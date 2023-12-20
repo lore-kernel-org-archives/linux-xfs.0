@@ -1,123 +1,147 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-4323.proton.ch (mail-4323.proton.ch [185.70.43.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F42168B3;
-	Wed, 20 Dec 2023 07:15:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAC1B1CA93
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 08:36:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=maiolino.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maiolino.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mmUBG276"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6d87eadc43fso1766766b3a.1;
-        Tue, 19 Dec 2023 23:15:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1703056501; x=1703661301; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=eJqWdKRl0UBq0Wj+r8chL9QmhrnrulM60eoe1tH98KY=;
-        b=mmUBG2766MCmU+ZcjSOo09fxvnBdIO3MIOuTtci1nkkT8LxOHncXez4Ddt2Ybxdp9F
-         VOXnc0QO6lfJmFZy+lgxY8IkIpUzz85V3vyXBkqRb2rM4+S9jJ/1XsfluIW4Kuxl3vxV
-         LO4C8p/Qxwh4+u6ndBgXS8Ub6lT0oRe/B2494ZKcr1Vmnhu4KlhLYI8y7SSt2i8G4jwb
-         zji1dsJpTurejRGJBE0mIMPkjE+yS3pl+4FhmzbVZgYE+JZyHf7lfF2MI+HpqZpkvSBP
-         sDP3BJ88wpFLryfburFd9Kt+BDgmIDIM8L7ARISnHT64cdWMI0wM8Fztno3PesligHF1
-         iYxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703056501; x=1703661301;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eJqWdKRl0UBq0Wj+r8chL9QmhrnrulM60eoe1tH98KY=;
-        b=Y0VfGsBaSUb6OF3CR5nOWmwhOSq9UWl17XjBwJdB3DSvBsIZSiWvQMzWV5Elnno4RO
-         Qr1Y98+M/gYrn/zUSyDx2cvXJP1fihLrkjfT7AYXx85kmEutHs2J3E0tgcOukTCl+Ih/
-         oC+u/69z3tHtOPqWJEWwoU9k8vGWX2C2PNmWfWZPus1/vOb0VbhDogFQrh1H5zXk++pa
-         /SPqJ8c7Q/L5Bl+/aIQvQ4x32eCBlsnMElqfrjgkC2+lNRX3o733/rbkV9emRp+uSire
-         0KRly20DLDMMmIZ4Ekm98hJKLXIPtdfuuEVCF3geq+oMP/b64SvU/rxToOmkGu6gz68q
-         Rxow==
-X-Gm-Message-State: AOJu0YylOLcE94PYjz62ebvXs089LFxlxJv/Fzc8T1MxgZkGIGWAn9Uv
-	1JKfVH7W08hO7BJdfznKuXc=
-X-Google-Smtp-Source: AGHT+IH2/KQGWsEEIk+CfQb//I/X1FN9i9PYn0R8hU2YQDfX0MobECujamcRsnvnV4o1L8WIa9T7SQ==
-X-Received: by 2002:a17:903:947:b0:1d3:be34:7862 with SMTP id ma7-20020a170903094700b001d3be347862mr3583611plb.9.1703056501427;
-        Tue, 19 Dec 2023 23:15:01 -0800 (PST)
-Received: from localhost (dhcp-72-253-202-210.hawaiiantel.net. [72.253.202.210])
-        by smtp.gmail.com with ESMTPSA id m2-20020a170902bb8200b001cfd2cb1907sm22210314pls.206.2023.12.19.23.15.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Dec 2023 23:15:00 -0800 (PST)
-Sender: Tejun Heo <htejun@gmail.com>
-Date: Tue, 19 Dec 2023 21:14:59 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Naohiro Aota <Naohiro.Aota@wdc.com>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	"ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
-	"coreteam@netfilter.org" <coreteam@netfilter.org>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>,
-	"intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-bcachefs@vger.kernel.org" <linux-bcachefs@vger.kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-cachefs@redhat.com" <linux-cachefs@redhat.com>,
-	"linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
-	"linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>,
-	"linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-remoteproc@vger.kernel.org" <linux-remoteproc@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-trace-kernel@vger.kernel.org" <linux-trace-kernel@vger.kernel.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"nbd@other.debian.org" <nbd@other.debian.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"ntb@lists.linux.dev" <ntb@lists.linux.dev>,
-	"open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-	"oss-drivers@corigine.com" <oss-drivers@corigine.com>,
-	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
-	"samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
-	"target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
-	"wireguard@lists.zx2c4.com" <wireguard@lists.zx2c4.com>
-Subject: Re: Performance drop due to alloc_workqueue() misuse and recent
- change
-Message-ID: <ZYKUc7MUGvre2lGQ@slm.duckdns.org>
-References: <dbu6wiwu3sdhmhikb2w6lns7b27gbobfavhjj57kwi2quafgwl@htjcc5oikcr3>
+	dkim=pass (2048-bit key) header.d=maiolino.me header.i=@maiolino.me header.b="Bn4Xl4s3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maiolino.me;
+	s=protonmail; t=1703061396; x=1703320596;
+	bh=IScsvlfKqvIyRL1koZ0R/J5JsEqqrfScw3IMsXnvjgM=;
+	h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=Bn4Xl4s3j/ppNgsZzwNS0ZrC7Y4L2pKossBd8+wVcKA56u3Cj3onjjqv/X4yDFsoi
+	 DEpGK/Ehx+DsUky8jmSjZe36Ihc7onPvS9PhPQFpnJel1L5e0W61hNb/zy0NBQaPh4
+	 DGDEtYZa4U1+TSMIRSxDTdvewnnsx6UJ+VkqHAtmbtBOGy5rvSFXKwREu7VYFaBIti
+	 XIZ5wTNOQ9FZLwtZIWz8XGJrMLdyHxC+0VXA3xAGPPFsetVSkYlp16WlTigtxcQIGD
+	 eSS7o5xMLpa5x8NYr2DYl63lZx+9JhQDLRGb/ZuX7DZOiD/C2GypOloJxKQlgyh1jQ
+	 ca2kZV6OFz0TQ==
+Date: Wed, 20 Dec 2023 08:36:17 +0000
+To: linux-xfs@vger.kernel.org
+From: Carlos Maiolino <carlos@maiolino.me>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to fc83c7574
+Message-ID: <dskfaggepbcqpi3bkohog5vz537qzntue75hv6zvrnls7cd2x3@h3mwrg4x7vbt>
+Feedback-ID: 28765827:user:proton
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha256; boundary="------6d5cba85cfbb5e03bb3b31b99076b06e014406db5d893b22507d4715f3f6dede"; charset=utf-8
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------6d5cba85cfbb5e03bb3b31b99076b06e014406db5d893b22507d4715f3f6dede
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 20 Dec 2023 09:36:14 +0100
+From: Carlos Maiolino <carlos@maiolino.me>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs: for-next updated to fc83c7574
+Message-ID: <dskfaggepbcqpi3bkohog5vz537qzntue75hv6zvrnls7cd2x3@h3mwrg4x7vbt>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <dbu6wiwu3sdhmhikb2w6lns7b27gbobfavhjj57kwi2quafgwl@htjcc5oikcr3>
 
-Hello, again.
+Hello.
 
-On Mon, Dec 04, 2023 at 04:03:47PM +0000, Naohiro Aota wrote:
-...
-> In summary, we misuse max_active, considering it is a global limit. And,
-> the recent commit introduced a huge performance drop in some cases.  We
-> need to review alloc_workqueue() usage to check if its max_active setting
-> is proper or not.
+The xfsprogs for-next branch, located at:
 
-Can you please test the following branch?
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
 
- https://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git unbound-system-wide-max_active
+Has just been updated.
 
-Thanks.
+Patches often get missed, so if your outstanding patches are properly reviewed on
+the list and not included in this update, please let me know.
 
--- 
-tejun
+The new head of the for-next branch is commit:
+
+fc83c7574b1fb2258c9403461e55b0cb091c670c
+
+24 new commits:
+
+Christoph Hellwig (23):
+      [73352da7d] libxfs: remove the unused icache_flags member from struct libxfs_xinit
+      [74c77adf5] libxfs: remove the dead {d,log,rt}path variables in libxfs_init
+      [e634be8f1] libxfs/frog: remove latform_find{raw,block}path
+      [732f5b904] libxfs: remove the volname concept
+      [7b17b49e7] xfs_logprint: move all code to set up the fake xlog into logstat()
+      [809310c4a] libxlog: remove the verbose argument to xlog_is_dirty
+      [09746c2a7] libxlog: add a helper to initialize a xlog without clobbering the x structure
+      [c42edb2e8] libxlog: don't require a libxfs_xinit structure for xlog_init
+      [cf9162582] libxlog: remove the global libxfs_xinit x structure
+      [01dcfd9e4] libxfs: rename struct libxfs_xinit to libxfs_init
+      [ddd9942bc] libxfs: pass a struct libxfs_init to libxfs_mount
+      [ca8cc76e8] libxfs: pass a struct libxfs_init to libxfs_alloc_buftarg
+      [b6e08bf37] libxfs: merge the file vs device cases in libxfs_init
+      [23d889559] libxfs: making passing flags to libxfs_init less confusing
+      [8798d4a6a] libxfs: remove the setblksize == 1 case in libxfs_device_open
+      [a3106f329] libfrog: make platform_set_blocksize exit on fatal failure
+      [f73596118] libxfs: remove dead size < 0 checks in libxfs_init
+      [4f112cb17] libxfs: mark libxfs_device_{open,close} static
+      [652683748] libxfs: return the opened fd from libxfs_device_open
+      [024b577aa] libxfs: pass the device fd to discard_blocks
+      [28cd682be] xfs_repair: remove various libxfs_device_to_fd calls
+      [7b47b1bc2] libxfs: stash away the device fd in struct xfs_buftarg
+      [fc83c7574] libxfs: split out a libxfs_dev structure from struct libxfs_init
+
+Eric Biggers (1):
+      [e97caf714] xfs_io/encrypt: support specifying crypto data unit size
+
+Code Diffstat:
+
+ configure.ac          |   1 +
+ copy/xfs_copy.c       |  19 +--
+ db/crc.c              |   2 +-
+ db/fuzz.c             |   2 +-
+ db/info.c             |   2 +-
+ db/init.c             |  29 ++--
+ db/init.h             |   3 +-
+ db/metadump.c         |   4 +-
+ db/output.c           |   2 +-
+ db/sb.c               |  18 +--
+ db/write.c            |   2 +-
+ growfs/xfs_growfs.c   |  24 +--
+ include/builddefs.in  |   4 +
+ include/libxfs.h      |  87 ++++++-----
+ include/libxlog.h     |   7 +-
+ include/xfs_mount.h   |   3 +-
+ io/encrypt.c          |  72 ++++++---
+ libfrog/linux.c       |  39 ++---
+ libfrog/platform.h    |   6 +-
+ libxfs/init.c         | 398 +++++++++++++++-----------------------------------
+ libxfs/libxfs_io.h    |   5 +-
+ libxfs/rdwr.c         |  16 +-
+ libxfs/topology.c     |  23 +--
+ libxfs/topology.h     |   4 +-
+ libxlog/util.c        |  49 +++----
+ logprint/logprint.c   |  79 +++++-----
+ m4/package_libcdev.m4 |  21 +++
+ man/man8/xfs_io.8     |   5 +-
+ mkfs/xfs_mkfs.c       | 249 +++++++++++++------------------
+ repair/globals.h      |   2 +
+ repair/init.c         |  40 +++--
+ repair/phase2.c       |  27 +---
+ repair/prefetch.c     |   2 +-
+ repair/protos.h       |   2 +-
+ repair/sb.c           |  18 +--
+ repair/xfs_repair.c   |  15 +-
+ 36 files changed, 537 insertions(+), 744 deletions(-)
+
+--------6d5cba85cfbb5e03bb3b31b99076b06e014406db5d893b22507d4715f3f6dede
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wnUEARYIACcFAmWCp4EJEOk12U/828uvFiEEj32Dn/1+aNUZzl9s6TXZT/zb
+y68AAHKJAQDZABAUbzCyODROt1ops90lkvSvWgv3BP85rYUYsfrffQD9EwL9
+83K9y0IOOKq30/55+15YJTqjUWRciqVXMKJTaAc=
+=ZT2z
+-----END PGP SIGNATURE-----
+
+
+--------6d5cba85cfbb5e03bb3b31b99076b06e014406db5d893b22507d4715f3f6dede--
+
