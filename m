@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FA0B47787
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:14:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 361D34776B
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:15:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ernGT/6g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64A19C433C7;
-	Wed, 20 Dec 2023 17:14:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DnLfbRxt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F337FC433C7;
+	Wed, 20 Dec 2023 17:15:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703092489;
-	bh=gZHG9gFNGDYJOMfHUNWI/dOFGVtRgNuxNifk+/8yYvA=;
+	s=k20201202; t=1703092505;
+	bh=CHCl/zMNcMr3PiLIAfk3i8JhfwnPwjrznk09LJEW9UE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ernGT/6gjwdjP5KPgiAK4q1wWorgX8NJTlRclXZIc7EDaM5vpSKhMBCC6nHjfbSWH
-	 1Iua3ITvsKGgZbH557PDs4rYlbBhTMbx87UcT+hbxV2x5qci+AhquFNrFfhd7AcM4o
-	 yT9Iz57MpzrmAGbYdSWOPCzF0B4amQjDEdUYH7+EoNu8azAB74fJUEV4rnEK3MOwOs
-	 DMZ1Mgbs+vMd7OtCe9KvXFpmC7Q013eT6bnuy84RKShhMF9npB1zTqvXXmSM8rmisf
-	 D2mSEJ21DDVtvFhg9JsgdnF73VIUu5+tv8nk3lGwWMjtSSIyo/8VhGDd7IjM+xHrWV
-	 CHwfyCDrB/G0Q==
-Date: Wed, 20 Dec 2023 09:14:48 -0800
-Subject: [PATCH 2/4] xfs_io: collapse trivial helpers
+	b=DnLfbRxtEqJA2uQ2Dns+n1MbCWwMA8MDWrNXcZgg/HtuYLRWkba+56qsk6MDt4gMG
+	 zvD7bSJJvKbc+hJm/y0KTv1VAt1mkWHvYovAJgtBX9Eadq+eRbH4jpeDinhZE8h/FY
+	 ZQRFbQz+j8M408xa//9972bEsQw/OmZyWhyHVAXQYxlWwXdEnoSVHoRrBevrHM3p8s
+	 FudB1mQQcHt5/jimXCmQPnyWrRh7KWAt1ppfRiAhZoxhjJjbnueXy/3QpXHrqGPDuS
+	 +2Re9UqGSRXEmMPlGanaHzk8l49BiZZvSzof28WSVYkjBBKRTHzD1vX6n2M1SFz0M/
+	 ydIYP4taI78uQ==
+Date: Wed, 20 Dec 2023 09:15:04 -0800
+Subject: [PATCH 3/4] xfs_io: extract contorl number parsing routines
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170309219107.1608142.4643674100831010643.stgit@frogsfrogsfrogs>
+Message-ID: <170309219120.1608142.14150492359425333052.stgit@frogsfrogsfrogs>
 In-Reply-To: <170309219080.1608142.737701463093437769.stgit@frogsfrogsfrogs>
 References: <170309219080.1608142.737701463093437769.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,220 +37,186 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Simply the call chain by having parse_args set the scrub ioctl
-parameters in the caller's object.  The parse_args callers can then
-invoke the ioctl directly, eliminating one function and one indirect
-call.
+Break out the parts of parse_args that extract control numbers from the
+CLI arguments, so that the function isn't as long.  This isn't all that
+exciting now, but the scrub vectorization speedups will introduce a new
+ioctl.  For the new command that comes with that, we'll want the control
+number parsing helpers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/scrub.c |  124 +++++++++++++++++++-----------------------------------------
- 1 file changed, 40 insertions(+), 84 deletions(-)
+ io/scrub.c |  128 ++++++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 85 insertions(+), 43 deletions(-)
 
 
 diff --git a/io/scrub.c b/io/scrub.c
-index 8b3bdd77..238d9240 100644
+index 238d9240..cde788fb 100644
 --- a/io/scrub.c
 +++ b/io/scrub.c
-@@ -41,57 +41,12 @@ scrub_help(void)
+@@ -41,6 +41,87 @@ scrub_help(void)
  	printf("\n");
  }
  
--static void
--scrub_ioctl(
--	int				fd,
--	int				type,
--	uint64_t			control,
--	uint32_t			control2)
--{
--	struct xfs_scrub_metadata	meta;
--	const struct xfrog_scrub_descr	*sc;
--	int				error;
--
--	sc = &xfrog_scrubbers[type];
--	memset(&meta, 0, sizeof(meta));
--	meta.sm_type = type;
--	switch (sc->type) {
--	case XFROG_SCRUB_TYPE_AGHEADER:
--	case XFROG_SCRUB_TYPE_PERAG:
--		meta.sm_agno = control;
--		break;
--	case XFROG_SCRUB_TYPE_INODE:
--		meta.sm_ino = control;
--		meta.sm_gen = control2;
--		break;
--	case XFROG_SCRUB_TYPE_NONE:
--	case XFROG_SCRUB_TYPE_FS:
--		/* no control parameters */
--		break;
--	}
--	meta.sm_flags = 0;
--
--	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
--	if (error)
--		perror("scrub");
--	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		printf(_("Corruption detected.\n"));
--	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
--		printf(_("Optimization possible.\n"));
--	if (meta.sm_flags & XFS_SCRUB_OFLAG_XFAIL)
--		printf(_("Cross-referencing failed.\n"));
--	if (meta.sm_flags & XFS_SCRUB_OFLAG_XCORRUPT)
--		printf(_("Corruption detected during cross-referencing.\n"));
--	if (meta.sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
--		printf(_("Scan was not complete.\n"));
--}
--
++static bool
++parse_inode(
++	int		argc,
++	char		**argv,
++	int		optind,
++	__u64		*ino,
++	__u32		*gen)
++{
++	char		*p;
++	unsigned long long control;
++	unsigned long	control2;
++
++	if (optind == argc) {
++		*ino = 0;
++		*gen = 0;
++		return true;
++	}
++
++	if (optind != argc - 2) {
++		fprintf(stderr,
++ _("Must specify inode number and generation.\n"));
++		return false;
++	}
++
++	control = strtoull(argv[optind], &p, 0);
++	if (*p != '\0') {
++		fprintf(stderr, _("Bad inode number '%s'.\n"),
++				argv[optind]);
++		return false;
++	}
++	control2 = strtoul(argv[optind + 1], &p, 0);
++	if (*p != '\0') {
++		fprintf(stderr, _("Bad generation number '%s'.\n"),
++				argv[optind + 1]);
++		return false;
++	}
++
++	*ino = control;
++	*gen = control2;
++	return true;
++}
++
++static bool
++parse_agno(
++	int		argc,
++	char		**argv,
++	int		optind,
++	__u32		*agno)
++{
++	char		*p;
++	unsigned long	control;
++
++	if (optind != argc - 1) {
++		fprintf(stderr, _("Must specify one AG number.\n"));
++		return false;
++	}
++
++	control = strtoul(argv[optind], &p, 0);
++	if (*p != '\0') {
++		fprintf(stderr, _("Bad AG number '%s'.\n"), argv[optind]);
++		return false;
++	}
++
++	*agno = control;
++	return true;
++}
++
++static bool
++parse_none(
++	int		argc,
++	int		optind)
++{
++	if (optind != argc) {
++		fprintf(stderr, _("No parameters allowed.\n"));
++		return false;
++	}
++
++	/* no control parameters */
++	return true;
++}
++
  static int
  parse_args(
  	int				argc,
- 	char				**argv,
--	struct cmdinfo			*cmdinfo,
--	void				(*fn)(int, int, uint64_t, uint32_t))
-+	const struct cmdinfo		*cmdinfo,
-+	struct xfs_scrub_metadata	*meta)
+@@ -48,11 +129,8 @@ parse_args(
+ 	const struct cmdinfo		*cmdinfo,
+ 	struct xfs_scrub_metadata	*meta)
  {
- 	char				*p;
+-	char				*p;
  	int				type = -1;
-@@ -100,6 +55,7 @@ parse_args(
- 	uint32_t			control2 = 0;
+ 	int				i, c;
+-	uint64_t			control = 0;
+-	uint32_t			control2 = 0;
  	const struct xfrog_scrub_descr	*d = NULL;
  
-+	memset(meta, 0, sizeof(struct xfs_scrub_metadata));
- 	while ((c = getopt(argc, argv, "")) != EOF) {
- 		switch (c) {
- 		default:
-@@ -125,6 +81,8 @@ parse_args(
- 	}
- 	optind++;
+ 	memset(meta, 0, sizeof(struct xfs_scrub_metadata));
+@@ -85,61 +163,25 @@ parse_args(
  
-+	meta->sm_type = type;
-+
  	switch (d->type) {
  	case XFROG_SCRUB_TYPE_INODE:
- 		if (optind == argc) {
-@@ -153,6 +111,8 @@ parse_args(
+-		if (optind == argc) {
+-			control = 0;
+-			control2 = 0;
+-		} else if (optind == argc - 2) {
+-			control = strtoull(argv[optind], &p, 0);
+-			if (*p != '\0') {
+-				fprintf(stderr,
+-					_("Bad inode number '%s'.\n"),
+-					argv[optind]);
+-				exitcode = 1;
+-				return command_usage(cmdinfo);
+-			}
+-			control2 = strtoul(argv[optind + 1], &p, 0);
+-			if (*p != '\0') {
+-				fprintf(stderr,
+-					_("Bad generation number '%s'.\n"),
+-					argv[optind + 1]);
+-				exitcode = 1;
+-				return command_usage(cmdinfo);
+-			}
+-		} else {
+-			fprintf(stderr,
+-				_("Must specify inode number and generation.\n"));
++		if (!parse_inode(argc, argv, optind, &meta->sm_ino,
++						     &meta->sm_gen)) {
  			exitcode = 1;
  			return command_usage(cmdinfo);
  		}
-+		meta->sm_ino = control;
-+		meta->sm_gen = control2;
+-		meta->sm_ino = control;
+-		meta->sm_gen = control2;
  		break;
  	case XFROG_SCRUB_TYPE_AGHEADER:
  	case XFROG_SCRUB_TYPE_PERAG:
-@@ -169,6 +129,7 @@ parse_args(
+-		if (optind != argc - 1) {
+-			fprintf(stderr,
+-				_("Must specify one AG number.\n"));
++		if (!parse_agno(argc, argv, optind, &meta->sm_agno)) {
  			exitcode = 1;
  			return command_usage(cmdinfo);
  		}
-+		meta->sm_agno = control;
+-		control = strtoul(argv[optind], &p, 0);
+-		if (*p != '\0') {
+-			fprintf(stderr,
+-				_("Bad AG number '%s'.\n"), argv[optind]);
+-			exitcode = 1;
+-			return command_usage(cmdinfo);
+-		}
+-		meta->sm_agno = control;
  		break;
  	case XFROG_SCRUB_TYPE_FS:
  	case XFROG_SCRUB_TYPE_NONE:
-@@ -178,13 +139,12 @@ parse_args(
+-		if (optind != argc) {
+-			fprintf(stderr,
+-				_("No parameters allowed.\n"));
++		if (!parse_none(argc, optind)) {
  			exitcode = 1;
  			return command_usage(cmdinfo);
  		}
-+		/* no control parameters */
+-		/* no control parameters */
  		break;
  	default:
  		ASSERT(0);
- 		break;
- 	}
--	fn(file->fd, type, control, control2);
--
- 	return 0;
- }
- 
-@@ -193,7 +153,27 @@ scrub_f(
- 	int				argc,
- 	char				**argv)
- {
--	return parse_args(argc, argv, &scrub_cmd, scrub_ioctl);
-+	struct xfs_scrub_metadata	meta;
-+	int				error;
-+
-+	error = parse_args(argc, argv, &scrub_cmd, &meta);
-+	if (error)
-+		return error;
-+
-+	error = ioctl(file->fd, XFS_IOC_SCRUB_METADATA, &meta);
-+	if (error)
-+		perror("scrub");
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		printf(_("Corruption detected.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
-+		printf(_("Optimization possible.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_XFAIL)
-+		printf(_("Cross-referencing failed.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_XCORRUPT)
-+		printf(_("Corruption detected during cross-referencing.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
-+		printf(_("Scan was not complete.\n"));
-+	return 0;
- }
- 
- void
-@@ -236,37 +216,20 @@ repair_help(void)
- 	printf("\n");
- }
- 
--static void
--repair_ioctl(
--	int				fd,
--	int				type,
--	uint64_t			control,
--	uint32_t			control2)
-+static int
-+repair_f(
-+	int				argc,
-+	char				**argv)
- {
- 	struct xfs_scrub_metadata	meta;
--	const struct xfrog_scrub_descr	*sc;
- 	int				error;
- 
--	sc = &xfrog_scrubbers[type];
--	memset(&meta, 0, sizeof(meta));
--	meta.sm_type = type;
--	switch (sc->type) {
--	case XFROG_SCRUB_TYPE_AGHEADER:
--	case XFROG_SCRUB_TYPE_PERAG:
--		meta.sm_agno = control;
--		break;
--	case XFROG_SCRUB_TYPE_INODE:
--		meta.sm_ino = control;
--		meta.sm_gen = control2;
--		break;
--	case XFROG_SCRUB_TYPE_NONE:
--	case XFROG_SCRUB_TYPE_FS:
--		/* no control parameters */
--		break;
--	}
--	meta.sm_flags = XFS_SCRUB_IFLAG_REPAIR;
-+	error = parse_args(argc, argv, &repair_cmd, &meta);
-+	if (error)
-+		return error;
-+	meta.sm_flags |= XFS_SCRUB_IFLAG_REPAIR;
- 
--	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
-+	error = ioctl(file->fd, XFS_IOC_SCRUB_METADATA, &meta);
- 	if (error)
- 		perror("repair");
- 	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-@@ -281,14 +244,7 @@ repair_ioctl(
- 		printf(_("Repair was not complete.\n"));
- 	if (meta.sm_flags & XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- 		printf(_("Metadata did not need repair or optimization.\n"));
--}
--
--static int
--repair_f(
--	int				argc,
--	char				**argv)
--{
--	return parse_args(argc, argv, &repair_cmd, repair_ioctl);
-+	return 0;
- }
- 
- void
 
