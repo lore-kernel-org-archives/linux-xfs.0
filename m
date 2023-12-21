@@ -1,34 +1,34 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71092C2E3
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Dec 2023 05:32:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FB8D14F76
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Dec 2023 05:32:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vb15Wulb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TgERG1Z4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=vb15Wulb943f7jth04sGL2rgau
-	aCRO2ZZVGL+D44sMypw9/Lme/8stSTNk0Bvm85ESiviMLa4N9BpjbSChWVCd0HTiL/oytfblr0KQK
-	vZZbyUka5WK5OgKe1R3yK+1evt6i8hL/o3BRbNAO2cf2kFJyqC467ivOIMHz0KdB6kDgsoicT/2y+
-	WK61b1BKWCeSywVdURDIFQxMR/0T10h/KgYAI1zAHsSPpDcxb11F/YKMRbkIGYPmnHGZIv4ewT5l8
-	CfmDxd/gRf9cfZiM8S0dnnvABBK7+6GTedmBJhrpTCIm7AUiTLKQtoUKgjFvxXfHG+/DNEdskGexE
-	RLXjAaZA==;
+	bh=EkZ3APwQ4pV20mMbP/uH2mvLd1WS55fKnmDkHbGqqA4=; b=TgERG1Z4d73REdIFWKuRcSEahz
+	VQY1WECNFEXuFnV1OPmWt9277iO4CuXQzSKaAqjVcLIuGQ5pHe7AXV9VuFKOrrzUklTgP+OzgEyib
+	NGq3uco1TztF7qPbGXzRTfQR6QvXBg5QXiCo2QCDI4dshuFCRrPgNv4ulR15RNmRB7EFbv7wcYmMq
+	hrKoLL2Cpht9ddlqhKVrCQIffO933811ox3H7m7IJhgKVghWIoCL9GPosakD8eCEQTfIqoqYD9Oen
+	6Q8PT3UB6bI221kqlNTJOcaoYkz9toDFkndV8yXROrsqWw+7nj2sVSXo9LRk8RUASnSO3uMqji5tw
+	Pmtw+bmA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rGBfE-001kVH-0H;
-	Thu, 21 Dec 2023 05:32:08 +0000
-Date: Wed, 20 Dec 2023 21:32:08 -0800
+	id 1rGBfi-001kcq-31;
+	Thu, 21 Dec 2023 05:32:38 +0000
+Date: Wed, 20 Dec 2023 21:32:38 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs_mdrestore: refactor progress printing and sb
- fixup code
-Message-ID: <ZYPN2Df5rdd5V3wq@infradead.org>
-References: <170309218716.1607943.7868749567386210342.stgit@frogsfrogsfrogs>
- <170309218796.1607943.2978536167133920710.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/4] xfs_io: set exitcode = 1 on parsing errors in
+ scrub/repair command
+Message-ID: <ZYPN9nz2dKVMjID8@infradead.org>
+References: <170309219080.1608142.737701463093437769.stgit@frogsfrogsfrogs>
+ <170309219094.1608142.4865155109436063528.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,8 +37,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170309218796.1607943.2978536167133920710.stgit@frogsfrogsfrogs>
+In-Reply-To: <170309219094.1608142.4865155109436063528.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+
+On Wed, Dec 20, 2023 at 09:14:33AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Set exitcode to 1 if there is an error parsing the CLI arguments to the
+> scrub or repair commands, like we do most other places in xfs_io.
 
 Looks good:
 
