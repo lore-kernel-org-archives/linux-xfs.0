@@ -1,88 +1,84 @@
-Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59A2BEB8
-	for <linux-xfs@vger.kernel.org>; Fri, 22 Dec 2023 02:06:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5B8A6124
+	for <linux-xfs@vger.kernel.org>; Fri, 22 Dec 2023 02:31:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iGxKGhEo"
-Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-3bb6e8708b7so934328b6e.1
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Dec 2023 18:06:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1703210779; x=1703815579; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=UCuvXgGVBllnF7kYrwGnMP7O133slTvNR4ZyKlkSLi8=;
-        b=iGxKGhEomNZUZe6u3cD/jtzO+5MqreXN5sel0nNa4oBxN8ujyI92sDgtN12do+uNvs
-         ZeEzrcFAd6aqsBA+sQos0bIlZGvqNSf9UuZrf2EIL/u3B9oq+W7aJdpITh/vZXgPbSLf
-         dD3l1r3xqymbd1PEHFj5//u3Lg0Xov74GlAmYf34MfKbJLnoslC8+wqUKmBVy01zwlVx
-         gVp40pbBtBR8O2PXtjP36YQZsj3LNDX3xUrYn6A0NdX5CAVi7fDFXxVARCVhTdQG3zux
-         7mj7dg+9b2ELmdpoNx/RTGPFYQfakl79JygBg0BuRJC4e0+PC/50497u51IOyKzjpjbj
-         kCqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703210779; x=1703815579;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=UCuvXgGVBllnF7kYrwGnMP7O133slTvNR4ZyKlkSLi8=;
-        b=aOEIlYo8owZqvzn/J6JvPb4HrrivkFBTBb4k0Bc2POL+y1Xt0HG6lceJpQqpNJqIqF
-         L3BkKtKXkCEBpy/PXnyBghbm7Xp2D5GMv5EJErdqV2js+1d+nI+Ya5IHlU9+pGezChgq
-         7jTiQdYW9Pn2sriXBRbAU0F3x0Aai6M9x6Q8Iu9WPnhNqWPkxOOWPl6pcCW7zjb1MD91
-         kC9OS7c/UPw3yIxGhS/geSYPVwTeICB+jmoBijqDSZRESOqq5GFVHrPA5dxAvaStQwgd
-         Iwi5GS969Ur3na/yJgOs0Z8CMwq2GbtaImDRBVn8izPb3ClO4HZ2r63Ak8Zr1LBPA5Xv
-         VC4A==
-X-Gm-Message-State: AOJu0YzXMFcEjlyVyppNz/khbXNfvctvWbGvV7b6jLpqQN+y/SXq/IvD
-	7AVrSv1eskFDoGxZ1XyS8uCgRgT6Uxm7FDYR8YqQuBjlSAw=
-X-Google-Smtp-Source: AGHT+IHKrT3QUcBZptrEBQrhy894otshPbZTFQDMzcsq3AjNdqKuyXlGlkp8qVasR7T4UO8cmok3pkVUOy2SThnaClo=
-X-Received: by 2002:a05:6808:650b:b0:3b8:b063:a1da with SMTP id
- fm11-20020a056808650b00b003b8b063a1damr590179oib.100.1703210779281; Thu, 21
- Dec 2023 18:06:19 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mw0mzg5E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57061C433C8;
+	Fri, 22 Dec 2023 02:31:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703212270;
+	bh=Rj6iR86sh66bgjXJfZtlfNu8Mv39wkCL66nrFQHpy1Y=;
+	h=Date:Subject:From:To:Cc:From;
+	b=Mw0mzg5ExsnTKBcz3Fct/4QIibMSBV/XIi/5kWrVK6ziEClMuGnRO1WF7BtyRsWHy
+	 8t8Sd2QeLPuqTbsy7iCh+00AasbmZDSLl2j9EvOgJYZI4GLx9Q4jXoq6Jd07LuWP48
+	 x7e5VbtEy6B0QWC3etqWigafngRdV3Oiq9f0kkCej3W3cBMvDhmMbPTwM5WVS4sNrQ
+	 7M9K5X1QYvfP/KFE2vQJdf6I0xU9WiUl2Wk0WGcvMw5Y0TBqoQrCiaMSW1ia9it9o9
+	 LYjYs4f2+2VjVdNB0n2LnpF+bsCRn9YEZ01P6PX7w1cI6rXGCRqPeeVH6eFM6Wxx0S
+	 Q41gLWz23F9nA==
+Date: Thu, 21 Dec 2023 18:31:09 -0800
+Subject: [GIT PULL 1/4] xfsprogs: various bug fixes for 6.6
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, djwong@kernel.org
+Cc: chandanbabu@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <170321220608.2974519.4401807541250057118.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Phillip Ferentinos <phillip.jf@gmail.com>
-Date: Thu, 21 Dec 2023 20:05:43 -0600
-Message-ID: <CACf8WVvuBpDwMdTor_oGobAKG6ELyUMmm4-HAu--eTfZqF5+Yg@mail.gmail.com>
-Subject: Metadata corruption detected, fatal error -- couldn't map inode, err
- = 117
-To: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Hello,
+Hi Carlos,
 
-Looking for opinions on recovering a filesystem that does not
-successfully repair from xfs_repair. On the first xfs_repair, I was
-prompted to mount the disk to replay the log which I did successfully.
-I created an image of the disk with ddrescue and am attempting to
-recover the data. Unfortunately, I do not have a recent backup of this
-disk.
+Please pull this branch with changes for xfsprogs for 6.6-rc1.
 
-The final output of xfs_repair is:
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
-rebuilding directory inode 12955326179
-Metadata corruption detected at 0x46fa05, inode 0x38983bd88 dinode
+The following changes since commit fc83c7574b1fb2258c9403461e55b0cb091c670c:
 
-fatal error -- couldn't map inode 15192014216, err = 117
+libxfs: split out a libxfs_dev structure from struct libxfs_init (2023-12-18 14:57:50 +0100)
 
-The full log is:
-https://raw.githubusercontent.com/phillipjf/xfs_debug/main/xfs_repair_1.log
+are available in the Git repository at:
 
-Based on another discussion (https://narkive.com/4dDxIees.10), I've
-included the specific inode:
-https://raw.githubusercontent.com/phillipjf/xfs_debug/main/xfs_db_01.log
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/xfsprogs-fixes-6.6_2023-12-21
 
-I also cannot create a metadump due to the following issue:
-https://raw.githubusercontent.com/phillipjf/xfs_debug/main/xfs_metadump_01.log.
+for you to fetch changes up to 1665923a8302088744a69403ff60a1709f5d24ed:
 
-Any advice would be greatly appreciated. If any more information is
-needed, hopefully I can provide it.
+xfs_db: report the device associated with each io cursor (2023-12-21 18:29:14 -0800)
 
-Thanks in advance
+----------------------------------------------------------------
+xfsprogs: various bug fixes for 6.6 [1/8]
+
+This series fixes a couple of bugs that I found in the userspace support
+libraries.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (5):
+libfrog: move 64-bit division wrappers to libfrog
+libxfs: don't UAF a requeued EFI
+xfs_copy: distinguish short writes to EOD from runtime errors
+xfs_copy: actually do directio writes to block devices
+xfs_db: report the device associated with each io cursor
+
+copy/xfs_copy.c      | 24 +++++++++----
+db/block.c           | 14 +++++++-
+db/io.c              | 35 +++++++++++++++++--
+db/io.h              |  3 ++
+include/libxfs.h     |  1 +
+libfrog/Makefile     |  1 +
+libfrog/div64.h      | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+libxfs/defer_item.c  |  7 ++++
+libxfs/libxfs_priv.h | 77 +----------------------------------------
+9 files changed, 171 insertions(+), 87 deletions(-)
+create mode 100644 libfrog/div64.h
+
