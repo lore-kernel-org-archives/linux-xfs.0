@@ -1,122 +1,66 @@
-Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4C47C14B
-	for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2023 11:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3871A10A19
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Dec 2023 08:26:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PKHXJYjs"
-Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-6dbc2bf4e8dso415372a34.1
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2023 03:00:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1703329250; x=1703934050; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VILrGyAYT0i2NmKYaOjVLWXTyxkrTNbUAn+Codd2WJo=;
-        b=PKHXJYjshcKPTDMNnpxtttw6S1DfJ0GSM07Ru1V0Avfy2Nw+LiLlph0Hb2XJ2Eplao
-         p6ga3DwhIbS41QlkhO1LGbX738uhUcvTPPoG/VlUnubkFq0ms+e7+aU99QiKpMNoJeRW
-         b8V7UrFOS3cSLSW12cLHehEevLD9LNm62wx4Y8M/lj7rj5BtuxpzSu+mhctRn9TDrXnf
-         q1aF1Wn2s+S77vsynW1UoUl1q1XBMy7vwLgkgRSlUxyG40CRrRrdRTMQOzIDko36Y70Z
-         iW+hK4I9UyA8BQ7ddtcYeQyhlxuujyZmHAsrVMRNgOcvKVpZSwYxLhGx1TOY3PuhK8R9
-         VQPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703329250; x=1703934050;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VILrGyAYT0i2NmKYaOjVLWXTyxkrTNbUAn+Codd2WJo=;
-        b=tYa+zPV2//CpIV3z00flB2lqyM8RXb778wFUqHiuQyvWFYHbpb3Kg2HHkds6TYEpVY
-         KPmy7nS01cz8AE1frG/fK6578MBtw3SCwQhsQgKCIb7PeG/op6nT2Np0hqP6syLltbBC
-         KKAgBpVz+mzuNHpwP4C0xh3xPn2Z9bUF3KggRT2lBcobpjNSuofWHS4QzjAJwQsqz+5Q
-         6P8tnHmyw4xaPGjjy77SZAuzfXyZo2uRgIFrTFpNqCt3Uov2K4ILCKuCEKeNjFXE8YVr
-         Zwn3H3G/uhHujLZ7AEa1OOY84u9tFua/yO3vu/5nayMSrpwH1Q/4a9NNIbq2u6aXU+ge
-         8kgw==
-X-Gm-Message-State: AOJu0Yy/mT5yDoCMBFWAM/Q1vVFbV/utOfA78pHnwwtLqUeGuywm+MVp
-	VSo8ohH+NIXCzZ4HAD1vJFLs9vOdiWZ+FcPePZj8/PEeNls=
-X-Google-Smtp-Source: AGHT+IERHipZlJMEQaO/0rtauAcoFETr9NbyA293rKtYEPdkV2KCKaRYgvJJqmXw7HN97563vd1ETKTCcCcK0ccXzSw=
-X-Received: by 2002:a05:6820:1043:b0:594:36ea:b0ce with SMTP id
- x3-20020a056820104300b0059436eab0cemr4004707oot.0.1703329249704; Sat, 23 Dec
- 2023 03:00:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="krlvvaOe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+	Content-ID:Content-Description:In-Reply-To;
+	bh=gQSuVPIhe7Gl2Agngght1L670p9B5FcUdxpCieVtH5g=; b=krlvvaOeztl2TfXOfkqs0GJ5yE
+	hCwrIpeMWjOowHeapIs0B052pMAh/1rq+uILUVWIq8Q1nNyleNNMpYQDfCkGw82hL5MZDOtavJ28M
+	sSXHU+rWgsXN9oKt7GNOQo/cToUXTBoK9xAPL91w7Dzb6q9i/XBl2ejvA8Pkw9bBpoQnLO77BHsWg
+	IiNTRETBpFHGzODUSICZjf2YL1pCt7WwWvqu+XbCbenq2sx2kT+kcwMeGWWV4gIF3INIA8vNCIttI
+	Vk9yR9YFOuSF0yXPPUs/1IOBbaFfHag5+6PzuTDWM5wZezUpMl5/JQj7dI21NGp/kyi6Bgh1Lgb2b
+	dWxH0lJg==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1rHgA2-000rCd-As; Mon, 25 Dec 2023 08:18:06 +0000
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231214150708.77586-1-wenjianhn@gmail.com> <20231216153522.52767-1-wenjianhn@gmail.com>
- <ZYDBBmZWabnbd3zq@dread.disaster.area>
-In-Reply-To: <ZYDBBmZWabnbd3zq@dread.disaster.area>
-From: Jian Wen <wenjianhn@gmail.com>
-Date: Sat, 23 Dec 2023 19:00:13 +0800
-Message-ID: <CAMXzGW+ooGhvP1mHvEco5u97XUG+PO=bHD6Exx17oea7pjq3ew@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: improve handling of prjquot ENOSPC
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, hch@lst.de, 
-	dchinner@redhat.com, Jian Wen <wenjian1@xiaomi.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Mailer: MIME-tools 5.509 (Entity 5.509)
+Content-Type: text/plain; charset=utf-8
+From: "Debian Bug Tracking System" <owner@bugs.debian.org>
+To: Julian Andres Klode <julian.klode@canonical.com>
+CC: pkg-grub-devel@alioth-lists.debian.net, linux-xfs@vger.kernel.org
+Subject: Processed: Re: Bug#1054644: xfsprogs-udeb: causes D-I to fail,
+ reporting errors about missing partition devices
+Message-ID: <handler.s.B1054644.1703492168204060.transcript@bugs.debian.org>
+References: <20231225081559.7xwxb7qtk6obgczx@jak-t480s>
+ <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com>
+X-Debian-PR-Package: grub2 xfsprogs
+X-Debian-PR-Source: grub2 xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date: Mon, 25 Dec 2023 08:18:06 +0000
 
-On Tue, Dec 19, 2023 at 6:00=E2=80=AFAM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> So, with the assumption that project quotas return EDQUOT and not
-> ENOSPC, we add this helper to fs/xfs/xfs_dquot.h:
->
-> static inline bool
-> xfs_dquot_is_enospc(
->         struct xfs_dquot        *dqp)
-> {
->         if (!dqp)
->                 return false;
->         if (!xfs_dquot_is_enforced(dqp)
->                 return false;
->         if (dqp->q_blk.hardlimit - dqp->q_blk.reserved > 0)
-I need some help on how to improve the above enospc check.
-It seems that we need a value that is larger than 0.
+Processing control commands:
 
-4.0K space is available.
-# df -h ./
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vda1       100M  100M  4.0K 100% /tmp/roothome/vda
+> clone -1 -2
+Bug #1054644 [grub2] xfsprogs-udeb: causes D-I to fail, reporting errors ab=
+out missing partition devices
+Bug 1054644 cloned as bug 1059424
+> reassign -2 xfsprogs
+Bug #1059424 [grub2] xfsprogs-udeb: causes D-I to fail, reporting errors ab=
+out missing partition devices
+Bug reassigned from package 'grub2' to 'xfsprogs'.
+Ignoring request to alter found versions of bug #1059424 to the same values=
+ previously set
+Ignoring request to alter fixed versions of bug #1059424 to the same values=
+ previously set
 
-ENOSPC is expected, but gets EDQUOT.
-# touch t
-touch: cannot touch 't': Disk quota exceeded
-
->
-> The buffered write code ends up as:
->
->         .....
->         do {
->                 iolock =3D XFS_IOLOCK_EXCL;
->                 ret =3D xfs_ilock_iocb(iocb, iolock);
->                 if (ret)
->                         return ret;
->
->                 ret =3D xfs_file_write_checks(iocb, from, &iolock);
->                 if (ret)
->                         goto out;
->
->                 trace_xfs_file_buffered_write(iocb, from);
->                 ret =3D iomap_file_buffered_write(iocb, from,
->                                 &xfs_buffered_write_iomap_ops);
->                 if (!(ret =3D=3D -EDQUOT || ret =3D -ENOSPC))
->                         break;
->
->                 xfs_iunlock(ip, iolock);
-xfs_iunlock() is called after the retry.
->                 xfs_blockgc_nospace_flush(ip, ret);
->         } while (retries++ =3D=3D 0);
->
->         if (ret =3D=3D -EDQUOT && xfs_dquot_is_enospc(ip->i_pdquot))
->                 ret =3D -ENOSPC;
->         .....
-out:
-        if (iolock)
-                xfs_iunlock(ip, iolock);
-Double xfs_iunlock().
-
-Please take a look at the v3 patch.
-Thanks.
+--=20
+1054644: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1054644
+1059424: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059424
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
