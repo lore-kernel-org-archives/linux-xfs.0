@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49D187ED
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:21:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBD5F7ED
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:21:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UWA8kWNk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B75DC433C7;
-	Mon,  1 Jan 2024 00:21:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oGSbGnXP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7521C433C7;
+	Mon,  1 Jan 2024 00:21:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068488;
-	bh=SyG8m0B2MleUKieVDu7LL4hWatUsGMEHKmFtuloM4v0=;
+	s=k20201202; t=1704068503;
+	bh=8mUtgVsfp1PxqCBHnrkvD6iz8V8FRjbPc8BqophbShU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UWA8kWNk71FRCuEUpZaVdZDN3bjZr+XotirqBdOSntqo/HyTNeYaOCvWG9Q1YtiQI
-	 hlZCr/650SRAKPmLXa2wHYpQQL61h4zluWQnjla/AVFHVKj+mMSpMKSRbsFwSJXcz6
-	 GhkjGXZNMhPAYY4O5SWxWcyGB3/RSDgCLjNPztCb5ftHkzBfhtoYgTURIH5IsFGvyg
-	 cSOQHJ5cqp34I1qwMASP6/dXi4iVpVzC0Xunb9LqBil43mSExpt3PYcetvhEcCzpLa
-	 Ugl0MNF4r9qHTKNcoJlgagjgtjqeJ/kvbWv5tlyWxHFfsM+MwXb8aLUh231LvEajLA
-	 42uR11g47AtNg==
-Date: Sun, 31 Dec 2023 16:21:27 +9900
-Subject: [PATCH 42/47] xfs_repair: check for global free space concerns with
- default btree slack levels
+	b=oGSbGnXP6Y3Lzzbj2GGilEX/vSIaWkWWbkBmnIh8LgkGT/Sse8JHvwaHHhMG6Md1U
+	 jT+6wCW1T22v25vkhqJdxXDu3T1dyK5USyK9vYeaB6e2ioOxfTDPKtjBGYj2Y7hE/S
+	 85VPZtgeIZyeaH8EL1nNDHEjJAoDUtfiLWGRodvBScJU6xBkuTDnIsOUGgzTr/8Gri
+	 k8A33G6WQfYdVm2/kz0QrIlVBctzmZRf5/tzSAk6BEdnI7zW+Rumn1kPSLU2l7g+hk
+	 zbYFKgdnZV06n/I6nV5bf6E9Z/i/rf+mKzzv3/GAgkL1OChMP01a9XDIv/104AEsvY
+	 yLGVpJND4NyAw==
+Date: Sun, 31 Dec 2023 16:21:43 +9900
+Subject: [PATCH 43/47] xfs_repair: rebuild the bmap btree for realtime files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015873.1815505.13193987272438467777.stgit@frogsfrogsfrogs>
+Message-ID: <170405015886.1815505.15186385222227343688.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,227 +37,172 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It's possible that before repair was started, the filesystem might have
-been nearly full, and its metadata btree blocks could all have been
-nearly full.  If we then rebuild the btrees with blocks that are only
-75% full, that expansion might be enough to run out of free space.  The
-solution to this is to pack the new blocks completely full if we fear
-running out of space.
-
-Previously, we only had to check and decide that on a per-AG basis.
-However, now that XFS can have filesystems with metadata btrees rooted
-in inodes, we have a global free space concern because there might be
-enough space in each AG to regenerate the AG btrees at 75%, but that
-might not leave enough space to regenerate the inode btrees, even if we
-fill those blocks to 100%.
-
-Hence we need to precompute the worst case space usage for all btrees in
-the filesystem and compare /that/ against the global free space to
-decide if we're going to pack the btrees maximally to conserve space.
-That decision can override the per-AG determination.
+Use the realtime rmap btree information to rebuild an inode's data fork
+when appropriate.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/globals.c |    6 +++
- repair/globals.h |    2 +
- repair/phase5.c  |  116 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
- repair/phase6.c  |   16 +++++--
- 4 files changed, 131 insertions(+), 9 deletions(-)
+ repair/bmap_repair.c |  131 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 127 insertions(+), 4 deletions(-)
 
 
-diff --git a/repair/globals.c b/repair/globals.c
-index b121d6e2d6d..92ebe5fab8a 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -133,3 +133,9 @@ int		thread_count;
- 
- /* If nonzero, simulate failure after this phase. */
- int		fail_after_phase;
-+
-+/*
-+ * Do we think we're going to be so low on disk space that we need to pack
-+ * all rebuilt btree blocks completely full to avoid running out of space?
-+ */
-+bool		need_packed_btrees;
-diff --git a/repair/globals.h b/repair/globals.h
-index f5dcc11f410..2e11f35a0e4 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -180,4 +180,6 @@ extern int		fail_after_phase;
- 
- extern struct libxfs_init x;
- 
-+extern bool		need_packed_btrees;
-+
- #endif /* _XFS_REPAIR_GLOBAL_H */
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 74594d53a87..5e1dff0aadd 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -479,11 +479,14 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
- 
- 	/*
- 	 * Estimate the number of free blocks in this AG after rebuilding
--	 * all btrees.
-+	 * all btrees, unless we already decided that we need to pack all
-+	 * btree blocks maximally.
- 	 */
--	total_btblocks = estimate_agbtree_blocks(pag, num_extents);
--	if (num_freeblocks > total_btblocks)
--		est_agfreeblocks = num_freeblocks - total_btblocks;
-+	if (!need_packed_btrees) {
-+		total_btblocks = estimate_agbtree_blocks(pag, num_extents);
-+		if (num_freeblocks > total_btblocks)
-+			est_agfreeblocks = num_freeblocks - total_btblocks;
-+	}
- 
- 	init_ino_cursors(&sc, pag, est_agfreeblocks, &sb_icount_ag[agno],
- 			&sb_ifree_ag[agno], &btr_ino, &btr_fino);
-@@ -631,6 +634,109 @@ check_rtmetadata(
- 	check_rtsummary(mp);
+diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
+index dfd1405cca2..5d4da861322 100644
+--- a/repair/bmap_repair.c
++++ b/repair/bmap_repair.c
+@@ -212,6 +212,122 @@ xrep_bmap_scan_ag(
+ 	return error;
  }
  
-+/*
-+ * Estimate the amount of free space used by the perag metadata without
-+ * building the incore tree.  This is only necessary if realtime btrees are
-+ * enabled.
-+ */
-+static xfs_extlen_t
-+estimate_agbtree_blocks_early(
-+	struct xfs_perag	*pag,
-+	unsigned int		*num_freeblocks)
++/* Check for any obvious errors or conflicts in the file mapping. */
++STATIC int
++xrep_bmap_check_rtfork_rmap(
++	struct repair_ctx		*sc,
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec)
 +{
-+	struct xfs_mount	*mp = pag->pag_mount;
-+	xfs_agblock_t		agbno;
-+	xfs_agblock_t		ag_end;
-+	xfs_extlen_t		extent_len;
-+	xfs_extlen_t		blen;
-+	unsigned int		num_extents = 0;
-+	int			bstate;
-+	bool			in_extent = false;
++	/* xattr extents are never stored on realtime devices */
++	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
++		return EFSCORRUPTED;
 +
-+	/* Find the number of free space extents. */
-+	ag_end = libxfs_ag_block_count(mp, pag->pag_agno);
-+	for (agbno = 0; agbno < ag_end; agbno += blen) {
-+		bstate = get_bmap_ext(pag->pag_agno, agbno, ag_end, &blen);
-+		if (bstate < XR_E_INUSE)  {
-+			if (!in_extent) {
-+				/*
-+				 * found the start of a free extent
-+				 */
-+				in_extent = true;
-+				num_extents++;
-+				extent_len = blen;
-+			} else {
-+				extent_len += blen;
-+			}
-+		} else {
-+			if (in_extent)  {
-+				/*
-+				 * free extent ends here
-+				 */
-+				in_extent = false;
-+				*num_freeblocks += extent_len;
-+			}
-+		}
-+	}
-+	if (in_extent)
-+		*num_freeblocks += extent_len;
++	/* bmbt blocks are never stored on realtime devices */
++	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		return EFSCORRUPTED;
 +
-+	return estimate_agbtree_blocks(pag, num_extents);
++	/* Data extents for non-rt files are never stored on the rt device. */
++	if (!XFS_IS_REALTIME_INODE(sc->ip))
++		return EFSCORRUPTED;
++
++	/* Check the file offsets and physical extents. */
++	if (!xfs_verify_fileext(sc->mp, rec->rm_offset, rec->rm_blockcount))
++		return EFSCORRUPTED;
++
++	/* Check that this fits in the rt volume. */
++	if (!xfs_verify_rgbext(cur->bc_ino.rtg, rec->rm_startblock,
++				rec->rm_blockcount))
++		return EFSCORRUPTED;
++
++	return 0;
++}
++
++/* Record realtime extents that belong to this inode's fork. */
++STATIC int
++xrep_bmap_walk_rtrmap(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec,
++	void				*priv)
++{
++	struct xrep_bmap		*rb = priv;
++	int				error = 0;
++
++	/* Skip extents which are not owned by this inode and fork. */
++	if (rec->rm_owner != rb->sc->ip->i_ino)
++		return 0;
++
++	error = xrep_bmap_check_rtfork_rmap(rb->sc, cur, rec);
++	if (error)
++		return error;
++
++	/*
++	 * Record all blocks allocated to this file even if the extent isn't
++	 * for the fork we're rebuilding so that we can reset di_nblocks later.
++	 */
++	rb->nblocks += rec->rm_blockcount;
++
++	/* If this rmap isn't for the fork we want, we're done. */
++	if (rb->whichfork == XFS_DATA_FORK &&
++	    (rec->rm_flags & XFS_RMAP_ATTR_FORK))
++		return 0;
++	if (rb->whichfork == XFS_ATTR_FORK &&
++	    !(rec->rm_flags & XFS_RMAP_ATTR_FORK))
++		return 0;
++
++	return xrep_bmap_from_rmap(rb, rec->rm_offset, rec->rm_startblock,
++			rec->rm_blockcount,
++			rec->rm_flags & XFS_RMAP_UNWRITTEN);
 +}
 +
 +/*
-+ * Decide if we need to pack every new btree block completely full to conserve
-+ * disk space.  Normally we rebuild btree blocks to be 75% full, but we don't
-+ * want to start rebuilding AG btrees that way only to discover that there
-+ * isn't enough space left in the data volume to rebuild inode-based btrees.
++ * Scan the realtime reverse mappings to build the new extent map.  The rt rmap
++ * inodes must be loaded from disk explicitly here, since we have not yet
++ * validated the metadata directory tree but do not wish to throw away user
++ * data unnecessarily.
 + */
-+static bool
-+are_packed_btrees_needed(
-+	struct xfs_mount	*mp)
++STATIC int
++xrep_bmap_scan_rt(
++	struct xrep_bmap	*rb,
++	struct xfs_rtgroup	*rtg)
 +{
-+	struct xfs_perag	*pag;
-+	struct xfs_rtgroup	*rtg;
-+	xfs_agnumber_t		agno;
-+	xfs_rgnumber_t		rgno;
-+	unsigned long long	metadata_blocks = 0;
-+	unsigned long long	fdblocks = 0;
++	struct repair_ctx	*sc = rb->sc;
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_btree_cur	*cur;
++	struct xfs_inode	*ip;
++	struct xfs_imeta_path	*path;
++	xfs_ino_t		ino;
++	int			error;
 +
-+	/*
-+	 * If we don't have inode-based metadata, we can let the AG btrees
-+	 * pack as needed; there are no global space concerns here.
-+	 */
-+	if (!xfs_has_rtrmapbt(mp))
-+		return false;
++	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
++	if (error)
++		return error;
 +
-+	for_each_perag(mp, agno, pag) {
-+		unsigned int	ag_fdblocks = 0;
++	error = -libxfs_imeta_lookup(sc->tp, path, &ino);
++	if (error)
++		goto out_path;
 +
-+		metadata_blocks += estimate_agbtree_blocks_early(pag,
-+								 &ag_fdblocks);
-+		fdblocks += ag_fdblocks;
++	if (ino == NULLFSINO) {
++		error = EFSCORRUPTED;
++		goto out_path;
 +	}
 +
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		metadata_blocks += estimate_rtrmapbt_blocks(rtg);
-+	}
++	error = -libxfs_imeta_iget(sc->tp, ino, XFS_DIR3_FT_REG_FILE, &ip);
++	if (error)
++		goto out_path;
 +
-+	/*
-+	 * If we think we'll have more metadata blocks than free space, then
-+	 * pack the btree blocks.
-+	 */
-+	if (metadata_blocks > fdblocks)
-+		return true;
-+
-+	/*
-+	 * If the amount of free space after building btrees is less than 9%
-+	 * of the data volume, pack the btree blocks.
-+	 */
-+	fdblocks -= metadata_blocks;
-+	if (fdblocks < ((mp->m_sb.sb_dblocks * 3) >> 5))
-+		return true;
-+	return false;
++	cur = libxfs_rtrmapbt_init_cursor(mp, sc->tp, rtg, ip);
++	error = -libxfs_rmap_query_all(cur, xrep_bmap_walk_rtrmap, rb);
++	if (error)
++		goto out_cur;
++out_cur:
++	libxfs_btree_del_cursor(cur, error);
++	libxfs_imeta_irele(ip);
++out_path:
++	libxfs_imeta_free_path(path);
++	return error;
 +}
 +
- void
- phase5(xfs_mount_t *mp)
+ /*
+  * Collect block mappings for this fork of this inode and decide if we have
+  * enough space to rebuild.  Caller is responsible for cleaning up the list if
+@@ -222,9 +338,20 @@ xrep_bmap_find_mappings(
+ 	struct xrep_bmap	*rb)
  {
-@@ -682,6 +788,8 @@ phase5(xfs_mount_t *mp)
- 	if (error)
- 		do_error(_("cannot alloc lost block bitmap\n"));
+ 	struct xfs_perag	*pag;
++	struct xfs_rtgroup	*rtg;
+ 	xfs_agnumber_t		agno;
++	xfs_rgnumber_t		rgno;
+ 	int			error;
  
-+	need_packed_btrees = are_packed_btrees_needed(mp);
-+
- 	for_each_perag(mp, agno, pag)
- 		phase5_func(mp, pag, lost_blocks);
- 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 4c387557c31..ab5c22ffbb0 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -3979,12 +3979,18 @@ reset_rt_metadata_inodes(
- 	xfs_filblks_t		est_fdblocks = 0;
- 	xfs_rgnumber_t		rgno;
- 
--	/* Estimate how much free space will be left after building btrees */
--	for_each_rtgroup(mp, rgno, rtg) {
--		metadata_blocks += estimate_rtrmapbt_blocks(rtg);
-+	/*
-+	 * Estimate how much free space will be left after building btrees
-+	 * unless we already decided that we needed to pack all new blocks
-+	 * maximally.
-+	 */
-+	if (!need_packed_btrees) {
-+		for_each_rtgroup(mp, rgno, rtg) {
-+			metadata_blocks += estimate_rtrmapbt_blocks(rtg);
++	/* Iterate the rtrmaps for extents. */
++	for_each_rtgroup(rb->sc->mp, rgno, rtg) {
++		error = xrep_bmap_scan_rt(rb, rtg);
++		if (error) {
++			libxfs_rtgroup_put(rtg);
++			return error;
 +		}
-+		if (mp->m_sb.sb_fdblocks > metadata_blocks)
-+			est_fdblocks = mp->m_sb.sb_fdblocks - metadata_blocks;
++	}
++
+ 	/* Iterate the rmaps for extents. */
+ 	for_each_perag(rb->sc->mp, agno, pag) {
+ 		error = xrep_bmap_scan_ag(rb, pag);
+@@ -572,10 +699,6 @@ xrep_bmap_check_inputs(
+ 		return EINVAL;
  	}
--	if (mp->m_sb.sb_fdblocks > metadata_blocks)
--		est_fdblocks = mp->m_sb.sb_fdblocks - metadata_blocks;
  
- 	for_each_rtgroup(mp, rgno, rtg) {
- 		ensure_rtgroup_rmapbt(rtg, est_fdblocks);
+-	/* Don't know how to rebuild realtime data forks. */
+-	if (XFS_IS_REALTIME_INODE(sc->ip))
+-		return EOPNOTSUPP;
+-
+ 	return 0;
+ }
+ 
 
