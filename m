@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49ECABA32;
-	Mon,  1 Jan 2024 00:44:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3789FBA37;
+	Mon,  1 Jan 2024 00:44:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AI9tRzED"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EA09C433C8;
-	Mon,  1 Jan 2024 00:44:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cGrhHzSU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7266DC433C7;
+	Mon,  1 Jan 2024 00:44:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704069865;
-	bh=zgdsCVrSNyY99tmTP3DdmIlUQ9eQQQQ3PIDnPyCGxxA=;
+	s=k20201202; t=1704069881;
+	bh=eTYrOG1sddLtxOiyI0ghjPnUA6RElQDDZdLN6kFqyKA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AI9tRzEDaAosxICeiOL1mg2J1FzFhKssbWWjAw5hnMThovAJEHAufm+SyxJKDJGnq
-	 iDLuFcXbc7Ho70i7zdQbq2XoJfLGeVRTvibjOten/yU4u25X0PqI+qpXyybcYLbgOi
-	 398ZynmP3kWfsYcKqFlZZePggxZV5gS8OUYL1AJMjvo/V2Ax9ZVSa5ZDYodulxYMTr
-	 C0JRiAbXINJxVbbvYjHgdhH0smV2GyQKZpR8B2MhakXmzBxWUi3CseAnc2MRVn6KhH
-	 0SrcZncPuWAfl9guctaywIO9fxwtLqaDaltRlmXmx1TpToZIBKiFjqVT/FOWMWkdNB
-	 bRNDWpBT1Mk4w==
-Date: Sun, 31 Dec 2023 16:44:25 +9900
-Subject: [PATCH 3/4] xfs: norepair fuzz test known output
+	b=cGrhHzSUZP68SyXP6Ooua29vnK8BHsA3aPc+44aL7Wl1UFtVtu7Cl20DLlE4M4MeG
+	 f9VC3bt8LRN6ehjXYw83pAIFSH6SbADVIowHSGa9w6df1YxV2V0hW9JkobVr/sd16G
+	 HEMv065PfBd1ELcULrGuhOZ/WEefAV0WC6i/04qJQGYdsSHEtepkX/BsfO2UV8O4SU
+	 xGucYBmMBxcwJRy9oL7pegYntNPqDOKzNrtE+d3MPe+MFNJVERwzpPnpXjq3dvz2R2
+	 zXEq/uE0+B1GMXrQ1qTFaIV/NV08NLkPyNkV9qK5s4g72iKq62KNr/fJitfMZiXkRJ
+	 0zEt9+m9WMUeQ==
+Date: Sun, 31 Dec 2023 16:44:41 +9900
+Subject: [PATCH 4/4] xfs: bothrepair fuzz test known output
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, guan@eryu.me
-Message-ID: <170405026269.1823639.15978016282575129460.stgit@frogsfrogsfrogs>
+Message-ID: <170405026283.1823639.17836910630354198856.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405026226.1823639.16368830178504929409.stgit@frogsfrogsfrogs>
 References: <170405026226.1823639.16368830178504929409.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,53 +37,57 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Record all the currently known failures of the kernel verifier code.
+Record all the currently known failures of the online-then-offline
+repair code.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/453.out |  152 +++++++++++++++
- tests/xfs/454.out |   96 ++++++++++
- tests/xfs/455.out |  134 ++++++++++++++
- tests/xfs/456.out |  129 +++++++++++++
- tests/xfs/457.out |    5 +
- tests/xfs/458.out |   44 ++++
- tests/xfs/459.out |    5 +
- tests/xfs/460.out |    6 +
- tests/xfs/461.out |    6 +
- tests/xfs/462.out |    8 +
- tests/xfs/463.out |  525 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/464.out |    5 +
- tests/xfs/465.out |   71 +++++++
- tests/xfs/466.out |   51 +++++
- tests/xfs/467.out |   47 +++++
- tests/xfs/469.out |    8 +
- tests/xfs/470.out |   79 ++++++++
- tests/xfs/471.out |    7 +
- tests/xfs/472.out |    7 +
- tests/xfs/474.out |    7 +
- tests/xfs/475.out |    6 +
- tests/xfs/477.out |   79 ++++++++
- tests/xfs/478.out |   91 +++++++++
- tests/xfs/479.out |    7 +
- tests/xfs/480.out |   24 ++
- tests/xfs/483.out |    6 +
- tests/xfs/484.out |   45 +++++
- tests/xfs/485.out |   51 +++++
- tests/xfs/486.out |   46 +++++
- tests/xfs/487.out |  242 ++++++++++++++++++++++++
- tests/xfs/488.out |  242 ++++++++++++++++++++++++
- tests/xfs/489.out |  242 ++++++++++++++++++++++++
- tests/xfs/498.out |   12 +
- tests/xfs/788.out |   23 ++
- 34 files changed, 2508 insertions(+)
+ tests/xfs/747.out |  152 +++++++++++++++
+ tests/xfs/748.out |   96 ++++++++++
+ tests/xfs/749.out |  134 ++++++++++++++
+ tests/xfs/750.out |  129 +++++++++++++
+ tests/xfs/751.out |    5 +
+ tests/xfs/752.out |   44 ++++
+ tests/xfs/753.out |    5 +
+ tests/xfs/754.out |   25 ---
+ tests/xfs/755.out |    6 +
+ tests/xfs/756.out |   61 ++++++
+ tests/xfs/757.out |  525 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/758.out |    5 +
+ tests/xfs/759.out |   94 +++++++++
+ tests/xfs/760.out |   64 ++++++
+ tests/xfs/761.out |   66 +++++++
+ tests/xfs/762.out |    1 
+ tests/xfs/763.out |    8 +
+ tests/xfs/764.out |   92 +++++++++
+ tests/xfs/765.out |    7 +
+ tests/xfs/766.out |   11 +
+ tests/xfs/768.out |    7 +
+ tests/xfs/769.out |    6 +
+ tests/xfs/771.out |   91 +++++++++
+ tests/xfs/772.out |   93 +++++++++
+ tests/xfs/773.out |    7 +
+ tests/xfs/774.out |   24 ++
+ tests/xfs/775.out |    6 +
+ tests/xfs/776.out |   59 ++++++
+ tests/xfs/777.out |   69 +++++++
+ tests/xfs/778.out |   60 ++++++
+ tests/xfs/779.out |  296 ++++++++++++++++++++++++++++++
+ tests/xfs/780.out |  296 ++++++++++++++++++++++++++++++
+ tests/xfs/781.out |  296 ++++++++++++++++++++++++++++++
+ tests/xfs/782.out |   12 +
+ tests/xfs/783.out |  210 +++++++++++++++++++++
+ tests/xfs/784.out |   10 +
+ tests/xfs/787.out |   23 ++
+ 37 files changed, 3074 insertions(+), 21 deletions(-)
 
 
-diff --git a/tests/xfs/453.out b/tests/xfs/453.out
-index 4b89bb01d8..15626b9caa 100644
---- a/tests/xfs/453.out
-+++ b/tests/xfs/453.out
+diff --git a/tests/xfs/747.out b/tests/xfs/747.out
+index 1cf4e747fb..80ef3c1fd7 100644
+--- a/tests/xfs/747.out
++++ b/tests/xfs/747.out
 @@ -1,4 +1,156 @@
- QA output created by 453
+ QA output created by 747
  Format and populate
  Fuzz superblock
 +uuid = zeroes: offline scrub didn't fail.
@@ -239,12 +243,12 @@ index 4b89bb01d8..15626b9caa 100644
 +meta_uuid = middlebit: online scrub didn't fail.
 +meta_uuid = lastbit: online scrub didn't fail.
  Done fuzzing superblock
-diff --git a/tests/xfs/454.out b/tests/xfs/454.out
-index ba7a8c24ba..dc89b2a488 100644
---- a/tests/xfs/454.out
-+++ b/tests/xfs/454.out
+diff --git a/tests/xfs/748.out b/tests/xfs/748.out
+index a281c130ea..4caad4f092 100644
+--- a/tests/xfs/748.out
++++ b/tests/xfs/748.out
 @@ -1,4 +1,100 @@
- QA output created by 454
+ QA output created by 748
  Format and populate
  Fuzz AGF
 +magicnum = zeroes: mount failed (32).
@@ -344,12 +348,12 @@ index ba7a8c24ba..dc89b2a488 100644
 +crc = add: mount failed (32).
 +crc = sub: mount failed (32).
  Done fuzzing AGF
-diff --git a/tests/xfs/455.out b/tests/xfs/455.out
-index ff68505f92..ffe9c557a1 100644
---- a/tests/xfs/455.out
-+++ b/tests/xfs/455.out
+diff --git a/tests/xfs/749.out b/tests/xfs/749.out
+index 478ce52818..57b505aa85 100644
+--- a/tests/xfs/749.out
++++ b/tests/xfs/749.out
 @@ -1,6 +1,140 @@
- QA output created by 455
+ QA output created by 749
  Format and populate
  Fuzz AGFL
 +magicnum = zeroes: offline scrub didn't fail.
@@ -489,12 +493,12 @@ index ff68505f92..ffe9c557a1 100644
  Done fuzzing AGFL
  Fuzz AGFL flfirst
  Done fuzzing AGFL flfirst
-diff --git a/tests/xfs/456.out b/tests/xfs/456.out
-index 75c6ef160c..a896b754ed 100644
---- a/tests/xfs/456.out
-+++ b/tests/xfs/456.out
+diff --git a/tests/xfs/750.out b/tests/xfs/750.out
+index 7521416f9b..047728583d 100644
+--- a/tests/xfs/750.out
++++ b/tests/xfs/750.out
 @@ -1,4 +1,133 @@
- QA output created by 456
+ QA output created by 750
  Format and populate
  Fuzz AGI
 +magicnum = zeroes: mount failed (32).
@@ -627,12 +631,12 @@ index 75c6ef160c..a896b754ed 100644
 +free_level = add: mount failed (32).
 +free_level = sub: mount failed (32).
  Done fuzzing AGI
-diff --git a/tests/xfs/457.out b/tests/xfs/457.out
-index 9d5c40150c..414fd7096e 100644
---- a/tests/xfs/457.out
-+++ b/tests/xfs/457.out
+diff --git a/tests/xfs/751.out b/tests/xfs/751.out
+index 77a74f3b4c..655a943dd1 100644
+--- a/tests/xfs/751.out
++++ b/tests/xfs/751.out
 @@ -1,4 +1,9 @@
- QA output created by 457
+ QA output created by 751
  Format and populate
  Fuzz bnobt recs
 +leftsib = add: offline scrub didn't fail.
@@ -641,12 +645,12 @@ index 9d5c40150c..414fd7096e 100644
 +rightsib = lastbit: offline scrub didn't fail.
 +rightsib = add: offline scrub didn't fail.
  Done fuzzing bnobt recs
-diff --git a/tests/xfs/458.out b/tests/xfs/458.out
-index a6ab9879c2..ba9de90280 100644
---- a/tests/xfs/458.out
-+++ b/tests/xfs/458.out
+diff --git a/tests/xfs/752.out b/tests/xfs/752.out
+index 2e8348d5d2..b4eaed97c8 100644
+--- a/tests/xfs/752.out
++++ b/tests/xfs/752.out
 @@ -1,4 +1,48 @@
- QA output created by 458
+ QA output created by 752
  Format and populate
  Fuzz bnobt keyptr
 +leftsib = add: offline scrub didn't fail.
@@ -694,12 +698,12 @@ index a6ab9879c2..ba9de90280 100644
 +keys[2].blockcount = sub: offline scrub didn't fail.
 +keys[2].blockcount = sub: online scrub didn't fail.
  Done fuzzing bnobt keyptr
-diff --git a/tests/xfs/459.out b/tests/xfs/459.out
-index 3100f78360..9b39b14e97 100644
---- a/tests/xfs/459.out
-+++ b/tests/xfs/459.out
+diff --git a/tests/xfs/753.out b/tests/xfs/753.out
+index 0c981968b0..f2fb9daa01 100644
+--- a/tests/xfs/753.out
++++ b/tests/xfs/753.out
 @@ -1,4 +1,9 @@
- QA output created by 459
+ QA output created by 753
  Format and populate
  Fuzz cntbt
 +leftsib = add: offline scrub didn't fail.
@@ -708,27 +712,47 @@ index 3100f78360..9b39b14e97 100644
 +rightsib = lastbit: offline scrub didn't fail.
 +rightsib = add: offline scrub didn't fail.
  Done fuzzing cntbt
-diff --git a/tests/xfs/460.out b/tests/xfs/460.out
-index 3ca46b4c4c..e8bb9625ab 100644
---- a/tests/xfs/460.out
-+++ b/tests/xfs/460.out
-@@ -1,4 +1,10 @@
- QA output created by 460
+diff --git a/tests/xfs/754.out b/tests/xfs/754.out
+index 174c4300d8..7f8da151ed 100644
+--- a/tests/xfs/754.out
++++ b/tests/xfs/754.out
+@@ -2,26 +2,9 @@ QA output created by 754
  Format and populate
  Fuzz inobt
-+leftsib = add: offline scrub didn't fail.
+ leftsib = add: offline scrub didn't fail.
 +rightsib = ones: offline scrub didn't fail.
 +rightsib = middlebit: offline scrub didn't fail.
 +rightsib = lastbit: offline scrub didn't fail.
-+rightsib = add: offline scrub didn't fail.
+ rightsib = add: offline scrub didn't fail.
+-keys[1].startino = zeroes: offline scrub didn't fail.
+-keys[1].startino = ones: offline scrub didn't fail.
+-keys[1].startino = firstbit: offline scrub didn't fail.
+-keys[1].startino = middlebit: offline scrub didn't fail.
+-keys[1].startino = lastbit: offline scrub didn't fail.
+-keys[1].startino = add: offline scrub didn't fail.
+-keys[1].startino = sub: offline scrub didn't fail.
+-keys[2].startino = zeroes: offline scrub didn't fail.
+-keys[2].startino = ones: offline scrub didn't fail.
+-keys[2].startino = firstbit: offline scrub didn't fail.
+-keys[2].startino = middlebit: offline scrub didn't fail.
+-keys[2].startino = lastbit: offline scrub didn't fail.
+-keys[2].startino = add: offline scrub didn't fail.
+-keys[2].startino = sub: offline scrub didn't fail.
+-keys[3].startino = zeroes: offline scrub didn't fail.
+-keys[3].startino = ones: offline scrub didn't fail.
+-keys[3].startino = firstbit: offline scrub didn't fail.
+-keys[3].startino = middlebit: offline scrub didn't fail.
+-keys[3].startino = lastbit: offline scrub didn't fail.
+-keys[3].startino = add: offline scrub didn't fail.
+-keys[3].startino = sub: offline scrub didn't fail.
 +rightsib = sub: offline scrub didn't fail.
  Done fuzzing inobt
-diff --git a/tests/xfs/461.out b/tests/xfs/461.out
-index 8d616bf2fd..429b1711d1 100644
---- a/tests/xfs/461.out
-+++ b/tests/xfs/461.out
+diff --git a/tests/xfs/755.out b/tests/xfs/755.out
+index 55e5ff4fcb..a5ff9a1f9f 100644
+--- a/tests/xfs/755.out
++++ b/tests/xfs/755.out
 @@ -1,4 +1,10 @@
- QA output created by 461
+ QA output created by 755
  Format and populate
  Fuzz finobt
 +leftsib = add: offline scrub didn't fail.
@@ -738,12 +762,12 @@ index 8d616bf2fd..429b1711d1 100644
 +rightsib = add: offline scrub didn't fail.
 +rightsib = sub: offline scrub didn't fail.
  Done fuzzing finobt
-diff --git a/tests/xfs/462.out b/tests/xfs/462.out
-index 4ff2d33b7c..842095dc9b 100644
---- a/tests/xfs/462.out
-+++ b/tests/xfs/462.out
-@@ -1,4 +1,12 @@
- QA output created by 462
+diff --git a/tests/xfs/756.out b/tests/xfs/756.out
+index 76df05ad60..05094c2fce 100644
+--- a/tests/xfs/756.out
++++ b/tests/xfs/756.out
+@@ -1,4 +1,65 @@
+ QA output created by 756
  Format and populate
  Fuzz rmapbt recs
 +leftsib = add: offline scrub didn't fail.
@@ -751,16 +775,69 @@ index 4ff2d33b7c..842095dc9b 100644
 +rightsib = middlebit: offline scrub didn't fail.
 +rightsib = lastbit: offline scrub didn't fail.
 +rightsib = add: offline scrub didn't fail.
++recs[2].owner = add: offline re-scrub failed (1).
++recs[2].owner = add: offline post-mod scrub failed (1).
 +recs[3].startblock = lastbit: offline scrub didn't fail.
 +recs[3].blockcount = lastbit: offline scrub didn't fail.
++recs[3].owner = add: offline re-scrub failed (1).
++recs[3].owner = add: offline post-mod scrub failed (1).
++recs[5].owner = lastbit: online repair failed (1).
 +recs[6].owner = lastbit: offline scrub didn't fail.
++recs[7].owner = lastbit: offline re-scrub failed (1).
++recs[7].owner = lastbit: offline post-mod scrub failed (1).
++recs[7].owner = add: offline re-scrub failed (1).
++recs[7].owner = add: offline post-mod scrub failed (1).
++recs[7].attrfork = ones: offline re-scrub failed (1).
++recs[7].attrfork = ones: offline post-mod scrub failed (1).
++recs[7].attrfork = firstbit: offline re-scrub failed (1).
++recs[7].attrfork = firstbit: offline post-mod scrub failed (1).
++recs[7].attrfork = middlebit: offline re-scrub failed (1).
++recs[7].attrfork = middlebit: offline post-mod scrub failed (1).
++recs[7].attrfork = lastbit: offline re-scrub failed (1).
++recs[7].attrfork = lastbit: offline post-mod scrub failed (1).
++recs[7].attrfork = add: offline re-scrub failed (1).
++recs[7].attrfork = add: offline post-mod scrub failed (1).
++recs[7].attrfork = sub: offline re-scrub failed (1).
++recs[7].attrfork = sub: offline post-mod scrub failed (1).
++recs[8].owner = lastbit: offline re-scrub failed (1).
++recs[8].owner = lastbit: offline post-mod scrub failed (1).
++recs[8].owner = add: offline re-scrub failed (1).
++recs[8].owner = add: offline post-mod scrub failed (1).
++recs[8].attrfork = ones: offline re-scrub failed (1).
++recs[8].attrfork = ones: offline post-mod scrub failed (1).
++recs[8].attrfork = firstbit: offline re-scrub failed (1).
++recs[8].attrfork = firstbit: offline post-mod scrub failed (1).
++recs[8].attrfork = middlebit: offline re-scrub failed (1).
++recs[8].attrfork = middlebit: offline post-mod scrub failed (1).
++recs[8].attrfork = lastbit: offline re-scrub failed (1).
++recs[8].attrfork = lastbit: offline post-mod scrub failed (1).
++recs[8].attrfork = add: offline re-scrub failed (1).
++recs[8].attrfork = add: offline post-mod scrub failed (1).
++recs[8].attrfork = sub: offline re-scrub failed (1).
++recs[8].attrfork = sub: offline post-mod scrub failed (1).
++recs[9].owner = lastbit: offline re-scrub failed (1).
++recs[9].owner = lastbit: offline post-mod scrub failed (1).
++recs[9].owner = add: offline re-scrub failed (1).
++recs[9].owner = add: offline post-mod scrub failed (1).
++recs[9].attrfork = ones: offline re-scrub failed (1).
++recs[9].attrfork = ones: offline post-mod scrub failed (1).
++recs[9].attrfork = firstbit: offline re-scrub failed (1).
++recs[9].attrfork = firstbit: offline post-mod scrub failed (1).
++recs[9].attrfork = middlebit: offline re-scrub failed (1).
++recs[9].attrfork = middlebit: offline post-mod scrub failed (1).
++recs[9].attrfork = lastbit: offline re-scrub failed (1).
++recs[9].attrfork = lastbit: offline post-mod scrub failed (1).
++recs[9].attrfork = add: offline re-scrub failed (1).
++recs[9].attrfork = add: offline post-mod scrub failed (1).
++recs[9].attrfork = sub: offline re-scrub failed (1).
++recs[9].attrfork = sub: offline post-mod scrub failed (1).
  Done fuzzing rmapbt recs
-diff --git a/tests/xfs/463.out b/tests/xfs/463.out
-index 87d2eef540..a7482abdb9 100644
---- a/tests/xfs/463.out
-+++ b/tests/xfs/463.out
+diff --git a/tests/xfs/757.out b/tests/xfs/757.out
+index 293a86329d..b0622d5cf1 100644
+--- a/tests/xfs/757.out
++++ b/tests/xfs/757.out
 @@ -1,4 +1,529 @@
- QA output created by 463
+ QA output created by 757
  Format and populate
  Fuzz rmapbt keyptr
 +leftsib = add: offline scrub didn't fail.
@@ -1289,12 +1366,12 @@ index 87d2eef540..a7482abdb9 100644
 +keys[9].bmbtblock_hi = add: offline scrub didn't fail.
 +keys[9].bmbtblock_hi = sub: offline scrub didn't fail.
  Done fuzzing rmapbt keyptr
-diff --git a/tests/xfs/464.out b/tests/xfs/464.out
-index fd949298f5..a949fa0875 100644
---- a/tests/xfs/464.out
-+++ b/tests/xfs/464.out
+diff --git a/tests/xfs/758.out b/tests/xfs/758.out
+index e969d7ba02..8a911c9735 100644
+--- a/tests/xfs/758.out
++++ b/tests/xfs/758.out
 @@ -1,4 +1,9 @@
- QA output created by 464
+ QA output created by 758
  Format and populate
  Fuzz refcountbt
 +leftsib = add: offline scrub didn't fail.
@@ -1303,28 +1380,41 @@ index fd949298f5..a949fa0875 100644
 +keys[1].startblock = lastbit: offline scrub didn't fail.
 +keys[1].startblock = sub: offline scrub didn't fail.
  Done fuzzing refcountbt
-diff --git a/tests/xfs/465.out b/tests/xfs/465.out
-index bb560881ae..5d8e6818fb 100644
---- a/tests/xfs/465.out
-+++ b/tests/xfs/465.out
-@@ -2,4 +2,75 @@ QA output created by 465
+diff --git a/tests/xfs/759.out b/tests/xfs/759.out
+index 3eaa678c0a..220883bd84 100644
+--- a/tests/xfs/759.out
++++ b/tests/xfs/759.out
+@@ -2,4 +2,98 @@ QA output created by 759
  Format and populate
  Find btree-format dir inode
  Fuzz inode
++core.mode = zeroes: offline re-scrub failed (1).
++core.mode = zeroes: offline post-mod scrub failed (1).
++core.mode = firstbit: online repair failed (1).
 +core.mode = middlebit: offline scrub didn't fail.
 +core.mode = middlebit: online scrub didn't fail.
 +core.mode = lastbit: offline scrub didn't fail.
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.size = zeroes: online repair failed (1).
 +core.size = middlebit: offline scrub didn't fail.
 +core.size = middlebit: online health check failed (0).
++core.size = middlebit: online repair failed (4).
++core.size = middlebit: online re-scrub failed (4).
++core.size = middlebit: online post-mod scrub failed (4).
 +core.size = lastbit: offline scrub didn't fail.
 +core.size = lastbit: online scrub didn't fail.
 +core.size = add: offline scrub didn't fail.
 +core.size = add: online scrub didn't fail.
 +core.size = sub: offline scrub didn't fail.
 +core.size = sub: online scrub didn't fail.
++core.naextents = lastbit: online repair failed (1).
++core.forkoff = ones: online repair failed (1).
++core.forkoff = firstbit: online repair failed (1).
++core.forkoff = add: online repair failed (1).
++core.forkoff = sub: online repair failed (1).
 +core.rtinherit = ones: offline scrub didn't fail.
 +core.rtinherit = ones: online scrub didn't fail.
 +core.rtinherit = firstbit: offline scrub didn't fail.
@@ -1362,6 +1452,8 @@ index bb560881ae..5d8e6818fb 100644
 +core.nosymlinks = sub: offline scrub didn't fail.
 +core.nosymlinks = sub: online scrub didn't fail.
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -1376,27 +1468,39 @@ index bb560881ae..5d8e6818fb 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
 +v3.flags2 = lastbit: offline scrub didn't fail.
 +v3.flags2 = lastbit: online scrub didn't fail.
 +v3.flags2 = add: online scrub didn't fail.
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +u3.bmbt.ptrs[1] = firstbit: offline scrub didn't fail.
 +u3.bmbt.ptrs[1] = firstbit: online scrub didn't fail.
  Done fuzzing inode
-diff --git a/tests/xfs/466.out b/tests/xfs/466.out
-index b1762f2478..b2d84cd0fa 100644
---- a/tests/xfs/466.out
-+++ b/tests/xfs/466.out
-@@ -2,4 +2,55 @@ QA output created by 466
+diff --git a/tests/xfs/760.out b/tests/xfs/760.out
+index 9b66d13f2c..c08d5c5672 100644
+--- a/tests/xfs/760.out
++++ b/tests/xfs/760.out
+@@ -2,4 +2,68 @@ QA output created by 760
  Format and populate
  Find extents-format file inode
  Fuzz inode
++core.mode = zeroes: offline re-scrub failed (1).
++core.mode = zeroes: offline post-mod scrub failed (1).
 +core.mode = middlebit: offline scrub didn't fail.
 +core.mode = middlebit: online scrub didn't fail.
 +core.mode = lastbit: offline scrub didn't fail.
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.nlinkv2 = lastbit: online repair failed (4).
 +core.size = zeroes: offline scrub didn't fail.
 +core.size = zeroes: online scrub didn't fail.
 +core.size = middlebit: offline scrub didn't fail.
@@ -1407,7 +1511,10 @@ index b1762f2478..b2d84cd0fa 100644
 +core.size = add: online scrub didn't fail.
 +core.size = sub: offline scrub didn't fail.
 +core.size = sub: online scrub didn't fail.
++core.forkoff = firstbit: online repair failed (1).
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -1422,10 +1529,18 @@ index b1762f2478..b2d84cd0fa 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
 +v3.flags2 = lastbit: offline scrub didn't fail.
 +v3.flags2 = lastbit: online scrub didn't fail.
 +v3.flags2 = add: online scrub didn't fail.
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.reflink = ones: offline scrub didn't fail.
 +v3.reflink = ones: online scrub didn't fail.
 +v3.reflink = firstbit: offline scrub didn't fail.
@@ -1438,25 +1553,27 @@ index b1762f2478..b2d84cd0fa 100644
 +v3.reflink = add: online scrub didn't fail.
 +v3.reflink = sub: offline scrub didn't fail.
 +v3.reflink = sub: online scrub didn't fail.
-+u3.bmx[0].startoff = lastbit: pre-mod mount failed (32).
-+u3.bmx[0].blockcount = middlebit: pre-mod mount failed (32).
-+u3.bmx[0].blockcount = add: pre-mod mount failed (32).
-+a.sfattr.list[0].parent_ino = lastbit: online scrub didn't fail.
++u3.bmx[0].blockcount = middlebit: online repair failed (4).
++u3.bmx[0].blockcount = add: online repair failed (4).
  Done fuzzing inode
-diff --git a/tests/xfs/467.out b/tests/xfs/467.out
-index 1ca0e21d40..f68fab8444 100644
---- a/tests/xfs/467.out
-+++ b/tests/xfs/467.out
-@@ -2,4 +2,51 @@ QA output created by 467
+diff --git a/tests/xfs/761.out b/tests/xfs/761.out
+index 43cbe4d000..28db068aa4 100644
+--- a/tests/xfs/761.out
++++ b/tests/xfs/761.out
+@@ -2,4 +2,70 @@ QA output created by 761
  Format and populate
  Find btree-format file inode
  Fuzz inode
++core.mode = zeroes: offline re-scrub failed (1).
++core.mode = zeroes: offline post-mod scrub failed (1).
 +core.mode = middlebit: offline scrub didn't fail.
 +core.mode = middlebit: online scrub didn't fail.
 +core.mode = lastbit: offline scrub didn't fail.
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.nlinkv2 = lastbit: online repair failed (4).
 +core.size = zeroes: offline scrub didn't fail.
 +core.size = zeroes: online scrub didn't fail.
 +core.size = middlebit: offline scrub didn't fail.
@@ -1467,7 +1584,14 @@ index 1ca0e21d40..f68fab8444 100644
 +core.size = add: online scrub didn't fail.
 +core.size = sub: offline scrub didn't fail.
 +core.size = sub: online scrub didn't fail.
++core.naextents = lastbit: online repair failed (1).
++core.forkoff = ones: online repair failed (1).
++core.forkoff = firstbit: online repair failed (1).
++core.forkoff = add: online repair failed (1).
++core.forkoff = sub: online repair failed (1).
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -1482,10 +1606,18 @@ index 1ca0e21d40..f68fab8444 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
 +v3.flags2 = lastbit: offline scrub didn't fail.
 +v3.flags2 = lastbit: online scrub didn't fail.
 +v3.flags2 = add: online scrub didn't fail.
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.reflink = ones: offline scrub didn't fail.
 +v3.reflink = ones: online scrub didn't fail.
 +v3.reflink = firstbit: offline scrub didn't fail.
@@ -1499,11 +1631,21 @@ index 1ca0e21d40..f68fab8444 100644
 +v3.reflink = sub: offline scrub didn't fail.
 +v3.reflink = sub: online scrub didn't fail.
  Done fuzzing inode
-diff --git a/tests/xfs/469.out b/tests/xfs/469.out
-index 1f514019b8..641a63fee7 100644
---- a/tests/xfs/469.out
-+++ b/tests/xfs/469.out
-@@ -2,4 +2,12 @@ QA output created by 469
+diff --git a/tests/xfs/762.out b/tests/xfs/762.out
+index 1ff528e296..0dcc55f7ba 100644
+--- a/tests/xfs/762.out
++++ b/tests/xfs/762.out
+@@ -2,4 +2,5 @@ QA output created by 762
+ Format and populate
+ Find bmbt block
+ Fuzz bmbt
++rightsib = lastbit: online re-scrub failed (5).
+ Done fuzzing bmbt
+diff --git a/tests/xfs/763.out b/tests/xfs/763.out
+index 00fe93dbd5..017ebae31e 100644
+--- a/tests/xfs/763.out
++++ b/tests/xfs/763.out
+@@ -2,4 +2,12 @@ QA output created by 763
  Format and populate
  Find symlink remote block
  Fuzz symlink remote block
@@ -1516,20 +1658,23 @@ index 1f514019b8..641a63fee7 100644
 +data = lastbit: offline scrub didn't fail.
 +data = lastbit: online scrub didn't fail.
  Done fuzzing symlink remote block
-diff --git a/tests/xfs/470.out b/tests/xfs/470.out
-index 88abc0bc6a..41b0739d9d 100644
---- a/tests/xfs/470.out
-+++ b/tests/xfs/470.out
-@@ -2,4 +2,83 @@ QA output created by 470
+diff --git a/tests/xfs/764.out b/tests/xfs/764.out
+index 727f797f77..9515240556 100644
+--- a/tests/xfs/764.out
++++ b/tests/xfs/764.out
+@@ -2,4 +2,96 @@ QA output created by 764
  Format and populate
  Find inline-format dir inode
  Fuzz inline-format dir inode
++core.mode = firstbit: online repair failed (1).
 +core.mode = middlebit: offline scrub didn't fail.
 +core.mode = middlebit: online scrub didn't fail.
 +core.mode = lastbit: offline scrub didn't fail.
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.forkoff = firstbit: online repair failed (1).
 +core.rtinherit = ones: offline scrub didn't fail.
 +core.rtinherit = ones: online scrub didn't fail.
 +core.rtinherit = firstbit: offline scrub didn't fail.
@@ -1567,6 +1712,8 @@ index 88abc0bc6a..41b0739d9d 100644
 +core.nosymlinks = sub: offline scrub didn't fail.
 +core.nosymlinks = sub: online scrub didn't fail.
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -1581,10 +1728,18 @@ index 88abc0bc6a..41b0739d9d 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
 +v3.flags2 = lastbit: offline scrub didn't fail.
 +v3.flags2 = lastbit: online scrub didn't fail.
 +v3.flags2 = add: online scrub didn't fail.
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.nrext64 = zeroes: offline scrub didn't fail.
 +v3.nrext64 = zeroes: online scrub didn't fail.
 +v3.nrext64 = firstbit: offline scrub didn't fail.
@@ -1604,11 +1759,11 @@ index 88abc0bc6a..41b0739d9d 100644
 +u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
 +u3.sfdir3.list[1].offset = add: online scrub didn't fail.
  Done fuzzing inline-format dir inode
-diff --git a/tests/xfs/471.out b/tests/xfs/471.out
-index 25e55ff03b..cbc61d9491 100644
---- a/tests/xfs/471.out
-+++ b/tests/xfs/471.out
-@@ -2,4 +2,11 @@ QA output created by 471
+diff --git a/tests/xfs/765.out b/tests/xfs/765.out
+index 008c22e4c6..e147cdd7e9 100644
+--- a/tests/xfs/765.out
++++ b/tests/xfs/765.out
+@@ -2,4 +2,11 @@ QA output created by 765
  Format and populate
  Find data-format dir block
  Fuzz data-format dir block
@@ -1620,11 +1775,11 @@ index 25e55ff03b..cbc61d9491 100644
 +bhdr.hdr.crc = add: offline scrub didn't fail.
 +bhdr.hdr.crc = sub: offline scrub didn't fail.
  Done fuzzing data-format dir block
-diff --git a/tests/xfs/472.out b/tests/xfs/472.out
-index 3f4d23acce..a2eead205e 100644
---- a/tests/xfs/472.out
-+++ b/tests/xfs/472.out
-@@ -2,4 +2,11 @@ QA output created by 472
+diff --git a/tests/xfs/766.out b/tests/xfs/766.out
+index 29b8e227a3..15bce8f504 100644
+--- a/tests/xfs/766.out
++++ b/tests/xfs/766.out
+@@ -2,4 +2,15 @@ QA output created by 766
  Format and populate
  Find data-format dir block
  Fuzz data-format dir block
@@ -1635,12 +1790,16 @@ index 3f4d23acce..a2eead205e 100644
 +dhdr.hdr.crc = lastbit: offline scrub didn't fail.
 +dhdr.hdr.crc = add: offline scrub didn't fail.
 +dhdr.hdr.crc = sub: offline scrub didn't fail.
++du[4].name = lastbit: offline re-scrub failed (1).
++du[4].name = lastbit: online re-scrub failed (5).
++du[4].name = lastbit: online post-mod scrub failed (1).
++du[4].name = lastbit: offline post-mod scrub failed (1).
  Done fuzzing data-format dir block
-diff --git a/tests/xfs/474.out b/tests/xfs/474.out
-index bba106d249..93e1147d3f 100644
---- a/tests/xfs/474.out
-+++ b/tests/xfs/474.out
-@@ -2,4 +2,11 @@ QA output created by 474
+diff --git a/tests/xfs/768.out b/tests/xfs/768.out
+index b45ce63b40..e7e87f724a 100644
+--- a/tests/xfs/768.out
++++ b/tests/xfs/768.out
+@@ -2,4 +2,11 @@ QA output created by 768
  Format and populate
  Find leafn-format dir block
  Fuzz leafn-format dir block
@@ -1652,11 +1811,11 @@ index bba106d249..93e1147d3f 100644
 +lhdr.info.crc = add: offline scrub didn't fail.
 +lhdr.info.crc = sub: offline scrub didn't fail.
  Done fuzzing leafn-format dir block
-diff --git a/tests/xfs/475.out b/tests/xfs/475.out
-index 5e64381922..d4d8b9ec9d 100644
---- a/tests/xfs/475.out
-+++ b/tests/xfs/475.out
-@@ -2,4 +2,10 @@ QA output created by 475
+diff --git a/tests/xfs/769.out b/tests/xfs/769.out
+index dc42f6f1db..fb338c0e59 100644
+--- a/tests/xfs/769.out
++++ b/tests/xfs/769.out
+@@ -2,4 +2,10 @@ QA output created by 769
  Format and populate
  Find node-format dir block
  Fuzz node-format dir block
@@ -1667,11 +1826,11 @@ index 5e64381922..d4d8b9ec9d 100644
 +nhdr.info.hdr.back = add: offline scrub didn't fail.
 +nhdr.info.hdr.back = sub: offline scrub didn't fail.
  Done fuzzing node-format dir block
-diff --git a/tests/xfs/477.out b/tests/xfs/477.out
-index f3dd00ea51..c6f06d5efc 100644
---- a/tests/xfs/477.out
-+++ b/tests/xfs/477.out
-@@ -2,4 +2,83 @@ QA output created by 477
+diff --git a/tests/xfs/771.out b/tests/xfs/771.out
+index 526bb00ed6..c92ae0a42c 100644
+--- a/tests/xfs/771.out
++++ b/tests/xfs/771.out
+@@ -2,4 +2,95 @@ QA output created by 771
  Format and populate
  Find inline-format attr inode
  Fuzz inline-format attr inode
@@ -1681,6 +1840,8 @@ index f3dd00ea51..c6f06d5efc 100644
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.nlinkv2 = lastbit: online repair failed (4).
 +core.size = middlebit: offline scrub didn't fail.
 +core.size = middlebit: online scrub didn't fail.
 +core.size = lastbit: offline scrub didn't fail.
@@ -1688,6 +1849,8 @@ index f3dd00ea51..c6f06d5efc 100644
 +core.size = add: offline scrub didn't fail.
 +core.size = add: online scrub didn't fail.
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -1702,10 +1865,18 @@ index f3dd00ea51..c6f06d5efc 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
 +v3.flags2 = lastbit: offline scrub didn't fail.
 +v3.flags2 = lastbit: online scrub didn't fail.
 +v3.flags2 = add: online scrub didn't fail.
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.reflink = ones: offline scrub didn't fail.
 +v3.reflink = ones: online scrub didn't fail.
 +v3.reflink = firstbit: offline scrub didn't fail.
@@ -1755,11 +1926,11 @@ index f3dd00ea51..c6f06d5efc 100644
 +a.sfattr.list[2].name = sub: offline scrub didn't fail.
 +a.sfattr.list[2].name = sub: online scrub didn't fail.
  Done fuzzing inline-format attr inode
-diff --git a/tests/xfs/478.out b/tests/xfs/478.out
-index ff2067f09f..961be25626 100644
---- a/tests/xfs/478.out
-+++ b/tests/xfs/478.out
-@@ -2,4 +2,95 @@ QA output created by 478
+diff --git a/tests/xfs/772.out b/tests/xfs/772.out
+index c774116ea3..ffa4023ae6 100644
+--- a/tests/xfs/772.out
++++ b/tests/xfs/772.out
+@@ -2,4 +2,97 @@ QA output created by 772
  Format and populate
  Find leaf-format attr block
  Fuzz leaf-format attr block
@@ -1771,6 +1942,8 @@ index ff2067f09f..961be25626 100644
 +hdr.info.crc = add: offline scrub didn't fail.
 +hdr.info.crc = sub: offline scrub didn't fail.
 +hdr.firstused = middlebit: online scrub didn't fail.
++hdr.firstused = middlebit: offline re-scrub failed (1).
++hdr.firstused = middlebit: offline post-mod scrub failed (1).
 +hdr.holes = ones: offline scrub didn't fail.
 +hdr.holes = ones: online scrub didn't fail.
 +hdr.holes = firstbit: offline scrub didn't fail.
@@ -1855,11 +2028,11 @@ index ff2067f09f..961be25626 100644
 +entries[9].incomplete = add: online scrub didn't fail.
 +entries[9].incomplete = sub: online scrub didn't fail.
  Done fuzzing leaf-format attr block
-diff --git a/tests/xfs/479.out b/tests/xfs/479.out
-index 320a82ac39..ca8ff9f71f 100644
---- a/tests/xfs/479.out
-+++ b/tests/xfs/479.out
-@@ -2,4 +2,11 @@ QA output created by 479
+diff --git a/tests/xfs/773.out b/tests/xfs/773.out
+index d301cda524..2439706f7d 100644
+--- a/tests/xfs/773.out
++++ b/tests/xfs/773.out
+@@ -2,4 +2,11 @@ QA output created by 773
  Format and populate
  Find node-format attr block
  Fuzz node-format attr block
@@ -1871,11 +2044,11 @@ index 320a82ac39..ca8ff9f71f 100644
 +hdr.info.crc = add: offline scrub didn't fail.
 +hdr.info.crc = sub: offline scrub didn't fail.
  Done fuzzing node-format attr block
-diff --git a/tests/xfs/480.out b/tests/xfs/480.out
-index 6225f4daad..d4628171ba 100644
---- a/tests/xfs/480.out
-+++ b/tests/xfs/480.out
-@@ -2,4 +2,28 @@ QA output created by 480
+diff --git a/tests/xfs/774.out b/tests/xfs/774.out
+index 58b3ea004c..8d99820951 100644
+--- a/tests/xfs/774.out
++++ b/tests/xfs/774.out
+@@ -2,4 +2,28 @@ QA output created by 774
  Format and populate
  Find external attr block
  Fuzz external attr block
@@ -1904,12 +2077,12 @@ index 6225f4daad..d4628171ba 100644
 +data = lastbit: offline scrub didn't fail.
 +data = lastbit: online scrub didn't fail.
  Done fuzzing external attr block
-diff --git a/tests/xfs/483.out b/tests/xfs/483.out
-index 07b75b3655..01c95a3bac 100644
---- a/tests/xfs/483.out
-+++ b/tests/xfs/483.out
+diff --git a/tests/xfs/775.out b/tests/xfs/775.out
+index 71eaf9c0ed..b842b6853d 100644
+--- a/tests/xfs/775.out
++++ b/tests/xfs/775.out
 @@ -1,4 +1,10 @@
- QA output created by 483
+ QA output created by 775
  Format and populate
  Fuzz refcountbt
 +numrecs = lastbit: offline scrub didn't fail.
@@ -1919,20 +2092,24 @@ index 07b75b3655..01c95a3bac 100644
 +rightsib = lastbit: offline scrub didn't fail.
 +rightsib = add: offline scrub didn't fail.
  Done fuzzing refcountbt
-diff --git a/tests/xfs/484.out b/tests/xfs/484.out
-index 1295aaad34..89ee83772d 100644
---- a/tests/xfs/484.out
-+++ b/tests/xfs/484.out
-@@ -2,4 +2,49 @@ QA output created by 484
+diff --git a/tests/xfs/776.out b/tests/xfs/776.out
+index 226fc02005..5d83a310a4 100644
+--- a/tests/xfs/776.out
++++ b/tests/xfs/776.out
+@@ -2,4 +2,63 @@ QA output created by 776
  Format and populate
  Find btree-format attr inode
  Fuzz inode
++core.mode = zeroes: offline re-scrub failed (1).
++core.mode = zeroes: offline post-mod scrub failed (1).
 +core.mode = middlebit: offline scrub didn't fail.
 +core.mode = middlebit: online scrub didn't fail.
 +core.mode = lastbit: offline scrub didn't fail.
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.nlinkv2 = lastbit: online repair failed (4).
 +core.size = middlebit: offline scrub didn't fail.
 +core.size = middlebit: online scrub didn't fail.
 +core.size = lastbit: offline scrub didn't fail.
@@ -1940,6 +2117,8 @@ index 1295aaad34..89ee83772d 100644
 +core.size = add: offline scrub didn't fail.
 +core.size = add: online scrub didn't fail.
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -1954,10 +2133,18 @@ index 1295aaad34..89ee83772d 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
 +v3.flags2 = lastbit: offline scrub didn't fail.
 +v3.flags2 = lastbit: online scrub didn't fail.
 +v3.flags2 = add: online scrub didn't fail.
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.reflink = ones: offline scrub didn't fail.
 +v3.reflink = ones: online scrub didn't fail.
 +v3.reflink = firstbit: offline scrub didn't fail.
@@ -1973,11 +2160,11 @@ index 1295aaad34..89ee83772d 100644
 +a.bmbt.ptrs[1] = firstbit: offline scrub didn't fail.
 +a.bmbt.ptrs[1] = firstbit: online scrub didn't fail.
  Done fuzzing inode
-diff --git a/tests/xfs/485.out b/tests/xfs/485.out
-index c89c0e5a37..dfd131d4f3 100644
---- a/tests/xfs/485.out
-+++ b/tests/xfs/485.out
-@@ -2,4 +2,55 @@ QA output created by 485
+diff --git a/tests/xfs/777.out b/tests/xfs/777.out
+index daca70d863..f16d70ee45 100644
+--- a/tests/xfs/777.out
++++ b/tests/xfs/777.out
+@@ -2,4 +2,73 @@ QA output created by 777
  Format and populate
  Find blockdev inode
  Fuzz inode
@@ -1987,10 +2174,20 @@ index c89c0e5a37..dfd131d4f3 100644
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.nlinkv2 = lastbit: online repair failed (4).
 +core.size = middlebit: online scrub didn't fail.
++core.size = middlebit: offline re-scrub failed (1).
++core.size = middlebit: offline post-mod scrub failed (1).
 +core.size = lastbit: online scrub didn't fail.
++core.size = lastbit: offline re-scrub failed (1).
++core.size = lastbit: offline post-mod scrub failed (1).
 +core.size = add: online scrub didn't fail.
++core.size = add: offline re-scrub failed (1).
++core.size = add: offline post-mod scrub failed (1).
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -2005,7 +2202,15 @@ index c89c0e5a37..dfd131d4f3 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.nrext64 = zeroes: offline scrub didn't fail.
 +v3.nrext64 = zeroes: online scrub didn't fail.
 +v3.nrext64 = firstbit: offline scrub didn't fail.
@@ -2033,21 +2238,27 @@ index c89c0e5a37..dfd131d4f3 100644
 +u3.dev = sub: offline scrub didn't fail.
 +u3.dev = sub: online scrub didn't fail.
  Done fuzzing inode
-diff --git a/tests/xfs/486.out b/tests/xfs/486.out
-index 26f1a362d9..1e4f7102a3 100644
---- a/tests/xfs/486.out
-+++ b/tests/xfs/486.out
-@@ -2,4 +2,50 @@ QA output created by 486
+diff --git a/tests/xfs/778.out b/tests/xfs/778.out
+index a729f111d1..2f490d642d 100644
+--- a/tests/xfs/778.out
++++ b/tests/xfs/778.out
+@@ -2,4 +2,64 @@ QA output created by 778
  Format and populate
  Find local-format symlink inode
  Fuzz inode
++core.mode = firstbit: online repair failed (1).
 +core.mode = middlebit: offline scrub didn't fail.
 +core.mode = middlebit: online scrub didn't fail.
 +core.mode = lastbit: offline scrub didn't fail.
 +core.mode = lastbit: online scrub didn't fail.
 +core.mode = add: offline scrub didn't fail.
 +core.mode = add: online scrub didn't fail.
++core.nlinkv2 = zeroes: online repair failed (4).
++core.nlinkv2 = lastbit: online repair failed (4).
++core.forkoff = firstbit: online repair failed (1).
 +next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
 +v3.change_count = zeroes: offline scrub didn't fail.
 +v3.change_count = zeroes: online scrub didn't fail.
 +v3.change_count = ones: offline scrub didn't fail.
@@ -2062,7 +2273,15 @@ index 26f1a362d9..1e4f7102a3 100644
 +v3.change_count = add: online scrub didn't fail.
 +v3.change_count = sub: offline scrub didn't fail.
 +v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = ones: offline re-scrub failed (1).
++v3.flags2 = ones: offline post-mod scrub failed (1).
 +v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
++v3.flags2 = add: offline re-scrub failed (1).
++v3.flags2 = add: offline post-mod scrub failed (1).
++v3.flags2 = sub: offline re-scrub failed (1).
++v3.flags2 = sub: offline post-mod scrub failed (1).
 +v3.nrext64 = zeroes: offline scrub didn't fail.
 +v3.nrext64 = zeroes: online scrub didn't fail.
 +v3.nrext64 = firstbit: offline scrub didn't fail.
@@ -2088,12 +2307,12 @@ index 26f1a362d9..1e4f7102a3 100644
 +u3.symlink = sub: offline scrub didn't fail.
 +u3.symlink = sub: online scrub didn't fail.
  Done fuzzing inode
-diff --git a/tests/xfs/487.out b/tests/xfs/487.out
-index a7d2926ce5..4e036a7d6b 100644
---- a/tests/xfs/487.out
-+++ b/tests/xfs/487.out
-@@ -1,4 +1,246 @@
- QA output created by 487
+diff --git a/tests/xfs/779.out b/tests/xfs/779.out
+index a8c19a9a05..7d98ff2cc9 100644
+--- a/tests/xfs/779.out
++++ b/tests/xfs/779.out
+@@ -1,4 +1,300 @@
+ QA output created by 779
  Format and populate
  Fuzz user 0 dquot
 +diskdq.blk_hardlimit = ones: offline scrub didn't fail.
@@ -2109,11 +2328,29 @@ index a7d2926ce5..4e036a7d6b 100644
 +diskdq.blk_hardlimit = sub: offline scrub didn't fail.
 +diskdq.blk_hardlimit = sub: online scrub didn't fail.
 +diskdq.blk_softlimit = ones: offline scrub didn't fail.
++diskdq.blk_softlimit = ones: online repair failed (1).
++diskdq.blk_softlimit = ones: online re-scrub failed (5).
++diskdq.blk_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = firstbit: offline scrub didn't fail.
++diskdq.blk_softlimit = firstbit: online repair failed (1).
++diskdq.blk_softlimit = firstbit: online re-scrub failed (5).
++diskdq.blk_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = middlebit: offline scrub didn't fail.
++diskdq.blk_softlimit = middlebit: online repair failed (1).
++diskdq.blk_softlimit = middlebit: online re-scrub failed (5).
++diskdq.blk_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = lastbit: offline scrub didn't fail.
++diskdq.blk_softlimit = lastbit: online repair failed (1).
++diskdq.blk_softlimit = lastbit: online re-scrub failed (5).
++diskdq.blk_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = add: offline scrub didn't fail.
++diskdq.blk_softlimit = add: online repair failed (1).
++diskdq.blk_softlimit = add: online re-scrub failed (5).
++diskdq.blk_softlimit = add: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = sub: offline scrub didn't fail.
++diskdq.blk_softlimit = sub: online repair failed (1).
++diskdq.blk_softlimit = sub: online re-scrub failed (5).
++diskdq.blk_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.ino_hardlimit = ones: offline scrub didn't fail.
 +diskdq.ino_hardlimit = ones: online scrub didn't fail.
 +diskdq.ino_hardlimit = firstbit: offline scrub didn't fail.
@@ -2127,11 +2364,29 @@ index a7d2926ce5..4e036a7d6b 100644
 +diskdq.ino_hardlimit = sub: offline scrub didn't fail.
 +diskdq.ino_hardlimit = sub: online scrub didn't fail.
 +diskdq.ino_softlimit = ones: offline scrub didn't fail.
++diskdq.ino_softlimit = ones: online repair failed (1).
++diskdq.ino_softlimit = ones: online re-scrub failed (5).
++diskdq.ino_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = firstbit: offline scrub didn't fail.
++diskdq.ino_softlimit = firstbit: online repair failed (1).
++diskdq.ino_softlimit = firstbit: online re-scrub failed (5).
++diskdq.ino_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = middlebit: offline scrub didn't fail.
++diskdq.ino_softlimit = middlebit: online repair failed (1).
++diskdq.ino_softlimit = middlebit: online re-scrub failed (5).
++diskdq.ino_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = lastbit: offline scrub didn't fail.
++diskdq.ino_softlimit = lastbit: online repair failed (1).
++diskdq.ino_softlimit = lastbit: online re-scrub failed (5).
++diskdq.ino_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = add: offline scrub didn't fail.
++diskdq.ino_softlimit = add: online repair failed (1).
++diskdq.ino_softlimit = add: online re-scrub failed (5).
++diskdq.ino_softlimit = add: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = sub: offline scrub didn't fail.
++diskdq.ino_softlimit = sub: online repair failed (1).
++diskdq.ino_softlimit = sub: online re-scrub failed (5).
++diskdq.ino_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.itimer = ones: offline scrub didn't fail.
 +diskdq.itimer = ones: online scrub didn't fail.
 +diskdq.itimer = firstbit: offline scrub didn't fail.
@@ -2169,11 +2424,29 @@ index a7d2926ce5..4e036a7d6b 100644
 +diskdq.rtb_hardlimit = sub: offline scrub didn't fail.
 +diskdq.rtb_hardlimit = sub: online scrub didn't fail.
 +diskdq.rtb_softlimit = ones: offline scrub didn't fail.
++diskdq.rtb_softlimit = ones: online repair failed (1).
++diskdq.rtb_softlimit = ones: online re-scrub failed (5).
++diskdq.rtb_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = firstbit: offline scrub didn't fail.
++diskdq.rtb_softlimit = firstbit: online repair failed (1).
++diskdq.rtb_softlimit = firstbit: online re-scrub failed (5).
++diskdq.rtb_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = middlebit: offline scrub didn't fail.
++diskdq.rtb_softlimit = middlebit: online repair failed (1).
++diskdq.rtb_softlimit = middlebit: online re-scrub failed (5).
++diskdq.rtb_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = lastbit: offline scrub didn't fail.
++diskdq.rtb_softlimit = lastbit: online repair failed (1).
++diskdq.rtb_softlimit = lastbit: online re-scrub failed (5).
++diskdq.rtb_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = add: offline scrub didn't fail.
++diskdq.rtb_softlimit = add: online repair failed (1).
++diskdq.rtb_softlimit = add: online re-scrub failed (5).
++diskdq.rtb_softlimit = add: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = sub: offline scrub didn't fail.
++diskdq.rtb_softlimit = sub: online repair failed (1).
++diskdq.rtb_softlimit = sub: online re-scrub failed (5).
++diskdq.rtb_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.rtbtimer = ones: offline scrub didn't fail.
 +diskdq.rtbtimer = ones: online scrub didn't fail.
 +diskdq.rtbtimer = firstbit: offline scrub didn't fail.
@@ -2339,12 +2612,12 @@ index a7d2926ce5..4e036a7d6b 100644
 +diskdq.rtbtimer = add: offline scrub didn't fail.
 +diskdq.rtbtimer = sub: offline scrub didn't fail.
  Done fuzzing dquot
-diff --git a/tests/xfs/488.out b/tests/xfs/488.out
-index 2fc75d163e..738a7297a3 100644
---- a/tests/xfs/488.out
-+++ b/tests/xfs/488.out
-@@ -1,4 +1,246 @@
- QA output created by 488
+diff --git a/tests/xfs/780.out b/tests/xfs/780.out
+index df5784d5a8..f3823cc932 100644
+--- a/tests/xfs/780.out
++++ b/tests/xfs/780.out
+@@ -1,4 +1,300 @@
+ QA output created by 780
  Format and populate
  Fuzz group 0 dquot
 +diskdq.blk_hardlimit = ones: offline scrub didn't fail.
@@ -2360,11 +2633,29 @@ index 2fc75d163e..738a7297a3 100644
 +diskdq.blk_hardlimit = sub: offline scrub didn't fail.
 +diskdq.blk_hardlimit = sub: online scrub didn't fail.
 +diskdq.blk_softlimit = ones: offline scrub didn't fail.
++diskdq.blk_softlimit = ones: online repair failed (1).
++diskdq.blk_softlimit = ones: online re-scrub failed (5).
++diskdq.blk_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = firstbit: offline scrub didn't fail.
++diskdq.blk_softlimit = firstbit: online repair failed (1).
++diskdq.blk_softlimit = firstbit: online re-scrub failed (5).
++diskdq.blk_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = middlebit: offline scrub didn't fail.
++diskdq.blk_softlimit = middlebit: online repair failed (1).
++diskdq.blk_softlimit = middlebit: online re-scrub failed (5).
++diskdq.blk_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = lastbit: offline scrub didn't fail.
++diskdq.blk_softlimit = lastbit: online repair failed (1).
++diskdq.blk_softlimit = lastbit: online re-scrub failed (5).
++diskdq.blk_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = add: offline scrub didn't fail.
++diskdq.blk_softlimit = add: online repair failed (1).
++diskdq.blk_softlimit = add: online re-scrub failed (5).
++diskdq.blk_softlimit = add: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = sub: offline scrub didn't fail.
++diskdq.blk_softlimit = sub: online repair failed (1).
++diskdq.blk_softlimit = sub: online re-scrub failed (5).
++diskdq.blk_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.ino_hardlimit = ones: offline scrub didn't fail.
 +diskdq.ino_hardlimit = ones: online scrub didn't fail.
 +diskdq.ino_hardlimit = firstbit: offline scrub didn't fail.
@@ -2378,11 +2669,29 @@ index 2fc75d163e..738a7297a3 100644
 +diskdq.ino_hardlimit = sub: offline scrub didn't fail.
 +diskdq.ino_hardlimit = sub: online scrub didn't fail.
 +diskdq.ino_softlimit = ones: offline scrub didn't fail.
++diskdq.ino_softlimit = ones: online repair failed (1).
++diskdq.ino_softlimit = ones: online re-scrub failed (5).
++diskdq.ino_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = firstbit: offline scrub didn't fail.
++diskdq.ino_softlimit = firstbit: online repair failed (1).
++diskdq.ino_softlimit = firstbit: online re-scrub failed (5).
++diskdq.ino_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = middlebit: offline scrub didn't fail.
++diskdq.ino_softlimit = middlebit: online repair failed (1).
++diskdq.ino_softlimit = middlebit: online re-scrub failed (5).
++diskdq.ino_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = lastbit: offline scrub didn't fail.
++diskdq.ino_softlimit = lastbit: online repair failed (1).
++diskdq.ino_softlimit = lastbit: online re-scrub failed (5).
++diskdq.ino_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = add: offline scrub didn't fail.
++diskdq.ino_softlimit = add: online repair failed (1).
++diskdq.ino_softlimit = add: online re-scrub failed (5).
++diskdq.ino_softlimit = add: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = sub: offline scrub didn't fail.
++diskdq.ino_softlimit = sub: online repair failed (1).
++diskdq.ino_softlimit = sub: online re-scrub failed (5).
++diskdq.ino_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.itimer = ones: offline scrub didn't fail.
 +diskdq.itimer = ones: online scrub didn't fail.
 +diskdq.itimer = firstbit: offline scrub didn't fail.
@@ -2420,11 +2729,29 @@ index 2fc75d163e..738a7297a3 100644
 +diskdq.rtb_hardlimit = sub: offline scrub didn't fail.
 +diskdq.rtb_hardlimit = sub: online scrub didn't fail.
 +diskdq.rtb_softlimit = ones: offline scrub didn't fail.
++diskdq.rtb_softlimit = ones: online repair failed (1).
++diskdq.rtb_softlimit = ones: online re-scrub failed (5).
++diskdq.rtb_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = firstbit: offline scrub didn't fail.
++diskdq.rtb_softlimit = firstbit: online repair failed (1).
++diskdq.rtb_softlimit = firstbit: online re-scrub failed (5).
++diskdq.rtb_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = middlebit: offline scrub didn't fail.
++diskdq.rtb_softlimit = middlebit: online repair failed (1).
++diskdq.rtb_softlimit = middlebit: online re-scrub failed (5).
++diskdq.rtb_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = lastbit: offline scrub didn't fail.
++diskdq.rtb_softlimit = lastbit: online repair failed (1).
++diskdq.rtb_softlimit = lastbit: online re-scrub failed (5).
++diskdq.rtb_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = add: offline scrub didn't fail.
++diskdq.rtb_softlimit = add: online repair failed (1).
++diskdq.rtb_softlimit = add: online re-scrub failed (5).
++diskdq.rtb_softlimit = add: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = sub: offline scrub didn't fail.
++diskdq.rtb_softlimit = sub: online repair failed (1).
++diskdq.rtb_softlimit = sub: online re-scrub failed (5).
++diskdq.rtb_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.rtbtimer = ones: offline scrub didn't fail.
 +diskdq.rtbtimer = ones: online scrub didn't fail.
 +diskdq.rtbtimer = firstbit: offline scrub didn't fail.
@@ -2590,12 +2917,12 @@ index 2fc75d163e..738a7297a3 100644
 +diskdq.rtbtimer = add: offline scrub didn't fail.
 +diskdq.rtbtimer = sub: offline scrub didn't fail.
  Done fuzzing dquot
-diff --git a/tests/xfs/489.out b/tests/xfs/489.out
-index 7483e6420c..15aa6efefc 100644
---- a/tests/xfs/489.out
-+++ b/tests/xfs/489.out
-@@ -1,4 +1,246 @@
- QA output created by 489
+diff --git a/tests/xfs/781.out b/tests/xfs/781.out
+index 68c42e6fce..a7b6651b77 100644
+--- a/tests/xfs/781.out
++++ b/tests/xfs/781.out
+@@ -1,4 +1,300 @@
+ QA output created by 781
  Format and populate
  Fuzz project 0 dquot
 +diskdq.blk_hardlimit = ones: offline scrub didn't fail.
@@ -2611,11 +2938,29 @@ index 7483e6420c..15aa6efefc 100644
 +diskdq.blk_hardlimit = sub: offline scrub didn't fail.
 +diskdq.blk_hardlimit = sub: online scrub didn't fail.
 +diskdq.blk_softlimit = ones: offline scrub didn't fail.
++diskdq.blk_softlimit = ones: online repair failed (1).
++diskdq.blk_softlimit = ones: online re-scrub failed (5).
++diskdq.blk_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = firstbit: offline scrub didn't fail.
++diskdq.blk_softlimit = firstbit: online repair failed (1).
++diskdq.blk_softlimit = firstbit: online re-scrub failed (5).
++diskdq.blk_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = middlebit: offline scrub didn't fail.
++diskdq.blk_softlimit = middlebit: online repair failed (1).
++diskdq.blk_softlimit = middlebit: online re-scrub failed (5).
++diskdq.blk_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = lastbit: offline scrub didn't fail.
++diskdq.blk_softlimit = lastbit: online repair failed (1).
++diskdq.blk_softlimit = lastbit: online re-scrub failed (5).
++diskdq.blk_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = add: offline scrub didn't fail.
++diskdq.blk_softlimit = add: online repair failed (1).
++diskdq.blk_softlimit = add: online re-scrub failed (5).
++diskdq.blk_softlimit = add: online post-mod scrub failed (1).
 +diskdq.blk_softlimit = sub: offline scrub didn't fail.
++diskdq.blk_softlimit = sub: online repair failed (1).
++diskdq.blk_softlimit = sub: online re-scrub failed (5).
++diskdq.blk_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.ino_hardlimit = ones: offline scrub didn't fail.
 +diskdq.ino_hardlimit = ones: online scrub didn't fail.
 +diskdq.ino_hardlimit = firstbit: offline scrub didn't fail.
@@ -2629,11 +2974,29 @@ index 7483e6420c..15aa6efefc 100644
 +diskdq.ino_hardlimit = sub: offline scrub didn't fail.
 +diskdq.ino_hardlimit = sub: online scrub didn't fail.
 +diskdq.ino_softlimit = ones: offline scrub didn't fail.
++diskdq.ino_softlimit = ones: online repair failed (1).
++diskdq.ino_softlimit = ones: online re-scrub failed (5).
++diskdq.ino_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = firstbit: offline scrub didn't fail.
++diskdq.ino_softlimit = firstbit: online repair failed (1).
++diskdq.ino_softlimit = firstbit: online re-scrub failed (5).
++diskdq.ino_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = middlebit: offline scrub didn't fail.
++diskdq.ino_softlimit = middlebit: online repair failed (1).
++diskdq.ino_softlimit = middlebit: online re-scrub failed (5).
++diskdq.ino_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = lastbit: offline scrub didn't fail.
++diskdq.ino_softlimit = lastbit: online repair failed (1).
++diskdq.ino_softlimit = lastbit: online re-scrub failed (5).
++diskdq.ino_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = add: offline scrub didn't fail.
++diskdq.ino_softlimit = add: online repair failed (1).
++diskdq.ino_softlimit = add: online re-scrub failed (5).
++diskdq.ino_softlimit = add: online post-mod scrub failed (1).
 +diskdq.ino_softlimit = sub: offline scrub didn't fail.
++diskdq.ino_softlimit = sub: online repair failed (1).
++diskdq.ino_softlimit = sub: online re-scrub failed (5).
++diskdq.ino_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.itimer = ones: offline scrub didn't fail.
 +diskdq.itimer = ones: online scrub didn't fail.
 +diskdq.itimer = firstbit: offline scrub didn't fail.
@@ -2671,11 +3034,29 @@ index 7483e6420c..15aa6efefc 100644
 +diskdq.rtb_hardlimit = sub: offline scrub didn't fail.
 +diskdq.rtb_hardlimit = sub: online scrub didn't fail.
 +diskdq.rtb_softlimit = ones: offline scrub didn't fail.
++diskdq.rtb_softlimit = ones: online repair failed (1).
++diskdq.rtb_softlimit = ones: online re-scrub failed (5).
++diskdq.rtb_softlimit = ones: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = firstbit: offline scrub didn't fail.
++diskdq.rtb_softlimit = firstbit: online repair failed (1).
++diskdq.rtb_softlimit = firstbit: online re-scrub failed (5).
++diskdq.rtb_softlimit = firstbit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = middlebit: offline scrub didn't fail.
++diskdq.rtb_softlimit = middlebit: online repair failed (1).
++diskdq.rtb_softlimit = middlebit: online re-scrub failed (5).
++diskdq.rtb_softlimit = middlebit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = lastbit: offline scrub didn't fail.
++diskdq.rtb_softlimit = lastbit: online repair failed (1).
++diskdq.rtb_softlimit = lastbit: online re-scrub failed (5).
++diskdq.rtb_softlimit = lastbit: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = add: offline scrub didn't fail.
++diskdq.rtb_softlimit = add: online repair failed (1).
++diskdq.rtb_softlimit = add: online re-scrub failed (5).
++diskdq.rtb_softlimit = add: online post-mod scrub failed (1).
 +diskdq.rtb_softlimit = sub: offline scrub didn't fail.
++diskdq.rtb_softlimit = sub: online repair failed (1).
++diskdq.rtb_softlimit = sub: online re-scrub failed (5).
++diskdq.rtb_softlimit = sub: online post-mod scrub failed (1).
 +diskdq.rtbtimer = ones: offline scrub didn't fail.
 +diskdq.rtbtimer = ones: online scrub didn't fail.
 +diskdq.rtbtimer = firstbit: offline scrub didn't fail.
@@ -2841,11 +3222,11 @@ index 7483e6420c..15aa6efefc 100644
 +diskdq.rtbtimer = add: offline scrub didn't fail.
 +diskdq.rtbtimer = sub: offline scrub didn't fail.
  Done fuzzing dquot
-diff --git a/tests/xfs/498.out b/tests/xfs/498.out
-index 5c5ef5917c..5295aeb3e5 100644
---- a/tests/xfs/498.out
-+++ b/tests/xfs/498.out
-@@ -2,4 +2,16 @@ QA output created by 498
+diff --git a/tests/xfs/782.out b/tests/xfs/782.out
+index ec750a670b..9c98cf1cf6 100644
+--- a/tests/xfs/782.out
++++ b/tests/xfs/782.out
+@@ -2,4 +2,16 @@ QA output created by 782
  Format and populate
  Find single-leafn-format dir block
  Fuzz single-leafn-format dir block
@@ -2862,12 +3243,262 @@ index 5c5ef5917c..5295aeb3e5 100644
 +lhdr.info.hdr.back = add: offline scrub didn't fail.
 +lhdr.info.hdr.back = sub: offline scrub didn't fail.
  Done fuzzing single-leafn-format dir block
-diff --git a/tests/xfs/788.out b/tests/xfs/788.out
-index 5f6414d0f1..525d385160 100644
---- a/tests/xfs/788.out
-+++ b/tests/xfs/788.out
+diff --git a/tests/xfs/783.out b/tests/xfs/783.out
+index 11e6d93b88..41892794b4 100644
+--- a/tests/xfs/783.out
++++ b/tests/xfs/783.out
+@@ -1,10 +1,220 @@
+ QA output created by 783
+ Format and populate
+ Fuzz block map for BLOCK
++u3.bmx[0].blockcount = middlebit: online repair failed (1).
++u3.bmx[0].blockcount = middlebit: offline re-scrub failed (1).
++u3.bmx[0].blockcount = middlebit: offline post-mod scrub failed (1).
++u3.bmx[0].blockcount = add: online repair failed (1).
++u3.bmx[0].blockcount = add: offline re-scrub failed (1).
++u3.bmx[0].blockcount = add: offline post-mod scrub failed (1).
+ Done fuzzing dir map BLOCK
+ Fuzz block map for LEAF
++u3.bmx[0].startblock = zeroes: offline re-scrub failed (1).
++u3.bmx[0].startblock = zeroes: offline post-mod scrub failed (1).
++u3.bmx[0].startblock = ones: offline re-scrub failed (1).
++u3.bmx[0].startblock = ones: offline post-mod scrub failed (1).
++u3.bmx[0].startblock = firstbit: offline re-scrub failed (1).
++u3.bmx[0].startblock = firstbit: offline post-mod scrub failed (1).
++u3.bmx[0].startblock = middlebit: offline re-scrub failed (1).
++u3.bmx[0].startblock = middlebit: offline post-mod scrub failed (1).
++u3.bmx[0].startblock = sub: offline re-scrub failed (1).
++u3.bmx[0].startblock = sub: offline post-mod scrub failed (1).
++u3.bmx[0].blockcount = zeroes: offline re-scrub failed (1).
++u3.bmx[0].blockcount = zeroes: offline post-mod scrub failed (1).
++u3.bmx[0].blockcount = ones: offline re-scrub failed (1).
++u3.bmx[0].blockcount = ones: offline post-mod scrub failed (1).
++u3.bmx[0].blockcount = firstbit: offline re-scrub failed (1).
++u3.bmx[0].blockcount = firstbit: offline post-mod scrub failed (1).
++u3.bmx[0].blockcount = lastbit: offline re-scrub failed (1).
++u3.bmx[0].blockcount = lastbit: offline post-mod scrub failed (1).
++u3.bmx[0].blockcount = sub: offline re-scrub failed (1).
++u3.bmx[0].blockcount = sub: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[1].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = ones: offline re-scrub failed (1).
++u3.bmx[1].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[1].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[1].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[1].startoff = lastbit: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = add: offline re-scrub failed (1).
++u3.bmx[1].startoff = add: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = sub: offline re-scrub failed (1).
++u3.bmx[1].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[1].startblock = zeroes: offline re-scrub failed (1).
++u3.bmx[1].startblock = zeroes: offline post-mod scrub failed (1).
++u3.bmx[1].startblock = ones: offline re-scrub failed (1).
++u3.bmx[1].startblock = ones: offline post-mod scrub failed (1).
++u3.bmx[1].startblock = firstbit: offline re-scrub failed (1).
++u3.bmx[1].startblock = firstbit: offline post-mod scrub failed (1).
++u3.bmx[1].startblock = middlebit: offline re-scrub failed (1).
++u3.bmx[1].startblock = middlebit: offline post-mod scrub failed (1).
++u3.bmx[1].startblock = sub: offline re-scrub failed (1).
++u3.bmx[1].startblock = sub: offline post-mod scrub failed (1).
++u3.bmx[1].blockcount = zeroes: offline re-scrub failed (1).
++u3.bmx[1].blockcount = zeroes: offline post-mod scrub failed (1).
++u3.bmx[1].blockcount = ones: offline re-scrub failed (1).
++u3.bmx[1].blockcount = ones: offline post-mod scrub failed (1).
++u3.bmx[1].blockcount = firstbit: offline re-scrub failed (1).
++u3.bmx[1].blockcount = firstbit: offline post-mod scrub failed (1).
++u3.bmx[1].blockcount = lastbit: offline re-scrub failed (1).
++u3.bmx[1].blockcount = lastbit: offline post-mod scrub failed (1).
++u3.bmx[1].blockcount = sub: offline re-scrub failed (1).
++u3.bmx[1].blockcount = sub: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[2].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = ones: offline re-scrub failed (1).
++u3.bmx[2].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[2].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[2].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = sub: offline re-scrub failed (1).
++u3.bmx[2].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[2].startblock = zeroes: offline re-scrub failed (1).
++u3.bmx[2].startblock = zeroes: offline post-mod scrub failed (1).
++u3.bmx[2].startblock = ones: offline re-scrub failed (1).
++u3.bmx[2].startblock = ones: offline post-mod scrub failed (1).
++u3.bmx[2].startblock = firstbit: offline re-scrub failed (1).
++u3.bmx[2].startblock = firstbit: offline post-mod scrub failed (1).
++u3.bmx[2].startblock = middlebit: offline re-scrub failed (1).
++u3.bmx[2].startblock = middlebit: offline post-mod scrub failed (1).
++u3.bmx[2].startblock = sub: offline re-scrub failed (1).
++u3.bmx[2].startblock = sub: offline post-mod scrub failed (1).
++u3.bmx[2].blockcount = zeroes: offline re-scrub failed (1).
++u3.bmx[2].blockcount = zeroes: offline post-mod scrub failed (1).
++u3.bmx[2].blockcount = ones: offline re-scrub failed (1).
++u3.bmx[2].blockcount = ones: offline post-mod scrub failed (1).
++u3.bmx[2].blockcount = firstbit: offline re-scrub failed (1).
++u3.bmx[2].blockcount = firstbit: offline post-mod scrub failed (1).
++u3.bmx[2].blockcount = middlebit: online repair failed (1).
++u3.bmx[2].blockcount = middlebit: online re-scrub failed (5).
++u3.bmx[2].blockcount = middlebit: online post-mod scrub failed (1).
++u3.bmx[2].blockcount = lastbit: offline re-scrub failed (1).
++u3.bmx[2].blockcount = lastbit: offline post-mod scrub failed (1).
++u3.bmx[2].blockcount = add: online repair failed (1).
++u3.bmx[2].blockcount = add: online re-scrub failed (5).
++u3.bmx[2].blockcount = add: online post-mod scrub failed (1).
++u3.bmx[2].blockcount = sub: offline re-scrub failed (1).
++u3.bmx[2].blockcount = sub: offline post-mod scrub failed (1).
++u3.bmx[3].startblock = zeroes: offline re-scrub failed (1).
++u3.bmx[3].startblock = zeroes: offline post-mod scrub failed (1).
++u3.bmx[3].startblock = ones: offline re-scrub failed (1).
++u3.bmx[3].startblock = ones: offline post-mod scrub failed (1).
++u3.bmx[3].startblock = firstbit: offline re-scrub failed (1).
++u3.bmx[3].startblock = firstbit: offline post-mod scrub failed (1).
++u3.bmx[3].startblock = middlebit: offline re-scrub failed (1).
++u3.bmx[3].startblock = middlebit: offline post-mod scrub failed (1).
++u3.bmx[3].startblock = sub: offline re-scrub failed (1).
++u3.bmx[3].startblock = sub: offline post-mod scrub failed (1).
++u3.bmx[3].blockcount = zeroes: offline re-scrub failed (1).
++u3.bmx[3].blockcount = zeroes: offline post-mod scrub failed (1).
++u3.bmx[3].blockcount = ones: offline re-scrub failed (1).
++u3.bmx[3].blockcount = ones: offline post-mod scrub failed (1).
++u3.bmx[3].blockcount = firstbit: offline re-scrub failed (1).
++u3.bmx[3].blockcount = firstbit: offline post-mod scrub failed (1).
++u3.bmx[3].blockcount = lastbit: offline re-scrub failed (1).
++u3.bmx[3].blockcount = lastbit: offline post-mod scrub failed (1).
++u3.bmx[3].blockcount = sub: offline re-scrub failed (1).
++u3.bmx[3].blockcount = sub: offline post-mod scrub failed (1).
+ Done fuzzing dir map LEAF
+ Fuzz block map for LEAFN
++u3.bmx[1].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[1].startoff = lastbit: offline post-mod scrub failed (1).
+ Done fuzzing dir map LEAFN
+ Fuzz block map for NODE
++u3.bmx[1].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[1].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = ones: offline re-scrub failed (1).
++u3.bmx[1].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[1].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[1].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[1].startoff = lastbit: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = add: offline re-scrub failed (1).
++u3.bmx[1].startoff = add: offline post-mod scrub failed (1).
++u3.bmx[1].startoff = sub: offline re-scrub failed (1).
++u3.bmx[1].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[1].blockcount = ones: offline re-scrub failed (1).
++u3.bmx[1].blockcount = ones: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[2].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = ones: offline re-scrub failed (1).
++u3.bmx[2].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[2].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[2].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[2].startoff = lastbit: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = add: offline re-scrub failed (1).
++u3.bmx[2].startoff = add: offline post-mod scrub failed (1).
++u3.bmx[2].startoff = sub: offline re-scrub failed (1).
++u3.bmx[2].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[3].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = ones: offline re-scrub failed (1).
++u3.bmx[3].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[3].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[3].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[3].startoff = lastbit: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = add: offline re-scrub failed (1).
++u3.bmx[3].startoff = add: offline post-mod scrub failed (1).
++u3.bmx[3].startoff = sub: offline re-scrub failed (1).
++u3.bmx[3].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[4].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = ones: offline re-scrub failed (1).
++u3.bmx[4].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[4].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[4].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[4].startoff = lastbit: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = add: offline re-scrub failed (1).
++u3.bmx[4].startoff = add: offline post-mod scrub failed (1).
++u3.bmx[4].startoff = sub: offline re-scrub failed (1).
++u3.bmx[4].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[5].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = ones: offline re-scrub failed (1).
++u3.bmx[5].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[5].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[5].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = lastbit: offline re-scrub failed (1).
++u3.bmx[5].startoff = lastbit: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = add: offline re-scrub failed (1).
++u3.bmx[5].startoff = add: offline post-mod scrub failed (1).
++u3.bmx[5].startoff = sub: offline re-scrub failed (1).
++u3.bmx[5].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[5].blockcount = lastbit: offline re-scrub failed (1).
++u3.bmx[5].blockcount = lastbit: offline post-mod scrub failed (1).
++u3.bmx[6].startoff = zeroes: offline re-scrub failed (1).
++u3.bmx[6].startoff = zeroes: offline post-mod scrub failed (1).
++u3.bmx[6].startoff = ones: offline re-scrub failed (1).
++u3.bmx[6].startoff = ones: offline post-mod scrub failed (1).
++u3.bmx[6].startoff = firstbit: offline re-scrub failed (1).
++u3.bmx[6].startoff = firstbit: offline post-mod scrub failed (1).
++u3.bmx[6].startoff = middlebit: offline re-scrub failed (1).
++u3.bmx[6].startoff = middlebit: offline post-mod scrub failed (1).
++u3.bmx[6].startoff = sub: offline re-scrub failed (1).
++u3.bmx[6].startoff = sub: offline post-mod scrub failed (1).
++u3.bmx[6].startblock = middlebit: offline re-scrub failed (1).
++u3.bmx[6].startblock = middlebit: offline post-mod scrub failed (1).
++u3.bmx[7].blockcount = lastbit: offline re-scrub failed (1).
++u3.bmx[7].blockcount = lastbit: offline post-mod scrub failed (1).
++u3.bmx[8].blockcount = zeroes: offline re-scrub failed (1).
++u3.bmx[8].blockcount = zeroes: offline post-mod scrub failed (1).
++u3.bmx[9].blockcount = zeroes: offline re-scrub failed (1).
++u3.bmx[9].blockcount = zeroes: offline post-mod scrub failed (1).
+ Done fuzzing dir map NODE
+diff --git a/tests/xfs/784.out b/tests/xfs/784.out
+index b5c3fddabd..0b345dbc72 100644
+--- a/tests/xfs/784.out
++++ b/tests/xfs/784.out
+@@ -1,10 +1,20 @@
+ QA output created by 784
+ Format and populate
+ Fuzz block map for EXTENTS_REMOTE3K
++a.bmx[0].startblock = firstbit: offline scrub didn't fail.
++a.bmx[0].startblock = firstbit: online scrub didn't fail.
++a.bmx[1].startblock = firstbit: offline scrub didn't fail.
++a.bmx[1].startblock = firstbit: online scrub didn't fail.
+ Done fuzzing attr map EXTENTS_REMOTE3K
+ Fuzz block map for EXTENTS_REMOTE4K
++a.bmx[0].startblock = firstbit: offline scrub didn't fail.
++a.bmx[0].startblock = firstbit: online scrub didn't fail.
++a.bmx[1].startblock = firstbit: offline scrub didn't fail.
++a.bmx[1].startblock = firstbit: online scrub didn't fail.
+ Done fuzzing attr map EXTENTS_REMOTE4K
+ Fuzz block map for LEAF
++a.bmx[0].startblock = firstbit: offline scrub didn't fail.
++a.bmx[0].startblock = firstbit: online scrub didn't fail.
+ Done fuzzing attr map LEAF
+ Fuzz block map for NODE
+ Done fuzzing attr map NODE
+diff --git a/tests/xfs/787.out b/tests/xfs/787.out
+index 39bd7c2469..80a334f4ca 100755
+--- a/tests/xfs/787.out
++++ b/tests/xfs/787.out
 @@ -1,4 +1,27 @@
- QA output created by 788
+ QA output created by 787
  Format and populate
  Fuzz inobt
 +leftsib = add: offline scrub didn't fail.
