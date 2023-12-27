@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CC96CA43
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:01:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8DACA43
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:01:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hMfxAFWP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF754C433C7;
-	Mon,  1 Jan 2024 00:01:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WRomrjjU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2AEAC433C7;
+	Mon,  1 Jan 2024 00:01:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704067299;
-	bh=s0EXCCfydEqnCNJ55+0Ip+DSP7KKBIGhyBQQRbHumZw=;
+	s=k20201202; t=1704067314;
+	bh=QI9VXgkA8k90ttbFaWmi9rk0dDSCH3eYl+2pWqliPjQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hMfxAFWP/xvTwby31OQY8Y+msJZPbX3ZTh2b6n/HOJ8VXznQAxvFcuXy+0/UEQaf6
-	 N/FDrzq377kZ3vAanb02yCx2hV8WRqAyM1L5s7CcS+uyx3Qu7H1TiXJijjHWcEc26W
-	 YUNeAqExMddnZ7ZR6MV/UWToe87Qz0hbzj9QHn2U+Nz96FJWvkHz9S9daD6PMgamo6
-	 QkUuWIUwYdB4+CtWB0RzzgasglSYU9q8XsNnl59cMWfk5jjYiDWlcQ51JRkQQzNo5W
-	 N26QzqfwDLNEqbjBaW2OW9xJHZdSuBHCOhHi/tgcZ5KWiGXtuThC+GPzVJC0iWB8ZF
-	 RyXY3H5KtX4RQ==
-Date: Sun, 31 Dec 2023 16:01:38 +9900
-Subject: [PATCH 02/14] xfs: refactor the allocation and freeing of incore
- inode fork btree roots
+	b=WRomrjjUH2Ff1v7HlV8+OK3Zi7Fedp9Dr38kjlS6etrpPNTWCAgcmBUp6PmAHpCZB
+	 mnCqQpzCHA2DN3tkg4Cl2mjymkmubDF9WFBIQMqwfCE7qrarS4vUEn7E41OT3OGwl7
+	 X9m0UKWqTXYnksazYd76oUbCnBlqqm1oxDre/U8C1y8DOCS7mCLKVjvep1rLCsBAsx
+	 gsY8MA7TiErhVp5gE6a5ImYwzbbngCEHAg2P0+/SmG+CcN7ebY1V2IbpYOx/GkzuNP
+	 JlhSKSXUwQm9vPMdnpQP930uSQNl7X1PuqXv65eWBcFVwYf6fmYqlGJTsjpPY+sGSi
+	 SYvHlpCfZz1cA==
+Date: Sun, 31 Dec 2023 16:01:54 +9900
+Subject: [PATCH 03/14] xfs: refactor creation of bmap btree roots
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405013228.1812545.15094582290392984235.stgit@frogsfrogsfrogs>
+Message-ID: <170405013242.1812545.12549775903709255426.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405013189.1812545.1581948480545654103.stgit@frogsfrogsfrogs>
 References: <170405013189.1812545.1581948480545654103.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,123 +37,104 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Refactor the code that allocates and freese the incore inode fork btree
-roots.  This will help us disentangle some of the weird logic when we're
-creating and tearing down inode-based btrees.
+Now that we've created inode fork helpers to allocate and free btree
+roots, create a new bmap btree helper to create a new bmbt root, and
+refactor the extents <-> btree conversion functions to use our new
+helpers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_inode_fork.c |   53 +++++++++++++++++++++++++++++++++--------------
- libxfs/xfs_inode_fork.h |    3 +++
- 2 files changed, 40 insertions(+), 16 deletions(-)
+ libxfs/xfs_bmap.c       |   17 ++++-------------
+ libxfs/xfs_bmap_btree.c |   16 ++++++++++++++++
+ libxfs/xfs_bmap_btree.h |    2 ++
+ 3 files changed, 22 insertions(+), 13 deletions(-)
 
 
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 2d67e35c7e3..05f7ada0ae3 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -205,8 +205,7 @@ xfs_iformat_btree(
- 		return -EFSCORRUPTED;
- 	}
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index d7cbef76067..5935f87833b 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -591,7 +591,7 @@ xfs_bmap_btree_to_extents(
+ 	xfs_trans_binval(tp, cbp);
+ 	if (cur->bc_levels[0].bp == cbp)
+ 		cur->bc_levels[0].bp = NULL;
+-	xfs_iroot_realloc(ip, -1, whichfork);
++	xfs_iroot_free(ip, whichfork);
+ 	ASSERT(ifp->if_broot == NULL);
+ 	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
+ 	*logflagsp |= XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+@@ -631,20 +631,10 @@ xfs_bmap_extents_to_btree(
+ 	ifp = xfs_ifork_ptr(ip, whichfork);
+ 	ASSERT(ifp->if_format == XFS_DINODE_FMT_EXTENTS);
  
--	ifp->if_broot_bytes = size;
--	ifp->if_broot = kmem_alloc(size, KM_NOFS);
-+	xfs_iroot_alloc(ip, whichfork, size);
- 	ASSERT(ifp->if_broot != NULL);
+-	/*
+-	 * Make space in the inode incore. This needs to be undone if we fail
+-	 * to expand the root.
+-	 */
+-	xfs_iroot_realloc(ip, 1, whichfork);
+-
+-	/*
+-	 * Fill in the root.
+-	 */
+-	block = ifp->if_broot;
+-	xfs_btree_init_block(mp, block, &xfs_bmbt_ops, 1, 1, ip->i_ino);
  	/*
- 	 * Copy and convert from the on-disk structure
-@@ -356,6 +355,32 @@ xfs_iformat_attr_fork(
- 	return error;
+ 	 * Need a cursor.  Can't allocate until bb_level is filled in.
+ 	 */
++	xfs_bmbt_iroot_alloc(ip, whichfork);
+ 	cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+ 	cur->bc_ino.flags = wasdel ? XFS_BTCUR_BMBT_WASDEL : 0;
+ 	/*
+@@ -700,6 +690,7 @@ xfs_bmap_extents_to_btree(
+ 	/*
+ 	 * Fill in the root key and pointer.
+ 	 */
++	block = ifp->if_broot;
+ 	kp = xfs_bmbt_key_addr(mp, block, 1);
+ 	arp = xfs_bmbt_rec_addr(mp, ablock, 1);
+ 	kp->br_startoff = cpu_to_be64(xfs_bmbt_disk_get_startoff(arp));
+@@ -721,7 +712,7 @@ xfs_bmap_extents_to_btree(
+ out_unreserve_dquot:
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+ out_root_realloc:
+-	xfs_iroot_realloc(ip, -1, whichfork);
++	xfs_iroot_free(ip, whichfork);
+ 	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
+ 	ASSERT(ifp->if_broot == NULL);
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index be4979894a0..1dd8d12af8f 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -778,3 +778,19 @@ xfs_bmbt_destroy_cur_cache(void)
+ 	kmem_cache_destroy(xfs_bmbt_cur_cache);
+ 	xfs_bmbt_cur_cache = NULL;
  }
- 
-+/* Allocate a new incore ifork btree root. */
-+void
-+xfs_iroot_alloc(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	size_t			bytes)
-+{
-+	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
 +
-+	ifp->if_broot = kmem_alloc(bytes, KM_NOFS);
-+	ifp->if_broot_bytes = bytes;
-+}
-+
-+/* Free all the memory and state associated with an incore ifork btree root. */
++/* Create an incore bmbt btree root block. */
 +void
-+xfs_iroot_free(
++xfs_bmbt_iroot_alloc(
 +	struct xfs_inode	*ip,
 +	int			whichfork)
 +{
 +	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
 +
-+	ifp->if_broot_bytes = 0;
-+	kmem_free(ifp->if_broot);
-+	ifp->if_broot = NULL;
++	xfs_iroot_alloc(ip, whichfork,
++			xfs_bmap_broot_space_calc(ip->i_mount, 1));
++
++	/* Fill in the root. */
++	xfs_btree_init_block(ip->i_mount, ifp->if_broot, &xfs_bmbt_ops, 1, 1,
++			ip->i_ino);
 +}
-+
- /*
-  * Reallocate the space for if_broot based on the number of records
-  * being added or deleted as indicated in rec_diff.  Move the records
-@@ -404,8 +429,7 @@ xfs_iroot_realloc(
- 		 */
- 		if (ifp->if_broot_bytes == 0) {
- 			new_size = xfs_bmap_broot_space_calc(mp, rec_diff);
--			ifp->if_broot = kmem_alloc(new_size, KM_NOFS);
--			ifp->if_broot_bytes = (int)new_size;
-+			xfs_iroot_alloc(ip, whichfork, new_size);
- 			return;
- 		}
- 
-@@ -444,17 +468,15 @@ xfs_iroot_realloc(
- 		new_size = xfs_bmap_broot_space_calc(mp, new_max);
- 	else
- 		new_size = 0;
--	if (new_size > 0) {
--		new_broot = kmem_alloc(new_size, KM_NOFS);
--		/*
--		 * First copy over the btree block header.
--		 */
--		memcpy(new_broot, ifp->if_broot,
--			xfs_bmbt_block_len(ip->i_mount));
--	} else {
--		new_broot = NULL;
-+	if (new_size == 0) {
-+		xfs_iroot_free(ip, whichfork);
-+		return;
- 	}
- 
-+	/* First copy over the btree block header. */
-+	new_broot = kmem_alloc(new_size, KM_NOFS);
-+	memcpy(new_broot, ifp->if_broot, xfs_bmbt_block_len(ip->i_mount));
-+
- 	/*
- 	 * Only copy the records and pointers if there are any.
- 	 */
-@@ -478,9 +500,8 @@ xfs_iroot_realloc(
- 	kmem_free(ifp->if_broot);
- 	ifp->if_broot = new_broot;
- 	ifp->if_broot_bytes = (int)new_size;
--	if (ifp->if_broot)
--		ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
--			xfs_inode_fork_size(ip, whichfork));
-+	ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
-+		xfs_inode_fork_size(ip, whichfork));
- 	return;
+diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
+index 62fbc4f7c2c..3fe9c4f7f1a 100644
+--- a/libxfs/xfs_bmap_btree.h
++++ b/libxfs/xfs_bmap_btree.h
+@@ -196,4 +196,6 @@ xfs_bmap_bmdr_space(struct xfs_btree_block *bb)
+ 	return xfs_bmdr_space_calc(be16_to_cpu(bb->bb_numrecs));
  }
  
-diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
-index ebeb925be09..18ea2d27777 100644
---- a/libxfs/xfs_inode_fork.h
-+++ b/libxfs/xfs_inode_fork.h
-@@ -172,6 +172,9 @@ void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
- void		xfs_idestroy_fork(struct xfs_ifork *ifp);
- void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
- 				int whichfork);
-+void		xfs_iroot_alloc(struct xfs_inode *ip, int whichfork,
-+				size_t bytes);
-+void		xfs_iroot_free(struct xfs_inode *ip, int whichfork);
- void		xfs_iroot_realloc(struct xfs_inode *, int, int);
- int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
- int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
++void xfs_bmbt_iroot_alloc(struct xfs_inode *ip, int whichfork);
++
+ #endif	/* __XFS_BMAP_BTREE_H__ */
 
