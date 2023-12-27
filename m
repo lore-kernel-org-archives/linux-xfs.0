@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2548642;
-	Mon,  1 Jan 2024 00:58:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F007EF;
+	Mon,  1 Jan 2024 00:58:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NFcUkiEo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5810DC433C7;
-	Mon,  1 Jan 2024 00:58:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="POcvr6Pt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA44BC433C8;
+	Mon,  1 Jan 2024 00:58:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704070711;
-	bh=e8C2AtCF/7Yhu7cMKseIcORmI1rqaz/31kg8V+bwEwo=;
+	s=k20201202; t=1704070727;
+	bh=XXlbWvWkUPc6diQ1nc573PK6tgbd2IypPrgPrqS6584=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NFcUkiEoptzZc3gyX/wD9+qmfXhVrBMcvZCqmbzayRxZ3z2XPxE8Ux6Y7KWqCoz84
-	 VGGLXBPjfhe4D0HLechaYaoThEyjuXy4wIgFrgtnAMBHP2/Y3NeV4OtQxDsZJAkUqV
-	 9gClmO6VDr7ti6DEuxGtaELaxRX75mPTMH1azDX+UieAH1fnKU+7WmQDxvd+jNg+jv
-	 zuTGtV7bTguyWlIMW+sbXg5azCQTTbJE0umrumK0CWXxBAANooY9NQTXvwu8n1+JH6
-	 X4vg7cbYHzLvcJLJ8ztMbT/HA1a0hFWRUkVQj4HSPUxCzH0VSCc2kEAbS/wqgu+kKw
-	 71elvAjtoc0UA==
-Date: Sun, 31 Dec 2023 16:58:30 +9900
-Subject: [PATCH 03/13] xfs: race fsstress with realtime rmap btree scrub and
- repair
+	b=POcvr6PtplJt4YwUw+Tf3FXS2VJWSY97tNmrlUbi6KyeKTCuBhyBOk0sk/3h10Cxt
+	 ri8xbaDE5HIyqzMhWAY0NeYR+CyR7PSdFDx0bJtaLkXA8h+QlaKNywgm2FTR0g//ry
+	 eVDkpvFPqTEq6abNxJPczcOUkeRYS3tsT98ZgGsTHSfwzUQk6VuzjKkiQyi3YsO+TC
+	 MPbmuk5dWGc6a/nlvX1QKv49joKLcwVU9+ZOuId4jkE8T7U2OnNNiJa1yWgXiZICgI
+	 KeBJtRzIGaNbXka9XN0cVangmty9ksayIMut9+/mts5NyhnuuPEqtDnw6xwpo/i36b
+	 u9FBqyKmI6vyw==
+Date: Sun, 31 Dec 2023 16:58:46 +9900
+Subject: [PATCH 04/13] xfs/856: add rtrmapbt upgrade to test matrix
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405031273.1826914.10723169821572634090.stgit@frogsfrogsfrogs>
+Message-ID: <170405031286.1826914.4787726527598409685.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405031226.1826914.14340556896857027512.stgit@frogsfrogsfrogs>
 References: <170405031226.1826914.14340556896857027512.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,191 +37,86 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Race checking and rebuilding realtime rmap btrees with fsstress.
+Add realtime reverse mapping btrees to the features that this test will
+try to upgrade.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/1817     |   42 ++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1817.out |    2 ++
- tests/xfs/1821     |   42 ++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1821.out |    2 ++
- tests/xfs/1857     |   42 ++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1857.out |    2 ++
- 6 files changed, 132 insertions(+)
- create mode 100755 tests/xfs/1817
- create mode 100644 tests/xfs/1817.out
- create mode 100755 tests/xfs/1821
- create mode 100644 tests/xfs/1821.out
- create mode 100755 tests/xfs/1857
- create mode 100644 tests/xfs/1857.out
+ tests/xfs/1856 |   39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/1817 b/tests/xfs/1817
-new file mode 100755
-index 0000000000..56ce63e005
---- /dev/null
-+++ b/tests/xfs/1817
-@@ -0,0 +1,42 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1817
-+#
-+# Race fsstress and rtrmapbt scrub for a while to see if we crash or livelock.
-+#
-+. ./common/preamble
-+_begin_fstest scrub dangerous_fsstress_scrub
-+
-+_cleanup() {
-+	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-+	cd /
-+	rm -r -f $tmp.*
+diff --git a/tests/xfs/1856 b/tests/xfs/1856
+index 93bdbaa531..8453d9bff2 100755
+--- a/tests/xfs/1856
++++ b/tests/xfs/1856
+@@ -34,11 +34,46 @@ rt_configured()
+ 	test "$USE_EXTERNAL" = "yes" && test -n "$SCRATCH_RTDEV"
+ }
+ 
++# Does mkfs support rtgroups?
++supports_rtgroups()
++{
++	$MKFS_XFS_PROG 2>&1 | grep -q 'rtgroups='
 +}
-+_register_cleanup "_cleanup" BUS
 +
-+# Import common functions.
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+. ./common/xfs
++# Do we need to enable rtgroups at mkfs time to support a feature upgrade test?
++need_rtgroups()
++{
++	local feat="$1"
 +
-+# real QA test starts here
-+_supported_fs xfs
-+_require_realtime
-+_require_scratch
-+_require_xfs_stress_scrub
++	# if realtime isn't configured, we don't need rt groups
++	rt_configured || return 1
 +
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+_require_xfs_has_feature "$SCRATCH_MNT" realtime
-+_require_xfs_has_feature "$SCRATCH_MNT" rmapbt
-+_xfs_force_bdev realtime $SCRATCH_MNT
++	# If we don't even know what realtime rmap is, we don't need rt groups
++	test -z "${FEATURE_STATE["rmapbt"]}" && return 1
 +
-+_scratch_xfs_stress_scrub -s "scrub rtrmapbt %rgno%"
++	# rt rmap btrees require rt groups but rt groups cannot be added to
++	# an existing filesystem, so we must force it on at mkfs time
++	test "${FEATURE_STATE["rmapbt"]}" -eq 1 && return 0
++	test "$feat" = "rmapbt" && return 0
 +
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/1817.out b/tests/xfs/1817.out
-new file mode 100644
-index 0000000000..525ec14ed0
---- /dev/null
-+++ b/tests/xfs/1817.out
-@@ -0,0 +1,2 @@
-+QA output created by 1817
-+Silence is golden
-diff --git a/tests/xfs/1821 b/tests/xfs/1821
-new file mode 100755
-index 0000000000..7dbac04f52
---- /dev/null
-+++ b/tests/xfs/1821
-@@ -0,0 +1,42 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1821
-+#
-+# Race fsstress and realtime bitmap repair for a while to see if we crash or
-+# livelock.
-+#
-+. ./common/preamble
-+_begin_fstest online_repair dangerous_fsstress_repair
-+
-+_cleanup() {
-+	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-+	cd /
-+	rm -r -f $tmp.*
++	return 1
 +}
-+_register_cleanup "_cleanup" BUS
 +
-+# Import common functions.
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+. ./common/xfs
+ # Compute the MKFS_OPTIONS string for a particular feature upgrade test
+ compute_mkfs_options()
+ {
++	local feat="$1"
+ 	local m_opts=""
+ 	local caller_options="$MKFS_OPTIONS"
++	local rtgroups
 +
-+# real QA test starts here
-+_supported_fs xfs
-+_require_realtime
-+_require_scratch
-+_require_xfs_stress_online_repair
-+
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+_require_xfs_has_feature "$SCRATCH_MNT" realtime
-+_xfs_force_bdev realtime $SCRATCH_MNT
-+
-+_scratch_xfs_stress_online_repair -s "repair rtbitmap" -s "repair rgbitmap %rgno%"
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/1821.out b/tests/xfs/1821.out
-new file mode 100644
-index 0000000000..0f18ad5d88
---- /dev/null
-+++ b/tests/xfs/1821.out
-@@ -0,0 +1,2 @@
-+QA output created by 1821
-+Silence is golden
-diff --git a/tests/xfs/1857 b/tests/xfs/1857
-new file mode 100755
-index 0000000000..de10bbb5c4
---- /dev/null
-+++ b/tests/xfs/1857
-@@ -0,0 +1,42 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1857
-+#
-+# Race fsstress and rtrmapbt repair for a while to see if we crash or livelock.
-+#
-+. ./common/preamble
-+_begin_fstest online_repair dangerous_fsstress_repair
-+
-+_cleanup() {
-+	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-+	cd /
-+	rm -r -f $tmp.*
-+}
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+. ./common/xfs
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_realtime
-+_require_scratch
-+_require_xfs_stress_online_repair
-+
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+_require_xfs_has_feature "$SCRATCH_MNT" realtime
-+_require_xfs_has_feature "$SCRATCH_MNT" rmapbt
-+_xfs_force_bdev realtime $SCRATCH_MNT
-+
-+_scratch_xfs_stress_online_repair -s "repair rtrmapbt %rgno%"
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/1857.out b/tests/xfs/1857.out
-new file mode 100644
-index 0000000000..b51ffd3f6c
---- /dev/null
-+++ b/tests/xfs/1857.out
-@@ -0,0 +1,2 @@
-+QA output created by 1857
-+Silence is golden
++	need_rtgroups "$feat" && rtgroups=1
++	if echo "$caller_options" | grep -q 'rtgroups='; then
++		test -z "$rtgroups" && rtgroups=0
++		caller_options="$(echo "$caller_options" | sed -e 's/rtgroups=*[0-9]*/rtgroups='$rtgroups'/g')"
++	elif [ -n "$rtgroups" ]; then
++		caller_options="$caller_options -r rtgroups=$rtgroups"
++	fi
+ 
+ 	for feat in "${FEATURES[@]}"; do
+ 		local feat_state="${FEATURE_STATE["${feat}"]}"
+@@ -170,10 +205,12 @@ post_exercise()
+ # upgrade don't spread failure to the rest of the tests.
+ FEATURES=()
+ if rt_configured; then
++	# rmap wasn't added to rt devices until after metadir and rtgroups
+ 	check_repair_upgrade finobt && FEATURES+=("finobt")
+ 	check_repair_upgrade inobtcount && FEATURES+=("inobtcount")
+ 	check_repair_upgrade bigtime && FEATURES+=("bigtime")
+ 	check_repair_upgrade metadir && FEATURES+=("metadir")
++	supports_rtgroups && check_repair_upgrade rmapbt && FEATURES+=("rmapbt")
+ else
+ 	check_repair_upgrade finobt && FEATURES+=("finobt")
+ 	check_repair_upgrade rmapbt && FEATURES+=("rmapbt")
+@@ -196,7 +233,7 @@ for feat in "${FEATURES[@]}"; do
+ 
+ 	upgrade_start_message "$feat" | _tee_kernlog $seqres.full > /dev/null
+ 
+-	opts="$(compute_mkfs_options)"
++	opts="$(compute_mkfs_options "$feat")"
+ 	echo "mkfs.xfs $opts" >> $seqres.full
+ 
+ 	# Format filesystem
 
