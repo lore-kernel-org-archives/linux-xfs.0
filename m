@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E9987FD;
-	Mon,  1 Jan 2024 01:05:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 747FA1375;
+	Mon,  1 Jan 2024 01:05:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kSSyqdKD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37D2AC433C7;
-	Mon,  1 Jan 2024 01:05:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fEBrf9i9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFAC4C433C7;
+	Mon,  1 Jan 2024 01:05:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704071118;
-	bh=pByeGkhsCivrIbR+n9n+uAAy1d+FpUiap/CXwMYVGYo=;
+	s=k20201202; t=1704071134;
+	bh=uQgqtH9eeWV39z+CWK1TSEIoF1SZ0iUAoOrg3IIv73A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kSSyqdKDBx+SCL9o3jDRuP6ubc48M9imfQONCdG55S2ac8Uc5Oqn8XsFr+mCwUIub
-	 xYVt+Q8oTO4F87bR/1bigCXrmuaHC9VgvyZ73nZl4IooSUQY0YbhzNDOTqvYAgfKyS
-	 unEyQVjsiis1wAmUVMP9+d+44FwZ4x6XSDBDc9YXuT/IfL9dkZAyXFIqZKAdBlq+kk
-	 jVO1UFtk0t6JdqScfFQKeoQ5PShBfihMa+5015OnS4fLGq57FH+CS5KjwGdGRh8zyM
-	 wyTojkkhSK2pLzwmp66XJSc4/PvHwueEqSoZniANrCxlcOpk+awLxysVDNqA/Bi25h
-	 Oc2az/EN0mMQQ==
-Date: Sun, 31 Dec 2023 17:05:17 +9900
-Subject: [PATCH 5/5] generic/303: avoid test failures on weird rt extent sizes
+	b=fEBrf9i9U+WzoFwDmtPCO0hrsYpO5JDgfmpS+vIaiKw+aKUCSiBYCFFmYzwPheBfd
+	 A0RGs3J2frksRDa4xBdemNs/InRNIdjNCScD7o7KamMvReEa7wa6fgpimor+kWTOaj
+	 rjY1LCpnrH8AXv01sLn8KnP+iNKm8CsFQKR2Mm+OffuI8dedNTbQjKUh5+6fu1M2bR
+	 gpUOLcOOvle4lO9kVOXYA/eU2Qj9A4HCAsisLrKK1yKyHJzVpzsOqBTpdEN+r/dA3D
+	 aDFxOpUvRNv5YsubvrLho4o9+a0hzSZxWvAHLbZ2mMT61XpzFzohl6LwAMO8++mSS7
+	 mZ0KDSYFnNprw==
+Date: Sun, 31 Dec 2023 17:05:33 +9900
+Subject: [PATCH 1/3] common: enable testing of realtime quota when supported
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405032802.1827706.17351355710375259350.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405032733.1827706.12312180709769839153.stgit@frogsfrogsfrogs>
-References: <170405032733.1827706.12312180709769839153.stgit@frogsfrogsfrogs>
+Message-ID: <170405033132.1827880.10074394252232670734.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405033118.1827880.4279631111094836504.stgit@frogsfrogsfrogs>
+References: <170405033118.1827880.4279631111094836504.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -33,71 +33,92 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix this test to skip the high offset reflink test if (on XFS) the rt
-extent size isn't congruent with the chosen target offset.
+If the kernel advertises realtime quota support, test it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/rc         |   23 +++++++++++++++++++++++
- tests/generic/303 |    8 +++++++-
- 2 files changed, 30 insertions(+), 1 deletion(-)
+ common/populate |    2 +-
+ common/quota    |   12 ++++++------
+ common/xfs      |   12 ++++++++++++
+ 3 files changed, 19 insertions(+), 7 deletions(-)
 
 
-diff --git a/common/rc b/common/rc
-index f760eedc26..2d67f7dff1 100644
---- a/common/rc
-+++ b/common/rc
-@@ -4690,6 +4690,29 @@ _get_file_block_size()
- 	esac
+diff --git a/common/populate b/common/populate
+index 1e51eedddc..538cbc86fc 100644
+--- a/common/populate
++++ b/common/populate
+@@ -240,7 +240,7 @@ _populate_xfs_qmount_option()
+ 	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+ 		# No quota support
+ 		return
+-	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ]; then
++	elif [ "${USE_EXTERNAL}" = "yes" ] && [ ! -z "${SCRATCH_RTDEV}" ] && ! _xfs_supports_rtquota; then
+ 		# Quotas not supported on rt filesystems
+ 		return
+ 	elif [ -z "${XFS_QUOTA_PROG}" ]; then
+diff --git a/common/quota b/common/quota
+index 6b529bf4b4..565057d932 100644
+--- a/common/quota
++++ b/common/quota
+@@ -23,10 +23,10 @@ _require_quota()
+ 	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+ 	    _notrun "Installed kernel does not support XFS quotas"
+         fi
+-	if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
++	if [ "$USE_EXTERNAL" = yes ] && [ -n "$TEST_RTDEV" ] && ! _xfs_supports_rtquota; then
+ 	    _notrun "Quotas not supported on realtime test device"
+ 	fi
+-	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
++	if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && ! _xfs_supports_rtquota; then
+ 	    _notrun "Quotas not supported on realtime scratch device"
+ 	fi
+ 	;;
+@@ -44,10 +44,10 @@ _require_xfs_quota()
+ {
+     $here/src/feature -q $TEST_DEV
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
+-    if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
++    if [ "$USE_EXTERNAL" = yes ] && [ -n "$TEST_RTDEV" ] && ! _xfs_supports_rtquota; then
+ 	_notrun "Quotas not supported on realtime test device"
+     fi
+-    if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
++    if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && ! _xfs_supports_rtquota; then
+ 	_notrun "Quotas not supported on realtime scratch device"
+     fi
+     [ -n "$XFS_QUOTA_PROG" ] || _notrun "XFS quota user tools not installed"
+@@ -153,8 +153,8 @@ _require_prjquota()
+     fi
+     $here/src/feature -P $_dev
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
+-    if [ "$USE_EXTERNAL" = yes ]; then
+-	if [ -n "$TEST_RTDEV" -o -n "$SCRATCH_RTDEV" ]; then
++    if [ "$FSTYP" = "xfs" ] && [ "$USE_EXTERNAL" = yes ]; then
++	if [ -n "$TEST_RTDEV" -o -n "$SCRATCH_RTDEV" ] && ! _xfs_supports_rtquota; then
+ 	    _notrun "Project quotas not supported on realtime filesystem"
+ 	fi
+     fi
+diff --git a/common/xfs b/common/xfs
+index 69a0eb620c..56c4b20889 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -2194,3 +2194,15 @@ _scratch_find_rt_metadir_entry() {
+ 
+ 	return 1
  }
- 
-+_test_congruent_file_oplen()
-+{
-+	local file="$1"
-+	local alloc_unit=$(_get_file_block_size "$file")
-+	local oplen="$2"
 +
-+	case $FSTYP in
-+	nfs*|cifs|9p|virtiofs|ceph|glusterfs|overlay|pvfs2)
-+		# Network filesystems don't know about (or tell the client
-+		# about) the underlying file allocation unit and they generally
-+		# pass the file IO request to the underlying filesystem, so we
-+		# don't have anything to check here.
-+		return
-+		;;
-+	esac
++_xfs_supports_rtquota() {
++	test "$FSTYP" = "xfs" || return 1
 +
-+	if [ $alloc_unit -gt $oplen ]; then
-+		return 1
-+	fi
-+	test $((oplen % alloc_unit)) -eq 0 || return 1
-+	return 0
++	local xqmfile="/proc/fs/xfs/xqm"
++
++	test -e "$xqmfile" || modprobe xfs
++	test -e "$xqmfile" || return 1
++
++	local rtquota="$(cat "$xqmfile" | awk '{print $5}')"
++	test "$rtquota" = "1"
 +}
-+
- # Given a file path and a byte length of a file operation under test, ensure
- # that the length is an integer multiple of the file's allocation unit size.
- # In other words, skip the test unless (oplen ≡ alloc_unit mod 0).  This is
-diff --git a/tests/generic/303 b/tests/generic/303
-index 95679569e4..ef88d2357b 100755
---- a/tests/generic/303
-+++ b/tests/generic/303
-@@ -48,7 +48,13 @@ echo "Reflink past maximum file size in dest file (should fail)"
- _reflink_range $testdir/file1 0 $testdir/file5 4611686018427322368 $len >> $seqres.full
- 
- echo "Reflink high offset to low offset"
--_reflink_range $testdir/file1 $bigoff_64k $testdir/file6 1048576 65535 >> $seqres.full
-+oplen=1048576
-+if _test_congruent_file_oplen $testdir $oplen; then
-+	_reflink_range $testdir/file1 $bigoff_64k $testdir/file6 $oplen 65535 >> $seqres.full
-+else
-+	# If we can't do the ficlonerange test, fake it in the output file
-+	$XFS_IO_PROG -f -c 'pwrite -S 0x61 1114110 1' $testdir/file6 >> $seqres.full
-+fi
- 
- echo "Reflink past source file EOF (should fail)"
- _reflink_range $testdir/file2 524288 $testdir/file7 0 1048576 >> $seqres.full
 
