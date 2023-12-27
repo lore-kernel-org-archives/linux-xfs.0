@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D516B384
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:17:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B835389
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:17:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U6o80nU+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A97C433C7;
-	Mon,  1 Jan 2024 00:17:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K52id64e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED5D3C433C8;
+	Mon,  1 Jan 2024 00:17:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068238;
-	bh=CaYqbgZ17ZNhRxShHpe+sEjZ+6SlS9zbKdKR4cXj++Y=;
+	s=k20201202; t=1704068254;
+	bh=R6gAFhOyzPFSoi+piO9GEISbBg+ArNB9mwUp/HRJ/K8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=U6o80nU+U1i3FOzeOjmoL9M+m5uLOZYZWKNaL3Ito7Hw3R/7Xsb4aLDlHK47El1h6
-	 L2x8babXiX2pd1Q9OxHUDp8zlGg0xHxAQah6F5H6Up3Qc8k1zqFFkDQxkUZ3L1UCTR
-	 S/Xh2eAMFHb2jiLIUAIH6ZzxS9fAckVnOTD2iLYL28SM+x1rpBJjM+EqMPf+WoSptj
-	 Ih9LA4e8UTsks1gRvTxvObNaeIzhk/yNLP7pYMWqpNSFb8+hC4PNhSpkncdH2VHWxV
-	 sUqkSj2SHrjrk5oqVRGZ8CmxaUbiXTxB7VZeqHZdYEZjwGUpiqIorqEeAGekmfpQcr
-	 DnmHoaUNh4Zmw==
-Date: Sun, 31 Dec 2023 16:17:17 +9900
-Subject: [PATCH 26/47] xfs_db: make fsmap query the realtime reverse mapping
- tree
+	b=K52id64eDtnhqQtnQHWJYHuhmmAYEJJX+QXUIN01Zqv0YtDbUVPtKMEfP16sjJWa0
+	 h7LtFMQdFrhpw2JXkMhjBtzIwtV5C1bYS5g7kdHfyWqODdMxsuRApt4+B++O8u5Aai
+	 GZIPYZEtGcbltm8bqbxTc5m3FaWZmf+y7D/bl5iMSd6zSaKOfdPqOePvczRvnKkePc
+	 d60T1z7luazOJTrApQG0PpPtw4Z9+wJZG+FkXzeMi1zNLRfFqz+JOf/fVuDkck5WS3
+	 XXqBgiy6AOqjl5ZdQnc5AT6g6jTzw0OG0DCYXIoJ9iKMtQnBboLQkVY1yDIbwtp46C
+	 dj5tWxcuP6uRQ==
+Date: Sun, 31 Dec 2023 16:17:33 +9900
+Subject: [PATCH 27/47] xfs_io: support scrubbing rtgroup metadata paths
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015659.1815505.10556464363110963669.stgit@frogsfrogsfrogs>
+Message-ID: <170405015672.1815505.2648554341105907093.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,233 +37,120 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Extend the 'fsmap' debugger command to support querying the realtime
-rmap btree via a new -r argument.
+Support scrubbing the metadata directory path of an rtgroup metadata
+file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/fsmap.c               |  164 +++++++++++++++++++++++++++++++++++++++++++++-
- libxfs/libxfs_api_defs.h |    2 +
- 2 files changed, 162 insertions(+), 4 deletions(-)
+ io/scrub.c        |   41 +++++++++++++++++++++++++++++++++++------
+ man/man8/xfs_io.8 |    3 ++-
+ 2 files changed, 37 insertions(+), 7 deletions(-)
 
 
-diff --git a/db/fsmap.c b/db/fsmap.c
-index 7fd42df2a1c..363c159ec07 100644
---- a/db/fsmap.c
-+++ b/db/fsmap.c
-@@ -102,6 +102,149 @@ fsmap(
- 	}
- }
+diff --git a/io/scrub.c b/io/scrub.c
+index e9254c7882a..72296cbe86a 100644
+--- a/io/scrub.c
++++ b/io/scrub.c
+@@ -136,21 +136,23 @@ parse_metapath(
+ 	int		argc,
+ 	char		**argv,
+ 	int		optind,
+-	__u64		*ino)
++	__u64		*ino,
++	__u32		*group)
+ {
+ 	char		*p;
+ 	unsigned long long control;
++	unsigned long	control2 = 0;
+ 	int		i;
  
-+static int
-+fsmap_rt_fn(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*priv)
-+{
-+	struct fsmap_info		*info = priv;
-+
-+	dbprintf(_("%llu: %u/%u len %u owner %lld offset %llu bmbt %d attrfork %d extflag %d\n"),
-+		info->nr, cur->bc_ino.rtg->rtg_rgno, rec->rm_startblock,
-+		rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
-+		!!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK),
-+		!!(rec->rm_flags & XFS_RMAP_ATTR_FORK),
-+		!!(rec->rm_flags & XFS_RMAP_UNWRITTEN));
-+	info->nr++;
-+
-+	return 0;
-+}
-+
-+static int
-+fsmap_rtgroup(
-+	struct xfs_rtgroup		*rtg,
-+	const struct xfs_rmap_irec	*low,
-+	const struct xfs_rmap_irec	*high,
-+	struct fsmap_info		*info)
-+{
-+	struct xfs_mount	*mp = rtg->rtg_mount;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	struct xfs_imeta_path	*path;
-+	struct xfs_btree_cur	*bt_cur;
-+	xfs_ino_t		ino;
-+	int			error;
-+
-+	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
-+	if (error) {
-+		dbprintf(
-+ _("Cannot create path to rtgroup %u rmap inode\n"),
-+				rtg->rtg_rgno);
-+		return error;
-+	}
-+
-+	error = -libxfs_trans_alloc_empty(mp, &tp);
-+	if (error) {
-+		dbprintf(
-+ _("Cannot alloc transaction to look up rtgroup %u rmap inode\n"),
-+				rtg->rtg_rgno);
-+		goto out_path;
-+	}
-+		
-+	error = -libxfs_imeta_lookup(tp, path, &ino);
-+	if (ino == NULLFSINO)
-+		error = ENOENT;
-+	if (error) {
-+		dbprintf(_("Cannot look up rtgroup %u rmap inode, error %d\n"),
-+				rtg->rtg_rgno, error);
-+		goto out_trans;
-+	}
-+
-+	error = -libxfs_imeta_iget(tp, ino, XFS_DIR3_FT_REG_FILE, &ip);
-+	if (error) {
-+		dbprintf(_("Cannot load rtgroup %u rmap inode\n"),
-+				rtg->rtg_rgno);
-+		goto out_trans;
-+	}
-+
-+	bt_cur = libxfs_rtrmapbt_init_cursor(mp, tp, rtg, ip);
-+	if (!bt_cur) {
-+		dbprintf(_("Not enough memory.\n"));
-+		goto out_rele;
-+	}
-+
-+	error = -libxfs_rmap_query_range(bt_cur, low, high, fsmap_rt_fn,
-+			info);
-+	if (error) {
-+		dbprintf(_("Error %d while querying rt fsmap btree.\n"),
-+			error);
-+		goto out_cur;
-+	}
-+
-+out_cur:
-+	libxfs_btree_del_cursor(bt_cur, error);
-+out_rele:
-+	libxfs_imeta_irele(ip);
-+out_trans:
-+	libxfs_trans_cancel(tp);
-+out_path:
-+	libxfs_imeta_free_path(path);
-+	return error;
-+}
-+
-+static void
-+fsmap_rt(
-+	xfs_fsblock_t		start_fsb,
-+	xfs_fsblock_t		end_fsb)
-+{
-+	struct fsmap_info	info;
-+	xfs_daddr_t		eofs;
-+	struct xfs_rmap_irec	low;
-+	struct xfs_rmap_irec	high;
-+	struct xfs_rtgroup	*rtg;
-+	xfs_rgnumber_t		start_rg;
-+	xfs_rgnumber_t		end_rg;
-+	int			error;
-+
-+	if (mp->m_sb.sb_rblocks == 0)
-+		return;
-+
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
-+	if (XFS_FSB_TO_DADDR(mp, end_fsb) >= eofs)
-+		end_fsb = XFS_DADDR_TO_FSB(mp, eofs - 1);
-+
-+	low.rm_startblock = xfs_rtb_to_rgbno(mp, start_fsb, &start_rg);
-+	low.rm_owner = 0;
-+	low.rm_offset = 0;
-+	low.rm_flags = 0;
-+	high.rm_startblock = -1U;
-+	high.rm_owner = ULLONG_MAX;
-+	high.rm_offset = ULLONG_MAX;
-+	high.rm_flags = XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
-+			XFS_RMAP_UNWRITTEN;
-+
-+	end_rg = xfs_rtb_to_rgno(mp, end_fsb);
-+
-+	info.nr = 0;
-+	for_each_rtgroup_range(mp, start_rg, end_rg, rtg) {
-+		xfs_rgnumber_t		rgno;
-+
-+		if (rtg->rtg_rgno == end_rg)
-+			high.rm_startblock = xfs_rtb_to_rgbno(mp, end_fsb,
-+					&rgno);
-+ 
-+		error = fsmap_rtgroup(rtg, &low, &high, &info);
-+		if (error) {
-+			libxfs_rtgroup_put(rtg);
-+			return;
-+		}
-+
-+		if (rtg->rtg_rgno == start_rg)
-+			low.rm_startblock = 0;
-+	}
-+}
-+
- static int
- fsmap_f(
- 	int			argc,
-@@ -111,14 +254,18 @@ fsmap_f(
- 	int			c;
- 	xfs_fsblock_t		start_fsb = 0;
- 	xfs_fsblock_t		end_fsb = NULLFSBLOCK;
-+	bool			isrt = false;
- 
- 	if (!xfs_has_rmapbt(mp)) {
- 		dbprintf(_("Filesystem does not support reverse mapping btree.\n"));
- 		return 0;
+-	if (optind != argc - 1) {
++	if (optind != argc - 1 && optind != argc - 2) {
+ 		fprintf(stderr, _("Must specify metapath number.\n"));
+ 		return false;
  	}
  
--	while ((c = getopt(argc, argv, "")) != EOF) {
-+	while ((c = getopt(argc, argv, "r")) != EOF) {
- 		switch (c) {
-+		case 'r':
-+			isrt = true;
-+			break;
- 		default:
- 			dbprintf(_("Bad option for fsmap command.\n"));
- 			return 0;
-@@ -141,14 +288,23 @@ fsmap_f(
+ 	for (i = 0; i < XFS_SCRUB_METAPATH_NR; i++) {
+ 		if (!strcmp(argv[optind], xfrog_metapaths[i].name)) {
+-			*ino = i;
+-			return true;
++			control = i;
++			goto find_group;
  		}
  	}
  
--	fsmap(start_fsb, end_fsb);
-+	if (argc > optind + 2) {
-+		exitcode = 1;
-+		dbprintf(_("Too many arguments to fsmap.\n"));
-+		return 0;
+@@ -161,7 +163,32 @@ parse_metapath(
+ 		return false;
+ 	}
+ 
++find_group:
++	if (xfrog_metapaths[*ino].group == XFROG_SCRUB_GROUP_RTGROUP) {
++		if (optind == argc - 1) {
++			fprintf(stderr,
++_("%s: Metapath requires a group number.\n"),
++					xfrog_metapaths[*ino].name);
++			return false;
++		}
++		control2 = strtoul(argv[optind + 1], &p, 0);
++		if (*p != '\0') {
++			fprintf(stderr,
++ _("Bad group number '%s'.\n"),
++				argv[optind + 1]);
++			return false;
++		}
++	} else {
++		if (optind == argc - 2) {
++			fprintf(stderr,
++_("%s: Metapath does not take a second argument.\n"),
++					xfrog_metapaths[*ino].name);
++			return false;
++		}
 +	}
 +
-+	if (isrt)
-+		fsmap_rt(start_fsb, end_fsb);
-+	else
-+		fsmap(start_fsb, end_fsb);
- 
- 	return 0;
+ 	*ino = control;
++	*group = control2;
+ 	return true;
  }
  
- static const cmdinfo_t	fsmap_cmd =
--	{ "fsmap", NULL, fsmap_f, 0, 2, 0,
--	  N_("[start_fsb] [end_fsb]"),
-+	{ "fsmap", NULL, fsmap_f, 0, -1, 0,
-+	  N_("[-r] [start_fsb] [end_fsb]"),
- 	  N_("display reverse mapping(s)"), NULL };
+@@ -237,7 +264,8 @@ parse_args(
  
- void
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 4b2fbd7cac9..85a4a131c75 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -284,11 +284,13 @@
- #define xfs_rtsummary_wordcount		libxfs_rtsummary_wordcount
+ 	switch (d->group) {
+ 	case XFROG_SCRUB_GROUP_METAPATH:
+-		if (!parse_metapath(argc, argv, optind, &meta->sm_ino)) {
++		if (!parse_metapath(argc, argv, optind, &meta->sm_ino,
++							&meta->sm_agno)) {
+ 			exitcode = 1;
+ 			return command_usage(cmdinfo);
+ 		}
+@@ -587,7 +615,8 @@ scrubv_f(
  
- #define xfs_rtfree_extent		libxfs_rtfree_extent
-+#define xfs_rtgroup_put			libxfs_rtgroup_put
- #define xfs_rtgroup_update_secondary_sbs	libxfs_rtgroup_update_secondary_sbs
- #define xfs_rtgroup_update_super	libxfs_rtgroup_update_super
- #define xfs_rtrmapbt_create_path	libxfs_rtrmapbt_create_path
- #define xfs_rtrmapbt_droot_maxrecs	libxfs_rtrmapbt_droot_maxrecs
- #define xfs_rtrmapbt_maxlevels_ondisk	libxfs_rtrmapbt_maxlevels_ondisk
-+#define xfs_rtrmapbt_init_cursor	libxfs_rtrmapbt_init_cursor
- #define xfs_rtrmapbt_maxrecs		libxfs_rtrmapbt_maxrecs
- 
- #define xfs_sb_from_disk		libxfs_sb_from_disk
+ 	switch (group) {
+ 	case XFROG_SCRUB_GROUP_METAPATH:
+-		if (!parse_metapath(argc, argv, optind, &vhead->svh_ino)) {
++		if (!parse_metapath(argc, argv, optind, &vhead->svh_ino,
++							&vhead->svh_agno)) {
+ 			exitcode = 1;
+ 			return command_usage(&scrubv_cmd);
+ 		}
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 6cf4b9e32e5..f94de0ce40f 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -1447,7 +1447,7 @@ Currently supported versions are 1 and 5.
+ .RE
+ .PD
+ .TP
+-.BI "scrub " type " [ " agnumber " | " rgnumber " | " "ino" " " "gen" " | " metapath " ]"
++.BI "scrub " type " [ " agnumber " | " rgnumber " | " "ino" " " "gen" " | " metapath " [ " rgnumber " ] ]"
+ Scrub internal XFS filesystem metadata.  The
+ .BI type
+ parameter specifies which type of metadata to scrub.
+@@ -1456,6 +1456,7 @@ For realtime group metadata, one rtgroup number must be specified.
+ For file metadata, the scrub is applied to the open file unless the
+ inode number and generation number are specified.
+ For metapath, the name of a file or a raw number must be specified.
++If the metapath file is a per-rtgroup file, the group number must be specified.
+ .RE
+ .PD
+ .TP
 
