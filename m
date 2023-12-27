@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CDD37F9;
-	Mon,  1 Jan 2024 00:50:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BD417ED;
+	Mon,  1 Jan 2024 00:51:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="juZspp4F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D7B5C433C7;
-	Mon,  1 Jan 2024 00:50:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RAToLHxt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E054AC433C7;
+	Mon,  1 Jan 2024 00:51:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704070257;
-	bh=zWcZvK5otpvmqwZPIb6vjxtYz/oRQJU1IbLgCJ+PSUg=;
+	s=k20201202; t=1704070272;
+	bh=RADrQcVQ5hnq6i1FI1tSNwnR/V3ortWIapUM9cZ7++k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=juZspp4FyEFBXsU0bHmBcJyNb23zIOU+B3nAhIzHLohqo0fF4o4HTS0VrRbqW2pPS
-	 woxIpvNZtwLn+D21kruflOUe05bfWJm9VjlpTOgwkPMe6h7k1T95Xus03TDiLGS8Tq
-	 4Zl9MZPFGjSDvrTPhr1Ry24NBIJHbrfDJEZb3tFDIWLN21yxoVaz02xxLr20IQMBQh
-	 tdODUtuFb2mpYFbDdGKwzISjjbMc+8K1ilt5iAIdtLARcCLbf/Vgd0YIB7//L1+3Gp
-	 VVb9yLzXQXx9b0wJQ203wVJ7bfz3cR3nyANmE4emRBH2aFQwoX0vqazAWMs5mCpiUV
-	 FpMC9JziXeiig==
-Date: Sun, 31 Dec 2023 16:50:56 +9900
-Subject: [PATCH 04/11] common/repair: patch up repair sb inode value
- complaints
+	b=RAToLHxtBB3v27XX7MnO/vBoxunuMhyxW8U4qw6dgLUdqkLgKdCKAP66Y9XJ5Fyi5
+	 inGpzBOFD7jSCYkII9SFVttPKLDY3XXbhVJdoe8//2yZVirpHZQN89gacD2WmEg1TR
+	 c2vfq6Qu0L+FvJOvfnFGahUL6z2fQ+gWtCjh0fS99f/6cThfvtfI/ydReIle7yiMB9
+	 d2teTSdQ0ZIJCEUr9HBP7J8GnTxUinAG9PGRqQe9I1bwhDs5smqbRRPU7A22CpbQnh
+	 PrGLVDaV+RE/c7m/aHxp9MSoGyir8oxD+TyobADEYUGTmEnKpLtw2JQ0wwRoFNfsdv
+	 T4hNXpZ+G97KA==
+Date: Sun, 31 Dec 2023 16:51:12 +9900
+Subject: [PATCH 05/11] xfs/206: update for metadata directory support
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405029902.1826032.4276950154935936731.stgit@frogsfrogsfrogs>
+Message-ID: <170405029916.1826032.4300084170108329048.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
 References: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,29 +37,27 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we've refactored xfs_repair to be more consistent in how it
-reports unexpected superblock inode pointer values, we have to fix up
-the fstests repair filters to emulate the old golden output.
+Filter 'metadir=' out of the golden output so that metadata directories
+don't cause this test to regress.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/repair |    4 ++++
- 1 file changed, 4 insertions(+)
+ tests/xfs/206 |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/common/repair b/common/repair
-index 8945d0028c..c3afcfb3e6 100644
---- a/common/repair
-+++ b/common/repair
-@@ -28,6 +28,10 @@ _filter_repair()
- 	perl -ne '
- # for sb
- /- agno = / && next;	# remove each AG line (variable number)
-+s/realtime bitmap inode pointer/realtime bitmap ino pointer/;
-+s/sb realtime bitmap inode value/sb realtime bitmap inode/;
-+s/realtime summary inode pointer/realtime summary ino pointer/;
-+s/sb realtime summary inode value/sb realtime summary inode/;
- s/(pointer to) (\d+)/\1 INO/;
- # Changed inode output in 5.5.0
- s/sb root inode value /sb root inode /;
+diff --git a/tests/xfs/206 b/tests/xfs/206
+index f7f12ff1f9..9fd9400daf 100755
+--- a/tests/xfs/206
++++ b/tests/xfs/206
+@@ -65,7 +65,8 @@ mkfs_filter()
+ 	    -e "s/, lazy-count=[0-9]//" \
+ 	    -e "/.*crc=/d" \
+ 	    -e "/^Default configuration/d" \
+-	    -e 's/, parent=[01]//'
++	    -e 's/, parent=[01]//' \
++	    -e '/metadir=.*/d'
+ }
+ 
+ # mkfs slightly smaller than that, small log for speed.
 
