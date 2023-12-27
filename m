@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A22BA32;
-	Mon,  1 Jan 2024 00:46:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E9ACBA37;
+	Mon,  1 Jan 2024 00:46:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pl4wCLa+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8077DC433C7;
-	Mon,  1 Jan 2024 00:46:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tP6NZ+yT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2818CC433C8;
+	Mon,  1 Jan 2024 00:46:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704069975;
-	bh=uiNBhjMCalL2Vc84JiA+Ch6eBs6JdZQ1GA/clmqV684=;
+	s=k20201202; t=1704069991;
+	bh=X95Qm/QsJBP36b9nNqujW0N3W4dXS1JuC3F9/ArxC+c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Pl4wCLa+yEThwGb7DCHdMv5p1796a6bE6pMelGPkPCT3zwdHeejuQ+rcOW9ERcYv7
-	 66GPQVRopWlAZgGwaTWm/4jX24nosfoQ62Yd/niKegRPjeW3xiFHMdHuX62gH7bS34
-	 0j0Q/n2JdkYZF4iAuBPgD1nvYNjBpD7sU3kWo8MGWuaqkgZzRGDGz9oHztIz5+C0jW
-	 All4lwCrJO2K4uD3qp9VNtbvNtzGrJQ37ygc2dzq0M+bOWr+TajCASsV3FweKSt533
-	 KHC/2yMQfD7Mtr8J8o2zsUK73mroJA8keZqXEBHrrgZJ7yS0ows7/kI7ja3dfTYoO3
-	 AA5H6b7DUf0jg==
-Date: Sun, 31 Dec 2023 16:46:15 +9900
-Subject: [PATCH 1/1] xfs: test upgrading old features
+	b=tP6NZ+yTnRDLRzMVIRvo1LyeEzKhxQo6EqKBlj+Q52qf27wAVH8fX/x9rcCsIFKeF
+	 MlO9zcdkoj2nWkFLnaDt4x8kADwLY63QPSz0OhTHzEQRGydBOWigRKT6JmmPcg4x/E
+	 DBt+B99IS5EvnGa48RlkTBK1onvK42UFPiJbm1A6PWN7COlQgKeCvKanJlAKJs1U1v
+	 APipJxGNU+SK4jsMs7lLA09Ev8feoBrZi5g5ti7R8fTSmqpvpg0O9CmGv/dXUd0+SX
+	 5Gj9s1FiE7tYOT1D1NcjzDjxqX5H4N+eIwxbATosGiyOFiJTC2xiu9vheteWvPbsd4
+	 SSPr7+xZEihVw==
+Date: Sun, 31 Dec 2023 16:46:30 +9900
+Subject: [PATCH 01/11] generic: test recovery of extended attribute updates
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, zlang@redhat.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, guan@eryu.me
-Message-ID: <170405027834.1824126.3351657672266983074.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405027821.1824126.5951508817499207936.stgit@frogsfrogsfrogs>
-References: <170405027821.1824126.5951508817499207936.stgit@frogsfrogsfrogs>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: fstests@vger.kernel.org, catherine.hoang@oracle.com,
+ allison.henderson@oracle.com, guan@eryu.me, linux-xfs@vger.kernel.org
+Message-ID: <170405028441.1824869.2845684654793184854.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405028421.1824869.17871351204326094851.stgit@frogsfrogsfrogs>
+References: <170405028421.1824869.17871351204326094851.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,276 +38,123 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Test the ability to add older v5 features.
+Fork generic/475 to test recovery of extended attribute modifications
+and log recovery.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/1856     |  247 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1856.out |    2 
- 2 files changed, 249 insertions(+)
- create mode 100755 tests/xfs/1856
- create mode 100644 tests/xfs/1856.out
+ tests/generic/1834     |   93 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1834.out |    2 +
+ 2 files changed, 95 insertions(+)
+ create mode 100755 tests/generic/1834
+ create mode 100644 tests/generic/1834.out
 
 
-diff --git a/tests/xfs/1856 b/tests/xfs/1856
+diff --git a/tests/generic/1834 b/tests/generic/1834
 new file mode 100755
-index 0000000000..84e72d7c81
+index 0000000000..7910a40545
 --- /dev/null
-+++ b/tests/xfs/1856
-@@ -0,0 +1,247 @@
++++ b/tests/generic/1834
+@@ -0,0 +1,93 @@
 +#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2024 Oracle, Inc.  All Rights Reserved.
 +#
-+# FS QA Test No. 1856
++# FS QA Test No. 1834
 +#
-+# Test upgrading filesystems with new features.
++# Test log recovery with repeated (simulated) disk failures.  We kick
++# off fsstress on the scratch fs to exercise extended attribute operations,
++# then switch out the underlying device with dm-error to see what happens when
++# the disk goes down.  Having taken down the fs in this manner, remount it and
++# repeat.
 +#
 +. ./common/preamble
-+_begin_fstest auto mkfs repair
++_begin_fstest shutdown auto log metadata eio recoveryloop attr
++
++# Override the default cleanup function.
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++	_dmerror_unmount
++	_dmerror_cleanup
++}
 +
 +# Import common functions.
-+. ./common/filter
-+. ./common/populate
++. ./common/dmerror
 +
-+# real QA test starts here
-+_supported_fs xfs
++# Modify as appropriate.
++_supported_fs generic
 +
-+_require_check_dmesg
-+_require_scratch_nocheck
-+_require_scratch_xfs_crc
++_require_scratch
++_require_dm_target error
++_require_command "$KILLALL_PROG" "killall"
 +
-+# Does repair know how to add a particular feature to a filesystem?
-+check_repair_upgrade()
-+{
-+	$XFS_REPAIR_PROG -c "$1=narf" 2>&1 | \
-+		grep -q 'unknown option' && return 1
-+	return 0
-+}
++echo "Silence is golden."
 +
-+# Are we configured for realtime?
-+rt_configured()
-+{
-+	test "$USE_EXTERNAL" = "yes" && test -n "$SCRATCH_RTDEV"
-+}
++_scratch_mkfs >> $seqres.full 2>&1
++_require_metadata_journaling $SCRATCH_DEV
++_dmerror_init
++_dmerror_mount
 +
-+# Compute the MKFS_OPTIONS string for a particular feature upgrade test
-+compute_mkfs_options()
-+{
-+	local m_opts=""
-+	local caller_options="$MKFS_OPTIONS"
++args=('-z' '-S' 'c')
 +
-+	for feat in "${FEATURES[@]}"; do
-+		local feat_state="${FEATURE_STATE["${feat}"]}"
++# Do some directory tree modifications, but the bulk of this is geared towards
++# exercising the xattr code, especially attr_set which can do up to 10k values.
++for verb in unlink rmdir; do
++	args+=('-f' "${verb}=50")
++done
++for verb in creat mkdir; do
++	args+=('-f' "${verb}=2")
++done
++for verb in getfattr listfattr; do
++	args+=('-f' "${verb}=3")
++done
++for verb in attr_remove removefattr; do
++	args+=('-f' "${verb}=4")
++done
++args+=('-f' "setfattr=20")
++args+=('-f' "attr_set=60")	# sets larger xattrs
 +
-+		if echo "$caller_options" | grep -E -w -q "${feat}=[0-9]*"; then
-+			# Change the caller's options
-+			caller_options="$(echo "$caller_options" | \
-+				sed -e "s/\([^[:alnum:]]\)${feat}=[0-9]*/\1${feat}=${feat_state}/g")"
-+		else
-+			# Add it to our list of new mkfs flags
-+			m_opts="${feat}=${feat_state},${m_opts}"
-+		fi
++while _soak_loop_running $((50 * TIME_FACTOR)); do
++	($FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p $((LOAD_FACTOR * 4)) >> $seqres.full &) \
++		> /dev/null 2>&1
++
++	# purposely include 0 second sleeps to test shutdown immediately after
++	# recovery
++	sleep $((RANDOM % 3))
++
++	# This test aims to simulate sudden disk failure, which means that we
++	# do not want to quiesce the filesystem or otherwise give it a chance
++	# to flush its logs.  Therefore we want to call dmsetup with the
++	# --nolockfs parameter; to make this happen we must call the load
++	# error table helper *without* 'lockfs'.
++	_dmerror_load_error_table
++
++	ps -e | grep fsstress > /dev/null 2>&1
++	while [ $? -eq 0 ]; do
++		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++		wait > /dev/null 2>&1
++		ps -e | grep fsstress > /dev/null 2>&1
 +	done
 +
-+	test -n "$m_opts" && m_opts=" -m $m_opts"
-+
-+	echo "$caller_options$m_opts"
-+}
-+
-+# Log the start of an upgrade.
-+upgrade_start_message()
-+{
-+	local feat="$1"
-+
-+	echo "Add $feat to filesystem"
-+}
-+
-+# Find dmesg log messages since we started a particular upgrade test
-+dmesg_since_feature_upgrade_start()
-+{
-+	local feat_logmsg="$(upgrade_start_message "$1")"
-+
-+	# search the dmesg log of last run of $seqnum for possible failures
-+	# use sed \cregexpc address type, since $seqnum contains "/"
-+	dmesg | \
-+		tac | \
-+		sed -ne "0,\#run fstests $seqnum at $date_time#p" | \
-+		sed -ne "0,\#${feat_logmsg}#p" | \
-+		tac
-+}
-+
-+# Did the mount fail because this feature is not supported?
-+feature_unsupported()
-+{
-+	local feat="$1"
-+
-+	dmesg_since_feature_upgrade_start "$feat" | \
-+		grep -q 'has unknown.*features'
-+}
-+
-+# Exercise the scratch fs
-+scratch_fsstress()
-+{
-+	echo moo > $SCRATCH_MNT/sample.txt
-+	$FSSTRESS_PROG -n $((TIME_FACTOR * 1000)) -p $((LOAD_FACTOR * 4)) \
-+		-d $SCRATCH_MNT/data >> $seqres.full
-+}
-+
-+# Exercise the filesystem a little bit and emit a manifest.
-+pre_exercise()
-+{
-+	local feat="$1"
-+
-+	_try_scratch_mount &> $tmp.mount
-+	res=$?
-+	# If the kernel doesn't support the filesystem even after a
-+	# fresh format, skip the rest of the upgrade test quietly.
-+	if [ $res -eq 32 ] && feature_unsupported "$feat"; then
-+		echo "mount failed due to unsupported feature $feat" >> $seqres.full
-+		return 1
-+	fi
-+	if [ $res -ne 0 ]; then
-+		cat $tmp.mount
-+		echo "mount failed with $res before upgrading to $feat" | \
-+			tee -a $seqres.full
-+		return 1
-+	fi
-+
-+	scratch_fsstress
-+	find $SCRATCH_MNT -type f -print0 | xargs -r -0 md5sum > $tmp.manifest
-+	_scratch_unmount
-+	return 0
-+}
-+
-+# Check the manifest and exercise the filesystem more
-+post_exercise()
-+{
-+	local feat="$1"
-+
-+	_try_scratch_mount &> $tmp.mount
-+	res=$?
-+	# If the kernel doesn't support the filesystem even after a
-+	# fresh format, skip the rest of the upgrade test quietly.
-+	if [ $res -eq 32 ] && feature_unsupported "$feat"; then
-+		echo "mount failed due to unsupported feature $feat" >> $seqres.full
-+		return 1
-+	fi
-+	if [ $res -ne 0 ]; then
-+		cat $tmp.mount
-+		echo "mount failed with $res after upgrading to $feat" | \
-+			tee -a $seqres.full
-+		return 1
-+	fi
-+
-+	md5sum --quiet -c $tmp.manifest || \
-+		echo "fs contents ^^^ changed after adding $feat"
-+
-+	iam="check" _check_scratch_fs || \
-+		echo "scratch fs check failed after adding $feat"
-+
-+	# Try to mount the fs in case the check unmounted it
-+	_try_scratch_mount &>> $seqres.full
-+
-+	scratch_fsstress
-+
-+	iam="check" _check_scratch_fs || \
-+		echo "scratch fs check failed after exercising $feat"
-+
-+	# Try to unmount the fs in case the check didn't
-+	_scratch_unmount &>> $seqres.full
-+	return 0
-+}
-+
-+# Create a list of fs features in the order that support for them was added
-+# to the kernel driver.  For each feature upgrade test, we enable all the
-+# features that came before it and none of the ones after, which means we're
-+# testing incremental migrations.  We start each run with a clean fs so that
-+# errors and unsatisfied requirements (log size, root ino position, etc) in one
-+# upgrade don't spread failure to the rest of the tests.
-+FEATURES=()
-+if rt_configured; then
-+	check_repair_upgrade finobt && FEATURES+=("finobt")
-+	check_repair_upgrade inobtcount && FEATURES+=("inobtcount")
-+	check_repair_upgrade bigtime && FEATURES+=("bigtime")
-+else
-+	check_repair_upgrade finobt && FEATURES+=("finobt")
-+	check_repair_upgrade rmapbt && FEATURES+=("rmapbt")
-+	check_repair_upgrade reflink && FEATURES+=("reflink")
-+	check_repair_upgrade inobtcount && FEATURES+=("inobtcount")
-+	check_repair_upgrade bigtime && FEATURES+=("bigtime")
-+fi
-+
-+test "${#FEATURES[@]}" -eq 0 && \
-+	_notrun "xfs_repair does not know how to add V5 features"
-+
-+declare -A FEATURE_STATE
-+for f in "${FEATURES[@]}"; do
-+	FEATURE_STATE["$f"]=0
-+done
-+
-+for feat in "${FEATURES[@]}"; do
-+	echo "-----------------------" >> $seqres.full
-+
-+	upgrade_start_message "$feat" | _tee_kernlog $seqres.full > /dev/null
-+
-+	opts="$(compute_mkfs_options)"
-+	echo "mkfs.xfs $opts" >> $seqres.full
-+
-+	# Format filesystem
-+	MKFS_OPTIONS="$opts" _scratch_mkfs &>> $seqres.full
-+	res=$?
-+	outcome="mkfs returns $res for $feat upgrade test"
-+	echo "$outcome" >> $seqres.full
-+	if [ $res -ne 0 ]; then
-+		echo "$outcome"
-+		continue
-+	fi
-+
-+	# Create some files to make things interesting.
-+	pre_exercise "$feat" || break
-+
-+	# Upgrade the fs
-+	_scratch_xfs_repair -c "${feat}=1" &> $tmp.upgrade
-+	res=$?
-+	cat $tmp.upgrade >> $seqres.full
-+	grep -q "^Adding" $tmp.upgrade || \
-+		echo "xfs_repair ignored command to add $feat"
-+
-+	outcome="xfs_repair returns $res while adding $feat"
-+	echo "$outcome" >> $seqres.full
-+	if [ $res -ne 0 ]; then
-+		# Couldn't upgrade filesystem, move on to the next feature.
-+		FEATURE_STATE["$feat"]=1
-+		continue
-+	fi
-+
-+	# Make sure repair runs cleanly afterwards
-+	_scratch_xfs_repair -n &>> $seqres.full
-+	res=$?
-+	outcome="xfs_repair -n returns $res after adding $feat"
-+	echo "$outcome" >> $seqres.full
-+	if [ $res -ne 0 ]; then
-+		echo "$outcome"
-+	fi
-+
-+	# Make sure we can still exercise the filesystem.
-+	post_exercise "$feat" || break
-+
-+	# Update feature state for next run
-+	FEATURE_STATE["$feat"]=1
++	# Mount again to replay log after loading working table, so we have a
++	# consistent XFS after test.
++	_dmerror_unmount || _fail "unmount failed"
++	_dmerror_load_working_table
++	_dmerror_mount || _fail "mount failed"
 +done
 +
 +# success, all done
-+echo Silence is golden.
 +status=0
 +exit
-diff --git a/tests/xfs/1856.out b/tests/xfs/1856.out
+diff --git a/tests/generic/1834.out b/tests/generic/1834.out
 new file mode 100644
-index 0000000000..3c569451b3
+index 0000000000..5efe2033b5
 --- /dev/null
-+++ b/tests/xfs/1856.out
++++ b/tests/generic/1834.out
 @@ -0,0 +1,2 @@
-+QA output created by 1856
++QA output created by 1834
 +Silence is golden.
 
