@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414998F5B;
-	Mon,  1 Jan 2024 00:43:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 086AB9464;
+	Mon,  1 Jan 2024 00:43:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V7s2A1Fr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C28F7C433C7;
-	Mon,  1 Jan 2024 00:43:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cQIyVGMH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F799C433C8;
+	Mon,  1 Jan 2024 00:43:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704069802;
-	bh=O2HlMEr4j4zMWn2d/2gxKGEqM4DbFyga+89yC9qa2h4=;
+	s=k20201202; t=1704069818;
+	bh=4no1kR5Uv3KasvAmfQXSTNVM6RSsc/tOjJE08i9cm5Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=V7s2A1FrRcgIuV7LdvclwjPVWQzM3ZLdMpRG0ApjxYre7Bv84GmTJP2rN5qhuqOnz
-	 ZI6k2I6YxuvmjHU2LdrJbG5+68JAAZICMH+jXo3BWbt6eaB8gZS5K2pDuE2Akf0AeK
-	 NtEPbNaKdD/9+dkUEaMmAUCUwFAno9ozxeotTCCOKpQ4j5Qn3EhApvXRdC9h04sZii
-	 4P5LQW0qomSc6/yEXri/GYqq/XQNdyMldKUOnR0fhry2ErNpxeLE1WqYgmUiOw9/aH
-	 ywOiJQK2Wyk8+tkneRdg/wy+vHUXJwdmcv/QpjK+p5spV9bZOWoMS1xV7P7hfD1WqZ
-	 MGx36HU6AA+IQ==
-Date: Sun, 31 Dec 2023 16:43:22 +9900
-Subject: [PATCH 3/3] fuzzy: test other dquot ids
+	b=cQIyVGMHSHRQkXJY8GXAGt/yBMCZElZMO4xQeL8pYKoy8h4drUW8h46asPUkrlLH3
+	 FP324UMgC5Al52WmU0odu7y8qfP7CUc4G48ILdMDZf0CZW1a8MIR4Q1StiE1/Es4Bt
+	 pp8l/442kebfGUEKUfeevfDnoh+IckwfCI8L1eHNROskN7IXA+reFFIq2M6XXk/9yF
+	 sCxuvKoI9VSrFidEa6Uq0OdjiQtaq4l3++30FlWd8pes+YJi/lN3hJZx1iowpGhfrv
+	 TfoSM/HR+RGYtEFFWbEjYwqLUD/EvoTkTZduPLt/634jUNgji+fvIkCbAiI8Vqskhq
+	 R9hbfFpBGhaug==
+Date: Sun, 31 Dec 2023 16:43:37 +9900
+Subject: [PATCH 1/1] xfs: test scaling of the mkfs concurrency options
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, guan@eryu.me
-Message-ID: <170405025640.1821776.3192555943023683779.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405025600.1821776.14517378233107318876.stgit@frogsfrogsfrogs>
-References: <170405025600.1821776.14517378233107318876.stgit@frogsfrogsfrogs>
+Message-ID: <170405025944.1823561.5698073164938069178.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405025931.1823561.11251524119820744796.stgit@frogsfrogsfrogs>
+References: <170405025931.1823561.11251524119820744796.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,325 +37,256 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
+Make sure that the AG count and log size scale up with the new
+concurrency options to mkfs.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy    |   14 ++++++++++++++
- common/populate |   14 ++++++++++++++
- tests/xfs/425   |   10 +++++++---
- tests/xfs/426   |   10 +++++++---
- tests/xfs/427   |   10 +++++++---
- tests/xfs/428   |   10 +++++++---
- tests/xfs/429   |   10 +++++++---
- tests/xfs/430   |   10 +++++++---
- tests/xfs/487   |   10 +++++++---
- tests/xfs/488   |   10 +++++++---
- tests/xfs/489   |   10 +++++++---
- tests/xfs/779   |   10 +++++++---
- tests/xfs/780   |   10 +++++++---
- tests/xfs/781   |   10 +++++++---
- 14 files changed, 112 insertions(+), 36 deletions(-)
+ tests/xfs/1842     |   51 +++++++++++++++
+ tests/xfs/1842.out |  177 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 228 insertions(+)
+ create mode 100755 tests/xfs/1842
+ create mode 100644 tests/xfs/1842.out
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-index bbf7f83d9e..b72b4a9fe7 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -678,6 +678,20 @@ _scratch_xfs_set_xattr_fuzz_types() {
- 	SCRATCH_XFS_XATTR_FUZZ_TYPES=(EXTENTS_REMOTE3K EXTENTS_REMOTE4K LEAF NODE)
- }
- 
-+# Sets the array SCRATCH_XFS_QUOTA_FUZZ_IDS to the list of dquot ids available
-+# for fuzzing.  By default, this list contains 0 (root), 4242 (non-root), and
-+# 8484 (zero counts).  Users can override this by setting
-+# SCRATCH_XFS_LIST_FUZZ_QUOTAIDS in the environment.
-+_scratch_xfs_set_quota_fuzz_ids() {
-+	if [ -n "${SCRATCH_XFS_LIST_FUZZ_QUOTAIDS}" ]; then
-+		mapfile -t SCRATCH_XFS_QUOTA_FUZZ_IDS < \
-+				<(echo "${SCRATCH_XFS_LIST_FUZZ_QUOTAIDS}" | tr '[ ,]' '[\n\n]')
-+		return
-+	fi
+diff --git a/tests/xfs/1842 b/tests/xfs/1842
+new file mode 100755
+index 0000000000..41254a1581
+--- /dev/null
++++ b/tests/xfs/1842
+@@ -0,0 +1,51 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1842
++#
++# mkfs concurrency test - ensure the log and agsize scaling works for various
++# concurrency= parameters
++#
++. ./common/preamble
++_begin_fstest log metadata auto quick
 +
-+	SCRATCH_XFS_QUOTA_FUZZ_IDS=(0 4242 8484)
++# Import common functions.
++. ./common/filter
++. ./common/reflink
++
++_cleanup()
++{
++	cd /
++	rm -r -f $tmp.* $loop_file
 +}
 +
- # Grab the list of available fuzzing verbs
- _scratch_xfs_list_fuzz_verbs() {
- 	if [ -n "${SCRATCH_XFS_LIST_FUZZ_VERBS}" ]; then
-diff --git a/common/populate b/common/populate
-index 3d233073c9..8097151919 100644
---- a/common/populate
-+++ b/common/populate
-@@ -360,6 +360,20 @@ _scratch_xfs_populate() {
- 	mknod "${SCRATCH_MNT}/S_IFBLK" b 1 1
- 	mknod "${SCRATCH_MNT}/S_IFIFO" p
- 
-+	# non-root dquot
-+	local nonroot_id=4242
-+	echo "${nonroot_id}" > "${SCRATCH_MNT}/non_root_dquot"
-+	chown "${nonroot_id}:${nonroot_id}" "${SCRATCH_MNT}/non_root_dquot"
-+	$XFS_IO_PROG -c "chproj ${nonroot_id}" "${SCRATCH_MNT}/non_root_dquot"
++# real QA test starts here
++_supported_fs xfs
 +
-+	# empty dquot
-+	local empty_id=8484
-+	echo "${empty_id}" > "${SCRATCH_MNT}/empty_dquot"
-+	chown "${empty_id}:${empty_id}" "${SCRATCH_MNT}/empty_dquot"
-+	$XFS_IO_PROG -c "chproj ${empty_id}" "${SCRATCH_MNT}/empty_dquot"
-+	chown "0:0" "${SCRATCH_MNT}/empty_dquot"
-+	$XFS_IO_PROG -c "chproj 0" "${SCRATCH_MNT}/empty_dquot"
++_require_test
++_require_loop
++$MKFS_XFS_PROG 2>&1 | grep -q concurrency || \
++	_notrun "mkfs does not support concurrency options"
 +
- 	# special file with an xattr
- 	setfacl -P -m u:nobody:r ${SCRATCH_MNT}/S_IFCHR
- 
-diff --git a/tests/xfs/425 b/tests/xfs/425
-index c2e16ee87e..5275e594b2 100755
---- a/tests/xfs/425
-+++ b/tests/xfs/425
-@@ -27,9 +27,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
- 
--echo "Fuzz user 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -u 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
++loop_file=$TEST_DIR/$seq.loop
 +
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz user $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -u $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
++rm -f "$loop_file"
++for sz in 16M 512M 1G 2G 16G 64G 256G 512G 1T 2T 4T 16T 64T 256T 512T 1P; do
++	for cpus in 2 4 8 16 32 40 64 96 160 512; do
++		truncate -s "$sz" "$loop_file"
++		echo "sz $sz cpus $cpus" >> $seqres.full
++		echo "-----------------" >> $seqres.full
++
++		$MKFS_XFS_PROG -f -N "$loop_file" -d concurrency=$cpus -l concurrency=$cpus &> $tmp.mkfsout
++		cat $tmp.mkfsout >> $seqres.full
++
++		_filter_mkfs > /dev/null 2> $tmp.mkfs < $tmp.mkfsout
++		. $tmp.mkfs
++		echo "sz $sz cpus $cpus agcount $agcount logblocks $lblocks"
++	done
++	echo "-----------------"
 +done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/426 b/tests/xfs/426
-index e52b15f28d..06f0f44b62 100755
---- a/tests/xfs/426
-+++ b/tests/xfs/426
-@@ -27,9 +27,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
- 
--echo "Fuzz user 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'online'  "dquot -u 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
 +
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz user $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'online'  "dquot -u $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/427 b/tests/xfs/427
-index 19f45fbd81..327cddd879 100755
---- a/tests/xfs/427
-+++ b/tests/xfs/427
-@@ -27,9 +27,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
- 
--echo "Fuzz group 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -g 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz group $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -g $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/428 b/tests/xfs/428
-index 338e659df2..80b05b8450 100755
---- a/tests/xfs/428
-+++ b/tests/xfs/428
-@@ -27,9 +27,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
- 
--echo "Fuzz group 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'online'  "dquot -g 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz group $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'online'  "dquot -g $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/429 b/tests/xfs/429
-index a4aeb6e440..5fa3b2ce29 100755
---- a/tests/xfs/429
-+++ b/tests/xfs/429
-@@ -27,9 +27,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
- 
--echo "Fuzz project 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -p 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz project $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'offline'  "dquot -p $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/430 b/tests/xfs/430
-index d94f65bd14..6f5c772dfb 100755
---- a/tests/xfs/430
-+++ b/tests/xfs/430
-@@ -27,9 +27,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
- 
--echo "Fuzz project 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'online'  "dquot -p 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz project $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'online'  "dquot -p $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/487 b/tests/xfs/487
-index 337541bbcd..a688593950 100755
---- a/tests/xfs/487
-+++ b/tests/xfs/487
-@@ -28,9 +28,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
- 
--echo "Fuzz user 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'none'  "dquot -u 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz user $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'none'  "dquot -u $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/488 b/tests/xfs/488
-index 4347768964..0d54ab8c7d 100755
---- a/tests/xfs/488
-+++ b/tests/xfs/488
-@@ -28,9 +28,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
- 
--echo "Fuzz group 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'none'  "dquot -g 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz group $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'none'  "dquot -g $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/489 b/tests/xfs/489
-index c70e674ccc..012416f989 100755
---- a/tests/xfs/489
-+++ b/tests/xfs/489
-@@ -28,9 +28,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
- 
--echo "Fuzz project 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'none'  "dquot -p 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz project $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'none'  "dquot -p $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/779 b/tests/xfs/779
-index fe0de3087a..05f2718632 100755
---- a/tests/xfs/779
-+++ b/tests/xfs/779
-@@ -29,9 +29,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'usrquota' || _notrun "user quota disabled"
- 
--echo "Fuzz user 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'both'  "dquot -u 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz user $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'both'  "dquot -u $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/780 b/tests/xfs/780
-index 0a23473538..9dd8f4527e 100755
---- a/tests/xfs/780
-+++ b/tests/xfs/780
-@@ -29,9 +29,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'grpquota' || _notrun "group quota disabled"
- 
--echo "Fuzz group 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'both'  "dquot -g 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz group $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'both'  "dquot -g $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/781 b/tests/xfs/781
-index ada0f8a1ca..604c9bdd87 100755
---- a/tests/xfs/781
-+++ b/tests/xfs/781
-@@ -29,9 +29,13 @@ echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- echo "${MOUNT_OPTIONS}" | grep -q 'prjquota' || _notrun "project quota disabled"
- 
--echo "Fuzz project 0 dquot"
--_scratch_xfs_fuzz_metadata '' 'both'  "dquot -p 0" >> $seqres.full
--echo "Done fuzzing dquot"
-+_scratch_xfs_set_quota_fuzz_ids
-+
-+for id in "${SCRATCH_XFS_QUOTA_FUZZ_IDS[@]}"; do
-+	echo "Fuzz project $id dquot"
-+	_scratch_xfs_fuzz_metadata '' 'both'  "dquot -p $id" >> $seqres.full
-+	echo "Done fuzzing dquot"
-+done
- 
- # success, all done
- status=0
++status=0
++exit
+diff --git a/tests/xfs/1842.out b/tests/xfs/1842.out
+new file mode 100644
+index 0000000000..9d1e22120b
+--- /dev/null
++++ b/tests/xfs/1842.out
+@@ -0,0 +1,177 @@
++QA output created by 1842
++sz 16M cpus 2 agcount 1 logblocks 3075
++sz 16M cpus 4 agcount 1 logblocks 3075
++sz 16M cpus 8 agcount 1 logblocks 3075
++sz 16M cpus 16 agcount 1 logblocks 3075
++sz 16M cpus 32 agcount 1 logblocks 3075
++sz 16M cpus 40 agcount 1 logblocks 3075
++sz 16M cpus 64 agcount 1 logblocks 3075
++sz 16M cpus 96 agcount 1 logblocks 3075
++sz 16M cpus 160 agcount 1 logblocks 3075
++sz 16M cpus 512 agcount 1 logblocks 3075
++-----------------
++sz 512M cpus 2 agcount 4 logblocks 16384
++sz 512M cpus 4 agcount 4 logblocks 16384
++sz 512M cpus 8 agcount 4 logblocks 16384
++sz 512M cpus 16 agcount 4 logblocks 16384
++sz 512M cpus 32 agcount 4 logblocks 16384
++sz 512M cpus 40 agcount 4 logblocks 16384
++sz 512M cpus 64 agcount 4 logblocks 16384
++sz 512M cpus 96 agcount 4 logblocks 16384
++sz 512M cpus 160 agcount 4 logblocks 16384
++sz 512M cpus 512 agcount 4 logblocks 16384
++-----------------
++sz 1G cpus 2 agcount 4 logblocks 16384
++sz 1G cpus 4 agcount 4 logblocks 16384
++sz 1G cpus 8 agcount 4 logblocks 16384
++sz 1G cpus 16 agcount 4 logblocks 22482
++sz 1G cpus 32 agcount 4 logblocks 44964
++sz 1G cpus 40 agcount 4 logblocks 56205
++sz 1G cpus 64 agcount 4 logblocks 65524
++sz 1G cpus 96 agcount 4 logblocks 65524
++sz 1G cpus 160 agcount 4 logblocks 65524
++sz 1G cpus 512 agcount 4 logblocks 65524
++-----------------
++sz 2G cpus 2 agcount 4 logblocks 16384
++sz 2G cpus 4 agcount 4 logblocks 16384
++sz 2G cpus 8 agcount 4 logblocks 16384
++sz 2G cpus 16 agcount 4 logblocks 25650
++sz 2G cpus 32 agcount 4 logblocks 51300
++sz 2G cpus 40 agcount 4 logblocks 64125
++sz 2G cpus 64 agcount 4 logblocks 102600
++sz 2G cpus 96 agcount 4 logblocks 131060
++sz 2G cpus 160 agcount 4 logblocks 131060
++sz 2G cpus 512 agcount 4 logblocks 131060
++-----------------
++sz 16G cpus 2 agcount 4 logblocks 16384
++sz 16G cpus 4 agcount 4 logblocks 16384
++sz 16G cpus 8 agcount 4 logblocks 16384
++sz 16G cpus 16 agcount 4 logblocks 25650
++sz 16G cpus 32 agcount 4 logblocks 51300
++sz 16G cpus 40 agcount 4 logblocks 64125
++sz 16G cpus 64 agcount 4 logblocks 102600
++sz 16G cpus 96 agcount 4 logblocks 153900
++sz 16G cpus 160 agcount 4 logblocks 256500
++sz 16G cpus 512 agcount 4 logblocks 296512
++-----------------
++sz 64G cpus 2 agcount 4 logblocks 16384
++sz 64G cpus 4 agcount 4 logblocks 16384
++sz 64G cpus 8 agcount 8 logblocks 16384
++sz 64G cpus 16 agcount 16 logblocks 25650
++sz 64G cpus 32 agcount 16 logblocks 51300
++sz 64G cpus 40 agcount 16 logblocks 64125
++sz 64G cpus 64 agcount 16 logblocks 102600
++sz 64G cpus 96 agcount 16 logblocks 153900
++sz 64G cpus 160 agcount 16 logblocks 256500
++sz 64G cpus 512 agcount 16 logblocks 296512
++-----------------
++sz 256G cpus 2 agcount 4 logblocks 32768
++sz 256G cpus 4 agcount 4 logblocks 32768
++sz 256G cpus 8 agcount 8 logblocks 32768
++sz 256G cpus 16 agcount 16 logblocks 32768
++sz 256G cpus 32 agcount 32 logblocks 51300
++sz 256G cpus 40 agcount 40 logblocks 64125
++sz 256G cpus 64 agcount 64 logblocks 102600
++sz 256G cpus 96 agcount 64 logblocks 153900
++sz 256G cpus 160 agcount 64 logblocks 256500
++sz 256G cpus 512 agcount 64 logblocks 296512
++-----------------
++sz 512G cpus 2 agcount 4 logblocks 65536
++sz 512G cpus 4 agcount 4 logblocks 65536
++sz 512G cpus 8 agcount 8 logblocks 65536
++sz 512G cpus 16 agcount 16 logblocks 65536
++sz 512G cpus 32 agcount 32 logblocks 65536
++sz 512G cpus 40 agcount 40 logblocks 65535
++sz 512G cpus 64 agcount 64 logblocks 102600
++sz 512G cpus 96 agcount 96 logblocks 153900
++sz 512G cpus 160 agcount 128 logblocks 256500
++sz 512G cpus 512 agcount 128 logblocks 296512
++-----------------
++sz 1T cpus 2 agcount 4 logblocks 131072
++sz 1T cpus 4 agcount 4 logblocks 131072
++sz 1T cpus 8 agcount 8 logblocks 131072
++sz 1T cpus 16 agcount 16 logblocks 131072
++sz 1T cpus 32 agcount 32 logblocks 131072
++sz 1T cpus 40 agcount 40 logblocks 131071
++sz 1T cpus 64 agcount 64 logblocks 131072
++sz 1T cpus 96 agcount 96 logblocks 153900
++sz 1T cpus 160 agcount 160 logblocks 256500
++sz 1T cpus 512 agcount 256 logblocks 296512
++-----------------
++sz 2T cpus 2 agcount 4 logblocks 262144
++sz 2T cpus 4 agcount 4 logblocks 262144
++sz 2T cpus 8 agcount 8 logblocks 262144
++sz 2T cpus 16 agcount 16 logblocks 262144
++sz 2T cpus 32 agcount 32 logblocks 262144
++sz 2T cpus 40 agcount 40 logblocks 262143
++sz 2T cpus 64 agcount 64 logblocks 262144
++sz 2T cpus 96 agcount 96 logblocks 262143
++sz 2T cpus 160 agcount 160 logblocks 262143
++sz 2T cpus 512 agcount 512 logblocks 296512
++-----------------
++sz 4T cpus 2 agcount 4 logblocks 521728
++sz 4T cpus 4 agcount 4 logblocks 521728
++sz 4T cpus 8 agcount 8 logblocks 521728
++sz 4T cpus 16 agcount 16 logblocks 521728
++sz 4T cpus 32 agcount 32 logblocks 521728
++sz 4T cpus 40 agcount 40 logblocks 521728
++sz 4T cpus 64 agcount 64 logblocks 521728
++sz 4T cpus 96 agcount 96 logblocks 521728
++sz 4T cpus 160 agcount 160 logblocks 521728
++sz 4T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 16T cpus 2 agcount 16 logblocks 521728
++sz 16T cpus 4 agcount 16 logblocks 521728
++sz 16T cpus 8 agcount 16 logblocks 521728
++sz 16T cpus 16 agcount 16 logblocks 521728
++sz 16T cpus 32 agcount 32 logblocks 521728
++sz 16T cpus 40 agcount 40 logblocks 521728
++sz 16T cpus 64 agcount 64 logblocks 521728
++sz 16T cpus 96 agcount 96 logblocks 521728
++sz 16T cpus 160 agcount 160 logblocks 521728
++sz 16T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 64T cpus 2 agcount 64 logblocks 521728
++sz 64T cpus 4 agcount 64 logblocks 521728
++sz 64T cpus 8 agcount 64 logblocks 521728
++sz 64T cpus 16 agcount 64 logblocks 521728
++sz 64T cpus 32 agcount 64 logblocks 521728
++sz 64T cpus 40 agcount 64 logblocks 521728
++sz 64T cpus 64 agcount 64 logblocks 521728
++sz 64T cpus 96 agcount 96 logblocks 521728
++sz 64T cpus 160 agcount 160 logblocks 521728
++sz 64T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 256T cpus 2 agcount 256 logblocks 521728
++sz 256T cpus 4 agcount 256 logblocks 521728
++sz 256T cpus 8 agcount 256 logblocks 521728
++sz 256T cpus 16 agcount 256 logblocks 521728
++sz 256T cpus 32 agcount 256 logblocks 521728
++sz 256T cpus 40 agcount 256 logblocks 521728
++sz 256T cpus 64 agcount 256 logblocks 521728
++sz 256T cpus 96 agcount 256 logblocks 521728
++sz 256T cpus 160 agcount 256 logblocks 521728
++sz 256T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 512T cpus 2 agcount 512 logblocks 521728
++sz 512T cpus 4 agcount 512 logblocks 521728
++sz 512T cpus 8 agcount 512 logblocks 521728
++sz 512T cpus 16 agcount 512 logblocks 521728
++sz 512T cpus 32 agcount 512 logblocks 521728
++sz 512T cpus 40 agcount 512 logblocks 521728
++sz 512T cpus 64 agcount 512 logblocks 521728
++sz 512T cpus 96 agcount 512 logblocks 521728
++sz 512T cpus 160 agcount 512 logblocks 521728
++sz 512T cpus 512 agcount 512 logblocks 521728
++-----------------
++sz 1P cpus 2 agcount 1024 logblocks 521728
++sz 1P cpus 4 agcount 1024 logblocks 521728
++sz 1P cpus 8 agcount 1024 logblocks 521728
++sz 1P cpus 16 agcount 1024 logblocks 521728
++sz 1P cpus 32 agcount 1024 logblocks 521728
++sz 1P cpus 40 agcount 1024 logblocks 521728
++sz 1P cpus 64 agcount 1024 logblocks 521728
++sz 1P cpus 96 agcount 1024 logblocks 521728
++sz 1P cpus 160 agcount 1024 logblocks 521728
++sz 1P cpus 512 agcount 1024 logblocks 521728
++-----------------
 
