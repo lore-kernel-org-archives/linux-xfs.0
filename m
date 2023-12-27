@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5440438E
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:12:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05646384
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:12:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="efJTtGZW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24B4EC433C7;
-	Mon,  1 Jan 2024 00:12:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A86srkuK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3C9BC433C7;
+	Mon,  1 Jan 2024 00:12:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704067941;
-	bh=6J6DqmW0fqw8Pppfo90zwucnq5NuyJ8slmbi5Htrxsc=;
+	s=k20201202; t=1704067956;
+	bh=gxyrQQpad9JFVN0c9XiaocO7nUjYTvhIIye7Wp7hcDc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=efJTtGZW7GClkMl0yH1pz9olqfMGJYjErpi7c6AAw5nPGUvkVZrEEPgEvi5mI7xgm
-	 HdRxyC9LcmOjDJZpwWcLTut/svbwMeX7JS2H/QG9KKRkxQyOuXMKxj+2/whRqjBAuT
-	 9fOs7H8um5Xc5yZw2JcfNiz3RIe7dz5wTpm4SkaN2ntS8L2YQCfcNVZ+Wf3y8RMcqw
-	 sE6GnreVBpMdI6R7N3I2Ioldsjia1ya8CGTIALNneXfe2mIdFIAj3JGXGqb/r/pexU
-	 7Bs5VT6c6URKTDNkfbWDzAQ3ybWnLufMEkQ6+BzXv/mk0Kva8tfb1sZIXJark/i7RQ
-	 SnXemhGDHxI8A==
-Date: Sun, 31 Dec 2023 16:12:20 +9900
-Subject: [PATCH 07/47] xfs: add a realtime flag to the rmap update log redo
- items
+	b=A86srkuK0+LjZ43dB3cZf35u1SCtxckiUw/PhjsRDv2UkYcW7FlV4RMqYGAyY9xJm
+	 p5zYP5fLQH4OLfw1fnKBP9wwC1cVX9RqJmYbREEAPQa1JoefXAEMcCNxvUEROPp16S
+	 VruJVRc3wM7I7HoIZNJgMqCEJf72g10cbRMIbqV8O8BtKGH4L461RaxRqhSKJXJ4/P
+	 FLaP/j0qdl5s+KN+fiEkLOMo3cpIHZEESTK500QoPR4WllrD98b1zxlkNcRQYfzKtj
+	 q7xAYQVPGU/D0WjK6fTH/pcNJX/0JVn6g28r92KdeZlIYQ4++Cv9Eg14zP6hoaDSdv
+	 FH3UfdQj5HlIQ==
+Date: Sun, 31 Dec 2023 16:12:36 +9900
+Subject: [PATCH 08/47] xfs: add realtime reverse map inode to metadata
+ directory
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015406.1815505.15806508939281366124.stgit@frogsfrogsfrogs>
+Message-ID: <170405015420.1815505.10479182490320173681.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,356 +38,208 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Extend the rmap update (RUI) log items with a new realtime flag that
-indicates that the updates apply against the realtime rmapbt.  We'll
-wire up the actual rmap code later.
+Add a metadir path to select the realtime rmap btree inode and load
+it at mount time.  The rtrmapbt inode will have a unique extent format
+code, which means that we also have to update the inode validation and
+flush routines to look for it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/defer_item.c     |   96 ++++++++++++++++++++++++++++++++++++++++++++++-
- libxfs/xfs_defer.h      |    1 
- libxfs/xfs_log_format.h |    6 ++-
- libxfs/xfs_refcount.c   |    4 +-
- libxfs/xfs_rmap.c       |   32 +++++++++++++---
- libxfs/xfs_rmap.h       |   12 ++++--
- 6 files changed, 138 insertions(+), 13 deletions(-)
+ libxfs/init.c             |    8 ++++++++
+ libxfs/xfs_format.h       |    6 ++++--
+ libxfs/xfs_inode_buf.c    |   10 ++++++++++
+ libxfs/xfs_inode_fork.c   |    9 +++++++++
+ libxfs/xfs_rtgroup.h      |    3 +++
+ libxfs/xfs_rtrmap_btree.c |   33 +++++++++++++++++++++++++++++++++
+ libxfs/xfs_rtrmap_btree.h |    4 ++++
+ 7 files changed, 71 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 5399a20f186..a82d23c17cf 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -29,6 +29,7 @@
- #include "xfs_swapext.h"
- #include "defer_item.h"
- #include "xfs_btree.h"
-+#include "xfs_rtgroup.h"
- 
- /* Dummy defer item ops, since we don't do logging. */
- 
-@@ -329,8 +330,23 @@ xfs_rmap_defer_add(
- 
- 	trace_xfs_rmap_defer(mp, ri);
- 
--	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
--	xfs_defer_add(tp, &ri->ri_list, &xfs_rmap_update_defer_type);
-+	/*
-+	 * Deferred rmap updates for the realtime and data sections must use
-+	 * separate transactions to finish deferred work because updates to
-+	 * realtime metadata files can lock AGFs to allocate btree blocks and
-+	 * we don't want that mixing with the AGF locks taken to finish data
-+	 * section updates.
-+	 */
-+	if (ri->ri_realtime) {
-+		xfs_rgnumber_t	rgno;
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 9a4dfe02945..ba0b9a87f2d 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -969,6 +969,14 @@ libxfs_mount(
+ void
+ libxfs_rtmount_destroy(xfs_mount_t *mp)
+ {
++	struct xfs_rtgroup	*rtg;
++	xfs_rgnumber_t		rgno;
 +
-+		rgno = xfs_rtb_to_rgno(mp, ri->ri_bmap.br_startblock);
-+		ri->ri_rtg = xfs_rtgroup_get(mp, rgno);
-+		xfs_defer_add(tp, &ri->ri_list, &xfs_rtrmap_update_defer_type);
-+	} else {
-+		ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
-+		xfs_defer_add(tp, &ri->ri_list, &xfs_rmap_update_defer_type);
++	for_each_rtgroup(mp, rgno, rtg) {
++		if (rtg->rtg_rmapip)
++			libxfs_imeta_irele(rtg->rtg_rmapip);
++		rtg->rtg_rmapip = NULL;
 +	}
- }
- 
- /* Cancel a deferred rmap update. */
-@@ -395,6 +411,82 @@ const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
- 	.cancel_item	= xfs_rmap_update_cancel_item,
+ 	if (mp->m_rsumip)
+ 		libxfs_imeta_irele(mp->m_rsumip);
+ 	if (mp->m_rbmip)
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 5317c6438f0..d374240fc58 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1026,7 +1026,8 @@ enum xfs_dinode_fmt {
+ 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
+ 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
+ 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
+-	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
++	XFS_DINODE_FMT_UUID,		/* added long ago, but never used */
++	XFS_DINODE_FMT_RMAP,		/* reverse mapping btree */
  };
  
-+/* Sort rmap intents by rtgroup. */
-+static int
-+xfs_rtrmap_update_diff_items(
-+	void				*priv,
-+	const struct list_head		*a,
-+	const struct list_head		*b)
-+{
-+	struct xfs_rmap_intent		*ra = ri_entry(a);
-+	struct xfs_rmap_intent		*rb = ri_entry(b);
-+
-+	return ra->ri_rtg->rtg_rgno - rb->ri_rtg->rtg_rgno;
-+}
-+
-+static struct xfs_log_item *
-+xfs_rtrmap_update_create_intent(
-+	struct xfs_trans		*tp,
-+	struct list_head		*items,
-+	unsigned int			count,
-+	bool				sort)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+
-+	if (sort)
-+		list_sort(mp, items, xfs_rtrmap_update_diff_items);
-+	return NULL;
-+}
-+
-+/* Cancel a deferred realtime rmap update. */
-+STATIC void
-+xfs_rtrmap_update_cancel_item(
-+	struct list_head		*item)
-+{
-+	struct xfs_rmap_intent		*ri = ri_entry(item);
-+
-+	xfs_rtgroup_put(ri->ri_rtg);
-+	kmem_cache_free(xfs_rmap_intent_cache, ri);
-+}
-+
-+/* Process a deferred realtime rmap update. */
-+STATIC int
-+xfs_rtrmap_update_finish_item(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
-+	struct list_head		*item,
-+	struct xfs_btree_cur		**state)
-+{
-+	struct xfs_rmap_intent		*ri = ri_entry(item);
-+	int				error;
-+
-+	error = xfs_rtrmap_finish_one(tp, ri, state);
-+
-+	xfs_rtrmap_update_cancel_item(item);
-+	return error;
-+}
-+
-+/* Clean up after calling xfs_rtrmap_finish_one. */
-+STATIC void
-+xfs_rtrmap_finish_one_cleanup(
-+	struct xfs_trans	*tp,
-+	struct xfs_btree_cur	*rcur,
-+	int			error)
-+{
-+	if (rcur)
-+		xfs_btree_del_cursor(rcur, error);
-+}
-+
-+const struct xfs_defer_op_type xfs_rtrmap_update_defer_type = {
-+	.name		= "rtrmap",
-+	.create_intent	= xfs_rtrmap_update_create_intent,
-+	.abort_intent	= xfs_rmap_update_abort_intent,
-+	.create_done	= xfs_rmap_update_create_done,
-+	.finish_item	= xfs_rtrmap_update_finish_item,
-+	.finish_cleanup = xfs_rtrmap_finish_one_cleanup,
-+	.cancel_item	= xfs_rtrmap_update_cancel_item,
-+};
-+
- /* Reference Counting */
- 
- /* Sort refcount intents by AG. */
-diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index b4e1c386768..fddcb4cccbc 100644
---- a/libxfs/xfs_defer.h
-+++ b/libxfs/xfs_defer.h
-@@ -69,6 +69,7 @@ struct xfs_defer_op_type {
- extern const struct xfs_defer_op_type xfs_bmap_update_defer_type;
- extern const struct xfs_defer_op_type xfs_refcount_update_defer_type;
- extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
-+extern const struct xfs_defer_op_type xfs_rtrmap_update_defer_type;
- extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
- extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
- extern const struct xfs_defer_op_type xfs_rtextent_free_defer_type;
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index 1f5fe4a588e..ea4e88d6657 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -250,6 +250,8 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_SXD		0x1249  /* extent swap done */
- #define	XFS_LI_EFI_RT		0x124a	/* realtime extent free intent */
- #define	XFS_LI_EFD_RT		0x124b	/* realtime extent free done */
-+#define	XFS_LI_RUI_RT		0x124c	/* realtime rmap update intent */
-+#define	XFS_LI_RUD_RT		0x124d	/* realtime rmap update done */
- 
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -271,7 +273,9 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_SXI,		"XFS_LI_SXI" }, \
- 	{ XFS_LI_SXD,		"XFS_LI_SXD" }, \
- 	{ XFS_LI_EFI_RT,	"XFS_LI_EFI_RT" }, \
--	{ XFS_LI_EFD_RT,	"XFS_LI_EFD_RT" }
-+	{ XFS_LI_EFD_RT,	"XFS_LI_EFD_RT" }, \
-+	{ XFS_LI_RUI_RT,	"XFS_LI_RUI_RT" }, \
-+	{ XFS_LI_RUD_RT,	"XFS_LI_RUD_RT" }
+ #define XFS_INODE_FORMAT_STR \
+@@ -1034,7 +1035,8 @@ enum xfs_dinode_fmt {
+ 	{ XFS_DINODE_FMT_LOCAL,		"local" }, \
+ 	{ XFS_DINODE_FMT_EXTENTS,	"extent" }, \
+ 	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
+-	{ XFS_DINODE_FMT_UUID,		"uuid" }
++	{ XFS_DINODE_FMT_UUID,		"uuid" }, \
++	{ XFS_DINODE_FMT_RMAP,		"rmap" }
  
  /*
-  * Inode Log Item Format definitions.
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index 9f933d953b9..0e8daab9986 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -1886,7 +1886,7 @@ xfs_refcount_alloc_cow_extent(
- 	__xfs_refcount_add(tp, XFS_REFCOUNT_ALLOC_COW, fsb, len);
+  * Max values for extnum and aextnum.
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 8d100595756..9755ae33813 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -408,6 +408,12 @@ xfs_dinode_verify_fork(
+ 		if (di_nextents > max_extents)
+ 			return __this_address;
+ 		break;
++	case XFS_DINODE_FMT_RMAP:
++		if (!xfs_has_rtrmapbt(mp))
++			return __this_address;
++		if (!(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADIR)))
++			return __this_address;
++		break;
+ 	default:
+ 		return __this_address;
+ 	}
+@@ -427,6 +433,10 @@ xfs_dinode_verify_forkoff(
+ 		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
+ 			return __this_address;
+ 		break;
++	case XFS_DINODE_FMT_RMAP:
++		if (!(xfs_has_metadir(mp) && xfs_has_parent(mp)))
++			return __this_address;
++		fallthrough;
+ 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+ 	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
+ 	case XFS_DINODE_FMT_BTREE:
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index ec3a399e798..2e8f84e57a4 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -262,6 +262,11 @@ xfs_iformat_data_fork(
+ 			return xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
+ 		case XFS_DINODE_FMT_BTREE:
+ 			return xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
++		case XFS_DINODE_FMT_RMAP:
++			if (!xfs_has_rtrmapbt(ip->i_mount))
++				return -EFSCORRUPTED;
++			ASSERT(0); /* to be implemented later */
++			return -EFSCORRUPTED;
+ 		default:
+ 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
+ 					dip, sizeof(*dip), __this_address);
+@@ -651,6 +656,10 @@ xfs_iflush_fork(
+ 		}
+ 		break;
  
- 	/* Add rmap entry */
--	xfs_rmap_alloc_extent(tp, fsb, len, XFS_RMAP_OWN_COW);
-+	xfs_rmap_alloc_extent(tp, false, fsb, len, XFS_RMAP_OWN_COW);
++	case XFS_DINODE_FMT_RMAP:
++		ASSERT(0); /* to be implemented later */
++		break;
++
+ 	default:
+ 		ASSERT(0);
+ 		break;
+diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
+index 0a63f14b5aa..77503bda355 100644
+--- a/libxfs/xfs_rtgroup.h
++++ b/libxfs/xfs_rtgroup.h
+@@ -22,6 +22,9 @@ struct xfs_rtgroup {
+ 	/* for rcu-safe freeing */
+ 	struct rcu_head		rcu_head;
+ 
++	/* reverse mapping btree inode */
++	struct xfs_inode	*rtg_rmapip;
++
+ 	/* Number of blocks in this group */
+ 	xfs_rgblock_t		rtg_blockcount;
+ 
+diff --git a/libxfs/xfs_rtrmap_btree.c b/libxfs/xfs_rtrmap_btree.c
+index a2cb497379f..d788ef60333 100644
+--- a/libxfs/xfs_rtrmap_btree.c
++++ b/libxfs/xfs_rtrmap_btree.c
+@@ -24,6 +24,7 @@
+ #include "xfs_cksum.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_bmap.h"
++#include "xfs_imeta.h"
+ 
+ static struct kmem_cache	*xfs_rtrmapbt_cur_cache;
+ 
+@@ -474,6 +475,7 @@ xfs_rtrmapbt_commit_staged_btree(
+ 	int			flags = XFS_ILOG_CORE | XFS_ILOG_DBROOT;
+ 
+ 	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++	ASSERT(ifake->if_fork->if_format == XFS_DINODE_FMT_RMAP);
+ 
+ 	/*
+ 	 * Free any resources hanging off the real fork, then shallow-copy the
+@@ -574,3 +576,34 @@ xfs_rtrmapbt_compute_maxlevels(
+ 	/* Add one level to handle the inode root level. */
+ 	mp->m_rtrmap_maxlevels = min(d_maxlevels, r_maxlevels) + 1;
  }
- 
- /* Forget a CoW staging event in the refcount btree. */
-@@ -1902,7 +1902,7 @@ xfs_refcount_free_cow_extent(
- 		return;
- 
- 	/* Remove rmap entry */
--	xfs_rmap_free_extent(tp, fsb, len, XFS_RMAP_OWN_COW);
-+	xfs_rmap_free_extent(tp, false, fsb, len, XFS_RMAP_OWN_COW);
- 	__xfs_refcount_add(tp, XFS_REFCOUNT_FREE_COW, fsb, len);
- }
- 
-diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-index 007f17cc644..00544d6a20f 100644
---- a/libxfs/xfs_rmap.c
-+++ b/libxfs/xfs_rmap.c
-@@ -2681,6 +2681,21 @@ xfs_rmap_finish_one(
- 	return 0;
- }
- 
-+/*
-+ * Process one of the deferred realtime rmap operations.  We pass back the
-+ * btree cursor to reduce overhead.
-+ */
++
++#define XFS_RTRMAP_NAMELEN		17
++
++/* Create the metadata directory path for an rtrmap btree inode. */
 +int
-+xfs_rtrmap_finish_one(
-+	struct xfs_trans		*tp,
-+	struct xfs_rmap_intent		*ri,
-+	struct xfs_btree_cur		**pcur)
++xfs_rtrmapbt_create_path(
++	struct xfs_mount	*mp,
++	xfs_rgnumber_t		rgno,
++	struct xfs_imeta_path	**pathp)
 +{
-+	/* coming in a subsequent patch */
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
++	struct xfs_imeta_path	*path;
++	unsigned char		*fname;
++	int			error;
 +
- /*
-  * Don't defer an rmap if we aren't an rmap filesystem.
-  */
-@@ -2701,6 +2716,7 @@ __xfs_rmap_add(
- 	struct xfs_trans		*tp,
- 	enum xfs_rmap_intent_type	type,
- 	uint64_t			owner,
-+	bool				isrt,
- 	int				whichfork,
- 	struct xfs_bmbt_irec		*bmap)
- {
-@@ -2712,6 +2728,7 @@ __xfs_rmap_add(
- 	ri->ri_owner = owner;
- 	ri->ri_whichfork = whichfork;
- 	ri->ri_bmap = *bmap;
-+	ri->ri_realtime = isrt;
++	error = xfs_imeta_create_file_path(mp, 2, &path);
++	if (error)
++		return error;
++
++	fname = kmalloc(XFS_RTRMAP_NAMELEN, GFP_KERNEL);
++	if (!fname) {
++		xfs_imeta_free_path(path);
++		return -ENOMEM;
++	}
++
++	snprintf(fname, XFS_RTRMAP_NAMELEN, "%u.rmap", rgno);
++	path->im_path[0] = "realtime";
++	path->im_path[1] = fname;
++	path->im_dynamicmask = 0x2;
++	*pathp = path;
++	return 0;
++}
+diff --git a/libxfs/xfs_rtrmap_btree.h b/libxfs/xfs_rtrmap_btree.h
+index 0f732679719..29b69866018 100644
+--- a/libxfs/xfs_rtrmap_btree.h
++++ b/libxfs/xfs_rtrmap_btree.h
+@@ -11,6 +11,7 @@ struct xfs_btree_cur;
+ struct xfs_mount;
+ struct xbtree_ifakeroot;
+ struct xfs_rtgroup;
++struct xfs_imeta_path;
  
- 	xfs_rmap_defer_add(tp, ri);
- }
-@@ -2725,6 +2742,7 @@ xfs_rmap_map_extent(
- 	struct xfs_bmbt_irec	*PREV)
- {
- 	enum xfs_rmap_intent_type type = XFS_RMAP_MAP;
-+	bool			isrt = xfs_ifork_is_realtime(ip, whichfork);
+ /* rmaps only exist on crc enabled filesystems */
+ #define XFS_RTRMAP_BLOCK_LEN	XFS_BTREE_LBLOCK_CRC_LEN
+@@ -80,4 +81,7 @@ unsigned int xfs_rtrmapbt_maxlevels_ondisk(void);
+ int __init xfs_rtrmapbt_init_cur_cache(void);
+ void xfs_rtrmapbt_destroy_cur_cache(void);
  
- 	if (!xfs_rmap_update_is_needed(tp->t_mountp, whichfork))
- 		return;
-@@ -2732,7 +2750,7 @@ xfs_rmap_map_extent(
- 	if (whichfork != XFS_ATTR_FORK && xfs_is_reflink_inode(ip))
- 		type = XFS_RMAP_MAP_SHARED;
- 
--	__xfs_rmap_add(tp, type, ip->i_ino, whichfork, PREV);
-+	__xfs_rmap_add(tp, type, ip->i_ino, isrt, whichfork, PREV);
- }
- 
- /* Unmap an extent out of a file. */
-@@ -2744,6 +2762,7 @@ xfs_rmap_unmap_extent(
- 	struct xfs_bmbt_irec	*PREV)
- {
- 	enum xfs_rmap_intent_type type = XFS_RMAP_UNMAP;
-+	bool			isrt = xfs_ifork_is_realtime(ip, whichfork);
- 
- 	if (!xfs_rmap_update_is_needed(tp->t_mountp, whichfork))
- 		return;
-@@ -2751,7 +2770,7 @@ xfs_rmap_unmap_extent(
- 	if (whichfork != XFS_ATTR_FORK && xfs_is_reflink_inode(ip))
- 		type = XFS_RMAP_UNMAP_SHARED;
- 
--	__xfs_rmap_add(tp, type, ip->i_ino, whichfork, PREV);
-+	__xfs_rmap_add(tp, type, ip->i_ino, isrt, whichfork, PREV);
- }
- 
- /*
-@@ -2769,6 +2788,7 @@ xfs_rmap_convert_extent(
- 	struct xfs_bmbt_irec	*PREV)
- {
- 	enum xfs_rmap_intent_type type = XFS_RMAP_CONVERT;
-+	bool			isrt = xfs_ifork_is_realtime(ip, whichfork);
- 
- 	if (!xfs_rmap_update_is_needed(mp, whichfork))
- 		return;
-@@ -2776,13 +2796,14 @@ xfs_rmap_convert_extent(
- 	if (whichfork != XFS_ATTR_FORK && xfs_is_reflink_inode(ip))
- 		type = XFS_RMAP_CONVERT_SHARED;
- 
--	__xfs_rmap_add(tp, type, ip->i_ino, whichfork, PREV);
-+	__xfs_rmap_add(tp, type, ip->i_ino, isrt, whichfork, PREV);
- }
- 
- /* Schedule the creation of an rmap for non-file data. */
- void
- xfs_rmap_alloc_extent(
- 	struct xfs_trans	*tp,
-+	bool			isrt,
- 	xfs_fsblock_t		fsbno,
- 	xfs_extlen_t		len,
- 	uint64_t		owner)
-@@ -2797,13 +2818,14 @@ xfs_rmap_alloc_extent(
- 	bmap.br_startoff = 0;
- 	bmap.br_state = XFS_EXT_NORM;
- 
--	__xfs_rmap_add(tp, XFS_RMAP_ALLOC, owner, XFS_DATA_FORK, &bmap);
-+	__xfs_rmap_add(tp, XFS_RMAP_ALLOC, owner, isrt, XFS_DATA_FORK, &bmap);
- }
- 
- /* Schedule the deletion of an rmap for non-file data. */
- void
- xfs_rmap_free_extent(
- 	struct xfs_trans	*tp,
-+	bool			isrt,
- 	xfs_fsblock_t		fsbno,
- 	xfs_extlen_t		len,
- 	uint64_t		owner)
-@@ -2818,7 +2840,7 @@ xfs_rmap_free_extent(
- 	bmap.br_startoff = 0;
- 	bmap.br_state = XFS_EXT_NORM;
- 
--	__xfs_rmap_add(tp, XFS_RMAP_FREE, owner, XFS_DATA_FORK, &bmap);
-+	__xfs_rmap_add(tp, XFS_RMAP_FREE, owner, isrt, XFS_DATA_FORK, &bmap);
- }
- 
- /* Compare rmap records.  Returns -1 if a < b, 1 if a > b, and 0 if equal. */
-diff --git a/libxfs/xfs_rmap.h b/libxfs/xfs_rmap.h
-index 762f2f40b6e..3719fc4cbc2 100644
---- a/libxfs/xfs_rmap.h
-+++ b/libxfs/xfs_rmap.h
-@@ -174,7 +174,11 @@ struct xfs_rmap_intent {
- 	int					ri_whichfork;
- 	uint64_t				ri_owner;
- 	struct xfs_bmbt_irec			ri_bmap;
--	struct xfs_perag			*ri_pag;
-+	union {
-+		struct xfs_perag		*ri_pag;
-+		struct xfs_rtgroup		*ri_rtg;
-+	};
-+	bool					ri_realtime;
- };
- 
- /* functions for updating the rmapbt based on bmbt map/unmap operations */
-@@ -185,11 +189,13 @@ void xfs_rmap_unmap_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- void xfs_rmap_convert_extent(struct xfs_mount *mp, struct xfs_trans *tp,
- 		struct xfs_inode *ip, int whichfork,
- 		struct xfs_bmbt_irec *imap);
--void xfs_rmap_alloc_extent(struct xfs_trans *tp, xfs_fsblock_t fsbno,
-+void xfs_rmap_alloc_extent(struct xfs_trans *tp, bool isrt, xfs_fsblock_t fsbno,
- 		xfs_extlen_t len, uint64_t owner);
--void xfs_rmap_free_extent(struct xfs_trans *tp, xfs_fsblock_t fsbno,
-+void xfs_rmap_free_extent(struct xfs_trans *tp, bool isrt, xfs_fsblock_t fsbno,
- 		xfs_extlen_t len, uint64_t owner);
- 
-+int xfs_rtrmap_finish_one(struct xfs_trans *tp, struct xfs_rmap_intent *ri,
-+		struct xfs_btree_cur **pcur);
- int xfs_rmap_finish_one(struct xfs_trans *tp, struct xfs_rmap_intent *ri,
- 		struct xfs_btree_cur **pcur);
- int __xfs_rmap_finish_intent(struct xfs_btree_cur *rcur,
++int xfs_rtrmapbt_create_path(struct xfs_mount *mp, xfs_rgnumber_t rgno,
++		struct xfs_imeta_path **pathp);
++
+ #endif	/* __XFS_RTRMAP_BTREE_H__ */
 
