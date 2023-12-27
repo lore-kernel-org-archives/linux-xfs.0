@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40647CA46
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:01:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71A72CA4E
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:01:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="caxrHq+p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C72A7C433C8;
-	Mon,  1 Jan 2024 00:01:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VfLtUKt6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57D1AC433C7;
+	Mon,  1 Jan 2024 00:01:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704067267;
-	bh=hYSIER6PCHmgirewCjVy3hFpVv3181aWiOckiLZ5yOA=;
+	s=k20201202; t=1704067283;
+	bh=493wTA1sxqL+Ad3stb8HOPEGU1Y/8kEjZyzUZDBKpNQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=caxrHq+prgfhYglT+J8b3taEWXNP664+8EN8AsbI4ulhO982OuEY3MKfZ+0arzcOS
-	 rgRrXsNBkE578J11FgqxZPVv6hNcer0uabJ8NTemKU0hdcjnEnBP4oKVPlhxJVfQZC
-	 Y2kw3K7oOhUww1PdvBfR90igJ1BDUKFdcmqwdQVwsCqHZ3bZVO3oJFn2dyl+8dS1VD
-	 RizJgCv+ibUSm3H/uh/RMKY7d0mzklF9ca4Z2ioXqX5BCoF/GyY2o0KlnES1ona1QB
-	 j9r7vUE/VofOrvLH1/AE7/r0Q8I1lst3Ir9XaB7S5WEjYNXSLofOsmXAsBzL6tExlN
-	 OXMiZHnAkiBLQ==
-Date: Sun, 31 Dec 2023 16:01:07 +9900
-Subject: [PATCH 52/52] mkfs: format realtime groups
+	b=VfLtUKt6Eto31S1ke4f9fMSuWyNRaXIbE8LdHk+F5H4/XnUCoOJiTPIJa3RP2r56U
+	 9OUij+CoSZvM5c1noj1wCK0Uy4mSfiYSwbGiDB++Ff3ehVhCvQSqXXkNidKBXVKcFk
+	 Fsv0CJWingEUnkFEmi/nWTSkTrNssaVnB8bmlChE+cgWOXgWCOMXMxWR1xawZKPJ5a
+	 z9p8bgnp3dtEL6sJY9K4ruBr/B3L0pRAhZP+CyrjyA5B3e5zU+euozvvILyrw097Ek
+	 y7+TA6rT/2il6fi4iR138Rt6fBOP0o7FUsN05LYotw4qe3/tqC9heVQl42ZYBOP5yB
+	 dYHQr+RlbQMEw==
+Date: Sun, 31 Dec 2023 16:01:22 +9900
+Subject: [PATCH 01/14] xfs: replace shouty XFS_BM{BT,DR} macros
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405012857.1811243.7240725352292653783.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
-References: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
+Message-ID: <170405013213.1812545.3599503738664394372.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405013189.1812545.1581948480545654103.stgit@frogsfrogsfrogs>
+References: <170405013189.1812545.1581948480545654103.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,669 +37,920 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create filesystems with the realtime group feature enabled.
+Replace all the shouty bmap btree and bmap disk root macros with actual
+functions, and fix a type handling error in the xattr code that the
+macros previously didn't care about.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/div64.h          |    6 +
- libfrog/util.c           |   12 ++
- libfrog/util.h           |    1 
- libxfs/libxfs_api_defs.h |    1 
- libxfs/libxfs_priv.h     |    6 -
- libxfs/topology.c        |   42 +++++++
- libxfs/topology.h        |    3 +
- libxfs/xfs_format.h      |    1 
- man/man8/mkfs.xfs.8.in   |   44 +++++++
- mkfs/proto.c             |   45 +++++++-
- mkfs/xfs_mkfs.c          |  272 ++++++++++++++++++++++++++++++++++++++++++++++
- 11 files changed, 425 insertions(+), 8 deletions(-)
+ db/bmap.c               |   10 +-
+ db/bmap_inflate.c       |    2 
+ db/bmroot.c             |    8 +-
+ db/check.c              |    8 +-
+ db/frag.c               |    8 +-
+ db/metadump.c           |   16 ++--
+ libxfs/xfs_attr_leaf.c  |    8 +-
+ libxfs/xfs_bmap.c       |   40 +++++----
+ libxfs/xfs_bmap_btree.c |   18 ++--
+ libxfs/xfs_bmap_btree.h |  204 ++++++++++++++++++++++++++++++++---------------
+ libxfs/xfs_inode_fork.c |   30 +++----
+ libxfs/xfs_trans_resv.c |    2 
+ repair/bmap_repair.c    |    2 
+ repair/dinode.c         |   10 +-
+ repair/prefetch.c       |    8 +-
+ repair/scan.c           |    6 +
+ 16 files changed, 228 insertions(+), 152 deletions(-)
 
 
-diff --git a/libfrog/div64.h b/libfrog/div64.h
-index 673b01cbab3..4b0d4c3b3c7 100644
---- a/libfrog/div64.h
-+++ b/libfrog/div64.h
-@@ -93,4 +93,10 @@ howmany_64(uint64_t x, uint32_t y)
- 	return x;
+diff --git a/db/bmap.c b/db/bmap.c
+index 874135f001e..7915772aaee 100644
+--- a/db/bmap.c
++++ b/db/bmap.c
+@@ -78,8 +78,8 @@ bmap(
+ 		push_cur();
+ 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+ 		fsize = XFS_DFORK_SIZE(dip, mp, whichfork);
+-		pp = XFS_BMDR_PTR_ADDR(rblock, 1, libxfs_bmdr_maxrecs(fsize, 0));
+-		kp = XFS_BMDR_KEY_ADDR(rblock, 1);
++		pp = xfs_bmdr_ptr_addr(rblock, 1, libxfs_bmdr_maxrecs(fsize, 0));
++		kp = xfs_bmdr_key_addr(rblock, 1);
+ 		bno = select_child(curoffset, kp, pp,
+ 					be16_to_cpu(rblock->bb_numrecs));
+ 		for (;;) {
+@@ -88,9 +88,9 @@ bmap(
+ 			block = (struct xfs_btree_block *)iocur_top->data;
+ 			if (be16_to_cpu(block->bb_level) == 0)
+ 				break;
+-			pp = XFS_BMBT_PTR_ADDR(mp, block, 1,
++			pp = xfs_bmbt_ptr_addr(mp, block, 1,
+ 				libxfs_bmbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0));
+-			kp = XFS_BMBT_KEY_ADDR(mp, block, 1);
++			kp = xfs_bmbt_key_addr(mp, block, 1);
+ 			bno = select_child(curoffset, kp, pp,
+ 					be16_to_cpu(block->bb_numrecs));
+ 		}
+@@ -98,7 +98,7 @@ bmap(
+ 			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+ 			nextents = be16_to_cpu(block->bb_numrecs);
+ 			xp = (xfs_bmbt_rec_t *)
+-				XFS_BMBT_REC_ADDR(mp, block, 1);
++				xfs_bmbt_rec_addr(mp, block, 1);
+ 			for (ep = xp; ep < &xp[nextents] && n < nex; ep++) {
+ 				if (!bmap_one_extent(ep, &curoffset, eoffset,
+ 						&n, bep)) {
+diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
+index a3ad6ad3832..118d911a1db 100644
+--- a/db/bmap_inflate.c
++++ b/db/bmap_inflate.c
+@@ -282,7 +282,7 @@ iroot_size(
+ 	unsigned int		nr_this_level,
+ 	void			*priv)
+ {
+-	return XFS_BMAP_BROOT_SPACE_CALC(cur->bc_mp, nr_this_level);
++	return xfs_bmap_broot_space_calc(cur->bc_mp, nr_this_level);
  }
  
-+static inline __attribute__((const))
-+int is_power_of_2(unsigned long n)
-+{
-+	return (n != 0 && ((n & (n - 1)) == 0));
-+}
-+
- #endif /* LIBFROG_DIV64_H_ */
-diff --git a/libfrog/util.c b/libfrog/util.c
-index 46047571a55..4e130c884c1 100644
---- a/libfrog/util.c
-+++ b/libfrog/util.c
-@@ -36,3 +36,15 @@ memchr_inv(const void *start, int c, size_t bytes)
- 
- 	return NULL;
+ static int
+diff --git a/db/bmroot.c b/db/bmroot.c
+index 246e390a8a3..7ef07da181e 100644
+--- a/db/bmroot.c
++++ b/db/bmroot.c
+@@ -89,7 +89,7 @@ bmroota_key_offset(
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(dip->di_forkoff != 0 && (char *)block == XFS_DFORK_APTR(dip));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+-	kp = XFS_BMDR_KEY_ADDR(block, idx);
++	kp = xfs_bmdr_key_addr(block, idx);
+ 	return bitize((int)((char *)kp - (char *)block));
  }
-+
-+unsigned int
-+log2_rounddown(unsigned long long i)
-+{
-+	int	rval;
-+
-+	for (rval = NBBY * sizeof(i) - 1; rval >= 0; rval--) {
-+		if ((1ULL << rval) < i)
-+			break;
-+	}
-+	return rval;
-+}
-diff --git a/libfrog/util.h b/libfrog/util.h
-index ac2f331c93e..b0715576e8d 100644
---- a/libfrog/util.h
-+++ b/libfrog/util.h
-@@ -7,6 +7,7 @@
- #define __LIBFROG_UTIL_H__
  
- unsigned int	log2_roundup(unsigned int i);
-+unsigned int	log2_rounddown(unsigned long long i);
- 
- void *memchr_inv(const void *start, int c, size_t bytes);
- 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index a3503e07984..c5dad34f3d2 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -80,6 +80,7 @@
- #define xfs_btree_update		libxfs_btree_update
- #define xfs_btree_space_to_height	libxfs_btree_space_to_height
- #define xfs_btree_visit_blocks		libxfs_btree_visit_blocks
-+#define xfs_buf_delwri_queue		libxfs_buf_delwri_queue
- #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
- #define xfs_buf_get			libxfs_buf_get
- #define xfs_buf_get_uncached		libxfs_buf_get_uncached
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 4e4a51637e6..120a41e20a7 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -337,12 +337,6 @@ find_next_zero_bit(const unsigned long *addr, unsigned long size,
+@@ -127,7 +127,7 @@ bmroota_ptr_offset(
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(dip->di_forkoff != 0 && (char *)block == XFS_DFORK_APTR(dip));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+-	pp = XFS_BMDR_PTR_ADDR(block, idx,
++	pp = xfs_bmdr_ptr_addr(block, idx,
+ 		libxfs_bmdr_maxrecs(XFS_DFORK_ASIZE(dip, mp), 0));
+ 	return bitize((int)((char *)pp - (char *)block));
  }
- #define find_first_zero_bit(addr, size) find_next_zero_bit((addr), (size), 0)
+@@ -185,7 +185,7 @@ bmrootd_key_offset(
+ 	ASSERT(obj == iocur_top->data);
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+-	kp = XFS_BMDR_KEY_ADDR(block, idx);
++	kp = xfs_bmdr_key_addr(block, idx);
+ 	return bitize((int)((char *)kp - (char *)block));
+ }
  
--static inline __attribute__((const))
--int is_power_of_2(unsigned long n)
--{
--	return (n != 0 && ((n & (n - 1)) == 0));
--}
+@@ -222,7 +222,7 @@ bmrootd_ptr_offset(
+ 	dip = obj;
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+-	pp = XFS_BMDR_PTR_ADDR(block, idx,
++	pp = xfs_bmdr_ptr_addr(block, idx,
+ 		libxfs_bmdr_maxrecs(XFS_DFORK_DSIZE(dip, mp), 0));
+ 	return bitize((int)((char *)pp - (char *)block));
+ }
+diff --git a/db/check.c b/db/check.c
+index 7d0687a9db7..d1c86206c08 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -2366,13 +2366,13 @@ process_btinode(
+ 		return;
+ 	}
+ 	if (be16_to_cpu(dib->bb_level) == 0) {
+-		xfs_bmbt_rec_t	*rp = XFS_BMDR_REC_ADDR(dib, 1);
++		xfs_bmbt_rec_t	*rp = xfs_bmdr_rec_addr(dib, 1);
+ 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), type,
+ 							id, totd, blkmapp);
+ 		*nex += be16_to_cpu(dib->bb_numrecs);
+ 		return;
+ 	} else {
+-		pp = XFS_BMDR_PTR_ADDR(dib, 1, libxfs_bmdr_maxrecs(
++		pp = xfs_bmdr_ptr_addr(dib, 1, libxfs_bmdr_maxrecs(
+ 				XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+ 		for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
+ 			scan_lbtree(get_unaligned_be64(&pp[i]),
+@@ -4422,7 +4422,7 @@ scanfunc_bmap(
+ 			error++;
+ 			return;
+ 		}
+-		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
++		rp = xfs_bmbt_rec_addr(mp, block, 1);
+ 		*nex += be16_to_cpu(block->bb_numrecs);
+ 		process_bmbt_reclist(rp, be16_to_cpu(block->bb_numrecs), type, id, totd,
+ 			blkmapp);
+@@ -4438,7 +4438,7 @@ scanfunc_bmap(
+ 		error++;
+ 		return;
+ 	}
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[0]);
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[0]);
+ 	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+ 		scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, type, id,
+ 					totd, toti, nex, blkmapp, 0, btype);
+diff --git a/db/frag.c b/db/frag.c
+index 4efc6ad07f8..1165e824a37 100644
+--- a/db/frag.c
++++ b/db/frag.c
+@@ -243,11 +243,11 @@ process_btinode(
+ 
+ 	dib = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+ 	if (be16_to_cpu(dib->bb_level) == 0) {
+-		xfs_bmbt_rec_t		*rp = XFS_BMDR_REC_ADDR(dib, 1);
++		xfs_bmbt_rec_t		*rp = xfs_bmdr_rec_addr(dib, 1);
+ 		process_bmbt_reclist(rp, be16_to_cpu(dib->bb_numrecs), extmapp);
+ 		return;
+ 	}
+-	pp = XFS_BMDR_PTR_ADDR(dib, 1,
++	pp = xfs_bmdr_ptr_addr(dib, 1,
+ 		libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+ 	for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
+ 		scan_lbtree(get_unaligned_be64(&pp[i]),
+@@ -437,7 +437,7 @@ scanfunc_bmap(
+ 				   nrecs, typtab[btype].name);
+ 			return;
+ 		}
+-		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
++		rp = xfs_bmbt_rec_addr(mp, block, 1);
+ 		process_bmbt_reclist(rp, nrecs, extmapp);
+ 		return;
+ 	}
+@@ -447,7 +447,7 @@ scanfunc_bmap(
+ 			   nrecs, typtab[btype].name);
+ 		return;
+ 	}
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[0]);
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[0]);
+ 	for (i = 0; i < nrecs; i++)
+ 		scan_lbtree(be64_to_cpu(pp[i]), level, scanfunc_bmap, extmapp,
+ 									btype);
+diff --git a/db/metadump.c b/db/metadump.c
+index be4cc01ff26..ccf7b89ccd5 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -250,8 +250,8 @@ zero_btree_node(
+ 		if (nrecs > mp->m_bmap_dmxr[1])
+ 			return;
+ 
+-		bkp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+-		bpp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
++		bkp = xfs_bmbt_key_addr(mp, block, 1);
++		bpp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 		zp1 = (char *)&bkp[nrecs];
+ 		zp2 = (char *)&bpp[nrecs];
+ 		key_end = (char *)bpp;
+@@ -316,7 +316,7 @@ zero_btree_leaf(
+ 		if (nrecs > mp->m_bmap_dmxr[0])
+ 			return;
+ 
+-		brp = XFS_BMBT_REC_ADDR(mp, block, 1);
++		brp = xfs_bmbt_rec_addr(mp, block, 1);
+ 		zp = (char *)&brp[nrecs];
+ 		break;
+ 	case TYP_INOBT:
+@@ -2156,7 +2156,7 @@ scanfunc_bmap(
+ 					typtab[btype].name, agno, agbno);
+ 			return 1;
+ 		}
+-		return process_bmbt_reclist(XFS_BMBT_REC_ADDR(mp, block, 1),
++		return process_bmbt_reclist(xfs_bmbt_rec_addr(mp, block, 1),
+ 					    nrecs, sbm->typ, sbm->is_meta);
+ 	}
+ 
+@@ -2166,7 +2166,7 @@ scanfunc_bmap(
+ 					nrecs, typtab[btype].name, agno, agbno);
+ 		return 1;
+ 	}
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 	for (i = 0; i < nrecs; i++) {
+ 		xfs_agnumber_t	ag;
+ 		xfs_agblock_t	bno;
+@@ -2229,7 +2229,7 @@ process_btinode(
+ 	}
+ 
+ 	if (level == 0) {
+-		return process_bmbt_reclist(XFS_BMDR_REC_ADDR(dib, 1),
++		return process_bmbt_reclist(xfs_bmdr_rec_addr(dib, 1),
+ 					    nrecs, itype, is_meta);
+ 	}
+ 
+@@ -2242,13 +2242,13 @@ process_btinode(
+ 		return 1;
+ 	}
+ 
+-	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
++	pp = xfs_bmdr_ptr_addr(dib, 1, maxrecs);
+ 
+ 	if (metadump.zero_stale_data) {
+ 		char	*top;
+ 
+ 		/* Unused btree key space */
+-		top = (char*)XFS_BMDR_KEY_ADDR(dib, nrecs + 1);
++		top = (char*)xfs_bmdr_key_addr(dib, nrecs + 1);
+ 		memset(top, 0, (char*)pp - top);
+ 
+ 		/* Unused btree ptr space */
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 14020c09146..28bb72f7a8a 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -669,7 +669,7 @@ xfs_attr_shortform_bytesfit(
+ 		 */
+ 		if (!dp->i_forkoff && dp->i_df.if_bytes >
+ 		    xfs_default_attroffset(dp))
+-			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
++			dsize = xfs_bmdr_space_calc(MINDBTPTRS);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		/*
+@@ -683,7 +683,7 @@ xfs_attr_shortform_bytesfit(
+ 				return 0;
+ 			return dp->i_forkoff;
+ 		}
+-		dsize = XFS_BMAP_BROOT_SPACE(mp, dp->i_df.if_broot);
++		dsize = xfs_bmap_bmdr_space(dp->i_df.if_broot);
+ 		break;
+ 	}
+ 
+@@ -691,11 +691,11 @@ xfs_attr_shortform_bytesfit(
+ 	 * A data fork btree root must have space for at least
+ 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 	 */
+-	minforkoff = max_t(int64_t, dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
++	minforkoff = max_t(int64_t, dsize, xfs_bmdr_space_calc(MINDBTPTRS));
+ 	minforkoff = roundup(minforkoff, 8) >> 3;
+ 
+ 	/* attr fork btree root can have at least this many key/ptr pairs */
+-	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
++	maxforkoff = XFS_LITINO(mp) - xfs_bmdr_space_calc(MINABTPTRS);
+ 	maxforkoff = maxforkoff >> 3;	/* rounded down */
+ 
+ 	if (offset >= maxforkoff)
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index c69cb5c66df..d7cbef76067 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -73,9 +73,9 @@ xfs_bmap_compute_maxlevels(
+ 	maxleafents = xfs_iext_max_nextents(xfs_has_large_extent_counts(mp),
+ 				whichfork);
+ 	if (whichfork == XFS_DATA_FORK)
+-		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
++		sz = xfs_bmdr_space_calc(MINDBTPTRS);
+ 	else
+-		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
++		sz = xfs_bmdr_space_calc(MINABTPTRS);
+ 
+ 	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
+ 	minleafrecs = mp->m_bmap_dmnr[0];
+@@ -96,8 +96,8 @@ xfs_bmap_compute_attr_offset(
+ 	struct xfs_mount	*mp)
+ {
+ 	if (mp->m_sb.sb_inodesize == 256)
+-		return XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
+-	return XFS_BMDR_SPACE_CALC(6 * MINABTPTRS);
++		return XFS_LITINO(mp) - xfs_bmdr_space_calc(MINABTPTRS);
++	return xfs_bmdr_space_calc(6 * MINABTPTRS);
+ }
+ 
+ STATIC int				/* error */
+@@ -270,7 +270,7 @@ xfs_check_block(
+ 	prevp = NULL;
+ 	for( i = 1; i <= xfs_btree_get_numrecs(block); i++) {
+ 		dmxr = mp->m_bmap_dmxr[0];
+-		keyp = XFS_BMBT_KEY_ADDR(mp, block, i);
++		keyp = xfs_bmbt_key_addr(mp, block, i);
+ 
+ 		if (prevp) {
+ 			ASSERT(be64_to_cpu(prevp->br_startoff) <
+@@ -282,15 +282,15 @@ xfs_check_block(
+ 		 * Compare the block numbers to see if there are dups.
+ 		 */
+ 		if (root)
+-			pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, i, sz);
++			pp = xfs_bmap_broot_ptr_addr(mp, block, i, sz);
+ 		else
+-			pp = XFS_BMBT_PTR_ADDR(mp, block, i, dmxr);
++			pp = xfs_bmbt_ptr_addr(mp, block, i, dmxr);
+ 
+ 		for (j = i+1; j <= be16_to_cpu(block->bb_numrecs); j++) {
+ 			if (root)
+-				thispa = XFS_BMAP_BROOT_PTR_ADDR(mp, block, j, sz);
++				thispa = xfs_bmap_broot_ptr_addr(mp, block, j, sz);
+ 			else
+-				thispa = XFS_BMBT_PTR_ADDR(mp, block, j, dmxr);
++				thispa = xfs_bmbt_ptr_addr(mp, block, j, dmxr);
+ 			if (*thispa == *pp) {
+ 				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %lld",
+ 					__func__, j, i,
+@@ -345,7 +345,7 @@ xfs_bmap_check_leaf_extents(
+ 	level = be16_to_cpu(block->bb_level);
+ 	ASSERT(level > 0);
+ 	xfs_check_block(block, mp, 1, ifp->if_broot_bytes);
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
++	pp = xfs_bmap_broot_ptr_addr(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+ 
+ 	ASSERT(bno != NULLFSBLOCK);
+@@ -380,7 +380,7 @@ xfs_bmap_check_leaf_extents(
+ 		 */
+ 
+ 		xfs_check_block(block, mp, 0, 0);
+-		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
++		pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 		bno = be64_to_cpu(*pp);
+ 		if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbno(mp, bno))) {
+ 			xfs_btree_mark_sick(cur);
+@@ -420,14 +420,14 @@ xfs_bmap_check_leaf_extents(
+ 		 * conform with the first entry in this one.
+ 		 */
+ 
+-		ep = XFS_BMBT_REC_ADDR(mp, block, 1);
++		ep = xfs_bmbt_rec_addr(mp, block, 1);
+ 		if (i) {
+ 			ASSERT(xfs_bmbt_disk_get_startoff(&last) +
+ 			       xfs_bmbt_disk_get_blockcount(&last) <=
+ 			       xfs_bmbt_disk_get_startoff(ep));
+ 		}
+ 		for (j = 1; j < num_recs; j++) {
+-			nextp = XFS_BMBT_REC_ADDR(mp, block, j + 1);
++			nextp = xfs_bmbt_rec_addr(mp, block, j + 1);
+ 			ASSERT(xfs_bmbt_disk_get_startoff(ep) +
+ 			       xfs_bmbt_disk_get_blockcount(ep) <=
+ 			       xfs_bmbt_disk_get_startoff(nextp));
+@@ -562,7 +562,7 @@ xfs_bmap_btree_to_extents(
+ 	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
+ 	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0) == 1);
+ 
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, ifp->if_broot_bytes);
++	pp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, ifp->if_broot_bytes);
+ 	cbno = be64_to_cpu(*pp);
+ #ifdef DEBUG
+ 	if (XFS_IS_CORRUPT(cur->bc_mp, !xfs_btree_check_lptr(cur, cbno, 1))) {
+@@ -690,7 +690,7 @@ xfs_bmap_extents_to_btree(
+ 	for_each_xfs_iext(ifp, &icur, &rec) {
+ 		if (isnullstartblock(rec.br_startblock))
+ 			continue;
+-		arp = XFS_BMBT_REC_ADDR(mp, ablock, 1 + cnt);
++		arp = xfs_bmbt_rec_addr(mp, ablock, 1 + cnt);
+ 		xfs_bmbt_disk_set_all(arp, &rec);
+ 		cnt++;
+ 	}
+@@ -700,10 +700,10 @@ xfs_bmap_extents_to_btree(
+ 	/*
+ 	 * Fill in the root key and pointer.
+ 	 */
+-	kp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+-	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
++	kp = xfs_bmbt_key_addr(mp, block, 1);
++	arp = xfs_bmbt_rec_addr(mp, ablock, 1);
+ 	kp->br_startoff = cpu_to_be64(xfs_bmbt_disk_get_startoff(arp));
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, xfs_bmbt_get_maxrecs(cur,
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, xfs_bmbt_get_maxrecs(cur,
+ 						be16_to_cpu(block->bb_level)));
+ 	*pp = cpu_to_be64(args.fsbno);
+ 
+@@ -872,7 +872,7 @@ xfs_bmap_add_attrfork_btree(
+ 
+ 	mp = ip->i_mount;
+ 
+-	if (XFS_BMAP_BMDR_SPACE(block) <= xfs_inode_data_fork_size(ip))
++	if (xfs_bmap_bmdr_space(block) <= xfs_inode_data_fork_size(ip))
+ 		*flags |= XFS_ILOG_DBROOT;
+ 	else {
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+@@ -1139,7 +1139,7 @@ xfs_iread_bmbt_block(
+ 	}
+ 
+ 	/* Copy records into the incore cache. */
+-	frp = XFS_BMBT_REC_ADDR(mp, block, 1);
++	frp = xfs_bmbt_rec_addr(mp, block, 1);
+ 	for (j = 0; j < num_recs; j++, frp++, ir->loaded++) {
+ 		struct xfs_bmbt_irec	new;
+ 		xfs_failaddr_t		fa;
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 160f7b08ffd..be4979894a0 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -47,10 +47,10 @@ xfs_bmdr_to_bmbt(
+ 	ASSERT(be16_to_cpu(rblock->bb_level) > 0);
+ 	rblock->bb_numrecs = dblock->bb_numrecs;
+ 	dmxr = xfs_bmdr_maxrecs(dblocklen, 0);
+-	fkp = XFS_BMDR_KEY_ADDR(dblock, 1);
+-	tkp = XFS_BMBT_KEY_ADDR(mp, rblock, 1);
+-	fpp = XFS_BMDR_PTR_ADDR(dblock, 1, dmxr);
+-	tpp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, rblocklen);
++	fkp = xfs_bmdr_key_addr(dblock, 1);
++	tkp = xfs_bmbt_key_addr(mp, rblock, 1);
++	fpp = xfs_bmdr_ptr_addr(dblock, 1, dmxr);
++	tpp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, rblocklen);
+ 	dmxr = be16_to_cpu(dblock->bb_numrecs);
+ 	memcpy(tkp, fkp, sizeof(*fkp) * dmxr);
+ 	memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
+@@ -150,10 +150,10 @@ xfs_bmbt_to_bmdr(
+ 	dblock->bb_level = rblock->bb_level;
+ 	dblock->bb_numrecs = rblock->bb_numrecs;
+ 	dmxr = xfs_bmdr_maxrecs(dblocklen, 0);
+-	fkp = XFS_BMBT_KEY_ADDR(mp, rblock, 1);
+-	tkp = XFS_BMDR_KEY_ADDR(dblock, 1);
+-	fpp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, rblocklen);
+-	tpp = XFS_BMDR_PTR_ADDR(dblock, 1, dmxr);
++	fkp = xfs_bmbt_key_addr(mp, rblock, 1);
++	tkp = xfs_bmdr_key_addr(dblock, 1);
++	fpp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, rblocklen);
++	tpp = xfs_bmdr_ptr_addr(dblock, 1, dmxr);
+ 	dmxr = be16_to_cpu(dblock->bb_numrecs);
+ 	memcpy(tkp, fkp, sizeof(*fkp) * dmxr);
+ 	memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
+@@ -670,7 +670,7 @@ xfs_bmbt_maxrecs(
+ 	int			blocklen,
+ 	int			leaf)
+ {
+-	blocklen -= XFS_BMBT_BLOCK_LEN(mp);
++	blocklen -= xfs_bmbt_block_len(mp);
+ 	return xfs_bmbt_block_maxrecs(blocklen, leaf);
+ }
+ 
+diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
+index 151b8491f60..62fbc4f7c2c 100644
+--- a/libxfs/xfs_bmap_btree.h
++++ b/libxfs/xfs_bmap_btree.h
+@@ -13,70 +13,6 @@ struct xfs_inode;
+ struct xfs_trans;
+ struct xbtree_ifakeroot;
+ 
+-/*
+- * Btree block header size depends on a superblock flag.
+- */
+-#define XFS_BMBT_BLOCK_LEN(mp) \
+-	(xfs_has_crc(((mp))) ? \
+-		XFS_BTREE_LBLOCK_CRC_LEN : XFS_BTREE_LBLOCK_LEN)
+-
+-#define XFS_BMBT_REC_ADDR(mp, block, index) \
+-	((xfs_bmbt_rec_t *) \
+-		((char *)(block) + \
+-		 XFS_BMBT_BLOCK_LEN(mp) + \
+-		 ((index) - 1) * sizeof(xfs_bmbt_rec_t)))
+-
+-#define XFS_BMBT_KEY_ADDR(mp, block, index) \
+-	((xfs_bmbt_key_t *) \
+-		((char *)(block) + \
+-		 XFS_BMBT_BLOCK_LEN(mp) + \
+-		 ((index) - 1) * sizeof(xfs_bmbt_key_t)))
+-
+-#define XFS_BMBT_PTR_ADDR(mp, block, index, maxrecs) \
+-	((xfs_bmbt_ptr_t *) \
+-		((char *)(block) + \
+-		 XFS_BMBT_BLOCK_LEN(mp) + \
+-		 (maxrecs) * sizeof(xfs_bmbt_key_t) + \
+-		 ((index) - 1) * sizeof(xfs_bmbt_ptr_t)))
+-
+-#define XFS_BMDR_REC_ADDR(block, index) \
+-	((xfs_bmdr_rec_t *) \
+-		((char *)(block) + \
+-		 sizeof(struct xfs_bmdr_block) + \
+-	         ((index) - 1) * sizeof(xfs_bmdr_rec_t)))
+-
+-#define XFS_BMDR_KEY_ADDR(block, index) \
+-	((xfs_bmdr_key_t *) \
+-		((char *)(block) + \
+-		 sizeof(struct xfs_bmdr_block) + \
+-		 ((index) - 1) * sizeof(xfs_bmdr_key_t)))
+-
+-#define XFS_BMDR_PTR_ADDR(block, index, maxrecs) \
+-	((xfs_bmdr_ptr_t *) \
+-		((char *)(block) + \
+-		 sizeof(struct xfs_bmdr_block) + \
+-		 (maxrecs) * sizeof(xfs_bmdr_key_t) + \
+-		 ((index) - 1) * sizeof(xfs_bmdr_ptr_t)))
+-
+-/*
+- * These are to be used when we know the size of the block and
+- * we don't have a cursor.
+- */
+-#define XFS_BMAP_BROOT_PTR_ADDR(mp, bb, i, sz) \
+-	XFS_BMBT_PTR_ADDR(mp, bb, i, xfs_bmbt_maxrecs(mp, sz, 0))
+-
+-#define XFS_BMAP_BROOT_SPACE_CALC(mp, nrecs) \
+-	(int)(XFS_BMBT_BLOCK_LEN(mp) + \
+-	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+-
+-#define XFS_BMAP_BROOT_SPACE(mp, bb) \
+-	(XFS_BMAP_BROOT_SPACE_CALC(mp, be16_to_cpu((bb)->bb_numrecs)))
+-#define XFS_BMDR_SPACE_CALC(nrecs) \
+-	(int)(sizeof(xfs_bmdr_block_t) + \
+-	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+-#define XFS_BMAP_BMDR_SPACE(bb) \
+-	(XFS_BMDR_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
 -
  /*
-  * xfs_iroundup: round up argument to next power of two
+  * Maximum number of bmap btree levels.
   */
-diff --git a/libxfs/topology.c b/libxfs/topology.c
-index 06013d42945..b87731820c4 100644
---- a/libxfs/topology.c
-+++ b/libxfs/topology.c
-@@ -89,6 +89,48 @@ calc_default_ag_geometry(
- 	*agcount = dblocks / blocks + (dblocks % blocks != 0);
- }
+@@ -120,4 +56,144 @@ unsigned int xfs_bmbt_maxlevels_ondisk(void);
+ int __init xfs_bmbt_init_cur_cache(void);
+ void xfs_bmbt_destroy_cur_cache(void);
  
-+void
-+calc_default_rtgroup_geometry(
-+	int		blocklog,
-+	uint64_t	rblocks,
-+	uint64_t	*rgsize,
-+	uint64_t	*rgcount)
++/*
++ * Btree block header size depends on a superblock flag.
++ */
++static inline size_t
++xfs_bmbt_block_len(struct xfs_mount *mp)
 +{
-+	uint64_t	blocks = 0;
-+	int		shift = 0;
-+
-+	/*
-+	 * For a single underlying storage device over 4TB in size use the
-+	 * maximum rtgroup size.  Between 128MB and 4TB, just use 4 rtgroups
-+	 * and scale up smoothly between min/max rtgroup sizes.
-+	 */
-+	if (rblocks >= TERABYTES(4, blocklog)) {
-+		blocks = XFS_MAX_RGBLOCKS;
-+		goto done;
-+	}
-+	if (rblocks >= MEGABYTES(128, blocklog)) {
-+		shift = XFS_NOMULTIDISK_AGLOG;
-+		goto calc_blocks;
-+	}
-+
-+	/*
-+	 * If rblocks is not evenly divisible by the number of desired rt
-+	 * groups, round "blocks" up so we don't lose the last bit of the
-+	 * filesystem. The same principle applies to the rt group count, so we
-+	 * don't lose the last rt group!
-+	 */
-+calc_blocks:
-+	ASSERT(shift >= 0 && shift <= XFS_MULTIDISK_AGLOG);
-+	blocks = rblocks >> shift;
-+	if (rblocks & xfs_mask32lo(shift)) {
-+		if (blocks < XFS_MAX_RGBLOCKS)
-+		    blocks++;
-+	}
-+done:
-+	*rgsize = blocks;
-+	*rgcount = rblocks / blocks + (rblocks % blocks != 0);
++	return xfs_has_crc(mp) ?
++			XFS_BTREE_LBLOCK_CRC_LEN : XFS_BTREE_LBLOCK_LEN;
 +}
 +
- /*
-  * Check for existing filesystem or partition table on device.
-  * Returns:
-diff --git a/libxfs/topology.h b/libxfs/topology.h
-index 1af5b054947..f1174bb4bab 100644
---- a/libxfs/topology.h
-+++ b/libxfs/topology.h
-@@ -32,6 +32,9 @@ calc_default_ag_geometry(
- 	uint64_t	*agsize,
- 	uint64_t	*agcount);
- 
-+void calc_default_rtgroup_geometry(int blocklog, uint64_t rblocks,
-+		uint64_t *rgsize, uint64_t *rgcount);
++/* Addresses of key, pointers, and records within an incore bmbt block. */
 +
- extern int
- check_overwrite(
- 	const char	*device);
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 59ba13db53e..87476c6bb6c 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -418,6 +418,7 @@ xfs_sb_has_ro_compat_feature(
- 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR| \
- 		 XFS_SB_FEAT_INCOMPAT_NREXT64| \
- 		 XFS_SB_FEAT_INCOMPAT_PARENT | \
-+		 XFS_SB_FEAT_INCOMPAT_RTGROUPS | \
- 		 XFS_SB_FEAT_INCOMPAT_METADIR)
- 
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index 587754ff95b..e0175ca04b4 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -1116,6 +1116,50 @@ or logical volume containing the section.
- .BI noalign
- This option disables stripe size detection, enforcing a realtime device with no
- stripe geometry.
-+.TP
-+.BI rtgroups= value
-+This feature breaks the realtime section into multiple allocation groups for
-+improved scalability.
-+This feature is only available if the metadata directory tree feature is
-+enabled.
-+.IP
-+By default,
-+.B mkfs.xfs
-+will not enable this feature.
-+If the option
-+.B \-r rtgroups=0
-+is used, the rt group feature is not supported and is disabled.
-+.TP
-+.BI rgcount=
-+This is used to specify the number of allocation groups in the realtime
-+section.
-+The realtime section of the filesystem can be divided into allocation groups to
-+improve the performance of XFS.
-+More allocation groups imply that more parallelism can be achieved when
-+allocating blocks.
-+The minimum allocation group size is 2 realtime extents; the maximum size is
-+2^31 blocks.
-+The rt section of the filesystem is divided into
-+.I value
-+allocation groups (default value is scaled automatically based
-+on the underlying device size).
-+.TP
-+.BI rgsize= value
-+This is an alternative to using the
-+.B rgcount
-+suboption. The
-+.I value
-+is the desired size of the realtime allocation group expressed in bytes
-+(usually using the
-+.BR m " or " g
-+suffixes).
-+This value must be a multiple of the realtime extent size,
-+must be at least two realtime extents, and no more than 2^31 blocks.
-+The
-+.B rgcount
-+and
-+.B rgsize
-+suboptions are mutually exclusive.
- .RE
- .PP
- .PD 0
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index b89b114d0d6..5239f9ec413 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -1001,6 +1001,46 @@ rtsummary_init(
- 	}
- }
- 
-+static void
-+rtfreesp_init_groups(
-+	struct xfs_mount	*mp)
++static inline struct xfs_bmbt_rec *
++xfs_bmbt_rec_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	unsigned int		index)
 +{
-+	xfs_rgnumber_t		rgno;
-+	int			error;
-+
-+	for (rgno = 0; rgno < mp->m_sb.sb_rgcount; rgno++) {
-+		struct xfs_trans	*tp;
-+		xfs_rtblock_t	rtbno;
-+		xfs_rtxnum_t	start_rtx;
-+		xfs_rtxnum_t	next_rtx;
-+
-+		rtbno = xfs_rgbno_to_rtb(mp, rgno, mp->m_sb.sb_rextsize);
-+		start_rtx = xfs_rtb_to_rtx(mp, rtbno);
-+
-+		rtbno = xfs_rgbno_to_rtb(mp, rgno + 1, 0);
-+		next_rtx = xfs_rtb_to_rtx(mp, rtbno);
-+		next_rtx = min(next_rtx, mp->m_sb.sb_rextents);
-+
-+		error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+				0, 0, 0, &tp);
-+		if (error)
-+			res_failed(error);
-+
-+		libxfs_trans_ijoin(tp, mp->m_rbmip, 0);
-+		error = -libxfs_rtfree_extent(tp, start_rtx,
-+				next_rtx - start_rtx);
-+		if (error) {
-+			fail(_("Error initializing the realtime space"),
-+				error);
-+		}
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			fail(_("Initialization of the realtime space failed"),
-+					error);
-+
-+	}
++	return (struct xfs_bmbt_rec *)
++		((char *)block + xfs_bmbt_block_len(mp) +
++		 (index - 1) * sizeof(struct xfs_bmbt_rec));
 +}
 +
- /*
-  * Free the whole realtime area using transactions.
-  * Do one transaction per bitmap block.
-@@ -1049,7 +1089,10 @@ rtinit(
- 
- 	rtbitmap_init(mp);
- 	rtsummary_init(mp);
--	rtfreesp_init(mp);
-+	if (xfs_has_rtgroups(mp))
-+		rtfreesp_init_groups(mp);
-+	else
-+		rtfreesp_init(mp);
- }
- 
- static long
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index aab1d9130b2..66532b8c9b6 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -131,6 +131,9 @@ enum {
- 	R_FILE,
- 	R_NAME,
- 	R_NOALIGN,
-+	R_RTGROUPS,
-+	R_RGCOUNT,
-+	R_RGSIZE,
- 	R_MAX_OPTS,
- };
- 
-@@ -718,6 +721,9 @@ static struct opt_params ropts = {
- 		[R_FILE] = "file",
- 		[R_NAME] = "name",
- 		[R_NOALIGN] = "noalign",
-+		[R_RTGROUPS] = "rtgroups",
-+		[R_RGCOUNT] = "rgcount",
-+		[R_RGSIZE] = "rgsize",
- 		[R_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -757,6 +763,27 @@ static struct opt_params ropts = {
- 		  .defaultval = 1,
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		},
-+		{ .index = R_RTGROUPS,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
-+		{ .index = R_RGCOUNT,
-+		  .conflicts = { { &dopts, R_RGSIZE },
-+				 { NULL, LAST_CONFLICT } },
-+		  .minval = 1,
-+		  .maxval = XFS_MAX_RGNUMBER,
-+		  .defaultval = SUBOPT_NEEDS_VAL,
-+		},
-+		{ .index = R_RGSIZE,
-+		  .conflicts = { { &dopts, R_RGCOUNT },
-+				 { NULL, LAST_CONFLICT } },
-+		  .convert = true,
-+		  .minval = 0,
-+		  .maxval = (unsigned long long)XFS_MAX_RGBLOCKS << XFS_MAX_BLOCKSIZE_LOG,
-+		  .defaultval = SUBOPT_NEEDS_VAL,
-+		},
- 	},
- };
- 
-@@ -922,6 +949,7 @@ struct cli_params {
- 	/* parameters that depend on sector/block size being validated. */
- 	char	*dsize;
- 	char	*agsize;
-+	char	*rgsize;
- 	char	*dsu;
- 	char	*dirblocksize;
- 	char	*logsize;
-@@ -943,6 +971,7 @@ struct cli_params {
- 
- 	/* parameters where 0 is not a valid value */
- 	int64_t	agcount;
-+	int64_t	rgcount;
- 	int	inodesize;
- 	int	inopblock;
- 	int	imaxpct;
-@@ -999,6 +1028,9 @@ struct mkfs_params {
- 	uint64_t	agsize;
- 	uint64_t	agcount;
- 
-+	uint64_t	rgsize;
-+	uint64_t	rgcount;
++static inline struct xfs_bmbt_key *
++xfs_bmbt_key_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_key *)
++		((char *)block + xfs_bmbt_block_len(mp) +
++		 (index - 1) * sizeof(struct xfs_bmbt_key *));
++}
 +
- 	int		imaxpct;
- 
- 	bool		loginternal;
-@@ -1055,7 +1087,8 @@ usage( void )
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
- /* quiet */		[-q]\n\
--/* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx]\n\
-+/* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rtgroups=0|1,\n\
-+			    rgcount=n,rgsize=n]\n\
- /* sectorsize */	[-s size=num]\n\
- /* version */		[-V]\n\
- 			devicename\n\
-@@ -1952,6 +1985,15 @@ rtdev_opts_parser(
- 	case R_NOALIGN:
- 		cli->sb_feat.nortalign = getnum(value, opts, subopt);
- 		break;
-+	case R_RTGROUPS:
-+		cli->sb_feat.rtgroups = getnum(value, opts, subopt);
-+		break;
-+	case R_RGCOUNT:
-+		cli->rgcount = getnum(value, opts, subopt);
-+		break;
-+	case R_RGSIZE:
-+		cli->rgsize = getstr(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2447,6 +2489,15 @@ _("cowextsize not supported without reflink support\n"));
- 		usage();
- 	}
- 
-+	if (cli->sb_feat.rtgroups && !cli->sb_feat.metadir) {
-+		if (cli_opt_set(&mopts, M_METADIR)) {
-+			fprintf(stderr,
-+_("realtime groups not supported without metadata directory support\n"));
-+			usage();
-+		}
-+		cli->sb_feat.metadir = true;
-+	}
++static inline xfs_bmbt_ptr_t *
++xfs_bmbt_ptr_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	unsigned int		index,
++	unsigned int		maxrecs)
++{
++	return (xfs_bmbt_ptr_t *)
++		((char *)block + xfs_bmbt_block_len(mp) +
++		 maxrecs * sizeof(struct xfs_bmbt_key) +
++		 (index - 1) * sizeof(xfs_bmbt_ptr_t));
++}
 +
- 	/*
- 	 * Copy features across to config structure now.
++/* Addresses of key, pointers, and records within an ondisk bmbt block. */
++
++static inline struct xfs_bmbt_rec *
++xfs_bmdr_rec_addr(
++	struct xfs_bmdr_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_rec *)
++		((char *)(block + 1) +
++		 (index - 1) * sizeof(struct xfs_bmbt_rec));
++}
++
++static inline struct xfs_bmbt_key *
++xfs_bmdr_key_addr(
++	struct xfs_bmdr_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_key *)
++		((char *)(block + 1) +
++		 (index - 1) * sizeof(struct xfs_bmbt_key));
++}
++
++static inline xfs_bmbt_ptr_t *
++xfs_bmdr_ptr_addr(
++	struct xfs_bmdr_block	*block,
++	unsigned int		index,
++	unsigned int		maxrecs)
++{
++	return (xfs_bmbt_ptr_t *)
++		((char *)(block + 1) +
++		 maxrecs * sizeof(struct xfs_bmbt_key) +
++		 (index - 1) * sizeof(xfs_bmbt_ptr_t));
++}
++
++/*
++ * Address of pointers within the incore btree root.
++ *
++ * These are to be used when we know the size of the block and
++ * we don't have a cursor.
++ */
++static inline xfs_bmbt_ptr_t *
++xfs_bmap_broot_ptr_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*bb,
++	unsigned int		i,
++	unsigned int		sz)
++{
++	return xfs_bmbt_ptr_addr(mp, bb, i, xfs_bmbt_maxrecs(mp, sz, 0));
++}
++
++/*
++ * Compute the space required for the incore btree root containing the given
++ * number of records.
++ */
++static inline size_t
++xfs_bmap_broot_space_calc(
++	struct xfs_mount	*mp,
++	unsigned int		nrecs)
++{
++	return xfs_bmbt_block_len(mp) + \
++	       (nrecs * (sizeof(struct xfs_bmbt_key) + sizeof(xfs_bmbt_ptr_t)));
++}
++
++/*
++ * Compute the space required for the incore btree root given the ondisk
++ * btree root block.
++ */
++static inline size_t
++xfs_bmap_broot_space(
++	struct xfs_mount	*mp,
++	struct xfs_bmdr_block	*bb)
++{
++	return xfs_bmap_broot_space_calc(mp, be16_to_cpu(bb->bb_numrecs));
++}
++
++/* Compute the space required for the ondisk root block. */
++static inline size_t
++xfs_bmdr_space_calc(unsigned int nrecs)
++{
++	return sizeof(struct xfs_bmdr_block) +
++	       (nrecs * (sizeof(struct xfs_bmbt_key) + sizeof(xfs_bmbt_ptr_t)));
++}
++
++/*
++ * Compute the space required for the ondisk root block given an incore root
++ * block.
++ */
++static inline size_t
++xfs_bmap_bmdr_space(struct xfs_btree_block *bb)
++{
++	return xfs_bmdr_space_calc(be16_to_cpu(bb->bb_numrecs));
++}
++
+ #endif	/* __XFS_BMAP_BTREE_H__ */
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index 46da5edfb11..2d67e35c7e3 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -179,7 +179,7 @@ xfs_iformat_btree(
+ 
+ 	ifp = xfs_ifork_ptr(ip, whichfork);
+ 	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+-	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
++	size = xfs_bmap_broot_space(mp, dfp);
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
+ 
+@@ -192,7 +192,7 @@ xfs_iformat_btree(
  	 */
-@@ -3413,6 +3464,181 @@ an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
- 			     cfg->agsize, cfg->agcount);
+ 	if (unlikely(ifp->if_nextents <= XFS_IFORK_MAXEXT(ip, whichfork) ||
+ 		     nrecs == 0 ||
+-		     XFS_BMDR_SPACE_CALC(nrecs) >
++		     xfs_bmdr_space_calc(nrecs) >
+ 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+ 		     ifp->if_nextents > ip->i_nblocks) ||
+ 		     level == 0 || level > XFS_BM_MAXLEVELS(mp, whichfork)) {
+@@ -403,7 +403,7 @@ xfs_iroot_realloc(
+ 		 * allocate it now and get out.
+ 		 */
+ 		if (ifp->if_broot_bytes == 0) {
+-			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
++			new_size = xfs_bmap_broot_space_calc(mp, rec_diff);
+ 			ifp->if_broot = kmem_alloc(new_size, KM_NOFS);
+ 			ifp->if_broot_bytes = (int)new_size;
+ 			return;
+@@ -417,15 +417,15 @@ xfs_iroot_realloc(
+ 		 */
+ 		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
+ 		new_max = cur_max + rec_diff;
+-		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
++		new_size = xfs_bmap_broot_space_calc(mp, new_max);
+ 		ifp->if_broot = krealloc(ifp->if_broot, new_size,
+ 					 GFP_NOFS | __GFP_NOFAIL);
+-		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++		op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     ifp->if_broot_bytes);
+-		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++		np = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     (int)new_size);
+ 		ifp->if_broot_bytes = (int)new_size;
+-		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++		ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+ 			xfs_inode_fork_size(ip, whichfork));
+ 		memmove(np, op, cur_max * (uint)sizeof(xfs_fsblock_t));
+ 		return;
+@@ -441,7 +441,7 @@ xfs_iroot_realloc(
+ 	new_max = cur_max + rec_diff;
+ 	ASSERT(new_max >= 0);
+ 	if (new_max > 0)
+-		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
++		new_size = xfs_bmap_broot_space_calc(mp, new_max);
+ 	else
+ 		new_size = 0;
+ 	if (new_size > 0) {
+@@ -450,7 +450,7 @@ xfs_iroot_realloc(
+ 		 * First copy over the btree block header.
+ 		 */
+ 		memcpy(new_broot, ifp->if_broot,
+-			XFS_BMBT_BLOCK_LEN(ip->i_mount));
++			xfs_bmbt_block_len(ip->i_mount));
+ 	} else {
+ 		new_broot = NULL;
+ 	}
+@@ -462,16 +462,16 @@ xfs_iroot_realloc(
+ 		/*
+ 		 * First copy the records.
+ 		 */
+-		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
+-		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
++		op = (char *)xfs_bmbt_rec_addr(mp, ifp->if_broot, 1);
++		np = (char *)xfs_bmbt_rec_addr(mp, new_broot, 1);
+ 		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
+ 
+ 		/*
+ 		 * Then copy the pointers.
+ 		 */
+-		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++		op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     ifp->if_broot_bytes);
+-		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
++		np = (char *)xfs_bmap_broot_ptr_addr(mp, new_broot, 1,
+ 						     (int)new_size);
+ 		memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
+ 	}
+@@ -479,7 +479,7 @@ xfs_iroot_realloc(
+ 	ifp->if_broot = new_broot;
+ 	ifp->if_broot_bytes = (int)new_size;
+ 	if (ifp->if_broot)
+-		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++		ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+ 			xfs_inode_fork_size(ip, whichfork));
+ 	return;
  }
- 
-+static uint64_t
-+calc_rgsize_extsize_nonpower(
-+	struct mkfs_params	*cfg)
-+{
-+	uint64_t		try_rgsize, rgsize, rgcount;
-+
-+	/*
-+	 * For non-power-of-two rt extent sizes, round the rtgroup size down to
-+	 * the nearest extent.
-+	 */
-+	calc_default_rtgroup_geometry(cfg->blocklog, cfg->rtblocks, &rgsize,
-+			&rgcount);
-+	rgsize -= rgsize % cfg->rtextblocks;
-+	rgsize = min(XFS_MAX_RGBLOCKS, rgsize);
-+
-+	/*
-+	 * If we would be left with a too-small rtgroup, increase or decrease
-+	 * the size of the group until we have a working geometry.
-+	 */
-+	for (try_rgsize = rgsize;
-+	     try_rgsize <= XFS_MAX_RGBLOCKS - cfg->rtextblocks;
-+	     try_rgsize += cfg->rtextblocks) {
-+		if (cfg->rtblocks % try_rgsize >= (2 * cfg->rtextblocks))
-+			return try_rgsize;
-+	}
-+	for (try_rgsize = rgsize;
-+	     try_rgsize > (2 * cfg->rtextblocks);
-+	     try_rgsize -= cfg->rtextblocks) {
-+		if (cfg->rtblocks % try_rgsize >= (2 * cfg->rtextblocks))
-+			return try_rgsize;
-+	}
-+
-+	fprintf(stderr,
-+_("realtime group size (%llu) not at all congruent with extent size (%llu)\n"),
-+			(unsigned long long)rgsize,
-+			(unsigned long long)cfg->rtextblocks);
-+	usage();
-+	return 0;
-+}
-+
-+static uint64_t
-+calc_rgsize_extsize_power(
-+	struct mkfs_params	*cfg)
-+{
-+	uint64_t		try_rgsize, rgsize, rgcount;
-+	unsigned int		rgsizelog;
-+
-+	/*
-+	 * Find the rt group size that is both a power of two and yields at
-+	 * least as many rt groups as the default geometry specified.
-+	 */
-+	calc_default_rtgroup_geometry(cfg->blocklog, cfg->rtblocks, &rgsize,
-+			&rgcount);
-+	rgsizelog = log2_rounddown(rgsize);
-+	rgsize = min(XFS_MAX_RGBLOCKS, 1U << rgsizelog);
-+
-+	/*
-+	 * If we would be left with a too-small rtgroup, increase or decrease
-+	 * the size of the group by powers of 2 until we have a working
-+	 * geometry.  If that doesn't work, try bumping by the extent size.
-+	 */
-+	for (try_rgsize = rgsize;
-+	     try_rgsize <= XFS_MAX_RGBLOCKS - cfg->rtextblocks;
-+	     try_rgsize <<= 2) {
-+		if (cfg->rtblocks % try_rgsize >= (2 * cfg->rtextblocks))
-+			return try_rgsize;
-+	}
-+	for (try_rgsize = rgsize;
-+	     try_rgsize > (2 * cfg->rtextblocks);
-+	     try_rgsize >>= 2) {
-+		if (cfg->rtblocks % try_rgsize >= (2 * cfg->rtextblocks))
-+			return try_rgsize;
-+	}
-+	for (try_rgsize = rgsize;
-+	     try_rgsize <= XFS_MAX_RGBLOCKS - cfg->rtextblocks;
-+	     try_rgsize += cfg->rtextblocks) {
-+		if (cfg->rtblocks % try_rgsize >= (2 * cfg->rtextblocks))
-+			return try_rgsize;
-+	}
-+	for (try_rgsize = rgsize;
-+	     try_rgsize > (2 * cfg->rtextblocks);
-+	     try_rgsize -= cfg->rtextblocks) {
-+		if (cfg->rtblocks % try_rgsize >= (2 * cfg->rtextblocks))
-+			return try_rgsize;
-+	}
-+
-+	fprintf(stderr,
-+_("realtime group size (%llu) not at all congruent with extent size (%llu)\n"),
-+			(unsigned long long)rgsize,
-+			(unsigned long long)cfg->rtextblocks);
-+	usage();
-+	return 0;
-+}
-+
-+static void
-+calculate_rtgroup_geometry(
-+	struct mkfs_params	*cfg,
-+	struct cli_params	*cli)
-+{
-+	if (!cli->sb_feat.rtgroups) {
-+		cfg->rgcount = 0;
-+		cfg->rgsize = 0;
-+		return;
-+	}
-+
-+	if (cli->rgsize) {	/* User-specified rtgroup size */
-+		cfg->rgsize = getnum(cli->rgsize, &ropts, R_RGSIZE);
-+
-+		/*
-+		 * Check specified agsize is a multiple of blocksize.
-+		 */
-+		if (cfg->rgsize % cfg->blocksize) {
-+			fprintf(stderr,
-+_("rgsize (%s) not a multiple of fs blk size (%d)\n"),
-+				cli->rgsize, cfg->blocksize);
-+			usage();
-+		}
-+		cfg->rgsize /= cfg->blocksize;
-+		cfg->rgcount = cfg->rtblocks / cfg->rgsize +
-+				(cfg->rtblocks % cfg->rgsize != 0);
-+
-+	} else if (cli->rgcount) {	/* User-specified rtgroup count */
-+		cfg->rgcount = cli->rgcount;
-+		cfg->rgsize = cfg->rtblocks / cfg->rgcount +
-+				(cfg->rtblocks % cfg->rgcount != 0);
-+	} else if (cfg->rtblocks == 0) {
-+		/*
-+		 * If nobody specified a realtime device or the rtgroup size,
-+		 * try 1TB, rounded down to the nearest rt extent.
-+		 */
-+		cfg->rgsize = TERABYTES(1, cfg->blocklog);
-+		cfg->rgsize -= cfg->rgsize % cfg->rtextblocks;
-+		cfg->rgcount = 0;
-+	} else if (!is_power_of_2(cfg->rtextblocks)) {
-+		cfg->rgsize = calc_rgsize_extsize_nonpower(cfg);
-+		cfg->rgcount = cfg->rtblocks / cfg->rgsize +
-+				(cfg->rtblocks % cfg->rgsize != 0);
-+	} else {
-+		cfg->rgsize = calc_rgsize_extsize_power(cfg);
-+		cfg->rgcount = cfg->rtblocks / cfg->rgsize +
-+				(cfg->rtblocks % cfg->rgsize != 0);
-+	}
-+
-+	if (cfg->rgsize > XFS_MAX_RGBLOCKS) {
-+		fprintf(stderr,
-+_("realtime group size (%llu) must be less than the maximum (%u)\n"),
-+				(unsigned long long)cfg->rgsize,
-+				XFS_MAX_RGBLOCKS);
-+		usage();
-+	}
-+
-+	if (cfg->rgsize % cfg->rtextblocks != 0) {
-+		fprintf(stderr,
-+_("realtime group size (%llu) not a multiple of rt extent size (%llu)\n"),
-+				(unsigned long long)cfg->rgsize,
-+				(unsigned long long)cfg->rtextblocks);
-+		usage();
-+	}
-+
-+	if (cfg->rgsize <= cfg->rtextblocks) {
-+		fprintf(stderr,
-+_("realtime group size (%llu) must be at least two realtime extents\n"),
-+				(unsigned long long)cfg->rgsize);
-+		usage();
-+	}
-+
-+	if (cfg->rgcount > XFS_MAX_RGNUMBER) {
-+		fprintf(stderr,
-+_("realtime group count (%llu) must be less than the maximum (%u)\n"),
-+				(unsigned long long)cfg->rgcount,
-+				XFS_MAX_RGNUMBER);
-+		usage();
-+	}
-+}
-+
- static void
- calculate_imaxpct(
- 	struct mkfs_params	*cfg,
-@@ -3552,6 +3778,12 @@ sb_set_features(
- 
- 	if (fp->nrext64)
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NREXT64;
-+
-+	if (fp->rtgroups) {
-+		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_RTGROUPS;
-+		sbp->sb_rgcount = cfg->rgcount;
-+		sbp->sb_rgblocks = cfg->rgsize;
-+	}
+@@ -652,7 +652,7 @@ xfs_iflush_fork(
+ 		if ((iip->ili_fields & brootflag[whichfork]) &&
+ 		    (ifp->if_broot_bytes > 0)) {
+ 			ASSERT(ifp->if_broot != NULL);
+-			ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++			ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+ 			        xfs_inode_fork_size(ip, whichfork));
+ 			xfs_bmbt_to_bmdr(mp, ifp->if_broot, ifp->if_broot_bytes,
+ 				(xfs_bmdr_block_t *)cp,
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index 74f46539179..800a2f9ecb8 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -128,7 +128,7 @@ xfs_calc_inode_res(
+ 		(4 * sizeof(struct xlog_op_header) +
+ 		 sizeof(struct xfs_inode_log_format) +
+ 		 mp->m_sb.sb_inodesize +
+-		 2 * XFS_BMBT_BLOCK_LEN(mp));
++		 2 * xfs_bmbt_block_len(mp));
  }
  
  /*
-@@ -4327,6 +4559,7 @@ main(
- 	char			**argv)
+diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
+index 7705980621c..a8cbff67ceb 100644
+--- a/repair/bmap_repair.c
++++ b/repair/bmap_repair.c
+@@ -285,7 +285,7 @@ xrep_bmap_iroot_size(
  {
- 	xfs_agnumber_t		agno;
-+	xfs_rgnumber_t		rgno;
- 	struct xfs_buf		*buf;
- 	int			c;
- 	int			dry_run = 0;
-@@ -4536,6 +4769,7 @@ main(
+ 	ASSERT(level > 0);
+ 
+-	return XFS_BMAP_BROOT_SPACE_CALC(cur->bc_mp, nr_this_level);
++	return xfs_bmap_broot_space_calc(cur->bc_mp, nr_this_level);
+ }
+ 
+ /* Update the inode counters. */
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 5a57069c29e..31b3cd74139 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -842,19 +842,19 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+ 	/*
+ 	 * use bmdr/dfork_dsize since the root block is in the data fork
  	 */
- 	calculate_initial_ag_geometry(&cfg, &cli, &xi);
- 	align_ag_geometry(&cfg);
-+	calculate_rtgroup_geometry(&cfg, &cli);
- 
- 	calculate_imaxpct(&cfg, &cli);
- 
-@@ -4636,6 +4870,42 @@ main(
- 		exit(1);
+-	if (XFS_BMDR_SPACE_CALC(numrecs) > XFS_DFORK_SIZE(dip, mp, whichfork)) {
++	if (xfs_bmdr_space_calc(numrecs) > XFS_DFORK_SIZE(dip, mp, whichfork)) {
+ 		do_warn(
+-	_("indicated size of %s btree root (%d bytes) greater than space in "
++	_("indicated size of %s btree root (%zu bytes) greater than space in "
+ 	  "inode %" PRIu64 " %s fork\n"),
+-			forkname, XFS_BMDR_SPACE_CALC(numrecs), lino, forkname);
++			forkname, xfs_bmdr_space_calc(numrecs), lino, forkname);
+ 		return(1);
  	}
  
-+	/* Write all the realtime group superblocks. */
-+	for (rgno = 0; rgno < cfg.rgcount; rgno++) {
-+		struct xfs_buf	*rtsb_bp;
-+		struct xfs_buf	*sb_bp = libxfs_getsb(mp);
-+
-+		if (!sb_bp) {
-+			fprintf(stderr,
-+ _("%s: couldn't grab buffers to write primary rt superblock\n"), progname);
-+			exit(1);
-+		}
-+
-+		error = -libxfs_buf_get_uncached(mp->m_rtdev_targp,
-+				XFS_FSB_TO_BB(mp, 1), 0,
-+				&rtsb_bp);
-+		if (error) {
-+			fprintf(stderr,
-+ _("%s: couldn't grab primary rt superblock\n"), progname);
-+			exit(1);
-+		}
-+		rtsb_bp->b_maps[0].bm_bn = XFS_RTSB_DADDR;
-+		rtsb_bp->b_ops = &xfs_rtsb_buf_ops;
-+
-+		libxfs_rtgroup_update_super(rtsb_bp, sb_bp);
-+		libxfs_buf_mark_dirty(rtsb_bp);
-+		libxfs_buf_relse(rtsb_bp);
-+		libxfs_buf_relse(sb_bp);
-+
-+		error = -libxfs_rtgroup_update_secondary_sbs(mp);
-+		if (error) {
-+			fprintf(stderr,
-+	_("%s: writing secondary rtgroup headers failed, err=%d\n"),
-+					progname, error);
-+			exit(1);
-+		}
-+	}
-+
+ 	init_bm_cursor(&cursor, level + 1);
+ 
+-	pp = XFS_BMDR_PTR_ADDR(dib, 1,
++	pp = xfs_bmdr_ptr_addr(dib, 1,
+ 		libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+-	pkey = XFS_BMDR_KEY_ADDR(dib, 1);
++	pkey = xfs_bmdr_key_addr(dib, 1);
+ 	last_key = NULLFILEOFF;
+ 
+ 	for (i = 0; i < numrecs; i++)  {
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 58fc2dac1a8..5caa41beb74 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -328,13 +328,13 @@ pf_scanfunc_bmap(
+ 		if (numrecs > mp->m_bmap_dmxr[0] || !isadir)
+ 			return 0;
+ 		return pf_read_bmbt_reclist(args,
+-			XFS_BMBT_REC_ADDR(mp, block, 1), numrecs);
++			xfs_bmbt_rec_addr(mp, block, 1), numrecs);
+ 	}
+ 
+ 	if (numrecs > mp->m_bmap_dmxr[1])
+ 		return 0;
+ 
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 
+ 	for (i = 0; i < numrecs; i++) {
+ 		dbno = get_unaligned_be64(&pp[i]);
+@@ -372,11 +372,11 @@ pf_read_btinode(
  	/*
- 	 * Initialise the freespace freelists (i.e. AGFLs) in each AG.
+ 	 * use bmdr/dfork_dsize since the root block is in the data fork
  	 */
+-	if (XFS_BMDR_SPACE_CALC(numrecs) > XFS_DFORK_DSIZE(dino, mp))
++	if (xfs_bmdr_space_calc(numrecs) > XFS_DFORK_DSIZE(dino, mp))
+ 		return;
+ 
+ 	dsize = XFS_DFORK_DSIZE(dino, mp);
+-	pp = XFS_BMDR_PTR_ADDR(dib, 1, libxfs_bmdr_maxrecs(dsize, 0));
++	pp = xfs_bmdr_ptr_addr(dib, 1, libxfs_bmdr_maxrecs(dsize, 0));
+ 
+ 	for (i = 0; i < numrecs; i++) {
+ 		dbno = get_unaligned_be64(&pp[i]);
+diff --git a/repair/scan.c b/repair/scan.c
+index 3857593b165..1cd4d0ad2e1 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -445,7 +445,7 @@ _("inode %" PRIu64 " bad # of bmap records (%" PRIu64 ", min - %u, max - %u)\n")
+ 					mp->m_bmap_dmxr[0]);
+ 			return(1);
+ 		}
+-		rp = XFS_BMBT_REC_ADDR(mp, block, 1);
++		rp = xfs_bmbt_rec_addr(mp, block, 1);
+ 		*nex += numrecs;
+ 		/*
+ 		 * XXX - if we were going to fix up the btree record,
+@@ -496,8 +496,8 @@ _("inode %" PRIu64 " bad # of bmap records (%" PRIu64 ", min - %u, max - %u)\n")
+ 			ino, numrecs, mp->m_bmap_dmnr[1], mp->m_bmap_dmxr[1]);
+ 		return(1);
+ 	}
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+-	pkey = XFS_BMBT_KEY_ADDR(mp, block, 1);
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[1]);
++	pkey = xfs_bmbt_key_addr(mp, block, 1);
+ 
+ 	last_key = NULLFILEOFF;
+ 
 
