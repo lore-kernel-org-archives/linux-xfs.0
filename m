@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0257EE;
-	Mon,  1 Jan 2024 01:02:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07BF97EF;
+	Mon,  1 Jan 2024 01:02:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fv3IyO+W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3CEAC433C7;
-	Mon,  1 Jan 2024 01:02:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NHNru/oX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87030C433C8;
+	Mon,  1 Jan 2024 01:02:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704070946;
-	bh=H7LrtpjWIjCPTWP+1OQCQlLph2koDrat4UkLQ1WobcU=;
+	s=k20201202; t=1704070961;
+	bh=zgzSX+sXh/oB3KgXb9RGzPP8BblpJQN7rbqn9NFxIrI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Fv3IyO+WDtpGZHqujGIsfOCJ6hsT6vlHVG3nFKbvGazvVO5f3h5gyYncKzjeQbIXK
-	 LdhMarQEjkXdo1fgJqN6y6Axsc6p9RIuJc+MQb2qHmg7MxfFL79NJoNbUoJKhcZHhu
-	 g1RWWgwW4s23pPrCUt1HKSRoB9IvCfCJ6GLzbqtdNY9XrB1EQfOo2X1JTWHKX9/0SV
-	 Hhyf3oSCGG7n7I0jPRA9w9w7T5R2DXWQaNtK/n4jco3/35PTTNUYLU3w8XsQyT3Z7h
-	 0iNUbqmCn4EwGYTLn/5lHT7oxM9qCOShRU78GEpMmDRIuk79qZs6cmjZF/YiSdh24i
-	 59hZe5DeptnSg==
-Date: Sun, 31 Dec 2023 17:02:25 +9900
-Subject: [PATCH 4/9] xfs/27[24]: adapt for checking files on the realtime
- volume
+	b=NHNru/oXxOnGvtU4PUS9sDufycyJfCVeJJ4Tl1Zac4WOB44FSX/ikOZafenHN9jUk
+	 XLmNJon/iO6eibdkay4l2fbMcoxR2hDC6GAiWZrM1iJLSp22XR2z2RKmFdR1FPcpt8
+	 iSzZSNrOftPKQjKgP2HhG/ihnPGkWCW9BsnUoG0luHyG0KCiioF7vDpUjnou4f9PCL
+	 /s+P4SgxpGECP/eUfD2ru7CRjNyUdDdPgeRkGgcLI6OujtHS31WZMmUyjNZ+xEcrCe
+	 SyP+PRDvtaTxFND9gpxPnuHZiH0SNPuA3BE40q2OS9YtzJO/s2pK5GpUHIxmff0tNP
+	 o8+dEQQiz5b3w==
+Date: Sun, 31 Dec 2023 17:02:41 +9900
+Subject: [PATCH 5/9] xfs: race fsstress with realtime refcount btree scrub and
+ repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405032069.1827358.7647888380084910379.stgit@frogsfrogsfrogs>
+Message-ID: <170405032082.1827358.7127035550813883108.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405032011.1827358.11723561661069109569.stgit@frogsfrogsfrogs>
 References: <170405032011.1827358.11723561661069109569.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,154 +38,133 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Adapt both tests to behave properly if the two files being tested are on
-the realtime volume.
+Race checking and rebuilding realtime refcount btrees with fsstress.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/272 |   40 +++++++++++++++++++++++++------------
- tests/xfs/274 |   62 ++++++++++++++++++++++++++++++++++++++++-----------------
- 2 files changed, 70 insertions(+), 32 deletions(-)
+ tests/xfs/1818     |   43 +++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1818.out |    2 ++
+ tests/xfs/1819     |   43 +++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1819.out |    2 ++
+ 4 files changed, 90 insertions(+)
+ create mode 100755 tests/xfs/1818
+ create mode 100644 tests/xfs/1818.out
+ create mode 100755 tests/xfs/1819
+ create mode 100644 tests/xfs/1819.out
 
 
-diff --git a/tests/xfs/272 b/tests/xfs/272
-index d5f3a74177..edc5b16967 100755
---- a/tests/xfs/272
-+++ b/tests/xfs/272
-@@ -40,26 +40,40 @@ $here/src/punch-alternating $SCRATCH_MNT/urk >> $seqres.full
- ino=$(stat -c '%i' $SCRATCH_MNT/urk)
- 
- echo "Get fsmap" | tee -a $seqres.full
--$XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT >> $seqres.full
- $XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT | tr '[]()' '    ' > $TEST_DIR/fsmap
-+cat $TEST_DIR/fsmap >> $seqres.full
- 
- echo "Get bmap" | tee -a $seqres.full
--$XFS_IO_PROG -c 'bmap -v' $SCRATCH_MNT/urk >> $seqres.full
- $XFS_IO_PROG -c 'bmap -v' $SCRATCH_MNT/urk | grep '^[[:space:]]*[0-9]*:' | grep -v 'hole' | tr '[]()' '    ' > $TEST_DIR/bmap
-+cat $TEST_DIR/bmap >> $seqres.full
- 
- echo "Check bmap and fsmap" | tee -a $seqres.full
--cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total crap; do
--	qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${blockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${ag}[[:space:]]*${agrange}[[:space:]]*${total}(| [01]*)$"
--	echo "${qstr}" >> $seqres.full
--	grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
--	found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
--	test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
--done
-+if $XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT/urk | grep -q realtime; then
-+	# file on rt volume
-+	cat $TEST_DIR/bmap | while read ext offrange colon rtblockrange total crap; do
-+		qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${rtblockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${total}(| [01]*)$"
-+		echo "${qstr}" >> $seqres.full
-+		grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
-+		found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
-+		test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
-+	done
- 
--echo "Check device field of FS metadata and regular file"
--data_dev=$(grep 'inode btree' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
--rt_dev=$(grep "${ino}[[:space:]]*[0-9]*\.\.[0-9]*" $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
--test "${data_dev}" = "${rt_dev}" || echo "data ${data_dev} realtime ${rt_dev}?"
-+	echo "Check device field of FS metadata and regular file"
-+else
-+	# file on data volume
-+	cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total crap; do
-+		qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${blockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${ag}[[:space:]]*${agrange}[[:space:]]*${total}(| [01]*)$"
-+		echo "${qstr}" >> $seqres.full
-+		grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
-+		found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
-+		test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
-+	done
+diff --git a/tests/xfs/1818 b/tests/xfs/1818
+new file mode 100755
+index 0000000000..674fff25fa
+--- /dev/null
++++ b/tests/xfs/1818
+@@ -0,0 +1,43 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1818
++#
++# Race fsstress and rt refcount btree scrub for a while to see if we crash or
++# livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
 +
-+	echo "Check device field of FS metadata and regular file"
-+	data_dev=$(grep 'inode btree' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+	rt_dev=$(grep "${ino}[[:space:]]*[0-9]*\.\.[0-9]*" $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+	test "${data_dev}" = "${rt_dev}" || echo "data ${data_dev} realtime ${rt_dev}?"
-+fi
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/274 b/tests/xfs/274
-index cd483d77bc..f16b49fc1c 100755
---- a/tests/xfs/274
-+++ b/tests/xfs/274
-@@ -40,34 +40,58 @@ _cp_reflink $SCRATCH_MNT/f1 $SCRATCH_MNT/f2
- ino=$(stat -c '%i' $SCRATCH_MNT/f1)
- 
- echo "Get fsmap" | tee -a $seqres.full
--$XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT >> $seqres.full
- $XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT | tr '[]()' '    ' > $TEST_DIR/fsmap
-+cat $TEST_DIR/fsmap >> $seqres.full
- 
- echo "Get f1 bmap" | tee -a $seqres.full
--$XFS_IO_PROG -c 'bmap -v' $SCRATCH_MNT/f1 >> $seqres.full
- $XFS_IO_PROG -c 'bmap -v' $SCRATCH_MNT/f1 | grep '^[[:space:]]*[0-9]*:' | grep -v 'hole' | tr '[]()' '    ' > $TEST_DIR/bmap
-+cat $TEST_DIR/bmap >> $seqres.full
- 
--echo "Check f1 bmap and fsmap" | tee -a $seqres.full
--cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total crap; do
--	qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${blockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${ag}[[:space:]]*${agrange}[[:space:]]*${total} 010[01]{4}$"
--	echo "${qstr}" >> $seqres.full
--	grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
--	found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
--	test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
--done
-+if _xfs_is_realtime_file $SCRATCH_MNT/f1 && ! _xfs_has_feature $SCRATCH_MNT rtgroups; then
-+	# file on rt volume
-+	echo "Check f1 bmap and fsmap" | tee -a $seqres.full
-+	cat $TEST_DIR/bmap | while read ext offrange colon rtblockrange total crap; do
-+		qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${rtblockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${total} 010[01]{4}$"
-+		echo "${qstr}" >> $seqres.full
-+		grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
-+		found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
-+		test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
-+	done
-+else
-+	# file on data volume
-+	echo "Check f1 bmap and fsmap" | tee -a $seqres.full
-+	cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total crap; do
-+		qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${blockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${ag}[[:space:]]*${agrange}[[:space:]]*${total} 010[01]{4}$"
-+		echo "${qstr}" >> $seqres.full
-+		grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
-+		found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
-+		test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
-+	done
-+fi
- 
- echo "Get f2 bmap" | tee -a $seqres.full
--$XFS_IO_PROG -c 'bmap -v' $SCRATCH_MNT/f2 >> $seqres.full
- $XFS_IO_PROG -c 'bmap -v' $SCRATCH_MNT/f2 | grep '^[[:space:]]*[0-9]*:' | grep -v 'hole' | tr '[]()' '    ' > $TEST_DIR/bmap
-+cat $TEST_DIR/bmap >> $seqres.full
- 
--echo "Check f2 bmap and fsmap" | tee -a $seqres.full
--cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total crap; do
--	qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${blockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${ag}[[:space:]]*${agrange}[[:space:]]*${total} 010[01]{4}$"
--	echo "${qstr}" >> $seqres.full
--	grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
--	found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
--	test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
--done
-+if _xfs_is_realtime_file $SCRATCH_MNT/f2 && ! _xfs_has_feature $SCRATCH_MNT rtgroups; then
-+	echo "Check f2 bmap and fsmap" | tee -a $seqres.full
-+	cat $TEST_DIR/bmap | while read ext offrange colon rtblockrange total crap; do
-+		qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${rtblockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${total} 010[01]{4}$"
-+		echo "${qstr}" >> $seqres.full
-+		grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
-+		found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
-+		test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
-+	done
-+else
-+	echo "Check f2 bmap and fsmap" | tee -a $seqres.full
-+	cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total crap; do
-+		qstr="^[[:space:]]*[0-9]*:[[:space:]]*[0-9]*:[0-9]*[[:space:]]*${blockrange} :[[:space:]]*${ino}[[:space:]]*${offrange}[[:space:]]*${ag}[[:space:]]*${agrange}[[:space:]]*${total} 010[01]{4}$"
-+		echo "${qstr}" >> $seqres.full
-+		grep "${qstr}" $TEST_DIR/fsmap >> $seqres.full
-+		found=$(grep -E -c "${qstr}" $TEST_DIR/fsmap)
-+		test $found -eq 1 || echo "Unexpected output for offset ${offrange}."
-+	done
-+fi
- 
- # success, all done
- status=0
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_realtime
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_require_xfs_has_feature "$SCRATCH_MNT" realtime
++_require_xfs_has_feature "$SCRATCH_MNT" reflink
++_xfs_force_bdev realtime $SCRATCH_MNT
++
++_scratch_xfs_stress_scrub -s "scrub rtrefcountbt %rgno%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1818.out b/tests/xfs/1818.out
+new file mode 100644
+index 0000000000..700d301da1
+--- /dev/null
++++ b/tests/xfs/1818.out
+@@ -0,0 +1,2 @@
++QA output created by 1818
++Silence is golden
+diff --git a/tests/xfs/1819 b/tests/xfs/1819
+new file mode 100755
+index 0000000000..e27a29271f
+--- /dev/null
++++ b/tests/xfs/1819
+@@ -0,0 +1,43 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1819
++#
++# Race fsstress and rt refcount btree scrub for a while to see if we crash or
++# livelock.
++#
++. ./common/preamble
++_begin_fstest online_repair dangerous_fsstress_repair
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_realtime
++_require_scratch
++_require_xfs_stress_online_repair
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_require_xfs_has_feature "$SCRATCH_MNT" realtime
++_require_xfs_has_feature "$SCRATCH_MNT" reflink
++_xfs_force_bdev realtime $SCRATCH_MNT
++
++_scratch_xfs_stress_online_repair -s "repair rtrefcountbt %rgno%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1819.out b/tests/xfs/1819.out
+new file mode 100644
+index 0000000000..041e17ab61
+--- /dev/null
++++ b/tests/xfs/1819.out
+@@ -0,0 +1,2 @@
++QA output created by 1819
++Silence is golden
 
