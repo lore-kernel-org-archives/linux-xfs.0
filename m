@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2C44A04;
-	Mon,  1 Jan 2024 00:57:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84764A02;
+	Mon,  1 Jan 2024 00:57:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DzqCBzqq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFF05C433C8;
-	Mon,  1 Jan 2024 00:57:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tJMozmzb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A500AC433C8;
+	Mon,  1 Jan 2024 00:57:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704070633;
-	bh=XaVndy1OPIO5w1cmb6PN1D/P8heGFWib/A35S5NaWFU=;
+	s=k20201202; t=1704070648;
+	bh=gr4SMOJ41U2PLOSrBIJPCzWxQeykfR4VWfQXCDEEOZs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DzqCBzqqm6LhEG96o3hATWEXe6P9nAICBHtfy6vPZO7cbOObuI5CUj/aOEprULJH0
-	 X7lsltnxu9F3Pk4wtCohDZOFpzPCIIo6PXdiCkIEp9tDzGMYzocyy8vUBEWpARNY0d
-	 cg9wKiE+Dfhk/ZMkRcEf5+Hpts3Pc6TeboRhGbs+6ijYD/bZCyN95b4dGN8RcuXaJF
-	 0WLmyPNuxmS+cI6/Ee6YddL+ulxRk6Tv2yNtRTiX4MzzWEwY339BOuhWulshJVf1cr
-	 FLXXvY2huHqIRCacv1BOSKIuJenVWLG5sVSkICESi3jjU2dH7//NMZxJ8/gUqVXXyV
-	 4tvCu4De1xxZg==
-Date: Sun, 31 Dec 2023 16:57:12 +9900
-Subject: [PATCH 17/17] common/fuzzy: adapt the scrub stress tests to support
- rtgroups
+	b=tJMozmzbPqBToCftsFSa/yqbaNK3MAUeohXGT8ukjD7IOqurrkCWOKhUeIn7nW3mo
+	 17Eg6rkpNMr7ctlaPPzzGQx3LCcYndqR4HLW9eUq2z1mAfd3SdcS1msAe7UphkKVCB
+	 cMijmsgnVSTTs+aYYxgKvA5fKP/mJI8dTcK7dd6Vl7ZJ8mkssuPTIEyemQyjjn2Yva
+	 wOl7ELFQIDN4HR60GZ0tUcllwrwCPc6TsjJczgl6jDu1sxpXTKoeGwyPbQzEBZPcz/
+	 xV604IAW5TK8RD4E9YoMAFYEfSson1zC2/VzT6YSuRqtDrB9Rbo/E+yhLZq3IzTKCN
+	 /nYUt89pyeskA==
+Date: Sun, 31 Dec 2023 16:57:28 +9900
+Subject: [PATCH 1/2] xfs: refactor statfs field extraction
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405030561.1826350.9873455298200379629.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405030327.1826350.709349465573559319.stgit@frogsfrogsfrogs>
-References: <170405030327.1826350.709349465573559319.stgit@frogsfrogsfrogs>
+Message-ID: <170405030881.1826812.8733545912595670620.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405030868.1826812.10067703094837693199.stgit@frogsfrogsfrogs>
+References: <170405030868.1826812.10067703094837693199.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,176 +37,96 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Adapt the scrub stress testing framework to support checking realtime
-group metadata.
+Prepare for the next patch by refactoring the open-coded bits that call
+statfs on a mounted xfs filesystem to extract a status field.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy  |   27 ++++++++++++++++++++++-----
- common/xfs    |    9 +++++++++
- tests/xfs/581 |    2 +-
- tests/xfs/720 |    2 +-
- tests/xfs/795 |    2 +-
- 5 files changed, 34 insertions(+), 8 deletions(-)
+ common/xfs    |    6 ++++++
+ tests/xfs/176 |    4 ++--
+ tests/xfs/187 |    6 +++---
+ tests/xfs/541 |    6 ++----
+ 4 files changed, 13 insertions(+), 9 deletions(-)
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-index d504f0854e..2de06622e5 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -847,8 +847,10 @@ __stress_one_scrub_loop() {
- 	local scrub_tgt="$3"
- 	local scrub_startat="$4"
- 	local start_agno="$5"
--	shift; shift; shift; shift; shift
-+	local start_rgno="$6"
-+	shift; shift; shift; shift; shift; shift
- 	local agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
-+	local rgcount="$(_xfs_mount_rgcount $SCRATCH_MNT)"
- 
- 	local xfs_io_args=()
- 	for arg in "$@"; do
-@@ -861,6 +863,12 @@ __stress_one_scrub_loop() {
- 				local ag_arg="$(echo "$arg" | sed -e "s|%agno%|$agno|g")"
- 				xfs_io_args+=('-c' "$ag_arg")
- 			done
-+		elif echo "$arg" | grep -q -w '%rgno%'; then
-+			# Substitute the rtgroup number
-+			for ((rgno = start_rgno; rgno < rgcount; rgno++)); do
-+				local rg_arg="$(echo "$arg" | sed -e "s|%rgno%|$rgno|g")"
-+				xfs_io_args+=('-c' "$rg_arg")
-+			done
- 		else
- 			xfs_io_args+=('-c' "$arg")
- 		fi
-@@ -1245,7 +1253,9 @@ _scratch_xfs_stress_scrub_cleanup() {
- __stress_scrub_check_commands() {
- 	local scrub_tgt="$1"
- 	local start_agno="$2"
--	shift; shift
-+	local start_rgno="$3"
-+	shift; shift; shift
-+	local rgcount="$(_xfs_mount_rgcount $SCRATCH_MNT)"
- 
- 	local cooked_tgt="$scrub_tgt"
- 	case "$scrub_tgt" in
-@@ -1275,6 +1285,10 @@ __stress_scrub_check_commands() {
- 			cooked_arg="$(echo "$cooked_arg" | sed -e 's/^repair/repair -R/g')"
- 		fi
- 		cooked_arg="$(echo "$cooked_arg" | sed -e "s/%agno%/$start_agno/g")"
-+		if echo "$cooked_arg" | grep -q -w '%rgno%'; then
-+			test "$rgcount" -eq 0 && continue
-+			cooked_arg="$(echo "$cooked_arg" | sed -e "s/%rgno%/$start_rgno/g")"
-+		fi
- 		testio=`$XFS_IO_PROG -x -c "$cooked_arg" "$cooked_tgt" 2>&1`
- 		echo $testio | grep -q "Unknown type" && \
- 			_notrun "xfs_io scrub subcommand support is missing"
-@@ -1300,6 +1314,7 @@ __stress_scrub_check_commands() {
- #	in a separate loop.  If zero -i options are specified, do not run.
- #	Callers must check each of these commands (via _require_xfs_io_command)
- #	before calling here.
-+# -R	For %rgno% substitution, start with this rtgroup instead of rtgroup 0.
- # -r	Run fsstress for this amount of time, then remount the fs ro or rw.
- #	The default is to run fsstress continuously with no remount, unless
- #	XFS_SCRUB_STRESS_REMOUNT_PERIOD is set.
-@@ -1346,6 +1361,7 @@ _scratch_xfs_stress_scrub() {
- 	local remount_period="${XFS_SCRUB_STRESS_REMOUNT_PERIOD}"
- 	local stress_tgt="${XFS_SCRUB_STRESS_TARGET:-default}"
- 	local start_agno=0
-+	local start_rgno=0
- 
- 	__SCRUB_STRESS_FREEZE_PID=""
- 	__SCRUB_STRESS_REMOUNT_LOOP=""
-@@ -1353,12 +1369,13 @@ _scratch_xfs_stress_scrub() {
- 	touch "$runningfile"
- 
- 	OPTIND=1
--	while getopts "a:fi:r:s:S:t:w:x:X:" c; do
-+	while getopts "a:fi:r:R:s:S:t:w:x:X:" c; do
- 		case "$c" in
- 			a) start_agno="$OPTARG";;
- 			f) freeze=yes;;
- 			i) io_args+=("$OPTARG");;
- 			r) remount_period="$OPTARG";;
-+			R) start_rgno="$OPTARG";;
- 			s) one_scrub_args+=("$OPTARG");;
- 			S) xfs_scrub_args+=("$OPTARG");;
- 			t) scrub_tgt="$OPTARG";;
-@@ -1369,7 +1386,7 @@ _scratch_xfs_stress_scrub() {
- 		esac
- 	done
- 
--	__stress_scrub_check_commands "$scrub_tgt" "$start_agno" \
-+	__stress_scrub_check_commands "$scrub_tgt" "$start_agno" "$start_rgno" \
- 			"${one_scrub_args[@]}"
- 
- 	if ! command -v "__stress_scrub_${exerciser}_loop" &>/dev/null; then
-@@ -1425,7 +1442,7 @@ _scratch_xfs_stress_scrub() {
- 
- 	if [ "${#one_scrub_args[@]}" -gt 0 ]; then
- 		__stress_one_scrub_loop "$end" "$runningfile" "$scrub_tgt" \
--				"$scrub_startat" "$start_agno" \
-+				"$scrub_startat" "$start_agno" "$start_rgno" \
- 				"${one_scrub_args[@]}" &
- 	fi
- 
 diff --git a/common/xfs b/common/xfs
-index 1ff81f4cc2..313b7045bd 100644
+index 313b7045bd..d9aa242ec7 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -1584,6 +1584,15 @@ _xfs_mount_agcount()
- 	$XFS_INFO_PROG "$1" | sed -n "s/^.*agcount=\([[:digit:]]*\).*/\1/p"
+@@ -2063,3 +2063,9 @@ _require_xfs_scratch_metadir()
+ 		_scratch_unmount
+ 	fi
  }
- 
-+# Find rtgroup count of mounted filesystem
-+_xfs_mount_rgcount()
++
++# Extract a statfs attribute of the given mounted XFS filesystem.
++_xfs_statfs_field()
 +{
-+	local rtgroups="$($XFS_INFO_PROG "$1" | grep rgcount= | sed -e 's/^.*rgcount=\([0-9]*\).*$/\1/g')"
-+
-+	test -z "$rtgroups" && rtgroups=0
-+	echo "$rtgroups"
++	$XFS_IO_PROG -c 'statfs' "$1" | grep -E "$2" | cut -d ' ' -f 3
 +}
-+
- # Wipe the superblock of each XFS AGs
- _try_wipe_scratch_xfs()
- {
-diff --git a/tests/xfs/581 b/tests/xfs/581
-index 1d08bc7df3..353421130e 100755
---- a/tests/xfs/581
-+++ b/tests/xfs/581
-@@ -32,7 +32,7 @@ _require_xfs_stress_scrub
- _scratch_mkfs > "$seqres.full" 2>&1
+diff --git a/tests/xfs/176 b/tests/xfs/176
+index 5231b888ba..0af81fcce3 100755
+--- a/tests/xfs/176
++++ b/tests/xfs/176
+@@ -49,7 +49,7 @@ fi
+ 
  _scratch_mount
- _require_xfs_has_feature "$SCRATCH_MNT" realtime
--_scratch_xfs_stress_scrub -s "scrub rtbitmap"
-+_scratch_xfs_stress_scrub -s "scrub rtbitmap"  -s "scrub rgbitmap %rgno%"
+ _xfs_force_bdev data $SCRATCH_MNT
+-old_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
++old_dblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.datablocks)
  
- # success, all done
- echo Silence is golden
-diff --git a/tests/xfs/720 b/tests/xfs/720
-index 2b6406da6e..3242a19b02 100755
---- a/tests/xfs/720
-+++ b/tests/xfs/720
-@@ -39,7 +39,7 @@ alloc_unit=$(_get_file_block_size $SCRATCH_MNT)
- scratchfile=$SCRATCH_MNT/file
- touch $scratchfile
- $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
--__stress_scrub_check_commands "$scratchfile" "" 'repair bmapbtd'
-+__stress_scrub_check_commands "$scratchfile" "" "" 'repair bmapbtd'
+ mkdir $SCRATCH_MNT/save/
+ sino=$(stat -c '%i' $SCRATCH_MNT/save)
+@@ -172,7 +172,7 @@ for ((ino = target_ino; ino >= icluster_ino; ino--)); do
+ 	res=$?
  
- # Compute the number of extent records needed to guarantee btree format,
- # assuming 16 bytes for each ondisk extent record
-diff --git a/tests/xfs/795 b/tests/xfs/795
-index a381db320f..2ce2ec5365 100755
---- a/tests/xfs/795
-+++ b/tests/xfs/795
-@@ -39,7 +39,7 @@ scratchfile=$SCRATCH_MNT/file
- mkdir $scratchdir
- touch $scratchfile
- $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
--__stress_scrub_check_commands "$scratchdir" "" 'repair directory'
-+__stress_scrub_check_commands "$scratchdir" "" "" 'repair directory'
+ 	# Make sure shrink did not work
+-	new_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
++	new_dblocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.datablocks)
+ 	if [ "$new_dblocks" != "$old_dblocks" ]; then
+ 		echo "should not have shrank $old_dblocks -> $new_dblocks"
+ 		break
+diff --git a/tests/xfs/187 b/tests/xfs/187
+index 14c3b37670..03d92d0890 100755
+--- a/tests/xfs/187
++++ b/tests/xfs/187
+@@ -79,8 +79,8 @@ _xfs_force_bdev realtime $SCRATCH_MNT
  
- # Create a 2-dirblock directory
- total_size=$((alloc_unit * 2))
+ # Set the extent size hint larger than the realtime extent size.  This is
+ # necessary to exercise the minlen constraints on the realtime allocator.
+-fsbsize=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.bsize | awk '{print $3}')
+-rtextsize_blks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.rtextsize | awk '{print $3}')
++fsbsize=$(_xfs_statfs_field "$SCRATCH_MNT" geom.bsize)
++rtextsize_blks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtextsize)
+ extsize=$((2 * rtextsize_blks * fsbsize))
+ 
+ echo "rtextsize_blks=$rtextsize_blks extsize=$extsize" >> $seqres.full
+@@ -136,7 +136,7 @@ rtextsize_bytes=$((fsbsize * rtextsize_blks))
+ $here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / rtextsize_bytes))
+ 
+ # Make sure we have some free rtextents.
+-free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep statfs.f_bavail | awk '{print $3}')
++free_rtx=$(_xfs_statfs_field "$SCRATCH_MNT" statfs.f_bavail)
+ if [ $free_rtx -eq 0 ]; then
+ 	echo "Expected fragmented free rt space, found none."
+ fi
+diff --git a/tests/xfs/541 b/tests/xfs/541
+index ae2fd819d5..3a0a9d5390 100755
+--- a/tests/xfs/541
++++ b/tests/xfs/541
+@@ -83,13 +83,11 @@ test $grow_extszhint -eq 0 || \
+ 	echo "expected post-grow extszhint 0, got $grow_extszhint"
+ 
+ # Check that we now have rt extents.
+-rtextents=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | \
+-	grep 'geom.rtextents' | cut -d ' ' -f 3)
++rtextents=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtextents)
+ test $rtextents -gt 0 || echo "expected rtextents > 0"
+ 
+ # Check the new rt extent size.
+-after_rtextsz_blocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | \
+-	grep 'geom.rtextsize' | cut -d ' ' -f 3)
++after_rtextsz_blocks=$(_xfs_statfs_field "$SCRATCH_MNT" geom.rtextsize)
+ test $after_rtextsz_blocks -eq $new_rtextsz_blocks || \
+ 	echo "expected rtextsize $new_rtextsz_blocks, got $after_rtextsz_blocks"
+ 
 
