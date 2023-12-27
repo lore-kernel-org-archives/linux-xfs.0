@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CE0D38E
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:14:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 933E4384
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:15:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NKpsh/cW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F8C1C433C8;
-	Mon,  1 Jan 2024 00:14:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TNqVS8zu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EFBCC433C8;
+	Mon,  1 Jan 2024 00:15:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068097;
-	bh=PFdtcNrt6Gy5q9/UrBtGtHY6d4MTQGLNxWjKVJPyLqU=;
+	s=k20201202; t=1704068113;
+	bh=x3Y4Nhde1imslMdavfYz54VefE75MYh8QFabXy8VwGo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NKpsh/cWLRVPfoH9AsIs3tGLH/WcK7amQ5/Lb5ajqCCgAAkx/v+7el3x/RoUGRqmW
-	 ULV3RZObDwd4XBQ9aNIHStka5O7H1aRc4TC5uaMm841NPsXs0ejXH+Ld1MjO5gPFKt
-	 LjzfNWti0qJ5wIu403detElJDM5opZqSkCMmp+wyPY045Im+l90NBn3u2GfoVjNjxa
-	 pp7J6RJFM+eco85mqBGvpdiFr1gCsl2GlfHbIl88sgfBzWwYS2LoWTsxwp0jLLncoS
-	 TDcb3SShso4pAFRiBEb2SIEDWbW4MECER9o8yse7b7ac9Ida2qoer/KWtpokkKl8jX
-	 xqPEJWTQstp9Q==
-Date: Sun, 31 Dec 2023 16:14:56 +9900
-Subject: [PATCH 17/47] xfs: scrub the realtime rmapbt
+	b=TNqVS8zuP5PcvFzptHv6U6VmMb9MnxzPvy1bb9wCnQzAAVKuVgmwD9NWii0iIshvl
+	 GDqRXjI4n92fD8TGfeVhn34QDKEZQS/6duynxEE9TBDTrjLfCxXiO98/OeZ3WMDvL1
+	 Cc/sC+kM3O+WtEjObh2HIcbpdUpXdowDSA060CADEQM2x7nzdb4JpU48efEo2/W2wk
+	 t2Vo9GDReG9k3k7sD2HRd8bf0FDM4yr/yAFHYu/CkazkwKo/IZKYqnQuPLrhiyvjHO
+	 7obOOGJBcWlqB3GZEYb4ebGL+R/1vQBGTkKRcp9pC8fSU8H4Rm08if6X+CPr/3QM6W
+	 NQZCVjspmY6Cg==
+Date: Sun, 31 Dec 2023 16:15:12 +9900
+Subject: [PATCH 18/47] xfs: scrub the metadir path of rt rmap btree files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015540.1815505.4202138808019867178.stgit@frogsfrogsfrogs>
+Message-ID: <170405015553.1815505.5227863645429649399.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,50 +37,61 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Check the realtime reverse mapping btree against the rtbitmap, and
-modify the rtbitmap scrub to check against the rtrmapbt.
+Add a new XFS_SCRUB_METAPATH subtype so that we can scrub the metadata
+directory tree path to the rmap btree file for each rt group.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_fs.h                     |    3 ++-
- man/man2/ioctl_xfs_scrub_metadata.2 |    8 ++++++--
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ libfrog/scrub.c |    5 +++++
+ libxfs/xfs_fs.h |    3 ++-
+ scrub/scrub.c   |    3 +++
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
 
+diff --git a/libfrog/scrub.c b/libfrog/scrub.c
+index b22770d639c..8822fc0088c 100644
+--- a/libfrog/scrub.c
++++ b/libfrog/scrub.c
+@@ -197,6 +197,11 @@ const struct xfrog_scrub_descr xfrog_metapaths[XFS_SCRUB_METAPATH_NR] = {
+ 		.descr	= "project quota metadir path",
+ 		.group	= XFROG_SCRUB_GROUP_FS,
+ 	},
++	[XFS_SCRUB_METAPATH_RTRMAPBT]	= {
++		.name	= "rtrmapbt",
++		.descr	= "rmap btree file metadir path",
++		.group	= XFROG_SCRUB_GROUP_RTGROUP,
++	},
+ };
+ 
+ /* Invoke the scrub ioctl.  Returns zero or negative error code. */
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 102b9273360..dcf048aae8c 100644
+index dcf048aae8c..0bbdbfb0a8a 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -737,9 +737,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_METAPATH	29	/* metadata directory tree paths */
- #define XFS_SCRUB_TYPE_RGSUPER	30	/* realtime superblock */
- #define XFS_SCRUB_TYPE_RGBITMAP	31	/* realtime group bitmap */
-+#define XFS_SCRUB_TYPE_RTRMAPBT	32	/* rtgroup reverse mapping btree */
+@@ -804,9 +804,10 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_METAPATH_USRQUOTA	2
+ #define XFS_SCRUB_METAPATH_GRPQUOTA	3
+ #define XFS_SCRUB_METAPATH_PRJQUOTA	4
++#define XFS_SCRUB_METAPATH_RTRMAPBT	5
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	32
-+#define XFS_SCRUB_TYPE_NR	33
+ /* Number of metapath sm_ino values */
+-#define XFS_SCRUB_METAPATH_NR		5
++#define XFS_SCRUB_METAPATH_NR		6
  
  /*
-  * This special type code only applies to the vectored scrub implementation.
-diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
-index dc439897c98..79875968d1c 100644
---- a/man/man2/ioctl_xfs_scrub_metadata.2
-+++ b/man/man2/ioctl_xfs_scrub_metadata.2
-@@ -98,9 +98,13 @@ The realtime allocation group number must be given in
- must be zero.
+  * ioctl limits
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 8f9fde80263..f20910de855 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -66,6 +66,9 @@ format_metapath_descr(
+ 				(unsigned long long)vhead->svh_ino);
  
- .PP
--.TP
-+.nf
- .B XFS_SCRUB_TYPE_RGBITMAP
--Examine a given realtime allocation group's free space bitmap.
-+.fi
-+.TP
-+.B XFS_SCRUB_TYPE_RTRMAPBT
-+Examine a given realtime allocation group's free space bitmap or reverse
-+mapping btree, respectively.
- Records are checked for obviously incorrect values and cross-referenced
- with other allocation group metadata records to ensure that there are no
- conflicts.
+ 	sc = &xfrog_metapaths[vhead->svh_ino];
++	if (sc->group == XFROG_SCRUB_GROUP_RTGROUP)
++		return snprintf(buf, buflen, _("rtgroup %u %s"),
++				vhead->svh_agno, _(sc->descr));
+ 	return snprintf(buf, buflen, "%s", _(sc->descr));
+ }
+ 
 
