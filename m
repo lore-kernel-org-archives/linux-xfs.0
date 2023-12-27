@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 265231368
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:31:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A81B1370
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:32:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OIdQA9EX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B867C433C8;
-	Mon,  1 Jan 2024 00:31:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t4rPyvv3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D980C433C8;
+	Mon,  1 Jan 2024 00:32:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704069113;
-	bh=934PcW4dwNt1BPr54/rQK6Qc+4TDeNhIiLn1HeTLjTM=;
+	s=k20201202; t=1704069129;
+	bh=blSr9bMEOrQjxAMavSNgMOlxxiRX60w/QFGLF4p1ytM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OIdQA9EXHQgC+hzKCnBscvH9MfwgGVemRrKsT6T4tCVBWcsKbcnv6kriHFxqy60AD
-	 kCRkGKiTFqdkR/DPRXaFLCk2irA9gSPCWMNsfmEnL5PQ6TK8mQ22yV67QWa63PiFv5
-	 QDFrG5e2YDZfmZPf8QcOhpxDPZ6t/hkHyFr89ZS2I+YNx30crVJDfSFpaI1KjAru66
-	 a3nDFQ/B3splhhTYSg3vl4sbwlH36spjBly5cGq0XlVAAk2O+CwofTPY2Devk3042/
-	 jGM+M9/avOdFVkiTvHvKXMFKy/T2kQDZFnNNfHMwwoYCeiUgFfN65lCdDWM8AEUS6e
-	 qaN75HoW/d8Aw==
-Date: Sun, 31 Dec 2023 16:31:53 +9900
-Subject: [PATCH 22/42] xfs: scrub the metadir path of rt refcount btree files
+	b=t4rPyvv38wxHy8vJx5xhoxFnINIAEb196lSitmOrLK4cQHSO1S+/SVUKBbnF2ei4D
+	 UM0kvozxpEPFfBKfj+OpRk86s/f/sS9v7MrO4dPJib0Y7UXdKzBA6AVaC0ulqt7pDO
+	 Sf4k5rHhmnKMaj1VgdtmcCSDmyJqNSuzobSQSP+s0qhiitoYHKbjTCsxWIU+oWh3h/
+	 kDxcL/9PCpHJXkeiZoAb5KNChZcm00bpa/tJMoZ7/xqggU5Cjmq51bEULb7xBUzykk
+	 AlNCBEHRmYqbDp94AOCYnhbix0GfIwv12q+R2kkAVAdDpgCfhPKpnmLXy7lrjeUwVI
+	 8O8gMoAVdFeKA==
+Date: Sun, 31 Dec 2023 16:32:08 +9900
+Subject: [PATCH 23/42] libfrog: enable scrubbing of the realtime refcount data
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405017419.1817107.10086590945379462719.stgit@frogsfrogsfrogs>
+Message-ID: <170405017432.1817107.15282915694645263552.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405017092.1817107.5442809166380700367.stgit@frogsfrogsfrogs>
 References: <170405017092.1817107.5442809166380700367.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,46 +37,41 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new XFS_SCRUB_METAPATH subtype so that we can scrub the metadata
-directory tree path to the refcount btree file for each rt group.
+Add a new entry so that we can scrub the rtrefcountbt.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
  libfrog/scrub.c |    5 +++++
- libxfs/xfs_fs.h |    3 ++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ scrub/repair.c  |    1 +
+ 2 files changed, 6 insertions(+)
 
 
 diff --git a/libfrog/scrub.c b/libfrog/scrub.c
-index 290ba0fb8bf..97b3d533910 100644
+index 97b3d533910..62220f1eb0b 100644
 --- a/libfrog/scrub.c
 +++ b/libfrog/scrub.c
-@@ -207,6 +207,11 @@ const struct xfrog_scrub_descr xfrog_metapaths[XFS_SCRUB_METAPATH_NR] = {
- 		.descr	= "rmap btree file metadir path",
+@@ -174,6 +174,11 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
+ 		.descr	= "realtime reverse mapping btree",
  		.group	= XFROG_SCRUB_GROUP_RTGROUP,
  	},
-+	[XFS_SCRUB_METAPATH_RTREFCBT]	= {
-+		.name	= "rtrefcbt",
-+		.descr	= "refcount btree file metadir path",
++	[XFS_SCRUB_TYPE_RTREFCBT] = {
++		.name	= "rtrefcountbt",
++		.descr	= "realtime reference count btree",
 +		.group	= XFROG_SCRUB_GROUP_RTGROUP,
 +	},
  };
  
- /* Invoke the scrub ioctl.  Returns zero or negative error code. */
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 7847da61db2..4159e96d01a 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -806,9 +806,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_METAPATH_GRPQUOTA	3
- #define XFS_SCRUB_METAPATH_PRJQUOTA	4
- #define XFS_SCRUB_METAPATH_RTRMAPBT	5
-+#define XFS_SCRUB_METAPATH_RTREFCBT	6
- 
- /* Number of metapath sm_ino values */
--#define XFS_SCRUB_METAPATH_NR		6
-+#define XFS_SCRUB_METAPATH_NR		7
- 
- /*
-  * ioctl limits
+ const struct xfrog_scrub_descr xfrog_metapaths[XFS_SCRUB_METAPATH_NR] = {
+diff --git a/scrub/repair.c b/scrub/repair.c
+index 72533ab5b02..08d11079547 100644
+--- a/scrub/repair.c
++++ b/scrub/repair.c
+@@ -556,6 +556,7 @@ repair_item_difficulty(
+ 		case XFS_SCRUB_TYPE_RTBITMAP:
+ 		case XFS_SCRUB_TYPE_RTSUM:
+ 		case XFS_SCRUB_TYPE_RGSUPER:
++		case XFS_SCRUB_TYPE_RTREFCBT:
+ 			ret |= REPAIR_DIFFICULTY_PRIMARY;
+ 			break;
+ 		}
 
