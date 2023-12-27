@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF644A04
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 01:07:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F3A4A05
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 01:07:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aSqMqbv5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E090DC433C7;
-	Mon,  1 Jan 2024 01:07:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iIaO9nvP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 926EBC433C7;
+	Mon,  1 Jan 2024 01:07:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704071258;
-	bh=iLQXLdzrd5w0gnFbKh6DylXPSFmDyHopPpYWz8QlBZQ=;
+	s=k20201202; t=1704071274;
+	bh=OJzQdA7vAYsjcWIc1V/dtiDc277/PJgnujmvH2ABOtU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aSqMqbv5XqS+8/t7a9Vf5LIEhzRUTk+D1ry/3J80xbZiDoIHY6efOrasZOkyZQiUA
-	 +dx91lGpMSxrLu+054+qJZhduMVCJEQj26vQWo/uPkg8bxSKOGYXWpWPd6BlG+sxZe
-	 fqM88zv6FcrigUfYrCDzYdccDpymREC66gUK3Q8/g6vsV4XPHXGmBJHA13ZJkbMQWh
-	 wBOntxdxwfWyAULfQ2sXljozIYaN33cAhVz5ffGKdtQNB+2/wsgoSLyzjuDXoRv80f
-	 sTCAYKzG6g89OnU5kVOE8Zgi3uRfs8CUGmx6syzH5bCV+iFK8QV/d8DT4NvabPH4J6
-	 mYRq8kNQqlrIw==
-Date: Sun, 31 Dec 2023 17:07:38 +9900
-Subject: [PATCH 1/1] design: document new name-value logged attribute variants
+	b=iIaO9nvPWAORqybet1djohPHjnelhUBexTLwTQQ0qS3PcssIAFSRWMHYfiQmupZ0o
+	 k8T3uYFIvl8tC0Frw3utsKxqYlEqfs17OMs8XVaquqXjCmMUBUmOkQAnNsUIpX0VBO
+	 ZgCFx8Yk0bwSKwwrHZAKwC1fS4b00m8PjeJhOYX8jF8iiMkZ+Ft1pkfusqYInAYQ7X
+	 jvz8UKhlfQBsn0zCOoe2mGA+voeDdM/sm3j3L0D2qUojYLKGJF5aZhsn7pq3Co7q7J
+	 ZfG4dn9PIEfZg2cbI6W+KE7n41drwcp1fvsO0vbMremQoey4S0UyZ0hrjDQ9d2iyDZ
+	 Qe3aWznggCdTA==
+Date: Sun, 31 Dec 2023 17:07:54 +9900
+Subject: [PATCH 1/1] design: document the parent pointer ondisk format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405036215.1829412.10624772030547951296.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405036203.1829412.14716609287158101338.stgit@frogsfrogsfrogs>
-References: <170405036203.1829412.14716609287158101338.stgit@frogsfrogsfrogs>
+Message-ID: <170405036551.1829491.4726867159555229702.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405036539.1829491.7832722721100300824.stgit@frogsfrogsfrogs>
+References: <170405036539.1829491.7832722721100300824.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,115 +37,140 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In preparation for parent pointers, we added a few new opcodes for
-logged extended attribute updates.  Document them now.
+Add parent pointers to the ondisk format documentation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .../journaling_log.asciidoc                        |   60 ++++++++++++++++++--
- 1 file changed, 54 insertions(+), 6 deletions(-)
+ .../allocation_groups.asciidoc                     |    4 +
+ .../extended_attributes.asciidoc                   |   94 ++++++++++++++++++++
+ 2 files changed, 98 insertions(+)
 
 
-diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-index daf9b225..c91fbb6a 100644
---- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-+++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-@@ -730,10 +730,21 @@ of file block mapping operation we want.
- .Extended attribute update log intent types
- [options="header"]
- |=====
--| Value				| Description
--| +XFS_ATTRI_OP_FLAGS_SET+	| Set a key/value pair.
--| +XFS_ATTRI_OP_FLAGS_REMOVE+	| Remove a key/value pair.
--| +XFS_ATTRI_OP_FLAGS_REPLACE+	| Replace one key/value pair with another.
-+| Value					| Description
-+| +XFS_ATTRI_OP_FLAGS_SET+		| Associate an attribute name with the
-+given value, creating an entry for the name if necessary.
-+| +XFS_ATTRI_OP_FLAGS_REMOVE+		| Remove an attribute name and any
-+value associated with it.
-+| +XFS_ATTRI_OP_FLAGS_REPLACE+		| Remove any value associated with an
-+attribute name, then associate the name with the given value.
-+| +XFS_ATTRI_OP_FLAGS_NVREMOVE+		| Remove the specific name and value
-+from the attribute structure.  The name and value must already exist.
-+| +XFS_ATTRI_OP_FLAGS_NVSET+		| Associate an attribute name with the
-+given value.  The name and value must not exist in the attribute structure.
-+A name associated with a different value will not be removed.
-+| +XFS_ATTRI_OP_FLAGS_NVREPLACE+	| Remove a specific name and value from
-+the attribute structure, then associate a specific name with a given value.
-+The two names and values need not be the same.
+diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+index c91a06bf..bd825207 100644
+--- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
++++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+@@ -469,6 +469,10 @@ space mappings allowed in data and extended attribute file forks.
+ Metadata directory tree.  See the section about the xref:Metadata_Directories[
+ metadata directory tree] for more information.
+ 
++| +XFS_SB_FEAT_INCOMPAT_PARENT+ |
++Directory parent pointers.  See the section about xref:Parent_Pointers[parent
++pointers] for more information.
++
  |=====
  
- The ``extended attribute update intent'' operation comes first; it tells the
-@@ -747,11 +758,17 @@ through the complex update will be replayed fully during log recovery.
- struct xfs_attri_log_format {
-      uint16_t                  alfi_type;
-      uint16_t                  alfi_size;
--     uint32_t                  __pad;
-+     uint32_t                  alfi_new_value_len;
-      uint64_t                  alfi_id;
-      uint64_t                  alfi_ino;
-      uint32_t                  alfi_op_flags;
--     uint32_t                  alfi_name_len;
-+     union {
-+          uint32_t             alfi_name_len;
-+          struct {
-+              uint16_t         alfi_old_name_len;
-+              uint16_t         alfi_new_name_len;
-+          };
-+     };
-      uint32_t                  alfi_value_len;
-      uint32_t                  alfi_attr_filter;
- };
-@@ -764,6 +781,11 @@ order, not big-endian like the rest of XFS.
- *alfi_size*::
- Size of this log item.  Should be 1.
+ *sb_features_log_incompat*::
+diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+index 19bff70f..6f905a1b 100644
+--- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
++++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+@@ -90,6 +90,7 @@ A combination of the following:
+ | +XFS_ATTR_SECURE+		| The attribute's namespace is ``secure''.
+ | +XFS_ATTR_INCOMPLETE+		| This attribute is being modified.
+ | +XFS_ATTR_LOCAL+		| The attribute value is contained within this block.
++| +XFS_ATTR_PARENT+		| This attribute is a parent pointer.
+ |=====
  
-+*alfi_new_value_len*::
-+For NVREPLACE, this is the length of the new xattr value, and +alfi_value_len+
-+contains the length of the old xattr value.
-+For all other opcodes, this field must be zero.
-+
- *alfi_id*::
- A 64-bit number that binds the corresponding ATTRD log item to this ATTRI log
- item.
-@@ -778,6 +800,13 @@ The operation being performed.  The lower byte must be one of the
- *alfi_name_len*::
- Length of the name of the extended attribute.  This must not be zero.
- The attribute name itself is captured in the next log item.
-+This field is not defined for the NVREPLACE opcode.
-+
-+*alfi_old_name_len*::
-+For NVREPLACE, this is the length of the old name.
-+
-+*alfi_new_name_len*::
-+For NVREPLACE, this is the length of the new name.
+ .Short form attribute layout
+@@ -911,6 +912,99 @@ Log sequence number of the last write to this block.
+ Filesystems formatted prior to v5 do not have this header in the remote block.
+ Value data begins immediately at offset zero.
  
- *alfi_value_len*::
- Length of the value of the extended attribute.  This must be zero for remove
-@@ -789,6 +818,25 @@ name.
- Attribute namespace filter flags.  This must be one of +ATTR_ROOT+,
- +ATTR_SECURE+, or +ATTR_INCOMPLETE+.
++[[Parent_Pointers]]
++== Directory Parent Pointers
++
++If this feature is enabled, each directory entry pointing from a parent
++directory to a child file has a corresponding back link from the child file
++back to the parent.  In other words, if directory P has an entry "foo" pointing
++to child C, then child C will have a parent pointer entry "foo" pointing to
++parent P.  This redundancy enables validation and repairs of the directory tree
++if the tree structure is damaged.
++
++Parent pointers are stored in a private namespace within the extended attribute
++structure.  The attribute name contains the following binary structure, and
++the attribute value contains the directory entry name.
++
++[source, c]
++----
++struct xfs_parent_name_rec {
++	__be64	p_ino;
++	__be32	p_gen;
++	__be32	p_namehash;
++};
++----
++
++*p_ino*::
++Inode number of the parent directory.
++
++*p_gen*::
++Generation number of the parent directory.
++
++*p_namehash*::
++The directory name hash of the directory entry name in the parent.
++
++=== xfs_db Parent Pointer Example
++
++Create a directory tree with the following structure, assuming that the
++XFS filesystem is mounted on +/mnt+:
++
++----
++$ mkdir /mnt/a/ /mnt/b
++$ touch /mnt/a/autoexec.bat
++$ ln /mnt/a/autoexec.bat /mnt/b/config.sys
++----
++
++Now we open this up in the debugger:
++
++----
++xfs_db> path /a
++xfs_db> ls
++8          131                directory      0x0000002e   1 . (good)
++10         128                directory      0x0000172e   2 .. (good)
++12         132                regular        0x5a1f6ea0  12 autoexec.bat (good)
++xfs_db> path /b
++xfs_db> ls
++8          8388736            directory      0x0000002e   1 . (good)
++10         128                directory      0x0000172e   2 .. (good)
++15         132                regular        0x9a01678c  10 config.sys (good)
++xfs_db> path /b/config.sys
++xfs_db> p a
++a.sfattr.hdr.totsize = 64
++a.sfattr.hdr.count = 2
++a.sfattr.list[0].namelen = 16
++a.sfattr.list[0].valuelen = 12
++a.sfattr.list[0].root = 0
++a.sfattr.list[0].secure = 0
++a.sfattr.list[0].parent = 1
++a.sfattr.list[0].parent_ino = 131
++a.sfattr.list[0].parent_gen = 3772462576
++a.sfattr.list[0].parent_namehash = 0x5a1f6ea0
++a.sfattr.list[0].parent_name = "autoexec.bat"
++a.sfattr.list[1].namelen = 16
++a.sfattr.list[1].valuelen = 10
++a.sfattr.list[1].root = 0
++a.sfattr.list[1].secure = 0
++a.sfattr.list[1].parent = 1
++a.sfattr.list[1].parent_ino = 8388736
++a.sfattr.list[1].parent_gen = 1161632072
++a.sfattr.list[1].parent_namehash = 0x9a01678c
++a.sfattr.list[1].parent_name = "config.sys"
++----
++
++In this example, +/a+ and +/b+ are subdirectories of the root.  A regular file
++is hardlinked into both subdirectories, under different names.  Directory +/a+
++is inode 131 and has an entry +autoexec.bat+ pointing to the child file.
++Directory +/b+ is inode 8388736 and has an entry +config.sys+ pointing to the
++same child file.
++
++Within the child file, notice that there are two parent pointers in the
++extended attribute structure.  The first parent pointer tells us that directory
++inode 131 should have an entry +autoexec.bat+ pointing down to the child; the
++second parent pointer tells us that directory inode 8388736 should have an
++entry +config.sys+ pointing down to the child.  Note that the name hashes are
++the same between each directory entry and its parent pointer.
++
+ == Key Differences Between Directories and Extended Attributes
  
-+For a SET or REPLACE opcode, there should be two regions after the ATTRI intent
-+item.  The first region contains the attribute name and the second contains the
-+attribute value.
-+
-+For a REMOVE opcode, there should only be one region after the ATTRI intent
-+item, and it will contain the attribute name.
-+
-+For an NVSET or NVREMOVE opcode, there should be one or two regions after the
-+ATTRI intent item.  The first region contains the attribute name.  The second
-+region, if present, contains the attribute value.
-+
-+For an NVREPLACE opcode, there should be between two and four regions after the
-+ATTRI intent item.  The first region contains the attribute name to remove.
-+The second region contains the attribute name to create.  If +alfi_value_len+
-+is nonzero, the third region contains the attribute value to remove.  If
-++alfi_new_value_len+ is nonzero, the next region seen contains the attribute
-+value to create.  This could be the third region if there was no value to
-+remove, or it could be the fourth region.
-+
- [[ATTRD_Log_Item]]
- === Completion of Extended Attribute Updates
- 
+ Directories and extended attributes share the function of mapping names to
 
