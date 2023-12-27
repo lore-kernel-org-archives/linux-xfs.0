@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16724384
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:17:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D516B384
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:17:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aT4n0518"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9800FC433C7;
-	Mon,  1 Jan 2024 00:17:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U6o80nU+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A97C433C7;
+	Mon,  1 Jan 2024 00:17:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068222;
-	bh=ovGpr6HXSx1ZuyS7GEjXmiRAX2Szi/yziGmk6ES3pLE=;
+	s=k20201202; t=1704068238;
+	bh=CaYqbgZ17ZNhRxShHpe+sEjZ+6SlS9zbKdKR4cXj++Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aT4n0518IUX4qhC/O8WAECfGCqBsT90CqUD5isIU6wAyWNmN6fxDyiM1EmzuisOCl
-	 SrPeMba7Ulst5XN3irwtD11GMcf//xppcC82K6DjKinlNX56eUcT0fcGYMQIzKFbgK
-	 tdkQyohMVqbaw39t8C63aXzhG9PbmJgD1woaLmX6OhWkXTWMCmWwXLQQ+SzpgcYY4y
-	 /fiHfWvl/qVFN9gXn5iQdYgyWHKHQj0bbMSdmdyQu+vn6Q8Id+jKiYKZ1l3+G5NUQv
-	 QXo4szxa/myqJawh3KPuHi7sjlQt7aVLCXQdlTO5CWKEuyW0bXuXdPBhcKvaDYA+0F
-	 yD+GmQkGw9qnw==
-Date: Sun, 31 Dec 2023 16:17:02 +9900
-Subject: [PATCH 25/47] xfs_db: copy the realtime rmap btree
+	b=U6o80nU+U1i3FOzeOjmoL9M+m5uLOZYZWKNaL3Ito7Hw3R/7Xsb4aLDlHK47El1h6
+	 L2x8babXiX2pd1Q9OxHUDp8zlGg0xHxAQah6F5H6Up3Qc8k1zqFFkDQxkUZ3L1UCTR
+	 S/Xh2eAMFHb2jiLIUAIH6ZzxS9fAckVnOTD2iLYL28SM+x1rpBJjM+EqMPf+WoSptj
+	 Ih9LA4e8UTsks1gRvTxvObNaeIzhk/yNLP7pYMWqpNSFb8+hC4PNhSpkncdH2VHWxV
+	 sUqkSj2SHrjrk5oqVRGZ8CmxaUbiXTxB7VZeqHZdYEZjwGUpiqIorqEeAGekmfpQcr
+	 DnmHoaUNh4Zmw==
+Date: Sun, 31 Dec 2023 16:17:17 +9900
+Subject: [PATCH 26/47] xfs_db: make fsmap query the realtime reverse mapping
+ tree
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015646.1815505.17570592286285852411.stgit@frogsfrogsfrogs>
+Message-ID: <170405015659.1815505.10556464363110963669.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,166 +38,233 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Copy the realtime rmapbt when we're metadumping the filesystem.
+Extend the 'fsmap' debugger command to support querying the realtime
+rmap btree via a new -r argument.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/metadump.c |  129 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 129 insertions(+)
+ db/fsmap.c               |  164 +++++++++++++++++++++++++++++++++++++++++++++-
+ libxfs/libxfs_api_defs.h |    2 +
+ 2 files changed, 162 insertions(+), 4 deletions(-)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index ccf7b89ccd5..c6f6bf1ea17 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -589,6 +589,55 @@ copy_rmap_btree(
- 	return scan_btree(agno, root, levels, TYP_RMAPBT, agf, scanfunc_rmapbt);
- }
- 
-+static int
-+scanfunc_rtrmapbt(
-+	struct xfs_btree_block	*block,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	int			level,
-+	typnm_t			btype,
-+	void			*arg)
-+{
-+	xfs_rtrmap_ptr_t	*pp;
-+	int			i;
-+	int			numrecs;
-+
-+	if (level == 0)
-+		return 1;
-+
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (numrecs > mp->m_rtrmap_mxr[1]) {
-+		if (metadump.show_warnings)
-+			print_warning("invalid numrecs (%u) in %s block %u/%u",
-+				numrecs, typtab[btype].name, agno, agbno);
-+		return 1;
-+	}
-+
-+	pp = xfs_rtrmap_ptr_addr(block, 1, mp->m_rtrmap_mxr[1]);
-+	for (i = 0; i < numrecs; i++) {
-+		xfs_agnumber_t	pagno;
-+		xfs_agblock_t	pbno;
-+
-+		pagno = XFS_FSB_TO_AGNO(mp, get_unaligned_be64(&pp[i]));
-+		pbno = XFS_FSB_TO_AGBNO(mp, get_unaligned_be64(&pp[i]));
-+
-+		if (pbno == 0 || pbno > mp->m_sb.sb_agblocks ||
-+		    pagno > mp->m_sb.sb_agcount) {
-+			if (metadump.show_warnings)
-+				print_warning("invalid block number (%u/%u) "
-+						"in inode %llu %s block %u/%u",
-+						pagno, pbno,
-+						(unsigned long long)metadump.cur_ino,
-+						typtab[btype].name, agno, agbno);
-+			continue;
-+		}
-+		if (!scan_btree(pagno, pbno, level, btype, arg,
-+				scanfunc_rtrmapbt))
-+			return 0;
-+	}
-+	return 1;
-+}
-+
- static int
- scanfunc_refcntbt(
- 	struct xfs_btree_block	*block,
-@@ -2319,6 +2368,83 @@ process_exinode(
- 					whichfork), nex, itype, is_meta);
- }
- 
-+static int
-+process_rtrmap(
-+	struct xfs_dinode	*dip,
-+	typnm_t			itype)
-+{
-+	struct xfs_rtrmap_root	*dib;
-+	int			i;
-+	xfs_rtrmap_ptr_t	*pp;
-+	int			level;
-+	int			nrecs;
-+	int			maxrecs;
-+	int			whichfork;
-+	typnm_t			btype;
-+
-+	if (itype == TYP_ATTR && metadump.show_warnings) {
-+		print_warning("ignoring rtrmapbt root in inode %llu attr fork",
-+				(unsigned long long)metadump.cur_ino);
-+		return 1;
-+	}
-+
-+	whichfork = XFS_DATA_FORK;
-+	btype = TYP_RTRMAPBT;
-+
-+	dib = (struct xfs_rtrmap_root *)XFS_DFORK_PTR(dip, whichfork);
-+	level = be16_to_cpu(dib->bb_level);
-+	nrecs = be16_to_cpu(dib->bb_numrecs);
-+
-+	if (level > mp->m_rtrmap_maxlevels) {
-+		if (metadump.show_warnings)
-+			print_warning("invalid level (%u) in inode %lld %s "
-+					"root", level,
-+					(unsigned long long)metadump.cur_ino,
-+					typtab[btype].name);
-+		return 1;
-+	}
-+
-+	if (level == 0)
-+		return 1;
-+
-+	maxrecs = libxfs_rtrmapbt_droot_maxrecs(
-+			XFS_DFORK_SIZE(dip, mp, whichfork),
-+			false);
-+	if (nrecs > maxrecs) {
-+		if (metadump.show_warnings)
-+			print_warning("invalid numrecs (%u) in inode %lld %s "
-+					"root", nrecs,
-+					(unsigned long long)metadump.cur_ino,
-+					typtab[btype].name);
-+		return 1;
-+	}
-+
-+	pp = xfs_rtrmap_droot_ptr_addr(dib, 1, maxrecs);
-+	for (i = 0; i < nrecs; i++) {
-+		xfs_agnumber_t	ag;
-+		xfs_agblock_t	bno;
-+
-+		ag = XFS_FSB_TO_AGNO(mp, get_unaligned_be64(&pp[i]));
-+		bno = XFS_FSB_TO_AGBNO(mp, get_unaligned_be64(&pp[i]));
-+
-+		if (bno == 0 || bno > mp->m_sb.sb_agblocks ||
-+				ag > mp->m_sb.sb_agcount) {
-+			if (metadump.show_warnings)
-+				print_warning("invalid block number (%u/%u) "
-+						"in inode %llu %s root", ag,
-+						bno,
-+						(unsigned long long)metadump.cur_ino,
-+						typtab[btype].name);
-+			continue;
-+		}
-+
-+		if (!scan_btree(ag, bno, level, btype, &itype,
-+				scanfunc_rtrmapbt))
-+			return 0;
-+	}
-+	return 1;
-+}
-+
- static int
- process_inode_data(
- 	struct xfs_dinode	*dip,
-@@ -2363,6 +2489,9 @@ process_inode_data(
- 
- 		case XFS_DINODE_FMT_BTREE:
- 			return process_btinode(dip, itype);
-+
-+		case XFS_DINODE_FMT_RMAP:
-+			return process_rtrmap(dip, itype);
+diff --git a/db/fsmap.c b/db/fsmap.c
+index 7fd42df2a1c..363c159ec07 100644
+--- a/db/fsmap.c
++++ b/db/fsmap.c
+@@ -102,6 +102,149 @@ fsmap(
  	}
- 	return 1;
  }
+ 
++static int
++fsmap_rt_fn(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec,
++	void				*priv)
++{
++	struct fsmap_info		*info = priv;
++
++	dbprintf(_("%llu: %u/%u len %u owner %lld offset %llu bmbt %d attrfork %d extflag %d\n"),
++		info->nr, cur->bc_ino.rtg->rtg_rgno, rec->rm_startblock,
++		rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
++		!!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK),
++		!!(rec->rm_flags & XFS_RMAP_ATTR_FORK),
++		!!(rec->rm_flags & XFS_RMAP_UNWRITTEN));
++	info->nr++;
++
++	return 0;
++}
++
++static int
++fsmap_rtgroup(
++	struct xfs_rtgroup		*rtg,
++	const struct xfs_rmap_irec	*low,
++	const struct xfs_rmap_irec	*high,
++	struct fsmap_info		*info)
++{
++	struct xfs_mount	*mp = rtg->rtg_mount;
++	struct xfs_trans	*tp;
++	struct xfs_inode	*ip;
++	struct xfs_imeta_path	*path;
++	struct xfs_btree_cur	*bt_cur;
++	xfs_ino_t		ino;
++	int			error;
++
++	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
++	if (error) {
++		dbprintf(
++ _("Cannot create path to rtgroup %u rmap inode\n"),
++				rtg->rtg_rgno);
++		return error;
++	}
++
++	error = -libxfs_trans_alloc_empty(mp, &tp);
++	if (error) {
++		dbprintf(
++ _("Cannot alloc transaction to look up rtgroup %u rmap inode\n"),
++				rtg->rtg_rgno);
++		goto out_path;
++	}
++		
++	error = -libxfs_imeta_lookup(tp, path, &ino);
++	if (ino == NULLFSINO)
++		error = ENOENT;
++	if (error) {
++		dbprintf(_("Cannot look up rtgroup %u rmap inode, error %d\n"),
++				rtg->rtg_rgno, error);
++		goto out_trans;
++	}
++
++	error = -libxfs_imeta_iget(tp, ino, XFS_DIR3_FT_REG_FILE, &ip);
++	if (error) {
++		dbprintf(_("Cannot load rtgroup %u rmap inode\n"),
++				rtg->rtg_rgno);
++		goto out_trans;
++	}
++
++	bt_cur = libxfs_rtrmapbt_init_cursor(mp, tp, rtg, ip);
++	if (!bt_cur) {
++		dbprintf(_("Not enough memory.\n"));
++		goto out_rele;
++	}
++
++	error = -libxfs_rmap_query_range(bt_cur, low, high, fsmap_rt_fn,
++			info);
++	if (error) {
++		dbprintf(_("Error %d while querying rt fsmap btree.\n"),
++			error);
++		goto out_cur;
++	}
++
++out_cur:
++	libxfs_btree_del_cursor(bt_cur, error);
++out_rele:
++	libxfs_imeta_irele(ip);
++out_trans:
++	libxfs_trans_cancel(tp);
++out_path:
++	libxfs_imeta_free_path(path);
++	return error;
++}
++
++static void
++fsmap_rt(
++	xfs_fsblock_t		start_fsb,
++	xfs_fsblock_t		end_fsb)
++{
++	struct fsmap_info	info;
++	xfs_daddr_t		eofs;
++	struct xfs_rmap_irec	low;
++	struct xfs_rmap_irec	high;
++	struct xfs_rtgroup	*rtg;
++	xfs_rgnumber_t		start_rg;
++	xfs_rgnumber_t		end_rg;
++	int			error;
++
++	if (mp->m_sb.sb_rblocks == 0)
++		return;
++
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
++	if (XFS_FSB_TO_DADDR(mp, end_fsb) >= eofs)
++		end_fsb = XFS_DADDR_TO_FSB(mp, eofs - 1);
++
++	low.rm_startblock = xfs_rtb_to_rgbno(mp, start_fsb, &start_rg);
++	low.rm_owner = 0;
++	low.rm_offset = 0;
++	low.rm_flags = 0;
++	high.rm_startblock = -1U;
++	high.rm_owner = ULLONG_MAX;
++	high.rm_offset = ULLONG_MAX;
++	high.rm_flags = XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
++			XFS_RMAP_UNWRITTEN;
++
++	end_rg = xfs_rtb_to_rgno(mp, end_fsb);
++
++	info.nr = 0;
++	for_each_rtgroup_range(mp, start_rg, end_rg, rtg) {
++		xfs_rgnumber_t		rgno;
++
++		if (rtg->rtg_rgno == end_rg)
++			high.rm_startblock = xfs_rtb_to_rgbno(mp, end_fsb,
++					&rgno);
++ 
++		error = fsmap_rtgroup(rtg, &low, &high, &info);
++		if (error) {
++			libxfs_rtgroup_put(rtg);
++			return;
++		}
++
++		if (rtg->rtg_rgno == start_rg)
++			low.rm_startblock = 0;
++	}
++}
++
+ static int
+ fsmap_f(
+ 	int			argc,
+@@ -111,14 +254,18 @@ fsmap_f(
+ 	int			c;
+ 	xfs_fsblock_t		start_fsb = 0;
+ 	xfs_fsblock_t		end_fsb = NULLFSBLOCK;
++	bool			isrt = false;
+ 
+ 	if (!xfs_has_rmapbt(mp)) {
+ 		dbprintf(_("Filesystem does not support reverse mapping btree.\n"));
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "")) != EOF) {
++	while ((c = getopt(argc, argv, "r")) != EOF) {
+ 		switch (c) {
++		case 'r':
++			isrt = true;
++			break;
+ 		default:
+ 			dbprintf(_("Bad option for fsmap command.\n"));
+ 			return 0;
+@@ -141,14 +288,23 @@ fsmap_f(
+ 		}
+ 	}
+ 
+-	fsmap(start_fsb, end_fsb);
++	if (argc > optind + 2) {
++		exitcode = 1;
++		dbprintf(_("Too many arguments to fsmap.\n"));
++		return 0;
++	}
++
++	if (isrt)
++		fsmap_rt(start_fsb, end_fsb);
++	else
++		fsmap(start_fsb, end_fsb);
+ 
+ 	return 0;
+ }
+ 
+ static const cmdinfo_t	fsmap_cmd =
+-	{ "fsmap", NULL, fsmap_f, 0, 2, 0,
+-	  N_("[start_fsb] [end_fsb]"),
++	{ "fsmap", NULL, fsmap_f, 0, -1, 0,
++	  N_("[-r] [start_fsb] [end_fsb]"),
+ 	  N_("display reverse mapping(s)"), NULL };
+ 
+ void
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 4b2fbd7cac9..85a4a131c75 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -284,11 +284,13 @@
+ #define xfs_rtsummary_wordcount		libxfs_rtsummary_wordcount
+ 
+ #define xfs_rtfree_extent		libxfs_rtfree_extent
++#define xfs_rtgroup_put			libxfs_rtgroup_put
+ #define xfs_rtgroup_update_secondary_sbs	libxfs_rtgroup_update_secondary_sbs
+ #define xfs_rtgroup_update_super	libxfs_rtgroup_update_super
+ #define xfs_rtrmapbt_create_path	libxfs_rtrmapbt_create_path
+ #define xfs_rtrmapbt_droot_maxrecs	libxfs_rtrmapbt_droot_maxrecs
+ #define xfs_rtrmapbt_maxlevels_ondisk	libxfs_rtrmapbt_maxlevels_ondisk
++#define xfs_rtrmapbt_init_cursor	libxfs_rtrmapbt_init_cursor
+ #define xfs_rtrmapbt_maxrecs		libxfs_rtrmapbt_maxrecs
+ 
+ #define xfs_sb_from_disk		libxfs_sb_from_disk
 
