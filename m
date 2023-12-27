@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6357EE
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:22:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164767ED
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:22:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TyC5d+Tb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA7C8C433C8;
-	Mon,  1 Jan 2024 00:22:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oDKOOsXh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CECBC433C7;
+	Mon,  1 Jan 2024 00:22:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068535;
-	bh=XGux3g2DbuffIzvy1ksVLaTCYtLQ9yVqg0WsS1e3z+c=;
+	s=k20201202; t=1704068550;
+	bh=8IkLoAwl6yWWkx8Hf2xx1/ye7/kxAdBVC7LJVxanusU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TyC5d+TbcRacR9r8EpkMARzjdKstJDvlJikmvF9hu2OMIhIycHuVkSRIMr/33vJQY
-	 1M9PFW9jbSkZAPPeO9ngQnOeiFMY1tguRap+noJt++lcEzhwUuMjnjjp89Gd4qSlbd
-	 HuNKP1McHqzfQ8HtTiFCHqg+VRWhXc9jRpfgm/Y+72y2mExpwb/wJ2pSzH6SGNytbd
-	 ZgbJZjTpf47tIQz7i5s4ghIJeH4hl+ToVB7NoeHtzaLqRsGh40jh2zjTcNGxOxGk3L
-	 DvHjdPXqg+1Lc7hW5snKgnP2+kmQcOEeKPlZKYU3t5z/1MbUs8QbrOsditqkltPysA
-	 L3lp3+b3UzpDw==
-Date: Sun, 31 Dec 2023 16:22:14 +9900
-Subject: [PATCH 45/47] xfs_repair: allow sysadmins to add realtime reverse
- mapping indexes
+	b=oDKOOsXhROYwSo0i2iG17xKq8uajRqTQjCq5JH7642qNigrVEpi+NRnUrEMsbEms4
+	 E0Yl6HdSZFPB2YQGHB3EuFjudazWjSeCoOVMiLhTqDmX+SnyqKKOLjZ+tp7fAD/HcF
+	 dcBHm0zpHu1lPbMWIcSxvPgiH2zAgEFbdkNqvokmIHYoAzXrTd/PddU5aekiAWKTgR
+	 k+UIbOM1kpIJ4ZMwYjp7VlXqDdlAfDzDvKykH2twI5On1AyarRHnnwIEMeFTf0ImYS
+	 OkjAKt+gKMvTkgfBqSTQD3NoCsLss9AAcp7NzxAUttqyTEgo/Qt0hXT1tCC90lJrsm
+	 PE0wxf+SaxITw==
+Date: Sun, 31 Dec 2023 16:22:30 +9900
+Subject: [PATCH 46/47] xfs_logprint: report realtime RUIs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015913.1815505.10741521850890564062.stgit@frogsfrogsfrogs>
+Message-ID: <170405015926.1815505.11026140199367054479.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,196 +37,121 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow the sysadmin to use xfs_repair to upgrade an existing filesystem
-to support the reverse mapping btree index for realtime volumes.  This
-is needed for online fsck.
+Decode the RUI format just enough to report if an RUI targets the
+realtime device or not.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    4 ++
- repair/phase2.c          |  100 ++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 99 insertions(+), 5 deletions(-)
+ logprint/log_misc.c      |    2 ++
+ logprint/log_print_all.c |    8 ++++++++
+ logprint/log_redo.c      |   24 +++++++++++++++++++-----
+ 3 files changed, 29 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index b5bb6c39928..cfa8c474160 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -63,6 +63,7 @@
- #define xfs_btree_bload			libxfs_btree_bload
- #define xfs_btree_bload_compute_geometry libxfs_btree_bload_compute_geometry
- #define xfs_btree_calc_size		libxfs_btree_calc_size
-+#define xfs_btree_compute_maxlevels	libxfs_btree_compute_maxlevels
- #define xfs_btree_decrement		libxfs_btree_decrement
- #define xfs_btree_del_cursor		libxfs_btree_del_cursor
- #define xfs_btree_delete		libxfs_btree_delete
-@@ -190,6 +191,8 @@
- #define xfs_imeta_link_space_res	libxfs_imeta_link_space_res
- #define xfs_imeta_lookup		libxfs_imeta_lookup
- #define xfs_imeta_mount			libxfs_imeta_mount
-+#define xfs_imeta_resv_free_inode	libxfs_imeta_resv_free_inode
-+#define xfs_imeta_resv_init_inode	libxfs_imeta_resv_init_inode
- #define xfs_imeta_set_iflag		libxfs_imeta_set_iflag
- #define xfs_imeta_start_create		libxfs_imeta_start_create
- #define xfs_imeta_start_link		libxfs_imeta_start_link
-@@ -289,6 +292,7 @@
- #define xfs_rtgroup_put			libxfs_rtgroup_put
- #define xfs_rtgroup_update_secondary_sbs	libxfs_rtgroup_update_secondary_sbs
- #define xfs_rtgroup_update_super	libxfs_rtgroup_update_super
-+#define xfs_rtrmapbt_calc_reserves	libxfs_rtrmapbt_calc_reserves
- #define xfs_rtrmapbt_calc_size		libxfs_rtrmapbt_calc_size
- #define xfs_rtrmapbt_commit_staged_btree	libxfs_rtrmapbt_commit_staged_btree
- #define xfs_rtrmapbt_create		libxfs_rtrmapbt_create
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 4cb0d7946bf..22458aee4cd 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -250,9 +250,8 @@ set_rmapbt(
- 		exit(0);
- 	}
- 
--	if (xfs_has_realtime(mp)) {
--		printf(
--	_("Reverse mapping btree feature not supported with realtime.\n"));
-+	if (xfs_has_realtime(mp) && !xfs_has_rtgroups(mp)) {
-+		printf(_("Reverse mapping btree requires realtime groups.\n"));
- 		exit(0);
- 	}
- 
-@@ -265,6 +264,11 @@ set_rmapbt(
- 	printf(_("Adding reverse mapping btrees to filesystem.\n"));
- 	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
- 	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-+
-+	/* Quota counts will be wrong once we add the rmap inodes. */
-+	if (xfs_has_realtime(mp))
-+		quotacheck_skip();
-+
- 	return true;
- }
- 
-@@ -450,6 +454,63 @@ check_free_space(
- 	return avail > GIGABYTES(10, mp->m_sb.sb_blocklog);
- }
- 
-+/*
-+ * Reserve space to handle rt rmap btree expansion.
-+ *
-+ * If the rmap inode for this group already exists, we assume that we're adding
-+ * some other feature.  Note that we have not validated the metadata directory
-+ * tree, so we must perform the lookup by hand and abort the upgrade if there
-+ * are errors.  Otherwise, the amount of space needed to handle a new maximally
-+ * sized rmap btree is added to @new_resv.
-+ */
-+static int
-+reserve_rtrmap_inode(
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rfsblock_t		*new_resv)
-+{
-+	struct xfs_mount	*mp = rtg->rtg_mount;
-+	struct xfs_trans	*tp;
-+	struct xfs_imeta_path	*path;
-+	xfs_ino_t		ino;
-+	xfs_filblks_t		ask;
-+	int			error;
-+
-+	if (!xfs_has_rtrmapbt(mp))
-+		return 0;
-+
-+	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
-+	if (error)
-+		return error;
-+
-+	error = -libxfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		goto out_path;
-+
-+	ask = libxfs_rtrmapbt_calc_reserves(mp);
-+
-+	error = -libxfs_imeta_lookup(tp, path, &ino);
-+	if (error)
-+		goto out_trans;
-+
-+	if (ino == NULLFSINO) {
-+		*new_resv += ask;
-+		goto out_trans;
-+	}
-+
-+	error = -libxfs_imeta_iget(tp, ino, XFS_DIR3_FT_REG_FILE,
-+			&rtg->rtg_rmapip);
-+	if (error)
-+		goto out_trans;
-+
-+	error = -libxfs_imeta_resv_init_inode(rtg->rtg_rmapip, ask);
-+
-+out_trans:
-+	libxfs_trans_cancel(tp);
-+out_path:
-+	libxfs_imeta_free_path(path);
-+	return error;
-+}
-+
- static void
- check_fs_free_space(
- 	struct xfs_mount		*mp,
-@@ -457,7 +518,10 @@ check_fs_free_space(
- 	struct xfs_sb			*new_sb)
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 9d63f376390..3661b595c53 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -1021,12 +1021,14 @@ xlog_print_record(
+ 					be32_to_cpu(op_head->oh_len));
+ 			break;
+ 		    }
++		    case XFS_LI_RUI_RT:
+ 		    case XFS_LI_RUI: {
+ 			skip = xlog_print_trans_rui(&ptr,
+ 					be32_to_cpu(op_head->oh_len),
+ 					continued);
+ 			break;
+ 		    }
++		    case XFS_LI_RUD_RT:
+ 		    case XFS_LI_RUD: {
+ 			skip = xlog_print_trans_rud(&ptr,
+ 					be32_to_cpu(op_head->oh_len));
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index d030efa9efb..e67e2c57f26 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -424,9 +424,11 @@ xlog_recover_print_logitem(
+ 	case XFS_LI_ATTRI:
+ 		xlog_recover_print_attri(item);
+ 		break;
++	case XFS_LI_RUD_RT:
+ 	case XFS_LI_RUD:
+ 		xlog_recover_print_rud(item);
+ 		break;
++	case XFS_LI_RUI_RT:
+ 	case XFS_LI_RUI:
+ 		xlog_recover_print_rui(item);
+ 		break;
+@@ -500,6 +502,12 @@ xlog_recover_print_item(
+ 	case XFS_LI_RUI:
+ 		printf("RUI");
+ 		break;
++	case XFS_LI_RUD_RT:
++		printf("RUD_RT");
++		break;
++	case XFS_LI_RUI_RT:
++		printf("RUI_RT");
++		break;
+ 	case XFS_LI_CUD:
+ 		printf("CUD");
+ 		break;
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 0cc3cd4ba28..ae6f311f19b 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -274,6 +274,7 @@ xlog_print_trans_rui(
+ 	uint			src_len,
+ 	int			continued)
  {
- 	struct xfs_perag		*pag;
-+	struct xfs_rtgroup		*rtg;
-+	xfs_rfsblock_t			new_resv = 0;
- 	xfs_agnumber_t			agno;
-+	xfs_rgnumber_t			rgno;
- 	int				error;
- 
- 	/* Make sure we have enough space for per-AG reservations. */
-@@ -533,6 +597,21 @@ check_fs_free_space(
- 		libxfs_trans_cancel(tp);
++	const char		*item_name = "RUI?";
+ 	struct xfs_rui_log_format	*src_f, *f = NULL;
+ 	uint			dst_len;
+ 	uint			nextents;
+@@ -318,8 +319,14 @@ xlog_print_trans_rui(
+ 		goto error;
  	}
  
-+	/* Realtime metadata btree inodes */
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		error = reserve_rtrmap_inode(rtg, &new_resv);
-+		if (error == ENOSPC) {
-+			printf(
-+_("Not enough free space would remain for rtgroup %u rmap inode.\n"),
-+					rtg->rtg_rgno);
-+			exit(0);
-+		}
-+		if (error)
-+			do_error(
-+_("Error %d while checking rtgroup %u rmap inode space reservation.\n"),
-+					error, rtg->rtg_rgno);
+-	printf(_("RUI:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
+-		f->rui_size, f->rui_nextents, (unsigned long long)f->rui_id);
++	switch (f->rui_type) {
++	case XFS_LI_RUI:	item_name = "RUI"; break;
++	case XFS_LI_RUI_RT:	item_name = "RUI_RT"; break;
 +	}
 +
- 	/*
- 	 * If we're adding parent pointers, we need at least 25% free since
- 	 * scanning the entire filesystem to guesstimate the overhead is
-@@ -548,13 +627,24 @@ check_fs_free_space(
++	printf(_("%s:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
++			item_name, f->rui_size, f->rui_nextents,
++			(unsigned long long)f->rui_id);
  
- 	/*
- 	 * Would the post-upgrade filesystem have enough free space on the data
--	 * device after making per-AG reservations?
-+	 * device after making per-AG reservations and reserving rt metadata
-+	 * inode blocks?
+ 	if (continued) {
+ 		printf(_("RUI extent data skipped (CONTINUE set, no space)\n"));
+@@ -359,6 +366,7 @@ xlog_print_trans_rud(
+ 	char				**ptr,
+ 	uint				len)
+ {
++	const char			*item_name = "RUD?";
+ 	struct xfs_rud_log_format	*f;
+ 	struct xfs_rud_log_format	lbuf;
+ 
+@@ -371,11 +379,17 @@ xlog_print_trans_rud(
  	 */
--	if (!check_free_space(mp, mp->m_sb.sb_fdblocks, mp->m_sb.sb_dblocks)) {
-+	if (new_resv > mp->m_sb.sb_fdblocks ||
-+	    !check_free_space(mp, mp->m_sb.sb_fdblocks, mp->m_sb.sb_dblocks)) {
- 		printf(_("Filesystem will be low on space after upgrade.\n"));
- 		exit(1);
- 	}
- 
-+	/* Unreserve the realtime metadata reservations. */
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		if (rtg->rtg_rmapip) {
-+			libxfs_imeta_resv_free_inode(rtg->rtg_rmapip);
-+			libxfs_imeta_irele(rtg->rtg_rmapip);
-+			rtg->rtg_rmapip = NULL;
-+		}
+ 	memmove(&lbuf, *ptr, min(core_size, len));
+ 	f = &lbuf;
++
++	switch (f->rud_type) {
++	case XFS_LI_RUD:	item_name = "RUD"; break;
++	case XFS_LI_RUD_RT:	item_name = "RUD_RT"; break;
 +	}
 +
- 	/*
- 	 * Release the per-AG reservations and mark the per-AG structure as
- 	 * uninitialized so that we don't trip over stale cached counters
+ 	*ptr += len;
+ 	if (len >= core_size) {
+-		printf(_("RUD:  #regs: %d	                 id: 0x%llx\n"),
+-			f->rud_size,
+-			(unsigned long long)f->rud_rui_id);
++		printf(_("%s:  #regs: %d	                 id: 0x%llx\n"),
++				item_name, f->rud_size,
++				(unsigned long long)f->rud_rui_id);
+ 
+ 		/* don't print extents as they are not used */
+ 
 
