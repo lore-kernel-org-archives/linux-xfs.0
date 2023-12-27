@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA83A7F9;
-	Mon,  1 Jan 2024 00:52:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 560EE7EE;
+	Mon,  1 Jan 2024 00:52:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KDHPOdSc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 770BAC433C7;
-	Mon,  1 Jan 2024 00:52:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mqGOrNL2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B1FFC433C8;
+	Mon,  1 Jan 2024 00:52:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704070335;
-	bh=/aANm7nvLEKfpkuwErFAb72mKDf0v0lHcinO9RN7UVU=;
+	s=k20201202; t=1704070351;
+	bh=bfOryF8ygdVuQkUzO48F25VOHdghEYvNCm3um5+Sw5U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=KDHPOdScsmEjjHy/APAyFzKfK7fq7E0JLg4cjTth4OGjkC1ZWS5TLC7i35XBhoyRd
-	 90voi+HLsnrXf5vtEdk18CcArr26mGh0xIk0T1N8RCcq2gE95SjrMoSMhp7ZJPWNts
-	 ERIrPf5cP4v3lMp20j443MrMFo79D2nL+yzfZnWueMqwLC1xkOqV39Flba6s1JJ97S
-	 MdiTdxqyIS7XLimh6rxlRMFRZyTcAMsDnV4737zAlqx880hwtYLWNWtBBAyAaWw9Zg
-	 37+RVUGUYYrQcvz2Kpu097HjQgzHNVNwHfuOv6yK4mjEqvjTZLZjqRv+vWzNV25+Y4
-	 FCMr4u+pozTsQ==
-Date: Sun, 31 Dec 2023 16:52:15 +9900
-Subject: [PATCH 09/11] xfs: create fuzz tests for metadata directories
+	b=mqGOrNL2dEOs/+LathuqqooKwfaT1J/ZOXLM8+qf2FDLlS6LWYeMmCEHhVjukWmYf
+	 iLPqza+VXuWvYJBaKrL1A5OyUSwsl16maJvgMHbo9IvlAT3lxBmz3xBkAR+F0Nj2OF
+	 1F/N4+6mMjJVlS2AVFx8Nqx5eSvr0HTFfSS5kuNht7U1QiSCjZzeb/eZDA67bf9crV
+	 rvZzwC+x276A7+diqQr5lNR/MZIIxkrOTlnPP2KTeAD+suBZRtmUcAz6LW8MCGYKzk
+	 g93OF2is6iThSXJwv+2ltVxmW74sjejb3ifORYXvk4JMg79FbaAIclhlcIcTtRMBYp
+	 7jGN0erwTup3w==
+Date: Sun, 31 Dec 2023 16:52:30 +9900
+Subject: [PATCH 10/11] xfs: baseline golden output for metadata directory fuzz
+ tests
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405029968.1826032.6023234349919842647.stgit@frogsfrogsfrogs>
+Message-ID: <170405029982.1826032.1603274280482729337.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
 References: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,501 +38,2242 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create fuzz tests to make sure that all the validation works for
-metadata directories and subdirectories.
+Record all the currently known failures of the xfs_scrub check and
+repair code for the metadata directory fuzz tests.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs         |   22 ++++++++++++++++++++++
- tests/xfs/1546     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1546.out |    4 ++++
- tests/xfs/1547     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1547.out |    4 ++++
- tests/xfs/1548     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1548.out |    4 ++++
- tests/xfs/1549     |   38 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/1549.out |    4 ++++
- tests/xfs/1550     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1550.out |    4 ++++
- tests/xfs/1551     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1551.out |    4 ++++
- tests/xfs/1552     |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1552.out |    4 ++++
- tests/xfs/1553     |   38 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/1553.out |    4 ++++
- 17 files changed, 352 insertions(+)
- create mode 100755 tests/xfs/1546
- create mode 100644 tests/xfs/1546.out
- create mode 100755 tests/xfs/1547
- create mode 100644 tests/xfs/1547.out
- create mode 100755 tests/xfs/1548
- create mode 100644 tests/xfs/1548.out
- create mode 100755 tests/xfs/1549
- create mode 100644 tests/xfs/1549.out
- create mode 100755 tests/xfs/1550
- create mode 100644 tests/xfs/1550.out
- create mode 100755 tests/xfs/1551
- create mode 100644 tests/xfs/1551.out
- create mode 100755 tests/xfs/1552
- create mode 100644 tests/xfs/1552.out
- create mode 100755 tests/xfs/1553
- create mode 100644 tests/xfs/1553.out
+ tests/xfs/1546.out |  312 ++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1547.out |   32 ++++
+ tests/xfs/1548.out |  314 ++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1549.out |  326 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1550.out |  430 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1551.out |   31 ++++
+ tests/xfs/1552.out |  339 +++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1553.out |  366 ++++++++++++++++++++++++++++++++++++++++++++
+ 8 files changed, 2150 insertions(+)
 
 
-diff --git a/common/xfs b/common/xfs
-index c6a60119f9..b88491666d 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1913,3 +1913,25 @@ _xfs_calc_hidden_quota_files() {
- 		echo 0
- 	fi
- }
-+
-+_require_xfs_mkfs_metadir()
-+{
-+	_scratch_mkfs_xfs_supported -m metadir=1 >/dev/null 2>&1 || \
-+		_notrun "mkfs.xfs doesn't have metadir features"
-+}
-+
-+_require_xfs_scratch_metadir()
-+{
-+	_require_xfs_mkfs_metadir
-+	_require_scratch
-+
-+	_scratch_mkfs -m metadir=1 &> /dev/null
-+	_require_scratch_xfs_features METADIR
-+	_try_scratch_mount
-+	res=$?
-+	if [ $res -ne 0 ]; then
-+		_notrun "mounting with metadir not supported by filesystem type: $FSTYP"
-+	else
-+		_scratch_unmount
-+	fi
-+}
-diff --git a/tests/xfs/1546 b/tests/xfs/1546
-new file mode 100755
-index 0000000000..a370eb7abf
---- /dev/null
-+++ b/tests/xfs/1546
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1546
-+#
-+# Populate a XFS filesystem and fuzz every metadir root field.
-+# Use xfs_scrub to fix the corruption.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /')
-+
-+echo "Fuzz metadir root"
-+_scratch_xfs_fuzz_metadata '' 'online' 'path -m /' >> $seqres.full
-+echo "Done fuzzing metadir root"
-+
-+# success, all done
-+status=0
-+exit
 diff --git a/tests/xfs/1546.out b/tests/xfs/1546.out
-new file mode 100644
-index 0000000000..b72891a758
---- /dev/null
+index b72891a758..cdfffd1609 100644
+--- a/tests/xfs/1546.out
 +++ b/tests/xfs/1546.out
-@@ -0,0 +1,4 @@
-+QA output created by 1546
-+Format and populate
-+Fuzz metadir root
-+Done fuzzing metadir root
-diff --git a/tests/xfs/1547 b/tests/xfs/1547
-new file mode 100755
-index 0000000000..0083924b7b
---- /dev/null
-+++ b/tests/xfs/1547
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1547
-+#
-+# Populate a XFS filesystem and fuzz every metadir root field.
-+# Use xfs_repair to fix the corruption.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /')
-+
-+echo "Fuzz metadir root"
-+_scratch_xfs_fuzz_metadata '' 'offline' 'path -m /' >> $seqres.full
-+echo "Done fuzzing metadir root"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,316 @@
+ QA output created by 1546
+ Format and populate
+ Fuzz metadir root
++core.magic = zeroes: mount failed (32).
++core.magic = ones: mount failed (32).
++core.magic = firstbit: mount failed (32).
++core.magic = middlebit: mount failed (32).
++core.magic = lastbit: mount failed (32).
++core.magic = add: mount failed (32).
++core.magic = sub: mount failed (32).
++core.mode = zeroes: mount failed (32).
++core.mode = ones: mount failed (32).
++core.mode = firstbit: mount failed (32).
++core.mode = middlebit: mount failed (32).
++core.mode = lastbit: mount failed (32).
++core.mode = add: mount failed (32).
++core.mode = sub: mount failed (32).
++core.version = zeroes: mount failed (32).
++core.version = ones: mount failed (32).
++core.version = firstbit: mount failed (32).
++core.version = middlebit: mount failed (32).
++core.version = lastbit: mount failed (32).
++core.version = add: mount failed (32).
++core.version = sub: mount failed (32).
++core.format = zeroes: mount failed (32).
++core.format = ones: mount failed (32).
++core.format = firstbit: mount failed (32).
++core.format = middlebit: mount failed (32).
++core.format = lastbit: mount failed (32).
++core.format = add: mount failed (32).
++core.format = sub: mount failed (32).
++core.onlink = ones: mount failed (32).
++core.onlink = firstbit: mount failed (32).
++core.onlink = middlebit: mount failed (32).
++core.onlink = lastbit: mount failed (32).
++core.onlink = add: mount failed (32).
++core.onlink = sub: mount failed (32).
++core.uid = ones: mount failed (32).
++core.uid = firstbit: mount failed (32).
++core.uid = middlebit: mount failed (32).
++core.uid = lastbit: mount failed (32).
++core.uid = add: mount failed (32).
++core.uid = sub: mount failed (32).
++core.gid = ones: mount failed (32).
++core.gid = firstbit: mount failed (32).
++core.gid = middlebit: mount failed (32).
++core.gid = lastbit: mount failed (32).
++core.gid = add: mount failed (32).
++core.gid = sub: mount failed (32).
++core.nlinkv2 = zeroes: mount failed (32).
++core.projid_lo = ones: mount failed (32).
++core.projid_lo = firstbit: mount failed (32).
++core.projid_lo = middlebit: mount failed (32).
++core.projid_lo = lastbit: mount failed (32).
++core.projid_lo = add: mount failed (32).
++core.projid_lo = sub: mount failed (32).
++core.projid_hi = ones: mount failed (32).
++core.projid_hi = firstbit: mount failed (32).
++core.projid_hi = middlebit: mount failed (32).
++core.projid_hi = lastbit: mount failed (32).
++core.projid_hi = add: mount failed (32).
++core.projid_hi = sub: mount failed (32).
++core.nextents = ones: mount failed (32).
++core.nextents = firstbit: mount failed (32).
++core.nextents = middlebit: mount failed (32).
++core.nextents = lastbit: mount failed (32).
++core.nextents = add: mount failed (32).
++core.nextents = sub: mount failed (32).
++core.size = zeroes: mount failed (32).
++core.size = ones: mount failed (32).
++core.size = firstbit: mount failed (32).
++core.size = middlebit: mount failed (32).
++core.size = lastbit: mount failed (32).
++core.size = add: mount failed (32).
++core.size = sub: mount failed (32).
++core.extsize = ones: mount failed (32).
++core.extsize = firstbit: mount failed (32).
++core.extsize = middlebit: mount failed (32).
++core.extsize = lastbit: mount failed (32).
++core.extsize = add: mount failed (32).
++core.extsize = sub: mount failed (32).
++core.naextents = ones: mount failed (32).
++core.naextents = firstbit: mount failed (32).
++core.naextents = middlebit: mount failed (32).
++core.naextents = lastbit: mount failed (32).
++core.naextents = add: mount failed (32).
++core.naextents = sub: mount failed (32).
++core.forkoff = ones: mount failed (32).
++core.forkoff = firstbit: mount failed (32).
++core.forkoff = middlebit: online scrub didn't fail.
++core.forkoff = lastbit: mount failed (32).
++core.forkoff = add: mount failed (32).
++core.forkoff = sub: mount failed (32).
++core.aformat = zeroes: online scrub didn't fail.
++core.aformat = zeroes: offline re-scrub failed (1).
++core.aformat = zeroes: offline post-mod scrub failed (1).
++core.aformat = ones: mount failed (32).
++core.aformat = firstbit: mount failed (32).
++core.aformat = middlebit: mount failed (32).
++core.aformat = lastbit: mount failed (32).
++core.aformat = add: mount failed (32).
++core.aformat = sub: mount failed (32).
++core.realtime = ones: mount failed (32).
++core.realtime = firstbit: mount failed (32).
++core.realtime = middlebit: mount failed (32).
++core.realtime = lastbit: mount failed (32).
++core.realtime = add: mount failed (32).
++core.realtime = sub: mount failed (32).
++core.rtinherit = ones: online scrub didn't fail.
++core.rtinherit = firstbit: online scrub didn't fail.
++core.rtinherit = middlebit: online scrub didn't fail.
++core.rtinherit = lastbit: online scrub didn't fail.
++core.rtinherit = add: online scrub didn't fail.
++core.rtinherit = sub: online scrub didn't fail.
++core.projinherit = ones: online scrub didn't fail.
++core.projinherit = firstbit: online scrub didn't fail.
++core.projinherit = middlebit: online scrub didn't fail.
++core.projinherit = lastbit: online scrub didn't fail.
++core.projinherit = add: online scrub didn't fail.
++core.projinherit = sub: online scrub didn't fail.
++core.nosymlinks = zeroes: mount failed (32).
++core.nosymlinks = firstbit: mount failed (32).
++core.nosymlinks = middlebit: mount failed (32).
++core.nosymlinks = lastbit: mount failed (32).
++core.nosymlinks = add: mount failed (32).
++core.nosymlinks = sub: mount failed (32).
++core.extsz = ones: mount failed (32).
++core.extsz = firstbit: mount failed (32).
++core.extsz = middlebit: mount failed (32).
++core.extsz = lastbit: mount failed (32).
++core.extsz = add: mount failed (32).
++core.extsz = sub: mount failed (32).
++core.extszinherit = ones: mount failed (32).
++core.extszinherit = firstbit: mount failed (32).
++core.extszinherit = middlebit: mount failed (32).
++core.extszinherit = lastbit: mount failed (32).
++core.extszinherit = add: mount failed (32).
++core.extszinherit = sub: mount failed (32).
++next_unlinked = zeroes: mount failed (32).
++next_unlinked = firstbit: mount failed (32).
++next_unlinked = middlebit: mount failed (32).
++next_unlinked = lastbit: mount failed (32).
++next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
++next_unlinked = sub: mount failed (32).
++v3.crc = zeroes: mount failed (32).
++v3.crc = ones: mount failed (32).
++v3.crc = firstbit: mount failed (32).
++v3.crc = middlebit: mount failed (32).
++v3.crc = lastbit: mount failed (32).
++v3.crc = add: mount failed (32).
++v3.crc = sub: mount failed (32).
++v3.change_count = zeroes: online scrub didn't fail.
++v3.change_count = ones: online scrub didn't fail.
++v3.change_count = firstbit: online scrub didn't fail.
++v3.change_count = middlebit: online scrub didn't fail.
++v3.change_count = lastbit: online scrub didn't fail.
++v3.change_count = add: online scrub didn't fail.
++v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = zeroes: mount failed (32).
++v3.flags2 = ones: mount failed (32).
++v3.flags2 = firstbit: mount failed (32).
++v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
++v3.flags2 = lastbit: mount failed (32).
++v3.flags2 = add: mount failed (32).
++v3.flags2 = sub: mount failed (32).
++v3.cowextsize = ones: mount failed (32).
++v3.cowextsize = firstbit: mount failed (32).
++v3.cowextsize = middlebit: mount failed (32).
++v3.cowextsize = lastbit: mount failed (32).
++v3.cowextsize = add: mount failed (32).
++v3.cowextsize = sub: mount failed (32).
++v3.inumber = zeroes: mount failed (32).
++v3.inumber = ones: mount failed (32).
++v3.inumber = firstbit: mount failed (32).
++v3.inumber = middlebit: mount failed (32).
++v3.inumber = lastbit: mount failed (32).
++v3.inumber = add: mount failed (32).
++v3.inumber = sub: mount failed (32).
++v3.uuid = zeroes: mount failed (32).
++v3.uuid = ones: mount failed (32).
++v3.uuid = firstbit: mount failed (32).
++v3.uuid = middlebit: mount failed (32).
++v3.uuid = lastbit: mount failed (32).
++v3.reflink = ones: mount failed (32).
++v3.reflink = firstbit: mount failed (32).
++v3.reflink = middlebit: mount failed (32).
++v3.reflink = lastbit: mount failed (32).
++v3.reflink = add: mount failed (32).
++v3.reflink = sub: mount failed (32).
++v3.cowextsz = ones: mount failed (32).
++v3.cowextsz = firstbit: mount failed (32).
++v3.cowextsz = middlebit: mount failed (32).
++v3.cowextsz = lastbit: mount failed (32).
++v3.cowextsz = add: mount failed (32).
++v3.cowextsz = sub: mount failed (32).
++v3.nrext64 = zeroes: online scrub didn't fail.
++v3.nrext64 = firstbit: online scrub didn't fail.
++v3.nrext64 = middlebit: online scrub didn't fail.
++v3.nrext64 = lastbit: online scrub didn't fail.
++v3.nrext64 = add: online scrub didn't fail.
++v3.nrext64 = sub: online scrub didn't fail.
++v3.metadir = zeroes: mount failed (32).
++v3.metadir = firstbit: mount failed (32).
++v3.metadir = middlebit: mount failed (32).
++v3.metadir = lastbit: mount failed (32).
++v3.metadir = add: mount failed (32).
++v3.metadir = sub: mount failed (32).
++u3.sfdir3.hdr.count = zeroes: mount failed (32).
++u3.sfdir3.hdr.count = ones: mount failed (32).
++u3.sfdir3.hdr.count = firstbit: mount failed (32).
++u3.sfdir3.hdr.count = middlebit: mount failed (32).
++u3.sfdir3.hdr.count = lastbit: mount failed (32).
++u3.sfdir3.hdr.count = add: mount failed (32).
++u3.sfdir3.hdr.count = sub: mount failed (32).
++u3.sfdir3.hdr.i8count = ones: mount failed (32).
++u3.sfdir3.hdr.i8count = firstbit: mount failed (32).
++u3.sfdir3.hdr.i8count = middlebit: mount failed (32).
++u3.sfdir3.hdr.i8count = lastbit: mount failed (32).
++u3.sfdir3.hdr.i8count = add: mount failed (32).
++u3.sfdir3.hdr.i8count = sub: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = zeroes: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = ones: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = firstbit: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[0].namelen = ones: mount failed (32).
++u3.sfdir3.list[0].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[0].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[0].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[0].namelen = add: mount failed (32).
++u3.sfdir3.list[0].namelen = sub: mount failed (32).
++u3.sfdir3.list[0].offset = zeroes: mount failed (32).
++u3.sfdir3.list[0].offset = ones: mount failed (32).
++u3.sfdir3.list[0].offset = firstbit: mount failed (32).
++u3.sfdir3.list[0].offset = middlebit: mount failed (32).
++u3.sfdir3.list[0].offset = lastbit: mount failed (32).
++u3.sfdir3.list[0].offset = add: mount failed (32).
++u3.sfdir3.list[0].offset = sub: mount failed (32).
++u3.sfdir3.list[0].name = zeroes: mount failed (32).
++u3.sfdir3.list[0].name = ones: mount failed (32).
++u3.sfdir3.list[0].name = firstbit: mount failed (32).
++u3.sfdir3.list[0].name = middlebit: mount failed (32).
++u3.sfdir3.list[0].name = lastbit: mount failed (32).
++u3.sfdir3.list[0].name = add: mount failed (32).
++u3.sfdir3.list[0].name = sub: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[0].filetype = ones: mount failed (32).
++u3.sfdir3.list[0].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[0].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[0].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[0].filetype = add: mount failed (32).
++u3.sfdir3.list[0].filetype = sub: mount failed (32).
++u3.sfdir3.list[1].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[1].namelen = ones: mount failed (32).
++u3.sfdir3.list[1].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[1].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[1].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[1].namelen = add: mount failed (32).
++u3.sfdir3.list[1].namelen = sub: mount failed (32).
++u3.sfdir3.list[1].offset = zeroes: mount failed (32).
++u3.sfdir3.list[1].offset = ones: mount failed (32).
++u3.sfdir3.list[1].offset = firstbit: mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = add: online scrub didn't fail.
++u3.sfdir3.list[1].offset = sub: mount failed (32).
++u3.sfdir3.list[1].name = zeroes: online repair failed (4).
++u3.sfdir3.list[1].name = zeroes: online re-scrub failed (4).
++u3.sfdir3.list[1].name = zeroes: offline re-scrub failed (1).
++u3.sfdir3.list[1].name = zeroes: pre-mod mount failed (32).
++u3.sfdir3.list[1].name = ones: online repair failed (4).
++u3.sfdir3.list[1].name = ones: online re-scrub failed (4).
++u3.sfdir3.list[1].name = ones: offline re-scrub failed (1).
++u3.sfdir3.list[1].name = ones: pre-mod mount failed (32).
++u3.sfdir3.list[1].name = firstbit: online repair failed (4).
++u3.sfdir3.list[1].name = firstbit: online re-scrub failed (4).
++u3.sfdir3.list[1].name = firstbit: offline re-scrub failed (1).
++u3.sfdir3.list[1].name = firstbit: pre-mod mount failed (32).
++u3.sfdir3.list[1].name = lastbit: online repair failed (4).
++u3.sfdir3.list[1].name = lastbit: online re-scrub failed (4).
++u3.sfdir3.list[1].name = lastbit: offline re-scrub failed (1).
++u3.sfdir3.list[1].name = lastbit: pre-mod mount failed (32).
++u3.sfdir3.list[1].name = add: online repair failed (4).
++u3.sfdir3.list[1].name = add: online re-scrub failed (4).
++u3.sfdir3.list[1].name = add: offline re-scrub failed (1).
++u3.sfdir3.list[1].name = add: pre-mod mount failed (32).
++u3.sfdir3.list[1].name = sub: online repair failed (4).
++u3.sfdir3.list[1].name = sub: online re-scrub failed (4).
++u3.sfdir3.list[1].name = sub: offline re-scrub failed (1).
++u3.sfdir3.list[1].name = sub: pre-mod mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[1].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[1].filetype = ones: mount failed (32).
++u3.sfdir3.list[1].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[1].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[1].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[1].filetype = add: mount failed (32).
++u3.sfdir3.list[1].filetype = sub: mount failed (32).
+ Done fuzzing metadir root
 diff --git a/tests/xfs/1547.out b/tests/xfs/1547.out
-new file mode 100644
-index 0000000000..983cc01343
---- /dev/null
+index 983cc01343..662d04321f 100644
+--- a/tests/xfs/1547.out
 +++ b/tests/xfs/1547.out
-@@ -0,0 +1,4 @@
-+QA output created by 1547
-+Format and populate
-+Fuzz metadir root
-+Done fuzzing metadir root
-diff --git a/tests/xfs/1548 b/tests/xfs/1548
-new file mode 100755
-index 0000000000..d81c524b07
---- /dev/null
-+++ b/tests/xfs/1548
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1548
-+#
-+# Populate a XFS filesystem and fuzz every metadir root field.
-+# Do not fix the filesystem, to test metadata verifiers.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_norepair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /')
-+
-+echo "Fuzz metadir root"
-+_scratch_xfs_fuzz_metadata '' 'none' 'path -m /' >> $seqres.full
-+echo "Done fuzzing metadir root"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,36 @@
+ QA output created by 1547
+ Format and populate
+ Fuzz metadir root
++core.forkoff = middlebit: offline scrub didn't fail.
++core.rtinherit = ones: offline scrub didn't fail.
++core.rtinherit = firstbit: offline scrub didn't fail.
++core.rtinherit = middlebit: offline scrub didn't fail.
++core.rtinherit = lastbit: offline scrub didn't fail.
++core.rtinherit = add: offline scrub didn't fail.
++core.rtinherit = sub: offline scrub didn't fail.
++core.projinherit = ones: offline scrub didn't fail.
++core.projinherit = firstbit: offline scrub didn't fail.
++core.projinherit = middlebit: offline scrub didn't fail.
++core.projinherit = lastbit: offline scrub didn't fail.
++core.projinherit = add: offline scrub didn't fail.
++core.projinherit = sub: offline scrub didn't fail.
++v3.change_count = zeroes: offline scrub didn't fail.
++v3.change_count = ones: offline scrub didn't fail.
++v3.change_count = firstbit: offline scrub didn't fail.
++v3.change_count = middlebit: offline scrub didn't fail.
++v3.change_count = lastbit: offline scrub didn't fail.
++v3.change_count = add: offline scrub didn't fail.
++v3.change_count = sub: offline scrub didn't fail.
++v3.nrext64 = zeroes: offline scrub didn't fail.
++v3.nrext64 = firstbit: offline scrub didn't fail.
++v3.nrext64 = middlebit: offline scrub didn't fail.
++v3.nrext64 = lastbit: offline scrub didn't fail.
++v3.nrext64 = add: offline scrub didn't fail.
++v3.nrext64 = sub: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = middlebit: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = lastbit: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = add: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = middlebit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
+ Done fuzzing metadir root
 diff --git a/tests/xfs/1548.out b/tests/xfs/1548.out
-new file mode 100644
-index 0000000000..9e395bb059
---- /dev/null
+index 9e395bb059..48ee6c02fb 100644
+--- a/tests/xfs/1548.out
 +++ b/tests/xfs/1548.out
-@@ -0,0 +1,4 @@
-+QA output created by 1548
-+Format and populate
-+Fuzz metadir root
-+Done fuzzing metadir root
-diff --git a/tests/xfs/1549 b/tests/xfs/1549
-new file mode 100755
-index 0000000000..487c73e9e9
---- /dev/null
-+++ b/tests/xfs/1549
-@@ -0,0 +1,38 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1549
-+#
-+# Populate a XFS filesystem and fuzz every metadir root field.
-+# Try online repair and, if necessary, offline repair,
-+# to test the most likely usage pattern.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_bothrepair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /')
-+
-+echo "Fuzz metadir root"
-+_scratch_xfs_fuzz_metadata '' 'both' 'path -m /' >> $seqres.full
-+echo "Done fuzzing metadir root"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,318 @@
+ QA output created by 1548
+ Format and populate
+ Fuzz metadir root
++core.magic = zeroes: mount failed (32).
++core.magic = ones: mount failed (32).
++core.magic = firstbit: mount failed (32).
++core.magic = middlebit: mount failed (32).
++core.magic = lastbit: mount failed (32).
++core.magic = add: mount failed (32).
++core.magic = sub: mount failed (32).
++core.mode = zeroes: mount failed (32).
++core.mode = ones: mount failed (32).
++core.mode = firstbit: mount failed (32).
++core.mode = middlebit: mount failed (32).
++core.mode = lastbit: mount failed (32).
++core.mode = add: mount failed (32).
++core.mode = sub: mount failed (32).
++core.version = zeroes: mount failed (32).
++core.version = ones: mount failed (32).
++core.version = firstbit: mount failed (32).
++core.version = middlebit: mount failed (32).
++core.version = lastbit: mount failed (32).
++core.version = add: mount failed (32).
++core.version = sub: mount failed (32).
++core.format = zeroes: mount failed (32).
++core.format = ones: mount failed (32).
++core.format = firstbit: mount failed (32).
++core.format = middlebit: mount failed (32).
++core.format = lastbit: mount failed (32).
++core.format = add: mount failed (32).
++core.format = sub: mount failed (32).
++core.onlink = ones: mount failed (32).
++core.onlink = firstbit: mount failed (32).
++core.onlink = middlebit: mount failed (32).
++core.onlink = lastbit: mount failed (32).
++core.onlink = add: mount failed (32).
++core.onlink = sub: mount failed (32).
++core.uid = ones: mount failed (32).
++core.uid = firstbit: mount failed (32).
++core.uid = middlebit: mount failed (32).
++core.uid = lastbit: mount failed (32).
++core.uid = add: mount failed (32).
++core.uid = sub: mount failed (32).
++core.gid = ones: mount failed (32).
++core.gid = firstbit: mount failed (32).
++core.gid = middlebit: mount failed (32).
++core.gid = lastbit: mount failed (32).
++core.gid = add: mount failed (32).
++core.gid = sub: mount failed (32).
++core.nlinkv2 = zeroes: mount failed (32).
++core.projid_lo = ones: mount failed (32).
++core.projid_lo = firstbit: mount failed (32).
++core.projid_lo = middlebit: mount failed (32).
++core.projid_lo = lastbit: mount failed (32).
++core.projid_lo = add: mount failed (32).
++core.projid_lo = sub: mount failed (32).
++core.projid_hi = ones: mount failed (32).
++core.projid_hi = firstbit: mount failed (32).
++core.projid_hi = middlebit: mount failed (32).
++core.projid_hi = lastbit: mount failed (32).
++core.projid_hi = add: mount failed (32).
++core.projid_hi = sub: mount failed (32).
++core.nextents = ones: mount failed (32).
++core.nextents = firstbit: mount failed (32).
++core.nextents = middlebit: mount failed (32).
++core.nextents = lastbit: mount failed (32).
++core.nextents = add: mount failed (32).
++core.nextents = sub: mount failed (32).
++core.size = zeroes: mount failed (32).
++core.size = ones: mount failed (32).
++core.size = firstbit: mount failed (32).
++core.size = middlebit: mount failed (32).
++core.size = lastbit: mount failed (32).
++core.size = add: mount failed (32).
++core.size = sub: mount failed (32).
++core.extsize = ones: mount failed (32).
++core.extsize = firstbit: mount failed (32).
++core.extsize = middlebit: mount failed (32).
++core.extsize = lastbit: mount failed (32).
++core.extsize = add: mount failed (32).
++core.extsize = sub: mount failed (32).
++core.naextents = ones: mount failed (32).
++core.naextents = firstbit: mount failed (32).
++core.naextents = middlebit: mount failed (32).
++core.naextents = lastbit: mount failed (32).
++core.naextents = add: mount failed (32).
++core.naextents = sub: mount failed (32).
++core.forkoff = ones: mount failed (32).
++core.forkoff = firstbit: mount failed (32).
++core.forkoff = middlebit: offline scrub didn't fail.
++core.forkoff = middlebit: online scrub didn't fail.
++core.forkoff = lastbit: mount failed (32).
++core.forkoff = add: mount failed (32).
++core.forkoff = sub: mount failed (32).
++core.aformat = zeroes: online scrub didn't fail.
++core.aformat = ones: mount failed (32).
++core.aformat = firstbit: mount failed (32).
++core.aformat = middlebit: mount failed (32).
++core.aformat = lastbit: mount failed (32).
++core.aformat = add: mount failed (32).
++core.aformat = sub: mount failed (32).
++core.realtime = ones: mount failed (32).
++core.realtime = firstbit: mount failed (32).
++core.realtime = middlebit: mount failed (32).
++core.realtime = lastbit: mount failed (32).
++core.realtime = add: mount failed (32).
++core.realtime = sub: mount failed (32).
++core.rtinherit = ones: offline scrub didn't fail.
++core.rtinherit = ones: online scrub didn't fail.
++core.rtinherit = firstbit: offline scrub didn't fail.
++core.rtinherit = firstbit: online scrub didn't fail.
++core.rtinherit = middlebit: offline scrub didn't fail.
++core.rtinherit = middlebit: online scrub didn't fail.
++core.rtinherit = lastbit: offline scrub didn't fail.
++core.rtinherit = lastbit: online scrub didn't fail.
++core.rtinherit = add: offline scrub didn't fail.
++core.rtinherit = add: online scrub didn't fail.
++core.rtinherit = sub: offline scrub didn't fail.
++core.rtinherit = sub: online scrub didn't fail.
++core.projinherit = ones: offline scrub didn't fail.
++core.projinherit = ones: online scrub didn't fail.
++core.projinherit = firstbit: offline scrub didn't fail.
++core.projinherit = firstbit: online scrub didn't fail.
++core.projinherit = middlebit: offline scrub didn't fail.
++core.projinherit = middlebit: online scrub didn't fail.
++core.projinherit = lastbit: offline scrub didn't fail.
++core.projinherit = lastbit: online scrub didn't fail.
++core.projinherit = add: offline scrub didn't fail.
++core.projinherit = add: online scrub didn't fail.
++core.projinherit = sub: offline scrub didn't fail.
++core.projinherit = sub: online scrub didn't fail.
++core.nosymlinks = zeroes: mount failed (32).
++core.nosymlinks = firstbit: mount failed (32).
++core.nosymlinks = middlebit: mount failed (32).
++core.nosymlinks = lastbit: mount failed (32).
++core.nosymlinks = add: mount failed (32).
++core.nosymlinks = sub: mount failed (32).
++core.extsz = ones: mount failed (32).
++core.extsz = firstbit: mount failed (32).
++core.extsz = middlebit: mount failed (32).
++core.extsz = lastbit: mount failed (32).
++core.extsz = add: mount failed (32).
++core.extsz = sub: mount failed (32).
++core.extszinherit = ones: mount failed (32).
++core.extszinherit = firstbit: mount failed (32).
++core.extszinherit = middlebit: mount failed (32).
++core.extszinherit = lastbit: mount failed (32).
++core.extszinherit = add: mount failed (32).
++core.extszinherit = sub: mount failed (32).
++next_unlinked = zeroes: mount failed (32).
++next_unlinked = firstbit: mount failed (32).
++next_unlinked = middlebit: mount failed (32).
++next_unlinked = lastbit: mount failed (32).
++next_unlinked = add: online scrub didn't fail.
++next_unlinked = sub: mount failed (32).
++v3.crc = zeroes: mount failed (32).
++v3.crc = ones: mount failed (32).
++v3.crc = firstbit: mount failed (32).
++v3.crc = middlebit: mount failed (32).
++v3.crc = lastbit: mount failed (32).
++v3.crc = add: mount failed (32).
++v3.crc = sub: mount failed (32).
++v3.change_count = zeroes: offline scrub didn't fail.
++v3.change_count = zeroes: online scrub didn't fail.
++v3.change_count = ones: offline scrub didn't fail.
++v3.change_count = ones: online scrub didn't fail.
++v3.change_count = firstbit: offline scrub didn't fail.
++v3.change_count = firstbit: online scrub didn't fail.
++v3.change_count = middlebit: offline scrub didn't fail.
++v3.change_count = middlebit: online scrub didn't fail.
++v3.change_count = lastbit: offline scrub didn't fail.
++v3.change_count = lastbit: online scrub didn't fail.
++v3.change_count = add: offline scrub didn't fail.
++v3.change_count = add: online scrub didn't fail.
++v3.change_count = sub: offline scrub didn't fail.
++v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = zeroes: mount failed (32).
++v3.flags2 = ones: mount failed (32).
++v3.flags2 = firstbit: mount failed (32).
++v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = lastbit: mount failed (32).
++v3.flags2 = add: mount failed (32).
++v3.flags2 = sub: mount failed (32).
++v3.cowextsize = ones: mount failed (32).
++v3.cowextsize = firstbit: mount failed (32).
++v3.cowextsize = middlebit: mount failed (32).
++v3.cowextsize = lastbit: mount failed (32).
++v3.cowextsize = add: mount failed (32).
++v3.cowextsize = sub: mount failed (32).
++v3.inumber = zeroes: mount failed (32).
++v3.inumber = ones: mount failed (32).
++v3.inumber = firstbit: mount failed (32).
++v3.inumber = middlebit: mount failed (32).
++v3.inumber = lastbit: mount failed (32).
++v3.inumber = add: mount failed (32).
++v3.inumber = sub: mount failed (32).
++v3.uuid = zeroes: mount failed (32).
++v3.uuid = ones: mount failed (32).
++v3.uuid = firstbit: mount failed (32).
++v3.uuid = middlebit: mount failed (32).
++v3.uuid = lastbit: mount failed (32).
++v3.reflink = ones: mount failed (32).
++v3.reflink = firstbit: mount failed (32).
++v3.reflink = middlebit: mount failed (32).
++v3.reflink = lastbit: mount failed (32).
++v3.reflink = add: mount failed (32).
++v3.reflink = sub: mount failed (32).
++v3.cowextsz = ones: mount failed (32).
++v3.cowextsz = firstbit: mount failed (32).
++v3.cowextsz = middlebit: mount failed (32).
++v3.cowextsz = lastbit: mount failed (32).
++v3.cowextsz = add: mount failed (32).
++v3.cowextsz = sub: mount failed (32).
++v3.nrext64 = zeroes: offline scrub didn't fail.
++v3.nrext64 = zeroes: online scrub didn't fail.
++v3.nrext64 = firstbit: offline scrub didn't fail.
++v3.nrext64 = firstbit: online scrub didn't fail.
++v3.nrext64 = middlebit: offline scrub didn't fail.
++v3.nrext64 = middlebit: online scrub didn't fail.
++v3.nrext64 = lastbit: offline scrub didn't fail.
++v3.nrext64 = lastbit: online scrub didn't fail.
++v3.nrext64 = add: offline scrub didn't fail.
++v3.nrext64 = add: online scrub didn't fail.
++v3.nrext64 = sub: offline scrub didn't fail.
++v3.nrext64 = sub: online scrub didn't fail.
++v3.metadir = zeroes: mount failed (32).
++v3.metadir = firstbit: mount failed (32).
++v3.metadir = middlebit: mount failed (32).
++v3.metadir = lastbit: mount failed (32).
++v3.metadir = add: mount failed (32).
++v3.metadir = sub: mount failed (32).
++u3.sfdir3.hdr.count = zeroes: mount failed (32).
++u3.sfdir3.hdr.count = ones: mount failed (32).
++u3.sfdir3.hdr.count = firstbit: mount failed (32).
++u3.sfdir3.hdr.count = middlebit: mount failed (32).
++u3.sfdir3.hdr.count = lastbit: mount failed (32).
++u3.sfdir3.hdr.count = add: mount failed (32).
++u3.sfdir3.hdr.count = sub: mount failed (32).
++u3.sfdir3.hdr.i8count = ones: mount failed (32).
++u3.sfdir3.hdr.i8count = firstbit: mount failed (32).
++u3.sfdir3.hdr.i8count = middlebit: mount failed (32).
++u3.sfdir3.hdr.i8count = lastbit: mount failed (32).
++u3.sfdir3.hdr.i8count = add: mount failed (32).
++u3.sfdir3.hdr.i8count = sub: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = zeroes: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = ones: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = firstbit: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = middlebit: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = lastbit: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = add: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[0].namelen = ones: mount failed (32).
++u3.sfdir3.list[0].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[0].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[0].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[0].namelen = add: mount failed (32).
++u3.sfdir3.list[0].namelen = sub: mount failed (32).
++u3.sfdir3.list[0].offset = zeroes: mount failed (32).
++u3.sfdir3.list[0].offset = ones: mount failed (32).
++u3.sfdir3.list[0].offset = firstbit: mount failed (32).
++u3.sfdir3.list[0].offset = middlebit: mount failed (32).
++u3.sfdir3.list[0].offset = lastbit: mount failed (32).
++u3.sfdir3.list[0].offset = add: mount failed (32).
++u3.sfdir3.list[0].offset = sub: mount failed (32).
++u3.sfdir3.list[0].name = zeroes: mount failed (32).
++u3.sfdir3.list[0].name = ones: mount failed (32).
++u3.sfdir3.list[0].name = firstbit: mount failed (32).
++u3.sfdir3.list[0].name = middlebit: mount failed (32).
++u3.sfdir3.list[0].name = lastbit: mount failed (32).
++u3.sfdir3.list[0].name = add: mount failed (32).
++u3.sfdir3.list[0].name = sub: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[0].filetype = ones: mount failed (32).
++u3.sfdir3.list[0].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[0].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[0].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[0].filetype = add: mount failed (32).
++u3.sfdir3.list[0].filetype = sub: mount failed (32).
++u3.sfdir3.list[1].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[1].namelen = ones: mount failed (32).
++u3.sfdir3.list[1].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[1].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[1].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[1].namelen = add: mount failed (32).
++u3.sfdir3.list[1].namelen = sub: mount failed (32).
++u3.sfdir3.list[1].offset = zeroes: mount failed (32).
++u3.sfdir3.list[1].offset = ones: mount failed (32).
++u3.sfdir3.list[1].offset = firstbit: mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = middlebit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = add: online scrub didn't fail.
++u3.sfdir3.list[1].offset = sub: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[1].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[1].filetype = ones: mount failed (32).
++u3.sfdir3.list[1].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[1].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[1].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[1].filetype = add: mount failed (32).
++u3.sfdir3.list[1].filetype = sub: mount failed (32).
+ Done fuzzing metadir root
 diff --git a/tests/xfs/1549.out b/tests/xfs/1549.out
-new file mode 100644
-index 0000000000..22b3d215e3
---- /dev/null
+index 22b3d215e3..c35f47c31a 100644
+--- a/tests/xfs/1549.out
 +++ b/tests/xfs/1549.out
-@@ -0,0 +1,4 @@
-+QA output created by 1549
-+Format and populate
-+Fuzz metadir root
-+Done fuzzing metadir root
-diff --git a/tests/xfs/1550 b/tests/xfs/1550
-new file mode 100755
-index 0000000000..8b5b42710c
---- /dev/null
-+++ b/tests/xfs/1550
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1550
-+#
-+# Populate a XFS filesystem and fuzz every metadir subdir field.
-+# Use xfs_scrub to fix the corruption.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime')
-+
-+echo "Fuzz metadir subdir"
-+_scratch_xfs_fuzz_metadata '' 'online' 'path -m /realtime' >> $seqres.full
-+echo "Done fuzzing metadir subdir"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,330 @@
+ QA output created by 1549
+ Format and populate
+ Fuzz metadir root
++core.magic = zeroes: mount failed (32).
++core.magic = ones: mount failed (32).
++core.magic = firstbit: mount failed (32).
++core.magic = middlebit: mount failed (32).
++core.magic = lastbit: mount failed (32).
++core.magic = add: mount failed (32).
++core.magic = sub: mount failed (32).
++core.mode = zeroes: mount failed (32).
++core.mode = ones: mount failed (32).
++core.mode = firstbit: mount failed (32).
++core.mode = middlebit: mount failed (32).
++core.mode = lastbit: mount failed (32).
++core.mode = add: mount failed (32).
++core.mode = sub: mount failed (32).
++core.version = zeroes: mount failed (32).
++core.version = ones: mount failed (32).
++core.version = firstbit: mount failed (32).
++core.version = middlebit: mount failed (32).
++core.version = lastbit: mount failed (32).
++core.version = add: mount failed (32).
++core.version = sub: mount failed (32).
++core.format = zeroes: mount failed (32).
++core.format = ones: mount failed (32).
++core.format = firstbit: mount failed (32).
++core.format = middlebit: mount failed (32).
++core.format = lastbit: mount failed (32).
++core.format = add: mount failed (32).
++core.format = sub: mount failed (32).
++core.onlink = ones: mount failed (32).
++core.onlink = firstbit: mount failed (32).
++core.onlink = middlebit: mount failed (32).
++core.onlink = lastbit: mount failed (32).
++core.onlink = add: mount failed (32).
++core.onlink = sub: mount failed (32).
++core.uid = ones: mount failed (32).
++core.uid = firstbit: mount failed (32).
++core.uid = middlebit: mount failed (32).
++core.uid = lastbit: mount failed (32).
++core.uid = add: mount failed (32).
++core.uid = sub: mount failed (32).
++core.gid = ones: mount failed (32).
++core.gid = firstbit: mount failed (32).
++core.gid = middlebit: mount failed (32).
++core.gid = lastbit: mount failed (32).
++core.gid = add: mount failed (32).
++core.gid = sub: mount failed (32).
++core.nlinkv2 = zeroes: mount failed (32).
++core.projid_lo = ones: mount failed (32).
++core.projid_lo = firstbit: mount failed (32).
++core.projid_lo = middlebit: mount failed (32).
++core.projid_lo = lastbit: mount failed (32).
++core.projid_lo = add: mount failed (32).
++core.projid_lo = sub: mount failed (32).
++core.projid_hi = ones: mount failed (32).
++core.projid_hi = firstbit: mount failed (32).
++core.projid_hi = middlebit: mount failed (32).
++core.projid_hi = lastbit: mount failed (32).
++core.projid_hi = add: mount failed (32).
++core.projid_hi = sub: mount failed (32).
++core.nextents = ones: mount failed (32).
++core.nextents = firstbit: mount failed (32).
++core.nextents = middlebit: mount failed (32).
++core.nextents = lastbit: mount failed (32).
++core.nextents = add: mount failed (32).
++core.nextents = sub: mount failed (32).
++core.size = zeroes: mount failed (32).
++core.size = ones: mount failed (32).
++core.size = firstbit: mount failed (32).
++core.size = middlebit: mount failed (32).
++core.size = lastbit: mount failed (32).
++core.size = add: mount failed (32).
++core.size = sub: mount failed (32).
++core.extsize = ones: mount failed (32).
++core.extsize = firstbit: mount failed (32).
++core.extsize = middlebit: mount failed (32).
++core.extsize = lastbit: mount failed (32).
++core.extsize = add: mount failed (32).
++core.extsize = sub: mount failed (32).
++core.naextents = ones: mount failed (32).
++core.naextents = firstbit: mount failed (32).
++core.naextents = middlebit: mount failed (32).
++core.naextents = lastbit: mount failed (32).
++core.naextents = add: mount failed (32).
++core.naextents = sub: mount failed (32).
++core.forkoff = ones: mount failed (32).
++core.forkoff = firstbit: mount failed (32).
++core.forkoff = middlebit: offline scrub didn't fail.
++core.forkoff = middlebit: online scrub didn't fail.
++core.forkoff = lastbit: mount failed (32).
++core.forkoff = add: mount failed (32).
++core.forkoff = sub: mount failed (32).
++core.aformat = zeroes: online scrub didn't fail.
++core.aformat = zeroes: offline re-scrub failed (1).
++core.aformat = zeroes: offline post-mod scrub failed (1).
++core.aformat = ones: mount failed (32).
++core.aformat = firstbit: mount failed (32).
++core.aformat = middlebit: mount failed (32).
++core.aformat = lastbit: mount failed (32).
++core.aformat = add: mount failed (32).
++core.aformat = sub: mount failed (32).
++core.realtime = ones: mount failed (32).
++core.realtime = firstbit: mount failed (32).
++core.realtime = middlebit: mount failed (32).
++core.realtime = lastbit: mount failed (32).
++core.realtime = add: mount failed (32).
++core.realtime = sub: mount failed (32).
++core.rtinherit = ones: offline scrub didn't fail.
++core.rtinherit = ones: online scrub didn't fail.
++core.rtinherit = firstbit: offline scrub didn't fail.
++core.rtinherit = firstbit: online scrub didn't fail.
++core.rtinherit = middlebit: offline scrub didn't fail.
++core.rtinherit = middlebit: online scrub didn't fail.
++core.rtinherit = lastbit: offline scrub didn't fail.
++core.rtinherit = lastbit: online scrub didn't fail.
++core.rtinherit = add: offline scrub didn't fail.
++core.rtinherit = add: online scrub didn't fail.
++core.rtinherit = sub: offline scrub didn't fail.
++core.rtinherit = sub: online scrub didn't fail.
++core.projinherit = ones: offline scrub didn't fail.
++core.projinherit = ones: online scrub didn't fail.
++core.projinherit = firstbit: offline scrub didn't fail.
++core.projinherit = firstbit: online scrub didn't fail.
++core.projinherit = middlebit: offline scrub didn't fail.
++core.projinherit = middlebit: online scrub didn't fail.
++core.projinherit = lastbit: offline scrub didn't fail.
++core.projinherit = lastbit: online scrub didn't fail.
++core.projinherit = add: offline scrub didn't fail.
++core.projinherit = add: online scrub didn't fail.
++core.projinherit = sub: offline scrub didn't fail.
++core.projinherit = sub: online scrub didn't fail.
++core.nosymlinks = zeroes: mount failed (32).
++core.nosymlinks = firstbit: mount failed (32).
++core.nosymlinks = middlebit: mount failed (32).
++core.nosymlinks = lastbit: mount failed (32).
++core.nosymlinks = add: mount failed (32).
++core.nosymlinks = sub: mount failed (32).
++core.extsz = ones: mount failed (32).
++core.extsz = firstbit: mount failed (32).
++core.extsz = middlebit: mount failed (32).
++core.extsz = lastbit: mount failed (32).
++core.extsz = add: mount failed (32).
++core.extsz = sub: mount failed (32).
++core.extszinherit = ones: mount failed (32).
++core.extszinherit = firstbit: mount failed (32).
++core.extszinherit = middlebit: mount failed (32).
++core.extszinherit = lastbit: mount failed (32).
++core.extszinherit = add: mount failed (32).
++core.extszinherit = sub: mount failed (32).
++next_unlinked = zeroes: mount failed (32).
++next_unlinked = firstbit: mount failed (32).
++next_unlinked = middlebit: mount failed (32).
++next_unlinked = lastbit: mount failed (32).
++next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
++next_unlinked = sub: mount failed (32).
++v3.crc = zeroes: mount failed (32).
++v3.crc = ones: mount failed (32).
++v3.crc = firstbit: mount failed (32).
++v3.crc = middlebit: mount failed (32).
++v3.crc = lastbit: mount failed (32).
++v3.crc = add: mount failed (32).
++v3.crc = sub: mount failed (32).
++v3.change_count = zeroes: offline scrub didn't fail.
++v3.change_count = zeroes: online scrub didn't fail.
++v3.change_count = ones: offline scrub didn't fail.
++v3.change_count = ones: online scrub didn't fail.
++v3.change_count = firstbit: offline scrub didn't fail.
++v3.change_count = firstbit: online scrub didn't fail.
++v3.change_count = middlebit: offline scrub didn't fail.
++v3.change_count = middlebit: online scrub didn't fail.
++v3.change_count = lastbit: offline scrub didn't fail.
++v3.change_count = lastbit: online scrub didn't fail.
++v3.change_count = add: offline scrub didn't fail.
++v3.change_count = add: online scrub didn't fail.
++v3.change_count = sub: offline scrub didn't fail.
++v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = zeroes: mount failed (32).
++v3.flags2 = ones: mount failed (32).
++v3.flags2 = firstbit: mount failed (32).
++v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
++v3.flags2 = lastbit: mount failed (32).
++v3.flags2 = add: mount failed (32).
++v3.flags2 = sub: mount failed (32).
++v3.cowextsize = ones: mount failed (32).
++v3.cowextsize = firstbit: mount failed (32).
++v3.cowextsize = middlebit: mount failed (32).
++v3.cowextsize = lastbit: mount failed (32).
++v3.cowextsize = add: mount failed (32).
++v3.cowextsize = sub: mount failed (32).
++v3.inumber = zeroes: mount failed (32).
++v3.inumber = ones: mount failed (32).
++v3.inumber = firstbit: mount failed (32).
++v3.inumber = middlebit: mount failed (32).
++v3.inumber = lastbit: mount failed (32).
++v3.inumber = add: mount failed (32).
++v3.inumber = sub: mount failed (32).
++v3.uuid = zeroes: mount failed (32).
++v3.uuid = ones: mount failed (32).
++v3.uuid = firstbit: mount failed (32).
++v3.uuid = middlebit: mount failed (32).
++v3.uuid = lastbit: mount failed (32).
++v3.reflink = ones: mount failed (32).
++v3.reflink = firstbit: mount failed (32).
++v3.reflink = middlebit: mount failed (32).
++v3.reflink = lastbit: mount failed (32).
++v3.reflink = add: mount failed (32).
++v3.reflink = sub: mount failed (32).
++v3.cowextsz = ones: mount failed (32).
++v3.cowextsz = firstbit: mount failed (32).
++v3.cowextsz = middlebit: mount failed (32).
++v3.cowextsz = lastbit: mount failed (32).
++v3.cowextsz = add: mount failed (32).
++v3.cowextsz = sub: mount failed (32).
++v3.nrext64 = zeroes: offline scrub didn't fail.
++v3.nrext64 = zeroes: online scrub didn't fail.
++v3.nrext64 = firstbit: offline scrub didn't fail.
++v3.nrext64 = firstbit: online scrub didn't fail.
++v3.nrext64 = middlebit: offline scrub didn't fail.
++v3.nrext64 = middlebit: online scrub didn't fail.
++v3.nrext64 = lastbit: offline scrub didn't fail.
++v3.nrext64 = lastbit: online scrub didn't fail.
++v3.nrext64 = add: offline scrub didn't fail.
++v3.nrext64 = add: online scrub didn't fail.
++v3.nrext64 = sub: offline scrub didn't fail.
++v3.nrext64 = sub: online scrub didn't fail.
++v3.metadir = zeroes: mount failed (32).
++v3.metadir = firstbit: mount failed (32).
++v3.metadir = middlebit: mount failed (32).
++v3.metadir = lastbit: mount failed (32).
++v3.metadir = add: mount failed (32).
++v3.metadir = sub: mount failed (32).
++u3.sfdir3.hdr.count = zeroes: mount failed (32).
++u3.sfdir3.hdr.count = ones: mount failed (32).
++u3.sfdir3.hdr.count = firstbit: mount failed (32).
++u3.sfdir3.hdr.count = middlebit: mount failed (32).
++u3.sfdir3.hdr.count = lastbit: mount failed (32).
++u3.sfdir3.hdr.count = add: mount failed (32).
++u3.sfdir3.hdr.count = sub: mount failed (32).
++u3.sfdir3.hdr.i8count = ones: mount failed (32).
++u3.sfdir3.hdr.i8count = firstbit: mount failed (32).
++u3.sfdir3.hdr.i8count = middlebit: mount failed (32).
++u3.sfdir3.hdr.i8count = lastbit: mount failed (32).
++u3.sfdir3.hdr.i8count = add: mount failed (32).
++u3.sfdir3.hdr.i8count = sub: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = zeroes: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = ones: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = firstbit: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = middlebit: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = lastbit: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = add: offline scrub didn't fail.
++u3.sfdir3.hdr.parent.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[0].namelen = ones: mount failed (32).
++u3.sfdir3.list[0].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[0].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[0].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[0].namelen = add: mount failed (32).
++u3.sfdir3.list[0].namelen = sub: mount failed (32).
++u3.sfdir3.list[0].offset = zeroes: mount failed (32).
++u3.sfdir3.list[0].offset = ones: mount failed (32).
++u3.sfdir3.list[0].offset = firstbit: mount failed (32).
++u3.sfdir3.list[0].offset = middlebit: mount failed (32).
++u3.sfdir3.list[0].offset = lastbit: mount failed (32).
++u3.sfdir3.list[0].offset = add: mount failed (32).
++u3.sfdir3.list[0].offset = sub: mount failed (32).
++u3.sfdir3.list[0].name = zeroes: mount failed (32).
++u3.sfdir3.list[0].name = ones: mount failed (32).
++u3.sfdir3.list[0].name = firstbit: mount failed (32).
++u3.sfdir3.list[0].name = middlebit: mount failed (32).
++u3.sfdir3.list[0].name = lastbit: mount failed (32).
++u3.sfdir3.list[0].name = add: mount failed (32).
++u3.sfdir3.list[0].name = sub: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[0].filetype = ones: mount failed (32).
++u3.sfdir3.list[0].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[0].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[0].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[0].filetype = add: mount failed (32).
++u3.sfdir3.list[0].filetype = sub: mount failed (32).
++u3.sfdir3.list[1].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[1].namelen = ones: mount failed (32).
++u3.sfdir3.list[1].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[1].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[1].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[1].namelen = add: mount failed (32).
++u3.sfdir3.list[1].namelen = sub: mount failed (32).
++u3.sfdir3.list[1].offset = zeroes: mount failed (32).
++u3.sfdir3.list[1].offset = ones: mount failed (32).
++u3.sfdir3.list[1].offset = firstbit: mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = middlebit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = add: online scrub didn't fail.
++u3.sfdir3.list[1].offset = sub: mount failed (32).
++u3.sfdir3.list[1].name = zeroes: online repair failed (4).
++u3.sfdir3.list[1].name = firstbit: online repair failed (4).
++u3.sfdir3.list[1].name = middlebit: online repair failed (4).
++u3.sfdir3.list[1].name = lastbit: online repair failed (4).
++u3.sfdir3.list[1].name = add: online repair failed (4).
++u3.sfdir3.list[1].name = sub: online repair failed (4).
++u3.sfdir3.list[1].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[1].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[1].filetype = ones: mount failed (32).
++u3.sfdir3.list[1].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[1].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[1].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[1].filetype = add: mount failed (32).
++u3.sfdir3.list[1].filetype = sub: mount failed (32).
+ Done fuzzing metadir root
 diff --git a/tests/xfs/1550.out b/tests/xfs/1550.out
-new file mode 100644
-index 0000000000..7694cd670b
---- /dev/null
+index 7694cd670b..166e165538 100644
+--- a/tests/xfs/1550.out
 +++ b/tests/xfs/1550.out
-@@ -0,0 +1,4 @@
-+QA output created by 1550
-+Format and populate
-+Fuzz metadir subdir
-+Done fuzzing metadir subdir
-diff --git a/tests/xfs/1551 b/tests/xfs/1551
-new file mode 100755
-index 0000000000..05b0328ef0
---- /dev/null
-+++ b/tests/xfs/1551
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1551
-+#
-+# Populate a XFS filesystem and fuzz every metadir subdir field.
-+# Use xfs_repair to fix the corruption.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime')
-+
-+echo "Fuzz metadir subdir"
-+_scratch_xfs_fuzz_metadata '' 'offline' 'path -m /realtime' >> $seqres.full
-+echo "Done fuzzing metadir subdir"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,434 @@
+ QA output created by 1550
+ Format and populate
+ Fuzz metadir subdir
++core.magic = zeroes: mount failed (32).
++core.magic = ones: mount failed (32).
++core.magic = firstbit: mount failed (32).
++core.magic = middlebit: mount failed (32).
++core.magic = lastbit: mount failed (32).
++core.magic = add: mount failed (32).
++core.magic = sub: mount failed (32).
++core.mode = zeroes: mount failed (32).
++core.mode = ones: mount failed (32).
++core.mode = firstbit: mount failed (32).
++core.mode = middlebit: mount failed (32).
++core.mode = lastbit: mount failed (32).
++core.mode = add: mount failed (32).
++core.mode = sub: mount failed (32).
++core.version = zeroes: mount failed (32).
++core.version = ones: mount failed (32).
++core.version = firstbit: mount failed (32).
++core.version = middlebit: mount failed (32).
++core.version = lastbit: mount failed (32).
++core.version = add: mount failed (32).
++core.version = sub: mount failed (32).
++core.format = zeroes: mount failed (32).
++core.format = ones: mount failed (32).
++core.format = firstbit: mount failed (32).
++core.format = middlebit: mount failed (32).
++core.format = lastbit: mount failed (32).
++core.format = add: mount failed (32).
++core.format = sub: mount failed (32).
++core.onlink = ones: mount failed (32).
++core.onlink = firstbit: mount failed (32).
++core.onlink = middlebit: mount failed (32).
++core.onlink = lastbit: mount failed (32).
++core.onlink = add: mount failed (32).
++core.onlink = sub: mount failed (32).
++core.uid = ones: mount failed (32).
++core.uid = firstbit: mount failed (32).
++core.uid = middlebit: mount failed (32).
++core.uid = lastbit: mount failed (32).
++core.uid = add: mount failed (32).
++core.uid = sub: mount failed (32).
++core.gid = ones: mount failed (32).
++core.gid = firstbit: mount failed (32).
++core.gid = middlebit: mount failed (32).
++core.gid = lastbit: mount failed (32).
++core.gid = add: mount failed (32).
++core.gid = sub: mount failed (32).
++core.nlinkv2 = zeroes: mount failed (32).
++core.projid_lo = ones: mount failed (32).
++core.projid_lo = firstbit: mount failed (32).
++core.projid_lo = middlebit: mount failed (32).
++core.projid_lo = lastbit: mount failed (32).
++core.projid_lo = add: mount failed (32).
++core.projid_lo = sub: mount failed (32).
++core.projid_hi = ones: mount failed (32).
++core.projid_hi = firstbit: mount failed (32).
++core.projid_hi = middlebit: mount failed (32).
++core.projid_hi = lastbit: mount failed (32).
++core.projid_hi = add: mount failed (32).
++core.projid_hi = sub: mount failed (32).
++core.nextents = ones: mount failed (32).
++core.nextents = firstbit: mount failed (32).
++core.nextents = middlebit: mount failed (32).
++core.nextents = lastbit: mount failed (32).
++core.nextents = add: mount failed (32).
++core.nextents = sub: mount failed (32).
++core.size = zeroes: mount failed (32).
++core.size = ones: mount failed (32).
++core.size = firstbit: mount failed (32).
++core.size = middlebit: mount failed (32).
++core.size = lastbit: mount failed (32).
++core.size = add: mount failed (32).
++core.size = sub: mount failed (32).
++core.extsize = ones: mount failed (32).
++core.extsize = firstbit: mount failed (32).
++core.extsize = middlebit: mount failed (32).
++core.extsize = lastbit: mount failed (32).
++core.extsize = add: mount failed (32).
++core.extsize = sub: mount failed (32).
++core.naextents = ones: mount failed (32).
++core.naextents = firstbit: mount failed (32).
++core.naextents = middlebit: mount failed (32).
++core.naextents = lastbit: mount failed (32).
++core.naextents = add: mount failed (32).
++core.naextents = sub: mount failed (32).
++core.forkoff = zeroes: mount failed (32).
++core.forkoff = ones: mount failed (32).
++core.forkoff = firstbit: mount failed (32).
++core.forkoff = middlebit: mount failed (32).
++core.forkoff = lastbit: mount failed (32).
++core.forkoff = add: mount failed (32).
++core.forkoff = sub: mount failed (32).
++core.aformat = zeroes: mount failed (32).
++core.aformat = ones: mount failed (32).
++core.aformat = firstbit: mount failed (32).
++core.aformat = middlebit: mount failed (32).
++core.aformat = lastbit: mount failed (32).
++core.aformat = add: mount failed (32).
++core.aformat = sub: mount failed (32).
++core.realtime = ones: mount failed (32).
++core.realtime = firstbit: mount failed (32).
++core.realtime = middlebit: mount failed (32).
++core.realtime = lastbit: mount failed (32).
++core.realtime = add: mount failed (32).
++core.realtime = sub: mount failed (32).
++core.rtinherit = ones: online scrub didn't fail.
++core.rtinherit = firstbit: online scrub didn't fail.
++core.rtinherit = middlebit: online scrub didn't fail.
++core.rtinherit = lastbit: online scrub didn't fail.
++core.rtinherit = add: online scrub didn't fail.
++core.rtinherit = sub: online scrub didn't fail.
++core.projinherit = ones: online scrub didn't fail.
++core.projinherit = firstbit: online scrub didn't fail.
++core.projinherit = middlebit: online scrub didn't fail.
++core.projinherit = lastbit: online scrub didn't fail.
++core.projinherit = add: online scrub didn't fail.
++core.projinherit = sub: online scrub didn't fail.
++core.nosymlinks = zeroes: mount failed (32).
++core.nosymlinks = firstbit: mount failed (32).
++core.nosymlinks = middlebit: mount failed (32).
++core.nosymlinks = lastbit: mount failed (32).
++core.nosymlinks = add: mount failed (32).
++core.nosymlinks = sub: mount failed (32).
++core.extsz = ones: mount failed (32).
++core.extsz = firstbit: mount failed (32).
++core.extsz = middlebit: mount failed (32).
++core.extsz = lastbit: mount failed (32).
++core.extsz = add: mount failed (32).
++core.extsz = sub: mount failed (32).
++core.extszinherit = ones: mount failed (32).
++core.extszinherit = firstbit: mount failed (32).
++core.extszinherit = middlebit: mount failed (32).
++core.extszinherit = lastbit: mount failed (32).
++core.extszinherit = add: mount failed (32).
++core.extszinherit = sub: mount failed (32).
++next_unlinked = zeroes: mount failed (32).
++next_unlinked = firstbit: mount failed (32).
++next_unlinked = middlebit: mount failed (32).
++next_unlinked = lastbit: mount failed (32).
++next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
++next_unlinked = sub: mount failed (32).
++v3.crc = zeroes: mount failed (32).
++v3.crc = ones: mount failed (32).
++v3.crc = firstbit: mount failed (32).
++v3.crc = middlebit: mount failed (32).
++v3.crc = lastbit: mount failed (32).
++v3.crc = add: mount failed (32).
++v3.crc = sub: mount failed (32).
++v3.change_count = zeroes: online scrub didn't fail.
++v3.change_count = ones: online scrub didn't fail.
++v3.change_count = firstbit: online scrub didn't fail.
++v3.change_count = middlebit: online scrub didn't fail.
++v3.change_count = lastbit: online scrub didn't fail.
++v3.change_count = add: online scrub didn't fail.
++v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = zeroes: mount failed (32).
++v3.flags2 = ones: mount failed (32).
++v3.flags2 = firstbit: mount failed (32).
++v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
++v3.flags2 = lastbit: mount failed (32).
++v3.flags2 = add: mount failed (32).
++v3.flags2 = sub: mount failed (32).
++v3.cowextsize = ones: mount failed (32).
++v3.cowextsize = firstbit: mount failed (32).
++v3.cowextsize = middlebit: mount failed (32).
++v3.cowextsize = lastbit: mount failed (32).
++v3.cowextsize = add: mount failed (32).
++v3.cowextsize = sub: mount failed (32).
++v3.inumber = zeroes: mount failed (32).
++v3.inumber = ones: mount failed (32).
++v3.inumber = firstbit: mount failed (32).
++v3.inumber = middlebit: mount failed (32).
++v3.inumber = lastbit: mount failed (32).
++v3.inumber = add: mount failed (32).
++v3.inumber = sub: mount failed (32).
++v3.uuid = zeroes: mount failed (32).
++v3.uuid = ones: mount failed (32).
++v3.uuid = firstbit: mount failed (32).
++v3.uuid = middlebit: mount failed (32).
++v3.uuid = lastbit: mount failed (32).
++v3.reflink = ones: mount failed (32).
++v3.reflink = firstbit: mount failed (32).
++v3.reflink = middlebit: mount failed (32).
++v3.reflink = lastbit: mount failed (32).
++v3.reflink = add: mount failed (32).
++v3.reflink = sub: mount failed (32).
++v3.cowextsz = ones: mount failed (32).
++v3.cowextsz = firstbit: mount failed (32).
++v3.cowextsz = middlebit: mount failed (32).
++v3.cowextsz = lastbit: mount failed (32).
++v3.cowextsz = add: mount failed (32).
++v3.cowextsz = sub: mount failed (32).
++v3.nrext64 = zeroes: online scrub didn't fail.
++v3.nrext64 = firstbit: online scrub didn't fail.
++v3.nrext64 = middlebit: online scrub didn't fail.
++v3.nrext64 = lastbit: online scrub didn't fail.
++v3.nrext64 = add: online scrub didn't fail.
++v3.nrext64 = sub: online scrub didn't fail.
++v3.metadir = zeroes: mount failed (32).
++v3.metadir = firstbit: mount failed (32).
++v3.metadir = middlebit: mount failed (32).
++v3.metadir = lastbit: mount failed (32).
++v3.metadir = add: mount failed (32).
++v3.metadir = sub: mount failed (32).
++u3.sfdir3.hdr.count = zeroes: mount failed (32).
++u3.sfdir3.hdr.count = ones: mount failed (32).
++u3.sfdir3.hdr.count = firstbit: mount failed (32).
++u3.sfdir3.hdr.count = middlebit: mount failed (32).
++u3.sfdir3.hdr.count = lastbit: mount failed (32).
++u3.sfdir3.hdr.count = add: mount failed (32).
++u3.sfdir3.hdr.count = sub: mount failed (32).
++u3.sfdir3.hdr.i8count = ones: mount failed (32).
++u3.sfdir3.hdr.i8count = firstbit: mount failed (32).
++u3.sfdir3.hdr.i8count = middlebit: mount failed (32).
++u3.sfdir3.hdr.i8count = lastbit: mount failed (32).
++u3.sfdir3.hdr.i8count = add: mount failed (32).
++u3.sfdir3.hdr.i8count = sub: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = zeroes: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = ones: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = firstbit: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[0].namelen = ones: mount failed (32).
++u3.sfdir3.list[0].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[0].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[0].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[0].namelen = add: mount failed (32).
++u3.sfdir3.list[0].namelen = sub: mount failed (32).
++u3.sfdir3.list[0].offset = zeroes: mount failed (32).
++u3.sfdir3.list[0].offset = ones: mount failed (32).
++u3.sfdir3.list[0].offset = firstbit: mount failed (32).
++u3.sfdir3.list[0].offset = middlebit: mount failed (32).
++u3.sfdir3.list[0].offset = lastbit: mount failed (32).
++u3.sfdir3.list[0].offset = add: mount failed (32).
++u3.sfdir3.list[0].offset = sub: mount failed (32).
++u3.sfdir3.list[0].name = zeroes: mount failed (32).
++u3.sfdir3.list[0].name = ones: mount failed (32).
++u3.sfdir3.list[0].name = firstbit: mount failed (32).
++u3.sfdir3.list[0].name = middlebit: mount failed (32).
++u3.sfdir3.list[0].name = lastbit: mount failed (32).
++u3.sfdir3.list[0].name = add: mount failed (32).
++u3.sfdir3.list[0].name = sub: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[0].filetype = ones: mount failed (32).
++u3.sfdir3.list[0].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[0].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[0].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[0].filetype = add: mount failed (32).
++u3.sfdir3.list[0].filetype = sub: mount failed (32).
++u3.sfdir3.list[1].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[1].namelen = ones: mount failed (32).
++u3.sfdir3.list[1].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[1].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[1].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[1].namelen = add: mount failed (32).
++u3.sfdir3.list[1].namelen = sub: mount failed (32).
++u3.sfdir3.list[1].offset = zeroes: mount failed (32).
++u3.sfdir3.list[1].offset = ones: mount failed (32).
++u3.sfdir3.list[1].offset = firstbit: mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = add: online scrub didn't fail.
++u3.sfdir3.list[1].offset = sub: mount failed (32).
++u3.sfdir3.list[1].name = zeroes: mount failed (32).
++u3.sfdir3.list[1].name = ones: mount failed (32).
++u3.sfdir3.list[1].name = firstbit: mount failed (32).
++u3.sfdir3.list[1].name = middlebit: mount failed (32).
++u3.sfdir3.list[1].name = lastbit: mount failed (32).
++u3.sfdir3.list[1].name = add: mount failed (32).
++u3.sfdir3.list[1].name = sub: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[1].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[1].filetype = ones: mount failed (32).
++u3.sfdir3.list[1].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[1].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[1].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[1].filetype = add: mount failed (32).
++u3.sfdir3.list[1].filetype = sub: mount failed (32).
++a.sfattr.hdr.totsize = zeroes: mount failed (32).
++a.sfattr.hdr.totsize = ones: mount failed (32).
++a.sfattr.hdr.totsize = firstbit: mount failed (32).
++a.sfattr.hdr.totsize = middlebit: mount failed (32).
++a.sfattr.hdr.totsize = lastbit: mount failed (32).
++a.sfattr.hdr.totsize = add: mount failed (32).
++a.sfattr.hdr.totsize = sub: mount failed (32).
++a.sfattr.hdr.count = zeroes: mount failed (32).
++a.sfattr.hdr.count = ones: mount failed (32).
++a.sfattr.hdr.count = firstbit: mount failed (32).
++a.sfattr.hdr.count = middlebit: mount failed (32).
++a.sfattr.hdr.count = lastbit: mount failed (32).
++a.sfattr.hdr.count = add: mount failed (32).
++a.sfattr.hdr.count = sub: mount failed (32).
++a.sfattr.list[0].namelen = zeroes: mount failed (32).
++a.sfattr.list[0].namelen = ones: mount failed (32).
++a.sfattr.list[0].namelen = firstbit: mount failed (32).
++a.sfattr.list[0].namelen = middlebit: mount failed (32).
++a.sfattr.list[0].namelen = lastbit: mount failed (32).
++a.sfattr.list[0].namelen = add: mount failed (32).
++a.sfattr.list[0].namelen = sub: mount failed (32).
++a.sfattr.list[0].parent = zeroes: online repair failed (1).
++a.sfattr.list[0].parent = zeroes: online re-scrub failed (5).
++a.sfattr.list[0].parent = zeroes: offline re-scrub failed (1).
++a.sfattr.list[0].parent = zeroes: online post-mod scrub failed (1).
++a.sfattr.list[0].parent = zeroes: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent = lastbit: online repair failed (1).
++a.sfattr.list[0].parent = lastbit: online re-scrub failed (5).
++a.sfattr.list[0].parent = lastbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent = lastbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent = lastbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent = sub: online repair failed (1).
++a.sfattr.list[0].parent = sub: online re-scrub failed (5).
++a.sfattr.list[0].parent = sub: offline re-scrub failed (1).
++a.sfattr.list[0].parent = sub: online post-mod scrub failed (1).
++a.sfattr.list[0].parent = sub: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_ino = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_ino = lastbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_ino = lastbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_ino = lastbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_ino = lastbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_ino = add: online repair failed (1).
++a.sfattr.list[0].parent_ino = add: online re-scrub failed (5).
++a.sfattr.list[0].parent_ino = add: offline re-scrub failed (1).
++a.sfattr.list[0].parent_ino = add: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_ino = add: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_ino = sub: online repair failed (1).
++a.sfattr.list[0].parent_ino = sub: online re-scrub failed (5).
++a.sfattr.list[0].parent_ino = sub: offline re-scrub failed (1).
++a.sfattr.list[0].parent_ino = sub: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_ino = sub: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = ones: online repair failed (1).
++a.sfattr.list[0].parent_gen = ones: online re-scrub failed (5).
++a.sfattr.list[0].parent_gen = ones: offline re-scrub failed (1).
++a.sfattr.list[0].parent_gen = ones: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = ones: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_gen = firstbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_gen = firstbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_gen = firstbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = firstbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = middlebit: online repair failed (1).
++a.sfattr.list[0].parent_gen = middlebit: online re-scrub failed (5).
++a.sfattr.list[0].parent_gen = middlebit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_gen = middlebit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = middlebit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_gen = lastbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_gen = lastbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_gen = lastbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = lastbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = add: online repair failed (1).
++a.sfattr.list[0].parent_gen = add: online re-scrub failed (5).
++a.sfattr.list[0].parent_gen = add: offline re-scrub failed (1).
++a.sfattr.list[0].parent_gen = add: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = add: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = sub: online repair failed (1).
++a.sfattr.list[0].parent_gen = sub: online re-scrub failed (5).
++a.sfattr.list[0].parent_gen = sub: offline re-scrub failed (1).
++a.sfattr.list[0].parent_gen = sub: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_gen = sub: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = zeroes: online repair failed (1).
++a.sfattr.list[0].parent_namehash = zeroes: online re-scrub failed (5).
++a.sfattr.list[0].parent_namehash = zeroes: offline re-scrub failed (1).
++a.sfattr.list[0].parent_namehash = zeroes: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = zeroes: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_namehash = firstbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_namehash = firstbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_namehash = firstbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = firstbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_namehash = lastbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_namehash = lastbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_namehash = lastbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = lastbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = add: online repair failed (1).
++a.sfattr.list[0].parent_namehash = add: online re-scrub failed (5).
++a.sfattr.list[0].parent_namehash = add: offline re-scrub failed (1).
++a.sfattr.list[0].parent_namehash = add: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = add: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = sub: online repair failed (1).
++a.sfattr.list[0].parent_namehash = sub: online re-scrub failed (5).
++a.sfattr.list[0].parent_namehash = sub: offline re-scrub failed (1).
++a.sfattr.list[0].parent_namehash = sub: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_namehash = sub: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = ones: online repair failed (1).
++a.sfattr.list[0].parent_name = ones: online re-scrub failed (5).
++a.sfattr.list[0].parent_name = ones: offline re-scrub failed (1).
++a.sfattr.list[0].parent_name = ones: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = ones: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_name = firstbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_name = firstbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_name = firstbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = firstbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = middlebit: online repair failed (1).
++a.sfattr.list[0].parent_name = middlebit: online re-scrub failed (5).
++a.sfattr.list[0].parent_name = middlebit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_name = middlebit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = middlebit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_name = lastbit: online re-scrub failed (5).
++a.sfattr.list[0].parent_name = lastbit: offline re-scrub failed (1).
++a.sfattr.list[0].parent_name = lastbit: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = lastbit: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = add: online repair failed (1).
++a.sfattr.list[0].parent_name = add: online re-scrub failed (5).
++a.sfattr.list[0].parent_name = add: offline re-scrub failed (1).
++a.sfattr.list[0].parent_name = add: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = add: offline post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = sub: online repair failed (1).
++a.sfattr.list[0].parent_name = sub: online re-scrub failed (5).
++a.sfattr.list[0].parent_name = sub: offline re-scrub failed (1).
++a.sfattr.list[0].parent_name = sub: online post-mod scrub failed (1).
++a.sfattr.list[0].parent_name = sub: offline post-mod scrub failed (1).
+ Done fuzzing metadir subdir
 diff --git a/tests/xfs/1551.out b/tests/xfs/1551.out
-new file mode 100644
-index 0000000000..4c3360d08b
---- /dev/null
+index 4c3360d08b..fedbe7ad69 100644
+--- a/tests/xfs/1551.out
 +++ b/tests/xfs/1551.out
-@@ -0,0 +1,4 @@
-+QA output created by 1551
-+Format and populate
-+Fuzz metadir subdir
-+Done fuzzing metadir subdir
-diff --git a/tests/xfs/1552 b/tests/xfs/1552
-new file mode 100755
-index 0000000000..0870837f9c
---- /dev/null
-+++ b/tests/xfs/1552
-@@ -0,0 +1,37 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1552
-+#
-+# Populate a XFS filesystem and fuzz every metadir subdir field.
-+# Do not fix the filesystem, to test metadata verifiers.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_norepair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime')
-+
-+echo "Fuzz metadir subdir"
-+_scratch_xfs_fuzz_metadata '' 'none' 'path -m /realtime' >> $seqres.full
-+echo "Done fuzzing metadir subdir"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,35 @@
+ QA output created by 1551
+ Format and populate
+ Fuzz metadir subdir
++core.rtinherit = ones: offline scrub didn't fail.
++core.rtinherit = firstbit: offline scrub didn't fail.
++core.rtinherit = middlebit: offline scrub didn't fail.
++core.rtinherit = lastbit: offline scrub didn't fail.
++core.rtinherit = add: offline scrub didn't fail.
++core.rtinherit = sub: offline scrub didn't fail.
++core.projinherit = ones: offline scrub didn't fail.
++core.projinherit = firstbit: offline scrub didn't fail.
++core.projinherit = middlebit: offline scrub didn't fail.
++core.projinherit = lastbit: offline scrub didn't fail.
++core.projinherit = add: offline scrub didn't fail.
++core.projinherit = sub: offline scrub didn't fail.
++v3.change_count = zeroes: offline scrub didn't fail.
++v3.change_count = ones: offline scrub didn't fail.
++v3.change_count = firstbit: offline scrub didn't fail.
++v3.change_count = middlebit: offline scrub didn't fail.
++v3.change_count = lastbit: offline scrub didn't fail.
++v3.change_count = add: offline scrub didn't fail.
++v3.change_count = sub: offline scrub didn't fail.
++v3.nrext64 = zeroes: offline scrub didn't fail.
++v3.nrext64 = firstbit: offline scrub didn't fail.
++v3.nrext64 = middlebit: offline scrub didn't fail.
++v3.nrext64 = lastbit: offline scrub didn't fail.
++v3.nrext64 = add: offline scrub didn't fail.
++v3.nrext64 = sub: offline scrub didn't fail.
++u3.sfdir3.list[0].inumber.i4 = lastbit: offline repair failed (1).
++u3.sfdir3.list[0].inumber.i4 = lastbit: offline re-scrub failed (1).
++u3.sfdir3.list[0].inumber.i4 = lastbit: pre-mod mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
+ Done fuzzing metadir subdir
 diff --git a/tests/xfs/1552.out b/tests/xfs/1552.out
-new file mode 100644
-index 0000000000..6636b1b656
---- /dev/null
+index 6636b1b656..35cc60d261 100644
+--- a/tests/xfs/1552.out
 +++ b/tests/xfs/1552.out
-@@ -0,0 +1,4 @@
-+QA output created by 1552
-+Format and populate
-+Fuzz metadir subdir
-+Done fuzzing metadir subdir
-diff --git a/tests/xfs/1553 b/tests/xfs/1553
-new file mode 100755
-index 0000000000..ab15e53e27
---- /dev/null
-+++ b/tests/xfs/1553
-@@ -0,0 +1,38 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1553
-+#
-+# Populate a XFS filesystem and fuzz every metadir subdir field.
-+# Try online repair and, if necessary, offline repair,
-+# to test the most likely usage pattern.
-+
-+. ./common/preamble
-+_begin_fstest dangerous_fuzzers dangerous_bothrepair
-+
-+_register_cleanup "_cleanup" BUS
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_metadir
-+_require_scratch_xfs_fuzz_fields
-+_disable_dmesg_check
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'path -m /realtime')
-+
-+echo "Fuzz metadir subdir"
-+_scratch_xfs_fuzz_metadata '' 'both' 'path -m /realtime' >> $seqres.full
-+echo "Done fuzzing metadir subdir"
-+
-+# success, all done
-+status=0
-+exit
+@@ -1,4 +1,343 @@
+ QA output created by 1552
+ Format and populate
+ Fuzz metadir subdir
++core.magic = zeroes: mount failed (32).
++core.magic = ones: mount failed (32).
++core.magic = firstbit: mount failed (32).
++core.magic = middlebit: mount failed (32).
++core.magic = lastbit: mount failed (32).
++core.magic = add: mount failed (32).
++core.magic = sub: mount failed (32).
++core.mode = zeroes: mount failed (32).
++core.mode = ones: mount failed (32).
++core.mode = firstbit: mount failed (32).
++core.mode = middlebit: mount failed (32).
++core.mode = lastbit: mount failed (32).
++core.mode = add: mount failed (32).
++core.mode = sub: mount failed (32).
++core.version = zeroes: mount failed (32).
++core.version = ones: mount failed (32).
++core.version = firstbit: mount failed (32).
++core.version = middlebit: mount failed (32).
++core.version = lastbit: mount failed (32).
++core.version = add: mount failed (32).
++core.version = sub: mount failed (32).
++core.format = zeroes: mount failed (32).
++core.format = ones: mount failed (32).
++core.format = firstbit: mount failed (32).
++core.format = middlebit: mount failed (32).
++core.format = lastbit: mount failed (32).
++core.format = add: mount failed (32).
++core.format = sub: mount failed (32).
++core.onlink = ones: mount failed (32).
++core.onlink = firstbit: mount failed (32).
++core.onlink = middlebit: mount failed (32).
++core.onlink = lastbit: mount failed (32).
++core.onlink = add: mount failed (32).
++core.onlink = sub: mount failed (32).
++core.uid = ones: mount failed (32).
++core.uid = firstbit: mount failed (32).
++core.uid = middlebit: mount failed (32).
++core.uid = lastbit: mount failed (32).
++core.uid = add: mount failed (32).
++core.uid = sub: mount failed (32).
++core.gid = ones: mount failed (32).
++core.gid = firstbit: mount failed (32).
++core.gid = middlebit: mount failed (32).
++core.gid = lastbit: mount failed (32).
++core.gid = add: mount failed (32).
++core.gid = sub: mount failed (32).
++core.nlinkv2 = zeroes: mount failed (32).
++core.projid_lo = ones: mount failed (32).
++core.projid_lo = firstbit: mount failed (32).
++core.projid_lo = middlebit: mount failed (32).
++core.projid_lo = lastbit: mount failed (32).
++core.projid_lo = add: mount failed (32).
++core.projid_lo = sub: mount failed (32).
++core.projid_hi = ones: mount failed (32).
++core.projid_hi = firstbit: mount failed (32).
++core.projid_hi = middlebit: mount failed (32).
++core.projid_hi = lastbit: mount failed (32).
++core.projid_hi = add: mount failed (32).
++core.projid_hi = sub: mount failed (32).
++core.nextents = ones: mount failed (32).
++core.nextents = firstbit: mount failed (32).
++core.nextents = middlebit: mount failed (32).
++core.nextents = lastbit: mount failed (32).
++core.nextents = add: mount failed (32).
++core.nextents = sub: mount failed (32).
++core.size = zeroes: mount failed (32).
++core.size = ones: mount failed (32).
++core.size = firstbit: mount failed (32).
++core.size = middlebit: mount failed (32).
++core.size = lastbit: mount failed (32).
++core.size = add: mount failed (32).
++core.size = sub: mount failed (32).
++core.extsize = ones: mount failed (32).
++core.extsize = firstbit: mount failed (32).
++core.extsize = middlebit: mount failed (32).
++core.extsize = lastbit: mount failed (32).
++core.extsize = add: mount failed (32).
++core.extsize = sub: mount failed (32).
++core.naextents = ones: mount failed (32).
++core.naextents = firstbit: mount failed (32).
++core.naextents = middlebit: mount failed (32).
++core.naextents = lastbit: mount failed (32).
++core.naextents = add: mount failed (32).
++core.naextents = sub: mount failed (32).
++core.forkoff = zeroes: mount failed (32).
++core.forkoff = ones: mount failed (32).
++core.forkoff = firstbit: mount failed (32).
++core.forkoff = middlebit: mount failed (32).
++core.forkoff = lastbit: mount failed (32).
++core.forkoff = add: mount failed (32).
++core.forkoff = sub: mount failed (32).
++core.aformat = zeroes: mount failed (32).
++core.aformat = ones: mount failed (32).
++core.aformat = firstbit: mount failed (32).
++core.aformat = middlebit: mount failed (32).
++core.aformat = lastbit: mount failed (32).
++core.aformat = add: mount failed (32).
++core.aformat = sub: mount failed (32).
++core.realtime = ones: mount failed (32).
++core.realtime = firstbit: mount failed (32).
++core.realtime = middlebit: mount failed (32).
++core.realtime = lastbit: mount failed (32).
++core.realtime = add: mount failed (32).
++core.realtime = sub: mount failed (32).
++core.rtinherit = ones: offline scrub didn't fail.
++core.rtinherit = ones: online scrub didn't fail.
++core.rtinherit = firstbit: offline scrub didn't fail.
++core.rtinherit = firstbit: online scrub didn't fail.
++core.rtinherit = middlebit: offline scrub didn't fail.
++core.rtinherit = middlebit: online scrub didn't fail.
++core.rtinherit = lastbit: offline scrub didn't fail.
++core.rtinherit = lastbit: online scrub didn't fail.
++core.rtinherit = add: offline scrub didn't fail.
++core.rtinherit = add: online scrub didn't fail.
++core.rtinherit = sub: offline scrub didn't fail.
++core.rtinherit = sub: online scrub didn't fail.
++core.projinherit = ones: offline scrub didn't fail.
++core.projinherit = ones: online scrub didn't fail.
++core.projinherit = firstbit: offline scrub didn't fail.
++core.projinherit = firstbit: online scrub didn't fail.
++core.projinherit = middlebit: offline scrub didn't fail.
++core.projinherit = middlebit: online scrub didn't fail.
++core.projinherit = lastbit: offline scrub didn't fail.
++core.projinherit = lastbit: online scrub didn't fail.
++core.projinherit = add: offline scrub didn't fail.
++core.projinherit = add: online scrub didn't fail.
++core.projinherit = sub: offline scrub didn't fail.
++core.projinherit = sub: online scrub didn't fail.
++core.nosymlinks = zeroes: mount failed (32).
++core.nosymlinks = firstbit: mount failed (32).
++core.nosymlinks = middlebit: mount failed (32).
++core.nosymlinks = lastbit: mount failed (32).
++core.nosymlinks = add: mount failed (32).
++core.nosymlinks = sub: mount failed (32).
++core.extsz = ones: mount failed (32).
++core.extsz = firstbit: mount failed (32).
++core.extsz = middlebit: mount failed (32).
++core.extsz = lastbit: mount failed (32).
++core.extsz = add: mount failed (32).
++core.extsz = sub: mount failed (32).
++core.extszinherit = ones: mount failed (32).
++core.extszinherit = firstbit: mount failed (32).
++core.extszinherit = middlebit: mount failed (32).
++core.extszinherit = lastbit: mount failed (32).
++core.extszinherit = add: mount failed (32).
++core.extszinherit = sub: mount failed (32).
++next_unlinked = zeroes: mount failed (32).
++next_unlinked = firstbit: mount failed (32).
++next_unlinked = middlebit: mount failed (32).
++next_unlinked = lastbit: mount failed (32).
++next_unlinked = add: online scrub didn't fail.
++next_unlinked = sub: mount failed (32).
++v3.crc = zeroes: mount failed (32).
++v3.crc = ones: mount failed (32).
++v3.crc = firstbit: mount failed (32).
++v3.crc = middlebit: mount failed (32).
++v3.crc = lastbit: mount failed (32).
++v3.crc = add: mount failed (32).
++v3.crc = sub: mount failed (32).
++v3.change_count = zeroes: offline scrub didn't fail.
++v3.change_count = zeroes: online scrub didn't fail.
++v3.change_count = ones: offline scrub didn't fail.
++v3.change_count = ones: online scrub didn't fail.
++v3.change_count = firstbit: offline scrub didn't fail.
++v3.change_count = firstbit: online scrub didn't fail.
++v3.change_count = middlebit: offline scrub didn't fail.
++v3.change_count = middlebit: online scrub didn't fail.
++v3.change_count = lastbit: offline scrub didn't fail.
++v3.change_count = lastbit: online scrub didn't fail.
++v3.change_count = add: offline scrub didn't fail.
++v3.change_count = add: online scrub didn't fail.
++v3.change_count = sub: offline scrub didn't fail.
++v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = zeroes: mount failed (32).
++v3.flags2 = ones: mount failed (32).
++v3.flags2 = firstbit: mount failed (32).
++v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = lastbit: mount failed (32).
++v3.flags2 = add: mount failed (32).
++v3.flags2 = sub: mount failed (32).
++v3.cowextsize = ones: mount failed (32).
++v3.cowextsize = firstbit: mount failed (32).
++v3.cowextsize = middlebit: mount failed (32).
++v3.cowextsize = lastbit: mount failed (32).
++v3.cowextsize = add: mount failed (32).
++v3.cowextsize = sub: mount failed (32).
++v3.inumber = zeroes: mount failed (32).
++v3.inumber = ones: mount failed (32).
++v3.inumber = firstbit: mount failed (32).
++v3.inumber = middlebit: mount failed (32).
++v3.inumber = lastbit: mount failed (32).
++v3.inumber = add: mount failed (32).
++v3.inumber = sub: mount failed (32).
++v3.uuid = zeroes: mount failed (32).
++v3.uuid = ones: mount failed (32).
++v3.uuid = firstbit: mount failed (32).
++v3.uuid = middlebit: mount failed (32).
++v3.uuid = lastbit: mount failed (32).
++v3.reflink = ones: mount failed (32).
++v3.reflink = firstbit: mount failed (32).
++v3.reflink = middlebit: mount failed (32).
++v3.reflink = lastbit: mount failed (32).
++v3.reflink = add: mount failed (32).
++v3.reflink = sub: mount failed (32).
++v3.cowextsz = ones: mount failed (32).
++v3.cowextsz = firstbit: mount failed (32).
++v3.cowextsz = middlebit: mount failed (32).
++v3.cowextsz = lastbit: mount failed (32).
++v3.cowextsz = add: mount failed (32).
++v3.cowextsz = sub: mount failed (32).
++v3.nrext64 = zeroes: offline scrub didn't fail.
++v3.nrext64 = zeroes: online scrub didn't fail.
++v3.nrext64 = firstbit: offline scrub didn't fail.
++v3.nrext64 = firstbit: online scrub didn't fail.
++v3.nrext64 = middlebit: offline scrub didn't fail.
++v3.nrext64 = middlebit: online scrub didn't fail.
++v3.nrext64 = lastbit: offline scrub didn't fail.
++v3.nrext64 = lastbit: online scrub didn't fail.
++v3.nrext64 = add: offline scrub didn't fail.
++v3.nrext64 = add: online scrub didn't fail.
++v3.nrext64 = sub: offline scrub didn't fail.
++v3.nrext64 = sub: online scrub didn't fail.
++v3.metadir = zeroes: mount failed (32).
++v3.metadir = firstbit: mount failed (32).
++v3.metadir = middlebit: mount failed (32).
++v3.metadir = lastbit: mount failed (32).
++v3.metadir = add: mount failed (32).
++v3.metadir = sub: mount failed (32).
++u3.sfdir3.hdr.count = zeroes: mount failed (32).
++u3.sfdir3.hdr.count = ones: mount failed (32).
++u3.sfdir3.hdr.count = firstbit: mount failed (32).
++u3.sfdir3.hdr.count = middlebit: mount failed (32).
++u3.sfdir3.hdr.count = lastbit: mount failed (32).
++u3.sfdir3.hdr.count = add: mount failed (32).
++u3.sfdir3.hdr.count = sub: mount failed (32).
++u3.sfdir3.hdr.i8count = ones: mount failed (32).
++u3.sfdir3.hdr.i8count = firstbit: mount failed (32).
++u3.sfdir3.hdr.i8count = middlebit: mount failed (32).
++u3.sfdir3.hdr.i8count = lastbit: mount failed (32).
++u3.sfdir3.hdr.i8count = add: mount failed (32).
++u3.sfdir3.hdr.i8count = sub: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = zeroes: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = ones: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = firstbit: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[0].namelen = ones: mount failed (32).
++u3.sfdir3.list[0].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[0].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[0].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[0].namelen = add: mount failed (32).
++u3.sfdir3.list[0].namelen = sub: mount failed (32).
++u3.sfdir3.list[0].offset = zeroes: mount failed (32).
++u3.sfdir3.list[0].offset = ones: mount failed (32).
++u3.sfdir3.list[0].offset = firstbit: mount failed (32).
++u3.sfdir3.list[0].offset = middlebit: mount failed (32).
++u3.sfdir3.list[0].offset = lastbit: mount failed (32).
++u3.sfdir3.list[0].offset = add: mount failed (32).
++u3.sfdir3.list[0].offset = sub: mount failed (32).
++u3.sfdir3.list[0].name = zeroes: mount failed (32).
++u3.sfdir3.list[0].name = ones: mount failed (32).
++u3.sfdir3.list[0].name = firstbit: mount failed (32).
++u3.sfdir3.list[0].name = middlebit: mount failed (32).
++u3.sfdir3.list[0].name = lastbit: mount failed (32).
++u3.sfdir3.list[0].name = add: mount failed (32).
++u3.sfdir3.list[0].name = sub: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[0].filetype = ones: mount failed (32).
++u3.sfdir3.list[0].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[0].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[0].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[0].filetype = add: mount failed (32).
++u3.sfdir3.list[0].filetype = sub: mount failed (32).
++u3.sfdir3.list[1].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[1].namelen = ones: mount failed (32).
++u3.sfdir3.list[1].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[1].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[1].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[1].namelen = add: mount failed (32).
++u3.sfdir3.list[1].namelen = sub: mount failed (32).
++u3.sfdir3.list[1].offset = zeroes: mount failed (32).
++u3.sfdir3.list[1].offset = ones: mount failed (32).
++u3.sfdir3.list[1].offset = firstbit: mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = middlebit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = add: online scrub didn't fail.
++u3.sfdir3.list[1].offset = sub: mount failed (32).
++u3.sfdir3.list[1].name = zeroes: mount failed (32).
++u3.sfdir3.list[1].name = ones: mount failed (32).
++u3.sfdir3.list[1].name = firstbit: mount failed (32).
++u3.sfdir3.list[1].name = middlebit: mount failed (32).
++u3.sfdir3.list[1].name = lastbit: mount failed (32).
++u3.sfdir3.list[1].name = add: mount failed (32).
++u3.sfdir3.list[1].name = sub: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[1].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[1].filetype = ones: mount failed (32).
++u3.sfdir3.list[1].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[1].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[1].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[1].filetype = add: mount failed (32).
++u3.sfdir3.list[1].filetype = sub: mount failed (32).
++a.sfattr.hdr.totsize = zeroes: mount failed (32).
++a.sfattr.hdr.totsize = ones: mount failed (32).
++a.sfattr.hdr.totsize = firstbit: mount failed (32).
++a.sfattr.hdr.totsize = middlebit: mount failed (32).
++a.sfattr.hdr.totsize = lastbit: mount failed (32).
++a.sfattr.hdr.totsize = add: mount failed (32).
++a.sfattr.hdr.totsize = sub: mount failed (32).
++a.sfattr.hdr.count = zeroes: mount failed (32).
++a.sfattr.hdr.count = ones: mount failed (32).
++a.sfattr.hdr.count = firstbit: mount failed (32).
++a.sfattr.hdr.count = middlebit: mount failed (32).
++a.sfattr.hdr.count = lastbit: mount failed (32).
++a.sfattr.hdr.count = add: mount failed (32).
++a.sfattr.hdr.count = sub: mount failed (32).
++a.sfattr.list[0].namelen = zeroes: mount failed (32).
++a.sfattr.list[0].namelen = ones: mount failed (32).
++a.sfattr.list[0].namelen = firstbit: mount failed (32).
++a.sfattr.list[0].namelen = middlebit: mount failed (32).
++a.sfattr.list[0].namelen = lastbit: mount failed (32).
++a.sfattr.list[0].namelen = add: mount failed (32).
++a.sfattr.list[0].namelen = sub: mount failed (32).
+ Done fuzzing metadir subdir
 diff --git a/tests/xfs/1553.out b/tests/xfs/1553.out
-new file mode 100644
-index 0000000000..0298fcfddb
---- /dev/null
+index 0298fcfddb..e406b598b9 100644
+--- a/tests/xfs/1553.out
 +++ b/tests/xfs/1553.out
-@@ -0,0 +1,4 @@
-+QA output created by 1553
-+Format and populate
-+Fuzz metadir subdir
-+Done fuzzing metadir subdir
+@@ -1,4 +1,370 @@
+ QA output created by 1553
+ Format and populate
+ Fuzz metadir subdir
++core.magic = zeroes: mount failed (32).
++core.magic = ones: mount failed (32).
++core.magic = firstbit: mount failed (32).
++core.magic = middlebit: mount failed (32).
++core.magic = lastbit: mount failed (32).
++core.magic = add: mount failed (32).
++core.magic = sub: mount failed (32).
++core.mode = zeroes: mount failed (32).
++core.mode = ones: mount failed (32).
++core.mode = firstbit: mount failed (32).
++core.mode = middlebit: mount failed (32).
++core.mode = lastbit: mount failed (32).
++core.mode = add: mount failed (32).
++core.mode = sub: mount failed (32).
++core.version = zeroes: mount failed (32).
++core.version = ones: mount failed (32).
++core.version = firstbit: mount failed (32).
++core.version = middlebit: mount failed (32).
++core.version = lastbit: mount failed (32).
++core.version = add: mount failed (32).
++core.version = sub: mount failed (32).
++core.format = zeroes: mount failed (32).
++core.format = ones: mount failed (32).
++core.format = firstbit: mount failed (32).
++core.format = middlebit: mount failed (32).
++core.format = lastbit: mount failed (32).
++core.format = add: mount failed (32).
++core.format = sub: mount failed (32).
++core.onlink = ones: mount failed (32).
++core.onlink = firstbit: mount failed (32).
++core.onlink = middlebit: mount failed (32).
++core.onlink = lastbit: mount failed (32).
++core.onlink = add: mount failed (32).
++core.onlink = sub: mount failed (32).
++core.uid = ones: mount failed (32).
++core.uid = firstbit: mount failed (32).
++core.uid = middlebit: mount failed (32).
++core.uid = lastbit: mount failed (32).
++core.uid = add: mount failed (32).
++core.uid = sub: mount failed (32).
++core.gid = ones: mount failed (32).
++core.gid = firstbit: mount failed (32).
++core.gid = middlebit: mount failed (32).
++core.gid = lastbit: mount failed (32).
++core.gid = add: mount failed (32).
++core.gid = sub: mount failed (32).
++core.nlinkv2 = zeroes: mount failed (32).
++core.projid_lo = ones: mount failed (32).
++core.projid_lo = firstbit: mount failed (32).
++core.projid_lo = middlebit: mount failed (32).
++core.projid_lo = lastbit: mount failed (32).
++core.projid_lo = add: mount failed (32).
++core.projid_lo = sub: mount failed (32).
++core.projid_hi = ones: mount failed (32).
++core.projid_hi = firstbit: mount failed (32).
++core.projid_hi = middlebit: mount failed (32).
++core.projid_hi = lastbit: mount failed (32).
++core.projid_hi = add: mount failed (32).
++core.projid_hi = sub: mount failed (32).
++core.nextents = ones: mount failed (32).
++core.nextents = firstbit: mount failed (32).
++core.nextents = middlebit: mount failed (32).
++core.nextents = lastbit: mount failed (32).
++core.nextents = add: mount failed (32).
++core.nextents = sub: mount failed (32).
++core.size = zeroes: mount failed (32).
++core.size = ones: mount failed (32).
++core.size = firstbit: mount failed (32).
++core.size = middlebit: mount failed (32).
++core.size = lastbit: mount failed (32).
++core.size = add: mount failed (32).
++core.size = sub: mount failed (32).
++core.extsize = ones: mount failed (32).
++core.extsize = firstbit: mount failed (32).
++core.extsize = middlebit: mount failed (32).
++core.extsize = lastbit: mount failed (32).
++core.extsize = add: mount failed (32).
++core.extsize = sub: mount failed (32).
++core.naextents = ones: mount failed (32).
++core.naextents = firstbit: mount failed (32).
++core.naextents = middlebit: mount failed (32).
++core.naextents = lastbit: mount failed (32).
++core.naextents = add: mount failed (32).
++core.naextents = sub: mount failed (32).
++core.forkoff = zeroes: mount failed (32).
++core.forkoff = ones: mount failed (32).
++core.forkoff = firstbit: mount failed (32).
++core.forkoff = middlebit: mount failed (32).
++core.forkoff = lastbit: mount failed (32).
++core.forkoff = add: mount failed (32).
++core.forkoff = sub: mount failed (32).
++core.aformat = zeroes: mount failed (32).
++core.aformat = ones: mount failed (32).
++core.aformat = firstbit: mount failed (32).
++core.aformat = middlebit: mount failed (32).
++core.aformat = lastbit: mount failed (32).
++core.aformat = add: mount failed (32).
++core.aformat = sub: mount failed (32).
++core.realtime = ones: mount failed (32).
++core.realtime = firstbit: mount failed (32).
++core.realtime = middlebit: mount failed (32).
++core.realtime = lastbit: mount failed (32).
++core.realtime = add: mount failed (32).
++core.realtime = sub: mount failed (32).
++core.rtinherit = ones: offline scrub didn't fail.
++core.rtinherit = ones: online scrub didn't fail.
++core.rtinherit = firstbit: offline scrub didn't fail.
++core.rtinherit = firstbit: online scrub didn't fail.
++core.rtinherit = middlebit: offline scrub didn't fail.
++core.rtinherit = middlebit: online scrub didn't fail.
++core.rtinherit = lastbit: offline scrub didn't fail.
++core.rtinherit = lastbit: online scrub didn't fail.
++core.rtinherit = add: offline scrub didn't fail.
++core.rtinherit = add: online scrub didn't fail.
++core.rtinherit = sub: offline scrub didn't fail.
++core.rtinherit = sub: online scrub didn't fail.
++core.projinherit = ones: offline scrub didn't fail.
++core.projinherit = ones: online scrub didn't fail.
++core.projinherit = firstbit: offline scrub didn't fail.
++core.projinherit = firstbit: online scrub didn't fail.
++core.projinherit = middlebit: offline scrub didn't fail.
++core.projinherit = middlebit: online scrub didn't fail.
++core.projinherit = lastbit: offline scrub didn't fail.
++core.projinherit = lastbit: online scrub didn't fail.
++core.projinherit = add: offline scrub didn't fail.
++core.projinherit = add: online scrub didn't fail.
++core.projinherit = sub: offline scrub didn't fail.
++core.projinherit = sub: online scrub didn't fail.
++core.nosymlinks = zeroes: mount failed (32).
++core.nosymlinks = firstbit: mount failed (32).
++core.nosymlinks = middlebit: mount failed (32).
++core.nosymlinks = lastbit: mount failed (32).
++core.nosymlinks = add: mount failed (32).
++core.nosymlinks = sub: mount failed (32).
++core.extsz = ones: mount failed (32).
++core.extsz = firstbit: mount failed (32).
++core.extsz = middlebit: mount failed (32).
++core.extsz = lastbit: mount failed (32).
++core.extsz = add: mount failed (32).
++core.extsz = sub: mount failed (32).
++core.extszinherit = ones: mount failed (32).
++core.extszinherit = firstbit: mount failed (32).
++core.extszinherit = middlebit: mount failed (32).
++core.extszinherit = lastbit: mount failed (32).
++core.extszinherit = add: mount failed (32).
++core.extszinherit = sub: mount failed (32).
++next_unlinked = zeroes: mount failed (32).
++next_unlinked = firstbit: mount failed (32).
++next_unlinked = middlebit: mount failed (32).
++next_unlinked = lastbit: mount failed (32).
++next_unlinked = add: online scrub didn't fail.
++next_unlinked = add: offline re-scrub failed (1).
++next_unlinked = add: offline post-mod scrub failed (1).
++next_unlinked = sub: mount failed (32).
++v3.crc = zeroes: mount failed (32).
++v3.crc = ones: mount failed (32).
++v3.crc = firstbit: mount failed (32).
++v3.crc = middlebit: mount failed (32).
++v3.crc = lastbit: mount failed (32).
++v3.crc = add: mount failed (32).
++v3.crc = sub: mount failed (32).
++v3.change_count = zeroes: offline scrub didn't fail.
++v3.change_count = zeroes: online scrub didn't fail.
++v3.change_count = ones: offline scrub didn't fail.
++v3.change_count = ones: online scrub didn't fail.
++v3.change_count = firstbit: offline scrub didn't fail.
++v3.change_count = firstbit: online scrub didn't fail.
++v3.change_count = middlebit: offline scrub didn't fail.
++v3.change_count = middlebit: online scrub didn't fail.
++v3.change_count = lastbit: offline scrub didn't fail.
++v3.change_count = lastbit: online scrub didn't fail.
++v3.change_count = add: offline scrub didn't fail.
++v3.change_count = add: online scrub didn't fail.
++v3.change_count = sub: offline scrub didn't fail.
++v3.change_count = sub: online scrub didn't fail.
++v3.flags2 = zeroes: mount failed (32).
++v3.flags2 = ones: mount failed (32).
++v3.flags2 = firstbit: mount failed (32).
++v3.flags2 = middlebit: online scrub didn't fail.
++v3.flags2 = middlebit: offline re-scrub failed (1).
++v3.flags2 = middlebit: offline post-mod scrub failed (1).
++v3.flags2 = lastbit: mount failed (32).
++v3.flags2 = add: mount failed (32).
++v3.flags2 = sub: mount failed (32).
++v3.cowextsize = ones: mount failed (32).
++v3.cowextsize = firstbit: mount failed (32).
++v3.cowextsize = middlebit: mount failed (32).
++v3.cowextsize = lastbit: mount failed (32).
++v3.cowextsize = add: mount failed (32).
++v3.cowextsize = sub: mount failed (32).
++v3.inumber = zeroes: mount failed (32).
++v3.inumber = ones: mount failed (32).
++v3.inumber = firstbit: mount failed (32).
++v3.inumber = middlebit: mount failed (32).
++v3.inumber = lastbit: mount failed (32).
++v3.inumber = add: mount failed (32).
++v3.inumber = sub: mount failed (32).
++v3.uuid = zeroes: mount failed (32).
++v3.uuid = ones: mount failed (32).
++v3.uuid = firstbit: mount failed (32).
++v3.uuid = middlebit: mount failed (32).
++v3.uuid = lastbit: mount failed (32).
++v3.reflink = ones: mount failed (32).
++v3.reflink = firstbit: mount failed (32).
++v3.reflink = middlebit: mount failed (32).
++v3.reflink = lastbit: mount failed (32).
++v3.reflink = add: mount failed (32).
++v3.reflink = sub: mount failed (32).
++v3.cowextsz = ones: mount failed (32).
++v3.cowextsz = firstbit: mount failed (32).
++v3.cowextsz = middlebit: mount failed (32).
++v3.cowextsz = lastbit: mount failed (32).
++v3.cowextsz = add: mount failed (32).
++v3.cowextsz = sub: mount failed (32).
++v3.nrext64 = zeroes: offline scrub didn't fail.
++v3.nrext64 = zeroes: online scrub didn't fail.
++v3.nrext64 = firstbit: offline scrub didn't fail.
++v3.nrext64 = firstbit: online scrub didn't fail.
++v3.nrext64 = middlebit: offline scrub didn't fail.
++v3.nrext64 = middlebit: online scrub didn't fail.
++v3.nrext64 = lastbit: offline scrub didn't fail.
++v3.nrext64 = lastbit: online scrub didn't fail.
++v3.nrext64 = add: offline scrub didn't fail.
++v3.nrext64 = add: online scrub didn't fail.
++v3.nrext64 = sub: offline scrub didn't fail.
++v3.nrext64 = sub: online scrub didn't fail.
++v3.metadir = zeroes: mount failed (32).
++v3.metadir = firstbit: mount failed (32).
++v3.metadir = middlebit: mount failed (32).
++v3.metadir = lastbit: mount failed (32).
++v3.metadir = add: mount failed (32).
++v3.metadir = sub: mount failed (32).
++u3.sfdir3.hdr.count = zeroes: mount failed (32).
++u3.sfdir3.hdr.count = ones: mount failed (32).
++u3.sfdir3.hdr.count = firstbit: mount failed (32).
++u3.sfdir3.hdr.count = middlebit: mount failed (32).
++u3.sfdir3.hdr.count = lastbit: mount failed (32).
++u3.sfdir3.hdr.count = add: mount failed (32).
++u3.sfdir3.hdr.count = sub: mount failed (32).
++u3.sfdir3.hdr.i8count = ones: mount failed (32).
++u3.sfdir3.hdr.i8count = firstbit: mount failed (32).
++u3.sfdir3.hdr.i8count = middlebit: mount failed (32).
++u3.sfdir3.hdr.i8count = lastbit: mount failed (32).
++u3.sfdir3.hdr.i8count = add: mount failed (32).
++u3.sfdir3.hdr.i8count = sub: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = zeroes: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = ones: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = firstbit: mount failed (32).
++u3.sfdir3.hdr.parent.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[0].namelen = ones: mount failed (32).
++u3.sfdir3.list[0].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[0].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[0].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[0].namelen = add: mount failed (32).
++u3.sfdir3.list[0].namelen = sub: mount failed (32).
++u3.sfdir3.list[0].offset = zeroes: mount failed (32).
++u3.sfdir3.list[0].offset = ones: mount failed (32).
++u3.sfdir3.list[0].offset = firstbit: mount failed (32).
++u3.sfdir3.list[0].offset = middlebit: mount failed (32).
++u3.sfdir3.list[0].offset = lastbit: mount failed (32).
++u3.sfdir3.list[0].offset = add: mount failed (32).
++u3.sfdir3.list[0].offset = sub: mount failed (32).
++u3.sfdir3.list[0].name = zeroes: mount failed (32).
++u3.sfdir3.list[0].name = ones: mount failed (32).
++u3.sfdir3.list[0].name = firstbit: mount failed (32).
++u3.sfdir3.list[0].name = middlebit: mount failed (32).
++u3.sfdir3.list[0].name = lastbit: mount failed (32).
++u3.sfdir3.list[0].name = add: mount failed (32).
++u3.sfdir3.list[0].name = sub: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = lastbit: offline repair failed (1).
++u3.sfdir3.list[0].inumber.i4 = lastbit: offline re-scrub failed (1).
++u3.sfdir3.list[0].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[0].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[0].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[0].filetype = ones: mount failed (32).
++u3.sfdir3.list[0].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[0].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[0].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[0].filetype = add: mount failed (32).
++u3.sfdir3.list[0].filetype = sub: mount failed (32).
++u3.sfdir3.list[1].namelen = zeroes: mount failed (32).
++u3.sfdir3.list[1].namelen = ones: mount failed (32).
++u3.sfdir3.list[1].namelen = firstbit: mount failed (32).
++u3.sfdir3.list[1].namelen = middlebit: mount failed (32).
++u3.sfdir3.list[1].namelen = lastbit: mount failed (32).
++u3.sfdir3.list[1].namelen = add: mount failed (32).
++u3.sfdir3.list[1].namelen = sub: mount failed (32).
++u3.sfdir3.list[1].offset = zeroes: mount failed (32).
++u3.sfdir3.list[1].offset = ones: mount failed (32).
++u3.sfdir3.list[1].offset = firstbit: mount failed (32).
++u3.sfdir3.list[1].offset = middlebit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = middlebit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = lastbit: online scrub didn't fail.
++u3.sfdir3.list[1].offset = add: offline scrub didn't fail.
++u3.sfdir3.list[1].offset = add: online scrub didn't fail.
++u3.sfdir3.list[1].offset = sub: mount failed (32).
++u3.sfdir3.list[1].name = zeroes: mount failed (32).
++u3.sfdir3.list[1].name = ones: mount failed (32).
++u3.sfdir3.list[1].name = firstbit: mount failed (32).
++u3.sfdir3.list[1].name = middlebit: mount failed (32).
++u3.sfdir3.list[1].name = lastbit: mount failed (32).
++u3.sfdir3.list[1].name = add: mount failed (32).
++u3.sfdir3.list[1].name = sub: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = zeroes: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = ones: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = firstbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = middlebit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = lastbit: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = add: mount failed (32).
++u3.sfdir3.list[1].inumber.i4 = sub: mount failed (32).
++u3.sfdir3.list[1].filetype = zeroes: mount failed (32).
++u3.sfdir3.list[1].filetype = ones: mount failed (32).
++u3.sfdir3.list[1].filetype = firstbit: mount failed (32).
++u3.sfdir3.list[1].filetype = middlebit: mount failed (32).
++u3.sfdir3.list[1].filetype = lastbit: mount failed (32).
++u3.sfdir3.list[1].filetype = add: mount failed (32).
++u3.sfdir3.list[1].filetype = sub: mount failed (32).
++a.sfattr.hdr.totsize = zeroes: mount failed (32).
++a.sfattr.hdr.totsize = ones: mount failed (32).
++a.sfattr.hdr.totsize = firstbit: mount failed (32).
++a.sfattr.hdr.totsize = middlebit: mount failed (32).
++a.sfattr.hdr.totsize = lastbit: mount failed (32).
++a.sfattr.hdr.totsize = add: mount failed (32).
++a.sfattr.hdr.totsize = sub: mount failed (32).
++a.sfattr.hdr.count = zeroes: mount failed (32).
++a.sfattr.hdr.count = ones: mount failed (32).
++a.sfattr.hdr.count = firstbit: mount failed (32).
++a.sfattr.hdr.count = middlebit: mount failed (32).
++a.sfattr.hdr.count = lastbit: mount failed (32).
++a.sfattr.hdr.count = add: mount failed (32).
++a.sfattr.hdr.count = sub: mount failed (32).
++a.sfattr.list[0].namelen = zeroes: mount failed (32).
++a.sfattr.list[0].namelen = ones: mount failed (32).
++a.sfattr.list[0].namelen = firstbit: mount failed (32).
++a.sfattr.list[0].namelen = middlebit: mount failed (32).
++a.sfattr.list[0].namelen = lastbit: mount failed (32).
++a.sfattr.list[0].namelen = add: mount failed (32).
++a.sfattr.list[0].namelen = sub: mount failed (32).
++a.sfattr.list[0].parent = zeroes: online repair failed (1).
++a.sfattr.list[0].parent = add: online repair failed (1).
++a.sfattr.list[0].parent_ino = zeroes: online repair failed (1).
++a.sfattr.list[0].parent_ino = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_ino = middlebit: online repair failed (1).
++a.sfattr.list[0].parent_ino = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_ino = add: online repair failed (1).
++a.sfattr.list[0].parent_gen = ones: online repair failed (1).
++a.sfattr.list[0].parent_gen = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_gen = middlebit: online repair failed (1).
++a.sfattr.list[0].parent_gen = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_gen = add: online repair failed (1).
++a.sfattr.list[0].parent_namehash = zeroes: online repair failed (1).
++a.sfattr.list[0].parent_namehash = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_namehash = middlebit: online repair failed (1).
++a.sfattr.list[0].parent_namehash = lastbit: online repair failed (1).
++a.sfattr.list[0].parent_name = firstbit: online repair failed (1).
++a.sfattr.list[0].parent_name = middlebit: online repair failed (1).
++a.sfattr.list[0].parent_name = add: online repair failed (1).
++a.sfattr.list[0].parent_name = sub: online repair failed (1).
+ Done fuzzing metadir subdir
 
