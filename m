@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 734141376
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:36:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC0F1362
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:36:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c41RnNTo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49AF6C433C7;
-	Mon,  1 Jan 2024 00:36:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugLsVxJN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09046C433C7;
+	Mon,  1 Jan 2024 00:36:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704069364;
-	bh=mFd+f2n7Oeyg8X/eS5u01YeVGAAcoKqmebIq50is6AE=;
+	s=k20201202; t=1704069380;
+	bh=H255maff+EfGsU7DWyKQy78I30lvQUHG6BAece41hsU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=c41RnNToetcw+4VfO7+xs//GAGEyKShKk5EbUJfnANzAiS23p8TUEaofMhVcn4qM/
-	 pZQCnTw2oUBTvdkIX+dFwtuG87UMA3Z+OGnuiq5Dixi8zsu14pIpp+OHjgikBTXM26
-	 xjDMyTcKphWc5TfpgRHh4lPRYWps6wtD2b3b4nMuTo8ZBrEvElVLq689t+DgfxCMxb
-	 LhILHIm224EdVSKGQ1IAcoMruc8nPu2m3L1Pf4Af8xVYOw5dwBtoPoFcdvbcDMKBs2
-	 ++LbUlcbVwpC/s6sKQheHvNsMgOknJVwVTt3EbivOceigBdLmomBbNxFwAYh877E0c
-	 Xm32orh/MaSGQ==
-Date: Sun, 31 Dec 2023 16:36:03 +9900
-Subject: [PATCH 38/42] xfs_repair: validate CoW extent size hint on rtinherit
- directories
+	b=ugLsVxJNm8dG9N8uSwedOa1/aqksULcePk5Z5g9TIPWmmXgGSP3+rJd+hPhOO1OdA
+	 7Lkv/ZAt334cnUzXLRqbFQ19AgKmMrUnyjNxx1+dO8RoxnVXRHIpMlMHc7zjOJdA+i
+	 u+fzRNIcTQ97RD6kixNlWlbARx2cQMm4h+UeY1mVCvch91VKxSv8ZIjHXF5l/IKgEs
+	 py3wwX6srCrfXdmSOwA7Gq44sBAXkibQ6SufwAMH6ODtC0r2wgRdnjLYVJwX9+K3D5
+	 sXzhFvPW5Emqt+dN8hpfB8M+/+DTrJVQcwvBlU7ArpgJmT3RPQOmh6/+RyWNw+phYa
+	 aH+EBdk0f8k+A==
+Date: Sun, 31 Dec 2023 16:36:19 +9900
+Subject: [PATCH 39/42] xfs_repair: allow sysadmins to add realtime reflink
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405017634.1817107.4786026043233889277.stgit@frogsfrogsfrogs>
+Message-ID: <170405017647.1817107.18135523970470294722.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405017092.1817107.5442809166380700367.stgit@frogsfrogsfrogs>
 References: <170405017092.1817107.5442809166380700367.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,99 +37,148 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-XFS allows a sysadmin to change the rt extent size when adding a rt
-section to a filesystem after formatting.  If there are any directories
-with both a cowextsize hint and rtinherit set, the hint could become
-misaligned with the new rextsize.  Offer to fix the problem if we're in
-modify mode and the verifier didn't trip.  If we're in dry run mode,
-we let the kernel fix it.
+Allow the sysadmin to use xfs_repair to upgrade an existing filesystem
+to support the realtime reference count btree, and therefore reflink on
+realtime volumes.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/dinode.c |   64 +++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 43 insertions(+), 21 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/phase2.c          |   83 +++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 82 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 2b254b29c4a..df88a162829 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2808,6 +2808,47 @@ _("Bad extent size hint %u on inode %" PRIu64 ", "),
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index bc34ce9caad..4e7b3caba4b 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -294,6 +294,7 @@
+ #define xfs_rtgroup_update_super	libxfs_rtgroup_update_super
+ 
+ #define xfs_rtrefcountbt_absolute_maxlevels	libxfs_rtrefcountbt_absolute_maxlevels
++#define xfs_rtrefcountbt_calc_reserves	libxfs_rtrefcountbt_calc_reserves
+ #define xfs_rtrefcountbt_calc_size		libxfs_rtrefcountbt_calc_size
+ #define xfs_rtrefcountbt_commit_staged_btree	libxfs_rtrefcountbt_commit_staged_btree
+ #define xfs_rtrefcountbt_create		libxfs_rtrefcountbt_create
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 22458aee4cd..cd3aa30eecd 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -223,14 +223,19 @@ set_reflink(
+ 		exit(0);
  	}
+ 
+-	if (xfs_has_realtime(mp)) {
+-		printf(_("Reflink feature not supported with realtime.\n"));
++	if (xfs_has_realtime(mp) && !xfs_has_rtgroups(mp)) {
++		printf(_("Reference count btree requires realtime groups.\n"));
+ 		exit(0);
+ 	}
+ 
+ 	printf(_("Adding reflink support to filesystem.\n"));
+ 	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
+ 	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++
++	/* Quota counts will be wrong once we add the refcount inodes. */
++	if (xfs_has_realtime(mp))
++		quotacheck_skip();
++
+ 	return true;
  }
  
-+static void
-+validate_cowextsize(
-+	struct xfs_mount	*mp,
-+	struct xfs_dinode	*dino,
-+	xfs_ino_t		lino,
-+	int			*dirty)
+@@ -511,6 +516,63 @@ reserve_rtrmap_inode(
+ 	return error;
+ }
+ 
++/*
++ * Reserve space to handle rt refcount btree expansion.
++ *
++ * If the refcount inode for this group already exists, we assume that we're
++ * adding some other feature.  Note that we have not validated the metadata
++ * directory tree, so we must perform the lookup by hand and abort the upgrade
++ * if there are errors.  If the inode does not exist, the amount of space
++ * needed to handle a new maximally sized refcount btree is added to @new_resv.
++ */
++static int
++reserve_rtrefcount_inode(
++	struct xfs_rtgroup	*rtg,
++	xfs_rfsblock_t		*new_resv)
 +{
-+	uint16_t		flags = be16_to_cpu(dino->di_flags);
-+	uint64_t		flags2 = be64_to_cpu(dino->di_flags2);
-+	unsigned int		value = be32_to_cpu(dino->di_cowextsize);
-+	bool			misaligned = false;
-+	bool			bad;
++	struct xfs_mount	*mp = rtg->rtg_mount;
++	struct xfs_imeta_path	*path;
++	struct xfs_trans	*tp;
++	xfs_ino_t		ino;
++	xfs_filblks_t		ask;
++	int			error;
 +
-+	/*
-+	 * XFS allows a sysadmin to change the rt extent size when adding a
-+	 * rt section to a filesystem after formatting.  If there are any
-+	 * directories with both a cowextsize hint and rtinherit set, the
-+	 * hint could become misaligned with the new rextsize.
-+	 */
-+	if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
-+	    (flags & XFS_DIFLAG_RTINHERIT) &&
-+	    value % mp->m_sb.sb_rextsize > 0)
-+		misaligned = true;
++	if (!xfs_has_rtreflink(mp))
++		return 0;
 +
-+	/* Complain if the verifier fails. */
-+	bad = libxfs_inode_validate_cowextsize(mp, value,
-+			be16_to_cpu(dino->di_mode), flags, flags2) != NULL;
-+	if (bad || misaligned) {
-+		do_warn(
-+_("Bad CoW extent size hint %u on inode %" PRIu64 ", "),
-+				be32_to_cpu(dino->di_cowextsize), lino);
-+		if (!no_modify) {
-+			do_warn(_("resetting to zero\n"));
-+			dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
-+			dino->di_cowextsize = 0;
-+			*dirty = 1;
-+		} else
-+			do_warn(_("would reset to zero\n"));
++	error = -libxfs_rtrefcountbt_create_path(mp, rtg->rtg_rgno, &path);
++	if (error)
++		return error;
++
++	error = -libxfs_trans_alloc_empty(mp, &tp);
++	if (error)
++		goto out_path;
++
++	ask = libxfs_rtrefcountbt_calc_reserves(mp);
++
++	error = -libxfs_imeta_lookup(tp, path, &ino);
++	if (error)
++		goto out_trans;
++
++	if (ino == NULLFSINO) {
++		*new_resv += ask;
++		goto out_trans;
 +	}
++
++	error = -libxfs_imeta_iget(tp, ino, XFS_DIR3_FT_REG_FILE,
++			&rtg->rtg_refcountip);
++	if (error)
++		goto out_trans;
++
++	error = -libxfs_imeta_resv_init_inode(rtg->rtg_refcountip, ask);
++
++out_trans:
++	libxfs_trans_cancel(tp);
++out_path:
++	libxfs_imeta_free_path(path);
++	return error;
 +}
 +
- /*
-  * returns 0 if the inode is ok, 1 if the inode is corrupt
-  * check_dups can be set to 1 *only* when called by the
-@@ -3385,27 +3426,8 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ static void
+ check_fs_free_space(
+ 	struct xfs_mount		*mp,
+@@ -610,6 +672,18 @@ _("Not enough free space would remain for rtgroup %u rmap inode.\n"),
+ 			do_error(
+ _("Error %d while checking rtgroup %u rmap inode space reservation.\n"),
+ 					error, rtg->rtg_rgno);
++
++		error = reserve_rtrefcount_inode(rtg, &new_resv);
++		if (error == ENOSPC) {
++			printf(
++_("Not enough free space would remain for rtgroup %u refcount inode.\n"),
++					rtg->rtg_rgno);
++			exit(0);
++		}
++		if (error)
++			do_error(
++_("Error %d while checking rtgroup %u refcount inode space reservation.\n"),
++					error, rtg->rtg_rgno);
+ 	}
  
- 	validate_extsize(mp, dino, lino, dirty);
+ 	/*
+@@ -643,6 +717,11 @@ _("Error %d while checking rtgroup %u rmap inode space reservation.\n"),
+ 			libxfs_imeta_irele(rtg->rtg_rmapip);
+ 			rtg->rtg_rmapip = NULL;
+ 		}
++		if (rtg->rtg_refcountip) {
++			libxfs_imeta_resv_free_inode(rtg->rtg_refcountip);
++			libxfs_imeta_irele(rtg->rtg_refcountip);
++			rtg->rtg_refcountip = NULL;
++		}
+ 	}
  
--	/*
--	 * Only (regular files and directories) with COWEXTSIZE flags
--	 * set can have extsize set.
--	 */
--	if (dino->di_version >= 3 &&
--	    libxfs_inode_validate_cowextsize(mp,
--			be32_to_cpu(dino->di_cowextsize),
--			be16_to_cpu(dino->di_mode),
--			be16_to_cpu(dino->di_flags),
--			be64_to_cpu(dino->di_flags2)) != NULL) {
--		do_warn(
--_("Bad CoW extent size %u on inode %" PRIu64 ", "),
--				be32_to_cpu(dino->di_cowextsize), lino);
--		if (!no_modify)  {
--			do_warn(_("resetting to zero\n"));
--			dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
--			dino->di_cowextsize = 0;
--			*dirty = 1;
--		} else
--			do_warn(_("would reset to zero\n"));
--	}
-+	if (dino->di_version >= 3)
-+		validate_cowextsize(mp, dino, lino, dirty);
- 
- 	/* nsec fields cannot be larger than 1 billion */
- 	check_nsec("atime", lino, dino, &dino->di_atime, dirty);
+ 	/*
 
