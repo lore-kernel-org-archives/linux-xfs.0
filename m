@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F06C7ED;
-	Mon,  1 Jan 2024 01:04:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 132FA7ED;
+	Mon,  1 Jan 2024 01:04:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MuzddTKt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3467FC433C8;
-	Mon,  1 Jan 2024 01:04:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WpWmOV96"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0218C433C8;
+	Mon,  1 Jan 2024 01:04:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704071071;
-	bh=bGka8KkS5/SmPkedarS/6RMqBg6Hubd2jVw+iOePdAs=;
+	s=k20201202; t=1704071086;
+	bh=pEWxttbe7ZFy++6/xveUJs/muewSFpCu/5fWwGCCLFk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MuzddTKt67Zg/jk8DykfFdHMzzMxxHnsB8dA4ThhR8dhFre7/eOUWuYbveFm9w9eb
-	 xNdgMBn6GJCeZ71CqEBixIuv7+pIcLKlUQTuSVI4ObWCIP2khpwFCSkROmHTIgb9de
-	 qIMbZGHxd866uzUI3hPZ45xcrEgA8b6MYQMOZW2/PA61j993eQy0vz6s8MXof7vU3a
-	 eS238+Sq14o6KaH3MgMJgFSyNUpJW6AehdU74LV4DsDpKwFoiJs8k65YGBxLR+jg5V
-	 WcFqETHaOQsq3VeRbtZZYGiXN7TM4fK8sLs7WBNCQZqOF2iAk+xMqPD8yz+q3dd4nK
-	 CqesamKCIIQ/g==
-Date: Sun, 31 Dec 2023 17:04:30 +9900
-Subject: [PATCH 2/5] xfs: skip cowextsize hint fragmentation tests on realtime
- volumes
+	b=WpWmOV967nrn+gvaeSgs+uxl7qZL5BAVl+FKH2sFumKR6eTVlw5YBpVvpcO8ZjARg
+	 2JC2vqNudi7MMotbf5EXIZttn1pjAsM+quB1Q9J8WKKIuU474jW/z5S3ch1mrfbjlz
+	 cEk2SObMxCf9sRxG9Mxksq2aLsPMyYPgou0QGyUk2wAXqOT4v9FEKV+djzD9ko6Rmi
+	 OlE94PD45du3weD2oV6VyefnVlcP+y1l1KzLo4U/f3Om0VjDdhxUhNvK7nFjk3avXl
+	 uoFcqqELau6gW4Qx4o2Y9IkWowjJxi7+Hi3rPSFxwrVPyB9kTTBNZnLgLaw1hEVAy0
+	 Aelg9RXbcZ53Q==
+Date: Sun, 31 Dec 2023 17:04:46 +9900
+Subject: [PATCH 3/5] misc: add more congruent oplen testing
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405032762.1827706.12824926807769911075.stgit@frogsfrogsfrogs>
+Message-ID: <170405032776.1827706.12287719690033943992.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405032733.1827706.12312180709769839153.stgit@frogsfrogsfrogs>
 References: <170405032733.1827706.12312180709769839153.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,173 +37,265 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The XFS CoW extent size hint is ignored on realtime filesystems when the
-rt extent size set to a unit larger than a single filesystem block
-because it is assumed that the larger allocation unit is the
-administrator's sole and mandatory anti-fragmentation strategy.  As
-such, we can skip these tests.
+Do more checking for file allocation operation op length congruency.
+This prevents tests from failing with EINVAL when the realtime extent
+size is something weird like 28k or 1GB.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/reflink |   27 +++++++++++++++++++++++++++
- tests/xfs/180  |    1 +
- tests/xfs/182  |    1 +
- tests/xfs/184  |    1 +
- tests/xfs/192  |    1 +
- tests/xfs/200  |    1 +
- tests/xfs/204  |    1 +
- tests/xfs/208  |    1 +
- tests/xfs/315  |    1 +
- tests/xfs/326  |    6 ++++++
- 10 files changed, 41 insertions(+)
+ tests/generic/145 |    1 +
+ tests/generic/147 |    1 +
+ tests/generic/261 |    1 +
+ tests/generic/262 |    1 +
+ tests/generic/331 |    1 +
+ tests/generic/353 |    2 +-
+ tests/generic/517 |    1 +
+ tests/generic/657 |    1 +
+ tests/generic/658 |    1 +
+ tests/generic/659 |    1 +
+ tests/generic/660 |    1 +
+ tests/generic/663 |    1 +
+ tests/generic/664 |    1 +
+ tests/generic/665 |    1 +
+ tests/generic/670 |    1 +
+ tests/generic/672 |    1 +
+ tests/xfs/420     |    3 +++
+ tests/xfs/421     |    3 +++
+ tests/xfs/792     |    1 +
+ 19 files changed, 23 insertions(+), 1 deletion(-)
 
 
-diff --git a/common/reflink b/common/reflink
-index 22adc4449b..1082642e4e 100644
---- a/common/reflink
-+++ b/common/reflink
-@@ -521,3 +521,30 @@ _sweave_reflink_rainbow_delalloc() {
- 		_pwrite_byte 0x62 $((blksz * i)) $blksz $dfile.chk
- 	done
+diff --git a/tests/generic/145 b/tests/generic/145
+index f213f53be8..81fc5f6c2f 100755
+--- a/tests/generic/145
++++ b/tests/generic/145
+@@ -36,6 +36,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $TEST_DIR $blksz
+ _pwrite_byte 0x61 0 $blksz $testdir/file1 >> $seqres.full
+ _pwrite_byte 0x62 $blksz $blksz $testdir/file1 >> $seqres.full
+ _pwrite_byte 0x63 $((blksz * 2)) $blksz $testdir/file1 >> $seqres.full
+diff --git a/tests/generic/147 b/tests/generic/147
+index 113800944b..bb17bb1c0b 100755
+--- a/tests/generic/147
++++ b/tests/generic/147
+@@ -35,6 +35,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $TEST_DIR $blksz
+ _pwrite_byte 0x61 0 $blksz $testdir/file1 >> $seqres.full
+ _pwrite_byte 0x62 $blksz $blksz $testdir/file1 >> $seqres.full
+ _pwrite_byte 0x63 $((blksz * 2)) $blksz $testdir/file1 >> $seqres.full
+diff --git a/tests/generic/261 b/tests/generic/261
+index 93c1c349b1..deb360288e 100755
+--- a/tests/generic/261
++++ b/tests/generic/261
+@@ -29,6 +29,7 @@ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+ 
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=5
+ filesize=$((blksz * nr))
+ 
+diff --git a/tests/generic/262 b/tests/generic/262
+index 46e88f8731..f296e37e02 100755
+--- a/tests/generic/262
++++ b/tests/generic/262
+@@ -29,6 +29,7 @@ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+ 
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=4
+ filesize=$((blksz * nr))
+ 
+diff --git a/tests/generic/331 b/tests/generic/331
+index 8c665ce4fc..9b6801e16f 100755
+--- a/tests/generic/331
++++ b/tests/generic/331
+@@ -38,6 +38,7 @@ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+ 
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=640
+ bufnr=128
+ filesize=$((blksz * nr))
+diff --git a/tests/generic/353 b/tests/generic/353
+index c563972510..6dbb0d4c24 100755
+--- a/tests/generic/353
++++ b/tests/generic/353
+@@ -30,7 +30,7 @@ _scratch_mkfs > /dev/null 2>&1
+ _scratch_mount
+ 
+ blocksize=$(_get_file_block_size $SCRATCH_MNT)
+-
++_require_congruent_file_oplen $SCRATCH_MNT $blocksize
+ file1="$SCRATCH_MNT/file1"
+ file2="$SCRATCH_MNT/file2"
+ extmap1="$SCRATCH_MNT/extmap1"
+diff --git a/tests/generic/517 b/tests/generic/517
+index cf3031ed2d..229358d06b 100755
+--- a/tests/generic/517
++++ b/tests/generic/517
+@@ -21,6 +21,7 @@ _require_scratch_dedupe
+ 
+ _scratch_mkfs >>$seqres.full 2>&1
+ _scratch_mount
++_require_congruent_file_oplen $SCRATCH_MNT 65536
+ 
+ # The first byte with a value of 0xae starts at an offset (512Kb + 100) which is
+ # not a multiple of the block size.
+diff --git a/tests/generic/657 b/tests/generic/657
+index e0fecd544c..9f4673dda3 100755
+--- a/tests/generic/657
++++ b/tests/generic/657
+@@ -30,6 +30,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _pwrite_byte 0x61 0 $filesize $testdir/file1 >> $seqres.full
+diff --git a/tests/generic/658 b/tests/generic/658
+index a5cbadaaa5..e9519c25e2 100755
+--- a/tests/generic/658
++++ b/tests/generic/658
+@@ -31,6 +31,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _weave_reflink_regular $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
+diff --git a/tests/generic/659 b/tests/generic/659
+index ccc2d7950d..05436edfab 100755
+--- a/tests/generic/659
++++ b/tests/generic/659
+@@ -31,6 +31,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _weave_reflink_unwritten $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
+diff --git a/tests/generic/660 b/tests/generic/660
+index bc17dc5e59..52b0d1ea9e 100755
+--- a/tests/generic/660
++++ b/tests/generic/660
+@@ -31,6 +31,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _weave_reflink_holes $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
+diff --git a/tests/generic/663 b/tests/generic/663
+index 658a5b7004..692c77b745 100755
+--- a/tests/generic/663
++++ b/tests/generic/663
+@@ -32,6 +32,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _sweave_reflink_regular $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
+diff --git a/tests/generic/664 b/tests/generic/664
+index 3009101fdc..40fb8c6d92 100755
+--- a/tests/generic/664
++++ b/tests/generic/664
+@@ -34,6 +34,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _sweave_reflink_unwritten $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
+diff --git a/tests/generic/665 b/tests/generic/665
+index 86ba578720..ee511755e6 100755
+--- a/tests/generic/665
++++ b/tests/generic/665
+@@ -34,6 +34,7 @@ mkdir $testdir
+ 
+ echo "Create the original files"
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=64
+ filesize=$((blksz * nr))
+ _sweave_reflink_holes $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full
+diff --git a/tests/generic/670 b/tests/generic/670
+index 67de167405..80f9fe6d4f 100755
+--- a/tests/generic/670
++++ b/tests/generic/670
+@@ -31,6 +31,7 @@ mkdir $testdir
+ loops=512
+ nr_loops=$((loops - 1))
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ 
+ echo "Initialize files"
+ echo >> $seqres.full
+diff --git a/tests/generic/672 b/tests/generic/672
+index 9e3a97ec5e..0710a04294 100755
+--- a/tests/generic/672
++++ b/tests/generic/672
+@@ -30,6 +30,7 @@ mkdir $testdir
+ loops=1024
+ nr_loops=$((loops - 1))
+ blksz=65536
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ 
+ echo "Initialize files"
+ echo >> $seqres.full
+diff --git a/tests/xfs/420 b/tests/xfs/420
+index d38772c9d9..51f87bc304 100755
+--- a/tests/xfs/420
++++ b/tests/xfs/420
+@@ -69,6 +69,9 @@ exercise_lseek() {
  }
-+
-+# Require that the COW extent size hint can actually be used to combat
-+# fragmentation on the scratch filesystem.  This is (so far) true for any
-+# filesystem except for the ones where the realtime extent size is larger
-+# than one fs block, for it is assumed that setting a rt extent size is the
-+# preferred fragmentation avoidance strategy.
-+_require_scratch_cowextsize_useful() {
-+	local testfile=$SCRATCH_MNT/hascowextsize
-+	local param="${1:-1m}"
-+
-+	rm -f $testfile
-+	touch $testfile
-+	local before="$($XFS_IO_PROG -c 'cowextsize' $testfile)"
-+
-+	$XFS_IO_PROG -c "cowextsize $param" $testfile
-+	local after="$($XFS_IO_PROG -c 'cowextsize' $testfile)"
-+	rm -f $testfile
-+
-+	test "$before" != "$after" || \
-+		_notrun "setting cowextsize to $param had no effect"
-+
-+	local fileblocksize=$(_get_file_block_size $SCRATCH_MNT)
-+	local fsblocksize=$(_get_block_size $SCRATCH_MNT)
-+
-+	test $fsblocksize -eq $fileblocksize || \
-+		_notrun "XFS does not support cowextsize when rt extsize ($fileblocksize) > 1FSB ($fsblocksize)"
-+}
-diff --git a/tests/xfs/180 b/tests/xfs/180
-index d2fac03a9e..e8e04062a8 100755
---- a/tests/xfs/180
-+++ b/tests/xfs/180
-@@ -38,6 +38,7 @@ nr=128
+ 
+ blksz=65536
++# Golden output encodes SEEK_HOLE/DATA output, which depends on COW only
++# happening on $blksz granularity
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=8
  filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
  
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_block_size $testdir)
-diff --git a/tests/xfs/182 b/tests/xfs/182
-index 511aca6f2d..7c0713b248 100755
---- a/tests/xfs/182
-+++ b/tests/xfs/182
-@@ -39,6 +39,7 @@ nr=128
+diff --git a/tests/xfs/421 b/tests/xfs/421
+index 027ae47c21..429333e349 100755
+--- a/tests/xfs/421
++++ b/tests/xfs/421
+@@ -51,6 +51,9 @@ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+ 
+ blksz=65536
++# Golden output encodes SEEK_HOLE/DATA output, which depends on COW only
++# happening on $blksz granularity
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
+ nr=8
  filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
  
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_block_size $testdir)
-diff --git a/tests/xfs/184 b/tests/xfs/184
-index 97f529f666..b2b4da6024 100755
---- a/tests/xfs/184
-+++ b/tests/xfs/184
-@@ -40,6 +40,7 @@ nr=128
- filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
+diff --git a/tests/xfs/792 b/tests/xfs/792
+index bfbfbce4aa..bfbfd8bfbc 100755
+--- a/tests/xfs/792
++++ b/tests/xfs/792
+@@ -32,6 +32,7 @@ _require_xfs_io_error_injection "bmap_finish_one"
  
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_block_size $testdir)
-diff --git a/tests/xfs/192 b/tests/xfs/192
-index ef7da55be5..0017597280 100755
---- a/tests/xfs/192
-+++ b/tests/xfs/192
-@@ -42,6 +42,7 @@ nr=128
- filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
+ _scratch_mkfs >> $seqres.full
+ _scratch_mount
++_require_congruent_file_oplen $SCRATCH_MNT 65536
  
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_block_size $testdir)
-diff --git a/tests/xfs/200 b/tests/xfs/200
-index a9d6ce1bb6..500564d9a8 100755
---- a/tests/xfs/200
-+++ b/tests/xfs/200
-@@ -42,6 +42,7 @@ nr=128
- filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
- 
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_block_size $testdir)
-diff --git a/tests/xfs/204 b/tests/xfs/204
-index 7dacfa2de7..8cbdd6513f 100755
---- a/tests/xfs/204
-+++ b/tests/xfs/204
-@@ -44,6 +44,7 @@ nr=128
- filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
- 
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_block_size $testdir)
-diff --git a/tests/xfs/208 b/tests/xfs/208
-index 1e7734b822..0d2401b908 100755
---- a/tests/xfs/208
-+++ b/tests/xfs/208
-@@ -41,6 +41,7 @@ nr=128
- filesize=$((blksz * nr))
- bufnr=16
- bufsize=$((blksz * bufnr))
-+_require_scratch_cowextsize_useful $bufsize
- 
- _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
- real_blksz=$(_get_file_block_size $testdir)
-diff --git a/tests/xfs/315 b/tests/xfs/315
-index 9f6b39c8cc..3a618a3680 100755
---- a/tests/xfs/315
-+++ b/tests/xfs/315
-@@ -38,6 +38,7 @@ echo "Format filesystem"
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount >> $seqres.full
- _require_congruent_file_oplen $SCRATCH_MNT $blksz
-+_require_scratch_cowextsize_useful $sz
- 
- $XFS_IO_PROG -c "cowextsize $sz" $SCRATCH_MNT
- 
-diff --git a/tests/xfs/326 b/tests/xfs/326
-index ac620fc433..a3fed8b6ac 100755
---- a/tests/xfs/326
-+++ b/tests/xfs/326
-@@ -55,6 +55,12 @@ $XFS_IO_PROG -c "cowextsize $sz" $SCRATCH_MNT
- # staging extent for an unshared extent and trips over the injected error.
- _require_no_xfs_always_cow
- 
-+# This test uses a very large cowextszhint to manipulate the COW fork to
-+# contain a large unwritten extent before injecting the error.  XFS ignores
-+# cowextsize when the realtime extent size is greater than 1FSB, so this test
-+# cannot set up the preconditions for the test.
-+_require_scratch_cowextsize_useful $sz
-+
- echo "Create files"
- _pwrite_byte 0x66 0 $sz $SCRATCH_MNT/file1 >> $seqres.full
- _cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/file2
+ # Create original file
+ _pwrite_byte 0x58 0 1m $SCRATCH_MNT/a >> $seqres.full
 
