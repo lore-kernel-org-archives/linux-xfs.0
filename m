@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F90384
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:14:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AAA389
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:14:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cWvxFGON"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FA12C433C8;
-	Mon,  1 Jan 2024 00:14:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UoRLaENK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5F9DC433C7;
+	Mon,  1 Jan 2024 00:14:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068066;
-	bh=VzH9xyguqN/CJ4FlituhP5sgsw7tPQDIhUdlL7QjTOY=;
+	s=k20201202; t=1704068081;
+	bh=sjktispdo33sVHopap9yaG8KN8VL46erdgSyAGYyABM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cWvxFGONkBXBBaSdTDJOmJ6kvFIsIRx5z9QV9UBVFaoTMvFMC3IH5fPn13sud0XWW
-	 bK+jJHfe6cjjb6JImjsIpw/VWjKdjNyNLT8tk8RhJiUs6kbTTYhkH6YpDwBipqvd3S
-	 IyRVYuqLUDqTm7QxT6dv4o5Pj8vvv/TpLTcePv1x9UBCBaW8kw6omWsuwtFvFWxqv5
-	 tegSg5n+8RSYqgni3RvGAh6Iq04WpTvKYfy5vHcR6qSkT0A1VXX0KuI5W3Zb0MtDMJ
-	 SJ1AEDmFRVKnqfi9n5UA5P/ZcMiEhTs6HxqOw6kiDTIrs08IX7b2Vc03K6NV0MiVC7
-	 FonBOHLxmE+5Q==
-Date: Sun, 31 Dec 2023 16:14:25 +9900
-Subject: [PATCH 15/47] xfs: report realtime rmap btree corruption errors to
- the health system
+	b=UoRLaENKI5byn6gd/dptCk8yYX/QTlgKqhTQbvddq5qitQZB1WVpdC+waZiboU9DI
+	 p4Wwwj6EZwcrROWv7ToOjHu2MzUZ5ItNoU8nyEVMvFr5MRD7VDZ4Ms5Em4kGg0RXkg
+	 CCL1QiL8Zw9OTI41OFWPY8Tk9rrRu2ym5JuhhrMUAnd2sMiSz4wrClZA//VYaODY9Z
+	 i+zdMD6Yo5QomkvJx8Y7aOl6stGyMujnp+Q931ukkftDVxkpm5Zhjdrwz1WML4kUlf
+	 GSzLZJp/WIc1VatJKcUY7v6MeKZKQL5qB7oVMXJogOQPGipQBuiZrxI6mVbKpqh7XM
+	 9J84Zf3MOgNUg==
+Date: Sun, 31 Dec 2023 16:14:41 +9900
+Subject: [PATCH 16/47] xfs: allow queued realtime intents to drain before
+ scrubbing
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015513.1815505.15975259091873127380.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <170405015526.1815505.9934847494535195493.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,105 +38,175 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Whenever we encounter corrupt realtime rmap btree blocks, we should
-report that to the health monitoring system for later reporting.
+When a writer thread executes a chain of log intent items for the
+realtime volume, the ILOCKs taken during each step are for each rt
+metadata file, not the entire rt volume itself.  Although scrub takes
+all rt metadata ILOCKs, this isn't sufficient to guard against scrub
+checking the rt volume while that writer thread is in the middle of
+finishing a chain because there's no higher level locking primitive
+guarding the realtime volume.
 
+When there's a collision, cross-referencing between data structures
+(e.g. rtrmapbt and rtrefcountbt) yields false corruption events; if
+repair is running, this results in incorrect repairs, which is
+catastrophic.
+
+Fix this by adding to the mount structure the same drain that we use to
+protect scrub against concurrent AG updates, but this time for the
+realtime volume.
+
+[Contains a few cleanups from hch]
+
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_fs_staging.h               |    1 +
- libxfs/xfs_health.h                   |    4 +++-
- libxfs/xfs_inode_fork.c               |    4 +++-
- libxfs/xfs_rtrmap_btree.c             |    5 ++++-
- man/man2/ioctl_xfs_rtgroup_geometry.2 |    3 +++
- 5 files changed, 14 insertions(+), 3 deletions(-)
+ include/xfs_mount.h  |   12 ++++++++++++
+ libxfs/defer_item.c  |   31 +++++++++++++------------------
+ libxfs/xfs_rtgroup.c |    2 ++
+ libxfs/xfs_rtgroup.h |    9 +++++++++
+ 4 files changed, 36 insertions(+), 18 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs_staging.h b/libxfs/xfs_fs_staging.h
-index 1f573314877..9d5d6af62b6 100644
---- a/libxfs/xfs_fs_staging.h
-+++ b/libxfs/xfs_fs_staging.h
-@@ -216,6 +216,7 @@ struct xfs_rtgroup_geometry {
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index 4e4da5bc4fa..07f9e33b8b2 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -333,6 +333,18 @@ struct xfs_defer_drain { /* empty */ };
+ static inline void xfs_perag_intent_hold(struct xfs_perag *pag) {}
+ static inline void xfs_perag_intent_rele(struct xfs_perag *pag) {}
+ 
++struct xfs_rtgroup;
++
++#define xfs_rtgroup_intent_get(mp, rgno) \
++	xfs_rtgroup_get((mp), xfs_rtb_to_rgno((mp), (rgno)))
++#define xfs_rtgroup_intent_put(rtg)		xfs_rtgroup_put(rtg)
++
++static inline void xfs_rtgroup_intent_hold(struct xfs_rtgroup *rtg) { }
++static inline void xfs_rtgroup_intent_rele(struct xfs_rtgroup *rtg) { }
++
++#define xfs_drain_free(dr)		((void)0)
++#define xfs_drain_init(dr)		((void)0)
++
+ static inline void libxfs_buftarg_drain(struct xfs_buftarg *btp)
+ {
+ 	cache_purge(btp->bcache);
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index a82d23c17cf..e7270d02c4b 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -88,11 +88,8 @@ xfs_extent_free_defer_add(
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 
+ 	if (xfs_efi_is_realtime(xefi)) {
+-		xfs_rgnumber_t		rgno;
+-
+-		rgno = xfs_rtb_to_rgno(mp, xefi->xefi_startblock);
+-		xefi->xefi_rtg = xfs_rtgroup_get(mp, rgno);
+-
++		xefi->xefi_rtg = xfs_rtgroup_intent_get(mp,
++						xefi->xefi_startblock);
+ 		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+ 				&xfs_rtextent_free_defer_type);
+ 		return;
+@@ -204,7 +201,7 @@ xfs_rtextent_free_cancel_item(
+ {
+ 	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 
+-	xfs_rtgroup_put(xefi->xefi_rtg);
++	xfs_rtgroup_intent_put(xefi->xefi_rtg);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ }
+ 
+@@ -338,13 +335,12 @@ xfs_rmap_defer_add(
+ 	 * section updates.
+ 	 */
+ 	if (ri->ri_realtime) {
+-		xfs_rgnumber_t	rgno;
+-
+-		rgno = xfs_rtb_to_rgno(mp, ri->ri_bmap.br_startblock);
+-		ri->ri_rtg = xfs_rtgroup_get(mp, rgno);
++		ri->ri_rtg = xfs_rtgroup_intent_get(mp,
++						ri->ri_bmap.br_startblock);
+ 		xfs_defer_add(tp, &ri->ri_list, &xfs_rtrmap_update_defer_type);
+ 	} else {
+-		ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
++		ri->ri_pag = xfs_perag_intent_get(mp,
++						ri->ri_bmap.br_startblock);
+ 		xfs_defer_add(tp, &ri->ri_list, &xfs_rmap_update_defer_type);
+ 	}
+ }
+@@ -445,7 +441,7 @@ xfs_rtrmap_update_cancel_item(
+ {
+ 	struct xfs_rmap_intent		*ri = ri_entry(item);
+ 
+-	xfs_rtgroup_put(ri->ri_rtg);
++	xfs_rtgroup_intent_put(ri->ri_rtg);
+ 	kmem_cache_free(xfs_rmap_intent_cache, ri);
+ }
+ 
+@@ -656,10 +652,8 @@ xfs_bmap_update_get_group(
+ {
+ 	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
+ 		if (xfs_has_rtgroups(mp)) {
+-			xfs_rgnumber_t	rgno;
+-
+-			rgno = xfs_rtb_to_rgno(mp, bi->bi_bmap.br_startblock);
+-			bi->bi_rtg = xfs_rtgroup_get(mp, rgno);
++			bi->bi_rtg = xfs_rtgroup_intent_get(mp,
++						bi->bi_bmap.br_startblock);
+ 		} else {
+ 			bi->bi_rtg = NULL;
+ 		}
+@@ -695,8 +689,9 @@ xfs_bmap_update_put_group(
+ 	struct xfs_bmap_intent	*bi)
+ {
+ 	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
+-		if (xfs_has_rtgroups(bi->bi_owner->i_mount))
+-			xfs_rtgroup_put(bi->bi_rtg);
++		if (xfs_has_rtgroups(bi->bi_owner->i_mount)) {
++			xfs_rtgroup_intent_put(bi->bi_rtg);
++		}
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
+index 449cd57cf9e..1acf98f8c7e 100644
+--- a/libxfs/xfs_rtgroup.c
++++ b/libxfs/xfs_rtgroup.c
+@@ -159,6 +159,7 @@ xfs_initialize_rtgroups(
+ 		/* Place kernel structure only init below this point. */
+ 		spin_lock_init(&rtg->rtg_state_lock);
+ 		init_waitqueue_head(&rtg->rtg_active_wq);
++		xfs_defer_drain_init(&rtg->rtg_intents_drain);
+ #endif /* __KERNEL__ */
+ 
+ 		/* Active ref owned by mount indicates rtgroup is online. */
+@@ -213,6 +214,7 @@ xfs_free_rtgroups(
+ 		spin_unlock(&mp->m_rtgroup_lock);
+ 		ASSERT(rtg);
+ 		XFS_IS_CORRUPT(mp, atomic_read(&rtg->rtg_ref) != 0);
++		xfs_defer_drain_free(&rtg->rtg_intents_drain);
+ 
+ 		/* drop the mount's active reference */
+ 		xfs_rtgroup_rele(rtg);
+diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
+index 559a5135820..9487c2e0047 100644
+--- a/libxfs/xfs_rtgroup.h
++++ b/libxfs/xfs_rtgroup.h
+@@ -39,6 +39,15 @@ struct xfs_rtgroup {
+ #ifdef __KERNEL__
+ 	/* -- kernel only structures below this line -- */
+ 	spinlock_t		rtg_state_lock;
++
++	/*
++	 * We use xfs_drain to track the number of deferred log intent items
++	 * that have been queued (but not yet processed) so that waiters (e.g.
++	 * scrub) will not lock resources when other threads are in the middle
++	 * of processing a chain of intent items only to find momentary
++	 * inconsistencies.
++	 */
++	struct xfs_defer_drain	rtg_intents_drain;
+ #endif /* __KERNEL__ */
  };
- #define XFS_RTGROUP_GEOM_SICK_SUPER	(1 << 0)  /* superblock */
- #define XFS_RTGROUP_GEOM_SICK_BITMAP	(1 << 1)  /* rtbitmap for this group */
-+#define XFS_RTGROUP_GEOM_SICK_RMAPBT	(1 << 2)  /* reverse mappings */
  
- #define XFS_IOC_RTGROUP_GEOMETRY _IOWR('X', 63, struct xfs_rtgroup_geometry)
- 
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index 1e9938a417b..aeeb6276977 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -68,6 +68,7 @@ struct xfs_rtgroup;
- #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
- #define XFS_SICK_RT_SUMMARY	(1 << 1)  /* realtime summary */
- #define XFS_SICK_RT_SUPER	(1 << 2)  /* rt group superblock */
-+#define XFS_SICK_RT_RMAPBT	(1 << 3)  /* reverse mappings */
- 
- /* Observable health issues for AG metadata. */
- #define XFS_SICK_AG_SB		(1 << 0)  /* superblock */
-@@ -113,7 +114,8 @@ struct xfs_rtgroup;
- 
- #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
- 				 XFS_SICK_RT_SUMMARY | \
--				 XFS_SICK_RT_SUPER)
-+				 XFS_SICK_RT_SUPER | \
-+				 XFS_SICK_RT_RMAPBT)
- 
- #define XFS_SICK_AG_PRIMARY	(XFS_SICK_AG_SB | \
- 				 XFS_SICK_AG_AGF | \
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 0e6cd5bacdb..127571527cf 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -264,8 +264,10 @@ xfs_iformat_data_fork(
- 		case XFS_DINODE_FMT_BTREE:
- 			return xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
- 		case XFS_DINODE_FMT_RMAP:
--			if (!xfs_has_rtrmapbt(ip->i_mount))
-+			if (!xfs_has_rtrmapbt(ip->i_mount)) {
-+				xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 				return -EFSCORRUPTED;
-+			}
- 			return xfs_iformat_rtrmap(ip, dip);
- 		default:
- 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
-diff --git a/libxfs/xfs_rtrmap_btree.c b/libxfs/xfs_rtrmap_btree.c
-index 832a58cfe13..5a25791baa5 100644
---- a/libxfs/xfs_rtrmap_btree.c
-+++ b/libxfs/xfs_rtrmap_btree.c
-@@ -25,6 +25,7 @@
- #include "xfs_rtgroup.h"
- #include "xfs_bmap.h"
- #include "xfs_imeta.h"
-+#include "xfs_health.h"
- 
- static struct kmem_cache	*xfs_rtrmapbt_cur_cache;
- 
-@@ -798,8 +799,10 @@ xfs_iformat_rtrmap(
- 	level = be16_to_cpu(dfp->bb_level);
- 
- 	if (level > mp->m_rtrmap_maxlevels ||
--	    xfs_rtrmap_droot_space_calc(level, numrecs) > dsize)
-+	    xfs_rtrmap_droot_space_calc(level, numrecs) > dsize) {
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	xfs_iroot_alloc(ip, XFS_DATA_FORK,
- 			xfs_rtrmap_broot_space_calc(mp, level, numrecs));
-diff --git a/man/man2/ioctl_xfs_rtgroup_geometry.2 b/man/man2/ioctl_xfs_rtgroup_geometry.2
-index ccd931d1e17..38753b93055 100644
---- a/man/man2/ioctl_xfs_rtgroup_geometry.2
-+++ b/man/man2/ioctl_xfs_rtgroup_geometry.2
-@@ -73,6 +73,9 @@ Realtime group superblock.
- .TP
- .B XFS_RTGROUP_GEOM_SICK_BITMAP
- Realtime bitmap for this group.
-+.TP
-+.B XFS_RTGROUP_GEOM_SICK_RTRMAPBT
-+Reverse mapping btree for this group.
- .RE
- .SH RETURN VALUE
- On error, \-1 is returned, and
 
