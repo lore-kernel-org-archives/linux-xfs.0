@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47F3D7ED;
-	Mon,  1 Jan 2024 00:49:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E35E7EF;
+	Mon,  1 Jan 2024 00:50:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZZ7XkpL+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6B33C433C7;
-	Mon,  1 Jan 2024 00:49:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hJnUg8Ip"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BBD6C433C8;
+	Mon,  1 Jan 2024 00:50:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704070194;
-	bh=7iJji2hl++cTkCdZcVdUaE/HbsAF8ntLD0YJD2dg/5Q=;
+	s=k20201202; t=1704070210;
+	bh=o7wUg8ZbmhmP2nqpNrlTslzHWcBmT/O/xkTDfERLaLc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZZ7XkpL+AY6mVEBeuGUrx+fqSHm+Oi9zZY+6L2mxdxJ1vWWsEHTkiscJPnjtTKQPM
-	 Sy8htfF6QmDYJu+n/8/IhOTalvE7fzSVmW1JCxaNEPGJN7JlRuq7CPyFI9/eZmFIvV
-	 k5c1R9reeTsL0rGyNqRawTVcpYa6CEDf2dSAMO1pcH8rkOrT9ixwvt+sKT0B7RIP0G
-	 UTcAcCImtqDIvkT6AnH6MpZYYVI3GUkBmzRJT0becKIrPwOXjF8n8grGfhtGgh+9as
-	 rsdcOXxwDIsaNRy6uSJvWy8NJVbqubLV23YeOi8f6ceD9bj+/OumaC9HMmtusAafWr
-	 qYDOzLyrDLjRA==
-Date: Sun, 31 Dec 2023 16:49:54 +9900
-Subject: [PATCH 1/1] xfs/122: update for vectored scrub
+	b=hJnUg8IphpJnvtMbIiKfWRkNkZPlXzsDR+AmV6O/C1kts30+PoyRW8m6alFpcGyKt
+	 c+k/b8lc56CYph85pcVlgakr7kRM9nJTDdKnL/FDHkibdXp5xgbvsRl7bO/PfIfVof
+	 uIcsenTTOKfYadx3O0S+Cbura8+mZe8QVa7lRBM1KWY7qTHAXUZy+pIS635D7V41Da
+	 lv/NodNK+1OO8iToiWTuag9a7vEhYGx/YImjK7i27Ardc6u7Yi/WwT8Vh3Pqi6fiVk
+	 dl7WGRcB1/5P3knz5ILcuKIClYYGHFdeG3C9BfpLDS1JmbUaQO+QhNMYV77DX6H3LK
+	 nwpxNGBUpSs9A==
+Date: Sun, 31 Dec 2023 16:50:09 +9900
+Subject: [PATCH 01/11] xfs/122: fix metadirino
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, guan@eryu.me, fstests@vger.kernel.org
-Message-ID: <170405029254.1825289.9531958913453325876.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405029241.1825289.15703936901700637451.stgit@frogsfrogsfrogs>
-References: <170405029241.1825289.15703936901700637451.stgit@frogsfrogsfrogs>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <170405029862.1826032.9120032235595084513.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
+References: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,25 +37,24 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the two new vectored scrub structures.
+Fix xfs/122 to work properly with metadirino.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/122.out |    2 ++
- 1 file changed, 2 insertions(+)
+ tests/xfs/122.out |    1 +
+ 1 file changed, 1 insertion(+)
 
 
 diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index 55138218dd..5d14386518 100644
+index 5d14386518..430b805792 100644
 --- a/tests/xfs/122.out
 +++ b/tests/xfs/122.out
-@@ -121,6 +121,8 @@ sizeof(struct xfs_rtrmap_root) = 4
- sizeof(struct xfs_rud_log_format) = 16
- sizeof(struct xfs_rui_log_format) = 16
- sizeof(struct xfs_scrub_metadata) = 64
-+sizeof(struct xfs_scrub_vec) = 16
-+sizeof(struct xfs_scrub_vec_head) = 32
- sizeof(struct xfs_swap_extent) = 64
- sizeof(struct xfs_sxd_log_format) = 16
- sizeof(struct xfs_sxi_log_format) = 80
+@@ -35,6 +35,7 @@ offsetof(xfs_sb_t, sb_logsunit) = 196
+ offsetof(xfs_sb_t, sb_lsn) = 240
+ offsetof(xfs_sb_t, sb_magicnum) = 0
+ offsetof(xfs_sb_t, sb_meta_uuid) = 248
++offsetof(xfs_sb_t, sb_metadirino) = 264
+ offsetof(xfs_sb_t, sb_pquotino) = 232
+ offsetof(xfs_sb_t, sb_qflags) = 176
+ offsetof(xfs_sb_t, sb_rblocks) = 16
 
