@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60A0C7EE
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:22:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C3217EF
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:23:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ob4X5iMR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F926C433C8;
-	Mon,  1 Jan 2024 00:22:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Or1NOkjk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9D0AC433C8;
+	Mon,  1 Jan 2024 00:23:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068566;
-	bh=06HFhubAFrWaD0QX4+r0olLKrHpzwe8D6YOj7OEbY94=;
+	s=k20201202; t=1704068581;
+	bh=PR8tJjNPh+QFd/tksTfuu153ph65HTziK2Hd8lMZGBY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ob4X5iMRv9ueRmXkYSCTbBuzV2149fKrAXLAUhQYirf03fIMq8oERPqnw9B2vGchw
-	 +PdntPF5GuHFpT5WTr90vMduwjqasYhhFGBXFoUwZ1ZV+oMvPqgY7aob6tLoAJFWlp
-	 gtKnQcgOFqzElRpWYfhvWrMGszX55KRs/XiQ8TaufBcDF9krNDtdQNi7ZeN9I9xMLJ
-	 C/HbtE6/A02+H58VlUiU48WcGckSxyJwVK3GEexomBUvgioqGcXuK0BAYrNN6i+0zG
-	 Fg5GgPasLDtQD8PxDF2MR6gI0HbEDosTmvui6WQ0mzWYsli628e9GfBRYepAsQ4X72
-	 MKe5r6aa9ZUQA==
-Date: Sun, 31 Dec 2023 16:22:45 +9900
-Subject: [PATCH 47/47] mkfs: create the realtime rmap inode
+	b=Or1NOkjkSXzyroGGIM1mi06O6I1BwOArZRHj1zjby6rd6xFdICQ15pitm5A1cwzYg
+	 YshP4zMzWwrqEJGOcpTqeWFh1sSvxuPc65towu50+3b9EGNnnHNbDAd3obNt0g0AZG
+	 uA/MENlmNXY9dt2FRYDjRncFMaqq0AI33dmrjf43SMjFIiWZNDWpHo2XgRRukfYnKz
+	 am2JtNNh7BUGjEbQvI95tCROeRL9VlL9/kE/fSXiFADl9QQQ0MF31ubBn7QAt+LW3D
+	 j5TlQ4+tufOj+Lf+vR6wcUOLhhZwn0E8WHCpA+z5JU0cfoyZXO8cSV2NafcI98BPP+
+	 v/npPikjOzrCg==
+Date: Sun, 31 Dec 2023 16:23:01 +9900
+Subject: [PATCH 1/4] libxfs: resync libxfs_alloc_file_space interface with the
+ kernel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015939.1815505.5116508316707037900.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
-References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
+Message-ID: <170405016251.1816687.11676235673456526383.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405016236.1816687.16728890385158475127.stgit@frogsfrogsfrogs>
+References: <170405016236.1816687.16728890385158475127.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,226 +38,222 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a realtime rmapbt inode if we format the fs with realtime
-and rmap.
+Make the userspace xfs_alloc_file_space behave (more or less) like the
+kernel version, at least as far as the interface goes.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c   |    7 ----
- mkfs/proto.c    |   56 ++++++++++++++++++++++++++++++++++
- mkfs/xfs_mkfs.c |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 3 files changed, 141 insertions(+), 12 deletions(-)
+ include/libxfs.h |    4 +-
+ libxfs/util.c    |  143 ++++++++++++++++++++++++++++++++++++------------------
+ mkfs/proto.c     |    2 -
+ 3 files changed, 99 insertions(+), 50 deletions(-)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index ba0b9a87f2d..18bd2116c50 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -307,13 +307,6 @@ rtmount_init(
- 		return -1;
- 	}
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 72f38938f69..1fc8bc0e97b 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -174,8 +174,8 @@ extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
  
--	if (xfs_has_rmapbt(mp)) {
--		fprintf(stderr,
--	_("%s: Reverse mapping btree not compatible with realtime device. Please try a newer xfsprogs.\n"),
--				progname);
--		return -1;
--	}
+ /* Shared utility routines */
+ 
+-extern int	libxfs_alloc_file_space (struct xfs_inode *, xfs_off_t,
+-				xfs_off_t, int, int);
++extern int	libxfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
++					xfs_off_t len, uint32_t bmapi_flags);
+ 
+ /* XXX: this is messy and needs fixing */
+ #ifndef __LIBXFS_INTERNAL_XFS_H__
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 76e49b8637c..aec7798a814 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -179,78 +179,127 @@ libxfs_mod_incore_sb(
+  */
+ int
+ libxfs_alloc_file_space(
+-	xfs_inode_t	*ip,
+-	xfs_off_t	offset,
+-	xfs_off_t	len,
+-	int		alloc_type,
+-	int		attr_flags)
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len,
++	uint32_t		bmapi_flags)
+ {
+-	xfs_mount_t	*mp;
+-	xfs_off_t	count;
+-	xfs_filblks_t	datablocks;
+-	xfs_filblks_t	allocated_fsb;
+-	xfs_filblks_t	allocatesize_fsb;
+-	xfs_bmbt_irec_t *imapp;
+-	xfs_bmbt_irec_t imaps[1];
+-	int		reccount;
+-	uint		resblks;
+-	xfs_fileoff_t	startoffset_fsb;
+-	xfs_trans_t	*tp;
+-	int		xfs_bmapi_flags;
+-	int		error;
++	xfs_mount_t		*mp = ip->i_mount;
++	xfs_off_t		count;
++	xfs_filblks_t		allocatesize_fsb;
++	xfs_extlen_t		extsz, temp;
++	xfs_fileoff_t		startoffset_fsb;
++	xfs_fileoff_t		endoffset_fsb;
++	int			rt;
++	xfs_trans_t		*tp;
++	xfs_bmbt_irec_t		imaps[1], *imapp;
++	int			error;
+ 
+ 	if (len <= 0)
+ 		return -EINVAL;
+ 
++	rt = XFS_IS_REALTIME_INODE(ip);
++	extsz = xfs_get_extsz_hint(ip);
++
+ 	count = len;
+-	error = 0;
+ 	imapp = &imaps[0];
+-	reccount = 1;
+-	xfs_bmapi_flags = alloc_type ? XFS_BMAPI_PREALLOC : 0;
+-	mp = ip->i_mount;
+-	startoffset_fsb = XFS_B_TO_FSBT(mp, offset);
+-	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
++	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
++	endoffset_fsb = XFS_B_TO_FSB(mp, offset + count);
++	allocatesize_fsb = endoffset_fsb - startoffset_fsb;
+ 
+-	/* allocate file space until done or until there is an error */
++	/*
++	 * Allocate file space until done or until there is an error
++	 */
+ 	while (allocatesize_fsb && !error) {
+-		datablocks = allocatesize_fsb;
++		xfs_fileoff_t	s, e;
++		unsigned int	dblocks, rblocks, resblks;
++		int		nimaps = 1;
+ 
+-		resblks = (uint)XFS_DIOSTRAT_SPACE_RES(mp, datablocks);
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
+-					0, 0, &tp);
+ 		/*
+-		 * Check for running out of space
++		 * Determine space reservations for data/realtime.
+ 		 */
+-		if (error) {
+-			ASSERT(error == -ENOSPC);
++		if (unlikely(extsz)) {
++			s = startoffset_fsb;
++			do_div(s, extsz);
++			s *= extsz;
++			e = startoffset_fsb + allocatesize_fsb;
++			div_u64_rem(startoffset_fsb, extsz, &temp);
++			if (temp)
++				e += temp;
++			div_u64_rem(e, extsz, &temp);
++			if (temp)
++				e += extsz - temp;
++		} else {
++			s = 0;
++			e = allocatesize_fsb;
++		}
++
++		/*
++		 * The transaction reservation is limited to a 32-bit block
++		 * count, hence we need to limit the number of blocks we are
++		 * trying to reserve to avoid an overflow. We can't allocate
++		 * more than @nimaps extents, and an extent is limited on disk
++		 * to XFS_BMBT_MAX_EXTLEN (21 bits), so use that to enforce the
++		 * limit.
++		 */
++		resblks = min_t(xfs_fileoff_t, (e - s),
++				(XFS_MAX_BMBT_EXTLEN * nimaps));
++		if (unlikely(rt)) {
++			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++			rblocks = resblks;
++		} else {
++			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, resblks);
++			rblocks = 0;
++		}
++
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++				dblocks, rblocks, false, &tp);
++		if (error)
+ 			break;
+-		}
+-		xfs_trans_ijoin(tp, ip, 0);
+ 
+-		error = xfs_bmapi_write(tp, ip, startoffset_fsb, allocatesize_fsb,
+-				xfs_bmapi_flags, 0, imapp, &reccount);
++		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++				XFS_IEXT_ADD_NOSPLIT_CNT);
++		if (error == -EFBIG)
++			error = xfs_iext_count_upgrade(tp, ip,
++					XFS_IEXT_ADD_NOSPLIT_CNT);
++		if (error)
++			goto error;
+ 
++		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
++				allocatesize_fsb, bmapi_flags, 0, imapp,
++				&nimaps);
+ 		if (error)
+-			goto error0;
++			goto error;
++
++		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-		/*
+-		 * Complete the transaction
+-		 */
+ 		error = xfs_trans_commit(tp);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+ 			break;
+ 
+-		allocated_fsb = imapp->br_blockcount;
+-		if (reccount == 0)
+-			return -ENOSPC;
 -
- 	if (mp->m_rtdev_targp->bt_bdev == 0 && !xfs_is_debugger(mp)) {
- 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
- 			progname);
+-		startoffset_fsb += allocated_fsb;
+-		allocatesize_fsb -= allocated_fsb;
++		/*
++		 * If xfs_bmapi_write finds a delalloc extent at the requested
++		 * range, it tries to convert the entire delalloc extent to a
++		 * real allocation.
++		 * If the allocator cannot find a single free extent large
++		 * enough to cover the start block of the requested range,
++		 * xfs_bmapi_write will return 0 but leave *nimaps set to 0.
++		 * In that case we simply need to keep looping with the same
++		 * startoffset_fsb.
++		 */
++		if (nimaps) {
++			startoffset_fsb += imapp->br_blockcount;
++			allocatesize_fsb -= imapp->br_blockcount;
++		}
+ 	}
++
+ 	return error;
+ 
+-error0:	/* Cancel bmap, cancel trans */
++error:
+ 	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+ 
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 5239f9ec413..d575d9c511e 100644
+index d575d9c511e..5b632d31215 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -852,6 +852,54 @@ rtsummary_create(
- 	mp->m_rsumip = rsumip;
- }
+@@ -205,7 +205,7 @@ rsvfile(
+ 	int		error;
+ 	xfs_trans_t	*tp;
  
-+/* Create the realtime rmap btree inode. */
-+static void
-+rtrmapbt_create(
-+	struct xfs_rtgroup	*rtg)
-+{
-+	struct xfs_imeta_update	upd;
-+	struct xfs_rmap_irec	rmap = {
-+		.rm_startblock	= 0,
-+		.rm_blockcount	= rtg->rtg_mount->m_sb.sb_rextsize,
-+		.rm_owner	= XFS_RMAP_OWN_FS,
-+		.rm_offset	= 0,
-+		.rm_flags	= 0,
-+	};
-+	struct xfs_mount	*mp = rtg->rtg_mount;
-+	struct xfs_imeta_path	*path;
-+	struct xfs_btree_cur	*cur;
-+	int			error;
-+
-+	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
-+	if (error)
-+		fail( _("rtrmap inode path creation failed"), error);
-+
-+	error = -libxfs_imeta_ensure_dirpath(mp, path);
-+	if (error)
-+		fail(_("rtgroup directory allocation failed"), error);
-+
-+	error = -libxfs_imeta_start_create(mp, path, &upd);
-+	if (error)
-+		res_failed(error);
-+
-+	error = -libxfs_rtrmapbt_create(&upd, &rtg->rtg_rmapip);
-+	if (error)
-+		fail(_("rtrmap inode creation failed"), error);
-+
-+	/* Adding an rmap for the rtgroup super should fit in the data fork */
-+	cur = libxfs_rtrmapbt_init_cursor(mp, upd.tp, rtg, rtg->rtg_rmapip);
-+	error = -libxfs_rmap_map_raw(cur, &rmap);
-+	libxfs_btree_del_cursor(cur, error);
-+	if (error)
-+		fail(_("rtrmapbt initialization failed"), error);
-+
-+	error = -libxfs_imeta_commit_update(&upd);
-+	if (error)
-+		fail(_("rtrmapbt commit failed"), error);
-+
-+	libxfs_imeta_free_path(path);
-+}
-+
- /* Initialize block headers of rt free space files. */
- static int
- init_rtblock_headers(
-@@ -1084,9 +1132,17 @@ static void
- rtinit(
- 	struct xfs_mount	*mp)
- {
-+	struct xfs_rtgroup	*rtg;
-+	xfs_rgnumber_t		rgno;
-+
- 	rtbitmap_create(mp);
- 	rtsummary_create(mp);
+-	error = -libxfs_alloc_file_space(ip, 0, llen, 1, 0);
++	error = -libxfs_alloc_file_space(ip, 0, llen, XFS_BMAPI_PREALLOC);
  
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		if (xfs_has_rtrmapbt(mp))
-+			rtrmapbt_create(rtg);
-+	}
-+
- 	rtbitmap_init(mp);
- 	rtsummary_init(mp);
- 	if (xfs_has_rtgroups(mp))
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 66532b8c9b6..162546cd1e8 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2474,12 +2474,18 @@ _("reflink not supported with realtime devices\n"));
- 		}
- 		cli->sb_feat.reflink = false;
- 
--		if (cli->sb_feat.rmapbt && cli_opt_set(&mopts, M_RMAPBT)) {
--			fprintf(stderr,
--_("rmapbt not supported with realtime devices\n"));
--			usage();
-+		if (!cli->sb_feat.rtgroups && cli->sb_feat.rmapbt) {
-+			if (cli_opt_set(&mopts, M_RMAPBT) &&
-+			    cli_opt_set(&ropts, R_RTGROUPS)) {
-+				fprintf(stderr,
-+_("rmapbt not supported on realtime devices without rtgroups feature\n"));
-+				usage();
-+			} else if (cli_opt_set(&mopts, M_RMAPBT)) {
-+				cli->sb_feat.rtgroups = true;
-+			} else {
-+				cli->sb_feat.rmapbt = false;
-+			}
- 		}
--		cli->sb_feat.rmapbt = false;
- 	}
- 
- 	if ((cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
-@@ -4553,6 +4559,77 @@ cfgfile_parse(
- 		cli->cfgfile);
- }
- 
-+static inline void
-+prealloc_fail(
-+	struct xfs_mount	*mp,
-+	int			error,
-+	xfs_filblks_t		ask,
-+	const char		*tag)
-+{
-+	if (error == ENOSPC)
-+		fprintf(stderr,
-+	_("%s: cannot handle expansion of %s; need %llu free blocks, have %llu\n"),
-+				progname, tag, (unsigned long long)ask,
-+				(unsigned long long)mp->m_sb.sb_fdblocks);
-+	else
-+		fprintf(stderr,
-+	_("%s: error %d while checking free space for %s\n"),
-+				progname, error, tag);
-+	exit(1);
-+}
-+
-+/*
-+ * Make sure there's enough space on the data device to handle realtime
-+ * metadata btree expansions.
-+ */
-+static void
-+check_rt_meta_prealloc(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_perag	*pag;
-+	struct xfs_rtgroup	*rtg;
-+	xfs_agnumber_t		agno;
-+	xfs_rgnumber_t		rgno;
-+	xfs_filblks_t		ask;
-+	int			error;
-+
-+	/*
-+	 * First create all the per-AG reservations, since they take from the
-+	 * free block count.  Each AG should start with enough free space for
-+	 * the per-AG reservation.
-+	 */
-+	mp->m_finobt_nores = false;
-+
-+	for_each_perag(mp, agno, pag) {
-+		error = -libxfs_ag_resv_init(pag, NULL);
-+		if (error && error != ENOSPC) {
-+			fprintf(stderr,
-+	_("%s: error %d while checking AG free space for realtime metadata\n"),
-+					progname, error);
-+			exit(1);
-+		}
-+	}
-+
-+	/* Realtime metadata btree inode */
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		ask = libxfs_rtrmapbt_calc_reserves(mp);
-+		error = -libxfs_imeta_resv_init_inode(rtg->rtg_rmapip, ask);
-+		if (error)
-+			prealloc_fail(mp, error, ask, _("realtime rmap btree"));
-+	}
-+
-+	/* Unreserve the realtime metadata reservations. */
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		libxfs_imeta_resv_free_inode(rtg->rtg_rmapip);
-+	}
-+
-+	/* Unreserve the per-AG reservations. */
-+	for_each_perag(mp, agno, pag)
-+		libxfs_ag_resv_free(pag);
-+
-+	mp->m_finobt_nores = false;
-+}
-+
- int
- main(
- 	int			argc,
-@@ -4922,6 +4999,9 @@ main(
- 	 */
- 	check_root_ino(mp);
- 
-+	/* Make sure we can handle space preallocations of rt metadata btrees */
-+	check_rt_meta_prealloc(mp);
-+
- 	/*
- 	 * Re-write multiple secondary superblocks with rootinode field set
- 	 */
+ 	if (error) {
+ 		fail(_("error reserving space for a file"), error);
 
