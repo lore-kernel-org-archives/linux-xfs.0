@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F5ECA48
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:03:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79654CA46
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:04:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IbWihAKL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98F03C433C7;
-	Mon,  1 Jan 2024 00:03:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJf4DB7S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C182C433C7;
+	Mon,  1 Jan 2024 00:04:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704067424;
-	bh=OYlNyLdbsjonbkLaT84wqBq8bFCJ7z4h7LxU2erqbuA=;
+	s=k20201202; t=1704067440;
+	bh=Fo0HLS/V0VAmP+KQdKxanikeKUdleFb8k4f7OYmqQkc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IbWihAKLirbNjjm5uIRdZGBox+iHshDYJfl1tbrzAYnOBZzdHyXZQo1vrjNmXaZhK
-	 ma2ELzEemQKrnYGXWRPsocs5xFvWKMGTY3WjGP5O7XBNcV0/4HGIZ19QvliF8Ty3Q1
-	 ATfzyGZqcENChpJRKnRR4TpdyausC3ixLtHDWRAI3WIP6XxzvtfblGp7rffVBpmC6o
-	 yJNVFSoO4xxLVLbSCZkaNkMj0Ic5w+kOVWrEeHsB2rNBb6guOaa9Yz/FDm5W5pqr3J
-	 l/9+oIDLYfts4vuNiGnuRYKxxMq/wDY5mqBjav9FPFiBhFMsIUt4HZ4NwsWajmuP+V
-	 yySptnQsmX0Dw==
-Date: Sun, 31 Dec 2023 16:03:44 +9900
-Subject: [PATCH 10/14] xfs: support leaves in the incore btree root block in
- xfs_iroot_realloc
+	b=WJf4DB7SCuAEER5gfsiVjFEMuKOLrflBcBOTGemBY9a6L61C9ZYmyXgtA9YQk8TcH
+	 T/mAfYBT+iClePyPMhg+MdNx/SIufe1pY5PL6tSMrQ2qTv8BiaVwXHRmHSicmFhDRq
+	 2PUk+pJC6WJHSTMk40ABALMMFzxrWDngoK4SS5AtD0pHPpf6HR2A3mPAulfzxynFcR
+	 p6nRO4ncgm2/QD30eboKfUnlgifN++af3qSPCRNuxMVJ29VpJWimcRDfcaUArQKWjo
+	 +qsfrFtgEaXfVDkcggsyYF9C6b6lTbz7dNQypQ6sx9Op5Tp0mVT2PobadELxe0gQan
+	 GotbyuJCNAE/w==
+Date: Sun, 31 Dec 2023 16:03:59 +9900
+Subject: [PATCH 11/14] xfs: hoist the node iroot update code out of
+ xfs_btree_new_iroot
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405013335.1812545.4747668590297411066.stgit@frogsfrogsfrogs>
+Message-ID: <170405013349.1812545.7658709266942732134.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405013189.1812545.1581948480545654103.stgit@frogsfrogsfrogs>
 References: <170405013189.1812545.1581948480545654103.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,172 +38,161 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some logic to xfs_iroot_realloc so that we can handle leaf records
-in the btree root block correctly.
+In preparation for allowing records in an inode btree root, hoist the
+code that copies keyptrs from an existing node root into a child block
+to a separate function.  Note that the new function explicitly computes
+the keys of the new child block and stores that in the root block; while
+the bmap btree could rely on leaving the key alone, realtime rmap needs
+to set the new high key.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/bmap_inflate.c       |    2 +-
- libxfs/xfs_bmap_btree.c |    4 +++-
- libxfs/xfs_bmap_btree.h |    5 ++++-
- libxfs/xfs_inode_fork.c |   12 +++++++-----
- libxfs/xfs_inode_fork.h |    5 +++--
- repair/bmap_repair.c    |    2 +-
- 6 files changed, 19 insertions(+), 11 deletions(-)
+ libxfs/xfs_btree.c |  113 ++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 74 insertions(+), 39 deletions(-)
 
 
-diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
-index 118d911a1db..b08204201c2 100644
---- a/db/bmap_inflate.c
-+++ b/db/bmap_inflate.c
-@@ -282,7 +282,7 @@ iroot_size(
- 	unsigned int		nr_this_level,
- 	void			*priv)
- {
--	return xfs_bmap_broot_space_calc(cur->bc_mp, nr_this_level);
-+	return xfs_bmap_broot_space_calc(cur->bc_mp, level, nr_this_level);
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index b6f73fcc6d6..5a21788c707 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -3079,6 +3079,77 @@ xfs_btree_iroot_realloc(
+ 			cur->bc_ops->iroot_ops, rec_diff);
  }
  
- static int
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 4156e23a2da..8658e7c390a 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -520,6 +520,7 @@ xfs_bmbt_broot_move(
- 	size_t			dst_bytes,
- 	struct xfs_btree_block	*src_broot,
- 	size_t			src_bytes,
-+	unsigned int		level,
- 	unsigned int		numrecs)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -527,6 +528,7 @@ xfs_bmbt_broot_move(
- 	void			*sptr;
- 
- 	ASSERT(xfs_bmap_bmdr_space(src_broot) <= xfs_inode_fork_size(ip, whichfork));
-+	ASSERT(level > 0);
- 
- 	/*
- 	 * We always have to move the pointers because they are not butted
-@@ -839,7 +841,7 @@ xfs_bmbt_iroot_alloc(
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
- 
- 	xfs_iroot_alloc(ip, whichfork,
--			xfs_bmap_broot_space_calc(ip->i_mount, 1));
-+			xfs_bmap_broot_space_calc(ip->i_mount, 1, 1));
- 
- 	/* Fill in the root. */
- 	xfs_btree_init_block(ip->i_mount, ifp->if_broot, &xfs_bmbt_ops, 1, 1,
-diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
-index a9ddc9b42e6..d20321bfe2f 100644
---- a/libxfs/xfs_bmap_btree.h
-+++ b/libxfs/xfs_bmap_btree.h
-@@ -161,8 +161,11 @@ xfs_bmap_broot_ptr_addr(
- static inline size_t
- xfs_bmap_broot_space_calc(
- 	struct xfs_mount	*mp,
-+	unsigned int		level,
- 	unsigned int		nrecs)
- {
-+	ASSERT(level > 0);
++/*
++ * Move the keys and pointers from a root block to a separate block.
++ *
++ * Since the keyptr size does not change, all we have to do is increase the
++ * tree height, copy the keyptrs to the new internal node (cblock), shrink
++ * the root, and copy the pointers there.
++ */
++STATIC int
++xfs_btree_promote_node_iroot(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	int			level,
++	struct xfs_buf		*cbp,
++	union xfs_btree_ptr	*cptr,
++	struct xfs_btree_block	*cblock)
++{
++	union xfs_btree_key	*ckp;
++	union xfs_btree_key	*kp;
++	union xfs_btree_ptr	*cpp;
++	union xfs_btree_ptr	*pp;
++	int			i;
++	int			error;
++	int			numrecs = xfs_btree_get_numrecs(block);
 +
- 	/*
- 	 * If the bmbt root block is empty, we should be converting the fork
- 	 * to extents format.  Hence, the size is zero.
-@@ -183,7 +186,7 @@ xfs_bmap_broot_space(
- 	struct xfs_mount	*mp,
- 	struct xfs_bmdr_block	*bb)
- {
--	return xfs_bmap_broot_space_calc(mp, be16_to_cpu(bb->bb_numrecs));
-+	return xfs_bmap_broot_space_calc(mp, 1, be16_to_cpu(bb->bb_numrecs));
- }
++	/*
++	 * Increase tree height, adjusting the root block level to match.
++	 * We cannot change the root btree node size until we've copied the
++	 * block contents to the new child block.
++	 */
++	be16_add_cpu(&block->bb_level, 1);
++	cur->bc_nlevels++;
++	cur->bc_levels[level + 1].ptr = 1;
++
++	/*
++	 * Adjust the root btree record count, then copy the keys from the old
++	 * root to the new child block.
++	 */
++	xfs_btree_set_numrecs(block, 1);
++	kp = xfs_btree_key_addr(cur, 1, block);
++	ckp = xfs_btree_key_addr(cur, 1, cblock);
++	xfs_btree_copy_keys(cur, ckp, kp, numrecs);
++
++	/* Check the pointers and copy them to the new child block. */
++	pp = xfs_btree_ptr_addr(cur, 1, block);
++	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
++	for (i = 0; i < numrecs; i++) {
++		error = xfs_btree_debug_check_ptr(cur, pp, i, level);
++		if (error)
++			return error;
++	}
++	xfs_btree_copy_ptrs(cur, cpp, pp, numrecs);
++
++	/*
++	 * Set the first keyptr to point to the new child block, then shrink
++	 * the memory buffer for the root block.
++	 */
++	error = xfs_btree_debug_check_ptr(cur, cptr, 0, level);
++	if (error)
++		return error;
++	xfs_btree_copy_ptrs(cur, pp, cptr, 1);
++	xfs_btree_get_keys(cur, cblock, kp);
++	xfs_btree_iroot_realloc(cur, 1 - numrecs);
++
++	/* Attach the new block to the cursor and log it. */
++	xfs_btree_setbuf(cur, level, cbp);
++	xfs_btree_log_block(cur, cbp, XFS_BB_ALL_BITS);
++	xfs_btree_log_keys(cur, cbp, 1, numrecs);
++	xfs_btree_log_ptrs(cur, cbp, 1, numrecs);
++	return 0;
++}
++
+ /*
+  * Copy the old inode root contents into a real block and make the
+  * broot point to it.
+@@ -3092,14 +3163,10 @@ xfs_btree_new_iroot(
+ 	struct xfs_buf		*cbp;		/* buffer for cblock */
+ 	struct xfs_btree_block	*block;		/* btree block */
+ 	struct xfs_btree_block	*cblock;	/* child btree block */
+-	union xfs_btree_key	*ckp;		/* child key pointer */
+-	union xfs_btree_ptr	*cpp;		/* child ptr pointer */
+-	union xfs_btree_key	*kp;		/* pointer to btree key */
+-	union xfs_btree_ptr	*pp;		/* pointer to block addr */
++	union xfs_btree_ptr	*pp;
+ 	union xfs_btree_ptr	nptr;		/* new block addr */
+ 	int			level;		/* btree level */
+ 	int			error;		/* error return code */
+-	int			i;		/* loop counter */
  
- /* Compute the space required for the ondisk root block. */
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 50422bbeb8f..ec3a399e798 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -407,6 +407,7 @@ xfs_iroot_realloc(
- 	struct xfs_btree_block		*new_broot;
- 	size_t				new_size;
- 	size_t				old_size = ifp->if_broot_bytes;
-+	unsigned int			level;
- 	int				cur_max;
- 	int				new_max;
+ 	XFS_BTREE_STATS_INC(cur, newroot);
  
-@@ -421,16 +422,17 @@ xfs_iroot_realloc(
- 	if (old_size == 0) {
- 		ASSERT(rec_diff > 0);
- 
--		new_size = ops->size(mp, rec_diff);
-+		new_size = ops->size(mp, 0, rec_diff);
- 		xfs_iroot_alloc(ip, whichfork, new_size);
- 		return;
+@@ -3137,43 +3204,11 @@ xfs_btree_new_iroot(
+ 			cblock->bb_u.s.bb_blkno = bno;
  	}
  
- 	/* Compute the new and old record count and space requirements. */
--	cur_max = ops->maxrecs(mp, old_size, false);
-+	level = be16_to_cpu(ifp->if_broot->bb_level);
-+	cur_max = ops->maxrecs(mp, old_size, level == 0);
- 	new_max = cur_max + rec_diff;
- 	ASSERT(new_max >= 0);
--	new_size = ops->size(mp, new_max);
-+	new_size = ops->size(mp, level, new_max);
+-	be16_add_cpu(&block->bb_level, 1);
+-	xfs_btree_set_numrecs(block, 1);
+-	cur->bc_nlevels++;
+-	ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
+-	cur->bc_levels[level + 1].ptr = 1;
+-
+-	kp = xfs_btree_key_addr(cur, 1, block);
+-	ckp = xfs_btree_key_addr(cur, 1, cblock);
+-	xfs_btree_copy_keys(cur, ckp, kp, xfs_btree_get_numrecs(cblock));
+-
+-	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
+-	for (i = 0; i < be16_to_cpu(cblock->bb_numrecs); i++) {
+-		error = xfs_btree_debug_check_ptr(cur, pp, i, level);
+-		if (error)
+-			goto error0;
+-	}
+-
+-	xfs_btree_copy_ptrs(cur, cpp, pp, xfs_btree_get_numrecs(cblock));
+-
+-	error = xfs_btree_debug_check_ptr(cur, &nptr, 0, level);
++	error = xfs_btree_promote_node_iroot(cur, block, level, cbp, &nptr,
++			cblock);
+ 	if (error)
+ 		goto error0;
  
- 	if (rec_diff > 0) {
- 		/*
-@@ -442,7 +444,7 @@ xfs_iroot_realloc(
- 					 GFP_NOFS | __GFP_NOFAIL);
- 		ifp->if_broot_bytes = new_size;
- 		ops->move(ip, whichfork, ifp->if_broot, new_size,
--				ifp->if_broot, old_size, cur_max);
-+				ifp->if_broot, old_size, level, cur_max);
- 		return;
- 	}
- 
-@@ -459,7 +461,7 @@ xfs_iroot_realloc(
- 	/* Reallocate the btree root and move the contents. */
- 	new_broot = kmem_alloc(new_size, KM_NOFS);
- 	ops->move(ip, whichfork, new_broot, new_size, ifp->if_broot,
--			ifp->if_broot_bytes, new_max);
-+			ifp->if_broot_bytes, level, new_max);
- 
- 	kmem_free(ifp->if_broot);
- 	ifp->if_broot = new_broot;
-diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
-index 1ac9a7a8b5f..9a0136f8273 100644
---- a/libxfs/xfs_inode_fork.h
-+++ b/libxfs/xfs_inode_fork.h
-@@ -279,7 +279,8 @@ struct xfs_ifork_broot_ops {
- 			bool leaf);
- 
- 	/* Calculate the bytes required for the incore btree root block. */
--	size_t (*size)(struct xfs_mount *mp, unsigned int nrecs);
-+	size_t (*size)(struct xfs_mount *mp, unsigned int level,
-+			unsigned int nrecs);
- 
- 	/*
- 	 * Move an incore btree root from one buffer to another.  Note that
-@@ -289,7 +290,7 @@ struct xfs_ifork_broot_ops {
- 	void (*move)(struct xfs_inode *ip, int whichfork,
- 			struct xfs_btree_block *dst_broot, size_t dst_bytes,
- 			struct xfs_btree_block *src_broot, size_t src_bytes,
--			unsigned int numrecs);
-+			unsigned int level, unsigned int numrecs);
- };
- 
- void xfs_iroot_realloc(struct xfs_inode *ip, int whichfork,
-diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
-index a8cbff67ceb..dfd1405cca2 100644
---- a/repair/bmap_repair.c
-+++ b/repair/bmap_repair.c
-@@ -285,7 +285,7 @@ xrep_bmap_iroot_size(
- {
- 	ASSERT(level > 0);
- 
--	return xfs_bmap_broot_space_calc(cur->bc_mp, nr_this_level);
-+	return xfs_bmap_broot_space_calc(cur->bc_mp, level, nr_this_level);
- }
- 
- /* Update the inode counters. */
+-	xfs_btree_copy_ptrs(cur, pp, &nptr, 1);
+-
+-	xfs_btree_iroot_realloc(cur, 1 - xfs_btree_get_numrecs(cblock));
+-
+-	xfs_btree_setbuf(cur, level, cbp);
+-
+-	/*
+-	 * Do all this logging at the end so that
+-	 * the root is at the right level.
+-	 */
+-	xfs_btree_log_block(cur, cbp, XFS_BB_ALL_BITS);
+-	xfs_btree_log_keys(cur, cbp, 1, be16_to_cpu(cblock->bb_numrecs));
+-	xfs_btree_log_ptrs(cur, cbp, 1, be16_to_cpu(cblock->bb_numrecs));
+-
+ 	*logflags |=
+ 		XFS_ILOG_CORE | xfs_ilog_fbroot(cur->bc_ino.whichfork);
+ 	*stat = 1;
 
