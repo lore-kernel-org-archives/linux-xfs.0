@@ -1,36 +1,28 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A98E663B1
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Dec 2023 07:24:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cVsGUbGE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=yx+571wiRf4XPK35tNQV8nJDTiL6Nyab43vpDyix8Hs=; b=cVsGUbGE81G2zEF4KrPlA298n6
-	MEfmrUZMVz381a0pf/MGzTRH+c0c8qy9iheOJnd+9bCgioNeAVYlb47ro0SbynakXKjuvscBvN4kj
-	87+Okk2tuf7vt+1xg7XSX3D2TOFF294lZNCJDy6kHe26EKmTIZmcXSYk5rCeztI5O+eB+lGlGQDRw
-	6N6bHW361/SLUTpked56N0xvvt8z64HUVZaTOhoY/ejwNUcdKGqIokvkk+Q3Uqrs77Lhav0IVu7Z2
-	zT7+wmRuaBsxed5e0gUKWqlWKiu+64cDhuYhhh1TY7n8yPVbTWwQ+r/Bh6ibyQjxyhHdU6NdkLBXM
-	g3FTjqoA==;
-Received: from 128.red-83-57-75.dynamicip.rima-tde.net ([83.57.75.128] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rIkkb-00GKjJ-02;
-	Thu, 28 Dec 2023 07:24:17 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: chandan.babu@oracle.com
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH v2 2/2] xfs: use the op name in trace_xlog_intent_recovery_failed
-Date: Thu, 28 Dec 2023 07:24:10 +0000
-Message-Id: <20231228072410.359908-2-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231228072410.359908-1-hch@lst.de>
-References: <20231228072410.359908-1-hch@lst.de>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 699A4748F
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Dec 2023 12:50:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.44])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4T17Yt4ZT3z1FGVV;
+	Thu, 28 Dec 2023 20:46:58 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 106FF140414;
+	Thu, 28 Dec 2023 20:50:51 +0800 (CST)
+Received: from localhost.localdomain (10.175.127.227) by
+ kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Thu, 28 Dec 2023 20:50:50 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <chandanbabu@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<leo.lilong@huawei.com>, <yangerkun@huawei.com>
+Subject: [PATCH] xfs: ensure submit buffers on LSN boundaries in error handlers
+Date: Thu, 28 Dec 2023 20:46:46 +0800
+Message-ID: <20231228124646.142757-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,74 +30,167 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
-Instead of tracing the address of the recovery handler, use the name
-in the defer op, similar to other defer ops related tracepoints.
+While performing the IO fault injection test, I caught the following data
+corruption report:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+ XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
+ CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+ Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_corruption_error+0x134/0x150
+  xfs_free_ag_extent+0x7d3/0x1130
+  __xfs_free_extent+0x201/0x3c0
+  xfs_trans_free_extent+0x29b/0xa10
+  xfs_extent_free_finish_item+0x2a/0xb0
+  xfs_defer_finish_noroll+0x8d1/0x1b40
+  xfs_defer_finish+0x21/0x200
+  xfs_itruncate_extents_flags+0x1cb/0x650
+  xfs_free_eofblocks+0x18f/0x250
+  xfs_inactive+0x485/0x570
+  xfs_inodegc_worker+0x207/0x530
+  process_scheduled_works+0x24a/0xe10
+  worker_thread+0x5ac/0xc60
+  kthread+0x2cd/0x3c0
+  ret_from_fork+0x4a/0x80
+  ret_from_fork_asm+0x11/0x20
+  </TASK>
+ XFS (dm-0): Corruption detected. Unmount and run xfs_repair
+
+After analyzing the disk image, it was found that the corruption was
+triggered by the fact that extent was recorded in both the inode and AGF
+btrees. After a long time of reproduction and analysis, we found that the
+root cause of the problem was that the AGF btree block was not recovered.
+
+Consider the following situation, Transaction A and Transaction B are in
+the same record, so Transaction A and Transaction B share the same LSN1.
+If the buf item in Transaction A has been recovered, then the buf item in
+Transaction B cannot be recovered, because log recovery skips items with a
+metadata LSN >= the current LSN of the recovery item. If there is still an
+inode item in transaction B that records the Extent X, the Extent X will
+be recorded in both the inode and the AGF btree block after transaction B
+is recovered.
+
+  |------------Record (LSN1)------------------|---Record (LSN2)---|
+  |----------Trans A------------|-------------Trans B-------------|
+  |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
+  |     Extent X is freed       |     Extent X is allocated       |
+
+After commit 12818d24db8a ("xfs: rework log recovery to submit buffers on
+LSN boundaries") was introduced, we submit buffers on lsn boundaries during
+log recovery. The above problem can be avoided under normal paths, but it's
+not guaranteed under abnormal paths. Consider the following process, if an
+error was encountered after recover buf item in transaction A and before
+recover buf item in transaction B, buffers that have been added to
+buffer_list will still be submitted, this violates the submits rule on lsn
+boundaries. So buf item in Transaction B cannot be recovered on the next
+mount due to current lsn of transaction equal to metadata lsn on disk.
+
+  xlog_do_recovery_pass
+    error = xlog_recover_process
+      xlog_recover_process_data
+        ...
+          xlog_recover_buf_commit_pass2
+            xlog_recover_do_reg_buffer  //recover buf item in Trans A
+            xfs_buf_delwri_queue(bp, buffer_list)
+        ...
+        ====> Encountered error and returned
+        ...
+          xlog_recover_buf_commit_pass2
+            xlog_recover_do_reg_buffer  //recover buf item in Trans B
+            xfs_buf_delwri_queue(bp, buffer_list)
+    if (!list_empty(&buffer_list))
+      xfs_buf_delwri_submit(&buffer_list); //submit regardless of error
+
+In order to make sure that submits buffers on lsn boundaries in the
+abnormal paths, we need to check error status before submit buffers that
+have been added from the last record processed. If error status exist,
+buffers in the bufffer_list should be canceled.
+
+Canceling the buffers in the buffer_list directly isn't correct, unlike
+any other place where write list was canceled, these buffers has been
+initialized by xfs_buf_item_init() during recovery and held by buf
+item, buf items will not be released in xfs_buf_delwri_cancel(). If
+these buffers are submitted successfully, buf items assocated with
+the buffer will be released in io end process. So releasing buf item
+in write list cacneling process is needed.
+
+Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
+Signed-off-by: Long Li <leo.lilong@huawei.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |  3 +--
- fs/xfs/xfs_trace.h        | 15 +++++++++------
- 2 files changed, 10 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_buf.c         |  2 ++
+ fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 75c5b3a2c2cba4..66a17910d02194 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -921,8 +921,7 @@ xfs_defer_finish_recovery(
- 	/* dfp is freed by recover_work and must not be accessed afterwards */
- 	error = ops->recover_work(dfp, capture_list);
- 	if (error)
--		trace_xlog_intent_recovery_failed(mp, error,
--				ops->recover_work);
-+		trace_xlog_intent_recovery_failed(mp, ops, error);
- 	return error;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 8e5bd50d29fe..6a1b26aaf97e 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -2075,6 +2075,8 @@ xfs_buf_delwri_cancel(
+ 		xfs_buf_lock(bp);
+ 		bp->b_flags &= ~_XBF_DELWRI_Q;
+ 		xfs_buf_list_del(bp);
++		if (bp->b_log_item)
++			xfs_buf_item_relse(bp);
+ 		xfs_buf_relse(bp);
+ 	}
+ }
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1251c81e55f9..2cda6c90890d 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2964,7 +2964,6 @@ xlog_do_recovery_pass(
+ 	char			*offset;
+ 	char			*hbp, *dbp;
+ 	int			error = 0, h_size, h_len;
+-	int			error2 = 0;
+ 	int			bblks, split_bblks;
+ 	int			hblks, split_hblks, wrapped_hblks;
+ 	int			i;
+@@ -3203,16 +3202,21 @@ xlog_do_recovery_pass(
+  bread_err1:
+ 	kmem_free(hbp);
+ 
+-	/*
+-	 * Submit buffers that have been added from the last record processed,
+-	 * regardless of error status.
+-	 */
+-	if (!list_empty(&buffer_list))
+-		error2 = xfs_buf_delwri_submit(&buffer_list);
+-
+ 	if (error && first_bad)
+ 		*first_bad = rhead_blk;
+ 
++	/*
++	 * If there are no error, submit buffers that have been added from the
++	 * last record processed, othrewise cancel the write list, to ensure
++	 * submit buffers on LSN boundaries.
++	 */
++	if (!list_empty(&buffer_list)) {
++		if (error)
++			xfs_buf_delwri_cancel(&buffer_list);
++		else
++			error = xfs_buf_delwri_submit(&buffer_list);
++	}
++
+ 	/*
+ 	 * Transactions are freed at commit time but transactions without commit
+ 	 * records on disk are never committed. Free any that may be left in the
+@@ -3226,7 +3230,7 @@ xlog_do_recovery_pass(
+ 			xlog_recover_free_trans(trans);
+ 	}
+ 
+-	return error ? error : error2;
++	return error;
  }
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 0efcdb79d10e51..0984a1c884c742 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -67,6 +67,7 @@ struct xfs_buf_log_format;
- struct xfs_inode_log_format;
- struct xfs_bmbt_irec;
- struct xfs_btree_cur;
-+struct xfs_defer_op_type;
- struct xfs_refcount_irec;
- struct xfs_fsmap;
- struct xfs_rmap_irec;
-@@ -145,21 +146,23 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
- DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
- 
- TRACE_EVENT(xlog_intent_recovery_failed,
--	TP_PROTO(struct xfs_mount *mp, int error, void *function),
--	TP_ARGS(mp, error, function),
-+	TP_PROTO(struct xfs_mount *mp, const struct xfs_defer_op_type *ops,
-+		 int error),
-+	TP_ARGS(mp, ops, error),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-+		__string(name, ops->name)
- 		__field(int, error)
--		__field(void *, function)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
-+		__assign_str(name, ops->name);
- 		__entry->error = error;
--		__entry->function = function;
- 	),
--	TP_printk("dev %d:%d error %d function %pS",
-+	TP_printk("dev %d:%d optype %s error %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->error, __entry->function)
-+		  __get_str(name),
-+		  __entry->error)
- );
- 
- DECLARE_EVENT_CLASS(xfs_perag_class,
+ /*
 -- 
-2.39.2
+2.31.1
 
