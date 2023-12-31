@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC3F9B667
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:33:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359DCB645
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:33:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PuUhveo1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C533C433C8;
-	Sun, 31 Dec 2023 19:33:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QfDNbvx2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0527BC433C8;
+	Sun, 31 Dec 2023 19:33:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051191;
-	bh=Fc2Pzb/SfWo2qdbXFc7FtEfLBY0XtbGJWGpKoOaYp5s=;
+	s=k20201202; t=1704051207;
+	bh=34WnpDbdlNeMrjhGX3ULILF2mhRS+z3BWyE9ljVQAU0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PuUhveo1/vbUJKyRfS4CK7E9F+0hEGXaH5UycrZbSiVlnjIoI+T+yA40sKMkvRf29
-	 kRuLuXFIpv+3+spLY1oRJm7J2pcWLQNbhcCh2laiSLbaHPHpNGCnLparwpXNts5p3a
-	 CTeassBQGp3jChmv+2A0q8h0/2W9OyfSU8QyTwoUlwY8QSpEuOd09+w8t7X4bLkL3I
-	 QLqmRmPjqb1i3PciH3GhvLEOU9nWdaFkoxhIOtxkSxyp1nG6EX6a1N1vL7yA+8a0h+
-	 LdVIaTtUt9olnk93IRnyyAA4X5ncB3T4/+lcVDl+FAEVqb4wY5GPj0kPRmtuXfyLxg
-	 Co9G/2RRYSr7Q==
-Date: Sun, 31 Dec 2023 11:33:11 -0800
-Subject: [PATCHSET v13.0 2/7] xfs: retain ILOCK during directory updates
+	b=QfDNbvx25Vya8VJkbwQfZEGYU1cFxECPkczGnjBafygHyZ2wgrl7ChdonXfWxkKRl
+	 ymmqFJ6CFUnvPZnWikEWc9Luf6ypWSoOOSLXjjXAY3GrN3octxZRNAbSpUjzPx1L+A
+	 iEW21lNb9mxTjqrXV7nNGac82w66BjceV6IA4oByPZFASo2fGnclRXJS1wwa5nDkFW
+	 7Y8gMSzv1Gi0SLkun+n3N2fPUfzieZZJMf5BvclJXUnqtcUK3dayRwAVneqJrVplvT
+	 Co0FCrC8H8CA72j8OKmOfQvdgvhlihA7cToMrHPzQxhqXzEUOfzgUWS5EP96Qwh2AL
+	 j4AofTdbiOBGw==
+Date: Sun, 31 Dec 2023 11:33:26 -0800
+Subject: [PATCHSET v13.0 3/7] xfs: name-value xattr lookups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Catherine Hoang <catherine.hoang@oracle.com>,
- Allison Henderson <allison.henderson@oracle.com>, catherine.hoang@oracle.com,
- allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <170404839888.1756291.10910474860265774109.stgit@frogsfrogsfrogs>
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ catherine.hoang@oracle.com, allison.henderson@oracle.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181849.GT361584@frogsfrogsfrogs>
 References: <20231231181849.GT361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,15 +39,18 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series changes the directory update code to retain the ILOCK on all
-files involved in a rename until the end of the operation.  The upcoming
-parent pointers patchset applies parent pointers in a separate chained
-update from the actual directory update, which is why it is now
-necessary to keep the ILOCK instead of dropping it after the first
-transaction in the chain.
+Directory parent pointers are stored as namespaced extended attributes
+of a file.  Because parent pointers can consume up to 267 bytes of
+space and xattr names are 255 bytes at most, we cannot use the usual
+attr name lookup functions to find a parent pointer.  This is solvable
+by introducing a new lookup mode that checks both the name and the
+value of the xattr.
 
-As a side effect, we no longer need to hold the IOLOCK during an rmapbt
-scan of inodes to serialize the scan with ongoing directory updates.
+Therefore, introduce this new lookup mode.  Because all parent pointer
+updates are logged, we must extend the xattr logging code to capture the
+VLOOKUP variants, and restore them when recovering logged operations.
+These new log formats are protected by the sb_incompat PARENT flag, so
+they do not need a separate log_incompat feature flag.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,23 +61,22 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=retain-ilock-during-dir-ops
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-attr-nvlookups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=retain-ilock-during-dir-ops
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-attr-nvlookups
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=pptrs-attr-nvlookups
 ---
- fs/xfs/libxfs/xfs_defer.c  |    6 ++-
- fs/xfs/libxfs/xfs_defer.h  |    8 +++-
- fs/xfs/scrub/rmap_repair.c |   16 -------
- fs/xfs/scrub/tempfile.c    |    2 +
- fs/xfs/xfs_dquot.c         |   41 ++++++++++++++++++
- fs/xfs/xfs_dquot.h         |    1 
- fs/xfs/xfs_inode.c         |   98 ++++++++++++++++++++++++++++++++------------
- fs/xfs/xfs_inode.h         |    2 +
- fs/xfs/xfs_qm.c            |    4 +-
- fs/xfs/xfs_qm.h            |    2 -
- fs/xfs/xfs_symlink.c       |    6 ++-
- fs/xfs/xfs_trans.c         |    9 +++-
- fs/xfs/xfs_trans_dquot.c   |   15 ++++---
- 13 files changed, 156 insertions(+), 54 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c       |   52 ++++--
+ fs/xfs/libxfs/xfs_attr.h       |   32 +++-
+ fs/xfs/libxfs/xfs_attr_leaf.c  |   45 ++++-
+ fs/xfs/libxfs/xfs_da_btree.h   |   10 +
+ fs/xfs/libxfs/xfs_format.h     |    6 +
+ fs/xfs/libxfs/xfs_log_format.h |   29 +++
+ fs/xfs/xfs_attr_item.c         |  349 ++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_attr_item.h         |    2 
+ fs/xfs/xfs_xattr.c             |   15 ++
+ 9 files changed, 460 insertions(+), 80 deletions(-)
 
