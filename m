@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DA6ABA2E
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:06:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37F94BA2B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:06:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VHvGUT1n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B1FEC433C8;
-	Sun, 31 Dec 2023 20:06:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H72+XIyb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBF67C433C8;
+	Sun, 31 Dec 2023 20:06:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704053161;
-	bh=3camY0y11MN4KV8Rkk1/dMIh4RMjlYE4GgZtrGRcalI=;
+	s=k20201202; t=1704053176;
+	bh=h8fDOvYBKv98GOAr45ZIdQifh4/OlA+VzMHB7sOwTy0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VHvGUT1n2DAQI7YoooZO+PGROoO4zzNtpPLYZXml20HxRxoeZxu8FmARaKxQURGW8
-	 vxB2dcy6XSEbvjlQbOSr8jhMtt40mz2chLTOM+V95bNc9mwLP+QqWvXgcb21cuy92B
-	 x5pVE5Qr7khXtUS4KpVliR2RHcq1TsHonb59No+aJOsqRZWe5uIp1uvVYmhR64MdOp
-	 BtXnZIokD8fxmkxD9rAPbVlMmBp+MAgM0ijjSM/LQLo73FaPNVK7MoQEn5VzTKZqf4
-	 /acwvKgWRkGqsQ9iE1tYImmbgct6n+1XQssNqVsBOHENUwNOuKCvH/9zxrNZsbmnlz
-	 e9mG51m672QSg==
-Date: Sun, 31 Dec 2023 12:06:00 -0800
-Subject: [PATCH 6/7] xfs: cache a bunch of inodes for repair scans
+	b=H72+XIybLjaB2eLaxE49X7pWzEY8iwbLp7f8gd5RVJzoyATsoaBhhhIgAUAr+oKSU
+	 jp8KdDhtlZ8aj/eYP5g3qWuKY9aEzwSZrSzc1GsJ4PdFNSDPPbR4GFK8hNaH3j8ekL
+	 3TsKyqnMVHeMNB39yUVeCRt/Z+RwUaOHVsApPTECdCjg3gl8DyODjIoUe6Z82Hcoj5
+	 DG161y5iIY1EoUs0xE2D/lGhZ0wyxW+P88MtfEfSGrLrTqEFOuxq7VhYCi20DEMLM9
+	 zVxIg+NV4K+8zr23za6mX/Y++Q4ECaVFnyrJAC9ZjkPXxF1ne56gjmhE8EWkI0pPOR
+	 7Klc5RdtL5cNA==
+Date: Sun, 31 Dec 2023 12:06:16 -0800
+Subject: [PATCH 7/7] xfs: iscan batching should handle unallocated inodes too
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404826603.1747630.1523391664280656042.stgit@frogsfrogsfrogs>
+Message-ID: <170404826619.1747630.14010547497155037331.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404826492.1747630.1053076578437373265.stgit@frogsfrogsfrogs>
 References: <170404826492.1747630.1053076578437373265.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -33,297 +33,250 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-After observing xfs_scrub taking forever to rebuild parent pointers on a
-pptrs enabled filesystem, I decided to profile what the system was
-doing.  It turns out that when there are a lot of threads trying to scan
-the filesystem, most of our time is spent contending on AGI buffer
-locks.  Given that we're walking the inobt records anyway, we can often
-tell ahead of time when there's a bunch of (up to 64) consecutive inodes
-that we could grab all at once.
+The inode scanner tries to reduce contention on the AGI header buffer
+lock by grabbing references to consecutive allocated inodes.  Batching
+stops as soon as we encounter an unallocated inode.  This is unfortunate
+because in the worst case performance collapses to the old "one at a
+time" behavior if every other inode is free.
 
-Do this to amortize the cost of taking the AGI lock across as many
-inodes as we possibly can.  On the author's system this seems to improve
-parallel throughput from barely one and a half cores to slightly
-sublinear scaling.  The obvious antipattern here of course is where the
-freemask has every other bit set (e.g. all 0xA's)
+This is correct behavior, but we could do better.  Unallocated inodes by
+definition have nothing to scan, which means the iscan can ignore them
+as long as someone ensures that the scan data will reflect another
+thread allocating the inode and adding interesting metadata to that
+inode.  That mechanism is, of course, the live update hooks.
+
+Therefore, extend the batching mechanism to track unallocated inodes
+adjacent to the scan cursor.  The _want_live_update predicate can tell
+the caller's live update hook to incorporate all live updates to what
+the scanner thinks is an unallocated inode if (after dropping the AGI)
+some other thread allocates one of those inodes and begins using it.
+
+Note that we cannot just copy the ir_free bitmap into the scan cursor
+because the batching stops if iget says the inode is in an intermediate
+state (e.g. on the inactivation list) and cannot be igrabbed.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/iscan.c |  159 +++++++++++++++++++++++++++++++++++++++++---------
- fs/xfs/scrub/iscan.h |    7 ++
- fs/xfs/scrub/trace.h |   23 +++++++
- 3 files changed, 159 insertions(+), 30 deletions(-)
+ fs/xfs/scrub/iscan.c |  107 +++++++++++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/scrub/iscan.h |    6 ++-
+ fs/xfs/scrub/trace.h |   21 ++++++++--
+ 3 files changed, 119 insertions(+), 15 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/iscan.c b/fs/xfs/scrub/iscan.c
-index ef78620dcc846..ba93258c47030 100644
+index ba93258c47030..4e570b5d98b1b 100644
 --- a/fs/xfs/scrub/iscan.c
 +++ b/fs/xfs/scrub/iscan.c
-@@ -60,6 +60,7 @@ xchk_iscan_find_next(
- 	struct xchk_iscan	*iscan,
+@@ -61,7 +61,8 @@ xchk_iscan_find_next(
  	struct xfs_buf		*agi_bp,
  	struct xfs_perag	*pag,
-+	xfs_inofree_t		*allocmaskp,
- 	xfs_agino_t		*cursor)
+ 	xfs_inofree_t		*allocmaskp,
+-	xfs_agino_t		*cursor)
++	xfs_agino_t		*cursor,
++	uint8_t			*nr_inodesp)
  {
  	struct xfs_scrub	*sc = iscan->sc;
-@@ -145,6 +146,7 @@ xchk_iscan_find_next(
- 
+ 	struct xfs_inobt_rec_incore	rec;
+@@ -147,6 +148,7 @@ xchk_iscan_find_next(
  			ASSERT(next >= 0);
  			*cursor = rec.ir_startino + next;
-+			*allocmaskp = allocmask >> next;
+ 			*allocmaskp = allocmask >> next;
++			*nr_inodesp = XFS_INODES_PER_CHUNK - next;
  			break;
  		}
  	}
-@@ -225,7 +227,8 @@ STATIC int
- xchk_iscan_advance(
+@@ -228,7 +230,8 @@ xchk_iscan_advance(
  	struct xchk_iscan	*iscan,
  	struct xfs_perag	**pagp,
--	struct xfs_buf		**agi_bpp)
-+	struct xfs_buf		**agi_bpp,
-+	xfs_inofree_t		*allocmaskp)
+ 	struct xfs_buf		**agi_bpp,
+-	xfs_inofree_t		*allocmaskp)
++	xfs_inofree_t		*allocmaskp,
++	uint8_t			*nr_inodesp)
  {
  	struct xfs_scrub	*sc = iscan->sc;
  	struct xfs_mount	*mp = sc->mp;
-@@ -251,7 +254,8 @@ xchk_iscan_advance(
- 			goto out_pag;
+@@ -255,7 +258,7 @@ xchk_iscan_advance(
  
  		agino = XFS_INO_TO_AGINO(mp, iscan->cursor_ino);
--		ret = xchk_iscan_find_next(iscan, agi_bp, pag, &agino);
-+		ret = xchk_iscan_find_next(iscan, agi_bp, pag, allocmaskp,
-+				&agino);
+ 		ret = xchk_iscan_find_next(iscan, agi_bp, pag, allocmaskp,
+-				&agino);
++				&agino, nr_inodesp);
  		if (ret)
  			goto out_buf;
  
-@@ -331,29 +335,35 @@ xchk_iscan_iget_retry(
-  * caller must ensure that no other threads can modify the inode until a call
-  * to xchk_iscan_visit succeeds.
-  *
-- * Returns 0 and an incore inode; -EAGAIN if the caller should call again
-- * xchk_iscan_advance; -EBUSY if we couldn't grab an inode; -ECANCELED if
-- * there's a fatal signal pending; or some other negative errno.
-+ * Returns the number of incore inodes grabbed; -EAGAIN if the caller should
-+ * call again xchk_iscan_advance; -EBUSY if we couldn't grab an inode;
-+ * -ECANCELED if there's a fatal signal pending; or some other negative errno.
-  */
- STATIC int
- xchk_iscan_iget(
+@@ -344,12 +347,14 @@ xchk_iscan_iget(
  	struct xchk_iscan	*iscan,
  	struct xfs_perag	*pag,
  	struct xfs_buf		*agi_bp,
--	struct xfs_inode	**ipp)
-+	xfs_inofree_t		allocmask)
+-	xfs_inofree_t		allocmask)
++	xfs_inofree_t		allocmask,
++	uint8_t			nr_inodes)
  {
  	struct xfs_scrub	*sc = iscan->sc;
  	struct xfs_mount	*mp = sc->mp;
-+	xfs_ino_t		ino = iscan->cursor_ino;
-+	unsigned int		idx = 0;
+ 	xfs_ino_t		ino = iscan->cursor_ino;
+ 	unsigned int		idx = 0;
++	unsigned int		i;
  	int			error;
  
--	error = xfs_iget(sc->mp, sc->tp, iscan->cursor_ino, XFS_IGET_NORETRY,
--			0, ipp);
--	xfs_trans_brelse(sc->tp, agi_bp);
--	xfs_perag_put(pag);
-+	ASSERT(iscan->__inodes[0] == NULL);
+ 	ASSERT(iscan->__inodes[0] == NULL);
+@@ -399,10 +404,28 @@ xchk_iscan_iget(
+ 	/*
+ 	 * Now that we've filled the first slot in __inodes, try to fill the
+ 	 * rest of the batch with consecutively ordered inodes.  to reduce the
+-	 * number of _iter calls.  If we can't get an inode, we stop and return
+-	 * what we have.
++	 * number of _iter calls.  Make a bitmap of unallocated inodes from the
++	 * zeroes in the inuse bitmap; these inodes will not be scanned, but
++	 * the _want_live_update predicate will pass through all live updates.
++	 *
++	 * If we can't iget an allocated inode, stop and return what we have.
+ 	 */
+-	for (; allocmask & 1; allocmask >>= 1, ino++, idx++) {
++	mutex_lock(&iscan->lock);
++	iscan->__batch_ino = ino - 1;
++	iscan->__skipped_inomask = 0;
++	mutex_unlock(&iscan->lock);
 +
-+	/* Fill the first slot in the inode array. */
-+	error = xfs_iget(sc->mp, sc->tp, ino, XFS_IGET_NORETRY, 0,
-+			&iscan->__inodes[idx]);
- 
- 	trace_xchk_iscan_iget(iscan, error);
- 
- 	if (error == -ENOENT || error == -EAGAIN) {
-+		xfs_trans_brelse(sc->tp, agi_bp);
-+		xfs_perag_put(pag);
++	for (i = 1; i < nr_inodes; i++, ino++, allocmask >>= 1) {
++		if (!(allocmask & 1)) {
++			ASSERT(!(iscan->__skipped_inomask & (1ULL << i)));
 +
- 		/*¬
- 		 * It's possible that this inode has lost all of its links but
- 		 * hasn't yet been inactivated.  If we don't have a transaction
-@@ -364,6 +374,9 @@ xchk_iscan_iget(
++			mutex_lock(&iscan->lock);
++			iscan->cursor_ino = ino;
++			iscan->__skipped_inomask |= (1ULL << i);
++			mutex_unlock(&iscan->lock);
++			continue;
++		}
++
+ 		ASSERT(iscan->__inodes[idx] == NULL);
+ 
+ 		error = xfs_iget(sc->mp, sc->tp, ino, XFS_IGET_NORETRY, 0,
+@@ -413,14 +436,42 @@ xchk_iscan_iget(
+ 		mutex_lock(&iscan->lock);
+ 		iscan->cursor_ino = ino;
+ 		mutex_unlock(&iscan->lock);
++		idx++;
  	}
  
- 	if (error == -EINVAL) {
-+		xfs_trans_brelse(sc->tp, agi_bp);
-+		xfs_perag_put(pag);
-+
- 		/*
- 		 * We thought the inode was allocated, but the inode btree
- 		 * lookup failed, which means that it was freed since the last
-@@ -374,25 +387,47 @@ xchk_iscan_iget(
- 		return xchk_iscan_iget_retry(iscan, false);
- 	}
- 
--	return error;
-+	if (error) {
-+		xfs_trans_brelse(sc->tp, agi_bp);
-+		xfs_perag_put(pag);
-+		return error;
-+	}
-+	idx++;
-+	ino++;
-+	allocmask >>= 1;
-+
-+	/*
-+	 * Now that we've filled the first slot in __inodes, try to fill the
-+	 * rest of the batch with consecutively ordered inodes.  to reduce the
-+	 * number of _iter calls.  If we can't get an inode, we stop and return
-+	 * what we have.
-+	 */
-+	for (; allocmask & 1; allocmask >>= 1, ino++, idx++) {
-+		ASSERT(iscan->__inodes[idx] == NULL);
-+
-+		error = xfs_iget(sc->mp, sc->tp, ino, XFS_IGET_NORETRY, 0,
-+				&iscan->__inodes[idx]);
-+		if (error)
-+			break;
-+
-+		mutex_lock(&iscan->lock);
-+		iscan->cursor_ino = ino;
-+		mutex_unlock(&iscan->lock);
-+	}
-+
-+	trace_xchk_iscan_iget_batch(sc->mp, iscan, idx);
-+	xfs_trans_brelse(sc->tp, agi_bp);
-+	xfs_perag_put(pag);
-+	return idx;
- }
- 
- /*
-- * Advance the inode scan cursor to the next allocated inode and return the
-- * incore inode structure associated with it.
-- *
-- * Returns 1 if there's a new inode to examine, 0 if we've run out of inodes,
-- * -ECANCELED if the live scan aborted, -EBUSY if the incore inode could not be
-- * grabbed, or the usual negative errno.
-- *
-- * If the function returns -EBUSY and the caller can handle skipping an inode,
-- * it may call this function again to continue the scan with the next allocated
-- * inode.
-+ * Advance the inode scan cursor to the next allocated inode and return up to
-+ * 64 consecutive allocated inodes starting with the cursor position.
-  */
--int
--xchk_iscan_iter(
--	struct xchk_iscan	*iscan,
--	struct xfs_inode	**ipp)
-+STATIC int
-+xchk_iscan_iter_batch(
-+	struct xchk_iscan	*iscan)
- {
- 	struct xfs_scrub	*sc = iscan->sc;
- 	int			ret;
-@@ -404,8 +439,9 @@ xchk_iscan_iter(
- 	do {
- 		struct xfs_buf	*agi_bp = NULL;
- 		struct xfs_perag *pag = NULL;
-+		xfs_inofree_t	allocmask = 0;
- 
--		ret = xchk_iscan_advance(iscan, &pag, &agi_bp);
-+		ret = xchk_iscan_advance(iscan, &pag, &agi_bp, &allocmask);
- 		if (ret != 1)
- 			return ret;
- 
-@@ -416,21 +452,74 @@ xchk_iscan_iter(
- 			break;
- 		}
- 
--		ret = xchk_iscan_iget(iscan, pag, agi_bp, ipp);
-+		ret = xchk_iscan_iget(iscan, pag, agi_bp, allocmask);
- 	} while (ret == -EAGAIN);
- 
--	if (!ret)
--		return 1;
--
- 	return ret;
+-	trace_xchk_iscan_iget_batch(sc->mp, iscan, idx);
++	trace_xchk_iscan_iget_batch(sc->mp, iscan, nr_inodes, idx);
+ 	xfs_trans_brelse(sc->tp, agi_bp);
+ 	xfs_perag_put(pag);
+ 	return idx;
  }
  
 +/*
-+ * Advance the inode scan cursor to the next allocated inode and return the
-+ * incore inode structure associated with it.
-+ *
-+ * Returns 1 if there's a new inode to examine, 0 if we've run out of inodes,
-+ * -ECANCELED if the live scan aborted, -EBUSY if the incore inode could not be
-+ * grabbed, or the usual negative errno.
-+ *
-+ * If the function returns -EBUSY and the caller can handle skipping an inode,
-+ * it may call this function again to continue the scan with the next allocated
-+ * inode.
++ * Advance the visit cursor to reflect skipped inodes beyond whatever we
++ * scanned.
 + */
-+int
-+xchk_iscan_iter(
-+	struct xchk_iscan	*iscan,
-+	struct xfs_inode	**ipp)
-+{
-+	unsigned int		i;
-+	int			error;
-+
-+	/* Find a cached inode, or go get another batch. */
-+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++) {
-+		if (iscan->__inodes[i])
-+			goto foundit;
-+	}
-+
-+	error = xchk_iscan_iter_batch(iscan);
-+	if (error <= 0)
-+		return error;
-+
-+	ASSERT(iscan->__inodes[0] != NULL);
-+	i = 0;
-+
-+foundit:
-+	/* Give the caller our reference. */
-+	*ipp = iscan->__inodes[i];
-+	iscan->__inodes[i] = NULL;
-+	return 1;
-+}
-+
-+/* Clean up an xfs_iscan_iter call by dropping any inodes that we still hold. */
-+void
-+xchk_iscan_iter_finish(
++STATIC void
++xchk_iscan_finish_batch(
 +	struct xchk_iscan	*iscan)
 +{
-+	struct xfs_scrub	*sc = iscan->sc;
-+	unsigned int		i;
++	xfs_ino_t		highest_skipped;
 +
-+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++) {
-+		if (iscan->__inodes[i]) {
-+			xchk_irele(sc, iscan->__inodes[i]);
-+			iscan->__inodes[i] = NULL;
-+		}
++	mutex_lock(&iscan->lock);
++
++	if (iscan->__batch_ino != NULLFSINO) {
++		highest_skipped = iscan->__batch_ino +
++					xfs_highbit64(iscan->__skipped_inomask);
++		iscan->__visited_ino = max(iscan->__visited_ino,
++					   highest_skipped);
++
++		trace_xchk_iscan_skip(iscan);
 +	}
++
++	iscan->__batch_ino = NULLFSINO;
++	iscan->__skipped_inomask = 0;
++
++	mutex_unlock(&iscan->lock);
 +}
++
+ /*
+  * Advance the inode scan cursor to the next allocated inode and return up to
+  * 64 consecutive allocated inodes starting with the cursor position.
+@@ -432,6 +483,8 @@ xchk_iscan_iter_batch(
+ 	struct xfs_scrub	*sc = iscan->sc;
+ 	int			ret;
  
- /* Mark this inode scan finished and release resources. */
- void
- xchk_iscan_teardown(
- 	struct xchk_iscan	*iscan)
- {
-+	xchk_iscan_iter_finish(iscan);
- 	xchk_iscan_finish(iscan);
- 	mutex_destroy(&iscan->lock);
- }
-@@ -478,6 +567,7 @@ xchk_iscan_start(
- 	iscan->cursor_ino = start_ino;
- 	iscan->scan_start_ino = start_ino;
- 	mutex_init(&iscan->lock);
-+	memset(iscan->__inodes, 0, sizeof(iscan->__inodes));
++	xchk_iscan_finish_batch(iscan);
++
+ 	if (iscan->iget_timeout)
+ 		iscan->__iget_deadline = jiffies +
+ 					 msecs_to_jiffies(iscan->iget_timeout);
+@@ -440,8 +493,10 @@ xchk_iscan_iter_batch(
+ 		struct xfs_buf	*agi_bp = NULL;
+ 		struct xfs_perag *pag = NULL;
+ 		xfs_inofree_t	allocmask = 0;
++		uint8_t		nr_inodes = 0;
  
- 	trace_xchk_iscan_start(iscan, start_ino);
+-		ret = xchk_iscan_advance(iscan, &pag, &agi_bp, &allocmask);
++		ret = xchk_iscan_advance(iscan, &pag, &agi_bp, &allocmask,
++				&nr_inodes);
+ 		if (ret != 1)
+ 			return ret;
+ 
+@@ -452,7 +507,7 @@ xchk_iscan_iter_batch(
+ 			break;
+ 		}
+ 
+-		ret = xchk_iscan_iget(iscan, pag, agi_bp, allocmask);
++		ret = xchk_iscan_iget(iscan, pag, agi_bp, allocmask, nr_inodes);
+ 	} while (ret == -EAGAIN);
+ 
+ 	return ret;
+@@ -559,6 +614,9 @@ xchk_iscan_start(
+ 
+ 	start_ino = xchk_iscan_rotor(sc->mp);
+ 
++	iscan->__batch_ino = NULLFSINO;
++	iscan->__skipped_inomask = 0;
++
+ 	iscan->sc = sc;
+ 	clear_bit(XCHK_ISCAN_OPSTATE_ABORTED, &iscan->__opstate);
+ 	iscan->iget_timeout = iget_timeout;
+@@ -587,6 +645,26 @@ xchk_iscan_mark_visited(
+ 	mutex_unlock(&iscan->lock);
  }
-@@ -523,6 +613,15 @@ xchk_iscan_want_live_update(
+ 
++/*
++ * Did we skip this inode because it wasn't allocated when we loaded the batch?
++ * If so, it is newly allocated and will not be scanned.  All live updates to
++ * this inode must be passed to the caller to maintain scan correctness.
++ */
++static inline bool
++xchk_iscan_skipped(
++	const struct xchk_iscan	*iscan,
++	xfs_ino_t		ino)
++{
++	if (iscan->__batch_ino == NULLFSINO)
++		return false;
++	if (ino < iscan->__batch_ino)
++		return false;
++	if (ino >= iscan->__batch_ino + XFS_INODES_PER_CHUNK)
++		return false;
++
++	return iscan->__skipped_inomask & (1ULL << (ino - iscan->__batch_ino));
++}
++
+ /*
+  * Do we need a live update for this inode?  This is true if the scanner thread
+  * has visited this inode and the scan hasn't been aborted due to errors.
+@@ -622,6 +700,15 @@ xchk_iscan_want_live_update(
  		goto unlock;
  	}
  
 +	/*
-+	 * No inodes have been visited yet, so the visited cursor points at the
-+	 * start of the scan range.  The caller should not receive any updates.
++	 * This inode was not allocated at the time of the iscan batch.
++	 * The caller should receive all updates.
 +	 */
-+	if (iscan->scan_start_ino == iscan->__visited_ino) {
-+		ret = false;
++	if (xchk_iscan_skipped(iscan, ino)) {
++		ret = true;
 +		goto unlock;
 +	}
 +
@@ -331,62 +284,75 @@ index ef78620dcc846..ba93258c47030 100644
  	 * The visited cursor hasn't yet wrapped around the end of the FS.  If
  	 * @ino is inside the starred range, the caller should receive updates:
 diff --git a/fs/xfs/scrub/iscan.h b/fs/xfs/scrub/iscan.h
-index 0db97d98ee8da..f7317af807ddc 100644
+index f7317af807ddc..365d54e35cd94 100644
 --- a/fs/xfs/scrub/iscan.h
 +++ b/fs/xfs/scrub/iscan.h
-@@ -41,6 +41,12 @@ struct xchk_iscan {
+@@ -44,8 +44,12 @@ struct xchk_iscan {
  
- 	/* Wait this many ms to retry an iget. */
- 	unsigned int		iget_retry_delay;
-+
-+	/*
-+	 * The scan grabs batches of inodes and stashes them here before
-+	 * handing them out with _iter.
-+	 */
-+	struct xfs_inode	*__inodes[XFS_INODES_PER_CHUNK];
+ 	/*
+ 	 * The scan grabs batches of inodes and stashes them here before
+-	 * handing them out with _iter.
++	 * handing them out with _iter.  Unallocated inodes are set in the
++	 * mask so that all updates to that inode are selected for live
++	 * update propagation.
+ 	 */
++	xfs_ino_t		__batch_ino;
++	xfs_inofree_t		__skipped_inomask;
+ 	struct xfs_inode	*__inodes[XFS_INODES_PER_CHUNK];
  };
  
- /* Set if the scan has been aborted due to some event in the fs. */
-@@ -63,6 +69,7 @@ void xchk_iscan_start(struct xfs_scrub *sc, unsigned int iget_timeout,
- void xchk_iscan_teardown(struct xchk_iscan *iscan);
- 
- int xchk_iscan_iter(struct xchk_iscan *iscan, struct xfs_inode **ipp);
-+void xchk_iscan_iter_finish(struct xchk_iscan *iscan);
- 
- void xchk_iscan_mark_visited(struct xchk_iscan *iscan, struct xfs_inode *ip);
- bool xchk_iscan_want_live_update(struct xchk_iscan *iscan, xfs_ino_t ino);
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 92d1f3b6203db..896910be3173b 100644
+index 896910be3173b..e1dcd5f6ce5dd 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -1200,6 +1200,29 @@ TRACE_EVENT(xchk_iscan_iget,
- 		  __entry->error)
+@@ -1145,6 +1145,7 @@ DEFINE_EVENT(xchk_iscan_class, name, \
+ 	TP_ARGS(iscan))
+ DEFINE_ISCAN_EVENT(xchk_iscan_move_cursor);
+ DEFINE_ISCAN_EVENT(xchk_iscan_visit);
++DEFINE_ISCAN_EVENT(xchk_iscan_skip);
+ DEFINE_ISCAN_EVENT(xchk_iscan_advance_ag);
+ 
+ DECLARE_EVENT_CLASS(xchk_iscan_ino_class,
+@@ -1202,25 +1203,37 @@ TRACE_EVENT(xchk_iscan_iget,
+ 
+ TRACE_EVENT(xchk_iscan_iget_batch,
+ 	TP_PROTO(struct xfs_mount *mp, struct xchk_iscan *iscan,
+-		 unsigned int nr),
+-	TP_ARGS(mp, iscan, nr),
++		 unsigned int nr, unsigned int avail),
++	TP_ARGS(mp, iscan, nr, avail),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, cursor)
+ 		__field(xfs_ino_t, visited)
+ 		__field(unsigned int, nr)
++		__field(unsigned int, avail)
++		__field(unsigned int, unavail)
++		__field(xfs_ino_t, batch_ino)
++		__field(unsigned long long, skipmask)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->cursor = iscan->cursor_ino;
+ 		__entry->visited = iscan->__visited_ino;
+ 		__entry->nr = nr;
++		__entry->avail = avail;
++		__entry->unavail = hweight64(iscan->__skipped_inomask);
++		__entry->batch_ino = iscan->__batch_ino;
++		__entry->skipmask = iscan->__skipped_inomask;
+ 	),
+-	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx nr %d",
++	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx batchino 0x%llx skipmask 0x%llx nr %u avail %u unavail %u",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->cursor,
+ 		  __entry->visited,
+-		  __entry->nr)
++		  __entry->batch_ino,
++		  __entry->skipmask,
++		  __entry->nr,
++		  __entry->avail,
++		  __entry->unavail)
  );
  
-+TRACE_EVENT(xchk_iscan_iget_batch,
-+	TP_PROTO(struct xfs_mount *mp, struct xchk_iscan *iscan,
-+		 unsigned int nr),
-+	TP_ARGS(mp, iscan, nr),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, cursor)
-+		__field(xfs_ino_t, visited)
-+		__field(unsigned int, nr)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->cursor = iscan->cursor_ino;
-+		__entry->visited = iscan->__visited_ino;
-+		__entry->nr = nr;
-+	),
-+	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx nr %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->cursor,
-+		  __entry->visited,
-+		  __entry->nr)
-+);
-+
  TRACE_EVENT(xchk_iscan_iget_retry_wait,
- 	TP_PROTO(struct xchk_iscan *iscan),
- 	TP_ARGS(iscan),
 
