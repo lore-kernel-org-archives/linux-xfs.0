@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD9FC2CC
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:19:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA14C154
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:19:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JPEldZTN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71D08C433C8;
-	Sun, 31 Dec 2023 23:19:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpJwzlFk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A507C433C9;
+	Sun, 31 Dec 2023 23:19:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064782;
-	bh=r1KXLIu2NvI+H91zK0uHKgyI1/Uz95foIKhiyepYGz8=;
+	s=k20201202; t=1704064798;
+	bh=HNd0bgulWfNjZJSWfh3MGvjffDN9Ozyp0WRp9kIV1Ko=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=JPEldZTN+60u2qvVnvNZErnVH9pwToehfYouW9M7+ikCtblZnjYMPHuH97Qy4c6e+
-	 MpiZqCJUrnXWuC3reV7Mg+3I9LSO5jc6YyzTWoUEoBtBxxFIGQL9Yx+oQwd8IdB+iI
-	 jr+D3jErN6jcxxw7nm1uqmbLwhKJUrc9isqw/1nrvxTpRePr55c8Z9SlQ71M85FmeS
-	 8qWslRREt1q0Osp6guIujc3Rk/v3+/o51+N21OPPlQlmlCPaGm8OS9VJjhw4aaZw1c
-	 9NE/fkDJz5GJbP66KW4GQrHOIyTZGXlh9qFyL+LE4ubxMhuF8IgVhK+4rOYXDCKyOf
-	 jki5kCr0LNI/A==
-Date: Sun, 31 Dec 2023 15:19:41 -0800
-Subject: [PATCH 6/6] xfs_scrub: defer phase5 file scans if dirloop fails
+	b=BpJwzlFkGbzIlKiQoXW/hNbL4hZ8F+AzO2Ml8kz4fMz1mKnqFpatDSAm4fBRjgG5B
+	 a9hkNFK/P0yNTVjWDOFUacZEmYM3Aw5UyvexLXyB0hpYSiGw1JcaSZeVgFGkfIjj22
+	 2GHGvV9emAIs6XILTxpBOvuzVzIIY2uawD06pR7LX3wPvq4MJUu1sDv4TagDL+1+4R
+	 p4IrLx06nSDAs35PqREBtVJQUPN/stN/yMab4MA6WuJUHAAbviIoxMAF62JEnpiVEr
+	 0qEXGQKCEhn0eESumy8KleidZ+afBS+51rCpOTb/SrZeDGi+xAF3M+fqIPvRdtYLWA
+	 JtMYAFONFA4aA==
+Date: Sun, 31 Dec 2023 15:19:57 -0800
+Subject: [PATCH 01/10] xfs: introduce vectored scrub mode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405007512.1805996.11814780916064262740.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405007429.1805996.15935827855068032438.stgit@frogsfrogsfrogs>
-References: <170405007429.1805996.15935827855068032438.stgit@frogsfrogsfrogs>
+Message-ID: <170405007856.1806194.7426360300744176144.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405007836.1806194.11810681886556560484.stgit@frogsfrogsfrogs>
+References: <170405007836.1806194.11810681886556560484.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,360 +37,258 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we cannot fix dirloop problems during the initial phase 5 inode scan,
-defer them until later.
+Introduce a variant on XFS_SCRUB_METADATA that allows for vectored mode.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase5.c |  215 ++++++++++++++++++++++++++++++++++++++++++++++++++++----
- scrub/repair.c |   13 +++
- scrub/repair.h |    2 +
- 3 files changed, 216 insertions(+), 14 deletions(-)
+ libxfs/xfs_fs.h                      |   10 ++
+ libxfs/xfs_fs_staging.h              |   32 ++++++
+ man/man2/ioctl_xfs_scrubv_metadata.2 |  168 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 210 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_scrubv_metadata.2
 
 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 6c8dee66e6e..f6c295c64ad 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -18,6 +18,8 @@
- #include "libfrog/workqueue.h"
- #include "libfrog/fsgeom.h"
- #include "libfrog/scrub.h"
-+#include "libfrog/bitmap.h"
-+#include "libfrog/bulkstat.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "inodes.h"
-@@ -29,6 +31,36 @@
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 2499a20f5f7..77fbca573e1 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -725,6 +725,15 @@ struct xfs_scrub_metadata {
+ /* Number of scrub subcommands. */
+ #define XFS_SCRUB_TYPE_NR	29
  
- /* Phase 5: Full inode scans and check directory connectivity. */
++/*
++ * This special type code only applies to the vectored scrub implementation.
++ *
++ * If any of the previous scrub vectors recorded runtime errors or have
++ * sv_flags bits set that match the OFLAG bits in the barrier vector's
++ * sv_flags, set the barrier's sv_ret to -ECANCELED and return to userspace.
++ */
++#define XFS_SCRUB_TYPE_BARRIER	(-1U)
++
+ /* i: Repair this metadata. */
+ #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
  
-+struct ncheck_state {
-+	struct scrub_ctx	*ctx;
+@@ -813,6 +822,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+ #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
++/*	XFS_IOC_SCRUBV_METADATA -- staging 60	   */
+ #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
+ /*	XFS_IOC_GETPARENTS ---- staging 62         */
+ 
+diff --git a/libxfs/xfs_fs_staging.h b/libxfs/xfs_fs_staging.h
+index e0650af0558..69d29f213af 100644
+--- a/libxfs/xfs_fs_staging.h
++++ b/libxfs/xfs_fs_staging.h
+@@ -170,4 +170,36 @@ xfs_getparents_rec(
+ 
+ #define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
+ 
++/* Vectored scrub calls to reduce the number of kernel transitions. */
 +
-+	/* Have we aborted this scan? */
-+	bool			aborted;
-+
-+	/* Is this the last time we're going to process deferred inodes? */
-+	bool			last_call;
-+
-+	/* Did we fix at least one thing while walking @cur->deferred? */
-+	bool			fixed_something;
-+
-+	/* Lock for this structure */
-+	pthread_mutex_t		lock;
-+
-+	/*
-+	 * Inodes that are involved with directory tree structure corruptions
-+	 * are marked here.  This will be NULL until the first corruption is
-+	 * noted.
-+	 */
-+	struct bitmap		*new_deferred;
-+
-+	/*
-+	 * Inodes that we're reprocessing due to earlier directory tree
-+	 * structure corruption problems are marked here.  This will be NULL
-+	 * during the first (parallel) inode scan.
-+	 */
-+	struct bitmap		*cur_deferred;
++struct xfs_scrub_vec {
++	__u32 sv_type;		/* XFS_SCRUB_TYPE_* */
++	__u32 sv_flags;		/* XFS_SCRUB_FLAGS_* */
++	__s32 sv_ret;		/* 0 or a negative error code */
++	__u32 sv_reserved;	/* must be zero */
 +};
 +
- /*
-  * Warn about problematic bytes in a directory/attribute name.  That means
-  * terminal control characters and escape sequences, since that could be used
-@@ -252,6 +284,26 @@ render_ino_from_handle(
- 			bstat->bs_gen, NULL);
- }
- 
-+/* Defer this inode until later. */
-+static inline int
-+defer_inode(
-+	struct ncheck_state	*ncs,
-+	uint64_t		ino)
-+{
-+	int			error;
++/* Vectored metadata scrub control structure. */
++struct xfs_scrub_vec_head {
++	__u64 svh_ino;		/* inode number. */
++	__u32 svh_gen;		/* inode generation. */
++	__u32 svh_agno;		/* ag number. */
++	__u32 svh_flags;	/* XFS_SCRUB_VEC_FLAGS_* */
++	__u16 svh_rest_us;	/* wait this much time between vector items */
++	__u16 svh_nr;		/* number of svh_vecs */
++	__u64 svh_reserved;	/* must be zero */
 +
-+	pthread_mutex_lock(&ncs->lock);
-+	if (!ncs->new_deferred) {
-+		error = -bitmap_alloc(&ncs->new_deferred);
-+		if (error)
-+			goto unlock;
-+	}
-+	error = -bitmap_set(ncs->new_deferred, ino, 1);
-+unlock:
-+	pthread_mutex_unlock(&ncs->lock);
-+	return error;
++	struct xfs_scrub_vec svh_vecs[];
++};
++
++#define XFS_SCRUB_VEC_FLAGS_ALL		(0)
++
++static inline size_t sizeof_xfs_scrub_vec(unsigned int nr)
++{
++	return sizeof(struct xfs_scrub_vec_head) +
++		nr * sizeof(struct xfs_scrub_vec);
 +}
 +
- /*
-  * Check the directory structure for problems that could cause open_by_handle
-  * not to work.  Returns 0 for no problems; EADDRNOTAVAIL if the there are
-@@ -260,7 +312,7 @@ render_ino_from_handle(
- static int
- check_dir_connection(
- 	struct scrub_ctx		*ctx,
--	struct descr			*dsc,
-+	struct ncheck_state		*ncs,
- 	const struct xfs_bulkstat	*bstat)
- {
- 	struct scrub_item		sri = { };
-@@ -279,17 +331,31 @@ check_dir_connection(
- 		return error;
- 	}
- 
--	error = repair_file_corruption(ctx, &sri, -1);
-+	if (ncs->last_call)
-+		error = repair_file_corruption_now(ctx, &sri, -1);
-+	else
-+		error = repair_file_corruption(ctx, &sri, -1);
- 	if (error) {
- 		str_liberror(ctx, error, _("repairing directory loops"));
- 		return error;
- 	}
- 
- 	/* No directory tree problems?  Clear this inode if it was deferred. */
--	if (repair_item_count_needsrepair(&sri) == 0)
-+	if (repair_item_count_needsrepair(&sri) == 0) {
-+		if (ncs->cur_deferred)
-+			ncs->fixed_something = true;
- 		return 0;
-+	}
++#define XFS_IOC_SCRUBV_METADATA	_IOWR('X', 60, struct xfs_scrub_vec_head)
 +
-+	/* Don't defer anything during last call. */
-+	if (ncs->last_call)
-+		return 0;
+ #endif /* __XFS_FS_STAGING_H__ */
+diff --git a/man/man2/ioctl_xfs_scrubv_metadata.2 b/man/man2/ioctl_xfs_scrubv_metadata.2
+new file mode 100644
+index 00000000000..05a4adaba48
+--- /dev/null
++++ b/man/man2/ioctl_xfs_scrubv_metadata.2
+@@ -0,0 +1,168 @@
++.\" Copyright (c) 2023-2024 Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0-or-later
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-SCRUBV-METADATA 2 2023-08-18 "XFS"
++.SH NAME
++ioctl_xfs_scrubv_metadata \- check a lot of XFS filesystem metadata
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.br
++.B #include <xfs/xfs_fs_staging.h>
++.PP
++.BI "int ioctl(int " dest_fd ", XFS_IOC_SCRUBV_METADATA, struct xfs_scrub_vec_head *" arg );
++.SH DESCRIPTION
++This XFS ioctl asks the kernel driver to examine several pieces of filesystem
++metadata for errors or suboptimal metadata.
++Multiple scrub types can be invoked to target a single filesystem object.
++See
++.BR ioctl_xfs_scrub_metadata (2)
++for a discussion of metadata validation, and documentation of the various
++.B XFS_SCRUB_TYPE
++and
++.B XFS_SCRUB_FLAGS
++values referenced below.
 +
-+	/* Directory tree structure problems exist; do not check names yet. */
-+	error = defer_inode(ncs, bstat->bs_ino);
-+	if (error)
-+		return error;
- 
--	str_corrupt(ctx, descr_render(dsc), _("directory loop uncorrected!"));
- 	return EADDRNOTAVAIL;
- }
- 
-@@ -308,7 +374,7 @@ check_inode_names(
- 	void			*arg)
- {
- 	DEFINE_DESCR(dsc, ctx, render_ino_from_handle);
--	bool			*aborted = arg;
-+	struct ncheck_state	*ncs = arg;
- 	int			fd = -1;
- 	int			error = 0;
- 	int			err2;
-@@ -321,7 +387,7 @@ check_inode_names(
- 	 * handle.
- 	 */
- 	if (S_ISDIR(bstat->bs_mode)) {
--		error = check_dir_connection(ctx, &dsc, bstat);
-+		error = check_dir_connection(ctx, ncs, bstat);
- 		if (error == EADDRNOTAVAIL) {
- 			error = 0;
- 			goto out;
-@@ -369,14 +435,120 @@ check_inode_names(
- 	}
- err:
- 	if (error)
--		*aborted = true;
-+		ncs->aborted = true;
- out:
--	if (!error && *aborted)
-+	if (!error && ncs->aborted)
- 		error = ECANCELED;
- 
- 	return error;
- }
- 
-+/* Try to check_inode_names on a specific inode. */
-+static int
-+retry_deferred_inode(
-+	struct ncheck_state	*ncs,
-+	struct xfs_handle	*handle,
-+	uint64_t		ino)
-+{
-+	struct xfs_bulkstat	bstat;
-+	struct scrub_ctx	*ctx = ncs->ctx;
-+	unsigned int		flags = 0;
-+	int			error;
++The types and location of the metadata to scrub are conveyed as a vector with
++a header of the following form:
++.PP
++.in +4n
++.nf
 +
-+	error = -xfrog_bulkstat_single(&ctx->mnt, ino, flags, &bstat);
-+	if (error == ENOENT) {
-+		/* Directory is gone, mark it clear. */
-+		ncs->fixed_something = true;
-+		return 0;
-+	}
-+	if (error)
-+		return error;
++struct xfs_scrub_vec_head {
++	__u64 svh_ino;
++	__u32 svh_gen;
++	__u32 svh_agno;
++	__u32 svh_flags;
++	__u16 svh_rest_us;
++	__u16 svh_nr;
++	__u64 svh_reserved;
 +
-+	handle->ha_fid.fid_ino = bstat.bs_ino;
-+	handle->ha_fid.fid_gen = bstat.bs_gen;
++	struct xfs_scrub_vec svh_vecs[];
++};
++.fi
++.in
++.PP
++The field
++.IR svh_ino ,
++.IR svh_gen ,
++and
++.IR svh_agno
++correspond to the
++.IR sm_ino ,
++.IR sm_gen ,
++and
++.IR sm_agno
++fields of the regular scrub ioctl.
++Exactly one filesystem object can be specified in a single call.
++The kernel will proceed with each vector in
++.I svh_vecs
++until progress is no longer possible.
 +
-+	return check_inode_names(ncs->ctx, handle, &bstat, ncs);
-+}
++The field
++.I svh_rest_us
++specifies an amount of time to pause between each scrub invocation to give
++the system a chance to process other requests.
 +
-+/* Try to check_inode_names on a range of inodes from the bitmap. */
-+static int
-+retry_deferred_inode_range(
-+	uint64_t		ino,
-+	uint64_t		len,
-+	void			*arg)
-+{
-+	struct xfs_handle	handle = { };
-+	struct ncheck_state	*ncs = arg;
-+	struct scrub_ctx	*ctx = ncs->ctx;
-+	uint64_t		i;
-+	int			error;
++The field
++.I svh_nr
++specifies the number of vectors in the
++.I svh_recs
++flex array.
 +
-+	memcpy(&handle.ha_fsid, ctx->fshandle, sizeof(handle.ha_fsid));
-+	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
-+			sizeof(handle.ha_fid.fid_len);
-+	handle.ha_fid.fid_pad = 0;
++.PP
++The field
++.I svh_reserved
++must be zero.
 +
-+	for (i = 0; i < len; i++) {
-+		error = retry_deferred_inode(ncs, &handle, ino + i);
-+		if (error)
-+			return error;
-+	}
++Each vector has the following form:
++.PP
++.in +4n
++.nf
 +
-+	return 0;
-+}
++struct xfs_scrub_vec {
++	__u32 sv_type;
++	__u32 sv_flags;
++	__s32 sv_ret;
++	__u32 sv_reserved;
++};
++.fi
++.in
 +
-+/*
-+ * Try to check_inode_names on inodes that were deferred due to directory tree
-+ * problems until we stop making progress.
-+ */
-+static int
-+retry_deferred_inodes(
-+	struct scrub_ctx	*ctx,
-+	struct ncheck_state	*ncs)
-+{
-+	int			error;
++.PP
++The fields
++.I sv_type
++and
++.I sv_flags
++indicate the type of metadata to check and the behavioral changes that
++userspace will permit of the kernel.
++The
++.I sv_flags
++field will be updated upon completion of the scrub call.
++See the documentation of
++.B XFS_SCRUB_TYPE_*
++and
++.B XFS_SCRUB_[IO]FLAG_*
++values in
++.BR ioctl_xfs_scrub_metadata (2)
++for a detailed description of their purpose.
 +
-+	if  (!ncs->new_deferred)
-+		return 0;
++.PP
++If a vector's
++.I sv_type
++field is set to the value
++.BR XFS_SCRUB_TYPE_BARRIER ,
++the kernel will stop processing vectors and return to userspace if a scrubber
++flags corruption by setting one of the
++.B XFS_SCRUB_OFLAG_*
++values in
++.I sv_flags
++or
++returns an operation error in
++.IR sv_ret .
++Otherwise, the kernel returns only after processing all vectors.
 +
-+	/*
-+	 * Try to repair things until we stop making forward progress or we
-+	 * don't observe any new corruptions.  During the loop, we do not
-+	 * complain about the corruptions that do not get fixed.
-+	 */
-+	do {
-+		ncs->cur_deferred = ncs->new_deferred;
-+		ncs->new_deferred = NULL;
-+		ncs->fixed_something = false;
++The
++.I sv_ret
++field is set to the return value of the scrub function.
++See the RETURN VALUE
++section of the
++.BR ioctl_xfs_scrub_metadata (2)
++manual page for more information.
 +
-+		error = -bitmap_iterate(ncs->cur_deferred,
-+				retry_deferred_inode_range, ncs);
-+		if (error)
-+			return error;
++The
++.B sv_reserved
++field must be zero.
 +
-+		bitmap_free(&ncs->cur_deferred);
-+	} while (ncs->fixed_something && ncs->new_deferred);
-+
-+	/*
-+	 * Try one last time to fix things, and complain about any problems
-+	 * that remain.
-+	 */
-+	if (!ncs->new_deferred)
-+		return 0;
-+
-+	ncs->cur_deferred = ncs->new_deferred;
-+	ncs->new_deferred = NULL;
-+	ncs->last_call = true;
-+
-+	error = -bitmap_iterate(ncs->cur_deferred,
-+			retry_deferred_inode_range, ncs);
-+	if (error)
-+		return error;
-+
-+	bitmap_free(&ncs->cur_deferred);
-+	return 0;
-+}
-+
- #ifndef FS_IOC_GETFSLABEL
- # define FSLABEL_MAX		256
- # define FS_IOC_GETFSLABEL	_IOR(0x94, 49, char[FSLABEL_MAX])
-@@ -568,9 +740,10 @@ int
- phase5_func(
- 	struct scrub_ctx	*ctx)
- {
--	bool			aborted = false;
-+	struct ncheck_state	ncs = { .ctx = ctx };
- 	int			ret;
- 
-+
- 	/*
- 	 * Check and fix anything that requires a full filesystem scan.  We do
- 	 * this after we've checked all inodes and repaired anything that could
-@@ -590,14 +763,28 @@ _("Filesystem has errors, skipping connectivity checks."));
- 	if (ret)
- 		return ret;
- 
--	ret = scrub_scan_all_inodes(ctx, check_inode_names, &aborted);
-+	pthread_mutex_init(&ncs.lock, NULL);
-+
-+	ret = scrub_scan_all_inodes(ctx, check_inode_names, &ncs);
- 	if (ret)
--		return ret;
--	if (aborted)
--		return ECANCELED;
-+		goto out_lock;
-+	if (ncs.aborted) {
-+		ret = ECANCELED;
-+		goto out_lock;
-+	}
-+
-+	ret = retry_deferred_inodes(ctx, &ncs);
-+	if (ret)
-+		goto out_lock;
- 
- 	scrub_report_preen_triggers(ctx);
--	return 0;
-+out_lock:
-+	pthread_mutex_destroy(&ncs.lock);
-+	if (ncs.new_deferred)
-+		bitmap_free(&ncs.new_deferred);
-+	if (ncs.cur_deferred)
-+		bitmap_free(&ncs.cur_deferred);
-+	return ret;
- }
- 
- /* Estimate how much work we're going to do. */
-diff --git a/scrub/repair.c b/scrub/repair.c
-index 0258210722b..4fed86134ed 100644
---- a/scrub/repair.c
-+++ b/scrub/repair.c
-@@ -732,6 +732,19 @@ repair_file_corruption(
- 			XRM_REPAIR_ONLY | XRM_NOPROGRESS);
- }
- 
-+/* Repair all parts of this file or complain if we cannot. */
-+int
-+repair_file_corruption_now(
-+	struct scrub_ctx	*ctx,
-+	struct scrub_item	*sri,
-+	int			override_fd)
-+{
-+	repair_item_boost_priorities(sri);
-+
-+	return repair_item_class(ctx, sri, override_fd, SCRUB_ITEM_CORRUPT,
-+			XRM_REPAIR_ONLY | XRM_NOPROGRESS | XRM_FINAL_WARNING);
-+}
-+
- /*
-  * Repair everything in this filesystem object that needs it.  This includes
-  * cross-referencing and preening.
-diff --git a/scrub/repair.h b/scrub/repair.h
-index 411a379f6fa..ec4aa381a82 100644
---- a/scrub/repair.h
-+++ b/scrub/repair.h
-@@ -76,6 +76,8 @@ int action_list_process(struct scrub_ctx *ctx, struct action_list *alist,
- int repair_item_corruption(struct scrub_ctx *ctx, struct scrub_item *sri);
- int repair_file_corruption(struct scrub_ctx *ctx, struct scrub_item *sri,
- 		int override_fd);
-+int repair_file_corruption_now(struct scrub_ctx *ctx, struct scrub_item *sri,
-+		int override_fd);
- int repair_item(struct scrub_ctx *ctx, struct scrub_item *sri,
- 		unsigned int repair_flags);
- int repair_item_to_action_item(struct scrub_ctx *ctx,
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B EINTR
++The operation was interrupted.
++.TP
++.B ENOMEM
++There was not sufficient memory to perform the scrub or repair operation.
++.TP
++.B EFAULT
++A memory fault was encountered while reading or writing the vector.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH NOTES
++These operations may block other filesystem operations for a long time.
++A calling process can stop the operation by being sent a fatal
++signal, but non-fatal signals are blocked.
++.SH SEE ALSO
++.BR ioctl (2)
++.BR ioctl_xfs_scrub_metadata (2)
++.BR xfs_scrub (8)
++.BR xfs_repair (8)
 
