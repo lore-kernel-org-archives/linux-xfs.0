@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65859BA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:20:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3185FBA2B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:20:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="to4XwTX5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDE06C433C7;
-	Sun, 31 Dec 2023 20:20:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BO79uhHn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A546CC433C7;
+	Sun, 31 Dec 2023 20:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704054021;
-	bh=JJqb0Q7ljrNrBA0BkC4GXSRx0N9JIBuozCEwjJgMC6E=;
+	s=k20201202; t=1704054036;
+	bh=rQGQp0+f9lXPwoOY6wtfp6XAkwuKdD+yLvyPUm9wz6I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=to4XwTX5w4wDT0Yr9BnndSBE0hwSgPSLVRw5z0zRkkFLMrw7s9ro0748Xi9UQ3/Ge
-	 1HsS3bKL1qoAjCzFNKXuVrI9D4AOaZIK8E0UfZw71gRjkGWOESdiHjrGv4/s/wWaHU
-	 YEpob74G9qJLcDaCeOC3z9RVlzgcWLX39BA8+L9mQcrPvh7Kwv3AP374AVWAK68kO9
-	 GirSrswTSDwPrxEcLN10Jv/4fXpiX4gSlHD9lD7ggcK6m9N6k4D4DMU9FiuclcQR2e
-	 4sAgrXligFykmLMaCWzJFNkHsz17ackEQy1Xn6iJs4opjj0rLBa/z0EgsvLK6UmIUX
-	 +p5DNnV3Z+DvQ==
-Date: Sun, 31 Dec 2023 12:20:20 -0800
-Subject: [PATCH 4/4] xfs: port refcount repair to the new refcount bag
- structure
+	b=BO79uhHnv2fAwA0t+ZEp+sZIPvT+8piDWe47/BS6iwORebEPXmi3CK6k1rHhLyI0l
+	 6YAu4/y73Bh5Shwhzjo094BeiFjWSElekFBQWv49xAFiXEPbaWSev0JqZcpABuIZ7F
+	 U6c2j8rVaxHPnam1l79R4NRVXNpKd4AS/DyaFwfM/cD/4gjyKmSeskS6xRmvYRUx5f
+	 JC1OrsVO+0+xPF0xMyTJX0TcxkrhKApTtgjHvS7dx1hMkjhNhCXOAtak6IMNuZXpO5
+	 qtFwKCSnHpxxK4y/1Ipa9S6+4KgGuhk938kL10JrwhSMwQNuoDg4C+JL0gHB/s799z
+	 FxVrFuZFRPkLQ==
+Date: Sun, 31 Dec 2023 12:20:36 -0800
+Subject: [PATCH 1/7] xfs: split tracepoint classes for deferred items
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404831070.1749557.18013766870623858132.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404830995.1749557.6135790697605021363.stgit@frogsfrogsfrogs>
-References: <170404830995.1749557.6135790697605021363.stgit@frogsfrogsfrogs>
+Message-ID: <170404831441.1749708.11833404272521238326.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404831410.1749708.14664484779809794342.stgit@frogsfrogsfrogs>
+References: <170404831410.1749708.14664484779809794342.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,441 +37,326 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Port the refcount record generating code to use the new refcount bag
-data structure.
+We're about to start adding support for deferred log intent items for
+realtime extents, so split these four types into separate classes so
+that we can customize them as the transition happens.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/refcount.c        |   12 +++
- fs/xfs/scrub/refcount_repair.c |  164 ++++++++++++++--------------------------
- fs/xfs/scrub/repair.h          |    2 
- fs/xfs/xfs_super.c             |   10 ++
- 4 files changed, 81 insertions(+), 107 deletions(-)
+ fs/xfs/xfs_trace.h |  273 ++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 177 insertions(+), 96 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index bf22f245bbfa8..d0c7d4a29c0fe 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -7,8 +7,10 @@
- #include "xfs_fs.h"
- #include "xfs_shared.h"
- #include "xfs_format.h"
-+#include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
-+#include "xfs_trans.h"
- #include "xfs_ag.h"
- #include "xfs_btree.h"
- #include "xfs_rmap.h"
-@@ -17,6 +19,7 @@
- #include "scrub/common.h"
- #include "scrub/btree.h"
- #include "scrub/trace.h"
-+#include "scrub/repair.h"
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 1690f518ae74b..fa829d1a8ecae 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2658,94 +2658,6 @@ DEFINE_EVENT(xfs_defer_pending_class, name, \
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_pending *dfp), \
+ 	TP_ARGS(mp, dfp))
  
- /*
-  * Set us up to scrub reference count btrees.
-@@ -27,6 +30,15 @@ xchk_setup_ag_refcountbt(
- {
- 	if (xchk_need_intent_drain(sc))
- 		xchk_fsgates_enable(sc, XCHK_FSGATES_DRAIN);
-+
-+	if (xchk_could_repair(sc)) {
-+		int		error;
-+
-+		error = xrep_setup_ag_refcountbt(sc);
-+		if (error)
-+			return error;
-+	}
-+
- 	return xchk_setup_ag_btree(sc, false);
- }
- 
-diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-index 9c39af03ee1d8..b485c5cc9f290 100644
---- a/fs/xfs/scrub/refcount_repair.c
-+++ b/fs/xfs/scrub/refcount_repair.c
-@@ -38,6 +38,7 @@
- #include "scrub/xfarray.h"
- #include "scrub/newbt.h"
- #include "scrub/reap.h"
-+#include "scrub/rcbag.h"
- 
- /*
-  * Rebuilding the Reference Count Btree
-@@ -98,12 +99,6 @@
-  * insert all the records.
-  */
- 
--/* The only parts of the rmap that we care about for computing refcounts. */
--struct xrep_refc_rmap {
--	xfs_agblock_t		startblock;
--	xfs_extlen_t		blockcount;
--} __packed;
+-DECLARE_EVENT_CLASS(xfs_phys_extent_deferred_class,
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+-		 int type, xfs_agblock_t agbno, xfs_extlen_t len),
+-	TP_ARGS(mp, agno, type, agbno, len),
+-	TP_STRUCT__entry(
+-		__field(dev_t, dev)
+-		__field(xfs_agnumber_t, agno)
+-		__field(int, type)
+-		__field(xfs_agblock_t, agbno)
+-		__field(xfs_extlen_t, len)
+-	),
+-	TP_fast_assign(
+-		__entry->dev = mp->m_super->s_dev;
+-		__entry->agno = agno;
+-		__entry->type = type;
+-		__entry->agbno = agbno;
+-		__entry->len = len;
+-	),
+-	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x fsbcount 0x%x",
+-		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->type,
+-		  __entry->agno,
+-		  __entry->agbno,
+-		  __entry->len)
+-);
+-#define DEFINE_PHYS_EXTENT_DEFERRED_EVENT(name) \
+-DEFINE_EVENT(xfs_phys_extent_deferred_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+-		 int type, \
+-		 xfs_agblock_t bno, \
+-		 xfs_extlen_t len), \
+-	TP_ARGS(mp, agno, type, bno, len))
 -
- struct xrep_refc {
- 	/* refcount extents */
- 	struct xfarray		*refcount_records;
-@@ -123,6 +118,20 @@ struct xrep_refc {
- 	xfs_extlen_t		btblocks;
- };
+-DECLARE_EVENT_CLASS(xfs_map_extent_deferred_class,
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+-		 int op,
+-		 xfs_agblock_t agbno,
+-		 xfs_ino_t ino,
+-		 int whichfork,
+-		 xfs_fileoff_t offset,
+-		 xfs_filblks_t len,
+-		 xfs_exntst_t state),
+-	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state),
+-	TP_STRUCT__entry(
+-		__field(dev_t, dev)
+-		__field(xfs_agnumber_t, agno)
+-		__field(xfs_ino_t, ino)
+-		__field(xfs_agblock_t, agbno)
+-		__field(int, whichfork)
+-		__field(xfs_fileoff_t, l_loff)
+-		__field(xfs_filblks_t, l_len)
+-		__field(xfs_exntst_t, l_state)
+-		__field(int, op)
+-	),
+-	TP_fast_assign(
+-		__entry->dev = mp->m_super->s_dev;
+-		__entry->agno = agno;
+-		__entry->ino = ino;
+-		__entry->agbno = agbno;
+-		__entry->whichfork = whichfork;
+-		__entry->l_loff = offset;
+-		__entry->l_len = len;
+-		__entry->l_state = state;
+-		__entry->op = op;
+-	),
+-	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x owner 0x%llx %s fileoff 0x%llx fsbcount 0x%llx state %d",
+-		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->op,
+-		  __entry->agno,
+-		  __entry->agbno,
+-		  __entry->ino,
+-		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
+-		  __entry->l_loff,
+-		  __entry->l_len,
+-		  __entry->l_state)
+-);
+-#define DEFINE_MAP_EXTENT_DEFERRED_EVENT(name) \
+-DEFINE_EVENT(xfs_map_extent_deferred_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+-		 int op, \
+-		 xfs_agblock_t agbno, \
+-		 xfs_ino_t ino, \
+-		 int whichfork, \
+-		 xfs_fileoff_t offset, \
+-		 xfs_filblks_t len, \
+-		 xfs_exntst_t state), \
+-	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state))
+-
+ DEFINE_DEFER_EVENT(xfs_defer_cancel);
+ DEFINE_DEFER_EVENT(xfs_defer_trans_roll);
+ DEFINE_DEFER_EVENT(xfs_defer_trans_abort);
+@@ -2764,11 +2676,42 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_isolate_paused);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_item_pause);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_item_unpause);
  
-+/* Set us up to repair refcount btrees. */
-+int
-+xrep_setup_ag_refcountbt(
-+	struct xfs_scrub	*sc)
-+{
-+	char			*descr;
-+	int			error;
+-#define DEFINE_BMAP_FREE_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
+-DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
+-DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_deferred);
+-DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_agfl_free_defer);
+-DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_agfl_free_deferred);
++DECLARE_EVENT_CLASS(xfs_free_extent_deferred_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 int type, xfs_agblock_t agbno, xfs_extlen_t len),
++	TP_ARGS(mp, agno, type, agbno, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, type)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->type = type;
++		__entry->agbno = agbno;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x fsbcount 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->type,
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len)
++);
++#define DEFINE_FREE_EXTENT_DEFERRED_EVENT(name) \
++DEFINE_EVENT(xfs_free_extent_deferred_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 int type, \
++		 xfs_agblock_t bno, \
++		 xfs_extlen_t len), \
++	TP_ARGS(mp, agno, type, bno, len))
++DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_bmap_free_defer);
++DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_bmap_free_deferred);
++DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_agfl_free_defer);
++DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_agfl_free_deferred);
+ 
+ DECLARE_EVENT_CLASS(xfs_defer_pending_item_class,
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_pending *dfp,
+@@ -2933,7 +2876,60 @@ DEFINE_EVENT(xfs_rmapbt_class, name, \
+ 		 uint64_t owner, uint64_t offset, unsigned int flags), \
+ 	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
+ 
+-#define DEFINE_RMAP_DEFERRED_EVENT DEFINE_MAP_EXTENT_DEFERRED_EVENT
++DECLARE_EVENT_CLASS(xfs_rmap_deferred_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 int op,
++		 xfs_agblock_t agbno,
++		 xfs_ino_t ino,
++		 int whichfork,
++		 xfs_fileoff_t offset,
++		 xfs_filblks_t len,
++		 xfs_exntst_t state),
++	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(xfs_agblock_t, agbno)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, l_loff)
++		__field(xfs_filblks_t, l_len)
++		__field(xfs_exntst_t, l_state)
++		__field(int, op)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->ino = ino;
++		__entry->agbno = agbno;
++		__entry->whichfork = whichfork;
++		__entry->l_loff = offset;
++		__entry->l_len = len;
++		__entry->l_state = state;
++		__entry->op = op;
++	),
++	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x owner 0x%llx %s fileoff 0x%llx fsbcount 0x%llx state %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->op,
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->ino,
++		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
++		  __entry->l_loff,
++		  __entry->l_len,
++		  __entry->l_state)
++);
++#define DEFINE_RMAP_DEFERRED_EVENT(name) \
++DEFINE_EVENT(xfs_rmap_deferred_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 int op, \
++		 xfs_agblock_t agbno, \
++		 xfs_ino_t ino, \
++		 int whichfork, \
++		 xfs_fileoff_t offset, \
++		 xfs_filblks_t len, \
++		 xfs_exntst_t state), \
++	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state))
+ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
+ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_deferred);
+ 
+@@ -2953,7 +2949,60 @@ DEFINE_RMAPBT_EVENT(xfs_rmap_find_right_neighbor_result);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_result);
+ 
+ /* deferred bmbt updates */
+-#define DEFINE_BMAP_DEFERRED_EVENT	DEFINE_RMAP_DEFERRED_EVENT
++DECLARE_EVENT_CLASS(xfs_bmap_deferred_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 int op,
++		 xfs_agblock_t agbno,
++		 xfs_ino_t ino,
++		 int whichfork,
++		 xfs_fileoff_t offset,
++		 xfs_filblks_t len,
++		 xfs_exntst_t state),
++	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(xfs_agblock_t, agbno)
++		__field(int, whichfork)
++		__field(xfs_fileoff_t, l_loff)
++		__field(xfs_filblks_t, l_len)
++		__field(xfs_exntst_t, l_state)
++		__field(int, op)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->ino = ino;
++		__entry->agbno = agbno;
++		__entry->whichfork = whichfork;
++		__entry->l_loff = offset;
++		__entry->l_len = len;
++		__entry->l_state = state;
++		__entry->op = op;
++	),
++	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x owner 0x%llx %s fileoff 0x%llx fsbcount 0x%llx state %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->op,
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->ino,
++		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
++		  __entry->l_loff,
++		  __entry->l_len,
++		  __entry->l_state)
++);
++#define DEFINE_BMAP_DEFERRED_EVENT(name) \
++DEFINE_EVENT(xfs_bmap_deferred_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 int op, \
++		 xfs_agblock_t agbno, \
++		 xfs_ino_t ino, \
++		 int whichfork, \
++		 xfs_fileoff_t offset, \
++		 xfs_filblks_t len, \
++		 xfs_exntst_t state), \
++	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state))
+ DEFINE_BMAP_DEFERRED_EVENT(xfs_bmap_defer);
+ DEFINE_BMAP_DEFERRED_EVENT(xfs_bmap_deferred);
+ 
+@@ -3330,7 +3379,39 @@ DEFINE_AG_ERROR_EVENT(xfs_refcount_find_right_extent_error);
+ DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared);
+ DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared_result);
+ DEFINE_AG_ERROR_EVENT(xfs_refcount_find_shared_error);
+-#define DEFINE_REFCOUNT_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
 +
-+	descr = xchk_xfile_ag_descr(sc, "rmap record bag");
-+	error = xrep_setup_buftarg(sc, descr);
-+	kfree(descr);
-+	return error;
-+}
-+
- /* Check for any obvious conflicts with this shared/CoW staging extent. */
- STATIC int
- xrep_refc_check_ext(
-@@ -224,10 +233,9 @@ xrep_refc_rmap_shareable(
- STATIC int
- xrep_refc_walk_rmaps(
- 	struct xrep_refc	*rr,
--	struct xrep_refc_rmap	*rrm,
-+	struct xfs_rmap_irec	*rmap,
- 	bool			*have_rec)
- {
--	struct xfs_rmap_irec	rmap;
- 	struct xfs_btree_cur	*cur = rr->sc->sa.rmap_cur;
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	int			have_gt;
-@@ -251,7 +259,7 @@ xrep_refc_walk_rmaps(
- 		if (!have_gt)
- 			return 0;
++DECLARE_EVENT_CLASS(xfs_refcount_deferred_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 int type, xfs_agblock_t agbno, xfs_extlen_t len),
++	TP_ARGS(mp, agno, type, agbno, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, type)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->type = type;
++		__entry->agbno = agbno;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x fsbcount 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->type,
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len)
++);
++#define DEFINE_REFCOUNT_DEFERRED_EVENT(name) \
++DEFINE_EVENT(xfs_refcount_deferred_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 int type, \
++		 xfs_agblock_t bno, \
++		 xfs_extlen_t len), \
++	TP_ARGS(mp, agno, type, bno, len))
+ DEFINE_REFCOUNT_DEFERRED_EVENT(xfs_refcount_defer);
+ DEFINE_REFCOUNT_DEFERRED_EVENT(xfs_refcount_deferred);
  
--		error = xfs_rmap_get_rec(cur, &rmap, &have_gt);
-+		error = xfs_rmap_get_rec(cur, rmap, &have_gt);
- 		if (error)
- 			return error;
- 		if (XFS_IS_CORRUPT(mp, !have_gt)) {
-@@ -259,23 +267,22 @@ xrep_refc_walk_rmaps(
- 			return -EFSCORRUPTED;
- 		}
- 
--		if (rmap.rm_owner == XFS_RMAP_OWN_COW) {
--			error = xrep_refc_stash_cow(rr, rmap.rm_startblock,
--					rmap.rm_blockcount);
-+		if (rmap->rm_owner == XFS_RMAP_OWN_COW) {
-+			error = xrep_refc_stash_cow(rr, rmap->rm_startblock,
-+					rmap->rm_blockcount);
- 			if (error)
- 				return error;
--		} else if (rmap.rm_owner == XFS_RMAP_OWN_REFC) {
-+		} else if (rmap->rm_owner == XFS_RMAP_OWN_REFC) {
- 			/* refcountbt block, dump it when we're done. */
--			rr->btblocks += rmap.rm_blockcount;
-+			rr->btblocks += rmap->rm_blockcount;
- 			error = xagb_bitmap_set(&rr->old_refcountbt_blocks,
--					rmap.rm_startblock, rmap.rm_blockcount);
-+					rmap->rm_startblock,
-+					rmap->rm_blockcount);
- 			if (error)
- 				return error;
- 		}
--	} while (!xrep_refc_rmap_shareable(mp, &rmap));
-+	} while (!xrep_refc_rmap_shareable(mp, rmap));
- 
--	rrm->startblock = rmap.rm_startblock;
--	rrm->blockcount = rmap.rm_blockcount;
- 	*have_rec = true;
- 	return 0;
- }
-@@ -357,45 +364,6 @@ xrep_refc_sort_records(
- 	return error;
- }
- 
--#define RRM_NEXT(r)	((r).startblock + (r).blockcount)
--/*
-- * Find the next block where the refcount changes, given the next rmap we
-- * looked at and the ones we're already tracking.
-- */
--static inline int
--xrep_refc_next_edge(
--	struct xfarray		*rmap_bag,
--	struct xrep_refc_rmap	*next_rrm,
--	bool			next_valid,
--	xfs_agblock_t		*nbnop)
--{
--	struct xrep_refc_rmap	rrm;
--	xfarray_idx_t		array_cur = XFARRAY_CURSOR_INIT;
--	xfs_agblock_t		nbno = NULLAGBLOCK;
--	int			error;
--
--	if (next_valid)
--		nbno = next_rrm->startblock;
--
--	while ((error = xfarray_iter(rmap_bag, &array_cur, &rrm)) == 1)
--		nbno = min_t(xfs_agblock_t, nbno, RRM_NEXT(rrm));
--
--	if (error)
--		return error;
--
--	/*
--	 * We should have found /something/ because either next_rrm is the next
--	 * interesting rmap to look at after emitting this refcount extent, or
--	 * there are other rmaps in rmap_bag contributing to the current
--	 * sharing count.  But if something is seriously wrong, bail out.
--	 */
--	if (nbno == NULLAGBLOCK)
--		return -EFSCORRUPTED;
--
--	*nbnop = nbno;
--	return 0;
--}
--
- /*
-  * Walk forward through the rmap btree to collect all rmaps starting at
-  * @bno in @rmap_bag.  These represent the file(s) that share ownership of
-@@ -405,22 +373,21 @@ xrep_refc_next_edge(
- static int
- xrep_refc_push_rmaps_at(
- 	struct xrep_refc	*rr,
--	struct xfarray		*rmap_bag,
-+	struct rcbag		*rcstack,
- 	xfs_agblock_t		bno,
--	struct xrep_refc_rmap	*rrm,
--	bool			*have,
--	uint64_t		*stack_sz)
-+	struct xfs_rmap_irec	*rmap,
-+	bool			*have)
- {
- 	struct xfs_scrub	*sc = rr->sc;
- 	int			have_gt;
- 	int			error;
- 
--	while (*have && rrm->startblock == bno) {
--		error = xfarray_store_anywhere(rmap_bag, rrm);
-+	while (*have && rmap->rm_startblock == bno) {
-+		error = rcbag_add(rcstack, rr->sc->tp, rmap);
- 		if (error)
- 			return error;
--		(*stack_sz)++;
--		error = xrep_refc_walk_rmaps(rr, rrm, have);
-+
-+		error = xrep_refc_walk_rmaps(rr, rmap, have);
- 		if (error)
- 			return error;
- 	}
-@@ -441,12 +408,9 @@ STATIC int
- xrep_refc_find_refcounts(
- 	struct xrep_refc	*rr)
- {
--	struct xrep_refc_rmap	rrm;
- 	struct xfs_scrub	*sc = rr->sc;
--	struct xfarray		*rmap_bag;
--	char			*descr;
--	uint64_t		old_stack_sz;
--	uint64_t		stack_sz = 0;
-+	struct rcbag		*rcstack;
-+	uint64_t		old_stack_height;
- 	xfs_agblock_t		sbno;
- 	xfs_agblock_t		cbno;
- 	xfs_agblock_t		nbno;
-@@ -456,14 +420,11 @@ xrep_refc_find_refcounts(
- 	xrep_ag_btcur_init(sc, &sc->sa);
- 
- 	/*
--	 * Set up a sparse array to store all the rmap records that we're
--	 * tracking to generate a reference count record.  If this exceeds
-+	 * Set up a bag to store all the rmap records that we're tracking to
-+	 * generate a reference count record.  If the size of the bag exceeds
- 	 * MAXREFCOUNT, we clamp rc_refcount.
- 	 */
--	descr = xchk_xfile_ag_descr(sc, "rmap record bag");
--	error = xfarray_create(descr, 0, sizeof(struct xrep_refc_rmap),
--			&rmap_bag);
--	kfree(descr);
-+	error = rcbag_init(sc->mp, sc->xfile_buftarg, &rcstack);
- 	if (error)
- 		goto out_cur;
- 
-@@ -474,62 +435,54 @@ xrep_refc_find_refcounts(
- 
- 	/* Process reverse mappings into refcount data. */
- 	while (xfs_btree_has_more_records(sc->sa.rmap_cur)) {
-+		struct xfs_rmap_irec	rmap;
-+
- 		/* Push all rmaps with pblk == sbno onto the stack */
--		error = xrep_refc_walk_rmaps(rr, &rrm, &have);
-+		error = xrep_refc_walk_rmaps(rr, &rmap, &have);
- 		if (error)
- 			goto out_bag;
- 		if (!have)
- 			break;
--		sbno = cbno = rrm.startblock;
--		error = xrep_refc_push_rmaps_at(rr, rmap_bag, sbno,
--					&rrm, &have, &stack_sz);
-+		sbno = cbno = rmap.rm_startblock;
-+		error = xrep_refc_push_rmaps_at(rr, rcstack, sbno, &rmap,
-+				&have);
- 		if (error)
- 			goto out_bag;
- 
- 		/* Set nbno to the bno of the next refcount change */
--		error = xrep_refc_next_edge(rmap_bag, &rrm, have, &nbno);
-+		error = rcbag_next_edge(rcstack, sc->tp, &rmap, have, &nbno);
- 		if (error)
- 			goto out_bag;
- 
- 		ASSERT(nbno > sbno);
--		old_stack_sz = stack_sz;
-+		old_stack_height = rcbag_count(rcstack);
- 
- 		/* While stack isn't empty... */
--		while (stack_sz) {
--			xfarray_idx_t	array_cur = XFARRAY_CURSOR_INIT;
--
-+		while (rcbag_count(rcstack) > 0) {
- 			/* Pop all rmaps that end at nbno */
--			while ((error = xfarray_iter(rmap_bag, &array_cur,
--								&rrm)) == 1) {
--				if (RRM_NEXT(rrm) != nbno)
--					continue;
--				error = xfarray_unset(rmap_bag, array_cur - 1);
--				if (error)
--					goto out_bag;
--				stack_sz--;
--			}
-+			error = rcbag_remove_ending_at(rcstack, sc->tp, nbno);
- 			if (error)
- 				goto out_bag;
- 
- 			/* Push array items that start at nbno */
--			error = xrep_refc_walk_rmaps(rr, &rrm, &have);
-+			error = xrep_refc_walk_rmaps(rr, &rmap, &have);
- 			if (error)
- 				goto out_bag;
- 			if (have) {
--				error = xrep_refc_push_rmaps_at(rr, rmap_bag,
--						nbno, &rrm, &have, &stack_sz);
-+				error = xrep_refc_push_rmaps_at(rr, rcstack,
-+						nbno, &rmap, &have);
- 				if (error)
- 					goto out_bag;
- 			}
- 
- 			/* Emit refcount if necessary */
- 			ASSERT(nbno > cbno);
--			if (stack_sz != old_stack_sz) {
--				if (old_stack_sz > 1) {
-+			if (rcbag_count(rcstack) != old_stack_height) {
-+				if (old_stack_height > 1) {
- 					error = xrep_refc_stash(rr,
- 							XFS_REFC_DOMAIN_SHARED,
- 							cbno, nbno - cbno,
--							old_stack_sz);
-+							old_stack_height);
- 					if (error)
- 						goto out_bag;
- 				}
-@@ -537,13 +490,13 @@ xrep_refc_find_refcounts(
- 			}
- 
- 			/* Stack empty, go find the next rmap */
--			if (stack_sz == 0)
-+			if (rcbag_count(rcstack) == 0)
- 				break;
--			old_stack_sz = stack_sz;
-+			old_stack_height = rcbag_count(rcstack);
- 			sbno = nbno;
- 
- 			/* Set nbno to the bno of the next refcount change */
--			error = xrep_refc_next_edge(rmap_bag, &rrm, have,
-+			error = rcbag_next_edge(rcstack, sc->tp, &rmap, have,
- 					&nbno);
- 			if (error)
- 				goto out_bag;
-@@ -552,14 +505,13 @@ xrep_refc_find_refcounts(
- 		}
- 	}
- 
--	ASSERT(stack_sz == 0);
-+	ASSERT(rcbag_count(rcstack) == 0);
- out_bag:
--	xfarray_destroy(rmap_bag);
-+	rcbag_free(&rcstack);
- out_cur:
- 	xchk_ag_btcur_free(&sc->sa);
- 	return error;
- }
--#undef RRM_NEXT
- 
- /* Retrieve refcountbt data for bulk load. */
- STATIC int
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 0243481f770fe..38aa5c9649d71 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -89,6 +89,7 @@ int xrep_reset_perag_resv(struct xfs_scrub *sc);
- int xrep_bmap(struct xfs_scrub *sc, int whichfork, bool allow_unwritten);
- int xrep_metadata_inode_forks(struct xfs_scrub *sc);
- int xrep_setup_ag_rmapbt(struct xfs_scrub *sc);
-+int xrep_setup_ag_refcountbt(struct xfs_scrub *sc);
- 
- /* Repair setup functions */
- int xrep_setup_ag_allocbt(struct xfs_scrub *sc);
-@@ -186,6 +187,7 @@ xrep_setup_nothing(
- }
- #define xrep_setup_ag_allocbt		xrep_setup_nothing
- #define xrep_setup_ag_rmapbt		xrep_setup_nothing
-+#define xrep_setup_ag_refcountbt	xrep_setup_nothing
- 
- #define xrep_setup_inode(sc, imap)	((void)0)
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 8619f517b1bf3..d535445129752 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -44,6 +44,7 @@
- #include "xfs_dahash_test.h"
- #include "xfs_rtbitmap.h"
- #include "scrub/stats.h"
-+#include "scrub/rcbag_btree.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -2069,10 +2070,14 @@ xfs_init_caches(void)
- 	if (error)
- 		goto out_destroy_log_ticket_cache;
- 
--	error = xfs_defer_init_item_caches();
-+	error = rcbagbt_init_cur_cache();
- 	if (error)
- 		goto out_destroy_btree_cur_cache;
- 
-+	error = xfs_defer_init_item_caches();
-+	if (error)
-+		goto out_destroy_rcbagbt_cur_cache;
-+
- 	xfs_da_state_cache = kmem_cache_create("xfs_da_state",
- 					      sizeof(struct xfs_da_state),
- 					      0, 0, NULL);
-@@ -2229,6 +2234,8 @@ xfs_init_caches(void)
- 	kmem_cache_destroy(xfs_da_state_cache);
-  out_destroy_defer_item_cache:
- 	xfs_defer_destroy_item_caches();
-+ out_destroy_rcbagbt_cur_cache:
-+	rcbagbt_destroy_cur_cache();
-  out_destroy_btree_cur_cache:
- 	xfs_btree_destroy_cur_caches();
-  out_destroy_log_ticket_cache:
-@@ -2266,6 +2273,7 @@ xfs_destroy_caches(void)
- 	kmem_cache_destroy(xfs_ifork_cache);
- 	kmem_cache_destroy(xfs_da_state_cache);
- 	xfs_defer_destroy_item_caches();
-+	rcbagbt_destroy_cur_cache();
- 	xfs_btree_destroy_cur_caches();
- 	kmem_cache_destroy(xfs_log_ticket_cache);
- 	kmem_cache_destroy(xfs_buf_cache);
 
