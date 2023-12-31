@@ -1,29 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DCEAC127
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:15:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 818D0C127
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:15:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DzKgpr/f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39992C433C7;
-	Sun, 31 Dec 2023 23:15:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GI5J8BQa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF15DC433C8;
+	Sun, 31 Dec 2023 23:15:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064532;
-	bh=Cy54tTxG0v4o5HirQfVqBZ5O0+3Y3LPaVajK8+SsnpI=;
+	s=k20201202; t=1704064547;
+	bh=FrokU9IwDsz3QU4j+XYwMcz4v+fBBfcu3dQHNwNohV4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DzKgpr/fOUTdtA+c04Jj5qzJJ/5Ze5q3GwV5X04720VtE7a/43WYN7sVVhLWFZtss
-	 J/aodEyyn81r8NVh0TN4TVSXHXfpCxFajb3U/RD3zNZAt6esSPHHn1j4dTlPrkfHaN
-	 uOyVT/lOSI4zPjs+XTxXyuBHqfQX2KbqpY970IgmF0ttJZlJ2zXZXOhtehut0dXj4A
-	 GzWZHQjGstj4H0e2vXb/G7hqN+GYxdh8m0b9FLsLDgKpuzA9v1uR0pmIT3/iTFwUeV
-	 fJdYIUVckYKjM0uFCRlObtm32cAzsmoBAOIOY37XeBPpei/LSSxACMGHqDdRd2HN9n
-	 J9LyCvHyjmjWQ==
-Date: Sun, 31 Dec 2023 15:15:31 -0800
-Subject: [PATCH 08/18] xfs: actually rebuild the parent pointer xattrs
+	b=GI5J8BQahmKoCtHZGAzUQIlH+buVwFpuf09SvazMSlV+/gT1jS4tKksFhLuRelmJ2
+	 eI95lcP7TxB90kwT1F0UcgJbak1RwW8ncmAacOrf7l8n3mzUCMqYJWHztlk9iLmA5s
+	 5F/EbQOV6YvVvWuVdBBtHn2wSZ0oWqbPkT0hUCJ9hMXsjj1qTRh/fnfVoh5QdXcEY3
+	 rNeyxl3kwJG1w8aXjtqR9/Ky/WdST74TvxSlRR+14oPPM8jOCfViMFgaM7P9pdugey
+	 kloIReVNU06DP+coJhvanna4WoRgJ+n4EWqiFZ5t8fzNGr3aHutvLxqxfBZyTLgyLF
+	 W9LP64UD0pFEw==
+Date: Sun, 31 Dec 2023 15:15:47 -0800
+Subject: [PATCH 09/18] xfs_repair: add parent pointers when messing with
+ /lost+found
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
  allison.henderson@oracle.com
-Message-ID: <170405006969.1805510.10773893656651536282.stgit@frogsfrogsfrogs>
+Message-ID: <170405006982.1805510.17053068517547637734.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405006850.1805510.11145262768706358018.stgit@frogsfrogsfrogs>
 References: <170405006850.1805510.11145262768706358018.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,43 +39,164 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Once we've assembled all the parent pointers for a file, we need to
-commit the new dataset atomically to that file.  Parent pointer records
-are embedded in the xattr structure, which means that we must write a
-new extended attribute structure, again, atomically.  Therefore, we must
-copy the non-parent-pointer attributes from the file being repaired into
-the temporary file's extended attributes and then call the atomic extent
-swap mechanism to exchange the blocks.
+Make sure that the /lost+found gets created with parent pointers, and
+that lost children being put in there get new parent pointers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_attr.c |    2 +-
- libxfs/xfs_attr.h |    2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ libxfs/libxfs_api_defs.h |    2 +
+ repair/phase6.c          |   73 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 75 insertions(+)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index cb4c2726fd7..5da0ac9f706 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -933,7 +933,7 @@ xfs_attr_defer_add(
- 	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
- }
- 
--STATIC int
-+int
- xfs_attr_add_fork(
- 	struct xfs_inode	*ip,		/* incore inode pointer */
- 	int			size,		/* space new attribute needs */
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 0204f62298c..a2cfe9e35fd 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -650,4 +650,6 @@ xfs_attri_can_use_without_log_assistance(
- 	return false;
- }
- 
-+int xfs_attr_add_fork(struct xfs_inode *ip, int size, int rsvd);
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 7ea7eebfbca..1aa2d9f0679 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -185,6 +185,8 @@
+ #define xfs_parent_add			libxfs_parent_add
+ #define xfs_parent_finish		libxfs_parent_finish
+ #define xfs_parent_irec_from_disk	libxfs_parent_irec_from_disk
++#define xfs_parent_irec_hashname	libxfs_parent_irec_hashname
++#define xfs_parent_lookup		libxfs_parent_lookup
+ #define xfs_parent_start		libxfs_parent_start
+ #define xfs_parent_hashcheck		libxfs_parent_hashcheck
+ #define xfs_parent_namecheck		libxfs_parent_namecheck
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 9b43e58b3d3..2bdddafe213 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -902,6 +902,12 @@ mk_orphanage(xfs_mount_t *mp)
+ 	const int	mode = 0755;
+ 	int		nres;
+ 	struct xfs_name	xname;
++	struct xfs_parent_args *ppargs;
 +
- #endif	/* __XFS_ATTR_H__ */
++	i = -libxfs_parent_start(mp, &ppargs);
++	if (i)
++		do_error(_("%d - couldn't allocate parent pointer for %s\n"),
++			i, ORPHANAGE);
+ 
+ 	/*
+ 	 * check for an existing lost+found first, if it exists, return
+@@ -991,6 +997,12 @@ mk_orphanage(xfs_mount_t *mp)
+ 		_("can't make %s, createname error %d\n"),
+ 			ORPHANAGE, error);
+ 
++	error = -libxfs_parent_add(tp, ppargs, pip, &xname, ip);
++	if (error)
++		do_error(
++ _("committing %s parent pointer failed, error %d.\n"),
++				ORPHANAGE, error);
++
+ 	/*
+ 	 * bump up the link count in the root directory to account
+ 	 * for .. in the new directory, and update the irec copy of the
+@@ -1012,10 +1024,51 @@ mk_orphanage(xfs_mount_t *mp)
+ 	}
+ 	libxfs_irele(ip);
+ 	libxfs_irele(pip);
++	libxfs_parent_finish(mp, ppargs);
+ 
+ 	return(ino);
+ }
+ 
++/*
++ * Add a parent pointer back to the orphanage for any file we're moving into
++ * the orphanage, being careful not to trip over any existing parent pointer.
++ * You never know when the orphanage might get corrupted.
++ */
++static void
++add_orphan_pptr(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*orphanage_ip,
++	const struct xfs_name	*xname,
++	struct xfs_inode	*ip,
++	struct xfs_parent_args	*ppargs)
++{
++	struct xfs_parent_name_irec	pptr = {
++		.p_ino		= orphanage_ip->i_ino,
++		.p_gen		= VFS_I(orphanage_ip)->i_generation,
++		.p_namelen	= xname->len,
++	};
++	struct xfs_parent_scratch	scr = { };
++	struct xfs_mount	*mp = tp->t_mountp;
++	int			error;
++
++	memcpy(pptr.p_name, xname->name, xname->len);
++	libxfs_parent_irec_hashname(mp, &pptr);
++
++	error = -libxfs_parent_lookup(tp, ip, &pptr, &scr);
++	if (!error)
++		return;
++	if (error != ENOATTR)
++		do_log(
++ _("cannot look up parent pointer for '%.*s', err %d\n"),
++				xname->len, xname->name, error);
++
++	error = -libxfs_parent_add(tp, ppargs, orphanage_ip, xname, ip);
++	if (error)
++		do_error(
++ _("adding '%.*s' parent pointer failed, error %d.\n"),
++				xname->len, xname->name, error);
++}
++
+ /*
+  * move a file to the orphange.
+  */
+@@ -1036,6 +1089,13 @@ mv_orphanage(
+ 	ino_tree_node_t		*irec;
+ 	int			ino_offset = 0;
+ 	struct xfs_name		xname;
++	struct xfs_parent_args	*ppargs;
++
++	err = -libxfs_parent_start(mp, &ppargs);
++	if (err)
++		do_error(
++ _("%d - couldn't allocate parent pointer for lost inode\n"),
++			err);
+ 
+ 	xname.name = fname;
+ 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
+@@ -1087,6 +1147,10 @@ mv_orphanage(
+ 				do_error(
+ 	_("name create failed in %s (%d)\n"), ORPHANAGE, err);
+ 
++			if (ppargs)
++				add_orphan_pptr(tp, orphanage_ip, &xname,
++						ino_p, ppargs);
++
+ 			if (irec)
+ 				add_inode_ref(irec, ino_offset);
+ 			else
+@@ -1121,6 +1185,10 @@ mv_orphanage(
+ 				do_error(
+ 	_("name create failed in %s (%d)\n"), ORPHANAGE, err);
+ 
++			if (ppargs)
++				add_orphan_pptr(tp, orphanage_ip, &xname,
++						ino_p, ppargs);
++
+ 			if (irec)
+ 				add_inode_ref(irec, ino_offset);
+ 			else
+@@ -1169,6 +1237,10 @@ mv_orphanage(
+ 	_("name create failed in %s (%d)\n"), ORPHANAGE, err);
+ 		ASSERT(err == 0);
+ 
++		if (ppargs)
++			add_orphan_pptr(tp, orphanage_ip, &xname, ino_p,
++					ppargs);
++
+ 		set_nlink(VFS_I(ino_p), 1);
+ 		libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
+ 		err = -libxfs_trans_commit(tp);
+@@ -1178,6 +1250,7 @@ mv_orphanage(
+ 	}
+ 	libxfs_irele(ino_p);
+ 	libxfs_irele(orphanage_ip);
++	libxfs_parent_finish(mp, ppargs);
+ }
+ 
+ static int
 
