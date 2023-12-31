@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55EACDDAB
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:38:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A45ADDAB
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:39:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugy1ZNux"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC08EC433C7;
-	Sun, 31 Dec 2023 23:38:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HZbMkGV0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B3FFC433C8;
+	Sun, 31 Dec 2023 23:39:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065938;
-	bh=vMLZ+LkznQWz9EJZ/wEbgjkVPEuFX0uUH5rKt9wLLcE=;
+	s=k20201202; t=1704065954;
+	bh=14eHtdD5jSHQyDFP9B17384soC8eNFjJob8d9b//RKs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ugy1ZNux3EccN9bjCJ+S9qw9a+HqCIqIPdf6m3bgxHhPjO6ou3FR8AaNAq5yVmJ02
-	 a30o+5rp9nUhYn7vQqE8zPejqCVV00kiB70llJ8NDUwSy1Zz7Nx1ZizyyzpB2jsoaF
-	 ExunBP0wIZ9MYvPM2ulWBP9YCHSF7f0kNFwYBr34Z03l3xQBjQ32OP02FP3w45LQBn
-	 v2JvzV/sigba7qgz854UbSFYzb2c/qCiA19JeMHvL/clKhtf5hXrPmCMApRin1TQdg
-	 XXlc0IXsVVylc/oM6txajNRassn0fHTWiS81kj8cTVKIXn25ueRtDaCWSSYXEMxuXF
-	 IsVALAf0SpQww==
-Date: Sun, 31 Dec 2023 15:38:58 -0800
-Subject: [PATCH 36/58] xfs_repair: don't zero the incore secondary super when
- zeroing
+	b=HZbMkGV0w/SWoxrsOQ9nrxHp0gLLiGZjNdwvEI2Hy4N0ok4S+Biwox2EYVKJ+Sk1c
+	 c/HUVfw+6xMQPyctbSINQGFdJf+aHEQGQJUKctx0rN4+7ugZ68EPBlkraSUIaKoLFW
+	 yx7rwbXobWe9itziUPe3nOUAVw0lThcdc3OZjxz6N/I86C5VdWCdV+2aaxMBeNOnJT
+	 XvvZFb+P6yD48HIx10X2PxIUlEIDhrQfpapcCzyP6ZGyA4bnCI+hdPKlX0qg6Vdpd7
+	 vcP3OHP1Lbt4qIwx9diiEAENFswSm7QmnKjYy2eYkgfyIemqK+Hjwc38P34R+vNESW
+	 NGXXqM0Q6QhiQ==
+Date: Sun, 31 Dec 2023 15:39:13 -0800
+Subject: [PATCH 37/58] xfs_repair: refactor metadata inode tagging
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010427.1809361.9818118347695597896.stgit@frogsfrogsfrogs>
+Message-ID: <170405010440.1809361.17433659396936418067.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,45 +37,99 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If secondary_sb_whack detects nonzero bytes beyond the end of the ondisk
-superblock, it will try to zero the end of the ondisk buffer as well as
-the incore superblock prior to scan_ag using that incore super to
-rewrite the ondisk super.
-
-However, the metadata directory feature adds a sb_metadirino field to
-the incore super.  On disk, this is stored in the same slot as
-sb_rbmino, but we wanted to cache both inumbers incore to minimize the
-churn.  Therefore, it is now only safe to zero the "end" of an xfs_dsb
-buffer, and never an xfs_sb object.
-
-Most of the XFS codebase moved off that second behavior long ago, with
-the exception of this one part of repair.  The zeroing probably ought to
-be turned into explicit logic to zero fields that weren't defined with
-the featureset encoded in the primary superblock, but for now we'll
-resort to always resetting the values from the xfs_mount's xfs_sb.
+Refactor tagging of metadata inodes into a single helper function
+instead of open-coding a if-else statement.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/agheader.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ repair/dir2.c |   60 ++++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 36 insertions(+), 24 deletions(-)
 
 
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 3930a0ac091..af88802ffdf 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -405,6 +405,13 @@ secondary_sb_whack(
- 				mp->m_sb.sb_sectsize - size);
- 			/* Preserve meta_uuid so we don't fail uuid checks */
- 			memcpy(&sb->sb_meta_uuid, &tmpuuid, sizeof(uuid_t));
+diff --git a/repair/dir2.c b/repair/dir2.c
+index e46ae9ae46f..9f10fde09a1 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -136,6 +136,31 @@ process_sf_dir2_fixoff(
+ 	}
+ }
+ 
++static bool
++is_meta_ino(
++	struct xfs_mount	*mp,
++	xfs_ino_t		dirino,
++	xfs_ino_t		lino,
++	char			**junkreason)
++{
++	char			*reason = NULL;
 +
++	if (lino == mp->m_sb.sb_rbmino)
++		reason = _("realtime bitmap");
++	else if (lino == mp->m_sb.sb_rsumino)
++		reason = _("realtime summary");
++	else if (lino == mp->m_sb.sb_uquotino)
++		reason = _("user quota");
++	else if (lino == mp->m_sb.sb_gquotino)
++		reason = _("group quota");
++	else if (lino == mp->m_sb.sb_pquotino)
++		reason = _("project quota");
++
++	if (reason)
++		*junkreason = reason;
++	return reason != NULL;
++}
++
+ /*
+  * this routine performs inode discovery and tries to fix things
+  * in place.  available redundancy -- inode data size should match
+@@ -227,21 +252,12 @@ process_sf_dir2(
+ 		} else if (!libxfs_verify_dir_ino(mp, lino)) {
+ 			junkit = 1;
+ 			junkreason = _("invalid");
+-		} else if (lino == mp->m_sb.sb_rbmino)  {
++		} else if (is_meta_ino(mp, ino, lino, &junkreason)) {
 +			/*
-+			 * Preserve the parts of the incore super that extend
-+			 * beyond the part that's supposed to match the ondisk
-+			 * super byte for byte.
++			 * Directories that are not in the metadir tree should
++			 * not be linking to metadata files.
 +			 */
-+			sb->sb_metadirino = mp->m_sb.sb_metadirino;
- 		} else
- 			do_warn(
- 	_("would zero unused portion of %s superblock (AG #%u)\n"),
+ 			junkit = 1;
+-			junkreason = _("realtime bitmap");
+-		} else if (lino == mp->m_sb.sb_rsumino)  {
+-			junkit = 1;
+-			junkreason = _("realtime summary");
+-		} else if (lino == mp->m_sb.sb_uquotino)  {
+-			junkit = 1;
+-			junkreason = _("user quota");
+-		} else if (lino == mp->m_sb.sb_gquotino)  {
+-			junkit = 1;
+-			junkreason = _("group quota");
+-		} else if (lino == mp->m_sb.sb_pquotino)  {
+-			junkit = 1;
+-			junkreason = _("project quota");
+ 		} else if ((irec_p = find_inode_rec(mp,
+ 					XFS_INO_TO_AGNO(mp, lino),
+ 					XFS_INO_TO_AGINO(mp, lino))) != NULL) {
+@@ -698,16 +714,12 @@ process_dir2_data(
+ 			 * directory since it's still structurally intact.
+ 			 */
+ 			clearreason = _("invalid");
+-		} else if (ent_ino == mp->m_sb.sb_rbmino) {
+-			clearreason = _("realtime bitmap");
+-		} else if (ent_ino == mp->m_sb.sb_rsumino) {
+-			clearreason = _("realtime summary");
+-		} else if (ent_ino == mp->m_sb.sb_uquotino) {
+-			clearreason = _("user quota");
+-		} else if (ent_ino == mp->m_sb.sb_gquotino) {
+-			clearreason = _("group quota");
+-		} else if (ent_ino == mp->m_sb.sb_pquotino) {
+-			clearreason = _("project quota");
++		} else if (is_meta_ino(mp, ino, ent_ino, &clearreason)) {
++			/*
++			 * Directories that are not in the metadir tree should
++			 * not be linking to metadata files.
++			 */
++			clearino = 1;
+ 		} else {
+ 			irec_p = find_inode_rec(mp,
+ 						XFS_INO_TO_AGNO(mp, ent_ino),
 
