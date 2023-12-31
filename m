@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3502DBE47
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:09:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 378AABE4D
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:09:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ut8AXOfi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02430C433C8;
-	Sun, 31 Dec 2023 22:09:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SO3pL+DP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABA54C433C7;
+	Sun, 31 Dec 2023 22:09:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060545;
-	bh=7GPNEISEGTVuE61KnUi/BdHUkJnz7nKtoTkWU6dQ4GU=;
+	s=k20201202; t=1704060560;
+	bh=4jBIkW2ocVGxJdGttysApEa/IcDJpwTmQEs+hYYt7cY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ut8AXOfiNq+XZKHaAVqO/qd802IX0cC6gF22z7oRtdLm5ZmnsnpbZ6cREy4vRkwzG
-	 z3lxi6VjDc91TtcCSnlqesbPtPty73/T8Ir5PXRgVmxLf0M8KR/2cZ3oRby46AJIpu
-	 B2T9a4t+81h3DLkDUkB2q+7IV/aWsLQmJbF2EtVZTkJLgdr8gmAthgYmOnrhWio1zE
-	 allAKZE4h2V9FeI/6jr3hzrs1A6dm2XCEwcZUOS24VKI6bRnTnERFdJNiObNFCWCuw
-	 jeJw2HSmZg6WaluY9Vv2Odz3ypn1s9oB3l5r0NjrtrvINYE63MKjOVXcjtxHIghDIb
-	 ILYJl5rxGPU1Q==
-Date: Sun, 31 Dec 2023 14:09:04 -0800
-Subject: [PATCH 3/8] xfs_repair: support more than 2^32 rmapbt records per AG
+	b=SO3pL+DPgGQwW0DSGzy2lTlJIyEatG8v1MIynlmxao9SaOjRPoX03mtD8o8PGsMyV
+	 3WSEZENE2lRIzz3/Hd9ponFxYHay/Z/lOVl05TtPS3Kv62aufqDaOlIbRgsSGSeUFN
+	 BAFPO1OIwhROiIhOOGZkAa0x0gy2ULbRioJl6mDFKBYlgCe2u0WVgVPe11zxrQgPPz
+	 /wOtbmEknaINaFroOVLp0VAqEdjN3hZAj7kjgy9ZNwJeLJeebTaWXWGr9ReBfptAt1
+	 RPU6OIbeMb3nQOmSqUilURn55KYYJLU6hDiz3SukkJkUtqMnKBhMqwUXsP4Hv9+qM/
+	 xd+Jncabfw41Q==
+Date: Sun, 31 Dec 2023 14:09:20 -0800
+Subject: [PATCH 4/8] xfs_repair: support more than 2^32 owners per physical
+ block
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: "Darrick J. Wong" <djwong@djwong.org>, linux-xfs@vger.kernel.org
-Message-ID: <170404991178.1793698.3340045648839811450.stgit@frogsfrogsfrogs>
+Message-ID: <170404991192.1793698.2797509871951673384.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404991133.1793698.11944872908755383201.stgit@frogsfrogsfrogs>
 References: <170404991133.1793698.11944872908755383201.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,62 +39,96 @@ Content-Transfer-Encoding: 7bit
 From: Darrick J. Wong <djwong@djwong.org>
 
 Now that the incore structures handle more than 2^32 records correctly,
-fix the rmapbt generation code to handle that many records.  This fixes
-the problem where an extremely large rmapbt cannot be rebuilt properly
-because of integer truncation.
+fix the refcountbt generation code to handle the case of that many rmap
+records pointing to a piece of space in an AG.  This fixes the problem
+where the refcountbt cannot be rebuilt properly because of integer
+truncation if there are more than 4.3 billion owners of a piece of
+space.
 
 Signed-off-by: Darrick J. Wong <djwong@djwong.org>
 ---
- repair/rmap.c |    8 ++++----
+ repair/rmap.c |   18 +++++++++---------
  repair/rmap.h |    2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
 
 diff --git a/repair/rmap.c b/repair/rmap.c
-index a2291c7b3b0..c908429c9bf 100644
+index c908429c9bf..564e1cbf294 100644
 --- a/repair/rmap.c
 +++ b/repair/rmap.c
-@@ -283,7 +283,7 @@ rmap_fold_raw_recs(
- {
- 	struct xfs_slab_cursor	*cur = NULL;
- 	struct xfs_rmap_irec	*prev, *rec;
--	size_t			old_sz;
-+	uint64_t		old_sz;
- 	int			error = 0;
- 
- 	old_sz = slab_count(ag_rmaps[agno].ar_rmaps);
-@@ -690,7 +690,7 @@ mark_inode_rl(
- 	struct xfs_rmap_irec	*rmap;
- 	struct ino_tree_node	*irec;
- 	int			off;
--	size_t			idx;
-+	uint64_t		idx;
- 	xfs_agino_t		ino;
- 
- 	if (bag_count(rmaps) < 2)
-@@ -873,9 +873,9 @@ compute_refcounts(
+@@ -713,14 +713,13 @@ mark_inode_rl(
  /*
-  * Return the number of rmap objects for an AG.
+  * Emit a refcount object for refcntbt reconstruction during phase 5.
+  */
+-#define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
+ static void
+ refcount_emit(
+-	struct xfs_mount		*mp,
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		agbno,
+ 	xfs_extlen_t		len,
+-	size_t			nr_rmaps)
++	uint64_t		nr_rmaps)
+ {
+ 	struct xfs_refcount_irec	rlrec;
+ 	int			error;
+@@ -733,7 +732,9 @@ refcount_emit(
+ 		agno, agbno, len, nr_rmaps);
+ 	rlrec.rc_startblock = agbno;
+ 	rlrec.rc_blockcount = len;
+-	rlrec.rc_refcount = REFCOUNT_CLAMP(nr_rmaps);
++	if (nr_rmaps > MAXREFCOUNT)
++		nr_rmaps = MAXREFCOUNT;
++	rlrec.rc_refcount = nr_rmaps;
+ 	rlrec.rc_domain = XFS_REFC_DOMAIN_SHARED;
+ 
+ 	error = slab_add(rlslab, &rlrec);
+@@ -741,7 +742,6 @@ refcount_emit(
+ 		do_error(
+ _("Insufficient memory while recreating refcount tree."));
+ }
+-#undef REFCOUNT_CLAMP
+ 
+ /*
+  * Transform a pile of physical block mapping observations into refcount data
+@@ -758,11 +758,11 @@ compute_refcounts(
+ 	struct xfs_slab_cursor	*rmaps_cur;
+ 	struct xfs_rmap_irec	*array_cur;
+ 	struct xfs_rmap_irec	*rmap;
++	uint64_t		n, idx;
++	uint64_t		old_stack_nr;
+ 	xfs_agblock_t		sbno;	/* first bno of this rmap set */
+ 	xfs_agblock_t		cbno;	/* first bno of this refcount set */
+ 	xfs_agblock_t		nbno;	/* next bno where rmap set changes */
+-	size_t			n, idx;
+-	size_t			old_stack_nr;
+ 	int			error;
+ 
+ 	if (!xfs_has_reflink(mp))
+@@ -1312,9 +1312,9 @@ _("Unable to fix reflink flag on inode %"PRIu64".\n"),
+ /*
+  * Return the number of refcount objects for an AG.
   */
 -size_t
 +uint64_t
- rmap_record_count(
+ refcount_record_count(
 -	struct xfs_mount		*mp,
 +	struct xfs_mount	*mp,
  	xfs_agnumber_t		agno)
  {
- 	return slab_count(ag_rmaps[agno].ar_rmaps);
+ 	return slab_count(ag_rmaps[agno].ar_refcount_items);
 diff --git a/repair/rmap.h b/repair/rmap.h
-index 1dad2f5890a..b074e2e8786 100644
+index b074e2e8786..1bc8c127d0e 100644
 --- a/repair/rmap.h
 +++ b/repair/rmap.h
-@@ -26,7 +26,7 @@ extern bool rmaps_are_mergeable(struct xfs_rmap_irec *r1, struct xfs_rmap_irec *
- extern int rmap_add_fixed_ag_rec(struct xfs_mount *, xfs_agnumber_t);
- extern int rmap_store_ag_btree_rec(struct xfs_mount *, xfs_agnumber_t);
+@@ -37,7 +37,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ 		struct xfs_rmap_irec *key);
  
--extern size_t rmap_record_count(struct xfs_mount *, xfs_agnumber_t);
-+uint64_t rmap_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
- extern int rmap_init_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
- extern void rmap_avoid_check(void);
- void rmaps_verify_btree(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
+-extern size_t refcount_record_count(struct xfs_mount *, xfs_agnumber_t);
++uint64_t refcount_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
+ extern void refcount_avoid_check(void);
+ void check_refcounts(struct xfs_mount *mp, xfs_agnumber_t agno);
 
