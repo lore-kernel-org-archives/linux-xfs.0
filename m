@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13AD9B675
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:14:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EC43B671
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:15:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QHwmMLyJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 811B2C433C7;
-	Sun, 31 Dec 2023 20:14:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LxPKBX35"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17CDCC433C7;
+	Sun, 31 Dec 2023 20:15:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704053692;
-	bh=KZRnL56XC4TAAOzX0MUMt6ot6bsiUYlS3fb0oXYh6R8=;
+	s=k20201202; t=1704053708;
+	bh=oYmn+hy5F/ViDytNdl7QxqrWDXlEBKyLl0w7Ykbx6TU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QHwmMLyJT5gvaiAEJ3UEqxezOGKH8mrkemOeI873RH+++cr2VgVJsvbv7c7qEOU96
-	 I+3ro5v93qlVKGrBAH1ptLH4PvWiQCBh6ujxJHhIQpWJKgqfU1AV0/rUW5Z/3bKHo0
-	 yzxy9rGRqqp5xiL5QOAfqB/p+TvEW/VcdktvaBNWXgZKU0jSZFry+RgKFoBTuCI2hU
-	 4aBWIJZgYnxArdTh2CEC0k4LdliFKqgi4MysfUvNAE4TAM5sz8u0zGghQRcxtOJEpm
-	 kafJ2KhYzrrrd2eEmlTubYcTZw2kZzUMLemts/jIS6H6qwCqP/TGmQgsfukoSSt0hr
-	 D/rfEExm4f8OA==
-Date: Sun, 31 Dec 2023 12:14:52 -0800
-Subject: [PATCH 5/9] xfs: support in-memory buffer cache targets
+	b=LxPKBX35tEAeMqMKKhQBgu37BwjSPnD9Y5SVqDMkN0EKTRy8gGi6ZT5rxg9PaV90Z
+	 JlsA6DmWNoPri9knTehTYjlrvuINJrPBPkYNGRH3lVV+wo+wzMJPeo8lyvKlyw/uGB
+	 W9ykfoLg+n+7QNb6Awj00PcFYU5k+Ot5ZN0sgzXA0oeHdZ17DRJsOu1AApxB01f62W
+	 5+vvB8YoGbCBxzra702wQAgA5uUD2Bk6rXBMA5cSocNS7Ltdzek5vygNi/RCl0cDHi
+	 NdbqWhELXKzPgEV7JQwWEDoLXy/VeR/Gy3wrCCJOudwuzt4qzyK56lIKZENRGRCgFL
+	 kSm8zpoRzlKiQ==
+Date: Sun, 31 Dec 2023 12:15:07 -0800
+Subject: [PATCH 6/9] xfs: consolidate btree block freeing tracepoints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, willy@infradead.org
-Message-ID: <170404829659.1748854.3761446311521327635.stgit@frogsfrogsfrogs>
+Message-ID: <170404829675.1748854.18135934618780501542.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
 References: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,388 +37,112 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow the buffer cache to target in-memory files by connecting it to
-xfiles.
+Don't waste tracepoint segment memory on per-btree block freeing
+tracepoints when we can do it from the generic btree code.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Kconfig         |    4 ++
- fs/xfs/Makefile        |    1 +
- fs/xfs/scrub/xfile.h   |   16 +++++++++
- fs/xfs/xfs_buf.c       |   46 ++++++++++++++++++++++---
- fs/xfs/xfs_buf.h       |   22 ++++++++++++
- fs/xfs/xfs_buf_xfile.c |   89 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_buf_xfile.h |   18 ++++++++++
- 7 files changed, 191 insertions(+), 5 deletions(-)
- create mode 100644 fs/xfs/xfs_buf_xfile.c
- create mode 100644 fs/xfs/xfs_buf_xfile.h
+ fs/xfs/libxfs/xfs_btree.c          |    2 ++
+ fs/xfs/libxfs/xfs_refcount_btree.c |    2 --
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    2 --
+ fs/xfs/xfs_trace.h                 |   32 ++++++++++++++++++++++++++++++--
+ 4 files changed, 32 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index dbcf55377e9fe..7c016a8788456 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -128,6 +128,9 @@ config XFS_LIVE_HOOKS
- 	bool
- 	select JUMP_LABEL if HAVE_ARCH_JUMP_LABEL
- 
-+config XFS_IN_MEMORY_FILE
-+	bool
-+
- config XFS_ONLINE_SCRUB
- 	bool "XFS online metadata check support"
- 	default n
-@@ -135,6 +138,7 @@ config XFS_ONLINE_SCRUB
- 	depends on TMPFS && SHMEM
- 	select XFS_LIVE_HOOKS
- 	select XFS_DRAIN_INTENTS
-+	select XFS_IN_MEMORY_FILE
- 	help
- 	  If you say Y here you will be able to check metadata on a
- 	  mounted XFS filesystem.  This feature is intended to reduce
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index a6a455ac5a38b..7eb7c521c4a84 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -138,6 +138,7 @@ endif
- 
- xfs-$(CONFIG_XFS_DRAIN_INTENTS)	+= xfs_drain.o
- xfs-$(CONFIG_XFS_LIVE_HOOKS)	+= xfs_hooks.o
-+xfs-$(CONFIG_XFS_IN_MEMORY_FILE)	+= xfs_buf_xfile.o
- 
- # online scrub/repair
- ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
-diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
-index 9022fe8924b94..d7661ee909495 100644
---- a/fs/xfs/scrub/xfile.h
-+++ b/fs/xfs/scrub/xfile.h
-@@ -6,6 +6,8 @@
- #ifndef __XFS_SCRUB_XFILE_H__
- #define __XFS_SCRUB_XFILE_H__
- 
-+#ifdef CONFIG_XFS_IN_MEMORY_FILE
-+
- struct xfile_page {
- 	struct page		*page;
- 	void			*fsdata;
-@@ -24,6 +26,7 @@ static inline pgoff_t xfile_page_index(const struct xfile_page *xfpage)
- 
- struct xfile {
- 	struct file		*file;
-+	struct xfs_buf_cache	bcache;
- };
- 
- int xfile_create(const char *description, loff_t isize, struct xfile **xfilep);
-@@ -75,5 +78,18 @@ int xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len,
- int xfile_put_page(struct xfile *xf, struct xfile_page *xbuf);
- 
- int xfile_dump(struct xfile *xf);
-+#else
-+static inline int
-+xfile_obj_load(struct xfile *xf, void *buf, size_t count, loff_t offset)
-+{
-+	return -EIO;
-+}
-+
-+static inline int
-+xfile_obj_store(struct xfile *xf, const void *buf, size_t count, loff_t offset)
-+{
-+	return -EIO;
-+}
-+#endif /* CONFIG_XFS_IN_MEMORY_FILE */
- 
- #endif /* __XFS_SCRUB_XFILE_H__ */
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 05b651672085d..9ce08a4823851 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -21,6 +21,7 @@
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_ag.h"
-+#include "xfs_buf_xfile.h"
- 
- struct kmem_cache *xfs_buf_cache;
- 
-@@ -1556,6 +1557,30 @@ xfs_buf_ioapply_map(
- 
- }
- 
-+/* Start a synchronous process-context buffer IO. */
-+static inline void
-+xfs_buf_start_sync_io(
-+	struct xfs_buf	*bp)
-+{
-+	atomic_inc(&bp->b_io_remaining);
-+}
-+
-+/* Finish a synchronous bprocess-context uffer IO. */
-+static void
-+xfs_buf_end_sync_io(
-+	struct xfs_buf	*bp,
-+	int		error)
-+{
-+	if (error)
-+		cmpxchg(&bp->b_io_error, 0, error);
-+
-+	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
-+		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
-+
-+	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-+		xfs_buf_ioend(bp);
-+}
-+
- STATIC void
- _xfs_buf_ioapply(
- 	struct xfs_buf	*bp)
-@@ -1613,6 +1638,15 @@ _xfs_buf_ioapply(
- 	/* we only use the buffer cache for meta-data */
- 	op |= REQ_META;
- 
-+	if (bp->b_target->bt_flags & XFS_BUFTARG_XFILE) {
-+		int	error;
-+
-+		xfs_buf_start_sync_io(bp);
-+		error = xfile_buf_ioapply(bp);
-+		xfs_buf_end_sync_io(bp, error);
-+		return;
-+	}
-+
- 	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
- 	 * into the buffer and the desired IO size before we start -
-@@ -1976,10 +2010,12 @@ xfs_free_buftarg(
- 	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
- 
--	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
--	/* the main block device is closed by kill_block_super */
--	if (btp->bt_bdev != btp->bt_mount->m_super->s_bdev)
--		bdev_release(btp->bt_bdev_handle);
-+	if (!(btp->bt_flags & XFS_BUFTARG_XFILE)) {
-+		fs_put_dax(btp->bt_daxdev, btp->bt_mount);
-+		/* the main block device is closed by kill_block_super */
-+		if (btp->bt_bdev != btp->bt_mount->m_super->s_bdev)
-+			bdev_release(btp->bt_bdev_handle);
-+	}
- 
- 	kvfree(btp);
- }
-@@ -2019,7 +2055,7 @@ xfs_setsize_buftarg_early(
- 	return xfs_setsize_buftarg(btp, bdev_logical_block_size(btp->bt_bdev));
- }
- 
--static struct xfs_buftarg *
-+struct xfs_buftarg *
- xfs_alloc_buftarg_common(
- 	struct xfs_mount	*mp,
- 	const char		*descr)
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 4e964470587ce..a86c0b8e5a85e 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -21,6 +21,7 @@ extern struct kmem_cache *xfs_buf_cache;
-  *	Base types
-  */
- struct xfs_buf;
-+struct xfile;
- 
- #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
- 
-@@ -109,9 +110,11 @@ typedef struct xfs_buftarg {
- 	struct bdev_handle	*bt_bdev_handle;
- 	struct block_device	*bt_bdev;
- 	struct dax_device	*bt_daxdev;
-+	struct xfile		*bt_xfile;
- 	u64			bt_dax_part_off;
- 	struct xfs_mount	*bt_mount;
- 	struct xfs_buf_cache	*bt_cache;
-+	unsigned int		bt_flags;
- 	unsigned int		bt_meta_sectorsize;
- 	size_t			bt_meta_sectormask;
- 	size_t			bt_logical_sectorsize;
-@@ -125,6 +128,13 @@ typedef struct xfs_buftarg {
- 	struct ratelimit_state	bt_ioerror_rl;
- } xfs_buftarg_t;
- 
-+#ifdef CONFIG_XFS_IN_MEMORY_FILE
-+/* in-memory buftarg via bt_xfile */
-+# define XFS_BUFTARG_XFILE	(1U << 0)
-+#else
-+# define XFS_BUFTARG_XFILE	(0)
-+#endif
-+
- #define XB_PAGES	2
- 
- struct xfs_buf_map {
-@@ -375,6 +385,8 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
- /*
-  *	Handling of buftargs.
-  */
-+struct xfs_buftarg *xfs_alloc_buftarg_common(struct xfs_mount *mp,
-+		const char *descr);
- struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
- 		struct bdev_handle *bdev_handle);
- extern void xfs_free_buftarg(struct xfs_buftarg *);
-@@ -385,24 +397,32 @@ extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
- static inline struct block_device *
- xfs_buftarg_bdev(struct xfs_buftarg *btp)
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 28ba528086888..3e966182b90a9 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -414,6 +414,8 @@ xfs_btree_free_block(
  {
-+	if (btp->bt_flags & XFS_BUFTARG_XFILE)
-+		return NULL;
- 	return btp->bt_bdev;
- }
+ 	int			error;
  
- static inline unsigned int
- xfs_getsize_buftarg(struct xfs_buftarg *btp)
- {
-+	if (btp->bt_flags & XFS_BUFTARG_XFILE)
-+		return SECTOR_SIZE;
- 	return block_size(btp->bt_bdev);
- }
++	trace_xfs_btree_free_block(cur, bp);
++
+ 	error = cur->bc_ops->free_block(cur, bp);
+ 	if (!error) {
+ 		xfs_trans_binval(cur->bc_tp, bp);
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 0d80bd99147cc..a346e49981ac3 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -107,8 +107,6 @@ xfs_refcountbt_free_block(
+ 	struct xfs_agf		*agf = agbp->b_addr;
+ 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
  
- static inline bool
- xfs_readonly_buftarg(struct xfs_buftarg *btp)
- {
-+	if (btp->bt_flags & XFS_BUFTARG_XFILE)
-+		return false;
- 	return bdev_read_only(btp->bt_bdev);
- }
+-	trace_xfs_refcountbt_free_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
+-			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1);
+ 	be32_add_cpu(&agf->agf_refcount_blocks, -1);
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
+ 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 6c81b20e97d21..0dc086bc528f7 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -125,8 +125,6 @@ xfs_rmapbt_free_block(
+ 	int			error;
  
- static inline int
- xfs_buftarg_flush(struct xfs_buftarg *btp)
- {
-+	if (btp->bt_flags & XFS_BUFTARG_XFILE)
-+		return 0;
- 	return blkdev_issue_flush(btp->bt_bdev);
- }
+ 	bno = xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp));
+-	trace_xfs_rmapbt_free_block(cur->bc_mp, pag->pag_agno,
+-			bno, 1);
+ 	be32_add_cpu(&agf->agf_rmap_blocks, -1);
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+ 	error = xfs_alloc_put_freelist(pag, cur->bc_tp, agbp, NULL, bno, 1);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 7d075e426c5d0..5076770d9b000 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2493,6 +2493,36 @@ DEFINE_EVENT(xfs_btree_cur_class, name, \
+ DEFINE_BTREE_CUR_EVENT(xfs_btree_updkeys);
+ DEFINE_BTREE_CUR_EVENT(xfs_btree_overlapped_query_range);
  
-@@ -414,6 +434,8 @@ xfs_buftarg_zeroout(
- 	gfp_t			gfp_mask,
- 	unsigned int		flags)
- {
-+	if (btp->bt_flags & XFS_BUFTARG_XFILE)
-+		return -EOPNOTSUPP;
- 	return blkdev_issue_zeroout(btp->bt_bdev, sector, nr_sects, gfp_mask,
- 			flags);
- }
-diff --git a/fs/xfs/xfs_buf_xfile.c b/fs/xfs/xfs_buf_xfile.c
-new file mode 100644
-index 0000000000000..15cbe3df7aa01
---- /dev/null
-+++ b/fs/xfs/xfs_buf_xfile.c
-@@ -0,0 +1,89 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2023-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_buf.h"
-+#include "xfs_buf_xfile.h"
-+#include "scrub/xfile.h"
++TRACE_EVENT(xfs_btree_free_block,
++	TP_PROTO(struct xfs_btree_cur *cur, struct xfs_buf *bp),
++	TP_ARGS(cur, bp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_ino_t, ino)
++		__field(xfs_btnum_t, btnum)
++		__field(xfs_agblock_t, agbno)
++	),
++	TP_fast_assign(
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		__entry->agno = xfs_daddr_to_agno(cur->bc_mp,
++							xfs_buf_daddr(bp));
++		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
++			__entry->ino = cur->bc_ino.ip->i_ino;
++		else
++			__entry->ino = 0;
++		__entry->btnum = cur->bc_btnum;
++		__entry->agbno = xfs_daddr_to_agbno(cur->bc_mp,
++							xfs_buf_daddr(bp));
++	),
++	TP_printk("dev %d:%d btree %s agno 0x%x ino 0x%llx agbno 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __entry->agno,
++		  __entry->ino,
++		  __entry->agbno)
++);
 +
-+/* Perform a buffer IO to an xfile.  Caller must be in process context. */
-+int
-+xfile_buf_ioapply(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfile		*xfile = bp->b_target->bt_xfile;
-+	loff_t			pos = BBTOB(xfs_buf_daddr(bp));
-+	size_t			size = BBTOB(bp->b_length);
-+
-+	if (bp->b_map_count > 1) {
-+		/* We don't need or support multi-map buffers. */
-+		ASSERT(0);
-+		return -EIO;
-+	}
-+
-+	if (bp->b_flags & XBF_WRITE)
-+		return xfile_obj_store(xfile, bp->b_addr, size, pos);
-+	return xfile_obj_load(xfile, bp->b_addr, size, pos);
-+}
-+
-+/* Allocate a buffer cache target for a memory-backed file. */
-+int
-+xfile_alloc_buftarg(
-+	struct xfs_mount	*mp,
-+	const char		*descr,
-+	struct xfs_buftarg	**btpp)
-+{
-+	struct xfs_buftarg	*btp;
-+	struct xfile		*xfile;
-+	int			error;
-+
-+	error = xfile_create(descr, 0, &xfile);
-+	if (error)
-+		return error;
-+
-+	error = xfs_buf_cache_init(&xfile->bcache);
-+	if (error)
-+		goto out_xfile;
-+
-+	btp = xfs_alloc_buftarg_common(mp, descr);
-+	if (!btp) {
-+		error = -ENOMEM;
-+		goto out_bcache;
-+	}
-+
-+	btp->bt_xfile = xfile;
-+	btp->bt_dev = (dev_t)-1U;
-+	btp->bt_flags |= XFS_BUFTARG_XFILE;
-+	btp->bt_cache = &xfile->bcache;
-+
-+	btp->bt_meta_sectorsize = SECTOR_SIZE;
-+	btp->bt_meta_sectormask = SECTOR_SIZE - 1;
-+	btp->bt_logical_sectorsize = SECTOR_SIZE;
-+	btp->bt_logical_sectormask = SECTOR_SIZE - 1;
-+
-+	*btpp = btp;
-+	return 0;
-+
-+out_bcache:
-+	xfs_buf_cache_destroy(&xfile->bcache);
-+out_xfile:
-+	xfile_destroy(xfile);
-+	return error;
-+}
-+
-+/* Free a buffer cache target for a memory-backed file. */
-+void
-+xfile_free_buftarg(
-+	struct xfs_buftarg	*btp)
-+{
-+	struct xfile		*xfile = btp->bt_xfile;
-+
-+	ASSERT(btp->bt_flags & XFS_BUFTARG_XFILE);
-+
-+	xfs_free_buftarg(btp);
-+	xfs_buf_cache_destroy(&xfile->bcache);
-+	xfile_destroy(xfile);
-+}
-diff --git a/fs/xfs/xfs_buf_xfile.h b/fs/xfs/xfs_buf_xfile.h
-new file mode 100644
-index 0000000000000..69d7846215468
---- /dev/null
-+++ b/fs/xfs/xfs_buf_xfile.h
-@@ -0,0 +1,18 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2023-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_BUF_XFILE_H__
-+#define __XFS_BUF_XFILE_H__
-+
-+#ifdef CONFIG_XFS_IN_MEMORY_FILE
-+int xfile_buf_ioapply(struct xfs_buf *bp);
-+int xfile_alloc_buftarg(struct xfs_mount *mp, const char *descr,
-+		struct xfs_buftarg **btpp);
-+void xfile_free_buftarg(struct xfs_buftarg *btp);
-+#else
-+# define xfile_buf_ioapply(bp)			(-EOPNOTSUPP)
-+#endif /* CONFIG_XFS_IN_MEMORY_FILE */
-+
-+#endif /* __XFS_BUF_XFILE_H__ */
+ /* deferred ops */
+ struct xfs_defer_pending;
+ 
+@@ -2856,7 +2886,6 @@ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
+ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_deferred);
+ 
+ DEFINE_BUSY_EVENT(xfs_rmapbt_alloc_block);
+-DEFINE_BUSY_EVENT(xfs_rmapbt_free_block);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_update);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_insert);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_delete);
+@@ -3215,7 +3244,6 @@ DEFINE_EVENT(xfs_refcount_triple_extent_class, name, \
+ 
+ /* refcount btree tracepoints */
+ DEFINE_BUSY_EVENT(xfs_refcountbt_alloc_block);
+-DEFINE_BUSY_EVENT(xfs_refcountbt_free_block);
+ DEFINE_AG_BTREE_LOOKUP_EVENT(xfs_refcount_lookup);
+ DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_get);
+ DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_update);
 
