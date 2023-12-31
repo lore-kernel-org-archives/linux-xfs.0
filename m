@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB479B65B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:48:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26E0BB64C
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:48:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b0T8T6fc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47544C433C8;
-	Sun, 31 Dec 2023 19:48:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vcy4jZx5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6C80C433C7;
+	Sun, 31 Dec 2023 19:48:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052098;
-	bh=lcEinqPeNjd0JlSCz3SLsaHva8ebepLfG+awIn81wVA=;
+	s=k20201202; t=1704052114;
+	bh=N+Ux1aLEH9KxC3glPGnKIXuwtQuIirzcZ4Jil8yHZGY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=b0T8T6fcIoinb5uJfo83/yQg/ypoyJL/Gqib/DVoBNEYi9ePmV+xTft2qE90RgRyF
-	 xGaIBcx+171ZAp3Ov7WecvcNsQRvEQfbWh4yfAvlM7kTijw+/QiWxNmdRkjxcjZ+IQ
-	 H7uUzt838EZfKBwGvvAcYJL8tz3gdKo2D2pPSbrghY4qQZnRysFu082I7fsqeKVCGo
-	 4MQUcFk6azai0rX3E0mpul6lEJY03E7nftaT4ORB200A3HIdnhAr1NeHGjISa1/lsI
-	 73VgsTL80dZFaefK0anM08TYPYSgnNfpZlNRqCoRryJnG/eQcRzniY+miK74aEhPa6
-	 MJ6AWGWfoidMA==
-Date: Sun, 31 Dec 2023 11:48:17 -0800
-Subject: [PATCHSET v29.0 33/40] xfs_scrub: use free space histograms to reduce
- fstrim runtime
+	b=Vcy4jZx5eFIq4krHuJzsK69LIromJ3fP9r+CgxizQCF64+Og+IIsJi1bhf6bZzk3t
+	 ciAYSarq5w3DpS4hUJy00zTsxm3UkrrmNsMgYbLZoAyzhvVU+24a/ZUYyZ4gA4yHed
+	 86LFLSk2Ysx51xHicO/VCvV8Wjl5tMHZgFurCPG7gXRw5D7LQjL8c1i7I3ZsWYjB14
+	 zF/dcQFb+HdbWtHOIsHA4ZyV7gxr53fpk7EbSqB3SYwy30xsS3si1fPP0GAJNLCTR2
+	 /TFSHBf8U8FjNf4/NfMQLYXC9470CMfEmX4cBkg/ZDbpZypl2wS0YoCJI6NuDxO7tm
+	 ynQ8xCmTZ7lFA==
+Date: Sun, 31 Dec 2023 11:48:33 -0800
+Subject: [PATCHSET v29.0 34/40] xfs_scrub: fixes for systemd services
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405001452.1798998.1713163893791596567.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Neal Gompa <neal@gompa.dev>,
+ linux-xfs@vger.kernel.org
+Message-ID: <170405001841.1800712.6745668619742020884.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,25 +38,15 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This patchset dramatically reduces the runtime of the FITRIM calls made
-during phase 8 of xfs_scrub.  It turns out that phase 8 can really get
-bogged down if the free space contains a large number of very small
-extents.  In these cases, the runtime can increase by an order of
-magnitude to free less than 1% of the free space.  This is not worth the
-time, since we're spending a lot of time to do very little work.  The
-FITRIM ioctl allows us to specify a minimum extent length, so we can use
-statistical methods to compute a minlen parameter.
+This series fixes deficiencies in the systemd services that were created
+to manage background scans.  First, improve the debian packaging so that
+services get installed at package install time.  Next, fix copyright and
+spdx header omissions.
 
-It turns out xfs_db/spaceman already have the code needed to create
-histograms of free space extent lengths.  We add the ability to compute
-a CDF of the extent lengths, which make it easy to pick a minimum length
-corresponding to 99% of the free space.  In most cases, this results in
-dramatic reductions in phase 8 runtime.  Hence, move the histogram code
-to libfrog, and wire up xfs_scrub, since phase 7 already walks the
-fsmap.
-
-We also add a new -o suboption to xfs_scrub so that people who /do/ want
-to examine every free extent can do so.
+Finally, fix bugs in the mailer scripts so that scrub failures are
+reported effectively.  Finally, fix xfs_scrub_all to deal with systemd
+restarts causing it to think that a scrub has finished before the
+service actually finishes.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -67,25 +57,15 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fstrim-minlen-freesp-histogram
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-fstrim-minlen-freesp-histogram
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-service-fixes
 ---
- db/freesp.c          |   83 +++-------------
- libfrog/Makefile     |    2 
- libfrog/histogram.c  |  252 ++++++++++++++++++++++++++++++++++++++++++++++++++
- libfrog/histogram.h  |   54 +++++++++++
- man/man8/xfs_scrub.8 |   16 +++
- scrub/phase7.c       |   47 +++++++++
- scrub/phase8.c       |   75 ++++++++++++++-
- scrub/spacemap.c     |   11 +-
- scrub/vfs.c          |    4 +
- scrub/vfs.h          |    2 
- scrub/xfs_scrub.c    |   45 +++++++++
- scrub/xfs_scrub.h    |   16 +++
- spaceman/freesp.c    |   93 +++++-------------
- 13 files changed, 544 insertions(+), 156 deletions(-)
- create mode 100644 libfrog/histogram.c
- create mode 100644 libfrog/histogram.h
+ debian/rules                     |    1 +
+ include/builddefs.in             |    2 +-
+ scrub/Makefile                   |   26 ++++++++++++++------
+ scrub/xfs_scrub@.service.in      |    6 ++---
+ scrub/xfs_scrub_all.in           |   49 ++++++++++++++++----------------------
+ scrub/xfs_scrub_fail.in          |   12 ++++++++-
+ scrub/xfs_scrub_fail@.service.in |    4 ++-
+ 7 files changed, 55 insertions(+), 45 deletions(-)
+ rename scrub/{xfs_scrub_fail => xfs_scrub_fail.in} (62%)
 
