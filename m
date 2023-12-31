@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42302C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:17:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D70E6C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:17:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tkmzr7Mb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FD3CC433C7;
-	Sun, 31 Dec 2023 23:17:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SVcOcPNt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC8EFC433C8;
+	Sun, 31 Dec 2023 23:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064626;
-	bh=nrgYqZUuqYzdpIGcPfylcFPKdKyiWjLVFLeUHjI0Y1U=;
+	s=k20201202; t=1704064641;
+	bh=PNZOvuxfRJKsSH8KYVp8vohgpN3yLM8M+GnA2crUh/s=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Tkmzr7MbjmoBTDvq1N9NQQJEB3zHv6Di386epefP8ZcMUdmBiVXzt0+nbGyXGPQXH
-	 wpBpYJREl0PsRfDwQu/DgAOpHfsroC7CH694PJ2vv3xfJ2vXnvDzfO0I9JTIiA9kL5
-	 DCxg13JN9AvuDZgRhJ2VPRHazWcCbqMakocdJk2b87pHnPqztle14tXxpImTWfBEkv
-	 FWLjv0y63La5dCcmxOJvJ0iNW1ajk98t/2ejT3gy90CpF6b4g60/oxG415fh/K+6r1
-	 xbJMJQPwwgUhX0/tWkPjcr8me9R+ba1zrTxcNQgQycPB0egHNibQOExSKCtFw8scj8
-	 9cG4wUZKpmwGQ==
-Date: Sun, 31 Dec 2023 15:17:05 -0800
-Subject: [PATCH 14/18] xfs_repair: dump garbage parent pointer attributes
+	b=SVcOcPNt4PvibH6pzkcBh+hRtE3pUtRTJv6kQBcK9bhSb76UIWnKCFEW+09s1hXvE
+	 xd3ax5jtCMkVyXgzFWYjuUq7FxcaHUjlqoQ+5mtNOgfzXY50nOCXge2LMK/96QNagc
+	 1EZsFO7kKCdpUsFHvFPMva5PEinQVyUUBiEGU4qxsfldlKS2GcVCH5eR64M+AB9QZj
+	 DvdJ7nS69ciwoWZjwOwqhr7tRiIVGxXgH5ed4Tyyd4o7Nn5swd/hWYSdctDbyT7CVC
+	 w6eH6ctojtab0lD0jsJOTrRFG/ltKO9YahasHGFTus4otaxgDowSQI13+A5IpZKIjo
+	 jIbNCQ23/BNaQ==
+Date: Sun, 31 Dec 2023 15:17:21 -0800
+Subject: [PATCH 15/18] xfs_repair: update ondisk parent pointer records
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
  allison.henderson@oracle.com
-Message-ID: <170405007049.1805510.13334389199605845708.stgit@frogsfrogsfrogs>
+Message-ID: <170405007062.1805510.1229066115957563747.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405006850.1805510.11145262768706358018.stgit@frogsfrogsfrogs>
 References: <170405006850.1805510.11145262768706358018.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,202 +38,150 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Delete xattrs that have ATTR_PARENT set but are so garbage that they
-clearly aren't parent pointers.
+Update the ondisk parent pointer records as necessary.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/pptr.c |  145 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 143 insertions(+), 2 deletions(-)
+ libxfs/libxfs_api_defs.h |    2 +
+ repair/pptr.c            |   89 ++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 88 insertions(+), 3 deletions(-)
 
 
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 1aa2d9f0679..d5662c42f2b 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -187,9 +187,11 @@
+ #define xfs_parent_irec_from_disk	libxfs_parent_irec_from_disk
+ #define xfs_parent_irec_hashname	libxfs_parent_irec_hashname
+ #define xfs_parent_lookup		libxfs_parent_lookup
++#define xfs_parent_set			libxfs_parent_set
+ #define xfs_parent_start		libxfs_parent_start
+ #define xfs_parent_hashcheck		libxfs_parent_hashcheck
+ #define xfs_parent_namecheck		libxfs_parent_namecheck
++#define xfs_parent_unset		libxfs_parent_unset
+ #define xfs_parent_valuecheck		libxfs_parent_valuecheck
+ #define xfs_parent_verify_irec		libxfs_parent_verify_irec
+ #define xfs_perag_get			libxfs_perag_get
 diff --git a/repair/pptr.c b/repair/pptr.c
-index 11aa8d4e322..21b15ab80ea 100644
+index 21b15ab80ea..7f65ae1aac3 100644
 --- a/repair/pptr.c
 +++ b/repair/pptr.c
-@@ -192,6 +192,29 @@ struct file_scan {
- 
- 	/* Does this file have garbage xattrs with ATTR_PARENT set? */
- 	bool			have_garbage;
-+
-+	/* xattrs that we have to remove from this file */
-+	struct xfs_slab		*garbage_xattr_recs;
-+
-+	/* attr names associated with garbage_xattr_recs */
-+	struct xfblob		*garbage_xattr_names;
-+};
-+
-+struct garbage_xattr {
-+	/* xfs_da_args.attr_filter for the attribute being removed */
-+	unsigned int		attr_filter;
-+
-+	/* attribute name length */
-+	unsigned int		attrnamelen;
-+
-+	/* attribute value length */
-+	unsigned int		attrvaluelen;
-+
-+	/* cookie for the attribute name */
-+	xfblob_cookie		attrname_cookie;
-+
-+	/* cookie for the attribute value */
-+	xfblob_cookie		attrvalue_cookie;
- };
- 
- /* Global names storage file. */
-@@ -381,6 +404,78 @@ add_parent_ptr(
- 			(unsigned long long)ag_pptr.name_cookie);
+@@ -686,6 +686,48 @@ load_file_pptr_name(
+ 			name, file_pptr->namelen);
  }
  
-+/* Remove garbage extended attributes that have ATTR_PARENT set. */
-+static void
-+remove_garbage_xattrs(
-+	struct xfs_inode	*ip,
-+	struct file_scan	*fscan)
++/* Add an on disk parent pointer to a file. */
++static int
++add_file_pptr(
++	struct xfs_inode		*ip,
++	const struct ag_pptr		*ag_pptr,
++	const unsigned char		*name)
 +{
-+	struct xfs_slab_cursor	*cur;
-+	struct garbage_xattr	*ga;
-+	void			*buf = NULL;
-+	size_t			bufsize = 0;
-+	int			error;
++	struct xfs_parent_name_irec	pptr_rec = {
++		.p_ino			= ag_pptr->parent_ino,
++		.p_gen			= ag_pptr->parent_gen,
++		.p_namelen		= ag_pptr->namelen,
++	};
++	struct xfs_parent_scratch	scratch;
++	int				error;
 +
-+	error = -init_slab_cursor(fscan->garbage_xattr_recs, NULL, &cur);
-+	if (error)
-+		do_error(_("init garbage xattr cursor failed: %s\n"),
-+				strerror(error));
-+
-+	while ((ga = pop_slab_cursor(cur)) != NULL) {
-+		struct xfs_da_args	args = {
-+			.dp		= ip,
-+			.attr_filter	= ga->attr_filter,
-+			.namelen	= ga->attrnamelen,
-+			.valuelen	= ga->attrvaluelen,
-+			.op_flags	= XFS_DA_OP_REMOVE | XFS_DA_OP_NVLOOKUP,
-+		};
-+		size_t		desired = ga->attrnamelen + ga->attrvaluelen;
-+
-+		if (desired > bufsize) {
-+			free(buf);
-+			buf = malloc(desired);
-+			if (!buf)
-+				do_error(
-+ _("allocating %zu bytes to remove ino %llu garbage xattr failed: %s\n"),
-+						desired,
-+						(unsigned long long)ip->i_ino,
-+						strerror(errno));
-+			bufsize = desired;
-+		}
-+
-+		args.name = buf;
-+		args.value = buf + ga->attrnamelen;
-+
-+		error = -xfblob_load(fscan->garbage_xattr_names,
-+				ga->attrname_cookie, buf, ga->attrnamelen);
-+		if (error)
-+			do_error(
-+ _("loading garbage xattr name failed: %s\n"),
-+					strerror(error));
-+
-+		error = -xfblob_load(fscan->garbage_xattr_names,
-+				ga->attrvalue_cookie, args.value,
-+				ga->attrvaluelen);
-+		if (error)
-+			do_error(
-+ _("loading garbage xattr value failed: %s\n"),
-+					strerror(error));
-+
-+		error = -libxfs_attr_set(&args);
-+		if (error)
-+			do_error(
-+ _("removing ino %llu garbage xattr failed: %s\n"),
-+					(unsigned long long)ip->i_ino,
-+					strerror(error));
-+	}
-+
-+	free(buf);
-+	free_slab_cursor(&cur);
-+	free_slab(&fscan->garbage_xattr_recs);
-+	xfblob_destroy(fscan->garbage_xattr_names);
-+	fscan->garbage_xattr_names = NULL;
++	memcpy(pptr_rec.p_name, name, ag_pptr->namelen);
++	libxfs_parent_irec_hashname(ip->i_mount, &pptr_rec);
++	error = -libxfs_parent_lookup(NULL, ip, &pptr_rec, &scratch);
++	if (!error || error != ENOATTR)
++		return error;
++	return -libxfs_parent_set(ip, ip->i_ino, &pptr_rec, &scratch);
 +}
 +
- /* Schedule this ATTR_PARENT extended attribute for deletion. */
- static void
- record_garbage_xattr(
-@@ -392,6 +487,15 @@ record_garbage_xattr(
- 	const void		*value,
- 	unsigned int		valuelen)
- {
-+	struct garbage_xattr	garbage_xattr = {
-+		.attr_filter	= attr_filter,
-+		.attrnamelen	= namelen,
-+		.attrvaluelen	= valuelen,
++/* Remove an on disk parent pointer from a file. */
++static int
++remove_file_pptr(
++	struct xfs_inode		*ip,
++	const struct file_pptr		*file_pptr,
++	const unsigned char		*name)
++{
++	struct xfs_parent_name_irec	pptr_rec = {
++		.p_ino			= file_pptr->parent_ino,
++		.p_gen			= file_pptr->parent_gen,
++		.p_namelen		= file_pptr->namelen,
 +	};
-+	struct xfs_mount	*mp = ip->i_mount;
-+	char			*descr;
-+	int			error;
++	struct xfs_parent_scratch	scratch;
 +
- 	if (no_modify) {
- 		if (!fscan->have_garbage)
- 			do_warn(
-@@ -402,13 +506,47 @@ record_garbage_xattr(
++	memcpy(pptr_rec.p_name, name, file_pptr->namelen);
++	libxfs_parent_irec_hashname(ip->i_mount, &pptr_rec);
++	return -libxfs_parent_unset(ip, ip->i_ino, &pptr_rec, &scratch);
++}
++
+ /* Remove all pptrs from @ip. */
+ static void
+ clear_all_pptrs(
+@@ -742,7 +784,16 @@ add_missing_parent_ptr(
+ 				name);
  	}
  
- 	if (fscan->have_garbage)
--		return;
-+		goto stuffit;
- 	fscan->have_garbage = true;
+-	/* XXX actually do the work */
++	error = add_file_pptr(ip, ag_pptr, name);
++	if (error)
++		do_error(
++ _("adding ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
++			(unsigned long long)ip->i_ino,
++			(unsigned long long)ag_pptr->parent_ino,
++			ag_pptr->parent_gen,
++			ag_pptr->namelen,
++			name,
++			strerror(error));
+ }
  
- 	do_warn(
-  _("deleting garbage parent pointer extended attributes in ino %llu\n"),
- 			(unsigned long long)ip->i_ino);
--	/* XXX do the work */
-+
-+	error = -init_slab(&fscan->garbage_xattr_recs,
-+			sizeof(struct garbage_xattr));
+ /* Remove @file_pptr from @ip. */
+@@ -784,7 +835,16 @@ remove_incorrect_parent_ptr(
+ 			file_pptr->namelen,
+ 			name);
+ 
+-	/* XXX actually do the work */
++	error = remove_file_pptr(ip, file_pptr, name);
 +	if (error)
-+		do_error(_("init garbage xattr recs failed: %s\n"),
-+				strerror(error));
-+
-+	descr = kasprintf("xfs_repair (%s): garbage xattr names",
-+			mp->m_fsname);
-+	error = -xfblob_create(descr, &fscan->garbage_xattr_names);
-+	kfree(descr);
-+	if (error)
-+		do_error("init garbage xattr names failed: %s\n",
-+				strerror(error));
-+
-+stuffit:
-+	error = -xfblob_store(fscan->garbage_xattr_names,
-+			&garbage_xattr.attrname_cookie, name, namelen);
-+	if (error)
-+		do_error(_("storing ino %llu garbage xattr failed: %s\n"),
-+				(unsigned long long)ip->i_ino,
-+				strerror(error));
-+
-+	error = -xfblob_store(fscan->garbage_xattr_names,
-+			&garbage_xattr.attrvalue_cookie, value, valuelen);
-+	if (error)
-+		do_error(_("storing ino %llu garbage xattr failed: %s\n"),
-+				(unsigned long long)ip->i_ino,
-+				strerror(error));
-+
-+	error = -slab_add(fscan->garbage_xattr_recs, &garbage_xattr);
-+	if (error)
-+		do_error(_("storing ino %llu garbage xattr rec failed: %s\n"),
-+				(unsigned long long)ip->i_ino,
-+				strerror(error));
++		do_error(
++ _("removing ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
++			(unsigned long long)ip->i_ino,
++			(unsigned long long)file_pptr->parent_ino,
++			file_pptr->parent_gen,
++			file_pptr->namelen,
++			name,
++			strerror(error));
  }
  
  /*
-@@ -931,6 +1069,9 @@ check_file_parent_ptrs(
- 		goto out_free;
- 	}
+@@ -856,7 +916,30 @@ compare_parent_ptrs(
+ 			ag_pptr->namelen,
+ 			name1);
  
-+	if (!no_modify && fscan->have_garbage)
-+		remove_garbage_xattrs(ip, fscan);
+-	/* XXX do the work */
++	if (ag_pptr->parent_gen != file_pptr->parent_gen ||
++	    ag_pptr->namehash   != file_pptr->namehash) {
++		error = remove_file_pptr(ip, file_pptr, name2);
++		if (error)
++			do_error(
++ _("erasing ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
++				(unsigned long long)ip->i_ino,
++				(unsigned long long)file_pptr->parent_ino,
++				file_pptr->parent_gen,
++				file_pptr->namelen,
++				name2,
++				strerror(error));
++	}
 +
- 	crosscheck_file_parent_ptrs(ip, fscan);
++	error = add_file_pptr(ip, ag_pptr, name1);
++	if (error)
++		do_error(
++ _("updating ino %llu pptr (ino %llu gen 0x%x name '%.*s') failed: %s\n"),
++			(unsigned long long)ip->i_ino,
++			(unsigned long long)ag_pptr->parent_ino,
++			ag_pptr->parent_gen,
++			ag_pptr->namelen,
++			name1,
++			strerror(error));
+ }
  
- out_free:
+ static int
 
