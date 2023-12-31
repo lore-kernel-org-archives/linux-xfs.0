@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4448BB666
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:38:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC38B65B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:39:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kn8a+B+L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10913C433C8;
-	Sun, 31 Dec 2023 19:38:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZaDqZkra"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9E15C433C7;
+	Sun, 31 Dec 2023 19:39:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051535;
-	bh=9aay8RuX9bRDOsigR6ZhJEmgFTWDFT8u5m95Q6Qa1oM=;
+	s=k20201202; t=1704051550;
+	bh=zneHYGm7LulJ1rQwfFY7T6b6wNtrt4zbRNM1Kpw7Hkg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Kn8a+B+LgM8/gRmnTtX9XaXvhoaIddzJAzwrPJLoSZQ+8HQkzq/A/YI/Tp7z5laL6
-	 AN08yqVV4JtKAJaAFw0GtWRR5y011xbWDm//eFuW618CoKlb1xBBeEW2BDeQJmIen5
-	 UfcBFUU9+KrU9KzXSA+KkiF5hPGNVJFCocdCFT3QBBVNfloUTrwhl90B345u/n9ux1
-	 RHQgAVF5pmtwAVJKHL8G9w+jaJoGirD12SpNtXFUWjwppMl1CW+6/C0v5zhedDssqU
-	 wJhCek/JGzX2m15Pg9GXacfMaeYvvY0TJzK8on5caZHmBTVpA8Q18ybGtXZ8RywuUB
-	 F3CuwWeJzHvOQ==
-Date: Sun, 31 Dec 2023 11:38:54 -0800
-Subject: [PATCHSET RFC 2/5] xfs: noalloc allocation groups
+	b=ZaDqZkraGxoML71RD71Ty9e4nlMPJ/iUgBuK7GHoOuoFZ6hajsHexNIHezqVSjI2S
+	 347iNBe/X8yyf76pv/hFKN4Tf2Z8uhsRbr+GoE6Ey5W+Ro1gHEL/lYEJQEq43GgZgz
+	 LdERNnaaGvfzRewkL0KFilEuC8CU7tep+AqdLmDI/9iO+h6Uul7fF+u84nR/wnB3SG
+	 ECFF+wtYwdhiUCHP5DWNQC2QixzQLNrOqxz8ZKjEdEZBYaJFbKWV3hKKboOKwabTGg
+	 MVWKD+fyKunf8s2UrJacIJ9ccak2y1njYpVRwtbvlptMH/bcZ9+leMCjZtij8fzblK
+	 bYJa19XxZcRLw==
+Date: Sun, 31 Dec 2023 11:39:10 -0800
+Subject: [PATCHSET 3/5] xfs: report refcount information to userspace
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404854709.1769671.12231107418026207335.stgit@frogsfrogsfrogs>
+Message-ID: <170404855142.1769846.8435488593659046849.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182553.GV361584@frogsfrogsfrogs>
 References: <20231231182553.GV361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,13 +37,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series creates a new NOALLOC flag for allocation groups that causes
-the block and inode allocators to look elsewhere when trying to
-allocate resources.  This is either the first part of a patchset to
-implement online shrinking (set noalloc on the last AGs, run fsr to move
-the files and directories) or freeze-free rmapbt rebuilding (set
-noalloc to prevent creation of new mappings, then hook deletion of old
-mappings).  This is still totally a research project.
+Create a new ioctl to report the number of owners of each disk block so
+that reflink-aware defraggers can make better decisions about which
+extents to target.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -54,35 +50,22 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=noalloc-ags
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=report-refcounts
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=noalloc-ags
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=report-refcounts
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=report-refcounts
 ---
- fs/xfs/Kconfig              |   13 +++++
- fs/xfs/libxfs/xfs_ag.c      |  114 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ag.h      |    8 +++
- fs/xfs/libxfs/xfs_ag_resv.c |   27 +++++++++-
- fs/xfs/libxfs/xfs_defer.c   |   14 +++++
- fs/xfs/libxfs/xfs_fs.h      |    5 ++
- fs/xfs/libxfs/xfs_ialloc.c  |    3 +
- fs/xfs/scrub/btree.c        |   88 +++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.c       |  107 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h       |    1 
- fs/xfs/scrub/dabtree.c      |   24 +++++++++
- fs/xfs/scrub/fscounters.c   |    3 +
- fs/xfs/scrub/inode.c        |    4 ++
- fs/xfs/scrub/scrub.c        |   40 +++++++++++++++
- fs/xfs/scrub/trace.c        |   22 ++++++++
- fs/xfs/scrub/trace.h        |    2 +
- fs/xfs/xfs_fsops.c          |   10 +++-
- fs/xfs/xfs_globals.c        |    5 ++
- fs/xfs/xfs_ioctl.c          |    4 +-
- fs/xfs/xfs_super.c          |    1 
- fs/xfs/xfs_sysctl.h         |    1 
- fs/xfs/xfs_sysfs.c          |   32 ++++++++++++
- fs/xfs/xfs_trace.h          |   65 +++++++++++++++++++++++++
- fs/xfs/xfs_trans.c          |    3 +
- fs/xfs/xfs_trans.h          |    7 +++
- 25 files changed, 597 insertions(+), 6 deletions(-)
+ fs/xfs/Makefile                |    1 
+ fs/xfs/libxfs/xfs_fs_staging.h |   82 +++
+ fs/xfs/xfs_fsrefs.c            |  970 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsrefs.h            |   34 +
+ fs/xfs/xfs_ioctl.c             |  135 ++++++
+ fs/xfs/xfs_trace.c             |    1 
+ fs/xfs/xfs_trace.h             |   99 ++++
+ 7 files changed, 1322 insertions(+)
+ create mode 100644 fs/xfs/xfs_fsrefs.c
+ create mode 100644 fs/xfs/xfs_fsrefs.h
 
