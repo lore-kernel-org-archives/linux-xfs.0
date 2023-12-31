@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CB77C127
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:10:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F69C127
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:10:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NXvEidGh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A07DC433C8;
-	Sun, 31 Dec 2023 22:10:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QkNx0HKu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB810C433C8;
+	Sun, 31 Dec 2023 22:10:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060623;
-	bh=D+Fr3kB7TuoDj7TgBD1cgMe+GuJj3YpkynEB62RS5GY=;
+	s=k20201202; t=1704060638;
+	bh=pJkQ4EBOjTt2FeYaolhIlsXJ8GwZKXwo3NFqTegQHEE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NXvEidGhDPk3Y3K2kVBpExa4IOycovBJlHlMuVCUKliviwgcHtDXHRdvV7D3TmhG+
-	 QBNwxZvII0SL/UqGNJ2tCNupg4d6qC8e8EYGe5KEXDX8kXhBJYcwtDHPCPFOXbA8yA
-	 Sc9YhW+HLNKR4GpC5VYxH6Cck5JIrhzvuujDtaoTdOQnpL17jMVKC2VsQqPpn/nT3b
-	 5YuK1OJHULsYRh3nhM2BuO579KrWMLk1vsRWopUvSwDcLwsRDF3MrGwrWJ6ZUlVwXb
-	 uCSlplHogkJyflvOg5xNyTf2H3n2UcUb3Y7qmQ28lV+oIynrqPAZ3myNy4v29Nfsdc
-	 MXbRNs4iSsMOw==
-Date: Sun, 31 Dec 2023 14:10:22 -0800
-Subject: [PATCH 8/8] xfs_repair: support more than INT_MAX block maps
+	b=QkNx0HKurUxAz3hXRuOxQGtd2NB0FeDCVksT2EpKabsCqdMYjbf9t0t37RO2OLDVY
+	 R2HNWy8NAofCYnfgv2fIZm3RoP45XErES6x9a9+dAq2UeWqEPXQkHVJgBGH4vkd0VG
+	 l81Jg6XD2W2CsgDWjFAJ4PHFOAs5ORQq5LhCQkghgL4lLrxOBvsmQdjPJP2XTGmBYL
+	 AelMNV6ZP/RNO+A8urSBNS/LSSkcwAROJuW4ufiylzF2EzKhG2xNV5qUl9laKMOTSn
+	 vCKb/3j0dpTjEoO1usYANy2VCqTKEISouAsKBT+BrmCCu4JPcLLVb8WrBye9D+zRwz
+	 uN8jXBFmqPXkw==
+Date: Sun, 31 Dec 2023 14:10:38 -0800
+Subject: [PATCH 1/3] xfs: report health of inode link counts
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404991244.1793698.1211159366032444089.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404991133.1793698.11944872908755383201.stgit@frogsfrogsfrogs>
-References: <170404991133.1793698.11944872908755383201.stgit@frogsfrogsfrogs>
+Message-ID: <170404991587.1793944.15546271111816175118.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404991573.1793944.10238192046951704393.stgit@frogsfrogsfrogs>
+References: <170404991573.1793944.10238192046951704393.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,162 +37,63 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that it's possible to have more than INT_MAX block mappings attached
-to a file fork, expand the counters used by this data structure so that
-it can support all possible block mappings.
-
-Note that in practice we're still never going to exceed 4 billion
-extents because the previous patch switched off the block mappings for
-regular files.  This is still twice as much as memory as previous, but
-it's not totally unconstrained.  Hopefully few people bloat the xattr
-structures that large.
+Report on the health of the inode link counts.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/bmap.c   |   26 ++++++++++++++------------
- repair/bmap.h   |    9 ++++-----
- repair/dinode.c |    2 +-
- repair/dir2.c   |    2 +-
- 4 files changed, 20 insertions(+), 19 deletions(-)
+ libxfs/xfs_fs.h     |    1 +
+ libxfs/xfs_health.h |    4 +++-
+ spaceman/health.c   |    4 ++++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/bmap.c b/repair/bmap.c
-index cd1a8b07b30..9ae28686107 100644
---- a/repair/bmap.c
-+++ b/repair/bmap.c
-@@ -34,8 +34,9 @@ blkmap_alloc(
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 07acbed9235..f10d0aa0e33 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -196,6 +196,7 @@ struct xfs_fsop_geom {
+ #define XFS_FSOP_GEOM_SICK_RT_BITMAP	(1 << 4)  /* realtime bitmap */
+ #define XFS_FSOP_GEOM_SICK_RT_SUMMARY	(1 << 5)  /* realtime summary */
+ #define XFS_FSOP_GEOM_SICK_QUOTACHECK	(1 << 6)  /* quota counts */
++#define XFS_FSOP_GEOM_SICK_NLINKS	(1 << 7)  /* inode link counts */
  
- 	if (nex < 1)
- 		nex = 1;
-+	nex = min(nex, XFS_MAX_EXTCNT_DATA_FORK_LARGE);
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index 5626e53b3f0..2bfe2dc404a 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -42,6 +42,7 @@ struct xfs_fsop_geom;
+ #define XFS_SICK_FS_GQUOTA	(1 << 2)  /* group quota */
+ #define XFS_SICK_FS_PQUOTA	(1 << 3)  /* project quota */
+ #define XFS_SICK_FS_QUOTACHECK	(1 << 4)  /* quota counts */
++#define XFS_SICK_FS_NLINKS	(1 << 5)  /* inode link counts */
  
--#if (BITS_PER_LONG == 32)	/* on 64-bit platforms this is never true */
-+#ifdef BLKMAP_NEXTS_MAX
- 	if (nex > BLKMAP_NEXTS_MAX) {
- 		do_warn(
- 	_("Number of extents requested in blkmap_alloc (%llu) overflows 32 bits.\n"
-@@ -115,7 +116,7 @@ blkmap_get(
- 	xfs_fileoff_t	o)
- {
- 	bmap_ext_t	*ext = blkmap->exts;
--	int		i;
-+	xfs_extnum_t	i;
+ /* Observable health issues for realtime volume metadata. */
+ #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
+@@ -79,7 +80,8 @@ struct xfs_fsop_geom;
+ 				 XFS_SICK_FS_UQUOTA | \
+ 				 XFS_SICK_FS_GQUOTA | \
+ 				 XFS_SICK_FS_PQUOTA | \
+-				 XFS_SICK_FS_QUOTACHECK)
++				 XFS_SICK_FS_QUOTACHECK | \
++				 XFS_SICK_FS_NLINKS)
  
- 	for (i = 0; i < blkmap->nexts; i++, ext++) {
- 		if (o >= ext->startoff && o < ext->startoff + ext->blockcount)
-@@ -137,7 +138,7 @@ blkmap_getn(
- {
- 	bmap_ext_t	*bmp = NULL;
- 	bmap_ext_t	*ext;
--	int		i;
-+	xfs_extnum_t	i;
- 	int		nex;
- 
- 	if (nb == 1) {
-@@ -233,7 +234,7 @@ xfs_fileoff_t
- blkmap_next_off(
- 	blkmap_t	*blkmap,
- 	xfs_fileoff_t	o,
--	int		*t)
-+	xfs_extnum_t	*t)
- {
- 	bmap_ext_t	*ext;
- 
-@@ -263,7 +264,7 @@ blkmap_grow(
- {
- 	pthread_key_t	key = dblkmap_key;
- 	blkmap_t	*new_blkmap;
--	int		new_naexts;
-+	xfs_extnum_t	new_naexts;
- 
- 	/* reduce the number of reallocations for large files */
- 	if (blkmap->naexts < 1000)
-@@ -278,20 +279,21 @@ blkmap_grow(
- 		ASSERT(pthread_getspecific(key) == blkmap);
- 	}
- 
--#if (BITS_PER_LONG == 32)	/* on 64-bit platforms this is never true */
-+#ifdef BLKMAP_NEXTS_MAX
- 	if (new_naexts > BLKMAP_NEXTS_MAX) {
- 		do_error(
--	_("Number of extents requested in blkmap_grow (%d) overflows 32 bits.\n"
-+	_("Number of extents requested in blkmap_grow (%llu) overflows 32 bits.\n"
- 	  "You need a 64 bit system to repair this filesystem.\n"),
--			new_naexts);
-+			(unsigned long long)new_naexts);
- 		return NULL;
- 	}
- #endif
--	if (new_naexts <= 0) {
-+	if (new_naexts > XFS_MAX_EXTCNT_DATA_FORK_LARGE) {
- 		do_error(
--	_("Number of extents requested in blkmap_grow (%d) overflowed the\n"
--	  "maximum number of supported extents (%d).\n"),
--			new_naexts, BLKMAP_NEXTS_MAX);
-+	_("Number of extents requested in blkmap_grow (%llu) overflowed the\n"
-+	  "maximum number of supported extents (%llu).\n"),
-+			(unsigned long long)new_naexts,
-+			(unsigned long long)XFS_MAX_EXTCNT_DATA_FORK_LARGE);
- 		return NULL;
- 	}
- 
-diff --git a/repair/bmap.h b/repair/bmap.h
-index 4b588df8c86..3d6be94441c 100644
---- a/repair/bmap.h
-+++ b/repair/bmap.h
-@@ -20,8 +20,8 @@ typedef struct bmap_ext {
-  * Block map.
-  */
- typedef	struct blkmap {
--	int		naexts;
--	int		nexts;
-+	xfs_extnum_t	naexts;
-+	xfs_extnum_t	nexts;
- 	bmap_ext_t	exts[1];
- } blkmap_t;
- 
-@@ -37,8 +37,6 @@ typedef	struct blkmap {
-  */
- #if BITS_PER_LONG == 32
- #define BLKMAP_NEXTS_MAX	((INT_MAX / sizeof(bmap_ext_t)) - 1)
--#else
--#define BLKMAP_NEXTS_MAX	INT_MAX
- #endif
- 
- extern pthread_key_t dblkmap_key;
-@@ -56,6 +54,7 @@ int		blkmap_getn(blkmap_t *blkmap, xfs_fileoff_t o,
- 			    xfs_filblks_t nb, bmap_ext_t **bmpp,
- 			    bmap_ext_t *bmpp_single);
- xfs_fileoff_t	blkmap_last_off(blkmap_t *blkmap);
--xfs_fileoff_t	blkmap_next_off(blkmap_t *blkmap, xfs_fileoff_t o, int *t);
-+xfs_fileoff_t	blkmap_next_off(blkmap_t *blkmap, xfs_fileoff_t o,
-+				xfs_extnum_t *t);
- 
- #endif /* _XFS_REPAIR_BMAP_H */
-diff --git a/repair/dinode.c b/repair/dinode.c
-index f2961275cd1..629440fe6de 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1136,7 +1136,7 @@ process_quota_inode(
- 	xfs_dqid_t		dqid;
- 	xfs_fileoff_t		qbno;
- 	int			i;
--	int			t = 0;
-+	xfs_extnum_t		t = 0;
- 	int			error;
- 
- 	switch (ino_type) {
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 022b61b885f..e46ae9ae46f 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -1327,7 +1327,7 @@ process_leaf_node_dir2(
- 	int			i;
- 	xfs_fileoff_t		ndbno;
- 	int			nex;
--	int			t;
-+	xfs_extnum_t		t;
- 	bmap_ext_t		lbmp;
- 	int			dirty = 0;
+ #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
+ 				 XFS_SICK_RT_SUMMARY)
+diff --git a/spaceman/health.c b/spaceman/health.c
+index 3318f9d1a7f..88b12c0b0ea 100644
+--- a/spaceman/health.c
++++ b/spaceman/health.c
+@@ -76,6 +76,10 @@ static const struct flag_map fs_flags[] = {
+ 		.mask = XFS_FSOP_GEOM_SICK_QUOTACHECK,
+ 		.descr = "quota counts",
+ 	},
++	{
++		.mask = XFS_FSOP_GEOM_SICK_NLINKS,
++		.descr = "inode link counts",
++	},
+ 	{0},
+ };
  
 
