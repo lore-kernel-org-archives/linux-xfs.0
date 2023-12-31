@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37163B666
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:44:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85B8DB666
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:44:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NMIdRefW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC015C433C8;
-	Sun, 31 Dec 2023 19:44:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gM3zfx55"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54DCFC433C7;
+	Sun, 31 Dec 2023 19:44:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051863;
-	bh=zstzYcGPEqAdNwDp5h/TbmxOOj5u9R5JqG1B1v/xysQ=;
+	s=k20201202; t=1704051879;
+	bh=Bq2qnRApCX+nh6FlnrmxGpdYv7qz24Gz+MoROQ+GU98=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NMIdRefWO9n5+rylvoFdn/KAMuR0gFrOOfxSyFiHE02acosLxY8K/YPUCGE/ZkxPf
-	 PN90+1QfypPnUSQkPLx1O19ip9yVo4HyeTCTVo92f4Q0+Zhkg421ZK0UNjqw0f/wIG
-	 MjuDYzuBVXzDE/Ixrn8w6lmBMFiFw8P3vMnqQ4IN2ZWtg0SEFDmubvdsg3DmWRlb25
-	 nLx8VW+lADQtnBZanAZAnhO6EON9q5Nk7eNveWJS8Y3VY5mSD6VmhdHCc3Qw3loWn8
-	 aYydo/9M3tED15xarAT7Bgwn5xfmj8dKj73fB3bKMuBNTYf2+i2/fepO+Juh17tOsL
-	 WDVBecm02D/pQ==
-Date: Sun, 31 Dec 2023 11:44:23 -0800
-Subject: [PATCHSET v29.0 18/40] xfsprogs: support attrfork and unwritten BUIs
+	b=gM3zfx55OrSuUeATy11cghT/oPLLcn5v0Q2UIRh5+YWKAlblJMbda1wfpzP8Uu2E8
+	 dvtb1iwMxiEpp0m9OsxorMpNt0vYnEzyfT3M3Ygnkhj0ThIkw+/meDZwlYfnRVo+YG
+	 D+j8gxEC/csw4RJC+t9K6ASr9OIusQbdlyekNA3IANXh5fGsGQH4UsiWXQvOWx5A6h
+	 ttIrsF6Zz1Hsg2vvmfIbliN+XGXXFElDrQMVNpkXCP3A3Rbqv4wBmFhNIsWNP1SOn3
+	 Z6i44tPHML2fmr9+FX8hnTOv8iFZRBBJIbL390S/XSvg1TIfvQyYf7AUYAMGdnjWDA
+	 nqgsUDJx3vC7g==
+Date: Sun, 31 Dec 2023 11:44:38 -0800
+Subject: [PATCHSET v29.0 19/40] xfsprogs: clean up symbolic link code
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404995537.1795876.9859168140445827889.stgit@frogsfrogsfrogs>
+Message-ID: <170404995879.1795978.16481180835947373560.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,10 +37,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-In preparation for atomic extent swapping and the online repair
-functionality that wants atomic extent swaps, enhance the BUI code so
-that we can support deferred work on the extended attribute fork and on
-unwritten extents.
+This series cleans up a few bits of the symbolic link code as needed for
+future projects.  Online repair requires the ability to commit fixed
+fork-based filesystem metadata such as directories, xattrs, and symbolic
+links atomically, so we need to rearrange the symlink code before we
+land the atomic extent swapping.
+
+Accomplish this by moving the remote symlink target block code and
+declarations to xfs_symlink_remote.[ch].
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -51,12 +55,19 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=expand-bmap-intent-usage
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=symlink-cleanups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=expand-bmap-intent-usage
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=symlink-cleanups
 ---
- libxfs/xfs_bmap.c |   49 +++++++++++++++++++++----------------------------
- libxfs/xfs_bmap.h |    4 ++--
- 2 files changed, 23 insertions(+), 30 deletions(-)
+ include/libxfs.h            |    1 
+ libxfs/libxfs_api_defs.h    |    1 
+ libxfs/xfs_bmap.c           |    1 
+ libxfs/xfs_inode_fork.c     |    1 
+ libxfs/xfs_shared.h         |   13 ----
+ libxfs/xfs_symlink_remote.c |  155 +++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_symlink_remote.h |   26 +++++++
+ mkfs/proto.c                |   72 +++++++++++---------
+ 8 files changed, 222 insertions(+), 48 deletions(-)
+ create mode 100644 libxfs/xfs_symlink_remote.h
 
