@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6BDF9C3
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:31:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D125F9C3
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:32:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBoBt5AG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA80EC433C8;
-	Sun, 31 Dec 2023 20:31:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q8DN3NO1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B0A2C433C8;
+	Sun, 31 Dec 2023 20:32:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704054708;
-	bh=190i35DJJ7ye++3bbyvc1qNGH6Zbal26cAc0iUlykHI=;
+	s=k20201202; t=1704054724;
+	bh=m3szYfdgQK+ZIZkd39dtjVBSFq1uvu7K0mY6f4eqx8w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IBoBt5AGI5bt/2LFwjQcMO6o6QolBoJNhQ8TIaRZ187hh+j9bL29pwb5XrMm6ecZH
-	 wcqEpyee6gqSL1dQgueK2zjfVNaUUpfbLw+ldouXHEjDN/insFQUqh59qN3f1mKlX0
-	 RgAa096Uud+RpayDnFTi/UYa1mmojUJh4YVYnFmLb1MQXOo0XqzQApLNbrksQlxcUl
-	 WCu1lg/dP6IXiJ8u+jm48goMAFZ/B421BLNLGTdu4OB/JluAu9Tf/obdvT8wFv1W2t
-	 DJVvvp8vY3HYco+v99WPZfQtcgN4ks4eIrb8ybAn0A4Cv8OTrKNPvS4pUMYtAiUbI+
-	 EYzABUA/c2cww==
-Date: Sun, 31 Dec 2023 12:31:48 -0800
-Subject: [PATCH 4/4] xfs: add the ability to reap entire inode forks
+	b=q8DN3NO1zTovLYMYwfzSUHjYDyIZwNw1M1IxgHd6cWcyU+TDPtcPcrcDS2NGPhhQh
+	 A4uy2FADLa5RRmqqmN0nFqx/rv3Fh+QOl80nSGztHahaGeL2bH0vZ6ecC//XSbaaM4
+	 HcYz++zFiWgL+VhlhUeW7tPEpFrdmP2REF/l86Xp64/kHsn1GRaEU5uEjDLzXgM6kF
+	 1a/G+bkbnkJC8YlBkdBPgNIO0Vhj1f2EepWXTWiK8CLWUVkoyYMGj93vmugCrU+S0T
+	 6Rn7k/eJkU0YeIcNcDtspKp6rm4qHgKjdWNASSgsKys9IyAk1+y6ZKFgW4KEtJiC1r
+	 KVuFLoqpPUiXg==
+Date: Sun, 31 Dec 2023 12:32:04 -0800
+Subject: [PATCH 1/3] xfs: support preallocating and copying content into
+ temporary files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404833931.1752674.3586860708664682941.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404833858.1752674.247392515267008994.stgit@frogsfrogsfrogs>
-References: <170404833858.1752674.247392515267008994.stgit@frogsfrogsfrogs>
+Message-ID: <170404834301.1752917.3615563381322048344.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404834278.1752917.3964733922134331052.stgit@frogsfrogsfrogs>
+References: <170404834278.1752917.3964733922134331052.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,499 +38,315 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In preparation for supporting repair of indexed file-based metadata
-(such as realtime bitmaps, directories, and extended attribute data),
-add a function to reap the old blocks after a metadata repair finishes.
-IOWs, this is an elaborate bunmapi call that deals with crosslinked
-blocks by unmapping them without freeing them, and also scans for incore
-buffers to invalidate.
+Create the routines we need to preallocate space in a temporary ondisk
+file and then copy the contents of an xfile into the tempfile.  The
+upcoming rtsummary repair feature will construct the contents of a
+realtime summary file in memory, after which it will want to copy all
+that into the ondisk temporary file before atomically committing the new
+rtsummary contents.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/reap.c  |  372 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/reap.h  |    1 
- fs/xfs/scrub/trace.h |   63 ++++++++
- 3 files changed, 436 insertions(+)
+ fs/xfs/scrub/tempfile.c |  197 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/tempfile.h |   15 ++++
+ fs/xfs/scrub/trace.h    |   39 +++++++++
+ 3 files changed, 251 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index 7ae6253395e72..01ceaa4efa16b 100644
---- a/fs/xfs/scrub/reap.c
-+++ b/fs/xfs/scrub/reap.c
-@@ -675,3 +675,375 @@ xrep_reap_fsblocks(
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 5f4a931b1967c..936107d083545 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -14,14 +14,18 @@
+ #include "xfs_inode.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_quota.h"
++#include "xfs_bmap.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_dir2.h"
+ #include "xfs_xchgrange.h"
++#include "xfs_defer.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
++#include "scrub/repair.h"
+ #include "scrub/trace.h"
+ #include "scrub/tempfile.h"
++#include "scrub/xfile.h"
  
- 	return 0;
+ /*
+  * Create a temporary file for reconstructing metadata, with the intention of
+@@ -249,3 +253,196 @@ xrep_tempfile_rele(
+ 	xchk_irele(sc, sc->tempip);
+ 	sc->tempip = NULL;
  }
 +
 +/*
-+ * Metadata files are not supposed to share blocks with anything else.
-+ * If blocks are shared, we remove the reverse mapping (thus reducing the
-+ * crosslink factor); if blocks are not shared, we also need to free them.
-+ *
-+ * This first step determines the longest subset of the passed-in imap
-+ * (starting at its beginning) that is either crosslinked or not crosslinked.
-+ * The blockcount will be adjust down as needed.
-+ */
-+STATIC int
-+xreap_bmapi_select(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	struct xfs_bmbt_irec	*imap,
-+	bool			*crosslinked)
-+{
-+	struct xfs_owner_info	oinfo;
-+	struct xfs_btree_cur	*cur;
-+	xfs_filblks_t		len = 1;
-+	xfs_agblock_t		bno;
-+	xfs_agblock_t		agbno;
-+	xfs_agblock_t		agbno_next;
-+	int			error;
-+
-+	agbno = XFS_FSB_TO_AGBNO(sc->mp, imap->br_startblock);
-+	agbno_next = agbno + imap->br_blockcount;
-+
-+	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
-+			sc->sa.pag);
-+
-+	xfs_rmap_ino_owner(&oinfo, ip->i_ino, whichfork, imap->br_startoff);
-+	error = xfs_rmap_has_other_keys(cur, agbno, 1, &oinfo, crosslinked);
-+	if (error)
-+		goto out_cur;
-+
-+	bno = agbno + 1;
-+	while (bno < agbno_next) {
-+		bool		also_crosslinked;
-+
-+		oinfo.oi_offset++;
-+		error = xfs_rmap_has_other_keys(cur, bno, 1, &oinfo,
-+				&also_crosslinked);
-+		if (error)
-+			goto out_cur;
-+
-+		if (also_crosslinked != *crosslinked)
-+			break;
-+
-+		len++;
-+		bno++;
-+	}
-+
-+	imap->br_blockcount = len;
-+	trace_xreap_bmapi_select(sc->sa.pag, agbno, len, *crosslinked);
-+out_cur:
-+	xfs_btree_del_cursor(cur, error);
-+	return error;
-+}
-+
-+/*
-+ * Decide if this buffer can be joined to a transaction.  This is true for most
-+ * buffers, but there are two cases that we want to catch: large remote xattr
-+ * value buffers are not logged and can overflow the buffer log item dirty
-+ * bitmap size; and oversized cached buffers if things have really gone
-+ * haywire.
-+ */
-+static inline bool
-+xreap_buf_loggable(
-+	const struct xfs_buf	*bp)
-+{
-+	int			i;
-+
-+	for (i = 0; i < bp->b_map_count; i++) {
-+		int		chunks;
-+		int		map_size;
-+
-+		chunks = DIV_ROUND_UP(BBTOB(bp->b_maps[i].bm_len),
-+				XFS_BLF_CHUNK);
-+		map_size = DIV_ROUND_UP(chunks, NBWORD);
-+		if (map_size > XFS_BLF_DATAMAP_SIZE)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+/*
-+ * Invalidate any buffers for this file mapping.  The @imap blockcount may be
-+ * adjusted downward if we need to roll the transaction.
-+ */
-+STATIC int
-+xreap_bmapi_binval(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	struct xfs_bmbt_irec	*imap)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_perag	*pag = sc->sa.pag;
-+	int			bmap_flags = xfs_bmapi_aflag(whichfork);
-+	xfs_fileoff_t		off;
-+	xfs_fileoff_t		max_off;
-+	xfs_extlen_t		scan_blocks;
-+	xfs_agnumber_t		agno = sc->sa.pag->pag_agno;
-+	xfs_agblock_t		bno;
-+	xfs_agblock_t		agbno;
-+	xfs_agblock_t		agbno_next;
-+	unsigned int		invalidated = 0;
-+	int			error;
-+
-+	/*
-+	 * Avoid invalidating AG headers and post-EOFS blocks because we never
-+	 * own those.
-+	 */
-+	agbno = bno = XFS_FSB_TO_AGBNO(sc->mp, imap->br_startblock);
-+	agbno_next = agbno + imap->br_blockcount;
-+	if (!xfs_verify_agbno(pag, agbno) ||
-+	    !xfs_verify_agbno(pag, agbno_next - 1))
-+		return 0;
-+
-+	/*
-+	 * Buffers for file blocks can span multiple contiguous mappings.  This
-+	 * means that for each block in the mapping, there could exist an
-+	 * xfs_buf indexed by that block with any length up to the maximum
-+	 * buffer size (remote xattr values) or to the next hole in the fork.
-+	 * To set up our binval scan, first we need to figure out the location
-+	 * of the next hole.
-+	 */
-+	off = imap->br_startoff + imap->br_blockcount;
-+	max_off = off + xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
-+	while (off < max_off) {
-+		struct xfs_bmbt_irec	hmap;
-+		int			nhmaps = 1;
-+
-+		error = xfs_bmapi_read(ip, off, max_off - off, &hmap,
-+				&nhmaps, bmap_flags);
-+		if (error)
-+			return error;
-+		if (nhmaps != 1 || hmap.br_startblock == DELAYSTARTBLOCK) {
-+			ASSERT(0);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		if (!xfs_bmap_is_real_extent(&hmap))
-+			break;
-+
-+		off = hmap.br_startoff + hmap.br_blockcount;
-+	}
-+	scan_blocks = off - imap->br_startoff;
-+
-+	trace_xreap_bmapi_binval_scan(sc, imap, scan_blocks);
-+
-+	/*
-+	 * If there are incore buffers for these blocks, invalidate them.  If
-+	 * we can't (try)lock the buffer we assume it's owned by someone else
-+	 * and leave it alone.  The buffer cache cannot detect aliasing, so
-+	 * employ nested loops to detect incore buffers of any plausible size.
-+	 */
-+	while (bno < agbno_next) {
-+		struct xrep_bufscan	scan = {
-+			.daddr		= XFS_AGB_TO_DADDR(mp, agno, bno),
-+			.max_sectors	= xrep_bufscan_max_sectors(mp,
-+								scan_blocks),
-+			.daddr_step	= XFS_FSB_TO_BB(mp, 1),
-+		};
-+		struct xfs_buf		*bp;
-+
-+		while ((bp = xrep_bufscan_advance(mp, &scan)) != NULL) {
-+			if (xreap_buf_loggable(bp)) {
-+				xfs_trans_bjoin(sc->tp, bp);
-+				xfs_trans_binval(sc->tp, bp);
-+			} else {
-+				xfs_buf_stale(bp);
-+				xfs_buf_relse(bp);
-+			}
-+			invalidated++;
-+
-+			/*
-+			 * Stop invalidating if we've hit the limit; we should
-+			 * still have enough reservation left to free however
-+			 * much of the mapping we've seen so far.
-+			 */
-+			if (invalidated > XREAP_MAX_BINVAL) {
-+				imap->br_blockcount = agbno_next - bno;
-+				goto out;
-+			}
-+		}
-+
-+		bno++;
-+		scan_blocks--;
-+	}
-+
-+out:
-+	trace_xreap_bmapi_binval(sc->sa.pag, agbno, imap->br_blockcount);
-+	return 0;
-+}
-+
-+/*
-+ * Dispose of as much of the beginning of this file fork mapping as possible.
-+ * The number of blocks disposed of is returned in @imap->br_blockcount.
-+ */
-+STATIC int
-+xrep_reap_bmapi_iter(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	int				whichfork,
-+	struct xfs_bmbt_irec		*imap,
-+	bool				crosslinked)
-+{
-+	int				error;
-+
-+	if (crosslinked) {
-+		/*
-+		 * If there are other rmappings, this block is cross linked and
-+		 * must not be freed.  Remove the reverse mapping, leave the
-+		 * buffer cache in its possibly confused state, and move on.
-+		 * We don't want to risk discarding valid data buffers from
-+		 * anybody else who thinks they own the block, even though that
-+		 * runs the risk of stale buffer warnings in the future.
-+		 */
-+		trace_xreap_dispose_unmap_extent(sc->sa.pag,
-+				XFS_FSB_TO_AGBNO(sc->mp, imap->br_startblock),
-+				imap->br_blockcount);
-+
-+		/*
-+		 * Schedule removal of the mapping from the fork.  We use
-+		 * deferred log intents in this function to control the exact
-+		 * sequence of metadata updates.
-+		 */
-+		xfs_bmap_unmap_extent(sc->tp, ip, whichfork, imap);
-+		xfs_trans_mod_dquot_byino(sc->tp, ip, XFS_TRANS_DQ_BCOUNT,
-+				-(int64_t)imap->br_blockcount);
-+		xfs_rmap_unmap_extent(sc->tp, ip, whichfork, imap);
-+		return 0;
-+	}
-+
-+	/*
-+	 * If the block is not crosslinked, we can invalidate all the incore
-+	 * buffers for the extent, and then free the extent.  This is a bit of
-+	 * a mess since we don't detect discontiguous buffers that are indexed
-+	 * by a block starting before the first block of the extent but overlap
-+	 * anyway.
-+	 */
-+	trace_xreap_dispose_free_extent(sc->sa.pag,
-+			XFS_FSB_TO_AGBNO(sc->mp, imap->br_startblock),
-+			imap->br_blockcount);
-+
-+	/*
-+	 * Invalidate as many buffers as we can, starting at the beginning of
-+	 * this mapping.  If this function sets blockcount to zero, the
-+	 * transaction is full of logged buffer invalidations, so we need to
-+	 * return early so that we can roll and retry.
-+	 */
-+	error = xreap_bmapi_binval(sc, ip, whichfork, imap);
-+	if (error || imap->br_blockcount == 0)
-+		return error;
-+
-+	/*
-+	 * Schedule removal of the mapping from the fork.  We use deferred log
-+	 * intents in this function to control the exact sequence of metadata
-+	 * updates.
-+	 */
-+	xfs_bmap_unmap_extent(sc->tp, ip, whichfork, imap);
-+	xfs_trans_mod_dquot_byino(sc->tp, ip, XFS_TRANS_DQ_BCOUNT,
-+			-(int64_t)imap->br_blockcount);
-+	return xfs_free_extent_later(sc->tp, imap->br_startblock,
-+			imap->br_blockcount, NULL, XFS_AG_RESV_NONE, true);
-+}
-+
-+/*
-+ * Dispose of as much of this file extent as we can.  Upon successful return,
-+ * the imap will reflect the mapping that was removed from the fork.
-+ */
-+STATIC int
-+xreap_ifork_extent(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	int				whichfork,
-+	struct xfs_bmbt_irec		*imap)
-+{
-+	xfs_agnumber_t			agno;
-+	bool				crosslinked;
-+	int				error;
-+
-+	ASSERT(sc->sa.pag == NULL);
-+
-+	trace_xreap_ifork_extent(sc, ip, whichfork, imap);
-+
-+	agno = XFS_FSB_TO_AGNO(sc->mp, imap->br_startblock);
-+	sc->sa.pag = xfs_perag_get(sc->mp, agno);
-+	if (!sc->sa.pag)
-+		return -EFSCORRUPTED;
-+
-+	error = xfs_alloc_read_agf(sc->sa.pag, sc->tp, 0, &sc->sa.agf_bp);
-+	if (error)
-+		goto out_pag;
-+
-+	/*
-+	 * Decide the fate of the blocks at the beginning of the mapping, then
-+	 * update the mapping to use it with the unmap calls.
-+	 */
-+	error = xreap_bmapi_select(sc, ip, whichfork, imap, &crosslinked);
-+	if (error)
-+		goto out_agf;
-+
-+	error = xrep_reap_bmapi_iter(sc, ip, whichfork, imap, crosslinked);
-+	if (error)
-+		goto out_agf;
-+
-+out_agf:
-+	xfs_trans_brelse(sc->tp, sc->sa.agf_bp);
-+	sc->sa.agf_bp = NULL;
-+out_pag:
-+	xfs_perag_put(sc->sa.pag);
-+	sc->sa.pag = NULL;
-+	return error;
-+}
-+
-+/*
-+ * Dispose of each block mapped to the given fork of the given file.  Callers
-+ * must hold ILOCK_EXCL, and ip can only be sc->ip or sc->tempip.  The fork
-+ * must not have any delalloc reservations.
++ * Make sure that the given range of the data fork of the temporary file is
++ * mapped to written blocks.  The caller must ensure that both inodes are
++ * joined to the transaction.
 + */
 +int
-+xrep_reap_ifork(
++xrep_tempfile_prealloc(
 +	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	int			whichfork)
++	xfs_fileoff_t		off,
++	xfs_filblks_t		len)
 +{
-+	xfs_fileoff_t		off = 0;
-+	int			bmap_flags = xfs_bmapi_aflag(whichfork);
++	struct xfs_bmbt_irec	map;
++	xfs_fileoff_t		end = off + len;
 +	int			error;
 +
-+	ASSERT(xfs_has_rmapbt(sc->mp));
-+	ASSERT(ip == sc->ip || ip == sc->tempip);
-+	ASSERT(whichfork == XFS_ATTR_FORK || !XFS_IS_REALTIME_INODE(ip));
++	ASSERT(sc->tempip != NULL);
++	ASSERT(!XFS_NOT_DQATTACHED(sc->mp, sc->tempip));
 +
-+	while (off < XFS_MAX_FILEOFF) {
-+		struct xfs_bmbt_irec	imap;
-+		int			nimaps = 1;
++	for (; off < end; off = map.br_startoff + map.br_blockcount) {
++		int		nmaps = 1;
 +
-+		/* Read the next extent, skip past holes and delalloc. */
-+		error = xfs_bmapi_read(ip, off, XFS_MAX_FILEOFF - off, &imap,
-+				&nimaps, bmap_flags);
++		/*
++		 * If we have a real extent mapping this block then we're
++		 * in ok shape.
++		 */
++		error = xfs_bmapi_read(sc->tempip, off, end - off, &map, &nmaps,
++				XFS_DATA_FORK);
 +		if (error)
 +			return error;
-+		if (nimaps != 1 || imap.br_startblock == DELAYSTARTBLOCK) {
-+			ASSERT(0);
++		if (nmaps == 0) {
++			ASSERT(nmaps != 0);
 +			return -EFSCORRUPTED;
 +		}
 +
++		if (xfs_bmap_is_written_extent(&map))
++			continue;
++
 +		/*
-+		 * If this is a real space mapping, reap as much of it as we
-+		 * can in a single transaction.
++		 * If we find a delalloc reservation then something is very
++		 * very wrong.  Bail out.
 +		 */
-+		if (xfs_bmap_is_real_extent(&imap)) {
-+			error = xreap_ifork_extent(sc, ip, whichfork, &imap);
-+			if (error)
-+				return error;
++		if (map.br_startblock == DELAYSTARTBLOCK)
++			return -EFSCORRUPTED;
 +
-+			error = xfs_defer_finish(&sc->tp);
-+			if (error)
-+				return error;
-+		}
++		/*
++		 * Make sure this block has a real zeroed extent allocated to
++		 * it.
++		 */
++		nmaps = 1;
++		error = xfs_bmapi_write(sc->tp, sc->tempip, off, end - off,
++				XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO, 0, &map,
++				&nmaps);
++		if (error)
++			return error;
++		if (nmaps != 1)
++			return -EFSCORRUPTED;
 +
-+		off = imap.br_startoff + imap.br_blockcount;
++		trace_xrep_tempfile_prealloc(sc, XFS_DATA_FORK, &map);
++
++		/* Commit new extent and all deferred work. */
++		error = xfs_defer_finish(&sc->tp);
++		if (error)
++			return error;
 +	}
 +
 +	return 0;
 +}
-diff --git a/fs/xfs/scrub/reap.h b/fs/xfs/scrub/reap.h
-index bb09e21fcb172..3f2f1775e29db 100644
---- a/fs/xfs/scrub/reap.h
-+++ b/fs/xfs/scrub/reap.h
-@@ -13,6 +13,7 @@ int xrep_reap_agblocks(struct xfs_scrub *sc, struct xagb_bitmap *bitmap,
- 		const struct xfs_owner_info *oinfo, enum xfs_ag_resv_type type);
- int xrep_reap_fsblocks(struct xfs_scrub *sc, struct xfsb_bitmap *bitmap,
- 		const struct xfs_owner_info *oinfo);
-+int xrep_reap_ifork(struct xfs_scrub *sc, struct xfs_inode *ip, int whichfork);
- 
- /* Buffer cache scan context. */
- struct xrep_bufscan {
++
++/*
++ * Write data to each block of a file.  The given range of the tempfile's data
++ * fork must already be populated with written extents.
++ */
++int
++xrep_tempfile_copyin(
++	struct xfs_scrub	*sc,
++	xfs_fileoff_t		off,
++	xfs_filblks_t		len,
++	xrep_tempfile_copyin_fn	prep_fn,
++	void			*data)
++{
++	LIST_HEAD(buffers_list);
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_buf		*bp;
++	xfs_fileoff_t		flush_mask;
++	xfs_fileoff_t		end = off + len;
++	loff_t			pos = XFS_FSB_TO_B(mp, off);
++	int			error = 0;
++
++	ASSERT(S_ISREG(VFS_I(sc->tempip)->i_mode));
++
++	/* Flush buffers to disk every 512K */
++	flush_mask = XFS_B_TO_FSBT(mp, (1U << 19)) - 1;
++
++	for (; off < end; off++, pos += mp->m_sb.sb_blocksize) {
++		struct xfs_bmbt_irec	map;
++		int			nmaps = 1;
++
++		/* Read block mapping for this file block. */
++		error = xfs_bmapi_read(sc->tempip, off, 1, &map, &nmaps, 0);
++		if (error)
++			goto out_err;
++		if (nmaps == 0 || !xfs_bmap_is_written_extent(&map)) {
++			error = -EFSCORRUPTED;
++			goto out_err;
++		}
++
++		/* Get the metadata buffer for this offset in the file. */
++		error = xfs_trans_get_buf(sc->tp, mp->m_ddev_targp,
++				XFS_FSB_TO_DADDR(mp, map.br_startblock),
++				mp->m_bsize, 0, &bp);
++		if (error)
++			goto out_err;
++
++		trace_xrep_tempfile_copyin(sc, XFS_DATA_FORK, &map);
++
++		/* Read in a block's worth of data from the xfile. */
++		error = prep_fn(sc, bp, data);
++		if (error) {
++			xfs_trans_brelse(sc->tp, bp);
++			goto out_err;
++		}
++
++		/* Queue buffer, and flush if we have too much dirty data. */
++		xfs_buf_delwri_queue_here(bp, &buffers_list);
++		xfs_trans_brelse(sc->tp, bp);
++
++		if (!(off & flush_mask)) {
++			error = xfs_buf_delwri_submit(&buffers_list);
++			if (error)
++				goto out_err;
++		}
++	}
++
++	/*
++	 * Write the new blocks to disk.  If the ordered list isn't empty after
++	 * that, then something went wrong and we have to fail.  This should
++	 * never happen, but we'll check anyway.
++	 */
++	error = xfs_buf_delwri_submit(&buffers_list);
++	if (error)
++		goto out_err;
++
++	if (!list_empty(&buffers_list)) {
++		ASSERT(list_empty(&buffers_list));
++		error = -EIO;
++		goto out_err;
++	}
++
++	return 0;
++
++out_err:
++	xfs_buf_delwri_cancel(&buffers_list);
++	return error;
++}
++
++/*
++ * Set the temporary file's size.  Caller must join the tempfile to the scrub
++ * transaction and is responsible for adjusting block mappings as needed.
++ */
++int
++xrep_tempfile_set_isize(
++	struct xfs_scrub	*sc,
++	unsigned long long	isize)
++{
++	if (sc->tempip->i_disk_size == isize)
++		return 0;
++
++	sc->tempip->i_disk_size = isize;
++	i_size_write(VFS_I(sc->tempip), isize);
++	return xrep_tempfile_roll_trans(sc);
++}
++
++/*
++ * Roll a repair transaction involving the temporary file.  Caller must join
++ * both the temporary file and the file being scrubbed to the transaction.
++ * This function return with both inodes joined to a new scrub transaction,
++ * or the usual negative errno.
++ */
++int
++xrep_tempfile_roll_trans(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	xfs_trans_log_inode(sc->tp, sc->tempip, XFS_ILOG_CORE);
++	error = xrep_roll_trans(sc);
++	if (error)
++		return error;
++
++	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
++	return 0;
++}
+diff --git a/fs/xfs/scrub/tempfile.h b/fs/xfs/scrub/tempfile.h
+index e165e0a3faf63..7980f9c4de552 100644
+--- a/fs/xfs/scrub/tempfile.h
++++ b/fs/xfs/scrub/tempfile.h
+@@ -17,6 +17,21 @@ void xrep_tempfile_iounlock(struct xfs_scrub *sc);
+ void xrep_tempfile_ilock(struct xfs_scrub *sc);
+ bool xrep_tempfile_ilock_nowait(struct xfs_scrub *sc);
+ void xrep_tempfile_iunlock(struct xfs_scrub *sc);
++
++int xrep_tempfile_prealloc(struct xfs_scrub *sc, xfs_fileoff_t off,
++		xfs_filblks_t len);
++
++enum xfs_blft;
++
++typedef int (*xrep_tempfile_copyin_fn)(struct xfs_scrub *sc,
++		struct xfs_buf *bp, void *data);
++
++int xrep_tempfile_copyin(struct xfs_scrub *sc, xfs_fileoff_t off,
++		xfs_filblks_t len, xrep_tempfile_copyin_fn fn, void *data);
++
++int xrep_tempfile_set_isize(struct xfs_scrub *sc, unsigned long long isize);
++
++int xrep_tempfile_roll_trans(struct xfs_scrub *sc);
+ #else
+ static inline void xrep_tempfile_iolock_both(struct xfs_scrub *sc)
+ {
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 00f906e50c341..691c91c9a5853 100644
+index 691c91c9a5853..73ddaaadd2414 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -1510,6 +1510,7 @@ DEFINE_EVENT(xrep_extent_class, name, \
- DEFINE_REPAIR_EXTENT_EVENT(xreap_dispose_unmap_extent);
- DEFINE_REPAIR_EXTENT_EVENT(xreap_dispose_free_extent);
- DEFINE_REPAIR_EXTENT_EVENT(xreap_agextent_binval);
-+DEFINE_REPAIR_EXTENT_EVENT(xreap_bmapi_binval);
- DEFINE_REPAIR_EXTENT_EVENT(xrep_agfl_insert);
- 
- DECLARE_EVENT_CLASS(xrep_reap_find_class,
-@@ -1543,6 +1544,7 @@ DEFINE_EVENT(xrep_reap_find_class, name, \
- 		 bool crosslinked), \
- 	TP_ARGS(pag, agbno, len, crosslinked))
- DEFINE_REPAIR_REAP_FIND_EVENT(xreap_agextent_select);
-+DEFINE_REPAIR_REAP_FIND_EVENT(xreap_bmapi_select);
- 
- DECLARE_EVENT_CLASS(xrep_rmap_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-@@ -2394,6 +2396,67 @@ TRACE_EVENT(xrep_tempfile_create,
+@@ -2396,6 +2396,45 @@ TRACE_EVENT(xrep_tempfile_create,
  		  __entry->temp_inum)
  );
  
-+TRACE_EVENT(xreap_ifork_extent,
-+	TP_PROTO(struct xfs_scrub *sc, struct xfs_inode *ip, int whichfork,
-+		 const struct xfs_bmbt_irec *irec),
-+	TP_ARGS(sc, ip, whichfork, irec),
++DECLARE_EVENT_CLASS(xrep_tempfile_class,
++	TP_PROTO(struct xfs_scrub *sc, int whichfork,
++		 struct xfs_bmbt_irec *irec),
++	TP_ARGS(sc, whichfork, irec),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
 +		__field(xfs_ino_t, ino)
 +		__field(int, whichfork)
-+		__field(xfs_fileoff_t, fileoff)
++		__field(xfs_fileoff_t, lblk)
 +		__field(xfs_filblks_t, len)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
++		__field(xfs_fsblock_t, pblk)
 +		__field(int, state)
 +	),
 +	TP_fast_assign(
 +		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
++		__entry->ino = sc->tempip->i_ino;
 +		__entry->whichfork = whichfork;
-+		__entry->fileoff = irec->br_startoff;
++		__entry->lblk = irec->br_startoff;
 +		__entry->len = irec->br_blockcount;
-+		__entry->agno = XFS_FSB_TO_AGNO(sc->mp, irec->br_startblock);
-+		__entry->agbno = XFS_FSB_TO_AGBNO(sc->mp, irec->br_startblock);
++		__entry->pblk = irec->br_startblock;
 +		__entry->state = irec->br_state;
 +	),
-+	TP_printk("dev %d:%d ip 0x%llx whichfork %s agno 0x%x agbno 0x%x fileoff 0x%llx fsbcount 0x%llx state 0x%x",
++	TP_printk("dev %d:%d ino 0x%llx whichfork %s fileoff 0x%llx fsbcount 0x%llx startblock 0x%llx state %d",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->ino,
 +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->fileoff,
++		  __entry->lblk,
 +		  __entry->len,
++		  __entry->pblk,
 +		  __entry->state)
 +);
++#define DEFINE_XREP_TEMPFILE_EVENT(name) \
++DEFINE_EVENT(xrep_tempfile_class, name, \
++	TP_PROTO(struct xfs_scrub *sc, int whichfork, \
++		 struct xfs_bmbt_irec *irec), \
++	TP_ARGS(sc, whichfork, irec))
++DEFINE_XREP_TEMPFILE_EVENT(xrep_tempfile_prealloc);
++DEFINE_XREP_TEMPFILE_EVENT(xrep_tempfile_copyin);
 +
-+TRACE_EVENT(xreap_bmapi_binval_scan,
-+	TP_PROTO(struct xfs_scrub *sc, const struct xfs_bmbt_irec *irec,
-+		 xfs_extlen_t scan_blocks),
-+	TP_ARGS(sc, irec, scan_blocks),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_filblks_t, len)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, scan_blocks)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->len = irec->br_blockcount;
-+		__entry->agno = XFS_FSB_TO_AGNO(sc->mp, irec->br_startblock);
-+		__entry->agbno = XFS_FSB_TO_AGBNO(sc->mp, irec->br_startblock);
-+		__entry->scan_blocks = scan_blocks;
-+	),
-+	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%llx scan_blocks 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len,
-+		  __entry->scan_blocks)
-+);
-+
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
- 
- 
+ TRACE_EVENT(xreap_ifork_extent,
+ 	TP_PROTO(struct xfs_scrub *sc, struct xfs_inode *ip, int whichfork,
+ 		 const struct xfs_bmbt_irec *irec),
 
