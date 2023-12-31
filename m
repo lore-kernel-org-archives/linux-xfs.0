@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36211BA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:46:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB34BA30
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:46:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G4fo/ref"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BDACC433C7;
-	Sun, 31 Dec 2023 20:46:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZB1t5FCS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACAC4C433C8;
+	Sun, 31 Dec 2023 20:46:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704055585;
-	bh=Iwgtbz43KQ2GDEx8guiaCpEZoUhtQ5g9OHBFsayr+3c=;
+	s=k20201202; t=1704055600;
+	bh=TkCOToRJtogkYuJtdAOWGgiT5yTPP9B9oYW2WsL8sUo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G4fo/refiFK3B98w/N9Q2Y9pr4cfJfJUP59tSFqK7aoKwCaZC3EOkAkgzRVMfBpJF
-	 0uFZAerHI0DomNRx89RXfm6JkO/78zEK3MTxM8erVyf9xqvo1Jwq2UjKZSgtbJXcTI
-	 Y9DWzX2FJTxto46KH91oSiNZC96jSfnzRQZOhHxFfi1pRo4mMUB5lziVgKm2qp2FdF
-	 HMXEqm1lvoCblB0oBFlqZseOGFlZbgWqnfK6npGax+5obMcrPXg0c0gJMZUOd5E4DG
-	 cOWUyAHn60rMEYwpXPlKmgECuUSoniwOhNXMrg5Kd6RJMbeQWEY6i8tQPIvwh3KlL4
-	 R7rvO2tbhexLQ==
-Date: Sun, 31 Dec 2023 12:46:24 -0800
-Subject: [PATCH 06/14] xfs: preserve NVLOOKUP in xfs_attr_set
+	b=ZB1t5FCSE7mrszCtXm89uFkPvqoR0VjEopbSYyNQXd1ZnZ/UohS6TYKOU47Q1jbUI
+	 wC8zJ4b/e7QuvWAB7N9RBNkbGlwYruG/ruPuEllViuqgqLGBib6QrOBVCR2D+Pd+8p
+	 uLBQr4A0rVzj2ca80/VK3mDvIDrCt/wrIfdZUfiOSUAkVu+C4O+me9NUYlUdS/Eigb
+	 f8zDJvFTzsFepN8BVytwujIf2LGv3aCWxBWs3dAedab4Xj8FPZ5Pkn2PGrRgqi0cKZ
+	 ZLDgGi6TWdV5je9OqikQ313GPMaVDCbM01JGGPKZ/xtAzkz0Fwlz3Y0LtrJkNTE0Yz
+	 /IUZvxP9OqMaQ==
+Date: Sun, 31 Dec 2023 12:46:40 -0800
+Subject: [PATCH 07/14] xfs: restructure xfs_attr_complete_op a bit
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <170404840499.1756514.9313936060568212683.stgit@frogsfrogsfrogs>
+Message-ID: <170404840514.1756514.4245756369419113020.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
 References: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,33 +38,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Preserve the attr-value lookup flag when calling xfs_attr_set.  Normal
-xattr users will never use this, but parent pointer fsck will.
+Reduce the indentation in this function by flattening the nested if
+statements.  We're going to add more code later to this function later,
+hence the early cleanup.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 2de3f6ad36601..d1f228c67857f 100644
+index d1f228c67857f..1d4cd8a8ac9ab 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -945,11 +945,11 @@ xfs_attr_set(
- 	/*
- 	 * We have no control over the attribute names that userspace passes us
- 	 * to remove, so we have to allow the name lookup prior to attribute
--	 * removal to fail as well.  Preserve the logged flag, since we need
--	 * to pass that through to the logging code.
-+	 * removal to fail as well.  Preserve the logged and vlookup flags,
-+	 * since we need to pass them through to the lower levels.
- 	 */
--	args->op_flags = XFS_DA_OP_OKNOENT |
--					(args->op_flags & XFS_DA_OP_LOGGED);
-+	args->op_flags &= (XFS_DA_OP_LOGGED | XFS_DA_OP_NVLOOKUP);
-+	args->op_flags |= XFS_DA_OP_OKNOENT;
+@@ -421,11 +421,11 @@ xfs_attr_complete_op(
+ 	bool			do_replace = args->op_flags & XFS_DA_OP_REPLACE;
  
- 	if (!is_remove) {
- 		XFS_STATS_INC(mp, xs_attr_set);
+ 	args->op_flags &= ~XFS_DA_OP_REPLACE;
+-	if (do_replace) {
+-		args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
+-		return replace_state;
+-	}
+-	return XFS_DAS_DONE;
++	if (!do_replace)
++		return XFS_DAS_DONE;
++
++	args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
++	return replace_state;
+ }
+ 
+ static int
 
