@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AE23B65B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:42:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AAE5B65B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:42:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LdTiq1NU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE3B0C433C7;
-	Sun, 31 Dec 2023 19:42:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyOuM/Uc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907F9C433C7;
+	Sun, 31 Dec 2023 19:42:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051723;
-	bh=LQQX2X4WNc1fXo6GiKhIpwXzqIYg8PzAi22gMZwxcHI=;
+	s=k20201202; t=1704051738;
+	bh=E72fn/Tym3Qo4aiXR0lqNM3Yqt4n+M7fviqvfCVlp5o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LdTiq1NUok+NWH89szwn3J5ZizMuHwIeAAVJa1uj8yuQ/v5RyvGKI/E/LpR+3gg71
-	 Pb3ifzOVqXtPoQR980i0Me7g0sOs0UFZg4XCGErgAXvxUDLZ6zzsak4+4SJMttbmK5
-	 0Xqn22+ccBtL1GpCJIwCMxSYT5QPJiZ38YUR+SVvS//95hRhlWyy4xnMQ8ZKG38t3H
-	 Bu8iLGX7jMapqPoMyKmUhPJcPMMeAHQEfaUcqRZizrmPpNNv/gVUqNt9d0HGJlSx4c
-	 2YGFX1B2E5Kk2b2/u97yWq0VPRQPLxTtH36PJ1dhrli9UucMMBLnSmnuOFXKpb698C
-	 7Nh8VxUgZgzGg==
-Date: Sun, 31 Dec 2023 11:42:02 -0800
-Subject: [PATCHSET v29.0 09/40] xfsprogs: report corruption to the health
- trackers
+	b=kyOuM/UcClBpvriKBoLCeg/ShAITyngxTNXX8QPpVz/qPmK9pu886DiMXH4IA/Bdg
+	 Eqrf22hZslaY4A/5LkGyhaNlQFrgpMD0aY3vT5LxUSiMa9IvcMOB3AcO/WGsSmFa3w
+	 rT+3BPVZ1f6zaJAulAPrEw+O+XS4fxLUyD0vJiSOrYFLIpgqA2BFjbpmViS8jAXw4P
+	 hDzkNoUcY6mWH8fyjfDqzSh7xIL+OtLcSCYWrrBixhZ6URUk42GnyclJbUQsBhwR+c
+	 Et7bai3eH0Plfl3BRCf2hAnmrxr9crg4X5Spj+Ch02I6ZbFh6zrMQqbxQYBicSOlQ6
+	 I9HnJvOI+a7SQ==
+Date: Sun, 31 Dec 2023 11:42:18 -0800
+Subject: [PATCHSET v29.0 10/40] xfsprogs: indirect health reporting
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404991943.1794070.7853125417143732405.stgit@frogsfrogsfrogs>
+Message-ID: <170404992400.1794340.13951488488074140755.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,26 +37,16 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Any time that the runtime code thinks it has found corrupt metadata, it
-should tell the health tracking subsystem that the corresponding part of
-the filesystem is sick.  These reports come primarily from two places --
-code that is reading a buffer that fails validation, and higher level
-pieces that observe a conflict involving multiple buffers.  This
-patchset uses automated scanning to update all such callsites with a
-mark_sick call.
+This series enables the XFS health reporting infrastructure to remember
+indirect health concerns when resources are scarce.  For example, if a
+scrub notices that there's something wrong with an inode's metadata but
+memory reclaim needs to free the incore inode, we want to record in the
+perag data the fact that there was some inode somewhere with an error.
+The perag structures never go away.
 
-Doing this enables the health system to record problem observed at
-runtime, which (for now) can prompt the sysadmin to run xfs_scrub, and
-(later) may enable more targetted fixing of the filesystem.
-
-Note: Earlier reviewers of this patchset suggested that the verifier
-functions themselves should be responsible for calling _mark_sick.  In a
-higher level language this would be easily accomplished with lambda
-functions and closures.  For the kernel, however, we'd have to create
-the necessary closures by hand, pass them to the buf_read calls, and
-then implement necessary state tracking to detach the xfs_buf from the
-closure at the necessary time.  This is far too much work and complexity
-and will not be pursued further.
+The first two patches in this series set that up, and the third one
+provides a means for xfs_scrub to tell the kernel that it can forget the
+indirect problem report.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -68,34 +57,21 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=corruption-health-reports
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=indirect-health-reporting
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=corruption-health-reports
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=corruption-health-reports
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=indirect-health-reporting
 ---
- libxfs/util.c            |   10 +++
- libxfs/xfs_ag.c          |    5 +-
- libxfs/xfs_alloc.c       |  105 ++++++++++++++++++++++++++++++------
- libxfs/xfs_attr_leaf.c   |    4 +
- libxfs/xfs_attr_remote.c |   35 +++++++-----
- libxfs/xfs_bmap.c        |  135 +++++++++++++++++++++++++++++++++++++++++-----
- libxfs/xfs_btree.c       |   39 ++++++++++++-
- libxfs/xfs_da_btree.c    |   37 +++++++++++--
- libxfs/xfs_dir2.c        |    5 +-
- libxfs/xfs_dir2_block.c  |    2 +
- libxfs/xfs_dir2_data.c   |    3 +
- libxfs/xfs_dir2_leaf.c   |    3 +
- libxfs/xfs_dir2_node.c   |    7 ++
- libxfs/xfs_health.h      |   35 +++++++++++-
- libxfs/xfs_ialloc.c      |   57 ++++++++++++++++---
- libxfs/xfs_inode_buf.c   |   12 +++-
- libxfs/xfs_inode_fork.c  |    8 +++
- libxfs/xfs_refcount.c    |   43 ++++++++++++++-
- libxfs/xfs_rmap.c        |   83 +++++++++++++++++++++++++++-
- libxfs/xfs_rtbitmap.c    |    9 +++
- libxfs/xfs_sb.c          |    2 +
- 21 files changed, 559 insertions(+), 80 deletions(-)
+ libfrog/scrub.c                     |    5 ++++
+ libxfs/xfs_fs.h                     |    4 ++-
+ libxfs/xfs_health.h                 |   47 +++++++++++++++++++++++++++++++++++
+ libxfs/xfs_inode_buf.c              |    2 +
+ man/man2/ioctl_xfs_scrub_metadata.2 |    6 ++++
+ scrub/phase1.c                      |   38 ++++++++++++++++++++++++++++
+ scrub/repair.c                      |   15 +++++++++++
+ scrub/repair.h                      |    1 +
+ scrub/scrub.c                       |   16 +++++++-----
+ scrub/scrub.h                       |    1 +
+ spaceman/health.c                   |    4 +++
+ 11 files changed, 131 insertions(+), 8 deletions(-)
 
