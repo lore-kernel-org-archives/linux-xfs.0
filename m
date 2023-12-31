@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00B15C14C
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:55:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF6BAC127
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:56:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eT9vgP2G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6D62C433C7;
-	Sun, 31 Dec 2023 22:55:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hn1Df6zX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FC60C433C8;
+	Sun, 31 Dec 2023 22:56:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704063359;
-	bh=nTokLvHwpBYLT8Vol16Mq2p3cuYArmyof72S5tb8duU=;
+	s=k20201202; t=1704063375;
+	bh=HWRB1nd9XbsyNl2JU/Jv+OGisjTX9GjswXa40A1tP0I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eT9vgP2GXg9mB/YKc2+vSKRfVUHwGL8iFf1aB0jOeU0OP4WQhxOQ4T8suPthl2z05
-	 RcV7hCdEkgq/FKi9s5QdqUEnzXjT5oRqU+50CuZ+KX9+yUAXdsjsFTPjZw8/upO3FS
-	 HzKHsQIen7h5MCUeRckmJZfABa6cbmFT2M/S6p2ZdcwGZEW6cH39XtsZAb1FqZgsr/
-	 Uw6MQy7Khzm7oCujG4eYxKcYoZOOQgYBnw9KEbUfoCiILsMnEFit2cBoL3RcO8CFla
-	 3v8i5tkqCFeIZNeVKZajVv5AKk1BApD9NcjLBeKLjNYxHAvlGFVZk67Zq+aPPwJMyF
-	 PefqWzx9sOZLQ==
-Date: Sun, 31 Dec 2023 14:55:59 -0800
-Subject: [PATCH 1/6] xfs_scrub: allow auxiliary pathnames for sandboxing
+	b=hn1Df6zXxkZgydVzSk8Ct8JyK6KZtJxF7xDt96Q9VDgAVoJD90SpeRj6HaKWGCXYv
+	 Rm3/twgLs6ReYN1FDmjVVbCmS87WnSfnSdhpu6n60EfrCVNFMEdMv/Fq7bAtH35RCd
+	 ZdHpkRr3FvXPBNs9sm4mZ3cQ3wtmiraeXL+rpXPWegR5X2KREOvlPf9Qd4zF/ejign
+	 sxNGmadi2p+MliaVVyGYDfQIHRmGj5Ys29oC3a/Y7p4xZk6tL7eWkkWJLmN7PrwxNs
+	 0pZWw7FP746iBugpL2A35P5smhV6+eEEFo3RC4+X+oJUMq2ve+dfxPlUmmmBLu4OaA
+	 N5PHFweUoelLg==
+Date: Sun, 31 Dec 2023 14:56:14 -0800
+Subject: [PATCH 2/6] xfs_scrub.service: reduce CPU usage to 60% when possible
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405002619.1801298.8465209620940926881.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <170405002632.1801298.15847343727423178849.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405002602.1801298.14531646183046394491.stgit@frogsfrogsfrogs>
 References: <170405002602.1801298.14531646183046394491.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,151 +37,131 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In the next patch, we'll tighten up the security on the xfs_scrub
-service so that it can't escape.  However, sandboxing the service
-involves making the host filesystem as inaccessible as possible, with
-the filesystem to scrub bind mounted onto a known location within the
-sandbox.  Hence we need one path for reporting and a new -M argument to
-tell scrub what it should actually be trying to open.
+Currently, the xfs_scrub background service is configured to use -b,
+which means that the program runs completely serially.  However, even
+using 100% of one CPU with idle priority may be enough to cause thermal
+throttling and unwanted fan noise on smaller systems (e.g. laptops) with
+fast IO systems.
+
+Let's try to avoid this (at least on systemd) by using cgroups to limit
+the program's usage to 60% of one CPU and lowering the nice priority in
+the scheduler.  What we /really/ want is to run steadily on an
+efficiency core, but there doesn't seem to be a means to ask the
+scheduler not to ramp up the CPU frequency for a particular task.
+
+While we're at it, group the resource limit directives together.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/xfs_scrub.8 |    9 ++++++++-
- scrub/phase1.c       |    4 ++--
- scrub/vfs.c          |    2 +-
- scrub/xfs_scrub.c    |   11 ++++++++---
- scrub/xfs_scrub.h    |    5 ++++-
- 5 files changed, 23 insertions(+), 8 deletions(-)
+ scrub/Makefile                   |    7 ++++++-
+ scrub/system-xfs_scrub.slice     |   30 ++++++++++++++++++++++++++++++
+ scrub/xfs_scrub@.service.in      |   12 ++++++++++--
+ scrub/xfs_scrub_all.service.in   |    4 ++++
+ scrub/xfs_scrub_fail@.service.in |    4 ++++
+ 5 files changed, 54 insertions(+), 3 deletions(-)
+ create mode 100644 scrub/system-xfs_scrub.slice
 
 
-diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
-index b9f253e1b07..6154011271e 100644
---- a/man/man8/xfs_scrub.8
-+++ b/man/man8/xfs_scrub.8
-@@ -4,7 +4,7 @@ xfs_scrub \- check and repair the contents of a mounted XFS filesystem
- .SH SYNOPSIS
- .B xfs_scrub
- [
--.B \-abCemnTvx
-+.B \-abCeMmnTvx
- ]
- .I mount-point
- .br
-@@ -79,6 +79,13 @@ behavior.
- .B \-k
- Do not call TRIM on the free space.
- .TP
-+.BI \-M " real-mount-point"
-+Open the this path for issuing scrub system calls to the kernel.
-+The positional
-+.I mount-point
-+parameter will be used for displaying informational messages and logging.
-+This parameter exists to enable process sandboxing for service mode.
-+.TP
- .BI \-m " file"
- Search this file for mounted filesystems instead of /etc/mtab.
- .TP
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 1b3f6e8eb4f..516d929d626 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -146,7 +146,7 @@ phase1_func(
- 	 * CAP_SYS_ADMIN, which we probably need to do anything fancy
- 	 * with the (XFS driver) kernel.
- 	 */
--	error = -xfd_open(&ctx->mnt, ctx->mntpoint,
-+	error = -xfd_open(&ctx->mnt, ctx->actual_mntpoint,
- 			O_RDONLY | O_NOATIME | O_DIRECTORY);
- 	if (error) {
- 		if (error == EPERM)
-@@ -199,7 +199,7 @@ _("Not an XFS filesystem."));
- 		return error;
- 	}
- 
--	error = path_to_fshandle(ctx->mntpoint, &ctx->fshandle,
-+	error = path_to_fshandle(ctx->actual_mntpoint, &ctx->fshandle,
- 			&ctx->fshandle_len);
- 	if (error) {
- 		str_errno(ctx, _("getting fshandle"));
-diff --git a/scrub/vfs.c b/scrub/vfs.c
-index 22c19485a2d..fca9a4cf356 100644
---- a/scrub/vfs.c
-+++ b/scrub/vfs.c
-@@ -249,7 +249,7 @@ scan_fs_tree(
- 		goto out_cond;
- 	}
- 
--	ret = queue_subdir(ctx, &sft, &wq, ctx->mntpoint, true);
-+	ret = queue_subdir(ctx, &sft, &wq, ctx->actual_mntpoint, true);
- 	if (ret) {
- 		str_liberror(ctx, ret, _("queueing directory scan"));
- 		goto out_wq;
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 37b95aa1e67..4912333219d 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -725,7 +725,7 @@ main(
- 	pthread_mutex_init(&ctx.lock, NULL);
- 	ctx.mode = SCRUB_MODE_REPAIR;
- 	ctx.error_action = ERRORS_CONTINUE;
--	while ((c = getopt(argc, argv, "a:bC:de:km:no:TvxV")) != EOF) {
-+	while ((c = getopt(argc, argv, "a:bC:de:kM:m:no:TvxV")) != EOF) {
- 		switch (c) {
- 		case 'a':
- 			ctx.max_errors = cvt_u64(optarg, 10);
-@@ -769,6 +769,9 @@ main(
- 		case 'k':
- 			want_fstrim = false;
- 			break;
-+		case 'M':
-+			ctx.actual_mntpoint = optarg;
-+			break;
- 		case 'm':
- 			mtab = optarg;
- 			break;
-@@ -823,6 +826,8 @@ main(
- 		usage();
- 
- 	ctx.mntpoint = argv[optind];
-+	if (!ctx.actual_mntpoint)
-+		ctx.actual_mntpoint = ctx.mntpoint;
- 
- 	stdout_isatty = isatty(STDOUT_FILENO);
- 	stderr_isatty = isatty(STDERR_FILENO);
-@@ -840,7 +845,7 @@ main(
- 		return SCRUB_RET_OPERROR;
- 
- 	/* Find the mount record for the passed-in argument. */
--	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
-+	if (stat(ctx.actual_mntpoint, &ctx.mnt_sb) < 0) {
- 		fprintf(stderr,
- 			_("%s: could not stat: %s: %s\n"),
- 			progname, argv[optind], strerror(errno));
-@@ -863,7 +868,7 @@ main(
- 	}
- 
- 	fs_table_initialise(0, NULL, 0, NULL);
--	fsp = fs_table_lookup_mount(ctx.mntpoint);
-+	fsp = fs_table_lookup_mount(ctx.actual_mntpoint);
- 	if (!fsp) {
- 		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
- 				ctx.mntpoint);
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 7d48f4bad9c..b0aa9fcc67b 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -38,9 +38,12 @@ enum error_action {
- struct scrub_ctx {
- 	/* Immutable scrub state. */
- 
--	/* Strings we need for presentation */
-+	/* Mountpoint we use for presentation */
- 	char			*mntpoint;
- 
-+	/* Actual VFS path to the filesystem */
-+	char			*actual_mntpoint;
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 472df48a720..42b27bfcad7 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -18,7 +18,12 @@ XFS_SCRUB_FAIL_PROG = xfs_scrub_fail
+ XFS_SCRUB_ARGS = -b -n
+ ifeq ($(HAVE_SYSTEMD),yes)
+ INSTALL_SCRUB += install-systemd
+-SYSTEMD_SERVICES = $(scrub_svcname) xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
++SYSTEMD_SERVICES=\
++	$(scrub_svcname) \
++	xfs_scrub_fail@.service \
++	xfs_scrub_all.service \
++	xfs_scrub_all.timer \
++	system-xfs_scrub.slice
+ OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
+ endif
+ ifeq ($(HAVE_CROND),yes)
+diff --git a/scrub/system-xfs_scrub.slice b/scrub/system-xfs_scrub.slice
+new file mode 100644
+index 00000000000..95cd4f74526
+--- /dev/null
++++ b/scrub/system-xfs_scrub.slice
+@@ -0,0 +1,30 @@
++# SPDX-License-Identifier: GPL-2.0
++#
++# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++# Author: Darrick J. Wong <djwong@kernel.org>
 +
- 	/* Mountpoint info */
- 	struct stat		mnt_sb;
- 	struct statvfs		mnt_sv;
++[Unit]
++Description=xfs_scrub background service slice
++Before=slices.target
++
++[Slice]
++
++# If the CPU usage cgroup controller is available, don't use more than 60% of a
++# single core for all background processes.
++CPUQuota=60%
++CPUAccounting=true
++
++[Install]
++# As of systemd 249, the systemd cgroupv2 configuration code will drop resource
++# controllers from the root and system.slice cgroups at startup if it doesn't
++# find any direct dependencies that require a given controller.  Newly
++# activated units with resource control directives are created under the system
++# slice but do not cause a reconfiguration of the slice's resource controllers.
++# Hence we cannot put CPUQuota= into the xfs_scrub service units directly.
++#
++# For the CPUQuota directive to have any effect, we must therefore create an
++# explicit definition file for the slice that systemd creates to contain the
++# xfs_scrub instance units (e.g. xfs_scrub@.service) and we must configure this
++# slice as a dependency of the system slice to establish the direct dependency
++# relation.
++WantedBy=system.slice
+diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+index 043aad12f20..7306e173ebe 100644
+--- a/scrub/xfs_scrub@.service.in
++++ b/scrub/xfs_scrub@.service.in
+@@ -18,8 +18,16 @@ PrivateTmp=no
+ AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
+ NoNewPrivileges=yes
+ User=nobody
+-IOSchedulingClass=idle
+-CPUSchedulingPolicy=idle
+ Environment=SERVICE_MODE=1
+ ExecStart=@sbindir@/xfs_scrub @scrub_args@ %f
+ SyslogIdentifier=%N
++
++# Run scrub with minimal CPU and IO priority so that nothing else will starve.
++IOSchedulingClass=idle
++CPUSchedulingPolicy=idle
++CPUAccounting=true
++Nice=19
++
++# Create the service underneath the scrub background service slice so that we
++# can control resource usage.
++Slice=system-xfs_scrub.slice
+diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
+index 4011ed271f9..0f4bddf740a 100644
+--- a/scrub/xfs_scrub_all.service.in
++++ b/scrub/xfs_scrub_all.service.in
+@@ -14,3 +14,7 @@ Type=oneshot
+ Environment=SERVICE_MODE=1
+ ExecStart=@sbindir@/xfs_scrub_all
+ SyslogIdentifier=xfs_scrub_all
++
++# Create the service underneath the scrub background service slice so that we
++# can control resource usage.
++Slice=system-xfs_scrub.slice
+diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
+index 48a0f25b5f1..dfbbd3b8218 100644
+--- a/scrub/xfs_scrub_fail@.service.in
++++ b/scrub/xfs_scrub_fail@.service.in
+@@ -14,3 +14,7 @@ ExecStart=@pkg_libexec_dir@/xfs_scrub_fail "${EMAIL_ADDR}" %f
+ User=mail
+ Group=mail
+ SupplementaryGroups=systemd-journal
++
++# Create the service underneath the scrub background service slice so that we
++# can control resource usage.
++Slice=system-xfs_scrub.slice
 
