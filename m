@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3784BA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:02:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B18F2BA30
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:03:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CDgACdqy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9012BC433C8;
-	Sun, 31 Dec 2023 20:02:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hW/I7kIo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DE2BC433C7;
+	Sun, 31 Dec 2023 20:03:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052973;
-	bh=tNhmUr7KCbahgy7zQ9xjCjwt6Q6Y0TH3wT9qvssWxps=;
+	s=k20201202; t=1704052989;
+	bh=0skT2WMyZDSK9bG+P2cPreVWFZQhMXgxGQ3zc5usy6Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CDgACdqypn5Q/dCq+vPJzidbO7mzmzvjCu8rJlNWM/kWA7aLvxJQteRPsw1uiqFuQ
-	 caGeMVbfL2V3c4tsipgIjKQk+9IFqyYirWJf1mMux6vtGW8B8hy1jIUj9ZGdxsIwKe
-	 isTolp5Rd2r75TG+/fs7E5EPe24YbJkYeQduLkvpdX8ap/avQ7omE2LPW7C+h3rSOn
-	 YnzzWcWD6sAlBlX7mypQCoVt7vxhTRVfyNdorYJ62a4YlSse75wLIFwnAmOZJFLcUn
-	 sYBa7G3LWJmDbr+cbCNQcteXimdUgyRBeCqr5L9A6bnugpK6xZSWzLd6veOEawvFwJ
-	 fY5sfDIXy0kcw==
-Date: Sun, 31 Dec 2023 12:02:53 -0800
-Subject: [PATCHSET v29.0] xfs-documentation: atomic file updates
+	b=hW/I7kIof+LkMPw774X8n9mQLzf+3OhvAVBGTx/OE4kmtgKBXWXbYDvwLQZd1+5k0
+	 mAdamBvc5D8H+2YhoN5Brytpy2rLz0sO+1hcR+BcAnLpvbHSZS9K5+6xQ2wjyy1soo
+	 VLTXp8fNul+zlA1+lLeT1rhcTwjpfjq5MYcb/8KjBAOTfdHyHAuOff6ZwujliPO8ZA
+	 ESuLczNFfcZKoe4aCDvmZ94szqSxjfWw16LYB4LNkJmdb0TTjILgksMn4FAlZYYkr/
+	 iH260ofzdkfgBJk8d6tDZ6I6aKOciTrWd06g4ZAL9/7A9Ff/rGTuD/ipq7L3PrcCRc
+	 Ud2Kl/pu1FRNA==
+Date: Sun, 31 Dec 2023 12:03:08 -0800
+Subject: [PATCHSET v13.0 1/2] xfs-documentation: document attr log item
+ changes for parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: darrick.wong@oracle.com, djwong@kernel.org
+To: djwong@kernel.org, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405035784.1829110.16772887829212783961.stgit@frogsfrogsfrogs>
-In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
-References: <20231231181215.GA241128@frogsfrogsfrogs>
+Message-ID: <170405036203.1829412.14716609287158101338.stgit@frogsfrogsfrogs>
+In-Reply-To: <20231231181849.GT361584@frogsfrogsfrogs>
+References: <20231231181849.GT361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,9 +38,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This patch documents the new log incompat feature and log intent items to
-track high level progress of swapping ranges of two files and finish
-interrupted work if the system goes down.
+This patch documents the changes to the ondisk format of attr log items
+that are needed to support directory parent pointers.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -47,19 +47,14 @@ from my git trees, which are linked below.
 Comments and questions are, as always, welcome.
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-attr-nvlookups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-file-updates
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-attr-nvlookups
 
 xfsdocs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=atomic-file-updates
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=pptrs-attr-nvlookups
 ---
- .../allocation_groups.asciidoc                     |    7 +
- .../journaling_log.asciidoc                        |  111 ++++++++++++++++++++
- design/XFS_Filesystem_Structure/magic.asciidoc     |    2 
- 3 files changed, 120 insertions(+)
+ .../journaling_log.asciidoc                        |   60 ++++++++++++++++++--
+ 1 file changed, 54 insertions(+), 6 deletions(-)
 
