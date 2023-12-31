@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F756B65B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:36:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D98BB64C
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:36:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mYJzEr1Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FD1FC433C8;
-	Sun, 31 Dec 2023 19:36:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DZRDVJHo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADF71C433C7;
+	Sun, 31 Dec 2023 19:36:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051379;
-	bh=WhimTHfYGI6yAlTMoKZlmKC/WAs78SQ6wxoA3OrojMc=;
+	s=k20201202; t=1704051394;
+	bh=vLNEfCdSr5tzH8RptvaL0EcN9YmwacQxTe61YPHl7aI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mYJzEr1Y9pzYmDmkHgi0hzyys08EYazx4gZJ+ZQwGJIW7K1OH8N1b5A3MIbSueblt
-	 PahpJGJC+Hq4aE8W8CoVhe1udnWykU9mHi3wyEH/N4EtbM+mG7Yt/DxJid7thFYdru
-	 GUm5+rclRjHVB9Sb8BjVFS/eQp5bTrEM+k3S3K+EmUXfElQlWj7JO1YHT8ObZb/l/H
-	 z7RZOXkUZLUybWmCp7NQlkwh38mucWjrgUayMfc0LwBuG0Pyj2rdO5O3J0Oz2XOfhi
-	 yRGqmpSwBLB6sRKX1bxrhS48R+O1KWB5dbngTiwM+KS7ZP3TYn9jan0ujlAm3R3COL
-	 lPJm5MNlJYEZw==
-Date: Sun, 31 Dec 2023 11:36:18 -0800
-Subject: [PATCHSET v2.0 07/15] xfs: enable in-core block reservation for rt
- metadata
+	b=DZRDVJHoZ9W02HJ8ytkf7HyyZniSnNNyT6O1VCfCPtdIAnbYBC7p6qhoDmFBZCTGQ
+	 eY+x8k+8Fg01w8HtWQ9z/Rop0RNqvAqfUMBwnCxx3JKpVM0cvf3cQxgltF3u1mnviS
+	 y9m0fPo8SewxXpoQbSI0KJJOvyii3k1p+CUjH/DWbqXVNApSBdAlT9MK9NEe/jYiLj
+	 FuvU0oOUEFqfWXiRClN8Bwnx8X0Juui6zTX7F74qFlcyei1oA8i3Ntcxm30LI3j30C
+	 LuEcMzaORnfxTaFl+JJhzc5I9+nk4x571honb7N9DUno4wF+68uTXO25iI0rS6Pl1i
+	 ZaJiRlzfmgv5Q==
+Date: Sun, 31 Dec 2023 11:36:34 -0800
+Subject: [PATCHSET v2.0 08/15] xfs: extent free log intent cleanups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404847925.1764226.3996380045217070282.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,14 +37,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-In preparation for adding reverse mapping and refcounting to the
-realtime device, enhance the metadir code to reserve free space for
-btree shape changes as delayed allocation blocks.
-
-This effectively allows us to pre-allocate space for the rmap and
-refcount btrees in the same manner as we do for the data device
-counterparts, which is how we avoid ENOSPC failures when space is low
-but we've already committed to a COW operation.
+This series cleans up some warts in the extent freeing log intent code.
+We start by acknowledging that this mechanism does not have anything to
+do with the bmap code by moving it to xfs_alloc.c and giving the
+function a more descriptive name.  Then we clean up the tracepoints and
+the _finish_one call paths to pass the intent structure around.  This
+reduces the overhead when the tracepoints are disabled and will make
+things much cleaner when we start adding realtime support in the next
+patch.  I also incorporated a bunch of cleanups from Christoph Hellwig.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -56,28 +55,30 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=reserve-rt-metadata-space
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=extfree-intent-cleanups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=reserve-rt-metadata-space
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=extfree-intent-cleanups
 ---
- fs/xfs/libxfs/xfs_ag.c       |    4 -
- fs/xfs/libxfs/xfs_ag_resv.c  |   25 ++---
- fs/xfs/libxfs/xfs_ag_resv.h  |    2 
- fs/xfs/libxfs/xfs_errortag.h |    4 +
- fs/xfs/libxfs/xfs_imeta.c    |  191 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_imeta.h    |   11 ++
- fs/xfs/libxfs/xfs_types.h    |    7 ++
- fs/xfs/scrub/repair.c        |    5 -
- fs/xfs/xfs_error.c           |    3 +
- fs/xfs/xfs_fsops.c           |   39 +++++----
- fs/xfs/xfs_fsops.h           |    2 
- fs/xfs/xfs_inode.h           |    3 +
- fs/xfs/xfs_mount.c           |   10 ++
- fs/xfs/xfs_mount.h           |    1 
- fs/xfs/xfs_rtalloc.c         |   23 +++++
- fs/xfs/xfs_rtalloc.h         |    5 +
- fs/xfs/xfs_super.c           |    6 -
- fs/xfs/xfs_trace.h           |   46 ++++++++++
- 18 files changed, 337 insertions(+), 50 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c             |    2 -
+ fs/xfs/libxfs/xfs_alloc.c          |   92 ++++++++---------------------
+ fs/xfs/libxfs/xfs_alloc.h          |   12 ++--
+ fs/xfs/libxfs/xfs_bmap.c           |   12 +++-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    2 -
+ fs/xfs/libxfs/xfs_ialloc.c         |    5 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 -
+ fs/xfs/libxfs/xfs_refcount.c       |    6 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |    2 -
+ fs/xfs/scrub/newbt.c               |    5 +-
+ fs/xfs/scrub/reap.c                |    7 +-
+ fs/xfs/xfs_bmap_item.c             |    6 --
+ fs/xfs/xfs_drain.c                 |    8 +--
+ fs/xfs/xfs_drain.h                 |    5 +-
+ fs/xfs/xfs_extfree_item.c          |  115 +++++++++++++++++-------------------
+ fs/xfs/xfs_extfree_item.h          |    6 ++
+ fs/xfs/xfs_refcount_item.c         |    5 --
+ fs/xfs/xfs_reflink.c               |    2 -
+ fs/xfs/xfs_rmap_item.c             |    5 --
+ fs/xfs/xfs_trace.h                 |   33 +++++-----
+ 20 files changed, 141 insertions(+), 191 deletions(-)
 
