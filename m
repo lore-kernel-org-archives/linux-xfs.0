@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35F5AC127
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:54:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73CD2C127
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:54:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UahYe9PM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FF57C433C8;
-	Sun, 31 Dec 2023 22:54:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ppe+RdEW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41AE9C433C8;
+	Sun, 31 Dec 2023 22:54:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704063281;
-	bh=weZVtNuwuFW8FMAuVzTSxje6A8pHRgD6V4zIxuqzp+Y=;
+	s=k20201202; t=1704063297;
+	bh=XATPJKcf5uevdtzySLIyWQlXhBsV3vZjT89AHaEmWfg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UahYe9PMC1MFnCKaPZRVqA90qv2Cexzk+1l8BEAPZm262lUJrw+Ga0kxlg31P9v0v
-	 b+b+sKT4mmormyhD1Z5OkENmzaRIPlU35L5KH2DOMpLqwRencKmzxRDfjCzXflSPmR
-	 RBuEG5Lmyb6CoMIymNnmZvXhGcZH8q/RNXcZgi2jjx9S5LMTfS6ERgHrOR/GxWTpcw
-	 5SGBj7XPv77VLUAfawR5LkULTrEVISE5p1SJ9RZ/Cosb8LZC6Bc0D5Wu/nITGef9j3
-	 es9fR3TqvzgzS1GN7MwE8Hbah25kf3kuCeA9ZWO8/WKnGh+LnSOKu96JKN4mtS8pFO
-	 UZtVGAGLssgZA==
-Date: Sun, 31 Dec 2023 14:54:41 -0800
-Subject: [PATCH 9/9] xfs_scrub_all.cron: move to package data directory
+	b=Ppe+RdEW8Sm8PTmdN+iF7MKCZmEjWq6OkNis6MLCoM2Fc+RwFgY9XDtI4hBD6RSE4
+	 x5r2IBqMqkr9PO7BRqWuNEf5qF9Dz0t0wn+dhcYbXEg6NeYo9oDKJKecNGCN5MkezO
+	 LutA41/qxWcWgAd0UhgurqJb3dpNnoi0J3Z+YtFXWKDRaipBFc4fUZ1AN3vjLQKBAo
+	 u6GtCci+T0VUL74NLpM35fiUF4DrL2dvvDAX4H5VFF9dX0i1LKAojY23C3U3JcxO5Y
+	 T8ruLgEvf1S/gkMmhirqRiF7L6p76QYnwokkLcUE6DT+yE/V9s6deSpET8w9uxwvFq
+	 h+vPB6h+ofnCg==
+Date: Sun, 31 Dec 2023 14:54:56 -0800
+Subject: [PATCH 1/4] xfs_scrub_all: fix argument passing when invoking
+ xfs_scrub manually
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405001964.1800712.10514067731814883862.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405001841.1800712.6745668619742020884.stgit@frogsfrogsfrogs>
-References: <170405001841.1800712.6745668619742020884.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <170405002269.1801148.13653507616866096035.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405002254.1801148.6324602186356936873.stgit@frogsfrogsfrogs>
+References: <170405002254.1801148.6324602186356936873.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,41 +38,36 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-cron jobs don't belong in /usr/lib.  Since the cron job is also
-secondary to the systemd timer, it's really only provided as a courtesy
-for distributions that don't use systemd.  Move it to @datadir@, aka
-/usr/share/xfsprogs.
+Currently, xfs_scrub_all will try to invoke xfs_scrub with argv[1] being
+"-n -x".  This of course is recognized by C getopt as a weird looking
+string, not two individual arguments, and causes the child process to
+exit with complaints about CLI usage.
+
+What we really want is to split the string into a proper array and then
+add them to the xfs_scrub command line.  The code here isn't strictly
+correct, but as @scrub_args@ is controlled by us in the Makefile, it'll
+do for now.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/builddefs.in |    1 -
- scrub/Makefile       |    2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ scrub/xfs_scrub_all.in |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 9d0f9c3bf7c..f5138b5098f 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -51,7 +51,6 @@ PKG_SBIN_DIR	= @sbindir@
- PKG_ROOT_SBIN_DIR = @root_sbindir@
- PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
- PKG_LIB_DIR	= @libdir@@libdirsuffix@
--PKG_LIB_SCRIPT_DIR	= @libdir@
- PKG_LIBEXEC_DIR	= @libexecdir@/@pkg_name@
- PKG_INC_DIR	= @includedir@/xfs
- DK_INC_DIR	= @includedir@/disk
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 8fb366c922c..472df48a720 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -26,7 +26,7 @@ INSTALL_SCRUB += install-crond
- CRONTABS = xfs_scrub_all.cron
- OPTIONAL_TARGETS += $(CRONTABS)
- # Don't enable the crontab by default for now
--CROND_DIR = $(PKG_LIB_SCRIPT_DIR)/$(PKG_NAME)
-+CROND_DIR = $(PKG_DATA_DIR)
- endif
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index d7d36e1bdb0..671d588177a 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -123,7 +123,9 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+ 				return
  
- endif	# scrub_prereqs
+ 		# Invoke xfs_scrub manually
+-		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
++		cmd = ['@sbindir@/xfs_scrub']
++		cmd += '@scrub_args@'.split()
++		cmd += [mnt]
+ 		ret = run_killable(cmd, None, killfuncs, \
+ 				lambda proc: proc.terminate())
+ 		if ret >= 0:
 
