@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6D0B645
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:29:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B75A6B645
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:30:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G4+aL/d4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF16CC433C7;
-	Sun, 31 Dec 2023 19:29:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kK4VneRS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 844DFC433C8;
+	Sun, 31 Dec 2023 19:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704050987;
-	bh=16OMI2ijysnSmXKqRbQ4zVO7RFkjyAFRKmesGGdwqZg=;
+	s=k20201202; t=1704051003;
+	bh=3JT47urqJ/XfCxGwC/d5NrMX32m6our1rpljLslRE4Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G4+aL/d4WVFo9IP4ouIDPj2OFut15ATWBgg6BdaMPmLbQX8J2Ykde7iOdvWYRB6MQ
-	 wDG1vzIW95Uzil+NSnIGJe5ARlLmdqphXfjuckiVd8BCeShok/H/7EMZ9YR0lVJtag
-	 cFQY/uXG35fILAJvcHKv5XivmgOiaePY9hqg5QxezSIwodtla15ooZO6AIW3ZR/uhF
-	 VkzYW1VtSfvTLHqovwUV1yCjc1KQDK4XZDLh2JtDuHp/ekauYLHEgyg+f3KfHxw4He
-	 CSiyCqO3lmpHPh7rs5fKPSr+tKhulI9+mAGlnm837qKZAR5+CprKcxCAxvPpUsbdqH
-	 tCc1x1ocPWdAQ==
-Date: Sun, 31 Dec 2023 11:29:47 -0800
-Subject: [PATCHSET v29.0 17/28] xfs: create temporary files for online repair
+	b=kK4VneRSdCqxTd2qurU0gZTZrjQqBdCwJKX9XOjC+jorY4B2jCCYgfvmEKbrelU15
+	 wHXCKIHQq7w/FrgqhMymx1beea1nDCGWbGvLM++iO6+KPZTHMgvOeKZQQmgQJNNvTg
+	 n+LN4dw6Jgb2sJlV3YuiFqfsbe+PIIqJKmqYcM1T7Rw2IFnwRodppgdwIlfeJWcDM9
+	 l6983ha9+5pZ5NCJPZ49arGGfYpHJ0bwLgCQiPpyUymTz9lb9nDn8wkUgTh6r40O1u
+	 SAizimnkEiia2zOlMHt4qdWDwQ2pw0eOco8Ljo8fz9ig0D6C3iVTR9eLoGQeQE0vxb
+	 CnWob13fLRxsw==
+Date: Sun, 31 Dec 2023 11:30:03 -0800
+Subject: [PATCHSET v29.0 18/28] xfs: online repair of realtime summaries
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404833858.1752674.247392515267008994.stgit@frogsfrogsfrogs>
+Message-ID: <170404834278.1752917.3964733922134331052.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,16 +37,18 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-As mentioned earlier, the repair strategy for file-based metadata is to
-build a new copy in a temporary file and swap the file fork mappings
-with the metadata inode.  We've built the atomic extent swap facility,
-so now we need to build a facility for handling private temporary files.
+We now have all the infrastructure we need to repair file metadata.
+We'll begin with the realtime summary file, because it is the least
+complex data structure.  To support this we need to add three more
+pieces to the temporary file code from the previous patchset --
+preallocating space in the temp file, formatting metadata into that
+space and writing the blocks to disk, and swapping the fork mappings
+atomically.
 
-The first step is to teach the filesystem to ignore the temporary files.
-We'll mark them as PRIVATE in the VFS so that the kernel security
-modules will leave it alone.  The second step is to add the online
-repair code the ability to create a temporary file and reap extents from
-the temporary file after the extent swap.
+After that, the actual reconstruction of the realtime summary
+information is pretty simple, since we can simply write the incore
+copy computed by the rtsummary scrubber to the temporary file, swap the
+contents, and reap the old blocks.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -57,22 +59,28 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-tempfiles
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-rtsummary
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-rtsummary
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-rtsummary
 ---
- fs/xfs/Makefile         |    1 
- fs/xfs/scrub/parent.c   |    2 
- fs/xfs/scrub/reap.c     |  445 +++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/scrub/reap.h     |   21 ++
- fs/xfs/scrub/scrub.c    |    3 
- fs/xfs/scrub/scrub.h    |    4 
- fs/xfs/scrub/tempfile.c |  251 +++++++++++++++++++++++++++
- fs/xfs/scrub/tempfile.h |   28 +++
- fs/xfs/scrub/trace.h    |   96 ++++++++++
- fs/xfs/xfs_export.c     |    2 
- fs/xfs/xfs_inode.c      |    3 
- fs/xfs/xfs_inode.h      |    2 
- fs/xfs/xfs_itable.c     |    8 +
- 13 files changed, 840 insertions(+), 26 deletions(-)
- create mode 100644 fs/xfs/scrub/tempfile.c
- create mode 100644 fs/xfs/scrub/tempfile.h
+ fs/xfs/Makefile                 |    1 
+ fs/xfs/scrub/common.c           |    1 
+ fs/xfs/scrub/repair.h           |    3 
+ fs/xfs/scrub/rtsummary.c        |   33 ++-
+ fs/xfs/scrub/rtsummary.h        |   37 ++++
+ fs/xfs/scrub/rtsummary_repair.c |  177 +++++++++++++++++
+ fs/xfs/scrub/scrub.c            |   14 +
+ fs/xfs/scrub/scrub.h            |    7 +
+ fs/xfs/scrub/tempfile.c         |  401 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/tempfile.h         |   15 +
+ fs/xfs/scrub/tempswap.h         |   21 ++
+ fs/xfs/scrub/trace.h            |   40 ++++
+ 12 files changed, 731 insertions(+), 19 deletions(-)
+ create mode 100644 fs/xfs/scrub/rtsummary.h
+ create mode 100644 fs/xfs/scrub/rtsummary_repair.c
+ create mode 100644 fs/xfs/scrub/tempswap.h
 
