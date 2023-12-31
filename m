@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F390BA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:55:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8E7BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:55:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V/JQ1+h+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2C2BC433C8;
-	Sun, 31 Dec 2023 19:55:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nt+Pck2z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76097C433C7;
+	Sun, 31 Dec 2023 19:55:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052504;
-	bh=fBHkCPfKmVBO6s7HZpQ+ZfnJpChpS7xK/xDpAicN8kM=;
+	s=k20201202; t=1704052520;
+	bh=R9iOGWh1OTSUf0uq5a1t+FVGQf9vd/oWEX35xY12KU8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=V/JQ1+h+mHfanHF8uNtubd5kzY0ao4GSPiZ12SMzg77DuIiSl8ZIUbKJpq4Ra+6v9
-	 jSUxvZak5+Xe4yt2kWQr1jX/58UPLoqeknm6/DIb6IzLAKM0x53+qpNifsVyYXb3B6
-	 Hui6f5W8aP3+31oDaKqPzB8waU/F2YExOQUI2jFaiH37B2VQNfnSWB3ffJVadAOvCF
-	 MatNloFDawv5FjjNmVVarG17Iskz4n2CV19/+RdovOr8ljLdh2JjGPm6hY7ABPKNbO
-	 UFuqt0YB66JPGaroGYNEqI8AJohgeSiE/0cFbYzNsFSKYWNVl57ZH1aTI2bgMAO9IU
-	 gWGTtda5cg36Q==
-Date: Sun, 31 Dec 2023 11:55:04 -0800
-Subject: [PATCHSET v2.0 13/17] xfsprogs: file write utility refactoring
+	b=Nt+Pck2zYrgrFupftxQCnDv9haGmdD3aN379owTEUbeo6rNDaB4ILp/k4hynBRgVk
+	 op9BzBEjuxdg7UtDQwFYk+udGBtJwDf255Opg0MYi94HYVGJxAV45TUmkTbkhGKh9T
+	 EzLW9TbBou532Ha+b7/Tn1kdy9erfPWCg3zeKzqkWkI2kNd7vzC7yQCwTzeIxmuQOe
+	 pAezRUKA+EpllGDQMLPKdK5mzL4bPQG7HnMIgK4Wj76AxFQSxI4cTqJWaUFEIQuc5z
+	 2a0eBgKsc6fUgzuRj1LkTB2r4piD+KGuYUQ2nf2tTZdab2XMDZ/9ho3RfiyqUMG+Dr
+	 PxTcWeaPvJ2Ig==
+Date: Sun, 31 Dec 2023 11:55:20 -0800
+Subject: [PATCHSET v2.0 14/17] xfsprogs: refcount log intent cleanups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405016236.1816687.16728890385158475127.stgit@frogsfrogsfrogs>
+Message-ID: <170405016616.1816837.2298941345938137266.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,10 +37,12 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Refactor the parts of mkfs and xfs_repair that open-code the process of
-mapping disk space into files and writing data into them.  This will help
-primarily with resetting of the realtime metadata, but is also used for
-protofiles.
+This series cleans up the refcount intent code before we start adding
+support for realtime devices.  Similar to previous intent cleanup
+patchsets, we start transforming the tracepoints so that the data
+extraction are done inside the tracepoint code, and then we start
+passing the intent itself to the _finish_one function.  This reduces the
+boxing and unboxing of parameters.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -50,12 +52,15 @@ Comments and questions are, as always, welcome.
 
 --D
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=refcount-intent-cleanups
+
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bmap-utils
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=refcount-intent-cleanups
 ---
- include/libxfs.h |    6 +-
- libxfs/util.c    |  212 ++++++++++++++++++++++++++++++++++++++++++------------
- mkfs/proto.c     |  108 +++++-----------------------
- repair/phase6.c  |   76 +++----------------
- 4 files changed, 197 insertions(+), 205 deletions(-)
+ libxfs/defer_item.c   |   60 ++++++++++++--------
+ libxfs/defer_item.h   |    5 ++
+ libxfs/xfs_refcount.c |  150 +++++++++++++++----------------------------------
+ libxfs/xfs_refcount.h |   11 ++--
+ 4 files changed, 93 insertions(+), 133 deletions(-)
 
