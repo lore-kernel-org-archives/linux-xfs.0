@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3631CBE48
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:04:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8212BE48
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:05:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ngbzq0Iv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C330AC433C8;
-	Sun, 31 Dec 2023 22:04:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ssAaBWXZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67B58C433C8;
+	Sun, 31 Dec 2023 22:05:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060294;
-	bh=Ou/c6s4JR8xItBjNG8GnDGmLsM9aP0ncSPHcVparYB4=;
+	s=k20201202; t=1704060310;
+	bh=h9DXvUnnZp9EglafkbmSkdXe9+71QpNGX6M7XEAxpOk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ngbzq0IvITZ91qQoE9BW3bEZ6d/RSlwXK8+z/jKQRsYXM823T+eT+DptM4+/RyP7N
-	 kz3z4t3HeKg2ADCH9cjtzjuwFiw6CJvrcyt57mBeNOSDE8321QZahvi1wH1UxiGySz
-	 V5Idj1vmS9hDMu0rvQ8YfbnlcMIjBhTdxqG7jEQrh8cOU72h5T90+HdJBnAQ22wDnA
-	 qK8lAoKhunphLevc7BvtvGgMT0b9rEDiHZjTOLy5xxObvA6lSk+8ZArWrnY2jZ5z3W
-	 1MBne6HPx/duuhOQxPq/3zJOdj69QT7ku2FOp3ogNhaA2qCOuUVbtCez/fAMIWJ8yM
-	 ueXHNCw6kc6hA==
-Date: Sun, 31 Dec 2023 14:04:54 -0800
-Subject: [PATCH 1/2] mkfs: allow sizing allocation groups for concurrency
+	b=ssAaBWXZeXD5GosuhuQLjAAeD8BGrCbBynCW30Brr4CsON0mcPLvfxel3rw0GwM+L
+	 6CuupukG8tL8csvmbSORdwLC7XGvtOIpdV5Ba012tRSfIHTdzIgcnkSfXiOKuHTbN6
+	 sJFamZe0notRrWzAnjKn1HU4GHuq2QKwrNiZVXk1TSzVxprsVnYZeiGjkMuDEw1TlO
+	 uLDK3AAISZLf3s+CIWzibE6mg5dDOcYne4d02rMcMw9YxgE90NxQjFIfleJlAaJiNe
+	 lcaofohOce7ONx84CKd18OxfD44k6JlLZz9eQXjjt3RgkAkn9wHFM7gvZF/0/paRS3
+	 +zlA321b/yQdQ==
+Date: Sun, 31 Dec 2023 14:05:09 -0800
+Subject: [PATCH 2/2] mkfs: allow sizing internal logs for concurrency
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404989437.1791433.58561592257201816.stgit@frogsfrogsfrogs>
+Message-ID: <170404989451.1791433.2745783356762992258.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404989423.1791433.6933477036695309956.stgit@frogsfrogsfrogs>
 References: <170404989423.1791433.6933477036695309956.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,38 +37,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a -d concurrency= option to mkfs so that sysadmins can configure the
-filesystem so that there are enough allocation groups that the specified
-number of threads can (in theory) can find an uncontended group to
-allocate space from.
+Add a -l option to mkfs so that sysadmins can configure the filesystem
+so that the log can handle a certain number of transactions (front and
+backend) without any threads contending for log grant space.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- man/man8/mkfs.xfs.8.in |   27 +++++++++
- mkfs/xfs_mkfs.c        |  150 +++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 173 insertions(+), 4 deletions(-)
+ man/man8/mkfs.xfs.8.in |   19 +++++++++
+ mkfs/xfs_mkfs.c        |  104 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 120 insertions(+), 3 deletions(-)
 
 
 diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index c152546a47d..b18daa23395 100644
+index b18daa23395..8060d342c2a 100644
 --- a/man/man8/mkfs.xfs.8.in
 +++ b/man/man8/mkfs.xfs.8.in
-@@ -504,6 +504,33 @@ directories.
- By default,
- .B mkfs.xfs
- will not enable DAX mode.
+@@ -795,6 +795,25 @@ if you want to disable this feature for older kernels which don't support
+ it.
+ .IP
+ This option is only tunable on the deprecated V4 format.
 +.TP
 +.BI concurrency= value
-+Create enough allocation groups to handle the desired level of concurrency.
-+The goal of this calculation scheme is to set the number of allocation groups
-+to an integer multiple of the number of writer threads desired, to minimize
-+contention of AG locks.
-+This scheme will neither create fewer AGs than would be created by the default
-+configuration, nor will it create AGs smaller than 4GB.
++Allocate a log that is estimated to be large enough to handle the desired level
++of concurrency without userspace program threads contending for log space.
++This scheme will neither create a log smaller than the minimum required,
++nor create a log larger than the maximum possible.
++This option is only valid for internal logs and is not compatible with the
++size option.
 +This option is not compatible with the
-+.B agcount
++.B logdev
 +or
-+.B agsize
++.B size
 +options.
 +The magic value
 +.I nr_cpus
@@ -76,58 +75,63 @@ index c152546a47d..b18daa23395 100644
 +.I 1
 +or no value at all will set this parameter to the number of active processors
 +in the system.
-+If the kernel advertises that the data device is a non-mechanical storage
-+device,
-+.B mkfs.xfs
-+will use this new geometry calculation scheme.
-+The magic value of
-+.I 0
-+forces use of the older AG geometry calculations that is used for mechanical
-+storage.
  .RE
- .TP
- .B \-f
+ .PP
+ .PD 0
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f29f902982d..fbe40b7edf1 100644
+index fbe40b7edf1..cb09c6466a6 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -77,6 +77,7 @@ enum {
- 	D_EXTSZINHERIT,
- 	D_COWEXTSIZE,
- 	D_DAXINHERIT,
-+	D_CONCURRENCY,
- 	D_MAX_OPTS,
+@@ -105,6 +105,7 @@ enum {
+ 	L_FILE,
+ 	L_NAME,
+ 	L_LAZYSBCNTR,
++	L_CONCURRENCY,
+ 	L_MAX_OPTS,
  };
  
-@@ -318,11 +319,13 @@ static struct opt_params dopts = {
- 		[D_EXTSZINHERIT] = "extszinherit",
- 		[D_COWEXTSIZE] = "cowextsize",
- 		[D_DAXINHERIT] = "daxinherit",
-+		[D_CONCURRENCY] = "concurrency",
- 		[D_MAX_OPTS] = NULL,
+@@ -541,6 +542,7 @@ static struct opt_params lopts = {
+ 		[L_FILE] = "file",
+ 		[L_NAME] = "name",
+ 		[L_LAZYSBCNTR] = "lazy-count",
++		[L_CONCURRENCY] = "concurrency",
+ 		[L_MAX_OPTS] = NULL,
  	},
  	.subopt_params = {
- 		{ .index = D_AGCOUNT,
- 		  .conflicts = { { &dopts, D_AGSIZE },
-+				 { &dopts, D_CONCURRENCY },
- 				 { NULL, LAST_CONFLICT } },
- 		  .minval = 1,
- 		  .maxval = XFS_MAX_AGNUMBER,
-@@ -365,6 +368,7 @@ static struct opt_params dopts = {
+@@ -561,7 +563,8 @@ static struct opt_params lopts = {
+ 		  .defaultval = 1,
  		},
- 		{ .index = D_AGSIZE,
- 		  .conflicts = { { &dopts, D_AGCOUNT },
-+				 { &dopts, D_CONCURRENCY },
- 				 { NULL, LAST_CONFLICT } },
+ 		{ .index = L_SIZE,
+-		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .conflicts = { { &lopts, L_CONCURRENCY },
++				 { NULL, LAST_CONFLICT } },
  		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
-@@ -440,6 +444,14 @@ static struct opt_params dopts = {
+ 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 		  .maxval = XFS_MAX_LOG_BYTES,
+@@ -592,6 +595,7 @@ static struct opt_params lopts = {
+ 		  .conflicts = { { &lopts, L_AGNUM },
+ 				 { &lopts, L_NAME },
+ 				 { &lopts, L_INTERNAL },
++				 { &lopts, L_CONCURRENCY },
+ 				 { NULL, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+@@ -606,6 +610,7 @@ static struct opt_params lopts = {
+ 		},
+ 		{ .index = L_FILE,
+ 		  .conflicts = { { &lopts, L_INTERNAL },
++				 { &lopts, L_CONCURRENCY },
+ 				 { NULL, LAST_CONFLICT } },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+@@ -624,6 +629,15 @@ static struct opt_params lopts = {
  		  .maxval = 1,
  		  .defaultval = 1,
  		},
-+		{ .index = D_CONCURRENCY,
-+		  .conflicts = { { &dopts, D_AGCOUNT },
-+				 { &dopts, D_AGSIZE },
++		{ .index = L_CONCURRENCY,
++		  .conflicts = { { &lopts, L_SIZE },
++				 { &lopts, L_FILE },
++				 { &lopts, L_DEV },
 +				 { NULL, LAST_CONFLICT } },
 +		  .minval = 0,
 +		  .maxval = INT_MAX,
@@ -136,59 +140,40 @@ index f29f902982d..fbe40b7edf1 100644
  	},
  };
  
-@@ -891,6 +903,7 @@ struct cli_params {
- 	int	lsunit;
+@@ -904,6 +918,7 @@ struct cli_params {
  	int	is_supported;
  	int	proto_slashes_are_spaces;
-+	int	data_concurrency;
+ 	int	data_concurrency;
++	int	log_concurrency;
  
  	/* parameters where 0 is not a valid value */
  	int64_t	agcount;
-@@ -993,7 +1006,7 @@ usage( void )
- 			    inobtcount=0|1,bigtime=0|1]\n\
- /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
- 			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
--			    sectsize=num\n\
-+			    sectsize=num,concurrency=num]\n\
- /* force overwrite */	[-f]\n\
- /* inode size */	[-i perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+@@ -1012,7 +1027,8 @@ usage( void )
  			    projid32bit=0|1,sparse=0|1,nrext64=0|1]\n\
-@@ -1090,6 +1103,19 @@ invalid_cfgfile_opt(
- 		filename, section, name, value);
- }
- 
-+static int
-+nr_cpus(void)
-+{
-+	static long	cpus = -1;
-+
-+	if (cpus < 0)
-+		cpus = sysconf(_SC_NPROCESSORS_ONLN);
-+	if (cpus < 0)
-+		return 0;
-+
-+	return min(INT_MAX, cpus);
-+}
-+
- static void
- check_device_type(
- 	struct libxfs_dev	*dev,
-@@ -1544,6 +1570,30 @@ cfgfile_opts_parser(
+ /* no discard */	[-K]\n\
+ /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+-			    sunit=value|su=num,sectsize=num,lazy-count=0|1]\n\
++			    sunit=value|su=num,sectsize=num,lazy-count=0|1,\n\
++			    concurrency=num]\n\
+ /* label */		[-L label (maximum 12 characters)]\n\
+ /* naming */		[-n size=num,version=2|ci,ftype=0|1]\n\
+ /* no-op info only */	[-N]\n\
+@@ -1712,6 +1728,30 @@ inode_opts_parser(
  	return 0;
  }
  
 +static void
-+set_data_concurrency(
++set_log_concurrency(
 +	struct opt_params	*opts,
 +	int			subopt,
-+	struct cli_params	*cli,
-+	const char		*value)
++	const char		*value,
++	struct cli_params	*cli)
 +{
 +	long long		optnum;
 +
 +	/*
-+	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
-+	 * If this cannot be determined, fall back to the default AG geometry.
++	 * "nr_cpus" or 1 means set the concurrency level to the CPU count.  If
++	 * this cannot be determined, fall back to the default computation.
 +	 */
 +	if (!strcmp(value, "nr_cpus"))
 +		optnum = 1;
@@ -196,149 +181,123 @@ index f29f902982d..fbe40b7edf1 100644
 +		optnum = getnum(value, opts, subopt);
 +
 +	if (optnum == 1)
-+		cli->data_concurrency = nr_cpus();
++		cli->log_concurrency = nr_cpus();
 +	else
-+		cli->data_concurrency = optnum;
++		cli->log_concurrency = optnum;
 +}
 +
  static int
- data_opts_parser(
+ log_opts_parser(
  	struct opt_params	*opts,
-@@ -1615,6 +1665,9 @@ data_opts_parser(
- 		else
- 			cli->fsx.fsx_xflags &= ~FS_XFLAG_DAX;
+@@ -1752,6 +1792,9 @@ log_opts_parser(
+ 	case L_LAZYSBCNTR:
+ 		cli->sb_feat.lazy_sb_counters = getnum(value, opts, subopt);
  		break;
-+	case D_CONCURRENCY:
-+		set_data_concurrency(opts, subopt, cli, value);
++	case L_CONCURRENCY:
++		set_log_concurrency(opts, subopt, value, cli);
 +		break;
  	default:
  		return -EINVAL;
  	}
-@@ -3034,12 +3087,98 @@ _("cannot have an rt subvolume with zero extents\n"));
- 						NBBY * cfg->blocksize);
+@@ -3607,15 +3650,59 @@ _("internal log size %lld too large, must be less than %d\n"),
+ 	cfg->logblocks = min(cfg->logblocks, *max_logblocks);
  }
  
-+static bool
-+ddev_is_solidstate(
-+	struct libxfs_init	*xi)
-+{
-+	unsigned short		rotational = 1;
-+	int			error;
-+
-+	error = ioctl(xi->data.fd, BLKROTATIONAL, &rotational);
-+	if (error)
-+		return false;
-+
-+	return rotational == 0;
-+}
-+
-+static void
-+calc_concurrency_ag_geometry(
++static uint64_t
++calc_concurrency_logblocks(
 +	struct mkfs_params	*cfg,
 +	struct cli_params	*cli,
-+	struct libxfs_init	*xi)
++	struct libxfs_init	*xi,
++	unsigned int		max_tx_bytes)
 +{
-+	uint64_t		try_agsize;
-+	uint64_t		def_agsize;
-+	uint64_t		def_agcount;
-+	int			nr_threads = cli->data_concurrency;
-+	int			try_threads;
++	uint64_t		log_bytes;
++	uint64_t		logblocks = cfg->logblocks;
++	unsigned int		new_logblocks;
 +
-+	calc_default_ag_geometry(cfg->blocklog, cfg->dblocks, cfg->dsunit,
-+			&def_agsize, &def_agcount);
-+	try_agsize = def_agsize;
++	if (cli->log_concurrency < 0) {
++		if (!ddev_is_solidstate(xi))
++			goto out;
 +
-+	/*
-+	 * If the caller doesn't have a particular concurrency level in mind,
-+	 * set it to the number of CPUs in the system.
-+	 */
-+	if (nr_threads < 0)
-+		nr_threads = nr_cpus();
-+
-+	/*
-+	 * Don't create fewer AGs than what we would create with the default
-+	 * geometry calculation.
-+	 */
-+	if (!nr_threads || nr_threads < def_agcount)
++		cli->log_concurrency = nr_cpus();
++	}
++	if (cli->log_concurrency == 0)
 +		goto out;
 +
 +	/*
-+	 * Let's try matching the number of AGs to the number of CPUs.  If the
-+	 * proposed geometry results in AGs smaller than 4GB, reduce the AG
-+	 * count until we have 4GB AGs.  Don't let the thread count go below
-+	 * the default geometry calculation.
++	 * If this filesystem is smaller than a gigabyte, there's little to be
++	 * gained from making the log larger.
 +	 */
-+	try_threads = nr_threads;
-+	try_agsize = cfg->dblocks / try_threads;
-+	if (try_agsize < GIGABYTES(4, cfg->blocklog)) {
-+		do {
-+			try_threads--;
-+			if (try_threads <= def_agcount) {
-+				try_agsize = def_agsize;
-+				goto out;
-+			}
-+
-+			try_agsize = cfg->dblocks / try_threads;
-+		} while (try_agsize < GIGABYTES(4, cfg->blocklog));
++	if (cfg->dblocks < GIGABYTES(1, cfg->blocklog))
 +		goto out;
-+	}
 +
 +	/*
-+	 * For large filesystems we try to ensure that the AG count is a
-+	 * multiple of the desired thread count.  Specifically, if the proposed
-+	 * AG size is larger than both the maximum AG size and the AG size we
-+	 * would have gotten with the defaults, add the thread count to the AG
-+	 * count until we get an AG size below both of those factors.
++	 * Create a log that is large enough to handle simultaneous maximally
++	 * sized transactions at the concurrency level specified by the user
++	 * without blocking for space.  Increase the figure by 50% so that
++	 * background threads can also run.
 +	 */
-+	while (try_agsize > XFS_AG_MAX_BLOCKS(cfg->blocklog) &&
-+	       try_agsize > def_agsize) {
-+		try_threads += nr_threads;
-+		try_agsize = cfg->dblocks / try_threads;
-+	}
++	log_bytes = max_tx_bytes * 3 * cli->log_concurrency / 2;
++	new_logblocks = min(XFS_MAX_LOG_BYTES >> cfg->blocklog,
++				log_bytes >> cfg->blocklog);
 +
++	logblocks = max(logblocks, new_logblocks);
 +out:
-+	cfg->agsize = try_agsize;
-+	cfg->agcount = howmany(cfg->dblocks, cfg->agsize);
++	return logblocks;
 +}
 +
  static void
- calculate_initial_ag_geometry(
+ calculate_log_size(
  	struct mkfs_params	*cfg,
--	struct cli_params	*cli)
-+	struct cli_params	*cli,
-+	struct libxfs_init	*xi)
+ 	struct cli_params	*cli,
++	struct libxfs_init	*xi,
+ 	struct xfs_mount	*mp)
  {
--	if (cli->agsize) {		/* User-specified AG size */
-+	if (cli->data_concurrency > 0) {
-+		calc_concurrency_ag_geometry(cfg, cli, xi);
-+	} else if (cli->agsize) {	/* User-specified AG size */
- 		cfg->agsize = getnum(cli->agsize, &dopts, D_AGSIZE);
+ 	struct xfs_sb		*sbp = &mp->m_sb;
+ 	int			min_logblocks;	/* absolute minimum */
+ 	int			max_logblocks;	/* absolute max for this AG */
++	unsigned int		max_tx_bytes = 0;
+ 	struct xfs_mount	mount;
+ 	struct libxfs_init	dummy_init = { };
  
- 		/*
-@@ -3059,6 +3198,8 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
- 		cfg->agcount = cli->agcount;
- 		cfg->agsize = cfg->dblocks / cfg->agcount +
- 				(cfg->dblocks % cfg->agcount != 0);
-+	} else if (cli->data_concurrency == -1 && ddev_is_solidstate(xi)) {
-+		calc_concurrency_ag_geometry(cfg, cli, xi);
- 	} else {
- 		calc_default_ag_geometry(cfg->blocklog, cfg->dblocks,
- 					 cfg->dsunit, &cfg->agsize,
-@@ -4060,6 +4201,7 @@ main(
- 		.xi = &xi,
+@@ -3624,6 +3711,12 @@ calculate_log_size(
+ 	mount.m_sb = *sbp;
+ 	libxfs_mount(&mount, &mp->m_sb, &dummy_init, 0);
+ 	min_logblocks = libxfs_log_calc_minimum_size(&mount);
++	if (cli->log_concurrency != 0) {
++		struct xfs_trans_res	res;
++
++		libxfs_log_get_max_trans_res(&mount, &res);
++		max_tx_bytes = res.tr_logres * res.tr_logcount;
++	}
+ 	libxfs_umount(&mount);
+ 
+ 	ASSERT(min_logblocks);
+@@ -3681,6 +3774,10 @@ _("max log size %d smaller than min log size %d, filesystem is too small\n"),
+ 		cfg->logblocks = (cfg->dblocks << cfg->blocklog) / 2048;
+ 		cfg->logblocks = cfg->logblocks >> cfg->blocklog;
+ 
++		if (cli->log_concurrency != 0)
++			cfg->logblocks = calc_concurrency_logblocks(cfg, cli,
++							xi, max_tx_bytes);
++
+ 		/* But don't go below a reasonable size */
+ 		cfg->logblocks = max(cfg->logblocks,
+ 				XFS_MIN_REALISTIC_LOG_BLOCKS(cfg->blocklog));
+@@ -4202,6 +4299,7 @@ main(
  		.loginternal = 1,
  		.is_supported	= 1,
-+		.data_concurrency = -1, /* auto detect non-mechanical storage */
+ 		.data_concurrency = -1, /* auto detect non-mechanical storage */
++		.log_concurrency = -1, /* auto detect non-mechanical ddev */
  	};
  	struct mkfs_params	cfg = {};
  
-@@ -4244,7 +4386,7 @@ main(
- 	 * dependent on device sizes. Once calculated, make sure everything
- 	 * aligns to device geometry correctly.
+@@ -4403,7 +4501,7 @@ main(
+ 	 * With the mount set up, we can finally calculate the log size
+ 	 * constraints and do default size calculations and final validation
  	 */
--	calculate_initial_ag_geometry(&cfg, &cli);
-+	calculate_initial_ag_geometry(&cfg, &cli, &xi);
- 	align_ag_geometry(&cfg);
+-	calculate_log_size(&cfg, &cli, mp);
++	calculate_log_size(&cfg, &cli, &xi, mp);
  
- 	calculate_imaxpct(&cfg, &cli);
+ 	finish_superblock_setup(&cfg, mp, sbp);
+ 
 
