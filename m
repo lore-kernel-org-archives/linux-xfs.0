@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5BFB64C
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:54:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A832B64C
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:54:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TYaFSxqu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5507DC433C7;
-	Sun, 31 Dec 2023 19:54:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gaAvHUxO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0088CC433C9;
+	Sun, 31 Dec 2023 19:54:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052442;
-	bh=JT3li+TRydANcXK+JxcMctLzhCYmV/60Kxj1SjHHPBI=;
+	s=k20201202; t=1704052458;
+	bh=Nushhxa8IT0/4ESw9Nq9at2xsx/yGhKTWlGTK0UxoUQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TYaFSxquxO2kQLmsEKxkdjWBrMjfoYg3+wuAOIB6czbE2KEv/W2RQX3KdtpFp1Nhr
-	 41/BuFBq4YyebAJoPE5ogTLPHL+IYXsawSxw6wV13J8JSrgQMEHeLCAltoSxMkl71U
-	 PV6j/1diHO7inFR/V6o/tZ1fXpH5/lvIolY1z/LHbJNM3NYcsrISRZu4KBqPkTgeiy
-	 Npqr1fxecRwfAI3dCVfrTYB0myI6hYlPEFxKZVrkTVLkzxYK+7WQSUqk7eo0MlGeWF
-	 TDazktKyIlPIAby1ZcUrUGjUo8ZIgGyAz6TkzlJWUaXtcbiSIaKGN3ZvAqK2ryDrSd
-	 s/Lgvcm9BmrjA==
-Date: Sun, 31 Dec 2023 11:54:01 -0800
-Subject: [PATCHSET v2.0 09/17] xfsprogs: extent free log intent cleanups
+	b=gaAvHUxO1rqvrwts9AJbMBAXECEUTczINJQ6klVJAXVRPAnN2GKqTrEDRhjygpJ7t
+	 8Ww7SKUpF8td8G6T5UJGClP+Nx3aBUkBjYhn6vwDyCafJqme9xdEiP9l7FC5XoXVDx
+	 Uv20tQ060KbiJxVAyTfCqC1edLuWeo9VXk7kJDKbMpzW3fr9F9PCEhi1bkKyNfwYyX
+	 svaGBnJ1d3CpLo4MV8M5ZNlOygUcF59aJG7rabwSEJz9hSyevu7lLw12/eivhQsucH
+	 5HSAV1EWVpMVwj4XHziY87bewNFaIb5QD4uDtG3Qc4nCGaIc5BgSz/5qhEZD34Qhlk
+	 3lGjSthyr3nAQ==
+Date: Sun, 31 Dec 2023 11:54:17 -0800
+Subject: [PATCHSET v2.0 10/17] xfsprogs: widen EFI format to support rt
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <170405014035.1814860.4299784888161945873.stgit@frogsfrogsfrogs>
+Message-ID: <170405014459.1815106.2840285507026368491.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,14 +37,10 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series cleans up some warts in the extent freeing log intent code.
-We start by acknowledging that this mechanism does not have anything to
-do with the bmap code by moving it to xfs_alloc.c and giving the
-function a more descriptive name.  Then we clean up the tracepoints and
-the _finish_one call paths to pass the intent structure around.  This
-reduces the overhead when the tracepoints are disabled and will make
-things much cleaner when we start adding realtime support in the next
-patch.  I also incorporated a bunch of cleanups from Christoph Hellwig.
+Realtime reverse mapping (and beyond that, realtime reflink) needs to be
+able to defer file mapping and extent freeing work in much the same
+manner as is required on the data volume.  Make the extent freeing log
+items operate on rt extents in preparation for realtime rmap.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -55,24 +51,20 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=extfree-intent-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-extfree-intents
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=extfree-intent-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-extfree-intents
 ---
- include/xfs_mount.h         |    3 +
- include/xfs_trace.h         |    5 +-
- libxfs/defer_item.c         |   91 +++++++++++++++++--------------------------
- libxfs/defer_item.h         |    6 +++
- libxfs/xfs_ag.c             |    2 -
- libxfs/xfs_alloc.c          |   92 +++++++++++--------------------------------
- libxfs/xfs_alloc.h          |   12 +++---
- libxfs/xfs_bmap.c           |   12 ++++--
- libxfs/xfs_bmap_btree.c     |    2 -
- libxfs/xfs_ialloc.c         |    5 +-
- libxfs/xfs_ialloc_btree.c   |    2 -
- libxfs/xfs_refcount.c       |    6 +--
- libxfs/xfs_refcount_btree.c |    2 -
- repair/bulkload.c           |    3 +
- 14 files changed, 96 insertions(+), 147 deletions(-)
+ libxfs/defer_item.c      |   75 ++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_alloc.c       |   16 ++++++++--
+ libxfs/xfs_alloc.h       |   17 +++++++++-
+ libxfs/xfs_defer.c       |    6 ++++
+ libxfs/xfs_defer.h       |    1 +
+ libxfs/xfs_log_format.h  |    6 +++-
+ libxfs/xfs_rtbitmap.c    |    4 ++
+ logprint/log_misc.c      |    2 +
+ logprint/log_print_all.c |    8 +++++
+ logprint/log_redo.c      |   57 ++++++++++++++++++++++++++---------
+ 10 files changed, 172 insertions(+), 20 deletions(-)
 
