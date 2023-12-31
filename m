@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99EABA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:38:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA38BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:39:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NESIC/8S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C39CC433C8;
-	Sun, 31 Dec 2023 20:38:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MlaitjL+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7FD9C433C7;
+	Sun, 31 Dec 2023 20:39:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704055131;
-	bh=2K8Y1tTQxpmVYfCcCP7LH7MwHAzg6S4z3AAJL993mdg=;
+	s=k20201202; t=1704055146;
+	bh=RznCchwiLRte84QWovmjctD3jJNhowWxjVrV3Y0Lr9I=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NESIC/8SBJ3uAIMTVA0+bd4DdTTq1a8oRFs2NU4eYfwoHLT4C8ramp5QL8uft6Z18
-	 uUjCUYwkLpMJCFRp/gI0p5+IhYjIjiSJKA8mE2hFzuSHrmbSEnpFYd64VAAXAL7OqW
-	 ba+vTKlPMg1wOdkNfT0lCjqZJc/+6ZBor8A9GaEPrKhfH1J5fDCkGjIrWOvOLrTJKt
-	 Bon+YcfBmcmn1CoBFDBCkKFUafmp5SMQL1FkbrO4XuD+B32Pemeqyz96Y0KvlXtVZ5
-	 KsrXQWAvsbeatS2OtGQMjUG7zTYxhwparVy40b2y09DKGH6M6Zv1M1Wi/HK3nd1FSL
-	 EaW6F07akjztQ==
-Date: Sun, 31 Dec 2023 12:38:50 -0800
-Subject: [PATCH 3/3] xfs: ensure dentry consistency when the orphanage adopts
- a file
+	b=MlaitjL+t5Oar8SO6Zrs8TakfjIMaHHgWYCsQesdpfC7XXWDInkFznBJJlQKk95Ro
+	 HM2hXcM03Fw26XuI+aL8zGbStgidpc5unx1Ei4pSlttRzobKue9Rk6Vk1HAfmLqb+A
+	 17NBFLZwcJQBhagB1/chuuwhodK613Mx9b+BlSldHg1jSKGRdodBXmYkliFLntwJT4
+	 ixH9oyYzSSEkr5sPdxFAcN4UBp4I29HPTQyE7QN7bxw3mtU71/xl6LiE/+U3PThZcU
+	 VNIg7zyYXmK5msOirnotw1uWdxsviX3jJwUeJmI6US9xPSpj2Ki66qpayxiQeiBG5G
+	 JasutsYzy/QEA==
+Date: Sun, 31 Dec 2023 12:39:06 -0800
+Subject: [PATCH 1/1] xfs: online repair of symbolic links
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404836491.1753770.8880491971122860886.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404836433.1753770.18094386562668840224.stgit@frogsfrogsfrogs>
-References: <170404836433.1753770.18094386562668840224.stgit@frogsfrogsfrogs>
+Message-ID: <170404836848.1753898.11502443829851648607.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404836829.1753898.12847456543644205933.stgit@frogsfrogsfrogs>
+References: <170404836829.1753898.12847456543644205933.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,181 +37,836 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When the orphanage adopts a file, that file becomes a child of the
-orphanage.  The dentry cache may have entries for the orphanage
-directory and the name we've chosen, so (1) make sure we abort if the
-dcache has a positive entry because something's not right; and (2)
-invalidate and purge negative dentries if the adoption goes through.
+If a symbolic link target looks bad, try to sift through the rubble to
+find as much of the target buffer that we can, and stage a new target
+(short or remote format as needed) in a temporary file and use the
+atomic extent swapping mechanism to commit the results.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/orphanage.c |   88 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/trace.h     |   42 ++++++++++++++++++++++
- 2 files changed, 130 insertions(+)
+ fs/xfs/Makefile                    |    1 
+ fs/xfs/libxfs/xfs_bmap.c           |   11 -
+ fs/xfs/libxfs/xfs_bmap.h           |    6 
+ fs/xfs/libxfs/xfs_symlink_remote.c |    9 -
+ fs/xfs/libxfs/xfs_symlink_remote.h |   22 +-
+ fs/xfs/scrub/repair.h              |    8 +
+ fs/xfs/scrub/scrub.c               |    2 
+ fs/xfs/scrub/symlink.c             |   13 +
+ fs/xfs/scrub/symlink_repair.c      |  488 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/tempfile.c            |    5 
+ fs/xfs/scrub/trace.h               |   46 +++
+ 11 files changed, 596 insertions(+), 15 deletions(-)
+ create mode 100644 fs/xfs/scrub/symlink_repair.c
 
 
-diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
-index 0aedc5c70b632..e1024a7bc9e96 100644
---- a/fs/xfs/scrub/orphanage.c
-+++ b/fs/xfs/scrub/orphanage.c
-@@ -418,6 +418,87 @@ xrep_adoption_compute_name(
- 	return 0;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 49f12fb8480e1..09016465d4925 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -213,6 +213,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   refcount_repair.o \
+ 				   repair.o \
+ 				   rmap_repair.o \
++				   symlink_repair.o \
+ 				   tempfile.o \
+ 				   xfblob.o \
+ 				   xfbtree.o \
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5a0e6cffb90d9..44b8c315c5978 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -761,7 +761,7 @@ xfs_bmap_local_to_extents_empty(
  }
  
-+/*
-+ * Make sure the dcache does not have a positive dentry for the name we've
-+ * chosen.  The caller should have checked with the ondisk directory, so any
-+ * discrepancy is a sign that something is seriously wrong.
-+ */
-+static int
-+xrep_adoption_check_dcache(
-+	struct xrep_adoption	*adopt)
+ 
+-STATIC int				/* error */
++int					/* error */
+ xfs_bmap_local_to_extents(
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+ 	xfs_inode_t	*ip,		/* incore inode pointer */
+@@ -771,7 +771,8 @@ xfs_bmap_local_to_extents(
+ 	void		(*init_fn)(struct xfs_trans *tp,
+ 				   struct xfs_buf *bp,
+ 				   struct xfs_inode *ip,
+-				   struct xfs_ifork *ifp))
++				   struct xfs_ifork *ifp, void *priv),
++	void		*priv)
+ {
+ 	int		error = 0;
+ 	int		flags;		/* logging flags returned */
+@@ -832,7 +833,7 @@ xfs_bmap_local_to_extents(
+ 	 * log here. Note that init_fn must also set the buffer log item type
+ 	 * correctly.
+ 	 */
+-	init_fn(tp, bp, ip, ifp);
++	init_fn(tp, bp, ip, ifp, priv);
+ 
+ 	/* account for the change in fork size */
+ 	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
+@@ -964,8 +965,8 @@ xfs_bmap_add_attrfork_local(
+ 
+ 	if (S_ISLNK(VFS_I(ip)->i_mode))
+ 		return xfs_bmap_local_to_extents(tp, ip, 1, flags,
+-						 XFS_DATA_FORK,
+-						 xfs_symlink_local_to_remote);
++				XFS_DATA_FORK, xfs_symlink_local_to_remote,
++				NULL);
+ 
+ 	/* should only be called for types that support local format data */
+ 	ASSERT(0);
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index ccd1ddcd78500..87633449c379a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -177,6 +177,12 @@ unsigned int xfs_bmap_compute_attr_offset(struct xfs_mount *mp);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_trans *tp,
+ 		struct xfs_inode *ip, int whichfork);
++int xfs_bmap_local_to_extents(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_extlen_t total, int *logflagsp, int whichfork,
++		void (*init_fn)(struct xfs_trans *tp, struct xfs_buf *bp,
++				struct xfs_inode *ip, struct xfs_ifork *ifp,
++				void *priv),
++		void *priv);
+ void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork);
+ int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
+diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+index c9c50b50d2114..3b86d1d27f43d 100644
+--- a/fs/xfs/libxfs/xfs_symlink_remote.c
++++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+@@ -169,7 +169,8 @@ xfs_symlink_local_to_remote(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp,
+ 	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
++	struct xfs_ifork	*ifp,
++	void			*priv)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	char			*buf;
+@@ -307,9 +308,10 @@ xfs_symlink_remote_read(
+ 
+ /* Write the symlink target into the inode. */
+ int
+-xfs_symlink_write_target(
++__xfs_symlink_write_target(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
++	xfs_ino_t		owner,
+ 	const char		*target_path,
+ 	int			pathlen,
+ 	xfs_fsblock_t		fs_blocks,
+@@ -364,8 +366,7 @@ xfs_symlink_write_target(
+ 		byte_cnt = min(byte_cnt, pathlen);
+ 
+ 		buf = bp->b_addr;
+-		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset, byte_cnt,
+-				bp);
++		buf += xfs_symlink_hdr_set(mp, owner, offset, byte_cnt, bp);
+ 
+ 		memcpy(buf, cur_chunk, byte_cnt);
+ 
+diff --git a/fs/xfs/libxfs/xfs_symlink_remote.h b/fs/xfs/libxfs/xfs_symlink_remote.h
+index ac3dac8f617ed..e409d68013360 100644
+--- a/fs/xfs/libxfs/xfs_symlink_remote.h
++++ b/fs/xfs/libxfs/xfs_symlink_remote.h
+@@ -16,12 +16,26 @@ int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
+ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
+ 			uint32_t size, struct xfs_buf *bp);
+ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+-				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++				 struct xfs_inode *ip, struct xfs_ifork *ifp,
++				 void *priv);
+ xfs_failaddr_t xfs_symlink_shortform_verify(void *sfp, int64_t size);
+ int xfs_symlink_remote_read(struct xfs_inode *ip, char *link);
+-int xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
+-		const char *target_path, int pathlen, xfs_fsblock_t fs_blocks,
+-		uint resblks);
++int __xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_ino_t owner, const char *target_path, int pathlen,
++		xfs_fsblock_t fs_blocks, uint resblks);
++
++static inline int
++xfs_symlink_write_target(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	const char		*target_path,
++	int			pathlen,
++	xfs_fsblock_t		fs_blocks,
++	uint			resblks)
 +{
-+	struct qstr		qname = QSTR_INIT(adopt->xname.name,
-+						  adopt->xname.len);
-+	struct dentry		*d_orphanage, *d_child;
-+	int			error = 0;
++	return __xfs_symlink_write_target(tp, ip, ip->i_ino, target_path,
++			pathlen, fs_blocks, resblks);
++}
+ int xfs_symlink_remote_truncate(struct xfs_trans *tp, struct xfs_inode *ip);
+ 
+ #endif /* __XFS_SYMLINK_REMOTE_H */
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 615137a2039ab..7ee5f7e5bffcb 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -94,6 +94,7 @@ int xrep_setup_xattr(struct xfs_scrub *sc);
+ int xrep_setup_directory(struct xfs_scrub *sc);
+ int xrep_setup_parent(struct xfs_scrub *sc);
+ int xrep_setup_nlinks(struct xfs_scrub *sc);
++int xrep_setup_symlink(struct xfs_scrub *sc, unsigned int *resblks);
+ 
+ /* Repair setup functions */
+ int xrep_setup_ag_allocbt(struct xfs_scrub *sc);
+@@ -130,6 +131,7 @@ int xrep_fscounters(struct xfs_scrub *sc);
+ int xrep_xattr(struct xfs_scrub *sc);
+ int xrep_directory(struct xfs_scrub *sc);
+ int xrep_parent(struct xfs_scrub *sc);
++int xrep_symlink(struct xfs_scrub *sc);
+ 
+ #ifdef CONFIG_XFS_RT
+ int xrep_rtbitmap(struct xfs_scrub *sc);
+@@ -206,6 +208,11 @@ xrep_setup_nothing(
+ 
+ #define xrep_setup_inode(sc, imap)	((void)0)
+ 
++static inline int xrep_setup_symlink(struct xfs_scrub *sc, unsigned int *x)
++{
++	return 0;
++}
 +
-+	d_orphanage = d_find_alias(VFS_I(adopt->sc->orphanage));
-+	if (!d_orphanage)
-+		return 0;
+ #define xrep_revalidate_allocbt		(NULL)
+ #define xrep_revalidate_iallocbt	(NULL)
+ 
+@@ -231,6 +238,7 @@ xrep_setup_nothing(
+ #define xrep_xattr			xrep_notsupported
+ #define xrep_directory			xrep_notsupported
+ #define xrep_parent			xrep_notsupported
++#define xrep_symlink			xrep_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 0d35f1f30d9be..df6f5d3474048 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -342,7 +342,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_INODE,
+ 		.setup	= xchk_setup_symlink,
+ 		.scrub	= xchk_symlink,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_symlink,
+ 	},
+ 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
+ 		.type	= ST_INODE,
+diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+index 7239590c9dd29..7d79ee4767696 100644
+--- a/fs/xfs/scrub/symlink.c
++++ b/fs/xfs/scrub/symlink.c
+@@ -10,6 +10,7 @@
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+ #include "xfs_log_format.h"
++#include "xfs_trans.h"
+ #include "xfs_inode.h"
+ #include "xfs_symlink.h"
+ #include "xfs_health.h"
+@@ -17,18 +18,28 @@
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/health.h"
++#include "scrub/repair.h"
+ 
+ /* Set us up to scrub a symbolic link. */
+ int
+ xchk_setup_symlink(
+ 	struct xfs_scrub	*sc)
+ {
++	unsigned int		resblks = 0;
++	int			error;
 +
-+	d_child = d_hash_and_lookup(d_orphanage, &qname);
-+	if (d_child) {
-+		trace_xrep_adoption_check_child(adopt->sc->mp, d_child);
-+
-+		if (d_is_positive(d_child)) {
-+			ASSERT(d_is_negative(d_child));
-+			error = -EFSCORRUPTED;
-+		}
-+
-+		dput(d_child);
+ 	/* Allocate the buffer without the inode lock held. */
+ 	sc->buf = kvzalloc(XFS_SYMLINK_MAXLEN + 1, XCHK_GFP_FLAGS);
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+-	return xchk_setup_inode_contents(sc, 0);
++	if (xchk_could_repair(sc)) {
++		error = xrep_setup_symlink(sc, &resblks);
++		if (error)
++			return error;
 +	}
 +
-+	dput(d_orphanage);
++	return xchk_setup_inode_contents(sc, resblks);
+ }
+ 
+ /* Symbolic links. */
+diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+new file mode 100644
+index 0000000000000..60246350ebfc9
+--- /dev/null
++++ b/fs/xfs/scrub/symlink_repair.c
+@@ -0,0 +1,488 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2018-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_inode_fork.h"
++#include "xfs_symlink.h"
++#include "xfs_bmap.h"
++#include "xfs_quota.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
++#include "xfs_symlink_remote.h"
++#include "xfs_swapext.h"
++#include "xfs_xchgrange.h"
++#include "xfs_health.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++#include "scrub/tempfile.h"
++#include "scrub/tempswap.h"
++#include "scrub/reap.h"
++
++/*
++ * Symbolic Link Repair
++ * ====================
++ *
++ * We repair symbolic links by reading whatever target data we can find, up to
++ * the first NULL byte.  Zero length symlinks are turned into links to the
++ * current directory.  The new target is written into a private hidden
++ * temporary file, and then an atomic extent swap commits the new symlink
++ * target to the file being repaired.
++ */
++
++/* Set us up to repair the rtsummary file. */
++int
++xrep_setup_symlink(
++	struct xfs_scrub	*sc,
++	unsigned int		*resblks)
++{
++	struct xfs_mount	*mp = sc->mp;
++	unsigned long long	blocks;
++	int			error;
++
++	error = xrep_tempfile_create(sc, S_IFLNK);
 +	if (error)
 +		return error;
 +
 +	/*
-+	 * Do we need to update d_parent of the dentry for the file being
-+	 * repaired?  In theory there shouldn't be one since the file had
-+	 * nonzero nlink but wasn't connected to any parent dir.
++	 * If we're doing a repair, we reserve enough blocks to write out a
++	 * completely new symlink file, plus twice as many blocks as we would
++	 * need if we can only allocate one block per data fork mapping.  This
++	 * should cover the preallocation of the temporary file and swapping
++	 * the extent mappings.
++	 *
++	 * We cannot use xfs_swapext_estimate because we have not yet
++	 * constructed the replacement rtsummary and therefore do not know how
++	 * many extents it will use.  By the time we do, we will have a dirty
++	 * transaction (which we cannot drop because we cannot drop the
++	 * rtsummary ILOCK) and cannot ask for more reservation.
 +	 */
-+	d_child = d_find_alias(VFS_I(adopt->sc->ip));
-+	if (d_child) {
-+		trace_xrep_adoption_check_alias(adopt->sc->mp, d_child);
-+		ASSERT(d_child->d_parent == NULL);
++	blocks = xfs_symlink_blocks(sc->mp, XFS_SYMLINK_MAXLEN);
++	blocks += xfs_bmbt_calc_size(mp, blocks) * 2;
++	if (blocks > UINT_MAX)
++		return -EOPNOTSUPP;
 +
-+		dput(d_child);
-+		return -EFSCORRUPTED;
++	*resblks += blocks;
++	return 0;
++}
++
++/*
++ * Try to salvage the pathname from remote blocks.  Returns the number of bytes
++ * salvaged or a negative errno.
++ */
++STATIC int
++xrep_symlink_salvage_remote(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	struct xfs_inode	*ip = sc->ip;
++	struct xfs_buf		*bp;
++	char			*target_buf = sc->buf;
++	xfs_failaddr_t		fa;
++	xfs_filblks_t		fsblocks;
++	xfs_daddr_t		d;
++	loff_t			len;
++	loff_t			offset = 0;
++	unsigned int		byte_cnt;
++	bool			magic_ok;
++	bool			hdr_ok;
++	int			n;
++	int			nmaps = XFS_SYMLINK_MAPS;
++	int			error;
++
++	/* We'll only read until the buffer is full. */
++	len = min_t(loff_t, ip->i_disk_size, XFS_SYMLINK_MAXLEN);
++	fsblocks = xfs_symlink_blocks(sc->mp, len);
++	error = xfs_bmapi_read(ip, 0, fsblocks, mval, &nmaps, 0);
++	if (error)
++		return error;
++
++	for (n = 0; n < nmaps; n++) {
++		struct xfs_dsymlink_hdr	*dsl;
++
++		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
++
++		/* Read the rmt block.  We'll run the verifiers manually. */
++		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
++				d, XFS_FSB_TO_BB(sc->mp, mval[n].br_blockcount),
++				0, &bp, NULL);
++		if (error)
++			return error;
++		bp->b_ops = &xfs_symlink_buf_ops;
++
++		/* How many bytes do we expect to get out of this buffer? */
++		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
++		byte_cnt = min_t(unsigned int, byte_cnt, len);
++
++		/*
++		 * See if the verifiers accept this block.  We're willing to
++		 * salvage if the if the offset/byte/ino are ok and either the
++		 * verifier passed or the magic is ok.  Anything else and we
++		 * stop dead in our tracks.
++		 */
++		fa = bp->b_ops->verify_struct(bp);
++		dsl = bp->b_addr;
++		magic_ok = dsl->sl_magic == cpu_to_be32(XFS_SYMLINK_MAGIC);
++		hdr_ok = xfs_symlink_hdr_ok(ip->i_ino, offset, byte_cnt, bp);
++		if (!hdr_ok || (fa != NULL && !magic_ok))
++			break;
++
++		memcpy(target_buf + offset, dsl + 1, byte_cnt);
++
++		len -= byte_cnt;
++		offset += byte_cnt;
++	}
++	return offset;
++}
++
++/*
++ * Try to salvage an inline symlink's contents.  Returns the number of bytes
++ * salvaged or a negative errno.
++ */
++STATIC int
++xrep_symlink_salvage_inline(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_inode	*ip = sc->ip;
++	char			*target_buf = sc->buf;
++	struct xfs_ifork	*ifp;
++	unsigned int		nr;
++
++	ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
++	if (!ifp->if_u1.if_data)
++		return 0;
++
++	/*
++	 * If inode repair zapped the link target, pretend that we didn't find
++	 * any bytes at all so that we can replace the (now totally lost) link
++	 * target with a warning message.
++	 */
++	if (xfs_inode_has_sickness(sc->ip, XFS_SICK_INO_SYMLINK_ZAPPED) &&
++	    sc->ip->i_disk_size == 1 && ifp->if_u1.if_data[0] == '?')
++		return 0;
++
++	nr = min(XFS_SYMLINK_MAXLEN, xfs_inode_data_fork_size(ip));
++	strncpy(target_buf, ifp->if_u1.if_data, nr);
++	return nr;
++}
++
++#define DUMMY_TARGET \
++	"The target of this symbolic link could not be recovered at all and " \
++	"has been replaced with this explanatory message.  To avoid " \
++	"accidentally pointing to an existing file path, this message is " \
++	"longer than the maximum supported file name length.  That is an " \
++	"acceptable length for a symlink target on XFS but will produce " \
++	"File Name Too Long errors if resolved."
++
++/* Salvage whatever we can of the target. */
++STATIC int
++xrep_symlink_salvage(
++	struct xfs_scrub	*sc)
++{
++	char			*target_buf = sc->buf;
++	int			ret;
++
++	BUILD_BUG_ON(sizeof(DUMMY_TARGET) - 1 <= NAME_MAX);
++
++	/* Find whatever we can of the link target. */
++	if (sc->ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
++		ret = xrep_symlink_salvage_inline(sc);
++	else
++		ret = xrep_symlink_salvage_remote(sc);
++	if (ret < 0)
++		return ret;
++	target_buf[ret] = 0;
++
++	/*
++	 * Change an empty target into a dummy target and clear the symlink
++	 * target zapped flag.
++	 */
++	if (target_buf[0] == 0) {
++		sc->sick_mask |= XFS_SICK_INO_SYMLINK_ZAPPED;
++		sprintf(target_buf, DUMMY_TARGET);
++	}
++
++	trace_xrep_symlink_salvage_target(sc->ip, target_buf,
++					  strlen(target_buf));
++	return 0;
++}
++
++STATIC void
++xrep_symlink_local_to_remote(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp,
++	void			*priv)
++{
++	struct xfs_scrub	*sc = priv;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	xfs_symlink_local_to_remote(tp, bp, ip, ifp, NULL);
++
++	if (!xfs_has_crc(sc->mp))
++		return;
++
++	dsl->sl_owner = cpu_to_be64(sc->ip->i_ino);
++	xfs_trans_log_buf(tp, bp, 0,
++			  sizeof(struct xfs_dsymlink_hdr) + ifp->if_bytes - 1);
++}
++
++/*
++ * Prepare both links' data forks for extent swapping.  Promote the tempfile
++ * from local format to extents format, and if the file being repaired has a
++ * short format data fork, turn it into an empty extent list.
++ */
++STATIC int
++xrep_symlink_swap_prep(
++	struct xfs_scrub	*sc,
++	bool			temp_local,
++	bool			ip_local)
++{
++	int			error;
++
++	/*
++	 * If the temp link is in shortform format, convert that to a remote
++	 * target so that we can use the atomic extent swap.
++	 */
++	if (temp_local) {
++		int		logflags = XFS_ILOG_CORE;
++
++		error = xfs_bmap_local_to_extents(sc->tp, sc->tempip, 1,
++				&logflags, XFS_DATA_FORK,
++				xrep_symlink_local_to_remote,
++				sc);
++		if (error)
++			return error;
++
++		xfs_trans_log_inode(sc->tp, sc->ip, 0);
++
++		error = xfs_defer_finish(&sc->tp);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * If the file being repaired had a shortform data fork, convert that
++	 * to an empty extent list in preparation for the atomic extent swap.
++	 */
++	if (ip_local) {
++		struct xfs_ifork	*ifp;
++
++		ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
++		xfs_idestroy_fork(ifp);
++		ifp->if_format = XFS_DINODE_FMT_EXTENTS;
++		ifp->if_nextents = 0;
++		ifp->if_bytes = 0;
++		ifp->if_u1.if_root = NULL;
++		ifp->if_height = 0;
++
++		xfs_trans_log_inode(sc->tp, sc->ip,
++				XFS_ILOG_CORE | XFS_ILOG_DDATA);
 +	}
 +
 +	return 0;
 +}
 +
-+/*
-+ * Remove all negative dentries from the dcache.  There should not be any
-+ * positive entries, since we've maintained our lock on the orphanage
-+ * directory.
-+ */
-+static void
-+xrep_adoption_zap_dcache(
-+	struct xrep_adoption	*adopt)
++/* Swap the temporary link's data fork with the one being repaired. */
++STATIC int
++xrep_symlink_swap(
++	struct xfs_scrub	*sc)
 +{
-+	struct qstr		qname = QSTR_INIT(adopt->xname.name,
-+						  adopt->xname.len);
-+	struct dentry		*d_orphanage, *d_child;
++	struct xrep_tempswap	*tx = sc->buf;
++	bool			ip_local, temp_local;
++	int			error;
 +
-+	d_orphanage = d_find_alias(VFS_I(adopt->sc->orphanage));
-+	if (!d_orphanage)
-+		return;
++	ip_local = sc->ip->i_df.if_format == XFS_DINODE_FMT_LOCAL;
++	temp_local = sc->tempip->i_df.if_format == XFS_DINODE_FMT_LOCAL;
 +
-+	d_child = d_hash_and_lookup(d_orphanage, &qname);
-+	while (d_child != NULL) {
-+		trace_xrep_adoption_invalidate_child(adopt->sc->mp, d_child);
-+
-+		ASSERT(d_is_negative(d_child));
-+		d_invalidate(d_child);
-+		dput(d_child);
-+		d_child = d_lookup(d_orphanage, &qname);
++	/*
++	 * If the both links have a local format data fork and the rebuilt
++	 * remote data would fit in the repaired file's data fork, copy the
++	 * contents from the tempfile and declare ourselves done.
++	 */
++	if (ip_local && temp_local &&
++	    sc->tempip->i_disk_size <= xfs_inode_data_fork_size(sc->ip)) {
++		xrep_tempfile_copyout_local(sc, XFS_DATA_FORK);
++		return 0;
 +	}
 +
-+	dput(d_orphanage);
-+}
-+
- /*
-  * Move the current file to the orphanage under the computed name.
-  *
-@@ -436,6 +517,10 @@ xrep_adoption_move(
- 	trace_xrep_adoption_reparent(sc->orphanage, &adopt->xname,
- 			sc->ip->i_ino);
- 
-+	error = xrep_adoption_check_dcache(adopt);
++	/* Otherwise, make sure both data forks are in block-mapping mode. */
++	error = xrep_symlink_swap_prep(sc, temp_local, ip_local);
 +	if (error)
 +		return error;
 +
- 	/* Create the new name in the orphanage. */
- 	error = xfs_dir_createname(sc->tp, sc->orphanage, xname, sc->ip->i_ino,
- 			adopt->orphanage_blkres);
-@@ -466,6 +551,9 @@ xrep_adoption_move(
- 	 * recorded in the log.
- 	 */
- 	xfs_dir_update_hook(sc->orphanage, sc->ip, 1, xname);
++	return xrep_tempswap_contents(sc, tx);
++}
 +
-+	/* Remove negative dentries from the lost+found's dcache */
-+	xrep_adoption_zap_dcache(adopt);
- 	return 0;
- }
++/*
++ * Free all the remote blocks and reset the data fork.  The caller must join
++ * the inode to the transaction.  This function returns with the inode joined
++ * to a clean scrub transaction.
++ */
++STATIC int
++xrep_symlink_reset_fork(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(sc->tempip, XFS_DATA_FORK);
++	int			error;
++
++	/* Unmap all the remote target buffers. */
++	if (xfs_ifork_has_extents(ifp)) {
++		error = xrep_reap_ifork(sc, sc->tempip, XFS_DATA_FORK);
++		if (error)
++			return error;
++	}
++
++	trace_xrep_symlink_reset_fork(sc->tempip);
++
++	/* Reset the temp symlink target to dummy content. */
++	xfs_idestroy_fork(ifp);
++	return xfs_symlink_write_target(sc->tp, sc->tempip, "?", 1, 0, 0);
++}
++
++/*
++ * Reinitialize a link target.  Caller must ensure the inode is joined to
++ * the transaction.
++ */
++STATIC int
++xrep_symlink_rebuild(
++	struct xfs_scrub	*sc)
++{
++	struct xrep_tempswap	*tx;
++	char			*target_buf = sc->buf;
++	xfs_fsblock_t		fs_blocks;
++	unsigned int		target_len;
++	unsigned int		resblks;
++	int			error;
++
++	/* How many blocks do we need? */
++	target_len = strlen(target_buf);
++	ASSERT(target_len != 0);
++	if (target_len == 0 || target_len > XFS_SYMLINK_MAXLEN)
++		return -EFSCORRUPTED;
++
++	trace_xrep_symlink_rebuild(sc->ip);
++
++	/*
++	 * In preparation to write the new symlink target to the temporary
++	 * file, drop the ILOCK of the file being repaired (it shouldn't be
++	 * joined) and take the ILOCK of the temporary file.
++	 *
++	 * The VFS does not take the IOLOCK while reading a symlink (and new
++	 * symlinks are hidden with INEW until they've been written) so it's
++	 * possible that a readlink() could see the old corrupted contents
++	 * while we're doing this.
++	 */
++	xchk_iunlock(sc, XFS_ILOCK_EXCL);
++	xrep_tempfile_ilock(sc);
++	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
++
++	/*
++	 * Reserve resources to reinitialize the target.  We're allowed to
++	 * exceed file quota to repair inconsistent metadata, though this is
++	 * unlikely.
++	 */
++	fs_blocks = xfs_symlink_blocks(sc->mp, target_len);
++	resblks = XFS_SYMLINK_SPACE_RES(sc->mp, target_len, fs_blocks);
++	error = xfs_trans_reserve_quota_nblks(sc->tp, sc->tempip, resblks, 0,
++			true);
++	if (error)
++		return error;
++
++	/* Erase the dummy target set up by the tempfile initialization. */
++	xfs_idestroy_fork(&sc->tempip->i_df);
++	sc->tempip->i_df.if_bytes = 0;
++	sc->tempip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
++
++	/* Write the salvaged target to the temporary link. */
++	error = __xfs_symlink_write_target(sc->tp, sc->tempip, sc->ip->i_ino,
++			target_buf, target_len, fs_blocks, resblks);
++	if (error)
++		return error;
++
++	/*
++	 * Commit the repair transaction so that we can use the atomic extent
++	 * swap helper functions to compute the correct block reservations and
++	 * re-lock the inodes.
++	 */
++	target_buf = NULL;
++	error = xrep_trans_commit(sc);
++	if (error)
++		return error;
++
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		return error;
++
++	xrep_tempfile_iunlock(sc);
++
++	/*
++	 * We're done with the temporary buffer, so we can reuse it for the
++	 * tempfile swap information.
++	 */
++	tx = sc->buf;
++	error = xrep_tempswap_trans_alloc(sc, XFS_DATA_FORK, tx);
++	if (error)
++		return error;
++
++	/*
++	 * Swap the temp link's data fork with the file being repaired.  This
++	 * recreates the transaction and takes the ILOCKs of the file being
++	 * repaired and the temporary file.
++	 */
++	error = xrep_symlink_swap(sc);
++	if (error)
++		return error;
++
++	/*
++	 * Release the old symlink blocks and reset the data fork of the temp
++	 * link to an empty shortform link.  This is the last repair action we
++	 * perform on the symlink, so we don't need to clean the transaction.
++	 */
++	return xrep_symlink_reset_fork(sc);
++}
++
++/* Repair a symbolic link. */
++int
++xrep_symlink(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	/* The rmapbt is required to reap the old data fork. */
++	if (!xfs_has_rmapbt(sc->mp))
++		return -EOPNOTSUPP;
++
++	ASSERT(sc->ilock_flags & XFS_ILOCK_EXCL);
++
++	error = xrep_symlink_salvage(sc);
++	if (error)
++		return error;
++
++	/* Now reset the target. */
++	error = xrep_symlink_rebuild(sc);
++	if (error)
++		return error;
++
++	return xrep_trans_commit(sc);
++}
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 49361e03ad8a4..93d8a6b68f442 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -21,6 +21,7 @@
+ #include "xfs_xchgrange.h"
+ #include "xfs_swapext.h"
+ #include "xfs_defer.h"
++#include "xfs_symlink_remote.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/repair.h"
+@@ -109,6 +110,10 @@ xrep_tempfile_create(
+ 		error = xfs_dir_init(tp, sc->tempip, dp);
+ 		if (error)
+ 			goto out_trans_cancel;
++	} else if (S_ISLNK(VFS_I(sc->tempip)->i_mode)) {
++		error = xfs_symlink_write_target(tp, sc->tempip, ".", 1, 0, 0);
++		if (error)
++			goto out_trans_cancel;
+ 	}
  
+ 	/*
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 9c90b078d021a..3766fffd7eb08 100644
+index 3766fffd7eb08..18c1a92c1901e 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -2750,6 +2750,48 @@ TRACE_EVENT(xrep_nlinks_set_record,
- 		  __entry->children)
- );
+@@ -2792,6 +2792,52 @@ DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_check_alias);
+ DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_check_dentry);
+ DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_invalidate_child);
  
-+DECLARE_EVENT_CLASS(xrep_dentry_class,
-+	TP_PROTO(struct xfs_mount *mp, const struct dentry *dentry),
-+	TP_ARGS(mp, dentry),
++TRACE_EVENT(xrep_symlink_salvage_target,
++	TP_PROTO(struct xfs_inode *ip, char *target, unsigned int targetlen),
++	TP_ARGS(ip, target, targetlen),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
-+		__field(unsigned int, flags)
-+		__field(unsigned long, ino)
-+		__field(bool, positive)
-+		__field(unsigned long, parent_ino)
-+		__field(unsigned int, namelen)
-+		__dynamic_array(char, name, dentry->d_name.len)
++		__field(xfs_ino_t, ino)
++		__field(unsigned int, targetlen)
++		__dynamic_array(char, target, targetlen + 1)
 +	),
 +	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->flags = dentry->d_flags;
-+		__entry->positive = d_is_positive(dentry);
-+		if (dentry->d_parent && d_inode(dentry->d_parent))
-+			__entry->parent_ino = d_inode(dentry->d_parent)->i_ino;
-+		else
-+			__entry->parent_ino = -1UL;
-+		__entry->ino = d_inode(dentry) ? d_inode(dentry)->i_ino : 0;
-+		__entry->namelen = dentry->d_name.len;
-+		memcpy(__get_str(name), dentry->d_name.name, dentry->d_name.len);
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->targetlen = targetlen;
++		memcpy(__get_str(target), target, targetlen);
++		__get_str(target)[targetlen] = 0;
 +	),
-+	TP_printk("dev %d:%d flags 0x%x positive? %d parent_ino 0x%lx ino 0x%lx name '%.*s'",
++	TP_printk("dev %d:%d ip 0x%llx target '%.*s'",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->flags,
-+		  __entry->positive,
-+		  __entry->parent_ino,
 +		  __entry->ino,
-+		  __entry->namelen,
-+		  __get_str(name))
++		  __entry->targetlen,
++		  __get_str(target))
 +);
-+#define DEFINE_REPAIR_DENTRY_EVENT(name) \
-+DEFINE_EVENT(xrep_dentry_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, const struct dentry *dentry), \
-+	TP_ARGS(mp, dentry))
-+DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_check_child);
-+DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_check_alias);
-+DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_check_dentry);
-+DEFINE_REPAIR_DENTRY_EVENT(xrep_adoption_invalidate_child);
++
++DECLARE_EVENT_CLASS(xrep_symlink_class,
++	TP_PROTO(struct xfs_inode *ip),
++	TP_ARGS(ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++	),
++	TP_printk("dev %d:%d ip 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino)
++);
++
++#define DEFINE_XREP_SYMLINK_EVENT(name) \
++DEFINE_EVENT(xrep_symlink_class, name, \
++	TP_PROTO(struct xfs_inode *ip), \
++	TP_ARGS(ip))
++DEFINE_XREP_SYMLINK_EVENT(xrep_symlink_rebuild);
++DEFINE_XREP_SYMLINK_EVENT(xrep_symlink_reset_fork);
 +
  #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
  
