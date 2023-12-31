@@ -1,30 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 872FEDF42
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:14:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E560DDF42
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:14:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cq2S0pEf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B6BDC433C7;
-	Sun, 31 Dec 2023 23:14:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P60wUqet"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B04B5C433C8;
+	Sun, 31 Dec 2023 23:14:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064454;
-	bh=5HYn3b6QOVRQ2XfANgmsjyALqtbpr7fzafdRlv+tdhU=;
+	s=k20201202; t=1704064469;
+	bh=X1OcUVriTlM8RA2Yohg0rgAUchmxChIWHEdmk7DNQrI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cq2S0pEf+wo3RS+UFtI8umQWnTwDPj7WUPAN1NZofdvlw3pozetrhweP7QHv0p0EM
-	 tLK69CYZcuLFDAy1xW27kaJllV/vBS3E0Kfa9+EG4d18NaKjeeqp1JeeIXdUTTLMH9
-	 7Hbp/iPO8m6TjRiPSmSBlvbpRDGoQcJKCdj1a2PfT3+IZ1AaBdQ5YycJenb1dw0oeE
-	 wx3F0S5pvo1QxDdBU2OX3W93j5l7kySJQ8h752vFDZhr/fjLQEVErVZuccHBosqpep
-	 nC9YKLkWrHYZk2AOGsWzvnjIRU2MDyABBPUwmAJrMobKP5otdMo8rQtQuusoR+PbbJ
-	 Vjeou6H3p6Ocg==
-Date: Sun, 31 Dec 2023 15:14:13 -0800
-Subject: [PATCH 03/18] man2: update ioctl_xfs_scrub_metadata.2 for parent
- pointers
+	b=P60wUqet6ue1/wnW7thWkk7akMrZiI4d/2z/f5a97NkquQlzho6Ue8vbOST/4xcIh
+	 mbGFVcRds6R1sdQibE0K8lCbIwTZuXD3ujvrbHC9LX7n0ox1YXcSeZqsW16WGWiIwJ
+	 s5hbqKWnXRjjIsh00hFfbmxxexAeGAYAspT5fg+VpycJZR0o5Gr+XWsmBY1FkxqNuF
+	 tBuhwog6wwNGuyHhzF3AamyPImrpUbR9CRufIg3GS7L172zaQYviyEntdf9O+kI4oR
+	 6MKETL5aVXxaJJI41XtWpqypCdkjtUGbVXvYJfzbezCzHt2sn3nyEiSvBr3PQegJvA
+	 ioc688ZQsftig==
+Date: Sun, 31 Dec 2023 15:14:29 -0800
+Subject: [PATCH 04/18] xfs: add raw parent pointer apis to support repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
  allison.henderson@oracle.com
-Message-ID: <170405006903.1805510.18376884190572161694.stgit@frogsfrogsfrogs>
+Message-ID: <170405006916.1805510.16418319009796406101.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405006850.1805510.11145262768706358018.stgit@frogsfrogsfrogs>
 References: <170405006850.1805510.11145262768706358018.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,56 +38,114 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the man page for the scrub ioctl to reflect the new scrubbing
-abilities when parent pointers are enabled.
+Add a couple of utility functions to set or remove parent pointers from
+a file.  These functions will be used by repair code, hence they skip
+the xattr logging that regular parent pointer updates use.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- man/man2/ioctl_xfs_scrub_metadata.2 |   20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ libxfs/xfs_dir2.c   |    2 +-
+ libxfs/xfs_dir2.h   |    2 +-
+ libxfs/xfs_parent.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_parent.h |    8 ++++++++
+ 4 files changed, 56 insertions(+), 2 deletions(-)
 
 
-diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
-index 9963f1913e6..75ae52bb584 100644
---- a/man/man2/ioctl_xfs_scrub_metadata.2
-+++ b/man/man2/ioctl_xfs_scrub_metadata.2
-@@ -109,12 +109,11 @@ must be zero.
- .nf
- .B XFS_SCRUB_TYPE_BMBTD
- .B XFS_SCRUB_TYPE_BMBTA
-+.fi
-+.TP
- .B XFS_SCRUB_TYPE_BMBTC
--.fi
--.TP
--.B XFS_SCRUB_TYPE_PARENT
- Examine a given inode's data block map, extended attribute block map,
--copy on write block map, or parent inode pointer.
-+or copy on write block map.
- Inode records are examined for obviously incorrect values and
- discrepancies with the three block map types.
- The block maps are checked for obviously wrong values and
-@@ -133,9 +132,22 @@ The inode to examine can be specified in the same manner as
- .TP
- .B XFS_SCRUB_TYPE_DIR
- Examine the entries in a given directory for invalid data or dangling pointers.
-+If the filesystem supports directory parent pointers, each entry will be
-+checked to confirm that the child file has a matching parent pointer.
- The directory to examine can be specified in the same manner as
- .BR XFS_SCRUB_TYPE_INODE "."
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 79b6ec893fd..b906f39e0fe 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -439,7 +439,7 @@ int
+ xfs_dir_removename(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
+-	struct xfs_name		*name,
++	const struct xfs_name	*name,
+ 	xfs_ino_t		ino,
+ 	xfs_extlen_t		total)		/* bmap's total block count */
+ {
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index f99788a1f3e..ca1949ed4f5 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -55,7 +55,7 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				const struct xfs_name *name, xfs_ino_t *inum,
+ 				struct xfs_name *ci_name);
+ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+-				struct xfs_name *name, xfs_ino_t ino,
++				const struct xfs_name *name, xfs_ino_t ino,
+ 				xfs_extlen_t tot);
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				const struct xfs_name *name, xfs_ino_t inum,
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index 024e89756e6..f7cef51e1ec 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -421,3 +421,49 @@ xfs_parent_lookup(
  
-+.TP
-+.B XFS_SCRUB_TYPE_PARENT
-+For filesystems that support directory parent pointers, this scrubber
-+examines all the parent pointers attached to a file and confirms that the
-+parent directory has an entry matching the parent pointer.
-+For filesystems that do not support directory parent pointers, this scrubber
-+checks that a subdirectory's dotdot entry points to a directory with an entry
-+that points back to the subdirectory.
-+The inode to examine can be specified in the same manner as
-+.BR XFS_SCRUB_TYPE_INODE "."
+ 	return xfs_attr_get_ilocked(&scr->args);
+ }
 +
- .TP
- .B XFS_SCRUB_TYPE_SYMLINK
- Examine the target of a symbolic link for obvious pathname problems.
++/*
++ * Attach the parent pointer (@pptr -> @name) to @ip immediately.  Caller must
++ * not have a transaction or hold the ILOCK.  This is for specialized repair
++ * functions only.  The scratchpad need not be initialized.
++ */
++int
++xfs_parent_set(
++	struct xfs_inode		*ip,
++	const struct xfs_parent_name_irec *pptr,
++	struct xfs_parent_scratch	*scr)
++{
++	if (XFS_IS_CORRUPT(ip->i_mount,
++			!xfs_parent_verify_irec(ip->i_mount, pptr))) {
++		return -EFSCORRUPTED;
++	}
++
++	xfs_parent_irec_to_disk(&scr->rec, pptr);
++	xfs_parent_scratch_init(NULL, ip, pptr, scr);
++	scr->args.op_flags |= XFS_DA_OP_LOGGED;
++
++	return xfs_attr_set(&scr->args);
++}
++
++/*
++ * Remove the parent pointer (@rec -> @name) from @ip immediately.  Caller must
++ * not have a transaction or hold the ILOCK.  This is for specialized repair
++ * functions only.  The scratchpad need not be initialized.
++ */
++int
++xfs_parent_unset(
++	struct xfs_inode		*ip,
++	const struct xfs_parent_name_irec *pptr,
++	struct xfs_parent_scratch	*scr)
++{
++	if (XFS_IS_CORRUPT(ip->i_mount,
++			!xfs_parent_verify_irec(ip->i_mount, pptr))) {
++		return -EFSCORRUPTED;
++	}
++
++	xfs_parent_irec_to_disk(&scr->rec, pptr);
++	xfs_parent_scratch_init(NULL, ip, pptr, scr);
++	scr->args.op_flags |= XFS_DA_OP_LOGGED | XFS_DA_OP_REMOVE;
++
++	return xfs_attr_set(&scr->args);
++}
+diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
+index e4443da1d86..58e59af818b 100644
+--- a/libxfs/xfs_parent.h
++++ b/libxfs/xfs_parent.h
+@@ -162,4 +162,12 @@ int xfs_parent_lookup(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		const struct xfs_parent_name_irec *pptr,
+ 		struct xfs_parent_scratch *scratch);
+ 
++int xfs_parent_set(struct xfs_inode *ip,
++		const struct xfs_parent_name_irec *pptr,
++		struct xfs_parent_scratch *scratch);
++
++int xfs_parent_unset(struct xfs_inode *ip,
++		const struct xfs_parent_name_irec *rec,
++		struct xfs_parent_scratch *scratch);
++
+ #endif	/* __XFS_PARENT_H__ */
 
