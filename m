@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76F9DC2CC
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:40:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A69C2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:41:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GszBo6nD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46CDDC433C7;
-	Sun, 31 Dec 2023 23:40:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oNjnT0BL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBCD2C433C8;
+	Sun, 31 Dec 2023 23:41:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066048;
-	bh=KpsHVfLM0Z7bKtM2Xb7zuRQ0txlVnlDKg3L4DCVW8oY=;
+	s=k20201202; t=1704066064;
+	bh=W7EaV+SZo5/9boffTuMfBXBm4JR9DxZ+BgjQTgAM4GQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GszBo6nD3BCHAvNAXKBeBbavOOZmT4loxSNwxP7OEisI7p+N69QNrs5YeUWoygIy+
-	 P1mX7keVJEu/HFnm+lU6Xfq93qieT2He1fOab16p84LG31vOgwnCE0o1qtqOnmq/Vn
-	 UlpiweQ1YBrv+Z0TJuVue8sUcUqCL9PjRVFdBR/hn9lXrZMko7CIUc9wKFWmshmZGe
-	 KmKcnrXZPGMX1cFsRTDGfuRWna6p3jCGeWt1Yi34ViHroazzdd6pcC25VRPkgfKEt1
-	 efJu5HE18PasqMwXVLRkzGk7nKFuZca22FTfaTsGKbHXy/CMa9q1Lqt8/rvy3jAkki
-	 kfBNcCVBslmBw==
-Date: Sun, 31 Dec 2023 15:40:47 -0800
-Subject: [PATCH 43/58] xfs_repair: refactor grabbing realtime metadata inodes
+	b=oNjnT0BLg+SLP9x1dXoL5fFMPOk4Sz4l6XQ+u5y0OaZuEQnQeOjry1QBUo6MlU4A4
+	 xHEKiE2T7PaxPU0XoNdrLVazM2/skcw2DDOUJ/2kX228eA0Ztgka1NSC9ujfbO9jJ6
+	 Kkxjl3/KcOFsY4M575kMw769+uaSiwvqy52TIoQD2x4tHPM9NkXuf3XqVJxxYOr+AD
+	 UNvqKzQZ9ryaOAR1UJ0RvmyDTkdoomQNMQB1Dji+/NLucUi3HfHEhqaG7NzrW5K6oR
+	 lYZu5ZvJ0g1YnuCZcc4763YTbe1iICRKKracxES1vjql4OV3IGY6mQ0V84n6e43ePI
+	 TA9AKDt+Dsa1w==
+Date: Sun, 31 Dec 2023 15:41:03 -0800
+Subject: [PATCH 44/58] xfs_repair: check metadata inode flag
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010520.1809361.17407986062622776380.stgit@frogsfrogsfrogs>
+Message-ID: <170405010533.1809361.10226253768657395190.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,141 +37,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper function to grab a realtime metadata inode.  When
-metadir arrives, the bitmap and summary inodes can float, so we'll
-turn this function into a "load or allocate" function.
+Check whether or not the metadata inode flag is set appropriately.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase6.c |   90 ++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 53 insertions(+), 37 deletions(-)
+ repair/dinode.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 017c46f43af..afb09ff7232 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -471,18 +471,37 @@ reset_root_ino(
- 	libxfs_inode_init(tp, &args, ip);
- }
+diff --git a/repair/dinode.c b/repair/dinode.c
+index f2da4325d5e..4af7c91d5c9 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2669,6 +2669,20 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			}
+ 		}
  
-+/* Load a realtime metadata inode from disk and reset it. */
-+static int
-+ensure_rtino(
-+	struct xfs_trans		*tp,
-+	xfs_ino_t			ino,
-+	struct xfs_inode		**ipp)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	int				error;
++		if (flags2 & XFS_DIFLAG2_METADIR) {
++			xfs_failaddr_t	fa;
 +
-+	error = -libxfs_iget(mp, tp, ino, 0, ipp);
-+	if (error)
-+		return error;
++			fa = libxfs_dinode_verify_metadir(mp, dino, di_mode,
++					be16_to_cpu(dino->di_flags), flags2);
++			if (fa) {
++				if (!uncertain)
++					do_warn(
++	_("inode %" PRIu64 " is incorrectly marked as metadata\n"),
++						lino);
++				goto clear_bad_out;
++			}
++		}
 +
-+	reset_root_ino(tp, S_IFREG, *ipp);
-+	return 0;
-+}
-+
- static void
--mk_rbmino(xfs_mount_t *mp)
-+mk_rbmino(
-+	struct xfs_mount	*mp)
- {
--	xfs_trans_t	*tp;
--	xfs_inode_t	*ip;
--	xfs_bmbt_irec_t	*ep;
--	int		i;
--	int		nmap;
--	int		error;
--	xfs_fileoff_t	bno;
--	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
--	uint		blocks;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	struct xfs_bmbt_irec	*ep;
-+	int			i;
-+	int			nmap;
-+	int			error;
-+	xfs_fileoff_t		bno;
-+	struct xfs_bmbt_irec	map[XFS_BMAP_MAX_NMAP];
-+	uint			blocks;
- 
- 	/*
- 	 * first set up inode
-@@ -491,15 +510,13 @@ mk_rbmino(xfs_mount_t *mp)
- 	if (i)
- 		res_failed(i);
- 
--	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip);
--	if (error) {
--		do_error(
--		_("couldn't iget realtime bitmap inode -- error - %d\n"),
--			error);
--	}
--
- 	/* Reset the realtime bitmap inode. */
--	reset_root_ino(tp, S_IFREG, ip);
-+	error = ensure_rtino(tp, mp->m_sb.sb_rbmino, &ip);
-+	if (error) {
-+		do_error(
-+		_("couldn't iget realtime bitmap inode -- error - %d\n"),
-+			error);
-+	}
- 	ip->i_disk_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
-@@ -700,18 +717,19 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
- }
- 
- static void
--mk_rsumino(xfs_mount_t *mp)
-+mk_rsumino(
-+	struct xfs_mount	*mp)
- {
--	xfs_trans_t	*tp;
--	xfs_inode_t	*ip;
--	xfs_bmbt_irec_t	*ep;
--	int		i;
--	int		nmap;
--	int		error;
--	int		nsumblocks;
--	xfs_fileoff_t	bno;
--	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
--	uint		blocks;
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
-+	struct xfs_bmbt_irec	*ep;
-+	int			i;
-+	int			nmap;
-+	int			error;
-+	int			nsumblocks;
-+	xfs_fileoff_t		bno;
-+	struct xfs_bmbt_irec	map[XFS_BMAP_MAX_NMAP];
-+	uint			blocks;
- 
- 	/*
- 	 * first set up inode
-@@ -720,15 +738,13 @@ mk_rsumino(xfs_mount_t *mp)
- 	if (i)
- 		res_failed(i);
- 
--	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip);
--	if (error) {
--		do_error(
--		_("couldn't iget realtime summary inode -- error - %d\n"),
--			error);
--	}
--
- 	/* Reset the rt summary inode. */
--	reset_root_ino(tp, S_IFREG, ip);
-+	error = ensure_rtino(tp, mp->m_sb.sb_rsumino, &ip);
-+	if (error) {
-+		do_error(
-+		_("couldn't iget realtime summary inode -- error - %d\n"),
-+			error);
-+	}
- 	ip->i_disk_size = mp->m_rsumsize;
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
+ 		if ((flags2 & XFS_DIFLAG2_REFLINK) &&
+ 		    !xfs_has_reflink(mp)) {
+ 			if (!uncertain) {
 
