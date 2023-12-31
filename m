@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF62AB65D
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:28:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FBE1B65C
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:28:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tLzapcAj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 923FEC433C7;
-	Sun, 31 Dec 2023 19:28:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CaIBnUNB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D922C433C8;
+	Sun, 31 Dec 2023 19:28:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704050893;
-	bh=zxG7vjJHw8AubIn07O3yELL9Bn5PuQRYO10JyuxhwQ8=;
+	s=k20201202; t=1704050909;
+	bh=iTkhXmoHEowS20gXlmqkVdfK60KHplqkSVZw6qbOOcI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tLzapcAjqNrzjAVps1DgdCUkvP4J1CkDYyIDlQZenYHVJeRRhRz3kwstTwPWWPki5
-	 SMPFA22tWXh2NOMcAFopq7GJOnm9M194huViPskCzl/WTcpEv7FkZpuvRHJmhUo4rt
-	 bqDlSpY5hQ64JIRr+1SRpHm3e8Gxnvfl/1awRATHrXkz7tggTs1fBaVJSgzN3vbDOY
-	 /ttU09L1H9D6tTiqtTQuSklYcyFcbWZ3DJDO/682Sjg+OeaW1gkdPebuMdUnz6gnN0
-	 HEw1kTBlDsWtvRaiWqKUiln6XaPFgIYB1yFKfCPAQj8FwwFm85x4ncIyP3wdcndg+S
-	 FPFJXBgCGkWkA==
-Date: Sun, 31 Dec 2023 11:28:13 -0800
-Subject: [PATCHSET v29.0 11/28] xfs: reduce refcount repair memory usage
+	b=CaIBnUNB8GFXiMj4WgJF6ZrT+64xPqkfALJBjK8Ou77fg5zgxCi2r1Qb/RxDoQ2e1
+	 p+GVhqsmEtovLPm9qVMRceyVZQIz/DB6EvG2SIHuas7cwMPZn3xEAsjV7xC4w9IqBU
+	 BRZDBULoQX1ki4rUYSfoplAxYOLZdEgnpUGC/6ulddPLO3DJFykyj3xO2EmMrGqYyI
+	 uKJIvZrBwHElrVzj4NdpG/zRKegi3N1RjM9ox7Ra3f2JEJDaY84SOL4sqSGtSPlgZv
+	 mCr/xWJG9c4R+mhkBxavnm0sJ6ku/6ljXVkd2bqJFFNpfnWhj08n+h6TdosmgqGDN+
+	 TRUORoqO+glpg==
+Date: Sun, 31 Dec 2023 11:28:28 -0800
+Subject: [PATCHSET v29.0 12/28] xfs: bmap log intent cleanups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404830995.1749557.6135790697605021363.stgit@frogsfrogsfrogs>
+Message-ID: <170404831410.1749708.14664484779809794342.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,43 +37,24 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-The refcountbt repair code has serious memory usage problems when the
-block sharing factor of the filesystem is very high.  This can happen if
-a deduplication tool has been run against the filesystem, or if the fs
-stores reflinked VM images that have been aging for a long time.
+The next major target of online repair are metadata that are persisted
+in blocks mapped by a file fork.  In other words, we want to repair
+directories, extended attributes, symbolic links, and the realtime free
+space information.  For file-based metadata, we assume that the space
+metadata is correct, which enables repair to construct new versions of
+the metadata in a temporary file.  We then need to swap the file fork
+mappings of the two files atomically.  With this patchset, we begin
+constructing such a facility based on the existing bmap log items and a
+new extent swap log item.
 
-Recall that the original reference counting algorithm walks the reverse
-mapping records of the filesystem to generate reference counts.  For any
-given block in the AG, the rmap bag structure contains the all rmap
-records that cover that block; the refcount is the size of that bag.
-
-For online repair, the bag doesn't need the owner, offset, or state flag
-information, so it discards those.  This halves the record size, but the
-bag structure still stores one excerpted record for each reverse
-mapping.  If the sharing count is high, this will use a LOT of memory
-storing redundant records.  In the extreme case, 100k mappings to the
-same piece of space will consume 100k*16 bytes = 1.6M of memory.
-
-For offline repair, the bag stores the owner values so that we know
-which inodes need to be marked as being reflink inodes.  If a
-deduplication tool has been run and there are many blocks within a file
-pointing to the same physical space, this will stll use a lot of memory
-to store redundant records.
-
-The solution to this problem is to deduplicate the bag records when
-possible by adding a reference count to the bag record, and changing the
-bag add function to detect an existing record to bump the refcount.  In
-the above example, the 100k mappings will now use 24 bytes of memory.
-These lookups can be done efficiently with a btree, so we create a new
-refcount bag btree type (inside of online repair).  This is why we
-refactored the btree code in the previous patchset.
-
-The btree conversion also dramatically reduces the runtime of the
-refcount generation algorithm, because the code to delete all bag
-records that end at a given agblock now only has to delete one record
-instead of (using the example above) 100k records.  As an added benefit,
-record deletion now gives back the unused xfile space, which it did not
-do previously.
+This series cleans up a few parts of the file block mapping log intent
+code before we start adding support for realtime bmap intents.  Most of
+it involves cleaning up tracepoints so that more of the data extraction
+logic ends up in the tracepoint code and not the tracepoint call site,
+which should reduce overhead further when tracepoints are disabled.
+There is also a change to pass bmap intents all the way back to the bmap
+code instead of unboxing the intent values and re-boxing them after the
+_finish_one function completes.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -84,33 +65,17 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-refcount-scalability
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bmap-intent-cleanups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-refcount-scalability
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bmap-intent-cleanups
 ---
- fs/xfs/Makefile                    |    2 
- fs/xfs/libxfs/xfs_alloc_btree.c    |    2 
- fs/xfs/libxfs/xfs_bmap_btree.c     |    1 
- fs/xfs/libxfs/xfs_btree.c          |   24 --
- fs/xfs/libxfs/xfs_btree.h          |    4 
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 
- fs/xfs/libxfs/xfs_refcount_btree.c |    1 
- fs/xfs/libxfs/xfs_rmap_btree.c     |    2 
- fs/xfs/libxfs/xfs_types.h          |    6 -
- fs/xfs/scrub/rcbag.c               |  331 ++++++++++++++++++++++++++++++++
- fs/xfs/scrub/rcbag.h               |   28 +++
- fs/xfs/scrub/rcbag_btree.c         |  372 ++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/rcbag_btree.h         |   83 ++++++++
- fs/xfs/scrub/refcount.c            |   12 +
- fs/xfs/scrub/refcount_repair.c     |  164 ++++++----------
- fs/xfs/scrub/repair.h              |    2 
- fs/xfs/scrub/trace.h               |    1 
- fs/xfs/xfs_super.c                 |   10 +
- fs/xfs/xfs_trace.h                 |    1 
- 19 files changed, 917 insertions(+), 131 deletions(-)
- create mode 100644 fs/xfs/scrub/rcbag.c
- create mode 100644 fs/xfs/scrub/rcbag.h
- create mode 100644 fs/xfs/scrub/rcbag_btree.c
- create mode 100644 fs/xfs/scrub/rcbag_btree.h
+ fs/xfs/libxfs/xfs_bmap.c |   21 +---
+ fs/xfs/libxfs/xfs_bmap.h |    7 +
+ fs/xfs/xfs_attr_item.c   |   11 +-
+ fs/xfs/xfs_bmap_item.c   |   95 ++++++++--------
+ fs/xfs/xfs_bmap_item.h   |    4 +
+ fs/xfs/xfs_trace.c       |    1 
+ fs/xfs/xfs_trace.h       |  267 +++++++++++++++++++++++++++++-----------------
+ 7 files changed, 237 insertions(+), 169 deletions(-)
 
