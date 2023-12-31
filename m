@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45EA7BA30;
-	Sun, 31 Dec 2023 20:00:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C552BA30;
+	Sun, 31 Dec 2023 20:00:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mcvPD5tg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B721AC433C7;
-	Sun, 31 Dec 2023 20:00:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R6h3CuUY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BD8EC433C8;
+	Sun, 31 Dec 2023 20:00:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052801;
-	bh=s9OB6zcKv0gK0Cbbhj281ByPbNmwDRAEEHYHJ5LTOB0=;
+	s=k20201202; t=1704052817;
+	bh=HQEqa9Sc8iFTDdBi7u4M6wQmJnt48BOZ8mHqso+gtWQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mcvPD5tgM+n2I0Extjoq+cTHrOy5qNsnWbYUMdZiG15RR9nfqMsLkQ9NZgWXGUiKP
-	 4EfOnIS37UoFHZga8opJ3pGtO7PXPhOg/fhCfCZmmIxzHI/ejeRsNIE51vay603Zuz
-	 4/Htu3XuL1RKuJn1VyQCGuGxx9Ols/qkUOpvwT/V7vSj/0HWpmEyNGKuEN9VEAQH3r
-	 2yxaJJcrzgIPEoS2ZWAnc/PZa4FSIU9englCtPJwkCuZlOKKsLDtbJz5W8iwcFDBTR
-	 7ZFALmdSfUWL+Zq4O+EG89UPpMDDhBsBYAEO22VzGSFAvNnLqiGxy2hJWJ5G8E54Xz
-	 ibyxlvNvDGmAw==
-Date: Sun, 31 Dec 2023 12:00:01 -0800
-Subject: [PATCHSET v2.0 1/9] fstests: test XFS metadata directories
+	b=R6h3CuUYm1GLWqy657U+Q2au5y8/0bg3qGPnPH9qyHH+bmrROLZ3gk482l+ufYong
+	 ajJZjfoYk7ta00D7PgttHbdhVHXgiuyHqhdD740+aidegZoYRTJ8WCOdJL43nxC3zl
+	 jKIWGLGzt7bGKekMzo1gYQT7QSxGLTqKMzY6KS6SB1VrD9/PKMLGrINMuPOSZJB59I
+	 puOWerjsQwBIh18nXH49INF4r7KT9e/IrAW8ZZQDcZXGEEGB6/6g6+/mgQ7He1aRAC
+	 KMM2SlaD17b3OxgrQh5aqHNyL0j9z7BXcK6frR3AYzr+ocP1YswBw3pEITelFPJnE9
+	 gxZs3lE5udcaQ==
+Date: Sun, 31 Dec 2023 12:00:16 -0800
+Subject: [PATCHSET v2.0 2/9] xfsprogs: shard the realtime section
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405029843.1826032.12205800164831698648.stgit@frogsfrogsfrogs>
+Message-ID: <170405030327.1826350.709349465573559319.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,9 +37,23 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Adjust fstests as needed to support the XFS metadata directory feature,
-and add some new tests for online fsck and fuzz testing of the ondisk
-metadata.
+Right now, the realtime section uses a single pair of metadata inodes to
+store the free space information.  This presents a scalability problem
+since every thread trying to allocate or free rt extents have to lock
+these files.  It would be very useful if we could begin to tackle these
+problems by sharding the realtime section, so create the notion of
+realtime groups, which are similar to allocation groups on the data
+section.
+
+While we're at it, define a superblock to be stamped into the start of
+each rt section.  This enables utilities such as blkid to identify block
+devices containing realtime sections, and helpfully avoids the situation
+where a file extent can cross an rtgroup boundary.
+
+The best advantage for rtgroups will become evident later when we get to
+adding rmap and reflink to the realtime volume, since the geometry
+constraints are the same for rt groups and AGs.  Hence we can reuse all
+that code directly.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -50,77 +64,35 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=metadir
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-groups
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=metadir
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-groups
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=metadir
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-groups
 
 xfsdocs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=metadir
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-groups
 ---
- common/filter      |    7 +
- common/repair      |    4 
- common/xfs         |   96 +++++++++++-
- tests/xfs/007      |   16 +-
- tests/xfs/030      |    1 
- tests/xfs/033      |    1 
- tests/xfs/050      |    5 +
- tests/xfs/122.out  |    1 
- tests/xfs/153      |    5 +
- tests/xfs/1546     |   37 ++++
- tests/xfs/1546.out |  316 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/1547     |   37 ++++
- tests/xfs/1547.out |   36 ++++
- tests/xfs/1548     |   37 ++++
- tests/xfs/1548.out |  318 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/1549     |   38 +++++
- tests/xfs/1549.out |  330 ++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1550     |   37 ++++
- tests/xfs/1550.out |  434 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1551     |   37 ++++
- tests/xfs/1551.out |   35 ++++
- tests/xfs/1552     |   37 ++++
- tests/xfs/1552.out |  343 +++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1553     |   38 +++++
- tests/xfs/1553.out |  370 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/178      |    1 
- tests/xfs/1856     |    2 
- tests/xfs/1874     |  132 ++++++++++++++++
- tests/xfs/1874.out |   16 ++
- tests/xfs/206      |    3 
- tests/xfs/299      |    1 
- tests/xfs/330      |    6 +
- tests/xfs/509      |   21 ++-
- tests/xfs/529      |    5 -
- tests/xfs/530      |    6 -
- tests/xfs/739      |    9 -
- tests/xfs/740      |    9 -
- tests/xfs/741      |    9 -
- tests/xfs/742      |    9 -
- tests/xfs/743      |    9 -
- tests/xfs/744      |    9 -
- tests/xfs/745      |    9 -
- tests/xfs/746      |    9 -
- 43 files changed, 2803 insertions(+), 78 deletions(-)
- create mode 100755 tests/xfs/1546
- create mode 100644 tests/xfs/1546.out
- create mode 100755 tests/xfs/1547
- create mode 100644 tests/xfs/1547.out
- create mode 100755 tests/xfs/1548
- create mode 100644 tests/xfs/1548.out
- create mode 100755 tests/xfs/1549
- create mode 100644 tests/xfs/1549.out
- create mode 100755 tests/xfs/1550
- create mode 100644 tests/xfs/1550.out
- create mode 100755 tests/xfs/1551
- create mode 100644 tests/xfs/1551.out
- create mode 100755 tests/xfs/1552
- create mode 100644 tests/xfs/1552.out
- create mode 100755 tests/xfs/1553
- create mode 100644 tests/xfs/1553.out
- create mode 100755 tests/xfs/1874
- create mode 100644 tests/xfs/1874.out
+ common/ext4             |   17 +++++
+ common/fuzzy            |   38 ++++++++++--
+ common/populate         |   78 +++++++++++++-----------
+ common/xfs              |  150 ++++++++++++++++++++++++++++++++++++++++++++---
+ src/punch-alternating.c |   28 ++++++++-
+ tests/xfs/114           |    4 +
+ tests/xfs/122           |    2 -
+ tests/xfs/122.out       |    8 +++
+ tests/xfs/146           |    2 -
+ tests/xfs/185           |    2 -
+ tests/xfs/187           |    3 +
+ tests/xfs/206           |    3 +
+ tests/xfs/271           |    3 +
+ tests/xfs/341           |    4 +
+ tests/xfs/449           |    6 ++
+ tests/xfs/556           |   16 +++--
+ tests/xfs/581           |    2 -
+ tests/xfs/720           |    2 -
+ tests/xfs/795           |    2 -
+ 19 files changed, 298 insertions(+), 72 deletions(-)
 
