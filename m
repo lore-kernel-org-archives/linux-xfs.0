@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EFEBA2E
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:07:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A185BA2E
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:07:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rHi5Keok"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E2A3C433C7;
-	Sun, 31 Dec 2023 21:07:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D5lq1yoM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDB59C433C8;
+	Sun, 31 Dec 2023 21:07:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704056821;
-	bh=EcO4M90eePfMHohtqU20ShjD2OgSWfK5UvmB9f5MFWI=;
+	s=k20201202; t=1704056836;
+	bh=T6GT53cZvxcw6WKR5X/8Ph65DQQiIav3ts+sKO1taoE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rHi5Keokj30kMH2yJcEt4mhDkicuMa5WYldN/p+xkt4mYzqopLnT8IaQr2rcvRug2
-	 zUzRlpIw4rMX8yWiYYg8jbSCDLLbNxWw2VRjHPiOeqBqAehT3urgsKhQ6TZkFyNYWl
-	 SigNJffkCa/dTt+5B64Uf9Ne7KnW72z/z9VMzro8h002Lj1FkTllE9Ne39NlX5+Fdy
-	 bg8DT0nTzGcCpXJxqZgNUyPT0xWEQ/fYaDMdQKUo0HhfAhuTvsKxLgsKuUkbQMKJBL
-	 XG1KGn1CIQ4KwJRNaIJeSwO+87JwruUWqrgs/Dlkj3u17mz+OACMKGK4fDu42X/EoA
-	 khK9/De9qtELQ==
-Date: Sun, 31 Dec 2023 13:07:00 -0800
-Subject: [PATCH 03/32] xfs: create transaction reservations for metadata inode
- operations
+	b=D5lq1yoM+4L0qySjTUMOQPB5MNb+97nnLcyCe3O2uX8a1P6qGFV3s3QkswOJzI4db
+	 6hVS8rGt4mM4Pj6HaHHjGFSCRNJUNVqQOQ4ZOMGMYCK7vyP69WYC9gQEHllm4rIB+T
+	 Z+N1vjmfM1Tt3DhYJxGlmcDMpVuZD+n1Vq3oWq+2WPGWXy+vLnOLnRMYOPWdRntSm2
+	 OlRr22nzFQzxF6o8aHMnfnN1tq/gk2qwL/rTk4T+nwDroBryuOF7TmTFx5kcpe5Ezn
+	 gA5w3/QnPNtA3KPWaCgEOkGGAGv+I+oe9/x/iJmwjN2ouJhlrElYZfeu9UkavqzLkd
+	 vwNfp+IGPVj4w==
+Date: Sun, 31 Dec 2023 13:07:16 -0800
+Subject: [PATCH 04/32] xfs: refactor the v4 group/project inode pointer switch
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404844912.1760491.2675400978498717477.stgit@frogsfrogsfrogs>
+Message-ID: <170404844928.1760491.12662709098659330743.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404844790.1760491.7084433932242910678.stgit@frogsfrogsfrogs>
 References: <170404844790.1760491.7084433932242910678.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,108 +37,123 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create transaction reservation types and block reservation helpers to
-help us calculate transaction requirements.  Right now the reservations
-are the same as always; we're just separating the symbols for a future
-patch.
+Refactor the group and project quota inode pointer switcheroo that
+happens only on v4 filesystems into a separate function prior to
+enhancing the xfs_qm_qino_alloc function.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_imeta.c      |    4 ++++
- fs/xfs/libxfs/xfs_imeta.h      |    4 ++++
- fs/xfs/libxfs/xfs_trans_resv.c |    5 +++++
- fs/xfs/libxfs/xfs_trans_resv.h |    3 +++
- fs/xfs/xfs_imeta_utils.c       |    8 +++++---
- 5 files changed, 21 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_qm.c |   90 +++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 54 insertions(+), 36 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_imeta.c b/fs/xfs/libxfs/xfs_imeta.c
-index 717e67b3264cf..497d28abaff10 100644
---- a/fs/xfs/libxfs/xfs_imeta.c
-+++ b/fs/xfs/libxfs/xfs_imeta.c
-@@ -19,6 +19,10 @@
- #include "xfs_inode.h"
- #include "xfs_quota.h"
- #include "xfs_ialloc.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_trans_space.h"
- 
- /*
-  * Metadata File Management
-diff --git a/fs/xfs/libxfs/xfs_imeta.h b/fs/xfs/libxfs/xfs_imeta.h
-index c1833b8b1c977..7b3da865c0931 100644
---- a/fs/xfs/libxfs/xfs_imeta.h
-+++ b/fs/xfs/libxfs/xfs_imeta.h
-@@ -43,4 +43,8 @@ int xfs_imeta_link(struct xfs_imeta_update *upd);
- bool xfs_is_static_meta_ino(struct xfs_mount *mp, xfs_ino_t ino);
- int xfs_imeta_mount(struct xfs_trans *tp);
- 
-+unsigned int xfs_imeta_create_space_res(struct xfs_mount *mp);
-+unsigned int xfs_imeta_link_space_res(struct xfs_mount *mp);
-+unsigned int xfs_imeta_unlink_space_res(struct xfs_mount *mp);
-+
- #endif /* __XFS_IMETA_H__ */
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index b390d9aa02142..d7c9af3406949 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -1249,4 +1249,9 @@ xfs_trans_resv_calc(
- 	resp->tr_itruncate.tr_logcount += logcount_adj;
- 	resp->tr_write.tr_logcount += logcount_adj;
- 	resp->tr_qm_dqalloc.tr_logcount += logcount_adj;
-+
-+	/* metadata inode creation and unlink */
-+	resp->tr_imeta_create = resp->tr_create;
-+	resp->tr_imeta_link = resp->tr_link;
-+	resp->tr_imeta_unlink = resp->tr_remove;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 07d0d0231252a..3e7e0f9cecc0e 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -732,6 +732,57 @@ xfs_qm_destroy_quotainfo(
+ 	mp->m_quotainfo = NULL;
  }
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-index 0554b9d775d26..6b851dfe1ac07 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.h
-+++ b/fs/xfs/libxfs/xfs_trans_resv.h
-@@ -48,6 +48,9 @@ struct xfs_trans_resv {
- 	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
- 	struct xfs_trans_res	tr_sb;		/* modify superblock */
- 	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
-+	struct xfs_trans_res	tr_imeta_create; /* create metadata inode */
-+	struct xfs_trans_res	tr_imeta_link;	/* link metadata inode */
-+	struct xfs_trans_res	tr_imeta_unlink; /* unlink metadata inode */
- };
  
- /* shorthand way of accessing reservation structure */
-diff --git a/fs/xfs/xfs_imeta_utils.c b/fs/xfs/xfs_imeta_utils.c
-index 262422daa931f..65a3aea49a5fc 100644
---- a/fs/xfs/xfs_imeta_utils.c
-+++ b/fs/xfs/xfs_imeta_utils.c
-@@ -78,7 +78,7 @@ xfs_imeta_start_create(
- 	 * will account for them.
- 	 */
++/*
++ * Switch the group and project quota in-core inode pointers if needed.
++ *
++ * On v4 superblocks that don't have separate pquotino, we share an inode
++ * between gquota and pquota. If the on-disk superblock has GQUOTA and the
++ * filesystem is now mounted with PQUOTA, just use sb_gquotino for sb_pquotino
++ * and vice-versa.
++ */
++STATIC int
++xfs_qm_qino_switch(
++	struct xfs_mount	*mp,
++	struct xfs_inode	**ipp,
++	unsigned int		flags,
++	bool			*need_alloc)
++{
++	xfs_ino_t		ino = NULLFSINO;
++	int			error;
++
++	if (xfs_has_pquotino(mp) ||
++	    !(flags & (XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)))
++		return 0;
++
++	if ((flags & XFS_QMOPT_PQUOTA) &&
++	    (mp->m_sb.sb_gquotino != NULLFSINO)) {
++		ino = mp->m_sb.sb_gquotino;
++		if (XFS_IS_CORRUPT(mp, mp->m_sb.sb_pquotino != NULLFSINO)) {
++			xfs_fs_mark_sick(mp, XFS_SICK_FS_PQUOTA);
++			return -EFSCORRUPTED;
++		}
++	} else if ((flags & XFS_QMOPT_GQUOTA) &&
++		   (mp->m_sb.sb_pquotino != NULLFSINO)) {
++		ino = mp->m_sb.sb_pquotino;
++		if (XFS_IS_CORRUPT(mp, mp->m_sb.sb_gquotino != NULLFSINO)) {
++			xfs_fs_mark_sick(mp, XFS_SICK_FS_GQUOTA);
++			return -EFSCORRUPTED;
++		}
++	}
++
++	if (ino == NULLFSINO)
++		return 0;
++
++	error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
++	if (error)
++		return error;
++
++	mp->m_sb.sb_gquotino = NULLFSINO;
++	mp->m_sb.sb_pquotino = NULLFSINO;
++	*need_alloc = false;
++	return 0;
++}
++
+ /*
+  * Create an inode and return with a reference already taken, but unlocked
+  * This is how we create quota inodes
+@@ -747,43 +798,10 @@ xfs_qm_qino_alloc(
+ 	bool			need_alloc = true;
  
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_create,
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_imeta_create,
- 			xfs_create_space_res(mp, MAXNAMELEN), 0, 0, &upd->tp);
- 	if (error)
- 		goto out_teardown;
-@@ -136,7 +136,8 @@ xfs_imeta_start_link(
- {
- 	int				error;
+ 	*ipp = NULL;
+-	/*
+-	 * With superblock that doesn't have separate pquotino, we
+-	 * share an inode between gquota and pquota. If the on-disk
+-	 * superblock has GQUOTA and the filesystem is now mounted
+-	 * with PQUOTA, just use sb_gquotino for sb_pquotino and
+-	 * vice-versa.
+-	 */
+-	if (!xfs_has_pquotino(mp) &&
+-			(flags & (XFS_QMOPT_PQUOTA|XFS_QMOPT_GQUOTA))) {
+-		xfs_ino_t ino = NULLFSINO;
  
--	error = xfs_imeta_start_dir_update(mp, path, ip, &M_RES(mp)->tr_link,
-+	error = xfs_imeta_start_dir_update(mp, path, ip,
-+			&M_RES(mp)->tr_imeta_link,
- 			xfs_link_space_res(mp, MAXNAMELEN), upd);
- 	if (error)
- 		return error;
-@@ -158,7 +159,8 @@ xfs_imeta_start_unlink(
- {
- 	int				error;
+-		if ((flags & XFS_QMOPT_PQUOTA) &&
+-			     (mp->m_sb.sb_gquotino != NULLFSINO)) {
+-			ino = mp->m_sb.sb_gquotino;
+-			if (XFS_IS_CORRUPT(mp,
+-					   mp->m_sb.sb_pquotino != NULLFSINO)) {
+-				xfs_fs_mark_sick(mp, XFS_SICK_FS_PQUOTA);
+-				return -EFSCORRUPTED;
+-			}
+-		} else if ((flags & XFS_QMOPT_GQUOTA) &&
+-			     (mp->m_sb.sb_pquotino != NULLFSINO)) {
+-			ino = mp->m_sb.sb_pquotino;
+-			if (XFS_IS_CORRUPT(mp,
+-					   mp->m_sb.sb_gquotino != NULLFSINO)) {
+-				xfs_fs_mark_sick(mp, XFS_SICK_FS_GQUOTA);
+-				return -EFSCORRUPTED;
+-			}
+-		}
+-		if (ino != NULLFSINO) {
+-			error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
+-			if (error)
+-				return error;
+-			mp->m_sb.sb_gquotino = NULLFSINO;
+-			mp->m_sb.sb_pquotino = NULLFSINO;
+-			need_alloc = false;
+-		}
+-	}
++	error = xfs_qm_qino_switch(mp, ipp, flags, &need_alloc);
++	if (error)
++		return error;
  
--	error = xfs_imeta_start_dir_update(mp, path, ip, &M_RES(mp)->tr_remove,
-+	error = xfs_imeta_start_dir_update(mp, path, ip,
-+			&M_RES(mp)->tr_imeta_unlink,
- 			xfs_remove_space_res(mp, MAXNAMELEN), upd);
- 	if (error)
- 		return error;
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_create,
+ 			need_alloc ? XFS_QM_QINOCREATE_SPACE_RES(mp) : 0,
 
