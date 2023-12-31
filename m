@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67B03C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:44:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA1EFC2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:44:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QHylGRy/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9A41C433C7;
-	Sun, 31 Dec 2023 23:44:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nJKbD2L9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79C17C433C8;
+	Sun, 31 Dec 2023 23:44:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066282;
-	bh=zogi8EgxjOMbCLcmrgQkMVuIvbCpsUlqH7qRhFWSVZs=;
+	s=k20201202; t=1704066298;
+	bh=keFBWwUyJisLAIRFl08VxMSWVf5lEwpIjqEtR1l6HnE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QHylGRy/VFXGSydY+j5hd95+bCYpzv3RuVUxaTl+MOr9H/ps29fqk5LBEmXgcybXG
-	 TL1YDsuZUFhQdax64BiYapuN4aaUNUh3VL8bico2w9G4UF0+l5OoXy69PpnjgtXC2/
-	 ql64GkZaIsjxVaOoietvIr+R4YYHDalKmJ8ixH1Jst4F1KBbcP1Xx/mmW9fUA8C4IF
-	 BHwDEOV5J+8TWlWz+pB5O4XyOS71W6dt3kR0QeN1FppgYluJPRgzq/ItYkNXVKQLRr
-	 hCm8DkranfxCn6HWtehvWuz0LsmNu6SJxCw5gmGscb2N7hqPvuGKS9ls1rL5OYEP3O
-	 G9q8I5mHXybFA==
-Date: Sun, 31 Dec 2023 15:44:42 -0800
-Subject: [PATCH 58/58] mkfs: add a utility to generate protofiles
+	b=nJKbD2L9XBf6phMznN5yRT1GzR1iw8hl3TIqP26YMLUXPAmGXUrwQ2oiEDkTrmQOC
+	 fVyyxY/3/7u/TPePjQuQiwA68xfoEuCc03pO34pZT9SDBRITsI0WZLI0UohtQlXW0l
+	 20nZBcNAIf6Abq9+Rp24tqIbvNt45YEYP7d94SwOLI/Mqkf3oxYpxiIQsk/2klThIV
+	 DiYeO/yQXbIwK3izcLOfgwxFqMkhc0UyP7zWsCKt46z/DdgLD9MhZZ1tyogQHGX6VW
+	 Ott5q7I8UpQ/y/WOkP1GL0gb5Ba934uCme2XZ4N2L43KJD7Lq0cPZnfd61woRRJ4s0
+	 hDA1kj/ZNgMHw==
+Date: Sun, 31 Dec 2023 15:44:58 -0800
+Subject: [PATCH 1/8] xfs_db: support passing the realtime device to the
+ debugger
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010721.1809361.5709410894088659453.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
-References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
+Message-ID: <170405011033.1810817.9046097201583232026.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405011015.1810817.17512390006888048389.stgit@frogsfrogsfrogs>
+References: <170405011015.1810817.17512390006888048389.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,251 +38,197 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new utility to generate mkfs protofiles from a directory tree.
+Create a new -R flag so that sysadmins can pass the realtime device to
+the xfs debugger.  Since we can now have superblocks on the rt device,
+we need this to be able to inspect/dump/etc.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- man/man8/xfs_protofile.8 |   33 ++++++++++
- mkfs/Makefile            |   10 +++
- mkfs/xfs_protofile.in    |  152 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 194 insertions(+), 1 deletion(-)
- create mode 100644 man/man8/xfs_protofile.8
- create mode 100644 mkfs/xfs_protofile.in
+ db/init.c         |    7 +++++--
+ db/io.c           |   28 +++++++++++++++++++++++-----
+ db/io.h           |    2 ++
+ db/xfs_admin.sh   |    4 +++-
+ man/man8/xfs_db.8 |   13 +++++++++++++
+ 5 files changed, 46 insertions(+), 8 deletions(-)
 
 
-diff --git a/man/man8/xfs_protofile.8 b/man/man8/xfs_protofile.8
-new file mode 100644
-index 00000000000..75090c138f3
---- /dev/null
-+++ b/man/man8/xfs_protofile.8
-@@ -0,0 +1,33 @@
-+.TH xfs_protofile 8
-+.SH NAME
-+xfs_protofile \- create a protofile for use with mkfs.xfs
-+.SH SYNOPSIS
-+.B xfs_protofile
-+.I path
-+[
-+.I paths...
-+]
-+.br
-+.B xfs_protofile \-V
-+.SH DESCRIPTION
-+.B xfs_protofile
-+walks a directory tree to generate a protofile.
-+The protofile format is specified in the
-+.BR mkfs.xfs (8)
-+manual page and is derived from 3rd edition Unix.
-+.SH OPTIONS
-+.TP 1.0i
-+.I path
-+Create protofile directives to copy this path into the root directory.
-+If the path is a directory, protofile directives will be emitted to
-+replicate the entire subtree as a subtree of the root directory.
-+If the path is a not a directory, protofile directives will be emitted
-+to create the file as an entry in the root directory.
-+The first path must resolve to a directory.
-+
-+.SH BUGS
-+Filenames cannot contain spaces.
-+Extended attributes are not copied into the filesystem.
-+
-+.PD
-+.RE
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index a0c168e3815..e42a5618302 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -6,6 +6,7 @@ TOPDIR = ..
- include $(TOPDIR)/include/builddefs
+diff --git a/db/init.c b/db/init.c
+index cea25ae52bd..17fb094296c 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -33,7 +33,7 @@ static void
+ usage(void)
+ {
+ 	fprintf(stderr, _(
+-		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
++		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-R rtdev] [-c cmd]... device\n"
+ 		), progname);
+ 	exit(1);
+ }
+@@ -54,7 +54,7 @@ init(
+ 	textdomain(PACKAGE);
  
- LTCOMMAND = mkfs.xfs
-+XFS_PROTOFILE = xfs_protofile
+ 	progname = basename(argv[0]);
+-	while ((c = getopt(argc, argv, "c:fFip:rxVl:")) != EOF) {
++	while ((c = getopt(argc, argv, "c:fFip:rR:xVl:")) != EOF) {
+ 		switch (c) {
+ 		case 'c':
+ 			cmdline = xrealloc(cmdline, (ncmdline+1)*sizeof(char*));
+@@ -75,6 +75,9 @@ init(
+ 		case 'r':
+ 			x.flags = LIBXFS_ISREADONLY;
+ 			break;
++		case 'R':
++			x.rt.name = optarg;
++			break;
+ 		case 'l':
+ 			x.log.name = optarg;
+ 			break;
+diff --git a/db/io.c b/db/io.c
+index 590dd1f82f7..61befb43437 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -458,6 +458,7 @@ ring_add(void)
+ static void
+ write_cur_buf(void)
+ {
++	struct xfs_buftarg	*btp = iocur_top->bp->b_target;
+ 	int ret;
  
- HFILES =
- CFILES = proto.c xfs_mkfs.c
-@@ -22,17 +23,24 @@ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
- 	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
- LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
-+DIRT = $(XFS_PROTOFILE)
+ 	ret = -libxfs_bwrite(iocur_top->bp);
+@@ -465,7 +466,7 @@ write_cur_buf(void)
+ 		dbprintf(_("write error: %s\n"), strerror(ret));
  
--default: depend $(LTCOMMAND) $(CFGFILES)
-+default: depend $(LTCOMMAND) $(CFGFILES) $(XFS_PROTOFILE)
+ 	/* re-read buffer from disk */
+-	ret = -libxfs_readbufr(mp->m_ddev_targp, iocur_top->bb, iocur_top->bp,
++	ret = -libxfs_readbufr(btp, iocur_top->bb, iocur_top->bp,
+ 			      iocur_top->blen, 0);
+ 	if (ret != 0)
+ 		dbprintf(_("read error: %s\n"), strerror(ret));
+@@ -474,6 +475,7 @@ write_cur_buf(void)
+ static void
+ write_cur_bbs(void)
+ {
++	struct xfs_buftarg	*btp = iocur_top->bp->b_target;
+ 	int ret;
  
- include $(BUILDRULES)
+ 	ret = -libxfs_bwrite(iocur_top->bp);
+@@ -482,7 +484,7 @@ write_cur_bbs(void)
  
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-+	$(INSTALL) -m 755 $(XFS_PROTOFILE) $(PKG_ROOT_SBIN_DIR)
- 	$(INSTALL) -m 755 -d $(MKFS_CFG_DIR)
- 	$(INSTALL) -m 644 $(CFGFILES) $(MKFS_CFG_DIR)
  
- install-dev:
+ 	/* re-read buffer from disk */
+-	ret = -libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp, 0);
++	ret = -libxfs_readbufr_map(btp, iocur_top->bp, 0);
+ 	if (ret != 0)
+ 		dbprintf(_("read error: %s\n"), strerror(ret));
+ }
+@@ -541,9 +543,9 @@ static void
+ __set_cur(
+ 	struct xfs_buftarg	*btargp,
+ 	const typ_t		*type,
+-	xfs_daddr_t		 blknum,
+-	int			 len,
+-	int			 ring_flag,
++	xfs_daddr_t		blknum,
++	int			len,
++	int			ring_flag,
+ 	bbmap_t			*bbmap)
+ {
+ 	struct xfs_buf		*bp;
+@@ -647,6 +649,22 @@ set_log_cur(
+ 	__set_cur(mp->m_logdev_targp, type, blknum, len, ring_flag, bbmap);
+ }
  
-+$(XFS_PROTOFILE): $(XFS_PROTOFILE).in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@pkg_version@|$(PKG_VERSION)|g" < $< > $@
-+	$(Q)chmod a+x $@
++int
++set_rt_cur(
++	const typ_t	*type,
++	xfs_daddr_t	blknum,
++	int		len,
++	int		ring_flag,
++	bbmap_t		*bbmap)
++{
++	if (!mp->m_rtdev_targp->bt_bdev) {
++		printf(_("realtime device not loaded, use -R.\n"));
++		return ENODEV;
++	}
 +
- -include .dep
-diff --git a/mkfs/xfs_protofile.in b/mkfs/xfs_protofile.in
-new file mode 100644
-index 00000000000..9aee4336888
---- /dev/null
-+++ b/mkfs/xfs_protofile.in
-@@ -0,0 +1,152 @@
-+#!/usr/bin/python3
-+
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2018-2024 Oracle.  All rights reserved.
-+#
-+# Author: Darrick J. Wong <djwong@kernel.org>
-+
-+# Walk a filesystem tree to generate a protofile for mkfs.
-+
-+import os
-+import argparse
-+import sys
-+import stat
-+
-+def emit_proto_header():
-+	'''Emit the protofile header.'''
-+	print('/')
-+	print('0 0')
-+
-+def stat_to_str(statbuf):
-+	'''Convert a stat buffer to a proto string.'''
-+
-+	if stat.S_ISREG(statbuf.st_mode):
-+		type = '-'
-+	elif stat.S_ISCHR(statbuf.st_mode):
-+		type = 'c'
-+	elif stat.S_ISBLK(statbuf.st_mode):
-+		type = 'b'
-+	elif stat.S_ISFIFO(statbuf.st_mode):
-+		type = 'p'
-+	elif stat.S_ISDIR(statbuf.st_mode):
-+		type = 'd'
-+	elif stat.S_ISLNK(statbuf.st_mode):
-+		type = 'l'
-+
-+	if statbuf.st_mode & stat.S_ISUID:
-+		suid = 'u'
-+	else:
-+		suid = '-'
-+
-+	if statbuf.st_mode & stat.S_ISGID:
-+		sgid = 'g'
-+	else:
-+		sgid = '-'
-+
-+	perms = stat.S_IMODE(statbuf.st_mode)
-+
-+	return '%s%s%s%o %d %d' % (type, suid, sgid, perms, statbuf.st_uid, \
-+			statbuf.st_gid)
-+
-+def stat_to_extra(statbuf, fullpath):
-+	'''Compute the extras column for a protofile.'''
-+
-+	if stat.S_ISREG(statbuf.st_mode):
-+		return ' %s' % fullpath
-+	elif stat.S_ISCHR(statbuf.st_mode) or stat.S_ISBLK(statbuf.st_mode):
-+		return ' %d %d' % (statbuf.st_rdev, statbuf.st_rdev)
-+	elif stat.S_ISLNK(statbuf.st_mode):
-+		return ' %s' % os.readlink(fullpath)
-+	return ''
-+
-+def max_fname_len(s1):
-+	'''Return the length of the longest string in s1.'''
-+	ret = 0
-+	for s in s1:
-+		if len(s) > ret:
-+			ret = len(s)
-+	return ret
-+
-+def walk_tree(path, depth):
-+	'''Walk the directory tree rooted by path.'''
-+	dirs = []
-+	files = []
-+
-+	for fname in os.listdir(path):
-+		fullpath = os.path.join(path, fname)
-+		sb = os.lstat(fullpath)
-+
-+		if stat.S_ISDIR(sb.st_mode):
-+			dirs.append(fname)
-+			continue
-+		elif stat.S_ISSOCK(sb.st_mode):
-+			continue
-+		else:
-+			files.append(fname)
-+
-+	for fname in files:
-+		if ' ' in fname:
-+			raise ValueError( \
-+				f'{fname}: Spaces not allowed in file names.')
-+	for fname in dirs:
-+		if ' ' in fname:
-+			raise Exception( \
-+				f'{fname}: Spaces not allowed in file names.')
-+
-+	fname_width = max_fname_len(files)
-+	for fname in files:
-+		fullpath = os.path.join(path, fname)
-+		sb = os.lstat(fullpath)
-+		extra = stat_to_extra(sb, fullpath)
-+		print('%*s%-*s %s%s' % (depth, ' ', fname_width, fname, \
-+				stat_to_str(sb), extra))
-+
-+	for fname in dirs:
-+		fullpath = os.path.join(path, fname)
-+		sb = os.lstat(fullpath)
-+		extra = stat_to_extra(sb, fullpath)
-+		print('%*s%s %s' % (depth, ' ', fname, \
-+				stat_to_str(sb)))
-+		walk_tree(fullpath, depth + 1)
-+
-+	if depth > 1:
-+		print('%*s$' % (depth - 1, ' '))
-+
-+def main():
-+	parser = argparse.ArgumentParser( \
-+			description = "Generate mkfs.xfs protofile for a directory tree.")
-+	parser.add_argument('paths', metavar = 'paths', type = str, \
-+			nargs = '*', help = 'Directory paths to walk.')
-+	parser.add_argument("-V", help = "Report version and exit.", \
-+			action = "store_true")
-+	args = parser.parse_args()
-+
-+	if args.V:
-+		print("xfs_protofile version @pkg_version@")
-+		sys.exit(0)
-+
-+	emit_proto_header()
-+	if len(args.paths) == 0:
-+		print('d--755 0 0')
-+		print('$')
-+	else:
-+		# Copy the first argument's stat to the rootdir
-+		statbuf = os.stat(args.paths[0])
-+		if not stat.S_ISDIR(statbuf.st_mode):
-+			raise NotADirectoryError(path)
-+		print(stat_to_str(statbuf))
-+
-+		# All files under each path go in the root dir, recursively
-+		for path in args.paths:
-+			print(': Descending path %s' % path)
-+			try:
-+				walk_tree(path, 1)
-+			except Exception as e:
-+				print(e, file = sys.stderr)
-+				return 1
-+
-+		print('$')
-+	return 0
-+
-+if __name__ == '__main__':
-+	sys.exit(main())
++	__set_cur(mp->m_rtdev_targp, type, blknum, len, ring_flag, bbmap);
++	return 0;
++}
+ 
+ void
+ set_iocur_type(
+diff --git a/db/io.h b/db/io.h
+index f48b67b47a2..bb5065f06c0 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -51,6 +51,8 @@ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
+ 			int len, int ring_add, bbmap_t *bbmap);
+ extern void	set_log_cur(const struct typ *type, xfs_daddr_t blknum,
+ 			int len, int ring_add, bbmap_t *bbmap);
++extern int	set_rt_cur(const struct typ *type, xfs_daddr_t blknum,
++			int len, int ring_add, bbmap_t *bbmap);
+ extern void     ring_add(void);
+ extern void	set_iocur_type(const struct typ *type);
+ extern void	xfs_dummy_verify(struct xfs_buf *bp);
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index cc650c42550..52a658ba4a5 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -8,6 +8,7 @@ status=0
+ require_offline=""
+ require_online=""
+ DB_OPTS=""
++DB_DEV_OPTS=""
+ REPAIR_OPTS=""
+ IO_OPTS=""
+ REPAIR_DEV_OPTS=""
+@@ -42,6 +43,7 @@ do
+ 		require_offline=1
+ 		;;
+ 	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'"
++		DB_DEV_OPTS=" -R '$OPTARG'"
+ 		require_offline=1
+ 		;;
+ 	u)	DB_OPTS=$DB_OPTS" -r -c uuid"
+@@ -89,7 +91,7 @@ case $# in
+ 
+ 		if [ -n "$DB_OPTS" ]
+ 		then
+-			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
++			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_DEV_OPTS $DB_OPTS "$1"
+ 			status=$?
+ 		fi
+ 		if [ -n "$REPAIR_OPTS" ]
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index b1712a92f76..f5e3064d923 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -14,6 +14,9 @@ xfs_db \- debug an XFS filesystem
+ .B \-l
+ .I logdev
+ ] [
++.B \-R
++.I rtdev
++] [
+ .B \-p
+ .I progname
+ ]
+@@ -80,6 +83,16 @@ Set the program name to
+ for prompts and some error messages, the default value is
+ .BR xfs_db .
+ .TP
++.B -R
++.I rtdev
++Specifies the device where the realtime data resides.
++This is only relevant for filesystems that have a realtime section.
++See the
++.BR mkfs.xfs "(8) " \-r
++option, and refer to
++.BR xfs (5)
++for a detailed description of the XFS realtime section.
++.TP
+ .B -r
+ Open
+ .I device
 
