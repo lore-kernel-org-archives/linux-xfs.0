@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E9E3B666
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:44:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37163B666
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:44:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="apLphteQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C25DC433C8;
-	Sun, 31 Dec 2023 19:44:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NMIdRefW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC015C433C8;
+	Sun, 31 Dec 2023 19:44:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051848;
-	bh=Nhk3H4Q407rQ7me0/8CZFRtG3aze6g4264YUQFkU6oI=;
+	s=k20201202; t=1704051863;
+	bh=zstzYcGPEqAdNwDp5h/TbmxOOj5u9R5JqG1B1v/xysQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=apLphteQJw8H0474V+SjasvFPZyUP95w1ueEVqu9jAEi8c4YCytFaLV0LL2BxCMiX
-	 J/XoHXK7ATBBA+ahIZ3/eX3N2HtJ7Q7CgqFM//x80RwazX/mKEnrd8LhfNJQ1SRuVu
-	 5wNvt2I6td92nkaC7Wy/iFov9XI0lJaaR6ji1q4wjFZqOD8zLJOGEIgwv7xNrC4gHx
-	 zzDqjzZMM/HAhoi+AmnnDuSFH+jb6fn8rDQek1hv/lH3z20lcM0PBuHknxSXDx0Ek0
-	 Wr9qwmrelHkisA4icYAEn2nUU+bPbX73hU5NOlEIK2DzVtlzQoabAIogohFLyAaiQ+
-	 21b7RYgGN8nfQ==
-Date: Sun, 31 Dec 2023 11:44:07 -0800
-Subject: [PATCHSET v29.0 17/40] xfsprogs: widen BUI formats to support
- realtime
+	b=NMIdRefWO9n5+rylvoFdn/KAMuR0gFrOOfxSyFiHE02acosLxY8K/YPUCGE/ZkxPf
+	 PN90+1QfypPnUSQkPLx1O19ip9yVo4HyeTCTVo92f4Q0+Zhkg421ZK0UNjqw0f/wIG
+	 MjuDYzuBVXzDE/Ixrn8w6lmBMFiFw8P3vMnqQ4IN2ZWtg0SEFDmubvdsg3DmWRlb25
+	 nLx8VW+lADQtnBZanAZAnhO6EON9q5Nk7eNveWJS8Y3VY5mSD6VmhdHCc3Qw3loWn8
+	 aYydo/9M3tED15xarAT7Bgwn5xfmj8dKj73fB3bKMuBNTYf2+i2/fepO+Juh17tOsL
+	 WDVBecm02D/pQ==
+Date: Sun, 31 Dec 2023 11:44:23 -0800
+Subject: [PATCHSET v29.0 18/40] xfsprogs: support attrfork and unwritten BUIs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404995199.1795774.9776541526454187305.stgit@frogsfrogsfrogs>
+Message-ID: <170404995537.1795876.9859168140445827889.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,11 +37,10 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Atomic extent swapping (and later, reverse mapping and reflink) on the
-realtime device needs to be able to defer file mapping and extent
-freeing work in much the same manner as is required on the data volume.
-Make the BUI log items operate on rt extents in preparation for atomic
-swapping and realtime rmap.
+In preparation for atomic extent swapping and the online repair
+functionality that wants atomic extent swaps, enhance the BUI code so
+that we can support deferred work on the extended attribute fork and on
+unwritten extents.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -53,13 +51,12 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-bmap-intents
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=expand-bmap-intent-usage
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-bmap-intents
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=expand-bmap-intent-usage
 ---
- libxfs/defer_item.c     |    6 ++++++
- libxfs/xfs_bmap.c       |    4 ++--
- libxfs/xfs_log_format.h |    4 +++-
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ libxfs/xfs_bmap.c |   49 +++++++++++++++++++++----------------------------
+ libxfs/xfs_bmap.h |    4 ++--
+ 2 files changed, 23 insertions(+), 30 deletions(-)
 
