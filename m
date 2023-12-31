@@ -1,29 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 322AEBA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:58:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B104BA2E
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:58:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tEfVyhyU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0313AC433C8;
-	Sun, 31 Dec 2023 20:58:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M+5T9012"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90C9BC433C7;
+	Sun, 31 Dec 2023 20:58:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704056305;
-	bh=S7VSA4CrBU009tt9ZgsQ+nOp1XmxH3qzjcafMRv6a9s=;
+	s=k20201202; t=1704056320;
+	bh=U+Im2sCPPHjfihruMxiNWQy+Y5fWU3ngHV97IGLHMI8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tEfVyhyUvfxO64wLDgaNBoPoItRhqhJBpI0sCaJUL9c39ZTUd8t3lO79HqvkMbyJJ
-	 VgbvCIVD/mXSp+VNWG18vDpbWKUtYXndO56YMJbwjeSRR/VgFywtNaVU9YiF5QbQk4
-	 632jK4yJfuqgb5gQQdDpt8wdGpVaV5R8YyE/Jegiu/iWRFvNC3kgUjeWtcu54CkZVf
-	 RjwOXbcxqUhfz/TWnvB86ihaUghmvMwK2Dr0t6U24Icjme5g8THfNzB9dudTGECMDt
-	 TVdK0ohMwxMYZ0BLH2IuuuuJZLYE/D6Mymr5ayA/oGyVCjUJxon5+csx0WpRxLV7ha
-	 qjUm2JrwSdpDA==
-Date: Sun, 31 Dec 2023 12:58:24 -0800
-Subject: [PATCH 20/22] xfs: adapt the orphanage code to handle parent pointers
+	b=M+5T9012464MV8Xhx7/RTrjo9tf9fU3bimlpPLvWrhGWd043IUszjiUImnVVl/HX8
+	 6eH/7MdiFqsMQXMSvwR0oqwBuy4llSKAq8DE7APbD4wVbQGjRejNo/nAxZYOaIFihT
+	 d9dwas03h0xYOhqOto+nGvdit6b9qJoJqt/YahvP8eZ38BUAXNAOlQ9vpAMFTWZSHG
+	 Sr69Yt0oTaL05VHtoEgaZBI1ZguDlpt6/kNShYO5s9vro8P4TdRbrWRGxvtyjO5a26
+	 RH9iy0Xodxpki0/E3Fx4GTh0r2Poh6pKJemHP2s4u+iWxlpHoH2V0X31jEdsUaNace
+	 cCkQfAi8YFwJw==
+Date: Sun, 31 Dec 2023 12:58:40 -0800
+Subject: [PATCH 21/22] xfs: repair link count of nondirectories after
+ rebuilding parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <170404842069.1757392.18360146955036269056.stgit@frogsfrogsfrogs>
+Message-ID: <170404842085.1757392.9649595192868451417.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404841699.1757392.2057683072581072853.stgit@frogsfrogsfrogs>
 References: <170404841699.1757392.2057683072581072853.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,127 +39,150 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Adapt the orphanage's adoption code to update the child file's parent
-pointers as part of the reparenting process.  Also ensure that the child
-has an attr fork to receive the parent pointer update, since the runtime
-code assumes one exists.
+Since the parent pointer scrubber does not exhaustively search the
+filesystem for missing parent pointers, it doesn't have a good way to
+determine that there are pointers missing from an otherwise uncorrupt
+xattr structure.  Instead, for nondirectories it employs a heuristic of
+comparing the file link count to the number of parent pointers found.
+
+However, we don't want this heuristic flagging a false corruption after
+a repair has actually scanned the entire filesystem to rebuild the
+parent pointers.  Therefore, reset the file link count in this one case
+because we actually know the correct link count.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/orphanage.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/orphanage.h |    3 +++
- fs/xfs/scrub/scrub.c     |    2 ++
- 3 files changed, 47 insertions(+)
+ fs/xfs/scrub/parent_repair.c |   97 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 97 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
-index ace7a0f23e474..b894b807155a7 100644
---- a/fs/xfs/scrub/orphanage.c
-+++ b/fs/xfs/scrub/orphanage.c
-@@ -19,6 +19,8 @@
- #include "xfs_icache.h"
+diff --git a/fs/xfs/scrub/parent_repair.c b/fs/xfs/scrub/parent_repair.c
+index 00e6735717a37..04ea0b05ed088 100644
+--- a/fs/xfs/scrub/parent_repair.c
++++ b/fs/xfs/scrub/parent_repair.c
+@@ -27,6 +27,7 @@
+ #include "xfs_parent.h"
+ #include "xfs_attr.h"
  #include "xfs_bmap.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_parent.h"
-+#include "xfs_attr_sf.h"
++#include "xfs_ag.h"
+ #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
- #include "scrub/repair.h"
-@@ -330,8 +332,12 @@ xrep_adoption_trans_alloc(
- 	if (S_ISDIR(VFS_I(sc->ip)->i_mode))
- 		child_blkres = xfs_rename_space_res(mp, 0, false,
- 						    xfs_name_dotdot.len, false);
-+	if (xfs_has_parent(mp))
-+		child_blkres += XFS_ADDAFORK_SPACE_RES(mp);
- 	adopt->child_blkres = child_blkres;
- 
-+	xfs_parent_args_init(mp, &adopt->ppargs);
+@@ -160,6 +161,9 @@ struct xrep_parent {
+ 	 * lost+found filename if we need to reparent the file.
+ 	 */
+ 	struct xfs_parent_name_irec pptr;
 +
- 	/*
- 	 * Allocate a transaction to link the child into the parent, along with
- 	 * enough disk space to handle expansion of both the orphanage and the
-@@ -500,6 +506,21 @@ xrep_adoption_zap_dcache(
- 	dput(d_orphanage);
++	/* Number of parents we found after all other repairs */
++	unsigned long long	parents;
+ };
+ 
+ struct xrep_parent_xattr {
+@@ -1381,6 +1385,92 @@ xrep_parent_rebuild_tree(
+ 	return 0;
  }
  
-+/*
-+ * If we have to add an attr fork ahead of a parent pointer update, how much
-+ * space should we ask for?
-+ */
-+static inline int
-+xrep_adoption_attr_sizeof(
-+	const struct xrep_adoption	*adopt)
++/* Count the number of parent pointers. */
++STATIC int
++xrep_parent_count_pptr(
++	struct xfs_scrub	*sc,
++	struct xfs_inode	*ip,
++	const struct xfs_parent_name_irec *pptr,
++	void			*priv)
 +{
-+	size_t				res = sizeof(struct xfs_attr_sf_hdr);
++	struct xrep_parent	*rp = priv;
 +
-+	res += xfs_attr_sf_entsize_byname(sizeof(struct xfs_parent_name_rec),
-+			adopt->xname.len);
-+	return res;
++	if (!xfs_parent_verify_irec(sc->mp, pptr))
++		return -EFSCORRUPTED;
++
++	rp->parents++;
++	return 0;
 +}
 +
- /*
-  * Move the current file to the orphanage under the computed name.
-  *
-@@ -522,6 +543,19 @@ xrep_adoption_move(
++/*
++ * After all parent pointer rebuilding and adoption activity completes, reset
++ * the link count of this nondirectory, having scanned the fs to rebuild all
++ * parent pointers.
++ */
++STATIC int
++xrep_parent_set_nondir_nlink(
++	struct xrep_parent	*rp)
++{
++	struct xfs_scrub	*sc = rp->sc;
++	struct xfs_inode	*ip = sc->ip;
++	struct xfs_perag	*pag;
++	bool			joined = false;
++	int			error;
++
++	/* Count parent pointers so we can reset the file link count. */
++	rp->parents = 0;
++	error = xchk_pptr_walk(sc, ip, xrep_parent_count_pptr, &rp->pptr, rp);
++	if (error)
++		return error;
++
++	if (rp->parents > 0 && xfs_inode_on_unlinked_list(ip)) {
++		xfs_trans_ijoin(sc->tp, sc->ip, 0);
++		joined = true;
++
++		/*
++		 * The file is on the unlinked list but we found parents.
++		 * Remove the file from the unlinked list.
++		 */
++		pag = xfs_perag_get(sc->mp, XFS_INO_TO_AGNO(sc->mp, ip->i_ino));
++		if (!pag) {
++			ASSERT(0);
++			return -EFSCORRUPTED;
++		}
++
++		error = xfs_iunlink_remove(sc->tp, pag, ip);
++		xfs_perag_put(pag);
++		if (error)
++			return error;
++	} else if (rp->parents == 0 && !xfs_inode_on_unlinked_list(ip)) {
++		xfs_trans_ijoin(sc->tp, sc->ip, 0);
++		joined = true;
++
++		/*
++		 * The file is not on the unlinked list but we found no
++		 * parents.  Add the file to the unlinked list.
++		 */
++		error = xfs_iunlink(sc->tp, ip);
++		if (error)
++			return error;
++	}
++
++	/* Set the correct link count. */
++	if (VFS_I(ip)->i_nlink != rp->parents) {
++		if (!joined) {
++			xfs_trans_ijoin(sc->tp, sc->ip, 0);
++			joined = true;
++		}
++
++		set_nlink(VFS_I(ip), min_t(unsigned long long, rp->parents,
++					   XFS_NLINK_PINNED));
++	}
++
++	/* Log the inode to keep it moving forward if we dirtied anything. */
++	if (joined)
++		xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_CORE);
++	return 0;
++}
++
+ /* Set up the filesystem scan so we can look for parents. */
+ STATIC int
+ xrep_parent_setup_scan(
+@@ -1505,6 +1595,13 @@ xrep_parent(
+ 	error = xrep_parent_rebuild_tree(rp);
  	if (error)
- 		return error;
- 
-+	/*
-+	 * If this filesystem has parent pointers, ensure that the file being
-+	 * moved to the orphanage has an attribute fork.  This is required
-+	 * because the parent pointer code does not itself add attr forks.
-+	 */
-+	if (!xfs_inode_has_attr_fork(sc->ip) && xfs_has_parent(sc->mp)) {
-+		int sf_size = xrep_adoption_attr_sizeof(adopt);
-+
-+		error = xfs_bmap_add_attrfork(sc->tp, sc->ip, sf_size, true);
+ 		goto out_teardown;
++	if (xfs_has_parent(sc->mp) && !S_ISDIR(VFS_I(sc->ip)->i_mode)) {
++		error = xrep_parent_set_nondir_nlink(rp);
 +		if (error)
-+			return error;
++			goto out_teardown;
 +	}
 +
- 	/* Create the new name in the orphanage. */
- 	error = xfs_dir_createname(sc->tp, sc->orphanage, xname, sc->ip->i_ino,
- 			adopt->orphanage_blkres);
-@@ -546,6 +580,14 @@ xrep_adoption_move(
- 			return error;
- 	}
++	error = xrep_defer_finish(sc);
  
-+	/* Add a parent pointer from the file back to the lost+found. */
-+	if (xfs_has_parent(sc->mp)) {
-+		error = xfs_parent_addname(sc->tp, &adopt->ppargs,
-+				sc->orphanage, xname, sc->ip);
-+		if (error)
-+			return error;
-+	}
-+
- 	/*
- 	 * Notify dirent hooks that we moved the file to /lost+found, and
- 	 * finish all the deferred work so that we know the adoption is fully
-diff --git a/fs/xfs/scrub/orphanage.h b/fs/xfs/scrub/orphanage.h
-index 9d40992583b24..74ce0bc05c6f1 100644
---- a/fs/xfs/scrub/orphanage.h
-+++ b/fs/xfs/scrub/orphanage.h
-@@ -54,6 +54,9 @@ struct xrep_adoption {
- 
- 	struct xfs_scrub	*sc;
- 
-+	/* Parent pointer context tracking */
-+	struct xfs_parent_args	ppargs;
-+
- 	/* Block reservations for orphanage and child (if directory). */
- 	unsigned int		orphanage_blkres;
- 	unsigned int		child_blkres;
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 440b8cb1957f4..d9c6d54ffad7f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -19,6 +19,8 @@
- #include "xfs_rmap.h"
- #include "xfs_xchgrange.h"
- #include "xfs_swapext.h"
-+#include "xfs_dir2.h"
-+#include "xfs_parent.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
+ out_teardown:
+ 	xrep_parent_teardown(rp);
 
