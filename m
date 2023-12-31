@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD45CC2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:30:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 621A8C2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:30:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TG9dDmqg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 973BEC433C8;
-	Sun, 31 Dec 2023 23:30:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lOb/j/PO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 326EBC433C8;
+	Sun, 31 Dec 2023 23:30:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065422;
-	bh=UfGCM8qkXPM/AIDGwKwjQ3HpcnQ8UIlTRum8v+RUvFo=;
+	s=k20201202; t=1704065438;
+	bh=NGL2hBQkPChT3WaL7u1RO1TFMYXATSWgKT41d01mT2w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TG9dDmqgr9MibjiM4RtS0tfqsnHt8s86tGiyxyfPHJn0QOK783CBZyywll4iA69hp
-	 02VbpbW6RLK2YTYUwTghd+MLb7dZff2I5sd0aeNDo6wuaE2NnJ86+oRaKV6YSoVLxI
-	 oSZw5Us0ruOybfjrxTx9ekCZnx7xQGMhRSeqwOde9dFbMfu2mhWcLoE6pqe6+URE3k
-	 13Ui3BECzTOtVCeI++rMpuCQRxcCxODFs+YWtgz+A8SLDI7HTm3A44Oya/zCO9bwPk
-	 2TlBCEj1FSAUIwj0FwWl8V4qCS62JqiJdbg7YLOvYiL0dpP1jhYe2Z1oAfzsbec/Wb
-	 JZNhGz/Auzk0w==
-Date: Sun, 31 Dec 2023 15:30:22 -0800
-Subject: [PATCH 03/58] xfs: create transaction reservations for metadata inode
- operations
+	b=lOb/j/POnLc/rlb4JWCabsFwMKCq7Xt5fDh6XBlmhYtZnBgOu72Yv8V1SHUQzLOE/
+	 ia2jqgnP6PG2T9vddbiMu3GwG1FvSTv/lRyaBdd0h9QJ/WzAJ6SMCfSk9VwlGrXVp5
+	 uz0O6bVmXMyrg0bNBcTYsjts43Hne4nbFgEBqgOlhduIINAigHtM1uTE2EN3T5Jt0J
+	 364/SP74T3b5LeUalDd6Ktfx/it0qW3vDJ1kig5oiyGt0T2uE8Og/EtnKxptxNlDO6
+	 2kzuIxkKQpvi86iyc4p89JEeAedVoOsQG2Nu4MaxKJYvFPyYQRC0WD4Yqfk26bQF+r
+	 TsMEJq8+UZvOA==
+Date: Sun, 31 Dec 2023 15:30:37 -0800
+Subject: [PATCH 04/58] mkfs: clean up the rtinit() function
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405009987.1809361.15843525045056018505.stgit@frogsfrogsfrogs>
+Message-ID: <170405010001.1809361.11639524525861448693.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,130 +37,141 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create transaction reservation types and block reservation helpers to
-help us calculate transaction requirements.  Right now the reservations
-are the same as always; we're just separating the symbols for a future
-patch.
+Clean up some of the warts in this function, like the inconsistent use
+of @i for @error, missing comments, and make this more visually pleasing
+by adding some whitespace between major sections.  Some things are left
+untouched for the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/imeta_utils.c     |    8 +++++---
- libxfs/libxfs_api_defs.h |    3 +++
- libxfs/xfs_imeta.c       |    4 ++++
- libxfs/xfs_imeta.h       |    4 ++++
- libxfs/xfs_trans_resv.c  |    5 +++++
- libxfs/xfs_trans_resv.h  |    3 +++
- 6 files changed, 24 insertions(+), 3 deletions(-)
+ mkfs/proto.c |   70 ++++++++++++++++++++++++++++------------------------------
+ 1 file changed, 34 insertions(+), 36 deletions(-)
 
 
-diff --git a/libxfs/imeta_utils.c b/libxfs/imeta_utils.c
-index 4610c2f49c8..f3165b5eed3 100644
---- a/libxfs/imeta_utils.c
-+++ b/libxfs/imeta_utils.c
-@@ -70,7 +70,7 @@ xfs_imeta_start_create(
- 	if (error)
- 		return error;
- 
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_create,
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_imeta_create,
- 			xfs_create_space_res(mp, MAXNAMELEN), 0, 0, &upd->tp);
- 	if (error)
- 		goto out_teardown;
-@@ -128,7 +128,8 @@ xfs_imeta_start_link(
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index f9b0f837ed9..a519aaeb72b 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -750,28 +750,26 @@ parse_proto(
+  */
+ static void
+ rtinit(
+-	xfs_mount_t	*mp)
++	struct xfs_mount	*mp)
  {
- 	int				error;
+-	xfs_fileoff_t	bno;
+-	xfs_bmbt_irec_t	*ep;
+-	int		error;
+-	int		i;
+-	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
+-	xfs_extlen_t	nsumblocks;
+-	uint		blocks;
+-	int		nmap;
+-	xfs_inode_t	*rbmip;
+-	xfs_inode_t	*rsumip;
+-	xfs_trans_t	*tp;
+-	struct cred	creds;
+-	struct fsxattr	fsxattrs;
++	struct cred		creds;
++	struct fsxattr		fsxattrs;
++	struct xfs_bmbt_irec	map[XFS_BMAP_MAX_NMAP];
++	struct xfs_inode	*rbmip;
++	struct xfs_inode	*rsumip;
++	struct xfs_trans	*tp;
++	struct xfs_bmbt_irec	*ep;
++	xfs_fileoff_t		bno;
++	xfs_extlen_t		nsumblocks;
++	uint			blocks;
++	int			i;
++	int			nmap;
++	int			error;
  
--	error = xfs_imeta_start_dir_update(mp, path, ip, &M_RES(mp)->tr_link,
-+	error = xfs_imeta_start_dir_update(mp, path, ip,
-+			&M_RES(mp)->tr_imeta_link,
- 			xfs_link_space_res(mp, MAXNAMELEN), upd);
- 	if (error)
- 		return error;
-@@ -150,7 +151,8 @@ xfs_imeta_start_unlink(
- {
- 	int				error;
+-	/*
+-	 * First, allocate the inodes.
+-	 */
+-	i = -libxfs_trans_alloc_rollable(mp, MKFS_BLOCKRES_INODE, &tp);
+-	if (i)
+-		res_failed(i);
++	/* Create the realtime bitmap inode. */
++	error = -libxfs_trans_alloc_rollable(mp, MKFS_BLOCKRES_INODE, &tp);
++	if (error)
++		res_failed(error);
  
--	error = xfs_imeta_start_dir_update(mp, path, ip, &M_RES(mp)->tr_remove,
-+	error = xfs_imeta_start_dir_update(mp, path, ip,
-+			&M_RES(mp)->tr_imeta_unlink,
- 			xfs_remove_space_res(mp, MAXNAMELEN), upd);
- 	if (error)
- 		return error;
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 9fd53415b47..167617771d8 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -176,13 +176,16 @@
- #define xfs_imeta_cancel_update		libxfs_imeta_cancel_update
- #define xfs_imeta_commit_update		libxfs_imeta_commit_update
- #define xfs_imeta_create		libxfs_imeta_create
-+#define xfs_imeta_create_space_res	libxfs_imeta_create_space_res
- #define xfs_imeta_link			libxfs_imeta_link
-+#define xfs_imeta_link_space_res	libxfs_imeta_link_space_res
- #define xfs_imeta_lookup		libxfs_imeta_lookup
- #define xfs_imeta_mount			libxfs_imeta_mount
- #define xfs_imeta_start_create		libxfs_imeta_start_create
- #define xfs_imeta_start_link		libxfs_imeta_start_link
- #define xfs_imeta_start_unlink		libxfs_imeta_start_unlink
- #define xfs_imeta_unlink		libxfs_imeta_unlink
-+#define xfs_imeta_unlink_space_res	libxfs_imeta_unlink_space_res
- 
- #define xfs_initialize_perag		libxfs_initialize_perag
- #define xfs_initialize_perag_data	libxfs_initialize_perag_data
-diff --git a/libxfs/xfs_imeta.c b/libxfs/xfs_imeta.c
-index b89843926fe..086c250a3c2 100644
---- a/libxfs/xfs_imeta.c
-+++ b/libxfs/xfs_imeta.c
-@@ -18,6 +18,10 @@
- #include "xfs_trace.h"
- #include "xfs_inode.h"
- #include "xfs_ialloc.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_trans_space.h"
- 
- /*
-  * Metadata File Management
-diff --git a/libxfs/xfs_imeta.h b/libxfs/xfs_imeta.h
-index c1833b8b1c9..7b3da865c09 100644
---- a/libxfs/xfs_imeta.h
-+++ b/libxfs/xfs_imeta.h
-@@ -43,4 +43,8 @@ int xfs_imeta_link(struct xfs_imeta_update *upd);
- bool xfs_is_static_meta_ino(struct xfs_mount *mp, xfs_ino_t ino);
- int xfs_imeta_mount(struct xfs_trans *tp);
- 
-+unsigned int xfs_imeta_create_space_res(struct xfs_mount *mp);
-+unsigned int xfs_imeta_link_space_res(struct xfs_mount *mp);
-+unsigned int xfs_imeta_unlink_space_res(struct xfs_mount *mp);
+ 	memset(&creds, 0, sizeof(creds));
+ 	memset(&fsxattrs, 0, sizeof(fsxattrs));
+@@ -792,6 +790,8 @@ rtinit(
+ 	libxfs_trans_log_inode(tp, rbmip, XFS_ILOG_CORE);
+ 	libxfs_log_sb(tp);
+ 	mp->m_rbmip = rbmip;
 +
- #endif /* __XFS_IMETA_H__ */
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 78e7a575baa..5a1ad959870 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -1246,4 +1246,9 @@ xfs_trans_resv_calc(
- 	resp->tr_itruncate.tr_logcount += logcount_adj;
- 	resp->tr_write.tr_logcount += logcount_adj;
- 	resp->tr_qm_dqalloc.tr_logcount += logcount_adj;
++	/* Create the realtime summary inode. */
+ 	error = creatproto(&tp, NULL, S_IFREG, 1, 0, &creds, &fsxattrs,
+ 			&rsumip);
+ 	if (error) {
+@@ -806,14 +806,13 @@ rtinit(
+ 		fail(_("Completion of the realtime summary inode failed"),
+ 				error);
+ 	mp->m_rsumip = rsumip;
+-	/*
+-	 * Next, give the bitmap file some zero-filled blocks.
+-	 */
 +
-+	/* metadata inode creation and unlink */
-+	resp->tr_imeta_create = resp->tr_create;
-+	resp->tr_imeta_link = resp->tr_link;
-+	resp->tr_imeta_unlink = resp->tr_remove;
- }
-diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
-index 0554b9d775d..6b851dfe1ac 100644
---- a/libxfs/xfs_trans_resv.h
-+++ b/libxfs/xfs_trans_resv.h
-@@ -48,6 +48,9 @@ struct xfs_trans_resv {
- 	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
- 	struct xfs_trans_res	tr_sb;		/* modify superblock */
- 	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
-+	struct xfs_trans_res	tr_imeta_create; /* create metadata inode */
-+	struct xfs_trans_res	tr_imeta_link;	/* link metadata inode */
-+	struct xfs_trans_res	tr_imeta_unlink; /* unlink metadata inode */
- };
++	/* Zero the realtime bitmap. */
+ 	blocks = mp->m_sb.sb_rbmblocks +
+ 			XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
+-	i = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
+-	if (i)
+-		res_failed(i);
++	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
++	if (error)
++		res_failed(error);
  
- /* shorthand way of accessing reservation structure */
+ 	libxfs_trans_ijoin(tp, rbmip, 0);
+ 	bno = 0;
+@@ -822,10 +821,10 @@ rtinit(
+ 		error = -libxfs_bmapi_write(tp, rbmip, bno,
+ 				(xfs_extlen_t)(mp->m_sb.sb_rbmblocks - bno),
+ 				0, mp->m_sb.sb_rbmblocks, map, &nmap);
+-		if (error) {
++		if (error)
+ 			fail(_("Allocation of the realtime bitmap failed"),
+ 				error);
+-		}
++
+ 		for (i = 0, ep = map; i < nmap; i++, ep++) {
+ 			libxfs_device_zero(mp->m_ddev_targp,
+ 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
+@@ -839,25 +838,24 @@ rtinit(
+ 		fail(_("Block allocation of the realtime bitmap inode failed"),
+ 				error);
+ 
+-	/*
+-	 * Give the summary file some zero-filled blocks.
+-	 */
++	/* Zero the summary file. */
+ 	nsumblocks = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
+ 	blocks = nsumblocks + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1;
+-	i = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
+-	if (i)
+-		res_failed(i);
++	error = -libxfs_trans_alloc_rollable(mp, blocks, &tp);
++	if (error)
++		res_failed(error);
+ 	libxfs_trans_ijoin(tp, rsumip, 0);
++
+ 	bno = 0;
+ 	while (bno < nsumblocks) {
+ 		nmap = XFS_BMAP_MAX_NMAP;
+ 		error = -libxfs_bmapi_write(tp, rsumip, bno,
+ 				(xfs_extlen_t)(nsumblocks - bno),
+ 				0, nsumblocks, map, &nmap);
+-		if (error) {
++		if (error)
+ 			fail(_("Allocation of the realtime summary failed"),
+ 				error);
+-		}
++
+ 		for (i = 0, ep = map; i < nmap; i++, ep++) {
+ 			libxfs_device_zero(mp->m_ddev_targp,
+ 				XFS_FSB_TO_DADDR(mp, ep->br_startblock),
 
