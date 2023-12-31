@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF50B64C
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:26:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CACEBB65D
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:26:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3yfJNgQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E098DC433C7;
-	Sun, 31 Dec 2023 19:26:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q5ADvvP/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94605C433C7;
+	Sun, 31 Dec 2023 19:26:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704050783;
-	bh=58S+guDpzdk92wNDSEedweyZeaG9YiMrbvY6oQY3gZk=;
+	s=k20201202; t=1704050799;
+	bh=5sikE85t3jpyLhSL9UTV4HjmtZ9WjltuOlQlXAMeh9Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=T3yfJNgQrZ4Y+FHabiOS08vWgu6Tzxou+DMgKwX11YN/c9pcIsl8AjVsszGWoYmtH
-	 LZ/0Cg5bRMC4ZUWiFxI6hDrNC7/dqap3HGcY6TflBpapXaA4qB8e9R1wUx5qjoyBnD
-	 JYieBlC1KdpvnoLmu+or5d0+ubhHRaH7v2PVS/9boCA2ZWouC5m21pd3ayiZOZTSlj
-	 AyNipO2xaSVvg2RiuMBUOCJT42yXQb6bvI57Mr202sBZnrj24lH6r9kKbaBX1R7PRP
-	 TbOjLUOykPjcTWjpyc+7fYjSk6XXb2NavLUIKuCVn/EJ+2Tcd8hkfLyZCBRmqh7sUY
-	 GeIIqxk4HCjrw==
-Date: Sun, 31 Dec 2023 11:26:23 -0800
-Subject: [PATCHSET v29.0 04/28] xfs: online repair of file link counts
+	b=Q5ADvvP/BrJo/OEiys3yBjyS9SNpzWzNW0BDCap/RZv+jsIqfn+IRvG9enlhBSDyu
+	 TQM31BsTJd8L2NvsnHgM/xpSX8vzXoePAIb8NtGLdtr4PB+pjyW48CcA7e8Ngm9Y9s
+	 YPAdUIkT2F/yKp50jqU2dzd+EBoD2A3H7jjD5T9cNfIxPsDFsFG1cNpMk8tfY9/dnK
+	 aprKnTkPT+kATndq91kHAb5zyK+GQIe3UlG52IM2TknJei29OFPGMTiVjoE4b9L/xO
+	 4QEp4CzVRz1SsHqKEMiu3LHhmZk0ZQXF+2NXlbr1HQaH784TdDVcZyQml2oYBqK8Yr
+	 Vk1ShON328Czg==
+Date: Sun, 31 Dec 2023 11:26:39 -0800
+Subject: [PATCHSET v29.0 05/28] xfs: report corruption to the health trackers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404827820.1748178.11128292961813747066.stgit@frogsfrogsfrogs>
+Message-ID: <170404828253.1748329.6550106654194720629.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,17 +37,26 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Now that we've created the infrastructure to perform live scans of every
-file in the filesystem and the necessary hook infrastructure to observe
-live updates, use it to scan directories to compute the correct link
-counts for files in the filesystem, and reset those link counts.
+Any time that the runtime code thinks it has found corrupt metadata, it
+should tell the health tracking subsystem that the corresponding part of
+the filesystem is sick.  These reports come primarily from two places --
+code that is reading a buffer that fails validation, and higher level
+pieces that observe a conflict involving multiple buffers.  This
+patchset uses automated scanning to update all such callsites with a
+mark_sick call.
 
-This patchset creates a tailored readdir implementation for scrub
-because the regular version has to cycle ILOCKs to copy information to
-userspace.  We can't cycle the ILOCK during the nlink scan and we don't
-need all the other VFS support code (maintaining a readdir cursor and
-translating XFS structures to VFS structures and back) so it was easier
-to duplicate the code.
+Doing this enables the health system to record problem observed at
+runtime, which (for now) can prompt the sysadmin to run xfs_scrub, and
+(later) may enable more targetted fixing of the filesystem.
+
+Note: Earlier reviewers of this patchset suggested that the verifier
+functions themselves should be responsible for calling _mark_sick.  In a
+higher level language this would be easily accomplished with lambda
+functions and closures.  For the kernel, however, we'd have to create
+the necessary closures by hand, pass them to the buf_read calls, and
+then implement necessary state tracking to detach the xfs_buf from the
+closure at the necessary time.  This is far too much work and complexity
+and will not be pursued further.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -58,37 +67,50 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-nlinks
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=corruption-health-reports
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-nlinks
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=corruption-health-reports
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-nlinks
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=corruption-health-reports
 ---
- fs/xfs/Makefile              |    2 
- fs/xfs/libxfs/xfs_fs.h       |    4 
- fs/xfs/libxfs/xfs_health.h   |    4 
- fs/xfs/scrub/common.c        |    3 
- fs/xfs/scrub/common.h        |    1 
- fs/xfs/scrub/health.c        |    1 
- fs/xfs/scrub/nlinks.c        |  930 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/nlinks.h        |  102 +++++
- fs/xfs/scrub/nlinks_repair.c |  223 ++++++++++
- fs/xfs/scrub/repair.h        |    2 
- fs/xfs/scrub/scrub.c         |    9 
- fs/xfs/scrub/scrub.h         |    5 
- fs/xfs/scrub/stats.c         |    1 
- fs/xfs/scrub/trace.c         |    2 
- fs/xfs/scrub/trace.h         |  183 ++++++++
- fs/xfs/xfs_health.c          |    1 
- fs/xfs/xfs_inode.c           |  108 +++++
- fs/xfs/xfs_inode.h           |   31 +
- fs/xfs/xfs_mount.h           |    3 
- fs/xfs/xfs_super.c           |    2 
- fs/xfs/xfs_symlink.c         |    1 
- 21 files changed, 1614 insertions(+), 4 deletions(-)
- create mode 100644 fs/xfs/scrub/nlinks.c
- create mode 100644 fs/xfs/scrub/nlinks.h
- create mode 100644 fs/xfs/scrub/nlinks_repair.c
+ fs/xfs/libxfs/xfs_ag.c          |    5 +
+ fs/xfs/libxfs/xfs_alloc.c       |  105 ++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_attr_leaf.c   |    4 +
+ fs/xfs/libxfs/xfs_attr_remote.c |   35 +++++---
+ fs/xfs/libxfs/xfs_bmap.c        |  135 +++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_btree.c       |   39 ++++++++-
+ fs/xfs/libxfs/xfs_da_btree.c    |   37 +++++++-
+ fs/xfs/libxfs/xfs_dir2.c        |    5 +
+ fs/xfs/libxfs/xfs_dir2_block.c  |    2 
+ fs/xfs/libxfs/xfs_dir2_data.c   |    3 +
+ fs/xfs/libxfs/xfs_dir2_leaf.c   |    3 +
+ fs/xfs/libxfs/xfs_dir2_node.c   |    7 ++
+ fs/xfs/libxfs/xfs_health.h      |   35 +++++++-
+ fs/xfs/libxfs/xfs_ialloc.c      |   57 +++++++++++--
+ fs/xfs/libxfs/xfs_inode_buf.c   |   12 ++-
+ fs/xfs/libxfs/xfs_inode_fork.c  |    8 ++
+ fs/xfs/libxfs/xfs_refcount.c    |   43 +++++++++-
+ fs/xfs/libxfs/xfs_rmap.c        |   83 ++++++++++++++++++-
+ fs/xfs/libxfs/xfs_rtbitmap.c    |    9 ++
+ fs/xfs/libxfs/xfs_sb.c          |    2 
+ fs/xfs/scrub/health.c           |   20 +++--
+ fs/xfs/scrub/refcount_repair.c  |    9 ++
+ fs/xfs/xfs_attr_inactive.c      |    4 +
+ fs/xfs/xfs_attr_list.c          |   18 +++-
+ fs/xfs/xfs_dir2_readdir.c       |    6 +
+ fs/xfs/xfs_discard.c            |    2 
+ fs/xfs/xfs_dquot.c              |   30 +++++++
+ fs/xfs/xfs_health.c             |  172 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_icache.c             |    9 ++
+ fs/xfs/xfs_inode.c              |   16 +++-
+ fs/xfs/xfs_iomap.c              |   15 +++
+ fs/xfs/xfs_iwalk.c              |    5 +
+ fs/xfs/xfs_mount.c              |    5 +
+ fs/xfs/xfs_qm.c                 |    8 +-
+ fs/xfs/xfs_reflink.c            |    6 +
+ fs/xfs/xfs_rtalloc.c            |    6 +
+ fs/xfs/xfs_symlink.c            |   17 +++-
+ 37 files changed, 867 insertions(+), 110 deletions(-)
 
