@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1697C13B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:48:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 726BCC127
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:48:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PVIhkuWX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DD1DC433C7;
-	Sun, 31 Dec 2023 22:48:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lmwYf0Ce"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB149C433C8;
+	Sun, 31 Dec 2023 22:48:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704062906;
-	bh=JEVDK+1q3KSO8Ijx13YnzF4+hglbNW9cq30HGfPzVEE=;
+	s=k20201202; t=1704062921;
+	bh=ku0P7X0noBc30net+fP+VftmSqEYDyjo283keHplStk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PVIhkuWXIb6oSSZLRgByaL738wy1ms/7jcfdTzG8SjsOFOKHUzVPjAJoj9lIXesAR
-	 C+Dhzd85Eb+srV4Zd9J95QIkghJ72l2GOVQFwEZiF4zP/q0h57My8MECH5NvFmWBKd
-	 tQVAC+IRRG8uBMHfMHu42I5zMxgZax/uVrLocKh1zGt6rKzP+rDhfIUb5C9mwjdWeK
-	 epda1QhEwXNKFa5wCZFcAcn97iWBnMYuHT1Z9ey94Y12j0tRhllzER7qD0D5G6PcXk
-	 l4sZOGyzOTPG5tFY0Hcjid7h2u6JWwbbpj9WSaYxXskJhtaZ7QAWJy8cAfzaPYYaMx
-	 rbVTx2OVjkuVA==
-Date: Sun, 31 Dec 2023 14:48:25 -0800
-Subject: [PATCH 13/13] xfs_scrub: dump unicode points
+	b=lmwYf0CeDOZtmXoLmiDJ8NQPZzIv1Ra+VGZajeQiy9+eeDwMJB/C2A0DUbwe81SqA
+	 80Ii/yzbnhlvuKQ1k5qZUdLzDFKpu8+E9vgCXnu4+ZZVIBOgF1HLlswJ0UTxRgTRkd
+	 EJOApmpdiosCz7zR2pg9JZHE5x2fGIO2VySz6byPMhF8USF1KIqhAaAvRof6qfpIMt
+	 FUQBWTX7ve7VRRxEIK/g/bzX7Pq5DbB2I655gZmKxspR5G//cFsphfP6j1O0qRGAHr
+	 c8sqzgRV1v9lbz4M3ny3uaytuiLzg2bcg25BWaLHVxTU5+8epT0l3D7JfPS9tS9Zsz
+	 SDOwTOttLqKug==
+Date: Sun, 31 Dec 2023 14:48:41 -0800
+Subject: [PATCH 1/8] xfs_scrub: move FITRIM to phase 8
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405000755.1798385.14586557471677458655.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405000576.1798385.17716144085137758324.stgit@frogsfrogsfrogs>
-References: <170405000576.1798385.17716144085137758324.stgit@frogsfrogsfrogs>
+Message-ID: <170405001063.1798752.11685058643451631355.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405001045.1798752.4380751003208751209.stgit@frogsfrogsfrogs>
+References: <170405001045.1798752.4380751003208751209.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,96 +37,187 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some debug functions to make it easier to query unicode character
-properties.
+Issuing discards against the filesystem should be the *last* thing that
+xfs_scrub does, after everything else has been checked, repaired, and
+found to be clean.  If we can't satisfy all those conditions, we have no
+business telling the storage to discard itself.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/unicrash.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 57 insertions(+), 2 deletions(-)
+ scrub/Makefile    |    1 +
+ scrub/phase4.c    |   30 ++----------------------
+ scrub/phase8.c    |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.h |    3 ++
+ 4 files changed, 73 insertions(+), 27 deletions(-)
+ create mode 100644 scrub/phase8.c
 
 
-diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index e895afe32aa..119656b0b9d 100644
---- a/scrub/unicrash.c
-+++ b/scrub/unicrash.c
-@@ -5,6 +5,7 @@
-  */
- #include "xfs.h"
- #include "xfs_arch.h"
-+#include "list.h"
- #include <stdint.h>
- #include <stdlib.h>
- #include <dirent.h>
-@@ -1001,14 +1002,68 @@ unicrash_check_fs_label(
- 			label, 0);
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 24af9716120..af94cf0d684 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -65,6 +65,7 @@ phase4.c \
+ phase5.c \
+ phase6.c \
+ phase7.c \
++phase8.c \
+ progress.c \
+ read_verify.c \
+ repair.c \
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 9080d38818f..451101811c9 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -227,16 +227,6 @@ repair_everything(
+ 	return action_list_process(ctx, ctx->fs_repair_list, XRM_FINAL_WARNING);
  }
  
-+/* Dump a unicode code point and its properties. */
-+static inline void dump_uchar32(UChar32 c)
+-/* Trim the unused areas of the filesystem if the caller asked us to. */
+-static void
+-trim_filesystem(
+-	struct scrub_ctx	*ctx)
+-{
+-	if (want_fstrim)
+-		fstrim(ctx);
+-	progress_add(1);
+-}
+-
+ /* Fix everything that needs fixing. */
+ int
+ phase4_func(
+@@ -248,7 +238,7 @@ phase4_func(
+ 
+ 	if (action_list_empty(ctx->fs_repair_list) &&
+ 	    action_list_empty(ctx->file_repair_list))
+-		goto maybe_trim;
++		return 0;
+ 
+ 	/*
+ 	 * Check the resource usage counters early.  Normally we do this during
+@@ -281,20 +271,7 @@ phase4_func(
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = repair_everything(ctx);
+-	if (ret)
+-		return ret;
+-
+-	/*
+-	 * If errors remain on the filesystem, do not trim anything.  We don't
+-	 * have any threads running, so it's ok to skip the ctx lock here.
+-	 */
+-	if (ctx->corruptions_found || ctx->unfixable_errors != 0)
+-		return 0;
+-
+-maybe_trim:
+-	trim_filesystem(ctx);
+-	return 0;
++	return repair_everything(ctx);
+ }
+ 
+ /* Estimate how much work we're going to do. */
+@@ -307,10 +284,9 @@ phase4_estimate(
+ {
+ 	unsigned long long	need_fixing;
+ 
+-	/* Everything on the repair list plus FSTRIM. */
++	/* Everything on the repair lis. */
+ 	need_fixing = action_list_length(ctx->fs_repair_list) +
+ 		      action_list_length(ctx->file_repair_list);
+-	need_fixing++;
+ 
+ 	*items = need_fixing;
+ 	*nr_threads = scrub_nproc(ctx) + 1;
+diff --git a/scrub/phase8.c b/scrub/phase8.c
+new file mode 100644
+index 00000000000..07726b5b869
+--- /dev/null
++++ b/scrub/phase8.c
+@@ -0,0 +1,66 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2018-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include <stdint.h>
++#include <dirent.h>
++#include <sys/types.h>
++#include <sys/statvfs.h>
++#include "list.h"
++#include "libfrog/paths.h"
++#include "libfrog/workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "progress.h"
++#include "scrub.h"
++#include "repair.h"
++#include "vfs.h"
++#include "atomic.h"
++
++/* Phase 8: Trim filesystem. */
++
++/* Trim the unused areas of the filesystem if the caller asked us to. */
++static void
++trim_filesystem(
++	struct scrub_ctx	*ctx)
 +{
-+	UChar		uchrstr[UCHAR_PER_UCHAR32];
-+	const char	*descr;
-+	char		buf[16];
-+	int32_t		uchrstrlen, buflen;
-+	UProperty	p;
-+	UErrorCode	uerr = U_ZERO_ERROR;
-+
-+	printf("Unicode point 0x%x:", c);
-+
-+	/* Convert UChar32 to UTF8 representation. */
-+	uchrstrlen = uchar32_to_uchar(c, uchrstr);
-+	if (!uchrstrlen)
-+		return;
-+
-+	u_strToUTF8(buf, sizeof(buf), &buflen, uchrstr, uchrstrlen, &uerr);
-+	if (!U_FAILURE(uerr) && buflen > 0) {
-+		int32_t	i;
-+
-+		printf(" \"");
-+		for (i = 0; i < buflen; i++)
-+			printf("\\x%02x", buf[i]);
-+		printf("\"");
-+	}
-+	printf("\n");
-+
-+	for (p = 0; p < UCHAR_BINARY_LIMIT; p++) {
-+		int	has;
-+
-+		descr = u_getPropertyName(p, U_LONG_PROPERTY_NAME);
-+		if (!descr)
-+			descr = u_getPropertyName(p, U_SHORT_PROPERTY_NAME);
-+
-+		has = u_hasBinaryProperty(c, p) ? 1 : 0;
-+		if (descr) {
-+			printf("  %s(%u) = %d\n", descr, p, has);
-+		} else {
-+			printf("  ?(%u) = %d\n", p, has);
-+		}
-+	}
++	fstrim(ctx);
++	progress_add(1);
 +}
 +
- /* Load libicu and initialize it. */
- bool
- unicrash_load(void)
- {
--	UErrorCode		uerr = U_ZERO_ERROR;
-+	char		*dbgstr;
-+	UChar32		uchr;
-+	UErrorCode	uerr = U_ZERO_ERROR;
- 
- 	u_init(&uerr);
--	return U_FAILURE(uerr);
-+	if (U_FAILURE(uerr))
-+		return true;
++/* Trim the filesystem, if desired. */
++int
++phase8_func(
++	struct scrub_ctx	*ctx)
++{
++	if (action_list_empty(ctx->fs_repair_list) &&
++	    action_list_empty(ctx->file_repair_list))
++		goto maybe_trim;
 +
-+	dbgstr = getenv("XFS_SCRUB_DUMP_CHAR");
-+	if (dbgstr) {
-+		uchr = strtol(dbgstr, NULL, 0);
-+		dump_uchar32(uchr);
-+	}
-+	return false;
- }
++	/*
++	 * If errors remain on the filesystem, do not trim anything.  We don't
++	 * have any threads running, so it's ok to skip the ctx lock here.
++	 */
++	if (ctx->corruptions_found || ctx->unfixable_errors != 0)
++		return 0;
++
++maybe_trim:
++	trim_filesystem(ctx);
++	return 0;
++}
++
++/* Estimate how much work we're going to do. */
++int
++phase8_estimate(
++	struct scrub_ctx	*ctx,
++	uint64_t		*items,
++	unsigned int		*nr_threads,
++	int			*rshift)
++{
++	*items = 1;
++	*nr_threads = 1;
++	*rshift = 0;
++	return 0;
++}
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index ed86d0093db..6272a36879e 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -98,6 +98,7 @@ int phase4_func(struct scrub_ctx *ctx);
+ int phase5_func(struct scrub_ctx *ctx);
+ int phase6_func(struct scrub_ctx *ctx);
+ int phase7_func(struct scrub_ctx *ctx);
++int phase8_func(struct scrub_ctx *ctx);
  
- /* Unload libicu once we're done with it. */
+ /* Progress estimator functions */
+ unsigned int scrub_estimate_ag_work(struct scrub_ctx *ctx);
+@@ -112,5 +113,7 @@ int phase5_estimate(struct scrub_ctx *ctx, uint64_t *items,
+ 		    unsigned int *nr_threads, int *rshift);
+ int phase6_estimate(struct scrub_ctx *ctx, uint64_t *items,
+ 		    unsigned int *nr_threads, int *rshift);
++int phase8_estimate(struct scrub_ctx *ctx, uint64_t *items,
++		    unsigned int *nr_threads, int *rshift);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
