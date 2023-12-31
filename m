@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A78C2CC
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:43:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3DF7C2CC
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:43:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NhZ8+nxb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2764CC433C7;
-	Sun, 31 Dec 2023 23:43:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGsvkbgw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD6E0C433C7;
+	Sun, 31 Dec 2023 23:43:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066189;
-	bh=k1rgXECzQHfkHVkFlzO7XLDT8g1tVTd4cn5atZb609k=;
+	s=k20201202; t=1704066204;
+	bh=nhyKsGAAMZUEeVIXej5cxLAmx8IIMcUiPECiRex1NaE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NhZ8+nxbdgA7OEARDT6e4sLXHKAR19OpQbgCNw3ZnAWj1yhchAqtzx5mHN1lH3Vjf
-	 RzKymkS4j16Qk2OH1JBdZIlfDxaPXb0VDShnoiQ0Y47OEsxuz3aAmu8sYgTzGK0+qp
-	 TcuKcE+RetK9UxpbgXQoShVkY2JNc33UyHAGVJoDDKSqhaXw5TpVSJzmM3kseLNckW
-	 yrnTIsm1ycP6/T/ckHdZTxEPi0nNcL/c8/XNL1hTSxNiIhQ1jr+mMcRLLu31tPmbn4
-	 sqGdjNjhnnW8jgGONxKrB02BrEuAhiZHfSRP9A5m0k+t9JYT5R/GvWibU6b7ySNJyZ
-	 oZ3YlAxeu7wxA==
-Date: Sun, 31 Dec 2023 15:43:08 -0800
-Subject: [PATCH 52/58] xfs_repair: reattach quota inodes to metadata directory
+	b=HGsvkbgwUd2PxnBSH1ICJFvSoGIORJTjJpnR5LMOO18LcbEZH7XSGeNLlFmq3Rrjh
+	 PxpJiFg+t1h+cLW1jZeGqyyN2doJ5Brj6KqQOlz1npnhzKoUaRrmaWD78rS2wsX3WR
+	 T6GnhtAYBSH85JhCA4LJim8hXR5TXJUYGzsRz4oJ2xWTQsABgfFbI2vga5TRP/PSjA
+	 4MbVmUsOpPL4NMnxPsjiHuZfqJ8k4eQfJ/TFk45NHvR7N+KoBjbvr/yM9q9c9lwFeB
+	 9XGXEwLZj3DIBZCzS6pTjnbBwixmitjAu9OWuYb3GMGKa44ZFyu7eDRgAtJkMkOaJm
+	 cvYUQ1VgM+cWA==
+Date: Sun, 31 Dec 2023 15:43:24 -0800
+Subject: [PATCH 53/58] xfs_repair: drop all the metadata directory files
+ during pass 4
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010640.1809361.6877152924759110980.stgit@frogsfrogsfrogs>
+Message-ID: <170405010653.1809361.5737330654597011552.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,158 +38,127 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the quota inodes came through unscathed, we should attach them to
-the new metadata directory so that phase 7 can run quotacheck on them.
+Drop the entire metadata directory tree during pass 4 so that we can
+reinitialize the entire tree in phase 6.  The existing metadata files
+(rtbitmap, rtsummary, quotas) will be reattached to the newly rebuilt
+directory tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase6.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 127 insertions(+)
+ repair/dino_chunks.c |    9 +++++++++
+ repair/dinode.c      |   14 +++++++++++++-
+ repair/phase6.c      |   21 +++++++++++----------
+ repair/scan.c        |    2 +-
+ 4 files changed, 34 insertions(+), 12 deletions(-)
 
 
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 7e18991a3d5..a7f9ea70ca7 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -950,6 +950,15 @@ process_inode_chunk(
+ 			clear_inode_isadir(ino_rec, irec_offset);
+ 		}
+ 
++		/*
++		 * We always reinitialize the rt bitmap and summary inodes if
++		 * the metadata directory feature is enabled.
++		 */
++		if (xfs_has_metadir(mp) && !no_modify) {
++			need_rbmino = -1;
++			need_rsumino = -1;
++		}
++
+ 		if (status)  {
+ 			if (mp->m_sb.sb_rootino == ino) {
+ 				need_root_inode = 1;
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 52830a85a6f..5c9101fa0b0 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -656,7 +656,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
+ 				break;
+ 			}
+ 		}
+-		if (collect_rmaps) /* && !check_dups */
++		if (collect_rmaps && !zap_metadata) /* && !check_dups */
+ 			rmap_add_rec(mp, ino, whichfork, &irec);
+ 		*tot += irec.br_blockcount;
+ 	}
+@@ -3084,6 +3084,18 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
+ 	 */
+ 	*dirty += process_check_inode_nlink_version(dino, lino);
+ 
++	/*
++	 * The entire metadata directory tree will be rebuilt during phase 6.
++	 * Therefore, if we're at the end of phase 4 and this is a metadata
++	 * file, zero the ondisk inode and the incore state.
++	 */
++	if (check_dups && zap_metadata && !no_modify) {
++		clear_dinode(mp, dino, lino);
++		*dirty += 1;
++		*used = is_free;
++		*isa_dir = 0;
++	}
++
+ 	return retval;
+ 
+ clear_bad_out:
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 9ad586602cb..5eeffd5dce9 100644
+index 5eeffd5dce9..c7cfc371ac2 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -3633,6 +3633,131 @@ update_missing_dotdot_entries(
- 	}
- }
- 
-+/*
-+ * Re-link a quota inode into the metadata directory.  We do not create quota
-+ * inodes or abort repair if we cannot relink the inodes, because quota mount
-+ * can recreate all the quota metadata.
-+ */
-+static int
-+reattach_quota_inode(
-+	struct xfs_mount		*mp,
-+	xfs_ino_t			*inop,
-+	const struct xfs_imeta_path	*path)
-+{
-+	struct xfs_imeta_update		upd;
-+	struct xfs_trans		*tp;
-+	struct xfs_inode		*ip = NULL;
-+	xfs_ino_t			ino = *inop;
-+	int				error;
-+
-+	error = ensure_imeta_dirpath(mp, path);
-+	if (error) {
-+		do_warn(
-+ _("Couldn't create quota metadata directory, error %d\n"), error);
-+		return error;
-+	}
-+
-+	error = -libxfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		do_error(
-+ _("failed to allocate trans to grab quota inode 0x%llx, error %d\n"),
-+				(unsigned long long)ino, error);
-+	error = -libxfs_imeta_iget(tp, ino, XFS_DIR3_FT_REG_FILE, &ip);
-+	libxfs_trans_cancel(tp);
-+	if (error) {
-+		do_warn(
-+ _("Couldn't grab quota inode 0x%llx, error %d\n"),
-+				(unsigned long long)ino, error);
-+		goto out_rele;
-+	}
-+
-+	/*
-+	 * Since we're reattaching this file to the metadata directory tree,
-+	 * try to remove all the parent pointers that might be attached.
-+	 */
-+	try_erase_parent_ptrs(ip);
-+
-+	error = -libxfs_imeta_start_link(mp, path, ip, &upd);
-+	if (error) {
-+		do_warn(
-+ _("Couldn't allocate transaction to attach quota inode 0x%llx, error %d\n"),
-+				(unsigned long long)ino, error);
-+		goto out_rele;
-+	}
-+
-+	/* Null out the superblock pointer and re-link this file into it. */
-+	*inop = NULLFSINO;
-+
-+	error = -libxfs_imeta_link(&upd);
-+	if (error) {
-+		do_warn(
-+ _("Couldn't link quota inode 0x%llx, error %d\n"),
-+				(unsigned long long)ino, error);
-+		goto out_cancel;
-+	}
-+
-+	/* Reset the link count to something sane. */
-+	set_nlink(VFS_I(ip), 1);
-+	libxfs_trans_log_inode(upd.tp, ip, XFS_ILOG_CORE);
-+
-+	error = -libxfs_imeta_commit_update(&upd);
-+	if (error) {
-+		do_warn(
-+_("Couldn't commit quota inode 0x%llx reattachment transaction, error %d\n"),
-+				(unsigned long long)ino, error);
-+	}
-+
-+	goto out_rele;
-+
-+out_cancel:
-+	libxfs_imeta_cancel_update(&upd, error);
-+out_rele:
-+	if (ip)
-+		libxfs_irele(ip);
-+	return error;
-+}
-+
-+/*
-+ * Reattach quota inodes to the metadata directory if we rebuilt the metadata
-+ * directory tree.
-+ */
-+static inline void
-+reattach_metadir_quota_inodes(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
-+
-+	if (!xfs_has_metadir(mp) || no_modify)
-+		return;
-+
-+	if (mp->m_sb.sb_uquotino != NULLFSINO) {
-+		error = reattach_quota_inode(mp, &mp->m_sb.sb_uquotino,
-+				&XFS_IMETA_USRQUOTA);
-+		if (error) {
-+			mp->m_sb.sb_uquotino = NULLFSINO;
-+			lost_uquotino = 1;
-+		}
-+	}
-+
-+	if (mp->m_sb.sb_gquotino != NULLFSINO) {
-+		error = reattach_quota_inode(mp, &mp->m_sb.sb_gquotino,
-+				&XFS_IMETA_GRPQUOTA);
-+		if (error) {
-+			mp->m_sb.sb_gquotino = NULLFSINO;
-+			lost_gquotino = 1;
-+		}
-+	}
-+
-+	if (mp->m_sb.sb_pquotino != NULLFSINO) {
-+		error = reattach_quota_inode(mp, &mp->m_sb.sb_pquotino,
-+				&XFS_IMETA_PRJQUOTA);
-+		if (error) {
-+			mp->m_sb.sb_pquotino = NULLFSINO;
-+			lost_pquotino = 1;
-+		}
-+	}
-+}
-+
- static void
- traverse_ags(
- 	struct xfs_mount	*mp)
-@@ -3718,6 +3843,8 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
+@@ -3798,20 +3798,20 @@ phase6(xfs_mount_t *mp)
  		}
  	}
  
-+	reattach_metadir_quota_inodes(mp);
-+
- 	mark_standalone_inodes(mp);
+-	if (need_metadir_inode) {
+-		if (!no_modify)  {
++	if (!no_modify && xfs_has_metadir(mp))  {
++		if (need_metadir_inode)
+ 			do_warn(_("reinitializing metadata root directory\n"));
+-			mk_metadir(mp);
+-			need_metadir_inode = false;
+-			need_metadir_dotdot = 0;
+-		} else  {
+-			do_warn(_("would reinitialize metadata root directory\n"));
+-		}
++		mk_metadir(mp);
++		need_metadir_inode = false;
++		need_metadir_dotdot = 0;
++	} else if (need_metadir_inode) {
++		do_warn(_("would reinitialize metadata root directory\n"));
+ 	}
  
- 	do_log(_("        - traversing filesystem ...\n"));
+ 	if (need_rbmino)  {
+ 		if (!no_modify)  {
+-			do_warn(_("reinitializing realtime bitmap inode\n"));
++			if (need_rbmino > 0)
++				do_warn(_("reinitializing realtime bitmap inode\n"));
+ 			mk_rbmino(mp);
+ 			need_rbmino = 0;
+ 		} else  {
+@@ -3821,7 +3821,8 @@ phase6(xfs_mount_t *mp)
+ 
+ 	if (need_rsumino)  {
+ 		if (!no_modify)  {
+-			do_warn(_("reinitializing realtime summary inode\n"));
++			if (need_rsumino > 0)
++				do_warn(_("reinitializing realtime summary inode\n"));
+ 			mk_rsumino(mp);
+ 			need_rsumino = 0;
+ 		} else  {
+diff --git a/repair/scan.c b/repair/scan.c
+index c52ace31c2d..3857593b165 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -429,7 +429,7 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+ 	numrecs = be16_to_cpu(block->bb_numrecs);
+ 
+ 	/* Record BMBT blocks in the reverse-mapping data. */
+-	if (check_dups && collect_rmaps) {
++	if (check_dups && collect_rmaps && !zap_metadata) {
+ 		agno = XFS_FSB_TO_AGNO(mp, bno);
+ 		pthread_mutex_lock(&ag_locks[agno].lock);
+ 		rmap_add_bmbt_rec(mp, ino, whichfork, bno);
 
