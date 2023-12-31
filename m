@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C30E1BA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:22:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF0C7BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:22:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o+3jVyFt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 927F0C433C8;
-	Sun, 31 Dec 2023 21:22:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fztm8ASs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3992DC433C7;
+	Sun, 31 Dec 2023 21:22:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704057728;
-	bh=O6z0JlnwMAByEIQvEi57ERslYMQC+6A5kD+BDwbJ+KU=;
+	s=k20201202; t=1704057744;
+	bh=sAU56PLEwzmxqxb/+0DSb8bQRj4qtxqkhfn2gKakUpM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=o+3jVyFtKDo3ZvXJBvuWnqGqo3+QpLIDdS9xWH8QfliTb9Vc0AWnIj5YeztV5dZ9S
-	 z9pGRVw4PuAnn4bkudEpq2VlX7SFRlOvqvrdXFtidfWc63HZJu41nMeLe51OG4bZE1
-	 H6FBAed9DaFJeyTOPlHxvA3Pm7JSIibwgvRTH1HFeaYgYyEyz3+QUysqMgxcSKpAR8
-	 TS5ainuYtUszuMngA7wKN9glY6a9btFhQYC976PkZEFvGaKNKKg2d2cKkvl9f6hJXv
-	 811UVZgmv388RrQ+fPTbFIivdnXd3zLTiBOaCs9hUIVmELS0TSxJ1CL9h3paorl1Mm
-	 v0sKfL+QDYtCg==
-Date: Sun, 31 Dec 2023 13:22:08 -0800
-Subject: [PATCH 1/1] xfs: enable FITRIM on the realtime device
+	b=Fztm8ASsG1lmnF3Uz3ooNtQVgbcctkPMGw+jS4vOpxNQ2q2wOEmIJYmhdzaHtNT/i
+	 2sNZWnSE5dmHfMDKIkk1uuivd/CBE9fZk7bZPAvbhh1ZLSal8ijoOt5GPedU/Ka1Td
+	 Sc9qXi/dBm51YAwRk5zjwm3w+z3pMt3E2NBaw/2wrtLqvjeukN9KqBukV/AJdrrmTK
+	 20zsditF+UTLEUGVRnKEkGdgNCYncB2LT64M9xrpnjbkeGUn0bfi22t8wNXweZhWxK
+	 kJ+2+NMERI16i3ustoUcm7iE9KsbX/1jiLnxXCI889TxK2iW6Nld/D309sLAASA0G1
+	 xyf4gO4BHbLTg==
+Date: Sun, 31 Dec 2023 13:22:23 -0800
+Subject: [PATCH 01/14] xfs: replace shouty XFS_BM{BT,DR} macros
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404846975.1763756.7829043057977943548.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404846958.1763756.2429460281828066199.stgit@frogsfrogsfrogs>
-References: <170404846958.1763756.2429460281828066199.stgit@frogsfrogsfrogs>
+Message-ID: <170404847383.1763835.8300895490518509530.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404847334.1763835.8921217007526026461.stgit@frogsfrogsfrogs>
+References: <170404847334.1763835.8921217007526026461.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,343 +37,673 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Implement FITRIM for the realtime device by pretending that it's
-"space" immediately after the data device.
+Replace all the shouty bmap btree and bmap disk root macros with actual
+functions, and fix a type handling error in the xattr code that the
+macros previously didn't care about.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_discard.c |  225 +++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trace.h   |   29 ++++++
- 2 files changed, 248 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c  |    8 +-
+ fs/xfs/libxfs/xfs_bmap.c       |   40 ++++----
+ fs/xfs/libxfs/xfs_bmap_btree.c |   18 ++--
+ fs/xfs/libxfs/xfs_bmap_btree.h |  204 +++++++++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_inode_fork.c |   30 +++---
+ fs/xfs/libxfs/xfs_trans_resv.c |    2 
+ fs/xfs/scrub/bmap_repair.c     |    2 
+ fs/xfs/scrub/inode_repair.c    |   12 +-
+ fs/xfs/xfs_xchgrange.c         |    4 -
+ 9 files changed, 198 insertions(+), 122 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index d235f60c166c6..6febfd6caa500 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -19,6 +19,7 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
- #include "xfs_health.h"
-+#include "xfs_rtbitmap.h"
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2168747aaa2dc..fee156d72fbac 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -672,7 +672,7 @@ xfs_attr_shortform_bytesfit(
+ 		 */
+ 		if (!dp->i_forkoff && dp->i_df.if_bytes >
+ 		    xfs_default_attroffset(dp))
+-			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
++			dsize = xfs_bmdr_space_calc(MINDBTPTRS);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		/*
+@@ -686,7 +686,7 @@ xfs_attr_shortform_bytesfit(
+ 				return 0;
+ 			return dp->i_forkoff;
+ 		}
+-		dsize = XFS_BMAP_BROOT_SPACE(mp, dp->i_df.if_broot);
++		dsize = xfs_bmap_bmdr_space(dp->i_df.if_broot);
+ 		break;
+ 	}
  
- /*
-  * Notes on an efficient, low latency fstrim algorithm
-@@ -514,6 +515,197 @@ xfs_trim_extents(
+@@ -694,11 +694,11 @@ xfs_attr_shortform_bytesfit(
+ 	 * A data fork btree root must have space for at least
+ 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 	 */
+-	minforkoff = max_t(int64_t, dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
++	minforkoff = max_t(int64_t, dsize, xfs_bmdr_space_calc(MINDBTPTRS));
+ 	minforkoff = roundup(minforkoff, 8) >> 3;
  
+ 	/* attr fork btree root can have at least this many key/ptr pairs */
+-	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
++	maxforkoff = XFS_LITINO(mp) - xfs_bmdr_space_calc(MINABTPTRS);
+ 	maxforkoff = maxforkoff >> 3;	/* rounded down */
+ 
+ 	if (offset >= maxforkoff)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c10ed52433979..da89a76512776 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -79,9 +79,9 @@ xfs_bmap_compute_maxlevels(
+ 	maxleafents = xfs_iext_max_nextents(xfs_has_large_extent_counts(mp),
+ 				whichfork);
+ 	if (whichfork == XFS_DATA_FORK)
+-		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
++		sz = xfs_bmdr_space_calc(MINDBTPTRS);
+ 	else
+-		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
++		sz = xfs_bmdr_space_calc(MINABTPTRS);
+ 
+ 	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
+ 	minleafrecs = mp->m_bmap_dmnr[0];
+@@ -102,8 +102,8 @@ xfs_bmap_compute_attr_offset(
+ 	struct xfs_mount	*mp)
+ {
+ 	if (mp->m_sb.sb_inodesize == 256)
+-		return XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
+-	return XFS_BMDR_SPACE_CALC(6 * MINABTPTRS);
++		return XFS_LITINO(mp) - xfs_bmdr_space_calc(MINABTPTRS);
++	return xfs_bmdr_space_calc(6 * MINABTPTRS);
  }
  
-+#ifdef CONFIG_XFS_RT
-+struct xfs_trim_rtdev {
-+	/* list of rt extents to free */
-+	struct list_head	extent_list;
-+
-+	/* pointer to count of blocks trimmed */
-+	uint64_t		*blocks_trimmed;
-+
-+	/* minimum length that caller allows us to trim */
-+	xfs_rtblock_t		minlen_fsb;
-+
-+	/* restart point for the rtbitmap walk */
-+	xfs_rtxnum_t		restart_rtx;
-+
-+	/* stopping point for the current rtbitmap walk */
-+	xfs_rtxnum_t		stop_rtx;
-+};
-+
-+struct xfs_rtx_busy {
-+	struct list_head	list;
-+	xfs_rtblock_t		bno;
-+	xfs_rtblock_t		length;
-+};
-+
-+static void
-+xfs_discard_free_rtdev_extents(
-+	struct xfs_trim_rtdev	*tr)
+ STATIC int				/* error */
+@@ -276,7 +276,7 @@ xfs_check_block(
+ 	prevp = NULL;
+ 	for( i = 1; i <= xfs_btree_get_numrecs(block); i++) {
+ 		dmxr = mp->m_bmap_dmxr[0];
+-		keyp = XFS_BMBT_KEY_ADDR(mp, block, i);
++		keyp = xfs_bmbt_key_addr(mp, block, i);
+ 
+ 		if (prevp) {
+ 			ASSERT(be64_to_cpu(prevp->br_startoff) <
+@@ -288,15 +288,15 @@ xfs_check_block(
+ 		 * Compare the block numbers to see if there are dups.
+ 		 */
+ 		if (root)
+-			pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, i, sz);
++			pp = xfs_bmap_broot_ptr_addr(mp, block, i, sz);
+ 		else
+-			pp = XFS_BMBT_PTR_ADDR(mp, block, i, dmxr);
++			pp = xfs_bmbt_ptr_addr(mp, block, i, dmxr);
+ 
+ 		for (j = i+1; j <= be16_to_cpu(block->bb_numrecs); j++) {
+ 			if (root)
+-				thispa = XFS_BMAP_BROOT_PTR_ADDR(mp, block, j, sz);
++				thispa = xfs_bmap_broot_ptr_addr(mp, block, j, sz);
+ 			else
+-				thispa = XFS_BMBT_PTR_ADDR(mp, block, j, dmxr);
++				thispa = xfs_bmbt_ptr_addr(mp, block, j, dmxr);
+ 			if (*thispa == *pp) {
+ 				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %lld",
+ 					__func__, j, i,
+@@ -351,7 +351,7 @@ xfs_bmap_check_leaf_extents(
+ 	level = be16_to_cpu(block->bb_level);
+ 	ASSERT(level > 0);
+ 	xfs_check_block(block, mp, 1, ifp->if_broot_bytes);
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
++	pp = xfs_bmap_broot_ptr_addr(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+ 
+ 	ASSERT(bno != NULLFSBLOCK);
+@@ -386,7 +386,7 @@ xfs_bmap_check_leaf_extents(
+ 		 */
+ 
+ 		xfs_check_block(block, mp, 0, 0);
+-		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
++		pp = xfs_bmbt_ptr_addr(mp, block, 1, mp->m_bmap_dmxr[1]);
+ 		bno = be64_to_cpu(*pp);
+ 		if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbno(mp, bno))) {
+ 			xfs_btree_mark_sick(cur);
+@@ -426,14 +426,14 @@ xfs_bmap_check_leaf_extents(
+ 		 * conform with the first entry in this one.
+ 		 */
+ 
+-		ep = XFS_BMBT_REC_ADDR(mp, block, 1);
++		ep = xfs_bmbt_rec_addr(mp, block, 1);
+ 		if (i) {
+ 			ASSERT(xfs_bmbt_disk_get_startoff(&last) +
+ 			       xfs_bmbt_disk_get_blockcount(&last) <=
+ 			       xfs_bmbt_disk_get_startoff(ep));
+ 		}
+ 		for (j = 1; j < num_recs; j++) {
+-			nextp = XFS_BMBT_REC_ADDR(mp, block, j + 1);
++			nextp = xfs_bmbt_rec_addr(mp, block, j + 1);
+ 			ASSERT(xfs_bmbt_disk_get_startoff(ep) +
+ 			       xfs_bmbt_disk_get_blockcount(ep) <=
+ 			       xfs_bmbt_disk_get_startoff(nextp));
+@@ -568,7 +568,7 @@ xfs_bmap_btree_to_extents(
+ 	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
+ 	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0) == 1);
+ 
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, ifp->if_broot_bytes);
++	pp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, ifp->if_broot_bytes);
+ 	cbno = be64_to_cpu(*pp);
+ #ifdef DEBUG
+ 	if (XFS_IS_CORRUPT(cur->bc_mp, !xfs_btree_check_lptr(cur, cbno, 1))) {
+@@ -696,7 +696,7 @@ xfs_bmap_extents_to_btree(
+ 	for_each_xfs_iext(ifp, &icur, &rec) {
+ 		if (isnullstartblock(rec.br_startblock))
+ 			continue;
+-		arp = XFS_BMBT_REC_ADDR(mp, ablock, 1 + cnt);
++		arp = xfs_bmbt_rec_addr(mp, ablock, 1 + cnt);
+ 		xfs_bmbt_disk_set_all(arp, &rec);
+ 		cnt++;
+ 	}
+@@ -706,10 +706,10 @@ xfs_bmap_extents_to_btree(
+ 	/*
+ 	 * Fill in the root key and pointer.
+ 	 */
+-	kp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+-	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
++	kp = xfs_bmbt_key_addr(mp, block, 1);
++	arp = xfs_bmbt_rec_addr(mp, ablock, 1);
+ 	kp->br_startoff = cpu_to_be64(xfs_bmbt_disk_get_startoff(arp));
+-	pp = XFS_BMBT_PTR_ADDR(mp, block, 1, xfs_bmbt_get_maxrecs(cur,
++	pp = xfs_bmbt_ptr_addr(mp, block, 1, xfs_bmbt_get_maxrecs(cur,
+ 						be16_to_cpu(block->bb_level)));
+ 	*pp = cpu_to_be64(args.fsbno);
+ 
+@@ -878,7 +878,7 @@ xfs_bmap_add_attrfork_btree(
+ 
+ 	mp = ip->i_mount;
+ 
+-	if (XFS_BMAP_BMDR_SPACE(block) <= xfs_inode_data_fork_size(ip))
++	if (xfs_bmap_bmdr_space(block) <= xfs_inode_data_fork_size(ip))
+ 		*flags |= XFS_ILOG_DBROOT;
+ 	else {
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+@@ -1145,7 +1145,7 @@ xfs_iread_bmbt_block(
+ 	}
+ 
+ 	/* Copy records into the incore cache. */
+-	frp = XFS_BMBT_REC_ADDR(mp, block, 1);
++	frp = xfs_bmbt_rec_addr(mp, block, 1);
+ 	for (j = 0; j < num_recs; j++, frp++, ir->loaded++) {
+ 		struct xfs_bmbt_irec	new;
+ 		xfs_failaddr_t		fa;
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index fd5fb8abf4448..da63d64f185c8 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -49,10 +49,10 @@ xfs_bmdr_to_bmbt(
+ 	ASSERT(be16_to_cpu(rblock->bb_level) > 0);
+ 	rblock->bb_numrecs = dblock->bb_numrecs;
+ 	dmxr = xfs_bmdr_maxrecs(dblocklen, 0);
+-	fkp = XFS_BMDR_KEY_ADDR(dblock, 1);
+-	tkp = XFS_BMBT_KEY_ADDR(mp, rblock, 1);
+-	fpp = XFS_BMDR_PTR_ADDR(dblock, 1, dmxr);
+-	tpp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, rblocklen);
++	fkp = xfs_bmdr_key_addr(dblock, 1);
++	tkp = xfs_bmbt_key_addr(mp, rblock, 1);
++	fpp = xfs_bmdr_ptr_addr(dblock, 1, dmxr);
++	tpp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, rblocklen);
+ 	dmxr = be16_to_cpu(dblock->bb_numrecs);
+ 	memcpy(tkp, fkp, sizeof(*fkp) * dmxr);
+ 	memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
+@@ -152,10 +152,10 @@ xfs_bmbt_to_bmdr(
+ 	dblock->bb_level = rblock->bb_level;
+ 	dblock->bb_numrecs = rblock->bb_numrecs;
+ 	dmxr = xfs_bmdr_maxrecs(dblocklen, 0);
+-	fkp = XFS_BMBT_KEY_ADDR(mp, rblock, 1);
+-	tkp = XFS_BMDR_KEY_ADDR(dblock, 1);
+-	fpp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, rblocklen);
+-	tpp = XFS_BMDR_PTR_ADDR(dblock, 1, dmxr);
++	fkp = xfs_bmbt_key_addr(mp, rblock, 1);
++	tkp = xfs_bmdr_key_addr(dblock, 1);
++	fpp = xfs_bmap_broot_ptr_addr(mp, rblock, 1, rblocklen);
++	tpp = xfs_bmdr_ptr_addr(dblock, 1, dmxr);
+ 	dmxr = be16_to_cpu(dblock->bb_numrecs);
+ 	memcpy(tkp, fkp, sizeof(*fkp) * dmxr);
+ 	memcpy(tpp, fpp, sizeof(*fpp) * dmxr);
+@@ -672,7 +672,7 @@ xfs_bmbt_maxrecs(
+ 	int			blocklen,
+ 	int			leaf)
+ {
+-	blocklen -= XFS_BMBT_BLOCK_LEN(mp);
++	blocklen -= xfs_bmbt_block_len(mp);
+ 	return xfs_bmbt_block_maxrecs(blocklen, leaf);
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index 151b8491f60ee..62fbc4f7c2c40 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -13,70 +13,6 @@ struct xfs_inode;
+ struct xfs_trans;
+ struct xbtree_ifakeroot;
+ 
+-/*
+- * Btree block header size depends on a superblock flag.
+- */
+-#define XFS_BMBT_BLOCK_LEN(mp) \
+-	(xfs_has_crc(((mp))) ? \
+-		XFS_BTREE_LBLOCK_CRC_LEN : XFS_BTREE_LBLOCK_LEN)
+-
+-#define XFS_BMBT_REC_ADDR(mp, block, index) \
+-	((xfs_bmbt_rec_t *) \
+-		((char *)(block) + \
+-		 XFS_BMBT_BLOCK_LEN(mp) + \
+-		 ((index) - 1) * sizeof(xfs_bmbt_rec_t)))
+-
+-#define XFS_BMBT_KEY_ADDR(mp, block, index) \
+-	((xfs_bmbt_key_t *) \
+-		((char *)(block) + \
+-		 XFS_BMBT_BLOCK_LEN(mp) + \
+-		 ((index) - 1) * sizeof(xfs_bmbt_key_t)))
+-
+-#define XFS_BMBT_PTR_ADDR(mp, block, index, maxrecs) \
+-	((xfs_bmbt_ptr_t *) \
+-		((char *)(block) + \
+-		 XFS_BMBT_BLOCK_LEN(mp) + \
+-		 (maxrecs) * sizeof(xfs_bmbt_key_t) + \
+-		 ((index) - 1) * sizeof(xfs_bmbt_ptr_t)))
+-
+-#define XFS_BMDR_REC_ADDR(block, index) \
+-	((xfs_bmdr_rec_t *) \
+-		((char *)(block) + \
+-		 sizeof(struct xfs_bmdr_block) + \
+-	         ((index) - 1) * sizeof(xfs_bmdr_rec_t)))
+-
+-#define XFS_BMDR_KEY_ADDR(block, index) \
+-	((xfs_bmdr_key_t *) \
+-		((char *)(block) + \
+-		 sizeof(struct xfs_bmdr_block) + \
+-		 ((index) - 1) * sizeof(xfs_bmdr_key_t)))
+-
+-#define XFS_BMDR_PTR_ADDR(block, index, maxrecs) \
+-	((xfs_bmdr_ptr_t *) \
+-		((char *)(block) + \
+-		 sizeof(struct xfs_bmdr_block) + \
+-		 (maxrecs) * sizeof(xfs_bmdr_key_t) + \
+-		 ((index) - 1) * sizeof(xfs_bmdr_ptr_t)))
+-
+-/*
+- * These are to be used when we know the size of the block and
+- * we don't have a cursor.
+- */
+-#define XFS_BMAP_BROOT_PTR_ADDR(mp, bb, i, sz) \
+-	XFS_BMBT_PTR_ADDR(mp, bb, i, xfs_bmbt_maxrecs(mp, sz, 0))
+-
+-#define XFS_BMAP_BROOT_SPACE_CALC(mp, nrecs) \
+-	(int)(XFS_BMBT_BLOCK_LEN(mp) + \
+-	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+-
+-#define XFS_BMAP_BROOT_SPACE(mp, bb) \
+-	(XFS_BMAP_BROOT_SPACE_CALC(mp, be16_to_cpu((bb)->bb_numrecs)))
+-#define XFS_BMDR_SPACE_CALC(nrecs) \
+-	(int)(sizeof(xfs_bmdr_block_t) + \
+-	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+-#define XFS_BMAP_BMDR_SPACE(bb) \
+-	(XFS_BMDR_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
+-
+ /*
+  * Maximum number of bmap btree levels.
+  */
+@@ -120,4 +56,144 @@ unsigned int xfs_bmbt_maxlevels_ondisk(void);
+ int __init xfs_bmbt_init_cur_cache(void);
+ void xfs_bmbt_destroy_cur_cache(void);
+ 
++/*
++ * Btree block header size depends on a superblock flag.
++ */
++static inline size_t
++xfs_bmbt_block_len(struct xfs_mount *mp)
 +{
-+	struct xfs_rtx_busy	*busyp, *n;
++	return xfs_has_crc(mp) ?
++			XFS_BTREE_LBLOCK_CRC_LEN : XFS_BTREE_LBLOCK_LEN;
++}
 +
-+	list_for_each_entry_safe(busyp, n, &tr->extent_list, list) {
-+		list_del_init(&busyp->list);
-+		kfree(busyp);
-+	}
++/* Addresses of key, pointers, and records within an incore bmbt block. */
++
++static inline struct xfs_bmbt_rec *
++xfs_bmbt_rec_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_rec *)
++		((char *)block + xfs_bmbt_block_len(mp) +
++		 (index - 1) * sizeof(struct xfs_bmbt_rec));
++}
++
++static inline struct xfs_bmbt_key *
++xfs_bmbt_key_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_key *)
++		((char *)block + xfs_bmbt_block_len(mp) +
++		 (index - 1) * sizeof(struct xfs_bmbt_key *));
++}
++
++static inline xfs_bmbt_ptr_t *
++xfs_bmbt_ptr_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*block,
++	unsigned int		index,
++	unsigned int		maxrecs)
++{
++	return (xfs_bmbt_ptr_t *)
++		((char *)block + xfs_bmbt_block_len(mp) +
++		 maxrecs * sizeof(struct xfs_bmbt_key) +
++		 (index - 1) * sizeof(xfs_bmbt_ptr_t));
++}
++
++/* Addresses of key, pointers, and records within an ondisk bmbt block. */
++
++static inline struct xfs_bmbt_rec *
++xfs_bmdr_rec_addr(
++	struct xfs_bmdr_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_rec *)
++		((char *)(block + 1) +
++		 (index - 1) * sizeof(struct xfs_bmbt_rec));
++}
++
++static inline struct xfs_bmbt_key *
++xfs_bmdr_key_addr(
++	struct xfs_bmdr_block	*block,
++	unsigned int		index)
++{
++	return (struct xfs_bmbt_key *)
++		((char *)(block + 1) +
++		 (index - 1) * sizeof(struct xfs_bmbt_key));
++}
++
++static inline xfs_bmbt_ptr_t *
++xfs_bmdr_ptr_addr(
++	struct xfs_bmdr_block	*block,
++	unsigned int		index,
++	unsigned int		maxrecs)
++{
++	return (xfs_bmbt_ptr_t *)
++		((char *)(block + 1) +
++		 maxrecs * sizeof(struct xfs_bmbt_key) +
++		 (index - 1) * sizeof(xfs_bmbt_ptr_t));
 +}
 +
 +/*
-+ * Walk the discard list and issue discards on all the busy extents in the
-+ * list. We plug and chain the bios so that we only need a single completion
-+ * call to clear all the busy extents once the discards are complete.
-+ */
-+static int
-+xfs_discard_rtdev_extents(
-+	struct xfs_mount	*mp,
-+	struct xfs_trim_rtdev	*tr)
-+{
-+	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_rtdev_targp);
-+	struct xfs_rtx_busy	*busyp;
-+	struct bio		*bio = NULL;
-+	struct blk_plug		plug;
-+	int			error = 0;
-+
-+	blk_start_plug(&plug);
-+	list_for_each_entry(busyp, &tr->extent_list, list) {
-+		trace_xfs_discard_rtextent(mp, busyp->bno, busyp->length);
-+
-+		error = __blkdev_issue_discard(bdev,
-+				XFS_FSB_TO_BB(mp, busyp->bno),
-+				XFS_FSB_TO_BB(mp, busyp->length),
-+				GFP_NOFS, &bio);
-+		if (error && error != -EOPNOTSUPP) {
-+			xfs_info(mp,
-+	 "discard failed for rtextent [0x%llx,%llu], error %d",
-+				 (unsigned long long)busyp->bno,
-+				 (unsigned long long)busyp->length,
-+				 error);
-+			break;
-+		}
-+	}
-+	xfs_discard_free_rtdev_extents(tr);
-+
-+	if (bio)
-+		submit_bio(bio);
-+	blk_finish_plug(&plug);
-+
-+	return error;
-+}
-+
-+static int
-+xfs_trim_gather_rtextent(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	const struct xfs_rtalloc_rec	*rec,
-+	void				*priv)
-+{
-+	struct xfs_trim_rtdev		*tr = priv;
-+	struct xfs_rtx_busy		*busyp;
-+	xfs_rtblock_t			rbno, rlen;
-+
-+	if (rec->ar_startext > tr->stop_rtx) {
-+		/*
-+		 * If we've scanned a large number of rtbitmap blocks, update
-+		 * the cursor to point at this extent so we restart the next
-+		 * batch from this extent.
-+		 */
-+		tr->restart_rtx = rec->ar_startext;
-+		return -ECANCELED;
-+	}
-+
-+	rbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
-+	rlen = xfs_rtx_to_rtb(mp, rec->ar_extcount);
-+
-+	/* Ignore too small. */
-+	if (rlen < tr->minlen_fsb) {
-+		trace_xfs_discard_rttoosmall(mp, rbno, rlen);
-+		return 0;
-+	}
-+
-+	busyp = kmem_zalloc(sizeof(struct xfs_rtx_busy), 0);
-+	busyp->bno = rbno;
-+	busyp->length = rlen;
-+	INIT_LIST_HEAD(&busyp->list);
-+	list_add_tail(&busyp->list, &tr->extent_list);
-+	*tr->blocks_trimmed += rlen;
-+
-+	tr->restart_rtx = rec->ar_startext + rec->ar_extcount;
-+	return 0;
-+}
-+
-+static int
-+xfs_trim_rtdev_extents(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_daddr_t		minlen,
-+	uint64_t		*blocks_trimmed)
-+{
-+	struct xfs_rtalloc_rec	low = { };
-+	struct xfs_rtalloc_rec	high = { };
-+	struct xfs_trim_rtdev	tr = {
-+		.blocks_trimmed	= blocks_trimmed,
-+		.minlen_fsb	= XFS_BB_TO_FSB(mp, minlen),
-+	};
-+	xfs_daddr_t		rtdev_daddr;
-+	int			error;
-+
-+	INIT_LIST_HEAD(&tr.extent_list);
-+
-+	/* Shift the start and end downwards to match the rt device. */
-+	rtdev_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (start > rtdev_daddr)
-+		start -= rtdev_daddr;
-+	else
-+		start = 0;
-+
-+	if (end <= rtdev_daddr)
-+		return 0;
-+	end -= rtdev_daddr;
-+
-+	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1)
-+		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1;
-+
-+	/* Convert the rt blocks to rt extents */
-+	low.ar_startext = xfs_rtb_to_rtxup(mp, XFS_BB_TO_FSB(mp, start));
-+	high.ar_startext = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSBT(mp, end));
-+
-+	/*
-+	 * Walk the free ranges between low and high.  The query_range function
-+	 * trims the extents returned.
-+	 */
-+	do {
-+		tr.stop_rtx = low.ar_startext +
-+					xfs_rtbitmap_rtx_per_rbmblock(mp);
-+		xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
-+		error = xfs_rtalloc_query_range(mp, NULL, &low, &high,
-+				xfs_trim_gather_rtextent, &tr);
-+		xfs_rtbitmap_unlock_shared(mp, XFS_RBMLOCK_BITMAP);
-+
-+		if (error == -ECANCELED)
-+			error = 0;
-+		if (error) {
-+			xfs_discard_free_rtdev_extents(&tr);
-+			break;
-+		}
-+
-+		if (list_empty(&tr.extent_list))
-+			break;
-+
-+		error = xfs_discard_rtdev_extents(mp, &tr);
-+		if (error)
-+			break;
-+
-+		low.ar_startext = tr.restart_rtx;
-+	} while (!xfs_trim_should_stop() && low.ar_startext <= high.ar_startext);
-+
-+	return error;
-+}
-+#else
-+# define xfs_trim_rtdev_extents(m,s,e,n,b)	(-EOPNOTSUPP)
-+#endif /* CONFIG_XFS_RT */
-+
- /*
-  * trim a range of the filesystem.
-  *
-@@ -522,6 +714,9 @@ xfs_trim_extents(
-  * addressing. FSB addressing is sparse (AGNO|AGBNO), while the incoming format
-  * is a linear address range. Hence we need to use DADDR based conversions and
-  * comparisons for determining the correct offset and regions to trim.
++ * Address of pointers within the incore btree root.
 + *
-+ * The realtime device is mapped into the FITRIM "address space" immediately
-+ * after the data device.
-  */
- int
- xfs_ioc_trim(
-@@ -530,9 +725,12 @@ xfs_ioc_trim(
- {
- 	struct xfs_perag	*pag;
- 	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_ddev_targp);
-+	struct block_device	*rt_bdev = NULL;
- 	unsigned int		granularity = bdev_discard_granularity(bdev);
- 	struct fstrim_range	range;
-+	xfs_rfsblock_t		max_blocks;
- 	xfs_daddr_t		start, end, minlen;
-+	xfs_daddr_t		ddev_end;
- 	xfs_agnumber_t		agno;
- 	uint64_t		blocks_trimmed = 0;
- 	int			error, last_error = 0;
-@@ -542,6 +740,14 @@ xfs_ioc_trim(
- 	if (!bdev_max_discard_sectors(bdev))
- 		return -EOPNOTSUPP;
- 
-+	if (mp->m_rtdev_targp) {
-+		rt_bdev = xfs_buftarg_bdev(mp->m_rtdev_targp);
-+		if (!bdev_max_discard_sectors(rt_bdev))
-+			return -EOPNOTSUPP;
-+		granularity = max(granularity,
-+				  bdev_discard_granularity(rt_bdev));
-+	}
++ * These are to be used when we know the size of the block and
++ * we don't have a cursor.
++ */
++static inline xfs_bmbt_ptr_t *
++xfs_bmap_broot_ptr_addr(
++	struct xfs_mount	*mp,
++	struct xfs_btree_block	*bb,
++	unsigned int		i,
++	unsigned int		sz)
++{
++	return xfs_bmbt_ptr_addr(mp, bb, i, xfs_bmbt_maxrecs(mp, sz, 0));
++}
 +
- 	/*
- 	 * We haven't recovered the log, so we cannot use our bnobt-guided
- 	 * storage zapping commands.
-@@ -561,7 +767,8 @@ xfs_ioc_trim(
- 	 * used by the fstrim application.  In the end it really doesn't
- 	 * matter as trimming blocks is an advisory interface.
++/*
++ * Compute the space required for the incore btree root containing the given
++ * number of records.
++ */
++static inline size_t
++xfs_bmap_broot_space_calc(
++	struct xfs_mount	*mp,
++	unsigned int		nrecs)
++{
++	return xfs_bmbt_block_len(mp) + \
++	       (nrecs * (sizeof(struct xfs_bmbt_key) + sizeof(xfs_bmbt_ptr_t)));
++}
++
++/*
++ * Compute the space required for the incore btree root given the ondisk
++ * btree root block.
++ */
++static inline size_t
++xfs_bmap_broot_space(
++	struct xfs_mount	*mp,
++	struct xfs_bmdr_block	*bb)
++{
++	return xfs_bmap_broot_space_calc(mp, be16_to_cpu(bb->bb_numrecs));
++}
++
++/* Compute the space required for the ondisk root block. */
++static inline size_t
++xfs_bmdr_space_calc(unsigned int nrecs)
++{
++	return sizeof(struct xfs_bmdr_block) +
++	       (nrecs * (sizeof(struct xfs_bmbt_key) + sizeof(xfs_bmbt_ptr_t)));
++}
++
++/*
++ * Compute the space required for the ondisk root block given an incore root
++ * block.
++ */
++static inline size_t
++xfs_bmap_bmdr_space(struct xfs_btree_block *bb)
++{
++	return xfs_bmdr_space_calc(be16_to_cpu(bb->bb_numrecs));
++}
++
+ #endif	/* __XFS_BMAP_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 7e571fcfe9d1a..62cd25ed4c59d 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -181,7 +181,7 @@ xfs_iformat_btree(
+ 
+ 	ifp = xfs_ifork_ptr(ip, whichfork);
+ 	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+-	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
++	size = xfs_bmap_broot_space(mp, dfp);
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
+ 
+@@ -194,7 +194,7 @@ xfs_iformat_btree(
  	 */
--	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
-+	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
-+	if (range.start >= XFS_FSB_TO_B(mp, max_blocks) ||
- 	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
- 	    range.len < mp->m_sb.sb_blocksize)
- 		return -EINVAL;
-@@ -569,12 +776,11 @@ xfs_ioc_trim(
- 	start = BTOBB(range.start);
- 	end = start + BTOBBT(range.len) - 1;
- 
--	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
--		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1;
--
- 	agno = xfs_daddr_to_agno(mp, start);
--	for_each_perag_range(mp, agno, xfs_daddr_to_agno(mp, end), pag) {
--		error = xfs_trim_extents(pag, start, end, minlen,
-+	ddev_end = min_t(xfs_daddr_t, end,
-+			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1);
-+	for_each_perag_range(mp, agno, xfs_daddr_to_agno(mp, ddev_end), pag) {
-+		error = xfs_trim_extents(pag, start, ddev_end, minlen,
- 					  &blocks_trimmed);
- 		if (error)
- 			last_error = error;
-@@ -585,6 +791,13 @@ xfs_ioc_trim(
- 		}
+ 	if (unlikely(ifp->if_nextents <= XFS_IFORK_MAXEXT(ip, whichfork) ||
+ 		     nrecs == 0 ||
+-		     XFS_BMDR_SPACE_CALC(nrecs) >
++		     xfs_bmdr_space_calc(nrecs) >
+ 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+ 		     ifp->if_nextents > ip->i_nblocks) ||
+ 		     level == 0 || level > XFS_BM_MAXLEVELS(mp, whichfork)) {
+@@ -405,7 +405,7 @@ xfs_iroot_realloc(
+ 		 * allocate it now and get out.
+ 		 */
+ 		if (ifp->if_broot_bytes == 0) {
+-			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
++			new_size = xfs_bmap_broot_space_calc(mp, rec_diff);
+ 			ifp->if_broot = kmem_alloc(new_size, KM_NOFS);
+ 			ifp->if_broot_bytes = (int)new_size;
+ 			return;
+@@ -419,15 +419,15 @@ xfs_iroot_realloc(
+ 		 */
+ 		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
+ 		new_max = cur_max + rec_diff;
+-		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
++		new_size = xfs_bmap_broot_space_calc(mp, new_max);
+ 		ifp->if_broot = krealloc(ifp->if_broot, new_size,
+ 					 GFP_NOFS | __GFP_NOFAIL);
+-		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++		op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     ifp->if_broot_bytes);
+-		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++		np = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     (int)new_size);
+ 		ifp->if_broot_bytes = (int)new_size;
+-		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++		ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+ 			xfs_inode_fork_size(ip, whichfork));
+ 		memmove(np, op, cur_max * (uint)sizeof(xfs_fsblock_t));
+ 		return;
+@@ -443,7 +443,7 @@ xfs_iroot_realloc(
+ 	new_max = cur_max + rec_diff;
+ 	ASSERT(new_max >= 0);
+ 	if (new_max > 0)
+-		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
++		new_size = xfs_bmap_broot_space_calc(mp, new_max);
+ 	else
+ 		new_size = 0;
+ 	if (new_size > 0) {
+@@ -452,7 +452,7 @@ xfs_iroot_realloc(
+ 		 * First copy over the btree block header.
+ 		 */
+ 		memcpy(new_broot, ifp->if_broot,
+-			XFS_BMBT_BLOCK_LEN(ip->i_mount));
++			xfs_bmbt_block_len(ip->i_mount));
+ 	} else {
+ 		new_broot = NULL;
  	}
+@@ -464,16 +464,16 @@ xfs_iroot_realloc(
+ 		/*
+ 		 * First copy the records.
+ 		 */
+-		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
+-		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
++		op = (char *)xfs_bmbt_rec_addr(mp, ifp->if_broot, 1);
++		np = (char *)xfs_bmbt_rec_addr(mp, new_broot, 1);
+ 		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
  
-+	if (rt_bdev) {
-+		error = xfs_trim_rtdev_extents(mp, start, end, minlen,
-+				&blocks_trimmed);
-+		if (error)
-+			last_error = error;
-+	}
-+
- 	if (last_error)
- 		return last_error;
+ 		/*
+ 		 * Then copy the pointers.
+ 		 */
+-		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++		op = (char *)xfs_bmap_broot_ptr_addr(mp, ifp->if_broot, 1,
+ 						     ifp->if_broot_bytes);
+-		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
++		np = (char *)xfs_bmap_broot_ptr_addr(mp, new_broot, 1,
+ 						     (int)new_size);
+ 		memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
+ 	}
+@@ -481,7 +481,7 @@ xfs_iroot_realloc(
+ 	ifp->if_broot = new_broot;
+ 	ifp->if_broot_bytes = (int)new_size;
+ 	if (ifp->if_broot)
+-		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++		ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+ 			xfs_inode_fork_size(ip, whichfork));
+ 	return;
+ }
+@@ -654,7 +654,7 @@ xfs_iflush_fork(
+ 		if ((iip->ili_fields & brootflag[whichfork]) &&
+ 		    (ifp->if_broot_bytes > 0)) {
+ 			ASSERT(ifp->if_broot != NULL);
+-			ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++			ASSERT(xfs_bmap_bmdr_space(ifp->if_broot) <=
+ 			        xfs_inode_fork_size(ip, whichfork));
+ 			xfs_bmbt_to_bmdr(mp, ifp->if_broot, ifp->if_broot_bytes,
+ 				(xfs_bmdr_block_t *)cp,
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 0840d5000bf97..83922f5e54aed 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -131,7 +131,7 @@ xfs_calc_inode_res(
+ 		(4 * sizeof(struct xlog_op_header) +
+ 		 sizeof(struct xfs_inode_log_format) +
+ 		 mp->m_sb.sb_inodesize +
+-		 2 * XFS_BMBT_BLOCK_LEN(mp));
++		 2 * xfs_bmbt_block_len(mp));
+ }
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d23566e841cba..063b1ee79de2f 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2506,6 +2506,35 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
- DEFINE_DISCARD_EVENT(xfs_discard_exclude);
- DEFINE_DISCARD_EVENT(xfs_discard_busy);
+ /*
+diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+index a4bb89fdd5106..f005c21770204 100644
+--- a/fs/xfs/scrub/bmap_repair.c
++++ b/fs/xfs/scrub/bmap_repair.c
+@@ -480,7 +480,7 @@ xrep_bmap_iroot_size(
+ {
+ 	ASSERT(level > 0);
  
-+DECLARE_EVENT_CLASS(xfs_rtdiscard_class,
-+	TP_PROTO(struct xfs_mount *mp,
-+		 xfs_rtblock_t rtbno, xfs_rtblock_t len),
-+	TP_ARGS(mp, rtbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_rtblock_t, rtbno)
-+		__field(xfs_rtblock_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_rtdev_targp->bt_dev;
-+		__entry->rtbno = rtbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d rtbno 0x%llx rtbcount 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->rtbno,
-+		  __entry->len)
-+)
-+
-+#define DEFINE_RTDISCARD_EVENT(name) \
-+DEFINE_EVENT(xfs_rtdiscard_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, \
-+		 xfs_rtblock_t rtbno, xfs_rtblock_t len), \
-+	TP_ARGS(mp, rtbno, len))
-+DEFINE_RTDISCARD_EVENT(xfs_discard_rtextent);
-+DEFINE_RTDISCARD_EVENT(xfs_discard_rttoosmall);
-+DEFINE_RTDISCARD_EVENT(xfs_discard_rtrelax);
-+
- /* btree cursor events */
- TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
- TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
+-	return XFS_BMAP_BROOT_SPACE_CALC(cur->bc_mp, nr_this_level);
++	return xfs_bmap_broot_space_calc(cur->bc_mp, nr_this_level);
+ }
+ 
+ /* Update the inode counters. */
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index 2c4209054f41b..30be423b3716e 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -808,7 +808,7 @@ xrep_dinode_bad_bmbt_fork(
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
+ 	level = be16_to_cpu(dfp->bb_level);
+ 
+-	if (nrecs == 0 || XFS_BMDR_SPACE_CALC(nrecs) > dfork_size)
++	if (nrecs == 0 || xfs_bmdr_space_calc(nrecs) > dfork_size)
+ 		return true;
+ 	if (level == 0 || level >= XFS_BM_MAXLEVELS(sc->mp, whichfork))
+ 		return true;
+@@ -820,12 +820,12 @@ xrep_dinode_bad_bmbt_fork(
+ 		xfs_fileoff_t		fileoff;
+ 		xfs_fsblock_t		fsbno;
+ 
+-		fkp = XFS_BMDR_KEY_ADDR(dfp, i);
++		fkp = xfs_bmdr_key_addr(dfp, i);
+ 		fileoff = be64_to_cpu(fkp->br_startoff);
+ 		if (!xfs_verify_fileoff(sc->mp, fileoff))
+ 			return true;
+ 
+-		fpp = XFS_BMDR_PTR_ADDR(dfp, i, dmxr);
++		fpp = xfs_bmdr_ptr_addr(dfp, i, dmxr);
+ 		fsbno = be64_to_cpu(*fpp);
+ 		if (!xfs_verify_fsbno(sc->mp, fsbno))
+ 			return true;
+@@ -1083,7 +1083,7 @@ xrep_dinode_ensure_forkoff(
+ 	struct xfs_bmdr_block	*bmdr;
+ 	struct xfs_scrub	*sc = ri->sc;
+ 	xfs_extnum_t		attr_extents, data_extents;
+-	size_t			bmdr_minsz = XFS_BMDR_SPACE_CALC(1);
++	size_t			bmdr_minsz = xfs_bmdr_space_calc(1);
+ 	unsigned int		lit_sz = XFS_LITINO(sc->mp);
+ 	unsigned int		afork_min, dfork_min;
+ 
+@@ -1135,7 +1135,7 @@ xrep_dinode_ensure_forkoff(
+ 	case XFS_DINODE_FMT_BTREE:
+ 		/* Must have space for btree header and key/pointers. */
+ 		bmdr = XFS_DFORK_PTR(dip, XFS_ATTR_FORK);
+-		afork_min = XFS_BMAP_BROOT_SPACE(sc->mp, bmdr);
++		afork_min = xfs_bmap_broot_space(sc->mp, bmdr);
+ 		break;
+ 	default:
+ 		/* We should never see any other formats. */
+@@ -1185,7 +1185,7 @@ xrep_dinode_ensure_forkoff(
+ 	case XFS_DINODE_FMT_BTREE:
+ 		/* Must have space for btree header and key/pointers. */
+ 		bmdr = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+-		dfork_min = XFS_BMAP_BROOT_SPACE(sc->mp, bmdr);
++		dfork_min = xfs_bmap_broot_space(sc->mp, bmdr);
+ 		break;
+ 	default:
+ 		dfork_min = 0;
+diff --git a/fs/xfs/xfs_xchgrange.c b/fs/xfs/xfs_xchgrange.c
+index d805678e946c1..e8d44e4de5a81 100644
+--- a/fs/xfs/xfs_xchgrange.c
++++ b/fs/xfs/xfs_xchgrange.c
+@@ -566,7 +566,7 @@ xfs_swap_extents_check_format(
+ 	 */
+ 	if (tifp->if_format == XFS_DINODE_FMT_BTREE) {
+ 		if (xfs_inode_has_attr_fork(ip) &&
+-		    XFS_BMAP_BMDR_SPACE(tifp->if_broot) > xfs_inode_fork_boff(ip))
++		    xfs_bmap_bmdr_space(tifp->if_broot) > xfs_inode_fork_boff(ip))
+ 			return -EINVAL;
+ 		if (tifp->if_nextents <= XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+ 			return -EINVAL;
+@@ -575,7 +575,7 @@ xfs_swap_extents_check_format(
+ 	/* Reciprocal target->temp btree format checks */
+ 	if (ifp->if_format == XFS_DINODE_FMT_BTREE) {
+ 		if (xfs_inode_has_attr_fork(tip) &&
+-		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > xfs_inode_fork_boff(tip))
++		    xfs_bmap_bmdr_space(ip->i_df.if_broot) > xfs_inode_fork_boff(tip))
+ 			return -EINVAL;
+ 		if (ifp->if_nextents <= XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+ 			return -EINVAL;
 
