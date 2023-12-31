@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35355B64C
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:39:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D6BB666
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:39:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HNyO+Ucu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A619C433C8;
-	Sun, 31 Dec 2023 19:39:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hflMwMko"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9095DC433C7;
+	Sun, 31 Dec 2023 19:39:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051582;
-	bh=RTiM/SaEk0Eqlw4u1TiR7bWWVtiZ2z2aNHsG6IGToK0=;
+	s=k20201202; t=1704051597;
+	bh=BKiRMj7q4JPUeV98pBtRByANts4WpOtcJ0zjrnXXfd4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HNyO+UcuVIvQ551AGgdzgazwNKJMC0kEpDaGdOM/7FIu/3a1Wc1SsrO6uc9wQ+IR4
-	 5Ik3c0now7WdBvllzCAkWq3Nx0nJ+3DLFgif+DFt8LWRXz1LuPArlmfbm0BCCEpcy+
-	 kGNW8ASnr69QwF6nDrGe7bfFzemLmjFOFpZDqQYPjNfst1sjg3B8fMG7kCOc/pJ09g
-	 pE8J1LtoLHT15S4DtIZ1zHMVFxJ59hDKbaEo5VlblMRFk2rQwAW5NK/gLNqawFqQxI
-	 UPJpko5teUnnnJ1XETniwWLyZH5pe+54y/HhVxC1ot25vJXPr2PSb9x20wNmtMVBLF
-	 y+LIzQDwoxUYA==
-Date: Sun, 31 Dec 2023 11:39:41 -0800
-Subject: [PATCHSET v2 5/5] xfs: aligned file data extent mappings
+	b=hflMwMkoTJ48sDreCTnElj8iIk5ZgKTXQrOO+5ed0GaQ7GhjIZgabm2r6NeE9ounf
+	 xRL1XQ532MDS6oiG3dhvc1oNJBGlvXmiCxnXTzEh0ynv6YYTpfHSNaJfhojfKXxFLp
+	 lWeWO8BbgC7+jGVvjQULuu8bHL1Bn7FRBxRlWhllOfk5tkds/Ry+WIhaVYzmSRqazj
+	 W0Lc4zPoR+kDUFJi2UeN/5Tqk0fQBsDq0KOyRhv7A2SC4fNdHpoLrYkH+WpqPvH7zI
+	 KtN6vjscQznJYHNu61h0lOa8iLoNntNzmdV3kNpnJpsDYxjqhThmBYZGo9jtL6b1FG
+	 39e3vbmN0e5zQ==
+Date: Sun, 31 Dec 2023 11:39:57 -0800
+Subject: [PATCHSET v29.0 01/40] xfs_scrub: fix licensing and copyright notices
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, john.g.garry@oracle.com
-Message-ID: <170404855884.1770028.10371509002317647981.stgit@frogsfrogsfrogs>
-In-Reply-To: <20231231182553.GV361584@frogsfrogsfrogs>
-References: <20231231182553.GV361584@frogsfrogsfrogs>
+To: djwong@kernel.org, cem@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <170404989091.1791307.1449422318127974555.stgit@frogsfrogsfrogs>
+In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
+References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,37 +37,11 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Years ago during the adaptation of XFS to persistent memory, a product
-development team expressed a desire to guarantee that mmap mappings of
-an S_DAX file on pmem would always get a PMD mapping to increase TLB hit
-rates.  That means ensuring that all space allocations are aligned to
-2MB (on x86) and ensuring that the file range of each file space mapping
-are aligned to 2MB.  Then pmem faded.
-
-NVME/SCSI atomic write unit support has brought this discussion back to
-the forefront, because untorn writes to conventional storage only work
-if the space allocations are aligned to the max atomic write unit.  To
-simplify the administrative model a bit, we want to ensure that the
-mappings are aligned to the same value.  IOWs, for a storage device that
-supports up to 64k atomic write units, we want to ensure that the file
-range of all mappings are aligned to 64k.
-
-From a file metadata perspective, these are nearly the same use case.
-The realtime volume already has a realtime extent size field that forces
-the alignment of both space and mapping, but not everyone wants to
-adminster a realtime volume.  This patchset adds a forcealign superblock
-feature and inode flag so that we can impose the same alignment
-restrictions on selected files on the data volume.
-
-IOWs, you can now set an inode flag that causes regular files on the
-data volume to have rextsize-aligned space mappings.  This is an
-improvement over ext4 bigalloc style things that impose the larger
-allocation unit size even for things that don't need it.
-
-Note: Currently this patchset reuses sb_rextsize for the forcealign
-value because that enabled reuse of the COW around code that I wrote for
-realtime reflink that ensures that remapping operations follow
-forcealign.
+Fix various attribution problems in the xfs_scrub source code, such as
+the author's contact information, out of date SPDX tags, and a rough
+estimate of when the feature was under heavy development.  The most
+egregious parts are the files that are missing license information
+completely.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -78,30 +52,55 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=file-force-align
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-fix-legalese
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=file-force-align
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fix-legalese
 ---
- fs/xfs/libxfs/xfs_bmap.c       |   48 +++++++++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_format.h     |   19 +++++++++++++---
- fs/xfs/libxfs/xfs_inode_buf.c  |   36 ++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_buf.h  |    3 +++
- fs/xfs/libxfs/xfs_inode_util.c |   14 ++++++++++++
- fs/xfs/libxfs/xfs_sb.c         |   30 +++++++++++++++++++++++++
- fs/xfs/scrub/inode_repair.c    |   41 ++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/trace.h           |    1 +
- fs/xfs/xfs_bmap_util.c         |    2 --
- fs/xfs/xfs_bmap_util.h         |    4 ++-
- fs/xfs/xfs_inode.c             |    2 +-
- fs/xfs/xfs_inode.h             |    8 ++++++-
- fs/xfs/xfs_ioctl.c             |   14 ++++++++++++
- fs/xfs/xfs_iomap.c             |    4 +++
- fs/xfs/xfs_mount.h             |    2 ++
- fs/xfs/xfs_reflink.c           |   16 ++++++++++---
- fs/xfs/xfs_rtalloc.c           |    4 +++
- fs/xfs/xfs_super.c             |    4 +++
- fs/xfs/xfs_trace.h             |    4 ---
- include/uapi/linux/fs.h        |    2 ++
- 20 files changed, 236 insertions(+), 22 deletions(-)
+ scrub/Makefile                   |    2 +-
+ scrub/common.c                   |    6 +++---
+ scrub/common.h                   |    6 +++---
+ scrub/counter.c                  |    6 +++---
+ scrub/counter.h                  |    6 +++---
+ scrub/descr.c                    |    4 ++--
+ scrub/descr.h                    |    4 ++--
+ scrub/disk.c                     |    6 +++---
+ scrub/disk.h                     |    6 +++---
+ scrub/filemap.c                  |    6 +++---
+ scrub/filemap.h                  |    6 +++---
+ scrub/fscounters.c               |    6 +++---
+ scrub/fscounters.h               |    6 +++---
+ scrub/inodes.c                   |    6 +++---
+ scrub/inodes.h                   |    6 +++---
+ scrub/phase1.c                   |    6 +++---
+ scrub/phase2.c                   |    6 +++---
+ scrub/phase3.c                   |    6 +++---
+ scrub/phase4.c                   |    6 +++---
+ scrub/phase5.c                   |    6 +++---
+ scrub/phase6.c                   |    6 +++---
+ scrub/phase7.c                   |    6 +++---
+ scrub/progress.c                 |    6 +++---
+ scrub/progress.h                 |    6 +++---
+ scrub/read_verify.c              |    6 +++---
+ scrub/read_verify.h              |    6 +++---
+ scrub/repair.c                   |    6 +++---
+ scrub/repair.h                   |    6 +++---
+ scrub/scrub.c                    |    6 +++---
+ scrub/scrub.h                    |    6 +++---
+ scrub/spacemap.c                 |    6 +++---
+ scrub/spacemap.h                 |    6 +++---
+ scrub/unicrash.c                 |    6 +++---
+ scrub/unicrash.h                 |    6 +++---
+ scrub/vfs.c                      |    6 +++---
+ scrub/vfs.h                      |    6 +++---
+ scrub/xfs_scrub.c                |    6 +++---
+ scrub/xfs_scrub.h                |    6 +++---
+ scrub/xfs_scrub@.service.in      |    5 +++++
+ scrub/xfs_scrub_all.cron.in      |    5 +++++
+ scrub/xfs_scrub_all.in           |    6 +++---
+ scrub/xfs_scrub_all.service.in   |    5 +++++
+ scrub/xfs_scrub_all.timer        |    5 +++++
+ scrub/xfs_scrub_fail             |    5 +++++
+ scrub/xfs_scrub_fail@.service.in |    5 +++++
+ 45 files changed, 143 insertions(+), 113 deletions(-)
 
