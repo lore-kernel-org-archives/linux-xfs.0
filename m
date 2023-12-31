@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A7DB65B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:46:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95CCCB666
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:47:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxUQxdkO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D690C433C7;
-	Sun, 31 Dec 2023 19:46:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f0OdS0hg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C7C4C433C7;
+	Sun, 31 Dec 2023 19:47:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052004;
-	bh=6Vs7of+oKMjwlZT7+1zPkUuKmLtyAxS6w/4YkIF4+e4=;
+	s=k20201202; t=1704052020;
+	bh=cPi4AdTpQeaDyWL4q+4tppHVfCqS4X3IPOQKP1yvhTs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gxUQxdkOeR/35b+0Kvpqsz4wrAzk1YHc74ntOhTwnsWB5NCO6tiritkVSiC0YQMNM
-	 6hiZtl/T4JMU5lM2Ryp5WQX0nldjpEX0F9oRW8PzhOw8ALJPMV3WxgudJYjf6l/VZ6
-	 hXhwVQTTL5O29zT7f/h3wDGTsIatx+mLxsnWzdLfskmRV7TTE1RX0SKmPekPAhVCSW
-	 HA7u+3x+RJSdK5YS5Fr+V6AEt7Ru4G/nb14/ymrLjYxhRxkUTnA/L/SBUHNMoCeN6s
-	 9VQlXsBoI3BZxnIambeXVrUS/4waajZ7pTD9B03nUv3ijwAymaIt1r8zA7uDVwYOM2
-	 aJ2aPLlsEPOAQ==
-Date: Sun, 31 Dec 2023 11:46:43 -0800
-Subject: [PATCHSET v29.0 27/40] xfs_scrub: improve warnings about difficult
- repairs
+	b=f0OdS0hgfxjHibSYQeCr71XdtWBqwq6DWFQUHmujnfYdxpW3X+Y3DWLZou8En/9pZ
+	 DkVnvjrynKkOMDedpwcFXYAiG1N7RJa6XaSMjjbjaprruDqf/Wq18xAuKDJOHY+rye
+	 XFTnw/ocPVXdqjAxzecMrW/JpclIdwdBkT/IFsZMflnByPhIvD+KMF6JwCpvnnRbU8
+	 ZIkGiuOrWHH+tCkH18XkLgbN4XVC38OfraYpjUAg/iUs4q6nCEl3f5QBrplK/xwjJI
+	 dcXvXMo036T+boiHd8PvHC9rrS69b6KqkvBpjCS6//zjpfdgcUP/2kBrmzyP3xVYu3
+	 k8VK+ht1fidVA==
+Date: Sun, 31 Dec 2023 11:46:59 -0800
+Subject: [PATCHSET v29.0 28/40] xfs_scrub: track data dependencies for repairs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404999029.1797544.5974682335470417611.stgit@frogsfrogsfrogs>
+Message-ID: <170404999439.1797790.8016278650267736019.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,13 +37,28 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-While I was poking through the QA results for xfs_scrub, I noticed that
-it doesn't warn the user when the primary and secondary realtime
-metadata are so out of whack that the chances of a successful repair are
-not so high.  I decided that it was worth refactoring the scrub code a
-bit so that we could warn the user about these types of things, and
-ended up refactoring unnecessary helpers out of existence and fixing
-other reporting gaps.
+Certain kinds of XFS metadata depend on the correctness of lower level
+metadata.  For example, directory indexes depends on the directory data
+fork, which in turn depend on the directory inode to be correct.  The
+current scrub code does not strictly preserve these dependencies if it
+has to defer a repair until phase 4, because phase 4 prioritizes repairs
+by type (corruption, then cross referencing, and then preening) and
+loses the ordering of in the previous phases.  This leads to absurd
+things like trying to repair a directory before repairing its corrupted
+fork, which is absurd.
+
+To solve this problem, introduce a repair ticket structure to track all
+the repairs pending for a principal object (inode, AG, etc).  This
+reduces memory requirements if an object requires more than one type of
+repair and makes it very easy to track the data dependencies between
+sub-objects of a principal object.  Repair dependencies between object
+types (e.g.  bnobt before inodes) must still be encoded statically into
+phase 4.
+
+A secondary benefit of this new ticket structure is that we can decide
+to attempt a repair of an object A that was flagged for a cross
+referencing error during the scan if a different object B depends on A
+but only B showed definitive signs of corruption.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -55,20 +69,19 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-better-repair-warnings
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-repair-data-deps
 ---
- man/man8/xfs_scrub.8 |   19 ++++++++++++++++++
- scrub/common.c       |    2 ++
- scrub/phase1.c       |    2 +-
- scrub/phase2.c       |   53 +++++++++++++++++++++++++++++++-------------------
- scrub/phase3.c       |   21 ++++++++++++++++----
- scrub/phase4.c       |    9 +++++---
- scrub/phase5.c       |   15 +++++++-------
- scrub/repair.c       |   47 ++++++++++++++++++++++++++++++++++----------
- scrub/repair.h       |   10 +++++++--
- scrub/scrub.c        |   52 +------------------------------------------------
- scrub/scrub.h        |    7 ++-----
- scrub/xfs_scrub.c    |   45 ++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.h    |    1 +
- 13 files changed, 175 insertions(+), 108 deletions(-)
+ libfrog/scrub.c       |    1 
+ scrub/phase1.c        |    9 -
+ scrub/phase2.c        |   46 ++--
+ scrub/phase3.c        |   77 ++++---
+ scrub/phase4.c        |   17 +-
+ scrub/phase5.c        |    9 -
+ scrub/phase7.c        |    9 -
+ scrub/repair.c        |  530 +++++++++++++++++++++++++++++++++----------------
+ scrub/repair.h        |   47 +++-
+ scrub/scrub.c         |  136 ++++++-------
+ scrub/scrub.h         |  108 ++++++++--
+ scrub/scrub_private.h |   37 +++
+ 12 files changed, 664 insertions(+), 362 deletions(-)
 
