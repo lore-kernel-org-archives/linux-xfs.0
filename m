@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA115C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:31:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64181C2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:31:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SZJ7Jc08"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40183C433C8;
-	Sun, 31 Dec 2023 23:31:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ek0DwadF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E814CC433C7;
+	Sun, 31 Dec 2023 23:31:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065485;
-	bh=63A98CUfW5pyOJB5fJTGLvQUOAwEa9LASLOFFX55fbw=;
+	s=k20201202; t=1704065501;
+	bh=8KQtq39YR2qxhC32eAg8QO8jYpaQkf7I69GzF/FlmL4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SZJ7Jc08tCcfkRJATYejbavLy98yAS9xEcqdTCHztun9cNYgqruup3bK58FlKqSMU
-	 Rz5bGwg5bt+9Jg6yjZIV2jxhlb9989zb8qV5d8fMxKlJ1203n5LkZ2eS59MTTDFvBY
-	 z/CB7+hFrTzgSdpXVBJ8kyPgkIHSKt8fGMMIc1E7LGqnkJN4cUA9KcZOvjhVKDDqJo
-	 YlJ8KJT4MCqGBpCx+RwF/dWhUwd4H1U7sSNE0ZM/ahwm0XaK8DtAXuReNF9pWIny1d
-	 ezYNo9iXNU1VkY+cucFb7yBe/MT+dcWJQYrVzGRY1LOYo8142+1pRfcT83lpLlFZWZ
-	 wd4bDZDwVA3Mg==
-Date: Sun, 31 Dec 2023 15:31:24 -0800
-Subject: [PATCH 07/58] xfs: iget for metadata inodes
+	b=Ek0DwadFfa0fhYYxJh3ueWRzsqxfiaNGUjCb2/x4ixlRbBYBIE4zPYn/r23fHWDYd
+	 FW0zVg13XlbV6twCyjIZajnIPmr7PPSi48u/RFQm5UqU9DdzcEzNFBv0WkUGJ6t5pV
+	 qxdj6GYd1IKjWQJSkCuU7fjKICJoFuA/u8HX2COvlxkpAaZZ6cNtkde8b8+8caa9fU
+	 bgNg2x3MqI47UNMgtB2CW+biJM/OtF4Gl78eASS2xp/QzW3Uap3VyZDzo9z0VxV/6b
+	 26amQVwdH4acxztcdSv4FwcEm/QcxmCiwaWo44BCxMUit2VPI+agM4D7Z5XUVJGqvF
+	 K9JK1tNuJEsXw==
+Date: Sun, 31 Dec 2023 15:31:40 -0800
+Subject: [PATCH 08/58] xfs: define the on-disk format for the metadir feature
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010040.1809361.4434787677428532445.stgit@frogsfrogsfrogs>
+Message-ID: <170405010053.1809361.17434100075820339651.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,113 +37,175 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a xfs_iget_meta function for metadata inodes to ensure that we
-always check that the inobt thinks a metadata inode is in use.
+Define the on-disk layout and feature flags for the metadata inode
+directory feature.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c            |    4 ++--
- libxfs/inode.c           |   36 ++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_api_defs.h |    2 ++
- libxfs/xfs_imeta.h       |    5 +++++
- 4 files changed, 45 insertions(+), 2 deletions(-)
+ include/xfs_inode.h     |    5 ++++
+ include/xfs_mount.h     |    2 ++
+ libxfs/xfs_format.h     |   60 +++++++++++++++++++++++++++++++++++++++++------
+ libxfs/xfs_inode_util.c |    2 ++
+ libxfs/xfs_sb.c         |    2 ++
+ 5 files changed, 63 insertions(+), 8 deletions(-)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index c199aeea45e..c0f148e75a2 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -883,9 +883,9 @@ void
- libxfs_rtmount_destroy(xfs_mount_t *mp)
- {
- 	if (mp->m_rsumip)
--		libxfs_irele(mp->m_rsumip);
-+		libxfs_imeta_irele(mp->m_rsumip);
- 	if (mp->m_rbmip)
--		libxfs_irele(mp->m_rbmip);
-+		libxfs_imeta_irele(mp->m_rbmip);
- 	mp->m_rsumip = mp->m_rbmip = NULL;
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 5d7bc69e3ff..1fdae6c1d3a 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -386,6 +386,11 @@ static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
+ 	return false;
  }
  
-diff --git a/libxfs/inode.c b/libxfs/inode.c
-index 47c9b9d6bd7..560b127ee9d 100644
---- a/libxfs/inode.c
-+++ b/libxfs/inode.c
-@@ -225,6 +225,35 @@ libxfs_iget(
- 	return error;
- }
++static inline bool xfs_is_metadir_inode(struct xfs_inode *ip)
++{
++	return ip->i_diflags2 & XFS_DIFLAG2_METADIR;
++}
++
+ extern void	libxfs_trans_inode_alloc_buf (struct xfs_trans *,
+ 				struct xfs_buf *);
  
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index da621f3b992..7dfa94dfd9f 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -175,6 +175,7 @@ typedef struct xfs_mount {
+ #define XFS_FEAT_BIGTIME	(1ULL << 24)	/* large timestamps */
+ #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
+ #define XFS_FEAT_NREXT64	(1ULL << 26)	/* large extent counters */
++#define XFS_FEAT_METADIR	(1ULL << 27)	/* metadata directory tree */
+ 
+ #define __XFS_HAS_FEAT(name, NAME) \
+ static inline bool xfs_has_ ## name (struct xfs_mount *mp) \
+@@ -219,6 +220,7 @@ __XFS_HAS_FEAT(inobtcounts, INOBTCNT)
+ __XFS_HAS_FEAT(bigtime, BIGTIME)
+ __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
+ __XFS_HAS_FEAT(large_extent_counts, NREXT64)
++__XFS_HAS_FEAT(metadir, METADIR)
+ 
+ /* Kernel mount features that we don't support */
+ #define __XFS_UNSUPP_FEAT(name) \
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index c60af436963..7596b928698 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -174,6 +174,16 @@ typedef struct xfs_sb {
+ 	xfs_lsn_t	sb_lsn;		/* last write sequence */
+ 	uuid_t		sb_meta_uuid;	/* metadata file system unique id */
+ 
++	/* Fields beyond here do not match xfs_dsb.  Be very careful! */
++
++	/*
++	 * Metadata Directory Inode.  On disk this lives in the sb_rbmino slot,
++	 * but we continue to use the in-core superblock to cache the classic
++	 * inodes (rt bitmap; rt summary; user, group, and project quotas) so
++	 * we cache the metadir inode value here too.
++	 */
++	xfs_ino_t	sb_metadirino;
++
+ 	/* must be padded to 64 bit alignment */
+ } xfs_sb_t;
+ 
+@@ -190,7 +200,14 @@ struct xfs_dsb {
+ 	uuid_t		sb_uuid;	/* user-visible file system unique id */
+ 	__be64		sb_logstart;	/* starting block of log if internal */
+ 	__be64		sb_rootino;	/* root inode number */
+-	__be64		sb_rbmino;	/* bitmap inode for realtime extents */
++	/*
++	 * bitmap inode for realtime extents.
++	 *
++	 * The metadata directory feature uses the sb_rbmino field to point to
++	 * the root of the metadata directory tree.  All other sb inode
++	 * pointers are no longer used.
++	 */
++	__be64		sb_rbmino;
+ 	__be64		sb_rsumino;	/* summary inode for rt bitmap */
+ 	__be32		sb_rextsize;	/* realtime extent size, blocks */
+ 	__be32		sb_agblocks;	/* size of an allocation group */
+@@ -373,6 +390,7 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+ #define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
+ #define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 6)	/* parent pointers */
++#define XFS_SB_FEAT_INCOMPAT_METADIR	(1U << 31)	/* metadata dir tree */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+ 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+@@ -1109,17 +1127,43 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+ #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+ #define XFS_DIFLAG2_BIGTIME_BIT	3	/* big timestamps */
+-#define XFS_DIFLAG2_NREXT64_BIT 4	/* large extent counters */
++#define XFS_DIFLAG2_NREXT64_BIT	4	/* large extent counters */
++#define XFS_DIFLAG2_METADIR_BIT	63	/* filesystem metadata */
+ 
+-#define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
+-#define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
+-#define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
+-#define XFS_DIFLAG2_BIGTIME	(1 << XFS_DIFLAG2_BIGTIME_BIT)
+-#define XFS_DIFLAG2_NREXT64	(1 << XFS_DIFLAG2_NREXT64_BIT)
++#define XFS_DIFLAG2_DAX		(1ULL << XFS_DIFLAG2_DAX_BIT)
++#define XFS_DIFLAG2_REFLINK	(1ULL << XFS_DIFLAG2_REFLINK_BIT)
++#define XFS_DIFLAG2_COWEXTSIZE	(1ULL << XFS_DIFLAG2_COWEXTSIZE_BIT)
++#define XFS_DIFLAG2_BIGTIME	(1ULL << XFS_DIFLAG2_BIGTIME_BIT)
++#define XFS_DIFLAG2_NREXT64	(1ULL << XFS_DIFLAG2_NREXT64_BIT)
++
 +/*
-+ * Get a metadata inode.  The ftype must match exactly.  Caller must supply
-+ * a transaction (even if empty) to avoid livelocking if the inobt has a cycle.
++ * The inode contains filesystem metadata and can be found through the metadata
++ * directory tree.  Metadata inodes must satisfy the following constraints:
++ *
++ * - V5 filesystem (and ftype) are enabled;
++ * - The only valid modes are regular files and directories;
++ * - The access bits must be zero;
++ * - DMAPI event and state masks are zero;
++ * - The user, group, and project IDs must be zero;
++ * - The immutable, sync, noatime, nodump, nodefrag flags must be set.
++ * - The dax flag must not be set.
++ * - Directories must have nosymlinks set.
++ *
++ * These requirements are chosen defensively to minimize the ability of
++ * userspace to read or modify the contents, should a metadata file ever
++ * escape to userspace.
++ *
++ * There are further constraints on the directory tree itself:
++ *
++ * - Metadata inodes must never be resolvable through the root directory;
++ * - They must never be accessed by userspace;
++ * - Metadata directory entries must have correct ftype.
 + */
-+int
-+libxfs_imeta_iget(
-+	struct xfs_trans	*tp,
-+	xfs_ino_t		ino,
-+	unsigned char		ftype,
-+	struct xfs_inode	**ipp)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_inode	*ip;
-+	int			error;
-+
-+	error = libxfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, &ip);
-+	if (error)
-+		return error;
-+
-+	if (ftype == XFS_DIR3_FT_UNKNOWN ||
-+	    xfs_mode_to_ftype(VFS_I(ip)->i_mode) != ftype) {
-+		libxfs_irele(ip);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	*ipp = ip;
-+	return 0;
-+}
-+
- static void
- libxfs_idestroy(
- 	struct xfs_inode	*ip)
-@@ -258,6 +287,13 @@ libxfs_irele(
- 	}
- }
++#define XFS_DIFLAG2_METADIR	(1ULL << XFS_DIFLAG2_METADIR_BIT)
  
-+void
-+libxfs_imeta_irele(
-+	struct xfs_inode	*ip)
-+{
-+	libxfs_irele(ip);
-+}
-+
- static inline void inode_fsgid_set(struct inode *inode,
- 				   struct mnt_idmap *idmap)
+ #define XFS_DIFLAG2_ANY \
+ 	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
+-	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64)
++	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_METADIR)
+ 
+ static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
  {
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 167617771d8..873995f265c 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -177,6 +177,8 @@
- #define xfs_imeta_commit_update		libxfs_imeta_commit_update
- #define xfs_imeta_create		libxfs_imeta_create
- #define xfs_imeta_create_space_res	libxfs_imeta_create_space_res
-+#define xfs_imeta_iget			libxfs_imeta_iget
-+#define xfs_imeta_irele			libxfs_imeta_irele
- #define xfs_imeta_link			libxfs_imeta_link
- #define xfs_imeta_link_space_res	libxfs_imeta_link_space_res
- #define xfs_imeta_lookup		libxfs_imeta_lookup
-diff --git a/libxfs/xfs_imeta.h b/libxfs/xfs_imeta.h
-index 7b3da865c09..0a4361bda1c 100644
---- a/libxfs/xfs_imeta.h
-+++ b/libxfs/xfs_imeta.h
-@@ -47,4 +47,9 @@ unsigned int xfs_imeta_create_space_res(struct xfs_mount *mp);
- unsigned int xfs_imeta_link_space_res(struct xfs_mount *mp);
- unsigned int xfs_imeta_unlink_space_res(struct xfs_mount *mp);
+diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
+index 19d26950db9..b63aacb6971 100644
+--- a/libxfs/xfs_inode_util.c
++++ b/libxfs/xfs_inode_util.c
+@@ -222,6 +222,8 @@ xfs_inode_inherit_flags2(
+ 	}
+ 	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
+ 		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
++	if (pip->i_diflags2 & XFS_DIFLAG2_METADIR)
++		ip->i_diflags2 |= XFS_DIFLAG2_METADIR;
  
-+/* Must be implemented by the libxfs client */
-+int xfs_imeta_iget(struct xfs_trans *tp, xfs_ino_t ino, unsigned char ftype,
-+		struct xfs_inode **ipp);
-+void xfs_imeta_irele(struct xfs_inode *ip);
-+
- #endif /* __XFS_IMETA_H__ */
+ 	/* Don't let invalid cowextsize hints propagate. */
+ 	failaddr = xfs_inode_validate_cowextsize(ip->i_mount, ip->i_cowextsize,
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index d150170d87b..49d62281995 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -176,6 +176,8 @@ xfs_sb_version_to_features(
+ 		features |= XFS_FEAT_NREXT64;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_PARENT)
+ 		features |= XFS_FEAT_PARENT;
++	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)
++		features |= XFS_FEAT_METADIR;
+ 
+ 	return features;
+ }
 
