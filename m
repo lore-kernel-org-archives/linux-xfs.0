@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 362631171B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:56:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA76111704
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:57:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ITq7QEzW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08DC3C433C8;
-	Sun, 31 Dec 2023 21:56:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iQM578Bo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9F1DC433C8;
+	Sun, 31 Dec 2023 21:57:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704059810;
-	bh=gZYA1weZfJ3HP/d7VEAjufvv33VpmlWVw4WZno1SNsY=;
+	s=k20201202; t=1704059825;
+	bh=vg76k9acyABRI+YhTu1zMJQdFknTjOSlaq0rncKsg04=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ITq7QEzWGlIKHkZ6KCqDeAlyTeqhV8KYdmbJ4EV9mct6TYjLYb7i/UH7sKyUz4Dw1
-	 KsNzANGa5pqlZyeVHg+7T+RjV+mxF3sI/jy5Vt6rqSC7Z6BBsVwtF7u6MJoetO8zv4
-	 IzvgSn8u5h9NTsQYs6nvWXXwC3CDIFOEB5qQ1ZOqK2imgFXOuRsMifL6o/2Wbn2Pzf
-	 xF2HRcahtMW5IpRWQGQ12JNlkZwBwCFOr/iRSQSuGeSP7S+2sViytZ+tXPSAd9QfAu
-	 5xySjwYOb8e9KGoLS4nxTHhhaqgi0+thIkfrytAjPjhW9oGZqBj/R4PK0m4UZqDO2R
-	 ffFZjSRlNNI2Q==
-Date: Sun, 31 Dec 2023 13:56:49 -0800
-Subject: [PATCH 3/9] xfs: forcibly convert unwritten blocks within an rt
- extent before sharing
+	b=iQM578BoCxjmo6MCYdVbSW+bmBV4K+Y7uhk7SFl4i/ZcrshJdTz6aX2H7Cy973qPS
+	 mr+n5fdnftj0r+v0skDDpO29QChKnDt4hJXJvZ0imdk68FMQQLs/qNbYUtvFNgEAEf
+	 w0CyLCtkkJvckDGyWFCgtKO1ZfXiyHDWlHC7jhQiuxO/RIR9qzeTCeLbCr81w6RTXD
+	 U8H5iuWyBitB6PIaNPGpguj3E4gCL5dxR6PTEpUQKftFZ8DRXXO3yY7A0eQUnK4idI
+	 /fHIjKvLOK2XIsuQYPPmBuNr23s4Q9gl7TtKbM1tX6AYQrD5Gp5ywRJsSLuDsIFxUI
+	 y6lA3qH0/OR1A==
+Date: Sun, 31 Dec 2023 13:57:05 -0800
+Subject: [PATCH 4/9] xfs: add some tracepoints for writeback
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404852719.1767395.5382072798264653253.stgit@frogsfrogsfrogs>
+Message-ID: <170404852735.1767395.8058627554300848243.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404852650.1767395.17654728220580066333.stgit@frogsfrogsfrogs>
 References: <170404852650.1767395.17654728220580066333.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,50 +37,102 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-As noted in the previous patch, XFS can only unmap and map full rt
-extents.  This means that we cannot stop mid-extent for any reason,
-including stepping around unwritten/written extents.  Second, the
-reflink and CoW mechanisms were not designed to handle shared unwritten
-extents, so we have to do something to get rid of them.
-
-If the user asks us to remap two files, we must scan both ranges
-beforehand to convert any unwritten extents that are not aligned to rt
-extent boundaries into zeroed written extents before sharing.
+Add a tracepoint so I can see where writeback is initiated.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_reflink.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ fs/xfs/xfs_aops.c  |   19 ++++++++++++-------
+ fs/xfs/xfs_trace.h |   34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index d5773f9b7ec54..5d68603506f27 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1693,6 +1693,25 @@ xfs_reflink_remap_prep(
- 	if (ret)
- 		goto out_unlock;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 3001ddf48d6c6..1217ce197ad98 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -497,10 +497,11 @@ static const struct iomap_writeback_ops xfs_writeback_ops = {
  
-+	/*
-+	 * Now that we've marked both inodes for reflink, make sure that all
-+	 * allocation units (AU) mapped into either files' ranges are either
-+	 * wholly written, wholly unwritten, or holes.  The bmap code requires
-+	 * that we align all unmap and remap requests to an AU.  We've already
-+	 * flushed the page cache and finished directio for the range that's
-+	 * being remapped, so we can convert the mappings directly.
-+	 */
-+	if (xfs_inode_has_bigallocunit(src)) {
-+		ret = xfs_convert_bigalloc_file_space(src, pos_in, *len);
-+		if (ret)
-+			goto out_unlock;
-+	}
-+	if (xfs_inode_has_bigallocunit(dest)) {
-+		ret = xfs_convert_bigalloc_file_space(dest, pos_out, *len);
-+		if (ret)
-+			goto out_unlock;
-+	}
-+
+ STATIC int
+ xfs_vm_writepages(
+-	struct address_space	*mapping,
+-	struct writeback_control *wbc)
++	struct address_space		*mapping,
++	struct writeback_control	*wbc)
+ {
+-	struct xfs_writepage_ctx wpc = { };
++	struct xfs_writepage_ctx	wpc = { };
++	struct xfs_inode		*ip = XFS_I(mapping->host);
+ 
  	/*
- 	 * If pos_out > EOF, we may have dirtied blocks between EOF and
- 	 * pos_out. In that case, we need to extend the flush and unmap to cover
+ 	 * Writing back data in a transaction context can result in recursive
+@@ -509,16 +510,20 @@ xfs_vm_writepages(
+ 	if (WARN_ON_ONCE(current->journal_info))
+ 		return 0;
+ 
+-	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
++	trace_xfs_vm_writepages(ip, wbc);
++
++	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+ }
+ 
+ STATIC int
+ xfs_dax_writepages(
+-	struct address_space	*mapping,
+-	struct writeback_control *wbc)
++	struct address_space		*mapping,
++	struct writeback_control	*wbc)
+ {
+-	struct xfs_inode	*ip = XFS_I(mapping->host);
++	struct xfs_inode		*ip = XFS_I(mapping->host);
++
++	trace_xfs_dax_writepages(ip, wbc);
+ 
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 	return dax_writeback_mapping_range(mapping,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 643cffaf3add2..39df20ae702c8 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1552,6 +1552,40 @@ DEFINE_IMAP_EVENT(xfs_map_blocks_alloc);
+ DEFINE_IMAP_EVENT(xfs_iomap_alloc);
+ DEFINE_IMAP_EVENT(xfs_iomap_found);
+ 
++DECLARE_EVENT_CLASS(xfs_writeback_class,
++	TP_PROTO(struct xfs_inode *ip, const struct writeback_control *wbc),
++	TP_ARGS(ip, wbc),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(loff_t, range_start)
++		__field(loff_t, range_end)
++		__field(long, nr_to_write)
++		__field(enum writeback_sync_modes, sync_mode)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->range_start = wbc->range_start;
++		__entry->range_end = wbc->range_end;
++		__entry->nr_to_write = wbc->nr_to_write;
++		__entry->sync_mode = wbc->sync_mode;
++	),
++	TP_printk("dev %d:%d ino 0x%llx range_start 0x%llx range_end 0x%llx nr_to_write %ld sync_mode %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		   __entry->ino,
++		   __entry->range_start,
++		   __entry->range_end,
++		   __entry->nr_to_write,
++		   __entry->sync_mode)
++);
++#define DEFINE_WRITEBACK_EVENT(name)	\
++DEFINE_EVENT(xfs_writeback_class, name,	\
++	TP_PROTO(struct xfs_inode *ip, const struct writeback_control *wbc), \
++	TP_ARGS(ip, wbc))
++DEFINE_WRITEBACK_EVENT(xfs_vm_writepages);
++DEFINE_WRITEBACK_EVENT(xfs_dax_writepages);
++
+ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, u64 count),
+ 	TP_ARGS(ip, offset, count),
 
