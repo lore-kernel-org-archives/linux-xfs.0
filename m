@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B76F6BA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:16:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 668B9BA34
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:16:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F00fmvL/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E516C433C7;
-	Sun, 31 Dec 2023 21:16:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FpZn8kaS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39D76C433C7;
+	Sun, 31 Dec 2023 21:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704057368;
-	bh=7NthETXwYqJ3xi4zCJ2GKeS+oauegPfCKEDhRhHiLMM=;
+	s=k20201202; t=1704057384;
+	bh=hTnBwbjAGPp3cUhG0nBI7bBdP1hH/Qzze5u5eXauiug=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=F00fmvL/atVzSsfVefeQ9xzkyo6EIHeNqr03VKCLJxzGuMC9G8v6aL9tqCzWd2viJ
-	 SP7vSHSsVWUMZVbbdlqGILBeMSHOxxB7cu8fUMW+ckjOtC+IgJJM7VbmpDIn7gjLfq
-	 pFpKWk0JDm9bQESKKSDu0IcZaedC0KW3wVvcDrM0sSE5nZk+V6tWazbai/P6XoaKVW
-	 fqRQ3qotwL2Uuz2zwAKA9JTbhSvAocYwZtSlIjpiVM76yaEMGp9qQEkMGG8g7igO/L
-	 YfoAxpvtSTXKIwydO4XDJZrKNuU41oksFAnzRkgV2plx3SEJJ9QowtSOoSFFX0CpeF
-	 7IN+kwaVFGT8g==
-Date: Sun, 31 Dec 2023 13:16:08 -0800
-Subject: [PATCH 02/24] xfs: define the format of rt groups
+	b=FpZn8kaSypib2sNdTL02eq60eeU/ND+AKnGC1PtDyBXEaHuYiZY2RaJh1dpEFpHRc
+	 cpILh39z4x13hZxJmC9uhVP6/Y4G1rI38IRQQ4iLv9RrtP+6d2b/yPIjXa+T+kK26N
+	 xazF69jezk7SxeNBMBfNunudJLpClCStqVWbKAQ8+nbSFEM8ywLzhtgH6WaEjrxHvI
+	 cM5CCqyJtXa3yZNAyLBBdaZnPJiST0RcWPnRp1Rv1OhEBBVrBSiUjulsCKucON+cpg
+	 o94uAkumZZQsh/Ic7YT1VDw7PYjDrI4iinyBHHvKktKWbdW1nl1Sr9VGHfwl1yRpgY
+	 UJIXQ8PJrjzuw==
+Date: Sun, 31 Dec 2023 13:16:23 -0800
+Subject: [PATCH 03/24] xfs: reduce rt summary file levels for rtgroups
+ filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404846274.1763124.9559567871299782407.stgit@frogsfrogsfrogs>
+Message-ID: <170404846290.1763124.4226770473396031658.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 References: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,472 +38,152 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Define the ondisk format of realtime group metadata.
+The rt summary file is supposed to be large enough to track the number
+of log2(rtextentcount) free space extents that start in a given rt
+bitmap block.  Prior to rt groups, there could be a single 2^52 block
+free extent, which implies a summary file with 53 levels.
+
+However, each rtgroup uses its first rt extent to hold a superblock,
+so there can't be any free extents longer than the length of a group.
+Groups are limited to 2^32-1 blocks, which means that the longest
+freespace will be counted in level 31.  Hence we only need 32 levels.
+
+Adjust the rextslog computation to create smaller rt summary files for
+rtgroups filesystems.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h  |   62 +++++++++++++++++++++++++++-
- fs/xfs/libxfs/xfs_ondisk.h  |    1 
- fs/xfs/libxfs/xfs_rtgroup.c |   96 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtgroup.h |   83 +++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_sb.c      |   86 +++++++++++++++++++++++++++++++++++++--
- fs/xfs/libxfs/xfs_shared.h  |    1 
- 6 files changed, 324 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_format.h   |    2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c |   11 +++++++++++
+ fs/xfs/libxfs/xfs_rtbitmap.h |    4 ++--
+ fs/xfs/libxfs/xfs_sb.c       |    2 +-
+ fs/xfs/scrub/rtbitmap.c      |    2 +-
+ fs/xfs/scrub/rtsummary.c     |    2 +-
+ fs/xfs/xfs_rtalloc.c         |    5 +++--
+ 7 files changed, 20 insertions(+), 8 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 3bd93c01bf4bf..8debe92571692 100644
+index 8debe92571692..43e66740e2aec 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -216,7 +216,17 @@ struct xfs_dsb {
- 	 * pointers are no longer used.
- 	 */
- 	__be64		sb_rbmino;
--	__be64		sb_rsumino;	/* summary inode for rt bitmap */
+@@ -313,7 +313,7 @@ struct xfs_dsb {
+ 
+ #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
+ 
+-static inline bool xfs_sb_is_v5(struct xfs_sb *sbp)
++static inline bool xfs_sb_is_v5(const struct xfs_sb *sbp)
+ {
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+ }
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 795035556c4b4..a8e5c702a7515 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1144,10 +1144,21 @@ xfs_rtbitmap_blockcount(
+  */
+ uint8_t
+ xfs_compute_rextslog(
++	const struct xfs_sb	*sbp,
+ 	xfs_rtbxlen_t		rtextents)
+ {
+ 	if (!rtextents)
+ 		return 0;
++
 +	/*
-+	 * rtgroups requires metadir, so we reuse the rsumino space to hold
-+	 * the rg block count and shift values.
++	 * Realtime groups are never larger than 2^32 extents and are never
++	 * fully free, so we can use highbit32 on the number of rtextents per
++	 * group.
 +	 */
-+	union {
-+		__be64	sb_rsumino;	/* summary inode for rt bitmap */
-+		struct {
-+			__be32	sb_rgcount;	/* # of realtime groups */
-+			__be32	sb_rgblocks;	/* rtblocks per group */
-+		};
-+	};
- 	__be32		sb_rextsize;	/* realtime extent size, blocks */
- 	__be32		sb_agblocks;	/* size of an allocation group */
- 	__be32		sb_agcount;	/* number of allocation groups */
-@@ -398,6 +408,7 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
- #define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
- #define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 6)	/* parent pointers */
-+#define XFS_SB_FEAT_INCOMPAT_RTGROUPS	(1U << 30)	/* realtime groups */
- #define XFS_SB_FEAT_INCOMPAT_METADIR	(1U << 31)	/* metadata dir tree */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
-@@ -752,6 +763,55 @@ union xfs_suminfo_raw {
- 	__u32		old;
- };
- 
-+/*
-+ * Realtime allocation groups break the rt section into multiple pieces that
-+ * could be locked independently.  Realtime block group numbers are 32-bit
-+ * quantities.  Block numbers within a group are also 32-bit quantities, but
-+ * the upper bit must never be set.
-+ */
-+#define XFS_MAX_RGBLOCKS	((xfs_rgblock_t)(1U << 31) - 1)
-+#define XFS_MAX_RGNUMBER	((xfs_rgnumber_t)(-1U))
++	if (xfs_sb_is_v5(sbp) &&
++	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS))
++		return xfs_highbit32(sbp->sb_rgblocks / sbp->sb_rextsize);
 +
-+#define XFS_RTSB_MAGIC	0x58524750	/* 'XRGP' */
-+
-+/*
-+ * Realtime superblock - on disk version.  Must be padded to 64 bit alignment.
-+ * The first block of each realtime group contains this superblock; this is
-+ * how we avoid having file data extents cross a group boundary.
-+ */
-+struct xfs_rtsb {
-+	__be32		rsb_magicnum;	/* magic number == XFS_RTSB_MAGIC */
-+	__be32		rsb_blocksize;	/* logical block size, bytes */
-+	__be64		rsb_rblocks;	/* number of realtime blocks */
-+
-+	__be64		rsb_rextents;	/* number of realtime extents */
-+	__be64		rsb_lsn;	/* last write sequence */
-+
-+	__be32		rsb_rgcount;	/* # of realtime groups */
-+	unsigned char	rsb_fname[XFSLABEL_MAX]; /* rt volume name */
-+
-+	uuid_t		rsb_uuid;	/* user-visible file system unique id */
-+
-+	__be32		rsb_rextsize;	/* realtime extent size, blocks */
-+	__be32		rsb_rbmblocks;	/* number of rt bitmap blocks */
-+
-+	__be32		rsb_rgblocks;	/* rt blocks per group */
-+	__u8		rsb_blocklog;	/* log2 of sb_blocksize */
-+	__u8		rsb_sectlog;	/* log2 of sb_sectsize */
-+	__u8		rsb_rextslog;	/* log2 of sb_rextents */
-+	__u8		rsb_pad;
-+
-+	__le32		rsb_crc;	/* superblock crc */
-+	__le32		rsb_pad2;
-+
-+	uuid_t		rsb_meta_uuid;	/* metadata file system unique id */
-+
-+	/* must be padded to 64 bit alignment */
-+};
-+
-+#define XFS_RTSB_CRC_OFF	offsetof(struct xfs_rtsb, rsb_crc)
-+#define XFS_RTSB_DADDR		((xfs_daddr_t)0) /* daddr in rt section */
-+
- /*
-  * XFS Timestamps
-  * ==============
-diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
-index 832d96f0f3c54..65219d4cf99ca 100644
---- a/fs/xfs/libxfs/xfs_ondisk.h
-+++ b/fs/xfs/libxfs/xfs_ondisk.h
-@@ -53,6 +53,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			104);
- 
- 	/* dir/attr trees */
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-index caa82c4813038..a82dd23cf0c79 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.c
-+++ b/fs/xfs/libxfs/xfs_rtgroup.c
-@@ -28,6 +28,7 @@
- #include "xfs_trace.h"
- #include "xfs_inode.h"
- #include "xfs_icache.h"
-+#include "xfs_buf_item.h"
- #include "xfs_rtgroup.h"
- #include "xfs_rtbitmap.h"
- 
-@@ -249,3 +250,98 @@ xfs_rtgroup_block_count(
- 	return __xfs_rtgroup_block_count(mp, rgno, mp->m_sb.sb_rgcount,
- 			mp->m_sb.sb_rblocks);
- }
-+
-+static xfs_failaddr_t
-+xfs_rtsb_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_rtsb		*rsb = bp->b_addr;
-+
-+	if (!xfs_verify_magic(bp, rsb->rsb_magicnum))
-+		return __this_address;
-+	if (be32_to_cpu(rsb->rsb_blocksize) != mp->m_sb.sb_blocksize)
-+		return __this_address;
-+	if (be64_to_cpu(rsb->rsb_rblocks) != mp->m_sb.sb_rblocks)
-+		return __this_address;
-+
-+	if (be64_to_cpu(rsb->rsb_rextents) != mp->m_sb.sb_rextents)
-+		return __this_address;
-+
-+	if (!uuid_equal(&rsb->rsb_uuid, &mp->m_sb.sb_uuid))
-+		return __this_address;
-+
-+	if (be32_to_cpu(rsb->rsb_rgcount) != mp->m_sb.sb_rgcount)
-+		return __this_address;
-+
-+	if (be32_to_cpu(rsb->rsb_rextsize) != mp->m_sb.sb_rextsize)
-+		return __this_address;
-+	if (be32_to_cpu(rsb->rsb_rbmblocks) != mp->m_sb.sb_rbmblocks)
-+		return __this_address;
-+
-+	if (be32_to_cpu(rsb->rsb_rgblocks) != mp->m_sb.sb_rgblocks)
-+		return __this_address;
-+	if (rsb->rsb_blocklog != mp->m_sb.sb_blocklog)
-+		return __this_address;
-+	if (rsb->rsb_sectlog != mp->m_sb.sb_sectlog)
-+		return __this_address;
-+	if (rsb->rsb_rextslog != mp->m_sb.sb_rextslog)
-+		return __this_address;
-+	if (rsb->rsb_pad)
-+		return __this_address;
-+
-+	if (rsb->rsb_pad2)
-+		return __this_address;
-+
-+	if (!uuid_equal(&rsb->rsb_meta_uuid, &mp->m_sb.sb_meta_uuid))
-+		return __this_address;
-+
-+	/* Everything to the end of the fs block must be zero */
-+	if (memchr_inv(rsb + 1, 0, BBTOB(bp->b_length) - sizeof(*rsb)))
-+		return __this_address;
-+
-+	return NULL;
-+}
-+
-+static void
-+xfs_rtsb_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	xfs_failaddr_t	fa;
-+
-+	if (!xfs_buf_verify_cksum(bp, XFS_RTSB_CRC_OFF))
-+		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
-+	else {
-+		fa = xfs_rtsb_verify(bp);
-+		if (fa)
-+			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
-+	}
-+}
-+
-+static void
-+xfs_rtsb_write_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_rtsb		*rsb = bp->b_addr;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
-+	xfs_failaddr_t		fa;
-+
-+	fa = xfs_rtsb_verify(bp);
-+	if (fa) {
-+		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
-+		return;
-+	}
-+
-+	if (bip)
-+		rsb->rsb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+
-+	xfs_buf_update_cksum(bp, XFS_RTSB_CRC_OFF);
-+}
-+
-+const struct xfs_buf_ops xfs_rtsb_buf_ops = {
-+	.name = "xfs_rtsb",
-+	.magic = { 0, cpu_to_be32(XFS_RTSB_MAGIC) },
-+	.verify_read = xfs_rtsb_read_verify,
-+	.verify_write = xfs_rtsb_write_verify,
-+	.verify_struct = xfs_rtsb_verify,
-+};
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-index 2f0a670217c48..924c8c95acbc3 100644
---- a/fs/xfs/libxfs/xfs_rtgroup.h
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -122,6 +122,89 @@ xfs_verify_rgbext(
- 	return xfs_verify_rgbno(rtg, rgbno + len - 1);
+ 	return xfs_highbit64(rtextents);
  }
  
-+static inline xfs_rtblock_t
-+xfs_rgbno_to_rtb(
-+	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno,
-+	xfs_rgblock_t		rgbno)
-+{
-+	ASSERT(xfs_has_rtgroups(mp));
-+
-+	if (mp->m_rgblklog >= 0)
-+		return ((xfs_rtblock_t)rgno << mp->m_rgblklog) | rgbno;
-+
-+	return ((xfs_rtblock_t)rgno * mp->m_sb.sb_rgblocks) + rgbno;
-+}
-+
-+static inline xfs_rgnumber_t
-+xfs_rtb_to_rgno(
-+	struct xfs_mount	*mp,
-+	xfs_rtblock_t		rtbno)
-+{
-+	ASSERT(xfs_has_rtgroups(mp));
-+
-+	if (mp->m_rgblklog >= 0)
-+		return rtbno >> mp->m_rgblklog;
-+
-+	return div_u64(rtbno, mp->m_sb.sb_rgblocks);
-+}
-+
-+static inline xfs_rgblock_t
-+xfs_rtb_to_rgbno(
-+	struct xfs_mount	*mp,
-+	xfs_rtblock_t		rtbno,
-+	xfs_rgnumber_t		*rgno)
-+{
-+	uint32_t		rem;
-+
-+	ASSERT(xfs_has_rtgroups(mp));
-+
-+	if (mp->m_rgblklog >= 0) {
-+		*rgno = rtbno >> mp->m_rgblklog;
-+		return rtbno & mp->m_rgblkmask;
-+	}
-+
-+	*rgno = div_u64_rem(rtbno, mp->m_sb.sb_rgblocks, &rem);
-+	return rem;
-+}
-+
-+static inline xfs_daddr_t
-+xfs_rtb_to_daddr(
-+	struct xfs_mount	*mp,
-+	xfs_rtblock_t		rtbno)
-+{
-+	return rtbno << mp->m_blkbb_log;
-+}
-+
-+static inline xfs_rtblock_t
-+xfs_daddr_to_rtb(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		daddr)
-+{
-+	return daddr >> mp->m_blkbb_log;
-+}
-+
-+static inline xfs_rgnumber_t
-+xfs_daddr_to_rgno(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		daddr)
-+{
-+	xfs_rtblock_t		rtb = daddr >> mp->m_blkbb_log;
-+
-+	return xfs_rtb_to_rgno(mp, rtb);
-+}
-+
-+static inline xfs_rgblock_t
-+xfs_daddr_to_rgbno(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		daddr)
-+{
-+	xfs_rtblock_t		rtb = daddr >> mp->m_blkbb_log;
-+	xfs_rgnumber_t		rgno;
-+
-+	return xfs_rtb_to_rgbno(mp, rtb, &rgno);
-+}
-+
- #ifdef CONFIG_XFS_RT
- xfs_rgblock_t xfs_rtgroup_block_count(struct xfs_mount *mp,
- 		xfs_rgnumber_t rgno);
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 6ac17f0195ea1..3de0ec2d24123 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -351,7 +351,7 @@ xfs_rtfree_extent(
+ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
+ 		xfs_filblks_t rtlen);
+ 
+-uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
++uint8_t xfs_compute_rextslog(const struct xfs_sb *sbp, xfs_rtbxlen_t rtextents);
+ 
+ /* Do we support an rt volume having this number of rtextents? */
+ static inline bool
+@@ -396,7 +396,7 @@ void xfs_rtbitmap_unlock_shared(struct xfs_mount *mp,
+ # define xfs_rtsummary_read_buf(a,b)			(-ENOSYS)
+ # define xfs_rtbuf_cache_relse(a)			(0)
+ # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
+-# define xfs_compute_rextslog(rtx)			(0)
++# define xfs_compute_rextslog(sbp, rtx)			(0)
+ # define xfs_validate_rtextents(rtx)			(false)
+ static inline xfs_filblks_t
+ xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
 diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 88402cb4a6879..638de2f7c8dc1 100644
+index 638de2f7c8dc1..6a6877c365ae9 100644
 --- a/fs/xfs/libxfs/xfs_sb.c
 +++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -180,6 +180,8 @@ xfs_sb_version_to_features(
- 		features |= XFS_FEAT_PARENT;
- 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)
- 		features |= XFS_FEAT_METADIR;
-+	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS)
-+		features |= XFS_FEAT_RTGROUPS;
+@@ -583,7 +583,7 @@ xfs_validate_sb_common(
  
- 	return features;
- }
-@@ -307,6 +309,64 @@ xfs_validate_sb_write(
- 	return 0;
- }
- 
-+static int
-+xfs_validate_sb_rtgroups(
-+	struct xfs_mount	*mp,
-+	struct xfs_sb		*sbp)
-+{
-+	uint64_t		groups;
-+
-+	if (!(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)) {
-+		xfs_warn(mp,
-+"Realtime groups require metadata directory tree.");
-+		return -EINVAL;
-+	}
-+
-+	if (sbp->sb_rgblocks > XFS_MAX_RGBLOCKS) {
-+		xfs_warn(mp,
-+"Realtime group size (%u) must be less than %u.",
-+			 sbp->sb_rgblocks, XFS_MAX_RGBLOCKS);
-+		return -EINVAL;
-+	}
-+
-+	if (sbp->sb_rextsize == 0) {
-+		xfs_warn(mp,
-+"Realtime extent size must not be zero.");
-+		return -EINVAL;
-+	}
-+
-+	if (sbp->sb_rgblocks % sbp->sb_rextsize != 0) {
-+		xfs_warn(mp,
-+"Realtime group size (%u) must be an even multiple of extent size (%u).",
-+			 sbp->sb_rgblocks, sbp->sb_rextsize);
-+		return -EINVAL;
-+	}
-+
-+	if (sbp->sb_rgblocks < (sbp->sb_rextsize << 1)) {
-+		xfs_warn(mp,
-+"Realtime group size (%u) must be greater than 1 rt extent.",
-+			 sbp->sb_rgblocks);
-+		return -EINVAL;
-+	}
-+
-+	if (sbp->sb_rgcount > XFS_MAX_RGNUMBER) {
-+		xfs_warn(mp,
-+"Realtime groups (%u) must be less than %u.",
-+			 sbp->sb_rgcount, XFS_MAX_RGNUMBER);
-+		return -EINVAL;
-+	}
-+
-+	groups = howmany_64(sbp->sb_rblocks, sbp->sb_rgblocks);
-+	if (groups != sbp->sb_rgcount) {
-+		xfs_warn(mp,
-+"Realtime groups (%u) do not cover the entire rt section; need (%llu) groups.",
-+			sbp->sb_rgcount, groups);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- /* Check the validity of the SB. */
- STATIC int
- xfs_validate_sb_common(
-@@ -318,6 +378,7 @@ xfs_validate_sb_common(
- 	uint32_t		agcount = 0;
- 	uint32_t		rem;
- 	bool			has_dalign;
-+	int			error;
- 
- 	if (!xfs_verify_magic(bp, dsb->sb_magicnum)) {
- 		xfs_warn(mp,
-@@ -367,6 +428,12 @@ xfs_validate_sb_common(
- 				return -EINVAL;
- 			}
- 		}
-+
-+		if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS) {
-+			error = xfs_validate_sb_rtgroups(mp, sbp);
-+			if (error)
-+				return error;
-+		}
- 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
- 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
+ 		if (!xfs_validate_rtextents(rexts) ||
+ 		    sbp->sb_rextents != rexts ||
+-		    sbp->sb_rextslog != xfs_compute_rextslog(rexts) ||
++		    sbp->sb_rextslog != xfs_compute_rextslog(sbp, rexts) ||
+ 		    sbp->sb_rbmblocks != rbmblocks) {
  			xfs_notice(mp,
-@@ -702,8 +769,13 @@ __xfs_sb_from_disk(
- 		to->sb_pquotino = NULLFSINO;
+ 				"realtime geometry sanity check failed");
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index c018376256a86..7f910fed7de95 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -61,7 +61,7 @@ xchk_setup_rtbitmap(
+ 	 */
+ 	if (mp->m_sb.sb_rblocks) {
+ 		rtb->rextents = xfs_rtb_to_rtx(mp, mp->m_sb.sb_rblocks);
+-		rtb->rextslog = xfs_compute_rextslog(rtb->rextents);
++		rtb->rextslog = xfs_compute_rextslog(&mp->m_sb, rtb->rextents);
+ 		rtb->rbmblocks = xfs_rtbitmap_blockcount(mp, rtb->rextents);
  	}
+ 	return 0;
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 829036b50b0c1..df9aa29cb94c6 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -92,7 +92,7 @@ xchk_setup_rtsummary(
+ 		int		rextslog;
  
--	to->sb_rgcount = 0;
--	to->sb_rgblocks = 0;
-+	if (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS) {
-+		to->sb_rgcount = be32_to_cpu(from->sb_rgcount);
-+		to->sb_rgblocks = be32_to_cpu(from->sb_rgblocks);
-+	} else {
-+		to->sb_rgcount = 0;
-+		to->sb_rgblocks = 0;
-+	}
- }
- 
- void
-@@ -863,6 +935,12 @@ xfs_sb_to_disk(
- 		to->sb_gquotino = cpu_to_be64(NULLFSINO);
- 		to->sb_pquotino = cpu_to_be64(NULLFSINO);
- 	}
-+
-+	if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS) {
-+		/* must come after setting to_rsumino */
-+		to->sb_rgcount = cpu_to_be32(from->sb_rgcount);
-+		to->sb_rgblocks = cpu_to_be32(from->sb_rgblocks);
-+	}
- }
- 
- /*
-@@ -1018,8 +1096,8 @@ xfs_sb_mount_common(
- 	mp->m_blockwmask = mp->m_blockwsize - 1;
- 	mp->m_rtxblklog = log2_if_power2(sbp->sb_rextsize);
- 	mp->m_rtxblkmask = mask64_if_power2(sbp->sb_rextsize);
--	mp->m_rgblklog = 0;
--	mp->m_rgblkmask = 0;
-+	mp->m_rgblklog = log2_if_power2(sbp->sb_rgblocks);
-+	mp->m_rgblkmask = mask64_if_power2(sbp->sb_rgblocks);
- 
- 	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
- 	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 2cecebe018814..f76d2789e1c2d 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -39,6 +39,7 @@ extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
- extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
- extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
- extern const struct xfs_buf_ops xfs_rtbuf_ops;
-+extern const struct xfs_buf_ops xfs_rtsb_buf_ops;
- extern const struct xfs_buf_ops xfs_sb_buf_ops;
- extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
- extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+ 		rts->rextents = xfs_rtb_to_rtx(mp, mp->m_sb.sb_rblocks);
+-		rextslog = xfs_compute_rextslog(rts->rextents);
++		rextslog = xfs_compute_rextslog(&mp->m_sb, rts->rextents);
+ 		rts->rsumlevels = rextslog + 1;
+ 		rts->rbmblocks = xfs_rtbitmap_blockcount(mp, rts->rextents);
+ 		rsumblocks = xfs_rtsummary_blockcount(mp, rts->rsumlevels,
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 59ded74c9007e..ba9116b6e8de7 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -981,7 +981,7 @@ xfs_growfs_rt(
+ 	if (!xfs_validate_rtextents(nrextents))
+ 		return -EINVAL;
+ 	nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
+-	nrextslog = xfs_compute_rextslog(nrextents);
++	nrextslog = xfs_compute_rextslog(&mp->m_sb, nrextents);
+ 	nrsumlevels = nrextslog + 1;
+ 	nrsumblocks = xfs_rtsummary_blockcount(mp, nrsumlevels, nrbmblocks);
+ 	nrsumsize = XFS_FSB_TO_B(mp, nrsumblocks);
+@@ -1048,7 +1048,8 @@ xfs_growfs_rt(
+ 		nsbp->sb_rblocks = min(nrblocks, nrblocks_step);
+ 		nsbp->sb_rextents = xfs_rtb_to_rtx(nmp, nsbp->sb_rblocks);
+ 		ASSERT(nsbp->sb_rextents != 0);
+-		nsbp->sb_rextslog = xfs_compute_rextslog(nsbp->sb_rextents);
++		nsbp->sb_rextslog = xfs_compute_rextslog(&mp->m_sb,
++				nsbp->sb_rextents);
+ 		nrsumlevels = nmp->m_rsumlevels = nsbp->sb_rextslog + 1;
+ 		nrsumblocks = xfs_rtsummary_blockcount(mp, nrsumlevels,
+ 				nsbp->sb_rbmblocks);
 
