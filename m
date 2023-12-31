@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54B13BA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:15:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B76F6BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:16:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QzyPH40+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4960C433C8;
-	Sun, 31 Dec 2023 21:15:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F00fmvL/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E516C433C7;
+	Sun, 31 Dec 2023 21:16:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704057352;
-	bh=6gYhs78HbM8RJ74hPLsn6uYLIK8JwaOGxp10HbV1K3A=;
+	s=k20201202; t=1704057368;
+	bh=7NthETXwYqJ3xi4zCJ2GKeS+oauegPfCKEDhRhHiLMM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QzyPH40+3jkTBuAO4RPY+ctsU/7ajbI9Rtuca6fofZz6X1kO1izyzuPJY+lAutXF8
-	 L+43dbHw0SmWFNUuGfDqCTyii+JkSiWXudSZ1VfFCXugpEiZWZolrOL4hixK+FpmNc
-	 4lG0AO5CG8SWa93/2+bWs9xjxlzMlasrgsIFb0xi6OrJHbRhxjJqeWPhGuBmi4N+iP
-	 jZ4EfmXsXDSa5giQ9jHzx8o3F/j9Ea1NWKKD7D0Q8yz3IWuUWqn0EqI5ycwcEUxYi/
-	 dtDJ11OPV3749dp8FLQREHyvGlTlB18nDfO6sXq6CIBhwNNzJ0RxwvZiMqs8ZvBZsK
-	 103WT7PaGy+tg==
-Date: Sun, 31 Dec 2023 13:15:52 -0800
-Subject: [PATCH 01/24] xfs: create incore realtime group structures
+	b=F00fmvL/atVzSsfVefeQ9xzkyo6EIHeNqr03VKCLJxzGuMC9G8v6aL9tqCzWd2viJ
+	 SP7vSHSsVWUMZVbbdlqGILBeMSHOxxB7cu8fUMW+ckjOtC+IgJJM7VbmpDIn7gjLfq
+	 pFpKWk0JDm9bQESKKSDu0IcZaedC0KW3wVvcDrM0sSE5nZk+V6tWazbai/P6XoaKVW
+	 fqRQ3qotwL2Uuz2zwAKA9JTbhSvAocYwZtSlIjpiVM76yaEMGp9qQEkMGG8g7igO/L
+	 YfoAxpvtSTXKIwydO4XDJZrKNuU41oksFAnzRkgV2plx3SEJJ9QowtSOoSFFX0CpeF
+	 7IN+kwaVFGT8g==
+Date: Sun, 31 Dec 2023 13:16:08 -0800
+Subject: [PATCH 02/24] xfs: define the format of rt groups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404846257.1763124.13866237693545815043.stgit@frogsfrogsfrogs>
+Message-ID: <170404846274.1763124.9559567871299782407.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 References: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,734 +37,472 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create an incore object that will contain information about a realtime
-allocation group.  This will eventually enable us to shard the realtime
-section in a similar manner to how we shard the data section.
+Define the ondisk format of realtime group metadata.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile             |    1 
- fs/xfs/libxfs/xfs_format.h  |    8 +
- fs/xfs/libxfs/xfs_rtgroup.c |  251 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtgroup.h |  132 +++++++++++++++++++++++
- fs/xfs/libxfs/xfs_sb.c      |    5 +
- fs/xfs/libxfs/xfs_types.h   |    4 +
- fs/xfs/xfs_log_recover.c    |    6 +
- fs/xfs/xfs_mount.c          |   12 ++
- fs/xfs/xfs_mount.h          |    6 +
- fs/xfs/xfs_rtalloc.c        |    8 +
- fs/xfs/xfs_super.c          |    2 
- fs/xfs/xfs_trace.c          |    1 
- fs/xfs/xfs_trace.h          |   38 +++++++
- 13 files changed, 473 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/libxfs/xfs_rtgroup.c
- create mode 100644 fs/xfs/libxfs/xfs_rtgroup.h
+ fs/xfs/libxfs/xfs_format.h  |   62 +++++++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_ondisk.h  |    1 
+ fs/xfs/libxfs/xfs_rtgroup.c |   96 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtgroup.h |   83 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.c      |   86 +++++++++++++++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_shared.h  |    1 
+ 6 files changed, 324 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 5362a0fb56d77..500dea292a9d6 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -59,6 +59,7 @@ xfs-y				+= $(addprefix libxfs/, \
- # xfs_rtbitmap is shared with libxfs
- xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
- 				   xfs_rtbitmap.o \
-+				   xfs_rtgroup.o \
- 				   )
- 
- # highlevel code
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 0636ca97622dd..3bd93c01bf4bf 100644
+index 3bd93c01bf4bf..8debe92571692 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -184,6 +184,14 @@ typedef struct xfs_sb {
+@@ -216,7 +216,17 @@ struct xfs_dsb {
+ 	 * pointers are no longer used.
  	 */
- 	xfs_ino_t	sb_metadirino;
- 
+ 	__be64		sb_rbmino;
+-	__be64		sb_rsumino;	/* summary inode for rt bitmap */
 +	/*
-+	 * Realtime group geometry information.  On disk these fields live in
-+	 * the rsumino slot, but we cache them separately in the in-core super
-+	 * for easy access.
++	 * rtgroups requires metadir, so we reuse the rsumino space to hold
++	 * the rg block count and shift values.
 +	 */
-+	xfs_rgblock_t	sb_rgblocks;	/* size of a realtime group */
-+	xfs_rgnumber_t	sb_rgcount;	/* number of realtime groups */
-+
- 	/* must be padded to 64 bit alignment */
- } xfs_sb_t;
++	union {
++		__be64	sb_rsumino;	/* summary inode for rt bitmap */
++		struct {
++			__be32	sb_rgcount;	/* # of realtime groups */
++			__be32	sb_rgblocks;	/* rtblocks per group */
++		};
++	};
+ 	__be32		sb_rextsize;	/* realtime extent size, blocks */
+ 	__be32		sb_agblocks;	/* size of an allocation group */
+ 	__be32		sb_agcount;	/* number of allocation groups */
+@@ -398,6 +408,7 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+ #define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
+ #define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 6)	/* parent pointers */
++#define XFS_SB_FEAT_INCOMPAT_RTGROUPS	(1U << 30)	/* realtime groups */
+ #define XFS_SB_FEAT_INCOMPAT_METADIR	(1U << 31)	/* metadata dir tree */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+@@ -752,6 +763,55 @@ union xfs_suminfo_raw {
+ 	__u32		old;
+ };
  
++/*
++ * Realtime allocation groups break the rt section into multiple pieces that
++ * could be locked independently.  Realtime block group numbers are 32-bit
++ * quantities.  Block numbers within a group are also 32-bit quantities, but
++ * the upper bit must never be set.
++ */
++#define XFS_MAX_RGBLOCKS	((xfs_rgblock_t)(1U << 31) - 1)
++#define XFS_MAX_RGNUMBER	((xfs_rgnumber_t)(-1U))
++
++#define XFS_RTSB_MAGIC	0x58524750	/* 'XRGP' */
++
++/*
++ * Realtime superblock - on disk version.  Must be padded to 64 bit alignment.
++ * The first block of each realtime group contains this superblock; this is
++ * how we avoid having file data extents cross a group boundary.
++ */
++struct xfs_rtsb {
++	__be32		rsb_magicnum;	/* magic number == XFS_RTSB_MAGIC */
++	__be32		rsb_blocksize;	/* logical block size, bytes */
++	__be64		rsb_rblocks;	/* number of realtime blocks */
++
++	__be64		rsb_rextents;	/* number of realtime extents */
++	__be64		rsb_lsn;	/* last write sequence */
++
++	__be32		rsb_rgcount;	/* # of realtime groups */
++	unsigned char	rsb_fname[XFSLABEL_MAX]; /* rt volume name */
++
++	uuid_t		rsb_uuid;	/* user-visible file system unique id */
++
++	__be32		rsb_rextsize;	/* realtime extent size, blocks */
++	__be32		rsb_rbmblocks;	/* number of rt bitmap blocks */
++
++	__be32		rsb_rgblocks;	/* rt blocks per group */
++	__u8		rsb_blocklog;	/* log2 of sb_blocksize */
++	__u8		rsb_sectlog;	/* log2 of sb_sectsize */
++	__u8		rsb_rextslog;	/* log2 of sb_rextents */
++	__u8		rsb_pad;
++
++	__le32		rsb_crc;	/* superblock crc */
++	__le32		rsb_pad2;
++
++	uuid_t		rsb_meta_uuid;	/* metadata file system unique id */
++
++	/* must be padded to 64 bit alignment */
++};
++
++#define XFS_RTSB_CRC_OFF	offsetof(struct xfs_rtsb, rsb_crc)
++#define XFS_RTSB_DADDR		((xfs_daddr_t)0) /* daddr in rt section */
++
+ /*
+  * XFS Timestamps
+  * ==============
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index 832d96f0f3c54..65219d4cf99ca 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -53,6 +53,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			104);
+ 
+ 	/* dir/attr trees */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
 diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
-new file mode 100644
-index 0000000000000..caa82c4813038
---- /dev/null
+index caa82c4813038..a82dd23cf0c79 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.c
 +++ b/fs/xfs/libxfs/xfs_rtgroup.c
-@@ -0,0 +1,251 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_bit.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_btree.h"
-+#include "xfs_alloc_btree.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_alloc.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_ag.h"
-+#include "xfs_ag_resv.h"
-+#include "xfs_health.h"
-+#include "xfs_error.h"
-+#include "xfs_bmap.h"
-+#include "xfs_defer.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_rtgroup.h"
-+#include "xfs_rtbitmap.h"
+@@ -28,6 +28,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
++#include "xfs_buf_item.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_rtbitmap.h"
+ 
+@@ -249,3 +250,98 @@ xfs_rtgroup_block_count(
+ 	return __xfs_rtgroup_block_count(mp, rgno, mp->m_sb.sb_rgcount,
+ 			mp->m_sb.sb_rblocks);
+ }
 +
-+/*
-+ * Passive reference counting access wrappers to the rtgroup structures.  If
-+ * the rtgroup structure is to be freed, the freeing code is responsible for
-+ * cleaning up objects with passive references before freeing the structure.
-+ */
-+struct xfs_rtgroup *
-+xfs_rtgroup_get(
-+	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno)
++static xfs_failaddr_t
++xfs_rtsb_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_rtgroup	*rtg;
++	struct xfs_mount	*mp = bp->b_mount;
++	struct xfs_rtsb		*rsb = bp->b_addr;
 +
-+	rcu_read_lock();
-+	rtg = radix_tree_lookup(&mp->m_rtgroup_tree, rgno);
-+	if (rtg) {
-+		trace_xfs_rtgroup_get(rtg, _RET_IP_);
-+		ASSERT(atomic_read(&rtg->rtg_ref) >= 0);
-+		atomic_inc(&rtg->rtg_ref);
++	if (!xfs_verify_magic(bp, rsb->rsb_magicnum))
++		return __this_address;
++	if (be32_to_cpu(rsb->rsb_blocksize) != mp->m_sb.sb_blocksize)
++		return __this_address;
++	if (be64_to_cpu(rsb->rsb_rblocks) != mp->m_sb.sb_rblocks)
++		return __this_address;
++
++	if (be64_to_cpu(rsb->rsb_rextents) != mp->m_sb.sb_rextents)
++		return __this_address;
++
++	if (!uuid_equal(&rsb->rsb_uuid, &mp->m_sb.sb_uuid))
++		return __this_address;
++
++	if (be32_to_cpu(rsb->rsb_rgcount) != mp->m_sb.sb_rgcount)
++		return __this_address;
++
++	if (be32_to_cpu(rsb->rsb_rextsize) != mp->m_sb.sb_rextsize)
++		return __this_address;
++	if (be32_to_cpu(rsb->rsb_rbmblocks) != mp->m_sb.sb_rbmblocks)
++		return __this_address;
++
++	if (be32_to_cpu(rsb->rsb_rgblocks) != mp->m_sb.sb_rgblocks)
++		return __this_address;
++	if (rsb->rsb_blocklog != mp->m_sb.sb_blocklog)
++		return __this_address;
++	if (rsb->rsb_sectlog != mp->m_sb.sb_sectlog)
++		return __this_address;
++	if (rsb->rsb_rextslog != mp->m_sb.sb_rextslog)
++		return __this_address;
++	if (rsb->rsb_pad)
++		return __this_address;
++
++	if (rsb->rsb_pad2)
++		return __this_address;
++
++	if (!uuid_equal(&rsb->rsb_meta_uuid, &mp->m_sb.sb_meta_uuid))
++		return __this_address;
++
++	/* Everything to the end of the fs block must be zero */
++	if (memchr_inv(rsb + 1, 0, BBTOB(bp->b_length) - sizeof(*rsb)))
++		return __this_address;
++
++	return NULL;
++}
++
++static void
++xfs_rtsb_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_failaddr_t	fa;
++
++	if (!xfs_buf_verify_cksum(bp, XFS_RTSB_CRC_OFF))
++		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
++	else {
++		fa = xfs_rtsb_verify(bp);
++		if (fa)
++			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
 +	}
-+	rcu_read_unlock();
-+	return rtg;
 +}
 +
-+/* Get a passive reference to the given rtgroup. */
-+struct xfs_rtgroup *
-+xfs_rtgroup_hold(
-+	struct xfs_rtgroup	*rtg)
++static void
++xfs_rtsb_write_verify(
++	struct xfs_buf		*bp)
 +{
-+	ASSERT(atomic_read(&rtg->rtg_ref) > 0 ||
-+	       atomic_read(&rtg->rtg_active_ref) > 0);
++	struct xfs_rtsb		*rsb = bp->b_addr;
++	struct xfs_buf_log_item	*bip = bp->b_log_item;
++	xfs_failaddr_t		fa;
 +
-+	trace_xfs_rtgroup_hold(rtg, _RET_IP_);
-+	atomic_inc(&rtg->rtg_ref);
-+	return rtg;
-+}
-+
-+void
-+xfs_rtgroup_put(
-+	struct xfs_rtgroup	*rtg)
-+{
-+	trace_xfs_rtgroup_put(rtg, _RET_IP_);
-+	ASSERT(atomic_read(&rtg->rtg_ref) > 0);
-+	atomic_dec(&rtg->rtg_ref);
-+}
-+
-+/*
-+ * Active references for rtgroup structures. This is for short term access to
-+ * the rtgroup structures for walking trees or accessing state. If an rtgroup
-+ * is being shrunk or is offline, then this will fail to find that group and
-+ * return NULL instead.
-+ */
-+struct xfs_rtgroup *
-+xfs_rtgroup_grab(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
-+{
-+	struct xfs_rtgroup	*rtg;
-+
-+	rcu_read_lock();
-+	rtg = radix_tree_lookup(&mp->m_rtgroup_tree, agno);
-+	if (rtg) {
-+		trace_xfs_rtgroup_grab(rtg, _RET_IP_);
-+		if (!atomic_inc_not_zero(&rtg->rtg_active_ref))
-+			rtg = NULL;
++	fa = xfs_rtsb_verify(bp);
++	if (fa) {
++		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
++		return;
 +	}
-+	rcu_read_unlock();
-+	return rtg;
++
++	if (bip)
++		rsb->rsb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++
++	xfs_buf_update_cksum(bp, XFS_RTSB_CRC_OFF);
 +}
 +
-+void
-+xfs_rtgroup_rele(
-+	struct xfs_rtgroup	*rtg)
-+{
-+	trace_xfs_rtgroup_rele(rtg, _RET_IP_);
-+	if (atomic_dec_and_test(&rtg->rtg_active_ref))
-+		wake_up(&rtg->rtg_active_wq);
-+}
-+
-+int
-+xfs_initialize_rtgroups(
++const struct xfs_buf_ops xfs_rtsb_buf_ops = {
++	.name = "xfs_rtsb",
++	.magic = { 0, cpu_to_be32(XFS_RTSB_MAGIC) },
++	.verify_read = xfs_rtsb_read_verify,
++	.verify_write = xfs_rtsb_write_verify,
++	.verify_struct = xfs_rtsb_verify,
++};
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 2f0a670217c48..924c8c95acbc3 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -122,6 +122,89 @@ xfs_verify_rgbext(
+ 	return xfs_verify_rgbno(rtg, rgbno + len - 1);
+ }
+ 
++static inline xfs_rtblock_t
++xfs_rgbno_to_rtb(
 +	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgcount)
++	xfs_rgnumber_t		rgno,
++	xfs_rgblock_t		rgbno)
 +{
-+	struct xfs_rtgroup	*rtg;
-+	xfs_rgnumber_t		index;
-+	xfs_rgnumber_t		first_initialised = NULLRGNUMBER;
-+	int			error;
++	ASSERT(xfs_has_rtgroups(mp));
 +
-+	if (!xfs_has_rtgroups(mp))
-+		return 0;
++	if (mp->m_rgblklog >= 0)
++		return ((xfs_rtblock_t)rgno << mp->m_rgblklog) | rgbno;
 +
-+	/*
-+	 * Walk the current rtgroup tree so we don't try to initialise rt
-+	 * groups that already exist (growfs case). Allocate and insert all the
-+	 * rtgroups we don't find ready for initialisation.
-+	 */
-+	for (index = 0; index < rgcount; index++) {
-+		rtg = xfs_rtgroup_get(mp, index);
-+		if (rtg) {
-+			xfs_rtgroup_put(rtg);
-+			continue;
-+		}
++	return ((xfs_rtblock_t)rgno * mp->m_sb.sb_rgblocks) + rgbno;
++}
 +
-+		rtg = kmem_zalloc(sizeof(struct xfs_rtgroup), KM_MAYFAIL);
-+		if (!rtg) {
-+			error = -ENOMEM;
-+			goto out_unwind_new_rtgs;
-+		}
-+		rtg->rtg_rgno = index;
-+		rtg->rtg_mount = mp;
++static inline xfs_rgnumber_t
++xfs_rtb_to_rgno(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	ASSERT(xfs_has_rtgroups(mp));
 +
-+		error = radix_tree_preload(GFP_NOFS);
-+		if (error)
-+			goto out_free_rtg;
++	if (mp->m_rgblklog >= 0)
++		return rtbno >> mp->m_rgblklog;
 +
-+		spin_lock(&mp->m_rtgroup_lock);
-+		if (radix_tree_insert(&mp->m_rtgroup_tree, index, rtg)) {
-+			WARN_ON_ONCE(1);
-+			spin_unlock(&mp->m_rtgroup_lock);
-+			radix_tree_preload_end();
-+			error = -EEXIST;
-+			goto out_free_rtg;
-+		}
-+		spin_unlock(&mp->m_rtgroup_lock);
-+		radix_tree_preload_end();
++	return div_u64(rtbno, mp->m_sb.sb_rgblocks);
++}
 +
-+#ifdef __KERNEL__
-+		/* Place kernel structure only init below this point. */
-+		spin_lock_init(&rtg->rtg_state_lock);
-+		init_waitqueue_head(&rtg->rtg_active_wq);
-+#endif /* __KERNEL__ */
++static inline xfs_rgblock_t
++xfs_rtb_to_rgbno(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno,
++	xfs_rgnumber_t		*rgno)
++{
++	uint32_t		rem;
 +
-+		/* Active ref owned by mount indicates rtgroup is online. */
-+		atomic_set(&rtg->rtg_active_ref, 1);
++	ASSERT(xfs_has_rtgroups(mp));
 +
-+		/* first new rtg is fully initialized */
-+		if (first_initialised == NULLRGNUMBER)
-+			first_initialised = index;
++	if (mp->m_rgblklog >= 0) {
++		*rgno = rtbno >> mp->m_rgblklog;
++		return rtbno & mp->m_rgblkmask;
++	}
++
++	*rgno = div_u64_rem(rtbno, mp->m_sb.sb_rgblocks, &rem);
++	return rem;
++}
++
++static inline xfs_daddr_t
++xfs_rtb_to_daddr(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return rtbno << mp->m_blkbb_log;
++}
++
++static inline xfs_rtblock_t
++xfs_daddr_to_rtb(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	return daddr >> mp->m_blkbb_log;
++}
++
++static inline xfs_rgnumber_t
++xfs_daddr_to_rgno(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	xfs_rtblock_t		rtb = daddr >> mp->m_blkbb_log;
++
++	return xfs_rtb_to_rgno(mp, rtb);
++}
++
++static inline xfs_rgblock_t
++xfs_daddr_to_rgbno(
++	struct xfs_mount	*mp,
++	xfs_daddr_t		daddr)
++{
++	xfs_rtblock_t		rtb = daddr >> mp->m_blkbb_log;
++	xfs_rgnumber_t		rgno;
++
++	return xfs_rtb_to_rgbno(mp, rtb, &rgno);
++}
++
+ #ifdef CONFIG_XFS_RT
+ xfs_rgblock_t xfs_rtgroup_block_count(struct xfs_mount *mp,
+ 		xfs_rgnumber_t rgno);
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 88402cb4a6879..638de2f7c8dc1 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -180,6 +180,8 @@ xfs_sb_version_to_features(
+ 		features |= XFS_FEAT_PARENT;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)
+ 		features |= XFS_FEAT_METADIR;
++	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS)
++		features |= XFS_FEAT_RTGROUPS;
+ 
+ 	return features;
+ }
+@@ -307,6 +309,64 @@ xfs_validate_sb_write(
+ 	return 0;
+ }
+ 
++static int
++xfs_validate_sb_rtgroups(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*sbp)
++{
++	uint64_t		groups;
++
++	if (!(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)) {
++		xfs_warn(mp,
++"Realtime groups require metadata directory tree.");
++		return -EINVAL;
++	}
++
++	if (sbp->sb_rgblocks > XFS_MAX_RGBLOCKS) {
++		xfs_warn(mp,
++"Realtime group size (%u) must be less than %u.",
++			 sbp->sb_rgblocks, XFS_MAX_RGBLOCKS);
++		return -EINVAL;
++	}
++
++	if (sbp->sb_rextsize == 0) {
++		xfs_warn(mp,
++"Realtime extent size must not be zero.");
++		return -EINVAL;
++	}
++
++	if (sbp->sb_rgblocks % sbp->sb_rextsize != 0) {
++		xfs_warn(mp,
++"Realtime group size (%u) must be an even multiple of extent size (%u).",
++			 sbp->sb_rgblocks, sbp->sb_rextsize);
++		return -EINVAL;
++	}
++
++	if (sbp->sb_rgblocks < (sbp->sb_rextsize << 1)) {
++		xfs_warn(mp,
++"Realtime group size (%u) must be greater than 1 rt extent.",
++			 sbp->sb_rgblocks);
++		return -EINVAL;
++	}
++
++	if (sbp->sb_rgcount > XFS_MAX_RGNUMBER) {
++		xfs_warn(mp,
++"Realtime groups (%u) must be less than %u.",
++			 sbp->sb_rgcount, XFS_MAX_RGNUMBER);
++		return -EINVAL;
++	}
++
++	groups = howmany_64(sbp->sb_rblocks, sbp->sb_rgblocks);
++	if (groups != sbp->sb_rgcount) {
++		xfs_warn(mp,
++"Realtime groups (%u) do not cover the entire rt section; need (%llu) groups.",
++			sbp->sb_rgcount, groups);
++		return -EINVAL;
 +	}
 +
 +	return 0;
-+
-+out_free_rtg:
-+	kmem_free(rtg);
-+out_unwind_new_rtgs:
-+	/* unwind any prior newly initialized rtgs */
-+	for (index = first_initialised; index < rgcount; index++) {
-+		rtg = radix_tree_delete(&mp->m_rtgroup_tree, index);
-+		if (!rtg)
-+			break;
-+		kmem_free(rtg);
-+	}
-+	return error;
 +}
 +
-+STATIC void
-+__xfs_free_rtgroups(
-+	struct rcu_head		*head)
-+{
-+	struct xfs_rtgroup	*rtg;
+ /* Check the validity of the SB. */
+ STATIC int
+ xfs_validate_sb_common(
+@@ -318,6 +378,7 @@ xfs_validate_sb_common(
+ 	uint32_t		agcount = 0;
+ 	uint32_t		rem;
+ 	bool			has_dalign;
++	int			error;
+ 
+ 	if (!xfs_verify_magic(bp, dsb->sb_magicnum)) {
+ 		xfs_warn(mp,
+@@ -367,6 +428,12 @@ xfs_validate_sb_common(
+ 				return -EINVAL;
+ 			}
+ 		}
 +
-+	rtg = container_of(head, struct xfs_rtgroup, rcu_head);
-+	kmem_free(rtg);
-+}
-+
-+/*
-+ * Free up the rtgroup resources associated with the mount structure.
-+ */
-+void
-+xfs_free_rtgroups(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_rtgroup	*rtg;
-+	xfs_rgnumber_t		rgno;
-+
-+	if (!xfs_has_rtgroups(mp))
-+		return;
-+
-+	for (rgno = 0; rgno < mp->m_sb.sb_rgcount; rgno++) {
-+		spin_lock(&mp->m_rtgroup_lock);
-+		rtg = radix_tree_delete(&mp->m_rtgroup_tree, rgno);
-+		spin_unlock(&mp->m_rtgroup_lock);
-+		ASSERT(rtg);
-+		XFS_IS_CORRUPT(mp, atomic_read(&rtg->rtg_ref) != 0);
-+
-+		/* drop the mount's active reference */
-+		xfs_rtgroup_rele(rtg);
-+		XFS_IS_CORRUPT(mp, atomic_read(&rtg->rtg_active_ref) != 0);
-+
-+		call_rcu(&rtg->rcu_head, __xfs_free_rtgroups);
-+	}
-+}
-+
-+/* Find the size of the rtgroup, in blocks. */
-+static xfs_rgblock_t
-+__xfs_rtgroup_block_count(
-+	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno,
-+	xfs_rgnumber_t		rgcount,
-+	xfs_rfsblock_t		rblocks)
-+{
-+	ASSERT(rgno < rgcount);
-+
-+	if (rgno < rgcount - 1)
-+		return mp->m_sb.sb_rgblocks;
-+	return xfs_rtb_rounddown_rtx(mp,
-+			rblocks - (rgno * mp->m_sb.sb_rgblocks));
-+}
-+
-+/* Compute the number of blocks in this realtime group. */
-+xfs_rgblock_t
-+xfs_rtgroup_block_count(
-+	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno)
-+{
-+	return __xfs_rtgroup_block_count(mp, rgno, mp->m_sb.sb_rgcount,
-+			mp->m_sb.sb_rblocks);
-+}
-diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
-new file mode 100644
-index 0000000000000..2f0a670217c48
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_rtgroup.h
-@@ -0,0 +1,132 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __LIBXFS_RTGROUP_H
-+#define __LIBXFS_RTGROUP_H 1
-+
-+struct xfs_mount;
-+struct xfs_trans;
-+
-+/*
-+ * Realtime group incore structure, similar to the per-AG structure.
-+ */
-+struct xfs_rtgroup {
-+	struct xfs_mount	*rtg_mount;
-+	xfs_rgnumber_t		rtg_rgno;
-+	atomic_t		rtg_ref;	/* passive reference count */
-+	atomic_t		rtg_active_ref;	/* active reference count */
-+	wait_queue_head_t	rtg_active_wq;/* woken active_ref falls to zero */
-+
-+	/* for rcu-safe freeing */
-+	struct rcu_head		rcu_head;
-+
-+	/* Number of blocks in this group */
-+	xfs_rgblock_t		rtg_blockcount;
-+
-+#ifdef __KERNEL__
-+	/* -- kernel only structures below this line -- */
-+	spinlock_t		rtg_state_lock;
-+#endif /* __KERNEL__ */
-+};
-+
-+#ifdef CONFIG_XFS_RT
-+/* Passive rtgroup references */
-+struct xfs_rtgroup *xfs_rtgroup_get(struct xfs_mount *mp, xfs_rgnumber_t rgno);
-+struct xfs_rtgroup *xfs_rtgroup_hold(struct xfs_rtgroup *rtg);
-+void xfs_rtgroup_put(struct xfs_rtgroup *rtg);
-+
-+/* Active rtgroup references */
-+struct xfs_rtgroup *xfs_rtgroup_grab(struct xfs_mount *mp, xfs_rgnumber_t rgno);
-+void xfs_rtgroup_rele(struct xfs_rtgroup *rtg);
-+
-+int xfs_initialize_rtgroups(struct xfs_mount *mp, xfs_rgnumber_t rgcount);
-+void xfs_free_rtgroups(struct xfs_mount *mp);
-+#else
-+static inline struct xfs_rtgroup *
-+xfs_rtgroup_get(
-+	struct xfs_mount	*mp,
-+	xfs_rgnumber_t		rgno)
-+{
-+	return NULL;
-+}
-+static inline struct xfs_rtgroup *
-+xfs_rtgroup_hold(struct xfs_rtgroup *rtg)
-+{
-+	ASSERT(rtg == NULL);
-+	return NULL;
-+}
-+# define xfs_rtgroup_grab			xfs_rtgroup_get
-+# define xfs_rtgroup_put(rtg)			((void)0)
-+# define xfs_rtgroup_rele(rtg)			((void)0)
-+# define xfs_initialize_rtgroups(mp, rgcount)	(0)
-+# define xfs_free_rtgroups(mp)			((void)0)
-+#endif /* CONFIG_XFS_RT */
-+
-+/*
-+ * rt group iteration APIs
-+ */
-+static inline struct xfs_rtgroup *
-+xfs_rtgroup_next(
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgnumber_t		*rgno,
-+	xfs_rgnumber_t		end_rgno)
-+{
-+	struct xfs_mount	*mp = rtg->rtg_mount;
-+
-+	*rgno = rtg->rtg_rgno + 1;
-+	xfs_rtgroup_rele(rtg);
-+	if (*rgno > end_rgno)
-+		return NULL;
-+	return xfs_rtgroup_grab(mp, *rgno);
-+}
-+
-+#define for_each_rtgroup_range(mp, rgno, end_rgno, rtg) \
-+	for ((rtg) = xfs_rtgroup_grab((mp), (rgno)); \
-+		(rtg) != NULL; \
-+		(rtg) = xfs_rtgroup_next((rtg), &(rgno), (end_rgno)))
-+
-+#define for_each_rtgroup_from(mp, rgno, rtg) \
-+	for_each_rtgroup_range((mp), (rgno), (mp)->m_sb.sb_rgcount - 1, (rtg))
-+
-+
-+#define for_each_rtgroup(mp, rgno, rtg) \
-+	(rgno) = 0; \
-+	for_each_rtgroup_from((mp), (rgno), (rtg))
-+
-+static inline bool
-+xfs_verify_rgbno(
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		rgbno)
-+{
-+	if (rgbno >= rtg->rtg_blockcount)
-+		return false;
-+	if (rgbno < rtg->rtg_mount->m_sb.sb_rextsize)
-+		return false;
-+	return true;
-+}
-+
-+static inline bool
-+xfs_verify_rgbext(
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rgblock_t		rgbno,
-+	xfs_rgblock_t		len)
-+{
-+	if (rgbno + len <= rgbno)
-+		return false;
-+
-+	if (!xfs_verify_rgbno(rtg, rgbno))
-+		return false;
-+
-+	return xfs_verify_rgbno(rtg, rgbno + len - 1);
-+}
-+
-+#ifdef CONFIG_XFS_RT
-+xfs_rgblock_t xfs_rtgroup_block_count(struct xfs_mount *mp,
-+		xfs_rgnumber_t rgno);
-+#else
-+# define xfs_rtgroup_block_count(mp, rgno)	(0)
-+#endif /* CONFIG_XFS_RT */
-+
-+#endif /* __LIBXFS_RTGROUP_H */
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 7a20b9b4bccb3..88402cb4a6879 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -701,6 +701,9 @@ __xfs_sb_from_disk(
- 		to->sb_gquotino = NULLFSINO;
++		if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS) {
++			error = xfs_validate_sb_rtgroups(mp, sbp);
++			if (error)
++				return error;
++		}
+ 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
+ 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
+ 			xfs_notice(mp,
+@@ -702,8 +769,13 @@ __xfs_sb_from_disk(
  		to->sb_pquotino = NULLFSINO;
  	}
-+
-+	to->sb_rgcount = 0;
-+	to->sb_rgblocks = 0;
+ 
+-	to->sb_rgcount = 0;
+-	to->sb_rgblocks = 0;
++	if (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS) {
++		to->sb_rgcount = be32_to_cpu(from->sb_rgcount);
++		to->sb_rgblocks = be32_to_cpu(from->sb_rgblocks);
++	} else {
++		to->sb_rgcount = 0;
++		to->sb_rgblocks = 0;
++	}
  }
  
  void
-@@ -1015,6 +1018,8 @@ xfs_sb_mount_common(
+@@ -863,6 +935,12 @@ xfs_sb_to_disk(
+ 		to->sb_gquotino = cpu_to_be64(NULLFSINO);
+ 		to->sb_pquotino = cpu_to_be64(NULLFSINO);
+ 	}
++
++	if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_RTGROUPS) {
++		/* must come after setting to_rsumino */
++		to->sb_rgcount = cpu_to_be32(from->sb_rgcount);
++		to->sb_rgblocks = cpu_to_be32(from->sb_rgblocks);
++	}
+ }
+ 
+ /*
+@@ -1018,8 +1096,8 @@ xfs_sb_mount_common(
  	mp->m_blockwmask = mp->m_blockwsize - 1;
  	mp->m_rtxblklog = log2_if_power2(sbp->sb_rextsize);
  	mp->m_rtxblkmask = mask64_if_power2(sbp->sb_rextsize);
-+	mp->m_rgblklog = 0;
-+	mp->m_rgblkmask = 0;
+-	mp->m_rgblklog = 0;
+-	mp->m_rgblkmask = 0;
++	mp->m_rgblklog = log2_if_power2(sbp->sb_rgblocks);
++	mp->m_rgblkmask = mask64_if_power2(sbp->sb_rgblocks);
  
  	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
  	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 5556615a2ff9c..195471c438599 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -9,10 +9,12 @@
- typedef uint32_t	prid_t;		/* project ID */
- 
- typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
-+typedef uint32_t	xfs_rgblock_t;	/* blockno in realtime group */
- typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
- typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
- typedef uint32_t	xfs_rtxlen_t;	/* file extent length in rtextents */
- typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
-+typedef uint32_t	xfs_rgnumber_t;	/* realtime group number */
- typedef uint64_t	xfs_extnum_t;	/* # of extents in a file */
- typedef uint32_t	xfs_aextnum_t;	/* # extents in an attribute fork */
- typedef int64_t		xfs_fsize_t;	/* bytes in a file */
-@@ -54,7 +56,9 @@ typedef void *		xfs_failaddr_t;
- #define	NULLRTEXTNO	((xfs_rtxnum_t)-1)
- 
- #define	NULLAGBLOCK	((xfs_agblock_t)-1)
-+#define NULLRGBLOCK	((xfs_rgblock_t)-1)
- #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
-+#define	NULLRGNUMBER	((xfs_rgnumber_t)-1)
- 
- #define NULLCOMMITLSN	((xfs_lsn_t)-1)
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 628d7915120b0..5e9562f37dc89 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -28,6 +28,7 @@
- #include "xfs_ag.h"
- #include "xfs_quota.h"
- #include "xfs_reflink.h"
-+#include "xfs_rtgroup.h"
- 
- #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
- 
-@@ -3347,6 +3348,11 @@ xlog_do_recover(
- 		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
- 		return error;
- 	}
-+	error = xfs_initialize_rtgroups(mp, sbp->sb_rgcount);
-+	if (error) {
-+		xfs_warn(mp, "Failed post-recovery rtgroup init: %d", error);
-+		return error;
-+	}
- 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
- 
- 	/* Normal transactions can now occur */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 8b61b8c51cd16..ba6c77e7e265d 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -35,6 +35,7 @@
- #include "xfs_trace.h"
- #include "xfs_ag.h"
- #include "xfs_imeta.h"
-+#include "xfs_rtgroup.h"
- #include "scrub/stats.h"
- 
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
-@@ -842,10 +843,16 @@ xfs_mountfs(
- 		goto out_free_dir;
- 	}
- 
-+	error = xfs_initialize_rtgroups(mp, sbp->sb_rgcount);
-+	if (error) {
-+		xfs_warn(mp, "Failed rtgroup init: %d", error);
-+		goto out_free_perag;
-+	}
-+
- 	if (XFS_IS_CORRUPT(mp, !sbp->sb_logblocks)) {
- 		xfs_warn(mp, "no log defined");
- 		error = -EFSCORRUPTED;
--		goto out_free_perag;
-+		goto out_free_rtgroup;
- 	}
- 
- 	error = xfs_inodegc_register_shrinker(mp);
-@@ -1070,6 +1077,8 @@ xfs_mountfs(
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
- 		xfs_buftarg_drain(mp->m_logdev_targp);
- 	xfs_buftarg_drain(mp->m_ddev_targp);
-+ out_free_rtgroup:
-+	xfs_free_rtgroups(mp);
-  out_free_perag:
- 	xfs_free_perag(mp);
-  out_free_dir:
-@@ -1151,6 +1160,7 @@ xfs_unmountfs(
- 	xfs_errortag_clearall(mp);
- #endif
- 	shrinker_free(mp->m_inodegc_shrinker);
-+	xfs_free_rtgroups(mp);
- 	xfs_free_perag(mp);
- 
- 	xfs_errortag_del(mp);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index b45a4f4a8503e..52976a133cec9 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -121,6 +121,7 @@ typedef struct xfs_mount {
- 	uint8_t			m_agno_log;	/* log #ag's */
- 	uint8_t			m_sectbb_log;	/* sectlog - BBSHIFT */
- 	int8_t			m_rtxblklog;	/* log2 of rextsize, if possible */
-+	int8_t			m_rgblklog;	/* log2 of rt group sz if possible */
- 	uint			m_blockmask;	/* sb_blocksize-1 */
- 	uint			m_blockwsize;	/* sb_blocksize in words */
- 	uint			m_blockwmask;	/* blockwsize-1 */
-@@ -155,6 +156,7 @@ typedef struct xfs_mount {
- 	uint64_t		m_low_space[XFS_LOWSP_MAX];
- 	uint64_t		m_low_rtexts[XFS_LOWSP_MAX];
- 	uint64_t		m_rtxblkmask;	/* rt extent block mask */
-+	uint64_t		m_rgblkmask;	/* rt group block mask */
- 	struct xfs_ino_geometry	m_ino_geo;	/* inode geometry */
- 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
- 						/* low free space thresholds */
-@@ -203,6 +205,8 @@ typedef struct xfs_mount {
- 	 */
- 	atomic64_t		m_allocbt_blks;
- 
-+	struct radix_tree_root	m_rtgroup_tree;	/* per-rt group info */
-+	spinlock_t		m_rtgroup_lock;	/* lock for m_rtgroup_tree */
- 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
- 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
- 	uint64_t		m_resblks;	/* total reserved blocks */
-@@ -294,6 +298,7 @@ typedef struct xfs_mount {
- #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
- #define XFS_FEAT_NREXT64	(1ULL << 26)	/* large extent counters */
- #define XFS_FEAT_METADIR	(1ULL << 27)	/* metadata directory tree */
-+#define XFS_FEAT_RTGROUPS	(1ULL << 28)	/* realtime groups */
- 
- /* Mount features */
- #define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
-@@ -358,6 +363,7 @@ __XFS_HAS_FEAT(bigtime, BIGTIME)
- __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
- __XFS_HAS_FEAT(large_extent_counts, NREXT64)
- __XFS_HAS_FEAT(metadir, METADIR)
-+__XFS_HAS_FEAT(rtgroups, RTGROUPS)
- 
- /*
-  * Mount features
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index f76ecb9a19b51..59ded74c9007e 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -24,6 +24,7 @@
- #include "xfs_health.h"
- #include "xfs_da_format.h"
- #include "xfs_imeta.h"
-+#include "xfs_rtgroup.h"
- 
- /*
-  * Realtime metadata files are not quite regular files because userspace can't
-@@ -1396,6 +1397,8 @@ xfs_rtmount_inodes(
- {
- 	struct xfs_trans	*tp;
- 	struct xfs_sb		*sbp = &mp->m_sb;
-+	struct xfs_rtgroup	*rtg;
-+	xfs_rgnumber_t		rgno;
- 	int			error;
- 
- 	error = xfs_trans_alloc_empty(mp, &tp);
-@@ -1426,6 +1429,11 @@ xfs_rtmount_inodes(
- 	if (error)
- 		goto out_rele_summary;
- 
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		rtg->rtg_blockcount = xfs_rtgroup_block_count(mp,
-+							      rtg->rtg_rgno);
-+	}
-+
- 	xfs_alloc_rsum_cache(mp, sbp->sb_rbmblocks);
- 	xfs_trans_cancel(tp);
- 	return 0;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 998fa006af5bb..c154e2cb7a18e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2002,6 +2002,8 @@ static int xfs_init_fs_context(
- 	spin_lock_init(&mp->m_sb_lock);
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
- 	spin_lock_init(&mp->m_perag_lock);
-+	INIT_RADIX_TREE(&mp->m_rtgroup_tree, GFP_ATOMIC);
-+	spin_lock_init(&mp->m_rtgroup_lock);
- 	mutex_init(&mp->m_growlock);
- 	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-index 453cf7ffdea03..21f55b0125fc4 100644
---- a/fs/xfs/xfs_trace.c
-+++ b/fs/xfs/xfs_trace.c
-@@ -44,6 +44,7 @@
- #include "xfs_xchgrange.h"
- #include "xfs_parent.h"
- #include "xfs_imeta.h"
-+#include "xfs_rtgroup.h"
- 
- /*
-  * We include this last to have the helpers above available for the trace
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 17f364e1b9613..81c21000d4fea 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -87,6 +87,7 @@ struct xfs_getparents;
- struct xfs_parent_name_irec;
- struct xfs_attrlist_cursor_kern;
- struct xfs_imeta_update;
-+struct xfs_rtgroup;
- 
- #define XFS_ATTR_FILTER_FLAGS \
- 	{ XFS_ATTR_ROOT,	"ROOT" }, \
-@@ -216,6 +217,43 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_rele);
- DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
- DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
- 
-+#ifdef CONFIG_XFS_RT
-+DECLARE_EVENT_CLASS(xfs_rtgroup_class,
-+	TP_PROTO(struct xfs_rtgroup *rtg, unsigned long caller_ip),
-+	TP_ARGS(rtg, caller_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_rgnumber_t, rgno)
-+		__field(int, refcount)
-+		__field(int, active_refcount)
-+		__field(unsigned long, caller_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = rtg->rtg_mount->m_super->s_dev;
-+		__entry->rgno = rtg->rtg_rgno;
-+		__entry->refcount = atomic_read(&rtg->rtg_ref);
-+		__entry->active_refcount = atomic_read(&rtg->rtg_active_ref);
-+		__entry->caller_ip = caller_ip;
-+	),
-+	TP_printk("dev %d:%d rgno 0x%x passive refs %d active refs %d caller %pS",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->rgno,
-+		  __entry->refcount,
-+		  __entry->active_refcount,
-+		  (char *)__entry->caller_ip)
-+);
-+
-+#define DEFINE_RTGROUP_REF_EVENT(name)	\
-+DEFINE_EVENT(xfs_rtgroup_class, name,	\
-+	TP_PROTO(struct xfs_rtgroup *rtg, unsigned long caller_ip), \
-+	TP_ARGS(rtg, caller_ip))
-+DEFINE_RTGROUP_REF_EVENT(xfs_rtgroup_get);
-+DEFINE_RTGROUP_REF_EVENT(xfs_rtgroup_hold);
-+DEFINE_RTGROUP_REF_EVENT(xfs_rtgroup_put);
-+DEFINE_RTGROUP_REF_EVENT(xfs_rtgroup_grab);
-+DEFINE_RTGROUP_REF_EVENT(xfs_rtgroup_rele);
-+#endif /* CONFIG_XFS_RT */
-+
- TRACE_EVENT(xfs_inodegc_worker,
- 	TP_PROTO(struct xfs_mount *mp, unsigned int shrinker_hits),
- 	TP_ARGS(mp, shrinker_hits),
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index 2cecebe018814..f76d2789e1c2d 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -39,6 +39,7 @@ extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
+ extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_rtbuf_ops;
++extern const struct xfs_buf_ops xfs_rtsb_buf_ops;
+ extern const struct xfs_buf_ops xfs_sb_buf_ops;
+ extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
+ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
 
