@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14260C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:52:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D3B5C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:52:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CjXeAAvy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DBE1C433C7;
-	Sun, 31 Dec 2023 23:52:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kk0s1JVa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A704C433C8;
+	Sun, 31 Dec 2023 23:52:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066720;
-	bh=JRtCfU6DDjNuO75Z5jDi8e6x8ymRT95d647uU/r4bkY=;
+	s=k20201202; t=1704066736;
+	bh=Mgis5ApiN8H7LDZ6HRfTiG1Rzg8ApbIgI7jAqMvWGaE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CjXeAAvyg9Y566eqzasFQi/2vpcs8N6S6JtWX4F7Ppc2Epf4+vbze0dGybJeXTQ/b
-	 o8WEZ8xOoGfKG3IkkFzk7A5ZUaLcNZ8LZR0+xnIftvjfNTGrzlL1fJ4SO9MLrL9oc9
-	 OqLSNPIIZ7gYVszqpBDgKmB5jrfYm2xHzxDnyR66WDUIp3oyMCuMO4dreO2olx06qF
-	 BCfCop8PItApLkUyMuuRLNEY4OBRgLp7Zes1KqEGC6WQAGzM7+pJqRcxxgW/5U3xSn
-	 yEVanu/rThsFdXndimz6e6pwhemRV/0hZXs4+ZnajPdKK5V9XzRV2wXhMDteT9/YSF
-	 yuvs4dWKnkmrw==
-Date: Sun, 31 Dec 2023 15:51:59 -0800
-Subject: [PATCH 17/52] xfs: store rtgroup information with a bmap intent
+	b=Kk0s1JVaE7tZaCvO2YnXrjT5n50IskWo3lnVwW3R8RBHFBWaoB2Ch5gON5dMuzK9X
+	 78l3c3o8MngyntKx0NVEcWX3yyeW3zXE53jBQ9V39as/oNAcMe7S7OJ136Qtyb2gmy
+	 SOgLuFi22j35BTtIN9YWVI+3+damKIEwn1qS8ymW4im2uJUbNMScwUsFy5y/DDZWl4
+	 t/fQcwcH9UMGkADuslWdpL98Yl6Sttzrw/FBs4TEeF8YgV14vDFhesCQyA4nj4Bj+A
+	 YX8En3MfhFgycniiaQfAmo8PbgxZ+R9veiW6GRUWusTOHHN0aFnh2ekOjWE4Rg5aXH
+	 fdkQU3GpLzAUA==
+Date: Sun, 31 Dec 2023 15:52:15 -0800
+Subject: [PATCH 18/52] xfs: use an incore rtgroup rotor for rtpick
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405012396.1811243.3971205341311733974.stgit@frogsfrogsfrogs>
+Message-ID: <170405012409.1811243.7956219219085956379.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 References: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,69 +37,78 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the bmap intent items take an active reference to the rtgroup
-containing the space that is being mapped or unmapped.  We will need
-this functionality once we start enabling rmap and reflink on the rt
-volume.
+During the 6.7 merge window, Linus noticed that the realtime allocator
+was doing some sketchy things trying to encode a u64 sequence counter
+into the rtbitmap file's atime.  The sketchy casting of a struct pointer
+to a u64 pointer has subtly broken several times over the past decade as
+the codebase has transitioned to using the VFS i_atime field and that
+field has changed in size and layout over time.
 
+Since the goal of the rtpick code is to _suggest_ a starting place for
+new rt file allocations, the repeated breakage has not resulted in
+inconsistent metadata.  IOWs, it's a hint.
+
+For rtgroups, we don't need this complex code to cut the rtextents space
+into fractions.  Add an rtgroup rotor and use that for rtpick, similar
+to AG rotoring on the data device.  The new rotor does not persist,
+which reduces the logging overhead slightly.
+
+Link: https://lore.kernel.org/linux-xfs/CAHk-=wj3oM3d-Hw2vvxys3KCZ9De+gBN7Gxr2jf96OTisL9udw@mail.gmail.com/
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/defer_item.c |   17 +++++++++++++++--
- libxfs/xfs_bmap.h   |    5 ++++-
- 2 files changed, 19 insertions(+), 3 deletions(-)
+ include/xfs_mount.h   |    1 +
+ libxfs/xfs_rtbitmap.c |   12 ++++++++----
+ mkfs/proto.c          |    3 ++-
+ 3 files changed, 11 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 49e6cf02dc8..fbd035d9b94 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -492,8 +492,18 @@ xfs_bmap_update_get_group(
- {
- 	xfs_agnumber_t		agno;
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index ecee4ccc0b7..a2fdd7c2f14 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -52,6 +52,7 @@ typedef struct xfs_mount {
+ 	char			*m_fsname;	/* filesystem name */
+ 	int			m_bsize;	/* fs logical block size */
+ 	spinlock_t		m_agirotor_lock;
++	xfs_rgnumber_t		m_rtgrotor;	/* last rtgroup rtpicked */
+ 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
+ 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+ 	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 7be1c0bdbea..7d29a72be6b 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1060,10 +1060,14 @@ xfs_rtfree_extent(
+ 		if (!(mp->m_rbmip->i_diflags & XFS_DIFLAG_NEWRTBM))
+ 			mp->m_rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
  
--	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
-+	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
+-		atime = inode_get_atime(VFS_I(mp->m_rbmip));
+-		atime.tv_sec = 0;
+-		inode_set_atime_to_ts(VFS_I(mp->m_rbmip), atime);
+-		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
 +		if (xfs_has_rtgroups(mp)) {
-+			xfs_rgnumber_t	rgno;
-+
-+			rgno = xfs_rtb_to_rgno(mp, bi->bi_bmap.br_startblock);
-+			bi->bi_rtg = xfs_rtgroup_get(mp, rgno);
++			mp->m_rtgrotor = 0;
 +		} else {
-+			bi->bi_rtg = NULL;
++			atime = inode_get_atime(VFS_I(mp->m_rbmip));
++			atime.tv_sec = 0;
++			inode_set_atime_to_ts(VFS_I(mp->m_rbmip), atime);
++			xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
 +		}
-+
- 		return;
-+	}
+ 	}
+ 	error = 0;
+ out:
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 33d454cffb2..36df148018f 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -810,7 +810,8 @@ rtbitmap_create(
  
- 	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
+ 	rbmip->i_disk_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
+ 	rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
+-	inode_set_atime(VFS_I(rbmip), 0, 0);
++	if (!xfs_has_rtgroups(mp))
++		inode_set_atime(VFS_I(rbmip), 0, 0);
+ 	libxfs_trans_log_inode(upd.tp, rbmip, XFS_ILOG_CORE);
  
-@@ -524,8 +534,11 @@ static inline void
- xfs_bmap_update_put_group(
- 	struct xfs_bmap_intent	*bi)
- {
--	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
-+	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
-+		if (xfs_has_rtgroups(bi->bi_owner->i_mount))
-+			xfs_rtgroup_put(bi->bi_rtg);
- 		return;
-+	}
- 
- 	xfs_perag_intent_put(bi->bi_pag);
- }
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index bd7f936262c..61c195198db 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -246,7 +246,10 @@ struct xfs_bmap_intent {
- 	enum xfs_bmap_intent_type		bi_type;
- 	int					bi_whichfork;
- 	struct xfs_inode			*bi_owner;
--	struct xfs_perag			*bi_pag;
-+	union {
-+		struct xfs_perag		*bi_pag;
-+		struct xfs_rtgroup		*bi_rtg;
-+	};
- 	struct xfs_bmbt_irec			bi_bmap;
- };
- 
+ 	error = -libxfs_imeta_commit_update(&upd);
 
