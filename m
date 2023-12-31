@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38954BE66
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:23:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A294C12D
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:23:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQlDRUvK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9F3EC433C7;
-	Sun, 31 Dec 2023 22:23:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AJcO6DNz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C4EBC433C7;
+	Sun, 31 Dec 2023 22:23:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704061404;
-	bh=1IvsX4IPp7nrpqk3554fAEtHMhttE8jDcQzEddx808c=;
+	s=k20201202; t=1704061420;
+	bh=RKV558f1E2kjnc2Blj8JNKoUV7NDsxeSeMLeECOki/Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PQlDRUvKtRDHgzomGAPVwtOR6Sd5LcuFCqhiMugGKS4gCm5LoSeCH7gaAWY8m9qhj
-	 shp+T5XOSMg5TlFA7kntRPHcCoVGZLKMW4IxwWU/ug3ol3SzBQBk9ZjLKKDRtOEKiB
-	 uu7eUdAFDWGBXkISw3NuSzv4M3ODGBfGlbBMaO7pAAjn5jq4w2rDMVjHaS2n9+AQk4
-	 d6y6Nrdb7KGv0loCQ8pz/UKiUbTNhkd7yN0HBGapLT2iD5JcG6K7EOq1TezhImLjOZ
-	 B+Kug/KjgKp5WQY/pJjRp3vLmwtvSF0d3Q+/4wPoX/Z5IH0Pju/CtchARnIXtazH9T
-	 T61W5TO26myMg==
-Date: Sun, 31 Dec 2023 14:23:24 -0800
-Subject: [PATCH 5/6] xfs_repair: port to the new refcount bag structure
+	b=AJcO6DNzCJP7mcRox2kY76p6dqxDXiQmQcwv+wtO1PVPEJenDF4Gc//gUCea/baLg
+	 Sif2f/kH/QoUf9MEVllSOd2jKgut5yVKFQ+AqVWj7M/AZPRyoUQqB1keVNpgNEjGNi
+	 pB/XLwqZMrO2QKauUETGHPOLfjgJsYFqfbScG5r17n4VYC8v0qS7+oSTlYyCmJpEmO
+	 yWPKKBaR1v/pnoXn13uEgCsR8kWTjJdxXajCKd87e5JsV6zq2J4wnkDT4T4xkIVvFt
+	 919LVFjVhsMPaCZdAI058nxlBKEmjTD0z/CwsgG2EEh5Gx8OuWGCWxat3Nyfe+Q3oP
+	 QsVtO45g5BnlQ==
+Date: Sun, 31 Dec 2023 14:23:39 -0800
+Subject: [PATCH 6/6] xfs_repair: remove the old bag implementation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404994491.1795402.5578754783675934274.stgit@frogsfrogsfrogs>
+Message-ID: <170404994505.1795402.18372950747511650235.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404994421.1795402.5021109335646815731.stgit@frogsfrogsfrogs>
 References: <170404994421.1795402.5021109335646815731.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,332 +37,205 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Port the refcount record generating code to use the new refcount bag
-data structure.
+Remove the old bag implementation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/rmap.c       |  152 +++++++++++++++------------------------------------
- repair/xfs_repair.c |    6 ++
- 2 files changed, 52 insertions(+), 106 deletions(-)
+ repair/rmap.c |    7 ---
+ repair/slab.c |  130 ---------------------------------------------------------
+ repair/slab.h |   19 --------
+ 3 files changed, 156 deletions(-)
 
 
 diff --git a/repair/rmap.c b/repair/rmap.c
-index b338cdc3bea..cc1312c5d1c 100644
+index cc1312c5d1c..8895377aa2a 100644
 --- a/repair/rmap.c
 +++ b/repair/rmap.c
-@@ -16,6 +16,7 @@
- #include "libfrog/platform.h"
- #include "libxfs/xfile.h"
- #include "libxfs/xfbtree.h"
-+#include "rcbag.h"
+@@ -35,13 +35,6 @@ struct xfs_ag_rmap {
+ 	struct xfs_slab	*ar_refcount_items;	/* refcount items, p4-5 */
+ };
  
- #undef RMAP_DEBUG
- 
-@@ -759,35 +760,32 @@ rmap_dump(
-  * reflink inode flag, if the stack depth is greater than 1.
-  */
- static void
--mark_inode_rl(
-+mark_reflink_inodes(
- 	struct xfs_mount	*mp,
--	struct xfs_bag		*rmaps)
-+	struct rcbag		*rcstack)
- {
--	struct rmap_for_refcount *rfr;
-+	struct rcbag_iter	rciter;
- 	struct ino_tree_node	*irec;
--	int			off;
--	uint64_t		idx;
- 
--	if (bag_count(rmaps) < 2)
--		return;
+-/* Only the parts of struct xfs_rmap_irec that we need to compute refcounts. */
+-struct rmap_for_refcount {
+-	xfs_agblock_t	rm_startblock;
+-	xfs_extlen_t	rm_blockcount;
+-	uint64_t	rm_owner;
+-};
 -
--	/* Reflink flag accounting */
--	foreach_bag_ptr(rmaps, idx, rfr) {
-+	rcbag_ino_iter_start(rcstack, &rciter);
-+	while (rcbag_ino_iter(rcstack, &rciter) == 1) {
- 		xfs_agnumber_t	agno;
- 		xfs_agino_t	agino;
-+		int		off;
- 
--		ASSERT(!XFS_RMAP_NON_INODE_OWNER(rfr->rm_owner));
-+		ASSERT(!XFS_RMAP_NON_INODE_OWNER(rciter.ino));
- 
--		agno = XFS_INO_TO_AGNO(mp, rfr->rm_owner);
--		agino = XFS_INO_TO_AGINO(mp, rfr->rm_owner);
-+		agno = XFS_INO_TO_AGNO(mp, rciter.ino);
-+		agino = XFS_INO_TO_AGINO(mp, rciter.ino);
- 
- 		pthread_mutex_lock(&ag_locks[agno].lock);
- 		irec = find_inode_rec(mp, agno, agino);
--		off = get_inode_offset(mp, rfr->rm_owner, irec);
-+		off = get_inode_offset(mp, rciter.ino, irec);
- 		/* lock here because we might go outside this ag */
- 		set_inode_is_rl(irec, off);
- 		pthread_mutex_unlock(&ag_locks[agno].lock);
- 	}
-+	rcbag_ino_iter_stop(rcstack, &rciter);
- }
- 
- /*
-@@ -823,8 +821,6 @@ refcount_emit(
- _("Insufficient memory while recreating refcount tree."));
- }
- 
--#define RMAP_NEXT(r)	((r)->rm_startblock + (r)->rm_blockcount)
--
- /* Decide if an rmap could describe a shared extent. */
- static inline bool
- rmap_shareable(
-@@ -884,40 +880,6 @@ refcount_walk_rmaps(
- 	return 0;
- }
+ static struct xfs_ag_rmap *ag_rmaps;
+ bool rmapbt_suspect;
+ static bool refcbt_suspect;
+diff --git a/repair/slab.c b/repair/slab.c
+index 44ca0468eda..a0114ac2373 100644
+--- a/repair/slab.c
++++ b/repair/slab.c
+@@ -77,28 +77,6 @@ struct xfs_slab_cursor {
+ 	struct xfs_slab_hdr_cursor	hcur[0];	/* per-slab cursors */
+ };
  
 -/*
-- * Find the next block where the refcount changes, given the next rmap we
-- * looked at and the ones we're already tracking.
+- * Bags -- each bag is an array of record items; when a bag fills up, we resize
+- * it and hope we don't run out of memory.
 - */
--static inline int
--next_refcount_edge(
--	struct xfs_bag		*stack_top,
--	struct xfs_rmap_irec	*next_rmap,
--	bool			next_valid,
--	xfs_agblock_t		*nbnop)
+-#define MIN_BAG_SIZE	4096
+-struct xfs_bag {
+-	uint64_t		bg_nr;		/* number of pointers */
+-	uint64_t		bg_inuse;	/* number of slots in use */
+-	char			*bg_items;	/* pointer to block of items */
+-	size_t			bg_item_sz;	/* size of each item */
+-};
+-
+-static inline void *bag_ptr(struct xfs_bag *bag, uint64_t idx)
 -{
--	struct rmap_for_refcount *rfr;
--	uint64_t		idx;
--	xfs_agblock_t		nbno = NULLAGBLOCK;
+-	return &bag->bg_items[bag->bg_item_sz * idx];
+-}
 -
--	if (next_valid)
--		nbno = next_rmap->rm_startblock;
--
--	foreach_bag_ptr(stack_top, idx, rfr)
--		nbno = min(nbno, RMAP_NEXT(rfr));
--
--	/*
--	 * We should have found /something/ because either next_rrm is the next
--	 * interesting rmap to look at after emitting this refcount extent, or
--	 * there are other rmaps in rmap_bag contributing to the current
--	 * sharing count.  But if something is seriously wrong, bail out.
--	 */
--	if (nbno == NULLAGBLOCK)
--		return EFSCORRUPTED;
--
--	*nbnop = nbno;
--	return 0;
+-static inline void *bag_end(struct xfs_bag *bag)
+-{
+-	return bag_ptr(bag, bag->bg_nr);
 -}
 -
  /*
-  * Walk forward through the rmap btree to collect all rmaps starting at
-  * @bno in @rmap_bag.  These represent the file(s) that share ownership of
-@@ -927,28 +889,19 @@ next_refcount_edge(
- static int
- refcount_push_rmaps_at(
- 	struct rmap_mem_cur	*rmcur,
--	xfs_agnumber_t		agno,
--	struct xfs_bag		*stack_top,
-+	struct rcbag		*stack,
- 	xfs_agblock_t		bno,
--	struct xfs_rmap_irec	*irec,
-+	struct xfs_rmap_irec	*rmap,
- 	bool			*have,
- 	const char		*tag)
- {
- 	int			have_gt;
- 	int			error;
- 
--	while (*have && irec->rm_startblock == bno) {
--		struct rmap_for_refcount	rfr = {
--			.rm_startblock		= irec->rm_startblock,
--			.rm_blockcount		= irec->rm_blockcount,
--			.rm_owner		= irec->rm_owner,
--		};
-+	while (*have && rmap->rm_startblock == bno) {
-+		rcbag_add(stack, rmap);
- 
--		rmap_dump(tag, agno, &rfr);
--		error = bag_add(stack_top, &rfr);
--		if (error)
--			return error;
--		error = refcount_walk_rmaps(rmcur->mcur, irec, have);
-+		error = refcount_walk_rmaps(rmcur->mcur, rmap, have);
- 		if (error)
- 			return error;
- 	}
-@@ -968,15 +921,14 @@ refcount_push_rmaps_at(
+  * Create a slab to hold some objects of a particular size.
   */
- int
- compute_refcounts(
--	struct xfs_mount		*mp,
-+	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno)
+@@ -386,111 +364,3 @@ slab_count(
  {
-+	struct rcbag		*rcstack;
- 	struct rmap_mem_cur	rmcur;
--	struct xfs_rmap_irec	irec;
--	struct xfs_bag		*stack_top = NULL;
--	struct rmap_for_refcount *rfr;
--	uint64_t		idx;
--	uint64_t		old_stack_nr;
-+	struct xfs_rmap_irec	rmap;
-+	uint64_t		nr_rmaps;
-+	uint64_t		old_stack_height;
- 	xfs_agblock_t		sbno;	/* first bno of this rmap set */
- 	xfs_agblock_t		cbno;	/* first bno of this refcount set */
- 	xfs_agblock_t		nbno;	/* next bno where rmap set changes */
-@@ -988,11 +940,13 @@ compute_refcounts(
- 	if (ag_rmaps[agno].ar_xfbtree == NULL)
- 		return 0;
- 
-+	nr_rmaps = rmap_record_count(mp, agno);
-+
- 	error = rmap_init_mem_cursor(mp, NULL, agno, &rmcur);
- 	if (error)
- 		return error;
- 
--	error = init_bag(&stack_top, sizeof(struct rmap_for_refcount));
-+	error = rcbag_init(mp, nr_rmaps, &rcstack);
- 	if (error)
- 		goto out_cur;
- 
-@@ -1005,86 +959,72 @@ compute_refcounts(
- 	/* Process reverse mappings into refcount data. */
- 	while (libxfs_btree_has_more_records(rmcur.mcur)) {
- 		/* Push all rmaps with pblk == sbno onto the stack */
--		error = refcount_walk_rmaps(rmcur.mcur, &irec, &have);
-+		error = refcount_walk_rmaps(rmcur.mcur, &rmap, &have);
- 		if (error)
- 			goto out_bag;
- 		if (!have)
- 			break;
--		sbno = cbno = irec.rm_startblock;
--		error = refcount_push_rmaps_at(&rmcur, agno, stack_top, sbno,
--				&irec, &have, "push0");
-+		sbno = cbno = rmap.rm_startblock;
-+		error = refcount_push_rmaps_at(&rmcur, rcstack, sbno, &rmap,
-+				&have, "push0");
- 		if (error)
- 			goto out_bag;
--		mark_inode_rl(mp, stack_top);
-+		mark_reflink_inodes(mp, rcstack);
- 
- 		/* Set nbno to the bno of the next refcount change */
--		error = next_refcount_edge(stack_top, &irec, have, &nbno);
--		if (error)
--			goto out_bag;
-+		rcbag_next_edge(rcstack, &rmap, have, &nbno);
- 
- 		/* Emit reverse mappings, if needed */
- 		ASSERT(nbno > sbno);
--		old_stack_nr = bag_count(stack_top);
-+		old_stack_height = rcbag_count(rcstack);
- 
- 		/* While stack isn't empty... */
--		while (bag_count(stack_top)) {
-+		while (rcbag_count(rcstack) > 0) {
- 			/* Pop all rmaps that end at nbno */
--			foreach_bag_ptr_reverse(stack_top, idx, rfr) {
--				if (RMAP_NEXT(rfr) != nbno)
--					continue;
--				rmap_dump("pop", agno, rfr);
--				error = bag_remove(stack_top, idx);
--				if (error)
--					goto out_bag;
--			}
-+			rcbag_remove_ending_at(rcstack, nbno);
- 
- 			/* Push array items that start at nbno */
--			error = refcount_walk_rmaps(rmcur.mcur, &irec, &have);
-+			error = refcount_walk_rmaps(rmcur.mcur, &rmap, &have);
- 			if (error)
- 				goto out_bag;
- 			if (have) {
--				error = refcount_push_rmaps_at(&rmcur, agno,
--						stack_top, nbno, &irec, &have,
--						"push1");
-+				error = refcount_push_rmaps_at(&rmcur, rcstack,
-+						nbno, &rmap, &have, "push1");
- 				if (error)
- 					goto out_bag;
- 			}
--			mark_inode_rl(mp, stack_top);
-+			mark_reflink_inodes(mp, rcstack);
- 
- 			/* Emit refcount if necessary */
- 			ASSERT(nbno > cbno);
--			if (bag_count(stack_top) != old_stack_nr) {
--				if (old_stack_nr > 1) {
-+			if (rcbag_count(rcstack) != old_stack_height) {
-+				if (old_stack_height > 1) {
- 					refcount_emit(mp, agno, cbno,
--						      nbno - cbno,
--						      old_stack_nr);
-+							nbno - cbno,
-+							old_stack_height);
- 				}
- 				cbno = nbno;
- 			}
- 
- 			/* Stack empty, go find the next rmap */
--			if (bag_count(stack_top) == 0)
-+			if (rcbag_count(rcstack) == 0)
- 				break;
--			old_stack_nr = bag_count(stack_top);
-+			old_stack_height = rcbag_count(rcstack);
- 			sbno = nbno;
- 
- 			/* Set nbno to the bno of the next refcount change */
--			error = next_refcount_edge(stack_top, &irec, have,
--					&nbno);
--			if (error)
--				goto out_bag;
-+			rcbag_next_edge(rcstack, &rmap, have, &nbno);
- 
- 			/* Emit reverse mappings, if needed */
- 			ASSERT(nbno > sbno);
- 		}
- 	}
- out_bag:
--	free_bag(&stack_top);
-+	rcbag_free(&rcstack);
- out_cur:
- 	rmap_free_mem_cursor(NULL, &rmcur, error);
- 	return error;
+ 	return slab->s_nr_items;
  }
--#undef RMAP_NEXT
+-
+-/*
+- * Create a bag to point to some objects.
+- */
+-int
+-init_bag(
+-	struct xfs_bag	**bag,
+-	size_t		item_sz)
+-{
+-	struct xfs_bag	*ptr;
+-
+-	ptr = calloc(1, sizeof(struct xfs_bag));
+-	if (!ptr)
+-		return -ENOMEM;
+-	ptr->bg_item_sz = item_sz;
+-	ptr->bg_items = calloc(MIN_BAG_SIZE, item_sz);
+-	if (!ptr->bg_items) {
+-		free(ptr);
+-		return -ENOMEM;
+-	}
+-	ptr->bg_nr = MIN_BAG_SIZE;
+-	*bag = ptr;
+-	return 0;
+-}
+-
+-/*
+- * Free a bag of pointers.
+- */
+-void
+-free_bag(
+-	struct xfs_bag	**bag)
+-{
+-	struct xfs_bag	*ptr;
+-
+-	ptr = *bag;
+-	if (!ptr)
+-		return;
+-	free(ptr->bg_items);
+-	free(ptr);
+-	*bag = NULL;
+-}
+-
+-/*
+- * Add an object to the pointer bag.
+- */
+-int
+-bag_add(
+-	struct xfs_bag	*bag,
+-	void		*ptr)
+-{
+-	void		*p, *x;
+-
+-	p = bag_ptr(bag, bag->bg_inuse);
+-	if (p == bag_end(bag)) {
+-		/* No free space, alloc more pointers */
+-		uint64_t	nr;
+-
+-		nr = bag->bg_nr * 2;
+-		x = realloc(bag->bg_items, nr * bag->bg_item_sz);
+-		if (!x)
+-			return -ENOMEM;
+-		bag->bg_items = x;
+-		memset(bag_end(bag), 0, bag->bg_nr * bag->bg_item_sz);
+-		bag->bg_nr = nr;
+-		p = bag_ptr(bag, bag->bg_inuse);
+-	}
+-	memcpy(p, ptr, bag->bg_item_sz);
+-	bag->bg_inuse++;
+-	return 0;
+-}
+-
+-/*
+- * Remove a pointer from a bag.
+- */
+-int
+-bag_remove(
+-	struct xfs_bag	*bag,
+-	uint64_t	nr)
+-{
+-	ASSERT(nr < bag->bg_inuse);
+-	memmove(bag_ptr(bag, nr), bag_ptr(bag, nr + 1),
+-		(bag->bg_inuse - nr - 1) * bag->bg_item_sz);
+-	bag->bg_inuse--;
+-	return 0;
+-}
+-
+-/*
+- * Return the number of items in a bag.
+- */
+-uint64_t
+-bag_count(
+-	struct xfs_bag	*bag)
+-{
+-	return bag->bg_inuse;
+-}
+-
+-/*
+- * Return the nth item in a bag.
+- */
+-void *
+-bag_item(
+-	struct xfs_bag	*bag,
+-	uint64_t	nr)
+-{
+-	if (nr >= bag->bg_inuse)
+-		return NULL;
+-	return bag_ptr(bag, nr);
+-}
+diff --git a/repair/slab.h b/repair/slab.h
+index 019b169024d..77fb32163d5 100644
+--- a/repair/slab.h
++++ b/repair/slab.h
+@@ -26,23 +26,4 @@ void *peek_slab_cursor(struct xfs_slab_cursor *cur);
+ void advance_slab_cursor(struct xfs_slab_cursor *cur);
+ void *pop_slab_cursor(struct xfs_slab_cursor *cur);
  
- static int
- count_btree_records(
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index ba78dc0b8ea..bf02beba375 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -26,6 +26,7 @@
- #include "libfrog/platform.h"
- #include "bulkload.h"
- #include "quotacheck.h"
-+#include "rcbag_btree.h"
- 
- /*
-  * option tables for getsubopt calls
-@@ -1259,6 +1260,10 @@ main(int argc, char **argv)
- 	phase3(mp, phase2_threads);
- 	phase_end(mp, 3);
- 
-+	error = rcbagbt_init_cur_cache();
-+	if (error)
-+		do_error(_("could not allocate btree cursor memory\n"));
-+
- 	phase4(mp);
- 	phase_end(mp, 4);
- 
-@@ -1271,6 +1276,7 @@ main(int argc, char **argv)
- 		phase5(mp);
- 	}
- 	phase_end(mp, 5);
-+	rcbagbt_destroy_cur_cache();
- 
- 	/*
- 	 * Done with the block usage maps, toss them...
+-struct xfs_bag;
+-
+-int init_bag(struct xfs_bag **bagp, size_t itemsz);
+-void free_bag(struct xfs_bag **bagp);
+-int bag_add(struct xfs_bag *bag, void *item);
+-int bag_remove(struct xfs_bag *bag, uint64_t idx);
+-uint64_t bag_count(struct xfs_bag *bag);
+-void *bag_item(struct xfs_bag *bag, uint64_t idx);
+-
+-#define foreach_bag_ptr(bag, idx, ptr) \
+-	for ((idx) = 0, (ptr) = bag_item((bag), (idx)); \
+-	     (idx) < bag_count(bag); \
+-	     (idx)++, (ptr) = bag_item((bag), (idx)))
+-
+-#define foreach_bag_ptr_reverse(bag, idx, ptr) \
+-	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
+-	     (ptr) != NULL; \
+-	     (idx)--, (ptr) = bag_item((bag), (idx)))
+-
+ #endif /* SLAB_H_ */
 
