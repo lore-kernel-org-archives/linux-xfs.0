@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E411EBA45
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:05:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B713EC140
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:05:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ubF44yS+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B16FEC433C7;
-	Sun, 31 Dec 2023 23:05:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gPJrW2LJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46C3EC433C7;
+	Sun, 31 Dec 2023 23:05:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704063922;
-	bh=xvu1csgTYZkhpjsNQhsIDg77pinD2q4DwmcYh3QiFGY=;
+	s=k20201202; t=1704063938;
+	bh=qDc+hMSCd6o2NNzcCp003YS8n++k7bOizBl0rdk/O48=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ubF44yS+jgC9lybPAQPmBxFW7zquoc+ASi3SYhYRWPvHTZZWi9/vdAdNShF4qHYF4
-	 3SW8gYmeDizbrizdiHsqunWILZ79zwHocmiHDQbVLE740L7sPS+7qt5jJeXaMS5o9W
-	 s/GUTMWY319yxCcujxx+5oZvKJgVc62xxFnnZATiSDTzCxw8fWli7u1PK9hFjjIx6d
-	 MJT/4wXVzBqTYLEdRN5rXsbfjUmp4h3+KEFm2Czn3mrIgOvVJrjM/xO2z86CLXNvrn
-	 TxOkaMUDEtRXfhYPJfX4sDPYFeDz369UtuSxvBW6ey92oUzCKTwyeE+QRyzMLCTF0E
-	 Ui+UG2pgMjjhw==
-Date: Sun, 31 Dec 2023 15:05:22 -0800
-Subject: [PATCH 01/32] xfs: add parent pointer support to attribute code
+	b=gPJrW2LJ8dPFZhfUKqJhKioucYfuEk9/2Ohb2Xk47FJF+TszXkPkA8uSiUZCM/4mh
+	 +LlvlzfRZqqnoNmk56wgFJLQSegeVtvorSrQmet7rBWUubLnt5pd+5jqr1HkTqVeb9
+	 4bjngXCdfdSj992s1K7GK5PE/SYUgjf18gvRahGeXRpEt1FT4HJkXT4eRwCXsnvDvh
+	 dSEfVYE1Vxi2BwY2NyFRVIuUmJibbsMl93wfAotr6KTASsBXLPwF2N2dz2MhqNGZvO
+	 lNuFAEPOahAdwxHG+iJrI+WFkc+5jWnnQX7Tgfwn61G2GqnnomgNvGeCacF5s1jNbP
+	 59VkYsErnrkHQ==
+Date: Sun, 31 Dec 2023 15:05:37 -0800
+Subject: [PATCH 02/32] xfs: define parent pointer ondisk extended attribute
+ format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>,
+Cc: Dave Chinner <dchinner@redhat.com>,
  Allison Henderson <allison.henderson@oracle.com>, catherine.hoang@oracle.com,
  linux-xfs@vger.kernel.org, allison.henderson@oracle.com
-Message-ID: <170405006115.1804688.9089283147822973903.stgit@frogsfrogsfrogs>
+Message-ID: <170405006129.1804688.7377562468344948804.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405006077.1804688.8762482665401724622.stgit@frogsfrogsfrogs>
 References: <170405006077.1804688.8762482665401724622.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,66 +40,68 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+We need to define the parent pointer attribute format before we start
+adding support for it into all the code that needs to use it. The EA
+format we will use encodes the following information:
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+        name={parent inode #, parent inode generation, dirent namehash}
+        value={dirent name}
+
+The inode/gen gives all the information we need to reliably identify the
+parent without requiring child->parent lock ordering, and allows
+userspace to do pathname component level reconstruction without the
+kernel ever needing to verify the parent itself as part of ioctl calls.
+Storing the dirent name hash in the key reduces hash collisions if a
+file is hardlinked multiple times in the same directory.
+
+By using the NVLOOKUP mode in the extended attribute code to match
+parent pointers using both the xattr name and value, we can identify the
+exact parent pointer EA we need to modify/remove in rename/unlink
+operations without searching the entire EA space.
+
+By storing the dirent name, we have enough information to be able to
+validate and reconstruct damaged directory trees.  Earlier iterations of
+this patchset encoded the directory offset in the parent pointer key,
+but this format required repair to keep that in sync across directory
+rebuilds, which is unnecessary complexity.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: replace diroffset with the namehash in the pptr key]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_attr.c       |    3 ++-
- libxfs/xfs_da_format.h  |    5 ++++-
- libxfs/xfs_log_format.h |    1 +
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ libxfs/xfs_da_format.h |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 3fe9041ae2c..78884485c08 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -943,7 +943,8 @@ xfs_attr_set(
- 	struct xfs_inode	*dp = args->dp;
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_trans_res	tres;
--	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
-+	bool			rsvd = (args->attr_filter & (XFS_ATTR_ROOT |
-+							     XFS_ATTR_PARENT));
- 	bool			is_remove = args->op_flags & XFS_DA_OP_REMOVE;
- 	int			error, local;
- 	int			rmt_blks = 0;
 diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
-index 0e1ada44f21..6b5971ee680 100644
+index 6b5971ee680..edbd901d906 100644
 --- a/libxfs/xfs_da_format.h
 +++ b/libxfs/xfs_da_format.h
-@@ -709,12 +709,15 @@ struct xfs_attr3_leafblock {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define	XFS_ATTR_PARENT_BIT	3	/* parent pointer attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ONDISK_MASK \
-+			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
+@@ -878,4 +878,24 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+ xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *bp,
+ 				      struct xfs_da3_blkinfo *hdr3);
  
- #define XFS_ATTR_NAMESPACE_STR \
- 	{ XFS_ATTR_LOCAL,	"local" }, \
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index 285a0a089df..bded03634e5 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -1056,6 +1056,7 @@ struct xfs_icreate_log {
-  */
- #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
- 					 XFS_ATTR_SECURE | \
-+					 XFS_ATTR_PARENT | \
- 					 XFS_ATTR_INCOMPLETE)
- 
- /*
++/*
++ * Parent pointer attribute format definition
++ *
++ * The xattr name encodes the parent inode number, generation and the crc32c
++ * hash of the dirent name.
++ *
++ * The xattr value contains the dirent name.
++ */
++struct xfs_parent_name_rec {
++	__be64	p_ino;
++	__be32	p_gen;
++	__be32	p_namehash;
++};
++
++/*
++ * Maximum size of the dirent name that can be stored in a parent pointer.
++ * This matches the maximum dirent name length.
++ */
++#define XFS_PARENT_DIRENT_NAME_MAX_SIZE		(MAXNAMELEN - 1)
++
+ #endif /* __XFS_DA_FORMAT_H__ */
 
