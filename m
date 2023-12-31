@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2671FBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:19:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53BDFBA2E
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:19:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TaBl9dBX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B242C433C7;
-	Sun, 31 Dec 2023 20:19:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rzx0HgfT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2756CC433C8;
+	Sun, 31 Dec 2023 20:19:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704053958;
-	bh=ZuUXVgpPIz7uoOvU656bXVh7FxENwOII74vI4xDOWUY=;
+	s=k20201202; t=1704053974;
+	bh=XeRK9kRCmvDkHWdtcjLwZ2/OI/aLheehQrMAnDVz28A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TaBl9dBXMC1ZXIW1WprRhDmjVGSlM17GdBY+s+P5dRDh2xm6P+J2gnk518TdorvvG
-	 OeGu0vpFG3O+tTGYIDyLxaSpeyMYfAqby52GRusBRNx+to67+Z8Egop3EQmP5AY2TM
-	 54rN5s3hjeYtLNBzHQ8yzJAZUwmC86yo3nSyklsfE3UAE4SKpI6iWZbKTS1su7Swc6
-	 hwwAP7GOhrvUTcKlJ1LRCupOx0zcpcNU/rFM/dSEv99qm9wuDggdAR2bTfPSccAGSj
-	 mafnlvm1cbBwxvZDbXC66/A0ymb5uoK/+o8CEFlIC/ndNwpVjQ0qi4+KYPWdLUBIJC
-	 G/GnfhSf6SVMg==
-Date: Sun, 31 Dec 2023 12:19:17 -0800
-Subject: [PATCH 9/9] xfs: remove unnecessary fields in xfbtree_config
+	b=Rzx0HgfTWRTyOHUaD8R9ISxqqhlEOMZQKAwjbsTASxleVdI7avSj1+VPwsf7juGHa
+	 +KxQP+yJse3LxV0xS1HglBkUZiKU9FfprWsxrKPCxQDRi/F6KfTuTqWUt1npXV7iIT
+	 y0crjpbw6/uueYJG21r1jFr8l6MswX4Y/k74tW0pyDJ0UBZQ8E4i5Yxfu58s52epr7
+	 y+aoQigRGnB2OPqAvrxMQk3kQETNGYAuhBbQv7VyA2MpxEWmWmzuATNnq4gMDf7RID
+	 m0qd+CrCjoPD8A5DdaFvfMYrhkDAxUwFOJk6Nu2W+IAat2NoZwQIWYkuPTDzUVBFc0
+	 7CV77XXJX32QQ==
+Date: Sun, 31 Dec 2023 12:19:33 -0800
+Subject: [PATCH 1/4] xfs: move lru refs to the btree ops structure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404830659.1749286.12453760879570391978.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404830490.1749286.17145905891935561298.stgit@frogsfrogsfrogs>
-References: <170404830490.1749286.17145905891935561298.stgit@frogsfrogsfrogs>
+Message-ID: <170404831021.1749557.2760974108166727419.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404830995.1749557.6135790697605021363.stgit@frogsfrogsfrogs>
+References: <170404830995.1749557.6135790697605021363.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,108 +37,158 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove these fields now that we get all the info we need from the btree
-ops.
+Move the btree buffer LRU refcount to the btree ops structure so that we
+can eliminate the last bc_btnum switch in the generic btree code.  We're
+about to create repair-specific btree types, and we don't want that
+stuff cluttering up libxfs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree_mem.h  |    9 ---------
- fs/xfs/libxfs/xfs_rmap_btree.c |    1 -
- fs/xfs/scrub/trace.h           |   10 ++++------
- fs/xfs/scrub/xfbtree.c         |    4 ++--
- 4 files changed, 6 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    2 ++
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    1 +
+ fs/xfs/libxfs/xfs_btree.c          |   24 ++----------------------
+ fs/xfs/libxfs/xfs_btree.h          |    3 +++
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 ++
+ fs/xfs/libxfs/xfs_refcount_btree.c |    1 +
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    2 ++
+ 7 files changed, 13 insertions(+), 22 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree_mem.h b/fs/xfs/libxfs/xfs_btree_mem.h
-index 29f97c5030465..1f961f3f55444 100644
---- a/fs/xfs/libxfs/xfs_btree_mem.h
-+++ b/fs/xfs/libxfs/xfs_btree_mem.h
-@@ -17,17 +17,8 @@ struct xfbtree_config {
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 08aa92f574334..fd769e62cc35b 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -457,6 +457,7 @@ xfs_allocbt_keys_contiguous(
+ const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
++	.lru_refs		= XFS_ALLOC_BTREE_REF,
  
- 	/* Owner of this btree. */
- 	unsigned long long		owner;
--
--	/* Btree type number */
--	xfs_btnum_t			btnum;
--
--	/* XFBTREE_CREATE_* flags */
--	unsigned int			flags;
- };
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+ 	.set_root		= xfs_allocbt_set_root,
+@@ -480,6 +481,7 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
+ const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
++	.lru_refs		= XFS_ALLOC_BTREE_REF,
+ 	.geom_flags		= XFS_BTREE_LASTREC_UPDATE,
  
--/* btree has long pointers */
--#define XFBTREE_CREATE_LONG_PTRS	(1U << 0)
--
- #ifdef CONFIG_XFS_BTREE_IN_XFILE
- unsigned int xfs_btree_mem_head_nlevels(struct xfs_buf *head_bp);
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 54e0a47169487..fd5fb8abf4448 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -516,6 +516,7 @@ xfs_bmbt_keys_contiguous(
+ const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.rec_len		= sizeof(xfs_bmbt_rec_t),
+ 	.key_len		= sizeof(xfs_bmbt_key_t),
++	.lru_refs		= XFS_BMAP_BTREE_REF,
+ 	.geom_flags		= XFS_BTREE_LONG_PTRS | XFS_BTREE_ROOT_IN_INODE,
  
+ 	.dup_cursor		= xfs_bmbt_dup_cursor,
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 5af19610d8919..4c8e9dd25b739 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1350,32 +1350,12 @@ xfs_btree_buf_to_ptr(
+ 	}
+ }
+ 
+-STATIC void
++static inline void
+ xfs_btree_set_refs(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_buf		*bp)
+ {
+-	switch (cur->bc_btnum) {
+-	case XFS_BTNUM_BNO:
+-	case XFS_BTNUM_CNT:
+-		xfs_buf_set_ref(bp, XFS_ALLOC_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_INO:
+-	case XFS_BTNUM_FINO:
+-		xfs_buf_set_ref(bp, XFS_INO_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_BMAP:
+-		xfs_buf_set_ref(bp, XFS_BMAP_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_RMAP:
+-		xfs_buf_set_ref(bp, XFS_RMAP_BTREE_REF);
+-		break;
+-	case XFS_BTNUM_REFC:
+-		xfs_buf_set_ref(bp, XFS_REFC_BTREE_REF);
+-		break;
+-	default:
+-		ASSERT(0);
+-	}
++	xfs_buf_set_ref(bp, cur->bc_ops->lru_refs);
+ }
+ 
+ int
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 41000bd6cccf7..edbcd4f0e9888 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -120,6 +120,9 @@ struct xfs_btree_ops {
+ 	/* XFS_BTREE_* flags that determine the geometry of the btree */
+ 	unsigned int	geom_flags;
+ 
++	/* LRU refcount to set on each btree buffer created */
++	int	lru_refs;
++
+ 	/* cursor operations */
+ 	struct xfs_btree_cur *(*dup_cursor)(struct xfs_btree_cur *);
+ 	void	(*update_cursor)(struct xfs_btree_cur *src,
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 69086fdc3be6f..cdb1f99970724 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -401,6 +401,7 @@ xfs_inobt_keys_contiguous(
+ const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
++	.lru_refs		= XFS_INO_BTREE_REF,
+ 
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_inobt_set_root,
+@@ -423,6 +424,7 @@ const struct xfs_btree_ops xfs_inobt_ops = {
+ const struct xfs_btree_ops xfs_finobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
++	.lru_refs		= XFS_INO_BTREE_REF,
+ 
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_finobt_set_root,
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 36e7b26d5e3b2..06a2f062b58cb 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -320,6 +320,7 @@ xfs_refcountbt_keys_contiguous(
+ const struct xfs_btree_ops xfs_refcountbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_refcount_rec),
+ 	.key_len		= sizeof(struct xfs_refcount_key),
++	.lru_refs		= XFS_REFC_BTREE_REF,
+ 
+ 	.dup_cursor		= xfs_refcountbt_dup_cursor,
+ 	.set_root		= xfs_refcountbt_set_root,
 diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index f5889da0bff76..b4a8b4b62456b 100644
+index b4a8b4b62456b..23841ee6e2ff6 100644
 --- a/fs/xfs/libxfs/xfs_rmap_btree.c
 +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -669,7 +669,6 @@ xfs_rmapbt_mem_create(
- 	struct xfbtree_config	cfg = {
- 		.btree_ops	= &xfs_rmapbt_mem_ops,
- 		.target		= target,
--		.btnum		= XFS_BTNUM_RMAP,
- 		.owner		= agno,
- 	};
+@@ -489,6 +489,7 @@ xfs_rmapbt_keys_contiguous(
+ const struct xfs_btree_ops xfs_rmapbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_rmap_rec),
+ 	.key_len		= 2 * sizeof(struct xfs_rmap_key),
++	.lru_refs		= XFS_RMAP_BTREE_REF,
+ 	.geom_flags		= XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING,
  
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 06d593dcd697a..14bbefdd7ab81 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -2218,8 +2218,7 @@ TRACE_EVENT(xfbtree_create,
- 		 struct xfbtree *xfbt),
- 	TP_ARGS(mp, cfg, xfbt),
- 	TP_STRUCT__entry(
--		__field(xfs_btnum_t, btnum)
--		__field(unsigned int, xfbtree_flags)
-+		__field(const void *, btree_ops)
- 		__field(unsigned long, xfino)
- 		__field(unsigned int, leaf_mxr)
- 		__field(unsigned int, leaf_mnr)
-@@ -2228,8 +2227,7 @@ TRACE_EVENT(xfbtree_create,
- 		__field(unsigned long long, owner)
- 	),
- 	TP_fast_assign(
--		__entry->btnum = cfg->btnum;
--		__entry->xfbtree_flags = cfg->flags;
-+		__entry->btree_ops = cfg->btree_ops;
- 		__entry->xfino = xfbtree_ino(xfbt);
- 		__entry->leaf_mxr = xfbt->maxrecs[0];
- 		__entry->node_mxr = xfbt->maxrecs[1];
-@@ -2237,9 +2235,9 @@ TRACE_EVENT(xfbtree_create,
- 		__entry->node_mnr = xfbt->minrecs[1];
- 		__entry->owner = cfg->owner;
- 	),
--	TP_printk("xfino 0x%lx btnum %s owner 0x%llx leaf_mxr %u leaf_mnr %u node_mxr %u node_mnr %u",
-+	TP_printk("xfino 0x%lx btree_ops %pS owner 0x%llx leaf_mxr %u leaf_mnr %u node_mxr %u node_mnr %u",
- 		  __entry->xfino,
--		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-+		  __entry->btree_ops,
- 		  __entry->owner,
- 		  __entry->leaf_mxr,
- 		  __entry->leaf_mnr,
-diff --git a/fs/xfs/scrub/xfbtree.c b/fs/xfs/scrub/xfbtree.c
-index 9d2e01614d1ff..016026947019a 100644
---- a/fs/xfs/scrub/xfbtree.c
-+++ b/fs/xfs/scrub/xfbtree.c
-@@ -414,7 +414,7 @@ xfbtree_rec_bytes(
- {
- 	unsigned int			blocklen = xfo_to_b(1);
+ 	.dup_cursor		= xfs_rmapbt_dup_cursor,
+@@ -613,6 +614,7 @@ static const struct xfs_buf_ops xfs_rmapbt_mem_buf_ops = {
+ static const struct xfs_btree_ops xfs_rmapbt_mem_ops = {
+ 	.rec_len		= sizeof(struct xfs_rmap_rec),
+ 	.key_len		= 2 * sizeof(struct xfs_rmap_key),
++	.lru_refs		= XFS_RMAP_BTREE_REF,
+ 	.geom_flags		= XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING |
+ 				  XFS_BTREE_IN_XFILE,
  
--	if (cfg->flags & XFBTREE_CREATE_LONG_PTRS) {
-+	if (cfg->btree_ops->geom_flags & XFS_BTREE_LONG_PTRS) {
- 		if (xfs_has_crc(mp))
- 			return blocklen - XFS_BTREE_LBLOCK_CRC_LEN;
- 
-@@ -504,7 +504,7 @@ xfbtree_create(
- 	xfboff_bitmap_init(&xfbt->freespace);
- 
- 	/* Set up min/maxrecs for this btree. */
--	if (cfg->flags & XFBTREE_CREATE_LONG_PTRS)
-+	if (cfg->btree_ops->geom_flags & XFS_BTREE_LONG_PTRS)
- 		keyptr_len += sizeof(__be64);
- 	else
- 		keyptr_len += sizeof(__be32);
 
