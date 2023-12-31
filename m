@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCFD1C2CC
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:15:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD074C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:16:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sIdZJyRE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97BE3C433C8;
-	Sun, 31 Dec 2023 22:15:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qg4bY5eN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4325AC433C7;
+	Sun, 31 Dec 2023 22:16:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060951;
-	bh=D0k2xenrOs52PF19sxLcFcTGUQtXdtgUufJwNL/qfJY=;
+	s=k20201202; t=1704060967;
+	bh=DqKy2GD2NNPOyzzRHBJxy+9bw/DGIpw3kalFeyTLV2o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sIdZJyRESZMO4GR0eoZXNC+au42BTtokvjG5J74OC+8u632cU2iOGd15b9CdE1Y9x
-	 EQlIeRhVYNCQwmTFQ7D6ceL+g24U8gCm9Rj8J+q+Rb4A+0YejFjyS6oOz9ubHLK7p1
-	 0L5lq52K8JyHbluXyhiYU2Lp2xk7/PMJY9CiPXkqxnmaulSLJWYI4yY1sEov4OsN5O
-	 UmO1xYMsKbVpfi7JIqBUWzPJInFfx5NH1K/DYZ6+DEas/6ujwSQjetoDq5wGy9+iro
-	 ecdnL7rGm1bvC++K0iAk+ME+MP8sJN64RdRcI4RQ61OEnKzgahTTIkfLJrDqrCvrFV
-	 lQVRll8caP70A==
-Date: Sun, 31 Dec 2023 14:15:51 -0800
-Subject: [PATCH 05/10] libxfs: support in-memory buffer cache targets
+	b=Qg4bY5eNtX8rf0rCRWoPNpQgfSv2pT4M50g1Yay2ZEUENO0zc+tDFYe8MAhXPsahy
+	 BFSOPELAD0TLq+2Mz6im6EV9swlyk/RzwzLdlufKCXywei2keX3MBQFWpK9B7uEDFF
+	 bPQ1RDDjYEO/oJqO3qFkYM003v4J5jMgRcPz++K4L5MTt5un5maKqcICILnf2XhKfG
+	 r0exVqiJkFJJNNksd0MpKC4xyoz1SX9N5L9rhiCiZ7ge+5CuE1zTl3CHp13ViZ3uvw
+	 V9DRikNpljplV6o/G+Q4C2AyTWGlQxcMuAtyB3YoogPmZ83wRbUO24PNsE2C5wrI0s
+	 UitlOKAZQ9a1g==
+Date: Sun, 31 Dec 2023 14:16:06 -0800
+Subject: [PATCH 06/10] xfs: consolidate btree block freeing tracepoints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404992849.1794490.842205740134023696.stgit@frogsfrogsfrogs>
+Message-ID: <170404992862.1794490.1545761667302582844.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404992774.1794490.2226231791872978170.stgit@frogsfrogsfrogs>
 References: <170404992774.1794490.2226231791872978170.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,121 +37,83 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow the buffer cache to target in-memory files by connecting it to
-xfiles.
+Don't waste tracepoint segment memory on per-btree block freeing
+tracepoints when we can do it from the generic btree code.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_io.h |    3 +++
- libxfs/rdwr.c      |   40 ++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 41 insertions(+), 2 deletions(-)
+ include/xfs_trace.h         |    3 +--
+ libxfs/xfs_btree.c          |    2 ++
+ libxfs/xfs_refcount_btree.c |    2 --
+ libxfs/xfs_rmap_btree.c     |    2 --
+ 4 files changed, 3 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 7877e17685b..a20e78338dd 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -27,6 +27,7 @@ struct xfs_buftarg {
- 	unsigned long		writes_left;
- 	dev_t			bt_bdev;
- 	int			bt_bdev_fd;
-+	struct xfile		*bt_xfile;
- 	unsigned int		flags;
- 	struct cache		*bcache;	/* buffer cache */
- };
-@@ -39,6 +40,8 @@ struct xfs_buftarg {
- #define XFS_BUFTARG_INJECT_WRITE_FAIL	(1 << 2)
- /* purge buffers when lookups find a size mismatch */
- #define XFS_BUFTARG_MISCOMPARE_PURGE	(1 << 3)
-+/* use bt_xfile instead of bt_bdev/bt_bdev_fd */
-+#define XFS_BUFTARG_XFILE		(1 << 4)
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index f172b61d6a5..98819653bcb 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -68,6 +68,7 @@
+ #define trace_xfs_btree_commit_ifakeroot(a)	((void) 0)
+ #define trace_xfs_btree_bload_level_geometry(a,b,c,d,e,f,g) ((void) 0)
+ #define trace_xfs_btree_bload_block(a,b,c,d,e,f) ((void) 0)
++#define trace_xfs_btree_free_block(...)		((void) 0)
  
- /* Simulate the system crashing after a certain number of writes. */
- static inline void
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index f791136c982..645c4b7838d 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -18,7 +18,7 @@
- #include "xfs_inode.h"
- #include "xfs_trans.h"
- #include "libfrog/platform.h"
--
-+#include "libxfs/xfile.h"
- #include "libxfs.h"
+ #define trace_xfs_free_extent(a,b,c,d,e,f,g)	((void) 0)
+ #define trace_xfs_agf(a,b,c,d)			((void) 0)
+@@ -256,7 +257,6 @@
+ #define trace_xfs_rmap_find_left_neighbor_result(...)	((void) 0)
+ #define trace_xfs_rmap_lookup_le_range_result(...)	((void) 0)
  
- static void libxfs_brelse(struct cache_node *node);
-@@ -69,6 +69,9 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
- 	char		*z;
- 	int		error;
+-#define trace_xfs_rmapbt_free_block(...)	((void) 0)
+ #define trace_xfs_rmapbt_alloc_block(...)	((void) 0)
  
-+	if (btp->flags & XFS_BUFTARG_XFILE)
-+		return -EOPNOTSUPP;
+ #define trace_xfs_ag_resv_critical(...)		((void) 0)
+@@ -276,7 +276,6 @@
+ #define trace_xfs_refcount_insert_error(...)	((void) 0)
+ #define trace_xfs_refcount_delete(...)		((void) 0)
+ #define trace_xfs_refcount_delete_error(...)	((void) 0)
+-#define trace_xfs_refcountbt_free_block(...)	((void) 0)
+ #define trace_xfs_refcountbt_alloc_block(...)	((void) 0)
+ #define trace_xfs_refcount_rec_order_error(...)	((void) 0)
+ 
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 4b4099c5635..14587e52840 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -411,6 +411,8 @@ xfs_btree_free_block(
+ {
+ 	int			error;
+ 
++	trace_xfs_btree_free_block(cur, bp);
 +
- 	start_offset = LIBXFS_BBTOOFF64(start);
+ 	error = cur->bc_ops->free_block(cur, bp);
+ 	if (!error) {
+ 		xfs_trans_binval(cur->bc_tp, bp);
+diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
+index ac1c3ab868e..67551df02bd 100644
+--- a/libxfs/xfs_refcount_btree.c
++++ b/libxfs/xfs_refcount_btree.c
+@@ -106,8 +106,6 @@ xfs_refcountbt_free_block(
+ 	struct xfs_agf		*agf = agbp->b_addr;
+ 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
  
- 	/* try to use special zeroing methods, fall back to writes if needed */
-@@ -578,6 +581,31 @@ libxfs_balloc(
- 	return &bp->b_node;
- }
+-	trace_xfs_refcountbt_free_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
+-			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1);
+ 	be32_add_cpu(&agf->agf_refcount_blocks, -1);
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
+ 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
+diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
+index d6e2fc0a3f9..7966a3e6a47 100644
+--- a/libxfs/xfs_rmap_btree.c
++++ b/libxfs/xfs_rmap_btree.c
+@@ -123,8 +123,6 @@ xfs_rmapbt_free_block(
+ 	int			error;
  
-+static inline int
-+libxfs_buf_ioapply_in_memory(
-+	struct xfs_buf		*bp,
-+	bool			is_write)
-+{
-+	struct xfile		*xfile = bp->b_target->bt_xfile;
-+	loff_t			pos = BBTOB(xfs_buf_daddr(bp));
-+	size_t			size = BBTOB(bp->b_length);
-+	int			error;
-+
-+	if (bp->b_nmaps > 1) {
-+		/* We don't need or support multi-map buffers. */
-+		ASSERT(0);
-+		error = -EIO;
-+	} else if (is_write) {
-+		error = xfile_obj_store(xfile, bp->b_addr, size, pos);
-+	} else {
-+		error = xfile_obj_load(xfile, bp->b_addr, size, pos);
-+	}
-+	if (error)
-+		bp->b_error = error;
-+	else if (!is_write)
-+		bp->b_flags |= LIBXFS_B_UPTODATE;
-+	return error;
-+}
- 
- static int
- __read_buf(int fd, void *buf, int len, off64_t offset, int flags)
-@@ -608,6 +636,9 @@ libxfs_readbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno, struct xfs_buf *bp,
- 
- 	ASSERT(len <= bp->b_length);
- 
-+	if (bp->b_target->flags & XFS_BUFTARG_XFILE)
-+		return libxfs_buf_ioapply_in_memory(bp, false);
-+
- 	error = __read_buf(fd, bp->b_addr, bytes, LIBXFS_BBTOOFF64(blkno), flags);
- 	if (!error &&
- 	    bp->b_target->bt_bdev == btp->bt_bdev &&
-@@ -640,6 +671,9 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
- 	void	*buf;
- 	int	i;
- 
-+	if (bp->b_target->flags & XFS_BUFTARG_XFILE)
-+		return libxfs_buf_ioapply_in_memory(bp, false);
-+
- 	buf = bp->b_addr;
- 	for (i = 0; i < bp->b_nmaps; i++) {
- 		off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
-@@ -858,7 +892,9 @@ libxfs_bwrite(
- 		}
- 	}
- 
--	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
-+	if (bp->b_target->flags & XFS_BUFTARG_XFILE) {
-+		libxfs_buf_ioapply_in_memory(bp, true);
-+	} else if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
- 		bp->b_error = __write_buf(fd, bp->b_addr, BBTOB(bp->b_length),
- 				    LIBXFS_BBTOOFF64(xfs_buf_daddr(bp)),
- 				    bp->b_flags);
+ 	bno = xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp));
+-	trace_xfs_rmapbt_free_block(cur->bc_mp, pag->pag_agno,
+-			bno, 1);
+ 	be32_add_cpu(&agf->agf_rmap_blocks, -1);
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+ 	error = xfs_alloc_put_freelist(pag, cur->bc_tp, agbp, NULL, bno, 1);
 
