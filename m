@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB3FC2D4
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:58:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD1CDC2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:58:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ll0Q/gTq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBE02C433C7;
-	Sun, 31 Dec 2023 23:57:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbv1tmXY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A369C433C7;
+	Sun, 31 Dec 2023 23:58:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704067080;
-	bh=AaGsBEX5erp6nIP3VvopVfqQ1DtQOCMQqW2MVbd5wo0=;
+	s=k20201202; t=1704067095;
+	bh=c+f56ploWG7PcJFJG3bAJeDIrmMFizvq4LbWYJ6L8co=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ll0Q/gTqexbhpoYYHFWGjNg3jMMdjV5k4To6ZrZ455+Uc5510MRwHyY9k5ccA3DTn
-	 YlGlON6LPLtKs63mfsgxoUO9Lq3zDrGzxfAOHwpZEdiihln2A+LM2tVPxE6zD5i05H
-	 uD/toarfAwvM+lSovAkyO4rFdAq56SERWUhiL2ZvghLq+HB5xys1/c3QbJgqlvfzc5
-	 1S/FqmDxYvaky+nYeyEzN8fH5R74ofo4Lqv+CPQKHa8Z5cXKkDMKDneHHkuZqFgejy
-	 +c7HVc1fJUX3JmC5DaU3W6H44zL8bh9wKAM0FU4R+YvkqZiNyhqmyXG0XMpCJzVzk5
-	 ZDnmy78Prj1Hw==
-Date: Sun, 31 Dec 2023 15:57:59 -0800
-Subject: [PATCH 40/52] xfs_io: support scrubbing rtgroup metadata
+	b=fbv1tmXY8LE8l+X4np5UkiwusQI8geG+8/h0987MfICL8TlLK/HUJ7TcYAA7qsdWG
+	 duX+ywPmQVvXzbCXJSiJa48MnTmo4bEx+CEurrtD6UXV6SMYUEqJwQdp09A6aFtatk
+	 tciL+uwphQcK4a7qhAAEB3WYq9vhAXLTYN4/6FDe3VUIE6vcpwubkkvJIOQYvNge0U
+	 rMWgBZmPcuUSSUsWGOc+Ta1cVI5rgASArfkUw5rK5q+pObpPo4plBja3IaYJW3p4xk
+	 z0XuZOyOrUtFytyw+Y+04qDV1Ongk9z3YAFQ1gMpVGB0WXbaCJvpdiqbWik7zaJojb
+	 g3kQZ1UgLnl3Q==
+Date: Sun, 31 Dec 2023 15:58:15 -0800
+Subject: [PATCH 41/52] xfs_io: add a command to display allocation group
+ information
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405012698.1811243.8238486017822319285.stgit@frogsfrogsfrogs>
+Message-ID: <170405012712.1811243.6148262402670158207.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 References: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,103 +38,200 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Support scrubbing all rtgroup metadata with a scrubv call.
+Add a new 'aginfo' command to xfs_io so that we can display allocation
+group geometry.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/scrub.c        |   40 ++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_io.8 |    3 ++-
- 2 files changed, 42 insertions(+), 1 deletion(-)
+ io/Makefile       |    2 -
+ io/aginfo.c       |  119 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ io/init.c         |    1 
+ io/io.h           |    1 
+ man/man8/xfs_io.8 |   12 +++++
+ 5 files changed, 134 insertions(+), 1 deletion(-)
+ create mode 100644 io/aginfo.c
 
 
-diff --git a/io/scrub.c b/io/scrub.c
-index cb4e24503dc..e9254c7882a 100644
---- a/io/scrub.c
-+++ b/io/scrub.c
-@@ -165,6 +165,32 @@ parse_metapath(
- 	return true;
- }
- 
-+static bool
-+parse_rtgroup(
-+	int		argc,
-+	char		**argv,
-+	int		optind,
-+	__u32		*rgno)
+diff --git a/io/Makefile b/io/Makefile
+index 1be6ab77d87..32a40294358 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_io
+ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+ HFILES = init.h io.h
+-CFILES = init.c \
++CFILES = init.c aginfo.c \
+ 	attr.c bmap.c bulkstat.c crc32cselftest.c cowextsize.c encrypt.c \
+ 	file.c freeze.c fsuuid.c fsync.c getrusage.c imap.c inject.c label.c \
+ 	link.c mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
+diff --git a/io/aginfo.c b/io/aginfo.c
+new file mode 100644
+index 00000000000..6cbfcb8de35
+--- /dev/null
++++ b/io/aginfo.c
+@@ -0,0 +1,119 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2021-2024 Oracle.  All rights reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "platform_defs.h"
++#include "libxfs.h"
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "io.h"
++#include "libfrog/logging.h"
++#include "libfrog/paths.h"
++#include "libfrog/fsgeom.h"
++
++static cmdinfo_t aginfo_cmd;
++
++static int
++report_aginfo(
++	struct xfs_fd		*xfd,
++	xfs_agnumber_t		agno)
 +{
-+	char		*p;
-+	unsigned long	control;
++	struct xfs_ag_geometry	ageo = { 0 };
++	int			ret;
 +
-+	if (optind != argc - 1) {
-+		fprintf(stderr, _("Must specify one rtgroup number.\n"));
-+		return false;
++	ret = -xfrog_ag_geometry(xfd->fd, agno, &ageo);
++	if (ret) {
++		xfrog_perror(ret, "aginfo");
++		return 1;
 +	}
 +
-+	control = strtoul(argv[optind], &p, 0);
-+	if (*p != '\0') {
-+		fprintf(stderr, _("Bad rtgroup number '%s'.\n"),
-+				argv[optind]);
-+		return false;
-+	}
++	printf(_("AG: %u\n"),		ageo.ag_number);
++	printf(_("Blocks: %u\n"),	ageo.ag_length);
++	printf(_("Free Blocks: %u\n"),	ageo.ag_freeblks);
++	printf(_("Inodes: %u\n"),	ageo.ag_icount);
++	printf(_("Free Inodes: %u\n"),	ageo.ag_ifree);
++	printf(_("Sick: 0x%x\n"),	ageo.ag_sick);
++	printf(_("Checked: 0x%x\n"),	ageo.ag_checked);
++	printf(_("Flags: 0x%x\n"),	ageo.ag_flags);
 +
-+	*rgno = control;
-+	return true;
++	return 0;
 +}
 +
- static int
- parse_args(
- 	int				argc,
-@@ -230,6 +256,12 @@ parse_args(
- 			return command_usage(cmdinfo);
- 		}
- 		break;
-+	case XFROG_SCRUB_GROUP_RTGROUP:
-+		if (!parse_rtgroup(argc, argv, optind, &meta->sm_agno)) {
-+			exitcode = 1;
-+			return command_usage(cmdinfo);
++/* Display AG status. */
++static int
++aginfo_f(
++	int			argc,
++	char			**argv)
++{
++	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
++	unsigned long long	x;
++	xfs_agnumber_t		agno = NULLAGNUMBER;
++	int			c;
++	int			ret = 0;
++
++	ret = -xfd_prepare_geometry(&xfd);
++	if (ret) {
++		xfrog_perror(ret, "xfd_prepare_geometry");
++		exitcode = 1;
++		return 1;
++	}
++
++	while ((c = getopt(argc, argv, "a:")) != EOF) {
++		switch (c) {
++		case 'a':
++			errno = 0;
++			x = strtoll(optarg, NULL, 10);
++			if (!errno && x >= NULLAGNUMBER)
++				errno = ERANGE;
++			if (errno) {
++				perror("aginfo");
++				return 1;
++			}
++			agno = x;
++			break;
++		default:
++			return command_usage(&aginfo_cmd);
 +		}
-+		break;
- 	case XFROG_SCRUB_GROUP_FS:
- 	case XFROG_SCRUB_GROUP_NONE:
- 	case XFROG_SCRUB_GROUP_SUMMARY:
-@@ -544,6 +576,8 @@ scrubv_f(
- 		group = XFROG_SCRUB_GROUP_ISCAN;
- 	else if (!strcmp(argv[optind], "summary"))
- 		group = XFROG_SCRUB_GROUP_SUMMARY;
-+	else if (!strcmp(argv[optind], "rtgroup"))
-+		group = XFROG_SCRUB_GROUP_RTGROUP;
- 	else {
- 		printf(_("Unknown group '%s'.\n"), argv[optind]);
- 		exitcode = 1;
-@@ -581,6 +615,12 @@ scrubv_f(
- 			return command_usage(&scrubv_cmd);
- 		}
- 		break;
-+	case XFROG_SCRUB_GROUP_RTGROUP:
-+		if (!parse_rtgroup(argc, argv, optind, &vhead->svh_agno)) {
-+			exitcode = 1;
-+			return command_usage(&scrubv_cmd);
++	}
++
++	if (agno != NULLAGNUMBER) {
++		ret = report_aginfo(&xfd, agno);
++	} else {
++		for (agno = 0; !ret && agno < xfd.fsgeom.agcount; agno++) {
++			ret = report_aginfo(&xfd, agno);
 +		}
-+		break;
- 	default:
- 		ASSERT(0);
- 		break;
++	}
++
++	return ret;
++}
++
++static void
++aginfo_help(void)
++{
++	printf(_(
++"\n"
++"Report allocation group geometry.\n"
++"\n"
++" -a agno  -- Report on the given allocation group.\n"
++"\n"));
++
++}
++
++static cmdinfo_t aginfo_cmd = {
++	.name = "aginfo",
++	.cfunc = aginfo_f,
++	.argmin = 0,
++	.argmax = -1,
++	.args = "[-a agno]",
++	.flags = CMD_NOMAP_OK,
++	.help = aginfo_help,
++};
++
++void
++aginfo_init(void)
++{
++	aginfo_cmd.oneline = _("Get XFS allocation group state.");
++	add_command(&aginfo_cmd);
++}
+diff --git a/io/init.c b/io/init.c
+index a6c3d0cf147..dee09b56333 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -44,6 +44,7 @@ init_cvtnum(
+ static void
+ init_commands(void)
+ {
++	aginfo_init();
+ 	atomicupdate_init();
+ 	attr_init();
+ 	bmap_init();
+diff --git a/io/io.h b/io/io.h
+index a30b96401a7..61920fcee7f 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -190,3 +190,4 @@ extern void		repair_init(void);
+ extern void		crc32cselftest_init(void);
+ extern void		bulkstat_init(void);
+ extern void		atomicupdate_init(void);
++extern void		aginfo_init(void);
 diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index ef3a5681a1a..61eed7f5aa8 100644
+index 61eed7f5aa8..36ab5f9dc11 100644
 --- a/man/man8/xfs_io.8
 +++ b/man/man8/xfs_io.8
-@@ -1422,11 +1422,12 @@ Currently supported versions are 1 and 5.
- .RE
- .PD
+@@ -1239,6 +1239,18 @@ Dumps a list of pages or ranges of pages that are currently in core,
+ for the current memory mapping.
+ 
+ .SH FILESYSTEM COMMANDS
++.TP
++.BI "aginfo [ \-a " agno " ]"
++Show information about or update the state of allocation groups.
++.RE
++.RS 1.0i
++.PD 0
++.TP
++.BI \-a
++Act only on a specific allocation group.
++.PD
++.RE
++
  .TP
--.BI "scrub " type " [ " agnumber " | " "ino" " " "gen" " | " metapath " ]"
-+.BI "scrub " type " [ " agnumber " | " rgnumber " | " "ino" " " "gen" " | " metapath " ]"
- Scrub internal XFS filesystem metadata.  The
- .BI type
- parameter specifies which type of metadata to scrub.
- For AG metadata, one AG number must be specified.
-+For realtime group metadata, one rtgroup number must be specified.
- For file metadata, the scrub is applied to the open file unless the
- inode number and generation number are specified.
- For metapath, the name of a file or a raw number must be specified.
+ .BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-m ] [ \-n " batchsize " ] [ \-q ] [ \-s " startino " ] [ \-v " version" ]
+ Display raw stat information about a bunch of inodes in an XFS filesystem.
 
