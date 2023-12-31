@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2F43BA49
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:06:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D712BBE48
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:06:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fj94cSPq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1D88C433C8;
-	Sun, 31 Dec 2023 22:06:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a9gCpuCt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60F6DC433C7;
+	Sun, 31 Dec 2023 22:06:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060388;
-	bh=GfKtRIymmsMLQEYJ2gKpGz5GBJzCw2Ib1JLdcVbFO/g=;
+	s=k20201202; t=1704060404;
+	bh=KJxLkUZA3PMu5zrygvVKq7gd7f+6PZH20QPZ91BP5S8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fj94cSPqtFJuWqRtPXAZtqpHdGcubuem1X8dLJIZZxDg0pgxCzFpzL8Cy/ysT94tv
-	 TOhu/69HLf2sDdbj8LNdL+hoUsMZ4I4JXj9Kg4qfY6UUs3lmcSdlwVc+ZGpbGkmPf8
-	 e2EjxvE84VZmxTK15plGdgycmyRX5jESI9ugHcKCZJTpxxPkOMDuul78pWgsAsPGao
-	 6Mbej4p/bmcG+f11izxV1J4027vo2GwmlcQvZeZ4AzLkQDn+f3s2e9KNHSLrEfSbuT
-	 IEGkgAvgBFIs3Mlq8OSXJVWQcB+n2DGubo1mk2SczYzYLTqxQkgKdnhchf+y2kpsEs
-	 EQEvKclkNfFHg==
-Date: Sun, 31 Dec 2023 14:06:28 -0800
-Subject: [PATCH 2/3] xfs: create a predicate to determine if two xfs_names are
- the same
+	b=a9gCpuCtsdCsF+IqOE3FolYIUhUXc3qKGkgJ4177WVNapv36a1Jdf0qaIu/k8cCHy
+	 IxMqKb6oMtHDAThWaSCmsOeSZ1SYcGtIEsFDC86BTVKRrey5AgQ0AXcCtpq7mlij8A
+	 lYpVcDZW3gsZSwgnYqfPhKQYmKQsP1QxuYsUEzf2GXUagKjY70+Ss6ksH5iLFwy96h
+	 Ti4qQLqpkk783MULMzNfElPkhO/xEBL6wVG7ElJ6tCQiVYXThH/w8l+6Z4DGQuSxL0
+	 vSQmo/L56zLsxsWaIPi7c+EE+hb04dWmeRlDH36QZ/t+e4jjIv/UnBG9u3yDs3pX9w
+	 0OU709iej0miA==
+Date: Sun, 31 Dec 2023 14:06:43 -0800
+Subject: [PATCH 3/3] xfs: create a macro for decoding ftypes in tracepoints
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404990129.1793320.14034009986995240605.stgit@frogsfrogsfrogs>
+Message-ID: <170404990142.1793320.4776161040245673665.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404990101.1793320.2115612026823880865.stgit@frogsfrogsfrogs>
 References: <170404990101.1793320.2115612026823880865.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,34 +37,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a simple predicate to determine if two xfs_names are the same
-objects or have the exact same name.  The comparison is always case
-sensitive.
+Create the XFS_DIR3_FTYPE_STR macro so that we can report ftype as
+strings instead of numbers in tracepoints.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_dir2.h |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ libxfs/xfs_da_format.h |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 7d7cd8d808e..ac3c264402d 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -24,6 +24,15 @@ struct xfs_dir3_icleaf_hdr;
- extern const struct xfs_name	xfs_name_dotdot;
- extern const struct xfs_name	xfs_name_dot;
+diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
+index f9015f88eca..44748f1640e 100644
+--- a/libxfs/xfs_da_format.h
++++ b/libxfs/xfs_da_format.h
+@@ -159,6 +159,17 @@ struct xfs_da3_intnode {
  
-+static inline bool
-+xfs_dir2_samename(
-+	const struct xfs_name	*n1,
-+	const struct xfs_name	*n2)
-+{
-+	return n1 == n2 || (n1->len == n2->len &&
-+			    !memcmp(n1->name, n2->name, n1->len));
-+}
+ #define XFS_DIR3_FT_MAX			9
+ 
++#define XFS_DIR3_FTYPE_STR \
++	{ XFS_DIR3_FT_UNKNOWN,	"unknown" }, \
++	{ XFS_DIR3_FT_REG_FILE,	"file" }, \
++	{ XFS_DIR3_FT_DIR,	"directory" }, \
++	{ XFS_DIR3_FT_CHRDEV,	"char" }, \
++	{ XFS_DIR3_FT_BLKDEV,	"block" }, \
++	{ XFS_DIR3_FT_FIFO,	"fifo" }, \
++	{ XFS_DIR3_FT_SOCK,	"sock" }, \
++	{ XFS_DIR3_FT_SYMLINK,	"symlink" }, \
++	{ XFS_DIR3_FT_WHT,	"whiteout" }
 +
  /*
-  * Convert inode mode to directory entry filetype
+  * Byte offset in data block and shortform entry.
   */
 
