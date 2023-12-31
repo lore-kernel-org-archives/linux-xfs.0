@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077B2BA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:00:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95FD6BA2B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:01:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u6LbD7+u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C840DC433C7;
-	Sun, 31 Dec 2023 21:00:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGPnyCOl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68D9EC433C7;
+	Sun, 31 Dec 2023 21:01:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704056445;
-	bh=iku2M6TWjzbwmk5lajO1Ofqfb2KvBBjJyAy636araTE=;
+	s=k20201202; t=1704056461;
+	bh=xD0XqLCLMTTa/387GjoOziqsxq09EZNcwp6b/J01dlE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=u6LbD7+ursTbYYcGE98Z6JKPCyniHSy2RsVaJIHIqC9cdvCOnsT/mC7oJ7P0ij42K
-	 8xOTXmYkd3QR+b+iKPe8/4RCSXDzCv80BFTI0JYMtdXWBNqbICP8n3pnTxJzN7eraQ
-	 sKWXS3PS12TT6yPJRzVXgXpZoeUV/AvMhW36B4phXJn0ZrR8YVS7D22F6IsTrkOYXy
-	 3cdVvVME3RmYqNcIGWecHp9pEGCvpJa5LLtl/3coiE/za5XXTRxQaNuTWVIueGxJTs
-	 +3xN5RLY+lbJ/nZLtaUriK4U18EuD69D6+x97iwMSe9g9sFwzfo0usdmqpUwGIcgiL
-	 NO++8PksEhcXQ==
-Date: Sun, 31 Dec 2023 13:00:45 -0800
-Subject: [PATCH 3/3] xfs: only iget the file once when doing vectored
- scrub-by-handle
+	b=hGPnyCOlljz8gInrTW9+ex0FdDrZa7d4Wx5Dpb2FXZJu1xe5gjAPon51u+fPOEMql
+	 mSfyM9mGwH2qJ1XH2d4D85PN1BT/fheHVkN2KgN/n5cozuSQxahobqbZn25KZ/q25/
+	 zhc71IOrsbCVEifp0N73dHmX4PCIVT7RkDJfuiSJGspHKKmRCbEfY68ouALstMBgk8
+	 iIIGsLhn0Ol9d0zd1ue9i19V9DYkD7/0PKhjLl1/fFEKgG7447viWPRak24cR/a9Zb
+	 5+Kblp3tdOV6VqjywUlK+xiSLK6vjAewkvA8NUKhxuc7yCs7edbTaF8pyFULa4Jchd
+	 g6P8BFvhE7fYQ==
+Date: Sun, 31 Dec 2023 13:01:00 -0800
+Subject: [PATCH 01/21] xfs: move inode copy-on-write predicates to
+ xfs_inode.[ch]
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404842912.1758126.5295850690380079776.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404842857.1758126.13889834380054922462.stgit@frogsfrogsfrogs>
-References: <170404842857.1758126.13889834380054922462.stgit@frogsfrogsfrogs>
+Message-ID: <170404844068.1759932.3785025579897299385.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404844006.1759932.2866067666813443603.stgit@frogsfrogsfrogs>
+References: <170404844006.1759932.2866067666813443603.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,122 +38,70 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a program wants us to perform a scrub on a file handle and the fd
-passed to ioctl() is not the file referenced in the handle, iget the
-file once and pass it into the scrub code.  This amortizes the untrusted
-iget lookup over /all/ the scrubbers mentioned in the scrubv call.
-
-When running fstests in "rebuild all metadata after each test" mode, I
-observed a 10% reduction in runtime on account of avoiding repeated
-inobt lookups.
+Move these inode predicate functions to xfs_inode.[ch] since they're not
+reflink functions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/scrub.c |   61 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
+ fs/xfs/xfs_inode.c   |    8 ++++++++
+ fs/xfs/xfs_inode.h   |    7 +++++++
+ fs/xfs/xfs_reflink.h |   10 ----------
+ 3 files changed, 15 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 1a0018537b054..7b70dfb30287b 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -764,6 +764,31 @@ xfs_scrubv_previous_failures(
- 	return false;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 01b100e28b541..199def25c0343 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -4263,3 +4263,11 @@ xfs_inode_alloc_unitsize(
+ 
+ 	return XFS_FSB_TO_B(ip->i_mount, blocks);
+ }
++
++/* Should we always be using copy on write for file writes? */
++bool
++xfs_is_always_cow_inode(
++	struct xfs_inode	*ip)
++{
++	return ip->i_mount->m_always_cow && xfs_has_reflink(ip->i_mount);
++}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index cbde77d711b49..f6c463ce46424 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -292,6 +292,13 @@ static inline bool xfs_is_metadata_inode(struct xfs_inode *ip)
+ 		xfs_is_quota_inode(&mp->m_sb, ip->i_ino);
  }
  
-+/*
-+ * If the caller provided us with a nonzero inode number that isn't the ioctl
-+ * file, try to grab a reference to it to eliminate all further untrusted inode
-+ * lookups.  If we can't get the inode, let each scrub function try again.
-+ */
-+STATIC struct xfs_inode *
-+xchk_scrubv_open_by_handle(
-+	struct xfs_mount		*mp,
-+	const struct xfs_scrub_vec_head	*vhead)
++bool xfs_is_always_cow_inode(struct xfs_inode *ip);
++
++static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
 +{
-+	struct xfs_inode		*ip;
-+	int				error;
-+
-+	error = xfs_iget(mp, NULL, vhead->svh_ino, XFS_IGET_UNTRUSTED, 0, &ip);
-+	if (error)
-+		return NULL;
-+
-+	if (VFS_I(ip)->i_generation != vhead->svh_gen) {
-+		xfs_irele(ip);
-+		return NULL;
-+	}
-+
-+	return ip;
++	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
 +}
 +
- /* Vectored scrub implementation to reduce ioctl calls. */
- int
- xfs_scrubv_metadata(
-@@ -772,7 +797,9 @@ xfs_scrubv_metadata(
- {
- 	struct xfs_inode		*ip_in = XFS_I(file_inode(file));
- 	struct xfs_mount		*mp = ip_in->i_mount;
-+	struct xfs_inode		*handle_ip = NULL;
- 	struct xfs_scrub_vec		*v;
-+	bool				set_dontcache = false;
- 	unsigned int			i;
- 	int				error = 0;
+ /*
+  * Check if an inode has any data in the COW fork.  This might be often false
+  * even for inodes with the reflink flag when there is no pending COW operation.
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 65c5dfe17ecf7..fb55e4ce49fa1 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -6,16 +6,6 @@
+ #ifndef __XFS_REFLINK_H
+ #define __XFS_REFLINK_H 1
  
-@@ -791,9 +818,28 @@ xfs_scrubv_metadata(
- 		    (v->sv_flags & ~XFS_SCRUB_FLAGS_OUT))
- 			return -EINVAL;
- 
-+		/*
-+		 * If we detect at least one inode-type scrub, we might
-+		 * consider setting dontcache at the end.
-+		 */
-+		if (v->sv_type < XFS_SCRUB_TYPE_NR &&
-+		    meta_scrub_ops[v->sv_type].type == ST_INODE)
-+			set_dontcache = true;
-+
- 		trace_xchk_scrubv_item(mp, vhead, v);
- 	}
- 
-+	/*
-+	 * If the caller wants us to do a scrub-by-handle and the file used to
-+	 * call the ioctl is not the same file, load the incore inode and pin
-+	 * it across all the scrubv actions to avoid repeated UNTRUSTED
-+	 * lookups.  The reference is not passed to deeper layers of scrub
-+	 * because each scrubber gets to decide its own strategy for getting an
-+	 * inode.
-+	 */
-+	if (vhead->svh_ino && vhead->svh_ino != ip_in->i_ino)
-+		handle_ip = xchk_scrubv_open_by_handle(mp, vhead);
-+
- 	/* Run all the scrubbers. */
- 	for (i = 0, v = vhead->svh_vecs; i < vhead->svh_nr; i++, v++) {
- 		struct xfs_scrub_metadata	sm = {
-@@ -817,6 +863,10 @@ xfs_scrubv_metadata(
- 		v->sv_ret = xfs_scrub_metadata(file, &sm);
- 		v->sv_flags = sm.sm_flags;
- 
-+		/* Leave the inode in memory if something's wrong with it. */
-+		if (xchk_needs_repair(&sm))
-+			set_dontcache = false;
-+
- 		if (vhead->svh_rest_us) {
- 			ktime_t		expires;
- 
-@@ -831,5 +881,16 @@ xfs_scrubv_metadata(
- 		}
- 	}
- 
-+	/*
-+	 * If we're holding the only reference to an inode opened via handle
-+	 * and the scan was clean, mark it dontcache so that we don't pollute
-+	 * the cache.
-+	 */
-+	if (handle_ip) {
-+		if (set_dontcache &&
-+		    atomic_read(&VFS_I(handle_ip)->i_count) == 1)
-+			d_mark_dontcache(VFS_I(handle_ip));
-+		xfs_irele(handle_ip);
-+	}
- 	return error;
- }
+-static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
+-{
+-	return ip->i_mount->m_always_cow && xfs_has_reflink(ip->i_mount);
+-}
+-
+-static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
+-{
+-	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
+-}
+-
+ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *irec, bool *shared);
+ int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
 
