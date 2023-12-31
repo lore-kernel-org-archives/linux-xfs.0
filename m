@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8D7BA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:29:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FE2F9CC
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:30:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f+jTFG84"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D844C433C7;
-	Sun, 31 Dec 2023 20:29:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="phBR+I0Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7CCCC433C8;
+	Sun, 31 Dec 2023 20:30:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704054599;
-	bh=oYgk5AT4vp3+j3qLSv52jwphtMfOBmyIalf/MCO5neM=;
+	s=k20201202; t=1704054614;
+	bh=9882EWFGHEOwHo7bT2wt+zpbv9AgbqopDD9aP5IaKbU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=f+jTFG84BnMtNpghKOYE8XJTucAy44nWXgYzfzzV3PJ0Li2Mn3++JqqDS9G1VI8UR
-	 NwVACuPCH3kICvtrhXEIWqoLaunOa4PXBfAI6eWVePdf3y9+p3qvMEegMyCRTGR1Yv
-	 eo9EkjiVkJBxn9QRp+o9wxquNYZTEqDcNU2tMqR9gZE/7BvDvO+e4TwtcXSU3DsCAD
-	 9MIw1+AlX6xcMRreFGcgIrLINyrtPKIT5Mit1xmTBMOkTU+MDyOOvcdv3Fe7MR3FaR
-	 eZw8W/e8UVYqLksl3n/AlrE3U55nSOP83NoLgeaY08yYcytjXUQbFTGaxDqRscgFR0
-	 4e9SJUugC/yGw==
-Date: Sun, 31 Dec 2023 12:29:58 -0800
-Subject: [PATCH 22/25] xfs: condense symbolic links after an atomic swap
+	b=phBR+I0Z9IT1bsAcdXenQ5j8Yx3yxb+Ud1nlzV4Z6ifYr2npnimZnVbmqjX7Eipqx
+	 xV55v+lHWPuLKi1WWGreHOdhNVXleA8lWVG5zP0NeC7F5u1ruQSMrbE8zQYfXa2g75
+	 5xj1lYGUE3WbVqWqv7Esie9h3LfHXK1o/bCy52fs/IL8DUCcYZvcOeCNsz8oR+b0l7
+	 gTrf8gxzrPmrWu4iBtnqvP0vnHWHNsLuAvzVYOGUEtO75FbC3/2jnVXt5sMQnoJVrZ
+	 Y6L+tVFmJ+cwGHQ+7J4SOtxC8f8cRwO6QuSjZh7UrghhNQ7wU/9FvQ9zq6w6s4jJvS
+	 l4BENFXC9vTZg==
+Date: Sun, 31 Dec 2023 12:30:14 -0800
+Subject: [PATCH 23/25] xfs: make atomic extent swapping support realtime files
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404833493.1750288.7137413954819786399.stgit@frogsfrogsfrogs>
+Message-ID: <170404833510.1750288.3946324503305445551.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404833081.1750288.16964477956002067164.stgit@frogsfrogsfrogs>
 References: <170404833081.1750288.16964477956002067164.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,246 +37,631 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The previous commit added a new swapext flag that enables us to perform
-post-swap processing on file2 once we're done swapping the extent maps.
-Now add this ability for symlinks.
-
-This isn't used anywhere right now, but we need to have the basic ondisk
-flags in place so that a future online symlink repair feature can
-salvage the remote target in a temporary link and swap the data forks
-when ready.  If one file is in extents format and the other is inline,
-we will have to promote both to extents format to perform the swap.
-After the swap, we can try to condense the fixed symlink down to inline
-format if possible.
+Now that bmap items support the realtime device, we can add the
+necessary pieces to the atomic extent swapping code to support such
+things.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_swapext.c        |   48 +++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_symlink_remote.c |   47 +++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_symlink_remote.h |    1 +
- fs/xfs/xfs_symlink.c               |   49 ++++--------------------------------
- 4 files changed, 101 insertions(+), 44 deletions(-)
+ fs/xfs/libxfs/xfs_swapext.c |  165 ++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_bmap_util.c      |  185 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h      |    7 ++
+ fs/xfs/xfs_inode.h          |    5 +
+ fs/xfs/xfs_trace.h          |   11 ++-
+ fs/xfs/xfs_xchgrange.c      |   61 ++++++++++++++
+ fs/xfs/xfs_xchgrange.h      |    2 
+ 7 files changed, 418 insertions(+), 18 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_swapext.c b/fs/xfs/libxfs/xfs_swapext.c
-index 06c5fffec6423..e84b9ffe9df6b 100644
+index e84b9ffe9df6b..7e36e136cee0d 100644
 --- a/fs/xfs/libxfs/xfs_swapext.c
 +++ b/fs/xfs/libxfs/xfs_swapext.c
-@@ -30,6 +30,7 @@
- #include "xfs_attr.h"
+@@ -31,6 +31,7 @@
  #include "xfs_dir2_priv.h"
  #include "xfs_dir2.h"
-+#include "xfs_symlink_remote.h"
+ #include "xfs_symlink_remote.h"
++#include "xfs_rtbitmap.h"
  
  struct kmem_cache	*xfs_swapext_intent_cache;
  
-@@ -433,6 +434,48 @@ xfs_swapext_dir_to_sf(
- 	return xfs_dir2_block_to_sf(&args, bp, size, &sfh);
+@@ -133,6 +134,102 @@ sxi_advance(
+ 	sxi->sxi_blockcount -= irec->br_blockcount;
  }
  
-+/* Convert inode2's remote symlink target back to shortform, if possible. */
-+STATIC int
-+xfs_swapext_link_to_sf(
-+	struct xfs_trans		*tp,
-+	struct xfs_swapext_intent	*sxi)
++#ifdef DEBUG
++/*
++ * If we're going to do a BUI-only extent swap, ensure that all mappings are
++ * aligned to the realtime extent size.
++ */
++static inline int
++xfs_swapext_check_rt_extents(
++	struct xfs_mount		*mp,
++	const struct xfs_swapext_req	*req)
 +{
-+	struct xfs_inode		*ip = sxi->sxi_ip2;
-+	struct xfs_ifork		*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
-+	char				*buf;
++	struct xfs_bmbt_irec		irec1, irec2;
++	xfs_fileoff_t			startoff1 = req->startoff1;
++	xfs_fileoff_t			startoff2 = req->startoff2;
++	xfs_filblks_t			blockcount = req->blockcount;
++	uint32_t			mod;
++	int				nimaps;
 +	int				error;
 +
-+	if (ifp->if_format == XFS_DINODE_FMT_LOCAL ||
-+	    ip->i_disk_size > xfs_inode_data_fork_size(ip))
++	/* xattrs don't live on the rt device */
++	if (req->whichfork == XFS_ATTR_FORK)
 +		return 0;
 +
-+	/* Read the current symlink target into a buffer. */
-+	buf = kmem_alloc(ip->i_disk_size + 1, KM_NOFS);
-+	if (!buf) {
-+		ASSERT(0);
-+		return -ENOMEM;
++	/*
++	 * Caller got permission to use SXI log items, so log recovery will
++	 * finish the swap and not leave us with partially swapped rt extents
++	 * exposed to userspace.
++	 */
++	if (req->req_flags & XFS_SWAP_REQ_LOGGED)
++		return 0;
++
++	/*
++	 * Allocation units must be fully mapped to a file range.  For files
++	 * with a single-fsblock allocation unit, this is trivial.
++	 */
++	if (!xfs_inode_has_bigallocunit(req->ip2))
++		return 0;
++
++	/*
++	 * For multi-fsblock allocation units, we must check the alignment of
++	 * every single mapping.
++	 */
++	while (blockcount > 0) {
++		/* Read extent from the first file */
++		nimaps = 1;
++		error = xfs_bmapi_read(req->ip1, startoff1, blockcount,
++				&irec1, &nimaps, 0);
++		if (error)
++			return error;
++		ASSERT(nimaps == 1);
++
++		/* Read extent from the second file */
++		nimaps = 1;
++		error = xfs_bmapi_read(req->ip2, startoff2,
++				irec1.br_blockcount, &irec2, &nimaps,
++				0);
++		if (error)
++			return error;
++		ASSERT(nimaps == 1);
++
++		/*
++		 * We can only swap as many blocks as the smaller of the two
++		 * extent maps.
++		 */
++		irec1.br_blockcount = min(irec1.br_blockcount,
++					  irec2.br_blockcount);
++
++		/* Both mappings must be aligned to the realtime extent size. */
++		mod = xfs_rtb_to_rtxoff(mp, irec1.br_startoff);
++		if (mod) {
++			ASSERT(mod == 0);
++			return -EINVAL;
++		}
++
++		mod = xfs_rtb_to_rtxoff(mp, irec1.br_startoff);
++		if (mod) {
++			ASSERT(mod == 0);
++			return -EINVAL;
++		}
++
++		mod = xfs_rtb_to_rtxoff(mp, irec1.br_blockcount);
++		if (mod) {
++			ASSERT(mod == 0);
++			return -EINVAL;
++		}
++
++		startoff1 += irec1.br_blockcount;
++		startoff2 += irec1.br_blockcount;
++		blockcount -= irec1.br_blockcount;
 +	}
 +
-+	error = xfs_symlink_remote_read(ip, buf);
-+	if (error)
-+		goto free;
++	return 0;
++}
++#else
++# define xfs_swapext_check_rt_extents(mp, req)		(0)
++#endif
 +
-+	/* Remove the blocks. */
-+	error = xfs_symlink_remote_truncate(tp, ip);
-+	if (error)
-+		goto free;
+ /* Check all extents to make sure we can actually swap them. */
+ int
+ xfs_swapext_check_extents(
+@@ -152,12 +249,7 @@ xfs_swapext_check_extents(
+ 	    ifp2->if_format == XFS_DINODE_FMT_LOCAL)
+ 		return -EINVAL;
+ 
+-	/* We don't support realtime data forks yet. */
+-	if (!XFS_IS_REALTIME_INODE(req->ip1))
+-		return 0;
+-	if (req->whichfork == XFS_ATTR_FORK)
+-		return 0;
+-	return -EINVAL;
++	return xfs_swapext_check_rt_extents(mp, req);
+ }
+ 
+ #ifdef CONFIG_XFS_QUOTA
+@@ -198,6 +290,8 @@ xfs_swapext_can_skip_mapping(
+ 	struct xfs_swapext_intent	*sxi,
+ 	struct xfs_bmbt_irec		*irec)
+ {
++	struct xfs_mount		*mp = sxi->sxi_ip1->i_mount;
 +
-+	/* Convert fork to local format and log our changes. */
-+	xfs_idestroy_fork(ifp);
-+	ifp->if_bytes = 0;
-+	ifp->if_format = XFS_DINODE_FMT_LOCAL;
-+	xfs_init_local_fork(ip, XFS_DATA_FORK, buf, ip->i_disk_size);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
-+free:
-+	kmem_free(buf);
+ 	/* Do not skip this mapping if the caller did not tell us to. */
+ 	if (!(sxi->sxi_flags & XFS_SWAP_EXT_INO1_WRITTEN))
+ 		return false;
+@@ -210,10 +304,63 @@ xfs_swapext_can_skip_mapping(
+ 	 * The mapping is unwritten or a hole.  It cannot be a delalloc
+ 	 * reservation because we already excluded those.  It cannot be an
+ 	 * unwritten extent with dirty page cache because we flushed the page
+-	 * cache.  We don't support realtime files yet, so we needn't (yet)
+-	 * deal with them.
++	 * cache.  For files where the allocation unit is 1FSB (files on the
++	 * data dev, rt files if the extent size is 1FSB), we can safely
++	 * skip this mapping.
+ 	 */
+-	return true;
++	if (!xfs_inode_has_bigallocunit(sxi->sxi_ip1))
++		return true;
++
++	/*
++	 * For a realtime file with a multi-fsb allocation unit, the decision
++	 * is trickier because we can only swap full allocation units.
++	 * Unwritten mappings can appear in the middle of an rtx if the rtx is
++	 * partially written, but they can also appear for preallocations.
++	 *
++	 * If the mapping is a hole, skip it entirely.  Holes should align with
++	 * rtx boundaries.
++	 */
++	if (!xfs_bmap_is_real_extent(irec))
++		return true;
++
++	/*
++	 * All mappings below this point are unwritten.
++	 *
++	 * - If the beginning is not aligned to an rtx, trim the end of the
++	 *   mapping so that it does not cross an rtx boundary, and swap it.
++	 *
++	 * - If both ends are aligned to an rtx, skip the entire mapping.
++	 */
++	if (!isaligned_64(irec->br_startoff, mp->m_sb.sb_rextsize)) {
++		xfs_fileoff_t	new_end;
++
++		new_end = roundup_64(irec->br_startoff, mp->m_sb.sb_rextsize);
++		irec->br_blockcount = min(irec->br_blockcount,
++					  new_end - irec->br_startoff);
++		return false;
++	}
++	if (isaligned_64(irec->br_blockcount, mp->m_sb.sb_rextsize))
++		return true;
++
++	/*
++	 * All mappings below this point are unwritten, start on an rtx
++	 * boundary, and do not end on an rtx boundary.
++	 *
++	 * - If the mapping is longer than one rtx, trim the end of the mapping
++	 *   down to an rtx boundary and skip it.
++	 *
++	 * - The mapping is shorter than one rtx.  Swap it.
++	 */
++	if (irec->br_blockcount > mp->m_sb.sb_rextsize) {
++		xfs_fileoff_t	new_end;
++
++		new_end = rounddown_64(irec->br_startoff + irec->br_blockcount,
++				mp->m_sb.sb_rextsize);
++		irec->br_blockcount = new_end - irec->br_startoff;
++		return true;
++	}
++
++	return false;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8eab56a62ce24..d1a57164de032 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -684,7 +684,7 @@ xfs_can_free_eofblocks(
+ 	 * forever.
+ 	 */
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+-	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
++	if (xfs_inode_has_bigallocunit(ip))
+ 		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+ 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+ 	if (last_fsb <= end_fsb)
+@@ -985,7 +985,7 @@ xfs_free_file_space(
+ 	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+ 
+ 	/* We can only free complete realtime extents. */
+-	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1) {
++	if (xfs_inode_has_bigallocunit(ip)) {
+ 		startoffset_fsb = xfs_rtb_roundup_rtx(mp, startoffset_fsb);
+ 		endoffset_fsb = xfs_rtb_rounddown_rtx(mp, endoffset_fsb);
+ 	}
+@@ -1234,3 +1234,184 @@ xfs_insert_file_space(
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
++
++#ifdef CONFIG_XFS_RT
++/*
++ * Decide if this is an unwritten extent that isn't aligned to an allocation
++ * unit boundary.
++ *
++ * If it is, shorten the mapping to the end of the allocation unit so that
++ * we're ready to convert all the mappings for this allocation unit to a zeroed
++ * written extent.  If not, return false.
++ */
++static inline bool
++xfs_want_convert_bigalloc_mapping(
++	struct xfs_mount	*mp,
++	struct xfs_bmbt_irec	*irec)
++{
++	xfs_fileoff_t		rext_next;
++	xfs_extlen_t		modoff, modcnt;
++
++	if (irec->br_state != XFS_EXT_UNWRITTEN)
++		return false;
++
++	modoff = xfs_rtb_to_rtxoff(mp, irec->br_startoff);
++	if (modoff == 0) {
++		xfs_rtbxlen_t	rexts;
++
++		rexts = xfs_rtb_to_rtxrem(mp, irec->br_blockcount, &modcnt);
++		if (rexts > 0) {
++			/*
++			 * Unwritten mapping starts at an rt extent boundary
++			 * and is longer than one rt extent.  Round the length
++			 * down to the nearest extent but don't select it for
++			 * conversion.
++			 */
++			irec->br_blockcount -= modcnt;
++			modcnt = 0;
++		}
++
++		/* Unwritten mapping is perfectly aligned, do not convert. */
++		if (modcnt == 0)
++			return false;
++	}
++
++	/*
++	 * Unaligned and unwritten; trim to the current rt extent and select it
++	 * for conversion.
++	 */
++	rext_next = (irec->br_startoff - modoff) + mp->m_sb.sb_rextsize;
++	xfs_trim_extent(irec, irec->br_startoff, rext_next - irec->br_startoff);
++	return true;
++}
++
++/*
++ * Find an unwritten extent in the given file range, zero it, and convert the
++ * mapping to written.  Adjust the scan cursor on the way out.
++ */
++STATIC int
++xfs_convert_bigalloc_mapping(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		*offp,
++	xfs_fileoff_t		endoff)
++{
++	struct xfs_bmbt_irec	irec;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	unsigned int		resblks;
++	int			nmap;
++	int			error;
++
++	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 1);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
++	if (error)
++		return error;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++
++	/*
++	 * Read the mapping.  If we find an unwritten extent that isn't aligned
++	 * to an allocation unit...
++	 */
++retry:
++	nmap = 1;
++	error = xfs_bmapi_read(ip, *offp, endoff - *offp, &irec, &nmap, 0);
++	if (error)
++		goto out_cancel;
++	ASSERT(nmap == 1);
++	ASSERT(irec.br_startoff == *offp);
++	if (!xfs_want_convert_bigalloc_mapping(mp, &irec)) {
++		*offp = irec.br_startoff + irec.br_blockcount;
++		if (*offp >= endoff)
++			goto out_cancel;
++		goto retry;
++	}
++
++	/*
++	 * ...then write zeroes to the space and change the mapping state to
++	 * written.  This consolidates the mappings for this allocation unit.
++	 */
++	nmap = 1;
++	error = xfs_bmapi_write(tp, ip, irec.br_startoff, irec.br_blockcount,
++			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO, 0, &irec, &nmap);
++	if (error)
++		goto out_cancel;
++	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_unlock;
++
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * If an unwritten mapping was returned, something is very wrong.
++	 * If no mapping was returned, then bmapi_write thought it performed
++	 * a short allocation, which should be impossible since we previously
++	 * queried the mapping and haven't cycled locks since then.  Either
++	 * way, fail the operation.
++	 */
++	if (nmap == 0 || irec.br_state != XFS_EXT_NORM) {
++		ASSERT(nmap != 0);
++		ASSERT(irec.br_state == XFS_EXT_NORM);
++		return -EIO;
++	}
++
++	/* Advance the cursor to the end of the mapping returned. */
++	*offp = irec.br_startoff + irec.br_blockcount;
++	return 0;
++
++out_cancel:
++	xfs_trans_cancel(tp);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 +	return error;
 +}
 +
- static inline void
- xfs_swapext_clear_reflink(
- 	struct xfs_trans	*tp,
-@@ -457,6 +500,8 @@ xfs_swapext_do_postop_work(
- 			error = xfs_swapext_attr_to_sf(tp, sxi);
- 		else if (S_ISDIR(VFS_I(sxi->sxi_ip2)->i_mode))
- 			error = xfs_swapext_dir_to_sf(tp, sxi);
-+		else if (S_ISLNK(VFS_I(sxi->sxi_ip2)->i_mode))
-+			error = xfs_swapext_link_to_sf(tp, sxi);
- 		sxi->sxi_flags &= ~XFS_SWAP_EXT_CVT_INO2_SF;
- 		if (error)
- 			return error;
-@@ -1113,7 +1158,8 @@ xfs_swapext(
- 	if (req->req_flags & XFS_SWAP_REQ_CVT_INO2_SF)
- 		ASSERT(req->whichfork == XFS_ATTR_FORK ||
- 		       (req->whichfork == XFS_DATA_FORK &&
--			S_ISDIR(VFS_I(req->ip2)->i_mode)));
-+			(S_ISDIR(VFS_I(req->ip2)->i_mode) ||
-+			 S_ISLNK(VFS_I(req->ip2)->i_mode))));
- 
- 	if (req->blockcount == 0)
- 		return;
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index 1b8815159702e..c9c50b50d2114 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -380,3 +380,50 @@ xfs_symlink_write_target(
- 	ASSERT(pathlen == 0);
- 	return 0;
- }
-+
-+/* Remove all the blocks from a symlink and invalidate buffers. */
++/*
++ * Prepare a file with multi-fsblock allocation units for a remapping.
++ *
++ * File allocation units (AU) must be fully mapped to the data fork.  If the
++ * space in an AU have not been fully written, there can be multiple extent
++ * mappings (e.g. mixed written and unwritten blocks) to the AU.  If the log
++ * does not have a means to ensure that all remappings for a given AU will be
++ * completed even if the fs goes down, we must maintain the above constraint in
++ * another way.
++ *
++ * Convert the unwritten parts of an AU to written by writing zeroes to the
++ * storage and flipping the mapping.  Once this completes, there will be a
++ * single mapping for the entire AU, and we can proceed with the remapping
++ * operation.
++ *
++ * Callers must ensure that there are no dirty pages in the given range.
++ */
 +int
-+xfs_symlink_remote_truncate(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
++xfs_convert_bigalloc_file_space(
++	struct xfs_inode	*ip,
++	loff_t			pos,
++	uint64_t		len)
 +{
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_buf		*bp;
-+	int			nmaps = XFS_SYMLINK_MAPS;
-+	int			done = 0;
-+	int			i;
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		off;
++	xfs_fileoff_t		endoff;
 +	int			error;
 +
-+	/* Read mappings and invalidate buffers. */
-+	error = xfs_bmapi_read(ip, 0, XFS_MAX_FILEOFF, mval, &nmaps, 0);
-+	if (error)
-+		return error;
++	if (!xfs_inode_has_bigallocunit(ip))
++		return 0;
 +
-+	for (i = 0; i < nmaps; i++) {
-+		if (!xfs_bmap_is_real_extent(&mval[i]))
-+			break;
++	off = xfs_rtb_rounddown_rtx(mp, XFS_B_TO_FSBT(mp, pos));
++	endoff = xfs_rtb_roundup_rtx(mp, XFS_B_TO_FSB(mp, pos + len));
 +
-+		error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-+				XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
-+				XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0,
-+				&bp);
++	trace_xfs_convert_bigalloc_file_space(ip, pos, len);
++
++	while (off < endoff) {
++		if (fatal_signal_pending(current))
++			return -EINTR;
++
++		error = xfs_convert_bigalloc_mapping(ip, &off, endoff);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++#endif /* CONFIG_XFS_RT */
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 8eb7166aa9d41..231c4f1629c66 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -76,4 +76,11 @@ int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+ int	xfs_flush_unmap_range(struct xfs_inode *ip, xfs_off_t offset,
+ 			      xfs_off_t len);
+ 
++#ifdef CONFIG_XFS_RT
++int xfs_convert_bigalloc_file_space(struct xfs_inode *ip, loff_t pos,
++		uint64_t len);
++#else
++# define xfs_convert_bigalloc_file_space(ip, pos, len)	(-EOPNOTSUPP)
++#endif
++
+ #endif	/* __XFS_BMAP_UTIL_H__ */
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e1d60ba75bbdd..77acc3177ecea 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -311,6 +311,11 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+ 	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+ }
+ 
++static inline bool xfs_inode_has_bigallocunit(struct xfs_inode *ip)
++{
++	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
++}
++
+ /*
+  * Return the buftarg used for data allocations on a given inode.
+  */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 47c30d8093289..91ec676fcf8ed 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1494,7 +1494,7 @@ DEFINE_IMAP_EVENT(xfs_iomap_alloc);
+ DEFINE_IMAP_EVENT(xfs_iomap_found);
+ 
+ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+-	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
++	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, u64 count),
+ 	TP_ARGS(ip, offset, count),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+@@ -1502,7 +1502,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 		__field(loff_t, isize)
+ 		__field(loff_t, disize)
+ 		__field(loff_t, offset)
+-		__field(size_t, count)
++		__field(u64, count)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+@@ -1513,7 +1513,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 		__entry->count = count;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx "
+-		  "pos 0x%llx bytecount 0x%zx",
++		  "pos 0x%llx bytecount 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->isize,
+@@ -1524,7 +1524,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 
+ #define DEFINE_SIMPLE_IO_EVENT(name)	\
+ DEFINE_EVENT(xfs_simple_io_class, name,	\
+-	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),	\
++	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, u64 count),	\
+ 	TP_ARGS(ip, offset, count))
+ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enospc);
+ DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
+@@ -3728,6 +3728,9 @@ TRACE_EVENT(xfs_ioctl_clone,
+ /* unshare tracepoints */
+ DEFINE_SIMPLE_IO_EVENT(xfs_reflink_unshare);
+ DEFINE_INODE_ERROR_EVENT(xfs_reflink_unshare_error);
++#ifdef CONFIG_XFS_RT
++DEFINE_SIMPLE_IO_EVENT(xfs_convert_bigalloc_file_space);
++#endif /* CONFIG_XFS_RT */
+ 
+ /* copy on write */
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_around_shared);
+diff --git a/fs/xfs/xfs_xchgrange.c b/fs/xfs/xfs_xchgrange.c
+index c3476e68d6410..fd09a2dfca9b9 100644
+--- a/fs/xfs/xfs_xchgrange.c
++++ b/fs/xfs/xfs_xchgrange.c
+@@ -27,6 +27,8 @@
+ #include "xfs_sb.h"
+ #include "xfs_icache.h"
+ #include "xfs_log.h"
++#include "xfs_bmap_util.h"
++#include "xfs_rtbitmap.h"
+ #include <linux/fsnotify.h>
+ 
+ /*
+@@ -403,7 +405,7 @@ xfs_file_xchg_range(
+ 		priv_flags |= XFS_XCHG_RANGE_LOGGED;
+ 
+ 	/* Prepare and then exchange file contents. */
+-	error = xfs_xchg_range_prep(file1, file2, fxr);
++	error = xfs_xchg_range_prep(file1, file2, fxr, priv_flags);
+ 	if (error)
+ 		goto out_drop_feat;
+ 
+@@ -773,12 +775,46 @@ xfs_swap_extent_forks(
+ 	return 0;
+ }
+ 
++/*
++ * Do we need to convert partially written extents before a swap?
++ *
++ * There may be partially written rt extents lurking in the ranges to be
++ * swapped.  According to the rules for realtime files with big rt extents, we
++ * must guarantee that a userspace observer (an IO thread, realistically) never
++ * sees multiple physical rt extents mapped to the same logical file rt extent.
++ */
++static bool
++xfs_xchg_range_need_convert_bigalloc(
++	struct xfs_inode		*ip,
++	unsigned int			xchg_flags)
++{
++	/*
++	 * Extent swap log intent (SXI) items take care of this by ensuring
++	 * that we always complete the entire swap operation.  If the caller
++	 * obtained permission to use these log items, no conversion work is
++	 * needed.
++	 */
++	if (xchg_flags & XFS_XCHG_RANGE_LOGGED)
++		return false;
++
++	/*
++	 * If the caller did not get SXI permission but the filesystem is new
++	 * enough to use BUI log items and big rt extents are in play, the only
++	 * way to prevent userspace from seeing partially mapped big rt extents
++	 * in case of a crash midway through remapping a big rt extent is to
++	 * convert all the partially written rt extents before the swap.
++	 */
++	return xfs_swapext_supports_nonatomic(ip->i_mount) &&
++	       xfs_inode_has_bigallocunit(ip);
++}
++
+ /* Prepare two files to have their data exchanged. */
+ int
+ xfs_xchg_range_prep(
+ 	struct file		*file1,
+ 	struct file		*file2,
+-	struct xfs_exch_range	*fxr)
++	struct xfs_exch_range	*fxr,
++	unsigned int		xchg_flags)
+ {
+ 	struct xfs_inode	*ip1 = XFS_I(file_inode(file1));
+ 	struct xfs_inode	*ip2 = XFS_I(file_inode(file2));
+@@ -842,6 +878,19 @@ xfs_xchg_range_prep(
+ 			return error;
+ 	}
+ 
++	/* Convert unwritten sub-extent mappings if required. */
++	if (xfs_xchg_range_need_convert_bigalloc(ip2, xchg_flags)) {
++		error = xfs_convert_bigalloc_file_space(ip2, fxr->file2_offset,
++				fxr->length);
 +		if (error)
 +			return error;
 +
-+		xfs_trans_binval(tp, bp);
++		error = xfs_convert_bigalloc_file_space(ip1, fxr->file1_offset,
++				fxr->length);
++		if (error)
++			return error;
 +	}
 +
-+	/* Unmap the remote blocks. */
-+	error = xfs_bunmapi(tp, ip, 0, XFS_MAX_FILEOFF, 0, nmaps, &done);
-+	if (error)
-+		return error;
-+	if (!done) {
-+		ASSERT(done);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.h b/fs/xfs/libxfs/xfs_symlink_remote.h
-index a63bd38ae4faf..ac3dac8f617ed 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.h
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.h
-@@ -22,5 +22,6 @@ int xfs_symlink_remote_read(struct xfs_inode *ip, char *link);
- int xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
- 		const char *target_path, int pathlen, xfs_fsblock_t fs_blocks,
- 		uint resblks);
-+int xfs_symlink_remote_truncate(struct xfs_trans *tp, struct xfs_inode *ip);
+ 	return 0;
+ }
  
- #endif /* __XFS_SYMLINK_REMOTE_H */
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 2a082749be5cf..06df5522db7a5 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -251,19 +251,12 @@ xfs_symlink(
-  */
- STATIC int
- xfs_inactive_symlink_rmt(
--	struct xfs_inode *ip)
-+	struct xfs_inode	*ip)
- {
--	struct xfs_buf	*bp;
--	int		done;
--	int		error;
--	int		i;
--	xfs_mount_t	*mp;
--	xfs_bmbt_irec_t	mval[XFS_SYMLINK_MAPS];
--	int		nmaps;
--	int		size;
--	xfs_trans_t	*tp;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			error;
+@@ -1103,6 +1152,14 @@ xfs_xchg_range(
+ 	if (xchg_flags & XFS_XCHG_RANGE_LOGGED)
+ 		req.req_flags |= XFS_SWAP_REQ_LOGGED;
  
--	mp = ip->i_mount;
- 	ASSERT(!xfs_need_iread_extents(&ip->i_df));
- 	/*
- 	 * We're freeing a symlink that has some
-@@ -287,44 +280,14 @@ xfs_inactive_symlink_rmt(
- 	 * locked for the second transaction.  In the error paths we need it
- 	 * held so the cancel won't rele it, see below.
- 	 */
--	size = (int)ip->i_disk_size;
- 	ip->i_disk_size = 0;
- 	VFS_I(ip)->i_mode = (VFS_I(ip)->i_mode & ~S_IFMT) | S_IFREG;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	/*
--	 * Find the block(s) so we can inval and unmap them.
--	 */
--	done = 0;
--	nmaps = ARRAY_SIZE(mval);
--	error = xfs_bmapi_read(ip, 0, xfs_symlink_blocks(mp, size),
--				mval, &nmaps, 0);
--	if (error)
--		goto error_trans_cancel;
--	/*
--	 * Invalidate the block(s). No validation is done.
--	 */
--	for (i = 0; i < nmaps; i++) {
--		error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
--				XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
--				XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0,
--				&bp);
--		if (error)
--			goto error_trans_cancel;
--		xfs_trans_binval(tp, bp);
--	}
--	/*
--	 * Unmap the dead block(s) to the dfops.
--	 */
--	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps, &done);
++	/*
++	 * Round the request length up to the nearest file allocation unit.
++	 * The prep function already checked that the request offsets and
++	 * length in @fxr are safe to round up.
++	 */
++	if (xfs_inode_has_bigallocunit(ip2))
++		req.blockcount = xfs_rtb_roundup_rtx(mp, req.blockcount);
 +
-+	error = xfs_symlink_remote_truncate(tp, ip);
+ 	error = xfs_xchg_range_estimate(&req);
  	if (error)
- 		goto error_trans_cancel;
--	ASSERT(done);
+ 		return error;
+diff --git a/fs/xfs/xfs_xchgrange.h b/fs/xfs/xfs_xchgrange.h
+index 3471182d1402f..5ca902b11c2e9 100644
+--- a/fs/xfs/xfs_xchgrange.h
++++ b/fs/xfs/xfs_xchgrange.h
+@@ -51,6 +51,6 @@ void xfs_xchg_range_rele_log_assist(struct xfs_mount *mp);
+ int xfs_xchg_range(struct xfs_inode *ip1, struct xfs_inode *ip2,
+ 		const struct xfs_exch_range *fxr, unsigned int xchg_flags);
+ int xfs_xchg_range_prep(struct file *file1, struct file *file2,
+-		struct xfs_exch_range *fxr);
++		struct xfs_exch_range *fxr, unsigned int xchg_flags);
  
--	/*
--	 * Commit the transaction. This first logs the EFI and the inode, then
--	 * rolls and commits the transaction that frees the extents.
--	 */
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(tp);
- 	if (error) {
- 		ASSERT(xfs_is_shutdown(mp));
+ #endif /* __XFS_XCHGRANGE_H__ */
 
