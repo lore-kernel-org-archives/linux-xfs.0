@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AAE5B65B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:42:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC30B666
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:42:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyOuM/Uc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907F9C433C7;
-	Sun, 31 Dec 2023 19:42:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="StTXg+8j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C89CC433C8;
+	Sun, 31 Dec 2023 19:42:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051738;
-	bh=E72fn/Tym3Qo4aiXR0lqNM3Yqt4n+M7fviqvfCVlp5o=;
+	s=k20201202; t=1704051754;
+	bh=+PLZFeBmxqR39Qs7ExocmropiNtaAw6aGRoGFd4EpM0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kyOuM/UcClBpvriKBoLCeg/ShAITyngxTNXX8QPpVz/qPmK9pu886DiMXH4IA/Bdg
-	 Eqrf22hZslaY4A/5LkGyhaNlQFrgpMD0aY3vT5LxUSiMa9IvcMOB3AcO/WGsSmFa3w
-	 rT+3BPVZ1f6zaJAulAPrEw+O+XS4fxLUyD0vJiSOrYFLIpgqA2BFjbpmViS8jAXw4P
-	 hDzkNoUcY6mWH8fyjfDqzSh7xIL+OtLcSCYWrrBixhZ6URUk42GnyclJbUQsBhwR+c
-	 Et7bai3eH0Plfl3BRCf2hAnmrxr9crg4X5Spj+Ch02I6ZbFh6zrMQqbxQYBicSOlQ6
-	 I9HnJvOI+a7SQ==
-Date: Sun, 31 Dec 2023 11:42:18 -0800
-Subject: [PATCHSET v29.0 10/40] xfsprogs: indirect health reporting
+	b=StTXg+8jaadspYfyuwelUdz23+F7mEl/FfljGSpS0IODVNhsUZ8k39F6TbPJAaTwe
+	 eIfKT54bfBVoeFEAYNKUkOYzlLOtgpIaCwTLXeNgDce+TpcdMq4Tg7b1BuT6CQ3tgT
+	 xe7dNf7Q8FtiFyty/Fgofa8osEbzb0nrs8P+JFigqNnqyyTuiNZ951VWTwF8MJ4a3w
+	 AMhfEcPc7gG3EUFwwUUy4q8ykQWoP/DfNnP636bv8TA7/0B65E/LHEGaP1txGRmd7v
+	 O0R5Wz1KSbNB+r9ZLaFkO+ennSeMT7wF8RdzlJ2iGAoUBd1exmdrGtv8uAEf6OlEMl
+	 Nrnd6TV+DBUnA==
+Date: Sun, 31 Dec 2023 11:42:33 -0800
+Subject: [PATCHSET v29.0 11/40] xfsprogs: support in-memory btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404992400.1794340.13951488488074140755.stgit@frogsfrogsfrogs>
+Message-ID: <170404992774.1794490.2226231791872978170.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,16 +37,36 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series enables the XFS health reporting infrastructure to remember
-indirect health concerns when resources are scarce.  For example, if a
-scrub notices that there's something wrong with an inode's metadata but
-memory reclaim needs to free the incore inode, we want to record in the
-perag data the fact that there was some inode somewhere with an error.
-The perag structures never go away.
+Online repair of the reverse-mapping btrees presens some unique
+challenges.  To construct a new reverse mapping btree, we must scan the
+entire filesystem, but we cannot afford to quiesce the entire filesystem
+for the potentially lengthy scan.
 
-The first two patches in this series set that up, and the third one
-provides a means for xfs_scrub to tell the kernel that it can forget the
-indirect problem report.
+For rmap btrees, therefore, we relax our requirements of totally atomic
+repairs.  Instead, repairs will scan all inodes, construct a new reverse
+mapping dataset, format a new btree, and commit it before anyone trips
+over the corruption.  This is exactly the same strategy as was used in
+the quotacheck and nlink scanners.
+
+Unfortunately, the xfarray cannot perform key-based lookups and is
+therefore unsuitable for supporting live updates.  Luckily, we already a
+data structure that maintains an indexed rmap recordset -- the existing
+rmap btree code!  Hence we port the existing btree and buffer target
+code to be able to create a btree using the xfile we developed earlier.
+Live hooks keep the in-memory btree up to date for any resources that
+have already been scanned.
+
+This approach is not maximally memory efficient, but we can use the same
+rmap code that we do everywhere else, which provides improved stability
+without growing the code base even more.  Note that in-memory btree
+blocks are always page sized.
+
+This patchset modifies the kernel xfs buffer cache to be capable of
+using a xfile (aka a shmem file) as a backing device.  It then augments
+the btree code to support creating btree cursors with buffers that come
+from a buftarg other than the data device (namely an xfile-backed
+buftarg).  For the userspace xfs buffer cache, we instead use a memfd or
+an O_TMPFILE file as a backing device.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -57,21 +77,48 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=indirect-health-reporting
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=in-memory-btrees
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=indirect-health-reporting
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=in-memory-btrees
 ---
- libfrog/scrub.c                     |    5 ++++
- libxfs/xfs_fs.h                     |    4 ++-
- libxfs/xfs_health.h                 |   47 +++++++++++++++++++++++++++++++++++
- libxfs/xfs_inode_buf.c              |    2 +
- man/man2/ioctl_xfs_scrub_metadata.2 |    6 ++++
- scrub/phase1.c                      |   38 ++++++++++++++++++++++++++++
- scrub/repair.c                      |   15 +++++++++++
- scrub/repair.h                      |    1 +
- scrub/scrub.c                       |   16 +++++++-----
- scrub/scrub.h                       |    1 +
- spaceman/health.c                   |    4 +++
- 11 files changed, 131 insertions(+), 8 deletions(-)
+ configure.ac                |    4 
+ include/builddefs.in        |    4 
+ include/libxfs.h            |    2 
+ include/xfs_mount.h         |   10 +
+ include/xfs_trace.h         |   15 +
+ include/xfs_trans.h         |    1 
+ libfrog/bitmap.c            |   64 +++
+ libfrog/bitmap.h            |    3 
+ libxfs/Makefile             |   18 +
+ libxfs/init.c               |  121 +++++--
+ libxfs/libxfs_io.h          |   23 +
+ libxfs/libxfs_priv.h        |    5 
+ libxfs/rdwr.c               |  109 +++++-
+ libxfs/trans.c              |   40 ++
+ libxfs/xfbtree.c            |  797 +++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfbtree.h            |   57 +++
+ libxfs/xfile.c              |  299 ++++++++++++++++
+ libxfs/xfile.h              |  108 ++++++
+ libxfs/xfs_ag.c             |    6 
+ libxfs/xfs_ag.h             |    4 
+ libxfs/xfs_btree.c          |  173 ++++++++-
+ libxfs/xfs_btree.h          |   17 +
+ libxfs/xfs_btree_mem.h      |  128 +++++++
+ libxfs/xfs_refcount_btree.c |    4 
+ libxfs/xfs_rmap_btree.c     |    4 
+ m4/package_libcdev.m4       |   66 ++++
+ mkfs/xfs_mkfs.c             |    2 
+ repair/prefetch.c           |   12 -
+ repair/prefetch.h           |    1 
+ repair/progress.c           |   14 -
+ repair/progress.h           |    2 
+ repair/scan.c               |    2 
+ repair/xfs_repair.c         |   47 ++-
+ 33 files changed, 2022 insertions(+), 140 deletions(-)
+ create mode 100644 libxfs/xfbtree.c
+ create mode 100644 libxfs/xfbtree.h
+ create mode 100644 libxfs/xfile.c
+ create mode 100644 libxfs/xfile.h
+ create mode 100644 libxfs/xfs_btree_mem.h
 
