@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50611C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:24:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D8B0C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:24:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qBTbPK08"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB06FC433C8;
-	Sun, 31 Dec 2023 23:24:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="udZvxskA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BE65C433C7;
+	Sun, 31 Dec 2023 23:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065047;
-	bh=zfqWetWiw9Jgn1B6HYOwjphWYbGfJsoo2wvF4AkHkBE=;
+	s=k20201202; t=1704065063;
+	bh=YU2kJGeyZKb6yCYYCupPoZbLWurZnj1RPBVnzPULisE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qBTbPK08AE1jj+hdv1tgYAswkHsC+J/Nprfef0pXhl2Tcb7/oNxWOC1xWkUFDQrAH
-	 HLh97MijWI/VjLk5Ge8BC2cjubjWym0sIZ3WgTSjwYeX3CF8hZrT+joWLLZM8YmzrW
-	 v7V+gW1CH53yCONb1TSe8ZzesEsXyrnEkqT/Mka51n9s5nD2mPEy1D3XikPE7kIs5v
-	 B/HqI2I/OB9IqrishFEgmoK0eruhp1OnjlRG00v6JVyluZm08oeg1tFE940naIx7hL
-	 6FdTdRt+x3zZWPB9txOitNkUKEzP9Hbsleaua90u2sDywKz/P23Y3G2Pyj+ErkyQIu
-	 WMdOw6dZFGuOQ==
-Date: Sun, 31 Dec 2023 15:24:07 -0800
-Subject: [PATCH 07/28] xfs: implement atime updates in xfs_trans_ichgtime
+	b=udZvxskAqeR2mbbQQMEkWfuXg9Ynptbm287+oSiDdZIUg5thSlfiiN8wexiwa9hrq
+	 G+EIOVNEQIWc4Hli4ju2hf0WvOH5l31SjiWPj3jtSLdQtyccDaW9CFMLpB13stLocG
+	 U4/qG1WM/vHYfitjdnWTnk7xk8I0MHJ0guO/stLtk975cBmCsyqwlJXpTL9B5DS4Gc
+	 jTpnAunivyo2hTOxHR0NIS0p6zkDo7qxczK06jQOulfzog4bBYvR/gd6dDGAvGDwOP
+	 GlUgjKoXPmU9fAHd590KND+yQhp9wouMbVtAnOwVUp2j94DgvbpBtF7/kEGAxHX8lj
+	 UzJXOOGCOd3Ag==
+Date: Sun, 31 Dec 2023 15:24:23 -0800
+Subject: [PATCH 08/28] libxfs: rearrange libxfs_trans_ichgtime call when
+ creating inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405009271.1808635.15703237161852483883.stgit@frogsfrogsfrogs>
+Message-ID: <170405009283.1808635.1561211133359804844.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009159.1808635.10158480820888604007.stgit@frogsfrogsfrogs>
 References: <170405009159.1808635.10158480820888604007.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,40 +38,47 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable xfs_trans_ichgtime to change the inode access time so that we can
-use this function to set inode times when allocating inodes instead of
-open-coding it.
+Rearrange the libxfs_trans_ichgtime call in libxfs_ialloc so that we
+call it once with the flags we want.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_shared.h      |    1 +
- libxfs/xfs_trans_inode.c |    2 ++
- 2 files changed, 3 insertions(+)
+ libxfs/inode.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 7509c1406a3..1d327685f6e 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -136,6 +136,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
- #define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
- #define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
-+#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
+diff --git a/libxfs/inode.c b/libxfs/inode.c
+index 433755a18ba..8a2f7dfff4d 100644
+--- a/libxfs/inode.c
++++ b/libxfs/inode.c
+@@ -91,6 +91,7 @@ libxfs_icreate(
+ 	struct xfs_inode	*pip = args->pip;
+ 	struct xfs_inode	*ip;
+ 	unsigned int		flags;
++	int			times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
+ 	int			error;
  
- /* Computed inode geometry for the filesystem. */
- struct xfs_ino_geometry {
-diff --git a/libxfs/xfs_trans_inode.c b/libxfs/xfs_trans_inode.c
-index c171a525cef..c2e5cb26004 100644
---- a/libxfs/xfs_trans_inode.c
-+++ b/libxfs/xfs_trans_inode.c
-@@ -65,6 +65,8 @@ xfs_trans_ichgtime(
- 		inode_set_mtime_to_ts(inode, tv);
- 	if (flags & XFS_ICHGTIME_CHG)
- 		inode_set_ctime_to_ts(inode, tv);
-+	if (flags & XFS_ICHGTIME_ACCESS)
-+		inode_set_atime_to_ts(inode, tv);
- 	if (flags & XFS_ICHGTIME_CREATE)
- 		ip->i_crtime = tv;
- }
+ 	error = libxfs_iget(tp->t_mountp, tp, ino, XFS_IGET_CREATE, &ip);
+@@ -102,7 +103,6 @@ libxfs_icreate(
+ 	set_nlink(VFS_I(ip), args->nlink);
+ 	VFS_I(ip)->i_uid = args->uid;
+ 	ip->i_projid = args->prid;
+-	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD);
+ 
+ 	if (pip && (VFS_I(pip)->i_mode & S_ISGID)) {
+ 		if (!(args->flags & XFS_ICREATE_ARGS_FORCE_GID))
+@@ -120,10 +120,12 @@ libxfs_icreate(
+ 	if (xfs_has_v3inodes(ip->i_mount)) {
+ 		VFS_I(ip)->i_version = 1;
+ 		ip->i_diflags2 = ip->i_mount->m_ino_geo.new_diflags2;
+-		ip->i_crtime = VFS_I(ip)->__i_mtime;
+ 		ip->i_cowextsize = 0;
++		times |= XFS_ICHGTIME_CREATE;
+ 	}
+ 
++	xfs_trans_ichgtime(tp, ip, times);
++
+ 	flags = XFS_ILOG_CORE;
+ 	switch (args->mode & S_IFMT) {
+ 	case S_IFIFO:
 
