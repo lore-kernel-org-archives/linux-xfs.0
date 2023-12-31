@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E2A9C127
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:14:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B429DC2DA
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:14:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XI2f4iGI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B0CDC433C7;
-	Sun, 31 Dec 2023 22:14:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EahYD2Ym"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 243B9C433C8;
+	Sun, 31 Dec 2023 22:14:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060873;
-	bh=ta8BT/bdhicVjv3MqclTmvjNyVJRoXdkm5f9h9yKgV0=;
+	s=k20201202; t=1704060889;
+	bh=Bww2N1IjRuxcG1H4IQPH8+RZYtb10WNeS35Ert8D428=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XI2f4iGI8E1MtDO6ewHXuhEbCGXosPXW21zWREXgD+fubN+LAEjeYNZcPubNMmJIQ
-	 NPy9/D+taEuvl9ZLojKhRj4vuHls370ECKUCBAy3uKrd3QD9CqF221ofEsRBT79LQF
-	 OiVt2Vz34+sCmPChuENFAjXXKoAhGYjewEWYOKOGIrucMLty6saWdhbweQVsNbBqfr
-	 rY266OhRYeZRBsB7dOsqfT1VKvIWOgnr/K6oWScA4fwvKZs6QhJgPpXKCSM4d039vu
-	 TckQU5yE9Wi5fbfArLTNmL5nLRkhDYUGvYIGpUMYpBIaUP/mzmWPdBO5ncHSB5HZxC
-	 KwUK/d0PUD89g==
-Date: Sun, 31 Dec 2023 14:14:33 -0800
-Subject: [PATCH 4/4] xfs_scrub: upload clean bills of health
+	b=EahYD2YmeJF5ZrxlBSZpRx9r1NmnYzLPihLnLKYNn6wHwKsKjZX5IhRuIunW5/3nr
+	 ShrRzS4FMZeYWtFMHXzDimUSiIZz33E22ZxKOFVGMDd0T3HrWXRrTDaqGzJ22+YOcV
+	 5ZHCVsqYj34aiK+epeZqDN6dQd/F9vLMsrSBM9c/ybRHz7FynxaqCUGtM3XNddCAi0
+	 fQqw9V9eFi6hjSjlGIP6Z60Ez5qzDuuoarzXm+Wp7TE4wdx7IMsBBB93H5wOQOA/pt
+	 guwHZxvIxNw6yEHr4U+qHqSLQnF4dFhtSV8XcYTr3g9y6xCXSl2BPBRNPsqGKNSJFS
+	 VqIHB1wPMasjw==
+Date: Sun, 31 Dec 2023 14:14:48 -0800
+Subject: [PATCH 01/10] libxfs: clean up xfs_da_unmount usage
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404992455.1794340.3210892907025600521.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404992400.1794340.13951488488074140755.stgit@frogsfrogsfrogs>
-References: <170404992400.1794340.13951488488074140755.stgit@frogsfrogsfrogs>
+Message-ID: <170404992795.1794490.11964384959099526040.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404992774.1794490.2226231791872978170.stgit@frogsfrogsfrogs>
+References: <170404992774.1794490.2226231791872978170.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,143 +37,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If scrub terminates with a clean bill of health, tell the kernel that
-the result of the scan is that everything's healthy.
+Replace the open-coded xfs_da_unmount usage in libxfs_umount and teach
+libxfs_mount not to leak the dir/attr geometry structures when the mount
+attempt fails.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase1.c |   38 ++++++++++++++++++++++++++++++++++++++
- scrub/repair.c |   15 +++++++++++++++
- scrub/repair.h |    1 +
- scrub/scrub.c  |    9 +++++++++
- scrub/scrub.h  |    1 +
- 5 files changed, 64 insertions(+)
+ libxfs/init.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
 
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 48ca8313b05..96138e03e71 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -44,6 +44,40 @@ xfs_shutdown_fs(
- 		str_errno(ctx, ctx->mntpoint);
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 1e035c48f57..f15ac48a21d 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -716,7 +716,7 @@ libxfs_mount(
+ 	if (error) {
+ 		fprintf(stderr, _("%s: data size check failed\n"), progname);
+ 		if (!xfs_is_debugger(mp))
+-			return NULL;
++			goto out_da;
+ 	} else
+ 		libxfs_buf_relse(bp);
+ 
+@@ -730,7 +730,7 @@ libxfs_mount(
+ 			fprintf(stderr, _("%s: log size checks failed\n"),
+ 					progname);
+ 			if (!xfs_is_debugger(mp))
+-				return NULL;
++				goto out_da;
+ 		}
+ 		if (bp)
+ 			libxfs_buf_relse(bp);
+@@ -741,8 +741,8 @@ libxfs_mount(
+ 	/* Initialize realtime fields in the mount structure */
+ 	if (rtmount_init(mp)) {
+ 		fprintf(stderr, _("%s: realtime device init failed\n"),
+-			progname);
+-			return NULL;
++				progname);
++			goto out_da;
+ 	}
+ 
+ 	/*
+@@ -760,7 +760,7 @@ libxfs_mount(
+ 			fprintf(stderr, _("%s: read of AG %u failed\n"),
+ 						progname, sbp->sb_agcount);
+ 			if (!xfs_is_debugger(mp))
+-				return NULL;
++				goto out_da;
+ 			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
+ 								progname);
+ 			sbp->sb_agcount = 1;
+@@ -778,6 +778,9 @@ libxfs_mount(
+ 	xfs_set_perag_data_loaded(mp);
+ 
+ 	return mp;
++out_da:
++	xfs_da_unmount(mp);
++	return NULL;
  }
  
-+/*
-+ * If we haven't found /any/ problems at all, tell the kernel that we're giving
-+ * the filesystem a clean bill of health.
-+ */
-+static int
-+report_to_kernel(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct action_list	alist;
-+	int			ret;
-+
-+	if (!ctx->scrub_setup_succeeded || ctx->corruptions_found ||
-+	    ctx->runtime_errors || ctx->unfixable_errors ||
-+	    ctx->warnings_found)
-+		return 0;
-+
-+	action_list_init(&alist);
-+	ret = scrub_clean_health(ctx, &alist);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Complain if we cannot fail the clean bill of health, unless we're
-+	 * just testing repairs.
-+	 */
-+	if (action_list_length(&alist) > 0 &&
-+	    !debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
-+		str_info(ctx, _("Couldn't upload clean bill of health."), NULL);
-+		action_list_discard(&alist);
-+	}
-+
-+	return 0;
-+}
-+
- /* Clean up the XFS-specific state data. */
- int
- scrub_cleanup(
-@@ -51,6 +85,10 @@ scrub_cleanup(
- {
- 	int			error;
- 
-+	error = report_to_kernel(ctx);
-+	if (error)
-+		return error;
-+
- 	action_lists_free(&ctx->action_lists);
- 	if (ctx->fshandle)
- 		free_handle(ctx->fshandle, ctx->fshandle_len);
-diff --git a/scrub/repair.c b/scrub/repair.c
-index 3cb7224f7cc..9ade805e1b6 100644
---- a/scrub/repair.c
-+++ b/scrub/repair.c
-@@ -172,6 +172,21 @@ action_lists_alloc(
- 	return 0;
- }
- 
-+/* Discard repair list contents. */
-+void
-+action_list_discard(
-+	struct action_list		*alist)
-+{
-+	struct action_item		*aitem;
-+	struct action_item		*n;
-+
-+	list_for_each_entry_safe(aitem, n, &alist->list, list) {
-+		alist->nr--;
-+		list_del(&aitem->list);
-+		free(aitem);
-+	}
-+}
-+
- /* Free the repair lists. */
  void
- action_lists_free(
-diff --git a/scrub/repair.h b/scrub/repair.h
-index 486617f1ce4..aa3ea13615f 100644
---- a/scrub/repair.h
-+++ b/scrub/repair.h
-@@ -24,6 +24,7 @@ static inline bool action_list_empty(const struct action_list *alist)
+@@ -900,9 +903,7 @@ libxfs_umount(
+ 	if (xfs_is_perag_data_loaded(mp))
+ 		libxfs_free_perag(mp);
  
- unsigned long long action_list_length(struct action_list *alist);
- void action_list_add(struct action_list *dest, struct action_item *item);
-+void action_list_discard(struct action_list *alist);
- void action_list_splice(struct action_list *dest, struct action_list *src);
- 
- void action_list_find_mustfix(struct action_list *actions,
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index cf056779526..7cb94af3d15 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -444,6 +444,15 @@ scrub_nlinks(
- 	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_NLINKS, 0, alist);
- }
- 
-+/* Update incore health records if we were clean. */
-+int
-+scrub_clean_health(
-+	struct scrub_ctx		*ctx,
-+	struct action_list		*alist)
-+{
-+	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_HEALTHY, 0, alist);
-+}
-+
- /* How many items do we have to check? */
- unsigned int
- scrub_estimate_ag_work(
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 5e3f40bf1f4..cb33ddb46f3 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -29,6 +29,7 @@ int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_quotacheck(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_nlinks(struct scrub_ctx *ctx, struct action_list *alist);
-+int scrub_clean_health(struct scrub_ctx *ctx, struct action_list *alist);
- 
- bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
- bool can_scrub_inode(struct scrub_ctx *ctx);
+-	kmem_free(mp->m_attr_geo);
+-	kmem_free(mp->m_dir_geo);
+-
++	xfs_da_unmount(mp);
+ 	kmem_free(mp->m_rtdev_targp);
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp)
+ 		kmem_free(mp->m_logdev_targp);
 
