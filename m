@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E59EBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:28:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0EC3BA2B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:28:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4gk7Oun"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D75C433C8;
-	Sun, 31 Dec 2023 21:28:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZAhV904i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BECB7C433C8;
+	Sun, 31 Dec 2023 21:28:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704058104;
-	bh=W/6jn+quTdDPnBCZesEYPPPgNI0Xr8F+lM/xcvhPvd8=;
+	s=k20201202; t=1704058119;
+	bh=kg65gkM8tyxRFg6kAqK/7MHvY8mXvj0QGtmq38JHu78=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Z4gk7Ouna7TAzQFp3neMSnclucY3u9iT0rUYTITWzRE7OLt2RXiu2+5MrqGPIFXAP
-	 q8CSv0444H59GGL8X/A/VVIvYjPWqwZlJ6d5y1SB5LAKDY+tijwUzXTfDNXLWdXPN7
-	 dzx4KaQyJzGjwCEPPCd/lH+a1mNBztuJbTdjbDBBiHpqhUOxQDBF+NuM4HwsYDe+7P
-	 HJtW/Xf/XK9zhGGaEvDXFwXB5DD4uF42HlmX+lQ3hspz9Vfd3Afm70fxlnnY009wSK
-	 8YBcAP/8wHIx+RSJXrBvTzxrFGmNJ4o34LA2ei86DFTcZykw8BXymPOJUH8ss+367w
-	 +z2IEX5NB6IUw==
-Date: Sun, 31 Dec 2023 13:28:23 -0800
-Subject: [PATCH 8/9] xfs: remove xfs_defer_agfl_block
+	b=ZAhV904ioPR22kftF6OAHfIlcgWwlrTAi3gf9myA3sgRQddtsj3mHQa3VLm9YJFDq
+	 IcM0CeVlPgpeFGVN2YgleqNXGc5ijEgMFyFBUVZkab7ywpZZgMbmFdKVRsKemcL+AU
+	 uVM3iBladXMgWcPqApVan7fkqyYGWYqhSFGvh5K6e24kvn2+jKjHdsyGHQ4cWqs6g8
+	 vwUljnCvrdHFh35MHw5P5vyalT9lAMGdjJ7N/jo+3hk+Xitzzy8J+0zb60PJ2OrUWZ
+	 DOvL6QC2Qo4y2DYuAtb6h/jIyIsxfscLCsPXwhwyrtClVW6eJwk1DpLbXg1ucBIXc0
+	 N/QToLBhEc4rg==
+Date: Sun, 31 Dec 2023 13:28:39 -0800
+Subject: [PATCH 9/9] xfs: move xfs_extent_free_defer_add to xfs_extfree_item.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <170404848464.1764329.16504824624090286076.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <170404848480.1764329.1566640489700733204.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 References: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -35,109 +35,140 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_free_extent_later can handle the extra AGFL special casing with
-very little extra logic.
+Move the code that adds the incore xfs_extent_free_item deferred work
+data to a transaction live with the EFI log item code.  This means that
+the allocator code no longer has to know about the inner workings of the
+EFI log items.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+As a consequence, we can get rid of the _{get,put}_group helpers.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   67 +++++++++++++++------------------------------
- 1 file changed, 22 insertions(+), 45 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c |   12 ++----------
+ fs/xfs/libxfs/xfs_alloc.h |    3 ---
+ fs/xfs/xfs_extfree_item.c |   31 +++++++++++++++++--------------
+ fs/xfs/xfs_extfree_item.h |    6 ++++++
+ 4 files changed, 25 insertions(+), 27 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index ca4df5e0b2a31..0227985676042 100644
+index 0227985676042..5d63711ad1aac 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2538,48 +2538,6 @@ xfs_agfl_reset(
- 	clear_bit(XFS_AGSTATE_AGFL_NEEDS_RESET, &pag->pag_opstate);
- }
+@@ -27,6 +27,7 @@
+ #include "xfs_ag_resv.h"
+ #include "xfs_bmap.h"
+ #include "xfs_health.h"
++#include "xfs_extfree_item.h"
  
--/*
-- * Defer an AGFL block free. This is effectively equivalent to
-- * xfs_free_extent_later() with some special handling particular to AGFL blocks.
-- *
-- * Deferring AGFL frees helps prevent log reservation overruns due to too many
-- * allocation operations in a transaction. AGFL frees are prone to this problem
-- * because for one they are always freed one at a time. Further, an immediate
-- * AGFL block free can cause a btree join and require another block free before
-- * the real allocation can proceed. Deferring the free disconnects freeing up
-- * the AGFL slot from freeing the block.
-- */
--static int
--xfs_defer_agfl_block(
--	struct xfs_trans		*tp,
--	xfs_agnumber_t			agno,
--	xfs_agblock_t			agbno,
--	struct xfs_owner_info		*oinfo)
--{
--	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_extent_free_item	*xefi;
--	xfs_fsblock_t			fsbno = XFS_AGB_TO_FSB(mp, agno, agbno);
--
--	ASSERT(xfs_extfree_item_cache != NULL);
--	ASSERT(oinfo != NULL);
--
--	if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbno(mp, fsbno)))
--		return -EFSCORRUPTED;
--
--	xefi = kmem_cache_zalloc(xfs_extfree_item_cache,
--			       GFP_KERNEL | __GFP_NOFAIL);
--	xefi->xefi_startblock = fsbno;
--	xefi->xefi_blockcount = 1;
--	xefi->xefi_owner = oinfo->oi_owner;
--	xefi->xefi_agresv = XFS_AG_RESV_AGFL;
--
--	trace_xfs_agfl_free_defer(mp, xefi);
+ struct kmem_cache	*xfs_extfree_item_cache;
+ 
+@@ -2582,16 +2583,7 @@ xfs_defer_extent_free(
+ 		xefi->xefi_owner = XFS_RMAP_OWN_NULL;
+ 	}
+ 
+-	trace_xfs_extent_free_defer(mp, xefi);
 -
 -	xfs_extent_free_get_group(mp, xefi);
--	xfs_defer_add(tp, &xefi->xefi_list, &xfs_agfl_free_defer_type);
--	return 0;
+-
+-	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
+-		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+-				&xfs_agfl_free_defer_type);
+-	else
+-		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
+-				&xfs_extent_free_defer_type);
++	xfs_extent_free_defer_add(tp, xefi, dfpp);
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 2da543fb90ecd..0ed71a31fe7ce 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -254,9 +254,6 @@ struct xfs_extent_free_item {
+ 	enum xfs_ag_resv_type	xefi_agresv;
+ };
+ 
+-void xfs_extent_free_get_group(struct xfs_mount *mp,
+-		struct xfs_extent_free_item *xefi);
+-
+ #define XFS_EFI_SKIP_DISCARD	(1U << 0) /* don't issue discard */
+ #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
+ #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index be932390bd1f7..e8569bf26819c 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -436,21 +436,24 @@ xfs_extent_free_create_done(
+ 	return &efdp->efd_item;
+ }
+ 
+-/* Take a passive ref to the AG containing the space we're freeing. */
++/* Add this deferred EFI to the transaction. */
+ void
+-xfs_extent_free_get_group(
+-	struct xfs_mount		*mp,
+-	struct xfs_extent_free_item	*xefi)
++xfs_extent_free_defer_add(
++	struct xfs_trans		*tp,
++	struct xfs_extent_free_item	*xefi,
++	struct xfs_defer_pending	**dfpp)
+ {
++	struct xfs_mount		*mp = tp->t_mountp;
++
++	trace_xfs_extent_free_defer(mp, xefi);
++
+ 	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
 -}
 -
- /*
-  * Add the extent to the list of extents to be free at transaction end.
-  * The list is maintained sorted (by block number).
-@@ -2627,7 +2585,13 @@ xfs_defer_extent_free(
- 	trace_xfs_extent_free_defer(mp, xefi);
- 
- 	xfs_extent_free_get_group(mp, xefi);
--	*dfpp = xfs_defer_add(tp, &xefi->xefi_list, &xfs_extent_free_defer_type);
-+
+-/* Release a passive AG ref after some freeing work. */
+-static inline void
+-xfs_extent_free_put_group(
+-	struct xfs_extent_free_item	*xefi)
+-{
+-	xfs_perag_intent_put(xefi->xefi_pag);
 +	if (xefi->xefi_agresv == XFS_AG_RESV_AGFL)
 +		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
 +				&xfs_agfl_free_defer_type);
 +	else
 +		*dfpp = xfs_defer_add(tp, &xefi->xefi_list,
 +				&xfs_extent_free_defer_type);
- 	return 0;
  }
  
-@@ -2885,8 +2849,21 @@ xfs_alloc_fix_freelist(
- 		if (error)
- 			goto out_agbp_relse;
+ /* Cancel a free extent. */
+@@ -460,7 +463,7 @@ xfs_extent_free_cancel_item(
+ {
+ 	struct xfs_extent_free_item	*xefi = xefi_entry(item);
  
--		/* defer agfl frees */
--		error = xfs_defer_agfl_block(tp, args->agno, bno, &targs.oinfo);
-+		/*
-+		 * Defer the AGFL block free.
-+		 *
-+		 * This helps to prevent log reservation overruns due to too
-+		 * many allocation operations in a transaction. AGFL frees are
-+		 * prone to this problem because for one they are always freed
-+		 * one at a time.  Further, an immediate AGFL block free can
-+		 * cause a btree join and require another block free before the
-+		 * real allocation can proceed.
-+		 * Deferring the free disconnects freeing up the AGFL slot from
-+		 * freeing the block.
-+		 */
-+		error = xfs_free_extent_later(tp,
-+				XFS_AGB_TO_FSB(mp, args->agno, bno), 1,
-+				&targs.oinfo, XFS_AG_RESV_AGFL, 0);
- 		if (error)
- 			goto out_agbp_relse;
- 	}
+-	xfs_extent_free_put_group(xefi);
++	xfs_perag_intent_put(xefi->xefi_pag);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ }
+ 
+@@ -575,7 +578,7 @@ xfs_efi_recover_work(
+ 	xefi->xefi_blockcount = extp->ext_len;
+ 	xefi->xefi_agresv = XFS_AG_RESV_NONE;
+ 	xefi->xefi_owner = XFS_RMAP_OWN_UNKNOWN;
+-	xfs_extent_free_get_group(mp, xefi);
++	xefi->xefi_pag = xfs_perag_intent_get(mp, extp->ext_start);
+ 
+ 	xfs_defer_add_item(dfp, &xefi->xefi_list);
+ }
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index da6a5afa607cf..41b7c43060799 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -88,4 +88,10 @@ xfs_efd_log_item_sizeof(
+ extern struct kmem_cache	*xfs_efi_cache;
+ extern struct kmem_cache	*xfs_efd_cache;
+ 
++struct xfs_extent_free_item;
++
++void xfs_extent_free_defer_add(struct xfs_trans *tp,
++		struct xfs_extent_free_item *xefi,
++		struct xfs_defer_pending **dfpp);
++
+ #endif	/* __XFS_EXTFREE_ITEM_H__ */
 
