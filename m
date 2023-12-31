@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3273FBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:25:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF836BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:26:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RadlWI16"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90E06C433C8;
-	Sun, 31 Dec 2023 21:25:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oZ+4Ac/U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45699C433C8;
+	Sun, 31 Dec 2023 21:26:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704057947;
-	bh=M5TPtXzgXQ/EhcwWcGQEjxJkwgdTBr+18PbnOFJ67vA=;
+	s=k20201202; t=1704057963;
+	bh=v23wjC29Vjugc9kHSyRQkpGmdhFfUZGkWFvo7uc6WAc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RadlWI16x1gzhKvAaHMGaxtp1Gc+7mH8ShechDsjgIRkq9426J9Gg+f0ZJs10S6BS
-	 v20QvExmX2aFg7BJGWVm6AynXbrGl9l8dGBXUp1wqBhNu7QiUSf5iIjWYsjcuRmoaR
-	 /bN6PnwBaaDnA9D11UnSZFMHESqpxtUQyYZpDm9ZAtmTAeSLfP1qCw9cTL5+rBGilu
-	 qSVFowF1AEVNALjWRYQpa6KrWLADs4RYTfM5JlArBy3Rwzfo4rXnczx000mDje3Jza
-	 zGxnumzf77gVoCeGgI9gyJLHT8vDW0TY+IABGZa2OHp41cXN48nHoZU+dAcZ2TQ5WE
-	 vtZI5BDAuDbmg==
-Date: Sun, 31 Dec 2023 13:25:47 -0800
-Subject: [PATCH 14/14] xfs: update btree keys correctly when _insrec splits an
- inode root block
+	b=oZ+4Ac/U7QPNoK+ri9EEeS/CunEvbkNz95CwDK8rcj7csbDtV7mJpBGuOhb3ZVCem
+	 KDTVaP+W1R44gz8nkUbk03T91x3Cpn0EjQV2tsFPYZ8coqUhNcD2uKzB0rZvaQM+rZ
+	 hYl6KXM0uqt7yBU9xH7ozJQ2NfQfOHzyzxCxJp2HygPowlK1VfDtBhdIiHg0IXky72
+	 /ehBEgSg3QO4bYPBrACkuMdf0pzl1jfH5tz47rcoyLrwCyyUaKjANPdg3QqBu3KnIe
+	 nO53cUHpHpnaM6DMoC3hayhN2JDFrylU5+fD3vQQu9FrYdEbXZblt+Hvizt71WcvFb
+	 y3uudrtHbYQuQ==
+Date: Sun, 31 Dec 2023 13:26:02 -0800
+Subject: [PATCH 1/2] xfs: simplify xfs_ag_resv_free signature
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404847593.1763835.12995764830585274777.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404847334.1763835.8921217007526026461.stgit@frogsfrogsfrogs>
-References: <170404847334.1763835.8921217007526026461.stgit@frogsfrogsfrogs>
+Message-ID: <170404847946.1764226.10841381744800434703.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404847925.1764226.3996380045217070282.stgit@frogsfrogsfrogs>
+References: <170404847925.1764226.3996380045217070282.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,74 +37,214 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In commit 2c813ad66a72, I partially fixed a bug wherein xfs_btree_insrec
-would erroneously try to update the parent's key for a block that had
-been split if we decided to insert the new record into the new block.
-The solution was to detect this situation and update the in-core key
-value that we pass up to the caller so that the caller will (eventually)
-add the new block to the parent level of the tree with the correct key.
+It's not possible to fail at increasing fdblocks, so get rid of all the
+error returns here.
 
-However, I missed a subtlety about the way inode-rooted btrees work.  If
-the full block was a maximally sized inode root block, we'll solve that
-fullness by moving the root block's records to a new block, resizing the
-root block, and updating the root to point to the new block.  We don't
-pass a pointer to the new block to the caller because that work has
-already been done.  The new record will /always/ land in the new block,
-so in this case we need to use xfs_btree_update_keys to update the keys.
-
-This bug can theoretically manifest itself in the very rare case that we
-split a bmbt root block and the new record lands in the very first slot
-of the new block, though I've never managed to trigger it in practice.
-However, it is very easy to reproduce by running generic/522 with the
-realtime rmapbt patchset if rtinherit=1.
-
-Fixes: 2c813ad66a72 ("xfs: support btrees with overlapping intervals for keys")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree.c |   29 +++++++++++++++++++++++------
- 1 file changed, 23 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c      |    4 +---
+ fs/xfs/libxfs/xfs_ag_resv.c |   22 +++++-----------------
+ fs/xfs/libxfs/xfs_ag_resv.h |    2 +-
+ fs/xfs/scrub/repair.c       |    5 +----
+ fs/xfs/xfs_fsops.c          |   24 ++++++------------------
+ fs/xfs/xfs_fsops.h          |    2 +-
+ fs/xfs/xfs_super.c          |    6 +-----
+ fs/xfs/xfs_trace.h          |    1 -
+ 8 files changed, 16 insertions(+), 50 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 76320ab728467..ddbe2d55a8077 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -3656,14 +3656,31 @@ xfs_btree_insrec(
- 	xfs_btree_log_block(cur, bp, XFS_BB_NUMRECS);
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 77309a1ce12fb..136e02bb1c9eb 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -944,9 +944,7 @@ xfs_ag_shrink_space(
+ 	 * Disable perag reservations so it doesn't cause the allocation request
+ 	 * to fail. We'll reestablish reservation before we return.
+ 	 */
+-	error = xfs_ag_resv_free(pag);
+-	if (error)
+-		return error;
++	xfs_ag_resv_free(pag);
+ 
+ 	/* internal log shouldn't also show up in the free space btrees */
+ 	error = xfs_alloc_vextent_exact_bno(&args,
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index da1057bd0e606..c9594254304b2 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -126,14 +126,13 @@ xfs_ag_resv_needed(
+ }
+ 
+ /* Clean out a reservation */
+-static int
++static void
+ __xfs_ag_resv_free(
+ 	struct xfs_perag		*pag,
+ 	enum xfs_ag_resv_type		type)
+ {
+ 	struct xfs_ag_resv		*resv;
+ 	xfs_extlen_t			oldresv;
+-	int				error;
+ 
+ 	trace_xfs_ag_resv_free(pag, type, 0);
+ 
+@@ -149,30 +148,19 @@ __xfs_ag_resv_free(
+ 		oldresv = resv->ar_orig_reserved;
+ 	else
+ 		oldresv = resv->ar_reserved;
+-	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
++	xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
+ 	resv->ar_reserved = 0;
+ 	resv->ar_asked = 0;
+ 	resv->ar_orig_reserved = 0;
+-
+-	if (error)
+-		trace_xfs_ag_resv_free_error(pag->pag_mount, pag->pag_agno,
+-				error, _RET_IP_);
+-	return error;
+ }
+ 
+ /* Free a per-AG reservation. */
+-int
++void
+ xfs_ag_resv_free(
+ 	struct xfs_perag		*pag)
+ {
+-	int				error;
+-	int				err2;
+-
+-	error = __xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
+-	err2 = __xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
+-	if (err2 && !error)
+-		error = err2;
+-	return error;
++	__xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
++	__xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
+ }
+ 
+ static int
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+index b74b210008ea7..ff20ed93de772 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.h
++++ b/fs/xfs/libxfs/xfs_ag_resv.h
+@@ -6,7 +6,7 @@
+ #ifndef __XFS_AG_RESV_H__
+ #define	__XFS_AG_RESV_H__
+ 
+-int xfs_ag_resv_free(struct xfs_perag *pag);
++void xfs_ag_resv_free(struct xfs_perag *pag);
+ int xfs_ag_resv_init(struct xfs_perag *pag, struct xfs_trans *tp);
+ 
+ bool xfs_ag_resv_critical(struct xfs_perag *pag, enum xfs_ag_resv_type type);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 12cbc14b24810..24d99891a634c 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -968,9 +968,7 @@ xrep_reset_perag_resv(
+ 	ASSERT(sc->tp);
+ 
+ 	sc->flags &= ~XREP_RESET_PERAG_RESV;
+-	error = xfs_ag_resv_free(sc->sa.pag);
+-	if (error)
+-		goto out;
++	xfs_ag_resv_free(sc->sa.pag);
+ 	error = xfs_ag_resv_init(sc->sa.pag, sc->tp);
+ 	if (error == -ENOSPC) {
+ 		xfs_err(sc->mp,
+@@ -979,7 +977,6 @@ xrep_reset_perag_resv(
+ 		error = 0;
+ 	}
+ 
+-out:
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 84b311bd185af..bd37a7ef28178 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -214,11 +214,10 @@ xfs_growfs_data_private(
+ 			struct xfs_perag	*pag;
+ 
+ 			pag = xfs_perag_get(mp, id.agno);
+-			error = xfs_ag_resv_free(pag);
++			xfs_ag_resv_free(pag);
+ 			xfs_perag_put(pag);
+-			if (error)
+-				return error;
+ 		}
++
+ 		/*
+ 		 * Reserve AG metadata blocks. ENOSPC here does not mean there
+ 		 * was a growfs failure, just that there still isn't space for
+@@ -601,24 +600,13 @@ xfs_fs_reserve_ag_blocks(
+ /*
+  * Free space reserved for per-AG metadata.
+  */
+-int
++void
+ xfs_fs_unreserve_ag_blocks(
+ 	struct xfs_mount	*mp)
+ {
+-	xfs_agnumber_t		agno;
+ 	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			err2;
++	xfs_agnumber_t		agno;
+ 
+-	for_each_perag(mp, agno, pag) {
+-		err2 = xfs_ag_resv_free(pag);
+-		if (err2 && !error)
+-			error = err2;
+-	}
+-
+-	if (error)
+-		xfs_warn(mp,
+-	"Error %d freeing per-AG metadata reserve pool.", error);
+-
+-	return error;
++	for_each_perag(mp, agno, pag)
++		xfs_ag_resv_free(pag);
+ }
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 2cffe51a31e8b..dba17c404e7d1 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -14,6 +14,6 @@ extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, uint32_t inflags);
+ 
+ extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
+-extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
++extern void xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
+ 
+ #endif	/* __XFS_FSOPS_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f3a5e194c535b..4a3119a48ef08 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1900,11 +1900,7 @@ xfs_remount_ro(
+ 	xfs_inodegc_stop(mp);
+ 
+ 	/* Free the per-AG metadata reservation pool. */
+-	error = xfs_fs_unreserve_ag_blocks(mp);
+-	if (error) {
+-		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		return error;
+-	}
++	xfs_fs_unreserve_ag_blocks(mp);
  
  	/*
--	 * If we just inserted into a new tree block, we have to
--	 * recalculate nkey here because nkey is out of date.
-+	 * Update btree keys to reflect the newly added record or keyptr.
-+	 * There are three cases here to be aware of.  Normally, all we have to
-+	 * do is walk towards the root, updating keys as necessary.
- 	 *
--	 * Otherwise we're just updating an existing block (having shoved
--	 * some records into the new tree block), so use the regular key
--	 * update mechanism.
-+	 * If the caller had us target a full block for the insertion, we dealt
-+	 * with that by calling the _make_block_unfull function.  If the
-+	 * "make unfull" function splits the block, it'll hand us back the key
-+	 * and pointer of the new block.  We haven't yet added the new block to
-+	 * the next level up, so if we decide to add the new record to the new
-+	 * block (bp->b_bn != old_bn), we have to update the caller's pointer
-+	 * so that the caller adds the new block with the correct key.
-+	 *
-+	 * However, there is a third possibility-- if the selected block is the
-+	 * root block of an inode-rooted btree and cannot be expanded further,
-+	 * the "make unfull" function moves the root block contents to a new
-+	 * block and updates the root block to point to the new block.  In this
-+	 * case, no block pointer is passed back because the block has already
-+	 * been added to the btree.  In this case, we need to use the regular
-+	 * key update function, just like the first case.  This is critical for
-+	 * overlapping btrees, because the high key must be updated to reflect
-+	 * the entire tree, not just the subtree accessible through the first
-+	 * child of the root (which is now two levels down from the root).
- 	 */
--	if (bp && xfs_buf_daddr(bp) != old_bn) {
-+	if (!xfs_btree_ptr_is_null(cur, &nptr) &&
-+	    bp && xfs_buf_daddr(bp) != old_bn) {
- 		xfs_btree_get_keys(cur, block, lkey);
- 	} else if (xfs_btree_needs_key_update(cur, optr)) {
- 		error = xfs_btree_update_keys(cur, level);
+ 	 * Before we sync the metadata, we need to free up the reserve block
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 063b1ee79de2f..87c3fe0f078be 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3149,7 +3149,6 @@ DEFINE_AG_RESV_EVENT(xfs_ag_resv_free_extent);
+ DEFINE_AG_RESV_EVENT(xfs_ag_resv_critical);
+ DEFINE_AG_RESV_EVENT(xfs_ag_resv_needed);
+ 
+-DEFINE_AG_ERROR_EVENT(xfs_ag_resv_free_error);
+ DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
+ 
+ /* refcount tracepoint classes */
 
