@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C5FBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:27:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61183BA2B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:27:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XKv4YhEZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 213ABC433C7;
-	Sun, 31 Dec 2023 21:27:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JZbodacp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4606C433C8;
+	Sun, 31 Dec 2023 21:27:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704058057;
-	bh=Y1LWVPL1nPeE4qoUKc8pf7a7GyjMgwDNpWXN3vbT/Xw=;
+	s=k20201202; t=1704058072;
+	bh=ygi/eQdVo9B8BclWm4x8gvybxVeDqDnSvV2ChTK/dR0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XKv4YhEZzSk5djXGRGk+obRKdRAGhSCACnBbgKfmRxdbm+62hlB7eTYXR6woalsZ4
-	 2fRg4xY+V5NfPRTI377Jh1Lkt9OnzNIK+5mV9seVZaUc2qlv0H7Zo5tK7iQCBcK0u2
-	 oExvt6CV09PO9GFfFKETfvSLf0jSeTfpOlOqX9rBfcDY212AhBd89Jv92yV/OCYH5U
-	 O+ZDES0jTMM/hpBkcdRtAX+24SFqIA+hWiq5G55TmYZgmKQqHXn74AgXLrnbAxPfVR
-	 XDArBPoj+CnJEWuUG0jxsWhQBoRS/rEez8RzDP92ibY6hAeJE/5C63rRkL0Z0a07MZ
-	 c0M6HQO8ni6Uw==
-Date: Sun, 31 Dec 2023 13:27:36 -0800
-Subject: [PATCH 5/9] xfs: reuse xfs_extent_free_cancel_item
+	b=JZbodacpNo9oDekeM+INIsOYqTYVVgyJ0fZuuHtOvywesjYMLBmeaA7x1ZlqDoPy+
+	 QAeSEhkyMsu7IdjKC1l753u9Gn6VUgSUTDfMu3wJM+UbdVIqlQ3vLsiyy5+vNYEbU8
+	 yu+IVh31Oxi6QGf8ccTgSYDYvwj+KVLkG4y6LnSyehYFnJqcx0J7eStLqxJiXeWLe4
+	 o41+c7Ba0yqrXXXCUiiQIfzx0O2N5s+FWqiRkaKOlHyK71OmSCQWwJel4vbLv0934R
+	 oPhnQHIay2Y5g8JpNBTL/oiJmSfpB3uCvG5xLW9seN2p3ObzyC/T88I9Eqw4RlCAS1
+	 h3zJsNcUHwPAw==
+Date: Sun, 31 Dec 2023 13:27:52 -0800
+Subject: [PATCH 6/9] xfs: factor out a xfs_efd_add_extent helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <170404848417.1764329.4025148745846475029.stgit@frogsfrogsfrogs>
+Message-ID: <170404848433.1764329.14224111487773657261.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 References: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,75 +37,94 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Reuse xfs_extent_free_cancel_item to put the AG/RTG and free the item in
-a few places that currently open code the logic.
+Factor out a helper to add an extent to and EFD instead of duplicating
+the logic in two places.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_extfree_item.c |   28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_extfree_item.c |   37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index d86ec1d5e468a..9d141b9876572 100644
+index 9d141b9876572..be932390bd1f7 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -437,6 +437,17 @@ xfs_extent_free_put_group(
- 	xfs_perag_intent_put(xefi->xefi_pag);
+@@ -336,6 +336,22 @@ xfs_efd_from_efi(
+ 	efdp->efd_next_extent = efip->efi_format.efi_nextents;
  }
  
-+/* Cancel a free extent. */
-+STATIC void
-+xfs_extent_free_cancel_item(
-+	struct list_head		*item)
++static void
++xfs_efd_add_extent(
++	struct xfs_efd_log_item		*efdp,
++	struct xfs_extent_free_item	*xefi)
 +{
-+	struct xfs_extent_free_item	*xefi = xefi_entry(item);
++	struct xfs_extent		*extp;
 +
-+	xfs_extent_free_put_group(xefi);
-+	kmem_cache_free(xfs_extfree_item_cache, xefi);
++	ASSERT(efdp->efd_next_extent < efdp->efd_format.efd_nextents);
++
++	extp = &efdp->efd_format.efd_extents[efdp->efd_next_extent];
++	extp->ext_start = xefi->xefi_startblock;
++	extp->ext_len = xefi->xefi_blockcount;
++
++	efdp->efd_next_extent++;
 +}
 +
- /* Process a free extent. */
- STATIC int
- xfs_extent_free_finish_item(
-@@ -487,8 +498,7 @@ xfs_extent_free_finish_item(
- 	extp->ext_len = xefi->xefi_blockcount;
- 	efdp->efd_next_extent++;
+ /* Sort bmap items by AG. */
+ static int
+ xfs_extent_free_diff_items(
+@@ -460,8 +476,6 @@ xfs_extent_free_finish_item(
+ 	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
+ 	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_extent		*extp;
+-	uint				next_extent;
+ 	xfs_agblock_t			agbno;
+ 	int				error = 0;
  
--	xfs_extent_free_put_group(xefi);
--	kmem_cache_free(xfs_extfree_item_cache, xefi);
-+	xfs_extent_free_cancel_item(item);
+@@ -490,14 +504,7 @@ xfs_extent_free_finish_item(
+ 		return error;
+ 	}
+ 
+-	/* Add the work we finished to the EFD, even though nobody uses that */
+-	next_extent = efdp->efd_next_extent;
+-	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+-	extp = &(efdp->efd_format.efd_extents[next_extent]);
+-	extp->ext_start = xefi->xefi_startblock;
+-	extp->ext_len = xefi->xefi_blockcount;
+-	efdp->efd_next_extent++;
+-
++	xfs_efd_add_extent(efdp, xefi);
+ 	xfs_extent_free_cancel_item(item);
  	return error;
  }
+@@ -525,11 +532,9 @@ xfs_agfl_free_finish_item(
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
+ 	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+-	struct xfs_extent		*extp;
+ 	struct xfs_buf			*agbp;
+ 	int				error;
+ 	xfs_agblock_t			agbno;
+-	uint				next_extent;
  
-@@ -500,17 +510,6 @@ xfs_extent_free_abort_intent(
- 	xfs_efi_release(EFI_ITEM(intent));
- }
+ 	ASSERT(xefi->xefi_blockcount == 1);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
+@@ -542,13 +547,7 @@ xfs_agfl_free_finish_item(
+ 		error = xfs_free_agfl_block(tp, xefi->xefi_pag->pag_agno,
+ 				agbno, agbp, &oinfo);
  
--/* Cancel a free extent. */
--STATIC void
--xfs_extent_free_cancel_item(
--	struct list_head		*item)
--{
--	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+-	next_extent = efdp->efd_next_extent;
+-	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+-	extp = &(efdp->efd_format.efd_extents[next_extent]);
+-	extp->ext_start = xefi->xefi_startblock;
+-	extp->ext_len = xefi->xefi_blockcount;
+-	efdp->efd_next_extent++;
 -
--	xfs_extent_free_put_group(xefi);
--	kmem_cache_free(xfs_extfree_item_cache, xefi);
--}
--
- /*
-  * AGFL blocks are accounted differently in the reserve pools and are not
-  * inserted into the busy extent list.
-@@ -550,8 +549,7 @@ xfs_agfl_free_finish_item(
- 	extp->ext_len = xefi->xefi_blockcount;
- 	efdp->efd_next_extent++;
- 
--	xfs_extent_free_put_group(xefi);
--	kmem_cache_free(xfs_extfree_item_cache, xefi);
-+	xfs_extent_free_cancel_item(&xefi->xefi_list);
++	xfs_efd_add_extent(efdp, xefi);
+ 	xfs_extent_free_cancel_item(&xefi->xefi_list);
  	return error;
  }
- 
 
