@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2FB8C140
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:58:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA748C140
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:59:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kumumHMR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1F75C433C7;
-	Sun, 31 Dec 2023 22:58:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TkF+mOF6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5065AC433C7;
+	Sun, 31 Dec 2023 22:59:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704063531;
-	bh=dWLIKyWGFE6q96TXtE8POk7r8/fNSKbSV2qzhZjjR8Y=;
+	s=k20201202; t=1704063547;
+	bh=4tP+3YkpxHi2KRbeJaJmtbUvGwfCwKN/PA9esTXHFV4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kumumHMRBLzvA/avDmG/c7Fru53QOckCZnYi6vMkWKcBvYOft5H7QfejJXPeuZwIS
-	 ePBh7ELDRsJdEz0BdVkhDWy+by3Xwc+MW1aKIbjTbUWkQJ5AmrourbLKnm9btzZFeE
-	 M52j2wIElSpesfdUPeqpDZiSYPlDTGiUXSxp00NgQSsp79SpS0Pbif2np+ogsTb6Vk
-	 0oUrtrn+OgV2+1V2agdElgwLj5LKh3iA9/GtIE3WneFRCtQN2aL3ER8tDvWp5/9KYT
-	 SCEn2QeD6B8ZkhtNTY6gFCD4TujsGOouR4AWTYyz1B881DhwuEu/qHld7d8DpI0LVF
-	 biF8TsUpYAiEw==
-Date: Sun, 31 Dec 2023 14:58:51 -0800
-Subject: [PATCH 6/6] xfs_scrub_all: failure reporting for the xfs_scrub_all
- job
+	b=TkF+mOF6rwjZEECqZ/R52LQNMNbknkNhkxxXxVPb2UmtxZS33v9bCFP1V1YbKFXrn
+	 xEeX2Pmb+j0K5V2LQNEAxfoXRg4j3QswA+6ee8AehMAVgvfQgIUYJWVI8sQL5YJweb
+	 WCxUa+oryD7DcPIzqM6Qk8b+nHqHzxzRLE+/QyQzgRILXG36bHHG33krcjTuK/sDdU
+	 r/j+o0gRqndr7pBq70JpYESDKvLDOun2Pl+74OJ73DyLOZdjENG05jh65cHPhO/j3R
+	 JWuetbaarKCFRovV+q01YiEwY3g6YzjYS0OaBpYUzvLux8FomLSY5fVeMTF76exCgH
+	 xGZ+iC0IrBIUA==
+Date: Sun, 31 Dec 2023 14:59:06 -0800
+Subject: [PATCH 1/5] xfs_scrub_all: encapsulate all the subprocess code in an
+ object
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405003057.1801496.18372212760015454598.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405002977.1801496.15279364480135878968.stgit@frogsfrogsfrogs>
-References: <170405002977.1801496.15279364480135878968.stgit@frogsfrogsfrogs>
+Message-ID: <170405003363.1801694.12866688345417241571.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405003347.1801694.9862582977773516679.stgit@frogsfrogsfrogs>
+References: <170405003347.1801694.9862582977773516679.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,183 +38,103 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a failure reporting service for when xfs_scrub_all fails.  This
-shouldn't happen often, but let's report anyways.
+Move all the xfs_scrub subprocess handling code to an object so that we
+can contain all the details in a single place.  This also simplifies the
+background state management.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/Makefile                      |    1 
- scrub/xfs_scrub_all.service.in      |    1 
- scrub/xfs_scrub_all_fail.service.in |   71 +++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub_fail.in             |   35 ++++++++++++++---
- 4 files changed, 101 insertions(+), 7 deletions(-)
- create mode 100644 scrub/xfs_scrub_all_fail.service.in
+ scrub/xfs_scrub_all.in |   68 ++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 54 insertions(+), 14 deletions(-)
 
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 7bd3a355478..7e14d82ad66 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -26,6 +26,7 @@ SYSTEMD_SERVICES=\
- 	$(scrub_media_svcname) \
- 	xfs_scrub_media_fail@.service \
- 	xfs_scrub_all.service \
-+	xfs_scrub_all_fail.service \
- 	xfs_scrub_all.timer \
- 	system-xfs_scrub.slice
- OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
-diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
-index 7cfe3a1bc42..2165494e64a 100644
---- a/scrub/xfs_scrub_all.service.in
-+++ b/scrub/xfs_scrub_all.service.in
-@@ -5,6 +5,7 @@
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index 9d5cbd2a648..001c49a7012 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -78,15 +78,62 @@ def remove_killfunc(killfuncs, fn):
+ 	except:
+ 		pass
  
- [Unit]
- Description=Online XFS Metadata Check for All Filesystems
-+OnFailure=xfs_scrub_all_fail.service
- ConditionACPower=true
- Documentation=man:xfs_scrub_all(8)
- After=paths.target multi-user.target network.target network-online.target systemd-networkd.service NetworkManager.service connman.service
-diff --git a/scrub/xfs_scrub_all_fail.service.in b/scrub/xfs_scrub_all_fail.service.in
-new file mode 100644
-index 00000000000..53479db8477
---- /dev/null
-+++ b/scrub/xfs_scrub_all_fail.service.in
-@@ -0,0 +1,71 @@
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Copyright (c) 2018-2024 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
+-def run_killable(cmd, stdout, killfuncs):
++class scrub_control(object):
++	'''Control object for xfs_scrub.'''
++	def __init__(self):
++		pass
 +
-+[Unit]
-+Description=Online XFS Metadata Check for All Filesystems Failure Reporting
-+Documentation=man:xfs_scrub_all(8)
++	def start(self):
++		'''Start scrub and wait for it to complete.  Returns -1 if the
++		service was not started, 0 if it succeeded, or 1 if it
++		failed.'''
++		assert False
 +
-+[Service]
-+Type=oneshot
-+Environment=EMAIL_ADDR=root
-+ExecStart=@pkg_libexec_dir@/xfs_scrub_fail "${EMAIL_ADDR}" xfs_scrub_all
-+User=mail
-+Group=mail
-+SupplementaryGroups=systemd-journal
++	def stop(self):
++		'''Stop scrub.'''
++		assert False
 +
-+# No realtime scheduling
-+RestrictRealtime=true
++class scrub_subprocess(scrub_control):
++	'''Control object for xfs_scrub subprocesses.'''
++	def __init__(self, mnt, scrub_media):
++		cmd = ['@sbindir@/xfs_scrub']
++		if 'SERVICE_MODE' in os.environ:
++			cmd += '@scrub_service_args@'.split()
++		cmd += '@scrub_args@'.split()
++		if scrub_media:
++			cmd += '-x'
++		cmd += [mnt]
++		self.cmdline = cmd
++		self.proc = None
 +
-+# Make the entire filesystem readonly and /home inaccessible.
-+ProtectSystem=full
-+ProtectHome=yes
-+PrivateTmp=true
-+RestrictSUIDSGID=true
++	def start(self):
++		'''Start xfs_scrub and wait for it to complete.  Returns -1 if
++		the service was not started, 0 if it succeeded, or 1 if it
++		failed.'''
++		try:
++			self.proc = subprocess.Popen(self.cmdline)
++			self.proc.wait()
++		except:
++			return -1
 +
-+# Emailing reports requires network access, but not the ability to change the
-+# hostname.
-+ProtectHostname=true
++		proc = self.proc
++		self.proc = None
++		return proc.returncode
 +
-+# Don't let the program mess with the kernel configuration at all
-+ProtectKernelLogs=true
-+ProtectKernelModules=true
-+ProtectKernelTunables=true
-+ProtectControlGroups=true
-+ProtectProc=invisible
-+RestrictNamespaces=true
++	def stop(self):
++		'''Stop xfs_scrub.'''
++		if self.proc is not None:
++			self.proc.terminate()
 +
-+# Can't hide /proc because journalctl needs it to find various pieces of log
-+# information
-+#ProcSubset=pid
-+
-+# Only allow the default personality Linux
-+LockPersonality=true
-+
-+# No writable memory pages
-+MemoryDenyWriteExecute=true
-+
-+# Don't let our mounts leak out to the host
-+PrivateMounts=true
-+
-+# Restrict system calls to the native arch and only enough to get things going
-+SystemCallArchitectures=native
-+SystemCallFilter=@system-service
-+SystemCallFilter=~@privileged
-+SystemCallFilter=~@resources
-+SystemCallFilter=~@mount
-+
-+# xfs_scrub needs these privileges to run, and no others
-+CapabilityBoundingSet=
-+NoNewPrivileges=true
-+
-+# Failure reporting shouldn't create world-readable files
-+UMask=0077
-+
-+# Clean up any IPC objects when this unit stops
-+RemoveIPC=true
-+
-+# No access to hardware device files
-+PrivateDevices=true
-+ProtectClock=true
-diff --git a/scrub/xfs_scrub_fail.in b/scrub/xfs_scrub_fail.in
-index ff5f20b45d8..5665f83f325 100755
---- a/scrub/xfs_scrub_fail.in
-+++ b/scrub/xfs_scrub_fail.in
-@@ -5,14 +5,13 @@
- # Copyright (C) 2018-2024 Oracle.  All Rights Reserved.
- # Author: Darrick J. Wong <djwong@kernel.org>
++def run_subprocess(mnt, scrub_media, killfuncs):
+ 	'''Run a killable program.  Returns program retcode or -1 if we can't
+ 	start it.'''
+ 	try:
+-		proc = subprocess.Popen(cmd, stdout = stdout)
+-		killfuncs.add(proc.terminate)
+-		proc.wait()
+-		remove_killfunc(killfuncs, proc.terminate)
+-		return proc.returncode
++		p = scrub_subprocess(mnt, scrub_media)
++		killfuncs.add(p.stop)
++		ret = p.start()
++		remove_killfunc(killfuncs, p.stop)
++		return ret
+ 	except:
+ 		return -1
  
--# Email logs of failed xfs_scrub unit runs
-+# Email logs of failed xfs_scrub and xfs_scrub_all unit runs
- 
- recipient="$1"
- test -z "${recipient}" && exit 0
- service="$2"
- test -z "${service}" && exit 0
- mntpoint="$3"
--test -z "${mntpoint}" && exit 0
- 
- hostname="$(hostname -f 2>/dev/null)"
- test -z "${hostname}" && hostname="${HOSTNAME}"
-@@ -23,11 +22,13 @@ if [ ! -x "${mailer}" ]; then
- 	exit 1
- fi
- 
--# Turn the mountpoint into a properly escaped systemd instance name
--scrub_svc="$(systemd-escape --template "${service}@.service" --path "${mntpoint}")"
-+fail_mail_mntpoint() {
-+	local scrub_svc
- 
--(cat << ENDL
--To: $1
-+	# Turn the mountpoint into a properly escaped systemd instance name
-+	scrub_svc="$(systemd-escape --template "${service}@.service" --path "${mntpoint}")"
-+	cat << ENDL
-+To: ${recipient}
- From: <${service}@${hostname}>
- Subject: ${service} failure on ${mntpoint}
- Content-Transfer-Encoding: 8bit
-@@ -38,5 +39,25 @@ Please do not reply to this mesage.
- 
- A log of what happened follows:
- ENDL
--systemctl status --full --lines 4294967295 "${scrub_svc}") | "${mailer}" -t -i
-+	systemctl status --full --lines 4294967295 "${scrub_svc}"
-+}
-+
-+fail_mail() {
-+	cat << ENDL
-+To: ${recipient}
-+From: <${service}@${hostname}>
-+Subject: ${service} failure
-+
-+So sorry, the automatic ${service} on ${hostname} failed.
-+
-+A log of what happened follows:
-+ENDL
-+	systemctl status --full --lines 4294967295 "${service}"
-+}
-+
-+if [ -n "${mntpoint}" ]; then
-+	fail_mail_mntpoint | "${mailer}" -t -i
-+else
-+	fail_mail | "${mailer}" -t -i
-+fi
- exit "${PIPESTATUS[1]}"
+@@ -188,14 +235,7 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+ 		# Invoke xfs_scrub manually if we're running in the foreground.
+ 		# We also permit this if we're running as a cronjob where
+ 		# systemd services are unavailable.
+-		cmd = ['@sbindir@/xfs_scrub']
+-		if 'SERVICE_MODE' in os.environ:
+-			cmd += '@scrub_service_args@'.split()
+-		cmd += '@scrub_args@'.split()
+-		if scrub_media:
+-			cmd += '-x'
+-		cmd += [mnt]
+-		ret = run_killable(cmd, None, killfuncs)
++		ret = run_subprocess(mnt, scrub_media, killfuncs)
+ 		if ret >= 0:
+ 			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
+ 			sys.stdout.flush()
 
