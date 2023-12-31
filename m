@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC790B666
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:32:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B769CB666
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:32:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IqXXHXiF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90DB5C433C7;
-	Sun, 31 Dec 2023 19:32:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cf9Xvzsj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A234C433C8;
+	Sun, 31 Dec 2023 19:32:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051144;
-	bh=72or/JDMCgZK02a7ZAko0XXryquJPFpAhbFe9SCwM3s=;
+	s=k20201202; t=1704051160;
+	bh=Ua0Z0oAU6iELwdFTzthgyOI5SXRVNDHv5pC+i6Gggp4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IqXXHXiFLBo/X1jM7fS/0aVUwDm02N7FvkTjomFLyrnX7/hunv5kpYMjXrYESyiI0
-	 K73qmhSixyEoRA7Teb/3kOvK2uK2RMZOEs1UBicYRaZH10s2S5l9S0x93PKtN2VX4t
-	 3h5MMEZtGK5dLpmt8OIHtgjLNHTSmQDAFFGmUU/0d0vuS2czeuREJSOUe3kTMYYBFx
-	 klKtE9nsJWvWh0Iclij4+PuE/iV9TS6QyLyrRj2LupmU6rJDelalhTKaVqFjSbGRa1
-	 EuUJcuNs1hHIlkGfKC0ajkk62Lun6nKsE6SVA2P7WaHhUxVF8oifiXeRzC+zdyixe9
-	 ejpCNkozrQIkw==
-Date: Sun, 31 Dec 2023 11:32:24 -0800
-Subject: [PATCHSET v29.0 27/28] xfs: inode-related repair fixes
+	b=cf9Xvzsjafr3eINdAZGPGe3kJQPT0Gz+3oCU10161uO5156gICuNs7AmLCuwR9B2/
+	 h1r/7tsaLgNfE8B+ERjPzqupLRlMOgu84eU72Rep3ce2FxAOSNSLDueeBYE44I6HNc
+	 gNHlBkm1QXjyWdvaL94zomWBBW1Ee/6MI9iPSM51imP+cWQPTZjdbVsCq2jACfKykD
+	 uE449FlTp0WsvboZnwu0zgCPhYx80q0lbFmyAcHWDz7PzggdRipuhP3fZPulLefSO1
+	 bS4vFsyQDdNv86wpm1C20UWTJrj7o5i0X/+uhgjkCqlFytQoNo/ktR1Kk29d8N/u3t
+	 7fi7D4qmKVR3A==
+Date: Sun, 31 Dec 2023 11:32:39 -0800
+Subject: [PATCHSET v29.0 28/28] xfs: less heavy locks during fstrim
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404837990.1754231.2175141512934229542.stgit@frogsfrogsfrogs>
+Message-ID: <170404838392.1754382.3493272901639286885.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,16 +37,21 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-While doing QA of the online fsck code, I made a few observations:
-First, nobody was checking that the di_onlink field is actually zero;
-Second, that allocating a temporary file for repairs can fail (and
-thus bring down the entire fs) if the inode cluster is corrupt; and
-Third, that file link counts do not pin at ~0U to prevent integer
-overflows.  Fourth, the x{chk,rep}_metadata_inode_fork functions
-should be subclassing the main scrub context, not modifying the
-parent's setup willy-nilly.
+Congratulations!  You have made it to the final patchset of the main
+online fsck feature!  This patchset fixes some stalling behavior that I
+observed when running FITRIM against large flash-based filesystems with
+very heavily fragmented free space data.  In summary -- the current
+fstrim implementation optimizes for trimming the largest free extents
+first, and holds the AGF lock for the duration of the operation.  This
+is great if fstrim is being run as a foreground process by a sysadmin.
 
-This scattered patchset fixes those three problems.
+For xfs_scrub, however, this isn't so good -- we don't really want to
+block on one huge kernel call while reporting no progress information.
+We don't want to hold the AGF so long that background processes stall.
+These problems are easily fixable by issuing smaller FITRIM calls, but
+there's still the problem of walking the entire cntbt.  To solve that
+second problem, we introduce a new sub-AG FITRIM implementation.  To
+solve the first problem, make it relax the AGF periodically.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -57,22 +62,8 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=inode-repair-improvements
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=inode-repair-improvements
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=discard-relax-locks
 ---
- fs/xfs/libxfs/xfs_format.h    |    6 ++++
- fs/xfs/libxfs/xfs_ialloc.c    |   40 ++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_buf.c |    8 +++++
- fs/xfs/scrub/common.c         |   23 ++------------
- fs/xfs/scrub/dir_repair.c     |   11 ++-----
- fs/xfs/scrub/inode_repair.c   |   12 +++++++
- fs/xfs/scrub/nlinks.c         |    4 ++
- fs/xfs/scrub/nlinks_repair.c  |    8 +----
- fs/xfs/scrub/repair.c         |   67 ++++++++---------------------------------
- fs/xfs/scrub/scrub.c          |   63 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.h          |   11 +++++++
- fs/xfs/xfs_inode.c            |   33 +++++++++++++-------
- 12 files changed, 187 insertions(+), 99 deletions(-)
+ fs/xfs/xfs_discard.c |  164 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 162 insertions(+), 2 deletions(-)
 
