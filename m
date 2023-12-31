@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BD91C2D4
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:50:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D8F5C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:50:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMr3JmpE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08C89C433C7;
-	Sun, 31 Dec 2023 23:50:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mITeqhtw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9032CC433C8;
+	Sun, 31 Dec 2023 23:50:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066611;
-	bh=JxV+ao1L1hZOxGOScucV5k4eWwh5PG/YQYOChbmOnPU=;
+	s=k20201202; t=1704066626;
+	bh=M8kgRDvfECFph8+HK62Is5od/XNQFqoFRPTm0ndd5hE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YMr3JmpErktgWQD6O1Bu5Zi7D5eT/GPl6V5eUXLZkNfD/FY7JlSfPbVyaY/M5G1RF
-	 a2d4kYqd2NkOc0OoDrrp0PQfUwiDmsMpQK1yQsCLqZZ2Y1Ezv43b0nLV9EXGkT/oHq
-	 ZuP5Xo8qomXcw2ndrYIsK0H2vhJEfk5bFoz/+5dTfZeHoKLjdRDALyX7aC/51JcdF9
-	 afrMDTx9oliCHGdO8lnsgASd1oKAaw1LQwv0DGCjuRcu/+17OEyGF/y451lhhKakHY
-	 7pkUXsim7AxE7iz+uul6ut2SjT4389YQqHLezbiD+Qp53QdzqEVus9nJtXFwKRDpp3
-	 pOt4AXwJimpXw==
-Date: Sun, 31 Dec 2023 15:50:10 -0800
-Subject: [PATCH 10/52] xfs: record rt group superblock errors in the health
- system
+	b=mITeqhtw0CPGi474AgtaHmRZETynqri6+XWXBWJdsiBJ8M8E0Msdi0ymkP/lBDiJ+
+	 9npr1+8tPNcKkpWDvmBnuxgDI+WDZtlRjfQMsm+ziGo3TzZTsUaZTscLGz2Cs4VHuS
+	 Ae/mQagnbLoW5PeiYjtatUovcBByQSreedWfk4/AWPtqawJl9ESQI1jIi71Qb0U82i
+	 EepArfuGj1UblV5zA0FXrYwVe4NueqIqYuS8Y796oGPySgkFxzyMXF4oYDR73L3TNG
+	 EZNOwODgamBa0Vbv5DA5n/UUjNzS2Ke/TCgGQ5go5XaiMFJNDEvmTHsfyg0LaRbZIv
+	 Mr+0cNM0dW2vA==
+Date: Sun, 31 Dec 2023 15:50:26 -0800
+Subject: [PATCH 11/52] xfs: define locking primitives for realtime groups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405012303.1811243.18088177921751798432.stgit@frogsfrogsfrogs>
+Message-ID: <170405012317.1811243.6429425331947593787.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 References: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,107 +37,87 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Record the state of per-rtgroup metadata sickness in the rtgroup
-structure for later reporting.
+Define helper functions to lock all metadata inodes related to a
+realtime group.  There's not much to look at now, but this will become
+important when we add per-rtgroup metadata files and online fsck code
+for them.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_health.h  |   28 +++++++++++++++++++++++++++-
- libxfs/xfs_rtgroup.h |    8 ++++++++
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ libxfs/xfs_rtgroup.c |   33 +++++++++++++++++++++++++++++++++
+ libxfs/xfs_rtgroup.h |   14 ++++++++++++++
+ 2 files changed, 47 insertions(+)
 
 
-diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
-index 1816c67351a..f5449a804c6 100644
---- a/libxfs/xfs_health.h
-+++ b/libxfs/xfs_health.h
-@@ -52,6 +52,7 @@ struct xfs_inode;
- struct xfs_fsop_geom;
- struct xfs_btree_cur;
- struct xfs_da_args;
-+struct xfs_rtgroup;
+diff --git a/libxfs/xfs_rtgroup.c b/libxfs/xfs_rtgroup.c
+index 8bfaa8d06f8..7003ac5c567 100644
+--- a/libxfs/xfs_rtgroup.c
++++ b/libxfs/xfs_rtgroup.c
+@@ -533,3 +533,36 @@ xfs_rtgroup_update_secondary_sbs(
  
- /* Observable health issues for metadata spanning the entire filesystem. */
- #define XFS_SICK_FS_COUNTERS	(1 << 0)  /* summary counters */
-@@ -66,6 +67,7 @@ struct xfs_da_args;
- /* Observable health issues for realtime volume metadata. */
- #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
- #define XFS_SICK_RT_SUMMARY	(1 << 1)  /* realtime summary */
-+#define XFS_SICK_RT_SUPER	(1 << 2)  /* rt group superblock */
- 
- /* Observable health issues for AG metadata. */
- #define XFS_SICK_AG_SB		(1 << 0)  /* superblock */
-@@ -110,7 +112,8 @@ struct xfs_da_args;
- 				 XFS_SICK_FS_METAPATH)
- 
- #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
--				 XFS_SICK_RT_SUMMARY)
-+				 XFS_SICK_RT_SUMMARY | \
-+				 XFS_SICK_RT_SUPER)
- 
- #define XFS_SICK_AG_PRIMARY	(XFS_SICK_AG_SB | \
- 				 XFS_SICK_AG_AGF | \
-@@ -192,6 +195,14 @@ void xfs_rt_mark_healthy(struct xfs_mount *mp, unsigned int mask);
- void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
- 		unsigned int *checked);
- 
-+void xfs_rgno_mark_sick(struct xfs_mount *mp, xfs_rgnumber_t rgno,
-+		unsigned int mask);
-+void xfs_rtgroup_mark_sick(struct xfs_rtgroup *rtg, unsigned int mask);
-+void xfs_rtgroup_mark_checked(struct xfs_rtgroup *rtg, unsigned int mask);
-+void xfs_rtgroup_mark_healthy(struct xfs_rtgroup *rtg, unsigned int mask);
-+void xfs_rtgroup_measure_sickness(struct xfs_rtgroup *rtg, unsigned int *sick,
-+		unsigned int *checked);
-+
- void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		unsigned int mask);
- void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
-@@ -241,6 +252,15 @@ xfs_ag_has_sickness(struct xfs_perag *pag, unsigned int mask)
- 	return sick & mask;
+ 	return saved_error ? saved_error : error;
  }
- 
-+static inline bool
-+xfs_rtgroup_has_sickness(struct xfs_rtgroup *rtg, unsigned int mask)
-+{
-+	unsigned int	sick, checked;
 +
-+	xfs_rtgroup_measure_sickness(rtg, &sick, &checked);
-+	return sick & mask;
++/* Lock metadata inodes associated with this rt group. */
++void
++xfs_rtgroup_lock(
++	struct xfs_trans	*tp,
++	struct xfs_rtgroup	*rtg,
++	unsigned int		rtglock_flags)
++{
++	ASSERT(!(rtglock_flags & ~XFS_RTGLOCK_ALL_FLAGS));
++	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) ||
++	       !(rtglock_flags & XFS_RTGLOCK_BITMAP));
++
++	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
++		xfs_rtbitmap_lock(tp, rtg->rtg_mount);
++	else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED)
++		xfs_rtbitmap_lock_shared(rtg->rtg_mount, XFS_RBMLOCK_BITMAP);
 +}
 +
- static inline bool
- xfs_inode_has_sickness(struct xfs_inode *ip, unsigned int mask)
- {
-@@ -262,6 +282,12 @@ xfs_rt_is_healthy(struct xfs_mount *mp)
- 	return !xfs_rt_has_sickness(mp, -1U);
- }
- 
-+static inline bool
-+xfs_rtgroup_is_healthy(struct xfs_rtgroup *rtg)
++/* Unlock metadata inodes associated with this rt group. */
++void
++xfs_rtgroup_unlock(
++	struct xfs_rtgroup	*rtg,
++	unsigned int		rtglock_flags)
 +{
-+	return !xfs_rtgroup_has_sickness(rtg, -1U);
-+}
++	ASSERT(!(rtglock_flags & ~XFS_RTGLOCK_ALL_FLAGS));
++	ASSERT(!(rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED) ||
++	       !(rtglock_flags & XFS_RTGLOCK_BITMAP));
 +
- static inline bool
- xfs_ag_is_healthy(struct xfs_perag *pag)
- {
++	if (rtglock_flags & XFS_RTGLOCK_BITMAP)
++		xfs_rtbitmap_unlock(rtg->rtg_mount);
++	else if (rtglock_flags & XFS_RTGLOCK_BITMAP_SHARED)
++		xfs_rtbitmap_unlock_shared(rtg->rtg_mount, XFS_RBMLOCK_BITMAP);
++}
 diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index 2d0422c6712..c3f4f644ea5 100644
+index c3f4f644ea5..70968cf700f 100644
 --- a/libxfs/xfs_rtgroup.h
 +++ b/libxfs/xfs_rtgroup.h
-@@ -25,6 +25,14 @@ struct xfs_rtgroup {
- 	/* Number of blocks in this group */
- 	xfs_rgblock_t		rtg_blockcount;
- 
-+	/*
-+	 * Bitsets of per-rtgroup metadata that have been checked and/or are
-+	 * sick.  Callers should hold rtg_state_lock before accessing this
-+	 * field.
-+	 */
-+	uint16_t		rtg_checked;
-+	uint16_t		rtg_sick;
+@@ -221,11 +221,25 @@ void xfs_rtgroup_update_super(struct xfs_buf *rtsb_bp,
+ 		const struct xfs_buf *sb_bp);
+ void xfs_rtgroup_log_super(struct xfs_trans *tp, const struct xfs_buf *sb_bp);
+ int xfs_rtgroup_update_secondary_sbs(struct xfs_mount *mp);
 +
- #ifdef __KERNEL__
- 	/* -- kernel only structures below this line -- */
- 	spinlock_t		rtg_state_lock;
++/* Lock the rt bitmap inode in exclusive mode */
++#define XFS_RTGLOCK_BITMAP		(1U << 0)
++/* Lock the rt bitmap inode in shared mode */
++#define XFS_RTGLOCK_BITMAP_SHARED	(1U << 1)
++
++#define XFS_RTGLOCK_ALL_FLAGS	(XFS_RTGLOCK_BITMAP | \
++				 XFS_RTGLOCK_BITMAP_SHARED)
++
++void xfs_rtgroup_lock(struct xfs_trans *tp, struct xfs_rtgroup *rtg,
++		unsigned int rtglock_flags);
++void xfs_rtgroup_unlock(struct xfs_rtgroup *rtg, unsigned int rtglock_flags);
+ #else
+ # define xfs_rtgroup_block_count(mp, rgno)	(0)
+ # define xfs_rtgroup_update_super(bp, sb_bp)	((void)0)
+ # define xfs_rtgroup_log_super(tp, sb_bp)	((void)0)
+ # define xfs_rtgroup_update_secondary_sbs(mp)	(0)
++# define xfs_rtgroup_lock(tp, rtg, gf)		((void)0)
++# define xfs_rtgroup_unlock(rtg, gf)		((void)0)
+ #endif /* CONFIG_XFS_RT */
+ 
+ #endif /* __LIBXFS_RTGROUP_H */
 
