@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEE4EBE4A
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:58:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62BAEBE48
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:58:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TlhCrLMA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AC7EC433C8;
-	Sun, 31 Dec 2023 21:58:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q3LEcVGu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 333B0C433C8;
+	Sun, 31 Dec 2023 21:58:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704059919;
-	bh=KX/CVIy1puMLzXKw5gfgMi4XsGp/65vUNSICQmk19GE=;
+	s=k20201202; t=1704059935;
+	bh=oXEhoqLQqc4mM2NI691r3MYuRuOFwMUb0RRHnEvJ0J4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TlhCrLMAd9CbTL0k/28V3WiVe+ElWcbqxPz85ai1jQ/eT67lPBVZqx5WgN62fvb6l
-	 2ZRuMQHIfclM4CcNKcgbsd1086ucJ/BiQqM32tSqDr8NZUvIM7lhV3YoeZ4x7/w1Lc
-	 RH939FzlV0ZfGKLOLtwVemXcs58+DVKE7SXOhDzRw1myCYO0CY2iAsnRVrR/uIxMgn
-	 WNdCFJHOqvDSwtqc4jtbOiWfbNTasGGJiUumvoYy0VHhD3sRFq0oSP60w/RhtW0F1Z
-	 hMiL53JxJbHnZZ8W6f/DgLRVmsUsJTMee1vTOHF13yT3SPK5obEf5NUiAfWRBWx9nC
-	 VotpGpWVn6RNg==
-Date: Sun, 31 Dec 2023 13:58:39 -0800
-Subject: [PATCH 1/6] xfs: attach dquots to rt metadata files when starting
- quota
+	b=q3LEcVGuijvOm9m3OETTWcjk9YbHBPFzaMThempYUNxhAa3jm+HOyhHq0EdoSrtjV
+	 nxYWx7CRx/NMoKxYu4HWQEy5DyW3y0NqAwE6jHvSQcvLVj4WWMnxE9zaoKLk9dh9Na
+	 aeuWrHop558uTXImsJOSB71qexJS5rcAkuesYjy1kk33Nj7UgrI6dnjYkXSdpA8brc
+	 z62fumT5dSr7Oxtzp2Xefy+krxFyIp0m5c0I2sFWa/aA3DjKeDrCWoGetimZ3gLgW7
+	 ptTcBNLveHsLiJsJRpOkYo1OR0Y5oKbnPI7tubizlkdTHqkiZN8tpvgIRgC+mDapdb
+	 3KLTIGDqES4Sw==
+Date: Sun, 31 Dec 2023 13:58:54 -0800
+Subject: [PATCH 2/6] xfs: fix chown with rt quota
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404853191.1767666.13680815163884956936.stgit@frogsfrogsfrogs>
+Message-ID: <170404853207.1767666.13873334856849446722.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404853163.1767666.1660746530012636507.stgit@frogsfrogsfrogs>
 References: <170404853163.1767666.1660746530012636507.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,182 +37,165 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Attach dquots to the realtime metadata files when starting up quotas,
-since the resources used by them are charged to the root dquot.
+Make chown's quota adjustments work with realtime files.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_mount.c   |    4 +++-
- fs/xfs/xfs_qm.c      |   20 +++++++++++++++++---
- fs/xfs/xfs_qm_bhv.c  |    2 +-
- fs/xfs/xfs_quota.h   |    4 ++--
- fs/xfs/xfs_rtalloc.c |   22 ++++++++++++++++++++++
- fs/xfs/xfs_rtalloc.h |    3 +++
- 6 files changed, 48 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_qm.c    |   44 +++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_trans.c |   31 +++++++++++++++++++++++++++++--
+ 2 files changed, 56 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b20e0e6410512..879945c305da4 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1024,7 +1024,9 @@ xfs_mountfs(
- 		ASSERT(mp->m_qflags == 0);
- 		mp->m_qflags = quotaflags;
- 
--		xfs_qm_mount_quotas(mp);
-+		error = xfs_qm_mount_quotas(mp);
-+		if (error)
-+			goto out_rtunmount;
- 	}
- 
- 	/*
 diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index a6b5193190c4c..2771aef361a25 100644
+index 2771aef361a25..b89f0e8f80f9f 100644
 --- a/fs/xfs/xfs_qm.c
 +++ b/fs/xfs/xfs_qm.c
-@@ -30,6 +30,7 @@
- #include "xfs_imeta.h"
- #include "xfs_imeta_utils.h"
- #include "xfs_da_format.h"
-+#include "xfs_rtalloc.h"
- 
- /*
-  * The global quota manager. There is only one of these for the entire
-@@ -1525,7 +1526,7 @@ xfs_qm_quotacheck(
-  * If we fail here, the mount will continue with quota turned off. We don't
-  * need to inidicate success or failure at all.
-  */
--void
-+int
- xfs_qm_mount_quotas(
- 	struct xfs_mount	*mp)
+@@ -1221,8 +1221,8 @@ xfs_qm_dqusage_adjust(
+ 	void			*data)
  {
-@@ -1564,7 +1565,7 @@ xfs_qm_mount_quotas(
- 		error = xfs_qm_quotacheck(mp);
- 		if (error) {
- 			/* Quotacheck failed and disabled quotas. */
--			return;
-+			return 0;
- 		}
+ 	struct xfs_inode	*ip;
+-	xfs_qcnt_t		nblks;
+-	xfs_filblks_t		rtblks = 0;	/* total rt blks */
++	xfs_filblks_t		nblks, rtblks;
++	unsigned int		lock_mode;
+ 	int			error;
+ 
+ 	ASSERT(XFS_IS_QUOTA_ON(mp));
+@@ -1263,18 +1263,17 @@ xfs_qm_dqusage_adjust(
+ 
+ 	ASSERT(ip->i_delayed_blks == 0);
+ 
++	lock_mode = xfs_ilock_data_map_shared(ip);
+ 	if (XFS_IS_REALTIME_INODE(ip)) {
+-		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
+-
+ 		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+-		if (error)
++		if (error) {
++			xfs_iunlock(ip, lock_mode);
+ 			goto error0;
+-
+-		xfs_bmap_count_leaves(ifp, &rtblks);
++		}
  	}
+-
+-	nblks = (xfs_qcnt_t)ip->i_nblocks - rtblks;
++	xfs_inode_count_blocks(tp, ip, &nblks, &rtblks);
+ 	xfs_iflags_clear(ip, XFS_IQUOTAUNCHECKED);
++	xfs_iunlock(ip, lock_mode);
+ 
  	/*
-@@ -1605,8 +1606,21 @@ xfs_qm_mount_quotas(
+ 	 * Add the (disk blocks and inode) resources occupied by this
+@@ -1921,9 +1920,8 @@ xfs_qm_vop_chown(
+ 	struct xfs_dquot	*newdq)
+ {
+ 	struct xfs_dquot	*prevdq;
+-	uint		bfield = XFS_IS_REALTIME_INODE(ip) ?
+-				 XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
+-
++	xfs_filblks_t		dblocks, rblocks;
++	bool			isrt = XFS_IS_REALTIME_INODE(ip);
  
- 	if (error) {
- 		xfs_warn(mp, "Failed to initialize disk quotas.");
--		return;
-+		return 0;
- 	}
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	ASSERT(XFS_IS_QUOTA_ON(ip->i_mount));
+@@ -1934,11 +1932,17 @@ xfs_qm_vop_chown(
+ 	ASSERT(prevdq);
+ 	ASSERT(prevdq != newdq);
+ 
+-	xfs_trans_mod_ino_dquot(tp, ip, prevdq, bfield, -(ip->i_nblocks));
++	xfs_inode_count_blocks(tp, ip, &dblocks, &rblocks);
 +
-+	/*
-+	 * Attach dquots to realtime metadata files before we do anything that
-+	 * could alter the resource usage of rt metadata (log recovery, normal
-+	 * operation, etc).
-+	 */
-+	error = xfs_rtmount_dqattach(mp);
-+	if (error) {
-+		xfs_qm_unmount_quotas(mp);
-+		return error;
++	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_BCOUNT,
++			-(xfs_qcnt_t)dblocks);
++	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_RTBCOUNT,
++			-(xfs_qcnt_t)rblocks);
+ 	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_ICOUNT, -1);
+ 
+ 	/* the sparkling new dquot */
+-	xfs_trans_mod_ino_dquot(tp, ip, newdq, bfield, ip->i_nblocks);
++	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_BCOUNT, dblocks);
++	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_RTBCOUNT, rblocks);
+ 	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+ 
+ 	/*
+@@ -1948,7 +1952,8 @@ xfs_qm_vop_chown(
+ 	 * (having already bumped up the real counter) so that we don't have
+ 	 * any reservation to give back when we commit.
+ 	 */
+-	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_RES_BLKS,
++	xfs_trans_mod_dquot(tp, newdq,
++			isrt ? XFS_TRANS_DQ_RES_RTBLKS : XFS_TRANS_DQ_RES_BLKS,
+ 			-ip->i_delayed_blks);
+ 
+ 	/*
+@@ -1960,8 +1965,13 @@ xfs_qm_vop_chown(
+ 	 */
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	xfs_dqlock(prevdq);
+-	ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
+-	prevdq->q_blk.reserved -= ip->i_delayed_blks;
++	if (isrt) {
++		ASSERT(prevdq->q_rtb.reserved >= ip->i_delayed_blks);
++		prevdq->q_rtb.reserved -= ip->i_delayed_blks;
++	} else {
++		ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
++		prevdq->q_blk.reserved -= ip->i_delayed_blks;
 +	}
-+
-+	return 0;
- }
+ 	xfs_dqunlock(prevdq);
  
- /*
-diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-index 271c1021c7335..df569a839d3f9 100644
---- a/fs/xfs/xfs_qm_bhv.c
-+++ b/fs/xfs/xfs_qm_bhv.c
-@@ -119,7 +119,7 @@ xfs_qm_newmount(
- 			 * mounting, and get on with the boring life
- 			 * without disk quotas.
- 			 */
--			xfs_qm_mount_quotas(mp);
-+			return xfs_qm_mount_quotas(mp);
- 		} else {
- 			/*
- 			 * Clear the quota flags, but remember them. This
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index 165013f03db9e..b0cdbe1f1f275 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -125,7 +125,7 @@ extern void xfs_qm_dqdetach(struct xfs_inode *);
- extern void xfs_qm_dqrele(struct xfs_dquot *);
- extern void xfs_qm_statvfs(struct xfs_inode *, struct kstatfs *);
- extern int xfs_qm_newmount(struct xfs_mount *, uint *, uint *);
--extern void xfs_qm_mount_quotas(struct xfs_mount *);
-+int xfs_qm_mount_quotas(struct xfs_mount *mp);
- extern void xfs_qm_unmount(struct xfs_mount *);
- extern void xfs_qm_unmount_quotas(struct xfs_mount *);
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index d4952be8f2498..008380482777b 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1420,11 +1420,26 @@ xfs_trans_alloc_ichange(
+ 	gdqp = (new_gdqp != ip->i_gdquot) ? new_gdqp : NULL;
+ 	pdqp = (new_pdqp != ip->i_pdquot) ? new_pdqp : NULL;
+ 	if (udqp || gdqp || pdqp) {
++		xfs_filblks_t	dblocks, rblocks;
+ 		unsigned int	qflags = XFS_QMOPT_RES_REGBLKS;
++		bool		isrt = XFS_IS_REALTIME_INODE(ip);
  
-@@ -206,7 +206,7 @@ xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_dquot *udqp,
- #define xfs_qm_dqrele(d)			do { (d) = (d); } while(0)
- #define xfs_qm_statvfs(ip, s)			do { } while(0)
- #define xfs_qm_newmount(mp, a, b)					(0)
--#define xfs_qm_mount_quotas(mp)
-+#define xfs_qm_mount_quotas(mp)						(0)
- #define xfs_qm_unmount(mp)
- #define xfs_qm_unmount_quotas(mp)
- #define xfs_inode_near_dquot_enforcement(ip, type)			(false)
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7917eaef911f6..cc83651636ecb 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -32,6 +32,7 @@
- #include "xfs_rtrmap_btree.h"
- #include "xfs_trace.h"
- #include "xfs_rtrefcount_btree.h"
-+#include "xfs_quota.h"
+ 		if (force)
+ 			qflags |= XFS_QMOPT_FORCE_RES;
  
- /*
-  * Realtime metadata files are not quite regular files because userspace can't
-@@ -2039,6 +2040,27 @@ xfs_rtmount_inodes(
- 	return error;
- }
- 
-+/*
-+ * Attach dquots for realtime metadata files.  Prior to the introduction of the
-+ * metadata directory tree, the rtbitmap and rtsummary inodes were counted in
-+ * the root dquot icount, so we must dqattach them to maintain correct counts.
-+ */
-+int
-+xfs_rtmount_dqattach(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
++		if (isrt) {
++			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
++			if (error)
++				goto out_cancel;
++		}
 +
-+	if (xfs_has_metadir(mp))
-+		return 0;
++		xfs_inode_count_blocks(tp, ip, &dblocks, &rblocks);
 +
-+	error = xfs_qm_dqattach(mp->m_rbmip);
-+	if (error)
-+		return error;
++		if (isrt)
++			rblocks += ip->i_delayed_blks;
++		else
++			dblocks += ip->i_delayed_blks;
 +
-+	return xfs_qm_dqattach(mp->m_rsumip);
-+}
+ 		/*
+ 		 * Reserve enough quota to handle blocks on disk and reserved
+ 		 * for a delayed allocation.  We'll actually transfer the
+@@ -1432,8 +1447,20 @@ xfs_trans_alloc_ichange(
+ 		 * though that part is only semi-transactional.
+ 		 */
+ 		error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
+-				pdqp, ip->i_nblocks + ip->i_delayed_blks,
+-				1, qflags);
++				pdqp, dblocks, 1, qflags);
++		if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
++			xfs_trans_cancel(tp);
++			xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
++			retried = true;
++			goto retry;
++		}
++		if (error)
++			goto out_cancel;
 +
- void
- xfs_rtunmount_inodes(
- 	struct xfs_mount	*mp)
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 8a7b6cfa13cf0..a03796ea90eaf 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -46,6 +46,8 @@ void
- xfs_rtunmount_inodes(
- 	struct xfs_mount	*mp);
- 
-+int xfs_rtmount_dqattach(struct xfs_mount *mp);
-+
- /*
-  * Get the bitmap and summary inodes into the mount structure
-  * at mount time.
-@@ -106,6 +108,7 @@ xfs_rtmount_init(
- # define xfs_rt_resv_free(mp)				((void)0)
- # define xfs_rt_resv_init(mp)				(0)
- # define xfs_growfs_check_rtgeom(mp, d, r, rs, rx, rb, rl)	(0)
-+# define xfs_rtmount_dqattach(mp)			(0)
- #endif	/* CONFIG_XFS_RT */
- 
- #endif	/* __XFS_RTALLOC_H__ */
++		/* Do the same for realtime. */
++		qflags = XFS_QMOPT_RES_RTBLKS | (qflags & XFS_QMOPT_FORCE_RES);
++		error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
++				pdqp, rblocks, 0, qflags);
+ 		if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
+ 			xfs_trans_cancel(tp);
+ 			xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
 
