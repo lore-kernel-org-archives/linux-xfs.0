@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C032BBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:32:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF62BA2B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:32:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yh0zD2D3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BB1FC433C7;
-	Sun, 31 Dec 2023 21:32:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYKnLCc6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F32FAC433C8;
+	Sun, 31 Dec 2023 21:32:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704058339;
-	bh=MPyy2vNTFg8PstYcc1tFrQk8RD3FP/ejOTKx2W2BqG4=;
+	s=k20201202; t=1704058355;
+	bh=G9MrzXIp+a/2boci0/eQ/LHW7gDOrQG4+OubWORU6ys=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Yh0zD2D3UqlizMoJZSKacm3zUm3gWM4yJ/20rNkM+Fkollg1UpZf+f39b5nig/WWW
-	 fzxmeA19RMJQNyGuHkLmJQP3RDh7BN8XM7f+XaO5YpixPMP3s/2YR0hBm7Ca/hy7nc
-	 k3U4TeURwKFvGGhROsiBAewCgZ4sFcjMqklODmXjebXgsSo9xhgxoEJIL9UZ2gCXz+
-	 8l8eXLsQLMPphsO/X4Krr0SzVOgEkQwmbz8aeXKf+OXgNgW+C3HvYLdMO30FmmeJVU
-	 /Q5EpbWbJTq3iVisYRrf7x1ulTTe6I7kDCzyLo3JziVsWaajs/zlzK7V5cq8NE3tR1
-	 qSdVyzaJzpIww==
-Date: Sun, 31 Dec 2023 13:32:18 -0800
-Subject: [PATCH 02/39] xfs: simplify the xfs_rmap_{alloc,free}_extent calling
- conventions
+	b=AYKnLCc6lpiyUD4CdxcBhI5It9BhSNkLieBVl8lhBHPQwzvmA3JaV8fZhrP6Fgfjk
+	 XkvvfXKsmYLg1eWLSCef3lkYqVKCK+cxNHTx/dOfssRGOqyMrNwoC9zuotO2ykW8B+
+	 7t8E+kjl5h1uT/93Eic4Y6AEzVxkJkiWtZWQ2mlBp5Rr+9KKWL6+P3XdYwvlBswwIq
+	 yKrrNqoTbP2vEQ5TKY+cEOhquAEcJbiWz7ETeuFkzubT+FyTz63sJRHrxhgTfNrWyZ
+	 WbWl+p5saL9xXSHjHCeGWZzwH7MpfylMAtuyFK9fsDKrhsfjWGm3SMyeRY8BqcD1bJ
+	 0yR0TGGVEBRcg==
+Date: Sun, 31 Dec 2023 13:32:34 -0800
+Subject: [PATCH 03/39] xfs: introduce realtime rmap btree definitions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404849932.1764998.15853029901796499799.stgit@frogsfrogsfrogs>
+Message-ID: <170404849949.1764998.560975757192969969.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404849811.1764998.10873316890301599216.stgit@frogsfrogsfrogs>
 References: <170404849811.1764998.10873316890301599216.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,132 +37,95 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Simplify the calling conventions by allowing callers to pass a fsbno
-(xfs_fsblock_t) directly into these functions, since we're just going to
-set it in a struct anyway.
+Add new realtime rmap btree definitions. The realtime rmap btree will
+be rooted from a hidden inode, but has its own shape and therefore
+needs to have most of its own separate types.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_refcount.c |    6 ++----
- fs/xfs/libxfs/xfs_rmap.c     |   12 +++++-------
- fs/xfs/libxfs/xfs_rmap.h     |    8 ++++----
- fs/xfs/scrub/alloc_repair.c  |   10 +++++++---
- 4 files changed, 18 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_btree.h  |    1 +
+ fs/xfs/libxfs/xfs_format.h |    7 +++++++
+ fs/xfs/libxfs/xfs_types.h  |    5 +++--
+ fs/xfs/scrub/trace.h       |    1 +
+ fs/xfs/xfs_trace.h         |    1 +
+ 5 files changed, 13 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index e30c4cdfaa392..6f7ec83281656 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1887,8 +1887,7 @@ xfs_refcount_alloc_cow_extent(
- 	__xfs_refcount_add(tp, XFS_REFCOUNT_ALLOC_COW, fsb, len);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index ce0bc5dfffe1c..e6571c9157d1e 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -64,6 +64,7 @@ union xfs_btree_rec {
+ #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
+ #define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
+ #define	XFS_BTNUM_RCBAG	((xfs_btnum_t)XFS_BTNUM_RCBAGi)
++#define	XFS_BTNUM_RTRMAP ((xfs_btnum_t)XFS_BTNUM_RTRMAPi)
  
- 	/* Add rmap entry */
--	xfs_rmap_alloc_extent(tp, XFS_FSB_TO_AGNO(mp, fsb),
--			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
-+	xfs_rmap_alloc_extent(tp, fsb, len, XFS_RMAP_OWN_COW);
- }
+ struct xfs_btree_ops;
+ uint32_t xfs_btree_magic(struct xfs_mount *mp, const struct xfs_btree_ops *ops);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 87476c6bb6c64..b47d4f16143a6 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1746,6 +1746,13 @@ typedef __be32 xfs_rmap_ptr_t;
+ 	 XFS_FIBT_BLOCK(mp) + 1 : \
+ 	 XFS_IBT_BLOCK(mp) + 1)
  
- /* Forget a CoW staging event in the refcount btree. */
-@@ -1904,8 +1903,7 @@ xfs_refcount_free_cow_extent(
- 		return;
- 
- 	/* Remove rmap entry */
--	xfs_rmap_free_extent(tp, XFS_FSB_TO_AGNO(mp, fsb),
--			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
-+	xfs_rmap_free_extent(tp, fsb, len, XFS_RMAP_OWN_COW);
- 	__xfs_refcount_add(tp, XFS_REFCOUNT_FREE_COW, fsb, len);
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 0f552cb737c8b..b3383cc474492 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -527,7 +527,7 @@ xfs_rmap_free_check_owner(
- 	struct xfs_btree_cur	*cur,
- 	uint64_t		ltoff,
- 	struct xfs_rmap_irec	*rec,
--	xfs_filblks_t		len,
-+	xfs_extlen_t		len,
- 	uint64_t		owner,
- 	uint64_t		offset,
- 	unsigned int		flags)
-@@ -2718,8 +2718,7 @@ xfs_rmap_convert_extent(
- void
- xfs_rmap_alloc_extent(
- 	struct xfs_trans	*tp,
--	xfs_agnumber_t		agno,
--	xfs_agblock_t		bno,
-+	xfs_fsblock_t		fsbno,
- 	xfs_extlen_t		len,
- 	uint64_t		owner)
- {
-@@ -2728,7 +2727,7 @@ xfs_rmap_alloc_extent(
- 	if (!xfs_rmap_update_is_needed(tp->t_mountp, XFS_DATA_FORK))
- 		return;
- 
--	bmap.br_startblock = XFS_AGB_TO_FSB(tp->t_mountp, agno, bno);
-+	bmap.br_startblock = fsbno;
- 	bmap.br_blockcount = len;
- 	bmap.br_startoff = 0;
- 	bmap.br_state = XFS_EXT_NORM;
-@@ -2740,8 +2739,7 @@ xfs_rmap_alloc_extent(
- void
- xfs_rmap_free_extent(
- 	struct xfs_trans	*tp,
--	xfs_agnumber_t		agno,
--	xfs_agblock_t		bno,
-+	xfs_fsblock_t		fsbno,
- 	xfs_extlen_t		len,
- 	uint64_t		owner)
- {
-@@ -2750,7 +2748,7 @@ xfs_rmap_free_extent(
- 	if (!xfs_rmap_update_is_needed(tp->t_mountp, XFS_DATA_FORK))
- 		return;
- 
--	bmap.br_startblock = XFS_AGB_TO_FSB(tp->t_mountp, agno, bno);
-+	bmap.br_startblock = fsbno;
- 	bmap.br_blockcount = len;
- 	bmap.br_startoff = 0;
- 	bmap.br_state = XFS_EXT_NORM;
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index e6240efd6fe75..0ccfd7d88e56e 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -184,10 +184,10 @@ void xfs_rmap_unmap_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- void xfs_rmap_convert_extent(struct xfs_mount *mp, struct xfs_trans *tp,
- 		struct xfs_inode *ip, int whichfork,
- 		struct xfs_bmbt_irec *imap);
--void xfs_rmap_alloc_extent(struct xfs_trans *tp, xfs_agnumber_t agno,
--		xfs_agblock_t bno, xfs_extlen_t len, uint64_t owner);
--void xfs_rmap_free_extent(struct xfs_trans *tp, xfs_agnumber_t agno,
--		xfs_agblock_t bno, xfs_extlen_t len, uint64_t owner);
-+void xfs_rmap_alloc_extent(struct xfs_trans *tp, xfs_fsblock_t fsbno,
-+		xfs_extlen_t len, uint64_t owner);
-+void xfs_rmap_free_extent(struct xfs_trans *tp, xfs_fsblock_t fsbno,
-+		xfs_extlen_t len, uint64_t owner);
- 
- int xfs_rmap_finish_one(struct xfs_trans *tp, struct xfs_rmap_intent *ri,
- 		struct xfs_btree_cur **pcur);
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index 45edda096869c..3805099cb578b 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -542,9 +542,13 @@ xrep_abt_dispose_one(
- 	ASSERT(pag == resv->pag);
- 
- 	/* Add a deferred rmap for each extent we used. */
--	if (resv->used > 0)
--		xfs_rmap_alloc_extent(sc->tp, pag->pag_agno, resv->agbno,
--				resv->used, XFS_RMAP_OWN_AG);
-+	if (resv->used > 0) {
-+		xfs_fsblock_t	fsbno;
++/*
++ * Realtime Reverse mapping btree format definitions
++ *
++ * This is a btree for reverse mapping records for realtime volumes
++ */
++#define	XFS_RTRMAP_CRC_MAGIC	0x4d415052	/* 'MAPR' */
 +
-+		fsbno = XFS_AGB_TO_FSB(sc->mp, pag->pag_agno, resv->agbno);
-+		xfs_rmap_alloc_extent(sc->tp, fsbno, resv->used,
-+				XFS_RMAP_OWN_AG);
-+	}
+ /*
+  * Reference Count Btree format definitions
+  *
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index ad2ce83874f9f..b3edc57dc65bd 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -126,7 +126,7 @@ typedef enum {
+ typedef enum {
+ 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+ 	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_RCBAGi,
+-	XFS_BTNUM_MAX
++	XFS_BTNUM_RTRMAPi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
  
- 	/*
- 	 * For each reserved btree block we didn't use, add it to the free
+ #define XFS_BTNUM_STRINGS \
+@@ -137,7 +137,8 @@ typedef enum {
+ 	{ XFS_BTNUM_INOi,	"inobt" }, \
+ 	{ XFS_BTNUM_FINOi,	"finobt" }, \
+ 	{ XFS_BTNUM_REFCi,	"refcbt" }, \
+-	{ XFS_BTNUM_RCBAGi,	"rcbagbt" }
++	{ XFS_BTNUM_RCBAGi,	"rcbagbt" }, \
++	{ XFS_BTNUM_RTRMAPi,	"rtrmapbt" }
+ 
+ struct xfs_name {
+ 	const unsigned char	*name;
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index dd809042a6041..bdcd77c839317 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -48,6 +48,7 @@ TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
+ TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
+ TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
+ TRACE_DEFINE_ENUM(XFS_BTNUM_RCBAGi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_RTRMAPi);
+ 
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_SHARED);
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_COW);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 43ecf98f86558..1c89d38b85446 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2550,6 +2550,7 @@ TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
+ TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
+ TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
+ TRACE_DEFINE_ENUM(XFS_BTNUM_RCBAGi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_RTRMAPi);
+ 
+ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+ 	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
 
