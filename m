@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A08B5C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:12:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76A9C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:12:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O0xtbnKo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F104C433C8;
-	Sun, 31 Dec 2023 23:12:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jVvSlolq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B768FC433C7;
+	Sun, 31 Dec 2023 23:12:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064329;
-	bh=Phe7FxD7STkHY5TjHf4voB6bCmpPTq7ktKtJn7fqX/s=;
+	s=k20201202; t=1704064344;
+	bh=mXYcodJ52vnINEs0pgcJWnY9HUGUuMQeBih6NSdzMh0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=O0xtbnKoaIRiK/G1IK7diDH9J/ZH6DIJdxr3vsqG4neD1n17M8euJX8Hxvr4eGpBb
-	 Dz5/Ph2pblCAQAX+zBj9wEUA/YZdSYwBdaA9u+p7mcTygWNmoxMU5/n98baAIzqJDD
-	 /FXAoDKC5H/CwPr3/+y+vlYO1v4dD2Hzi3rerbRVSWRQZBFemeH/9ZENq5iLw3emS8
-	 3nvvrfykALUNMMGv72VZGETYw7+BkBZVaEdi/QAZGqMIoppl1NfLIJOy4uXUUg9iN2
-	 NuDLE6vhd85lk7ihTsBDJpRTg7s5B5mTmMATha4mwV+2WYoIzbjXxZb3gDfxiJvSam
-	 QEgKkvjsyAzSg==
-Date: Sun, 31 Dec 2023 15:12:08 -0800
-Subject: [PATCH 27/32] libxfs: export attr3_leaf_hdr_from_disk via
- libxfs_api_defs.h
+	b=jVvSlolqK5VdVbxZYfwh0N9iyHQlRGRCSKZAML1X+MCN+C1vaMvZAHxxejueDBupD
+	 h0OJUhnhsbhe+IHpHLRTq7QSU1nCwmpNuLy/mw/NoaJdKX6Ia3mccsuJCUx/H8/LzM
+	 tkDmWeBfO2jLFV7MJBdqQL+HjmY15v9ioS649x+vjmXCZSAGrwv/gkDtuJ3MoakHZW
+	 MKD3WzhV+f0zGz29nms8jPZDkoXR945i1Lgx3SOxtRqgPlTJuqWoOl9ji2FT0jaJIq
+	 J+H+XJriW2i9U5fB9Tg+j7AdVVVhwoKxvc/0+nKzUGxZ6SEu44nht9HS7H67NGYldt
+	 8jj9eLYcaRwEA==
+Date: Sun, 31 Dec 2023 15:12:24 -0800
+Subject: [PATCH 28/32] xfs_db: add a parents command to list the parents of a
+ file
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: catherine.hoang@oracle.com, linux-xfs@vger.kernel.org,
  allison.henderson@oracle.com
-Message-ID: <170405006461.1804688.5728263139637208432.stgit@frogsfrogsfrogs>
+Message-ID: <170405006474.1804688.8496939238290408650.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405006077.1804688.8762482665401724622.stgit@frogsfrogsfrogs>
 References: <170405006077.1804688.8762482665401724622.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,104 +39,397 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Do the xfs -> libxfs switcheroo and cleanups separately so the next
-patch doesn't become an even larger mess.
+Create a command to dump the parents of a file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/attr.c                |    2 +-
- db/metadump.c            |    2 +-
- libxfs/libxfs_api_defs.h |    5 +++++
- repair/attr_repair.c     |    6 +++---
- 4 files changed, 10 insertions(+), 5 deletions(-)
+ db/namei.c               |  335 ++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/libxfs_api_defs.h |    1 
+ man/man8/xfs_db.8        |    9 +
+ 3 files changed, 345 insertions(+)
 
 
-diff --git a/db/attr.c b/db/attr.c
-index 9e7bbd164df..95969d115d4 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -256,7 +256,7 @@ attr_leaf_entry_walk(
- 		return 0;
+diff --git a/db/namei.c b/db/namei.c
+index a8577b97222..fb7f63fda07 100644
+--- a/db/namei.c
++++ b/db/namei.c
+@@ -598,6 +598,338 @@ static struct cmdinfo ls_cmd = {
+ 	.help		= ls_help,
+ };
  
- 	off = byteize(startoff);
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
- 	entries = xfs_attr3_leaf_entryp(leaf);
++static void
++pptr_emit(
++	struct xfs_mount	*mp,
++	const struct xfs_parent_name_irec *irec)
++{
++	struct xfs_name		xname = {
++		.name		= irec->p_name,
++		.len		= irec->p_namelen,
++	};
++	xfs_dahash_t		hash;
++	bool			good;
++
++	hash = libxfs_dir2_hashname(mp, &xname);
++	good = libxfs_parent_verify_irec(mp, irec);
++
++	dbprintf("%18llu:0x%08x 0x%08x:0x%08x %3d %.*s %s\n",
++			irec->p_ino, irec->p_gen, irec->p_namehash, hash,
++			xname.len, xname.len, xname.name,
++			good ? _("(good)") : _("(corrupt)"));
++}
++
++static int
++list_sf_pptrs(
++	struct xfs_inode		*ip)
++{
++	struct xfs_parent_name_irec	irec;
++	struct xfs_attr_shortform	*sf;
++	struct xfs_attr_sf_entry	*sfe;
++	unsigned int			i;
++
++	sf = (struct xfs_attr_shortform *)ip->i_af.if_u1.if_data;
++	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
++		void			*name = sfe->nameval;
++		void			*value = &sfe->nameval[sfe->namelen];
++
++		if ((sfe->flags & XFS_ATTR_PARENT) &&
++		    libxfs_parent_namecheck(mp, name, sfe->namelen, sfe->flags) &&
++		    libxfs_parent_valuecheck(mp, value, sfe->valuelen)) {
++			libxfs_parent_irec_from_disk(&irec, name, value,
++					sfe->valuelen);
++			pptr_emit(mp, &irec);
++		}
++
++		sfe = xfs_attr_sf_nextentry(sfe);
++	}
++
++	return 0;
++}
++
++static void
++list_leaf_pptr_entries(
++	struct xfs_inode		*ip,
++	struct xfs_buf			*bp)
++{
++	struct xfs_parent_name_irec	irec;
++	struct xfs_attr3_icleaf_hdr	ichdr;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_attr_leafblock	*leaf = bp->b_addr;
++	struct xfs_attr_leaf_entry	*entry;
++	unsigned int			i;
++
++	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
++	entry = xfs_attr3_leaf_entryp(leaf);
++
++	for (i = 0; i < ichdr.count; entry++, i++) {
++		struct xfs_attr_leaf_name_local	*name_loc;
++		void			*value;
++		void			*name;
++		unsigned int		namelen, valuelen;
++
++		if (!(entry->flags & XFS_ATTR_LOCAL) ||
++		    !(entry->flags & XFS_ATTR_PARENT))
++			continue;
++
++		name_loc = xfs_attr3_leaf_name_local(leaf, i);
++		name = name_loc->nameval;
++		namelen = name_loc->namelen;
++		value = &name_loc->nameval[name_loc->namelen];
++		valuelen = be16_to_cpu(name_loc->valuelen);
++
++		if (libxfs_parent_namecheck(mp, name, namelen, entry->flags) &&
++		    libxfs_parent_valuecheck(mp, value, valuelen)) {
++			libxfs_parent_irec_from_disk(&irec, name, value,
++					valuelen);
++			pptr_emit(mp, &irec);
++		}
++	}
++}
++
++static int
++list_leaf_pptrs(
++	struct xfs_inode		*ip)
++{
++	struct xfs_buf			*leaf_bp;
++	int				error;
++
++	error = -libxfs_attr3_leaf_read(NULL, ip, ip->i_ino, 0, &leaf_bp);
++	if (error)
++		return error;
++
++	list_leaf_pptr_entries(ip, leaf_bp);
++	libxfs_trans_brelse(NULL, leaf_bp);
++	return 0;
++}
++
++static int
++find_leftmost_attr_leaf(
++	struct xfs_inode		*ip,
++	struct xfs_buf			**leaf_bpp)
++{
++	struct xfs_da3_icnode_hdr	nodehdr;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_da_intnode		*node;
++	struct xfs_da_node_entry	*btree;
++	struct xfs_buf			*bp;
++	xfs_dablk_t			blkno = 0;
++	unsigned int			expected_level = 0;
++	int				error;
++
++	for (;;) {
++		uint16_t		magic;
++
++		error = -libxfs_da3_node_read(NULL, ip, blkno, &bp,
++				XFS_ATTR_FORK);
++		if (error)
++			return error;
++
++		node = bp->b_addr;
++		magic = be16_to_cpu(node->hdr.info.magic);
++		if (magic == XFS_ATTR_LEAF_MAGIC ||
++		    magic == XFS_ATTR3_LEAF_MAGIC)
++			break;
++
++		error = EFSCORRUPTED;
++		if (magic != XFS_DA_NODE_MAGIC &&
++		    magic != XFS_DA3_NODE_MAGIC)
++			goto out_buf;
++
++		libxfs_da3_node_hdr_from_disk(mp, &nodehdr, node);
++
++		if (nodehdr.count == 0 || nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
++			goto out_buf;
++
++		/* Check the level from the root node. */
++		if (blkno == 0)
++			expected_level = nodehdr.level - 1;
++		else if (expected_level != nodehdr.level)
++			goto out_buf;
++		else
++			expected_level--;
++
++		/* Find the next level towards the leaves of the dabtree. */
++		btree = nodehdr.btree;
++		blkno = be32_to_cpu(btree->before);
++		libxfs_trans_brelse(NULL, bp);
++	}
++
++	error = EFSCORRUPTED;
++	if (expected_level != 0)
++		goto out_buf;
++
++	*leaf_bpp = bp;
++	return 0;
++
++out_buf:
++	libxfs_trans_brelse(NULL, bp);
++	return error;
++}
++
++static int
++list_node_pptrs(
++	struct xfs_inode		*ip)
++{
++	struct xfs_attr3_icleaf_hdr	leafhdr;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_attr_leafblock	*leaf;
++	struct xfs_buf			*leaf_bp;
++	int				error;
++
++	error = find_leftmost_attr_leaf(ip, &leaf_bp);
++	if (error)
++		return error;
++
++	for (;;) {
++		list_leaf_pptr_entries(ip, leaf_bp);
++
++		/* Find the right sibling of this leaf block. */
++		leaf = leaf_bp->b_addr;
++		libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
++		if (leafhdr.forw == 0)
++			goto out_leaf;
++
++		libxfs_trans_brelse(NULL, leaf_bp);
++
++		error = -libxfs_attr3_leaf_read(NULL, ip, ip->i_ino,
++				leafhdr.forw, &leaf_bp);
++		if (error)
++			return error;
++	}
++
++out_leaf:
++	libxfs_trans_brelse(NULL, leaf_bp);
++	return error;
++}
++
++static int
++list_pptrs(
++	struct xfs_inode	*ip)
++{
++	int			error;
++
++	if (!libxfs_inode_hasattr(ip))
++		return 0;
++
++	if (ip->i_af.if_format == XFS_DINODE_FMT_LOCAL)
++		return list_sf_pptrs(ip);
++
++	/* attr functions require that the attr fork is loaded */
++	error = -libxfs_iread_extents(NULL, ip, XFS_ATTR_FORK);
++	if (error)
++		return error;
++
++	if (libxfs_attr_is_leaf(ip))
++		return list_leaf_pptrs(ip);
++
++	return list_node_pptrs(ip);
++}
++
++/* If the io cursor points to a file, list its parents. */
++static int
++parent_cur(
++	char			*tag)
++{
++	struct xfs_inode	*ip;
++	int			error = 0;
++
++	if (!xfs_has_parent(mp))
++		return 0;
++
++	if (iocur_top->typ != &typtab[TYP_INODE])
++		return ENOTDIR;
++
++	error = -libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip);
++	if (error)
++		return error;
++
++	/* List the parents of a file. */
++	if (tag)
++		dbprintf(_("%s:\n"), tag);
++
++	error = list_pptrs(ip);
++	if (error)
++		goto rele;
++
++rele:
++	libxfs_irele(ip);
++	return error;
++}
++
++static void
++parent_help(void)
++{
++	dbprintf(_(
++"\n"
++" List the parents of the currently selected file.\n"
++"\n"
++" Parent pointers will be listed in the format:\n"
++" inode_number:inode_gen	ondisk_namehash:namehash	name_length	name\n"
++	));
++}
++
++static int
++parent_f(
++	int			argc,
++	char			**argv)
++{
++	int			c;
++	int			error = 0;
++
++	while ((c = getopt(argc, argv, "")) != -1) {
++		switch (c) {
++		default:
++			ls_help();
++			return 0;
++		}
++	}
++
++	if (optind == argc) {
++		error = parent_cur(NULL);
++		if (error) {
++			dbprintf("%s\n", strerror(error));
++			exitcode = 1;
++		}
++
++		return 0;
++	}
++
++	for (c = optind; c < argc; c++) {
++		push_cur();
++
++		error = path_walk(argv[c]);
++		if (error)
++			goto err_cur;
++
++		error = parent_cur(argv[c]);
++		if (error)
++			goto err_cur;
++
++		pop_cur();
++	}
++
++	return 0;
++err_cur:
++	pop_cur();
++	if (error) {
++		dbprintf("%s: %s\n", argv[c], strerror(error));
++		exitcode = 1;
++	}
++	return 0;
++}
++
++static struct cmdinfo parent_cmd = {
++	.name		= "parent",
++	.altname	= "pptr",
++	.cfunc		= parent_f,
++	.argmin		= 0,
++	.argmax		= -1,
++	.canpush	= 0,
++	.args		= "[paths...]",
++	.help		= parent_help,
++};
++
+ void
+ namei_init(void)
+ {
+@@ -606,4 +938,7 @@ namei_init(void)
  
- 	for (i = 0; i < leafhdr.count; i++) {
-diff --git a/db/metadump.c b/db/metadump.c
-index 5f5a33335b0..f5b930d51d2 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1701,7 +1701,7 @@ process_attr_block(
- 	}
- 
- 	/* Ok, it's a leaf - get header; accounts for crc & non-crc */
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
- 
- 	nentries = hdr.count;
- 	if (nentries == 0 ||
+ 	ls_cmd.oneline = _("list directory contents");
+ 	add_command(&ls_cmd);
++
++	parent_cmd.oneline = _("list parent pointers");
++	add_command(&parent_cmd);
+ }
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index a6b561b5b40..22e4c569170 100644
+index 22e4c569170..7ea7eebfbca 100644
 --- a/libxfs/libxfs_api_defs.h
 +++ b/libxfs/libxfs_api_defs.h
-@@ -36,7 +36,10 @@
- 
- #define xfs_ascii_ci_hashname		libxfs_ascii_ci_hashname
- 
-+#define xfs_attr3_leaf_hdr_from_disk	libxfs_attr3_leaf_hdr_from_disk
-+#define xfs_attr3_leaf_read		libxfs_attr3_leaf_read
- #define xfs_attr_get			libxfs_attr_get
-+#define xfs_attr_is_leaf		libxfs_attr_is_leaf
- #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
- #define xfs_attr_namecheck		libxfs_attr_namecheck
- #define xfs_attr_set			libxfs_attr_set
-@@ -91,6 +94,7 @@
- #define xfs_compute_rextslog		libxfs_compute_rextslog
- #define xfs_create_space_res		libxfs_create_space_res
- #define xfs_da3_node_hdr_from_disk	libxfs_da3_node_hdr_from_disk
-+#define xfs_da3_node_read		libxfs_da3_node_read
- #define xfs_da_get_buf			libxfs_da_get_buf
- #define xfs_da_hashname			libxfs_da_hashname
- #define xfs_da_read_buf			libxfs_da_read_buf
-@@ -164,6 +168,7 @@
- #define xfs_inobt_stage_cursor		libxfs_inobt_stage_cursor
- #define xfs_inode_from_disk		libxfs_inode_from_disk
- #define xfs_inode_from_disk_ts		libxfs_inode_from_disk_ts
-+#define xfs_inode_hasattr		libxfs_inode_hasattr
- #define xfs_inode_to_disk		libxfs_inode_to_disk
- #define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
- #define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 314a9cb4d6e..b0f6ee11ae4 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -596,7 +596,7 @@ process_leaf_attr_block(
- 	da_freemap_t *attr_freemap;
- 	struct xfs_attr3_icleaf_hdr leafhdr;
- 
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
- 	clearit = usedbs = 0;
- 	firstb = mp->m_sb.sb_blocksize;
- 	stop = xfs_attr3_leaf_hdr_size(leaf);
-@@ -819,7 +819,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
- 		}
- 
- 		leaf = bp->b_addr;
--		xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+		libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
- 
- 		/* check magic number for leaf directory btree block */
- 		if (!(leafhdr.magic == XFS_ATTR_LEAF_MAGIC ||
-@@ -1017,7 +1017,7 @@ process_longform_leaf_root(
- 	 * check sibling pointers in leaf block or root block 0 before
- 	 * we have to release the btree block
- 	 */
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, bp->b_addr);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, bp->b_addr);
- 	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
- 		if (!no_modify)  {
- 			do_warn(
+@@ -189,6 +189,7 @@
+ #define xfs_parent_hashcheck		libxfs_parent_hashcheck
+ #define xfs_parent_namecheck		libxfs_parent_namecheck
+ #define xfs_parent_valuecheck		libxfs_parent_valuecheck
++#define xfs_parent_verify_irec		libxfs_parent_verify_irec
+ #define xfs_perag_get			libxfs_perag_get
+ #define xfs_perag_hold			libxfs_perag_hold
+ #define xfs_perag_put			libxfs_perag_put
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index a7f6d55ed8b..937b17e79a3 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -943,6 +943,15 @@ See the
+ .B print
+ command.
+ .TP
++.BI "parent [" paths "]..."
++List the parents of a file.
++If a path resolves to a file, the parents of that file will be listed.
++If no paths are supplied and the IO cursor points at an inode, the parents of
++that file will be listed.
++
++The output format is:
++inode number, inode generation, ondisk namehash, namehash, name length, name.
++.TP
+ .BI "path " dir_path
+ Walk the directory tree to an inode using the supplied path.
+ Absolute and relative paths are supported.
 
