@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F695C147
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:38:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A86C13B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:38:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pZk0YVC2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AAC8C433C8;
-	Sun, 31 Dec 2023 22:38:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TwSB4S71"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE919C433C7;
+	Sun, 31 Dec 2023 22:38:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704062312;
-	bh=KC9ELear0CoIIqddJbwKJUL6S58Vzr5a9kpJ0rhL3+o=;
+	s=k20201202; t=1704062327;
+	bh=agmbz1bWrUc76dlx0Yu1nHcbDIIr6c77TqYBACxspdg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pZk0YVC22yi1UN7bj04gvSecChNxTXvP0WC2oY7mEJTvgU6w78eAcrGO1bJnxmj68
-	 YKK26vjiTKBD45EcMQA+LrGRQeOU5uwA6RV9VU9w0dFQz0G2/r810KzLjutveHFeBF
-	 PTPmngAeuMLNPsdFIcicnF7THKaIZI44heK0xcS3qsmyOOUy/dK5KRXxa+X0bcs9kl
-	 lvm2tFnAb3CGABFpMYE/+3VFhC4mHrD85CNFhPctX5/8Akix5aoQog0979ht2yG96K
-	 Xq1EGiJQJxdZu7gtEyzp1b1OwY6qqK3ozJI7T2FDjnO7QCxt6v91bpLk/2xaCoAp2j
-	 pThV84gG/Up2A==
-Date: Sun, 31 Dec 2023 14:38:31 -0800
-Subject: [PATCH 1/8] xfs_scrub: fix missing scrub coverage for broken inodes
+	b=TwSB4S71UB2n9twHD+IX7j+bTgi9Z+/LcFBmZorgkMQ8O8CsqfFkoLMdDhmgtBbTM
+	 GSSD9SimUz8aidDlKlm6ADQ6WrKrsEAFO26vL/+TdBYN7iEtFHc9lJOU9Scelycqtf
+	 L2ZvUFgelfJHd7Miq0bDolmTkDccccc/prd6PlTKqClBLzVyLVO8D0d0shRNq14yuC
+	 NvPIk1pIS2jcNnQ+BxUMgNTkuDEzMW6BzmHZynhUHpRlXmEgjorc0fIKzdScik8e21
+	 H9OHThqMKWFLAdpnNSfTIFNBLwyFT5itgGqnxUsUJNiE+t3/jVixqPltKM7K9ZyLIJ
+	 1iE5HYeVXOXQw==
+Date: Sun, 31 Dec 2023 14:38:47 -0800
+Subject: [PATCH 2/8] xfs_scrub: collapse trivial superblock scrub helpers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404999048.1797544.5322672088708731038.stgit@frogsfrogsfrogs>
+Message-ID: <170404999061.1797544.15540940981670714039.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404999029.1797544.5974682335470417611.stgit@frogsfrogsfrogs>
 References: <170404999029.1797544.5974682335470417611.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,65 +37,93 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If INUMBERS says that an inode is allocated, but BULKSTAT skips over the
-inode and BULKSTAT_SINGLE errors out when loading the inumber, there are
-two possibilities: One, we're racing with ifree; or two, the inode is
-corrupt and iget failed.
-
-When this happens, the scrub_scan_all_inodes code will insert a dummy
-bulkstat record with all fields zeroed except bs_ino and bs_blksize.
-Hence the use of i_mode switches in phase3 to schedule file content
-scrubbing are not entirely correct -- bs_mode==0 means "type unknown",
-which ought to mean "schedule all scrubbers".
-
-Unfortunately, the current code doesn't do that, so instead we schedule
-no content scrubs.  If the broken file was actually a directory, we fail
-to check the directory contents for further corruptions.
-
-Found by using fuzzing with xfs/385 and core.format = 0.
+Remove the trivial primary super scrub helper function since it makes
+tracing code paths difficult and will become annoying in the patches
+that follow.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase3.c |   21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+ scrub/phase2.c |    9 +++++----
+ scrub/scrub.c  |   16 +---------------
+ scrub/scrub.h  |    3 ++-
+ 3 files changed, 8 insertions(+), 20 deletions(-)
 
 
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 9a26b92036c..b03b55250a3 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -166,16 +166,29 @@ scrub_inode(
- 	if (error)
- 		goto out;
- 
--	if (S_ISLNK(bstat->bs_mode)) {
-+	/*
-+	 * Check file data contents, e.g. symlink and directory entries.
-+	 *
-+	 * Note: bs_mode==0 occurs when inumbers says an inode is allocated,
-+	 * bulkstat skips the inode, and bulkstat_single errors out when
-+	 * loading the inode.  This could be due to racing with ifree, but it
-+	 * could be a corrupt inode.  Either way, schedule all the data fork
-+	 * content scrubbers.  Better to have them return -ENOENT than miss
-+	 * some coverage.
-+	 */
-+	if (S_ISLNK(bstat->bs_mode) || !bstat->bs_mode) {
- 		/* Check symlink contents. */
- 		error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_SYMLINK,
- 				&alist);
--	} else if (S_ISDIR(bstat->bs_mode)) {
-+		if (error)
-+			goto out;
-+	}
-+	if (S_ISDIR(bstat->bs_mode) || !bstat->bs_mode) {
- 		/* Check the directory entries. */
- 		error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_DIR, &alist);
-+		if (error)
-+			goto out;
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index 2d49c604eae..ec72bb5b71a 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -166,12 +166,13 @@ phase2_func(
  	}
--	if (error)
--		goto out;
  
- 	/* Check all the extended attributes. */
- 	error = scrub_file(ctx, fd, bstat, XFS_SCRUB_TYPE_XATTR, &alist);
+ 	/*
+-	 * In case we ever use the primary super scrubber to perform fs
+-	 * upgrades (followed by a full scrub), do that before we launch
+-	 * anything else.
++	 * Scrub primary superblock.  This will be useful if we ever need to
++	 * hook a filesystem-wide pre-scrub activity (e.g. enable filesystem
++	 * upgrades) off of the sb 0 scrubber (which currently does nothing).
++	 * If errors occur, this function will log them and return nonzero.
+ 	 */
+ 	action_list_init(&alist);
+-	ret = scrub_primary_super(ctx, &alist);
++	ret = scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, &alist);
+ 	if (ret)
+ 		goto out_wq;
+ 	ret = action_list_process(ctx, -1, &alist,
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 59583913031..c2e56e5f1cb 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -259,7 +259,7 @@ scrub_save_repair(
+  * Returns 0 for success.  If errors occur, this function will log them and
+  * return a positive error code.
+  */
+-static int
++int
+ scrub_meta_type(
+ 	struct scrub_ctx		*ctx,
+ 	unsigned int			type,
+@@ -325,20 +325,6 @@ scrub_group(
+ 	return 0;
+ }
+ 
+-/*
+- * Scrub primary superblock.  This will be useful if we ever need to hook
+- * a filesystem-wide pre-scrub activity off of the sb 0 scrubber (which
+- * currently does nothing).  If errors occur, this function will log them and
+- * return nonzero.
+- */
+-int
+-scrub_primary_super(
+-	struct scrub_ctx		*ctx,
+-	struct action_list		*alist)
+-{
+-	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, alist);
+-}
+-
+ /* Scrub each AG's header blocks. */
+ int
+ scrub_ag_headers(
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 133445e8da6..fef8a596049 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -17,7 +17,6 @@ enum check_outcome {
+ struct action_item;
+ 
+ void scrub_report_preen_triggers(struct scrub_ctx *ctx);
+-int scrub_primary_super(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct action_list *alist);
+ int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+@@ -30,6 +29,8 @@ int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_quotacheck(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_nlinks(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_clean_health(struct scrub_ctx *ctx, struct action_list *alist);
++int scrub_meta_type(struct scrub_ctx *ctx, unsigned int type,
++		xfs_agnumber_t agno, struct action_list *alist);
+ 
+ bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
+ bool can_scrub_inode(struct scrub_ctx *ctx);
 
