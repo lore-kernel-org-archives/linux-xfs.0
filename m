@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2167CC129
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:24:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78322C12D
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:25:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="khQrxf9W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86C0AC433C8;
-	Sun, 31 Dec 2023 22:24:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="trN5fesZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 484B6C433C8;
+	Sun, 31 Dec 2023 22:25:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704061498;
-	bh=ZaGmaYL+1Ga8Adlgmzx2Tg6tHo1perom219mZMQAWYM=;
+	s=k20201202; t=1704061514;
+	bh=vSxW5iQTZ8aDGGfn2RooVk0Q+p0sfZDhXfGxnh+ZxVI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=khQrxf9WjAxS4S5tLSxaUwdlL6Qy50vLi1TdWNPnUJ4BrDfPL2jmqj2Plp+aN4GI6
-	 KZHR0eSShcs1mL48AARNxqjmjbHfYte0NxtPij/4T6EqhoVnAssqzFn3REcJDFRoG5
-	 1+FCLY99MGwiICnJOdAMbbC2cTgYJ2aCS1kX9OqBhyk81b2dDFo7WVg+h2WmiCUEom
-	 SFZ+8IPcpkeOy1SSBwm095eDGPId54fEmanOiZ9awEzPC29aS7/w9/WhJS+rCszhyV
-	 PB37ABxo+/uCCn0Vp2LHs+92zDI5mXm2AHinoG+ajGPqrQQqcWRgBLZSkAILow9AW/
-	 byaoj+s8D1NFg==
-Date: Sun, 31 Dec 2023 14:24:58 -0800
-Subject: [PATCH 5/5] xfs: add a xattr_entry helper
+	b=trN5fesZM+SmYEaBroramb7+SwWn93IEm6Vr86wmROo80NiNp/96PUuO8DbcVNN6H
+	 mHmgB0OImxCGWWvOBNVPjkBV6syGtheCuiWhqn17g7xyQFUO8Lsi4aZkLqScwVlOO3
+	 nq23ubfQOt5ymJxGpvqBu3aIHBYnp+4hiiLo7xsOxY6mpuVRXsJJLC9DfHg3s8M10G
+	 BqM5gkWD5VizP/mPYULqx4hTMtYU5JbE8MOH0KoMwU5FT3o2JPo8wnakrAApdQrIlR
+	 9UU5sfrW0jikhuGE2BCGJ1RJLSOvmX+xtUvP5kYEW691lMZr+CptAuPn6XY64B7AU+
+	 7eQjznUBrbL7w==
+Date: Sun, 31 Dec 2023 14:25:13 -0800
+Subject: [PATCH 1/2] xfs: fix xfs_bunmapi to allow unmapping of partial rt
+ extents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404994887.1795600.5522642082995268669.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404994817.1795600.10635472836293725435.stgit@frogsfrogsfrogs>
-References: <170404994817.1795600.10635472836293725435.stgit@frogsfrogsfrogs>
+Message-ID: <170404995213.1795774.508500796488164613.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404995199.1795774.9776541526454187305.stgit@frogsfrogsfrogs>
+References: <170404995199.1795774.9776541526454187305.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,58 +38,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a helper to translate from the item list head to the attr_intent
-item structure and use it so shorten assignments and avoid the need for
-extra local variables.
+When XFS_BMAPI_REMAP is passed to bunmapi, that means that we want to
+remove part of a block mapping without touching the allocator.  For
+realtime files with rtextsize > 1, that also means that we should skip
+all the code that changes a partial remove request into an unwritten
+extent conversion.  IOWs, bunmapi in this mode should handle removing
+the mapping from the rt file and nothing else.
 
-Inspired-by: Christoph Hellwig <hch@lst.de>
+Note that XFS_BMAPI_REMAP callers are required to decrement the
+reference count and/or free the space manually.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/defer_item.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ libxfs/xfs_bmap.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index c9502d30860..e9875f3e208 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -570,6 +570,13 @@ const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
- 	.cancel_item	= xfs_bmap_update_cancel_item,
- };
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 69ed4150c5e..b0747e57e90 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -5425,7 +5425,7 @@ __xfs_bunmapi(
+ 		if (del.br_startoff + del.br_blockcount > end + 1)
+ 			del.br_blockcount = end + 1 - del.br_startoff;
  
-+/* Logged extended attributes */
-+
-+static inline struct xfs_attr_intent *attri_entry(const struct list_head *e)
-+{
-+	return list_entry(e, struct xfs_attr_intent, xattri_list);
-+}
-+
- /* Get an ATTRI. */
- static struct xfs_log_item *
- xfs_attr_create_intent(
-@@ -618,11 +625,10 @@ xfs_attr_finish_item(
- 	struct list_head	*item,
- 	struct xfs_btree_cur	**state)
- {
--	struct xfs_attr_intent	*attr;
--	int			error;
-+	struct xfs_attr_intent	*attr = attri_entry(item);
- 	struct xfs_da_args	*args;
-+	int			error;
+-		if (!isrt)
++		if (!isrt || (flags & XFS_BMAPI_REMAP))
+ 			goto delete;
  
--	attr = container_of(item, struct xfs_attr_intent, xattri_list);
- 	args = attr->xattri_da_args;
- 
- 	/*
-@@ -651,9 +657,8 @@ static void
- xfs_attr_cancel_item(
- 	struct list_head	*item)
- {
--	struct xfs_attr_intent	*attr;
-+	struct xfs_attr_intent	*attr = attri_entry(item);
- 
--	attr = container_of(item, struct xfs_attr_intent, xattri_list);
- 	xfs_attr_free_item(attr);
- }
- 
+ 		mod = xfs_rtb_to_rtxoff(mp,
+@@ -5443,7 +5443,7 @@ __xfs_bunmapi(
+ 				 * This piece is unwritten, or we're not
+ 				 * using unwritten extents.  Skip over it.
+ 				 */
+-				ASSERT(end >= mod);
++				ASSERT((flags & XFS_BMAPI_REMAP) || end >= mod);
+ 				end -= mod > del.br_blockcount ?
+ 					del.br_blockcount : mod;
+ 				if (end < got.br_startoff &&
 
