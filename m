@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52C94C2D4
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:33:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D387C2CC
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:33:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NIKh9wE0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77DDBC433C7;
-	Sun, 31 Dec 2023 23:33:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EJkkd5cp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1015FC433C7;
+	Sun, 31 Dec 2023 23:33:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065610;
-	bh=IJK4kDvCJ3MaaVevr4yOhr2MnTikIq/FugGuwaAlsCA=;
+	s=k20201202; t=1704065626;
+	bh=MC2F6Q7YfONYnFvHKdwpYwt47ePA4MKYkY2oE5uNGvc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NIKh9wE0OaWnY1tShTi8HAltNceqByIL7JfeECtVSRnlWwN/v9ku6xtrfHUd4xbdQ
-	 ZQXouYfW1CgXMJMYq/avtFhhkVhSCm008X0WO5M0GlNo8u6eWodTXJxOWLLDnRyzU4
-	 YBkkfHrMg/MoyXWukLdkE+7zm8gLqe/SvkOSuRQyPt0sYLV8+bBKuaJ9w7+13fQmwy
-	 oySLsXDfjHZp2NwqjGX4Db3m5XcpYYz6MPrAkOyUhRpKPUwDv/t4KxhI+qr4Sio0xM
-	 15FkGJKsmghYtpDnluZekE4Bh9Sk9engtNFdjXqLi42+iiQ7WDr044F9rk46sW6f3C
-	 bDEvpDYrMYiyg==
-Date: Sun, 31 Dec 2023 15:33:29 -0800
-Subject: [PATCH 15/58] xfs: ensure metadata directory paths exist before
- creating files
+	b=EJkkd5cpkgtliJmsuCN7ayu9yr/BRIqf1xUQ2E269LSHoP5TaeH/oMqoPdqEIvz/6
+	 IEsA3gVm92FbErL3bWG158Mtg5YpUXIFxHxtgBvQ/R1JslnUgSEW4ckH1lSIBI/Gn3
+	 tfD6wDw9sAQBICWXbEdHtoK7DWwQ23lRMr6wJBTYi4BEKbyf1DXEM81lWDN2nCRC7i
+	 pvgTq0YH6nsGvyMeJc3w76V0FgrKyYp4c38FPuJEob39we/aCrgOwkKzrFZ+qDaPg3
+	 XEJOu5G6jtmC/Uyfc6DCkHboVEJX03e5NtiKsIZoa65cuD9OPg0Jy53C9n8r2gVAeQ
+	 wZgFjHUokg6/A==
+Date: Sun, 31 Dec 2023 15:33:45 -0800
+Subject: [PATCH 16/58] xfs: disable the agi rotor for metadata inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010148.1809361.16643842176885546069.stgit@frogsfrogsfrogs>
+Message-ID: <170405010161.1809361.14825279080058332772.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,147 +37,187 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Since xfs_imeta_create can create new metadata files arbitrarily deep in
-the metadata directory tree, we must supply a function that can ensure
-that all directories in a path exist, and call it before the quota
-functions create the quota inodes.
+Ideally, we'd put all the metadata inodes in one place if we could, so
+that the metadata all stay reasonably close together instead of
+spreading out over the disk.  Furthermore, if the log is internal we'd
+probably prefer to keep the metadata near the log.  Therefore, disable
+AGI rotoring for metadata inode allocations.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/imeta_utils.c     |   69 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/imeta_utils.h     |    3 ++
- libxfs/libxfs_api_defs.h |    1 +
- mkfs/proto.c             |    8 +++++
- 4 files changed, 81 insertions(+)
+ db/iunlink.c        |    2 +-
+ libxfs/xfs_ialloc.c |   56 +++++++++++++++++++++++++++++++++++----------------
+ libxfs/xfs_ialloc.h |    2 +-
+ libxfs/xfs_imeta.c  |    4 ++--
+ mkfs/proto.c        |    3 +--
+ repair/phase6.c     |    2 +-
+ 6 files changed, 44 insertions(+), 25 deletions(-)
 
 
-diff --git a/libxfs/imeta_utils.c b/libxfs/imeta_utils.c
-index ce6000530d3..0186968ed3e 100644
---- a/libxfs/imeta_utils.c
-+++ b/libxfs/imeta_utils.c
-@@ -246,3 +246,72 @@ xfs_imeta_cancel_update(
+diff --git a/db/iunlink.c b/db/iunlink.c
+index c87b98431e5..fd5ed64c9e2 100644
+--- a/db/iunlink.c
++++ b/db/iunlink.c
+@@ -221,7 +221,7 @@ create_unlinked(
+ 		return error;
+ 	}
  
- 	xfs_imeta_teardown(upd, error);
+-	error = -libxfs_dialloc(&tp, 0, args.mode, &ino);
++	error = -libxfs_dialloc(&tp, args.pip, args.mode, &ino);
+ 	if (error) {
+ 		dbprintf(_("alloc inode: %s\n"), strerror(error));
+ 		goto out_cancel;
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 2c941603986..19543f76994 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1794,6 +1794,37 @@ xfs_dialloc_try_ag(
+ 	return error;
  }
-+
-+/* Create a metadata for the last component of the path. */
-+STATIC int
-+xfs_imeta_mkdir(
-+	struct xfs_mount		*mp,
-+	const struct xfs_imeta_path	*path)
-+{
-+	struct xfs_imeta_update		upd;
-+	struct xfs_inode		*ip = NULL;
-+	int				error;
-+
-+	if (xfs_is_shutdown(mp))
-+		return -EIO;
-+
-+	/* Allocate a transaction to create the last directory. */
-+	error = xfs_imeta_start_create(mp, path, &upd);
-+	if (error)
-+		return error;
-+
-+	/* Create the subdirectory and take our reference. */
-+	error = xfs_imeta_create(&upd, S_IFDIR, &ip);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = xfs_imeta_commit_update(&upd);
-+
-+	/*
-+	 * We don't pass the directory we just created to the caller, so finish
-+	 * setting up the inode, then release the dir and the dquots.
-+	 */
-+	goto out_irele;
-+
-+out_cancel:
-+	xfs_imeta_cancel_update(&upd, error);
-+out_irele:
-+	/* Have to finish setting up the inode to ensure it's deleted. */
-+	if (ip)
-+		xfs_irele(ip);
-+	return error;
-+}
-+
+ 
 +/*
-+ * Make sure that every metadata directory path component exists and is a
-+ * directory.
++ * Pick an AG for the new inode.
++ *
++ * Directories, symlinks, and regular files frequently allocate at least one
++ * block, so factor that potential expansion when we examine whether an AG has
++ * enough space for file creation.  Try to keep metadata files all in the same
++ * AG.
 + */
-+int
-+xfs_imeta_ensure_dirpath(
-+	struct xfs_mount		*mp,
-+	const struct xfs_imeta_path	*path)
++static inline xfs_agnumber_t
++xfs_dialloc_pick_ag(
++	struct xfs_mount	*mp,
++	struct xfs_inode	*dp,
++	umode_t			mode)
 +{
-+	struct xfs_imeta_path		temp_path = {
-+		.im_path		= path->im_path,
-+		.im_depth		= 1,
-+		.im_ftype		= XFS_DIR3_FT_DIR,
-+	};
-+	unsigned int			i;
-+	int				error = 0;
++	xfs_agnumber_t		start_agno;
 +
-+	if (!xfs_has_metadir(mp))
++	if (!dp)
++		return 0;
++	if (xfs_is_metadir_inode(dp))
 +		return 0;
 +
-+	for (i = 0; i < path->im_depth - 1; i++, temp_path.im_depth++) {
-+		error = xfs_imeta_mkdir(mp, &temp_path);
-+		if (error && error != -EEXIST)
-+			return error;
-+	}
++	if (S_ISDIR(mode))
++		return (atomic_inc_return(&mp->m_agirotor) - 1) % mp->m_maxagi;
 +
-+	return 0;
++	start_agno = XFS_INO_TO_AGNO(mp, dp->i_ino);
++	if (start_agno >= mp->m_maxagi)
++		start_agno = 0;
++
++	return start_agno;
 +}
-diff --git a/libxfs/imeta_utils.h b/libxfs/imeta_utils.h
-index a2afc0f37ac..8ab81149b05 100644
---- a/libxfs/imeta_utils.h
-+++ b/libxfs/imeta_utils.h
-@@ -18,6 +18,9 @@ int xfs_imeta_start_unlink(struct xfs_mount *mp,
- 		const struct xfs_imeta_path *path,
- 		struct xfs_inode *ip, struct xfs_imeta_update *upd);
- 
-+int xfs_imeta_ensure_dirpath(struct xfs_mount *mp,
-+		const struct xfs_imeta_path *path);
 +
- int xfs_imeta_commit_update(struct xfs_imeta_update *upd);
- void xfs_imeta_cancel_update(struct xfs_imeta_update *upd, int error);
+ /*
+  * Allocate an on-disk inode.
+  *
+@@ -1805,34 +1836,23 @@ xfs_dialloc_try_ag(
+ int
+ xfs_dialloc(
+ 	struct xfs_trans	**tpp,
+-	xfs_ino_t		parent,
++	struct xfs_inode	*dp,
+ 	umode_t			mode,
+ 	xfs_ino_t		*new_ino)
+ {
+ 	struct xfs_mount	*mp = (*tpp)->t_mountp;
+-	xfs_agnumber_t		agno;
+-	int			error = 0;
+-	xfs_agnumber_t		start_agno;
+ 	struct xfs_perag	*pag;
+ 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
++	xfs_ino_t		ino = NULLFSINO;
++	xfs_ino_t		parent = dp ? dp->i_ino : 0;
++	xfs_agnumber_t		agno;
++	xfs_agnumber_t		start_agno;
+ 	bool			ok_alloc = true;
+ 	bool			low_space = false;
+ 	int			flags;
+-	xfs_ino_t		ino = NULLFSINO;
++	int			error = 0;
  
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 90304da8983..e08be764a49 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -178,6 +178,7 @@
- #define xfs_imeta_commit_update		libxfs_imeta_commit_update
- #define xfs_imeta_create		libxfs_imeta_create
- #define xfs_imeta_create_space_res	libxfs_imeta_create_space_res
-+#define xfs_imeta_ensure_dirpath	libxfs_imeta_ensure_dirpath
- #define xfs_imeta_iget			libxfs_imeta_iget
- #define xfs_imeta_irele			libxfs_imeta_irele
- #define xfs_imeta_link			libxfs_imeta_link
+-	/*
+-	 * Directories, symlinks, and regular files frequently allocate at least
+-	 * one block, so factor that potential expansion when we examine whether
+-	 * an AG has enough space for file creation.
+-	 */
+-	if (S_ISDIR(mode))
+-		start_agno = (atomic_inc_return(&mp->m_agirotor) - 1) %
+-				mp->m_maxagi;
+-	else {
+-		start_agno = XFS_INO_TO_AGNO(mp, parent);
+-		if (start_agno >= mp->m_maxagi)
+-			start_agno = 0;
+-	}
++	start_agno = xfs_dialloc_pick_ag(mp, dp, mode);
+ 
+ 	/*
+ 	 * If we have already hit the ceiling of inode blocks then clear
+diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
+index f1412183bb4..9bfe2d8d84b 100644
+--- a/libxfs/xfs_ialloc.h
++++ b/libxfs/xfs_ialloc.h
+@@ -37,7 +37,7 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
+  * Allocate an inode on disk.  Mode is used to tell whether the new inode will
+  * need space, and whether it is a directory.
+  */
+-int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
++int xfs_dialloc(struct xfs_trans **tpp, struct xfs_inode *dp, umode_t mode,
+ 		xfs_ino_t *new_ino);
+ 
+ int xfs_difree(struct xfs_trans *tp, struct xfs_perag *pag,
+diff --git a/libxfs/xfs_imeta.c b/libxfs/xfs_imeta.c
+index b1c5c6ec5e6..2defee9562b 100644
+--- a/libxfs/xfs_imeta.c
++++ b/libxfs/xfs_imeta.c
+@@ -229,7 +229,7 @@ xfs_imeta_sb_create(
+ 		return -EEXIST;
+ 
+ 	/* Create a new inode and set the sb pointer. */
+-	error = xfs_dialloc(&upd->tp, 0, mode, &ino);
++	error = xfs_dialloc(&upd->tp, NULL, mode, &ino);
+ 	if (error)
+ 		return error;
+ 	error = xfs_icreate(upd->tp, ino, &args, &upd->ip);
+@@ -661,7 +661,7 @@ xfs_imeta_dir_create(
+ 	 * entry pointing to them, but a directory also the "." entry
+ 	 * pointing to itself.
+ 	 */
+-	error = xfs_dialloc(&upd->tp, upd->dp->i_ino, mode, &ino);
++	error = xfs_dialloc(&upd->tp, upd->dp, mode, &ino);
+ 	if (error)
+ 		return error;
+ 	error = xfs_icreate(upd->tp, ino, &args, &upd->ip);
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 2eff1f32173..5e17ea420f4 100644
+index 5e17ea420f4..0103fe54a5d 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -754,6 +754,10 @@ rtbitmap_create(
- 	struct xfs_inode	*rbmip;
+@@ -431,7 +431,6 @@ creatproto(
+ 				  XFS_ICREATE_ARGS_FORCE_MODE,
+ 	};
+ 	struct xfs_inode	*ip;
+-	xfs_ino_t		parent_ino = dp ? dp->i_ino : 0;
+ 	xfs_ino_t		ino;
  	int			error;
  
-+	error = -libxfs_imeta_ensure_dirpath(mp, &XFS_IMETA_RTBITMAP);
-+	if (error)
-+		fail(_("Realtime bitmap directory allocation failed"), error);
-+
- 	error = -libxfs_imeta_start_create(mp, &XFS_IMETA_RTBITMAP, &upd);
+@@ -442,7 +441,7 @@ creatproto(
+ 	 * Call the space management code to pick the on-disk inode to be
+ 	 * allocated.
+ 	 */
+-	error = -libxfs_dialloc(tpp, parent_ino, mode, &ino);
++	error = -libxfs_dialloc(tpp, dp, mode, &ino);
  	if (error)
- 		res_failed(error);
-@@ -783,6 +787,10 @@ rtsummary_create(
- 	struct xfs_inode	*rsumip;
- 	int			error;
+ 		return error;
  
-+	error = -libxfs_imeta_ensure_dirpath(mp, &XFS_IMETA_RTSUMMARY);
-+	if (error)
-+		fail(_("Realtime summary directory allocation failed"), error);
-+
- 	error = -libxfs_imeta_start_create(mp, &XFS_IMETA_RTSUMMARY, &upd);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 6a3c5e2a37a..fe9a4da62dc 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -870,7 +870,7 @@ mk_orphanage(
+ 	if (i)
+ 		res_failed(i);
+ 
+-	error = -libxfs_dialloc(&tp, mp->m_sb.sb_rootino, mode, &ino);
++	error = -libxfs_dialloc(&tp, du.dp, mode, &ino);
  	if (error)
- 		res_failed(error);
+ 		do_error(_("%s inode allocation failed %d\n"),
+ 			ORPHANAGE, error);
 
