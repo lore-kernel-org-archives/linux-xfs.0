@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A60B65B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:36:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F756B65B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:36:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cb0+xAfj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61E34C433C8;
-	Sun, 31 Dec 2023 19:36:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mYJzEr1Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FD1FC433C8;
+	Sun, 31 Dec 2023 19:36:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051363;
-	bh=LMcpbRLwAd6OKTE0jSmhArxrlFBhW9vIh2c53CWQ07k=;
+	s=k20201202; t=1704051379;
+	bh=WhimTHfYGI6yAlTMoKZlmKC/WAs78SQ6wxoA3OrojMc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cb0+xAfjadCHVcbvv5qYG4cuj2rciWOmjgmO0afk+oEtGSJ5Zur0UnjwQNKiAI+wQ
-	 BYsmDuTDWB40iTz2BnbyjKwslll004U1QGyLPxJKd8CW54eWjMyui3QpuCMo9dVs1C
-	 cNd2dQFvR5hefRpMyJwZkQFFmXRc9/ZtXzWKb16sAZvPsucGioGQfVGuNFYrNI4oOt
-	 eh/pCPdnYuoZhaL8lSZXzbfvZdEvMkNBDpUitQDrGfvUVE6J9mjUnAz73RbeZAJcmR
-	 +CXYsFg6ILc1beneh4pJcVtqUWqHZdS2j7DX5KkJT6wMuUjgD1yCUgvR9y+bq4M2xJ
-	 0KfL9Y+KhgoUg==
-Date: Sun, 31 Dec 2023 11:36:02 -0800
-Subject: [PATCHSET v2.0 06/15] xfs: refactor btrees to support records in
- inode root
+	b=mYJzEr1Y9pzYmDmkHgi0hzyys08EYazx4gZJ+ZQwGJIW7K1OH8N1b5A3MIbSueblt
+	 PahpJGJC+Hq4aE8W8CoVhe1udnWykU9mHi3wyEH/N4EtbM+mG7Yt/DxJid7thFYdru
+	 GUm5+rclRjHVB9Sb8BjVFS/eQp5bTrEM+k3S3K+EmUXfElQlWj7JO1YHT8ObZb/l/H
+	 z7RZOXkUZLUybWmCp7NQlkwh38mucWjrgUayMfc0LwBuG0Pyj2rdO5O3J0Oz2XOfhi
+	 yRGqmpSwBLB6sRKX1bxrhS48R+O1KWB5dbngTiwM+KS7ZP3TYn9jan0ujlAm3R3COL
+	 lPJm5MNlJYEZw==
+Date: Sun, 31 Dec 2023 11:36:18 -0800
+Subject: [PATCHSET v2.0 07/15] xfs: enable in-core block reservation for rt
+ metadata
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404847334.1763835.8921217007526026461.stgit@frogsfrogsfrogs>
+Message-ID: <170404847925.1764226.3996380045217070282.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,12 +38,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series prepares the btree code to support realtime reverse mapping
-btrees by refactoring xfs_ifork_realloc to be fed a per-btree ops
-structure so that it can handle multiple types of inode-rooted btrees.
-It moves on to refactoring the btree code to use the new realloc
-routines and to support storing btree rcords in the inode root, because
-the current bmbt code does not support this.
+In preparation for adding reverse mapping and refcounting to the
+realtime device, enhance the metadir code to reserve free space for
+btree shape changes as delayed allocation blocks.
+
+This effectively allows us to pre-allocate space for the rmap and
+refcount btrees in the same manner as we do for the data device
+counterparts, which is how we avoid ENOSPC failures when space is low
+but we've already committed to a COW operation.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -54,33 +56,28 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-ifork-records
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=reserve-rt-metadata-space
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-ifork-records
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=reserve-rt-metadata-space
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |    6 -
- fs/xfs/libxfs/xfs_alloc_btree.h    |    3 
- fs/xfs/libxfs/xfs_attr_leaf.c      |    8 -
- fs/xfs/libxfs/xfs_bmap.c           |   59 ++----
- fs/xfs/libxfs/xfs_bmap_btree.c     |   93 ++++++++-
- fs/xfs/libxfs/xfs_bmap_btree.h     |  219 +++++++++++++++------
- fs/xfs/libxfs/xfs_btree.c          |  382 ++++++++++++++++++++++++++++--------
- fs/xfs/libxfs/xfs_btree.h          |    4 
- fs/xfs/libxfs/xfs_btree_staging.c  |    4 
- fs/xfs/libxfs/xfs_ialloc.c         |    4 
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    6 -
- fs/xfs/libxfs/xfs_ialloc_btree.h   |    3 
- fs/xfs/libxfs/xfs_inode_fork.c     |  163 +++++++--------
- fs/xfs/libxfs/xfs_inode_fork.h     |   27 ++-
- fs/xfs/libxfs/xfs_refcount_btree.c |    5 
- fs/xfs/libxfs/xfs_refcount_btree.h |    3 
- fs/xfs/libxfs/xfs_rmap_btree.c     |    9 -
- fs/xfs/libxfs/xfs_rmap_btree.h     |    3 
- fs/xfs/libxfs/xfs_sb.c             |   16 +-
- fs/xfs/libxfs/xfs_trans_resv.c     |    2 
- fs/xfs/scrub/bmap_repair.c         |    2 
- fs/xfs/scrub/inode_repair.c        |   12 +
- fs/xfs/xfs_xchgrange.c             |    4 
- 23 files changed, 707 insertions(+), 330 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c       |    4 -
+ fs/xfs/libxfs/xfs_ag_resv.c  |   25 ++---
+ fs/xfs/libxfs/xfs_ag_resv.h  |    2 
+ fs/xfs/libxfs/xfs_errortag.h |    4 +
+ fs/xfs/libxfs/xfs_imeta.c    |  191 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_imeta.h    |   11 ++
+ fs/xfs/libxfs/xfs_types.h    |    7 ++
+ fs/xfs/scrub/repair.c        |    5 -
+ fs/xfs/xfs_error.c           |    3 +
+ fs/xfs/xfs_fsops.c           |   39 +++++----
+ fs/xfs/xfs_fsops.h           |    2 
+ fs/xfs/xfs_inode.h           |    3 +
+ fs/xfs/xfs_mount.c           |   10 ++
+ fs/xfs/xfs_mount.h           |    1 
+ fs/xfs/xfs_rtalloc.c         |   23 +++++
+ fs/xfs/xfs_rtalloc.h         |    5 +
+ fs/xfs/xfs_super.c           |    6 -
+ fs/xfs/xfs_trace.h           |   46 ++++++++++
+ 18 files changed, 337 insertions(+), 50 deletions(-)
 
