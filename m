@@ -1,62 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30E18F58;
-	Sun, 31 Dec 2023 18:25:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68AD5B645
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:25:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gQIm0HgK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19855C433C8;
-	Sun, 31 Dec 2023 18:25:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kk+dexcD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9431C433C7;
+	Sun, 31 Dec 2023 19:25:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704047154;
-	bh=QwW8hn90gcAPdwvISI50BNnLmRAm+x613Da3GnHfS8I=;
-	h=Date:From:To:Subject:From;
-	b=gQIm0HgK3lyG2SYyC7eEu64MF7kslOlpje6BcYZSHHCSzxhpPYvCL868nlrTZvjWr
-	 63Wv8uzr1mYQmX7XMWW3++gipEUpzHJdn7Od9+AYbZS3ATKjAJ4B8M78CS2oJa/RvJ
-	 qbBDIrWp5xhJsKEkX50m5AHTErAPF9jmj3JZJPqN8J2bITcw7B5OvNlLtbDwofxDco
-	 d8G1Xl2kmuZO9Re9l45gevqz01PH7Xfjo6E6eQ7Y3aSNmkp0WxEMw8e5h2IiRtkqVH
-	 sY35cd8R998t7RH7k7bZumD4MzpL3KzwbhvAVVJ13EC8dOF1yXYV7u/F4Up1WYS0VI
-	 A+vHEfwXs1mIA==
-Date: Sun, 31 Dec 2023 10:25:53 -0800
+	s=k20201202; t=1704050736;
+	bh=+6VVCXM4qTtoS5ai7TUCrkmcB7omg+/iMoLU6chBaqk=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=kk+dexcDKmz20TWDkHk3wU+qJg12tF2Vizq3gn+XNPuXRwOBjoKDU2IiBexzJlmro
+	 tPGxsDOcKzvBZhHW/FKKAtTkVtL/1Z+XnD6Ej2f+eYUO+jP3HZwjrYmoMwAIPedqZh
+	 WgFsgypd7nV4UwzF2K7ZcAcSvmZ04g/4ujRVRY1VmoO1BouplOLlbbFWL6YbXb5vAi
+	 mXjvy7nBiC3Qkvh8IPIKh5aS9lLfNkir8ntnSk5Tz56pHUyo6ouTDjjzr/6YnyAPdW
+	 yk3SuQWXAzvZYg94Tpbd8ydGPivQGJ5IwQWI18jlQHqwaNU7N/qa81A1KSHV5jL8Um
+	 asU3zlKtZKPNg==
+Date: Sun, 31 Dec 2023 11:25:36 -0800
+Subject: [PATCHSET v29.0 01/28] xfs: live inode scans for online fsck
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
-Subject: [NYE PATCHRIVER 4/4] xfs: freespace defrag for online shrink
-Message-ID: <20231231182553.GV361584@frogsfrogsfrogs>
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <170404826492.1747630.1053076578437373265.stgit@frogsfrogsfrogs>
+In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
+References: <20231231181215.GA241128@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Hi everyone,
+Hi all,
 
-This fourth patchriver has two faces -- one way of looking at it is that
-it is random odds and ends at the tail of my development tree.  A second
-interpretation is that it is necessary pieces for defragmenting free
-space, which is a precursor for online shrink of XFS filesystems.
+The design document discusses the need for a specialized inode scan
+cursor to manage walking every file on a live filesystem to build
+replacement metadata objects while receiving updates about the files
+already scanned.  This series adds three pieces of infrastructure -- the
+scan cursor, live hooks to deliver information about updates going
+on in other parts of the filesystem, and then adds a batching mechanism
+to amortize AGI lookups over a batch of inodes to improve performance.
 
-The kernel side isn't that exciting -- we export refcounting information
-for space extents, and add a new fallocate mode for mapping exact
-portions of free filesystem space into a file.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-Userspace is where things get interesting!  The free space defragmenter
-is an iterative algorithm that assigns free space to a dummy file, and
-then uses the GETFSMAP and GETFSREFCOUNTS information to target file
-space extents in order of decreasing share counts.  Once an extent has
-been targeted, it uses reflinking to freeze the space, copies it
-elsewhere, and uses FIDEDUPERANGE to remap existing file data until the
-dummy file is the sole owner of the targetted space.  If metadata are
-involved, the defrag utility invokes online repair to rebuild the
-metadata somewhere else.
-
-Since last year, I've also merged in Dave's xfs_spaceman code to move
-inodes.  I've not had much time to play with it otherwise.
-
-When the defragmenter finishes, all the free space has been isolated to
-the dummy file, which can be unlinked and closed if defragmentation was
-the goal; or it could be passed to a shrinkfs operation.
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-iscan
+---
+ fs/xfs/Kconfig       |   36 ++
+ fs/xfs/Makefile      |    2 
+ fs/xfs/scrub/iscan.c |  738 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/iscan.h |   81 +++++
+ fs/xfs/scrub/trace.c |    1 
+ fs/xfs/scrub/trace.h |  145 ++++++++++
+ fs/xfs/xfs_hooks.c   |   94 ++++++
+ fs/xfs/xfs_hooks.h   |   72 +++++
+ fs/xfs/xfs_iwalk.c   |   13 -
+ fs/xfs/xfs_linux.h   |    1 
+ 10 files changed, 1172 insertions(+), 11 deletions(-)
+ create mode 100644 fs/xfs/scrub/iscan.c
+ create mode 100644 fs/xfs/scrub/iscan.h
+ create mode 100644 fs/xfs/xfs_hooks.c
+ create mode 100644 fs/xfs/xfs_hooks.h
+
