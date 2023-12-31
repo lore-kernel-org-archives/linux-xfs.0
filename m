@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CDA4C2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:18:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAFEAC2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:18:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l97yP97y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E363CC433C7;
-	Sun, 31 Dec 2023 23:18:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n3SRXy6T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87651C433C8;
+	Sun, 31 Dec 2023 23:18:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064719;
-	bh=t8z4aU5BY9zzwEaSSbnEsTYMkLWykRneMq7u0qgtBik=;
+	s=k20201202; t=1704064735;
+	bh=2LescKwlE7IzShpoJEPPigqDA5TX2y6109L0//pUMEk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=l97yP97yyPrhx9Nb29Mz2sQTYxsq2CmSqQ1b5/mSqIenqtJJY05OHkdMtASr8mD/B
-	 /mt+CvgU+Dyj67IpCu5rg2FQ8WEg71FvD6NeKzIkxjCB5kCk7q16N6duJvN42KsgT8
-	 g4jMi6QLkTkNCOkgF2qiUhGBpuG61tKmssC7EoEgJG9qWg34HaVHshscH4hpGFl9eY
-	 exR84zuqGypA8tLrx0AtvG42CyLni02DyFFaQyKNTZaVIK2CDNnCcUZUQ5BqYLGXV8
-	 oHzHugLrj7HVNpJif2jRNSB4VJkepCpG67Q+JjXFQQeaFg8M1XMLhaM3dGQj2VPaLa
-	 einEuzBfStBVg==
-Date: Sun, 31 Dec 2023 15:18:39 -0800
-Subject: [PATCH 2/6] xfs: teach online scrub to find directory tree structure
- problems
+	b=n3SRXy6TlaTJ4AHW8H9gYwsZFOPVrQwq382iY9/FsQbyKglUzlvhOBB08rLRLuqB0
+	 5vv9Qr47tH3kHYrLF6W//OY/Th1pJGydRmhsmUXKZ0Z85QCZ0B566WvRLJ3wFi1tso
+	 4FB7UfXjeGaVB3r5f66SiVjuHbh08IK+UObxeSXhf9l3JCxBqIrIfVyJaeken4UUUD
+	 RxRRjpZzOIs4M3fMgRtY2p4lctAOkZzA95LIcDl4GQYFh17IGE15Uy2e3L6P2veBxU
+	 RLKQ38QD47yjIGGBqTgVHSc1A2ERMqAl4Q4WxsvEw+qzVV7fnyXbmvzZqOoE4z7ao5
+	 IzDsBpetWzilw==
+Date: Sun, 31 Dec 2023 15:18:55 -0800
+Subject: [PATCH 3/6] xfs: report directory tree corruption in the health
+ information
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405007459.1805996.13319683096140892679.stgit@frogsfrogsfrogs>
+Message-ID: <170405007473.1805996.14045845817139841397.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405007429.1805996.15935827855068032438.stgit@frogsfrogsfrogs>
 References: <170405007429.1805996.15935827855068032438.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,74 +38,94 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new scrubber that detects corruptions within the directory tree
-structure itself.  It can detect directories with multiple parents;
-loops within the directory tree; and directory loops not accessible from
-the root.
+Report directories that are the source of corruption in the directory
+tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/scrub.c                     |    5 +++++
- libxfs/xfs_fs.h                     |    3 ++-
- man/man2/ioctl_xfs_scrub_metadata.2 |   14 ++++++++++++++
- 3 files changed, 21 insertions(+), 1 deletion(-)
+ libxfs/xfs_fs.h                 |    1 +
+ libxfs/xfs_health.h             |    4 +++-
+ man/man2/ioctl_xfs_bulkstat.2   |    3 +++
+ man/man2/ioctl_xfs_fsbulkstat.2 |    3 +++
+ spaceman/health.c               |    4 ++++
+ 5 files changed, 14 insertions(+), 1 deletion(-)
 
 
-diff --git a/libfrog/scrub.c b/libfrog/scrub.c
-index baaa4b4d940..a2146e228f5 100644
---- a/libfrog/scrub.c
-+++ b/libfrog/scrub.c
-@@ -149,6 +149,11 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
- 		.descr	= "retained health records",
- 		.group	= XFROG_SCRUB_GROUP_NONE,
- 	},
-+	[XFS_SCRUB_TYPE_DIRTREE] = {
-+		.name	= "dirtree",
-+		.descr	= "directory tree structure",
-+		.group	= XFROG_SCRUB_GROUP_INODE,
-+	},
- };
- #undef DEP
- 
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index efa68a2d82a..48f38694f12 100644
+index 48f38694f12..2499a20f5f7 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -719,9 +719,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_QUOTACHECK 25	/* quota counters */
- #define XFS_SCRUB_TYPE_NLINKS	26	/* inode link counts */
- #define XFS_SCRUB_TYPE_HEALTHY	27	/* everything checked out ok */
-+#define XFS_SCRUB_TYPE_DIRTREE	28	/* directory tree structure */
+@@ -413,6 +413,7 @@ struct xfs_bulkstat {
+ #define XFS_BS_SICK_XATTR	(1 << 5)  /* extended attributes */
+ #define XFS_BS_SICK_SYMLINK	(1 << 6)  /* symbolic link remote target */
+ #define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
++#define XFS_BS_SICK_DIRTREE	(1 << 8)  /* directory tree structure */
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	28
-+#define XFS_SCRUB_TYPE_NR	29
+ /*
+  * Project quota id helpers (previously projid was 16bit only
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index df07c5877ba..bca1990f71d 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -95,6 +95,7 @@ struct xfs_da_args;
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
-diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
-index 75ae52bb584..44aa139b297 100644
---- a/man/man2/ioctl_xfs_scrub_metadata.2
-+++ b/man/man2/ioctl_xfs_scrub_metadata.2
-@@ -148,6 +148,20 @@ that points back to the subdirectory.
- The inode to examine can be specified in the same manner as
- .BR XFS_SCRUB_TYPE_INODE "."
+ /* Don't propagate sick status to ag health summary during inactivation */
+ #define XFS_SICK_INO_FORGET	(1 << 12)
++#define XFS_SICK_INO_DIRTREE	(1 << 13)  /* directory tree structure */
  
-+.TP
-+.B XFS_SCRUB_TYPE_DIRTREE
-+This scrubber looks for problems in the directory tree structure such as loops
-+and directories accessible through more than one path.
-+Problems are detected by walking parent pointers upwards towards the root.
-+Loops are detected by comparing the parent directory at each step against the
-+directories already examined.
-+Directories with multiple paths are detected by counting the parent pointers
-+attached to a directory.
-+Non-directories do not have links pointing away from the directory tree root
-+and can be skipped.
-+The directory to examine can be specified in the same manner as
-+.BR XFS_SCRUB_TYPE_INODE "."
-+
+ /* Primary evidence of health problems in a given group. */
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+@@ -125,7 +126,8 @@ struct xfs_da_args;
+ 				 XFS_SICK_INO_DIR | \
+ 				 XFS_SICK_INO_XATTR | \
+ 				 XFS_SICK_INO_SYMLINK | \
+-				 XFS_SICK_INO_PARENT)
++				 XFS_SICK_INO_PARENT | \
++				 XFS_SICK_INO_DIRTREE)
+ 
+ #define XFS_SICK_INO_ZAPPED	(XFS_SICK_INO_BMBTD_ZAPPED | \
+ 				 XFS_SICK_INO_BMBTA_ZAPPED | \
+diff --git a/man/man2/ioctl_xfs_bulkstat.2 b/man/man2/ioctl_xfs_bulkstat.2
+index 3203ca0c5d2..b6d51aa4381 100644
+--- a/man/man2/ioctl_xfs_bulkstat.2
++++ b/man/man2/ioctl_xfs_bulkstat.2
+@@ -326,6 +326,9 @@ Symbolic link target.
  .TP
- .B XFS_SCRUB_TYPE_SYMLINK
- Examine the target of a symbolic link for obvious pathname problems.
+ .B XFS_BS_SICK_PARENT
+ Parent pointers.
++.TP
++.B XFS_BS_SICK_DIRTREE
++Directory is the source of corruption in the directory tree.
+ .RE
+ .SH ERRORS
+ Error codes can be one of, but are not limited to, the following:
+diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
+index 3f059942a21..cd38d2fd6f2 100644
+--- a/man/man2/ioctl_xfs_fsbulkstat.2
++++ b/man/man2/ioctl_xfs_fsbulkstat.2
+@@ -239,6 +239,9 @@ Symbolic link target.
+ .TP
+ .B XFS_BS_SICK_PARENT
+ Parent pointers.
++.TP
++.B XFS_BS_SICK_DIRTREE
++Directory is the source of corruption in the directory tree.
+ .RE
+ .SH RETURN VALUE
+ On error, \-1 is returned, and
+diff --git a/spaceman/health.c b/spaceman/health.c
+index ab5bc074988..8ba78152cb6 100644
+--- a/spaceman/health.c
++++ b/spaceman/health.c
+@@ -169,6 +169,10 @@ static const struct flag_map inode_flags[] = {
+ 		.mask = XFS_BS_SICK_PARENT,
+ 		.descr = "parent pointers",
+ 	},
++	{
++		.mask = XFS_BS_SICK_DIRTREE,
++		.descr = "directory tree structure",
++	},
+ 	{0},
+ };
+ 
 
