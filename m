@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5BBC127
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:21:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7D2C129
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:21:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QteMpV7R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9D4C433C7;
-	Sun, 31 Dec 2023 22:21:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EUvxHU0C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F713C433C8;
+	Sun, 31 Dec 2023 22:21:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704061295;
-	bh=8mD7v80Zh3zTC0Gv801scn614GUH0/LBmt159Tv49HA=;
+	s=k20201202; t=1704061311;
+	bh=i8ECzpPFhAb8UC4y3YDK9WexTyPKmY4l8fqCbjdMuTM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QteMpV7RVCWXoCJz2fG6OP1Q88Khhsw6PSNUUbHIuw5Invfk/jnkw5EdCAUIPuUUn
-	 ecYVUlYm6bS60K4ZpuM4LfJDyhQZ2rpYrIThkNXGSArWpQ7Je32XbTx1bSLV1Lukgf
-	 NE1lLeySDAVVbvuvJmC3diYXoAXrnph7Y6dxdSqCZPkMGERGGZKtpwl/9cWK38hAsi
-	 P2/ukZ3/qlU9dXi9VBa55Se5ZGumopSIrHSWkeT8wIHO+TB9CsTR1U5uJIRUi7B9Tz
-	 z6EUjrCllg3Pu62u9TDFSHCdxYJ/Ems/5ysrG/8dS2IGQ1yBZ2Z7RT1Jt99JYxn3ip
-	 +15lVw2i15nwQ==
-Date: Sun, 31 Dec 2023 14:21:35 -0800
-Subject: [PATCH 7/9] xfs: remove the unnecessary daddr paramter to _init_block
+	b=EUvxHU0C66bvCviwpVqlNdHBMV2Xb8cAQHrQQAPtTQtsUvlrRmFpilJsv5lzuNPs0
+	 TWdksoK+zcahHq4wkY1sPQAxaXBrb0Amd/sn1whtBXc/2JzHTmglUzTDeNqHWZwwl/
+	 hoTqF62SJ/N0QlwIXW7WlnaMfAUzfspl610IaTfm3NAz4+7lYGxY143izSElWfO651
+	 VGYf/Se8+BX0SZOWRp4Qqc1Zvm4kObyESveDu+16OdqwZl3sN6gyGknempjxHff9CJ
+	 KHOeCCDtu93ZHBJdCkEhZaBg0eHfXhlDgNyg1ktrKAKHq8v1/OiIMvr18KeLGKSx50
+	 31M1onb49X5qw==
+Date: Sun, 31 Dec 2023 14:21:50 -0800
+Subject: [PATCH 8/9] xfs: set btree block buffer ops in _init_buf
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404994083.1795132.2433498207897795023.stgit@frogsfrogsfrogs>
+Message-ID: <170404994097.1795132.7145169827970828780.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404993983.1795132.17312636757680803212.stgit@frogsfrogsfrogs>
 References: <170404993983.1795132.17312636757680803212.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,118 +37,51 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that all of the callers pass XFS_BUF_DADDR_NULL as the daddr
-parameter, we can elide that too.
+Set the btree block buffer ops in xfs_btree_init_buf since we already
+have access to that information through the btree ops.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_bmap.c          |    3 +--
- libxfs/xfs_bmap_btree.c    |    3 +--
- libxfs/xfs_btree.c         |   19 ++++++++++++++++---
- libxfs/xfs_btree.h         |    2 +-
- libxfs/xfs_btree_staging.c |    5 ++---
- 5 files changed, 21 insertions(+), 11 deletions(-)
+ libxfs/xfbtree.c   |    1 -
+ libxfs/xfs_bmap.c  |    1 -
+ libxfs/xfs_btree.c |    1 +
+ 3 files changed, 1 insertion(+), 2 deletions(-)
 
 
+diff --git a/libxfs/xfbtree.c b/libxfs/xfbtree.c
+index 7310f29a8c2..d76b3d5ea70 100644
+--- a/libxfs/xfbtree.c
++++ b/libxfs/xfbtree.c
+@@ -401,7 +401,6 @@ xfbtree_init_leaf_block(
+ 
+ 	trace_xfbtree_create_root_buf(xfbt, bp);
+ 
+-	bp->b_ops = cfg->btree_ops->buf_ops;
+ 	xfs_btree_init_buf(mp, bp, cfg->btree_ops, 0, 0, cfg->owner);
+ 	error = xfs_bwrite(bp);
+ 	xfs_buf_relse(bp);
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 1c53204e1d5..46551021755 100644
+index 46551021755..9a2cb5662d1 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -638,8 +638,7 @@ xfs_bmap_extents_to_btree(
- 	 * Fill in the root.
- 	 */
- 	block = ifp->if_broot;
--	xfs_btree_init_block(mp, block, &xfs_bmbt_ops, XFS_BUF_DADDR_NULL, 1,
--			1, ip->i_ino);
-+	xfs_btree_init_block(mp, block, &xfs_bmbt_ops, 1, 1, ip->i_ino);
+@@ -681,7 +681,6 @@ xfs_bmap_extents_to_btree(
  	/*
- 	 * Need a cursor.  Can't allocate until bb_level is filled in.
+ 	 * Fill in the child block.
  	 */
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index ea6bd791eff..1dd85d4d41c 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -42,8 +42,7 @@ xfs_bmdr_to_bmbt(
- 	xfs_bmbt_key_t		*tkp;
- 	__be64			*tpp;
+-	abp->b_ops = &xfs_bmbt_buf_ops;
+ 	ablock = XFS_BUF_TO_BLOCK(abp);
+ 	xfs_btree_init_buf(mp, abp, &xfs_bmbt_ops, 0, 0, ip->i_ino);
  
--	xfs_btree_init_block(mp, rblock, &xfs_bmbt_ops, XFS_BUF_DADDR_NULL,
--			0, 0, ip->i_ino);
-+	xfs_btree_init_block(mp, rblock, &xfs_bmbt_ops, 0, 0, ip->i_ino);
- 	rblock->bb_level = dblock->bb_level;
- 	ASSERT(be16_to_cpu(rblock->bb_level) > 0);
- 	rblock->bb_numrecs = dblock->bb_numrecs;
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index c8bbda80b40..218e96d7976 100644
+index 218e96d7976..6705a6d83f3 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -1209,8 +1209,8 @@ xfs_btree_set_sibling(
- 	}
- }
- 
--void
--xfs_btree_init_block(
-+static void
-+__xfs_btree_init_block(
- 	struct xfs_mount	*mp,
- 	struct xfs_btree_block	*buf,
- 	const struct xfs_btree_ops *ops,
-@@ -1251,6 +1251,19 @@ xfs_btree_init_block(
- 	}
- }
- 
-+void
-+xfs_btree_init_block(
-+	struct xfs_mount	*mp,
-+	struct xfs_btree_block	*block,
-+	const struct xfs_btree_ops *ops,
-+	__u16			level,
-+	__u16			numrecs,
-+	__u64			owner)
-+{
-+	__xfs_btree_init_block(mp, block, ops, XFS_BUF_DADDR_NULL, level,
-+			numrecs, owner);
-+}
-+
- void
- xfs_btree_init_buf(
- 	struct xfs_mount		*mp,
-@@ -1260,7 +1273,7 @@ xfs_btree_init_buf(
- 	__u16				numrecs,
- 	__u64				owner)
+@@ -1275,6 +1275,7 @@ xfs_btree_init_buf(
  {
--	xfs_btree_init_block(mp, XFS_BUF_TO_BLOCK(bp), ops,
-+	__xfs_btree_init_block(mp, XFS_BUF_TO_BLOCK(bp), ops,
+ 	__xfs_btree_init_block(mp, XFS_BUF_TO_BLOCK(bp), ops,
  			xfs_buf_daddr(bp), level, numrecs, owner);
++	bp->b_ops = ops->buf_ops;
  }
  
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 6a27c34e68c..41000bd6ccc 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -456,7 +456,7 @@ void xfs_btree_init_buf(struct xfs_mount *mp, struct xfs_buf *bp,
- 		__u64 owner);
- void xfs_btree_init_block(struct xfs_mount *mp,
- 		struct xfs_btree_block *buf, const struct xfs_btree_ops *ops,
--		xfs_daddr_t blkno, __u16 level, __u16 numrecs, __u64 owner);
-+		__u16 level, __u16 numrecs, __u64 owner);
- 
- /*
-  * Common btree core entry points.
-diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index c2f39702b7b..ec496915433 100644
---- a/libxfs/xfs_btree_staging.c
-+++ b/libxfs/xfs_btree_staging.c
-@@ -410,9 +410,8 @@ xfs_btree_bload_prep_block(
- 		ifp->if_broot_bytes = (int)new_size;
- 
- 		/* Initialize it and send it out. */
--		xfs_btree_init_block(cur->bc_mp, ifp->if_broot,
--				cur->bc_ops, XFS_BUF_DADDR_NULL, level,
--				nr_this_block, cur->bc_ino.ip->i_ino);
-+		xfs_btree_init_block(cur->bc_mp, ifp->if_broot, cur->bc_ops,
-+				level, nr_this_block, cur->bc_ino.ip->i_ino);
- 
- 		*bpp = NULL;
- 		*blockp = ifp->if_broot;
+ void
 
