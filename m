@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF79C2D4
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:26:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A18BC2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:27:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tXBAeznv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0CFEC433C7;
-	Sun, 31 Dec 2023 23:26:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sVKNKtwl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C31C433C8;
+	Sun, 31 Dec 2023 23:27:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065219;
-	bh=rPsUNx7RP16Meo46gLaiyjMPwT0r83xmFab3+MwBSb0=;
+	s=k20201202; t=1704065235;
+	bh=IBywPLv0Slg1M5kLYFynJOmLBjG56MkPJ/OK+O7tHf8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tXBAeznveNjZEAzlJxGV7nAS14Mw+sSi2j41yWmvOSS5YDClTgyTk/WVvDJocWVgI
-	 4TrcEFaAV6ovYH52xQxyDezNuOh1PngjVbNQJ9Jbptu4CxFtOyc4mXBA5LbFSyUIfn
-	 ipAtbd2v7U0rXk2ulpbE/1doAE1UALb7eepK4F/FPpRcyAhwrxlU+JRDKU2SChfKrO
-	 KK0lBu09bYvntnnU2njROP7h7/R1lBR59sXE2w4y1uNDUUD0HOhySJDkvdmrErP96C
-	 yWNjsYRAJkGosTacQcQRXiPzNXpsvbEU8lfez7/2geUMCZcwac8e5mvB+GhR8DQSl/
-	 WUtGPRMRP+qdw==
-Date: Sun, 31 Dec 2023 15:26:59 -0800
-Subject: [PATCH 18/28] xfs: hoist xfs_{bump,drop}link to libxfs
+	b=sVKNKtwlw/YzP6xX67uoWA/t2FV0QOKPzPjeHZt2KgmwJwudIe8IpPupvYtHXYoYu
+	 li8JBd35a6Gb7PD0MmSngDghhn1OHReEhhpPYim+pQrA6eDwrMJFU5DUBK4DC24j5v
+	 RaHdaweKKqrtkJx8Co+JPkm5zUODU/+FQB/OWVTcXd9BoJ58Y+35MivLEuU/6ofPXl
+	 0RMvXxAvmA1AVDCzui1gqHInzC4O4yBkNCJV8yDTKjhKuU90zJNnyb9N06nZw9WmuN
+	 2CWcky1O7hZb7Nv9xrYcIdgKb1xazAEaOu6GCuVrHc/y87GFUcibvBy6i6It2W6ZNg
+	 714IyEEP2i6XQ==
+Date: Sun, 31 Dec 2023 15:27:14 -0800
+Subject: [PATCH 19/28] xfs: create libxfs helper to link a new inode into a
+ directory
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405009417.1808635.11181394231337112446.stgit@frogsfrogsfrogs>
+Message-ID: <170405009430.1808635.2626790860497805288.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009159.1808635.10158480820888604007.stgit@frogsfrogsfrogs>
 References: <170405009159.1808635.10158480820888604007.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,203 +38,99 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move xfs_bumplink and xfs_droplink to libxfs.
+Create a new libxfs function to link a newly created inode into a
+directory.  The upcoming metadata directory feature will need this to
+create a metadata directory tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/namei.c               |   23 +++++---------------
- include/xfs_inode.h      |    2 --
- libxfs/inode.c           |   18 ----------------
- libxfs/libxfs_api_defs.h |    1 +
- libxfs/libxfs_priv.h     |    1 +
- libxfs/xfs_inode_util.c  |   53 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_inode_util.h  |    2 ++
- 7 files changed, 63 insertions(+), 37 deletions(-)
+ libxfs/xfs_dir2.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_dir2.h |   12 ++++++++++++
+ 2 files changed, 60 insertions(+)
 
 
-diff --git a/db/namei.c b/db/namei.c
-index 196da7f90e9..e75179b2c67 100644
---- a/db/namei.c
-+++ b/db/namei.c
-@@ -1154,21 +1154,6 @@ unlink_help(void)
- 	));
- }
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index b906f39e0fe..3b7c828fec1 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -18,6 +18,10 @@
+ #include "xfs_errortag.h"
+ #include "xfs_trace.h"
+ #include "xfs_health.h"
++#include "xfs_shared.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
++#include "xfs_parent.h"
  
--static void
--droplink(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip)
--{
--	struct inode		*inode = VFS_I(ip);
--
--	libxfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	if (inode->i_nlink != XFS_NLINK_PINNED)
--		drop_nlink(VFS_I(ip));
--
--	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--}
--
- static int
- remove_child(
- 	struct xfs_mount	*mp,
-@@ -1218,13 +1203,17 @@ remove_child(
- 
- 	if (S_ISDIR(VFS_I(ip)->i_mode)) {
- 		/* drop ip's dotdot link to dp */
--		droplink(tp, dp);
-+		error = -libxfs_droplink(tp, dp);
-+		if (error)
-+			goto out_trans;
- 	} else {
- 		libxfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 	}
- 
- 	/* drop dp's link to ip */
--	droplink(tp, ip);
-+	error = -libxfs_droplink(tp, ip);
-+	if (error)
-+		goto out_trans;
- 
- 	error = -libxfs_dir_removename(tp, dp, &xname, ip->i_ino, resblks);
- 	if (error)
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index a48cb7eaf77..5d7bc69e3ff 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -393,8 +393,6 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
- 				struct xfs_inode *, int);
- extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
- 
--void libxfs_bumplink(struct xfs_trans *tp, struct xfs_inode *ip);
--
- int libxfs_icreate(struct xfs_trans *tp, xfs_ino_t ino,
- 		const struct xfs_icreate_args *args, struct xfs_inode **ipp);
- void libxfs_icreate_args_rootfile(struct xfs_icreate_args *args,
-diff --git a/libxfs/inode.c b/libxfs/inode.c
-index 73eecebae96..47c9b9d6bd7 100644
---- a/libxfs/inode.c
-+++ b/libxfs/inode.c
-@@ -29,24 +29,6 @@
- #include "xfs_da_btree.h"
- #include "xfs_dir2_priv.h"
- 
--/*
-- * Increment the link count on an inode & log the change.
-- */
--void
--libxfs_bumplink(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip)
--{
--	struct inode		*inode = VFS_I(ip);
--
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	if (inode->i_nlink != XFS_NLINK_PINNED)
--		inc_nlink(inode);
--
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--}
--
- /*
-  * Initialise a newly allocated inode and return the in-core inode to the
-  * caller locked exclusively.
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 7e4d4c008cf..de59d6cdb5d 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -88,6 +88,7 @@
- #define xfs_buf_read_uncached		libxfs_buf_read_uncached
- #define xfs_buf_relse			libxfs_buf_relse
- #define xfs_buf_unlock			libxfs_buf_unlock
-+#define xfs_bumplink			libxfs_bumplink
- #define xfs_bunmapi			libxfs_bunmapi
- #define xfs_bwrite			libxfs_bwrite
- #define xfs_calc_dquots_per_chunk	libxfs_calc_dquots_per_chunk
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index a457e127d8a..17e62c9fbb7 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -133,6 +133,7 @@ extern void cmn_err(int, char *, ...);
- enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- 
- #define xfs_info(mp,fmt,args...)	cmn_err(CE_CONT, _(fmt), ## args)
-+#define xfs_info_ratelimited(mp,fmt,args...) cmn_err(CE_CONT, _(fmt), ## args)
- #define xfs_notice(mp,fmt,args...)	cmn_err(CE_NOTE, _(fmt), ## args)
- #define xfs_warn(mp,fmt,args...)	cmn_err((mp) ? CE_WARN : CE_WARN, _(fmt), ## args)
- #define xfs_err(mp,fmt,args...)		cmn_err(CE_ALERT, _(fmt), ## args)
-diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
-index a51d0342b98..8f053e3941c 100644
---- a/libxfs/xfs_inode_util.c
-+++ b/libxfs/xfs_inode_util.c
-@@ -615,3 +615,56 @@ xfs_iunlink_remove(
- 
- 	return xfs_iunlink_remove_inode(tp, pag, agibp, ip);
+ const struct xfs_name xfs_name_dotdot = {
+ 	.name	= (const unsigned char *)"..",
+@@ -781,3 +785,47 @@ xfs_dir2_compname(
+ 		return xfs_ascii_ci_compname(args, name, len);
+ 	return xfs_da_compname(args, name, len);
  }
 +
 +/*
-+ * Decrement the link count on an inode & log the change.  If this causes the
-+ * link count to go to zero, move the inode to AGI unlinked list so that it can
-+ * be freed when the last active reference goes away via xfs_inactive().
++ * Given a directory @dp, a newly allocated inode @ip, and a @name, link @ip
++ * into @dp under the given @name.  If @ip is a directory, it will be
++ * initialized.  Both inodes must have the ILOCK held and the transaction must
++ * have sufficient blocks reserved.
 + */
 +int
-+xfs_droplink(
++xfs_dir_create_child(
 +	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
++	unsigned int		resblks,
++	struct xfs_dir_update	*du)
 +{
-+	struct inode		*inode = VFS_I(ip);
++	struct xfs_inode	*dp = du->dp;
++	const struct xfs_name	*name = du->name;
++	struct xfs_inode	*ip = du->ip;
++	int			error;
 +
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(dp, XFS_ILOCK_EXCL));
 +
-+	if (inode->i_nlink == 0) {
-+		xfs_info_ratelimited(tp->t_mountp,
-+ "Inode 0x%llx link count dropped below zero.  Pinning link count.",
-+				ip->i_ino);
-+		set_nlink(inode, XFS_NLINK_PINNED);
++	error = xfs_dir_createname(tp, dp, name, ip->i_ino, resblks);
++	if (error) {
++		ASSERT(error != -ENOSPC);
++		return error;
 +	}
-+	if (inode->i_nlink != XFS_NLINK_PINNED)
-+		drop_nlink(inode);
 +
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 +
-+	if (inode->i_nlink)
-+		return 0;
++	if (S_ISDIR(VFS_I(ip)->i_mode)) {
++		error = xfs_dir_init(tp, ip, dp);
++		if (error)
++			return error;
 +
-+	return xfs_iunlink(tp, ip);
++		xfs_bumplink(tp, dp);
++	}
++
++	/*
++	 * If we have parent pointers, we need to add the attribute containing
++	 * the parent information now.
++	 */
++	return xfs_parent_add(tp, du->ppargs, dp, name, ip);
 +}
-+
-+/*
-+ * Increment the link count on an inode & log the change.
-+ */
-+void
-+xfs_bumplink(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	if (inode->i_nlink == XFS_NLINK_PINNED - 1)
-+		xfs_info_ratelimited(tp->t_mountp,
-+ "Inode 0x%llx link count exceeded maximum.  Pinning link count.",
-+				ip->i_ino);
-+	if (inode->i_nlink != XFS_NLINK_PINNED)
-+		inc_nlink(inode);
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+}
-diff --git a/libxfs/xfs_inode_util.h b/libxfs/xfs_inode_util.h
-index 0406401d21b..a2a1796a72f 100644
---- a/libxfs/xfs_inode_util.h
-+++ b/libxfs/xfs_inode_util.h
-@@ -60,5 +60,7 @@ void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
- int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
- int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
- 		struct xfs_inode *ip);
-+int xfs_droplink(struct xfs_trans *tp, struct xfs_inode *ip);
-+void xfs_bumplink(struct xfs_trans *tp, struct xfs_inode *ip);
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index ca1949ed4f5..71a8d8e8a8e 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -293,4 +293,16 @@ static inline unsigned char xfs_ascii_ci_xfrm(unsigned char c)
+ 	return c;
+ }
  
- #endif /* __XFS_INODE_UTIL_H__ */
++struct xfs_parent_args;
++
++struct xfs_dir_update {
++	struct xfs_inode	*dp;
++	const struct xfs_name	*name;
++	struct xfs_inode	*ip;
++	struct xfs_parent_args	*ppargs;
++};
++
++int xfs_dir_create_child(struct xfs_trans *tp, unsigned int resblks,
++		struct xfs_dir_update *du);
++
+ #endif	/* __XFS_DIR2_H__ */
 
