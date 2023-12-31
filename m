@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D201DC2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:36:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EA5C2CC
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:37:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sRlR5Cno"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3B26C433C7;
-	Sun, 31 Dec 2023 23:36:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pk7dxP25"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FA73C433C7;
+	Sun, 31 Dec 2023 23:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065813;
-	bh=FgxN001mOTmk+AxBT61V344SXu/FkvWCV2TW9r9au2I=;
+	s=k20201202; t=1704065829;
+	bh=w+qr40siuZmQsqNI3VFds+3NnrnU9eNEBafYLxQTANc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sRlR5CnovjWK/WCPi+BBtMKNQMDfytlusvrFTv+fnf07CvZWc3LZ+YzwZbAoqGgyi
-	 opM8nh6fB5sESGFOdlR+VXVPnrF+c7jw+TuYor5VFzE3bERWZG/P0DUIIPwv47zcVh
-	 D6ovsKX/lHAi+Atxk/GxKb87oDFpVV7PXg8cVRwP3HzRLIpzyu7zXpDRagKRUk0+fj
-	 6/yo8TsfHATZcBPxy8+MIOsxhaKY9JNHc7QX+/sGU/iColiyJFTK0TLy1HFjN6PuFk
-	 YSHeKuR36E2ovG/lEvNgprWIBzRA1XDD3ALtWIbcW2GlBm105V7rjhAsF+Are9jXDk
-	 DEL8/E8qcbVWQ==
-Date: Sun, 31 Dec 2023 15:36:53 -0800
-Subject: [PATCH 28/58] xfs_db: don't obfuscate metadata directories and
- attributes
+	b=Pk7dxP25YDSyKyu5MrRJaFeYHfeVuiYVyhzen+atCIKwp6ooIt7ZjCeZ8Xyb5UIjM
+	 MvlIOWsrUIBIn9a/yPfEdUFMCUpqe7Sp/mN46c6QTHPgCRxJO3wQf+k5RJb/DPfKUC
+	 FHN5s2J/Mt+LGkPaeCNO8Sn0zCeIPQ81tLv5GPak5u18EwHNSLOuCCSKyCeeHGw6tA
+	 9jjmYhwg+ATh/DZpMmmcUHpd/r6nji3y8FCq1W3cTMAMY2YtgFJ0U3k1X9sGZ2t61A
+	 lpM7OHWmXQYU3QF6UFN9vYLiVpJ482p63AWd+acLx3AB7qNLZYhr+Yye63mV8pAyWm
+	 746VGbuTxOaFQ==
+Date: Sun, 31 Dec 2023 15:37:08 -0800
+Subject: [PATCH 29/58] xfs_db: support metadata directories in the path
+ command
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010321.1809361.10825471775307243751.stgit@frogsfrogsfrogs>
+Message-ID: <170405010334.1809361.8685129977917604647.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,386 +38,291 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't obfuscate the directory and attribute names of metadata inodes.
+Teach the path command to traverse the metadata directory tree by
+passing a '\' as the first letter in the path.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/metadump.c |  114 ++++++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 79 insertions(+), 35 deletions(-)
+ db/namei.c        |   71 ++++++++++++++++++++++++++++++++++++++++++++---------
+ man/man8/xfs_db.8 |   23 ++++++++++++++---
+ 2 files changed, 78 insertions(+), 16 deletions(-)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index f5b930d51d2..714be862231 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1056,9 +1056,16 @@ generate_obfuscated_name(
- 		free(orig_name);
+diff --git a/db/namei.c b/db/namei.c
+index e75179b2c67..db467141f13 100644
+--- a/db/namei.c
++++ b/db/namei.c
+@@ -139,11 +139,11 @@ path_navigate(
+ /* Walk a directory path to an inode and set the io cursor to that inode. */
+ static int
+ path_walk(
++	xfs_ino_t	rootino,
+ 	char		*path)
+ {
+ 	struct dirpath	*dirpath;
+ 	char		*p = path;
+-	xfs_ino_t	rootino = mp->m_sb.sb_rootino;
+ 	int		error = 0;
+ 
+ 	if (*p == '/') {
+@@ -173,6 +173,9 @@ path_help(void)
+ 	dbprintf(_(
+ "\n"
+ " Navigate to an inode via directory path.\n"
++"\n"
++" Options:\n"
++"   -m -- Walk an absolute path down the metadata directory tree.\n"
+ 	));
  }
  
-+static inline bool
-+want_obfuscate_dirents(bool is_meta)
-+{
-+	return metadump.obfuscate && !is_meta;
-+}
-+
- static void
- process_sf_dir(
--	struct xfs_dinode	*dip)
-+	struct xfs_dinode	*dip,
-+	bool			is_meta)
+@@ -181,18 +184,34 @@ path_f(
+ 	int		argc,
+ 	char		**argv)
  {
- 	struct xfs_dir2_sf_hdr	*sfp;
- 	xfs_dir2_sf_entry_t	*sfep;
-@@ -1105,7 +1112,7 @@ process_sf_dir(
- 					 (char *)sfp);
- 		}
++	xfs_ino_t	rootino = mp->m_sb.sb_rootino;
+ 	int		c;
+ 	int		error;
  
--		if (metadump.obfuscate)
-+		if (want_obfuscate_dirents(is_meta))
- 			generate_obfuscated_name(
- 					 libxfs_dir2_sf_get_ino(mp, sfp, sfep),
- 					 namelen, &sfep->name[0]);
-@@ -1195,9 +1202,10 @@ want_obfuscate_pptr(
- 	const void	*name,
- 	unsigned int	namelen,
- 	const void	*value,
--	unsigned int	valuelen)
-+	unsigned int	valuelen,
-+	bool		is_meta)
- {
--	if (!metadump.obfuscate)
-+	if (!metadump.obfuscate || is_meta)
- 		return false;
- 
- 	/* Ignore if parent pointers aren't enabled. */
-@@ -1293,9 +1301,10 @@ want_obfuscate_attr(
- 	const void	*name,
- 	unsigned int	namelen,
- 	const void	*value,
--	unsigned int	valuelen)
-+	unsigned int	valuelen,
-+	bool		is_meta)
- {
--	if (!metadump.obfuscate)
-+	if (!metadump.obfuscate || is_meta)
- 		return false;
- 
- 	/*
-@@ -1310,7 +1319,8 @@ want_obfuscate_attr(
- 
- static void
- process_sf_attr(
--	struct xfs_dinode		*dip)
-+	struct xfs_dinode		*dip,
-+	bool				is_meta)
- {
- 	/*
- 	 * with extended attributes, obfuscate the names and fill the actual
-@@ -1357,11 +1367,11 @@ process_sf_attr(
- 		name = &asfep->nameval[0];
- 		value = &asfep->nameval[asfep->namelen];
- 
--		if (want_obfuscate_pptr(asfep->flags, name, namelen, value,
--					asfep->valuelen)) {
-+		if (want_obfuscate_pptr(asfep->flags, name, namelen,
-+					value, asfep->valuelen, is_meta)) {
- 			obfuscate_parent_pointer(name, value, asfep->valuelen);
- 		} else if (want_obfuscate_attr(asfep->flags, name, namelen,
--					value, asfep->valuelen)) {
-+					value, asfep->valuelen, is_meta)) {
- 			generate_obfuscated_name(0, asfep->namelen, name);
- 			memset(value, 'v', asfep->valuelen);
- 		}
-@@ -1463,7 +1473,8 @@ static void
- process_dir_data_block(
- 	char		*block,
- 	xfs_fileoff_t	offset,
--	int		is_block_format)
-+	int		is_block_format,
-+	bool		is_meta)
- {
- 	/*
- 	 * we have to rely on the fileoffset and signature of the block to
-@@ -1570,7 +1581,7 @@ process_dir_data_block(
- 				dir_offset)
- 			return;
- 
--		if (metadump.obfuscate)
-+		if (want_obfuscate_dirents(is_meta))
- 			generate_obfuscated_name(be64_to_cpu(dep->inumber),
- 					 dep->namelen, &dep->name[0]);
- 		dir_offset += length;
-@@ -1595,7 +1606,8 @@ process_symlink_block(
- 	xfs_fsblock_t	s,
- 	xfs_filblks_t	c,
- 	typnm_t		btype,
--	xfs_fileoff_t	last)
-+	xfs_fileoff_t	last,
-+	bool		is_meta)
- {
- 	struct bbmap	map;
- 	char		*link;
-@@ -1620,7 +1632,7 @@ process_symlink_block(
- 	if (xfs_has_crc((mp)))
- 		link += sizeof(struct xfs_dsymlink_hdr);
- 
--	if (metadump.obfuscate)
-+	if (want_obfuscate_dirents(is_meta))
- 		obfuscate_path_components(link, XFS_SYMLINK_BUF_SPACE(mp,
- 							mp->m_sb.sb_blocksize));
- 	if (metadump.zero_stale_data) {
-@@ -1671,7 +1683,8 @@ add_remote_vals(
- static void
- process_attr_block(
- 	char				*block,
--	xfs_fileoff_t			offset)
-+	xfs_fileoff_t			offset,
-+	bool				is_meta)
- {
- 	struct xfs_attr_leafblock	*leaf;
- 	struct xfs_attr3_icleaf_hdr	hdr;
-@@ -1750,11 +1763,11 @@ process_attr_block(
- 
- 			if (want_obfuscate_pptr(entry->flags, name,
- 						local->namelen, value,
--						valuelen)) {
-+						valuelen, is_meta)) {
- 				obfuscate_parent_pointer(name, value, valuelen);
- 			} else if (want_obfuscate_attr(entry->flags, name,
- 						local->namelen, value,
--						valuelen)) {
-+						valuelen, is_meta)) {
- 				generate_obfuscated_name(0, local->namelen,
- 						name);
- 				memset(value, 'v', valuelen);
-@@ -1776,7 +1789,7 @@ process_attr_block(
- 						(long long)metadump.cur_ino);
- 				break;
- 			}
--			if (metadump.obfuscate) {
-+			if (want_obfuscate_dirents(is_meta)) {
- 				generate_obfuscated_name(0, remote->namelen,
- 							 &remote->name[0]);
- 				add_remote_vals(be32_to_cpu(remote->valueblk),
-@@ -1809,7 +1822,8 @@ process_single_fsb_objects(
- 	xfs_fsblock_t	s,
- 	xfs_filblks_t	c,
- 	typnm_t		btype,
--	xfs_fileoff_t	last)
-+	xfs_fileoff_t	last,
-+	bool		is_meta)
- {
- 	int		rval = 1;
- 	char		*dp;
-@@ -1879,12 +1893,13 @@ process_single_fsb_objects(
- 				process_dir_leaf_block(dp);
- 			} else {
- 				process_dir_data_block(dp, o,
--					 last == mp->m_dir_geo->fsbcount);
-+					 last == mp->m_dir_geo->fsbcount,
-+					 is_meta);
- 			}
- 			iocur_top->need_crc = 1;
- 			break;
- 		case TYP_ATTR:
--			process_attr_block(dp, o);
-+			process_attr_block(dp, o, is_meta);
- 			iocur_top->need_crc = 1;
- 			break;
+-	while ((c = getopt(argc, argv, "")) != -1) {
++	while ((c = getopt(argc, argv, "m")) != -1) {
+ 		switch (c) {
++		case 'm':
++			/* Absolute path, start from metadata rootdir. */
++			if (!xfs_has_metadir(mp)) {
++				dbprintf(
++	_("filesystem does not support metadata directories.\n"));
++				exitcode = 1;
++				return 0;
++			}
++			rootino = mp->m_sb.sb_metadirino;
++			break;
  		default:
-@@ -1917,7 +1932,8 @@ process_multi_fsb_dir(
- 	xfs_fsblock_t	s,
- 	xfs_filblks_t	c,
- 	typnm_t		btype,
--	xfs_fileoff_t	last)
-+	xfs_fileoff_t	last,
-+	bool		is_meta)
- {
- 	char		*dp;
- 	int		rval = 1;
-@@ -1961,7 +1977,8 @@ process_multi_fsb_dir(
- 				process_dir_leaf_block(dp);
- 			} else {
- 				process_dir_data_block(dp, o,
--					 last == mp->m_dir_geo->fsbcount);
-+					 last == mp->m_dir_geo->fsbcount,
-+					 is_meta);
- 			}
- 			iocur_top->need_crc = 1;
- write:
-@@ -1998,13 +2015,14 @@ process_multi_fsb_objects(
- 	xfs_fsblock_t	s,
- 	xfs_filblks_t	c,
- 	typnm_t		btype,
--	xfs_fileoff_t	last)
-+	xfs_fileoff_t	last,
-+	bool		is_meta)
- {
- 	switch (btype) {
- 	case TYP_DIR2:
--		return process_multi_fsb_dir(o, s, c, btype, last);
-+		return process_multi_fsb_dir(o, s, c, btype, last, is_meta);
- 	case TYP_SYMLINK:
--		return process_symlink_block(o, s, c, btype, last);
-+		return process_symlink_block(o, s, c, btype, last, is_meta);
- 	default:
- 		print_warning("bad type for multi-fsb object %d", btype);
- 		return 1;
-@@ -2016,7 +2034,8 @@ static int
- process_bmbt_reclist(
- 	xfs_bmbt_rec_t		*rp,
- 	int			numrecs,
--	typnm_t			btype)
-+	typnm_t			btype,
-+	bool			is_meta)
- {
- 	int			i;
- 	xfs_fileoff_t		o, op = NULLFILEOFF;
-@@ -2096,10 +2115,10 @@ process_bmbt_reclist(
- 		/* multi-extent blocks require special handling */
- 		if (is_multi_fsb)
- 			rval = process_multi_fsb_objects(o, s, c, btype,
--					last);
-+					last, is_meta);
- 		else
- 			rval = process_single_fsb_objects(o, s, c, btype,
--					last);
-+					last, is_meta);
- 		if (!rval)
- 			break;
- 	}
-@@ -2107,6 +2126,11 @@ process_bmbt_reclist(
- 	return rval;
- }
- 
-+struct scan_bmap {
-+	enum typnm	typ;
-+	bool		is_meta;
-+};
-+
- static int
- scanfunc_bmap(
- 	struct xfs_btree_block	*block,
-@@ -2116,6 +2140,7 @@ scanfunc_bmap(
- 	typnm_t			btype,
- 	void			*arg)	/* ptr to itype */
- {
-+	struct scan_bmap	*sbm = arg;
- 	int			i;
- 	xfs_bmbt_ptr_t		*pp;
- 	int			nrecs;
-@@ -2131,7 +2156,7 @@ scanfunc_bmap(
- 			return 1;
- 		}
- 		return process_bmbt_reclist(XFS_BMBT_REC_ADDR(mp, block, 1),
--					    nrecs, *(typnm_t*)arg);
-+					    nrecs, sbm->typ, sbm->is_meta);
- 	}
- 
- 	if (nrecs > mp->m_bmap_dmxr[1]) {
-@@ -2163,6 +2188,15 @@ scanfunc_bmap(
- 	return 1;
- }
- 
-+static inline bool
-+is_metadata_ino(
-+	struct xfs_dinode	*dip)
-+{
-+	return xfs_has_metadir(mp) &&
-+			dip->di_version >= 3 &&
-+			(dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADIR));
-+}
-+
- static int
- process_btinode(
- 	struct xfs_dinode 	*dip,
-@@ -2176,6 +2210,7 @@ process_btinode(
- 	int			maxrecs;
- 	int			whichfork;
- 	typnm_t			btype;
-+	bool			is_meta = is_metadata_ino(dip);
- 
- 	whichfork = (itype == TYP_ATTR) ? XFS_ATTR_FORK : XFS_DATA_FORK;
- 	btype = (itype == TYP_ATTR) ? TYP_BMAPBTA : TYP_BMAPBTD;
-@@ -2194,7 +2229,7 @@ process_btinode(
- 
- 	if (level == 0) {
- 		return process_bmbt_reclist(XFS_BMDR_REC_ADDR(dib, 1),
--					    nrecs, itype);
-+					    nrecs, itype, is_meta);
- 	}
- 
- 	maxrecs = libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0);
-@@ -2221,6 +2256,10 @@ process_btinode(
- 	}
- 
- 	for (i = 0; i < nrecs; i++) {
-+		struct scan_bmap	sbm = {
-+			.typ = itype,
-+			.is_meta = is_meta,
-+		};
- 		xfs_agnumber_t	ag;
- 		xfs_agblock_t	bno;
- 
-@@ -2237,7 +2276,7 @@ process_btinode(
- 			continue;
- 		}
- 
--		if (!scan_btree(ag, bno, level, btype, &itype, scanfunc_bmap))
-+		if (!scan_btree(ag, bno, level, btype, &sbm, scanfunc_bmap))
+ 			path_help();
  			return 0;
+ 		}
  	}
- 	return 1;
-@@ -2251,6 +2290,7 @@ process_exinode(
- 	int			whichfork;
- 	int			used;
- 	xfs_extnum_t		nex, max_nex;
-+	bool			is_meta = is_metadata_ino(dip);
  
- 	whichfork = (itype == TYP_ATTR) ? XFS_ATTR_FORK : XFS_DATA_FORK;
- 
-@@ -2275,7 +2315,7 @@ process_exinode(
- 
- 
- 	return process_bmbt_reclist((xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip,
--					whichfork), nex, itype);
-+					whichfork), nex, itype, is_meta);
- }
- 
- static int
-@@ -2283,6 +2323,8 @@ process_inode_data(
- 	struct xfs_dinode	*dip,
- 	typnm_t			itype)
+-	error = path_walk(argv[optind]);
++	if (argc == optind || argc > optind + 1) {
++		dbprintf(_("Only supply one path.\n"));
++		return -1;
++	}
++
++	error = path_walk(rootino, argv[optind]);
+ 	if (error) {
+ 		dbprintf("%s: %s\n", argv[optind], strerror(error));
+ 		exitcode = 1;
+@@ -206,7 +225,7 @@ static struct cmdinfo path_cmd = {
+ 	.altname	= NULL,
+ 	.cfunc		= path_f,
+ 	.argmin		= 1,
+-	.argmax		= 1,
++	.argmax		= -1,
+ 	.canpush	= 0,
+ 	.args		= "",
+ 	.help		= path_help,
+@@ -521,6 +540,7 @@ ls_help(void)
+ " Options:\n"
+ "   -i -- Resolve the given paths to their corresponding inode numbers.\n"
+ "         If no paths are given, display the current inode number.\n"
++"   -m -- Walk an absolute path down the metadata directory tree.\n"
+ "\n"
+ " Directory contents will be listed in the format:\n"
+ " dir_cookie	inode_number	type	hash	name_length	name\n"
+@@ -532,15 +552,26 @@ ls_f(
+ 	int			argc,
+ 	char			**argv)
  {
-+	bool			is_meta = is_metadata_ino(dip);
-+
- 	switch (dip->di_format) {
- 		case XFS_DINODE_FMT_LOCAL:
- 			if (!(metadump.obfuscate || metadump.zero_stale_data))
-@@ -2303,7 +2345,7 @@ process_inode_data(
++	xfs_ino_t		rootino = mp->m_sb.sb_rootino;
+ 	bool			inum_only = false;
+ 	int			c;
+ 	int			error = 0;
  
- 			switch (itype) {
- 				case TYP_DIR2:
--					process_sf_dir(dip);
-+					process_sf_dir(dip, is_meta);
- 					break;
+-	while ((c = getopt(argc, argv, "i")) != -1) {
++	while ((c = getopt(argc, argv, "im")) != -1) {
+ 		switch (c) {
+ 		case 'i':
+ 			inum_only = true;
+ 			break;
++		case 'm':
++			/* Absolute path, start from metadata rootdir. */
++			if (!xfs_has_metadir(mp)) {
++				dbprintf(
++	_("filesystem does not support metadata directories.\n"));
++				exitcode = 1;
++				return 0;
++			}
++			rootino = mp->m_sb.sb_metadirino;
++			break;
+ 		default:
+ 			ls_help();
+ 			return 0;
+@@ -563,7 +594,7 @@ ls_f(
+ 	for (c = optind; c < argc; c++) {
+ 		push_cur();
  
- 				case TYP_SYMLINK:
-@@ -2421,13 +2463,15 @@ process_inode(
+-		error = path_walk(argv[c]);
++		error = path_walk(rootino, argv[c]);
+ 		if (error)
+ 			goto err_cur;
  
- 	/* copy extended attributes if they exist and forkoff is valid */
- 	if (XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
-+		bool	is_meta = is_metadata_ino(dip);
-+
- 		attr_data.remote_val_count = 0;
- 		switch (dip->di_aformat) {
- 			case XFS_DINODE_FMT_LOCAL:
- 				need_new_crc = true;
- 				if (metadump.obfuscate ||
- 				    metadump.zero_stale_data)
--					process_sf_attr(dip);
-+					process_sf_attr(dip, is_meta);
- 				break;
+@@ -874,11 +905,22 @@ parent_f(
+ 	int			argc,
+ 	char			**argv)
+ {
++	xfs_ino_t		rootino = mp->m_sb.sb_rootino;
+ 	int			c;
+ 	int			error = 0;
  
- 			case XFS_DINODE_FMT_EXTENTS:
+-	while ((c = getopt(argc, argv, "")) != -1) {
++	while ((c = getopt(argc, argv, "m")) != -1) {
+ 		switch (c) {
++		case 'm':
++			/* Absolute path, start from metadata rootdir. */
++			if (!xfs_has_metadir(mp)) {
++				dbprintf(
++	_("filesystem does not support metadata directories.\n"));
++				exitcode = 1;
++				return 0;
++			}
++			rootino = mp->m_sb.sb_metadirino;
++			break;
+ 		default:
+ 			ls_help();
+ 			return 0;
+@@ -898,7 +940,7 @@ parent_f(
+ 	for (c = optind; c < argc; c++) {
+ 		push_cur();
+ 
+-		error = path_walk(argv[c]);
++		error = path_walk(rootino, argv[c]);
+ 		if (error)
+ 			goto err_cur;
+ 
+@@ -926,7 +968,7 @@ static struct cmdinfo parent_cmd = {
+ 	.argmin		= 0,
+ 	.argmax		= -1,
+ 	.canpush	= 0,
+-	.args		= "[paths...]",
++	.args		= "[-m] [paths...]",
+ 	.help		= parent_help,
+ };
+ 
+@@ -940,6 +982,7 @@ link_help(void)
+ "\n"
+ " Options:\n"
+ "   -i   -- Point to this specific inode number.\n"
++"   -m   -- Select the metadata directory tree.\n"
+ "   -p   -- Point to the inode given by this path.\n"
+ "   -t   -- Set the file type to this value.\n"
+ "   name -- Create this directory entry with this name.\n"
+@@ -1051,11 +1094,12 @@ link_f(
+ {
+ 	xfs_ino_t		child_ino = NULLFSINO;
+ 	int			ftype = XFS_DIR3_FT_UNKNOWN;
++	xfs_ino_t		rootino = mp->m_sb.sb_rootino;
+ 	unsigned int		i;
+ 	int			c;
+ 	int			error = 0;
+ 
+-	while ((c = getopt(argc, argv, "i:p:t:")) != -1) {
++	while ((c = getopt(argc, argv, "i:mp:t:")) != -1) {
+ 		switch (c) {
+ 		case 'i':
+ 			errno = 0;
+@@ -1066,9 +1110,12 @@ link_f(
+ 				return 0;
+ 			}
+ 			break;
++		case 'm':
++			rootino = mp->m_sb.sb_metadirino;
++			break;
+ 		case 'p':
+ 			push_cur();
+-			error = path_walk(optarg);
++			error = path_walk(rootino, optarg);
+ 			if (error) {
+ 				printf("%s: %s\n", optarg, strerror(error));
+ 				exitcode = 1;
+@@ -1138,7 +1185,7 @@ static struct cmdinfo link_cmd = {
+ 	.argmin		= 0,
+ 	.argmax		= -1,
+ 	.canpush	= 0,
+-	.args		= "[-i ino] [-p path] [-t ftype] name",
++	.args		= "[-i ino] [-m] [-p path] [-t ftype] name",
+ 	.help		= link_help,
+ };
+ 
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 638a8dc9352..b1712a92f76 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -884,7 +884,7 @@ will result in truncation and a warning will be issued. If no
+ .I label
+ is given, the current filesystem label is printed.
+ .TP
+-.BI "link [-i " ino "] [-p " path "] [-t " ftype "] name"
++.BI "link [-i " ino "] [-m] [-p " path "] [-t " ftype "] name"
+ In the current directory, create a directory entry with the given
+ .I name
+ pointing to a file.
+@@ -897,6 +897,10 @@ The file type in the directory entry will be determined from the mode of the
+ child file unless the
+ .I ftype
+ option is given.
++The
++.B -m
++option specifies that the path lookup should be done in the metadata directory
++tree.
+ The file being targetted must not be on the iunlink list.
+ .TP
+ .BI "log [stop | start " filename ]
+@@ -917,7 +921,7 @@ This makes it easier to find discrepancies in the reservation calculations
+ between xfsprogs and the kernel, which will help when diagnosing minimum
+ log size calculation errors.
+ .TP
+-.BI "ls [\-i] [" paths "]..."
++.BI "ls [\-im] [" paths "]..."
+ List the contents of a directory.
+ If a path resolves to a directory, the directory will be listed.
+ If no paths are supplied and the IO cursor points at a directory inode,
+@@ -931,6 +935,9 @@ directory cookie, inode number, file type, hash, name length, name.
+ Resolve each of the given paths to an inode number and print that number.
+ If no paths are given and the IO cursor points to an inode, print the inode
+ number.
++.TP
++.B \-m
++Absolute paths should be walked from the root of the metadata directory tree.
+ .RE
+ .TP
+ .BI "metadump [\-egow] " filename
+@@ -958,18 +965,26 @@ See the
+ .B print
+ command.
+ .TP
+-.BI "parent [" paths "]..."
++.BI "parent [\-m] [" paths "]..."
+ List the parents of a file.
+ If a path resolves to a file, the parents of that file will be listed.
+ If no paths are supplied and the IO cursor points at an inode, the parents of
+ that file will be listed.
++The
++.B \-m
++option causes absolute paths to be walked from the root of the metadata
++directory tree.
+ 
+ The output format is:
+ inode number, inode generation, ondisk namehash, namehash, name length, name.
+ .TP
+-.BI "path " dir_path
++.BI "path [\-m] " dir_path
+ Walk the directory tree to an inode using the supplied path.
+ Absolute and relative paths are supported.
++The
++.B \-m
++option causes absolute paths to be walked from the root of the metadata
++directory tree.
+ .TP
+ .B pop
+ Pop location from the stack.
 
