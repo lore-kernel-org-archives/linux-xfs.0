@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DBEB64C
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:25:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB738B65C
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:26:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cLxnAQF1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89EA7C433C7;
-	Sun, 31 Dec 2023 19:25:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IIetVEbI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41BEEC433C8;
+	Sun, 31 Dec 2023 19:26:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704050752;
-	bh=PjapwCz3PbQo1kMMYQAUXj0I7V5qKEwvpZmCtSNSqaY=;
+	s=k20201202; t=1704050768;
+	bh=pG8oIK3HV+89haj4JJcILsvR8rXN7gh7wtjNwri+O2g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cLxnAQF1UtSYLp5vQ2QHe95lPPhxuJuqhAQnxaspBxuQpBaTdKjWwTyx5dOK8HIIS
-	 Bg8Q80O/elzC1lIujipo/m8Z9knjCtv4gzaczrT2p54wfg/gF/m6RhWnvLA2hSY+AR
-	 8jJNV30Rz056pgQrrAjPtw2RpeUytZuEiXNCq5sgbaQ4ViJOPDVvUoHlD8nDgz0JGw
-	 4eRyMWA/yd/z2tpMDz5T+KTn3fHgeAaepLgXEqqKzUvpE9B1KeCe3nwvA9ikLKFNKE
-	 ejGATHqb9vNnfU5qVc4L7rdR3ANKOrvr9vLbnq/CO6VZ+YOT8cWBehSaxrWl7kLYJf
-	 qUy0lL3iz5bnQ==
-Date: Sun, 31 Dec 2023 11:25:51 -0800
-Subject: [PATCHSET v29.0 02/28] xfs: repair inode mode by scanning dirs
+	b=IIetVEbI1VQ7ogjHE6kU6p6f0mg/HdTpatsvR4CNyBS5X+lfmnU4VFB1XYBkQmN1S
+	 k/p6VpEpvsRlq46RV70zOWSqL9wROfDS4fY8hU8cxDrkKDJ0XDTaRRq9BVSohcH+Y/
+	 sU4aWoAHQfAoBqz7FYI56A1YVkZtqDhP9b8P+XqZ2ZRxDpXBJBnRFsPX1S3Z8iyxyN
+	 SXafn8tHjqnBQFtcm195tI0Rol3e6e8pBLDRHPIpoebXPfgGtP7LhwASPiwKaOOc11
+	 7PO9nttNtKH1xJ1AT539gLJcQ+omviF8hpMsVilqwHZrXq3E9EI/fnigt5zDYoi6FG
+	 EuYwl6TxNnSZQ==
+Date: Sun, 31 Dec 2023 11:26:07 -0800
+Subject: [PATCHSET v29.0 03/28] xfs: online repair of quota counters
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404826964.1747851.15684326001874060927.stgit@frogsfrogsfrogs>
+Message-ID: <170404827380.1748002.1474710373694082536.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,18 +37,15 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-One missing piece of functionality in the inode record repair code is
-figuring out what to do with a file whose mode is so corrupt that we
-cannot tell us the type of the file.  Originally this was done by
-guessing the mode from the ondisk inode contents, but Christoph didn't
-like that because it read from data fork block 0, which could be user
-controlled data.
+This series uses the inode scanner and live update hook functionality
+introduced in the last patchset to implement quotacheck on a live
+filesystem.  The quotacheck scrubber builds an incore copy of the
+dquot resource usage counters and compares it to the live dquots to
+report discrepancies.
 
-Therefore, I've replaced all that with a directory scanner that looks
-for any dirents that point to the file with the garbage mode.  If so,
-the ftype in the dirent will tell us exactly what mode to set on the
-file.  Since users cannot directly write to the ftype field of a dirent,
-this should be safe.
+If the user chooses to repair the quota counters, the repair function
+visits each incore dquot to update the counts from the live information.
+The live update hooks are key to keeping the incore copy up to date.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -59,19 +56,41 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-inode-mode
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-quotacheck
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-inode-mode
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-quotacheck
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-quotacheck
 ---
- fs/xfs/libxfs/xfs_da_format.h |   11 ++
- fs/xfs/libxfs/xfs_dir2.c      |    6 +
- fs/xfs/libxfs/xfs_dir2.h      |   10 ++
- fs/xfs/scrub/dir.c            |    4 -
- fs/xfs/scrub/inode_repair.c   |  236 ++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/iscan.c          |   29 +++++
- fs/xfs/scrub/iscan.h          |    3 +
- fs/xfs/scrub/trace.c          |    1 
- fs/xfs/scrub/trace.h          |   49 +++++++++
- 9 files changed, 341 insertions(+), 8 deletions(-)
+ fs/xfs/Makefile                  |    2 
+ fs/xfs/libxfs/xfs_fs.h           |    4 
+ fs/xfs/libxfs/xfs_health.h       |    4 
+ fs/xfs/scrub/common.c            |   47 ++
+ fs/xfs/scrub/common.h            |   11 
+ fs/xfs/scrub/fscounters.c        |    2 
+ fs/xfs/scrub/health.c            |    1 
+ fs/xfs/scrub/quotacheck.c        |  862 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/quotacheck.h        |   76 +++
+ fs/xfs/scrub/quotacheck_repair.c |  261 ++++++++++++
+ fs/xfs/scrub/repair.c            |   46 ++
+ fs/xfs/scrub/repair.h            |    5 
+ fs/xfs/scrub/scrub.c             |    9 
+ fs/xfs/scrub/scrub.h             |   10 
+ fs/xfs/scrub/stats.c             |    1 
+ fs/xfs/scrub/trace.h             |   30 +
+ fs/xfs/scrub/xfarray.h           |   19 +
+ fs/xfs/xfs_health.c              |    1 
+ fs/xfs/xfs_inode.c               |   21 +
+ fs/xfs/xfs_inode.h               |    2 
+ fs/xfs/xfs_qm.c                  |   23 +
+ fs/xfs/xfs_qm.h                  |   16 +
+ fs/xfs/xfs_qm_bhv.c              |    1 
+ fs/xfs/xfs_quota.h               |   45 ++
+ fs/xfs/xfs_trans_dquot.c         |  158 +++++++
+ 25 files changed, 1632 insertions(+), 25 deletions(-)
+ create mode 100644 fs/xfs/scrub/quotacheck.c
+ create mode 100644 fs/xfs/scrub/quotacheck.h
+ create mode 100644 fs/xfs/scrub/quotacheck_repair.c
 
