@@ -1,23 +1,23 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC65BA22;
-	Sun, 31 Dec 2023 18:12:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD3138F57;
+	Sun, 31 Dec 2023 18:18:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k5S2MqOG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AEF9C433C8;
-	Sun, 31 Dec 2023 18:12:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YSZI1xiP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 899F1C433C8;
+	Sun, 31 Dec 2023 18:18:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704046336;
-	bh=FdfHdP3DmJrcJVFOS3K/3ZD3qnts8Rp5p8HMd6Vl6vE=;
+	s=k20201202; t=1704046729;
+	bh=da9F+lcbCWF7pAvHK75nYhALGS262yVa7ak24pe6ttI=;
 	h=Date:From:To:Cc:Subject:From;
-	b=k5S2MqOGKcE3gzdb4EriaBnzjG6UanErYwEA49kTtmWBGHGC+NveWw6uq/Kxuod0I
-	 FjQt/hSnMHToL44dqYuh9OjV+kK3ve++zRR0KvtOFZL+ThGgti7LOvMUi2QBmXIHbO
-	 FTeeNjx/+tYHwyLjLXQkpbXKh2flMcRZmN4a1BUc2b2oGXnKjl3Z9jKczoV0mCwv4i
-	 GBykR9bamo2F7GL2CbA1KDw/kyJ6mmvwZYHfXg0VJDOvwbFsEO162SjikcPvm0FpMZ
-	 0Aiv31WHXrTDfcnxnWa02VmN7h6pz6Whahm6nnhFzldirRnoEgalQHRtU3c+CVpWjl
-	 DM3WJMQCyILVQ==
-Date: Sun, 31 Dec 2023 10:12:15 -0800
+	b=YSZI1xiPwBZs74AOijCzbgjkjspmsdIDvBV9t2kiz6bLRAJs0sZVmTQ5zB4nsltkY
+	 9XzCIBbyfNJ+WFdE2pIdvI9t22JOtq8AeQfM+rxwvokdP8rrcyqZqs4jSgZdwMJL0J
+	 1BESLikUdvgZo/jbWAu34JIE7fgwjKvk+rOlOr1/rYz2mlbNE/UXviTcTFPOt4k+A8
+	 6rjMuf96gX12Y4h/YPG0peIGsNKLhpOVHZv6616ZmWNx42bGkgyoPhRFRWVOB9+zVx
+	 w2YBjuFzNHJyr9dOzgi6R/r/O6LjI1eaOJV2d8hby2Ys1cbtBAKKH7QWMfaymBaPiY
+	 IK7joX3akwNQg==
+Date: Sun, 31 Dec 2023 10:18:49 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chandan Babu R <chandanrlinux@gmail.com>,
 	Christoph Hellwig <hch@infradead.org>
@@ -29,8 +29,8 @@ Cc: xfs <linux-xfs@vger.kernel.org>, greg.marsden@oracle.com,
 	fstests <fstests@vger.kernel.org>, Zorro Lang <zlang@redhat.com>,
 	Carlos Maiolino <cmaiolino@redhat.com>,
 	Kent Overstreet <kent.overstreet@linux.dev>
-Subject: [NYE PATCHRIVER 1/4] xfs: the rest of online repair part 1
-Message-ID: <20231231181215.GA241128@frogsfrogsfrogs>
+Subject: [NYE PATCHRIVER 2/4] xfs: online repair part 2
+Message-ID: <20231231181849.GT361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,37 +42,21 @@ Content-Disposition: inline
 
 Hi everyone,
 
-In last year's NYE deluges, I mentioned that I wanted to get online
-repair merged for the 2023 LTS kernel.  That goal was not attained, so
-now I want to get this merged in time for the 2024 LTS kernel.
+This is part 2 of online repair.  This river combines the directory
+parent pointer work that I took over from Allison after she departed
+with a bunch of new online repair functionality that enables rebuilding
+of directory trees and correction of problems with the tree structure.
 
-(Big thanks to Dave earlier for helping to get all 120 scrub fixes
-merged; and Christoph more recently for doing the same for the first 30
-patches of repair and a bunch of rt refactorings from the modernization
-series.)
+As a consequence, this river needs closer review than the previous
+river.  I've changed the ondisk format of the parent pointers to make it
+easier to correct the directory structure, but that required some
+alterations to the attr log intent items to support looking up xattrs by
+name and value.
 
-But seriously, folks, this is dragging on unnecessarily.  Either you all
-need to step up and actually review the 55 patchsets and 458 patches
-needed to get online repair done, or decide to let me merge it and deal
-with the consequences, which I will.  The only part of this deluge that
-changes the ondisk format are the swapext patches that add a new log
-intent item type.  Everything else is guarded by Kconfig options and
-won't destabilize the rest of the filesystem.  I haven't changed the
-swapext log intent item format since 2021.  2+ years to get feedback is
-dysfunctional.
-
-In the meantime, lack of upstream merging means that I cannot start
-wider testing of this code with the people who run (b)leading edge XFS
-code; I cannot solicit user and customer feedback because they don't
-have the code; and there's no way I can meaningfully prioritize
-improvements to the code because **I cannot get feedback**.
-
-Fuzz and stress testing of online repairs have been running well for two
-years now.  As of this writing, online repair can fix more things than
-offline repair, and the fsstress+repair long soak test has passed 300
-million repairs with zero problems observed.
-
-(For comparison, the long soak fsx test recently passed 110 billion file
-operations, so online fsck has a ways to go...)
+AFAICT this part is stable enough for review-- I've been running a few
+testvm host systems with parent pointers enabled for about 6 months, and
+haven't noticed any problems.  With this part added, there's a dramatic
+drop in the number of uncorrectable directory fields reported by the
+fuzz test suite.
 
 --D
