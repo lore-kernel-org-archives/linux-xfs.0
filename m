@@ -1,29 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25AFBA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:47:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92E7DBA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:47:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CYZE+DFx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4CB2C433C8;
-	Sun, 31 Dec 2023 20:47:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HSEhlDCG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 674CBC433C7;
+	Sun, 31 Dec 2023 20:47:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704055647;
-	bh=15hxiE/mzyzlOco0H6E5COPJUsvpOADTNb5nnTjxDlY=;
+	s=k20201202; t=1704055663;
+	bh=te6+QFbiUlaTjreEuZoTMAW57J1olFys5dHXBNuDdsY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CYZE+DFxr+oiJUipT/iL9cvCtN3pe2KOHuLwrz+OQSh2JOBNSocIwCai+1ra+hT4H
-	 Lu1Xy8t0/XyDP3Z2tfbEl6pBDbkXC9BeGCCn9tfLnyrNBrlXZvmVE4N5VBvGBysWPM
-	 hhXgMmkXoB8xBONBWhrd5ToEDI5ikeuNGlRPENZGPAGaMrzD7gxQCQ1o4Pe+RGgb8T
-	 kt24nEo7GO9jQ7nCH4X4a0QnrgSQErP75BjA1xnQeiewQcFUHlUnW0X+eVwCaZUTPc
-	 0SL5Ul1BK0X3JURhYWirFTXF6zHhRDuI3zlkThIOKoPnL32R/IBHM96rlSvU2HwHzY
-	 FSuziMNdlW1Ow==
-Date: Sun, 31 Dec 2023 12:47:27 -0800
-Subject: [PATCH 10/14] xfs: always set args->value in xfs_attri_item_recover
+	b=HSEhlDCGrVcmafqGXSJl0egrToNI7jjcumWLmZi0CoQVRrYgdxyYCKamkI1KhwMqb
+	 IPrxMe787QzxMn/l4SoEBEu/VfIlv7KkYFJXgD0cj/4rK5q8nsVhHpn06BLBtqI1CM
+	 0+VWneq5qcSfiaQ0kZNlD75MJEIlkFTSWTUGk5FkYBE/w5Jbzz9viniXM2pQH/zGaP
+	 NFkvS5uENub1jZa/GqX+Hx0z458hSTVDnVPzP3/ZAMtqBaxTZJzuCOQ7B2N8xZ5e4K
+	 byuxfMPSwcy1m8e+vadGY6FnJnM+3bdnch2HVuMCJ2LDpL+Uo0eYOYcUxH6NfdO6cY
+	 NGsL3W1/JcCBA==
+Date: Sun, 31 Dec 2023 12:47:42 -0800
+Subject: [PATCH 11/14] xfs: use local variables for name and value length in
+ _attri_commit_pass2
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <170404840561.1756514.3635801941684306792.stgit@frogsfrogsfrogs>
+Message-ID: <170404840577.1756514.14919447984066330984.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
 References: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,36 +39,107 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Always set args->value to the recovered value buffer.  This reduces the
-amount of code in the switch statement, and hence the amount of thinking
-that I have to do.  We validated the recovered buffers, supposedly.
+We're about to start using tagged unions in the xattr log format, so
+create a bunch of local variables in the recovery function so we only
+have to decode the log item fields once.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_attr_item.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_attr_item.c |   25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index b9a9bb7c1ebad..fbf392ab2dc5b 100644
+index fbf392ab2dc5b..19fc535b4a22b 100644
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -545,6 +545,8 @@ xfs_attri_recover_work(
- 	args->name = nv->name.i_addr;
- 	args->namelen = nv->name.i_len;
- 	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	args->value = nv->value.i_addr;
-+	args->valuelen = nv->value.i_len;
- 	args->attr_filter = attrp->alfi_attr_filter & XFS_ATTRI_FILTER_MASK;
- 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT |
- 			 XFS_DA_OP_LOGGED;
-@@ -553,8 +555,6 @@ xfs_attri_recover_work(
- 	switch (xfs_attr_intent_op(attr)) {
- 	case XFS_ATTRI_OP_FLAGS_SET:
- 	case XFS_ATTRI_OP_FLAGS_REPLACE:
--		args->value = nv->value.i_addr;
--		args->valuelen = nv->value.i_len;
- 		args->total = xfs_attr_calc_size(args, &local);
- 		if (xfs_inode_hasattr(args->dp))
- 			attr->xattri_dela_state = xfs_attr_init_replace_state(args);
+@@ -709,9 +709,11 @@ xlog_recover_attri_commit_pass2(
+ 	struct xfs_attri_log_item       *attrip;
+ 	struct xfs_attri_log_format     *attri_formatp;
+ 	struct xfs_attri_log_nameval	*nv;
+-	const void			*attr_value = NULL;
+ 	const void			*attr_name;
++	const void			*attr_value = NULL;
+ 	size_t				len;
++	unsigned int			name_len = 0;
++	unsigned int			value_len = 0;
+ 	unsigned int			op, i = 0;
+ 
+ 	/* Validate xfs_attri_log_format before the large memory allocation */
+@@ -740,6 +742,8 @@ xlog_recover_attri_commit_pass2(
+ 					     attri_formatp, len);
+ 			return -EFSCORRUPTED;
+ 		}
++		name_len = attri_formatp->alfi_name_len;
++		value_len = attri_formatp->alfi_value_len;
+ 		break;
+ 	case XFS_ATTRI_OP_FLAGS_REMOVE:
+ 		/* Log item, attr name */
+@@ -748,6 +752,7 @@ xlog_recover_attri_commit_pass2(
+ 					     attri_formatp, len);
+ 			return -EFSCORRUPTED;
+ 		}
++		name_len = attri_formatp->alfi_name_len;
+ 		break;
+ 	default:
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+@@ -757,15 +762,14 @@ xlog_recover_attri_commit_pass2(
+ 	i++;
+ 
+ 	/* Validate the attr name */
+-	if (item->ri_buf[i].i_len !=
+-			xlog_calc_iovec_len(attri_formatp->alfi_name_len)) {
++	if (item->ri_buf[i].i_len != xlog_calc_iovec_len(name_len)) {
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 				attri_formatp, len);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+ 	attr_name = item->ri_buf[i].i_addr;
+-	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
++	if (!xfs_attr_namecheck(attr_name, name_len)) {
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 				attri_formatp, len);
+ 		return -EFSCORRUPTED;
+@@ -773,8 +777,8 @@ xlog_recover_attri_commit_pass2(
+ 	i++;
+ 
+ 	/* Validate the attr value, if present */
+-	if (attri_formatp->alfi_value_len != 0) {
+-		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(attri_formatp->alfi_value_len)) {
++	if (value_len != 0) {
++		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(value_len)) {
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 					item->ri_buf[0].i_addr,
+ 					item->ri_buf[0].i_len);
+@@ -798,7 +802,7 @@ xlog_recover_attri_commit_pass2(
+ 	switch (op) {
+ 	case XFS_ATTRI_OP_FLAGS_REMOVE:
+ 		/* Regular remove operations operate only on names. */
+-		if (attr_value != NULL || attri_formatp->alfi_value_len != 0) {
++		if (attr_value != NULL || value_len != 0) {
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 					     attri_formatp, len);
+ 			return -EFSCORRUPTED;
+@@ -811,7 +815,7 @@ xlog_recover_attri_commit_pass2(
+ 		 * and do not take a newname.  Values are optional for set and
+ 		 * replace.
+ 		 */
+-		if (attr_name == NULL || attri_formatp->alfi_name_len == 0) {
++		if (attr_name == NULL || name_len == 0) {
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 					     attri_formatp, len);
+ 			return -EFSCORRUPTED;
+@@ -824,9 +828,8 @@ xlog_recover_attri_commit_pass2(
+ 	 * name/value buffer to the recovered incore log item and drop our
+ 	 * reference.
+ 	 */
+-	nv = xfs_attri_log_nameval_alloc(attr_name,
+-			attri_formatp->alfi_name_len, attr_value,
+-			attri_formatp->alfi_value_len);
++	nv = xfs_attri_log_nameval_alloc(attr_name, name_len,
++			attr_value, value_len);
+ 
+ 	attrip = xfs_attri_init(mp, nv);
+ 	memcpy(&attrip->attri_format, attri_formatp, len);
 
