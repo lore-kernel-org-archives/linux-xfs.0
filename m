@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEE02BE47
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:40:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A07D3BE4A
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:40:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QeyKBHo2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 837C8C433C7;
-	Sun, 31 Dec 2023 21:40:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+eugcSW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C1A6C433C8;
+	Sun, 31 Dec 2023 21:40:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704058808;
-	bh=jf3w9WMZmFVo2XW5zq/B9PlurFTOu0PZWALJH/rXQnY=;
+	s=k20201202; t=1704058824;
+	bh=DdPduB72BynKanXiNEeS3gMgZnmD8MUGewOs/zaEVY0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QeyKBHo2rlDk4vEYYuNS6TdTava5uB/OAZ3xwfI5Hw6LCxN+mGM203EVPYTvcFGSW
-	 9M1+/Z9jS2OJUMK7EwT+A2gcu9NKBQsVDw3RgkBcEweooLRl125C/bCMf1qinnEciX
-	 7D2BEAf0vOZBsGCaWU0gg54KG4nF3pMWb7hEf2/82CQef5+/HI1dt/16Owa+yaOjhj
-	 J85gzcabheCL63EK8hKBfWBAgMt04isnL3JEn6p/qHbxpfG6omWIH82+ApShoalXq1
-	 o1oYmqlnrHgfkD1UKkqEoqntkz3fpGqUFKXI+bdj7Tk8FfW0A6u6a+GNdwIDgDa/jI
-	 dWBBpLEtYcwYw==
-Date: Sun, 31 Dec 2023 13:40:08 -0800
-Subject: [PATCH 32/39] xfs: repair inodes that have realtime extents
+	b=R+eugcSWmHBGtO7xi/X6S6O4j0ayFIF6572HL+J6pq3Yq24c28xqkIFsnMvErMh1C
+	 8gQNW0MasRvKpIgU2Vx9sIIyqUSkTTcUrRZiYmHhvyJxwhQvmgYWvMw1LKu2xuiZ6G
+	 cSmHX28X5kqsYxmSVBHW3qwkfKsoGEBkKjbrL1yZqvqIPHJTBgv1uF6slkpai5+NFz
+	 q4wE7i4iWqyNhfq+XAwLY8XGdLDdbjOqE9uQ8hDCL9OzU+9oh1ilTTHSPOV6C/8RYt
+	 +uXeQxj4+65METWppdU8WWbBpdWqriTUw5A0sm8Q0JTpq5MTiXPEusJRycnHUgvmml
+	 HYCnWPmD5zzrg==
+Date: Sun, 31 Dec 2023 13:40:23 -0800
+Subject: [PATCH 33/39] xfs: repair rmap btree inodes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404850415.1764998.13498058839507532597.stgit@frogsfrogsfrogs>
+Message-ID: <170404850431.1764998.13516823120574789010.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404849811.1764998.10873316890301599216.stgit@frogsfrogsfrogs>
 References: <170404849811.1764998.10873316890301599216.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,105 +37,100 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Plumb into the inode core repair code the ability to search for extents
-on realtime devices.
+Teach the inode repair code how to deal with realtime rmap btree inodes
+that won't load properly.  This is most likely moot since the filesystem
+generally won't mount without the rtrmapbt inodes being usable, but
+we'll add this for completeness.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/inode_repair.c |   63 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 62 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/inode_repair.c |   46 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
 
 diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 2b3a6cbadae71..45ad78d1e5404 100644
+index 45ad78d1e5404..f4f6ed6ef5120 100644
 --- a/fs/xfs/scrub/inode_repair.c
 +++ b/fs/xfs/scrub/inode_repair.c
-@@ -38,6 +38,8 @@
- #include "xfs_log_priv.h"
- #include "xfs_health.h"
- #include "xfs_symlink_remote.h"
-+#include "xfs_rtgroup.h"
-+#include "xfs_rtrmap_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -718,18 +720,77 @@ xrep_dinode_count_ag_rmaps(
- 	return error;
+@@ -895,6 +895,37 @@ xrep_dinode_bad_bmbt_fork(
+ 	return false;
  }
  
-+/* Count extents and blocks for an inode given an rt rmap. */
-+STATIC int
-+xrep_dinode_walk_rtrmap(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*priv)
++/* Return true if this rmap-format ifork looks like garbage. */
++STATIC bool
++xrep_dinode_bad_rmapbt_fork(
++	struct xfs_scrub	*sc,
++	struct xfs_dinode	*dip,
++	unsigned int		dfork_size,
++	int			whichfork)
 +{
-+	struct xrep_inode		*ri = priv;
-+	int				error = 0;
++	struct xfs_rtrmap_root	*dfp;
++	unsigned int		nrecs;
++	unsigned int		level;
 +
-+	if (xchk_should_terminate(ri->sc, &error))
-+		return error;
++	if (whichfork != XFS_DATA_FORK)
++		return true;
++	if (dfork_size < sizeof(struct xfs_rtrmap_root))
++		return true;
 +
-+	/* We only care about this inode. */
-+	if (rec->rm_owner != ri->sc->sm->sm_ino)
-+		return 0;
++	dfp = XFS_DFORK_PTR(dip, whichfork);
++	nrecs = be16_to_cpu(dfp->bb_numrecs);
++	level = be16_to_cpu(dfp->bb_level);
 +
-+	if (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))
-+		return -EFSCORRUPTED;
++	if (level > sc->mp->m_rtrmap_maxlevels)
++		return true;
++	if (xfs_rtrmap_droot_space_calc(level, nrecs) > dfork_size)
++		return true;
++	if (level > 0 && nrecs == 0)
++		return true;
 +
-+	ri->rt_blocks += rec->rm_blockcount;
-+	ri->rt_extents++;
-+	return 0;
++	return false;
 +}
 +
-+/* Count extents and blocks for an inode from all realtime rmap data. */
-+STATIC int
-+xrep_dinode_count_rtgroup_rmaps(
-+	struct xrep_inode	*ri,
-+	struct xfs_rtgroup	*rtg)
-+{
-+	struct xfs_scrub	*sc = ri->sc;
-+	int			error;
-+
-+	if (!xfs_has_realtime(sc->mp) ||
-+	    xrep_is_rtmeta_ino(sc, rtg, sc->sm->sm_ino))
-+		return 0;
-+
-+	error = xrep_rtgroup_init(sc, rtg, &sc->sr, XFS_RTGLOCK_RMAP);
-+	if (error)
-+		return error;
-+
-+	error = xfs_rmap_query_all(sc->sr.rmap_cur, xrep_dinode_walk_rtrmap,
-+			ri);
-+	xchk_rtgroup_btcur_free(&sc->sr);
-+	xchk_rtgroup_free(sc, &sc->sr);
-+	return error;
-+}
-+
- /* Count extents and blocks for a given inode from all rmap data. */
- STATIC int
- xrep_dinode_count_rmaps(
- 	struct xrep_inode	*ri)
+ /*
+  * Check the data fork for things that will fail the ifork verifiers or the
+  * ifork formatters.
+@@ -975,6 +1006,11 @@ xrep_dinode_check_dfork(
+ 				XFS_DATA_FORK))
+ 			return true;
+ 		break;
++	case XFS_DINODE_FMT_RMAP:
++		if (xrep_dinode_bad_rmapbt_fork(sc, dip, dfork_size,
++				XFS_DATA_FORK))
++			return true;
++		break;
+ 	default:
+ 		return true;
+ 	}
+@@ -1095,6 +1131,11 @@ xrep_dinode_check_afork(
+ 					XFS_ATTR_FORK))
+ 			return true;
+ 		break;
++	case XFS_DINODE_FMT_RMAP:
++		if (xrep_dinode_bad_rmapbt_fork(sc, dip, afork_size,
++				XFS_ATTR_FORK))
++			return true;
++		break;
+ 	default:
+ 		return true;
+ 	}
+@@ -1142,6 +1183,7 @@ xrep_dinode_ensure_forkoff(
+ 	uint16_t		mode)
  {
- 	struct xfs_perag	*pag;
-+	struct xfs_rtgroup	*rtg;
- 	xfs_agnumber_t		agno;
-+	xfs_rgnumber_t		rgno;
- 	int			error;
- 
--	if (!xfs_has_rmapbt(ri->sc->mp) || xfs_has_realtime(ri->sc->mp))
-+	if (!xfs_has_rmapbt(ri->sc->mp))
- 		return -EOPNOTSUPP;
- 
-+	for_each_rtgroup(ri->sc->mp, rgno, rtg) {
-+		error = xrep_dinode_count_rtgroup_rmaps(ri, rtg);
-+		if (error) {
-+			xfs_rtgroup_rele(rtg);
-+			return error;
-+		}
-+	}
-+
- 	for_each_perag(ri->sc->mp, agno, pag) {
- 		error = xrep_dinode_count_ag_rmaps(ri, pag);
- 		if (error) {
+ 	struct xfs_bmdr_block	*bmdr;
++	struct xfs_rtrmap_root	*rmdr;
+ 	struct xfs_scrub	*sc = ri->sc;
+ 	xfs_extnum_t		attr_extents, data_extents;
+ 	size_t			bmdr_minsz = xfs_bmdr_space_calc(1);
+@@ -1248,6 +1290,10 @@ xrep_dinode_ensure_forkoff(
+ 		bmdr = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+ 		dfork_min = xfs_bmap_broot_space(sc->mp, bmdr);
+ 		break;
++	case XFS_DINODE_FMT_RMAP:
++		rmdr = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
++		dfork_min = xfs_rtrmap_broot_space(sc->mp, rmdr);
++		break;
+ 	default:
+ 		dfork_min = 0;
+ 		break;
 
