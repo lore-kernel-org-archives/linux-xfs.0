@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07ED2C2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:47:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEEE2C2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:47:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nMMUaKDO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87407C433C8;
-	Sun, 31 Dec 2023 23:47:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G9A3KzzX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 355C2C433C8;
+	Sun, 31 Dec 2023 23:47:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066423;
-	bh=wAlTItY/Amgzs9X3/2OA9HKvfXi8WoyBzZ3BAtRN0+M=;
+	s=k20201202; t=1704066439;
+	bh=zSnmF8pwWboFaKfSKgIH66VWyiO7c3G0J7BiznPbKts=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nMMUaKDOuXqlYIyBijTQmO4Gq0qMRyNmhrCkN9Qv0NtfHiUAYLBO1whVI9Hx9E5gM
-	 0//bJIGHF1knQFH8gqzKQRlP3A6cJ1LXjtJsmSqtBVs2ThHqiTAbq7HI1O9qsLQ0k4
-	 7v/IhwdJXYitdRKH8bOgQIMgPrLMtwp1k3e/ZtqsOC6jxQwxVpDKlG3OlKHibQW3eU
-	 W0E9de1891sh+3VrLouAERWTfcnl3lmjSpanIVQdSuhVIeD4PR2vuxzC6BnIBnYZsF
-	 VzNvk2/PCDUTkQidDo6qfLaeDZmiLFHSPwTlV4/CBSpbmhm1LSq17yhgV7PaGD1deT
-	 iJostOY3mNHXA==
-Date: Sun, 31 Dec 2023 15:47:03 -0800
-Subject: [PATCH 1/1] xfs_db: allow setting current address to log blocks
+	b=G9A3KzzX8db4kVUWT2ooyTCeLBvhlXcgGWnwNwTf5vOJ9Ixp9r0zxca8SAt40C2SG
+	 jAr2uIZs+94P7QPTabaPKvBbelDcvIIPLEp0SS8EgLHYiFI3nhQdAwVckpAPxHJF19
+	 DEI1Lf8UGHDl9Q5Y5I93KxyY/Z7LnIEEZrm+k+Zhm6ePAHneKPW8g6k8czSjv8GwQO
+	 bcI0zFjwZmAY8mESIF2FIYZKoTWl2rtVcNfwCl1Vu6XO4+fJZe77+1J57IYusEC8w5
+	 kT9eKQ22SpadBDYt95XY618hiXi3qjAdRPw+5q8m15Xo0Ear9JIPneQCmf6SFtWULq
+	 OxtNeddWGUh3w==
+Date: Sun, 31 Dec 2023 15:47:18 -0800
+Subject: [PATCH 1/2] xfs: refactor realtime inode locking
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405011434.1811063.7438046909399237691.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405011421.1811063.2601536880760874799.stgit@frogsfrogsfrogs>
-References: <170405011421.1811063.2601536880760874799.stgit@frogsfrogsfrogs>
+Message-ID: <170405011762.1811141.3689996494445152207.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405011748.1811141.16068744852666586384.stgit@frogsfrogsfrogs>
+References: <170405011748.1811141.16068744852666586384.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -37,215 +37,153 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add commands so that users can target blocks on an external log device.
+Create helper functions to deal with locking realtime metadata inodes.
+This enables us to maintain correct locking order once we start adding
+the realtime rmap and refcount btree inodes.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/block.c        |  103 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- man/man8/xfs_db.8 |   17 +++++++++
- 2 files changed, 119 insertions(+), 1 deletion(-)
+ libxfs/libxfs_priv.h  |    3 +++
+ libxfs/xfs_bmap.c     |    7 ++----
+ libxfs/xfs_rtbitmap.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_rtbitmap.h |   17 +++++++++++++++
+ 4 files changed, 79 insertions(+), 5 deletions(-)
 
 
-diff --git a/db/block.c b/db/block.c
-index fff7f7d6f52..f234fcb4edc 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -29,6 +29,8 @@ static int	rtblock_f(int argc, char **argv);
- static void	rtblock_help(void);
- static int	rtextent_f(int argc, char **argv);
- static void	rtextent_help(void);
-+static int	logblock_f(int argc, char **argv);
-+static void	logblock_help(void);
- static void	print_rawdata(void *data, int len);
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index f4614ee9631..178330aafa1 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -174,9 +174,12 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ 	(unlikely(expr) ? XFS_WARN_CORRUPT((mp), (expr)) : false)
  
- static const cmdinfo_t	ablock_cmd =
-@@ -49,6 +51,9 @@ static const cmdinfo_t	rtblock_cmd =
- static const cmdinfo_t	rtextent_cmd =
- 	{ "rtextent", "rtx", rtextent_f, 0, 1, 1, N_("[rtxno]"),
- 	  N_("set address to rtextent value"), rtextent_help };
-+static const cmdinfo_t	logblock_cmd =
-+	{ "logblock", "lsb", logblock_f, 0, 1, 1, N_("[logbno]"),
-+	  N_("set address to logblock value"), logblock_help };
+ #define XFS_ERRLEVEL_LOW		1
++#define XFS_ILOCK_SHARED		0
+ #define XFS_ILOCK_EXCL			0
+ #define XFS_IOLOCK_SHARED		0
+ #define XFS_IOLOCK_EXCL			0
++#define XFS_ILOCK_RTSUM			0
++#define XFS_ILOCK_RTBITMAP		0
+ #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
+ #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
+ #define XFS_STATS_ADD(mp, count, x)	do { (mp) = (mp); } while (0)
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 0dfb37073a7..c69cb5c66df 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -5370,12 +5370,9 @@ __xfs_bunmapi(
  
- static void
- ablock_help(void)
-@@ -116,6 +121,7 @@ block_init(void)
- 	add_command(&fsblock_cmd);
- 	add_command(&rtblock_cmd);
- 	add_command(&rtextent_cmd);
-+	add_command(&logblock_cmd);
- }
- 
- static void
-@@ -132,6 +138,7 @@ daddr_help(void)
- enum daddr_target {
- 	DT_DATA,
- 	DT_RT,
-+	DT_LOG,
- };
- 
- static int
-@@ -145,18 +152,27 @@ daddr_f(
- 	xfs_rfsblock_t	max_daddrs = mp->m_sb.sb_dblocks;
- 	enum daddr_target tgt = DT_DATA;
- 
--	while ((c = getopt(argc, argv, "r")) != -1) {
-+	while ((c = getopt(argc, argv, "rl")) != -1) {
- 		switch (c) {
- 		case 'r':
- 			tgt = DT_RT;
- 			max_daddrs = mp->m_sb.sb_rblocks;
- 			break;
-+		case 'l':
-+			tgt = DT_LOG;
-+			max_daddrs = mp->m_sb.sb_logblocks;
-+			break;
- 		default:
- 			daddr_help();
- 			return 0;
- 		}
+ 	if (isrt) {
+ 		/*
+-		 * Synchronize by locking the bitmap inode.
++		 * Synchronize by locking the realtime bitmap.
+ 		 */
+-		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
+-		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
+-		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
+-		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
++		xfs_rtbitmap_lock(tp, mp);
  	}
  
-+	if (tgt == DT_LOG && mp->m_sb.sb_logstart > 0) {
-+		dbprintf(_("filesystem has internal log\n"));
-+		return 0;
-+	}
+ 	extno = 0;
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index b4da1b07c73..72d9d0f0ec9 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1192,3 +1192,60 @@ xfs_rtsummary_wordcount(
+ 	blocks = xfs_rtsummary_blockcount(mp, rsumlevels, rbmblocks);
+ 	return XFS_FSB_TO_B(mp, blocks) >> XFS_WORDLOG;
+ }
 +
- 	if (optind == argc) {
- 		xfs_daddr_t	daddr = iocur_top->off >> BBSHIFT;
- 
-@@ -191,6 +207,9 @@ daddr_f(
- 	case DT_RT:
- 		set_rt_cur(&typtab[TYP_DATA], d, 1, DB_RING_ADD, NULL);
- 		break;
-+	case DT_LOG:
-+		set_log_cur(&typtab[TYP_DATA], d, 1, DB_RING_ADD, NULL);
-+		break;
- 	}
- 	return 0;
- }
-@@ -406,6 +425,88 @@ rtextent_f(
- 	return 0;
- }
- 
-+static void
-+logblock_help(void)
++/*
++ * Lock both realtime free space metadata inodes for a freespace update.  If a
++ * transaction is given, the inodes will be joined to the transaction and the
++ * ILOCKs will be released on transaction commit.
++ */
++void
++xfs_rtbitmap_lock(
++	struct xfs_trans	*tp,
++	struct xfs_mount	*mp)
 +{
-+	dbprintf(_(
-+"\n Example:\n"
-+"\n"
-+" 'logblock 1023' - sets the file position to the 1023rd log block.\n"
-+" The external log device or the block offset within the internal log will be\n"
-+" chosen as appropriate.\n"
-+));
++	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP);
++	if (tp)
++		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
++
++	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
++	if (tp)
++		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
 +}
 +
-+static int
-+logblock_f(
-+	int		argc,
-+	char		**argv)
++/* Unlock both realtime free space metadata inodes after a freespace update. */
++void
++xfs_rtbitmap_unlock(
++	struct xfs_mount	*mp)
 +{
-+	xfs_fsblock_t	logblock;
-+	char		*p;
-+
-+	if (argc == 1) {
-+		if (mp->m_sb.sb_logstart > 0 && iocur_is_ddev(iocur_top)) {
-+			logblock = XFS_DADDR_TO_FSB(mp,
-+						iocur_top->off >> BBSHIFT);
-+
-+			if (logblock < mp->m_sb.sb_logstart ||
-+			    logblock >= mp->m_sb.sb_logstart +
-+					mp->m_sb.sb_logblocks) {
-+				dbprintf(
-+ _("current address not within internal log\n"));
-+				return 0;
-+			}
-+
-+			dbprintf(_("current logblock is %lld\n"),
-+					logblock - mp->m_sb.sb_logstart);
-+			return 0;
-+		}
-+
-+		if (mp->m_sb.sb_logstart == 0 &&
-+		    iocur_is_extlogdev(iocur_top)) {
-+			logblock = XFS_BB_TO_FSB(mp,
-+						iocur_top->off >> BBSHIFT);
-+
-+			if (logblock >= mp->m_sb.sb_logblocks) {
-+				dbprintf(
-+ _("current address not within external log\n"));
-+				return 0;
-+			}
-+
-+			dbprintf(_("current logblock is %lld\n"), logblock);
-+			return 0;
-+		}
-+
-+		dbprintf(_("current address does not point to log\n"));
-+		return 0;
-+	}
-+
-+	logblock = strtoull(argv[1], &p, 0);
-+	if (*p != '\0') {
-+		dbprintf(_("bad logblock %s\n"), argv[1]);
-+		return 0;
-+	}
-+
-+	if (logblock >= mp->m_sb.sb_logblocks) {
-+		dbprintf(_("bad logblock %s\n"), argv[1]);
-+		return 0;
-+	}
-+
-+	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
-+
-+	if (mp->m_sb.sb_logstart) {
-+		logblock += mp->m_sb.sb_logstart;
-+		set_cur(&typtab[TYP_DATA], XFS_FSB_TO_DADDR(mp, logblock),
-+				blkbb, DB_RING_ADD, NULL);
-+	} else {
-+		set_log_cur(&typtab[TYP_DATA], XFS_FSB_TO_BB(mp, logblock),
-+				blkbb, DB_RING_ADD, NULL);
-+	}
-+
-+	return 0;
++	xfs_iunlock(mp->m_rsumip, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
++	xfs_iunlock(mp->m_rbmip, XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP);
 +}
 +
- void
- print_block(
- 	const field_t	*fields,
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 91e9e0ed9a5..15a30c11ae5 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -600,6 +600,9 @@ The type is set to
- .B data
- (uninterpreted).
++/*
++ * Lock the realtime free space metadata inodes for a freespace scan.  Callers
++ * must walk metadata blocks in order of increasing file offset.
++ */
++void
++xfs_rtbitmap_lock_shared(
++	struct xfs_mount	*mp,
++	unsigned int		rbmlock_flags)
++{
++	if (rbmlock_flags & XFS_RBMLOCK_BITMAP)
++		xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++
++	if (rbmlock_flags & XFS_RBMLOCK_SUMMARY)
++		xfs_ilock(mp->m_rsumip, XFS_ILOCK_SHARED | XFS_ILOCK_RTSUM);
++}
++
++/* Unlock the realtime free space metadata inodes after a freespace scan. */
++void
++xfs_rtbitmap_unlock_shared(
++	struct xfs_mount	*mp,
++	unsigned int		rbmlock_flags)
++{
++	if (rbmlock_flags & XFS_RBMLOCK_SUMMARY)
++		xfs_iunlock(mp->m_rsumip, XFS_ILOCK_SHARED | XFS_ILOCK_RTSUM);
++
++	if (rbmlock_flags & XFS_RBMLOCK_BITMAP)
++		xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++}
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index 1c84b52de3d..6ac17f0195e 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -374,6 +374,19 @@ xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
+ 		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
+ unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
+ 		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
++
++void xfs_rtbitmap_lock(struct xfs_trans *tp, struct xfs_mount *mp);
++void xfs_rtbitmap_unlock(struct xfs_mount *mp);
++
++/* Lock the rt bitmap inode in shared mode */
++#define XFS_RBMLOCK_BITMAP	(1U << 0)
++/* Lock the rt summary inode in shared mode */
++#define XFS_RBMLOCK_SUMMARY	(1U << 1)
++
++void xfs_rtbitmap_lock_shared(struct xfs_mount *mp,
++		unsigned int rbmlock_flags);
++void xfs_rtbitmap_unlock_shared(struct xfs_mount *mp,
++		unsigned int rbmlock_flags);
+ #else /* CONFIG_XFS_RT */
+ # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
+ # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
+@@ -394,6 +407,10 @@ xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
+ # define xfs_rtbitmap_wordcount(mp, r)			(0)
+ # define xfs_rtsummary_blockcount(mp, l, b)		(0)
+ # define xfs_rtsummary_wordcount(mp, l, b)		(0)
++# define xfs_rtbitmap_lock(tp, mp)		do { } while (0)
++# define xfs_rtbitmap_unlock(mp)		do { } while (0)
++# define xfs_rtbitmap_lock_shared(mp, lf)	do { } while (0)
++# define xfs_rtbitmap_unlock_shared(mp, lf)	do { } while (0)
+ #endif /* CONFIG_XFS_RT */
  
-+If an address and the
-+.B \-l
-+option are specified, the current address is set to the external log device.
- If an address and the
- .B \-r
- option are specified, the current address is set to the realtime device.
-@@ -925,6 +928,20 @@ Start logging output to
- .IR filename ,
- stop logging, or print the current logging status.
- .TP
-+.BI "logblock [" logbno ]
-+Set current address to the log block value given by
-+.IR logbno .
-+If no value for
-+.I logbno
-+is given the current address is printed, expressed as an fsb.
-+The type is set to
-+.B data
-+(uninterpreted).
-+If the filesystem has an external log, then the address will be within the log
-+device.
-+If the filesystem has an internal log, then the address will be within the
-+internal log.
-+.TP
- .BI "logformat [\-c " cycle "] [\-s " sunit "]"
- Reformats the log to the specified log cycle and log stripe unit.
- This has the effect of clearing the log destructively.
+ #endif /* __XFS_RTBITMAP_H__ */
 
