@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7189BBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:50:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19890BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:50:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZzYNOlZr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBBE7C433C7;
-	Sun, 31 Dec 2023 20:50:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kvZEbARf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CC6FC433C8;
+	Sun, 31 Dec 2023 20:50:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704055820;
-	bh=oohAL0wQbW5ZmFHnT9tQTGXP0N0ALueH+bgE2ngb/cM=;
+	s=k20201202; t=1704055835;
+	bh=kgyEQeowIu4fQNWGEhwbQUlgF6ABeqrslfLtIcgBODs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZzYNOlZr9Kh7y78FDTK1ujQsknGlsE2Z155yLujrB8nT9Yz5NOz4zlK78hxEWloik
-	 0CCksZmeTlcUmc6ydLWcF9MK6gebvv16ecC76s1jfjXWrrINrg1a6NeGr4O9FN4fJh
-	 /k/rGt0TZVskt2rwhnqPzMS0WS/ufs3gf11YV2j7yTrRPLruM7zlcw+52AY9v9Ko4x
-	 0RBbxq+/obhAoWKaEU/8EhNwnd0oYs75EpzYckUIRaxoDtlClDDhxIy27+NyaH19/f
-	 HQ/K/OCEJmy4J0puO0g+uwtz8gGZdBsiuWHmsxPOxyBVPN7gc15qmajRSCICwg1ZBj
-	 cBU3d0tQH9stQ==
-Date: Sun, 31 Dec 2023 12:50:19 -0800
-Subject: [PATCH 07/18] xfs: add parent attributes to link
+	b=kvZEbARfwhLPMt03+6AObfg4Q/HrqGJBTy7jJ4ukubRVY5fj5hvAjnp7v2MDiO+bv
+	 rxLz2lU0LlQk4ktG7WTlHQFLZ+jVfVWRtj8Y6TWeTQnW2lW4zcGZL8cbXHKIjeACRD
+	 jfN9QSXDYfxhDqJ6VilujlP/8K605zrtjC4/COjeF6inD5Ybfw436Vrgce5xKo8+xs
+	 zaXU67yI9edgSQxXdwfs4sWHd67k4UwuZpGYC3tpXqzCUNz+vBK5YTEWlI7ZYIT06g
+	 ILhOu+wnhJV/Fx2s2513FPrl21gqgO/SGwOnMaelfZteadqoVeKiRbsEXo69QODt7u
+	 kn9Ow143gLpdQ==
+Date: Sun, 31 Dec 2023 12:50:35 -0800
+Subject: [PATCH 08/18] xfs: add parent attributes to symlink
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>,
- Allison Henderson <allison.henderson@oracle.com>, catherine.hoang@oracle.com,
- allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <170404841152.1756905.9141159000997600645.stgit@frogsfrogsfrogs>
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ catherine.hoang@oracle.com, allison.henderson@oracle.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <170404841168.1756905.3742334033342369885.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404840995.1756905.18018727013229504371.stgit@frogsfrogsfrogs>
 References: <170404840995.1756905.18018727013229504371.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,174 +39,166 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-This patch modifies xfs_link to add a parent pointer to the inode.
+This patch modifies xfs_symlink to add a parent pointer to the inode.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: minor rebase fixes]
+[djwong: minor rebase fixups]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_space.c |   14 +++++++++++++
- fs/xfs/libxfs/xfs_trans_space.h |    3 +--
- fs/xfs/scrub/dir_repair.c       |    2 +-
- fs/xfs/scrub/orphanage.c        |    2 +-
- fs/xfs/xfs_inode.c              |   41 +++++++++++++++++++++++++++++++++------
- 5 files changed, 52 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_trans_space.c |   17 +++++++++++++++++
+ fs/xfs/libxfs/xfs_trans_space.h |    4 ++--
+ fs/xfs/scrub/symlink_repair.c   |    2 +-
+ fs/xfs/xfs_symlink.c            |   28 +++++++++++++++++++++++-----
+ 4 files changed, 43 insertions(+), 8 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_trans_space.c b/fs/xfs/libxfs/xfs_trans_space.c
-index 90532c3fa2053..cf775750120e8 100644
+index cf775750120e8..c8adda82debe0 100644
 --- a/fs/xfs/libxfs/xfs_trans_space.c
 +++ b/fs/xfs/libxfs/xfs_trans_space.c
-@@ -50,3 +50,17 @@ xfs_mkdir_space_res(
- {
- 	return xfs_create_space_res(mp, namelen);
+@@ -64,3 +64,20 @@ xfs_link_space_res(
+ 
+ 	return ret;
  }
 +
 +unsigned int
-+xfs_link_space_res(
++xfs_symlink_space_res(
 +	struct xfs_mount	*mp,
-+	unsigned int		namelen)
++	unsigned int		namelen,
++	unsigned int		fsblocks)
 +{
 +	unsigned int		ret;
 +
-+	ret = XFS_DIRENTER_SPACE_RES(mp, namelen);
++	ret = XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp, namelen) +
++			fsblocks;
++
 +	if (xfs_has_parent(mp))
 +		ret += xfs_parent_calc_space_res(mp, namelen);
 +
 +	return ret;
 +}
 diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-index 6cda87153b38c..5539634009fb2 100644
+index 5539634009fb2..354ad1d6e18d6 100644
 --- a/fs/xfs/libxfs/xfs_trans_space.h
 +++ b/fs/xfs/libxfs/xfs_trans_space.h
-@@ -86,8 +86,6 @@
- 	(2 * (mp)->m_alloc_maxlevels)
- #define	XFS_GROWFSRT_SPACE_RES(mp,b)	\
- 	((b) + XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK))
--#define	XFS_LINK_SPACE_RES(mp,nl)	\
--	XFS_DIRENTER_SPACE_RES(mp,nl)
- #define	XFS_QM_DQALLOC_SPACE_RES(mp)	\
- 	(XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK) + \
- 	 XFS_DQUOT_CLUSTER_SIZE_FSB)
-@@ -107,5 +105,6 @@ unsigned int xfs_parent_calc_space_res(struct xfs_mount *mp,
+@@ -95,8 +95,6 @@
+ 	XFS_DIRREMOVE_SPACE_RES(mp)
+ #define	XFS_RENAME_SPACE_RES(mp,nl)	\
+ 	(XFS_DIRREMOVE_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
+-#define	XFS_SYMLINK_SPACE_RES(mp,nl,b)	\
+-	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl) + (b))
+ #define XFS_IFREE_SPACE_RES(mp)		\
+ 	(xfs_has_finobt(mp) ? M_IGEO(mp)->inobt_maxlevels : 0)
  
+@@ -106,5 +104,7 @@ unsigned int xfs_parent_calc_space_res(struct xfs_mount *mp,
  unsigned int xfs_create_space_res(struct xfs_mount *mp, unsigned int namelen);
  unsigned int xfs_mkdir_space_res(struct xfs_mount *mp, unsigned int namelen);
-+unsigned int xfs_link_space_res(struct xfs_mount *mp, unsigned int namelen);
+ unsigned int xfs_link_space_res(struct xfs_mount *mp, unsigned int namelen);
++unsigned int xfs_symlink_space_res(struct xfs_mount *mp, unsigned int namelen,
++		unsigned int fsblocks);
  
  #endif	/* __XFS_TRANS_SPACE_H__ */
-diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-index 48e30a9baeae0..e74f456c7b444 100644
---- a/fs/xfs/scrub/dir_repair.c
-+++ b/fs/xfs/scrub/dir_repair.c
-@@ -705,7 +705,7 @@ xrep_dir_replay_update(
- 	uint				resblks;
- 	int				error;
- 
--	resblks = XFS_LINK_SPACE_RES(mp, dirent->namelen);
-+	resblks = xfs_link_space_res(mp, dirent->namelen);
- 	error = xchk_trans_alloc(rd->sc, resblks);
+diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+index 60246350ebfc9..62190fa738553 100644
+--- a/fs/xfs/scrub/symlink_repair.c
++++ b/fs/xfs/scrub/symlink_repair.c
+@@ -403,7 +403,7 @@ xrep_symlink_rebuild(
+ 	 * unlikely.
+ 	 */
+ 	fs_blocks = xfs_symlink_blocks(sc->mp, target_len);
+-	resblks = XFS_SYMLINK_SPACE_RES(sc->mp, target_len, fs_blocks);
++	resblks = xfs_symlink_space_res(sc->mp, target_len, fs_blocks);
+ 	error = xfs_trans_reserve_quota_nblks(sc->tp, sc->tempip, resblks, 0,
+ 			true);
  	if (error)
- 		return error;
-diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
-index e1024a7bc9e96..84e6dcef067c1 100644
---- a/fs/xfs/scrub/orphanage.c
-+++ b/fs/xfs/scrub/orphanage.c
-@@ -326,7 +326,7 @@ xrep_adoption_trans_alloc(
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 307a2b7e5426e..ced29d8c48c0a 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -25,6 +25,8 @@
+ #include "xfs_error.h"
+ #include "xfs_health.h"
+ #include "xfs_symlink_remote.h"
++#include "xfs_parent.h"
++#include "xfs_defer.h"
  
- 	/* Compute the worst case space reservation that we need. */
- 	adopt->sc = sc;
--	adopt->orphanage_blkres = XFS_LINK_SPACE_RES(mp, MAXNAMELEN);
-+	adopt->orphanage_blkres = xfs_link_space_res(mp, MAXNAMELEN);
- 	if (S_ISDIR(VFS_I(sc->ip)->i_mode))
- 		child_blkres = XFS_RENAME_SPACE_RES(mp, xfs_name_dotdot.len);
- 	adopt->child_blkres = child_blkres;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 20aee9db1b43a..4d7d923cf72ec 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1309,14 +1309,15 @@ xfs_create_tmpfile(
- 
+ /* ----- Kernel only functions below ----- */
  int
- xfs_link(
--	xfs_inode_t		*tdp,
--	xfs_inode_t		*sip,
-+	struct xfs_inode	*tdp,
-+	struct xfs_inode	*sip,
- 	struct xfs_name		*target_name)
- {
--	xfs_mount_t		*mp = tdp->i_mount;
--	xfs_trans_t		*tp;
-+	struct xfs_mount	*mp = tdp->i_mount;
-+	struct xfs_trans	*tp;
- 	int			error, nospace_error = 0;
- 	int			resblks;
+@@ -101,6 +103,7 @@ xfs_symlink(
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	uint			resblks;
+ 	xfs_ino_t		ino;
 +	struct xfs_parent_args	*ppargs;
  
- 	trace_xfs_link(tdp, target_name);
+ 	*ipp = NULL;
  
-@@ -1335,11 +1336,25 @@ xfs_link(
- 	if (error)
- 		goto std_return;
+@@ -131,18 +134,24 @@ xfs_symlink(
  
--	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+ 	/*
+ 	 * The symlink will fit into the inode data fork?
+-	 * There can't be any attributes so we get the whole variable part.
++	 * If there are no parent pointers, then there wont't be any attributes.
++	 * So we get the whole variable part, and do not need to reserve extra
++	 * blocks.  Otherwise, we need to reserve the blocks.
+ 	 */
+-	if (pathlen <= XFS_LITINO(mp))
++	if (pathlen <= XFS_LITINO(mp) && !xfs_has_parent(mp))
+ 		fs_blocks = 0;
+ 	else
+ 		fs_blocks = xfs_symlink_blocks(mp, pathlen);
+-	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
++	resblks = xfs_symlink_space_res(mp, link_name->len, fs_blocks);
++
 +	error = xfs_parent_start(mp, &ppargs);
 +	if (error)
-+		goto std_return;
-+
-+	resblks = xfs_link_space_res(mp, target_name->len);
- 	error = xfs_trans_alloc_dir(tdp, &M_RES(mp)->tr_link, sip, &resblks,
- 			&tp, &nospace_error);
++		goto out_release_dquots;
+ 
+ 	error = xfs_trans_alloc_icreate(mp, &M_RES(mp)->tr_symlink, udqp, gdqp,
+ 			pdqp, resblks, &tp);
  	if (error)
--		goto std_return;
+-		goto out_release_dquots;
 +		goto out_parent;
-+
-+	/*
-+	 * We don't allow reservationless or quotaless hardlinking when parent
-+	 * pointers are enabled because we can't back out if the xattrs must
-+	 * grow.
-+	 */
-+	if (ppargs && nospace_error) {
-+		error = nospace_error;
-+		goto error_return;
-+	}
  
- 	/*
- 	 * If we are using project inheritance, we only allow hard link
-@@ -1379,6 +1394,17 @@ xfs_link(
- 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+ 	unlock_dp_on_error = true;
+@@ -162,7 +171,7 @@ xfs_symlink(
+ 	if (!error)
+ 		error = xfs_init_new_inode(idmap, tp, dp, ino,
+ 				S_IFLNK | (mode & ~S_IFMT), 1, 0, prid,
+-				false, &ip);
++				xfs_has_parent(mp), &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
  
- 	xfs_bumplink(tp, sip);
+@@ -196,6 +205,12 @@ xfs_symlink(
+ 		goto out_trans_cancel;
+ 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 +
-+	/*
-+	 * If we have parent pointers, we now need to add the parent record to
-+	 * the attribute fork of the inode. If this is the initial parent
-+	 * attribute, we need to create it correctly, otherwise we can just add
-+	 * the parent to the inode.
-+	 */
-+	error = xfs_parent_add(tp, ppargs, tdp, target_name, sip);
++	/* Add parent pointer for the new symlink. */
++	error = xfs_parent_add(tp, ppargs, dp, link_name, ip);
 +	if (error)
-+		goto error_return;
++		goto out_trans_cancel;
 +
- 	xfs_dir_update_hook(tdp, sip, 1, target_name);
+ 	xfs_dir_update_hook(dp, ip, 1, link_name);
  
  	/*
-@@ -1392,12 +1418,15 @@ xfs_link(
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(tdp, XFS_ILOCK_EXCL);
- 	xfs_iunlock(sip, XFS_ILOCK_EXCL);
+@@ -217,6 +232,7 @@ xfs_symlink(
+ 	*ipp = ip;
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
 +	xfs_parent_finish(mp, ppargs);
- 	return error;
+ 	return 0;
  
-  error_return:
- 	xfs_trans_cancel(tp);
- 	xfs_iunlock(tdp, XFS_ILOCK_EXCL);
- 	xfs_iunlock(sip, XFS_ILOCK_EXCL);
-+ out_parent:
+ out_trans_cancel:
+@@ -232,6 +248,8 @@ xfs_symlink(
+ 		xfs_finish_inode_setup(ip);
+ 		xfs_irele(ip);
+ 	}
++out_parent:
 +	xfs_parent_finish(mp, ppargs);
-  std_return:
- 	if (error == -ENOSPC && nospace_error)
- 		error = nospace_error;
+ out_release_dquots:
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
 
