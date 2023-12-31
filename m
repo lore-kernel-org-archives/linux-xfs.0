@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11CDFBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:21:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A74CBA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:21:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f8gI7egE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D520FC433C8;
-	Sun, 31 Dec 2023 20:21:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B1reS6k3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7600BC433C7;
+	Sun, 31 Dec 2023 20:21:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704054067;
-	bh=TRl2/nWiAH9R7ZbHdO1gYavReFBpD1VrNnGkbrLItMo=;
+	s=k20201202; t=1704054083;
+	bh=3FlUvj2LjGq8OKkTcmTsz7aH5CPgG6KUwKV21mmE774=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=f8gI7egEgL6snzXnaCEqgaXcf7vbQPRoWtKP+R6+K1LQDqlckf3o4YNfa7pT2kYuI
-	 fex7GA17Kknx6wdhgfaFaJoY4rv07NModOCKxqVfy+a21ydFI1GFs4XU9L46FUcF0x
-	 Kv4ARySLxyy15iOufhvZfjvEqNKXnij6JWzvWWm80THhKxbxVBASirtLQh5mxWrqPs
-	 YlpoKENyEc1TZNCLaDhRXxEIttu41m7FvboTtR9guSvdjkge7P8X+LuI8j4JOYM9d5
-	 zIse+xQqzcSaBV6r2dEtf7vLXYWgLpgIsleOcX70uX7ql8c+JTB1tqUHlmbutsbo94
-	 w1Drx0EgLGLhg==
-Date: Sun, 31 Dec 2023 12:21:07 -0800
-Subject: [PATCH 3/7] xfs: remove xfs_trans_set_bmap_flags
+	b=B1reS6k3vcEYZB9uOt34hocadKiaFNL7KnNM5dubrSybeMQniJRo1LwgmJT0ZkT++
+	 TqUae3njPmFIm5pRmfl+trRUK6SX/JY8mWWJxwEDceKiZOyVO3+bviHIBYHRFMz78K
+	 K+kJJjJD0ZRsXaTiZCki5Hyq3qAYOUJ+bb97M9U9bajxsV2TbcLFV/WRwebX9ar0AX
+	 Zik+ZjYJt9uafbKVd3xZkF7O91Ygde0m1Ahl/csWgiZJ5FHgnX/KFgv4iEtLndnHo3
+	 E3ha44dLODwgVTZ4owTrEdL98FDqb8rWs4qAHQoJFlXz5LE9qsKqSHAGIG+0xgIcWq
+	 QWLAslT1bQPew==
+Date: Sun, 31 Dec 2023 12:21:23 -0800
+Subject: [PATCH 4/7] xfs: add a bi_entry helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404831473.1749708.3949699027505473459.stgit@frogsfrogsfrogs>
+Message-ID: <170404831489.1749708.9412724534892167170.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404831410.1749708.14664484779809794342.stgit@frogsfrogsfrogs>
 References: <170404831410.1749708.14664484779809794342.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,68 +37,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove this single-use helper.
+Add a helper to translate from the item list head to the bmap_intent
+structure and use it so shorten assignments and avoid the need for extra
+local variables.
 
+Inspired-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_item.c |   38 +++++++++++++-------------------------
- 1 file changed, 13 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_bmap_item.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 52fb8a148b7dc..6faa9b9da95a3 100644
+index 6faa9b9da95a3..2a6afda6cb8ed 100644
 --- a/fs/xfs/xfs_bmap_item.c
 +++ b/fs/xfs/xfs_bmap_item.c
-@@ -236,29 +236,6 @@ xfs_bmap_update_diff_items(
+@@ -221,6 +221,11 @@ static const struct xfs_item_ops xfs_bud_item_ops = {
+ 	.iop_intent	= xfs_bud_item_intent,
+ };
+ 
++static inline struct xfs_bmap_intent *bi_entry(const struct list_head *e)
++{
++	return list_entry(e, struct xfs_bmap_intent, bi_list);
++}
++
+ /* Sort bmap intents by inode. */
+ static int
+ xfs_bmap_update_diff_items(
+@@ -228,11 +233,9 @@ xfs_bmap_update_diff_items(
+ 	const struct list_head		*a,
+ 	const struct list_head		*b)
+ {
+-	struct xfs_bmap_intent		*ba;
+-	struct xfs_bmap_intent		*bb;
++	struct xfs_bmap_intent		*ba = bi_entry(a);
++	struct xfs_bmap_intent		*bb = bi_entry(b);
+ 
+-	ba = container_of(a, struct xfs_bmap_intent, bi_list);
+-	bb = container_of(b, struct xfs_bmap_intent, bi_list);
  	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
  }
  
--/* Set the map extent flags for this mapping. */
--static void
--xfs_trans_set_bmap_flags(
--	struct xfs_map_extent		*map,
--	enum xfs_bmap_intent_type	type,
--	int				whichfork,
--	xfs_exntst_t			state)
--{
--	map->me_flags = 0;
--	switch (type) {
--	case XFS_BMAP_MAP:
--	case XFS_BMAP_UNMAP:
--		map->me_flags = type;
--		break;
--	default:
--		ASSERT(0);
--	}
--	if (state == XFS_EXT_UNWRITTEN)
--		map->me_flags |= XFS_BMAP_EXTENT_UNWRITTEN;
--	if (whichfork == XFS_ATTR_FORK)
--		map->me_flags |= XFS_BMAP_EXTENT_ATTR_FORK;
--}
--
- /* Log bmap updates in the intent item. */
- STATIC void
- xfs_bmap_update_log_item(
-@@ -281,8 +258,19 @@ xfs_bmap_update_log_item(
- 	map->me_startblock = bi->bi_bmap.br_startblock;
- 	map->me_startoff = bi->bi_bmap.br_startoff;
- 	map->me_len = bi->bi_bmap.br_blockcount;
--	xfs_trans_set_bmap_flags(map, bi->bi_type, bi->bi_whichfork,
--			bi->bi_bmap.br_state);
-+
-+	switch (bi->bi_type) {
-+	case XFS_BMAP_MAP:
-+	case XFS_BMAP_UNMAP:
-+		map->me_flags = bi->bi_type;
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+	if (bi->bi_bmap.br_state == XFS_EXT_UNWRITTEN)
-+		map->me_flags |= XFS_BMAP_EXTENT_UNWRITTEN;
-+	if (bi->bi_whichfork == XFS_ATTR_FORK)
-+		map->me_flags |= XFS_BMAP_EXTENT_ATTR_FORK;
- }
+@@ -348,11 +351,9 @@ xfs_bmap_update_finish_item(
+ 	struct list_head		*item,
+ 	struct xfs_btree_cur		**state)
+ {
+-	struct xfs_bmap_intent		*bi;
++	struct xfs_bmap_intent		*bi = bi_entry(item);
+ 	int				error;
  
- static struct xfs_log_item *
+-	bi = container_of(item, struct xfs_bmap_intent, bi_list);
+-
+ 	error = xfs_bmap_finish_one(tp, bi);
+ 	if (!error && bi->bi_bmap.br_blockcount > 0) {
+ 		ASSERT(bi->bi_type == XFS_BMAP_UNMAP);
+@@ -377,9 +378,7 @@ STATIC void
+ xfs_bmap_update_cancel_item(
+ 	struct list_head		*item)
+ {
+-	struct xfs_bmap_intent		*bi;
+-
+-	bi = container_of(item, struct xfs_bmap_intent, bi_list);
++	struct xfs_bmap_intent		*bi = bi_entry(item);
+ 
+ 	xfs_bmap_update_put_group(bi);
+ 	kmem_cache_free(xfs_bmap_intent_cache, bi);
 
