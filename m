@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62BAEBE48
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:58:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57EDCBE47
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:59:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q3LEcVGu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 333B0C433C8;
-	Sun, 31 Dec 2023 21:58:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rRwQxRou"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAF5AC433C7;
+	Sun, 31 Dec 2023 21:59:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704059935;
-	bh=oXEhoqLQqc4mM2NI691r3MYuRuOFwMUb0RRHnEvJ0J4=;
+	s=k20201202; t=1704059950;
+	bh=Mbee5DWekZSRT+ywVTraiP8+VFkYlVf8Lq2k09hGqgk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=q3LEcVGuijvOm9m3OETTWcjk9YbHBPFzaMThempYUNxhAa3jm+HOyhHq0EdoSrtjV
-	 nxYWx7CRx/NMoKxYu4HWQEy5DyW3y0NqAwE6jHvSQcvLVj4WWMnxE9zaoKLk9dh9Na
-	 aeuWrHop558uTXImsJOSB71qexJS5rcAkuesYjy1kk33Nj7UgrI6dnjYkXSdpA8brc
-	 z62fumT5dSr7Oxtzp2Xefy+krxFyIp0m5c0I2sFWa/aA3DjKeDrCWoGetimZ3gLgW7
-	 ptTcBNLveHsLiJsJRpOkYo1OR0Y5oKbnPI7tubizlkdTHqkiZN8tpvgIRgC+mDapdb
-	 3KLTIGDqES4Sw==
-Date: Sun, 31 Dec 2023 13:58:54 -0800
-Subject: [PATCH 2/6] xfs: fix chown with rt quota
+	b=rRwQxRouLsHTrXTo6RTwFEBwF080/P8SzH75JMeOUyIMQRkA/o3c9CPuEG0W9vNHs
+	 h8PKVbNjm7wohcuirP6imtCHcgepC/zYyVh08Rm3I5/Ya8KVaF40oEKgQTIlZ7h1uX
+	 t/1m8fJaFCD5DvI8onRBlduwf+MPKwWncknWCS+yvf7s5kXDEjWHopJ8xKvCp11hmg
+	 +QYWMph480rMMOP0XT7++QBRQxRUw5bS3gpQYKQue1V6LfPFjD+Qe5oHlKj1ARz/7E
+	 XUY7NspI8qM3xjMcVCBKuFGop3sj2ZQvj5QE6RjExjChYqu0o34Ni18fHFW1UAiSxf
+	 tcj26ed/v1/ng==
+Date: Sun, 31 Dec 2023 13:59:10 -0800
+Subject: [PATCH 3/6] xfs: fix rt growfs quota accounting
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404853207.1767666.13873334856849446722.stgit@frogsfrogsfrogs>
+Message-ID: <170404853223.1767666.13347327464674667016.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404853163.1767666.1660746530012636507.stgit@frogsfrogsfrogs>
 References: <170404853163.1767666.1660746530012636507.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,165 +37,92 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make chown's quota adjustments work with realtime files.
+When growing the realtime bitmap or summary inodes, use
+xfs_trans_alloc_inode to reserve quota for the blocks that could be
+allocated to the file.  Although we never enforce limits against the
+root dquot, making a reservation means that the bmap code will update
+the quota block count, which is necessary for correct accounting.
+
+Found by running xfs/521.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_qm.c    |   44 +++++++++++++++++++++++++++-----------------
- fs/xfs/xfs_trans.c |   31 +++++++++++++++++++++++++++++--
- 2 files changed, 56 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 2771aef361a25..b89f0e8f80f9f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1221,8 +1221,8 @@ xfs_qm_dqusage_adjust(
- 	void			*data)
- {
- 	struct xfs_inode	*ip;
--	xfs_qcnt_t		nblks;
--	xfs_filblks_t		rtblks = 0;	/* total rt blks */
-+	xfs_filblks_t		nblks, rtblks;
-+	unsigned int		lock_mode;
- 	int			error;
- 
- 	ASSERT(XFS_IS_QUOTA_ON(mp));
-@@ -1263,18 +1263,17 @@ xfs_qm_dqusage_adjust(
- 
- 	ASSERT(ip->i_delayed_blks == 0);
- 
-+	lock_mode = xfs_ilock_data_map_shared(ip);
- 	if (XFS_IS_REALTIME_INODE(ip)) {
--		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
--
- 		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
--		if (error)
-+		if (error) {
-+			xfs_iunlock(ip, lock_mode);
- 			goto error0;
--
--		xfs_bmap_count_leaves(ifp, &rtblks);
-+		}
- 	}
--
--	nblks = (xfs_qcnt_t)ip->i_nblocks - rtblks;
-+	xfs_inode_count_blocks(tp, ip, &nblks, &rtblks);
- 	xfs_iflags_clear(ip, XFS_IQUOTAUNCHECKED);
-+	xfs_iunlock(ip, lock_mode);
- 
- 	/*
- 	 * Add the (disk blocks and inode) resources occupied by this
-@@ -1921,9 +1920,8 @@ xfs_qm_vop_chown(
- 	struct xfs_dquot	*newdq)
- {
- 	struct xfs_dquot	*prevdq;
--	uint		bfield = XFS_IS_REALTIME_INODE(ip) ?
--				 XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
--
-+	xfs_filblks_t		dblocks, rblocks;
-+	bool			isrt = XFS_IS_REALTIME_INODE(ip);
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(XFS_IS_QUOTA_ON(ip->i_mount));
-@@ -1934,11 +1932,17 @@ xfs_qm_vop_chown(
- 	ASSERT(prevdq);
- 	ASSERT(prevdq != newdq);
- 
--	xfs_trans_mod_ino_dquot(tp, ip, prevdq, bfield, -(ip->i_nblocks));
-+	xfs_inode_count_blocks(tp, ip, &dblocks, &rblocks);
-+
-+	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_BCOUNT,
-+			-(xfs_qcnt_t)dblocks);
-+	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_RTBCOUNT,
-+			-(xfs_qcnt_t)rblocks);
- 	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_ICOUNT, -1);
- 
- 	/* the sparkling new dquot */
--	xfs_trans_mod_ino_dquot(tp, ip, newdq, bfield, ip->i_nblocks);
-+	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_BCOUNT, dblocks);
-+	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_RTBCOUNT, rblocks);
- 	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_ICOUNT, 1);
- 
- 	/*
-@@ -1948,7 +1952,8 @@ xfs_qm_vop_chown(
- 	 * (having already bumped up the real counter) so that we don't have
- 	 * any reservation to give back when we commit.
- 	 */
--	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_RES_BLKS,
-+	xfs_trans_mod_dquot(tp, newdq,
-+			isrt ? XFS_TRANS_DQ_RES_RTBLKS : XFS_TRANS_DQ_RES_BLKS,
- 			-ip->i_delayed_blks);
- 
- 	/*
-@@ -1960,8 +1965,13 @@ xfs_qm_vop_chown(
- 	 */
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- 	xfs_dqlock(prevdq);
--	ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
--	prevdq->q_blk.reserved -= ip->i_delayed_blks;
-+	if (isrt) {
-+		ASSERT(prevdq->q_rtb.reserved >= ip->i_delayed_blks);
-+		prevdq->q_rtb.reserved -= ip->i_delayed_blks;
-+	} else {
-+		ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
-+		prevdq->q_blk.reserved -= ip->i_delayed_blks;
-+	}
- 	xfs_dqunlock(prevdq);
- 
- 	/*
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index d4952be8f2498..008380482777b 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1420,11 +1420,26 @@ xfs_trans_alloc_ichange(
- 	gdqp = (new_gdqp != ip->i_gdquot) ? new_gdqp : NULL;
- 	pdqp = (new_pdqp != ip->i_pdquot) ? new_pdqp : NULL;
- 	if (udqp || gdqp || pdqp) {
-+		xfs_filblks_t	dblocks, rblocks;
- 		unsigned int	qflags = XFS_QMOPT_RES_REGBLKS;
-+		bool		isrt = XFS_IS_REALTIME_INODE(ip);
- 
- 		if (force)
- 			qflags |= XFS_QMOPT_FORCE_RES;
- 
-+		if (isrt) {
-+			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-+			if (error)
-+				goto out_cancel;
-+		}
-+
-+		xfs_inode_count_blocks(tp, ip, &dblocks, &rblocks);
-+
-+		if (isrt)
-+			rblocks += ip->i_delayed_blks;
-+		else
-+			dblocks += ip->i_delayed_blks;
-+
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index cc83651636ecb..0af834897fad4 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -842,15 +842,10 @@ xfs_growfs_rt_alloc(
  		/*
- 		 * Reserve enough quota to handle blocks on disk and reserved
- 		 * for a delayed allocation.  We'll actually transfer the
-@@ -1432,8 +1447,20 @@ xfs_trans_alloc_ichange(
- 		 * though that part is only semi-transactional.
+ 		 * Reserve space & log for one extent added to the file.
  		 */
- 		error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
--				pdqp, ip->i_nblocks + ip->i_delayed_blks,
--				1, qflags);
-+				pdqp, dblocks, 1, qflags);
-+		if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
-+			xfs_trans_cancel(tp);
-+			xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
-+			retried = true;
-+			goto retry;
-+		}
-+		if (error)
-+			goto out_cancel;
-+
-+		/* Do the same for realtime. */
-+		qflags = XFS_QMOPT_RES_RTBLKS | (qflags & XFS_QMOPT_FORCE_RES);
-+		error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
-+				pdqp, rblocks, 0, qflags);
- 		if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
- 			xfs_trans_cancel(tp);
- 			xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtalloc, resblks,
+-				0, 0, &tp);
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_growrtalloc,
++				resblks, 0, false, &tp);
+ 		if (error)
+ 			return error;
+-		/*
+-		 * Lock the inode.
+-		 */
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+ 		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+ 				XFS_IEXT_ADD_NOSPLIT_CNT);
+@@ -874,6 +869,7 @@ xfs_growfs_rt_alloc(
+ 		 * Free any blocks freed up in the transaction, then commit.
+ 		 */
+ 		error = xfs_trans_commit(tp);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+ 			return error;
+ 		/*
+@@ -886,15 +882,11 @@ xfs_growfs_rt_alloc(
+ 			/*
+ 			 * Reserve log for one block zeroing.
+ 			 */
+-			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growrtzero,
+-					0, 0, 0, &tp);
++			error = xfs_trans_alloc_inode(ip,
++					&M_RES(mp)->tr_growrtzero, 0, 0, false,
++					&tp);
+ 			if (error)
+ 				return error;
+-			/*
+-			 * Lock the bitmap inode.
+-			 */
+-			xfs_ilock(ip, XFS_ILOCK_EXCL);
+-			xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+ 			error = xfs_growfs_init_rtbuf(tp, ip, fsbno, buf_type);
+ 			if (error)
+@@ -904,6 +896,7 @@ xfs_growfs_rt_alloc(
+ 			 * Commit the transaction.
+ 			 */
+ 			error = xfs_trans_commit(tp);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -917,6 +910,7 @@ xfs_growfs_rt_alloc(
+ 
+ out_trans_cancel:
+ 	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+ 
+@@ -1252,8 +1246,6 @@ xfs_growfs_rt(
+ 	/* Unsupported realtime features. */
+ 	if (!xfs_has_rtgroups(mp) && (xfs_has_rmapbt(mp) || xfs_has_reflink(mp)))
+ 		return -EOPNOTSUPP;
+-	if (xfs_has_quota(mp))
+-		return -EOPNOTSUPP;
+ 	if (xfs_has_reflink(mp) && !is_power_of_2(mp->m_sb.sb_rextsize) &&
+ 	    (XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize) & ~PAGE_MASK))
+ 		return -EOPNOTSUPP;
 
