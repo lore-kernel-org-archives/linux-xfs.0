@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C6AFBA22
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:27:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A31BA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:27:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EyQ4KNvU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3C67C433C7;
-	Sun, 31 Dec 2023 21:27:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mcz1zoMc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C37DC433C7;
+	Sun, 31 Dec 2023 21:27:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704058025;
-	bh=i1QN7aF43H/9EcAB919vyrBARlvIICG5rOe97cW7rxY=;
+	s=k20201202; t=1704058041;
+	bh=dpJjPEG7qhz3yPCXBrPLeaEP1XcqcItWX4OnQVYforQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EyQ4KNvUq9IjwHi8bBfEvsmJzOXl4/NgG4dSCzVtBQUA4z+w2DZ0Lb85cNnEZJxpH
-	 T+eDVTW1/5ykD1gq93g2WYtt1oj8r7VPM/op1cY35hDk5moG8uEvFKyevM8iPRd+Dm
-	 mey9ox+4LHL7GhwDWcpd3QoIyr2rK3WJMlX1SeUpU0CioweSz/6cvnE/H6TwVF2Qlo
-	 8s/yQ8RjEYHjf44Omo7yqa0xtJDoDSwO0hLaJLJSz7kVyQ5nY+OBNKxLvGezjQHr41
-	 yDo/lEwNREn1FbWU3gspmUfGO49pIztNT+lSqveGupIZy4PvfChKEc+ULfaNmEyXvx
-	 mbusnoZOMm9cA==
-Date: Sun, 31 Dec 2023 13:27:05 -0800
-Subject: [PATCH 3/9] xfs: pass the fsbno to xfs_perag_intent_get
+	b=Mcz1zoMcNp46JD5uKBX0282auRj3VIb+VJUH3Uy+2yJ+pixFdDMIPop1cecx/UpPa
+	 MitUKtZrHpsY0MhdofYB6xSJSXOeiGFmhOSkOBGwYVOR0UxVEmdE4DWxt571EdWvUx
+	 FGJkyVcuLtxYYawefEh9o+0lDgCErErH7xbpUwcVzWgmLHbpWV3X4G8r6e5TnB2XqS
+	 HE1uF71a/00Uux3c9GBu8Hcdqf+oU/SG6hnCOESinc/N4gwyZH46kJ7yYA3hInAvn8
+	 +bpCxAmXEAjrEcSXxbTRy5gYD01c52GGQ1AQHTmkNDO5tuil4/bAr6qA7vxvRj4jum
+	 vBWTMV9hVmY8g==
+Date: Sun, 31 Dec 2023 13:27:20 -0800
+Subject: [PATCH 4/9] xfs: add a xefi_entry helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <170404848385.1764329.9186246888293070127.stgit@frogsfrogsfrogs>
+Message-ID: <170404848401.1764329.14466513813180386601.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 References: <170404848314.1764329.10362480227353094080.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,149 +37,90 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-All callers of xfs_perag_intent_get have a fsbno and need boilerplate
-code to turn that into an agno.  Just pass the fsbno to
-xfs_perag_intent_get and look up the agno there.
+Add a helper to translate from the item list head to the
+xfs_extent_free_item structure and use it so shorten assignments
+and avoid the need for extra local variables.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_item.c     |    6 +-----
- fs/xfs/xfs_drain.c         |    8 ++++----
- fs/xfs/xfs_drain.h         |    5 +++--
- fs/xfs/xfs_extfree_item.c  |    5 +----
- fs/xfs/xfs_refcount_item.c |    5 +----
- fs/xfs/xfs_rmap_item.c     |    5 +----
- 6 files changed, 11 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_extfree_item.c |   22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 234296a37b269..e50276ceceae9 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -325,8 +325,6 @@ xfs_bmap_update_get_group(
- 	struct xfs_mount	*mp,
- 	struct xfs_bmap_intent	*bi)
- {
--	xfs_agnumber_t		agno;
--
- 	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
- 		if (xfs_has_rtgroups(mp)) {
- 			xfs_rgnumber_t	rgno;
-@@ -340,8 +338,6 @@ xfs_bmap_update_get_group(
- 		return;
- 	}
- 
--	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
--
- 	/*
- 	 * Bump the intent count on behalf of the deferred rmap and refcount
- 	 * intent items that that we can queue when we finish this bmap work.
-@@ -349,7 +345,7 @@ xfs_bmap_update_get_group(
- 	 * intent drops the intent count, ensuring that the intent count
- 	 * remains nonzero across the transaction roll.
- 	 */
--	bi->bi_pag = xfs_perag_intent_get(mp, agno);
-+	bi->bi_pag = xfs_perag_intent_get(mp, bi->bi_bmap.br_startblock);
- }
- 
- /* Add this deferred BUI to the transaction. */
-diff --git a/fs/xfs/xfs_drain.c b/fs/xfs/xfs_drain.c
-index 005a66be44a25..7bdb9688c0f5e 100644
---- a/fs/xfs/xfs_drain.c
-+++ b/fs/xfs/xfs_drain.c
-@@ -94,17 +94,17 @@ static inline int xfs_defer_drain_wait(struct xfs_defer_drain *dr)
- }
- 
- /*
-- * Get a passive reference to an AG and declare an intent to update its
-- * metadata.
-+ * Get a passive reference to the AG that contains a fsbno and declare an intent
-+ * to update its metadata.
-  */
- struct xfs_perag *
- xfs_perag_intent_get(
- 	struct xfs_mount	*mp,
--	xfs_agnumber_t		agno)
-+	xfs_fsblock_t		fsbno)
- {
- 	struct xfs_perag	*pag;
- 
--	pag = xfs_perag_get(mp, agno);
-+	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, fsbno));
- 	if (!pag)
- 		return NULL;
- 
-diff --git a/fs/xfs/xfs_drain.h b/fs/xfs/xfs_drain.h
-index 50a5772a8296c..775164f54ea6d 100644
---- a/fs/xfs/xfs_drain.h
-+++ b/fs/xfs/xfs_drain.h
-@@ -62,7 +62,7 @@ void xfs_drain_wait_enable(void);
-  * until the item is finished or cancelled.
-  */
- struct xfs_perag *xfs_perag_intent_get(struct xfs_mount *mp,
--		xfs_agnumber_t agno);
-+		xfs_fsblock_t fsbno);
- void xfs_perag_intent_put(struct xfs_perag *pag);
- 
- void xfs_perag_intent_hold(struct xfs_perag *pag);
-@@ -76,7 +76,8 @@ struct xfs_defer_drain { /* empty */ };
- #define xfs_defer_drain_free(dr)		((void)0)
- #define xfs_defer_drain_init(dr)		((void)0)
- 
--#define xfs_perag_intent_get(mp, agno)		xfs_perag_get((mp), (agno))
-+#define xfs_perag_intent_get(mp, fsbno) \
-+	xfs_perag_get((mp), XFS_FSB_TO_AGNO(mp, fsbno))
- #define xfs_perag_intent_put(pag)		xfs_perag_put(pag)
- 
- static inline void xfs_perag_intent_hold(struct xfs_perag *pag) { }
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 190d6a69e40b0..a29105583de96 100644
+index a29105583de96..d86ec1d5e468a 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -424,10 +424,7 @@ xfs_extent_free_get_group(
- 	struct xfs_mount		*mp,
- 	struct xfs_extent_free_item	*xefi)
- {
--	xfs_agnumber_t			agno;
--
--	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
--	xefi->xefi_pag = xfs_perag_intent_get(mp, agno);
-+	xefi->xefi_pag = xfs_perag_intent_get(mp, xefi->xefi_startblock);
- }
+@@ -303,6 +303,11 @@ static const struct xfs_item_ops xfs_efd_item_ops = {
+ 	.iop_intent	= xfs_efd_item_intent,
+ };
  
- /* Release a passive AG ref after some freeing work. */
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 20ad8086da60b..ff1fdb759a8d2 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -330,10 +330,7 @@ xfs_refcount_update_get_group(
- 	struct xfs_mount		*mp,
- 	struct xfs_refcount_intent	*ri)
++static inline struct xfs_extent_free_item *xefi_entry(const struct list_head *e)
++{
++	return list_entry(e, struct xfs_extent_free_item, xefi_list);
++}
++
+ /*
+  * Fill the EFD with all extents from the EFI when we need to roll the
+  * transaction and continue with a new EFI.
+@@ -338,11 +343,8 @@ xfs_extent_free_diff_items(
+ 	const struct list_head		*a,
+ 	const struct list_head		*b)
  {
--	xfs_agnumber_t			agno;
+-	struct xfs_extent_free_item	*ra;
+-	struct xfs_extent_free_item	*rb;
 -
--	agno = XFS_FSB_TO_AGNO(mp, ri->ri_startblock);
--	ri->ri_pag = xfs_perag_intent_get(mp, agno);
-+	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_startblock);
- }
+-	ra = container_of(a, struct xfs_extent_free_item, xefi_list);
+-	rb = container_of(b, struct xfs_extent_free_item, xefi_list);
++	struct xfs_extent_free_item	*ra = xefi_entry(a);
++	struct xfs_extent_free_item	*rb = xefi_entry(b);
  
- /* Release a passive AG ref after finishing refcounting work. */
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 79ad0087aecaf..183544ac74c98 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -355,10 +355,7 @@ xfs_rmap_update_get_group(
- 	struct xfs_mount	*mp,
- 	struct xfs_rmap_intent	*ri)
+ 	return ra->xefi_pag->pag_agno - rb->xefi_pag->pag_agno;
+ }
+@@ -444,7 +446,7 @@ xfs_extent_free_finish_item(
+ 	struct xfs_btree_cur		**state)
  {
--	xfs_agnumber_t		agno;
--
--	agno = XFS_FSB_TO_AGNO(mp, ri->ri_bmap.br_startblock);
--	ri->ri_pag = xfs_perag_intent_get(mp, agno);
-+	ri->ri_pag = xfs_perag_intent_get(mp, ri->ri_bmap.br_startblock);
- }
+ 	struct xfs_owner_info		oinfo = { };
+-	struct xfs_extent_free_item	*xefi;
++	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	struct xfs_extent		*extp;
+@@ -452,7 +454,6 @@ xfs_extent_free_finish_item(
+ 	xfs_agblock_t			agbno;
+ 	int				error = 0;
  
- /* Release a passive AG ref after finishing rmapping work. */
+-	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
+ 
+ 	oinfo.oi_owner = xefi->xefi_owner;
+@@ -504,9 +505,7 @@ STATIC void
+ xfs_extent_free_cancel_item(
+ 	struct list_head		*item)
+ {
+-	struct xfs_extent_free_item	*xefi;
+-
+-	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
++	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 
+ 	xfs_extent_free_put_group(xefi);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+@@ -526,14 +525,13 @@ xfs_agfl_free_finish_item(
+ 	struct xfs_owner_info		oinfo = { };
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
+-	struct xfs_extent_free_item	*xefi;
++	struct xfs_extent_free_item	*xefi = xefi_entry(item);
+ 	struct xfs_extent		*extp;
+ 	struct xfs_buf			*agbp;
+ 	int				error;
+ 	xfs_agblock_t			agbno;
+ 	uint				next_extent;
+ 
+-	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
+ 	ASSERT(xefi->xefi_blockcount == 1);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
+ 	oinfo.oi_owner = xefi->xefi_owner;
 
