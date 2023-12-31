@@ -1,28 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59289C129
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:13:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0A14C12B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:13:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S5mR+o1L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD483C433C7;
-	Sun, 31 Dec 2023 22:12:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AqBpCtUe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B712C433C8;
+	Sun, 31 Dec 2023 22:13:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704060779;
-	bh=0+xJVCA34k41oCCX2ao8t/lAIagL0qOe1cXMSyelDcM=;
+	s=k20201202; t=1704060795;
+	bh=bI+4+z07ADkihF/Dnk5FvakE8WIY57ES4E5UJ59U1JU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=S5mR+o1LXVoNbtAM4ONxyOrp2nhSBRRy8BU2Tr6dKeLYBj8vC6INH2Rst/Tm8WbYV
-	 142KbNcCpYNZKs44QxRrIxURABSJzMVklwxwct6cj1lzNMeztIBbMnIwSl5xKgFtVu
-	 VBEg05TUVm5rWPZKEdjvHD2uwuhcX2dB+S064chNu4kMmC+5in4Iq518JU+oLdi+/B
-	 /MV25ELATlmGN9/eivxC2IS+JrRTvySQN5h36YGxDyEqbWeaEFjV0f0hkEIoZ3MJIE
-	 6ltxYm0dwYBD6S3AVLAxIzPRUMG5xPCu0GD1Cr4TSebyTNtI+9rAnhK2wyvKnRDnXd
-	 QMMbR9ZCgsFqg==
-Date: Sun, 31 Dec 2023 14:12:59 -0800
-Subject: [PATCH 7/9] xfs: report inode corruption errors to the health system
+	b=AqBpCtUe8narsVNf9dxUi1bgNOl5wHhZNrC7zVWWmW6akIhzlJuVZOp7upH2oSbvJ
+	 RNNAEdc1TdRDbelW18+E7TCjRPZmYM7Ur1Q5XKzELF9V9OtD6XrM2Vj5ie4YCG266N
+	 Tsatwsh2FNh/kLMR+PbsvCIjb3jQUZlI+WNBd73tvt4sBbJNGB6rAFr5SeSIt184gw
+	 J1ggjjwstYhMuq5jQ0lwV+k6bEh8mbPO9LQ10r+1uneZse12yO5xU69KAdGe6bKtJt
+	 1c9ObYRViYjJTVmXEbnAo6QR9mnaVZuJbSI6/k3JMvLTtosmCL4C12mNxd38In8vWZ
+	 RS9kW/m2CMFag==
+Date: Sun, 31 Dec 2023 14:13:15 -0800
+Subject: [PATCH 8/9] xfs: report realtime metadata corruption errors to the
+ health system
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404992048.1794070.3190508518785373951.stgit@frogsfrogsfrogs>
+Message-ID: <170404992062.1794070.6089763105860969829.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404991943.1794070.7853125417143732405.stgit@frogsfrogsfrogs>
 References: <170404991943.1794070.7853125417143732405.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,134 +38,56 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Whenever we encounter corrupt inode records, we should report that to
-the health monitoring system for later reporting.
+Whenever we encounter corrupt realtime metadat blocks, we should report
+that to the health monitoring system for later reporting.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/util.c           |    1 +
- libxfs/xfs_ialloc.c     |    1 +
- libxfs/xfs_inode_buf.c  |   12 +++++++++---
- libxfs/xfs_inode_fork.c |    8 ++++++++
- 4 files changed, 19 insertions(+), 3 deletions(-)
+ libxfs/util.c         |    1 +
+ libxfs/xfs_rtbitmap.c |    9 ++++++++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/util.c b/libxfs/util.c
-index 44b404d8d5d..ddb98141210 100644
+index ddb98141210..097362d488d 100644
 --- a/libxfs/util.c
 +++ b/libxfs/util.c
-@@ -736,3 +736,4 @@ void xfs_bmap_mark_sick(struct xfs_inode *ip, int whichfork) { }
- void xfs_btree_mark_sick(struct xfs_btree_cur *cur) { }
+@@ -737,3 +737,4 @@ void xfs_btree_mark_sick(struct xfs_btree_cur *cur) { }
  void xfs_dirattr_mark_sick(struct xfs_inode *ip, int whichfork) { }
  void xfs_da_mark_sick(struct xfs_da_args *args) { }
-+void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask) { }
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 92ca3d460e0..63922f44ffe 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -2994,6 +2994,7 @@ xfs_ialloc_check_shrink(
- 		goto out;
- 
- 	if (!has) {
-+		xfs_ag_mark_sick(pag, XFS_SICK_AG_INOBT);
- 		error = -EFSCORRUPTED;
- 		goto out;
- 	}
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index fd351c252af..83d93698116 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -16,6 +16,7 @@
+ void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask) { }
++void xfs_rt_mark_sick(struct xfs_mount *mp, unsigned int mask) { }
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 726543abb51..b4da1b07c73 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -15,6 +15,7 @@
+ #include "xfs_bmap.h"
  #include "xfs_trans.h"
- #include "xfs_ialloc.h"
- #include "xfs_dir2.h"
+ #include "xfs_rtbitmap.h"
 +#include "xfs_health.h"
- 
  
  /*
-@@ -129,9 +130,14 @@ xfs_imap_to_bp(
- 	struct xfs_imap		*imap,
- 	struct xfs_buf		**bpp)
- {
--	return xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
--				   imap->im_len, XBF_UNMAPPED, bpp,
--				   &xfs_inode_buf_ops);
-+	int			error;
-+
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
-+			imap->im_len, XBF_UNMAPPED, bpp, &xfs_inode_buf_ops);
+  * Realtime allocator bitmap functions shared with userspace.
+@@ -113,13 +114,19 @@ xfs_rtbuf_get(
+ 	if (error)
+ 		return error;
+ 
+-	if (XFS_IS_CORRUPT(mp, nmap == 0 || !xfs_bmap_is_written_extent(&map)))
++	if (XFS_IS_CORRUPT(mp, nmap == 0 || !xfs_bmap_is_written_extent(&map))) {
++		xfs_rt_mark_sick(mp, issum ? XFS_SICK_RT_SUMMARY :
++					     XFS_SICK_RT_BITMAP);
+ 		return -EFSCORRUPTED;
++	}
+ 
+ 	ASSERT(map.br_startblock != NULLFSBLOCK);
+ 	error = xfs_trans_read_buf(mp, args->tp, mp->m_ddev_targp,
+ 				   XFS_FSB_TO_DADDR(mp, map.br_startblock),
+ 				   mp->m_bsize, 0, &bp, &xfs_rtbuf_ops);
 +	if (xfs_metadata_is_sick(error))
-+		xfs_agno_mark_sick(mp, xfs_daddr_to_agno(mp, imap->im_blkno),
-+				XFS_SICK_AG_INOBT);
-+	return error;
- }
++		xfs_rt_mark_sick(mp, issum ? XFS_SICK_RT_SUMMARY :
++					     XFS_SICK_RT_BITMAP);
+ 	if (error)
+ 		return error;
  
- static inline struct timespec64 xfs_inode_decode_bigtime(uint64_t ts)
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 80f4215d24b..d6478af46d6 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -23,6 +23,7 @@
- #include "xfs_attr_leaf.h"
- #include "xfs_types.h"
- #include "xfs_errortag.h"
-+#include "xfs_health.h"
- 
- struct kmem_cache *xfs_ifork_cache;
- 
-@@ -82,6 +83,7 @@ xfs_iformat_local(
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
- 				"xfs_iformat_local", dip, sizeof(*dip),
- 				__this_address);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -119,6 +121,7 @@ xfs_iformat_extents(
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
- 				"xfs_iformat_extents(1)", dip, sizeof(*dip),
- 				__this_address);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -138,6 +141,7 @@ xfs_iformat_extents(
- 				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
- 						"xfs_iformat_extents(2)",
- 						dp, sizeof(*dp), fa);
-+				xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 				return xfs_bmap_complain_bad_rec(ip, whichfork,
- 						fa, &new);
- 			}
-@@ -196,6 +200,7 @@ xfs_iformat_btree(
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
- 				"xfs_iformat_btree", dfp, size,
- 				__this_address);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -260,12 +265,14 @@ xfs_iformat_data_fork(
- 		default:
- 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
- 					dip, sizeof(*dip), __this_address);
-+			xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 			return -EFSCORRUPTED;
- 		}
- 		break;
- 	default:
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
- 				sizeof(*dip), __this_address);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		return -EFSCORRUPTED;
- 	}
- }
-@@ -338,6 +345,7 @@ xfs_iformat_attr_fork(
- 	default:
- 		xfs_inode_verifier_error(ip, error, __func__, dip,
- 				sizeof(*dip), __this_address);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
- 		error = -EFSCORRUPTED;
- 		break;
- 	}
 
