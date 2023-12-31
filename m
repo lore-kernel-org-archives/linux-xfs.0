@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72767BE47
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:20:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88C9BE4A
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:20:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uQsQNKxU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07728C433C8;
-	Sun, 31 Dec 2023 21:20:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WwwBTEtG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5F38C433C7;
+	Sun, 31 Dec 2023 21:20:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704057619;
-	bh=YBnL93N1sDtUjjwf2KxM+bGeZhbLzyufyZ+rKEkfWxo=;
+	s=k20201202; t=1704057634;
+	bh=5//ySmczwmtz2XgpwFe4TCs4eQeGTlsg3pu8hJVY7xs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uQsQNKxUWzEIuNCJzjrh+tJd0PtMO4xUI/8TeIghfQagbEuZgUoUsGtZ9Q/gfOcmg
-	 jexvacHnyzAeo4GOs0jjDlPIO2xuuV7xDCvjdxEZycOIcxb12ytylI2M4caCEvhXT7
-	 Ze/DDUeAB0gYBVgfeaEZLHxbht40GwDFIGBYSCSOPnK5j3t3Ss6t6X45VNzNtSlYBY
-	 nwUSV+w26oUjTnABjaY6yvkJVHMJxoBDofB6reAid2JSXEYc9Fo31mtFPLuZMLuFve
-	 toT0EX7ZlcDepqfH9x1PSpyA57pSiOSADwLBT8tc5wgkkl2ImvL5iKaXufN4Ygncv2
-	 uCwV52ojF2j0A==
-Date: Sun, 31 Dec 2023 13:20:18 -0800
-Subject: [PATCH 18/24] xfs: encode the rtsummary in big endian format
+	b=WwwBTEtGvSWMkUwpTNQJ/qngOo0QhCg3blNXYobjLTAJB1RiCmnXZmrINfkQFYyGg
+	 fnEm/uHwU+UbRjAOSth/H9MArkWF8oM8EK/1oJHe/0RaEqMdKh4GdNjBAcj+AEP002
+	 DS/LtpAYggY0nx/JZEpRYy8WBvM07zfn6wI0s+MAu3ZNkkC7vMQJfKF4M5OBj28xfL
+	 4ttY2EOxNzehKhALNm5ezxCWuVstjc4yf9d1Zl5GkteIPxxj83EbaTD4mGl3PWed6L
+	 x4GTbvlW3POx/PeGIdYTFpZQHl3LTAgACCAMZly+W5vS9NT33gPsvbvi35sIiMdeoQ
+	 RAd8mVJ4T5XAA==
+Date: Sun, 31 Dec 2023 13:20:34 -0800
+Subject: [PATCH 19/24] xfs: store rtgroup information with a bmap intent
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404846529.1763124.15100521804833298198.stgit@frogsfrogsfrogs>
+Message-ID: <170404846544.1763124.14189276181526727693.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 References: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,79 +37,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, the ondisk realtime summary file counters are accessed in
-units of 32-bit words.  There's no endian translation of the contents of
-this file, which means that the Bad Things Happen(tm) if you go from
-(say) x86 to powerpc.  Since we have a new feature flag, let's take the
-opportunity to enforce an endianness on the file.  Encode the summary
-information in big endian format, like most of the rest of the
-filesystem.
+Make the bmap intent items take an active reference to the rtgroup
+containing the space that is being mapped or unmapped.  We will need
+this functionality once we start enabling rmap and reflink on the rt
+volume.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h   |    4 +++-
- fs/xfs/libxfs/xfs_rtbitmap.h |    7 +++++++
- fs/xfs/scrub/rtsummary.c     |    5 +++++
- 3 files changed, 15 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_bmap.h |    5 ++++-
+ fs/xfs/xfs_bmap_item.c   |   18 ++++++++++++++++--
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index f2c70e1027ed7..59ba13db53e7a 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -759,10 +759,12 @@ union xfs_rtword_raw {
- 
- /*
-  * Realtime summary counts are accessed by the word, which is currently
-- * stored in host-endian format.
-+ * stored in host-endian format.  Starting with the realtime groups feature,
-+ * the words are stored in be32 ondisk.
-  */
- union xfs_suminfo_raw {
- 	__u32		old;
-+	__be32		rtg;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index bd7f936262cc6..61c195198db43 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -246,7 +246,10 @@ struct xfs_bmap_intent {
+ 	enum xfs_bmap_intent_type		bi_type;
+ 	int					bi_whichfork;
+ 	struct xfs_inode			*bi_owner;
+-	struct xfs_perag			*bi_pag;
++	union {
++		struct xfs_perag		*bi_pag;
++		struct xfs_rtgroup		*bi_rtg;
++	};
+ 	struct xfs_bmbt_irec			bi_bmap;
  };
  
- /*
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index e8558db14b9b7..0bb63f77ede82 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -298,6 +298,8 @@ xfs_suminfo_get(
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 02b872a133104..234296a37b269 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -26,6 +26,7 @@
+ #include "xfs_log_recover.h"
+ #include "xfs_ag.h"
+ #include "xfs_trace.h"
++#include "xfs_rtgroup.h"
+ 
+ struct kmem_cache	*xfs_bui_cache;
+ struct kmem_cache	*xfs_bud_cache;
+@@ -326,8 +327,18 @@ xfs_bmap_update_get_group(
  {
- 	union xfs_suminfo_raw	*info = xfs_rsumblock_infoptr(args, index);
+ 	xfs_agnumber_t		agno;
  
-+	if (xfs_has_rtgroups(args->mp))
-+		return be32_to_cpu(info->rtg);
- 	return info->old;
- }
- 
-@@ -310,6 +312,11 @@ xfs_suminfo_add(
- {
- 	union xfs_suminfo_raw	*info = xfs_rsumblock_infoptr(args, index);
- 
-+	if (xfs_has_rtgroups(args->mp)) {
-+		be32_add_cpu(&info->rtg, delta);
-+		return be32_to_cpu(info->rtg);
-+	}
+-	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
++	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
++		if (xfs_has_rtgroups(mp)) {
++			xfs_rgnumber_t	rgno;
 +
- 	info->old += delta;
- 	return info->old;
- }
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index df9aa29cb94c6..5107873775b7f 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -142,6 +142,11 @@ xchk_rtsum_inc(
- 	struct xfs_mount	*mp,
- 	union xfs_suminfo_raw	*v)
- {
-+	if (xfs_has_rtgroups(mp)) {
-+		be32_add_cpu(&v->rtg, 1);
-+		return be32_to_cpu(v->rtg);
-+	}
++			rgno = xfs_rtb_to_rgno(mp, bi->bi_bmap.br_startblock);
++			bi->bi_rtg = xfs_rtgroup_get(mp, rgno);
++		} else {
++			bi->bi_rtg = NULL;
++		}
 +
- 	v->old += 1;
- 	return v->old;
+ 		return;
++	}
+ 
+ 	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
+ 
+@@ -358,8 +369,11 @@ static inline void
+ xfs_bmap_update_put_group(
+ 	struct xfs_bmap_intent	*bi)
+ {
+-	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
++	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
++		if (xfs_has_rtgroups(bi->bi_owner->i_mount))
++			xfs_rtgroup_put(bi->bi_rtg);
+ 		return;
++	}
+ 
+ 	xfs_perag_intent_put(bi->bi_pag);
  }
 
