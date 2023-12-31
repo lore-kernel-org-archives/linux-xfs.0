@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBB90C2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:31:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F046C2C0
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:32:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kPsPaXCn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 837D0C433C8;
-	Sun, 31 Dec 2023 23:31:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G+x8CHX5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18F72C433C7;
+	Sun, 31 Dec 2023 23:32:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065516;
-	bh=7uRS5G9klNxj6jdi7LLbA3iTIf+bYMr+els+NiORrHU=;
+	s=k20201202; t=1704065532;
+	bh=viBc982nQ80zJhQyCuFg35i8lVowkqJDzPvsvt5B928=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kPsPaXCnjuMIRkEqoFXULfz911TT0lmqAqvE6tIrRymBSEnvVbKcRodxH11rHXOrr
-	 I1a2f4gNPN+vEQ7opfaL8wOhpmwgT6JtzSo3yYoV6tywc7YpDjRae8K3bRHPFEmLCL
-	 95HaZz91DepF63jlMPYW+PiXnF7AE+Agpi7JJPYNyArnxDt2NvEAi6Mrlp6ctrWcxc
-	 aIlKnA0kg9Mg/XAWODPDtemcIagMcGzgNa0t2txVtfzTklXqFgpFc7AtaTIG7DFuUF
-	 ynSrcE6FX2/kdRGLYMGCHH8KRullxRGTpOBXG9eYvoUH8MtIOan2g6epD4REYiRaXn
-	 oPI370c8jXZpg==
-Date: Sun, 31 Dec 2023 15:31:56 -0800
-Subject: [PATCH 09/58] xfs: update imeta transaction reservations for metadir
+	b=G+x8CHX5mo9ia/xar4TB0ZsX/D+9+f4C6Uvz9Cjg0yn8srM+MgVbGyC4UQZAZSevF
+	 ENX6VwBAdPeB+pj3KXolqBDfDqkiOEqtduKV1UoSIYxKiChrxIJ1ZpYCOMzG1cISYm
+	 dH83MRlvvDFPob17e9J4Whg4ESAIhgVGAJoA5TurZuDkbuOrq1JldjGfo371HjZtFW
+	 uqM6hAwe7YmTkmyIiibJ1r8wuz+FujTBNfS2BSbOEUQTrzHa8TYKazujQ7oe/8SmSQ
+	 X1w3oWhtrwz0Eg9glZHSL5HBPLODosm/GSwjDNVleFJP1it3oGIBi/agh1yXICpIkj
+	 h1r8yVf57W7nw==
+Date: Sun, 31 Dec 2023 15:32:11 -0800
+Subject: [PATCH 10/58] xfs: load metadata directory root at mount time
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010067.1809361.750161469464973114.stgit@frogsfrogsfrogs>
+Message-ID: <170405010080.1809361.5972158645244058110.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,130 +37,122 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the new metadata inode transaction reservations to handle
-metadata directories if that feature is enabled.
+Load the metadata directory root inode into memory at mount time and
+release it at unmount time.  We also make sure that the obsolete inode
+pointers in the superblock are not logged or read from the superblock.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_trans_resv.c |  101 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 98 insertions(+), 3 deletions(-)
+ include/xfs_mount.h |    1 +
+ libxfs/init.c       |   13 +++++++++++++
+ libxfs/xfs_sb.c     |   31 +++++++++++++++++++++++++++++++
+ libxfs/xfs_types.c  |    2 +-
+ 4 files changed, 46 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 5a1ad959870..a46360e2bdb 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -1106,6 +1106,81 @@ xfs_calc_sb_reservation(
- 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index 7dfa94dfd9f..8952869d89a 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -66,6 +66,7 @@ typedef struct xfs_mount {
+ 	uint8_t			*m_rsum_cache;
+ 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
+ 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
++	struct xfs_inode	*m_metadirip;	/* ptr to metadata directory */
+ 	struct xfs_buftarg	*m_ddev_targp;
+ 	struct xfs_buftarg	*m_logdev_targp;
+ 	struct xfs_buftarg	*m_rtdev_targp;
+diff --git a/libxfs/init.c b/libxfs/init.c
+index c0f148e75a2..67f9e1fe99b 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -685,6 +685,17 @@ libxfs_mountfs_imeta(
+ 	if (error)
+ 		return;
+ 
++	if (xfs_has_metadir(mp)) {
++		error = -libxfs_imeta_iget(tp, mp->m_sb.sb_metadirino,
++				XFS_DIR3_FT_DIR, &mp->m_metadirip);
++		if (error) {
++			fprintf(stderr,
++ _("%s: Failed to load metadir root directory, error %d\n"),
++					progname, error);
++			goto err_cancel;
++		}
++	}
++
+ 	error = -xfs_imeta_mount(tp);
+ 	if (error) {
+ 		fprintf(stderr,
+@@ -991,6 +1002,8 @@ libxfs_umount(
+ 	int			error;
+ 
+ 	libxfs_rtmount_destroy(mp);
++	if (mp->m_metadirip)
++		libxfs_imeta_irele(mp->m_metadirip);
+ 
+ 	/*
+ 	 * Purge the buffer cache to write all dirty buffers to disk and free
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 49d62281995..b74a170605d 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -680,6 +680,25 @@ __xfs_sb_from_disk(
+ 	/* Convert on-disk flags to in-memory flags? */
+ 	if (convert_xquota)
+ 		xfs_sb_quota_from_disk(to);
++
++	if (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR) {
++		/*
++		 * Set metadirino here and null out the in-core fields for
++		 * the other inodes because metadir initialization will load
++		 * them later.
++		 */
++		to->sb_metadirino = be64_to_cpu(from->sb_rbmino);
++		to->sb_rbmino = NULLFSINO;
++		to->sb_rsumino = NULLFSINO;
++
++		/*
++		 * We don't have to worry about quota inode conversion here
++		 * because metadir requires a v5 filesystem.
++		 */
++		to->sb_uquotino = NULLFSINO;
++		to->sb_gquotino = NULLFSINO;
++		to->sb_pquotino = NULLFSINO;
++	}
  }
  
-+/*
-+ * Metadata inode creation needs enough space to create or mkdir a directory,
-+ * plus logging the superblock.
-+ */
-+static unsigned int
-+xfs_calc_imeta_create_resv(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
-+{
-+	unsigned int		ret;
+ void
+@@ -827,6 +846,18 @@ xfs_sb_to_disk(
+ 	to->sb_lsn = cpu_to_be64(from->sb_lsn);
+ 	if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID)
+ 		uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
 +
-+	ret = xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
-+	ret += resp->tr_create.tr_logres;
-+	return ret;
-+}
-+
-+/* Metadata inode creation needs enough rounds to create or mkdir a directory */
-+static int
-+xfs_calc_imeta_create_count(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
-+{
-+	return resp->tr_create.tr_logcount;
-+}
-+
-+/*
-+ * Metadata inode link needs enough space to add a file plus logging the
-+ * superblock.
-+ */
-+static unsigned int
-+xfs_calc_imeta_link_resv(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
-+{
-+	unsigned int		ret;
-+
-+	ret = xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
-+	ret += resp->tr_link.tr_logres;
-+	return ret;
-+}
-+
-+/* Metadata inode linking needs enough rounds to remove a file. */
-+static int
-+xfs_calc_imeta_link_count(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
-+{
-+	return resp->tr_link.tr_logcount;
-+}
-+
-+/*
-+ * Metadata inode unlink needs enough space to remove a file plus logging the
-+ * superblock.
-+ */
-+static unsigned int
-+xfs_calc_imeta_unlink_resv(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
-+{
-+	unsigned int		ret;
-+
-+	ret = xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
-+	ret += resp->tr_remove.tr_logres;
-+	return ret;
-+}
-+
-+/* Metadata inode unlinking needs enough rounds to remove a file. */
-+static int
-+xfs_calc_imeta_unlink_count(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
-+{
-+	return resp->tr_remove.tr_logcount;
-+}
-+
- /*
-  * Namespace reservations.
-  *
-@@ -1248,7 +1323,27 @@ xfs_trans_resv_calc(
- 	resp->tr_qm_dqalloc.tr_logcount += logcount_adj;
- 
- 	/* metadata inode creation and unlink */
--	resp->tr_imeta_create = resp->tr_create;
--	resp->tr_imeta_link = resp->tr_link;
--	resp->tr_imeta_unlink = resp->tr_remove;
-+	if (xfs_has_metadir(mp)) {
-+		resp->tr_imeta_create.tr_logres =
-+				xfs_calc_imeta_create_resv(mp, resp);
-+		resp->tr_imeta_create.tr_logcount =
-+				xfs_calc_imeta_create_count(mp, resp);
-+		resp->tr_imeta_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+		resp->tr_imeta_link.tr_logres =
-+				xfs_calc_imeta_link_resv(mp, resp);
-+		resp->tr_imeta_link.tr_logcount =
-+				xfs_calc_imeta_link_count(mp, resp);
-+		resp->tr_imeta_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+		resp->tr_imeta_unlink.tr_logres =
-+				xfs_calc_imeta_unlink_resv(mp, resp);
-+		resp->tr_imeta_unlink.tr_logcount =
-+				xfs_calc_imeta_unlink_count(mp, resp);
-+		resp->tr_imeta_unlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+	} else {
-+		resp->tr_imeta_create = resp->tr_create;
-+		resp->tr_imeta_link = resp->tr_link;
-+		resp->tr_imeta_unlink = resp->tr_remove;
++	if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR) {
++		/*
++		 * Save metadirino here and null out the on-disk fields for
++		 * the other inodes, at least until we reuse the fields.
++		 */
++		to->sb_rbmino = cpu_to_be64(from->sb_metadirino);
++		to->sb_rsumino = cpu_to_be64(NULLFSINO);
++		to->sb_uquotino = cpu_to_be64(NULLFSINO);
++		to->sb_gquotino = cpu_to_be64(NULLFSINO);
++		to->sb_pquotino = cpu_to_be64(NULLFSINO);
 +	}
+ }
+ 
+ /*
+diff --git a/libxfs/xfs_types.c b/libxfs/xfs_types.c
+index 88720b297d7..f5eab8839e3 100644
+--- a/libxfs/xfs_types.c
++++ b/libxfs/xfs_types.c
+@@ -128,7 +128,7 @@ xfs_verify_dir_ino(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino)
+ {
+-	if (xfs_internal_inum(mp, ino))
++	if (!xfs_has_metadir(mp) && xfs_internal_inum(mp, ino))
+ 		return false;
+ 	return xfs_verify_ino(mp, ino);
  }
 
