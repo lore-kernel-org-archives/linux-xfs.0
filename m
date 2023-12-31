@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AB11BA2E;
-	Sun, 31 Dec 2023 20:01:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC392BA22;
+	Sun, 31 Dec 2023 20:02:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oAWFD34l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A71FC433C7;
-	Sun, 31 Dec 2023 20:01:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PKdDhC2I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9D67C433C8;
+	Sun, 31 Dec 2023 20:02:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052911;
-	bh=3+Quyh09QidfmcQPi+eCTcq8k/PlGZLC+uOkXRrEIAw=;
+	s=k20201202; t=1704052926;
+	bh=UVjlDA5BQCKVTPL6RxkQjGqQF6EjNS9B8oFNyx1iGFA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=oAWFD34l9Nst0tvVUwy8BzKSHNGRKBtf7T321aLAKeqfEc8rV0IHteKpuwmw1QBPR
-	 AFQUbyUxJeIu3tlobIhsl6esXu4gW6LtzE+7IQiL9tiybQFA+tje47ZGWaExopsoEC
-	 cnWYUXIZKjU6btpCEDWCj0dJr3KokPlR5AU4v+RJQoqwKjbBjMjy8qo0UKvQN7Xf1t
-	 5KI/or9E51pMnsOcRncyqKSPQajSNhGHwXxC2ZT9WGk8eoiYiYCMzydYXkWIw4d3cr
-	 amWK8h96pyZ8/1udhDaVBqqRfkA78DpSHAa+OlAQmlaHWYoj4M2rSOmz5R+KCDbwsS
-	 /D2InhSuzO1mQ==
-Date: Sun, 31 Dec 2023 12:01:50 -0800
-Subject: [PATCHSET v2.0 8/9] fstests: reflink with large realtime extents
+	b=PKdDhC2IHWUGK+g2d38XiFp/GHBL7AQ5KYnhiOiFKTiJ6EK8MmSbX6UCjd6sgQ31K
+	 1gEIXDn7teDN6lU67fs288RLPGH3da84OWSVQ/568KZpgTgxU6d6ClDBdAbfxrJNOc
+	 iJNhVrQZJ/gN2SbDS4op1tbkC8wIrizSYJDHo5ys1cLTqK4imLQIZaGigIgyjJJy6O
+	 iYWWvV2ITyugzyc7CE33+/PGU570emnfizKwGQm1LuozqnLvvI0aDN3l2vpaRgtNPD
+	 Ce6cQJxwFt2cSVohZGXzazde9L32HAh2rWhK3r5CGeFYJWdhiky+3pG/PdpJq+BsTI
+	 SqDfNCemTkZVg==
+Date: Sun, 31 Dec 2023 12:02:06 -0800
+Subject: [PATCHSET v2.0 9/9] fstests: functional tests for rt quota
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170405032733.1827706.12312180709769839153.stgit@frogsfrogsfrogs>
+Message-ID: <170405033118.1827880.4279631111094836504.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,13 +37,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Now that we've landed support for reflink on the realtime device for
-cases where the rt extent size is the same as the fs block size, enhance
-the reflink code further to support cases where the rt extent size is a
-power-of-two multiple of the fs block size.  This enables us to do data
-block sharing (for example) for much larger allocation units by dirtying
-pagecache around shared extents and expanding writeback to write back
-shared extents fully.
+The sole patch in this series sets up functional testing for quota on
+the xfs realtime device.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -54,52 +49,49 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-quotas
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-quotas
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-quotas
 ---
- common/rc          |   23 +++++++
- common/reflink     |   27 ++++++++
- tests/generic/145  |    1 
- tests/generic/147  |    1 
- tests/generic/261  |    1 
- tests/generic/262  |    1 
- tests/generic/303  |    8 ++
- tests/generic/331  |    1 
- tests/generic/353  |    2 -
- tests/generic/517  |    1 
- tests/generic/657  |    1 
- tests/generic/658  |    1 
- tests/generic/659  |    1 
- tests/generic/660  |    1 
- tests/generic/663  |    1 
- tests/generic/664  |    1 
- tests/generic/665  |    1 
- tests/generic/670  |    1 
- tests/generic/672  |    1 
- tests/xfs/180      |    1 
- tests/xfs/182      |    1 
- tests/xfs/184      |    1 
- tests/xfs/1919     |  163 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1919.out |   84 +++++++++++++++++++++++++
- tests/xfs/192      |    1 
- tests/xfs/1926     |  177 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1926.out |    2 +
- tests/xfs/200      |    1 
- tests/xfs/204      |    1 
- tests/xfs/208      |    1 
- tests/xfs/315      |    1 
- tests/xfs/326      |    6 ++
- tests/xfs/420      |    3 +
- tests/xfs/421      |    3 +
- tests/xfs/792      |    1 
- 35 files changed, 520 insertions(+), 2 deletions(-)
- create mode 100755 tests/xfs/1919
- create mode 100644 tests/xfs/1919.out
- create mode 100755 tests/xfs/1926
- create mode 100644 tests/xfs/1926.out
+ common/populate    |    2 -
+ common/quota       |   64 ++++++++++++++++++--
+ common/xfs         |   12 ++++
+ tests/generic/219  |    1 
+ tests/generic/230  |    1 
+ tests/generic/305  |    1 
+ tests/generic/326  |    1 
+ tests/generic/327  |    1 
+ tests/generic/328  |    1 
+ tests/generic/566  |    4 +
+ tests/generic/587  |    1 
+ tests/generic/603  |    1 
+ tests/generic/691  |    2 +
+ tests/generic/710  |    4 +
+ tests/xfs/050      |    2 +
+ tests/xfs/106      |    1 
+ tests/xfs/108      |    2 +
+ tests/xfs/152      |    1 
+ tests/xfs/153      |    2 +
+ tests/xfs/161      |    2 +
+ tests/xfs/1858     |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1858.out |   41 +++++++++++++
+ tests/xfs/213      |    1 
+ tests/xfs/214      |    1 
+ tests/xfs/220      |    2 +
+ tests/xfs/299      |    2 +
+ tests/xfs/330      |    1 
+ tests/xfs/434      |    1 
+ tests/xfs/435      |    1 
+ tests/xfs/441      |    1 
+ tests/xfs/442      |    1 
+ tests/xfs/508      |    2 +
+ tests/xfs/511      |   10 +++
+ tests/xfs/720      |    5 ++
+ 34 files changed, 333 insertions(+), 10 deletions(-)
+ create mode 100755 tests/xfs/1858
+ create mode 100644 tests/xfs/1858.out
 
