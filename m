@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA14C154
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:19:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC45C2CC
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:20:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpJwzlFk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A507C433C9;
-	Sun, 31 Dec 2023 23:19:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f/0gXBN3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 986DBC433C8;
+	Sun, 31 Dec 2023 23:20:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704064798;
-	bh=HNd0bgulWfNjZJSWfh3MGvjffDN9Ozyp0WRp9kIV1Ko=;
+	s=k20201202; t=1704064813;
+	bh=rLEWCoTbexiKW/OGN75uYpHafbeupx1GvUJVdpvp63o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BpJwzlFkGbzIlKiQoXW/hNbL4hZ8F+AzO2Ml8kz4fMz1mKnqFpatDSAm4fBRjgG5B
-	 a9hkNFK/P0yNTVjWDOFUacZEmYM3Aw5UyvexLXyB0hpYSiGw1JcaSZeVgFGkfIjj22
-	 2GHGvV9emAIs6XILTxpBOvuzVzIIY2uawD06pR7LX3wPvq4MJUu1sDv4TagDL+1+4R
-	 p4IrLx06nSDAs35PqREBtVJQUPN/stN/yMab4MA6WuJUHAAbviIoxMAF62JEnpiVEr
-	 0qEXGQKCEhn0eESumy8KleidZ+afBS+51rCpOTb/SrZeDGi+xAF3M+fqIPvRdtYLWA
-	 JtMYAFONFA4aA==
-Date: Sun, 31 Dec 2023 15:19:57 -0800
-Subject: [PATCH 01/10] xfs: introduce vectored scrub mode
+	b=f/0gXBN3gv2ppz0AsOsiyaLSwvi8IQbLzhnoY6aBS/Xa+l7HHge0jvONdFkKP5yth
+	 9dGAJvdzeFiKImmYcl90QmdcP+qgpncXSLxUVTC45nGyZ05p7YGkksvJ+b0V1tNksJ
+	 130gtSMC6IeF/+cH/ctmUBA8hH4m/lsNW9Jh3dM4jI3+npxGF8zwa4TAbjiP36MV95
+	 K+1rNbV+34BB1evRgCOp3GFOzG82BoE5oi7vk78O9FdDR/azYjAsNYAgJG3YJ5N2+P
+	 0CovVXjiT3YKgCeT9v+BhBMUBX6keiOkNSmxNy+CsC3llcOa64S6Y7TLFvxSoD1s6o
+	 F0XQ06YoPUQAA==
+Date: Sun, 31 Dec 2023 15:20:13 -0800
+Subject: [PATCH 02/10] libfrog: support vectored scrub
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405007856.1806194.7426360300744176144.stgit@frogsfrogsfrogs>
+Message-ID: <170405007870.1806194.6377941671214699137.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405007836.1806194.11810681886556560484.stgit@frogsfrogsfrogs>
 References: <170405007836.1806194.11810681886556560484.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,258 +37,176 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Introduce a variant on XFS_SCRUB_METADATA that allows for vectored mode.
+Enhance libfrog to support performing vectored metadata scrub.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_fs.h                      |   10 ++
- libxfs/xfs_fs_staging.h              |   32 ++++++
- man/man2/ioctl_xfs_scrubv_metadata.2 |  168 ++++++++++++++++++++++++++++++++++
- 3 files changed, 210 insertions(+)
- create mode 100644 man/man2/ioctl_xfs_scrubv_metadata.2
+ libfrog/fsgeom.h |    6 +++
+ libfrog/scrub.c  |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/scrub.h  |    4 ++
+ 3 files changed, 134 insertions(+)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 2499a20f5f7..77fbca573e1 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -725,6 +725,15 @@ struct xfs_scrub_metadata {
- /* Number of scrub subcommands. */
- #define XFS_SCRUB_TYPE_NR	29
+diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
+index 7e002c5137a..4f3542eafec 100644
+--- a/libfrog/fsgeom.h
++++ b/libfrog/fsgeom.h
+@@ -56,6 +56,12 @@ struct xfs_fd {
+ /* Only use XFS_IOC_EXCHANGE_RANGE for file data exchanges. */
+ #define XFROG_FLAG_FORCE_EXCH_RANGE	(1 << 3)
  
-+/*
-+ * This special type code only applies to the vectored scrub implementation.
-+ *
-+ * If any of the previous scrub vectors recorded runtime errors or have
-+ * sv_flags bits set that match the OFLAG bits in the barrier vector's
-+ * sv_flags, set the barrier's sv_ret to -ECANCELED and return to userspace.
-+ */
-+#define XFS_SCRUB_TYPE_BARRIER	(-1U)
++/* Only use the older one-at-a-time scrub ioctl. */
++#define XFROG_FLAG_SCRUB_FORCE_SINGLE	(1 << 4)
 +
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
++/* Only use the vectored scrub ioctl. */
++#define XFROG_FLAG_SCRUB_FORCE_VECTOR	(1 << 5)
++
+ /* Static initializers */
+ #define XFS_FD_INIT(_fd)	{ .fd = (_fd), }
+ #define XFS_FD_INIT_EMPTY	XFS_FD_INIT(-1)
+diff --git a/libfrog/scrub.c b/libfrog/scrub.c
+index a2146e228f5..8264aab00ef 100644
+--- a/libfrog/scrub.c
++++ b/libfrog/scrub.c
+@@ -171,3 +171,127 @@ xfrog_scrub_metadata(
  
-@@ -813,6 +822,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-+/*	XFS_IOC_SCRUBV_METADATA -- staging 60	   */
- #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
- /*	XFS_IOC_GETPARENTS ---- staging 62         */
- 
-diff --git a/libxfs/xfs_fs_staging.h b/libxfs/xfs_fs_staging.h
-index e0650af0558..69d29f213af 100644
---- a/libxfs/xfs_fs_staging.h
-+++ b/libxfs/xfs_fs_staging.h
-@@ -170,4 +170,36 @@ xfs_getparents_rec(
- 
- #define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
- 
-+/* Vectored scrub calls to reduce the number of kernel transitions. */
+ 	return 0;
+ }
 +
-+struct xfs_scrub_vec {
-+	__u32 sv_type;		/* XFS_SCRUB_TYPE_* */
-+	__u32 sv_flags;		/* XFS_SCRUB_FLAGS_* */
-+	__s32 sv_ret;		/* 0 or a negative error code */
-+	__u32 sv_reserved;	/* must be zero */
-+};
-+
-+/* Vectored metadata scrub control structure. */
-+struct xfs_scrub_vec_head {
-+	__u64 svh_ino;		/* inode number. */
-+	__u32 svh_gen;		/* inode generation. */
-+	__u32 svh_agno;		/* ag number. */
-+	__u32 svh_flags;	/* XFS_SCRUB_VEC_FLAGS_* */
-+	__u16 svh_rest_us;	/* wait this much time between vector items */
-+	__u16 svh_nr;		/* number of svh_vecs */
-+	__u64 svh_reserved;	/* must be zero */
-+
-+	struct xfs_scrub_vec svh_vecs[];
-+};
-+
-+#define XFS_SCRUB_VEC_FLAGS_ALL		(0)
-+
-+static inline size_t sizeof_xfs_scrub_vec(unsigned int nr)
++/* Decide if there have been any scrub failures up to this point. */
++static inline int
++xfrog_scrubv_previous_failures(
++	struct xfs_scrub_vec_head	*vhead,
++	struct xfs_scrub_vec		*barrier_vec)
 +{
-+	return sizeof(struct xfs_scrub_vec_head) +
-+		nr * sizeof(struct xfs_scrub_vec);
++	struct xfs_scrub_vec		*v;
++	__u32				failmask;
++
++	failmask = barrier_vec->sv_flags & XFS_SCRUB_FLAGS_OUT;
++	for (v = vhead->svh_vecs; v < barrier_vec; v++) {
++		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER)
++			continue;
++
++		/*
++		 * Runtime errors count as a previous failure, except the ones
++		 * used to ask userspace to retry.
++		 */
++		if (v->sv_ret && v->sv_ret != -EBUSY && v->sv_ret != -ENOENT &&
++		    v->sv_ret != -EUSERS)
++			return -ECANCELED;
++
++		/*
++		 * If any of the out-flags on the scrub vector match the mask
++		 * that was set on the barrier vector, that's a previous fail.
++		 */
++		if (v->sv_flags & failmask)
++			return -ECANCELED;
++	}
++
++	return 0;
 +}
 +
-+#define XFS_IOC_SCRUBV_METADATA	_IOWR('X', 60, struct xfs_scrub_vec_head)
++static int
++xfrog_scrubv_fallback(
++	struct xfs_fd			*xfd,
++	struct xfs_scrub_vec_head	*vhead)
++{
++	struct xfs_scrub_vec		*v;
++	unsigned int			i;
 +
- #endif /* __XFS_FS_STAGING_H__ */
-diff --git a/man/man2/ioctl_xfs_scrubv_metadata.2 b/man/man2/ioctl_xfs_scrubv_metadata.2
-new file mode 100644
-index 00000000000..05a4adaba48
---- /dev/null
-+++ b/man/man2/ioctl_xfs_scrubv_metadata.2
-@@ -0,0 +1,168 @@
-+.\" Copyright (c) 2023-2024 Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" SPDX-License-Identifier: GPL-2.0-or-later
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-SCRUBV-METADATA 2 2023-08-18 "XFS"
-+.SH NAME
-+ioctl_xfs_scrubv_metadata \- check a lot of XFS filesystem metadata
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.br
-+.B #include <xfs/xfs_fs_staging.h>
-+.PP
-+.BI "int ioctl(int " dest_fd ", XFS_IOC_SCRUBV_METADATA, struct xfs_scrub_vec_head *" arg );
-+.SH DESCRIPTION
-+This XFS ioctl asks the kernel driver to examine several pieces of filesystem
-+metadata for errors or suboptimal metadata.
-+Multiple scrub types can be invoked to target a single filesystem object.
-+See
-+.BR ioctl_xfs_scrub_metadata (2)
-+for a discussion of metadata validation, and documentation of the various
-+.B XFS_SCRUB_TYPE
-+and
-+.B XFS_SCRUB_FLAGS
-+values referenced below.
++	if (vhead->svh_flags & ~XFS_SCRUB_VEC_FLAGS_ALL)
++		return -EINVAL;
++	for (i = 0, v = vhead->svh_vecs; i < vhead->svh_nr; i++, v++) {
++		if (v->sv_reserved)
++			return -EINVAL;
++		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER &&
++		    (v->sv_flags & ~XFS_SCRUB_FLAGS_OUT))
++			return -EINVAL;
++	}
 +
-+The types and location of the metadata to scrub are conveyed as a vector with
-+a header of the following form:
-+.PP
-+.in +4n
-+.nf
++	/* Run all the scrubbers. */
++	for (i = 0, v = vhead->svh_vecs; i < vhead->svh_nr; i++, v++) {
++		struct xfs_scrub_metadata	sm = {
++			.sm_type	= v->sv_type,
++			.sm_flags	= v->sv_flags,
++			.sm_ino		= vhead->svh_ino,
++			.sm_gen		= vhead->svh_gen,
++			.sm_agno	= vhead->svh_agno,
++		};
++		struct timespec	tv;
 +
-+struct xfs_scrub_vec_head {
-+	__u64 svh_ino;
-+	__u32 svh_gen;
-+	__u32 svh_agno;
-+	__u32 svh_flags;
-+	__u16 svh_rest_us;
-+	__u16 svh_nr;
-+	__u64 svh_reserved;
++		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER) {
++			v->sv_ret = xfrog_scrubv_previous_failures(vhead, v);
++			if (v->sv_ret)
++				break;
++			continue;
++		}
 +
-+	struct xfs_scrub_vec svh_vecs[];
-+};
-+.fi
-+.in
-+.PP
-+The field
-+.IR svh_ino ,
-+.IR svh_gen ,
-+and
-+.IR svh_agno
-+correspond to the
-+.IR sm_ino ,
-+.IR sm_gen ,
-+and
-+.IR sm_agno
-+fields of the regular scrub ioctl.
-+Exactly one filesystem object can be specified in a single call.
-+The kernel will proceed with each vector in
-+.I svh_vecs
-+until progress is no longer possible.
++		v->sv_ret = xfrog_scrub_metadata(xfd, &sm);
++		v->sv_flags = sm.sm_flags;
 +
-+The field
-+.I svh_rest_us
-+specifies an amount of time to pause between each scrub invocation to give
-+the system a chance to process other requests.
++		if (vhead->svh_rest_us) {
++			tv.tv_sec = 0;
++			tv.tv_nsec = vhead->svh_rest_us * 1000;
++			nanosleep(&tv, NULL);
++		}
++	}
 +
-+The field
-+.I svh_nr
-+specifies the number of vectors in the
-+.I svh_recs
-+flex array.
++	return 0;
++}
 +
-+.PP
-+The field
-+.I svh_reserved
-+must be zero.
++/* Invoke the vectored scrub ioctl. */
++static int
++xfrog_scrubv_call(
++	struct xfs_fd			*xfd,
++	struct xfs_scrub_vec_head	*vhead)
++{
++	int				ret;
 +
-+Each vector has the following form:
-+.PP
-+.in +4n
-+.nf
++	ret = ioctl(xfd->fd, XFS_IOC_SCRUBV_METADATA, vhead);
++	if (ret)
++		return -errno;
 +
-+struct xfs_scrub_vec {
-+	__u32 sv_type;
-+	__u32 sv_flags;
-+	__s32 sv_ret;
-+	__u32 sv_reserved;
-+};
-+.fi
-+.in
++	return 0;
++}
 +
-+.PP
-+The fields
-+.I sv_type
-+and
-+.I sv_flags
-+indicate the type of metadata to check and the behavioral changes that
-+userspace will permit of the kernel.
-+The
-+.I sv_flags
-+field will be updated upon completion of the scrub call.
-+See the documentation of
-+.B XFS_SCRUB_TYPE_*
-+and
-+.B XFS_SCRUB_[IO]FLAG_*
-+values in
-+.BR ioctl_xfs_scrub_metadata (2)
-+for a detailed description of their purpose.
++/* Invoke the vectored scrub ioctl.  Returns zero or negative error code. */
++int
++xfrog_scrubv_metadata(
++	struct xfs_fd			*xfd,
++	struct xfs_scrub_vec_head	*vhead)
++{
++	int				error = 0;
 +
-+.PP
-+If a vector's
-+.I sv_type
-+field is set to the value
-+.BR XFS_SCRUB_TYPE_BARRIER ,
-+the kernel will stop processing vectors and return to userspace if a scrubber
-+flags corruption by setting one of the
-+.B XFS_SCRUB_OFLAG_*
-+values in
-+.I sv_flags
-+or
-+returns an operation error in
-+.IR sv_ret .
-+Otherwise, the kernel returns only after processing all vectors.
++	if (xfd->flags & XFROG_FLAG_SCRUB_FORCE_SINGLE)
++		goto try_single;
 +
-+The
-+.I sv_ret
-+field is set to the return value of the scrub function.
-+See the RETURN VALUE
-+section of the
-+.BR ioctl_xfs_scrub_metadata (2)
-+manual page for more information.
++	error = xfrog_scrubv_call(xfd, vhead);
++	if (error == 0 || (xfd->flags & XFROG_FLAG_SCRUB_FORCE_VECTOR))
++		return error;
 +
-+The
-+.B sv_reserved
-+field must be zero.
++	/* If the vectored scrub ioctl wasn't found, force single mode. */
++	switch (error) {
++	case -EOPNOTSUPP:
++	case -ENOTTY:
++		xfd->flags |= XFROG_FLAG_SCRUB_FORCE_SINGLE;
++		break;
++	}
 +
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EINVAL
-+One or more of the arguments specified is invalid.
-+.TP
-+.B EINTR
-+The operation was interrupted.
-+.TP
-+.B ENOMEM
-+There was not sufficient memory to perform the scrub or repair operation.
-+.TP
-+.B EFAULT
-+A memory fault was encountered while reading or writing the vector.
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH NOTES
-+These operations may block other filesystem operations for a long time.
-+A calling process can stop the operation by being sent a fatal
-+signal, but non-fatal signals are blocked.
-+.SH SEE ALSO
-+.BR ioctl (2)
-+.BR ioctl_xfs_scrub_metadata (2)
-+.BR xfs_scrub (8)
-+.BR xfs_repair (8)
++try_single:
++	return xfrog_scrubv_fallback(xfd, vhead);
++}
+diff --git a/libfrog/scrub.h b/libfrog/scrub.h
+index 27230c62f71..43456230479 100644
+--- a/libfrog/scrub.h
++++ b/libfrog/scrub.h
+@@ -28,4 +28,8 @@ extern const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR];
+ 
+ int xfrog_scrub_metadata(struct xfs_fd *xfd, struct xfs_scrub_metadata *meta);
+ 
++struct xfs_scrub_vec_head;
++
++int xfrog_scrubv_metadata(struct xfs_fd *xfd, struct xfs_scrub_vec_head *vhead);
++
+ #endif	/* __LIBFROG_SCRUB_H__ */
 
