@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C9F8C127
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:56:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD5B1C140
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:57:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UxLU1coS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89624C433C7;
-	Sun, 31 Dec 2023 22:56:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GUk/4Ekj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 348A9C433C8;
+	Sun, 31 Dec 2023 22:57:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704063406;
-	bh=GtozBuGbD6GTmS4+4nYeFsCVVPkcsvTf+M3njZpXY2k=;
+	s=k20201202; t=1704063422;
+	bh=CRT6+7XJjVytP/pdcxGP04oLLNV+H26lOrSrxSGGjbY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UxLU1coSytJ0KNzTCy+jOk17+2UMjxxVTtZHHWznYZbdM4b54w3bfOEDjXewVFtbH
-	 yEaBnELH1DmzW6L3nHIK8LnSGgUuEoFKcX/haXgar5moILpnZAhgrj/iY8U0+ZlXfG
-	 NvyQpG6G6ulDVsfhTQFtK/h5WilnNRfxPkpeMsrLwaFA2aCEs/8SCnKQZyqP//w2Ih
-	 M0HgDd5f6J7sgBVF0HBMjDCgBLO+pK5B5DnUHKDGV9XPI6JcEEf1Qds0IaPr8FwF8w
-	 NK4rZaQ5Hs7EHzGkKXDwZ6LakiS8frGLDGiRNNmYDwVNjgFQQxRNuiDI2Q/Y9VGEvI
-	 wyKz0NpPCgRVQ==
-Date: Sun, 31 Dec 2023 14:56:46 -0800
-Subject: [PATCH 4/6] xfs_scrub: tighten up the security on the background
+	b=GUk/4EkjAA5kCfmUkMm/y7ty4CO2BOkcWC2ls2Uz4xhzCUgaGOhm2ueMI7ghYgjsw
+	 JytbAY5k0fcYfYtKhJClIldpRBNdVVOB54PybNtNuZCKPGqvKa2BGuRKaZmASVMMA1
+	 XBjbRSeqzWxXmHg+9EikvpwoVapWmCXABypYNjyIbueNGdGf1kGoLqL55y3Fj0mFb3
+	 nonLVPiYg6VcYYxoJnr+bVOFCo+lMkgqPD+NgtQwLLuQ4F89ZREFlVRVum1H0p+/wB
+	 lmNE6TIMdxf9ewcfm+l5XeQHLgFdoU/BhFPPhvnOy4rldZgBU40gLopLxJiyFXbS5/
+	 Ex+HgTysjLHMg==
+Date: Sun, 31 Dec 2023 14:57:01 -0800
+Subject: [PATCH 5/6] xfs_scrub_fail: tighten up the security on the background
  systemd service
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <170405002659.1801298.16325608720084880570.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <170405002672.1801298.17944033724602795810.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405002602.1801298.14531646183046394491.stgit@frogsfrogsfrogs>
 References: <170405002602.1801298.14531646183046394491.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,82 +38,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, xfs_scrub has to run with some elevated privileges.  Minimize
-the risk of xfs_scrub escaping its service container or contaminating
-the rest of the system by using systemd's sandboxing controls to
-prohibit as much access as possible.
+Currently, xfs_scrub_fail has to run with enough privileges to access
+the journal contents for a given scrub run and to send a report via
+email.  Minimize the risk of xfs_scrub_fail escaping its service
+container or contaminating the rest of the system by using systemd's
+sandboxing controls to prohibit as much access as possible.
 
 The directives added by this patch were recommended by the command
-'systemd-analyze security xfs_scrub@.service' in systemd 249.
+'systemd-analyze security xfs_scrub_fail@.service' in systemd 249.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub@.service.in |   81 +++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 73 insertions(+), 8 deletions(-)
+ scrub/xfs_scrub_fail@.service.in |   55 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
 
-diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-index 504d3606985..d834f26bd53 100644
---- a/scrub/xfs_scrub@.service.in
-+++ b/scrub/xfs_scrub@.service.in
-@@ -8,17 +8,21 @@ Description=Online XFS Metadata Check for %f
- OnFailure=xfs_scrub_fail@%i.service
- Documentation=man:xfs_scrub(8)
- 
-+# Explicitly require the capabilities that this program needs
-+ConditionCapability=CAP_SYS_ADMIN
-+ConditionCapability=CAP_FOWNER
-+ConditionCapability=CAP_DAC_OVERRIDE
-+ConditionCapability=CAP_DAC_READ_SEARCH
-+ConditionCapability=CAP_SYS_RAWIO
-+
-+# Must be a mountpoint
-+ConditionPathIsMountPoint=%f
-+RequiresMountsFor=%f
-+
- [Service]
- Type=oneshot
--PrivateNetwork=true
--ProtectSystem=full
--ProtectHome=read-only
--# Disable private /tmp just in case %f is a path under /tmp.
--PrivateTmp=no
--AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
--NoNewPrivileges=yes
- Environment=SERVICE_MODE=1
--ExecStart=@sbindir@/xfs_scrub @scrub_args@ %f
-+ExecStart=@sbindir@/xfs_scrub @scrub_args@ -M /tmp/scrub/ %f
- SyslogIdentifier=%N
- 
- # Run scrub with minimal CPU and IO priority so that nothing else will starve.
-@@ -31,5 +35,66 @@ Nice=19
+diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
+index dfbbd3b8218..4a40f3bdc85 100644
+--- a/scrub/xfs_scrub_fail@.service.in
++++ b/scrub/xfs_scrub_fail@.service.in
+@@ -18,3 +18,58 @@ SupplementaryGroups=systemd-journal
+ # Create the service underneath the scrub background service slice so that we
  # can control resource usage.
  Slice=system-xfs_scrub.slice
- 
-+# No realtime CPU scheduling
++
++# No realtime scheduling
 +RestrictRealtime=true
 +
- # Dynamically create a user that isn't root
- DynamicUser=true
-+
-+# Make the entire filesystem readonly and /home inaccessible, then bind mount
-+# the filesystem we're supposed to be checking into our private /tmp dir.
-+# 'norbind' means that we don't bind anything under that original mount.
-+ProtectSystem=strict
++# Make the entire filesystem readonly and /home inaccessible.
++ProtectSystem=full
 +ProtectHome=yes
 +PrivateTmp=true
-+BindPaths=%f:/tmp/scrub:norbind
++RestrictSUIDSGID=true
 +
-+# Don't let scrub complain about paths in /etc/projects that have been hidden
-+# by our sandboxing.  scrub doesn't care about project ids anyway.
-+InaccessiblePaths=-/etc/projects
-+
-+# No network access
-+PrivateNetwork=true
++# Emailing reports requires network access, but not the ability to change the
++# hostname.
 +ProtectHostname=true
-+RestrictAddressFamilies=none
-+IPAddressDeny=any
 +
 +# Don't let the program mess with the kernel configuration at all
 +ProtectKernelLogs=true
@@ -123,8 +83,9 @@ index 504d3606985..d834f26bd53 100644
 +ProtectProc=invisible
 +RestrictNamespaces=true
 +
-+# Hide everything in /proc, even /proc/mounts
-+ProcSubset=pid
++# Can't hide /proc because journalctl needs it to find various pieces of log
++# information
++#ProcSubset=pid
 +
 +# Only allow the default personality Linux
 +LockPersonality=true
@@ -143,15 +104,16 @@ index 504d3606985..d834f26bd53 100644
 +SystemCallFilter=~@mount
 +
 +# xfs_scrub needs these privileges to run, and no others
-+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
++CapabilityBoundingSet=
 +NoNewPrivileges=true
 +
-+# xfs_scrub doesn't create files
-+UMask=7777
++# Failure reporting shouldn't create world-readable files
++UMask=0077
 +
-+# No access to hardware /dev files except for block devices
++# Clean up any IPC objects when this unit stops
++RemoveIPC=true
++
++# No access to hardware device files
++PrivateDevices=true
 +ProtectClock=true
-+DevicePolicy=closed
-+DeviceAllow=block-*
 
