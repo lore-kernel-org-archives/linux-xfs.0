@@ -1,31 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA54FBA2B
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:44:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07FD0BA30
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:45:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ksT3HaMt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 349B6C433C7;
-	Sun, 31 Dec 2023 20:44:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vO5uHOud"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC39AC433C7;
+	Sun, 31 Dec 2023 20:45:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704055491;
-	bh=gz44cReZRudGuzQOR80zG4zCE7nFmxrvuY4D7uVPt+I=;
+	s=k20201202; t=1704055506;
+	bh=LeVUhAQxkqF+AXnzn2hoj1qGvr/jij/wSJ+93UUfzfU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ksT3HaMt/Y9Blv8jnzfrNKtxX9h91ytvI2sWz8lcERqmj09quiihHZIqj4XkuDMsK
-	 5bPJoHtGT2A8ILI/Qm9qYu3BGTdgfHIjMbTbxIBcsG/CqvZ0q6vXH0YhtctV2+rkqh
-	 jmFyq3wVPrhxhtTYkX5mjP/Y7ac/dlLrjI9J8D+duMFSt8GZf4H3b2r2yJ95kUAl5d
-	 71W29otMOvJ67mQhhZDit4SY+UpQKirWcy4gfAJ3xeamwePs2O0TSUxkPNK3r9NeyY
-	 b1UtTbM0wcJ99CFI/uONfaPV9Ej05MBw/1aZmM6q7fn7mEDavIJVFd/arTgm3VhXV6
-	 c66HdNPqkd9mg==
-Date: Sun, 31 Dec 2023 12:44:50 -0800
-Subject: [PATCH 7/7] xfs: unlock new repair tempfiles after creation
+	b=vO5uHOudMSpxgXHFv2bi0Mawxk9OimBKwI9/KV7SLyyfDy1ENc2vxzVKs0wdC8gUb
+	 cEOKmqjMSzYMJjGuQyD3+RblIlEFp5D1G1Jg5AANoXDuUrc0on5f3g63Tbjtk+pxYh
+	 vjZ3gn9uaFi3xILEnfy+fgZ/KgH/sApA+9JpKiM+uKO4l69C8mCK3vlvRJTloXH3D1
+	 Wddxl4Rrm15OKjdGWwp8HQPe2emLamp72UUIhYZaNWKIzkn/Re4IW9+5gcoYr3ZO1X
+	 C748kDwpdLxm8Bae0fKkwI2ivmdjV8HmsuPzeAEAqgOOh6yie8QSghleMmhRH0lab6
+	 iGi7EVvPgvJiw==
+Date: Sun, 31 Dec 2023 12:45:06 -0800
+Subject: [PATCH 01/14] xfs: require XFS_SB_FEAT_INCOMPAT_LOG_XATTRS for attr
+ log intent item recovery
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <170404840016.1756291.13128379414353037150.stgit@frogsfrogsfrogs>
-In-Reply-To: <170404839888.1756291.10910474860265774109.stgit@frogsfrogsfrogs>
-References: <170404839888.1756291.10910474860265774109.stgit@frogsfrogsfrogs>
+Message-ID: <170404840420.1756514.7241148659196496235.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
+References: <170404840374.1756514.8610142613907153469.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,33 +39,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-After creation, drop the ILOCK on temporary files that have been created
-to stage a repair.
+The XFS_SB_FEAT_INCOMPAT_LOG_XATTRS feature bit protects a filesystem
+from old kernels that do not know how to recover extended attribute log
+intent items.  Make this check mandatory instead of a debugging assert.
 
+Fixes: fd920008784ea ("xfs: Set up infrastructure for log attribute replay")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/tempfile.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/xfs_attr_item.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index 93d8a6b68f442..9e0f1d311118b 100644
---- a/fs/xfs/scrub/tempfile.c
-+++ b/fs/xfs/scrub/tempfile.c
-@@ -145,6 +145,7 @@ xrep_tempfile_create(
- 	xfs_qm_dqrele(pdqp);
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index d7ebb54a03870..c023962141556 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -469,6 +469,9 @@ xfs_attri_validate(
+ 	unsigned int			op = attrp->alfi_op_flags &
+ 					     XFS_ATTRI_OP_FLAGS_TYPE_MASK;
  
- 	/* Finish setting up the incore / vfs context. */
-+	xfs_iunlock(sc->tempip, XFS_ILOCK_EXCL);
- 	xfs_setup_iops(sc->tempip);
- 	xfs_finish_inode_setup(sc->tempip);
++	if (!xfs_sb_version_haslogxattrs(&mp->m_sb))
++		return false;
++
+ 	if (attrp->__pad != 0)
+ 		return false;
  
-@@ -160,6 +161,7 @@ xrep_tempfile_create(
- 	 * transactions and deadlocks from xfs_inactive.
- 	 */
- 	if (sc->tempip) {
-+		xfs_iunlock(sc->tempip, XFS_ILOCK_EXCL);
- 		xfs_finish_inode_setup(sc->tempip);
- 		xchk_irele(sc, sc->tempip);
- 	}
+@@ -542,8 +545,6 @@ xfs_attri_recover_work(
+ 			 XFS_DA_OP_LOGGED;
+ 	args->owner = args->dp->i_ino;
+ 
+-	ASSERT(xfs_sb_version_haslogxattrs(&mp->m_sb));
+-
+ 	switch (attr->xattri_op_flags) {
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
 
