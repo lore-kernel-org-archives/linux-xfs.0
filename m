@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78322C12D
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:25:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9DFC2CC
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 22:25:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="trN5fesZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 484B6C433C8;
-	Sun, 31 Dec 2023 22:25:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qm1eM0WH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7BCAC433C8;
+	Sun, 31 Dec 2023 22:25:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704061514;
-	bh=vSxW5iQTZ8aDGGfn2RooVk0Q+p0sfZDhXfGxnh+ZxVI=;
+	s=k20201202; t=1704061530;
+	bh=IAjGyFFotrVx3A9NexiCgy0eEEQwPNdU8XgtUh7YvVQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=trN5fesZM+SmYEaBroramb7+SwWn93IEm6Vr86wmROo80NiNp/96PUuO8DbcVNN6H
-	 mHmgB0OImxCGWWvOBNVPjkBV6syGtheCuiWhqn17g7xyQFUO8Lsi4aZkLqScwVlOO3
-	 nq23ubfQOt5ymJxGpvqBu3aIHBYnp+4hiiLo7xsOxY6mpuVRXsJJLC9DfHg3s8M10G
-	 BqM5gkWD5VizP/mPYULqx4hTMtYU5JbE8MOH0KoMwU5FT3o2JPo8wnakrAApdQrIlR
-	 9UU5sfrW0jikhuGE2BCGJ1RJLSOvmX+xtUvP5kYEW691lMZr+CptAuPn6XY64B7AU+
-	 7eQjznUBrbL7w==
-Date: Sun, 31 Dec 2023 14:25:13 -0800
-Subject: [PATCH 1/2] xfs: fix xfs_bunmapi to allow unmapping of partial rt
- extents
+	b=Qm1eM0WHFQzU6NLGNEnW8mkZTlRtW6R+XFgXUmFsJLB+LfRYe87YrGPbl7mLIWJPa
+	 fHZI0a3lzcQHZZKZrKTgRG3HCBDvLES9jAixUAitaHw+yl3PIInWyhllUT80SfW0j8
+	 BgiyNXQAkzRbUbhaV2nSf0lFhGMBn6trPuJzBNoOrxwdWzfvbKDPLFK0mfJtUgfcvJ
+	 Apx0ogdbBmGbxZ3RU7gitUu0R87+A0PT+yGduaU7GOj1OxkMeuRLzYaKHdAUVuHNWi
+	 R4yS/rClI+r6aXWTnosCA8gVYb+Ezc01wzlV8KtAyKANNs4OcDkz3jBidjSg4XIZjl
+	 7WrWVW73bDIlg==
+Date: Sun, 31 Dec 2023 14:25:29 -0800
+Subject: [PATCH 2/2] xfs: add a realtime flag to the bmap update log redo
+ items
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404995213.1795774.508500796488164613.stgit@frogsfrogsfrogs>
+Message-ID: <170404995227.1795774.7271970679282592714.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404995199.1795774.9776541526454187305.stgit@frogsfrogsfrogs>
 References: <170404995199.1795774.9776541526454187305.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,42 +38,57 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When XFS_BMAPI_REMAP is passed to bunmapi, that means that we want to
-remove part of a block mapping without touching the allocator.  For
-realtime files with rtextsize > 1, that also means that we should skip
-all the code that changes a partial remove request into an unwritten
-extent conversion.  IOWs, bunmapi in this mode should handle removing
-the mapping from the rt file and nothing else.
-
-Note that XFS_BMAPI_REMAP callers are required to decrement the
-reference count and/or free the space manually.
+Extend the bmap update (BUI) log items with a new realtime flag that
+indicates that the updates apply against a realtime file's data fork.
+We'll wire up the actual code later.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_bmap.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ libxfs/defer_item.c     |    6 ++++++
+ libxfs/xfs_log_format.h |    4 +++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 69ed4150c5e..b0747e57e90 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -5425,7 +5425,7 @@ __xfs_bunmapi(
- 		if (del.br_startoff + del.br_blockcount > end + 1)
- 			del.br_blockcount = end + 1 - del.br_startoff;
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index e9875f3e208..e7d64be014d 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -490,6 +490,9 @@ xfs_bmap_update_get_group(
+ {
+ 	xfs_agnumber_t		agno;
  
--		if (!isrt)
-+		if (!isrt || (flags & XFS_BMAPI_REMAP))
- 			goto delete;
++	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
++		return;
++
+ 	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
  
- 		mod = xfs_rtb_to_rtxoff(mp,
-@@ -5443,7 +5443,7 @@ __xfs_bunmapi(
- 				 * This piece is unwritten, or we're not
- 				 * using unwritten extents.  Skip over it.
- 				 */
--				ASSERT(end >= mod);
-+				ASSERT((flags & XFS_BMAPI_REMAP) || end >= mod);
- 				end -= mod > del.br_blockcount ?
- 					del.br_blockcount : mod;
- 				if (end < got.br_startoff &&
+ 	/*
+@@ -519,6 +522,9 @@ static inline void
+ xfs_bmap_update_put_group(
+ 	struct xfs_bmap_intent	*bi)
+ {
++	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
++		return;
++
+ 	xfs_perag_intent_put(bi->bi_pag);
+ }
+ 
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index 269573c8280..16872972e1e 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -838,10 +838,12 @@ struct xfs_cud_log_format {
+ 
+ #define XFS_BMAP_EXTENT_ATTR_FORK	(1U << 31)
+ #define XFS_BMAP_EXTENT_UNWRITTEN	(1U << 30)
++#define XFS_BMAP_EXTENT_REALTIME	(1U << 29)
+ 
+ #define XFS_BMAP_EXTENT_FLAGS		(XFS_BMAP_EXTENT_TYPE_MASK | \
+ 					 XFS_BMAP_EXTENT_ATTR_FORK | \
+-					 XFS_BMAP_EXTENT_UNWRITTEN)
++					 XFS_BMAP_EXTENT_UNWRITTEN | \
++					 XFS_BMAP_EXTENT_REALTIME)
+ 
+ /*
+  * This is the structure used to lay out an bui log item in the
 
