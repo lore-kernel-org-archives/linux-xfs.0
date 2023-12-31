@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFDE9BA2E
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:30:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59915BA2E
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:30:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UP8ytuRI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 842FFC433C8;
-	Sun, 31 Dec 2023 21:30:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N9gSwt7/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C781C433C8;
+	Sun, 31 Dec 2023 21:30:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704058229;
-	bh=g3yt/g2jKxvOOBbJWEIe4uJrGekVPt3gIQnnrWxt0m4=;
+	s=k20201202; t=1704058245;
+	bh=tivL8laqZxEzUaInTZLQWhRIZmeJa/d01TBB1I6nUW8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UP8ytuRIHPTMrJ0Wp9D7WcnZ/aZt87f/8mpxmjNJmR9H5IRNgeiY7whfXV+B+XiUS
-	 dNUCCBlLMpmDc0QjFp4GswJ3y+WNK6hsuxKWlrwLTKSzGroqFP0Ko5xY2qhyeNYgRh
-	 YDD2E/IJ483a3gCJwAvD13Bg03cK6yeWjT0uL/LX6p4BlRnc2dpbhcBxVo3m7NUpBj
-	 +zKoObspUXoNDjq2XQrs89LedY6hdTaTXFg4dt/YeEK8oO/gvR68ukzvltOfnjnzFV
-	 Mt6vwR/TdnHNt4Lat8pczPiqFCAdEXe16xDpyKwu64y5ESEMQZ1nAJ7W3+244SHHC0
-	 DyfbqhurLlTzw==
-Date: Sun, 31 Dec 2023 13:30:29 -0800
-Subject: [PATCH 05/10] xfs: remove xfs_trans_set_rmap_flags
+	b=N9gSwt7/ECpRlg/zAXEW4291v/IaAl2xvKo134Tod4V/940gkSjVGZusRVWC63kjK
+	 WvhJgFOMuF5YHfKXPZ9XPq6yEcD9EczJUAnKxVdYi9axxbctqM6XzLjdyaDsO8ynTz
+	 8SUO0FtkZmNnVmINqfSZeYURK2WZ5OOM9c68Hvmpubdg/qQsr0xbZlFa7hhx/giVU3
+	 aGpDJb/RjkrZOWblVWv5QZbIIZzuIk3ajgoNxyR9pf7J+LUir+9O0RiyBYABS8EIqV
+	 qGpYKmrtpY1Kz/oogHQr+NO0Ex3kKuGOmWkuMctqqh0zNJIoAtpH+BzKtFraRkX0w5
+	 YsldbH1GKDZcg==
+Date: Sun, 31 Dec 2023 13:30:44 -0800
+Subject: [PATCH 06/10] xfs: add a ri_entry helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404849315.1764703.8444810479623957001.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <170404849331.1764703.10863385655407554494.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404849212.1764703.16534369828563181378.stgit@frogsfrogsfrogs>
 References: <170404849212.1764703.16534369828563181378.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -35,111 +35,72 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Remove this single-use helper.
+Add a helper to translate from the item list head to the
+rmap_intent_item structure and use it so shorten assignments
+and avoid the need for extra local variables.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rmap_item.c |   79 +++++++++++++++++++++---------------------------
- 1 file changed, 34 insertions(+), 45 deletions(-)
+ fs/xfs/xfs_rmap_item.c |   20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 183544ac74c98..3e67fe2133263 100644
+index 3e67fe2133263..80433d6b2f9a3 100644
 --- a/fs/xfs/xfs_rmap_item.c
 +++ b/fs/xfs/xfs_rmap_item.c
-@@ -225,49 +225,6 @@ static const struct xfs_item_ops xfs_rud_item_ops = {
+@@ -225,6 +225,11 @@ static const struct xfs_item_ops xfs_rud_item_ops = {
  	.iop_intent	= xfs_rud_item_intent,
  };
  
--/* Set the map extent flags for this reverse mapping. */
--static void
--xfs_trans_set_rmap_flags(
--	struct xfs_map_extent		*map,
--	enum xfs_rmap_intent_type	type,
--	int				whichfork,
--	xfs_exntst_t			state)
--{
--	map->me_flags = 0;
--	if (state == XFS_EXT_UNWRITTEN)
--		map->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
--	if (whichfork == XFS_ATTR_FORK)
--		map->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
--	switch (type) {
--	case XFS_RMAP_MAP:
--		map->me_flags |= XFS_RMAP_EXTENT_MAP;
--		break;
--	case XFS_RMAP_MAP_SHARED:
--		map->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
--		break;
--	case XFS_RMAP_UNMAP:
--		map->me_flags |= XFS_RMAP_EXTENT_UNMAP;
--		break;
--	case XFS_RMAP_UNMAP_SHARED:
--		map->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
--		break;
--	case XFS_RMAP_CONVERT:
--		map->me_flags |= XFS_RMAP_EXTENT_CONVERT;
--		break;
--	case XFS_RMAP_CONVERT_SHARED:
--		map->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
--		break;
--	case XFS_RMAP_ALLOC:
--		map->me_flags |= XFS_RMAP_EXTENT_ALLOC;
--		break;
--	case XFS_RMAP_FREE:
--		map->me_flags |= XFS_RMAP_EXTENT_FREE;
--		break;
--	default:
--		ASSERT(0);
--	}
--}
--
++static inline struct xfs_rmap_intent *ri_entry(const struct list_head *e)
++{
++	return list_entry(e, struct xfs_rmap_intent, ri_list);
++}
++
  /* Sort rmap intents by AG. */
  static int
  xfs_rmap_update_diff_items(
-@@ -306,8 +263,40 @@ xfs_rmap_update_log_item(
- 	map->me_startblock = ri->ri_bmap.br_startblock;
- 	map->me_startoff = ri->ri_bmap.br_startoff;
- 	map->me_len = ri->ri_bmap.br_blockcount;
--	xfs_trans_set_rmap_flags(map, ri->ri_type, ri->ri_whichfork,
--			ri->ri_bmap.br_state);
-+
-+	map->me_flags = 0;
-+	if (ri->ri_bmap.br_state == XFS_EXT_UNWRITTEN)
-+		map->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
-+	if (ri->ri_whichfork == XFS_ATTR_FORK)
-+		map->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
-+	switch (ri->ri_type) {
-+	case XFS_RMAP_MAP:
-+		map->me_flags |= XFS_RMAP_EXTENT_MAP;
-+		break;
-+	case XFS_RMAP_MAP_SHARED:
-+		map->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
-+		break;
-+	case XFS_RMAP_UNMAP:
-+		map->me_flags |= XFS_RMAP_EXTENT_UNMAP;
-+		break;
-+	case XFS_RMAP_UNMAP_SHARED:
-+		map->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
-+		break;
-+	case XFS_RMAP_CONVERT:
-+		map->me_flags |= XFS_RMAP_EXTENT_CONVERT;
-+		break;
-+	case XFS_RMAP_CONVERT_SHARED:
-+		map->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
-+		break;
-+	case XFS_RMAP_ALLOC:
-+		map->me_flags |= XFS_RMAP_EXTENT_ALLOC;
-+		break;
-+	case XFS_RMAP_FREE:
-+		map->me_flags |= XFS_RMAP_EXTENT_FREE;
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
- }
+@@ -232,11 +237,8 @@ xfs_rmap_update_diff_items(
+ 	const struct list_head		*a,
+ 	const struct list_head		*b)
+ {
+-	struct xfs_rmap_intent		*ra;
+-	struct xfs_rmap_intent		*rb;
+-
+-	ra = container_of(a, struct xfs_rmap_intent, ri_list);
+-	rb = container_of(b, struct xfs_rmap_intent, ri_list);
++	struct xfs_rmap_intent		*ra = ri_entry(a);
++	struct xfs_rmap_intent		*rb = ri_entry(b);
  
- static struct xfs_log_item *
+ 	return ra->ri_pag->pag_agno - rb->ri_pag->pag_agno;
+ }
+@@ -363,11 +365,9 @@ xfs_rmap_update_finish_item(
+ 	struct list_head		*item,
+ 	struct xfs_btree_cur		**state)
+ {
+-	struct xfs_rmap_intent		*ri;
++	struct xfs_rmap_intent		*ri = ri_entry(item);
+ 	int				error;
+ 
+-	ri = container_of(item, struct xfs_rmap_intent, ri_list);
+-
+ 	error = xfs_rmap_finish_one(tp, ri, state);
+ 
+ 	xfs_rmap_update_put_group(ri);
+@@ -388,9 +388,7 @@ STATIC void
+ xfs_rmap_update_cancel_item(
+ 	struct list_head		*item)
+ {
+-	struct xfs_rmap_intent		*ri;
+-
+-	ri = container_of(item, struct xfs_rmap_intent, ri_list);
++	struct xfs_rmap_intent		*ri = ri_entry(item);
+ 
+ 	xfs_rmap_update_put_group(ri);
+ 	kmem_cache_free(xfs_rmap_intent_cache, ri);
 
