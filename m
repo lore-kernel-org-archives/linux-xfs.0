@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02B2EBA2E
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:17:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7BEBA22
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 21:17:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hn5FE5Rp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B482C433C7;
-	Sun, 31 Dec 2023 21:17:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MpLeZXuW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CE51C433C7;
+	Sun, 31 Dec 2023 21:17:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704057462;
-	bh=/TiEWYYItZwvncszQPXShr4QjodL6ZvOgMNItBghsvA=;
+	s=k20201202; t=1704057478;
+	bh=Yb/y8uzEQq10qTquGSS8shy6v+pwFMRsesAUu7c20+Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hn5FE5RpttY85FXclefjVzNRZNOtwRKB7BvK5GluBcC+kSwmDTkNuJ/EvDzxN/DGD
-	 TBuaMu+bp/V1T5tP4mnyFbcwAcFcyTOaLPeO7gQWOu2azXF8BRYlnWX/gxEmSYFtWd
-	 H+YEOuT63jHcwmz2lLzYKuJwnG/eOAidR2453nvl/MHYFnekKVNaP3qjOUuT94p48p
-	 +Ua9anTG/xYN1QFZRZ5Y79vwW1RJTLC1fqTSdShQNdflgwpYegx6h9yGjs0s+TrKhL
-	 GsV3YxwnhXGq2lvzKS+vcGNEIonZCV4urpnwJs/hqCpx3Mq//1Q8rXvQB5loge5Aum
-	 DQR/rAO09N+LA==
-Date: Sun, 31 Dec 2023 13:17:41 -0800
-Subject: [PATCH 08/24] xfs: always update secondary rt supers when we update
- secondary fs supers
+	b=MpLeZXuWwykVbQgdBCct4NSNjEVqnksUJCYWaSpAUASi+etA0jRfzeQtzTxWCggxr
+	 61ZSdvLXa5/xOnzfEiK/GVf6hmg7rFx8bm0QcImYblb6SYmkJuzCFZbdAVNOIMaBdk
+	 EYFFUt1heLmKOcYSqoHt80COroNChATtEtVhWcVJ/IhIPK7rdJH8BcAtHoaURYSoyU
+	 wcOP/Ysaeg5Hu5T5Xb6fgZFHkmrIinRNDIbIOiaQARswM/Bcg72ZGRn6b8/kLZ4KeP
+	 Dimm4Ya47XV1KYw4XSekSQHyR2163AA5p5zg4i/SD/a5kJNHAbGic0CALhspvwqfxj
+	 lVMc8Is01PqMg==
+Date: Sun, 31 Dec 2023 13:17:57 -0800
+Subject: [PATCH 09/24] xfs: export realtime group geometry via XFS_FSOP_GEOM
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404846370.1763124.5031203573820391747.stgit@frogsfrogsfrogs>
+Message-ID: <170404846385.1763124.16362358589721884777.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 References: <170404846187.1763124.7316400597964398308.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,58 +37,44 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that any update to the secondary superblocks in the data
-section are also echoed to the secondary superblocks in the realtime
-section.
+Export the realtime geometry information so that userspace can query it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_fsops.c |    4 ++++
- fs/xfs/xfs_ioctl.c |    3 +++
- 2 files changed, 7 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h |    4 +++-
+ fs/xfs/libxfs/xfs_sb.c |    5 +++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 80811d16dde00..84b311bd185af 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -21,6 +21,7 @@
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
- #include "xfs_trace.h"
-+#include "xfs_rtgroup.h"
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index a0efcbde5ae60..bae9ef924bf59 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -186,7 +186,9 @@ struct xfs_fsop_geom {
+ 	__u32		logsunit;	/* log stripe unit, bytes	*/
+ 	uint32_t	sick;		/* o: unhealthy fs & rt metadata */
+ 	uint32_t	checked;	/* o: checked fs & rt metadata	*/
+-	__u64		reserved[17];	/* reserved space		*/
++	__u32		rgblocks;	/* rtblocks in a realtime group	*/
++	__u32		rgcount;	/* number of realtime groups	*/
++	__u64		reserved[16];	/* reserved space		*/
+ };
  
- /*
-  * Write new AG headers to disk. Non-transactional, but need to be
-@@ -319,6 +320,9 @@ xfs_growfs_data(
+ #define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index b37924cf67a93..cf94417aa9faa 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1411,6 +1411,11 @@ xfs_fs_geometry(
+ 		return;
  
- 	/* Update secondary superblocks now the physical grow has completed */
- 	error = xfs_update_secondary_sbs(mp);
-+	if (error)
-+		goto out_error;
-+	error = xfs_rtgroup_update_secondary_sbs(mp);
+ 	geo->version = XFS_FSOP_GEOM_VERSION_V5;
++
++	if (xfs_has_rtgroups(mp)) {
++		geo->rgcount = sbp->sb_rgcount;
++		geo->rgblocks = sbp->sb_rgblocks;
++	}
+ }
  
- out_error:
- 	/*
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index a887c1d5d69fb..b140f7ed916c9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -42,6 +42,7 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_xchgrange.h"
- #include "xfs_file.h"
-+#include "xfs_rtgroup.h"
- 
- #include <linux/mount.h>
- #include <linux/namei.h>
-@@ -1874,6 +1875,8 @@ xfs_ioc_setlabel(
- 	 */
- 	mutex_lock(&mp->m_growlock);
- 	error = xfs_update_secondary_sbs(mp);
-+	if (!error)
-+		error = xfs_rtgroup_update_secondary_sbs(mp);
- 	mutex_unlock(&mp->m_growlock);
- 
- 	invalidate_bdev(bdev);
+ /* Read a secondary superblock. */
 
