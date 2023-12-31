@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB816BE48
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:51:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 547F6BE47
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 20:51:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yaprtm2f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA67C433C8;
-	Sun, 31 Dec 2023 20:51:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zl+7kcaI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2198BC433C7;
+	Sun, 31 Dec 2023 20:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704055882;
-	bh=DWGlmIFIEXkMWyOhQEJiMYy6mPESxCBebRmsXNBkcqk=;
+	s=k20201202; t=1704055898;
+	bh=nbN1rt5S0ystaD32BxN8VfSLW+xRGWiG+F/zo2rCsok=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Yaprtm2fiFMcUD52Eks46Zexh5/prlaGgnC3Q0ejgog+5tstccSR0d62S8LVsqBqV
-	 r7o6NtyHGVuZr2wVBJVruI63HHuCpRsclkVXfq+CjBxKTmItTD/vxjjpEDCKsPCD+Z
-	 t9+mClE/4jargfhSmfyixX6YqlkdifvSZ+VBUQoqhWy9Vv/7fEJT3r8IszLIFXMhQJ
-	 oHng7l+ENVHA1jhmj6JXPjOb2XZLX096WpW72WZSgZE9HTB2JtK7kgctv7ulv0BGYn
-	 w583dDepwAs4tcwt5F3FRDbBkTFWv+6xwPGVlT/YBwU5llrnX39Mkm1ZvB4PiyOR0j
-	 +bnyity+Yinvg==
-Date: Sun, 31 Dec 2023 12:51:22 -0800
-Subject: [PATCH 11/18] xfs: Add parent pointers to xfs_cross_rename
+	b=Zl+7kcaIUzFt3YvHfgxjjHJANywptq+4xKi2lWRp6/Ecef1r0ITs2mZZOxsU54Ixj
+	 wUF8oIsONg5NM4Mvr7vMNrFR9MYjW0uWElJy6UDyWJB4qxBOSByMk6WWsD3lODNrjX
+	 eZNQJ2hkpa+uuFYK4qf1wiSvGbEOgHZ0+KYHI34pSumn7D+Z6DAStknU3ciJEFk/zj
+	 V8jOO0EwicwT4f6cQkWCuw8GKlkoqYtWU/+fWHi730e6ChMI4dDw+3BT0yAvFA6doz
+	 9J2Aojswh3ozW6jYVmfVRTlUth/dCUzymnUtxooRkQCDOck7ncvm2AnN4QyETqypqW
+	 sYD3BeBDAKefA==
+Date: Sun, 31 Dec 2023 12:51:37 -0800
+Subject: [PATCH 12/18] xfs: Filter XFS_ATTR_PARENT for getfattr
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Allison Henderson <allison.henderson@oracle.com>,
  catherine.hoang@oracle.com, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <170404841217.1756905.45527345331323865.stgit@frogsfrogsfrogs>
+Message-ID: <170404841232.1756905.15803071363377442128.stgit@frogsfrogsfrogs>
 In-Reply-To: <170404840995.1756905.18018727013229504371.stgit@frogsfrogsfrogs>
 References: <170404840995.1756905.18018727013229504371.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,72 +39,30 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Cross renames are handled separately from standard renames, and
-need different handling to update the parent attributes correctly.
+Parent pointers returned to the get_fattr tool cause errors since
+the tool cannot parse parent pointers.  Fix this by filtering parent
+parent pointers from xfs_xattr_put_listent.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_xattr.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3723b4bdc47c7..998df0d5dac3c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2967,15 +2967,17 @@ xfs_cross_rename(
- 	struct xfs_inode	*dp1,
- 	struct xfs_name		*name1,
- 	struct xfs_inode	*ip1,
-+	struct xfs_parent_args	*ip1_ppargs,
- 	struct xfs_inode	*dp2,
- 	struct xfs_name		*name2,
- 	struct xfs_inode	*ip2,
-+	struct xfs_parent_args	*ip2_ppargs,
- 	int			spaceres)
- {
--	int		error = 0;
--	int		ip1_flags = 0;
--	int		ip2_flags = 0;
--	int		dp2_flags = 0;
-+	int			error = 0;
-+	int			ip1_flags = 0;
-+	int			ip2_flags = 0;
-+	int			dp2_flags = 0;
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 12405e4a70c1b..483685dbaaceb 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -259,6 +259,9 @@ xfs_xattr_put_listent(
  
- 	/* Swap inode number for dirent in first parent */
- 	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres);
-@@ -3044,6 +3046,15 @@ xfs_cross_rename(
- 		}
- 	}
+ 	ASSERT(context->count >= 0);
  
-+	/* Schedule parent pointer replacements */
-+	error = xfs_parent_replace(tp, ip1_ppargs, dp1, name1, dp2, name2, ip1);
-+	if (error)
-+		goto out_trans_abort;
++	if (flags & XFS_ATTR_PARENT)
++		return;
 +
-+	error = xfs_parent_replace(tp, ip2_ppargs, dp2, name2, dp1, name1, ip2);
-+	if (error)
-+		goto out_trans_abort;
-+
- 	if (ip1_flags) {
- 		xfs_trans_ichgtime(tp, ip1, ip1_flags);
- 		xfs_trans_log_inode(tp, ip1, XFS_ILOG_CORE);
-@@ -3260,10 +3271,10 @@ xfs_rename(
- 	/* RENAME_EXCHANGE is unique from here on. */
- 	if (flags & RENAME_EXCHANGE) {
- 		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
--					target_dp, target_name, target_ip,
--					spaceres);
--		xfs_iunlock_rename(inodes, num_inodes);
--		return error;
-+				src_ppargs, target_dp, target_name, target_ip,
-+				tgt_ppargs, spaceres);
-+		nospace_error = 0;
-+		goto out_unlock;
- 	}
- 
- 	/*
+ 	if (flags & XFS_ATTR_ROOT) {
+ #ifdef CONFIG_XFS_POSIX_ACL
+ 		if (namelen == SGI_ACL_FILE_SIZE &&
 
