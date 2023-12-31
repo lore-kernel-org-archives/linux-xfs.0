@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D6BB666
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:39:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C288B670
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:40:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hflMwMko"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9095DC433C7;
-	Sun, 31 Dec 2023 19:39:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L+7jnPRe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 374FEC433C8;
+	Sun, 31 Dec 2023 19:40:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704051597;
-	bh=BKiRMj7q4JPUeV98pBtRByANts4WpOtcJ0zjrnXXfd4=;
+	s=k20201202; t=1704051613;
+	bh=xPRNmL6Qhi+rhbfFLpZYcqKz/k+E6gBI99EW6i9CIvo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hflMwMkoTJ48sDreCTnElj8iIk5ZgKTXQrOO+5ed0GaQ7GhjIZgabm2r6NeE9ounf
-	 xRL1XQ532MDS6oiG3dhvc1oNJBGlvXmiCxnXTzEh0ynv6YYTpfHSNaJfhojfKXxFLp
-	 lWeWO8BbgC7+jGVvjQULuu8bHL1Bn7FRBxRlWhllOfk5tkds/Ry+WIhaVYzmSRqazj
-	 W0Lc4zPoR+kDUFJi2UeN/5Tqk0fQBsDq0KOyRhv7A2SC4fNdHpoLrYkH+WpqPvH7zI
-	 KtN6vjscQznJYHNu61h0lOa8iLoNntNzmdV3kNpnJpsDYxjqhThmBYZGo9jtL6b1FG
-	 39e3vbmN0e5zQ==
-Date: Sun, 31 Dec 2023 11:39:57 -0800
-Subject: [PATCHSET v29.0 01/40] xfs_scrub: fix licensing and copyright notices
+	b=L+7jnPReV5mKEZ/sp2AleEo2JfKJWWATyhv9dAy315UWGcuVvGuPfrg8stdV9fQmH
+	 ESuUew5Q0L1VB4yoOcVcpuHSizzPPyKrIKBs9PHqWxdkAkmYlBfhLouDGerzqdP3TB
+	 FnVkx6s0NPwbUA0Mbt5oLU595xX3l9UbYYa6/V/0B7VVTFdqrGGXzzi7JWYrX+YzFk
+	 1TI8DWYkjLcwfbxhnSafwvQ/5Cu+VKmMPe+mFjjCtc/VqOUT0Z+2MG/+7gAwtfGydj
+	 Ubbv1MOwJry3Ll6I6qlZWV0p6talVXgr5FpiRtx825kjMywpVuTUw2E+WnJ49q+mhh
+	 VCdU4QH33xpVQ==
+Date: Sun, 31 Dec 2023 11:40:12 -0800
+Subject: [PATCHSET 02/40] mkfs: scale shards on ssds
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170404989091.1791307.1449422318127974555.stgit@frogsfrogsfrogs>
+Message-ID: <170404989423.1791433.6933477036695309956.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231181215.GA241128@frogsfrogsfrogs>
 References: <20231231181215.GA241128@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,11 +37,22 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Fix various attribution problems in the xfs_scrub source code, such as
-the author's contact information, out of date SPDX tags, and a rough
-estimate of when the feature was under heavy development.  The most
-egregious parts are the files that are missing license information
-completely.
+For a long time, the maintainers have had a gut feeling that we could
+optimize performance of XFS filesystems on non-mechanical storage by
+scaling the number of allocation groups to be a multiple of the CPU
+count.
+
+With modern ~2022 hardware, it is common for systems to have more than
+four CPU cores and non-striped SSDs ranging in size from 256GB to 4TB.
+The default mkfs geometry still defaults to 4 AGs regardless of core
+count, which was settled on in the age of spinning rust.
+
+This patchset adds a different computation for AG count and log size
+that is based entirely on a desired level of concurrency.  If we detect
+storage that is non-rotational (or the sysadmin provides a CLI option),
+then we will try to match the AG count to the CPU count to minimize AGF
+contention and make the log large enough to minimize grant head
+contention.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -51,56 +62,13 @@ Comments and questions are, as always, welcome.
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-fix-legalese
-
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fix-legalese
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-scale-geo-on-ssds
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=mkfs-scale-geo-on-ssds
 ---
- scrub/Makefile                   |    2 +-
- scrub/common.c                   |    6 +++---
- scrub/common.h                   |    6 +++---
- scrub/counter.c                  |    6 +++---
- scrub/counter.h                  |    6 +++---
- scrub/descr.c                    |    4 ++--
- scrub/descr.h                    |    4 ++--
- scrub/disk.c                     |    6 +++---
- scrub/disk.h                     |    6 +++---
- scrub/filemap.c                  |    6 +++---
- scrub/filemap.h                  |    6 +++---
- scrub/fscounters.c               |    6 +++---
- scrub/fscounters.h               |    6 +++---
- scrub/inodes.c                   |    6 +++---
- scrub/inodes.h                   |    6 +++---
- scrub/phase1.c                   |    6 +++---
- scrub/phase2.c                   |    6 +++---
- scrub/phase3.c                   |    6 +++---
- scrub/phase4.c                   |    6 +++---
- scrub/phase5.c                   |    6 +++---
- scrub/phase6.c                   |    6 +++---
- scrub/phase7.c                   |    6 +++---
- scrub/progress.c                 |    6 +++---
- scrub/progress.h                 |    6 +++---
- scrub/read_verify.c              |    6 +++---
- scrub/read_verify.h              |    6 +++---
- scrub/repair.c                   |    6 +++---
- scrub/repair.h                   |    6 +++---
- scrub/scrub.c                    |    6 +++---
- scrub/scrub.h                    |    6 +++---
- scrub/spacemap.c                 |    6 +++---
- scrub/spacemap.h                 |    6 +++---
- scrub/unicrash.c                 |    6 +++---
- scrub/unicrash.h                 |    6 +++---
- scrub/vfs.c                      |    6 +++---
- scrub/vfs.h                      |    6 +++---
- scrub/xfs_scrub.c                |    6 +++---
- scrub/xfs_scrub.h                |    6 +++---
- scrub/xfs_scrub@.service.in      |    5 +++++
- scrub/xfs_scrub_all.cron.in      |    5 +++++
- scrub/xfs_scrub_all.in           |    6 +++---
- scrub/xfs_scrub_all.service.in   |    5 +++++
- scrub/xfs_scrub_all.timer        |    5 +++++
- scrub/xfs_scrub_fail             |    5 +++++
- scrub/xfs_scrub_fail@.service.in |    5 +++++
- 45 files changed, 143 insertions(+), 113 deletions(-)
+ man/man8/mkfs.xfs.8.in |   46 +++++++++
+ mkfs/xfs_mkfs.c        |  254 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 293 insertions(+), 7 deletions(-)
 
