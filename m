@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD616C2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:49:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BD91C2D4
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:50:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="squIOSMA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61549C433C7;
-	Sun, 31 Dec 2023 23:49:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMr3JmpE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08C89C433C7;
+	Sun, 31 Dec 2023 23:50:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066595;
-	bh=/zCyE/mwxu1Yb3/Z896xD+iJ4COl1NUXZRBzDuMST8M=;
+	s=k20201202; t=1704066611;
+	bh=JxV+ao1L1hZOxGOScucV5k4eWwh5PG/YQYOChbmOnPU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=squIOSMA0/YrlhumlDMjxnHIQLCs9cGO0kUO7IbIoEsDd9typWc9ZwvwWUrZmdZj5
-	 WQ1U0W2tuW9mmR3i0NHsUkmW4WuLtoRLOxhAGVMH0z2dhEjvGIuVPdA1QpjIPvvSuW
-	 pSxVjJhbnzoyoAVbvhWAaAkRL9PAnBfSFIFE3LAA2r9NifJ3REesNA02K0paRKI6a6
-	 faEWg21HscQul2MJ7v2WioDK7Vwu8sCvcWW/OIEZ8qaRXnsIRAb3ItegCZhquCZer2
-	 K77/5dA12O6GHW0C28ZYcO0LjLKwPWSkVr0HBakOt5nib8rpIh/3yts+ZaPglWUJqR
-	 NDflnis8BlkuA==
-Date: Sun, 31 Dec 2023 15:49:54 -0800
-Subject: [PATCH 09/52] xfs: add frextents to the lazysbcounters when rtgroups
- enabled
+	b=YMr3JmpErktgWQD6O1Bu5Zi7D5eT/GPl6V5eUXLZkNfD/FY7JlSfPbVyaY/M5G1RF
+	 a2d4kYqd2NkOc0OoDrrp0PQfUwiDmsMpQK1yQsCLqZZ2Y1Ezv43b0nLV9EXGkT/oHq
+	 ZuP5Xo8qomXcw2ndrYIsK0H2vhJEfk5bFoz/+5dTfZeHoKLjdRDALyX7aC/51JcdF9
+	 afrMDTx9oliCHGdO8lnsgASd1oKAaw1LQwv0DGCjuRcu/+17OEyGF/y451lhhKakHY
+	 7pkUXsim7AxE7iz+uul6ut2SjT4389YQqHLezbiD+Qp53QdzqEVus9nJtXFwKRDpp3
+	 pOt4AXwJimpXw==
+Date: Sun, 31 Dec 2023 15:50:10 -0800
+Subject: [PATCH 10/52] xfs: record rt group superblock errors in the health
+ system
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405012289.1811243.15016247613899430387.stgit@frogsfrogsfrogs>
+Message-ID: <170405012303.1811243.18088177921751798432.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 References: <170405012128.1811243.5724050972228209086.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,52 +38,107 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the free rt extent count a part of the lazy sb counters when the
-realtime groups feature is enabled.  This is possible because the patch
-to recompute frextents from the rtbitmap during log recovery predates
-the code adding rtgroup support, hence we know that the value will
-always be correct during runtime.
+Record the state of per-rtgroup metadata sickness in the rtgroup
+structure for later reporting.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_mount.h |    1 +
- libxfs/xfs_sb.c     |    5 +++++
- 2 files changed, 6 insertions(+)
+ libxfs/xfs_health.h  |   28 +++++++++++++++++++++++++++-
+ libxfs/xfs_rtgroup.h |    8 ++++++++
+ 2 files changed, 35 insertions(+), 1 deletion(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index ec0956c539f..184e7a38fb3 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -39,6 +39,7 @@ typedef struct xfs_mount {
- #define m_icount	m_sb.sb_icount
- #define m_ifree		m_sb.sb_ifree
- #define m_fdblocks	m_sb.sb_fdblocks
-+#define m_frextents	m_sb.sb_frextents
- 	spinlock_t		m_sb_lock;
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index 1816c67351a..f5449a804c6 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -52,6 +52,7 @@ struct xfs_inode;
+ struct xfs_fsop_geom;
+ struct xfs_btree_cur;
+ struct xfs_da_args;
++struct xfs_rtgroup;
  
- 	/*
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 3bd56edab87..0ded5220161 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1148,6 +1148,9 @@ xfs_log_sb(
- 	 * sb counters, despite having a percpu counter. It is always kept
- 	 * consistent with the ondisk rtbitmap by xfs_trans_apply_sb_deltas()
- 	 * and hence we don't need have to update it here.
-+	 *
-+	 * sb_frextents was added to the lazy sb counters when the rt groups
-+	 * feature was introduced.
- 	 */
- 	if (xfs_has_lazysbcount(mp)) {
- 		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
-@@ -1156,6 +1159,8 @@ xfs_log_sb(
- 				mp->m_sb.sb_icount);
- 		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
- 	}
-+	if (xfs_has_rtgroups(mp))
-+		mp->m_sb.sb_frextents = percpu_counter_sum(&mp->m_frextents);
+ /* Observable health issues for metadata spanning the entire filesystem. */
+ #define XFS_SICK_FS_COUNTERS	(1 << 0)  /* summary counters */
+@@ -66,6 +67,7 @@ struct xfs_da_args;
+ /* Observable health issues for realtime volume metadata. */
+ #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
+ #define XFS_SICK_RT_SUMMARY	(1 << 1)  /* realtime summary */
++#define XFS_SICK_RT_SUPER	(1 << 2)  /* rt group superblock */
  
- 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
- 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+ /* Observable health issues for AG metadata. */
+ #define XFS_SICK_AG_SB		(1 << 0)  /* superblock */
+@@ -110,7 +112,8 @@ struct xfs_da_args;
+ 				 XFS_SICK_FS_METAPATH)
+ 
+ #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
+-				 XFS_SICK_RT_SUMMARY)
++				 XFS_SICK_RT_SUMMARY | \
++				 XFS_SICK_RT_SUPER)
+ 
+ #define XFS_SICK_AG_PRIMARY	(XFS_SICK_AG_SB | \
+ 				 XFS_SICK_AG_AGF | \
+@@ -192,6 +195,14 @@ void xfs_rt_mark_healthy(struct xfs_mount *mp, unsigned int mask);
+ void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sick,
+ 		unsigned int *checked);
+ 
++void xfs_rgno_mark_sick(struct xfs_mount *mp, xfs_rgnumber_t rgno,
++		unsigned int mask);
++void xfs_rtgroup_mark_sick(struct xfs_rtgroup *rtg, unsigned int mask);
++void xfs_rtgroup_mark_checked(struct xfs_rtgroup *rtg, unsigned int mask);
++void xfs_rtgroup_mark_healthy(struct xfs_rtgroup *rtg, unsigned int mask);
++void xfs_rtgroup_measure_sickness(struct xfs_rtgroup *rtg, unsigned int *sick,
++		unsigned int *checked);
++
+ void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		unsigned int mask);
+ void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
+@@ -241,6 +252,15 @@ xfs_ag_has_sickness(struct xfs_perag *pag, unsigned int mask)
+ 	return sick & mask;
+ }
+ 
++static inline bool
++xfs_rtgroup_has_sickness(struct xfs_rtgroup *rtg, unsigned int mask)
++{
++	unsigned int	sick, checked;
++
++	xfs_rtgroup_measure_sickness(rtg, &sick, &checked);
++	return sick & mask;
++}
++
+ static inline bool
+ xfs_inode_has_sickness(struct xfs_inode *ip, unsigned int mask)
+ {
+@@ -262,6 +282,12 @@ xfs_rt_is_healthy(struct xfs_mount *mp)
+ 	return !xfs_rt_has_sickness(mp, -1U);
+ }
+ 
++static inline bool
++xfs_rtgroup_is_healthy(struct xfs_rtgroup *rtg)
++{
++	return !xfs_rtgroup_has_sickness(rtg, -1U);
++}
++
+ static inline bool
+ xfs_ag_is_healthy(struct xfs_perag *pag)
+ {
+diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
+index 2d0422c6712..c3f4f644ea5 100644
+--- a/libxfs/xfs_rtgroup.h
++++ b/libxfs/xfs_rtgroup.h
+@@ -25,6 +25,14 @@ struct xfs_rtgroup {
+ 	/* Number of blocks in this group */
+ 	xfs_rgblock_t		rtg_blockcount;
+ 
++	/*
++	 * Bitsets of per-rtgroup metadata that have been checked and/or are
++	 * sick.  Callers should hold rtg_state_lock before accessing this
++	 * field.
++	 */
++	uint16_t		rtg_checked;
++	uint16_t		rtg_sick;
++
+ #ifdef __KERNEL__
+ 	/* -- kernel only structures below this line -- */
+ 	spinlock_t		rtg_state_lock;
 
