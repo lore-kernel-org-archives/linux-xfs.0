@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D4CBC2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:34:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033CBC2D4
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:34:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I9aHTMlA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBA3BC433C7;
-	Sun, 31 Dec 2023 23:34:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GfHh+A0e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 804DDC433C7;
+	Sun, 31 Dec 2023 23:34:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065672;
-	bh=TGxSjdfx7zOFwG9Z650fXg96RooMi8rWVUjngu10MMw=;
+	s=k20201202; t=1704065688;
+	bh=Q7yDz277FkeY2usHqxP+V4UC3ap0PLDgNChcD/xMX/8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=I9aHTMlAn/1MX4Hk3sjLpBmC2btgW6THPL46iowwaTXJKhi1ETj/YWHRz2mauUsIl
-	 TMsoMGFLrDzKmc05T5hrSST23g8jfFPifOa8qfi/h3swHR9Wz9ntsWOOuI0Qq8t+RB
-	 XYB/SsOSAaORtbgMQqw0jYII+JwDIenrFJ8iRNW1YpLjRppP57qbKPbl3TGb4OTvzb
-	 PQOWhqeiZDMGcU30SGNCuDX2uFe9AlxHFObqoM39GUblNU5GbCGP/iz22ogxboUP5i
-	 TMVO5P3ANUAIz6xWj9uuU0xFE+AiHWybpm9VfEdiGFGm9ImU7cYCJOboGNUSdRx0Ki
-	 uIue+RtqaQ0vQ==
-Date: Sun, 31 Dec 2023 15:34:32 -0800
-Subject: [PATCH 19/58] xfs: enable creation of dynamically allocated metadir
- path structures
+	b=GfHh+A0eYVepReEPyqLRtlTIheD91icUhn9YbQBLuxr2UOvqfNcQ7Lh/7oydySyR8
+	 CjqLj9qrqOpWjJKcrbMt62XI6DJlPCDaTYmRxMzM2lxT+1C457yCZs3bhlbjWKuJym
+	 9RM3N0am2CmkEuJTKSYDf7d0g8tRghDz/u5nb4JTRo5h/VwK45moYyeXD3vq0/X8bm
+	 OghP0JcXiZKSo3Rk7ciGp5KGueF3jwCiYp/iMLvSWxSFkXXu73U53E6RxFsmZTeqXF
+	 oaTR6c/+F5A1sRe1T8fNLMgczoZxawBBZXJ1l57k6TUCzd/Dczmc+0X5nmabquMJ6Z
+	 IisRyhbMD26Qw==
+Date: Sun, 31 Dec 2023 15:34:47 -0800
+Subject: [PATCH 20/58] xfs: adjust xfs_bmap_add_attrfork for metadir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010201.1809361.5265276208797149157.stgit@frogsfrogsfrogs>
+Message-ID: <170405010214.1809361.8608139201414860751.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,157 +37,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a few helper functions so that it's possible to allocate
-xfs_imeta_path objects dynamically, along with dynamically allocated
-path components.  Eventually we're going to want to support paths of the
-form "/realtime/$rtgroup.rmap", and this is necessary for that.
+Online repair might use the xfs_bmap_add_attrfork to repair a file in
+the metadata directory tree if (say) the metadata file lacks the correct
+parent pointers.  In that case, it is not correct to check that the file
+is dqattached -- metadata files must be not have /any/ dquot attached at
+all.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/kmem.h           |    5 ++++-
- libxfs/libxfs_api_defs.h |    2 ++
- libxfs/xfs_imeta.c       |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_imeta.h       |   15 +++++++++++++++
- 4 files changed, 67 insertions(+), 1 deletion(-)
+ libxfs/xfs_attr.c |    5 ++++-
+ libxfs/xfs_bmap.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 
-diff --git a/include/kmem.h b/include/kmem.h
-index 8ae919c7066..c71e311cabc 100644
---- a/include/kmem.h
-+++ b/include/kmem.h
-@@ -26,7 +26,7 @@ typedef unsigned int __bitwise gfp_t;
- #define __GFP_NOFAIL	((__force gfp_t)0)
- #define __GFP_NOLOCKDEP	((__force gfp_t)0)
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 5da0ac9f706..aa391f4bae5 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -944,7 +944,10 @@ xfs_attr_add_fork(
+ 	unsigned int		blks;		/* space reservation */
+ 	int			error;		/* error return value */
  
--#define __GFP_ZERO	(__force gfp_t)1
-+#define __GFP_ZERO	((__force gfp_t)1)
+-	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
++	if (xfs_is_metadir_inode(ip))
++		ASSERT(XFS_IS_DQDETACHED(ip->i_mount, ip));
++	else
++		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
  
- struct kmem_cache * kmem_cache_create(const char *name, unsigned int size,
- 		unsigned int align, unsigned int slab_flags,
-@@ -65,6 +65,9 @@ static inline void *kmalloc(size_t size, gfp_t flags)
- 	return kvmalloc(size, flags);
- }
+ 	blks = XFS_ADDAFORK_SPACE_RES(mp);
  
-+#define kvcalloc(nr, size, gfp)	kvmalloc((nr) * (size), (gfp) | __GFP_ZERO)
-+#define kzalloc(size, gfp)	kvmalloc((size), (gfp) | __GFP_ZERO)
-+
- static inline void kfree(const void *ptr)
- {
- 	return kmem_free(ptr);
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e08be764a49..ca8e231c0fd 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -177,8 +177,10 @@
- #define xfs_imeta_cancel_update		libxfs_imeta_cancel_update
- #define xfs_imeta_commit_update		libxfs_imeta_commit_update
- #define xfs_imeta_create		libxfs_imeta_create
-+#define xfs_imeta_create_file_path	libxfs_imeta_create_file_path
- #define xfs_imeta_create_space_res	libxfs_imeta_create_space_res
- #define xfs_imeta_ensure_dirpath	libxfs_imeta_ensure_dirpath
-+#define xfs_imeta_free_path		libxfs_imeta_free_path
- #define xfs_imeta_iget			libxfs_imeta_iget
- #define xfs_imeta_irele			libxfs_imeta_irele
- #define xfs_imeta_link			libxfs_imeta_link
-diff --git a/libxfs/xfs_imeta.c b/libxfs/xfs_imeta.c
-index 2defee9562b..ad429c82b47 100644
---- a/libxfs/xfs_imeta.c
-+++ b/libxfs/xfs_imeta.c
-@@ -1014,3 +1014,49 @@ xfs_imeta_mount(
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index ed50bb90e6a..0dfb37073a7 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -1018,7 +1018,10 @@ xfs_bmap_add_attrfork(
+ 	int			error;		/* error return value */
  
- 	return 0;
- }
-+
-+/* Create a path to a file within the metadata directory tree. */
-+int
-+xfs_imeta_create_file_path(
-+	struct xfs_mount	*mp,
-+	unsigned int		nr_components,
-+	struct xfs_imeta_path	**pathp)
-+{
-+	struct xfs_imeta_path	*p;
-+	unsigned char		**components;
-+
-+	p = kzalloc(sizeof(struct xfs_imeta_path), GFP_KERNEL);
-+	if (!p)
-+		return -ENOMEM;
-+
-+	components = kvcalloc(nr_components, sizeof(unsigned char *),
-+			GFP_KERNEL);
-+	if (!components) {
-+		kfree(p);
-+		return -ENOMEM;
-+	}
-+
-+	p->im_depth = nr_components;
-+	p->im_path = (const unsigned char **)components;
-+	p->im_ftype = XFS_DIR3_FT_REG_FILE;
-+	*pathp = p;
-+	return 0;
-+}
-+
-+/* Free a metadata directory tree path. */
-+void
-+xfs_imeta_free_path(
-+	const struct xfs_imeta_path	*path)
-+{
-+	unsigned int			i;
-+
-+	if (path->im_flags & XFS_IMETA_PATH_STATIC)
-+		return;
-+
-+	for (i = 0; i < path->im_depth; i++) {
-+		if ((path->im_dynamicmask & (1ULL << i)) && path->im_path[i])
-+			kfree(path->im_path[i]);
-+	}
-+	kfree(path->im_path);
-+	kfree(path);
-+}
-diff --git a/libxfs/xfs_imeta.h b/libxfs/xfs_imeta.h
-index b8e360bbdfb..3b5953efc01 100644
---- a/libxfs/xfs_imeta.h
-+++ b/libxfs/xfs_imeta.h
-@@ -15,6 +15,8 @@ const struct xfs_imeta_path name = { \
- 	.im_path = (path), \
- 	.im_ftype = XFS_DIR3_FT_REG_FILE, \
- 	.im_depth = ARRAY_SIZE(path), \
-+	.im_flags = XFS_IMETA_PATH_STATIC, \
-+	.im_dynamicmask = 0, \
- }
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
++	if (xfs_is_metadir_inode(ip))
++		ASSERT(XFS_IS_DQDETACHED(ip->i_mount, ip));
++	else
++		ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 	ASSERT(!xfs_inode_has_attr_fork(ip));
  
- /* Key for looking up metadata inodes. */
-@@ -22,6 +24,12 @@ struct xfs_imeta_path {
- 	/* Array of string pointers. */
- 	const unsigned char	**im_path;
- 
-+	/* Each bit corresponds to an element of im_path needing to be freed */
-+	unsigned long long	im_dynamicmask;
-+
-+	/* XFS_IMETA_* path flags */
-+	uint16_t		im_flags;
-+
- 	/* Number of strings in path. */
- 	uint8_t			im_depth;
- 
-@@ -29,6 +37,9 @@ struct xfs_imeta_path {
- 	uint8_t			im_ftype;
- };
- 
-+/* Path is statically allocated. */
-+#define XFS_IMETA_PATH_STATIC	(1U << 0)
-+
- /* Cleanup widget for metadata inode creation and deletion. */
- struct xfs_imeta_update {
- 	struct xfs_mount	*mp;
-@@ -72,6 +83,10 @@ int xfs_imeta_lookup(struct xfs_trans *tp, const struct xfs_imeta_path *path,
- int xfs_imeta_dir_parent(struct xfs_trans *tp,
- 		const struct xfs_imeta_path *path, struct xfs_inode **dpp);
- 
-+int xfs_imeta_create_file_path(struct xfs_mount *mp,
-+		unsigned int nr_components, struct xfs_imeta_path **pathp);
-+void xfs_imeta_free_path(const struct xfs_imeta_path *path);
-+
- void xfs_imeta_set_iflag(struct xfs_trans *tp, struct xfs_inode *ip);
- void xfs_imeta_clear_iflag(struct xfs_trans *tp, struct xfs_inode *ip);
- 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
