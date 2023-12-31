@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CA3FBA34
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:55:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CDFEC2D4
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 19:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hlwK/eHE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8E2DC433C8;
-	Sun, 31 Dec 2023 19:55:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DTNYxNBm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 716CFC433C8;
+	Sun, 31 Dec 2023 19:56:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704052551;
-	bh=7fsrvM4yi2IMovI1mGkMB4ZHIhFcr1SsHTVBFmuydqA=;
+	s=k20201202; t=1704052567;
+	bh=+/6RYGjb35yFzTDStbgZPa/rNA6doWaWLbugaLs5PlY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hlwK/eHE3yXNSrFBpOLku0AbkMZKLoEICjx7EVCCy9PPGoylZ5P5dei0v7rwcTTNc
-	 4qAzAH25m6wQXJKrceCXpoiXuD/XqKntc7mNmqrqt94F/t/rl+AjUStthcSlNtVoVy
-	 bHQLSR59HoVEZhKKkUgwHvgOnPgs+x9YWH1gQ2UhXPUUzsj15iqrW8FZ4WPV27VYnE
-	 k0XadduxMHwZEHN+YEjbbYrrdP/TLWL6e+jE6tF2m20J61QUYTJLo0hMX3w4e+zq4w
-	 J8SOw+OOY1GzITAMOXl+LfqvIeihArVW8xiLwVNfDj7N0rS2slRRr0Hc4e/28WFwiL
-	 lWIcXo2Wdl5aQ==
-Date: Sun, 31 Dec 2023 11:55:51 -0800
-Subject: [PATCHSET v2.0 16/17] xfsprogs: reflink with large realtime extents
+	b=DTNYxNBmZAYZ64TlO6EweYEA2IOnvm68N/Ud0EP/pEGRq9IexH2j/AUlWeGyYVnkI
+	 WbXEV6lBPFE4Owqbm3gHp45a4xK5/xu6CBRm9fSY5+cGf61UQ8O1NcTNGwtF4wm9qv
+	 dud61Tww58wQ+CIvrBUfKgBhOiVOwaGpJzDeKXuKFFslsdhirZcpEt5Rl48Ll1Yb8E
+	 7PbSgR6lsDHVZ9IXyfsyFvnLxeTU9yriC1KspJSbmh7f9CS2i8YIRqGm0MHjjVcWlD
+	 ApILE8ZyOmATWth7/pdHB9nwmJQ9HbcYMqlfkXMaRL+WJpl7PqRuwmgqZK0ZRPYe3b
+	 uegRy+wlJO01w==
+Date: Sun, 31 Dec 2023 11:56:06 -0800
+Subject: [PATCHSET v2.0 17/17] xfsprogs: enable quota for realtime voluems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405018010.1818169.15531409874864543325.stgit@frogsfrogsfrogs>
+Message-ID: <170405018382.1818295.12964444180016025240.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231231182323.GU361584@frogsfrogsfrogs>
 References: <20231231182323.GU361584@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,13 +37,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Now that we've landed support for reflink on the realtime device for
-cases where the rt extent size is the same as the fs block size, enhance
-the reflink code further to support cases where the rt extent size is a
-power-of-two multiple of the fs block size.  This enables us to do data
-block sharing (for example) for much larger allocation units by dirtying
-pagecache around shared extents and expanding writeback to write back
-shared extents fully.
+At some point, I realized that I've refactored enough of the quota code
+in XFS that I should evaluate whether or not quota actually works on
+realtime volumes.  It turns out that with two exceptions, it actually
+does seem to work properly!  There are three broken pieces that I've
+found so far: chown doesn't work, the quota accounting goes wrong when
+the rt bitmap changes size, and the VFS quota ioctls don't report the
+realtime warning counts or limits.  Hence this series fixes two things
+in XFS and re-enables rt quota after a break of a couple decades.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -54,17 +55,15 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-quotas
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-quotas
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-quotas
 ---
- libxfs/init.c          |    7 -------
- libxfs/xfs_bmap.c      |   22 ++++++++++++++++++++++
- libxfs/xfs_inode_buf.c |   20 ++++++--------------
- mkfs/xfs_mkfs.c        |   37 -------------------------------------
- 4 files changed, 28 insertions(+), 58 deletions(-)
+ include/xqm.h |    5 ++++-
+ quota/state.c |    1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
