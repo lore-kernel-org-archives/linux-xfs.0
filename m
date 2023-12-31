@@ -1,29 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B4AC2C5
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:42:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3283C2D4
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:42:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="euMzbnG3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEDC5C433C7;
-	Sun, 31 Dec 2023 23:42:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ilzUiF37"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C928C433C7;
+	Sun, 31 Dec 2023 23:42:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704066157;
-	bh=gVE66MjBOl5jAYoXNtswRcMW4Tn1kwCUJj5jwAqeKSA=;
+	s=k20201202; t=1704066173;
+	bh=l7L2i5yKDV8jNMpvQyjAJ2/HuE75/90s4dlK+3uuvG4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=euMzbnG3HsmZQGUUhuT746u5aOqj8qRg34c8nEYMri5pYGLwlNA1ZKGjeixuvnofU
-	 uiP5Dcy7044yNM9MhW3qacAeYrn37TIwBd5NT6FNhaO4Z+EcvoMR3gHYJQRTnqBvsZ
-	 fg11cbKeQLG3Ujv8mPTzTFJlNFbgBNKLHmsOVzak6pWo+21XCR9NBxoWdr5ZE39+23
-	 eWxRhyJvzBmyvK6awVJ8IKzbj8cAozRnFZgDHXJABWj1kj9b9FjNICeEixGqFG2IqR
-	 6DqnHq9E0hKSTgUlL8ZpqKUKUkjl1A9F8KU//r9H2Wx9Ua3MJUP2wuCeBsjT4dcq0p
-	 ZhcP7PCKl6DFw==
-Date: Sun, 31 Dec 2023 15:42:37 -0800
-Subject: [PATCH 50/58] xfs_repair: adjust keep_fsinos to handle metadata
- directories
+	b=ilzUiF37UFTeCtGeCKePLQLFfZd7WHiVHWXR51AffroWs3Wz9ok/31OM1cb3StuYo
+	 7eZ7HMJqEZpeBNGTq1KTOD0AeHjPiX2ZzkvEyEev0wfIBIoO35UHcYwa+t1ZvY5a4y
+	 RZO/0GUvWH47lQJrK1a2ryHZLkwKQE10h6t88OOK1hFfjYiqIviUd2djQhprp5eBNn
+	 nVmWS6x97PadFOq5uSk+2t5TQb40bIKFiBA8dlvysMUkWOX7I3XQAJtGW8dEJMsOEG
+	 MHi5/AWI0PXveAqhJsigPqGyPGOU/lKQglze0NFrR4cGfei4EuGsHZi02EqcwfibN6
+	 8kUmZRno8C3og==
+Date: Sun, 31 Dec 2023 15:42:53 -0800
+Subject: [PATCH 51/58] xfs_repair: metadata dirs are never plausible root dirs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010614.1809361.4904828130415486810.stgit@frogsfrogsfrogs>
+Message-ID: <170405010627.1809361.195606095171584318.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,37 +37,35 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On a filesystem with metadata directories, we only want to automatically
-mark the two root directories present because those are the only two
-statically allocated inode numbers -- the rt summary inode is now just a
-regular file in a directory.
+Metadata directories are never candidates to be the root of the
+user-accessible directory tree.  Update has_plausible_rootdir to ignore
+them all, as well as detecting the case where the superblock incorrectly
+thinks both trees have the same root.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase5.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ repair/xfs_repair.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index d7bacb18b84..983f2169228 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -421,13 +421,14 @@ static void
- keep_fsinos(xfs_mount_t *mp)
- {
- 	ino_tree_node_t		*irec;
--	int			i;
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index d881d5ec4ac..fe24f66ab98 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -541,9 +541,15 @@ has_plausible_rootdir(
+ 	int			error;
+ 	bool			ret = false;
  
- 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
- 			XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
++	if (xfs_has_metadir(mp) &&
++	    mp->m_sb.sb_rootino == mp->m_sb.sb_metadirino)
++		goto out;
++
+ 	error = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip);
+ 	if (error)
+ 		goto out;
++	if (xfs_is_metadir_inode(ip))
++		goto out_rele;
+ 	if (!S_ISDIR(VFS_I(ip)->i_mode))
+ 		goto out_rele;
  
--	for (i = 0; i < 3; i++)
--		set_inode_used(irec, i);
-+	set_inode_used(irec, 0);	/* root dir */
-+	set_inode_used(irec, 1);	/* rt bitmap or metadata dir root */
-+	if (!xfs_has_metadir(mp))
-+		set_inode_used(irec, 2);	/* rt summary */
- }
- 
- static void
 
