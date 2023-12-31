@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D42A9C2C0
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:36:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E630C2C5
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Dec 2023 23:36:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bN+AK5p7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B6CEC433C8;
-	Sun, 31 Dec 2023 23:36:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pCSkAE+W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2785C433C7;
+	Sun, 31 Dec 2023 23:36:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704065782;
-	bh=tBvnMlYmcEEjkeIgXJLgjQWp/CO/n5qW60eFb7tEdeE=;
+	s=k20201202; t=1704065798;
+	bh=tF7oXD00Ys8KmbxmC+AUFOlBCaIkdmk10h0iJ9sCOOc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bN+AK5p7W/GlDv+3jewLrHBc+ozTqvQ5D5V7d2uGM87gU3KEM9e3guR6HTRHFKtHC
-	 5zFBvqKmIXniF6qg6dfySRVCfeD+CdhYREzewt53Qq5ipwtOWFs6BWqMOIr3nRNq92
-	 6Rkda5wFRl1pXKceTRT7JCNSdq2JzIdUFTHdxLlzscRWdtzgrJRXJsTQMdDhryQsrn
-	 BS1sEIALcS4aOY2c4n0nkBkvLwa3abFukRlcnjJ0xVLbkM8Rpi6Pb3V+Ue8z3wcVf+
-	 uQ9cpAeRyeZQcPbtF1LBrgmTPWZI1Zti5lLf7ZqZDa9gjZ9iBHnWcskXdUec0/2QV1
-	 0tfidGaZWK/kw==
-Date: Sun, 31 Dec 2023 15:36:21 -0800
-Subject: [PATCH 26/58] xfs_db: basic xfs_check support for metadir
+	b=pCSkAE+Wiu/jaWdxtkE5V0t9F/DwcM7kfju5fQMRA7AZm08dqkTrr8PsxYhCIB/+5
+	 66gXincPdrlvYvPBG7sNreFF9a3fcWJbUwW+AdlreJ4e0j01tfgArMKYMutuZI+Ce2
+	 UfpONVdn0V7dKl+e5Na4tJjROf7W1HiKb7Dj0GEsB69OCjG+SIY///banXc+uGR04Y
+	 v+l9CT0ZFFMavt3Th3xNQu+EchoFE7qxNg1TJkTX5MKQfWNbxlysqzZqBqgxiKKbV3
+	 GufoiIf6LEJqHkbfbgyt6bwZb3czzlU/M3N5qvchOKLgTmfoYJtKprZRn2eEBfsUok
+	 KfOMqK9vCPqkg==
+Date: Sun, 31 Dec 2023 15:36:37 -0800
+Subject: [PATCH 27/58] xfs_db: report metadir support for version command
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405010294.1809361.16491233404708859058.stgit@frogsfrogsfrogs>
+Message-ID: <170405010308.1809361.1415783380543629932.stgit@frogsfrogsfrogs>
 In-Reply-To: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 References: <170405009903.1809361.17191356040741566208.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,74 +37,40 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Support metadata directories in xfs_check.
+Report metadir support if we have it enabled.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/check.c |   21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+ db/inode.c |    3 +++
+ db/sb.c    |    2 ++
+ 2 files changed, 5 insertions(+)
 
 
-diff --git a/db/check.c b/db/check.c
-index 2f2fbc7cbd8..ae527471161 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -2663,7 +2663,9 @@ process_dir(
- 		if (!sflag || id->ilist || CHECK_BLIST(bno))
- 			dbprintf(_("no .. entry for directory %lld\n"), id->ino);
- 		error++;
--	} else if (parent == id->ino && id->ino != mp->m_sb.sb_rootino) {
-+	} else if (parent == id->ino &&
-+		   id->ino != mp->m_sb.sb_rootino &&
-+		   id->ino != mp->m_sb.sb_metadirino) {
- 		if (!sflag || id->ilist || CHECK_BLIST(bno))
- 			dbprintf(_(". and .. same for non-root directory %lld\n"),
- 				id->ino);
-@@ -2673,6 +2675,11 @@ process_dir(
- 			dbprintf(_("root directory %lld has .. %lld\n"), id->ino,
- 				parent);
- 		error++;
-+	} else if (id->ino == mp->m_sb.sb_metadirino && id->ino != parent) {
-+		if (!sflag || id->ilist || CHECK_BLIST(bno))
-+			dbprintf(_("metadata directory %lld has .. %lld\n"),
-+				id->ino, parent);
-+		error++;
- 	} else if (parent != NULLFSINO && id->ino != parent)
- 		addparent_inode(id, parent);
+diff --git a/db/inode.c b/db/inode.c
+index c9b506b905d..4e2be6a1156 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -207,6 +207,9 @@ const field_t	inode_v3_flds[] = {
+ 	{ "nrext64", FLDT_UINT1,
+ 	  OI(COFF(flags2) + bitsz(uint64_t) - XFS_DIFLAG2_NREXT64_BIT - 1), C1,
+ 	  0, TYP_NONE },
++	{ "metadir", FLDT_UINT1,
++	  OI(COFF(flags2) + bitsz(uint64_t) - XFS_DIFLAG2_METADIR_BIT-1), C1,
++	  0, TYP_NONE },
+ 	{ NULL }
+ };
+ 
+diff --git a/db/sb.c b/db/sb.c
+index e738065b5be..002736b02b7 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -708,6 +708,8 @@ version_string(
+ 		strcat(s, ",NREXT64");
+ 	if (xfs_has_parent(mp))
+ 		strcat(s, ",PARENT");
++	if (xfs_has_metadir(mp))
++		strcat(s, ",METADIR");
+ 	return s;
  }
-@@ -2916,6 +2923,9 @@ process_inode(
- 		type = DBM_DIR;
- 		if (dip->di_format == XFS_DINODE_FMT_LOCAL)
- 			break;
-+		if (xfs_has_metadir(mp) &&
-+		    id->ino == mp->m_sb.sb_metadirino)
-+			addlink_inode(id);
- 		blkmap = blkmap_alloc(dnextents);
- 		break;
- 	case S_IFREG:
-@@ -2924,18 +2934,21 @@ process_inode(
- 		else if (id->ino == mp->m_sb.sb_rbmino) {
- 			type = DBM_RTBITMAP;
- 			blkmap = blkmap_alloc(dnextents);
--			addlink_inode(id);
-+			if (!xfs_has_metadir(mp))
-+				addlink_inode(id);
- 		} else if (id->ino == mp->m_sb.sb_rsumino) {
- 			type = DBM_RTSUM;
- 			blkmap = blkmap_alloc(dnextents);
--			addlink_inode(id);
-+			if (!xfs_has_metadir(mp))
-+				addlink_inode(id);
- 		}
- 		else if (id->ino == mp->m_sb.sb_uquotino ||
- 			 id->ino == mp->m_sb.sb_gquotino ||
- 			 id->ino == mp->m_sb.sb_pquotino) {
- 			type = DBM_QUOTA;
- 			blkmap = blkmap_alloc(dnextents);
--			addlink_inode(id);
-+			if (!xfs_has_metadir(mp))
-+				addlink_inode(id);
- 		}
- 		else
- 			type = DBM_DATA;
+ 
 
