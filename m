@@ -1,99 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AA46384
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:18:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D809C38E
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jan 2024 00:18:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AeL4Kz7l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D007EC433C9;
-	Mon,  1 Jan 2024 00:18:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704068331;
-	bh=J/Mc5H/lWHPrgqeVao/5YNyfX9MunT6tNZXRv9pM3dc=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AeL4Kz7lVRJgcC47VpRaxVzq3yY2RjQvxakXQS5Y0kW8aXApFELeyP4CG4Uob93rJ
-	 CuiX6+Ubcp5RyxE1RvttvGOHS1pNqUJDCvnznABewYJODCKAWFGdYjrnzxn19+2o5r
-	 iMJZv0Hg1+qa4fUvfDTj9NuRtj/dzkrL0s2Iyfd7jumsuK/0GlzgQjBA1+aEmF3Eso
-	 NGSYkA7+l0uwrOEi6dxkFZ3vjb2WoihITe+kf6OMwmKXah/DUF2apExbIAAjU9/yGu
-	 Yr4fbXcjRED2mJMzSlsOVSOkFE4mkCTtQYau//mShDkcQmMQHF+gGdMO7Na+my/z+P
-	 7XZFCsYb8azbA==
-Date: Sun, 31 Dec 2023 16:18:51 +9900
-Subject: [PATCH 32/47] libxfs: dirty buffers should be marked uptodate too
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="p0TTIqR6"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=XwXIVTaQHU9IVrNjjbFTwkTR7jIpe506NGsplbrLhD4=; b=p0TTIqR6mk/kRPE+/Dlao3VRYW
+	bni1nnjl5WPC0YqQsxcY9jmtlgxgmE8sNdHQNH3UdKvY7bi5gjGQSgYOWvJ7LMuw8BBN1+2qWqfR8
+	Cj1gOpJLXpgtGgG2H1+Hcrv2Wl4W8weKYrCy/2nmNYg6THv3Zo38UhF+hhNESBRLC/ZXakiclKSuF
+	FmG5brpQkj6nSrQq3HDNVVISZRIhvpHvhb8Ju7Sp4Ri64QBrY4gelrVLOf1T+jJuuAvRJ4MeioP0d
+	AMejQVxP1sZ5lJtb8DQOK7CKTLJXK0QmcvWIlC9cQasjOiza0zUExowZtj/UuxmQE6h9oB4mPOYfe
+	KbDct8YA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+	id 1rK612-008AYo-HE; Mon, 01 Jan 2024 00:18:48 +0000
+Date: Mon, 1 Jan 2024 00:18:48 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170405015739.1815505.4360949566104494215.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
-References: <170405015275.1815505.16749821217116487639.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+Subject: Re: [PATCH 9/9] xfs: connect in-memory btrees to xfiles
+Message-ID: <ZZIE6P0aoVgAtONY@casper.infradead.org>
+References: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
+ <170404829726.1748854.1262147267981918901.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <170404829726.1748854.1262147267981918901.stgit@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sun, Dec 31, 2023 at 12:15:54PM -0800, Darrick J. Wong wrote:
+> +/* Ensure that there is storage backing the given range. */
+> +int
+> +xfile_prealloc(
+> +	struct xfile		*xf,
+> +	loff_t			pos,
+> +	u64			count)
+> +{
+> +	struct inode		*inode = file_inode(xf->file);
+> +	struct address_space	*mapping = inode->i_mapping;
+> +	const struct address_space_operations *aops = mapping->a_ops;
+> +	struct page		*page = NULL;
+> +	unsigned int		pflags;
+> +	int			error = 0;
+> +
+> +	if (count > MAX_RW_COUNT)
+> +		return -E2BIG;
+> +	if (inode->i_sb->s_maxbytes - pos < count)
+> +		return -EFBIG;
+> +
+> +	trace_xfile_prealloc(xf, pos, count);
+> +
+> +	pflags = memalloc_nofs_save();
+> +	while (count > 0) {
+> +		void		*fsdata = NULL;
+> +		unsigned int	len;
+> +		int		ret;
+> +
+> +		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
+> +
+> +		/*
+> +		 * We call write_begin directly here to avoid all the freezer
+> +		 * protection lock-taking that happens in the normal path.
+> +		 * shmem doesn't support fs freeze, but lockdep doesn't know
+> +		 * that and will trip over that.
+> +		 */
+> +		error = aops->write_begin(NULL, mapping, pos, len, &page,
+> +				&fsdata);
+> +		if (error)
+> +			break;
+> +
+> +		/*
+> +		 * xfile pages must never be mapped into userspace, so we skip
+> +		 * the dcache flush.  If the page is not uptodate, zero it to
+> +		 * ensure we never go lacking for space here.
+> +		 */
+> +		if (!PageUptodate(page)) {
+> +			void	*kaddr = kmap_local_page(page);
+> +
+> +			memset(kaddr, 0, PAGE_SIZE);
+> +			SetPageUptodate(page);
+> +			kunmap_local(kaddr);
+> +		}
 
-I started fuzz-testing the realtime rmap feature with a very large
-number of realtime allocation groups.  There were so many rt groups that
-repair had to rebuild /realtime in the metadata directory tree, and that
-directory was big enough to spur the creation of a block format
-directory.
-
-Unfortunately, repair then walks both directory trees to look for
-unconnceted files.  This part of phase 6 emits CRC errors on the newly
-created buffers for the /realtime directory, declares the directory to
-be garbage, and moves all the rt rmap inodes to /lost+found, resulting
-in a corrupt fs.
-
-Poking around in gdb, I noticed that the buffer contents were indeed
-zero, and that UPTODATE was not set.  This was very strange, until I
-added a watch on bp->b_flags to watch for accesses.  It turns out that
-xfs_repair's prefetch code will _get a buffer and zero the contents if
-UPTODATE is not set.
-
-The directory tree code in libxfs will also _get a buffer, initialize
-it, and log it to the coordinating transaction, which in this case is
-the transactions used to reconnect the rmap btree inodes to /realtime.
-At no point does any of that code ever set UPTODATE on the buffer, which
-is why prefetch zaps the contents.
-
-Hence change both buffer dirtying functions to set UPTODATE, since a
-dirty buffer is by definition at least as recent as whatever's on disk.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- libxfs/rdwr.c  |    2 +-
- libxfs/trans.c |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
-
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 17abced06c9..a3b30510926 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -959,7 +959,7 @@ libxfs_buf_mark_dirty(
- 	 */
- 	bp->b_error = 0;
- 	bp->b_flags &= ~LIBXFS_B_STALE;
--	bp->b_flags |= LIBXFS_B_DIRTY;
-+	bp->b_flags |= LIBXFS_B_DIRTY | LIBXFS_B_UPTODATE;
- }
- 
- /* Prepare a buffer to be sent to the MRU list. */
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index aab9923d9ad..3c5d6383e8c 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -716,6 +716,7 @@ libxfs_trans_dirty_buf(
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
- 
-+	bp->b_flags |= LIBXFS_B_UPTODATE;
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- 	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
- }
+Does the xfiles implementation prevent THPs from being created?
+If not, this could lead to an entire THP being marked uptodate even
+though we've only zeroed one page of it.
 
