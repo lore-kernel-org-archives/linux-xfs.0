@@ -1,194 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA38863B2;
-	Tue,  2 Jan 2024 08:44:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5824BD26A
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jan 2024 10:24:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aaBFR6Hr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34BDDC433C8;
-	Tue,  2 Jan 2024 08:44:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704185089;
-	bh=TqUw30VBClGf8EBzxFLjIwlFwak5WEgzCq6DETQbdyI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aaBFR6HrK+uHcu5HexeMXMB3F6c2Fh0y7A7RNc6Fo8aVK3CnQ+7oV/74dk+Cmxpxq
-	 lOFPEXeFs1+3JE3F8AGDK3oQlPj0FDxfAXlrTRB5CuUrizTRxHmW2ydMiBSZfiK8r8
-	 QiHz3hbrHlSO/CXOV9Xrk49DzkdOAw1+x+LidBxxhCmjh3Ttl2lj/O1UyNwFEhRgCN
-	 kUz7U8i7WPSmLZoEwsdrsx/d7kI1nHTFk4cYiMHnMxpUUpsc8KLu7YF/RWl2ppw9Wn
-	 bBtv1vz6AXWNqB4f03RE1j0sx7rHC0WMdr+BoYfjmQS3qzxaKrDXamsV1Q1I0zLYVJ
-	 omAUr/LHC+hkQ==
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: fstests@vger.kernel.org
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	djwong@kernel.org,
-	zlang@redhat.com
-Subject: [PATCH 5/5] xfs: Check correctness of metadump/mdrestore's ability to work with dirty log
-Date: Tue,  2 Jan 2024 14:13:52 +0530
-Message-ID: <20240102084357.1199843-6-chandanbabu@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240102084357.1199843-1-chandanbabu@kernel.org>
-References: <20240102084357.1199843-1-chandanbabu@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PllDNpqL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=4yhgIXbGIOcDyh2Mco+QVQ80qmJNH1iJL+E7tvL5OFw=; b=PllDNpqLEP0HXEcgTUjeYRNDtu
+	CjH/kY2s0ZeUM7vtUSuolaJ0TH49+R8/fnu1Yy5LwxN70+bF8+MkFdMq3qAH1K8qKhsPoRm/dvcbk
+	u3cYpo80Elx3pJqT7Oz3/9BJotZGoSpmiWkgtg8GiverZx6CnS4n+bR/LbanlIwSOI1QU55yBLfGh
+	wywr9WJ48tR+brCRMuvJQfO593CBzVmuNe3LYHx+rp1tQ7oeteO5aX/AGXf9Toe+zDVmoOrPV66A8
+	yOv8cwCElqPmTzGqkVrfuZrnqlbOiHag32qRSoRNl8te8URd2xQ/QDojO5YHF6cQNCnCqk1t+C7oA
+	CSYtPgyw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rKbwz-007aJ0-0l;
+	Tue, 02 Jan 2024 10:24:45 +0000
+Date: Tue, 2 Jan 2024 02:24:45 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: speed up xfs_iwalk_adjust_start a little bit
+Message-ID: <ZZPkbX55ytrI3raP@infradead.org>
+References: <170404826492.1747630.1053076578437373265.stgit@frogsfrogsfrogs>
+ <170404826523.1747630.4260188331032209988.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <170404826523.1747630.4260188331032209988.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a new test to verify if metadump/mdrestore are able to dump and restore
-the contents of a dirty log.
+On Sun, Dec 31, 2023 at 12:04:42PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Replace the open-coded loop that recomputes freecount with a single call
+> to a bit weight function.
 
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
----
- tests/xfs/801     | 115 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/801.out |  14 ++++++
- 2 files changed, 129 insertions(+)
- create mode 100755 tests/xfs/801
- create mode 100644 tests/xfs/801.out
+Looks good:
 
-diff --git a/tests/xfs/801 b/tests/xfs/801
-new file mode 100755
-index 00000000..3ed559df
---- /dev/null
-+++ b/tests/xfs/801
-@@ -0,0 +1,115 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test 801
-+#
-+# Test metadump/mdrestore's ability to dump a dirty log and restore it
-+# correctly.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick metadump log logprint punch
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.*
-+	_scratch_unmount > /dev/null 2>&1
-+}
-+
-+# Import common functions.
-+. ./common/dmflakey
-+. ./common/inject
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_scratch
-+_require_test
-+_require_xfs_debug
-+_require_xfs_io_error_injection log_item_pin
-+_require_dm_target flakey
-+_require_xfs_io_command "pwrite"
-+_require_test_program "punch-alternating"
-+
-+metadump_file=${TEST_DIR}/${seq}.md
-+testfile=${SCRATCH_MNT}/testfile
-+
-+echo "Format filesystem on scratch device"
-+_scratch_mkfs >> $seqres.full 2>&1
-+
-+max_md_version=1
-+_scratch_metadump_v2_supported && max_md_version=2
-+
-+external_log=0
-+if [[ $USE_EXTERNAL = yes && -n "$SCRATCH_LOGDEV" ]]; then
-+	external_log=1
-+fi
-+
-+if [[ $max_md_version == 1 && $external_log == 1 ]]; then
-+	_notrun "metadump v1 does not support external log device"
-+fi
-+
-+echo "Initialize and mount filesystem on flakey device"
-+_init_flakey
-+_load_flakey_table $FLAKEY_ALLOW_WRITES
-+_mount_flakey
-+
-+echo "Create test file"
-+$XFS_IO_PROG -s -f -c "pwrite 0 5M" $testfile >> $seqres.full
-+
-+echo "Punch alternative blocks of test file"
-+$here/src/punch-alternating $testfile
-+
-+echo "Mount cycle the filesystem on flakey device"
-+_unmount_flakey
-+_mount_flakey
-+
-+device=$(readlink -f $FLAKEY_DEV)
-+device=$(_short_dev $device)
-+
-+echo "Pin log items in the AIL"
-+echo 1 > /sys/fs/xfs/${device}/errortag/log_item_pin
-+
-+echo "Create two checkpoint transactions on ondisk log"
-+for ct in $(seq 1 2); do
-+	offset=$(xfs_io -c 'fiemap' $testfile | tac |  grep -v hole | \
-+			 head -n 1 | awk -F '[\\[.]' '{ print $2 * 512; }')
-+	$XFS_IO_PROG -c "truncate $offset" -c fsync $testfile
-+done
-+
-+echo "Drop writes to filesystem from here onwards"
-+_load_flakey_table $FLAKEY_DROP_WRITES
-+
-+echo "Unpin log items in AIL"
-+echo 0 > /sys/fs/xfs/${device}/errortag/log_item_pin
-+
-+echo "Unmount filesystem on flakey device"
-+_unmount_flakey
-+
-+echo "Clean up flakey device"
-+_cleanup_flakey
-+
-+echo -n "Filesystem has a "
-+_print_logstate
-+
-+echo "Create metadump file, restore it and check restored fs"
-+for md_version in $(seq 1 $max_md_version); do
-+	[[ $md_version == 1 && $external_log == 1 ]] && continue
-+
-+	version=""
-+	if [[ $max_md_version == 2 ]]; then
-+		version="-v $md_version"
-+	fi
-+
-+	_scratch_xfs_metadump $metadump_file -a -o $version
-+	_scratch_xfs_mdrestore $metadump_file
-+
-+	_scratch_mount
-+	_check_scratch_fs
-+	_scratch_unmount
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/801.out b/tests/xfs/801.out
-new file mode 100644
-index 00000000..a2f2abca
---- /dev/null
-+++ b/tests/xfs/801.out
-@@ -0,0 +1,14 @@
-+QA output created by 801
-+Format filesystem on scratch device
-+Initialize and mount filesystem on flakey device
-+Create test file
-+Punch alternative blocks of test file
-+Mount cycle the filesystem on flakey device
-+Pin log items in the AIL
-+Create two checkpoint transactions on ondisk log
-+Drop writes to filesystem from here onwards
-+Unpin log items in AIL
-+Unmount filesystem on flakey device
-+Clean up flakey device
-+Filesystem has a dirty log
-+Create metadump file, restore it and check restored fs
--- 
-2.43.0
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
