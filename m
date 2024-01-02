@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9351C156E0;
-	Tue,  2 Jan 2024 18:27:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FEA15AE2;
+	Tue,  2 Jan 2024 19:11:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cm19BWa9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F159CC433C8;
-	Tue,  2 Jan 2024 18:27:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vP6fUiss"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59B8CC433C7;
+	Tue,  2 Jan 2024 19:11:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704220054;
-	bh=HP6tI+HVZOSimiQ6Fk4eB4jNgTr/gBOBVI+28KM6jQY=;
+	s=k20201202; t=1704222663;
+	bh=v7Sg5Hu2tTtPpVizisGQrUZ1egDq4eG4pzn1oBIzlEk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cm19BWa9LjdOMSmMndSikGfi1J699z1W+uGSWZrxFY7SlJCVR/jjFy06qe3oFuXj/
-	 qlwVxpTwCbAfO2Vz0fOaxcBsf+vEIhZthkNlifoxwEiusDKTLayRFgKtufoubDUNNG
-	 yDPHzFQGsN74aLBa3bNOP6c8etCxEPuojZzNZmI0ePPTkZF0+M3S1cwfDLZ8pEzJif
-	 /fW1qRUZy2ZZTL4pDR85SVtZqjxWMiwOOB5SPz8HZ9z7HXLp5QN+mQ1A6TLAPy0FuO
-	 nVyFW1eFDBBLGAx+31ALx+eZuEis/66OQpVz+XofA7B28JMPZd7hyh6JaUkwPA/qjM
-	 ioFLJg6o4dwTg==
-Date: Tue, 2 Jan 2024 10:27:33 -0800
+	b=vP6fUissFLHpwDJUX3Clw/yIeEVawt8yhtl8IXFZ1XDDsGF4vBn+K28wosP+9athF
+	 jehLmhrbkY8bLjmy+B08xY1UC8wNZ8e4AlPDVMUPC34YkyFob16d8LCqCOWtqMF6Zv
+	 YzY2uxii5fN5/qRHd0dSVPVlYDXIPuuJhjh5NiKsXRIuu93ntb8+2N3pBzc7C58cWY
+	 dIph2dDGEVG+XUJiT70xdLmppLdG9StQAw0BcyWlc+aA1wOVWp7pB7ofBG41fRmtoH
+	 JNW+xRT1+lmCqjILa63oAtgnfZ7iGQXmzMuuGy55EdmFNFJn2MxKJouVVla+zAzDm4
+	 W/OpSlJnv0YMQ==
+Date: Tue, 2 Jan 2024 11:11:02 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chandan Babu R <chandanbabu@kernel.org>
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, zlang@redhat.com
-Subject: Re: [PATCH 2/5] common/xfs: Add function to detect support for
- metadump v2
-Message-ID: <20240102182733.GW361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/5] _scratch_xfs_mdrestore: Pass scratch log device when
+ applicable
+Message-ID: <20240102191102.GE108281@frogsfrogsfrogs>
 References: <20240102084357.1199843-1-chandanbabu@kernel.org>
- <20240102084357.1199843-3-chandanbabu@kernel.org>
+ <20240102084357.1199843-4-chandanbabu@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,43 +34,74 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240102084357.1199843-3-chandanbabu@kernel.org>
+In-Reply-To: <20240102084357.1199843-4-chandanbabu@kernel.org>
 
-On Tue, Jan 02, 2024 at 02:13:49PM +0530, Chandan Babu R wrote:
-> This commit defines a new function to help detect support for metadump v2.
+On Tue, Jan 02, 2024 at 02:13:50PM +0530, Chandan Babu R wrote:
+> Metadump v2 supports dumping contents of an external log device. This commit
+> modifies _scratch_xfs_mdrestore() and _xfs_mdrestore() to be able to restore
+> metadump files which contain data from external log devices.
+> 
+> The callers of _scratch_xfs_mdrestore() must set the value of $SCRATCH_LOGDEV
+> only when all of the following conditions are met:
+> 1. Metadump is in v2 format.
+> 2. Metadump has contents dumped from an external log device.
 > 
 > Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-> ---
->  common/xfs | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 38094828..558a6bb5 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -698,6 +698,14 @@ _xfs_mdrestore() {
->  	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
->  }
->  
-> +_scratch_metadump_v2_supported()
-> +{
-> +	$XFS_DB_PROG -c "help metadump" $SCRATCH_DEV | \
-> +		grep -q "Metadump version to be used"
-> +
-> +	return $?
 
-You don't need this; bash will retain the status code of the last
-process in the pipe as the result value.
-
-(Looks good to me otherwise.)
+Looks very similar to my version,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +}
+> ---
+>  common/xfs | 19 +++++++++++++++++--
+>  1 file changed, 17 insertions(+), 2 deletions(-)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 558a6bb5..248c8361 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -682,7 +682,8 @@ _xfs_metadump() {
+>  _xfs_mdrestore() {
+>  	local metadump="$1"
+>  	local device="$2"
+> -	shift; shift
+> +	local logdev="$3"
+> +	shift; shift; shift
+>  	local options="$@"
+>  
+>  	# If we're configured for compressed dumps and there isn't already an
+> @@ -695,6 +696,10 @@ _xfs_mdrestore() {
+>  	fi
+>  	test -r "$metadump" || return 1
+>  
+> +	if [ "$logdev" != "none" ]; then
+> +		options="$options -l $logdev"
+> +	fi
 > +
->  # Snapshot the metadata on the scratch device
->  _scratch_xfs_metadump()
+>  	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
+>  }
+>  
+> @@ -724,8 +729,18 @@ _scratch_xfs_mdrestore()
 >  {
+>  	local metadump=$1
+>  	shift
+> +	local logdev=none
+> +	local options="$@"
+>  
+> -	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$@"
+> +	# $SCRATCH_LOGDEV should have a non-zero length value only when all of
+> +	# the following conditions are met.
+> +	# 1. Metadump is in v2 format.
+> +	# 2. Metadump has contents dumped from an external log device.
+> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
+> +		logdev=$SCRATCH_LOGDEV
+> +	fi
+> +
+> +	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$@"
+>  }
+>  
+>  # Do not use xfs_repair (offline fsck) to rebuild the filesystem
 > -- 
 > 2.43.0
 > 
