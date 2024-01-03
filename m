@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4EAA361
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 00:23:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C9E171CA
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 01:07:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugk/LFv/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B938C433C8;
-	Wed,  3 Jan 2024 00:23:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lto469fm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42636C433C7;
+	Wed,  3 Jan 2024 01:07:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704241431;
-	bh=/r9L1QshPcsJRmSwG54Bl6pUNRGBLCYn/pJhkFRzIYo=;
+	s=k20201202; t=1704244068;
+	bh=QQ4xNsdc9Y8Od2jkFfon89To/WCr62mT1jnWCKuwNVs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ugk/LFv/qN8lzyvjL80QDue/UMP03na0RuhoLgzvmv2rsbpd2Ir267Q1X8d6u7A57
-	 neWKTlsgnda6s0LwTSDHiXIaeXSKijYT7937N+nC5F6/VzYnyTeTOkTt27VW9hOhSL
-	 Fl7/b0Q3pEfQHxiDd0t50/QTNnFCk8oP2BIVgC43+k35K9PGIMTLIZmnNm3hYnmVRk
-	 VzGK1n2dOSU07o6kftD5+ZvzDme/RbhvYbP+tnu6+EwKm6Fs99NjU9qCvbOtHBJQfd
-	 xe8J42cOm935VBfhI6Gq3DQaOmlcb3mKKpSi0Sp496JCXc4LbGBf5gC02W+QxU4e+v
-	 39cFVGqsJOqkA==
-Date: Tue, 2 Jan 2024 16:23:51 -0800
+	b=Lto469fmst6MOmGiJCwsbAdOWA33tZxVv60q0UNv/xOZxWc+c8lyXGHCZK429+iwa
+	 kw46kRHEsF3kUC10voc/fBcA+DwDISMG4xQFxI5MJKufVW+7nE7ZtQLKMbxDreBbVo
+	 FsGSK2odlucl2TgrSxVI/jBiurgDmlRBNFKtVKBBZZDZ8Cn+EIpM8YP8tKDQRK7ehX
+	 I6ET+35Ja1PpPtuGg8PrEnRqI1wt2OYTaLFF1J/cEaHcFny0CU419eprnuAomBrJGm
+	 QyJh/PVJcUPJ22TIJE+SywckHCvHdDOaZ8zcoYswTPS97MYwbPzoTBxVF6SXfkVm+I
+	 WSmOfz32Lo7Sw==
+Date: Tue, 2 Jan 2024 17:07:47 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs: allow scrub to hook metadata updates in other
- writers
-Message-ID: <20240103002351.GZ361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/7] xfs: allow blocking notifier chains with filesystem
+ hooks
+Message-ID: <20240103010747.GB241128@frogsfrogsfrogs>
 References: <170404826492.1747630.1053076578437373265.stgit@frogsfrogsfrogs>
- <170404826555.1747630.3275306768802391467.stgit@frogsfrogsfrogs>
- <ZZPzyTaiAEN+TmdB@infradead.org>
+ <170404826571.1747630.2096311818934079737.stgit@frogsfrogsfrogs>
+ <ZZPlNOFEfG7KnEk6@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,77 +35,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZZPzyTaiAEN+TmdB@infradead.org>
+In-Reply-To: <ZZPlNOFEfG7KnEk6@infradead.org>
 
-On Tue, Jan 02, 2024 at 03:30:17AM -0800, Christoph Hellwig wrote:
-> On Sun, Dec 31, 2023 at 12:05:13PM -0800, Darrick J. Wong wrote:
-> > On the author's computer, calling an empty srcu notifier chain was
-> > observed to have an overhead averaging ~40ns with a maximum of 60ns.
-> > Adding a no-op notifier function increased the average to ~58ns and
-> > 66ns.  When the quotacheck live update notifier is attached, the average
-> > increases to ~322ns with a max of 372ns to update scrub's in-memory
-> > observation data, assuming no lock contention.
+On Tue, Jan 02, 2024 at 02:28:04AM -0800, Christoph Hellwig wrote:
+> On Sun, Dec 31, 2023 at 12:05:29PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > With jump labels enabled, calls to empty srcu notifier chains are elided
-> > from the call sites when there are no hooks registered, which means that
-> > the overhead is 0.36ns when fsck is not running.  For compilers that do
-> > not support jump labels (all major architectures do), the overhead of a
-> > no-op notifier call is less bad (on a many-cpu system) than the atomic
-> > counter ops, so we make the hook switch itself a nop.
+> > Make it so that we can switch between notifier chain implementations for
+> > testing purposes.  On the author's test system, calling an empty srcu
+> > notifier chain cost about 19ns per call, vs. 4ns for a blocking notifier
+> > chain.  Hm.  Might we actually want regular blocking notifiers?
 > 
-> Based on the next patch it seems like blocking notifier are the way
-> to go and thus this patch should switch to using them and the above
-> needs updates.
+> Sounds like it.  But what is important is that we really shouldn't
+> provide both and punt the decision to the user..
 
-I'll address the srcu vs. blocking choice in the thread for the next
-patch.
+How about this for a commit message:
 
-> > Note: This new code is also split out as a separate patch from its
-> > initial user so that the author can move patches around his tree with
-> > ease.
-> 
-> For the final merge candidate at least this comment should go away,
-> and maybe also the split..
-> 
-> > +config XFS_LIVE_HOOKS
-> > +	bool
-> > +	select JUMP_LABEL if HAVE_ARCH_JUMP_LABEL
-> > +
-> >  config XFS_ONLINE_SCRUB
-> >  	bool "XFS online metadata check support"
-> >  	default n
-> >  	depends on XFS_FS
-> >  	depends on TMPFS && SHMEM
-> > +	select XFS_LIVE_HOOKS
-> >  	select XFS_DRAIN_INTENTS
-> 
-> I'm a bit confused by all the extra Kconfig options here.
-> Why do we need XFS_LIVE_HOOKS, or the existing XFS_DRAIN_INTENTS
-> instead of just switching the ifdefs to XFS_ONLINE_SCRUB and
-> selecting JUMP_LABEL if HAVE_ARCH_JUMP_LABEL from
-> XFS_ONLINE_SCRUB?
+"Originally, I selected srcu notifiers to implement live hooks because
+they seemed to have fewer impacts to scalability.  The per-call cost of
+srcu_notifier_call_chain is lower (19ns) than blocking_notifier_ (4ns),
+but the latter takes an rwsem.  IIRC, rwsems have scalability problems
+when the cpu count gets high due to all the cacheline bouncing and
+atomic operations.  I didn't want regular xfs operations to suffer
+memory contention on the blocking notifiers for the sake of something
+that won't be running most of the time.
 
-I have plans to use the live hooks for more than just online scrub.
-If we ever get around to reimplementing xfs_reno (see patchriver #4 for
-a somewhat racy userspace version) in the kernel, it would be helpful
-for reno to be able to keep an eye on any other directory link changes
-while we're trying to renumber things.
+"Therefore, I stuck with srcu notifiers, despite trading off single
+threaded performance for multithreaded performance.  I wasn't thrilled
+with the very high teardown time for srcu notifiers, since the caller
+has to wait for the next rcu grace period.
 
-As for DRAIN_INTENTS, userspace takes advantage of some of the
-XFS_ONLINE_SCRUB code but doesn't need the intent drain because libxfs
-isn't properly multithreaded.
+"Then I discovered static branches.
 
-> Also while I'm at random Kconfig critique, n is the default default
-> and the default n here can be dropped.  I might just send a patch for
-> that instead of bothering you once this series is in, though.
+"Now suddenly I had a tool to reduce the pain of a high-contention rwsem
+to zero except in the case where scrub is running.  This seemed a lot
+better to me -- zero runtime overhead when scrub is not running; low
+setup and teardown overhead for scrub; and cacheline bouncing problems
+only when there are a lot of threads running through the notifier call
+code *and* scrub is running.
 
-You could even send it now; I don't think there's much chance that
-Chandan will merge this patchset for 6.8, whereas I think the kconfig
-cleanup would be fine for the merge window.
+"This seems perfect, but static branches aren't supported on all the
+architectures that Linux supports.  Further, I haven't really tested the
+impacts of scrub on big iron.  This makes me hesitant to get rid of the
+SRCU notifier implementation while online fsck is still experimental.
 
-> Otherwise this looks good except for the choice of which notifier
-> type to use.
+"Note that Kconfig automatically selects the best option for a
+particular architecture.  Kernel builders should take the defaults."
 
-<nod>
+I dunno.  Do you want me to rip out the srcu implementation and only
+provide the blocking notifiers?  That's easy to do, though hard to undo
+once I've done it.
+
+Hmm.  How many arches support static branches today?
+
+$ grep HAVE_ARCH_JUMP_LABEL arch/
+arch/arc/Kconfig:52:    select HAVE_ARCH_JUMP_LABEL if ISA_ARCV2 && !CPU_ENDIAN_BE32
+arch/arm/Kconfig:77:    select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL && !CPU_ENDIAN_BE32 && MMU
+arch/arm64/Kconfig:163: select HAVE_ARCH_JUMP_LABEL
+arch/arm64/Kconfig:164: select HAVE_ARCH_JUMP_LABEL_RELATIVE
+arch/csky/Kconfig:71:   select HAVE_ARCH_JUMP_LABEL if !CPU_CK610
+arch/csky/Kconfig:72:   select HAVE_ARCH_JUMP_LABEL_RELATIVE
+arch/mips/Kconfig:53:   select HAVE_ARCH_JUMP_LABEL
+arch/parisc/Kconfig:60: select HAVE_ARCH_JUMP_LABEL
+arch/parisc/Kconfig:61: select HAVE_ARCH_JUMP_LABEL_RELATIVE
+arch/powerpc/Kconfig:212:       select HAVE_ARCH_JUMP_LABEL
+arch/powerpc/Kconfig:213:       select HAVE_ARCH_JUMP_LABEL_RELATIVE
+arch/riscv/Kconfig:96:  select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL
+arch/riscv/Kconfig:97:  select HAVE_ARCH_JUMP_LABEL_RELATIVE if !XIP_KERNEL
+arch/s390/Kconfig:151:  select HAVE_ARCH_JUMP_LABEL
+arch/s390/Kconfig:152:  select HAVE_ARCH_JUMP_LABEL_RELATIVE
+arch/sparc/Kconfig:31:  select HAVE_ARCH_JUMP_LABEL if SPARC64
+arch/x86/Kconfig:176:   select HAVE_ARCH_JUMP_LABEL
+arch/x86/Kconfig:177:   select HAVE_ARCH_JUMP_LABEL_RELATIVE
+arch/xtensa/Kconfig:33: select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL
+arch/loongarch/Kconfig:94:      select HAVE_ARCH_JUMP_LABEL
+arch/loongarch/Kconfig:95:      select HAVE_ARCH_JUMP_LABEL_RELATIVE
+
+The main arches that xfs really cares about are arm64, ppc64, riscv,
+s390x, and x86_64, right?  Perhaps there's a stronger case for only
+providing blocking notifiers and jump labels since there aren't many
+m68k xfs users, right?
 
 --D
