@@ -1,34 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082201F606
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 23:32:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 105FD1F92C
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 23:36:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PgVVFAhH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DBD2C433C7;
-	Wed,  3 Jan 2024 23:32:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hv22/uS8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79420C433C8;
+	Wed,  3 Jan 2024 23:36:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704324758;
-	bh=+5o/V3NHEhBC28Q/AGRGKxOFWI4+5MHUYEGWMTi0chY=;
+	s=k20201202; t=1704324962;
+	bh=q1/He56ZfObyAbbkFqAXfu9H1s3WwKykt+JjEkoFD1w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PgVVFAhHl5JMUKNiKjmFIkqIjrGVUcgWRsy6tbQ55SEFxuoLeYjR5j/R0cZFwRhf/
-	 0LUZNfIPXHdNLvJhZT2BqYC7xVPGd3/E1nDeNbu3nIoFrecfutBDvWB2taXLN6aCwo
-	 XYICA4gIN1fg8K9hntpNtshe0MWayWKv6uE0vUvsXPQOsvfXyg3cVRkvpYeh5ipbfI
-	 HlI1I9O5qK1SSiI/yvESHZ4gg+RBx8F4USLq6/Ge9lQNXm1cyx26WrVoAZsSufp8Bi
-	 vl9IkxVvxxHK8bs7k3t1iA/NcqtpjdXvTY3TzJQniaBsw/464B2vmm4NH6YnK8NR8i
-	 gb5uZdjwMmwuw==
-Date: Wed, 3 Jan 2024 15:32:37 -0800
+	b=Hv22/uS86EpyqzeSGsHaoqgsgpauK/uLvWiFJ2hxFE37x0eq+dsixxtRb+xUMTDum
+	 hoY9tN43FIrwFazB5ikx2j9SLkQVY5HAhLF2hUpzxB9+TuHCQiQQQv2nIWxB/kkIpZ
+	 samf06N9XT3fkaqM8gEX/HPmeQ+poOVLDKm56hmbVXc9WsOxr8wXLV9nxiV6Y7hHaL
+	 HLJAI0mFgURY6VL5cGz24APhWfOKvZFF0UuA8RSmwyASnt3TAJsnTfO0Ntd3K8483g
+	 Q/gSl4cB6AatakEj7dBsqUtwCnAXggIF0PmYUu/P7ekp+EF+o5ZIobLtjEQTcyCYWb
+	 nNGfozhUeJm0A==
+Date: Wed, 3 Jan 2024 15:36:01 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Hugh Dickins <hughd@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 01/15] shmem: move the shmem_mapping assert into
- shmem_get_folio_gfp
-Message-ID: <20240103233237.GV361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 02/15] shmem: export shmem_get_folio
+Message-ID: <20240103233601.GW361584@frogsfrogsfrogs>
 References: <20240103084126.513354-1-hch@lst.de>
- <20240103084126.513354-2-hch@lst.de>
+ <20240103084126.513354-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,47 +36,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240103084126.513354-2-hch@lst.de>
+In-Reply-To: <20240103084126.513354-3-hch@lst.de>
 
-On Wed, Jan 03, 2024 at 08:41:12AM +0000, Christoph Hellwig wrote:
-> Move the check that the inode really is a shmemfs one from
-> shmem_read_folio_gfp to shmem_get_folio_gfp given that shmem_get_folio
-> can also be called from outside of shmem.c.  Also turn it into a
-> WARN_ON_ONCE and error return instead of BUG_ON to be less severe.
+On Wed, Jan 03, 2024 at 08:41:13AM +0000, Christoph Hellwig wrote:
+> Export shmem_get_folio as a slightly lower-level variant of
+> shmem_read_folio_gfp.  This will be useful for XFS xfile use cases
+> that want to pass SGP_NOALLOC or get a locked page, which the thin
+> shmem_read_folio_gfp wrapper can't provide.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-No complaints from me about converting a BUGON to an error return...
+I've long wanted more direct coordination with tmpfs for xfiles...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  mm/shmem.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  mm/shmem.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
 > diff --git a/mm/shmem.c b/mm/shmem.c
-> index 91e2620148b2f6..3349df6d4e0360 100644
+> index 3349df6d4e0360..328eb3dbea9f1c 100644
 > --- a/mm/shmem.c
 > +++ b/mm/shmem.c
-> @@ -1951,6 +1951,9 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
->  	int error;
->  	bool alloced;
+> @@ -2116,12 +2116,27 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+>  	return error;
+>  }
 >  
-> +	if (WARN_ON_ONCE(!shmem_mapping(inode->i_mapping)))
-> +		return -EINVAL;
-> +
->  	if (index > (MAX_LFS_FILESIZE >> PAGE_SHIFT))
->  		return -EFBIG;
->  repeat:
-> @@ -4895,7 +4898,6 @@ struct folio *shmem_read_folio_gfp(struct address_space *mapping,
->  	struct folio *folio;
->  	int error;
+> +/**
+> + * shmem_get_folio - find and get a reference to a shmem folio.
+> + * @inode:	inode to search
+> + * @index:	the page index.
+> + * @foliop:	pointer to the found folio if one was found
+> + * @sgp:	SGP_* flags to control behavior
+> + *
+> + * Looks up the page cache entry at @inode & @index.
+> + *
+> + * If this function returns a folio, it is returned with an increased refcount.
+> + *
+> + * Return: The found folio, %NULL if SGP_READ or SGP_NOALLOC was passed in @sgp
+> + * and no folio was found at @index, or an ERR_PTR() otherwise.
+> + */
+>  int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **foliop,
+>  		enum sgp_type sgp)
+>  {
+>  	return shmem_get_folio_gfp(inode, index, foliop, sgp,
+>  			mapping_gfp_mask(inode->i_mapping), NULL, NULL);
+>  }
+> +EXPORT_SYMBOL_GPL(shmem_get_folio);
 >  
-> -	BUG_ON(!shmem_mapping(mapping));
->  	error = shmem_get_folio_gfp(inode, index, &folio, SGP_CACHE,
->  				    gfp, NULL, NULL);
->  	if (error)
+>  /*
+>   * This is like autoremove_wake_function, but it removes the wait queue
 > -- 
 > 2.39.2
 > 
