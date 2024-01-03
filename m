@@ -1,26 +1,26 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D9A1804D
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 08:42:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F88182A2
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 08:42:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xUQFbdpu"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ushH/vho"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=a2KU587OgqnObeCrGx0UU79uRQUUDAR8Cm6RFnFUOy8=; b=xUQFbdpubXfChe2Qx//ZD9lJ2P
-	EeE0mcPqXp7XRhtFCs6ZAOL8/8PWfHGYYgHcgtGj+Fzgd7HuppaPAOICSanP3ICu3IBf8Gn46EDny
-	vGtFDb4Jy5MWKnEPxQ5kfgpaNUvbPb4L/bHgjwkRmLkpTtVAPe7HS616Um4nVtGpQJdFYLmlUOkFD
-	sbrY6co1D9btX06ldeHVaa0UyRZpOKdqP9J6HUa9NcP1TkCuYbPtpjOMShI8iUa3ET+CpxW8nxBKp
-	nqXL4biGZR1oLOM2VZ3wLYrL0lr5RSL1190L0axmtIKXgaAQv0Gu83LaKNOR7W79v+U/uXOFXbGD/
-	MtlAnNtQ==;
+	bh=vsVwWXzNp/uF3VedPHiPLXVFz+eMZwvkb3rlfHln50o=; b=ushH/vhogOKJM3dNcUq2jCv9IU
+	q8maRJKSzV35pfdLYBkzK2kXNLfpfTFmJ0/yRj44opJilvDQZzZ7vWgMgeMgr8BqFr2kbeKm8/JuI
+	tFGKIjSbiQprPzQvRjdG5OqHdBLexBDwTl25ZGYwXUMyvyMfx6L/W9C4fMccYIM2FySS3GHDwP03I
+	Y2V9eFYKnpreihOWfze6ik5bw2PufxUXxUECRo+vlFR6JGaIUAs/nKiaTusk9tMckadbG9/R0IjW1
+	GvK1CFewMDD0bL5nII7yyovgXzFVM0kOIAMKmKnVUy+LbR0R2Duw8/zmq3keDLk2Lz0LEO/8VZosm
+	rqFGj2Aw==;
 Received: from [89.144.222.185] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rKwpl-00A6wM-1M;
-	Wed, 03 Jan 2024 08:42:42 +0000
+	id 1rKwpr-00A6zm-2U;
+	Wed, 03 Jan 2024 08:42:48 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
@@ -28,9 +28,9 @@ To: Chandan Babu R <chandan.babu@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 13/15] xfs: don't unconditionally allocate a new page in xfile_get_page
-Date: Wed,  3 Jan 2024 08:41:24 +0000
-Message-Id: <20240103084126.513354-14-hch@lst.de>
+Subject: [PATCH 14/15] xfs: use xfile_get_page and xfile_put_page in xfile_obj_store
+Date: Wed,  3 Jan 2024 08:41:25 +0000
+Message-Id: <20240103084126.513354-15-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240103084126.513354-1-hch@lst.de>
 References: <20240103084126.513354-1-hch@lst.de>
@@ -43,92 +43,105 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Pass a flags argument to xfile_get_page, and only allocate a new page
-if the XFILE_ALLOC flag is passed.  This allows to also use
-xfile_get_page for pure readers that do not want to allocate a new
-page or dirty the existing one.
+Rewrite xfile_obj_store to use xfile_get_page and xfile_put_page to
+access the data in the shmem page cache instead of abusing the
+shmem write_begin and write_end aops.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/xfarray.c |  2 +-
- fs/xfs/scrub/xfile.c   | 14 ++++++++++----
- fs/xfs/scrub/xfile.h   |  4 +++-
- 3 files changed, 14 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/xfile.c | 66 ++++++++------------------------------------
+ 1 file changed, 11 insertions(+), 55 deletions(-)
 
-diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
-index 4f396462186793..8543067d46366d 100644
---- a/fs/xfs/scrub/xfarray.c
-+++ b/fs/xfs/scrub/xfarray.c
-@@ -572,7 +572,7 @@ xfarray_sort_get_page(
- {
- 	struct page		*page;
- 
--	page = xfile_get_page(si->array->xfile, pos, len);
-+	page = xfile_get_page(si->array->xfile, pos, len, XFILE_ALLOC);
- 	if (IS_ERR(page))
- 		return PTR_ERR(page);
- 	si->page = page;
 diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-index 715c4d10b67c14..3ed7fb82a4497b 100644
+index 3ed7fb82a4497b..987b03df241b02 100644
 --- a/fs/xfs/scrub/xfile.c
 +++ b/fs/xfs/scrub/xfile.c
-@@ -274,7 +274,8 @@ struct page *
- xfile_get_page(
- 	struct xfile		*xf,
- 	loff_t			pos,
--	unsigned int		len)
-+	unsigned int		len,
-+	unsigned int		flags)
+@@ -182,74 +182,30 @@ xfile_obj_store(
+ 	size_t			count,
+ 	loff_t			pos)
  {
- 	struct inode		*inode = file_inode(xf->file);
- 	struct folio		*folio = NULL;
-@@ -293,15 +294,19 @@ xfile_get_page(
- 	 * Increase the file size first so that shmem_get_folio(..., SGP_CACHE),
- 	 * actually allocates a folio instead of erroring out.
- 	 */
--	if (pos + len > i_size_read(inode))
-+	if ((flags & XFILE_ALLOC) && pos + len > i_size_read(inode))
- 		i_size_write(inode, pos + len);
+-	struct inode		*inode = file_inode(xf->file);
+-	struct address_space	*mapping = inode->i_mapping;
+-	const struct address_space_operations *aops = mapping->a_ops;
+-	struct page		*page = NULL;
+-	unsigned int		pflags;
+-	int			error = 0;
+-
+ 	if (count > MAX_RW_COUNT)
+ 		return -ENOMEM;
+-	if (inode->i_sb->s_maxbytes - pos < count)
++	if (file_inode(xf->file)->i_sb->s_maxbytes - pos < count)
+ 		return -ENOMEM;
  
- 	pflags = memalloc_nofs_save();
--	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio, SGP_CACHE);
-+	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
-+			(flags & XFILE_ALLOC) ? SGP_CACHE : SGP_READ);
- 	memalloc_nofs_restore(pflags);
- 	if (error)
- 		return ERR_PTR(error);
+ 	trace_xfile_obj_store(xf, pos, count);
  
-+	if (!folio)
-+		return NULL;
-+
- 	page = folio_file_page(folio, pos >> PAGE_SHIFT);
- 	if (PageHWPoison(page)) {
- 		folio_put(folio);
-@@ -312,7 +317,8 @@ xfile_get_page(
- 	 * Mark the page dirty so that it won't be reclaimed once we drop the
- 	 * (potentially last) reference in xfile_put_page.
- 	 */
--	set_page_dirty(page);
-+	if (flags & XFILE_ALLOC)
-+		set_page_dirty(page);
- 	return page;
+-	pflags = memalloc_nofs_save();
+ 	while (count > 0) {
+-		void		*fsdata = NULL;
+-		void		*p, *kaddr;
++		struct page	*page;
+ 		unsigned int	len;
+-		int		ret;
+ 
+ 		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
++		page = xfile_get_page(xf, pos, len, XFILE_ALLOC);
++		if (IS_ERR(page))
++			return -ENOMEM;
++		memcpy(page_address(page) + offset_in_page(pos), buf, len);
++		xfile_put_page(xf, page);
+ 
+-		/*
+-		 * We call write_begin directly here to avoid all the freezer
+-		 * protection lock-taking that happens in the normal path.
+-		 * shmem doesn't support fs freeze, but lockdep doesn't know
+-		 * that and will trip over that.
+-		 */
+-		error = aops->write_begin(NULL, mapping, pos, len, &page,
+-				&fsdata);
+-		if (error) {
+-			error = -ENOMEM;
+-			break;
+-		}
+-
+-		/*
+-		 * xfile pages must never be mapped into userspace, so we skip
+-		 * the dcache flush.  If the page is not uptodate, zero it
+-		 * before writing data.
+-		 */
+-		kaddr = page_address(page);
+-		if (!PageUptodate(page)) {
+-			memset(kaddr, 0, PAGE_SIZE);
+-			SetPageUptodate(page);
+-		}
+-		p = kaddr + offset_in_page(pos);
+-		memcpy(p, buf, len);
+-
+-		ret = aops->write_end(NULL, mapping, pos, len, len, page,
+-				fsdata);
+-		if (ret < 0) {
+-			error = -ENOMEM;
+-			break;
+-		}
+-
+-		if (ret != len) {
+-			error = -ENOMEM;
+-			break;
+-		}
+-
+-		count -= ret;
+-		pos += ret;
+-		buf += ret;
++		count -= len;
++		pos += len;
++		buf += len;
+ 	}
+-	memalloc_nofs_restore(pflags);
+ 
+-	return error;
++	return 0;
  }
  
-diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
-index 993368b37b4b7c..f0403ea869e4d0 100644
---- a/fs/xfs/scrub/xfile.h
-+++ b/fs/xfs/scrub/xfile.h
-@@ -19,7 +19,9 @@ int xfile_obj_store(struct xfile *xf, const void *buf, size_t count,
- 
- loff_t xfile_seek_data(struct xfile *xf, loff_t pos);
- 
--struct page *xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len);
-+#define XFILE_ALLOC		(1 << 0) /* allocate page if not present */
-+struct page *xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len,
-+		unsigned int flags);
- void xfile_put_page(struct xfile *xf, struct page *page);
- 
- #endif /* __XFS_SCRUB_XFILE_H__ */
+ /* Find the next written area in the xfile data for a given offset. */
 -- 
 2.39.2
 
