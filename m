@@ -1,107 +1,102 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3C44A10
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 02:02:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gompa.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-556cd81163fso44638a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2024 18:02:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704247349; x=1704852149;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=C43bCs0K8WlD9V6hcg6uqWvQ0mfyJ+mvwYTPqAdiZaI=;
-        b=xBMQ4VnfzmuWNb+uKIruM1kHAGeegfO7w4OhqeYEPnwVcWnkf5ZZ78H+DXU7Y2jlQ7
-         a181XWY/IlQiIGdRuW5+l3ch/OmqffU47KdBFR4pj+hltl3GyaqTJOCuRFlp6k7EiDGw
-         +b30emo5MvVANc01MWYaYIwHvGHob88iMHegVm9rrUlsQYY3ePWWTJ+2ujNpKJa1BYIx
-         /GTJlsH4mKgfUBg3pBioGRNAvJ0vNOgOpjCDuGb9W48mLTsgn8X4U2XF/3axMunfSa9n
-         cqwSrsq0cAi1e5Uuwb++5Gs8WuTQbyQ7YLElaxpkLZrlQtup1BGzJyjT5/viRFXuvg9I
-         g9gw==
-X-Gm-Message-State: AOJu0Yy1a9XHkO6bi4tYKWN6V06tlPnpp7toX2iD6J1mCEFxX+FpwhiR
-	Far5sI9TIvOeXAq8HdXRg4k8FSvE8NPDb8h1
-X-Google-Smtp-Source: AGHT+IFDGgFNjpIrzJ1cizR5xVqPXcxaa+oJZqWLYHqj44hM+U2o7fO1Ajn0cc5Jn/WSHavinPOeog==
-X-Received: by 2002:a50:8ad2:0:b0:555:22c3:4a84 with SMTP id k18-20020a508ad2000000b0055522c34a84mr4476322edk.51.1704247348554;
-        Tue, 02 Jan 2024 18:02:28 -0800 (PST)
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com. [209.85.128.50])
-        by smtp.gmail.com with ESMTPSA id g20-20020a056402091400b005551b2f66f0sm10314513edz.43.2024.01.02.18.02.28
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Jan 2024 18:02:28 -0800 (PST)
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-40d6b4e2945so49376115e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2024 18:02:28 -0800 (PST)
-X-Received: by 2002:a7b:cd8b:0:b0:40d:3a32:7d43 with SMTP id
- y11-20020a7bcd8b000000b0040d3a327d43mr6369386wmj.95.1704247348059; Tue, 02
- Jan 2024 18:02:28 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0044B110D
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 02:04:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c2rRJVwn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 728B9C433C8;
+	Wed,  3 Jan 2024 02:04:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704247490;
+	bh=lUhEAP++kW1tZ/+ps07VSSdAkJoZ3sIPyTQpOafV0Tc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=c2rRJVwntCC0ZU2MngmFPmxoo4b0B5ZfH26fpU2aGFLILEdSbF5R4NdU9wrAgAqIA
+	 BasX5lee2gddt4vOaCQNnc/AwoA0/Cj0RdhSJdVvBhi73QUR1hGKGH98NyjpiJWPe3
+	 Zt0j+eozxx1dAsI7GG7dABm5C8kB2i/+4f4/tw2X8imrRiG1GEqDvNLrWdPJeJDOgV
+	 L2/YtmOgJBPV4KlQuRt/oB06L939d13LYbbgDuB0A9Cx3XPKhJmlZNsKCD2Fb9aXAT
+	 NiuG7WvyXV/tGmUuP6SF0eFFxWMcoTo7DRFSyEt/OPb1qjXFhl3ejMyBgbNnMpnFLp
+	 V4QDTDLVtw7og==
+Date: Tue, 2 Jan 2024 18:04:49 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 9/9] xfs: connect in-memory btrees to xfiles
+Message-ID: <20240103020449.GJ361584@frogsfrogsfrogs>
+References: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
+ <170404829726.1748854.1262147267981918901.stgit@frogsfrogsfrogs>
+ <ZZIE6P0aoVgAtONY@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <170405001841.1800712.6745668619742020884.stgit@frogsfrogsfrogs> <170405001964.1800712.10514067731814883862.stgit@frogsfrogsfrogs>
-In-Reply-To: <170405001964.1800712.10514067731814883862.stgit@frogsfrogsfrogs>
-From: Neal Gompa <neal@gompa.dev>
-Date: Tue, 2 Jan 2024 21:01:51 -0500
-X-Gmail-Original-Message-ID: <CAEg-Je-q2P2EyhAKUtoL+0e3jygTtxXntEgVuTuUiTfMM-XdkA@mail.gmail.com>
-Message-ID: <CAEg-Je-q2P2EyhAKUtoL+0e3jygTtxXntEgVuTuUiTfMM-XdkA@mail.gmail.com>
-Subject: Re: [PATCH 9/9] xfs_scrub_all.cron: move to package data directory
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZZIE6P0aoVgAtONY@casper.infradead.org>
 
-On Tue, Jan 2, 2024 at 8:23=E2=80=AFPM Darrick J. Wong <djwong@kernel.org> =
-wrote:
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> cron jobs don't belong in /usr/lib.  Since the cron job is also
-> secondary to the systemd timer, it's really only provided as a courtesy
-> for distributions that don't use systemd.  Move it to @datadir@, aka
-> /usr/share/xfsprogs.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  include/builddefs.in |    1 -
->  scrub/Makefile       |    2 +-
->  2 files changed, 1 insertion(+), 2 deletions(-)
->
->
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index 9d0f9c3bf7c..f5138b5098f 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -51,7 +51,6 @@ PKG_SBIN_DIR  =3D @sbindir@
->  PKG_ROOT_SBIN_DIR =3D @root_sbindir@
->  PKG_ROOT_LIB_DIR=3D @root_libdir@@libdirsuffix@
->  PKG_LIB_DIR    =3D @libdir@@libdirsuffix@
-> -PKG_LIB_SCRIPT_DIR     =3D @libdir@
->  PKG_LIBEXEC_DIR        =3D @libexecdir@/@pkg_name@
->  PKG_INC_DIR    =3D @includedir@/xfs
->  DK_INC_DIR     =3D @includedir@/disk
-> diff --git a/scrub/Makefile b/scrub/Makefile
-> index 8fb366c922c..472df48a720 100644
-> --- a/scrub/Makefile
-> +++ b/scrub/Makefile
-> @@ -26,7 +26,7 @@ INSTALL_SCRUB +=3D install-crond
->  CRONTABS =3D xfs_scrub_all.cron
->  OPTIONAL_TARGETS +=3D $(CRONTABS)
->  # Don't enable the crontab by default for now
-> -CROND_DIR =3D $(PKG_LIB_SCRIPT_DIR)/$(PKG_NAME)
-> +CROND_DIR =3D $(PKG_DATA_DIR)
->  endif
->
->  endif  # scrub_prereqs
->
->
+On Mon, Jan 01, 2024 at 12:18:48AM +0000, Matthew Wilcox wrote:
+> On Sun, Dec 31, 2023 at 12:15:54PM -0800, Darrick J. Wong wrote:
+> > +/* Ensure that there is storage backing the given range. */
+> > +int
+> > +xfile_prealloc(
+> > +	struct xfile		*xf,
+> > +	loff_t			pos,
+> > +	u64			count)
+> > +{
+> > +	struct inode		*inode = file_inode(xf->file);
+> > +	struct address_space	*mapping = inode->i_mapping;
+> > +	const struct address_space_operations *aops = mapping->a_ops;
+> > +	struct page		*page = NULL;
+> > +	unsigned int		pflags;
+> > +	int			error = 0;
+> > +
+> > +	if (count > MAX_RW_COUNT)
+> > +		return -E2BIG;
+> > +	if (inode->i_sb->s_maxbytes - pos < count)
+> > +		return -EFBIG;
+> > +
+> > +	trace_xfile_prealloc(xf, pos, count);
+> > +
+> > +	pflags = memalloc_nofs_save();
+> > +	while (count > 0) {
+> > +		void		*fsdata = NULL;
+> > +		unsigned int	len;
+> > +		int		ret;
+> > +
+> > +		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
+> > +
+> > +		/*
+> > +		 * We call write_begin directly here to avoid all the freezer
+> > +		 * protection lock-taking that happens in the normal path.
+> > +		 * shmem doesn't support fs freeze, but lockdep doesn't know
+> > +		 * that and will trip over that.
+> > +		 */
+> > +		error = aops->write_begin(NULL, mapping, pos, len, &page,
+> > +				&fsdata);
+> > +		if (error)
+> > +			break;
+> > +
+> > +		/*
+> > +		 * xfile pages must never be mapped into userspace, so we skip
+> > +		 * the dcache flush.  If the page is not uptodate, zero it to
+> > +		 * ensure we never go lacking for space here.
+> > +		 */
+> > +		if (!PageUptodate(page)) {
+> > +			void	*kaddr = kmap_local_page(page);
+> > +
+> > +			memset(kaddr, 0, PAGE_SIZE);
+> > +			SetPageUptodate(page);
+> > +			kunmap_local(kaddr);
+> > +		}
+> 
+> Does the xfiles implementation prevent THPs from being created?
+> If not, this could lead to an entire THP being marked uptodate even
+> though we've only zeroed one page of it.
 
-Looks good to me.
+No.  How does one prevent THPs from being created for a specific tmpfs
+file?  It's probably time you and I burned a 1x1 on straightening out
+some of xfile.c's folio-idiocy. ;)
 
-Reviewed-by: Neal Gompa <neal@gompa.dev>
-
-
---=20
-=E7=9C=9F=E5=AE=9F=E3=81=AF=E3=81=84=E3=81=A4=E3=82=82=E4=B8=80=E3=81=A4=EF=
-=BC=81/ Always, there's only one truth!
+--D
