@@ -1,34 +1,34 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2ED5182A3
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 08:44:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9753818032
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 08:45:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gBMZHTQe"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HE4vAIvy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=mkixH15VxtTgaLqi89LRnth6WifSotvo5W9h0xOQOxs=; b=gBMZHTQeyrAgKPpvQUPw0t6cs+
-	QtFDbdaOKOtvy9pr9A4zyfTZ2PAMALrfgFVyTDpY1+PiSexqFUY0+RuRPS4vNZ5UpO1eCJ/SR7ABc
-	IvA+afhetWHpAPEv/tHPg2j63SJ+Db/yYBUCXoMaY48YdAl/D7GTFTTcW8J7zcdtdHrS7DwDWzFQn
-	WT4gGhlVVs5ucs3J75vo8sO7p9DF6u7f1wOxOvHQyX3tWkGw3HyOoK0Ry9LLWQG/j8jPXp/R4u+fd
-	K4uSSqALpxq7XAy9397vv/HLVOJeVfoP7/5H4ERYxIwOGNE2JxBuDo9L+j80a2wpWa+/rjO+CXcs+
-	npW2a9zQ==;
+	bh=xCyzFdEXNVWwcu7HO/CZTaYtwqXjuU7WlohFfI4n5rg=; b=HE4vAIvyXeBUOh1RRBIVF1A7sz
+	yFfWjHEtNCJ036M9phRGE3Jno+xheD7DCnLOVn/eoegI3B3t/uT7zTKf7KLxrnWdWOb8cZEOY0OU6
+	R4AaDDJfr4RHuoxIesqIu8nC2RFdXlWOc4Pb9lUUm3YNr1jJBWRWmOxzYHFmF//E0DPTvrcTS/AKv
+	IFx5eQ3Zd0CLK0ffrC0Jr0h/9u3Xavn9YrSa41JXq0jXE3SCXzTcgunixzY9hvIzdUJn4bYthG8Qs
+	1/kMHLVjxkPMisQOFVRhHSwnM2hEZYL2Oj0JW+kdQ3UB2oGpcfP0LnpyIY4aw7qtZeH2LpeiS7oce
+	mwzqupTg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rKwrf-00A7GH-25;
-	Wed, 03 Jan 2024 08:44:39 +0000
-Date: Wed, 3 Jan 2024 00:44:39 -0800
+	id 1rKwsm-00A7Lx-19;
+	Wed, 03 Jan 2024 08:45:48 +0000
+Date: Wed, 3 Jan 2024 00:45:48 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: map xfile pages directly into xfs_buf
-Message-ID: <ZZUedyZUefz2Ttnb@infradead.org>
-References: <170404997957.1797094.11986631367429317912.stgit@frogsfrogsfrogs>
- <170404997970.1797094.13056398021609108212.stgit@frogsfrogsfrogs>
- <ZZUZx6aNB68kbRLo@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: use b_offset to support direct-mapping pages
+ when blocksize < pagesize
+Message-ID: <ZZUevG77RPkwNG0x@infradead.org>
+References: <170404837590.1754104.3601847870577015044.stgit@frogsfrogsfrogs>
+ <170404837630.1754104.9143395380611692112.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,9 +37,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZZUZx6aNB68kbRLo@infradead.org>
+In-Reply-To: <170404837630.1754104.9143395380611692112.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This comment should have been for the kernel version and not the
-userspace artefact patch.
+On Sun, Dec 31, 2023 at 12:40:24PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Support using directly-mapped pages in the buffer cache when the fs
+> blocksize is less than the page size.  This is not strictly necessary
+> since the only user of direct-map buffers always uses page-sized
+> buffers, but I included it here for completeness.
+
+As mentioned on the main shmem mapping patch - let's not add code
+that is guaranteed to be unused.
 
