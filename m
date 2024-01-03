@@ -1,31 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FEA15AE2;
-	Tue,  2 Jan 2024 19:11:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11D9A4A33
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2024 00:02:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vP6fUiss"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59B8CC433C7;
-	Tue,  2 Jan 2024 19:11:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fqorMBzw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82455C433C8;
+	Wed,  3 Jan 2024 00:02:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704222663;
-	bh=v7Sg5Hu2tTtPpVizisGQrUZ1egDq4eG4pzn1oBIzlEk=;
+	s=k20201202; t=1704240155;
+	bh=4dDkFmadYcUbgwoSFTUBibrAw3T9fW7kE07J7Zc06HI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vP6fUissFLHpwDJUX3Clw/yIeEVawt8yhtl8IXFZ1XDDsGF4vBn+K28wosP+9athF
-	 jehLmhrbkY8bLjmy+B08xY1UC8wNZ8e4AlPDVMUPC34YkyFob16d8LCqCOWtqMF6Zv
-	 YzY2uxii5fN5/qRHd0dSVPVlYDXIPuuJhjh5NiKsXRIuu93ntb8+2N3pBzc7C58cWY
-	 dIph2dDGEVG+XUJiT70xdLmppLdG9StQAw0BcyWlc+aA1wOVWp7pB7ofBG41fRmtoH
-	 JNW+xRT1+lmCqjILa63oAtgnfZ7iGQXmzMuuGy55EdmFNFJn2MxKJouVVla+zAzDm4
-	 W/OpSlJnv0YMQ==
-Date: Tue, 2 Jan 2024 11:11:02 -0800
+	b=fqorMBzwoawm6uuatWUaQRG+FsmejqWXwX4opqKmU9eWqX3JfQWsAU1S6wujHu9lF
+	 +K1qu9HQWFkysmhzKZVyhHCeoTIhGf5BaO92OFSkU2IcG3Bev1df46OvCNor23f5ET
+	 coq2Cws907LIX9I+uIKfSf6HfVUwuUyrZum2aNtOFxMnk7fU2Ks9rt9AMt1xGkm8v0
+	 KfaH+GmxKmGvLzOUcXu3AShGHbqIEx1tyyW60nBaHORXFdYve9Zj32rZVTweuKGWyf
+	 FFVKZi/5vxxQUaJoO3oHgPcr7uWdg8lQnRKjWwTVyJe9ZN8QH9AOS8hYmwnHBs5/qd
+	 PG9rpBIXtewNQ==
+Date: Tue, 2 Jan 2024 16:02:35 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, zlang@redhat.com
-Subject: Re: [PATCH 3/5] _scratch_xfs_mdrestore: Pass scratch log device when
- applicable
-Message-ID: <20240102191102.GE108281@frogsfrogsfrogs>
-References: <20240102084357.1199843-1-chandanbabu@kernel.org>
- <20240102084357.1199843-4-chandanbabu@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] xfs: create a predicate to determine if two
+ xfs_names are the same
+Message-ID: <20240103000235.GX361584@frogsfrogsfrogs>
+References: <170404826964.1747851.15684326001874060927.stgit@frogsfrogsfrogs>
+ <170404827004.1747851.5152428546473219997.stgit@frogsfrogsfrogs>
+ <ZZPvwcT5x1AZAnzI@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,75 +35,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240102084357.1199843-4-chandanbabu@kernel.org>
+In-Reply-To: <ZZPvwcT5x1AZAnzI@infradead.org>
 
-On Tue, Jan 02, 2024 at 02:13:50PM +0530, Chandan Babu R wrote:
-> Metadump v2 supports dumping contents of an external log device. This commit
-> modifies _scratch_xfs_mdrestore() and _xfs_mdrestore() to be able to restore
-> metadump files which contain data from external log devices.
+On Tue, Jan 02, 2024 at 03:13:05AM -0800, Christoph Hellwig wrote:
+> On Sun, Dec 31, 2023 at 12:06:47PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create a simple predicate to determine if two xfs_names are the same
+> > objects or have the exact same name.  The comparison is always case
+> > sensitive.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_dir2.h |    9 +++++++++
+> >  fs/xfs/scrub/dir.c       |    4 ++--
+> >  2 files changed, 11 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> > index 7d7cd8d808e4d..ac3c264402dda 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2.h
+> > +++ b/fs/xfs/libxfs/xfs_dir2.h
+> > @@ -24,6 +24,15 @@ struct xfs_dir3_icleaf_hdr;
+> >  extern const struct xfs_name	xfs_name_dotdot;
+> >  extern const struct xfs_name	xfs_name_dot;
+> >  
+> > +static inline bool
+> > +xfs_dir2_samename(
+> > +	const struct xfs_name	*n1,
+> > +	const struct xfs_name	*n2)
+> > +{
+> > +	return n1 == n2 || (n1->len == n2->len &&
+> > +			    !memcmp(n1->name, n2->name, n1->len));
 > 
-> The callers of _scratch_xfs_mdrestore() must set the value of $SCRATCH_LOGDEV
-> only when all of the following conditions are met:
-> 1. Metadump is in v2 format.
-> 2. Metadump has contents dumped from an external log device.
+> Nit, but to me the formatting looks weird, why not:
 > 
-> Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+> 	return n1 == n2 ||
+> 		(n1->len == n2->len && !memcmp(n1->name, n2->name, n1->len));
+> 
+> Or even more verbose:
+> 
+> 	if (n1 == n2)
+> 		return true;
+> 	if (n1->len != n2->len)
+> 		return false;
+> 	return !memcmp(n1->name, n2->name, n1->len);
 
-Looks very similar to my version,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yeah, I'll do that instead of the multiline thing.
+
+> Otherwise this looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Thanks!
 
 --D
-
-> ---
->  common/xfs | 19 +++++++++++++++++--
->  1 file changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 558a6bb5..248c8361 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -682,7 +682,8 @@ _xfs_metadump() {
->  _xfs_mdrestore() {
->  	local metadump="$1"
->  	local device="$2"
-> -	shift; shift
-> +	local logdev="$3"
-> +	shift; shift; shift
->  	local options="$@"
->  
->  	# If we're configured for compressed dumps and there isn't already an
-> @@ -695,6 +696,10 @@ _xfs_mdrestore() {
->  	fi
->  	test -r "$metadump" || return 1
->  
-> +	if [ "$logdev" != "none" ]; then
-> +		options="$options -l $logdev"
-> +	fi
-> +
->  	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
->  }
->  
-> @@ -724,8 +729,18 @@ _scratch_xfs_mdrestore()
->  {
->  	local metadump=$1
->  	shift
-> +	local logdev=none
-> +	local options="$@"
->  
-> -	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$@"
-> +	# $SCRATCH_LOGDEV should have a non-zero length value only when all of
-> +	# the following conditions are met.
-> +	# 1. Metadump is in v2 format.
-> +	# 2. Metadump has contents dumped from an external log device.
-> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
-> +		logdev=$SCRATCH_LOGDEV
-> +	fi
-> +
-> +	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$@"
->  }
->  
->  # Do not use xfs_repair (offline fsck) to rebuild the filesystem
-> -- 
-> 2.43.0
-> 
-> 
