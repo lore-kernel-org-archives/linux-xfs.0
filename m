@@ -1,33 +1,21 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57AE21BDD6
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 07:15:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OxdiKYRZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8C81C433C7;
-	Thu,  4 Jan 2024 07:15:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704352511;
-	bh=+uca41ABqDWjDdyMvxXUfQ7F/wY+OYsTFpVpgArgiRQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OxdiKYRZOaGuNyyxcyUf3dYPcVzzVEx9i9RC7fDIhrKrlL8lbsaE2AuIBINxJtE2L
-	 BnjXFjHIBWfXxfPr6f4N65Wscd78yVyyEE7Loqen64TLtyU3EyA1X2pjkrnwheM5Pk
-	 l4zew5Xf0L+gnYc+sG3ZUgKodbJqNdBZF6aRFLBxIel9/7nUFxTki8BnjWU8QHZvBs
-	 EgG2EGxdn2dzC5AYP8D+j8Q8Ge53l2cBCGT+B2NbhCiLnmjS7uMU5iTeWZnF/EcsQ4
-	 ouupZpnJbAbH0heLR66A0HWkoCSktwVhRYReoMyA9XuoVo7BeSGGzhQtZjU4tv9WLx
-	 cAeosW1ioQXjQ==
-Date: Wed, 3 Jan 2024 23:15:11 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, willy@infradead.org
-Subject: Re: [PATCH 6/9] xfs: consolidate btree block freeing tracepoints
-Message-ID: <20240104071511.GZ361584@frogsfrogsfrogs>
-References: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
- <170404829675.1748854.18135934618780501542.stgit@frogsfrogsfrogs>
- <ZZUgfWT3ktuE9F5j@infradead.org>
- <20240103193705.GS361584@frogsfrogsfrogs>
- <ZZZN8UV67XGa1J+q@infradead.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8A1B1EB2B
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 07:17:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id F2CBB68AFE; Thu,  4 Jan 2024 08:17:35 +0100 (CET)
+Date: Thu, 4 Jan 2024 08:17:35 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/5] xfs: embedd struct xfbtree into the owning
+ structure
+Message-ID: <20240104071735.GB30339@lst.de>
+References: <20240103203836.608391-1-hch@lst.de> <20240103203836.608391-6-hch@lst.de> <20240104012133.GM361584@frogsfrogsfrogs> <20240104063218.GI29215@lst.de> <20240104071454.GY361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,16 +24,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZZZN8UV67XGa1J+q@infradead.org>
+In-Reply-To: <20240104071454.GY361584@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jan 03, 2024 at 10:19:29PM -0800, Christoph Hellwig wrote:
-> On Wed, Jan 03, 2024 at 11:37:05AM -0800, Darrick J. Wong wrote:
-> > Removing these two tracepoints reduces the size of the ELF segments by
-> > 264 bytes.  I'll add this note to the commit message.
+On Wed, Jan 03, 2024 at 11:14:54PM -0800, Darrick J. Wong wrote:
+> IIRC setting up the shrinker in xfs_alloc_buftarg_common takes some
+> shrinker lock somewhere, and lockdep complained about a potential
+> deadlock between the locks that scrub takes if I don't create the xfile
+> buftarg in the scrub _setup routines.  That's why it's not created
+> internally to the xfbtree.
 > 
-> Yeah.  Maybe just say memory usage - segment size feels awfully specific
-> to an implementation detail.
+> I agree that it makes much more sense only to create those things when
+> they're actually needed, but ... hm.  Maybe we don't need the xfile
+> buftarg to be hooked up to the shrinkers, seeing as it's ephemeral
+> anyway?  That would save a lot of fuss and ...
 
-Done.
+Yes, once we move to a model where the buffer always points to
+the shmem page, and we remove the buffer lru for them as we already
+have the page LRU there is no point in having a shrinker at all.
 
---D
+> > naming and moving it out of scrub/ would make sense as the concept
+> > isn't really scrub/repair specific.  But if we want to stick with
+> > it I'd prefer to not also have _mem-based naming.
+> 
+> Yes, lets move it to libxfs/xfbtree.[ch].
+
+What does the xf in the various scrubx/xf* thinks stand for, btw?
+Why not libxfs/xfs_btree_mem.[ch]?
