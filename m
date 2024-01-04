@@ -1,33 +1,35 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E5341DDC8
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 06:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08ECD1D68D
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 06:55:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vGVPZvic"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=631qpLymvqNIbFQtnx7wkr1YH0EIy+0qU4AS3mMmlaE=; b=vGVPZvicEUP/78Vt4+6F9G8ryu
-	OZ+9xF782VNJx3aFHoGwN+brQ4fJbi6S1a8B98u0nwS6O/Okc7pdRw/GpVsSNl+XGWUrYZc1gIAga
-	AY8MAkyPTwW3YheImnq/6RwPWcs460Y6rE3KnBZ4FgGsVPXQO6TOQoLznrRsZNvzDChSbDNpND6+L
-	E9RMwlEktzRTHfwJURQl1k4qFKbycHs4SmGlZdoZ/fgV99TRybn8Te96aPgt/xBFuPhBTgR6Tz7wX
-	7vrWteQ7TGJbhqO/D/1lZiYZbiCs0o4C+Ivoq1fh5OxOVfEz2Y5jJLpSJ2akMsMTmBg+Ih+KjzCqv
-	PakqGdqg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rLHcM-00D1ZE-1i;
-	Thu, 04 Jan 2024 06:54:14 +0000
-Date: Wed, 3 Jan 2024 22:54:14 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, willy@infradead.org
-Subject: Re: [PATCH 9/9] xfs: connect in-memory btrees to xfiles
-Message-ID: <ZZZWFjy1fGwSCx7C@infradead.org>
-References: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
- <170404829726.1748854.1262147267981918901.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N6TRl8Fv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65A01C433C7;
+	Thu,  4 Jan 2024 06:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704351312;
+	bh=GhliB2+i6ivMC5eLBdvRqy6WYTaYt0Dyon9VLhK2D14=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=N6TRl8FvrTiOGd9V/6/KmHjpvNJoLdP8TzonR0zpkWnJu5qgQFb0O++9S7GQhbknt
+	 FcutXGeF/y2kMPJnd8kbXb/irRUbwIWVysmTMqdDK+viHVu8gG636/yonjfnitQCwJ
+	 0XSbce0yXBjZGa8DjzjPs05payeXefkW8J0xeLEAmCpjw1d8O4vbYnbj+iC4N9W6Z+
+	 Qt9SzDvvlF+JRhl7cv0sNDD/zKUQ1yZxdY9eD6kv+dL9ezW1cRoN4mfoS0aCwCUjdI
+	 SqyxxA+nwZN9x8ZD315/hAVNOn/3oideA74P8jzn7uvcC72/i9NTfripVPJf8EAV9v
+	 /IoRJVcsCaUlA==
+Date: Wed, 3 Jan 2024 22:55:11 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 04/15] xfs: remove xfile_stat
+Message-ID: <20240104065511.GV361584@frogsfrogsfrogs>
+References: <20240103084126.513354-1-hch@lst.de>
+ <20240103084126.513354-5-hch@lst.de>
+ <20240103234533.GX361584@frogsfrogsfrogs>
+ <20240104061415.GB29011@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,96 +38,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170404829726.1748854.1262147267981918901.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240104061415.GB29011@lst.de>
 
-On Sun, Dec 31, 2023 at 12:15:54PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jan 04, 2024 at 07:14:15AM +0100, Christoph Hellwig wrote:
+> On Wed, Jan 03, 2024 at 03:45:33PM -0800, Darrick J. Wong wrote:
+> > > +		__entry->bytes = inode->i_bytes;
+> > 
+> > Shouldn't this be (i_blocks << 9) + i_bytes?
 > 
-> Add to our stubbed-out in-memory btrees the ability to connect them with
-> an actual in-memory backing file (aka xfiles) and the necessary pieces
-> to track free space in the xfile and flush dirty xfbtree buffers on
-> demand, which we'll need for online repair.
+> Actually this should just be doing:
+> 
+> 	__entry->bytes = inode->i_blocks << SECTOR_SHIFT;
+> 
+> The bytes name here really confused me.
 
-I guess this is is split from the last patch because of the size of
-the changes?   Because it feels they relong belong together.  Maybe with
-my patches for the diet and splitting out the new helpers outside the
-btree code these could now become a single commit?
+Me too.  It looks like some weird way to encode the bytes used by the
+file using a u64 sector count and a u16 byte count for ... some reason?
+XFS (and thankfully tmpfs) seem to ignore all that entirely.
 
-> +#ifdef CONFIG_XFS_BTREE_IN_XFILE
-> +static inline unsigned long
-> +xfbtree_ino(
-> +	struct xfbtree		*xfbt)
-> +{
-> +	return file_inode(xfbt->target->bt_xfile->file)->i_ino;
-> +}
-> +#endif /* CONFIG_XFS_BTREE_IN_XFILE */
+> Or we could change the trace
+> point to just report i_block directly and not rename it to bytes and
+> change the unit?
 
-This should probably move to xfile.h?
+I prefer to keep the tracepoint in bytes because that's a little easier
+than rshifting by 9 in my head.
 
-> +	/* Make sure we actually can write to the block before we return it. */
-> +	pos = xfo_to_b(bt_xfoff);
-> +	error = xfile_prealloc(xfbtree_xfile(xfbt), pos, xfo_to_b(1));
-> +	if (error)
-> +		return error;
-
-IFF we stick to always backing the buffers directly by the shmem
-pages this won't be needed - the btree code does a buf_get right after
-calling into ->alloc_blocks that will allocate the page.
-
-> +int
-> +xfbtree_free_block(
-> +	struct xfs_btree_cur	*cur,
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfbtree		*xfbt = cur->bc_mem.xfbtree;
-> +	xfileoff_t		bt_xfoff, bt_xflen;
-> +
-> +	ASSERT(cur->bc_flags & XFS_BTREE_IN_XFILE);
-> +
-> +	bt_xfoff = xfs_daddr_to_xfot(xfs_buf_daddr(bp));
-> +	bt_xflen = xfs_daddr_to_xfot(bp->b_length);
-> +
-> +	trace_xfbtree_free_block(xfbt, cur, bt_xfoff);
-> +
-> +	return xfboff_bitmap_set(&xfbt->freespace, bt_xfoff, bt_xflen);
-
-Any reason this doesn't actually remove the page from shmem?
-
-> +int
-> +xfbtree_trans_commit(
-> +	struct xfbtree		*xfbt,
-> +	struct xfs_trans	*tp)
-> +{
-> +	LIST_HEAD(buffer_list);
-> +	struct xfs_log_item	*lip, *n;
-> +	bool			corrupt = false;
-> +	bool			tp_dirty = false;
-
-Can we have some sort of flag on the xfs_trans structure that marks it
-as fake for xfbtree, and assert it gets fed here, and add ansother
-assert it desn't get fed to xfs_trans_commit/cancel?
-
-> +/* Discard pages backing a range of the xfile. */
-> +void
-> +xfile_discard(
-> +	struct xfile		*xf,
-> +	loff_t			pos,
-> +	u64			count)
-> +{
-> +	trace_xfile_discard(xf, pos, count);
-> +	shmem_truncate_range(file_inode(xf->file), pos, pos + count - 1);
-> +}
-
-This doesn't end up being used.
-
-> +/* Ensure that there is storage backing the given range. */
-> +int
-> +xfile_prealloc(
-> +	struct xfile		*xf,
-> +	loff_t			pos,
-> +	u64			count)
-
-If we end up needing this somewhere else in the end (and it really
-should be a separate patch), we should be able to replace it with
-a simple xfile_get_page/xfile_put_page pair.
+--D
