@@ -1,33 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF5F1849
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 00:14:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 565B336B
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 00:18:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FjQERSa+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 497EAC433C8;
-	Thu,  4 Jan 2024 00:14:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UztC+bEo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C78FC433C8;
+	Thu,  4 Jan 2024 00:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704327269;
-	bh=yE8aqJ5YETKPjFlrmJssXY04i4nLjPjr835xqavK0oo=;
+	s=k20201202; t=1704327536;
+	bh=T5mvxqVxG0/Fh+i329OnR6A1dG2fuRhpvMkzMGMxwZE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FjQERSa+c2uxtwTLN/UYa8sEMbo03FDr3aT1SleBHI9XDXMDDBIdbfmerHbFxNwdG
-	 9DXwszvq6CJ2a4WaG9zODZ9YCrsuHydNgZW913zAXTXrAKSE/xAf7Bo0au//Ca9iM/
-	 X+x0RpB/GKmq6eoacq5PVR9Yt67apiKJUFtFCs+sgtakZhoqyRRuPHacgNasH512ox
-	 ZrAt3a1mVnQEvvcH1VQGJYdIqu3wCixc3vxh9IeSELIKmZ9jO2jHskB+qfGBRaPPCj
-	 f6teu4CzC5w3L1wwBPgnGMi1DpAvaC0ziDbTDf1gQ/2tZwIl1oUB0/IAm+MtooyIg9
-	 iWAyMvy8wuKUw==
-Date: Wed, 3 Jan 2024 16:14:28 -0800
+	b=UztC+bEo2HFk5a6wyw5IuTma2KX1B8fCBjF/J5vAnzARfrNN9gTWGvDXxxTBgDp+g
+	 s9og//g863OwX+3RXuPz4AT/TMK75OyJV13u0yZXoSGG+c2M2nAMJUfnbPmQQJDurA
+	 JDJVYvCzdlrVoX3y160EPuOXrKYwOMIOonDaPIFoVgch95OidB/lWLaXgAp25EFpCw
+	 SzIlmW8TJzOv/ihe7ghQK4cEOqFPSDKNrUnBfn/A0fusiza2PsSkqE4caNwi20blp5
+	 q3XV9X+4FGQm/QPV97co0GKoMt8U4UGUr/n0jUZHvq/LNhgliBvOgQhsqCq3CkDnm2
+	 mZfAefA917RyA==
+Date: Wed, 3 Jan 2024 16:18:56 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Hugh Dickins <hughd@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 12/15] xfs: remove struct xfile_page
-Message-ID: <20240104001428.GF361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 13/15] xfs: don't unconditionally allocate a new page in
+ xfile_get_page
+Message-ID: <20240104001856.GG361584@frogsfrogsfrogs>
 References: <20240103084126.513354-1-hch@lst.de>
- <20240103084126.513354-13-hch@lst.de>
+ <20240103084126.513354-14-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,219 +37,99 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240103084126.513354-13-hch@lst.de>
+In-Reply-To: <20240103084126.513354-14-hch@lst.de>
 
-On Wed, Jan 03, 2024 at 08:41:23AM +0000, Christoph Hellwig wrote:
-> Return the shmem page directly from xfile_page_get and pass it back
-> to xfile_page.
+On Wed, Jan 03, 2024 at 08:41:24AM +0000, Christoph Hellwig wrote:
+> Pass a flags argument to xfile_get_page, and only allocate a new page
+> if the XFILE_ALLOC flag is passed.  This allows to also use
+> xfile_get_page for pure readers that do not want to allocate a new
+> page or dirty the existing one.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Much cleaner,
+Looks correct to me,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/scrub/xfarray.c | 23 +++++++++++++++--------
->  fs/xfs/scrub/xfarray.h |  2 +-
->  fs/xfs/scrub/xfile.c   | 27 ++++++++++-----------------
->  fs/xfs/scrub/xfile.h   | 21 ++-------------------
->  4 files changed, 28 insertions(+), 45 deletions(-)
+>  fs/xfs/scrub/xfarray.c |  2 +-
+>  fs/xfs/scrub/xfile.c   | 14 ++++++++++----
+>  fs/xfs/scrub/xfile.h   |  4 +++-
+>  3 files changed, 14 insertions(+), 6 deletions(-)
 > 
 > diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
-> index c6e62c119148a1..4f396462186793 100644
+> index 4f396462186793..8543067d46366d 100644
 > --- a/fs/xfs/scrub/xfarray.c
 > +++ b/fs/xfs/scrub/xfarray.c
-> @@ -570,7 +570,13 @@ xfarray_sort_get_page(
->  	loff_t			pos,
->  	uint64_t		len)
+> @@ -572,7 +572,7 @@ xfarray_sort_get_page(
 >  {
-> -	return xfile_get_page(si->array->xfile, pos, len, &si->xfpage);
-> +	struct page		*page;
-> +
-> +	page = xfile_get_page(si->array->xfile, pos, len);
-> +	if (IS_ERR(page))
-> +		return PTR_ERR(page);
-> +	si->page = page;
-> +	return 0;
->  }
+>  	struct page		*page;
 >  
->  /* Release a page we grabbed for sorting records. */
-> @@ -578,8 +584,10 @@ static inline void
->  xfarray_sort_put_page(
->  	struct xfarray_sortinfo	*si)
->  {
-> -	if (xfile_page_cached(&si->xfpage))
-> -		xfile_put_page(si->array->xfile, &si->xfpage);
-> +	if (si->page) {
-> +		xfile_put_page(si->array->xfile, si->page);
-> +		si->page = NULL;
-> +	}
->  }
->  
->  /* Decide if these records are eligible for in-page sorting. */
-> @@ -621,7 +629,7 @@ xfarray_pagesort(
->  		return error;
->  
->  	xfarray_sort_bump_heapsorts(si);
-> -	startp = page_address(si->xfpage.page) + offset_in_page(lo_pos);
-> +	startp = page_address(si->page) + offset_in_page(lo_pos);
->  	sort(startp, hi - lo + 1, si->array->obj_size, si->cmp_fn, NULL);
->  
->  	xfarray_sort_bump_stores(si);
-> @@ -845,15 +853,14 @@ xfarray_sort_load_cached(
->  	}
->  
->  	/* If the cached page is not the one we want, release it. */
-> -	if (xfile_page_cached(&si->xfpage) &&
-> -	    xfile_page_index(&si->xfpage) != startpage)
-> +	if (si->page && si->page->index != startpage)
->  		xfarray_sort_put_page(si);
->  
->  	/*
->  	 * If we don't have a cached page (and we know the load is contained
->  	 * in a single page) then grab it.
->  	 */
-> -	if (!xfile_page_cached(&si->xfpage)) {
-> +	if (!si->page) {
->  		if (xfarray_sort_terminated(si, &error))
->  			return error;
->  
-> @@ -863,7 +870,7 @@ xfarray_sort_load_cached(
->  			return error;
->  	}
->  
-> -	memcpy(ptr, page_address(si->xfpage.page) + offset_in_page(idx_pos),
-> +	memcpy(ptr, page_address(si->page) + offset_in_page(idx_pos),
->  			si->array->obj_size);
->  	return 0;
->  }
-> diff --git a/fs/xfs/scrub/xfarray.h b/fs/xfs/scrub/xfarray.h
-> index 6f2862054e194d..5765f2ad30d885 100644
-> --- a/fs/xfs/scrub/xfarray.h
-> +++ b/fs/xfs/scrub/xfarray.h
-> @@ -106,7 +106,7 @@ struct xfarray_sortinfo {
->  	unsigned int		flags;
->  
->  	/* Cache a page here for faster access. */
-> -	struct xfile_page	xfpage;
-> +	struct page		*page;
->  
->  #ifdef DEBUG
->  	/* Performance statistics. */
+> -	page = xfile_get_page(si->array->xfile, pos, len);
+> +	page = xfile_get_page(si->array->xfile, pos, len, XFILE_ALLOC);
+>  	if (IS_ERR(page))
+>  		return PTR_ERR(page);
+>  	si->page = page;
 > diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-> index 2b4b0c4e8d2fb6..715c4d10b67c14 100644
+> index 715c4d10b67c14..3ed7fb82a4497b 100644
 > --- a/fs/xfs/scrub/xfile.c
 > +++ b/fs/xfs/scrub/xfile.c
-> @@ -267,15 +267,14 @@ xfile_seek_data(
->  
->  /*
->   * Grab the (locked) page for a memory object.  The object cannot span a page
-> - * boundary.  Returns 0 (and a locked page) if successful, -ENOTBLK if we
-> - * cannot grab the page, or the usual negative errno.
-> + * boundary.  Returns 0 the locked page if successful, or an ERR_PTR on
-> + * failure.
->   */
-> -int
-> +struct page *
+> @@ -274,7 +274,8 @@ struct page *
 >  xfile_get_page(
 >  	struct xfile		*xf,
 >  	loff_t			pos,
-> -	unsigned int		len,
-> -	struct xfile_page	*xfpage)
-> +	unsigned int		len)
+> -	unsigned int		len)
+> +	unsigned int		len,
+> +	unsigned int		flags)
 >  {
 >  	struct inode		*inode = file_inode(xf->file);
 >  	struct folio		*folio = NULL;
-> @@ -284,9 +283,9 @@ xfile_get_page(
->  	int			error;
+> @@ -293,15 +294,19 @@ xfile_get_page(
+>  	 * Increase the file size first so that shmem_get_folio(..., SGP_CACHE),
+>  	 * actually allocates a folio instead of erroring out.
+>  	 */
+> -	if (pos + len > i_size_read(inode))
+> +	if ((flags & XFILE_ALLOC) && pos + len > i_size_read(inode))
+>  		i_size_write(inode, pos + len);
 >  
->  	if (inode->i_sb->s_maxbytes - pos < len)
-> -		return -ENOMEM;
-> +		return ERR_PTR(-ENOMEM);
->  	if (len > PAGE_SIZE - offset_in_page(pos))
-> -		return -ENOTBLK;
-> +		return ERR_PTR(-ENOTBLK);
->  
->  	trace_xfile_get_page(xf, pos, len);
->  
-> @@ -301,12 +300,12 @@ xfile_get_page(
->  	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio, SGP_CACHE);
+>  	pflags = memalloc_nofs_save();
+> -	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio, SGP_CACHE);
+> +	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> +			(flags & XFILE_ALLOC) ? SGP_CACHE : SGP_READ);
 >  	memalloc_nofs_restore(pflags);
 >  	if (error)
-> -		return error;
-> +		return ERR_PTR(error);
+>  		return ERR_PTR(error);
 >  
+> +	if (!folio)
+> +		return NULL;
+> +
 >  	page = folio_file_page(folio, pos >> PAGE_SHIFT);
 >  	if (PageHWPoison(page)) {
 >  		folio_put(folio);
-> -		return -EIO;
-> +		return ERR_PTR(-EIO);
->  	}
->  
->  	/*
-> @@ -314,11 +313,7 @@ xfile_get_page(
+> @@ -312,7 +317,8 @@ xfile_get_page(
+>  	 * Mark the page dirty so that it won't be reclaimed once we drop the
 >  	 * (potentially last) reference in xfile_put_page.
 >  	 */
->  	set_page_dirty(page);
-> -
-> -	xfpage->page = page;
-> -	xfpage->fsdata = NULL;
-> -	xfpage->pos = round_down(pos, PAGE_SIZE);
-> -	return 0;
-> +	return page;
+> -	set_page_dirty(page);
+> +	if (flags & XFILE_ALLOC)
+> +		set_page_dirty(page);
+>  	return page;
 >  }
 >  
->  /*
-> @@ -327,10 +322,8 @@ xfile_get_page(
->  void
->  xfile_put_page(
->  	struct xfile		*xf,
-> -	struct xfile_page	*xfpage)
-> +	struct page		*page)
->  {
-> -	struct page		*page = xfpage->page;
-> -
->  	trace_xfile_put_page(xf, page->index << PAGE_SHIFT, PAGE_SIZE);
->  
->  	unlock_page(page);
 > diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
-> index 2f46b7d694ce99..993368b37b4b7c 100644
+> index 993368b37b4b7c..f0403ea869e4d0 100644
 > --- a/fs/xfs/scrub/xfile.h
 > +++ b/fs/xfs/scrub/xfile.h
-> @@ -6,22 +6,6 @@
->  #ifndef __XFS_SCRUB_XFILE_H__
->  #define __XFS_SCRUB_XFILE_H__
->  
-> -struct xfile_page {
-> -	struct page		*page;
-> -	void			*fsdata;
-> -	loff_t			pos;
-> -};
-> -
-> -static inline bool xfile_page_cached(const struct xfile_page *xfpage)
-> -{
-> -	return xfpage->page != NULL;
-> -}
-> -
-> -static inline pgoff_t xfile_page_index(const struct xfile_page *xfpage)
-> -{
-> -	return xfpage->page->index;
-> -}
-> -
->  struct xfile {
->  	struct file		*file;
->  };
-> @@ -35,8 +19,7 @@ int xfile_obj_store(struct xfile *xf, const void *buf, size_t count,
+> @@ -19,7 +19,9 @@ int xfile_obj_store(struct xfile *xf, const void *buf, size_t count,
 >  
 >  loff_t xfile_seek_data(struct xfile *xf, loff_t pos);
 >  
-> -int xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len,
-> -		struct xfile_page *xbuf);
-> -void xfile_put_page(struct xfile *xf, struct xfile_page *xbuf);
-> +struct page *xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len);
-> +void xfile_put_page(struct xfile *xf, struct page *page);
+> -struct page *xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len);
+> +#define XFILE_ALLOC		(1 << 0) /* allocate page if not present */
+> +struct page *xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len,
+> +		unsigned int flags);
+>  void xfile_put_page(struct xfile *xf, struct page *page);
 >  
 >  #endif /* __XFS_SCRUB_XFILE_H__ */
 > -- 
