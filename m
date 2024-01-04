@@ -1,516 +1,213 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE3F1847
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 01:46:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54077184F
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 02:01:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WEoX7h51"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C909C433C8;
-	Thu,  4 Jan 2024 01:46:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cbg1wt6H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABA18C433C9;
+	Thu,  4 Jan 2024 02:01:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704332779;
-	bh=HiHvjpivMQEtThSz4KrslUSXDpcj4YijsZ5dJbqohC4=;
+	s=k20201202; t=1704333681;
+	bh=oZLbiGigBkOfTwisTEvZ6ECmKwOfzOmRJBghpSlPst0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WEoX7h51uAXrN5cKt0yaLoI+xwQ86SYOKZpLFJ2cH7eW1ZSniso4BUeDsTIt4kCgW
-	 ng1Pf5UnaxpteEY8sJZdaGJqNoQfxA2Qg/ByLVt5CM8UIeSW9+3T+1/QYX6WmXOEPN
-	 3AftZ9GMGLOtb1Iszv+CJUKB3tMLoiaR/4OXuWLVSsnFYHs92vlnki3hVKShz5UlTG
-	 YBjhhRxsUAzOL1zyL+o6T85x+qlpdJhEH4h78Q6G4XE6IImKt81M8QJQ0UEOR3Vjm/
-	 pdPqDcZhsQct5+WYoAmJxk+itqtjYXbtqZJUsKLfPEm4jZRytr+WJDxWZakHUtmHhE
-	 ehyGXK2Y6xXxw==
-Date: Wed, 3 Jan 2024 17:46:18 -0800
+	b=cbg1wt6Hw3HvBEvWZFzTYlDvMTSFne+rPc90YBXdp9fbzllDLd9hF3AW4noDaMTHt
+	 J/Alw/z+7WSlkKJf36X4hFpza9ZUw5jK4ZWULefVd1elQOhZxLy1tw7fEtg0e9UnPm
+	 Kz+1+GndVS6WxiZsGkb8Ku1B74G+JYcD+SrG/OG1TLC6xUpZHrzvsoMMsBHVQbVFzD
+	 lMNaRI3S8FgTbzhbw+fXoUi70ZNRwqHijFWi+XS666njzVZ89mENdVKUfCJLC4xuME
+	 k9j6FcFiCnWvKV5ERnVgI76WyqGhV3P5WCyD6RkUStuzubaQ31GJxNguWNO6MXnoaE
+	 vZavpq4i9uk/Q==
+Date: Wed, 3 Jan 2024 18:01:21 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jian Wen <wenjianhn@gmail.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
-	Dave Chinner <david@fromorbit.com>, Jian Wen <wenjian1@xiaomi.com>
-Subject: Re: [PATCH v3] xfs: improve handling of prjquot ENOSPC
-Message-ID: <20240104014618.GR361584@frogsfrogsfrogs>
-References: <20231214150708.77586-1-wenjianhn@gmail.com>
- <20231223105632.85286-1-wenjianhn@gmail.com>
- <20240103014209.GH361584@frogsfrogsfrogs>
- <CAMXzGWJZHpatRBBJsH04B9GWNEVntGjU3WHQS-nDiC4wN2_HjQ@mail.gmail.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: chandanbabu@kernel.org, linux-xfs@vger.kernel.org, yi.zhang@huawei.com,
+	houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
+ handlers
+Message-ID: <20240104020121.GS361584@frogsfrogsfrogs>
+References: <20231228124646.142757-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMXzGWJZHpatRBBJsH04B9GWNEVntGjU3WHQS-nDiC4wN2_HjQ@mail.gmail.com>
+In-Reply-To: <20231228124646.142757-1-leo.lilong@huawei.com>
 
-On Wed, Jan 03, 2024 at 11:45:30AM +0800, Jian Wen wrote:
-> > Dave commented earlier:
-> >
-> > "Hence my suggestion that we should be returning -EDQUOT from project
-> > quotas and only converting it to -ENOSPC once the project quota has been
-> > flushed and failed with EDQUOT a second time."
-> >
-> > I think what he meant was changing xfs_trans_dqresv to return EDQUOT in
-> > all circumstances.  I don't see that anywhere in this patch?
+On Thu, Dec 28, 2023 at 08:46:46PM +0800, Long Li wrote:
+> While performing the IO fault injection test, I caught the following data
+> corruption report:
 > 
-> The related code that makes xfs_trans_dqresv() return -EDQUOT if the
-> project quota limit is reached is as below.
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -700,8 +700,6 @@ xfs_trans_dqresv(
+>  XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
+>  CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
+>  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+>  Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
+>  Call Trace:
+>   <TASK>
+>   dump_stack_lvl+0x50/0x70
+>   xfs_corruption_error+0x134/0x150
+>   xfs_free_ag_extent+0x7d3/0x1130
+>   __xfs_free_extent+0x201/0x3c0
+>   xfs_trans_free_extent+0x29b/0xa10
+>   xfs_extent_free_finish_item+0x2a/0xb0
+>   xfs_defer_finish_noroll+0x8d1/0x1b40
+>   xfs_defer_finish+0x21/0x200
+>   xfs_itruncate_extents_flags+0x1cb/0x650
+>   xfs_free_eofblocks+0x18f/0x250
+>   xfs_inactive+0x485/0x570
+>   xfs_inodegc_worker+0x207/0x530
+>   process_scheduled_works+0x24a/0xe10
+>   worker_thread+0x5ac/0xc60
+>   kthread+0x2cd/0x3c0
+>   ret_from_fork+0x4a/0x80
+>   ret_from_fork_asm+0x11/0x20
+>   </TASK>
+>  XFS (dm-0): Corruption detected. Unmount and run xfs_repair
 > 
->  error_return:
->         xfs_dqunlock(dqp);
-> -       if (xfs_dquot_type(dqp) == XFS_DQTYPE_PROJ)
-> -               return -ENOSPC;
->         return -EDQUOT;
->  error_corrupt:
->         xfs_dqunlock(dqp);
-
-Oh, silly me, I missed that change, sorry about that.
-
-> On Wed, Jan 3, 2024 at 9:42 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Sat, Dec 23, 2023 at 06:56:32PM +0800, Jian Wen wrote:
-> > > Currently, xfs_trans_dqresv() return -ENOSPC when the project quota
-> > > limit is reached. As a result, xfs_file_buffered_write() will flush
-> > > the whole filesystem instead of the project quota.
-> > >
-> > > Fix the issue by make xfs_trans_dqresv() return -EDQUOT rather than
-> > > -ENOSPC. Add a helper, xfs_blockgc_nospace_flush(), to make flushing
-> > > for both EDQUOT and ENOSPC consistent.
-> > >
-> > > Changes since v2:
-> > >   - completely rewrote based on the suggestions from Dave
-> > >
-> > > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > > Signed-off-by: Jian Wen <wenjian1@xiaomi.com>
-> > > ---
-> > >  fs/xfs/xfs_dquot.h       | 13 +++++++++++
-> > >  fs/xfs/xfs_file.c        | 40 +++++++++++---------------------
-> > >  fs/xfs/xfs_icache.c      | 50 +++++++++++++++++++++++++++++-----------
-> > >  fs/xfs/xfs_icache.h      |  7 +++---
-> > >  fs/xfs/xfs_inode.c       | 19 ++++++++-------
-> > >  fs/xfs/xfs_reflink.c     |  2 ++
-> > >  fs/xfs/xfs_trans.c       | 39 +++++++++++++++++++++++--------
-> > >  fs/xfs/xfs_trans_dquot.c |  3 ---
-> > >  8 files changed, 109 insertions(+), 64 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-> > > index 80c8f851a2f3..c5f4a170eef1 100644
-> > > --- a/fs/xfs/xfs_dquot.h
-> > > +++ b/fs/xfs/xfs_dquot.h
-> > > @@ -183,6 +183,19 @@ xfs_dquot_is_enforced(
-> > >       return false;
-> > >  }
-> > >
-> > > +static inline bool
-> > > +xfs_dquot_is_enospc(
-> >
-> > I don't like encoding error codes in a function name, especially since
-> > EDQUOT is used for more dquot types than ENOSPC.
-> >
-> > "xfs_dquot_hardlimit_exceeded" ?
-> >
-> > > +     struct xfs_dquot        *dqp)
-> > > +{
-> > > +     if (!dqp)
-> > > +             return false;
-> > > +     if (!xfs_dquot_is_enforced(dqp))
-> > > +             return false;
-> > > +     if (dqp->q_blk.hardlimit - dqp->q_blk.reserved > 0)
-> > > +             return false;
-> >
-> >         return q_blk.reserved > dqp->q_blk.hardlimit; ?
-> >
-> > hardlimit == reserved shouldn't be considered an edquot condition.
-> >
-> > Also, locking is needed here.
-
-Any response to this?
-
-> > > +     return true;
-> > > +}
-> > > +
-> > >  /*
-> > >   * Check whether a dquot is under low free space conditions. We assume the quota
-> > >   * is enabled and enforced.
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index e33e5e13b95f..4b6e90bb1c59 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -24,6 +24,9 @@
-> > >  #include "xfs_pnfs.h"
-> > >  #include "xfs_iomap.h"
-> > >  #include "xfs_reflink.h"
-> > > +#include "xfs_quota.h"
-> > > +#include "xfs_dquot_item.h"
-> > > +#include "xfs_dquot.h"
-> > >
-> > >  #include <linux/dax.h>
-> > >  #include <linux/falloc.h>
-> > > @@ -785,32 +788,17 @@ xfs_file_buffered_write(
-> > >       trace_xfs_file_buffered_write(iocb, from);
-> > >       ret = iomap_file_buffered_write(iocb, from,
-> > >                       &xfs_buffered_write_iomap_ops);
-> > > -
-> > > -     /*
-> > > -      * If we hit a space limit, try to free up some lingering preallocated
-> > > -      * space before returning an error. In the case of ENOSPC, first try to
-> > > -      * write back all dirty inodes to free up some of the excess reserved
-> > > -      * metadata space. This reduces the chances that the eofblocks scan
-> > > -      * waits on dirty mappings. Since xfs_flush_inodes() is serialized, this
-> > > -      * also behaves as a filter to prevent too many eofblocks scans from
-> > > -      * running at the same time.  Use a synchronous scan to increase the
-> > > -      * effectiveness of the scan.
-> > > -      */
-> > > -     if (ret == -EDQUOT && !cleared_space) {
-> > > -             xfs_iunlock(ip, iolock);
-> > > -             xfs_blockgc_free_quota(ip, XFS_ICWALK_FLAG_SYNC);
-> > > -             cleared_space = true;
-> > > -             goto write_retry;
-> > > -     } else if (ret == -ENOSPC && !cleared_space) {
-> > > -             struct xfs_icwalk       icw = {0};
-> > > -
-> > > -             cleared_space = true;
-> > > -             xfs_flush_inodes(ip->i_mount);
-> > > -
-> > > -             xfs_iunlock(ip, iolock);
-> > > -             icw.icw_flags = XFS_ICWALK_FLAG_SYNC;
-> > > -             xfs_blockgc_free_space(ip->i_mount, &icw);
-> > > -             goto write_retry;
-> > > +     if (ret == -EDQUOT || ret == -ENOSPC) {
-> >
-> > Huh?
-> >
-> > Dave commented earlier:
-> >
-> > "Hence my suggestion that we should be returning -EDQUOT from project
-> > quotas and only converting it to -ENOSPC once the project quota has been
-> > flushed and failed with EDQUOT a second time."
-> >
-> > I think what he meant was changing xfs_trans_dqresv to return EDQUOT in
-> > all circumstances.  I don't see that anywhere in this patch?
-> >
-> > Granted I think it's messy to set the /wrong/ errno in low level code
-> > and require higher level code to detect and change it.  But I don't see
-> > a better way to do that.
-> >
-> > Also, a question for Dave: What happens if xfs_trans_dqresv detects a
-> > fatal overage in the project dquot, but the overage condition clears by
-> > the time this caller rechecks the dquot?  Is it ok that we then return
-> > EDQUOT whereas the current code would return ENOSPC?
-
-I think this question is still relevant, though.  Or perhaps we should
-define our own code for project quota exceeded, and translate that to
-ENOSPC in the callers?
-
-> >
-> > --D
-> >
-> > > +             if (!cleared_space) {
-> > > +                     xfs_iunlock(ip, iolock);
-> > > +                     xfs_blockgc_nospace_flush(ip->i_mount, ip->i_udquot,
-> > > +                                             ip->i_gdquot, ip->i_pdquot,
-> > > +                                             XFS_ICWALK_FLAG_SYNC, ret);
-> > > +                     cleared_space = true;
-> > > +                     goto write_retry;
-> > > +             }
-> > > +             if (ret == -EDQUOT && xfs_dquot_is_enospc(ip->i_pdquot))
-> > > +                     ret = -ENOSPC;
-> > >       }
-> > >
-> > >  out:
-> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > index dba514a2c84d..d2dcb653befc 100644
-> > > --- a/fs/xfs/xfs_icache.c
-> > > +++ b/fs/xfs/xfs_icache.c
-> > > @@ -64,6 +64,10 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
-> > >                                        XFS_ICWALK_FLAG_RECLAIM_SICK | \
-> > >                                        XFS_ICWALK_FLAG_UNION)
-> > >
-> > > +static int xfs_blockgc_free_dquots(struct xfs_mount *mp,
-> > > +             struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
-> > > +             struct xfs_dquot *pdqp, unsigned int iwalk_flags);
-> > > +
-> > >  /*
-> > >   * Allocate and initialise an xfs_inode.
-> > >   */
-> > > @@ -1477,6 +1481,38 @@ xfs_blockgc_free_space(
-> > >       return xfs_inodegc_flush(mp);
-> > >  }
-> > >
-> > > +/*
-> > > + * If we hit a space limit, try to free up some lingering preallocated
-> > > + * space before returning an error. In the case of ENOSPC, first try to
-> > > + * write back all dirty inodes to free up some of the excess reserved
-> > > + * metadata space. This reduces the chances that the eofblocks scan
-> > > + * waits on dirty mappings. Since xfs_flush_inodes() is serialized, this
-> > > + * also behaves as a filter to prevent too many eofblocks scans from
-> > > + * running at the same time.  Use a synchronous scan to increase the
-> > > + * effectiveness of the scan.
-> > > + */
-> > > +void
-> > > +xfs_blockgc_nospace_flush(
-> > > +     struct xfs_mount        *mp,
-> > > +     struct xfs_dquot        *udqp,
-> > > +     struct xfs_dquot        *gdqp,
-> > > +     struct xfs_dquot        *pdqp,
-> > > +     unsigned int            iwalk_flags,
-> > > +     int                     what)
-> > > +{
-> > > +     ASSERT(what == -EDQUOT || what == -ENOSPC);
-> > > +
-> > > +     if (what == -EDQUOT) {
-> > > +             xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, iwalk_flags);
-> > > +     } else if (what == -ENOSPC) {
-> > > +             struct xfs_icwalk       icw = {0};
-> > > +
-> > > +             xfs_flush_inodes(mp);
-> > > +             icw.icw_flags = iwalk_flags;
-> > > +             xfs_blockgc_free_space(mp, &icw);
-> > > +     }
-> > > +}
-> > > +
-> > >  /*
-> > >   * Reclaim all the free space that we can by scheduling the background blockgc
-> > >   * and inodegc workers immediately and waiting for them all to clear.
-> > > @@ -1515,7 +1551,7 @@ xfs_blockgc_flush_all(
-> > >   * (XFS_ICWALK_FLAG_SYNC), the caller also must not hold any inode's IOLOCK or
-> > >   * MMAPLOCK.
-> > >   */
-> > > -int
-> > > +static int
-> > >  xfs_blockgc_free_dquots(
-> > >       struct xfs_mount        *mp,
-> > >       struct xfs_dquot        *udqp,
-> > > @@ -1559,18 +1595,6 @@ xfs_blockgc_free_dquots(
-> > >       return xfs_blockgc_free_space(mp, &icw);
-> > >  }
-> > >
-> > > -/* Run cow/eofblocks scans on the quotas attached to the inode. */
-> > > -int
-> > > -xfs_blockgc_free_quota(
-> > > -     struct xfs_inode        *ip,
-> > > -     unsigned int            iwalk_flags)
-> > > -{
-> > > -     return xfs_blockgc_free_dquots(ip->i_mount,
-> > > -                     xfs_inode_dquot(ip, XFS_DQTYPE_USER),
-> > > -                     xfs_inode_dquot(ip, XFS_DQTYPE_GROUP),
-> > > -                     xfs_inode_dquot(ip, XFS_DQTYPE_PROJ), iwalk_flags);
-> > > -}
-> > > -
-> > >  /* XFS Inode Cache Walking Code */
-> > >
-> > >  /*
-> > > diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> > > index 905944dafbe5..c0833450969d 100644
-> > > --- a/fs/xfs/xfs_icache.h
-> > > +++ b/fs/xfs/xfs_icache.h
-> > > @@ -57,11 +57,10 @@ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, unsigned long nr_to_scan);
-> > >
-> > >  void xfs_inode_mark_reclaimable(struct xfs_inode *ip);
-> > >
-> > > -int xfs_blockgc_free_dquots(struct xfs_mount *mp, struct xfs_dquot *udqp,
-> > > -             struct xfs_dquot *gdqp, struct xfs_dquot *pdqp,
-> > > -             unsigned int iwalk_flags);
-> > > -int xfs_blockgc_free_quota(struct xfs_inode *ip, unsigned int iwalk_flags);
-> > >  int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_icwalk *icm);
-> > > +void xfs_blockgc_nospace_flush(struct xfs_mount *mp, struct xfs_dquot *udqp,
-> > > +                     struct xfs_dquot *gdqp, struct xfs_dquot *pdqp,
-> > > +                     unsigned int iwalk_flags, int what);
-> > >  int xfs_blockgc_flush_all(struct xfs_mount *mp);
-> > >
-> > >  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index c0f1c89786c2..e99ffa17d3d0 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -27,6 +27,8 @@
-> > >  #include "xfs_errortag.h"
-> > >  #include "xfs_error.h"
-> > >  #include "xfs_quota.h"
-> > > +#include "xfs_dquot_item.h"
-> > > +#include "xfs_dquot.h"
-> > >  #include "xfs_filestream.h"
-> > >  #include "xfs_trace.h"
-> > >  #include "xfs_icache.h"
-> > > @@ -1007,12 +1009,6 @@ xfs_create(
-> > >        */
-> > >       error = xfs_trans_alloc_icreate(mp, tres, udqp, gdqp, pdqp, resblks,
-> > >                       &tp);
-> > > -     if (error == -ENOSPC) {
-> > > -             /* flush outstanding delalloc blocks and retry */
-> > > -             xfs_flush_inodes(mp);
-> > > -             error = xfs_trans_alloc_icreate(mp, tres, udqp, gdqp, pdqp,
-> > > -                             resblks, &tp);
-> > > -     }
-> > >       if (error)
-> > >               goto out_release_dquots;
-> > >
-> > > @@ -2951,14 +2947,21 @@ xfs_rename(
-> > >       if (spaceres != 0) {
-> > >               error = xfs_trans_reserve_quota_nblks(tp, target_dp, spaceres,
-> > >                               0, false);
-> > > -             if (error == -EDQUOT || error == -ENOSPC) {
-> > > +             if (error == -EDQUOT) {
-> > >                       if (!retried) {
-> > >                               xfs_trans_cancel(tp);
-> > > -                             xfs_blockgc_free_quota(target_dp, 0);
-> > > +                             xfs_blockgc_nospace_flush(target_dp->i_mount,
-> > > +                                                     target_dp->i_udquot,
-> > > +                                                     target_dp->i_gdquot,
-> > > +                                                     target_dp->i_pdquot,
-> > > +                                                     0, error);
-> > >                               retried = true;
-> > >                               goto retry;
-> > >                       }
-> > >
-> > > +                     if (xfs_dquot_is_enospc(target_dp->i_pdquot))
-> > > +                             error = -ENOSPC;
-> > > +
-> > >                       nospace_error = error;
-> > >                       spaceres = 0;
-> > >                       error = 0;
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index e5b62dc28466..cb036e1173ae 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -25,6 +25,8 @@
-> > >  #include "xfs_bit.h"
-> > >  #include "xfs_alloc.h"
-> > >  #include "xfs_quota.h"
-> > > +#include "xfs_dquot_item.h"
-> > > +#include "xfs_dquot.h"
-> > >  #include "xfs_reflink.h"
-> > >  #include "xfs_iomap.h"
-> > >  #include "xfs_ag.h"
-
-I wonder, what about the xfs_trans_reserve_quota_nblks in
-xfs_reflink_remap_extent?  Does it need to filter EDQUOT?
-
-Just looking through the list, I think xfs_ioctl_setattr_get_trans and
-xfs_setattr_nonsize also need to check for EDQUOT and project dquots
-being over, don't they?
-
-> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > index 305c9d07bf1b..1574d7aa49c4 100644
-> > > --- a/fs/xfs/xfs_trans.c
-> > > +++ b/fs/xfs/xfs_trans.c
-> > > @@ -1217,15 +1217,21 @@ xfs_trans_alloc_inode(
-> > >       }
-> > >
-> > >       error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks, force);
-> > > -     if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
-> > > +     if (error == -EDQUOT && !retried) {
-> > >               xfs_trans_cancel(tp);
-> > >               xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > -             xfs_blockgc_free_quota(ip, 0);
-> > > +             xfs_blockgc_nospace_flush(ip->i_mount, ip->i_udquot,
-> > > +                                     ip->i_gdquot, ip->i_pdquot,
-> > > +                                     0, error);
-> > >               retried = true;
-> > >               goto retry;
-> > >       }
-> > > -     if (error)
-> > > +     if (error) {
-> > > +             if (error == -EDQUOT && xfs_dquot_is_enospc(ip->i_pdquot))
-> > > +                     error = -ENOSPC;
-> > > +
-> > >               goto out_cancel;
-> > > +     }
-> > >
-> > >       *tpp = tp;
-> > >       return 0;
-> > > @@ -1260,13 +1266,16 @@ xfs_trans_alloc_icreate(
-> > >               return error;
-> > >
-> > >       error = xfs_trans_reserve_quota_icreate(tp, udqp, gdqp, pdqp, dblocks);
-> > > -     if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
-> > > +     if (error == -EDQUOT && !retried) {
-> > >               xfs_trans_cancel(tp);
-> > > -             xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
-> > > +             xfs_blockgc_nospace_flush(mp, udqp, gdqp, pdqp, 0, error);
-> > >               retried = true;
-> > >               goto retry;
-> > >       }
-> > >       if (error) {
-> > > +             if (error == -EDQUOT && xfs_dquot_is_enospc(pdqp))
-> > > +                     error = -ENOSPC;
-> > > +
-> > >               xfs_trans_cancel(tp);
-> > >               return error;
-> > >       }
-> > > @@ -1340,14 +1349,19 @@ xfs_trans_alloc_ichange(
-> > >               error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
-> > >                               pdqp, ip->i_nblocks + ip->i_delayed_blks,
-> > >                               1, qflags);
-> > > -             if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
-> > > +             if (error == -EDQUOT && !retried) {
-> > >                       xfs_trans_cancel(tp);
-> > > -                     xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
-> > > +                     xfs_blockgc_nospace_flush(mp, udqp, gdqp, pdqp, 0,
-> > > +                                             error);
-> > >                       retried = true;
-> > >                       goto retry;
-> > >               }
-> > > -             if (error)
-> > > +             if (error) {
-> > > +                     if (error == -EDQUOT && xfs_dquot_is_enospc(pdqp))
-> > > +                             error = -ENOSPC;
-> > > +
-> > >                       goto out_cancel;
-> > > +             }
-> > >       }
-> > >
-> > >       *tpp = tp;
-> > > @@ -1419,14 +1433,19 @@ xfs_trans_alloc_dir(
-> > >               goto done;
-> > >
-> > >       error = xfs_trans_reserve_quota_nblks(tp, dp, resblks, 0, false);
-> > > -     if (error == -EDQUOT || error == -ENOSPC) {
-> > > +     if (error == -EDQUOT) {
-> > >               if (!retried) {
-> > >                       xfs_trans_cancel(tp);
-> > > -                     xfs_blockgc_free_quota(dp, 0);
-> > > +                     xfs_blockgc_nospace_flush(dp->i_mount, ip->i_udquot,
-> > > +                                             ip->i_gdquot, ip->i_pdquot,
-> > > +                                             0, error);
-> > >                       retried = true;
-> > >                       goto retry;
-> > >               }
-> > >
-> > > +             if (xfs_dquot_is_enospc(dp->i_pdquot))
-> > > +                     error = -ENOSPC;
-> > > +
-> > >               *nospace_error = error;
-> > >               resblks = 0;
-> > >               error = 0;
-> > > diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> > > index aa00cf67ad72..7201b86ef2c2 100644
-> > > --- a/fs/xfs/xfs_trans_dquot.c
-> > > +++ b/fs/xfs/xfs_trans_dquot.c
-> > > @@ -700,8 +700,6 @@ xfs_trans_dqresv(
-> > >
-> > >  error_return:
-> > >       xfs_dqunlock(dqp);
-> > > -     if (xfs_dquot_type(dqp) == XFS_DQTYPE_PROJ)
-> > > -             return -ENOSPC;
-> > >       return -EDQUOT;
-> > >  error_corrupt:
-> > >       xfs_dqunlock(dqp);
-> > > @@ -717,7 +715,6 @@ xfs_trans_dqresv(
-> > >   * approach.
-> > >   *
-> > >   * flags = XFS_QMOPT_FORCE_RES evades limit enforcement. Used by chown.
-> > > - *      XFS_QMOPT_ENOSPC returns ENOSPC not EDQUOT.  Used by pquota.
-> > >   *      XFS_TRANS_DQ_RES_BLKS reserves regular disk blocks
-> > >   *      XFS_TRANS_DQ_RES_RTBLKS reserves realtime disk blocks
-> > >   * dquots are unlocked on return, if they were not locked by caller.
-> > > --
-> > > 2.34.1
-> > >
-> > >
+> After analyzing the disk image, it was found that the corruption was
+> triggered by the fact that extent was recorded in both the inode and AGF
+> btrees. After a long time of reproduction and analysis, we found that the
+> root cause of the problem was that the AGF btree block was not recovered.
 > 
+> Consider the following situation, Transaction A and Transaction B are in
+> the same record, so Transaction A and Transaction B share the same LSN1.
+> If the buf item in Transaction A has been recovered, then the buf item in
+> Transaction B cannot be recovered, because log recovery skips items with a
+> metadata LSN >= the current LSN of the recovery item. If there is still an
+> inode item in transaction B that records the Extent X, the Extent X will
+> be recorded in both the inode and the AGF btree block after transaction B
+> is recovered.
 > 
+>   |------------Record (LSN1)------------------|---Record (LSN2)---|
+>   |----------Trans A------------|-------------Trans B-------------|
+>   |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
+>   |     Extent X is freed       |     Extent X is allocated       |
 > 
-> --
-> Best,
+> After commit 12818d24db8a ("xfs: rework log recovery to submit buffers on
+> LSN boundaries") was introduced, we submit buffers on lsn boundaries during
+> log recovery. The above problem can be avoided under normal paths, but it's
+> not guaranteed under abnormal paths. Consider the following process, if an
+> error was encountered after recover buf item in transaction A and before
+> recover buf item in transaction B, buffers that have been added to
+> buffer_list will still be submitted, this violates the submits rule on lsn
+> boundaries. So buf item in Transaction B cannot be recovered on the next
+> mount due to current lsn of transaction equal to metadata lsn on disk.
 > 
-> Jian
+>   xlog_do_recovery_pass
+>     error = xlog_recover_process
+>       xlog_recover_process_data
+>         ...
+>           xlog_recover_buf_commit_pass2
+>             xlog_recover_do_reg_buffer  //recover buf item in Trans A
+>             xfs_buf_delwri_queue(bp, buffer_list)
+>         ...
+>         ====> Encountered error and returned
+>         ...
+>           xlog_recover_buf_commit_pass2
+>             xlog_recover_do_reg_buffer  //recover buf item in Trans B
+>             xfs_buf_delwri_queue(bp, buffer_list)
+>     if (!list_empty(&buffer_list))
+>       xfs_buf_delwri_submit(&buffer_list); //submit regardless of error
+> 
+> In order to make sure that submits buffers on lsn boundaries in the
+> abnormal paths, we need to check error status before submit buffers that
+> have been added from the last record processed. If error status exist,
+> buffers in the bufffer_list should be canceled.
+
+What was the error, specifically?  I would have though that recovery
+would abort after "Encountered error and returned".  Does the recovery
+somehow keep running and then finds the buf item in Trans B?
+
+Or is the problem here that after the error, xfs submits the delwri
+buffers?  And then the user tried to recover a second time, only this
+time the recovery attempt reads Trans B, but then doesn't actually write
+anything because the ondisk buffer now has the same LSN as Trans B?
+
+<confused>
+
+--D
+
+> Canceling the buffers in the buffer_list directly isn't correct, unlike
+> any other place where write list was canceled, these buffers has been
+> initialized by xfs_buf_item_init() during recovery and held by buf
+> item, buf items will not be released in xfs_buf_delwri_cancel(). If
+> these buffers are submitted successfully, buf items assocated with
+> the buffer will be released in io end process. So releasing buf item
+> in write list cacneling process is needed.
+> 
+> Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
+> ---
+>  fs/xfs/xfs_buf.c         |  2 ++
+>  fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
+>  2 files changed, 15 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 8e5bd50d29fe..6a1b26aaf97e 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -2075,6 +2075,8 @@ xfs_buf_delwri_cancel(
+>  		xfs_buf_lock(bp);
+>  		bp->b_flags &= ~_XBF_DELWRI_Q;
+>  		xfs_buf_list_del(bp);
+> +		if (bp->b_log_item)
+> +			xfs_buf_item_relse(bp);
+>  		xfs_buf_relse(bp);
+>  	}
+>  }
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 1251c81e55f9..2cda6c90890d 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2964,7 +2964,6 @@ xlog_do_recovery_pass(
+>  	char			*offset;
+>  	char			*hbp, *dbp;
+>  	int			error = 0, h_size, h_len;
+> -	int			error2 = 0;
+>  	int			bblks, split_bblks;
+>  	int			hblks, split_hblks, wrapped_hblks;
+>  	int			i;
+> @@ -3203,16 +3202,21 @@ xlog_do_recovery_pass(
+>   bread_err1:
+>  	kmem_free(hbp);
+>  
+> -	/*
+> -	 * Submit buffers that have been added from the last record processed,
+> -	 * regardless of error status.
+> -	 */
+> -	if (!list_empty(&buffer_list))
+> -		error2 = xfs_buf_delwri_submit(&buffer_list);
+> -
+>  	if (error && first_bad)
+>  		*first_bad = rhead_blk;
+>  
+> +	/*
+> +	 * If there are no error, submit buffers that have been added from the
+> +	 * last record processed, othrewise cancel the write list, to ensure
+> +	 * submit buffers on LSN boundaries.
+> +	 */
+> +	if (!list_empty(&buffer_list)) {
+> +		if (error)
+> +			xfs_buf_delwri_cancel(&buffer_list);
+> +		else
+> +			error = xfs_buf_delwri_submit(&buffer_list);
+> +	}
+> +
+>  	/*
+>  	 * Transactions are freed at commit time but transactions without commit
+>  	 * records on disk are never committed. Free any that may be left in the
+> @@ -3226,7 +3230,7 @@ xlog_do_recovery_pass(
+>  			xlog_recover_free_trans(trans);
+>  	}
+>  
+> -	return error ? error : error2;
+> +	return error;
+>  }
+>  
+>  /*
+> -- 
+> 2.31.1
+> 
 > 
