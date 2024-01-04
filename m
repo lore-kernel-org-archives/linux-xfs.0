@@ -1,213 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54077184F
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 02:01:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22AEC18EA8
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 03:37:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cbg1wt6H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABA18C433C9;
-	Thu,  4 Jan 2024 02:01:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704333681;
-	bh=oZLbiGigBkOfTwisTEvZ6ECmKwOfzOmRJBghpSlPst0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cbg1wt6Hw3HvBEvWZFzTYlDvMTSFne+rPc90YBXdp9fbzllDLd9hF3AW4noDaMTHt
-	 J/Alw/z+7WSlkKJf36X4hFpza9ZUw5jK4ZWULefVd1elQOhZxLy1tw7fEtg0e9UnPm
-	 Kz+1+GndVS6WxiZsGkb8Ku1B74G+JYcD+SrG/OG1TLC6xUpZHrzvsoMMsBHVQbVFzD
-	 lMNaRI3S8FgTbzhbw+fXoUi70ZNRwqHijFWi+XS666njzVZ89mENdVKUfCJLC4xuME
-	 k9j6FcFiCnWvKV5ERnVgI76WyqGhV3P5WCyD6RkUStuzubaQ31GJxNguWNO6MXnoaE
-	 vZavpq4i9uk/Q==
-Date: Wed, 3 Jan 2024 18:01:21 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Long Li <leo.lilong@huawei.com>
-Cc: chandanbabu@kernel.org, linux-xfs@vger.kernel.org, yi.zhang@huawei.com,
-	houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
- handlers
-Message-ID: <20240104020121.GS361584@frogsfrogsfrogs>
-References: <20231228124646.142757-1-leo.lilong@huawei.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kc+mcHtM"
+Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-6dbd87b706aso30370a34.0
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Jan 2024 19:37:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1704339445; x=1704944245; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ufEpKC6OIZPWtjvMw/jE8XpkmAJH6aRuBbFm+u+6iXM=;
+        b=Kc+mcHtM08A28hBEvXhym6O0Fv6XIDZwUu4Zx151RCKtkT1YbAvN6G3+JIAOTGPsmK
+         +RUvBvtIT1n752tUhMjWPLCuex9mUagl+nYebnHDshrmknJ+UPPO5bYA24ItgQXWVgee
+         MPlgk07GZqDWfhDbZUrLn2EUYgwPJ2vWpdxQaoYQlzvi5RvCq6oR9bR4Aw+OdTrg0OjZ
+         v+H7t5iEut4Tar1xwd12irZfi3e77x2/c79Or96dfOeIcRoIJplcZP1mUCs1NTq+5VPy
+         5lGhGwwKhJzH4AwSsSxVL8lo2MQbzr+MUs+pCiTl7d55AFKSbVxKUGExYCL4gGdl572q
+         q2cQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704339445; x=1704944245;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ufEpKC6OIZPWtjvMw/jE8XpkmAJH6aRuBbFm+u+6iXM=;
+        b=GMYFDJxm4ANRQTJdw2dLi6nVNAH33un41Zlpk0oDjyulnnulxhXChZK5vIvitzgAKQ
+         tLcsEFFbTiojleC4vEjSYRxXynjWVNEDOniPZc35mdqlEXT1Ui/Fhy9ZKAbph5OnaIZb
+         4+96juU2W1KbV18uTOIuSsGb5Sq8fEe20RloLBDdITJeiwiEK4makX9tzOJ2UYAF/3SI
+         K54WMPPXt+M1RLGPR0VJ+ZQrJzOK0qNCbs/wcku2kYGdSNumY4LuNVMI+ghYU78/dL2Z
+         t7DOsQgxJoU8btJfoDnSSxYPmf+kGXqsL8r3IJpGAndohVnxFSeayw5JPLbLfJKkvPZ8
+         FYHw==
+X-Gm-Message-State: AOJu0YyloMRwlmt+LKFlpubO9t5QlNzYWg+Uf81lB1T6wWyEB+VV6otf
+	f9QUQmC9LMqT6ssTQ4JoxoBKwgoOtC63ARWrJ+E=
+X-Google-Smtp-Source: AGHT+IE4z9aT15EilKJh2LwqwI1MW6KGa89MI5ZcPaLsiX1omq6pCw55v9ets+Ky7jiO1+bJm2NKHvEjvr4zQx1Pkk4=
+X-Received: by 2002:a4a:d6da:0:b0:596:249c:936b with SMTP id
+ j26-20020a4ad6da000000b00596249c936bmr71067oot.1.1704339445051; Wed, 03 Jan
+ 2024 19:37:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231228124646.142757-1-leo.lilong@huawei.com>
+References: <20231214150708.77586-1-wenjianhn@gmail.com> <20231223105632.85286-1-wenjianhn@gmail.com>
+ <20240103014209.GH361584@frogsfrogsfrogs> <CAMXzGWJZHpatRBBJsH04B9GWNEVntGjU3WHQS-nDiC4wN2_HjQ@mail.gmail.com>
+ <20240104014618.GR361584@frogsfrogsfrogs>
+In-Reply-To: <20240104014618.GR361584@frogsfrogsfrogs>
+From: Jian Wen <wenjianhn@gmail.com>
+Date: Thu, 4 Jan 2024 11:36:48 +0800
+Message-ID: <CAMXzGWLpYazOAyW0v4M1=JGZicmV-jskGE-u19nS7z83oovBSQ@mail.gmail.com>
+Subject: Re: [PATCH v3] xfs: improve handling of prjquot ENOSPC
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com, 
+	Dave Chinner <david@fromorbit.com>, Jian Wen <wenjian1@xiaomi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Dec 28, 2023 at 08:46:46PM +0800, Long Li wrote:
-> While performing the IO fault injection test, I caught the following data
-> corruption report:
-> 
->  XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
->  CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
->  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
->  Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
->  Call Trace:
->   <TASK>
->   dump_stack_lvl+0x50/0x70
->   xfs_corruption_error+0x134/0x150
->   xfs_free_ag_extent+0x7d3/0x1130
->   __xfs_free_extent+0x201/0x3c0
->   xfs_trans_free_extent+0x29b/0xa10
->   xfs_extent_free_finish_item+0x2a/0xb0
->   xfs_defer_finish_noroll+0x8d1/0x1b40
->   xfs_defer_finish+0x21/0x200
->   xfs_itruncate_extents_flags+0x1cb/0x650
->   xfs_free_eofblocks+0x18f/0x250
->   xfs_inactive+0x485/0x570
->   xfs_inodegc_worker+0x207/0x530
->   process_scheduled_works+0x24a/0xe10
->   worker_thread+0x5ac/0xc60
->   kthread+0x2cd/0x3c0
->   ret_from_fork+0x4a/0x80
->   ret_from_fork_asm+0x11/0x20
->   </TASK>
->  XFS (dm-0): Corruption detected. Unmount and run xfs_repair
-> 
-> After analyzing the disk image, it was found that the corruption was
-> triggered by the fact that extent was recorded in both the inode and AGF
-> btrees. After a long time of reproduction and analysis, we found that the
-> root cause of the problem was that the AGF btree block was not recovered.
-> 
-> Consider the following situation, Transaction A and Transaction B are in
-> the same record, so Transaction A and Transaction B share the same LSN1.
-> If the buf item in Transaction A has been recovered, then the buf item in
-> Transaction B cannot be recovered, because log recovery skips items with a
-> metadata LSN >= the current LSN of the recovery item. If there is still an
-> inode item in transaction B that records the Extent X, the Extent X will
-> be recorded in both the inode and the AGF btree block after transaction B
-> is recovered.
-> 
->   |------------Record (LSN1)------------------|---Record (LSN2)---|
->   |----------Trans A------------|-------------Trans B-------------|
->   |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
->   |     Extent X is freed       |     Extent X is allocated       |
-> 
-> After commit 12818d24db8a ("xfs: rework log recovery to submit buffers on
-> LSN boundaries") was introduced, we submit buffers on lsn boundaries during
-> log recovery. The above problem can be avoided under normal paths, but it's
-> not guaranteed under abnormal paths. Consider the following process, if an
-> error was encountered after recover buf item in transaction A and before
-> recover buf item in transaction B, buffers that have been added to
-> buffer_list will still be submitted, this violates the submits rule on lsn
-> boundaries. So buf item in Transaction B cannot be recovered on the next
-> mount due to current lsn of transaction equal to metadata lsn on disk.
-> 
->   xlog_do_recovery_pass
->     error = xlog_recover_process
->       xlog_recover_process_data
->         ...
->           xlog_recover_buf_commit_pass2
->             xlog_recover_do_reg_buffer  //recover buf item in Trans A
->             xfs_buf_delwri_queue(bp, buffer_list)
->         ...
->         ====> Encountered error and returned
->         ...
->           xlog_recover_buf_commit_pass2
->             xlog_recover_do_reg_buffer  //recover buf item in Trans B
->             xfs_buf_delwri_queue(bp, buffer_list)
->     if (!list_empty(&buffer_list))
->       xfs_buf_delwri_submit(&buffer_list); //submit regardless of error
-> 
-> In order to make sure that submits buffers on lsn boundaries in the
-> abnormal paths, we need to check error status before submit buffers that
-> have been added from the last record processed. If error status exist,
-> buffers in the bufffer_list should be canceled.
+On Thu, Jan 4, 2024 at 9:46=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
+wrote:
 
-What was the error, specifically?  I would have though that recovery
-would abort after "Encountered error and returned".  Does the recovery
-somehow keep running and then finds the buf item in Trans B?
+> > > > diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+> > > > index 80c8f851a2f3..c5f4a170eef1 100644
+> > > > --- a/fs/xfs/xfs_dquot.h
+> > > > +++ b/fs/xfs/xfs_dquot.h
+> > > > @@ -183,6 +183,19 @@ xfs_dquot_is_enforced(
+> > > >       return false;
+> > > >  }
+> > > >
+> > > > +static inline bool
+> > > > +xfs_dquot_is_enospc(
+> > >
+> > > I don't like encoding error codes in a function name, especially sinc=
+e
+> > > EDQUOT is used for more dquot types than ENOSPC.
+> > >
+> > > "xfs_dquot_hardlimit_exceeded" ?
+> > >
+> > > > +     struct xfs_dquot        *dqp)
+> > > > +{
+> > > > +     if (!dqp)
+> > > > +             return false;
+> > > > +     if (!xfs_dquot_is_enforced(dqp))
+> > > > +             return false;
+> > > > +     if (dqp->q_blk.hardlimit - dqp->q_blk.reserved > 0)
+> > > > +             return false;
+> > >
+> > >         return q_blk.reserved > dqp->q_blk.hardlimit; ?
+> > >
+> > > hardlimit =3D=3D reserved shouldn't be considered an edquot condition=
+.
+> > >
+> > > Also, locking is needed here.
+>
+> Any response to this?
+I will address it in v4.
 
-Or is the problem here that after the error, xfs submits the delwri
-buffers?  And then the user tried to recover a second time, only this
-time the recovery attempt reads Trans B, but then doesn't actually write
-anything because the ondisk buffer now has the same LSN as Trans B?
+> > >
+> > > Also, a question for Dave: What happens if xfs_trans_dqresv detects a
+> > > fatal overage in the project dquot, but the overage condition clears =
+by
+> > > the time this caller rechecks the dquot?  Is it ok that we then retur=
+n
+> > > EDQUOT whereas the current code would return ENOSPC?
+The v3 patch will return EDQUOT if the condition clears. e.g.
 
-<confused>
+STATIC ssize_t
+xfs_file_buffered_write(
+...
+if (ret =3D=3D -EDQUOT && xfs_dquot_is_enospc(ip->i_pdquot))
+       ret =3D -ENOSPC;
 
---D
-
-> Canceling the buffers in the buffer_list directly isn't correct, unlike
-> any other place where write list was canceled, these buffers has been
-> initialized by xfs_buf_item_init() during recovery and held by buf
-> item, buf items will not be released in xfs_buf_delwri_cancel(). If
-> these buffers are submitted successfully, buf items assocated with
-> the buffer will be released in io end process. So releasing buf item
-> in write list cacneling process is needed.
-> 
-> Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> ---
->  fs/xfs/xfs_buf.c         |  2 ++
->  fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
->  2 files changed, 15 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 8e5bd50d29fe..6a1b26aaf97e 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -2075,6 +2075,8 @@ xfs_buf_delwri_cancel(
->  		xfs_buf_lock(bp);
->  		bp->b_flags &= ~_XBF_DELWRI_Q;
->  		xfs_buf_list_del(bp);
-> +		if (bp->b_log_item)
-> +			xfs_buf_item_relse(bp);
->  		xfs_buf_relse(bp);
->  	}
->  }
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1251c81e55f9..2cda6c90890d 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2964,7 +2964,6 @@ xlog_do_recovery_pass(
->  	char			*offset;
->  	char			*hbp, *dbp;
->  	int			error = 0, h_size, h_len;
-> -	int			error2 = 0;
->  	int			bblks, split_bblks;
->  	int			hblks, split_hblks, wrapped_hblks;
->  	int			i;
-> @@ -3203,16 +3202,21 @@ xlog_do_recovery_pass(
->   bread_err1:
->  	kmem_free(hbp);
->  
-> -	/*
-> -	 * Submit buffers that have been added from the last record processed,
-> -	 * regardless of error status.
-> -	 */
-> -	if (!list_empty(&buffer_list))
-> -		error2 = xfs_buf_delwri_submit(&buffer_list);
-> -
->  	if (error && first_bad)
->  		*first_bad = rhead_blk;
->  
-> +	/*
-> +	 * If there are no error, submit buffers that have been added from the
-> +	 * last record processed, othrewise cancel the write list, to ensure
-> +	 * submit buffers on LSN boundaries.
-> +	 */
-> +	if (!list_empty(&buffer_list)) {
-> +		if (error)
-> +			xfs_buf_delwri_cancel(&buffer_list);
-> +		else
-> +			error = xfs_buf_delwri_submit(&buffer_list);
-> +	}
-> +
->  	/*
->  	 * Transactions are freed at commit time but transactions without commit
->  	 * records on disk are never committed. Free any that may be left in the
-> @@ -3226,7 +3230,7 @@ xlog_do_recovery_pass(
->  			xlog_recover_free_trans(trans);
->  	}
->  
-> -	return error ? error : error2;
-> +	return error;
->  }
->  
->  /*
-> -- 
-> 2.31.1
-> 
-> 
+ret will not be translated from EDQUOT to ENOSPC.
+>
+> I think this question is still relevant, though.  Or perhaps we should
+> define our own code for project quota exceeded, and translate that to
+> ENOSPC in the callers?
+>
+> I wonder, what about the xfs_trans_reserve_quota_nblks in
+> xfs_reflink_remap_extent?  Does it need to filter EDQUOT?
+Yes, it does.  I will address it in v4.
+>
+> Just looking through the list, I think xfs_ioctl_setattr_get_trans and
+> xfs_setattr_nonsize also need to check for EDQUOT and project dquots
+> being over, don't they?
+Yes, xfs_trans_alloc_ichange has got them covered.
