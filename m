@@ -1,53 +1,231 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EB31F60C
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 07:41:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iUN4GsnR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Mbt7OJ9pJx9SRllnqDxD7oA2Gi2BNLitiVcuZfFdNng=; b=iUN4GsnRHaF1C9NDYmVBfnJr8V
-	JZD8LPLdFdpptkxExHwEzFXiinA6svetJje9x/AGP8lxACIsYSRsnsInwz0DqHTO7jpCp9BXB6aMr
-	oy76sDjJ22DoOh1Ksn7aPCVQOvdMOcAaFEWqAkGlF1WZcL/+k1seNBN+Ugkm1AR9Ow/IMKZbiofNM
-	kKGoLy0Ew8+ELWqJz0U/RRwxYenJ4yc5rqT9FsvZiZe+JsF1fXJqJ1kLgtnBkkEpEr6CvMtSyC7Ul
-	/3Fw1Bm7qBX/Erd2qHdpoZMvcU17Qh7QFVqy5K/KZdszAdZjl119+RBvXoub3Wh+l1rTby+ApgWDw
-	vZVot1+Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rLIMI-00D6du-1F;
-	Thu, 04 Jan 2024 07:41:42 +0000
-Date: Wed, 3 Jan 2024 23:41:42 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5F621A1E
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2024 13:00:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4T5RRH4czFz1FHYJ;
+	Thu,  4 Jan 2024 20:56:11 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id AA15B1A0172;
+	Thu,  4 Jan 2024 21:00:11 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 4 Jan
+ 2024 21:00:11 +0800
+Date: Thu, 4 Jan 2024 21:03:14 +0800
+From: Long Li <leo.lilong@huawei.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	willy@infradead.org
-Subject: Re: [PATCH 9/9] xfs: connect in-memory btrees to xfiles
-Message-ID: <ZZZhNo9X8f2AAGjE@infradead.org>
-References: <170404829556.1748854.13886473250848576704.stgit@frogsfrogsfrogs>
- <170404829726.1748854.1262147267981918901.stgit@frogsfrogsfrogs>
- <ZZZWFjy1fGwSCx7C@infradead.org>
- <20240104073217.GD361584@frogsfrogsfrogs>
+CC: <chandanbabu@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
+Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
+ handlers
+Message-ID: <20240104130314.GA1815758@ceph-admin>
+References: <20231228124646.142757-1-leo.lilong@huawei.com>
+ <20240104020121.GS361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20240104073217.GD361584@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240104020121.GS361584@frogsfrogsfrogs>
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
-On Wed, Jan 03, 2024 at 11:32:17PM -0800, Darrick J. Wong wrote:
-> > Any reason this doesn't actually remove the page from shmem?
+On Wed, Jan 03, 2024 at 06:01:21PM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 28, 2023 at 08:46:46PM +0800, Long Li wrote:
+> > While performing the IO fault injection test, I caught the following data
+> > corruption report:
+> > 
+> >  XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
+> >  CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
+> >  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+> >  Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
+> >  Call Trace:
+> >   <TASK>
+> >   dump_stack_lvl+0x50/0x70
+> >   xfs_corruption_error+0x134/0x150
+> >   xfs_free_ag_extent+0x7d3/0x1130
+> >   __xfs_free_extent+0x201/0x3c0
+> >   xfs_trans_free_extent+0x29b/0xa10
+> >   xfs_extent_free_finish_item+0x2a/0xb0
+> >   xfs_defer_finish_noroll+0x8d1/0x1b40
+> >   xfs_defer_finish+0x21/0x200
+> >   xfs_itruncate_extents_flags+0x1cb/0x650
+> >   xfs_free_eofblocks+0x18f/0x250
+> >   xfs_inactive+0x485/0x570
+> >   xfs_inodegc_worker+0x207/0x530
+> >   process_scheduled_works+0x24a/0xe10
+> >   worker_thread+0x5ac/0xc60
+> >   kthread+0x2cd/0x3c0
+> >   ret_from_fork+0x4a/0x80
+> >   ret_from_fork_asm+0x11/0x20
+> >   </TASK>
+> >  XFS (dm-0): Corruption detected. Unmount and run xfs_repair
+> > 
+> > After analyzing the disk image, it was found that the corruption was
+> > triggered by the fact that extent was recorded in both the inode and AGF
+> > btrees. After a long time of reproduction and analysis, we found that the
+> > root cause of the problem was that the AGF btree block was not recovered.
+> > 
+> > Consider the following situation, Transaction A and Transaction B are in
+> > the same record, so Transaction A and Transaction B share the same LSN1.
+> > If the buf item in Transaction A has been recovered, then the buf item in
+> > Transaction B cannot be recovered, because log recovery skips items with a
+> > metadata LSN >= the current LSN of the recovery item. If there is still an
+> > inode item in transaction B that records the Extent X, the Extent X will
+> > be recorded in both the inode and the AGF btree block after transaction B
+> > is recovered.
+> > 
+> >   |------------Record (LSN1)------------------|---Record (LSN2)---|
+> >   |----------Trans A------------|-------------Trans B-------------|
+> >   |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
+> >   |     Extent X is freed       |     Extent X is allocated       |
+> > 
+> > After commit 12818d24db8a ("xfs: rework log recovery to submit buffers on
+> > LSN boundaries") was introduced, we submit buffers on lsn boundaries during
+> > log recovery. The above problem can be avoided under normal paths, but it's
+> > not guaranteed under abnormal paths. Consider the following process, if an
+> > error was encountered after recover buf item in transaction A and before
+> > recover buf item in transaction B, buffers that have been added to
+> > buffer_list will still be submitted, this violates the submits rule on lsn
+> > boundaries. So buf item in Transaction B cannot be recovered on the next
+> > mount due to current lsn of transaction equal to metadata lsn on disk.
+> > 
+> >   xlog_do_recovery_pass
+> >     error = xlog_recover_process
+> >       xlog_recover_process_data
+> >         ...
+> >           xlog_recover_buf_commit_pass2
+> >             xlog_recover_do_reg_buffer  //recover buf item in Trans A
+> >             xfs_buf_delwri_queue(bp, buffer_list)
+> >         ...
+> >         ====> Encountered error and returned
+> >         ...
+> >           xlog_recover_buf_commit_pass2
+> >             xlog_recover_do_reg_buffer  //recover buf item in Trans B
+> >             xfs_buf_delwri_queue(bp, buffer_list)
+> >     if (!list_empty(&buffer_list))
+> >       xfs_buf_delwri_submit(&buffer_list); //submit regardless of error
+> > 
+> > In order to make sure that submits buffers on lsn boundaries in the
+> > abnormal paths, we need to check error status before submit buffers that
+> > have been added from the last record processed. If error status exist,
+> > buffers in the bufffer_list should be canceled.
 > 
-> I think I skipped the shmem_truncate_range call because the next btree
-> block allocation will re-use the page immediately.
+> What was the error, specifically?  I would have though that recovery
+> would abort after "Encountered error and returned".  Does the recovery
+> somehow keep running and then finds the buf item in Trans B?
+> 
 
-Maybe add a comment explaining that?  Note that shmemfs pages once
-dirties will keep space allocated for them in memory/swap until
-explicitly punched out.
+That was not what I meant. I'm just trying to point out that any error
+that occurs after recovering buf item in Transaction A and before
+recovering buf item in Transaction B can trigger the problem. It
+doesn't matter what the error is, for example the buf read error
+that occurred during this period. 
+
+> Or is the problem here that after the error, xfs submits the delwri
+> buffers?  And then the user tried to recover a second time, only this
+> time the recovery attempt reads Trans B, but then doesn't actually write
+> anything because the ondisk buffer now has the same LSN as Trans B?
+> 
+
+Yes, that's what I want to said.  I think I should change the description
+of the process that triggered the issue in commit message to avoid
+misunderstandings.
+
+Thanks
+Long Li
+
+> <confused>
+> 
+> --D
+> 
+> > Canceling the buffers in the buffer_list directly isn't correct, unlike
+> > any other place where write list was canceled, these buffers has been
+> > initialized by xfs_buf_item_init() during recovery and held by buf
+> > item, buf items will not be released in xfs_buf_delwri_cancel(). If
+> > these buffers are submitted successfully, buf items assocated with
+> > the buffer will be released in io end process. So releasing buf item
+> > in write list cacneling process is needed.
+> > 
+> > Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/xfs/xfs_buf.c         |  2 ++
+> >  fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
+> >  2 files changed, 15 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 8e5bd50d29fe..6a1b26aaf97e 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -2075,6 +2075,8 @@ xfs_buf_delwri_cancel(
+> >  		xfs_buf_lock(bp);
+> >  		bp->b_flags &= ~_XBF_DELWRI_Q;
+> >  		xfs_buf_list_del(bp);
+> > +		if (bp->b_log_item)
+> > +			xfs_buf_item_relse(bp);
+> >  		xfs_buf_relse(bp);
+> >  	}
+> >  }
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 1251c81e55f9..2cda6c90890d 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -2964,7 +2964,6 @@ xlog_do_recovery_pass(
+> >  	char			*offset;
+> >  	char			*hbp, *dbp;
+> >  	int			error = 0, h_size, h_len;
+> > -	int			error2 = 0;
+> >  	int			bblks, split_bblks;
+> >  	int			hblks, split_hblks, wrapped_hblks;
+> >  	int			i;
+> > @@ -3203,16 +3202,21 @@ xlog_do_recovery_pass(
+> >   bread_err1:
+> >  	kmem_free(hbp);
+> >  
+> > -	/*
+> > -	 * Submit buffers that have been added from the last record processed,
+> > -	 * regardless of error status.
+> > -	 */
+> > -	if (!list_empty(&buffer_list))
+> > -		error2 = xfs_buf_delwri_submit(&buffer_list);
+> > -
+> >  	if (error && first_bad)
+> >  		*first_bad = rhead_blk;
+> >  
+> > +	/*
+> > +	 * If there are no error, submit buffers that have been added from the
+> > +	 * last record processed, othrewise cancel the write list, to ensure
+> > +	 * submit buffers on LSN boundaries.
+> > +	 */
+> > +	if (!list_empty(&buffer_list)) {
+> > +		if (error)
+> > +			xfs_buf_delwri_cancel(&buffer_list);
+> > +		else
+> > +			error = xfs_buf_delwri_submit(&buffer_list);
+> > +	}
+> > +
+> >  	/*
+> >  	 * Transactions are freed at commit time but transactions without commit
+> >  	 * records on disk are never committed. Free any that may be left in the
+> > @@ -3226,7 +3230,7 @@ xlog_do_recovery_pass(
+> >  			xlog_recover_free_trans(trans);
+> >  	}
+> >  
+> > -	return error ? error : error2;
+> > +	return error;
+> >  }
+> >  
+> >  /*
+> > -- 
+> > 2.31.1
+> > 
+> > 
+> 
