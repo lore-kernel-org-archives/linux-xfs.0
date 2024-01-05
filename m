@@ -1,21 +1,34 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C5E5220
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 04:27:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A4DD368B05; Fri,  5 Jan 2024 05:27:54 +0100 (CET)
-Date: Fri, 5 Jan 2024 05:27:54 +0100
-From: Christoph Hellwig <hch@lst.de>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C3D15228
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 04:49:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZL6bYudB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=ZL6bYudBJkPmXA+0OFBC6o4JOE
+	HgT3HiXOEGvVv0zhELwO9GvM/8VKz3esBvfGYcDbeyddU64iuNvcK5KIs7oqgDwyhUNThAHh1UwbN
+	VoYCxGKQsU98DAZaZqumJ/Gap0+7v1W7n3ELyUhewGzC8/6/gEQGZknB43ehYO8SfpoIaG+y6ANhH
+	VC8vFiqbIUPPSvjTcQ87AKQFb7uCJ7Gv7zcRqx4vKn4ss8qTTUZ7kOBduhG5KuktYRAdm32pazZxK
+	JCDXxYz6HDQAVLt2ufv9rDCniEu4I2Wil38CoaRxgbUtCrx4dAKwzUqKOFku3VIVKzaSBTukACtOJ
+	N0F7uGAg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rLc94-00Fw82-2q;
+	Fri, 05 Jan 2024 04:49:22 +0000
+Date: Thu, 4 Jan 2024 20:49:22 -0800
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: embedd struct xfbtree into the owning
- structure
-Message-ID: <20240105042754.GA23630@lst.de>
-References: <20240103203836.608391-1-hch@lst.de> <20240103203836.608391-6-hch@lst.de> <20240104012133.GM361584@frogsfrogsfrogs> <20240104063218.GI29215@lst.de> <20240104071454.GY361584@frogsfrogsfrogs> <20240104071735.GB30339@lst.de> <20240104072200.GB361584@frogsfrogsfrogs> <20240104192822.GI361584@frogsfrogsfrogs>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs_scrub: fix author and spdx headers on scrub/
+ files
+Message-ID: <ZZeKUrCQ9v5d2K6y@infradead.org>
+References: <170404989091.1791307.1449422318127974555.stgit@frogsfrogsfrogs>
+ <170404989107.1791307.8796926188438152942.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -24,19 +37,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240104192822.GI361584@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <170404989107.1791307.8796926188438152942.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jan 04, 2024 at 11:28:22AM -0800, Darrick J. Wong wrote:
-> Though looking at buftarg allocation and my old notes from a couple of
-> years ago -- a second reason for allocating the buftarg during scrub
-> setup was that the list_lru_init call allocates an array that's
-> O(nodes_nr) and percpu_counter_init allocates an array that's
-> O(maxcpus).  At the time I decided that it was better to put those large
-> contiguous memory allocations in the ->setup routine where we don't have
-> any vfs/xfs locks held, can run direct reclaim, and haven't done any xfs
-> work yet.
+Looks good:
 
-Given that we use the page LRU for the shemfs pages, I don't think we
-need the buftarg LRU list at all - aging just the buffer container
-doesn't make much sense.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
