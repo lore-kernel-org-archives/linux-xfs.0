@@ -1,33 +1,51 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31C76118
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 05:53:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A932D788
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 13:31:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Zwu1JwDk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=zYVNVMwlgTR5wJu9etObnK1ndDasYvUYMjzO27F7lD4=; b=Zwu1JwDkYcOZfS6NRAAbYdpBsd
-	BGZB1YQDuomZMyC83/C4gIcCsTwx+WEUBsbNKHRdTaxu3xCa+7ETJfFziiOWIxvfkHbEGHe5l1M6K
-	rKKW+CfDF9JhAHTG587y9RZ3HKbSh37e7Mrlv71La/Ej8sWrA1lBTeHhYk3AAe4sDGY88E6sQMeHw
-	nO0a/m1Bfx3nroDi7++7W0k7RJg6iEZgd6ry91r6nUtl+pqIoGkF0uA+mcpb2kFdVXRpDX5bUUb1e
-	LT7sSIBpWgPi7Nv98E81CQ3jPhI671tkisLrIc2JZtuo9IjsI93oTC+zDyVgd+LG1LwfF5WnvByog
-	CQMhRWWQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rLd9B-00G0vA-1C;
-	Fri, 05 Jan 2024 05:53:33 +0000
-Date: Thu, 4 Jan 2024 21:53:33 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XDApVDuB"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a28b1095064so184612766b.2
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Jan 2024 05:31:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1704461483; x=1705066283; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Q6+KzCXM5YkP8A1jISM9ILSyDMeuUm71FZWWNzy0y2M=;
+        b=XDApVDuBlC48n5Hut0vHkDRHA+TVBJ2eZJsqfMqlr/o8WW6EuRAKfd2C1p4RlZk+A3
+         Cmv/2xgY6i0qHdMS5u9jLDCAdAWn/MY7n0TJGNncF78h+T2nEp/BN2bGXloH+0neIvrb
+         I3UlZ0V13Nvpb1rlUN5MTnhEyWnMs8DZksURWcj/LsASr3n8FOU+xACbEbU6vAvxOTdQ
+         jXxBuMFWntnElCQSMsWnyQUabV3G2mM+ZmzLTXHbiBLhnm7eLPCY5F1KxJ6sQRb/asEb
+         tFsYU7UTqiYU8hOQ6ukv/07EsvU7kzBN+DqIYrKHiL+ET2OrJcaILDwUU+xpMyNV0q94
+         MaFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704461483; x=1705066283;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Q6+KzCXM5YkP8A1jISM9ILSyDMeuUm71FZWWNzy0y2M=;
+        b=jPvPkQgE/ZCFnArYpcPyUYd0FEkmFj+ypeoKJ/Wqn38+zb5nyMvYT1RBKbdvmbe+dF
+         lBQr5L2CJQxyx31I0T0xAHgXM72YZxTG6DMANZG0YdyYscPwNFO37Z5MvNK3WnZ2dq4z
+         Iu+fWz0UNBvcaOlJsj1uz/Mg7xnUGNXeiXcvZO7tXURPcvIqZR1ul9ze3vxdaMs0UFha
+         COHRc+BIFjtwLsZU5CsFW5NIh2hOQ5jHPUgo7jCaHvG0Pz+O1hyjFsU4Ahy0JLq48nS6
+         8dMyush6aJjyJ2p4dxQpvbyh6Kprbkkc21jl4iBG0Gz10c0KuRPgryooPcb9EeZ6Fv7Y
+         X0ng==
+X-Gm-Message-State: AOJu0YxvY+sosA99gDL/W5U3SqJPNietOtD9y9WbsfyyJrtTuygPwC36
+	x60dwnCEkf0CXRhp4qljrwMMWTdw3wcwRLxPXSsv7lUoaWs=
+X-Google-Smtp-Source: AGHT+IH8gkWJE01hcy4oPnbpPL7DZNyghll3et9x5Ahxn9BSPZwDuas0VeMXAMtiJYd8iTuzi1PfIA==
+X-Received: by 2002:a17:906:1107:b0:a28:ac5b:5814 with SMTP id h7-20020a170906110700b00a28ac5b5814mr612703eja.185.1704461483059;
+        Fri, 05 Jan 2024 05:31:23 -0800 (PST)
+Received: from localhost ([102.140.209.237])
+        by smtp.gmail.com with ESMTPSA id j21-20020a170906255500b00a2990007447sm214277ejb.122.2024.01.05.05.31.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Jan 2024 05:31:22 -0800 (PST)
+Date: Fri, 5 Jan 2024 16:31:19 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: create a blob array data structure
-Message-ID: <ZZeZXVguVfGz+wyD@infradead.org>
-References: <170404835198.1753315.999170762222938046.stgit@frogsfrogsfrogs>
- <170404835229.1753315.13978723246161515244.stgit@frogsfrogsfrogs>
+Subject: [bug report] xfs: check rt summary file geometry more thoroughly
+Message-ID: <7ed30c07-2e61-4a73-a6a6-f7d15b75765f@moroto.mountain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,19 +54,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170404835229.1753315.13978723246161515244.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sun, Dec 31, 2023 at 12:35:11PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Create a simple 'blob array' data structure for storage of arbitrarily
-> sized metadata objects that will be used to reconstruct metadata.  For
-> the intended usage (temporarily storing extended attribute names and
-> values) we only have to support storing objects and retrieving them.
-> Use the xfile abstraction to store the attribute information in memory
-> that can be swapped out.
+Hello Darrick J. Wong,
 
-Can't this simply be supported by xfiles directly?  Just add a
-xfile_append that writes at i_size and retuns the offset and we're done?
+The patch 04f0c3269b41: "xfs: check rt summary file geometry more
+thoroughly" from Dec 15, 2023 (linux-next), leads to the following
+Smatch static checker warning:
 
+	fs/xfs/scrub/rtsummary.c:288 xchk_rtsum_compare()
+	warn: missing error code? 'error'
+
+fs/xfs/scrub/rtsummary.c
+    268         for (off = 0; off < endoff; off++) {
+    269                 union xfs_suminfo_raw        *ondisk_info;
+    270 
+    271                 /* Read a block's worth of ondisk rtsummary file. */
+    272                 error = xfs_rtsummary_read_buf(&rts->args, off);
+    273                 if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, off, &error))
+    274                         return error;
+    275 
+    276                 /* Read a block's worth of computed rtsummary file. */
+    277                 error = xfsum_copyout(sc, sumoff, rts->words, mp->m_blockwsize);
+    278                 if (error) {
+    279                         xfs_rtbuf_cache_relse(&rts->args);
+    280                         return error;
+    281                 }
+    282 
+    283                 ondisk_info = xfs_rsumblock_infoptr(&rts->args, 0);
+    284                 if (memcmp(ondisk_info, rts->words,
+    285                                         mp->m_blockwsize << XFS_WORDLOG) != 0) {
+    286                         xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
+    287                         xfs_rtbuf_cache_relse(&rts->args);
+--> 288                         return error;
+                                ^^^^^^^^^^^^^
+This is zero.  Should be some kind of error code.
+
+    289                 }
+    290 
+    291                 xfs_rtbuf_cache_relse(&rts->args);
+    292                 sumoff += mp->m_blockwsize;
+    293         }
+    294 
+    295         return 0;
+    296 }
+
+regards,
+dan carpenter
