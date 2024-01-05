@@ -1,34 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB69566A
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 05:51:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A8E96121
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 05:52:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SerCGD2Y"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gb01/Lql"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=SerCGD2Yjn918LsYjdDv2AlJJx
-	P3H/PGTr9abB+jWg7jQc8O7dJNz+ZuFF6Ng+rijZeTVeBMDaTqIjPPLsQCgrJWd7hvs50XY6wQcqA
-	urrKdSEhGL3DspZCulFEuK5nzxJvV9khgN6G9f3q/n8o//jaxqZU8AICAChqiJrEKzQd7w78OCrVE
-	mzXEl6UsmiCob4GY51Y9OfV1fK3dXoZnwt0Z67643smCUULrIKiJkLGKhsSEUDfg7hpNDLNhRT1/w
-	RjoWjh+R7N9QdgQ8LXjdWDKGjwmVOoIVSr3BDdtPj4N8zc/wXJz73OEy74d98Hf9UY7jb9HuDywpf
-	5IBuus+g==;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Gb01/LqlSX7pfUICc603plA8Ox
+	w4u7Fs+QiwurZdEFT/SEZRFgL2mg0WuE/6dcraeWleJPkI/1DsV/jo752uAG6pNp76O9H/tB5US2H
+	e4ACzlY00QCip7S6XEVE8upDM8okv4imsoua93tlzKrDzdQi/NR/Xe/Jq9P88hRXYtv70XVhHnZO5
+	jIfJFPzOeg6jjdRVUyPHPsrAUJHLleqJ09JFDmkrWsXB7jh+b3JvW1sjlletcz+b1UF1FjVbOTD0J
+	egu/LDIiBR3SFB2K7/jRFiGkTXloWZ6/dPJVtFOwkvozudBtpJsv50ysQc6W0PlvWmsFZfgNAIs+8
+	ud/htqpg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rLd7D-00G0nk-1g;
-	Fri, 05 Jan 2024 05:51:31 +0000
-Date: Thu, 4 Jan 2024 21:51:31 -0800
+	id 1rLd7s-00G0rN-33;
+	Fri, 05 Jan 2024 05:52:12 +0000
+Date: Thu, 4 Jan 2024 21:52:12 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: move remote symlink target read function to
- libxfs
-Message-ID: <ZZeY4/KvsUj2YOHU@infradead.org>
+Subject: Re: [PATCH 3/3] xfs: move symlink target write function to libxfs
+Message-ID: <ZZeZDMH2P7fTNrPB@infradead.org>
 References: <170404832640.1750161.7474736298870522543.stgit@frogsfrogsfrogs>
- <170404832680.1750161.6114741655557405167.stgit@frogsfrogsfrogs>
+ <170404832695.1750161.6464756869860729774.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +36,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170404832680.1750161.6114741655557405167.stgit@frogsfrogsfrogs>
+In-Reply-To: <170404832695.1750161.6464756869860729774.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 Looks good:
