@@ -1,34 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 429CD5396
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 05:11:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54230538B
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Jan 2024 05:11:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZFp5tzMC"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d12nEWIT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=LPxkje2NqEUTLs9c2ater6iMdecLq6B94u5y4ODKjyU=; b=ZFp5tzMCTel74g2LxjXguUsf6s
-	CZTJ7HB9mVD/N0mUmlomsGnNkJOjmdd8PIMAH+inZwGQlHdZz45W1C8dNIo8ZIBN+5r/6Ubsyc4b/
-	9MnnbM1DebJbs6sG4Iba/kSm2rLhFXEq55XIBK9nDdAyyDZJNBA73utun/BItq9iipmHClDObq3zk
-	JcVye3TL0e7rZ3ij5TDUwwOefb9XdSJbnYp2VudkdMm9EoZPq5jLFDFhJbX9Ydxgozhcndpjm97EB
-	D3jdVjROQYlDsp0eCL5FZKSovCdQE4HpsYX4xLXVsxxy7PGYlB/Ns5fZ2Wdjp8bC1w+VmLAXRloGx
-	mNFyJoKg==;
+	bh=ut07xhfUcGZXP4lUVLrKOFKbkRxQSWe+N8WQMUhQQgQ=; b=d12nEWITlqOxFM3Qhox0tMWWJy
+	Ydp4PVpKVuWgefnGj6WxO1kYaMAZn5ZBOzPHXyzhZCpb2YYQ99aFgotu9ovuyYtQ96k3qdmz7I2jC
+	qeJnijgZMbsxpwPDVDFG16n4n/rYsifRqQoXxYA44C0t8uPlQmtxX88eJ0UWT0hfDIvPpxlWM89RB
+	BH0l1okKjAPe6Ivpu9Az8STopC+r1q+LyaKnqDlY34CHInBrkuQYmX3mR4sQp2vgJu3G59jMf1nyW
+	WocalIRC9bY119MAraect4TWCFvbk5VNDLmA2e1EhrxQzcTUitj2gywmPMmWPNAmDqbkHTpBdmCGq
+	vnIQcBHw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rLcTy-00Fxe7-1K;
-	Fri, 05 Jan 2024 05:10:58 +0000
-Date: Thu, 4 Jan 2024 21:10:58 -0800
+	id 1rLcUG-00Fxf5-2d;
+	Fri, 05 Jan 2024 05:11:16 +0000
+Date: Thu, 4 Jan 2024 21:11:16 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, Neal Gompa <neal@gompa.dev>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs_scrub_fail: move executable script to
- /usr/libexec
-Message-ID: <ZZePYkMKSgKbvQjp@infradead.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 9/9] xfs_scrub_all.cron: move to package data directory
+Message-ID: <ZZePdC9VWHOgqmnL@infradead.org>
 References: <170405001841.1800712.6745668619742020884.stgit@frogsfrogsfrogs>
- <170405001950.1800712.15718005791386216226.stgit@frogsfrogsfrogs>
+ <170405001964.1800712.10514067731814883862.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,10 +36,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170405001950.1800712.15718005791386216226.stgit@frogsfrogsfrogs>
+In-Reply-To: <170405001964.1800712.10514067731814883862.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Oh, libexec is back, that gives me strong 4.4-BSD vibes..
+On Sun, Dec 31, 2023 at 02:54:41PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> cron jobs don't belong in /usr/lib.  Since the cron job is also
+> secondary to the systemd timer, it's really only provided as a courtesy
+> for distributions that don't use systemd.  Move it to @datadir@, aka
+> /usr/share/xfsprogs.
+
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
