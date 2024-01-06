@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC3410E5
-	for <linux-xfs@vger.kernel.org>; Sat,  6 Jan 2024 01:16:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC3C110B
+	for <linux-xfs@vger.kernel.org>; Sat,  6 Jan 2024 01:33:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iuHKkxwA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 288EDC433C7;
-	Sat,  6 Jan 2024 01:16:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdhfjui2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1BA0C433C9;
+	Sat,  6 Jan 2024 01:33:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704503811;
-	bh=tcs2Qx5DniR6rhV8A7Do+u5YyHxbCSqV6ij6f7/aQ1E=;
+	s=k20201202; t=1704504797;
+	bh=u4PhzZ5jozZV7IPXKjLebedjGtGr+zyQ72Jw8XYCIak=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iuHKkxwAbzPMudMtRqW1Y+Zq/SGqjWNnovjARvoh4acgw4btlPAgqbPZvMqmQJ8RZ
-	 9wCOW+hUeoJhCV5WlHaz7Q7x8onH4ON/k5vH0GLTWJa1wwYxgN3mMFjpWoN/1G/SP1
-	 hWj8W5DIkJZSQ9cKvsHbIBhWyn7z25Xwl1jGTi6BFWwvNMRKoMsMWDuTeBuDJeBgz/
-	 3C784wusAabheJzHxChcSLxQG2H7sKUCjKT9oiJAB8UwU2bgATraV1gbg79QEUeDD2
-	 DFYGFQLynI1EnJcKSNxfh0xu976D7GNldkEQcDSyxVpv2MqPqcM+I3/0gyjzYruPJC
-	 dI2cxdA8NAT6w==
-Date: Fri, 5 Jan 2024 17:16:50 -0800
+	b=kdhfjui2U4fADra2molvj7D3lW3mT6OslXsfa8D0hkGyUYJhb0/5CBDQrA5CFE6YG
+	 M5SD2lTiSvk/OmtSmm2rGdVOzMHJZzIK/xDujBlOb/ibS80T4OLo+m9FbSHt9+I8/U
+	 KpnYCvG7E/WK9uHJJ0wGpkrTkH3hxUARL511hUq0bU+dRdEHSUzpfckjxu1D6euvRw
+	 8dbYXoAWxQoTWbp7j6gPCbcj8jZqOxwneWYyoHeXiGYaEXsU4HUGn5pU7lJPL3+Wyx
+	 AfK0r4RMfkUCGyFOm34r79qVDayJh46EcO+lXOnGPMMGoWCP8SWAidsnWclLxXEYwI
+	 K/f/7/YjNM+oA==
+Date: Fri, 5 Jan 2024 17:33:16 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: implement live quotacheck inode scan
-Message-ID: <20240106011650.GK361584@frogsfrogsfrogs>
-References: <170404827380.1748002.1474710373694082536.stgit@frogsfrogsfrogs>
- <170404827425.1748002.12122438465318717193.stgit@frogsfrogsfrogs>
- <ZZeTrHqhROxcLKEA@infradead.org>
+Subject: Re: [PATCH 1/6] xfs: create a blob array data structure
+Message-ID: <20240106013316.GL361584@frogsfrogsfrogs>
+References: <170404835198.1753315.999170762222938046.stgit@frogsfrogsfrogs>
+ <170404835229.1753315.13978723246161515244.stgit@frogsfrogsfrogs>
+ <ZZeZXVguVfGz+wyD@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,112 +34,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZZeTrHqhROxcLKEA@infradead.org>
+In-Reply-To: <ZZeZXVguVfGz+wyD@infradead.org>
 
-On Thu, Jan 04, 2024 at 09:29:16PM -0800, Christoph Hellwig wrote:
-> Looks good,
+On Thu, Jan 04, 2024 at 09:53:33PM -0800, Christoph Hellwig wrote:
+> On Sun, Dec 31, 2023 at 12:35:11PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create a simple 'blob array' data structure for storage of arbitrarily
+> > sized metadata objects that will be used to reconstruct metadata.  For
+> > the intended usage (temporarily storing extended attribute names and
+> > values) we only have to support storing objects and retrieving them.
+> > Use the xfile abstraction to store the attribute information in memory
+> > that can be swapped out.
 > 
-> but a few nitpick below:
-> 
-> > +int
-> > +xchk_trans_alloc_empty(
-> > +	struct xfs_scrub	*sc)
-> > +{
-> > +	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
-> > +}
-> 
-> Can this and the conversion of an existing not quota related caller
-> of xfs_trans_alloc_empty be split into a separate patch that also
-> documents why this pretty trivial helper is useful?
+> Can't this simply be supported by xfiles directly?  Just add a
+> xfile_append that writes at i_size and retuns the offset and we're done?
 
-Done.
+Yeah, xfile could just do an "append and tell me where you wrote it".
+That said, i_size_read is less direct than reading a u64 out of a
+struct.
 
-> > +#ifdef CONFIG_XFS_QUOTA
-> > +void xchk_qcheck_set_corrupt(struct xfs_scrub *sc, unsigned int dqtype,
-> > +		xfs_dqid_t id);
-> > +#endif /* CONFIG_XFS_QUOTA */
-> 
-> No need for the ifdef here.
+Another speedbump with doing that is that eventually xfs_repair ports
+the xfblob to userspace to support parent pointers.  For that, a statx
+call is much more expensive, so I decided that both implementations
+should just have their own private u64 write pointer.
 
-Fixed.
-
-> > +	/* Figure out the data / rt device block counts. */
-> > +	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-> > +	if (isreg)
-> > +		xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> > +	if (XFS_IS_REALTIME_INODE(ip)) {
-> > +		ilock_flags = xfs_ilock_data_map_shared(ip);
-> > +		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> > +		if (error)
-> > +			goto out_incomplete;
-> > +	} else {
-> > +		ilock_flags = XFS_ILOCK_SHARED;
-> > +		xfs_ilock(ip, XFS_ILOCK_SHARED);
-> > +	}
-> 
-> The need to call xfs_iread_extents only for RT inodes here look good,
-> but I guess it is explained by the logic in xfs_inode_count_blocks.
-> Maybe add a comment?
-
-		/*
-		 * Read in the data fork for rt files so that _count_blocks
-		 * can count the number of blocks allocated from the rt volume.
-		 * Inodes do not track that separately.
-		 */
-
-> > +/*
-> > + * Load an array element, but zero the buffer if there's no data because we
-> > + * haven't stored to that array element yet.
-> > + */
-> > +static inline int
-> > +xfarray_load_sparse(
-> > +	struct xfarray	*array,
-> > +	uint64_t	idx,
-> > +	void		*rec)
-> > +{
-> > +	int		error = xfarray_load(array, idx, rec);
-> > +
-> > +	if (error == -ENODATA) {
-> > +		memset(rec, 0, array->obj_size);
-> > +		return 0;
-> > +	}
-> > +	return error;
-> > +}
-> 
-> Please split this into a separate prep patch.
-
-Done.
-
-> > +/* Compute the number of data and realtime blocks used by a file. */
-> > +void
-> > +xfs_inode_count_blocks(
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_inode	*ip,
-> > +	xfs_filblks_t		*dblocks,
-> > +	xfs_filblks_t		*rblocks)
-> > +{
-> > +	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
-> > +
-> > +	if (!XFS_IS_REALTIME_INODE(ip)) {
-> > +		*dblocks = ip->i_nblocks;
-> > +		*rblocks = 0;
-> > +		return;
-> > +	}
-> > +
-> > +	*rblocks = 0;
-> > +	xfs_bmap_count_leaves(ifp, rblocks);
-> > +	*dblocks = ip->i_nblocks - *rblocks;
-> > +}
-> 
-> Same for this one.  The flow here also reads a little odd to me,
-> what speaks against:
-> 
-> 	*rblocks = 0;
-> 	if (XFS_IS_REALTIME_INODE(ip))
-> 		xfs_bmap_count_leaves(&ip->i_df, rblocks);
-> 	*dblocks = ip->i_nblocks - *rblocks;
-
-Yeah, that is more tidy.  Thanks for the suggestion, I'll incorporate
-that.
+(Unless you want to sponsor a pwrite variant that actually does "append
+and tell me where"? ;))
 
 --D
