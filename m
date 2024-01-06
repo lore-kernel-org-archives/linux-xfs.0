@@ -1,31 +1,35 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC3C110B
-	for <linux-xfs@vger.kernel.org>; Sat,  6 Jan 2024 01:33:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81BAD3C07
+	for <linux-xfs@vger.kernel.org>; Sat,  6 Jan 2024 06:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdhfjui2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1BA0C433C9;
-	Sat,  6 Jan 2024 01:33:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704504797;
-	bh=u4PhzZ5jozZV7IPXKjLebedjGtGr+zyQ72Jw8XYCIak=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kdhfjui2U4fADra2molvj7D3lW3mT6OslXsfa8D0hkGyUYJhb0/5CBDQrA5CFE6YG
-	 M5SD2lTiSvk/OmtSmm2rGdVOzMHJZzIK/xDujBlOb/ibS80T4OLo+m9FbSHt9+I8/U
-	 KpnYCvG7E/WK9uHJJ0wGpkrTkH3hxUARL511hUq0bU+dRdEHSUzpfckjxu1D6euvRw
-	 8dbYXoAWxQoTWbp7j6gPCbcj8jZqOxwneWYyoHeXiGYaEXsU4HUGn5pU7lJPL3+Wyx
-	 AfK0r4RMfkUCGyFOm34r79qVDayJh46EcO+lXOnGPMMGoWCP8SWAidsnWclLxXEYwI
-	 K/f/7/YjNM+oA==
-Date: Fri, 5 Jan 2024 17:33:16 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4eyM5Nvd"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=jFK8d3bEooUYN5jnT8LTSjww8fGYCaB91YvoPSZvdG8=; b=4eyM5NvdoQiXEyo0t6ekKDyufg
+	fgoEvz6n5HzEKJbLS3DGiH60zfG/IHMR145XoCP3vj5W+dXzowE9EAjovImmQ7S+ewn5rGPVvV4jn
+	hf1RACMAYuVIE+O+M3BLokELhIe7VfV5Fw8Z7HhJwKtCXcjCw949J9dNnwcQ/aFujq8hE9HiFM1jU
+	Bl7x3aSPvQwi378pfwdCGcQQP+hBvsRVnAv53Xba1yy2dI2NZL1KEtc6VI/V26lxiC0jpTVXhhPnh
+	W4vq+OBciXz9uJWDVs59rm5SvSLm5Y8+9hSLMZ44ISxeJxLOF5Hqe/w6vVMR+LLU92//rjg9Ck8xK
+	BNVmKLhA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rM0Nd-000qtr-1y;
+	Sat, 06 Jan 2024 06:42:01 +0000
+Date: Fri, 5 Jan 2024 22:42:01 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/6] xfs: create a blob array data structure
-Message-ID: <20240106013316.GL361584@frogsfrogsfrogs>
+Message-ID: <ZZj2OZooCt8QWnTB@infradead.org>
 References: <170404835198.1753315.999170762222938046.stgit@frogsfrogsfrogs>
  <170404835229.1753315.13978723246161515244.stgit@frogsfrogsfrogs>
  <ZZeZXVguVfGz+wyD@infradead.org>
+ <20240106013316.GL361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,32 +38,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZZeZXVguVfGz+wyD@infradead.org>
+In-Reply-To: <20240106013316.GL361584@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jan 04, 2024 at 09:53:33PM -0800, Christoph Hellwig wrote:
-> On Sun, Dec 31, 2023 at 12:35:11PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Create a simple 'blob array' data structure for storage of arbitrarily
-> > sized metadata objects that will be used to reconstruct metadata.  For
-> > the intended usage (temporarily storing extended attribute names and
-> > values) we only have to support storing objects and retrieving them.
-> > Use the xfile abstraction to store the attribute information in memory
-> > that can be swapped out.
-> 
-> Can't this simply be supported by xfiles directly?  Just add a
-> xfile_append that writes at i_size and retuns the offset and we're done?
+On Fri, Jan 05, 2024 at 05:33:16PM -0800, Darrick J. Wong wrote:
+> (Unless you want to sponsor a pwrite variant that actually does "append
+> and tell me where"? ;))
 
-Yeah, xfile could just do an "append and tell me where you wrote it".
-That said, i_size_read is less direct than reading a u64 out of a
-struct.
+Damien and I have adding that on our TODO list (through io_uring) to
+better support zonefs and programming models like this one on regular
+files.
 
-Another speedbump with doing that is that eventually xfs_repair ports
-the xfblob to userspace to support parent pointers.  For that, a statx
-call is much more expensive, so I decided that both implementations
-should just have their own private u64 write pointer.
-
-(Unless you want to sponsor a pwrite variant that actually does "append
-and tell me where"? ;))
-
---D
+But I somehow doubt you'd want xfs_repair to depend on it..
