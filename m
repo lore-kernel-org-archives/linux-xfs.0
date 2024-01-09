@@ -1,64 +1,74 @@
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B9C739AC6
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2024 21:43:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D9314D592
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2024 23:04:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CAo5tay0"
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3bc1414b48eso3823719b6e.2
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Jan 2024 13:43:35 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="olMukpd8"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6dad22e13dcso2169910b3a.3
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Jan 2024 15:04:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704836615; x=1705441415; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704841443; x=1705446243; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TXBFOPWGuTkMTIAcYPL2OtqhFE6cEn7M1Pu8f/BtQzI=;
-        b=CAo5tay0B2vAjD6XBuV9t5vfTB9z/3op6srq6J+/EOSvSJ3qpfx77OLesYxbTzrV7d
-         ha4wEncOfiIOsdO4aaLkp9mUgTVf9ZsFkEvhoo8gM8GJlA9EMEI3g0eW2i9IKMUXU+bi
-         BvrmpaWUrBBJk02u1h3TZRo0VvLwbrHvN5YrmpsqL7itJkMHP2nC/y0BWNz/XAS0uYYf
-         MyIynDK2fRV7dmAUz52+aP3U4/oVRYdP/Va3Da9UpVy65dII6ie7X41KwNGgzCwpqwNG
-         TGadeW1bort94PMp2QzVusCAD5V70CBIGvt98kIM/m4b/8rYCVuXWVO7LwQkD8Ws0MWF
-         IFOw==
+        bh=GVskAbFQn1uVXaOO+q7ZemcnAH1k41TKnSXZBeHYzrY=;
+        b=olMukpd8457FDVL6h0M69V0r8ezyJTvPfIYpkW+JH/LSruTp7+PsQ1jIDoJLJ+/i+i
+         BipaQLTb8S39RmXJYFEjSoonuU/MkKKJPOQqjbTTMFQVcr42TqGGayha6OObILz4rqnL
+         ks5na4pyacpoOP5vokIWO0XUCOXmJw6eWVtjbxAGMNSIzU2+nbEN0cD9gXd7FoEG5bdq
+         q2VDbHctmJEFpa/p8puLEkHCVByvOX0fVl/pR5Th1lbFFdFT+ATCGMeaZ1Hufgav7h88
+         qoJdTyIJMnz/yfqC5/l73H/MkWm7L8EuSq+wEynQNwf6idZXz3K9jrWG9DqqkTi1Mn3e
+         T5zg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704836615; x=1705441415;
+        d=1e100.net; s=20230601; t=1704841443; x=1705446243;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TXBFOPWGuTkMTIAcYPL2OtqhFE6cEn7M1Pu8f/BtQzI=;
-        b=GzB/LWGXIhC+pmEcJ68SCBWa6jD06m8MKQHh0KEdZZcgj+AzykNj3Vc9BAfWiYAxZS
-         Mj8UqqTQRr++Z2nHszVsZcg7na3poKQzhHJDA/FMZ93dJVbcTbPUrr+hvYqGWbcHxWct
-         KBhg3SrDQbFMS4wm9e9rQE9MpzZLkrzlHT6F2sO+sNxKOVKuUQG3FmtRXhjFwjSAQ70U
-         bSmKVNfPHGF8p5HFYorhylkv2oX7cEpGX3QY0Ug05kyw4ln2IPZF8D3txaerfU/Q6QcG
-         o0jGwPug1vQixCZCVlJMPXmI1Srj0AuvAfsB5yfF3y6LsoJ7vDL0+TNodDgsS1CyYtkJ
-         D1iw==
-X-Gm-Message-State: AOJu0YxFqB+/KlweLSwQ8z1UkbPblaty133L6BCkO7M4yOn3Fplqh2Es
-	XgbZdwu3ZoIPCQ0O37FjFCSd3kPFh0YleQ==
-X-Google-Smtp-Source: AGHT+IEpX+cO44NpxBkaVewd3DM0l9CnGkZdYcSdz7Cso7wKxV5wRZnU4TxulSSlc+qjwkyi0SW2tw==
-X-Received: by 2002:a05:6358:8829:b0:170:17eb:9c45 with SMTP id hv41-20020a056358882900b0017017eb9c45mr8314rwb.38.1704836614892;
-        Tue, 09 Jan 2024 13:43:34 -0800 (PST)
+        bh=GVskAbFQn1uVXaOO+q7ZemcnAH1k41TKnSXZBeHYzrY=;
+        b=JVE8eQcLzXYOH3UCKgg8fumivpBMO9ZtiigGAyaCGHzwE4UcTPO5dnvwLPZM3wt6MU
+         ZczU3W933ls3xJjzrZQhx+jEq+GAC02utDso/XNWl0yQ8Ojvakk4GIQSdBVIytX49413
+         2QtoNKwsJmU6+K+G9wDnb4PP89RDrdYYbzbhz/3gZply2BlSSexWL//KfW+BbRIyeRvc
+         F6iiNo6i0hlpqcc3crasGUgecBW4wN9OLOkGCv7rXuybrJerOSoS2zAGPw/JF15QuA66
+         /eY6civXXf0HKqsmZQd+56lkPlujs2+b5qcrZ0YHomoNxyd0GYkMvDd8UPF4VoNwVTWj
+         wrZA==
+X-Gm-Message-State: AOJu0Yz8EspoAf0V6LfY8IfHjYs3i/hrof0IXsIPvHRKQo4UJ/nrvYhI
+	mVptkFbHaTAStOQM11ninz9xFpczm+oIGQ==
+X-Google-Smtp-Source: AGHT+IEzELO00cjbdQ5MoAae4PmrX2wGL2oSaAb1TtprT5iO1eenc3qlgGb6zh1GdAb8Vowe9WZkyA==
+X-Received: by 2002:a05:6a00:a01:b0:6d9:b8e3:9137 with SMTP id p1-20020a056a000a0100b006d9b8e39137mr245785pfh.10.1704841443394;
+        Tue, 09 Jan 2024 15:04:03 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id p10-20020a170902780a00b001d493ff1fcdsm2317737pll.120.2024.01.09.13.43.34
+        by smtp.gmail.com with ESMTPSA id fj1-20020a056a003a0100b006d9b66f3d07sm2241185pfb.95.2024.01.09.15.04.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jan 2024 13:43:34 -0800 (PST)
+        Tue, 09 Jan 2024 15:04:02 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rNJsh-008EyA-2o;
-	Wed, 10 Jan 2024 08:43:31 +1100
-Date: Wed, 10 Jan 2024 08:43:31 +1100
+	id 1rNL8a-008GXv-15;
+	Wed, 10 Jan 2024 10:04:00 +1100
+Date: Wed, 10 Jan 2024 10:04:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
- handlers
-Message-ID: <ZZ2+AwX3i7zze9iK@dread.disaster.area>
-References: <20231228124646.142757-1-leo.lilong@huawei.com>
- <ZZsiHu15pAMl+7aY@dread.disaster.area>
- <20240108122819.GA3770304@ceph-admin>
- <ZZyH85ghaJUO3xHE@dread.disaster.area>
- <ZZ1dtV1psURJnTOy@bfoster>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, bvanassche@acm.org, ojaswin@linux.ibm.com
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
+References: <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
+ <20231213154409.GA7724@lst.de>
+ <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
+ <20231219051456.GB3964019@frogsfrogsfrogs>
+ <20231219052121.GA338@lst.de>
+ <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com>
+ <20231219151759.GA4468@lst.de>
+ <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
+ <20231221065031.GA25778@lst.de>
+ <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -67,136 +77,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZZ1dtV1psURJnTOy@bfoster>
+In-Reply-To: <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
 
-On Tue, Jan 09, 2024 at 09:52:37AM -0500, Brian Foster wrote:
-> > 
-> > The problem we need to solve is how we preserve the necessary
-> > anti-recovery behaviour when we have multiple checkpoints that can
-> > have the same LSN and objects are updated immediately on recovery?
-> > 
-> > I suspect that we need to track that the checkpoint being recovered
-> > has a duplicate start LSN (i.e. in the struct xlog_recover) and
-> > modify the anti-recovery LSN check to take this into account. i.e.
-> > we can really only skip recovery of the first checkpoint at any
-> > given LSN because we cannot disambiguate an LSN updated by the first
-> > checkpoint at that LSN and the metadata already being up to date on
-> > disk in the second and subsequent checkpoints at the same start
-> > LSN.
-> > 
-> > There are likely to be other solutions - anyone have a different
-> > idea on how we might address this?
-> > 
+On Tue, Jan 09, 2024 at 09:55:24AM +0000, John Garry wrote:
+> On 21/12/2023 06:50, Christoph Hellwig wrote:
+> > On Tue, Dec 19, 2023 at 04:53:27PM +0000, John Garry wrote:
+> > > On 19/12/2023 15:17, Christoph Hellwig wrote:
+> > > > On Tue, Dec 19, 2023 at 12:41:37PM +0000, John Garry wrote:
+> > > > > How about something based on fcntl, like below? We will prob also require
+> > > > > some per-FS flag for enabling atomic writes without HW support. That flag
+> > > > > might be also useful for XFS for differentiating forcealign for atomic
+> > > > > writes with just forcealign.
+> > > > I would have just exposed it through a user visible flag instead of
+> > > > adding yet another ioctl/fcntl opcode and yet another method.
+> > > > 
+> > > Any specific type of flag?
+> > > 
+> > > I would suggest a file attribute which we can set via chattr, but that is
+> > > still using an ioctl and would require a new inode flag; but at least there
+> > > is standard userspace support.
+> > I'd be fine with that, but we're kinda running out of flag there.
+> > That's why I suggested the FS_XFLAG_ instead, which basically works
+> > the same.
 > 
-> It's been a while since I've looked at any of this and I haven't waded
-> through all of the details, so I could easily be missing something, but
-> what exactly is wrong with the approach of the patch as posted?
-
-That it fails to address the fact that the code as implemented
-violates the "only submit buffers on LSN change" invariant. Hence we
-have silent failure to recover of the second set of changes
-to a log item  recorded in the multiple checkpoints that have the
-same start LSN.
-
-The original problem described in the commit - a shutdown due to a
-freespace btree record corruption - has been something we've seen
-semi-regularly for a few years now. We've never got to the
-bottom of the problem because we've lacked a reliable reproducer for
-the issue.
-
-The analysis and debug information provided by out by Long indicates
-that when multiple checkpoints start at the same LSN, the objects in
-the later checkpoints (based on commit record ordering) won't get
-replayed because the LSN in the object has already been updated by
-the first checkpoint. Hence they skip recovery in the second (and
-subsequent) checkpoints at the same start LSN.
-
-In a lot of these cases, the object will be logged again later in
-the recovery process, thereby overwriting the corruption caused by
-skipping a checkpointed update. Hence this will only be exposed in
-normal situations if the silent recovery failure occurs on the last
-modification of the object in the journal.
-
-This is why it's a rare failure to be seen in production systems,
-but it is something that hindsight tells us has been occurring given
-the repeated reports of unexplainable single record free space btree
-corruption we've had over the past few years.
-
-> Commit 12818d24db ("xfs: rework log recovery to submit buffers on LSN
-> boundaries") basically created a new invariant for log recovery where
-> buffers are allowed to be written only once per LSN. The risk otherwise
-> is that a subsequent update with a matching LSN would not be correctly
-> applied due to the v5 LSN ordering rules. Since log recovery processes
-> transactions (using terminology/granularity as defined by the
-> implementation of xlog_recover_commit_trans()), this required changes to
-> accommodate any of the various possible runtime logging scenarios that
-> could cause a buffer to have multiple entries in the log associated with
-> a single LSN, the details of which were orthogonal to the fix.
+> Hi Christoph,
 > 
-> The functional change therefore was that rather than to process and
-> submit "transactions" in sequence during recovery, the pending buffer
-> list was lifted to a higher level in the code, a tracking field was
-> added for the "current LSN" of log recovery, and only once we cross a
-> current LSN boundary are we allowed to submit the set of buffers
-> processed for the prior LSN. The reason for this logic is that seeing
-> the next LSN was really the only way we know we're done processing items
-> for a particular LSN.
+> Coming back to this topic... how about this FS_XFLAG_ and fsxattr update:
+> 
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index da43810b7485..9ef15fced20c 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -118,7 +118,8 @@ struct fsxattr {
+>        __u32           fsx_nextents;   /* nextents field value (get)   */
+>        __u32           fsx_projid;     /* project identifier (get/set) */
+>        __u32           fsx_cowextsize; /* CoW extsize field value
+> (get/set)*/
+> -       unsigned char   fsx_pad[8];
+> +       __u32           fsx_atomicwrites_size; /* unit max */
+> +       unsigned char   fsx_pad[4];
+> };
+> 
+> /*
+> @@ -140,6 +141,7 @@ struct fsxattr {
+> #define FS_XFLAG_FILESTREAM    0x00004000      /* use filestream allocator
+> */
+> #define FS_XFLAG_DAX           0x00008000      /* use DAX for IO */
+> #define FS_XFLAG_COWEXTSIZE    0x00010000      /* CoW extent size
+> allocator hint */
+> +#define FS_XFLAG_ATOMICWRITES  0x00020000
+> #define FS_XFLAG_HASATTR       0x80000000      /* no DIFLAG for this   */
+> 
+> /* the read-only stuff doesn't really belong here, but any other place is
+> lines 1-22/22 (END)
+> 
+> Having FS_XFLAG_ATOMICWRITES set will lead to FMODE_CAN_ATOMIC_WRITE being
+> set.
+> 
+> So a user can issue:
+> 
+> >xfs_io -c "atomic-writes 64K" mnt/file
+> >xfs_io -c "atomic-writes" mnt/file
+> [65536] mnt/file
 
-Yes, and therein lies one of the problems with the current
-implementation - this "lsn has changed" logic is incorrect.
+Where are you going to store this value in the inode?  It requires a
+new field in the inode and so is a change of on-disk format, right?
 
-> If I understand the problem description correctly, the issue here is
-> that if an error is encountered in the middle of processing items for
-> some LSN A, we bail out of recovery and submit the pending buffers on
-> the way out.  If we haven't completed processing all items for LSN A
-> before failing, however, then we've just possibly violated the "write
-> once per LSN" invariant that protects from corrupting the fs.
+As it is, I really don't see this as a better solution than the
+original generic "force align" flag that simply makes the extent
+size hint alignment a hard physical alignment requirement rather
+than just a hint. This has multiple uses (DAX PMD alignment is
+another), so I just don't see why something that has a single,
+application specific API that implements a hard physical alignment
+is desirable.
 
-The error handling and/or repeated runs of log recovery simply
-exposes the problem - these symptoms are not the problem that needs
-to be fixed.
+Indeed, the whole reason that extent size hints are so versatile is
+that they implement a generic allocation alignment/size function
+that can be used for anything your imagination extends to. If they
+were implemented as a "only allow RAID stripe aligned/sized
+allocation" for the original use case then that functionality would
+have been far less useful than it has proven to be over the past
+couple of decades.
 
-The issue is that the code as it stands doesn't handle object
-recovery from multiple checkpoints with the same start lsn. The
-easiest way to understand this is to look at the buffer submit logic
-on completion of a checkpoint:
-
-	if (log->l_recovery_lsn != trans->r_lsn &&
-            ohead->oh_flags & XLOG_COMMIT_TRANS) {
-                error = xfs_buf_delwri_submit(buffer_list);
-                if (error)
-                        return error;
-                log->l_recovery_lsn = trans->r_lsn;
-        }
-
-This submits the buffer list on the first checkpoint that completes
-with a new start LSN, not when all the checkpoints with the same
-start LSN complete. i.e.:
-
-checkpoint  start LSN	commit lsn	submission on commit record
-A		32	  63		buffer list for A
-B		64	  68		buffer list for B
-C		64	  92		nothing, start lsn unchanged
-D		64	 127		nothing, start lsn unchanged
-E		128	 192		buffer list for C, D and E
-
-IOWs, the invariant "don't submit buffers until LSN changes" is not
-actually implemented correctly by this code. This is the obvious
-aspect of the problem, but addressing buffer submission doesn't
-actually fix the problem.
-
-That is, changing buffer submission to be correct doesn't address
-the fact that we've already done things like updated the LSN in
-inodes and dquots during recovery of those objects. Hence,
-regardless of whether we submit the buffers or not, changes to
-non-buffer objects in checkpoints C and D will never get recovered
-directly if they were originally modified in checkpoint B.
-
-This is the problem we need to address: if we have multiple
-checkpoints at the same start LSN, we need to ensure that all the
-changes to any object in any of the checkpoints at that start LSN
-are recovered. This is what we are not doing, and this is the root
-cause of the problem....
+Hence history teaches us that we should be designing the API around
+the generic filesystem function required (hard alignment of physical
+extent allocation), not the specific use case that requires that
+functionality.
 
 -Dave.
 -- 
