@@ -1,29 +1,36 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00D4964A
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2024 02:17:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6247C8F40
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2024 04:35:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M2L6AsZ1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71DCFC433C7;
-	Tue,  9 Jan 2024 02:17:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704766655;
-	bh=w4JkwSMC/GcKf4VlM4YB6CeE43hHJUPYROAQz42UC6M=;
-	h=Date:From:To:Cc:Subject:From;
-	b=M2L6AsZ1SYnQnrWi5p1347ClotmpeebSFKHy8jYaVlu7estdpY89tM7FiGwBFlU8c
-	 s+7VoC5J7sElU41CjL/oSWp/waflZf6KOwl6LtJrEEMmzJtSVSE/ecTT8CdMRoR4bO
-	 wHQ7x2uOBGy+3bsH4SFN5YWa5eNxVd4fHZ7ApCjXy08wQFg1iGEiq+xF6q3EL6kXhp
-	 NI4YBfRT23aAfqpEZqiTFvVv31PcjphYpVfbREbsj7tuil+Ak+ILK4ZQJjcBR+ebcs
-	 dJpicIUWlhJKO64iCX8hwC44lv1BE237tNNfxCbp2vOpWZK8p0BGAWuScieTvGEe0C
-	 qcHhtEl93uRgQ==
-Date: Mon, 8 Jan 2024 18:17:34 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>,
-	Chandan Babu R <chandanrlinux@gmail.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: fix backwards logic in xfs_bmap_alloc_account
-Message-ID: <20240109021734.GB722975@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xOvgQB3Q"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=BMuH8xqFB2CDw1OpF9RGd7ucmDEytYzUuXfUGCENfkA=; b=xOvgQB3QI/2oJFqt7sx7n11gHj
+	B3m5IKzukRRhtmGzMD6XCDavbInwjFhTgYTV+4DRJIn3Lldn+nvI9+DnaCJTUph+iF+wEySIA3aP/
+	qEEsyExdsUMLcrwwhxc4Bqm/wpnZD2Vm374ZiooPVxGBUfBEi9w4pJzUwnydeQ+oSY1jxzRIjz3fg
+	GRLPiTON8XXlsF/ztFFqN/yDzZzqyvTgtVOXhiV+rbpQAFcMTKsetHbbnIATUGQ0TOHfJyBvWeXEH
+	hXbScroIKp8yQZNxaLtsR4gy53IcIYtCDRwizMPN2RVxOGMqS6rluLOPG2b+SyKwCmCtb1QE7b/rP
+	eVEwNQaA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rN3pv-006uvu-1q;
+	Tue, 09 Jan 2024 04:35:35 +0000
+Date: Mon, 8 Jan 2024 20:35:35 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/5] xfs: implement live quotacheck inode scan
+Message-ID: <ZZzNF26qgjnq5phe@infradead.org>
+References: <170404827380.1748002.1474710373694082536.stgit@frogsfrogsfrogs>
+ <170404827425.1748002.12122438465318717193.stgit@frogsfrogsfrogs>
+ <ZZeTrHqhROxcLKEA@infradead.org>
+ <20240106011650.GK361584@frogsfrogsfrogs>
+ <20240109012346.GA722975@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,28 +39,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240109012346.GA722975@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 08, 2024 at 05:23:46PM -0800, Darrick J. Wong wrote:
+> > > > +#ifdef CONFIG_XFS_QUOTA
+> > > > +void xchk_qcheck_set_corrupt(struct xfs_scrub *sc, unsigned int dqtype,
+> > > > +		xfs_dqid_t id);
+> > > > +#endif /* CONFIG_XFS_QUOTA */
+> > > 
+> > > No need for the ifdef here.
+> > 
+> > Fixed.
+> 
+> ...and reverted because I forgot to remove the #ifdef around the
+> tracepoint in that function.  I tried to fix that, and got a ton of
+> macro spew over ... something not being defined.  In the end, I decided
+> that it was better not to waste memory on !CONFIG_XFS_QUOTA and not to
+> waste time on minor things like this.
 
-We're only allocating from the realtime device if the inode is marked
-for realtime and we're /not/ allocating into the attr fork.
+Note that I only meant the ifdef on the declaration in the header, not
+for the function itself anyway, sorry.
 
-Fixes: 8a3cf489410dd ("xfs: also use xfs_bmap_btalloc_accounting for RT allocations")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_bmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ed7e11697249e..e1f2e61cb308e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3320,7 +3320,7 @@ xfs_bmap_alloc_account(
- 	struct xfs_bmalloca	*ap)
- {
- 	bool			isrt = XFS_IS_REALTIME_INODE(ap->ip) &&
--					(ap->flags & XFS_BMAPI_ATTRFORK);
-+					!(ap->flags & XFS_BMAPI_ATTRFORK);
- 	uint			fld;
- 
- 	if (ap->flags & XFS_BMAPI_COWFORK) {
