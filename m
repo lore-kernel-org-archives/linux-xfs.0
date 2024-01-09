@@ -1,31 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E88762D621;
-	Tue,  9 Jan 2024 16:57:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B9C739AC6
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2024 21:43:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qiscRoCQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F262C433F1;
-	Tue,  9 Jan 2024 16:57:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704819466;
-	bh=gWfSNeYu8d6a7kKw1IxGBi3DnQsajLl44eL2p8EemV0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qiscRoCQV9vm9XN6pvhaIEFYsvb4TG4YsPfin0Pnjm9vEpOwi3O69NaJk9gMoQaJL
-	 nnYBfO1ghvty7JrvdTq0mQltHSDEOfGyU+PyEOqyyYqDz5T+6l4iJa4BRK+x2iAM9j
-	 N4jNUaBrMV7zsSOAq4KwugtlDMZL4w1hv8yBfIJWuo67xgbtI4gWunO13GPdgx1+7Y
-	 LsWW8nR8RqP9X2HMtUYytg/ndUYOTQWkrKItIgwx4J9NyyHS2S569TngMSzaTyh4ss
-	 mFCr8OumJP6UYxwMsVQ3f1vq+ysONnDf/9UYXGjy4fVgf0TgRd+d3yzihy/nvRSX84
-	 4kW+ozXExA2Yg==
-Date: Tue, 9 Jan 2024 08:57:45 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, zlang@redhat.com
-Subject: Re: [PATCH V2 5/5] xfs: Check correctness of metadump/mdrestore's
- ability to work with dirty log
-Message-ID: <20240109165745.GF722975@frogsfrogsfrogs>
-References: <20240109102054.1668192-1-chandanbabu@kernel.org>
- <20240109102054.1668192-6-chandanbabu@kernel.org>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CAo5tay0"
+Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3bc1414b48eso3823719b6e.2
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Jan 2024 13:43:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704836615; x=1705441415; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TXBFOPWGuTkMTIAcYPL2OtqhFE6cEn7M1Pu8f/BtQzI=;
+        b=CAo5tay0B2vAjD6XBuV9t5vfTB9z/3op6srq6J+/EOSvSJ3qpfx77OLesYxbTzrV7d
+         ha4wEncOfiIOsdO4aaLkp9mUgTVf9ZsFkEvhoo8gM8GJlA9EMEI3g0eW2i9IKMUXU+bi
+         BvrmpaWUrBBJk02u1h3TZRo0VvLwbrHvN5YrmpsqL7itJkMHP2nC/y0BWNz/XAS0uYYf
+         MyIynDK2fRV7dmAUz52+aP3U4/oVRYdP/Va3Da9UpVy65dII6ie7X41KwNGgzCwpqwNG
+         TGadeW1bort94PMp2QzVusCAD5V70CBIGvt98kIM/m4b/8rYCVuXWVO7LwQkD8Ws0MWF
+         IFOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704836615; x=1705441415;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TXBFOPWGuTkMTIAcYPL2OtqhFE6cEn7M1Pu8f/BtQzI=;
+        b=GzB/LWGXIhC+pmEcJ68SCBWa6jD06m8MKQHh0KEdZZcgj+AzykNj3Vc9BAfWiYAxZS
+         Mj8UqqTQRr++Z2nHszVsZcg7na3poKQzhHJDA/FMZ93dJVbcTbPUrr+hvYqGWbcHxWct
+         KBhg3SrDQbFMS4wm9e9rQE9MpzZLkrzlHT6F2sO+sNxKOVKuUQG3FmtRXhjFwjSAQ70U
+         bSmKVNfPHGF8p5HFYorhylkv2oX7cEpGX3QY0Ug05kyw4ln2IPZF8D3txaerfU/Q6QcG
+         o0jGwPug1vQixCZCVlJMPXmI1Srj0AuvAfsB5yfF3y6LsoJ7vDL0+TNodDgsS1CyYtkJ
+         D1iw==
+X-Gm-Message-State: AOJu0YxFqB+/KlweLSwQ8z1UkbPblaty133L6BCkO7M4yOn3Fplqh2Es
+	XgbZdwu3ZoIPCQ0O37FjFCSd3kPFh0YleQ==
+X-Google-Smtp-Source: AGHT+IEpX+cO44NpxBkaVewd3DM0l9CnGkZdYcSdz7Cso7wKxV5wRZnU4TxulSSlc+qjwkyi0SW2tw==
+X-Received: by 2002:a05:6358:8829:b0:170:17eb:9c45 with SMTP id hv41-20020a056358882900b0017017eb9c45mr8314rwb.38.1704836614892;
+        Tue, 09 Jan 2024 13:43:34 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
+        by smtp.gmail.com with ESMTPSA id p10-20020a170902780a00b001d493ff1fcdsm2317737pll.120.2024.01.09.13.43.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Jan 2024 13:43:34 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rNJsh-008EyA-2o;
+	Wed, 10 Jan 2024 08:43:31 +1100
+Date: Wed, 10 Jan 2024 08:43:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
+	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
+ handlers
+Message-ID: <ZZ2+AwX3i7zze9iK@dread.disaster.area>
+References: <20231228124646.142757-1-leo.lilong@huawei.com>
+ <ZZsiHu15pAMl+7aY@dread.disaster.area>
+ <20240108122819.GA3770304@ceph-admin>
+ <ZZyH85ghaJUO3xHE@dread.disaster.area>
+ <ZZ1dtV1psURJnTOy@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,237 +67,138 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240109102054.1668192-6-chandanbabu@kernel.org>
+In-Reply-To: <ZZ1dtV1psURJnTOy@bfoster>
 
-On Tue, Jan 09, 2024 at 03:50:47PM +0530, Chandan Babu R wrote:
-> Add a new test to verify if metadump/mdrestore are able to dump and restore
-> the contents of a dirty log.
+On Tue, Jan 09, 2024 at 09:52:37AM -0500, Brian Foster wrote:
+> > 
+> > The problem we need to solve is how we preserve the necessary
+> > anti-recovery behaviour when we have multiple checkpoints that can
+> > have the same LSN and objects are updated immediately on recovery?
+> > 
+> > I suspect that we need to track that the checkpoint being recovered
+> > has a duplicate start LSN (i.e. in the struct xlog_recover) and
+> > modify the anti-recovery LSN check to take this into account. i.e.
+> > we can really only skip recovery of the first checkpoint at any
+> > given LSN because we cannot disambiguate an LSN updated by the first
+> > checkpoint at that LSN and the metadata already being up to date on
+> > disk in the second and subsequent checkpoints at the same start
+> > LSN.
+> > 
+> > There are likely to be other solutions - anyone have a different
+> > idea on how we might address this?
+> > 
 > 
-> Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-> ---
->  tests/xfs/801     | 178 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/801.out |  14 ++++
->  2 files changed, 192 insertions(+)
->  create mode 100755 tests/xfs/801
->  create mode 100644 tests/xfs/801.out
+> It's been a while since I've looked at any of this and I haven't waded
+> through all of the details, so I could easily be missing something, but
+> what exactly is wrong with the approach of the patch as posted?
+
+That it fails to address the fact that the code as implemented
+violates the "only submit buffers on LSN change" invariant. Hence we
+have silent failure to recover of the second set of changes
+to a log item  recorded in the multiple checkpoints that have the
+same start LSN.
+
+The original problem described in the commit - a shutdown due to a
+freespace btree record corruption - has been something we've seen
+semi-regularly for a few years now. We've never got to the
+bottom of the problem because we've lacked a reliable reproducer for
+the issue.
+
+The analysis and debug information provided by out by Long indicates
+that when multiple checkpoints start at the same LSN, the objects in
+the later checkpoints (based on commit record ordering) won't get
+replayed because the LSN in the object has already been updated by
+the first checkpoint. Hence they skip recovery in the second (and
+subsequent) checkpoints at the same start LSN.
+
+In a lot of these cases, the object will be logged again later in
+the recovery process, thereby overwriting the corruption caused by
+skipping a checkpointed update. Hence this will only be exposed in
+normal situations if the silent recovery failure occurs on the last
+modification of the object in the journal.
+
+This is why it's a rare failure to be seen in production systems,
+but it is something that hindsight tells us has been occurring given
+the repeated reports of unexplainable single record free space btree
+corruption we've had over the past few years.
+
+> Commit 12818d24db ("xfs: rework log recovery to submit buffers on LSN
+> boundaries") basically created a new invariant for log recovery where
+> buffers are allowed to be written only once per LSN. The risk otherwise
+> is that a subsequent update with a matching LSN would not be correctly
+> applied due to the v5 LSN ordering rules. Since log recovery processes
+> transactions (using terminology/granularity as defined by the
+> implementation of xlog_recover_commit_trans()), this required changes to
+> accommodate any of the various possible runtime logging scenarios that
+> could cause a buffer to have multiple entries in the log associated with
+> a single LSN, the details of which were orthogonal to the fix.
 > 
-> diff --git a/tests/xfs/801 b/tests/xfs/801
-> new file mode 100755
-> index 00000000..a7866ce7
-> --- /dev/null
-> +++ b/tests/xfs/801
-> @@ -0,0 +1,178 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2024 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 801
-> +#
-> +# Test metadump/mdrestore's ability to dump a dirty log and restore it
-> +# correctly.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick metadump log logprint punch
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	_scratch_unmount > /dev/null 2>&1
-> +	[[ -n $logdev && $logdev != "none" && $logdev != $SCRATCH_LOGDEV ]] && \
-> +		_destroy_loop_device $logdev
-> +	[[ -n $datadev ]] && _destroy_loop_device $datadev
-> +	rm -r -f $metadump_file $TEST_DIR/data-image \
-> +	   $TEST_DIR/log-image
-> +}
-> +
-> +# Import common functions.
-> +. ./common/dmflakey
-> +. ./common/inject
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch
-> +_require_test
-> +_require_loop
-> +_require_xfs_debug
-> +_require_xfs_io_error_injection log_item_pin
-> +_require_dm_target flakey
-> +_require_xfs_io_command "pwrite"
-> +_require_test_program "punch-alternating"
-> +
-> +metadump_file=${TEST_DIR}/${seq}.md
-> +testfile=${SCRATCH_MNT}/testfile
-> +
-> +echo "Format filesystem on scratch device"
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +
-> +max_md_version=1
-> +_scratch_metadump_v2_supported && max_md_version=2
-> +
-> +external_log=0
-> +if [[ $USE_EXTERNAL = yes && -n "$SCRATCH_LOGDEV" ]]; then
-> +	external_log=1
-> +fi
-> +
-> +if [[ $max_md_version == 1 && $external_log == 1 ]]; then
-> +	_notrun "metadump v1 does not support external log device"
-> +fi
-> +
-> +verify_metadump_v1()
-> +{
-> +	local version=""
-> +	if [[ $max_md_version == 2 ]]; then
-> +		version="-v 1"
-> +	fi
-> +
-> +	_scratch_xfs_metadump $metadump_file -a -o $version
-> +
-> +	SCRATCH_DEV=$TEST_DIR/data-image _scratch_xfs_mdrestore $metadump_file
-> +
-> +	datadev=$(_create_loop_device $TEST_DIR/data-image)
-> +
-> +	SCRATCH_DEV=$datadev _scratch_mount
-> +	SCRATCH_DEV=$datadev _check_scratch_fs
-> +	SCRATCH_DEV=$datadev _scratch_unmount
-> +
-> +	_destroy_loop_device $datadev
-> +	datadev=""
-> +	rm -f $TEST_DIR/data-image
-> +}
-> +
-> +verify_metadump_v2()
-> +{
-> +	local version="-v 2"
-> +
-> +	_scratch_xfs_metadump $metadump_file -a -o $version
-> +
-> +	# Metadump v2 files can contain contents dumped from an external log
-> +	# device. Use a temporary file to hold the log device contents restored
-> +	# from such a metadump file.
-> +	slogdev=""
-> +	if [[ -n $SCRATCH_LOGDEV ]]; then
-> +		slogdev=$TEST_DIR/log-image
+> The functional change therefore was that rather than to process and
+> submit "transactions" in sequence during recovery, the pending buffer
+> list was lifted to a higher level in the code, a tracking field was
+> added for the "current LSN" of log recovery, and only once we cross a
+> current LSN boundary are we allowed to submit the set of buffers
+> processed for the prior LSN. The reason for this logic is that seeing
+> the next LSN was really the only way we know we're done processing items
+> for a particular LSN.
 
-Why not create the loopdevs here?
+Yes, and therein lies one of the problems with the current
+implementation - this "lsn has changed" logic is incorrect.
 
-> +	fi
-> +
-> +	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
-> +		   _scratch_xfs_mdrestore $metadump_file
-> +
-> +	datadev=$(_create_loop_device $TEST_DIR/data-image)
-> +
-> +	logdev=${SCRATCH_LOGDEV}
-> +	if [[ -s $TEST_DIR/log-image ]]; then
-> +		logdev=$(_create_loop_device $TEST_DIR/log-image)
+> If I understand the problem description correctly, the issue here is
+> that if an error is encountered in the middle of processing items for
+> some LSN A, we bail out of recovery and submit the pending buffers on
+> the way out.  If we haven't completed processing all items for LSN A
+> before failing, however, then we've just possibly violated the "write
+> once per LSN" invariant that protects from corrupting the fs.
 
-if [[ -s $slogdev ]]; then
-	logdev=$(_create_loop_device $slogdev)
-fi
+The error handling and/or repeated runs of log recovery simply
+exposes the problem - these symptoms are not the problem that needs
+to be fixed.
 
-When would we have logdev == SCRATCH_LOGDEV at this point in the program?
+The issue is that the code as it stands doesn't handle object
+recovery from multiple checkpoints with the same start lsn. The
+easiest way to understand this is to look at the buffer submit logic
+on completion of a checkpoint:
 
---D
+	if (log->l_recovery_lsn != trans->r_lsn &&
+            ohead->oh_flags & XLOG_COMMIT_TRANS) {
+                error = xfs_buf_delwri_submit(buffer_list);
+                if (error)
+                        return error;
+                log->l_recovery_lsn = trans->r_lsn;
+        }
 
-> +	fi
-> +
-> +	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_mount
-> +	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _check_scratch_fs
-> +	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_unmount
-> +
-> +	if [[ -s $TEST_DIR/log-image ]]; then
-> +		_destroy_loop_device $logdev
-> +		logdev=""
-> +		rm -f $TEST_DIR/log-image
-> +	fi
-> +
-> +	_destroy_loop_device $datadev
-> +	datadev=""
-> +	rm -f $TEST_DIR/data-image
-> +}
-> +
-> +echo "Initialize and mount filesystem on flakey device"
-> +_init_flakey
-> +_load_flakey_table $FLAKEY_ALLOW_WRITES
-> +_mount_flakey
-> +
-> +echo "Create test file"
-> +$XFS_IO_PROG -s -f -c "pwrite 0 5M" $testfile >> $seqres.full
-> +
-> +echo "Punch alternative blocks of test file"
-> +$here/src/punch-alternating $testfile
-> +
-> +echo "Mount cycle the filesystem on flakey device"
-> +_unmount_flakey
-> +_mount_flakey
-> +
-> +device=$(readlink -f $FLAKEY_DEV)
-> +device=$(_short_dev $device)
-> +
-> +echo "Pin log items in the AIL"
-> +echo 1 > /sys/fs/xfs/${device}/errortag/log_item_pin
-> +
-> +echo "Create two checkpoint transactions on ondisk log"
-> +for ct in $(seq 1 2); do
-> +	offset=$($XFS_IO_PROG -c 'fiemap' $testfile | tac |  grep -v hole | \
-> +			 head -n 1 | awk -F '[\\[.]' '{ print $2 * 512; }')
-> +	$XFS_IO_PROG -c "truncate $offset" -c fsync $testfile
-> +done
-> +
-> +echo "Drop writes to filesystem from here onwards"
-> +_load_flakey_table $FLAKEY_DROP_WRITES
-> +
-> +echo "Unpin log items in AIL"
-> +echo 0 > /sys/fs/xfs/${device}/errortag/log_item_pin
-> +
-> +echo "Unmount filesystem on flakey device"
-> +_unmount_flakey
-> +
-> +echo "Clean up flakey device"
-> +_cleanup_flakey
-> +
-> +echo -n "Filesystem has a "
-> +_print_logstate
-> +
-> +echo "Create metadump file, restore it and check restored fs"
-> +
-> +if [[ $external_log == 0 ]]; then
-> +	verify_metadump_v1 $max_md_version
-> +fi
-> +
-> +if [[ $max_md_version == 2 ]]; then
-> +	verify_metadump_v2
-> +fi
-> +
-> +# Mount the fs to replay the contents from the dirty log.
-> +_scratch_mount
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/801.out b/tests/xfs/801.out
-> new file mode 100644
-> index 00000000..a2f2abca
-> --- /dev/null
-> +++ b/tests/xfs/801.out
-> @@ -0,0 +1,14 @@
-> +QA output created by 801
-> +Format filesystem on scratch device
-> +Initialize and mount filesystem on flakey device
-> +Create test file
-> +Punch alternative blocks of test file
-> +Mount cycle the filesystem on flakey device
-> +Pin log items in the AIL
-> +Create two checkpoint transactions on ondisk log
-> +Drop writes to filesystem from here onwards
-> +Unpin log items in AIL
-> +Unmount filesystem on flakey device
-> +Clean up flakey device
-> +Filesystem has a dirty log
-> +Create metadump file, restore it and check restored fs
-> -- 
-> 2.43.0
-> 
-> 
+This submits the buffer list on the first checkpoint that completes
+with a new start LSN, not when all the checkpoints with the same
+start LSN complete. i.e.:
+
+checkpoint  start LSN	commit lsn	submission on commit record
+A		32	  63		buffer list for A
+B		64	  68		buffer list for B
+C		64	  92		nothing, start lsn unchanged
+D		64	 127		nothing, start lsn unchanged
+E		128	 192		buffer list for C, D and E
+
+IOWs, the invariant "don't submit buffers until LSN changes" is not
+actually implemented correctly by this code. This is the obvious
+aspect of the problem, but addressing buffer submission doesn't
+actually fix the problem.
+
+That is, changing buffer submission to be correct doesn't address
+the fact that we've already done things like updated the LSN in
+inodes and dquots during recovery of those objects. Hence,
+regardless of whether we submit the buffers or not, changes to
+non-buffer objects in checkpoints C and D will never get recovered
+directly if they were originally modified in checkpoint B.
+
+This is the problem we need to address: if we have multiple
+checkpoints at the same start LSN, we need to ensure that all the
+changes to any object in any of the checkpoints at that start LSN
+are recovered. This is what we are not doing, and this is the root
+cause of the problem....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
