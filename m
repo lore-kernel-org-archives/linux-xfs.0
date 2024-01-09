@@ -1,27 +1,31 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2F6638DC1;
-	Tue,  9 Jan 2024 16:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 97BB368B05; Tue,  9 Jan 2024 17:02:23 +0100 (CET)
-Date: Tue, 9 Jan 2024 17:02:23 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, bvanassche@acm.org, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <20240109160223.GA7737@lst.de>
-References: <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com> <20231213154409.GA7724@lst.de> <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com> <20231219051456.GB3964019@frogsfrogsfrogs> <20231219052121.GA338@lst.de> <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com> <20231219151759.GA4468@lst.de> <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com> <20231221065031.GA25778@lst.de> <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A70238DF8;
+	Tue,  9 Jan 2024 16:49:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n3Vj2zle"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B6F1C433F1;
+	Tue,  9 Jan 2024 16:49:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704818956;
+	bh=OCj4SPP069TkrrSiOjEbo4qW5j5LESdWi6ki9koNQog=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=n3Vj2zlecc2yrJRTMQwBIwTy0SyTfZDDu1h59KwKbOM7/axvgI7oROug6yILgFUlP
+	 8AYnYD9NkLl4WLPFw6DXFFCDWTdgzxZrjHZnI5NniD3PJzSwl3c+uiUYUueSc7GGsf
+	 a4940vta6WqXXzZ94zBCQKougr0piTebvaX8yAvTGEQPIGOKF2+9cnCp9EwoRoTBdY
+	 hm93fY4vV21rYGx33LPhVsptG/HAYIzcXiyywHr/LY33jm6FQzVGBuFaX7AbhrgYgN
+	 pZ6WnkDjopL4jrHDwElp8oBNnYgoKFc3I8ddbs+dpBVdpUXG365kxTceWJzneAc57Q
+	 q1k5xhIJcVp3g==
+Date: Tue, 9 Jan 2024 08:49:15 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, zlang@redhat.com
+Subject: Re: [PATCH V2 2/5] common/xfs: Add function to detect support for
+ metadump v2
+Message-ID: <20240109164915.GE722975@frogsfrogsfrogs>
+References: <20240109102054.1668192-1-chandanbabu@kernel.org>
+ <20240109102054.1668192-3-chandanbabu@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -30,30 +34,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240109102054.1668192-3-chandanbabu@kernel.org>
 
-On Tue, Jan 09, 2024 at 09:55:24AM +0000, John Garry wrote:
-> So a user can issue:
->
-> >xfs_io -c "atomic-writes 64K" mnt/file
-> >xfs_io -c "atomic-writes" mnt/file
-> [65536] mnt/file
+On Tue, Jan 09, 2024 at 03:50:44PM +0530, Chandan Babu R wrote:
+> This commit defines a new function to help detect support for metadump v2.
+> 
+> Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+> ---
+>  common/xfs | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 38094828..fc744489 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -698,6 +698,12 @@ _xfs_mdrestore() {
+>  	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
+>  }
+>  
+> +_scratch_metadump_v2_supported()
 
-Let me try to decipher that:
+/me wonders if the "_scratch" prefix is really warranted here since
+metadump v2 support is a property of the tool, not the scratch fs.
+OTOH xfs_db won't give you subcommand help without passing in a
+filesystem and we probably don't want to force-feed it $TEST_DEV so
+if zorro doesn't have any objections,
 
- - the first call sets a 64k fsx_atomicwrites_size size
- - the secon call queries fsx_atomicwrites_size?
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> The user will still have to issue statx to get the actual atomic write 
-> limit for a file, as 'xfs_io -c "atomic-writes"' does not take into account 
-> any HW/linux block layer atomic write limits.
+--D
 
-So will the set side never fail?
-
-> Is this the sort of userspace API which you would like to see?
-
-What I had in mind (and that's doesn't mean it's right..) was that
-the user just sets a binary flag, and the fs reports the best it
-could.  But there might be reasons to do it differently.
-
+> +{
+> +	$XFS_DB_PROG -c "help metadump" $SCRATCH_DEV | \
+> +		grep -q "Metadump version to be used"
+> +}
+> +
+>  # Snapshot the metadata on the scratch device
+>  _scratch_xfs_metadump()
+>  {
+> -- 
+> 2.43.0
+> 
+> 
