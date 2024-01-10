@@ -1,66 +1,80 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286CD4D106;
-	Wed, 10 Jan 2024 17:45:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F414D58F
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2024 17:47:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DgTA/Fvl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=8F54mSZB6KqJBeKTxONc90pk45yQAknFDeRqNyNuM9w=; b=DgTA/Fvl6QPj8Xhzjl5usrcpS7
-	zOjPUQ/NKBtaTdgzrXEk4pdqo0pnbQxsLSX+TEOjxhBPqpNU9RXF+1XL0r9ReQ2AdkVOspbSiegsh
-	HP6DvZHKtON231Lojb7XAtF5OuFbI8eDy0Y2XLHy//FTwR/wJO2gwVh0Wx7rw+gNdOEF6owzJX9A6
-	qF7yyRaFRu0ohNxfS3+lvNLJMBS7eWak79a5HU114PYamZWLNQZJr+VwLM0jaYBXgMKTePc1BcnW9
-	WbHK493jP75p72a2nkp52fsXkgpD6lNidOYXk1mTYoQRxbAPAzz59ObL2kFZ/OTFW8puhpFglKUVo
-	L26xkrSA==;
-Received: from [2001:4bb8:191:2f6b:6c64:f589:bc06:1618] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rNceD-00DFZq-1N;
-	Wed, 10 Jan 2024 17:45:49 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: zlang@redhat.com
-Cc: djwong@kernel.org,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs/262: call _supports_xfs_scrub
-Date: Wed, 10 Jan 2024 18:45:44 +0100
-Message-Id: <20240110174544.2007727-1-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="umkNv26O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B1A4C433C7;
+	Wed, 10 Jan 2024 17:47:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704908843;
+	bh=rarbayFg4ojRToz3K39LuGUIqO/ygiazw93J+JF5IJU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=umkNv26OZoy9MEPQ5cZejSyiv/KywoLB0+k8gW2caw2QnbukkM89V5opgI0qwnBiq
+	 uLHbf+B+uFqTckoubfenJ/37Va9Uu5GSDPozqOA1LSw+RxpRg592afB0oXwgnQprjj
+	 lsW+x+6ago6BDNPmYeiinyoUA2QzQGRU4xS9R/D1LS7qHkVRqyVr/h/syiuaUuhHB2
+	 4/wgNKMw/MIuKuY7ow/3LK5bCittpK8F+np92FYdPuVzlxoQs3shMmqpf9uqyaGO5k
+	 3reoEG790VBSEb+6QqsfHW22TKYshDnxA8Qpp7PBf8ZmktAv6OdeH5SxZaBH1zYk0N
+	 SJqNhFxn4jkaw==
+Date: Wed, 10 Jan 2024 09:47:23 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Chandan Babu R <chandanrlinux@gmail.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix backwards logic in xfs_bmap_alloc_account
+Message-ID: <20240110174723.GI722975@frogsfrogsfrogs>
+References: <20240109021734.GB722975@frogsfrogsfrogs>
+ <87cyu9ijfc.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87cyu9ijfc.fsf@debian-BULLSEYE-live-builder-AMD64>
 
-Call _supports_xfs_scrub so that the test is _notrun on kernels
-without online scrub support.
+On Wed, Jan 10, 2024 at 03:41:32PM +0530, Chandan Babu R wrote:
+> On Mon, Jan 08, 2024 at 06:17:34 PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > We're only allocating from the realtime device if the inode is marked
+> > for realtime and we're /not/ allocating into the attr fork.
+> >
+> > Fixes: 8a3cf489410dd ("xfs: also use xfs_bmap_btalloc_accounting for RT allocations")
+> 
+> The commit ID should be 58643460546d
+> (https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?id=58643460546da1dc61593fc6fd78762798b4534f)
+> right?
+> 
+> If yes, I will fix it before pushing it for-next.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/262 | 3 +++
- 1 file changed, 3 insertions(+)
+Yes.  Apparently I ran git blame on the wrong branch. :(
 
-diff --git a/tests/xfs/262 b/tests/xfs/262
-index b28a6c88b..6df3c79f3 100755
---- a/tests/xfs/262
-+++ b/tests/xfs/262
-@@ -29,6 +29,9 @@ _require_xfs_io_error_injection "force_repair"
- echo "Format and populate"
- _scratch_mkfs > "$seqres.full" 2>&1
- _scratch_mount
-+
-+_supports_xfs_scrub $SCRATCH_MNT $SCRATCH_DEV || _notrun "Scrub not supported"
-+
- cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
- $LDD_PROG $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
- 	cp $lib $SCRATCH_MNT/
--- 
-2.39.2
+--D
 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index ed7e11697249e..e1f2e61cb308e 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -3320,7 +3320,7 @@ xfs_bmap_alloc_account(
+> >  	struct xfs_bmalloca	*ap)
+> >  {
+> >  	bool			isrt = XFS_IS_REALTIME_INODE(ap->ip) &&
+> > -					(ap->flags & XFS_BMAPI_ATTRFORK);
+> > +					!(ap->flags & XFS_BMAPI_ATTRFORK);
+> >  	uint			fld;
+> >  
+> >  	if (ap->flags & XFS_BMAPI_COWFORK) {
+> 
+> -- 
+> Chandan
+> 
