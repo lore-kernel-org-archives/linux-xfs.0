@@ -1,32 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F414D58F
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2024 17:47:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C829495C1;
+	Wed, 10 Jan 2024 17:49:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="umkNv26O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B1A4C433C7;
-	Wed, 10 Jan 2024 17:47:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Od6OjdFA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E647C433C7;
+	Wed, 10 Jan 2024 17:49:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704908843;
-	bh=rarbayFg4ojRToz3K39LuGUIqO/ygiazw93J+JF5IJU=;
+	s=k20201202; t=1704908974;
+	bh=8pdu4G+sxd/WYGBpfT1RJU2CDbMNbaFV/xtZR4KrAxU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=umkNv26OZoy9MEPQ5cZejSyiv/KywoLB0+k8gW2caw2QnbukkM89V5opgI0qwnBiq
-	 uLHbf+B+uFqTckoubfenJ/37Va9Uu5GSDPozqOA1LSw+RxpRg592afB0oXwgnQprjj
-	 lsW+x+6ago6BDNPmYeiinyoUA2QzQGRU4xS9R/D1LS7qHkVRqyVr/h/syiuaUuhHB2
-	 4/wgNKMw/MIuKuY7ow/3LK5bCittpK8F+np92FYdPuVzlxoQs3shMmqpf9uqyaGO5k
-	 3reoEG790VBSEb+6QqsfHW22TKYshDnxA8Qpp7PBf8ZmktAv6OdeH5SxZaBH1zYk0N
-	 SJqNhFxn4jkaw==
-Date: Wed, 10 Jan 2024 09:47:23 -0800
+	b=Od6OjdFATDbeth+zcTLl2vAOnTNSyBkryne2VtISqHX3eZK0vabs0ki1Pw8Y/PwQf
+	 Aw8wXKV1z78hZ70PJDb0NMtjBo/hQmxTeudGUUVR9K3/BxIAdT3vwbyhvvKuP3aL+v
+	 3Gkqjs5lXEKpa6zYwGG3bPUYulIHjTgJ3GZ0UNd4cIA/MZMJCaPHoab+SeFbUG70c1
+	 bCiAvMWogojWT5wX/mDSeAzXFpQlXLCHIz5Lt7NS661GV/02dAEbPF4aBHMdOIJAmC
+	 wisOIBuTh4M0O7SzRMz3moFE36lhZTmGZ+bDOF0exm1BQcvUZQheK5NMy3n5ZCG+GH
+	 1xVOxziZVG3nQ==
+Date: Wed, 10 Jan 2024 09:49:33 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Chandan Babu R <chandanrlinux@gmail.com>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix backwards logic in xfs_bmap_alloc_account
-Message-ID: <20240110174723.GI722975@frogsfrogsfrogs>
-References: <20240109021734.GB722975@frogsfrogsfrogs>
- <87cyu9ijfc.fsf@debian-BULLSEYE-live-builder-AMD64>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/262: call _supports_xfs_scrub
+Message-ID: <20240110174933.GJ722975@frogsfrogsfrogs>
+References: <20240110174544.2007727-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,46 +32,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87cyu9ijfc.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <20240110174544.2007727-1-hch@lst.de>
 
-On Wed, Jan 10, 2024 at 03:41:32PM +0530, Chandan Babu R wrote:
-> On Mon, Jan 08, 2024 at 06:17:34 PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > We're only allocating from the realtime device if the inode is marked
-> > for realtime and we're /not/ allocating into the attr fork.
-> >
-> > Fixes: 8a3cf489410dd ("xfs: also use xfs_bmap_btalloc_accounting for RT allocations")
+On Wed, Jan 10, 2024 at 06:45:44PM +0100, Christoph Hellwig wrote:
+> Call _supports_xfs_scrub so that the test is _notrun on kernels
+> without online scrub support.
 > 
-> The commit ID should be 58643460546d
-> (https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?id=58643460546da1dc61593fc6fd78762798b4534f)
-> right?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/xfs/262 | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> If yes, I will fix it before pushing it for-next.
+> diff --git a/tests/xfs/262 b/tests/xfs/262
+> index b28a6c88b..6df3c79f3 100755
+> --- a/tests/xfs/262
+> +++ b/tests/xfs/262
+> @@ -29,6 +29,9 @@ _require_xfs_io_error_injection "force_repair"
+>  echo "Format and populate"
+>  _scratch_mkfs > "$seqres.full" 2>&1
+>  _scratch_mount
+> +
+> +_supports_xfs_scrub $SCRATCH_MNT $SCRATCH_DEV || _notrun "Scrub not supported"
 
-Yes.  Apparently I ran git blame on the wrong branch. :(
+Can you refactor this into a common _scratch_require_xfs_scrub helper
+for xfs/556 and xfs/716?
+
+The patch itself looks sound.
 
 --D
 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index ed7e11697249e..e1f2e61cb308e 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3320,7 +3320,7 @@ xfs_bmap_alloc_account(
-> >  	struct xfs_bmalloca	*ap)
-> >  {
-> >  	bool			isrt = XFS_IS_REALTIME_INODE(ap->ip) &&
-> > -					(ap->flags & XFS_BMAPI_ATTRFORK);
-> > +					!(ap->flags & XFS_BMAPI_ATTRFORK);
-> >  	uint			fld;
-> >  
-> >  	if (ap->flags & XFS_BMAPI_COWFORK) {
-> 
+> +
+>  cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
+>  $LDD_PROG $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
+>  	cp $lib $SCRATCH_MNT/
 > -- 
-> Chandan
+> 2.39.2
+> 
 > 
