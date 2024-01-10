@@ -1,226 +1,269 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 186886D6FA
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2024 08:35:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4T91M55srWzGpqm;
-	Wed, 10 Jan 2024 16:34:57 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 6C08518001C;
-	Wed, 10 Jan 2024 16:35:14 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Wed, 10 Jan
- 2024 16:35:13 +0800
-Date: Wed, 10 Jan 2024 16:38:08 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Brian Foster <bfoster@redhat.com>
-CC: <djwong@kernel.org>, <chandanbabu@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
-	<yangerkun@huawei.com>, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
- handlers
-Message-ID: <20240110083808.GA2075885@ceph-admin>
-References: <20231228124646.142757-1-leo.lilong@huawei.com>
- <ZZsiHu15pAMl+7aY@dread.disaster.area>
- <20240108122819.GA3770304@ceph-admin>
- <ZZyH85ghaJUO3xHE@dread.disaster.area>
- <ZZ1dtV1psURJnTOy@bfoster>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 840B1CA4A;
+	Wed, 10 Jan 2024 08:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B+KLrwdo";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="akMR8jFB"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40A8qV0F026163;
+	Wed, 10 Jan 2024 08:55:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=D/oV1V5CqZfxaNSGprerwuhAQb5jgee+fzydaJceHvA=;
+ b=B+KLrwdoyeRuQBI62T8hUYcbAybM4JHlpu0Wz7iiicKo/7PjUTzk59Gbvus59GzzJBxP
+ Morj2Bv4PY2ypd6melY8qR3PloS0ewBZXDvsJSWdM/+yW15/2EB1q3X53TeqGkgTYZ85
+ mfiRUyDycKD6NSCiLpt4+eTfE2KZrCG0/oLwZDU6yaSux8L/GszU1SbxxMOB3lSyFGqX
+ gg8buXsbEXu9JpN6SAdd9gzd61wKwnZMgRxIH95E3gugdOOfgudsBKYMeqSsPoLDd8kf
+ rgd642G7y191x+K3WrEdxh95vl+uKR4PVY4Ht/PEyc/+9wFIkN7ec6QUXsiHhDBKpfyw AA== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vhr3wg05f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 10 Jan 2024 08:55:20 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40A715uD012275;
+	Wed, 10 Jan 2024 08:55:15 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3vfuwj2ph5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 10 Jan 2024 08:55:15 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Zbk/iLBVsO7sI1x2PfK/uT8fv0NRXQDuL8QoTx8k/gQ+It4zO0VQKHVs4B0EUb1qHePq1euI30BT/QwVv6EmEStLQKUIHn9/bq4VXVZfbVYXly2bdNINw+0R7TKbbKnuIgLinDREkhjCHWmjFpmVih520EJKZ+rm9pDJmiBHNjAzk+GXHGQMQr/R9u+zWNJe7B9gUWDxWAiKxXcsQSs1xo4dkv5fX6M8v4aJylqsSw/VwJNNVo3PqQA3xR+fWtkAS9NT2Jzotu5ZGv8grudQf0uTCq81ri+qa6zK/k3UnvrSPOXpm8SIiYwUuIU5diLm/W2xb4NWPrqMUPGcXsL5Xw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=D/oV1V5CqZfxaNSGprerwuhAQb5jgee+fzydaJceHvA=;
+ b=ZCgSNuHaM5Z9qvsQgjsBa8lU7Z1DSQeb9DaiCbWCk50XzW0+81KdOF1iF/vN0TSdLVHOQGPLuxqdPMwOoy+2dLx9B6QSoqXCwmzxheE6h+0+zRc03hEtbNKIz98uwuPwZzLiLMkG8xk+hMl1q9/DixT56Xt5+R9WbtDfB9Zka7PrTCSmNdDjRCoR5UI9/26+2GZezA9zMfQXRlr4UK/vaGeJkLRPgDI7xmRarpDjrfLDjXhS/UkQmWH1QwQqP8j/1v+oLCkMcrZ4ro6Lzcc3pu2Yd5k0ZEaG7JzYYl5kL6GgZHo8+7NopeyN3HDTd5LyXB3jTBHOW/2OOAkeolmx0g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=D/oV1V5CqZfxaNSGprerwuhAQb5jgee+fzydaJceHvA=;
+ b=akMR8jFBW2mjInrK+JiOMT6NqWaAh7/jcWu1PRcdNaargjqq8r7gz+Sirb6sJER/AUmDiQWKjLj82FG4LwxEkkjg0iHOtKfSFvpGrGduO/mNf+zQpr1z1V/DKk75mID76O1+oENCUm7XeYvjGE9dcr2BYqNtGcyI4TOZLEsdhS0=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by SJ2PR10MB6992.namprd10.prod.outlook.com (2603:10b6:a03:4ce::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7159.21; Wed, 10 Jan
+ 2024 08:55:12 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::5d80:6614:f988:172a]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::5d80:6614:f988:172a%4]) with mapi id 15.20.7181.015; Wed, 10 Jan 2024
+ 08:55:12 +0000
+Message-ID: <aaa33b4f-dea7-4596-82ce-8c7e6cdaa6ef@oracle.com>
+Date: Wed, 10 Jan 2024 08:55:06 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/16] block atomic writes
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+        axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+        jack@suse.cz, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+        ming.lei@redhat.com, bvanassche@acm.org, ojaswin@linux.ibm.com
+References: <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
+ <20231213154409.GA7724@lst.de>
+ <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
+ <20231219051456.GB3964019@frogsfrogsfrogs> <20231219052121.GA338@lst.de>
+ <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com>
+ <20231219151759.GA4468@lst.de>
+ <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
+ <20231221065031.GA25778@lst.de>
+ <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+ <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: LO3P265CA0019.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:387::18) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <ZZ1dtV1psURJnTOy@bfoster>
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500009.china.huawei.com (7.221.188.199)
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SJ2PR10MB6992:EE_
+X-MS-Office365-Filtering-Correlation-Id: a9e378bf-63f3-4550-4db7-08dc11b9dafd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	aJiPN11Qbv4U14S61fQuIwT2KvsSx6X8r65b/18sDra8Cbm6mEgJut8qOEirqRCM1GQ1ypfCbvPMEsdpGmb810TZ35L+b12pbPHlnrw/IpF0Gn5MkfohAv57PQXm4qpJuEI89eAyThx9uqQyPy5YNlGgEJfa9ja43+ddMi9fUL5oeFuSXgNDooeOYk0p2i6KCNwHvGdTzRbb6jXkERl9uMpfT+SSCrgOWyDGgbwZj7RkufB+9ofJfRBQzA5P1ObIF+hvX93OmgbMRzLCFJl3SS6vdkWY6lP+cf3Z9J2UWxiBpWlgE/5kiRAxnu7NXCHv+9Q66neQwQN9pUcNpfUJH0GNOWAkBe5OaNxZJdikJlQUNGoIIjt3vLi2tejU+3wgWLbr84yeXlOpicLqOVCtmwFkVpXuVGNnVTN/dNjYQ0xhsad3+AjtNMVIaORqfLiqOQydM9Li6qQxiglhCvZr1IvQM8q536e9yhAKWj4ijTS7jKOACdB8NNYa5US9mhmfx1FgAqjx4zw8aiE0jd0aBmludl0/kK5yckgyVG78DhIWwp4+yICrGK7Jg6uFZsJCF6zcksfDA+ELgKYaracp5kanr1qmea3MhgXOPL57XzGVY2+0lbqBlCvNPdjTcNO/mo5Q3SsSYg7jZw0cF0KJrg==
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(366004)(376002)(39860400002)(346002)(230922051799003)(451199024)(1800799012)(64100799003)(186009)(7416002)(5660300002)(66946007)(2906002)(41300700001)(38100700002)(6486002)(36756003)(53546011)(86362001)(83380400001)(6512007)(31696002)(36916002)(6666004)(6506007)(66476007)(26005)(478600001)(66556008)(8676002)(316002)(6916009)(2616005)(8936002)(4326008)(54906003)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?UE1YTllvejBkOElaazJKa3RTNGl0K01uTzRpbC93ZWN4cXpOOU93Tk40VG9t?=
+ =?utf-8?B?T0hVdzVueVNUMG4wMlQ4c1ZWZWtIaGtJT1F1SURTQjE3aHZWMDdnbmkvNUtX?=
+ =?utf-8?B?L2tRZGlKMThkbnFUWlZtOTFqYzM2MXFlR09TdklWcTd3WEFHc2VNRXorc3VG?=
+ =?utf-8?B?b3hFbkVyNENudXVvSzF0ZWVuUlJRRUsxVlVJL0hINEFTdzhDMUc1azBwWTQ5?=
+ =?utf-8?B?eWtCMXRVcmNkTzlWVXpVVTlOcmUvRm9DelJEWmE0OEdQZWFmWEtpMGZYYzBU?=
+ =?utf-8?B?UUlQcXhYbGloQmgrOTltZkZNZnBXTFhCdzZYdHlwNklJbzQ4T1B3VlpuM0FT?=
+ =?utf-8?B?dk9zTkJRTlFuaGJnY2huWnF2dHE2R2p0ZCtPa1VqQmpNYnFJTkQ3OUwyUVNB?=
+ =?utf-8?B?akRzdHh0ZHIzWk50OHlMU3BSdytMWnZ4eWkxYWVzc29MRmwyUncvRDgyOU5p?=
+ =?utf-8?B?SHYvMU84OEZCajlxL2hiN3d0Z296YW1Uck1mTnNJbGhMWDVnbHN3d1VlZWZB?=
+ =?utf-8?B?OHd2SFB0NVpySjRrMldqbTdrdWEybWFTVXBXalhXYmxFV0xlNmJ3MTA0dE52?=
+ =?utf-8?B?UXErTGtVK2ZNUnlnQjIrWFVQNFV6VkR0M0dpV3plNDYvdkdvT20wOUZJY3pB?=
+ =?utf-8?B?QWwyd251OHhNRFNRakdzTWFoSmM3MkVyalRMVXg3TlJ4Y3VadUVZZ29ENkt4?=
+ =?utf-8?B?ZEhCRkl0NEhuUk1UM1pIVXFpZVkxRnB3ekw1MjZzWmtTSmRsME9jdEJOcEk5?=
+ =?utf-8?B?Q0gycytpTDBDR2kyWEo2YTVJS1kwZ1hOLzYrUForT0JaajFzTXdrV3dBVmhM?=
+ =?utf-8?B?S05SYkRtNFRHOTNTeGlKTllUVjlIcFh1bzlVR2VCdUxnUjNESWw1TjdJUC9a?=
+ =?utf-8?B?eXN4MzlLZTRQeEhJdDI5dkdGb2tIdWNVWTF1b1dzZFZ3NFR0dDIxN3hNN1J6?=
+ =?utf-8?B?TlpEd2JYY3pPZ0JFaUVxcHp5b0FFeWNDUm5wQjA4OFF1L203dzFKYmxhaXlR?=
+ =?utf-8?B?Z0VBOVZLTEpmM3J5OXV1OTJTazhFdWRMVWxEQmk0K2V6MG1Tc3ZSR0tsRTdu?=
+ =?utf-8?B?azFwSGNETk5wQmdxTUJwR2Q4SWtPWkhpbnQza3hyTmo0UWZwTVlqSUluLzh3?=
+ =?utf-8?B?eTg0L2FuVGdmZGI4S1hacDV5ZGw0aUxyQklCRHdLRTNRam1FSm96bUdzNHdt?=
+ =?utf-8?B?VWY0aXJMbXFRNDFSb2krKzM0V0ZtZ1Zwb1pWakE4ZUxJaUdzWUhUQ3FxSEdD?=
+ =?utf-8?B?VkVicGpMdUVnTjBFd00rTVphQVlYZWpBeU03V21sUklTeVNWMFpGSFJML0RK?=
+ =?utf-8?B?TUR2YjNvbkt0Mit0L0FYd2ptb01wejk5OUV1QzBHbVQ2a09yT3p1dUpnZG0r?=
+ =?utf-8?B?ZUJ0UWJnYk5zd3lUSm5CeStWZGtCdUh3RU1wTU5Pb0x2N2NFVjZoNTlkTTBz?=
+ =?utf-8?B?TGpWMWg0dEJscVRGVkVWdlE2UXA4aG00ZmxFUlVhUGVCNE9WTi96WGlZV3lE?=
+ =?utf-8?B?TzVyWWxMalJWVlA2N01uY3FLc2JDdTVGWjhuRkdXZ1FPTHBmbFhIUGJ0ZUY5?=
+ =?utf-8?B?bE1malZ1cWlwa1FsL2lGVUFwOUI3dDZ1c243dHo4U2M2ZHc1RVdKdjNHVi9k?=
+ =?utf-8?B?ZkhqNTgxd2hYNUZjd0J2S0ZrUE9WNThSZUJ3dmNQcC9mSFpiWVpPUXZ5SzI5?=
+ =?utf-8?B?b25ObmwzSkRscXd4Z3g5aDBFY1lSQ0hmZm1xK1dOWFg3ajZEMVNmVWh5WTRD?=
+ =?utf-8?B?RnNSbFJQUkV0cW15TlRxVXR2bEFWcFI4QmEyWEJkRDRITFFLaDNXa0ZFTjFX?=
+ =?utf-8?B?MmV5Ry90U1ludmxJNGVCRmxQOExxUElJVzY3SmNyUGIySlk5a2pjR3hoM1Zn?=
+ =?utf-8?B?T045dGJycUJwaVJFOThNRnBsQ3lMUU5zVlRBMHVuM1RuQXFwc1ExTXdWb01P?=
+ =?utf-8?B?OW83b0JGOWRKQjMwQ0h0MUhmQTVvTXVKdWJWK2U5WHBKbWRJbStSNDJnQU1v?=
+ =?utf-8?B?UFFVYnM4ZXE4WVNCdUtaOHFWdzlBNlozanJFRU5iMXE0ZlE4YUY5SEEvVzkr?=
+ =?utf-8?B?eEJ5QjVHM3JjT0g5OFF5NmVEamlWMWEvZXZ3VGs5enR2ZDA3NUVXTVVjYUVt?=
+ =?utf-8?B?WlA3VytUVGxGbXBWSUc1TDgzK29sWDlvV3VtZGxWMGxFbWNZdWUyQ3hWVHp1?=
+ =?utf-8?B?K3c9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	8YDyxOM9CdeyP0y3+lVViOeu1KnfQl6NoqUPr8CH0sJ9pmG+IubBcANb+ZnpHFU1rM59F7NjsHLZzQeLi94Ygg7t5FD/J+T0MwNKDlouRoY5Rh31LMcbvxTV3As4/nXwLFRGzeHWjVU65rXf0+ikQC/ZRknpobYPfqlrHLCNCWhYcAb1Y8bK1BC2arRvvwfrnhjVHFy6QyyvrHtvSG4y2rkNzUSLHIXVVf3KNOxaWBMM5w8u+gJsSwnfYja5WQD3tIEza2oiv4LTEjY0XYB3vrtPryE8U3/yD7XsHhsrD5T3FN5TiM4YtGeorea+HfCUkaDWETuqq96mtryhx3Pa+cj9I1zDPhCQZ3FcTHlIElsPJ/j/hSC7JNmQOnWzMn6MJmo9wYg7AohVbCwRfhG+beMxQQ0dl803r8i7KSVF3B7EgHO+62qMNHsgEQCdH5gMTkySpQIM2ZJkMhgZqqzeKzjua9jAjVbdwV2Tpq8hN+teQh8vA6bKxRoxE3NAAMPdwlBXmvKol+hPAANw375GDVfvcAL9iZ0UHhwMRnFrEMxLLbLoXvJ4oOJ3uuvgGiYwZEP60pCxJG+/65vq/yNsa0mfP1IsbJTRRREnGNcKJic=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a9e378bf-63f3-4550-4db7-08dc11b9dafd
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jan 2024 08:55:12.3023
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: HOS6gHbBqaCjhW8KJRaJ1LqpBg1atkwy1F2d+73qALXnC5RJUvJZhMpICQ6eIeDv/A1Z53Yk/sk9ZSI8KIzLwg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR10MB6992
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-10_02,2024-01-09_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
+ mlxlogscore=999 adultscore=0 spamscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2401100072
+X-Proofpoint-GUID: HweSHLUbVkVvX-qJ7P4uZFxvEWpgBhrE
+X-Proofpoint-ORIG-GUID: HweSHLUbVkVvX-qJ7P4uZFxvEWpgBhrE
 
-On Tue, Jan 09, 2024 at 09:52:37AM -0500, Brian Foster wrote:
-> > > > > After commit 12818d24db8a ("xfs: rework log recovery to submit buffers on
-> > > > > LSN boundaries") was introduced, we submit buffers on lsn boundaries during
-> > > > > log recovery. 
-> > > > 
-> > > > Correct - we submit all the changes in a checkpoint for submission
-> > > > before we start recovering the next checkpoint. That's because
-> > > > checkpoints are supposed to be atomic units of change moving the
-> > > > on-disk state from one change set to the next.
-> > > 
-> > > Submit buffer on LSN boundaries not means submit buffer on checkpoint
-> > > boundaries during recovery. In my understanding, One transaction on disk
-> > > corresponds to a checkpoint, there's maybe multiple transaction on disk
-> > > share same LSN, so sometimes we should ensure that submit multiple
-> > > transation one time in such case.  This rule was introduced by commit
-> > > 12818d24db8a ("xfs: rework log recovery to submit buffers on LSN boundaries")
-> > 
-> > Well, yes, that's exactly the situation that commit 12818d24db8a was
-> > intended to handle:
-> > 
-> >     "If independent transactions share an LSN and both modify the
-> >     same buffer, log recovery can incorrectly skip updates and leave
-> >     the filesystem in an inconsisent state."
-> > 
-> > Unfortunately, we didn't take into account the complexity of
-> > mutliple transactions sharing the same start LSN in commit
-> > 12818d24db8a ("xfs: rework log recovery to submit buffers on LSN
-> > boundaries") back in 2016.
-> > 
-> > Indeed, we didn't even know that there was a reliance on strict
-> > start record LSN ordering in journal recovery until 2021:
-> > 
-> > commit 68a74dcae6737c27b524b680e070fe41f0cad43a
-> > Author: Dave Chinner <dchinner@redhat.com>
-> > Date:   Tue Aug 10 18:00:44 2021 -0700
-> > 
-> >     xfs: order CIL checkpoint start records
-> >     
-> >     Because log recovery depends on strictly ordered start records as
-> >     well as strictly ordered commit records.
-> >     
-> >     This is a zero day bug in the way XFS writes pipelined transactions
-> >     to the journal which is exposed by fixing the zero day bug that
-> >     prevents the CIL from pipelining checkpoints. This re-introduces
-> >     explicit concurrent commits back into the on-disk journal and hence
-> >     out of order start records.
-> >     
-> >     The XFS journal commit code has never ordered start records and we
-> >     have relied on strict commit record ordering for correct recovery
-> >     ordering of concurrently written transactions. Unfortunately, root
-> >     cause analysis uncovered the fact that log recovery uses the LSN of
-> >     the start record for transaction commit processing. Hence, whilst
-> >     the commits are processed in strict order by recovery, the LSNs
-> >     associated with the commits can be out of order and so recovery may
-> >     stamp incorrect LSNs into objects and/or misorder intents in the AIL
-> >     for later processing. This can result in log recovery failures
-> >     and/or on disk corruption, sometimes silent.
-> >     
-> >     Because this is a long standing log recovery issue, we can't just
-> >     fix log recovery and call it good. This still leaves older kernels
-> >     susceptible to recovery failures and corruption when replaying a log
-> >     from a kernel that pipelines checkpoints. There is also the issue
-> >     that in-memory ordering for AIL pushing and data integrity
-> >     operations are based on checkpoint start LSNs, and if the start LSN
-> >     is incorrect in the journal, it is also incorrect in memory.
-> >     
-> >     Hence there's really only one choice for fixing this zero-day bug:
-> >     we need to strictly order checkpoint start records in ascending
-> >     sequence order in the log, the same way we already strictly order
-> >     commit records.
-> >     
-> >     Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> >     Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> >     Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Essentially, the problem now is that even with strictly ordered
-> > start records for checkpoints, checkpoints with the same start LSN
-> > interfere with each other in recovery because recovery is not
-> > aware of the fact that we can have multiple checkpoints that start
-> > with the same LSN.
-> > 
-> > This is another zero-day issue with the journal and log recovery;
-> > originally there was no "anti-recovery" logic in the journal like we
-> > have now with LSNs to prevent recovery from taking metadata state
-> > backwards.  Hence log recovery just always replayed every change
-> > that was in the journal from start to finish and so there was never
-> > a problem with having multiple start records in the same log record.
-> > 
-> > However, this was known to cause problems with inodes and data vs
-> > metadata sequencing and non-transactional inode metadata updates
-> > (e.g. inode size), so a "flush iteration" counter was added to
-> > inodes in 2003:
-> > 
-> > commit 6ed3d868e47470a301b49f1e8626972791206f50
-> > Author: Steve Lord <lord@sgi.com>
-> > Date:   Wed Aug 6 21:17:05 2003 +0000
-> > 
-> >     Add versioning to the on disk inode which we increment on each
-> >     flush call. This is used during recovery to avoid replaying an
-> >     older copy of the inode from the log. We can do this without
-> >     versioning the filesystem as the pad space we borrowed was
-> >     always zero and will be ignored by old kernels.
-> >     During recovery, do not replay an inode log record which is older
-> >     than the on disk copy. Check for wrapping in the counter.
-> > 
-> > This was never fully reliable, and there was always issues with
-> > this counter because inode changes weren't always journalled nor
-> > were cache flushes used to ensure unlogged inode metadata updates
-> > reached stable storage.
-> > 
-> > The LSN sequencing was added to the v5 format to ensure metadata
-> > never goes backwards in time on disk without fail. The issue you've
-> > uncovered shows that we still have issues stemming from the
-> > original journal recovery algorithm that was not designed with
-> > anti-recovery protections in mind from the start.
-> > 
-> > The problem we need to solve is how we preserve the necessary
-> > anti-recovery behaviour when we have multiple checkpoints that can
-> > have the same LSN and objects are updated immediately on recovery?
-> > 
-> > I suspect that we need to track that the checkpoint being recovered
-> > has a duplicate start LSN (i.e. in the struct xlog_recover) and
-> > modify the anti-recovery LSN check to take this into account. i.e.
-> > we can really only skip recovery of the first checkpoint at any
-> > given LSN because we cannot disambiguate an LSN updated by the first
-> > checkpoint at that LSN and the metadata already being up to date on
-> > disk in the second and subsequent checkpoints at the same start
-> > LSN.
-> > 
-> > There are likely to be other solutions - anyone have a different
-> > idea on how we might address this?
-> > 
-> 
-> It's been a while since I've looked at any of this and I haven't waded
-> through all of the details, so I could easily be missing something, but
-> what exactly is wrong with the approach of the patch as posted?
-> 
-> Commit 12818d24db ("xfs: rework log recovery to submit buffers on LSN
-> boundaries") basically created a new invariant for log recovery where
-> buffers are allowed to be written only once per LSN. The risk otherwise
-> is that a subsequent update with a matching LSN would not be correctly
-> applied due to the v5 LSN ordering rules. Since log recovery processes
-> transactions (using terminology/granularity as defined by the
-> implementation of xlog_recover_commit_trans()), this required changes to
-> accommodate any of the various possible runtime logging scenarios that
-> could cause a buffer to have multiple entries in the log associated with
-> a single LSN, the details of which were orthogonal to the fix.
-> 
-> The functional change therefore was that rather than to process and
-> submit "transactions" in sequence during recovery, the pending buffer
-> list was lifted to a higher level in the code, a tracking field was
-> added for the "current LSN" of log recovery, and only once we cross a
-> current LSN boundary are we allowed to submit the set of buffers
-> processed for the prior LSN. The reason for this logic is that seeing
-> the next LSN was really the only way we know we're done processing items
-> for a particular LSN.
-> 
-> If I understand the problem description correctly, the issue here is
-> that if an error is encountered in the middle of processing items for
-> some LSN A, we bail out of recovery and submit the pending buffers on
-> the way out. If we haven't completed processing all items for LSN A
-> before failing, however, then we've just possibly violated the "write
-> once per LSN" invariant that protects from corrupting the fs. This is
-> because the writeback permanently updates metadata LSNs (assuming that
-> I/O doesn't fail), which means if recovery retries from the same point
-> the next time around and progresses to find a second instance of an
-> already written buffer in LSN A, it will exhibit the same general
-> behavior from before the write once invariant was introduced. IOW,
-> there's still a vector to the original problematic multi-write per LSN
-> behavior through multiple recovery attempts (hence the simulated I/O
-> error to reproduce).
-> 
-> Long Li, am I following the problem description correctly? I've not
-> fully reviewed it, but if so, the proposed solution seems fairly sane
-> and logical to me. (And nice work tracking this down, BTW, regardless of
-> whether this is the final solution. ;).
-> 
+On 09/01/2024 23:04, Dave Chinner wrote:
+>> --- a/include/uapi/linux/fs.h
+>> +++ b/include/uapi/linux/fs.h
+>> @@ -118,7 +118,8 @@ struct fsxattr {
+>>         __u32           fsx_nextents;   /* nextents field value (get)   */
+>>         __u32           fsx_projid;     /* project identifier (get/set) */
+>>         __u32           fsx_cowextsize; /* CoW extsize field value
+>> (get/set)*/
+>> -       unsigned char   fsx_pad[8];
+>> +       __u32           fsx_atomicwrites_size; /* unit max */
+>> +       unsigned char   fsx_pad[4];
+>> };
+>>
+>> /*
+>> @@ -140,6 +141,7 @@ struct fsxattr {
+>> #define FS_XFLAG_FILESTREAM    0x00004000      /* use filestream allocator
+>> */
+>> #define FS_XFLAG_DAX           0x00008000      /* use DAX for IO */
+>> #define FS_XFLAG_COWEXTSIZE    0x00010000      /* CoW extent size
+>> allocator hint */
+>> +#define FS_XFLAG_ATOMICWRITES  0x00020000
+>> #define FS_XFLAG_HASATTR       0x80000000      /* no DIFLAG for this   */
+>>
+>> /* the read-only stuff doesn't really belong here, but any other place is
+>> lines 1-22/22 (END)
+>>
+>> Having FS_XFLAG_ATOMICWRITES set will lead to FMODE_CAN_ATOMIC_WRITE being
+>> set.
+>>
+>> So a user can issue:
+>>
+>>> xfs_io -c "atomic-writes 64K" mnt/file
+>>> xfs_io -c "atomic-writes" mnt/file
+>> [65536] mnt/file
+> Where are you going to store this value in the inode?  It requires a
+> new field in the inode and so is a change of on-disk format, right?
 
-Hi, Brian, your description is correct for me, and it is clear and easy
-to understand. Thanks for your encouragement of my work.
+It would require an on-disk format change, unless we can find an 
+alternative way to store the value, like:
+a. re-use pre-existing extsize or even cowextsize fields and 'xfs_io -c 
+"atomic-writes $SIZE"' would update those fields and 
+FS_XFLAG_ATOMICWRITES would be incompatible with FS_XFLAG_COWEXTSIZE or 
+FS_XFLAG_EXTSIZE
+b. require FS_XFLAG_EXTSIZE and extsize be also set to enable atomic 
+writes, and extsize is used for atomic write unit max
+
+I'm trying to think of ways to avoid requiring a value, but I don't see 
+good options, like:
+- make atomic write unit max some compile-time option
+- require mkfs stripe alignment/width be set and use that as basis for 
+atomic write unit max
+
+We could just use the atomic write unit max which HW provides, but that 
+could be 1MB or more and that will hardly give efficient data usage for 
+small files. But maybe we don't care about that if we expect this 
+feature to only be used on DB files, which can be huge anyway. However I 
+still have concerns – we require that value to be fixed, but a disk 
+firmware update could increase that value and this could mean we have 
+what would be pre-existing mis-aligned extents.
+
+> 
+> As it is, I really don't see this as a better solution than the
+> original generic "force align" flag that simply makes the extent
+> size hint alignment a hard physical alignment requirement rather
+> than just a hint. This has multiple uses (DAX PMD alignment is
+> another), so I just don't see why something that has a single,
+> application specific API that implements a hard physical alignment
+> is desirable.
+
+I would still hope that we will support forcealign separately for those 
+purposes.
+
+> 
+> Indeed, the whole reason that extent size hints are so versatile is
+> that they implement a generic allocation alignment/size function
+> that can be used for anything your imagination extends to. If they
+> were implemented as a "only allow RAID stripe aligned/sized
+> allocation" for the original use case then that functionality would
+> have been far less useful than it has proven to be over the past
+> couple of decades.
+> 
+> Hence history teaches us that we should be designing the API around
+> the generic filesystem function required (hard alignment of physical
+> extent allocation), not the specific use case that requires that
+> functionality.
+
+I understand your concern. However I am not even sure that forcealign 
+even gives us everything we want to enable atomic writes. There is an 
+issue where we were required to pre-zero a file prior to issuing atomic 
+writes to ensure extents are suitably sized, so FS_XFLAG_ATOMICWRITES 
+would make the FS do what is required to avoid that pre-zeroing (but 
+that pre-zeroing requirement that does sound like a forcealign issue...)
+
+Furthermore, there was some desire to support atomic writes on block 
+devices with no HW support by using a CoW-based solution, and forcealign 
+would not be relevant there.
 
 Thanks,
-Long Li
+John
+
