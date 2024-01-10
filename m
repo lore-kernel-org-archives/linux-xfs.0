@@ -1,58 +1,72 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B740320E;
-	Wed, 10 Jan 2024 09:19:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 34B2368BFE; Wed, 10 Jan 2024 10:19:29 +0100 (CET)
-Date: Wed, 10 Jan 2024 10:19:29 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>,
-	"Darrick J. Wong" <djwong@kernel.org>, axboe@kernel.dk,
-	kbusch@kernel.org, sagi@grimberg.me, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, dchinner@redhat.com, jack@suse.cz,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ming.lei@redhat.com, bvanassche@acm.org,
-	ojaswin@linux.ibm.com
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <20240110091929.GA31003@lst.de>
-References: <20231213154409.GA7724@lst.de> <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com> <20231219051456.GB3964019@frogsfrogsfrogs> <20231219052121.GA338@lst.de> <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com> <20231219151759.GA4468@lst.de> <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com> <20231221065031.GA25778@lst.de> <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com> <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 388213F8F0
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2024 10:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uFdchFJ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DADAC433C7;
+	Wed, 10 Jan 2024 10:15:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704881706;
+	bh=UAkXMCxAQkjCbyFQ1wpk6vp3A8ADtsqcU663ltrSonA=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=uFdchFJ4WLwrnR3drHhT+siDd3EVCsaW4HB4lylfV7wyrOVmQ/2tVztiVXo4pPFhc
+	 /6nquRklIc8xJtxQplTWlnkC2x6zMlrndi8DTvEzBc34MTRbzlpqqZ8UVNnF4ULAn0
+	 EP3xya2FboLcfUNNkD1gLBMo+PLV3nA5PsFbG8Sl/DOa6UVpuu40S0457uLa7y6H8P
+	 KUL8KtrjtpKEKNO7iBZhOxF2ixU6DCneAt0GzCMgMtqY+tOhWfbbTYB6OPauvuUspM
+	 DabksKC4we0LVjHopW52uhoxW8L4ow18t9E9PPed2AebV3wVhzuqqqIriQH9X9GlxU
+	 svu8LjxxUkLdw==
+References: <20240109021734.GB722975@frogsfrogsfrogs>
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Chandan Babu R
+ <chandanrlinux@gmail.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix backwards logic in xfs_bmap_alloc_account
+Date: Wed, 10 Jan 2024 15:41:32 +0530
+In-reply-to: <20240109021734.GB722975@frogsfrogsfrogs>
+Message-ID: <87cyu9ijfc.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
 
-On Wed, Jan 10, 2024 at 10:04:00AM +1100, Dave Chinner wrote:
-> Hence history teaches us that we should be designing the API around
-> the generic filesystem function required (hard alignment of physical
-> extent allocation), not the specific use case that requires that
-> functionality.
+On Mon, Jan 08, 2024 at 06:17:34 PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> We're only allocating from the realtime device if the inode is marked
+> for realtime and we're /not/ allocating into the attr fork.
+>
+> Fixes: 8a3cf489410dd ("xfs: also use xfs_bmap_btalloc_accounting for RT allocations")
 
-I disagree.  The alignment requirement is an artefact of how you
-implement atomic writes.  As the fs user I care that I can do atomic
-writes on a file and need to query how big the writes can be and
-what alignment is required.
+The commit ID should be 58643460546d
+(https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?id=58643460546da1dc61593fc6fd78762798b4534f)
+right?
 
-The forcealign feature is a sensible fs side implementation of that
-if using hardware based atomic writes with alignment requirements,
-but it is a really lousy userspace API.
+If yes, I will fix it before pushing it for-next.
 
-So with John's API proposal for XFS with hardware alignment based atomic
-writes we could still use force align.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index ed7e11697249e..e1f2e61cb308e 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3320,7 +3320,7 @@ xfs_bmap_alloc_account(
+>  	struct xfs_bmalloca	*ap)
+>  {
+>  	bool			isrt = XFS_IS_REALTIME_INODE(ap->ip) &&
+> -					(ap->flags & XFS_BMAPI_ATTRFORK);
+> +					!(ap->flags & XFS_BMAPI_ATTRFORK);
+>  	uint			fld;
+>  
+>  	if (ap->flags & XFS_BMAPI_COWFORK) {
 
-Requesting atomic writes for an inode will set the forcealign flag
-and the extent size hint, and after that it'll report atomic write
-capabilities.  Roughly the same implementation, but not an API
-tied to an implementation detail.
+-- 
+Chandan
