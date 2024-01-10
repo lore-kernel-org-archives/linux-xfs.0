@@ -1,170 +1,224 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D9314D592
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2024 23:04:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D840DF6C;
+	Wed, 10 Jan 2024 06:11:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="olMukpd8"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6dad22e13dcso2169910b3a.3
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Jan 2024 15:04:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704841443; x=1705446243; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GVskAbFQn1uVXaOO+q7ZemcnAH1k41TKnSXZBeHYzrY=;
-        b=olMukpd8457FDVL6h0M69V0r8ezyJTvPfIYpkW+JH/LSruTp7+PsQ1jIDoJLJ+/i+i
-         BipaQLTb8S39RmXJYFEjSoonuU/MkKKJPOQqjbTTMFQVcr42TqGGayha6OObILz4rqnL
-         ks5na4pyacpoOP5vokIWO0XUCOXmJw6eWVtjbxAGMNSIzU2+nbEN0cD9gXd7FoEG5bdq
-         q2VDbHctmJEFpa/p8puLEkHCVByvOX0fVl/pR5Th1lbFFdFT+ATCGMeaZ1Hufgav7h88
-         qoJdTyIJMnz/yfqC5/l73H/MkWm7L8EuSq+wEynQNwf6idZXz3K9jrWG9DqqkTi1Mn3e
-         T5zg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704841443; x=1705446243;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GVskAbFQn1uVXaOO+q7ZemcnAH1k41TKnSXZBeHYzrY=;
-        b=JVE8eQcLzXYOH3UCKgg8fumivpBMO9ZtiigGAyaCGHzwE4UcTPO5dnvwLPZM3wt6MU
-         ZczU3W933ls3xJjzrZQhx+jEq+GAC02utDso/XNWl0yQ8Ojvakk4GIQSdBVIytX49413
-         2QtoNKwsJmU6+K+G9wDnb4PP89RDrdYYbzbhz/3gZply2BlSSexWL//KfW+BbRIyeRvc
-         F6iiNo6i0hlpqcc3crasGUgecBW4wN9OLOkGCv7rXuybrJerOSoS2zAGPw/JF15QuA66
-         /eY6civXXf0HKqsmZQd+56lkPlujs2+b5qcrZ0YHomoNxyd0GYkMvDd8UPF4VoNwVTWj
-         wrZA==
-X-Gm-Message-State: AOJu0Yz8EspoAf0V6LfY8IfHjYs3i/hrof0IXsIPvHRKQo4UJ/nrvYhI
-	mVptkFbHaTAStOQM11ninz9xFpczm+oIGQ==
-X-Google-Smtp-Source: AGHT+IEzELO00cjbdQ5MoAae4PmrX2wGL2oSaAb1TtprT5iO1eenc3qlgGb6zh1GdAb8Vowe9WZkyA==
-X-Received: by 2002:a05:6a00:a01:b0:6d9:b8e3:9137 with SMTP id p1-20020a056a000a0100b006d9b8e39137mr245785pfh.10.1704841443394;
-        Tue, 09 Jan 2024 15:04:03 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id fj1-20020a056a003a0100b006d9b66f3d07sm2241185pfb.95.2024.01.09.15.04.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jan 2024 15:04:02 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rNL8a-008GXv-15;
-	Wed, 10 Jan 2024 10:04:00 +1100
-Date: Wed, 10 Jan 2024 10:04:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, bvanassche@acm.org, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
-References: <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
- <20231213154409.GA7724@lst.de>
- <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
- <20231219051456.GB3964019@frogsfrogsfrogs>
- <20231219052121.GA338@lst.de>
- <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com>
- <20231219151759.GA4468@lst.de>
- <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
- <20231221065031.GA25778@lst.de>
- <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c5mkA2CX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C8B6C433C7;
+	Wed, 10 Jan 2024 06:11:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704867093;
+	bh=HnY3GNHvuEPU7S2SP7+ZFdp14DYulgxqY37Py/jHuhM=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=c5mkA2CXMuQtbIzg7+xO1vHfnaHyfbRJYNmmjYuBQXo/1wDtbLN8iZRb83aKXJUPl
+	 I9MqdV6MO2WBsXM2qD036YWS2czoj4dwDjtvdW5B3j4qHVc/gh+pG93BxGFKhxc/tq
+	 /lprngZAF1MYWzOdlZ0pn3x4PVQWDrQIGZES5+jZTRcq8oUD1n/QmuLBhN+6WKZo1S
+	 bbsE9M1YE3JHMe0CUHqUbxv0qD+3kCS3wfoQ/yAAGDj+gzsPlPtYdRHZkX8fbw5B4G
+	 I01FfgL5GUc/eIL108uR9Fg7ZO1v+clgJiHTihElRoeLVcN4DHlFgCZ4+Ufv+J3Hgs
+	 Nv9Z4x6JTB3Rg==
+References: <20240109102054.1668192-1-chandanbabu@kernel.org>
+ <20240109102054.1668192-6-chandanbabu@kernel.org>
+ <20240109165745.GF722975@frogsfrogsfrogs>
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, zlang@redhat.com
+Subject: Re: [PATCH V2 5/5] xfs: Check correctness of metadump/mdrestore's
+ ability to work with dirty log
+Date: Wed, 10 Jan 2024 10:56:28 +0530
+In-reply-to: <20240109165745.GF722975@frogsfrogsfrogs>
+Message-ID: <87h6jliupa.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+Content-Type: text/plain
 
-On Tue, Jan 09, 2024 at 09:55:24AM +0000, John Garry wrote:
-> On 21/12/2023 06:50, Christoph Hellwig wrote:
-> > On Tue, Dec 19, 2023 at 04:53:27PM +0000, John Garry wrote:
-> > > On 19/12/2023 15:17, Christoph Hellwig wrote:
-> > > > On Tue, Dec 19, 2023 at 12:41:37PM +0000, John Garry wrote:
-> > > > > How about something based on fcntl, like below? We will prob also require
-> > > > > some per-FS flag for enabling atomic writes without HW support. That flag
-> > > > > might be also useful for XFS for differentiating forcealign for atomic
-> > > > > writes with just forcealign.
-> > > > I would have just exposed it through a user visible flag instead of
-> > > > adding yet another ioctl/fcntl opcode and yet another method.
-> > > > 
-> > > Any specific type of flag?
-> > > 
-> > > I would suggest a file attribute which we can set via chattr, but that is
-> > > still using an ioctl and would require a new inode flag; but at least there
-> > > is standard userspace support.
-> > I'd be fine with that, but we're kinda running out of flag there.
-> > That's why I suggested the FS_XFLAG_ instead, which basically works
-> > the same.
-> 
-> Hi Christoph,
-> 
-> Coming back to this topic... how about this FS_XFLAG_ and fsxattr update:
-> 
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index da43810b7485..9ef15fced20c 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -118,7 +118,8 @@ struct fsxattr {
->        __u32           fsx_nextents;   /* nextents field value (get)   */
->        __u32           fsx_projid;     /* project identifier (get/set) */
->        __u32           fsx_cowextsize; /* CoW extsize field value
-> (get/set)*/
-> -       unsigned char   fsx_pad[8];
-> +       __u32           fsx_atomicwrites_size; /* unit max */
-> +       unsigned char   fsx_pad[4];
-> };
-> 
-> /*
-> @@ -140,6 +141,7 @@ struct fsxattr {
-> #define FS_XFLAG_FILESTREAM    0x00004000      /* use filestream allocator
-> */
-> #define FS_XFLAG_DAX           0x00008000      /* use DAX for IO */
-> #define FS_XFLAG_COWEXTSIZE    0x00010000      /* CoW extent size
-> allocator hint */
-> +#define FS_XFLAG_ATOMICWRITES  0x00020000
-> #define FS_XFLAG_HASATTR       0x80000000      /* no DIFLAG for this   */
-> 
-> /* the read-only stuff doesn't really belong here, but any other place is
-> lines 1-22/22 (END)
-> 
-> Having FS_XFLAG_ATOMICWRITES set will lead to FMODE_CAN_ATOMIC_WRITE being
-> set.
-> 
-> So a user can issue:
-> 
-> >xfs_io -c "atomic-writes 64K" mnt/file
-> >xfs_io -c "atomic-writes" mnt/file
-> [65536] mnt/file
+On Tue, Jan 09, 2024 at 08:57:45 AM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 09, 2024 at 03:50:47PM +0530, Chandan Babu R wrote:
+>> Add a new test to verify if metadump/mdrestore are able to dump and restore
+>> the contents of a dirty log.
+>> 
+>> Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+>> ---
+>>  tests/xfs/801     | 178 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/801.out |  14 ++++
+>>  2 files changed, 192 insertions(+)
+>>  create mode 100755 tests/xfs/801
+>>  create mode 100644 tests/xfs/801.out
+>> 
+>> diff --git a/tests/xfs/801 b/tests/xfs/801
+>> new file mode 100755
+>> index 00000000..a7866ce7
+>> --- /dev/null
+>> +++ b/tests/xfs/801
+>> @@ -0,0 +1,178 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2024 Oracle, Inc.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 801
+>> +#
+>> +# Test metadump/mdrestore's ability to dump a dirty log and restore it
+>> +# correctly.
+>> +#
+>> +. ./common/preamble
+>> +_begin_fstest auto quick metadump log logprint punch
+>> +
+>> +# Override the default cleanup function.
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -r -f $tmp.*
+>> +	_scratch_unmount > /dev/null 2>&1
+>> +	[[ -n $logdev && $logdev != "none" && $logdev != $SCRATCH_LOGDEV ]] && \
+>> +		_destroy_loop_device $logdev
+>> +	[[ -n $datadev ]] && _destroy_loop_device $datadev
+>> +	rm -r -f $metadump_file $TEST_DIR/data-image \
+>> +	   $TEST_DIR/log-image
+>> +}
+>> +
+>> +# Import common functions.
+>> +. ./common/dmflakey
+>> +. ./common/inject
+>> +
+>> +# real QA test starts here
+>> +_supported_fs xfs
+>> +_require_scratch
+>> +_require_test
+>> +_require_loop
+>> +_require_xfs_debug
+>> +_require_xfs_io_error_injection log_item_pin
+>> +_require_dm_target flakey
+>> +_require_xfs_io_command "pwrite"
+>> +_require_test_program "punch-alternating"
+>> +
+>> +metadump_file=${TEST_DIR}/${seq}.md
+>> +testfile=${SCRATCH_MNT}/testfile
+>> +
+>> +echo "Format filesystem on scratch device"
+>> +_scratch_mkfs >> $seqres.full 2>&1
+>> +
+>> +max_md_version=1
+>> +_scratch_metadump_v2_supported && max_md_version=2
+>> +
+>> +external_log=0
+>> +if [[ $USE_EXTERNAL = yes && -n "$SCRATCH_LOGDEV" ]]; then
+>> +	external_log=1
+>> +fi
+>> +
+>> +if [[ $max_md_version == 1 && $external_log == 1 ]]; then
+>> +	_notrun "metadump v1 does not support external log device"
+>> +fi
+>> +
+>> +verify_metadump_v1()
+>> +{
+>> +	local version=""
+>> +	if [[ $max_md_version == 2 ]]; then
+>> +		version="-v 1"
+>> +	fi
+>> +
+>> +	_scratch_xfs_metadump $metadump_file -a -o $version
+>> +
+>> +	SCRATCH_DEV=$TEST_DIR/data-image _scratch_xfs_mdrestore $metadump_file
+>> +
+>> +	datadev=$(_create_loop_device $TEST_DIR/data-image)
+>> +
+>> +	SCRATCH_DEV=$datadev _scratch_mount
+>> +	SCRATCH_DEV=$datadev _check_scratch_fs
+>> +	SCRATCH_DEV=$datadev _scratch_unmount
+>> +
+>> +	_destroy_loop_device $datadev
+>> +	datadev=""
+>> +	rm -f $TEST_DIR/data-image
+>> +}
+>> +
+>> +verify_metadump_v2()
+>> +{
+>> +	local version="-v 2"
+>> +
+>> +	_scratch_xfs_metadump $metadump_file -a -o $version
+>> +
+>> +	# Metadump v2 files can contain contents dumped from an external log
+>> +	# device. Use a temporary file to hold the log device contents restored
+>> +	# from such a metadump file.
+>> +	slogdev=""
+>> +	if [[ -n $SCRATCH_LOGDEV ]]; then
+>> +		slogdev=$TEST_DIR/log-image
+>
+> Why not create the loopdevs here?
+>
 
-Where are you going to store this value in the inode?  It requires a
-new field in the inode and so is a change of on-disk format, right?
+The backing files (i.e. $TEST_DIR/data-image and $TEST_DIR/log-image) have not
+yet been created. They are created by the invocation of mdrestore command
+below.
 
-As it is, I really don't see this as a better solution than the
-original generic "force align" flag that simply makes the extent
-size hint alignment a hard physical alignment requirement rather
-than just a hint. This has multiple uses (DAX PMD alignment is
-another), so I just don't see why something that has a single,
-application specific API that implements a hard physical alignment
-is desirable.
+>> +	fi
+>> +
+>> +	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
+>> +		   _scratch_xfs_mdrestore $metadump_file
+>> +
+>> +	datadev=$(_create_loop_device $TEST_DIR/data-image)
+>> +
+>> +	logdev=${SCRATCH_LOGDEV}
+>> +	if [[ -s $TEST_DIR/log-image ]]; then
+>> +		logdev=$(_create_loop_device $TEST_DIR/log-image)
+>
+> if [[ -s $slogdev ]]; then
+> 	logdev=$(_create_loop_device $slogdev)
+> fi
+>
+> When would we have logdev == SCRATCH_LOGDEV at this point in the program?
 
-Indeed, the whole reason that extent size hints are so versatile is
-that they implement a generic allocation alignment/size function
-that can be used for anything your imagination extends to. If they
-were implemented as a "only allow RAID stripe aligned/sized
-allocation" for the original use case then that functionality would
-have been far less useful than it has proven to be over the past
-couple of decades.
+logdev == SCRATCH_LOGDEV only when using an internal log. I think a much
+cleaner way of initializing logdev would be
 
-Hence history teaches us that we should be designing the API around
-the generic filesystem function required (hard alignment of physical
-extent allocation), not the specific use case that requires that
-functionality.
+	logdev=""
 
--Dave.
+Combining this with the change suggested by you earlier, the code now looks
+like the following,
+
+	verify_metadump_v2()
+	{
+		local version="-v 2"
+	
+		_scratch_xfs_metadump $metadump_file -a -o $version
+	
+		# Metadump v2 files can contain contents dumped from an external log
+		# device. Use a temporary file to hold the log device contents restored
+		# from such a metadump file.
+		slogdev=""
+		if [[ -n $SCRATCH_LOGDEV ]]; then
+			slogdev=$TEST_DIR/log-image
+		fi
+	
+		SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
+			   _scratch_xfs_mdrestore $metadump_file
+	
+		datadev=$(_create_loop_device $TEST_DIR/data-image)
+	
+		logdev=""
+		if [[ -s $slogdev ]]; then
+			logdev=$(_create_loop_device $slogdev)
+		fi
+	
+		SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_mount
+		SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _check_scratch_fs
+		SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_unmount
+	
+		if [[ -s $logdev ]]; then
+			_destroy_loop_device $logdev
+			logdev=""
+			rm -f $slogdev
+		fi
+	
+		_destroy_loop_device $datadev
+		datadev=""
+		rm -f $TEST_DIR/data-image
+	}
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Chandan
