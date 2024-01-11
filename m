@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B71B615E89;
-	Thu, 11 Jan 2024 11:59:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A46CE15E86;
+	Thu, 11 Jan 2024 11:59:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qKcnE1fh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACF9CC43390;
-	Thu, 11 Jan 2024 11:59:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B/rk24pZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0015DC43390;
+	Thu, 11 Jan 2024 11:59:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704974372;
-	bh=KrcwIHRNBrvWhmypIQpphTw4zTRmmmsGsm5ScFnFkyc=;
+	s=k20201202; t=1704974375;
+	bh=u4HHZ3AFHL7gMnlhFkwiY14aNOdvq20liB4pGJr3ARw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qKcnE1fhPqImZOUV6SxBERPF6WH/ndewAfwCVSI8vjKlmhH8ewvstn3CyiWpy2a1V
-	 GYXIKKLq0Npe0MSvPC94ZYPQuoQGllJptnsB8kRfmrq3eJeds1qFiVebdPnCQ2T4mj
-	 X0ljF5q7+S1XcRVe1JXf6guyLD7YkkI3Az3JnvtYLa8LbuxPiwzVfHEjFig+b0xxRs
-	 eW0XBvDatm0eb9UcQHOk8ZQKZdXaVmIhgvXGzF/cBvcRjNs73UviSvOKZyN4j8FD4t
-	 mX4x72GZH6MOlSxAfDQDI5E0QWg34SIg7678GVtyT97cB5hxRqFdU+015m6JPkDGg9
-	 HC6STkJqFE/5w==
+	b=B/rk24pZwv/j7ieLA88K4T3r6c2z9YpUhBY/4bOLSJBPAC7Tj+jw/8cfh1ZTalLWW
+	 rVAzmyHaPo5d1T2qU0J5BypeB697qowJrO3kqsGsAdO3QetBqc/yBBhvw+cDwTtzai
+	 zFKJs7TxAfEu+MqX9ZKdrtPaGN+bzzeXhYs8ClPEMDXHMwcVW1taWs+A7V9J2/lOwO
+	 zllKxsJthkXXTK1230agdNYwC1kyoXH9aQ/vjsrreE/tTe08ocIWiLHJ5CIGR+BWpT
+	 aXMallx0OuhO5jQreHf0mFwrLXrpHiDLMoZLKVbX/bw00mtFPbV98IeoyQzcMbVrHf
+	 H8HRcIO2OuHsA==
 From: Chandan Babu R <chandanbabu@kernel.org>
 To: fstests@vger.kernel.org
 Cc: Chandan Babu R <chandanbabu@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	djwong@kernel.org,
 	zlang@redhat.com
-Subject: [PATCH V3 2/5] common/xfs: Add function to detect support for metadump v2
-Date: Thu, 11 Jan 2024 17:28:26 +0530
-Message-ID: <20240111115913.1638668-3-chandanbabu@kernel.org>
+Subject: [PATCH V3 3/5] _scratch_xfs_mdrestore: Pass scratch log device when applicable
+Date: Thu, 11 Jan 2024 17:28:27 +0530
+Message-ID: <20240111115913.1638668-4-chandanbabu@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240111115913.1638668-1-chandanbabu@kernel.org>
 References: <20240111115913.1638668-1-chandanbabu@kernel.org>
@@ -37,30 +37,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This commit defines a new function to help detect support for metadump v2.
+Metadump v2 supports dumping contents of an external log device. This commit
+modifies _scratch_xfs_mdrestore() and _xfs_mdrestore() to be able to restore
+metadump files which contain data from external log devices.
 
+The callers of _scratch_xfs_mdrestore() must set the value of $SCRATCH_LOGDEV
+only when all of the following conditions are met:
+1. Metadump is in v2 format.
+2. Metadump has contents dumped from an external log device.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- common/xfs | 6 ++++++
- 1 file changed, 6 insertions(+)
+ common/xfs | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/common/xfs b/common/xfs
-index 38094828..fc744489 100644
+index fc744489..070680d8 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -698,6 +698,12 @@ _xfs_mdrestore() {
+@@ -682,7 +682,8 @@ _xfs_metadump() {
+ _xfs_mdrestore() {
+ 	local metadump="$1"
+ 	local device="$2"
+-	shift; shift
++	local logdev="$3"
++	shift; shift; shift
+ 	local options="$@"
+ 
+ 	# If we're configured for compressed dumps and there isn't already an
+@@ -695,6 +696,10 @@ _xfs_mdrestore() {
+ 	fi
+ 	test -r "$metadump" || return 1
+ 
++	if [ "$logdev" != "none" ]; then
++		options="$options -l $logdev"
++	fi
++
  	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
  }
  
-+_scratch_metadump_v2_supported()
-+{
-+	$XFS_DB_PROG -c "help metadump" $SCRATCH_DEV | \
-+		grep -q "Metadump version to be used"
-+}
-+
- # Snapshot the metadata on the scratch device
- _scratch_xfs_metadump()
+@@ -722,8 +727,18 @@ _scratch_xfs_mdrestore()
  {
+ 	local metadump=$1
+ 	shift
++	local logdev=none
++	local options="$@"
+ 
+-	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$@"
++	# $SCRATCH_LOGDEV should have a non-zero length value only when all of
++	# the following conditions are met.
++	# 1. Metadump is in v2 format.
++	# 2. Metadump has contents dumped from an external log device.
++	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
++		logdev=$SCRATCH_LOGDEV
++	fi
++
++	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$@"
+ }
+ 
+ # Do not use xfs_repair (offline fsck) to rebuild the filesystem
 -- 
 2.43.0
 
