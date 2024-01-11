@@ -1,80 +1,134 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70B6351C4C
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 17:41:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3EED26AC7
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 20:17:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NuM8EcFo"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40BGmmK6024514
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 17:41:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2023-11-20;
- bh=dRNwdAwJANN64GO4ywnDLSJtqgYyzn4sp7iP2Q75i3Y=;
- b=NuM8EcFoOAgzWkLcWmDP+sCEAjSfF4Rn9LsQ5VEzzNEnuJ8LHwjPZ923oirzTAgHRC+N
- 4G+l5SvM8Gwbp3UDpbJ1gyU7VDi38620nJ6qaCkJ5HiTTFUEV5opu8jGLmT6VkYVDLQP
- PmxBnessjf9oajcIgjjCckvIxS7QOzMw5IJcQuf1EARtW2tGy2VKIwJZPo4CqNreyibV
- uMSL9nwZBgMN9SXwHWaHIJeNm9CBsQtPYdL+oFFyguKDClwG0MeGD9+StAGJs5nxVxA/
- E4em/Iduqpx/EVtYnkXJ41FaUfoioEVgZ8lgF6+78I86cb3Zjd7WMBppEIj3VWQE50A3 Wg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vj4wwhtan-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 17:41:50 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40BH1TuF008684
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 17:39:50 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3vfuunfuxj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 17:39:50 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 40BHdogi012298
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 17:39:50 GMT
-Received: from wwg-mac.us.oracle.com (dhcp-10-159-138-212.vpn.oracle.com [10.159.138.212])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3vfuunfuww-1;
-	Thu, 11 Jan 2024 17:39:50 +0000
-From: Wengang Wang <wen.gang.wang@oracle.com>
-To: linux-xfs@vger.kernel.org
-Cc: wen.gang.wang@oracle.com
-Subject: [PATCH 0/2] Introduce non-exclusive defrag to spaceman
-Date: Thu, 11 Jan 2024 09:39:49 -0800
-Message-Id: <20240111173949.50472-1-wen.gang.wang@oracle.com>
-X-Mailer: git-send-email 2.39.3 (Apple Git-145)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="n58jq0HD"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-28c93513462so3530292a91.2
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 12:17:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705004221; x=1705609021; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=rT2x4y2ebv2oPX4ti9HsDbnA2dvYDOyMcUyFn2RzObw=;
+        b=n58jq0HDHndfNpDiGfd/lrixaw8EkZE/3ql/5Y8nVsJllVHX1YjacORDC+DLgsm9FH
+         Es7LyXaF8mH17/FN3Y05bh5TwzV+NivHXy8fb+djQ3MQqkyvc6+zDuQ2f42KnpPd7wqA
+         n4iqZtSHrNxrjgOJdljeoP40t6RA7BKC7okx5VDO0Aa14ymBWVtI3qjB1kGR+EP4ND87
+         z6Uu2Wbm74Da634tX0EHLmRnfvx6CZYVh2NdelBFG2IG+fToKNJyAFuwcU09JHI0d3P6
+         M+q13/z+H6HKsGqw+yI9/J9aEphrywRPrY9DOEUtRqegaGfpY1nA03txVIW3vRdua59d
+         LoGw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705004221; x=1705609021;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rT2x4y2ebv2oPX4ti9HsDbnA2dvYDOyMcUyFn2RzObw=;
+        b=TlATzfWeqPZx9hPnuUPDAPLI/SDs3L8+VEk/4WYYXCeGVwpSTkTnsGu0F8i0D5u07U
+         FMIa9YdkQi7FCEUXe+g3Bc1zBpWoQ690FaqnS0JTOJXAefgydaBEIZdN/QOlV0s6cebm
+         rQUOFs5b8f8BV+43KB2X19urMGBC+fJ83UJ6SvHih1IyO8vVjlaivl8CopYenSUdHMbf
+         qIXqhBAEJT3HvtDwfauUIieEaM7b1O1/idYjpxELFRUr4v1dDhMs3NSYMK6aGxPkxrjU
+         uhGBa6BhPVRNbgUcIKmqnNSQkQFU1AwVX3owyqN4PBfIL4U31fg+fC0oEoHdtaxMJ4pw
+         v/mQ==
+X-Gm-Message-State: AOJu0Yz69ooUV4zE4IE7HaRkFryBpgtsUMgb5+ATZQubtIc2gCJ9QKVI
+	ncWauolizubG/Bk9dWysDNR/BFUASr3ZjQ==
+X-Google-Smtp-Source: AGHT+IEIUjO4YVUxg2h8IL2WXOfR99JrAbutFiRwdiitKvtn5NWN1DEx9wg3vhPcPdBtihyeK5FeZw==
+X-Received: by 2002:a17:90b:1c86:b0:28c:b450:a3e6 with SMTP id oo6-20020a17090b1c8600b0028cb450a3e6mr328161pjb.72.1705004221127;
+        Thu, 11 Jan 2024 12:17:01 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
+        by smtp.gmail.com with ESMTPSA id sm2-20020a17090b2e4200b0028d134a9223sm4397430pjb.8.2024.01.11.12.17.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 11 Jan 2024 12:17:00 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rO1U1-0095ek-1v;
+	Fri, 12 Jan 2024 07:16:57 +1100
+Date: Fri, 12 Jan 2024 07:16:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Jian Wen <wenjianhn@gmail.com>, linux-xfs@vger.kernel.org, hch@lst.de,
+	dchinner@redhat.com, Jian Wen <wenjian1@xiaomi.com>
+Subject: Re: [PATCH] xfs: explicitly call cond_resched in
+ xfs_itruncate_extents_flags
+Message-ID: <ZaBMuWGAo3E6+HWj@dread.disaster.area>
+References: <20240110071347.3711925-1-wenjian1@xiaomi.com>
+ <20240110174501.GH722975@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-11_09,2024-01-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=790 phishscore=0 mlxscore=0
- spamscore=0 adultscore=0 malwarescore=0 suspectscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2401110139
-X-Proofpoint-GUID: COVHAwIaUX25ijp8LQ15pFv_QAuKh8LQ
-X-Proofpoint-ORIG-GUID: COVHAwIaUX25ijp8LQ15pFv_QAuKh8LQ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240110174501.GH722975@frogsfrogsfrogs>
 
-Introduce non-exclusive defrag to spaceman.
+On Wed, Jan 10, 2024 at 09:45:01AM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 10, 2024 at 03:13:47PM +0800, Jian Wen wrote:
+> > From: Jian Wen <wenjianhn@gmail.com>
+> > 
+> > Deleting a file with lots of extents may cause a soft lockup if the
+> > preemption model is none(CONFIG_PREEMPT_NONE=y or preempt=none is set
+> > in the kernel cmdline). Alibaba cloud kernel and Oracle UEK container
+> > kernel are affected by the issue, since they select CONFIG_PREEMPT_NONE=y.
+> > 
+> > Explicitly call cond_resched in xfs_itruncate_extents_flags avoid
+> > the below softlockup warning.
+> > watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [kworker/0:13:139]
+> 
+> Wowwee, how many extents does this file have, anyway?
 
-Wengang Wang (2):
-  xfsprogs: introduce defrag command to spaceman
-  xfsprogs: modify spaceman man page for defrag
+IIRC, extent removal runs at about 50,000 extents/s on a typical
+modern CPU on a production kernel build when everything is cached.
+23s then equates to a bit above a million extents....
 
- man/man8/xfs_spaceman.8 |  22 +++
- spaceman/Makefile       |   2 +-
- spaceman/defrag.c       | 394 ++++++++++++++++++++++++++++++++++++++++
- spaceman/init.c         |   1 +
- spaceman/space.h        |   1 +
- 5 files changed, 419 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/defrag.c
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index c0f1c89786c2..194381e10472 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -4,6 +4,7 @@
+> >   * All Rights Reserved.
+> >   */
+> >  #include <linux/iversion.h>
+> > +#include <linux/sched.h>
+> >  
+> >  #include "xfs.h"
+> >  #include "xfs_fs.h"
+> > @@ -1383,6 +1384,8 @@ xfs_itruncate_extents_flags(
+> >  		error = xfs_defer_finish(&tp);
+> >  		if (error)
+> >  			goto out;
+> > +
+> > +		cond_resched();
+> 
+> Is there a particular reason why truncation uses a giant chained
+> transaction for all extents (with xfs_defer_finish) instead of, say, one
+> chain per extent?
 
+IIUC the question correctly, extent removal for a given range ibeing
+truncated has to been seen externally as an atomic change so the
+ILOCK has to held across the entire removal operation.
+
+This means it has to be executed as a single rolling transaction as
+transaction reservation cannot be done with the ILOCK held and the
+atomicity of extent removal prevents the ILOCK from being dropped.
+
+This atomicity only really matters for active operations
+like truncate, hole punching, etc when other operations may also be
+trying to act on the extent list. However, in inodegc, we are
+essentially guaranteed that nobody else will need to access the
+extent list whilst we are truncating them away, so it could be done
+as a bunch of fine grained transactions.
+
+However, this doesn't solve the problem the CPU never being yeilded
+if everything is cached and no locks or transaction reservations are
+ever contended. It will still hold the CPU for the same length of
+time. Hence I'm not sure changing the way the transactions are run
+will really change anything material w.r.t. the issue at hand.
+
+-Dave.
 -- 
-2.39.3 (Apple Git-145)
-
+Dave Chinner
+david@fromorbit.com
