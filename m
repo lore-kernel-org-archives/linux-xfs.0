@@ -1,59 +1,47 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E29B410E1
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2024 00:47:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AF19650;
+	Thu, 11 Jan 2024 01:40:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="di+VAPlB"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d3f8af8297so25052915ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2024 16:47:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704934071; x=1705538871; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=A+Hk4QyLfFz5zkfAU8rw+RiITCFE8Kxvn51NJlWlNzM=;
-        b=di+VAPlB2VB3pmaHAQAlHKTKlHhxN2UBHiMMG2ffjo14l+Mf/sMh9Cc5Gi+9bDtkzU
-         tE/2v0clXzCt5knoe5APuVG1oNpCVPS/CA/Ux4iKj58fhz8cJSqpBBR3r/6vgM1uCj6y
-         TuArN7WwxyM4FVrHj836B1AhXODz4/J5l+zU67TGd2Uv/6Zonf3Qk+v1jyfEnwG8Rr2d
-         WRdddCJrbO6m/nXqZkHD24DK6RmX7rmrUihq6K22RHFulI3/z/Et0p39nDAqZFJYnBWv
-         TVfuEdHIcebQAcsJbJz/wINJMymB8dgkJ77aMjdcBNQslT26IT8z6AjDpGfubXSyFIvz
-         eOBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704934071; x=1705538871;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=A+Hk4QyLfFz5zkfAU8rw+RiITCFE8Kxvn51NJlWlNzM=;
-        b=VJLY2hbvOa89sWCBFY9gulSvzetFY3nFanA5JLn5wBExN7M6SVoeNyVorVjPec6ecc
-         FUDP0Q5Cn/xeILG6vFKgixUNcXAu3YA29MH3VF0l40fToeua9Jq3hjeIXiZbQuXZTVOY
-         D3ks/I8qzPo7vxBV4aPURSdzZ4+HjKscBcfZAfinD394GpHvT9gTJ+Pg0hw7TJpc8DQw
-         NAHnEicQq1XRBy2gW453Jbl+PLAnTgHMwYmpivQCke5oAMn/hrheHUA3f1/xbz09OQJa
-         Fp1x+Vce2l78Q7rytMmiVRFMSsvSAIyVRbewwkS7dj5KOPTrnOJF9LuZI1dCuQnjaz6Y
-         14EQ==
-X-Gm-Message-State: AOJu0YyAZwOfzbHww7YmsDMePkoYAjzvkT0Ggpp3mj2138Oa+ZaNCknx
-	LyXlFf/6XQj+8OzzEBzWhPeaz9XTqFEOlQ==
-X-Google-Smtp-Source: AGHT+IH3+VRxI/431mAz5uer83cKqmNiaraADAcJ+TBISMZYLDFbOhlDr6CFHV4qZaSRW3so6JFPLQ==
-X-Received: by 2002:a17:902:8686:b0:1d4:3b8a:6389 with SMTP id g6-20020a170902868600b001d43b8a6389mr261593plo.135.1704934071069;
-        Wed, 10 Jan 2024 16:47:51 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id n10-20020a1709026a8a00b001cfc35d1326sm4243030plk.177.2024.01.10.16.47.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jan 2024 16:47:50 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rNjEZ-008jYc-3D;
-	Thu, 11 Jan 2024 11:47:48 +1100
-Date: Thu, 11 Jan 2024 11:47:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Long Li <leo.lilong@huawei.com>
-Cc: djwong@kernel.org, chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
- handlers
-Message-ID: <ZZ86sxUcO0xUpqno@dread.disaster.area>
-References: <20231228124646.142757-1-leo.lilong@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfDXvP+m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1D61C433F1;
+	Thu, 11 Jan 2024 01:40:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704937257;
+	bh=u51yyq5q6reKn5H0CqnJR7jUYlsGmLnDJKKy8teJDRs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cfDXvP+m7491pQR0YUCkm0mTB2aBegWGodHoLZFFG4xnm1HYzXRQuH2gS9jmS4sxK
+	 4a1YcSnAQwsufJxQwNnVNUv8zlTNrN2c8FDL4SvgoPYxlV5HCtl48g/zf8dKFEZFKy
+	 s2oFPeyW0anIBYuwCbKWlfg0iILlMck90/uZ6HjK3pEsmr6x3ggHxQYlbGaZ+LM+u9
+	 Cdp1Me8dqv2fMqivWwzjoUve3j+IWy/LLnsB6hnY7qN7e4nycBAq9OtxqrOqUVgXsd
+	 pNUpTm723vIzDa8WcFdKrRTfElEbLc8gQRM3fqF3Cypry45w0MWn8V/GMykrc5s3y6
+	 6wFr/xhlj/0lw==
+Date: Wed, 10 Jan 2024 17:40:56 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>,
+	John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+	kbusch@kernel.org, sagi@grimberg.me, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, dchinner@redhat.com, jack@suse.cz,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ming.lei@redhat.com, bvanassche@acm.org,
+	ojaswin@linux.ibm.com
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20240111014056.GL722975@frogsfrogsfrogs>
+References: <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
+ <20231219051456.GB3964019@frogsfrogsfrogs>
+ <20231219052121.GA338@lst.de>
+ <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com>
+ <20231219151759.GA4468@lst.de>
+ <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
+ <20231221065031.GA25778@lst.de>
+ <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+ <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
+ <20240110091929.GA31003@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,112 +50,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231228124646.142757-1-leo.lilong@huawei.com>
+In-Reply-To: <20240110091929.GA31003@lst.de>
 
-On Thu, Dec 28, 2023 at 08:46:46PM +0800, Long Li wrote:
-> In order to make sure that submits buffers on lsn boundaries in the
-> abnormal paths, we need to check error status before submit buffers that
-> have been added from the last record processed. If error status exist,
-> buffers in the bufffer_list should be canceled.
+On Wed, Jan 10, 2024 at 10:19:29AM +0100, Christoph Hellwig wrote:
+> On Wed, Jan 10, 2024 at 10:04:00AM +1100, Dave Chinner wrote:
+> > Hence history teaches us that we should be designing the API around
+> > the generic filesystem function required (hard alignment of physical
+> > extent allocation), not the specific use case that requires that
+> > functionality.
 > 
-> Canceling the buffers in the buffer_list directly isn't correct, unlike
-> any other place where write list was canceled, these buffers has been
-> initialized by xfs_buf_item_init() during recovery and held by buf
-> item, buf items will not be released in xfs_buf_delwri_cancel(). If
-> these buffers are submitted successfully, buf items assocated with
-> the buffer will be released in io end process. So releasing buf item
-> in write list cacneling process is needed.
-
-I still don't think this is correct.
-
-> Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> ---
->  fs/xfs/xfs_buf.c         |  2 ++
->  fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
->  2 files changed, 15 insertions(+), 9 deletions(-)
+> I disagree.  The alignment requirement is an artefact of how you
+> implement atomic writes.  As the fs user I care that I can do atomic
+> writes on a file and need to query how big the writes can be and
+> what alignment is required.
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 8e5bd50d29fe..6a1b26aaf97e 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -2075,6 +2075,8 @@ xfs_buf_delwri_cancel(
->  		xfs_buf_lock(bp);
->  		bp->b_flags &= ~_XBF_DELWRI_Q;
->  		xfs_buf_list_del(bp);
-> +		if (bp->b_log_item)
-> +			xfs_buf_item_relse(bp);
->  		xfs_buf_relse(bp);
+> The forcealign feature is a sensible fs side implementation of that
+> if using hardware based atomic writes with alignment requirements,
+> but it is a really lousy userspace API.
+> 
+> So with John's API proposal for XFS with hardware alignment based atomic
+> writes we could still use force align.
+> 
+> Requesting atomic writes for an inode will set the forcealign flag
+> and the extent size hint, and after that it'll report atomic write
+> capabilities.  Roughly the same implementation, but not an API
+> tied to an implementation detail.
 
-I still don't think this is safe.  The buffer log item might still be
-tracked in the AIL when the delwri list is cancelled, so the delwri
-list cancelling cannot release the BLI without removing the item
-from the AIL, too. The delwri cancelling walk really shouldn't be
-screwing with AIL state, which means it can't touch the BLIs here.
+Sounds good to me!  So to summarize, this is approximately what
+userspace programs would have to do something like this:
 
-At minimum, it's a landmine for future users of
-xfs_buf_delwri_cancel().  A quick look at the quotacheck code
-indicates that it can cancel delwri lists that have BLIs in the AIL
-(for newly allocated dquot chunks), so I think this is a real concern.
+struct statx statx;
+struct fsxattr fsxattr;
+int fd = open('/foofile', O_RDWR | O_DIRECT);
 
-This is one of the reasons for submitting the delwri list on error;
-the IO completion code does all the correct cleanup of log items
-including removing them from the AIL because the buffer is now
-either clean or stale and no longer needs to be tracked by the AIL.
+ioctl(fd, FS_IOC_GETXATTR, &fsxattr);
 
-If the filesystem has been shut down, then delwri list submission
-will error out all buffers on the list via IO submission/completion
-and do all the correct cleanup automatically.
+fsxattr.fsx_xflags |= FS_XFLAG_FORCEALIGN | FS_XFLAG_WRITE_ATOMIC;
+fsxattr.fsx_extsize = 16384; /* only for hardware no-tears writes */
 
-I note that write IO errors during log recovery will cause immediate
-shutdown of the filesytsem via xfs_buf_ioend_handle_error():
+ioctl(fd, FS_IOC_SETXATTR, &fsxattr);
 
-	/*
-         * We're not going to bother about retrying this during recovery.
-         * One strike!
-         */
-        if (bp->b_flags & _XBF_LOGRECOVERY) {
-                xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-                return false;
-        }
+statx(fd, "", AT_EMPTY_PATH, STATX_ALL | STATX_WRITE_ATOMIC, &statx);
 
-So I'm guessing that the IO error injection error that caused this
-failure was on a buffer read part way through recovering items.
+if (statx.stx_atomic_write_unit_max >= 16384) {
+	pwrite(fd, &iov, 1, 0, RWF_SYNC | RWF_ATOMIC);
+	printf("HAPPY DANCE\n");
+}
 
-Can you confirm that the failure is only seen after read IO error
-injection and that write IO error injection causes immediate
-shutdown and so avoids the problem altogether?
+(Assume we bail out on errors.)
 
-If so, then all we need to do to handle instantiation side errors (EIO, ENOMEM,
-etc) is this:
-
-	/*
-	 * Submit buffers that have been dirtied by the last record recovered.
-	 */
-	if (!list_empty(&buffer_list)) {
-		if (error) {
-			/*
-			 * If there has been an item recovery error then we
-			 * cannot allow partial checkpoint writeback to
-			 * occur.  We might have multiple checkpoints with the
-			 * same start LSN in this buffer list, and partial
-			 * writeback of a checkpoint in this situation can
-			 * prevent future recovery of all the changes in the
-			 * checkpoints at this start LSN.
-			 *
-			 * Note: Shutting down the filesystem will result in the
-			 * delwri submission marking all the buffers stale,
-			 * completing them and cleaning up _XBF_LOGRECOVERY
-			 * state without doing any IO.
-			 */
-			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-		}
-		error2 = xfs_buf_delwri_submit(&buffer_list);
-	}
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
