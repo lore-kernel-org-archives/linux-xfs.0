@@ -1,90 +1,187 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95AAF1DDFC
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2024 04:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204B01DDFC
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2024 04:52:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XPjmytRz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=1Ex8ngZz3YEIFycG5Aa2czR70KBNEJXh7WuxoJ6e9tU=; b=XPjmytRzn2XuVL4oGdM9QotTnN
-	Kf28YR8NoypTBCA0Xj3kTxF+TejjjKeU4GZzrxYQvBhicoHRmOsTCs1KCwWvk14APln/+kgIJMuz5
-	q9tb8bcpoLyKlKYMtEEWgGhyPE6ihMQLR7QL3jJMobkiWeC+/GNcB8gefaQXalbtO36MJp79USBbw
-	DmlXjeE+PmbOWIx2b7x3nJTRe1kuFDZuSsMu+2N85Neo0ArGCk5+dc6bK5WNBb/4GjXVRViiIuLoh
-	W4UYyz/XC6X4HotD6b7G793KIDss3Qf+mGAdWjEe62p35/cHa3ckp0LLNGkHzdQ7qIWHQJpTDlifT
-	2RI9WNZQ==;
-Received: from [2001:4bb8:191:2f6b:85c6:d242:5819:3c29] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rO9SY-001sYJ-1p;
-	Fri, 12 Jan 2024 04:47:59 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] mkfs: use a sensible log sector size default
-Date: Fri, 12 Jan 2024 05:47:43 +0100
-Message-Id: <20240112044743.2254211-5-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240112044743.2254211-1-hch@lst.de>
-References: <20240112044743.2254211-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W2ixD024"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1705035134;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PQJ9hOz9qN8Mqz2MuXKMKk0sGzrFbCj0fCm3cv5Fn6A=;
+	b=W2ixD024Pz+dsKo340NqhHMFTN8kxbBniMIwTPCSvWqsrvEGegPDsLnn6yd6AEGMiET6J9
+	GUExyScT9y1AC04xuXGbWpcwGcr3tO1zMD86H9j7BY9Ary7pgrc8ePAU92ex4VsNe+vM+Y
+	yhAEGgu6m62LYT8t2gHaGG2+sJNrSlE=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-67-Pzar8MfmPUiRq9c0eNUBEw-1; Thu,
+ 11 Jan 2024 23:52:12 -0500
+X-MC-Unique: Pzar8MfmPUiRq9c0eNUBEw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8C855282FA19;
+	Fri, 12 Jan 2024 04:52:11 +0000 (UTC)
+Received: from [10.22.16.77] (unknown [10.22.16.77])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 10CB92166B33;
+	Fri, 12 Jan 2024 04:52:11 +0000 (UTC)
+Message-ID: <b2e3f866-3644-4730-b2d3-6b84b1433a9d@redhat.com>
+Date: Thu, 11 Jan 2024 23:52:10 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/3] locking: Add rwsem_assert_held() and
+ rwsem_assert_held_write()
+Content-Language: en-US
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ Chandan Babu R <chandan.babu@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ "Darrick J . Wong" <djwong@kernel.org>, Mateusz Guzik <mjguzik@gmail.com>,
+ Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
+ Will Deacon <will@kernel.org>
+References: <20240111212424.3572189-1-willy@infradead.org>
+ <20240111212424.3572189-2-willy@infradead.org>
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20240111212424.3572189-2-willy@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
 
-Currently the XFS log sector size defaults to the 512 bytes unless
-explicitly overriden.  Default to the device logical block size queried
-by get_topology instead.  If that is also 512 nothing changes, and if
-the device logical block size is larged this prevents a mkfs failure
-because the libxfs buffer cache blows up and as we obviously can't
-use a smaller than hardware supported sector size.  This fixes xfs/157
-with a 4k block size device.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- mkfs/xfs_mkfs.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+On 1/11/24 16:24, Matthew Wilcox (Oracle) wrote:
+> Modelled after lockdep_assert_held() and lockdep_assert_held_write(),
+> but are always active, even when lockdep is disabled.  Of course, they
+> don't test that _this_ thread is the owner, but it's sufficient to catch
+> many bugs and doesn't incur the same performance penalty as lockdep.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index be65ccc1e..022a11a7f 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2075,7 +2075,8 @@ static void
- validate_log_sectorsize(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct mkfs_default_params *dft)
-+	struct mkfs_default_params *dft,
-+	struct fs_topology	*ft)
- {
- 
- 	if (cli->loginternal && cli->lsectorsize &&
-@@ -2090,7 +2091,7 @@ _("Can't change sector size on internal log!\n"));
- 	else if (cli->loginternal)
- 		cfg->lsectorsize = cfg->sectorsize;
- 	else
--		cfg->lsectorsize = dft->sectorsize;
-+		cfg->lsectorsize = ft->log.logical_sector_size;
- 	cfg->lsectorlog = libxfs_highbit32(cfg->lsectorsize);
- 
- 	if (cfg->lsectorsize < XFS_MIN_SECTORSIZE ||
-@@ -4196,7 +4197,7 @@ main(
- 	blocksize = cfg.blocksize;
- 	sectorsize = cfg.sectorsize;
- 
--	validate_log_sectorsize(&cfg, &cli, &dft);
-+	validate_log_sectorsize(&cfg, &cli, &dft, &ft);
- 	validate_sb_features(&cfg, &cli);
- 
- 	/*
--- 
-2.39.2
+I don't mind the new *assert_held*nolockdep APIs. The only nit that I 
+have is that their behavior is slightly different from the corresponding 
+lockdep counterparts as they don't imply the current process is holding 
+the lock. So we may need to have some comment to document the difference 
+and set the right expectation. Of course it can be done with a follow-up 
+patch.
+
+Acked-by: Waiman Long <longman@redhat.com>
+
+>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+> ---
+>   include/linux/rwbase_rt.h |  9 ++++++--
+>   include/linux/rwsem.h     | 46 ++++++++++++++++++++++++++++++++++-----
+>   2 files changed, 48 insertions(+), 7 deletions(-)
+>
+> diff --git a/include/linux/rwbase_rt.h b/include/linux/rwbase_rt.h
+> index 1d264dd08625..29c4e4f243e4 100644
+> --- a/include/linux/rwbase_rt.h
+> +++ b/include/linux/rwbase_rt.h
+> @@ -26,12 +26,17 @@ struct rwbase_rt {
+>   	} while (0)
+>   
+>   
+> -static __always_inline bool rw_base_is_locked(struct rwbase_rt *rwb)
+> +static __always_inline bool rw_base_is_locked(const struct rwbase_rt *rwb)
+>   {
+>   	return atomic_read(&rwb->readers) != READER_BIAS;
+>   }
+>   
+> -static __always_inline bool rw_base_is_contended(struct rwbase_rt *rwb)
+> +static inline void rw_base_assert_held_write(const struct rwbase_rt *rwb)
+> +{
+> +	WARN_ON(atomic_read(&rwb->readers) != WRITER_BIAS);
+> +}
+> +
+> +static __always_inline bool rw_base_is_contended(const struct rwbase_rt *rwb)
+>   {
+>   	return atomic_read(&rwb->readers) > 0;
+>   }
+> diff --git a/include/linux/rwsem.h b/include/linux/rwsem.h
+> index 9c29689ff505..4f1c18992f76 100644
+> --- a/include/linux/rwsem.h
+> +++ b/include/linux/rwsem.h
+> @@ -66,14 +66,24 @@ struct rw_semaphore {
+>   #endif
+>   };
+>   
+> -/* In all implementations count != 0 means locked */
+> +#define RWSEM_UNLOCKED_VALUE		0UL
+> +#define RWSEM_WRITER_LOCKED		(1UL << 0)
+> +#define __RWSEM_COUNT_INIT(name)	.count = ATOMIC_LONG_INIT(RWSEM_UNLOCKED_VALUE)
+> +
+>   static inline int rwsem_is_locked(struct rw_semaphore *sem)
+>   {
+> -	return atomic_long_read(&sem->count) != 0;
+> +	return atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;
+>   }
+>   
+> -#define RWSEM_UNLOCKED_VALUE		0L
+> -#define __RWSEM_COUNT_INIT(name)	.count = ATOMIC_LONG_INIT(RWSEM_UNLOCKED_VALUE)
+> +static inline void rwsem_assert_held_nolockdep(const struct rw_semaphore *sem)
+> +{
+> +	WARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);
+> +}
+> +
+> +static inline void rwsem_assert_held_write_nolockdep(const struct rw_semaphore *sem)
+> +{
+> +	WARN_ON(!(atomic_long_read(&sem->count) & RWSEM_WRITER_LOCKED));
+> +}
+>   
+>   /* Common initializer macros and functions */
+>   
+> @@ -152,11 +162,21 @@ do {								\
+>   	__init_rwsem((sem), #sem, &__key);			\
+>   } while (0)
+>   
+> -static __always_inline int rwsem_is_locked(struct rw_semaphore *sem)
+> +static __always_inline int rwsem_is_locked(const struct rw_semaphore *sem)
+>   {
+>   	return rw_base_is_locked(&sem->rwbase);
+>   }
+>   
+> +static inline void rwsem_assert_held_nolockdep(const struct rw_semaphore *sem)
+> +{
+> +	WARN_ON(!rwsem_is_locked(sem));
+> +}
+> +
+> +static inline void rwsem_assert_held_write_nolockdep(const struct rw_semaphore *sem)
+> +{
+> +	rw_base_assert_held_write(sem);
+> +}
+> +
+>   static __always_inline int rwsem_is_contended(struct rw_semaphore *sem)
+>   {
+>   	return rw_base_is_contended(&sem->rwbase);
+> @@ -169,6 +189,22 @@ static __always_inline int rwsem_is_contended(struct rw_semaphore *sem)
+>    * the RT specific variant.
+>    */
+>   
+> +static inline void rwsem_assert_held(const struct rw_semaphore *sem)
+> +{
+> +	if (IS_ENABLED(CONFIG_LOCKDEP))
+> +		lockdep_assert_held(sem);
+> +	else
+> +		rwsem_assert_held_nolockdep(sem);
+> +}
+> +
+> +static inline void rwsem_assert_held_write(const struct rw_semaphore *sem)
+> +{
+> +	if (IS_ENABLED(CONFIG_LOCKDEP))
+> +		lockdep_assert_held_write(sem);
+> +	else
+> +		rwsem_assert_held_write_nolockdep(sem);
+> +}
+> +
+>   /*
+>    * lock for reading
+>    */
 
