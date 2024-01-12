@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9EB776915;
-	Fri, 12 Jan 2024 16:43:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C750276915
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2024 16:44:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CgmCx3jJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A38C433F1;
-	Fri, 12 Jan 2024 16:43:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n4of3+cE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45AAAC433F1;
+	Fri, 12 Jan 2024 16:44:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705077799;
-	bh=4dwi9Ro2n1kyZE3BVKpYXvvZBdj2Baqhfvb92rjKYio=;
+	s=k20201202; t=1705077891;
+	bh=eL3Nofrhn4Kzwlpr7JZXJng1kgsc/C8hbnQGR4SUDlk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CgmCx3jJhegq5AT/jEmgfXn6BbLDQj3pck5BDPeppHdXOmv34K3Z9yXWaPL4qv1e2
-	 WOfS8p7jARgEbVOJ+EpgPeC1oiEHzI75MGDugHyoLBMD0E+2QG/hCLa/Qlf6v1GVT+
-	 T+uc6fjrdos+B7yhx/V+NMWt5jvut8xcqLPv8i2fnj7hmJwf3dk0iRm+kgXgfBmlmP
-	 q7ZBZzAp9ZJ9w96/jW7QKt/k+M+CqcXAlqnUTqWSGKNN1FlQkU2lcDDXAtzE+NU2rW
-	 tOWtG6D+ME5zum4Si1vGU0ECuaQYQrKYMnuCs1bsrd0VyqYq8K0fk7l1PsbQTXmatA
-	 up2gIMxBaeH2w==
-Date: Fri, 12 Jan 2024 08:43:18 -0800
+	b=n4of3+cEp1iFD977oxeAG/vmgPBJirLTrqKSMCGZ26eDm23thFTo+bWJnNc2CKqTo
+	 S5chtvlWGlwdoK6Nu6RTZiV3gLEAmArD6x4Q4yBs892YTRrjkrddJGHNDIgwME6a+F
+	 FOelA/UPHUMu9ZzXNUjr0CZ2dOoRfepcf16J96PGNXbTA4dTILEjeuLfHWCaXlz/Gs
+	 kN6h9Tr5ccIfbAdzdxbxY3WQbgVoYOWMIunnVQX2DAI/FMgqUPp+VY4teUrqu3XOW1
+	 VgIu9fOXEiR31xPk88Uei+rdcZeoC+7Hgl5gVg8snFVV/WkgvEYNpt6ixmK2Y4PGKK
+	 PD8uDC2iO5AHw==
+Date: Fri, 12 Jan 2024 08:44:50 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs/506: call _scratch_require_xfs_scrub
-Message-ID: <20240112164318.GT722975@frogsfrogsfrogs>
-References: <20240112050833.2255899-1-hch@lst.de>
- <20240112050833.2255899-5-hch@lst.de>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] libxfs: remove the unused fs_topology_t typedef
+Message-ID: <20240112164450.GU722975@frogsfrogsfrogs>
+References: <20240112044743.2254211-1-hch@lst.de>
+ <20240112044743.2254211-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,37 +33,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240112050833.2255899-5-hch@lst.de>
+In-Reply-To: <20240112044743.2254211-2-hch@lst.de>
 
-On Fri, Jan 12, 2024 at 06:08:33AM +0100, Christoph Hellwig wrote:
-> Call _scratch_require_xfs_scrub so that the test is _notrun on kernels
-> without online scrub support.
-> 
+On Fri, Jan 12, 2024 at 05:47:40AM +0100, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  libxfs/topology.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/libxfs/topology.h b/libxfs/topology.h
+> index 1af5b0549..3a309a4da 100644
+> --- a/libxfs/topology.h
+> +++ b/libxfs/topology.h
+> @@ -10,13 +10,13 @@
+>  /*
+>   * Device topology information.
+>   */
+> -typedef struct fs_topology {
+> +struct fs_topology {
+>  	int	dsunit;		/* stripe unit - data subvolume */
+>  	int	dswidth;	/* stripe width - data subvolume */
+>  	int	rtswidth;	/* stripe width - rt subvolume */
+>  	int	lsectorsize;	/* logical sector size &*/
 
-With whatever name we picked for the helper,
+Dumb nit: the ampersand in the comment can go away too ^
+
+Don't much care either way though.
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  tests/xfs/506 | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/tests/xfs/506 b/tests/xfs/506
-> index 157dac293..b6ef484a5 100755
-> --- a/tests/xfs/506
-> +++ b/tests/xfs/506
-> @@ -21,6 +21,9 @@ _require_xfs_spaceman_command "health"
+>  	int	psectorsize;	/* physical sector size */
+> -} fs_topology_t;
+> +};
 >  
->  _scratch_mkfs > $seqres.full 2>&1
->  _scratch_mount
-> +
-> +_scratch_require_xfs_scrub
-> +
->  _scratch_cycle_mount	# make sure we haven't run quotacheck on this mount
->  
->  # Haven't checked anything, it should tell us to run scrub
+>  void
+>  get_topology(
 > -- 
 > 2.39.2
 > 
