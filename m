@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC7B76915;
-	Fri, 12 Jan 2024 16:43:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9EB776915;
+	Fri, 12 Jan 2024 16:43:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r54vZ12w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B2BCC433F1;
-	Fri, 12 Jan 2024 16:43:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CgmCx3jJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A38C433F1;
+	Fri, 12 Jan 2024 16:43:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705077784;
-	bh=/4jDg+M8IQvw/nCBF4y9YS85eZFlZYwlZmZWecPuG8w=;
+	s=k20201202; t=1705077799;
+	bh=4dwi9Ro2n1kyZE3BVKpYXvvZBdj2Baqhfvb92rjKYio=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=r54vZ12w/a7x6XR6rwc19vkF4v4SwgUblXuedgedirNC7JcAAFqvqKFTNvyA6nWOp
-	 RsTQsDwG05ZVOHfCjt69lzbKnbqdUaoZyJPnN2PxX5hNxGatf38TEVDJaMWnlP3+zK
-	 YS+l7SXTq5EYX4JGZrUq3XVfqzXG4v1dQcrt07P+/xBSsntcVVXXmZxSVQwHrOonIm
-	 4KQsuH55dr2m/B2/VZGzrKk07MSW5fEnBkDFrbXirQDjZoJmWN8voE9WvGL08B2yEg
-	 EpUI3l6xf2bNgY4VNW0/tsWyq3leNeoAPSkXID7mS0wo9QWW8dnloHchSD+WuRHhe2
-	 3A7G6DlXF8fyA==
-Date: Fri, 12 Jan 2024 08:43:03 -0800
+	b=CgmCx3jJhegq5AT/jEmgfXn6BbLDQj3pck5BDPeppHdXOmv34K3Z9yXWaPL4qv1e2
+	 WOfS8p7jARgEbVOJ+EpgPeC1oiEHzI75MGDugHyoLBMD0E+2QG/hCLa/Qlf6v1GVT+
+	 T+uc6fjrdos+B7yhx/V+NMWt5jvut8xcqLPv8i2fnj7hmJwf3dk0iRm+kgXgfBmlmP
+	 q7ZBZzAp9ZJ9w96/jW7QKt/k+M+CqcXAlqnUTqWSGKNN1FlQkU2lcDDXAtzE+NU2rW
+	 tOWtG6D+ME5zum4Si1vGU0ECuaQYQrKYMnuCs1bsrd0VyqYq8K0fk7l1PsbQTXmatA
+	 up2gIMxBaeH2w==
+Date: Fri, 12 Jan 2024 08:43:18 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs/262: call _scratch_require_xfs_scrub
-Message-ID: <20240112164303.GS722975@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/4] xfs/506: call _scratch_require_xfs_scrub
+Message-ID: <20240112164318.GT722975@frogsfrogsfrogs>
 References: <20240112050833.2255899-1-hch@lst.de>
- <20240112050833.2255899-4-hch@lst.de>
+ <20240112050833.2255899-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,37 +33,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240112050833.2255899-4-hch@lst.de>
+In-Reply-To: <20240112050833.2255899-5-hch@lst.de>
 
-On Fri, Jan 12, 2024 at 06:08:32AM +0100, Christoph Hellwig wrote:
+On Fri, Jan 12, 2024 at 06:08:33AM +0100, Christoph Hellwig wrote:
 > Call _scratch_require_xfs_scrub so that the test is _notrun on kernels
 > without online scrub support.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-With _require_scratch_xfs_scrub,
+With whatever name we picked for the helper,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  tests/xfs/262 | 3 +++
+>  tests/xfs/506 | 3 +++
 >  1 file changed, 3 insertions(+)
 > 
-> diff --git a/tests/xfs/262 b/tests/xfs/262
-> index b28a6c88b..0d1fd779d 100755
-> --- a/tests/xfs/262
-> +++ b/tests/xfs/262
-> @@ -29,6 +29,9 @@ _require_xfs_io_error_injection "force_repair"
->  echo "Format and populate"
->  _scratch_mkfs > "$seqres.full" 2>&1
+> diff --git a/tests/xfs/506 b/tests/xfs/506
+> index 157dac293..b6ef484a5 100755
+> --- a/tests/xfs/506
+> +++ b/tests/xfs/506
+> @@ -21,6 +21,9 @@ _require_xfs_spaceman_command "health"
+>  
+>  _scratch_mkfs > $seqres.full 2>&1
 >  _scratch_mount
 > +
 > +_scratch_require_xfs_scrub
 > +
->  cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
->  $LDD_PROG $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
->  	cp $lib $SCRATCH_MNT/
+>  _scratch_cycle_mount	# make sure we haven't run quotacheck on this mount
+>  
+>  # Haven't checked anything, it should tell us to run scrub
 > -- 
 > 2.39.2
 > 
