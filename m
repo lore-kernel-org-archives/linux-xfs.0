@@ -1,32 +1,21 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B24210FE;
-	Fri, 12 Jan 2024 02:21:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o9kjrJNV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46E13C433C7;
-	Fri, 12 Jan 2024 02:21:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705026071;
-	bh=vzFsyrcpEKyKi/ZCFmMLv89tZPcFv5KRoRhuUunRASo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=o9kjrJNVjySVcq//l8zcsYCy/We/gWt06pCCqQ1F05AgF3+pJ9szXMi/SPheIJkXR
-	 mikdThOdtqsduSSb6SAufKn3FTaVyYYq+aNy8yE3RURhXwKg9FZ1r9Aymm1M0skPbk
-	 n/5LC628c5bbRBeTGW9bdouALGnSVwguBqhv028a0JrDQPdlgdwFLbKpg9JuzLNzp6
-	 ldR2YzvvyEPJ2NYQGE3mzRy5cSxl8QJoOhxKSBVb4MA9+cX/D32iNQV14q7vuFbPaR
-	 ZtK6eRvNR0T8pmxZjVOxFt1vHEZFP91TekqBnRwt6UI/35xKcSzUgD0b88Xv1bqmHb
-	 n2qRqxUa/AZQw==
-Date: Thu, 11 Jan 2024 18:21:10 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bill O'Donnell <bodonnel@redhat.com>
-Cc: Shiyang Ruan <ruansy.fnst@fujitsu.com>, linux-xfs@vger.kernel.org,
-	nvdimm@lists.linux.dev, chandan.babu@oracle.com,
-	dan.j.williams@intel.com
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-Message-ID: <20240112022110.GP722975@frogsfrogsfrogs>
-References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
- <ZaAeaRJnfERwwaP7@redhat.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC9D5B5AA;
+	Fri, 12 Jan 2024 04:41:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 4B95068D05; Fri, 12 Jan 2024 05:41:40 +0100 (CET)
+Date: Fri, 12 Jan 2024 05:41:39 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: check that the mountpoint is actually mounted
+ in _supports_xfs_scrub
+Message-ID: <20240112044139.GB5664@lst.de>
+References: <20240111142407.2163578-1-hch@lst.de> <20240111142407.2163578-2-hch@lst.de> <20240111172022.GO723010@frogsfrogsfrogs> <20240111172556.GB22255@lst.de> <20240111211702.baimcixgpuhoqbib@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,43 +24,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZaAeaRJnfERwwaP7@redhat.com>
+In-Reply-To: <20240111211702.baimcixgpuhoqbib@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jan 11, 2024 at 10:59:21AM -0600, Bill O'Donnell wrote:
-> On Fri, Sep 15, 2023 at 02:38:54PM +0800, Shiyang Ruan wrote:
-> > FSDAX and reflink can work together now, let's drop this warning.
-> > 
-> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+On Fri, Jan 12, 2024 at 05:17:02AM +0800, Zorro Lang wrote:
+> > No, it doesn't..  I actually did exactly that first, but that causes the
+> > test to be _notrun instead of reporting the error and thus telling the
+> > author that they usage of this helper is wrong.
 > 
-> Are there any updates on this?
- 
-Remind us to slip this in for 6.8-rc7 if nobody complains about the new
-dax functionality. :)
+> So below "usage" message won't be gotten either, if a _notrun be called
+> after this helper return 1 .
 
---D
+True.  But for the case reproducing my original error where I just
+misplaced it it does get shown.
 
-> Thanks-
-> Bill
-> 
-> 
-> > ---
-> >  fs/xfs/xfs_super.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 1f77014c6e1a..faee773fa026 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -371,7 +371,6 @@ xfs_setup_dax_always(
-> >  		return -EINVAL;
-> >  	}
-> >  
-> > -	xfs_warn(mp, "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
-> >  	return 0;
-> >  
-> >  disable_dax:
-> > -- 
-> > 2.42.0
-> > 
-> 
-> 
+> If there's not _notrun after that, the message will be gotten I think.
+> So I think the "return 1" makes sense.
+
+As this point we might as well skip this patch, as it won't be useful.
+
