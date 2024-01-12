@@ -1,76 +1,102 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45A6F5EE94;
-	Fri, 12 Jan 2024 13:02:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 850C66BB51
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2024 13:21:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="b4z0gnfg";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="0SpkV9u1"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1705064519;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cvAXmTn4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1705065669;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=TS9YhPDldTTjGIAAyOKez0LHmI8RD+x8kd63E/fDUqw=;
-	b=b4z0gnfg3rYIPjuHC/+CGOngTgmZ9G/DZXjxT14EEbShfFMUK5PKsI8npORtSBvthF7rtJ
-	yqzfmZbzTNHjv0fFq5/IvHsyrxeiO3i+YC/JJzf7SvmTgwNFUU58WzXM85C+kxC09cd8D7
-	nIrsR0z079jwaHZGWj5G9Kj8KdHaC0206jHSUouGA2o6I3klx9munEuxSfN3kqugkCipvS
-	qi5EE5vehBmE8QuXy5PPASCrHq5b0gOE4sC1g2oC/sb6ycHA3oFVVgLFABk6+glZ1Ff5Gn
-	tglPiZYslYqXiVLwophieMD7GSGxgzKfUGwS44yoTaYFA1/lDveIJDvEse9TZQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1705064519;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TS9YhPDldTTjGIAAyOKez0LHmI8RD+x8kd63E/fDUqw=;
-	b=0SpkV9u11zaLX55bOD86IHPv7DtnCwvpuus8BBQZWxykzJqS/dBPPl80+NnP/wnrpIrI+c
-	tBdvUUSr/sYzSyBA==
-To: Dave Chinner <david@fromorbit.com>, Jian Wen <wenjianhn@gmail.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, hch@lst.de,
- dchinner@redhat.com, Jian Wen <wenjian1@xiaomi.com>,
- linux-kernel@vger.kernel.org, Ankur Arora <ankur.a.arora@oracle.com>
-Subject: Re: [PATCH] xfs: explicitly call cond_resched in
- xfs_itruncate_extents_flags
-In-Reply-To: <ZaBPM14r5vGrQ9mc@dread.disaster.area>
-References: <20240110071347.3711925-1-wenjian1@xiaomi.com>
- <ZZ8OaNnp6b/PJzsb@dread.disaster.area>
- <CAMXzGWJU+a2s-tbpzdmPTCg9Et7UpDdpdBEjkiUUvAV5kxTjig@mail.gmail.com>
- <ZaBPM14r5vGrQ9mc@dread.disaster.area>
-Date: Fri, 12 Jan 2024 14:01:59 +0100
-Message-ID: <87v87yiu2g.ffs@tglx>
+	bh=mhi/+JgNV+S+4kaUsq/RAwFdZECY3i+QjvGNP8Cshdw=;
+	b=cvAXmTn4CrpERLxld8K4RQba46lzEziqyn5MmB2rTLb2oi2eqLvBVktuYsZ5gOOvJscXkK
+	9Sv7ZVs6D3r8YcxEJzI7dXw3ZiwYgTwzRKWTGewwVBlzTEdWmjHanka5W1+vl0+0RkSA/+
+	vMMvTieQQKZYR4My8xhM5Or4RG4vPDs=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-312-gmGMVE7XM9q5kywLJbTtHw-1; Fri, 12 Jan 2024 08:21:03 -0500
+X-MC-Unique: gmGMVE7XM9q5kywLJbTtHw-1
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-6d9b8fef16aso4797550b3a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2024 05:21:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705065661; x=1705670461;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mhi/+JgNV+S+4kaUsq/RAwFdZECY3i+QjvGNP8Cshdw=;
+        b=YnDouQwP2v1UjZoZnum57DRMwigXuq69BG1y/bmBtmy4R3idl4akLeDYbi0ZQtSE3n
+         sh/lg0nDUh94M5r7tojYN3FjDU2j1W1Kb8thBaUs5ISUKOkPOEKhXfUWy1civKS6Jc6h
+         s3MPE9/qDF5yWfHn82eblxRcBTCr57arMA8QXjNAciL/yWSDooRh7jO2hDukaxFfi4YF
+         Oq5VO/1w27HxpLRRhXakW0b4LbcHJ+uNdooqknUmYpmma/AjZgtdbgcB+PelvbWsFyLY
+         1321ZSzbZVMmb2vbiiU7Zl1wLq4wuTYmIBi2/OLfLxuXJZXBMpa7jVA9d5oS4jmWl0ts
+         0PzQ==
+X-Gm-Message-State: AOJu0Yzemc0JigeftUa7xDoY+eazAHvxi2zcYm2X0OC+zr2zEkS7RUhr
+	Si16xF/UtXi8WboAlZz8kNU3OIq6AOEOddH83zKDAA7os8LjXMxgYMQ81r064dK3fwBY0Ymsyzy
+	VgsJs1rVQ8a9HGFhfW1C/QEaxY164
+X-Received: by 2002:a05:6a00:464f:b0:6d9:acb2:29ac with SMTP id kp15-20020a056a00464f00b006d9acb229acmr1398177pfb.23.1705065661159;
+        Fri, 12 Jan 2024 05:21:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHOkbGz4wknQxKd35c5FYm98su9D3XNN32OBsrmlsx3jNtp1Jq9SZFAEwfBLL3+HhBmbphcBQ==
+X-Received: by 2002:a05:6a00:464f:b0:6d9:acb2:29ac with SMTP id kp15-20020a056a00464f00b006d9acb229acmr1398164pfb.23.1705065660850;
+        Fri, 12 Jan 2024 05:21:00 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id j6-20020aa783c6000000b006dab36287bfsm3134732pfn.207.2024.01.12.05.20.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jan 2024 05:21:00 -0800 (PST)
+Date: Fri, 12 Jan 2024 21:20:57 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: djwong@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: check that the mountpoint is actually mounted
+ in _supports_xfs_scrub
+Message-ID: <20240112132057.2uunfrh4ar6xurk5@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240112050833.2255899-1-hch@lst.de>
+ <20240112050833.2255899-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240112050833.2255899-2-hch@lst.de>
 
-On Fri, Jan 12 2024 at 07:27, Dave Chinner wrote:
+On Fri, Jan 12, 2024 at 06:08:30AM +0100, Christoph Hellwig wrote:
+> Add a sanity check that the passed in mount point is actually mounted
+> to guard against actually calling _supports_xfs_scrub before
+> $SCRATCH_MNT is mounted.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Cc: Ankur
+This version is good to me, thanks!
 
-> On Thu, Jan 11, 2024 at 08:52:22PM +0800, Jian Wen wrote:
->> On Thu, Jan 11, 2024 at 5:38=E2=80=AFAM Dave Chinner <david@fromorbit.co=
-m> wrote:
->> > IOWs, this is no longer considered an acceptible solution by core
->> > kernel maintainers.
->> Understood. I will only build a hotfix for our production kernel then.
->
-> Yeah, that may be your best short term fix. We'll need to clarify
-> what the current policy is on adding cond_resched points before we
-> go any further in this direction.
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-Well, right now until the scheduler situation is sorted there is no
-other solution than to add the cond_resched() muck.
+>  common/xfs | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index f53b33fc5..4e54d75cc 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -649,6 +649,9 @@ _supports_xfs_scrub()
+>  	test "$FSTYP" = "xfs" || return 1
+>  	test -x "$XFS_SCRUB_PROG" || return 1
+>  
+> +	mountpoint $mountpoint >/dev/null || \
+> +		_fail "$mountpoint is not mounted"
+> +
+>  	# Probe for kernel support...
+>  	$XFS_IO_PROG -c 'help scrub' 2>&1 | grep -q 'types are:.*probe' || return 1
+>  	$XFS_IO_PROG -c "scrub probe" "$mountpoint" 2>&1 | grep -q "Inappropriate ioctl" && return 1
+> -- 
+> 2.39.2
+> 
+> 
 
-> Thomas, any update on what is happening with cond_resched() - is
-> there an ETA on it going away/being unnecessary?
-
-Ankur is working on that...
