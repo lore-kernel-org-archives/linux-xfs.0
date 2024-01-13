@@ -1,47 +1,34 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD6814F82
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2024 18:41:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8368E17739;
+	Sat, 13 Jan 2024 00:29:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c7IKnoyW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705084882;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=InEFlUl/7zNwOQfAebMbrHwd59cfj51i23SF+8/l9nM=;
-	b=c7IKnoyW+9lLKlJ00Vvd6BA4qCZubmyOKKp0p5iAEuqJ6rIwNRm/gF2j62McDMMgBaSKB5
-	Eb2BX5AIb1CFETiHm6lZjnw+28kVcKhyG62EWFEDvvtweQubcyK394bnrgBnAiuHrE+FWY
-	jG/+MrlCtrEN9R0qjuvdXXc/u3HkQw8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-340-YeJQxBCdMiSLvGWCsF1sUA-1; Fri, 12 Jan 2024 13:41:15 -0500
-X-MC-Unique: YeJQxBCdMiSLvGWCsF1sUA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AFB4E85A589;
-	Fri, 12 Jan 2024 18:41:14 +0000 (UTC)
-Received: from bfoster (unknown [10.22.33.103])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 47A712166B31;
-	Fri, 12 Jan 2024 18:41:14 +0000 (UTC)
-Date: Fri, 12 Jan 2024 13:42:32 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Long Li <leo.lilong@huawei.com>
-Cc: Dave Chinner <david@fromorbit.com>, djwong@kernel.org,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH] xfs: ensure submit buffers on LSN boundaries in error
- handlers
-Message-ID: <ZaGH79UhpFUz8hOs@bfoster>
-References: <20231228124646.142757-1-leo.lilong@huawei.com>
- <ZZ86sxUcO0xUpqno@dread.disaster.area>
- <20240112125547.GA3459971@ceph-admin>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XDS7Oz0F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0944C433F1;
+	Sat, 13 Jan 2024 00:29:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1705105770;
+	bh=JAvwWUtmXl0VoUe1t4B4U2Vs7n3vjhfaIM/dqJeCdDE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XDS7Oz0Fyk20HkbbwDerLmzg8UgsATURp3iWM43OMggELC2/csRYvv4KnaYtLX519
+	 gPXFQwhN+vqof1Vi2PlLqNpLuDg5MbQMh6qFrjC2Z07SsZplsxiWMi1Dwpp5Fbscko
+	 x2oo5XK45aZLphzrD0w5i9J+VrsOVovN4UhWNDZHIYzDty1CbmJaZ6g3GsIygAfBU9
+	 yDvL4aoFLXWL1hsUIL0nhnnJDlH03eSVDYT8C5oMYiH6ZvizoWPdLU1WN+Y5qGuXu2
+	 9d72/K+vv3DJV/m2de8e00PFXbub6IzPMKd8F4RyDKXnQ187984ueSxszvDMSFwW9J
+	 FgkP/Dsk3CtlQ==
+Date: Fri, 12 Jan 2024 16:29:30 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Mateusz Guzik <mjguzik@gmail.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+	Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v5 3/3] xfs: Remove mrlock wrapper
+Message-ID: <20240113002930.GZ722975@frogsfrogsfrogs>
+References: <20240111212424.3572189-1-willy@infradead.org>
+ <20240111212424.3572189-4-willy@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,190 +37,251 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240112125547.GA3459971@ceph-admin>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
+In-Reply-To: <20240111212424.3572189-4-willy@infradead.org>
 
-On Fri, Jan 12, 2024 at 08:55:47PM +0800, Long Li wrote:
-> On Thu, Jan 11, 2024 at 11:47:47AM +1100, Dave Chinner wrote:
-> > On Thu, Dec 28, 2023 at 08:46:46PM +0800, Long Li wrote:
-> > > In order to make sure that submits buffers on lsn boundaries in the
-> > > abnormal paths, we need to check error status before submit buffers that
-> > > have been added from the last record processed. If error status exist,
-> > > buffers in the bufffer_list should be canceled.
-> > > 
-> > > Canceling the buffers in the buffer_list directly isn't correct, unlike
-> > > any other place where write list was canceled, these buffers has been
-> > > initialized by xfs_buf_item_init() during recovery and held by buf
-> > > item, buf items will not be released in xfs_buf_delwri_cancel(). If
-> > > these buffers are submitted successfully, buf items assocated with
-> > > the buffer will be released in io end process. So releasing buf item
-> > > in write list cacneling process is needed.
-> > 
-> > I still don't think this is correct.
-> > 
-> > > Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
-> > > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > > ---
-> > >  fs/xfs/xfs_buf.c         |  2 ++
-> > >  fs/xfs/xfs_log_recover.c | 22 +++++++++++++---------
-> > >  2 files changed, 15 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index 8e5bd50d29fe..6a1b26aaf97e 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -2075,6 +2075,8 @@ xfs_buf_delwri_cancel(
-> > >  		xfs_buf_lock(bp);
-> > >  		bp->b_flags &= ~_XBF_DELWRI_Q;
-> > >  		xfs_buf_list_del(bp);
-> > > +		if (bp->b_log_item)
-> > > +			xfs_buf_item_relse(bp);
-> > >  		xfs_buf_relse(bp);
-> > 
-> > I still don't think this is safe.  The buffer log item might still be
-> > tracked in the AIL when the delwri list is cancelled, so the delwri
-> > list cancelling cannot release the BLI without removing the item
-> > from the AIL, too. The delwri cancelling walk really shouldn't be
-> > screwing with AIL state, which means it can't touch the BLIs here.
-> > 
-> > At minimum, it's a landmine for future users of
-> > xfs_buf_delwri_cancel().  A quick look at the quotacheck code
-> > indicates that it can cancel delwri lists that have BLIs in the AIL
-> > (for newly allocated dquot chunks), so I think this is a real concern.
-> > 
-> > This is one of the reasons for submitting the delwri list on error;
-> > the IO completion code does all the correct cleanup of log items
-> > including removing them from the AIL because the buffer is now
-> > either clean or stale and no longer needs to be tracked by the AIL.
+On Thu, Jan 11, 2024 at 09:24:24PM +0000, Matthew Wilcox (Oracle) wrote:
+> mrlock was an rwsem wrapper that also recorded whether the lock was
+> held for read or write.  Now that we can ask the generic code whether
+> the lock is held for read or write, we can remove this wrapper and use
+> an rwsem directly.
 > 
-> Yes, it's not a safety solution.
+> As the comment says, we can't use lockdep to assert that the ILOCK is
+> held for write, because we might be in a workqueue, and we aren't able
+> to tell lockdep that we do in fact own the lock.
 > 
-> > 
-> > If the filesystem has been shut down, then delwri list submission
-> > will error out all buffers on the list via IO submission/completion
-> > and do all the correct cleanup automatically.
-> > 
-> > I note that write IO errors during log recovery will cause immediate
-> > shutdown of the filesytsem via xfs_buf_ioend_handle_error():
-> > 
-> > 	/*
-> >          * We're not going to bother about retrying this during recovery.
-> >          * One strike!
-> >          */
-> >         if (bp->b_flags & _XBF_LOGRECOVERY) {
-> >                 xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-> >                 return false;
-> >         }
-> > 
-> > So I'm guessing that the IO error injection error that caused this
-> > failure was on a buffer read part way through recovering items.
-> > 
-> > Can you confirm that the failure is only seen after read IO error
-> > injection and that write IO error injection causes immediate
-> > shutdown and so avoids the problem altogether?
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  fs/xfs/mrlock.h    | 78 ----------------------------------------------
+>  fs/xfs/xfs_inode.c | 22 +++++++------
+>  fs/xfs/xfs_inode.h |  2 +-
+>  fs/xfs/xfs_iops.c  |  4 +--
+>  fs/xfs/xfs_linux.h |  2 +-
+>  fs/xfs/xfs_super.c |  4 +--
+>  6 files changed, 18 insertions(+), 94 deletions(-)
+>  delete mode 100644 fs/xfs/mrlock.h
 > 
-> This problem reproduce very hard, we reproduce it only three times.
-> There may be several mounts between writing buffer not on LSN boundaries
-> and reporting free space btree corruption, I can't distinguish the
-> violation happend in which mount during test. So judging by the message
-> I've reprodced, I can't confirm that the failure is only seen after read
-> IO error injection. Look at one of the kernel message I've reprodced,
-> there are several mount fails before reporting free space btree corruption,
-> the reasons of mount fail include read IO error and write IO error.
-> 
-> [51555.801349] XFS (dm-3): Mounting V5 Filesystem
-> [51555.982130] XFS (dm-3): Starting recovery (logdev: internal)
-> [51558.153638] FAULT_INJECTION: forcing a failure.
->                name fail_make_request, interval 20, probability 1, space 0, times -1
-> [51558.153723] XFS (dm-3): log recovery read I/O error at daddr 0x3972 len 1 error -5
-> [51558.165996] XFS (dm-3): log mount/recovery failed: error -5
-> [51558.166880] XFS (dm-3): log mount failed
-> [51558.410963] XFS (dm-3): EXPERIMENTAL big timestamp feature in use. Use at your own risk!
-> [51558.410981] XFS (dm-3): EXPERIMENTAL inode btree counters feature in use. Use at your own risk!
-> [51558.413074] XFS (dm-3): Mounting V5 Filesystem
-> [51558.595739] XFS (dm-3): Starting recovery (logdev: internal)
-> [51559.592552] FAULT_INJECTION: forcing a failure.
->                name fail_make_request, interval 20, probability 1, space 0, times -1
-> [51559.593008] XFS (dm-3): metadata I/O error in "xfs_buf_ioend_handle_error+0x170/0x760 [xfs]" at daddr 0x1879e0 len 32 error 5
-> [51559.593335] XFS (dm-3): Metadata I/O Error (0x1) detected at xfs_buf_ioend_handle_error+0x63c/0x760 [xfs] (fs/xfs/xfs_buf.c:1272).  Shutting down filesystem.
-> [51559.593346] XFS (dm-3): Please unmount the filesystem and rectify the problem(s)
-> [51559.602833] XFS (dm-3): log mount/recovery failed: error -5
-> [51559.603772] XFS (dm-3): log mount failed
-> [51559.835690] XFS (dm-3): EXPERIMENTAL big timestamp feature in use. Use at your own risk!
-> [51559.835708] XFS (dm-3): EXPERIMENTAL inode btree counters feature in use. Use at your own risk!
-> [51559.837829] XFS (dm-3): Mounting V5 Filesystem
-> [51560.024083] XFS (dm-3): Starting recovery (logdev: internal)
-> [51562.155545] FAULT_INJECTION: forcing a failure.
->                name fail_make_request, interval 20, probability 1, space 0, times -1
-> [51562.445074] XFS (dm-3): Ending recovery (logdev: internal)
-> [51563.553960] XFS (dm-3): Internal error ltbno + ltlen > bno at line 1976 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x558/0xd80 [xfs]
-> [51563.558629] XFS (dm-3): Corruption detected. Unmount and run xfs_repair
-> 
-> > 
-> > If so, then all we need to do to handle instantiation side errors (EIO, ENOMEM,
-> > etc) is this:
-> > 
-> > 	/*
-> > 	 * Submit buffers that have been dirtied by the last record recovered.
-> > 	 */
-> > 	if (!list_empty(&buffer_list)) {
-> > 		if (error) {
-> > 			/*
-> > 			 * If there has been an item recovery error then we
-> > 			 * cannot allow partial checkpoint writeback to
-> > 			 * occur.  We might have multiple checkpoints with the
-> > 			 * same start LSN in this buffer list, and partial
-> > 			 * writeback of a checkpoint in this situation can
-> > 			 * prevent future recovery of all the changes in the
-> > 			 * checkpoints at this start LSN.
-> > 			 *
-> > 			 * Note: Shutting down the filesystem will result in the
-> > 			 * delwri submission marking all the buffers stale,
-> > 			 * completing them and cleaning up _XBF_LOGRECOVERY
-> > 			 * state without doing any IO.
-> > 			 */
-> > 			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-> > 		}
-> > 		error2 = xfs_buf_delwri_submit(&buffer_list);
-> > 	}
-> >
-> 
-> This solution is also used in our internally maintained linux branch,
-> and after several months of testing, the problem no longer arises. It
-> seems safe and reasonable enough.
-> 
+> diff --git a/fs/xfs/mrlock.h b/fs/xfs/mrlock.h
+> deleted file mode 100644
+> index 79155eec341b..000000000000
+> --- a/fs/xfs/mrlock.h
+> +++ /dev/null
+> @@ -1,78 +0,0 @@
+> -// SPDX-License-Identifier: GPL-2.0
+> -/*
+> - * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+> - * All Rights Reserved.
+> - */
+> -#ifndef __XFS_SUPPORT_MRLOCK_H__
+> -#define __XFS_SUPPORT_MRLOCK_H__
+> -
+> -#include <linux/rwsem.h>
+> -
+> -typedef struct {
+> -	struct rw_semaphore	mr_lock;
+> -#if defined(DEBUG) || defined(XFS_WARN)
+> -	int			mr_writer;
+> -#endif
+> -} mrlock_t;
+> -
+> -#if defined(DEBUG) || defined(XFS_WARN)
+> -#define mrinit(mrp, name)	\
+> -	do { (mrp)->mr_writer = 0; init_rwsem(&(mrp)->mr_lock); } while (0)
+> -#else
+> -#define mrinit(mrp, name)	\
+> -	do { init_rwsem(&(mrp)->mr_lock); } while (0)
+> -#endif
+> -
+> -#define mrlock_init(mrp, t,n,s)	mrinit(mrp, n)
+> -#define mrfree(mrp)		do { } while (0)
+> -
+> -static inline void mraccess_nested(mrlock_t *mrp, int subclass)
+> -{
+> -	down_read_nested(&mrp->mr_lock, subclass);
+> -}
+> -
+> -static inline void mrupdate_nested(mrlock_t *mrp, int subclass)
+> -{
+> -	down_write_nested(&mrp->mr_lock, subclass);
+> -#if defined(DEBUG) || defined(XFS_WARN)
+> -	mrp->mr_writer = 1;
+> -#endif
+> -}
+> -
+> -static inline int mrtryaccess(mrlock_t *mrp)
+> -{
+> -	return down_read_trylock(&mrp->mr_lock);
+> -}
+> -
+> -static inline int mrtryupdate(mrlock_t *mrp)
+> -{
+> -	if (!down_write_trylock(&mrp->mr_lock))
+> -		return 0;
+> -#if defined(DEBUG) || defined(XFS_WARN)
+> -	mrp->mr_writer = 1;
+> -#endif
+> -	return 1;
+> -}
+> -
+> -static inline void mrunlock_excl(mrlock_t *mrp)
+> -{
+> -#if defined(DEBUG) || defined(XFS_WARN)
+> -	mrp->mr_writer = 0;
+> -#endif
+> -	up_write(&mrp->mr_lock);
+> -}
+> -
+> -static inline void mrunlock_shared(mrlock_t *mrp)
+> -{
+> -	up_read(&mrp->mr_lock);
+> -}
+> -
+> -static inline void mrdemote(mrlock_t *mrp)
+> -{
+> -#if defined(DEBUG) || defined(XFS_WARN)
+> -	mrp->mr_writer = 0;
+> -#endif
+> -	downgrade_write(&mrp->mr_lock);
+> -}
+> -
+> -#endif /* __XFS_SUPPORT_MRLOCK_H__ */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 728b3bc1c3db..b9b2af913e89 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -203,9 +203,9 @@ xfs_ilock(
+>  	}
+>  
+>  	if (lock_flags & XFS_ILOCK_EXCL)
+> -		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+> +		down_write_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+>  	else if (lock_flags & XFS_ILOCK_SHARED)
+> -		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+> +		down_read_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+>  }
+>  
+>  /*
+> @@ -246,10 +246,10 @@ xfs_ilock_nowait(
+>  	}
+>  
+>  	if (lock_flags & XFS_ILOCK_EXCL) {
+> -		if (!mrtryupdate(&ip->i_lock))
+> +		if (!down_write_trylock(&ip->i_lock))
+>  			goto out_undo_mmaplock;
+>  	} else if (lock_flags & XFS_ILOCK_SHARED) {
+> -		if (!mrtryaccess(&ip->i_lock))
+> +		if (!down_read_trylock(&ip->i_lock))
+>  			goto out_undo_mmaplock;
+>  	}
+>  	return 1;
+> @@ -298,9 +298,9 @@ xfs_iunlock(
+>  		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
+>  
+>  	if (lock_flags & XFS_ILOCK_EXCL)
+> -		mrunlock_excl(&ip->i_lock);
+> +		up_write(&ip->i_lock);
+>  	else if (lock_flags & XFS_ILOCK_SHARED)
+> -		mrunlock_shared(&ip->i_lock);
+> +		up_read(&ip->i_lock);
+>  
+>  	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
+>  }
+> @@ -319,7 +319,7 @@ xfs_ilock_demote(
+>  		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
+>  
+>  	if (lock_flags & XFS_ILOCK_EXCL)
+> -		mrdemote(&ip->i_lock);
+> +		downgrade_write(&ip->i_lock);
+>  	if (lock_flags & XFS_MMAPLOCK_EXCL)
+>  		downgrade_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+>  	if (lock_flags & XFS_IOLOCK_EXCL)
+> @@ -333,10 +333,14 @@ xfs_assert_ilocked(
+>  	struct xfs_inode	*ip,
+>  	uint			lock_flags)
+>  {
+> +	/*
+> +	 * Sometimes we assert the ILOCK is held exclusively, but we're in
+> +	 * a workqueue, so lockdep doesn't know we're the owner.
+> +	 */
+>  	if (lock_flags & XFS_ILOCK_SHARED)
+> -		rwsem_assert_held(&ip->i_lock.mr_lock);
+> +		rwsem_assert_held(&ip->i_lock);
+>  	else if (lock_flags & XFS_ILOCK_EXCL)
+> -		ASSERT(ip->i_lock.mr_writer);
+> +		rwsem_assert_held_write_nolockdep(&ip->i_lock);
 
-I assume you're referring to the xfs_buf_delwri_cancel() change..? If
-so, this is a valid data point but doesn't necessarily help explain
-whether the change is correct in any other context. I/O cancel probably
-doesn't happen often for one, and even if it does, it's not totally
-clear if you're reproducing a situation where the item might be AIL
-resident or not at the time (or it is and you have a use after free that
-goes undetected). And even if none of that is relevant, that still
-doesn't protect against future code changes if this code doesn't respect
-the established bli lifecycle rules.
+Hooray, someone finally broke the gordian knot!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-IIRC, the bli_refcount (sampled via xfs_buf_item_relse()) is not
-necessarily an object lifecycle refcount. It simply reflects whether the
-item exists in a transaction where it might eventually be dirtied. This
-is somewhat tricky, but can also be surmised from some of the logic in
-xfs_buf_item_put(), for example.
+--D
 
-IOW, I think in the simple (non-recovery) case of a buffer being read,
-modified and committed by a transaction, the bli would eventually end up
-in a state where bli_refcount == 0 but is still resident in the AIL
-until eventually written back by xfsaild. That metadata writeback
-completion is what eventually frees the bli via xfs_buf_item_done().
-
-So if I'm not mistaken wrt to the above example sequence, the
-interesting question is if we suppose a buffer is in that intermediate
-state of waiting for writeback, and then somebody were to hypothetically
-execute a bit of code that simply added the associated buffer to a
-delwri q and immediately cancelled it, what would happen with this
-change in place? ISTM the remove would prematurely free the buffer/bli
-while it's still resident in the AIL and pending writeback, thus
-resulting in use-after-free or potential memory/list corruption, etc. Is
-that not the case?
-
-Brian
-
+>  
+>  	if (lock_flags & XFS_MMAPLOCK_SHARED)
+>  		rwsem_assert_held(&VFS_I(ip)->i_mapping->invalidate_lock);
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index dcc818901a79..796d11065fe2 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -39,7 +39,7 @@ typedef struct xfs_inode {
+>  
+>  	/* Transaction and locking information. */
+>  	struct xfs_inode_log_item *i_itemp;	/* logging information */
+> -	mrlock_t		i_lock;		/* inode lock */
+> +	struct rw_semaphore	i_lock;		/* inode lock */
+>  	atomic_t		i_pincount;	/* inode pin count */
+>  	struct llist_node	i_gclist;	/* deferred inactivation list */
+>  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index e7fca1913175..73f46486c252 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1284,9 +1284,9 @@ xfs_setup_inode(
+>  		 */
+>  		lockdep_set_class(&inode->i_rwsem,
+>  				  &inode->i_sb->s_type->i_mutex_dir_key);
+> -		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+> +		lockdep_set_class(&ip->i_lock, &xfs_dir_ilock_class);
+>  	} else {
+> -		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
+> +		lockdep_set_class(&ip->i_lock, &xfs_nondir_ilock_class);
+>  	}
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index d7873e0360f0..ec3c6c138a63 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -22,7 +22,6 @@ typedef __u32			xfs_nlink_t;
+>  #include "xfs_types.h"
+>  
+>  #include "kmem.h"
+> -#include "mrlock.h"
+>  
+>  #include <linux/semaphore.h>
+>  #include <linux/mm.h>
+> @@ -51,6 +50,7 @@ typedef __u32			xfs_nlink_t;
+>  #include <linux/notifier.h>
+>  #include <linux/delay.h>
+>  #include <linux/log2.h>
+> +#include <linux/rwsem.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/random.h>
+>  #include <linux/ctype.h>
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index aff20ddd4a9f..15831c53a83b 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -716,9 +716,7 @@ xfs_fs_inode_init_once(
+>  	/* xfs inode */
+>  	atomic_set(&ip->i_pincount, 0);
+>  	spin_lock_init(&ip->i_flags_lock);
+> -
+> -	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+> -		     "xfsino", ip->i_ino);
+> +	init_rwsem(&ip->i_lock);
+>  }
+>  
+>  /*
+> -- 
+> 2.43.0
+> 
+> 
