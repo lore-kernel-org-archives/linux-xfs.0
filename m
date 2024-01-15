@@ -1,63 +1,63 @@
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CD3B1B5BA
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D59251B7EA
 	for <linux-xfs@vger.kernel.org>; Mon, 15 Jan 2024 23:01:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bPyqrvi8"
-Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3bd5c4cffefso3518311b6e.1
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KMUiIR2m"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-28ddd807e4bso2323009a91.3
         for <linux-xfs@vger.kernel.org>; Mon, 15 Jan 2024 15:01:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705359680; x=1705964480; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705359681; x=1705964481; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=AReH4fPhX0qnf2rGMtllGHRPMoAw4H7smgC9h2elFy0=;
-        b=bPyqrvi80G9jtjJzDoRk4SM/l35+fLKrcZywoROhRN3/PizE5IplWy90ypl6nDj6+K
-         51pfOaXDNtKNVBX5ZAquV95JcPQYrue7cQVETDqoLAUaPjmfdfVidlzE+EmPAmdYGbM7
-         q4qgf/m8XpeIwvlA09dtMYqhG4hM0Xapv0ItNVH+OmyZ07pI9uVszZeEf0IOznB5733A
-         YXDJjJ5wNJqLQ8Q2SO0Ghw5d2w033VcnJMrl+JMrvcJMj7OAv0XVQqtc3OX8n6iHr30Y
-         oFnRZMppyD0emXOdNgAD9v6DFPtRP6AbnbNos5qvGo1HaUCVfbZoh3ovLjHWJ36pP+iu
-         TVeg==
+        bh=tgxEN+dxuPsIPQ/X2jxskuPK8v7LK84zp/ZH+sCdiJw=;
+        b=KMUiIR2mM6K4oYgwNLz5/r9E2V5txK/xSZkC/Gvd432M/5pvtefipDhNpiPPBfNNCc
+         tK9hk5xszEZ5yCAU6DZQ10+qbgALP8emdzNn2rCVoKipOzX4yynxoEGki8i2qquiIcjN
+         xRUVZ7GsVQVZD45ebe4U00AaI5rC1lNkwbnZforJrhsWdh9pMmUvd1SmAnxNT04T3Zxy
+         N89RvIGhUNvpH+UE249wkiyI+lo/VI4Of9UpMFtKWyezu2Dv5inPvDVeM7boSTzUDnBP
+         5CR/7BI+3uhkv8GweuC+FfxQpsn52ZrPu2oGCmRI/+D4s5JTJ9BYBvavK42hS6pOxwnT
+         Jidg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705359680; x=1705964480;
+        d=1e100.net; s=20230601; t=1705359681; x=1705964481;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=AReH4fPhX0qnf2rGMtllGHRPMoAw4H7smgC9h2elFy0=;
-        b=iHWrVLKotQF1gpignb8TZqteUSE6yg1USO616Ky6om+dRhpvG1pWtBP5Sw2tfLmtiu
-         FoPmDmxI+xMrC4RlluoE45GX6Ophp3+/8rfz49mxQYPOBM4T8oWcCZoBKnlfFSrRicWK
-         JOt7uzb9/X9UxGoVm2h3yw2Rjp0iyLkx286hA4aa5RMZxZixak3lCKJiu69atR5y6CAO
-         GJ/7G8ILoandEAW37X+L0HULVKA5uwij26W7s1wEJHGAnq3hmCcvITHECopBPO9VgrJr
-         5OoNanwmcLMAybOafGdJpdihswV9WEEpsd1HA/Eql7Qeo2rfNEjV40cRP/+jowgttOL/
-         W08w==
-X-Gm-Message-State: AOJu0YzXKkma5XKfSYOtL52pcJF4PBY9o1zMa7nknU+OCNofk7G0YQId
-	g8Y+U1O+ancdJiPTTpLXcCGtUAQ0smF73gYFCAS2kNLkycQ=
-X-Google-Smtp-Source: AGHT+IEYlcJQMm5bEb8rOiDx/77KPnN71bc52YGCAdpGz+zxZPCud2iakyhoXEj0f1EPTTWIVkPnhA==
-X-Received: by 2002:a05:6808:1826:b0:3bd:5be7:def2 with SMTP id bh38-20020a056808182600b003bd5be7def2mr7489577oib.8.1705359680200;
-        Mon, 15 Jan 2024 15:01:20 -0800 (PST)
+        bh=tgxEN+dxuPsIPQ/X2jxskuPK8v7LK84zp/ZH+sCdiJw=;
+        b=KCrDxqmMlWD6wSqf9saODuqp6mjBrQxXa2TajG5SS8j8rXiOX2i7jQyRnFIrGqSzJL
+         AUqOdTSZshkmtBfXLAZGYVHZ99UZ7gmySB2De02+UmnaIxXU0rbxuNR+eZQtHsVfSvtn
+         cVL+vmB2ayjmmbCK12xiH9L6pqZAjuf3QF7BnkP7YwvrgQAJjaJIZI3HciDhk//zKYGI
+         rouGQVlZkOg/OFpa8Q8MWSPTAf3AsFJASp8rGdrrjoN3g49GVLNzFG5YcOKDgno+Tzuv
+         C+O+5Z9yz6jgenwdCzvH3jcEKfPo0K3jZe9e8/AQbDi35MEFaWLVG/tosi0IxVtKZRCG
+         AdBA==
+X-Gm-Message-State: AOJu0YxCa400HydQCxto4SJW0V0bJ6ny7ZeQZwiZvW1g+fUtkBoRuLnK
+	busliU26N7lfiyLmPEU7DBaGXXU5/dygB4E4wGE+wppR460=
+X-Google-Smtp-Source: AGHT+IGzpNwsKNu7NVgPnlnsyEIybtI/t9LRuDCZhvbpZAVN6r4/IhKNwivF+6D2KG20ozQ0wahSCw==
+X-Received: by 2002:a17:90a:e01:b0:28d:2cee:119e with SMTP id v1-20020a17090a0e0100b0028d2cee119emr3549236pje.39.1705359681331;
+        Mon, 15 Jan 2024 15:01:21 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id c23-20020aa78817000000b006d96dc803b3sm8366593pfo.12.2024.01.15.15.01.18
+        by smtp.gmail.com with ESMTPSA id sh2-20020a17090b524200b0028dfdfc9a8esm8737391pjb.37.2024.01.15.15.01.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 15 Jan 2024 15:01:18 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1rPVxE-00AtKJ-0l;
+	id 1rPVxE-00AtKZ-1D;
 	Tue, 16 Jan 2024 10:01:15 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1rPVxD-0000000H8fw-2xxB;
+	id 1rPVxD-0000000H8gH-3WIC;
 	Tue, 16 Jan 2024 10:01:15 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: linux-xfs@vger.kernel.org
 Cc: willy@infradead.org,
 	linux-mm@kvack.org
-Subject: [PATCH 08/12] xfs: use GFP_KERNEL in pure transaction contexts
-Date: Tue, 16 Jan 2024 09:59:46 +1100
-Message-ID: <20240115230113.4080105-9-david@fromorbit.com>
+Subject: [PATCH 12/12] xfs: use xfs_defer_alloc a bit more
+Date: Tue, 16 Jan 2024 09:59:50 +1100
+Message-ID: <20240115230113.4080105-13-david@fromorbit.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240115230113.4080105-1-david@fromorbit.com>
 References: <20240115230113.4080105-1-david@fromorbit.com>
@@ -71,328 +71,70 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When running in a transaction context, memory allocations are scoped
-to GFP_NOFS. Hence we don't need to use GFP_NOFS contexts in pure
-transaction context allocations - GFP_KERNEL will automatically get
-converted to GFP_NOFS as appropriate.
-
-Go through the code and convert all the obvious GFP_NOFS allocations
-in transaction context to use GFP_KERNEL. This further reduces the
-explicit use of GFP_NOFS in XFS.
+Noticed by inspection, simple factoring allows the same allocation
+routine to be used for both transaction and recovery contexts.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_attr.c       |  3 ++-
- fs/xfs/libxfs/xfs_bmap.c       |  2 +-
- fs/xfs/libxfs/xfs_defer.c      |  6 +++---
- fs/xfs/libxfs/xfs_dir2.c       |  8 ++++----
- fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
- fs/xfs/libxfs/xfs_refcount.c   |  2 +-
- fs/xfs/libxfs/xfs_rmap.c       |  2 +-
- fs/xfs/xfs_attr_item.c         |  4 ++--
- fs/xfs/xfs_bmap_util.c         |  2 +-
- fs/xfs/xfs_buf.c               | 28 +++++++++++++++++-----------
- fs/xfs/xfs_log.c               |  3 ++-
- fs/xfs/xfs_mru_cache.c         |  2 +-
- 12 files changed, 39 insertions(+), 31 deletions(-)
+ fs/xfs/libxfs/xfs_defer.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 9976a00a73f9..269a57420859 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -891,7 +891,8 @@ xfs_attr_defer_add(
- 
- 	struct xfs_attr_intent	*new;
- 
--	new = kmem_cache_zalloc(xfs_attr_intent_cache, GFP_NOFS | __GFP_NOFAIL);
-+	new = kmem_cache_zalloc(xfs_attr_intent_cache,
-+			GFP_KERNEL | __GFP_NOFAIL);
- 	new->xattri_op_flags = op_flags;
- 	new->xattri_da_args = args;
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 98aaca933bdd..fbdaa53deecd 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6098,7 +6098,7 @@ __xfs_bmap_add(
- 			bmap->br_blockcount,
- 			bmap->br_state);
- 
--	bi = kmem_cache_alloc(xfs_bmap_intent_cache, GFP_NOFS | __GFP_NOFAIL);
-+	bi = kmem_cache_alloc(xfs_bmap_intent_cache, GFP_KERNEL | __GFP_NOFAIL);
- 	INIT_LIST_HEAD(&bi->bi_list);
- 	bi->bi_type = type;
- 	bi->bi_owner = ip;
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 75689c151a54..8ae4401f6810 100644
+index 8ae4401f6810..6ed3a5fda081 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -825,7 +825,7 @@ xfs_defer_alloc(
- 	struct xfs_defer_pending	*dfp;
- 
- 	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
--			GFP_NOFS | __GFP_NOFAIL);
-+			GFP_KERNEL | __GFP_NOFAIL);
- 	dfp->dfp_ops = ops;
- 	INIT_LIST_HEAD(&dfp->dfp_work);
- 	list_add_tail(&dfp->dfp_list, &tp->t_dfops);
-@@ -888,7 +888,7 @@ xfs_defer_start_recovery(
- 	struct xfs_defer_pending	*dfp;
- 
- 	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
--			GFP_NOFS | __GFP_NOFAIL);
-+			GFP_KERNEL | __GFP_NOFAIL);
- 	dfp->dfp_ops = ops;
- 	dfp->dfp_intent = lip;
- 	INIT_LIST_HEAD(&dfp->dfp_work);
-@@ -979,7 +979,7 @@ xfs_defer_ops_capture(
- 		return ERR_PTR(error);
- 
- 	/* Create an object to capture the defer ops. */
--	dfc = kzalloc(sizeof(*dfc), GFP_NOFS | __GFP_NOFAIL);
-+	dfc = kzalloc(sizeof(*dfc), GFP_KERNEL | __GFP_NOFAIL);
- 	INIT_LIST_HEAD(&dfc->dfc_list);
- 	INIT_LIST_HEAD(&dfc->dfc_dfops);
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 728f72f0d078..8c9403b33191 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -236,7 +236,7 @@ xfs_dir_init(
- 	if (error)
- 		return error;
- 
--	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-+	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
- 	if (!args)
- 		return -ENOMEM;
- 
-@@ -273,7 +273,7 @@ xfs_dir_createname(
- 		XFS_STATS_INC(dp->i_mount, xs_dir_create);
- 	}
- 
--	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-+	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
- 	if (!args)
- 		return -ENOMEM;
- 
-@@ -435,7 +435,7 @@ xfs_dir_removename(
- 	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
- 
--	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-+	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
- 	if (!args)
- 		return -ENOMEM;
- 
-@@ -496,7 +496,7 @@ xfs_dir_replace(
- 	if (rval)
- 		return rval;
- 
--	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-+	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
- 	if (!args)
- 		return -ENOMEM;
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 709fda3d742f..136d5d7b9de9 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -402,7 +402,7 @@ xfs_iroot_realloc(
- 		if (ifp->if_broot_bytes == 0) {
- 			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
- 			ifp->if_broot = kmalloc(new_size,
--						GFP_NOFS | __GFP_NOFAIL);
-+						GFP_KERNEL | __GFP_NOFAIL);
- 			ifp->if_broot_bytes = (int)new_size;
- 			return;
- 		}
-@@ -417,7 +417,7 @@ xfs_iroot_realloc(
- 		new_max = cur_max + rec_diff;
- 		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
- 		ifp->if_broot = krealloc(ifp->if_broot, new_size,
--					 GFP_NOFS | __GFP_NOFAIL);
-+					 GFP_KERNEL | __GFP_NOFAIL);
- 		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
- 						     ifp->if_broot_bytes);
- 		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-@@ -443,7 +443,7 @@ xfs_iroot_realloc(
- 	else
- 		new_size = 0;
- 	if (new_size > 0) {
--		new_broot = kmalloc(new_size, GFP_NOFS | __GFP_NOFAIL);
-+		new_broot = kmalloc(new_size, GFP_KERNEL | __GFP_NOFAIL);
- 		/*
- 		 * First copy over the btree block header.
- 		 */
-@@ -512,7 +512,7 @@ xfs_idata_realloc(
- 
- 	if (byte_diff) {
- 		ifp->if_data = krealloc(ifp->if_data, new_size,
--					GFP_NOFS | __GFP_NOFAIL);
-+					GFP_KERNEL | __GFP_NOFAIL);
- 		if (new_size == 0)
- 			ifp->if_data = NULL;
- 		ifp->if_bytes = new_size;
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 6709a7f8bad5..7df52daa22cf 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1449,7 +1449,7 @@ __xfs_refcount_add(
- 			blockcount);
- 
- 	ri = kmem_cache_alloc(xfs_refcount_intent_cache,
--			GFP_NOFS | __GFP_NOFAIL);
-+			GFP_KERNEL | __GFP_NOFAIL);
- 	INIT_LIST_HEAD(&ri->ri_list);
- 	ri->ri_type = type;
- 	ri->ri_startblock = startblock;
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 76bf7f48cb5a..0bd1f47b2c2b 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2559,7 +2559,7 @@ __xfs_rmap_add(
- 			bmap->br_blockcount,
- 			bmap->br_state);
- 
--	ri = kmem_cache_alloc(xfs_rmap_intent_cache, GFP_NOFS | __GFP_NOFAIL);
-+	ri = kmem_cache_alloc(xfs_rmap_intent_cache, GFP_KERNEL | __GFP_NOFAIL);
- 	INIT_LIST_HEAD(&ri->ri_list);
- 	ri->ri_type = type;
- 	ri->ri_owner = owner;
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 2a142cefdc3d..0bf25a2ba3b6 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -226,7 +226,7 @@ xfs_attri_init(
+@@ -819,7 +819,7 @@ xfs_defer_can_append(
+ /* Create a new pending item at the end of the transaction list. */
+ static inline struct xfs_defer_pending *
+ xfs_defer_alloc(
+-	struct xfs_trans		*tp,
++	struct list_head		*dfops,
+ 	const struct xfs_defer_op_type	*ops)
  {
- 	struct xfs_attri_log_item	*attrip;
+ 	struct xfs_defer_pending	*dfp;
+@@ -828,7 +828,7 @@ xfs_defer_alloc(
+ 			GFP_KERNEL | __GFP_NOFAIL);
+ 	dfp->dfp_ops = ops;
+ 	INIT_LIST_HEAD(&dfp->dfp_work);
+-	list_add_tail(&dfp->dfp_list, &tp->t_dfops);
++	list_add_tail(&dfp->dfp_list, dfops);
  
--	attrip = kmem_cache_zalloc(xfs_attri_cache, GFP_NOFS | __GFP_NOFAIL);
-+	attrip = kmem_cache_zalloc(xfs_attri_cache, GFP_KERNEL | __GFP_NOFAIL);
+ 	return dfp;
+ }
+@@ -846,7 +846,7 @@ xfs_defer_add(
  
- 	/*
- 	 * Grab an extra reference to the name/value buffer for this log item.
-@@ -666,7 +666,7 @@ xfs_attr_create_done(
+ 	dfp = xfs_defer_find_last(tp, ops);
+ 	if (!dfp || !xfs_defer_can_append(dfp, ops))
+-		dfp = xfs_defer_alloc(tp, ops);
++		dfp = xfs_defer_alloc(&tp->t_dfops, ops);
  
- 	attrip = ATTRI_ITEM(intent);
+ 	xfs_defer_add_item(dfp, li);
+ 	trace_xfs_defer_add_item(tp->t_mountp, dfp, li);
+@@ -870,7 +870,7 @@ xfs_defer_add_barrier(
+ 	if (dfp)
+ 		return;
  
--	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
-+	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_KERNEL | __GFP_NOFAIL);
+-	xfs_defer_alloc(tp, &xfs_barrier_defer_type);
++	xfs_defer_alloc(&tp->t_dfops, &xfs_barrier_defer_type);
  
- 	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
- 			  &xfs_attrd_item_ops);
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c2531c28905c..cb2a4b940292 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -66,7 +66,7 @@ xfs_zero_extent(
- 	return blkdev_issue_zeroout(target->bt_bdev,
- 		block << (mp->m_super->s_blocksize_bits - 9),
- 		count_fsb << (mp->m_super->s_blocksize_bits - 9),
--		GFP_NOFS, 0);
-+		GFP_KERNEL, 0);
+ 	trace_xfs_defer_add_item(tp->t_mountp, dfp, NULL);
+ }
+@@ -885,14 +885,9 @@ xfs_defer_start_recovery(
+ 	struct list_head		*r_dfops,
+ 	const struct xfs_defer_op_type	*ops)
+ {
+-	struct xfs_defer_pending	*dfp;
++	struct xfs_defer_pending	*dfp = xfs_defer_alloc(r_dfops, ops);
+ 
+-	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
+-			GFP_KERNEL | __GFP_NOFAIL);
+-	dfp->dfp_ops = ops;
+ 	dfp->dfp_intent = lip;
+-	INIT_LIST_HEAD(&dfp->dfp_work);
+-	list_add_tail(&dfp->dfp_list, r_dfops);
  }
  
  /*
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a09ffbbb0dda..de99368000b4 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -190,7 +190,7 @@ xfs_buf_get_maps(
- 	}
- 
- 	bp->b_maps = kzalloc(map_count * sizeof(struct xfs_buf_map),
--				GFP_NOFS | __GFP_NOFAIL);
-+			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
- 	if (!bp->b_maps)
- 		return -ENOMEM;
- 	return 0;
-@@ -222,7 +222,8 @@ _xfs_buf_alloc(
- 	int			i;
- 
- 	*bpp = NULL;
--	bp = kmem_cache_zalloc(xfs_buf_cache, GFP_NOFS | __GFP_NOFAIL);
-+	bp = kmem_cache_zalloc(xfs_buf_cache,
-+			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
- 
- 	/*
- 	 * We don't want certain flags to appear in b_flags unless they are
-@@ -325,7 +326,7 @@ xfs_buf_alloc_kmem(
- 	struct xfs_buf	*bp,
- 	xfs_buf_flags_t	flags)
- {
--	gfp_t		gfp_mask = GFP_NOFS | __GFP_NOFAIL;
-+	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL;
- 	size_t		size = BBTOB(bp->b_length);
- 
- 	/* Assure zeroed buffer for non-read cases. */
-@@ -356,13 +357,11 @@ xfs_buf_alloc_pages(
- 	struct xfs_buf	*bp,
- 	xfs_buf_flags_t	flags)
- {
--	gfp_t		gfp_mask = __GFP_NOWARN;
-+	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOWARN;
- 	long		filled = 0;
- 
- 	if (flags & XBF_READ_AHEAD)
- 		gfp_mask |= __GFP_NORETRY;
--	else
--		gfp_mask |= GFP_NOFS;
- 
- 	/* Make sure that we have a page list */
- 	bp->b_page_count = DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
-@@ -429,11 +428,18 @@ _xfs_buf_map_pages(
- 
- 		/*
- 		 * vm_map_ram() will allocate auxiliary structures (e.g.
--		 * pagetables) with GFP_KERNEL, yet we are likely to be under
--		 * GFP_NOFS context here. Hence we need to tell memory reclaim
--		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
--		 * memory reclaim re-entering the filesystem here and
--		 * potentially deadlocking.
-+		 * pagetables) with GFP_KERNEL, yet we often under a scoped nofs
-+		 * context here. Mixing GFP_KERNEL with GFP_NOFS allocations
-+		 * from the same call site that can be run from both above and
-+		 * below memory reclaim causes lockdep false positives. Hence we
-+		 * always need to force this allocation to nofs context because
-+		 * we can't pass __GFP_NOLOCKDEP down to auxillary structures to
-+		 * prevent false positive lockdep reports.
-+		 *
-+		 * XXX(dgc): I think dquot reclaim is the only place we can get
-+		 * to this function from memory reclaim context now. If we fix
-+		 * that like we've fixed inode reclaim to avoid writeback from
-+		 * reclaim, this nofs wrapping can go away.
- 		 */
- 		nofs_flag = memalloc_nofs_save();
- 		do {
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index ee39639bb92b..1f68569e62ca 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3518,7 +3518,8 @@ xlog_ticket_alloc(
- 	struct xlog_ticket	*tic;
- 	int			unit_res;
- 
--	tic = kmem_cache_zalloc(xfs_log_ticket_cache, GFP_NOFS | __GFP_NOFAIL);
-+	tic = kmem_cache_zalloc(xfs_log_ticket_cache,
-+			GFP_KERNEL | __GFP_NOFAIL);
- 
- 	unit_res = xlog_calc_unit_res(log, unit_bytes, &tic->t_iclog_hdrs);
- 
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index ce496704748d..7443debaffd6 100644
---- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -428,7 +428,7 @@ xfs_mru_cache_insert(
- 	if (!mru || !mru->lists)
- 		return -EINVAL;
- 
--	if (radix_tree_preload(GFP_NOFS))
-+	if (radix_tree_preload(GFP_KERNEL))
- 		return -ENOMEM;
- 
- 	INIT_LIST_HEAD(&elem->list_node);
 -- 
 2.43.0
 
