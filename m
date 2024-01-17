@@ -1,216 +1,212 @@
-Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com [66.111.4.25])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3A49633
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2024 02:33:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.111.4.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827861DFEF
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2024 12:28:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705458821; cv=none; b=erufUTG4UVrmG6iY1u/uqMeZF2uIJa4A8Dclkn4DBwLh6dSHkLUYCKfA29+vWeJagZhe5N5KPivGFKoWBhEa/E7DJ4Ak1YJ3byvZh23KoRHnISPdCL60P0fssjDXYDRjx1WTgBa3omfr4Lt0m6RTyEcV1ZdP47kKiUSRk0hd9M0=
+	t=1705494540; cv=none; b=IlYsmGgQL02VimK3Xm50wbP3UNeqvT41LpmQahYfOUts6n9Xc6+4Uv5Pex3JKzewBLbBvDHNgqc42STg1JuQWwo6bvqRkHSPsUWC8xle5rRd/Lwg9a6Pkc4bVNtUzYxsR31WjFyI9CD5X+1nwanuNS+kh0o5W/Ou5y/KPowsfkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705458821; c=relaxed/simple;
-	bh=GZs7/Wnhj/mPPVBAb77kLP/UDrcXTZNKx8eStJsyAME=;
-	h=Received:Received:DKIM-Signature:DKIM-Signature:X-ME-Sender:
-	 X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding; b=FmQk6gtoV0VZDU14yGcO0o3R9HiA/gHl9w4ERbjaE96eu2BDja4S9FtHdpMRM2GnnVZo6iCSZvssRZcIE7TuTBz9NeXDvYUh1fC+H72sE4oJ90+K2V0wgDlmylj357MpUhct3m3tXl1Ne9O6xD8xXA1LjS0RTWL6Za4CayeyVyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=themaw.net; spf=none smtp.mailfrom=themaw.net; dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b=D2Sb7Hba; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=oUFqPhcz; arc=none smtp.client-ip=66.111.4.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=themaw.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=themaw.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="D2Sb7Hba";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="oUFqPhcz"
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-	by mailout.nyi.internal (Postfix) with ESMTP id AF6565C0130;
-	Tue, 16 Jan 2024 21:33:37 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute2.internal (MEProxy); Tue, 16 Jan 2024 21:33:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1705458817;
-	 x=1705545217; bh=CKdZ0gJoQmOf0TOyntsm5ahqJuQaXDddBXduglAh+mg=; b=
-	D2Sb7HbaKCqZa2zgnvkPUTrQyTOJ3fGkwS73h/5rUq4fsE8l3wElsSMmcEN+tctk
-	O9AlHAWl86XMyoFNOA++Y+UvD2K78OReFv1OqkQfdFCG6LWqbkm2KzeUDNiDWqst
-	8N9vDyE8Zws1z4J9VUihGHHxIutdaYwuMK2QiZ4u5dBiwQpc6F+Fd29EY1hXLQPi
-	hebkUaB0Q+p6l8qLfvDHjKzhmUmzvsfZBQ5EqRLa6kgOLZycdqhji94r6bZLS5wR
-	cE68cORyPLf/SFUpY3AQ99uXgdPt8yGl1iHKr1JnhdQbPgXrD9rrTTqt/wii9q4O
-	w07JSMFouqqXS65OQK5ksg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1705458817; x=
-	1705545217; bh=CKdZ0gJoQmOf0TOyntsm5ahqJuQaXDddBXduglAh+mg=; b=o
-	UFqPhczeWX+dQCjaIHRsrCqdPBEzHRLEK/ELf0TD5i9JGcrwxUIKhUKmFZ7gPZtv
-	FB3197M8itZb8up9gF+DfvOVtRVJXL0ecMfyiJ7dCOulY4GseqT3oUVvYTx964yE
-	XxdB5rgdtdhT3uB6Z3AZYe/5K+05mU3eJbnfJyLxnrG539dv99uG8ppBNj/885NS
-	BAIKevNThudj+QVxde7UL+foodqSKZv5gDXE8dbvAoIugrwxli56bd60umtzz5Rv
-	8QQrAWHdkPJ8QVKdtPhFf0FZhq81r8aljDZEin6qkJ1JMCpFHZ7ZFZmH8O5BRoU3
-	vFHmHrMeknZmKSGm3gD3A==
-X-ME-Sender: <xms:gTynZVV0qyKZu9dF-XNYYxZjugA2C6MH4FeMGBOSpyIfk7EqaQPCVw>
-    <xme:gTynZVkC1wnn1_nTnrNoE6T2a7wz2y2njBHSxQQiCLp52vze7r_HRW9UW-vUHIRAG
-    btTcHkkBXrq>
-X-ME-Received: <xmr:gTynZRZOFKxRUmBaDoV3lY9UMnI2qbdicQhO9Ve9P4wzEmuhd-aD5jP9D0UHVAkVSqvvxwTzBLv8auwQbcSecnWLO_LPdDlLEC3LPwrxJqbz4bPMULRWw419>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedrvdejgedggeejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucenucfjughrpefkffggfgfuvfevfhfhjggtgfesth
-    ejredttdefjeenucfhrhhomhepkfgrnhcumfgvnhhtuceorhgrvhgvnhesthhhvghmrgif
-    rdhnvghtqeenucggtffrrghtthgvrhhnpeeuhfeuieeijeeuveekgfeitdethefguddtle
-    ffhfelfeelhfduuedvfefhgefhheenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgr
-    mhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgrfidrnhgvth
-X-ME-Proxy: <xmx:gTynZYVv-NcB3gZ0bLpu3MLAMduXVqChoZJr3G3fvGl4adOAq9zUag>
-    <xmx:gTynZfm92IkyjHlsHNb3cyy1jkfsnxomZ1bAn1X_n5IAg6flKyozwQ>
-    <xmx:gTynZVc1afxykjaPg9qgCx_zVb1zZAtYCUteLNzT6d6lnNAD653XNg>
-    <xmx:gTynZevXmOZULvAIbfrZsFOzXncoLZIrknW9mtbSdadVMonRErGENg>
-Feedback-ID: i31e841b0:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 16 Jan 2024 21:33:35 -0500 (EST)
-Message-ID: <94b7d2bd-a07c-1648-f3da-c1b395ca61bc@themaw.net>
-Date: Wed, 17 Jan 2024 10:33:32 +0800
+	s=arc-20240116; t=1705494540; c=relaxed/simple;
+	bh=35nW1seTagmK2KmWgXhi6RB6udoMX962KCFpuO5ck+I=;
+	h=Received:Received:Received:From:To:CC:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:Content-Type:
+	 X-Originating-IP:X-ClientProxiedBy; b=cAqtPBHY1SVK9M3m4MCVgmcSKjJXkVlXENl4pqyYFm7UXMbI1ajIIjfk5I5BQewcL0S/Llqk/O6yl084MP1Wzwlm1qs14fjZs9X5t6CMNc3Vm1NE1TWjJkpvSYh33mRg9rNCRZknUXlRp6XagoddMjOcPcmhqGXYj25df6upnaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4TFQCP1MP4zGpyg;
+	Wed, 17 Jan 2024 20:28:33 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 0EBD71800BF;
+	Wed, 17 Jan 2024 20:28:53 +0800 (CST)
+Received: from localhost.localdomain (10.175.127.227) by
+ kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Wed, 17 Jan 2024 20:28:52 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <chandanbabu@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<leo.lilong@huawei.com>, <yangerkun@huawei.com>
+Subject: [PATCH v2] xfs: ensure submit buffers on LSN boundaries in error handlers
+Date: Wed, 17 Jan 2024 20:31:26 +0800
+Message-ID: <20240117123126.2019059-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH] xfs: read only mounts with fsopen mount API are busted
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: chandan.babu@oracle.com
-References: <20240116043307.893574-1-david@fromorbit.com>
-Content-Language: en-US
-From: Ian Kent <raven@themaw.net>
-In-Reply-To: <20240116043307.893574-1-david@fromorbit.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
+While performing the IO fault injection test, I caught the following data
+corruption report:
 
-On 16/1/24 12:33, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Recently xfs/513 started failing on my test machines testing "-o
-> ro,norecovery" mount options. This was being emitted in dmesg:
->
-> [ 9906.932724] XFS (pmem0): no-recovery mounts must be read-only.
->
-> Turns out, readonly mounts with the fsopen()/fsconfig() mount API
-> have been busted since day zero. It's only taken 5 years for debian
-> unstable to start using this "new" mount API, and shortly after this
-> I noticed xfs/513 had started to fail as per above.
->
-> The syscall trace is:
->
-> fsopen("xfs", FSOPEN_CLOEXEC)           = 3
-> mount_setattr(-1, NULL, 0, NULL, 0)     = -1 EINVAL (Invalid argument)
-> .....
-> fsconfig(3, FSCONFIG_SET_STRING, "source", "/dev/pmem0", 0) = 0
-> fsconfig(3, FSCONFIG_SET_FLAG, "ro", NULL, 0) = 0
-> fsconfig(3, FSCONFIG_SET_FLAG, "norecovery", NULL, 0) = 0
-> fsconfig(3, FSCONFIG_CMD_CREATE, NULL, NULL, 0) = -1 EINVAL (Invalid argument)
-> close(3)                                = 0
->
-> Showing that the actual mount instantiation (FSCONFIG_CMD_CREATE) is
-> what threw out the error.
->
-> During mount instantiation, we call xfs_fs_validate_params() which
-> does:
->
->          /* No recovery flag requires a read-only mount */
->          if (xfs_has_norecovery(mp) && !xfs_is_readonly(mp)) {
->                  xfs_warn(mp, "no-recovery mounts must be read-only.");
->                  return -EINVAL;
->          }
->
-> and xfs_is_readonly() checks internal mount flags for read only
-> state. This state is set in xfs_init_fs_context() from the
-> context superblock flag state:
->
->          /*
->           * Copy binary VFS mount flags we are interested in.
->           */
->          if (fc->sb_flags & SB_RDONLY)
->                  set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
->
-> With the old mount API, all of the VFS specific superblock flags
-> had already been parsed and set before xfs_init_fs_context() is
-> called, so this all works fine.
->
-> However, in the brave new fsopen/fsconfig world,
-> xfs_init_fs_context() is called from fsopen() context, before any
-> VFS superblock have been set or parsed. Hence if we use fsopen(),
-> the internal XFS readonly state is *never set*. Hence anything that
-> depends on xfs_is_readonly() actually returning true for read only
-> mounts is broken if fsopen() has been used to mount the filesystem.
->
-> Fix this by moving this internal state initialisation to
-> xfs_fs_fill_super() before we attempt to validate the parameters
-> that have been set prior to the FSCONFIG_CMD_CREATE call being made.
+ XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
+ CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+ Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_corruption_error+0x134/0x150
+  xfs_free_ag_extent+0x7d3/0x1130
+  __xfs_free_extent+0x201/0x3c0
+  xfs_trans_free_extent+0x29b/0xa10
+  xfs_extent_free_finish_item+0x2a/0xb0
+  xfs_defer_finish_noroll+0x8d1/0x1b40
+  xfs_defer_finish+0x21/0x200
+  xfs_itruncate_extents_flags+0x1cb/0x650
+  xfs_free_eofblocks+0x18f/0x250
+  xfs_inactive+0x485/0x570
+  xfs_inodegc_worker+0x207/0x530
+  process_scheduled_works+0x24a/0xe10
+  worker_thread+0x5ac/0xc60
+  kthread+0x2cd/0x3c0
+  ret_from_fork+0x4a/0x80
+  ret_from_fork_asm+0x11/0x20
+  </TASK>
+ XFS (dm-0): Corruption detected. Unmount and run xfs_repair
 
-Wow, good catch, and equally good analysis, Dave.
+After analyzing the disk image, it was found that the corruption was
+triggered by the fact that extent was recorded in both inode datafork
+and AGF btree blocks. After a long time of reproduction and analysis,
+we found that the reason of free sapce btree corruption was that the
+AGF btree was not recovered correctly.
 
+Consider the following situation, Checkpoint A and Checkpoint B are in
+the same record and share the same start LSN1, buf items of same object
+(AGF btree block) is included in both Checkpoint A and Checkpoint B. If
+the buf item in Checkpoint A has been recovered and updates metadata LSN
+permanently, then the buf item in Checkpoint B cannot be recovered,
+because log recovery skips items with a metadata LSN >= the current LSN
+of the recovery item. If there is still an inode item in Checkpoint B
+that records the Extent X, the Extent X will be recorded in both inode
+datafork and AGF btree block after Checkpoint B is recovered. Such
+transaction can be seen when allocing enxtent for inode bmap, it record
+both the addition of extent to the inode extent list and the removing
+extent from the AGF.
 
-Ian
+  |------------Record (LSN1)------------------|---Record (LSN2)---|
+  |-------Checkpoint A----------|----------Checkpoint B-----------|
+  |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
+  |     Extent X is freed       |     Extent X is allocated       |
 
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Fixes: 73e5fff98b64 ("xfs: switch to use the new mount-api")
-> cc: stable@vger.kernel.org
-> ---
->   fs/xfs/xfs_super.c | 27 +++++++++++++++++----------
->   1 file changed, 17 insertions(+), 10 deletions(-)
->
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 96cb00e94551..0506632b5cf2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1508,6 +1508,18 @@ xfs_fs_fill_super(
->   
->   	mp->m_super = sb;
->   
-> +	/*
-> +	 * Copy VFS mount flags from the context now that all parameter parsing
-> +	 * is guaranteed to have been completed by either the old mount API or
-> +	 * the newer fsopen/fsconfig API.
-> +	 */
-> +	if (fc->sb_flags & SB_RDONLY)
-> +		set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
-> +	if (fc->sb_flags & SB_DIRSYNC)
-> +		mp->m_features |= XFS_FEAT_DIRSYNC;
-> +	if (fc->sb_flags & SB_SYNCHRONOUS)
-> +		mp->m_features |= XFS_FEAT_WSYNC;
-> +
->   	error = xfs_fs_validate_params(mp);
->   	if (error)
->   		return error;
-> @@ -1977,6 +1989,11 @@ static const struct fs_context_operations xfs_context_ops = {
->   	.free        = xfs_fs_free,
->   };
->   
-> +/*
-> + * WARNING: do not initialise any parameters in this function that depend on
-> + * mount option parsing having already been performed as this can be called from
-> + * fsopen() before any parameters have been set.
-> + */
->   static int xfs_init_fs_context(
->   	struct fs_context	*fc)
->   {
-> @@ -2008,16 +2025,6 @@ static int xfs_init_fs_context(
->   	mp->m_logbsize = -1;
->   	mp->m_allocsize_log = 16; /* 64k */
->   
-> -	/*
-> -	 * Copy binary VFS mount flags we are interested in.
-> -	 */
-> -	if (fc->sb_flags & SB_RDONLY)
-> -		set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
-> -	if (fc->sb_flags & SB_DIRSYNC)
-> -		mp->m_features |= XFS_FEAT_DIRSYNC;
-> -	if (fc->sb_flags & SB_SYNCHRONOUS)
-> -		mp->m_features |= XFS_FEAT_WSYNC;
-> -
->   	fc->s_fs_info = mp;
->   	fc->ops = &xfs_context_ops;
->   
+After commit 12818d24db8a ("xfs: rework log recovery to submit buffers
+on LSN boundaries") was introduced, we submit buffers on lsn boundaries
+during log recovery. The above problem can be avoided under normal paths,
+but it's not guaranteed under abnormal paths. Consider the following
+process, if an error was encountered after recover buf item in Checkpoint
+A and before recover buf item in Checkpoint B, buffers that have been
+added to the buffer_list will still be submitted, this violates the
+submits rule on lsn boundaries. So buf item in Checkpoint B cannot be
+recovered on the next mount due to current lsn of transaction equal to
+metadata lsn on disk. The detailed process of the problem is as follows.
+
+First Mount:
+
+  xlog_do_recovery_pass
+    error = xlog_recover_process
+      xlog_recover_process_data
+        xlog_recover_process_ophdr
+          xlog_recovery_process_trans
+            ...
+              /* recover buf item in Checkpoint A */
+              xlog_recover_buf_commit_pass2
+                xlog_recover_do_reg_buffer
+                /* add buffer of agf btree block to buffer_list */
+                xfs_buf_delwri_queue(bp, buffer_list)
+            ...
+            ==> Encounter read IO error and return
+    /* submit buffers regardless of error */
+    if (!list_empty(&buffer_list))
+      xfs_buf_delwri_submit(&buffer_list);
+
+    <buf items of agf btree block in Checkpoint A recovery success>
+
+Second Mount:
+
+  xlog_do_recovery_pass
+    error = xlog_recover_process
+      xlog_recover_process_data
+        xlog_recover_process_ophdr
+          xlog_recovery_process_trans
+            ...
+              /* recover buf item in Checkpoint B */
+              xlog_recover_buf_commit_pass2
+                /* buffer of agf btree block wouldn't added to
+                   buffer_list due to lsn equal to current_lsn */
+                if (XFS_LSN_CMP(lsn, current_lsn) >= 0)
+                  goto out_release
+
+    <buf items of agf btree block in Checkpoint B wouldn't recovery>
+
+In order to make sure that submits buffers on lsn boundaries in the
+abnormal paths, we need to check error status before submit buffers that
+have been added from the last record processed. If error status exist,
+buffers in the bufffer_list should not be writen to disk.
+
+Canceling the buffers in the buffer_list directly isn't correct, unlike
+any other place where write list was canceled, these buffers has been
+initialized by xfs_buf_item_init() during recovery and held by buf item,
+buf items will not be released in xfs_buf_delwri_cancel(), it's not easy
+to solve.
+
+If the filesystem has been shut down, then delwri list submission will
+error out all buffers on the list via IO submission/completion and do
+all the correct cleanup automatically. So shutting down the filesystem
+could prevents buffers in the bufffer_list from being written to disk.
+
+Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+v2:
+ - rewrite the part of commit message
+ - use shutdown solution to prevent buffer_list from writing to disk
+ fs/xfs/xfs_log_recover.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1251c81e55f9..9625cf62b038 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3204,11 +3204,28 @@ xlog_do_recovery_pass(
+ 	kmem_free(hbp);
+ 
+ 	/*
+-	 * Submit buffers that have been added from the last record processed,
+-	 * regardless of error status.
++	 * Submit buffers that have been dirtied by the last record recovered.
+ 	 */
+-	if (!list_empty(&buffer_list))
++	if (!list_empty(&buffer_list)) {
++		if (error) {
++			/*
++			 * If there has been an item recovery error then we
++			 * cannot allow partial checkpoint writeback to
++			 * occur.  We might have multiple checkpoints with the
++			 * same start LSN in this buffer list, and partial
++			 * writeback of a checkpoint in this situation can
++			 * prevent future recovery of all the changes in the
++			 * checkpoints at this start LSN.
++			 *
++			 * Note: Shutting down the filesystem will result in the
++			 * delwri submission marking all the buffers stale,
++			 * completing them and cleaning up _XBF_LOGRECOVERY
++			 * state without doing any IO.
++			 */
++			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
++		}
+ 		error2 = xfs_buf_delwri_submit(&buffer_list);
++	}
+ 
+ 	if (error && first_bad)
+ 		*first_bad = rhead_blk;
+-- 
+2.31.1
+
