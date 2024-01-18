@@ -1,80 +1,111 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D24F7481
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 04:21:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F9A749D;
+	Thu, 18 Jan 2024 05:49:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705551690; cv=none; b=peiYmgzOzsfvi6Gkj5b3eILfkXeWRQKekPHWxaVbOBLmVw+7dMd/0Lm7sy4Nn+IoPrTCijp6TgFtt03Zd1EpW+XE/Q6ZFHYJtU8cbs51rezMVXVnoN/urgA9az1FhNZlw8G8YGD1FEUxxj51NnaEUtf4vJmrju3x9Bkf/CPsAnc=
+	t=1705556981; cv=none; b=KW0w4d3DxA0zgRNElXvkrYybHslYCPA8vzWfhF6z2GuPc5lNrDbyF54kqy4tr8I9e8fBJxBcDLT8mMI5W20c3NtQDgbzlP9HPbQGuHHh6ct8LvdLh4HJQpJt2hNzxvGaG+iWVsa+HWWWVVJ76r1TSmj3BaUt40yGc8WS7PYMV2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705551690; c=relaxed/simple;
-	bh=0DfdJFyi2aAUKaGwxqYAqttWoNton8+WjAigRxMGsy8=;
-	h=DKIM-Signature:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite; b=XA2DF0vmT9lA/TUhEj81tpPSHFZft5O0tJz9Ljdg0P5vj97mxEim17AKxjQu83sAGlYe0Ftw89btfetxi71Xo8qbHBhaxBp4W9Lp0INHWVvKCFIqMineUQfYZhBkCPXdlrmv7MJFU3++Ce5Wy8cjLuQsHjz6rvkXWmqrkIskIgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KNh0x7hy; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1705556981; c=relaxed/simple;
+	bh=smVTYrpz7w+5HQWdbWbOy8VUmzkn+94GUCqw+7Dga5Y=;
+	h=Received:DKIM-Signature:References:User-agent:From:To:Cc:Subject:
+	 Date:In-reply-to:Message-ID:MIME-Version:Content-Type; b=IbYnEuVQpe1ESD4PZIk26tyF4AjPCAXYAi6rKyEHxH01HgukbbWN7uUpF9VBI8B26KsFPLutz9LYbVfua8HOvCqLRKanXjJQSLG4xpixVN1V9YXnOsH3ypOEXsdtQdR/XQ0buxZW8rYQpS7G332RViM8bKyvicxQ4L8bKtN1Rjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NIJRhpwV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KNh0x7hy"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uZSWYSc5oh+OuAIaUH1jK/i2mb10O+kU7A6psS3B9XU=; b=KNh0x7hyN+fu/eCIy+HiwozabW
-	zAQmztYWkohGnn2nmcaKiMdsEC8YXhmpqJHnZHUMqrPqn/h9/9Th77a2y02VcRa+vAbOj+Z57KsU5
-	KD7XZLaam45AdIpHe50PTd5yJcjHEEq1WU/GogFf0Dcifudq0YKNaez93mRkk4Rck8P738s4OoQmD
-	rTxZFz3nJoxnVKhYeoxwu6fipVEZkeLMMlnVYesXcQ039SeApkQK/CRYgmLsYU9zRPyn9bddzIdfq
-	/Y2GZDz1egaA64uvRWA2ucz9/18RajTrHZVKUJmKffDIRRN9dWIi47f6bjL6SDDQX3przdNggcrAM
-	TBrX6Vzg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rQJu9-001bu2-2Y;
-	Thu, 18 Jan 2024 04:21:25 +0000
-Date: Wed, 17 Jan 2024 20:21:25 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_db: use directio for device access
-Message-ID: <ZainRaV+P0qr1o6g@infradead.org>
-References: <169567914468.2320255.9161174588218371786.stgit@frogsfrogsfrogs>
- <169567915609.2320255.8945830759168479067.stgit@frogsfrogsfrogs>
- <Zagcv3rWRQMeTujZ@infradead.org>
- <20240118013250.GC674499@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NIJRhpwV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8A92C433F1;
+	Thu, 18 Jan 2024 05:49:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1705556981;
+	bh=smVTYrpz7w+5HQWdbWbOy8VUmzkn+94GUCqw+7Dga5Y=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=NIJRhpwVlSMzyIQv7cZAOp19MFxIxAdvwDkyMnVeDFcq1hMbF/8FJ5YDgAqsiqlxw
+	 bHGNqSSZ7bXp2R5ft2ZXBp0BuawNPhw/IhnkP4UThy9lzAoysszNVghNdPi6UUXfZR
+	 VZWpv+3o/rh625krmXjWcHS0GnDz6ImTYTAkYOTi0LmznODRwilN8jS3tjEneec/nc
+	 CLr0CTk7hkgn73zK0ucYLBjIKNn0QsNBFNfZuwQ0AGAWUXOzz5WUy9xh4eEwsnsG0i
+	 lXA4bUAIZdmBFUam24xb+AaE1TGIOQOwS1lo8mN95WHEzV2LapL0+OgNwTdF8zlV93
+	 MFZuHeia+CGTg==
+References: <87le96lorq.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20240104043420.GT361584@frogsfrogsfrogs>
+ <87sf3d8c0u.fsf@debian-BULLSEYE-live-builder-AMD64>
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel
+ <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org,
+ viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz
+Subject: Re: [BUG REPORT] shrink_dcache_parent() loops indefinitely on a
+ next-20240102 kernel
+Date: Thu, 18 Jan 2024 10:59:06 +0530
+In-reply-to: <87sf3d8c0u.fsf@debian-BULLSEYE-live-builder-AMD64>
+Message-ID: <874jfbjimn.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240118013250.GC674499@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
 
-On Wed, Jan 17, 2024 at 05:32:50PM -0800, Darrick J. Wong wrote:
-> > 
-> > For xfs/002 that is the libxfs_buf_read in __set_cur, when setting the
-> > type to data, but I haven't looked at the other test in detail.
-> 
-> Hmm.  Perhaps the userspace buftarg setup should go find the physical
-> sector size of the device?  That "bb_count = 1" in set_iocur_type looks
-> a bit smelly.
+On Thu, Jan 04, 2024 at 06:40:43 PM +0530, Chandan Babu R wrote:
+> On Wed, Jan 03, 2024 at 08:34:20 PM -0800, Darrick J. Wong wrote:
+>> On Wed, Jan 03, 2024 at 12:12:12PM +0530, Chandan Babu R wrote:
+>>> Hi,
+>>> 
+>>> Executing fstests' recoveryloop test group on XFS on a next-20240102 kernel
+>>> sometimes causes the following hung task report to be printed on the console,
+>>> 
 
-Yes, that should fix this particular issue.
+Meanwhile, I have executed some more experiments.
 
-> > Should I look into finding all these assumptions in xfs_db, or
-> > just make the direct I/O enablement conditional n a 612 byte sector
-> > size?
-> 
-> Let me go run a lbasize=4k fstests run overnight and see what happens.
-> IIRC zorro told me last year that it wasn't pretty.
+The bug can be recreated on a next-20240102 kernel by executing either
+generic/388 or generic/475 for a maximum of 10 iterations. I tried to do a git
+bisect based on this observation i.e. I would mark a commit as 'good' if the
+bug does not get recreated within 10 iterations. This led to the following git
+bisect log,
 
-There's a few failures, but I've been slowly trying to fix this.  The
-libxfs/mkfs log sector size detection series in one part of that,
-and this:
+# git bisect log
+# bad: [ab0b3e6ef50d305278b1971891cf1d82ab050b35] Add linux-next specific files for 20240102
+# good: [33cc938e65a98f1d29d0a18403dbbee050dcad9a] Linux 6.7-rc4
+git bisect start 'HEAD' 'v6.7-rc4' 'fs/'
+# bad: [ca20194665a58bb541cc9e4dc7abcf96a7c96bd9] Merge branch 'main' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git
+git bisect bad ca20194665a58bb541cc9e4dc7abcf96a7c96bd9
+# good: [bb986dac9a56f88552418288c87e2223f8f448e3] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git
+git bisect good bb986dac9a56f88552418288c87e2223f8f448e3
+# bad: [964c80149d24b33bbddd222edbcc782be6eab841] Merge branch 'linux-next' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+git bisect bad 964c80149d24b33bbddd222edbcc782be6eab841
+# good: [da9e5cca7e753dd96e07ae9212f4aeec1b9c68a6] Merge branch 'vfs.all' of git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+git bisect good da9e5cca7e753dd96e07ae9212f4aeec1b9c68a6
+# bad: [9e02829aa9d2e5f2e080ba0191c36a50a384acf1] Merge branch 'hwmon-next' of git://git.kernel.org/pub/scm/linux/kernel/git/groeck/linux-staging.git
+git bisect bad 9e02829aa9d2e5f2e080ba0191c36a50a384acf1
+# bad: [3ac3331ea2c1826e3d30276e0a7e7e62fff519a8] Merge branch 'next' of git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+git bisect bad 3ac3331ea2c1826e3d30276e0a7e7e62fff519a8
+# bad: [e01e3fb272cf7380dd5d70f52e955ac1122e2184] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/printk/linux.git
+git bisect bad e01e3fb272cf7380dd5d70f52e955ac1122e2184
+# bad: [6d06b73bcd6eee6ca43f429a28e812ef2ad7a4ea] Merge branch 'work.simple_recursive_removal' into for-next
+git bisect bad 6d06b73bcd6eee6ca43f429a28e812ef2ad7a4ea
+# bad: [119dcc73a9c2df0da002054cdb2296cb32b7cb93] Merge branches 'work.dcache-misc' and 'work.dcache2' into work.dcache
+git bisect bad 119dcc73a9c2df0da002054cdb2296cb32b7cb93
+# good: [6367b491c17a34b28aece294bddfda1a36ec0377] retain_dentry(): introduce a trimmed-down lockless variant
+git bisect good 6367b491c17a34b28aece294bddfda1a36ec0377
+# good: [b33c14c8618edfc00bf8963e3b0c8a2b19c9eaa4] Merge branch 'no-rebase-overlayfs' into work.dcache-misc
+git bisect good b33c14c8618edfc00bf8963e3b0c8a2b19c9eaa4
+# good: [f9453a1ad1fadae29fd7db5ad8ea16f35e737276] Merge branch 'merged-selinux' into work.dcache-misc
+git bisect good f9453a1ad1fadae29fd7db5ad8ea16f35e737276
+# good: [57851607326a2beef21e67f83f4f53a90df8445a] get rid of DCACHE_GENOCIDE
+git bisect good 57851607326a2beef21e67f83f4f53a90df8445a
+# good: [ef69f0506d8f3a250ac5baa96746e17ae22c67b5] __d_unalias() doesn't use inode argument
+git bisect good ef69f0506d8f3a250ac5baa96746e17ae22c67b5
+# first bad commit: [119dcc73a9c2df0da002054cdb2296cb32b7cb93] Merge branches 'work.dcache-misc' and 'work.dcache2' into work.dcache
 
-https://lore.kernel.org/linux-block/20240117175901.871796-1-hch@lst.de/T/#u
+Looks like the bug is caused by changes that were made in two separate
+branches.
 
-is another
+I have also confirmed that the bug was not present in the v6.7-rc4 kernel by
+executing generic/388 in a loop for 44 times.
 
+I can also confirm that the issue can be recreated on a next-20240118 kernel.
+
+-- 
+Chandan
