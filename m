@@ -1,75 +1,69 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35C11FAF
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 01:59:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEED563A4
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 04:20:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705543148; cv=none; b=RtB3OfipcE8jWg1LKVXCGGvxr9siljPMprNeKVlCgdkjyHcQJD44Mi48s+dt36GwhMfAdvKj2Y3X/bcEzJgr2hWLZLmIRUpndcbi2ZWSbu2nzSGfqT4llUiHrzFEmxhva5K3HiyzaiLRSWNm2NxnOd6kQPPNmSKIKZr5okZ49G4=
+	t=1705551628; cv=none; b=ZFOpBcmuB0lbYlzJy4VmijApAo8m3i/ZblWeBrilZ7DnD10QLXWHg9bTy8tPKbgBeIKRgcsxrWBaNZmVQ1p6Aoz3tI4GoGUHaHUuipOdXzqiqZPNi2uoBcTMy3dzRbL+r+pvEEDS47VtUXozcThqH+sNk06Soo4LKJJ8retpugE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705543148; c=relaxed/simple;
-	bh=iLQE0Nn25ZdOD8abgwN4oZdLPNufKn5YiCltKVp7eag=;
+	s=arc-20240116; t=1705551628; c=relaxed/simple;
+	bh=9z+DOJMS20+7akTAo82abVI/Sq2W+16iChaV1JV6pdQ=;
 	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:
 	 Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To; b=SEyKQS6kYnoazN/TwcmhFdurDXZwY4IO4rq2F4oWdrfwkGKzg1zXs2PvO+Zr7UhIIUZVhBRQgtebh9R+weFjUTuAK3GBLweIIe/+AgJOLKHjVBYY2+s6ryxCp7ePSP7QPPbsjnYBexph5DyVzVFVEnjBY1L6V/B+D4W6IHZsktQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=0+PvrQDe; arc=none smtp.client-ip=209.85.215.180
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To; b=uj6NdXCFRFZo+Pp47r9TxlgdqgDh3SBl1I5opWwURA8dgwQ6mSxm1tTdi3+Q5+gpnRCX3gdCmNa6OFaOIAAFRjH4bgpu+9CxIjmK5XcaEXatnE/r+b38+soVbtgHopfGJxnMscUZstmwDfHVmHHHLrV3rgIF228LcSUCZGze76g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=zjXjdPN5; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="0+PvrQDe"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-5ca1b4809b5so5144105a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2024 17:59:06 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="zjXjdPN5"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1d70a98c189so94065ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2024 20:20:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705543146; x=1706147946; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705551626; x=1706156426; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=3mokiIIftc61Fe5xy+tupKxR7hScn5bDl/MNxkEufu4=;
-        b=0+PvrQDeQHPNh1AjTMb/QUsvkL4p6yUcVjINiqyCO/ZIYXUKQ9pZLcmbsm0ss8p9yu
-         SdViSkmmWFXAo4Ujrlap9U2qahopKqm4T1I00TRUY9peV+qEIYjT8st9jUDKU4dpXNXi
-         nVe+EZz56LEGutq4GbSrL5vmdFct3GAYLvV2G7eGFFyCFA4aKe0LS6AKvIeW7NrARfmK
-         Aph7wOMDNiyBkgXmiPWD/WfnNvAAg+M4pthdaQl/4fX2dnjgujfr+yRcKcWQP3Xu1KGT
-         L/9A/vyMlueHosuog9CKiS87XL0JBtj4z5WrKHKMAxYcfkQ5hnKJzOqpbU6UIHGVdDus
-         0D7A==
+        bh=8vl/r3DGRPA/1LorOTAaVEPd5pfPjsf71a9s7DNPhCk=;
+        b=zjXjdPN5z0LSbOtDriUIGRHGqmH2Q0VpAYHC/cAWXQw5IFy3joUFilET1vCGkkGQKd
+         kxOWHK8vTyscqzeSRzVsK8NzPCVoD18vNd3Ff1xu4OPQBtoDUQuA8gRcNNhAbQ/BctNg
+         XaQp3jHp90Vbm+LjWXvXgASpuISon7TgjoCr5QueV1G0/7TFiqGYJ0hQaUnV798wOiGn
+         G3p0vmtOWRgEKlczneNRX6iytRrJN2W7jIBxKBTNzqtBKpEoUkwBCfD/hMStCd/iexmq
+         HJM5XT98KourQ9U9ACAUYxeJaCRsb3NfpVpEp73PKl3y/eIyESAxPyfiwPf35Czib3rH
+         EGLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705543146; x=1706147946;
+        d=1e100.net; s=20230601; t=1705551626; x=1706156426;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3mokiIIftc61Fe5xy+tupKxR7hScn5bDl/MNxkEufu4=;
-        b=vuwZ8cNepJry8WEOGbUqI69VNcgQnypCd37x0xtQTFqb7bCy30H0lb26/YHikJ6FtB
-         A7+bcp2aPMAYJDauMnpcWlxbMFRq+TOnFjPNZk9Gw2XQVNTjX3uNTngp8J21lE9OB9/K
-         QF7Y4owujV5ftvoHlhAlmSavGBUxYW1ekC7t8Tu8+6qxyNFx+UvCvzz7qlRgjGP/myCD
-         GDsCJkkvGkoyueNlcfMizqMOChEPhD5lgjg5w+9/NEcfZdqes9COjJtrACf7oqjSWad+
-         G62DWm3oGRIITe0FuV+i0WslBfK28m0lVDcJPe76WNLBk82dsp32Z+ulAzLcjTRbMOC4
-         4Mgg==
-X-Gm-Message-State: AOJu0YwYnkVn76HIpl6goAcUK1N7gqYGNpn+s6NbfbcU65qq5PHQhaEw
-	+o/8M1ri7yf50+jdmGcgDE6e0FGHwQ2HXrr24MBvTPaFyawoBLPrAq2y9asu7ExiabnqNJmUSfO
-	B
-X-Google-Smtp-Source: AGHT+IGX5mmEhVD89vQOBjLKFEMMnMTqmbJovTI8Llh13zrA5fxFMyb8nJk619l7SgAQjoHhaC8WvA==
-X-Received: by 2002:a17:90a:db4b:b0:28e:eb9a:477d with SMTP id u11-20020a17090adb4b00b0028eeb9a477dmr111276pjx.79.1705543146290;
-        Wed, 17 Jan 2024 17:59:06 -0800 (PST)
+        bh=8vl/r3DGRPA/1LorOTAaVEPd5pfPjsf71a9s7DNPhCk=;
+        b=rqLCSfGATgXB1Jj9pjDxroSRSZ67m+pAicbnGSfzpRlKy+3Aw9pfPwo8JYLYMTJjC2
+         +XsqFTnKhky+ubV65PxJxRSyphJenb6pwWU1SrNNaAUJCvxLYnl9kMsp1qptABE9xUE2
+         tjOlpLN/RHrGkJn6Na2/yKa3tZ7mUap/yhqRZj3ONTiyXD1L8Fq+scG8uV4rgi6XIv0+
+         MBb9UayB3h5WFWn//ZqJz1YCESgWz6ep+zrX+ByjnGAau169r5QI61FtYf2ax0VkE0sd
+         4tRkLBdJ9Yj9CsG05B/iWY3RTXnuPOgNczxyWb8tZfSZQSplMZQeOExTrwzKCYZgJ0CL
+         m1OA==
+X-Gm-Message-State: AOJu0YwjaoYjCc++fMc55stxsnFZbWwfmPSSHpW5NHN6KO+JR5LvC2lb
+	p85E3d8XDfRfQ0daOBr54vg3scoGLuCEuBfYZmr5EkoOCX5pKDcIJ7qhvATKzYQ=
+X-Google-Smtp-Source: AGHT+IEf7rfIjOCPPJBdRCuz8y89550uTvqSTu1Umbb1OPK3NhjJntJ/AhbzmZAfCpPNbzP1KLzD9A==
+X-Received: by 2002:a17:902:edc2:b0:1d6:fcc3:c98f with SMTP id q2-20020a170902edc200b001d6fcc3c98fmr281633plk.29.1705551626176;
+        Wed, 17 Jan 2024 20:20:26 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id nc7-20020a17090b37c700b0028d0c8c9d37sm374941pjb.22.2024.01.17.17.59.05
+        by smtp.gmail.com with ESMTPSA id b6-20020a170902650600b001d5ed020153sm432772plk.224.2024.01.17.20.20.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jan 2024 17:59:05 -0800 (PST)
+        Wed, 17 Jan 2024 20:20:25 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rQHgN-00BpFO-0c;
-	Thu, 18 Jan 2024 12:59:03 +1100
-Date: Thu, 18 Jan 2024 12:59:03 +1100
+	id 1rQJt7-00Brkc-0e;
+	Thu, 18 Jan 2024 15:20:21 +1100
+Date: Thu, 18 Jan 2024 15:20:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 Subject: Re: [xfstests generic/648] 64k directory block size (-n size=65536)
  crash on _xfs_buf_ioapply
-Message-ID: <ZaiF5+yMC8FfXYS7@dread.disaster.area>
+Message-ID: <ZainBd2Jz6I0Pgm1@dread.disaster.area>
 References: <20231218140134.gql6oecpezvj2e66@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20231218174836.GQ361584@frogsfrogsfrogs>
- <20231219063420.qssutqqhr3hreevw@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20231225133854.zfnywywxa6x5re4q@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20240104043552.GU361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,39 +72,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240104043552.GU361584@frogsfrogsfrogs>
+In-Reply-To: <20231218140134.gql6oecpezvj2e66@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-[ FYI, I missed this because I got the fstests list copy first, not
-linux-xfs list copy and so it got filtered into fstests, not XFS.
-please just send test failures like this to the linux-xfs list -
-there is no value in sending them to fstests as well but it can
-cause bug reports to "go missing". ]
-
-On Wed, Jan 03, 2024 at 08:35:52PM -0800, Darrick J. Wong wrote:
-> On Mon, Dec 25, 2023 at 09:38:54PM +0800, Zorro Lang wrote:
-> > On Tue, Dec 19, 2023 at 02:34:20PM +0800, Zorro Lang wrote:
-> > > > Also, does "xfs: update dir3 leaf block metadata after swap" fix it?
-> > > 
-> > > OK, I'll merge and give it a try.
-> > 
-> > It's still reproducible on xfs-linux for-next branch xfs-6.8-merge-2, which
-> > contains the 5759aa4f9560 ("xfs: update dir3 leaf block metadata after swap")
+On Mon, Dec 18, 2023 at 10:01:34PM +0800, Zorro Lang wrote:
+> Hi,
 > 
-> DOH.  Got a metadump?  I wonder if s390x is more fubar than we used to
-> think it was...
+> Recently I hit a crash [1] on s390x with 64k directory block size xfs
+> (-n size=65536 -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1),
+> even not panic, a assertion failure will happen.
+> 
+> I found it from an old downstream kernel at first, then reproduced it
+> on latest upstream mainline linux (v6.7-rc6). Can't be sure how long
+> time this issue be there, just reported it at first.
+>  [  978.591588] XFS (loop3): Mounting V5 Filesystem c1954438-a18d-4b4a-ad32-0e29c40713ed
+>  [  979.216565] XFS (loop3): Starting recovery (logdev: internal)
+>  [  979.225078] XFS (loop3): Bad dir block magic!
+>  [  979.225081] XFS: Assertion failed: 0, file: fs/xfs/xfs_buf_item_recover.c, line: 414
 
-I'm betting that the directory corruption is being reported because
-the directory block change was not replayed by recovery due to the
-bad magic number error. The kernel was configured with
-XFS_ASSERT_FATAL=n, so it continued on after the recovery failure
-and things went bad when that unrecovered metadata was accessed.
+Ok, so we got a XFS_BLFT_DIR_BLOCK_BUF buf log item, but the object
+that we recovered into the buffer did not have a
+XFS_DIR3_BLOCK_MAGIC type.
 
-Two things: a magic number mismatch between the buffer and the log
-item should cause recovery to fail on production kernels, and what
-we need to work out is how the buffer being recovered had a magic
-number mismatch with the buf log item.
+Perhaps the buf log item didn't contain the first 128 bytes of the
+buffer (or maybe any of it), and so didn't recovery the magic number?
 
--Dave.
+Can you reproduce this with CONFIG_XFS_ASSERT_FATAL=y so the failure
+preserves the journal contents when the issue triggers, then get a
+metadump of the filesystem so I can dig into the contents of the
+journal?  I really want to see what is in the buf log item we fail
+to recover.
+
+We don't want recovery to continue here because that will result in
+the journal being fully recovered and updated and so we won't be
+able to replay the recovery failure from it. 
+
+i.e. if we leave the buffer we recovered in memory without failure
+because the ASSERT is just a warn, we continue onwards and likely
+then recover newer changes over the top of it. This may or may
+not result in a correctly recovered buffer, depending on what parts
+of the buffer got relogged.
+
+IOWs, we should be expecting corruption to be detected somewhere
+further down the track once we've seen this warning, and really we
+should be aborting journal recovery if we see a mismatch like this.
+
+.....
+
+>  [  979.227613] XFS (loop3): Metadata corruption detected at __xfs_dir3_data_check+0x372/0x6c0 [xfs], xfs_dir3_block block 0x1020 
+>  [  979.227732] XFS (loop3): Unmount and run xfs_repair
+>  [  979.227733] XFS (loop3): First 128 bytes of corrupted metadata buffer:
+>  [  979.227736] 00000000: 58 44 42 33 00 00 00 00 00 00 00 00 00 00 10 20  XDB3........... 
+
+XDB3 is XFS_DIR3_BLOCK_MAGIC, so it's the right type, but given it's
+the tail pointer (btp->count) that is bad, this indicates that maybe
+the tail didn't get written correctly by subsequent checkpoint
+recoveries. We don't know, because that isn't in the output below.
+
+It likely doesn't matter, because I think the problem is either a
+runtime problem writing bad stuff into the journal, or a recovery
+problem failing to handle the contents correctly. Hence the need for
+a metadump.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
