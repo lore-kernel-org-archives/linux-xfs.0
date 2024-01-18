@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D22B21DDF6
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 23:38:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6D2F1DDF6
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 23:39:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705621102; cv=none; b=Ndk+yTrDWxqZG/WGHj+KElFXfvzfvRHayXe8r4R98fQlFnN92zITLW7vxo9aQvUWX906GEgzGHq6G+CwB0EzKnKUH6EQsPU3v6S0XZMD/6I4JpvlO9Qm4O4k44DdTrWbUL90Q+n2Wbhz5DBWZKC4gyeaazXL3wa8bGHd7Q9VlVU=
+	t=1705621153; cv=none; b=ivn4oQO4nim73Hks9T+J7xr8w+twaLt5nZ5vRnmmeZlR4bjr4OiOxVFSDX9mRia+JOPPkjtKs/74BlOvurPORAmuLp0wnLddTU9YygR+WgGPgYfx9PtlnY+gIFHSer8Z73yyIDmCG7loatFOcmnFPcP9DFB/iZTNNBqmJs7F2T4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705621102; c=relaxed/simple;
-	bh=xWFSlb7ZMy+dvnLjA2zyB4Yuz639X4LzJAlJcYrV7y0=;
+	s=arc-20240116; t=1705621153; c=relaxed/simple;
+	bh=kBi8sr7d6KMQKJ8NlGPfcvv71UswaZSW8Fst7sMA0XY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZUeyAGmstdklA3RwbRmay5mmX01/60aPsc9iZ3Xl06k08udeI+zxt+qF/aj3A2+xPy8J6WkF8bmrf6WxuXAXKc/SSnQlq7S9mXbJQEpN8i4cg+evSBypcUT8IwB8PNgufq3nxWx6cgdZmxNokYi5QxF0JWoobyxaHzkN67ghSRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OiLGE3Me; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Kynjj7dtfIriyZvUoxC9eN061DLnNe9r/6XB6BkAYTWqJSboMLw6ZkbFEAG4uN+IIQZ0wjjuQ8kus/YqceUwRdl42bvDOuX1Hrc40rP2AYSdx5hO36tqg2P/Dnv48KAaS6gRBYrwbY2+Qps808jJiUvhNGNv4Fa5RYgxsNzAZpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qa/pYQZK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OiLGE3Me"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3126FC433F1;
-	Thu, 18 Jan 2024 23:38:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qa/pYQZK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32A0EC433C7;
+	Thu, 18 Jan 2024 23:39:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705621102;
-	bh=xWFSlb7ZMy+dvnLjA2zyB4Yuz639X4LzJAlJcYrV7y0=;
+	s=k20201202; t=1705621153;
+	bh=kBi8sr7d6KMQKJ8NlGPfcvv71UswaZSW8Fst7sMA0XY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OiLGE3MeBxqHkUHTLDxE+tgTy9B3kesjuMdz8vDgEuQLnv8A+IxvIpJZaSmjdjgTe
-	 xGVaSJsM4qorulTSRZPFsZsFCTaCKAqQWiUZ6tfkAwMbm9+Dk3+CAKSsC4HxzuOaJj
-	 y4uOV4FEw+IaRClGBb1WLRPBAosDvPduk24aveKdlHpu/MhmEeslk4JaXDeMzkik0E
-	 vUBKbODqDeH2Y3qdh63gw1OKN0FE0O+gytwefVo45vo7hH33nsYOTBE6OCxJcf/kSm
-	 ThJIIq+mNAYJfMkrUBRoIap1G19CQntgnJtATDBDwWpo8G80y+vr2J7TC5WKEk5WTp
-	 sBEOr8C/AOEqw==
-Date: Thu, 18 Jan 2024 15:38:21 -0800
+	b=Qa/pYQZKCap9UNr96UVdEaAmO8UW/fk4HZ/ZHED47IJBRPO2EzC44+HuJz8G56uKU
+	 kTmkwY1Y6s0fkNJ6r3i2OyJS/OzYoA8AyL65EdHRdWCrsgiWDPx4ML4kcL1wMT8ny7
+	 AYyIDi1krn808alqxYfqAhcer2cJ425f60qrfi0xYJj63H9Xag+JEOhMoBBOnjKS/q
+	 hafbfhlvBIixrmIVhGbYvgCCi5zKDEdaKC9Uas7i7+6+KC8rRt6WaoCCuDaotSe2Yh
+	 tL7Kk4mjeUiMppHHTogqWam6HAm8KJjuypjGUcQZTVi5xN32KuwAK5TJTjRqEY0JpM
+	 P5ATEoTEDfRHQ==
+Date: Thu, 18 Jan 2024 15:39:12 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org, willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [PATCH 08/12] xfs: use GFP_KERNEL in pure transaction contexts
-Message-ID: <20240118233821.GK674499@frogsfrogsfrogs>
+Subject: Re: [PATCH 09/12] xfs: place intent recovery under NOFS allocation
+ context
+Message-ID: <20240118233912.GL674499@frogsfrogsfrogs>
 References: <20240115230113.4080105-1-david@fromorbit.com>
- <20240115230113.4080105-9-david@fromorbit.com>
+ <20240115230113.4080105-10-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,338 +43,146 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240115230113.4080105-9-david@fromorbit.com>
+In-Reply-To: <20240115230113.4080105-10-david@fromorbit.com>
 
-On Tue, Jan 16, 2024 at 09:59:46AM +1100, Dave Chinner wrote:
+On Tue, Jan 16, 2024 at 09:59:47AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When running in a transaction context, memory allocations are scoped
-> to GFP_NOFS. Hence we don't need to use GFP_NOFS contexts in pure
-> transaction context allocations - GFP_KERNEL will automatically get
-> converted to GFP_NOFS as appropriate.
+> When recovery starts processing intents, all of the initial intent
+> allocations are done outside of transaction contexts. That means
+> they need to specifically use GFP_NOFS as we do not want memory
+> reclaim to attempt to run direct reclaim of filesystem objects while
+> we have lots of objects added into deferred operations.
 > 
-> Go through the code and convert all the obvious GFP_NOFS allocations
-> in transaction context to use GFP_KERNEL. This further reduces the
-> explicit use of GFP_NOFS in XFS.
+> Rather than use GFP_NOFS for these specific allocations, just place
+> the entire intent recovery process under NOFS context and we can
+> then just use GFP_KERNEL for these allocations.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
+Hooray!  This finally goes away...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c       |  3 ++-
->  fs/xfs/libxfs/xfs_bmap.c       |  2 +-
->  fs/xfs/libxfs/xfs_defer.c      |  6 +++---
->  fs/xfs/libxfs/xfs_dir2.c       |  8 ++++----
->  fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
->  fs/xfs/libxfs/xfs_refcount.c   |  2 +-
->  fs/xfs/libxfs/xfs_rmap.c       |  2 +-
->  fs/xfs/xfs_attr_item.c         |  4 ++--
->  fs/xfs/xfs_bmap_util.c         |  2 +-
->  fs/xfs/xfs_buf.c               | 28 +++++++++++++++++-----------
->  fs/xfs/xfs_log.c               |  3 ++-
->  fs/xfs/xfs_mru_cache.c         |  2 +-
->  12 files changed, 39 insertions(+), 31 deletions(-)
+>  fs/xfs/xfs_attr_item.c     |  2 +-
+>  fs/xfs/xfs_bmap_item.c     |  3 ++-
+>  fs/xfs/xfs_log_recover.c   | 18 ++++++++++++++----
+>  fs/xfs/xfs_refcount_item.c |  2 +-
+>  fs/xfs/xfs_rmap_item.c     |  2 +-
+>  5 files changed, 19 insertions(+), 8 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 9976a00a73f9..269a57420859 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -891,7 +891,8 @@ xfs_attr_defer_add(
->  
->  	struct xfs_attr_intent	*new;
->  
-> -	new = kmem_cache_zalloc(xfs_attr_intent_cache, GFP_NOFS | __GFP_NOFAIL);
-> +	new = kmem_cache_zalloc(xfs_attr_intent_cache,
-> +			GFP_KERNEL | __GFP_NOFAIL);
->  	new->xattri_op_flags = op_flags;
->  	new->xattri_da_args = args;
->  
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 98aaca933bdd..fbdaa53deecd 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -6098,7 +6098,7 @@ __xfs_bmap_add(
->  			bmap->br_blockcount,
->  			bmap->br_state);
->  
-> -	bi = kmem_cache_alloc(xfs_bmap_intent_cache, GFP_NOFS | __GFP_NOFAIL);
-> +	bi = kmem_cache_alloc(xfs_bmap_intent_cache, GFP_KERNEL | __GFP_NOFAIL);
->  	INIT_LIST_HEAD(&bi->bi_list);
->  	bi->bi_type = type;
->  	bi->bi_owner = ip;
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 75689c151a54..8ae4401f6810 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -825,7 +825,7 @@ xfs_defer_alloc(
->  	struct xfs_defer_pending	*dfp;
->  
->  	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
-> -			GFP_NOFS | __GFP_NOFAIL);
-> +			GFP_KERNEL | __GFP_NOFAIL);
->  	dfp->dfp_ops = ops;
->  	INIT_LIST_HEAD(&dfp->dfp_work);
->  	list_add_tail(&dfp->dfp_list, &tp->t_dfops);
-> @@ -888,7 +888,7 @@ xfs_defer_start_recovery(
->  	struct xfs_defer_pending	*dfp;
->  
->  	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
-> -			GFP_NOFS | __GFP_NOFAIL);
-> +			GFP_KERNEL | __GFP_NOFAIL);
->  	dfp->dfp_ops = ops;
->  	dfp->dfp_intent = lip;
->  	INIT_LIST_HEAD(&dfp->dfp_work);
-> @@ -979,7 +979,7 @@ xfs_defer_ops_capture(
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 0bf25a2ba3b6..e14e229fc712 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -513,7 +513,7 @@ xfs_attri_recover_work(
 >  		return ERR_PTR(error);
 >  
->  	/* Create an object to capture the defer ops. */
-> -	dfc = kzalloc(sizeof(*dfc), GFP_NOFS | __GFP_NOFAIL);
-> +	dfc = kzalloc(sizeof(*dfc), GFP_KERNEL | __GFP_NOFAIL);
->  	INIT_LIST_HEAD(&dfc->dfc_list);
->  	INIT_LIST_HEAD(&dfc->dfc_dfops);
+>  	attr = kzalloc(sizeof(struct xfs_attr_intent) +
+> -			sizeof(struct xfs_da_args), GFP_NOFS | __GFP_NOFAIL);
+> +			sizeof(struct xfs_da_args), GFP_KERNEL | __GFP_NOFAIL);
+>  	args = (struct xfs_da_args *)(attr + 1);
 >  
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 728f72f0d078..8c9403b33191 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -236,7 +236,7 @@ xfs_dir_init(
+>  	attr->xattri_da_args = args;
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index 029a6a8d0efd..e3c58090e976 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -445,7 +445,8 @@ xfs_bui_recover_work(
 >  	if (error)
->  		return error;
+>  		return ERR_PTR(error);
 >  
-> -	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-> +	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
->  	if (!args)
->  		return -ENOMEM;
+> -	bi = kmem_cache_zalloc(xfs_bmap_intent_cache, GFP_NOFS | __GFP_NOFAIL);
+> +	bi = kmem_cache_zalloc(xfs_bmap_intent_cache,
+> +			GFP_KERNEL | __GFP_NOFAIL);
+>  	bi->bi_whichfork = (map->me_flags & XFS_BMAP_EXTENT_ATTR_FORK) ?
+>  			XFS_ATTR_FORK : XFS_DATA_FORK;
+>  	bi->bi_type = map->me_flags & XFS_BMAP_EXTENT_TYPE_MASK;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index e9ed43a833af..8c1d260bb9e1 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3443,12 +3443,19 @@ xlog_recover(
+>   * part of recovery so that the root and real-time bitmap inodes can be read in
+>   * from disk in between the two stages.  This is necessary so that we can free
+>   * space in the real-time portion of the file system.
+> + *
+> + * We run this whole process under GFP_NOFS allocation context. We do a
+> + * combination of non-transactional and transactional work, yet we really don't
+> + * want to recurse into the filesystem from direct reclaim during any of this
+> + * processing. This allows all the recovery code run here not to care about the
+> + * memory allocation context it is running in.
+>   */
+>  int
+>  xlog_recover_finish(
+>  	struct xlog	*log)
+>  {
+> -	int	error;
+> +	unsigned int	nofs_flags = memalloc_nofs_save();
+> +	int		error;
 >  
-> @@ -273,7 +273,7 @@ xfs_dir_createname(
->  		XFS_STATS_INC(dp->i_mount, xs_dir_create);
+>  	error = xlog_recover_process_intents(log);
+>  	if (error) {
+> @@ -3462,7 +3469,7 @@ xlog_recover_finish(
+>  		xlog_recover_cancel_intents(log);
+>  		xfs_alert(log->l_mp, "Failed to recover intents");
+>  		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> -		return error;
+> +		goto out_error;
 >  	}
 >  
-> -	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-> +	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
->  	if (!args)
->  		return -ENOMEM;
->  
-> @@ -435,7 +435,7 @@ xfs_dir_removename(
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
->  	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
->  
-> -	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-> +	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
->  	if (!args)
->  		return -ENOMEM;
->  
-> @@ -496,7 +496,7 @@ xfs_dir_replace(
->  	if (rval)
->  		return rval;
->  
-> -	args = kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
-> +	args = kzalloc(sizeof(*args), GFP_KERNEL | __GFP_NOFAIL);
->  	if (!args)
->  		return -ENOMEM;
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 709fda3d742f..136d5d7b9de9 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -402,7 +402,7 @@ xfs_iroot_realloc(
->  		if (ifp->if_broot_bytes == 0) {
->  			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
->  			ifp->if_broot = kmalloc(new_size,
-> -						GFP_NOFS | __GFP_NOFAIL);
-> +						GFP_KERNEL | __GFP_NOFAIL);
->  			ifp->if_broot_bytes = (int)new_size;
->  			return;
+>  	/*
+> @@ -3483,7 +3490,7 @@ xlog_recover_finish(
+>  		if (error < 0) {
+>  			xfs_alert(log->l_mp,
+>  	"Failed to clear log incompat features on recovery");
+> -			return error;
+> +			goto out_error;
 >  		}
-> @@ -417,7 +417,7 @@ xfs_iroot_realloc(
->  		new_max = cur_max + rec_diff;
->  		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
->  		ifp->if_broot = krealloc(ifp->if_broot, new_size,
-> -					 GFP_NOFS | __GFP_NOFAIL);
-> +					 GFP_KERNEL | __GFP_NOFAIL);
->  		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
->  						     ifp->if_broot_bytes);
->  		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-> @@ -443,7 +443,7 @@ xfs_iroot_realloc(
->  	else
->  		new_size = 0;
->  	if (new_size > 0) {
-> -		new_broot = kmalloc(new_size, GFP_NOFS | __GFP_NOFAIL);
-> +		new_broot = kmalloc(new_size, GFP_KERNEL | __GFP_NOFAIL);
->  		/*
->  		 * First copy over the btree block header.
->  		 */
-> @@ -512,7 +512,7 @@ xfs_idata_realloc(
+>  	}
 >  
->  	if (byte_diff) {
->  		ifp->if_data = krealloc(ifp->if_data, new_size,
-> -					GFP_NOFS | __GFP_NOFAIL);
-> +					GFP_KERNEL | __GFP_NOFAIL);
->  		if (new_size == 0)
->  			ifp->if_data = NULL;
->  		ifp->if_bytes = new_size;
-> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> index 6709a7f8bad5..7df52daa22cf 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.c
-> +++ b/fs/xfs/libxfs/xfs_refcount.c
-> @@ -1449,7 +1449,7 @@ __xfs_refcount_add(
->  			blockcount);
+> @@ -3508,9 +3515,12 @@ xlog_recover_finish(
+>  		 * and AIL.
+>  		 */
+>  		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> +		goto out_error;
+>  	}
+>  
+> -	return 0;
+> +out_error:
+> +	memalloc_nofs_restore(nofs_flags);
+> +	return error;
+>  }
+>  
+>  void
+> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> index d850b9685f7f..14919b33e4fe 100644
+> --- a/fs/xfs/xfs_refcount_item.c
+> +++ b/fs/xfs/xfs_refcount_item.c
+> @@ -425,7 +425,7 @@ xfs_cui_recover_work(
+>  	struct xfs_refcount_intent	*ri;
 >  
 >  	ri = kmem_cache_alloc(xfs_refcount_intent_cache,
 > -			GFP_NOFS | __GFP_NOFAIL);
 > +			GFP_KERNEL | __GFP_NOFAIL);
->  	INIT_LIST_HEAD(&ri->ri_list);
->  	ri->ri_type = type;
->  	ri->ri_startblock = startblock;
-> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> index 76bf7f48cb5a..0bd1f47b2c2b 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.c
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -2559,7 +2559,7 @@ __xfs_rmap_add(
->  			bmap->br_blockcount,
->  			bmap->br_state);
+>  	ri->ri_type = pmap->pe_flags & XFS_REFCOUNT_EXTENT_TYPE_MASK;
+>  	ri->ri_startblock = pmap->pe_startblock;
+>  	ri->ri_blockcount = pmap->pe_len;
+> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> index a40b92ac81e8..e473124e29cc 100644
+> --- a/fs/xfs/xfs_rmap_item.c
+> +++ b/fs/xfs/xfs_rmap_item.c
+> @@ -455,7 +455,7 @@ xfs_rui_recover_work(
+>  {
+>  	struct xfs_rmap_intent		*ri;
 >  
 > -	ri = kmem_cache_alloc(xfs_rmap_intent_cache, GFP_NOFS | __GFP_NOFAIL);
 > +	ri = kmem_cache_alloc(xfs_rmap_intent_cache, GFP_KERNEL | __GFP_NOFAIL);
->  	INIT_LIST_HEAD(&ri->ri_list);
->  	ri->ri_type = type;
->  	ri->ri_owner = owner;
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 2a142cefdc3d..0bf25a2ba3b6 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -226,7 +226,7 @@ xfs_attri_init(
->  {
->  	struct xfs_attri_log_item	*attrip;
 >  
-> -	attrip = kmem_cache_zalloc(xfs_attri_cache, GFP_NOFS | __GFP_NOFAIL);
-> +	attrip = kmem_cache_zalloc(xfs_attri_cache, GFP_KERNEL | __GFP_NOFAIL);
->  
->  	/*
->  	 * Grab an extra reference to the name/value buffer for this log item.
-> @@ -666,7 +666,7 @@ xfs_attr_create_done(
->  
->  	attrip = ATTRI_ITEM(intent);
->  
-> -	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
-> +	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_KERNEL | __GFP_NOFAIL);
->  
->  	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
->  			  &xfs_attrd_item_ops);
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index c2531c28905c..cb2a4b940292 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -66,7 +66,7 @@ xfs_zero_extent(
->  	return blkdev_issue_zeroout(target->bt_bdev,
->  		block << (mp->m_super->s_blocksize_bits - 9),
->  		count_fsb << (mp->m_super->s_blocksize_bits - 9),
-> -		GFP_NOFS, 0);
-> +		GFP_KERNEL, 0);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index a09ffbbb0dda..de99368000b4 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -190,7 +190,7 @@ xfs_buf_get_maps(
->  	}
->  
->  	bp->b_maps = kzalloc(map_count * sizeof(struct xfs_buf_map),
-> -				GFP_NOFS | __GFP_NOFAIL);
-> +			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
->  	if (!bp->b_maps)
->  		return -ENOMEM;
->  	return 0;
-> @@ -222,7 +222,8 @@ _xfs_buf_alloc(
->  	int			i;
->  
->  	*bpp = NULL;
-> -	bp = kmem_cache_zalloc(xfs_buf_cache, GFP_NOFS | __GFP_NOFAIL);
-> +	bp = kmem_cache_zalloc(xfs_buf_cache,
-> +			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
->  
->  	/*
->  	 * We don't want certain flags to appear in b_flags unless they are
-> @@ -325,7 +326,7 @@ xfs_buf_alloc_kmem(
->  	struct xfs_buf	*bp,
->  	xfs_buf_flags_t	flags)
->  {
-> -	gfp_t		gfp_mask = GFP_NOFS | __GFP_NOFAIL;
-> +	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL;
->  	size_t		size = BBTOB(bp->b_length);
->  
->  	/* Assure zeroed buffer for non-read cases. */
-> @@ -356,13 +357,11 @@ xfs_buf_alloc_pages(
->  	struct xfs_buf	*bp,
->  	xfs_buf_flags_t	flags)
->  {
-> -	gfp_t		gfp_mask = __GFP_NOWARN;
-> +	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOWARN;
->  	long		filled = 0;
->  
->  	if (flags & XBF_READ_AHEAD)
->  		gfp_mask |= __GFP_NORETRY;
-> -	else
-> -		gfp_mask |= GFP_NOFS;
->  
->  	/* Make sure that we have a page list */
->  	bp->b_page_count = DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
-> @@ -429,11 +428,18 @@ _xfs_buf_map_pages(
->  
->  		/*
->  		 * vm_map_ram() will allocate auxiliary structures (e.g.
-> -		 * pagetables) with GFP_KERNEL, yet we are likely to be under
-> -		 * GFP_NOFS context here. Hence we need to tell memory reclaim
-> -		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
-> -		 * memory reclaim re-entering the filesystem here and
-> -		 * potentially deadlocking.
-> +		 * pagetables) with GFP_KERNEL, yet we often under a scoped nofs
-> +		 * context here. Mixing GFP_KERNEL with GFP_NOFS allocations
-> +		 * from the same call site that can be run from both above and
-> +		 * below memory reclaim causes lockdep false positives. Hence we
-> +		 * always need to force this allocation to nofs context because
-> +		 * we can't pass __GFP_NOLOCKDEP down to auxillary structures to
-> +		 * prevent false positive lockdep reports.
-> +		 *
-> +		 * XXX(dgc): I think dquot reclaim is the only place we can get
-> +		 * to this function from memory reclaim context now. If we fix
-> +		 * that like we've fixed inode reclaim to avoid writeback from
-> +		 * reclaim, this nofs wrapping can go away.
->  		 */
->  		nofs_flag = memalloc_nofs_save();
->  		do {
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index ee39639bb92b..1f68569e62ca 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3518,7 +3518,8 @@ xlog_ticket_alloc(
->  	struct xlog_ticket	*tic;
->  	int			unit_res;
->  
-> -	tic = kmem_cache_zalloc(xfs_log_ticket_cache, GFP_NOFS | __GFP_NOFAIL);
-> +	tic = kmem_cache_zalloc(xfs_log_ticket_cache,
-> +			GFP_KERNEL | __GFP_NOFAIL);
->  
->  	unit_res = xlog_calc_unit_res(log, unit_bytes, &tic->t_iclog_hdrs);
->  
-> diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-> index ce496704748d..7443debaffd6 100644
-> --- a/fs/xfs/xfs_mru_cache.c
-> +++ b/fs/xfs/xfs_mru_cache.c
-> @@ -428,7 +428,7 @@ xfs_mru_cache_insert(
->  	if (!mru || !mru->lists)
->  		return -EINVAL;
->  
-> -	if (radix_tree_preload(GFP_NOFS))
-> +	if (radix_tree_preload(GFP_KERNEL))
->  		return -ENOMEM;
->  
->  	INIT_LIST_HEAD(&elem->list_node);
+>  	switch (map->me_flags & XFS_RMAP_EXTENT_TYPE_MASK) {
+>  	case XFS_RMAP_EXTENT_MAP:
 > -- 
 > 2.43.0
 > 
