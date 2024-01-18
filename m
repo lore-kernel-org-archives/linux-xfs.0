@@ -1,72 +1,68 @@
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898E11BC33;
-	Thu, 18 Jan 2024 08:04:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E9320B0C;
+	Thu, 18 Jan 2024 08:04:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705565080; cv=none; b=k3fdrMmk+mbx3aF+gvtpcf03XfxA2PYHyh1lc8snunaKJ6o5oT+nGHjrUPHIgwbt2RmAUUSLj3gyZ2btLMDacu331ye8hOtc0idX5xlpEzKAtUfirq13jbaDq3jd2Ncu/MHk9It17HVJJFUpRz9dA8hd+Jqk0Q1EQzVf18FOYmU=
+	t=1705565084; cv=none; b=UWeKWWKSauCm1p7YAvgc7RRV/bpYUNomYaNFKBMl1eIJbvr8a4dx8QVgbU2Gv/Yukx1zV47MqZ+PyIFedr4wVL3lRH3sc743YKdAC8frwVSYbVnx8ZCfAuKJsU9pWWh21H4kSOPzEvgq34VJ8lixGmFpmOEzcBErjH5D2CCZ2rQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705565080; c=relaxed/simple;
-	bh=0QdESbBtZ/ISvZsANzlPk0q0u9Eg1vmM5zr/uOfcCaI=;
+	s=arc-20240116; t=1705565084; c=relaxed/simple;
+	bh=68d9CmU5eeaESHqJic1JKrZ9pX0+kwyDcb6eL/2eh2o=;
 	h=Received:DKIM-Signature:Received:Received:Received:Received:
 	 Received:Received:Received:From:To:Cc:Subject:Date:Message-Id:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-TM-AS-GCONF:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details; b=VEigF9xv12yJSH3P2HT4YUQgR+idqtxxvACa5tHvyhSqt2VAE63P8sm6pfbDKmUMucaHlfbV9fUBWnxjPG46gm34ole2TmOGTDTJH01u3iHVA7w4/Dv3PNbgU51n9Bz583W07wvGXtoVdkKLlVCAoSPu15PWVTDchrRbR92gF2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=hid5dLq6; arc=none smtp.client-ip=148.163.158.5
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-TM-AS-GCONF:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=TTid7FPjuBVqQWJ7gh5n4kIfnry/NxtqRayoLGaxkqpqDfonJvTjJPR2+s7kcNr5Qdks1bqWcWFjh9MZjent3kwi6Lsg8lAjBRoVReiiT+W4b3DHSWjC/MmHt6N46i6wgAfKHdeh3wb7kDvISgM1h/p3IncTYSK58S5KiwxNWNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=OBK3Uu4x; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="hid5dLq6"
-Received: from pps.filterd (m0353724.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40I7wJRJ031217;
-	Thu, 18 Jan 2024 08:04:12 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="OBK3Uu4x"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40I7L5Br031729;
+	Thu, 18 Jan 2024 08:04:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=hnQzzb54EB6Nik9tA08SsWOYd/w2z1oIWszr1RROCZM=;
- b=hid5dLq6gdY3ewwsoy3mFW75v5sJh8x7pTlvEjBuWIzEh60czM6udDXOOPvZZVDf/+3l
- sdh1GZO6e2J70Q4cRDwNlr+3TllFAwglsYRGWTERLiEUfosEKeAe1W6nYPGuCgm5V6bz
- exfymJ6ZnJw3TJAeJehGNcl4kyXd82CkwSFlcltwWoIv+7qFWepcQdfljSgwa55IzUbi
- 2+Jdr9yVmk/RLDCpU4wZFKgyKVll/QCvAOt106bJmZDKnTzXm7tBi7UqjTdX2+7PVNAb
- lOn+M7iLeKu7ERM6PNVWu7ig/86eO2Wcgv89PlPeKrykb4GdPXShLESpYAHXY3tHU72l gg== 
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vq02f86hj-1
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=dW6SN3AhL0Lcxi0KIl8tKzSobcAeQPzLd4TnKFmh2CA=;
+ b=OBK3Uu4xnAqt0dl7fLOvpH/dqie3h3kpd8tLlyyaLATTVcXpH3tfbUk9+5Aa7G/SkG9K
+ rGke8RGRKvHW/aFLsNURz+WoPhu6p4+ZAR4f7hRro7yFdqwJQoe3DUPPpYvvR26ZYt/R
+ Qg925ljlJjVAh/KroqGlufbV/gNP5L1cKnfvqs2NlZ5GAecZzrlc27e2WIU8ZjhqpTQX
+ SjPlEsa1eJyZFyPTHu4YK/Nk5lErAvcvnC8hHQzhtgzR3JmMv+/iKT6ycjNjUGi6helL
+ Yw1phm/qMsyUNa1osixjIXNf705SlW8gt+qgt6G7PBP5QEubARkXtE1F/fv6+PJyoTXS mA== 
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vpw6pvauv-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 08:04:11 +0000
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40I72xol000441;
-	Thu, 18 Jan 2024 08:04:10 GMT
+	Thu, 18 Jan 2024 08:04:03 +0000
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40I7BDoX006508;
+	Thu, 18 Jan 2024 08:04:03 GMT
 Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3vm4ut2bda-1
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 3vm7j21nb2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 08:04:10 +0000
+	Thu, 18 Jan 2024 08:04:02 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40I848TM15008286
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40I841Q036045078
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 18 Jan 2024 08:04:09 GMT
+	Thu, 18 Jan 2024 08:04:01 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D570C2004B;
-	Thu, 18 Jan 2024 08:04:08 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 2FADC20043;
+	Thu, 18 Jan 2024 08:04:01 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C712020043;
-	Thu, 18 Jan 2024 08:04:06 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id F40FD20040;
+	Thu, 18 Jan 2024 08:03:58 +0000 (GMT)
 Received: from li-c1fdab4c-355a-11b2-a85c-ef242fe9efb4.in.ibm.com (unknown [9.109.201.126])
 	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 18 Jan 2024 08:04:06 +0000 (GMT)
+	Thu, 18 Jan 2024 08:03:58 +0000 (GMT)
 From: Shrikanth Hegde <sshegde@linux.ibm.com>
 To: linux-kernel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
         linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 Cc: sshegde@linux.ibm.com, mpe@ellerman.id.au, mingo@kernel.org,
         peterz@infradead.org, chandan.babu@oracle.com, anton@tuxera.com
-Subject: [RFC PATCH 2/3] fs: remove duplicate ifdefs
-Date: Thu, 18 Jan 2024 13:33:25 +0530
-Message-Id: <20240118080326.13137-3-sshegde@linux.ibm.com>
+Subject: [RFC PATCH 0/3] remove duplicate ifdefs
+Date: Thu, 18 Jan 2024 13:33:23 +0530
+Message-Id: <20240118080326.13137-1-sshegde@linux.ibm.com>
 X-Mailer: git-send-email 2.39.3
-In-Reply-To: <20240118080326.13137-1-sshegde@linux.ibm.com>
-References: <20240118080326.13137-1-sshegde@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,85 +71,112 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: P-8pNzrwHJ2K49DWfj4Oc0tgPfJY7qbK
-X-Proofpoint-GUID: P-8pNzrwHJ2K49DWfj4Oc0tgPfJY7qbK
+X-Proofpoint-GUID: sHUTBHPs0bn-MPgVd2jK5MQVyP9-lhbG
+X-Proofpoint-ORIG-GUID: sHUTBHPs0bn-MPgVd2jK5MQVyP9-lhbG
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-01-18_04,2024-01-17_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
- impostorscore=0 phishscore=0 adultscore=0 suspectscore=0 spamscore=0
- mlxscore=0 priorityscore=1501 lowpriorityscore=0 mlxlogscore=999
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
+ malwarescore=0 lowpriorityscore=0 mlxlogscore=696 priorityscore=1501
+ phishscore=0 adultscore=0 clxscore=1011 mlxscore=0 impostorscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2311290000 definitions=main-2401180056
 
-when a ifdef is used in the below manner, second one could be considered as
-duplicate.
+When going through the code observed a case in scheduler,
+where #ifdef CONFIG_SMP was used to inside an #ifdef CONFIG_SMP.
+That didn't make sense since first one is good enough and second
+one is a duplicate.
 
-ifdef DEFINE_A
-...code block...
-ifdef DEFINE_A
-...code block...
-endif
-...code block...
-endif
+This could improve code readability. No functional change is intended.
+Maybe this is not an issue these days as language servers can parse
+the config and users can read the code without bothering about
+whats true and whats not.
 
-There are few places in fs code where above pattern was seen.
-No functional change is intended here. It only aims to improve code
-readability.
+Does this change makes sense?
 
-Signed-off-by: Shrikanth Hegde <sshegde@linux.ibm.com>
----
- fs/ntfs/inode.c    | 2 --
- fs/xfs/xfs_sysfs.c | 4 ----
- 2 files changed, 6 deletions(-)
+Since this might be present in other code areas wrote a very basic
+python script which helps in finding these cases. It doesn't handle any
+complicated #defines or space separated "# if". At some places the
+log collected had to be manually corrected due to space separated ifdefs.
+Thats why its not a treewide change.
+There might be an opportunity for other files as well.
 
-diff --git a/fs/ntfs/inode.c b/fs/ntfs/inode.c
-index aba1e22db4e9..d2c8622d53d1 100644
---- a/fs/ntfs/inode.c
-+++ b/fs/ntfs/inode.c
-@@ -2859,11 +2859,9 @@ int ntfs_truncate(struct inode *vi)
-  *
-  * See ntfs_truncate() description above for details.
-  */
--#ifdef NTFS_RW
- void ntfs_truncate_vfs(struct inode *vi) {
- 	ntfs_truncate(vi);
- }
--#endif
+Logic is very simple. If there is #ifdef or #if or #ifndef add that
+variable to list. Upon every subsequent #ifdef or #if or #ifndef
+check if the same variable is in the list. If yes flag
+an error. Verification was done manually later checking for any #undef
+or any error due to script. These were the ones that flagged out and
+made sense after going through code.
 
- /**
-  * ntfs_setattr - called from notify_change() when an attribute is being changed
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 17485666b672..d2391eec37fe 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -193,7 +193,6 @@ always_cow_show(
- }
- XFS_SYSFS_ATTR_RW(always_cow);
+ifdefs were collected using grep in below way and that file was used as
+the input to the script.
+grep -rIwn --include="*.c*" --include="*.h"  -e "#if" -e "#ifndef" -e "#ifdef" -e "#else" -e "#endif" * > /tmp/input.txt
 
--#ifdef DEBUG
- /*
-  * Override how many threads the parallel work queue is allowed to create.
-  * This has to be a debug-only global (instead of an errortag) because one of
-@@ -260,7 +259,6 @@ larp_show(
- 	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.larp);
- }
- XFS_SYSFS_ATTR_RW(larp);
--#endif /* DEBUG */
+---------------------------------------------------------------------
+script used:
+---------------------------------------------------------------------
+import os
+import argparse
 
- STATIC ssize_t
- bload_leaf_slack_store(
-@@ -319,10 +317,8 @@ static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(log_recovery_delay),
- 	ATTR_LIST(mount_delay),
- 	ATTR_LIST(always_cow),
--#ifdef DEBUG
- 	ATTR_LIST(pwork_threads),
- 	ATTR_LIST(larp),
--#endif
- 	ATTR_LIST(bload_leaf_slack),
- 	ATTR_LIST(bload_node_slack),
- 	NULL,
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file",
+                            help="file to input to script",
+                            type=str)
+    parser.add_argument("--verbose",
+                            help="Print additional debugging info, 0 to disable ",
+                            type=int)
+    args = parser.parse_args()
+    return args
+
+def parseFiles(args):
+    file_to_parse = open(args.file, "r")
+    lines = file_to_parse.readlines()
+    check_length = len(lines)
+    ifdefs_list = []
+    i=0
+
+    while i < check_length:
+        line = lines[i]
+        last_word = line.strip().split(":")[2]
+        last_word = last_word.split("/")[0]
+
+        if (args.verbose):
+            print(line)
+        last_word_splits = last_word.split()
+        if (args.verbose):
+            print(last_word_splits)
+        if last_word_splits[0] == "#ifdef" or last_word_splits[0] == "#ifndef" or last_word_splits[0] == "#if":
+            if last_word_splits[1] in ifdefs_list:
+                print("This is duplicate and may be fixed: %s, parent_list:\n" % (line))
+                print(ifdefs_list)
+            ifdefs_list.append(last_word_splits[1])
+        if last_word_splits[0] == "#endif"":
+            ifdefs_list.pop()
+
+        i=i+1
+
+if __name__ == "__main__":
+    args = parse_args()
+    parseFiles(args)
+-------------------------------------------------------------------------
+
+
+Shrikanth Hegde (3):
+  sched: remove duplicate ifdefs
+  fs: remove depulicate ifdefs
+  arch/powerpc: remove duplicate ifdefs
+
+ arch/powerpc/include/asm/paca.h           | 4 ----
+ arch/powerpc/kernel/asm-offsets.c         | 2 --
+ arch/powerpc/platforms/powermac/feature.c | 2 --
+ arch/powerpc/xmon/xmon.c                  | 2 --
+ fs/ntfs/inode.c                           | 2 --
+ fs/xfs/xfs_sysfs.c                        | 4 ----
+ kernel/sched/core.c                       | 4 +---
+ kernel/sched/fair.c                       | 2 --
+ 8 files changed, 1 insertion(+), 21 deletions(-)
+
 --
 2.39.3
 
