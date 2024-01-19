@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADADEC7
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 01:31:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F1BD10F4
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 01:32:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705627861; cv=none; b=BDFaimrhfj7j3XLP3xhRSLp0ZRtDGRwEM7Upokmh2GGJZRN8pu40RK0C1pvJQxnS+gl6KPyqnwdrLjXkBr9TNLp18so2crXqi2qNH/gDlOG7VjBnPn0g2WxfA20V9i840p/dfA28bOp3O+nU6jlRTQPv0FnLyzTopXTXROvRdSk=
+	t=1705627925; cv=none; b=YG9SnlwqEGjow2GFmX826fhNvP1qpnZ33skd51Sb1WTD4qJXaH6fNqei6t/5t2wsGuPG9qGzgIRPW4pQulow8y6Mr/bAD2J6vggctnXG94quF1kWtizxOOXUChg4EhRE/n70hs0v3RuyOGPSJh8FY6TAhUdbxPJSGBAAZM26IjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705627861; c=relaxed/simple;
-	bh=sj8LwBuxpDXj+ppO1Uutgop62svsZ8u/RQRfzC/WmKI=;
+	s=arc-20240116; t=1705627925; c=relaxed/simple;
+	bh=FgDigqNMZY8/7k7ZFlPzWfD3e9Wxk/ZaT+1pKM79g+o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gPRs+wcK78WqRrtarbcM2pw0w9kunWz2E2QAM/vE4BhuDFN8KHhHskyzaoXkdsdUFMuIN2lQKpGaUyoHIrwPWJF6fbKdrAzhKZMrUWxuTRGsTwGnntrd0rwWl8ZNPQ8KXcBmI9M9C4JSQpANL/a4ZPcljxJcaHIczI8XkHwa274=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKUaiou+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=VONRFqrqWnH9akJ2n0/K/Y6r56WWg2b0ijQ4QIIWiK6SG3JfZMnVRt2mTY0DcqOCSN9DQKbdhnIhKqRbBnBa5VUgp+Wf/k7zgRz+SzDeP+ZijwAAwRwCpQ8iQchBzOFDkbTu3OCYZqCKtR+dBfKlkICDJopU2UkNz83obWkTlEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ly+EzGtu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKUaiou+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0F57C433F1;
-	Fri, 19 Jan 2024 01:31:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ly+EzGtu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5A2C433C7;
+	Fri, 19 Jan 2024 01:32:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705627860;
-	bh=sj8LwBuxpDXj+ppO1Uutgop62svsZ8u/RQRfzC/WmKI=;
+	s=k20201202; t=1705627925;
+	bh=FgDigqNMZY8/7k7ZFlPzWfD3e9Wxk/ZaT+1pKM79g+o=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SKUaiou+JC9Z7hoEwuwBPt3MxvsMqyjLtanjl7b4207fuWIDAMAqGY6HNpJxf3e65
-	 4Eph/WbTGlOgRJnM//JOz39b5aAJ7ntzDxRJCyRML8w67p7epcsMQ99C8754qB5TD1
-	 7Rj6ngjpNUSrMJDoukcozVNy1KlNhicZAqwDaFoL+9WPEVKkIyaDGa/RvRpEVop4Hw
-	 xo3LjE9q6hO/hAOWMMj9BOgTx5KuyjzHuM84He1vOFltvXxYpq4JKLoprh08JCMIks
-	 ZvIZk8UhyzzVFvzFCva5H5RN/npWoO1C9Lit2z1+vhIuyNZnjy9xCSWbz94j+EKnEl
-	 DtyE/8ebvuCCQ==
-Date: Thu, 18 Jan 2024 17:31:00 -0800
+	b=Ly+EzGtuKSlHv0cLB6EBc9Y/Gwf+woHhfNNbSI0X58BTAFuAp907LlGE6jtVDiaTR
+	 V+gD3PiW5OyhsqueyLlEN7qg4MeErplbzIdFS+4fKS4Pa/9P571jWL4FFr0h9s4jWr
+	 ivR4cPi+IWTUvYJXxZZAPF+gF1gmuRJPyH0hGiuImAW/LK1ZyUo/+gPZdncCbJPPGF
+	 slhQL+R64P2SzjSL985jSlUbPBO+RP+Mg1l9EshdKQm+he/oC0d6O7YOxvdBywxCef
+	 Uet0kN8pVPrgBjAi4FljmSy38Sl5aVYZBVYvZebW22damCml5uoahRqE8sQWOMFppx
+	 wuxypz7cKNUBw==
+Date: Thu, 18 Jan 2024 17:32:04 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [PATCH 3/3] xfs: convert buffer cache to use high order folios
-Message-ID: <20240119013100.GR674499@frogsfrogsfrogs>
-References: <20240118222216.4131379-1-david@fromorbit.com>
- <20240118222216.4131379-4-david@fromorbit.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: chandanbabu@kernel.org, linux-xfs@vger.kernel.org, yi.zhang@huawei.com,
+	houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH v2] xfs: ensure submit buffers on LSN boundaries in error
+ handlers
+Message-ID: <20240119013204.GS674499@frogsfrogsfrogs>
+References: <20240117123126.2019059-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,305 +43,181 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240118222216.4131379-4-david@fromorbit.com>
+In-Reply-To: <20240117123126.2019059-1-leo.lilong@huawei.com>
 
-On Fri, Jan 19, 2024 at 09:19:41AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jan 17, 2024 at 08:31:26PM +0800, Long Li wrote:
+> While performing the IO fault injection test, I caught the following data
+> corruption report:
 > 
-> Now that we have the buffer cache using the folio API, we can extend
-> the use of folios to allocate high order folios for multi-page
-> buffers rather than an array of single pages that are then vmapped
-> into a contiguous range.
+>  XFS (dm-0): Internal error ltbno + ltlen > bno at line 1957 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_ag_extent+0x79c/0x1130
+>  CPU: 3 PID: 33 Comm: kworker/3:0 Not tainted 6.5.0-rc7-next-20230825-00001-g7f8666926889 #214
+>  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+>  Workqueue: xfs-inodegc/dm-0 xfs_inodegc_worker
+>  Call Trace:
+>   <TASK>
+>   dump_stack_lvl+0x50/0x70
+>   xfs_corruption_error+0x134/0x150
+>   xfs_free_ag_extent+0x7d3/0x1130
+>   __xfs_free_extent+0x201/0x3c0
+>   xfs_trans_free_extent+0x29b/0xa10
+>   xfs_extent_free_finish_item+0x2a/0xb0
+>   xfs_defer_finish_noroll+0x8d1/0x1b40
+>   xfs_defer_finish+0x21/0x200
+>   xfs_itruncate_extents_flags+0x1cb/0x650
+>   xfs_free_eofblocks+0x18f/0x250
+>   xfs_inactive+0x485/0x570
+>   xfs_inodegc_worker+0x207/0x530
+>   process_scheduled_works+0x24a/0xe10
+>   worker_thread+0x5ac/0xc60
+>   kthread+0x2cd/0x3c0
+>   ret_from_fork+0x4a/0x80
+>   ret_from_fork_asm+0x11/0x20
+>   </TASK>
+>  XFS (dm-0): Corruption detected. Unmount and run xfs_repair
 > 
-> This creates two types of buffers: single folio buffers that can
-> have arbitrary order, and multi-folio buffers made up of many single
-> page folios that get vmapped. The latter is essentially the existing
-> code, so there are no logic changes to handle this case.
+> After analyzing the disk image, it was found that the corruption was
+> triggered by the fact that extent was recorded in both inode datafork
+> and AGF btree blocks. After a long time of reproduction and analysis,
+> we found that the reason of free sapce btree corruption was that the
+> AGF btree was not recovered correctly.
 > 
-> There are a few places where we iterate the folios on a buffer.
-> These need to be converted to handle the high order folio case.
-> Luckily, this only occurs when bp->b_folio_count == 1, and the code
-> for handling this case is just a simple application of the folio API
-> to the operations that need to be performed.
+> Consider the following situation, Checkpoint A and Checkpoint B are in
+> the same record and share the same start LSN1, buf items of same object
+> (AGF btree block) is included in both Checkpoint A and Checkpoint B. If
+> the buf item in Checkpoint A has been recovered and updates metadata LSN
+> permanently, then the buf item in Checkpoint B cannot be recovered,
+> because log recovery skips items with a metadata LSN >= the current LSN
+> of the recovery item. If there is still an inode item in Checkpoint B
+> that records the Extent X, the Extent X will be recorded in both inode
+> datafork and AGF btree block after Checkpoint B is recovered. Such
+> transaction can be seen when allocing enxtent for inode bmap, it record
+> both the addition of extent to the inode extent list and the removing
+> extent from the AGF.
 > 
-> The code that allocates buffers will optimistically attempt a high
-> order folio allocation as a fast path. If this high order allocation
-> fails, then we fall back to the existing multi-folio allocation
-> code. This now forms the slow allocation path, and hopefully will be
-> largely unused in normal conditions.
+>   |------------Record (LSN1)------------------|---Record (LSN2)---|
+>   |-------Checkpoint A----------|----------Checkpoint B-----------|
+>   |     Buf Item(Extent X)      | Buf Item / Inode item(Extent X) |
+>   |     Extent X is freed       |     Extent X is allocated       |
 > 
-> This should improve performance of large buffer operations (e.g.
-> large directory block sizes) as we should now mostly avoid the
-> expense of vmapping large buffers (and the vmap lock contention that
-> can occur) as well as avoid the runtime pressure that frequently
-> accessing kernel vmapped pages put on the TLBs.
+> After commit 12818d24db8a ("xfs: rework log recovery to submit buffers
+> on LSN boundaries") was introduced, we submit buffers on lsn boundaries
+> during log recovery. The above problem can be avoided under normal paths,
+> but it's not guaranteed under abnormal paths. Consider the following
+> process, if an error was encountered after recover buf item in Checkpoint
+> A and before recover buf item in Checkpoint B, buffers that have been
+> added to the buffer_list will still be submitted, this violates the
+> submits rule on lsn boundaries. So buf item in Checkpoint B cannot be
+> recovered on the next mount due to current lsn of transaction equal to
+> metadata lsn on disk. The detailed process of the problem is as follows.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c | 150 +++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 119 insertions(+), 31 deletions(-)
+> First Mount:
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 15907e92d0d3..df363f17ea1a 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -74,6 +74,10 @@ xfs_buf_is_vmapped(
->  	return bp->b_addr && bp->b_folio_count > 1;
->  }
->  
-> +/*
-> + * See comment above xfs_buf_alloc_folios() about the constraints placed on
-> + * allocating vmapped buffers.
-> + */
->  static inline int
->  xfs_buf_vmap_len(
->  	struct xfs_buf	*bp)
-> @@ -344,14 +348,72 @@ xfs_buf_alloc_kmem(
->  		bp->b_addr = NULL;
->  		return -ENOMEM;
->  	}
-> -	bp->b_offset = offset_in_page(bp->b_addr);
->  	bp->b_folios = bp->b_folio_array;
->  	bp->b_folios[0] = kmem_to_folio(bp->b_addr);
-> +	bp->b_offset = offset_in_folio(bp->b_folios[0], bp->b_addr);
->  	bp->b_folio_count = 1;
->  	bp->b_flags |= _XBF_KMEM;
->  	return 0;
->  }
->  
-> +/*
-> + * Allocating a high order folio makes the assumption that buffers are a
-> + * power-of-2 size so that ilog2() returns the exact order needed to fit
-> + * the contents of the buffer. Buffer lengths are mostly a power of two,
-> + * so this is not an unreasonable approach to take by default.
-> + *
-> + * The exception here are user xattr data buffers, which can be arbitrarily
-> + * sized up to 64kB plus structure metadata. In that case, round up the order.
-> + */
-> +static bool
-> +xfs_buf_alloc_folio(
-> +	struct xfs_buf	*bp,
-> +	gfp_t		gfp_mask)
-> +{
-> +	int		length = BBTOB(bp->b_length);
-> +	int		order;
-> +
-> +	order = ilog2(length);
-> +	if ((1 << order) < length)
-> +		order = ilog2(length - 1) + 1;
-> +
-> +	if (order <= PAGE_SHIFT)
-> +		order = 0;
-> +	else
-> +		order -= PAGE_SHIFT;
-> +
-> +	bp->b_folio_array[0] = folio_alloc(gfp_mask, order);
-> +	if (!bp->b_folio_array[0])
-> +		return false;
-> +
-> +	bp->b_folios = bp->b_folio_array;
-> +	bp->b_folio_count = 1;
-> +	bp->b_flags |= _XBF_FOLIOS;
-> +	return true;
+>   xlog_do_recovery_pass
+>     error = xlog_recover_process
+>       xlog_recover_process_data
+>         xlog_recover_process_ophdr
+>           xlog_recovery_process_trans
+>             ...
+>               /* recover buf item in Checkpoint A */
+>               xlog_recover_buf_commit_pass2
+>                 xlog_recover_do_reg_buffer
+>                 /* add buffer of agf btree block to buffer_list */
+>                 xfs_buf_delwri_queue(bp, buffer_list)
+>             ...
+>             ==> Encounter read IO error and return
+>     /* submit buffers regardless of error */
+>     if (!list_empty(&buffer_list))
+>       xfs_buf_delwri_submit(&buffer_list);
+> 
+>     <buf items of agf btree block in Checkpoint A recovery success>
+> 
+> Second Mount:
+> 
+>   xlog_do_recovery_pass
+>     error = xlog_recover_process
+>       xlog_recover_process_data
+>         xlog_recover_process_ophdr
+>           xlog_recovery_process_trans
+>             ...
+>               /* recover buf item in Checkpoint B */
+>               xlog_recover_buf_commit_pass2
+>                 /* buffer of agf btree block wouldn't added to
+>                    buffer_list due to lsn equal to current_lsn */
+>                 if (XFS_LSN_CMP(lsn, current_lsn) >= 0)
+>                   goto out_release
+> 
+>     <buf items of agf btree block in Checkpoint B wouldn't recovery>
+> 
+> In order to make sure that submits buffers on lsn boundaries in the
+> abnormal paths, we need to check error status before submit buffers that
+> have been added from the last record processed. If error status exist,
+> buffers in the bufffer_list should not be writen to disk.
+> 
+> Canceling the buffers in the buffer_list directly isn't correct, unlike
+> any other place where write list was canceled, these buffers has been
+> initialized by xfs_buf_item_init() during recovery and held by buf item,
+> buf items will not be released in xfs_buf_delwri_cancel(), it's not easy
+> to solve.
+> 
+> If the filesystem has been shut down, then delwri list submission will
+> error out all buffers on the list via IO submission/completion and do
+> all the correct cleanup automatically. So shutting down the filesystem
+> could prevents buffers in the bufffer_list from being written to disk.
+> 
+> Fixes: 50d5c8d8e938 ("xfs: check LSN ordering for v5 superblocks during recovery")
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
 
-Hmm.  So I guess with this patchset, either we get one multi-page large
-folio for the whole buffer, or we fall back to the array of basepage
-sized folios?
+On first glance this looks ok to me, though I wonder if bfoster or
+dchinner have any thoughts?
 
-/me wonders if the extra flexibility from alloc_folio_bulk_array and a
-folioized vm_map_ram would eliminate all this special casing?
-
-Uhoh, lights flickering again and ice crashing off the roof.  I better
-go before the lights go out again. :(
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +}
-> +
-> +/*
-> + * When we allocate folios for a buffer, we end up with one of two types of
-> + * buffer.
-> + *
-> + * The first type is a single folio buffer - this may be a high order
-> + * folio or just a single page sized folio, but either way they get treated the
-> + * same way by the rest of the code - the buffer memory spans a single
-> + * contiguous memory region that we don't have to map and unmap to access the
-> + * data directly.
-> + *
-> + * The second type of buffer is the multi-folio buffer. These are *always* made
-> + * up of single page folios so that they can be fed to vmap_ram() to return a
-> + * contiguous memory region we can access the data through, or mark it as
-> + * XBF_UNMAPPED and access the data directly through individual folio_address()
-> + * calls.
-> + *
-> + * We don't use high order folios for this second type of buffer (yet) because
-> + * having variable size folios makes offset-to-folio indexing and iteration of
-> + * the data range more complex than if they are fixed size. This case should now
-> + * be the slow path, though, so unless we regularly fail to allocate high order
-> + * folios, there should be little need to optimise this path.
-> + */
->  static int
->  xfs_buf_alloc_folios(
->  	struct xfs_buf	*bp,
-> @@ -363,7 +425,15 @@ xfs_buf_alloc_folios(
->  	if (flags & XBF_READ_AHEAD)
->  		gfp_mask |= __GFP_NORETRY;
->  
-> -	/* Make sure that we have a page list */
-> +	/* Assure zeroed buffer for non-read cases. */
-> +	if (!(flags & XBF_READ))
-> +		gfp_mask |= __GFP_ZERO;
-> +
-> +	/* Optimistically attempt a single high order folio allocation. */
-> +	if (xfs_buf_alloc_folio(bp, gfp_mask))
-> +		return 0;
-> +
-> +	/* Fall back to allocating an array of single page folios. */
->  	bp->b_folio_count = DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
->  	if (bp->b_folio_count <= XB_FOLIOS) {
->  		bp->b_folios = bp->b_folio_array;
-> @@ -375,9 +445,6 @@ xfs_buf_alloc_folios(
->  	}
->  	bp->b_flags |= _XBF_FOLIOS;
->  
-> -	/* Assure zeroed buffer for non-read cases. */
-> -	if (!(flags & XBF_READ))
-> -		gfp_mask |= __GFP_ZERO;
+> ---
+> v2:
+>  - rewrite the part of commit message
+>  - use shutdown solution to prevent buffer_list from writing to disk
+>  fs/xfs/xfs_log_recover.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 1251c81e55f9..9625cf62b038 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3204,11 +3204,28 @@ xlog_do_recovery_pass(
+>  	kmem_free(hbp);
 >  
 >  	/*
->  	 * Bulk filling of pages can take multiple calls. Not filling the entire
-> @@ -418,7 +485,7 @@ _xfs_buf_map_folios(
->  {
->  	ASSERT(bp->b_flags & _XBF_FOLIOS);
->  	if (bp->b_folio_count == 1) {
-> -		/* A single page buffer is always mappable */
-> +		/* A single folio buffer is always mappable */
->  		bp->b_addr = folio_address(bp->b_folios[0]);
->  	} else if (flags & XBF_UNMAPPED) {
->  		bp->b_addr = NULL;
-> @@ -1465,20 +1532,28 @@ xfs_buf_ioapply_map(
->  	int		*count,
->  	blk_opf_t	op)
->  {
-> -	int		page_index;
-> -	unsigned int	total_nr_pages = bp->b_folio_count;
-> -	int		nr_pages;
-> +	int		folio_index;
-> +	unsigned int	total_nr_folios = bp->b_folio_count;
-> +	int		nr_folios;
->  	struct bio	*bio;
->  	sector_t	sector =  bp->b_maps[map].bm_bn;
->  	int		size;
->  	int		offset;
->  
-> -	/* skip the pages in the buffer before the start offset */
-> -	page_index = 0;
-> +	/*
-> +	 * If the start offset if larger than a single page, we need to be
-> +	 * careful. We might have a high order folio, in which case the indexing
-> +	 * is from the start of the buffer. However, if we have more than one
-> +	 * folio single page folio in the buffer, we need to skip the folios in
-> +	 * the buffer before the start offset.
-> +	 */
-> +	folio_index = 0;
->  	offset = *buf_offset;
-> -	while (offset >= PAGE_SIZE) {
-> -		page_index++;
-> -		offset -= PAGE_SIZE;
-> +	if (bp->b_folio_count > 1) {
-> +		while (offset >= PAGE_SIZE) {
-> +			folio_index++;
-> +			offset -= PAGE_SIZE;
+> -	 * Submit buffers that have been added from the last record processed,
+> -	 * regardless of error status.
+> +	 * Submit buffers that have been dirtied by the last record recovered.
+>  	 */
+> -	if (!list_empty(&buffer_list))
+> +	if (!list_empty(&buffer_list)) {
+> +		if (error) {
+> +			/*
+> +			 * If there has been an item recovery error then we
+> +			 * cannot allow partial checkpoint writeback to
+> +			 * occur.  We might have multiple checkpoints with the
+> +			 * same start LSN in this buffer list, and partial
+> +			 * writeback of a checkpoint in this situation can
+> +			 * prevent future recovery of all the changes in the
+> +			 * checkpoints at this start LSN.
+> +			 *
+> +			 * Note: Shutting down the filesystem will result in the
+> +			 * delwri submission marking all the buffers stale,
+> +			 * completing them and cleaning up _XBF_LOGRECOVERY
+> +			 * state without doing any IO.
+> +			 */
+> +			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
 > +		}
->  	}
->  
->  	/*
-> @@ -1491,28 +1566,28 @@ xfs_buf_ioapply_map(
->  
->  next_chunk:
->  	atomic_inc(&bp->b_io_remaining);
-> -	nr_pages = bio_max_segs(total_nr_pages);
-> +	nr_folios = bio_max_segs(total_nr_folios);
->  
-> -	bio = bio_alloc(bp->b_target->bt_bdev, nr_pages, op, GFP_NOIO);
-> +	bio = bio_alloc(bp->b_target->bt_bdev, nr_folios, op, GFP_NOIO);
->  	bio->bi_iter.bi_sector = sector;
->  	bio->bi_end_io = xfs_buf_bio_end_io;
->  	bio->bi_private = bp;
->  
-> -	for (; size && nr_pages; nr_pages--, page_index++) {
-> -		int	rbytes, nbytes = PAGE_SIZE - offset;
-> +	for (; size && nr_folios; nr_folios--, folio_index++) {
-> +		struct folio	*folio = bp->b_folios[folio_index];
-> +		int		nbytes = folio_size(folio) - offset;
->  
->  		if (nbytes > size)
->  			nbytes = size;
->  
-> -		rbytes = bio_add_folio(bio, bp->b_folios[page_index], nbytes,
-> -				      offset);
-> -		if (rbytes < nbytes)
-> +		if (!bio_add_folio(bio, folio, nbytes,
-> +				offset_in_folio(folio, offset)))
->  			break;
->  
->  		offset = 0;
->  		sector += BTOBB(nbytes);
->  		size -= nbytes;
-> -		total_nr_pages--;
-> +		total_nr_folios--;
->  	}
->  
->  	if (likely(bio->bi_iter.bi_size)) {
-> @@ -1722,6 +1797,13 @@ xfs_buf_offset(
->  	if (bp->b_addr)
->  		return bp->b_addr + offset;
->  
-> +	/* Single folio buffers may use large folios. */
-> +	if (bp->b_folio_count == 1) {
-> +		folio = bp->b_folios[0];
-> +		return folio_address(folio) + offset_in_folio(folio, offset);
+>  		error2 = xfs_buf_delwri_submit(&buffer_list);
 > +	}
-> +
-> +	/* Multi-folio buffers always use PAGE_SIZE folios */
->  	folio = bp->b_folios[offset >> PAGE_SHIFT];
->  	return folio_address(folio) + (offset & (PAGE_SIZE-1));
->  }
-> @@ -1737,18 +1819,24 @@ xfs_buf_zero(
->  	bend = boff + bsize;
->  	while (boff < bend) {
->  		struct folio	*folio;
-> -		int		page_index, page_offset, csize;
-> +		int		folio_index, folio_offset, csize;
 >  
-> -		page_index = (boff + bp->b_offset) >> PAGE_SHIFT;
-> -		page_offset = (boff + bp->b_offset) & ~PAGE_MASK;
-> -		folio = bp->b_folios[page_index];
-> -		csize = min_t(size_t, PAGE_SIZE - page_offset,
-> +		/* Single folio buffers may use large folios. */
-> +		if (bp->b_folio_count == 1) {
-> +			folio = bp->b_folios[0];
-> +			folio_offset = offset_in_folio(folio,
-> +						bp->b_offset + boff);
-> +		} else {
-> +			folio_index = (boff + bp->b_offset) >> PAGE_SHIFT;
-> +			folio_offset = (boff + bp->b_offset) & ~PAGE_MASK;
-> +			folio = bp->b_folios[folio_index];
-> +		}
-> +
-> +		csize = min_t(size_t, folio_size(folio) - folio_offset,
->  				      BBTOB(bp->b_length) - boff);
-> +		ASSERT((csize + folio_offset) <= folio_size(folio));
->  
-> -		ASSERT((csize + page_offset) <= PAGE_SIZE);
-> -
-> -		memset(folio_address(folio) + page_offset, 0, csize);
-> -
-> +		memset(folio_address(folio) + folio_offset, 0, csize);
->  		boff += csize;
->  	}
->  }
+>  	if (error && first_bad)
+>  		*first_bad = rhead_blk;
 > -- 
-> 2.43.0
+> 2.31.1
 > 
 > 
