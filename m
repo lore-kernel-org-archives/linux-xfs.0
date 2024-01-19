@@ -1,68 +1,69 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6F503C17
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 07:12:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 251B66FA9
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 07:17:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705648375; cv=none; b=ttMPyC5Kqng0LHAwwLMZxHGaYVp99yLNI9P+XaNnwkEm2X084tWLPXCBCf0gRlq7Ha7uQFo6QZaEHSPuNQcZlK0cAExZNqCeV/J2hD48E5Ls+I4KgIi1yawB/gOSF2OfGlfHCaVlfXQpe0cUd7s3sPVT+8GYOWYjNRMoqjdJlpc=
+	t=1705648649; cv=none; b=a6yvJpjCKPqtuAvCTwukMD+PVm9wjMlkzhvkBghy2yEj9RagonuoU/+aM5LO7yfUR63XkKcDxVjt6WIkBe2yOjPnz1j3Cwg2TRz2pWhFCQLQcWtlOWl8jRrr47oAxr5C2AVXfksfmENIui4+34rWSC1IA0FF3a3NWMDVXuXqouE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705648375; c=relaxed/simple;
-	bh=EqNADm31PhYaK76uDvvIjsr7KqsTeswUNtOWubgA9gc=;
+	s=arc-20240116; t=1705648649; c=relaxed/simple;
+	bh=c1/lUlqe4sa6j2y1IwBB5UHo5mJdQ40j0NDNkXH1Jj8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EnXBIKT98QJPS8SMR2i+fnP7jYqN4coL+a1SNZkodzKuVKgT7Mqd4FwBWOdiV8ax01tJEPKIdVEG95JSpGFWE0JKGzV81w6M6iKIN3OqKUTknUuwY1QcvayVXP25SVSxnDQkEb9TUvXzyEJpbtNxcMiUKhJHcoXKed5iENdtts0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=EWO/p/In; arc=none smtp.client-ip=209.85.210.179
+	 Content-Type:Content-Disposition:In-Reply-To; b=GSmu9LPNgwmxBoECgH5zCa/lAxfm9+2L30Q0QlsDcSCr4p7OvYsgaU/m4UH8ycLOP7XVoP2MZz4FLMbi/vKBTsRtjslvaYn8Wj0C3MEvaMXdtNp+DClmJnto0YtHoBZH/v/B9/7n5Ii4qzadzugTjNqibsvtry7mE/mOe49DEkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=D8IZQeKL; arc=none smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EWO/p/In"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6db05618c1fso525830b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 23:12:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="D8IZQeKL"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6db0fdd2b8fso347300b3a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 23:17:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705648373; x=1706253173; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705648647; x=1706253447; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=o2rGo4E9Z6Imu0yMI8hCIg6A3l8W17KcdQeDBavO3jI=;
-        b=EWO/p/Inrm8i0NiyQsbzJgqu41580FtTDpxgoZo5bo22sMoatLxtO7BdYGEIGvUt5C
-         E2NwyOrJ2PfstJ0NCTVNVgfb6gmQHg+mcKoB2vSJ2B8xsFgI4eWQMPGR+Xyd8fO2EmOd
-         9aZUpUJjpfvEBZcugLXkhAHdSf4LRUHyrCdZqjJpIkVGZQNi8fYT1MwrIUCiBgpuubRW
-         oZblXc07UoGdA3wwk34DEtFS3oGoCFJRqtS8cFCMiLofe389oq5obJQ8DMI5Yr+dHZy4
-         uqkRye6xJNoonmTyY4o9H2ySxj7eCRfxZyMtz0WPUf4F5t9HnkrS30A72qyyFk43r7iV
-         854g==
+        bh=NNLjBDSzu/w2ZvwniH/Vm+WheOK2zApEID4VQXAzd0I=;
+        b=D8IZQeKLLEPdJq5uceq7de9/+FlllBXfUw08TvGc/cyX5JwEnslzDRxF3j8FQwMJHO
+         9ytsbHp7IiFQCfddB7agQAWZgeKq8VwDIJrhjytE1yrLBQwsInjB1eYiAhkOiYeFfIX3
+         1cF8olgJ2GRJFBnviym41O0STkflElhQgAfgifxsv0KprO/JQkfAWTmeRwpnEgkF6YvD
+         XVJIWwqiemhy7moaB6KdbC6AuX5FvuJKGrz4ttMNGNeNh0EF5s7KdSGNdoDZXDKxu0+B
+         zpbvz3gdWea6OVXAJLR/hJaQ41y8AuH7IuZm5FODH6ID+u4MQSToov+Ke+AljfjAB7ji
+         998g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705648373; x=1706253173;
+        d=1e100.net; s=20230601; t=1705648647; x=1706253447;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=o2rGo4E9Z6Imu0yMI8hCIg6A3l8W17KcdQeDBavO3jI=;
-        b=fgEZ3Oe1+BEkSjRbDLxd9CnkW2xLrR3RxM4IHV/6dhIk26Gspmi7kg2DDvD7hMkFc7
-         k5mdwSWc4eKgGOyJdFlAceXEapyR1SZpmFyxDISg4/6Ko7mDNYUR0qbBtvQEfP/uajkJ
-         bTcubinwvZnJ2WvPokqj4bnHao1GN0cdcR46dmOSdSKIMlViNTVKqK24v78lnPHeklfa
-         ZZkm90oD3znaqqBYJBbRhL53Ums6/UvkKwgEfXiT97qraNefJ/Gj0d+rWwHCO+0MxT30
-         0IwsZkgMBs2WPel4A3otIPOF0w1qrvHL0rAy488u6VMGA9pcJufDaby6QUoakPQVgYxw
-         dpNQ==
-X-Gm-Message-State: AOJu0YzNIxvAwWMkURFQEdRedz8GrQEpTFjQEQIxJXqRpcTYf5b7Npz/
-	dJ7p3rO5NmuhIB6wMDs3NP44Lo9/Y6hA3f10YM212eDeVj7L5XmwQoqn72n8dyo=
-X-Google-Smtp-Source: AGHT+IGg02vRJ90ZoWhm6XmrZ6hN65lib3+C3Y9NWWso++OQcw3k7dwytv7T3EhpMSdT0Gz3SaJmMQ==
-X-Received: by 2002:a62:6381:0:b0:6db:7543:6952 with SMTP id x123-20020a626381000000b006db75436952mr2319535pfb.52.1705648373101;
-        Thu, 18 Jan 2024 23:12:53 -0800 (PST)
+        bh=NNLjBDSzu/w2ZvwniH/Vm+WheOK2zApEID4VQXAzd0I=;
+        b=PX96S0gXrbHFLiOdWfjdtfZaqIbMKJ74Jp8hgW7kfnIuLoBZlGc39FCclk4SfQPCkq
+         HmfGZiFIrZ5LewOc1MthW3U8ppmVowREajD7H3iYnOPbBuIlopUyR7t/iqo+vXA0+O3M
+         RgdioCcSWQ7mjX6VPtzoce7RaQg+SaSHKSEqmtBja4bgbaYxktRlEPYli+tOpZ3dF42D
+         lY+8tM+xRQNlw2GC2YV9yNz6lozEkDmVWo52NM1Xm1JiHk7oo8TJky3Y3c575TgDPD4Z
+         z+M+WkAKm6Fd7qHUEIoJJLzejXraV8sPEqLJBXI1e4846gAde9SNFyxNPg9E91MWw1oi
+         eu1w==
+X-Gm-Message-State: AOJu0YwNspu3amQQ7HSLT+e5hWHJCLDjgLAt27S+S7m8YdyqftJBThVp
+	cnhy1IHIdq5lJWBJrAJ4p8q0jhCZWLO/co9R3V2dELwD5bTE4xdPsZo3zfnETYQ=
+X-Google-Smtp-Source: AGHT+IFFjM1+JZYieqOVS1WTqo0ehgRj/ucxZh+gtgio1p+I93k/TI6UcWW6CaniqQQbY1de0Y/Pyg==
+X-Received: by 2002:a05:6a00:4647:b0:6d9:e9ea:cfc8 with SMTP id kp7-20020a056a00464700b006d9e9eacfc8mr2672108pfb.16.1705648647446;
+        Thu, 18 Jan 2024 23:17:27 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id u6-20020a056a00124600b006dbc5569599sm339002pfi.10.2024.01.18.23.12.52
+        by smtp.gmail.com with ESMTPSA id g22-20020a056a0023d600b006da14f68ac1sm4407964pfc.198.2024.01.18.23.17.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Jan 2024 23:12:52 -0800 (PST)
+        Thu, 18 Jan 2024 23:17:27 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rQj3Z-00CMIL-2t;
-	Fri, 19 Jan 2024 18:12:49 +1100
-Date: Fri, 19 Jan 2024 18:12:49 +1100
+	id 1rQj80-00CMLy-1n;
+	Fri, 19 Jan 2024 18:17:24 +1100
+Date: Fri, 19 Jan 2024 18:17:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [PATCH 3/3] xfs: convert buffer cache to use high order folios
-Message-ID: <Zaog8du8DJ5u1Ert@dread.disaster.area>
-References: <20240118222216.4131379-1-david@fromorbit.com>
- <20240118222216.4131379-4-david@fromorbit.com>
- <20240119013100.GR674499@frogsfrogsfrogs>
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [xfstests generic/648] 64k directory block size (-n size=65536)
+ crash on _xfs_buf_ioapply
+Message-ID: <ZaoiBF9KqyMt3URQ@dread.disaster.area>
+References: <20231218140134.gql6oecpezvj2e66@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <ZainBd2Jz6I0Pgm1@dread.disaster.area>
+ <20240119013807.ivgvwe7yxweamg2m@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,79 +72,87 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240119013100.GR674499@frogsfrogsfrogs>
+In-Reply-To: <20240119013807.ivgvwe7yxweamg2m@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Thu, Jan 18, 2024 at 05:31:00PM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 19, 2024 at 09:19:41AM +1100, Dave Chinner wrote:
-> > +/*
-> > + * Allocating a high order folio makes the assumption that buffers are a
-> > + * power-of-2 size so that ilog2() returns the exact order needed to fit
-> > + * the contents of the buffer. Buffer lengths are mostly a power of two,
-> > + * so this is not an unreasonable approach to take by default.
-> > + *
-> > + * The exception here are user xattr data buffers, which can be arbitrarily
-> > + * sized up to 64kB plus structure metadata. In that case, round up the order.
-> > + */
-> > +static bool
-> > +xfs_buf_alloc_folio(
-> > +	struct xfs_buf	*bp,
-> > +	gfp_t		gfp_mask)
-> > +{
-> > +	int		length = BBTOB(bp->b_length);
-> > +	int		order;
-> > +
-> > +	order = ilog2(length);
-> > +	if ((1 << order) < length)
-> > +		order = ilog2(length - 1) + 1;
-> > +
-> > +	if (order <= PAGE_SHIFT)
-> > +		order = 0;
-> > +	else
-> > +		order -= PAGE_SHIFT;
-> > +
-> > +	bp->b_folio_array[0] = folio_alloc(gfp_mask, order);
-> > +	if (!bp->b_folio_array[0])
-> > +		return false;
-> > +
-> > +	bp->b_folios = bp->b_folio_array;
-> > +	bp->b_folio_count = 1;
-> > +	bp->b_flags |= _XBF_FOLIOS;
-> > +	return true;
+On Fri, Jan 19, 2024 at 09:38:07AM +0800, Zorro Lang wrote:
+> On Thu, Jan 18, 2024 at 03:20:21PM +1100, Dave Chinner wrote:
+> > On Mon, Dec 18, 2023 at 10:01:34PM +0800, Zorro Lang wrote:
+> > > Hi,
+> > > 
+> > > Recently I hit a crash [1] on s390x with 64k directory block size xfs
+> > > (-n size=65536 -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1),
+> > > even not panic, a assertion failure will happen.
+> > > 
+> > > I found it from an old downstream kernel at first, then reproduced it
+> > > on latest upstream mainline linux (v6.7-rc6). Can't be sure how long
+> > > time this issue be there, just reported it at first.
+> > >  [  978.591588] XFS (loop3): Mounting V5 Filesystem c1954438-a18d-4b4a-ad32-0e29c40713ed
+> > >  [  979.216565] XFS (loop3): Starting recovery (logdev: internal)
+> > >  [  979.225078] XFS (loop3): Bad dir block magic!
+> > >  [  979.225081] XFS: Assertion failed: 0, file: fs/xfs/xfs_buf_item_recover.c, line: 414
+> > 
+> > Ok, so we got a XFS_BLFT_DIR_BLOCK_BUF buf log item, but the object
+> > that we recovered into the buffer did not have a
+> > XFS_DIR3_BLOCK_MAGIC type.
+> > 
+> > Perhaps the buf log item didn't contain the first 128 bytes of the
+> > buffer (or maybe any of it), and so didn't recovery the magic number?
+> > 
+> > Can you reproduce this with CONFIG_XFS_ASSERT_FATAL=y so the failure
+> > preserves the journal contents when the issue triggers, then get a
+> > metadump of the filesystem so I can dig into the contents of the
+> > journal?  I really want to see what is in the buf log item we fail
+> > to recover.
+> > 
+> > We don't want recovery to continue here because that will result in
+> > the journal being fully recovered and updated and so we won't be
+> > able to replay the recovery failure from it. 
+> > 
+> > i.e. if we leave the buffer we recovered in memory without failure
+> > because the ASSERT is just a warn, we continue onwards and likely
+> > then recover newer changes over the top of it. This may or may
+> > not result in a correctly recovered buffer, depending on what parts
+> > of the buffer got relogged.
+> > 
+> > IOWs, we should be expecting corruption to be detected somewhere
+> > further down the track once we've seen this warning, and really we
+> > should be aborting journal recovery if we see a mismatch like this.
+> > 
+> > .....
+> > 
+> > >  [  979.227613] XFS (loop3): Metadata corruption detected at __xfs_dir3_data_check+0x372/0x6c0 [xfs], xfs_dir3_block block 0x1020 
+> > >  [  979.227732] XFS (loop3): Unmount and run xfs_repair
+> > >  [  979.227733] XFS (loop3): First 128 bytes of corrupted metadata buffer:
+> > >  [  979.227736] 00000000: 58 44 42 33 00 00 00 00 00 00 00 00 00 00 10 20  XDB3........... 
+> > 
+> > XDB3 is XFS_DIR3_BLOCK_MAGIC, so it's the right type, but given it's
+> > the tail pointer (btp->count) that is bad, this indicates that maybe
+> > the tail didn't get written correctly by subsequent checkpoint
+> > recoveries. We don't know, because that isn't in the output below.
+> > 
+> > It likely doesn't matter, because I think the problem is either a
+> > runtime problem writing bad stuff into the journal, or a recovery
+> > problem failing to handle the contents correctly. Hence the need for
+> > a metadump.
 > 
-> Hmm.  So I guess with this patchset, either we get one multi-page large
-> folio for the whole buffer, or we fall back to the array of basepage
-> sized folios?
+> Hi Dave,
+> 
+> Thanks for your reply. It's been a month passed, since I reported this
+> bug last time. Now I can't reproduce this issue on latest upstream
+> mainline linux and xfs-linux for-next branch. I've tried to do the
+> same testing ~1000 times, still can't reproduce it...
+> 
+> If you think it might not be fixed but be hided, I can try it on older
+> kernel which can reproduce this bug last time, to get a metadump. What
+> do you think?
 
-Yes.
+Perhaps a bisect from 6.7 to 6.7+linux-xfs/for-next to identify what
+fixed it? Nothing in the for-next branch really looks relevant to
+the problem to me....
 
-> /me wonders if the extra flexibility from alloc_folio_bulk_array and a
-> folioized vm_map_ram would eliminate all this special casing?
+Cheers,
 
-IMO, no. The basic requirement for a buffer is to provide contiguous
-memory space unless XBF_UNMAPPED is specified.
-
-In the case of contiguous space, we either get a single contiguous
-range allocated or we have to vmap multiple segments. The moment we
-can't get a contiguous memory range, we've lost, we're in the slow
-path and we should just do what we know will reliably work as
-efficiently as possible.
-
-In the case of XBF_UNMAPPED, if we get a single contiguous range we
-can ignore XBF_UNMAPPED, otherwise we should just do what we know
-will reliably work as efficiently as possible.
-
-Hence I don't think trying to optimise the "we didn't get a
-contiguous memory allocation for the buffer" case for smaller
-multi-page folios because it just adds complexity and doesn't
-provide any real advantage over the PAGE_SIZE allocation path we do
-now.
-
-> Uhoh, lights flickering again and ice crashing off the roof.  I better
-> go before the lights go out again. :(
-
-Fun fun!
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
