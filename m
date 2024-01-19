@@ -1,70 +1,68 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com [209.85.210.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7288CECE
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 01:38:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13891D50F
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 07:03:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705628302; cv=none; b=o7D4C+mDs9yASiu3iLlnfteQUnuoIVAjPlpNwRnbBpXB/3b0maikQxXxy9tkHanRPmI0BjzjMORRBKDtJ0zg+uGYG8+Vl1yAwUqUgmcp7I4tSzgmLoyNoUEp5FB4W9Ed2V2V3Qaup7N5Xa8vfEumpQLNzYeV0HYlQWHfqIfkdmc=
+	t=1705647837; cv=none; b=RBXnOuLvXbQZ71E86R/9/SMATQJjKcgt0dWc4/RTUi9vHaY6ulUmu2bVRkR4Nbrb8zi243hdwKz9FomU63yG3uCIHvPcIImCtwXQzMzOIMNbdvZ9mKVotA9TZpnhaepsKNXvI/Wv+VRwlyZnmMD5VE8ZKzN5J8MhBZdqoUU1gI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705628302; c=relaxed/simple;
-	bh=jzhofwMw9Fo+ZArcyf6+YpN5YOVq2IDotrP0k/xz4aY=;
+	s=arc-20240116; t=1705647837; c=relaxed/simple;
+	bh=GTxbW1SL3JK2YAurPq5xcsLPZ5gXrwIQUJEtjtQG+Yc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IyE4zpGqd0ZasrXpggYqj3ZOzeJEL1CdMGECWYXat2S3yBZ1XM37JY6zON7rKzApKI1Mw/Go0jJy9Qgw0pc7mGpOQDpwTSeky6TNLXpYO/ldtP2bUPSafhXaR+1+ttyE4qYg+Is+NdBqGWAq+6jemg0S0ByU6tftrFROi//ekAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=G7pgZ38u; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=fjDAJ83EpLkW3IVzNLkwj+CoRHRB5drhBGGSSVAY+JCIZRWr/nspU+H5LnRFJGUur7h4ZELfmNZgpalVOXddW8QwoMOinn3QVdDBKozwWV3iTx1Mbhh6ApjE+LGZ1EB3VJXIJ0WYti4QsBYmzm9G2dF5B14nqGM2HChljRGtH2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eV3kmnSo; arc=none smtp.client-ip=209.85.210.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G7pgZ38u"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705628299;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RHra5uM8Gv3w/wgAIdPCDklGEvqmXfBowuP5Y2ZF/Rs=;
-	b=G7pgZ38uSeA2QyJe66xlArJF6/P1AVSazsFfls/1jZrR29Wx38BIUJeeJL4X03X3qP2iVn
-	idXFPirqlm/21iuV5h+aes/eFO5Mgn6G5hfBcLkhvQc0t5hiTBms2mwMiHB/zagIRNtUkx
-	phic+5KZOrhR+L0jV6v5w90imH9n+qo=
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
- [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-605-tJqBw4c0PQ6AFBS0kM0j6w-1; Thu, 18 Jan 2024 20:38:12 -0500
-X-MC-Unique: tJqBw4c0PQ6AFBS0kM0j6w-1
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-5cf2714e392so321565a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 17:38:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eV3kmnSo"
+Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-6dc20b4595bso315880a34.0
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2024 23:03:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705647835; x=1706252635; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=X8Arh70fDu03R+d/hJeo95Gy62+3eiFjD0bJ2gIwqPM=;
+        b=eV3kmnSorKWmDAAfis2Zj46CD2XpDD+SkhGueWah1QDwXJg8T3HmdsvqHWGqYqXQ8X
+         /bxFaC2snOVtp3TU6LEbLc0jiZCvi+dsgKYC32bCRqcVUkmyd+AGkhdp71L7BSJdKWEw
+         tLpcvPmaVj/JHJK9A/3ZIY72El7m26LFtFEUDuTlYMl+cRpX5C+7QS6MJcf7WAaBjS3w
+         wuzr0ptFFZFIFhcbX8vZ5oyL6cxOT7RiD/5SfQRsTgnzB5A5sYD1O34FUNhqDFoUbhnD
+         L4CgEVxMtPbZn+gRAqgif2QJcAef0laX1PqWTsEIpLqv9oa45oWxz9ZLx2LZDgUmd9Cj
+         6WWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705628291; x=1706233091;
+        d=1e100.net; s=20230601; t=1705647835; x=1706252635;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=RHra5uM8Gv3w/wgAIdPCDklGEvqmXfBowuP5Y2ZF/Rs=;
-        b=U6SwDgzDE81XEZnVeJw7vXZVanL9PM5ift+v9reEuv3uKrSkiNwbSz/YAmvOfyKd0U
-         /vf/wINWCE9y1cZSMRXR9k5EnxY63KpACUCMgF57ls4bddran1Czkay/H+VHt1t3Kq1a
-         oFcEhThZVSRfJjMhKGfX2lvXuwMZB6vxTjx/7Z/lkAgaiqgqPNK6SkS5L/HIUkjO0J3E
-         oaN11EDkiZ+HEP9G9w44B84YrB6RJTJPOlRDtuGaW7CfI3DXcwHur+cMvSphFjEtSJsi
-         Eo5dFfndB84YGOuKNl4RJ2qT15nxvegaHTrA2Tjpuigv15NcgjLjT/Gp0mJs0F+UEp8X
-         7w8A==
-X-Gm-Message-State: AOJu0YyoAzDGdXpvZX9SQ3lIAtu4QH/fICiSbqN9OmVBxNWQtLTGJ5h9
-	gI+k25ERkArG+vhQwQAFXyWmE5HFjfwSPfQIC7n2DIiwJkWFLD5AZRxaf61Q8qTSBI8Pf7iL9UR
-	5WlZ1FOCOXFObOCOdSWhNyr4Js0ZQau4CIiUuL4w4/3De6sJRUlmIr2bzUoMiGXFbiw==
-X-Received: by 2002:a05:6a20:4e1b:b0:199:dcb2:8756 with SMTP id gk27-20020a056a204e1b00b00199dcb28756mr258632pzb.59.1705628291261;
-        Thu, 18 Jan 2024 17:38:11 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGFfqKCN7SyF9l3oF76mSxcnRX3bg7Yl3Px4U3HdQgZiA2aUAb/DhxD/+atTuaX1Qd5Q/fkfw==
-X-Received: by 2002:a05:6a20:4e1b:b0:199:dcb2:8756 with SMTP id gk27-20020a056a204e1b00b00199dcb28756mr258626pzb.59.1705628290921;
-        Thu, 18 Jan 2024 17:38:10 -0800 (PST)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id g4-20020aa78744000000b006d9bb4400f0sm3939410pfo.88.2024.01.18.17.38.09
+        bh=X8Arh70fDu03R+d/hJeo95Gy62+3eiFjD0bJ2gIwqPM=;
+        b=deq9Gov5D/WpiGA67yXGFeFpXqGgFS1qbNPFSMhAQ991av8YQ9OFZdPHMf5YWECDVm
+         KJ7WhI1OmE8bHqcNkuP+wbI9fYw8PbssFKWkQ/STdl5ch0ppfLhfhoHZuuvPUJhs4Vux
+         CGROv7SPBaN/hQUUazBmGPoYRXFDQGArK63kQBlQT54PYRyuEPLlnuDOoPYlIMS3tnPw
+         AgUFu7D/9V2mJ7okwjmueZ7Nl1llbFiqg9e5jGO3KiVHWRvcd/JvAncEGl2NSLd4Yykh
+         asIFRJ1NzVePpwQ9YEW1SAkVIcu3v4OCsKYzqxRWVwteG6xsr4DBKqTSuOkyR4Ls8cie
+         yVSA==
+X-Gm-Message-State: AOJu0YzhRrmkiq8WmSoZYi4NB3I7ZBsgNDiDRFmJKtfXW5HY130mcpzz
+	G06kQp85giHPrOxUfzU8r8dYLf1c/KxG0M71cCczNev3czCx4XRGqH5tXkLkht0=
+X-Google-Smtp-Source: AGHT+IGuHSygKsIPmCDnm1lLQ8LYQFBOogvEUeCXCoi5rvnUk3bTNh1cG6MUoT1bMmn9V+T6HwBtfA==
+X-Received: by 2002:a05:6359:45a9:b0:176:25b:64f5 with SMTP id no41-20020a05635945a900b00176025b64f5mr2689090rwb.26.1705647834866;
+        Thu, 18 Jan 2024 23:03:54 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
+        by smtp.gmail.com with ESMTPSA id q16-20020a056a00085000b006d9aa04574csm4338227pfk.52.2024.01.18.23.03.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Jan 2024 17:38:10 -0800 (PST)
-Date: Fri, 19 Jan 2024 09:38:07 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [xfstests generic/648] 64k directory block size (-n size=65536)
- crash on _xfs_buf_ioapply
-Message-ID: <20240119013807.ivgvwe7yxweamg2m@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20231218140134.gql6oecpezvj2e66@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZainBd2Jz6I0Pgm1@dread.disaster.area>
+        Thu, 18 Jan 2024 23:03:54 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rQius-00CMBs-2K;
+	Fri, 19 Jan 2024 18:03:50 +1100
+Date: Fri, 19 Jan 2024 18:03:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, willy@infradead.org, linux-mm@kvack.org
+Subject: Re: [PATCH 2/3] xfs: use folios in the buffer cache
+Message-ID: <Zaoe1jbUR5a0voiO@dread.disaster.area>
+References: <20240118222216.4131379-1-david@fromorbit.com>
+ <20240118222216.4131379-3-david@fromorbit.com>
+ <20240119012624.GQ674499@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,88 +71,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZainBd2Jz6I0Pgm1@dread.disaster.area>
+In-Reply-To: <20240119012624.GQ674499@frogsfrogsfrogs>
 
-On Thu, Jan 18, 2024 at 03:20:21PM +1100, Dave Chinner wrote:
-> On Mon, Dec 18, 2023 at 10:01:34PM +0800, Zorro Lang wrote:
-> > Hi,
+On Thu, Jan 18, 2024 at 05:26:24PM -0800, Darrick J. Wong wrote:
+> On Fri, Jan 19, 2024 at 09:19:40AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Recently I hit a crash [1] on s390x with 64k directory block size xfs
-> > (-n size=65536 -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1),
-> > even not panic, a assertion failure will happen.
+> > Convert the use of struct pages to struct folio everywhere. This
+> > is just direct API conversion, no actual logic of code changes
+> > should result.
 > > 
-> > I found it from an old downstream kernel at first, then reproduced it
-> > on latest upstream mainline linux (v6.7-rc6). Can't be sure how long
-> > time this issue be there, just reported it at first.
-> >  [  978.591588] XFS (loop3): Mounting V5 Filesystem c1954438-a18d-4b4a-ad32-0e29c40713ed
-> >  [  979.216565] XFS (loop3): Starting recovery (logdev: internal)
-> >  [  979.225078] XFS (loop3): Bad dir block magic!
-> >  [  979.225081] XFS: Assertion failed: 0, file: fs/xfs/xfs_buf_item_recover.c, line: 414
+> > Note: this conversion currently assumes only single page folios are
+> > allocated, and because some of the MM interfaces we use take
+> > pointers to arrays of struct pages, the address of single page
+> > folios and struct pages are the same. e.g alloc_pages_bulk_array(),
+> > vm_map_ram(), etc.
+> > 
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+.....
+> > @@ -387,9 +387,9 @@ xfs_buf_alloc_pages(
+> >  	for (;;) {
+> >  		long	last = filled;
+> >  
+> > -		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
+> > -						bp->b_pages);
+> > -		if (filled == bp->b_page_count) {
+> > +		filled = alloc_pages_bulk_array(gfp_mask, bp->b_folio_count,
+> > +						(struct page **)bp->b_folios);
 > 
-> Ok, so we got a XFS_BLFT_DIR_BLOCK_BUF buf log item, but the object
-> that we recovered into the buffer did not have a
-> XFS_DIR3_BLOCK_MAGIC type.
-> 
-> Perhaps the buf log item didn't contain the first 128 bytes of the
-> buffer (or maybe any of it), and so didn't recovery the magic number?
-> 
-> Can you reproduce this with CONFIG_XFS_ASSERT_FATAL=y so the failure
-> preserves the journal contents when the issue triggers, then get a
-> metadump of the filesystem so I can dig into the contents of the
-> journal?  I really want to see what is in the buf log item we fail
-> to recover.
-> 
-> We don't want recovery to continue here because that will result in
-> the journal being fully recovered and updated and so we won't be
-> able to replay the recovery failure from it. 
-> 
-> i.e. if we leave the buffer we recovered in memory without failure
-> because the ASSERT is just a warn, we continue onwards and likely
-> then recover newer changes over the top of it. This may or may
-> not result in a correctly recovered buffer, depending on what parts
-> of the buffer got relogged.
-> 
-> IOWs, we should be expecting corruption to be detected somewhere
-> further down the track once we've seen this warning, and really we
-> should be aborting journal recovery if we see a mismatch like this.
-> 
-> .....
-> 
-> >  [  979.227613] XFS (loop3): Metadata corruption detected at __xfs_dir3_data_check+0x372/0x6c0 [xfs], xfs_dir3_block block 0x1020 
-> >  [  979.227732] XFS (loop3): Unmount and run xfs_repair
-> >  [  979.227733] XFS (loop3): First 128 bytes of corrupted metadata buffer:
-> >  [  979.227736] 00000000: 58 44 42 33 00 00 00 00 00 00 00 00 00 00 10 20  XDB3........... 
-> 
-> XDB3 is XFS_DIR3_BLOCK_MAGIC, so it's the right type, but given it's
-> the tail pointer (btp->count) that is bad, this indicates that maybe
-> the tail didn't get written correctly by subsequent checkpoint
-> recoveries. We don't know, because that isn't in the output below.
-> 
-> It likely doesn't matter, because I think the problem is either a
-> runtime problem writing bad stuff into the journal, or a recovery
-> problem failing to handle the contents correctly. Hence the need for
-> a metadump.
+> Ugh, pointer casting.  I suppose here is where we might want an
+> alloc_folio_bulk_array that might give us successively smaller
+> large-folios until b_page_count is satisfied?  (Maybe that's in the next
+> patch?)
 
-Hi Dave,
+No, I explicitly chose not to do that because then converting buffer
+offset to memory address becomes excitingly complex. With fixed size
+folios, it's just simple math. With variable, unknown sized objects,
+we either have to store the size of each object with the pointer,
+or walk each object grabbing the size to determine what folio in the
+buffer corresponds to a specific offset.
 
-Thanks for your reply. It's been a month passed, since I reported this
-bug last time. Now I can't reproduce this issue on latest upstream
-mainline linux and xfs-linux for-next branch. I've tried to do the
-same testing ~1000 times, still can't reproduce it...
+And it's now the slow path, so I don't really care to optimise it
+that much.
 
-If you think it might not be fixed but be hided, I can try it on older
-kernel which can reproduce this bug last time, to get a metadump. What
-do you think?
+> I guess you'd also need a large-folio capable vm_map_ram.  Both of
+> these things sound reasonable, particularly if somebody wants to write
+> us a new buffer cache for ext2rs and support large block sizes.
 
-Thanks,
-Zorro
+Maybe so, but we do not require them and I don't really have the
+time or desire to try to implement something like that. And, really
+what benefit do small multipage folios bring us if we still have to
+vmap them?
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+> Assuming that one of the goals here is (say) to be able to mount a 16k
+> blocksize filesystem and try to get 16k folios for the buffer cache?
 
+The goal is that we optimistically use large folios where-ever we
+have metadata buffers that are larger than a single page, regardless
+of the filesystem block size.
+
+Right now on a 4kB block size filesystem that means inode cluster
+buffers (16kB for 512 byte inodes), user xattr buffers larger than a
+single page, and directory blocks if the filesytsem is configure
+with "-n size=X" and X is 8kB or larger.
+
+On filesystems with block sizes larger than 4kB, it will try to use
+large folios for everything but the sector sized AG headers.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
