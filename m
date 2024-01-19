@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F1E818
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 00:52:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34993A23
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2024 00:52:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705625525; cv=none; b=WA/rEsIjdVRzdB58xPd+/J3klRIP77RMmQRNJllZQ1cpVi2qbOBJvcktg5aollBnJqnclCk5cjnoysGkpJy8KoeoE1L4ngvD6YODMKFfPOt4DBiGHp7MzgCSFm9V71eh8SsrF4BLYrtY/e8Bq4MxlD6MWKXpydOjOmRycye4ULI=
+	t=1705625532; cv=none; b=pOH/ylwidxrFpeYrKqe60wUYYVaDqBdPySy0cVQVZdxnfF4/5r3H6fcNXhBNrywhm1JB8OsqioJGDOwXOmOg6j3Pfi8byxrkx1sRQ3NGNjqEsbtLJfBukOeSw5DPbamEQaANzn7GDp+rsRa6g+IifkaWM140U0c/VyUYlfYGxaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705625525; c=relaxed/simple;
-	bh=s0WyRgHpoBdBQKl3r5uRZj+7S6kwZ1JAsozsyLM9rk0=;
+	s=arc-20240116; t=1705625532; c=relaxed/simple;
+	bh=3w17LugFdSzUHQ3RR1rCxmfhElgZLX6v6gvtqwdR6MY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V1umID9tYiFqJOfOnxRRUup+H7s5wQ/yH8rnyneAB4m/s/Fb06aNxTR1jBtADS83Psgz44boPe5KB8vTw5tfq4yE4YVhSDzCNXdEuyxKARS2dtqY4jS6BXySDKI/Ul03DHzi5q1IfdLxzLNwQ88/6Sja0TgV0RAprcaqtTf8pLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YnSpDZRE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jRKhPlomJNfcTpui3K7w/qsNyMOmClabmk50A3Dct9ptRnLPSfPvbJAxM0rVmSDsEz86AD3YOel9Ud7tfckl5Zz/ACnXXpUzYzUjpMC7we5U18t6Y43TYie9rvbXlh9g5mrJiQBn5pCyZxlcAw8dlp3O30InN4rT2D1hPBZREFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nFMQPorI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YnSpDZRE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED7FFC433F1;
-	Fri, 19 Jan 2024 00:52:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nFMQPorI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEAFDC433C7;
+	Fri, 19 Jan 2024 00:52:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705625525;
-	bh=s0WyRgHpoBdBQKl3r5uRZj+7S6kwZ1JAsozsyLM9rk0=;
+	s=k20201202; t=1705625531;
+	bh=3w17LugFdSzUHQ3RR1rCxmfhElgZLX6v6gvtqwdR6MY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YnSpDZREkTsvXK6E5OOucXU8xuTYi3P7X9AtwKIHrURuIAewoK2HkZjfHra9jqeRp
-	 5Iuc9ZnDKAv/zJlSsnYHWl1nDuf1hYGx5Nx6YiccKM2eokdBDJciWArPY4c0NweaUp
-	 OeijRHlsyvZ5LrwwX2bH7KDRVETR3dRVV5ShF2ll3rsSKNDW8+EbrN20OoshmbLDr5
-	 ewqzzqyRTsXsttyBrjtC/JyY6W7rypUPQgRfptLi1CfFQsnlk7PciwSUOCrDM4TF6T
-	 7Jp1mWaogjBAjqVuHhlIdz6OWpKSFVDhmQgYowGMbu7m5HUGDgZ0o8YBWOA0FC5iJs
-	 mLg0+KpxbbMMg==
-Date: Thu, 18 Jan 2024 16:52:04 -0800
+	b=nFMQPorIPUbIxWv8XbX1uBprLU26fn4z+CbG21CAcfQZIUeRBplSOhQMFcL4XRtIq
+	 9zC0UtSgBZRxRcrPWSdPu/vEMff0mEUrg2cuqzjlnec0VGNJ2usjif2QN6M1jZ1R3h
+	 32pXNME5EvokjIRu4oS2o/PEuI3emoRjthd4xg3XA6/+180NsIIFAnRtCkchcqGZfJ
+	 kXCawN4QAoVmwE50Yxi9kxLoYMfhV8NhCwwv+6C3HK5YRTJdH2nzDBpugBmlFi/Zn0
+	 QWiO8dsJssUkAMprflSVeZvWpzD6QAezfjsGIDCtmGyjeGQ6eMqds1p0j4JPoRXzsc
+	 NXqbUcmJ9c3Mg==
+Date: Thu, 18 Jan 2024 16:52:11 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_db: use directio for device access
-Message-ID: <20240119005204.GF674522@frogsfrogsfrogs>
-References: <169567914468.2320255.9161174588218371786.stgit@frogsfrogsfrogs>
- <169567915609.2320255.8945830759168479067.stgit@frogsfrogsfrogs>
- <Zagcv3rWRQMeTujZ@infradead.org>
- <20240118013250.GC674499@frogsfrogsfrogs>
- <ZainRaV+P0qr1o6g@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, willy@infradead.org, linux-mm@kvack.org
+Subject: Re: [PATCH 11/12] xfs: clean up remaining GFP_NOFS users
+Message-ID: <20240119005211.GO674499@frogsfrogsfrogs>
+References: <20240115230113.4080105-1-david@fromorbit.com>
+ <20240115230113.4080105-12-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,43 +42,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZainRaV+P0qr1o6g@infradead.org>
+In-Reply-To: <20240115230113.4080105-12-david@fromorbit.com>
 
-On Wed, Jan 17, 2024 at 08:21:25PM -0800, Christoph Hellwig wrote:
-> On Wed, Jan 17, 2024 at 05:32:50PM -0800, Darrick J. Wong wrote:
-> > > 
-> > > For xfs/002 that is the libxfs_buf_read in __set_cur, when setting the
-> > > type to data, but I haven't looked at the other test in detail.
-> > 
-> > Hmm.  Perhaps the userspace buftarg setup should go find the physical
-> > sector size of the device?  That "bb_count = 1" in set_iocur_type looks
-> > a bit smelly.
+On Tue, Jan 16, 2024 at 09:59:49AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Yes, that should fix this particular issue.
+> These few remaining GFP_NOFS callers do not need to use GFP_NOFS at
+> all. They are only called from a non-transactional context or cannot
+> be accessed from memory reclaim due to other constraints. Hence they
+> can just use GFP_KERNEL.
 > 
-> > > Should I look into finding all these assumptions in xfs_db, or
-> > > just make the direct I/O enablement conditional n a 612 byte sector
-> > > size?
-> > 
-> > Let me go run a lbasize=4k fstests run overnight and see what happens.
-> > IIRC zorro told me last year that it wasn't pretty.
-> 
-> There's a few failures, but I've been slowly trying to fix this.  The
-> libxfs/mkfs log sector size detection series in one part of that,
-> and this:
-> 
-> https://lore.kernel.org/linux-block/20240117175901.871796-1-hch@lst.de/T/#u
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Hmm well I didn't manage to add your loop device patch before I sent
-this out last night, but here's the fstest results:
-
-https://djwong.org/fstests/output/.67c2f90f0a1bb329a1b895c50285b0d23c1bd2bb44b7839f3543f82281665db1/.4a10533d4dd2085d3f996649e0886284f557617c94e604189448672e6009b9e8/
-
-Looks like there were a lot of weird problems.  OFC now the second ice
-storm has started and the lights are flickering so that might be all
-from me for now.
+Looks good,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> is another
+> ---
+>  fs/xfs/libxfs/xfs_btree_staging.c | 4 ++--
+>  fs/xfs/xfs_attr_list.c            | 2 +-
+>  fs/xfs/xfs_buf.c                  | 2 +-
+>  3 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+> index 961f6b898f4b..f0c69f9bb169 100644
+> --- a/fs/xfs/libxfs/xfs_btree_staging.c
+> +++ b/fs/xfs/libxfs/xfs_btree_staging.c
+> @@ -139,7 +139,7 @@ xfs_btree_stage_afakeroot(
+>  	ASSERT(!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE));
+>  	ASSERT(cur->bc_tp == NULL);
+>  
+> -	nops = kmalloc(sizeof(struct xfs_btree_ops), GFP_NOFS | __GFP_NOFAIL);
+> +	nops = kmalloc(sizeof(struct xfs_btree_ops), GFP_KERNEL | __GFP_NOFAIL);
+>  	memcpy(nops, cur->bc_ops, sizeof(struct xfs_btree_ops));
+>  	nops->alloc_block = xfs_btree_fakeroot_alloc_block;
+>  	nops->free_block = xfs_btree_fakeroot_free_block;
+> @@ -220,7 +220,7 @@ xfs_btree_stage_ifakeroot(
+>  	ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
+>  	ASSERT(cur->bc_tp == NULL);
+>  
+> -	nops = kmalloc(sizeof(struct xfs_btree_ops), GFP_NOFS | __GFP_NOFAIL);
+> +	nops = kmalloc(sizeof(struct xfs_btree_ops), GFP_KERNEL | __GFP_NOFAIL);
+>  	memcpy(nops, cur->bc_ops, sizeof(struct xfs_btree_ops));
+>  	nops->alloc_block = xfs_btree_fakeroot_alloc_block;
+>  	nops->free_block = xfs_btree_fakeroot_free_block;
+> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> index 0318d768520a..47453510c0ab 100644
+> --- a/fs/xfs/xfs_attr_list.c
+> +++ b/fs/xfs/xfs_attr_list.c
+> @@ -109,7 +109,7 @@ xfs_attr_shortform_list(
+>  	 * It didn't all fit, so we have to sort everything on hashval.
+>  	 */
+>  	sbsize = sf->count * sizeof(*sbuf);
+> -	sbp = sbuf = kmalloc(sbsize, GFP_NOFS | __GFP_NOFAIL);
+> +	sbp = sbuf = kmalloc(sbsize, GFP_KERNEL | __GFP_NOFAIL);
+>  
+>  	/*
+>  	 * Scan the attribute list for the rest of the entries, storing
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index de99368000b4..08f2fbc04db5 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -2008,7 +2008,7 @@ xfs_alloc_buftarg(
+>  #if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
+>  	ops = &xfs_dax_holder_operations;
+>  #endif
+> -	btp = kzalloc(sizeof(*btp), GFP_NOFS | __GFP_NOFAIL);
+> +	btp = kzalloc(sizeof(*btp), GFP_KERNEL | __GFP_NOFAIL);
+>  
+>  	btp->bt_mount = mp;
+>  	btp->bt_bdev_handle = bdev_handle;
+> -- 
+> 2.43.0
+> 
 > 
