@@ -1,44 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3601A6FC6
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 06:39:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20838FBFF
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 06:41:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705905556; cv=none; b=KEUr9KEDiGMSf8R7K7bBAvyt1ppyDMFM2hFPeHTY05jnm5EaM8Xdd0rg6uevQfPlzFGed2i8uTA95I5m/njGsbKFtjty3Rd8UwEDDg2I2sdP16gyJwoMceXYvR7RUk3PV2FnWKLMP3alwGMGta1CWLJOKmyk4GF1BoNiP683Veg=
+	t=1705905665; cv=none; b=FUuKffRnMzUaWjBPW2A5upbxLqRvvg8tcg7HpfeMERNJq8MuKvuh74LYigEEA8w6/+Kuh4cH2oVj+2N+f/qEVR4IeVZfS5p6Zjn1VcZixTJ/za2YlITWOxMJA/FMr+lKcB+4KdF2nJe8kjy/37d6SED6uXqA6s62A89IzF7eCxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705905556; c=relaxed/simple;
-	bh=GZ1vyZLBeG6C7yxi4czJ9SBtHxH/dOypH3JAv/OLl50=;
+	s=arc-20240116; t=1705905665; c=relaxed/simple;
+	bh=JyLVogNGNZ1BROULmBv7h+zmh6r0U05SHTnqZnunzMQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hLuVrcgCFigEvqHwFTvO/TSROzm+ru7ZT0taJB8UMdUGENbKMQzNIF/xm7gPvS00cwZKuMtjANOKq+obCDqZHqC5kTGOfCB1N45jMY+wQ5Lz1PCeabk5NDXY93+KlwtXyE1bRkzUQgclQZdtLTKz1hEBY1MVdcZlPPUAjjXKtbo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eotifFW6; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=NnqE/XHt4F9bP+V0GQvj59mao/gTo4mPBgtYQyihCyTIoDLyOe3X0nwGyoiIipBGNA+oOd3WmG3Dm1IfbLrFLgoUb0hU+b8eOSklahQFr1rAmVhjr5jLH8UmK1av8aYmyhMl3oho4/8ISh969COryBHBloNNqRixBhe+ZcPCYkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WipcF8Vy; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eotifFW6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WipcF8Vy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Al8BzeKCJa/SU229J/wH0y+VrQO/ruk7m6AVYzxSD+Y=; b=eotifFW6SEJQTsqAnrzqc5kACn
-	L8GrmggaHMvhHhOlTW/Z1EpymDDkYp40fflc01jzbgpiH4k4DdGfY+8ttMzc+gMHDqNYwvRiBx5a7
-	E5wh4SQtTPpe8ruwVuCXMZTxuyRKSK6ujxPOs6LtFjVUojZY9pF0Gh664202Msk9StWAPWAN+0uCi
-	2ID1zRwcTBHtoZr18fW94pOKpvBVKplVqkf3CFimEwvl3G9ZVqwmmVUMnVAPT8fETwFKYlJbThUu+
-	dIMZoPRmlpo1IK+ooIr7wxStH8+yaK2bL+heU5byB03uXqF+Zz3KBu71FiN99vuehpCdTLR9ID4Rw
-	tFlI977Q==;
+	bh=JyLVogNGNZ1BROULmBv7h+zmh6r0U05SHTnqZnunzMQ=; b=WipcF8Vyn/TFv3DIkIqgvhNyaC
+	7TjSs8wU7IijGdo4sTHhtvd68furHm8JormEFIpnt1lpTmpnDQVCh65cCRQ+MVDX2/er3QH4/t7pb
+	gGDtnzyqswFyFoazLreku60HOy+HStUxfFXrR+R1WU7ZFC6mBySMNp7xMvOgO26w54KvAmSDIwIOt
+	vpt/6BoeNfZT6ZMqI4waE15E+cCpJUhrfqkrxT4zd+QLxcqV7pQs+q9SllO74nNGmvQ9YAJc3lON6
+	uuj6siInUnnlwVtK7IH2X7hAhNZwMMS0OO6TOUbFocLqy/QAILJP6EvT8LR6pDTVK/lUraIIY3VQk
+	ywv5i6YQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rRnxg-00AlG0-2Y;
-	Mon, 22 Jan 2024 06:39:12 +0000
-Date: Sun, 21 Jan 2024 22:39:12 -0800
+	id 1rRnzT-00AlSI-0S;
+	Mon, 22 Jan 2024 06:41:03 +0000
+Date: Sun, 21 Jan 2024 22:41:03 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-	willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [PATCH 2/3] xfs: use folios in the buffer cache
-Message-ID: <Za4NkMYRhYrVnb1l@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, willy@infradead.org, linux-mm@kvack.org
+Subject: Re: [PATCH 1/3] xfs: unmapped buffer item size straddling mismatch
+Message-ID: <Za4N/56HM1nEZ87K@infradead.org>
 References: <20240118222216.4131379-1-david@fromorbit.com>
- <20240118222216.4131379-3-david@fromorbit.com>
- <20240119012624.GQ674499@frogsfrogsfrogs>
+ <20240118222216.4131379-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,25 +45,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240119012624.GQ674499@frogsfrogsfrogs>
+In-Reply-To: <20240118222216.4131379-2-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jan 18, 2024 at 05:26:24PM -0800, Darrick J. Wong wrote:
-> Ugh, pointer casting.  I suppose here is where we might want an
-> alloc_folio_bulk_array that might give us successively smaller
-> large-folios until b_page_count is satisfied?  (Maybe that's in the next
-> patch?)
-> 
-> I guess you'd also need a large-folio capable vm_map_ram. 
+On Fri, Jan 19, 2024 at 09:19:39AM +1100, Dave Chinner wrote:
+> Whilst touching this code, don't bother checking mapped or single
+> folio buffers for discontiguous regions because they don't have
+> them. This significantly reduces the overhead of this check when
+> logging large buffers as calling xfs_buf_offset() is not free and
+> it occurs a *lot* in those cases.
 
-We need to just stop using vm_map_ram, there is no reason to do that
-even right now.  It was needed when we used the page cache to back
-pagebuf, but these days just sing vmalloc is the right thing for
-!unmapped buffers that can't use large folios.  And I'm seriously
-wondering if we should bother with unmapped buffers in the long run
-if we end up normally using larger folios or just consolidate down to:
+Nice.
 
- - kmalloc for buffers < PAGE_SIZE
- - folio for buffers >= PAGE_SIZE
- - vmalloc if allocation a larger folios is not possible
+Looks good:
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
