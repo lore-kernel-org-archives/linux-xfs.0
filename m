@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5517A5B5DB;
-	Mon, 22 Jan 2024 16:56:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033015BAE1;
+	Mon, 22 Jan 2024 16:57:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705942583; cv=none; b=qgtOvS0+zjlQvXus1NHFsGyk26xakaMt/RC9JzAdzPd5oJVtUVct12tcLU4rUsEtbKn+lPq13/yZh+kPoPhw2SIewUjumxyK6lAWs7QEJ1SJsaO/sBuRZ0KQwvm8h3fJeudJdN188OLRcNUVgAPuCWuYvdfPlLG02MSCBEAEGBk=
+	t=1705942678; cv=none; b=oh7Myyu/aYJIN1lBYZQyOdWi32OEueVY8V5QuMkhNA5/nH4Ubtd36HcISiV3Kfq/gxLYHQt+4yvJZdZMJPdP7tKjfCQfmz2tgnokNYKg9sOA2jyS6wCZUuf6+r7zhDk1NUbBYCYtK3xDyPAI6eB7fht+Zb9dxNt7YoRYMayBvwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705942583; c=relaxed/simple;
-	bh=bDbC5+OZYxWAWLes8ATPVhnQNB9i4jh3/Ib85vuOuo4=;
+	s=arc-20240116; t=1705942678; c=relaxed/simple;
+	bh=+0qL4g2PD6NgklavA2+8vHOMVLqgGK3BZjSbk8sJnDU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gnvHY84UAgl0Q07qzX+k2b+FU6ZIt9m82bjE7ZhRbPQwVdEKmEgyowYtmZB+oEMk5fpleokj3TdjD9xUjnCpXXRPj/J/buDxmYITnGzyvpwT5AEprRFP1W7XsV4BT5YW6wRb55kzz76jzU3hEov540xeMCdmmz5YYFjTHhYAeh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NaQr168e; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=MOCSg/EuYiAS6epdDeh3XLCPNIlDA4SG+fjNraqj+DCOswY8evUP1zza00h9+mc/G8dtw/rX9Q45zsIxNUhslRTCBvwYInJh9QNLZngUTadC/XpJmQ/XAdDx7GD10zriUVp2TQflClXbpjKixkanLmktGRWBu4TcwzPkfqgBENQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BPcPVVha; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NaQr168e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAD78C433F1;
-	Mon, 22 Jan 2024 16:56:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BPcPVVha"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AC42C433C7;
+	Mon, 22 Jan 2024 16:57:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705942582;
-	bh=bDbC5+OZYxWAWLes8ATPVhnQNB9i4jh3/Ib85vuOuo4=;
+	s=k20201202; t=1705942677;
+	bh=+0qL4g2PD6NgklavA2+8vHOMVLqgGK3BZjSbk8sJnDU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NaQr168eQC+fJtZ81Kt7oLuCmIhejTtREmS2HfBx4G0gEtOn52NiR1bMkdHY8CPk7
-	 KZKull2P42dW31+meyxrmSm0CT2zhewGyi7WvJ/cy8t/uDpDTbc/qfnYbp8vaZBh24
-	 3HvQ0lplTC/LQyeIj3jMQfZnSEcifl78NUJ7UQCK2vV0veAk/fWhBXS6yjsXVaGjpL
-	 Om68qRpvh6LkKGfbP3pvhWSjhBTtTb0BhvKOCuHcf0WURgRW6LH2RKEb6NFYNN5OiE
-	 19fx2e7V/t190NA+9IaFxCrM8Haa0p8tfF2WO/c+MRpd4Y+DTD3rEVaRzxGjYes0hN
-	 y41dGmpD4D+nw==
-Date: Mon, 22 Jan 2024 08:56:22 -0800
+	b=BPcPVVhats8WkLkWp8Pud1RSSu6P/VMpcckV/LB+4UXG36gy8UUeloUA3KGINxWD6
+	 yq+u1Uw/GnDMYYRdsWc9Dss9b4Shk78ddth/ozbcz/jA8t5m0qxWDhCrnTv5NeQQY/
+	 gc/5vhMyWVr0XEf3q9/FlWZVai7NwUJuHMrBsz3DxadtcfhqDxQeB5eWv29huqoJnS
+	 GO3yCrIxTAsmF1ELdeMho7q9SwFCZjGdD3ERjQZQmKqhrw0YSn0XXtFaM9OAECBrMZ
+	 7Vd23TNxSpaVOAVPFkA54Rq4j4fcw9C1fL9GBFcdyjCfQR6yKM+tflNWeGV+h961xW
+	 nSCj8Sk4IFy1w==
+Date: Mon, 22 Jan 2024 08:57:56 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCHv2] xfs/604: Make test as _notrun for higher blocksizes
- filesystem
-Message-ID: <20240122165622.GA6188@frogsfrogsfrogs>
-References: <89356c509e4cde7bf5fdea6b46ec45cc5b2afed9.1705910636.git.ritesh.list@gmail.com>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs/161: adapt the test case for LBS filesystem
+Message-ID: <20240122165756.GB6188@frogsfrogsfrogs>
+References: <20240122111751.449762-1-kernel@pankajraghav.com>
+ <20240122111751.449762-3-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,40 +43,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <89356c509e4cde7bf5fdea6b46ec45cc5b2afed9.1705910636.git.ritesh.list@gmail.com>
+In-Reply-To: <20240122111751.449762-3-kernel@pankajraghav.com>
 
-On Mon, Jan 22, 2024 at 01:51:20PM +0530, Ritesh Harjani (IBM) wrote:
-> If we have filesystem with blocksize = 64k, then the falloc value will
-> be huge (falloc_size=5451.33GB) which makes fallocate fail hence causing
-> the test to fail. Instead make the testcase "_notrun" if the initial
-> fallocate itself fails.
+On Mon, Jan 22, 2024 at 12:17:51PM +0100, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
 > 
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> This test fails for >= 64k filesystem block size on a 4k PAGE_SIZE
+> system(see LBS efforts[1]). Adapt the blksz so that we create more than
+> one block for the testcase.
 
-LGTM
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+How does this fail, specifically?  And, uh, what block sizes > 64k were
+tested?
 
 --D
 
-> ---
->  tests/xfs/604 | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> Cap the blksz to be at least 64k to retain the same behaviour as before
+> for smaller filesystem blocksizes.
 > 
-> diff --git a/tests/xfs/604 b/tests/xfs/604
-> index bb6db797..fdc444c2 100755
-> --- a/tests/xfs/604
-> +++ b/tests/xfs/604
-> @@ -35,7 +35,9 @@ allocbt_node_maxrecs=$(((dbsize - alloc_block_len) / 12))
->  # Create a big file with a size such that the punches below create the exact
->  # free extents we want.
->  num_holes=$((allocbt_leaf_maxrecs * allocbt_node_maxrecs - 1))
-> -$XFS_IO_PROG -c "falloc 0 $((9 * dbsize + num_holes * dbsize * 2))" -f "$SCRATCH_MNT/big"
-> +falloc_size=$((9 * dbsize + num_holes * dbsize * 2))
-> +$XFS_IO_PROG -c "falloc 0 $falloc_size" -f "$SCRATCH_MNT/big" ||
-> +       _notrun "Not enough space on device for falloc_size=$(echo "scale=2; $falloc_size / 1073741824" | $BC -q)GB and bs=$dbsize"
+> [1] LBS effort: https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> ---
+>  tests/xfs/161 | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/xfs/161 b/tests/xfs/161
+> index 486fa6ca..f7b03f0e 100755
+> --- a/tests/xfs/161
+> +++ b/tests/xfs/161
+> @@ -38,9 +38,14 @@ _qmount_option "usrquota"
+>  _scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+>  _scratch_mount >> $seqres.full
 >  
->  # Fill in any small free extents in AG 0. After this, there should be only one,
->  # large free extent.
+> +min_blksz=65536
+> +file_blksz=$(_get_file_block_size "$SCRATCH_MNT")
+> +blksz=$(( 2 * $file_blksz))
+> +
+> +blksz=$(( blksz > min_blksz ? blksz : min_blksz ))
+>  # Force the block counters for uid 1 and 2 above zero
+> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
+> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
+> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/a >> $seqres.full
+> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/b >> $seqres.full
+>  sync
+>  chown 1 $SCRATCH_MNT/a
+>  chown 2 $SCRATCH_MNT/b
 > -- 
 > 2.43.0
 > 
