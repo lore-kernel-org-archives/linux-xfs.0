@@ -1,47 +1,54 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21B063CF4B
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 13:19:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E59A3D0C2
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 13:34:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705929569; cv=none; b=p06FejXcp7zEDo/Iyqfca//tv4/shMEigbXK9G3yC/3rsYB3p9lmV/3wLZIM5IhUiButLmro4jeAIMVXUxtfAHE0HtDo5NHSZpomceYXCKDoKYqn9ubMA/F4rkw9NkkCZNkYInqnYj9UgnFiGo+BnGCXcrPPhrDaCV+B4N2sJdc=
+	t=1705930457; cv=none; b=HNF67tahSuydiSON43KUNfim8HcyXmPtzEqGjoWNH+Ea+k6ELpMxARuJqwqjfYcWhIvHKiAL3qRpttDvRHX3JOiQhgWrZ6B3jmQ2WelbW49VXVA3ayrW6jOglRzlyRRCKpfAhS7lkwYcG5xTnl8chZbOWhvlndPvAsZysIYSOZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705929569; c=relaxed/simple;
-	bh=Maj6IJwoMh9Z67a2lCJ0r2fxB85hUCARfTPU+S4E+eI=;
+	s=arc-20240116; t=1705930457; c=relaxed/simple;
+	bh=58hk3EGgivAqnjEyYxsUglKu29GyzAljTRDcz4+mJzs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=muaMDzCOqXySBCswQGmkqMz65NjIBPWAjHh8QA1BX2F/dStbj41QrEZeFSqmCqcEqyaOPJx6RzLEvN2TnkU+Y1YajmfWxpNW0Zm2h84qejAwBwV7C4Q1wMkTGDHGnyDSNs0/5hsVRtjFU6ul6tZcXU0I7CrX7w0xLBn58tYlcm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4iHweo9U; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=kWG01tW8DO1hSyPgIfsRXZDIIA5lRZ+TpdDJXlTvozB/yu1/+2tPXMSUF5h2BzRB3ocIaQYu/bQtgA3IPE00Fail73vsFeT/bN/S/E3wsyEVyu3GxC4HVjnLhbgEejDasJZIC1x+FXjPxZ+ONJ2ha60lsG3gzZdn67/glgIKZbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LCj3iWGX; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4iHweo9U"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=d1Z88MF5EGIom09k/BK6rmRHYbu17PtYl+yBuSl5XQU=; b=4iHweo9U0YowonvdGy/52phYOc
-	KSFXiE7xMqt6F9nTPJQ2xEmGNJ1/Qd9ojusJYOrDHbgf2eINFmU16FsfC0BvSQAJbLPBmpybNagiZ
-	5qc2sS8rpzde55WNBlBriD5RilPtn+VtenomL6IiG6w7jigJX87gpVme66Ru/nrtEREn0nU5PW1FP
-	vVV3aLzFSHtfuoK6b2UQrUFP8oesDnuunqbDgNMLMFQn9XvUqGlWXuMtZcF6eqjUG5q3d9hqdMDGz
-	oEcREygTvAIwBdXmDti4Nla4llmWonrbZw97bG5JVgfHqXrbkdnHwWibz62L1RyV8cyPcaXAiO6Fs
-	WQlFSuuw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rRuCY-00CGWb-13;
-	Mon, 22 Jan 2024 13:18:58 +0000
-Date: Mon, 22 Jan 2024 05:18:58 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LCj3iWGX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1705930455; x=1737466455;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=58hk3EGgivAqnjEyYxsUglKu29GyzAljTRDcz4+mJzs=;
+  b=LCj3iWGX1pEyc5WwL4J4L74qXp2SDZpYQ6IiljC2Paq4n3UiJQF8bUYU
+   S40Fppuc/iOP6CPMTSCgdS56UXfZTpYGs83TGuJRgMYIsS7CWLMQk6sEh
+   s5oj2x7MSvqhPSzHxULLAaTQHsuV4lbVWH5J8qguD5Ya0UjEbJP3zs2UB
+   DvbbiyVYQ+e9GeNb5k1aYBvI1i9Q0K2yEw/BZUuw0g8JUkXepNReHKcPH
+   0dSMg2swMp0oYmOts0feZ/CPadX7iORTrUC8BpILGLM1dSd17WBPRMcFm
+   dBTCGkGnwq+7OLxychbgAK8T8kd+2ha9FyzIbjN1hKeb/2bqE7LfMga9/
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10960"; a="1091137"
+X-IronPort-AV: E=Sophos;i="6.05,211,1701158400"; 
+   d="scan'208";a="1091137"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2024 05:34:15 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10960"; a="928993791"
+X-IronPort-AV: E=Sophos;i="6.05,211,1701158400"; 
+   d="scan'208";a="928993791"
+Received: from tassilo.jf.intel.com (HELO tassilo) ([10.54.38.190])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2024 05:34:14 -0800
+Date: Mon, 22 Jan 2024 05:34:12 -0800
+From: Andi Kleen <ak@linux.intel.com>
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [PATCH 2/3] xfs: use folios in the buffer cache
-Message-ID: <Za5rQnj6NPqTE+CN@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: Using Folios for XFS metadata
+Message-ID: <Za5u1CsKnrWflMOR@tassilo>
 References: <20240118222216.4131379-1-david@fromorbit.com>
- <20240118222216.4131379-3-david@fromorbit.com>
- <20240119012624.GQ674499@frogsfrogsfrogs>
- <Za4NkMYRhYrVnb1l@infradead.org>
- <Za5aANHuptzLrS6Z@dread.disaster.area>
+ <87zfwxk75o.fsf@linux.intel.com>
+ <Za5XQDOutk93L5w1@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,30 +57,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Za5aANHuptzLrS6Z@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Za5XQDOutk93L5w1@dread.disaster.area>
 
-On Mon, Jan 22, 2024 at 11:05:20PM +1100, Dave Chinner wrote:
-> I haven't looked at what using vmalloc means for packing the buffer
-> into a bio - we currently use bio_add_page(), so does that mean we
-> have to use some variant of virt_to_page() to break the vmalloc
-> region up into it's backing pages to feed them to the bio? Or is
-> there some helper that I'm unaware of that does it all for us
-> magically?
+[fixed the subject, not sure what happened there]
 
-We have a kmem_to_page helper for chuking any kind of kernel virtual
-address space into pages.  xfs_rw_bdev in fs/xfs/xfs_bio_io.c uses
-that for a bio, we should probably hav an async version of that
-and maybe move it to the block layer instead of duplicating the
-logic in various places.
+FWIW I'm not sure fail-fail is always the right strategy here,
+in many cases even with some reclaim, compaction may win. Just not if you're
+on a tight budget for the latencies.
 
-> Yeah, that's kind of where I'm going with this. Large folios already
-> turn off unmapped buffers, and I'd really like to get rid of that
-> page straddling mess that unmapped buffers require in the buffer
-> item dirty region tracking. That means we have to get rid of
-> unmapped buffers....
+> I stress test and measure XFS metadata performance under sustained
+> memory pressure all the time. This change has not caused any
+> obvious regressions in the short time I've been testing it.
 
-I actually have an old series to kill unmapped buffers and use
-vmalloc, but decided I'd need use folios for the fast path instead
-of paying the vmalloc overhead.  I can dust it off and you can decide
-if you want to pick up parts of it.
+Did you test for tail latencies?
+
+There are some relatively simple ways to trigger memory fragmentation,
+the standard way is to allocate a very large THP backed file and then
+punch a lot of holes.
+
+> 
+> I still need to do perf testing on large directory block sizes. That
+> is where high-order allocations will get stressed - that's where
+> xlog_kvmalloc() starts dominating the profiles as it trips over
+> vmalloc scalability issues...
+
+Yes that's true. vmalloc has many issues, although with the recent
+patches to split the rbtrees with separate locks it may now look
+quite different than before.
+
+> 
+> > I would in any case add a tunable for it in case people run into this.
+> 
+> No tunables. It either works or it doesn't. If we can't make
+> it work reliably by default, we throw it in the dumpster, light it
+> on fire and walk away.
+
+I'm not sure there is a single definition of "reliably" here -- for
+many workloads tail latencies don't matter, so it's always reliable,
+as long as you have good aggregate throughput.
+
+Others have very high expectations for them.
+
+Forcing the high expectations on everyone is probably not a good
+general strategy though, as there are general trade offs.
+
+I could see that having lots of small tunables for every use might not be a
+good idea. Perhaps there would be a case for a single general tunable
+that controls higher order folios for everyone.
+
+> 
+> > Tail latencies are a common concern on many IO workloads.
+> 
+> Yes, for user data operations it's a common concern. For metadata,
+> not so much - there's so many far worse long tail latencies in
+> metadata operations (like waiting for journal space) that memory
+> allocation latencies in the metadata IO path are largely noise....
+
+I've seen pretty long stalls in the past.
+
+The difference to the journal is also that it is local the file system, while
+the memory is normally shared with everyone on the node or system. So the
+scope of noisy neighbour impact can be quite different, especially on a large
+machine. 
+
+-Andi
+
