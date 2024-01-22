@@ -1,253 +1,122 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6162F1EF07
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 19:39:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF559481A1
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 21:10:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705952388; cv=none; b=dT3bxEKF/TH2J6148Ov5CW/OQ/3H/mVKs/3tpr4LUWfGRuaZbVpcGXat6eUa1v1KrazDG3hmZAHqJLiw2DD/3OJJTDkQGSkdTA3tLncK1gP7wHEy1tRP4kDBde9n1xDc/rHbKbnZKkW2QYQplMOaDHh2v44q3kpbJ8nhzmNXIzo=
+	t=1705957847; cv=none; b=jvGuAN5/pGBXK8oZ7n+A3L+j8lG+FAMsS7EOWcgIKsfnpyg3Fol7x7E5cBTb6s90HtEEeebIVsKzoJhHA1yR9RLuSl4RmzC5MxmfISGXOImjcaRR54lEZAs9BKuV3hrZMYZMeywk81j+QkAgHGrJ6wR8rUlD6XzaMp9IhMiBjV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705952388; c=relaxed/simple;
-	bh=tOlNQIdxJ8LfTJIkMSwj+DuHqrWfwaNAevXGYxT38kk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=J2ZxPppySiGdDkBZz+/XKlxYY9QG7tRfv6h98uA9BoJPsOHwORlNrZo4gX3HL9ArPf2/bBoG6ZSNjU8ZW/GiU0bJ+Rm+78DXJXaEmFaFAidJhDmBah8UBW+IC6b9c0SUICPOflFHR+TFwwS19giGFUxjwIYMGBHivJWretp0gm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DfWRiL9N; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1705957847; c=relaxed/simple;
+	bh=vC3WjR9eiS3egzgWXjR16FSJB5yh0XKkwNKSY9P0SSw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gLAfAI4SuAtWs8CnJIOpjdm4KMuAFNyxQ7gkvv0IvUrSez/wAjrIXaYHvYwePGJwnsB8mSRJeJiAr+b+nOO8Kfm3gFyyeBOCSZvWKscAFbP98dtrFfONjBsQrnlQznwzB56vzHBfKteIeW+ps0VuNtVuvyrCWwn93ArMfvh+xng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=dpcHB/0w; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DfWRiL9N"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=RQdjCj/qGfZg49bDD/iy9II5Zl5PHBeiToOyt1DCDp0=; b=DfWRiL9N8lTtWEFVmpXlxgDHZD
-	DCCz4xXLeO1HTsVW/tx0Id31sWnxHovZcbNxWt7IRA7HICxaBnghQdQ8rpVM7ZTWRX0sdAstnNuOO
-	UrJl+wZv71JOLwl8y53SY+/1o+1Z6CAsSrpk38FFsu85xS4LlKeUQp7N7dBAQ01AF9P+lSZ/A5tJN
-	Recb6RpS5KPRwwU7MuE/qhMW+q4k5wiyhLcJ1NcL3IhKSE6TCgrZEjUL77NpaDiE13F7FtODR75Aw
-	PWE+HGOin86eTc19g//VZMyFt7PSg+yEs0PK5BJJzfm1bZClGiIi0Os3cclrC4hKIW7ZwXsEH7tfH
-	QYia5EKQ==;
-Received: from [2001:4bb8:198:a22c:146a:86ef:5806:b115] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rS091-00DkWT-0Q;
-	Mon, 22 Jan 2024 19:39:44 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] xfs: use vmalloc for multi-page buffers
-Date: Mon, 22 Jan 2024 20:39:16 +0100
-Message-Id: <20240122193916.1803448-5-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240122193916.1803448-1-hch@lst.de>
-References: <20240122193916.1803448-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="dpcHB/0w"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1d7431e702dso9645095ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 13:10:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705957845; x=1706562645; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gbck5AucTZaxjbWeuuYe5wNSP+bnbEh0aXTJXBNZvyM=;
+        b=dpcHB/0wqEUxrfgmCvadVWp5SBnqt8mXYECbjhNPESN6ZyPOGzqrmw3Za/ovUVYbGo
+         ZQuJN+hDUt7kC1udMvtUm5AfYODoCDOQOXWiSLBaIE2QE/6BgPaeMEtOip4ATOsywdmB
+         u8G0liSTl6F+CAX082YTmYuM5V86xeTMO9AQTJRvv85dQzocwJeSmQ7jPxJmLGDb4HFm
+         Z/ITcRRLGCOBlyZxL8hBAFLH/MkTW8aMHvRPsswY0m6Ml0ri7zOkRd7mZI1BERIO7fnU
+         feUtfkISMugCJnDimJuuVdT29XR/X5zv48Yf/heT5Xu1iW1mHOGOUHqoJFjBhNF2rx8q
+         1hVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705957845; x=1706562645;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gbck5AucTZaxjbWeuuYe5wNSP+bnbEh0aXTJXBNZvyM=;
+        b=VKcSMapn8BP/gGAuz677rwkFoabdxLXAwFKtelP/jO1SDx92AGSpUi1S7HqI+iP82v
+         pgUDTGuiOUbE+HJUx32AYSW93aEkHXK40qFzdBAbsGspnkKf/Dtx9sSuKBdbnB1mn2Rz
+         +k5iJaZiUGPWahHvhNDg/tQCa8pvVTBf7BY+SYowiPZ6CHWRw7AGLOMKAx05lkOnFB/r
+         pgeFHbTyeU4tkrXVSc92l8dVCoAQyfItCqwqe1C0mzTLXOSupSngS0iCIIPPhK+bL4Z+
+         GcBq1WYrdJneHA+KUM3b5vu6w1bU2vx0jPvg/lCJ2gUHGvyuwmlKvaTrIS/7UQmUYbVx
+         ICsw==
+X-Gm-Message-State: AOJu0Yy84c3gbsNFEg4dr0o8aGiDd9WFw3Z98NZSDNC0f2EyoGa9M9K3
+	wyh9f6xiQqFSAl23LAt2ZNMgrt13MUA6GguaxSadC5G2CxTccvYpDTG85uxW8YU=
+X-Google-Smtp-Source: AGHT+IHUu3jLG0QUgF7pUGQTAj/j46q0ifGLwypCNt/gsq+Kex4/+H6n2AOh5+p3Xnl4HX8Pfgsp5w==
+X-Received: by 2002:a17:903:1c4:b0:1d7:2d68:cee8 with SMTP id e4-20020a17090301c400b001d72d68cee8mr2356123plh.45.1705957845195;
+        Mon, 22 Jan 2024 13:10:45 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
+        by smtp.gmail.com with ESMTPSA id i10-20020a17090320ca00b001d737d51411sm3636211plb.227.2024.01.22.13.10.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Jan 2024 13:10:44 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rS1Z2-00Dvph-2d;
+	Tue, 23 Jan 2024 08:10:40 +1100
+Date: Tue, 23 Jan 2024 08:10:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	willy@infradead.org, linux-mm@kvack.org
+Subject: Re: [PATCH 2/3] xfs: use folios in the buffer cache
+Message-ID: <Za7Z0CS696T9npwg@dread.disaster.area>
+References: <20240118222216.4131379-1-david@fromorbit.com>
+ <20240118222216.4131379-3-david@fromorbit.com>
+ <20240119012624.GQ674499@frogsfrogsfrogs>
+ <Za4NkMYRhYrVnb1l@infradead.org>
+ <Za5aANHuptzLrS6Z@dread.disaster.area>
+ <Za5rQnj6NPqTE+CN@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Za5rQnj6NPqTE+CN@infradead.org>
 
-Instead of allocating the pages manually using the bulk page allocator
-and then using vm_map_page just use vmalloc to allocate the entire
-buffer - vmalloc will use the bulk allocator internally if it fits.
+On Mon, Jan 22, 2024 at 05:18:58AM -0800, Christoph Hellwig wrote:
+> On Mon, Jan 22, 2024 at 11:05:20PM +1100, Dave Chinner wrote:
+> > I haven't looked at what using vmalloc means for packing the buffer
+> > into a bio - we currently use bio_add_page(), so does that mean we
+> > have to use some variant of virt_to_page() to break the vmalloc
+> > region up into it's backing pages to feed them to the bio? Or is
+> > there some helper that I'm unaware of that does it all for us
+> > magically?
+> 
+> We have a kmem_to_page helper for chuking any kind of kernel virtual
+> address space into pages.  xfs_rw_bdev in fs/xfs/xfs_bio_io.c uses
+> that for a bio, we should probably hav an async version of that
+> and maybe move it to the block layer instead of duplicating the
+> logic in various places.
 
-With this the b_pages array can go away as well as nothing uses it.
+Yeah, OK, as I expected. I'd forgotten that we already play that
+game with xfs_rw_bdev(). I think we can trivially factor out an
+async version and call that from the xfs_buf.c code fo vmalloc()d
+ranges, so I think I'll work towards that and actually remove the
+bio packing loop from xfs_buf.c altogether.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c | 96 +++++++++---------------------------------------
- fs/xfs/xfs_buf.h |  4 --
- 2 files changed, 18 insertions(+), 82 deletions(-)
+> > Yeah, that's kind of where I'm going with this. Large folios already
+> > turn off unmapped buffers, and I'd really like to get rid of that
+> > page straddling mess that unmapped buffers require in the buffer
+> > item dirty region tracking. That means we have to get rid of
+> > unmapped buffers....
+> 
+> I actually have an old series to kill unmapped buffers and use
+> vmalloc, but decided I'd need use folios for the fast path instead
+> of paying the vmalloc overhead.  I can dust it off and you can decide
+> if you want to pick up parts of it.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ddd917bed22e34..6c2c4c809cc55c 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -197,7 +197,7 @@ xfs_buf_get_maps(
- }
- 
- /*
-- *	Frees b_pages if it was allocated.
-+ *	Frees b_maps if it was allocated.
-  */
- static void
- xfs_buf_free_maps(
-@@ -271,29 +271,6 @@ _xfs_buf_alloc(
- 	return 0;
- }
- 
--static void
--xfs_buf_free_pages(
--	struct xfs_buf	*bp)
--{
--	uint		i;
--
--	ASSERT(bp->b_flags & _XBF_PAGES);
--
--	if (xfs_buf_is_vmapped(bp))
--		vm_unmap_ram(bp->b_addr, bp->b_page_count);
--
--	for (i = 0; i < bp->b_page_count; i++) {
--		if (bp->b_pages[i])
--			__free_page(bp->b_pages[i]);
--	}
--	mm_account_reclaimed_pages(bp->b_page_count);
--
--	if (bp->b_pages != bp->b_page_array)
--		kmem_free(bp->b_pages);
--	bp->b_pages = NULL;
--	bp->b_flags &= ~_XBF_PAGES;
--}
--
- static void
- xfs_buf_free_callback(
- 	struct callback_head	*cb)
-@@ -312,10 +289,15 @@ xfs_buf_free(
- 
- 	ASSERT(list_empty(&bp->b_lru));
- 
-+	if (!(bp->b_flags & _XBF_KMEM))
-+		mm_account_reclaimed_pages(bp->b_page_count);
-+
- 	if (bp->b_flags & _XBF_PAGES)
--		xfs_buf_free_pages(bp);
--	else if (bp->b_flags & _XBF_KMEM)
--		kmem_free(bp->b_addr);
-+		put_page(virt_to_page(bp->b_addr));
-+	else
-+		kvfree(bp->b_addr);
-+
-+	bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
- 
- 	call_rcu(&bp->b_rcu, xfs_buf_free_callback);
- }
-@@ -343,8 +325,6 @@ xfs_buf_alloc_kmem(
- 		bp->b_addr = NULL;
- 		return -ENOMEM;
- 	}
--	bp->b_pages = bp->b_page_array;
--	bp->b_pages[0] = kmem_to_page(bp->b_addr);
- 	bp->b_page_count = 1;
- 	bp->b_flags |= _XBF_KMEM;
- 	return 0;
-@@ -356,7 +336,6 @@ xfs_buf_alloc_pages(
- 	xfs_buf_flags_t	flags)
- {
- 	gfp_t		gfp_mask = __GFP_NOWARN;
--	long		filled = 0;
- 
- 	if (flags & XBF_READ_AHEAD)
- 		gfp_mask |= __GFP_NORETRY;
-@@ -365,56 +344,24 @@ xfs_buf_alloc_pages(
- 
- 	/* Make sure that we have a page list */
- 	bp->b_page_count = DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
--	if (bp->b_page_count <= XB_PAGES) {
--		bp->b_pages = bp->b_page_array;
--	} else {
--		bp->b_pages = kzalloc(sizeof(struct page *) * bp->b_page_count,
--					gfp_mask);
--		if (!bp->b_pages)
--			return -ENOMEM;
--	}
--	bp->b_flags |= _XBF_PAGES;
- 
- 	/* Assure zeroed buffer for non-read cases. */
- 	if (!(flags & XBF_READ))
- 		gfp_mask |= __GFP_ZERO;
- 
--	/*
--	 * Bulk filling of pages can take multiple calls. Not filling the entire
--	 * array is not an allocation failure, so don't back off if we get at
--	 * least one extra page.
--	 */
--	for (;;) {
--		long	last = filled;
--
--		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
--						bp->b_pages);
--		if (filled == bp->b_page_count) {
--			XFS_STATS_INC(bp->b_mount, xb_page_found);
--			break;
--		}
--
--		if (filled != last)
--			continue;
-+	if (bp->b_page_count == 1) {
-+		struct page *page;
- 
--		if (flags & XBF_READ_AHEAD) {
--			xfs_buf_free_pages(bp);
-+		page = alloc_page(gfp_mask);
-+		if (!page)
- 			return -ENOMEM;
--		}
--
--		XFS_STATS_INC(bp->b_mount, xb_page_retries);
--		memalloc_retry_wait(gfp_mask);
--	}
--
--	if (bp->b_page_count == 1) {
--		/* A single page buffer is always mappable */
--		bp->b_addr = page_address(bp->b_pages[0]);
-+		bp->b_addr = page_address(page);
-+		bp->b_flags |= _XBF_PAGES;
- 	} else {
--		int retried = 0;
- 		unsigned nofs_flag;
- 
- 		/*
--		 * vm_map_ram() will allocate auxiliary structures (e.g.
-+		 * vmalloc() will allocate auxiliary structures (e.g.
- 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
- 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
- 		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
-@@ -422,20 +369,13 @@ xfs_buf_alloc_pages(
- 		 * potentially deadlocking.
- 		 */
- 		nofs_flag = memalloc_nofs_save();
--		do {
--			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
--						-1);
--			if (bp->b_addr)
--				break;
--			vm_unmap_aliases();
--		} while (retried++ <= 1);
-+		bp->b_addr = __vmalloc(BBTOB(bp->b_length), gfp_mask);
- 		memalloc_nofs_restore(nofs_flag);
- 
- 		if (!bp->b_addr) {
- 			xfs_warn_ratelimited(bp->b_target->bt_mount,
--				"%s: failed to map %u pages", __func__,
-+				"%s: failed to allocate %u pages", __func__,
- 				bp->b_page_count);
--			xfs_buf_free_pages(bp);
- 			return -ENOMEM;
- 		}
- 	}
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 2116fed2b53026..b114bfa1b07fb6 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -114,8 +114,6 @@ typedef struct xfs_buftarg {
- 	struct ratelimit_state	bt_ioerror_rl;
- } xfs_buftarg_t;
- 
--#define XB_PAGES	2
--
- struct xfs_buf_map {
- 	xfs_daddr_t		bm_bn;	/* block number for I/O */
- 	int			bm_len;	/* size of I/O */
-@@ -178,8 +176,6 @@ struct xfs_buf {
- 	struct xfs_buf_log_item	*b_log_item;
- 	struct list_head	b_li_list;	/* Log items list head */
- 	struct xfs_trans	*b_transp;
--	struct page		**b_pages;	/* array of page pointers */
--	struct page		*b_page_array[XB_PAGES]; /* inline pages */
- 	struct xfs_buf_map	*b_maps;	/* compound buffer map */
- 	struct xfs_buf_map	__b_map;	/* inline compound buffer map */
- 	int			b_map_count;
+I wouldn't worry about it too much - the rest of it is pretty
+straight forward once we know inode cluster buffers are working
+correctly with single large folios and we always fall back to
+vmalloc().
+
+Cheers,
+
+Dave.
 -- 
-2.39.2
-
+Dave Chinner
+david@fromorbit.com
