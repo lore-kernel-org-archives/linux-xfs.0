@@ -1,94 +1,177 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033015BAE1;
-	Mon, 22 Jan 2024 16:57:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68671537EF
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 17:23:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705942678; cv=none; b=oh7Myyu/aYJIN1lBYZQyOdWi32OEueVY8V5QuMkhNA5/nH4Ubtd36HcISiV3Kfq/gxLYHQt+4yvJZdZMJPdP7tKjfCQfmz2tgnokNYKg9sOA2jyS6wCZUuf6+r7zhDk1NUbBYCYtK3xDyPAI6eB7fht+Zb9dxNt7YoRYMayBvwc=
+	t=1705944205; cv=none; b=FgSYGdJoqcmVyvKOAPaiTHWNJjrMqCozUObmLe+n1SSDww9huePoqkrEdP8ElKokaXNI8hsSjm2uDEhoVrAauLzvMctuM5ODLfY1fdMYTW4lIYY4y94hd4foZh31kMi+E+tAPww1FWk7szEFKvN+8UHKQxUOSuoXBvvv2OKRxRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705942678; c=relaxed/simple;
-	bh=+0qL4g2PD6NgklavA2+8vHOMVLqgGK3BZjSbk8sJnDU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MOCSg/EuYiAS6epdDeh3XLCPNIlDA4SG+fjNraqj+DCOswY8evUP1zza00h9+mc/G8dtw/rX9Q45zsIxNUhslRTCBvwYInJh9QNLZngUTadC/XpJmQ/XAdDx7GD10zriUVp2TQflClXbpjKixkanLmktGRWBu4TcwzPkfqgBENQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BPcPVVha; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705944205; c=relaxed/simple;
+	bh=ccVq4iGRwR8pUoUKcsw6rNhTaOJ/vhBoYkNnYgdUTMc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:From:In-Reply-To:
+	 Content-Type:References; b=gUBUVAS80toxJRFmtYrldxqToArmLSuRKIPdfxWvltW5Luj0t+GafXFTXH+kEFfS3oLy9sghsfRSTprSUvadmn2IPYWe29owAoMcJaD3phJlDTh+VJUnMpnzlnqUVpihAGMjLTedj4CS+lKeBp4ETEjU8AQOUa4J6yB796i12Ac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=HgKUi7x0; arc=none smtp.client-ip=210.118.77.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BPcPVVha"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AC42C433C7;
-	Mon, 22 Jan 2024 16:57:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705942677;
-	bh=+0qL4g2PD6NgklavA2+8vHOMVLqgGK3BZjSbk8sJnDU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BPcPVVhats8WkLkWp8Pud1RSSu6P/VMpcckV/LB+4UXG36gy8UUeloUA3KGINxWD6
-	 yq+u1Uw/GnDMYYRdsWc9Dss9b4Shk78ddth/ozbcz/jA8t5m0qxWDhCrnTv5NeQQY/
-	 gc/5vhMyWVr0XEf3q9/FlWZVai7NwUJuHMrBsz3DxadtcfhqDxQeB5eWv29huqoJnS
-	 GO3yCrIxTAsmF1ELdeMho7q9SwFCZjGdD3ERjQZQmKqhrw0YSn0XXtFaM9OAECBrMZ
-	 7Vd23TNxSpaVOAVPFkA54Rq4j4fcw9C1fL9GBFcdyjCfQR6yKM+tflNWeGV+h961xW
-	 nSCj8Sk4IFy1w==
-Date: Mon, 22 Jan 2024 08:57:56 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, p.raghav@samsung.com,
-	mcgrof@kernel.org, gost.dev@samsung.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs/161: adapt the test case for LBS filesystem
-Message-ID: <20240122165756.GB6188@frogsfrogsfrogs>
-References: <20240122111751.449762-1-kernel@pankajraghav.com>
- <20240122111751.449762-3-kernel@pankajraghav.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="HgKUi7x0"
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20240122172321euoutp023c01ca79e61b66ecf4619016d5797b55~suzZzC00K3061930619euoutp02y
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 17:23:21 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20240122172321euoutp023c01ca79e61b66ecf4619016d5797b55~suzZzC00K3061930619euoutp02y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1705944201;
+	bh=sfX4nRusXl4Dv4T3rJymtxDSLAj3omMNW8dmpNN+9Kk=;
+	h=Date:Subject:To:CC:From:In-Reply-To:References:From;
+	b=HgKUi7x0xdDBKmfL5zZ9Ocax/nXuz+OXBFuJ0M5wB+elEuSokmwX89CtDKxKo8HTo
+	 yugEO8bB6FapOgVnJnNO7u1I5lk1sBBsJF7I2Vl+ScbWIFNmW+xcKflCb8tKFieGAQ
+	 O5cKEwKYfnoDXPt5lxO+uxGNYzyKpbh+CEVrJpxw=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+	20240122172320eucas1p2bcc866472dc3bb1b725261e44c266a3d~suzYg381C3110531105eucas1p2p;
+	Mon, 22 Jan 2024 17:23:20 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+	eusmges2new.samsung.com (EUCPMTA) with SMTP id 9F.E4.09814.784AEA56; Mon, 22
+	Jan 2024 17:23:19 +0000 (GMT)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240122172319eucas1p2a2b5902e83d424e95a4f3f815c80b89a~suzYJk8Ov3111431114eucas1p2l;
+	Mon, 22 Jan 2024 17:23:19 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240122172319eusmtrp1f3b10500bc76cbd8d69236153b16e5c8~suzYI-_yC3050130501eusmtrp1S;
+	Mon, 22 Jan 2024 17:23:19 +0000 (GMT)
+X-AuditID: cbfec7f4-711ff70000002656-84-65aea4870ca8
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+	eusmgms2.samsung.com (EUCPMTA) with SMTP id BA.12.10702.784AEA56; Mon, 22
+	Jan 2024 17:23:19 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240122172319eusmtip1293f9096c2c9881dade037e57dfb9e9e~suzYAW6tR0573305733eusmtip15;
+	Mon, 22 Jan 2024 17:23:19 +0000 (GMT)
+Received: from [192.168.8.209] (106.210.248.230) by CAMSVWEXC02.scsc.local
+	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+	Mon, 22 Jan 2024 17:23:18 +0000
+Message-ID: <cb8a9359-6678-4692-a76c-545f8bb44b00@samsung.com>
+Date: Mon, 22 Jan 2024 18:23:16 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240122111751.449762-3-kernel@pankajraghav.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] xfs/558: scale blk IO size based on the filesystem
+ blksz
+To: "Darrick J. Wong" <djwong@kernel.org>, "Pankaj Raghav (Samsung)"
+	<kernel@pankajraghav.com>
+CC: <zlang@redhat.com>, <fstests@vger.kernel.org>, <mcgrof@kernel.org>,
+	<gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>
+Content-Language: en-US
+From: Pankaj Raghav <p.raghav@samsung.com>
+In-Reply-To: <20240122165336.GA6226@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprEKsWRmVeSWpSXmKPExsWy7djP87rtS9alGixZZGFx+QmfxemWvewW
+	Z15+ZrHY9WcHu8WNCU8ZLfae3MnqwOaxaVUnm8fZlY4e7/ddZfP4vEkugCWKyyYlNSezLLVI
+	3y6BK+Pr/sWsBa/4K84t2MvcwPiSp4uRg0NCwETix1yHLkYuDiGBFYwSl+fsZoNwvjBKfNt2
+	lQnC+cwose/oD/YuRk6wjs6Vz1kgEssZJVad3cwOV3V1yhSo/t2MEjcfrmQEaeEVsJPYfnkP
+	mM0ioCqx+s5Rdoi4oMTJmU9YQGxRAXmJ+7dmgMWFBYIlek+/YAOxRQQSJC5dm8wKYjML1Er8
+	erqBGcIWl7j1ZD4TyBNsAloSjZ1grZxA1508uZQJokRTonX7b3YIW15i+9s5zBA/K0tMXeoF
+	8UytxKktt8C+lBB4wyHx/ed2NoiEi8TdiwuYIWxhiVfHt0B9LyNxenIPC4RdLfH0xm9miOYW
+	Ron+nevZIBZYS/SdyYGocZQ4uO8JO0SYT+LGW0GIc/gkJm2bzjyBUXUWUkDMQvLYLCQfzELy
+	wQJGllWM4qmlxbnpqcVGeanlesWJucWleel6yfm5mxiByeb0v+NfdjAuf/VR7xAjEwfjIUYJ
+	DmYlEd4bkutShXhTEiurUovy44tKc1KLDzFKc7AoifOqpsinCgmkJ5akZqemFqQWwWSZODil
+	GpgmV7f+FVR7U8N5e4FZnPiypYEZ+w9kHrFzFdr9ooexIaf3h1ZK83TulwfvJT64vrbu7a+5
+	Dy4e1bJpMYw+mTJnQui39ZrLCgL+5/5ok72YGzF3n60dB88c73fNuXq3d58vfWnNetdBLPXa
+	6z7VigU+yTo/nltNbdGW0pawCWD82aHMttzh/t/4ir5Dd/7aufX1vt2yQsKETStjxZFgqaMT
+	tubvSEhvSvq68/6jLCu7V0xf9h1p2bfxvZmVFKeLb4fSjbQVJwTrZp0QP132/syyiNz9GhFG
+	Eo4fjSRYv4Zaf109I/nFkX65FRrCXm9ZW063q209+L7q4ym/O1uYaw89jOw7uT2ierfsa7+m
+	uNtKLMUZiYZazEXFiQAu7MSHpQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRmVeSWpSXmKPExsVy+t/xu7rtS9alGjQtUra4/ITP4nTLXnaL
+	My8/s1js+rOD3eLGhKeMFntP7mR1YPPYtKqTzePsSkeP9/uusnl83iQXwBKlZ1OUX1qSqpCR
+	X1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl/F1/2LWglf8FecW7GVu
+	YHzJ08XIySEhYCLRufI5SxcjF4eQwFJGiZez57BAJGQkNn65ygphC0v8udbFBlH0kVHizLKp
+	zBDObkaJVdNvs4FU8QrYSWy/vIcRxGYRUJVYfecoO0RcUOLkzCdgU0UF5CXu35oBFhcWCJbo
+	Pf0CrFdEIEHi0rXJYNuYBWolfj3dALXgPaPE9hVv2SAS4hK3nsxn6mLk4GAT0JJo7ASbwwn0
+	wsmTS5kgSjQlWrf/Zoew5SW2v53DDFIuIaAsMXWpF8QztRKf/z5jnMAoOgvJdbOQLJiFZNIs
+	JJMWMLKsYhRJLS3OTc8tNtIrTswtLs1L10vOz93ECIzSbcd+btnBuPLVR71DjEwcjIcYJTiY
+	lUR4b0iuSxXiTUmsrEotyo8vKs1JLT7EaAoMoonMUqLJ+cA0kVcSb2hmYGpoYmZpYGppZqwk
+	zutZ0JEoJJCeWJKanZpakFoE08fEwSnVwLQiNljnZnl07saPU4N3dv6eKrlF5rSJXtgyicg4
+	5ne+pW9CNxn4z711PehLdLL2kooHHbN913XEb3Lhq5zldeZCgMgJhu+zdnoUrHcrSeF85XLN
+	KuJc/AuvFQKrJt7Q0xRmSvq05aLb70UvWa1S75zZLfvv3+3WPymqB9kuSRZ0tImE68pdXroj
+	3b5P8cVkx63+08yiGv2Mql/zS03VMPT6upfhy4M8br2cif4Ni+yEnusovXO9XefqeZfNr2lj
+	ZZVM9ow1RQenMcjGR0tbZLi/WjXTdXfqdd6Qds35J0qPXtXva/AXF8x8EH7BkNfRUnRl/jL9
+	Lfeeei1isPT6x5mZsc45Vf7500rJzr19SizFGYmGWsxFxYkAvPZsOVsDAAA=
+X-CMS-MailID: 20240122172319eucas1p2a2b5902e83d424e95a4f3f815c80b89a
+X-Msg-Generator: CA
+X-RootMTR: 20240122165342eucas1p2ad68d6c116aeae8673ac04d84ab54356
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20240122165342eucas1p2ad68d6c116aeae8673ac04d84ab54356
+References: <20240122111751.449762-1-kernel@pankajraghav.com>
+	<20240122111751.449762-2-kernel@pankajraghav.com>
+	<CGME20240122165342eucas1p2ad68d6c116aeae8673ac04d84ab54356@eucas1p2.samsung.com>
+	<20240122165336.GA6226@frogsfrogsfrogs>
 
-On Mon, Jan 22, 2024 at 12:17:51PM +0100, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
-> 
-> This test fails for >= 64k filesystem block size on a 4k PAGE_SIZE
-> system(see LBS efforts[1]). Adapt the blksz so that we create more than
-> one block for the testcase.
+On 22/01/2024 17:53, Darrick J. Wong wrote:
+> On Mon, Jan 22, 2024 at 12:17:50PM +0100, Pankaj Raghav (Samsung) wrote:
+>> From: Pankaj Raghav <p.raghav@samsung.com>
+>>
+>> This test fails for >= 64k filesystem block size on a 4k PAGE_SIZE
+>> system(see LBS efforts[1]). Scale the `blksz` based on the filesystem
+> > Fails how, specifically?
 
-How does this fail, specifically?  And, uh, what block sizes > 64k were
-tested?
+I basically get this in 558.out.bad when I set filesystem block size to be 64k:
+QA output created by 558
+Expected to hear about writeback iomap invalidations?
+Silence is golden
 
---D
+But I do see that iomap invalidations are happening for 16k and 32k, which makes it pass
+the test for those block sizes.
 
-> Cap the blksz to be at least 64k to retain the same behaviour as before
-> for smaller filesystem blocksizes.
+My suspicion was that we don't see any invalidations because of the blksz fixed
+at 64k in the test, which will contain one FSB in the case of 64k block size.
+
+Let me know if I am missing something.
+
 > 
-> [1] LBS effort: https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
+> --D
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->  tests/xfs/161 | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tests/xfs/161 b/tests/xfs/161
-> index 486fa6ca..f7b03f0e 100755
-> --- a/tests/xfs/161
-> +++ b/tests/xfs/161
-> @@ -38,9 +38,14 @@ _qmount_option "usrquota"
->  _scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
->  _scratch_mount >> $seqres.full
->  
-> +min_blksz=65536
-> +file_blksz=$(_get_file_block_size "$SCRATCH_MNT")
-> +blksz=$(( 2 * $file_blksz))
-> +
-> +blksz=$(( blksz > min_blksz ? blksz : min_blksz ))
->  # Force the block counters for uid 1 and 2 above zero
-> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
-> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
-> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/a >> $seqres.full
-> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/b >> $seqres.full
->  sync
->  chown 1 $SCRATCH_MNT/a
->  chown 2 $SCRATCH_MNT/b
-> -- 
-> 2.43.0
-> 
-> 
+>> block size instead of fixing it as 64k so that we do get some iomap
+>> invalidations while doing concurrent writes.
+>>
+>> Cap the blksz to be at least 64k to retain the same behaviour as before
+>> for smaller filesystem blocksizes.
+>>
+>> [1] LBS effort: https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
+>>
+>> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+>> ---
+>>  tests/xfs/558 | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/tests/xfs/558 b/tests/xfs/558
+>> index 9e9b3be8..270f458c 100755
+>> --- a/tests/xfs/558
+>> +++ b/tests/xfs/558
+>> @@ -127,7 +127,12 @@ _scratch_mount >> $seqres.full
+>>  $XFS_IO_PROG -c 'chattr -x' $SCRATCH_MNT &> $seqres.full
+>>  _require_pagecache_access $SCRATCH_MNT
+>>  
+>> -blksz=65536
+>> +min_blksz=65536
+>> +file_blksz=$(_get_file_block_size "$SCRATCH_MNT")
+>> +blksz=$(( 8 * $file_blksz ))
+>> +
+>> +blksz=$(( blksz > min_blksz ? blksz : min_blksz ))
+>> +
+>>  _require_congruent_file_oplen $SCRATCH_MNT $blksz
+>>  
+>>  # Make sure we have sufficient extent size to create speculative CoW
+>> -- 
+>> 2.43.0
+>>
