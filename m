@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2E363E48B
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 19:39:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6162F1EF07
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 19:39:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705952380; cv=none; b=Km8clGWVSMndwHKoJEP/5niQSo44fPAPRpAa6sjYSo+2rMHPGXMVH7oiNttasObvOoCdAZfhVs34rerHvkY9yfpYqfKKjmOmGE124rACq0GLR8HjVYISRsnK5dlLvz9PmJzOLR6Wv9vXluiInlRul1Wwt+CW72fvE0QQ/W67lTU=
+	t=1705952388; cv=none; b=dT3bxEKF/TH2J6148Ov5CW/OQ/3H/mVKs/3tpr4LUWfGRuaZbVpcGXat6eUa1v1KrazDG3hmZAHqJLiw2DD/3OJJTDkQGSkdTA3tLncK1gP7wHEy1tRP4kDBde9n1xDc/rHbKbnZKkW2QYQplMOaDHh2v44q3kpbJ8nhzmNXIzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705952380; c=relaxed/simple;
-	bh=KOKKefF7L5u5cnasn+mMx/ON88wk4fS1XzBxh5/5UyI=;
+	s=arc-20240116; t=1705952388; c=relaxed/simple;
+	bh=tOlNQIdxJ8LfTJIkMSwj+DuHqrWfwaNAevXGYxT38kk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=qs9f/WJ9+i5zdb8skQVRDnHRyehR0A7jV5f1Qnr8n2sH7nZn371AlSFU8qIvo33Y39ln6otDFvKwnjNEZQp532cqb8FX0Enq7SOyhQCb0WeWZFJ+CywwWMlJAyoJuWbNw8U2y9APpKM7BcL0BSNAgiuz6ya1SKo7oUW3JY27A6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=S5kYTJza; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=J2ZxPppySiGdDkBZz+/XKlxYY9QG7tRfv6h98uA9BoJPsOHwORlNrZo4gX3HL9ArPf2/bBoG6ZSNjU8ZW/GiU0bJ+Rm+78DXJXaEmFaFAidJhDmBah8UBW+IC6b9c0SUICPOflFHR+TFwwS19giGFUxjwIYMGBHivJWretp0gm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DfWRiL9N; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="S5kYTJza"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DfWRiL9N"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=DvyaHEf0eh7I7CLwR0yWShj0NfyseUW0ePy4xYOaAVE=; b=S5kYTJzaHRNJCzFvqCzaa4BFMC
-	Nrm0z7VKhWejTAMhHsV/gQQJLSDQIiencRwDbEMAKvLKwA2/29grV3xmnsbJkx/VwKIxFNof27Qk9
-	vb3KgLkI6T03OBmj3MMKXZAQWjxmj0sHFm6Gn/ORJQP45iBxcwuFnjtHThOoRzWV5xtNwvmQfUbAV
-	seV47bwOCdprKBQJnCMoMKHMnsRjkB/0WdewuG5Vx31G8HcZ0/1w8gfj9twDX7SqH5Z7JH6VkJcJB
-	Ssls5QH1069tr4g6xTJYn1e+osYzbSWN/HCiOSrh+CC7MiBFbPnaAGcb7t1b6g0amley28YUn/U1C
-	JPG0ORzw==;
+	bh=RQdjCj/qGfZg49bDD/iy9II5Zl5PHBeiToOyt1DCDp0=; b=DfWRiL9N8lTtWEFVmpXlxgDHZD
+	DCCz4xXLeO1HTsVW/tx0Id31sWnxHovZcbNxWt7IRA7HICxaBnghQdQ8rpVM7ZTWRX0sdAstnNuOO
+	UrJl+wZv71JOLwl8y53SY+/1o+1Z6CAsSrpk38FFsu85xS4LlKeUQp7N7dBAQ01AF9P+lSZ/A5tJN
+	Recb6RpS5KPRwwU7MuE/qhMW+q4k5wiyhLcJ1NcL3IhKSE6TCgrZEjUL77NpaDiE13F7FtODR75Aw
+	PWE+HGOin86eTc19g//VZMyFt7PSg+yEs0PK5BJJzfm1bZClGiIi0Os3cclrC4hKIW7ZwXsEH7tfH
+	QYia5EKQ==;
 Received: from [2001:4bb8:198:a22c:146a:86ef:5806:b115] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rS08v-00DkVG-1C;
-	Mon, 22 Jan 2024 19:39:38 +0000
+	id 1rS091-00DkWT-0Q;
+	Mon, 22 Jan 2024 19:39:44 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 3/4] xfs: walk b_addr for buffer I/O
-Date: Mon, 22 Jan 2024 20:39:15 +0100
-Message-Id: <20240122193916.1803448-4-hch@lst.de>
+Subject: [PATCH 4/4] xfs: use vmalloc for multi-page buffers
+Date: Mon, 22 Jan 2024 20:39:16 +0100
+Message-Id: <20240122193916.1803448-5-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240122193916.1803448-1-hch@lst.de>
 References: <20240122193916.1803448-1-hch@lst.de>
@@ -48,173 +48,206 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Instead of walking the page array just walk the kernel virtual
-address in ->b_addr.  This prepares for using vmalloc for buffers
-and removing the b_pages array.
+Instead of allocating the pages manually using the bulk page allocator
+and then using vm_map_page just use vmalloc to allocate the entire
+buffer - vmalloc will use the bulk allocator internally if it fits.
+
+With this the b_pages array can go away as well as nothing uses it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c | 93 ++++++++++++++----------------------------------
- fs/xfs/xfs_buf.h |  2 --
- 2 files changed, 26 insertions(+), 69 deletions(-)
+ fs/xfs/xfs_buf.c | 96 +++++++++---------------------------------------
+ fs/xfs/xfs_buf.h |  4 --
+ 2 files changed, 18 insertions(+), 82 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1bfd89dbb78d79..ddd917bed22e34 100644
+index ddd917bed22e34..6c2c4c809cc55c 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -343,7 +343,6 @@ xfs_buf_alloc_kmem(
+@@ -197,7 +197,7 @@ xfs_buf_get_maps(
+ }
+ 
+ /*
+- *	Frees b_pages if it was allocated.
++ *	Frees b_maps if it was allocated.
+  */
+ static void
+ xfs_buf_free_maps(
+@@ -271,29 +271,6 @@ _xfs_buf_alloc(
+ 	return 0;
+ }
+ 
+-static void
+-xfs_buf_free_pages(
+-	struct xfs_buf	*bp)
+-{
+-	uint		i;
+-
+-	ASSERT(bp->b_flags & _XBF_PAGES);
+-
+-	if (xfs_buf_is_vmapped(bp))
+-		vm_unmap_ram(bp->b_addr, bp->b_page_count);
+-
+-	for (i = 0; i < bp->b_page_count; i++) {
+-		if (bp->b_pages[i])
+-			__free_page(bp->b_pages[i]);
+-	}
+-	mm_account_reclaimed_pages(bp->b_page_count);
+-
+-	if (bp->b_pages != bp->b_page_array)
+-		kmem_free(bp->b_pages);
+-	bp->b_pages = NULL;
+-	bp->b_flags &= ~_XBF_PAGES;
+-}
+-
+ static void
+ xfs_buf_free_callback(
+ 	struct callback_head	*cb)
+@@ -312,10 +289,15 @@ xfs_buf_free(
+ 
+ 	ASSERT(list_empty(&bp->b_lru));
+ 
++	if (!(bp->b_flags & _XBF_KMEM))
++		mm_account_reclaimed_pages(bp->b_page_count);
++
+ 	if (bp->b_flags & _XBF_PAGES)
+-		xfs_buf_free_pages(bp);
+-	else if (bp->b_flags & _XBF_KMEM)
+-		kmem_free(bp->b_addr);
++		put_page(virt_to_page(bp->b_addr));
++	else
++		kvfree(bp->b_addr);
++
++	bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
+ 
+ 	call_rcu(&bp->b_rcu, xfs_buf_free_callback);
+ }
+@@ -343,8 +325,6 @@ xfs_buf_alloc_kmem(
  		bp->b_addr = NULL;
  		return -ENOMEM;
  	}
--	bp->b_offset = offset_in_page(bp->b_addr);
- 	bp->b_pages = bp->b_page_array;
- 	bp->b_pages[0] = kmem_to_page(bp->b_addr);
+-	bp->b_pages = bp->b_page_array;
+-	bp->b_pages[0] = kmem_to_page(bp->b_addr);
  	bp->b_page_count = 1;
-@@ -1426,79 +1425,47 @@ xfs_buf_bio_end_io(
- static void
- xfs_buf_ioapply_map(
- 	struct xfs_buf	*bp,
--	int		map,
--	int		*buf_offset,
--	int		*count,
-+	unsigned int	map,
-+	unsigned int	*buf_offset,
- 	blk_opf_t	op)
+ 	bp->b_flags |= _XBF_KMEM;
+ 	return 0;
+@@ -356,7 +336,6 @@ xfs_buf_alloc_pages(
+ 	xfs_buf_flags_t	flags)
  {
--	int		page_index;
--	unsigned int	total_nr_pages = bp->b_page_count;
--	int		nr_pages;
- 	struct bio	*bio;
--	sector_t	sector =  bp->b_maps[map].bm_bn;
- 	int		size;
--	int		offset;
--
--	/* skip the pages in the buffer before the start offset */
--	page_index = 0;
--	offset = *buf_offset;
--	while (offset >= PAGE_SIZE) {
--		page_index++;
--		offset -= PAGE_SIZE;
--	}
+ 	gfp_t		gfp_mask = __GFP_NOWARN;
+-	long		filled = 0;
  
- 	/*
- 	 * Limit the IO size to the length of the current vector, and update the
- 	 * remaining IO count for the next time around.
- 	 */
--	size = min_t(int, BBTOB(bp->b_maps[map].bm_len), *count);
--	*count -= size;
--	*buf_offset += size;
-+	size = min_t(unsigned int, BBTOB(bp->b_maps[map].bm_len),
-+			BBTOB(bp->b_length) - *buf_offset);
-+	if (WARN_ON_ONCE(bp->b_page_count > BIO_MAX_VECS)) {
-+		xfs_buf_ioerror(bp, -EIO);
-+		return;
-+	}
+ 	if (flags & XBF_READ_AHEAD)
+ 		gfp_mask |= __GFP_NORETRY;
+@@ -365,56 +344,24 @@ xfs_buf_alloc_pages(
  
--next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
--	nr_pages = bio_max_segs(total_nr_pages);
- 
--	bio = bio_alloc(bp->b_target->bt_bdev, nr_pages, op, GFP_NOIO);
--	bio->bi_iter.bi_sector = sector;
-+	bio = bio_alloc(bp->b_target->bt_bdev, bp->b_page_count, op, GFP_NOIO);
-+	bio->bi_iter.bi_sector = bp->b_maps[map].bm_bn;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
- 
--	for (; size && nr_pages; nr_pages--, page_index++) {
--		int	rbytes, nbytes = PAGE_SIZE - offset;
-+	do {
-+		void		*data = bp->b_addr + *buf_offset;
-+		struct page	*page = kmem_to_page(data);
-+		unsigned int	off = offset_in_page(data);
-+		unsigned int	len = min_t(unsigned, size, PAGE_SIZE - off);
- 
--		if (nbytes > size)
--			nbytes = size;
-+		__bio_add_page(bio, page, len, off);
-+		size -= len;
-+		*buf_offset += len;
-+	} while (size);
- 
--		rbytes = bio_add_page(bio, bp->b_pages[page_index], nbytes,
--				      offset);
--		if (rbytes < nbytes)
--			break;
--
--		offset = 0;
--		sector += BTOBB(nbytes);
--		size -= nbytes;
--		total_nr_pages--;
-+	if (xfs_buf_is_vmapped(bp)) {
-+		flush_kernel_vmap_range(bp->b_addr,
-+					xfs_buf_vmap_len(bp));
- 	}
--
--	if (likely(bio->bi_iter.bi_size)) {
--		if (xfs_buf_is_vmapped(bp)) {
--			flush_kernel_vmap_range(bp->b_addr,
--						xfs_buf_vmap_len(bp));
--		}
--		submit_bio(bio);
--		if (size)
--			goto next_chunk;
+ 	/* Make sure that we have a page list */
+ 	bp->b_page_count = DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
+-	if (bp->b_page_count <= XB_PAGES) {
+-		bp->b_pages = bp->b_page_array;
 -	} else {
--		/*
--		 * This is guaranteed not to be the last io reference count
--		 * because the caller (xfs_buf_submit) holds a count itself.
--		 */
--		atomic_dec(&bp->b_io_remaining);
--		xfs_buf_ioerror(bp, -EIO);
--		bio_put(bio);
+-		bp->b_pages = kzalloc(sizeof(struct page *) * bp->b_page_count,
+-					gfp_mask);
+-		if (!bp->b_pages)
+-			return -ENOMEM;
+-	}
+-	bp->b_flags |= _XBF_PAGES;
+ 
+ 	/* Assure zeroed buffer for non-read cases. */
+ 	if (!(flags & XBF_READ))
+ 		gfp_mask |= __GFP_ZERO;
+ 
+-	/*
+-	 * Bulk filling of pages can take multiple calls. Not filling the entire
+-	 * array is not an allocation failure, so don't back off if we get at
+-	 * least one extra page.
+-	 */
+-	for (;;) {
+-		long	last = filled;
+-
+-		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
+-						bp->b_pages);
+-		if (filled == bp->b_page_count) {
+-			XFS_STATS_INC(bp->b_mount, xb_page_found);
+-			break;
+-		}
+-
+-		if (filled != last)
+-			continue;
++	if (bp->b_page_count == 1) {
++		struct page *page;
+ 
+-		if (flags & XBF_READ_AHEAD) {
+-			xfs_buf_free_pages(bp);
++		page = alloc_page(gfp_mask);
++		if (!page)
+ 			return -ENOMEM;
+-		}
+-
+-		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+-		memalloc_retry_wait(gfp_mask);
 -	}
 -
-+	submit_bio(bio);
- }
+-	if (bp->b_page_count == 1) {
+-		/* A single page buffer is always mappable */
+-		bp->b_addr = page_address(bp->b_pages[0]);
++		bp->b_addr = page_address(page);
++		bp->b_flags |= _XBF_PAGES;
+ 	} else {
+-		int retried = 0;
+ 		unsigned nofs_flag;
  
- STATIC void
-@@ -1507,8 +1474,7 @@ _xfs_buf_ioapply(
- {
- 	struct blk_plug	plug;
- 	blk_opf_t	op;
--	int		offset;
--	int		size;
-+	unsigned int	offset = 0;
- 	int		i;
+ 		/*
+-		 * vm_map_ram() will allocate auxiliary structures (e.g.
++		 * vmalloc() will allocate auxiliary structures (e.g.
+ 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+ 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+ 		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+@@ -422,20 +369,13 @@ xfs_buf_alloc_pages(
+ 		 * potentially deadlocking.
+ 		 */
+ 		nofs_flag = memalloc_nofs_save();
+-		do {
+-			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
+-						-1);
+-			if (bp->b_addr)
+-				break;
+-			vm_unmap_aliases();
+-		} while (retried++ <= 1);
++		bp->b_addr = __vmalloc(BBTOB(bp->b_length), gfp_mask);
+ 		memalloc_nofs_restore(nofs_flag);
  
- 	/*
-@@ -1564,16 +1530,9 @@ _xfs_buf_ioapply(
- 	 * _xfs_buf_ioapply_vec() will modify them appropriately for each
- 	 * subsequent call.
- 	 */
--	offset = bp->b_offset;
--	size = BBTOB(bp->b_length);
- 	blk_start_plug(&plug);
--	for (i = 0; i < bp->b_map_count; i++) {
--		xfs_buf_ioapply_map(bp, i, &offset, &size, op);
--		if (bp->b_error)
--			break;
--		if (size <= 0)
--			break;	/* all done */
--	}
-+	for (i = 0; i < bp->b_map_count; i++)
-+		xfs_buf_ioapply_map(bp, i, &offset, op);
- 	blk_finish_plug(&plug);
- }
- 
+ 		if (!bp->b_addr) {
+ 			xfs_warn_ratelimited(bp->b_target->bt_mount,
+-				"%s: failed to map %u pages", __func__,
++				"%s: failed to allocate %u pages", __func__,
+ 				bp->b_page_count);
+-			xfs_buf_free_pages(bp);
+ 			return -ENOMEM;
+ 		}
+ 	}
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 379d58c4cb9a27..2116fed2b53026 100644
+index 2116fed2b53026..b114bfa1b07fb6 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -186,8 +186,6 @@ struct xfs_buf {
- 	atomic_t		b_pin_count;	/* pin count */
- 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
- 	unsigned int		b_page_count;	/* size of page array */
--	unsigned int		b_offset;	/* page offset of b_addr,
--						   only for _XBF_KMEM buffers */
- 	int			b_error;	/* error code on I/O */
+@@ -114,8 +114,6 @@ typedef struct xfs_buftarg {
+ 	struct ratelimit_state	bt_ioerror_rl;
+ } xfs_buftarg_t;
  
- 	/*
+-#define XB_PAGES	2
+-
+ struct xfs_buf_map {
+ 	xfs_daddr_t		bm_bn;	/* block number for I/O */
+ 	int			bm_len;	/* size of I/O */
+@@ -178,8 +176,6 @@ struct xfs_buf {
+ 	struct xfs_buf_log_item	*b_log_item;
+ 	struct list_head	b_li_list;	/* Log items list head */
+ 	struct xfs_trans	*b_transp;
+-	struct page		**b_pages;	/* array of page pointers */
+-	struct page		*b_page_array[XB_PAGES]; /* inline pages */
+ 	struct xfs_buf_map	*b_maps;	/* compound buffer map */
+ 	struct xfs_buf_map	__b_map;	/* inline compound buffer map */
+ 	int			b_map_count;
 -- 
 2.39.2
 
