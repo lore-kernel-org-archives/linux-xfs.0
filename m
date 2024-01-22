@@ -1,190 +1,129 @@
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 371A565BCE
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 17:32:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F138495DF;
+	Mon, 22 Jan 2024 17:49:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705944779; cv=none; b=Rb7Wz/+xkCFoaTA4JzS9L5HkzaVHBcpOnbtJVAFsG9/SlLDgIfdTdJXEqoFbMecyXtfkKXfGfbVET4SesLYC1LnDxperr0iZ4S5RlCYljra2VtN7vpRMng8MK16sS58OoqehIZO96H+G0McW27lvcY7Pn26WVua20anSus6Hr4w=
+	t=1705945785; cv=none; b=Da0qI6nGe/Y5XJDrov64+YIuQ3Mml8wf8TlZ/4Aiib4ZdgSzgcx4vvnMuMhWBm2xYzwgBrgLLki4F2QIx3atKkBanCP7hCCJYdgjojvzIz4Ao54GsipkPb0csfjU+Iqvz31S7M1EyJw8ycCqV+H6SNOI2Af2F2ccg6hRXPEWCJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705944779; c=relaxed/simple;
-	bh=4PpXZngj9nb7PoouNsMwtXA+Ql25JdJJN5me9aGVLy8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:From:In-Reply-To:
-	 Content-Type:References; b=sGr7E6hqBJT37D+7mGnjEpJLBUrgZ9XjrVRZ39zgIQUPN/GBBBDey5WUnxd//OvCYG+9+YtKMNPpzd4WsLriEFXSqGMgH1VB4UesNv830zdt6DS/gVoVGPdjdCenpQQM0d+XC+LdA01NkEsVLLZOYW9ZWIL17bT/nDK2fb8sxB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=nQ08Xnga; arc=none smtp.client-ip=210.118.77.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1705945785; c=relaxed/simple;
+	bh=SxxSWiKlLkIIdaR2lFRfvvLtPrAjR7knkdq3ntGAKIA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=knQAMbI1f0eNV2HX5NitHCJG9VHtWqfTl7FtAolDgNLIzlLamxbfmluMx3ocyx/WgifOoUHZEHkiD9hAPY4KzDIaU5BTFPd2s5OV6DN+GNBQ39SDpXfPDspOMJw0wCDktpXE9jcO1lJk8bu5o+5sHGlkdCUTEWdNgGsEmUH1mbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=HQU/xgY+; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="nQ08Xnga"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20240122173255euoutp02d453d47ac2c5774f1054b2421cf3ba6f~su7wR61xe1011810118euoutp02h
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 17:32:55 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20240122173255euoutp02d453d47ac2c5774f1054b2421cf3ba6f~su7wR61xe1011810118euoutp02h
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1705944775;
-	bh=vrGu+T6Mb9CSHXTFUM617Z6hz9ceYTatRALbdHDqqHY=;
-	h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-	b=nQ08Xnga6n9pOzKexbOqY3g/qG7ThgcDuLygqL8ry3iMqGQV2uOE1W8CAxfmsUcZF
-	 TVkUEmh+oqhFXBs7bHkJME2tTfoVeDl/1tmpp6oWDQVBVPlriBRRkkJdyCFiTYqTAk
-	 cLi1PZTyN6gqNnO72Rsg9NLEO8Xln1p+W5ARzIV0=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20240122173254eucas1p29d86d785b3808cabb342953eed6ae7bc~su7vlX_pD1208812088eucas1p2Y;
-	Mon, 22 Jan 2024 17:32:54 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-	eusmges3new.samsung.com (EUCPMTA) with SMTP id 36.0B.09552.6C6AEA56; Mon, 22
-	Jan 2024 17:32:54 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-	20240122173253eucas1p17bcd38f21ef8479da6b75716e1b9fdbb~su7uvccJy2976929769eucas1p1Z;
-	Mon, 22 Jan 2024 17:32:53 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240122173253eusmtrp1987688d487edf2f69fc75bb22cbba3d6~su7uu6Ula0421104211eusmtrp1N;
-	Mon, 22 Jan 2024 17:32:53 +0000 (GMT)
-X-AuditID: cbfec7f5-853ff70000002550-32-65aea6c6dca9
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-	eusmgms2.samsung.com (EUCPMTA) with SMTP id 20.E2.10702.5C6AEA56; Mon, 22
-	Jan 2024 17:32:53 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240122173253eusmtip1d706c6453727bb6a53a9335687f863d8~su7ukSTGN1337113371eusmtip1j;
-	Mon, 22 Jan 2024 17:32:53 +0000 (GMT)
-Received: from [192.168.8.209] (106.210.248.230) by CAMSVWEXC02.scsc.local
-	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-	Mon, 22 Jan 2024 17:32:52 +0000
-Message-ID: <9c9bf45f-aef5-48a1-8d76-580198ebb988@samsung.com>
-Date: Mon, 22 Jan 2024 18:32:50 +0100
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="HQU/xgY+"
+Received: from pps.filterd (m0353722.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40MHOOss032448;
+	Mon, 22 Jan 2024 17:49:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : content-transfer-encoding : mime-version; s=pp1;
+ bh=EtTVATMRo8Tg2MeiKpn3dDX6z3G14KJlXax/0NCnrsE=;
+ b=HQU/xgY+X5uQi/buZnYEV1O9TtTA+b3KKSxgkQE9MO3xmVLsXpHLn/qs4ndFkbkki9rZ
+ pK6cvKIBHcmAxJ9QXKZzAkvoTrk8hu0rb0VsHsFhtwnvNeGwMY8LcuWQclk1IeGCHM7F
+ Z7lpBuosa2RrgvVn9CS5Qke3DnNXFL0KRlv5E5+u3sQ2hDTX5fiVvePB2mWe+wy82t+y
+ /SFNl6YQV+U57nBbmtSYT+rV9QyOGeoe9L97M3FMM+3sOChqVW5F5wUDNvigwl5mTr7t
+ eFFDYXERm6WknFOC+XaEUXtVnGBWbJWHIKzcLu+uMncgwpd9KWqbaul0ESvKooaCUULk Pw== 
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vsuxaa5nk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jan 2024 17:49:13 +0000
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40MFkQrU026475;
+	Mon, 22 Jan 2024 17:49:12 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3vrrgt2eet-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jan 2024 17:49:12 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40MHnARB27591306
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 22 Jan 2024 17:49:10 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 390B220043;
+	Mon, 22 Jan 2024 17:49:10 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B0C2620040;
+	Mon, 22 Jan 2024 17:49:07 +0000 (GMT)
+Received: from li-c1fdab4c-355a-11b2-a85c-ef242fe9efb4.ibm.com.com (unknown [9.43.53.45])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 22 Jan 2024 17:49:07 +0000 (GMT)
+From: Shrikanth Hegde <sshegde@linux.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: sshegde@linux.ibm.com, mpe@ellerman.id.au, mingo@kernel.org,
+        peterz@infradead.org, chandan.babu@oracle.com, anton@tuxera.com,
+        djwong@kernel.org
+Subject: [RFC PATCH v2 0/4] remove duplicate ifdefs
+Date: Mon, 22 Jan 2024 23:19:00 +0530
+Message-Id: <20240122174904.178594-1-sshegde@linux.ibm.com>
+X-Mailer: git-send-email 2.39.3
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: -rzBX_0dIV7n-gkdJoFKiqnOb4QTrDRU
+X-Proofpoint-GUID: -rzBX_0dIV7n-gkdJoFKiqnOb4QTrDRU
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] xfs/161: adapt the test case for LBS filesystem
-Content-Language: en-US
-To: "Darrick J. Wong" <djwong@kernel.org>, "Pankaj Raghav (Samsung)"
-	<kernel@pankajraghav.com>
-CC: <zlang@redhat.com>, <fstests@vger.kernel.org>, <mcgrof@kernel.org>,
-	<gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>
-From: Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <20240122165756.GB6188@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupjleLIzCtJLcpLzFFi42LZduznOd1jy9alGqz/Im1x+QmfxemWvewW
-	Z15+ZrHY9WcHu8WNCU8ZLfae3MnqwOaxaVUnm8fZlY4e7/ddZfP4vEkugCWKyyYlNSezLLVI
-	3y6BK2PfO92CN6IV0/6bNjCeF+xi5OSQEDCRWLOjmQnEFhJYwSjxe610FyMXkP2FUeLazrss
-	EM5noMTPLYxdjBxgHX+fhkDElzNKTHndwwpX9LO7kRnC2c0oMensUmaQubwCdhL790wE28Ei
-	oCqxZNcXFoi4oMTJmU/AbFEBeYn7t2awg9jCAh4S07ZMYQOxmQXEJW49mQ/WKyKQIHHp2mRW
-	iHitxK+nG5hBLmIT0JJo7ARr5QQ6rnXnIiaIEk2J1u2/2SFseYntb+cwQzygLDF1qRfE97US
-	p7bcYgI5WULgDYfEzQMX2SASLhInehczQ9jCEq+Ob2GHsGUkTk/uYYGwqyWe3vjNDNHcwijR
-	v3M9G8QCa4m+MzkQpqNE5+owCJNP4sZbQYhr+CQmbZvOPIFRdRZSOMxC8u8sJA/MQvLAAkaW
-	VYziqaXFuempxcZ5qeV6xYm5xaV56XrJ+bmbGIFJ5vS/4193MK549VHvECMTB+MhRgkOZiUR
-	3huS61KFeFMSK6tSi/Lji0pzUosPMUpzsCiJ86qmyKcKCaQnlqRmp6YWpBbBZJk4OKUamAw4
-	mSbMZw/wjL2o9m735RmzxMSklT1yJ3xsMd1eI6U0VffHwvcspkYz2EtOBB5UUdCQ+nbjyyqW
-	sFlN1t8PaS4Jqks9NNF19u6wvll6HQzq4t8EZd9+Xpm75fqMR5/6mR4/fOHMza92WIdZffKt
-	RKN63h+zG7MiDL+yHUxg2lEZ8Sdea7Wn+iPha29PHWFfNVNzT5noVv2KA6v7Suf9yfv7KXPx
-	zfp3OnrHubtVb0x6ZDs307Rg/u8zC022xc5v25tQuC+E4+eVjb03uwOE/Z25T31uN/1yKCWh
-	4LvilOh59pHfPr+Um8tvaFvoyDBzquPc8LQTbjd9qi2uFfPemxnCu4uFUW8F453P796wblNi
-	Kc5INNRiLipOBAA7D9qLoQMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrKIsWRmVeSWpSXmKPExsVy+t/xu7pHl61LNZj1WdHi8hM+i9Mte9kt
-	zrz8zGKx688OdosbE54yWuw9uZPVgc1j06pONo+zKx093u+7yubxeZNcAEuUnk1RfmlJqkJG
-	fnGJrVK0oYWRnqGlhZ6RiaWeobF5rJWRqZK+nU1Kak5mWWqRvl2CXsa+d7oFb0Qrpv03bWA8
-	L9jFyMEhIWAi8fdpSBcjF4eQwFJGiZ3/PjF3MXICxWUkNn65ygphC0v8udbFBlH0kVHi2oHF
-	TBDObkaJq4+fsYFU8QrYSezfM5EJxGYRUJVYsusLC0RcUOLkzCdgtqiAvMT9WzPYQWxhAQ+J
-	aVumgPUyC4hL3HoyH6xXRCBB4tK1yawQ8VqJX083MEMsew+0+cFkZpCz2QS0JBo7weZwAn3Q
-	unMRE0S9pkTr9t/sELa8xPa3c5ghvlSWmLrUC+KZWonPf58xTmAUnYXkullIrpiFZNIsJJMW
-	MLKsYhRJLS3OTc8tNtIrTswtLs1L10vOz93ECIzPbcd+btnBuPLVR71DjEwcjIcYJTiYlUR4
-	b0iuSxXiTUmsrEotyo8vKs1JLT7EaAoMoonMUqLJ+cAEkVcSb2hmYGpoYmZpYGppZqwkzutZ
-	0JEoJJCeWJKanZpakFoE08fEwSnVwJR9OuaCtorX0aJyh5jfEpx1wq+nbnXMsuRfdG/6m1ch
-	JSfz9UOOll1cNS3LK+DlGjX7Q6evKmzZfvix7PUo29YFC7r+LNronmsV9Ksw8MrkjZf377q0
-	Ra9U8/rHvbtnzBM9nrJ5slsWvw7H3d/yfhbOImFWIglSW6KUzgtNkrep27mkbsEj/5/2FT7u
-	flYqO475RXFxfDeZcUdy0R3LSSt3z7SIDbY6vd2MUd/Lb3JH0kcNm0aew1trQ9brzekv263W
-	9k3b/+gxy2vSn+9dTPlz7JT4jsm/Zt3bL7hHK946c/a7G/O+nNXv+DrTgfVZ3Ol3XObLGPo4
-	PwgWFvLa7mWtvHvZMEbO2N14Ba+I4i0lluKMREMt5qLiRAA0N38dWAMAAA==
-X-CMS-MailID: 20240122173253eucas1p17bcd38f21ef8479da6b75716e1b9fdbb
-X-Msg-Generator: CA
-X-RootMTR: 20240122165801eucas1p10c90512236fe96befd4a8ad616bb868d
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20240122165801eucas1p10c90512236fe96befd4a8ad616bb868d
-References: <20240122111751.449762-1-kernel@pankajraghav.com>
-	<20240122111751.449762-3-kernel@pankajraghav.com>
-	<CGME20240122165801eucas1p10c90512236fe96befd4a8ad616bb868d@eucas1p1.samsung.com>
-	<20240122165756.GB6188@frogsfrogsfrogs>
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-22_07,2024-01-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxscore=0
+ lowpriorityscore=0 mlxlogscore=824 priorityscore=1501 clxscore=1011
+ suspectscore=0 spamscore=0 malwarescore=0 phishscore=0 bulkscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2401220124
 
-On 22/01/2024 17:57, Darrick J. Wong wrote:
-> On Mon, Jan 22, 2024 at 12:17:51PM +0100, Pankaj Raghav (Samsung) wrote:
->> From: Pankaj Raghav <p.raghav@samsung.com>
->>
->> This test fails for >= 64k filesystem block size on a 4k PAGE_SIZE
->> system(see LBS efforts[1]). Adapt the blksz so that we create more than
->> one block for the testcase.
-> And, uh, what block sizes > 64k were tested?
+When going through the code observed a case in scheduler,
+where #ifdef CONFIG_SMP was used to inside an #ifdef CONFIG_SMP.
+That didn't make sense since first one is good enough and second
+one is a duplicate.
 
-I thought I removed >= 64k and put just 64k before I sent the patches as we
-don't allow FSB > 64k, for now. Hypothetically, due to the hardcoded 64k blksz, we might
-face the same issue for > 64k FSB as well.
-> How does this fail, specifically?
+This could improve code readability. No functional change is intended.
 
-This is the output I get when I set the block size to be 64k:
+Since this might be present in other code areas wrote a very basic
+python script which helps in finding these cases. It doesn't handle any
+complicated #defines or space separated "# if". At some places the
+log collected had to be manually corrected due to space separated ifdefs.
+Thats why its not a treewide change.
+There might be an opportunity for other files as well.
 
-QA output created by 161
-Expected timer expiry (0) to be after now (1705944360).
-Running xfs_repair to upgrade filesystem.
-Adding large timestamp support to filesystem.
-FEATURES: BIGTIME:YES
-Expected uid 1 expiry (0) to be after now (1705944361).
-Expected uid 2 expiry (0) to be after uid 1 (0).
-Expected uid 2 expiry (0) to be after 2038.
-Expected uid 1 expiry (0) to be after now (1705944361).
-Expected uid 2 expiry (0) to be after uid 1 (0).
-Expected uid 2 expiry (0) to be after 2038.
-grace2 expiry has value of 0
-grace2 expiry is NOT in range 7956915737 .. 7956915747
-grace2 expiry after remount has value of 0
-grace2 expiry after remount is NOT in range 7956915737 .. 7956915747
+Logic is very simple. If there is #ifdef or #if or #ifndef add that
+variable to list. Upon every subsequent #ifdef or #if or #ifndef
+check if the same variable is in the list. If yes flag
+an error. Verification was done manually later checking for any #undef
+or any error due to script. These were the ones that flagged out and
+made sense after going through code.
 
-Seeing the comment: Force the block counters for uid 1 and 2 above zero,
-I added the changes which fixed the issues for 64k FSB.
+More details about how the logs were collected and the script used for
+processing the logs are mentioned in v1 cover letter.
 
-> --D
-> 
->> Cap the blksz to be at least 64k to retain the same behaviour as before
->> for smaller filesystem blocksizes.
->>
->> [1] LBS effort: https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
->>
->> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
->> ---
->>  tests/xfs/161 | 9 +++++++--
->>  1 file changed, 7 insertions(+), 2 deletions(-)
->>
->> diff --git a/tests/xfs/161 b/tests/xfs/161
->> index 486fa6ca..f7b03f0e 100755
->> --- a/tests/xfs/161
->> +++ b/tests/xfs/161
->> @@ -38,9 +38,14 @@ _qmount_option "usrquota"
->>  _scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
->>  _scratch_mount >> $seqres.full
->>  
->> +min_blksz=65536
->> +file_blksz=$(_get_file_block_size "$SCRATCH_MNT")
->> +blksz=$(( 2 * $file_blksz))
->> +
->> +blksz=$(( blksz > min_blksz ? blksz : min_blksz ))
->>  # Force the block counters for uid 1 and 2 above zero
->> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
->> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
->> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/a >> $seqres.full
->> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/b >> $seqres.full
->>  sync
->>  chown 1 $SCRATCH_MNT/a
->>  chown 2 $SCRATCH_MNT/b
->> -- 
->> 2.43.0
->>
->>
+v2->v1:
+split the fs change into two patches as suggested by Chandan Babu R.
+v1: https://lore.kernel.org/all/20240118080326.13137-1-sshegde@linux.ibm.com/
+
+Shrikanth Hegde (4):
+  sched: remove duplicate ifdefs
+  xfs: remove duplicate ifdefs
+  ntfs: remove duplicate ifdefs
+  arch/powerpc: remove duplicate ifdefs
+
+ arch/powerpc/include/asm/paca.h           | 4 ----
+ arch/powerpc/kernel/asm-offsets.c         | 2 --
+ arch/powerpc/platforms/powermac/feature.c | 2 --
+ arch/powerpc/xmon/xmon.c                  | 2 --
+ fs/ntfs/inode.c                           | 2 --
+ fs/xfs/xfs_sysfs.c                        | 4 ----
+ kernel/sched/core.c                       | 4 +---
+ kernel/sched/fair.c                       | 2 --
+ 8 files changed, 1 insertion(+), 21 deletions(-)
+
+--
+2.39.3
+
