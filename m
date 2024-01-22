@@ -1,118 +1,92 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9083D57F;
-	Mon, 22 Jan 2024 14:38:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A1253FB39;
+	Mon, 22 Jan 2024 16:53:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705934297; cv=none; b=Sw/NWG+FWyvssg0tBLxW1k8YwB0Cyq9QBVKpFcoEncKQOEqbN6H6HfPVWz0sel6z56S/LO7yEF9z37RryYDiIEqFyzbGGmrxsLR6RhPeAhOvTK8LxmxVozeahyhcD1o3lhlw6oXLrl38dM9HCgyELOV9pZ5QZG3cKTYykGXNBM0=
+	t=1705942417; cv=none; b=ERqL47we0U7v5Bbo/K8Qhbikf2lYLTtJamXiL98iaJdoUyqCD/lxIpX470TMHoc5nTY4JcdryyUWZ9XCIzP7B5DM5r0cluafB3NHmmKHYnhbhBh+zpXl/caYOOGtyDAKr7L15iJV+I1Cdm4S6RvQ8KjPwFAohbuVqom+rRRczm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705934297; c=relaxed/simple;
-	bh=Glti8t+ZZpqebwMo9dTlaK0QzZUNIArYm7q98n5rPbc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PtQwJy3fX2CLvghWxKmggdor2g4173Mq1cUa5/qc9lrBFLh9mQo0feA3n7+6c0NXuGfV9Z4ffyNI/Q80AS5L/8GtrG/8oTspS9ugFaFi8Z4DDuvhaoToU35P/6G6snnBlu4IztTrkXYgf3LuncvChSXN5USVgn8Qk6IGOwxWwUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=O8TnIYlY; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1705942417; c=relaxed/simple;
+	bh=+fUb/1geYCi6XXls1nF1ZIUE2qfx2ZMySSZL/UG0MSs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FSAZSS0qZOhBzHrLTt5bzGx3PTjeiCd6LJ7KfYENIBiGSiEOvKSUU2ORFavvAI/Mpbl3zL51cmbKIO8oo7rt33uSQh1QjgZQN68yn8C8+qymZVVn/FXNKB2k7RFlwbEHbWpwjGHjvkE53my9HwhW3GDSH2Ww3hFBfqfgV3IFblk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bcC+Ue1X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="O8TnIYlY"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40MDB74L027059;
-	Mon, 22 Jan 2024 14:37:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=9eZRduKNvGVeB9aJIyquvVMwc8fAl3YaIxTQDqo1WTg=;
- b=O8TnIYlYGZfyYQL8P3i0C8yxN4DRQvasrWwLr0b4OqgDmaI75iRcqmBnf3Lf51wHvqTx
- prcbnFbRJj/s9eg5rNrRlh1L8zxgBRYDnsrWnsOMQb6WOpQpZeEGa5BaiKxu08FOIGPd
- QkER6Y2zHzffdGfKmCzXaCJPvrMb/YP5ZFZF4ygTpjOoKoCiuuunx22Z6KgtXoJL0FWn
- Q0oWbhDZ3Ym/d9Jfq7CnIkpqpx26B8hnUROolFW2Z/1WHG2mgAmyeVDApW2U+F2uNakq
- XEoPnP5uIZJIK1JrBLPQkoHLvGyr8wy/3+1g6JK3SQMssybZulRVfGyZ/LuZwYEKE+Lo GQ== 
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vsrycjk32-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Jan 2024 14:37:40 +0000
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40MBSVlX025636;
-	Mon, 22 Jan 2024 14:37:39 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3vrsgnruju-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Jan 2024 14:37:39 +0000
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40MEbcMb18285072
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 22 Jan 2024 14:37:38 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 527DB58055;
-	Mon, 22 Jan 2024 14:37:38 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2C46F5804B;
-	Mon, 22 Jan 2024 14:37:35 +0000 (GMT)
-Received: from [9.43.53.45] (unknown [9.43.53.45])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 22 Jan 2024 14:37:34 +0000 (GMT)
-Message-ID: <218f08f9-bc12-47db-aa04-c2058c901986@linux.ibm.com>
-Date: Mon, 22 Jan 2024 20:07:33 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bcC+Ue1X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 095F4C433F1;
+	Mon, 22 Jan 2024 16:53:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1705942417;
+	bh=+fUb/1geYCi6XXls1nF1ZIUE2qfx2ZMySSZL/UG0MSs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bcC+Ue1XT04by/DjWImPMpD6ekEvDXjRvFRcU/lVd9u10Ha4/p7O6Lo8ucBI7BY/s
+	 d1H1gkuZDWi82V1wifSj/4XHbLIbldNnnZE3TQrhl6rJCzaclolj3y6gQ1dU9deJRz
+	 aen5yxPpGpbApazoF6fergFPjr1tiwfYhvi5cgCfy7nptqXXmNo3AmOovSfpkLtOpN
+	 kK9hBy8fRKMVksHaclyh6yxuE3eNK+8tzbA+1wlqBPn7CQyjSU2Oe1mCpNGyOA9oQx
+	 Zmhn9oBUF5IfEvClalEADtJ8ieULpehaesef2yjRRl4P8NIQYV4IseTd+7dPAAQ0Qa
+	 JVlqWpzgdXLJg==
+Date: Mon, 22 Jan 2024 08:53:36 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, p.raghav@samsung.com,
+	mcgrof@kernel.org, gost.dev@samsung.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs/558: scale blk IO size based on the filesystem
+ blksz
+Message-ID: <20240122165336.GA6226@frogsfrogsfrogs>
+References: <20240122111751.449762-1-kernel@pankajraghav.com>
+ <20240122111751.449762-2-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 2/3] fs: remove duplicate ifdefs
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpe@ellerman.id.au, mingo@kernel.org, peterz@infradead.org,
-        anton@tuxera.com
-References: <20240118080326.13137-1-sshegde@linux.ibm.com>
- <20240118080326.13137-3-sshegde@linux.ibm.com>
- <87cyttedjj.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Language: en-US
-From: Shrikanth Hegde <sshegde@linux.ibm.com>
-In-Reply-To: <87cyttedjj.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: wwsiLOWQFOWpM58VonwYO5JiFtGQQtRe
-X-Proofpoint-GUID: wwsiLOWQFOWpM58VonwYO5JiFtGQQtRe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-22_05,2024-01-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
- impostorscore=0 mlxscore=0 spamscore=0 adultscore=0 mlxlogscore=620
- bulkscore=0 priorityscore=1501 lowpriorityscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2401220099
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240122111751.449762-2-kernel@pankajraghav.com>
 
-
-
-On 1/22/24 6:20 PM, Chandan Babu R wrote:
-> On Thu, Jan 18, 2024 at 01:33:25 PM +0530, Shrikanth Hegde wrote:
->> when a ifdef is used in the below manner, second one could be considered as
->> duplicate.
->>
->> ifdef DEFINE_A
->> ...code block...
->> ifdef DEFINE_A
->> ...code block...
->> endif
->> ...code block...
->> endif
->>
->> There are few places in fs code where above pattern was seen.
->> No functional change is intended here. It only aims to improve code
->> readability.
->>
+On Mon, Jan 22, 2024 at 12:17:50PM +0100, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
 > 
-> Can you please post the xfs changes as a separate patch along with Darrick's
-> RVB tag? This will make it easy for me to apply the resulting patch to the XFS
-> tree.
+> This test fails for >= 64k filesystem block size on a 4k PAGE_SIZE
+> system(see LBS efforts[1]). Scale the `blksz` based on the filesystem
 
-Ok. will split the fs patches into two and send v2 soon. 
+Fails how, specifically?
 
-Thanks.
+--D
 
+> block size instead of fixing it as 64k so that we do get some iomap
+> invalidations while doing concurrent writes.
+> 
+> Cap the blksz to be at least 64k to retain the same behaviour as before
+> for smaller filesystem blocksizes.
+> 
+> [1] LBS effort: https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> ---
+>  tests/xfs/558 | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/558 b/tests/xfs/558
+> index 9e9b3be8..270f458c 100755
+> --- a/tests/xfs/558
+> +++ b/tests/xfs/558
+> @@ -127,7 +127,12 @@ _scratch_mount >> $seqres.full
+>  $XFS_IO_PROG -c 'chattr -x' $SCRATCH_MNT &> $seqres.full
+>  _require_pagecache_access $SCRATCH_MNT
+>  
+> -blksz=65536
+> +min_blksz=65536
+> +file_blksz=$(_get_file_block_size "$SCRATCH_MNT")
+> +blksz=$(( 8 * $file_blksz ))
+> +
+> +blksz=$(( blksz > min_blksz ? blksz : min_blksz ))
+> +
+>  _require_congruent_file_oplen $SCRATCH_MNT $blksz
+>  
+>  # Make sure we have sufficient extent size to create speculative CoW
+> -- 
+> 2.43.0
 > 
