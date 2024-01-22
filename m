@@ -1,85 +1,78 @@
-Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E703A4A35
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 04:58:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E513C6AAB;
+	Mon, 22 Jan 2024 06:29:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705899527; cv=none; b=rLe7fn/C/I4Vwj2o54RvC/IVmJcapG0YfsfZ0J38n5lPjmVTI+XnEHYbHJMG9CoRyJBIqBmjgBlJP63rLu+gVi7qhoKJqUTfGB4lZqhJy0juAFN/1GJ2PZgO11GbTE7yAnN/dX+M0TyqrSnq27w5uVaRF4cHxJ8bjlgY/GPOc/U=
+	t=1705904974; cv=none; b=CCg/tNwed2pMJQptYB+bOq7xfHD8pxVbgYCQZvXvhHQK6Dc/GVkrsbjldoqiW1kGUl7g/+66RHK8oJ2GgseDPiacaNu+upeUnCpVOOu3/2ZBBcfzjbnn8RvQVDVtck9jMkcqPVHMBAQ8YIBJhVeTgqzp5Ler6RFzq/G3GtYjcS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705899527; c=relaxed/simple;
-	bh=3vxU1LAV3k8d7wYW3oX+MlNrTLFNNGMEYpfgc7RFllk=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=rLl5oedX5cjatGLiJA2oljhHCIHd9Okwd7EYEZUn0M3Ep5HgoiLhqn7xxna9YTxAD+9aH/LT7ehIjjGauj99pMIEVIuqgzJGW2Dn009sqwnGkEyTD8EXNxkx6h+WPC8DrKgf4G3Zm6aK2ggfCnc91muJbVk4jPcM6dWoUOfOjC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
-References: <20231215013657.1995699-1-sam@gentoo.org>
- <20231215013657.1995699-2-sam@gentoo.org> <ZYEwFUy6bFO3h7Lz@infradead.org>
- <87v88k1yeq.fsf@gentoo.org>
-User-agent: mu4e 1.10.8; emacs 30.0.50
-From: Sam James <sam@gentoo.org>
-To: Sam James <sam@gentoo.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Felix
- Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH v3 2/4] io: Assert we have a sensible off_t
-Date: Mon, 22 Jan 2024 04:58:07 +0000
-Organization: Gentoo
-In-reply-to: <87v88k1yeq.fsf@gentoo.org>
-Message-ID: <877ck2x8uc.fsf@gentoo.org>
+	s=arc-20240116; t=1705904974; c=relaxed/simple;
+	bh=u5yL144NsaBrxan/LdePbS96uEBl5AjnUNqDt6feW8k=;
+	h=Date:Message-Id:From:To:Cc:Subject:In-Reply-To; b=BBTPwflMGi0PTrdT3inOSBJ6BJHwMYesu/WaVMFA09B2W/m25L7Vs+Z8o5IHoGzOrq2m3YF+hmxTamAXTy/2PSdhDmQvjgWc2FqZohJ3kQbPXHUuk4PoVYWOqUFBP/DHc0sNcRbEdh61kPaukcV4hZALYKaSA0E0mIAbzCTEdfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Loxdxc/y; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Loxdxc/y"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-6db599d5cb8so1922335b3a.0;
+        Sun, 21 Jan 2024 22:29:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1705904971; x=1706509771; darn=vger.kernel.org;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=u5yL144NsaBrxan/LdePbS96uEBl5AjnUNqDt6feW8k=;
+        b=Loxdxc/yPwmc6SsJNPRj8paEHv7SH+PNagb85QK4OTjjHekwAkercb27TEWpHEzj4t
+         tQP5KSsvgH+uCkvd3VZXyR9tJ/lXLyc/Nj6F1KmZZkTx94/47Lm4W4aLKGABk2bJx8zl
+         aX53vDqFasPZkPFH9qhxFOc9DD+BU/nP3fk8geV4X6sctqZ7rQ378+YMgJdmY9YnrCa2
+         RZpYLcGm10gZRqZFBVwPDPDOkdoRAgECPmujt3k8U84bij5as6MMg4HPrKaW1UBE0dmj
+         6TGYjLminPnnI7t4sMuVNTctDsb19KLneyKhsAZR7JxcqNzM7M67i1j542H41PVEIttP
+         +i5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705904971; x=1706509771;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=u5yL144NsaBrxan/LdePbS96uEBl5AjnUNqDt6feW8k=;
+        b=Ajblq9/s+in+yvVcseExoNzo7DljQsKiFxvkZnAFUSL5UsNhaBmuI9KGuvwWMh86ww
+         B9nJhYdmJ8s8I4KuuvMbg9w/SjJ86P5guSRaR93S3rAB74O7MKh+uZOp7BOp7rstLzVT
+         bDDl7tcTd+GCOsHWS2/WwQKyWM+xRbMXLBvhMXvG8EvRJoGF8eO6d/2PetsdSLawDSWu
+         ZRspsmuJUUGKXQx1aXeWCW3W3nPI+X3NWvEmH8/MfMKJbQzCCF7jjVDOlAA5MlZS8sS1
+         dgY/UkBidcUvpXdyilSYpJBLQsg0UJzpM70gLBXUbGi6rgon0YLnh5b1/tNHoKczTaa6
+         AkSQ==
+X-Gm-Message-State: AOJu0YyIQ8V9icW2VFf73SYl8BtgmdEVq25HuVF1iIDOsli2NwIgQ5H8
+	EVBTDyeNLxo519fXIFlDpfpkYfZabP56axLICjMRKbGl5mx+mLPMS6nf2i4k
+X-Google-Smtp-Source: AGHT+IFk4DHVaM6Dq2+sfHCNHT/ZSXipHpiSHegM2AZfkD/B4R52gf1SPGF8trRu7tR887dyJSLEKw==
+X-Received: by 2002:a05:6a00:2d95:b0:6d9:ac71:3b52 with SMTP id fb21-20020a056a002d9500b006d9ac713b52mr1877798pfb.54.1705904971329;
+        Sun, 21 Jan 2024 22:29:31 -0800 (PST)
+Received: from dw-tp ([129.41.58.7])
+        by smtp.gmail.com with ESMTPSA id x21-20020a056a00189500b006dbd890c5e0sm2082679pfh.97.2024.01.21.22.29.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Jan 2024 22:29:30 -0800 (PST)
+Date: Mon, 22 Jan 2024 11:59:12 +0530
+Message-Id: <87cyttc24n.fsf@doe.com>
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/604: Make test as _notrun for higher blocksizes filesystem
+In-Reply-To: <20240121045636.GA674488@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-Sam James <sam@gentoo.org> writes:
-
-> Christoph Hellwig <hch@infradead.org> writes:
+> On Fri, Jan 19, 2024 at 02:57:45PM +0530, Ritesh Harjani (IBM) wrote:
+>> If we have filesystem with blocksize = 64k, then the falloc value will
+>> be huge which makes fallocate fail hence causing the test to fail.
+>> Instead make the testcase "_notrun" if the fallocate itself fails.
 >
->> On Fri, Dec 15, 2023 at 01:36:41AM +0000, Sam James wrote:
->>> +	/* We're only interested in supporting an off_t which can handle >=4GiB. */
->>
->> This adds a < 80 character line.  Also I find the wording a bit odd, the
->> point is that xfsprogs relies on (it or rather will with your entire
->> series), so maybe:
->>
->> 	/*
->> 	 * xfsprogs relies on the LFS interfaces with a 64-bit off_t to
->> 	 * actually support sensible file systems sizes.
->> 	 */
->>
->> And while I'm nitpicking, maybe a better place would be to move this to
->> libxfs as that's where we really care.  If you use the C99 static_assert
->> instead of the kernel BUILD_BUG_ON this can even move outside a function
->> and just into a header somewhere, say include/xfs,h.  Which actually
->> happens to have this assert in an awkware open coded way already:
->>
->> /*
->>  * make sure that any user of the xfs headers has a 64bit off_t type
->>  */
->> extern int xfs_assert_largefile[sizeof(off_t)-8];
->>
->> Enough of my stream of consciousness, sorry.  To summarize the findings:
->>
->>  - we don't really need this patch all
->>  - but cleaning up xfs_assert_largefile to just use static_assert would
->>    probably be nice to have anyway
->
-> Thanks, I agree, but I think static_assert is C11 (and then it gets a
-> nicer name in C23). If it's still fine for us, I can then use it.
->
-> Does it change your thinking at all or should I send a v4 with it
-> included?
+> How much space is it asking for?
 
-ping. I don't mind doing a followup, but I'd love to get this in given
-there's a bunch of other projects still to handle with this sort of
-problem.
+~5451.33 GB for 64k bs v/s ~1.29GB for 4k.
 
->
-> Thanks,
-> sam
+Let me modify the patch to also print the requested falloc size in GB.
+That will be much better.
 
+-ritesh
