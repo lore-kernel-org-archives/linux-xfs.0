@@ -1,124 +1,118 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E59A3D0C2
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 13:34:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9083D57F;
+	Mon, 22 Jan 2024 14:38:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705930457; cv=none; b=HNF67tahSuydiSON43KUNfim8HcyXmPtzEqGjoWNH+Ea+k6ELpMxARuJqwqjfYcWhIvHKiAL3qRpttDvRHX3JOiQhgWrZ6B3jmQ2WelbW49VXVA3ayrW6jOglRzlyRRCKpfAhS7lkwYcG5xTnl8chZbOWhvlndPvAsZysIYSOZs=
+	t=1705934297; cv=none; b=Sw/NWG+FWyvssg0tBLxW1k8YwB0Cyq9QBVKpFcoEncKQOEqbN6H6HfPVWz0sel6z56S/LO7yEF9z37RryYDiIEqFyzbGGmrxsLR6RhPeAhOvTK8LxmxVozeahyhcD1o3lhlw6oXLrl38dM9HCgyELOV9pZ5QZG3cKTYykGXNBM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705930457; c=relaxed/simple;
-	bh=58hk3EGgivAqnjEyYxsUglKu29GyzAljTRDcz4+mJzs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kWG01tW8DO1hSyPgIfsRXZDIIA5lRZ+TpdDJXlTvozB/yu1/+2tPXMSUF5h2BzRB3ocIaQYu/bQtgA3IPE00Fail73vsFeT/bN/S/E3wsyEVyu3GxC4HVjnLhbgEejDasJZIC1x+FXjPxZ+ONJ2ha60lsG3gzZdn67/glgIKZbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LCj3iWGX; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1705934297; c=relaxed/simple;
+	bh=Glti8t+ZZpqebwMo9dTlaK0QzZUNIArYm7q98n5rPbc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PtQwJy3fX2CLvghWxKmggdor2g4173Mq1cUa5/qc9lrBFLh9mQo0feA3n7+6c0NXuGfV9Z4ffyNI/Q80AS5L/8GtrG/8oTspS9ugFaFi8Z4DDuvhaoToU35P/6G6snnBlu4IztTrkXYgf3LuncvChSXN5USVgn8Qk6IGOwxWwUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=O8TnIYlY; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LCj3iWGX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705930455; x=1737466455;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=58hk3EGgivAqnjEyYxsUglKu29GyzAljTRDcz4+mJzs=;
-  b=LCj3iWGX1pEyc5WwL4J4L74qXp2SDZpYQ6IiljC2Paq4n3UiJQF8bUYU
-   S40Fppuc/iOP6CPMTSCgdS56UXfZTpYGs83TGuJRgMYIsS7CWLMQk6sEh
-   s5oj2x7MSvqhPSzHxULLAaTQHsuV4lbVWH5J8qguD5Ya0UjEbJP3zs2UB
-   DvbbiyVYQ+e9GeNb5k1aYBvI1i9Q0K2yEw/BZUuw0g8JUkXepNReHKcPH
-   0dSMg2swMp0oYmOts0feZ/CPadX7iORTrUC8BpILGLM1dSd17WBPRMcFm
-   dBTCGkGnwq+7OLxychbgAK8T8kd+2ha9FyzIbjN1hKeb/2bqE7LfMga9/
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10960"; a="1091137"
-X-IronPort-AV: E=Sophos;i="6.05,211,1701158400"; 
-   d="scan'208";a="1091137"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2024 05:34:15 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10960"; a="928993791"
-X-IronPort-AV: E=Sophos;i="6.05,211,1701158400"; 
-   d="scan'208";a="928993791"
-Received: from tassilo.jf.intel.com (HELO tassilo) ([10.54.38.190])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2024 05:34:14 -0800
-Date: Mon, 22 Jan 2024 05:34:12 -0800
-From: Andi Kleen <ak@linux.intel.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: Using Folios for XFS metadata
-Message-ID: <Za5u1CsKnrWflMOR@tassilo>
-References: <20240118222216.4131379-1-david@fromorbit.com>
- <87zfwxk75o.fsf@linux.intel.com>
- <Za5XQDOutk93L5w1@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="O8TnIYlY"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40MDB74L027059;
+	Mon, 22 Jan 2024 14:37:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=9eZRduKNvGVeB9aJIyquvVMwc8fAl3YaIxTQDqo1WTg=;
+ b=O8TnIYlYGZfyYQL8P3i0C8yxN4DRQvasrWwLr0b4OqgDmaI75iRcqmBnf3Lf51wHvqTx
+ prcbnFbRJj/s9eg5rNrRlh1L8zxgBRYDnsrWnsOMQb6WOpQpZeEGa5BaiKxu08FOIGPd
+ QkER6Y2zHzffdGfKmCzXaCJPvrMb/YP5ZFZF4ygTpjOoKoCiuuunx22Z6KgtXoJL0FWn
+ Q0oWbhDZ3Ym/d9Jfq7CnIkpqpx26B8hnUROolFW2Z/1WHG2mgAmyeVDApW2U+F2uNakq
+ XEoPnP5uIZJIK1JrBLPQkoHLvGyr8wy/3+1g6JK3SQMssybZulRVfGyZ/LuZwYEKE+Lo GQ== 
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vsrycjk32-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jan 2024 14:37:40 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40MBSVlX025636;
+	Mon, 22 Jan 2024 14:37:39 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3vrsgnruju-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 22 Jan 2024 14:37:39 +0000
+Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
+	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40MEbcMb18285072
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 22 Jan 2024 14:37:38 GMT
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 527DB58055;
+	Mon, 22 Jan 2024 14:37:38 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2C46F5804B;
+	Mon, 22 Jan 2024 14:37:35 +0000 (GMT)
+Received: from [9.43.53.45] (unknown [9.43.53.45])
+	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 22 Jan 2024 14:37:34 +0000 (GMT)
+Message-ID: <218f08f9-bc12-47db-aa04-c2058c901986@linux.ibm.com>
+Date: Mon, 22 Jan 2024 20:07:33 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Za5XQDOutk93L5w1@dread.disaster.area>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 2/3] fs: remove duplicate ifdefs
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        mpe@ellerman.id.au, mingo@kernel.org, peterz@infradead.org,
+        anton@tuxera.com
+References: <20240118080326.13137-1-sshegde@linux.ibm.com>
+ <20240118080326.13137-3-sshegde@linux.ibm.com>
+ <87cyttedjj.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Language: en-US
+From: Shrikanth Hegde <sshegde@linux.ibm.com>
+In-Reply-To: <87cyttedjj.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: wwsiLOWQFOWpM58VonwYO5JiFtGQQtRe
+X-Proofpoint-GUID: wwsiLOWQFOWpM58VonwYO5JiFtGQQtRe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-22_05,2024-01-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
+ impostorscore=0 mlxscore=0 spamscore=0 adultscore=0 mlxlogscore=620
+ bulkscore=0 priorityscore=1501 lowpriorityscore=0 phishscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2401220099
 
-[fixed the subject, not sure what happened there]
 
-FWIW I'm not sure fail-fail is always the right strategy here,
-in many cases even with some reclaim, compaction may win. Just not if you're
-on a tight budget for the latencies.
 
-> I stress test and measure XFS metadata performance under sustained
-> memory pressure all the time. This change has not caused any
-> obvious regressions in the short time I've been testing it.
+On 1/22/24 6:20 PM, Chandan Babu R wrote:
+> On Thu, Jan 18, 2024 at 01:33:25 PM +0530, Shrikanth Hegde wrote:
+>> when a ifdef is used in the below manner, second one could be considered as
+>> duplicate.
+>>
+>> ifdef DEFINE_A
+>> ...code block...
+>> ifdef DEFINE_A
+>> ...code block...
+>> endif
+>> ...code block...
+>> endif
+>>
+>> There are few places in fs code where above pattern was seen.
+>> No functional change is intended here. It only aims to improve code
+>> readability.
+>>
+> 
+> Can you please post the xfs changes as a separate patch along with Darrick's
+> RVB tag? This will make it easy for me to apply the resulting patch to the XFS
+> tree.
 
-Did you test for tail latencies?
+Ok. will split the fs patches into two and send v2 soon. 
 
-There are some relatively simple ways to trigger memory fragmentation,
-the standard way is to allocate a very large THP backed file and then
-punch a lot of holes.
+Thanks.
 
 > 
-> I still need to do perf testing on large directory block sizes. That
-> is where high-order allocations will get stressed - that's where
-> xlog_kvmalloc() starts dominating the profiles as it trips over
-> vmalloc scalability issues...
-
-Yes that's true. vmalloc has many issues, although with the recent
-patches to split the rbtrees with separate locks it may now look
-quite different than before.
-
-> 
-> > I would in any case add a tunable for it in case people run into this.
-> 
-> No tunables. It either works or it doesn't. If we can't make
-> it work reliably by default, we throw it in the dumpster, light it
-> on fire and walk away.
-
-I'm not sure there is a single definition of "reliably" here -- for
-many workloads tail latencies don't matter, so it's always reliable,
-as long as you have good aggregate throughput.
-
-Others have very high expectations for them.
-
-Forcing the high expectations on everyone is probably not a good
-general strategy though, as there are general trade offs.
-
-I could see that having lots of small tunables for every use might not be a
-good idea. Perhaps there would be a case for a single general tunable
-that controls higher order folios for everyone.
-
-> 
-> > Tail latencies are a common concern on many IO workloads.
-> 
-> Yes, for user data operations it's a common concern. For metadata,
-> not so much - there's so many far worse long tail latencies in
-> metadata operations (like waiting for journal space) that memory
-> allocation latencies in the metadata IO path are largely noise....
-
-I've seen pretty long stalls in the past.
-
-The difference to the journal is also that it is local the file system, while
-the memory is normally shared with everyone on the node or system. So the
-scope of noisy neighbour impact can be quite different, especially on a large
-machine. 
-
--Andi
-
