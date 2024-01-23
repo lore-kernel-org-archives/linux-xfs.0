@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93AF25C5FA
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 10:31:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECD557300
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 10:33:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706005919; cv=none; b=BW7j4xsOdOk8Rf5kdUgew7BFwdc0LtOvKVxwRy5k6j/EuLjlnckPkUO3C7kUVJ7adSVQeLHUS+vhvW/ZJTVU0Y0K8FIHaXeWv8aIkaeSrCaXx7Br1lpSbV2U7N31DYcTFFai8bLzBzjJ7PYWLquNHNT3jD2umctg5TZ43hl2g0E=
+	t=1706006029; cv=none; b=W3xc255NtnopCvLRYrCsYsXkRPmaRSYmlTZRbq+t9F/zygrehVzlYmNKfFwMhAkOkFtoW2sB1GM+QbPo3qykx4+GnqWnEOlyxTa1PetuAPzJh8Si5pvdW/TQhjcVUVNdv0l662dGFe7e7KlSCeBcqpSELvoggbMAg39Zb6lETtU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706005919; c=relaxed/simple;
-	bh=NepenW3OzO9RZov69/0y8W3aSvgLa88a24NCCeUm7HY=;
+	s=arc-20240116; t=1706006029; c=relaxed/simple;
+	bh=eLJEbeklUkoKs3RDYSckoStco76tZcqcSnTsyXYsON8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y4RgJqh4RkSkP3r9sJyid5cfogW97Ef2Y31gklxNUzVD6tIUKyPWs3TPjZkmjeK7nxKXclDeAlTVf1ew8pmfIfkYtQa3vgS1TAp47pEWCvSQEj58+2WaN+2fT0WwfTN9BR7Xy6SDgZNseBHM/Hu4moO2kW6X+16V1g5K5BlhIFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JLUiyPIQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=U/Db4nqbJR6vBRwjqPar75XeGhTeOQqFI//CYSIPKHO6sJspTcM3K3zrzbSn/gGe/1zI86adbLvckVguw/Q8Gnu1Oal+lY9L7eXoxL8nPFMR21mOf4WaeHMbDy4Z/3XjZVA8w/Ri51sLyccm9iwf0wfS9hi4J8kSdlK0nqPYQKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jvhsOMj+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JLUiyPIQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56708C433F1;
-	Tue, 23 Jan 2024 10:31:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jvhsOMj+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34E41C433F1;
+	Tue, 23 Jan 2024 10:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706005919;
-	bh=NepenW3OzO9RZov69/0y8W3aSvgLa88a24NCCeUm7HY=;
+	s=k20201202; t=1706006029;
+	bh=eLJEbeklUkoKs3RDYSckoStco76tZcqcSnTsyXYsON8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JLUiyPIQYp0ImAI6E86Uzk5Wo/74D2Vb45zONre/Qj292XS18pRYsl1GeT6JY9Vuq
-	 EdDLQS66dORROBLqu5sBrFmJKxnVGoBS/gErGSrXznDZbrIx1NSOUu0ORqwWpRor47
-	 ns7lgS5iRtMpv3CwJ6OCUQxz+UBa4SZE4os50173f47yzWsD57BxpGmyHgRh8Eu9mT
-	 eGrzVjikxHD+ogP6tfon81l91rzP0aLmSBz9PszdVB8lB8EY6OkhpXhrqUH0VBupbU
-	 sgMcy8n+Q1EyZUEHcx308u0aRLVWAvDfDudrEOmUfN0FUcJdCasndiTJtCQ1c+RCL5
-	 Q25KDybBgckaw==
-Date: Tue, 23 Jan 2024 11:31:55 +0100
+	b=jvhsOMj+Y6a3zUA13mA8MdyOADC4LfD23SxjNkXA2s9o6pO4/VzdIi0B01scR2sdz
+	 D/d96y/6noJtSkQkWt67slsXDmr8iUDjs6Aa8x6837ifK2R7Oz+dX/2fX6bspyjHLe
+	 iAp76LsWNVfDhI+2cXGpfI8gRrdylonxtDB3GcZJUIze5pv2xGFos0zRsNGC93P4K4
+	 fQ+MiV+g7I0UngFfxaNE3WpgGdQSM/Sl6tip1pvcr9tsksa1XKX9djOB+8OSWIOQMv
+	 aEaoS5QOxMHOwtdfymW2T8wXVXXbxcro95QsIcAO/4PcpE13inaeWrtJzDHaVK++h9
+	 +I9g/WtRxBk7g==
+Date: Tue, 23 Jan 2024 11:33:44 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL 5/6] xfs_scrub_all: fixes for systemd services
-Message-ID: <3ey3b55is5bojszfkuum2gn3zndvrbwmyuyx4uvmusm4e46lcc@cvptwyt7ez6y>
-References: <VpNs4tPDS4CME1zHeEnJHwITrJtUVtt2VTGY7xVBjKUqbni_FVcO7nWGhEsmuW69gA5Ok1yTGiwroBsTdJYXsA==@protonmail.internalid>
- <170502573560.996574.2504743062956504522.stg-ugh@frogsfrogsfrogs>
+Cc: glitsj16@riseup.net, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL 6/6] xfs_scrub: tighten security of systemd services
+Message-ID: <mws7bjjvztoeneefr7he4vtec6s4mhf5o5i7ur4cs6dfvsy75o@ciunmrv2bbqp>
+References: <r5ZmE3Y-_E8Hew0HCzp7lyf_Q6HlOYM1PCbjnrZP2j6es7Eq3mFWFJlBnQMogrRy_gTQkJEeeIzwjdSp6u63Jw==@protonmail.internalid>
+ <170502573653.996574.9591002351083368679.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,9 +42,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170502573560.996574.2504743062956504522.stg-ugh@frogsfrogsfrogs>
+In-Reply-To: <170502573653.996574.9591002351083368679.stg-ugh@frogsfrogsfrogs>
 
-On Thu, Jan 11, 2024 at 06:17:28PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 11, 2024 at 06:17:43PM -0800, Darrick J. Wong wrote:
 > Hi Carlos,
 > 
 > Please pull this branch with changes for xfsprogs for 6.6-rc1.
@@ -53,47 +53,59 @@ On Thu, Jan 11, 2024 at 06:17:28PM -0800, Darrick J. Wong wrote:
 > minutes ago, and didn't see any conflicts.  Please let me know if you
 > encounter any problems.
 > 
-> The following changes since commit 3d37d8bf535fd6a8ab241a86433b449152746e6a:
+> The following changes since commit 1c95c17c8857223d05e8c4516af42c6d41ae579a:
 > 
-> xfs_scrub_all.cron: move to package data directory (2024-01-11 18:08:47 -0800)
+> xfs_scrub_all: fix termination signal handling (2024-01-11 18:08:47 -0800)
 > 
 > are available in the Git repository at:
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scruball-service-fixes-6.6_2024-01-11
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-service-security-6.6_2024-01-11
 > 
-> for you to fetch changes up to 1c95c17c8857223d05e8c4516af42c6d41ae579a:
+> for you to fetch changes up to 13995601c86574e2f65d93055ac7a624fbde4443:
 > 
-> xfs_scrub_all: fix termination signal handling (2024-01-11 18:08:47 -0800)
+> xfs_scrub_all: tighten up the security on the background systemd service (2024-01-11 18:08:47 -0800)
 
-Pulled, thanks!
+As we spoke, this branch contain patches without Reviewed-by tags, I won't be
+pulling this branch by now.
 
+Cheers,
 Carlos
-
 > 
 > ----------------------------------------------------------------
-> xfs_scrub_all: fixes for systemd services [v28.3 5/6]
+> xfs_scrub: tighten security of systemd services [v28.3 6/6]
 > 
-> This patchset ties up some problems in the xfs_scrub_all program and
-> service, which are essential for finding mounted filesystems to scrub
-> and creating the background service instances that do the scrub.
+> To reduce the risk of the online fsck service suffering some sort of
+> catastrophic breach that results in attackers reconfiguring the running
+> system, I embarked on a security audit of the systemd service files.
+> The result should be that all elements of the background service
+> (individual scrub jobs, the scrub_all initiator, and the failure
+> reporting) run with as few privileges and within as strong of a sandbox
+> as possible.
 > 
-> First, we need to fix various errors in pathname escaping, because
-> systemd does /not/ like slashes in service names.  Then, teach
-> xfs_scrub_all to deal with systemd restarts causing it to think that a
-> scrub has finished before the service actually finishes.  Finally,
-> implement a signal handler so that SIGINT (console ^C) and SIGTERM
-> (systemd stopping the service) shut down the xfs_scrub@ services
-> correctly.
+> Granted, this does nothing about the potential for the /kernel/ screwing
+> up, but at least we could prevent obvious container escapes.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > 
 > ----------------------------------------------------------------
-> Darrick J. Wong (4):
-> xfs_scrub_all: fix argument passing when invoking xfs_scrub manually
-> xfs_scrub_all: survive systemd restarts when waiting for services
-> xfs_scrub_all: simplify cleanup of run_killable
-> xfs_scrub_all: fix termination signal handling
+> Darrick J. Wong (6):
+> xfs_scrub: allow auxiliary pathnames for sandboxing
+> xfs_scrub.service: reduce CPU usage to 60% when possible
+> xfs_scrub: use dynamic users when running as a systemd service
+> xfs_scrub: tighten up the security on the background systemd service
+> xfs_scrub_fail: tighten up the security on the background systemd service
+> xfs_scrub_all: tighten up the security on the background systemd service
 > 
-> scrub/xfs_scrub_all.in | 157 +++++++++++++++++++++++++++++++++++++++----------
-> 1 file changed, 125 insertions(+), 32 deletions(-)
+> man/man8/xfs_scrub.8             |  9 +++-
+> scrub/Makefile                   |  7 ++-
+> scrub/phase1.c                   |  4 +-
+> scrub/system-xfs_scrub.slice     | 30 +++++++++++++
+> scrub/vfs.c                      |  2 +-
+> scrub/xfs_scrub.c                | 11 +++--
+> scrub/xfs_scrub.h                |  5 ++-
+> scrub/xfs_scrub@.service.in      | 97 +++++++++++++++++++++++++++++++++++-----
+> scrub/xfs_scrub_all.service.in   | 66 +++++++++++++++++++++++++++
+> scrub/xfs_scrub_fail@.service.in | 59 ++++++++++++++++++++++++
+> 10 files changed, 270 insertions(+), 20 deletions(-)
+> create mode 100644 scrub/system-xfs_scrub.slice
 > 
