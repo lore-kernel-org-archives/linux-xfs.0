@@ -1,247 +1,199 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69A5C3E491
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 07:02:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705993334; cv=none; b=WMG4RYfp15onArjOjekABRoHfK/81TsUGKM5VL3Bq7FxzU3+0IHNs8u35nyVTbIkdbxWDF5Lesx8fd3fABrwjifx4+yKBMgdrJOgUSfKHkr4tvwGBecdZxPiSqdb1T1RVpHY+XQ6TJnPp1jTMHVaSnRK4BnEj0gcAPyL4t4kt80=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705993334; c=relaxed/simple;
-	bh=PxN+Eu0Jzg9j27DOZsrowqWGbtSZooimFzjGKRa/lmg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AUR0KYrww9OXCY7F7L57PdEA2lwvkuQBQzaENrSNtspR2mzii/CWSGwbwSGtMDiB6jk5k+Di8dDchNh4QEtuBcE2Gztdw05SNg5QprRu415vndaSpjI4wJXIqq/1jfy1kGZhNkA6yFrvbjsZBS9kqnahQsrJmNR0d/939hCwEvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OQ+C2od5; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BE883E491;
+	Tue, 23 Jan 2024 07:02:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1705993344; cv=fail; b=aTxN5FbIuxueGSowtdyvLfXwsO55ecWRVRF0tV+ZsIzS9y825dPBVMnKd0ccQ2jxjtXt3V98J0lk2b5rJFUOGJcGn7YceBfUtn5UkNlMyhpn1gLgpz3sen0e6kByKCNCe1fW9O1SA6DmkM6JjSRyAfxpk24bLiOIu6wNfAPfaXw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1705993344; c=relaxed/simple;
+	bh=Z+u3wtzYGJXVPBmCnfzklxwp2ma/wGDgK/Blg9koN0w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=gVDu6o7KabEP7XIIwfyvXI5ITwvYJcMS8OOq8z/xg6Se/639BpkM0zROGrkB7CcL17+pQ3/i221FiA/3DpmNjOAv0ovqVk61hKTfqlozRFmDZFNhEND/H6/BiOBRTZOaP28id4p7pNEDTmAkso1GgW7OcRFL4qiZWbJFFNgFLSU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=lWC0AtaQ; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=cW3GZ60I; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OQ+C2od5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705993331;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=F5tHVKgS9G1891k9rr4yKEEA/1MVNypUvZ0Ubg91NkY=;
-	b=OQ+C2od5gblFg5mSENnSgR49EGY2fdtOkosjWMsuIsybd2s0vFP/N2g24FJrXptJMTfe+b
-	X9JhqBQFqgQBYBhFT/4sD9DU7pn35q8ORWShn+Wj0PiX5WW1ACxU+Fym7MFWyAXKHmjxPG
-	98Q2X5vG84d2Isr7S+cuiyrPmZ35tlw=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-135-s1ytJ5qXMNafofY6liiCVw-1; Tue, 23 Jan 2024 02:02:09 -0500
-X-MC-Unique: s1ytJ5qXMNafofY6liiCVw-1
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-6d9b082bb80so6368570b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 23:02:09 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705993328; x=1706598128;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=F5tHVKgS9G1891k9rr4yKEEA/1MVNypUvZ0Ubg91NkY=;
-        b=tOpt7qHTjDncQtyBGkPORMvlsrVwuj+71LaVnejeNBp08s8OzNP8mELZruoyf0G4Vq
-         j2iN9i7wJ9MGqMLBB2ucEZZf8Qiy0cJxBOdG9QlvtyRbL2MAoaoi8epOLPeFMtLa/TXJ
-         Oa87OxPDjPz1psRgK0IZL9Y1tZHFlylpThJZsonFXayZsSjgYYktcIbiWOvym77ph984
-         w6R4Q+sutdrRakBe3V+6WPy0Z2uI8vTI11+h5P5RdKZd1yBXWDppmfDzRzIig553p08Y
-         OQDCK+IbQGRKetOOTXpEYqQAI2g0yCJZiLcCDZ17id83nqvhDHgPuCkfIB4+ESvUNqrv
-         HD5w==
-X-Gm-Message-State: AOJu0YwrkVcfKqhqeeBikBXY1M1CjdLBagU2T5XkELE3TN4khNidWx+O
-	u9px0QGJHpd5tBAwjEJ7NH5kQ8NQbzNSMN3oYPkVTNeHvmJ9YhKYJeWhC30mcWukZ5rWiDyLp+L
-	yCYk80QO8lsJDjVC61EutgUF/T+1vPq5RWYkilqVMPZksow8vRmiOVZsf2x2tj83GFTO2
-X-Received: by 2002:a05:6a20:47e4:b0:19b:624c:c7bc with SMTP id ey36-20020a056a2047e400b0019b624cc7bcmr4527408pzb.118.1705993327978;
-        Mon, 22 Jan 2024 23:02:07 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHIQZgD7XJwE2mWL6BsVpcS3gA65JI3okQFy5dGoj8Yrgfg+x1mMG4cPzK/2y8UM1pIrfN7pg==
-X-Received: by 2002:a05:6a20:47e4:b0:19b:624c:c7bc with SMTP id ey36-20020a056a2047e400b0019b624cc7bcmr4527402pzb.118.1705993327458;
-        Mon, 22 Jan 2024 23:02:07 -0800 (PST)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id s23-20020a056a00179700b006dbe1e86a83sm2768284pfg.54.2024.01.22.23.02.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jan 2024 23:02:07 -0800 (PST)
-Date: Tue, 23 Jan 2024 15:02:03 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [xfstests generic/648] 64k directory block size (-n size=65536)
- crash on _xfs_buf_ioapply
-Message-ID: <20240123070203.6ybj224cwt2v6zf3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20231218140134.gql6oecpezvj2e66@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZainBd2Jz6I0Pgm1@dread.disaster.area>
- <20240119013807.ivgvwe7yxweamg2m@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZaoiBF9KqyMt3URQ@dread.disaster.area>
- <20240120112600.phkv37z4nx3pj2jn@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZaxeOXSb0+jPYCe1@dread.disaster.area>
- <20240122072312.usotep2ajokhcuci@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <Za5PoyT0WZdqgphT@dread.disaster.area>
- <20240122131856.2rtzmdtore25nj7k@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <Za7xAQUZa1PtnAHn@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lWC0AtaQ";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="cW3GZ60I"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40N6YxhJ006003;
+	Tue, 23 Jan 2024 07:01:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=Z+u3wtzYGJXVPBmCnfzklxwp2ma/wGDgK/Blg9koN0w=;
+ b=lWC0AtaQxY3UqoP5Y6cAmlob7oggYJIKOaqOrA/twCQXLw6IVvtwGgfsitGZicGV2xOH
+ rdXftGaC1fAhryaeuYyeuc8pg5SNx00AbA0Xq/Rp0YWmeryfFbDq5ZDSXmuiiTlB314E
+ +QSRuRi4K6fnBdCKKiVJBMRgdX0G3Hb1vhDLTNLRtgkrpitPxdIb2drE2Y3aex6JZc3R
+ MASr3va5U7x0AVwaCwC361qpMf8GhEpFS/YWOO9NE5pXXrtnXisaZf34RG4RpqjYV7W2
+ 0IA4KmkI+qwqOvIxCIIon7IGoCpyK16qVTb4NbanLpAlADzcVLr6I/OMB41T3OJmkrF7 nw== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vr7cwdgqx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 23 Jan 2024 07:01:52 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40N6VLrs016258;
+	Tue, 23 Jan 2024 07:01:51 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3vs32qbke5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 23 Jan 2024 07:01:51 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BjOoTou+UsVVL/qnzzL6bTcLJMwc5oEIVjsudnTDY6JhFnX0xiDrjbkf7rjxpGsp74B7KiJi6nRmlLUP2SsBVO3IuHMfSkAuYQ8OfLXhibOulkLw+QnkYAXwLPwkPnS+3IEntG8Y5qyKRkQWQ94bJ4FzIzGgr4zHHJgIakmXkxqj2F3a1cffoBHo68tTpE4i+uDoJ6IBBzillBz8VgI4JK4k97X4aLfUi3/4lsoGF86SQQYJ3l1fUF0OZSZjPntEZs8OKlsCT97cNa5yIdSLdkaA9PNzfXOHbhREiGMtorE+2naW0rwtTPpZM9U9gFXC23++0teMlIosrWS7o8Zpqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Z+u3wtzYGJXVPBmCnfzklxwp2ma/wGDgK/Blg9koN0w=;
+ b=ZfEKwyijUgJkIN5Ct/cGuP7K3LBCU0Kq7Yp7NWpwWIPPoLl7wTQEXaaSwm7D8rnoL+Z34ZaOCVbR31I9+6LW70+u+odJHFLM2TQrPUzRrfdxQ6WbIi7EEmh5WWDjHApXzr0cnkJH66+1XTCqvANYgjv62RlqZkXQA1CKlggDa2kmTxJKBJSbV9wr/3i3F0ij2/60aPdhX9692o2FrtMYVKEL+5x7umJXaJdljC6UYbMwvqEes4B9csVhkbeO0PUBCVU1EPT9gvvMRngkKURUWVPki3uaqlyHgFBW01Cw9PdQRb0Fs333Esb0KMrDsqpl9Kx2iRUFtNxUmqQ9hrreZA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Z+u3wtzYGJXVPBmCnfzklxwp2ma/wGDgK/Blg9koN0w=;
+ b=cW3GZ60IEa7KS1NC1omaRLgb0G1QbJId5Nj4dHWjBY8T46bjEAvkaPoZ1XuzPedd6AeOPBmwYUEPNNLLAhtFWMaAMuc03EnNWE3uQJAR/FC6XCnjlrEZjUqWE3+/IyHEICs/gT11sum7LeY3f3m8LWixQTVqmGUbuiosqfO7eoo=
+Received: from CO6PR10MB5409.namprd10.prod.outlook.com (2603:10b6:5:357::14)
+ by PH7PR10MB7033.namprd10.prod.outlook.com (2603:10b6:510:276::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7202.24; Tue, 23 Jan
+ 2024 07:01:49 +0000
+Received: from CO6PR10MB5409.namprd10.prod.outlook.com
+ ([fe80::91b3:fd53:a6ee:8685]) by CO6PR10MB5409.namprd10.prod.outlook.com
+ ([fe80::91b3:fd53:a6ee:8685%4]) with mapi id 15.20.7202.034; Tue, 23 Jan 2024
+ 07:01:49 +0000
+From: Ankur Arora <ankur.a.arora@oracle.com>
+To: tglx@linutronix.de
+Cc: ankur.a.arora@oracle.com, david@fromorbit.com, dchinner@redhat.com,
+        djwong@kernel.org, hch@lst.de, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, wenjian1@xiaomi.com, wenjianhn@gmail.com
+Subject: Re: [PATCH] xfs: explicitly call cond_resched in xfs_itruncate_extents_flags
+Date: Mon, 22 Jan 2024 23:01:58 -0800
+Message-Id: <20240123070158.4023269-1-ankur.a.arora@oracle.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <87v87yiu2g.ffs@tglx>
+References: <87v87yiu2g.ffs@tglx>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: MW4PR03CA0282.namprd03.prod.outlook.com
+ (2603:10b6:303:b5::17) To CO6PR10MB5409.namprd10.prod.outlook.com
+ (2603:10b6:5:357::14)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Za7xAQUZa1PtnAHn@dread.disaster.area>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO6PR10MB5409:EE_|PH7PR10MB7033:EE_
+X-MS-Office365-Filtering-Correlation-Id: d9ffb80a-1db3-472e-620e-08dc1be12b84
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	gAkd+l9xmiXeah4sA9DPuvUYS6oQsYSCyXsZKkahDwXU4+jSlZpeua/F/FavnUC1/BjTWPX4W5H6pNasMhx8eCJ2svpNaEp7Jc+K0mjRhgTeQCr5rWzkwzEBoupqiYY2hwDyhWzucZqOizw7z45Vcx4nAyORvqfm+3NoD3JXvxXkdZ6Viko5AI73tQTwcwfz+ih1ph53DbC3/gfSeErDY0tPwHRIjnNbPEJ4ryzIFBTg01WEKOaLH3OWcjMRIDMGTJQ9A8CeqemyHo4rmPOWCaW4Kmltr/lEMRDYJia9irkI5nRf/FLTZFWCqGvZlg2b9wDMHCwez2eRHQxzLn8Jm7OGtv6oXH6ddptQ4ZfqwVAB/uA9IbfpVRv5/yUov3aPNU2vo/Qz5wkUfQXPXPxKe2SjNQDaXM9zg6QlThdXA0owlf79EBJBrr/UqW238GVQj4EylIsyM2yskFgAeBRQrXUI9KPoyTdpxEylOuuDPW8YZiM7bNrz/Idy6wuGaGS3R0uzqaXrqBJCkElQkXxfH3LvtVcigRZ2P3L19i8T7HICZBaBuVXXLJt9rJ4xtWpF
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO6PR10MB5409.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(346002)(136003)(376002)(396003)(39860400002)(230922051799003)(64100799003)(1800799012)(451199024)(186009)(8676002)(8936002)(36756003)(316002)(4326008)(38100700002)(103116003)(86362001)(6486002)(83380400001)(2616005)(6506007)(6512007)(478600001)(6666004)(53546011)(6916009)(66556008)(66476007)(5660300002)(66946007)(2906002)(1076003)(26005)(41300700001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?V3ZTcTdDWVNFWFdyWlhqak1nRXZpTXVjTmZZMC9nV2ZDRXZjQUx4K21nWkJP?=
+ =?utf-8?B?bGl6Vm1IYUthSEN2eGhuU0hXWldpMlAvdmozdjJJanB5cnYyamhxLzJUeHVy?=
+ =?utf-8?B?WmdXZmo2ZDhBekNuWTVwSC82OWhSSDNpa1lIT0Qzek1JMEVGa2VrZ2NQZUNC?=
+ =?utf-8?B?U2tFVUd1UnRQc1lOazJ5YWtCUlpORlJpUnJ5TkdWSHZaY0Z0a2NWeEtwY212?=
+ =?utf-8?B?R1YxK0VBWlFoRnUyUWhsV2JhQUNoclh5YzZyWThic0locUtlNmNqUHhZY3FR?=
+ =?utf-8?B?N1ErMjkyOWY5QklvYzB6Y2Ztd2F3eHpYdUt2cTV3eHV6VmNCRWV5ZmhiaC9i?=
+ =?utf-8?B?SjFGOHVmcFc2NEFINDBoQmNoUFAxR1c4ZXp2NVNyY2REelIyTTNhUlVySTB0?=
+ =?utf-8?B?QnlubURIdEx6S2g1YXpRZ3FCYUV3RVArN2l3aDliNEtMblJZU0FLWk5Ed2tw?=
+ =?utf-8?B?bFNjU1NjRnBVK0JFb1Z4Smgwck83Y01sZGN1OEh4aHpOT2ZXNHhsWllYS0xQ?=
+ =?utf-8?B?RjJFZjRoTzhSZkhYSkozdzhZdGJnTEtSQlhHdTVsS1NFZ3R1NmxxQ1hMTHoy?=
+ =?utf-8?B?YlIyRlBoQzQ5WWxLUmJIUmNQMWxMNVhMUnIrNC9QdjRVaU10T244Zk9aYXNs?=
+ =?utf-8?B?S0liZ2ZBRUFjZ1V1T0dmNXJmMkdJazYxL3Z3OEVrRDM5WnRVOUlVWUFEaHB3?=
+ =?utf-8?B?eXRIaHllZXcraW1aNTN3czcySEpqRDlIWmRlaDg1TmZkVlBWVWFCSVoyUnZs?=
+ =?utf-8?B?YUoxU1VhQ1R3WTFKajV6NXZNK0N3SHkvOWNLQ012RlNEczNFMXVQOWFxS2Vy?=
+ =?utf-8?B?b2g5R0xUNzRScmd2SjF3WVcrSExaSit3U1NlMjNCbUZJaUxJU1JjeHRNQVVi?=
+ =?utf-8?B?NW96OEVUMlMvNk9pUzQxYWtZRHF4R0l6cE8vK1p0RmRjS0pCTnFGZVo3b0Vn?=
+ =?utf-8?B?dGlCVVNKVUhKbTQ1dkc1eDNDc0lLa0Q1UWF0RmdkZk1IZWEzL25ZeHZDMHNn?=
+ =?utf-8?B?ZlEwcFRPMmhPenQrcjJvN3BCbzcyUktqWHBNOUc5aG9UU0J5MHkzdGJKZkhs?=
+ =?utf-8?B?WW55b3ludU9PK0xxZzBUelhXMWFRZ0F3QzBzblN2UnB0aXc0Nkp4dWgyTUtk?=
+ =?utf-8?B?WDlQTFB0YjZXakVnckxCZm5YQ0VtNFhsVHNjSkFKaGE4bVBaK1R0MytHTTJX?=
+ =?utf-8?B?dTA5YXR4dmVSRDJhQlV6NDNtelNDUWlKZEZhT0VFZmVQNndrWjF2K2szNGM2?=
+ =?utf-8?B?RkRPTy9rMG1CWGlGN1gxa0k1RGlCNmtMMjhsM0JicG5wOW9nanFNam8vZXVZ?=
+ =?utf-8?B?NVR4YWtmNWtxSDBBcUpvOElla2hVNFdqZnVRNTVvcGY3M1J3MUhiYUl2aFly?=
+ =?utf-8?B?dmNFVk9FN3ZyL05paXNEZmJZUGM5K2ZHMnluSXA4NjlNaUNvSGd2UmFtNjU3?=
+ =?utf-8?B?MFZvd2loM0ppOWJkU3o4NEJxL0pCSkxSaXNpclR4OXFkT1FLRkhMK3pFczhR?=
+ =?utf-8?B?OTkvUXNkdnRMUndpMi8ySnFYMEZtNFNFZzNNbDA2UnlpRVBYbDRFVlpoYXh1?=
+ =?utf-8?B?UTZ6cW1HSlhDRHM3bm5jTGQrZDdqd0RjUVQzVTdyT3k2RDI4N1pNNkhpTDd1?=
+ =?utf-8?B?S0NZd0swK2tQVEZRZGlFd0VpYTVRUzUrSlFSWEdLU0g4c1RabkQxekl1OHc2?=
+ =?utf-8?B?aGorcXVtcCtLTDU2QVZ4Z2p2azFQR0NvejY1UFd0REtkVHYrK0h6MXVQVWJh?=
+ =?utf-8?B?VktnZ1NrKy9UeThJeFkvdUg3UytlMEFiZ2VINHU2YXl6NFVPMVh1dmk2VkVR?=
+ =?utf-8?B?a2FNWUpGejVFM0JNYk82Z0syVW02V09rWHJOWDNEUGpMbGFUL01nOEJLR2VO?=
+ =?utf-8?B?LzlTU3pyakwwb0ppb1M3ekhFUzM4M05LbWc2NmFnMlpDb0l1bG8zNjNoKzBj?=
+ =?utf-8?B?dW05ODhRR1pzazdoeWVwcDJycFNPVUNkSDgzZ3A3eG1UOUhYQlFzYlh0M1Vn?=
+ =?utf-8?B?MnNYUVZGRXYrWmNsL3IvVFc3VlM5UExKOTdRSXRiZUczV3BxK1pKd29tb3NQ?=
+ =?utf-8?B?enhzY0ZaNWc3MWFHR0tETGJFcmhhVkhEMGJOVG0rMUJjZzFKR2VGcTBxcTdm?=
+ =?utf-8?B?d0dUOEo2djkwem1XWGlrS1E4WTZPeGl1K0JhaERtLzdKbGJXTDJ6d3FwcUVN?=
+ =?utf-8?B?bWc9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	pYCDL8qI+rMu90fLx77zOIvvEwlQJZIeYE+uhwhxGhT7gvXRjS8TJuHJ3hYjAQMQ/iMgOu71iK6gwH7jyuZTxZNgMlpUNbKuK+xcd9qi5vMipgc8fcxokE1J9fiRy3Wa6gvYKvB4Lrvf0ZuqHFXU0WJE/Q2DhKp5SgVux+I/iZXD2DyBVqk/B9V3BQNEj8TjUYqnjIuoG/jJDe+NOFFCHD9mCNOgJomNrz1fdXheqsf/9YHF9mgyDSWIPK9U6zTbhJDePyk8pynOkiy6uDWWC4TezTmuqMUX/EBrj5JORaAhEmzAROCzRCB7s/A8jLTGIXvukRdBGoZQtTmg733oFgIDH1WRcd/4aeF2PHEhRZzndUcDFSSZbkzlN5eN0t0H3ZcOP3Lj7KHC+WYCQceK2YWWMp/rGGreKzIlkKG9dc9y7cxudVt8iJKklFybpjQ5aBitNe8W/FaHVTvaK4YBWdMCP+Uyjph0pDJJRSw+l5FLHhWOuZ3eVqXba6O5shtXxG7PDUQfgLkQlpbyxrn2FCgFxGpu0RtRMyhAXRiKmNVeAht4Y5q5EeCW04Cd1hN5sprSwzVea6xg7ua59dWzz6gNU/ypEDhW4lrYJEMARaw=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d9ffb80a-1db3-472e-620e-08dc1be12b84
+X-MS-Exchange-CrossTenant-AuthSource: CO6PR10MB5409.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jan 2024 07:01:49.2314
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: sIIduoa3PPSZB8sz/yQqVkKCMpEcXuqLHVGOtsBc9asdUKOTovar/5MbIasolE1P/eyb63Xq4pGG2aUnL9OCZmT2jT1gat/7aDzoFfE3GZY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB7033
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-23_02,2024-01-23_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ spamscore=0 mlxscore=0 adultscore=0 bulkscore=0 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2401230049
+X-Proofpoint-ORIG-GUID: LTzdUHDi2XjvvtIeX3182Pgrm0HA9n3R
+X-Proofpoint-GUID: LTzdUHDi2XjvvtIeX3182Pgrm0HA9n3R
 
-On Tue, Jan 23, 2024 at 09:49:37AM +1100, Dave Chinner wrote:
-> On Mon, Jan 22, 2024 at 09:18:56PM +0800, Zorro Lang wrote:
-> > # dmesg
-> > [180724.293443] loop: module loaded
-> > [180724.294001] loop0: detected capacity change from 0 to 6876344
-> > [180724.296987] XFS (loop0): Mounting V5 Filesystem 59e2f6ae-ceab-4232-9531-a85417847238
-> > [180724.309088] XFS (loop0): Starting recovery (logdev: internal)
-> > [180724.335207] XFS (loop0): Bad dir block magic!
-> > [180724.335210] XFS: Assertion failed: 0, file: fs/xfs/xfs_buf_item_recover.c, line: 414
-> > [180724.335264] ------------[ cut here ]------------
-> > [180724.335265] kernel BUG at fs/xfs/xfs_message.c:102!
-> > [180724.335356] monitor event: 0040 ilc:2 [#1] SMP 
-> > [180724.335362] Modules linked in: loop sunrpc rfkill vfio_ccw mdev vfio_iommu_type1 zcrypt_cex4 vfio iommufd drm fuse i2c_core drm_panel_orientation_quirks xfs libcrc32c ghash_s390 prng virt
-> > io_net des_s390 sha3_512_s390 net_failover sha3_256_s390 failover virtio_blk dm_mirror dm_region_hash dm_log dm_mod pkey zcrypt aes_s390
-> > [180724.335379] CPU: 2 PID: 6449 Comm: mount Kdump: loaded Not tainted 6.7.0+ #1
-> > [180724.335382] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
-> > [180724.335384] Krnl PSW : 0704e00180000000 000003ff7fe692ca (assfail+0x62/0x68 [xfs])
-> > [180724.335727]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:0 RI:0 EA:3
-> > [180724.335729] Krnl GPRS: c000000000000021 000003ff7fee3a40 ffffffffffffffea 000000000000000a
-> > [180724.335731]            000003800005b3c0 0000000000000000 000003ff800004c4 0000000300014178
-> > [180724.335732]            0000000090a87e80 0000000300014178 000000008bcf6000 00000000924a5000
-> > [180724.335734]            000003ffbe72ef68 000003ff7ffe4c20 000003ff7fe692a8 000003800005b468
-> > [180724.335742] Krnl Code: 000003ff7fe692bc: f0a8000407fe       srp     4(11,%r0),2046,8
-> >                            000003ff7fe692c2: 47000700           bc      0,1792
-> >                           #000003ff7fe692c6: af000000           mc      0,0
-> >                           >000003ff7fe692ca: 0707               bcr     0,%r7
-> >                            000003ff7fe692cc: 0707               bcr     0,%r7
-> >                            000003ff7fe692ce: 0707               bcr     0,%r7
-> >                            000003ff7fe692d0: c00400133e0c       brcl    0,000003ff800d0ee8
-> >                            000003ff7fe692d6: eb6ff0480024       stmg    %r6,%r15,72(%r15)
-> > [180724.335753] Call Trace:
-> > [180724.335754]  [<000003ff7fe692ca>] assfail+0x62/0x68 [xfs] 
-> > [180724.335835] ([<000003ff7fe692a8>] assfail+0x40/0x68 [xfs])
-> > [180724.335915]  [<000003ff7fe8323e>] xlog_recover_validate_buf_type+0x2a6/0x5c8 [xfs] 
-> > [180724.335997]  [<000003ff7fe845ba>] xlog_recover_buf_commit_pass2+0x382/0x448 [xfs] 
-> > [180724.336078]  [<000003ff7fe8e89a>] xlog_recover_items_pass2+0x72/0xf0 [xfs] 
-> > [180724.336159]  [<000003ff7fe8f7ce>] xlog_recover_commit_trans+0x39e/0x3c0 [xfs] 
-> > [180724.336240]  [<000003ff7fe8f930>] xlog_recovery_process_trans+0x140/0x148 [xfs] 
-> > [180724.336321]  [<000003ff7fe8f9f8>] xlog_recover_process_ophdr+0xc0/0x180 [xfs] 
-> > [180724.336402]  [<000003ff7fe9002e>] xlog_recover_process_data+0xb6/0x168 [xfs] 
-> > [180724.336482]  [<000003ff7fe901e4>] xlog_recover_process+0x104/0x150 [xfs] 
-> > [180724.336563]  [<000003ff7fe905e2>] xlog_do_recovery_pass+0x3b2/0x748 [xfs] 
-> > [180724.336643]  [<000003ff7fe90dd0>] xlog_do_log_recovery+0x88/0xd8 [xfs] 
-> > [180724.336727]  [<000003ff7fe90e6c>] xlog_do_recover+0x4c/0x218 [xfs] 
-> > [180724.336808]  [<000003ff7fe9247a>] xlog_recover+0xda/0x1a0 [xfs] 
-> > [180724.336888]  [<000003ff7fe78d36>] xfs_log_mount+0x11e/0x280 [xfs] 
-> > [180724.336967]  [<000003ff7fe6a756>] xfs_mountfs+0x3e6/0x920 [xfs] 
-> > [180724.337047]  [<000003ff7fe71ffc>] xfs_fs_fill_super+0x40c/0x7d8 [xfs] 
-> > [180724.337127]  [<00000000552adf88>] get_tree_bdev+0x120/0x1a8 
-> > [180724.337142]  [<00000000552ab690>] vfs_get_tree+0x38/0x110 
-> > [180724.337146]  [<00000000552dee28>] do_new_mount+0x188/0x2e0 
-> > [180724.337150]  [<00000000552dfaa4>] path_mount+0x1ac/0x818 
-> > [180724.337153]  [<00000000552e0214>] __s390x_sys_mount+0x104/0x148 
-> > [180724.337156]  [<0000000055934796>] __do_syscall+0x21e/0x2b0 
-> > [180724.337163]  [<0000000055944d60>] system_call+0x70/0x98 
-> > [180724.337170] Last Breaking-Event-Address:
-> > [180724.337221]  [<000003ff7fe692b2>] assfail+0x4a/0x68 [xfs]
-> > [180724.337301] ---[ end trace 0000000000000000 ]---
-> > 
-> > # trace-cmd report > testfs.trace.txt
-> > # bzip2 testfs.trace.txt
-> > 
-> > Please download it from:
-> > https://drive.google.com/file/d/1FgpPidbMZHSjZinyc_WbVGfvwp2btA86/view?usp=sharing
-> 
-> Actually, looking at the compound buffer logging code and reminding
-> myself of how it works, I think this might actually be a false
-> positive.
-> 
-> What I see in the trace is this pattern of buffer log items being
-> processed through every phase of recovery:
-> 
->  xfs_log_recover_buf_not_cancel: dev 7:0 daddr 0x2c2ce0, bbcount 0x10, flags 0x5000, size 2, map_size 2
->  xfs_log_recover_item_recover: dev 7:0 tid 0xce3ce480 lsn 0x300014178, pass 1, item 0x8ea70fc0, item type XFS_LI_BUF item region count/total 2/2
->  xfs_log_recover_buf_not_cancel: dev 7:0 daddr 0x331fb0, bbcount 0x58, flags 0x5000, size 2, map_size 11
->  xfs_log_recover_item_recover: dev 7:0 tid 0xce3ce480 lsn 0x300014178, pass 1, item 0x8f36c040, item type XFS_LI_BUF item region count/total 2/2
-> 
-> The item addresses, tid and LSN change, but the order of the two
-> buf log items does not.
-> 
-> These are both "flags 0x5000" which means both log items are
-> XFS_BLFT_DIR_BLOCK_BUF types, and they are both partial directory
-> block buffers, and they are discontiguous. They also have different
-> types of log items both before and after them, so it is likely these
-> are two extents within the same compound buffer.
-> 
-> The way we log compound buffers is that we create a buf log format
-> item for each extent in the buffer, and then we log each range as a
-> separate buf log format item. IOWs, to recovery these fragments of
-> the directory block appear just like complete regular buffers that
-> need to be recovered.
-> 
-> Hence what we see above is the first buffer (daddr 0x2c2ce0, bbcount
-> 0x10) is the first extent in the directory block that contains the
-> header and magic number, so it recovers and verifies just fine. The
-> second buffer is the tail of the directory block, and it does not
-> contain a magic number because it starts mid-way through the
-> directory block. Hence the magic number verification fails and the
-> buffer is not recovered.
-> 
-> Compound buffers were logged this way so that they didn't require a
-> change of log format to recover. Prior to compound buffers, the
-> directory code kept it's own dabuf structure to map multiple extents
-> in a singel directory block, and they got logged as separate buffer
-> log format items as well.
-> 
-> So the problem isn't directly related to the conversion of dabufs to
-> compound buffers - the problem is related to the buffer recovery
-> verification code not knowing that directory buffer fragments are
-> valid recovery targets.
-> 
-> IOWs, this appears to be a log recovery problem and not a runtime
-> issue. I think the fix will be to allow directory blocks to fail the
-> magic number check if and only if the buffer length does not match
-> the directory block size (i.e. it is a partial directory block
-> fragment being recovered). 
-> 
-> This makes the verification a bit more tricky and perhaps a little
-> less robust, but we do know that we are supposed to be recovering a
-> directory block from the buf log format flags and so this additional
-> check can be constrained.
-> 
-> I suspect that we also need to verify that all other buffers that
-> are supposed to log and recover entire objects have the correct
-> size, too.
-> 
-> I'll start working on a fix now - I'm not sure what form that will
-> take yet as I need to stare at the code for a while longer yet.
-> 
-> Zorro, in the mean time, can you write up an xfstest that creates a
-> small XFS filesystem with "-n size=64k" and a large log, sets it up
-> with single block fragmentation (falloc, punch alternate), then
-> creates a bunch of files (a few thousand) to create a set of
-> fragmented directory blocks, then runs 'shutdown -f' to force the
-> log and prevent metadata writeback, then unmounts and mounts the
-> filesystem. The mount of the filesystem should then trigger this
-> directory fragment recovery issue on any platform, not just s390.
+[ Missed this email until now. ]
 
-Sure Dave, do you mean something likes this:
+Thomas Gleixner writes:
 
-# mkfs.xfs -f -d size=1g -n size=64k -l size=200M /dev/loop0
-# mount /dev/loop0 /mnt/test
-# for ((i=0; i<10000; i++));do echo > /mnt/tmp/dir/loooooooooooooooooooooooogfile$i;done && xfs_io -xc 'shutdown -f' /mnt/test
-# umount /mnt/test
-# mount /mnt/test
+>On Fri, Jan 12 2024 at 07:27, Dave Chinner wrote:
+>
+>Cc: Ankur
+>
+> > On Thu, Jan 11, 2024 at 08:52:22PM +0800, Jian Wen wrote:
+> >> On Thu, Jan 11, 2024 at 5:38 AM Dave Chinner <david@fromorbit.com> wrote:
+> >> > IOWs, this is no longer considered an acceptible solution by core
+> >> > kernel maintainers.
+> >> Understood. I will only build a hotfix for our production kernel then.
+> >
+> > Yeah, that may be your best short term fix. We'll need to clarify
+> > what the current policy is on adding cond_resched points before we
+> > go any further in this direction.
+>
+> Well, right now until the scheduler situation is sorted there is no
+> other solution than to add the cond_resched() muck.
+>
+> > Thomas, any update on what is happening with cond_resched() - is
+> > there an ETA on it going away/being unnecessary?
+>
+> Ankur is working on that...
 
-I think might be not such simple, it only creates a directory with
-several dir-blocks, then shutdown fs. Is there anything detailed &
-necessary steps I missed?
+Yeah, running through a final round of tests before sending out the series.
 
-Thanks,
-Zorro
+Dave, on the status of cond_resched(): the work on this adds a new scheduling
+model (as Thomas implemented in his PoC) undwer which cond_resched() would
+basically be a stub.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+However, given that other preemption models continue to use cond_resched(),
+we would need to live with cond_resched() for a while -- at least while
+this model works well enough under a wide enough variety of loads.
 
+Thanks
+Ankur
