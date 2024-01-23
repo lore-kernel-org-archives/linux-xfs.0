@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECD557300
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 10:33:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9B25C5FE
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 10:38:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706006029; cv=none; b=W3xc255NtnopCvLRYrCsYsXkRPmaRSYmlTZRbq+t9F/zygrehVzlYmNKfFwMhAkOkFtoW2sB1GM+QbPo3qykx4+GnqWnEOlyxTa1PetuAPzJh8Si5pvdW/TQhjcVUVNdv0l662dGFe7e7KlSCeBcqpSELvoggbMAg39Zb6lETtU=
+	t=1706006315; cv=none; b=Ybdbae2Rg+9gynnf4mH+a/5F/a8z0IGMCwU0qoAoM4HooFRKAv2h0GnR7nJ4qx4QIjFffhxZKcMsJ/vrI2TwgOlN/zg1mJzDfiz5K+OOA7f7lBbTN48wib+kncIB8zugGS0LhMb+4SqJMyNIUS1pH1xTtlz6r7JlItoSKDIaCMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706006029; c=relaxed/simple;
-	bh=eLJEbeklUkoKs3RDYSckoStco76tZcqcSnTsyXYsON8=;
+	s=arc-20240116; t=1706006315; c=relaxed/simple;
+	bh=lVsBKbDDJF3ceXm0FPt8Ck+0PSteaxTqnfYYJdW9a6w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U/Db4nqbJR6vBRwjqPar75XeGhTeOQqFI//CYSIPKHO6sJspTcM3K3zrzbSn/gGe/1zI86adbLvckVguw/Q8Gnu1Oal+lY9L7eXoxL8nPFMR21mOf4WaeHMbDy4Z/3XjZVA8w/Ri51sLyccm9iwf0wfS9hi4J8kSdlK0nqPYQKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jvhsOMj+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iqlt7Y3uNd5MONHidV/GJOpmAR8i0w/BA4Y8AMy9MY7FR4if9RMKuRGvd7IWHUDRMH9mgjSEgwp+1oGkHXa9DNDwMT3U09cGaD6UmRiwUk4/0xkb70zgcnCh996h7bE43HDWzp0DNUrmoOJ+j+0x3uLHYa97bjbij0qszkONsuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hvckNIXQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jvhsOMj+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34E41C433F1;
-	Tue, 23 Jan 2024 10:33:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hvckNIXQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 382D4C433C7;
+	Tue, 23 Jan 2024 10:38:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706006029;
-	bh=eLJEbeklUkoKs3RDYSckoStco76tZcqcSnTsyXYsON8=;
+	s=k20201202; t=1706006315;
+	bh=lVsBKbDDJF3ceXm0FPt8Ck+0PSteaxTqnfYYJdW9a6w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jvhsOMj+Y6a3zUA13mA8MdyOADC4LfD23SxjNkXA2s9o6pO4/VzdIi0B01scR2sdz
-	 D/d96y/6noJtSkQkWt67slsXDmr8iUDjs6Aa8x6837ifK2R7Oz+dX/2fX6bspyjHLe
-	 iAp76LsWNVfDhI+2cXGpfI8gRrdylonxtDB3GcZJUIze5pv2xGFos0zRsNGC93P4K4
-	 fQ+MiV+g7I0UngFfxaNE3WpgGdQSM/Sl6tip1pvcr9tsksa1XKX9djOB+8OSWIOQMv
-	 aEaoS5QOxMHOwtdfymW2T8wXVXXbxcro95QsIcAO/4PcpE13inaeWrtJzDHaVK++h9
-	 +I9g/WtRxBk7g==
-Date: Tue, 23 Jan 2024 11:33:44 +0100
+	b=hvckNIXQoQnmXvT3FKkzHQbNBYVhNOGxp1ZWRVK4cfniLbBXxxvRGZE1fXpzGWRb+
+	 iTCIuUmor8oJxAaZylWx8wH8whuGwnc1KDLN1SixsrYJarHuhPi7meCVLJ2FB8XFP5
+	 jA62WEZWnruNpdkuNjIMAlB4rHoXtcb3FTWicC2iCRe8Fn8st7TGRKztIS3LrB2Iie
+	 LntSzTzkVXoyi+Ifzpu97LPA7CYMmW/dEzjUVsppbN60q3Nb2UlHn47L6BlC5NDlpU
+	 /z7brn58+v21wDtZzbOiUbit5sSRAdP+S53S+OGFr7c67Ij0+mflViNF/57P9jOves
+	 eilibQqRx/gyQ==
+Date: Tue, 23 Jan 2024 11:38:31 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: glitsj16@riseup.net, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL 6/6] xfs_scrub: tighten security of systemd services
-Message-ID: <mws7bjjvztoeneefr7he4vtec6s4mhf5o5i7ur4cs6dfvsy75o@ciunmrv2bbqp>
-References: <r5ZmE3Y-_E8Hew0HCzp7lyf_Q6HlOYM1PCbjnrZP2j6es7Eq3mFWFJlBnQMogrRy_gTQkJEeeIzwjdSp6u63Jw==@protonmail.internalid>
- <170502573653.996574.9591002351083368679.stg-ugh@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_db: don't hardcode 'type data' size at 512b
+Message-ID: <yr2rzvhdk7hcrjtsazhopvfx4o3uhscpbmbzi4tyvr32yqs4nr@vnu2wmrmjezw>
+References: <XHUtgxly_CH13p8M7H9gfXcYh0jkPKFUt3PdJWiUb0Zd-14mjvJntXzbO99fH1XtOezv0aqG4XSdnTZ06vmgzw==@protonmail.internalid>
+ <20240123041044.GD6226@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,70 +42,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170502573653.996574.9591002351083368679.stg-ugh@frogsfrogsfrogs>
+In-Reply-To: <20240123041044.GD6226@frogsfrogsfrogs>
 
-On Thu, Jan 11, 2024 at 06:17:43PM -0800, Darrick J. Wong wrote:
-> Hi Carlos,
+On Mon, Jan 22, 2024 at 08:10:44PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Please pull this branch with changes for xfsprogs for 6.6-rc1.
+> On a disk with 4096-byte LBAs, the xfs_db 'type data' subcommand doesn't
+> work:
 > 
-> As usual, I did a test-merge with the main upstream branch as of a few
-> minutes ago, and didn't see any conflicts.  Please let me know if you
-> encounter any problems.
+> # xfs_io -c 'sb' -c 'type data' /dev/sda
+> xfs_db: read failed: Invalid argument
+> no current object
 > 
-> The following changes since commit 1c95c17c8857223d05e8c4516af42c6d41ae579a:
-> 
-> xfs_scrub_all: fix termination signal handling (2024-01-11 18:08:47 -0800)
-> 
-> are available in the Git repository at:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-service-security-6.6_2024-01-11
-> 
-> for you to fetch changes up to 13995601c86574e2f65d93055ac7a624fbde4443:
-> 
-> xfs_scrub_all: tighten up the security on the background systemd service (2024-01-11 18:08:47 -0800)
-
-As we spoke, this branch contain patches without Reviewed-by tags, I won't be
-pulling this branch by now.
-
-Cheers,
-Carlos
-> 
-> ----------------------------------------------------------------
-> xfs_scrub: tighten security of systemd services [v28.3 6/6]
-> 
-> To reduce the risk of the online fsck service suffering some sort of
-> catastrophic breach that results in attackers reconfiguring the running
-> system, I embarked on a security audit of the systemd service files.
-> The result should be that all elements of the background service
-> (individual scrub jobs, the scrub_all initiator, and the failure
-> reporting) run with as few privileges and within as strong of a sandbox
-> as possible.
-> 
-> Granted, this does nothing about the potential for the /kernel/ screwing
-> up, but at least we could prevent obvious container escapes.
+> The cause of this is the hardcoded initialization of bb_count when we're
+> setting type data -- it should be the filesystem sector size, not just 1.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+Looks good:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> ---
+>  db/block.c |    7 ++++---
+>  db/io.c    |    3 ++-
+>  2 files changed, 6 insertions(+), 4 deletions(-)
 > 
-> ----------------------------------------------------------------
-> Darrick J. Wong (6):
-> xfs_scrub: allow auxiliary pathnames for sandboxing
-> xfs_scrub.service: reduce CPU usage to 60% when possible
-> xfs_scrub: use dynamic users when running as a systemd service
-> xfs_scrub: tighten up the security on the background systemd service
-> xfs_scrub_fail: tighten up the security on the background systemd service
-> xfs_scrub_all: tighten up the security on the background systemd service
+> diff --git a/db/block.c b/db/block.c
+> index f234fcb4edcb..c847a91dd22f 100644
+> --- a/db/block.c
+> +++ b/db/block.c
+> @@ -149,6 +149,7 @@ daddr_f(
+>  	int64_t		d;
+>  	char		*p;
+>  	int		c;
+> +	int		bb_count = BTOBB(mp->m_sb.sb_sectsize);
+>  	xfs_rfsblock_t	max_daddrs = mp->m_sb.sb_dblocks;
+>  	enum daddr_target tgt = DT_DATA;
 > 
-> man/man8/xfs_scrub.8             |  9 +++-
-> scrub/Makefile                   |  7 ++-
-> scrub/phase1.c                   |  4 +-
-> scrub/system-xfs_scrub.slice     | 30 +++++++++++++
-> scrub/vfs.c                      |  2 +-
-> scrub/xfs_scrub.c                | 11 +++--
-> scrub/xfs_scrub.h                |  5 ++-
-> scrub/xfs_scrub@.service.in      | 97 +++++++++++++++++++++++++++++++++++-----
-> scrub/xfs_scrub_all.service.in   | 66 +++++++++++++++++++++++++++
-> scrub/xfs_scrub_fail@.service.in | 59 ++++++++++++++++++++++++
-> 10 files changed, 270 insertions(+), 20 deletions(-)
-> create mode 100644 scrub/system-xfs_scrub.slice
+> @@ -202,13 +203,13 @@ daddr_f(
+>  	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
+>  	switch (tgt) {
+>  	case DT_DATA:
+> -		set_cur(&typtab[TYP_DATA], d, 1, DB_RING_ADD, NULL);
+> +		set_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
+>  		break;
+>  	case DT_RT:
+> -		set_rt_cur(&typtab[TYP_DATA], d, 1, DB_RING_ADD, NULL);
+> +		set_rt_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
+>  		break;
+>  	case DT_LOG:
+> -		set_log_cur(&typtab[TYP_DATA], d, 1, DB_RING_ADD, NULL);
+> +		set_log_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
+>  		break;
+>  	}
+>  	return 0;
+> diff --git a/db/io.c b/db/io.c
+> index 580d34015868..3841c0dcb86e 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -681,7 +681,8 @@ void
+>  set_iocur_type(
+>  	const typ_t	*type)
+>  {
+> -	int		bb_count = 1;	/* type's size in basic blocks */
+> +	/* type's size in basic blocks */
+> +	int		bb_count = BTOBB(mp->m_sb.sb_sectsize);
+>  	int		boff = iocur_top->boff;
+> 
+>  	/*
 > 
