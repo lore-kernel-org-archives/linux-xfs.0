@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3C45BAE7
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 10:29:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6305E38386
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 10:30:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706005780; cv=none; b=kFysI6gHQEvbfiSpv+ikJf1wa/2ySVGRMkmROUMkDlaIqznmXl0UD8jY5ecZ/ZrRWfkIEUkyKR6l/95ynOK+FMRiuZj7DeHv6mPczzwu3D7DDgW+kMkQfhGVCzcEDK96XdKKvXFWkC2wYyvTqbLO79nq2D0glxznzuQRM+iJgWM=
+	t=1706005851; cv=none; b=PCNhW73O1bYFAD3UnYx6H26AXMJLSFY8Is6yfUI72y91t3NovtURu/nrkDF7D+fy7GBIb1trr8vjZaS1kijFEevnffgJwZPDJz+oN+FHzlwyHUhS4epL/KisDhA3ooE7vPM6rIHzbap+NLNrMf4cR4HgmXpS3sA5V0PrejN2Who=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706005780; c=relaxed/simple;
-	bh=2wUkxfgYpofnkA2/LjnWmRTn4nScecYU/D750cu/kvI=;
+	s=arc-20240116; t=1706005851; c=relaxed/simple;
+	bh=+WHs/EGq7F8XMU9lm3BUGWoimCl+Me7U3RzYGh1Mq/I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GZayP0Z2vDj+6vyxSM+QjdhxzPeU4xbvSRQwRQzk7To7txVXBmjeqTb0UDPyq8ZiJCgJdDpFkbPhjfAnZ11dDYp/bEyN04LkLzCjI4itu0NO+VgN//qUgjcdVB3NSR8U1DPVXv/XjIcLKzw8mP4Dp5ORWAA9hsvR4XF0zXBjNRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ID/8gre8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QZ/JaiLEC6d7K7mEMN03CtSXKtecH/hKWyzrz25tzbz1pE06cTzbHVBzD3lXCLg2lbTczBGcVdRSVum+raBG1kNz0mA4WaIfwwuzKoL1dsSdxmn35IjH65lhBmMKKV6QMlW3JL+V+mMRyMkxLx5a5w1ckJ8AJyHHkSKGm3Jq3Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ffp3FJTz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ID/8gre8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE254C433C7;
-	Tue, 23 Jan 2024 10:29:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ffp3FJTz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6633C433C7;
+	Tue, 23 Jan 2024 10:30:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706005779;
-	bh=2wUkxfgYpofnkA2/LjnWmRTn4nScecYU/D750cu/kvI=;
+	s=k20201202; t=1706005850;
+	bh=+WHs/EGq7F8XMU9lm3BUGWoimCl+Me7U3RzYGh1Mq/I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ID/8gre8aptYqtdeu7uOuteYwcCpLeNpkRWkC3SbeH6JXtOh0g+F0awUu2EDRweqs
-	 CtlTCL3RQZ8BUpb+UeCYhE+plAm7HiFpajMlc8wNpg2xEZERkgGgwBmn/FnCCZOXM7
-	 U1WplzWZpnf/vtPQGsxFLShoFbcHghQDbxbIPFfAeiV1AZ+dUgwimcVGh8P2T5/Z4M
-	 GxhqTkANHptEgTxYViE372sNeZ6Biun6j0boK3OujbmoeBbtU6LmMFZi9AfbYyngbF
-	 eMsay1sqriKJgiQMk3JUruo+tnu6cFF7QK2cDSNWcx8rLniyAnYyBKzYVyNx0rBLLy
-	 1V/uM/ST7e1sg==
-Date: Tue, 23 Jan 2024 11:29:34 +0100
+	b=ffp3FJTzJis5R0aUCXrYnclG5DygTMfI2qUlKIFe5S1GX25hLLpYhmEHackc5j9Sb
+	 8u7MgrChvkNY8odvBm6x/G7q6E4fZgP6lDgExE5tmnKRGF+6qFuahJbK92cShU3WWq
+	 yGdRuY7m2ThYYV2EolMwXn8xX1EdoCoxJFJk1EErDD33mGLeNtKdfQWFHsCHfv+PK2
+	 kdq7wYdJv4RHEN0agQuXtpBkudmpjey9dS4ILFjjvKErhaZZ2sJEfd9MqhtLa5V9qi
+	 71aYrmrzJTWZ2knwMcdxQVFfoV+Smb9E2O8zGZYyPg1fKYW9BOpcda6tDGRnF6ed4I
+	 F4qjKAt+c97rg==
+Date: Tue, 23 Jan 2024 11:30:46 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL 3/6] xfs_scrub: fixes to the repair code
-Message-ID: <hu63j7c6gwphvzge73fwjqmn7zkscr2xif523or6ti5l7quzus@b7m6avpz7dff>
-References: <ciGNO1q9jvG-g9wEBfpT2U6k7IQyoT4LQiyHbytjSYoklyvQ5DrBo1VhztWxhBsuWW-xidrd1g4JtKyGr0i5kA==@protonmail.internalid>
- <170502573357.996574.18197732259576686299.stg-ugh@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, neal@gompa.dev
+Subject: Re: [GIT PULL 4/6] xfs_scrub: fixes for systemd services
+Message-ID: <6y6lo5glm3emr7zsahyjdyzh5cwf7s3ps7vyj3kits7mvudbpm@iq3w7prijo44>
+References: <YyATtfVqzg9jTrOOleNbtue2jxrd6bTPSEzNLTxj3aanjCgT1NJpZrCCKfSrfvt7gSNPy9uwLOYTPb0V3GLC_A==@protonmail.internalid>
+ <170502573456.996574.9256149259911075241.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,9 +42,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170502573357.996574.18197732259576686299.stg-ugh@frogsfrogsfrogs>
+In-Reply-To: <170502573456.996574.9256149259911075241.stg-ugh@frogsfrogsfrogs>
 
-On Thu, Jan 11, 2024 at 06:16:56PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 11, 2024 at 06:17:12PM -0800, Darrick J. Wong wrote:
 > Hi Carlos,
 > 
 > Please pull this branch with changes for xfsprogs for 6.6-rc1.
@@ -53,17 +53,17 @@ On Thu, Jan 11, 2024 at 06:16:56PM -0800, Darrick J. Wong wrote:
 > minutes ago, and didn't see any conflicts.  Please let me know if you
 > encounter any problems.
 > 
-> The following changes since commit 52520522199efa984dcf172a3eb8d835b93e324e:
+> The following changes since commit 96ac83c88e01ff7f59563ff76a96e555477c8637:
 > 
-> xfs_scrub: update copyright years for scrub/ files (2024-01-11 18:08:46 -0800)
+> xfs_scrub: don't report media errors for space with unknowable owner (2024-01-11 18:08:46 -0800)
 > 
 > are available in the Git repository at:
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-repair-fixes-6.6_2024-01-11
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-service-fixes-6.6_2024-01-11
 > 
-> for you to fetch changes up to 96ac83c88e01ff7f59563ff76a96e555477c8637:
+> for you to fetch changes up to 3d37d8bf535fd6a8ab241a86433b449152746e6a:
 > 
-> xfs_scrub: don't report media errors for space with unknowable owner (2024-01-11 18:08:46 -0800)
+> xfs_scrub_all.cron: move to package data directory (2024-01-11 18:08:47 -0800)
 
 Pulled, thanks!
 
@@ -71,22 +71,39 @@ Carlos
 
 > 
 > ----------------------------------------------------------------
-> xfs_scrub: fixes to the repair code [v28.3 3/6]
+> xfs_scrub: fixes for systemd services [v28.3 4/6]
 > 
-> Now that we've landed the new kernel code, it's time to reorganize the
-> xfs_scrub code that handles repairs.  Clean up various naming warts and
-> misleading error messages.  Move the repair code to scrub/repair.c as
-> the first step.  Then, fix various issues in the repair code before we
-> start reorganizing things.
+> This series fixes deficiencies in the systemd services that were created
+> to manage background scans.  First, improve the debian packaging so that
+> services get installed at package install time.  Next, fix copyright and
+> spdx header omissions.
+> 
+> Finally, fix bugs in the mailer scripts so that scrub failures are
+> reported effectively.  Finally, fix xfs_scrub_all to deal with systemd
+> restarts causing it to think that a scrub has finished before the
+> service actually finishes.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > 
 > ----------------------------------------------------------------
-> Darrick J. Wong (2):
-> xfs_scrub: flush stdout after printing to it
-> xfs_scrub: don't report media errors for space with unknowable owner
+> Darrick J. Wong (9):
+> debian: install scrub services with dh_installsystemd
+> xfs_scrub_all: escape service names consistently
+> xfs_scrub: fix pathname escaping across all service definitions
+> xfs_scrub_fail: fix sendmail detection
+> xfs_scrub_fail: return the failure status of the mailer program
+> xfs_scrub_fail: add content type header to failure emails
+> xfs_scrub_fail: advise recipients not to reply
+> xfs_scrub_fail: move executable script to /usr/libexec
+> xfs_scrub_all.cron: move to package data directory
 > 
-> scrub/phase6.c    | 13 ++++++++++++-
-> scrub/xfs_scrub.c |  2 ++
-> 2 files changed, 14 insertions(+), 1 deletion(-)
+> debian/rules                                |  1 +
+> include/builddefs.in                        |  2 +-
+> scrub/Makefile                              | 26 ++++++++++-----
+> scrub/xfs_scrub@.service.in                 |  6 ++--
+> scrub/xfs_scrub_all.in                      | 49 ++++++++++++-----------------
+> scrub/{xfs_scrub_fail => xfs_scrub_fail.in} | 12 +++++--
+> scrub/xfs_scrub_fail@.service.in            |  4 +--
+> 7 files changed, 55 insertions(+), 45 deletions(-)
+> rename scrub/{xfs_scrub_fail => xfs_scrub_fail.in} (63%)
 > 
