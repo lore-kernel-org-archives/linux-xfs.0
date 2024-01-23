@@ -1,146 +1,122 @@
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DC6B7F7E3
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 16:40:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BB06811EE;
+	Tue, 23 Jan 2024 19:42:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706028051; cv=none; b=vE04068Mk+I7NbgOSUqVFXO6igTYNvwnFv8xNsm2RoqFs0IDi7fnX+MOEN0VWwJtXEvDjoENfGVlVZ/Ydjkal3sgj/v87c8TC6PIdrTVCpqohIdzTDnLZym3oy8/og8Q2p8QxXHJGCWQGdsN+qBtsEXrpg2wHYBqj75ds+V1/2o=
+	t=1706038936; cv=none; b=DqqNeCHAo15jGIfXwSp1RBFp/Y2C9BTS0B8Q+x1DrLNFmiiPyC6wpvs2X+jtt91+M7EVnntctTOEb4jg4fjw7Cv3/Cp8hVY0r+gPGxoaCM4syklLWgCbxR+fzncULwxo1fEuzA9DMlkdtHFLt/1/1VSnKppo3JmzX1Q8ZQ2k850=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706028051; c=relaxed/simple;
-	bh=zEKOZrd79S8mIE6tD5Er8h8lMCDbyemsd3WOfCrC2k4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:From:In-Reply-To:
-	 Content-Type:References; b=ofQalnl45KQUQ3UykxhN3Ujs/SchGQ0gSxsSjXDKnT0QpBOJYVSXTiagq6gWkde5SoSWrf/Y7Nb1Ekuyv5LGo/bFvusSjnt8eWMObjefdpT5Mf9iNVjdPjJLlTgBBfMSf1qiN7s/CfwdidDWPB+7KHw4m0R2Vo1G2rTMuV/gd/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=kkptBV8q; arc=none smtp.client-ip=210.118.77.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1706038936; c=relaxed/simple;
+	bh=MgOh8qSAXOjVsURMY3TnuTHbI3cuWIPLfVNWhmhhrFI=;
+	h=Date:Message-Id:From:To:Cc:Subject:In-Reply-To; b=HxhUTzfxaO9/PKaCK9uqRlMptxH2iGW+4hUP3rS0ogTthI84jdo2tnZS9cy/GFcIQxNCt0lsQdDfFqY04u+fLM9TBxuecRbJB1HJ2znGpcPQvmBSvxue4ueb6p3RRGl5VmnSV9OXigHs9KZNXH23qFnI08lrXqa2NrDDKlpfV7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CnyelzOk; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="kkptBV8q"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20240123164047euoutp029fb49cabdde77da21dfb14ec42c8b2fd~tB3hmsste2316523165euoutp02R
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 16:40:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20240123164047euoutp029fb49cabdde77da21dfb14ec42c8b2fd~tB3hmsste2316523165euoutp02R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1706028047;
-	bh=d+3rmwVGRJ9k7WznkGJM+ZhfWlZzhnkh2hLWmpwqoEQ=;
-	h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-	b=kkptBV8qvq/b8kr8y5UHKookoHvncjPo166Icf2U4GHXz3exitykN7RscAXBUf6k1
-	 jS/jM4PWkFkmW3VQswkRianYeeDigUaFtAEl8D69zXWmsZTzvHZ2uvlSCkvwIUFcN6
-	 rT/uFQhRuWYAiUx5dkTdkESaElKLWyWFsX/7df70=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20240123164047eucas1p2fa350075d32790c348a854d1d7062ecd~tB3hSdP4C1243312433eucas1p2u;
-	Tue, 23 Jan 2024 16:40:47 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-	eusmges3new.samsung.com (EUCPMTA) with SMTP id AF.72.09552.F0CEFA56; Tue, 23
-	Jan 2024 16:40:47 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240123164046eucas1p297c033627bd506b0bf256e9ebc4639fe~tB3g5FST92500825008eucas1p2u;
-	Tue, 23 Jan 2024 16:40:46 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-	eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240123164046eusmtrp2c3092dc549020881ec4ec57a5c3bdc0d~tB3g4dVuw1469014690eusmtrp2W;
-	Tue, 23 Jan 2024 16:40:46 +0000 (GMT)
-X-AuditID: cbfec7f5-853ff70000002550-35-65afec0fad33
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-	eusmgms2.samsung.com (EUCPMTA) with SMTP id 1A.CE.10702.E0CEFA56; Tue, 23
-	Jan 2024 16:40:46 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240123164046eusmtip1fbe8e9570790f99424f59ac815e2d6df~tB3gpk0RR0469404694eusmtip1c;
-	Tue, 23 Jan 2024 16:40:46 +0000 (GMT)
-Received: from [192.168.8.209] (106.210.248.230) by CAMSVWEXC02.scsc.local
-	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-	Tue, 23 Jan 2024 16:40:45 +0000
-Message-ID: <803025df-5381-494d-9325-dd0a45312b8b@samsung.com>
-Date: Tue, 23 Jan 2024 17:40:44 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CnyelzOk"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1d71c844811so23216995ad.3;
+        Tue, 23 Jan 2024 11:42:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1706038933; x=1706643733; darn=vger.kernel.org;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=nOZhThgLXrk3cTydAduZLUncFHwC096MLmwwKuykovA=;
+        b=CnyelzOkgv6xDYVC7yWR6wg5yoYS1SQ1Z26JkuU6aCR2/d1pHgN/TIq2/S3Zdhiqry
+         r1OWymm5aCj+47mdTmoFSjW2N5UoBaivhqoB3NUAv/l8ObbDcoqICpsZEmMEgQSI7gNS
+         YDXUqINGZdFcHaVuaw0JGG3S4EedYG//v0+oRJ06VdDejDbsKBWBJotA2pWCB0q0sdsg
+         q7fhu5Jg9iSZaphuSJ0UnEWYWUEOUFad9mmkM/nIHfA4YsZYGm08quI7HzGgySiMnq2d
+         DQNI29kVYyNt0Szq5zuF53uj8Xci3r16n6PBQAL0P66X3R9Wf7ICReblRCa8tZa/hpPb
+         XmcA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706038933; x=1706643733;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=nOZhThgLXrk3cTydAduZLUncFHwC096MLmwwKuykovA=;
+        b=PH5jNoDWDoDFZMtqGwed9eI9HJhYzrvDKNums1+Ziry3Hme0GbfwYUY0ILU7YGYDEO
+         ZWTWyCJw8GhXo6hfvsquABxhGLmGwVJhWQo2gqgK/WcvX6fhICUcOggOBenfBzYhNEW8
+         NaXeiG0NOWanSoYUwVKirWyifXD1TuQQk6BVOG9vLXuyt6TpWjfAEPWlG2tBmOUsi756
+         OvfPMOEEuSV6IAHCIN2b41CsnLqovi9JGBmarlO688BotjZOORFbceLAoEokKw136Ml2
+         NexxQxv83DQc2QQy/tlIqdaD2EX1gROyIP0aMY9v2poweD9Go7csa43PAFLqOCiz1HAI
+         KANA==
+X-Gm-Message-State: AOJu0YytCZTt0UbK+lMSYvSpfTtSwPMHAatNliFdH63HdQUvUbEvyGDE
+	3zEF+fw1ffY1gDyMVXnt+e2x6UjPAv5/eayEuSy6Czl447nHSsw4S0luHipY
+X-Google-Smtp-Source: AGHT+IGyNHmGvsgwDy947E3qTBE3jH4X7oLo4cfW+ZeSSX5HBS7jAOJOmCfFp30dyMxIyteA5k4u2A==
+X-Received: by 2002:a17:902:ce8b:b0:1d6:f17e:a03d with SMTP id f11-20020a170902ce8b00b001d6f17ea03dmr4096509plg.95.1706038932878;
+        Tue, 23 Jan 2024 11:42:12 -0800 (PST)
+Received: from dw-tp ([49.205.218.89])
+        by smtp.gmail.com with ESMTPSA id e12-20020a17090301cc00b001d753a682e6sm3630397plh.96.2024.01.23.11.42.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 Jan 2024 11:42:12 -0800 (PST)
+Date: Wed, 24 Jan 2024 01:12:07 +0530
+Message-Id: <87frynkfao.fsf@doe.com>
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Pankaj Raghav <p.raghav@samsung.com>, Dave Chinner <david@fromorbit.com>, "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, djwong@kernel.org, mcgrof@kernel.org, gost.dev@samsung.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/2] fstest changes for LBS
+In-Reply-To: <803025df-5381-494d-9325-dd0a45312b8b@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] fstest changes for LBS
-Content-Language: en-US
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, Dave Chinner
-	<david@fromorbit.com>, "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-CC: <zlang@redhat.com>, <fstests@vger.kernel.org>, <djwong@kernel.org>,
-	<mcgrof@kernel.org>, <gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>
-From: Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <87le8gjc53.fsf@doe.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKKsWRmVeSWpSXmKPExsWy7djP87r8b9anGtydz2qx5dg9RovLT/gs
-	TrfsZbc48/Izi8WuPzvYLW5MeMpocfBUB7vF3pM7WR04PE4tkvDYOesuu8emVZ1sHmdXOnq8
-	33eVzePzJrkAtigum5TUnMyy1CJ9uwSujOU7njEW/GKveHXwK1MDYxdbFyMnh4SAicTJTZeY
-	uhi5OIQEVjBKzNzdww7hfGGU6Ju+mhmkSkjgM6NEw+XKLkYOsI6/P5IhapYzSuzrfMkM4QDV
-	bFg1gw3C2c0osXvLB0aQbl4BO4lnk2exgXSzCKhK7PniDBEWlDg58wkLiC0qIC9x/9YMdhBb
-	WEBfYvaGRWDnMQuIS9x6Mh/sPBGBXkaJc8eesII4zAKTGCWefDnBBDKUTUBLorETrJkTaP6L
-	t/3MEM2aEq3bf7ND2PIS29/OYYb4QFli6lIviPdrJU5tuQU2X0Kgm1Ni4bb/LBAJF4nXF/ZB
-	2cISr45vYYewZST+7wQ5CMSulnh64zczRHMLo0T/zvVsEAusJfrO5EDUOEpseT+DFSLMJ3Hj
-	rSDEOXwSk7ZNZ57AqDoLKShmIXl5FpIPZiH5YAEjyypG8dTS4tz01GLjvNRyveLE3OLSvHS9
-	5PzcTYzAlHT63/GvOxhXvPqod4iRiYPxEKMEB7OSCO8NyXWpQrwpiZVVqUX58UWlOanFhxil
-	OViUxHlVU+RThQTSE0tSs1NTC1KLYLJMHJxSDUxx9Tn/GDLMfXbIHHKbqyUXp6Siv9y64/bW
-	0AkzDY6vnm7TkjjPLU6jxuDUBIPg84yNGtOaO171f+V2KZ4TtjK2cPXi/edkTPVnlt4Ofnbw
-	SPqtjMDIP9fa3M78NS83MVSa/zSv0G/7/U1Mk5+eNZ49+2PYvUOnNnbxa1wwMNvUmjWn4455
-	kcCDTQkvOj7Y+exPuZ3JkfRi5T/fC5HzZpRbrq3cVbKK7fbeFnbJGT8vm0x4qFq/SFWinj94
-	m6DLnyIdnpSvwmbrlm8S2NHk9b3avSdIvmni8lXRP0Q3ds6ZG2xStPu8sfT+yGv/T7C8Pmql
-	8Ky1z/DsXef/jbUOCzK+1AU7VF7kuj/rXe7muX5KLMUZiYZazEXFiQAM1ipmuAMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrJIsWRmVeSWpSXmKPExsVy+t/xu7p8b9anGvTvVLPYcuweo8XlJ3wW
-	p1v2slucefmZxWLXnx3sFjcmPGW0OHiqg91i78mdrA4cHqcWSXjsnHWX3WPTqk42j7MrHT3e
-	77vK5vF5k1wAW5SeTVF+aUmqQkZ+cYmtUrShhZGeoaWFnpGJpZ6hsXmslZGpkr6dTUpqTmZZ
-	apG+XYJexvIdzxgLfrFXvDr4lamBsYuti5GDQ0LAROLvj+QuRi4OIYGljBKfFj8CinMCxWUk
-	Nn65ygphC0v8udYFFhcS+Mgo0fvJDKJhN6PEjE87wIp4Bewknk2eBTaURUBVYs8XZ4iwoMTJ
-	mU9YQGxRAXmJ+7dmsIPYwgL6ErM3LAKbySwgLnHryXwmkJkiAr2MEueOPWEFcZgFJjFKPPly
-	gglic4XErwtnGEEWsAloSTR2gg3iBNr14m0/M8QgTYnW7b/ZIWx5ie1v5zBDPKksMXWpF8Qv
-	tRKf/z5jnMAoOgvJebOQnDELyaRZSCYtYGRZxSiSWlqcm55bbKRXnJhbXJqXrpecn7uJERjH
-	24793LKDceWrj3qHGJk4GA8xSnAwK4nw3pBclyrEm5JYWZValB9fVJqTWnyI0RQYRBOZpUST
-	84GJJK8k3tDMwNTQxMzSwNTSzFhJnNezoCNRSCA9sSQ1OzW1ILUIpo+Jg1OqgcnYZbJwdmHh
-	hbbN5Q/fnOJ1ZMtUrbPUj929VPjqll1VNsuSb2nMtNC5zTl1SRlP0dWPMyfxbP/Vp1MSF7rw
-	VbDpUQEbW8038wobTblKUrMu8zAcLClYHt36J1IzZ5uTWUfEseRuS8Ze8XXbHsne3feH4YiC
-	suDFjZL6+go/OvJfmPL+2sf4p/vM3U0ntXw02QqKy3e5li551//ErlpYXrBmz7qjV35wMMet
-	FHsttmqTiyV744PT0p0zD5feSVJokNwdFa+8XexgkE/WHt2smWGh3KuXz52R8fZqu4eDZZPt
-	nL0PTOv494ivj7lZ8fSESOSKwM+3o6ISDi3aGmHMsDx84dS+uMJr3fmHm9WilViKMxINtZiL
-	ihMBCiUaSWwDAAA=
-X-CMS-MailID: 20240123164046eucas1p297c033627bd506b0bf256e9ebc4639fe
-X-Msg-Generator: CA
-X-RootMTR: 20240123153550eucas1p22e283235d636ce5005321ec694528627
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20240123153550eucas1p22e283235d636ce5005321ec694528627
-References: <CGME20240123153550eucas1p22e283235d636ce5005321ec694528627@eucas1p2.samsung.com>
-	<87le8gjc53.fsf@doe.com>
 
->> CCing Ritesh as I saw him post a patch to fix a testcase for 64k block size.
-> 
-> Hi Pankaj,
-> 
-> So I tested this on Linux 6.6 on Power8 qemu (which I had it handy).
-> xfs/558 passed with both 64k blocksize & with 4k blocksize on a 64k
-> pagesize system.
+Pankaj Raghav <p.raghav@samsung.com> writes:
 
-Thanks for testing it out. I will investigate this further, and see why
-I have this failure in LBS for 64k and not for 32k and 16k block sizes.
+>>> CCing Ritesh as I saw him post a patch to fix a testcase for 64k block size.
+>> 
+>> Hi Pankaj,
+>> 
+>> So I tested this on Linux 6.6 on Power8 qemu (which I had it handy).
+>> xfs/558 passed with both 64k blocksize & with 4k blocksize on a 64k
+>> pagesize system.
 
-As this test also expects some invalidation during the page cache writeback,
-this might an issue just with LBS and not for 64k page size machines.
+Ok, so it looks like the testcase xfs/558 is failing on linux-next with
+64k blocksize but passing with 4k blocksize.
+It thought it was passing on my previous linux 6.6 release, but I guess
+those too were just some lucky runs. Here is the report -
 
-Probably I will also spend some time to set up a Power8 qemu to test these failures.
+linux-next: xfs/558 aggregate results across 11 runs: pass=2 (18.2%), fail=9 (81.8%)
+v6.6: xfs/558 aggregate results across 11 runs: pass=5 (45.5%), fail=6 (54.5%)
 
-> However, since on this system the quota was v4.05, it does not support
-> bigtime feature hence could not run xfs/161. 
-> 
-> xfs/161       [not run] quota: bigtime support not detected
-> xfs/558 7s ...  21s
-> 
-> I will collect this info on a different system with latest kernel and
-> will update for xfs/161 too.
-> 
+So I guess, I will spend sometime analyzing why the failure.
 
-Sounds good! Thanks!
+Failure log
+================
+xfs/558 36s ... - output mismatch (see /root/xfstests-dev/results//xfs_64k_iomap/xfs/558.out.bad)
+    --- tests/xfs/558.out       2023-06-29 12:06:13.824276289 +0000
+    +++ /root/xfstests-dev/results//xfs_64k_iomap/xfs/558.out.bad       2024-01-23 18:54:56.613116520 +0000
+    @@ -1,2 +1,3 @@
+     QA output created by 558
+    +Expected to hear about writeback iomap invalidations?
+     Silence is golden
+    ...
+    (Run 'diff -u /root/xfstests-dev/tests/xfs/558.out /root/xfstests-dev/results//xfs_64k_iomap/xfs/558.out.bad'  to see the entire diff)
 
-> -ritesh
+HINT: You _MAY_ be missing kernel fix:
+      5c665e5b5af6 xfs: remove xfs_map_cow
+
+-ritesh
+
+>
+> Thanks for testing it out. I will investigate this further, and see why
+> I have this failure in LBS for 64k and not for 32k and 16k block sizes.
+>
+> As this test also expects some invalidation during the page cache writeback,
+> this might an issue just with LBS and not for 64k page size machines.
+>
+> Probably I will also spend some time to set up a Power8 qemu to test these failures.
+>
+>> However, since on this system the quota was v4.05, it does not support
+>> bigtime feature hence could not run xfs/161. 
+>> 
+>> xfs/161       [not run] quota: bigtime support not detected
+>> xfs/558 7s ...  21s
+>> 
+>> I will collect this info on a different system with latest kernel and
+>> will update for xfs/161 too.
+>> 
+>
+> Sounds good! Thanks!
+>
+>> -ritesh
