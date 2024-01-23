@@ -1,70 +1,68 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39BB0148FFA
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 00:19:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B3321078B
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2024 00:25:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705969182; cv=none; b=OSER9yDh60RP33Anl9+7LArYdNJ+2GJxGyYdhSp+7gAbFcTzqJt1KFhtfqxJpFapK2bHGGQhGuXSGQLJP4x1dcOYygkPmwngApdaCXITYT+LG8CJtO9tZR4ctS1T5igNAMItY7tukkjyV0VqDP6LHGy+iP9KifVRtdOkEcYIDf4=
+	t=1705969506; cv=none; b=M0fq1qb41+Xmek29A++xf3+hOmwWOMkha4/pxl2Qa2YyyuqZYcnKXwyoNaX9+y9m7U64PE5huWBuMkPQNjefaEeg1LAdbANxG8zRg7gNJSYmou2AOOf32zpahPepTnkAvVWVImkCLFDdPd/jEzz0jCTvNhaYNPXAko5BrNN8Bi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705969182; c=relaxed/simple;
-	bh=C+boFHnlU3bHNMu8LdhUVGE5pgl/xGAMq6veemTC6q8=;
+	s=arc-20240116; t=1705969506; c=relaxed/simple;
+	bh=wOJRPKW1bxPGDvsOi3xOSuJuhXqKBU0W5/hrzM6VbL8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZIzqRkfzwWxMcI49r7t4XKqN1TqWEqdbIUXdy++KbhrtlDaIMrmS+cqT/cBHbjDY2nvQqzXSryRW1ke/w9b/t1g7ZpNfr446feVK36v+YTkFQ+UTKB9uJR38br8HH+90kntKAvgWZ/VTHf44QfsQuu/q7P0itTUGuVs7WpX5ypU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KZCPFvar; arc=none smtp.client-ip=209.85.215.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=B+q5bn/U09mgfoBPjTLihKfGHe175owqwnQRNBxYBU0QWjvm2MlbW3HccjfE32cqDHBjKLrZM+wrvpKjjuDwOK4TyQq0tFvi0sbASVdSzSGJtqTG7iCBP61kmZL6v/ShgINHFRbmdL9hDij08MdNmKh6s6oynbao2kezT/9wWpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=iFx6H8LW; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KZCPFvar"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-5ce10b5ee01so2591357a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 16:19:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="iFx6H8LW"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6dbdb1cb23fso2003429b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2024 16:25:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705969180; x=1706573980; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1705969504; x=1706574304; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PsOlioRUwX2+o9Aa9cmeJB8MooioNCbAfG+kck/RrK8=;
-        b=KZCPFvar7j8dyVS/9C9Fiw5s6msHUPioWB1NfFOH90CMXa8QtmIbwFik/3IYtlmbuC
-         lBvowRyfMNq6tbd0Q8pVMNmPW0vwjJkcpxIsEie9m+Sa3osYqUJz0SjkElNv1mV+Ve2W
-         xZ83NLvj1pCH/4K71O3LBVyIgEeaFX0pg1AJ8urHMdDlaKOa4zHyAYucV11BdpngzvjW
-         E7RIGUtvDQ4/EGsufY1RSHnrl7MhxVmu2HglBZIBQfq1bcswllvJvogu0Xk1VyTOhw0z
-         KgUKykrqfcfhNi17APyMbrQqHJGZoHD+JVwMRvfkb89k5m9FORF3CmVilx5A4wYmQWWO
-         ilLw==
+        bh=C/kC1JFf7JnG/o9WgIwbuo8UGqbWDeIxlO4YdBIy+6E=;
+        b=iFx6H8LWVGE1jU61FTYaGODCcnGMugpwwvDFuOnnswHQg4t5LxwWRwoDOkXspm4LQb
+         M5EAeD7KsBJKd0ThtNPQ0PyvUncgafFUMX2rkF8ztPeGclYW+nMRmVW0RV0RDVMh8scY
+         laXHDo2+kgMfuJ2kG/pT4m6W0QcNUD5Z+QL08ooScNcjrm90ArpVJs72bkJVZdHTb+SA
+         6jsL7mbcPgZ2ha5st3PImIDz8mbLUqV4zQY/9DMvLCA8M7/FoarqLEu2jwJfkx1veF18
+         FfwAddX82whD++Q9vG76NFMq5A/5+G4MmClumGH3FPuqR+tKUOGKXnd3MKvAwcTBXquk
+         LXag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705969180; x=1706573980;
+        d=1e100.net; s=20230601; t=1705969504; x=1706574304;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=PsOlioRUwX2+o9Aa9cmeJB8MooioNCbAfG+kck/RrK8=;
-        b=AsKGRXfUtE+5DVpD5vYUgpvkBrnTIJycMc3U8kD9KSAyzkkOlz2c+UkHKfMwWBfS2k
-         Z40MIQEPGuRLTQqbWG+HkE0JfWMgYVYGuoxBJtT0aj/iE8cK0n5t5MB+IvUItxfSUGgI
-         ao2gk5wkSR/l4y7QusC200JE/kmWvgn/giHNoZkQchnolMqQWCvyD8sF+Vm1uR5E+uWc
-         ZVL4zdDSthFW3vTqsCA7UDl+GudWLHW0TwmILc20oQgMjsVlTBD2cXc9v5D7hplDWIgW
-         RWiyQFa4AO2ZDAnYnfulX1y5nl2+PLnO/IN6+sB07DRTcgTriBW1pTm0qOkCVW4KUjaW
-         jK3g==
-X-Gm-Message-State: AOJu0YxvNq8jVjAItw+9mQSJQcabQl9vlST7KaBStgkCgqyFPE1oBFI4
-	TgjSPraeRe7LmpQZbuqJgpClXZTrdbutm+B4Gup/bPkX3xySzONL/RW5voRglZ82EhGWvTerR/e
-	x
-X-Google-Smtp-Source: AGHT+IEvFm+Z3WvzsHcg59KKuaKzk5Uy7Oxu+IH0G4qXIMvJNfDJIdC1QznUZsez4BoQckuOwdkuRA==
-X-Received: by 2002:a05:6a20:c858:b0:19a:9f65:a971 with SMTP id ha24-20020a056a20c85800b0019a9f65a971mr4497920pzb.59.1705969180488;
-        Mon, 22 Jan 2024 16:19:40 -0800 (PST)
+        bh=C/kC1JFf7JnG/o9WgIwbuo8UGqbWDeIxlO4YdBIy+6E=;
+        b=j4R2jWO9mVEfxaMWwEZSVH2kG36MfMKd/Vr/5J2d7Pem/sGs5cnrZCLinL6oOsvdZ/
+         /GnCV7xuHe8vzxiMRnSb8Zugu4aBaxKypu2sdF3seG84eGkZu2W+pqKSa598uwHdSSmG
+         FAStE4qr2/NxSZzcYoNbOLwfxuXcrR78cWQ/ODEH1GjeWt2JsEsQ0IrusqF0LlE40rdz
+         Hj2UjE7MAiun1tiE0OcqTn+8GoIwkPht2a0fO5MRqrsamPsJRh/GHikF8IG6vII/z8JC
+         nBxaK1KtGz7NXjVsjgh8B7O7qXdVEUzALQG0pHenzPug00y/KuypFyahS38PNkvp1/yn
+         iFaw==
+X-Gm-Message-State: AOJu0YzfSFCNhJTagw1dFFcW5vr8T+ATD0yYMjTN6NXkeBJVvXmtHF5u
+	8UmAQQNAvbeyjtlnooU1u6443zNANNz8ekIIiGpkRXb8wF36M7Az6/fcYzwhkm4=
+X-Google-Smtp-Source: AGHT+IFF0J54Pvm/xN0b8DoJCIS3cRp0lsMiqhICOZ1TrW8ZJUoe6BS9T9ByVMyd3tU8PXap3GS/TQ==
+X-Received: by 2002:a05:6a00:cca:b0:6db:dd0e:8d6c with SMTP id b10-20020a056a000cca00b006dbdd0e8d6cmr3985474pfv.50.1705969504525;
+        Mon, 22 Jan 2024 16:25:04 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
-        by smtp.gmail.com with ESMTPSA id ls30-20020a056a00741e00b006dbe42b8f75sm1995534pfb.220.2024.01.22.16.19.39
+        by smtp.gmail.com with ESMTPSA id s10-20020a63dc0a000000b005cddfe17c0csm8831296pgg.92.2024.01.22.16.25.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jan 2024 16:19:39 -0800 (PST)
+        Mon, 22 Jan 2024 16:25:04 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rS4Vt-00DzKd-1W;
-	Tue, 23 Jan 2024 11:19:37 +1100
-Date: Tue, 23 Jan 2024 11:19:37 +1100
+	id 1rS4b6-00DzOD-1P;
+	Tue, 23 Jan 2024 11:25:00 +1100
+Date: Tue, 23 Jan 2024 11:25:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Andi Kleen <ak@linux.intel.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: Using Folios for XFS metadata
-Message-ID: <Za8GGYaK+3rQfiGo@dread.disaster.area>
-References: <20240118222216.4131379-1-david@fromorbit.com>
- <87zfwxk75o.fsf@linux.intel.com>
- <Za5XQDOutk93L5w1@dread.disaster.area>
- <Za5u1CsKnrWflMOR@tassilo>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, p.raghav@samsung.com,
+	djwong@kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/2] fstest changes for LBS
+Message-ID: <Za8HXDfoIK+lyMvR@dread.disaster.area>
+References: <20240122111751.449762-1-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,91 +71,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Za5u1CsKnrWflMOR@tassilo>
+In-Reply-To: <20240122111751.449762-1-kernel@pankajraghav.com>
 
-On Mon, Jan 22, 2024 at 05:34:12AM -0800, Andi Kleen wrote:
-> [fixed the subject, not sure what happened there]
+On Mon, Jan 22, 2024 at 12:17:49PM +0100, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
 > 
-> FWIW I'm not sure fail-fail is always the right strategy here,
-> in many cases even with some reclaim, compaction may win. Just not if you're
-> on a tight budget for the latencies.
+> Some tests need to be adapted to for LBS[1] based on the filesystem
+> blocksize. These are generic changes where it uses the filesystem
+> blocksize instead of assuming it.
 > 
-> > I stress test and measure XFS metadata performance under sustained
-> > memory pressure all the time. This change has not caused any
-> > obvious regressions in the short time I've been testing it.
+> There are some more generic test cases that are failing due to logdev
+> size requirement that changes with filesystem blocksize. I will address
+> them in a separate series.
 > 
-> Did you test for tail latencies?
-
-No, it's an RFC, and I mostly don't care about memory allocation
-tail latencies because it is highly unlikely to be a *new issue* we
-need to care about.
-
-The fact is taht we already do so much memory allocation and high
-order memory allocation (e.g. through slub, xlog_kvmalloc(), user
-data IO through the page cache, etc) that if there's a long tail
-latency problem with high order memory allocation then it will
-already be noticably affecting the XFS data and metadata IO
-latencies.
-
-Nobody is reporting problems about excessive long tail latencies
-when using XFS, so my care factor about long tail latencies in this
-specific memory allocation case is close to zero.
-
-> There are some relatively simple ways to trigger memory fragmentation,
-> the standard way is to allocate a very large THP backed file and then
-> punch a lot of holes.
-
-Or just run a filesystem with lots of variable sized high order
-allocations and varying cached object life times under sustained
-memory pressure for a significant period of time....
-
-> > > I would in any case add a tunable for it in case people run into this.
-> > 
-> > No tunables. It either works or it doesn't. If we can't make
-> > it work reliably by default, we throw it in the dumpster, light it
-> > on fire and walk away.
+> [1] https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
 > 
-> I'm not sure there is a single definition of "reliably" here -- for
-> many workloads tail latencies don't matter, so it's always reliable,
-> as long as you have good aggregate throughput.
-> 
-> Others have very high expectations for them.
-> 
-> Forcing the high expectations on everyone is probably not a good
-> general strategy though, as there are general trade offs.
+> Pankaj Raghav (2):
+>   xfs/558: scale blk IO size based on the filesystem blksz
+>   xfs/161: adapt the test case for LBS filesystem
 
-Yup, and we have to make those tradeoffs because filesystems need to
-be good at "general purpose" workloads as their primary focus.
-Minimising long tail latencies is really just "best effort only"
-because we intimately aware of the fact that there are global
-resource limitations that cause long tail latencies in filesystem
-implementations that simply cannot be worked around.
+Do either of these fail and require fixing for a 64k page size
+system running 64kB block size?
 
-> I could see that having lots of small tunables for every use might not be a
-> good idea. Perhaps there would be a case for a single general tunable
-> that controls higher order folios for everyone.
-
-You're not listening: no tunables. Code that has tunables because
-you think it *may not work* is code that is not ready to be merged.
-
-> > > Tail latencies are a common concern on many IO workloads.
-> > 
-> > Yes, for user data operations it's a common concern. For metadata,
-> > not so much - there's so many far worse long tail latencies in
-> > metadata operations (like waiting for journal space) that memory
-> > allocation latencies in the metadata IO path are largely noise....
-> 
-> I've seen pretty long stalls in the past.
-> 
-> The difference to the journal is also that it is local the file system, while
-> the memory is normally shared with everyone on the node or system. So the
-> scope of noisy neighbour impact can be quite different, especially on a large
-> machine. 
-
-Most systems run everything on a single filesystem. That makes them
-just as global as memory allocation.  If the journal bottlenecks,
-everyone on the system suffers the performance degradation, not just
-the user who caused it.
+i.e. are these actual 64kB block size issues, or just issues with
+the LBS patchset?
 
 -Dave.
 -- 
