@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D36E1B97F;
-	Thu, 25 Jan 2024 08:58:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF861BF2A;
+	Thu, 25 Jan 2024 08:58:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706173096; cv=none; b=aUfZ67VQgPGjRiQUOQu5DWFqE+/WqV63mT5M6VltV9yq7tP4+ts0bytOjUmfPRJSfknVYn4rd+En8O9N7ZFQspy2o2esyEPgoiZOQlTeqVRDpTtYc1ZkPxgEvrF5lNwsm6f2yi5L6n9oTeD7XHUInlY9F8jm3l3NLCSF4m5Sb9I=
+	t=1706173102; cv=none; b=rMXAEqUkvwjhjENiOgRAuv9qDsw4ebLGrfPOxoRKl4Ck+v4/OoG+dSkJQ3+9H6PpZ+RSow+GidiIoBE8Ly7DAFon2NvOjbSPy5dppva3ioF899S4bhKM3bTz/oliB+y0wKCy6uV/quk0pvbAgLIPjTPeIFlqDd2KZavAu8IOHhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706173096; c=relaxed/simple;
-	bh=drBwOfH1AGu+6d7cxyokt4683yCqbVSYcXM7b20ryMc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sKIxI+IDxOielC3ASUVDg5XGD7sC7IRlvO5PmjVbraD00uAyJGYnSpL6iFgs9f1mc7723CxTfRGqjv5b4Azf258anUFoo7cmu8ywRzyNbnRVGF/qv/UhgBlm90ggevxm8UuDV4FHwLsamew6g501XitXBzAv+ArGiFXHZGNUqQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=owPlqsT3; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1706173102; c=relaxed/simple;
+	bh=fJLE9r+QEojqvLMnrCNPOT7KyaYHqxx+aO7siaaR/Bk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=WhV/6MmRntpbEvKKA5PM1HZYX6jWs6mOnPToBfD2RN90VtWohRfbimfu6F2QtU676alt68OAjrukX3kf7kC9W5errp17gnsaDIhKtDdb3kDCLNOtgfMM1wbFRYmjtLkQwJYX3VpPozKhujQm9BvKmyEaWWyOz7+7vRpAsYWfmI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z3XEP95U; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="owPlqsT3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z3XEP95U"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=RA8V8EA4rA8rQA73Mc1Vf6KwiS+UOimfzJVh7CVG65w=; b=owPlqsT3O9aPf7GsLEuOhaWwm/
-	F9fZByMek3weUp/Tn0B8XXcEI1wGTaRNwTk4Q5g1m39aJRSzh+QjHw6MhVjTHQfLNcBTJctkAKYe0
-	fQRrtpUOkrQ0NC4qEMFs6YLIlolfim1wli9+T5fD6qtr0K4gd4ls2gsB2r8qmxRPtVStH0GFiWVsU
-	w9f7GF4ablqHIgutdPXZXXEBxj3A2KgTuKuOqDtEd3QwvSadVyl1eVwA+pV3lbqJW2D20pbo92l8C
-	acymCgyBnto3PtRrJ7SF435WyfTNpO3CAHrIbAf8Qu0178Yes/Bo4PRiKFUD12O7GJJhDT0vXGSDz
-	Tsovl5GA==;
+	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=xkTkipsZ3cJs79h1k4zQ5uPIipflfgz0lHVVoqCuaRQ=; b=Z3XEP95URFlirst2CbG0dJA364
+	FulC5T4auE+QQ1CfqyRb85iyZUG/TPGIRz5b0wz7TFrveqq3IdNZPwXIgIRRbr6NEALfARgSwvWOx
+	HOiTEaXMXH8giauijMsmkpjphfncVFr2i+CdcM5P7ORAiBPrAHW6mSqcp0Z2JJDn03qMkxRCKBWQJ
+	xUEWnDSWmFx6KsdgTmvqXzgUN0lUKW5JTLdLZlskqxCVmdYNC5ifTJBLUAUxGEz2nth6T+1RqkdAT
+	riWAqFdM5DI2XAHdnBtVnh1L8WuYkmz6y2FwTQvZ7A+7O3awT4+96hnCM0clkbgm4A6kPyaJn2y36
+	mUR50Qng==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rSvYi-007Q75-03;
-	Thu, 25 Jan 2024 08:58:04 +0000
+	id 1rSvYp-007Q9V-1E;
+	Thu, 25 Jan 2024 08:58:11 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: linux-mm@kvack.org
 Cc: Matthew Wilcox <willy@infradead.org>,
@@ -39,11 +40,15 @@ Cc: Matthew Wilcox <willy@infradead.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Convert write_cache_pages() to an iterator v5
-Date: Thu, 25 Jan 2024 09:57:39 +0100
-Message-Id: <20240125085758.2393327-1-hch@lst.de>
+	linux-kernel@vger.kernel.org,
+	Jan Kara <jack@suse.cz>,
+	Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 02/19] writeback: also update wbc->nr_to_write on writeback failure
+Date: Thu, 25 Jan 2024 09:57:41 +0100
+Message-Id: <20240125085758.2393327-3-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240125085758.2393327-1-hch@lst.de>
+References: <20240125085758.2393327-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,33 +58,39 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+When exiting write_cache_pages early due to a non-integrity write
+failure, wbc->nr_to_write currently doesn't account for the folio
+we just failed to write.  This doesn't matter because the callers
+always ingore the value on a failure, but moving the update to
+common code will allow to simplify the code, so do it.
 
-this is an evolution of the series Matthew Wilcox originally sent in June
-2023.  Based on comments from Jan and Brian this now actually untangles
-some of the more confusing conditional in the writeback code before
-refactoring it into the iterator.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Dave Chinner <dchinner@redhat.com>
+---
+ mm/page-writeback.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This version also adds a new RFC patch at the end that totally changes
-the API again to a while loop, based on commnts from Jan and some of
-my idea.  Let me know if that is a good idea or not, and if yes I'll
-fold the changes into the earlier patches.
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index ef2334291a7270..0c1e9c016bc48f 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2473,6 +2473,7 @@ int write_cache_pages(struct address_space *mapping,
+ 			trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
+ 			error = writepage(folio, wbc, data);
+ 			nr = folio_nr_pages(folio);
++			wbc->nr_to_write -= nr;
+ 			if (unlikely(error)) {
+ 				/*
+ 				 * Handle errors according to the type of
+@@ -2506,7 +2507,6 @@ int write_cache_pages(struct address_space *mapping,
+ 			 * we tagged for writeback prior to entering this loop.
+ 			 */
+ 			done_index = folio->index + nr;
+-			wbc->nr_to_write -= nr;
+ 			if (wbc->nr_to_write <= 0 &&
+ 			    wbc->sync_mode == WB_SYNC_NONE) {
+ 				done = 1;
+-- 
+2.39.2
 
-Changes since v4:
- - added back the (rebased) iomap conversion now that the conflict is in
-   mainline
- - add a new patch to change the iterator
-
-Changes since v3:
- - various commit log spelling fixes
- - remove a statement from a commit log that isn't true any more with the
-   changes in v3
- - rename a function
- - merge two helpers
-
-Diffstat:
- fs/iomap/buffered-io.c    |   10 -
- include/linux/pagevec.h   |   18 ++
- include/linux/writeback.h |   12 +
- mm/page-writeback.c       |  344 ++++++++++++++++++++++++++--------------------
- 4 files changed, 231 insertions(+), 153 deletions(-)
