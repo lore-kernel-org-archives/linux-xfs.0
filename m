@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 806E76A005;
-	Thu, 25 Jan 2024 19:06:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523EC6A005;
+	Thu, 25 Jan 2024 19:06:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706209580; cv=none; b=jVygJ1GqYDbRSmViL0gvdPWhdwanVlb/M+3p6PYnMWuwdaQ5QHUn1l6pCZCKfTKFKfaAe5HF+S0HlsHbpDLfeKJXsm4haESw64lSYuc3emwXDuE62KTFMb9A2jMHt6cXHX+fwtTiWPOUcXnub9YEUS6fmV589I++AuHAHM4/NOs=
+	t=1706209596; cv=none; b=hELdXL6E1pQmAKiS9eUOCI+uqjdPNEq+YLvjkOCc4r4bNUpBTtr9hHLo+iXxFAWO5Fl51HWwPSgmBRBYvBD5YlQQiQbN7DjvfaIbMjQZcmFGK/it83k7I92l35RbeS2tp9EwUA5xbNBWzf4WOlmd/FiG2KoT3WTnJW+Z0sc3YGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706209580; c=relaxed/simple;
-	bh=lujOX5jDxrf+xAdwjPmZfVAFc2qNESt/SPyuOqHDCI0=;
+	s=arc-20240116; t=1706209596; c=relaxed/simple;
+	bh=sLM2uLqDZXHu+g0PvRoJd31ZQQVQUao6m22FUiAOJZk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TBkvoIDl9CryclD5LxvDihmSKuf6JqWgtX/3D+32gByN0LfXM2bYxKeeIya817L5Xq+32C79LoEFWbg1UP4q6wTn8wxX+2RSsKPrNR9r1aIIvWLYA0UhJTqPcIji6csvNEdQpqk/iKT1nvyMkucfXWYQyANFmDkQENkdY9Joycg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8gL+SvJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tXQDqrauo8ulr/1QvMlx2k0xe+J4CjLxdF7KVdfY6r/I/ds33Boy8OadIMwcGxDxYyY8AifclMjeQry+CeyGRl7NZwbVyTp67VvovVYKS4nz7ZmnGuVjW0F2mKiYp47MVVT4Ay+PHvFPLMuNXJUzufBMcQyYf/TZBow7yLJQdEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oUZRbtUX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8gL+SvJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02D42C433F1;
-	Thu, 25 Jan 2024 19:06:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oUZRbtUX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB83FC433C7;
+	Thu, 25 Jan 2024 19:06:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706209580;
-	bh=lujOX5jDxrf+xAdwjPmZfVAFc2qNESt/SPyuOqHDCI0=;
+	s=k20201202; t=1706209595;
+	bh=sLM2uLqDZXHu+g0PvRoJd31ZQQVQUao6m22FUiAOJZk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=d8gL+SvJUU+dLSlL8n8mX7X4vQisI5o9F34qkugVBU5STM+F39/9pRbQXM/rw8w7N
-	 aTdRTEgLsM8JvlkgeSjMN/0HQ7ZiFhztLoCeopskvrVad3uuSoKvcK2ZHXumIYeRJx
-	 uUHKUwGdtJarDbpwQq+1S8asPWOyMMUulzz9n4PdqrcpzVdjGGj5g1BB9CnDpnHmx2
-	 Dc1GxS2wP/STxJwijBWosS7O7Ml0EfZ+G4xmzmvJIGwZ7awfwZWrk8hof+eKTDKRIH
-	 u0CcJp8k3k14AemaZ6Enb2tXdiBDApWORVHaFjjPA90RhQ+JnqDHf44CUm8R6uJfSb
-	 af8+oIWv72Njg==
-Date: Thu, 25 Jan 2024 11:06:19 -0800
-Subject: [PATCH 09/10] common/xfs: only pass -l in _xfs_mdrestore for v2
- metadumps
+	b=oUZRbtUX35jt4sZNA7VPOFMypyDxBFIBFdW0Ap1FF8RmXgEiM/lgBO7h8hFJZLBnO
+	 ouXdCSUUpWSSa9jl8/ULpsmaTizGWTSSTK1BxaWJMipkH8Ep33K43Pz2dTEYXZ01Wi
+	 sNEoDgGIt3NdUfOCoTKeb6HN1jlLUnMyMM4GHal5lmeFlvWR1GNVw7AljZbgIShgS0
+	 MCGBw5YvqgmyaauykF7TXNAkuNFADX6Or+AcPPG0ZrlaWDcaZig+5dCDeUBGC8LNmc
+	 99UGvrsSc3zRfhgSoAveLeVs1zVNRgkzZ60SMEDTorYA5NBjUP7XQHoYJZv+4izlF8
+	 lL9dv/zVBTmlw==
+Date: Thu, 25 Jan 2024 11:06:35 -0800
+Subject: [PATCH 10/10] xfs/122: fix for xfs_attr_shortform removal in 6.8
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170620924493.3283496.11650772421388432291.stgit@frogsfrogsfrogs>
+Message-ID: <170620924507.3283496.17636943697618850238.stgit@frogsfrogsfrogs>
 In-Reply-To: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
 References: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,69 +46,27 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-fstests has a weird history with external log devices -- prior to the
-introduction of metadump v2, a dump/restore cycle would leave an
-external log unaltered, and most tests worked just fine.  Were those
-tests ignorant?  Or did they pass intentionally?
-
-Either way, we don't want to pass -l to xfs_mdrestore just because we
-have an external log, because that switch is new and causes regressions
-when testing with xfsprogs from before 6.5.
+The xfs_attr_shortform struct (with multiple flexarrays) was removed in
+6.8.  Check the two surviving structures (the attr sf header and entry)
+instead.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs |   25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+ tests/xfs/122.out |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
-diff --git a/common/xfs b/common/xfs
-index 6a48960a7f..65b509691b 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -689,12 +689,25 @@ _xfs_metadump() {
- 	return $res
- }
- 
-+# What is the version of this metadump file?
-+_xfs_metadumpfile_version() {
-+	local file="$1"
-+	local magic
-+
-+	magic="$($XFS_IO_PROG -c 'pread -q -v 0 4' "$file")"
-+	case "$magic" in
-+	"00000000:  58 4d 44 32  XMD2") echo 2;;
-+	"00000000:  58 46 53 4d  XFSM") echo 1;;
-+	esac
-+}
-+
- _xfs_mdrestore() {
- 	local metadump="$1"
- 	local device="$2"
- 	local logdev="$3"
- 	shift; shift; shift
- 	local options="$@"
-+	local dumpfile_ver
- 
- 	# If we're configured for compressed dumps and there isn't already an
- 	# uncompressed dump, see if we can use DUMP_COMPRESSOR to decompress
-@@ -705,8 +718,18 @@ _xfs_mdrestore() {
- 		done
- 	fi
- 	test -r "$metadump" || return 1
-+	dumpfile_ver="$(_xfs_metadumpfile_version "$metadump")"
- 
--	if [ "$logdev" != "none" ]; then
-+	if [ "$logdev" != "none" ] && [[ $dumpfile_ver > 1 ]]; then
-+		# metadump and mdrestore began capturing and restoring the
-+		# contents of external log devices with the addition of the
-+		# metadump v2 format.  Hence it only makes sense to specify -l
-+		# here if the dump file itself is in v2 format.
-+		#
-+		# With a v1 metadump, the log device is not changed by the dump
-+		# and restore process.  Historically, fstests either didn't
-+		# notice or _notrun themselves when external logs were in use.
-+		# Don't break that for people testing with xfsprogs < 6.5.
- 		options="$options -l $logdev"
- 	fi
- 
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index 89f7b735b0..067a0ec76b 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -62,6 +62,8 @@ sizeof(struct xfs_agfl) = 36
+ sizeof(struct xfs_attr3_leaf_hdr) = 80
+ sizeof(struct xfs_attr3_leafblock) = 88
+ sizeof(struct xfs_attr3_rmt_hdr) = 56
++sizeof(struct xfs_attr_sf_entry) = 3
++sizeof(struct xfs_attr_sf_hdr) = 4
+ sizeof(struct xfs_attr_shortform) = 8
+ sizeof(struct xfs_attrd_log_format) = 16
+ sizeof(struct xfs_attri_log_format) = 40
 
