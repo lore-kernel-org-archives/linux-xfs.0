@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AC7379C7;
-	Thu, 25 Jan 2024 19:04:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EFDA135405;
+	Thu, 25 Jan 2024 19:04:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706209449; cv=none; b=s5sM9tmsOwdxcMxM/BjzACV67D6wluWV8ybdSiGD+mSQbLX8zXQ19e5gnSz0fFjVFhHxQxfloFe675JwEe8HD9AyCLnU8D68mb/b16RakPoMCBpI6bEkBhxQc2SLA/A5TB20FM/kgYRbKnz6lWenaqpRMycu/APlZOuujWYxdfY=
+	t=1706209455; cv=none; b=HrYSTBQ7fth+p4/TlR+rAzWp4mNZYo6EuTM0+KJztlA82zZh/7dOvphR9XjbQyhsftpvf+ULzCPRCCz3auq3UhBcT8BEuJHymH/Nfi/oAdpXZAErCT+n6t1z+BzfM1XccImrDhD5XAaRgnPfp0JV8J39anrjUn/k+SKeK+dRZBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706209449; c=relaxed/simple;
-	bh=YBJu+AlFhxGenkIiOv4bOywaD+EfNmbrAs52cb4bV/Q=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=lbF3DFdbsKc+6XcxV3b7LNMnqxX7yvPUwikg6rGrrTIq/fkxJq+ZI7rD+6MGiOslETNhdbHDVLO/J/UPWttywXToZ2gzph6eDVE5FI3B/GxDNtCFthaOb8C8r9jD46qSETkLcdnPnm0q9BLIiv/MjZqaFAf9txuiGeDqucBWfbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jEkISJ4B; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706209455; c=relaxed/simple;
+	bh=5AokXJeh3keA1gMhAeE9qrT5mnwtCxg8tC62AA/W9z0=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YXuCZ5UcSYqhdEqs3bHjarxSKMwQ0Gf9OGpbHJiDzVPQhmroJ9ecX4tHUIKnPWHiMgstW0qyddPwpV6wZUupDKFteq/VHumhcZzlS4erokd/44M8B1fWXLH1YH3uZog3jDKyT+tatcVFxTvXrEvkxEwkLKmdnhpMYDOkU87uh+E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K69CorOZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jEkISJ4B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAD74C433F1;
-	Thu, 25 Jan 2024 19:04:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K69CorOZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8761DC433F1;
+	Thu, 25 Jan 2024 19:04:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706209448;
-	bh=YBJu+AlFhxGenkIiOv4bOywaD+EfNmbrAs52cb4bV/Q=;
-	h=Date:Subject:From:To:Cc:From;
-	b=jEkISJ4BUCO4QQi7xeWxX+88RTfviEgcCRuM5gxAQjOQLrNlU4JgCyvA7n+pXeKIZ
-	 PIfau6V/NOOGz26fAG9pXLzGZGrh1wGRtD4kuorute6OnS4dFH4hssip+HpPI6GRQJ
-	 xiU3Id99JMe7qXceW+en3amIGwDhqHKk++sdTmry0+qRJSIh1xFyqACdedcuT1aUR7
-	 GRwCeVUok/pFDJzVz2Z57ep4Q3gx/pezL6CkYBye+ocSk/Z60ByPH331BUv0mr+UI0
-	 1tuaxyZy3eMOcLRjT0cmjnsGbSVd7KFvA1gtX9O/0aVtZNoie0cFI8vP+VymKKBxA7
-	 tsIGXkx2LYBcQ==
-Date: Thu, 25 Jan 2024 11:04:08 -0800
-Subject: [PATCHSET] fstests: random fixes for v2024.01.14
+	s=k20201202; t=1706209454;
+	bh=5AokXJeh3keA1gMhAeE9qrT5mnwtCxg8tC62AA/W9z0=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=K69CorOZsYoloRi/nBItTR1XuxCMQ1kmaaTsrn912pUjzEf+K1HkVJZOBwneLNMw0
+	 yeymByi9KO9gPEgneA6p+B43io3co+RaecoECxaUvZNCtFXvLJrIR1qVkN4Zm1Al47
+	 wmIAVqpxKvkk9yjvK9qB+cICTFKzT1CBcjfGVDlobhtNKAQmUnCA+nJNrr0iMf02SY
+	 rJEy4mROwLNn2W/eDQwXCp229i6vrMVa5DhxdWor2Flj5EMmhk4dRkC9+5CqxKpF7R
+	 ICS4pR3p6iA7Ay+NyfZja+i0vaETIEBv1YXImx/EqRjlHKvn+UAsEAJp7BK7jK4sPZ
+	 2T52Q/1UM6DMg==
+Date: Thu, 25 Jan 2024 11:04:14 -0800
+Subject: [PATCH 01/10] generic/256: constrain runtime with TIME_FACTOR
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
+Message-ID: <170620924382.3283496.6995781268514337077.stgit@frogsfrogsfrogs>
+In-Reply-To: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
+References: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -41,60 +44,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's the usual odd fixes for fstests.  Most of these are cleanups and
-bug fixes for the recently merged xfs metadump v2 testing code.
+This test runs 500 iterations of a "fill the fs and try to punch" test.
+Hole punching can be particularly slow if, say, the filesystem is
+mounted with -odiscard and the DISCARD operation takes a very long time.
+In extreme cases, I can see test runtimes of 4+ hours.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+Constrain the runtime of _test_full_fs_punch by establishing a deadline
+of (30 seconds * TIME_FACTOR) and breaking out of the for loop if the
+test goes beyond the time budget.  This keeps the runtime within the
+customary 30 seconds.
 
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * generic/256: constrain runtime with TIME_FACTOR
- * common/xfs: simplify maximum metadump format detection
- * common/populate: always metadump full metadata blocks
- * xfs/336: fix omitted -a and -o in metadump call
- * common: refactor metadump v1 and v2 tests
- * xfs/{129,234,253,605}: disable metadump v1 testing with external devices
- * xfs/503: test metadump obfuscation, not progressbars
- * xfs/503: split copy and metadump into two tests
- * common/xfs: only pass -l in _xfs_mdrestore for v2 metadumps
- * xfs/122: fix for xfs_attr_shortform removal in 6.8
----
- common/populate           |    2 -
- common/rc                 |   10 ---
- common/xfs                |   49 +++++++++++++++-
- common/xfs_metadump_tests |  138 +++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/256         |    7 ++
- tests/xfs/122.out         |    2 +
- tests/xfs/129             |   91 ++----------------------------
- tests/xfs/1876            |   54 ++++++++++++++++++
- tests/xfs/1876.out        |    4 +
- tests/xfs/234             |   92 ++----------------------------
- tests/xfs/253             |   90 ++---------------------------
- tests/xfs/284             |    4 +
- tests/xfs/291             |   32 ++++------
- tests/xfs/336             |    2 -
- tests/xfs/432             |   31 ++--------
- tests/xfs/503             |   82 ++++-----------------------
- tests/xfs/503.out         |    6 +-
- tests/xfs/605             |   92 +-----------------------------
- 18 files changed, 304 insertions(+), 484 deletions(-)
- create mode 100644 common/xfs_metadump_tests
- create mode 100755 tests/xfs/1876
- create mode 100755 tests/xfs/1876.out
+ tests/generic/256 |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+
+diff --git a/tests/generic/256 b/tests/generic/256
+index 808a730f3a..ea6cc2938a 100755
+--- a/tests/generic/256
++++ b/tests/generic/256
+@@ -44,6 +44,8 @@ _test_full_fs_punch()
+ 	local file_len=$(( $(( $hole_len + $hole_interval )) * $iterations ))
+ 	local path=`dirname $file_name`
+ 	local hole_offset=0
++	local start_time
++	local stop_time
+ 
+ 	if [ $# -ne 5 ]
+ 	then
+@@ -57,6 +59,9 @@ _test_full_fs_punch()
+ 		-c "fsync" $file_name &> /dev/null
+ 	chmod 666 $file_name
+ 
++	start_time="$(date +%s)"
++	stop_time=$(( start_time + (30 * TIME_FACTOR) ))
++
+ 	# All files are created as a non root user to prevent reserved blocks
+ 	# from being consumed.
+ 	_fill_fs $(( 1024 * 1024 * 1024 )) $path/fill $block_size 1 \
+@@ -64,6 +69,8 @@ _test_full_fs_punch()
+ 
+ 	for (( i=0; i<$iterations; i++ ))
+ 	do
++		test "$(date +%s)" -ge "$stop_time" && break
++
+ 		# This part must not be done as root in order to
+ 		# test that reserved blocks are used when needed
+ 		_user_do "$XFS_IO_PROG -f -c \"fpunch $hole_offset $hole_len\" $file_name"
 
