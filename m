@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C56B5249FA;
-	Thu, 25 Jan 2024 08:59:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0368B2D627;
+	Thu, 25 Jan 2024 08:59:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706173146; cv=none; b=Tzzm8vh8xheEP0awdQeijwb3IUuhWAFhEdEUtUvley1Q/KQet0NoOguCkfK+gaEMv7HGx05Mq67vYvH+KMDF9FYmhb6l7+OyItPC86t0dFCCYnw9zx9ARw5qfD8PM4Kt+tgcXc00fxV9aR80mrR2XXlD7r4yxQf9a0YWNaNWcGE=
+	t=1706173149; cv=none; b=aXRLQD8ZPbDyRVJ3eq4/8Fn+cs4VUSWr27L3BoTHmj9E4T+XlJo829xkG8Ql+Y6Z7+wDqVTj6Sd04MNks0z5lSI9pHC2UxFYVMN+mjuAAsAjTHznXhBXwbJXFZdsAzbjgZJ6f7IgJlqmUOrIKut0sa0ixnTxfZRT0WTylY8916Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706173146; c=relaxed/simple;
-	bh=TI24cJnMdGzsgxQqxt9jvYpBkT4NwKMozelbH1rukDY=;
+	s=arc-20240116; t=1706173149; c=relaxed/simple;
+	bh=RCsrh61Img5C5QwcYCSsKxUdRMm5ls9erOIy+p4nwnk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uJTX0rzb37eD+22Rwyd81SfISrBjbciG0vZ4b2Xd9mS750cynFQVBJvtOs3OtsPRxcO0HUjVdaWxwCtLcxPEDJXFg/1ZPbGcuIE2d3NqxCdMVMA+AX6WtYNMGEr0WtbBLAQgf3l5++P24nd5NFUmE7gXO2wMJgXbdKF0TOpDnKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=d3rO9V9S; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Rk64uLJjss6pd9KzMCuIhdCDrXJyZ3Bv3YRi6e+06tophj80a/jswuUGqbTas/wW05j2D/LnZRdEBWU7657QBVrXq8KjOWGF2YkULQq3Esf0ya/gMu1dZmF0f9CGeF6PMA16TPCVgOyO6oznyZjWZ+I9rDGisnw6z3DE6YI/iks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=b9+nO3yw; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d3rO9V9S"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b9+nO3yw"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=6v9XAAhdpH6YgZ+Y+Fwce9RtWvlBgAi1bnWfafXvJ4k=; b=d3rO9V9SsGYi+hKqPmgZ4FhJpC
-	YyFmQQC8kw3TEuvhCmh+RIj0Hrq9Ebm6JzPz1TPxhAQSlfikUlvmSe+xMs0a/XuOxlntOrUe/nN2t
-	XfoAdRowfYiU1GLgD1pSW+VuuSUkCbuXk6xrF8BvY50J2REvBSgyKCTTmZISVw9vFlrPhyJ8iH7cf
-	w6MnhBOjyEnC4JjDEJaTPzWJVOtoA0TtA5FIF1MwPuWIfzvXTFuN4E36VJbjulhSJgIE7ZH/rdZts
-	5H90iQduBnFLeqzLgKMDhukwZeWMBi4OvIVlOjKWyANJA6ueQT41NzyScrludnx4YKl6/kzTo8p2q
-	YwJDKtiQ==;
+	bh=jmxBhEwvvP0SHYr6G/94FmB0blh/Svg4tA2Bb0QCX2c=; b=b9+nO3ywJHkLbo7Hj/APqwblnx
+	0Jd3qWrW11823FTn4RkUzafKOu7wPN4qXVWb3Y3abZVmd6IeXCyA/8h25NwJ06dR7W4WRb0TiGxgS
+	XRSu+AWHyptJe9dauajhaWAA7KsaMgHO5l9+fuWnqXd836VjWfYGn7T8rlHhDYiTUCCkjK7cBPpc1
+	YguvS1IP6xeXvIaJiu8J8kF5tdyVBGE4IcyAC3h8JRFPuKt3k5hsvByqL8Pqf64BAMQy8cd2Rfb0b
+	wNkEzo0iawP2oJl4sK/Ea1XshNHk9nHAXQGTHXcSoqAs1Zmi24m5dyKVCgIG0/f8uPIA29xjnRI8R
+	Fq8sz5/A==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rSvZX-007QTL-1B;
-	Thu, 25 Jan 2024 08:58:55 +0000
+	id 1rSvZe-007QWD-0t;
+	Thu, 25 Jan 2024 08:59:03 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: linux-mm@kvack.org
 Cc: Matthew Wilcox <willy@infradead.org>,
@@ -43,9 +43,9 @@ Cc: Matthew Wilcox <willy@infradead.org>,
 	linux-kernel@vger.kernel.org,
 	Jan Kara <jack@suse.cz>,
 	Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 14/19] writeback: Factor writeback_iter_next() out of write_cache_pages()
-Date: Thu, 25 Jan 2024 09:57:53 +0100
-Message-Id: <20240125085758.2393327-15-hch@lst.de>
+Subject: [PATCH 16/19] writeback: Remove a use of write_cache_pages() from do_writepages()
+Date: Thu, 25 Jan 2024 09:57:55 +0100
+Message-Id: <20240125085758.2393327-17-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240125085758.2393327-1-hch@lst.de>
 References: <20240125085758.2393327-1-hch@lst.de>
@@ -60,131 +60,63 @@ X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Pull the post-processing of the writepage_t callback into a separate
-function.  That means changing writeback_get_next() to call
-writeback_finish() when we naturally run out of folios.
+Use the new for_each_writeback_folio() directly instead of indirecting
+through a callback.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
 Acked-by: Dave Chinner <dchinner@redhat.com>
 ---
- mm/page-writeback.c | 85 ++++++++++++++++++++++++---------------------
- 1 file changed, 45 insertions(+), 40 deletions(-)
+ mm/page-writeback.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index d170dab07402ce..d5815237fbec29 100644
+index aca0f43021a20c..81034d5d72e1f4 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -2442,8 +2442,10 @@ static struct folio *writeback_get_folio(struct address_space *mapping,
- 		filemap_get_folios_tag(mapping, &wbc->index, wbc_end(wbc),
- 				wbc_to_tag(wbc), &wbc->fbatch);
- 		folio = folio_batch_next(&wbc->fbatch);
--		if (!folio)
-+		if (!folio) {
-+			writeback_finish(mapping, wbc, 0);
- 			return NULL;
-+		}
- 	}
- 
- 	folio_lock(folio);
-@@ -2472,6 +2474,46 @@ static struct folio *writeback_iter_init(struct address_space *mapping,
- 	return writeback_get_folio(mapping, wbc);
- }
- 
-+static struct folio *writeback_iter_next(struct address_space *mapping,
-+		struct writeback_control *wbc, struct folio *folio, int error)
-+{
-+	unsigned long nr = folio_nr_pages(folio);
-+
-+	wbc->nr_to_write -= nr;
-+
-+	/*
-+	 * Handle the legacy AOP_WRITEPAGE_ACTIVATE magic return value.
-+	 * Eventually all instances should just unlock the folio themselves and
-+	 * return 0;
-+	 */
-+	if (error == AOP_WRITEPAGE_ACTIVATE) {
-+		folio_unlock(folio);
-+		error = 0;
-+	}
-+
-+	if (error && !wbc->err)
-+		wbc->err = error;
-+
-+	/*
-+	 * For integrity sync  we have to keep going until we have written all
-+	 * the folios we tagged for writeback prior to entering the writeback
-+	 * loop, even if we run past wbc->nr_to_write or encounter errors.
-+	 * This is because the file system may still have state to clear for
-+	 * each folio.   We'll eventually return the first error encountered.
-+	 *
-+	 * For background writeback just push done_index past this folio so that
-+	 * we can just restart where we left off and media errors won't choke
-+	 * writeout for the entire file.
-+	 */
-+	if (wbc->sync_mode == WB_SYNC_NONE &&
-+	    (wbc->err || wbc->nr_to_write <= 0)) {
-+		writeback_finish(mapping, wbc, folio->index + nr);
-+		return NULL;
-+	}
-+
-+	return writeback_get_folio(mapping, wbc);
-+}
-+
- /**
-  * write_cache_pages - walk the list of dirty pages of the given address space and write all of them.
-  * @mapping: address space structure to write
-@@ -2512,47 +2554,10 @@ int write_cache_pages(struct address_space *mapping,
- 
- 	for (folio = writeback_iter_init(mapping, wbc);
- 	     folio;
--	     folio = writeback_get_folio(mapping, wbc)) {
--		unsigned long nr;
--
-+	     folio = writeback_iter_next(mapping, wbc, folio, error))
- 		error = writepage(folio, wbc, data);
--		nr = folio_nr_pages(folio);
--		wbc->nr_to_write -= nr;
--
--		/*
--		 * Handle the legacy AOP_WRITEPAGE_ACTIVATE magic return value.
--		 * Eventually all instances should just unlock the folio
--		 * themselves and return 0;
--		 */
--		if (error == AOP_WRITEPAGE_ACTIVATE) {
--			folio_unlock(folio);
--			error = 0;
--		}
--
--		if (error && !wbc->err)
--			wbc->err = error;
- 
--		/*
--		 * For integrity sync  we have to keep going until we have
--		 * written all the folios we tagged for writeback prior to
--		 * entering this loop, even if we run past wbc->nr_to_write or
--		 * encounter errors.  This is because the file system may still
--		 * have state to clear for each folio.   We'll eventually return
--		 * the first error encountered.
--		 *
--		 * For background writeback just push done_index past this folio
--		 * so that we can just restart where we left off and media
--		 * errors won't choke writeout for the entire file.
--		 */
--		if (wbc->sync_mode == WB_SYNC_NONE &&
--		    (wbc->err || wbc->nr_to_write <= 0)) {
--			writeback_finish(mapping, wbc, folio->index + nr);
--			return error;
--		}
--	}
--
--	writeback_finish(mapping, wbc, 0);
--	return 0;
-+	return wbc->err;
+@@ -2559,13 +2559,21 @@ int write_cache_pages(struct address_space *mapping,
  }
  EXPORT_SYMBOL(write_cache_pages);
  
+-static int writepage_cb(struct folio *folio, struct writeback_control *wbc,
+-		void *data)
++static int writeback_use_writepage(struct address_space *mapping,
++		struct writeback_control *wbc)
+ {
+-	struct address_space *mapping = data;
+-	int ret = mapping->a_ops->writepage(&folio->page, wbc);
+-	mapping_set_error(mapping, ret);
+-	return ret;
++	struct blk_plug plug;
++	struct folio *folio;
++	int err;
++
++	blk_start_plug(&plug);
++	for_each_writeback_folio(mapping, wbc, folio, err) {
++		err = mapping->a_ops->writepage(&folio->page, wbc);
++		mapping_set_error(mapping, err);
++	}
++	blk_finish_plug(&plug);
++
++	return err;
+ }
+ 
+ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+@@ -2581,12 +2589,7 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+ 		if (mapping->a_ops->writepages) {
+ 			ret = mapping->a_ops->writepages(mapping, wbc);
+ 		} else if (mapping->a_ops->writepage) {
+-			struct blk_plug plug;
+-
+-			blk_start_plug(&plug);
+-			ret = write_cache_pages(mapping, wbc, writepage_cb,
+-						mapping);
+-			blk_finish_plug(&plug);
++			ret = writeback_use_writepage(mapping, wbc);
+ 		} else {
+ 			/* deal with chardevs and other special files */
+ 			ret = 0;
 -- 
 2.39.2
 
