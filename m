@@ -1,312 +1,234 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86CC6482CD
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2024 12:45:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773347318D
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2024 16:06:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706186743; cv=none; b=gL0TIPh0M9K9ZYXAC+rLAhKeOQzwIpfMzNlnUolSJXk/S2IzmiWgEo39jLph1aYu/si/3CG4ktB5vvuzpMiRWBj53MYvwmM409AN+zI/ytwQ5LMcGTfPu18gVaAsN36lHlpTN+BsHubnJc6Qei9MakKNfj2Psc9ytU00A7mCJl8=
+	t=1706198803; cv=none; b=Mun1XH6M9c5D2w7Ge/Sxzm7Prm+/zfxfjujgGEdB2jjSeoR04++i6jw83FWbJi3GR/bdyAjce4fVXjVfRMPlrbqT75QZ+8kP8NwZ7nbxioCQBWYUrEuZsXk2QhZz3zWlZNOs30cP0Se2LzAIQDJM92FGvcrLMxECcvJM+0eLJ/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706186743; c=relaxed/simple;
-	bh=dKA/oy+L0AlZZxeXuxO7MEVUa/gaFM9BOO5uPR3D6AQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pY8sd2gN/7JkxNN/kchx3bTOCzGA3TgjvTQwc9+CqOCHjWZLVmO5Cr09BLTsrpWk9qL1eAj7NKeQA7MogPoUkpLlmQ4tBp7My75mCTi1QcQZ5RkzO/+3feGi5zNzkIjaDWUBGMrPNnyE7A33fFHoR5HKNoezK36QBUPaebB/b5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CWoJLnAF; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1706198803; c=relaxed/simple;
+	bh=tLVU0GFRX5nRYQ2d+NOAmS813kep0m928rKDEDBLIkQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:From:In-Reply-To:
+	 Content-Type:References; b=YSLZnngHhBgYIIzgWmci7KetyHs3CuKevBoeCe3jYI0s/nafw/pcKGDHsvUjRy+O/pibaGbxY8NgzP0vdiIkDN/mH7oJWckB7vWXcE70JBfJ5q88t71oZHzq7TVq9yUzTlLO7llCdhMyTHeSjnF+Cnqd9XkOxqqdI3R877u6i1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Rnmc76hm; arc=none smtp.client-ip=210.118.77.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CWoJLnAF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706186740;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LyC53Pwpali4OZl0rGIMyJZu+xLaBsk5Yj8WQL6CRTM=;
-	b=CWoJLnAFolrCxApn0Xaxm+0rtvxu6pxMshYjObUfstM4LVf3oiJud5caPTmRh9eRMEH/G9
-	RBFkhtIMFN1dXI0lnZgnWWF21WVPh7USwXo8tfsbPAARj4Arl0NumCJDgFrAPyP4Ks1hwB
-	J5oB7kSoZbTiCcawZAPi5MPFMPQspeU=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-501-iuQ02DgYOP6VPUt1R2KwVQ-1; Thu,
- 25 Jan 2024 07:45:37 -0500
-X-MC-Unique: iuQ02DgYOP6VPUt1R2KwVQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E7A1438117FB;
-	Thu, 25 Jan 2024 12:45:36 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.186])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id B6F121C060AF;
-	Thu, 25 Jan 2024 12:45:36 +0000 (UTC)
-Date: Thu, 25 Jan 2024 07:46:55 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
- after reclaim
-Message-ID: <ZbJYP63PgykS1CwU@bfoster>
-References: <20240119193645.354214-1-bfoster@redhat.com>
- <Za3fwLKtjC+B8aZa@dread.disaster.area>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Rnmc76hm"
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20240125160632euoutp02ae44a7c2645a4caabd0c14411b67afde~tosMheX6A2826328263euoutp02I
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2024 16:06:32 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20240125160632euoutp02ae44a7c2645a4caabd0c14411b67afde~tosMheX6A2826328263euoutp02I
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1706198792;
+	bh=nvaF5g87ZOFbDsyOS9jYf1ISG0i3fk0OJopYLmyw1YI=;
+	h=Date:Subject:To:CC:From:In-Reply-To:References:From;
+	b=Rnmc76hm5XTugkL0m58nvBHs468m8jM02g1MCUpZpaT7snpWv8MofU8QUJR/A0zVa
+	 Zojryj+9KU6s3RXe3TVsOVLDTU5rmFWNjUl4rrsHN0nwhMpj54k21cWUevLxv9rxVp
+	 JNb/eS0htN1Q8/bxaBfXXjAAIdLM2Z4Q+4x7wOLY=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+	20240125160632eucas1p29cbfe68126ec83a9e16a3ec2c4732620~tosMToEiI0480104801eucas1p2E;
+	Thu, 25 Jan 2024 16:06:32 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+	eusmges3new.samsung.com (EUCPMTA) with SMTP id B4.D0.09552.80782B56; Thu, 25
+	Jan 2024 16:06:32 +0000 (GMT)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240125160632eucas1p21012a35cae905f9872982ae8323b3520~tosL7GSZq0481704817eucas1p2J;
+	Thu, 25 Jan 2024 16:06:32 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240125160632eusmtrp192e4bd8e5a2b60bd4bf962ca46c60ff0~tosL6Z8G-2468524685eusmtrp1b;
+	Thu, 25 Jan 2024 16:06:32 +0000 (GMT)
+X-AuditID: cbfec7f5-83dff70000002550-d3-65b287083ad0
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+	eusmgms2.samsung.com (EUCPMTA) with SMTP id 25.D4.10702.70782B56; Thu, 25
+	Jan 2024 16:06:32 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240125160631eusmtip1d31cca102220371434b2b14b30b3cb63~tosLtpZwQ2325823258eusmtip1F;
+	Thu, 25 Jan 2024 16:06:31 +0000 (GMT)
+Received: from [192.168.8.209] (106.210.248.241) by CAMSVWEXC02.scsc.local
+	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+	Thu, 25 Jan 2024 16:06:30 +0000
+Message-ID: <a05f3bfa-ee30-4309-b1e4-89f2cfb43510@samsung.com>
+Date: Thu, 25 Jan 2024 17:06:30 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Za3fwLKtjC+B8aZa@dread.disaster.area>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.7
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] xfs/161: adapt the test case for LBS filesystem
+To: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner
+	<david@fromorbit.com>
+CC: <zlang@redhat.com>, <fstests@vger.kernel.org>, <mcgrof@kernel.org>,
+	<gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>, "Pankaj Raghav
+ (Samsung)" <kernel@pankajraghav.com>, <chandan.babu@oracle.com>
+Content-Language: en-US
+From: Pankaj Raghav <p.raghav@samsung.com>
+In-Reply-To: <20240122165756.GB6188@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCKsWRmVeSWpSXmKPExsWy7djP87oc7ZtSDa6skbW4dFTOYsuxe4wW
+	l5/wWZxu2ctuceblZxaLXX92sFvcmPCU0WLvyZ2sDhwepxZJeGxa1cnm8fHpLRaPsysdPd7v
+	u8rm8XmTXABbFJdNSmpOZllqkb5dAldG14c5jAWXZSsaHq9kbWC8L97FyMEhIWAi8fu0Txcj
+	F4eQwApGiRPrNzN1MXICOV8YJaYvToBIfGaU+PH5ITtIAqThxppTTBCJ5YwSK5dcY4Or+jXx
+	MDuEs5tRYtukT6wgLbwCdhJL9x8Dm8sioCpxbOpjdoi4oMTJmU9YQGxRAXmJ+7dmgMWFBTwk
+	pm2ZwgZiiwj4S2y70ge2jlngPKPE2fVPwQYxC4hL3HoynwnkCTYBLYnGTrBeTqDzWncugirR
+	lGjd/psdwpaX2P52DjPEC8oSiy9cY4SwayVObbkFNl9CoJ9TomHXVBaIhIvEv65tTBC2sMSr
+	41ug/peROD25B6qmWuLpjd/MEM0tjBL9O9ezQULVWqLvTA6E6SjRuToMwuSTuPFWEOIcPolJ
+	26YzT2BUnYUUErOQPDYLyQezkHywgJFlFaN4amlxbnpqsXFearlecWJucWleul5yfu4mRmBC
+	Ov3v+NcdjCtefdQ7xMjEwXiIUYKDWUmE18R0Y6oQb0piZVVqUX58UWlOavEhRmkOFiVxXtUU
+	+VQhgfTEktTs1NSC1CKYLBMHp1QDk1yV1gF9BZ3na3MlHC73CEq1nqn+6s21oFn3paGqSc+8
+	bgmVEzNP+W3yWp2wf/et/Tfe9bfdPTjHyGJSA1uZ0dEXF3Pe8Qd41kzRl03Xil/bcWDv879M
+	LN9elVSzLAzZ6JtV/2lSucypcK+rCZOv/vM2XuTAVaGgZRTT963Ai2evVXrj7u2XXn+dxh0/
+	d1tbnM+JDKsin6g/zhnG9Q52ugd2HOo6ePTKoe8/xC7oyV000u6fvtvaz/Doys0+OSvYujdM
+	lnzr+mwfG4en7AfZJRH1+7izcpa0P3/CZjLHpO/o2cJdjKy9h+8VG7xr+rDuhVLJ0QV/9jzK
+	XfG5bOra8Ffcx2/03c9J3ld+VUSLTYmlOCPRUIu5qDgRAGdG2T+3AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDIsWRmVeSWpSXmKPExsVy+t/xu7oc7ZtSDU7fZLK4dFTOYsuxe4wW
+	l5/wWZxu2ctuceblZxaLXX92sFvcmPCU0WLvyZ2sDhwepxZJeGxa1cnm8fHpLRaPsysdPd7v
+	u8rm8XmTXABblJ5NUX5pSapCRn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllq
+	kb5dgl5G14c5jAWXZSsaHq9kbWC8L97FyMkhIWAicWPNKaYuRi4OIYGljBLXHxxngkjISGz8
+	cpUVwhaW+HOtiw2i6COjRM/cDnYIZzejxNe3c1hAqngF7CSW7j8G1s0ioCpxbOpjdoi4oMTJ
+	mU/AakQF5CXu35oBFhcW8JCYtmUKG4gtIuAr8eTcOVaQocwC5xklzq5/CnXTe0aJaw8mM4NU
+	MQuIS9x6Mh8owcHBJqAl0dgJNogT6IfWnYuYIEo0JVq3/2aHsOUltr+dwwzxgrLE4gvXGCHs
+	WonPf58xTmAUnYXkvllINsxCMmoWklELGFlWMYqklhbnpucWG+kVJ+YWl+al6yXn525iBEbz
+	tmM/t+xgXPnqo94hRiYOxkOMEhzMSiK8JqYbU4V4UxIrq1KL8uOLSnNSiw8xmgIDaSKzlGhy
+	PjCd5JXEG5oZmBqamFkamFqaGSuJ83oWdCQKCaQnlqRmp6YWpBbB9DFxcEo1MC0Ivv/yb4+s
+	w2X3CxJKGcH8PpMM+F/Emp01UDP3/ab9gePmXZEbX4VqPc4X1JaGz5x9Ye3Z74IJc6fqTJi4
+	6LB8YNotxSeiIUnaP9b9d4/+c+bXvUR/rYn1umoVtxTyT1wuKrFN+Gnr8djL+spO6dC/9jcc
+	Lk3Qm7B1nSZbk+YNkYZziUEC25coX1aYMXVpT4vrd1s5ow+vV+16Vfp+7pcJYX+WNBQu+Pih
+	oKe7Ub3tiijD7Nqa4xtPLlb1enFKZebEQw3+OlOeT1lg1zTz1spl0w79q7f3uL9aqvPey4Rf
+	Lc8U/D6LzE8JvMSYwmX6P/Op1jZn5kkzm93fH1c/IFla/rWmZ2fQwQ/XL3xrbmpQYinOSDTU
+	Yi4qTgQAD71W1m8DAAA=
+X-CMS-MailID: 20240125160632eucas1p21012a35cae905f9872982ae8323b3520
+X-Msg-Generator: CA
+X-RootMTR: 20240122165801eucas1p10c90512236fe96befd4a8ad616bb868d
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20240122165801eucas1p10c90512236fe96befd4a8ad616bb868d
+References: <20240122111751.449762-1-kernel@pankajraghav.com>
+	<20240122111751.449762-3-kernel@pankajraghav.com>
+	<CGME20240122165801eucas1p10c90512236fe96befd4a8ad616bb868d@eucas1p1.samsung.com>
+	<20240122165756.GB6188@frogsfrogsfrogs>
 
-On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
-> On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
-> > We've had reports on distro (pre-deferred inactivation) kernels that
-> > inode reclaim (i.e. via drop_caches) can deadlock on the s_umount
-> > lock when invoked on a frozen XFS fs. This occurs because
-> > drop_caches acquires the lock and then blocks in xfs_inactive() on
-> > transaction alloc for an inode that requires an eofb trim. unfreeze
-> > then blocks on the same lock and the fs is deadlocked.
+On 22/01/2024 17:57, Darrick J. Wong wrote:
+> On Mon, Jan 22, 2024 at 12:17:51PM +0100, Pankaj Raghav (Samsung) wrote:
+>> From: Pankaj Raghav <p.raghav@samsung.com>
+>>
+>> This test fails for >= 64k filesystem block size on a 4k PAGE_SIZE
+>> system(see LBS efforts[1]). Adapt the blksz so that we create more than
+>> one block for the testcase.
 > 
-> Yup, but why do we need to address that in upstream kernels?
+> How does this fail, specifically?  And, uh, what block sizes > 64k were
+> tested?
 > 
-> > With deferred inactivation, the deadlock problem is no longer
-> > present because ->destroy_inode() no longer blocks whether the fs is
-> > frozen or not. There is still unfortunate behavior in that lookups
-> > of a pending inactive inode spin loop waiting for the pending
-> > inactive state to clear, which won't happen until the fs is
-> > unfrozen.
+> --D
 > 
-> Largely we took option 1 from the previous discussion:
-> 
-> | ISTM the currently most viable options we've discussed are:
-> | 
-> | 1. Leave things as is, accept potential for lookup stalls while frozen
-> | and wait and see if this ever really becomes a problem for real users.
-> 
-> https://lore.kernel.org/linux-xfs/YeVxCXE6hXa1S%2Fic@bfoster/
-> 
-> And really it hasn't caused any serious problems with the upstream
-> and distro kernels that have background inodegc.
-> 
+>> Cap the blksz to be at least 64k to retain the same behaviour as before
+>> for smaller filesystem blocksizes.
+>>
+>> [1] LBS effort: https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
+>>
 
-For quite a long time, neither did introduction of the reclaim s_umount
-deadlock.
+I tried the same test on a machine with 64k page size and block size, and I get the same error
+and this patch fixes it!
 
-I can only speak for $employer distros of course, but my understanding
-is that the kernels that do have deferred inactivation are still in the
-early adoption phase of the typical lifecycle.
+Kernel version: 6.7.1
+xfstest version: for-next
+PAGE_SIZE: 64k
 
-> Regardless, the spinning lookup problem seems pretty easy to avoid.
-> We can turn it into a blocking lookup if the filesytsem is frozen
-> simply by cycling sb_start_write/sb_end_write if there's a pending
-> inactivation on that inode, and now the lookup blocks until the
-> filesystem is thawed.
-> 
-> Alternatively, we could actually implement reinstantiation of the
-> VFS inode portion of the inode and reactivate the inode if inodegc
-> is pending. As darrick mentioned we didn't do this because of the
-> difficulty in removing arbitrary items from the middle of llist
-> structures.
-> 
-> However, it occurs to me that we don't even need to remove the inode
-> from the inodegc list to recycle it. We can be lazy - just need to
-> set a flag on the inode to cancel the inodegc and have inodegc clear
-> the flag and skip over cancelled inodes instead of inactivating
-> them.  Then if a gc cancelled inode then gets reclaimed by the VFS
-> again, the inodegc queueing code can simply remove cancelled flag
-> and it's already queued for processing....
-> 
+# Without this patch
 
-Interesting idea, though from looking through some code I'm skeptical
-this is as simple as setting and clearing a flag.
+ubuntu@xfstest:/mnt/linux/xfstests$ getconf PAGE_SIZE
+65536
 
-> I think this avoids all the problems with needing to do inodegc
-> cleanup while the filesystem is frozen, so I leaning towards this as
-> the best way to solve this problem in the upstream kernel.
-> 
+ubuntu@xfstest:/mnt/linux/xfstests$ sudo ./check -s 64k xfs/161
+SECTION       -- 64k
+RECREATING    -- xfs on /dev/sdb2
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/aarch64 xfstest 6.7.1-64k #8 SMP Thu Jan 25 13:38:41 UTC 2024
+MKFS_OPTIONS  -- -f -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=64k, /dev/sdb3
+MOUNT_OPTIONS -- /dev/sdb3 /mnt/scratch
 
-"... avoids all the problems ..."
+xfs/161 6s ... - output mismatch (see /mnt/linux/xfstests/results/xfstest/6.7.1-64k/64k/xfs/161.out.bad)
+    --- tests/xfs/161.out	2024-01-25 15:36:48.869401419 +0000
+    +++ /mnt/linux/xfstests/results/xfstest/6.7.1-64k/64k/xfs/161.out.bad	2024-01-25
+15:59:47.702340351 +0000
+    @@ -1,6 +1,15 @@
+     QA output created by 161
+    +Expected timer expiry (0) to be after now (1706198386).
+     Running xfs_repair to upgrade filesystem.
+     Adding large timestamp support to filesystem.
+     FEATURES: BIGTIME:YES
+    -grace2 expiry is in range
+    -grace2 expiry after remount is in range
+    ...
+    (Run 'diff -u /mnt/linux/xfstests/tests/xfs/161.out
+/mnt/linux/xfstests/results/xfstest/6.7.1-64k/64k/xfs/161.out.bad'  to see the entire diff)
+Ran: xfs/161
+Failures: xfs/161
+Failed 1 of 1 tests
 
-AFAIA the only concern was avoiding the unlikely "read into mapped
-buffer" race situation, and that is fairly easy to avoid with further
-improvements to the freeze interface. For example, the appended diff is
-a quickly hacked up prototype (i.e. for conceptual purposes only) of
-something I was thinking as a logical evolution from this patch.
+SECTION       -- 64k
+=========================
+Ran: xfs/161
+Failures: xfs/161
+Failed 1 of 1 tests
 
-> > This was always possible to some degree, but is
-> > potentially amplified by the fact that reclaim no longer blocks on
-> > the first inode that requires inactivation work. Instead, we
-> > populate the inactivation queues indefinitely. The side effect can
-> > be observed easily by invoking drop_caches on a frozen fs previously
-> > populated with eofb and/or cowblocks inodes and then running
-> > anything that relies on inode lookup (i.e., ls).
-> 
-> As we discussed last time, that is largely avoidable by only queuing
-> inodes that absolutely need cleanup work. i.e. call
-> xfs_can_free_eofblocks() and make it return false is the filesystem
-> has an elevated freeze state because eof block clearing at reclaim
-> is not essential for correct operation - the inode simply behaves as
-> if it has XFS_DIFLAG_PREALLOC set on it. This will happen with any
-> inode that has had fallocate() called on it, so it's not like it's a
-> rare occurrence, either.
-> 
 
-Fortunately a simple scan mostly handles this case.
+# With this patch:
 
-> The cowblocks case is much a much rarer situation, so that case could
-> potentially just queue inodes those until the freeze goes away.
-> 
+ubuntu@xfstest:/mnt/linux/xfstests$ sudo ./check -s 64k xfs/161
+SECTION       -- 64k
+RECREATING    -- xfs on /dev/sdb2
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/aarch64 xfstest 6.7.1-64k #8 SMP Thu Jan 25 13:38:41 UTC 2024
+MKFS_OPTIONS  -- -f -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=64k, /dev/sdb3
+MOUNT_OPTIONS -- /dev/sdb3 /mnt/scratch
 
-And this as well.
+xfs/161 6s ...  6s
+Ran: xfs/161
+Passed all 1 tests
 
-> But if we can reinstantiate inodegc queued inodes as per my
-> suggestion above then we can just leave the inodegc queuing
-> unchanged and just not care how long they block for because if they
-> are needed again whilst queued we can reuse them immediately....
-> 
+SECTION       -- 64k
+=========================
+Ran: xfs/161
+Passed all 1 tests
 
-"... leave the inodegc queueing unchanged and just not care how long
-they block for ..."
-
-This reads to me as.. "leave inodes on the queue for non-deterministic
-time where the memory asked for by reclaim can't be released," just
-conveniently worded as if this behavior were somehow advantageous. ;)
-
-Regardless, I'll just drop this patch. There's not enough objective
-analysis here to make it clear to me how any of this is intended to try
-and improve upon the patch as posted. I mainly sent this for posterity
-since I had dug up the old discussion and realized I never followed up
-from when it was suggested.
-
-TLDR: option #1 it is...
-
-> > Finally, since the deadlock issue was present for such a long time,
-> > also document the subtle ->destroy_inode() constraint to avoid
-> > unintentional reintroduction of the deadlock problem in the future.
-> 
-> That's still useful, though.
-> 
-
-Heh, well $maintainer can feel free to strip the rest out if you just
-want a comment update.
-
-Brian
-
---- 8< ---
-
-Prototype to hook the filesystem into the various stages of freezing the
-superblock:
-
-diff --git a/fs/super.c b/fs/super.c
-index 076392396e72..9eca666cb55b 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1961,6 +1961,7 @@ static int wait_for_partially_frozen(struct super_block *sb)
- int freeze_super(struct super_block *sb, enum freeze_holder who)
- {
- 	int ret;
-+	bool per_stage = sb->s_iflags & SB_I_FREEZE_HACK;
- 
- 	atomic_inc(&sb->s_active);
- 	if (!super_lock_excl(sb))
-@@ -2015,6 +2016,11 @@ int freeze_super(struct super_block *sb, enum freeze_holder who)
- 	if (!super_lock_excl(sb))
- 		WARN(1, "Dying superblock while freezing!");
- 
-+	if (per_stage) {
-+		ret = sb->s_op->freeze_fs(sb);
-+		BUG_ON(ret);
-+	}
-+
- 	/* Now we go and block page faults... */
- 	sb->s_writers.frozen = SB_FREEZE_PAGEFAULT;
- 	sb_wait_write(sb, SB_FREEZE_PAGEFAULT);
-@@ -2029,6 +2035,11 @@ int freeze_super(struct super_block *sb, enum freeze_holder who)
- 		return ret;
- 	}
- 
-+	if (per_stage) {
-+		ret = sb->s_op->freeze_fs(sb);
-+		BUG_ON(ret);
-+	}
-+
- 	/* Now wait for internal filesystem counter */
- 	sb->s_writers.frozen = SB_FREEZE_FS;
- 	sb_wait_write(sb, SB_FREEZE_FS);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d0009430a627..d9dec07e5184 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -805,25 +805,6 @@ xfs_fs_sync_fs(
- 		flush_delayed_work(&mp->m_log->l_work);
- 	}
- 
--	/*
--	 * If we are called with page faults frozen out, it means we are about
--	 * to freeze the transaction subsystem. Take the opportunity to shut
--	 * down inodegc because once SB_FREEZE_FS is set it's too late to
--	 * prevent inactivation races with freeze. The fs doesn't get called
--	 * again by the freezing process until after SB_FREEZE_FS has been set,
--	 * so it's now or never.  Same logic applies to speculative allocation
--	 * garbage collection.
--	 *
--	 * We don't care if this is a normal syncfs call that does this or
--	 * freeze that does this - we can run this multiple times without issue
--	 * and we won't race with a restart because a restart can only occur
--	 * when the state is either SB_FREEZE_FS or SB_FREEZE_COMPLETE.
--	 */
--	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT) {
--		xfs_inodegc_stop(mp);
--		xfs_blockgc_stop(mp);
--	}
--
- 	return 0;
- }
- 
-@@ -937,6 +918,23 @@ xfs_fs_freeze(
- 	struct xfs_mount	*mp = XFS_M(sb);
- 	unsigned int		flags;
- 	int			ret;
-+	unsigned short		stage = sb->s_writers.frozen;
-+
-+	trace_printk("%d: stage %u\n", __LINE__, stage);
-+
-+	if (stage == SB_FREEZE_WRITE) {
-+		struct xfs_icwalk       icw = {0};
-+
-+		icw.icw_flags = XFS_ICWALK_FLAG_SYNC;
-+		xfs_blockgc_free_space(mp, &icw);
-+
-+		xfs_inodegc_stop(mp);
-+		xfs_blockgc_stop(mp);
-+		return 0;
-+	}
-+
-+	if (stage != SB_FREEZE_FS)
-+		return 0;
- 
- 	/*
- 	 * The filesystem is now frozen far enough that memory reclaim
-@@ -1688,7 +1686,7 @@ xfs_fs_fill_super(
- 		sb->s_time_max = XFS_LEGACY_TIME_MAX;
- 	}
- 	trace_xfs_inode_timestamp_range(mp, sb->s_time_min, sb->s_time_max);
--	sb->s_iflags |= SB_I_CGROUPWB;
-+	sb->s_iflags |= SB_I_CGROUPWB | SB_I_FREEZE_HACK;
- 
- 	set_posix_acl_flag(sb);
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 98b7a7a8c42e..5349563a860e 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1170,6 +1170,7 @@ extern int send_sigurg(struct fown_struct *fown);
- #define SB_I_TS_EXPIRY_WARNED 0x00000400 /* warned about timestamp range expiry */
- #define SB_I_RETIRED	0x00000800	/* superblock shouldn't be reused */
- #define SB_I_NOUMASK	0x00001000	/* VFS does not apply umask */
-+#define SB_I_FREEZE_HACK	0x00002000
- 
- /* Possible states of 'frozen' field */
- enum {
-
+>> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+>> ---
+>>  tests/xfs/161 | 9 +++++++--
+>>  1 file changed, 7 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/tests/xfs/161 b/tests/xfs/161
+>> index 486fa6ca..f7b03f0e 100755
+>> --- a/tests/xfs/161
+>> +++ b/tests/xfs/161
+>> @@ -38,9 +38,14 @@ _qmount_option "usrquota"
+>>  _scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+>>  _scratch_mount >> $seqres.full
+>>  
+>> +min_blksz=65536
+>> +file_blksz=$(_get_file_block_size "$SCRATCH_MNT")
+>> +blksz=$(( 2 * $file_blksz))
+>> +
+>> +blksz=$(( blksz > min_blksz ? blksz : min_blksz ))
+>>  # Force the block counters for uid 1 and 2 above zero
+>> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
+>> -_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
+>> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/a >> $seqres.full
+>> +_pwrite_byte 0x61 0 $blksz $SCRATCH_MNT/b >> $seqres.full
+>>  sync
+>>  chown 1 $SCRATCH_MNT/a
+>>  chown 2 $SCRATCH_MNT/b
+>> -- 
+>> 2.43.0
+>>
+>>
