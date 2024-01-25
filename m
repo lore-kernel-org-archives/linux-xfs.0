@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208E8537E3;
-	Thu, 25 Jan 2024 19:05:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41469130E25;
+	Thu, 25 Jan 2024 19:05:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706209533; cv=none; b=QMqsgDArRJ7b1Ymx1Xks+gYsGGu8v4rYT14bxPjcFCIkjwd5NLLeUQURTSyVTCUsvkUg1XhSYQ6eDMQTIVdVYzpNZ8KJi8ky3175oty5O4GdVk3uQbE474WG7uInx3ijjsEPtHwlZEx0WnjeeFPRYXu8YcURDNXIuCBVUBs2zUI=
+	t=1706209549; cv=none; b=NjI56CzrrqrNlGilwuHfGRQ2kdhGkGaBikapEKQ572GcfK6VOxcYbC5WcRFWkh5Xa7IBy5Ogodkczq3iuC5hP9w3MNih9ozwwAI3QMZ8Mvkn6FyjWVpcEfd2A/Y+SZ6iofuT4NoBUHzvi5Qfik2d53qKHvBG8nY2Xc+ObYpLWWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706209533; c=relaxed/simple;
-	bh=ZCFloK9HuTCJHwMc9UDEL6A7rdoZQY8gSpEeIR0fe5c=;
+	s=arc-20240116; t=1706209549; c=relaxed/simple;
+	bh=XrdHFp1d6U1J9PVsu0/jiWqxSkzmBrGOy8c/7VH3fjM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DhP8T42AZU6Iibc8FywhTkBbrlPMP43zrv/AlBlcgdZ+xmH/myJe8s8rjp7xvDA1tMVdq8yWmTQGFae5zgmm5qnWm3+sIkhjZr2/kQvV8BZ/8vu/okvhLIBg3xYSnqkQk2QUvjbyJ0XUyZhoIcG9WP7c5pwxSzorlMN2UJKvwqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n5AbLLwV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pMpXO1DJpUG3JzKJ5Z1cZcyQ1s+qgQUZ6SXY5zdXR3CKjo3QW4rCTZ7fhXQdcnlmIq1mUzh21v8MEmet0ujWVIixPUm48ApheugQ/o5YQzoISbyImDoYP8a9JXs5LGHUbbhq4AqjHRQF+tDAApzev0x1cCAWcczyMjrHdaaWaWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HdnK9FcV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n5AbLLwV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0728C433F1;
-	Thu, 25 Jan 2024 19:05:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HdnK9FcV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 943BBC433C7;
+	Thu, 25 Jan 2024 19:05:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706209533;
-	bh=ZCFloK9HuTCJHwMc9UDEL6A7rdoZQY8gSpEeIR0fe5c=;
+	s=k20201202; t=1706209548;
+	bh=XrdHFp1d6U1J9PVsu0/jiWqxSkzmBrGOy8c/7VH3fjM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=n5AbLLwVXh58GvO7VcoyqM9dgQurvTq9n4WowhcDqd/bSMtOkYooJH4C3eR3mls8c
-	 kgwy69Xf0wbitg4lTz6jB/d5HJiH2GoZu80rfseCUULOWajA+olsVH2hqXpTjZ6rQ6
-	 U0X3wASdHvas3vfNb/28fAvCNT7WQ7NWVCtlRj7iWGnwC7B4dQ4CARrKwUumwQ2hON
-	 BIYsV4NYmnHhCSdZu3epohxflu1XVZnPWMl1yoemE6DL1e2rXvdYQZZLQJD452YAWz
-	 OrG0DGzMzS+0rcMSDxJHAh9ICEQQdw4k0iCFiAhzefz66SAPRtYX3kPlNCDez7OWd0
-	 U4MBnZtEUiAsA==
-Date: Thu, 25 Jan 2024 11:05:32 -0800
-Subject: [PATCH 06/10] xfs/{129,234,253,605}: disable metadump v1 testing with
- external devices
+	b=HdnK9FcVstq3UvKd6p8+5VJrG7vJsvTyIx7qUldBWDjKTsWN99wrmYNvB5ol+nSCO
+	 rIutk7ljGb88RCkLjZgbbo2izZ46cmOShgo/L141LX//umHugxgvsVSDcOlx4bsD1C
+	 /5iZ9XBgogLKVSgtHY4XM6Xj71qQbfms4foorx7D3UT6getxz/lWKHQA53tdtmXVfc
+	 Twk2Qxb3va1MnoCV9JiEkSiVjCgSJTC/otOoMIaNsXNOH5KLPrq7zMWs8KKfYxM/we
+	 IJgnb8WC1Mkzfvd5PLARkcBpmNuokzcYYkmpwa72lWLKBz6O0YJTbn1Z5cq+Ni3Zkp
+	 2TF7aD6YccwQw==
+Date: Thu, 25 Jan 2024 11:05:48 -0800
+Subject: [PATCH 07/10] xfs/503: test metadump obfuscation, not progressbars
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <170620924449.3283496.4305194198701650108.stgit@frogsfrogsfrogs>
+Message-ID: <170620924464.3283496.16784489077157560763.stgit@frogsfrogsfrogs>
 In-Reply-To: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
 References: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,78 +46,59 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The metadump v1 format does not support capturing content from log
-devices or realtime devices.  Hence it does not make sense to test these
-scenarios.  Create predicates to decide if we want to test a particular
-metadump format, then convert existing tests to check formats
-explicitly.
+The -g switch to xfs_metadump turns on progress reporting, but nothing
+in this test actually checks that it works.
+
+The -o switch turns off obfuscation, which is much more critical to
+support teams.
+
+Change this test to check -o and -ao instead of -g or -ag.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs_metadump_tests |   25 ++++++++++++++++++++-----
- tests/xfs/605             |    9 ---------
- 2 files changed, 20 insertions(+), 14 deletions(-)
+ tests/xfs/503     |   10 +++++-----
+ tests/xfs/503.out |    4 ++--
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
 
-diff --git a/common/xfs_metadump_tests b/common/xfs_metadump_tests
-index dd3dec1fb4..fdc3a1fb10 100644
---- a/common/xfs_metadump_tests
-+++ b/common/xfs_metadump_tests
-@@ -23,6 +23,24 @@ _cleanup_verify_metadump()
- 	rm -f "$XFS_METADUMP_FILE" "$XFS_METADUMP_IMG"*
- }
+diff --git a/tests/xfs/503 b/tests/xfs/503
+index ff6b344a9c..79bbbdd26d 100755
+--- a/tests/xfs/503
++++ b/tests/xfs/503
+@@ -47,16 +47,16 @@ metadump_file=$testdir/scratch.md
+ copy_file=$testdir/copy.img
  
-+# Can xfs_metadump snapshot the fs metadata to a v1 metadump file?
-+_scratch_xfs_can_metadump_v1()
-+{
-+	# metadump v1 does not support log devices
-+	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_LOGDEV" ] && return 1
-+
-+	# metadump v1 does not support realtime devices
-+	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && return 1
-+
-+	return 0
-+}
-+
-+# Can xfs_metadump snapshot the fs metadata to a v2 metadump file?
-+_scratch_xfs_can_metadump_v2()
-+{
-+	test "$MAX_XFS_METADUMP_VERSION" -ge 2
-+}
-+
- # Create a metadump in v1 format, restore it to fs image files, then mount the
- # images and fsck them.
- _verify_metadump_v1()
-@@ -115,9 +133,6 @@ _verify_metadump_v2()
- # Verify both metadump formats if possible
- _verify_metadumps()
- {
--	_verify_metadump_v1 "$@"
--
--	if [[ $MAX_XFS_METADUMP_FORMAT == 2 ]]; then
--		_verify_metadump_v2 "$@"
--	fi
-+	_scratch_xfs_can_metadump_v1 && _verify_metadump_v1 "$@"
-+	_scratch_xfs_can_metadump_v2 && _verify_metadump_v2 "$@"
- }
-diff --git a/tests/xfs/605 b/tests/xfs/605
-index af917f0f32..4b6ffcb2b4 100755
---- a/tests/xfs/605
-+++ b/tests/xfs/605
-@@ -40,15 +40,6 @@ testfile=${SCRATCH_MNT}/testfile
- echo "Format filesystem on scratch device"
- _scratch_mkfs >> $seqres.full 2>&1
+ echo "metadump and mdrestore"
+-_verify_metadumps '-a -o'
++_verify_metadumps
  
--external_log=0
--if [[ $USE_EXTERNAL = yes && -n "$SCRATCH_LOGDEV" ]]; then
--	external_log=1
--fi
--
--if [[ $MAX_XFS_METADUMP_FORMAT == 1 && $external_log == 1 ]]; then
--	_notrun "metadump v1 does not support external log device"
--fi
--
- echo "Initialize and mount filesystem on flakey device"
- _init_flakey
- _load_flakey_table $FLAKEY_ALLOW_WRITES
+ echo "metadump a and mdrestore"
+ _verify_metadumps '-a'
+ 
+-echo "metadump g and mdrestore"
+-_verify_metadumps '-g' >> $seqres.full
++echo "metadump o and mdrestore"
++_verify_metadumps '-o'
+ 
+-echo "metadump ag and mdrestore"
+-_verify_metadumps '-a -g' >> $seqres.full
++echo "metadump ao and mdrestore"
++_verify_metadumps '-a -o'
+ 
+ echo copy
+ $XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
+diff --git a/tests/xfs/503.out b/tests/xfs/503.out
+index 496f2516e4..5e7488456d 100644
+--- a/tests/xfs/503.out
++++ b/tests/xfs/503.out
+@@ -2,7 +2,7 @@ QA output created by 503
+ Format and populate
+ metadump and mdrestore
+ metadump a and mdrestore
+-metadump g and mdrestore
+-metadump ag and mdrestore
++metadump o and mdrestore
++metadump ao and mdrestore
+ copy
+ recopy
 
