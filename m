@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D181DDEC
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 16:48:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF3D1869
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 16:50:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706287680; cv=none; b=SHl9jjrVhSiQv4//a1Kqb4mCtD9BCJwbFNfeLGWSriQ5liz9QReNX93DWP32bhYkUt6fQGp1PxaCUDuEICRWewKo+wxJr78s+nzpSOTXQllOt/OZVhMHMwmd7lDtlSScTMcgNUrYF8hB10TT8jmZ5Cy29FBYIBcbpmvYgIA2oSY=
+	t=1706287844; cv=none; b=PENSsgWykZimNJ2sqAlycIW7WvBmHgoCBTRPaJ0qrjMJNa7Wk0s7CW8QZAO6FKGErDiY+mMOZpyekZ3ZB8+CamWonyKJMhwKlv+kzf1e1d8G4JPdMnAYnl/tcHh++bcRyPruLpk1DcsmpfRgMg5pBWVvuNbkLAq97H4wy4Qzpbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706287680; c=relaxed/simple;
-	bh=QAuBut075bQsFpMytI6aLemdKVuNtYSYhaBjCjTmBWM=;
+	s=arc-20240116; t=1706287844; c=relaxed/simple;
+	bh=BfRIfATJHiovJMXY+wQ8jZcQr7Vj+GqHwgZRvVisOfo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eRiugS6cGOc6+hk21uJxTgymOjkN4JoXhaxmxap1meNCu6OKjXIQwsdUNYk8xJQpPEpKR/JtTdorYuwtwW7ZmiseX3sb3y07hlHwmWdIWb1MtPA8ToOra/FkDipQ+TRzjkVzPUNMx1mrC3LKjaJGgvexiNuRiDNzwfT9sAwBuSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KrYpJ4UI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=hWChNiTt2kJHbt9MxAXbzcXyzkty+W/vXtumTHtZQlh6VslNBnDoS7p/tfFlC9kQJfQSD8KucxPn+7q2x5b95cUwJhL8i+AnRNZilFokKlI3BRJcTX5aJoGLavtCjx/lZRB/JvVZfGmI6AIgPLbi0g4xhUHBgY8CHM1oQFOOIrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sdbjJzjv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KrYpJ4UI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75AB4C433F1;
-	Fri, 26 Jan 2024 16:48:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sdbjJzjv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70AA0C433F1;
+	Fri, 26 Jan 2024 16:50:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706287680;
-	bh=QAuBut075bQsFpMytI6aLemdKVuNtYSYhaBjCjTmBWM=;
+	s=k20201202; t=1706287844;
+	bh=BfRIfATJHiovJMXY+wQ8jZcQr7Vj+GqHwgZRvVisOfo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KrYpJ4UI6iPm7G0mK927Pbz7ii2aJw7ZMv1sf7jPDYdDkKfvegIXfEbDm8XfyGzA7
-	 AXTBmP/cBFNS4IyCOyt0w0Jx6XyUObVKWMz++k3AqbvzOLPsqSMfp10n2+V0bUBCoy
-	 StZ4gNCWnWvbXOl/zsA0zQclTd+H1oRnqDWbOGX1qfs3Ha/aiOjqJ8md7oRUaUWbkG
-	 u4SR/yFLqxzbPoqexqGcjUoe0P5JcYnjvhN3o9qCBTRo90eG4m394HmWRE6tdE6xY0
-	 S1KQjOz4OKDy9uD/xEciKJplmj7HAaRKCepVNx0JofG0ir+Cj/LBRpGnrcatJSx/Tv
-	 b02bLFM+sIpEQ==
-Date: Fri, 26 Jan 2024 08:48:00 -0800
+	b=sdbjJzjvb9f2B3QKApxhUDOtKi48uRzli2JgXQ24RjV3wSPrP3fRL7HkuOeSyAUXW
+	 E7v4K/tdSvVLBBhNBp73xV4s7M6E3LIkVpwpk3lo7iPVxubdtCqBzQh0YpRAoKGcB4
+	 D2gNjfRJELacB/uLV7lsvCtNxxMbPnko+E6itUs7vY17J6dppGBVKL8+6CO/c8mpEI
+	 zdHtD9uQZDl67saoRhmvb/RdGcr6NqKFqdWUPK2MPCEPbgve/ykYNQvSEu3FcxiCP9
+	 cePyZ4gXRos+yBPZugmL4hbXwywGWPWLIykOzOgOKNuFNd1D5cgYtUaJnHkdc922oU
+	 b8HQwBPnCkIAw==
+Date: Fri, 26 Jan 2024 08:50:43 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Matthew Wilcox <willy@infradead.org>
 Cc: Christoph Hellwig <hch@lst.de>,
@@ -34,11 +34,11 @@ Cc: Christoph Hellwig <hch@lst.de>,
 	Hugh Dickins <hughd@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 09/21] xfs: remove the xfile_pread/pwrite APIs
-Message-ID: <20240126164800.GB1371843@frogsfrogsfrogs>
+Subject: Re: [PATCH 16/21] xfs: improve detection of lost xfile contents
+Message-ID: <20240126165043.GC1371843@frogsfrogsfrogs>
 References: <20240126132903.2700077-1-hch@lst.de>
- <20240126132903.2700077-10-hch@lst.de>
- <ZbPcIPTFX_XpKIhw@casper.infradead.org>
+ <20240126132903.2700077-17-hch@lst.de>
+ <ZbPe5FjDaQp1v8En@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,42 +47,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZbPcIPTFX_XpKIhw@casper.infradead.org>
+In-Reply-To: <ZbPe5FjDaQp1v8En@casper.infradead.org>
 
-On Fri, Jan 26, 2024 at 04:21:52PM +0000, Matthew Wilcox wrote:
-> On Fri, Jan 26, 2024 at 02:28:51PM +0100, Christoph Hellwig wrote:
-> > +++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> > @@ -1915,19 +1915,13 @@ four of those five higher level data structures.
-> >  The fifth use case is discussed in the :ref:`realtime summary <rtsummary>` case
-> >  study.
-> >  
-> > -The most general storage interface supported by the xfile enables the reading
-> > -and writing of arbitrary quantities of data at arbitrary offsets in the xfile.
-> > -This capability is provided by ``xfile_pread`` and ``xfile_pwrite`` functions,
-> > -which behave similarly to their userspace counterparts.
-> >  XFS is very record-based, which suggests that the ability to load and store
-> >  complete records is important.
-> >  To support these cases, a pair of ``xfile_obj_load`` and ``xfile_obj_store``
+On Fri, Jan 26, 2024 at 04:33:40PM +0000, Matthew Wilcox wrote:
+> On Fri, Jan 26, 2024 at 02:28:58PM +0100, Christoph Hellwig wrote:
+> > +/* Has this file lost any of the data stored in it? */
+> > +static inline bool
+> > +xfile_has_lost_data(
+> > +	struct inode		*inode,
+> > +	struct folio		*folio)
+> > +{
+> > +	struct address_space	*mapping = inode->i_mapping;
+> > +
+> > +	/* This folio itself has been poisoned. */
+> > +	if (folio_test_hwpoison(folio))
+> > +		return true;
+> > +
+> > +	/* A base page under this large folio has been poisoned. */
+> > +	if (folio_test_large(folio) && folio_test_has_hwpoisoned(folio))
+> > +		return true;
+> > +
+> > +	/* Data loss has occurred anywhere in this shmem file. */
+> > +	if (test_bit(AS_EIO, &mapping->flags))
+> > +		return true;
+> > +	if (filemap_check_wb_err(mapping, 0))
+> > +		return true;
+> > +
+> > +	return false;
+> > +}
+> 
+> This is too much.  filemap_check_wb_err() will do just fine for your
+> needs unless you really want to get fine-grained and perhaps try to
+> reconstruct the contents of the file.
 
-Nit: s/xfile_obj_XXXX/xfile_XXXX/ here.
+Hah no, we're not going to implement online fsck for xfiles. ;)
 
-> > -functions are provided to read and persist objects into an xfile.
-> > -They are internally the same as pread and pwrite, except that they treat any
-> > -error as an out of memory error.
-> > +functions are provided to read and persist objects into an xfile that unlike
-> > +the pread and pwrite system calls treat any error as an out of memory error.
-> 
-> It's a bit weird to refer to the pread and pwrite system calls now.
-> I'd just say:
-> 
-> +functions are provided to read and persist objects into an xfile that
-> +treat any error as an out of memory error.
-> 
-> I wonder if we shouldn't also change:
-> 
-> -Programmatic access (e.g. pread and pwrite) uses this mechanism.
-> +Object load and store use this mechanism.
-
-Yes.
+Online fsck might be a little special in that any data loss anywhere in
+an xfile needs to result in the repair aborting without touching the
+ondisk metadata, and the sooner we realise this the better.
 
 --D
