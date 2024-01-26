@@ -1,43 +1,45 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B303A17721;
-	Fri, 26 Jan 2024 13:37:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C18D61B963
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 14:15:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706276266; cv=none; b=qldQeN//IpZnuW7tyLql/yJzqAUC9VHPr+O3TObpiA0yBguIxjySwVxszOBALI6KbDAUOxbOiWZHJ7IXe3v1bnBFoSLIfIVWeiIc6yRe742XmenRwQvp0NLIZDk4qh8dHdRj3BpyopBTkppfahyckQ10v0KgUQ7VSL405nNJXeU=
+	t=1706278553; cv=none; b=NhN+jo7MAyoEkcR3dge2BZKqCx595FmyLnResaMvbCS9ioht6TAh+u7jnMN72gKwuI1cVn3CnlinlNFebM1nCiItZbV0ibFkBlilPDRbPfoMCCt4DOTr6qRAQzMyUkb9uxZl/uhjp+e7vDD2ZnuhuSpNd9dFxEqlV5OVVod5vB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706276266; c=relaxed/simple;
-	bh=T/k4o1Hub3MsL1LDgA3vrxfaiG0a2BqPv28v7QiK1Rg=;
+	s=arc-20240116; t=1706278553; c=relaxed/simple;
+	bh=ytTWUuOUtHDBuRgXhgm7AWGJvUfZuwrcbAO7OHvMz8o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jh3R/gAZELBxUysDr/2LO1IHU6z8LduQiEYLAiGz+k0m6PH+iIuv7TBj3xQRaQ/SthMvlxpKfpPoT5oXq5+zK4iulpZAdooL1s0UonAFmPvP9Y2LZdrr9NqkuybjqYCHSdkqyGMpK3fbwSOYPXuHPjP+u+EUBvnlpdjPwbGww1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=y2pcthfz; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=aklJ8ZQZFrDEfK+acnOEirZJlYKrId0sdtugTQUzxH+eEQw/qWJA14ag+C1WyCkOplcuXiP03DV72t7xswGdjvPIqQkwOZAZp4TCVVUr34uALd7vJxQuo9c/1UPnZ/vkaK0uBmIqtKOyO4AhpWV6j1snHUfzaghSv8mvik7LrSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VmbzXhku; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="y2pcthfz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VmbzXhku"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ktZS6mPga3FjtLgvVgEDxYeJH+iUzNHI+ufWdyq3LFU=; b=y2pcthfzi4UVfTsLxxcne723OC
-	OiBTAu1oDYrfWIzErmljjb0krrK3sKdwIBdLd83iG7ZdgGn8HT6UksQ39lmBPE+mSInXv3/dwLXsG
-	OwpTXfX0yFDFFEcbqNu4cYLEKHYSfz36zChxJGapKs5eAjvFLlXr8RWUw1rE0t9MKitky00347wQS
-	6C75JazMj4XSN6FFoZE+RnEl6tBP2+1BMnxB+akTbcQdYzM01IIUXcCrn+h+zWkvizU2rLnFscXXw
-	P+ojnwSJ7x4K8gSxzgsB0vsFudPBmu6dAkLxf7okq+w4dmmJPJ+r7Sue1Jlqgih7emhzPWseDhgV8
-	GJypqk5w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rTMOu-00000004E1Z-1pQ1;
-	Fri, 26 Jan 2024 13:37:44 +0000
-Date: Fri, 26 Jan 2024 05:37:44 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, guan@eryu.me, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH 10/10] xfs/122: fix for xfs_attr_shortform removal in 6.8
-Message-ID: <ZbO1qL2Z37NFDaf0@infradead.org>
-References: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
- <170620924507.3283496.17636943697618850238.stgit@frogsfrogsfrogs>
+	bh=lCHm6glD5bpRm5gIuN7QlDUHqu736MGenBOlzRNfVEs=; b=VmbzXhkuXe+tclPmWymAUt3nUA
+	5TWXCaTc3oBVYSjrYwTebFl9dZjAbTyfbjc4lMIHXWFakuw8ID9HqkcaBbwL8ctFULUnDt4lRqB53
+	6o/B8shOCnhVWEge7rkyrbGG3YC2005m1VzvsK3PDRUN9NF3HALVtAK4+eXsJitK5+VqvfWGPxJEC
+	8mNzNNacKve8uq3LHz6kC2sUlkTR4tFGHFBKCoC0UVqCX06Wg3emssDtAjJICAErJ7dPliOy73ISI
+	jHf0pgQJ7D3xHwdYYJsMOq1AuGePZN2crOg30rd3TvtW6XfcgXUzCJYMVRjUEF0JQIJS5xzyiN4Q6
+	L4z3DRbw==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rTMzg-0000000DpOU-1tUK;
+	Fri, 26 Jan 2024 14:15:44 +0000
+Date: Fri, 26 Jan 2024 14:15:44 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Hugh Dickins <hughd@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: put the xfs xfile abstraction on a diet v2
+Message-ID: <ZbO-kMfwhg1TAGn5@casper.infradead.org>
+References: <20240126132903.2700077-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +48,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170620924507.3283496.17636943697618850238.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240126132903.2700077-1-hch@lst.de>
 
-On Thu, Jan 25, 2024 at 11:06:35AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> The xfs_attr_shortform struct (with multiple flexarrays) was removed in
-> 6.8.  Check the two surviving structures (the attr sf header and entry)
-> instead.
+On Fri, Jan 26, 2024 at 02:28:42PM +0100, Christoph Hellwig wrote:
+> One thing I don't really like yet is that xfile is still based on
+> folios and not pages.  The main stumbling block for that is the
+> mess around the hwpoison flag - that one still is per-file and not
+> per-folio, and shmem checks it weirdly often and not really in
 
-Looks good:
+hwpoison is per page not per file.  That's intrinsic to, well, hardware
+poison, it affects an entire page (I'd love to support sub-page poison,
+but not enough to spend my time working on memory-poison.c).
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+In general, I think there's a lack of understanding of hwpoison, and
+I include myself in that.  Mostly I blame Intel for this; limiting the
+hardware support to the higher end machines means that most of us just
+don't care about it.
 
-Although we really need to just kill this test.  Let me resubmit my
-series to do the checking in libxfs using the newly shared kernel code.
+Why even bother checking for hwpoison in xfiles?  If you have flaky
+hardware, well, maybe there's a reason you're having to fsck, and crashing
+during a fsck might encourage the user to replace their hardware with
+stuff that works.
 
