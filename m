@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67C5BA39
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 13:29:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB3FBA39
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 13:29:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706275753; cv=none; b=WoPgMySqQsucVugeSftz/c72K5oxF8d2nyl1Rw5764lQaClwk7kr5aHjbzrFR5nEj/AiJ3nYIct4kTghZZCXLR/q7qQC2hqyFLRxGBmkoUI1yQYDrHxYj2r887OwgobPkdDDA0HIlLYkbW06Mw8gsUFDzCbHX7JwUNtL3WDoXrM=
+	t=1706275756; cv=none; b=C7i1FwMOX/U8UIgLMYa4BwJP1UEBcCX7vzBYLZEDf+eOjspT5SERI4SKBV2IN3NXSqwEJuzYsmdVkaXlSIsiLuowoWwlVWeQjbnobMxD9Xsm0dyHq3otgvWwCgWDTPby1WQOT4d9kdvMSawJ7Mc4SHezSiM5CoDz//qRh4H+rvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706275753; c=relaxed/simple;
-	bh=mE0dVdKEBqXgfp0El5eZ2mdC+fNQZaT3v0FrEDU5se0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pf8mLqOWNjZW8kNQJsuiz/ksHB+d5YmulCk4ieqZpzRKKtPribt1TXMIM3m9A/Q06hHkSppnwLtIeOHkjbfBolqQy3mPSX0cd7UZXTYTtfsRav58IKbUk0q5q4CBi617bI4leqqV0yZbC+waPu+Hh5epyO66XhdEz/gt4+i6FyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=F30ofml3; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1706275756; c=relaxed/simple;
+	bh=BUyG2cKXUw5lyv+vJg4pt6nhZcLuhIZva5lQVQm/gKo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=cMjPok9rJf6I/gWSMe4/yQWnYKmpaytnLas8U7uWDOJs7LNb1K5Fsn70rTZ/90ef6S0MHUHz9xNnwVp/adwDdPbhNApvCJtlOxZwZrIZl5/GbQGAeAwQG6hdVoRabMOQ7Z0oNOtp7C6A7ZSCcbtEUMUEBl38IuQ/AP4K3XhH4UA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vCE7GgAB; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F30ofml3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vCE7GgAB"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=hXa6KhDbJQO4nQLf8wZARjk3kfM7rpSkNV4AyPwA9Ks=; b=F30ofml33LVKikZ7mLADE8gUgy
-	Hwo1HQaDT/T8BLYT3wlksPzDIkJJsFhwcXvRCh8yL4OeQrTvEyV5PA0tg3P77fL0LD8jIjum+lTtM
-	5au4tThKuWYFsL1wI5v9JRXX6rMD8Njp7MZavpyZJWyS3aN3YETu+btF9cDJ8zU11wQqW4jQEud2j
-	SZ2fZV0E9R8DQcXHN7y4Pu7B5NxUbIL6FTZNUk+iwdwJK/2/JIHHdwo7UYuVEIMPuXMspabtiyw+i
-	0UrXuCUdIYHwOvDWCGHz5GXpNxLJj8lEK2g3xUVWxbLpdJ8YAKYclbRkMXb4yd0/UxXqQdxIcgUms
-	b+CmD8rQ==;
+	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=owr/vlw+gG+D7l+zahUOl4d4YuUBj7TuMNS/fLNtya0=; b=vCE7GgABB7RKVc1xXrUquxSSXo
+	Tm+y/gatJCRztthVwTFX3SDm2qMdDX0H9Thx0vNKqlDHrYiujhIH01vgp8bPJnMONQLQtpo0i6vgv
+	x1yYUuD9Ot9Y1TKfMA5v/DA5EVQqQheYxTNJqa5WwdSY6AEMsWVdj3o0LFDp8Ua8w0z0EzQZ0iggj
+	AmfKZ5m4Wh5/BXsHh9PDc+zQbJR/WBnxBWhK57cN00I4ZU3vuQC/1GjPVOe8L9nxGd/uO3Bb4/Iij
+	HVf+QMAqRxy2vhFzbk1LGoP1mEKMcN3fqwMDJbkcNcszTPMwEg6HDROIvSZx558PCexj78+7vTL/G
+	lW15wIiQ==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rTMGa-00000004CZM-2uOA;
-	Fri, 26 Jan 2024 13:29:09 +0000
+	id 1rTMGe-00000004Ca1-0B1C;
+	Fri, 26 Jan 2024 13:29:12 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
@@ -36,10 +37,12 @@ To: Chandan Babu R <chandan.babu@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: put the xfs xfile abstraction on a diet v2
-Date: Fri, 26 Jan 2024 14:28:42 +0100
-Message-Id: <20240126132903.2700077-1-hch@lst.de>
+Subject: [PATCH 01/21] mm: move mapping_set_update out of <linux/swap.h>
+Date: Fri, 26 Jan 2024 14:28:43 +0100
+Message-Id: <20240126132903.2700077-2-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240126132903.2700077-1-hch@lst.de>
+References: <20240126132903.2700077-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,48 +52,70 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+mapping_set_update is only used inside mm/.  Move mapping_set_update to
+mm/internal.h and turn it into an inline function instead of a macro.
 
-this series refactors and simplifies the code in the xfs xfile
-abstraction, which is a thing layer on a kernel-use shmem file.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/swap.h | 10 ----------
+ mm/filemap.c         |  9 +++++++++
+ mm/internal.h        |  4 ++++
+ 3 files changed, 13 insertions(+), 10 deletions(-)
 
-Do do this is needs a slighly lower level export from shmem.c,
-which I combined with improving an assert and documentation there.
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 4db00ddad26169..755fc64ba48ded 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -350,16 +350,6 @@ void *workingset_eviction(struct folio *folio, struct mem_cgroup *target_memcg);
+ void workingset_refault(struct folio *folio, void *shadow);
+ void workingset_activation(struct folio *folio);
+ 
+-/* Only track the nodes of mappings with shadow entries */
+-void workingset_update_node(struct xa_node *node);
+-extern struct list_lru shadow_nodes;
+-#define mapping_set_update(xas, mapping) do {				\
+-	if (!dax_mapping(mapping) && !shmem_mapping(mapping)) {		\
+-		xas_set_update(xas, workingset_update_node);		\
+-		xas_set_lru(xas, &shadow_nodes);			\
+-	}								\
+-} while (0)
+-
+ /* linux/mm/page_alloc.c */
+ extern unsigned long totalreserve_pages;
+ 
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 750e779c23db74..6c8b089f00d26a 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -124,6 +124,15 @@
+  *    ->private_lock		(zap_pte_range->block_dirty_folio)
+  */
+ 
++static void mapping_set_update(struct xa_state *xas,
++		struct address_space *mapping)
++{
++	if (dax_mapping(mapping) || shmem_mapping(mapping))
++		return;
++	xas_set_update(xas, workingset_update_node);
++	xas_set_lru(xas, &shadow_nodes);
++}
++
+ static void page_cache_delete(struct address_space *mapping,
+ 				   struct folio *folio, void *shadow)
+ {
+diff --git a/mm/internal.h b/mm/internal.h
+index f309a010d50fb6..4398f572485f00 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -1266,4 +1266,8 @@ static inline void shrinker_debugfs_remove(struct dentry *debugfs_entry,
+ }
+ #endif /* CONFIG_SHRINKER_DEBUG */
+ 
++/* Only track the nodes of mappings with shadow entries */
++void workingset_update_node(struct xa_node *node);
++extern struct list_lru shadow_nodes;
++
+ #endif	/* __MM_INTERNAL_H */
+-- 
+2.39.2
 
-One thing I don't really like yet is that xfile is still based on
-folios and not pages.  The main stumbling block for that is the
-mess around the hwpoison flag - that one still is per-file and not
-per-folio, and shmem checks it weirdly often and not really in
-at the abstractions levels where I'd expect it and feels very
-different from the normal page cache code in filemap.c.  Maybe
-I'm just failing to understand why that is done, but especially
-without comments explaining it it feels like it could use some
-real attention first.
-
-The series is against the xfs for-next branch.
-
-Changes since v1:
- - fix reading i_blocks
- - provide wrappers for reading i_size and i_blocks
- - update the xfile load/store documentation
- - improve a commit message
- - use shmem_kernel_file_setup
- - add a missing folio unlock in the hwpoison path in xfile_get_page
- - fix checking for shmem mappings
- - improve I/O error handling (Darrick)
- - convert to folios (partially from Darrick)
-
-Diffstat:
- Documentation/filesystems/xfs/xfs-online-fsck-design.rst |   12 
- fs/xfs/scrub/rtsummary.c                                 |    6 
- fs/xfs/scrub/trace.h                                     |   81 ++-
- fs/xfs/scrub/xfarray.c                                   |  234 ++++-----
- fs/xfs/scrub/xfarray.h                                   |   11 
- fs/xfs/scrub/xfile.c                                     |  370 +++++----------
- fs/xfs/scrub/xfile.h                                     |   62 --
- include/linux/shmem_fs.h                                 |    6 
- include/linux/swap.h                                     |   10 
- mm/filemap.c                                             |    9 
- mm/internal.h                                            |    4 
- mm/shmem.c                                               |   38 +
- 12 files changed, 368 insertions(+), 475 deletions(-)
