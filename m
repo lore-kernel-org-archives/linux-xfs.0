@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732351B813
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 13:29:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A011F1B813
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2024 13:29:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706275767; cv=none; b=dFIn1pJd6vEWe99ueWil2k66QGkVqhPCb5XeefBlFK+XtmKDu83kuBw8E4rGYUOC9ncTRuHcuGlffll+hsVxxVyeSWqX2BbT8mN4/bhtKrsAGuZ3GafUH/psRqFTaB2s70feV2MZuUmUS9uoIbaQlFPIB8yLqwoYDOqhi6cYubo=
+	t=1706275770; cv=none; b=XS79q+rlQApjJGQeXbzreuDC5vMUXQIJP6KMZRJBQK8H6P9k0dW2rmNaR0zDJjfDvRhg79Axmpb0pqkUYOgTP2hlzSxJJevxUYRqPtyFoyTCR1iNXbTdDXrM/Oo59WNIYGY7Zi8agPC1+mbhBeKh94Nmg/LDo+K/oR3n/XlL7EM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706275767; c=relaxed/simple;
-	bh=gv6xQKtOAkUvIwMLcWRV1dpVo86a1Ilisg8/TOPHN9U=;
+	s=arc-20240116; t=1706275770; c=relaxed/simple;
+	bh=/f0jWSoziT8KKN8XVNkSoRfX1N/UCi9qiUpr4/QiWJg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Iix0X7FKm5L0/BLWBZmg0YiWkhbw+hEtiyea35CH+LA4nU/8WycXAPUlHhswB2nBgRSHtxPQUdDAi3uh+gNq86tPbwQaKXJF7c8e/mRVB40i5z5TG48yBH+IhK6zs+TDc5RReg/CV+pq3HtGs5Z42lVKYpcQVxsnlZZZxAgNBa8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pum15BU6; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=DKCsFEdX2u2iSFNbMuuXJFMpveB7mnSQkP8erfKPe5Mf81M32eSfKBCyqDhEGUmn0bKIS9f788/+tvLNBVWuLoP18hPQ4TECr2/wD8tDJ3vV0W7p128xGLtHPCEBkQRBmJD/tiUtN3HlnyAmdZqyMImMR2LzzsbmgUN0mMIIENY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UeYennuX; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pum15BU6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UeYennuX"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=EXl5jDeu7XONmlWbPRrm0Xu8RAKAjEJ+6x3o+QggOTo=; b=pum15BU67e0aLpR1792YzR24oi
-	MBaFfufHtCKkulLHA2z5SDqiyeUyDGOqykVa+NNtXdh7PNligs40WxGAynkcqKEJlXH4gbMBOARtv
-	GRVUyHmGU/VqlPahIeBYDKyBRl7QUKQU0nFYi01Ic7e4cbH9acLTb2nBIRGxGdnW+oC1xSGSDhU5s
-	rnVDBPv6nK+lRLt0CxXB6om0Czr+Ylfytg6QF1d8YX1TqaLJeYa2XMtRrGcWKyhoWm5iWzB5n76n7
-	jzpRM5Z9aTH5QS+ToEDinsikPO9sOsZZDWXVZqAj+dy2scmGcWaZ4ycSS21fnFlZhP+TQh+/uDm3O
-	Sv3vMLDQ==;
+	bh=0iKTKDcwlGTInQAMwUK2KO8AY6uPQ9BP+hArH0/aSbQ=; b=UeYennuXziCc+zdB372FuC0/HR
+	hb6hwObADJ+u0qirrQQSkwydcainIxZiErI9BUMvAeuIgioUBjkXfn0dz0Gx6FjLryifXOqo0JZai
+	Kq9uCtM8f4VKyQaLNpLcZmlNzbMkerdRpZVjQvFLw5gH9dLYYUFCmKP0/hdOzi5rwuk958xNLk3Jk
+	zheSxk0hFT/FcGN+8kdqe8fKZYovpF30hiwAj1n31kuDgmh0jCcpHc/vos3vyvjpxO3bnKqYREcwz
+	bHZet5+xHphrBFrHS+eE2iUHyRnTyFmOT9Hk9D44NQnmNOFzM1uVw+gtYUwXp3UweuimJByQTHHuV
+	XS26AYNQ==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rTMGq-00000004Cdo-46Cv;
-	Fri, 26 Jan 2024 13:29:25 +0000
+	id 1rTMGu-00000004CfW-0d0W;
+	Fri, 26 Jan 2024 13:29:28 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
@@ -37,9 +37,9 @@ To: Chandan Babu R <chandan.babu@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 05/21] shmem: export shmem_get_folio
-Date: Fri, 26 Jan 2024 14:28:47 +0100
-Message-Id: <20240126132903.2700077-6-hch@lst.de>
+Subject: [PATCH 06/21] shmem: export shmem_kernel_file_setup
+Date: Fri, 26 Jan 2024 14:28:48 +0100
+Message-Id: <20240126132903.2700077-7-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240126132903.2700077-1-hch@lst.de>
 References: <20240126132903.2700077-1-hch@lst.de>
@@ -52,49 +52,27 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Export shmem_get_folio as a slightly lower-level variant of
-shmem_read_folio_gfp.  This will be useful for XFS xfile use cases
-that want to pass SGP_NOALLOC or get a locked page, which the thin
-shmem_read_folio_gfp wrapper can't provide.
+XFS wants to use this for it's internal in-memory data structures and
+currently duplicates the functionality.  Export shmem_kernel_file_setup
+to allow XFS to switch over to using the proper kernel API.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- mm/shmem.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ mm/shmem.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/mm/shmem.c b/mm/shmem.c
-index ad533b2f0721a7..dae684cd3c99fb 100644
+index dae684cd3c99fb..e89fb5eccb0c0a 100644
 --- a/mm/shmem.c
 +++ b/mm/shmem.c
-@@ -2137,12 +2137,27 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
- 	return error;
- }
- 
-+/**
-+ * shmem_get_folio - find and get a reference to a shmem folio.
-+ * @inode:	inode to search
-+ * @index:	the page index.
-+ * @foliop:	pointer to the found folio if one was found
-+ * @sgp:	SGP_* flags to control behavior
-+ *
-+ * Looks up the page cache entry at @inode & @index.
-+ *
-+ * If this function returns a folio, it is returned with an increased refcount.
-+ *
-+ * Return: The found folio, %NULL if SGP_READ or SGP_NOALLOC was passed in @sgp
-+ * and no folio was found at @index, or an ERR_PTR() otherwise.
-+ */
- int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **foliop,
- 		enum sgp_type sgp)
+@@ -4856,6 +4856,7 @@ struct file *shmem_kernel_file_setup(const char *name, loff_t size, unsigned lon
  {
- 	return shmem_get_folio_gfp(inode, index, foliop, sgp,
- 			mapping_gfp_mask(inode->i_mapping), NULL, NULL);
+ 	return __shmem_file_setup(shm_mnt, name, size, flags, S_PRIVATE);
  }
-+EXPORT_SYMBOL_GPL(shmem_get_folio);
++EXPORT_SYMBOL_GPL(shmem_kernel_file_setup);
  
- /*
-  * This is like autoremove_wake_function, but it removes the wait queue
+ /**
+  * shmem_file_setup - get an unlinked file living in tmpfs
 -- 
 2.39.2
 
