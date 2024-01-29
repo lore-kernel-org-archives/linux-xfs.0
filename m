@@ -1,191 +1,123 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAA7976049
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 20:12:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89212158D9E;
+	Mon, 29 Jan 2024 21:06:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706559157; cv=none; b=b0VyEdSdPH1WNE5BqNzIUDnhX2OJrgyEITC9yawDsk/Q7PZYize6B/Go4ayn5BbOXg3SigCehdt5RROIpcJ6CQHhf59fXm5aVNOi6b+LUMNukJHi7yLL/ATJVG8MqqFp9ECCaOVgc5LXKcUAlLhvqoEe94hXqzUSdLXrRpIytoE=
+	t=1706562416; cv=none; b=IcuF6SZE4MfJtURYRwlr8Oc4Vg4mkhRHAbqwbRK3Bo1dnhHN8Ifp2XVdSe9nfhuZdtvlj/PNT1Mu2f8Erw+3xy8GME2irfU33Q5+w1KuamGCnc7SFEnQ4He0woxl4o5lkifYqyUt5wfCobl/Xp+QXaCdwyLl6WtKLF2nvcloZD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706559157; c=relaxed/simple;
-	bh=WCbvnW9dMahO0e4Ry6XopkLNjudSEdxv5YHLtY1umvg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AFrb7DMYOwV8v6TRxQNZyvEzHV8bUP1jV55/1w5lijW7UstJkmxkWd+x8Bgv9iL6/wDRjZppVczbbgFJqHRBBUK5az4GJn7fvyAvdxCiCoItTxKTXW6gqBQqef/NBx9JxrzNY1kN5lTGemi092bwaMXBXAERiYhoFzXwJuXaFfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ga8gFpp7; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1706562416; c=relaxed/simple;
+	bh=+9KVNYBLuRYpTotbk2zGsoJXymuo5SYIdtEsNtMMAo8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Wia5Kdbl0lskrOHtEZ1N04JXKVz6hCh8gslubX2SPWxW54bZQ8QG2tR6TL1YE4JKbHdZUqaZjZ1pJKmMFZAnkAVnU7TYJfllDRDZ4faP7t9orggM0Qh0ZQ0QvzJRbbfSWv82G6pMBAGHowBMcrDcFF018Uue84lEUh5r+9gBDy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=CcOYTXBC; arc=none smtp.client-ip=167.114.26.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ga8gFpp7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706559154;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qK9tbpAJWU+jCclBGn+oKppMC1R8LcdvjWspqD2gVlo=;
-	b=Ga8gFpp7da5k/FfCqMRhX1cfF31mb6V5VWFZETxzxPwzPxETN2MfELKOFN+AjT9QUcyuGH
-	ebVm7nGBKAKuVQrm89bEJt4iuD/Ou99ag5KEKO/fw2fCCophYrjKM+TIzkL739amCUAIWt
-	CCpRMCH16xvxxonxg8zlZzNwgJBnPCo=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-215-J6DXV2dePT6btmWl161NIw-1; Mon, 29 Jan 2024 15:12:30 -0500
-X-MC-Unique: J6DXV2dePT6btmWl161NIw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 727D4837224;
-	Mon, 29 Jan 2024 20:12:29 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.186])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id E6433AD4;
-	Mon, 29 Jan 2024 20:12:28 +0000 (UTC)
-Date: Mon, 29 Jan 2024 15:13:47 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-mm@kvack.org, Matthew Wilcox <willy@infradead.org>,
-	Jan Kara <jack@suse.com>, David Howells <dhowells@redhat.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 06/19] writeback: Factor out writeback_finish()
-Message-ID: <ZbgG+7QhHGMz/uMJ@bfoster>
-References: <20240125085758.2393327-1-hch@lst.de>
- <20240125085758.2393327-7-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="CcOYTXBC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
+	s=smtpout1; t=1706562411;
+	bh=+9KVNYBLuRYpTotbk2zGsoJXymuo5SYIdtEsNtMMAo8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=CcOYTXBC+giecQFAnLXwCTdIA57noQj2OFLZSCDKOIqpDr07dTVy1a8yJ3JryQJFV
+	 2W5WB4QDkxTlNWbKpDcCfDCV1Yk9/dIKfFXxGJuTQcgowNhMsO3Yukg02bjPIMQFRv
+	 /baVDZYZtLVEz5A+3KUgQ0PgbI8sFNR5jmvB/7Vj1O8CCBTsO3bSZG9kBumQzDZiac
+	 Bm8evVOKtcBoj9wUdK5Wg/PiFVXjpfyrc41vpv1g5ItzalsHpw3MmQJYQPi57b1jWs
+	 DvIBjtghpS+h8EJifX32P3NqBz5VyeY9kNGlqU4+zvabpczDg6wWwsmvAwIDe9N3Eq
+	 k/288u39p8m6w==
+Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TP17v2W6RzVfr;
+	Mon, 29 Jan 2024 16:06:51 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>
+Cc: linux-kernel@vger.kernel.org,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-mm@kvack.org,
+	linux-arch@vger.kernel.org,
+	Matthew Wilcox <willy@infradead.org>,
+	nvdimm@lists.linux.dev,
+	linux-cxl@vger.kernel.org
+Subject: [RFC PATCH 7/7] xfs: Use dax_is_supported()
+Date: Mon, 29 Jan 2024 16:06:31 -0500
+Message-Id: <20240129210631.193493-8-mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240129210631.193493-1-mathieu.desnoyers@efficios.com>
+References: <20240129210631.193493-1-mathieu.desnoyers@efficios.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240125085758.2393327-7-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.1
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jan 25, 2024 at 09:57:45AM +0100, Christoph Hellwig wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> 
-> Instead of having a 'done' variable that controls the nested loops,
-> have a writeback_finish() that can be returned directly.  This involves
-> keeping more things in writeback_control, but it's just moving stuff
-> allocated on the stack to being allocated slightly earlier on the stack.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> [hch: heavily rebased, reordered and commented struct writeback_control]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Acked-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  include/linux/writeback.h |  6 +++
->  mm/page-writeback.c       | 79 ++++++++++++++++++++-------------------
->  2 files changed, 47 insertions(+), 38 deletions(-)
-> 
-...
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 437745a511c634..fcd90a176d806c 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-...
-> @@ -2419,22 +2437,23 @@ int write_cache_pages(struct address_space *mapping,
->  	} else {
->  		tag = PAGECACHE_TAG_DIRTY;
->  	}
-> -	done_index = index;
-> -	while (!done && (index <= end)) {
-> +
-> +	folio_batch_init(&wbc->fbatch);
-> +	wbc->err = 0;
-> +
-> +	while (index <= end) {
->  		int i;
->  
->  		nr_folios = filemap_get_folios_tag(mapping, &index, end,
-> -				tag, &fbatch);
-> +				tag, &wbc->fbatch);
->  
->  		if (nr_folios == 0)
->  			break;
->  
->  		for (i = 0; i < nr_folios; i++) {
-> -			struct folio *folio = fbatch.folios[i];
-> +			struct folio *folio = wbc->fbatch.folios[i];
->  			unsigned long nr;
->  
-> -			done_index = folio->index;
-> -
->  			folio_lock(folio);
->  
->  			/*
-> @@ -2481,6 +2500,9 @@ int write_cache_pages(struct address_space *mapping,
->  				folio_unlock(folio);
->  				error = 0;
->  			}
-> +		
+Use dax_is_supported() to validate whether the architecture has
+virtually aliased caches at mount time.
 
-JFYI: whitespace damage on the above line.
+This is relevant for architectures which require a dynamic check
+to validate whether they have virtually aliased data caches
+(ARCH_HAS_CACHE_ALIASING_DYNAMIC=y).
 
-> +			if (error && !wbc->err)
-> +				wbc->err = error;
->  
+Fixes: d92576f1167c ("dax: does not work correctly with virtual aliasing caches")
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-mm@kvack.org
+Cc: linux-arch@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: nvdimm@lists.linux.dev
+Cc: linux-cxl@vger.kernel.org
+---
+ fs/xfs/xfs_super.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-Also what happened to the return of the above "first error encountered"
-for the WB_SYNC_ALL case? Is that not needed for some reason (and so the
-comment just below might require an update)?
-
-Brian
-
->  			/*
->  			 * For integrity sync  we have to keep going until we
-> @@ -2496,38 +2518,19 @@ int write_cache_pages(struct address_space *mapping,
->  			 * off and media errors won't choke writeout for the
->  			 * entire file.
->  			 */
-> -			if (error && !ret)
-> -				ret = error;
-> -			if (wbc->sync_mode == WB_SYNC_NONE) {
-> -				if (ret || wbc->nr_to_write <= 0) {
-> -					done_index = folio->index + nr;
-> -					done = 1;
-> -					break;
-> -				}
-> +			if (wbc->sync_mode == WB_SYNC_NONE &&
-> +			    (wbc->err || wbc->nr_to_write <= 0)) {
-> +				writeback_finish(mapping, wbc,
-> +						folio->index + nr);
-> +				return error;
->  			}
->  		}
-> -		folio_batch_release(&fbatch);
-> +		folio_batch_release(&wbc->fbatch);
->  		cond_resched();
->  	}
->  
-> -	/*
-> -	 * For range cyclic writeback we need to remember where we stopped so
-> -	 * that we can continue there next time we are called.  If  we hit the
-> -	 * last page and there is more work to be done, wrap back to the start
-> -	 * of the file.
-> -	 *
-> -	 * For non-cyclic writeback we always start looking up at the beginning
-> -	 * of the file if we are called again, which can only happen due to
-> -	 * -ENOMEM from the file system.
-> -	 */
-> -	if (wbc->range_cyclic) {
-> -		if (done)
-> -			mapping->writeback_index = done_index;
-> -		else
-> -			mapping->writeback_index = 0;
-> -	}
-> -
-> -	return ret;
-> +	writeback_finish(mapping, wbc, 0);
-> +	return 0;
->  }
->  EXPORT_SYMBOL(write_cache_pages);
->  
-> -- 
-> 2.39.2
-> 
-> 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 764304595e8b..b27ecb11db66 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1376,14 +1376,22 @@ xfs_fs_parse_param(
+ 	case Opt_nodiscard:
+ 		parsing_mp->m_features &= ~XFS_FEAT_DISCARD;
+ 		return 0;
+-#ifdef CONFIG_FS_DAX
+ 	case Opt_dax:
+-		xfs_mount_set_dax_mode(parsing_mp, XFS_DAX_ALWAYS);
+-		return 0;
++		if (dax_is_supported()) {
++			xfs_mount_set_dax_mode(parsing_mp, XFS_DAX_ALWAYS);
++			return 0;
++		} else {
++			xfs_warn(parsing_mp, "dax option not supported.");
++			return -EINVAL;
++		}
+ 	case Opt_dax_enum:
+-		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
+-		return 0;
+-#endif
++		if (dax_is_supported()) {
++			xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
++			return 0;
++		} else {
++			xfs_warn(parsing_mp, "dax option not supported.");
++			return -EINVAL;
++		}
+ 	/* Following mount options will be removed in September 2025 */
+ 	case Opt_ikeep:
+ 		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_IKEEP, true);
+-- 
+2.39.2
 
