@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65FFF4F1E7
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2D24F1E7
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:33:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706513597; cv=none; b=V5oKf3Sqt/bYO0MoDWZJtvIBqbc9iabhIG4sCpy/NA1s2AZ9lfsmBP1V9AJcfl4aSFx7cTaKI/oVH/HgzCRiCJZCkS0Y1pcasqWyC4BOqfRFdyyTjQBdxFLpLuUyyEilzT1hPN9zvMbyqpW6Osj2pVm01N8NOMXcM7NhSAK11HE=
+	t=1706513600; cv=none; b=raJV2SKrIRorVk4e45hcNpDMuDd7sjGiSmRqJZ95btnnnBl6UyOkbiaiscpHV9GKtG9SkFJfc/dittfpk1wf7UFWlbdUn7bAxFlu9qgsN2PdbwHVmKSRwCeSQXTfzyDYhQ5aZ09Kg/oBxZ03uhhF9YBBcEaJrqguVowxOfjmX0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706513597; c=relaxed/simple;
-	bh=3i46HRLBgFF3IRC226WudWgjm5lkgiqqMwAd+UDCb6Y=;
+	s=arc-20240116; t=1706513600; c=relaxed/simple;
+	bh=WrIAQ81+uy5kmLm84OBXtUqfDrLmrfmZFYv+HxbjvCs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EcooWVftjWWDZMgI8X1ZizYwI/YI9kM8wqclEWjnli/V5mWSLZFlNmAjZH0W/ceTZ+BJ588FXY0g1GJRqVJNGYLhA/R0iF7i571Qn1V+QAvlex2nAK57z4tCitIbyxaxsqUAKBF0rx2MBozRqZUH/bKmcrsS5c2NLfpS3v8Ocms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RMF7dHJB; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=gyMCdbOgQ8vPr1mB98DUbrKkHxfp+8Rj+Bv+KYMZ49H5WDyMbt4FlRDxJ70CWhMpkv8bs2+Aevpr0HbMoKevDpFc2p4UFb0hL2KE+e+sP+p8WZEbwpGvRBiQ9e90k/r4Wj+hp0rjku7uedMroqYGtUcPLLt9T1o8TrgY+vvi3Ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vy4TCKsO; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RMF7dHJB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vy4TCKsO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=YDnvvYeVjViPzb7ZORlIr97W7eXIhb6njpBbgnqlrtc=; b=RMF7dHJBXQyHWkQOP/NV0/ikQ0
-	Rtj/0j5Pu1+pZg1QPou9iaIBr7sj+yg9DfVp6mF8sAC+pJlj72YOw8mCev+iZAWOOLaM0s+m/+o8b
-	u0Y+u/rixg6YPeKbXmflEPq08tlxmNHqBaHpBytG+2hVQ1ffskD4mOOwf/dLjvoZVp81TU1AkfFdS
-	/8EpS2z7Si16KGTaEmjW8BSD4NBNwEB4zvHRJejocwF5vkzVfa4DBz+6a/aoGe4szvHJJdjTaPPuF
-	qnAnKuntHmR+i/ZyXFwzGct/FD2zaY+AoGC9vI+gkzfix6uI7R+jLE03GHfXEhMxVXTH4ctlOvnei
-	FJsKDfNw==;
+	bh=ITqqNiHf36uvjfgXAhuWTrJjDckFKkYySNCvLOBobOY=; b=vy4TCKsO0ptk0EAieUiI4I85eV
+	j6Ksypi/f0R3tMHLI0XIMmV7vW9HIHbXU/r9KkNB8dMlRNmItD8JWAMsSXzF4e4FxDwhK8D8LQfjt
+	mTXCwLiEsrSonYO9b3c8R9WB/EXK1ZGMzHF792gRhyqnetMW6tx7kWC7TCHkIRDFgtBU2f5cKQ16W
+	N32ioLiCu+tUvTg8NXEoSndX4/FwYvMGHi9HVFtY7wtUgNZ9KAQulhatzvxbwRBbgg2jKxirvgiDT
+	4K/BxrWec+slyeVAO0/yH4p0CDoq6jziHsSqepKV7jKrwXEibNYIHeNpUfbocQEqJgzphOcFxiqLj
+	0yocZJEA==;
 Received: from [2001:4bb8:182:6550:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rUM8p-0000000BcmH-2sc3;
-	Mon, 29 Jan 2024 07:33:16 +0000
+	id 1rUM8s-0000000Bcmu-12hS;
+	Mon, 29 Jan 2024 07:33:18 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 22/27] configure: don't check for the f_flags field in statfs
-Date: Mon, 29 Jan 2024 08:32:10 +0100
-Message-Id: <20240129073215.108519-23-hch@lst.de>
+Subject: [PATCH 23/27] configure: don't check for mallinfo
+Date: Mon, 29 Jan 2024 08:32:11 +0100
+Message-Id: <20240129073215.108519-24-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240129073215.108519-1-hch@lst.de>
 References: <20240129073215.108519-1-hch@lst.de>
@@ -48,96 +48,111 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The f_flags field has been supported since Linux 2.6.36.
+mallinfo has been supported since the beginning in glibc.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
  configure.ac          |  1 -
  include/builddefs.in  |  1 -
- io/Makefile           |  4 ----
- io/stat.c             |  2 --
- m4/package_libcdev.m4 | 14 --------------
- 5 files changed, 22 deletions(-)
+ m4/package_libcdev.m4 | 20 --------------------
+ scrub/Makefile        |  4 ----
+ scrub/xfs_scrub.c     |  6 ------
+ 5 files changed, 32 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index ce9a8a935..32efad760 100644
+index 32efad760..0fa900d95 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -168,7 +168,6 @@ AC_NEED_INTERNAL_FSXATTR
- AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
- AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
+@@ -170,7 +170,6 @@ AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
  AC_HAVE_GETFSMAP
--AC_HAVE_STATFS_FLAGS
  AC_HAVE_MAP_SYNC
  AC_HAVE_DEVMAPPER
- AC_HAVE_MALLINFO
+-AC_HAVE_MALLINFO
+ AC_HAVE_MALLINFO2
+ AC_PACKAGE_WANT_ATTRIBUTES_H
+ AC_HAVE_LIBATTR
 diff --git a/include/builddefs.in b/include/builddefs.in
-index b84369ea7..c359cde45 100644
+index c359cde45..0df78f933 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -96,7 +96,6 @@ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
- NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
- NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
+@@ -98,7 +98,6 @@ NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
  HAVE_GETFSMAP = @have_getfsmap@
--HAVE_STATFS_FLAGS = @have_statfs_flags@
  HAVE_MAP_SYNC = @have_map_sync@
  HAVE_DEVMAPPER = @have_devmapper@
- HAVE_MALLINFO = @have_mallinfo@
-diff --git a/io/Makefile b/io/Makefile
-index 35b3ebd52..17d499de9 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -47,10 +47,6 @@ ifeq ($(HAVE_GETFSMAP),yes)
- CFILES += fsmap.c
- endif
- 
--ifeq ($(HAVE_STATFS_FLAGS),yes)
--LCFLAGS += -DHAVE_STATFS_FLAGS
--endif
--
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
-diff --git a/io/stat.c b/io/stat.c
-index b57f9eefe..7f9f633bb 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -238,10 +238,8 @@ statfs_f(
- 					(long long) st.f_files);
- 			printf(_("statfs.f_ffree = %lld\n"),
- 					(long long) st.f_ffree);
--#ifdef HAVE_STATFS_FLAGS
- 			printf(_("statfs.f_flags = 0x%llx\n"),
- 					(long long) st.f_flags);
--#endif
- 		}
- 	}
- 
+-HAVE_MALLINFO = @have_mallinfo@
+ HAVE_MALLINFO2 = @have_mallinfo2@
+ HAVE_LIBATTR = @have_libattr@
+ HAVE_LIBICU = @have_libicu@
 diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index ff0e83752..320809a62 100644
+index 320809a62..f29bdd76f 100644
 --- a/m4/package_libcdev.m4
 +++ b/m4/package_libcdev.m4
-@@ -120,20 +120,6 @@ struct fsmap_head fh;
-     AC_SUBST(have_getfsmap)
+@@ -137,26 +137,6 @@ int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+     AC_SUBST(have_map_sync)
    ])
  
--AC_DEFUN([AC_HAVE_STATFS_FLAGS],
--  [
--    AC_CHECK_TYPE(struct statfs,
--      [
--        AC_CHECK_MEMBER(struct statfs.f_flags,
--          have_statfs_flags=yes,,
--          [#include <sys/vfs.h>]
--        )
--      ],,
--      [#include <sys/vfs.h>]
--    )
--    AC_SUBST(have_statfs_flags)
+-#
+-# Check if we have a mallinfo libc call
+-#
+-AC_DEFUN([AC_HAVE_MALLINFO],
+-  [ AC_MSG_CHECKING([for mallinfo ])
+-    AC_COMPILE_IFELSE(
+-    [	AC_LANG_PROGRAM([[
+-#include <malloc.h>
+-	]], [[
+-struct mallinfo test;
+-
+-test.arena = 0; test.hblkhd = 0; test.uordblks = 0; test.fordblks = 0;
+-test = mallinfo();
+-	]])
+-    ], have_mallinfo=yes
+-       AC_MSG_RESULT(yes),
+-       AC_MSG_RESULT(no))
+-    AC_SUBST(have_mallinfo)
 -  ])
 -
  #
- # Check if we have MAP_SYNC defines (Linux)
+ # Check if we have a mallinfo2 libc call
  #
+diff --git a/scrub/Makefile b/scrub/Makefile
+index f3e22a9d6..846774619 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -81,10 +81,6 @@ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBICU_LIBS) $(LIBRT) $(LIBURCU) \
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
+ 
+-ifeq ($(HAVE_MALLINFO),yes)
+-LCFLAGS += -DHAVE_MALLINFO
+-endif
+-
+ ifeq ($(HAVE_MALLINFO2),yes)
+ LCFLAGS += -DHAVE_MALLINFO2
+ endif
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 752180d64..736af2711 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -296,7 +296,6 @@ report_mem_usage(
+ 	const char			*phase,
+ 	const struct phase_rusage	*pi)
+ {
+-#if defined(HAVE_MALLINFO2) || defined(HAVE_MALLINFO)
+ # ifdef HAVE_MALLINFO2
+ 	struct mallinfo2		mall_now = mallinfo2();
+ # else
+@@ -306,11 +305,6 @@ report_mem_usage(
+ 		phase,
+ 		kbytes(mall_now.arena), kbytes(mall_now.hblkhd),
+ 		kbytes(mall_now.uordblks), kbytes(mall_now.fordblks));
+-#else
+-	fprintf(stdout, _("%sMemory used: %lluk, "),
+-		phase,
+-		kbytes(((char *) sbrk(0)) - ((char *) pi->brk_start)));
+-#endif
+ }
+ 
+ /* Report usage stats. */
 -- 
 2.39.2
 
