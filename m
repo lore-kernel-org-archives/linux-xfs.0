@@ -1,89 +1,189 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B87C21D6AA
-	for <linux-xfs@vger.kernel.org>; Sun, 28 Jan 2024 20:33:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1587611718;
+	Mon, 29 Jan 2024 04:03:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706474014; cv=none; b=ZheVWPrc/EGolbfgr9TRPtcBQY7cybamVt18uWb35I65yES/kXec9fJMzrfUcyaFg+9wtXOJGBflSQWPwOh8LOtSKh7qYiy0j/Hn1Pv2Ajn93omxOwmMw+wjVM9jzZE3LMSkFowLfI6GsDh7nXb0MpPCatXLyKKjR719rFSWJ4E=
+	t=1706500983; cv=none; b=I8eoRchlE4c9Zhu/bWPXg88F1e9+kzgaoNA0KAwLzhYSprHNQfyVepxFLeR7tfzQTw7kptbunxqOP56rNxyRxkh7mOzrkamqKjXDMJr0v8MduBhVFJjj4xoBA6s5yXKClSZFmwakI7hp/26qoVdfIk01a8ADI4zSFs20uHzHqq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706474014; c=relaxed/simple;
-	bh=Irnxzo9KitvbOqweW5W9trTQeSYFjFL4UUrG+HYICiE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P8ybTF5VRGiSrNrvZcw8VmN7UkLhR/FIkPNv4LuRWH3m0pDd0wX4UKp7apcQbw8JwnVpXP3Rs117K1xrTxSAWTpiXFYRAIkLmJdghxeWxyW7YrswV1zmFwuQGFLXcKe3tudep3oBtsBrD2QmDHBYgDqKwciI7W5W0XtRqLzCuWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oqnQIp+t; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1706500983; c=relaxed/simple;
+	bh=YT2RWbXxaBiXyuyzShGyHz64yql/pjo1Q3CoTYnSzN0=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Qa1ilo6Q4sHOORGna7YBHcVFhJNDTTnyHZfpvi62SPnRnBC3LnXkwew1Br9tBdMFpHM5P4KeBLzUUl88/NhWm6mrclBKREFTXRFyxJY0kZihdKVVAKsqYgxqTzQ0u1PJZMxRY1xokI38fB85zKViNxZ3nx5JrV9cNddjD4hYhV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=a/ka+RqE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eWGAvAGd; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=a/ka+RqE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eWGAvAGd; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oqnQIp+t"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=IZEIuzWowjgS5paVGB9Th9MFI7haSD4QDPVH8hqmr8Q=; b=oqnQIp+tGoCwXg3AX5ySUTiKnx
-	13q0cLtA01S03CnX0BvnXvmGb+kyK0eQG5q1XZQXg1VoTPvvv+AHJnKUuixCYy411HNRHCLd+fNRG
-	PvoYvXlC5K4ngxC5yhj+UtSiqqqvD/tInnu29iH3gzokOn/30ZXd48a751ghasoVVKz8ukeQxMpJO
-	zoL1N8noutboa7xeU44qU7kOEF9p/jdAsgCYCTd7eBWjhdDJ/BZsOZ9AYcsf40W1PtRORZnDOwzy3
-	Ro8e7AhfQ50dDGQyjJLvbQsKxeGt8u5nIPQagqh3PcRb5gUvBowbPOAoao7T+0vs0bmIaUH6tPYth
-	8hMUlsZw==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rUBqC-00000004UMo-21gF;
-	Sun, 28 Jan 2024 20:33:20 +0000
-Date: Sun, 28 Jan 2024 20:33:20 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Hugh Dickins <hughd@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 16/21] xfs: improve detection of lost xfile contents
-Message-ID: <Zba6EOFba2sW3bb5@casper.infradead.org>
-References: <20240126132903.2700077-1-hch@lst.de>
- <20240126132903.2700077-17-hch@lst.de>
- <ZbPe5FjDaQp1v8En@casper.infradead.org>
- <20240128165549.GA5727@lst.de>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="a/ka+RqE";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eWGAvAGd";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="a/ka+RqE";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eWGAvAGd"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 15AF41F7CD;
+	Mon, 29 Jan 2024 04:03:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1706500980; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1sx+GOHSFluGUk5NZr+VeRBJMNBf6sjx/2I/jGHwB4Y=;
+	b=a/ka+RqEeP6D0sDWMBVWAMEoPQQauKvyQhPXemozt+kJWKZ3e/M68wuC+AgkSICyl7QM0g
+	6Roqbz32cHrq+6H4gvK2zkSnAfL/CnBVny3czQ1zfst1hSWlS4hVTFq1TvS8+vsS0LBzkl
+	EVr7KEc/wQ+ZNo2UWEkWx/Q4q95nOmE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1706500980;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1sx+GOHSFluGUk5NZr+VeRBJMNBf6sjx/2I/jGHwB4Y=;
+	b=eWGAvAGdhkRRhZMjKd25lgpiWo6EgQ052kJCVQBmq0IO6uIqkfwTPgAF1UsDuP0P3eOcJv
+	Ur3nPVN8/5WZ+CBA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1706500980; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1sx+GOHSFluGUk5NZr+VeRBJMNBf6sjx/2I/jGHwB4Y=;
+	b=a/ka+RqEeP6D0sDWMBVWAMEoPQQauKvyQhPXemozt+kJWKZ3e/M68wuC+AgkSICyl7QM0g
+	6Roqbz32cHrq+6H4gvK2zkSnAfL/CnBVny3czQ1zfst1hSWlS4hVTFq1TvS8+vsS0LBzkl
+	EVr7KEc/wQ+ZNo2UWEkWx/Q4q95nOmE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1706500980;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1sx+GOHSFluGUk5NZr+VeRBJMNBf6sjx/2I/jGHwB4Y=;
+	b=eWGAvAGdhkRRhZMjKd25lgpiWo6EgQ052kJCVQBmq0IO6uIqkfwTPgAF1UsDuP0P3eOcJv
+	Ur3nPVN8/5WZ+CBA==
+Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 7A72B13428;
+	Mon, 29 Jan 2024 04:02:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap2.dmz-prg2.suse.org with ESMTPSA
+	id XC4pC3Ijt2UGBQAAn2gu4w
+	(envelope-from <ddiss@suse.de>); Mon, 29 Jan 2024 04:02:58 +0000
+Date: Mon, 29 Jan 2024 15:02:47 +1100
+From: David Disseldorp <ddiss@suse.de>
+To: Zorro Lang <zlang@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: test xfs_growfs with too-small size expansion
+Message-ID: <20240129150247.54c7a27a@echidna>
+In-Reply-To: <20240128155653.1533493-1-zlang@kernel.org>
+References: <20240128155653.1533493-1-zlang@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240128165549.GA5727@lst.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="a/ka+RqE";
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=eWGAvAGd
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 FROM_HAS_DN(0.00)[];
+	 RCPT_COUNT_THREE(0.00)[3];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 DKIM_TRACE(0.00)[suse.de:+];
+	 MX_GOOD(-0.01)[];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 RCVD_TLS_ALL(0.00)[];
+	 BAYES_HAM(-3.00)[100.00%]
+X-Spam-Score: -4.01
+X-Rspamd-Queue-Id: 15AF41F7CD
+X-Spam-Flag: NO
 
-On Sun, Jan 28, 2024 at 05:55:49PM +0100, Christoph Hellwig wrote:
-> On Fri, Jan 26, 2024 at 04:33:40PM +0000, Matthew Wilcox wrote:
-> > > +static inline bool
-> > > +xfile_has_lost_data(
-> > > +	struct inode		*inode,
-> > > +	struct folio		*folio)
-> > > +{
-> > > +	struct address_space	*mapping = inode->i_mapping;
-> > > +
-> > > +	/* This folio itself has been poisoned. */
-> > > +	if (folio_test_hwpoison(folio))
-> > > +		return true;
-> > > +
-> > > +	/* A base page under this large folio has been poisoned. */
-> > > +	if (folio_test_large(folio) && folio_test_has_hwpoisoned(folio))
-> > > +		return true;
-> > > +
-> > > +	/* Data loss has occurred anywhere in this shmem file. */
-> > > +	if (test_bit(AS_EIO, &mapping->flags))
-> > > +		return true;
-> > > +	if (filemap_check_wb_err(mapping, 0))
-> > > +		return true;
-> > > +
-> > > +	return false;
-> > > +}
-> > 
-> > This is too much.  filemap_check_wb_err() will do just fine for your
-> > needs unless you really want to get fine-grained and perhaps try to
-> > reconstruct the contents of the file.
+Looks fine.
+Reviewed-by: David Disseldorp <ddiss@suse.de>
+
+A couple of minor comments below...
+
+On Sun, 28 Jan 2024 23:56:53 +0800, Zorro Lang wrote:
+
+> This's a regression test of 84712492e6da ("xfs: short circuit
+> xfs_growfs_data_private() if delta is zero").
 > 
-> As in only call filemap_check_wb_err and do away with all the
-> hwpoisoned checks and the extra AS_EIO check?
+> If try to do growfs with "too-small" size expansion, might lead to a
+> delta of "0" in xfs_growfs_data_private(), then end up in the shrink
+> case and emit the EXPERIMENTAL warning even if we're not changing
+> anything at all.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+>  tests/xfs/999     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |  2 ++
+>  2 files changed, 55 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 00000000..09192ba3
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,53 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2024 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 999
 
-Yes, that's what i meant.
+I'll assume 999 is just a placeholder...
+
+> +#
+> +# Test xfs_growfs with "too-small" size expansion, which lead to a delta of "0"
+> +# in xfs_growfs_data_private. This's a regression test of 84712492e6da ("xfs:
+> +# short circuit xfs_growfs_data_private() if delta is zero").
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick growfs
+> +
+> +_cleanup()
+> +{
+> +	local dev
+> +        $UMOUNT_PROG $LOOP_MNT 2>/dev/null
+> +	dev=$(losetup -j testfile | cut -d: -f1)
+> +	losetup -d $dev 2>/dev/null
+> +        rm -rf $LOOP_IMG $LOOP_MNT
+> +        cd /
+> +        rm -f $tmp.*
+
+nit: tabs and spaces mixed above
+
+> +}
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_fixed_by_kernel_commit 84712492e6da \
+> +	"xfs: short circuit xfs_growfs_data_private() if delta is zero"
+> +_require_test
+> +_require_loop
+> +_require_xfs_io_command "truncate"
+
+nit: it doesn't seem common for growfs, but you might want to add a:
+  _require_command "$XFS_GROWFS_PROG" xfs_growfs
