@@ -1,41 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E869D4F1EC
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:32:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CD964F1ED
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:32:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706513541; cv=none; b=aqnVBjdnPnFjEOvvICf3xll0fnCSsYKncLfjS97EO+jMVILAmyzGBWxmZ9DGH/iKPh+k7YsWscB2IberQtoC2D5fmmVLCMsnWP4N3F3bIPGJwxIoY9/++RvuWct9oii0tV4J20/0nh2Ijn7oW9iSE4wpb6/2ilLK9PuprMVBtTY=
+	t=1706513543; cv=none; b=htZlrYch1fD0mdhr9QPbyAD1Ih9jGG7s1xEocAekhYeII+XT4on36I2y7jUT4WvjxCBll/1VGjXt6moAgNr9ySMC+iXuFk2iXpC1vzyRBMMRBJwBdJU01NLEGS3E4a5nshYdWQTyLVAd+FiX8DudbXMcuvTr8HliNUm1nCvdcUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706513541; c=relaxed/simple;
-	bh=yOXA1oY0G5b90uDz66rP4fzKFRwHPya6j2Tm01dCdUw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VEDxqxrgv7wjcXoF6N1cxM3WDH9/ORkK4kPJh6WhQcU9kgqlvQz3hbeC6iOcFvW9PUASKix2TZSFgsLXspnEuauUuuqP8MWBmemCmK+kUbFe9MEUJAYIEKrzr6tU8bc/TM44ZywxvlLP/8UjV7qS7AFFK9/29E/vMfpukXVamxs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=be4fpV7V; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1706513543; c=relaxed/simple;
+	bh=pPwZWmIkIVqkqOPgkpo2tE6b5yZf6aNGMXEVAiP7XmY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=uMRC5WFnslYs3ywtzLLzloKlOiZjVE3c8P1A1Zbf+zmKQfj8vdGQxzUEn+zOKFWqmOIyIjQiRRdsMEh3FSP4qdyrDy8wx/+3pvbIcT/SkcJkWFwvzHhGP6jel2aHLC0K5tGwdn2a1okSdyarGfP9DGUhS/AV46uzzdjCtHQV1tc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TEbfqstd; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="be4fpV7V"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TEbfqstd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=yczdYAM3OaTcM0v9kLb9shvafQ8DwacvTn/DZec8r4o=; b=be4fpV7VFzcCNdmzKDihSWl6Yb
-	eC7QoZX6BQJiA+iUobGRQgtsvgTekx476uNx4H+8NfAOxDcP69w0L2ryj7AbN7I1VI01OsqH4viEC
-	jX9iGkB0FHjjXrVLwk5v34m+RqOKvlH/y0eZjWDJeXGhXE2n1CGQX9V+EhUe7GuVpY3mr2uhoJR0B
-	WBqQCE7exC4BxUUfyLoM+jqgY2WwSW2sU+SkSnQDVHuzVHjiUcIZjEBxNP9zPz/SrKTQqY2SO65+5
-	TWtRJhns9nb6xXoG5zlfkljroxNk6JgFkWpnbpSzVbax/Dp2e6mH/WvucMdqaExZLh56PZjuYTf7f
-	Rh8iKsrg==;
+	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=W+lZpVvfs5HaWhTjKKXVokDAK6pXHLSJ8r1rpuekodw=; b=TEbfqstdF6+CkFOi6RxvrIIHB3
+	rgeesKraUqtghD8ZKfDNOQgU9i/JwJeL6wdHnlzlSPFpLH9e5XmalFEQU9/MRjogH1YTfZFpS3nGV
+	+Uj+yyTnTjOt9OuyXFnmAXO5KVANt296qo1DTfBtWj3AQTh46lC8VPpL3cAgw3xKC3y/HGqqkVm2Y
+	uVYLWWKHRf6V7ehww6D+yct8RTP/BmUzXOeOsf+CIBvk0GhloHhgbOhp0UOqLxWVZe+/axSAxFxm2
+	7w2h87hPGUJrZo3o1s95BoXTvnouIIdqy2whzVJoBOlA3rLa0HQ+cstkEb1LUOe4w2ZkJirOxkU9q
+	Fq6BhUhg==;
 Received: from [2001:4bb8:182:6550:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rUM7u-0000000BcZM-0jAz;
-	Mon, 29 Jan 2024 07:32:18 +0000
+	id 1rUM7w-0000000BcZU-30Om;
+	Mon, 29 Jan 2024 07:32:21 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: decrufify the configure checks
-Date: Mon, 29 Jan 2024 08:31:48 +0100
-Message-Id: <20240129073215.108519-1-hch@lst.de>
+Subject: [PATCH 01/27] include: remove the filldir_t typedef
+Date: Mon, 29 Jan 2024 08:31:49 +0100
+Message-Id: <20240129073215.108519-2-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240129073215.108519-1-hch@lst.de>
+References: <20240129073215.108519-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,40 +48,26 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+Neither struct filldir, nor filldir_t is used anywhere in xfsprogs.
 
-I've been starting to look into making the xfsprogs build system suck
-less.  This series stops generating platform_defs.h and removes a lot
-of superfluous configure checks.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/platform_defs.h.in | 2 --
+ 1 file changed, 2 deletions(-)
 
-Diffstat:
- b/Makefile                |   15 -
- b/configure.ac            |   33 ----
- b/fsr/Makefile            |    4 
- b/fsr/xfs_fsr.c           |    2 
- b/include/bitops.h        |    2 
- b/include/builddefs.in    |   37 ----
- b/include/linux.h         |    2 
- b/include/platform_defs.h |   10 -
- b/io/Makefile             |   69 ---------
- b/io/io.h                 |   36 ----
- b/io/mmap.c               |    8 -
- b/io/pread.c              |    8 -
- b/io/prealloc.c           |    8 -
- b/io/pwrite.c             |    8 -
- b/io/seek.c               |    5 
- b/io/stat.c               |    2 
- b/io/sync.c               |    4 
- b/libfrog/Makefile        |    4 
- b/libfrog/paths.c         |    9 -
- b/libxfs/topology.c       |   37 ----
- b/m4/Makefile             |    1 
- b/m4/package_libcdev.m4   |  349 ----------------------------------------------
- b/repair/bmap.c           |   23 +--
- b/repair/bmap.h           |   13 -
- b/scrub/Makefile          |   20 --
- b/scrub/common.h          |    8 -
- b/scrub/disk.c            |   30 +--
- b/scrub/xfs_scrub.c       |    6 
- m4/package_types.m4       |   14 -
- 29 files changed, 35 insertions(+), 732 deletions(-)
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index 64e7efdbf..02b0e08b5 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -25,8 +25,6 @@
+ #include <libgen.h>
+ #include <urcu.h>
+ 
+-typedef struct filldir		filldir_t;
+-
+ /* long and pointer must be either 32 bit or 64 bit */
+ #undef SIZEOF_LONG
+ #undef SIZEOF_CHAR_P
+-- 
+2.39.2
+
