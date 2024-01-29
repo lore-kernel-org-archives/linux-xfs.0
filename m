@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DFB74F1E7
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:33:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40934F1E7
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:33:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706513584; cv=none; b=cocLscJkHWOdoyTSzhyqV7IrQuRYatoaGuLSxG07E38DGgrfKWb2OhpupuV1vLuCGeIbQwf3HBt749MpPD5zoMei5AIvR6qWa5gM3Rttpkub3j/W0tIoDtynV9N52+zkz/kFrEX4+DgEsBpSR8s1P6+m6apgNdj3XRWjuxy1Z6s=
+	t=1706513587; cv=none; b=ouYEkcfHGfXvw9vFg4YpsXgQjnhN7+lxBxDmNRpJHCtxQhCnsidcd8H4zyljItRo8FLxmeD0GTwBw5/7Y/fEUBOn8SxHF33mB5WIYqB86CsSSHdMPShls9P1y0NXy2Oz7AMrMTdvpM2/Q0viP/NuXIn7YffnwcvN/w3A6brPeUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706513584; c=relaxed/simple;
-	bh=eAD5iS4Z5lXJjqP6JjVWCvghU/+7/7HYQnpFR6Hf4bc=;
+	s=arc-20240116; t=1706513587; c=relaxed/simple;
+	bh=cSPIo88sJYZ0PNw4O4JeQhDHxF7kaiYM3I/ngneMDU8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kp17qofxUK8UoDTWB/G4eQzwnKttQ1cWmFj+BU13u3gfWh9Fq9eF27B94eJdLzJnsaqukuIPcIryRTjW3jZndyq4DCUZw7J7Sc2boOj0ebqYew5CY5MVROrdU4kW3f2r8z71hzQHNaKAnAIPMuLvL+cG7OKyClF1hMacMuejLtY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dc85npNk; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=EZ4cvJhwbHZBvJdh60FZTzU/pOVDGVgK0SXKqTr7qYF6XbhAi9n5yreCdgXJXBjUAUqWihJt2vt9OKtdou2YMy4STa65/ck42ERr2MeJ0hO+pH4RH/flRZEiMTXF0Ix1lTc/IT1u7rG3brkh0f8TcNRg0BqIco9ueMNVXBOtj9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=e3zR3WnH; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dc85npNk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="e3zR3WnH"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=sW8SIXG09IfWp22edtLs/2VhKhXIZq34o/jWD7Fcvzc=; b=dc85npNk2Y8xPitBbU49qkXWNf
-	deS8eTYRoAJpGXT5G2CH/W163B8Da1fWsnGVZEfpMQRGuLTY/M7rvZru4ciimDfVb3EWzygnonAKe
-	g8rqDPWPy2kbDs8yZvG6zpqg50nqCUz/HJrzQNGyydwZHDkSqWjdK+L4pd67f7hFwhYh1PJbpC5ns
-	/OSn5FspBqSlljsWCochjjIgdrsHJ0zlXOQbMMInnObWuueGtCclFL4R2Ynv0qq4FKrAzEmx8VzAR
-	gWrX9j9COhLMQLAWiH/MuzWPiM1zFfmT3nkH7S50pCoEjAaMAMfohBDUyqjU5w9/ATFklcGKNbS1s
-	HDLw6LKw==;
+	bh=gKQkL/N5lqp93b25OSARzpcx+SzhYWD0bz6vN1LGFPc=; b=e3zR3WnHNxEyCK6zWGgf/7NsZd
+	wleNR/IQf4/3VFnY3MJXRx9yW+E1p4NBp2nbmUVomSHiD3bBLN+5tY0qRUre/nzF4QzyX5f4zXLlE
+	D/cUCi4DvJAKts/H6U8vA3vBJqIPKSdLKJ6ZRenrDB+c1HQFNuhZgCJF8apbcWglggZlr/NUdGX6Q
+	gNVJClXxi8rKKfZxPiBuyUsrTUGly+7oopwN68umKz+afFElVgfCrl7U3xWdY20hyOIgfW1H27B+q
+	E572DjP4NDxwfnXmeFG7nohJr2V2kTt4xb1/Y8hGFhkC6CpUXimG3UOBEppvNw/Twg/4f096n0OSj
+	kn1+6qcw==;
 Received: from [2001:4bb8:182:6550:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rUM8c-0000000BciD-2Sa3;
-	Mon, 29 Jan 2024 07:33:03 +0000
+	id 1rUM8f-0000000BcjV-0oy1;
+	Mon, 29 Jan 2024 07:33:05 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 17/27] configure: don't check for fallocate
-Date: Mon, 29 Jan 2024 08:32:05 +0100
-Message-Id: <20240129073215.108519-18-hch@lst.de>
+Subject: [PATCH 18/27] configure: don't check for syncfs
+Date: Mon, 29 Jan 2024 08:32:06 +0100
+Message-Id: <20240129073215.108519-19-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240129073215.108519-1-hch@lst.de>
 References: <20240129073215.108519-1-hch@lst.de>
@@ -48,167 +48,155 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-fallocate has been supported since Linux 2.6.23 and glibc 2.10.
+syncfs has been supported since Linux 2.6.39.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
  configure.ac          |  1 -
- include/builddefs.in  |  4 ----
- include/linux.h       |  2 --
+ include/builddefs.in  |  1 -
  io/Makefile           |  4 ----
- io/prealloc.c         |  8 --------
- m4/package_libcdev.m4 | 19 -------------------
- 6 files changed, 38 deletions(-)
+ io/sync.c             |  4 ----
+ m4/package_libcdev.m4 | 18 ------------------
+ scrub/Makefile        |  4 ----
+ scrub/common.h        |  8 --------
+ 7 files changed, 40 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index abedaacf2..8c903ea2d 100644
+index 8c903ea2d..3a131982f 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -162,7 +162,6 @@ AC_PACKAGE_NEED_PTHREADMUTEXINIT
- AC_PACKAGE_NEED_URCU_H
- AC_PACKAGE_NEED_RCU_INIT
- 
--AC_HAVE_FALLOCATE
+@@ -165,7 +165,6 @@ AC_PACKAGE_NEED_RCU_INIT
  AC_HAVE_PWRITEV2
  AC_HAVE_PREADV
  AC_HAVE_COPY_FILE_RANGE
+-AC_HAVE_SYNCFS
+ AC_HAVE_FSETXATTR
+ AC_HAVE_MREMAP
+ AC_NEED_INTERNAL_FSXATTR
 diff --git a/include/builddefs.in b/include/builddefs.in
-index 47ac7173c..64468f486 100644
+index 64468f486..cb63751fd 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -90,7 +90,6 @@ ENABLE_SCRUB	= @enable_scrub@
- 
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- 
--HAVE_FALLOCATE = @have_fallocate@
+@@ -93,7 +93,6 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
  HAVE_PREADV = @have_preadv@
  HAVE_PWRITEV2 = @have_pwritev2@
  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
-@@ -144,9 +143,6 @@ endif
- ifeq ($(HAVE_GETFSMAP),yes)
- PCFLAGS+= -DHAVE_GETFSMAP
- endif
--ifeq ($(HAVE_FALLOCATE),yes)
--PCFLAGS += -DHAVE_FALLOCATE
--endif
- 
- LIBICU_LIBS = @libicu_LIBS@
- LIBICU_CFLAGS = @libicu_CFLAGS@
-diff --git a/include/linux.h b/include/linux.h
-index eddc4ad9c..95a0deee2 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -27,9 +27,7 @@
- #include <asm/types.h>
- #include <mntent.h>
- #include <fcntl.h>
--#if defined(HAVE_FALLOCATE)
- #include <linux/falloc.h>
--#endif
- #ifdef OVERRIDE_SYSTEM_FSXATTR
- # define fsxattr sys_fsxattr
- #endif
+-HAVE_SYNCFS = @have_syncfs@
+ HAVE_FSETXATTR = @have_fsetxattr@
+ HAVE_MREMAP = @have_mremap@
+ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
 diff --git a/io/Makefile b/io/Makefile
-index 837716238..eb6ad0574 100644
+index eb6ad0574..acef8957d 100644
 --- a/io/Makefile
 +++ b/io/Makefile
-@@ -33,10 +33,6 @@ ifeq ($(ENABLE_EDITLINE),yes)
- LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+@@ -25,10 +25,6 @@ CFILES += copy_file_range.c
+ LCFLAGS += -DHAVE_COPY_FILE_RANGE
  endif
  
--ifeq ($(HAVE_FALLOCATE),yes)
--LCFLAGS += -DHAVE_FALLOCATE
+-ifeq ($(HAVE_SYNCFS),yes)
+-LCFLAGS += -DHAVE_SYNCFS
 -endif
 -
- # Also implies PWRITEV
- ifeq ($(HAVE_PREADV),yes)
- LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
-diff --git a/io/prealloc.c b/io/prealloc.c
-index 5805897a4..8e968c9f2 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -4,9 +4,7 @@
-  * All Rights Reserved.
-  */
- 
--#if defined(HAVE_FALLOCATE)
- #include <linux/falloc.h>
--#endif
- #include "command.h"
- #include "input.h"
- #include "init.h"
-@@ -37,14 +35,12 @@ static cmdinfo_t freesp_cmd;
- static cmdinfo_t resvsp_cmd;
- static cmdinfo_t unresvsp_cmd;
- static cmdinfo_t zero_cmd;
--#if defined(HAVE_FALLOCATE)
- static cmdinfo_t falloc_cmd;
- static cmdinfo_t fpunch_cmd;
- static cmdinfo_t fcollapse_cmd;
- static cmdinfo_t finsert_cmd;
- static cmdinfo_t fzero_cmd;
- static cmdinfo_t funshare_cmd;
--#endif
- 
- static int
- offset_length(
-@@ -182,7 +178,6 @@ zero_f(
+ ifeq ($(ENABLE_EDITLINE),yes)
+ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+ endif
+diff --git a/io/sync.c b/io/sync.c
+index 89f787ecd..f3b900d86 100644
+--- a/io/sync.c
++++ b/io/sync.c
+@@ -21,7 +21,6 @@ sync_f(
+ 	return 0;
  }
  
+-#ifdef HAVE_SYNCFS
+ static cmdinfo_t syncfs_cmd;
  
--#if defined (HAVE_FALLOCATE)
- static void
- falloc_help(void)
- {
-@@ -381,7 +376,6 @@ funshare_f(
+ static int
+@@ -35,7 +34,6 @@ syncfs_f(
  	}
  	return 0;
  }
--#endif	/* HAVE_FALLOCATE */
+-#endif
  
  void
- prealloc_init(void)
-@@ -435,7 +429,6 @@ prealloc_init(void)
- 	add_command(&unresvsp_cmd);
- 	add_command(&zero_cmd);
+ sync_init(void)
+@@ -49,7 +47,6 @@ sync_init(void)
  
--#if defined (HAVE_FALLOCATE)
- 	falloc_cmd.name = "falloc";
- 	falloc_cmd.cfunc = fallocate_f;
- 	falloc_cmd.argmin = 2;
-@@ -496,5 +489,4 @@ prealloc_init(void)
- 	funshare_cmd.oneline =
- 	_("unshares shared blocks within the range");
- 	add_command(&funshare_cmd);
--#endif	/* HAVE_FALLOCATE */
+ 	add_command(&sync_cmd);
+ 
+-#ifdef HAVE_SYNCFS
+ 	syncfs_cmd.name = "syncfs";
+ 	syncfs_cmd.cfunc = syncfs_f;
+ 	syncfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+@@ -57,5 +54,4 @@ sync_init(void)
+ 		_("calls syncfs(2) to flush all in-core filesystem state to disk");
+ 
+ 	add_command(&syncfs_cmd);
+-#endif
  }
 diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 17319bb23..758b9378c 100644
+index 758b9378c..37d11e338 100644
 --- a/m4/package_libcdev.m4
 +++ b/m4/package_libcdev.m4
-@@ -1,22 +1,3 @@
+@@ -54,24 +54,6 @@ syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
+     AC_SUBST(have_copy_file_range)
+   ])
+ 
 -#
--# Check if we have a fallocate libc call (Linux)
+-# Check if we have a syncfs libc call (Linux)
 -#
--AC_DEFUN([AC_HAVE_FALLOCATE],
--  [ AC_MSG_CHECKING([for fallocate])
+-AC_DEFUN([AC_HAVE_SYNCFS],
+-  [ AC_MSG_CHECKING([for syncfs])
 -    AC_LINK_IFELSE(
 -    [	AC_LANG_PROGRAM([[
 -#define _GNU_SOURCE
--#include <fcntl.h>
--#include <linux/falloc.h>
+-#include <unistd.h>
 -	]], [[
--fallocate(0, 0, 0, 0);
+-syncfs(0);
 -	]])
--    ], have_fallocate=yes
+-    ], have_syncfs=yes
 -       AC_MSG_RESULT(yes),
 -       AC_MSG_RESULT(no))
--    AC_SUBST(have_fallocate)
+-    AC_SUBST(have_syncfs)
 -  ])
 -
  #
- # Check if we have a preadv libc call (Linux)
+ # Check if we have a fsetxattr call
  #
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 4368897f2..f3e22a9d6 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -89,10 +89,6 @@ ifeq ($(HAVE_MALLINFO2),yes)
+ LCFLAGS += -DHAVE_MALLINFO2
+ endif
+ 
+-ifeq ($(HAVE_SYNCFS),yes)
+-LCFLAGS += -DHAVE_SYNCFS
+-endif
+-
+ ifeq ($(HAVE_LIBATTR),yes)
+ LCFLAGS += -DHAVE_LIBATTR
+ endif
+diff --git a/scrub/common.h b/scrub/common.h
+index 865c1caa4..764639c06 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -74,14 +74,6 @@ double auto_units(unsigned long long number, char **units, int *precision);
+ unsigned int scrub_nproc(struct scrub_ctx *ctx);
+ unsigned int scrub_nproc_workqueue(struct scrub_ctx *ctx);
+ 
+-#ifndef HAVE_SYNCFS
+-static inline int syncfs(int fd)
+-{
+-	sync();
+-	return 0;
+-}
+-#endif
+-
+ void background_sleep(void);
+ char *string_escape(const char *in);
+ 
 -- 
 2.39.2
 
