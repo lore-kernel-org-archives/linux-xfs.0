@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6E64F1E7
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:33:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9ACB4F1E7
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2024 07:33:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706513592; cv=none; b=FdZEC4WKUcc1P6GGEwAHmT+5kBBj7hA+6akXfURRIFdy1SqoYHqQKyp7oWAMVC6B7lj+6RvnX9e1gUX7jlP9sP4m1eRf2K2ck4aPXDqjtwPWiDEC4uI5whlb6IsnkFN3MlMpvzhWZ4tuAbL7l9Lbv3eU1kgZYGFMwOBflbROmiI=
+	t=1706513595; cv=none; b=UGZCGyoTpevq71aqEbZC4XBJaElVEEm5Adf1hMVByiXrKhJlBCb1d0wPXgxudqa4sKu87Cq3fA6pSa83C2cWG+r5nhAUu0hbZJmd5rBTUHI/2fKSkHEtKCTCRp4YUzuNfjOtohphyBWOGq7dU6VCZxQH6tC7qM1MDwjh8uqaGDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706513592; c=relaxed/simple;
-	bh=9kouTLmqoV6EB/RL/NaZT5gG+G/wySrtx4jDSSlLy10=;
+	s=arc-20240116; t=1706513595; c=relaxed/simple;
+	bh=5EMDtBz3MlFfzd5zLe1Hd/qHYkedl1OEvwBGtuyYG0I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HhnAp+oMnCzJRjUscAa5917Mjwxzfl/taf5YgZY6/bORlhcedHwXLOVP966WCwnayOaLrGiLyTodjncKdp5XW7dZ8wIH9Yl4nFwLM12vJ9fWyI7+t7nfsfddMxuHqkD0rnMinpQ/2z+/qoMk7JPYRSISxw4h7Ox57F8/pjV3dec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HfTQKNak; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=sEh1oLhA2wWNWFUDnag8oCtZlGl3TbpPb2iz9pQp0uGqAGw+CT5O+RxNb4FniHXGFE1H0LIWhmBHpYnxavMOegh9opnHz9EQSeDPhLnmGwEjDK041xXaj8Kg/S9ioJnCi9VKX3qbJDnR5dxKdxUTxHmLy1XqM1wqT8rKVGXMnbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=j0i809GV; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HfTQKNak"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j0i809GV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=fXU9HtqqoHHQACjChsp17l79yf8UiZ5prKDKTTAUSic=; b=HfTQKNakDerOYBJBapx1VPXbj1
-	rRpfLMW/H1EwP+fUAkS/YamWH75827R0+qH6hTTbefxpKiM/5DcmrA4Pda6lZD6HWRBHamqM3A+j+
-	JyAFPeZDndY3hv1KcLPPWWk9royAxg/rfojXdaMX0us2XHa/NH3Me8XVjO6GV63RP7cmkESQ1wcnV
-	P3YYf1Vun03QZgFwqC/ZuKSeUFCBpYlqcMjNYftkQCmVAyKF7vsyQm5vpl/5XOLLuFZlCkiJOBHQz
-	IEPzxzSmZnMEouKfOI+RVOYxdkgL7pAmPQ96qOTtlD7+JR04GeUihb4h5Pg16MmRHHnRAUvgy6ZUF
-	ch+2zc8Q==;
+	bh=5oXZwd1FKW6Byhk9UiVAGwbKowTxtnQkNC3uVKrvyQA=; b=j0i809GV+TMU6V0yh25dc830Wf
+	L53cpKB8kFsqJUosXcyBT2s4+Lwel82RjCm4i8J17qF/fSXdvIiiYg5r5RqeK/7ih+R9K13sGH35f
+	ziISihhW5idBOVlBpX0fJJTbLhGmhEyOOp0LdCzCQrZ12fZAkBF2zHkInhEXDB1VLPijCKNS1JIaQ
+	gj4UkXY9VlCfB8sMP46jZXuifqkhK4Tjh3IC2ke4nYqhWpIv/DKSEXEouVd98XKkzOetYFgK7V65Q
+	W9GZxO10AHm8CGGMRiy641DLiS7hSJH4NhEn9A0LX7fAVxbgQRKLs8UMt/iiPZcoLTiiIf/LHY0yA
+	R17k45vw==;
 Received: from [2001:4bb8:182:6550:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rUM8k-0000000Bckv-1uX4;
-	Mon, 29 Jan 2024 07:33:10 +0000
+	id 1rUM8n-0000000BclB-04sB;
+	Mon, 29 Jan 2024 07:33:13 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 20/27] configure: don't check for mremap
-Date: Mon, 29 Jan 2024 08:32:08 +0100
-Message-Id: <20240129073215.108519-21-hch@lst.de>
+Subject: [PATCH 21/27] configure: don't check for fsetxattr
+Date: Mon, 29 Jan 2024 08:32:09 +0100
+Message-Id: <20240129073215.108519-22-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240129073215.108519-1-hch@lst.de>
 References: <20240129073215.108519-1-hch@lst.de>
@@ -48,128 +48,89 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-mremap has been around since before the dawn of it.
+fsetxattr has been supported since Linux 2.4 and glibc 2.3.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
  configure.ac          |  1 -
- include/builddefs.in  |  1 -
- io/Makefile           |  4 ----
- io/mmap.c             |  8 --------
+ fsr/xfs_fsr.c         |  2 --
+ include/builddefs.in  |  4 ----
  m4/package_libcdev.m4 | 13 -------------
- 5 files changed, 27 deletions(-)
+ 4 files changed, 20 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index a332b7694..dd000f11c 100644
+index dd000f11c..ce9a8a935 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -165,7 +165,6 @@ AC_PACKAGE_NEED_RCU_INIT
+@@ -164,7 +164,6 @@ AC_PACKAGE_NEED_RCU_INIT
+ 
  AC_HAVE_PWRITEV2
  AC_HAVE_COPY_FILE_RANGE
- AC_HAVE_FSETXATTR
--AC_HAVE_MREMAP
+-AC_HAVE_FSETXATTR
  AC_NEED_INTERNAL_FSXATTR
  AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
  AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index ba02506d8..971445c2d 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -954,7 +954,6 @@ fsr_setup_attr_fork(
+ 	int		tfd,
+ 	struct xfs_bstat *bstatp)
+ {
+-#ifdef HAVE_FSETXATTR
+ 	struct xfs_fd	txfd = XFS_FD_INIT(tfd);
+ 	struct stat	tstatbuf;
+ 	int		i;
+@@ -1119,7 +1118,6 @@ out:
+ 	if (dflag && diff)
+ 		fsrprintf(_("failed to match fork offset\n"));;
+ 
+-#endif /* HAVE_FSETXATTR */
+ 	return 0;
+ }
+ 
 diff --git a/include/builddefs.in b/include/builddefs.in
-index 0e0f26144..4b55f97cd 100644
+index 4b55f97cd..b84369ea7 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -93,7 +93,6 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+@@ -92,7 +92,6 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+ 
  HAVE_PWRITEV2 = @have_pwritev2@
  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
- HAVE_FSETXATTR = @have_fsetxattr@
--HAVE_MREMAP = @have_mremap@
+-HAVE_FSETXATTR = @have_fsetxattr@
  NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
  NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
  NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
-diff --git a/io/Makefile b/io/Makefile
-index a81a75fc8..35b3ebd52 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -33,10 +33,6 @@ ifeq ($(HAVE_PWRITEV2),yes)
- LCFLAGS += -DHAVE_PWRITEV2
+@@ -125,9 +124,6 @@ DEPENDFLAGS = -D__linux__
+ ifeq ($(HAVE_MNTENT),yes)
+ PCFLAGS+= -DHAVE_MNTENT
  endif
- 
--ifeq ($(HAVE_MREMAP),yes)
--LCFLAGS += -DHAVE_MREMAP
+-ifeq ($(HAVE_FSETXATTR),yes)
+-PCFLAGS+= -DHAVE_FSETXATTR
 -endif
--
- ifeq ($(HAVE_MAP_SYNC),yes)
- LCFLAGS += -DHAVE_MAP_SYNC
+ ifeq ($(NEED_INTERNAL_FSXATTR),yes)
+ PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
  endif
-diff --git a/io/mmap.c b/io/mmap.c
-index 425957d4b..c3bb211a8 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -16,9 +16,7 @@ static cmdinfo_t mread_cmd;
- static cmdinfo_t msync_cmd;
- static cmdinfo_t munmap_cmd;
- static cmdinfo_t mwrite_cmd;
--#ifdef HAVE_MREMAP
- static cmdinfo_t mremap_cmd;
--#endif /* HAVE_MREMAP */
- 
- mmap_region_t	*maptable;
- int		mapcount;
-@@ -636,7 +634,6 @@ mwrite_f(
- 	return 0;
- }
- 
--#ifdef HAVE_MREMAP
- static void
- mremap_help(void)
- {
-@@ -712,7 +709,6 @@ mremap_f(
- 	mapping->length = new_length;
- 	return 0;
- }
--#endif /* HAVE_MREMAP */
- 
- void
- mmap_init(void)
-@@ -769,7 +765,6 @@ mmap_init(void)
- 		_("writes data into a region in the current memory mapping");
- 	mwrite_cmd.help = mwrite_help;
- 
--#ifdef HAVE_MREMAP
- 	mremap_cmd.name = "mremap";
- 	mremap_cmd.altname = "mrm";
- 	mremap_cmd.cfunc = mremap_f;
-@@ -780,14 +775,11 @@ mmap_init(void)
- 	mremap_cmd.oneline =
- 		_("alters the size of the current memory mapping");
- 	mremap_cmd.help = mremap_help;
--#endif /* HAVE_MREMAP */
- 
- 	add_command(&mmap_cmd);
- 	add_command(&mread_cmd);
- 	add_command(&msync_cmd);
- 	add_command(&munmap_cmd);
- 	add_command(&mwrite_cmd);
--#ifdef HAVE_MREMAP
- 	add_command(&mremap_cmd);
--#endif /* HAVE_MREMAP */
- }
 diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 7d7679fa0..dd04be5f0 100644
+index dd04be5f0..ff0e83752 100644
 --- a/m4/package_libcdev.m4
 +++ b/m4/package_libcdev.m4
-@@ -48,19 +48,6 @@ AC_DEFUN([AC_HAVE_FSETXATTR],
-     AC_SUBST(have_fsetxattr)
+@@ -35,19 +35,6 @@ syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
+     AC_SUBST(have_copy_file_range)
    ])
  
 -#
--# Check if we have a mremap call (not on Mac OS X)
+-# Check if we have a fsetxattr call
 -#
--AC_DEFUN([AC_HAVE_MREMAP],
--  [ AC_CHECK_DECL([mremap],
--       have_mremap=yes,
+-AC_DEFUN([AC_HAVE_FSETXATTR],
+-  [ AC_CHECK_DECL([fsetxattr],
+-       have_fsetxattr=yes,
 -       [],
--       [#define _GNU_SOURCE
--        #include <sys/mman.h>]
+-       [#include <sys/types.h>
+-        #include <sys/xattr.h>]
 -       )
--    AC_SUBST(have_mremap)
+-    AC_SUBST(have_fsetxattr)
 -  ])
 -
  #
