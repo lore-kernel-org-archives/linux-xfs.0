@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 981A2376EA
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 05:03:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23858376F4
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 05:03:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706591020; cv=none; b=ZDQWEyELxLkAqw4VXAJmPhUQcboF/5DRNrnoltFMgfPshShvUj0LXcHtBnSAOLF5IqcPAD/Fpui0BjuC2n7HUkmKiGSyD/IItHYkNdyQGBY+hMz78LfIiYXHSXYh0bDUq4wA0bavuFItNWZYMYL/ar7e80KLiE97VEmiBZil8d8=
+	t=1706591026; cv=none; b=SbD1u2bG84sbPedbg5Fz//P/RfwSMTjg4KZ69wRfc8ufaWwLAVWgRYoGPyi8LpylgLACXd58RCiUVpIQcnCkWqkiQ/FfC3+0tmoHQgc2xPX9KZictOf7Xnf5RLYpeP8rzmLF188S5/j9rGmgIaXiMGzUtOmZe+J/LzCzxz0e4zI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706591020; c=relaxed/simple;
-	bh=3YjCnakdIFfNw8qYKV82Vxrgm0IrncOyW23l3Biu9p4=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=JIXUCklwB9tNesbgmEKvgOej+vEK2fjAKbH5jKR4aqQcGmwmKsTa4uQrVLfkOTamIR7O9kLx+G6vuWAmyIj1RaBanu2aDjSp9dvjv0XQ7X84XR1BEIx7eFE/m2OHjwA9gRk+bMJLFHQWxM1zRt3XZmmMygrZQ0ZKbYC9qcy6Bo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJ+QaITJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706591026; c=relaxed/simple;
+	bh=C2tvsrFuEfKiNqjY257KOG3uFFUTCXFTtGHrBLF9qlY=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=U92P1guGMFqeQJTtQBuJsWEt9C1MSzbqwloLw3FE/BzO+PIN1K7E0G4MJ0lJD1B4oxzf5k+sVGAJ+W2hc7cnmsvyHsmu4b3m24lgR7VsUPlkz1nwB/mEA9GJ4UAOODMi9LJdQOP3jcgLI/MEE8oBduVNjDOnSO1I9ZI1ROZsnZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vARLZFli; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJ+QaITJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B4D7C433F1;
-	Tue, 30 Jan 2024 05:03:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vARLZFli"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2E51C433F1;
+	Tue, 30 Jan 2024 05:03:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706591020;
-	bh=3YjCnakdIFfNw8qYKV82Vxrgm0IrncOyW23l3Biu9p4=;
-	h=Date:Subject:From:To:Cc:From;
-	b=kJ+QaITJwy5HOpEBj7HWYNr5Ou2bqda0SaM/gE2eTzGiDRYZb0BluJErdOBAq1vYk
-	 VCgpsuWjQj5Sxw3HZAksL5i9Jf9wwc5KxpWL8qHhpVDqkvlgvZ4V0P1FelUlW+q6jf
-	 h+xxT9ZW0F9sm9bYU0Q/AoQ1sMgo3G80XnOyUpXe7Nq0HwU4E5s2pKX0zBgF2zxhBO
-	 +k+k8V74RmcUlOf7xWTUd5gbDxJNHvO3g+EH2SjQydSNCuNjVfczWorP7VYpO6dl2r
-	 iwVmjdg+sD18sHABx32mE44ZeLJOLd87ud1Yu1FsYh00L/r49wL32IZ1lQmnOK09FV
-	 BAwOVBvq+1hpA==
-Date: Mon, 29 Jan 2024 21:03:39 -0800
-Subject: [PATCHSET v29.2 7/7] xfs: online repair for fs summary counters
+	s=k20201202; t=1706591025;
+	bh=C2tvsrFuEfKiNqjY257KOG3uFFUTCXFTtGHrBLF9qlY=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=vARLZFliQL3FLpPBjCQiW8ozE0hnDBFezXCWAyhkOws7iUEeZjR1OFFIe9QzKOt9/
+	 OhSbsGsqeaB7oROJz+BgsgApLrufCmi548LsrT6HNM0oxqlqfphMX6TKX4MLBaTQKn
+	 al38v6GoHkgmuFuA9xPDLlLQ3f/3k6YMWV+wu8UPAPUvQJ5uCRYOt3W5D4WWKy0gSU
+	 6PpPkKlC1Q7ujTpWPewW+UwgK80ouqCWpBRGds12IFHQgJm0B7gqwqCgTFaGlYHKyf
+	 JgdvmNwTTjeAE1UwhFN0/02q5ZJckHi+FdADyLOrzojCb1m+MF2m9Y2YiPcioYuP4v
+	 BnBcFAyhVLhxw==
+Date: Mon, 29 Jan 2024 21:03:45 -0800
+Subject: [PATCH 1/6] xfs: speed up xfs_iwalk_adjust_start a little bit
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170659064662.3354357.16936859621849391669.stgit@frogsfrogsfrogs>
+Message-ID: <170659061854.3353019.8514932032106677042.stgit@frogsfrogsfrogs>
+In-Reply-To: <170659061824.3353019.15854398821862048839.stgit@frogsfrogsfrogs>
+References: <170659061824.3353019.15854398821862048839.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -41,49 +44,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-A longstanding deficiency in the online fs summary counter scrubbing
-code is that it hasn't any means to quiesce the incore percpu counters
-while it's running.  There is no way to coordinate with other threads
-are reserving or freeing free space simultaneously, which leads to false
-error reports.  Right now, if the discrepancy is large, we just sort of
-shrug and bail out with an incomplete flag, but this is lame.
+Replace the open-coded loop that recomputes freecount with a single call
+to a bit weight function.
 
-For repair activity, we actually /do/ need to stabilize the counters to
-get an accurate reading and install it in the percpu counter.  To
-improve the former and enable the latter, allow the fscounters online
-fsck code to perform an exclusive mini-freeze on the filesystem.  The
-exclusivity prevents userspace from thawing while we're running, and the
-mini-freeze means that we don't wait for the log to quiesce, which will
-make both speedier.
-
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-fscounters
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * xfs: repair summary counters
----
- fs/xfs/Makefile                  |    1 +
- fs/xfs/scrub/fscounters.c        |   27 +++++++-------
- fs/xfs/scrub/fscounters.h        |   20 +++++++++++
- fs/xfs/scrub/fscounters_repair.c |   72 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h            |    2 +
- fs/xfs/scrub/scrub.c             |    2 +
- fs/xfs/scrub/trace.c             |    1 +
- fs/xfs/scrub/trace.h             |   21 +++++++++--
- 8 files changed, 128 insertions(+), 18 deletions(-)
- create mode 100644 fs/xfs/scrub/fscounters.h
- create mode 100644 fs/xfs/scrub/fscounters_repair.c
+ fs/xfs/xfs_iwalk.c |   13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index b3275e8d47b60..4ce85423ef3e0 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -22,6 +22,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_pwork.h"
+ #include "xfs_ag.h"
++#include "xfs_bit.h"
+ 
+ /*
+  * Walking Inodes in the Filesystem
+@@ -131,21 +132,11 @@ xfs_iwalk_adjust_start(
+ 	struct xfs_inobt_rec_incore	*irec)	/* btree record */
+ {
+ 	int				idx;	/* index into inode chunk */
+-	int				i;
+ 
+ 	idx = agino - irec->ir_startino;
+ 
+-	/*
+-	 * We got a right chunk with some left inodes allocated at it.  Grab
+-	 * the chunk record.  Mark all the uninteresting inodes free because
+-	 * they're before our start point.
+-	 */
+-	for (i = 0; i < idx; i++) {
+-		if (XFS_INOBT_MASK(i) & ~irec->ir_free)
+-			irec->ir_freecount++;
+-	}
+-
+ 	irec->ir_free |= xfs_inobt_maskn(0, idx);
++	irec->ir_freecount = hweight64(irec->ir_free);
+ }
+ 
+ /* Allocate memory for a walk. */
 
