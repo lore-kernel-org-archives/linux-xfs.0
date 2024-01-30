@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E68381AB
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 05:12:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB839381A0
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 05:12:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706591542; cv=none; b=LTD5KUZhyR+rVaFA/CRMZ+LeSe0zczUv5kMbbqwwvRvZintIcFpfe87uvxxkSXGyOpuaiRNigR+rQLc8v0Du7BVkShDohjSl4+yC8Lb2x6HMEbb6Uht7TKlReXjDoym6tyWqI6aGSqJQ01QatJ7DzO24Zk1VAgRIcp+8L5N9Le4=
+	t=1706591557; cv=none; b=aocGb/mA438/3lZV2Pao6trFeIZRRO7v9E5CynM/LLB8kZW6cdfG5o9V7KF3xibJWzy831kYBZqoRHFo1mRWnYTOWczYaorL/z0PukGNkyjgqdx9A22dqY5kEOgBOTVjHH4xH49/tRwqOR3L4Q8FpvYqj49pZuz3u5HjKZbNy3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706591542; c=relaxed/simple;
-	bh=/4dsg3KQZPmlo7U6i/x6ZchlHIHzWK+6fjphmqVFj98=;
+	s=arc-20240116; t=1706591557; c=relaxed/simple;
+	bh=YMLCj+p7wP+rpLTw+lg897rYK6udq+E4ne30BX3WO/s=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BdmzaJMyKGMHc0qlLcVeTaG8t8T/DOql0GIhdpuhh7NsUcN3qvNw48Vr3PYfIdUiC66iJ5HZnMdcXIrbfF88jIzXNE8dNL/5eGEyPT4CXrSr5puDauUWfMqTzx536hXrr2zNaOnGhLJkCU8LrBtOjhsm5/gO3GKHt4EKmsefNGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ou41jpeR; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=BX3K8Vubb4oDGCke7yqvjQ6icCJdN1igOfyaNP/Ot1IxUDz2CwYyJ6LGgEiEU3UEVOpp+T6lng8mb64FdcuQdlbxDk/40ELbMHaG3DsmHnTwpExiEAS/yhBXM/FmlSVsK+9QnMGU1nontc1GEWx1qUUwzYv6Rli3iqnTKJ3PUVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CJziLvhB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ou41jpeR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2CA6C433F1;
-	Tue, 30 Jan 2024 05:12:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CJziLvhB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B104C433C7;
+	Tue, 30 Jan 2024 05:12:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706591541;
-	bh=/4dsg3KQZPmlo7U6i/x6ZchlHIHzWK+6fjphmqVFj98=;
+	s=k20201202; t=1706591557;
+	bh=YMLCj+p7wP+rpLTw+lg897rYK6udq+E4ne30BX3WO/s=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ou41jpeRoH/a9X7T9LSElJOuzSv1bpaVt3U/4zQbJDBYQDZhp8xt5c4dqz/ihyrKU
-	 WvFyFo/7t2S80vo4iqVozKZeCPPwkBePVCtk6vzn+VqghlT+ZAk//ZKEFp6so6DYCD
-	 P+NurgHoNh3Zm9eRgeIXMr9hahG8lEnsB0HzUmCgvlbp1Yp1E7PSp0kAYoqdFWcls1
-	 UmAfy6ofMbsB7/Sf4uEyllI9U99wgKb25jD1t4NNfbSICUuxl+iYv0OyroGj+1YLUG
-	 dGp5Wa5TGWwbLK3qncz4qYwPerzomBjuYE4d8ia1SanWWOgt8yEERlpJiniNFMokWA
-	 HtVBXxHXxCj2g==
-Date: Mon, 29 Jan 2024 21:12:21 -0800
-Subject: [PATCH 1/3] xfs: add secondary and indirect classes to the health
- tracking system
+	b=CJziLvhB2vcHp1p2dWh4Il9VIWQVP6FUHvSbAmQFlj/2ieCNgFQcKxVT8MDFtLg41
+	 6FRUGRKKX9gcrWezTEkBH6c3TVNsiCy+QnhOTPHJ2xwbpBJVeDlIk0oixT14p8myOl
+	 GOSkSi4WZ5R48UKwLSECfDGS/3pbXJO4pU0zOI//l+SwH0E5Y2A9MZejAdIVyk22Q5
+	 jQ6gw8EN+DtRSMBu7yAyoyig5y331xziLPnMKngf0nBDq0/Z9di7XUjYRgGd4d2piD
+	 oN0MGSo3Mad6dWAv3sHxJ3PEq8l31pRdimCqrf2UGp/a1u3qDWm5y5gcmTeAJ4NsFa
+	 GomRpY1nydO9Q==
+Date: Mon, 29 Jan 2024 21:12:36 -0800
+Subject: [PATCH 2/3] xfs: remember sick inodes that get inactivated
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170659064287.3354229.18115067091726205547.stgit@frogsfrogsfrogs>
+Message-ID: <170659064303.3354229.9628194102451109373.stgit@frogsfrogsfrogs>
 In-Reply-To: <170659064262.3354229.596649174411799386.stgit@frogsfrogsfrogs>
 References: <170659064262.3354229.596649174411799386.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,195 +46,182 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Establish two more classes of health tracking bits:
-
- * Indirect problems, which suggest problems in other health domains
-   that we weren't able to preserve.
-
- * Secondary problems, which track state that's related to primary
-   evidence of health problems; and
-
-The first class we'll use in an upcoming patch to record in the AG
-health status the fact that we ran out of memory and had to inactivate
-an inode with defective metadata.  The second class we use to indicate
-that repair knows that an inode is bad and we need to fix it later.
+If an unhealthy inode gets inactivated, remember this fact in the
+per-fs health summary.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_health.h |   43 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_health.c        |   26 +++++++++++++++++---------
- 2 files changed, 60 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h        |    1 +
+ fs/xfs/libxfs/xfs_health.h    |    8 ++++++--
+ fs/xfs/libxfs/xfs_inode_buf.c |    2 +-
+ fs/xfs/scrub/health.c         |   12 +++++++++++-
+ fs/xfs/xfs_health.c           |    1 +
+ fs/xfs/xfs_inode.c            |   35 +++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trace.h            |    1 +
+ 7 files changed, 56 insertions(+), 4 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 515cd27d3b3a8..b5c8da7e6aa99 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -294,6 +294,7 @@ struct xfs_ag_geometry {
+ #define XFS_AG_GEOM_SICK_FINOBT	(1 << 7)  /* free inode index */
+ #define XFS_AG_GEOM_SICK_RMAPBT	(1 << 8)  /* reverse mappings */
+ #define XFS_AG_GEOM_SICK_REFCNTBT (1 << 9)  /* reference counts */
++#define XFS_AG_GEOM_SICK_INODES	(1 << 10) /* bad inodes were seen */
+ 
+ /*
+  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
 diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index a5b346b377cbb..26a2661571b1d 100644
+index 26a2661571b1d..df07c5877ba44 100644
 --- a/fs/xfs/libxfs/xfs_health.h
 +++ b/fs/xfs/libxfs/xfs_health.h
-@@ -31,6 +31,19 @@
-  *  - !checked && sick  => errors have been observed during normal operation,
-  *                         but the metadata has not been checked thoroughly
-  *  - !checked && !sick => has not been examined since mount
-+ *
-+ * Evidence of health problems can be sorted into three basic categories:
-+ *
-+ * a) Primary evidence, which signals that something is defective within the
-+ *    general grouping of metadata.
-+ *
-+ * b) Secondary evidence, which are side effects of primary problem but are
-+ *    not themselves problems.  These can be forgotten when the primary
-+ *    health problems are addressed.
-+ *
-+ * c) Indirect evidence, which points to something being wrong in another
-+ *    group, but we had to release resources and this is all that's left of
-+ *    that state.
-  */
+@@ -76,6 +76,7 @@ struct xfs_da_args;
+ #define XFS_SICK_AG_FINOBT	(1 << 7)  /* free inode index */
+ #define XFS_SICK_AG_RMAPBT	(1 << 8)  /* reverse mappings */
+ #define XFS_SICK_AG_REFCNTBT	(1 << 9)  /* reference counts */
++#define XFS_SICK_AG_INODES	(1 << 10) /* inactivated bad inodes */
  
- struct xfs_mount;
-@@ -115,6 +128,36 @@ struct xfs_da_args;
- 				 XFS_SICK_INO_DIR_ZAPPED | \
- 				 XFS_SICK_INO_SYMLINK_ZAPPED)
+ /* Observable health issues for inode metadata. */
+ #define XFS_SICK_INO_CORE	(1 << 0)  /* inode core */
+@@ -92,6 +93,9 @@ struct xfs_da_args;
+ #define XFS_SICK_INO_DIR_ZAPPED		(1 << 10) /* directory erased */
+ #define XFS_SICK_INO_SYMLINK_ZAPPED	(1 << 11) /* symlink erased */
  
-+/* Secondary state related to (but not primary evidence of) health problems. */
-+#define XFS_SICK_FS_SECONDARY	(0)
-+#define XFS_SICK_RT_SECONDARY	(0)
-+#define XFS_SICK_AG_SECONDARY	(0)
-+#define XFS_SICK_INO_SECONDARY	(0)
++/* Don't propagate sick status to ag health summary during inactivation */
++#define XFS_SICK_INO_FORGET	(1 << 12)
 +
-+/* Evidence of health problems elsewhere. */
-+#define XFS_SICK_FS_INDIRECT	(0)
-+#define XFS_SICK_RT_INDIRECT	(0)
-+#define XFS_SICK_AG_INDIRECT	(0)
-+#define XFS_SICK_INO_INDIRECT	(0)
+ /* Primary evidence of health problems in a given group. */
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+ 				 XFS_SICK_FS_UQUOTA | \
+@@ -132,12 +136,12 @@ struct xfs_da_args;
+ #define XFS_SICK_FS_SECONDARY	(0)
+ #define XFS_SICK_RT_SECONDARY	(0)
+ #define XFS_SICK_AG_SECONDARY	(0)
+-#define XFS_SICK_INO_SECONDARY	(0)
++#define XFS_SICK_INO_SECONDARY	(XFS_SICK_INO_FORGET)
+ 
+ /* Evidence of health problems elsewhere. */
+ #define XFS_SICK_FS_INDIRECT	(0)
+ #define XFS_SICK_RT_INDIRECT	(0)
+-#define XFS_SICK_AG_INDIRECT	(0)
++#define XFS_SICK_AG_INDIRECT	(XFS_SICK_AG_INODES)
+ #define XFS_SICK_INO_INDIRECT	(0)
+ 
+ /* All health masks. */
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 1280d6acd1c1b..d0dcce462bf42 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -139,7 +139,7 @@ xfs_imap_to_bp(
+ 			imap->im_len, XBF_UNMAPPED, bpp, &xfs_inode_buf_ops);
+ 	if (xfs_metadata_is_sick(error))
+ 		xfs_agno_mark_sick(mp, xfs_daddr_to_agno(mp, imap->im_blkno),
+-				XFS_SICK_AG_INOBT);
++				XFS_SICK_AG_INODES);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index ef3763a13a667..71a65fb78c3df 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -185,7 +185,17 @@ xchk_update_health(
+ 		if (!sc->ip)
+ 			return;
+ 		if (bad) {
+-			xfs_inode_mark_sick(sc->ip, sc->sick_mask);
++			unsigned int	mask = sc->sick_mask;
 +
-+/* All health masks. */
-+#define XFS_SICK_FS_ALL	(XFS_SICK_FS_PRIMARY | \
-+				 XFS_SICK_FS_SECONDARY | \
-+				 XFS_SICK_FS_INDIRECT)
-+
-+#define XFS_SICK_RT_ALL	(XFS_SICK_RT_PRIMARY | \
-+				 XFS_SICK_RT_SECONDARY | \
-+				 XFS_SICK_RT_INDIRECT)
-+
-+#define XFS_SICK_AG_ALL	(XFS_SICK_AG_PRIMARY | \
-+				 XFS_SICK_AG_SECONDARY | \
-+				 XFS_SICK_AG_INDIRECT)
-+
-+#define XFS_SICK_INO_ALL	(XFS_SICK_INO_PRIMARY | \
-+				 XFS_SICK_INO_SECONDARY | \
-+				 XFS_SICK_INO_INDIRECT | \
-+				 XFS_SICK_INO_ZAPPED)
-+
- /*
-  * These functions must be provided by the xfs implementation.  Function
-  * behavior with respect to the first argument should be as follows:
++			/*
++			 * If we're coming in for repairs then we don't want
++			 * sickness flags to propagate to the incore health
++			 * status if the inode gets inactivated before we can
++			 * fix it.
++			 */
++			if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
++				mask |= XFS_SICK_INO_FORGET;
++			xfs_inode_mark_sick(sc->ip, mask);
+ 			xfs_inode_mark_checked(sc->ip, sc->sick_mask);
+ 		} else
+ 			xfs_inode_mark_healthy(sc->ip, sc->sick_mask);
 diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 64dffc69a219d..6ea85cd6b66f8 100644
+index 6ea85cd6b66f8..2be1ac83f4c41 100644
 --- a/fs/xfs/xfs_health.c
 +++ b/fs/xfs/xfs_health.c
-@@ -97,7 +97,7 @@ xfs_fs_mark_sick(
- 	struct xfs_mount	*mp,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~XFS_SICK_FS_PRIMARY));
-+	ASSERT(!(mask & ~XFS_SICK_FS_ALL));
- 	trace_xfs_fs_mark_sick(mp, mask);
+@@ -415,6 +415,7 @@ static const struct ioctl_sick_map ag_map[] = {
+ 	{ XFS_SICK_AG_FINOBT,	XFS_AG_GEOM_SICK_FINOBT },
+ 	{ XFS_SICK_AG_RMAPBT,	XFS_AG_GEOM_SICK_RMAPBT },
+ 	{ XFS_SICK_AG_REFCNTBT,	XFS_AG_GEOM_SICK_REFCNTBT },
++	{ XFS_SICK_AG_INODES,	XFS_AG_GEOM_SICK_INODES },
+ 	{ 0, 0 },
+ };
  
- 	spin_lock(&mp->m_sb_lock);
-@@ -124,11 +124,13 @@ xfs_fs_mark_healthy(
- 	struct xfs_mount	*mp,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~XFS_SICK_FS_PRIMARY));
-+	ASSERT(!(mask & ~XFS_SICK_FS_ALL));
- 	trace_xfs_fs_mark_healthy(mp, mask);
- 
- 	spin_lock(&mp->m_sb_lock);
- 	mp->m_fs_sick &= ~mask;
-+	if (!(mp->m_fs_sick & XFS_SICK_FS_PRIMARY))
-+		mp->m_fs_sick &= ~XFS_SICK_FS_SECONDARY;
- 	mp->m_fs_checked |= mask;
- 	spin_unlock(&mp->m_sb_lock);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6412b558edf08..fe058a1a4fec4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1751,6 +1751,39 @@ xfs_inode_needs_inactive(
+ 	return xfs_can_free_eofblocks(ip, true);
  }
-@@ -152,7 +154,7 @@ xfs_rt_mark_sick(
- 	struct xfs_mount	*mp,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~XFS_SICK_RT_PRIMARY));
-+	ASSERT(!(mask & ~XFS_SICK_RT_ALL));
- 	trace_xfs_rt_mark_sick(mp, mask);
  
- 	spin_lock(&mp->m_sb_lock);
-@@ -180,11 +182,13 @@ xfs_rt_mark_healthy(
- 	struct xfs_mount	*mp,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~XFS_SICK_RT_PRIMARY));
-+	ASSERT(!(mask & ~XFS_SICK_RT_ALL));
- 	trace_xfs_rt_mark_healthy(mp, mask);
++/*
++ * Save health status somewhere, if we're dumping an inode with uncorrected
++ * errors and online repair isn't running.
++ */
++static inline void
++xfs_inactive_health(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_perag	*pag;
++	unsigned int		sick;
++	unsigned int		checked;
++
++	xfs_inode_measure_sickness(ip, &sick, &checked);
++	if (!sick)
++		return;
++
++	trace_xfs_inode_unfixed_corruption(ip, sick);
++
++	if (sick & XFS_SICK_INO_FORGET)
++		return;
++
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++	if (!pag) {
++		/* There had better still be a perag structure! */
++		ASSERT(0);
++		return;
++	}
++
++	xfs_ag_mark_sick(pag, XFS_SICK_AG_INODES);
++	xfs_perag_put(pag);
++}
++
+ /*
+  * xfs_inactive
+  *
+@@ -1779,6 +1812,8 @@ xfs_inactive(
+ 	mp = ip->i_mount;
+ 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
  
- 	spin_lock(&mp->m_sb_lock);
- 	mp->m_rt_sick &= ~mask;
-+	if (!(mp->m_rt_sick & XFS_SICK_RT_PRIMARY))
-+		mp->m_rt_sick &= ~XFS_SICK_RT_SECONDARY;
- 	mp->m_rt_checked |= mask;
- 	spin_unlock(&mp->m_sb_lock);
- }
-@@ -225,7 +229,7 @@ xfs_ag_mark_sick(
- 	struct xfs_perag	*pag,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~XFS_SICK_AG_PRIMARY));
-+	ASSERT(!(mask & ~XFS_SICK_AG_ALL));
- 	trace_xfs_ag_mark_sick(pag->pag_mount, pag->pag_agno, mask);
++	xfs_inactive_health(ip);
++
+ 	/*
+ 	 * If this is a read-only mount, don't do this (would generate I/O)
+ 	 * unless we're in log recovery and cleaning the iunlinked list.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 0984a1c884c74..b78c8be57b2d4 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3981,6 +3981,7 @@ DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
+ 	TP_ARGS(ip, flags))
+ DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
+ DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
++DEFINE_INODE_CORRUPT_EVENT(xfs_inode_unfixed_corruption);
  
- 	spin_lock(&pag->pag_state_lock);
-@@ -252,11 +256,13 @@ xfs_ag_mark_healthy(
- 	struct xfs_perag	*pag,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~XFS_SICK_AG_PRIMARY));
-+	ASSERT(!(mask & ~XFS_SICK_AG_ALL));
- 	trace_xfs_ag_mark_healthy(pag->pag_mount, pag->pag_agno, mask);
- 
- 	spin_lock(&pag->pag_state_lock);
- 	pag->pag_sick &= ~mask;
-+	if (!(pag->pag_sick & XFS_SICK_AG_PRIMARY))
-+		pag->pag_sick &= ~XFS_SICK_AG_SECONDARY;
- 	pag->pag_checked |= mask;
- 	spin_unlock(&pag->pag_state_lock);
- }
-@@ -280,7 +286,7 @@ xfs_inode_mark_sick(
- 	struct xfs_inode	*ip,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~(XFS_SICK_INO_PRIMARY | XFS_SICK_INO_ZAPPED)));
-+	ASSERT(!(mask & ~XFS_SICK_INO_ALL));
- 	trace_xfs_inode_mark_sick(ip, mask);
- 
- 	spin_lock(&ip->i_flags_lock);
-@@ -303,7 +309,7 @@ xfs_inode_mark_checked(
- 	struct xfs_inode	*ip,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~(XFS_SICK_INO_PRIMARY | XFS_SICK_INO_ZAPPED)));
-+	ASSERT(!(mask & ~XFS_SICK_INO_ALL));
- 
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_checked |= mask;
-@@ -316,11 +322,13 @@ xfs_inode_mark_healthy(
- 	struct xfs_inode	*ip,
- 	unsigned int		mask)
- {
--	ASSERT(!(mask & ~(XFS_SICK_INO_PRIMARY | XFS_SICK_INO_ZAPPED)));
-+	ASSERT(!(mask & ~XFS_SICK_INO_ALL));
- 	trace_xfs_inode_mark_healthy(ip, mask);
- 
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_sick &= ~mask;
-+	if (!(ip->i_sick & XFS_SICK_INO_PRIMARY))
-+		ip->i_sick &= ~XFS_SICK_INO_SECONDARY;
- 	ip->i_checked |= mask;
- 	spin_unlock(&ip->i_flags_lock);
- }
+ TRACE_EVENT(xfs_iwalk_ag,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
 
