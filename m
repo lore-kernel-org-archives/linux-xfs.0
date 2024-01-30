@@ -1,193 +1,124 @@
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD4B7E774
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 14:52:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8D6481AD7;
+	Tue, 30 Jan 2024 15:19:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706626343; cv=none; b=kPF/wMsA6M0Q/cRRiRQzj4Je4fGrxA//p+jK6pC3aHjlniA2/Lei1DnRhjb1aoOdgbo81HjsC+JqIlVfv+Y9FIr3qCyjAnndr8vgS6i/X2HHcU6maIc7iGLzE3/e39LHCbiAjub2t5ydGV0B2NwK1e9MR8HV9sOiOw/1xsLQhbQ=
+	t=1706628001; cv=none; b=M2QdieCFNK20fQxHwd3wC3HW7VFIZDTclXTHHKsT5HnRkKryr92yS0SJiLDKn+1bMkUDGKsb+3RVFoqKzyPETnE468uZ1+EXk3yGq12M4LFHCf8RDrjPWv1GzyHCcJblbbGEQ/NLv4asDJJsQHF8ISAtzHtUtFjLOhIYQOtczxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706626343; c=relaxed/simple;
-	bh=e0CfQZ8YFGEVA5V7+49yYz6Cpb4V7oQVAB3Hm82Uz8Y=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=VsCfpt/J4YQZCJUcoCku07fE7zip3HNdOEsx0KBuWeXRli66UkyUo7R6tCQiMUMcKFe8jK4C13l+WKE3DQaC6BGmYcqK4eyLOVzXlM01A3KPscN3nPH118vTWqU2irLTqJaIo1DWhDbfIPar8uvKgm/U2vwwztdSQKoj0zsxLdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-36387e7abccso9836715ab.2
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 06:52:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706626341; x=1707231141;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UQrPOJ4R4lUto4+AtoXSmJrCPbGvajCz9YCiNgKzlFk=;
-        b=jDwPFIwZfg3KwJXUio+e6LS7/SEWc0ifj21UkM+aAmz2hUlYXzHCdtfHToiC5k7O51
-         OMpAqtz+SIoMuZpZ2Cb6ysRNdbI3fbqUilFgCi5yTy/FQRTUv4IDW5MwDvkkn7Z39wuz
-         ALDaiBI55tvfyz0Mi9fplMZCAXy/sxnGTyJnfqxJfN2RosCt0E8KyKzDVZ+U53HdWUmQ
-         FWfvXqYzTd5g3p2E1tdFZtjO+M3rI+QArK6GyDOPctl+OhheIxeiHauTPMDe8CgA+fG0
-         B8mnOlW8Z2/R+cHFt57PcBjhBFuKTcKQdcMS1nUr8AY65fm9lhITtepkwdBDVtxY3bBj
-         gQKg==
-X-Gm-Message-State: AOJu0YzBlXKGzLtggmKqGzq6/ZVRCiMtePCVSacFGElWLK7zqKU+t4By
-	OvzSif240TA5xJ5gq5pH9RkFcjHkLLn462wsG3ocG2B6tqI9rdAwvZ6ULKPRylNAuzVfs1EA0id
-	oDrRwesT8AYvy/+0I/YV2MgNeIZIp2eFZX19DguOzwde6q6I8dd8HDEQ=
-X-Google-Smtp-Source: AGHT+IEAI3Lu4ZbX+WQ7MIFiaoMBd50Y0in0tvC9HrcSpaumbuT7JoXeP1SBzqg4M+G3iC9C9iJpOIALDKEO5G8VMeKu8ptJxpm9
+	s=arc-20240116; t=1706628001; c=relaxed/simple;
+	bh=JcOCpUNYX78olAmn5ygAlWF9kq291PrVVIR9mH3wcsw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=c6PH7obHgvDcEDwtRaKfoulunFERNEQIYOGU478oGbgW9ti8usbhYxC4UjiF69sbdR3fcHAUIOuPV2pwBR9AG29L1corbWCuUsATOu9uWQY57/+pT4oTz+s2k/w30JqqeVeExf6tJTACfv9mCvp4IXQ7I0sWIktWCS/witAcE/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=JPxN6dTK; arc=none smtp.client-ip=167.114.26.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="JPxN6dTK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
+	s=smtpout1; t=1706627999;
+	bh=JcOCpUNYX78olAmn5ygAlWF9kq291PrVVIR9mH3wcsw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=JPxN6dTK5Q/bxQsHTEY7XK3l9oczuiVZ8vLxKQcJxa2mwxLnyRXFfZ0eMzcgww5Xf
+	 18w3qMdFKykJmcWmlvPKFEkJKtpjVu543M1cpvx+Q62f5ni7hbSq213PHQfS2Ijoue
+	 yyGSjYKH/spBUmO+wADEcwcyKcVGmEG4aGWcaMg7iQENaKg4UU6p1UOfGPMJwz2Z5t
+	 xpS+TLWvlBjCul4Sh2Ewv7LTPEOaPlaluyTeYEqnBosrSALyZWaBpqztSwsGuS7Ss2
+	 gR4PHzgCZc20LNxisnTqnLhEtlcIkgleQSh4X+V5fRCoYhl6ul2Ar/s8mKocJiey7O
+	 5Jg5oRgFCWEGA==
+Received: from [172.16.0.134] (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TPTPB6JR9zVj1;
+	Tue, 30 Jan 2024 10:19:58 -0500 (EST)
+Message-ID: <c60044d2-4b61-45db-9036-6383b1677d20@efficios.com>
+Date: Tue, 30 Jan 2024 10:19:51 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:170a:b0:363:820f:72b8 with SMTP id
- u10-20020a056e02170a00b00363820f72b8mr526779ill.1.1706626341328; Tue, 30 Jan
- 2024 06:52:21 -0800 (PST)
-Date: Tue, 30 Jan 2024 06:52:21 -0800
-In-Reply-To: <000000000000e98460060fd59831@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000d6e06d06102ae80b@google.com>
-Subject: Re: [syzbot] [xfs?] [ext4?] general protection fault in jbd2__journal_start
-From: syzbot <syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com>
-To: adilger.kernel@dilger.ca, chandan.babu@oracle.com, jack@suse.com, 
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com, tytso@mit.edu
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 7/7] xfs: Use dax_is_supported()
+Content-Language: en-US
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ linux-kernel@vger.kernel.org, Chandan Babu R <chandan.babu@oracle.com>,
+ "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Linus Torvalds <torvalds@linux-foundation.org>, linux-mm@kvack.org,
+ linux-arch@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+ nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org
+References: <20240129210631.193493-1-mathieu.desnoyers@efficios.com>
+ <20240129210631.193493-8-mathieu.desnoyers@efficios.com>
+ <ZbhhNnQ+fqd4Hda+@dread.disaster.area>
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+In-Reply-To: <ZbhhNnQ+fqd4Hda+@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-syzbot has found a reproducer for the following issue on:
+On 2024-01-29 21:38, Dave Chinner wrote:
+> On Mon, Jan 29, 2024 at 04:06:31PM -0500, Mathieu Desnoyers wrote:
+>> Use dax_is_supported() to validate whether the architecture has
+>> virtually aliased caches at mount time.
+>>
+>> This is relevant for architectures which require a dynamic check
+>> to validate whether they have virtually aliased data caches
+>> (ARCH_HAS_CACHE_ALIASING_DYNAMIC=y).
+> 
+> Where's the rest of this patchset? I have no idea what
+> dax_is_supported() actually does, how it interacts with
+> CONFIG_FS_DAX, etc.
+> 
+> If you are changing anything to do with FSDAX, the cc-ing the
+> -entire- patchset to linux-fsdevel is absolutely necessary so the
+> entire patchset lands in our inboxes and not just a random patch
+> from the middle of a bigger change.
 
-HEAD commit:    861c0981648f Merge tag 'jfs-6.8-rc3' of github.com:kleikam..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=13ca8d97e80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=b0b9993d7d6d1990
-dashboard link: https://syzkaller.appspot.com/bug?extid=cdee56dbcdf0096ef605
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=104393efe80000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1393b90fe80000
+Sorry, I will Cc linux-fsdevel on all patches for the next round.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/7c6cc521298d/disk-861c0981.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/6203c94955db/vmlinux-861c0981.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/17e76e12b58c/bzImage-861c0981.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/d31d4eed2912/mount_3.gz
+Meanwhile you can find the whole series on lore:
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
+https://lore.kernel.org/lkml/20240129210631.193493-1-mathieu.desnoyers@efficios.com/
 
-general protection fault, probably for non-canonical address 0xdffffc000a8a4829: 0000 [#1] PREEMPT SMP KASAN
-KASAN: probably user-memory-access in range [0x0000000054524148-0x000000005452414f]
-CPU: 1 PID: 5065 Comm: syz-executor260 Not tainted 6.8.0-rc2-syzkaller-00031-g861c0981648f #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 11/17/2023
-RIP: 0010:jbd2__journal_start+0x87/0x5d0 fs/jbd2/transaction.c:496
-Code: 74 63 48 8b 1b 48 85 db 74 79 48 89 d8 48 c1 e8 03 42 80 3c 28 00 74 08 48 89 df e8 63 4d 8f ff 48 8b 2b 48 89 e8 48 c1 e8 03 <42> 80 3c 28 00 74 08 48 89 ef e8 4a 4d 8f ff 4c 39 65 00 0f 85 1a
-RSP: 0018:ffffc900043265c8 EFLAGS: 00010203
-RAX: 000000000a8a4829 RBX: ffff8880205fa3a8 RCX: ffff8880235dbb80
-RDX: 0000000000000000 RSI: 0000000000000002 RDI: ffff88801c1a6000
-RBP: 000000005452414e R08: 0000000000000c40 R09: 0000000000000001
-R10: dffffc0000000000 R11: ffffed1003834871 R12: ffff88801c1a6000
-R13: dffffc0000000000 R14: 0000000000000c40 R15: 0000000000000002
-FS:  0000555556f90380(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000020020000 CR3: 0000000021fed000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- __ext4_journal_start_sb+0x215/0x5b0 fs/ext4/ext4_jbd2.c:112
- __ext4_journal_start fs/ext4/ext4_jbd2.h:326 [inline]
- ext4_dirty_inode+0x92/0x110 fs/ext4/inode.c:5969
- __mark_inode_dirty+0x305/0xda0 fs/fs-writeback.c:2452
- generic_update_time fs/inode.c:1905 [inline]
- inode_update_time fs/inode.c:1918 [inline]
- __file_update_time fs/inode.c:2106 [inline]
- file_update_time+0x39b/0x3e0 fs/inode.c:2136
- ext4_page_mkwrite+0x207/0xdf0 fs/ext4/inode.c:6090
- do_page_mkwrite+0x197/0x470 mm/memory.c:2966
- wp_page_shared mm/memory.c:3353 [inline]
- do_wp_page+0x20e3/0x4c80 mm/memory.c:3493
- handle_pte_fault mm/memory.c:5160 [inline]
- __handle_mm_fault+0x26a3/0x72b0 mm/memory.c:5285
- handle_mm_fault+0x27e/0x770 mm/memory.c:5450
- do_user_addr_fault arch/x86/mm/fault.c:1415 [inline]
- handle_page_fault arch/x86/mm/fault.c:1507 [inline]
- exc_page_fault+0x2ad/0x870 arch/x86/mm/fault.c:1563
- asm_exc_page_fault+0x26/0x30 arch/x86/include/asm/idtentry.h:570
-RIP: 0010:rep_movs_alternative+0x4a/0x70 arch/x86/lib/copy_user_64.S:71
-Code: 75 f1 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 48 8b 06 48 89 07 48 83 c6 08 48 83 c7 08 83 e9 08 74 df 83 f9 08 73 e8 eb c9 <f3> a4 c3 48 89 c8 48 c1 e9 03 83 e0 07 f3 48 a5 89 c1 85 c9 75 b3
-RSP: 0018:ffffc900043270f8 EFLAGS: 00050202
-RAX: ffffffff848cda01 RBX: 0000000020020040 RCX: 0000000000000040
-RDX: 0000000000000000 RSI: ffff8880131873b0 RDI: 0000000020020000
-RBP: 1ffff92000864f26 R08: ffff8880131873ef R09: 1ffff11002630e7d
-R10: dffffc0000000000 R11: ffffed1002630e7e R12: 00000000000000c0
-R13: dffffc0000000000 R14: 000000002001ff80 R15: ffff888013187330
- copy_user_generic arch/x86/include/asm/uaccess_64.h:112 [inline]
- raw_copy_to_user arch/x86/include/asm/uaccess_64.h:133 [inline]
- _copy_to_user+0x86/0xa0 lib/usercopy.c:41
- copy_to_user include/linux/uaccess.h:191 [inline]
- xfs_bulkstat_fmt+0x4f/0x120 fs/xfs/xfs_ioctl.c:744
- xfs_bulkstat_one_int+0xd8b/0x12e0 fs/xfs/xfs_itable.c:161
- xfs_bulkstat_iwalk+0x72/0xb0 fs/xfs/xfs_itable.c:239
- xfs_iwalk_ag_recs+0x4c3/0x820 fs/xfs/xfs_iwalk.c:220
- xfs_iwalk_run_callbacks+0x25b/0x490 fs/xfs/xfs_iwalk.c:376
- xfs_iwalk_ag+0xad6/0xbd0 fs/xfs/xfs_iwalk.c:482
- xfs_iwalk+0x360/0x6f0 fs/xfs/xfs_iwalk.c:584
- xfs_bulkstat+0x4f8/0x6c0 fs/xfs/xfs_itable.c:308
- xfs_ioc_bulkstat+0x3d0/0x450 fs/xfs/xfs_ioctl.c:867
- xfs_file_ioctl+0x6a5/0x1980 fs/xfs/xfs_ioctl.c:1994
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:871 [inline]
- __se_sys_ioctl+0xf8/0x170 fs/ioctl.c:857
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xf5/0x230 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x63/0x6b
-RIP: 0033:0x7f02d4018b59
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 f1 17 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffdbe0deb98 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 0030656c69662f2e RCX: 00007f02d4018b59
-RDX: 000000002001fc40 RSI: 000000008040587f RDI: 0000000000000004
-RBP: 00000000000116e3 R08: 0000000000000000 R09: 0000555556f914c0
-R10: 0000000020000300 R11: 0000000000000246 R12: 00007ffdbe0debc0
-R13: 00007ffdbe0debac R14: 431bde82d7b634db R15: 00007f02d406103b
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:jbd2__journal_start+0x87/0x5d0 fs/jbd2/transaction.c:496
-Code: 74 63 48 8b 1b 48 85 db 74 79 48 89 d8 48 c1 e8 03 42 80 3c 28 00 74 08 48 89 df e8 63 4d 8f ff 48 8b 2b 48 89 e8 48 c1 e8 03 <42> 80 3c 28 00 74 08 48 89 ef e8 4a 4d 8f ff 4c 39 65 00 0f 85 1a
-RSP: 0018:ffffc900043265c8 EFLAGS: 00010203
-RAX: 000000000a8a4829 RBX: ffff8880205fa3a8 RCX: ffff8880235dbb80
-RDX: 0000000000000000 RSI: 0000000000000002 RDI: ffff88801c1a6000
-RBP: 000000005452414e R08: 0000000000000c40 R09: 0000000000000001
-R10: dffffc0000000000 R11: ffffed1003834871 R12: ffff88801c1a6000
-R13: dffffc0000000000 R14: 0000000000000c40 R15: 0000000000000002
-FS:  0000555556f90380(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000020020000 CR3: 0000000021fed000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-----------------
-Code disassembly (best guess):
-   0:	74 63                	je     0x65
-   2:	48 8b 1b             	mov    (%rbx),%rbx
-   5:	48 85 db             	test   %rbx,%rbx
-   8:	74 79                	je     0x83
-   a:	48 89 d8             	mov    %rbx,%rax
-   d:	48 c1 e8 03          	shr    $0x3,%rax
-  11:	42 80 3c 28 00       	cmpb   $0x0,(%rax,%r13,1)
-  16:	74 08                	je     0x20
-  18:	48 89 df             	mov    %rbx,%rdi
-  1b:	e8 63 4d 8f ff       	call   0xff8f4d83
-  20:	48 8b 2b             	mov    (%rbx),%rbp
-  23:	48 89 e8             	mov    %rbp,%rax
-  26:	48 c1 e8 03          	shr    $0x3,%rax
-* 2a:	42 80 3c 28 00       	cmpb   $0x0,(%rax,%r13,1) <-- trapping instruction
-  2f:	74 08                	je     0x39
-  31:	48 89 ef             	mov    %rbp,%rdi
-  34:	e8 4a 4d 8f ff       	call   0xff8f4d83
-  39:	4c 39 65 00          	cmp    %r12,0x0(%rbp)
-  3d:	0f                   	.byte 0xf
-  3e:	85 1a                	test   %ebx,(%rdx)
+[...]
+
+> 
+> Assuming that I understand what dax_is_supported() is doing, this
+> change isn't right.  We're just setting the DAX configuration flags
+> from the mount options here, we don't validate them until
+> we've parsed all options and eliminated conflicts and rejected
+> conflicting options. We validate whether the options are
+> appropriate for the underlying hardware configuration later in the
+> mount process.
+> 
+> dax=always suitability is check in xfs_setup_dax_always() called
+> later in the mount process when we have enough context and support
+> to open storage devices and check them for DAX support. If the
+> hardware does not support DAX then we simply we turn off DAX
+> support, we do not reject the mount as this change does.
+> 
+> dax=inode and dax=never are valid options on all configurations,
+> even those with without FSDAX support or have hardware that is not
+> capable of using DAX. dax=inode only affects how an inode is
+> instantiated in cache - if the inode has a flag that says "use DAX"
+> and dax is suppoortable by the hardware, then the turn on DAX for
+> that inode. Otherwise we just use the normal non-dax IO paths.
+> 
+> Again, we don't error out the filesystem if DAX is not supported,
+> we just don't turn it on. This check is done in
+> xfs_inode_should_enable_dax() and I think all you need to do is
+> replace the IS_ENABLED(CONFIG_FS_DAX) with a dax_is_supported()
+> call...
+
+Thanks a lot for the detailed explanation. You are right, I will
+move the dax_is_supported() check to xfs_inode_should_enable_dax().
+
+Mathieu
 
 
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+-- 
+Mathieu Desnoyers
+EfficiOS Inc.
+https://www.efficios.com
+
