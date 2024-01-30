@@ -1,165 +1,264 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898A178666;
-	Tue, 30 Jan 2024 21:50:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E9D2B9BD
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:37:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706651420; cv=none; b=mqmDmAohh/Cn/huoKUSTw73KrTM5v6dy66qJFJVCx++2BavHDATwQ0Z6m0vL4ZHZOCfxwMU2KrxfjHOipNvT/yXxo9I8UK8nUZGzH1LEXrTHbRJhpcCLT+v4PHg7smXZB6DWHZesPNrT1SqstUEphHkme1wuc8yZaXBJEy+xLRs=
+	t=1706657846; cv=none; b=StjdMFtcUAKS4/FvAN+jAsfRxZ/7ofBqipOLQ9ig/p9lZp2hfBMdsNxx1oG+Mqox/VzhO2AU/t6nlu9mQE5E+Vwf9mmvrOOxM5dni8ZjNlodEpMxuoxODzKcY0zE1mU2hHZpP5IHc9XpOVI92p7UGrVUNCYw4dN6X8jmzwAe08c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706651420; c=relaxed/simple;
-	bh=yja1D0oSsszcKToijHhcoFUhArBQ8Uv08OOMC3YY7Nk=;
+	s=arc-20240116; t=1706657846; c=relaxed/simple;
+	bh=nj26O4j2yRbE2IBzvkDQYVUr6PtJaGsOK/JobG7JKCA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VkisovZG2/mvuBR4aTbRGVB0ymg+FkumVQpEExMqlmdaX+AHFveoELhhEmdnfq7rv8VUEburwirveFms1zI4r7LuQyZjsA0uNH3M+i4hZVL7A7GDo9vH5cx//kDqQueXZJXDHnxCUkzEeBdhPbukXGJywIHHnNoSzxZXMf85ntU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ax/R6xWL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=wBvBemPg; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ax/R6xWL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=wBvBemPg; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=HsWqRq0huhErgWCw0EsTmFxcbU0OlF+pN0TuiFIzns+/zJ6Yg/AqYrC7yWvD+6vPxtNKI++6kOQLYe4H2jDTiuKKSo+qCuzoY8f/vtComHhlkjAkEB63JQASD7wd7gCzFRczL+ybuIWGY7w+Wsjo/4yexNZcAXFmpa/JUkdQdpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=qpXHPa3G; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ax/R6xWL";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="wBvBemPg";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ax/R6xWL";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="wBvBemPg"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C0FB521D08;
-	Tue, 30 Jan 2024 21:50:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1706651416; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=R6BGLwQfV4ZTDY8KhVPKQs2ZMupmIejtEZwLRmq2W/Q=;
-	b=ax/R6xWLZiZ+LLZIot0FIJap/K3XocOIEdWYTAgipJY3DbamIVrdTZvBRU6mhXqSxRWyEk
-	uiUMzteWYYRhSd+pbEMGzqh4bwVP5nO3XbD+X83ph8lWoHnIfHgNQHYtiRrVL988xpL2BK
-	E+SGzRjhfugHG18/12sn6pD4chdu+v8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1706651416;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=R6BGLwQfV4ZTDY8KhVPKQs2ZMupmIejtEZwLRmq2W/Q=;
-	b=wBvBemPgd4P/xuIZtaQYVn+AQruP/OcHBtLyY+zEf5+yRDftUFexYI6LrsGJlhP9dep7VK
-	NS8LhV9VcMMwG6Cg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1706651416; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=R6BGLwQfV4ZTDY8KhVPKQs2ZMupmIejtEZwLRmq2W/Q=;
-	b=ax/R6xWLZiZ+LLZIot0FIJap/K3XocOIEdWYTAgipJY3DbamIVrdTZvBRU6mhXqSxRWyEk
-	uiUMzteWYYRhSd+pbEMGzqh4bwVP5nO3XbD+X83ph8lWoHnIfHgNQHYtiRrVL988xpL2BK
-	E+SGzRjhfugHG18/12sn6pD4chdu+v8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1706651416;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=R6BGLwQfV4ZTDY8KhVPKQs2ZMupmIejtEZwLRmq2W/Q=;
-	b=wBvBemPgd4P/xuIZtaQYVn+AQruP/OcHBtLyY+zEf5+yRDftUFexYI6LrsGJlhP9dep7VK
-	NS8LhV9VcMMwG6Cg==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id AE46C13462;
-	Tue, 30 Jan 2024 21:50:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id jdmDKhhvuWWxHAAAn2gu4w
-	(envelope-from <jack@suse.cz>); Tue, 30 Jan 2024 21:50:16 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 1E75FA07F9; Tue, 30 Jan 2024 22:50:16 +0100 (CET)
-Date: Tue, 30 Jan 2024 22:50:16 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org,
-	Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.com>,
-	David Howells <dhowells@redhat.com>,
-	Brian Foster <bfoster@redhat.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 19/19] writeback: simplify writeback iteration
-Message-ID: <20240130215016.npofgza5nmoxuw6m@quack3>
-References: <20240125085758.2393327-1-hch@lst.de>
- <20240125085758.2393327-20-hch@lst.de>
- <20240130104605.2i6mmdncuhwwwfin@quack3>
- <20240130141601.GA31330@lst.de>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="qpXHPa3G"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6ddc268ce2bso2681687b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 15:37:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1706657843; x=1707262643; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=N/JCHM9AlyZpIdYvobl3nit5sSwfVrojdec2FUtAdqo=;
+        b=qpXHPa3Gft7GCz/acGdMa5l+S5L37lniLEPemR4nv5/HstrP6LSWK36oVJhGYFHBvt
+         qabbPD/Ns3gvmvVQSiE0opKN46F0VOiJeKwBoxctuVdJwEVz51HksoGRd86i2575ITxg
+         St7mEsotInX9IK6RW+VMMEfWmY2/7c/zKUAVDRHjwzD93Xt4VyiHynEpdiMtNS2VouEy
+         KkjmVBDy6OnzayH/3akeifePAZHJtqxGjRe6/PJpwQ7YgZg7sDOsqKuXyjON1zv7NwhZ
+         bJRHH1t1NP0SfRv5mlpNVqlutBFZgVavn3N9C/tmUB22xE+XbBpHOaxpighCPZS0C0bA
+         01iQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706657843; x=1707262643;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=N/JCHM9AlyZpIdYvobl3nit5sSwfVrojdec2FUtAdqo=;
+        b=PT2fqRDiN1hKSmYsTDJo+O79MiP5NdwPXrWzYP+86br9TdxQr3why1VP+wtstL8nGo
+         Pa3ANgT9ShFXn5NzaNyGbGSRdTxKbo+Fu/EMp+JY07Vvy6YxoEgGD7co8BUyxgXpPAKO
+         ARr1ZsZ1tQWPlmrFMOW5ip0M3XxF04JDf7IGAo3nge2CIMEqeNXM2L8oxf3Xtd4XuReF
+         GZUNlC3aCoPlHmMI2dqBt5UVOG6ZkyLLsB/az/e1vCjERLuk2WEm9ocjMjCHlUSKfJ0D
+         37o2LZWFWCtbnFQnciYJfYgBUwlzE8fK9k54SfD3Y9We9XEIs0hqMW/vcuJ4Jh0uMTEn
+         bFcA==
+X-Gm-Message-State: AOJu0YxWyEKe1LLFQJ8h7+nQlYhu8G5TaSZ+zmZZEsv41vRgonmMuwzw
+	QBKNccxyUAcm8yNHhtYFBB3KKVgJW8+D0w5hyC6JJ8+tQM+FWGTDUzOv8hzrJRw=
+X-Google-Smtp-Source: AGHT+IGcq/2OsDs8b9lsvt9PoLIXEKFIsw+IbJJHa1NLbozM5MTkwkE1NzK9MWzN0rBVG9jZqfSPWQ==
+X-Received: by 2002:a17:902:820a:b0:1d8:dd64:ff2 with SMTP id x10-20020a170902820a00b001d8dd640ff2mr66646pln.88.1706657843171;
+        Tue, 30 Jan 2024 15:37:23 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
+        by smtp.gmail.com with ESMTPSA id x13-20020a170902ea8d00b001d77a0e1374sm830681plb.151.2024.01.30.15.37.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jan 2024 15:37:22 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rUxfK-00HWCG-0P;
+	Wed, 31 Jan 2024 10:37:18 +1100
+Date: Wed, 31 Jan 2024 10:37:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: syzbot <syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com>
+Cc: adilger.kernel@dilger.ca, chandan.babu@oracle.com, jack@suse.com,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, tytso@mit.edu
+Subject: current->journal_info got nested! (was Re: [syzbot] [xfs?] [ext4?]
+ general protection fault in jbd2__journal_start)
+Message-ID: <ZbmILkfdGks57J4a@dread.disaster.area>
+References: <000000000000e98460060fd59831@google.com>
+ <000000000000d6e06d06102ae80b@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240130141601.GA31330@lst.de>
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spamd-Result: default: False [0.17 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[12];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-0.23)[72.65%]
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spam-Score: 0.17
+In-Reply-To: <000000000000d6e06d06102ae80b@google.com>
 
-On Tue 30-01-24 15:16:01, Christoph Hellwig wrote:
-> On Tue, Jan 30, 2024 at 11:46:05AM +0100, Jan Kara wrote:
-> > Looking at it now I'm thinking whether we would not be better off to
-> > completely dump the 'error' argument of writeback_iter() /
-> > writeback_iter_next() and just make all .writepage implementations set
-> > wbc->err directly. But that means touching all the ~20 writepage
-> > implementations we still have...
+On Tue, Jan 30, 2024 at 06:52:21AM -0800, syzbot wrote:
+> syzbot has found a reproducer for the following issue on:
 > 
-> Heh.  I actually had an earlier version that looked at wbc->err in
-> the ->writepages callers.  But it felt a bit too ugly.
-
-OK.
-
-> > > +		 */
-> > > +		if (wbc->sync_mode == WB_SYNC_NONE &&
-> > > +		    (wbc->err || wbc->nr_to_write <= 0))
-> > > +			goto finish;
-> > 
-> > I think it would be a bit more comprehensible if we replace the goto with:
-> > 			folio_batch_release(&wbc->fbatch);
-> > 			if (wbc->range_cyclic)
-> > 				mapping->writeback_index =
-> > 					folio->index + folio_nr_pages(folio);
-> > 			*error = wbc->err;
-> > 			return NULL;
+> HEAD commit:    861c0981648f Merge tag 'jfs-6.8-rc3' of github.com:kleikam..
+> git tree:       upstream
+> console+strace: https://syzkaller.appspot.com/x/log.txt?x=13ca8d97e80000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=b0b9993d7d6d1990
+> dashboard link: https://syzkaller.appspot.com/bug?extid=cdee56dbcdf0096ef605
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=104393efe80000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1393b90fe80000
 > 
-> I agree that keeping the logic on when to break and when to set the
-> writeback_index is good, but duplicating the batch release and error
-> assignment seems a bit suboptimal.  Let me know what you think of the
-> alternatіve variant below.
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/7c6cc521298d/disk-861c0981.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/6203c94955db/vmlinux-861c0981.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/17e76e12b58c/bzImage-861c0981.xz
+> mounted in repro: https://storage.googleapis.com/syzbot-assets/d31d4eed2912/mount_3.gz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
+> 
+> general protection fault, probably for non-canonical address 0xdffffc000a8a4829: 0000 [#1] PREEMPT SMP KASAN
+> KASAN: probably user-memory-access in range [0x0000000054524148-0x000000005452414f]
+> CPU: 1 PID: 5065 Comm: syz-executor260 Not tainted 6.8.0-rc2-syzkaller-00031-g861c0981648f #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 11/17/2023
+> RIP: 0010:jbd2__journal_start+0x87/0x5d0 fs/jbd2/transaction.c:496
+> Code: 74 63 48 8b 1b 48 85 db 74 79 48 89 d8 48 c1 e8 03 42 80 3c 28 00 74 08 48 89 df e8 63 4d 8f ff 48 8b 2b 48 89 e8 48 c1 e8 03 <42> 80 3c 28 00 74 08 48 89 ef e8 4a 4d 8f ff 4c 39 65 00 0f 85 1a
+> RSP: 0018:ffffc900043265c8 EFLAGS: 00010203
+> RAX: 000000000a8a4829 RBX: ffff8880205fa3a8 RCX: ffff8880235dbb80
+> RDX: 0000000000000000 RSI: 0000000000000002 RDI: ffff88801c1a6000
+> RBP: 000000005452414e R08: 0000000000000c40 R09: 0000000000000001
+               ^^^^^^^^
+Hmmmm - TRAN. That's looks suspicious, I'll come back to that.
 
-Well, batch release needs to be only here because if writeback_get_folio()
-returns NULL, the batch has been already released by it. So what would be
-duplicated is only the error assignment. But I'm fine with the version in
-the following email and actually somewhat prefer it compared the yet
-another variant you've sent.
+> R10: dffffc0000000000 R11: ffffed1003834871 R12: ffff88801c1a6000
+> R13: dffffc0000000000 R14: 0000000000000c40 R15: 0000000000000002
+> FS:  0000555556f90380(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000020020000 CR3: 0000000021fed000 CR4: 00000000003506f0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> Call Trace:
+>  <TASK>
+>  __ext4_journal_start_sb+0x215/0x5b0 fs/ext4/ext4_jbd2.c:112
+>  __ext4_journal_start fs/ext4/ext4_jbd2.h:326 [inline]
+>  ext4_dirty_inode+0x92/0x110 fs/ext4/inode.c:5969
+>  __mark_inode_dirty+0x305/0xda0 fs/fs-writeback.c:2452
+>  generic_update_time fs/inode.c:1905 [inline]
+>  inode_update_time fs/inode.c:1918 [inline]
+>  __file_update_time fs/inode.c:2106 [inline]
+>  file_update_time+0x39b/0x3e0 fs/inode.c:2136
+>  ext4_page_mkwrite+0x207/0xdf0 fs/ext4/inode.c:6090
+>  do_page_mkwrite+0x197/0x470 mm/memory.c:2966
+>  wp_page_shared mm/memory.c:3353 [inline]
+>  do_wp_page+0x20e3/0x4c80 mm/memory.c:3493
+>  handle_pte_fault mm/memory.c:5160 [inline]
+>  __handle_mm_fault+0x26a3/0x72b0 mm/memory.c:5285
+>  handle_mm_fault+0x27e/0x770 mm/memory.c:5450
+>  do_user_addr_fault arch/x86/mm/fault.c:1415 [inline]
+>  handle_page_fault arch/x86/mm/fault.c:1507 [inline]
+>  exc_page_fault+0x2ad/0x870 arch/x86/mm/fault.c:1563
+>  asm_exc_page_fault+0x26/0x30 arch/x86/include/asm/idtentry.h:570
 
-								Honza
+EXt4 is triggering a BUG_ON:
+
+	handle_t *handle = journal_current_handle();
+	int err;
+
+	if (!journal)
+		return ERR_PTR(-EROFS);
+
+	if (handle) {
+>>>>>>>>>	J_ASSERT(handle->h_transaction->t_journal == journal);
+		handle->h_ref++;
+		return handle;
+	}
+
+via a journal assert failure. It appears that current->journal_info
+isn't what it is supposed to be. It's finding something with TRAN in
+it, I think. I'll come back to this.
+
+What syzbot is doing is creating a file on it's root filesystem and
+write()ing 0x208e24b bytes (zeroes from an anonymous mmap() region,
+I think) to it to initialise it's contents.
+
+Then it mmap()s the ext4 file for 0xb36000 bytes and copies the raw
+test filesystem image in the source code into it.  It then creates a
+memfd that it decompresses the data in the mapped ext4 file into and
+creates a loop device that points to that memfd. It then mounts the
+loop device and we get an XFS filesystem which doesn't appear to
+contain any corruptions in it at all.  It then runs a bulkstat pass
+on the the XFS filesystem.
+
+This is where it gets interesting. The user buffer that XFS
+copies the inode data into points to a memory address inside the
+range of the ext4 file that the filesystem image was copied to.
+It does not overlap with the filesystem image.
+
+Hence when XFS goes to copy the inodes into the user buffer, it
+triggers write page faults on the ext4 backing file.
+
+That's this part of the trace:
+
+
+> RIP: 0010:rep_movs_alternative+0x4a/0x70 arch/x86/lib/copy_user_64.S:71
+> Code: 75 f1 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 48 8b 06 48 89 07 48 83 c6 08 48 83 c7 08 83 e9 08 74 df 83 f9 08 73 e8 eb c9 <f3> a4 c3 48 89 c8 48 c1 e9 03 83 e0 07 f3 48 a5 89 c1 85 c9 75 b3
+> RSP: 0018:ffffc900043270f8 EFLAGS: 00050202
+> RAX: ffffffff848cda01 RBX: 0000000020020040 RCX: 0000000000000040
+> RDX: 0000000000000000 RSI: ffff8880131873b0 RDI: 0000000020020000
+> RBP: 1ffff92000864f26 R08: ffff8880131873ef R09: 1ffff11002630e7d
+> R10: dffffc0000000000 R11: ffffed1002630e7e R12: 00000000000000c0
+> R13: dffffc0000000000 R14: 000000002001ff80 R15: ffff888013187330
+>  copy_user_generic arch/x86/include/asm/uaccess_64.h:112 [inline]
+>  raw_copy_to_user arch/x86/include/asm/uaccess_64.h:133 [inline]
+>  _copy_to_user+0x86/0xa0 lib/usercopy.c:41
+>  copy_to_user include/linux/uaccess.h:191 [inline]
+>  xfs_bulkstat_fmt+0x4f/0x120 fs/xfs/xfs_ioctl.c:744
+>  xfs_bulkstat_one_int+0xd8b/0x12e0 fs/xfs/xfs_itable.c:161
+>  xfs_bulkstat_iwalk+0x72/0xb0 fs/xfs/xfs_itable.c:239
+>  xfs_iwalk_ag_recs+0x4c3/0x820 fs/xfs/xfs_iwalk.c:220
+>  xfs_iwalk_run_callbacks+0x25b/0x490 fs/xfs/xfs_iwalk.c:376
+>  xfs_iwalk_ag+0xad6/0xbd0 fs/xfs/xfs_iwalk.c:482
+>  xfs_iwalk+0x360/0x6f0 fs/xfs/xfs_iwalk.c:584
+>  xfs_bulkstat+0x4f8/0x6c0 fs/xfs/xfs_itable.c:308
+>  xfs_ioc_bulkstat+0x3d0/0x450 fs/xfs/xfs_ioctl.c:867
+>  xfs_file_ioctl+0x6a5/0x1980 fs/xfs/xfs_ioctl.c:1994
+>  vfs_ioctl fs/ioctl.c:51 [inline]
+>  __do_sys_ioctl fs/ioctl.c:871 [inline]
+>  __se_sys_ioctl+0xf8/0x170 fs/ioctl.c:857
+>  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+>  do_syscall_64+0xf5/0x230 arch/x86/entry/common.c:83
+>  entry_SYSCALL_64_after_hwframe+0x63/0x6b
+
+What is interesting here is this is running in an empty XFS
+transaction context so that the bulkstat operation garbage collects
+all the buffers it accesses without us having to explicit cleanup -
+they all get released when we cancel the transaction context at the
+end of the process.
+
+But that means copy-out is running inside a transaction context, and
+that means current->journal_info contains a pointer to the current
+struct xfs_trans the bulkstat operation is using.
+
+Guess what we have as the first item in a struct xfs_trans? That's
+right, it's a magic number, and that magic number is:
+
+#define XFS_TRANS_HEADER_MAGIC  0x5452414e      /* TRAN */
+
+It should be obvious what has happened now -
+current->journal_info is not null, so ext4 thinks it owns the
+structure attached there and panics when it finds that it isn't an
+ext4 journal handle being held there.
+
+I don't think there are any clear rules as to how filesystems can
+and can't use current->journal_info. In general, a task can't jump
+from one filesystem to another inside a transaction context like
+this, so there's never been a serious concern about nested
+current->journal_info assignments like this in the past.
+
+XFS is doing nothing wrong - we're allowed to define transaction
+contexts however we want and use current->journal_info in this way.
+However, we have to acknowledge that ext4 has also done nothing
+wrong by assuming current->journal_info should below to it if it is
+not null. Indeed, XFS does the same thing.
+
+The question here is what to do about this? The obvious solution is
+to have save/restore semantics in the filesystem code that
+sets/clears current->journal_info, and then filesystems can also do
+the necessary "recursion into same filesystem" checks they need to
+ensure that they aren't nesting transactions in a way that can
+deadlock.
+
+Maybe there are other options - should filesystems even be allowed to
+trigger page faults when they have set current->journal_info?
+
+What other potential avenues are there that could cause this sort of
+transaction context nesting that we haven't realised exist? Does
+ext4 data=jounral have problems like this in the data copy-in path?
+What other filesystems allow page faults in transaction contexts?
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
