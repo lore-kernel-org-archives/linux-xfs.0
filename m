@@ -1,321 +1,177 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDE5560EDB;
-	Tue, 30 Jan 2024 10:46:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0837160874
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 13:18:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706611572; cv=none; b=MipXPr2ePM9JYUXPCjNhgTks+5X/v1rkDf9QcyeoRcrnQK18KqxPPGUuyplRNQ+pYTt8xugya9w9JgsEFxK6iIgnj5eUU2vv3Rj2HucBpuZh76lZDLGqVckaMCqSFACSMoWjuy+UrnvwhNt1XsE0DIBCl30+8sxutBnsU2Exang=
+	t=1706620694; cv=none; b=d0PEIzWbWXi1IjGEijfUo4p4Plz84wfa7it+rReHl88B9bWHvYv7zem6hQM4ZdiEDiYC6jvk/euL6LZ0bvoeL7ZP/paMsH/OOUJg+XG1B7BEYuggil4UXxsYtT+YInFtOgRcv134TvpcnHKv0uHzj+S0H+zvBZqRDAf11YD3C9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706611572; c=relaxed/simple;
-	bh=uck9Y05f7mfsXQNO/8efqYRcDvUO0vN93MooUwG+OQQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gNuiW9X1MuuV9yWmYlMTyuSP4gpW5Wb2XaMgBIqMfc3xapQtl6Tu6vEfLd4MZoi0hlOKWtUTFVmIJ1XvuCMPUqu8+wGsDoqlNfxXpkkfTRG2cKVW64JTOdUIO+jzzjl5Yxm+KQmR1tWaZr0TcodipBd7o/wATedUbmCeQlVZ8YA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=gtMjDf5s; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=4wMoKlQh; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Tg8PAfjr; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=8q27gk6s; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1706620694; c=relaxed/simple;
+	bh=7noXzSg3eR3LKSyOs9PmxZmkgbN6BoRHdkA+Ytdtbjs=;
+	h=Message-ID:Date:MIME-Version:From:Subject:CC:To:Content-Type:
+	 References; b=LCsBU11rdjM5ITFv3aDzDcc5vMSlQvcURzCn59R4IaLDlrUvCTxax7HSEdj+nQubI3Gd7fwXL/E6+9Yoxz4lcvFaF1joSFD2t3ZbFaHu2+gJQaD6YMirc76IDKB0ireVTTJI1ZsSt+F3JLwvG6LpVBIckC9rKrtHavVrW4RFb98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=InfQ8K9W; arc=none smtp.client-ip=210.118.77.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="gtMjDf5s";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4wMoKlQh";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Tg8PAfjr";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="8q27gk6s"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 19B95222D9;
-	Tue, 30 Jan 2024 10:46:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1706611568; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rd4laTPRq+btQlxHww6bI0r93gTPlM9zRmVQJZwHTLA=;
-	b=gtMjDf5sG1IhZDPGpqVgyLrBptiO3pdwyR6jSHrYN3bjxdtYkzIxL2PdF50p5YbseJZvnB
-	/8H4Jly+YqPnRVFvwKAu/RMtXGeT7FRjpkzT2Eb/4nbw8rD9aagEZl/l1UN4VxX+C7fxon
-	XAiihgKbqPn2n0nVEMN864QKS4y3gSE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1706611568;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rd4laTPRq+btQlxHww6bI0r93gTPlM9zRmVQJZwHTLA=;
-	b=4wMoKlQhXkMR2/C0sJSU6HKIX2Sd1aklC78v8F5E2KwhCPXc9JhMdN2tmMHj0d7a9tnQ/4
-	UQ6Xa2pWGryJfGBg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1706611566; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rd4laTPRq+btQlxHww6bI0r93gTPlM9zRmVQJZwHTLA=;
-	b=Tg8PAfjrkj0kivWc0IYSydT3PR5xS+P2VVhiWGnnx1hJtX0IXfcISdM7fvXSE1WYmaaMYW
-	g8M970sxT6nF49Oh5mS9SwocltuFO21lkg53abt1EhUmhYbMHrV/34/v/VDwFExs7m2kZ9
-	E1VMnW+MFWmCm3eWtvfKHQqBDXZN2nM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1706611566;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rd4laTPRq+btQlxHww6bI0r93gTPlM9zRmVQJZwHTLA=;
-	b=8q27gk6sjeXkl3adNWaO5+zphzC4qxeJ/QthFB/SGTHyc6MFq2gEf+K5pJdUP2/43lWE9q
-	E7ieQCnAT+r3X2BQ==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id EE27413212;
-	Tue, 30 Jan 2024 10:46:05 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id 1dscOm3TuGVEfQAAn2gu4w
-	(envelope-from <jack@suse.cz>); Tue, 30 Jan 2024 10:46:05 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 8D741A0807; Tue, 30 Jan 2024 11:46:05 +0100 (CET)
-Date: Tue, 30 Jan 2024 11:46:05 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-mm@kvack.org, Matthew Wilcox <willy@infradead.org>,
-	Jan Kara <jack@suse.com>, David Howells <dhowells@redhat.com>,
-	Brian Foster <bfoster@redhat.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 19/19] writeback: simplify writeback iteration
-Message-ID: <20240130104605.2i6mmdncuhwwwfin@quack3>
-References: <20240125085758.2393327-1-hch@lst.de>
- <20240125085758.2393327-20-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="InfQ8K9W"
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20240130131804euoutp01d93c0c40742d03733d8b9fe7bbe71d0f~vInhopGiH2852528525euoutp01y
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 13:18:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20240130131804euoutp01d93c0c40742d03733d8b9fe7bbe71d0f~vInhopGiH2852528525euoutp01y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1706620684;
+	bh=nchtKpFK/wfJqMktIbKPjhJtONuMwGvChv/TS4CLgbw=;
+	h=Date:From:Subject:CC:To:References:From;
+	b=InfQ8K9WLs/y/lajQEJt999l7cF/y8rDgNC0DYNolYISNH70+3AkEd0MVegUeWhK+
+	 sC0SwCwHZtiAhFRuF3c+hDwx8gYIGhvo9j8t6jpL7hmEdQpuIvfqj07Ow5jA8Poz2/
+	 EOsSiE5CpvobbiKpo8LgX6Pjmd6xAI39ACYRCn8E=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+	20240130131803eucas1p289f79fdaf6dc0e7561c9b314056ca7ff~vInhSOOR60247902479eucas1p2u;
+	Tue, 30 Jan 2024 13:18:03 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+	eusmges1new.samsung.com (EUCPMTA) with SMTP id 1B.F1.09539.B07F8B56; Tue, 30
+	Jan 2024 13:18:03 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820~vIngoAWK_0239902399eucas1p2P;
+	Tue, 30 Jan 2024 13:18:03 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+	eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240130131803eusmtrp290acbbd79033749fce87fa9756f8aa22~vIngnUriN1988119881eusmtrp2G;
+	Tue, 30 Jan 2024 13:18:03 +0000 (GMT)
+X-AuditID: cbfec7f2-52bff70000002543-f0-65b8f70bdd63
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+	eusmgms1.samsung.com (EUCPMTA) with SMTP id A5.6A.09146.B07F8B56; Tue, 30
+	Jan 2024 13:18:03 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240130131803eusmtip111428a3363982ffffddbcd3d76b40995~vIngeEx1s0365203652eusmtip1x;
+	Tue, 30 Jan 2024 13:18:03 +0000 (GMT)
+Received: from [192.168.8.209] (106.210.248.241) by CAMSVWEXC02.scsc.local
+	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+	Tue, 30 Jan 2024 13:18:02 +0000
+Message-ID: <fe7fec1c-3b08-430f-9c95-ea76b237acf4@samsung.com>
+Date: Tue, 30 Jan 2024 14:18:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240125085758.2393327-20-hch@lst.de>
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spam-Level: 
-X-Spam-Score: -3.80
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 RCPT_COUNT_SEVEN(0.00)[11];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[lst.de:email,suse.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-3.00)[100.00%]
-X-Spam-Flag: NO
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+From: Pankaj Raghav <p.raghav@samsung.com>
+Subject: fstest failure due to filesystem size for 16k, 32k and 64k FSB
+CC: <mcgrof@kernel.org>, <gost.dev@samsung.com>,
+	<linux-xfs@vger.kernel.org>, "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: <fstests@vger.kernel.org>, <djwong@kernel.org>, <zlang@redhat.com>,
+	"Dave Chinner" <david@fromorbit.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SfUhTYRTGe3fvtutq4zq/DipJy4qEpkLRBdM+ySFSgrVIKRt5WZLO2tJc
+	VjOz0JmVlk2Hppj0IWFlbrrC0hVOl1H2obYsP5hZgaYuqUyttmvgf895fuccnvPyEpjwOtuX
+	SFIcoZUKWbKIw8ONrb9erFr4o5EOKRxaQ9W3fkTUa7uAepbTxKU6vjhw6sF0I5fquTiEqBZr
+	LpdqajexNxASaxVITPoPXEldTR5H8vzWRsm3R285Ekfd4hhOHG9dIp2clE4rgyP28Q7cL2rF
+	DnV5ZbTnzOBZaEqgRW4EkKthsPwz0iIeISRvImj/0MNhiu8IrFl9GFM4ELQZX7D/j9TmTOEM
+	uIHAbq5wAVdX7enNDHiIwNY9hZyAT0bAE/M9l8bJZXDj6VuM8d2hvdSOO7UXGQB9thKuU2Ok
+	D9jsFSwtIggOGQSn8ly2BxkJ3QOjbOd+jDQgqByccAFPUgGPR7IxZnYlnGn4PbcnABpGyjAm
+	9VK49rILMfoEWOttLOciIMcI+DT7jsuALZBfWMJitAd8tdTP+f7wx1Qx52fCUM9vjBnOQXDB
+	dIfjTApkGJzvSGZ6NsLs1Uk2YwugZ8SdySOAIqMOY2w+5J4VXkSB+nkvoZ93vX7eNfp511Qi
+	vAb50GmqFDmtClXQR8UqWYoqTSEX709NqUP/vtKzWctEIyr/Oi42IxaBzAgITOTJ/7XSQAv5
+	iTL1MVqZmqBMS6ZVZuRH4CIf/rLEAFpIymVH6IM0fYhW/qcsws03i7V+9nJv2bEYQfH7u8/j
+	xMM7Tq7x512NWbSrdc/E4e1BWWLFil6t+mPpkwVc0StHoK6APV6X1xKBNHlbrFJW/FjNleNe
+	0w5dsEJ9gl3gvT999E9IRuPwzzBN/sClfvVTm5R+g/wSzNIhe6wkOjI79pFKsPzsjwiLRsoT
+	y43XK/iHA/xuL4jftkd0x0CVSAtMbt73zweGdhYvCRf3mzuio/r7qzdP73ysO93r3bw1sFZj
+	6Jbze/emAnUy35HdsjtbIOFTqcJ0i8i9S5+bWVqltcpj0v3Phd+dtITXGEKrGzaF+LdVzag1
+	pmhp5LCxeVdns3JtnDJqx3h808xurFOEqw7IQoMwpUr2F/x5gl+5AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMIsWRmVeSWpSXmKPExsVy+t/xu7rc33ekGiyaw2Ox5dg9RovLT/gs
+	TrfsZbc48/Izi8WuPzvYLW5MeMpocfBUB7vF3pM7WR04PE4tkvDYOesuu8emVZ1sHmdXOnq8
+	33eVzePzJrkAtig9m6L80pJUhYz84hJbpWhDCyM9Q0sLPSMTSz1DY/NYKyNTJX07m5TUnMyy
+	1CJ9uwS9jM2TjjEXXBOtONnyl6WB8RdfFyMnh4SAicS6ll8sILaQwFJGiTkNohBxGYmNX66y
+	QtjCEn+udbF1MXIB1XxklNi2/hIThLObUWLRz5XMIFW8AnYShw9tZASxWQRUJZYfuQoVF5Q4
+	OfMJ2AZRAXmJ+7dmsIPYzALiEreezAcaxMHBJqAl0dgJFhYWcJe4/vAdK8h8ZoGtjBJnFlwE
+	6xURyJP4tPMlE0SvpkTr9t9Qc+Qltr+dwwxxqbLE4gvXGCHsWonPf58xTmAUnoXkjFlIVs9C
+	MmoWklELGFlWMYqklhbnpucWG+oVJ+YWl+al6yXn525iBMbmtmM/N+9gnPfqo94hRiYOxkOM
+	EhzMSiK8PzW3pgrxpiRWVqUW5ccXleakFh9iNAWGxURmKdHkfGByyCuJNzQzMDU0MbM0MLU0
+	M1YS5/Us6EgUEkhPLEnNTk0tSC2C6WPi4JRqYJL+fcfuS+XlWbfqHCQPH73FxV+QmXCsR7Du
+	vmXp0dwp0XeCvZYmuuUGnf+5bDfPS/lXuWkJq0QcDqemirHOjlnvXXwoxC25tGTJrMCa/2yc
+	WT4+PavcuFZe1d5xcNn58lTNkPrd3Jv+zTY6uGjhgR4n2w+2+W+NLiT3LrXsvcKXa/Xu+pXs
+	8smu/ZbBP9yieFQPWEdN02V8t4S7V6Tn3iczA5njZZxWl1y0SiatTTX7XL3On2XJpF9/ZDYo
+	N7zd8XJH9STpsJker7iuXmnsCtv/ei17a+SCvOgT69MnPF+e4/pOccmuhetVGOS2im+y4wrs
+	qzHi/zEzwuPBiu9i4gxva79+WMy6UPSiEcfP7UosxRmJhlrMRcWJAECr1zZWAwAA
+X-CMS-MailID: 20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820
+X-Msg-Generator: CA
+X-RootMTR: 20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820
+References: <CGME20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820@eucas1p2.samsung.com>
 
-On Thu 25-01-24 09:57:58, Christoph Hellwig wrote:
-> Based on the feedback from Jan I've tried to figure out how to
-> avoid the error magic in the for_each_writeback_folio.  This patch
-> tries to implement this by switching to an open while loop over a
-> single writeback_iter() function:
-> 
-> 	while ((folio = writeback_iter(mapping, wbc, folio, &error))) {
-> 		...
-> 	}
-> 
-> the twist here is that the error value is passed by reference, so that
-> the iterator can restore it when breaking out of the loop.
-> 
-> Additionally it moves the AOP_WRITEPAGE_ACTIVATE out of the iterator
-> and into the callers, in preparation for eventually killing it off
-> with the phase out of write_cache_pages().
-> 
-> To me this form of the loop feels easier to follow, and it has the
-> added advantage that writeback_iter() can actually be nicely used in
-> nested loops, which should help with further iterizing the iomap
-> writeback code.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+As I pointed out in my previous thread [1], there are some testcases
+in fstests that are failing for FSB 16k, 32k and 64k due to the filesystem
+**size** under test. These are failures **upstream** and not due to the ongoing
+LBS work.
 
-Looking at it now I'm thinking whether we would not be better off to
-completely dump the 'error' argument of writeback_iter() /
-writeback_iter_next() and just make all .writepage implementations set
-wbc->err directly. But that means touching all the ~20 writepage
-implementations we still have...
+fstests creates a lot of tiny filesystems to perform some tests. Even though
+the minimum fs size allowed to create XFS filesystem is 300 MB, we have special
+condition in mkfs to allow smaller filesystems for fstest[2] (This took some time
+to figure out as I was splitting my hair how fstest is able to create XFS on top of
+25MB images).
 
-Couple of comments regarding this implementation below (overall I agree it
-seems somewhat easier to follow the code).
+The problem comes when we have FSB 16k, 32k and 64k. As we will
+require more log space when we have this feature enabled, some test cases are failing
+with the following error message:
 
-> +/**
-> + * writepage_iter - iterate folio of a mapping for writeback
-> + * @mapping: address space structure to write
-> + * @wbc: writeback context
-> + * @folio: previously iterated folio (%NULL to start)
-> + * @error: in-out pointer for writeback errors (see below)
-> + *
-> + * This function should be called in a while loop in the ->writepages
-> + * implementation and returns the next folio for the writeback operation
-> + * described by @wbc on @mapping.
-> + *
-> + * To start writeback @folio should be passed as NULL, for every following
-> + * iteration the folio returned by this function previously should be passed.
-> + * @error should contain the error from the previous writeback iteration when
-> + * calling writeback_iter.
-> + *
-> + * Once the writeback described in @wbc has finished, this function will return
-> + * %NULL and if there was an error in any iteration restore it to @error.
-> + *
-> + * Note: callers should not manually break out of the loop using break or goto.
-> + */
-> +struct folio *writeback_iter(struct address_space *mapping,
-> +		struct writeback_control *wbc, struct folio *folio, int *error)
->  {
-> -	unsigned long nr = folio_nr_pages(folio);
-> +	if (folio) {
-> +		wbc->nr_to_write -= folio_nr_pages(folio);
-> +		if (*error && !wbc->err)
-> +			wbc->err = *error;
->  
-> -	wbc->nr_to_write -= nr;
-> -
-> -	/*
-> -	 * Handle the legacy AOP_WRITEPAGE_ACTIVATE magic return value.
-> -	 * Eventually all instances should just unlock the folio themselves and
-> -	 * return 0;
-> -	 */
-> -	if (error == AOP_WRITEPAGE_ACTIVATE) {
-> -		folio_unlock(folio);
-> -		error = 0;
-> +		/*
-> +		 * For integrity sync  we have to keep going until we have
-> +		 * written all the folios we tagged for writeback prior to
-> +		 * entering the writeback loop, even if we run past
-> +		 * wbc->nr_to_write or encounter errors.
-> +		 *
-> +		 * This is because the file system may still have state to clear
-> +		 * for each folio.  We'll eventually return the first error
-> +		 * encountered.
-> +		 *
-> +		 * For background writeback just push done_index past this folio
-> +		 * so that we can just restart where we left off and media
-> +		 * errors won't choke writeout for the entire file.
-> +		 */
-> +		if (wbc->sync_mode == WB_SYNC_NONE &&
-> +		    (wbc->err || wbc->nr_to_write <= 0))
-> +			goto finish;
+max log size XXX smaller than min log size YYY, filesystem is too small
 
-I think it would be a bit more comprehensible if we replace the goto with:
-			folio_batch_release(&wbc->fbatch);
-			if (wbc->range_cyclic)
-				mapping->writeback_index =
-					folio->index + folio_nr_pages(folio);
-			*error = wbc->err;
-			return NULL;
+Most test cases run without this error message with **rmapbt disabled** for 16k and 64k (see
+the test matrix below).
 
-> +	} else {
-> +		if (wbc->range_cyclic)
-> +			wbc->index = mapping->writeback_index; /* prev offset */
-> +		else
-> +			wbc->index = wbc->range_start >> PAGE_SHIFT;
-> +		if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
-> +			tag_pages_for_writeback(mapping, wbc->index,
-> +					wbc_end(wbc));
-> +		folio_batch_init(&wbc->fbatch);
-> +		wbc->err = 0;
->  	}
->  
-> -	if (error && !wbc->err)
-> -		wbc->err = error;
-> +	folio = writeback_get_folio(mapping, wbc);
-> +	if (!folio)
-> +		goto finish;
+What should be the approach to solve this issue? 2 options that I had in my mind:
 
-And here we just need to do:
-		if (wbc->range_cyclic)
-			mapping->writeback_index = 0;
-		*error = wbc->err;
-		return NULL;
+1. Similar to [2], we could add a small hack in mkfs xfs to ignore the log space
+requirement while running fstests for these profiles.
 
-> +	return folio;
-> +
-> +finish:
-> +	folio_batch_release(&wbc->fbatch);
->  
->  	/*
-> -	 * For integrity sync  we have to keep going until we have written all
-> -	 * the folios we tagged for writeback prior to entering the writeback
-> -	 * loop, even if we run past wbc->nr_to_write or encounter errors.
-> -	 * This is because the file system may still have state to clear for
-> -	 * each folio.   We'll eventually return the first error encountered.
-> +	 * For range cyclic writeback we need to remember where we stopped so
-> +	 * that we can continue there next time we are called.  If  we hit the
-> +	 * last page and there is more work to be done, wrap back to the start
-> +	 * of the file.
->  	 *
-> -	 * For background writeback just push done_index past this folio so that
-> -	 * we can just restart where we left off and media errors won't choke
-> -	 * writeout for the entire file.
-> +	 * For non-cyclic writeback we always start looking up at the beginning
-> +	 * of the file if we are called again, which can only happen due to
-> +	 * -ENOMEM from the file system.
->  	 */
-> -	if (wbc->sync_mode == WB_SYNC_NONE &&
-> -	    (wbc->err || wbc->nr_to_write <= 0)) {
-> -		writeback_finish(mapping, wbc, folio->index + nr);
-> -		return NULL;
-> +	if (wbc->range_cyclic) {
-> +		WARN_ON_ONCE(wbc->sync_mode != WB_SYNC_NONE);
-> +		if (wbc->err || wbc->nr_to_write <= 0)
-> +			mapping->writeback_index =
-> +				folio->index + folio_nr_pages(folio);
-> +		else
-> +			mapping->writeback_index = 0;
->  	}
-> -
-> -	return writeback_get_folio(mapping, wbc);
-> +	*error = wbc->err;
-> +	return NULL;
->  }
->  
->  /**
-> @@ -2563,13 +2575,17 @@ static int writeback_use_writepage(struct address_space *mapping,
->  		struct writeback_control *wbc)
->  {
->  	struct blk_plug plug;
-> -	struct folio *folio;
-> -	int err;
-> +	struct folio *folio = 0;
-			     ^^ NULL please
+2. Increase the size of filesystem under test to accommodate these profiles. It could
+even be a conditional increase in filesystem size if the FSB > 16k to reduce the impact
+on existing FS test time for 4k FSB.
+
+Let me know what would be the best way to move forward.
+
+Here are the results:
+
+Test environment:
+kernel Release: 6.8.0-rc1
+xfsprogs: 6.5.0
+Architecture: aarch64
+Page size: 64k
+
+Test matrix:
+
+| Test        | 32k rmapbt=0 | 32k rmapbt=1 | 64k rmapbt=0 | 64k rmapbt=1 |
+| --------    | ---------    | ---------    | ---------    | ---------    |
+| generic/042 |     fail     |     fail     |     fail     |     fail     |
+| generic/081 |     fail     |     fail     |     pass     |     fail     |
+| generic/108 |     fail     |     fail     |     pass     |     fail     |
+| generic/455 |     fail     |     fail     |     pass     |     fail     |
+| generic/457 |     fail     |     fail     |     pass     |     fail     |
+| generic/482 |     fail     |     fail     |     pass     |     fail     |
+| generic/704 |     fail     |     fail     |     pass     |     fail     |
+| generic/730 |     fail     |     fail     |     pass     |     fail     |
+| generic/731 |     fail     |     fail     |     pass     |     fail     |
+| shared/298  |     pass     |     pass     |     pass     |     fail     |
+
+16k fails only on generic/042 for both rmapbt=0 and rmapbt=1
 
 
-> +	int err = 0;
->  
->  	blk_start_plug(&plug);
-> -	for_each_writeback_folio(mapping, wbc, folio, err) {
-> +	while ((folio = writeback_iter(mapping, wbc, folio, &err))) {
->  		err = mapping->a_ops->writepage(&folio->page, wbc);
->  		mapping_set_error(mapping, err);
-> +		if (err == AOP_WRITEPAGE_ACTIVATE) {
-> +			folio_unlock(folio);
-> +			err = 0;
-> +		}
->  	}
->  	blk_finish_plug(&plug);
->  
-> @@ -2590,6 +2606,8 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
->  			ret = mapping->a_ops->writepages(mapping, wbc);
->  		} else if (mapping->a_ops->writepage) {
->  			ret = writeback_use_writepage(mapping, wbc);
-> +			if (!ret)
-> +				ret = wbc->err;
-
-AFAICT this should not be needed as writeback_iter() made sure wbc->err is
-returned when set?
-
-								Honza
+[1] https://lore.kernel.org/all/7964c404-bc9d-47ef-97f1-aaaba7d7aee9@samsung.com/
+[2] xfsprogs commit: 6e0ed3d19c54603f0f7d628ea04b550151d8a262
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Regards,
+Pankaj
