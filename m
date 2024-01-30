@@ -1,264 +1,184 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E9D2B9BD
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:37:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706657846; cv=none; b=StjdMFtcUAKS4/FvAN+jAsfRxZ/7ofBqipOLQ9ig/p9lZp2hfBMdsNxx1oG+Mqox/VzhO2AU/t6nlu9mQE5E+Vwf9mmvrOOxM5dni8ZjNlodEpMxuoxODzKcY0zE1mU2hHZpP5IHc9XpOVI92p7UGrVUNCYw4dN6X8jmzwAe08c=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706657846; c=relaxed/simple;
-	bh=nj26O4j2yRbE2IBzvkDQYVUr6PtJaGsOK/JobG7JKCA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HsWqRq0huhErgWCw0EsTmFxcbU0OlF+pN0TuiFIzns+/zJ6Yg/AqYrC7yWvD+6vPxtNKI++6kOQLYe4H2jDTiuKKSo+qCuzoY8f/vtComHhlkjAkEB63JQASD7wd7gCzFRczL+ybuIWGY7w+Wsjo/4yexNZcAXFmpa/JUkdQdpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=qpXHPa3G; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28ABE7EEE4
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:44:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1706658270; cv=fail; b=WeO7f5IKPsyDP1cJnUCZ80Mh96/KYEd5mI43mo1MFeJDUjF5V2u3x5NCGPnY3E+hOh+ntFPNplw20kcNu7AYJrS2yJgM8gtVK9tXkMhBGEt6Sb2ntLpfoA1SP43Mtw8YJ7DRGx+BhzyaRpXwjyctBWa2JiSMiyDCAD0fsWS1aVE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1706658270; c=relaxed/simple;
+	bh=VvzN4yu1fmQ0VYqSjtKVezznRw0LavjhUkFiu0aYWsM=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=hhzIOgCayKZMGHIen2QfRB1Ujnqqm+o4EtAdTo/C3MXifk3P9/TjJifmlzgSENZThiXZ3a4nrTULiDaK84YJJFkPNXjyEhJz1j7eSk5BDy8Ozat+QXKGrxNhd6jKYcee7kUfeumjlN2BDNiSbOJoE2f3wQABPg++Rfpq3RuN2qg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Q7+IEvK2; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=np2NaRyG; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="qpXHPa3G"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6ddc268ce2bso2681687b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 15:37:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Q7+IEvK2";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="np2NaRyG"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40UKxZer021705
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:44:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : in-reply-to : references : content-transfer-encoding :
+ content-type : mime-version; s=corp-2023-11-20;
+ bh=BlYNkxjGWSfbfZQ+XxFjmVB/mlx/td51hSe1ITYbYsk=;
+ b=Q7+IEvK27HxVaNClUFN9uGqNdh6pQgMe50Zh+ZqswVMZb80GSmAVv5EbYSRwPPy/Ik+H
+ ZnDllfaww+2Tpk8ti9gHAlozE+18yZM2SNkBJUy/iLXlzEGhNtCQ+TRhqPSTHSevXDFY
+ 5f5nM54pTmzdsc5Ce+O/hyx557U//ZizmVcqkqpEOTqZ1upQn+eDJzXdHmazjD2zte7K
+ EatM+v0ZHBv4eef888tKDHKrhiJUheKVvC4FXQPPFhZXQ4/vbPzyPp2MBn3jB+Nng/Az
+ VG9WXa2ll2JhkEPYGqiMM13v+jPpyQzbwgI8O+yG9GyCan26WtyZA+dDN48WYZlDikvG MA== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vvtcv0f0x-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:44:27 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40UM0X44040253
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:44:26 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2040.outbound.protection.outlook.com [104.47.73.40])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3vvr987yc0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 23:44:26 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=V3cTClpd7v0FWR6unmtm3v5nEphDACd+arQy8JCEZbw0QfJEpx5I5YRr3tRxRTxJxwK5OfXsgmXEA1UHdCWHlJNUCy+cBsklhOHPOGO9RWo/ElRaN4Bo3vOvu95WCcyEGMRVdmOAyJY4q73E/LBYIFapVXvBYONtdyifAEpQUM0noHlQ9L/rUr3Wb8ubKsRsmyF28Es58tYngfXhlv/CJHT3pFDiXhWaMiMKf7Dbrfo+OYbC5hI/ha6B6tuNcW5UKah08Tiiy4A34da1wGdGq8wKjF6bdWRHHk8PX4ojluW7GQDTkcLZL0NqzvnnuROb4oWqOU+eHy99Ce6Wp56svA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BlYNkxjGWSfbfZQ+XxFjmVB/mlx/td51hSe1ITYbYsk=;
+ b=J9kKnmX9yOyAze+uOxUmbH+BV+SUe1aZlLcOfCMqGhw7aPC25z+kjOejK1QwjLE8+evW+0/uRpA1QtAVM0YSA3oV9+jPGYBxgHmGggjurZ/yGaFn/BKr1QIiTZO988s36M9ITIDswbrfj0B9iiRoIEtg22yQkKUYxmtNPXdIsBy+9mUX2W3p4crlduM/rIwbBTffbLeEsS8dvTxCmo7ix0wcJmNn0JbH9ScEkEERyZw4ynDsLnaLEZ04Fnu/Qqi/QTsPBtknBRmt22OpZ5JhQ9Eg+GdKyTQMuv2JkC6iNUbzbg5nS3ffH+ua+3Xx71ta/1DVwBKely9b5+VKn1eDZQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1706657843; x=1707262643; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=N/JCHM9AlyZpIdYvobl3nit5sSwfVrojdec2FUtAdqo=;
-        b=qpXHPa3Gft7GCz/acGdMa5l+S5L37lniLEPemR4nv5/HstrP6LSWK36oVJhGYFHBvt
-         qabbPD/Ns3gvmvVQSiE0opKN46F0VOiJeKwBoxctuVdJwEVz51HksoGRd86i2575ITxg
-         St7mEsotInX9IK6RW+VMMEfWmY2/7c/zKUAVDRHjwzD93Xt4VyiHynEpdiMtNS2VouEy
-         KkjmVBDy6OnzayH/3akeifePAZHJtqxGjRe6/PJpwQ7YgZg7sDOsqKuXyjON1zv7NwhZ
-         bJRHH1t1NP0SfRv5mlpNVqlutBFZgVavn3N9C/tmUB22xE+XbBpHOaxpighCPZS0C0bA
-         01iQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706657843; x=1707262643;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=N/JCHM9AlyZpIdYvobl3nit5sSwfVrojdec2FUtAdqo=;
-        b=PT2fqRDiN1hKSmYsTDJo+O79MiP5NdwPXrWzYP+86br9TdxQr3why1VP+wtstL8nGo
-         Pa3ANgT9ShFXn5NzaNyGbGSRdTxKbo+Fu/EMp+JY07Vvy6YxoEgGD7co8BUyxgXpPAKO
-         ARr1ZsZ1tQWPlmrFMOW5ip0M3XxF04JDf7IGAo3nge2CIMEqeNXM2L8oxf3Xtd4XuReF
-         GZUNlC3aCoPlHmMI2dqBt5UVOG6ZkyLLsB/az/e1vCjERLuk2WEm9ocjMjCHlUSKfJ0D
-         37o2LZWFWCtbnFQnciYJfYgBUwlzE8fK9k54SfD3Y9We9XEIs0hqMW/vcuJ4Jh0uMTEn
-         bFcA==
-X-Gm-Message-State: AOJu0YxWyEKe1LLFQJ8h7+nQlYhu8G5TaSZ+zmZZEsv41vRgonmMuwzw
-	QBKNccxyUAcm8yNHhtYFBB3KKVgJW8+D0w5hyC6JJ8+tQM+FWGTDUzOv8hzrJRw=
-X-Google-Smtp-Source: AGHT+IGcq/2OsDs8b9lsvt9PoLIXEKFIsw+IbJJHa1NLbozM5MTkwkE1NzK9MWzN0rBVG9jZqfSPWQ==
-X-Received: by 2002:a17:902:820a:b0:1d8:dd64:ff2 with SMTP id x10-20020a170902820a00b001d8dd640ff2mr66646pln.88.1706657843171;
-        Tue, 30 Jan 2024 15:37:23 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
-        by smtp.gmail.com with ESMTPSA id x13-20020a170902ea8d00b001d77a0e1374sm830681plb.151.2024.01.30.15.37.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Jan 2024 15:37:22 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rUxfK-00HWCG-0P;
-	Wed, 31 Jan 2024 10:37:18 +1100
-Date: Wed, 31 Jan 2024 10:37:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: syzbot <syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com>
-Cc: adilger.kernel@dilger.ca, chandan.babu@oracle.com, jack@suse.com,
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com, tytso@mit.edu
-Subject: current->journal_info got nested! (was Re: [syzbot] [xfs?] [ext4?]
- general protection fault in jbd2__journal_start)
-Message-ID: <ZbmILkfdGks57J4a@dread.disaster.area>
-References: <000000000000e98460060fd59831@google.com>
- <000000000000d6e06d06102ae80b@google.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BlYNkxjGWSfbfZQ+XxFjmVB/mlx/td51hSe1ITYbYsk=;
+ b=np2NaRyGRkjpKogGZ9SNjmJY9XrTf2MIZczkjkywBYVSFbcqmTf5NkQoysiWvtwvlIqnUFNUaeEu8NeqSSAfCuujv0BUOQM4fHcW82K2MQvmnCxpJxrO4fCaI2vQkwc/C9rkPfaH4DsrVv/7XxXvHln2WIr4V6Sj1y9kahs4o58=
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
+ by CH0PR10MB5305.namprd10.prod.outlook.com (2603:10b6:610:d9::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7249.22; Tue, 30 Jan
+ 2024 23:44:24 +0000
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::5758:bb17:6bb2:ab4f]) by BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::5758:bb17:6bb2:ab4f%4]) with mapi id 15.20.7249.017; Tue, 30 Jan 2024
+ 23:44:23 +0000
+From: Catherine Hoang <catherine.hoang@oracle.com>
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH 6.6 CANDIDATE v1 01/21] xfs: bump max fsgeom struct version
+Date: Tue, 30 Jan 2024 15:43:59 -0800
+Message-Id: <20240130234419.45896-2-catherine.hoang@oracle.com>
+X-Mailer: git-send-email 2.39.2 (Apple Git-143)
+In-Reply-To: <20240130234419.45896-1-catherine.hoang@oracle.com>
+References: <20240130234419.45896-1-catherine.hoang@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR21CA0027.namprd21.prod.outlook.com
+ (2603:10b6:a03:114::37) To BLAPR10MB5316.namprd10.prod.outlook.com
+ (2603:10b6:208:326::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000000000000d6e06d06102ae80b@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|CH0PR10MB5305:EE_
+X-MS-Office365-Filtering-Correlation-Id: 461b2ed8-a362-4fa6-aa84-08dc21ed62de
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	BmxV4f3yDjbwt6pBi0sVzrcAQRXRwTAZOz/mfIgv50eFW9g3nfBr1MvTCOFcKtBWpE5RVekC+6ale+VRWMs8fLUknXJMBXJEVy54RMxgFE7VplS4GWfTpa8XzLWdGeKfhBDe+1VPFih3fvi2ZDacG0X47U+0oBt3/UTVo3YfXkmqy9LuDQuN0thxFn0AgPExsDAzJ9DOyWmKGjRE4FFyP6FQ75NjsfXGSdMMeP7NVjfqbCXn3+PSZdTtJCoixGKx/V8nwYLkDkw4gCRB4jb95+envxPS9WBHBTJib3a0As/sbiFnygxokxBL+r9QXyPqfwoXeE/eb2zTvHMRu3FLLMpQLznY3/uJQE9XEUiGBJCleA2QMHQkU0VitMKg8Cd3tTna3akbje0WbV6I3awhMnJnJhe/1cRROouDu6yWAbns+M/6q7qOMwB3LrvvqYDOui9dTVF3WfeDWMbRJ3x8IF2w/N7w94TM4kPxua8GFt4Gw1Ss8ON7dkVcxgLHeoMtUQj/y9UJ9FxgVM/uoix0evlX+w3THQHnLW5hn1bmmsiS6n9Pu9QjOLcwZ1TrnDwn
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(136003)(39860400002)(396003)(346002)(366004)(230922051799003)(186009)(451199024)(64100799003)(1800799012)(6666004)(6506007)(83380400001)(316002)(6486002)(478600001)(86362001)(66946007)(6916009)(66556008)(66476007)(2616005)(41300700001)(6512007)(44832011)(5660300002)(8936002)(8676002)(38100700002)(2906002)(1076003)(36756003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?us-ascii?Q?jAk5rkJESa2xvTtVIU6qgynuXWIIJbj18HXlPQKwwbqms0dDFvUiXnksvp5b?=
+ =?us-ascii?Q?viyrq1qxYx5lypbdz5WOOgGCxV87Waf2W+mmFIzKsZzzAf2dg9G2jPxS273h?=
+ =?us-ascii?Q?Sk3pZekzaazMEYSnJCxHYNdAjzIyBAsX0DGANR3/70hi1/ixsh9clRqZaVHE?=
+ =?us-ascii?Q?mBSwlrcCmeR7mK9kd1Q7nVqUO0f+WGDvUoP5Cl+0b6H6xvqNVPJa8KTpbHKe?=
+ =?us-ascii?Q?nioZBYGynHIVMLLMD68EyGy103PztxochOzoqEs1XS4Z7YOBwauej4wQlwvm?=
+ =?us-ascii?Q?3afa5RngEAuqvoKGk3Wi5iLN+BHNC6s3rPfUqp34z/N/4DWDfzp1ob4Jrn/k?=
+ =?us-ascii?Q?8iAfhS3pLz/MIUdUHOjQ4IEXDcKM4JqlxR4wMuitvph0cRnPCVjJmFz2YqnA?=
+ =?us-ascii?Q?5tdrZl2oJSVu3Ao5aSIyImh0VFa+BRQfdip//+hLbfql6DB58ozmA4mAHdDJ?=
+ =?us-ascii?Q?JxFZ2Iz638uo2KhJk5Bcra4dN6w9Sey9lK6UsRa+Ot+1VmE1gYfqQEjCu/y9?=
+ =?us-ascii?Q?RJP7tpW/vov5UuQMuXYS+x++s58hMAhqBbZOP9qDfMFtyvQ08FxGLUUzyaC6?=
+ =?us-ascii?Q?gPZewCWwO0U21VeFxApafPPr6cOwOVsPOnLVkEks+HNFvYKDNXn0eLfxhjLr?=
+ =?us-ascii?Q?n6HbCKHw6RZ5A32WR+vjB8aYe/tX5jrZd1fjtIs2iQzV97nJyRQC3+Nu3kOS?=
+ =?us-ascii?Q?UPrhHVlG89vd/KFJ7jj7Xo3pUG9qXLF7+V0pt2woR+Pmj7A2d9XP7vsm2VGY?=
+ =?us-ascii?Q?XMTKKHXz4xr/bA9AQLDGwNAEy6Almdz65cVM77GLBMc7l9gg6gqVX7SHVTo+?=
+ =?us-ascii?Q?BJeI8+e+Q1rABdsFMytiTEhMnIWuMnUK37sQdOeRkfEcn2Vn+bYES2b3iyK5?=
+ =?us-ascii?Q?vMXKHbNDU2w4WWgjjNVdj8rba693UE0M9GDbSb9ajGd4ejb/3wrN6/1ss6nF?=
+ =?us-ascii?Q?qT+Az7btCTk/bKfqlYmUU97yudWsi9MVmh1JTAVZdX17ntucy+/KSRHB3Znw?=
+ =?us-ascii?Q?OyZ4zRcQcUCAN8/s9CzfaILDkuzwJK9xNc5n9lbtK9LzjrLFiIbo+xjs/N/L?=
+ =?us-ascii?Q?B9DsOrChmx8v3YlR6SgIw10BzyIceazyxv3h9VRT+BwcP98e5Nvt3g0PlHqz?=
+ =?us-ascii?Q?dBIVhGKeGmQz4OIbLHnRgbxuTFaoO9SGqbTrFzVpWWq9yvmyTusn4PlDUmAL?=
+ =?us-ascii?Q?bVny5qcTzfLnnYV3GToEOfs4FWGO3M3rgboyZrl8AYlSyXCeu+EZLo/XRROL?=
+ =?us-ascii?Q?BExwh2hU/8ZtpV/2mz0ZlGrJ6teNagjhzAUJr4Lh96wT3NkSe0lcUFaKMGLF?=
+ =?us-ascii?Q?mV8gFeBN+7hZ6OCpnOqs88MFa40+yNLBn7aDp6l5X3EbSShX+5cFD0HsXRt5?=
+ =?us-ascii?Q?pxYdikOtT2E/FO5nWjPK6f0RLVAaNq1gUG5ZOM437TlbvGaGznQI9m0gnG09?=
+ =?us-ascii?Q?0T+UQ9u/lB7l1IReo3zlqQybSHqFl7koh+8ahCCOPXXru+7E+PD1tihLGX9D?=
+ =?us-ascii?Q?2LJRtwQEJ9ney3UAv03Dt/yVUSUT3eaA8uk5eX67AJi9H/XPQ++ihxQePtwD?=
+ =?us-ascii?Q?BWtDaaxPfw5H4J336gAgpRu84DNafrDBf/cF95uFTNddbDlx5eN6NxvlVOyb?=
+ =?us-ascii?Q?dkklMoep6qPCMX+C9E/9U53BXnqkpqi8zyDw90RrpnpP+j4kLBdeYi4kj5ej?=
+ =?us-ascii?Q?Z1ryyg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	fNGtCgPLLN07xhz6QHJ+UVI8jMZty3/B0eTg1BlV1nr4pwsuadSdgt5GAwnp4nQjzf6jp6R+CttU+GIocD90lQQXniz0asLnDzwXLzA4T9gpLgPO80GsaBQd7+zTuZdgHJoimrbr/oYSR8nCRZxcpAjg30k9Ds8nonMpeEmpc9UhtQ6H1K0U9ZsVsSW1vvv2HDpR3cq4V5xs4/XX0rAD6TeE4GRpmjxjy4HFfyGvYVA1qLQr3hd8G1hENV73i/3h99KIabrLbn7mrgcqvN+2y9CYUY4cu4ePp1ejWpgCrSoeSwp9d+oWB+o5xaAaptQvQAXwYilb0yrLUgSw2wDZVJiuY60l4Pih99+JZDlTddDKEiYI2UHKA1oqBhxyI+jOBJpKIApv8/DgbsExYi+jPU3e++Ivhn22AyEN/LT6OgChihjs9+8+3yHJH3l6Xt8bUxkWrNl+Dqds9y/ABLH/yA6+KVChAbzxfjiZT7EaeZmFhT06EkbDBxlubJtnM28j8UboAQNOGvMKEyYm6kSeDKK6lytU+TU0G6TEiVdMyvVTjkI3P7iLlwptXK6lDrhHPP65vAaLE2TtjYrejK/rM72blYCaduyFpDqHRQpDor8=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 461b2ed8-a362-4fa6-aa84-08dc21ed62de
+X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jan 2024 23:44:23.0659
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TWRHxld/gMpTMsE4pKNSh7f/65pGGV4nBVtdjUwWUGyBFa4LQ0r5Gzol8o7hkn/vsnzyiP/Ey6W47H7fcYkqhrsbs3DHZEoz3SseIRv4TNI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5305
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-30_12,2024-01-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 mlxscore=0
+ spamscore=0 suspectscore=0 adultscore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2401300179
+X-Proofpoint-ORIG-GUID: YjM0-NePGx91wHjOdxokCEKzXAWcunkJ
+X-Proofpoint-GUID: YjM0-NePGx91wHjOdxokCEKzXAWcunkJ
 
-On Tue, Jan 30, 2024 at 06:52:21AM -0800, syzbot wrote:
-> syzbot has found a reproducer for the following issue on:
-> 
-> HEAD commit:    861c0981648f Merge tag 'jfs-6.8-rc3' of github.com:kleikam..
-> git tree:       upstream
-> console+strace: https://syzkaller.appspot.com/x/log.txt?x=13ca8d97e80000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=b0b9993d7d6d1990
-> dashboard link: https://syzkaller.appspot.com/bug?extid=cdee56dbcdf0096ef605
-> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=104393efe80000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1393b90fe80000
-> 
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/7c6cc521298d/disk-861c0981.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/6203c94955db/vmlinux-861c0981.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/17e76e12b58c/bzImage-861c0981.xz
-> mounted in repro: https://storage.googleapis.com/syzbot-assets/d31d4eed2912/mount_3.gz
-> 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
-> 
-> general protection fault, probably for non-canonical address 0xdffffc000a8a4829: 0000 [#1] PREEMPT SMP KASAN
-> KASAN: probably user-memory-access in range [0x0000000054524148-0x000000005452414f]
-> CPU: 1 PID: 5065 Comm: syz-executor260 Not tainted 6.8.0-rc2-syzkaller-00031-g861c0981648f #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 11/17/2023
-> RIP: 0010:jbd2__journal_start+0x87/0x5d0 fs/jbd2/transaction.c:496
-> Code: 74 63 48 8b 1b 48 85 db 74 79 48 89 d8 48 c1 e8 03 42 80 3c 28 00 74 08 48 89 df e8 63 4d 8f ff 48 8b 2b 48 89 e8 48 c1 e8 03 <42> 80 3c 28 00 74 08 48 89 ef e8 4a 4d 8f ff 4c 39 65 00 0f 85 1a
-> RSP: 0018:ffffc900043265c8 EFLAGS: 00010203
-> RAX: 000000000a8a4829 RBX: ffff8880205fa3a8 RCX: ffff8880235dbb80
-> RDX: 0000000000000000 RSI: 0000000000000002 RDI: ffff88801c1a6000
-> RBP: 000000005452414e R08: 0000000000000c40 R09: 0000000000000001
-               ^^^^^^^^
-Hmmmm - TRAN. That's looks suspicious, I'll come back to that.
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-> R10: dffffc0000000000 R11: ffffed1003834871 R12: ffff88801c1a6000
-> R13: dffffc0000000000 R14: 0000000000000c40 R15: 0000000000000002
-> FS:  0000555556f90380(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000020020000 CR3: 0000000021fed000 CR4: 00000000003506f0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Call Trace:
->  <TASK>
->  __ext4_journal_start_sb+0x215/0x5b0 fs/ext4/ext4_jbd2.c:112
->  __ext4_journal_start fs/ext4/ext4_jbd2.h:326 [inline]
->  ext4_dirty_inode+0x92/0x110 fs/ext4/inode.c:5969
->  __mark_inode_dirty+0x305/0xda0 fs/fs-writeback.c:2452
->  generic_update_time fs/inode.c:1905 [inline]
->  inode_update_time fs/inode.c:1918 [inline]
->  __file_update_time fs/inode.c:2106 [inline]
->  file_update_time+0x39b/0x3e0 fs/inode.c:2136
->  ext4_page_mkwrite+0x207/0xdf0 fs/ext4/inode.c:6090
->  do_page_mkwrite+0x197/0x470 mm/memory.c:2966
->  wp_page_shared mm/memory.c:3353 [inline]
->  do_wp_page+0x20e3/0x4c80 mm/memory.c:3493
->  handle_pte_fault mm/memory.c:5160 [inline]
->  __handle_mm_fault+0x26a3/0x72b0 mm/memory.c:5285
->  handle_mm_fault+0x27e/0x770 mm/memory.c:5450
->  do_user_addr_fault arch/x86/mm/fault.c:1415 [inline]
->  handle_page_fault arch/x86/mm/fault.c:1507 [inline]
->  exc_page_fault+0x2ad/0x870 arch/x86/mm/fault.c:1563
->  asm_exc_page_fault+0x26/0x30 arch/x86/include/asm/idtentry.h:570
+commit 9488062805943c2d63350d3ef9e4dc093799789a upstream.
 
-EXt4 is triggering a BUG_ON:
+The latest version of the fs geometry structure is v5.  Bump this
+constant so that xfs_db and mkfs calls to libxfs_fs_geometry will fill
+out all the fields.
 
-	handle_t *handle = journal_current_handle();
-	int err;
+IOWs, this commit is a no-op for the kernel, but will be useful for
+userspace reporting in later changes.
 
-	if (!journal)
-		return ERR_PTR(-EROFS);
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+---
+ fs/xfs/libxfs/xfs_sb.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	if (handle) {
->>>>>>>>>	J_ASSERT(handle->h_transaction->t_journal == journal);
-		handle->h_ref++;
-		return handle;
-	}
-
-via a journal assert failure. It appears that current->journal_info
-isn't what it is supposed to be. It's finding something with TRAN in
-it, I think. I'll come back to this.
-
-What syzbot is doing is creating a file on it's root filesystem and
-write()ing 0x208e24b bytes (zeroes from an anonymous mmap() region,
-I think) to it to initialise it's contents.
-
-Then it mmap()s the ext4 file for 0xb36000 bytes and copies the raw
-test filesystem image in the source code into it.  It then creates a
-memfd that it decompresses the data in the mapped ext4 file into and
-creates a loop device that points to that memfd. It then mounts the
-loop device and we get an XFS filesystem which doesn't appear to
-contain any corruptions in it at all.  It then runs a bulkstat pass
-on the the XFS filesystem.
-
-This is where it gets interesting. The user buffer that XFS
-copies the inode data into points to a memory address inside the
-range of the ext4 file that the filesystem image was copied to.
-It does not overlap with the filesystem image.
-
-Hence when XFS goes to copy the inodes into the user buffer, it
-triggers write page faults on the ext4 backing file.
-
-That's this part of the trace:
-
-
-> RIP: 0010:rep_movs_alternative+0x4a/0x70 arch/x86/lib/copy_user_64.S:71
-> Code: 75 f1 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 48 8b 06 48 89 07 48 83 c6 08 48 83 c7 08 83 e9 08 74 df 83 f9 08 73 e8 eb c9 <f3> a4 c3 48 89 c8 48 c1 e9 03 83 e0 07 f3 48 a5 89 c1 85 c9 75 b3
-> RSP: 0018:ffffc900043270f8 EFLAGS: 00050202
-> RAX: ffffffff848cda01 RBX: 0000000020020040 RCX: 0000000000000040
-> RDX: 0000000000000000 RSI: ffff8880131873b0 RDI: 0000000020020000
-> RBP: 1ffff92000864f26 R08: ffff8880131873ef R09: 1ffff11002630e7d
-> R10: dffffc0000000000 R11: ffffed1002630e7e R12: 00000000000000c0
-> R13: dffffc0000000000 R14: 000000002001ff80 R15: ffff888013187330
->  copy_user_generic arch/x86/include/asm/uaccess_64.h:112 [inline]
->  raw_copy_to_user arch/x86/include/asm/uaccess_64.h:133 [inline]
->  _copy_to_user+0x86/0xa0 lib/usercopy.c:41
->  copy_to_user include/linux/uaccess.h:191 [inline]
->  xfs_bulkstat_fmt+0x4f/0x120 fs/xfs/xfs_ioctl.c:744
->  xfs_bulkstat_one_int+0xd8b/0x12e0 fs/xfs/xfs_itable.c:161
->  xfs_bulkstat_iwalk+0x72/0xb0 fs/xfs/xfs_itable.c:239
->  xfs_iwalk_ag_recs+0x4c3/0x820 fs/xfs/xfs_iwalk.c:220
->  xfs_iwalk_run_callbacks+0x25b/0x490 fs/xfs/xfs_iwalk.c:376
->  xfs_iwalk_ag+0xad6/0xbd0 fs/xfs/xfs_iwalk.c:482
->  xfs_iwalk+0x360/0x6f0 fs/xfs/xfs_iwalk.c:584
->  xfs_bulkstat+0x4f8/0x6c0 fs/xfs/xfs_itable.c:308
->  xfs_ioc_bulkstat+0x3d0/0x450 fs/xfs/xfs_ioctl.c:867
->  xfs_file_ioctl+0x6a5/0x1980 fs/xfs/xfs_ioctl.c:1994
->  vfs_ioctl fs/ioctl.c:51 [inline]
->  __do_sys_ioctl fs/ioctl.c:871 [inline]
->  __se_sys_ioctl+0xf8/0x170 fs/ioctl.c:857
->  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
->  do_syscall_64+0xf5/0x230 arch/x86/entry/common.c:83
->  entry_SYSCALL_64_after_hwframe+0x63/0x6b
-
-What is interesting here is this is running in an empty XFS
-transaction context so that the bulkstat operation garbage collects
-all the buffers it accesses without us having to explicit cleanup -
-they all get released when we cancel the transaction context at the
-end of the process.
-
-But that means copy-out is running inside a transaction context, and
-that means current->journal_info contains a pointer to the current
-struct xfs_trans the bulkstat operation is using.
-
-Guess what we have as the first item in a struct xfs_trans? That's
-right, it's a magic number, and that magic number is:
-
-#define XFS_TRANS_HEADER_MAGIC  0x5452414e      /* TRAN */
-
-It should be obvious what has happened now -
-current->journal_info is not null, so ext4 thinks it owns the
-structure attached there and panics when it finds that it isn't an
-ext4 journal handle being held there.
-
-I don't think there are any clear rules as to how filesystems can
-and can't use current->journal_info. In general, a task can't jump
-from one filesystem to another inside a transaction context like
-this, so there's never been a serious concern about nested
-current->journal_info assignments like this in the past.
-
-XFS is doing nothing wrong - we're allowed to define transaction
-contexts however we want and use current->journal_info in this way.
-However, we have to acknowledge that ext4 has also done nothing
-wrong by assuming current->journal_info should below to it if it is
-not null. Indeed, XFS does the same thing.
-
-The question here is what to do about this? The obvious solution is
-to have save/restore semantics in the filesystem code that
-sets/clears current->journal_info, and then filesystems can also do
-the necessary "recursion into same filesystem" checks they need to
-ensure that they aren't nesting transactions in a way that can
-deadlock.
-
-Maybe there are other options - should filesystems even be allowed to
-trigger page faults when they have set current->journal_info?
-
-What other potential avenues are there that could cause this sort of
-transaction context nesting that we haven't realised exist? Does
-ext4 data=jounral have problems like this in the data copy-in path?
-What other filesystems allow page faults in transaction contexts?
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index a5e14740ec9a..19134b23c10b 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -25,7 +25,7 @@ extern uint64_t	xfs_sb_version_to_features(struct xfs_sb *sbp);
+ 
+ extern int	xfs_update_secondary_sbs(struct xfs_mount *mp);
+ 
+-#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
++#define XFS_FS_GEOM_MAX_STRUCT_VER	(5)
+ extern void	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
+ 				int struct_version);
+ extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.3
+
