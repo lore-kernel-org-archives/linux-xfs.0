@@ -1,472 +1,139 @@
-Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C81129A95;
-	Tue, 30 Jan 2024 16:53:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3534071B4F;
+	Tue, 30 Jan 2024 19:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706633595; cv=none; b=DP9SLfA2YTZUgA0EUiNvkTAzw9XH3l1/c47WXo6cEcYhEq1n/2xpbfp+qurKSRPfe/8ceAJ+wJGuHNEXrifr91q7v21b0WWXVFpnMw4WUxjFzljadXCCIHXhO9on60FfuXWKcH6RjSaPDkw53dV2XToLyLEpQepnC48/66tKpBQ=
+	t=1706644563; cv=none; b=mBCpZcwzBHhChtaqlGoYeUPnPsYC0OUMz6IvvgSVYM0WA1gNQ0rVIk9OF9ORj8L90HRahCvtPSuOWgaVhTYXwBEWCktM/Q9WpQqGdD9FOqcI5e4nOZOFJ7egYOyIMRhFnDTj6A+oy9/29gJ8nxfVLBNBApcn5izF6q/gWAUJ88Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706633595; c=relaxed/simple;
-	bh=XuWaMxt4d/3dm7lB6U+HSFTUUg6+UTaS46cwYkLEDis=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=psaBN/T9WFMsrx03PpyEXK8ZjuCu6YHHqD8UyRgB7q3TQK8rCHysFTJTZUnpfImPYZvJQZI19JXs70oAJEz1Epgd7g/OGVMLlvvAAlvcbS74/ZMKXa2qyjI74W+Uvub6pC9THq5xKq99cVo2crdYlWiFHV8gosxTlwXG/+1/rFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=Eu9fnlqf; arc=none smtp.client-ip=167.114.26.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+	s=arc-20240116; t=1706644563; c=relaxed/simple;
+	bh=4vd8klWoWsajaknbDkyWRMXlZUmPD9ZfMI5s7yqv5SQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kLh7lqu0PzJXE87D2DtNbIQwoFx1u4vu1Dky3w8l1nVW3YeilQTb5Y6jMka3sJc2hBZSqbWgEzovjTyJQ2toxA1sV7wGqo2VkHZivYpwSeZc4TKP+/+m7hkGyuHQlu7xW5j/RzbX5y1iBHzLu0aw8NbqqKd1Eu2K4TeQb4dkdw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rdKjWc4Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="Eu9fnlqf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
-	s=smtpout1; t=1706633585;
-	bh=XuWaMxt4d/3dm7lB6U+HSFTUUg6+UTaS46cwYkLEDis=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Eu9fnlqfzhLzucHQO4GXUi5CfnX64GMjpe6VUPPfT4s6bICAVT4o77MD8q7QjAJSP
-	 YlOp4I4vA7Bu5BearWb4qzDlQjHp0BPHrxrbBkJPO/2COFYNJx5kdHJuU7fAbWAquJ
-	 IzgQPX1lw8z+xki2gN6/qLPbeZeIEJI6bXXh2m7czyaaH5c38KsSz2PfKAh/CGa5w8
-	 /pw/3osZ+zO3DcL4GUYFfdb6WlH315jS5xDN3ZakazBLbrXYFJr5CvX74U4sFWhPoR
-	 RNBEIN3CJKWHmlzN6rkvu+KirGViahrvLPjkkKihr4Tw4e3UxZnaRtd8yK1Xy8h7pg
-	 2c29zPZ8Pv9hg==
-Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TPWSc5mWlzVgM;
-	Tue, 30 Jan 2024 11:53:04 -0500 (EST)
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-To: Dan Williams <dan.j.williams@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>
-Cc: linux-kernel@vger.kernel.org,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-mm@kvack.org,
-	linux-arch@vger.kernel.org,
-	Matthew Wilcox <willy@infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@armlinux.org.uk>,
-	linux-cxl@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	linux-xfs@vger.kernel.org
-Subject: [RFC PATCH v2 7/8] Introduce dcache_is_aliasing() across all architectures
-Date: Tue, 30 Jan 2024 11:52:54 -0500
-Message-Id: <20240130165255.212591-8-mathieu.desnoyers@efficios.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240130165255.212591-1-mathieu.desnoyers@efficios.com>
-References: <20240130165255.212591-1-mathieu.desnoyers@efficios.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rdKjWc4Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA6FC433F1;
+	Tue, 30 Jan 2024 19:56:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706644562;
+	bh=4vd8klWoWsajaknbDkyWRMXlZUmPD9ZfMI5s7yqv5SQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rdKjWc4YYirLxLpu49Fba0WUkBI8rbQiHBzETy88rmfiOzcDlTy+vV9wt1QNEJjhm
+	 3SRI327b9XbQobXnvZD9lPmhYQRk+N9I6W4l5IyagLX5WVtqhxvSg1xcdotitPDRb2
+	 386JBoXRskyv9dhSxghyXFoc8CydpmRUwb+Um3tCsCwRVtIGoBuP5A/bbqJ/d4JkuP
+	 Yb1AWDbizCda9sJeeKjFbcM/9T29usinJqZ8hKYK7tRNnc+sKyPve9IO5V9dPbeJSm
+	 RYs8DIMOLB1fgPdyoEkYbCjGrCp4W1O8E7emJZ18ae20jtKsU2WSIUNg8MZXGfgcVR
+	 7vQVfUc+wiPAA==
+Date: Tue, 30 Jan 2024 11:56:02 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: fstests@vger.kernel.org, zlang@redhat.com,
+	Dave Chinner <david@fromorbit.com>, mcgrof@kernel.org,
+	gost.dev@samsung.com, linux-xfs@vger.kernel.org,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Subject: Re: fstest failure due to filesystem size for 16k, 32k and 64k FSB
+Message-ID: <20240130195602.GJ1371843@frogsfrogsfrogs>
+References: <CGME20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820@eucas1p2.samsung.com>
+ <fe7fec1c-3b08-430f-9c95-ea76b237acf4@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fe7fec1c-3b08-430f-9c95-ea76b237acf4@samsung.com>
 
-Introduce a generic way to query whether the dcache is virtually aliased
-on all architectures. Its purpose is to ensure that subsystems which
-are incompatible with virtually aliased data caches (e.g. FS_DAX) can
-reliably query this.
+On Tue, Jan 30, 2024 at 02:18:01PM +0100, Pankaj Raghav wrote:
+> As I pointed out in my previous thread [1], there are some testcases
+> in fstests that are failing for FSB 16k, 32k and 64k due to the filesystem
+> **size** under test. These are failures **upstream** and not due to the ongoing
+> LBS work.
+> 
+> fstests creates a lot of tiny filesystems to perform some tests. Even though
+> the minimum fs size allowed to create XFS filesystem is 300 MB, we have special
+> condition in mkfs to allow smaller filesystems for fstest[2] (This took some time
+> to figure out as I was splitting my hair how fstest is able to create XFS on top of
+> 25MB images).
+> 
+> The problem comes when we have FSB 16k, 32k and 64k. As we will
+> require more log space when we have this feature enabled, some test cases are failing
+> with the following error message:
+> 
+> max log size XXX smaller than min log size YYY, filesystem is too small
+> 
+> Most test cases run without this error message with **rmapbt disabled** for 16k and 64k (see
+> the test matrix below).
+> 
+> What should be the approach to solve this issue? 2 options that I had in my mind:
+> 
+> 1. Similar to [2], we could add a small hack in mkfs xfs to ignore the log space
+> requirement while running fstests for these profiles.
+> 
+> 2. Increase the size of filesystem under test to accommodate these profiles. It could
+> even be a conditional increase in filesystem size if the FSB > 16k to reduce the impact
+> on existing FS test time for 4k FSB.
+> 
+> Let me know what would be the best way to move forward.
+> 
+> Here are the results:
+> 
+> Test environment:
+> kernel Release: 6.8.0-rc1
+> xfsprogs: 6.5.0
+> Architecture: aarch64
+> Page size: 64k
+> 
+> Test matrix:
+> 
+> | Test        | 32k rmapbt=0 | 32k rmapbt=1 | 64k rmapbt=0 | 64k rmapbt=1 |
+> | --------    | ---------    | ---------    | ---------    | ---------    |
+> | generic/042 |     fail     |     fail     |     fail     |     fail     |
+> | generic/081 |     fail     |     fail     |     pass     |     fail     |
+> | generic/108 |     fail     |     fail     |     pass     |     fail     |
+> | generic/455 |     fail     |     fail     |     pass     |     fail     |
+> | generic/457 |     fail     |     fail     |     pass     |     fail     |
+> | generic/482 |     fail     |     fail     |     pass     |     fail     |
+> | generic/704 |     fail     |     fail     |     pass     |     fail     |
+> | generic/730 |     fail     |     fail     |     pass     |     fail     |
+> | generic/731 |     fail     |     fail     |     pass     |     fail     |
+> | shared/298  |     pass     |     pass     |     pass     |     fail     |
 
-For dcache aliasing, there are three scenarios dependending on the
-architecture. Here is a breakdown based on my understanding:
+I noticed test failures on these tests when running djwong-wtf:
+generic/042
+generic/081
+generic/108
+generic/219
+generic/305
+generic/326
+generic/562
+generic/704
+xfs/093
+xfs/113
+xfs/161
+xfs/262
+xfs/508
+xfs/604
+xfs/709
 
-A) The dcache is always aliasing:
+Still sorting through all of them, but a large portion of them are the
+same failure to format due to minimum log size constraints.  I'd bump
+them up to ~500M (or whatever makes them work) since upstream doesn't
+really support small filesystems anymore.
 
-* arc
-* csky
-* m68k (note: shared memory mappings are incoherent ? SHMLBA is missing there.)
-* sh
-* parisc
+--D
 
-B) The dcache aliasing is statically known or depends on querying CPU
-   state at runtime:
-
-* arm (cache_is_vivt() || cache_is_vipt_aliasing())
-* mips (cpu_has_dc_aliases)
-* nios2 (NIOS2_DCACHE_SIZE > PAGE_SIZE)
-* sparc32 (vac_cache_size > PAGE_SIZE)
-* sparc64 (L1DCACHE_SIZE > PAGE_SIZE)
-* xtensa (DCACHE_WAY_SIZE > PAGE_SIZE)
-
-C) The dcache is never aliasing:
-
-* alpha
-* arm64 (aarch64)
-* hexagon
-* loongarch (but with incoherent write buffers, which are disabled since
-             commit d23b7795 ("LoongArch: Change SHMLBA from SZ_64K to PAGE_SIZE"))
-* microblaze
-* openrisc
-* powerpc
-* riscv
-* s390
-* um
-* x86
-
-Require architectures in A) and B) to select ARCH_HAS_CACHE_ALIASING and
-implement "dcache_is_aliasing()".
-
-Architectures in C) don't select ARCH_HAS_CACHE_ALIASING, and thus
-dcache_is_aliasing() simply evaluates to "false".
-
-Note that this leaves "icache_is_aliasing()" to be implemented as future
-work. This would be useful to gate features like XIP on architectures
-which have aliasing dcache-icache but not dcache-dcache.
-
-Link: https://lore.kernel.org/lkml/20030910210416.GA24258@mail.jlokier.co.uk/
-Fixes: d92576f1167c ("dax: does not work correctly with virtual aliasing caches")
-Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-arch@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Vishal Verma <vishal.l.verma@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: linux-cxl@vger.kernel.org
-Cc: nvdimm@lists.linux.dev
-Cc: linux-xfs@vger.kernel.org
----
- arch/arc/Kconfig                    |  1 +
- arch/arc/include/asm/cachetype.h    |  9 +++++++++
- arch/arm/Kconfig                    |  1 +
- arch/arm/include/asm/cachetype.h    |  2 ++
- arch/csky/Kconfig                   |  1 +
- arch/csky/include/asm/cachetype.h   |  9 +++++++++
- arch/m68k/Kconfig                   |  1 +
- arch/m68k/include/asm/cachetype.h   |  9 +++++++++
- arch/mips/Kconfig                   |  1 +
- arch/mips/include/asm/cachetype.h   |  9 +++++++++
- arch/nios2/Kconfig                  |  1 +
- arch/nios2/include/asm/cachetype.h  | 10 ++++++++++
- arch/parisc/Kconfig                 |  1 +
- arch/parisc/include/asm/cachetype.h |  9 +++++++++
- arch/sh/Kconfig                     |  1 +
- arch/sh/include/asm/cachetype.h     |  9 +++++++++
- arch/sparc/Kconfig                  |  1 +
- arch/sparc/include/asm/cachetype.h  | 14 ++++++++++++++
- arch/xtensa/Kconfig                 |  1 +
- arch/xtensa/include/asm/cachetype.h | 10 ++++++++++
- include/linux/cacheinfo.h           |  6 ++++++
- mm/Kconfig                          |  6 ++++++
- 22 files changed, 112 insertions(+)
- create mode 100644 arch/arc/include/asm/cachetype.h
- create mode 100644 arch/csky/include/asm/cachetype.h
- create mode 100644 arch/m68k/include/asm/cachetype.h
- create mode 100644 arch/mips/include/asm/cachetype.h
- create mode 100644 arch/nios2/include/asm/cachetype.h
- create mode 100644 arch/parisc/include/asm/cachetype.h
- create mode 100644 arch/sh/include/asm/cachetype.h
- create mode 100644 arch/sparc/include/asm/cachetype.h
- create mode 100644 arch/xtensa/include/asm/cachetype.h
-
-diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
-index 1b0483c51cc1..969e6740bcf7 100644
---- a/arch/arc/Kconfig
-+++ b/arch/arc/Kconfig
-@@ -6,6 +6,7 @@
- config ARC
- 	def_bool y
- 	select ARC_TIMERS
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_CACHE_LINE_SIZE
- 	select ARCH_HAS_DEBUG_VM_PGTABLE
- 	select ARCH_HAS_DMA_PREP_COHERENT
-diff --git a/arch/arc/include/asm/cachetype.h b/arch/arc/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..290e3cc85845
---- /dev/null
-+++ b/arch/arc/include/asm/cachetype.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_ARC_CACHETYPE_H
-+#define __ASM_ARC_CACHETYPE_H
-+
-+#include <linux/types.h>
-+
-+#define dcache_is_aliasing()		true
-+
-+#endif
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index f8567e95f98b..5adeee5e421f 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -5,6 +5,7 @@ config ARM
- 	select ARCH_32BIT_OFF_T
- 	select ARCH_CORRECT_STACKTRACE_ON_KRETPROBE if HAVE_KRETPROBES && FRAME_POINTER && !ARM_UNWIND
- 	select ARCH_HAS_BINFMT_FLAT
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_CPU_FINALIZE_INIT if MMU
- 	select ARCH_HAS_CURRENT_STACK_POINTER
- 	select ARCH_HAS_DEBUG_VIRTUAL if MMU
-diff --git a/arch/arm/include/asm/cachetype.h b/arch/arm/include/asm/cachetype.h
-index e8c30430be33..18311570d4f0 100644
---- a/arch/arm/include/asm/cachetype.h
-+++ b/arch/arm/include/asm/cachetype.h
-@@ -20,6 +20,8 @@ extern unsigned int cacheid;
- #define icache_is_vipt_aliasing()	cacheid_is(CACHEID_VIPT_I_ALIASING)
- #define icache_is_pipt()		cacheid_is(CACHEID_PIPT)
- 
-+#define dcache_is_aliasing()		(cache_is_vivt() || cache_is_vipt_aliasing())
-+
- /*
-  * __LINUX_ARM_ARCH__ is the minimum supported CPU architecture
-  * Mask out support which will never be present on newer CPUs.
-diff --git a/arch/csky/Kconfig b/arch/csky/Kconfig
-index cf2a6fd7dff8..439d7640deb8 100644
---- a/arch/csky/Kconfig
-+++ b/arch/csky/Kconfig
-@@ -2,6 +2,7 @@
- config CSKY
- 	def_bool y
- 	select ARCH_32BIT_OFF_T
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_DMA_PREP_COHERENT
- 	select ARCH_HAS_GCOV_PROFILE_ALL
- 	select ARCH_HAS_SYNC_DMA_FOR_CPU
-diff --git a/arch/csky/include/asm/cachetype.h b/arch/csky/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..fd21c815a8e4
---- /dev/null
-+++ b/arch/csky/include/asm/cachetype.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_CSKY_CACHETYPE_H
-+#define __ASM_CSKY_CACHETYPE_H
-+
-+#include <linux/types.h>
-+
-+#define dcache_is_aliasing()		true
-+
-+#endif
-diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
-index 4b3e93cac723..216338704f0a 100644
---- a/arch/m68k/Kconfig
-+++ b/arch/m68k/Kconfig
-@@ -3,6 +3,7 @@ config M68K
- 	bool
- 	default y
- 	select ARCH_32BIT_OFF_T
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_BINFMT_FLAT
- 	select ARCH_HAS_CPU_FINALIZE_INIT if MMU
- 	select ARCH_HAS_CURRENT_STACK_POINTER
-diff --git a/arch/m68k/include/asm/cachetype.h b/arch/m68k/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..24298a45b215
---- /dev/null
-+++ b/arch/m68k/include/asm/cachetype.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_M68K_CACHETYPE_H
-+#define __ASM_M68K_CACHETYPE_H
-+
-+#include <linux/types.h>
-+
-+#define dcache_is_aliasing()		true
-+
-+#endif
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 797ae590ebdb..cc21e88b2dc4 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -4,6 +4,7 @@ config MIPS
- 	default y
- 	select ARCH_32BIT_OFF_T if !64BIT
- 	select ARCH_BINFMT_ELF_STATE if MIPS_FP_SUPPORT
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_CPU_FINALIZE_INIT
- 	select ARCH_HAS_CURRENT_STACK_POINTER if !CC_IS_CLANG || CLANG_VERSION >= 140000
- 	select ARCH_HAS_DEBUG_VIRTUAL if !64BIT
-diff --git a/arch/mips/include/asm/cachetype.h b/arch/mips/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..b967c4219c31
---- /dev/null
-+++ b/arch/mips/include/asm/cachetype.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_MIPS_CACHETYPE_H
-+#define __ASM_MIPS_CACHETYPE_H
-+
-+#include <asm/cpu-features.h>
-+
-+#define dcache_is_aliasing()		cpu_has_dc_aliases
-+
-+#endif
-diff --git a/arch/nios2/Kconfig b/arch/nios2/Kconfig
-index d54464021a61..af3a0631f4f1 100644
---- a/arch/nios2/Kconfig
-+++ b/arch/nios2/Kconfig
-@@ -2,6 +2,7 @@
- config NIOS2
- 	def_bool y
- 	select ARCH_32BIT_OFF_T
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_DMA_PREP_COHERENT
- 	select ARCH_HAS_SYNC_DMA_FOR_CPU
- 	select ARCH_HAS_SYNC_DMA_FOR_DEVICE
-diff --git a/arch/nios2/include/asm/cachetype.h b/arch/nios2/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..3027ba4e75ab
---- /dev/null
-+++ b/arch/nios2/include/asm/cachetype.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_NIOS2_CACHETYPE_H
-+#define __ASM_NIOS2_CACHETYPE_H
-+
-+#include <asm/page.h>
-+#include <asm/cache.h>
-+
-+#define dcache_is_aliasing()		(NIOS2_DCACHE_SIZE > PAGE_SIZE)
-+
-+#endif
-diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
-index d14ccc948a29..e8c217744d83 100644
---- a/arch/parisc/Kconfig
-+++ b/arch/parisc/Kconfig
-@@ -8,6 +8,7 @@ config PARISC
- 	select HAVE_FUNCTION_GRAPH_TRACER
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select ARCH_WANT_FRAME_POINTERS
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_DMA_ALLOC if PA11
- 	select ARCH_HAS_ELF_RANDOMIZE
- 	select ARCH_HAS_STRICT_KERNEL_RWX
-diff --git a/arch/parisc/include/asm/cachetype.h b/arch/parisc/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..a7f49ff26e3f
---- /dev/null
-+++ b/arch/parisc/include/asm/cachetype.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_PARISC_CACHETYPE_H
-+#define __ASM_PARISC_CACHETYPE_H
-+
-+#include <linux/types.h>
-+
-+#define dcache_is_aliasing()		true
-+
-+#endif
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index 7500521b2b98..6465ef80c055 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -2,6 +2,7 @@
- config SUPERH
- 	def_bool y
- 	select ARCH_32BIT_OFF_T
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_ENABLE_MEMORY_HOTPLUG if SPARSEMEM && MMU
- 	select ARCH_ENABLE_MEMORY_HOTREMOVE if SPARSEMEM && MMU
- 	select ARCH_HAVE_NMI_SAFE_CMPXCHG if (GUSA_RB || CPU_SH4A)
-diff --git a/arch/sh/include/asm/cachetype.h b/arch/sh/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..55619e60c55f
---- /dev/null
-+++ b/arch/sh/include/asm/cachetype.h
-@@ -0,0 +1,9 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_SH_CACHETYPE_H
-+#define __ASM_SH_CACHETYPE_H
-+
-+#include <linux/types.h>
-+
-+#define dcache_is_aliasing()		true
-+
-+#endif
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index 49849790e66d..8794e0d0920f 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -13,6 +13,7 @@ config 64BIT
- config SPARC
- 	bool
- 	default y
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_MIGHT_HAVE_PC_PARPORT if SPARC64 && PCI
- 	select ARCH_MIGHT_HAVE_PC_SERIO
- 	select DMA_OPS
-diff --git a/arch/sparc/include/asm/cachetype.h b/arch/sparc/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..3ebc0e08a298
---- /dev/null
-+++ b/arch/sparc/include/asm/cachetype.h
-@@ -0,0 +1,14 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_SPARC_CACHETYPE_H
-+#define __ASM_SPARC_CACHETYPE_H
-+
-+#include <asm/page.h>
-+
-+#ifdef CONFIG_SPARC32
-+extern int vac_cache_size;
-+#define dcache_is_aliasing()		(vac_cache_size > PAGE_SIZE)
-+#else
-+#define dcache_is_aliasing()		(L1DCACHE_SIZE > PAGE_SIZE)
-+#endif
-+
-+#endif
-diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
-index 7d792077e5fd..54dbe9f42ec0 100644
---- a/arch/xtensa/Kconfig
-+++ b/arch/xtensa/Kconfig
-@@ -2,6 +2,7 @@
- config XTENSA
- 	def_bool y
- 	select ARCH_32BIT_OFF_T
-+	select ARCH_HAS_CACHE_ALIASING
- 	select ARCH_HAS_BINFMT_FLAT if !MMU
- 	select ARCH_HAS_CURRENT_STACK_POINTER
- 	select ARCH_HAS_DEBUG_VM_PGTABLE
-diff --git a/arch/xtensa/include/asm/cachetype.h b/arch/xtensa/include/asm/cachetype.h
-new file mode 100644
-index 000000000000..1de9337e9dbd
---- /dev/null
-+++ b/arch/xtensa/include/asm/cachetype.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __ASM_XTENSA_CACHETYPE_H
-+#define __ASM_XTENSA_CACHETYPE_H
-+
-+#include <asm/cache.h>
-+#include <asm/page.h>
-+
-+#define dcache_is_aliasing()		(DCACHE_WAY_SIZE > PAGE_SIZE)
-+
-+#endif
-diff --git a/include/linux/cacheinfo.h b/include/linux/cacheinfo.h
-index d504eb4b49ab..a307916fac40 100644
---- a/include/linux/cacheinfo.h
-+++ b/include/linux/cacheinfo.h
-@@ -138,4 +138,10 @@ static inline int get_cpu_cacheinfo_id(int cpu, int level)
- #define use_arch_cache_info()	(false)
- #endif
- 
-+#ifndef CONFIG_ARCH_HAS_CACHE_ALIASING
-+#define dcache_is_aliasing()	false
-+#else
-+#include <asm/cachetype.h>
-+#endif
-+
- #endif /* _LINUX_CACHEINFO_H */
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 57cd378c73d6..3fa87e45883d 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -1016,6 +1016,12 @@ config IDLE_PAGE_TRACKING
- 	  See Documentation/admin-guide/mm/idle_page_tracking.rst for
- 	  more details.
- 
-+# Architectures which implement dcache_is_aliasing() to query whether
-+# the data caches are aliased (VIVT or VIPT with dcache aliasing) need
-+# to select this.
-+config ARCH_HAS_CACHE_ALIASING
-+	bool
-+
- config ARCH_HAS_CACHE_LINE_SIZE
- 	bool
- 
--- 
-2.39.2
-
+> 
+> 16k fails only on generic/042 for both rmapbt=0 and rmapbt=1
+> 
+> 
+> [1] https://lore.kernel.org/all/7964c404-bc9d-47ef-97f1-aaaba7d7aee9@samsung.com/
+> [2] xfsprogs commit: 6e0ed3d19c54603f0f7d628ea04b550151d8a262
+> -- 
+> Regards,
+> Pankaj
+> 
