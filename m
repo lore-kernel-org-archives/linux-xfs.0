@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AED2D376EA
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 05:06:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6869937179
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2024 05:07:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706591213; cv=none; b=FXYgW7M3H+KrdvH+pUo20UJlDyrUW7aTuakFsTgx0+yFv4GcPSZwCkC/b3f8NC4kG7VJ8guXEA/XYmBS1qOrFCy0m1aoqLry758Ua966GA3elBaaJkcISfqCyQ+JvJ6pxoR3shv85Z89R+zhvt9b2MRTiR+A071uVtvvGfAqGKw=
+	t=1706591229; cv=none; b=PLmBbyf6jDlKt5XHcyX6dsKaCXB3noDTTeBNC2zVlzN1ZQTOlumJ5GRG62epHoZaWCvx7u9jRj9DCrKzpiRMVWFMsTx7iuDSBOX2K+RXk2jZ9xYdF7Pm1oUhwLyAHJkCigtugUTpmj9y4CusXkDXSO97snofyS83X2VzxbOcnS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706591213; c=relaxed/simple;
-	bh=9aUrKf5BXd+OWo3Ue8bjFRFzXg+fcxzYrzeEwkOMBII=;
+	s=arc-20240116; t=1706591229; c=relaxed/simple;
+	bh=7BfBVsiUnYr3iUe1J4xnV9Luy8EmUWzA7T5xan84BVc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i2m/UVKoevTpUf8QceZIZwoi7qGWbP9+ewAsgnDN6Ea7R6w8iF6uLakZhmLBH1/QL8PUfCHfja/FnYeZETvfV0hha2GrzXRg8+08ggjWHYlRDXa/2DAroREUq8X7Bm45y+Xm7IF/13/bAJp78eDZPCC2AaD+SS+LcoH+KaHM4P8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DhtW9tLt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gIbImDKsP11hArRUSQrkTEPcV3bxZjOc08XzYo3AdmSuA88x6t+V5gzaFYbBO+PfzQKt7weVv8486xkmY4QyyfuvtZZFtNKkLdGhpGQ88QzGB76NczTWH9NVIVRfa6Uw0Cz97DAe2xPQMj03uHXi1+O3SRDnUHDQVDAipbpZaAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DE9wLeZ0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DhtW9tLt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E42CC433C7;
-	Tue, 30 Jan 2024 05:06:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DE9wLeZ0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE927C433F1;
+	Tue, 30 Jan 2024 05:07:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706591213;
-	bh=9aUrKf5BXd+OWo3Ue8bjFRFzXg+fcxzYrzeEwkOMBII=;
+	s=k20201202; t=1706591228;
+	bh=7BfBVsiUnYr3iUe1J4xnV9Luy8EmUWzA7T5xan84BVc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DhtW9tLtFg4YxlDfM2r3KPjeyZvta1Fe4HVZJLmGUVbXioG2YfJmD9GHRF4KX66Wt
-	 LsrnBNdZN8auT1TLw4xdLIQbaU6FT7Ta7UZTydxKqww4pQfCNqb1hFfgzdyJXS7H/1
-	 PK5sVF0ruYmO9XpSynx9XZmW58OceZTfF4Nrc8JlIcwnZo+gl3S3w6Q17itziPm4/U
-	 iJk3uLhLFym9asci6AQPJSzYLoJ1a6GnxRl4XLoZggKS/2UgvNFJDvf8BRI/K0+QB6
-	 IVeyUU1HXLVNmKwNv1s9dOdu4ypUl3t77CY+GeicjLxwvQIlzDxKOTzgfkqBCz7miA
-	 /Ju/qQLnF4tnA==
-Date: Mon, 29 Jan 2024 21:06:52 -0800
-Subject: [PATCH 3/8] xfs: create a helper to count per-device inode block
- usage
+	b=DE9wLeZ0wCtmrG7nztmSx8HG0P4AoWf1xitknO/CIxBzrxyVM6DTN5DcofERVGXNK
+	 OanUfhZCoIBUBFKDi1lpUoBguWp1QdJL3gxFvqB46b141lmpwcyXHqLEmthitNT2PS
+	 +bkVN/m9kxGCkOFsiG2SjKnpMILurdYtYHAqmaBToMbSzNEtOKVRf0N/6bI4H5YhKw
+	 WkdiqOPzTfomtvdf0fmaQI8tX+F+QKjBdkVangKmqZNmYy+fVMLC5AE5v5FO84Cx7z
+	 sUiqlS85t1Pk+INCyDFdRjmip1/ejP7LwHRT0Ww/WtNzbv3tLAnr2znCVA5H22PvZp
+	 UizCclfEDELbw==
+Date: Mon, 29 Jan 2024 21:07:08 -0800
+Subject: [PATCH 4/8] xfs: create a sparse load xfarray function
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170659062802.3353369.11902244582318302459.stgit@frogsfrogsfrogs>
+Message-ID: <170659062818.3353369.15735312742710633221.stgit@frogsfrogsfrogs>
 In-Reply-To: <170659062732.3353369.13810986670900011827.stgit@frogsfrogsfrogs>
 References: <170659062732.3353369.13810986670900011827.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,51 +46,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper to compute the number of blocks that a file has
-allocated from the data realtime volumes.  Christoph requested this be
-split out to reduce the size of the upcoming quotacheck patch.
+Create a new method to load an xfarray element from the xfile, but with
+a twist.  If we've never stored to the array index, zero the caller's
+buffer.  This will facilitate RMWs updates of records in a sparse array
+without fuss, since the sparse xfarray convention is that uninitialized
+array elements default to zeroes.
+
+Christoph requested this as a separate patch to reduce the size
+of the upcoming quotacheck patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   16 ++++++++++++++++
- fs/xfs/xfs_inode.h |    2 ++
- 2 files changed, 18 insertions(+)
+ fs/xfs/scrub/xfarray.h |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 1fd94958aa97a..5670a2966e19f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3777,3 +3777,19 @@ xfs_ifork_zapped(
- 		return false;
- 	}
- }
-+
-+/* Compute the number of data and realtime blocks used by a file. */
-+void
-+xfs_inode_count_blocks(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	xfs_filblks_t		*dblocks,
-+	xfs_filblks_t		*rblocks)
+diff --git a/fs/xfs/scrub/xfarray.h b/fs/xfs/scrub/xfarray.h
+index ec643cc9fc143..acb2f94c56c13 100644
+--- a/fs/xfs/scrub/xfarray.h
++++ b/fs/xfs/scrub/xfarray.h
+@@ -45,6 +45,25 @@ int xfarray_store(struct xfarray *array, xfarray_idx_t idx, const void *ptr);
+ int xfarray_store_anywhere(struct xfarray *array, const void *ptr);
+ bool xfarray_element_is_null(struct xfarray *array, const void *ptr);
+ 
++/*
++ * Load an array element, but zero the buffer if there's no data because we
++ * haven't stored to that array element yet.
++ */
++static inline int
++xfarray_load_sparse(
++	struct xfarray	*array,
++	uint64_t	idx,
++	void		*rec)
 +{
-+	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
++	int		error = xfarray_load(array, idx, rec);
 +
-+	*rblocks = 0;
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		xfs_bmap_count_leaves(ifp, rblocks);
-+	*dblocks = ip->i_nblocks - *rblocks;
++	if (error == -ENODATA) {
++		memset(rec, 0, array->obj_size);
++		return 0;
++	}
++	return error;
 +}
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 97f63bacd4c2b..15a16e1404eea 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -623,5 +623,7 @@ int xfs_inode_reload_unlinked_bucket(struct xfs_trans *tp, struct xfs_inode *ip)
- int xfs_inode_reload_unlinked(struct xfs_inode *ip);
- 
- bool xfs_ifork_zapped(const struct xfs_inode *ip, int whichfork);
-+void xfs_inode_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
-+		xfs_filblks_t *dblocks, xfs_filblks_t *rblocks);
- 
- #endif	/* __XFS_INODE_H__ */
++
+ /* Append an element to the array. */
+ static inline int xfarray_append(struct xfarray *array, const void *ptr)
+ {
 
