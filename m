@@ -1,45 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E71616435;
-	Wed, 31 Jan 2024 03:48:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67DCF21341
+	for <linux-xfs@vger.kernel.org>; Wed, 31 Jan 2024 03:49:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706672932; cv=none; b=Uz4OmxHWoCmy3Z4Lkzhr7IgyAtGQWeGMPTXRvaty+V7bH1jNn1E52N0k5tFITPJx12SjvtNC024G13vvz1LtbWJapg2P8Si2TGcmHRJlenbMmCxIHNIWhPxlMMAeb25JO9r5ehs3XM1fvBT+ug6ZZxTbm4mTR2N+oOtMdvW5Nao=
+	t=1706672994; cv=none; b=MnbmR4i6lX+jk3D15VuTI7jGja3le7yZijNt+vwSQap8Ara1862XAxKyBQmNRjDNUrlxhJLyicagc4mMRDWe1WJgisqfc/r7eA61HXQDhb+kzjcxO4aM5uCVHTBN92RtsAe2XyfL6idBIisC+lgfgH26S5SV9nNiFqnMq5k5QMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706672932; c=relaxed/simple;
-	bh=RGoYVTc5imbblBgJTcCcd3YgL7+tqhI2bKyYDphgRGk=;
+	s=arc-20240116; t=1706672994; c=relaxed/simple;
+	bh=Wiy82803vjuQGhT1L1REFL3zBjeucPnSlUdt9RIH+fY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L+PeDGJzJtJaK+m3uXh7uYa9KCilvN/d1PJfwyxQ9PuKDFmqtALDJEiu1Db4tZopOXaAJCErPIw/YL8BJMe5tdTA4PQwc37b90JX5k/38xECwT2InbqZrVNscLQJt/+1QaLLA8FoSDYe5NolwsH4J6x71Tk5/afYSKlJ8NyFpig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cioVVCrQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nK1wxvCeaB0BE5RDnHR4L9HyFyvCrzJH2Z9DF2Th8ZUxuTE5DlT/pCy4ABEFv/k/Qoa9EgwHDD/VWLwlTuk0SThvBGEhnFV+K46n2dXuR56OAZfXrkodGdVSN+pS8/EzDgwCnsNJx3hf7tCl9Mkbo2EuijPa0zM2ctNKGUzWZkw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nsCcxThu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cioVVCrQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EC67C433C7;
-	Wed, 31 Jan 2024 03:48:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nsCcxThu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF5F9C433C7;
+	Wed, 31 Jan 2024 03:49:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706672931;
-	bh=RGoYVTc5imbblBgJTcCcd3YgL7+tqhI2bKyYDphgRGk=;
+	s=k20201202; t=1706672993;
+	bh=Wiy82803vjuQGhT1L1REFL3zBjeucPnSlUdt9RIH+fY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cioVVCrQT10R6wRXDfsBbg0MrC1nmlcv8D4kH5IoUu5JDEj/4W7EA1F9DH1t96KyU
-	 JweZ7H8zlPNDxx/sQrYmf20zj6T0Z4heFY2o9Aaltw/HPUSzoKi02joP/47Nqg2/zG
-	 NywbDqhBOdLRbYzHgupFMGSw72/3FKRdHZKreWv5ZWkd37oe/ZP6WQGgzgWL0iND+n
-	 xfnwxmjkRws6Tzy/LLODl/CLf05JQ6vI+PspLJnObwc4lp6726QU4HHeTHOwvtwcyM
-	 uidYRhyjh8IUmlzTNXETL5i9muLm8iInczA9+6rV4L2Z/Eh7b6FDlu+Ql/wCpgFV7f
-	 TetUo1Ofz3RDQ==
-Date: Tue, 30 Jan 2024 19:48:51 -0800
+	b=nsCcxThu0jN2LM9tD8s8EmoLS7T2j4Z9UsMBOspN7MGt4oJstOg0TDkmWDCdNSERv
+	 Gb2mubfM8BqkAvqqVYxWVgSxfPO9LvvW5HzdFTc4AYPNCh7wR0XirCPWjY0ULl85Vm
+	 2qNC76Kfh5OemHTl7klbzB0ubWJtaBxqfl3MPpluQmAnIrd3jOMe/Hyas6xNTGmeKu
+	 vuMNFmsd4bJIEZznd9PI0Az+stKp5zaeNWC/g1As+PZ5Ajy8fd7MoOO6nzKfztzwVX
+	 QsCX76nmN5Kt+iuRjA3HOPHJ5ebhU/DH/CZYNiViQEzITMXskwG+E1ajDE4hBbdp18
+	 s8AJltIOeud+Q==
+Date: Tue, 30 Jan 2024 19:49:53 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pankaj Raghav <p.raghav@samsung.com>
-Cc: fstests@vger.kernel.org, zlang@redhat.com,
-	Dave Chinner <david@fromorbit.com>, mcgrof@kernel.org,
-	gost.dev@samsung.com, linux-xfs@vger.kernel.org,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Subject: Re: fstest failure due to filesystem size for 16k, 32k and 64k FSB
-Message-ID: <20240131034851.GF6188@frogsfrogsfrogs>
-References: <CGME20240130131803eucas1p280d9355ca3f8dc94073aff54555e3820@eucas1p2.samsung.com>
- <fe7fec1c-3b08-430f-9c95-ea76b237acf4@samsung.com>
- <20240130195602.GJ1371843@frogsfrogsfrogs>
- <6bea58ad-5b07-4104-a6ff-a2c51a03bd2f@samsung.com>
+To: Catherine Hoang <catherine.hoang@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6.6 CANDIDATE v1 00/21] xfs backports for 6.6.y (from
+ v6.7)
+Message-ID: <20240131034953.GK1371843@frogsfrogsfrogs>
+References: <20240130234419.45896-1-catherine.hoang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,89 +42,136 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6bea58ad-5b07-4104-a6ff-a2c51a03bd2f@samsung.com>
+In-Reply-To: <20240130234419.45896-1-catherine.hoang@oracle.com>
 
-On Tue, Jan 30, 2024 at 09:34:23PM +0100, Pankaj Raghav wrote:
-> >> What should be the approach to solve this issue? 2 options that I had in my mind:
-> >>
-> >> 1. Similar to [2], we could add a small hack in mkfs xfs to ignore the log space
-> >> requirement while running fstests for these profiles.
-> >>
-> >> 2. Increase the size of filesystem under test to accommodate these profiles. It could
-> >> even be a conditional increase in filesystem size if the FSB > 16k to reduce the impact
-> >> on existing FS test time for 4k FSB.
-> >>
-> >> Let me know what would be the best way to move forward.
-> >>
-> >> Here are the results:
-> >>
-> >> Test environment:
-> >> kernel Release: 6.8.0-rc1
-> >> xfsprogs: 6.5.0
-> >> Architecture: aarch64
-> >> Page size: 64k
-> >>
-> >> Test matrix:
-> >>
-> >> | Test        | 32k rmapbt=0 | 32k rmapbt=1 | 64k rmapbt=0 | 64k rmapbt=1 |
-> >> | --------    | ---------    | ---------    | ---------    | ---------    |
-> >> | generic/042 |     fail     |     fail     |     fail     |     fail     |
-> >> | generic/081 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/108 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/455 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/457 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/482 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/704 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/730 |     fail     |     fail     |     pass     |     fail     |
-> >> | generic/731 |     fail     |     fail     |     pass     |     fail     |
-> >> | shared/298  |     pass     |     pass     |     pass     |     fail     |
-> > 
-> > I noticed test failures on these tests when running djwong-wtf:
-> > generic/042
-> > generic/081
-> > generic/108
-> > generic/219
-> > generic/305
-> > generic/326
-> > generic/562
-> > generic/704
-> > xfs/093
-> > xfs/113
-> > xfs/161
-> > xfs/262
-> > xfs/508
-> > xfs/604
-> > xfs/709
-> > 
+On Tue, Jan 30, 2024 at 03:43:58PM -0800, Catherine Hoang wrote:
+> Hi all,
 > 
-> Ok, there are some more tests that I didn't catch. I will check them out.
+> This series contains backports for 6.6 from the 6.7 release. Tested on 30
+> runs of kdevops with the following configurations:
 > 
-> > Still sorting through all of them, but a large portion of them are the
-> > same failure to format due to minimum log size constraints.  I'd bump
-> > them up to ~500M (or whatever makes them work) since upstream doesn't
-> > really support small filesystems anymore.
+> 1. CRC
+> 2. No CRC (512 and 4k block size)
+> 3. Reflink (1k and 4k block size)
+> 4. Reflink without rmapbt
+> 5. External log device
 > 
-> Thanks for the reply. So we can have a small `if` conditional block for xfs
-> to have fs size = 500M in generic test cases.
+> The patches included are from the following series:
+> 
+> [PATCHSET v1.1 0/4] xfs: minor bugfixes for rt stuff
+> xfs: bump max fsgeom struct version
+> xfs: hoist freeing of rt data fork extent mappings
+> xfs: prevent rt growfs when quota is enabled
+> xfs: rt stubs should return negative errnos when rt disabled
+> 
+> [PATCHSET v1.1 0/8] xfs: clean up realtime type usage
+> xfs: fix units conversion error in xfs_bmap_del_extent_delay
+> xfs: make sure maxlen is still congruent with prod when rounding down
+> 
+> [PATCH v6] xfs: introduce protection for drop nlink
+> 
+> [PATCH v2] xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space
+> 
+> [PATCH v4] xfs: allow read IO and FICLONE to run concurrently
+> 
+> [PATCH v3 0/3] xfs: fix two problem when recovery intents fails
+> xfs: factor out xfs_defer_pending_abort
+> xfs: abort intent items when recovery intents fail
+> 
+> [PATCH] xfs: only remap the written blocks in xfs_reflink_end_cow_extent
+> 
+> [PATCH v3] xfs: up(ic_sema) if flushing data device fails
+> 
+> [PATCH v3] xfs: fix internal error from AGFL exhaustion
+> 
+> [PATCH] xfs: fix again select in kconfig XFS_ONLINE_SCRUB_STATS
+> 
+> [PATCH 0/2] xfs: fix recovery corruption on s390 w/ nrext64
+> xfs: inode recovery does not validate the recovered inode
+> 
+> [PATCHSET 0/2] xfs: dquot recovery validation strengthening
+> xfs: clean up dqblk extraction
+> xfs: dquot recovery does not validate the recovered dquot
+> 
+> add and use a per-mapping stable writes flag v2
+> filemap: add a per-mapping stable writes flag 
+> xfs: clean up FS_XFLAG_REALTIME handling in xfs_ioctl_setattr_xflags 
+> xfs: respect the stable writes flag on the RT device
 
-I'd suggest creating a helper where you pass in the fs size you want and
-it rounds that up to the minimum value.  That would then get passed to
-_scratch_mkfs_sized or _scsi_debug_get_dev.
-
-(testing this as we speak...)
-
-> We do this irrespective of filesystem blocksizes right? If we do that, then we can
-> remove the special conditional that allows tiny filesystems for fstests in mkfs
-> as well.
-
-I dunno.  In the ideal world we'd figure out the fsblock size, but
-divining that from the MKFS_OPTIONS is hard fugly string parsing.
+Looks good to me, though you ought to update MAINTAINERS to list
+yourself as the maintainer of the 6.6LTS branch.
 
 --D
 
 > 
-> --
-> Pankaj
 > 
+> Anthony Iliopoulos (1):
+>   xfs: fix again select in kconfig XFS_ONLINE_SCRUB_STATS
+> 
+> Catherine Hoang (1):
+>   xfs: allow read IO and FICLONE to run concurrently
+> 
+> Cheng Lin (1):
+>   xfs: introduce protection for drop nlink
+> 
+> Christoph Hellwig (5):
+>   xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space
+>   xfs: only remap the written blocks in xfs_reflink_end_cow_extent
+>   filemap: add a per-mapping stable writes flag
+>   xfs: clean up FS_XFLAG_REALTIME handling in xfs_ioctl_setattr_xflags
+>   xfs: respect the stable writes flag on the RT device
+> 
+> Darrick J. Wong (8):
+>   xfs: bump max fsgeom struct version
+>   xfs: hoist freeing of rt data fork extent mappings
+>   xfs: prevent rt growfs when quota is enabled
+>   xfs: rt stubs should return negative errnos when rt disabled
+>   xfs: fix units conversion error in xfs_bmap_del_extent_delay
+>   xfs: make sure maxlen is still congruent with prod when rounding down
+>   xfs: clean up dqblk extraction
+>   xfs: dquot recovery does not validate the recovered dquot
+> 
+> Dave Chinner (1):
+>   xfs: inode recovery does not validate the recovered inode
+> 
+> Leah Rumancik (1):
+>   xfs: up(ic_sema) if flushing data device fails
+> 
+> Long Li (2):
+>   xfs: factor out xfs_defer_pending_abort
+>   xfs: abort intent items when recovery intents fail
+> 
+> Omar Sandoval (1):
+>   xfs: fix internal error from AGFL exhaustion
+> 
+>  fs/inode.c                      |  2 ++
+>  fs/xfs/Kconfig                  |  2 +-
+>  fs/xfs/libxfs/xfs_alloc.c       | 27 ++++++++++++--
+>  fs/xfs/libxfs/xfs_bmap.c        | 21 +++--------
+>  fs/xfs/libxfs/xfs_defer.c       | 28 +++++++++------
+>  fs/xfs/libxfs/xfs_defer.h       |  2 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c   |  3 ++
+>  fs/xfs/libxfs/xfs_rtbitmap.c    | 33 +++++++++++++++++
+>  fs/xfs/libxfs/xfs_sb.h          |  2 +-
+>  fs/xfs/xfs_bmap_util.c          | 24 +++++++------
+>  fs/xfs/xfs_dquot.c              |  5 +--
+>  fs/xfs/xfs_dquot_item_recover.c | 21 +++++++++--
+>  fs/xfs/xfs_file.c               | 63 ++++++++++++++++++++++++++-------
+>  fs/xfs/xfs_inode.c              | 24 +++++++++++++
+>  fs/xfs/xfs_inode.h              | 17 +++++++++
+>  fs/xfs/xfs_inode_item_recover.c | 14 +++++++-
+>  fs/xfs/xfs_ioctl.c              | 30 ++++++++++------
+>  fs/xfs/xfs_iops.c               |  7 ++++
+>  fs/xfs/xfs_log.c                | 23 ++++++------
+>  fs/xfs/xfs_log_recover.c        |  2 +-
+>  fs/xfs/xfs_reflink.c            |  5 +++
+>  fs/xfs/xfs_rtalloc.c            | 33 +++++++++++++----
+>  fs/xfs/xfs_rtalloc.h            | 27 ++++++++------
+>  include/linux/pagemap.h         | 17 +++++++++
+>  mm/page-writeback.c             |  2 +-
+>  25 files changed, 331 insertions(+), 103 deletions(-)
+> 
+> -- 
+> 2.39.3
 > 
 > 
