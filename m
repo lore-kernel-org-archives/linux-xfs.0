@@ -1,159 +1,480 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8013D1292FA;
-	Wed, 31 Jan 2024 15:41:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47BCA12AAF2;
+	Wed, 31 Jan 2024 16:25:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706715718; cv=none; b=pZju3J0nx0puZSIkBCggZbQJUm+109hAI0j9Jw6Yid3RiwshLOIhsmXrFxxNoZHHN8tKcFbXwnygkaQejmOpbnSH7wx5+lEiDn+zXYsxflruIoqMr1tUiR96K2eMVYVGno1Rl+YR0GwtJXmZVTrqBcse1UIF7D0FY1B/YFMwPWI=
+	t=1706718353; cv=none; b=q4/KBX27bVIf7iBPVX/pA/B52uT3PQ4cFOKKfBDPTtQuB/Kbj+tkdZJu9JujAjpFzI30r3P9sIdT5hCsKUG/IQEGjo+DPBuEy7262HcDkiU2HB2XVReml21Qfx6zSO9eMxXbUSHxFwZc1E1hd0c/hx7XphQYAQzXwcjv9HAuN9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706715718; c=relaxed/simple;
-	bh=k975rr5SOQJ0akKpIS6Xf8RVc6oORwcCOak8L3VOgN4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qEVhLmtMhFruNXNH2kXnf3NWNJQPKTLGMINfAbfdYQt1TWP5cZ7J6aBgdeFNftKB/pzlHzMzIsu5gAGgNlkhQHd3eYKFDRevlyWRanlrKP3MigFiaIF5kQ8EiHXuwbgNKp4w9ZRvXkDP8/dc9NJvYsqqtelR1y3Wkz6+6lQIDDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eAYRS6JE; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=JEcCUXZl; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eAYRS6JE; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=JEcCUXZl; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1706718353; c=relaxed/simple;
+	bh=hx2BzTstie5hVA+TCGyykJTnAt4QlbGvKlxJtOj/jIM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=is4Z68Nin/QarPkwORdz3sFAWS2dXpJx3ExHLZULt8BzZHRhXnD/KYu15I6uM9dgd060FEEeqJ3IYrcwk55NJSUrvsFZrqg9C1U5LOh215h6zWM4TT30ByW/Y+ejew4mc2EFaJbQJozb28XMLVbn0EXC236nRCNQl1RB891+S7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=PHH5lEXE; arc=none smtp.client-ip=167.114.26.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eAYRS6JE";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JEcCUXZl";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eAYRS6JE";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JEcCUXZl"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 99A931F747;
-	Wed, 31 Jan 2024 15:41:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1706715714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
-	b=eAYRS6JERcuIGWvi6Ek08YG+lfpfdU+UAgjzoDk7TwEInNVsdBf4o7EZXbfN0Y0JfD3dBs
-	aobWKJqCIB0rO7brfn9fUSiZT/mn2cZ04fww5vWpgTp2gVtXvpjhASo+fdLTjVTrAEp7aI
-	8zP5d9B3ea8I12U+4GCjKO9R6SMA6zc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1706715714;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
-	b=JEcCUXZltSMg4I4IO5xpTfXnvD8ZUTPWFRkM79oWnUGyAKuqqAs88AeT8qyKn9A19NT6zo
-	zDhz8aK3F+mAXmCA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1706715714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
-	b=eAYRS6JERcuIGWvi6Ek08YG+lfpfdU+UAgjzoDk7TwEInNVsdBf4o7EZXbfN0Y0JfD3dBs
-	aobWKJqCIB0rO7brfn9fUSiZT/mn2cZ04fww5vWpgTp2gVtXvpjhASo+fdLTjVTrAEp7aI
-	8zP5d9B3ea8I12U+4GCjKO9R6SMA6zc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1706715714;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
-	b=JEcCUXZltSMg4I4IO5xpTfXnvD8ZUTPWFRkM79oWnUGyAKuqqAs88AeT8qyKn9A19NT6zo
-	zDhz8aK3F+mAXmCA==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 7DCC2132FA;
-	Wed, 31 Jan 2024 15:41:54 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id cPeuHkJqumWyfwAAn2gu4w
-	(envelope-from <jack@suse.cz>); Wed, 31 Jan 2024 15:41:54 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 0ADF9A0809; Wed, 31 Jan 2024 16:41:54 +0100 (CET)
-Date: Wed, 31 Jan 2024 16:41:53 +0100
-From: Jan Kara <jack@suse.cz>
-To: Edward Adam Davis <eadavis@qq.com>
-Cc: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com,
-	adilger.kernel@dilger.ca, chandan.babu@oracle.com, jack@suse.com,
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com, tytso@mit.edu
-Subject: Re: [PATCH] jbd2: user-memory-access in jbd2__journal_start
-Message-ID: <20240131154153.domdzkkbqgpkplp2@quack3>
-References: <000000000000d6e06d06102ae80b@google.com>
- <tencent_7F29369E974036964A3E742F778567CC3C09@qq.com>
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="PHH5lEXE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
+	s=smtpout1; t=1706718349;
+	bh=hx2BzTstie5hVA+TCGyykJTnAt4QlbGvKlxJtOj/jIM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=PHH5lEXENSjaIFC0LHBtbAHRLo6wsAqhZZtrptlYtkGt4ThnuU8537yXTXYijMu2J
+	 WYcjF34WOyPRGkR9s3pLsQ6e735CYJBVTcgCtCSmflUcuBpb22gglQxGhdTx/G71Et
+	 elxwYMa+dzcmnSBJaPUnwUQkdGeuD974kNHOoQ3/kKODmcK/MAh7/Oym86pv08CAL8
+	 PJJXdufLeKMkO5WNiSYbn7iT3NuxxjD17ujEbSxjot8SoAslyptVXr79SYWWwxxJPK
+	 mxrrUijObDxLZgVC53jTuSrtyPlmGNj6rU0oefgJb9Uo/n4UhWwe4CGNvtVUIw6NVe
+	 m3nsL3dsvlJpw==
+Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TQ6ph6frjzVp0;
+	Wed, 31 Jan 2024 11:25:48 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-mm@kvack.org,
+	linux-arch@vger.kernel.org,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Russell King <linux@armlinux.org.uk>,
+	linux-cxl@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	linux-xfs@vger.kernel.org,
+	dm-devel@lists.linux.dev
+Subject: [RFC PATCH v3 3/4] Introduce cpu_dcache_is_aliasing() across all architectures
+Date: Wed, 31 Jan 2024 11:25:32 -0500
+Message-Id: <20240131162533.247710-4-mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240131162533.247710-1-mathieu.desnoyers@efficios.com>
+References: <20240131162533.247710-1-mathieu.desnoyers@efficios.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <tencent_7F29369E974036964A3E742F778567CC3C09@qq.com>
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=eAYRS6JE;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=JEcCUXZl
-X-Spamd-Result: default: False [1.69 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_TRACE(0.00)[suse.cz:+];
-	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_SEVEN(0.00)[11];
-	 FREEMAIL_TO(0.00)[qq.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 FROM_HAS_DN(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[qq.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 TAGGED_RCPT(0.00)[cdee56dbcdf0096ef605];
-	 MIME_GOOD(-0.10)[text/plain];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 SUSPICIOUS_RECIPS(1.50)[]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Score: 1.69
-X-Rspamd-Queue-Id: 99A931F747
-X-Spam-Level: *
-X-Spam-Flag: NO
-X-Spamd-Bar: +
+Content-Transfer-Encoding: 8bit
 
-On Wed 31-01-24 20:04:27, Edward Adam Davis wrote:
-> Before reusing the handle, it is necessary to confirm that the transaction is 
-> ready.
-> 
-> Reported-and-tested-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
-> Signed-off-by: Edward Adam Davis <eadavis@qq.com>
+Introduce a generic way to query whether the data cache is virtually
+aliased on all architectures. Its purpose is to ensure that subsystems
+which are incompatible with virtually aliased data caches (e.g. FS_DAX)
+can reliably query this.
 
-Sorry but no. Dave found a way to fix this particular problem in XFS and
-your patch would not really improve anything because we'd just crash
-when dereferencing handle->saved_alloc_context.
+For data cache aliasing, there are three scenarios dependending on the
+architecture. Here is a breakdown based on my understanding:
 
-								Honza
+A) The data cache is always aliasing:
 
+* arc
+* csky
+* m68k (note: shared memory mappings are incoherent ? SHMLBA is missing there.)
+* sh
+* parisc
 
-> diff --git a/fs/jbd2/transaction.c b/fs/jbd2/transaction.c
-> index cb0b8d6fc0c6..702312cd5392 100644
-> --- a/fs/jbd2/transaction.c
-> +++ b/fs/jbd2/transaction.c
-> @@ -493,6 +493,9 @@ handle_t *jbd2__journal_start(journal_t *journal, int nblocks, int rsv_blocks,
->  		return ERR_PTR(-EROFS);
->  
->  	if (handle) {
-> +		if (handle->saved_alloc_context & ~PF_MEMALLOC_NOFS)
-> +			return ERR_PTR(-EBUSY);
-> +
->  		J_ASSERT(handle->h_transaction->t_journal == journal);
->  		handle->h_ref++;
->  		return handle;
-> -- 
-> 2.43.0
-> 
+B) The data cache aliasing is statically known or depends on querying CPU
+   state at runtime:
+
+* arm (cache_is_vivt() || cache_is_vipt_aliasing())
+* mips (cpu_has_dc_aliases)
+* nios2 (NIOS2_DCACHE_SIZE > PAGE_SIZE)
+* sparc32 (vac_cache_size > PAGE_SIZE)
+* sparc64 (L1DCACHE_SIZE > PAGE_SIZE)
+* xtensa (DCACHE_WAY_SIZE > PAGE_SIZE)
+
+C) The data cache is never aliasing:
+
+* alpha
+* arm64 (aarch64)
+* hexagon
+* loongarch (but with incoherent write buffers, which are disabled since
+             commit d23b7795 ("LoongArch: Change SHMLBA from SZ_64K to PAGE_SIZE"))
+* microblaze
+* openrisc
+* powerpc
+* riscv
+* s390
+* um
+* x86
+
+Require architectures in A) and B) to select ARCH_HAS_CPU_CACHE_ALIASING and
+implement "cpu_dcache_is_aliasing()".
+
+Architectures in C) don't select ARCH_HAS_CPU_CACHE_ALIASING, and thus
+cpu_dcache_is_aliasing() simply evaluates to "false".
+
+Note that this leaves "cpu_icache_is_aliasing()" to be implemented as future
+work. This would be useful to gate features like XIP on architectures
+which have aliasing CPU dcache-icache but not CPU dcache-dcache.
+
+Use "cpu_dcache" and "cpu_cache" rather than just "dcache" and "cache"
+to clarify that we really mean "CPU data cache" and "CPU cache" to
+eliminate any possible confusion with VFS "dentry cache" and "page
+cache".
+
+Link: https://lore.kernel.org/lkml/20030910210416.GA24258@mail.jlokier.co.uk/
+Fixes: d92576f1167c ("dax: does not work correctly with virtual aliasing caches")
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-mm@kvack.org
+Cc: linux-arch@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: linux-cxl@vger.kernel.org
+Cc: nvdimm@lists.linux.dev
+Cc: linux-xfs@vger.kernel.org
+Cc: dm-devel@lists.linux.dev
+---
+ arch/arc/Kconfig                    |  1 +
+ arch/arc/include/asm/cachetype.h    |  9 +++++++++
+ arch/arm/Kconfig                    |  1 +
+ arch/arm/include/asm/cachetype.h    |  2 ++
+ arch/csky/Kconfig                   |  1 +
+ arch/csky/include/asm/cachetype.h   |  9 +++++++++
+ arch/m68k/Kconfig                   |  1 +
+ arch/m68k/include/asm/cachetype.h   |  9 +++++++++
+ arch/mips/Kconfig                   |  1 +
+ arch/mips/include/asm/cachetype.h   |  9 +++++++++
+ arch/nios2/Kconfig                  |  1 +
+ arch/nios2/include/asm/cachetype.h  | 10 ++++++++++
+ arch/parisc/Kconfig                 |  1 +
+ arch/parisc/include/asm/cachetype.h |  9 +++++++++
+ arch/sh/Kconfig                     |  1 +
+ arch/sh/include/asm/cachetype.h     |  9 +++++++++
+ arch/sparc/Kconfig                  |  1 +
+ arch/sparc/include/asm/cachetype.h  | 14 ++++++++++++++
+ arch/xtensa/Kconfig                 |  1 +
+ arch/xtensa/include/asm/cachetype.h | 10 ++++++++++
+ include/linux/cacheinfo.h           |  6 ++++++
+ mm/Kconfig                          |  6 ++++++
+ 22 files changed, 112 insertions(+)
+ create mode 100644 arch/arc/include/asm/cachetype.h
+ create mode 100644 arch/csky/include/asm/cachetype.h
+ create mode 100644 arch/m68k/include/asm/cachetype.h
+ create mode 100644 arch/mips/include/asm/cachetype.h
+ create mode 100644 arch/nios2/include/asm/cachetype.h
+ create mode 100644 arch/parisc/include/asm/cachetype.h
+ create mode 100644 arch/sh/include/asm/cachetype.h
+ create mode 100644 arch/sparc/include/asm/cachetype.h
+ create mode 100644 arch/xtensa/include/asm/cachetype.h
+
+diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
+index 1b0483c51cc1..7d294a3242a4 100644
+--- a/arch/arc/Kconfig
++++ b/arch/arc/Kconfig
+@@ -6,6 +6,7 @@
+ config ARC
+ 	def_bool y
+ 	select ARC_TIMERS
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_CACHE_LINE_SIZE
+ 	select ARCH_HAS_DEBUG_VM_PGTABLE
+ 	select ARCH_HAS_DMA_PREP_COHERENT
+diff --git a/arch/arc/include/asm/cachetype.h b/arch/arc/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..05fc7ed59712
+--- /dev/null
++++ b/arch/arc/include/asm/cachetype.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_ARC_CACHETYPE_H
++#define __ASM_ARC_CACHETYPE_H
++
++#include <linux/types.h>
++
++#define cpu_dcache_is_aliasing()	true
++
++#endif
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index f8567e95f98b..cd13b1788973 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -5,6 +5,7 @@ config ARM
+ 	select ARCH_32BIT_OFF_T
+ 	select ARCH_CORRECT_STACKTRACE_ON_KRETPROBE if HAVE_KRETPROBES && FRAME_POINTER && !ARM_UNWIND
+ 	select ARCH_HAS_BINFMT_FLAT
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_CPU_FINALIZE_INIT if MMU
+ 	select ARCH_HAS_CURRENT_STACK_POINTER
+ 	select ARCH_HAS_DEBUG_VIRTUAL if MMU
+diff --git a/arch/arm/include/asm/cachetype.h b/arch/arm/include/asm/cachetype.h
+index e8c30430be33..b9dbe1d4c8fe 100644
+--- a/arch/arm/include/asm/cachetype.h
++++ b/arch/arm/include/asm/cachetype.h
+@@ -20,6 +20,8 @@ extern unsigned int cacheid;
+ #define icache_is_vipt_aliasing()	cacheid_is(CACHEID_VIPT_I_ALIASING)
+ #define icache_is_pipt()		cacheid_is(CACHEID_PIPT)
+ 
++#define cpu_dcache_is_aliasing()	(cache_is_vivt() || cache_is_vipt_aliasing())
++
+ /*
+  * __LINUX_ARM_ARCH__ is the minimum supported CPU architecture
+  * Mask out support which will never be present on newer CPUs.
+diff --git a/arch/csky/Kconfig b/arch/csky/Kconfig
+index cf2a6fd7dff8..8a91eccf76dc 100644
+--- a/arch/csky/Kconfig
++++ b/arch/csky/Kconfig
+@@ -2,6 +2,7 @@
+ config CSKY
+ 	def_bool y
+ 	select ARCH_32BIT_OFF_T
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_DMA_PREP_COHERENT
+ 	select ARCH_HAS_GCOV_PROFILE_ALL
+ 	select ARCH_HAS_SYNC_DMA_FOR_CPU
+diff --git a/arch/csky/include/asm/cachetype.h b/arch/csky/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..98cbe3af662f
+--- /dev/null
++++ b/arch/csky/include/asm/cachetype.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_CSKY_CACHETYPE_H
++#define __ASM_CSKY_CACHETYPE_H
++
++#include <linux/types.h>
++
++#define cpu_dcache_is_aliasing()	true
++
++#endif
+diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
+index 4b3e93cac723..a9c3e3de0c6d 100644
+--- a/arch/m68k/Kconfig
++++ b/arch/m68k/Kconfig
+@@ -3,6 +3,7 @@ config M68K
+ 	bool
+ 	default y
+ 	select ARCH_32BIT_OFF_T
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_BINFMT_FLAT
+ 	select ARCH_HAS_CPU_FINALIZE_INIT if MMU
+ 	select ARCH_HAS_CURRENT_STACK_POINTER
+diff --git a/arch/m68k/include/asm/cachetype.h b/arch/m68k/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..7fad5d9ab8fe
+--- /dev/null
++++ b/arch/m68k/include/asm/cachetype.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_M68K_CACHETYPE_H
++#define __ASM_M68K_CACHETYPE_H
++
++#include <linux/types.h>
++
++#define cpu_dcache_is_aliasing()	true
++
++#endif
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 797ae590ebdb..ab1c8bd96666 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -4,6 +4,7 @@ config MIPS
+ 	default y
+ 	select ARCH_32BIT_OFF_T if !64BIT
+ 	select ARCH_BINFMT_ELF_STATE if MIPS_FP_SUPPORT
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_CPU_FINALIZE_INIT
+ 	select ARCH_HAS_CURRENT_STACK_POINTER if !CC_IS_CLANG || CLANG_VERSION >= 140000
+ 	select ARCH_HAS_DEBUG_VIRTUAL if !64BIT
+diff --git a/arch/mips/include/asm/cachetype.h b/arch/mips/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..9f4ba2fe1155
+--- /dev/null
++++ b/arch/mips/include/asm/cachetype.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_MIPS_CACHETYPE_H
++#define __ASM_MIPS_CACHETYPE_H
++
++#include <asm/cpu-features.h>
++
++#define cpu_dcache_is_aliasing()	cpu_has_dc_aliases
++
++#endif
+diff --git a/arch/nios2/Kconfig b/arch/nios2/Kconfig
+index d54464021a61..760fb541ecd2 100644
+--- a/arch/nios2/Kconfig
++++ b/arch/nios2/Kconfig
+@@ -2,6 +2,7 @@
+ config NIOS2
+ 	def_bool y
+ 	select ARCH_32BIT_OFF_T
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_DMA_PREP_COHERENT
+ 	select ARCH_HAS_SYNC_DMA_FOR_CPU
+ 	select ARCH_HAS_SYNC_DMA_FOR_DEVICE
+diff --git a/arch/nios2/include/asm/cachetype.h b/arch/nios2/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..eb9c416b8a1c
+--- /dev/null
++++ b/arch/nios2/include/asm/cachetype.h
+@@ -0,0 +1,10 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_NIOS2_CACHETYPE_H
++#define __ASM_NIOS2_CACHETYPE_H
++
++#include <asm/page.h>
++#include <asm/cache.h>
++
++#define cpu_dcache_is_aliasing()	(NIOS2_DCACHE_SIZE > PAGE_SIZE)
++
++#endif
+diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
+index d14ccc948a29..0f25c227f74b 100644
+--- a/arch/parisc/Kconfig
++++ b/arch/parisc/Kconfig
+@@ -8,6 +8,7 @@ config PARISC
+ 	select HAVE_FUNCTION_GRAPH_TRACER
+ 	select HAVE_SYSCALL_TRACEPOINTS
+ 	select ARCH_WANT_FRAME_POINTERS
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_DMA_ALLOC if PA11
+ 	select ARCH_HAS_ELF_RANDOMIZE
+ 	select ARCH_HAS_STRICT_KERNEL_RWX
+diff --git a/arch/parisc/include/asm/cachetype.h b/arch/parisc/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..e0868a1d3c47
+--- /dev/null
++++ b/arch/parisc/include/asm/cachetype.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_PARISC_CACHETYPE_H
++#define __ASM_PARISC_CACHETYPE_H
++
++#include <linux/types.h>
++
++#define cpu_dcache_is_aliasing()	true
++
++#endif
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 7500521b2b98..2ad3e29f0ebe 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -2,6 +2,7 @@
+ config SUPERH
+ 	def_bool y
+ 	select ARCH_32BIT_OFF_T
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_ENABLE_MEMORY_HOTPLUG if SPARSEMEM && MMU
+ 	select ARCH_ENABLE_MEMORY_HOTREMOVE if SPARSEMEM && MMU
+ 	select ARCH_HAVE_NMI_SAFE_CMPXCHG if (GUSA_RB || CPU_SH4A)
+diff --git a/arch/sh/include/asm/cachetype.h b/arch/sh/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..a5fffe536068
+--- /dev/null
++++ b/arch/sh/include/asm/cachetype.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_SH_CACHETYPE_H
++#define __ASM_SH_CACHETYPE_H
++
++#include <linux/types.h>
++
++#define cpu_dcache_is_aliasing()	true
++
++#endif
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index 49849790e66d..5ba627da15d7 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -13,6 +13,7 @@ config 64BIT
+ config SPARC
+ 	bool
+ 	default y
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_MIGHT_HAVE_PC_PARPORT if SPARC64 && PCI
+ 	select ARCH_MIGHT_HAVE_PC_SERIO
+ 	select DMA_OPS
+diff --git a/arch/sparc/include/asm/cachetype.h b/arch/sparc/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..caf1c0045892
+--- /dev/null
++++ b/arch/sparc/include/asm/cachetype.h
+@@ -0,0 +1,14 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_SPARC_CACHETYPE_H
++#define __ASM_SPARC_CACHETYPE_H
++
++#include <asm/page.h>
++
++#ifdef CONFIG_SPARC32
++extern int vac_cache_size;
++#define cpu_dcache_is_aliasing()	(vac_cache_size > PAGE_SIZE)
++#else
++#define cpu_dcache_is_aliasing()	(L1DCACHE_SIZE > PAGE_SIZE)
++#endif
++
++#endif
+diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
+index 7d792077e5fd..2dfde54d1a84 100644
+--- a/arch/xtensa/Kconfig
++++ b/arch/xtensa/Kconfig
+@@ -2,6 +2,7 @@
+ config XTENSA
+ 	def_bool y
+ 	select ARCH_32BIT_OFF_T
++	select ARCH_HAS_CPU_CACHE_ALIASING
+ 	select ARCH_HAS_BINFMT_FLAT if !MMU
+ 	select ARCH_HAS_CURRENT_STACK_POINTER
+ 	select ARCH_HAS_DEBUG_VM_PGTABLE
+diff --git a/arch/xtensa/include/asm/cachetype.h b/arch/xtensa/include/asm/cachetype.h
+new file mode 100644
+index 000000000000..51bd49e2a1c5
+--- /dev/null
++++ b/arch/xtensa/include/asm/cachetype.h
+@@ -0,0 +1,10 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __ASM_XTENSA_CACHETYPE_H
++#define __ASM_XTENSA_CACHETYPE_H
++
++#include <asm/cache.h>
++#include <asm/page.h>
++
++#define cpu_dcache_is_aliasing()	(DCACHE_WAY_SIZE > PAGE_SIZE)
++
++#endif
+diff --git a/include/linux/cacheinfo.h b/include/linux/cacheinfo.h
+index d504eb4b49ab..2cb15fe4fe12 100644
+--- a/include/linux/cacheinfo.h
++++ b/include/linux/cacheinfo.h
+@@ -138,4 +138,10 @@ static inline int get_cpu_cacheinfo_id(int cpu, int level)
+ #define use_arch_cache_info()	(false)
+ #endif
+ 
++#ifndef CONFIG_ARCH_HAS_CPU_CACHE_ALIASING
++#define cpu_dcache_is_aliasing()	false
++#else
++#include <asm/cachetype.h>
++#endif
++
+ #endif /* _LINUX_CACHEINFO_H */
+diff --git a/mm/Kconfig b/mm/Kconfig
+index 57cd378c73d6..db09c9ad15c9 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -1016,6 +1016,12 @@ config IDLE_PAGE_TRACKING
+ 	  See Documentation/admin-guide/mm/idle_page_tracking.rst for
+ 	  more details.
+ 
++# Architectures which implement cpu_dcache_is_aliasing() to query
++# whether the data caches are aliased (VIVT or VIPT with dcache
++# aliasing) need to select this.
++config ARCH_HAS_CPU_CACHE_ALIASING
++	bool
++
+ config ARCH_HAS_CACHE_LINE_SIZE
+ 	bool
+ 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.39.2
+
