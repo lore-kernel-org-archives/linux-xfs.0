@@ -1,107 +1,159 @@
-Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDBF182867;
-	Wed, 31 Jan 2024 14:58:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8013D1292FA;
+	Wed, 31 Jan 2024 15:41:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706713105; cv=none; b=BGSosTHxLZp4tZonSzQQfQuuHNW1nG77EwIs7TR66xXSa8mHN+1B2O3z4zC0IlufSKMkl4HZiixTrmTj04Vfz30t7wT810yEQRjviKKn64jnFh09Hz3uR14JgJH5GdNpEwQ1ziweF19lYLKaxjKfgLs9IsUNF8ITNRbYcYUZIIU=
+	t=1706715718; cv=none; b=pZju3J0nx0puZSIkBCggZbQJUm+109hAI0j9Jw6Yid3RiwshLOIhsmXrFxxNoZHHN8tKcFbXwnygkaQejmOpbnSH7wx5+lEiDn+zXYsxflruIoqMr1tUiR96K2eMVYVGno1Rl+YR0GwtJXmZVTrqBcse1UIF7D0FY1B/YFMwPWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706713105; c=relaxed/simple;
-	bh=L5pJpQ5dE+OFLWNsblvXxIVZo1jX7Zp/Itn5Bx1Ke3Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mjERpk64LxZ9rSoS9nPdUe7VOnw1L8OLjqh12eQR4yQpow4n/Qv9tHgej5UQ1qI8jLYazsFQY7m62fcjhwhVW117xVff58Q+s25u90PQxP4DO+LHgiZfQsUeQamDGRl0sGygogIsenyC85LeuQ+x8+Zb+SZBybM0SnDdjFLbbjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=spdpNVJY; arc=none smtp.client-ip=167.114.26.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+	s=arc-20240116; t=1706715718; c=relaxed/simple;
+	bh=k975rr5SOQJ0akKpIS6Xf8RVc6oORwcCOak8L3VOgN4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qEVhLmtMhFruNXNH2kXnf3NWNJQPKTLGMINfAbfdYQt1TWP5cZ7J6aBgdeFNftKB/pzlHzMzIsu5gAGgNlkhQHd3eYKFDRevlyWRanlrKP3MigFiaIF5kQ8EiHXuwbgNKp4w9ZRvXkDP8/dc9NJvYsqqtelR1y3Wkz6+6lQIDDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eAYRS6JE; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=JEcCUXZl; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eAYRS6JE; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=JEcCUXZl; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="spdpNVJY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
-	s=smtpout1; t=1706713101;
-	bh=L5pJpQ5dE+OFLWNsblvXxIVZo1jX7Zp/Itn5Bx1Ke3Y=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=spdpNVJYLB/Vcpi2FIvZnu7EVWB4/kO/4rDcNA2wvudacQT/We/qyugueJ7Ca1Kci
-	 SY8L9mJYTSYWYc1wGpXhTI2UK6GcikePPY16a8v+Nzrmi74ZzUlC3DoB1avnIkjQtF
-	 TR+Yp+tT6s0xzO64pJ9E7FlIOoBOWUeiZCT6Hbl8N05ksoGZJfU8vFXpDfj5k556My
-	 8EBMzBtWAdsmMFiakP9EeuR5f6Ve25VYI7mbnl0dVPWMdjZB6QWwpQ+nLL3pV7HaR5
-	 YX28OXtDEzVik25xabjPMkt68wwozSeLQAJXiSbWZ6QIPhBo3K79Y/06/NDpRx0LMt
-	 S20GCkIrCleKg==
-Received: from [172.16.0.134] (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TQ4sn1wYGzVrS;
-	Wed, 31 Jan 2024 09:58:21 -0500 (EST)
-Message-ID: <d30a890a-f64e-4082-8d8e-864bfb3c3800@efficios.com>
-Date: Wed, 31 Jan 2024 09:58:21 -0500
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eAYRS6JE";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JEcCUXZl";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eAYRS6JE";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JEcCUXZl"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 99A931F747;
+	Wed, 31 Jan 2024 15:41:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1706715714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
+	b=eAYRS6JERcuIGWvi6Ek08YG+lfpfdU+UAgjzoDk7TwEInNVsdBf4o7EZXbfN0Y0JfD3dBs
+	aobWKJqCIB0rO7brfn9fUSiZT/mn2cZ04fww5vWpgTp2gVtXvpjhASo+fdLTjVTrAEp7aI
+	8zP5d9B3ea8I12U+4GCjKO9R6SMA6zc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1706715714;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
+	b=JEcCUXZltSMg4I4IO5xpTfXnvD8ZUTPWFRkM79oWnUGyAKuqqAs88AeT8qyKn9A19NT6zo
+	zDhz8aK3F+mAXmCA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1706715714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
+	b=eAYRS6JERcuIGWvi6Ek08YG+lfpfdU+UAgjzoDk7TwEInNVsdBf4o7EZXbfN0Y0JfD3dBs
+	aobWKJqCIB0rO7brfn9fUSiZT/mn2cZ04fww5vWpgTp2gVtXvpjhASo+fdLTjVTrAEp7aI
+	8zP5d9B3ea8I12U+4GCjKO9R6SMA6zc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1706715714;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DfCZX+hFUBlbWs8+8jojtXLtoVcojjb6ykWSphE2z1g=;
+	b=JEcCUXZltSMg4I4IO5xpTfXnvD8ZUTPWFRkM79oWnUGyAKuqqAs88AeT8qyKn9A19NT6zo
+	zDhz8aK3F+mAXmCA==
+Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 7DCC2132FA;
+	Wed, 31 Jan 2024 15:41:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap2.dmz-prg2.suse.org with ESMTPSA
+	id cPeuHkJqumWyfwAAn2gu4w
+	(envelope-from <jack@suse.cz>); Wed, 31 Jan 2024 15:41:54 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 0ADF9A0809; Wed, 31 Jan 2024 16:41:54 +0100 (CET)
+Date: Wed, 31 Jan 2024 16:41:53 +0100
+From: Jan Kara <jack@suse.cz>
+To: Edward Adam Davis <eadavis@qq.com>
+Cc: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com,
+	adilger.kernel@dilger.ca, chandan.babu@oracle.com, jack@suse.com,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, tytso@mit.edu
+Subject: Re: [PATCH] jbd2: user-memory-access in jbd2__journal_start
+Message-ID: <20240131154153.domdzkkbqgpkplp2@quack3>
+References: <000000000000d6e06d06102ae80b@google.com>
+ <tencent_7F29369E974036964A3E742F778567CC3C09@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 7/8] Introduce dcache_is_aliasing() across all
- architectures
-Content-Language: en-US
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
- linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-mm@kvack.org,
- linux-arch@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
- Arnd Bergmann <arnd@arndb.de>, Russell King <linux@armlinux.org.uk>,
- linux-cxl@vger.kernel.org, nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org
-References: <20240130165255.212591-1-mathieu.desnoyers@efficios.com>
- <20240130165255.212591-8-mathieu.desnoyers@efficios.com>
- <Zbm1CLy+YZWx2IuO@dread.disaster.area>
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-In-Reply-To: <Zbm1CLy+YZWx2IuO@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tencent_7F29369E974036964A3E742F778567CC3C09@qq.com>
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=eAYRS6JE;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=JEcCUXZl
+X-Spamd-Result: default: False [1.69 / 50.00];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_TRACE(0.00)[suse.cz:+];
+	 MX_GOOD(-0.01)[];
+	 RCPT_COUNT_SEVEN(0.00)[11];
+	 FREEMAIL_TO(0.00)[qq.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 ARC_NA(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	 FROM_HAS_DN(0.00)[];
+	 FREEMAIL_ENVRCPT(0.00)[qq.com];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 TAGGED_RCPT(0.00)[cdee56dbcdf0096ef605];
+	 MIME_GOOD(-0.10)[text/plain];
+	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 RCVD_TLS_ALL(0.00)[];
+	 SUSPICIOUS_RECIPS(1.50)[]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Score: 1.69
+X-Rspamd-Queue-Id: 99A931F747
+X-Spam-Level: *
+X-Spam-Flag: NO
+X-Spamd-Bar: +
 
-On 2024-01-30 21:48, Dave Chinner wrote:
-> On Tue, Jan 30, 2024 at 11:52:54AM -0500, Mathieu Desnoyers wrote:
->> Introduce a generic way to query whether the dcache is virtually aliased
->> on all architectures. Its purpose is to ensure that subsystems which
->> are incompatible with virtually aliased data caches (e.g. FS_DAX) can
->> reliably query this.
->>
->> For dcache aliasing, there are three scenarios dependending on the
->> architecture. Here is a breakdown based on my understanding:
->>
->> A) The dcache is always aliasing:
->>
->> * arc
->> * csky
->> * m68k (note: shared memory mappings are incoherent ? SHMLBA is missing there.)
->> * sh
->> * parisc
+On Wed 31-01-24 20:04:27, Edward Adam Davis wrote:
+> Before reusing the handle, it is necessary to confirm that the transaction is 
+> ready.
 > 
-> /me wonders why the dentry cache aliasing has problems on these
-> systems.
+> Reported-and-tested-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
+> Signed-off-by: Edward Adam Davis <eadavis@qq.com>
+
+Sorry but no. Dave found a way to fix this particular problem in XFS and
+your patch would not really improve anything because we'd just crash
+when dereferencing handle->saved_alloc_context.
+
+								Honza
+
+
+> diff --git a/fs/jbd2/transaction.c b/fs/jbd2/transaction.c
+> index cb0b8d6fc0c6..702312cd5392 100644
+> --- a/fs/jbd2/transaction.c
+> +++ b/fs/jbd2/transaction.c
+> @@ -493,6 +493,9 @@ handle_t *jbd2__journal_start(journal_t *journal, int nblocks, int rsv_blocks,
+>  		return ERR_PTR(-EROFS);
+>  
+>  	if (handle) {
+> +		if (handle->saved_alloc_context & ~PF_MEMALLOC_NOFS)
+> +			return ERR_PTR(-EBUSY);
+> +
+>  		J_ASSERT(handle->h_transaction->t_journal == journal);
+>  		handle->h_ref++;
+>  		return handle;
+> -- 
+> 2.43.0
 > 
-> Oh, dcache != fs/dcache.c (the VFS dentry cache).
-> 
-> Can you please rename this function appropriately so us dumb
-> filesystem people don't confuse cpu data cache configurations with
-> the VFS dentry cache aliasing when we read this code? Something like
-> cpu_dcache_is_aliased(), perhaps?
-
-Good point, will do. I'm planning go rename as follows for v3 to
-eliminate confusion with dentry cache (and with "page cache" in
-general):
-
-ARCH_HAS_CACHE_ALIASING -> ARCH_HAS_CPU_CACHE_ALIASING
-dcache_is_aliasing() -> cpu_dcache_is_aliasing()
-
-I noticed that you suggested "aliased" rather than "aliasing",
-but I followed what arm64 did for icache_is_aliasing(). Do you
-have a strong preference one way or another ?
-
-Thanks,
-
-Mathieu
-
 -- 
-Mathieu Desnoyers
-EfficiOS Inc.
-https://www.efficios.com
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
