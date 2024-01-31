@@ -1,157 +1,345 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2679E2E646;
-	Wed, 31 Jan 2024 06:35:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1797254F9C;
+	Wed, 31 Jan 2024 07:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706682930; cv=none; b=hFhrZ56AjA0vpy5RLQuZt5qqfhm5kungF1Z/RxEIv0+Wi+Hv9ZggDPlepku7RxAMiI5v0y+Fp1cHqQaE9plitbEiEs+zbcH88NqV+C2lVm2Lk9Wdh7D+W3vInlfmbCGRm9FFBkDdk0875HKKz/Tpt/5WLiU6fW4/kUViMHBIR70=
+	t=1706685286; cv=none; b=RhYLjBpCakMHRMGw1/BGwFUDP/vAWbPpTiGb/mGbtXc9zRHo3CzwemV1YxmBvMpOBStxSkWC6k3BwSuJq2aDa9jJGjOdYGaafrhcH6wSF7P5EnpDzcqstUiyO1EWBB7QOeSri8fSkrEaeLKsJJLp0T/EygHwaiGrU5UkhatdEDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706682930; c=relaxed/simple;
-	bh=yEjvk7Z6GPbDCyyGwiMHpYBOIdUYk+N36+w68bh6Hz8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=bcYQlJlO7WHikzN7J30fVVxhgZmzLUUHWhVtE5vdcLCbEDRgz5Fj4eZRf5GXw6UVqEv69cs0Gjw2BKq9ry0SzAya25UCCiI2QZmy8LdFg52r+AX+nWha6vt8v/JwBj8PYi+VqYiVDapmNfnt5fPhjW7y17NEmLP2y/KQVLLVwjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i2+y4S0i; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i2+y4S0i"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1d7354ba334so34632785ad.1;
-        Tue, 30 Jan 2024 22:35:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706682928; x=1707287728; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+FNDbQxqsKRXUiAiX60JWrb4aEqdgGBOkItcuuiOTjM=;
-        b=i2+y4S0iyZKc9hZnfdMIPNwTy6ysW06MgGA3ZNw0Q80UEnKyxGxiSmVd1OGSs0a1ja
-         hdSm5UdabSjaIeidLiuoUMh4pW3YLiMTQzg/5rIRqt254+kTqJ7JnAABwGQi8RsMV721
-         aSf3dTf3yZlt+DzWnKtKaws5cXjODWwwnIe+7MA+pmFRUcBi712cbhCyNG2/myH0RiK8
-         XsJXuyus4VprvIykvZ4FoDkb3HAPxDaRYs4PYQDC1d0Csk4q3igOjEukCa8Kgske6SdA
-         X1kvlKbOWIYVf1rJdj6gTgnFjVv043xfk5ueAm7dilcHK7NtSbCH96sAm4A1tcsw3Mst
-         XK2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706682928; x=1707287728;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+FNDbQxqsKRXUiAiX60JWrb4aEqdgGBOkItcuuiOTjM=;
-        b=tAGA4OR19ZK+AwuzKeTY+ycClQM7beHDZz8EG9gVyxEaO8zDDd751+xtHgIojT3A4c
-         utldO25k+JMn1INrJjClK57woGAPUjG8GYaGsUbBluZOYJ7s62amt3FQAdPIBxhBtWMg
-         V54nIEXZNKByQNcOn0Ov8ITcsBm1B9S+jJrAJdtEpR/egLFqevxG9dPZf9+UvCq0n5xg
-         RuWZwlb41pj0TZ8/9VB79Gmr1QDbMqSvxUR3E/RUkfdQLFqAjUqX9ualWN1d1ChRL8b9
-         ytA7oGvoepQdm2oswKNqExjq4TU5MAwf1t+Q/hZNbKFLdjuXENyRII+R2eVmAvF2GPgl
-         RR4Q==
-X-Gm-Message-State: AOJu0Yy3ZHB9tWyiqkJR48/2wcpRG3EldXHu5VkmP6P3kiJrDShqtj1A
-	wW3jCeaoOS0mw6CxMqq8c9CJdMNmjX0gMeXo3M7jwiC6Id2Jfu8QG7fK4yllO4s=
-X-Google-Smtp-Source: AGHT+IHkKBojmMalCH1abnDqSb8OlKrQdwRV2VK6rsQwWqWt33sERj8ftB0n3bMtJsEZF1Wz/7WcSw==
-X-Received: by 2002:a17:902:6807:b0:1d7:8f44:45 with SMTP id h7-20020a170902680700b001d78f440045mr867077plk.0.1706682928204;
-        Tue, 30 Jan 2024 22:35:28 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCWX7TgSI8BRheelh05ItqYsgn40g6hBRIaTo+VNnT8npGQO/npnJJ5Dbz62dk7zNVDFAZ4tfWXenrWD0hHK7rM4L32sfdLfwmzqwSrzg01Jr1lI3TlA39Mj0VnxD0QMvYtNlwsSpgcXs4dacuFxIzRSUd+6oOqGP14QLijAFDJ/pZBca/bb+OuOjo3gPtB/bOCmYqZjJ5SZs5zxGkzExHdZFe26qW1t5xb3b2KfVQUCTbSExOABcg==
-Received: from localhost.localdomain ([43.132.141.8])
-        by smtp.gmail.com with ESMTPSA id e20-20020a170902f1d400b001d8d1a2e5fesm5499160plc.196.2024.01.30.22.35.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Jan 2024 22:35:27 -0800 (PST)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: david@fromorbit.com
-Cc: alexjlzheng@gmail.com,
-	bfoster@redhat.com,
-	djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	raven@themaw.net,
-	rcu@vger.kernel.org
-Subject: Re: About the conflict between XFS inode recycle and VFS rcu-walk
-Date: Wed, 31 Jan 2024 14:35:17 +0800
-Message-Id: <20240131063517.1812354-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.39.3
-In-Reply-To: <ZXJf6C0V1znU+ngP@dread.disaster.area>
-References: <ZXJf6C0V1znU+ngP@dread.disaster.area>
+	s=arc-20240116; t=1706685286; c=relaxed/simple;
+	bh=k2j8M59dz7qrBXCGQk58C4vwMDSZcDZTheCLukNm0r4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bvDn3I8Uy8FqK+pmdLQYZDjkUchCg0kj5vDWsBzXBVDIAu+oFOie2jJqh66mue0KZm4g1qCTLR5l34mp59DJHcOdVwSmf/Tsk5uWqdAe/HIWJG8Ff04zV6cW25JEg8Ccn7HfYdbZuQDvCvwOolIv2aKNjV9buZSJkMx/GJh/DQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id A9C0E68B05; Wed, 31 Jan 2024 08:14:37 +0100 (CET)
+Date: Wed, 31 Jan 2024 08:14:37 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org,
+	Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.com>,
+	David Howells <dhowells@redhat.com>,
+	Brian Foster <bfoster@redhat.com>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 19/19] writeback: simplify writeback iteration
+Message-ID: <20240131071437.GA17336@lst.de>
+References: <20240125085758.2393327-1-hch@lst.de> <20240125085758.2393327-20-hch@lst.de> <20240130104605.2i6mmdncuhwwwfin@quack3> <20240130141601.GA31330@lst.de> <20240130215016.npofgza5nmoxuw6m@quack3>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240130215016.npofgza5nmoxuw6m@quack3>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, 8 Dec 2023 11:14:32 +1100, david@fromorbit.com wrote:
-> On Tue, Dec 05, 2023 at 07:38:33PM +0800, alexjlzheng@gmail.com wrote:
-> > Hi, all
-> > 
-> > I would like to ask if the conflict between xfs inode recycle and vfs rcu-walk
-> > which can lead to null pointer references has been resolved?
-> > 
-> > I browsed through emails about the following patches and their discussions:
-> > - https://lore.kernel.org/linux-xfs/20220217172518.3842951-2-bfoster@redhat.com/
-> > - https://lore.kernel.org/linux-xfs/20220121142454.1994916-1-bfoster@redhat.com/
-> > - https://lore.kernel.org/linux-xfs/164180589176.86426.501271559065590169.stgit@mickey.themaw.net/
-> > 
-> > And then came to the conclusion that this problem has not been solved, am I
-> > right? Did I miss some patch that could solve this problem?
-> 
-> We fixed the known problems this caused by turning off the VFS
-> functionality that the rcu pathwalks kept tripping over. See commit
-> 7b7820b83f23 ("xfs: don't expose internal symlink metadata buffers to
-> the vfs").
+On Tue, Jan 30, 2024 at 10:50:16PM +0100, Jan Kara wrote:
+> Well, batch release needs to be only here because if writeback_get_folio()
+> returns NULL, the batch has been already released by it.
 
-Sorry for the delay.
+Indeed.
 
-The problem I encountered in the production environment was that during the
-rcu walk process the ->get_link() pointer was NULL, which caused a crash.
+> So what would be
+> duplicated is only the error assignment. But I'm fine with the version in
+> the following email and actually somewhat prefer it compared the yet
+> another variant you've sent.
 
-As far as I know, commit 7b7820b83f23 ("xfs: don't expose internal symlink
-metadata buffers to the vfs") first appeared in:
-- https://lore.kernel.org/linux-fsdevel/YZvvP9RFXi3%2FjX0q@bfoster/
+So how about another variant, this is closer to your original suggestion.
+But I've switched around the ordered of the folio or not branches
+from my original patch, and completely reworked and (IMHO) improved the
+comments.  it replaces patch 19 instead of being incremental to be
+readable:
 
-Does this commit solve the problem of NULL ->get_link()? And how?
-
-> 
-> Apart from that issue, I'm not aware of any other issues that the
-> XFS inode recycling directly exposes.
-> 
-> > According to my understanding, the essence of this problem is that XFS reuses
-> > the inode evicted by VFS, but VFS rcu-walk assumes that this will not happen.
-> 
-> It assumes that the inode will not change identity during the RCU
-> grace period after the inode has been evicted from cache. We can
-> safely reinstantiate an evicted inode without waiting for an RCU
-> grace period as long as it is the same inode with the same content
-> and same state.
-> 
-> Problems *may* arise when we unlink the inode, then evict it, then a
-> new file is created and the old slab cache memory address is used
-> for the new inode. I describe the issue here:
-> 
-> https://lore.kernel.org/linux-xfs/20220118232547.GD59729@dread.disaster.area/
-
-And judging from the relevant emails, the main reason why ->get_link() is set
-to NULL should be the lack of synchronize_rcu() before xfs_reinit_inode() when
-the inode is chosen to be reused.
-
-However, perhaps due to performance reasons, this solution has not been merged
-for a long time. How is it now? 
-
-Maybe I am missing something in the threads of mail?
-
-Thank you very much. :)
-Jinliang Zheng
-
-> 
-> That said, we have exactly zero evidence that this is actually a
-> problem in production systems. We did get systems tripping over the
-> symlink issue, but there's no evidence that the
-> unlink->close->open(O_CREAT) issues are manifesting in the wild and
-> hence there hasn't been any particular urgency to address it.
-> 
-> > Are there any recommended workarounds until an elegant and efficient solution
-> > can be proposed? After all, causing a crash is extremely unacceptable in a
-> > production environment.
-> 
-> What crashes are you seeing in your production environment?
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 58b3661f5eac9e..1593a783176ca2 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1985,12 +1985,13 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+ 		struct iomap_writepage_ctx *wpc,
+ 		const struct iomap_writeback_ops *ops)
+ {
+-	struct folio *folio;
+-	int ret;
++	struct folio *folio = NULL;
++	int ret = 0;
+ 
+ 	wpc->ops = ops;
+-	for_each_writeback_folio(mapping, wbc, folio, ret)
++	while ((folio = writeback_iter(mapping, wbc, folio, &ret)))
+ 		ret = iomap_do_writepage(folio, wbc, wpc);
++
+ 	if (!wpc->ioend)
+ 		return ret;
+ 	return iomap_submit_ioend(wpc, wpc->ioend, ret);
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 2416da933440e2..fc4605627496fc 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -367,15 +367,8 @@ int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
+ 
+ bool wb_over_bg_thresh(struct bdi_writeback *wb);
+ 
+-struct folio *writeback_iter_init(struct address_space *mapping,
+-		struct writeback_control *wbc);
+-struct folio *writeback_iter_next(struct address_space *mapping,
+-		struct writeback_control *wbc, struct folio *folio, int error);
+-
+-#define for_each_writeback_folio(mapping, wbc, folio, error)		\
+-	for (folio = writeback_iter_init(mapping, wbc);			\
+-	     folio || ((error = wbc->err), false);			\
+-	     folio = writeback_iter_next(mapping, wbc, folio, error))
++struct folio *writeback_iter(struct address_space *mapping,
++		struct writeback_control *wbc, struct folio *folio, int *error);
+ 
+ typedef int (*writepage_t)(struct folio *folio, struct writeback_control *wbc,
+ 				void *data);
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 0763c4353a676a..eefcb00cb7b227 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2360,29 +2360,6 @@ void tag_pages_for_writeback(struct address_space *mapping,
+ }
+ EXPORT_SYMBOL(tag_pages_for_writeback);
+ 
+-static void writeback_finish(struct address_space *mapping,
+-		struct writeback_control *wbc, pgoff_t done_index)
+-{
+-	folio_batch_release(&wbc->fbatch);
+-
+-	/*
+-	 * For range cyclic writeback we need to remember where we stopped so
+-	 * that we can continue there next time we are called.  If  we hit the
+-	 * last page and there is more work to be done, wrap back to the start
+-	 * of the file.
+-	 *
+-	 * For non-cyclic writeback we always start looking up at the beginning
+-	 * of the file if we are called again, which can only happen due to
+-	 * -ENOMEM from the file system.
+-	 */
+-	if (wbc->range_cyclic) {
+-		if (wbc->err || wbc->nr_to_write <= 0)
+-			mapping->writeback_index = done_index;
+-		else
+-			mapping->writeback_index = 0;
+-	}
+-}
+-
+ static xa_mark_t wbc_to_tag(struct writeback_control *wbc)
+ {
+ 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+@@ -2442,10 +2419,8 @@ static struct folio *writeback_get_folio(struct address_space *mapping,
+ 		filemap_get_folios_tag(mapping, &wbc->index, wbc_end(wbc),
+ 				wbc_to_tag(wbc), &wbc->fbatch);
+ 		folio = folio_batch_next(&wbc->fbatch);
+-		if (!folio) {
+-			writeback_finish(mapping, wbc, 0);
++		if (!folio)
+ 			return NULL;
+-		}
+ 	}
+ 
+ 	folio_lock(folio);
+@@ -2458,60 +2433,107 @@ static struct folio *writeback_get_folio(struct address_space *mapping,
+ 	return folio;
+ }
+ 
+-struct folio *writeback_iter_init(struct address_space *mapping,
+-		struct writeback_control *wbc)
++/**
++ * writepage_iter - iterate folio of a mapping for writeback
++ * @mapping: address space structure to write
++ * @wbc: writeback context
++ * @folio: previously iterated folio (%NULL to start)
++ * @error: in-out pointer for writeback errors (see below)
++ *
++ * This function should be called in a while loop in the ->writepages
++ * implementation and returns the next folio for the writeback operation
++ * described by @wbc on @mapping.
++ *
++ * To start writeback @folio should be passed as NULL, for every following
++ * iteration the folio returned by this function previously should be passed.
++ * @error should contain the error from the previous writeback iteration when
++ * calling writeback_iter.
++ *
++ * Once the writeback described in @wbc has finished, this function will return
++ * %NULL and if there was an error in any iteration restore it to @error.
++ *
++ * Note: callers should not manually break out of the loop using break or goto.
++ */
++struct folio *writeback_iter(struct address_space *mapping,
++		struct writeback_control *wbc, struct folio *folio, int *error)
+ {
+-	if (wbc->range_cyclic)
+-		wbc->index = mapping->writeback_index; /* prev offset */
+-	else
+-		wbc->index = wbc->range_start >> PAGE_SHIFT;
+-
+-	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+-		tag_pages_for_writeback(mapping, wbc->index, wbc_end(wbc));
+-
+-	wbc->err = 0;
+-	folio_batch_init(&wbc->fbatch);
+-	return writeback_get_folio(mapping, wbc);
+-}
++	if (!folio) {
++		folio_batch_init(&wbc->fbatch);
++		wbc->err = 0;
+ 
+-struct folio *writeback_iter_next(struct address_space *mapping,
+-		struct writeback_control *wbc, struct folio *folio, int error)
+-{
+-	unsigned long nr = folio_nr_pages(folio);
++		/*
++		 * For range cyclic writeback we remember where we stopped so
++		 * that we can continue where we stopped.
++		 *
++		 * For non-cyclic writeback we always start at the beginning of
++		 * the passed in range.
++		 */
++		if (wbc->range_cyclic)
++			wbc->index = mapping->writeback_index;
++		else
++			wbc->index = wbc->range_start >> PAGE_SHIFT;
+ 
+-	wbc->nr_to_write -= nr;
++		/*
++		 * To avoid livelocks when other processes dirty new pages, we
++		 * first tag pages which should be written back and only then
++		 * start writing them.
++		 *
++		 * For data-integrity sync we have to be careful so that we do
++		 * not miss some pages (e.g., because some other process has
++		 * cleared the TOWRITE tag we set).  The rule we follow is that
++		 * TOWRITE tag can be cleared only by the process clearing the
++		 * DIRTY tag (and submitting the page for I/O).
++		 */
++		if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
++			tag_pages_for_writeback(mapping, wbc->index,
++					wbc_end(wbc));
++	} else {
++		wbc->nr_to_write -= folio_nr_pages(folio);
+ 
+-	/*
+-	 * Handle the legacy AOP_WRITEPAGE_ACTIVATE magic return value.
+-	 * Eventually all instances should just unlock the folio themselves and
+-	 * return 0;
+-	 */
+-	if (error == AOP_WRITEPAGE_ACTIVATE) {
+-		folio_unlock(folio);
+-		error = 0;
++		/*
++		 * For integrity writeback  we have to keep going until we have
++		 * written all the folios we tagged for writeback prior to
++		 * entering the writeback loop, even if we run past
++		 * wbc->nr_to_write or encounter errors, and just stash away
++		 * the first error we encounter in wbc->err so that it can
++		 * be retrieved on return.
++		 *
++		 * This is because the file system may still have state to clear
++		 * for each folio.  We'll eventually return the first error
++		 * encountered.
++		 */
++		if (wbc->sync_mode == WB_SYNC_ALL) {
++			if (*error && !wbc->err)
++				wbc->err = *error;
++		} else {
++			if (*error || wbc->nr_to_write <= 0)
++				goto done;
++		}
+ 	}
+ 
+-	if (error && !wbc->err)
+-		wbc->err = error;
++	folio = writeback_get_folio(mapping, wbc);
++	if (!folio) {
++		/*
++		 * For range cyclic writeback not finding another folios means
++		 * that we are at the end of the file.  In that case go back
++		 * to the start of the file for the next call.
++		 */
++		if (wbc->range_cyclic)
++			mapping->writeback_index = 0;
+ 
+-	/*
+-	 * For integrity sync  we have to keep going until we have written all
+-	 * the folios we tagged for writeback prior to entering the writeback
+-	 * loop, even if we run past wbc->nr_to_write or encounter errors.
+-	 * This is because the file system may still have state to clear for
+-	 * each folio.   We'll eventually return the first error encountered.
+-	 *
+-	 * For background writeback just push done_index past this folio so that
+-	 * we can just restart where we left off and media errors won't choke
+-	 * writeout for the entire file.
+-	 */
+-	if (wbc->sync_mode == WB_SYNC_NONE &&
+-	    (wbc->err || wbc->nr_to_write <= 0)) {
+-		writeback_finish(mapping, wbc, folio->index + nr);
+-		return NULL;
++		/*
++		 * Return the first error we encountered (if there was any) to
++		 * the caller now that we are done.
++		 */
++		*error = wbc->err;
+ 	}
++	return folio;
+ 
+-	return writeback_get_folio(mapping, wbc);
++done:
++	if (wbc->range_cyclic)
++		mapping->writeback_index = folio->index + folio_nr_pages(folio);
++	folio_batch_release(&wbc->fbatch);
++	return NULL;
+ }
+ 
+ /**
+@@ -2549,13 +2571,18 @@ int write_cache_pages(struct address_space *mapping,
+ 		      struct writeback_control *wbc, writepage_t writepage,
+ 		      void *data)
+ {
+-	struct folio *folio;
+-	int error;
++	struct folio *folio = NULL;
++	int error = 0;
+ 
+-	for_each_writeback_folio(mapping, wbc, folio, error)
++	while ((folio = writeback_iter(mapping, wbc, folio, &error))) {
+ 		error = writepage(folio, wbc, data);
++		if (error == AOP_WRITEPAGE_ACTIVATE) {
++			folio_unlock(folio);
++			error = 0;
++		}
++	}
+ 
+-	return wbc->err;
++	return error;
+ }
+ EXPORT_SYMBOL(write_cache_pages);
+ 
+@@ -2563,13 +2590,17 @@ static int writeback_use_writepage(struct address_space *mapping,
+ 		struct writeback_control *wbc)
+ {
+ 	struct blk_plug plug;
+-	struct folio *folio;
+-	int err;
++	struct folio *folio = NULL;
++	int err = 0;
+ 
+ 	blk_start_plug(&plug);
+-	for_each_writeback_folio(mapping, wbc, folio, err) {
++	while ((folio = writeback_iter(mapping, wbc, folio, &err))) {
+ 		err = mapping->a_ops->writepage(&folio->page, wbc);
+ 		mapping_set_error(mapping, err);
++		if (err == AOP_WRITEPAGE_ACTIVATE) {
++			folio_unlock(folio);
++			err = 0;
++		}
+ 	}
+ 	blk_finish_plug(&plug);
+ 
