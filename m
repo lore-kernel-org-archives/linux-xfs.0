@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87D2585289
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:49:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327D885289
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:49:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816959; cv=none; b=AdUqu8GhXwpaRE873CGvSBCzFKNmkvZfgHX4dkZzZW9JsPKzMa2zvC5prrWUWu+FIWX21jnq2s1cohgchviqOdn+gUCOcH/c6FeEKYUABUQFgydCxqDkhlI+83cet9Dch1jy9+JG/HIVrs0pY3nFz1ILHwvWX4Lc9N+O5raW9dY=
+	t=1706816975; cv=none; b=TCRJuoyHAkwDnOoUulExLC2kFiBo3zOcRM8km2VWnlOs/0o2O0bt3svE+tU0BEcjZ6JqeZf6FpxQ4WCKRzzF0iK/Jvdn2xwv3+T0HIE94vb1fe7hYK+On6yq/Mc6J37OoNptQTSPfAFeajzK0GBcqP623JzQIgmG9bCi6xrSbHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816959; c=relaxed/simple;
-	bh=sIK95JghIVrW8Xm4HMGzNMD1DjJRYRTkzLge9g1as8M=;
+	s=arc-20240116; t=1706816975; c=relaxed/simple;
+	bh=wCkUU05aOyAFaBoGL1ex1c0vgLWUcP7KofB8+JYKqTY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IjXByvL7wjrzrr1SXN1sZcXw5kw3syQG5tlLc8gR24nlpHXgdSbWLHUVuc2ghrR+Kmt1Mcrnob3Dn8hmMa8/H9j4dhupktr0PlQ6hfNnd94MIoN1qv6IyNuHgBNOAJ/G/cVWpig2G/2AlJEMlPHclldKHLwp1cmNAGgMOHEF+Kg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n3SRPKTm; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QTxLWWIGJT3qUES6eiXlP4Z4eP6TkVCa6NntmwOOb7S+hITz7Pq6Dvm6gg9djc1I4HIr4De8eNBfnvsdm4UkWzZaI+Ef69DuTZSuIVHTc1b6hWJ/u/Vzd4IQx7wSUVjkaTpids2wQYaE3HU0z7j5co6/iYWB1Rd7M9SpUova60g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=siXsj6Rn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n3SRPKTm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55868C433C7;
-	Thu,  1 Feb 2024 19:49:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="siXsj6Rn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2D77C433F1;
+	Thu,  1 Feb 2024 19:49:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816959;
-	bh=sIK95JghIVrW8Xm4HMGzNMD1DjJRYRTkzLge9g1as8M=;
+	s=k20201202; t=1706816975;
+	bh=wCkUU05aOyAFaBoGL1ex1c0vgLWUcP7KofB8+JYKqTY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=n3SRPKTm4gVFSmoPkmpr99TT9ohIND4iwsxS2JRcWScKlrN95DGx8R+MA+qlF/bxu
-	 sWFAZ0n3hLgUR2YCXYvUWTff4kypONd/6eUzdnCWjZSwDrleypjPFImy/Fn6VzrAOq
-	 cHvsN3CAUmngRFOElcaCd1+M4zIKZXHwUEx5VujLP1pLSkBB2lZa8fdeOMNMd6VnwI
-	 L6xtLacdq9zt9oqZvR5mIdraZVEg6lpuk4AFzk6UHXBtgkpDuEq+9R2kNh4txBZwJ7
-	 Cg/BvCK8+yxR3aBGBrLG/L2Tg9cFQHF69iu4+pPkG00dpSSZPdvIJCqJpf7hC4UVp5
-	 u2wl7zgxZoNfg==
-Date: Thu, 01 Feb 2024 11:49:18 -0800
-Subject: [PATCH 14/27] xfs: fold xfs_bmbt_init_common into
- xfs_bmbt_init_cursor
+	b=siXsj6RnEUgywO3xQ+EltpH1DpR0o20EjYcU5CKGR5ul2G4VKAjSZVZ+UNPUIgcQd
+	 /caJwEnkuzvOWospyOGC5czWEeSeNIGF3Dv4EJi2kK4/p9UdpEs2q0hOE2sCVRE0YH
+	 MYB7AbWEbpd7xgL275gbnvP05SLEdVdIW1Ho2llIJOUGjkulJvBLQOLTFUhmfToTNz
+	 sR/ULNHV4OGCvihT1LQOtTaByhKxPDrsZOI8sgKnTVzbXDXwNp2j9vPBLPJJA9CO/6
+	 lOaVsdnhDT4beExRlsjme3S+rd5xiB5hA8HtQZuGEeG9UZjC1lLIH6BS/EIBbBAD21
+	 rBbvtxVmIlKfQ==
+Date: Thu, 01 Feb 2024 11:49:34 -0800
+Subject: [PATCH 15/27] xfs: remove xfs_bmbt_stage_cursor
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681335011.1605438.18394075552185732861.stgit@frogsfrogsfrogs>
+Message-ID: <170681335027.1605438.4521488811231990374.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 References: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,110 +46,78 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Make the levels initialization in xfs_bmbt_init_cursor conditional
-and merge the two helpers.
-
-This requires the fakeroot case to now pass a -1 whichfork directly
-into xfs_bmbt_init_cursor, and some special casing for that, but
-at least this scheme to deal with the fake btree root is handled and
-documented in once place now.
+Just open code the two calls in the callers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: tidy up a multline ternary]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.c |   58 +++++++++++++++++++---------------------
- 1 file changed, 28 insertions(+), 30 deletions(-)
+ fs/xfs/libxfs/xfs_bmap_btree.c |   19 -------------------
+ fs/xfs/libxfs/xfs_bmap_btree.h |    2 --
+ fs/xfs/scrub/bmap_repair.c     |    8 +++++++-
+ 3 files changed, 7 insertions(+), 22 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 7381e507b32ba..c338c5be4c67a 100644
+index c338c5be4c67a..1104bf4098e2e 100644
 --- a/fs/xfs/libxfs/xfs_bmap_btree.c
 +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -544,44 +544,46 @@ const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.keys_contiguous	= xfs_bmbt_keys_contiguous,
- };
+@@ -598,25 +598,6 @@ xfs_bmbt_block_maxrecs(
+ 	return blocklen / (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t));
+ }
  
--static struct xfs_btree_cur *
--xfs_bmbt_init_common(
-+/*
-+ * Create a new bmap btree cursor.
-+ *
-+ * For staging cursors -1 in passed in whichfork.
-+ */
-+struct xfs_btree_cur *
-+xfs_bmbt_init_cursor(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	int			whichfork)
- {
- 	struct xfs_btree_cur	*cur;
-+	unsigned int		maxlevels;
- 
- 	ASSERT(whichfork != XFS_COW_FORK);
- 
-+	/*
-+	 * The Data fork always has larger maxlevel, so use that for staging
-+	 * cursors.
-+	 */
-+	switch (whichfork) {
-+	case XFS_STAGING_FORK:
-+		maxlevels = mp->m_bm_maxlevels[XFS_DATA_FORK];
-+		break;
-+	default:
-+		maxlevels = mp->m_bm_maxlevels[whichfork];
-+		break;
-+	}
- 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP, &xfs_bmbt_ops,
--			mp->m_bm_maxlevels[whichfork], xfs_bmbt_cur_cache);
+-/*
+- * Allocate a new bmap btree cursor for reloading an inode block mapping data
+- * structure.  Note that callers can use the staged cursor to reload extents
+- * format inode forks if they rebuild the iext tree and commit the staged
+- * cursor immediately.
+- */
+-struct xfs_btree_cur *
+-xfs_bmbt_stage_cursor(
+-	struct xfs_mount	*mp,
+-	struct xfs_inode	*ip,
+-	struct xbtree_ifakeroot	*ifake)
+-{
+-	struct xfs_btree_cur	*cur;
 -
-+			maxlevels, xfs_bmbt_cur_cache);
- 	cur->bc_ino.ip = ip;
--	cur->bc_bmap.allocated = 0;
+-	cur = xfs_bmbt_init_cursor(mp, NULL, ip, XFS_STAGING_FORK);
+-	xfs_btree_stage_ifakeroot(cur, ifake);
 -	return cur;
 -}
 -
--/*
-- * Allocate a new bmap btree cursor.
-- */
--struct xfs_btree_cur *
--xfs_bmbt_init_cursor(
--	struct xfs_mount	*mp,
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip,
--	int			whichfork)
--{
--	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
--	struct xfs_btree_cur	*cur;
--
--	cur = xfs_bmbt_init_common(mp, tp, ip, whichfork);
--
--	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
--	cur->bc_ino.forksize = xfs_inode_fork_size(ip, whichfork);
- 	cur->bc_ino.whichfork = whichfork;
-+	cur->bc_bmap.allocated = 0;
-+	if (whichfork != XFS_STAGING_FORK) {
-+		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
+ /*
+  * Swap in the new inode fork root.  Once we pass this point the newly rebuilt
+  * mappings are in place and we have to kill off any old btree blocks.
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index e93aa42e2bf5b..de1b73f1225ca 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -107,8 +107,6 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
  
-+		cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
-+		cur->bc_ino.forksize = xfs_inode_fork_size(ip, whichfork);
-+	}
- 	return cur;
- }
+ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_inode *, int);
+-struct xfs_btree_cur *xfs_bmbt_stage_cursor(struct xfs_mount *mp,
+-		struct xfs_inode *ip, struct xbtree_ifakeroot *ifake);
+ void xfs_bmbt_commit_staged_btree(struct xfs_btree_cur *cur,
+ 		struct xfs_trans *tp, int whichfork);
  
-@@ -610,11 +612,7 @@ xfs_bmbt_stage_cursor(
- {
- 	struct xfs_btree_cur	*cur;
+diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+index a4bb89fdd5106..1e656fab5e41a 100644
+--- a/fs/xfs/scrub/bmap_repair.c
++++ b/fs/xfs/scrub/bmap_repair.c
+@@ -639,7 +639,13 @@ xrep_bmap_build_new_fork(
+ 	rb->new_bmapbt.bload.get_records = xrep_bmap_get_records;
+ 	rb->new_bmapbt.bload.claim_block = xrep_bmap_claim_block;
+ 	rb->new_bmapbt.bload.iroot_size = xrep_bmap_iroot_size;
+-	bmap_cur = xfs_bmbt_stage_cursor(sc->mp, sc->ip, ifake);
++
++	/*
++	 * Allocate a new bmap btree cursor for reloading an inode block mapping
++	 * data structure.
++	 */
++	bmap_cur = xfs_bmbt_init_cursor(sc->mp, NULL, sc->ip, XFS_STAGING_FORK);
++	xfs_btree_stage_ifakeroot(bmap_cur, ifake);
  
--	/* data fork always has larger maxheight */
--	cur = xfs_bmbt_init_common(mp, NULL, ip, XFS_DATA_FORK);
--
--	/* Don't let anyone think we're attached to the real fork yet. */
--	cur->bc_ino.whichfork = XFS_STAGING_FORK;
-+	cur = xfs_bmbt_init_cursor(mp, NULL, ip, XFS_STAGING_FORK);
- 	xfs_btree_stage_ifakeroot(cur, ifake);
- 	return cur;
- }
+ 	/*
+ 	 * Figure out the size and format of the new fork, then fill it with
 
