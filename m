@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F8D85289
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:49:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6F143AC7
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:50:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816990; cv=none; b=ujJQtDvQHvenrj2TeTNylNKUgb4roPhQoW9XfPzFvQZUrlzjhGVPpTR5W8hHpWYCC5mP3loiZtyEG46SgKxg6xdojgC6RqBhLnQ1GtPyz1bvMG+zlsvFdgm9bKku/BPy9EgI6pY+gIKOJtbKAHEn2TbbBHwz3mrc9156YO99iY0=
+	t=1706817006; cv=none; b=lSTl9fDtbzxED37bDB8Uotmgpu0PCvGoup7zYiCbzturoQr+dsMxN1VcNL2b/cG6fFnoOi+Q5F+b9O01LorewbWE5JXmlsOABg5ZMwdAnuON41W5dVSlLLFFpgJpSmdXKd8QjB72GBkXJEml3hOPlXNGV6zz5KTXwlqmGZEQh8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816990; c=relaxed/simple;
-	bh=qOuaPcnkqS/DVfQHcmsn1jdNj0KFPoS9PA8Q4H6sHO4=;
+	s=arc-20240116; t=1706817006; c=relaxed/simple;
+	bh=smAi/krLpMZEXJT2ORBAmSkCHpTq2mcNhjtMobT8XZw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GMzmv0ih0hLr5ZEZa0rNsw0u/kxrPRE4nhnIsJ93oiq/sF8fn9PUYWXHda5CCVXgkUbSdF3ucFq/b2I/R/SQE6AFw7mQuQpj8zc34DhKqJuULFFbtmv1orbQK9+x2O38qE4oy1OM3FGI32f5o5dxp4wpak3vk+DZOPplwxaM6Go=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u17nPGQc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HJGDsjes23wQK2dM+dTDCwynJ++rJ7qySTk8S3y3FjQtIELu+8gq/aQ/nYdAULgZbqZDmCvzLWLoEEb3j8V6jQP/N7Whg4ZfIvkGXGG4a/fmAkht00ry/F1BJ/BlHtJcGUo090M2Z6pI/SjiN/bb/fHcqAziqXbDEXj9QSUL9O8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2fqg9zh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u17nPGQc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E2E1C433C7;
-	Thu,  1 Feb 2024 19:49:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2fqg9zh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32B87C433F1;
+	Thu,  1 Feb 2024 19:50:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816990;
-	bh=qOuaPcnkqS/DVfQHcmsn1jdNj0KFPoS9PA8Q4H6sHO4=;
+	s=k20201202; t=1706817006;
+	bh=smAi/krLpMZEXJT2ORBAmSkCHpTq2mcNhjtMobT8XZw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=u17nPGQcDixAUQJVku9VjovgO3sKAldoRF5aS+R5sEPINbecgAiSzqklTaR0K3dA2
-	 g++UtIxtstGcJlXAKTQTW0Zdk1Ckrwab4dHLGjzzi+fV/tuorm2ym5juDDSRV4IOb2
-	 20swkF4PjYITiWbJ4fVl+x7bs/aKjlqgQIciX4mQnDggNETYg3fz4roxdMRqPmqsLD
-	 AOvFKnsUvO8X7C4gVC6Fawnqyn+wcvCqby57Rr1tbhcN6zYhjcWRYy9UWROGEtMlgS
-	 m19LS4xrk4Ehe6GqU09cMR5qw9J1GCp8V2PL8Mph5E2hzlYdB6mBjzqXBJJobrCNnr
-	 cw6QeiS1ySqqQ==
-Date: Thu, 01 Feb 2024 11:49:50 -0800
-Subject: [PATCH 16/27] xfs: split the agf_roots and agf_levels arrays
+	b=l2fqg9zhXipFUtkW9M0h4M4oXR7hlWEjtek/mTLHIwIWxUyvayxzklGE3L35qZqmb
+	 3CebKMqvPwnUzBz+msy/gXA8+/QZ9zTS1GcSe+zLZT3O/dVcfvwkyGQR1lysx3DNxg
+	 yhP7EFeOeN1Hhv1LUBNM/5H/YE2h/uzdcNW58PwIKUw0yj35C1X0nE3O5CqH6arHjj
+	 HRJMv7pg2S3unS/xknO5CkX4zR8ruRRBC+Ty+pghtJq0lw0YytUfkz3mTTnv5AGqrZ
+	 ULpiUwvVLOXT198dEbbCvYHoaIhEcFsH+CoXeF/8MMVFaiyMWzhAh7mnSpSuo57Aqf
+	 7ic0eKfiEkbTQ==
+Date: Thu, 01 Feb 2024 11:50:05 -0800
+Subject: [PATCH 17/27] xfs: add a name field to struct xfs_btree_ops
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681335044.1605438.15493685442671084965.stgit@frogsfrogsfrogs>
+Message-ID: <170681335062.1605438.4257790245706970220.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 References: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,555 +46,606 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Using arrays of largely unrelated fields that use the btree number
-as index is not very robust.  Split the arrays into three separate
-fields instead.
+The btnum in struct xfs_btree_ops is often used for printing a symbolic
+name for the btree.  Add a name field to the ops structure and use that
+directly.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c          |   13 +++++-----
- fs/xfs/libxfs/xfs_ag.h          |    8 ++++--
- fs/xfs/libxfs/xfs_alloc.c       |   49 ++++++++++++++-----------------------
- fs/xfs/libxfs/xfs_alloc_btree.c |   52 ++++++++++++++++++++++++++-------------
- fs/xfs/libxfs/xfs_format.h      |   21 ++++++++--------
- fs/xfs/libxfs/xfs_rmap_btree.c  |   17 ++++++-------
- fs/xfs/scrub/agheader.c         |   12 +++++----
- fs/xfs/scrub/agheader_repair.c  |   30 ++++++++---------------
- fs/xfs/scrub/alloc_repair.c     |   18 ++++++--------
- fs/xfs/xfs_trace.h              |   10 +++-----
- 10 files changed, 111 insertions(+), 119 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c          |    8 ++--
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    2 +
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    1 +
+ fs/xfs/libxfs/xfs_btree.c          |    8 ++--
+ fs/xfs/libxfs/xfs_btree.h          |    2 +
+ fs/xfs/libxfs/xfs_ialloc.c         |    5 +--
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 +
+ fs/xfs/libxfs/xfs_refcount_btree.c |    1 +
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    1 +
+ fs/xfs/libxfs/xfs_types.h          |    9 -----
+ fs/xfs/scrub/trace.h               |   40 ++++++++++-----------
+ fs/xfs/xfs_trace.h                 |   70 ++++++++++++++++++------------------
+ 12 files changed, 73 insertions(+), 76 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 02d8c1caa26a8..5c35babc30de7 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -669,14 +669,13 @@ xfs_agfblock_init(
- 	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
- 	agf->agf_seqno = cpu_to_be32(id->agno);
- 	agf->agf_length = cpu_to_be32(id->agsize);
--	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
--	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
--	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
--	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
-+	agf->agf_bno_root = cpu_to_be32(XFS_BNO_BLOCK(mp));
-+	agf->agf_cnt_root = cpu_to_be32(XFS_CNT_BLOCK(mp));
-+	agf->agf_bno_level = cpu_to_be32(1);
-+	agf->agf_cnt_level = cpu_to_be32(1);
- 	if (xfs_has_rmapbt(mp)) {
--		agf->agf_roots[XFS_BTNUM_RMAPi] =
--					cpu_to_be32(XFS_RMAP_BLOCK(mp));
--		agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
-+		agf->agf_rmap_root = cpu_to_be32(XFS_RMAP_BLOCK(mp));
-+		agf->agf_rmap_level = cpu_to_be32(1);
- 		agf->agf_rmap_blocks = cpu_to_be32(1);
- 	}
- 
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 77c0fa2bb510c..19eddba098941 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -36,8 +36,9 @@ struct xfs_perag {
- 	atomic_t	pag_active_ref;	/* active reference count */
- 	wait_queue_head_t pag_active_wq;/* woken active_ref falls to zero */
- 	unsigned long	pag_opstate;
--	uint8_t		pagf_levels[XFS_BTNUM_AGF];
--					/* # of levels in bno & cnt btree */
-+	uint8_t		pagf_bno_level;	/* # of levels in bno btree */
-+	uint8_t		pagf_cnt_level;	/* # of levels in cnt btree */
-+	uint8_t		pagf_rmap_level;/* # of levels in rmap btree */
- 	uint32_t	pagf_flcount;	/* count of blocks in freelist */
- 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
- 	xfs_extlen_t	pagf_longest;	/* longest free space */
-@@ -86,7 +87,8 @@ struct xfs_perag {
- 	 * Alternate btree heights so that online repair won't trip the write
- 	 * verifiers while rebuilding the AG btrees.
- 	 */
--	uint8_t		pagf_repair_levels[XFS_BTNUM_AGF];
-+	uint8_t		pagf_repair_bno_level;
-+	uint8_t		pagf_repair_cnt_level;
- 	uint8_t		pagf_repair_refcount_level;
- #endif
- 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 91553a54dc30a..7300dc2195896 100644
+index 7300dc2195896..44d4f0da90bad 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2335,8 +2335,9 @@ xfs_alloc_min_freelist(
- 	struct xfs_perag	*pag)
- {
- 	/* AG btrees have at least 1 level. */
--	static const uint8_t	fake_levels[XFS_BTNUM_AGF] = {1, 1, 1};
--	const uint8_t		*levels = pag ? pag->pagf_levels : fake_levels;
-+	const unsigned int	bno_level = pag ? pag->pagf_bno_level : 1;
-+	const unsigned int	cnt_level = pag ? pag->pagf_cnt_level : 1;
-+	const unsigned int	rmap_level = pag ? pag->pagf_rmap_level : 1;
- 	unsigned int		min_free;
+@@ -273,9 +273,8 @@ xfs_alloc_complain_bad_rec(
+ 	struct xfs_mount		*mp = cur->bc_mp;
  
- 	ASSERT(mp->m_alloc_maxlevels > 0);
-@@ -2363,16 +2364,12 @@ xfs_alloc_min_freelist(
- 	 */
- 
- 	/* space needed by-bno freespace btree */
--	min_free = min_t(unsigned int, levels[XFS_BTNUM_BNOi] + 1,
--				       mp->m_alloc_maxlevels) * 2 - 2;
-+	min_free = min(bno_level + 1, mp->m_alloc_maxlevels) * 2 - 2;
- 	/* space needed by-size freespace btree */
--	min_free += min_t(unsigned int, levels[XFS_BTNUM_CNTi] + 1,
--				       mp->m_alloc_maxlevels) * 2 - 2;
-+	min_free += min(cnt_level + 1, mp->m_alloc_maxlevels) * 2 - 2;
- 	/* space needed reverse mapping used space btree */
- 	if (xfs_has_rmapbt(mp))
--		min_free += min_t(unsigned int, levels[XFS_BTNUM_RMAPi] + 1,
--						mp->m_rmap_maxlevels) * 2 - 2;
--
-+		min_free += min(rmap_level + 1, mp->m_rmap_maxlevels) * 2 - 2;
- 	return min_free;
- }
- 
-@@ -3056,8 +3053,8 @@ xfs_alloc_log_agf(
- 		offsetof(xfs_agf_t, agf_versionnum),
- 		offsetof(xfs_agf_t, agf_seqno),
- 		offsetof(xfs_agf_t, agf_length),
--		offsetof(xfs_agf_t, agf_roots[0]),
--		offsetof(xfs_agf_t, agf_levels[0]),
-+		offsetof(xfs_agf_t, agf_bno_root),   /* also cnt/rmap root */
-+		offsetof(xfs_agf_t, agf_bno_level),  /* also cnt/rmap levels */
- 		offsetof(xfs_agf_t, agf_flfirst),
- 		offsetof(xfs_agf_t, agf_fllast),
- 		offsetof(xfs_agf_t, agf_flcount),
-@@ -3236,12 +3233,10 @@ xfs_agf_verify(
- 	    be32_to_cpu(agf->agf_freeblks) > agf_length)
- 		return __this_address;
- 
--	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
--	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) < 1 ||
--	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) >
--						mp->m_alloc_maxlevels ||
--	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) >
--						mp->m_alloc_maxlevels)
-+	if (be32_to_cpu(agf->agf_bno_level) < 1 ||
-+	    be32_to_cpu(agf->agf_cnt_level) < 1 ||
-+	    be32_to_cpu(agf->agf_bno_level) > mp->m_alloc_maxlevels ||
-+	    be32_to_cpu(agf->agf_cnt_level) > mp->m_alloc_maxlevels)
- 		return __this_address;
- 
- 	if (xfs_has_lazysbcount(mp) &&
-@@ -3252,9 +3247,8 @@ xfs_agf_verify(
- 		if (be32_to_cpu(agf->agf_rmap_blocks) > agf_length)
- 			return __this_address;
- 
--		if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) < 1 ||
--		    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) >
--							mp->m_rmap_maxlevels)
-+		if (be32_to_cpu(agf->agf_rmap_level) < 1 ||
-+		    be32_to_cpu(agf->agf_rmap_level) > mp->m_rmap_maxlevels)
- 			return __this_address;
- 	}
- 
-@@ -3380,12 +3374,9 @@ xfs_alloc_read_agf(
- 		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
- 		pag->pagf_flcount = be32_to_cpu(agf->agf_flcount);
- 		pag->pagf_longest = be32_to_cpu(agf->agf_longest);
--		pag->pagf_levels[XFS_BTNUM_BNOi] =
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
--		pag->pagf_levels[XFS_BTNUM_CNTi] =
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
--		pag->pagf_levels[XFS_BTNUM_RMAPi] =
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
-+		pag->pagf_bno_level = be32_to_cpu(agf->agf_bno_level);
-+		pag->pagf_cnt_level = be32_to_cpu(agf->agf_cnt_level);
-+		pag->pagf_rmap_level = be32_to_cpu(agf->agf_rmap_level);
- 		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
- 		if (xfs_agfl_needs_reset(pag->pag_mount, agf))
- 			set_bit(XFS_AGSTATE_AGFL_NEEDS_RESET, &pag->pag_opstate);
-@@ -3414,10 +3405,8 @@ xfs_alloc_read_agf(
- 		ASSERT(pag->pagf_btreeblks == be32_to_cpu(agf->agf_btreeblks));
- 		ASSERT(pag->pagf_flcount == be32_to_cpu(agf->agf_flcount));
- 		ASSERT(pag->pagf_longest == be32_to_cpu(agf->agf_longest));
--		ASSERT(pag->pagf_levels[XFS_BTNUM_BNOi] ==
--		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]));
--		ASSERT(pag->pagf_levels[XFS_BTNUM_CNTi] ==
--		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
-+		ASSERT(pag->pagf_bno_level == be32_to_cpu(agf->agf_bno_level));
-+		ASSERT(pag->pagf_cnt_level == be32_to_cpu(agf->agf_cnt_level));
- 	}
- #endif
- 	if (agfbpp)
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 99859803bb0b8..6c09573a98a9a 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -38,13 +38,18 @@ xfs_allocbt_set_root(
- {
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agf		*agf = agbp->b_addr;
--	int			btnum = cur->bc_btnum;
- 
- 	ASSERT(ptr->s != 0);
- 
--	agf->agf_roots[btnum] = ptr->s;
--	be32_add_cpu(&agf->agf_levels[btnum], inc);
--	cur->bc_ag.pag->pagf_levels[btnum] += inc;
-+	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-+		agf->agf_bno_root = ptr->s;
-+		be32_add_cpu(&agf->agf_bno_level, inc);
-+		cur->bc_ag.pag->pagf_bno_level += inc;
-+	} else {
-+		agf->agf_cnt_root = ptr->s;
-+		be32_add_cpu(&agf->agf_cnt_level, inc);
-+		cur->bc_ag.pag->pagf_cnt_level += inc;
-+	}
- 
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
- }
-@@ -226,7 +231,10 @@ xfs_allocbt_init_ptr_from_cur(
- 
- 	ASSERT(cur->bc_ag.pag->pag_agno == be32_to_cpu(agf->agf_seqno));
- 
--	ptr->s = agf->agf_roots[cur->bc_btnum];
-+	if (cur->bc_btnum == XFS_BTNUM_BNO)
-+		ptr->s = agf->agf_bno_root;
-+	else
-+		ptr->s = agf->agf_cnt_root;
- }
- 
- STATIC int64_t
-@@ -299,7 +307,6 @@ xfs_allocbt_verify(
- 	struct xfs_perag	*pag = bp->b_pag;
- 	xfs_failaddr_t		fa;
- 	unsigned int		level;
--	xfs_btnum_t		btnum = XFS_BTNUM_BNOi;
- 
- 	if (!xfs_verify_magic(bp, block->bb_magic))
- 		return __this_address;
-@@ -320,21 +327,27 @@ xfs_allocbt_verify(
- 	 * against.
- 	 */
- 	level = be16_to_cpu(block->bb_level);
--	if (bp->b_ops->magic[0] == cpu_to_be32(XFS_ABTC_MAGIC))
--		btnum = XFS_BTNUM_CNTi;
- 	if (pag && xfs_perag_initialised_agf(pag)) {
--		unsigned int	maxlevel = pag->pagf_levels[btnum];
-+		unsigned int	maxlevel, repair_maxlevel = 0;
- 
--#ifdef CONFIG_XFS_ONLINE_REPAIR
- 		/*
- 		 * Online repair could be rewriting the free space btrees, so
- 		 * we'll validate against the larger of either tree while this
- 		 * is going on.
- 		 */
--		maxlevel = max_t(unsigned int, maxlevel,
--				 pag->pagf_repair_levels[btnum]);
-+		if (bp->b_ops->magic[0] == cpu_to_be32(XFS_ABTC_MAGIC)) {
-+			maxlevel = pag->pagf_cnt_level;
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+			repair_maxlevel = pag->pagf_repair_cnt_level;
- #endif
--		if (level >= maxlevel)
-+		} else {
-+			maxlevel = pag->pagf_bno_level;
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+			repair_maxlevel = pag->pagf_repair_bno_level;
-+#endif
-+		}
-+
-+		if (level >= max(maxlevel, repair_maxlevel))
- 			return __this_address;
- 	} else if (level >= mp->m_alloc_maxlevels)
- 		return __this_address;
-@@ -542,8 +555,8 @@ xfs_allocbt_init_cursor(
- 		struct xfs_agf		*agf = agbp->b_addr;
- 
- 		cur->bc_nlevels = (btnum == XFS_BTNUM_BNO) ?
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) :
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
-+			be32_to_cpu(agf->agf_bno_level) :
-+			be32_to_cpu(agf->agf_cnt_level);
- 	}
- 	return cur;
- }
-@@ -563,8 +576,13 @@ xfs_allocbt_commit_staged_btree(
- 
- 	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
- 
--	agf->agf_roots[cur->bc_btnum] = cpu_to_be32(afake->af_root);
--	agf->agf_levels[cur->bc_btnum] = cpu_to_be32(afake->af_levels);
-+	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-+		agf->agf_bno_root = cpu_to_be32(afake->af_root);
-+		agf->agf_bno_level = cpu_to_be32(afake->af_levels);
-+	} else {
-+		agf->agf_cnt_root = cpu_to_be32(afake->af_root);
-+		agf->agf_cnt_level = cpu_to_be32(afake->af_levels);
-+	}
- 	xfs_alloc_log_agf(tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
- 
- 	xfs_btree_commit_afakeroot(cur, tp, agbp);
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 382ab1e71c0b6..2b2f9050fbfbb 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -477,15 +477,9 @@ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
- #define	XFS_AGI_GOOD_VERSION(v)	((v) == XFS_AGI_VERSION)
- 
- /*
-- * Btree number 0 is bno, 1 is cnt, 2 is rmap. This value gives the size of the
-- * arrays below.
-- */
--#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_RMAPi + 1)
--
--/*
-- * The second word of agf_levels in the first a.g. overlaps the EFS
-- * superblock's magic number.  Since the magic numbers valid for EFS
-- * are > 64k, our value cannot be confused for an EFS superblock's.
-+ * agf_cnt_level in the first AGF overlaps the EFS superblock's magic number.
-+ * Since the magic numbers valid for EFS are > 64k, our value cannot be confused
-+ * for an EFS superblock.
-  */
- 
- typedef struct xfs_agf {
-@@ -499,8 +493,13 @@ typedef struct xfs_agf {
- 	/*
- 	 * Freespace and rmap information
- 	 */
--	__be32		agf_roots[XFS_BTNUM_AGF];	/* root blocks */
--	__be32		agf_levels[XFS_BTNUM_AGF];	/* btree levels */
-+	__be32		agf_bno_root;	/* bnobt root block */
-+	__be32		agf_cnt_root;	/* cntbt root block */
-+	__be32		agf_rmap_root;	/* rmapbt root block */
-+
-+	__be32		agf_bno_level;	/* bnobt btree levels */
-+	__be32		agf_cnt_level;	/* cntbt btree levels */
-+	__be32		agf_rmap_level;	/* rmapbt btree levels */
- 
- 	__be32		agf_flfirst;	/* first freelist block's index */
- 	__be32		agf_fllast;	/* last freelist block's index */
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index b0da31f49ca8c..e050d7342d6c9 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -65,13 +65,12 @@ xfs_rmapbt_set_root(
- {
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agf		*agf = agbp->b_addr;
--	int			btnum = cur->bc_btnum;
- 
- 	ASSERT(ptr->s != 0);
- 
--	agf->agf_roots[btnum] = ptr->s;
--	be32_add_cpu(&agf->agf_levels[btnum], inc);
--	cur->bc_ag.pag->pagf_levels[btnum] += inc;
-+	agf->agf_rmap_root = ptr->s;
-+	be32_add_cpu(&agf->agf_rmap_level, inc);
-+	cur->bc_ag.pag->pagf_rmap_level += inc;
- 
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
- }
-@@ -222,7 +221,7 @@ xfs_rmapbt_init_ptr_from_cur(
- 
- 	ASSERT(cur->bc_ag.pag->pag_agno == be32_to_cpu(agf->agf_seqno));
- 
--	ptr->s = agf->agf_roots[cur->bc_btnum];
-+	ptr->s = agf->agf_rmap_root;
- }
- 
- /*
-@@ -342,7 +341,7 @@ xfs_rmapbt_verify(
- 
- 	level = be16_to_cpu(block->bb_level);
- 	if (pag && xfs_perag_initialised_agf(pag)) {
--		if (level >= pag->pagf_levels[XFS_BTNUM_RMAPi])
-+		if (level >= pag->pagf_rmap_level)
- 			return __this_address;
- 	} else if (level >= mp->m_rmap_maxlevels)
- 		return __this_address;
-@@ -523,7 +522,7 @@ xfs_rmapbt_init_cursor(
- 	if (agbp) {
- 		struct xfs_agf		*agf = agbp->b_addr;
- 
--		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
-+		cur->bc_nlevels = be32_to_cpu(agf->agf_rmap_level);
- 	}
- 	return cur;
- }
-@@ -543,8 +542,8 @@ xfs_rmapbt_commit_staged_btree(
- 
- 	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
- 
--	agf->agf_roots[cur->bc_btnum] = cpu_to_be32(afake->af_root);
--	agf->agf_levels[cur->bc_btnum] = cpu_to_be32(afake->af_levels);
-+	agf->agf_rmap_root = cpu_to_be32(afake->af_root);
-+	agf->agf_rmap_level = cpu_to_be32(afake->af_levels);
- 	agf->agf_rmap_blocks = cpu_to_be32(afake->af_blocks);
- 	xfs_alloc_log_agf(tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS |
- 				    XFS_AGF_RMAP_BLOCKS);
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 6c6e5eba42c8b..e954f07679dd7 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -556,28 +556,28 @@ xchk_agf(
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
- 	/* Check the AGF btree roots and levels */
--	agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]);
-+	agbno = be32_to_cpu(agf->agf_bno_root);
- 	if (!xfs_verify_agbno(pag, agbno))
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
--	agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]);
-+	agbno = be32_to_cpu(agf->agf_cnt_root);
- 	if (!xfs_verify_agbno(pag, agbno))
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
--	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
-+	level = be32_to_cpu(agf->agf_bno_level);
- 	if (level <= 0 || level > mp->m_alloc_maxlevels)
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
--	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
-+	level = be32_to_cpu(agf->agf_cnt_level);
- 	if (level <= 0 || level > mp->m_alloc_maxlevels)
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
- 	if (xfs_has_rmapbt(mp)) {
--		agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_RMAP]);
-+		agbno = be32_to_cpu(agf->agf_rmap_root);
- 		if (!xfs_verify_agbno(pag, agbno))
- 			xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
--		level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
-+		level = be32_to_cpu(agf->agf_rmap_level);
- 		if (level <= 0 || level > mp->m_rmap_maxlevels)
- 			xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 	}
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 26bd1ff68f1be..e4dd4fe84c5f9 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -174,8 +174,7 @@ xrep_agf_find_btrees(
- 	 * We relied on the rmapbt to reconstruct the AGF.  If we get a
- 	 * different root then something's seriously wrong.
- 	 */
--	if (fab[XREP_AGF_RMAPBT].root !=
--	    be32_to_cpu(old_agf->agf_roots[XFS_BTNUM_RMAPi]))
-+	if (fab[XREP_AGF_RMAPBT].root != be32_to_cpu(old_agf->agf_rmap_root))
- 		return -EFSCORRUPTED;
- 
- 	/* We must find the refcountbt root if that feature is enabled. */
-@@ -224,20 +223,14 @@ xrep_agf_set_roots(
- 	struct xfs_agf			*agf,
- 	struct xrep_find_ag_btree	*fab)
- {
--	agf->agf_roots[XFS_BTNUM_BNOi] =
--			cpu_to_be32(fab[XREP_AGF_BNOBT].root);
--	agf->agf_levels[XFS_BTNUM_BNOi] =
--			cpu_to_be32(fab[XREP_AGF_BNOBT].height);
-+	agf->agf_bno_root = cpu_to_be32(fab[XREP_AGF_BNOBT].root);
-+	agf->agf_bno_level = cpu_to_be32(fab[XREP_AGF_BNOBT].height);
- 
--	agf->agf_roots[XFS_BTNUM_CNTi] =
--			cpu_to_be32(fab[XREP_AGF_CNTBT].root);
--	agf->agf_levels[XFS_BTNUM_CNTi] =
--			cpu_to_be32(fab[XREP_AGF_CNTBT].height);
-+	agf->agf_cnt_root = cpu_to_be32(fab[XREP_AGF_CNTBT].root);
-+	agf->agf_cnt_level = cpu_to_be32(fab[XREP_AGF_CNTBT].height);
- 
--	agf->agf_roots[XFS_BTNUM_RMAPi] =
--			cpu_to_be32(fab[XREP_AGF_RMAPBT].root);
--	agf->agf_levels[XFS_BTNUM_RMAPi] =
--			cpu_to_be32(fab[XREP_AGF_RMAPBT].height);
-+	agf->agf_rmap_root = cpu_to_be32(fab[XREP_AGF_RMAPBT].root);
-+	agf->agf_rmap_level = cpu_to_be32(fab[XREP_AGF_RMAPBT].height);
- 
- 	if (xfs_has_reflink(sc->mp)) {
- 		agf->agf_refcount_root =
-@@ -333,12 +326,9 @@ xrep_agf_commit_new(
- 	pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
- 	pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
- 	pag->pagf_longest = be32_to_cpu(agf->agf_longest);
--	pag->pagf_levels[XFS_BTNUM_BNOi] =
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
--	pag->pagf_levels[XFS_BTNUM_CNTi] =
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
--	pag->pagf_levels[XFS_BTNUM_RMAPi] =
--			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
-+	pag->pagf_bno_level = be32_to_cpu(agf->agf_bno_level);
-+	pag->pagf_cnt_level = be32_to_cpu(agf->agf_cnt_level);
-+	pag->pagf_rmap_level = be32_to_cpu(agf->agf_rmap_level);
- 	pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
- 	set_bit(XFS_AGSTATE_AGF_INIT, &pag->pag_opstate);
- 
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index 544c53d450ce2..0ef27aacbf25c 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -687,8 +687,8 @@ xrep_abt_reset_counters(
- 	 * height values before re-initializing the perag info from the updated
- 	 * AGF to capture all the new values.
- 	 */
--	pag->pagf_repair_levels[XFS_BTNUM_BNOi] = pag->pagf_levels[XFS_BTNUM_BNOi];
--	pag->pagf_repair_levels[XFS_BTNUM_CNTi] = pag->pagf_levels[XFS_BTNUM_CNTi];
-+	pag->pagf_repair_bno_level = pag->pagf_bno_level;
-+	pag->pagf_repair_cnt_level = pag->pagf_cnt_level;
- 
- 	/* Reinitialize with the values we just logged. */
- 	return xrep_reinit_pagf(sc);
-@@ -768,10 +768,8 @@ xrep_abt_build_new_trees(
- 	 * height so that we don't trip the verifiers when writing the new
- 	 * btree blocks to disk.
- 	 */
--	pag->pagf_repair_levels[XFS_BTNUM_BNOi] =
--					ra->new_bnobt.bload.btree_height;
--	pag->pagf_repair_levels[XFS_BTNUM_CNTi] =
--					ra->new_cntbt.bload.btree_height;
-+	pag->pagf_repair_bno_level = ra->new_bnobt.bload.btree_height;
-+	pag->pagf_repair_cnt_level = ra->new_cntbt.bload.btree_height;
- 
- 	/* Load the free space by length tree. */
- 	ra->array_cur = XFARRAY_CURSOR_INIT;
-@@ -810,8 +808,8 @@ xrep_abt_build_new_trees(
- 	return xrep_roll_ag_trans(sc);
- 
- err_levels:
--	pag->pagf_repair_levels[XFS_BTNUM_BNOi] = 0;
--	pag->pagf_repair_levels[XFS_BTNUM_CNTi] = 0;
-+	pag->pagf_repair_bno_level = 0;
-+	pag->pagf_repair_cnt_level = 0;
- err_cur:
- 	xfs_btree_del_cursor(cnt_cur, error);
- 	xfs_btree_del_cursor(bno_cur, error);
-@@ -841,8 +839,8 @@ xrep_abt_remove_old_trees(
- 	 * Now that we've zapped all the old allocbt blocks we can turn off
- 	 * the alternate height mechanism.
- 	 */
--	pag->pagf_repair_levels[XFS_BTNUM_BNOi] = 0;
--	pag->pagf_repair_levels[XFS_BTNUM_CNTi] = 0;
-+	pag->pagf_repair_bno_level = 0;
-+	pag->pagf_repair_cnt_level = 0;
+ 	xfs_warn(mp,
+-		"%s Freespace BTree record corruption in AG %d detected at %pS!",
+-		cur->bc_btnum == XFS_BTNUM_BNO ? "Block" : "Size",
+-		cur->bc_ag.pag->pag_agno, fa);
++		"%sbt record corruption in AG %d detected at %pS!",
++		cur->bc_ops->name, cur->bc_ag.pag->pag_agno, fa);
+ 	xfs_warn(mp,
+ 		"start block 0x%x block count 0x%x", irec->ar_startblock,
+ 		irec->ar_blockcount);
+@@ -996,8 +995,7 @@ xfs_alloc_cur_check(
+ out:
+ 	if (deactivate)
+ 		cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
+-	trace_xfs_alloc_cur_check(args->mp, cur->bc_btnum, bno, len, diff,
+-				  *new);
++	trace_xfs_alloc_cur_check(cur, bno, len, diff, *new);
  	return 0;
  }
  
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 6c09573a98a9a..262f5dc3a483e 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -468,6 +468,7 @@ xfs_allocbt_keys_contiguous(
+ }
+ 
+ const struct xfs_btree_ops xfs_bnobt_ops = {
++	.name			= "bno",
+ 	.type			= XFS_BTREE_TYPE_AG,
+ 
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+@@ -497,6 +498,7 @@ const struct xfs_btree_ops xfs_bnobt_ops = {
+ };
+ 
+ const struct xfs_btree_ops xfs_cntbt_ops = {
++	.name			= "cnt",
+ 	.type			= XFS_BTREE_TYPE_AG,
+ 	.geom_flags		= XFS_BTGEO_LASTREC_UPDATE,
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 1104bf4098e2e..25193551e95b4 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -517,6 +517,7 @@ xfs_bmbt_keys_contiguous(
+ }
+ 
+ const struct xfs_btree_ops xfs_bmbt_ops = {
++	.name			= "bmap",
+ 	.type			= XFS_BTREE_TYPE_INODE,
+ 
+ 	.rec_len		= sizeof(xfs_bmbt_rec_t),
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 2649f24ed7482..278461d0f64d0 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -298,17 +298,17 @@ xfs_btree_check_ptr(
+ 				level))
+ 			return 0;
+ 		xfs_err(cur->bc_mp,
+-"Inode %llu fork %d: Corrupt btree %d pointer at level %d index %d.",
++"Inode %llu fork %d: Corrupt %sbt pointer at level %d index %d.",
+ 				cur->bc_ino.ip->i_ino,
+-				cur->bc_ino.whichfork, cur->bc_btnum,
++				cur->bc_ino.whichfork, cur->bc_ops->name,
+ 				level, index);
+ 	} else {
+ 		if (xfs_btree_check_sptr(cur, be32_to_cpu((&ptr->s)[index]),
+ 				level))
+ 			return 0;
+ 		xfs_err(cur->bc_mp,
+-"AG %u: Corrupt btree %d pointer at level %d index %d.",
+-				cur->bc_ag.pag->pag_agno, cur->bc_btnum,
++"AG %u: Corrupt %sbt pointer at level %d index %d.",
++				cur->bc_ag.pag->pag_agno, cur->bc_ops->name,
+ 				level, index);
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 273027515296a..1b27649905bbb 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -123,6 +123,8 @@ enum xfs_btree_type {
+ };
+ 
+ struct xfs_btree_ops {
++	const char		*name;
++
+ 	/* Type of btree - AG-rooted or inode-rooted */
+ 	enum xfs_btree_type	type;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 1ff867075026d..52b82cd7e6c9c 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -141,9 +141,8 @@ xfs_inobt_complain_bad_rec(
+ 	struct xfs_mount		*mp = cur->bc_mp;
+ 
+ 	xfs_warn(mp,
+-		"%s Inode BTree record corruption in AG %d detected at %pS!",
+-		cur->bc_btnum == XFS_BTNUM_INO ? "Used" : "Free",
+-		cur->bc_ag.pag->pag_agno, fa);
++		"%sbt record corruption in AG %d detected at %pS!",
++		cur->bc_ops->name, cur->bc_ag.pag->pag_agno, fa);
+ 	xfs_warn(mp,
+ "start inode 0x%x, count 0x%x, free 0x%x freemask 0x%llx, holemask 0x%x",
+ 		irec->ir_startino, irec->ir_count, irec->ir_freecount,
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index b45a2e5813133..ddb9a226914a8 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -399,6 +399,7 @@ xfs_inobt_keys_contiguous(
+ }
+ 
+ const struct xfs_btree_ops xfs_inobt_ops = {
++	.name			= "ino",
+ 	.type			= XFS_BTREE_TYPE_AG,
+ 
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+@@ -427,6 +428,7 @@ const struct xfs_btree_ops xfs_inobt_ops = {
+ };
+ 
+ const struct xfs_btree_ops xfs_finobt_ops = {
++	.name			= "fino",
+ 	.type			= XFS_BTREE_TYPE_AG,
+ 
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 4dcf6295e683b..16677cbbddfcc 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -318,6 +318,7 @@ xfs_refcountbt_keys_contiguous(
+ }
+ 
+ const struct xfs_btree_ops xfs_refcountbt_ops = {
++	.name			= "refcount",
+ 	.type			= XFS_BTREE_TYPE_AG,
+ 
+ 	.rec_len		= sizeof(struct xfs_refcount_rec),
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index e050d7342d6c9..e1ddf814492c5 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -472,6 +472,7 @@ xfs_rmapbt_keys_contiguous(
+ }
+ 
+ const struct xfs_btree_ops xfs_rmapbt_ops = {
++	.name			= "rmap",
+ 	.type			= XFS_BTREE_TYPE_AG,
+ 	.geom_flags		= XFS_BTGEO_OVERLAPPING,
+ 
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index a1004fb3c8fb4..f577247b748d3 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -125,15 +125,6 @@ typedef enum {
+ 	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
+ 
+-#define XFS_BTNUM_STRINGS \
+-	{ XFS_BTNUM_BNOi,	"bnobt" }, \
+-	{ XFS_BTNUM_CNTi,	"cntbt" }, \
+-	{ XFS_BTNUM_RMAPi,	"rmapbt" }, \
+-	{ XFS_BTNUM_BMAPi,	"bmbt" }, \
+-	{ XFS_BTNUM_INOi,	"inobt" }, \
+-	{ XFS_BTNUM_FINOi,	"finobt" }, \
+-	{ XFS_BTNUM_REFCi,	"refcbt" }
+-
+ struct xfs_name {
+ 	const unsigned char	*name;
+ 	int			len;
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 1e448d0c5aeef..2c2f99d8772cb 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -459,7 +459,7 @@ TRACE_EVENT(xchk_btree_op_error,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(unsigned int, type)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(int, level)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, bno)
+@@ -472,7 +472,7 @@ TRACE_EVENT(xchk_btree_op_error,
+ 
+ 		__entry->dev = sc->mp->m_super->s_dev;
+ 		__entry->type = sc->sm->sm_type;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+@@ -480,10 +480,10 @@ TRACE_EVENT(xchk_btree_op_error,
+ 		__entry->error = error;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x error %d ret_ip %pS",
++	TP_printk("dev %d:%d type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x error %d ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -501,7 +501,7 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
+ 		__field(xfs_ino_t, ino)
+ 		__field(int, whichfork)
+ 		__field(unsigned int, type)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(int, level)
+ 		__field(int, ptr)
+ 		__field(xfs_agnumber_t, agno)
+@@ -515,7 +515,7 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
+ 		__entry->ino = sc->ip->i_ino;
+ 		__entry->whichfork = cur->bc_ino.whichfork;
+ 		__entry->type = sc->sm->sm_type;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->ptr = cur->bc_levels[level].ptr;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+@@ -523,12 +523,12 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
+ 		__entry->error = error;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx fork %s type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x error %d ret_ip %pS",
++	TP_printk("dev %d:%d ino 0x%llx fork %s type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x error %d ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
+ 		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -544,7 +544,7 @@ TRACE_EVENT(xchk_btree_error,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(unsigned int, type)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(int, level)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, bno)
+@@ -555,17 +555,17 @@ TRACE_EVENT(xchk_btree_error,
+ 		xfs_fsblock_t fsbno = xchk_btree_cur_fsbno(cur, level);
+ 		__entry->dev = sc->mp->m_super->s_dev;
+ 		__entry->type = sc->sm->sm_type;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+ 		__entry->ptr = cur->bc_levels[level].ptr;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
++	TP_printk("dev %d:%d type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -582,7 +582,7 @@ TRACE_EVENT(xchk_ifork_btree_error,
+ 		__field(xfs_ino_t, ino)
+ 		__field(int, whichfork)
+ 		__field(unsigned int, type)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(int, level)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, bno)
+@@ -595,19 +595,19 @@ TRACE_EVENT(xchk_ifork_btree_error,
+ 		__entry->ino = sc->ip->i_ino;
+ 		__entry->whichfork = cur->bc_ino.whichfork;
+ 		__entry->type = sc->sm->sm_type;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+ 		__entry->ptr = cur->bc_levels[level].ptr;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx fork %s type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
++	TP_printk("dev %d:%d ino 0x%llx fork %s type %s %sbt level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
+ 		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -622,7 +622,7 @@ DECLARE_EVENT_CLASS(xchk_sbtree_class,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(int, type)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, bno)
+ 		__field(int, level)
+@@ -634,17 +634,17 @@ DECLARE_EVENT_CLASS(xchk_sbtree_class,
+ 
+ 		__entry->dev = sc->mp->m_super->s_dev;
+ 		__entry->type = sc->sm->sm_type;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
+ 		__entry->bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
+ 		__entry->level = level;
+ 		__entry->nlevels = cur->bc_nlevels;
+ 		__entry->ptr = cur->bc_levels[level].ptr;
+ 	),
+-	TP_printk("dev %d:%d type %s btree %s agno 0x%x agbno 0x%x level %d nlevels %d ptr %d",
++	TP_printk("dev %d:%d type %s %sbt agno 0x%x agbno 0x%x level %d nlevels %d ptr %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->agno,
+ 		  __entry->bno,
+ 		  __entry->level,
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index f02247f8f185c..824e6dfe103a6 100644
+index 824e6dfe103a6..feb681a1eed1a 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -1710,12 +1710,10 @@ DECLARE_EVENT_CLASS(xfs_agf_class,
- 		__entry->agno = be32_to_cpu(agf->agf_seqno),
- 		__entry->flags = flags;
- 		__entry->length = be32_to_cpu(agf->agf_length),
--		__entry->bno_root = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]),
--		__entry->cnt_root = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]),
--		__entry->bno_level =
--				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]),
--		__entry->cnt_level =
--				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]),
-+		__entry->bno_root = be32_to_cpu(agf->agf_bno_root),
-+		__entry->cnt_root = be32_to_cpu(agf->agf_cnt_root),
-+		__entry->bno_level = be32_to_cpu(agf->agf_bno_level),
-+		__entry->cnt_level = be32_to_cpu(agf->agf_cnt_level),
- 		__entry->flfirst = be32_to_cpu(agf->agf_flfirst),
- 		__entry->fllast = be32_to_cpu(agf->agf_fllast),
- 		__entry->flcount = be32_to_cpu(agf->agf_flcount),
+@@ -1888,28 +1888,28 @@ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_near_bno);
+ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_finish);
+ 
+ TRACE_EVENT(xfs_alloc_cur_check,
+-	TP_PROTO(struct xfs_mount *mp, xfs_btnum_t btnum, xfs_agblock_t bno,
++	TP_PROTO(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		 xfs_extlen_t len, xfs_extlen_t diff, bool new),
+-	TP_ARGS(mp, btnum, bno, len, diff, new),
++	TP_ARGS(cur, bno, len, diff, new),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(xfs_agblock_t, bno)
+ 		__field(xfs_extlen_t, len)
+ 		__field(xfs_extlen_t, diff)
+ 		__field(bool, new)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = mp->m_super->s_dev;
+-		__entry->btnum = btnum;
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->bno = bno;
+ 		__entry->len = len;
+ 		__entry->diff = diff;
+ 		__entry->new = new;
+ 	),
+-	TP_printk("dev %d:%d btree %s agbno 0x%x fsbcount 0x%x diff 0x%x new %d",
++	TP_printk("dev %d:%d %sbt agbno 0x%x fsbcount 0x%x diff 0x%x new %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->bno, __entry->len, __entry->diff, __entry->new)
+ )
+ 
+@@ -2464,7 +2464,7 @@ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+ 	TP_ARGS(cur, level, bp),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(int, level)
+ 		__field(int, nlevels)
+ 		__field(int, ptr)
+@@ -2472,15 +2472,15 @@ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->nlevels = cur->bc_nlevels;
+ 		__entry->ptr = cur->bc_levels[level].ptr;
+ 		__entry->daddr = bp ? xfs_buf_daddr(bp) : -1;
+ 	),
+-	TP_printk("dev %d:%d btree %s level %d/%d ptr %d daddr 0x%llx",
++	TP_printk("dev %d:%d %sbt level %d/%d ptr %d daddr 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->nlevels,
+ 		  __entry->ptr,
+@@ -2502,7 +2502,7 @@ TRACE_EVENT(xfs_btree_alloc_block,
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_ino_t, ino)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(int, error)
+ 		__field(xfs_agblock_t, agbno)
+ 	),
+@@ -2515,7 +2515,7 @@ TRACE_EVENT(xfs_btree_alloc_block,
+ 			__entry->agno = cur->bc_ag.pag->pag_agno;
+ 			__entry->ino = 0;
+ 		}
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->error = error;
+ 		if (!error && stat) {
+ 			if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN) {
+@@ -2532,9 +2532,9 @@ TRACE_EVENT(xfs_btree_alloc_block,
+ 			__entry->agbno = NULLAGBLOCK;
+ 		}
+ 	),
+-	TP_printk("dev %d:%d btree %s agno 0x%x ino 0x%llx agbno 0x%x error %d",
++	TP_printk("dev %d:%d %sbt agno 0x%x ino 0x%llx agbno 0x%x error %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->agno,
+ 		  __entry->ino,
+ 		  __entry->agbno,
+@@ -2548,7 +2548,7 @@ TRACE_EVENT(xfs_btree_free_block,
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_ino_t, ino)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(xfs_agblock_t, agbno)
+ 	),
+ 	TP_fast_assign(
+@@ -2559,13 +2559,13 @@ TRACE_EVENT(xfs_btree_free_block,
+ 			__entry->ino = cur->bc_ino.ip->i_ino;
+ 		else
+ 			__entry->ino = 0;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->agbno = xfs_daddr_to_agbno(cur->bc_mp,
+ 							xfs_buf_daddr(bp));
+ 	),
+-	TP_printk("dev %d:%d btree %s agno 0x%x ino 0x%llx agbno 0x%x",
++	TP_printk("dev %d:%d %sbt agno 0x%x ino 0x%llx agbno 0x%x",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->agno,
+ 		  __entry->ino,
+ 		  __entry->agbno)
+@@ -4163,7 +4163,7 @@ TRACE_EVENT(xfs_btree_commit_afakeroot,
+ 	TP_ARGS(cur),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, agbno)
+ 		__field(unsigned int, levels)
+@@ -4171,15 +4171,15 @@ TRACE_EVENT(xfs_btree_commit_afakeroot,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->agno = cur->bc_ag.pag->pag_agno;
+ 		__entry->agbno = cur->bc_ag.afake->af_root;
+ 		__entry->levels = cur->bc_ag.afake->af_levels;
+ 		__entry->blocks = cur->bc_ag.afake->af_blocks;
+ 	),
+-	TP_printk("dev %d:%d btree %s agno 0x%x levels %u blocks %u root %u",
++	TP_printk("dev %d:%d %sbt agno 0x%x levels %u blocks %u root %u",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->agno,
+ 		  __entry->levels,
+ 		  __entry->blocks,
+@@ -4191,7 +4191,7 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
+ 	TP_ARGS(cur),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agino_t, agino)
+ 		__field(unsigned int, levels)
+@@ -4200,7 +4200,7 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->agno = XFS_INO_TO_AGNO(cur->bc_mp,
+ 					cur->bc_ino.ip->i_ino);
+ 		__entry->agino = XFS_INO_TO_AGINO(cur->bc_mp,
+@@ -4209,9 +4209,9 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
+ 		__entry->blocks = cur->bc_ino.ifake->if_blocks;
+ 		__entry->whichfork = cur->bc_ino.whichfork;
+ 	),
+-	TP_printk("dev %d:%d btree %s agno 0x%x agino 0x%x whichfork %s levels %u blocks %u",
++	TP_printk("dev %d:%d %sbt agno 0x%x agino 0x%x whichfork %s levels %u blocks %u",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->agno,
+ 		  __entry->agino,
+ 		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
+@@ -4228,7 +4228,7 @@ TRACE_EVENT(xfs_btree_bload_level_geometry,
+ 		blocks_with_extra),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(unsigned int, level)
+ 		__field(unsigned int, nlevels)
+ 		__field(uint64_t, nr_this_level)
+@@ -4239,7 +4239,7 @@ TRACE_EVENT(xfs_btree_bload_level_geometry,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->nlevels = cur->bc_nlevels;
+ 		__entry->nr_this_level = nr_this_level;
+@@ -4248,9 +4248,9 @@ TRACE_EVENT(xfs_btree_bload_level_geometry,
+ 		__entry->blocks = blocks;
+ 		__entry->blocks_with_extra = blocks_with_extra;
+ 	),
+-	TP_printk("dev %d:%d btree %s level %u/%u nr_this_level %llu nr_per_block %u desired_npb %u blocks %llu blocks_with_extra %llu",
++	TP_printk("dev %d:%d %sbt level %u/%u nr_this_level %llu nr_per_block %u desired_npb %u blocks %llu blocks_with_extra %llu",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->nlevels,
+ 		  __entry->nr_this_level,
+@@ -4267,7 +4267,7 @@ TRACE_EVENT(xfs_btree_bload_block,
+ 	TP_ARGS(cur, level, block_idx, nr_blocks, ptr, nr_records),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(xfs_btnum_t, btnum)
++		__string(name, cur->bc_ops->name)
+ 		__field(unsigned int, level)
+ 		__field(unsigned long long, block_idx)
+ 		__field(unsigned long long, nr_blocks)
+@@ -4277,7 +4277,7 @@ TRACE_EVENT(xfs_btree_bload_block,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = cur->bc_mp->m_super->s_dev;
+-		__entry->btnum = cur->bc_btnum;
++		__assign_str(name, cur->bc_ops->name);
+ 		__entry->level = level;
+ 		__entry->block_idx = block_idx;
+ 		__entry->nr_blocks = nr_blocks;
+@@ -4292,9 +4292,9 @@ TRACE_EVENT(xfs_btree_bload_block,
+ 		}
+ 		__entry->nr_records = nr_records;
+ 	),
+-	TP_printk("dev %d:%d btree %s level %u block %llu/%llu agno 0x%x agbno 0x%x recs %u",
++	TP_printk("dev %d:%d %sbt level %u block %llu/%llu agno 0x%x agbno 0x%x recs %u",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __get_str(name),
+ 		  __entry->level,
+ 		  __entry->block_idx,
+ 		  __entry->nr_blocks,
 
