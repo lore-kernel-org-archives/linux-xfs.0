@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C7CF43AC7
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:53:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164118564C
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:54:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706817225; cv=none; b=fOA7OF8y6v8YE3BNWJafamq2EmzKm7mhCmYLECr9ahPojrHf4lmXH65UCuRyO/rphRheXpEquZ1G/aRijGkyE5Ma/LN6Epo9TnItnp1KsJAXl0I43jsN9AqT5W7AnYbWx2DvLQZcLCByG/SlbPGNC9hQyNsgoTPPuXx4jh79mzI=
+	t=1706817241; cv=none; b=uLpqskUmXeA+lH1riGjhaBBeiZ5mztRhtd51vRLkzVF0vO0UqMR0unjHmnzDrgu5/iz3+hTxqJTzscKUhtyRkpNuS4Zvi0m+ydjZFvmA2N87Jl/WWvRMjq3M9tyYCptvJxeFzANQT+vZn0YEPMONKALI87+shucRAzZjkWDf8/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706817225; c=relaxed/simple;
-	bh=YjnceyAt1bgWbDPOGkyn8ljeKRmG+WXOL4e7qN4xzQY=;
+	s=arc-20240116; t=1706817241; c=relaxed/simple;
+	bh=VoY908ZMi0f171m78Zgrn+P/tO0WI6479civcrIVJJ8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oMV6csaP82PBjdqCxzWxRsBo3Fuo0bJr4xiZO+PFKxWHiOBQEOeWxbPaS2n4e7jQ60xu2IUvBp3MS/o6lsY7NaLItgaaYaVXqfupjjrSNVvp8Mq4Qj3imrr24+aiXigqVuPnqFLC8jAuUjEJi+JINlHAWR9sDnN0cEwnr8ZJvCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NZs6rIQL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=K6NK6Qfq2AtFnagwj7AEGHOZxw8vpLgwF9JvYhIUOvOk9cax55KDryhFI0OAijf+iwJbx7kWFg0GaPsYEGYsqQzMMvj57miSkua2hhAgk/QztdMRjvNX8YXQOiPyTvin5dvXQ7A5U27uHuqJdIYtLZEP/UAKpLKRrcnlxlT3U5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L5+huO2H; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZs6rIQL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5904C433F1;
-	Thu,  1 Feb 2024 19:53:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L5+huO2H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 881EAC433C7;
+	Thu,  1 Feb 2024 19:54:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706817224;
-	bh=YjnceyAt1bgWbDPOGkyn8ljeKRmG+WXOL4e7qN4xzQY=;
+	s=k20201202; t=1706817240;
+	bh=VoY908ZMi0f171m78Zgrn+P/tO0WI6479civcrIVJJ8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NZs6rIQLtqA8xvKkBjm5W6d3l4uKAUPeK17gPuc7AYtFZ4IDMozkZVG21KjEe+BTu
-	 1wO9lc5XJdgzkcaPhb3QuxLrOl9qjfR8WeJ1bv5BykSA8EQ94MdId9EgojsCGlzTm4
-	 eguUXyGatF3Pb6LVEr4ES7L8tWSCtyWk7+fBCFoo0tGRCcxdCz/qWPKrvVP9QmKlss
-	 X1j6zeWNv+qZSXhVGvNdQ/busMcA5ngK2lEXHYE6qOla7KXep26VazPqR8IP0rMUly
-	 ctUNCmgge/tzJ1brqtw8uSEs5WHzR2/ifQuHygXyVYXvpilOV5zI06iK9r5RcJ9KJd
-	 4rxs+y80d88bQ==
-Date: Thu, 01 Feb 2024 11:53:44 -0800
-Subject: [PATCH 04/10] xfs: consolidate btree ptr checking
+	b=L5+huO2HeFmg0UgEaS/kKTQwEc1pzdK8zB8bAZ989eetM9e2qKxBi8uyqunvOZZM5
+	 34zirq9KJKAJepVgzq+oM3zhQy1jBbbkNjs/laqJCCVHWfODWheQLyeJj8Zv20xWnC
+	 +i6NRH7HxO/E9t2jkHYaX92ILzUV2UVlKMWMK+2RcD3Mwu+anSO5N3g5szWynezYKt
+	 fL9FIq79V8w/wS7aIMuwFS0FRR9eNTq8I160OxMjDcVBKA1fJ66Lzx7ZKKXaR9Z7ow
+	 Wun1WW1kOJNht5gZUzWGLYkqotrEIN4se/yvs/niaomXkSZ39PwiODJ0+U2uouQf94
+	 +mE1DB8E+WqcA==
+Date: Thu, 01 Feb 2024 11:54:00 -0800
+Subject: [PATCH 05/10] xfs: misc cleanups for __xfs_btree_check_sblock
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681335677.1606142.13327197520395156514.stgit@frogsfrogsfrogs>
+Message-ID: <170681335694.1606142.107334013076983573.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681335588.1606142.6111968277910779056.stgit@frogsfrogsfrogs>
 References: <170681335588.1606142.6111968277910779056.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,178 +46,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Merge xfs_btree_check_sptr and xfs_btree_check_lptr into a single
-__xfs_btree_check_ptr that can be shared between xfs_btree_check_ptr
-and the scrub code.
+Remove the local crc variable that is only used once and remove the bp
+NULL checking as it can't ever be NULL for short form blocks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree.c |   60 ++++++++++++++++++++++-----------------------
- fs/xfs/libxfs/xfs_btree.h |   21 ++--------------
- fs/xfs/scrub/btree.c      |   12 +++------
- 3 files changed, 36 insertions(+), 57 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index fc877188919e3..1a0816aa50091 100644
+index 1a0816aa50091..255d5437b6e2a 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -242,28 +242,27 @@ xfs_btree_check_block(
- 		return xfs_btree_check_sblock(cur, block, level, bp);
- }
- 
--/* Check that this long pointer is valid and points within the fs. */
--bool
--xfs_btree_check_lptr(
--	struct xfs_btree_cur	*cur,
--	xfs_fsblock_t		fsbno,
--	int			level)
-+int
-+__xfs_btree_check_ptr(
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				index,
-+	int				level)
+@@ -173,15 +173,13 @@ __xfs_btree_check_sblock(
  {
- 	if (level <= 0)
--		return false;
--	return xfs_verify_fsbno(cur->bc_mp, fsbno);
--}
-+		return -EFSCORRUPTED;
+ 	struct xfs_mount	*mp = cur->bc_mp;
+ 	struct xfs_perag	*pag = cur->bc_ag.pag;
+-	bool			crc = xfs_has_crc(mp);
+ 	xfs_failaddr_t		fa;
+-	xfs_agblock_t		agbno = NULLAGBLOCK;
++	xfs_agblock_t		agbno;
  
--/* Check that this short pointer is valid and points within the AG. */
--bool
--xfs_btree_check_sptr(
--	struct xfs_btree_cur	*cur,
--	xfs_agblock_t		agbno,
--	int			level)
--{
--	if (level <= 0)
--		return false;
--	return xfs_verify_agbno(cur->bc_ag.pag, agbno);
-+	if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN) {
-+		if (!xfs_verify_fsbno(cur->bc_mp,
-+				be64_to_cpu((&ptr->l)[index])))
-+			return -EFSCORRUPTED;
-+	} else {
-+		if (!xfs_verify_agbno(cur->bc_ag.pag,
-+				be32_to_cpu((&ptr->s)[index])))
-+			return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
- }
- 
- /*
-@@ -277,27 +276,26 @@ xfs_btree_check_ptr(
- 	int				index,
- 	int				level)
- {
--	if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN) {
--		if (xfs_btree_check_lptr(cur, be64_to_cpu((&ptr->l)[index]),
--				level))
--			return 0;
--		xfs_err(cur->bc_mp,
-+	int				error;
-+
-+	error = __xfs_btree_check_ptr(cur, ptr, index, level);
-+	if (error) {
-+		if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN) {
-+			xfs_err(cur->bc_mp,
- "Inode %llu fork %d: Corrupt %sbt pointer at level %d index %d.",
- 				cur->bc_ino.ip->i_ino,
- 				cur->bc_ino.whichfork, cur->bc_ops->name,
- 				level, index);
--	} else {
--		if (xfs_btree_check_sptr(cur, be32_to_cpu((&ptr->s)[index]),
--				level))
--			return 0;
--		xfs_err(cur->bc_mp,
-+		} else {
-+			xfs_err(cur->bc_mp,
- "AG %u: Corrupt %sbt pointer at level %d index %d.",
- 				cur->bc_ag.pag->pag_agno, cur->bc_ops->name,
- 				level, index);
-+		}
-+		xfs_btree_mark_sick(cur);
+-	if (crc) {
++	if (xfs_has_crc(mp)) {
+ 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+ 			return __this_address;
+-		if (block->bb_u.s.bb_blkno !=
+-		    cpu_to_be64(bp ? xfs_buf_daddr(bp) : XFS_BUF_DADDR_NULL))
++		if (block->bb_u.s.bb_blkno != cpu_to_be64(xfs_buf_daddr(bp)))
+ 			return __this_address;
  	}
  
--	xfs_btree_mark_sick(cur);
--	return -EFSCORRUPTED;
-+	return error;
- }
+@@ -193,9 +191,7 @@ __xfs_btree_check_sblock(
+ 	    cur->bc_ops->get_maxrecs(cur, level))
+ 		return __this_address;
  
- #ifdef DEBUG
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index c1d8d9895d15d..da9d5d6e12c24 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -343,6 +343,9 @@ xfs_failaddr_t __xfs_btree_check_lblock(struct xfs_btree_cur *cur,
- xfs_failaddr_t __xfs_btree_check_sblock(struct xfs_btree_cur *cur,
- 		struct xfs_btree_block *block, int level, struct xfs_buf *bp);
- 
-+int __xfs_btree_check_ptr(struct xfs_btree_cur *cur,
-+		const union xfs_btree_ptr *ptr, int index, int level);
-+
- /*
-  * Check that block header is ok.
-  */
-@@ -353,24 +356,6 @@ xfs_btree_check_block(
- 	int			level,	/* level of the btree block */
- 	struct xfs_buf		*bp);	/* buffer containing block, if any */
- 
--/*
-- * Check that (long) pointer is ok.
-- */
--bool					/* error (0 or EFSCORRUPTED) */
--xfs_btree_check_lptr(
--	struct xfs_btree_cur	*cur,	/* btree cursor */
--	xfs_fsblock_t		fsbno,	/* btree block disk address */
--	int			level);	/* btree block level */
+-	if (bp)
+-		agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
 -
--/*
-- * Check that (short) pointer is ok.
-- */
--bool					/* error (0 or EFSCORRUPTED) */
--xfs_btree_check_sptr(
--	struct xfs_btree_cur	*cur,	/* btree cursor */
--	xfs_agblock_t		agbno,	/* btree block disk address */
--	int			level);	/* btree block level */
--
- /*
-  * Delete the btree cursor.
-  */
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 187d692a0b58a..6fe5dae06f23c 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -236,22 +236,18 @@ xchk_btree_ptr_ok(
- 	int			level,
- 	union xfs_btree_ptr	*ptr)
- {
--	bool			res;
--
- 	/* A btree rooted in an inode has no block pointer to the root. */
- 	if (bs->cur->bc_ops->type == XFS_BTREE_TYPE_INODE &&
- 	    level == bs->cur->bc_nlevels)
- 		return true;
- 
- 	/* Otherwise, check the pointers. */
--	if (bs->cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN)
--		res = xfs_btree_check_lptr(bs->cur, be64_to_cpu(ptr->l), level);
--	else
--		res = xfs_btree_check_sptr(bs->cur, be32_to_cpu(ptr->s), level);
--	if (!res)
-+	if (__xfs_btree_check_ptr(bs->cur, ptr, 0, level)) {
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, level);
-+		return false;
-+	}
- 
--	return res;
-+	return true;
- }
- 
- /* Check that a btree block's sibling matches what we expect it. */
++	agbno = xfs_daddr_to_agbno(mp, xfs_buf_daddr(bp));
+ 	fa = xfs_btree_check_sblock_siblings(pag, agbno,
+ 			block->bb_u.s.bb_leftsib);
+ 	if (!fa)
 
