@@ -1,239 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90C616D39
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:36:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0D9D8527B
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:39:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816169; cv=none; b=PhZesRjxtsKVwH16N8ESo4KSNj7TGq9COWoTajX6p1mO4ri8McOibnQh6c5PmL7esW53OMyfL3otNEeP5wJK5/V491bgoaSdl22L1sL1hmJ5FZAJ1affMQqBDbiq37ACwJqdiqGGfXb/TarN4QajvzAjr4iCOe5YQd9TSMzAYWQ=
+	t=1706816352; cv=none; b=kRtyR+zLLFRWjHuSnK0VpCcn0lck6fTq3+FWJAnKG32mwNZ3WM/DX/O+FuSW21XtM6XpJIXSlKzl4prXssXUpnnZzJLXqaQi47AlXcCyhaLUhgXVc5OX9jdNT7xFU9qULy366kJuGt0a6diFAJjoVJ8OGvZy0cljjHM062Qej/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816169; c=relaxed/simple;
-	bh=/RaiVPuUwXqxvebAL9w6bIs7bki2H/PaDzBdGoFjVPU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZekLhTxh0/yV3CcAM5InOfpycvYH4KY8WWYECPtoOkFQ32MjyZDlYoVVaXTxT31K8J0dHCkA6hROA5uaO+RJhdIaHQ42iBOvKmYdTO8hyF7coLQQSzElM+RA1YZJCR1Hs+3lIdglwoM9L1LezV6Hpgps1mZ+CHBMm4n8n8XnFuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a9tlkqN2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706816352; c=relaxed/simple;
+	bh=wiS/Q9kSMwWlBPSg06qZ2u/IwO7t1jGRPRgPPScEgVs=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=Rg5C6AKagEITBmahxPoWlft5bv4DvaN8fVHTuwnGkan7tskq1PffkxxcNqPYuV33bzQpHlnIjoVpEwwBFgBW+SKySRLS375yJj+oOcJsM0A/cITRvRJOgmA7heIlQXfBpQPhakHdb2Qx9tg8fBKyUHjteMHshAGn0yRy3/iWKkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UmfLcr3l; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a9tlkqN2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2617C433C7;
-	Thu,  1 Feb 2024 19:36:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UmfLcr3l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E42DC433C7;
+	Thu,  1 Feb 2024 19:39:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816169;
-	bh=/RaiVPuUwXqxvebAL9w6bIs7bki2H/PaDzBdGoFjVPU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a9tlkqN2pyd1FpdhmdeEghR+LTJawUX6kV0gftkACvWpXwn2pRhaDV8C1F/6GCvRx
-	 StDp0vi95WAhCHGbhEyfMDq9jI+dXS4ceYwohPzULlUcNwFmG047B1myduKMBI1+fk
-	 /mP6AVpbljCNtq+aKz0cjHwhtqdqwDXQHNbqRYVC7RY0oD9BNH8Nb3Na4/GTPaErAf
-	 I/LHAlD1Ohwa18JpypxtsRbdtOXtK8iydb44HUmoyclwcT+aZqpUOrDFJt+XSsB+Un
-	 N8ed/P7pAR6d3sbfDru3KtS7t3PI7Eq+TcqkLBucsmmZpzyCYFlxVE9JvsXnYxXNJa
-	 YEFQXoyAvyndg==
-Date: Thu, 1 Feb 2024 11:36:08 -0800
+	s=k20201202; t=1706816351;
+	bh=wiS/Q9kSMwWlBPSg06qZ2u/IwO7t1jGRPRgPPScEgVs=;
+	h=Date:Subject:From:To:Cc:From;
+	b=UmfLcr3lEKa8ulO5gL8AXDY1Bftcy3SfQYx09jJTYMC4knsAT1eS2fCVTfnJg4ufY
+	 isY8FOiKIvcaEkFKrIXamcP2A0STxnvGPAzyWPMmoMMRRQfNbiOFXi5iFvXnEp+7DP
+	 MMLjxqaBUT03FqidPOGP5quw5ANWEUG8lYhmswh0dOfWRKQiKUZ9ylHJtqEsGyvI3s
+	 PRzCB1xBRPW3nm/zrbqxWBklngAfRodVps2VZZv5GyiLcU1MqBHzIUI40k/D+/xIKp
+	 xU2ZpKlO99cJsydN0ETcPHh+Wbu82s4p2/H9t9QW5a8up5fk1Flu+FwHgDGS3b9Cj+
+	 GYMR9MibKEawA==
+Date: Thu, 01 Feb 2024 11:39:10 -0800
+Subject: [PATCHSET v29.2 1/8] xfs: move btree geometry to ops struct
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from
- xfs_iget
-Message-ID: <20240201193608.GG616564@frogsfrogsfrogs>
-References: <20240201005217.1011010-1-david@fromorbit.com>
- <20240201005217.1011010-5-david@fromorbit.com>
+To: djwong@kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <170681333879.1604831.1274408743361215078.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240201005217.1011010-5-david@fromorbit.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Feb 01, 2024 at 11:30:16AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When xfs_iget() finds an inode that is queued for inactivation, it
-> issues an inodegc flush to trigger the inactivation work and then
-> retries the lookup.
-> 
-> However, when the filesystem is frozen, inodegc is turned off and
-> the flush does nothing and does not block. This results in lookup
-> spinning on NEED_INACTIVE inodes and being unable to make progress
-> until the filesystem is thawed. This is less than ideal.
-> 
-> The only reason we can't immediately recycle the inode is that it
-> queued on a lockless list we can't remove it from. However, those
-> lists now support lazy removal, and so we can now modify the lookup
-> code to reactivate inode queued for inactivation. The process is
-> identical to how we recycle reclaimable inodes from xfs_iget(), so
-> this ends up being a relatively simple change to make.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_icache.c | 98 +++++++++++++++++++++++++++++++++++----------
->  1 file changed, 76 insertions(+), 22 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 10588f78f679..1fc55ed0692c 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -64,6 +64,8 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
->  					 XFS_ICWALK_FLAG_RECLAIM_SICK | \
->  					 XFS_ICWALK_FLAG_UNION)
->  
-> +static void xfs_inodegc_queue(struct xfs_inode *ip);
-> +
->  /*
->   * Allocate and initialise an xfs_inode.
->   */
-> @@ -328,6 +330,7 @@ xfs_reinit_inode(
->  	return error;
->  }
->  
-> +
->  /*
->   * Carefully nudge an inode whose VFS state has been torn down back into a
->   * usable state.  Drops the i_flags_lock and the rcu read lock.
-> @@ -391,7 +394,71 @@ xfs_iget_recycle(
->  	inode->i_state = I_NEW;
->  	spin_unlock(&ip->i_flags_lock);
->  	spin_unlock(&pag->pag_ici_lock);
-> +	XFS_STATS_INC(mp, xs_ig_frecycle);
-> +	return 0;
-> +}
->  
-> +static int
-> +xfs_iget_reactivate(
-> +	struct xfs_perag	*pag,
-> +	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct inode		*inode = VFS_I(ip);
-> +	int			error;
-> +
-> +	trace_xfs_iget_recycle(ip);
-> +
-> +	/*
-> +	 * Take the ILOCK here to serialise against lookup races with putting
-> +	 * the inode back on the inodegc queue during error handling.
-> +	 */
-> +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-> +		return -EAGAIN;
-> +
-> +	/*
-> +	 * Move the state to inactivating so both inactivation and racing
-> +	 * lookups will skip over this inode until we've finished reactivating
-> +	 * it and can return it to the XFS_INEW state.
-> +	 */
-> +	ip->i_flags &= ~XFS_NEED_INACTIVE;
-> +	ip->i_flags |= XFS_INACTIVATING;
-> +	spin_unlock(&ip->i_flags_lock);
-> +	rcu_read_unlock();
-> +
-> +	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
-> +	error = xfs_reinit_inode(mp, inode);
-> +	if (error) {
-> +		/*
-> +		 * Well, that sucks. Put the inode back on the inactive queue.
-> +		 * Do this while still under the ILOCK so that we can set the
-> +		 * NEED_INACTIVE flag and clear the INACTIVATING flag an not
-> +		 * have another lookup race with us before we've finished
-> +		 * putting the inode back on the inodegc queue.
-> +		 */
-> +		spin_unlock(&ip->i_flags_lock);
-> +		ip->i_flags |= XFS_NEED_INACTIVE;
-> +		ip->i_flags &= ~XFS_INACTIVATING;
-> +		spin_unlock(&ip->i_flags_lock);
-> +
-> +		xfs_inodegc_queue(ip);
-> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +		return error;
+Hi all,
 
-Needs a trace_xfs_iget_recycle_fail here.
+This patchset prepares the generic btree code to allow for the creation
+of new btree types outside of libxfs.  The end goal here is for online
+fsck to be able to create its own in-memory btrees that will be used to
+improve the performance (and reduce the memory requirements of) the
+refcount btree.
 
-Do we want/need separate tracepoints for reactivation?  I'm guessing not
-really since either way (reclaim/inactivation) we're recreating the vfs
-state of an inode that hadn't yet been fully zapped.
+To enable this, I decided that the btree ops structure is the ideal
+place to encode all of the geometry information about a btree. The btree
+ops struture already contains the buffer ops (and hence the btree block
+magic numbers) as well as the key and record sizes, so it doesn't seem
+all that farfetched to encode the XFS_BTREE_ flags that determine the
+geometry (ROOT_IN_INODE, LONG_PTRS, etc).
 
-The code changes here look good to me otherwise.
+The rest of the patchset cleans up the btree functions that initialize
+btree blocks and btree buffers.  The bulk of this work is to replace
+btree geometry related function call arguments with a single pointer to
+the ops structure, and then clean up everything else around that.  As a
+side effect, we rename the functions.
+
+Later, Christoph Hellwig and I merged together a bunch more cleanups
+that he wanted to do for a while.  All the btree geometry information is
+now in the btree ops structure, we've created an explicit btree type
+(ag, inode, mem) and moved the per-btree type information to a separate
+union.
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> +	}
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +	/*
-> +	 * Reset the inode state to new so that xfs_iget() will complete
-> +	 * the required remaining inode initialisation before it returns the
-> +	 * inode to the caller.
-> +	 */
-> +	spin_lock(&ip->i_flags_lock);
-> +	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
-> +	ip->i_flags |= XFS_INEW;
-> +	inode->i_state = I_NEW;
-> +	spin_unlock(&ip->i_flags_lock);
-> +	XFS_STATS_INC(mp, xs_ig_frecycle);
->  	return 0;
->  }
->  
-> @@ -523,14 +590,6 @@ xfs_iget_cache_hit(
->  	if (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_INACTIVATING))
->  		goto out_skip;
->  
-> -	if (ip->i_flags & XFS_NEED_INACTIVE) {
-> -		/* Unlinked inodes cannot be re-grabbed. */
-> -		if (VFS_I(ip)->i_nlink == 0) {
-> -			error = -ENOENT;
-> -			goto out_error;
-> -		}
-> -		goto out_inodegc_flush;
-> -	}
->  
->  	/*
->  	 * Check the inode free state is valid. This also detects lookup
-> @@ -542,11 +601,18 @@ xfs_iget_cache_hit(
->  
->  	/* Skip inodes that have no vfs state. */
->  	if ((flags & XFS_IGET_INCORE) &&
-> -	    (ip->i_flags & XFS_IRECLAIMABLE))
-> +	    (ip->i_flags & (XFS_IRECLAIMABLE | XFS_NEED_INACTIVE)))
->  		goto out_skip;
->  
->  	/* The inode fits the selection criteria; process it. */
-> -	if (ip->i_flags & XFS_IRECLAIMABLE) {
-> +	if (ip->i_flags & XFS_NEED_INACTIVE) {
-> +		/* Drops i_flags_lock and RCU read lock. */
-> +		error = xfs_iget_reactivate(pag, ip);
-> +		if (error == -EAGAIN)
-> +			goto out_skip;
-> +		if (error)
-> +			return error;
-> +	} else if (ip->i_flags & XFS_IRECLAIMABLE) {
->  		/* Drops i_flags_lock and RCU read lock. */
->  		error = xfs_iget_recycle(pag, ip);
->  		if (error == -EAGAIN)
-> @@ -575,23 +641,11 @@ xfs_iget_cache_hit(
->  
->  out_skip:
->  	trace_xfs_iget_skip(ip);
-> -	XFS_STATS_INC(mp, xs_ig_frecycle);
->  	error = -EAGAIN;
->  out_error:
->  	spin_unlock(&ip->i_flags_lock);
->  	rcu_read_unlock();
->  	return error;
-> -
-> -out_inodegc_flush:
-> -	spin_unlock(&ip->i_flags_lock);
-> -	rcu_read_unlock();
-> -	/*
-> -	 * Do not wait for the workers, because the caller could hold an AGI
-> -	 * buffer lock.  We're just going to sleep in a loop anyway.
-> -	 */
-> -	if (xfs_is_inodegc_enabled(mp))
-> -		xfs_inodegc_queue_all(mp);
-> -	return -EAGAIN;
->  }
->  
->  static int
-> -- 
-> 2.43.0
-> 
-> 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-geometry-in-ops
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-geometry-in-ops
+---
+Commits in this patchset:
+ * xfs: consolidate btree block freeing tracepoints
+ * xfs: consolidate btree block allocation tracepoints
+ * xfs: set the btree cursor bc_ops in xfs_btree_alloc_cursor
+ * xfs: drop XFS_BTREE_CRC_BLOCKS
+ * xfs: fix imprecise logic in xchk_btree_check_block_owner
+ * xfs: encode the btree geometry flags in the btree ops structure
+ * xfs: remove bc_ino.flags
+ * xfs: consolidate the xfs_alloc_lookup_* helpers
+ * xfs: turn the allocbt cursor active field into a btree flag
+ * xfs: extern some btree ops structures
+ * xfs: initialize btree blocks using btree_ops structure
+ * xfs: rename btree block/buffer init functions
+ * xfs: btree convert xfs_btree_init_block to xfs_btree_init_buf calls
+ * xfs: remove the unnecessary daddr paramter to _init_block
+ * xfs: set btree block buffer ops in _init_buf
+ * xfs: move lru refs to the btree ops structure
+ * xfs: move the btree stats offset into struct btree_ops
+ * xfs: factor out a xfs_btree_owner helper
+ * xfs: factor out a btree block owner check
+ * xfs: store the btree pointer length in struct xfs_btree_ops
+ * xfs: split out a btree type from the btree ops geometry flags
+ * xfs: split the per-btree union in struct xfs_btree_cur
+ * xfs: create predicate to determine if cursor is at inode root level
+---
+ fs/xfs/libxfs/xfs_ag.c             |   33 +--
+ fs/xfs/libxfs/xfs_ag.h             |    2 
+ fs/xfs/libxfs/xfs_alloc.c          |   54 +++--
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   39 ++--
+ fs/xfs/libxfs/xfs_bmap.c           |   58 ++----
+ fs/xfs/libxfs/xfs_bmap_btree.c     |   59 +++---
+ fs/xfs/libxfs/xfs_bmap_btree.h     |    3 
+ fs/xfs/libxfs/xfs_btree.c          |  365 ++++++++++++++++++------------------
+ fs/xfs/libxfs/xfs_btree.h          |  165 +++++++++-------
+ fs/xfs/libxfs/xfs_btree_staging.c  |   20 +-
+ fs/xfs/libxfs/xfs_btree_staging.h  |    3 
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   35 ++-
+ fs/xfs/libxfs/xfs_refcount.c       |   24 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   24 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   19 +-
+ fs/xfs/libxfs/xfs_shared.h         |    9 +
+ fs/xfs/scrub/btree.c               |   29 ++-
+ fs/xfs/scrub/newbt.c               |    2 
+ fs/xfs/scrub/trace.c               |    2 
+ fs/xfs/xfs_trace.h                 |   83 ++++++++
+ 20 files changed, 566 insertions(+), 462 deletions(-)
+
