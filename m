@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA61C84FDF
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:31:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90C616D39
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:36:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706815873; cv=none; b=IEAAxUTQQGlag9IFDS0qIy6XqgkYtHBuYbpXD63qYe8FEtHIZDjMS69fwcrdoXZoSf1ZIusGnybLUgElASIsgDm8Wl8ghkYWr28TydqhfrjciI6APRe51esZdxi81N6IZTvYE6vh2IYuasDNuVCtquT5y9qI/vcgvjmrMEUW2ho=
+	t=1706816169; cv=none; b=PhZesRjxtsKVwH16N8ESo4KSNj7TGq9COWoTajX6p1mO4ri8McOibnQh6c5PmL7esW53OMyfL3otNEeP5wJK5/V491bgoaSdl22L1sL1hmJ5FZAJ1affMQqBDbiq37ACwJqdiqGGfXb/TarN4QajvzAjr4iCOe5YQd9TSMzAYWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706815873; c=relaxed/simple;
-	bh=lObTokn8g91xE65CHpKsV51/mc501egO2uH+Tdll+s0=;
+	s=arc-20240116; t=1706816169; c=relaxed/simple;
+	bh=/RaiVPuUwXqxvebAL9w6bIs7bki2H/PaDzBdGoFjVPU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SCNiwgmQpVZw2Q4toCzezkSlOu+hA9BKzmjcfCTddOBC26XG9UNzVGELhcXQ6l0wJkw63gqR5cUfifywnTLBgt7fkYPcaI9mta9i/EcrvGevnTkgNpLuSHGVMXGkk6dNqOkRi8Or7KwGMP+6wCq9KcwJa750r/c9oR+P5INnmGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DQof/x9h; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZekLhTxh0/yV3CcAM5InOfpycvYH4KY8WWYECPtoOkFQ32MjyZDlYoVVaXTxT31K8J0dHCkA6hROA5uaO+RJhdIaHQ42iBOvKmYdTO8hyF7coLQQSzElM+RA1YZJCR1Hs+3lIdglwoM9L1LezV6Hpgps1mZ+CHBMm4n8n8XnFuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a9tlkqN2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DQof/x9h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39182C433C7;
-	Thu,  1 Feb 2024 19:31:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a9tlkqN2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2617C433C7;
+	Thu,  1 Feb 2024 19:36:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706815873;
-	bh=lObTokn8g91xE65CHpKsV51/mc501egO2uH+Tdll+s0=;
+	s=k20201202; t=1706816169;
+	bh=/RaiVPuUwXqxvebAL9w6bIs7bki2H/PaDzBdGoFjVPU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DQof/x9hJ/Ezg6ZivLMJXKiFO3pcow9DffGWihb0VakeS+8O/0CsjX3YhRaDWFTBJ
-	 68ymkRvQ+kpnNg0hfjXBU6naYfG1D5gufDmREgKSCMtb4rcMhYGqp4riMqpD7DMTlO
-	 C3eMRPmxtSsj5Kzo+omtx4VB4xSuTOPIGjeuVYdKbXXFlSljRdM5c7oNyRxACq6bq0
-	 x6jWmrtkAc4gpTV/eTSdhNUoDnIbwULdIZlgbmLzFV6VfGV4LeNCu2jd41G8SSYYAy
-	 eIA4J/hZX/O+2vCPoXaXbOodPvdYVoHFpYV5pGmsJq4vacztjmZrWZWJzZJJZDG7AG
-	 gPg2RPplFtMNw==
-Date: Thu, 1 Feb 2024 11:31:12 -0800
+	b=a9tlkqN2pyd1FpdhmdeEghR+LTJawUX6kV0gftkACvWpXwn2pRhaDV8C1F/6GCvRx
+	 StDp0vi95WAhCHGbhEyfMDq9jI+dXS4ceYwohPzULlUcNwFmG047B1myduKMBI1+fk
+	 /mP6AVpbljCNtq+aKz0cjHwhtqdqwDXQHNbqRYVC7RY0oD9BNH8Nb3Na4/GTPaErAf
+	 I/LHAlD1Ohwa18JpypxtsRbdtOXtK8iydb44HUmoyclwcT+aZqpUOrDFJt+XSsB+Un
+	 N8ed/P7pAR6d3sbfDru3KtS7t3PI7Eq+TcqkLBucsmmZpzyCYFlxVE9JvsXnYxXNJa
+	 YEFQXoyAvyndg==
+Date: Thu, 1 Feb 2024 11:36:08 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: allow lazy removal of inodes from the inodegc
- queues
-Message-ID: <20240201193112.GF616564@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from
+ xfs_iget
+Message-ID: <20240201193608.GG616564@frogsfrogsfrogs>
 References: <20240201005217.1011010-1-david@fromorbit.com>
- <20240201005217.1011010-4-david@fromorbit.com>
+ <20240201005217.1011010-5-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,132 +43,196 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240201005217.1011010-4-david@fromorbit.com>
+In-Reply-To: <20240201005217.1011010-5-david@fromorbit.com>
 
-On Thu, Feb 01, 2024 at 11:30:15AM +1100, Dave Chinner wrote:
+On Thu, Feb 01, 2024 at 11:30:16AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> To allow us to recycle inodes that are awaiting inactivation, we
-> need to enable lazy removal of inodes from the list. Th elist is a
-
-s/Th elist/The list/
-
-> lockless single linked variant, so we can't just remove inodes from
-> the list at will.
+> When xfs_iget() finds an inode that is queued for inactivation, it
+> issues an inodegc flush to trigger the inactivation work and then
+> retries the lookup.
 > 
-> Instead, we can remove them lazily whenever inodegc runs by enabling
-> the inodegc processing to determine whether inactivation needs to be
-> done at processing time rather than queuing time.
+> However, when the filesystem is frozen, inodegc is turned off and
+> the flush does nothing and does not block. This results in lookup
+> spinning on NEED_INACTIVE inodes and being unable to make progress
+> until the filesystem is thawed. This is less than ideal.
 > 
-> We've already modified the queuing code to only queue the inode if
-> it isn't already queued, so here all we need to do is modify the
-> queue processing to determine if inactivation needs to be done.
-> 
-> Hence we introduce the behaviour that we can cancel inactivation
-> processing simply by clearing the XFS_NEED_INACTIVE flag on the
-> inode. Processing will check this flag and skip inactivation
-> processing if it is not set. The flag is always set at queuing time,
-> regardless of whether the inode is already one the queues or not.
-> Hence if it is not set at processing time, it means that something
-> has cancelled the inactivation and we should just remove it from the
-> list and then leave it alone.
+> The only reason we can't immediately recycle the inode is that it
+> queued on a lockless list we can't remove it from. However, those
+> lists now support lazy removal, and so we can now modify the lookup
+> code to reactivate inode queued for inactivation. The process is
+> identical to how we recycle reclaimable inodes from xfs_iget(), so
+> this ends up being a relatively simple change to make.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_icache.c | 38 ++++++++++++++++++++++++++++++--------
->  1 file changed, 30 insertions(+), 8 deletions(-)
+>  fs/xfs/xfs_icache.c | 98 +++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 76 insertions(+), 22 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 2dd1559aade2..10588f78f679 100644
+> index 10588f78f679..1fc55ed0692c 100644
 > --- a/fs/xfs/xfs_icache.c
 > +++ b/fs/xfs/xfs_icache.c
-> @@ -1877,15 +1877,23 @@ xfs_inodegc_worker(
->  		int	error;
+> @@ -64,6 +64,8 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
+>  					 XFS_ICWALK_FLAG_RECLAIM_SICK | \
+>  					 XFS_ICWALK_FLAG_UNION)
 >  
->  		/*
-> -		 * Switch state to inactivating and remove the inode from the
-> -		 * gclist. This allows the use of llist_on_list() in the queuing
-> -		 * code to determine if the inode is already on an inodegc
-> -		 * queue.
-> +		 * Remove the inode from the gclist and determine if it needs to
-> +		 * be processed. The XFS_NEED_INACTIVE flag gets cleared if the
-> +		 * inode is reactivated after queuing, but the list removal is
-> +		 * lazy and left up to us.
-> +		 *
-> +		 * We always remove the inode from the list to allow the use of
-> +		 * llist_on_list() in the queuing code to determine if the inode
-> +		 * is already on an inodegc queue.
->  		 */
->  		spin_lock(&ip->i_flags_lock);
-> +		init_llist_node(&ip->i_gclist);
-> +		if (!(ip->i_flags & XFS_NEED_INACTIVE)) {
-> +			spin_unlock(&ip->i_flags_lock);
-> +			continue;
-> +		}
->  		ip->i_flags |= XFS_INACTIVATING;
->  		ip->i_flags &= ~XFS_NEED_INACTIVE;
-> -		init_llist_node(&ip->i_gclist);
-
-Nit: unnecessary churn from the last patch.
-
-So if I understand this correctly, if we think a released inode needs
-inactivation, we put it on the percpu gclist and set NEEDS_INACTIVE.
-Once it's on there, only the inodegc worker can remove it from that
-list.  The novel part here is that now we serialize the i_gclist update
-with i_flags_lock, which means that the inodegc worker can observe that
-NEEDS_INACTIVE fell off the inode, and ignore the inode.
-
-This sounds pretty similar to the v8 deferred inode inactivation series
-where one could untag a NEED_INACTIVE inode to prevent the inodegc
-worker from finding it, though now ported to lockless lists that showed
-up for v9.
-
->  		spin_unlock(&ip->i_flags_lock);
+> +static void xfs_inodegc_queue(struct xfs_inode *ip);
+> +
+>  /*
+>   * Allocate and initialise an xfs_inode.
+>   */
+> @@ -328,6 +330,7 @@ xfs_reinit_inode(
+>  	return error;
+>  }
 >  
->  		error = xfs_inodegc_inactivate(ip);
-> @@ -2153,7 +2161,6 @@ xfs_inode_mark_reclaimable(
->  	struct xfs_inode	*ip)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	bool			need_inactive;
+> +
+>  /*
+>   * Carefully nudge an inode whose VFS state has been torn down back into a
+>   * usable state.  Drops the i_flags_lock and the rcu read lock.
+> @@ -391,7 +394,71 @@ xfs_iget_recycle(
+>  	inode->i_state = I_NEW;
+>  	spin_unlock(&ip->i_flags_lock);
+>  	spin_unlock(&pag->pag_ici_lock);
+> +	XFS_STATS_INC(mp, xs_ig_frecycle);
+> +	return 0;
+> +}
 >  
->  	XFS_STATS_INC(mp, vn_reclaim);
->  
-> @@ -2162,8 +2169,23 @@ xfs_inode_mark_reclaimable(
->  	 */
->  	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_ALL_IRECLAIM_FLAGS));
->  
-> -	need_inactive = xfs_inode_needs_inactive(ip);
-> -	if (need_inactive) {
+> +static int
+> +xfs_iget_reactivate(
+> +	struct xfs_perag	*pag,
+> +	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct inode		*inode = VFS_I(ip);
+> +	int			error;
+> +
+> +	trace_xfs_iget_recycle(ip);
+> +
 > +	/*
-> +	 * If the inode is already queued for inactivation because it was
-> +	 * re-activated and is now being reclaimed again (e.g. fs has been
-> +	 * frozen for a while) we must ensure that the inode waits for inodegc
-> +	 * to be run and removes it from the inodegc queue before it moves to
-> +	 * the reclaimable state and gets freed.
-> +	 *
-> +	 * We don't care about races here. We can't race with a list addition
-> +	 * because only one thread can be evicting the inode from the VFS cache,
-> +	 * hence false negatives can't occur and we only need to worry about
-> +	 * list removal races.  If we get a false positive from a list removal
-> +	 * race, then the inode goes through the inactive list whether it needs
-> +	 * to or not. This will slow down reclaim of this inode slightly but
-> +	 * should have no other side effects.
-
-That makes sense to me.
-
+> +	 * Take the ILOCK here to serialise against lookup races with putting
+> +	 * the inode back on the inodegc queue during error handling.
 > +	 */
-> +	if (llist_on_list(&ip->i_gclist) ||
-> +	    xfs_inode_needs_inactive(ip)) {
+> +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+> +		return -EAGAIN;
+> +
+> +	/*
+> +	 * Move the state to inactivating so both inactivation and racing
+> +	 * lookups will skip over this inode until we've finished reactivating
+> +	 * it and can return it to the XFS_INEW state.
+> +	 */
+> +	ip->i_flags &= ~XFS_NEED_INACTIVE;
+> +	ip->i_flags |= XFS_INACTIVATING;
+> +	spin_unlock(&ip->i_flags_lock);
+> +	rcu_read_unlock();
+> +
+> +	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+> +	error = xfs_reinit_inode(mp, inode);
+> +	if (error) {
+> +		/*
+> +		 * Well, that sucks. Put the inode back on the inactive queue.
+> +		 * Do this while still under the ILOCK so that we can set the
+> +		 * NEED_INACTIVE flag and clear the INACTIVATING flag an not
+> +		 * have another lookup race with us before we've finished
+> +		 * putting the inode back on the inodegc queue.
+> +		 */
+> +		spin_unlock(&ip->i_flags_lock);
+> +		ip->i_flags |= XFS_NEED_INACTIVE;
+> +		ip->i_flags &= ~XFS_INACTIVATING;
+> +		spin_unlock(&ip->i_flags_lock);
+> +
+> +		xfs_inodegc_queue(ip);
+> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +		return error;
 
-With the nits fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Needs a trace_xfs_iget_recycle_fail here.
+
+Do we want/need separate tracepoints for reactivation?  I'm guessing not
+really since either way (reclaim/inactivation) we're recreating the vfs
+state of an inode that hadn't yet been fully zapped.
+
+The code changes here look good to me otherwise.
 
 --D
 
->  		xfs_inodegc_queue(ip);
->  		return;
->  	}
+> +	}
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	/*
+> +	 * Reset the inode state to new so that xfs_iget() will complete
+> +	 * the required remaining inode initialisation before it returns the
+> +	 * inode to the caller.
+> +	 */
+> +	spin_lock(&ip->i_flags_lock);
+> +	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
+> +	ip->i_flags |= XFS_INEW;
+> +	inode->i_state = I_NEW;
+> +	spin_unlock(&ip->i_flags_lock);
+> +	XFS_STATS_INC(mp, xs_ig_frecycle);
+>  	return 0;
+>  }
+>  
+> @@ -523,14 +590,6 @@ xfs_iget_cache_hit(
+>  	if (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_INACTIVATING))
+>  		goto out_skip;
+>  
+> -	if (ip->i_flags & XFS_NEED_INACTIVE) {
+> -		/* Unlinked inodes cannot be re-grabbed. */
+> -		if (VFS_I(ip)->i_nlink == 0) {
+> -			error = -ENOENT;
+> -			goto out_error;
+> -		}
+> -		goto out_inodegc_flush;
+> -	}
+>  
+>  	/*
+>  	 * Check the inode free state is valid. This also detects lookup
+> @@ -542,11 +601,18 @@ xfs_iget_cache_hit(
+>  
+>  	/* Skip inodes that have no vfs state. */
+>  	if ((flags & XFS_IGET_INCORE) &&
+> -	    (ip->i_flags & XFS_IRECLAIMABLE))
+> +	    (ip->i_flags & (XFS_IRECLAIMABLE | XFS_NEED_INACTIVE)))
+>  		goto out_skip;
+>  
+>  	/* The inode fits the selection criteria; process it. */
+> -	if (ip->i_flags & XFS_IRECLAIMABLE) {
+> +	if (ip->i_flags & XFS_NEED_INACTIVE) {
+> +		/* Drops i_flags_lock and RCU read lock. */
+> +		error = xfs_iget_reactivate(pag, ip);
+> +		if (error == -EAGAIN)
+> +			goto out_skip;
+> +		if (error)
+> +			return error;
+> +	} else if (ip->i_flags & XFS_IRECLAIMABLE) {
+>  		/* Drops i_flags_lock and RCU read lock. */
+>  		error = xfs_iget_recycle(pag, ip);
+>  		if (error == -EAGAIN)
+> @@ -575,23 +641,11 @@ xfs_iget_cache_hit(
+>  
+>  out_skip:
+>  	trace_xfs_iget_skip(ip);
+> -	XFS_STATS_INC(mp, xs_ig_frecycle);
+>  	error = -EAGAIN;
+>  out_error:
+>  	spin_unlock(&ip->i_flags_lock);
+>  	rcu_read_unlock();
+>  	return error;
+> -
+> -out_inodegc_flush:
+> -	spin_unlock(&ip->i_flags_lock);
+> -	rcu_read_unlock();
+> -	/*
+> -	 * Do not wait for the workers, because the caller could hold an AGI
+> -	 * buffer lock.  We're just going to sleep in a loop anyway.
+> -	 */
+> -	if (xfs_is_inodegc_enabled(mp))
+> -		xfs_inodegc_queue_all(mp);
+> -	return -EAGAIN;
+>  }
+>  
+>  static int
 > -- 
 > 2.43.0
 > 
