@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615A784FCC
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:41:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22EDC84FCF
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:42:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816506; cv=none; b=MIr2lMQH6g/wSxYBEOeyVQyIHjtstC9TZ4gBRgnORuM1+1g9mctrCo/dPadoMungymA6Vd8Ee0sC2ABLvrpfGUbPMtVuzGHnqlhSqwmAgttE/9TelkunHZVo/t4wmve/aYfqn1BJUN5eG0pHXeYs0hR5s71rQop1N/FXHcuzD0U=
+	t=1706816522; cv=none; b=n29vq3CxZ4Ufn7OwVROhDlHiVtQS6boR/KMNqQLi0JyLbXHVKUWJJwDDIbqUNkL2dy0KA0EjZFFV0KbuJW+K2H8FuFvCN/nVO0gKsk998ly9gsgVQhIHewGzW93d1+vmGUkRcHtvTdLvJzUFCzyFEhO0Uji4cGnw2s52X+v00+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816506; c=relaxed/simple;
-	bh=gTiVtaPSQeumtmIvwIwBRQNDcBuWhNRCcruX9iEXur8=;
+	s=arc-20240116; t=1706816522; c=relaxed/simple;
+	bh=qh5WY0WsdIZNq/k/WReMEDVhEzAredem7t2tpiA0ueI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z+IgN5BAvr0U4Cd9hTv8AKYinnG7ef7EG+DXe9a/h9iZ6VVHqnlkSqnKFkrZP9JjkCLcsf2Z5nWyFZymAKqeXwn19fdfK5Rf213jTF9EOOETZXO24mDDcdmETMIYlkW+vK5K6I3Oahqtf136WyYah5NOlSwlFAhogQikBWD7ij8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ch1l9Weo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=NZ1JMgpOrwtzyz55zXx55Cj9MwNcHhfTQnnqUzryGBUYMg0dukw9XlUvKuwRr1+ouGEGGloSiPFlOtV3AE0+Cx+euj9P7b0+E98AJ5lVvt1Y7Gk8NvASBFWdg4T7z1H+0VyWrnjsbrAgzDxyMgNLRC5UTqhlrX2dt0HLY0OynuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JmFzJysY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ch1l9Weo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D16DDC433C7;
-	Thu,  1 Feb 2024 19:41:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JmFzJysY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E120C433F1;
+	Thu,  1 Feb 2024 19:42:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816505;
-	bh=gTiVtaPSQeumtmIvwIwBRQNDcBuWhNRCcruX9iEXur8=;
+	s=k20201202; t=1706816521;
+	bh=qh5WY0WsdIZNq/k/WReMEDVhEzAredem7t2tpiA0ueI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Ch1l9Weo3YxoZd++u4uoUSgVHBk5NUOHIPcWESFNFw8dzS3I8fo13KCUL1PuveMg/
-	 kwlsEFIx+XFB+AQ0OzCsGUypAAtnFheVrZb6T3lpWAnh1ji/WnLfzcG7ezzIUiUdci
-	 4w1DwchKXR6np7vAxxlm9j7SwydSXvnPCwQ1IZ9Zh9jYt00BE/ZXMiDGATpRA8WFbq
-	 +pueRGJ2apH325i1jXOw2k1R1VZovAx5YcJYyV6bQDBeoWfiLYBFdej3vc3TPSgLUN
-	 h0Q8dYk10ucZT/0YSl+6//y2+l+wuhJ+nLJo+XIB+fO1pKXhNKvs/PEABk7eGWoqlH
-	 fW9ysbFh3urfw==
-Date: Thu, 01 Feb 2024 11:41:45 -0800
-Subject: [PATCH 08/23] xfs: consolidate the xfs_alloc_lookup_* helpers
+	b=JmFzJysY9K6F/9lFTMyQK9sxaY3jpKrnTRSWFc9jqVuuf3omY3pBsezWomF4xXv0q
+	 vDxF2tTsfCCL+NZ1HUa0OSE4Y81xDLMt/nSOpWful86cgPlCr+IKUhkvAQWdnuWDDB
+	 HdTIqyzpoZcv0ODRcs2fIzOYT08F5RrqxkVnand1kwbgUL4glK0sPPRR1GufzU2+RJ
+	 z554ABDZ5IA5G9XPQdnAYjyeTNFtqOGjokvMOHPzJNRHWQGFD8wFwiE6AzVIk5NDAr
+	 14fC8jzoKuw3LP2GUzhbPE5kvnQXhxDolYZh3n0NhL9Lz9PeK4GEuo46K9Wsh8Lfn6
+	 XanJOj7IiwDkg==
+Date: Thu, 01 Feb 2024 11:42:01 -0800
+Subject: [PATCH 09/23] xfs: turn the allocbt cursor active field into a btree
+ flag
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681334069.1604831.7076286382782728966.stgit@frogsfrogsfrogs>
+Message-ID: <170681334085.1604831.17121982282621268410.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681333879.1604831.1274408743361215078.stgit@frogsfrogsfrogs>
 References: <170681333879.1604831.1274408743361215078.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,92 +47,104 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Add a single xfs_alloc_lookup helper to sort out the argument passing and
-setting of the active flag instead of duplicating the logic three times.
+Add a new XFS_BTREE_ALLOCBT_ACTIVE flag to replace the active field.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   43 ++++++++++++++++++++++---------------------
- 1 file changed, 22 insertions(+), 21 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c       |   13 ++++++++-----
+ fs/xfs/libxfs/xfs_alloc_btree.c |    1 -
+ fs/xfs/libxfs/xfs_btree.h       |    6 +++---
+ 3 files changed, 11 insertions(+), 9 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index ac31b62e70177..a40a5e43e94c8 100644
+index a40a5e43e94c8..91553a54dc30a 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -151,23 +151,35 @@ xfs_alloc_ag_max_usable(
- 	return mp->m_sb.sb_agblocks - blocks;
+@@ -165,7 +165,10 @@ xfs_alloc_lookup(
+ 	cur->bc_rec.a.ar_startblock = bno;
+ 	cur->bc_rec.a.ar_blockcount = len;
+ 	error = xfs_btree_lookup(cur, dir, stat);
+-	cur->bc_ag.abt.active = (*stat == 1);
++	if (*stat == 1)
++		cur->bc_flags |= XFS_BTREE_ALLOCBT_ACTIVE;
++	else
++		cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
+ 	return error;
  }
  
-+
-+static int
-+xfs_alloc_lookup(
-+	struct xfs_btree_cur	*cur,
-+	xfs_lookup_t		dir,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	int			*stat)
-+{
-+	int			error;
-+
-+	cur->bc_rec.a.ar_startblock = bno;
-+	cur->bc_rec.a.ar_blockcount = len;
-+	error = xfs_btree_lookup(cur, dir, stat);
-+	cur->bc_ag.abt.active = (*stat == 1);
-+	return error;
-+}
-+
- /*
-  * Lookup the record equal to [bno, len] in the btree given by cur.
-  */
--STATIC int				/* error */
-+static inline int				/* error */
- xfs_alloc_lookup_eq(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat)	/* success/failure */
+@@ -214,7 +217,7 @@ static inline bool
+ xfs_alloc_cur_active(
+ 	struct xfs_btree_cur	*cur)
  {
--	int			error;
--
--	cur->bc_rec.a.ar_startblock = bno;
--	cur->bc_rec.a.ar_blockcount = len;
--	error = xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
--	cur->bc_ag.abt.active = (*stat == 1);
--	return error;
-+	return xfs_alloc_lookup(cur, XFS_LOOKUP_EQ, bno, len, stat);
+-	return cur && cur->bc_ag.abt.active;
++	return cur && (cur->bc_flags & XFS_BTREE_ALLOCBT_ACTIVE);
  }
  
  /*
-@@ -181,13 +193,7 @@ xfs_alloc_lookup_ge(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat)	/* success/failure */
- {
--	int			error;
--
--	cur->bc_rec.a.ar_startblock = bno;
--	cur->bc_rec.a.ar_blockcount = len;
--	error = xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
--	cur->bc_ag.abt.active = (*stat == 1);
--	return error;
-+	return xfs_alloc_lookup(cur, XFS_LOOKUP_GE, bno, len, stat);
- }
+@@ -992,7 +995,7 @@ xfs_alloc_cur_check(
+ 		deactivate = true;
+ out:
+ 	if (deactivate)
+-		cur->bc_ag.abt.active = false;
++		cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
+ 	trace_xfs_alloc_cur_check(args->mp, cur->bc_btnum, bno, len, diff,
+ 				  *new);
+ 	return 0;
+@@ -1367,7 +1370,7 @@ xfs_alloc_walk_iter(
+ 		if (error)
+ 			return error;
+ 		if (i == 0)
+-			cur->bc_ag.abt.active = false;
++			cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
  
- /*
-@@ -201,12 +207,7 @@ xfs_alloc_lookup_le(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat)	/* success/failure */
- {
--	int			error;
--	cur->bc_rec.a.ar_startblock = bno;
--	cur->bc_rec.a.ar_blockcount = len;
--	error = xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
--	cur->bc_ag.abt.active = (*stat == 1);
--	return error;
-+	return xfs_alloc_lookup(cur, XFS_LOOKUP_LE, bno, len, stat);
- }
+ 		if (count > 0)
+ 			count--;
+@@ -1481,7 +1484,7 @@ xfs_alloc_ag_vextent_locality(
+ 		if (error)
+ 			return error;
+ 		if (i) {
+-			acur->cnt->bc_ag.abt.active = true;
++			acur->cnt->bc_flags |= XFS_BTREE_ALLOCBT_ACTIVE;
+ 			fbcur = acur->cnt;
+ 			fbinc = false;
+ 		}
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 0ed1477187bca..91485b642471d 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -523,7 +523,6 @@ xfs_allocbt_init_common(
+ 				mp->m_alloc_maxlevels, xfs_allocbt_cur_cache);
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+ 	}
+-	cur->bc_ag.abt.active = false;
  
- static inline bool
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index a0daccf765c83..1e660ef3b4f4f 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -236,9 +236,6 @@ struct xfs_btree_cur_ag {
+ 			unsigned int	nr_ops;	/* # record updates */
+ 			unsigned int	shape_changes;	/* # of extent splits */
+ 		} refc;
+-		struct {
+-			bool		active;	/* allocation cursor state */
+-		} abt;
+ 	};
+ };
+ 
+@@ -321,6 +318,9 @@ xfs_btree_cur_sizeof(unsigned int nlevels)
+ /* For extent swap, ignore owner check in verifier (only for bmbt btrees) */
+ #define	XFS_BTREE_BMBT_INVALID_OWNER	(1U << 2)
+ 
++/* Cursor is active (only for allocbt btrees) */
++#define	XFS_BTREE_ALLOCBT_ACTIVE	(1U << 3)
++
+ #define	XFS_BTREE_NOERROR	0
+ #define	XFS_BTREE_ERROR		1
+ 
 
