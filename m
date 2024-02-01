@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 354FD85286
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:51:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8DD643AC7
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:51:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706817069; cv=none; b=nA3O8PqKgbqA8lfCRnCLiWap1PD4jRbrSR+HmtXuOYc5z9db6R0xm13K/Fouu7EfcowBzi/IdkutHEhsMTIizhs+OAbISeBxMHqDaGE2H1lB4ErhgdrTBU/r53kQ60hS8yfXBlb+9/TwPm8yAvn8PQTDt0f7974RZ4G55vDLy3U=
+	t=1706817084; cv=none; b=eHAcjIwTO2TJeH/caiKa6aa0eJ2NaeAQxL/IpdmsIx9X5qvW1TRnMUHkYsGgLTcfYBQPH/29Z4zlrD9T2JVrxKwrwx56YI1ME4MFoQVthVlCbA4LB0/TVkOW1WwFYE8oUzd+XpOfnrzFWF20G92Q85Itw30wjfP9RCoy/0gMTTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706817069; c=relaxed/simple;
-	bh=WSD64O3DZK7oHom95OhHMrzsrbbvnBOR1fmSHSfNNkM=;
+	s=arc-20240116; t=1706817084; c=relaxed/simple;
+	bh=iREkTBIy9GKanm7Evf2+XjcjhgQ30Q0+AJs7BW1RgFA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wlcg8fnRczwWVt0YNtMIGGL4ed4CSjIKkKd96ewTTodsqJJNq9uHsCMLkkw1LtAyWv1FXPDTiRIhJ4tfHBeyZw3v94GH8jxIJASFw8niJ4AkeV8sn+zy5sNIP8ZJtVgAnmWB2VFU8E78YodNqprVFFJM81DOKg4NE1yu4eRFbYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OEpu3LXL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=cpIF3A2+bV6qVCs8PqnwMG3hZ+AfPd96oGoJVxy/yOEdfdDJFhMFpijuefQaujXv4Jx9IjJkeUnIzveeqdQCV4LMtyEOftMcd2Fy3USQKvqsh5CWZ9kFJe2pvELITOFUWHJj1Zvf0ASiyLHBO2kJhmAhfESrpxi8lMCrWub1Jts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IMItkeha; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OEpu3LXL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A36AFC433C7;
-	Thu,  1 Feb 2024 19:51:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IMItkeha"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45EAAC433F1;
+	Thu,  1 Feb 2024 19:51:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706817068;
-	bh=WSD64O3DZK7oHom95OhHMrzsrbbvnBOR1fmSHSfNNkM=;
+	s=k20201202; t=1706817084;
+	bh=iREkTBIy9GKanm7Evf2+XjcjhgQ30Q0+AJs7BW1RgFA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OEpu3LXLck31XlrmADX7IPuLkRF+019C0IKlqIXLg7nu1Xt43tVH0a7Bb6G8EOszJ
-	 BuRhxP7GFaNm+A1RIzhCrk6eY0QD6chXMp9Nflopb8WrvKeAbkUtSPQTXqmAkJdCh7
-	 61GM/sSz0ZarXufSaQMaF4R7JW6Eh0L0VxKH0KiNG1cx3Vxr6un8qUqngZB+p4JlYB
-	 4qNvCIfFBwtXfbn1jUWi0nfHd1YTAhzpe29zTlxbDbB6yvCyimR4CQRQvzDuCq9yhr
-	 VDnlc1/TSYup9LvIPV0HejSmp82zZmvW4ved29Not9puqFtY6fqcomyHFg3ApjeQ4Y
-	 wtYkR9OMH2sGg==
-Date: Thu, 01 Feb 2024 11:51:08 -0800
-Subject: [PATCH 21/27] xfs: remove xfs_inobt_cur
+	b=IMItkehapnoQzTLg37drzca7/ypW1uxXLUDJM23CF+KpYmoaamTkL2w9UqhhRvkYT
+	 YId8qw+qJ4Xc2SvEbT1V06qCWlKIzL/Nk43wh6+xVJSiMw1kR5BY4XNQLxliz1UZ+y
+	 WZTBwyeSGtu/sfFPzEwvulHlKAU5oxrl3TJdLtZRRbZvPZBn/6SDunN5rT0VBKZAoT
+	 3pJq3V3UDTeDT5dhm7P45dZj5NF9MZ7UYZ/2nI5FyJjhkqnkLfPX8WNYb+Cv6+AVaT
+	 VbOMBh4IkLBu5w9W0tJwtPBRvVvs13GaT4/msJ57EEO5mFnaYSFfFs20QMK5mKj9jT
+	 TAcE/RRmNUbNA==
+Date: Thu, 01 Feb 2024 11:51:23 -0800
+Subject: [PATCH 22/27] xfs: remove the btnum argument to
+ xfs_inobt_count_blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681335130.1605438.11513727847853353039.stgit@frogsfrogsfrogs>
+Message-ID: <170681335147.1605438.9294364123104075691.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 References: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,114 +47,50 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-This helper provides no real advantage over just open code the two
-calls in it in the callers.
+xfs_inobt_count_blocks is only used for the finobt.  Hardcode the btnum
+argument and rename the function to match that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ialloc_btree.c |   29 +++--------------------------
- fs/xfs/libxfs/xfs_ialloc_btree.h |    3 ---
- fs/xfs/xfs_iwalk.c               |    9 +++++----
- 3 files changed, 8 insertions(+), 33 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 1fe9d83c575ea..441c5a7be1e0f 100644
+index 441c5a7be1e0f..c920aee4a7daf 100644
 --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
 +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -710,30 +710,6 @@ xfs_inobt_max_size(
- 					XFS_INODES_PER_CHUNK);
+@@ -711,10 +711,9 @@ xfs_inobt_max_size(
  }
  
--/* Read AGI and create inobt cursor. */
--int
--xfs_inobt_cur(
--	struct xfs_perag	*pag,
--	struct xfs_trans	*tp,
--	xfs_btnum_t		which,
--	struct xfs_btree_cur	**curpp,
--	struct xfs_buf		**agi_bpp)
--{
--	struct xfs_btree_cur	*cur;
--	int			error;
--
--	ASSERT(*agi_bpp == NULL);
--	ASSERT(*curpp == NULL);
--
--	error = xfs_ialloc_read_agi(pag, tp, agi_bpp);
--	if (error)
--		return error;
--
--	cur = xfs_inobt_init_cursor(pag, tp, *agi_bpp, which);
--	*curpp = cur;
--	return 0;
--}
--
  static int
- xfs_inobt_count_blocks(
+-xfs_inobt_count_blocks(
++xfs_finobt_count_blocks(
  	struct xfs_perag	*pag,
-@@ -742,13 +718,14 @@ xfs_inobt_count_blocks(
+ 	struct xfs_trans	*tp,
+-	xfs_btnum_t		btnum,
  	xfs_extlen_t		*tree_blocks)
  {
  	struct xfs_buf		*agbp = NULL;
--	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_btree_cur	*cur;
- 	int			error;
- 
--	error = xfs_inobt_cur(pag, tp, btnum, &cur, &agbp);
-+	error = xfs_ialloc_read_agi(pag, tp, &agbp);
+@@ -725,7 +724,7 @@ xfs_inobt_count_blocks(
  	if (error)
  		return error;
  
-+	cur = xfs_inobt_init_cursor(pag, tp, agbp, btnum);
+-	cur = xfs_inobt_init_cursor(pag, tp, agbp, btnum);
++	cur = xfs_inobt_init_cursor(pag, tp, agbp, XFS_BTNUM_FINO);
  	error = xfs_btree_count_blocks(cur, tree_blocks);
  	xfs_btree_del_cursor(cur, error);
  	xfs_trans_brelse(tp, agbp);
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-index 40f0fc0e8da37..2f1552d656559 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-@@ -64,9 +64,6 @@ int xfs_finobt_calc_reserves(struct xfs_perag *perag, struct xfs_trans *tp,
- 		xfs_extlen_t *ask, xfs_extlen_t *used);
- extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
--int xfs_inobt_cur(struct xfs_perag *pag, struct xfs_trans *tp,
--		xfs_btnum_t btnum, struct xfs_btree_cur **curpp,
--		struct xfs_buf **agi_bpp);
- 
- void xfs_inobt_commit_staged_btree(struct xfs_btree_cur *cur,
- 		struct xfs_trans *tp, struct xfs_buf *agbp);
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index 6f26a791f17f0..bab4825e259bf 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -266,9 +266,10 @@ xfs_iwalk_ag_start(
- 
- 	/* Set up a fresh cursor and empty the inobt cache. */
- 	iwag->nr_recs = 0;
--	error = xfs_inobt_cur(pag, tp, XFS_BTNUM_INO, curpp, agi_bpp);
-+	error = xfs_ialloc_read_agi(pag, tp, agi_bpp);
+@@ -773,8 +772,7 @@ xfs_finobt_calc_reserves(
+ 	if (xfs_has_inobtcounts(pag->pag_mount))
+ 		error = xfs_finobt_read_blocks(pag, tp, &tree_len);
+ 	else
+-		error = xfs_inobt_count_blocks(pag, tp, XFS_BTNUM_FINO,
+-				&tree_len);
++		error = xfs_finobt_count_blocks(pag, tp, &tree_len);
  	if (error)
  		return error;
-+	*curpp = xfs_inobt_init_cursor(pag, tp, *agi_bpp, XFS_BTNUM_INO);
- 
- 	/* Starting at the beginning of the AG?  That's easy! */
- 	if (agino == 0)
-@@ -383,11 +384,11 @@ xfs_iwalk_run_callbacks(
- 	}
- 
- 	/* ...and recreate the cursor just past where we left off. */
--	error = xfs_inobt_cur(iwag->pag, iwag->tp, XFS_BTNUM_INO, curpp,
--			agi_bpp);
-+	error = xfs_ialloc_read_agi(iwag->pag, iwag->tp, agi_bpp);
- 	if (error)
- 		return error;
--
-+	*curpp = xfs_inobt_init_cursor(iwag->pag, iwag->tp, *agi_bpp,
-+			XFS_BTNUM_INO);
- 	return xfs_inobt_lookup(*curpp, next_agino, XFS_LOOKUP_GE, has_more);
- }
  
 
