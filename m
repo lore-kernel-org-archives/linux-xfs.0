@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A4485648
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:46:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713CB8528E
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:47:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816818; cv=none; b=l9hsTfIOuU186iCkTcGGsM2EZ8DJVNrKXkFt9YIWEYeLxi0N7ttNc/JPLT9o/WebB7IxtlUbyFCbQsP4uueCZ329eJsUJjsVsCGXRrqFSGJ7U6kYUPgb4l66ygZG4qcYhAUX0+pl4sGmPCCc3cG6zuwchrGfxdZ+oaPpZZmglH0=
+	t=1706816834; cv=none; b=hZKEdZrmKhImgurXfP1mAifAihPogIaWO47aMuMO153vwKlL3IDUhDMbzYvYy3ZfUOqgKZ7Fs8QM+wx/7GihSN+Fy39+y86azJKhCTcE6JxQOJSIh6T51JnLMBGWrWcHSlqrbHqFBrBrSs+1U7qz/RMVt29cCesGoTYl5XMQm0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816818; c=relaxed/simple;
-	bh=QdVM/2tRch8lYiLM860JoEWGvJwIjdDRJ7wBgT5AwjY=;
+	s=arc-20240116; t=1706816834; c=relaxed/simple;
+	bh=6jq9qWtqVdw5vPHneygzrW2R+ZEpW25UTlo5F4jgRaE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lJycNsjDRL5nhgnpEnBi2YGJ15yFS4dw2VojrtnraM+fCfqPOXvu3Ocol9AFb037qV5AyG21IajSdWVkLDzFBDmUT7CVuH3ZIlydVHKoJefwQYQsFfzH+QKU2ZZ6nOngIxJNatOyE5P4EFLOjz+sEnE5mnwqKmk5VFopW0kUO5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IU3gBKO2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oEpNicLv7r9D2/mMXU/B7/6oKiUMLY+IKjcdA4bi766YPXtpK3P/mEZWmIbCBFInTgbjT0DmAmy73YwsO4DL3+E4occr2qQvPTouPQu6kt/9i26mTqNiEoj7vIQxW6lUXdeRSlzvAtIuuAE0HWGFGp1yNOEtPJQbZaIZnbSnUZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KVKZWZ9U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IU3gBKO2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4C7CC433F1;
-	Thu,  1 Feb 2024 19:46:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KVKZWZ9U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D26DC433F1;
+	Thu,  1 Feb 2024 19:47:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816818;
-	bh=QdVM/2tRch8lYiLM860JoEWGvJwIjdDRJ7wBgT5AwjY=;
+	s=k20201202; t=1706816834;
+	bh=6jq9qWtqVdw5vPHneygzrW2R+ZEpW25UTlo5F4jgRaE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IU3gBKO2PIFj5zhKFAliQ952La7yW+yhoo6TVvGi8lyca7IM3es4lAosRMqN8c07e
-	 Ri6x6OXWCW7F4vXGO6UJcSFKgyETPGU267PigJF/wlPauBhwrw+h8dyOnFuaXzBP2H
-	 tK73buCX09jiPo3VUKhUxCetnyTM33aBIFabDdAX09qGXlPGyggu1Me3Wf7RIaqaGo
-	 mE1QeMcimj5O6p64sDI5QB9IiojXGwV/WYE8miMKQFzXwPR5WoxXwy/ubJWcq/E8EP
-	 jWE1o1pIdiyL09eZ31swOyqo1/R63bWTDC+bM/7OnlU2tUg9xJ4j6NL6e2sodbxdr1
-	 FL3rIMlgMoYdQ==
-Date: Thu, 01 Feb 2024 11:46:58 -0800
-Subject: [PATCH 05/27] xfs: remove xfs_allocbt_stage_cursor
+	b=KVKZWZ9U6rQwHlGfawkwl7ZF55gsxpERNDTSqBMfeNpCXOmFQHL7mR/vJqILRUaGU
+	 nRIpzlDAlRc5K6RmTIK9V5Dc8faHlXeWO5i299i1+W9Basf31OpN9zU2t4aCa4GqFR
+	 Md3kXyIvOfYmCom9NJo6Erz5dzFJOfLSDfsXvs55qld0ZOwaiK95Q6JGX/ksDR2RkO
+	 jl7if+28rmjY8YcYAdHcP1p7ZDQJTFT2KgGSP9stO2gwm8aCHIJsb3kfrOBRbXc069
+	 QUUBYHNeTmXylj5vzCZ4Ga6p4uadhelJL9PX0WUyRL//S1Ub64OH8JiQ3f7LLzHiCv
+	 GceE4q+m/ddSA==
+Date: Thu, 01 Feb 2024 11:47:13 -0800
+Subject: [PATCH 06/27] xfs: fold xfs_inobt_init_common into
+ xfs_inobt_init_cursor
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681334868.1605438.3526834023885589458.stgit@frogsfrogsfrogs>
+Message-ID: <170681334884.1605438.12512081534655278197.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 References: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,78 +47,82 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Just open code the two calls in the callers.
+Make the levels initialization in xfs_inobt_init_cursor conditional
+and merge the two helpers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c |   15 ---------------
- fs/xfs/libxfs/xfs_alloc_btree.h |    3 ---
- fs/xfs/scrub/alloc_repair.c     |   11 +++++++----
- 3 files changed, 7 insertions(+), 22 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc_btree.c |   39 +++++++++++++++-----------------------
+ 1 file changed, 15 insertions(+), 24 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 847674658d675..99859803bb0b8 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -548,21 +548,6 @@ xfs_allocbt_init_cursor(
- 	return cur;
- }
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 0d04ac32367df..48bfea0e2a200 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -455,12 +455,15 @@ const struct xfs_btree_ops xfs_finobt_ops = {
+ };
  
--/* Create a free space btree cursor with a fake root for staging. */
--struct xfs_btree_cur *
--xfs_allocbt_stage_cursor(
--	struct xfs_mount	*mp,
--	struct xbtree_afakeroot	*afake,
--	struct xfs_perag	*pag,
--	xfs_btnum_t		btnum)
--{
--	struct xfs_btree_cur	*cur;
--
--	cur = xfs_allocbt_init_cursor(mp, NULL, NULL, pag, btnum);
--	xfs_btree_stage_afakeroot(cur, afake);
+ /*
+- * Initialize a new inode btree cursor.
++ * Create an inode btree cursor.
++ *
++ * For staging cursors tp and agbp are NULL.
+  */
+-static struct xfs_btree_cur *
+-xfs_inobt_init_common(
++struct xfs_btree_cur *
++xfs_inobt_init_cursor(
+ 	struct xfs_perag	*pag,
+-	struct xfs_trans	*tp,		/* transaction pointer */
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
+ 	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
+@@ -475,26 +478,14 @@ xfs_inobt_init_common(
+ 	cur = xfs_btree_alloc_cursor(mp, tp, btnum, ops,
+ 			M_IGEO(mp)->inobt_maxlevels, xfs_inobt_cur_cache);
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
 -	return cur;
 -}
 -
- /*
-  * Install a new free space btree root.  Caller is responsible for invalidating
-  * and freeing the old btree blocks.
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
-index 45df893ef6bb0..1c910862535f7 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.h
-@@ -50,9 +50,6 @@ struct xbtree_afakeroot;
- extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *mp,
- 		struct xfs_trans *tp, struct xfs_buf *bp,
- 		struct xfs_perag *pag, xfs_btnum_t btnum);
--struct xfs_btree_cur *xfs_allocbt_stage_cursor(struct xfs_mount *mp,
--		struct xbtree_afakeroot *afake, struct xfs_perag *pag,
--		xfs_btnum_t btnum);
- extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
- extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index 45edda096869c..544c53d450ce2 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -735,10 +735,13 @@ xrep_abt_build_new_trees(
- 	ra->new_cntbt.bload.claim_block = xrep_abt_claim_block;
- 
- 	/* Allocate cursors for the staged btrees. */
--	bno_cur = xfs_allocbt_stage_cursor(sc->mp, &ra->new_bnobt.afake,
--			pag, XFS_BTNUM_BNO);
--	cnt_cur = xfs_allocbt_stage_cursor(sc->mp, &ra->new_cntbt.afake,
--			pag, XFS_BTNUM_CNT);
-+	bno_cur = xfs_allocbt_init_cursor(sc->mp, NULL, NULL, pag,
-+			XFS_BTNUM_BNO);
-+	xfs_btree_stage_afakeroot(bno_cur, &ra->new_bnobt.afake);
+-/* Create an inode btree cursor. */
+-struct xfs_btree_cur *
+-xfs_inobt_init_cursor(
+-	struct xfs_perag	*pag,
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*agbp,
+-	xfs_btnum_t		btnum)
+-{
+-	struct xfs_btree_cur	*cur;
+-	struct xfs_agi		*agi = agbp->b_addr;
+-
+-	cur = xfs_inobt_init_common(pag, tp, btnum);
+-	if (btnum == XFS_BTNUM_INO)
+-		cur->bc_nlevels = be32_to_cpu(agi->agi_level);
+-	else
+-		cur->bc_nlevels = be32_to_cpu(agi->agi_free_level);
+ 	cur->bc_ag.agbp = agbp;
++	if (agbp) {
++		struct xfs_agi		*agi = agbp->b_addr;
 +
-+	cnt_cur = xfs_allocbt_init_cursor(sc->mp, NULL, NULL, pag,
-+			XFS_BTNUM_CNT);
-+	xfs_btree_stage_afakeroot(cnt_cur, &ra->new_cntbt.afake);
++		cur->bc_nlevels = (btnum == XFS_BTNUM_INO) ?
++			be32_to_cpu(agi->agi_level) :
++			be32_to_cpu(agi->agi_free_level);
++	}
+ 	return cur;
+ }
  
- 	/* Last chance to abort before we start committing fixes. */
- 	if (xchk_should_terminate(sc, &error))
+@@ -507,7 +498,7 @@ xfs_inobt_stage_cursor(
+ {
+ 	struct xfs_btree_cur	*cur;
+ 
+-	cur = xfs_inobt_init_common(pag, NULL, btnum);
++	cur = xfs_inobt_init_cursor(pag, NULL, NULL, btnum);
+ 	xfs_btree_stage_afakeroot(cur, afake);
+ 	return cur;
+ }
 
