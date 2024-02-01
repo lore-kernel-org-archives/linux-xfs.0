@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53BE943AC7
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:48:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271C584FA8
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:48:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816881; cv=none; b=IklSNcRoe4DdEIFAlSEnQUjaGAS3bStEVlvOEqnf1BtubirmRlJChJm3e2Oryoqiio5wVlW973yKCwyBcNQGbw8OjiaOF4Np3+jE1ndL0daRIQ6ps0lxYS+wd9GNSnkcf3bVLBlit7u21BH7auiZlyKlxS4frdgQ9+CIAFs8hnQ=
+	t=1706816897; cv=none; b=pCzLk8eVqRIwtBNzmgnvM0O7SErerX7Mc/kF9LAirjZP3CIia5pD7JciSc3y07+hRetKmquAd6nPvghK0OsPBZkAAk39iUfWxU0Xiqfcf4zWTCnCCgtK9x8piUr+JdAmIUg+9ewE2jYCU0ZApzYwkHzWWlLxEZ+ndWwZv+6Ah28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816881; c=relaxed/simple;
-	bh=eduwgg6oluvmy/Ijcr3445BXfJGhD/QllXswlIQbQ0o=;
+	s=arc-20240116; t=1706816897; c=relaxed/simple;
+	bh=aUb8M+aAoAhMut20K5RNrUgNAFlAfbp67acH12oIyGY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NIvGdkhMwBb6vwibgL2jt8ixZcsNohMzgSxqYxv64wdwiNzACLVwdZZsdnDhGZ5lAVU8NKKHONv3KovQ0m+SPcXDYJpZbOP5s4wGCJ7+C3FA3zF4BR4y9XwNea7gb83wac1EyQIsYK2z3DUOxkMpjwaDUZHechwliIFO3BzlYBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BiJ92s4r; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=FNS9+JiTocFKLp/h0Z0RrFsx/nlJDm0NgOarQjWlJuvTAZYfxs9Qmw33M9CyByzXgwFlycQlsdzWLye5nDsz3g7et+5cryh4XPXEppztLTRRkEwF+Y3Jqdc7AxDnlTbR3eJiazhWvTFz6K63mWEFRAqnm6eSQpZSWWyGoiL49zs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ML4L8gZI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BiJ92s4r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27623C433C7;
-	Thu,  1 Feb 2024 19:48:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ML4L8gZI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B63D0C43390;
+	Thu,  1 Feb 2024 19:48:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816881;
-	bh=eduwgg6oluvmy/Ijcr3445BXfJGhD/QllXswlIQbQ0o=;
+	s=k20201202; t=1706816896;
+	bh=aUb8M+aAoAhMut20K5RNrUgNAFlAfbp67acH12oIyGY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BiJ92s4rHtpxHo5wfVWpQO+u26KqPvdfIJ6xHzN8o5kDZwzq9KSJOxALflNz88rvd
-	 5nYBCG2XhRH4mnqO1uteEiWk9UZoJ/vF9lj8jt8rVIhsnolPd72ZMqt14Em5mBU9CO
-	 NyTMRk2eEeuDQmH7eQtX3aJLGnZHF0PTChz2+df9dI5vx658y/md7Fy0DfVxsCDRpn
-	 AlmeLHQGueK2mnVgoWY0QHBaRN65qWk+SpSE/rnJmUY3SLfb3uE9SqCYiCrf4mWS1g
-	 iZq+Per1wYKZ4PvG/TP2xiEb3LEKtrrAT8HN+04lGJ3huHwWThvh3Obumx4ZzJJIrx
-	 K8lkn8oZbvkfQ==
-Date: Thu, 01 Feb 2024 11:48:00 -0800
-Subject: [PATCH 09/27] xfs: remove xfs_refcountbt_stage_cursor
+	b=ML4L8gZIXKwFogu6DVVFlgszNZk0A4s7t8S5DGQpGHlfw6kN+lqHmN+YR/eFhlRRM
+	 QcoZX55mqMgZ3+wZTQr6Xbpp71KkM4yeSpdLEKo0bFVkktHy2ghvvPzmK8hX0L3fhW
+	 LsiFnM4wENgNrnDHNwCwrzpXDniYntFOpAA3/sd+uryUdPZuLsiAMfFcmNq7LqFFOd
+	 M+ssymZcdT795YQ73n+TXO7J9a6MRwXIZuemRl+OyoDDyolKytcyUKfoZ7ZV8OzQ4k
+	 iW7ho32nI7gfLOIeB2JMwHnxNUtGO0oEQPEzhziAET0lBYB0BHapTN3YR3NhkdG/DO
+	 hLrNecXFO7udg==
+Date: Thu, 01 Feb 2024 11:48:16 -0800
+Subject: [PATCH 10/27] xfs: fold xfs_rmapbt_init_common into
+ xfs_rmapbt_init_cursor
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681334932.1605438.2814627786548431428.stgit@frogsfrogsfrogs>
+Message-ID: <170681334948.1605438.17614719757700281000.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 References: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,69 +47,76 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Just open code the two calls in the callers.
+Make the levels initialization in xfs_rmapbt_init_cursor conditional
+and merge the two helpers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_refcount_btree.c |   14 --------------
- fs/xfs/libxfs/xfs_refcount_btree.h |    2 --
- fs/xfs/scrub/refcount_repair.c     |    4 ++--
- 3 files changed, 2 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_rmap_btree.c |   33 ++++++++++++++-------------------
+ 1 file changed, 14 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 57710856ae347..4dcf6295e683b 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -376,20 +376,6 @@ xfs_refcountbt_init_cursor(
- 	return cur;
- }
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 84eb767425cba..dda9f8844d841 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -502,10 +502,16 @@ const struct xfs_btree_ops xfs_rmapbt_ops = {
+ 	.keys_contiguous	= xfs_rmapbt_keys_contiguous,
+ };
  
--/* Create a btree cursor with a fake root for staging. */
--struct xfs_btree_cur *
--xfs_refcountbt_stage_cursor(
--	struct xfs_mount	*mp,
--	struct xbtree_afakeroot	*afake,
--	struct xfs_perag	*pag)
--{
--	struct xfs_btree_cur	*cur;
--
--	cur = xfs_refcountbt_init_cursor(mp, NULL, NULL, pag);
--	xfs_btree_stage_afakeroot(cur, afake);
+-static struct xfs_btree_cur *
+-xfs_rmapbt_init_common(
++/*
++ * Create a new reverse mapping btree cursor.
++ *
++ * For staging cursors tp and agbp are NULL.
++ */
++struct xfs_btree_cur *
++xfs_rmapbt_init_cursor(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
+ 	struct xfs_perag	*pag)
+ {
+ 	struct xfs_btree_cur	*cur;
+@@ -513,23 +519,12 @@ xfs_rmapbt_init_common(
+ 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_RMAP, &xfs_rmapbt_ops,
+ 			mp->m_rmap_maxlevels, xfs_rmapbt_cur_cache);
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
 -	return cur;
 -}
 -
- /*
-  * Swap in the new btree root.  Once we pass this point the newly rebuilt btree
-  * is in place and we have to kill off all the old btree blocks.
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-index d66b37259bedb..1e0ab25f6c680 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -48,8 +48,6 @@ struct xbtree_afakeroot;
- extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
- 		struct xfs_trans *tp, struct xfs_buf *agbp,
- 		struct xfs_perag *pag);
--struct xfs_btree_cur *xfs_refcountbt_stage_cursor(struct xfs_mount *mp,
--		struct xbtree_afakeroot *afake, struct xfs_perag *pag);
- extern int xfs_refcountbt_maxrecs(int blocklen, bool leaf);
- extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
+-/* Create a new reverse mapping btree cursor. */
+-struct xfs_btree_cur *
+-xfs_rmapbt_init_cursor(
+-	struct xfs_mount	*mp,
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*agbp,
+-	struct xfs_perag	*pag)
+-{
+-	struct xfs_agf		*agf = agbp->b_addr;
+-	struct xfs_btree_cur	*cur;
+-
+-	cur = xfs_rmapbt_init_common(mp, tp, pag);
+-	cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
+ 	cur->bc_ag.agbp = agbp;
++	if (agbp) {
++		struct xfs_agf		*agf = agbp->b_addr;
++
++		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
++	}
+ 	return cur;
+ }
  
-diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-index 9c39af03ee1d8..8240c993061b2 100644
---- a/fs/xfs/scrub/refcount_repair.c
-+++ b/fs/xfs/scrub/refcount_repair.c
-@@ -658,8 +658,8 @@ xrep_refc_build_new_tree(
- 	rr->new_btree.bload.claim_block = xrep_refc_claim_block;
+@@ -542,7 +537,7 @@ xfs_rmapbt_stage_cursor(
+ {
+ 	struct xfs_btree_cur	*cur;
  
- 	/* Compute how many blocks we'll need. */
--	refc_cur = xfs_refcountbt_stage_cursor(sc->mp, &rr->new_btree.afake,
--			pag);
-+	refc_cur = xfs_refcountbt_init_cursor(sc->mp, NULL, NULL, pag);
-+	xfs_btree_stage_afakeroot(refc_cur, &rr->new_btree.afake);
- 	error = xfs_btree_bload_compute_geometry(refc_cur,
- 			&rr->new_btree.bload,
- 			xfarray_length(rr->refcount_records));
+-	cur = xfs_rmapbt_init_common(mp, NULL, pag);
++	cur = xfs_rmapbt_init_cursor(mp, NULL, NULL, pag);
+ 	xfs_btree_stage_afakeroot(cur, afake);
+ 	return cur;
+ }
 
