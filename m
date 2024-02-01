@@ -1,72 +1,77 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1446B139F
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 00:52:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B3141FC8
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 00:52:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706748745; cv=none; b=i+40d1H5qf0fW8EgbTY1PIVJ6FNOgGR6neL1REudLpMguc8D3bvFO2NsAiJRWSTFGXgVeugn27bfCmrhAhnXSeCp6z6A23ykbi7vxzGhj2YWLNQKWcsrOtp0CqZfxDwStDzo+KWICete2SgFlZzdiNv10besXJ61m9GrrYEzgvk=
+	t=1706748746; cv=none; b=pgI2HPoEUfJ6CQXZY+7PnQqQVaGLsdxgaZp0qJOOp4JAVZZIEJRm9P7HYaPODt01FH9hjucY+tmjA0uwsfWihiml/ewreP3o+vl1ABuYrG0rGtAyKq86U9BRfj1AwOS/esfxMafJn1sXw9XJ2r/Tf066ZyJN4tMr4mnfarY/kug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706748745; c=relaxed/simple;
-	bh=pDprpbLHdaXHf87/OJ5tvPjGlnUacrdJTc3knd/gdBI=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=RRO0ddtC5NiGjFTPnUAfKkLdG60jbevgzBnn6Y2E0X317upDIXCyGAm0ipgFYQqt9PCSYiiE2KX2QXA/TD6W6P3gQoi8VMOlMqlrD9J5wPk6Tg+VhkShpBHnGX2wJayhxyIJVyPNJhLZ6KGPCtApMtdW341yyLt7Ypp5o6s8Kgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HOrWi/8u; arc=none smtp.client-ip=209.85.214.176
+	s=arc-20240116; t=1706748746; c=relaxed/simple;
+	bh=snSGpR9js7NT7WX03++8NLBT5BAjnWzdA3ku62siDZ8=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ubcCtV/m1Oe4qyeuZMEe0ChtsZdBio2hEWNsKrQlq4Q8bbFAdrHOJbK3lMBYSeMRpjjFMEndENhAn1ijwd1MU7jf2+eBQsVV9FeF/UQcl7hXvq6R1sxurThvstNf89I/SRm+h6gvWgpW1IA3zyCAhhmft5SykNOfw//igV2ovHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eF6MtPrH; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HOrWi/8u"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1d7393de183so2952095ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Jan 2024 16:52:23 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eF6MtPrH"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1d934c8f8f7so3720645ad.2
+        for <linux-xfs@vger.kernel.org>; Wed, 31 Jan 2024 16:52:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1706748743; x=1707353543; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VvXXdhMJaI2cP/uUnZbvuaDRJM0YEAFe45ycn8xm1cA=;
-        b=HOrWi/8uhMmRf6KLBqrXng0zl+ozhutyWYLLauyyLx4AstJKUhSeT6XO7183FBC3JO
-         U1H8FXmOs3l+WIKtcloKRDw0g2TDhTXbS40ZAPtTn5rFSy1Tayo0BFk72hiZyLrfsoiz
-         NxRPsilaXKG5OG2lVeszcaPGjONFXEBnEP4B7Vpov3yqDYhAfjgsOBs5yznVg+kvHa8B
-         LW7CSL3xSrWh6Zzcf9PfCbKkIF1PDwY0mmYB3Ucy0oLuVYlThnl1SxRJtfUEEU2CkGf8
-         Oa9Ufz9KC8wq+lBZV2p1/LJPM9gkd0VFcS/dv6bK3NTOeNYSrZOmw/3fbDWzk/MhMcoM
-         6WWw==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DZ/i8uevVboeYT6hQ4wlxhvkJnImI+U1YC/Xo8sMnug=;
+        b=eF6MtPrHdEmZAcuAJjhjWFVmk5+hI4WfiWhb9sP5ADCdtjcY2y1fFO6HvXgcKiTmwA
+         2njfWQgHZNa0fwqLWfERHAGxYLCz8mMU9WuUD9g1xBnB7Ru1ZpFuck1rEi1SCktw94Ec
+         oyfW0kFHdOS8C91d91ArMC8aqWDAKU2zE6nPWxbO1b9hXYTs0CkRMgOmu4thrVb4Qs0Q
+         DvEW3XDcRdX5utIcIXCUse1+vko8CEkGGO6uYRR1TXd3sxWpNUjVbq0GtxH9FAULKChC
+         eQVKysDeasdJlVcnPFrcvQPeILcvBJLZVe290SCuYxdRhlVJbIo+jgPumol28l1mILr/
+         OhEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1706748743; x=1707353543;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=VvXXdhMJaI2cP/uUnZbvuaDRJM0YEAFe45ycn8xm1cA=;
-        b=OD/C9aLCapDLvmOKh8utvvAshb24DdnhDjOBmde19POLh2K4EyxxuWDcm3ysXQqOPt
-         BIUuG/s773S1BxfLwNKs+O8tAMBCTMKKmx0IslJrU9vwBlwMi4907RU6ajd1p9GpmPR6
-         Ya+pdGZ6UBqN3Lc7qqO5Fdsn7jHwW+z+uS8hPCOswuUTf0JtvfYodjfL+wEMawG9QqvW
-         NqcgZXeIbt5i8msxb2r8TSF3I+9H4L6A4QLcTTqmSg+r3geZ+Z86qLhn1Wl+r8daBLDc
-         MsDXNlQcoU/OLgU317muqGf+QEHTyTaPYKsj2LYtfSWoY0Om5rV0YrFrjXfgtSQ+YxRW
-         v7ig==
-X-Gm-Message-State: AOJu0YwyrJWiLK6fW9xQSDa14UU2pe9SNYeVaatQu406qquUmvgEQGrc
-	TzRGQIWTXh1wKdBEqokdjUv4dD43ouln0bujAFTy7souhPYpUeRwkWFRfn6HdWOBUSvUeSEJ2Wm
-	v
-X-Google-Smtp-Source: AGHT+IFPQtWFpJdO8cFcqU+lSgIbXOHqAmB0sJYlDHDFZue/j2dLHsRjrzIAsX6/6NvTsn7G2wmNfA==
-X-Received: by 2002:a17:902:e808:b0:1d8:ac08:3cb7 with SMTP id u8-20020a170902e80800b001d8ac083cb7mr881593plg.33.1706748743344;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=DZ/i8uevVboeYT6hQ4wlxhvkJnImI+U1YC/Xo8sMnug=;
+        b=CaPMmB8EuUoUnYJFuZ+wcqyFyfaJI61Ofjvzcf97ArKwLxmOpkXiH2r0FZdYaar3QZ
+         8TUHtonuvth3Rl0TrQjP1HBUt34OocDyiWQ2uv7lWLUeXxLXfP2A2SkRX116tvrg4NDD
+         g7wd+x66dFv4DEHa9+ftsqiIx8KP+V3Ccil3u6kUuR2uqoxFvUqJXZJ3qvSJhIEuwUrh
+         Wkt8+UcbD5zixqgN45qfKWCdIoC4RyL7BKxNXMUVm6MeN6SVJjCH2NnGVWF798Hd4SdV
+         i9UXJ8LtzFOxPFOtCtYaJXaW2zvvO9zZ/7F8pW1BK2KhmSK23pqk/0OwUl87mpEjcye9
+         suzw==
+X-Gm-Message-State: AOJu0YwdyCUDw23SLAUmhrzl7pdjWxCH+VWSCtfEGkRFfXVkhj3JR5fg
+	C2pt4Jo3WOvgULcABh/wQXb/HcnMsTexPPrjTGNyLDJ+irZJnwlDvkrwKXhQ7sft/t31P3W4+M4
+	y
+X-Google-Smtp-Source: AGHT+IG6w7UgvXWndN8SFh6JHZ5N5K6ekOmh21mXvK93UDft3HsxQNSNUwc6NywsCavWA9iLX8OxPA==
+X-Received: by 2002:a17:902:8602:b0:1d3:45c8:bc0f with SMTP id f2-20020a170902860200b001d345c8bc0fmr703907plo.46.1706748743593;
         Wed, 31 Jan 2024 16:52:23 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
-        by smtp.gmail.com with ESMTPSA id km12-20020a17090327cc00b001d8dd63670bsm6380101plb.290.2024.01.31.16.52.21
+        by smtp.gmail.com with ESMTPSA id jd6-20020a170903260600b001d8f82f90ddsm648759plb.183.2024.01.31.16.52.21
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Wed, 31 Jan 2024 16:52:22 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1rVLJT-000O7W-2Y
+	id 1rVLJU-000O7m-00
 	for linux-xfs@vger.kernel.org;
 	Thu, 01 Feb 2024 11:52:19 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1rVLJT-00000004WQu-14q5
+	id 1rVLJT-00000004WRB-24RA
 	for linux-xfs@vger.kernel.org;
 	Thu, 01 Feb 2024 11:52:19 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: linux-xfs@vger.kernel.org
-Subject: [RFC] [PATCH 0/4] xfs: reactivate inodes immediately in xfs_iget
-Date: Thu,  1 Feb 2024 11:30:12 +1100
-Message-ID: <20240201005217.1011010-1-david@fromorbit.com>
+Subject: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from xfs_iget
+Date: Thu,  1 Feb 2024 11:30:16 +1100
+Message-ID: <20240201005217.1011010-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240201005217.1011010-1-david@fromorbit.com>
+References: <20240201005217.1011010-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,83 +80,182 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Currently xfs_iget() will flush inodes queued for inactivation
-rather than recycling them. Flushing the inodegc queues causes
-inactivation to run and the inodes transistion to reclaimable where
-they can then be recycled. the xfs_iget() code spins for a short
-while before trying the lookup again, and will continue to do
-so until the inode has moved to the reclaimable state, at which
-point it will recycle the inode.
+From: Dave Chinner <dchinner@redhat.com>
 
-However, if the filesystem is frozen, we cannot flush the inode gc
-queues because we can't make modifications during a freeze and so
-inodegc is not running. Hence inodes that need inactivation that
-they VFS then tries to reference again (e.g. shrinker reclaimed them
-just before they were accessed), xfs_iget() will just spin on the
-inode waiting for the freeze to go away so the inode can be flushed.
+When xfs_iget() finds an inode that is queued for inactivation, it
+issues an inodegc flush to trigger the inactivation work and then
+retries the lookup.
 
-This can be triggered by creating a bunch of files with post-eof
-blocks and stalling them on the inodegc queues like so:
+However, when the filesystem is frozen, inodegc is turned off and
+the flush does nothing and does not block. This results in lookup
+spinning on NEED_INACTIVE inodes and being unable to make progress
+until the filesystem is thawed. This is less than ideal.
 
-# cp a-set-1MB-files* /mnt/xfs
-# xfs_io -xr -c "freeze" /mnt/xfs
-# echo 3 > /proc/sys/vm/drop_caches
-# ls -l /mnt/test
+The only reason we can't immediately recycle the inode is that it
+queued on a lockless list we can't remove it from. However, those
+lists now support lazy removal, and so we can now modify the lookup
+code to reactivate inode queued for inactivation. The process is
+identical to how we recycle reclaimable inodes from xfs_iget(), so
+this ends up being a relatively simple change to make.
 
-If the timing is just right, then the 'ls -l' will hang spinning
-on inodes as they are now sitting in XFS_NEED_INACTIVE state on
-the inodegc queues and won't be processed until the filesystem is
-thawed.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c | 98 +++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 76 insertions(+), 22 deletions(-)
 
-Instead of flushing the inode, we could just recycle the inode
-immediately. That, however, is complicated by the use of lockless
-single linked lists for the inodegc queues. We can't just remove
-them, so we need to enable lazy removal from the inodegc queue.
-
-To do this, we make the lockless list addition and removal atomic
-w.r.t. the inode state changes via the ip->i_flags_lock. This lock
-is also held during xfs_iget() lookups, so it serialises the inodegc
-list processing against inode lookup as well.
-
-This then enables us to use the XFS_NEED_INACTIVE state flag to
-determine if the inode should be inactivated when removing it from
-the inodegc list during inodegc work. i.e. the inodegc worker
-decides if inactivation should take place, not the context that is
-queuing the inode to the inodegc list.
-
-Hence by clearing the XFS_NEED_INACTIVE flag, we can leave inodes on
-the inodegc lists and know that they will not be inactivated when
-the worker next runs and sees that inode. It will just remove it
-from the list and skip over it.
-
-This gives us lazy list removal, and now we can immediately
-reactivate the inode during lookup. This is similar to the recycling
-of reclaimable inodes, but just a little bit different. I haven't
-tried to combine the implementations - it could be done, but I think
-that gets in the way of seeing how reactivation is different from
-recycling.
-
-By doing this, it means that the above series of operations will no
-longer hang waiting for a thaw to occur. Indeed, we can see the
-inode recycle stat getting bumped when the above reproducer is run -
-it reactivates the inodes instead of hanging:
-
-# xfs_stats.pl | grep recycle
-    xs_ig_frecycle.......            75    vn_reclaim............           304
-# cp a-set-1MB-files* /mnt/xfs
-# xfs_io -xr -c "freeze" /mnt/xfs
-# echo 3 > /proc/sys/vm/drop_caches
-# ls -l /mnt/test > /dev/null
-# xfs_stats.pl | grep recycle
-    xs_ig_frecycle.......           100    vn_reclaim............           330
-# xfs_io -xr -c "thaw" /mnt/xfs
-# rm -rf /mnt/test/a-set*
-# umount /mnt/test
-#
-
-This is all pretty simple - I don't think I've missed anything and
-it runs the full fstests auto group with a few different configs
-without regressions.
-
-Comments, thoughts?
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 10588f78f679..1fc55ed0692c 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -64,6 +64,8 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
+ 					 XFS_ICWALK_FLAG_RECLAIM_SICK | \
+ 					 XFS_ICWALK_FLAG_UNION)
+ 
++static void xfs_inodegc_queue(struct xfs_inode *ip);
++
+ /*
+  * Allocate and initialise an xfs_inode.
+  */
+@@ -328,6 +330,7 @@ xfs_reinit_inode(
+ 	return error;
+ }
+ 
++
+ /*
+  * Carefully nudge an inode whose VFS state has been torn down back into a
+  * usable state.  Drops the i_flags_lock and the rcu read lock.
+@@ -391,7 +394,71 @@ xfs_iget_recycle(
+ 	inode->i_state = I_NEW;
+ 	spin_unlock(&ip->i_flags_lock);
+ 	spin_unlock(&pag->pag_ici_lock);
++	XFS_STATS_INC(mp, xs_ig_frecycle);
++	return 0;
++}
+ 
++static int
++xfs_iget_reactivate(
++	struct xfs_perag	*pag,
++	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct inode		*inode = VFS_I(ip);
++	int			error;
++
++	trace_xfs_iget_recycle(ip);
++
++	/*
++	 * Take the ILOCK here to serialise against lookup races with putting
++	 * the inode back on the inodegc queue during error handling.
++	 */
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++		return -EAGAIN;
++
++	/*
++	 * Move the state to inactivating so both inactivation and racing
++	 * lookups will skip over this inode until we've finished reactivating
++	 * it and can return it to the XFS_INEW state.
++	 */
++	ip->i_flags &= ~XFS_NEED_INACTIVE;
++	ip->i_flags |= XFS_INACTIVATING;
++	spin_unlock(&ip->i_flags_lock);
++	rcu_read_unlock();
++
++	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
++	error = xfs_reinit_inode(mp, inode);
++	if (error) {
++		/*
++		 * Well, that sucks. Put the inode back on the inactive queue.
++		 * Do this while still under the ILOCK so that we can set the
++		 * NEED_INACTIVE flag and clear the INACTIVATING flag an not
++		 * have another lookup race with us before we've finished
++		 * putting the inode back on the inodegc queue.
++		 */
++		spin_unlock(&ip->i_flags_lock);
++		ip->i_flags |= XFS_NEED_INACTIVE;
++		ip->i_flags &= ~XFS_INACTIVATING;
++		spin_unlock(&ip->i_flags_lock);
++
++		xfs_inodegc_queue(ip);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++		return error;
++	}
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * Reset the inode state to new so that xfs_iget() will complete
++	 * the required remaining inode initialisation before it returns the
++	 * inode to the caller.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
++	ip->i_flags |= XFS_INEW;
++	inode->i_state = I_NEW;
++	spin_unlock(&ip->i_flags_lock);
++	XFS_STATS_INC(mp, xs_ig_frecycle);
+ 	return 0;
+ }
+ 
+@@ -523,14 +590,6 @@ xfs_iget_cache_hit(
+ 	if (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_INACTIVATING))
+ 		goto out_skip;
+ 
+-	if (ip->i_flags & XFS_NEED_INACTIVE) {
+-		/* Unlinked inodes cannot be re-grabbed. */
+-		if (VFS_I(ip)->i_nlink == 0) {
+-			error = -ENOENT;
+-			goto out_error;
+-		}
+-		goto out_inodegc_flush;
+-	}
+ 
+ 	/*
+ 	 * Check the inode free state is valid. This also detects lookup
+@@ -542,11 +601,18 @@ xfs_iget_cache_hit(
+ 
+ 	/* Skip inodes that have no vfs state. */
+ 	if ((flags & XFS_IGET_INCORE) &&
+-	    (ip->i_flags & XFS_IRECLAIMABLE))
++	    (ip->i_flags & (XFS_IRECLAIMABLE | XFS_NEED_INACTIVE)))
+ 		goto out_skip;
+ 
+ 	/* The inode fits the selection criteria; process it. */
+-	if (ip->i_flags & XFS_IRECLAIMABLE) {
++	if (ip->i_flags & XFS_NEED_INACTIVE) {
++		/* Drops i_flags_lock and RCU read lock. */
++		error = xfs_iget_reactivate(pag, ip);
++		if (error == -EAGAIN)
++			goto out_skip;
++		if (error)
++			return error;
++	} else if (ip->i_flags & XFS_IRECLAIMABLE) {
+ 		/* Drops i_flags_lock and RCU read lock. */
+ 		error = xfs_iget_recycle(pag, ip);
+ 		if (error == -EAGAIN)
+@@ -575,23 +641,11 @@ xfs_iget_cache_hit(
+ 
+ out_skip:
+ 	trace_xfs_iget_skip(ip);
+-	XFS_STATS_INC(mp, xs_ig_frecycle);
+ 	error = -EAGAIN;
+ out_error:
+ 	spin_unlock(&ip->i_flags_lock);
+ 	rcu_read_unlock();
+ 	return error;
+-
+-out_inodegc_flush:
+-	spin_unlock(&ip->i_flags_lock);
+-	rcu_read_unlock();
+-	/*
+-	 * Do not wait for the workers, because the caller could hold an AGI
+-	 * buffer lock.  We're just going to sleep in a loop anyway.
+-	 */
+-	if (xfs_is_inodegc_enabled(mp))
+-		xfs_inodegc_queue_all(mp);
+-	return -EAGAIN;
+ }
+ 
+ static int
+-- 
+2.43.0
 
