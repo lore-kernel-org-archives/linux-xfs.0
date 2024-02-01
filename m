@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1694E29B0
-	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:58:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7BF9652
+	for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2024 19:59:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706817538; cv=none; b=epRyv7sWG3c2iCEzra8EzuCLtmUWRYhiWVFyqRQFryXpm2fVNc8vp31ONguJ1SjkDoqTRkeOx5x/+Ec9Jfs7ljWjdOh8cSyfZzHIUzjDnS4TUrr0Anvur5+HWQYaPzP7cIegopfvPwRL4Y7oTfMQWd9gYcOnQpMaeqbqeHEPMB8=
+	t=1706817553; cv=none; b=FW1+7OjAtzJV/QutFu1Gw2pTLfV7dLVd4tMOUTjCWRcw2bzpwRy0fYGlLunVZVQVLCSqER7SSAxg3WXcvqP2o5sjLxrUUkJbkK+JVoQA7PwQCXS/dIO24JMEAibcvwtMHSBsbnhgw9E9W79YtinGyW8/u6r/Cw5pZuHLSViukbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706817538; c=relaxed/simple;
-	bh=CSY2vAOlZqckUDpslLzHA/urZICKaU0jDWk3urwAgdU=;
+	s=arc-20240116; t=1706817553; c=relaxed/simple;
+	bh=TYtYm/LVlKGEXyt928pmIa6ETqGNtz5Uo2m/EyH0XlU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WTtHT0fT5vP8lL3hZMH8RomQW1H/7hdosj8H0gXfuPbd2w1mysiog2n4DGSqLrXU+weYkf8TD0FrElpqQLJQ/gC3cOedmw5bIdwP9tFtKrhOZY9foXz0ssgoW9VZ9ML7dlu/WGetu8OozNcQ91gmnJN5uWBaGwzu+byMs4aHCZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A5HHNb3z; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tQyXFzTMqZPmcfGp71/h9LGaUIBxqpE4YsGJ6h+RMN7GOaa622jZOJZ85VGAN39UpRUwMFtQ4LsAFP6LsJ0v2gaQsBtbtUp9dOhK/9S/ztxtlmlsR5+5U5ZDabH027duUf2HY+HQMFLVsCj0opyjiFc64s4ZAn+jtrvjq8AEM6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKg0AONk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A5HHNb3z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 818ACC433C7;
-	Thu,  1 Feb 2024 19:58:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKg0AONk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F961C433F1;
+	Thu,  1 Feb 2024 19:59:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706817537;
-	bh=CSY2vAOlZqckUDpslLzHA/urZICKaU0jDWk3urwAgdU=;
+	s=k20201202; t=1706817553;
+	bh=TYtYm/LVlKGEXyt928pmIa6ETqGNtz5Uo2m/EyH0XlU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=A5HHNb3zRMRyLcvVzDnGOE9DQG+3MHmzroIOVq3rF+rVBgszCpNTLtHlDvIK3R2j6
-	 4Ai38qGkdu7VKD/KL20kQ+euccRLWbwtBhiSNf0YUhXAHa8dEES/4T1E6HSyR1XMZd
-	 A49XtipeHgOuV3mEqCLZuhXjTWpYRrWNjqvGmPDhFOMvKjQ2IfJdaHIO3JmrA8Mvua
-	 CimneUyMQyydf+jkWybP5GDJ2t2X4T5ET+2aGtNHC5Tw1FLdRuRq+RBLmvhqJQHrfS
-	 kNyvBkc9ucJGZ+yyF8Wqd3datQfwrnKatdobhKHTjbECQ2Ghuiz6UJlHXXZYQeYWUH
-	 jw/XAlNSV+0og==
-Date: Thu, 01 Feb 2024 11:58:57 -0800
-Subject: [PATCH 1/5] xfs: create a helper to decide if a file mapping targets
- the rt volume
+	b=SKg0AONk76cYr3LFVGUsJsev6kDp0/ncCSizR7TeKj7IpNigfkjwjK7iBrPRJayih
+	 +EBFWnacntjK/pL/6bbYh2LhfuNMapW0K5wLhy/UwTEgN8dElTR2fuPQbNFdL9iaQV
+	 QDV4D1FAbKBZ//LsTKQlafWvbS9X7slQ5hYwxp9kdXWhVoxrQ5oegtDldsIXsE7D3S
+	 6EZQ7K0w8EwwjOjsqGhqNdi5f2jZ6bzcyq/aNjg1fTVCtPiBPVUr78d3oTH8uiBIzT
+	 PmKm9bwrjd33dItMGRgC7dgqsym6VAb9FMYFqqUS/zerfMrMfX6avZA5NZKMSFYiX8
+	 pDy6QN5myNByg==
+Date: Thu, 01 Feb 2024 11:59:12 -0800
+Subject: [PATCH 2/5] xfs: create agblock bitmap helper to count the number of
+ set regions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170681337440.1608576.8753789039409739499.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <170681337456.1608576.11464579397615876665.stgit@frogsfrogsfrogs>
 In-Reply-To: <170681337409.1608576.2345800520406509462.stgit@frogsfrogsfrogs>
 References: <170681337409.1608576.2345800520406509462.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,90 +47,73 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper so that we can stop open-coding this decision
-everywhere.
+In the next patch, the rmap btree repair code will need to estimate the
+size of the new ondisk rmapbt.  The size is a function of the number of
+records that will be written to disk, and the size of the recordset is
+the number of observations made while scanning the filesystem plus the
+number of OWN_AG records that will be injected into the rmap btree.
+
+OWN_AG rmap records track the free space btrees, the AGFL, and the new
+rmap btree itself.  The repair tool uses a bitmap to record the space
+used for all four structures, which is why we need a function to count
+the number of set regions.
+
+Christoph Hellwig requested that this be pulled into a separate patch
+with its own justification, so here it is.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |    6 +++---
- fs/xfs/libxfs/xfs_inode_fork.c |    9 +++++++++
- fs/xfs/libxfs/xfs_inode_fork.h |    1 +
- fs/xfs/scrub/bmap.c            |    2 +-
- 4 files changed, 14 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/agb_bitmap.h |    5 +++++
+ fs/xfs/scrub/bitmap.c     |   14 ++++++++++++++
+ fs/xfs/scrub/bitmap.h     |    2 ++
+ 3 files changed, 21 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b4a2adb42df33..ac44a02db4e61 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4913,7 +4913,7 @@ xfs_bmap_del_extent_delay(
+diff --git a/fs/xfs/scrub/agb_bitmap.h b/fs/xfs/scrub/agb_bitmap.h
+index ed08f76ff4f3a..e488e1f4f63d3 100644
+--- a/fs/xfs/scrub/agb_bitmap.h
++++ b/fs/xfs/scrub/agb_bitmap.h
+@@ -65,4 +65,9 @@ int xagb_bitmap_set_btblocks(struct xagb_bitmap *bitmap,
+ int xagb_bitmap_set_btcur_path(struct xagb_bitmap *bitmap,
+ 		struct xfs_btree_cur *cur);
  
- 	XFS_STATS_INC(mp, xs_del_exlist);
- 
--	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
-+	isrt = xfs_ifork_is_realtime(ip, whichfork);
- 	del_endoff = del->br_startoff + del->br_blockcount;
- 	got_endoff = got->br_startoff + got->br_blockcount;
- 	da_old = startblockval(got->br_startblock);
-@@ -5149,7 +5149,7 @@ xfs_bmap_del_extent_real(
- 		return -ENOSPC;
- 
- 	*logflagsp = XFS_ILOG_CORE;
--	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
-+	if (xfs_ifork_is_realtime(ip, whichfork)) {
- 		if (!(bflags & XFS_BMAPI_REMAP)) {
- 			error = xfs_rtfree_blocks(tp, del->br_startblock,
- 					del->br_blockcount);
-@@ -5396,7 +5396,7 @@ __xfs_bunmapi(
- 		return 0;
- 	}
- 	XFS_STATS_INC(mp, xs_blk_unmap);
--	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
-+	isrt = xfs_ifork_is_realtime(ip, whichfork);
- 	end = start + len;
- 
- 	if (!xfs_iext_lookup_extent_before(ip, ifp, &end, &icur, &got)) {
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 3e63567810e5b..451615e1fdfff 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -810,3 +810,12 @@ xfs_iext_count_upgrade(
- 
- 	return 0;
++static inline uint32_t xagb_bitmap_count_set_regions(struct xagb_bitmap *b)
++{
++	return xbitmap32_count_set_regions(&b->agbitmap);
++}
++
+ #endif	/* __XFS_SCRUB_AGB_BITMAP_H__ */
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index 1449bb5262d95..0cb8d43912a84 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -566,3 +566,17 @@ xbitmap32_test(
+ 	*len = bn->bn_start - start;
+ 	return false;
  }
 +
-+/* Decide if a file mapping is on the realtime device or not. */
-+bool
-+xfs_ifork_is_realtime(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
++/* Count the number of set regions in this bitmap. */
++uint32_t
++xbitmap32_count_set_regions(
++	struct xbitmap32	*bitmap)
 +{
-+	return XFS_IS_REALTIME_INODE(ip) && whichfork != XFS_ATTR_FORK;
++	struct xbitmap32_node	*bn;
++	uint32_t		nr = 0;
++
++	for_each_xbitmap32_extent(bn, bitmap)
++		nr++;
++
++	return nr;
 +}
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 96303249d28ab..bd53eb951b651 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -260,6 +260,7 @@ int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
- 		int nr_to_add);
- int xfs_iext_count_upgrade(struct xfs_trans *tp, struct xfs_inode *ip,
- 		uint nr_to_add);
-+bool xfs_ifork_is_realtime(struct xfs_inode *ip, int whichfork);
+diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+index 2df8911606d6d..710c1ac5e323e 100644
+--- a/fs/xfs/scrub/bitmap.h
++++ b/fs/xfs/scrub/bitmap.h
+@@ -62,4 +62,6 @@ int xbitmap32_walk(struct xbitmap32 *bitmap, xbitmap32_walk_fn fn,
+ bool xbitmap32_empty(struct xbitmap32 *bitmap);
+ bool xbitmap32_test(struct xbitmap32 *bitmap, uint32_t start, uint32_t *len);
  
- /* returns true if the fork has extents but they are not read in yet. */
- static inline bool xfs_need_iread_extents(const struct xfs_ifork *ifp)
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index b169cddde6da4..24a15bf784f11 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -924,7 +924,7 @@ xchk_bmap(
- 	if (!ifp)
- 		return -ENOENT;
- 
--	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
-+	info.is_rt = xfs_ifork_is_realtime(ip, whichfork);
- 	info.whichfork = whichfork;
- 	info.is_shared = whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(ip);
- 	info.sc = sc;
++uint32_t xbitmap32_count_set_regions(struct xbitmap32 *bitmap);
++
+ #endif	/* __XFS_SCRUB_BITMAP_H__ */
 
