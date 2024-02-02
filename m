@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452CB14A08E
-	for <linux-xfs@vger.kernel.org>; Fri,  2 Feb 2024 16:37:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F67148309
+	for <linux-xfs@vger.kernel.org>; Fri,  2 Feb 2024 16:44:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706891864; cv=none; b=r/DMHXlUZ+WsPmbZrkULozbqmEJG6cyleOr9IxT4AU24MpLm7leM45vNH4jjWbdVSFjV3WYsicH4siUXSu210A6bhl2EPSL1MQgIYSbNUlqNUyMIbPL/DCS8r9OwPlmcIp7J6D6WlWllcyFVkDDvyCmr0Oo049Jjx5P5XCFI3TM=
+	t=1706892251; cv=none; b=FIZ/w5Vl7UO/a/Hlupqhzz4uzSFJb6/w+PD02WsPsNdV5x0V437GjGXjNcti0R71LE868jG/70braBtxEgH34P/Pz8Ri/eHqFYbbrik6vbmmtxFmzq8UraeKe+iDfvih+/lF1/36ykECWHsdSbzgRGppBOIx6Wl3cuYx8pnloCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706891864; c=relaxed/simple;
-	bh=l9DV2O7+mB8F/AW8QSG6FOFaWyVEencNmp1AYS9YD94=;
+	s=arc-20240116; t=1706892251; c=relaxed/simple;
+	bh=uUzOoGiERZ7mGeuggiTyL0+KnvGqCFboKmKedY0kEZI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E8S0AoEGpH1q58FKA2xpzwnSYu235lCtb3Br1FOl+jcaETmjIPpSJQii37SNO97nBKeMB8uFkfvZirvB3nClSoQv1mwUgzXajshf6LWtFDX4M6nygxECK95ePoeqmQ6VrM/N4LzsjKdxlV5tD78m8hPBGYSoc4xrXLCPG5o5+UQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VGtjuQEj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZM8tYPzZo22Rn/42uQx1WIIAeliGnnjSH0c96trVhIryM6x8Tue8tKfbJN0GMemHGsrx1TJEyCdoboXA4kKdL+uLG+EmjQoThMf8XFlsbb/QkNjPpbw8TuizI4WPpv11wq7xiGofont5iJfyPtC0DJxnl6lb6RKYGaiDumwZoOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SgskXtVo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VGtjuQEj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9EBBC433F1;
-	Fri,  2 Feb 2024 16:37:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SgskXtVo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B021BC433C7;
+	Fri,  2 Feb 2024 16:44:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706891863;
-	bh=l9DV2O7+mB8F/AW8QSG6FOFaWyVEencNmp1AYS9YD94=;
+	s=k20201202; t=1706892250;
+	bh=uUzOoGiERZ7mGeuggiTyL0+KnvGqCFboKmKedY0kEZI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VGtjuQEjEtFp4CpAJymRKW0xOFeSSw1rj1QiA4sBho6FZ2PsgkmovKcHEtzjDXNm/
-	 MpiwFR8KSLS5DW5HWsgmF8jNzdKdO10+8accxDR28jxUHJpN17s7HUkaWSvrvI0jWg
-	 onze2SFRJTluNVwLzoCOr65CYNqBwPdH0DwDd9TYqQhvuofHprdZ8IVr2kadMONa6c
-	 IeWL7PsUL2GlgeOOy+xu7f+AIlxf4iOCnkuxT9xuiM7rTbGVVuQu3xJBZTm/sTzUfg
-	 91wkaaEJCyILhfeYPb+Kmsk6yNZSKZLegIQZ5jK1RBk0k4uI1ne/j+ACm0GTaKedEE
-	 Ou79QrGdL6mxw==
-Date: Fri, 2 Feb 2024 08:37:43 -0800
+	b=SgskXtVocZ1TkCDqWC85h/tTEjlCHj574jxR9WgKzX9+CTOtKCRwpFBecRj/pTNIq
+	 YzZmvEAp6AhuRXckdV9nI8wgLC2YIOZ6VL/+ESTsrt7MQPmBR86YJrX7/vfyHKElSo
+	 uuWrgOY8B9e7jU3B79ipvOJgN5mEmA0t+sJbqbFqF36DpSoQc6eS3mDn0SCw2Wni2i
+	 z0KbybcLW+lQ1gipIzwXDKSdv9djRx0PfA9I4qfq6VopnO7w0cELEHaDUz5GMiW2k7
+	 jnnBXVZC1833V5vLlGVxvyZ0PSHJNtJkEvy/yOn+TR31g4zPczi04hSAl6GbTLOQEL
+	 UnBojjQWGKyog==
+Date: Fri, 2 Feb 2024 08:44:10 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/27] xfs: make fake file forks explicit
-Message-ID: <20240202163743.GI616564@frogsfrogsfrogs>
-References: <170681334718.1605438.17032954797722239513.stgit@frogsfrogsfrogs>
- <170681334995.1605438.15565130234166131675.stgit@frogsfrogsfrogs>
- <ZbyKvrEQgNvrz-iN@infradead.org>
+To: Sam James <sam@gentoo.org>
+Cc: carlos@maiolino.me, linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to 3ec53d438
+Message-ID: <20240202164410.GJ616564@frogsfrogsfrogs>
+References: <l6nxtgxvlwmcejoylpuevoyzxxylkcl2vcsw4pwzilos6rph2k@o5ontnahuhz2>
+ <87ttn3jawv.fsf@gentoo.org>
+ <87jznncqo2.fsf@gentoo.org>
+ <875xz7cqg9.fsf@gentoo.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,13 +44,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZbyKvrEQgNvrz-iN@infradead.org>
+In-Reply-To: <875xz7cqg9.fsf@gentoo.org>
 
-On Thu, Feb 01, 2024 at 10:25:02PM -0800, Christoph Hellwig wrote:
-> Looks good:
+On Fri, Feb 02, 2024 at 06:47:26AM +0000, Sam James wrote:
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Sam James <sam@gentoo.org> writes:
+> 
+> > Sam James <sam@gentoo.org> writes:
+> >
+> >> I think
+> >> https://lore.kernel.org/linux-xfs/20240122072351.3036242-1-sam@gentoo.org/
+> >> is ready.
+> >>
+> >> See Christoph's comment wrt application order:
+> >> https://lore.kernel.org/linux-xfs/Za4Yso9cEs+TzU8w@infradead.org/.
+> >>
+> >
+> > Ping - I think it missed another push too. Please let me know if I
+> > need to be doing something different.
+> 
+> (Oh wait, maybe the other one was a non-progs push.)
 
-Thanks!  I'm going to s/fake/staging/ on the subject line.
+Huh?  The off64_t -> off_t conversion and the TIME_BITS=64 changes are
+both xfsprogs.  Carlos hasn't merged either of those into for-next.  I'm
+not sure if he's just going to release 6.6 as-is and move on to 6.7, or
+what.
 
 --D
+
+> >
+> >> thanks,
+> >> sam
+> 
+> 
