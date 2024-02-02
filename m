@@ -1,43 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766A885945;
-	Fri,  2 Feb 2024 18:47:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0588C15E5C8
+	for <linux-xfs@vger.kernel.org>; Fri,  2 Feb 2024 19:40:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706899679; cv=none; b=WMY/MG4Snk8SgFF7RpQ02eUNf5qD0UK/9Y9B1AJeByQrZmp5WpKkRbAffZ6VOc903mUFggoA86SbX/k54anavMHhAbF/Lq4ZMuu3x+i6Izk/Wyc9rwIDUIZwCbsu1j+CH3I+t1VmOYeKeVkeKYWZ4a1EDWPr3ZYl110W/ZUjBNk=
+	t=1706902848; cv=none; b=E4MRDgxyM9zJh3m/CREiP4qHStPBJyAyMGkXq3KApZkGR5gY/xv+lcEwbN4szd4GZBEhiACcPP0cWLNTzcfYdAx4lx4CIqlhLxfyfv4v40OrsAobkPfXHN5tn7rdoD6uxKMUxmJAEeyxM9W25Pu32qI6RH19JE1xONUN1/NNaX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706899679; c=relaxed/simple;
-	bh=QcaaP/4jBnJB46G9guIEmeObnt6+/Id6kQQiWLBmNbo=;
+	s=arc-20240116; t=1706902848; c=relaxed/simple;
+	bh=0Y1sAOZ5BgKhPD2lfxcbxu/RFcAgDyJG3EKn7GfOdyc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gzFpA4diBcFU1C98tslUBn770mWB7hKYTlMywMjKj8snsYtT6EBChLdMD9ArmJRe7xepdi94CoRUgmXuk+aNHYuWRLYaQ2SpcHfGwr7Hzk4z/FF3Ob932+HHJh0HKwWQZ91KNbvsOLC/T3nvUA85U5scwPTCw2C/5HULglhQTMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h2eUvkkE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=KSe+eWUu/IyjxWdnvpz1d9CyyF818GEuaDDWMQiplyeP8FwOUMsS9B2K9hYbuqEe6w0lN7kVNaptPFH6I9xx2hc+Ess468H/V0V1FbsMQ9Jqkm4Jsfr2Eu/7R9PUIvVokc+2V0BT3D50cXkMRAutxzyTsj6DpcTV3jvOEbr4ocs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hdn4qW1+; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h2eUvkkE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB23CC43390;
-	Fri,  2 Feb 2024 18:47:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706899679;
-	bh=QcaaP/4jBnJB46G9guIEmeObnt6+/Id6kQQiWLBmNbo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=h2eUvkkEYHLCPDhfZVJ9aTeddxb6PdiJfiGQGBpuuxwaq+iEzg3P9l4OQo75Wjszq
-	 Mw0zSz/rcx9tbV36HcT3iISdYMxMgjvpIE4xRiWYi9AAcSTw+nD1EJQ5nc/GioU+A6
-	 8pjcuvz3TJj7fiAybhyT96Xvqxfn/3+3vXnNi7q1jXEKSyfjuQeWbdF6tDF7O0UQvL
-	 XomMzk1c6OHzcqA6TaTDPYp+IPPAX5mTNY+qpf5vxzuwahugA7tSc7RVU+tZxemNdh
-	 Bq2BEmbL9mu0E9GFBynBEwhj25IOzqK5Bi2aTk4SCl769dRXEFD7nSmHIDa1GgCk/Q
-	 ToB1eS/xzzvPw==
-Date: Fri, 2 Feb 2024 10:47:58 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	dchinner@redhat.com, jack@suse.cz, chandan.babu@oracle.com,
-	martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH RFC 5/6] fs: xfs: iomap atomic write support
-Message-ID: <20240202184758.GA6226@frogsfrogsfrogs>
-References: <20240124142645.9334-1-john.g.garry@oracle.com>
- <20240124142645.9334-6-john.g.garry@oracle.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hdn4qW1+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1706902845;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pZuDIwK8o8CGVtj1URAZgeRSO/U/NTnVnuQ48aFru2c=;
+	b=hdn4qW1+BOJcv0lhFNk78W4ioG3PKil3NLZGopw0dOaKX/sHmi0O4trMQF7BAyc6lVUBrf
+	Ol3iezmWsRntgqIlhL0lzt1SbXEa6QqPTU0qSReM4yah/t0sP00MpmUbM/9fxdcC3Ee8tP
+	KvjhKAjIl6GQWHpzMpBChLWbXj1xKd8=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-102-r8YfSmWENeW6pHNtTv6HLw-1; Fri, 02 Feb 2024 14:40:42 -0500
+X-MC-Unique: r8YfSmWENeW6pHNtTv6HLw-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6AB0D85A589;
+	Fri,  2 Feb 2024 19:40:42 +0000 (UTC)
+Received: from bfoster (unknown [10.22.32.186])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 4894D492BE2;
+	Fri,  2 Feb 2024 19:40:42 +0000 (UTC)
+Date: Fri, 2 Feb 2024 14:41:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
+ after reclaim
+Message-ID: <Zb1FhDn09pwFvE7O@bfoster>
+References: <20240119193645.354214-1-bfoster@redhat.com>
+ <Za3fwLKtjC+B8aZa@dread.disaster.area>
+ <ZbJYP63PgykS1CwU@bfoster>
+ <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
+ <Zbe9+EY5bLjhPPJn@bfoster>
+ <Zbrw07Co5vhrDUfd@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,115 +60,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240124142645.9334-6-john.g.garry@oracle.com>
+In-Reply-To: <Zbrw07Co5vhrDUfd@dread.disaster.area>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
 
-On Wed, Jan 24, 2024 at 02:26:44PM +0000, John Garry wrote:
-> Ensure that when creating a mapping that we adhere to all the atomic
-> write rules.
+On Thu, Feb 01, 2024 at 12:16:03PM +1100, Dave Chinner wrote:
+> On Mon, Jan 29, 2024 at 10:02:16AM -0500, Brian Foster wrote:
+> > On Fri, Jan 26, 2024 at 10:46:12AM +1100, Dave Chinner wrote:
+> > > On Thu, Jan 25, 2024 at 07:46:55AM -0500, Brian Foster wrote:
+> > > > On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
+> > > > > On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
+...
+> Here's the fixes for the iget vs inactive vs freeze problems in the
+> upstream kernel:
 > 
-> We check that the mapping covers the complete range of the write to ensure
-> that we'll be just creating a single mapping.
+> https://lore.kernel.org/linux-xfs/20240201005217.1011010-1-david@fromorbit.com/T/#t
 > 
-> Currently minimum granularity is the FS block size, but it should be
-> possibly to support lower in future.
+> With that sorted, are there any other issues we know about that
+> running a blockgc scan during freeze might work around?
 > 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
-> I am setting this as an RFC as I am not sure on the change in
-> xfs_iomap_write_direct() - it gives the desired result AFAICS.
-> 
->  fs/xfs/xfs_iomap.c | 41 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 41 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 18c8f168b153..758dc1c90a42 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -289,6 +289,9 @@ xfs_iomap_write_direct(
->  		}
->  	}
->  
-> +	if (xfs_inode_atomicwrites(ip))
-> +		bmapi_flags = XFS_BMAPI_ZERO;
 
-Why do we want to write zeroes to the disk if we're allocating space
-even if we're not sending an atomic write?
+The primary motivation for the scan patch was the downstream/stable
+deadlock issue. The reason I posted it upstream is because when I
+considered the overall behavior change, I thought it uniformly
+beneficial to both contexts based on the (minor) benefits of the side
+effects of the scan. You don't need me to enumerate them, and none of
+them are uniquely important or worth overanalyzing.
 
-(This might want an explanation for why we're doing this at all -- it's
-to avoid unwritten extent conversion, which defeats hardware untorn
-writes.)
+The only real question that matters here is do you agree with the
+general reasoning for a blockgc scan during freeze, or shall I drop the
+patch?
 
-I think we should support IOCB_ATOMIC when the mapping is unwritten --
-the data will land on disk in an untorn fashion, the unwritten extent
-conversion on IO completion is itself atomic, and callers still have to
-set O_DSYNC to persist anything.  Then we can avoid the cost of
-BMAPI_ZERO, because double-writes aren't free.
+Brian
 
-> +
->  	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
->  			rblocks, force, &tp);
->  	if (error)
-> @@ -812,6 +815,44 @@ xfs_direct_write_iomap_begin(
->  	if (error)
->  		goto out_unlock;
->  
-> +	if (flags & IOMAP_ATOMIC) {
-> +		xfs_filblks_t unit_min_fsb, unit_max_fsb;
-> +		unsigned int unit_min, unit_max;
-> +
-> +		xfs_get_atomic_write_attr(ip, &unit_min, &unit_max);
-> +		unit_min_fsb = XFS_B_TO_FSBT(mp, unit_min);
-> +		unit_max_fsb = XFS_B_TO_FSBT(mp, unit_max);
-> +
-> +		if (!imap_spans_range(&imap, offset_fsb, end_fsb)) {
-> +			error = -EINVAL;
-> +			goto out_unlock;
-> +		}
-> +
-> +		if ((offset & mp->m_blockmask) ||
-> +		    (length & mp->m_blockmask)) {
-> +			error = -EINVAL;
-> +			goto out_unlock;
-> +		}
-> +
-> +		if (imap.br_blockcount == unit_min_fsb ||
-> +		    imap.br_blockcount == unit_max_fsb) {
-> +			/* ok if exactly min or max */
-> +		} else if (imap.br_blockcount < unit_min_fsb ||
-> +			   imap.br_blockcount > unit_max_fsb) {
-> +			error = -EINVAL;
-> +			goto out_unlock;
-> +		} else if (!is_power_of_2(imap.br_blockcount)) {
-> +			error = -EINVAL;
-> +			goto out_unlock;
-> +		}
-> +
-> +		if (imap.br_startoff &&
-> +		    imap.br_startoff & (imap.br_blockcount - 1)) {
-
-Not sure why we care about the file position, it's br_startblock that
-gets passed into the bio, not br_startoff.
-
-I'm also still not convinced that any of this validation is useful here.
-The block device stack underneath the filesystem can change at any time
-without any particular notice to the fs, so the only way to find out if
-the proposed IO would meet the alignment constraints is to submit_bio
-and see what happens.
-
-(The "one bio per untorn write request" thing in the direct-io.c patch
-sound sane to me though.)
-
---D
-
-> +			error = -EINVAL;
-> +			goto out_unlock;
-> +		}
-> +	}
-> +
->  	if (imap_needs_cow(ip, flags, &imap, nimaps)) {
->  		error = -EAGAIN;
->  		if (flags & IOMAP_NOWAIT)
+> -Dave.
 > -- 
-> 2.31.1
+> Dave Chinner
+> david@fromorbit.com
 > 
-> 
+
