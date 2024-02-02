@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D943D5FDD3;
-	Fri,  2 Feb 2024 18:06:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766A885945;
+	Fri,  2 Feb 2024 18:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706897181; cv=none; b=p0qD/TXOETAAxccGo+vnfN/PUNUQuja0v2wdfaKCUaPN3nK4REB7qd/SrLz0T8qmbSuxXW2Ko1myMoPiuiwAkurohgA0Zm82YSrodGydmudKXtK9Gg4B+VRbLYd7r5gNecPhdwgm4xEzA9rmor4117R/5XtdKAtgoVVVlbhRvZY=
+	t=1706899679; cv=none; b=WMY/MG4Snk8SgFF7RpQ02eUNf5qD0UK/9Y9B1AJeByQrZmp5WpKkRbAffZ6VOc903mUFggoA86SbX/k54anavMHhAbF/Lq4ZMuu3x+i6Izk/Wyc9rwIDUIZwCbsu1j+CH3I+t1VmOYeKeVkeKYWZ4a1EDWPr3ZYl110W/ZUjBNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706897181; c=relaxed/simple;
-	bh=TK5YLwgxljxDowRQ0eNue0g/31dajW0hxOviA7WNyFE=;
+	s=arc-20240116; t=1706899679; c=relaxed/simple;
+	bh=QcaaP/4jBnJB46G9guIEmeObnt6+/Id6kQQiWLBmNbo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BSIe/RxrKxjIqNVphrNFvUjU2tUd5jRzeKT0ZFkVtsR+4VMlFE1OG8GqL2FfMDAB7oUTlciAUCKNRM1yKtuO1dz5qpvja0cINDMqC1V3SPb2AiclzUWK3FTAd5/LZs9RiL1fpYw1lbjr9Nc2wlPlovDxJ6EiuIfv0iXRmuuXXX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sck0oP5b; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=gzFpA4diBcFU1C98tslUBn770mWB7hKYTlMywMjKj8snsYtT6EBChLdMD9ArmJRe7xepdi94CoRUgmXuk+aNHYuWRLYaQ2SpcHfGwr7Hzk4z/FF3Ob932+HHJh0HKwWQZ91KNbvsOLC/T3nvUA85U5scwPTCw2C/5HULglhQTMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h2eUvkkE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sck0oP5b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D828C433F1;
-	Fri,  2 Feb 2024 18:06:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h2eUvkkE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB23CC43390;
+	Fri,  2 Feb 2024 18:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706897180;
-	bh=TK5YLwgxljxDowRQ0eNue0g/31dajW0hxOviA7WNyFE=;
+	s=k20201202; t=1706899679;
+	bh=QcaaP/4jBnJB46G9guIEmeObnt6+/Id6kQQiWLBmNbo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sck0oP5bBBnPHycfzsEoWFs5jT+4JemF8pU2m+bPdgc0DYc3x3+94uXLOA/TMZPAf
-	 6vI2D9hSJX+lQ2YRL+KD/NQ3SEFmuPU3kTRxgjx7e/qovN3I+YCHEBkU9br/NS1JUT
-	 NfQkk/sMy+h7jJB2u19X0xK7HUPO5az7inrmmq8LcQulT7lAHGHRbv+fyYgwusfyMn
-	 yLueG7Cd4JUR0HMCPZyuH0YY1SUNQlXEebWT2Th2URhjV+wk29PGsMh1J3ywSkZnv8
-	 JX+1rJGaVf9Y6DXzPVP/+73zgPHbY88i4+t/+r9N/4cOoKZxtBBKjQdVx1ue8GPaeF
-	 caeENVq28jkZg==
-Date: Fri, 2 Feb 2024 10:06:19 -0800
+	b=h2eUvkkEYHLCPDhfZVJ9aTeddxb6PdiJfiGQGBpuuxwaq+iEzg3P9l4OQo75Wjszq
+	 Mw0zSz/rcx9tbV36HcT3iISdYMxMgjvpIE4xRiWYi9AAcSTw+nD1EJQ5nc/GioU+A6
+	 8pjcuvz3TJj7fiAybhyT96Xvqxfn/3+3vXnNi7q1jXEKSyfjuQeWbdF6tDF7O0UQvL
+	 XomMzk1c6OHzcqA6TaTDPYp+IPPAX5mTNY+qpf5vxzuwahugA7tSc7RVU+tZxemNdh
+	 Bq2BEmbL9mu0E9GFBynBEwhj25IOzqK5Bi2aTk4SCl769dRXEFD7nSmHIDa1GgCk/Q
+	 ToB1eS/xzzvPw==
+Date: Fri, 2 Feb 2024 10:47:58 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: John Garry <john.g.garry@oracle.com>
 Cc: hch@lst.de, viro@zeniv.linux.org.uk, brauner@kernel.org,
@@ -34,11 +34,10 @@ Cc: hch@lst.de, viro@zeniv.linux.org.uk, brauner@kernel.org,
 	martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH 6/6] fs: xfs: Set FMODE_CAN_ATOMIC_WRITE for
- FS_XFLAG_ATOMICWRITES set
-Message-ID: <20240202180619.GK6184@frogsfrogsfrogs>
+Subject: Re: [PATCH RFC 5/6] fs: xfs: iomap atomic write support
+Message-ID: <20240202184758.GA6226@frogsfrogsfrogs>
 References: <20240124142645.9334-1-john.g.garry@oracle.com>
- <20240124142645.9334-7-john.g.garry@oracle.com>
+ <20240124142645.9334-6-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,36 +46,114 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240124142645.9334-7-john.g.garry@oracle.com>
+In-Reply-To: <20240124142645.9334-6-john.g.garry@oracle.com>
 
-On Wed, Jan 24, 2024 at 02:26:45PM +0000, John Garry wrote:
-> For when an inode is enabled for atomic writes, set FMODE_CAN_ATOMIC_WRITE
-> flag.
+On Wed, Jan 24, 2024 at 02:26:44PM +0000, John Garry wrote:
+> Ensure that when creating a mapping that we adhere to all the atomic
+> write rules.
+> 
+> We check that the mapping covers the complete range of the write to ensure
+> that we'll be just creating a single mapping.
+> 
+> Currently minimum granularity is the FS block size, but it should be
+> possibly to support lower in future.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_file.c | 2 ++
->  1 file changed, 2 insertions(+)
+> I am setting this as an RFC as I am not sure on the change in
+> xfs_iomap_write_direct() - it gives the desired result AFAICS.
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e33e5e13b95f..1375d0089806 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1232,6 +1232,8 @@ xfs_file_open(
->  		return -EIO;
->  	file->f_mode |= FMODE_NOWAIT | FMODE_BUF_RASYNC | FMODE_BUF_WASYNC |
->  			FMODE_DIO_PARALLEL_WRITE | FMODE_CAN_ODIRECT;
-> +	if (xfs_inode_atomicwrites(XFS_I(inode)))
+>  fs/xfs/xfs_iomap.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 41 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 18c8f168b153..758dc1c90a42 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -289,6 +289,9 @@ xfs_iomap_write_direct(
+>  		}
+>  	}
+>  
+> +	if (xfs_inode_atomicwrites(ip))
+> +		bmapi_flags = XFS_BMAPI_ZERO;
 
-Shouldn't we check that the device supports AWU at all before turning on
-the FMODE flag?
+Why do we want to write zeroes to the disk if we're allocating space
+even if we're not sending an atomic write?
+
+(This might want an explanation for why we're doing this at all -- it's
+to avoid unwritten extent conversion, which defeats hardware untorn
+writes.)
+
+I think we should support IOCB_ATOMIC when the mapping is unwritten --
+the data will land on disk in an untorn fashion, the unwritten extent
+conversion on IO completion is itself atomic, and callers still have to
+set O_DSYNC to persist anything.  Then we can avoid the cost of
+BMAPI_ZERO, because double-writes aren't free.
+
+> +
+>  	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, dblocks,
+>  			rblocks, force, &tp);
+>  	if (error)
+> @@ -812,6 +815,44 @@ xfs_direct_write_iomap_begin(
+>  	if (error)
+>  		goto out_unlock;
+>  
+> +	if (flags & IOMAP_ATOMIC) {
+> +		xfs_filblks_t unit_min_fsb, unit_max_fsb;
+> +		unsigned int unit_min, unit_max;
+> +
+> +		xfs_get_atomic_write_attr(ip, &unit_min, &unit_max);
+> +		unit_min_fsb = XFS_B_TO_FSBT(mp, unit_min);
+> +		unit_max_fsb = XFS_B_TO_FSBT(mp, unit_max);
+> +
+> +		if (!imap_spans_range(&imap, offset_fsb, end_fsb)) {
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		}
+> +
+> +		if ((offset & mp->m_blockmask) ||
+> +		    (length & mp->m_blockmask)) {
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		}
+> +
+> +		if (imap.br_blockcount == unit_min_fsb ||
+> +		    imap.br_blockcount == unit_max_fsb) {
+> +			/* ok if exactly min or max */
+> +		} else if (imap.br_blockcount < unit_min_fsb ||
+> +			   imap.br_blockcount > unit_max_fsb) {
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		} else if (!is_power_of_2(imap.br_blockcount)) {
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		}
+> +
+> +		if (imap.br_startoff &&
+> +		    imap.br_startoff & (imap.br_blockcount - 1)) {
+
+Not sure why we care about the file position, it's br_startblock that
+gets passed into the bio, not br_startoff.
+
+I'm also still not convinced that any of this validation is useful here.
+The block device stack underneath the filesystem can change at any time
+without any particular notice to the fs, so the only way to find out if
+the proposed IO would meet the alignment constraints is to submit_bio
+and see what happens.
+
+(The "one bio per untorn write request" thing in the direct-io.c patch
+sound sane to me though.)
 
 --D
 
-> +		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
->  	return generic_file_open(inode, file);
->  }
->  
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		}
+> +	}
+> +
+>  	if (imap_needs_cow(ip, flags, &imap, nimaps)) {
+>  		error = -EAGAIN;
+>  		if (flags & IOMAP_NOWAIT)
 > -- 
 > 2.31.1
 > 
