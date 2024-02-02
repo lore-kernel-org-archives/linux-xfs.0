@@ -1,100 +1,140 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0588C15E5C8
-	for <linux-xfs@vger.kernel.org>; Fri,  2 Feb 2024 19:40:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6C7081748;
+	Fri,  2 Feb 2024 21:00:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706902848; cv=none; b=E4MRDgxyM9zJh3m/CREiP4qHStPBJyAyMGkXq3KApZkGR5gY/xv+lcEwbN4szd4GZBEhiACcPP0cWLNTzcfYdAx4lx4CIqlhLxfyfv4v40OrsAobkPfXHN5tn7rdoD6uxKMUxmJAEeyxM9W25Pu32qI6RH19JE1xONUN1/NNaX4=
+	t=1706907631; cv=none; b=AdeRIdg022I5A1hFI3SlfG+qCwVMMzqJZBlD1a4bGF5XXkyXWS6ZmqUwime8eyyYUsV1uynPGTMgf0XSnbvWDXrx/LI0aXQXM0CVGvNMVmKcvAKFxmbXKG2TX9pybnAVUl6eoAw+l1y0kioxIF7Faq9RJfLNWrp5x6AOUU3dNxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706902848; c=relaxed/simple;
-	bh=0Y1sAOZ5BgKhPD2lfxcbxu/RFcAgDyJG3EKn7GfOdyc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KSe+eWUu/IyjxWdnvpz1d9CyyF818GEuaDDWMQiplyeP8FwOUMsS9B2K9hYbuqEe6w0lN7kVNaptPFH6I9xx2hc+Ess468H/V0V1FbsMQ9Jqkm4Jsfr2Eu/7R9PUIvVokc+2V0BT3D50cXkMRAutxzyTsj6DpcTV3jvOEbr4ocs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hdn4qW1+; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1706907631; c=relaxed/simple;
+	bh=NdQ4OmFkV2+G2H8B4VkXTCxDeM+TIHeVIiPEQVlM7R8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jMWVzwu53yHgHWMSkZ5Ug8v4GT7ph7AtRbe+lUB4TU/3+7f4KdGGZyn2dkeyo3/vKw/TN9IIJLf8QJsmwbqreE8Sm1y8P+q+zBA+/Rrb6OkBzbLHtxXIkE9RKHBPBBATpwWVXwXIG+CMKvnZ7MJCk0M1abWvw/TN28iNIBeSOuw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=SfD+9FBO; arc=none smtp.client-ip=167.114.26.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hdn4qW1+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706902845;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pZuDIwK8o8CGVtj1URAZgeRSO/U/NTnVnuQ48aFru2c=;
-	b=hdn4qW1+BOJcv0lhFNk78W4ioG3PKil3NLZGopw0dOaKX/sHmi0O4trMQF7BAyc6lVUBrf
-	Ol3iezmWsRntgqIlhL0lzt1SbXEa6QqPTU0qSReM4yah/t0sP00MpmUbM/9fxdcC3Ee8tP
-	KvjhKAjIl6GQWHpzMpBChLWbXj1xKd8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-102-r8YfSmWENeW6pHNtTv6HLw-1; Fri, 02 Feb 2024 14:40:42 -0500
-X-MC-Unique: r8YfSmWENeW6pHNtTv6HLw-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6AB0D85A589;
-	Fri,  2 Feb 2024 19:40:42 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.186])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 4894D492BE2;
-	Fri,  2 Feb 2024 19:40:42 +0000 (UTC)
-Date: Fri, 2 Feb 2024 14:41:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
- after reclaim
-Message-ID: <Zb1FhDn09pwFvE7O@bfoster>
-References: <20240119193645.354214-1-bfoster@redhat.com>
- <Za3fwLKtjC+B8aZa@dread.disaster.area>
- <ZbJYP63PgykS1CwU@bfoster>
- <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
- <Zbe9+EY5bLjhPPJn@bfoster>
- <Zbrw07Co5vhrDUfd@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="SfD+9FBO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
+	s=smtpout1; t=1706907627;
+	bh=NdQ4OmFkV2+G2H8B4VkXTCxDeM+TIHeVIiPEQVlM7R8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=SfD+9FBODsvL9YxlK1eefFmH2Hjg5R7Nm2c0c/fiMmV+KMkEfMgn8fwXWEqe567tr
+	 hitR0HdbXa8MBPzXdEQAfPlMmOwmhspx1tBJIONQneKlE9TwWJmkzfjXVdmBRroRoc
+	 tjILNBX/OBLmXaCizqF3wbdgWKaqsoQBmA0IBcR2qmBOEZHO6sI+lwpuXk3mpdXWn1
+	 0wFeI3QK26ekNegrAv+Homtya3de6AuOl2OXBg83Pb+HUc1wnEG95Aq+dFPABMDzZX
+	 A4jobyF0SFA0vRkB0HcB8gGIiRsGKsSNiGhvGEQux2MIPMvpIBgiM+92vhzg7Pf3gh
+	 OJnjmBEQikO1Q==
+Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TRSpg3hSPzX4Q;
+	Fri,  2 Feb 2024 16:00:27 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Russell King <linux@armlinux.org.uk>,
+	linux-arch@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	nvdimm@lists.linux.dev,
+	linux-s390@vger.kernel.org,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>
+Subject: [RFC PATCH v4 02/12] nvdimm/pmem: Treat alloc_dax() -EOPNOTSUPP failure as non-fatal
+Date: Fri,  2 Feb 2024 16:00:09 -0500
+Message-Id: <20240202210019.88022-3-mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240202210019.88022-1-mathieu.desnoyers@efficios.com>
+References: <20240202210019.88022-1-mathieu.desnoyers@efficios.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zbrw07Co5vhrDUfd@dread.disaster.area>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 01, 2024 at 12:16:03PM +1100, Dave Chinner wrote:
-> On Mon, Jan 29, 2024 at 10:02:16AM -0500, Brian Foster wrote:
-> > On Fri, Jan 26, 2024 at 10:46:12AM +1100, Dave Chinner wrote:
-> > > On Thu, Jan 25, 2024 at 07:46:55AM -0500, Brian Foster wrote:
-> > > > On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
-> > > > > On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
-...
-> Here's the fixes for the iget vs inactive vs freeze problems in the
-> upstream kernel:
-> 
-> https://lore.kernel.org/linux-xfs/20240201005217.1011010-1-david@fromorbit.com/T/#t
-> 
-> With that sorted, are there any other issues we know about that
-> running a blockgc scan during freeze might work around?
-> 
+In preparation for checking whether the architecture has data cache
+aliasing within alloc_dax(), modify the error handling of nvdimm/pmem
+pmem_attach_disk() to treat alloc_dax() -EOPNOTSUPP failure as non-fatal.
 
-The primary motivation for the scan patch was the downstream/stable
-deadlock issue. The reason I posted it upstream is because when I
-considered the overall behavior change, I thought it uniformly
-beneficial to both contexts based on the (minor) benefits of the side
-effects of the scan. You don't need me to enumerate them, and none of
-them are uniquely important or worth overanalyzing.
+For the transition, consider that alloc_dax() returning NULL is the
+same as returning -EOPNOTSUPP.
 
-The only real question that matters here is do you agree with the
-general reasoning for a blockgc scan during freeze, or shall I drop the
-patch?
+Fixes: d92576f1167c ("dax: does not work correctly with virtual aliasing caches")
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@kernel.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: linux-arch@vger.kernel.org
+Cc: linux-cxl@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Cc: dm-devel@lists.linux.dev
+Cc: nvdimm@lists.linux.dev
+---
+ drivers/nvdimm/pmem.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-Brian
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 9fe358090720..f1d9f5c6dbac 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -558,19 +558,21 @@ static int pmem_attach_disk(struct device *dev,
+ 	disk->bb = &pmem->bb;
+ 
+ 	dax_dev = alloc_dax(pmem, &pmem_dax_ops);
+-	if (IS_ERR(dax_dev)) {
+-		rc = PTR_ERR(dax_dev);
+-		goto out;
++	if (IS_ERR_OR_NULL(dax_dev)) {
++		rc = IS_ERR(dax_dev) ? PTR_ERR(dax_dev) : -EOPNOTSUPP;
++		if (rc != -EOPNOTSUPP)
++			goto out;
++	} else {
++		set_dax_nocache(dax_dev);
++		set_dax_nomc(dax_dev);
++		if (is_nvdimm_sync(nd_region))
++			set_dax_synchronous(dax_dev);
++		pmem->dax_dev = dax_dev;
++		rc = dax_add_host(dax_dev, disk);
++		if (rc)
++			goto out_cleanup_dax;
++		dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+ 	}
+-	set_dax_nocache(dax_dev);
+-	set_dax_nomc(dax_dev);
+-	if (is_nvdimm_sync(nd_region))
+-		set_dax_synchronous(dax_dev);
+-	pmem->dax_dev = dax_dev;
+-	rc = dax_add_host(dax_dev, disk);
+-	if (rc)
+-		goto out_cleanup_dax;
+-	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+ 	rc = device_add_disk(dev, disk, pmem_attribute_groups);
+ 	if (rc)
+ 		goto out_remove_host;
+-- 
+2.39.2
 
