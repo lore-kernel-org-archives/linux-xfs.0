@@ -1,98 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E5612C801
-	for <linux-xfs@vger.kernel.org>; Fri,  2 Feb 2024 23:33:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE314B5C1;
+	Sat,  3 Feb 2024 07:12:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706916824; cv=none; b=FBZ4IjF0QCepjIomhRPzxL7IInu/dvLRb2kTzaaqGOjvzJO4TFRCTqG7Zlj7Js7itUqaEf3xUjjto7vzn3dX0bFwsKezCtDU6XkBH6/OVcKMbYTeZ8xrKNXXvjW4CulXdQFBVC5RTTlLJNnDldNxAADZMc9lPzp8tlGAY9fxdHg=
+	t=1706944326; cv=none; b=Ax1eX5hVGVoDieRjCIdbURkaKHWomPrOQTPsG4dIKHrfEnpy/q7+UK6PkihXxG4jJy56HBgJHebSYCyzfTcMrexJL8G811FVkZaYWDdVIA3J1tjnxK/51mra8+qH+7ZmqlrmV//XIiDo5LnEwjOWP7yooiRjhMTzcFe4svyeGbU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706916824; c=relaxed/simple;
-	bh=iclG1KsbI+k1I/nVcJPH01ea2c/wYs+D7WE/fFpi0gs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jY+Jw5D8RaMr2GAFl4lx11t96LfKPvjICQUpv2dGI7kdiCB066uDHcCNdmDDPoJrQcStOgSYR0VvW+b2SGJ1IpjX+QcNzBw524dBvai0dI8t6DShnzowac9etkiHqKn1iWqCnZCUf8RpgLh5qlcPauTU/Sw3d+5tt9IdKzgcUXI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CVk9IhZy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706944326; c=relaxed/simple;
+	bh=h1vKh875I7DQ97UVGmnI+2v/whFN/tFVvlOTyPdDGwM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Zmtq6oVefYdBQQY1/qNt6qvlC6rJ2eUI2pTSiufmnU8/9vmiqxI8CDXDR2SLYyBRxASazyKyrtIZYb6YW4Oi2Yn/8voO9ZvCXByYUqTLOW8TUY/79VnNKkUsok9dKqkAYccPxTO9sakh1b4m23mq5aQHqRC8phfxb3SIeGnFn+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Hfk1jOB6; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CVk9IhZy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06FEBC433C7;
-	Fri,  2 Feb 2024 23:33:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706916824;
-	bh=iclG1KsbI+k1I/nVcJPH01ea2c/wYs+D7WE/fFpi0gs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CVk9IhZyRebqRixeMpXBHdLPubhnHt0P+rQ26oKMIKeEYccTHguVGlK+xpWvRCHQd
-	 /yu/UPKovWFESKK5gtvpp+Q7EpYGKZ2+VTnQrnaSCtWtZrmh8yigBFIBGCCeYMxNEL
-	 nv+fIVAfeAsFCdq7jkrzmKy6iYfbsu452Aqav3wiNZokrIkeJD93jP5BgJqnkIoM97
-	 DTGaxxMuT06DlA7qNlGz9mVeKBCIMVWYJHi5pmW2JDPfYdQyqmTIHCxWRT/cn5m8nY
-	 wsua8il4MJa+jxupy0wrLJE/0qIIQ/KA/OVcOpQJrsEfR63hjPsD1mMLqAhtFR2HG5
-	 lsSdkSn+Fz+vQ==
-Date: Fri, 2 Feb 2024 15:33:43 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
- after reclaim
-Message-ID: <20240202233343.GM616564@frogsfrogsfrogs>
-References: <20240119193645.354214-1-bfoster@redhat.com>
- <Za3fwLKtjC+B8aZa@dread.disaster.area>
- <ZbJYP63PgykS1CwU@bfoster>
- <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
- <Zbe9+EY5bLjhPPJn@bfoster>
- <Zbrw07Co5vhrDUfd@dread.disaster.area>
- <Zb1FhDn09pwFvE7O@bfoster>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Hfk1jOB6"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=HMBNnp3fgBDK6ztw/NO3s+iVnQcpEAV34TJMhHGz7lI=; b=Hfk1jOB6JsmsKp3tLeYrYuZOXy
+	AayejwfIhn+MYGLWoPY2CdSef9mFapvkWNacoc7Rc9QLlNPfjrpcB9HUMYMlRG5YgwX2Apt8dzL3i
+	Xw72vGE+8770V5or/kmoGOWXqDf+DXrRg8z75QB4pTc2FpV6phLf0yYPHlLstv6fYZTjqtmyAIouD
+	07FCNuwksuY9zDDjYG8iD2ldZJhr9POZKriEsRotD8evbA9ivqmxN8qt+tih1wb9gjQKExRb5oo7U
+	RESHqP+TPhdaALhK5CV/Yflm88j+YnlinUZXseBUAEUOCMrd2B7EsVm8PqMa6yl8S4CgEqJFGJNd/
+	cYpziPdA==;
+Received: from [89.144.222.32] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rWABz-0000000FjxC-1WUq;
+	Sat, 03 Feb 2024 07:12:00 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: linux-mm@kvack.org
+Cc: Matthew Wilcox <willy@infradead.org>,
+	Jan Kara <jack@suse.com>,
+	David Howells <dhowells@redhat.com>,
+	Brian Foster <bfoster@redhat.com>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: convert write_cache_pages() to an iterator v6
+Date: Sat,  3 Feb 2024 08:11:34 +0100
+Message-Id: <20240203071147.862076-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zb1FhDn09pwFvE7O@bfoster>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Feb 02, 2024 at 02:41:56PM -0500, Brian Foster wrote:
-> On Thu, Feb 01, 2024 at 12:16:03PM +1100, Dave Chinner wrote:
-> > On Mon, Jan 29, 2024 at 10:02:16AM -0500, Brian Foster wrote:
-> > > On Fri, Jan 26, 2024 at 10:46:12AM +1100, Dave Chinner wrote:
-> > > > On Thu, Jan 25, 2024 at 07:46:55AM -0500, Brian Foster wrote:
-> > > > > On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
-> > > > > > On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
-> ...
-> > Here's the fixes for the iget vs inactive vs freeze problems in the
-> > upstream kernel:
-> > 
-> > https://lore.kernel.org/linux-xfs/20240201005217.1011010-1-david@fromorbit.com/T/#t
-> > 
-> > With that sorted, are there any other issues we know about that
-> > running a blockgc scan during freeze might work around?
-> > 
-> 
-> The primary motivation for the scan patch was the downstream/stable
-> deadlock issue. The reason I posted it upstream is because when I
-> considered the overall behavior change, I thought it uniformly
-> beneficial to both contexts based on the (minor) benefits of the side
-> effects of the scan. You don't need me to enumerate them, and none of
-> them are uniquely important or worth overanalyzing.
-> 
-> The only real question that matters here is do you agree with the
-> general reasoning for a blockgc scan during freeze, or shall I drop the
-> patch?
+Hi all,
 
-I don't see any particular downside to flushing {block,inode}gc work
-during a freeze, other than the loss of speculative preallocations
-sounds painful.
+this is an evolution of the series Matthew Wilcox originally sent in June
+2023, which has changed quite a bit since and now has a while based
+iterator.
 
-Does Dave's patchset to recycle NEEDS_INACTIVE inodes eliminate the
-stall problem?
+Note that in this version two patches are so different from the previous
+version that I've not kept any Reviews or Acks for them, even if the
+final result look almost the same as the previous patches with the
+incremental patch on the list.
 
---D
+Changes since v5:
+ - completely reshuffle the series to directly prepare for the
+   writeback_iter() style.
+ - don't require *error to be initialized on first call
+ - improve various comments
+ - fix a bisection hazard where write_cache_pages don't return delayed
+   error for a few commits
+ - fix a whitespace error
+ - drop the iomap patch again for now as the iomap map multiple blocks
+   series isn't in mainline yet
 
-> Brian
-> 
-> > -Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> 
-> 
+Changes since v4:
+ - added back the (rebased) iomap conversion now that the conflict is in
+   mainline
+ - add a new patch to change the iterator
+
+Changes since v3:
+ - various commit log spelling fixes
+ - remove a statement from a commit log that isn't true any more with the
+   changes in v3
+ - rename a function
+ - merge two helpers
+
+Diffstat:
+ fs/iomap/buffered-io.c    |   10 -
+ include/linux/pagevec.h   |   18 ++
+ include/linux/writeback.h |   12 +
+ mm/page-writeback.c       |  344 ++++++++++++++++++++++++++--------------------
+ 4 files changed, 231 insertions(+), 153 deletions(-)
