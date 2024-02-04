@@ -1,67 +1,67 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 776B62556E;
-	Sun,  4 Feb 2024 21:14:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ADD92C68A
+	for <linux-xfs@vger.kernel.org>; Sun,  4 Feb 2024 21:56:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707081265; cv=none; b=lIHGUn8UGzQrjY8BYEJteHh6jN73w5dJVq+Z3HmCXQfUfOdCtt/47UjcjXrcqgMJEShUxyi/AOQ6LPWdZnf6iGkBsxjNVZj8p4NsW9SUWZX93lheCB5VY8t68TgTQ0BCdKCskH55LAMU4o8eYk/69gx4aTfR2Chfqa384+WT78A=
+	t=1707083792; cv=none; b=YcoQbcaJcUFRKegM7rUJvuJ0pBu3j4zFYmhnE0gZNaoSpPiu6HOKTvSQXPvHeFXishMQS/oqpsp7xafTI6+T5Z3rgUNgrqgfcAaoDmoFMUVtvhIK+Zp/9xgC1YlPwNWfnVYvXlEcvdW1twFKrBqFCJ2kgcAiYG0Y95FUzoFjxFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707081265; c=relaxed/simple;
-	bh=nDRSwWjiurLq688508mdp6fBlHDdaVsyZGnjnjY3Hxo=;
+	s=arc-20240116; t=1707083792; c=relaxed/simple;
+	bh=z6lhWHez6twbOS8iwDDfYzDVKQfuCWDYvj+I0TVAxQk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WVe5tbFcmarXGOxspCmJW9sFXdxhdaPlXx6zNqg72ipJseXpIPYdchY9kkdI1VpTB2eFpnDAPMZ+QoDKB0SaaZTdTkhJG9JqEh3Vt7Zm27bKHEWjMF6z1G26bZPVHDRK8U3yJI/jL8Mf1P08HTYLBZbUOAtDIAMLhPHejMVjCT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f7XWj9Sn; arc=none smtp.client-ip=209.85.215.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=iYh9Vu/bk0HUIkh+S4emI1Lpi8yxSUkHd7kMEDKB3MWFFjIo7nAGTa+Aqt27AwqBGjPd5grq6NbRd6Xq50kRIRBU9Bk27U2UKBu4Mx8ONFFCN6AieVg1SoORi1eYG7s+T1WURbL/fhZG6fy/jVqOTi4q+4pDVIuiTdQZFCaphmQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=L7q2By2c; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f7XWj9Sn"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-5d3912c9a83so2929810a12.3;
-        Sun, 04 Feb 2024 13:14:23 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="L7q2By2c"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1d70b0e521eso28841325ad.1
+        for <linux-xfs@vger.kernel.org>; Sun, 04 Feb 2024 13:56:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707081263; x=1707686063; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707083790; x=1707688590; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DlMROPYiqbdd9NKGh0wea7FTnlpIWxLsmTfTz5ljzLU=;
-        b=f7XWj9Snk+ebfcKGLOa8zpLP5YhHbxvtzhzdfmdg6R24fZRY7Z5UV0Nl1cnNMOLXMJ
-         zBIfQ8goyWeuNP6iG5k9lDG8hzsL/79cflSL/XYDcpCj85V9MrI7/nxokT4BmSMLf1QZ
-         NnWO6Bvha8l50yHS8uTmI6MrRRNOZzkWkmw+HSKdwFp8zpLNHVmSzsYXrYnQCKcxC5eE
-         h/viwqozX3gR2iePKedYg5+cyGJpBY93lqtW5V5t6ciSCE4VhViTMwIqpO6OllCqACyw
-         cTT2CXdaZAJl/XqhX26u68hYlM+vCsOvNapqkZAiHqMe5cQpc6CbpzjMetE3XXnIsCeX
-         Qesg==
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=NYgUGHSEV5G7bTmc/Dzy4/S08ihLAdaqJvIX0KncX7I=;
+        b=L7q2By2cDTGBQTivLA2I8jTD78K/Z8XFGhYF/uXm8CgFB6BM3cI0JK2Cm8TVw/+KhK
+         SfJCqufRwY6tBcBAizfIjCr03/hB3WNfWNkdKkIiUVf8wHzA6vg4J+ZJI63f3U/PQBl0
+         Uru9xLb+s4hmY9FSaF0nLvovN8z9HShtOlB1VVuXVgyHdyxKsBOjksO2j+wQ8WnfOIH1
+         jrdLG55q1P5KGkVbpivDEhauZ/yaXpZMfmGxcXWYdAmRZqoptvAYeprnbhgXGyJ2KiDb
+         +fPXW0sTqMdSlQOmWh7bnxY5RsOVUfMt3LTQeW4C0AAIIxx8uVwu6S/jXnscQr5L1DUM
+         jIsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707081263; x=1707686063;
+        d=1e100.net; s=20230601; t=1707083790; x=1707688590;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=DlMROPYiqbdd9NKGh0wea7FTnlpIWxLsmTfTz5ljzLU=;
-        b=i8+V+DOqYs7pGAmci128pcbIwsbnu/bDprxAonH9qEGtEC0BBmojJ+8qCnYLlWHH0L
-         jr6nfeSC3vKKVO6LEI4a4/R4iWW1yA1EiW8YWnagxdTArNki/4cJdklMcXxypXdJ1Tq/
-         w9gRB9Yl4wjXSHiRlmKDVxn8GsXKt1zccsWaYYfr1KCP8Ss2vP5ksM6ZtmJo5qj3kwFt
-         kyVabJ3WjIVgXzP9Bd38vs81v8gs+TWymxyUqlfPAKf9hqaYa6Evm/KYNO9CncfADolO
-         AYjv5uO/Ri07xRwEYLunDrdtxcV0fMEMrxr/O6f85Qh/n32W7deUyHJ6ZmZ9G32nBe+w
-         I4vA==
-X-Gm-Message-State: AOJu0YxrKGgk7nXxUNeLUawhIgaO5Tg1du+3Yy7q+3LrZmrk57vVtWxS
-	hq6M4bycqPIWz0SOQFIvmBIH8lahAtv42qkbA1YExCId1ukJnrG3
-X-Google-Smtp-Source: AGHT+IG2BiiMuOaru9edA5rfTEoLyjyj5BDSQaHcthhmWHn9iqWL+gTeP64hpl1M1CQC55u7m0vQiQ==
-X-Received: by 2002:a17:902:654b:b0:1d9:40f3:ada8 with SMTP id d11-20020a170902654b00b001d940f3ada8mr9317476pln.3.1707081262605;
-        Sun, 04 Feb 2024 13:14:22 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCXok8bKHNe5PByrhpn7cw7isMSves1hUfeCvwMRKswiYRlOL/8s1SNdKhPZGPbnjEm37nBLrUOixbDnrAA7wD73NyW769TDo2XN8eFWPG6/SEBHR/J62ugjht2s5HYLOi17f0VTnZBWzgdYOXR2E5YwQvLBKLcVGspv
-Received: from localhost (dhcp-141-239-144-21.hawaiiantel.net. [141.239.144.21])
-        by smtp.gmail.com with ESMTPSA id l4-20020a170903244400b001d9620dd3fdsm4867600pls.206.2024.02.04.13.14.21
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NYgUGHSEV5G7bTmc/Dzy4/S08ihLAdaqJvIX0KncX7I=;
+        b=V5Eh3M9doNn4IAOwMagYQ6yY/JkFKJEFjk6C0qdsMIrGgjzIzUy7C6o5ZONpTT+Gdk
+         9OkLoHuQsvgGZRjsMuFpfiSZyJeZG41o9XQ3+0GVVGJyWOjCcU1oTyDbIKfK8WKM1twI
+         LW6gJYtAqYwA2TkBvP9Fe8XFKLCrnoQoeMV7pgzSlWB0JKhF/xl4lHtsKJc74uvZiDXZ
+         PzH4od2okQ5d+yBBBJ3GezpWVfPXS+wa3RryqzgKSb6JokI8QzSTHe5FUaqr7OCirheR
+         qOoNVXcYxvVOqZu0S6suW0VekbUW5QqT0FsIsjxiNPjCwZKqvsWDgCpuuDQt8REeLbPm
+         b7Eg==
+X-Gm-Message-State: AOJu0YzaAhPZzxUFYT+u86UIOiy60iUeBwvhSnJmIlMEpziaDkDmnECN
+	a8FHTo8L+bG5yNkPOcLy6JH4uizKzChjlncaglUbWP2RLCX2/5lcM3Ver27dubarrgRa76tU5+y
+	P
+X-Google-Smtp-Source: AGHT+IHQH1SvNUdcJ2NSSjVHXbOfJUFCtGaSBH9aQgrDJqSAeKQ8m6IGElCLoNAW0Tq5jGHNOxnebA==
+X-Received: by 2002:a17:902:d34d:b0:1d9:5ed4:ec07 with SMTP id l13-20020a170902d34d00b001d95ed4ec07mr9610821plk.52.1707083789687;
+        Sun, 04 Feb 2024 13:56:29 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
+        by smtp.gmail.com with ESMTPSA id ks13-20020a170903084d00b001d8f3f91a23sm4992064plb.258.2024.02.04.13.56.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 04 Feb 2024 13:14:22 -0800 (PST)
-Sender: Tejun Heo <htejun@gmail.com>
-Date: Sun, 4 Feb 2024 11:14:21 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: jiangshanlai@gmail.com, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH wq/for-6.9] workqueue: Fix pwq->nr_in_flight corruption in
- try_to_grab_pending()
-Message-ID: <Zb_-LQLY7eRuakfe@slm.duckdns.org>
-References: <87o7cxeehy.fsf@debian-BULLSEYE-live-builder-AMD64>
+        Sun, 04 Feb 2024 13:56:29 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rWkTR-0027DQ-2e;
+	Mon, 05 Feb 2024 08:56:25 +1100
+Date: Mon, 5 Feb 2024 08:56:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Donald Buczek <buczek@molgen.mpg.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [QUESTION] zig build systems fails on XFS V4 volumes
+Message-ID: <ZcAICW2o5pg7eVlM@dread.disaster.area>
+References: <1b0bde1a-4bde-493c-9772-ad821b5c20db@molgen.mpg.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,90 +70,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87o7cxeehy.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <1b0bde1a-4bde-493c-9772-ad821b5c20db@molgen.mpg.de>
 
-dd6c3c544126 ("workqueue: Move pwq_dec_nr_in_flight() to the end of work
-item handling") relocated pwq_dec_nr_in_flight() after
-set_work_pool_and_keep_pending(). However, the latter destroys information
-contained in work->data that's needed by pwq_dec_nr_in_flight() including
-the flush color. With flush color destroyed, flush_workqueue() can stall
-easily when mixed with cancel_work*() usages.
+On Sat, Feb 03, 2024 at 06:50:31PM +0100, Donald Buczek wrote:
+> Dear Experts,
+> 
+> I'm encountering consistent build failures with the Zig language from source on certain systems, and I'm seeking insights into the issue.
+> 
+> Issue Summary:
+> 
+>     Build fails on XFS volumes with V4 format (crc=0).
+>     Build succeeds on XFS volumes with V5 format (crc=1), regardless of bigtime value.
 
-This is easily triggered by running xfstests generic/001 test on xfs:
+mkfs.xfs output for a successful build vs a broken build, please!
 
-     INFO: task umount:6305 blocked for more than 122 seconds.
-     ...
-     task:umount          state:D stack:13008 pid:6305  tgid:6305  ppid:6301   flags:0x00004000
-     Call Trace:
-      <TASK>
-      __schedule+0x2f6/0xa20
-      schedule+0x36/0xb0
-      schedule_timeout+0x20b/0x280
-      wait_for_completion+0x8a/0x140
-      __flush_workqueue+0x11a/0x3b0
-      xfs_inodegc_flush+0x24/0xf0
-      xfs_unmountfs+0x14/0x180
-      xfs_fs_put_super+0x3d/0x90
-      generic_shutdown_super+0x7c/0x160
-      kill_block_super+0x1b/0x40
-      xfs_kill_sb+0x12/0x30
-      deactivate_locked_super+0x35/0x90
-      deactivate_super+0x42/0x50
-      cleanup_mnt+0x109/0x170
-      __cleanup_mnt+0x12/0x20
-      task_work_run+0x60/0x90
-      syscall_exit_to_user_mode+0x146/0x150
-      do_syscall_64+0x5d/0x110
-      entry_SYSCALL_64_after_hwframe+0x6c/0x74
+Also a description of the hardware and storage stack configuration
+would be useful.
 
-Fix it by stashing work_data before calling set_work_pool_and_keep_pending()
-and using the stashed value for pwq_dec_nr_in_flight().
+> 
+> Observations:
+> 
+>     The failure occurs silently during Zig's native build process.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-Link: http://lkml.kernel.org/r/87o7cxeehy.fsf@debian-BULLSEYE-live-builder-AMD64
-Fixes: dd6c3c544126 ("workqueue: Move pwq_dec_nr_in_flight() to the end of work item handling")
----
-Hello, Chandan.
+What is the actual failure? What is the symptoms of this "silent
+failure". Please give output showing how the failure is occurs, how
+it is detected, etc. From there we can work to identify what to look
+at next.
 
-Thanks a lot for the report. I could reproduce the problem and verified that
-this patch fixes the issue. I'm applying this to wq/for-6.9 but would really
-appreciate if you could confirm the fix.
+Everything remaining in the bug report is pure speculation, but
+there's no information provided that allows us to do anything other
+than speculate in return, so I'm just going to ignore it. Document
+the evidence of the problem so we can understand it - speculation
+about causes in the absence of evidence is simply not helpful....
 
-Thanks.
-
- kernel/workqueue.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index ffb625db9771..55c9816506b0 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -1999,6 +1999,8 @@ static int try_to_grab_pending(struct work_struct *work, bool is_dwork,
- 	 */
- 	pwq = get_work_pwq(work);
- 	if (pwq && pwq->pool == pool) {
-+		unsigned long work_data;
-+
- 		debug_work_deactivate(work);
- 
- 		/*
-@@ -2016,11 +2018,15 @@ static int try_to_grab_pending(struct work_struct *work, bool is_dwork,
- 
- 		list_del_init(&work->entry);
- 
--		/* work->data points to pwq iff queued, point to pool */
-+		/*
-+		 * work->data points to pwq iff queued. Let's point to pool. As
-+		 * this destroys work->data needed by the next step, stash it.
-+		 */
-+		work_data = *work_data_bits(work);
- 		set_work_pool_and_keep_pending(work, pool->id);
- 
- 		/* must be the last step, see the function comment */
--		pwq_dec_nr_in_flight(pwq, *work_data_bits(work));
-+		pwq_dec_nr_in_flight(pwq, work_data);
- 
- 		raw_spin_unlock(&pool->lock);
- 		rcu_read_unlock();
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
