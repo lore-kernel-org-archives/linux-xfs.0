@@ -1,40 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5DE52C68F
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 14:34:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FD082E63B;
+	Mon,  5 Feb 2024 15:20:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707143692; cv=none; b=ghaevMgNonfAXCEuY/vKLhxs8Rb3aCcR1ehO/NNp1+Wc7hTdwZhhCmhbYaqmcd2s8Wo8twYIv73v+iUWSr8lx1IyDWmqJXlutGlyJA5/w7s/sNrvgbSTxMX30nXV6kmTRyk45pkTAg/r4VYCyih3pTazXTaHx4y1obOJftxl6tQ=
+	t=1707146443; cv=none; b=cOlmXKceEivJtYnUDzmlRLT3rad4nTpKVry/cCPZS4cwJifCsWFGQZIHZbTY6jlt2GD92UROnqYAGKZ5qJBjE2DlL/MomPyO8G0r7XY7KALNqpMJBDlQ0tXKsytzS4U3kjZaYm9AW/XM3Hh7B4EITeoTKaVkQxrRX4Ll6EXeyrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707143692; c=relaxed/simple;
-	bh=eGXRH2qUbJwP/r9xqMxU48HU/W/cApK2D5jJe7ZD314=;
+	s=arc-20240116; t=1707146443; c=relaxed/simple;
+	bh=RcWOjD26WJ8My7Q+eCiNGU84jj3EPhEAksItK/992bw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D2Te4popecKkW7ErS/P2VJXDV8sLszB+g2KJ7VwHzej0cTjisswHrA+dbeqks3qpkVIkEoGxupfnZBUBuTEwf5Amy0a3DtOm1O3/B1ZM1ZV1DUGyI2V2PsFS/udWLqcwbdxIR7TE2fHOhm119XnuLbrxVTPdlG7ELMChua2nb6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l1oTO7in; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PtZ1x+nZzQaSnv9w1ntR5GzP86CWn+PsrytinqF/LogzIvNIsQ3H6NIkFDFNG0O9kH02kFZ9CWC39cGcqz57pR1BkmykHjEdkphPAPBjRgy3qVI2HavAfh1vmjqvVa7O6ObtyrvIBGqbNN+z9cMGueDwLfdcHk4TSTL4IqL6/sY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=cXOX1Ha2; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l1oTO7in"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 990C1C433C7;
-	Mon,  5 Feb 2024 14:34:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707143692;
-	bh=eGXRH2qUbJwP/r9xqMxU48HU/W/cApK2D5jJe7ZD314=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=l1oTO7inUzkQn6wGQ8S0SaINiE/GXSHPTbiZKC4qm/p4orhHT0dupIGsClVDlcdeR
-	 3iwm2k3GSNl1MeyQREbuTJ/luoQqIk4B5DkZghYHLVPhfv29uxlLpYe9ScL0kdkwp4
-	 QdZqoj9gdYZd8UsF2aBUxEzbYxgEwvLchkXRXD0ekIIj+6LwGe2VSXefUmMiNtvuUs
-	 z63gLgZRQ8uxI+923qITXOsrmYxmpSeNbNVJmm/FsEGqTKdlkolFvcc8jNCpsA8oi2
-	 +34tv4UPh++sWS3ZWIcp8/tHusikiwCNy5eatMDdCC/Jh4SMlFwz+6Nf9lAn7NzUuq
-	 7F/0ZEuD/ZcBg==
-Date: Mon, 5 Feb 2024 15:34:48 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Abhinandan Purkait <abhinandan.purkait@datacore.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_repair reports filesystem as in consistent even on ensuring
- consistency
-Message-ID: <s47hgpezn6mqglztj3f2i6jmmtz2vpgqwnhdg3dlunv27asg3z@qoo2isxem76e>
-References: <m3mapuevaU1Ewlj3ubotLeoYTX9XzJbH-GtTPPopSbnmcZ6Tp9HaUnD-XDnzRPl9DGrMzPXxlE09YJ02q5lr0A==@protonmail.internalid>
- <B46A6877-1782-4AC7-91FB-F8F3082827A5@datacore.com>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="cXOX1Ha2"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4TT9793Lcrz9snM;
+	Mon,  5 Feb 2024 16:20:37 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1707146437;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O5QpBm9OVYV8g3cMHMrIijGXJuiMqqynbOTCB/oJ0aY=;
+	b=cXOX1Ha29Ld4nfj9cuuSNhqtFhZEWJsriIMfUx2094ad47RC6zJWZZmfA/Kc27sAgINjfq
+	DgHIsV7uu0KxFEgQgh5sr31Oe3RiP+vETLygLg4mQGjgMkfuIoZdmwkbtfVOq9inRz0hIh
+	ZwNYYwE/ai4QYoI8bWSK8PTMfh2W24kBuBkl7U5w6bSMR9LhpivpBaTm+EEpb+hEn/qpSg
+	L4H5+kodVLRutrE19pLE+Qx0Srp6to2AlnphJtg/Kq4dhY2CXQU82mYnv5eCt8HndzHMRM
+	oWZCtVhtiyi+EohyJmzR66CAemW9Bab6rxKh2WWxi3Xan0v+2IOoE7UcakfiOA==
+Date: Mon, 5 Feb 2024 16:20:32 +0100
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: hch@lst.de, djwong@kernel.org, viro@zeniv.linux.org.uk, 
+	brauner@kernel.org, dchinner@redhat.com, jack@suse.cz, chandan.babu@oracle.com, 
+	martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com, 
+	p.raghav@samsung.com
+Subject: Re: [PATCH 1/6] fs: iomap: Atomic write support
+Message-ID: <7ttdwk46hkj6ohdyq3ruwb2zkskzrpicz7dpf4g53v32nh7mgy@5g63yuoyotyi>
+References: <20240124142645.9334-1-john.g.garry@oracle.com>
+ <20240124142645.9334-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,43 +53,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <B46A6877-1782-4AC7-91FB-F8F3082827A5@datacore.com>
+In-Reply-To: <20240124142645.9334-2-john.g.garry@oracle.com>
 
-On Mon, Feb 05, 2024 at 01:13:02PM +0000, Abhinandan Purkait wrote:
-> Hi xfs folks,
-> I have been trying xfs filesystem consistency for a snapshot use case. I tried using xfs_freeze before taking snapshot, but xfs_repair shows the filesystem as in consistent.
+On Wed, Jan 24, 2024 at 02:26:40PM +0000, John Garry wrote:
+> Add flag IOMAP_ATOMIC_WRITE to indicate to the FS that an atomic write
+> bio is being created and all the rules there need to be followed.
 > 
-> I will write the steps below:
+> It is the task of the FS iomap iter callbacks to ensure that the mapping
+> created adheres to those rules, like size is power-of-2, is at a
+> naturally-aligned offset, etc. However, checking for a single iovec, i.e.
+> iter type is ubuf, is done in __iomap_dio_rw().
 > 
-> 1. I have a block volume provisioned by OpenEBS Mayastor as backend. Let's say the blockdevice is nvme0n1
-> 2. I created a filesystem mkfs.xfs -f nvme0n1.
-> 3. I mounted the filesystem on mydir.
-> 4. I ran fio --verify_dump=1 --bs=4096  --random_generator=tausworthe64 --rw=randrw --ioengine=libaio --iodepth=16 --verify_fatal=1 --verify=crc32 --verify_async=2 --name=benchtest0 --filename=mydir/test --time_based --runtime=60 --size=120M
-> 5. Now while fio is in progress I issued xfs_freeze -f mydir
-> 6. Took the block level snapshot.
-> 7. I unfroze the filesystem xfs_freeze -u mydir
-> 8. I let the fio application complete.
-> 9. Now while checking the filesystem consistency on the snapshot, using xfs_repair. I issue xfs_repair -n loop8, where loop8 is my snapshot filesystem
-> 10. I get the below
+> A write should only produce a single bio, so error when it doesn't.
 > 
-> The filesystem has valuable metadata changes in a log which is being
-> ignored because the -n option was used.  Expect spurious inconsistencies
-> which may be resolved by first mounting the filesystem to replay the log.
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  fs/iomap/direct-io.c  | 21 ++++++++++++++++++++-
+>  fs/iomap/trace.h      |  3 ++-
+>  include/linux/iomap.h |  1 +
+>  3 files changed, 23 insertions(+), 2 deletions(-)
 > 
-> What am I doing wrong here? Is this way of checking filesystem consistency incorrect?
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index bcd3f8cf5ea4..25736d01b857 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -275,10 +275,12 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+>  static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+>  		struct iomap_dio *dio)
+>  {
+> +	bool atomic_write = iter->flags & IOMAP_ATOMIC;
 
-xfs_repair is not telling you the filesystem is inconsistent.
-It is telling you there is metadata in the journal to be replayed, so the
-filesystem should be mounted so metadata can be replayed.
+Minor nit: the commit says IOMAP_ATOMIC_WRITE and you set the enum as
+IOMAP_ATOMIC in the code.
 
-> I have noticed that even without any operation the filesystem gets reported as inconsistent, for example issuing a simple xfs_freeze on a newly created  xfs filesystem volume and then unmounting and running xfs_repair -n somedevice also shows up as inconsistent.
+As the atomic semantics only apply to write, the commit could be just
+reworded to reflect the code?
 
-I don't know what kernel you are using, and the behavior differs slightly from
-kernel to kernel.
-In simple words, even after you freeze the filesystem, it might still need to do
-some work when you unfreeze it, and this will be done at the next mount.
-
-So, what you are seeing is not an inconsistent filesystem, but the journal
-working the way it is supposed to work.
-
-Carlos
+<snip>
+> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
+> index c16fd55f5595..c95576420bca 100644
+> --- a/fs/iomap/trace.h
+> +++ b/fs/iomap/trace.h
+> @@ -98,7 +98,8 @@ DEFINE_RANGE_EVENT(iomap_dio_rw_queued);
+>  	{ IOMAP_REPORT,		"REPORT" }, \
+>  	{ IOMAP_FAULT,		"FAULT" }, \
+>  	{ IOMAP_DIRECT,		"DIRECT" }, \
+> -	{ IOMAP_NOWAIT,		"NOWAIT" }
+> +	{ IOMAP_NOWAIT,		"NOWAIT" }, \
+> +	{ IOMAP_ATOMIC,		"ATOMIC" }
+>  
