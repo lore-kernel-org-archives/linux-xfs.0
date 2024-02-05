@@ -1,71 +1,47 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE235DF2A
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 21:58:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1466D45953
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 22:07:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707170335; cv=none; b=d+4ijetwucx5f/CrOyVeLbR3SLkek0aPtOLo48/OKp5arzW+WRDKQjpcnZMe/CMR2ODae4eJNSgJAWLZ6tJDAtKlTxNOzLIUjXKct/9Oshrt8SUIkGRBC8EC+x5IMTIduDgPqcqJOrcg9ZWXyjxq9d833E2MOdLlnMEa3QI6Q0w=
+	t=1707170849; cv=none; b=XqIwxevMzX9FK1jT9U8o/305V6q+/RefiUjCih7Y3UXAuMs1he2UFIQPFVBfmCw6cd9twbbjRcBwgGYoh2m5PnnI8rDQekjhbFvoPLUJPuySkRmcR7hqJefbJkFAnJhCriCownvtET03xG+1+wgPI5INm8npJaWqtiXew7VwXQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707170335; c=relaxed/simple;
-	bh=fXqCZbcBxU+Dl9zb7VwlQjoseiraK8MLA3UaXDw+Sok=;
+	s=arc-20240116; t=1707170849; c=relaxed/simple;
+	bh=HbF1qcDk1hI/jeBLCQZQMHHo6bfFmwUMgfezXvvvhLU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HQW0oRDvG+pYl5jXGPY5fKYsSLmQbnU1n5EGyRTyRojcOxwOeFiJGlo8mqIp0n7XPNGbCOgti51ePySVLhPm0mXATnM4ce5EV9USclMh8sJwGK535I1XdtbiWU/YiDTCy4OwAli1vpFqGm88Qpo03Sonn/AmhtKSyjZVvLFJbd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rIPn0sI7; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=BJ4V+Fm85PQHpJmDFIXS0irEo0gGu29adbAgXQCb2uGUuNfWmpeONqEr+ibm4CkCoXYxvHwbi6dJWsucGGO48JGQVT8mOpU+VDzb4I2RzB2LbMXbGALZ4go6TR08O9vq/Y0S0UGuVWnCxghm/xxwePY2UO0EPIDGUX8dze1UIsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y0uXbbaq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rIPn0sI7"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-5d8ddbac4fbso4462450a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Feb 2024 13:58:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707170332; x=1707775132; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RCce4pV3xPOpa0Za3QiaoPauzc6TdqvdOGmTYYs8YWk=;
-        b=rIPn0sI79mq7NbQHmPpQHNbDU/oLqETMyhOmKVtTBSYBQVoANMs26Zk8TshTBczon0
-         l+PlJJSDx13Qr5uwkSFvaUlYnLj9zTKg26ePCdBecAUqAv8Dk+uAg8vyQMEGZ6oNRZmY
-         RaVAqacTClXWft6fohsAstnbk158fvRfixCWqs/HpYEfBbfQk5LxzCbANso7QvtaWNg2
-         i/18jdpKq/GhuLDpaxBMjnOQl+Dyg0VbpxyA7yRvX6PnORKdrs0YnszefY2l/DeVZCCB
-         ykiHjmAPFJCnpu4+yj7M1aCSAe0DFSstdchSrb4HGyDKDovEinWLpy1CQzJW6bZvhSm3
-         RVfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707170332; x=1707775132;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RCce4pV3xPOpa0Za3QiaoPauzc6TdqvdOGmTYYs8YWk=;
-        b=filzVDurtOyp5JlVqJO/0+b86T7XIDlawaRgKDyCRvy76qiCEnOji3tABoYiyEgXWo
-         kLwvaJvSbMYYOZ8E1Ny4zEX3SxD9UmbwcsUp5SCJ6Qob0slWwK/7eHriS6PpUSVlubyG
-         cZPPvJLvxyA3zKKvHXeJHn2ThXzqdX/SB1IdTnt8tNsejcZDrMxK7eruktalHIJ8D40D
-         cb8VTffq+K/yEH8aOXVvfCr/DplaDB33Jy4YgimPi5TZ7KJVuWpxsf3Q/l2ot7g9CoY5
-         nBRMNx/q6iKjTKDdBoW7s5f+VO1ly9IdY0NuywbkEhbKxyCxPLkfUbUGKO0j2AtD/86f
-         iOIA==
-X-Gm-Message-State: AOJu0YzXS1G7I7+TU86/f8YDmeYf5iZrX/1fP/O6ZCeUT3Hs66QA+p3a
-	hzC7Y4VZligbqkpHcGBfqvDjCgI7UA5MBZjh8YoOUjISBdCi2y31H6EneIFyVRedACAfnt38lGX
-	j
-X-Google-Smtp-Source: AGHT+IGpyt5NWDGnI0khW1wkoK90/F1ldXluyiDGMdK3jQA9tZXTqTvflL1xE6RlSXU3tUzaKjY8Lg==
-X-Received: by 2002:a05:6a21:2d0a:b0:19c:7e6f:85f2 with SMTP id tw10-20020a056a212d0a00b0019c7e6f85f2mr462782pzb.1.1707170332483;
-        Mon, 05 Feb 2024 13:58:52 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCXfoiv3knB/SSXG8SVBFwzWWBW4atkK43PqHLEoHiySTJ+YmhaUJU2ngxDwfMe1JDaMdpi99UM1XuPBYwlaQ6iz/O4Ya9QxhbGcev8Glr4wO6FK7+kIXHO7pwT7pPg+Qa7JdbDAekq+oL0HJO6+26rNLubU31yvhucCTe387Ccm85s2D6KKw0vSfRvXCPoyHA/qD8PYXTJEKvr/YyRooerssQ==
-Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
-        by smtp.gmail.com with ESMTPSA id m22-20020aa78a16000000b006e035133b72sm350032pfa.134.2024.02.05.13.58.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Feb 2024 13:58:51 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rX6zJ-002Ypp-0V;
-	Tue, 06 Feb 2024 08:58:49 +1100
-Date: Tue, 6 Feb 2024 08:58:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Kent Overstreet <kent.overstreet@linux.dev>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 1/6] fs: super_block->s_uuid_len
-Message-ID: <ZcFaGRV08WQOxCzb@dread.disaster.area>
-References: <20240205200529.546646-1-kent.overstreet@linux.dev>
- <20240205200529.546646-2-kent.overstreet@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y0uXbbaq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90266C433C7;
+	Mon,  5 Feb 2024 22:07:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707170848;
+	bh=HbF1qcDk1hI/jeBLCQZQMHHo6bfFmwUMgfezXvvvhLU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Y0uXbbaqPcorqRSQ9xd+8bhsC2ZodsyoLZxXGVA5u7OUaQw5l8MIBWgmYF0LuPxhx
+	 axrku9mIwbigF7jE4dRJErq7zu6YAN5Q8dw9uDyiphfbjecXCiVx2UhkHRvfxJKKuA
+	 VJRdiq9PkGX2bga70o1tf9dKCerR7s3TNX2gJmD+B3DBxZgwrfi1VEzphLGwJ0vldZ
+	 oYHXMhECy1Shr6Ss58WhDVIADURErEIb9njmpbPHKiLOJvoIUxkPJgMAWrk+NHNu8c
+	 AylTJ6Rls7L7OEhcCLaH+ai32QFE0aE9h/77N71gr0aj6HQcs+WPYG6nh0y2h70qsD
+	 jZrbcoWDX+EEw==
+Date: Mon, 5 Feb 2024 14:07:27 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
+ after reclaim
+Message-ID: <20240205220727.GN616564@frogsfrogsfrogs>
+References: <20240119193645.354214-1-bfoster@redhat.com>
+ <Za3fwLKtjC+B8aZa@dread.disaster.area>
+ <ZbJYP63PgykS1CwU@bfoster>
+ <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
+ <Zbe9+EY5bLjhPPJn@bfoster>
+ <Zbrw07Co5vhrDUfd@dread.disaster.area>
+ <Zb1FhDn09pwFvE7O@bfoster>
+ <20240202233343.GM616564@frogsfrogsfrogs>
+ <Zb+1O+MlTpzHZ595@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,41 +50,117 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240205200529.546646-2-kent.overstreet@linux.dev>
+In-Reply-To: <Zb+1O+MlTpzHZ595@bfoster>
 
-On Mon, Feb 05, 2024 at 03:05:12PM -0500, Kent Overstreet wrote:
-> Some weird old filesytems have UUID-like things that we wish to expose
-> as UUIDs, but are smaller; add a length field so that the new
-> FS_IOC_(GET|SET)UUID ioctls can handle them in generic code.
+On Sun, Feb 04, 2024 at 11:03:07AM -0500, Brian Foster wrote:
+> On Fri, Feb 02, 2024 at 03:33:43PM -0800, Darrick J. Wong wrote:
+> > On Fri, Feb 02, 2024 at 02:41:56PM -0500, Brian Foster wrote:
+> > > On Thu, Feb 01, 2024 at 12:16:03PM +1100, Dave Chinner wrote:
+> > > > On Mon, Jan 29, 2024 at 10:02:16AM -0500, Brian Foster wrote:
+> > > > > On Fri, Jan 26, 2024 at 10:46:12AM +1100, Dave Chinner wrote:
+> > > > > > On Thu, Jan 25, 2024 at 07:46:55AM -0500, Brian Foster wrote:
+> > > > > > > On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
+> > > > > > > > On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
+> > > ...
+> > > > Here's the fixes for the iget vs inactive vs freeze problems in the
+> > > > upstream kernel:
+> > > > 
+> > > > https://lore.kernel.org/linux-xfs/20240201005217.1011010-1-david@fromorbit.com/T/#t
+> > > > 
+> > > > With that sorted, are there any other issues we know about that
+> > > > running a blockgc scan during freeze might work around?
+> > > > 
+> > > 
+> > > The primary motivation for the scan patch was the downstream/stable
+> > > deadlock issue. The reason I posted it upstream is because when I
+> > > considered the overall behavior change, I thought it uniformly
+> > > beneficial to both contexts based on the (minor) benefits of the side
+> > > effects of the scan. You don't need me to enumerate them, and none of
+> > > them are uniquely important or worth overanalyzing.
+> > > 
+> > > The only real question that matters here is do you agree with the
+> > > general reasoning for a blockgc scan during freeze, or shall I drop the
+> > > patch?
+> > 
 > 
-> Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
-> ---
->  fs/super.c         | 1 +
->  include/linux/fs.h | 1 +
->  2 files changed, 2 insertions(+)
+> Hi Darrick,
 > 
-> diff --git a/fs/super.c b/fs/super.c
-> index d35e85295489..ed688d2a58a7 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -375,6 +375,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags,
->  	s->s_time_gran = 1000000000;
->  	s->s_time_min = TIME64_MIN;
->  	s->s_time_max = TIME64_MAX;
-> +	s->s_uuid_len = sizeof(s->s_uuid);
+> > I don't see any particular downside to flushing {block,inode}gc work
+> > during a freeze, other than the loss of speculative preallocations
+> > sounds painful.
+> > 
+> 
+> Yeah, that's definitely a tradeoff. The more I thought about that, the
+> more ISTM that any workload that might be sensitive enough to the
+> penalty of an extra blockgc scan, the less likely it's probably going to
+> see freeze cycles all that often.
+> 
+> I suspect the same applies to the bit of extra work added to the freeze
+> as well , but maybe there's some more painful scenario..?
 
-So if the filesystem doesn't copy a uuid into sb->s_uuid, then we
-allow those 16 bytes to be pulled from userspace?
+<shrug> I suppose if you had a few gigabytes of speculative
+preallocations across a bunch of log files (or log structured tree
+files, or whatever) then you could lose those preallocations and make
+fragmentation worse.  Since blockgc can run on open files, maybe we
+should leave that out of the freeze preparation syncfs?
 
-Shouldn't this only get set when the filesystem copies it's uuid
-to the superblock?
+OTOH most of the inodes on those lists are not open at all, so perhaps
+we /should/ kick inodegc while preparing for freeze?  Such a patch could
+reuse the justification below after s/blockgc/inodegc/.  Too bad we
+didn't think far enough into the FIFREEZE design to allow userspace to
+indicate if they want us to minimize freeze time or post-freeze
+recovery time.
 
-And then in the get uuid  ioctl, if s_uuid_len is zero we can return
--ENOENT to indicate the filesystem doesn't have a UUID, rather that
-require userspace to determine a filesystem doesn't have a valid
-UUID somehow...
+--D
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > Does Dave's patchset to recycle NEEDS_INACTIVE inodes eliminate the
+> > stall problem?
+> > 
+> 
+> I assume it does. I think some of the confusion here is that I probably
+> would have gone in a slightly different direction on that issue, but
+> that's a separate discussion.
+> 
+> As it relates to this patch, in hindsight I probably should have
+> rewritten the commit log from the previous version. If I were to do that
+> now, it might read more like this (factoring out sync vs. non-sync
+> nuance and whatnot):
+> 
+> "
+> xfs: run blockgc on freeze to keep inodes off the inactivation queues
+> 
+> blockgc processing is disabled when the filesystem is frozen. This means
+> <words words words about blockgc> ...
+> 
+> Rather than hold pending blockgc inodes in inactivation queues when
+> frozen, run a blockgc scan during the freeze sequence to process this
+> subset of inodes up front. This allows reclaim to potentially free these
+> inodes while frozen (by keeping them off inactive lists) and produces a
+> more predictable/consistent on-disk freeze state. The latter is
+> potentially beneficial for shapshots, as this means no dangling post-eof
+> preallocs or cowblock recovery.
+> 
+> Potential tradeoffs for this are <yadda yadda, more words from above>
+> ...
+> "
+> 
+> ... but again, the primary motivation for this was still the whole
+> deadlock thing. I think it's perfectly reasonable to look at this change
+> and say it's not worth it. Thanks for the feedback.
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > -Dave.
+> > > > -- 
+> > > > Dave Chinner
+> > > > david@fromorbit.com
+> > > > 
+> > > 
+> > > 
+> > 
+> 
+> 
