@@ -1,86 +1,1030 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF47011197;
-	Mon,  5 Feb 2024 08:26:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6470F13AE0
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 09:37:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707121592; cv=none; b=RhNVTYr/F4DcpIaGXi7mMfI6SVTC8pgbGFd369ktJ34ymstVM9qGMaU61TlLmsonaE3yeyolkVw17thpLT+QGET1OHQlluWVpFg/+pmOFHbYOFsaysqmCxciiOZ0QvjgDPEGq4wUWzOScLn0ULuhwRbfwc72shYHX2rTjCUQxE0=
+	t=1707125877; cv=none; b=c1yMsqtebtupPr5bj6uHcKaN7btbPBzz+tt1Sk0+bjxxDe2yOYHsOps6PUcVST4jxPQGHGSrn1TmyLxoHk2j1AGBSf88mmNnGuIfgHGNsXs42pYDbqyIacskYgTfQ4biaTM4J/nljySMArzLVD+pSEabxTzYtpOEUhk7+5k99AU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707121592; c=relaxed/simple;
-	bh=LbuJw2xD8l9tYjGEUkeiPhK3rPmUvUClZqAADKdQjCA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kaWnAZCKzLSVG97U22ozGrcn+EqfjrmRp9Ruk6lM+65TpwupKEUmSc4F2xtqGxkqZxqT361XYWnJbnR3Rdkm3tO6qf9cFSBpSryGUDp8Fxakqphf3ofMoOnwzVr++6m8XR3/rRivrMmpoGnFAAlSis9s7L8WTpE/DULiDG6ZxAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 8b8e8b0dbbc142ecb32e9686707e00ca-20240205
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:d0471828-7056-4f39-9f3a-ae59c357938f,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACT
-	ION:release,TS:20
-X-CID-INFO: VERSION:1.1.35,REQID:d0471828-7056-4f39-9f3a-ae59c357938f,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:20
-X-CID-META: VersionHash:5d391d7,CLOUDID:0ea92180-4f93-4875-95e7-8c66ea833d57,B
-	ulkID:240205162625SWQ3TOL0,BulkQuantity:0,Recheck:0,SF:17|19|44|66|38|24|1
-	02,TC:nil,Content:0,EDM:5,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL
-	:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: 8b8e8b0dbbc142ecb32e9686707e00ca-20240205
-Received: from mail.kylinos.cn [(39.156.73.10)] by mailgw
-	(envelope-from <chentao@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 1928903605; Mon, 05 Feb 2024 16:26:22 +0800
-Received: from mail.kylinos.cn (localhost [127.0.0.1])
-	by mail.kylinos.cn (NSMail) with SMTP id 3472DE000EBC;
-	Mon,  5 Feb 2024 16:26:22 +0800 (CST)
-X-ns-mid: postfix-65C09BAE-2003869
-Received: from kernel.. (unknown [172.20.15.254])
-	by mail.kylinos.cn (NSMail) with ESMTPA id B7F44E000EBC;
-	Mon,  5 Feb 2024 16:26:21 +0800 (CST)
-From: Kunwu Chan <chentao@kylinos.cn>
-To: chandan.babu@oracle.com,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kunwu Chan <chentao@kylinos.cn>
-Subject: [PATCH] xfs: Simplify the allocation of slab caches in xfs_bmap_intent_init_cache
-Date: Mon,  5 Feb 2024 16:26:20 +0800
-Message-Id: <20240205082620.435721-1-chentao@kylinos.cn>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1707125877; c=relaxed/simple;
+	bh=3IdyApY+Mdf67yJYseCy768lvSJt+OhwjP+d86su3j8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=W19+AskU6sQ3iMIpSrJf8yqbXf6TDGFhvcjY5+OUgdzc2bxBEQtkLWPUeGmTh2RjQAVXpJDPg0H47AtYi29tfo+/Vv+ALUAPKdEwfYni5v5vh8ll+shzIFe/29cQ5NaYfpIocis/q0c49ncyH12ysSUpBfdJrtFZBg/mAwDBNh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dXopU/+f; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dXopU/+f"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1707125874;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xjwKiJEtTVeQSO9/O0tOJ33/pP8aSlnLUyoCN92OhSk=;
+	b=dXopU/+fAHPV5ATsbd1+Hyod+K0HceIop6LUyVV8yl9Rn/ltwORSy7HPgl49Kh1PdYvWz7
+	uktjKgSiG+Pb8vfQjKUad3qZr6BmJvUyovUe8HPe1m7uRxQ2UtpL9I0ilQV3cWLZ78TwkZ
+	aooVWXqN9GuJimPYsvKzYlQVKHDBNlQ=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-578-nCmCseq9MSG68ULVGrnBYA-1; Mon, 05 Feb 2024 04:37:50 -0500
+X-MC-Unique: nCmCseq9MSG68ULVGrnBYA-1
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1d9657c2b71so35649695ad.3
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Feb 2024 01:37:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707125869; x=1707730669;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xjwKiJEtTVeQSO9/O0tOJ33/pP8aSlnLUyoCN92OhSk=;
+        b=VP7GYhLtievQyiLJkHEsqyhtn3IG/jjsxDX0QQ9u3OgfCupYujeSIFMULQnjkPTK2y
+         H9zVzXmIIZqVKDKSVgplMOOfoHLCC3lmOdkI/ef65IpxnaOzdk/ox5K4qUs+U+VLJUUK
+         iIKdK8XVvR5WlMj+eh9HFw6TWRzgsB+TOUGmD3ZzJmXWZGGAPvAF144+4sIjUCjT0fso
+         bZM3fELlZruMc0VBs7uCKP0oChpQZpSPMUf2VKIbXqi5hLpJg6ZuuuoY9Cik1bJCxk3A
+         FG1TwgljQcDlUpoV5Ty2Hn/fUN/x0XtyT7v8dGz6+Ic10bHkv7XoWbEtOWgt6mb7/zAI
+         PFMw==
+X-Gm-Message-State: AOJu0YxO0GFSunxQK/gsbdiJ/b6K/MEV4bC/vZQf7o767ieY/+IEffYO
+	xAt1l6Nv2lZh5fDCcLv9cDlOYFMALKL8IGvNb1b+x4bWjM2M1FnnO66lTjAD8ajEezZ7nLzCdJq
+	G3YGkYPxncF6UuFYKDqvyzzsI7jgCfHi/nn5EG9rz/2RCawyrzqY2Gc0KWg==
+X-Received: by 2002:a17:902:d34d:b0:1d8:ee28:a305 with SMTP id l13-20020a170902d34d00b001d8ee28a305mr8538351plk.54.1707125869239;
+        Mon, 05 Feb 2024 01:37:49 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IE21b4lpoKNnVwaDgV5b6meRPWXaYdszwAKUoT8lZoMflFRztN/m5Vmn+UM0j/Zy7UJzyePqA==
+X-Received: by 2002:a17:902:d34d:b0:1d8:ee28:a305 with SMTP id l13-20020a170902d34d00b001d8ee28a305mr8538337plk.54.1707125868677;
+        Mon, 05 Feb 2024 01:37:48 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCUifGSSCDEgJeJZUWjee4OilR+ceuL1wSU0mUB9es5pTCpYo0BoWrIanPF3vKINfDedMpkBGocL9B+1YEMXxbIykO3GTK5ZLQ==
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id c16-20020a170902d49000b001d5b93560c3sm5374603plg.167.2024.02.05.01.37.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Feb 2024 01:37:48 -0800 (PST)
+Date: Mon, 5 Feb 2024 17:37:44 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 05/10] common: refactor metadump v1 and v2 tests
+Message-ID: <20240205093744.vrelp4y2y3xudgnt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <170620924356.3283496.1996184171093691313.stgit@frogsfrogsfrogs>
+ <170620924435.3283496.2022458241568622607.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <170620924435.3283496.2022458241568622607.stgit@frogsfrogsfrogs>
 
-Use the new KMEM_CACHE() macro instead of direct kmem_cache_create
-to simplify the creation of SLAB caches.
+On Thu, Jan 25, 2024 at 11:05:16AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Refactor the copy-pasta'd code in xfs/129, xfs/234, xfs/253, xfs/291,
+> xfs/432, xfs/503, and xfs/605 so that we don't have to maintain nearly
+> duplicate copies of the same code.
+> 
+> While we're at it, fix the fsck so that it includes xfs_scrub.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/rc                 |   10 ----
+>  common/xfs                |   14 +++++
+>  common/xfs_metadump_tests |  123 +++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/129             |   90 ++-------------------------------
+>  tests/xfs/234             |   91 ++-------------------------------
+>  tests/xfs/253             |   89 ++-------------------------------
+>  tests/xfs/291             |   31 ++++-------
+>  tests/xfs/432             |   30 ++---------
+>  tests/xfs/503             |   60 +++-------------------
+>  tests/xfs/605             |   84 ++-----------------------------
+>  10 files changed, 181 insertions(+), 441 deletions(-)
+>  create mode 100644 common/xfs_metadump_tests
+> 
+> 
+> diff --git a/common/rc b/common/rc
+> index 524ffa02aa..0b69f7f54f 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3320,15 +3320,7 @@ _check_scratch_fs()
+>  
+>      case $FSTYP in
+>      xfs)
+> -	local scratch_log="none"
+> -	local scratch_rt="none"
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> -	    scratch_log="$SCRATCH_LOGDEV"
+> -
+> -	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> -	    scratch_rt="$SCRATCH_RTDEV"
+> -
+> -	_check_xfs_filesystem $device $scratch_log $scratch_rt
+> +	_check_xfs_scratch_fs $device
+>  	;;
+>      udf)
+>  	_check_udf_filesystem $device $udf_fsize
+> diff --git a/common/xfs b/common/xfs
+> index 248ccefda3..6a48960a7f 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1035,6 +1035,20 @@ _check_xfs_test_fs()
+>  	return $?
+>  }
+>  
+> +_check_xfs_scratch_fs()
+> +{
+> +	local device="${1:-$SCRATCH_DEV}"
+> +	local scratch_log="none"
+> +	local scratch_rt="none"
+> +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +	    scratch_log="$SCRATCH_LOGDEV"
+> +
+> +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+> +	    scratch_rt="$SCRATCH_RTDEV"
+> +
+> +	_check_xfs_filesystem $device $scratch_log $scratch_rt
+> +}
+> +
+>  # modeled after _scratch_xfs_repair
+>  _test_xfs_repair()
+>  {
+> diff --git a/common/xfs_metadump_tests b/common/xfs_metadump_tests
+> new file mode 100644
+> index 0000000000..dd3dec1fb4
+> --- /dev/null
+> +++ b/common/xfs_metadump_tests
+> @@ -0,0 +1,123 @@
+> +#
+> +# XFS specific metadump testing functions.
+> +#
+> +
+> +# Set up environment variables for a metadump test.  Requires the test and
+> +# scratch devices.  Sets XFS_METADUMP_{FILE,IMG} and MAX_XFS_METADUMP_VERSION.
+> +_setup_verify_metadump()
+> +{
+> +	XFS_METADUMP_FILE="$TEST_DIR/${seq}_metadump"
+> +	XFS_METADUMP_IMG="$TEST_DIR/${seq}_image"
+> +	MAX_XFS_METADUMP_VERSION="$(_xfs_metadump_max_version)"
+> +
+> +	rm -f "$XFS_METADUMP_FILE" "$XFS_METADUMP_IMG"*
+> +}
+> +
+> +_cleanup_verify_metadump()
+> +{
+> +	_scratch_unmount &>> $seqres.full
+> +
+> +	losetup -n -a -O BACK-FILE,NAME | grep "^$XFS_METADUMP_IMG" | while read backing ldev; do
+> +		losetup -d "$ldev"
+> +	done
 
-Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
----
- fs/xfs/libxfs/xfs_bmap.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Hi Darrick,
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f362345467fa..e46d0e21aeb6 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6211,9 +6211,7 @@ xfs_bmap_validate_extent_raw(
- int __init
- xfs_bmap_intent_init_cache(void)
- {
--	xfs_bmap_intent_cache =3D kmem_cache_create("xfs_bmap_intent",
--			sizeof(struct xfs_bmap_intent),
--			0, 0, NULL);
-+	xfs_bmap_intent_cache =3D KMEM_CACHE(xfs_bmap_intent, 0);
-=20
- 	return xfs_bmap_intent_cache !=3D NULL ? 0 : -ENOMEM;
- }
---=20
-2.39.2
+If $XFS_METADUMP_IMG is null, this line will delete all loop device. If
+someone uses loop devices to be TEST_DEV and SCRATCH_DEV, then it might
+break the whole testing.
+
+> +	rm -f "$XFS_METADUMP_FILE" "$XFS_METADUMP_IMG"*
+
+This's dangerous too, I've explained that in :
+  https://lore.kernel.org/fstests/20240205065642.3hqhipmnxkg442kg@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/T/#m496e69db25755292ed9ac4bee08a22f227ebf7d2
+
+Sorry I didn't notice that when I tested with new upstream kernel. But after I
+tested on old kernel, some metadump cases start to _notrun, then trigger this
+bug. This bug is too dangerous, one of my regular system has gone, I have to
+reinstall. So I decide to reset my last fstests release, to avoid destroying
+other folks' machine.
+
+I think we'd better to check XFS_METADUMP_FILE and XFS_METADUMP_IMG aren't
+empty at first, e.g.
+
+if [ -n "$XFS_METADUMP_FILE" -a -n "$XFS_METADUMP_IMG" ];then
+	losetup -n -a -O BACK-FILE,NAME | grep "^$XFS_METADUMP_IMG" | while read backing ldev; do
+		losetup -d "$ldev"
+	done
+	rm -f "$XFS_METADUMP_FILE" "$XFS_METADUMP_IMG"*
+fi
+
+Or if you'd like to change more :)
+
+Thanks,
+Zorro
+
+> +}
+> +
+> +# Create a metadump in v1 format, restore it to fs image files, then mount the
+> +# images and fsck them.
+> +_verify_metadump_v1()
+> +{
+> +	local metadump_args="$1"
+> +	local extra_test="$2"
+> +
+> +	local metadump_file="$XFS_METADUMP_FILE"
+> +	local version=""
+> +	local data_img="$XFS_METADUMP_IMG.data"
+> +	local data_loop
+> +
+> +	# Force v1 if we detect v2 support
+> +	if [[ $MAX_XFS_METADUMP_FORMAT > 1 ]]; then
+> +		version="-v 1"
+> +	fi
+> +
+> +	# Capture metadump, which creates metadump_file
+> +	_scratch_xfs_metadump $metadump_file $metadump_args $version
+> +
+> +	# Restore metadump, which creates data_img
+> +	SCRATCH_DEV=$data_img _scratch_xfs_mdrestore $metadump_file
+> +
+> +	# Create loopdev for data device so we can mount the fs
+> +	data_loop=$(_create_loop_device $data_img)
+> +
+> +	# Mount fs, run an extra test, fsck, and unmount
+> +	SCRATCH_DEV=$data_loop _scratch_mount
+> +	if [ -n "$extra_test" ]; then
+> +		SCRATCH_DEV=$data_loop $extra_test
+> +	fi
+> +	SCRATCH_DEV=$data_loop _check_xfs_scratch_fs
+> +	SCRATCH_DEV=$data_loop _scratch_unmount
+> +
+> +	# Tear down what we created
+> +	_destroy_loop_device $data_loop
+> +	rm -f $data_img
+> +}
+> +
+> +# Create a metadump in v2 format, restore it to fs image files, then mount the
+> +# images and fsck them.
+> +_verify_metadump_v2()
+> +{
+> +	local metadump_args="$1"
+> +	local extra_test="$2"
+> +
+> +	local metadump_file="$XFS_METADUMP_FILE"
+> +	local version="-v 2"
+> +	local data_img="$XFS_METADUMP_IMG.data"
+> +	local data_loop
+> +	local log_img=""
+> +	local log_loop
+> +
+> +	# Capture metadump, which creates metadump_file
+> +	_scratch_xfs_metadump $metadump_file $metadump_args $version
+> +
+> +	#
+> +	# Metadump v2 files can contain contents dumped from an external log
+> +	# device. Use a temporary file to hold the log device contents restored
+> +	# from such a metadump file.
+> +	test -n "$SCRATCH_LOGDEV" && log_img="$XFS_METADUMP_IMG.log"
+> +
+> +	# Restore metadump, which creates data_img and log_img
+> +	SCRATCH_DEV=$data_img SCRATCH_LOGDEV=$log_img \
+> +		_scratch_xfs_mdrestore $metadump_file
+> +
+> +	# Create loopdev for data device so we can mount the fs
+> +	data_loop=$(_create_loop_device $data_img)
+> +
+> +	# Create loopdev for log device if we recovered anything
+> +	test -s "$log_img" && log_loop=$(_create_loop_device $log_img)
+> +
+> +	# Mount fs, run an extra test, fsck, and unmount
+> +	SCRATCH_DEV=$data_loop SCRATCH_LOGDEV=$log_loop _scratch_mount
+> +	if [ -n "$extra_test" ]; then
+> +		SCRATCH_DEV=$data_loop SCRATCH_LOGDEV=$log_loop $extra_test
+> +	fi
+> +	SCRATCH_DEV=$data_loop SCRATCH_LOGDEV=$log_loop _check_xfs_scratch_fs
+> +	SCRATCH_DEV=$data_loop _scratch_unmount
+> +
+> +	# Tear down what we created
+> +	if [ -b "$log_loop" ]; then
+> +		_destroy_loop_device $log_loop
+> +		rm -f $log_img
+> +	fi
+> +	_destroy_loop_device $data_loop
+> +	rm -f $data_img
+> +}
+> +
+> +# Verify both metadump formats if possible
+> +_verify_metadumps()
+> +{
+> +	_verify_metadump_v1 "$@"
+> +
+> +	if [[ $MAX_XFS_METADUMP_FORMAT == 2 ]]; then
+> +		_verify_metadump_v2 "$@"
+> +	fi
+> +}
+> diff --git a/tests/xfs/129 b/tests/xfs/129
+> index cdac2349df..c3a9bcefee 100755
+> --- a/tests/xfs/129
+> +++ b/tests/xfs/129
+> @@ -16,98 +16,23 @@ _cleanup()
+>  {
+>      cd /
+>      _scratch_unmount > /dev/null 2>&1
+> -    [[ -n $logdev && $logdev != "none" && $logdev != $SCRATCH_LOGDEV ]] && \
+> -	    _destroy_loop_device $logdev
+> -    [[ -n $datadev ]] && _destroy_loop_device $datadev
+> -    rm -rf $tmp.* $testdir $metadump_file $TEST_DIR/data-image \
+> -       $TEST_DIR/log-image
+> +    _cleanup_verify_metadump
+> +    rm -rf $tmp.* $testdir
+>  }
+>  
+>  # Import common functions.
+>  . ./common/filter
+>  . ./common/reflink
+> +. ./common/xfs_metadump_tests
+>  
+>  # real QA test starts here
+>  _supported_fs xfs
+>  _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
+>  _require_loop
+>  _require_scratch_reflink
+> -
+> -metadump_file=$TEST_DIR/${seq}_metadump
+> -
+> -verify_metadump_v1()
+> -{
+> -	local max_version=$1
+> -	local version=""
+> -
+> -	if [[ $max_version == 2 ]]; then
+> -		version="-v 1"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file $version
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV="" \
+> -		   _scratch_xfs_mdrestore $metadump_file
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	SCRATCH_DEV=$datadev _scratch_mount
+> -	SCRATCH_DEV=$datadev _scratch_unmount
+> -
+> -	logdev=$SCRATCH_LOGDEV
+> -	[[ -z $logdev ]] && logdev=none
+> -	_check_xfs_filesystem $datadev $logdev none
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> -
+> -verify_metadump_v2()
+> -{
+> -	version="-v 2"
+> -
+> -	_scratch_xfs_metadump $metadump_file $version
+> -
+> -	# Metadump v2 files can contain contents dumped from an external log
+> -	# device. Use a temporary file to hold the log device contents restored
+> -	# from such a metadump file.
+> -	slogdev=""
+> -	if [[ -n $SCRATCH_LOGDEV ]]; then
+> -		slogdev=$TEST_DIR/log-image
+> -	fi
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
+> -		   _scratch_xfs_mdrestore $metadump_file
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	logdev=${SCRATCH_LOGDEV}
+> -	if [[ -s $TEST_DIR/log-image ]]; then
+> -		logdev=$(_create_loop_device $TEST_DIR/log-image)
+> -	fi
+> -
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_mount
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_unmount
+> -
+> -	[[ -z $logdev ]] && logdev=none
+> -	_check_xfs_filesystem $datadev $logdev none
+> -
+> -	if [[ -s $TEST_DIR/log-image ]]; then
+> -		_destroy_loop_device $logdev
+> -		logdev=""
+> -		rm -f $TEST_DIR/log-image
+> -	fi
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> +_setup_verify_metadump
+>  
+>  _scratch_mkfs >/dev/null 2>&1
+> -
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+>  _scratch_mount
+>  
+>  testdir=$SCRATCH_MNT/test-$seq
+> @@ -127,12 +52,7 @@ done
+>  _scratch_unmount
+>  
+>  echo "Create metadump file, restore it and check restored fs"
+> -
+> -verify_metadump_v1 $max_md_version
+> -
+> -if [[ $max_md_version == 2 ]]; then
+> -	verify_metadump_v2
+> -fi
+> +_verify_metadumps
+>  
+>  # success, all done
+>  status=0
+> diff --git a/tests/xfs/234 b/tests/xfs/234
+> index f4f8af6d3a..8f808c7507 100755
+> --- a/tests/xfs/234
+> +++ b/tests/xfs/234
+> @@ -15,16 +15,13 @@ _begin_fstest auto quick rmap punch metadump
+>  _cleanup()
+>  {
+>      cd /
+> -    _scratch_unmount > /dev/null 2>&1
+> -    [[ -n $logdev && $logdev != "none" && $logdev != $SCRATCH_LOGDEV ]] && \
+> -	    _destroy_loop_device $logdev
+> -    [[ -n $datadev ]] && _destroy_loop_device $datadev
+> -    rm -rf $tmp.* $testdir $metadump_file $TEST_DIR/image \
+> -       $TEST_DIR/log-image
+> +    _cleanup_verify_metadump
+> +    rm -rf $tmp.* $testdir
+>  }
+>  
+>  # Import common functions.
+>  . ./common/filter
+> +. ./common/xfs_metadump_tests
+>  
+>  # real QA test starts here
+>  _supported_fs xfs
+> @@ -32,82 +29,9 @@ _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
+>  _require_loop
+>  _require_xfs_scratch_rmapbt
+>  _require_xfs_io_command "fpunch"
+> -
+> -metadump_file=$TEST_DIR/${seq}_metadump
+> -
+> -verify_metadump_v1()
+> -{
+> -	local max_version=$1
+> -	local version=""
+> -
+> -	if [[ $max_version == 2 ]]; then
+> -		version="-v 1"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file $version
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV="" \
+> -		   _scratch_xfs_mdrestore $metadump_file
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	SCRATCH_DEV=$datadev _scratch_mount
+> -	SCRATCH_DEV=$datadev _scratch_unmount
+> -
+> -	logdev=$SCRATCH_LOGDEV
+> -	[[ -z $logdev ]] && logdev=none
+> -	_check_xfs_filesystem $datadev $logdev none
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> -
+> -verify_metadump_v2()
+> -{
+> -	version="-v 2"
+> -
+> -	_scratch_xfs_metadump $metadump_file $version
+> -
+> -	# Metadump v2 files can contain contents dumped from an external log
+> -	# device. Use a temporary file to hold the log device contents restored
+> -	# from such a metadump file.
+> -	slogdev=""
+> -	if [[ -n $SCRATCH_LOGDEV ]]; then
+> -		slogdev=$TEST_DIR/log-image
+> -	fi
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
+> -		   _scratch_xfs_mdrestore $metadump_file
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	logdev=${SCRATCH_LOGDEV}
+> -	if [[ -s $TEST_DIR/log-image ]]; then
+> -		logdev=$(_create_loop_device $TEST_DIR/log-image)
+> -	fi
+> -
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_mount
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_unmount
+> -
+> -	[[ -z $logdev ]] && logdev=none
+> -	_check_xfs_filesystem $datadev $logdev none
+> -
+> -	if [[ -s $TEST_DIR/log-image ]]; then
+> -		_destroy_loop_device $logdev
+> -		logdev=""
+> -		rm -f $TEST_DIR/log-image
+> -	fi
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> +_setup_verify_metadump
+>  
+>  _scratch_mkfs >/dev/null 2>&1
+> -
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+>  _scratch_mount
+>  
+>  testdir=$SCRATCH_MNT/test-$seq
+> @@ -127,12 +51,7 @@ done
+>  _scratch_unmount
+>  
+>  echo "Create metadump file, restore it and check restored fs"
+> -
+> -verify_metadump_v1 $max_md_version
+> -
+> -if [[ $max_md_version == 2 ]]; then
+> -	verify_metadump_v2
+> -fi
+> +_verify_metadumps
+>  
+>  # success, all done
+>  status=0
+> diff --git a/tests/xfs/253 b/tests/xfs/253
+> index 3b567999d8..6623c435e5 100755
+> --- a/tests/xfs/253
+> +++ b/tests/xfs/253
+> @@ -26,23 +26,21 @@ _cleanup()
+>      cd /
+>      rm -f $tmp.*
+>      rm -rf "${OUTPUT_DIR}"
+> -    rm -f "${METADUMP_FILE}"
+> -    [[ -n $logdev && $logdev != $SCRATCH_LOGDEV ]] && \
+> -	    _destroy_loop_device $logdev
+> -    [[ -n $datadev ]] && _destroy_loop_device $datadev
+> +    _cleanup_verify_metadump
+>  }
+>  
+>  # Import common functions.
+>  . ./common/filter
+> +. ./common/xfs_metadump_tests
+>  
+>  _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
+>  _require_test
+>  _require_scratch
+> +_setup_verify_metadump
+>  
+>  # real QA test starts here
+>  
+>  OUTPUT_DIR="${SCRATCH_MNT}/test_${seq}"
+> -METADUMP_FILE="${TEST_DIR}/${seq}_metadump"
+>  ORPHANAGE="lost+found"
+>  
+>  _supported_fs xfs
+> @@ -52,24 +50,7 @@ function create_file() {
+>  	touch $(printf "$@")
+>  }
+>  
+> -verify_metadump_v1()
+> -{
+> -	local max_version=$1
+> -	local version=""
+> -
+> -	if [[ $max_version == 2 ]]; then
+> -		version="-v 1"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $METADUMP_FILE $version
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV="" \
+> -		   _scratch_xfs_mdrestore $METADUMP_FILE
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	SCRATCH_DEV=$datadev _scratch_mount
+> -
+> +extra_test() {
+>  	cd "${SCRATCH_MNT}"
+>  
+>  	# Get a listing of all the files after obfuscation
+> @@ -78,60 +59,6 @@ verify_metadump_v1()
+>  	ls -R | od -c >> $seqres.full
+>  
+>  	cd /
+> -
+> -	SCRATCH_DEV=$datadev _scratch_unmount
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> -
+> -verify_metadump_v2()
+> -{
+> -	version="-v 2"
+> -
+> -	_scratch_xfs_metadump $METADUMP_FILE $version
+> -
+> -	# Metadump v2 files can contain contents dumped from an external log
+> -	# device. Use a temporary file to hold the log device contents restored
+> -	# from such a metadump file.
+> -	slogdev=""
+> -	if [[ -n $SCRATCH_LOGDEV ]]; then
+> -		slogdev=$TEST_DIR/log-image
+> -	fi
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
+> -		   _scratch_xfs_mdrestore $METADUMP_FILE
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	logdev=${SCRATCH_LOGDEV}
+> -	if [[ -s $TEST_DIR/log-image ]]; then
+> -		logdev=$(_create_loop_device $TEST_DIR/log-image)
+> -	fi
+> -
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_mount
+> -
+> -	cd "${SCRATCH_MNT}"
+> -
+> -	# Get a listing of all the files after obfuscation
+> -	echo "Metadump v2" >> $seqres.full
+> -	ls -R >> $seqres.full
+> -	ls -R | od -c >> $seqres.full
+> -
+> -	cd /
+> -
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_unmount
+> -
+> -	if [[ -s $TEST_DIR/log-image ]]; then
+> -		_destroy_loop_device $logdev
+> -		logdev=""
+> -		rm -f $TEST_DIR/log-image
+> -	fi
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+>  }
+>  
+>  echo "Disciplyne of silence is goed."
+> @@ -233,13 +160,7 @@ cd $here
+>  
+>  _scratch_unmount
+>  
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+> -verify_metadump_v1 $max_md_version
+> -
+> -if [[ $max_md_version == 2 ]]; then
+> -	verify_metadump_v2
+> -fi
+> +_verify_metadumps '' extra_test
+>  
+>  # Finally, re-make the filesystem since to ensure we don't
+>  # leave a directory with duplicate entries lying around.
+> diff --git a/tests/xfs/291 b/tests/xfs/291
+> index 1433140821..c475d89ad9 100755
+> --- a/tests/xfs/291
+> +++ b/tests/xfs/291
+> @@ -9,11 +9,21 @@
+>  . ./common/preamble
+>  _begin_fstest auto repair metadump
+>  
+> +# Override the default cleanup function.
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -r -f $tmp.*
+> +	_cleanup_verify_metadump
+> +}
+> +
+>  # Import common functions.
+>  . ./common/filter
+> +. ./common/xfs_metadump_tests
+>  
+>  _supported_fs xfs
+>  _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
+> +_setup_verify_metadump
+>  
+>  # real QA test starts here
+>  _require_scratch
+> @@ -92,26 +102,7 @@ _scratch_xfs_check >> $seqres.full 2>&1 || _fail "xfs_check failed"
+>  
+>  # Yes they can!  Now...
+>  # Can xfs_metadump cope with this monster?
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+> -for md_version in $(seq 1 $max_md_version); do
+> -	version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v $md_version"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $tmp.metadump -a -o $version || \
+> -		_fail "xfs_metadump failed"
+> -
+> -	slogdev=$SCRATCH_LOGDEV
+> -	if [[ -z $version || $version == "-v 1" ]]; then
+> -		slogdev=""
+> -	fi
+> -	SCRATCH_DEV=$tmp.img SCRATCH_LOGDEV=$slogdev _scratch_xfs_mdrestore \
+> -		   $tmp.metadump || _fail "xfs_mdrestore failed"
+> -	SCRATCH_DEV=$tmp.img _scratch_xfs_repair -f &>> $seqres.full || \
+> -		_fail "xfs_repair of metadump failed"
+> -done
+> +_verify_metadumps '-a -o'
+>  
+>  # Yes it can; success, all done
+>  status=0
+> diff --git a/tests/xfs/432 b/tests/xfs/432
+> index 7e402aa88f..579e1b556a 100755
+> --- a/tests/xfs/432
+> +++ b/tests/xfs/432
+> @@ -20,16 +20,19 @@ _begin_fstest auto quick dir metadata metadump
+>  _cleanup()
+>  {
+>  	cd /
+> -	rm -f "$tmp".* $metadump_file $metadump_img
+> +	rm -f "$tmp".*
+> +	_cleanup_verify_metadump
+>  }
+>  
+>  # Import common functions.
+>  . ./common/filter
+> +. ./common/xfs_metadump_tests
+>  
+>  # real QA test starts here
+>  _supported_fs xfs
+>  _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
+>  _require_scratch
+> +_setup_verify_metadump
+>  
+>  rm -f "$seqres.full"
+>  
+> @@ -54,9 +57,6 @@ echo "Format and mount"
+>  _scratch_mkfs -b size=1k -n size=64k > "$seqres.full" 2>&1
+>  _scratch_mount >> "$seqres.full" 2>&1
+>  
+> -metadump_file="$TEST_DIR/meta-$seq"
+> -metadump_img="$TEST_DIR/img-$seq"
+> -rm -f $metadump_file $metadump_img
+>  testdir="$SCRATCH_MNT/test-$seq"
+>  max_fname_len=255
+>  blksz=$(_get_block_size $SCRATCH_MNT)
+> @@ -87,27 +87,7 @@ echo "qualifying extent: $extlen blocks" >> $seqres.full
+>  test -n "$extlen" || _notrun "could not create dir extent > 1000 blocks"
+>  
+>  echo "Try to metadump, restore and check restored metadump image"
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+> -for md_version in $(seq 1 $max_md_version); do
+> -	version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v $md_version"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file -a -o -w $version
+> -
+> -	slogdev=$SCRATCH_LOGDEV
+> -	if [[ -z $version || $version == "-v 1" ]]; then
+> -		slogdev=""
+> -	fi
+> -
+> -	SCRATCH_DEV=$metadump_img SCRATCH_LOGDEV=$slogdev \
+> -		   _scratch_xfs_mdrestore $metadump_file
+> -
+> -	SCRATCH_DEV=$metadump_img _scratch_xfs_repair -n &>> $seqres.full || \
+> -		echo "xfs_repair on restored fs returned $?"
+> -done
+> +_verify_metadumps '-a -o -w'
+>  
+>  # success, all done
+>  status=0
+> diff --git a/tests/xfs/503 b/tests/xfs/503
+> index 8643c3d483..ff6b344a9c 100755
+> --- a/tests/xfs/503
+> +++ b/tests/xfs/503
+> @@ -17,11 +17,13 @@ _cleanup()
+>  {
+>  	cd /
+>  	rm -rf $tmp.* $testdir
+> +	_cleanup_verify_metadump
+>  }
+>  
+>  # Import common functions.
+>  . ./common/filter
+>  . ./common/populate
+> +. ./common/xfs_metadump_tests
+>  
+>  testdir=$TEST_DIR/test-$seq
+>  
+> @@ -35,6 +37,7 @@ _require_scratch_nocheck
+>  _require_populate_commands
+>  _xfs_skip_online_rebuild
+>  _xfs_skip_offline_rebuild
+> +_setup_verify_metadump
+>  
+>  echo "Format and populate"
+>  _scratch_populate_cached nofill > $seqres.full 2>&1
+> @@ -43,66 +46,17 @@ mkdir -p $testdir
+>  metadump_file=$testdir/scratch.md
+>  copy_file=$testdir/copy.img
+>  
+> -check_restored_metadump_image()
+> -{
+> -	local image=$1
+> -
+> -	loop_dev=$(_create_loop_device $image)
+> -	SCRATCH_DEV=$loop_dev _scratch_mount
+> -	SCRATCH_DEV=$loop_dev _check_scratch_fs
+> -	SCRATCH_DEV=$loop_dev _scratch_unmount
+> -	_destroy_loop_device $loop_dev
+> -}
+> -
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+>  echo "metadump and mdrestore"
+> -for md_version in $(seq 1 $max_md_version); do
+> -	version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v $md_version"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file -a -o $version >> $seqres.full
+> -	SCRATCH_DEV=$TEST_DIR/image _scratch_xfs_mdrestore $metadump_file
+> -	check_restored_metadump_image $TEST_DIR/image
+> -done
+> +_verify_metadumps '-a -o'
+>  
+>  echo "metadump a and mdrestore"
+> -for md_version in $(seq 1 $max_md_version); do
+> -	version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v $md_version"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file -a $version >> $seqres.full
+> -	SCRATCH_DEV=$TEST_DIR/image _scratch_xfs_mdrestore $metadump_file
+> -	check_restored_metadump_image $TEST_DIR/image
+> -done
+> +_verify_metadumps '-a'
+>  
+>  echo "metadump g and mdrestore"
+> -for md_version in $(seq 1 $max_md_version); do
+> -	version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v $md_version"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file -g $version >> $seqres.full
+> -	SCRATCH_DEV=$TEST_DIR/image _scratch_xfs_mdrestore $metadump_file
+> -	check_restored_metadump_image $TEST_DIR/image
+> -done
+> +_verify_metadumps '-g' >> $seqres.full
+>  
+>  echo "metadump ag and mdrestore"
+> -for md_version in $(seq 1 $max_md_version); do
+> -	version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v $md_version"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file -a -g $version >> $seqres.full
+> -	SCRATCH_DEV=$TEST_DIR/image _scratch_xfs_mdrestore $metadump_file
+> -	check_restored_metadump_image $TEST_DIR/image
+> -done
+> +_verify_metadumps '-a -g' >> $seqres.full
+>  
+>  echo copy
+>  $XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
+> diff --git a/tests/xfs/605 b/tests/xfs/605
+> index f2cd7aba98..af917f0f32 100755
+> --- a/tests/xfs/605
+> +++ b/tests/xfs/605
+> @@ -15,17 +15,13 @@ _cleanup()
+>  {
+>  	cd /
+>  	rm -r -f $tmp.*
+> -	_scratch_unmount > /dev/null 2>&1
+> -	[[ -n $logdev && $logdev != "none" && $logdev != $SCRATCH_LOGDEV ]] && \
+> -		_destroy_loop_device $logdev
+> -	[[ -n $datadev ]] && _destroy_loop_device $datadev
+> -	rm -r -f $metadump_file $TEST_DIR/data-image \
+> -	   $TEST_DIR/log-image
+> +	_cleanup_verify_metadump
+>  }
+>  
+>  # Import common functions.
+>  . ./common/dmflakey
+>  . ./common/inject
+> +. ./common/xfs_metadump_tests
+>  
+>  # real QA test starts here
+>  _supported_fs xfs
+> @@ -37,85 +33,22 @@ _require_xfs_io_error_injection log_item_pin
+>  _require_dm_target flakey
+>  _require_xfs_io_command "pwrite"
+>  _require_test_program "punch-alternating"
+> +_setup_verify_metadump
+>  
+> -metadump_file=${TEST_DIR}/${seq}.md
+>  testfile=${SCRATCH_MNT}/testfile
+>  
+>  echo "Format filesystem on scratch device"
+>  _scratch_mkfs >> $seqres.full 2>&1
+>  
+> -max_md_version=$(_xfs_metadump_max_version)
+> -
+>  external_log=0
+>  if [[ $USE_EXTERNAL = yes && -n "$SCRATCH_LOGDEV" ]]; then
+>  	external_log=1
+>  fi
+>  
+> -if [[ $max_md_version == 1 && $external_log == 1 ]]; then
+> +if [[ $MAX_XFS_METADUMP_FORMAT == 1 && $external_log == 1 ]]; then
+>  	_notrun "metadump v1 does not support external log device"
+>  fi
+>  
+> -verify_metadump_v1()
+> -{
+> -	local version=""
+> -	if [[ $max_md_version == 2 ]]; then
+> -		version="-v 1"
+> -	fi
+> -
+> -	_scratch_xfs_metadump $metadump_file -a -o $version
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image _scratch_xfs_mdrestore $metadump_file
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	SCRATCH_DEV=$datadev _scratch_mount
+> -	SCRATCH_DEV=$datadev _check_scratch_fs
+> -	SCRATCH_DEV=$datadev _scratch_unmount
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> -
+> -verify_metadump_v2()
+> -{
+> -	local version="-v 2"
+> -
+> -	_scratch_xfs_metadump $metadump_file -a -o $version
+> -
+> -	# Metadump v2 files can contain contents dumped from an external log
+> -	# device. Use a temporary file to hold the log device contents restored
+> -	# from such a metadump file.
+> -	slogdev=""
+> -	if [[ -n $SCRATCH_LOGDEV ]]; then
+> -		slogdev=$TEST_DIR/log-image
+> -	fi
+> -
+> -	SCRATCH_DEV=$TEST_DIR/data-image SCRATCH_LOGDEV=$slogdev \
+> -		   _scratch_xfs_mdrestore $metadump_file
+> -
+> -	datadev=$(_create_loop_device $TEST_DIR/data-image)
+> -
+> -	logdev=""
+> -	if [[ -s $slogdev ]]; then
+> -		logdev=$(_create_loop_device $slogdev)
+> -	fi
+> -
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_mount
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _check_scratch_fs
+> -	SCRATCH_DEV=$datadev SCRATCH_LOGDEV=$logdev _scratch_unmount
+> -
+> -	if [[ -s $logdev ]]; then
+> -		_destroy_loop_device $logdev
+> -		logdev=""
+> -		rm -f $slogdev
+> -	fi
+> -
+> -	_destroy_loop_device $datadev
+> -	datadev=""
+> -	rm -f $TEST_DIR/data-image
+> -}
+> -
+>  echo "Initialize and mount filesystem on flakey device"
+>  _init_flakey
+>  _load_flakey_table $FLAKEY_ALLOW_WRITES
+> @@ -160,14 +93,7 @@ echo -n "Filesystem has a "
+>  _print_logstate
+>  
+>  echo "Create metadump file, restore it and check restored fs"
+> -
+> -if [[ $external_log == 0 ]]; then
+> -	verify_metadump_v1 $max_md_version
+> -fi
+> -
+> -if [[ $max_md_version == 2 ]]; then
+> -	verify_metadump_v2
+> -fi
+> +_verify_metadumps '-a -o'
+>  
+>  # Mount the fs to replay the contents from the dirty log.
+>  _scratch_mount
+> 
 
