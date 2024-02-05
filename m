@@ -1,47 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1466D45953
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 22:07:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8FEA4BA93
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 22:18:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707170849; cv=none; b=XqIwxevMzX9FK1jT9U8o/305V6q+/RefiUjCih7Y3UXAuMs1he2UFIQPFVBfmCw6cd9twbbjRcBwgGYoh2m5PnnI8rDQekjhbFvoPLUJPuySkRmcR7hqJefbJkFAnJhCriCownvtET03xG+1+wgPI5INm8npJaWqtiXew7VwXQA=
+	t=1707171485; cv=none; b=TkBe7wlke1SJOYUu+Opontz0QKuqvd0jO5ufdTxh5p5cOIbS2V01jED92F8VW5GBpx1/L3jPKFVOEejeIzGkijFLaqXyvmQOGvWpJWPM5QzP0qWJeXw56yavrVjF7Jp1kaWg9bOxjBitS83evDqLvZhWMgC5hL+PePQ8o3pBbN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707170849; c=relaxed/simple;
-	bh=HbF1qcDk1hI/jeBLCQZQMHHo6bfFmwUMgfezXvvvhLU=;
+	s=arc-20240116; t=1707171485; c=relaxed/simple;
+	bh=WFirQiv/bif0ORcBDskVBLI31abXA7X4de7fsW5AqyE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BJ4V+Fm85PQHpJmDFIXS0irEo0gGu29adbAgXQCb2uGUuNfWmpeONqEr+ibm4CkCoXYxvHwbi6dJWsucGGO48JGQVT8mOpU+VDzb4I2RzB2LbMXbGALZ4go6TR08O9vq/Y0S0UGuVWnCxghm/xxwePY2UO0EPIDGUX8dze1UIsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y0uXbbaq; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=vErHZ0ecPzankoA58c6tLQpYpPaWUF/W5TdOORW/8kzCtMvudVJC3TjlbFLUW+Oqpy6DtyzXQxB/t1W6cBBh3DfI2AeLyaBy2DF9IsAQ4Z/ogxyAH12CFDYhxeOmGa8cglRbp25CMcRxSd6COFM86ToZPC88hL1ukBuj61jpWO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=V8iRoTdT; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y0uXbbaq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90266C433C7;
-	Mon,  5 Feb 2024 22:07:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707170848;
-	bh=HbF1qcDk1hI/jeBLCQZQMHHo6bfFmwUMgfezXvvvhLU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y0uXbbaqPcorqRSQ9xd+8bhsC2ZodsyoLZxXGVA5u7OUaQw5l8MIBWgmYF0LuPxhx
-	 axrku9mIwbigF7jE4dRJErq7zu6YAN5Q8dw9uDyiphfbjecXCiVx2UhkHRvfxJKKuA
-	 VJRdiq9PkGX2bga70o1tf9dKCerR7s3TNX2gJmD+B3DBxZgwrfi1VEzphLGwJ0vldZ
-	 oYHXMhECy1Shr6Ss58WhDVIADURErEIb9njmpbPHKiLOJvoIUxkPJgMAWrk+NHNu8c
-	 AylTJ6Rls7L7OEhcCLaH+ai32QFE0aE9h/77N71gr0aj6HQcs+WPYG6nh0y2h70qsD
-	 jZrbcoWDX+EEw==
-Date: Mon, 5 Feb 2024 14:07:27 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
- after reclaim
-Message-ID: <20240205220727.GN616564@frogsfrogsfrogs>
-References: <20240119193645.354214-1-bfoster@redhat.com>
- <Za3fwLKtjC+B8aZa@dread.disaster.area>
- <ZbJYP63PgykS1CwU@bfoster>
- <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
- <Zbe9+EY5bLjhPPJn@bfoster>
- <Zbrw07Co5vhrDUfd@dread.disaster.area>
- <Zb1FhDn09pwFvE7O@bfoster>
- <20240202233343.GM616564@frogsfrogsfrogs>
- <Zb+1O+MlTpzHZ595@bfoster>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="V8iRoTdT"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1d70b0e521eso38206415ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Feb 2024 14:18:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707171482; x=1707776282; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=RQ2KX6PtmVgxF5myahHQmzeyx34uFsn54JKIPJOPSpQ=;
+        b=V8iRoTdTMUO1v76w5YIHp3hWgXPOLsK29pk1c4BMkXiQN2bAdsfgsmtkbQR+mZokXx
+         9dcy48l0wmpecdAfa1JPnGt2sdOdbXDnTK/GLxyxor/G3HYrVcbPJF2L43Yn5Cbqw6sq
+         FC6VEqFOvOdkZmaZksrEUlNrnULcqL/lBxRSmqKD9nqc1+xcDyeaAJ0OKV3qvC+Y/kyb
+         O208mg75XQFaQMJd4QzqSSHptgcy6O0CmZo1zHo1OErnm667MCTzHno2yUcGHxNF3Owi
+         MNsOySirEtorWUMCv3ccYgKy9IUfHuZqJdJCuPCBFy45jeFL2OiE8D1Lfcf84t7eDrnq
+         CgqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707171482; x=1707776282;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RQ2KX6PtmVgxF5myahHQmzeyx34uFsn54JKIPJOPSpQ=;
+        b=GZU3sRa3V4QNF/qboGyCykhxmNP/aeHunTnEUM44NwnYFNgCo7eu4sJ46yJ1W6zYg8
+         0o79GeAiU+HrZoBs+MY+fGksSLVT5sCtzEf4fBb7515LFR5XgQ4Wp9yqUqJdEmSQCS0h
+         xTj37YS2fqqrXGhBHmHkUUp4KbNRr15wj01RP/oSdMNh+nfKYsxo+5r348B17HiWI0RY
+         i2yXx9eNEk7s92FvO+s0+qQkKxIx/Fq+/TTV/6I31DfEeQ1iFc8veqYahtoNEGb84Ws6
+         qYo05KwEzcz++H/k5pCblmrOX8ek/eOOZlEiB5pUIRBmDZnX46UF6+a7+tKUeWvF1/do
+         yXuA==
+X-Gm-Message-State: AOJu0YxWuiVRYgzgj86ITIRI+jUiCbKQRJP9SYbSuqyZVkQYzRfxI6aV
+	afc+g/5T6L6izamkEl/bWBuHnGf3ahuX/+fbYo9TiNVyLr0SL7JnHYTkc8yVBp0=
+X-Google-Smtp-Source: AGHT+IGukEyR/oTSk6uDnfCM3DsGByrIPzirka2urPJDZhACgRtMbr5HUrwSDj+XoBjd9qAvrwVMBA==
+X-Received: by 2002:a17:902:ac88:b0:1d7:428f:50fd with SMTP id h8-20020a170902ac8800b001d7428f50fdmr906434plr.31.1707171482093;
+        Mon, 05 Feb 2024 14:18:02 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCU821uwUmfcCx4HStlzYkKkb4zVsnGy/9OCw3fqzMV3pdkmOcH6fejWbcoRuKEJA9x6kHl3OVFRo10vz1oQ8DrabMiV/k2fsF6ZrY3ertY6MX0BBQmKfYZJY1XVKj1F06TdPsTKwO16gabTa8v6wD9gV1799mlzzg0pEGyAltTMq3TX3ohmHxgHVwsTNBSO05Wq5T9BN/+cIjJi4XBn5lOcVfcxrafPv1hl4w9DaMRmdAnuSH7sL8Du1Sq4Nf5aq+I7fABRffRs+Bsj/LLKtv6YnTvg0hqMfeV8565M+4VOdEsP4fY3e97vf2QFc6FNoigP94GZrQs3hjEKCLWIodngZwfwUbcTL9zyaOcZ/dDkWLPn126gMdV+
+Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
+        by smtp.gmail.com with ESMTPSA id r17-20020a170903015100b001d92f2129dasm369262plc.233.2024.02.05.14.18.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Feb 2024 14:18:01 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rX7Hq-002Z3q-0O;
+	Tue, 06 Feb 2024 09:17:58 +1100
+Date: Tue, 6 Feb 2024 09:17:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>, linux-fsdevel@vger.kernel.or
+Subject: Re: [PATCH 2/6] fs: FS_IOC_GETUUID
+Message-ID: <ZcFelmKPb374aebH@dread.disaster.area>
+References: <20240205200529.546646-1-kent.overstreet@linux.dev>
+ <20240205200529.546646-3-kent.overstreet@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,117 +76,121 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zb+1O+MlTpzHZ595@bfoster>
+In-Reply-To: <20240205200529.546646-3-kent.overstreet@linux.dev>
 
-On Sun, Feb 04, 2024 at 11:03:07AM -0500, Brian Foster wrote:
-> On Fri, Feb 02, 2024 at 03:33:43PM -0800, Darrick J. Wong wrote:
-> > On Fri, Feb 02, 2024 at 02:41:56PM -0500, Brian Foster wrote:
-> > > On Thu, Feb 01, 2024 at 12:16:03PM +1100, Dave Chinner wrote:
-> > > > On Mon, Jan 29, 2024 at 10:02:16AM -0500, Brian Foster wrote:
-> > > > > On Fri, Jan 26, 2024 at 10:46:12AM +1100, Dave Chinner wrote:
-> > > > > > On Thu, Jan 25, 2024 at 07:46:55AM -0500, Brian Foster wrote:
-> > > > > > > On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
-> > > > > > > > On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
-> > > ...
-> > > > Here's the fixes for the iget vs inactive vs freeze problems in the
-> > > > upstream kernel:
-> > > > 
-> > > > https://lore.kernel.org/linux-xfs/20240201005217.1011010-1-david@fromorbit.com/T/#t
-> > > > 
-> > > > With that sorted, are there any other issues we know about that
-> > > > running a blockgc scan during freeze might work around?
-> > > > 
-> > > 
-> > > The primary motivation for the scan patch was the downstream/stable
-> > > deadlock issue. The reason I posted it upstream is because when I
-> > > considered the overall behavior change, I thought it uniformly
-> > > beneficial to both contexts based on the (minor) benefits of the side
-> > > effects of the scan. You don't need me to enumerate them, and none of
-> > > them are uniquely important or worth overanalyzing.
-> > > 
-> > > The only real question that matters here is do you agree with the
-> > > general reasoning for a blockgc scan during freeze, or shall I drop the
-> > > patch?
-> > 
+On Mon, Feb 05, 2024 at 03:05:13PM -0500, Kent Overstreet wrote:
+> Add a new generic ioctls for querying the filesystem UUID.
 > 
-> Hi Darrick,
+> These are lifted versions of the ext4 ioctls, with one change: we're not
+> using a flexible array member, because UUIDs will never be more than 16
+> bytes.
 > 
-> > I don't see any particular downside to flushing {block,inode}gc work
-> > during a freeze, other than the loss of speculative preallocations
-> > sounds painful.
-> > 
+> This patch adds a generic implementation of FS_IOC_GETFSUUID, which
+> reads from super_block->s_uuid; FS_IOC_SETFSUUID is left for individual
+> filesystems to implement.
 > 
-> Yeah, that's definitely a tradeoff. The more I thought about that, the
-> more ISTM that any workload that might be sensitive enough to the
-> penalty of an extra blockgc scan, the less likely it's probably going to
-> see freeze cycles all that often.
+> Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+> Cc: Christian Brauner <brauner@kernel.org>
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Cc: "Darrick J. Wong" <djwong@kernel.org>
+> Cc: Theodore Ts'o <tytso@mit.edu>
+> Cc: linux-fsdevel@vger.kernel.or
+> Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+> ---
+>  fs/ioctl.c              | 16 ++++++++++++++++
+>  include/uapi/linux/fs.h | 16 ++++++++++++++++
+>  2 files changed, 32 insertions(+)
 > 
-> I suspect the same applies to the bit of extra work added to the freeze
-> as well , but maybe there's some more painful scenario..?
+> diff --git a/fs/ioctl.c b/fs/ioctl.c
+> index 76cf22ac97d7..858801060408 100644
+> --- a/fs/ioctl.c
+> +++ b/fs/ioctl.c
+> @@ -763,6 +763,19 @@ static int ioctl_fssetxattr(struct file *file, void __user *argp)
+>  	return err;
+>  }
+>  
+> +static int ioctl_getfsuuid(struct file *file, void __user *argp)
+> +{
+> +	struct super_block *sb = file_inode(file)->i_sb;
+> +
+> +	if (WARN_ON(sb->s_uuid_len > sizeof(sb->s_uuid)))
+> +		sb->s_uuid_len = sizeof(sb->s_uuid);
 
-<shrug> I suppose if you had a few gigabytes of speculative
-preallocations across a bunch of log files (or log structured tree
-files, or whatever) then you could lose those preallocations and make
-fragmentation worse.  Since blockgc can run on open files, maybe we
-should leave that out of the freeze preparation syncfs?
+A "get"/read only ioctl should not be change superblock fields -
+this is not the place for enforcing superblock filed constraints.
+Make a helper function super_set_uuid(sb, uuid, uuid_len) for the
+filesystems to call that does all the validity checking and then
+sets the superblock fields appropriately.
 
-OTOH most of the inodes on those lists are not open at all, so perhaps
-we /should/ kick inodegc while preparing for freeze?  Such a patch could
-reuse the justification below after s/blockgc/inodegc/.  Too bad we
-didn't think far enough into the FIFREEZE design to allow userspace to
-indicate if they want us to minimize freeze time or post-freeze
-recovery time.
+> +
+> +	struct fsuuid2 u = { .fsu_len = sb->s_uuid_len, };
+> +	memcpy(&u.fsu_uuid[0], &sb->s_uuid, sb->s_uuid_len);
 
---D
+	if (!u.fsu_len)
+		return -ENOENT;
+	memcpy(&u.fsu_uuid[0], &sb->s_uuid, u.fsu_len);
 
-> > Does Dave's patchset to recycle NEEDS_INACTIVE inodes eliminate the
-> > stall problem?
-> > 
-> 
-> I assume it does. I think some of the confusion here is that I probably
-> would have gone in a slightly different direction on that issue, but
-> that's a separate discussion.
-> 
-> As it relates to this patch, in hindsight I probably should have
-> rewritten the commit log from the previous version. If I were to do that
-> now, it might read more like this (factoring out sync vs. non-sync
-> nuance and whatnot):
-> 
-> "
-> xfs: run blockgc on freeze to keep inodes off the inactivation queues
-> 
-> blockgc processing is disabled when the filesystem is frozen. This means
-> <words words words about blockgc> ...
-> 
-> Rather than hold pending blockgc inodes in inactivation queues when
-> frozen, run a blockgc scan during the freeze sequence to process this
-> subset of inodes up front. This allows reclaim to potentially free these
-> inodes while frozen (by keeping them off inactive lists) and produces a
-> more predictable/consistent on-disk freeze state. The latter is
-> potentially beneficial for shapshots, as this means no dangling post-eof
-> preallocs or cowblock recovery.
-> 
-> Potential tradeoffs for this are <yadda yadda, more words from above>
-> ...
-> "
-> 
-> ... but again, the primary motivation for this was still the whole
-> deadlock thing. I think it's perfectly reasonable to look at this change
-> and say it's not worth it. Thanks for the feedback.
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > -Dave.
-> > > > -- 
-> > > > Dave Chinner
-> > > > david@fromorbit.com
-> > > > 
-> > > 
-> > > 
-> > 
-> 
-> 
+> +
+> +	return copy_to_user(argp, &u, sizeof(u)) ? -EFAULT : 0;
+> +}
+> +
+>  /*
+>   * do_vfs_ioctl() is not for drivers and not intended to be EXPORT_SYMBOL()'d.
+>   * It's just a simple helper for sys_ioctl and compat_sys_ioctl.
+> @@ -845,6 +858,9 @@ static int do_vfs_ioctl(struct file *filp, unsigned int fd,
+>  	case FS_IOC_FSSETXATTR:
+>  		return ioctl_fssetxattr(filp, argp);
+>  
+> +	case FS_IOC_GETFSUUID:
+> +		return ioctl_getfsuuid(filp, argp);
+> +
+>  	default:
+>  		if (S_ISREG(inode->i_mode))
+>  			return file_ioctl(filp, cmd, argp);
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index 48ad69f7722e..0389fea87db5 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -64,6 +64,20 @@ struct fstrim_range {
+>  	__u64 minlen;
+>  };
+>  
+> +/*
+> + * We include a length field because some filesystems (vfat) have an identifier
+> + * that we do want to expose as a UUID, but doesn't have the standard length.
+> + *
+> + * We use a fixed size buffer beacuse this interface will, by fiat, never
+> + * support "UUIDs" longer than 16 bytes; we don't want to force all downstream
+> + * users to have to deal with that.
+> + */
+> +struct fsuuid2 {
+> +	__u32       fsu_len;
+> +	__u32       fsu_flags;
+> +	__u8        fsu_uuid[16];
+> +};
+
+Nobody in userspace will care that this is "version 2" of the ext4
+ioctl. I'd just name it "fs_uuid" as though the ext4 version didn't
+ever exist.
+
+> +
+>  /* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl definitions */
+>  #define FILE_DEDUPE_RANGE_SAME		0
+>  #define FILE_DEDUPE_RANGE_DIFFERS	1
+> @@ -215,6 +229,8 @@ struct fsxattr {
+>  #define FS_IOC_FSSETXATTR		_IOW('X', 32, struct fsxattr)
+>  #define FS_IOC_GETFSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
+>  #define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
+> +#define FS_IOC_GETFSUUID		_IOR(0x94, 51, struct fsuuid2)
+> +#define FS_IOC_SETFSUUID		_IOW(0x94, 52, struct fsuuid2)
+
+0x94 is the btrfs ioctl space, not the VFS space - why did you
+choose that? That said, what is the VFS ioctl space identifier? 'v',
+perhaps?
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
