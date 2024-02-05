@@ -1,71 +1,76 @@
-Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236A012D16C
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 20:06:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FE414CE0B
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 21:13:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707163576; cv=none; b=DqYMdQrn8t427IeOGRFJr0uWlNXzkBq7+CvGef7FAwtneyvw7fwt2Lps+e30NR2shbV2/iNpKa1Qdf+rD7sRoSln00kiE0kLXJxEhXk8kZmAtGYWEeQBWOEodPpU7XuySK0RWb838RdJIyqYrk2TumoQ6pJnd9oLAnq2sCPiPTg=
+	t=1707167586; cv=none; b=M+zP5qOHJHMyZiXm+mLGz42EenRG7wl0cGN6rFXlKdUzOdscwxxSih9Y00lOlaTr4vde/TFGjm7t8SAd3+Ot2IZnr8TX6gxvrR7KguUFZ1wyioVoUjgqu9zPZSkn/WA7fjyK8Kqs8Cp9BTA15FtzVZtGe49yhJb3MbuZN9s1Duc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707163576; c=relaxed/simple;
-	bh=SpXRXuGnMtRwA2NcE51fX/znF3QwnMp2SZRjBoEEXhY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XoaF+L8Z8BZL2yQ06pZkyh6otKB7V8+4AWFyVFq/84NsbvibPkazp4uDKiaCLrX1vWU+yRL0kCiot7x+Jld30fE/iiLNFE327V2UL7WJgXdTqeAuUlpDpfaDEDSeaQje0BMRbAztZ/R3c4tPGBNV2Zdfyq4WAOezlquEZcB5O+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xTYaLnhM; arc=none smtp.client-ip=91.218.175.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xTYaLnhM"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1707163570;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LjLLoTR+ir1vHIuy3hXsUuRK7GJSfSeb1z1mFbcs/pM=;
-	b=xTYaLnhM62iIw9h5mlJHwn37PFD+85rp5V2iVlzDFkUm/hiGWhkq5JrHRt13ZXTLbc5Qqz
-	cTHbzZadurpRL3NbkqdBkVzPCdxApb/tvOrNOsqUEmQ1SOFbq/dPloj4T6KJeTph2qziC+
-	Z0L+ka/B3oCSICX1qvb2qZpVQDiV1Zw=
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org
-Cc: Kent Overstreet <kent.overstreet@linux.dev>
-Subject: [PATCH 5/6] xfs: add support for FS_IOC_GETSYSFSNAME
-Date: Mon,  5 Feb 2024 15:05:16 -0500
-Message-ID: <20240205200529.546646-6-kent.overstreet@linux.dev>
-In-Reply-To: <20240205200529.546646-1-kent.overstreet@linux.dev>
-References: <20240205200529.546646-1-kent.overstreet@linux.dev>
+	s=arc-20240116; t=1707167586; c=relaxed/simple;
+	bh=RERVg0NCmBPsnzb6n/jjfpC8aRmrtHhD3ZlQlxIVfBs=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=swonWZ/K+B7c0snD43NuwWzkgt2DGI5DLH0ww57FzfYctZoG/4HyXr+W6gIrITdA8p8C8iyDyBYO5dbaqzK0e65nvIN7MeB6FKIeANj4588CYz5zT9H57oO2ujBUYo0+HC1+riMf6mPyruLrLMLPMcoSxgCOHztM/b0SX2gt/aA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-363c3862a93so16777955ab.2
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Feb 2024 13:13:04 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707167584; x=1707772384;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1Z0ihoDKUQq9Uqt/80kKGIwkNWhhfnyox0+aJomGQ+c=;
+        b=Lz488I+uzp2gTPi2I691wqjkZQtT1Jnxwcanq9McBlKCYaKobN7fiNMQzUhqA11CSG
+         8yjc2qbHGwibpomd5QaE3/V98JNQOEx6DeGIQPVJUdZP5wHQMvwP/kyx1I0yw4021CEt
+         BYTO6+bwEsYRwN0elRRiqpS0b55CEhfhszCzYGglMEsBzRXuXSLVctig3AcYDTYOd9DI
+         zwBTCZP9uNyd0r7QM1YPDvfsJauRfOoM4rGD87B4WwjfMVKaqpWhhzYKGobWrHDrzDWe
+         Oziy90+plESk4qLyWa+T5xw2RzO7VhH+jGJHHgIfOnZr4OqgJv8KHTfj6kkJueHAtu4Z
+         3tkw==
+X-Gm-Message-State: AOJu0YxgkydPbtTA3VV7ePBjd2kH2TEX88CzmrhipouoWSvt7i8p8hOF
+	0NY3+SXFL7FNEh7mbmRMMSrzOYjii64HfkFZ7/yKTW4SPA4ZcS+5Rk7sC1Zmx0erImgwkc26gAV
+	aYsHyfp/R6R8EaJLLEsdjIBT9aGSeTLxDcHz9kU8au3T5lQKV6zvXOrM=
+X-Google-Smtp-Source: AGHT+IEUIJq4+NI9WY9amk5S6XGpR/DU60PskU08/wZ5acN0mwT02+7/lbDHKIoPrXocNN1g8Li8iF6NRBWd9DCQRYIGP5il6yiN
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+X-Received: by 2002:a05:6e02:1d9e:b0:363:ca05:c856 with SMTP id
+ h30-20020a056e021d9e00b00363ca05c856mr55769ila.6.1707167584313; Mon, 05 Feb
+ 2024 13:13:04 -0800 (PST)
+Date: Mon, 05 Feb 2024 13:13:04 -0800
+In-Reply-To: <0000000000009c7eb105f5b88b70@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000006f69c90610a8edb3@google.com>
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_buf_item_unpin
+From: syzbot <syzbot+3f083e9e08b726fcfba2@syzkaller.appspotmail.com>
+To: axboe@kernel.dk, brauner@kernel.org, chandan.babu@oracle.com, 
+	djwong@kernel.org, jack@suse.cz, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
----
- fs/xfs/xfs_mount.c | 2 ++
- 1 file changed, 2 insertions(+)
+syzbot suspects this issue was fixed by commit:
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index aabb25dc3efa..6d16203d5c1c 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -711,6 +711,8 @@ xfs_mountfs(
- 	if (error)
- 		goto out;
- 
-+	strscpy(mp->m_super->s_sysfs_name, mp->m_super->s_id, sizeof(mp->m_super->m_sysfs_name));
-+
- 	error = xfs_sysfs_init(&mp->m_stats.xs_kobj, &xfs_stats_ktype,
- 			       &mp->m_kobj, "stats");
- 	if (error)
--- 
-2.43.0
+commit 6f861765464f43a71462d52026fbddfc858239a5
+Author: Jan Kara <jack@suse.cz>
+Date:   Wed Nov 1 17:43:10 2023 +0000
 
+    fs: Block writes to mounted block devices
+
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=176f2d7be80000
+start commit:   d2980d8d8265 Merge tag 'mm-nonmm-stable-2023-02-20-15-29' ..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=471a946f0dd5764c
+dashboard link: https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17a077d8c80000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14d91c74c80000
+
+If the result looks correct, please mark the issue as fixed by replying with:
+
+#syz fix: fs: Block writes to mounted block devices
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
