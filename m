@@ -1,54 +1,54 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5651119B;
-	Mon,  5 Feb 2024 08:24:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF47011197;
+	Mon,  5 Feb 2024 08:26:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707121478; cv=none; b=tCLluaNBu2Lg0QdNaUYTss8s5g1wEAGcULlRVtEz+n10aWOxsaVg6jfKmAEDL0yh07aVFRV4kvsePkBpE3rKB5nlXtOZNXMO16lo0CugKsG2KozayMFwNO/viM8lBo/FEov8pdSnGMqCPYfE+rCgycUpuMMiRg9FB3AOCbLy2tU=
+	t=1707121592; cv=none; b=RhNVTYr/F4DcpIaGXi7mMfI6SVTC8pgbGFd369ktJ34ymstVM9qGMaU61TlLmsonaE3yeyolkVw17thpLT+QGET1OHQlluWVpFg/+pmOFHbYOFsaysqmCxciiOZ0QvjgDPEGq4wUWzOScLn0ULuhwRbfwc72shYHX2rTjCUQxE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707121478; c=relaxed/simple;
-	bh=KQpaPLqSEolF8emsWTskFJOpRGHDfiOKvR6xUfHJThE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KMPQXHdyUCsFdbYZfomFEkezuC8BkLMrMrtCy1tp9f9DNYpjBzz2es41q6Qk9vMksNLSKkSY0s98zLzD7/4Hx+YEN9SSInRCXt8DHXNou1IcRZ+wWjbmOig3tcH2gMFWvD39v5Ld8iVFDHDLJU0+R/x4tafLcfvrC82q6U9/UtY=
+	s=arc-20240116; t=1707121592; c=relaxed/simple;
+	bh=LbuJw2xD8l9tYjGEUkeiPhK3rPmUvUClZqAADKdQjCA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kaWnAZCKzLSVG97U22ozGrcn+EqfjrmRp9Ruk6lM+65TpwupKEUmSc4F2xtqGxkqZxqT361XYWnJbnR3Rdkm3tO6qf9cFSBpSryGUDp8Fxakqphf3ofMoOnwzVr++6m8XR3/rRivrMmpoGnFAAlSis9s7L8WTpE/DULiDG6ZxAg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: f9bc70ff996c4d7392f84dd422bb2e54-20240205
+X-UUID: 8b8e8b0dbbc142ecb32e9686707e00ca-20240205
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:4e29416e-52ab-436f-85b1-2bd53a7c5caf,IP:10,
+X-CID-O-INFO: VERSION:1.1.35,REQID:d0471828-7056-4f39-9f3a-ae59c357938f,IP:10,
 	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACT
 	ION:release,TS:20
-X-CID-INFO: VERSION:1.1.35,REQID:4e29416e-52ab-436f-85b1-2bd53a7c5caf,IP:10,UR
+X-CID-INFO: VERSION:1.1.35,REQID:d0471828-7056-4f39-9f3a-ae59c357938f,IP:10,UR
 	L:0,TC:0,Content:0,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
 	N:release,TS:20
-X-CID-META: VersionHash:5d391d7,CLOUDID:eb9c86fe-c16b-4159-a099-3b9d0558e447,B
-	ulkID:240205162428F9EWJSI9,BulkQuantity:0,Recheck:0,SF:44|66|38|24|17|19|1
+X-CID-META: VersionHash:5d391d7,CLOUDID:0ea92180-4f93-4875-95e7-8c66ea833d57,B
+	ulkID:240205162625SWQ3TOL0,BulkQuantity:0,Recheck:0,SF:17|19|44|66|38|24|1
 	02,TC:nil,Content:0,EDM:5,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL
 	:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0,NGT
 X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: f9bc70ff996c4d7392f84dd422bb2e54-20240205
+X-UUID: 8b8e8b0dbbc142ecb32e9686707e00ca-20240205
 Received: from mail.kylinos.cn [(39.156.73.10)] by mailgw
 	(envelope-from <chentao@kylinos.cn>)
 	(Generic MTA)
-	with ESMTP id 1214818029; Mon, 05 Feb 2024 16:24:26 +0800
+	with ESMTP id 1928903605; Mon, 05 Feb 2024 16:26:22 +0800
 Received: from mail.kylinos.cn (localhost [127.0.0.1])
-	by mail.kylinos.cn (NSMail) with SMTP id E7E6BE000EBC;
-	Mon,  5 Feb 2024 16:24:25 +0800 (CST)
-X-ns-mid: postfix-65C09B39-75837763
+	by mail.kylinos.cn (NSMail) with SMTP id 3472DE000EBC;
+	Mon,  5 Feb 2024 16:26:22 +0800 (CST)
+X-ns-mid: postfix-65C09BAE-2003869
 Received: from kernel.. (unknown [172.20.15.254])
-	by mail.kylinos.cn (NSMail) with ESMTPA id 41994E000EBC;
-	Mon,  5 Feb 2024 16:24:25 +0800 (CST)
+	by mail.kylinos.cn (NSMail) with ESMTPA id B7F44E000EBC;
+	Mon,  5 Feb 2024 16:26:21 +0800 (CST)
 From: Kunwu Chan <chentao@kylinos.cn>
 To: chandan.babu@oracle.com,
 	djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Kunwu Chan <chentao@kylinos.cn>
-Subject: [PATCH] xfs: Simplify the allocation of slab caches in xfs_attr_intent_init_cache
-Date: Mon,  5 Feb 2024 16:24:23 +0800
-Message-Id: <20240205082423.435569-1-chentao@kylinos.cn>
+Subject: [PATCH] xfs: Simplify the allocation of slab caches in xfs_bmap_intent_init_cache
+Date: Mon,  5 Feb 2024 16:26:20 +0800
+Message-Id: <20240205082620.435721-1-chentao@kylinos.cn>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -63,23 +63,23 @@ to simplify the creation of SLAB caches.
 
 Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
 ---
- fs/xfs/libxfs/xfs_attr.c | 4 +---
+ fs/xfs/libxfs/xfs_bmap.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 9976a00a73f9..c8e1c741701f 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1530,9 +1530,7 @@ xfs_attr_namecheck(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f362345467fa..e46d0e21aeb6 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6211,9 +6211,7 @@ xfs_bmap_validate_extent_raw(
  int __init
- xfs_attr_intent_init_cache(void)
+ xfs_bmap_intent_init_cache(void)
  {
--	xfs_attr_intent_cache =3D kmem_cache_create("xfs_attr_intent",
--			sizeof(struct xfs_attr_intent),
+-	xfs_bmap_intent_cache =3D kmem_cache_create("xfs_bmap_intent",
+-			sizeof(struct xfs_bmap_intent),
 -			0, 0, NULL);
-+	xfs_attr_intent_cache =3D KMEM_CACHE(xfs_attr_intent, 0);
++	xfs_bmap_intent_cache =3D KMEM_CACHE(xfs_bmap_intent, 0);
 =20
- 	return xfs_attr_intent_cache !=3D NULL ? 0 : -ENOMEM;
+ 	return xfs_bmap_intent_cache !=3D NULL ? 0 : -ENOMEM;
  }
 --=20
 2.39.2
