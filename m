@@ -1,69 +1,71 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B5D1AB7F0
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 21:13:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE235DF2A
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 21:58:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707167621; cv=none; b=ew/zoC35lW2fBTlSGSEf98c68pbZUsz1WF5I8xQ+zwAcqvXwkOo3LbOBdNCdq4UAo4lByi8f9AG6BBTpuhJCvUZ4IQe5JTajhC0Uu7aHkjVuPYOrUloR9uodqoeN4bLIswVaEXTu7AwcNXG3XjN19V+04/KMv6R+3abonhe8Rxo=
+	t=1707170335; cv=none; b=d+4ijetwucx5f/CrOyVeLbR3SLkek0aPtOLo48/OKp5arzW+WRDKQjpcnZMe/CMR2ODae4eJNSgJAWLZ6tJDAtKlTxNOzLIUjXKct/9Oshrt8SUIkGRBC8EC+x5IMTIduDgPqcqJOrcg9ZWXyjxq9d833E2MOdLlnMEa3QI6Q0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707167621; c=relaxed/simple;
-	bh=13l6eG+fs48XmRRtchpk51xDVSUtF4X8wLvSauiE73I=;
+	s=arc-20240116; t=1707170335; c=relaxed/simple;
+	bh=fXqCZbcBxU+Dl9zb7VwlQjoseiraK8MLA3UaXDw+Sok=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UHmYcY4X6RtpJ+dcODzUsnWxpnlHI5qf8dUIQAJjvAsBSpwqyCAppDXwPmP9Kcp3Fl9F5cFa3LD2ePMfxsoS3bLrjcDL4gvTT1aJu+AsC8TPa4PC4rAMFZgSPyT0vxBAx2vI0iSx0ENcxe0sfpE0gcHaoQcNF7I9EUHfxK7aqo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=nCDmhtrx; arc=none smtp.client-ip=209.85.214.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=HQW0oRDvG+pYl5jXGPY5fKYsSLmQbnU1n5EGyRTyRojcOxwOeFiJGlo8mqIp0n7XPNGbCOgti51ePySVLhPm0mXATnM4ce5EV9USclMh8sJwGK535I1XdtbiWU/YiDTCy4OwAli1vpFqGm88Qpo03Sonn/AmhtKSyjZVvLFJbd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rIPn0sI7; arc=none smtp.client-ip=209.85.215.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="nCDmhtrx"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1d93ddd76adso974815ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Feb 2024 13:13:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rIPn0sI7"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-5d8ddbac4fbso4462450a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Feb 2024 13:58:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707167619; x=1707772419; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707170332; x=1707775132; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=f3r+qq22DmacUgGxPQrXNRVSMoRDx0IAeJG4ATrfk58=;
-        b=nCDmhtrxUnDPlV2RQP/6JmMEswN24EfZu5pEZ+XogwlCsU8H93kYIp+UJl+PKCOKnw
-         q0Aeyxftd/whaIWtm8Kt3KU6Hn9aSQrdjAb0LBnw4/MDvkK9PmaTEDQnT+UbwUnarlje
-         YSq7YBgwa8ZP/2VnqtGz8p9mvf4pwm6zffgIhOtzr975jCrSD2McQ4bj6OrshrDi2tkf
-         mBWwQdvmfNphk7DoP6aafUdxZhNE7CZlrWDHXIOkzrQhEyG59+Vpr+ueWmIiusGxzmsV
-         oTzRBXRCD33xU+Vlh6xb18yVFQu9zHrR0bFmbbcjg0qNo6rZMN00cVXRUw+RbRRYmrME
-         6TIg==
+        bh=RCce4pV3xPOpa0Za3QiaoPauzc6TdqvdOGmTYYs8YWk=;
+        b=rIPn0sI79mq7NbQHmPpQHNbDU/oLqETMyhOmKVtTBSYBQVoANMs26Zk8TshTBczon0
+         l+PlJJSDx13Qr5uwkSFvaUlYnLj9zTKg26ePCdBecAUqAv8Dk+uAg8vyQMEGZ6oNRZmY
+         RaVAqacTClXWft6fohsAstnbk158fvRfixCWqs/HpYEfBbfQk5LxzCbANso7QvtaWNg2
+         i/18jdpKq/GhuLDpaxBMjnOQl+Dyg0VbpxyA7yRvX6PnORKdrs0YnszefY2l/DeVZCCB
+         ykiHjmAPFJCnpu4+yj7M1aCSAe0DFSstdchSrb4HGyDKDovEinWLpy1CQzJW6bZvhSm3
+         RVfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707167619; x=1707772419;
+        d=1e100.net; s=20230601; t=1707170332; x=1707775132;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=f3r+qq22DmacUgGxPQrXNRVSMoRDx0IAeJG4ATrfk58=;
-        b=oQKfKLMl/ojPw/ZH0utGRh5R2ULE9DL8MlEUgZnUyClbLlyACnzZC8pkchIpTrUpTW
-         rR76Jdj86Wv0p6NVCF/hWCS9q2RHVC6hgpafNnDcHWEz01Vjf9MO4yvuv0iOItSSKwQY
-         olKYHZp+F9FxVef9aa4MFYDt4PCKcIKgO6lnJ0P/k3LWzXKXBI4S0EwgfsdKTtYjz39S
-         sPE7Uiwa3Ec5gTlzvVP+NbNpvPPGqC74r7qTcKxKsQg1VoImUKaEsmwpy/PAqKv08cSv
-         CfZdpHagXuaTJe76vz3aKf7GiwkcS/FeXYhRjfajfVo1TUf8WTJhrlJhnDgbyxMQQSrx
-         s6hw==
-X-Gm-Message-State: AOJu0YzJyEbAWWrMCR52URunxFRHCizyionnkDe/g6OwPb3JyFHg2myk
-	7noOhjMS68RHmXJgygLcU+NLb8S73Tlf6AbXWZ04d0+DxMYAeTwfGU5JOK2Wu6DlcZPe0Cxc0kw
-	f
-X-Google-Smtp-Source: AGHT+IHwdDgZKazDGYkqjHh6smTc0yoCcshlEA7o3+fVyXsc/OSLIS/0p4qMD1fGH2HpJ+4aqvtRBQ==
-X-Received: by 2002:a17:902:b281:b0:1d6:fcc3:c98f with SMTP id u1-20020a170902b28100b001d6fcc3c98fmr778263plr.29.1707167619331;
-        Mon, 05 Feb 2024 13:13:39 -0800 (PST)
+        bh=RCce4pV3xPOpa0Za3QiaoPauzc6TdqvdOGmTYYs8YWk=;
+        b=filzVDurtOyp5JlVqJO/0+b86T7XIDlawaRgKDyCRvy76qiCEnOji3tABoYiyEgXWo
+         kLwvaJvSbMYYOZ8E1Ny4zEX3SxD9UmbwcsUp5SCJ6Qob0slWwK/7eHriS6PpUSVlubyG
+         cZPPvJLvxyA3zKKvHXeJHn2ThXzqdX/SB1IdTnt8tNsejcZDrMxK7eruktalHIJ8D40D
+         cb8VTffq+K/yEH8aOXVvfCr/DplaDB33Jy4YgimPi5TZ7KJVuWpxsf3Q/l2ot7g9CoY5
+         nBRMNx/q6iKjTKDdBoW7s5f+VO1ly9IdY0NuywbkEhbKxyCxPLkfUbUGKO0j2AtD/86f
+         iOIA==
+X-Gm-Message-State: AOJu0YzXS1G7I7+TU86/f8YDmeYf5iZrX/1fP/O6ZCeUT3Hs66QA+p3a
+	hzC7Y4VZligbqkpHcGBfqvDjCgI7UA5MBZjh8YoOUjISBdCi2y31H6EneIFyVRedACAfnt38lGX
+	j
+X-Google-Smtp-Source: AGHT+IGpyt5NWDGnI0khW1wkoK90/F1ldXluyiDGMdK3jQA9tZXTqTvflL1xE6RlSXU3tUzaKjY8Lg==
+X-Received: by 2002:a05:6a21:2d0a:b0:19c:7e6f:85f2 with SMTP id tw10-20020a056a212d0a00b0019c7e6f85f2mr462782pzb.1.1707170332483;
+        Mon, 05 Feb 2024 13:58:52 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCXfoiv3knB/SSXG8SVBFwzWWBW4atkK43PqHLEoHiySTJ+YmhaUJU2ngxDwfMe1JDaMdpi99UM1XuPBYwlaQ6iz/O4Ya9QxhbGcev8Glr4wO6FK7+kIXHO7pwT7pPg+Qa7JdbDAekq+oL0HJO6+26rNLubU31yvhucCTe387Ccm85s2D6KKw0vSfRvXCPoyHA/qD8PYXTJEKvr/YyRooerssQ==
 Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
-        by smtp.gmail.com with ESMTPSA id j6-20020a170902c3c600b001d965cf6a9bsm316564plj.252.2024.02.05.13.13.38
+        by smtp.gmail.com with ESMTPSA id m22-20020aa78a16000000b006e035133b72sm350032pfa.134.2024.02.05.13.58.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Feb 2024 13:13:38 -0800 (PST)
+        Mon, 05 Feb 2024 13:58:51 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rX6HX-002Xqq-1v;
-	Tue, 06 Feb 2024 08:13:35 +1100
-Date: Tue, 6 Feb 2024 08:13:35 +1100
+	id 1rX6zJ-002Ypp-0V;
+	Tue, 06 Feb 2024 08:58:49 +1100
+Date: Tue, 6 Feb 2024 08:58:49 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Donald Buczek <buczek@molgen.mpg.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [QUESTION] zig build systems fails on XFS V4 volumes
-Message-ID: <ZcFPf8R8geZwBgIV@dread.disaster.area>
-References: <1b0bde1a-4bde-493c-9772-ad821b5c20db@molgen.mpg.de>
- <ZcAICW2o5pg7eVlM@dread.disaster.area>
- <39caab25-bf87-4a62-814d-b67f9c81a6e0@molgen.mpg.de>
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 1/6] fs: super_block->s_uuid_len
+Message-ID: <ZcFaGRV08WQOxCzb@dread.disaster.area>
+References: <20240205200529.546646-1-kent.overstreet@linux.dev>
+ <20240205200529.546646-2-kent.overstreet@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,131 +74,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <39caab25-bf87-4a62-814d-b67f9c81a6e0@molgen.mpg.de>
+In-Reply-To: <20240205200529.546646-2-kent.overstreet@linux.dev>
 
-On Mon, Feb 05, 2024 at 02:12:43PM +0100, Donald Buczek wrote:
-> On 2/4/24 22:56, Dave Chinner wrote:
-> > On Sat, Feb 03, 2024 at 06:50:31PM +0100, Donald Buczek wrote:
-> >> Dear Experts,
-> >>
-> >> I'm encountering consistent build failures with the Zig
-> >> language from source on certain systems, and I'm seeking
-> >> insights into the issue.
-> >>
-> >> Issue Summary:
-> >>
-> >>     Build fails on XFS volumes with V4 format (crc=0).  Build
-> >>     succeeds on XFS volumes with V5 format (crc=1), regardless
-> >>     of bigtime value.
-> > 
-> > mkfs.xfs output for a successful build vs a broken build,
-> > please!
-> > 
-> > Also a description of the hardware and storage stack
-> > configuration would be useful.
-> > 
-> >>
-> >> Observations:
-> >>
-> >>     The failure occurs silently during Zig's native build
-> >>     process.
-> > 
-> > What is the actual failure? What is the symptoms of this "silent
-> > failure". Please give output showing how the failure is occurs,
-> > how it is detected, etc. From there we can work to identify what
-> > to look at next.
-> > 
-> > Everything remaining in the bug report is pure speculation, but
-> > there's no information provided that allows us to do anything
-> > other than speculate in return, so I'm just going to ignore it.
-> > Document the evidence of the problem so we can understand it -
-> > speculation about causes in the absence of evidence is simply
-> > not helpful....
+On Mon, Feb 05, 2024 at 03:05:12PM -0500, Kent Overstreet wrote:
+> Some weird old filesytems have UUID-like things that we wish to expose
+> as UUIDs, but are smaller; add a length field so that the new
+> FS_IOC_(GET|SET)UUID ioctls can handle them in generic code.
 > 
-> I was actually just hoping that someone could confirm that the
-> functionality, as visible from userspace, should be identical,
-> apart from timing. Or, that someone might have an idea based on
-> experience what could be causing the different behavior. This was
-> not intended as a bug report for XFS.
+> Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+> ---
+>  fs/super.c         | 1 +
+>  include/linux/fs.h | 1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/fs/super.c b/fs/super.c
+> index d35e85295489..ed688d2a58a7 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -375,6 +375,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags,
+>  	s->s_time_gran = 1000000000;
+>  	s->s_time_min = TIME64_MIN;
+>  	s->s_time_max = TIME64_MAX;
+> +	s->s_uuid_len = sizeof(s->s_uuid);
 
-Maybe not, but as a report of "weird unexpected behaviour on XFS"
-it could be an XFS issue....
+So if the filesystem doesn't copy a uuid into sb->s_uuid, then we
+allow those 16 bytes to be pulled from userspace?
 
-[....]
+Shouldn't this only get set when the filesystem copies it's uuid
+to the superblock?
 
-> There is also a script cmp.sh and its output cmp.log, which
-> compares the xfs_ok and xfs_fail directories. It also produces
-> traces.cmp.txt which is a (width 200) side by side comparison of
-> the strace files.
-
-I think this one contains a smoking gun w.r.t. whatever code is
-running. Near the end of the first trace comaprison, there is an
-iteration of test/cases via getdents64(). They have different
-behaviour, yet the directory structure is the same.
-
-Good:
-
-openat(3, "test/cases", O_RDONLY|O_CLOEXEC|O_DIRECTORY) = 7
-lseek(7, 0, SEEK_SET)                   = 0
-getdents64(7, 0x7f8d106b69b8 /* 21 entries */, 1024) = 1000
-getdents64(7, 0x7f8d106b69b8 /* 21 entries */, 1024) = 1016
-getdents64(7, 0x7f8d106b69b8 /* 21 entries */, 1024) = 1000
-getdents64(7, 0x7f8d106b69b8 /* 23 entries */, 1024) = 1016
-openat(7, "compile_errors", O_RDONLY|O_CLOEXEC|O_DIRECTORY) = 8
-getdents64(8, 0x7f8d106b6de0 /* 16 entries */, 1024) = 968
-getdents64(8, 0x7f8d106b6de0 /* 17 entries */, 1024) = 1008
-getdents64(8, 0x7f8d106b6de0 /* 17 entries */, 1024) = 1016
-getdents64(8, 0x7f8d106b6de0 /* 14 entries */, 1024) = 968
-openat(8, "async", O_RDONLY|O_CLOEXEC|O_DIRECTORY) = 9
-getdents64(9, 0x7f8d106b7208 /* 16 entries */, 1024) = 1000
-......
-
-
-Bad:
-
-openat(3, "test/cases", O_RDONLY|O_CLOEXEC|O_DIRECTORY) = 7
-lseek(7, 0, SEEK_SET)                   = 0
-getdents64(7, 0x7f2593eb89b8 /* 21 entries */, 1024) = 1000
-getdents64(7, 0x7f2593eb89b8 /* 21 entries */, 1024) = 1016
-getdents64(7, 0x7f2593eb89b8 /* 21 entries */, 1024) = 1000
-getdents64(7, 0x7f2593eb89b8 /* 23 entries */, 1024) = 1016
-getdents64(7, 0x7f2593eb89b8 /* 25 entries */, 1024) = 1016
-getdents64(7, 0x7f2593eb89b8 /* 20 entries */, 1024) = 1016
-getdents64(7, 0x7f2593eb89b8 /* 19 entries */, 1024) = 992
-getdents64(7, 0x7f2593eb89b8 /* 22 entries */, 1024) = 1016
-getdents64(7, 0x7f2593eb89b8 /* 22 entries */, 1024) = 992
-getdents64(7, 0x7f2593eb89b8 /* 17 entries */, 1024) = 760
-getdents64(7, 0x7f2593eb89b8 /* 0 entries */, 1024) = 0
-
-In the good case, we see a test/cases being read, and then the first
-subdir test/cases/compile_errors being opened and read. And then a
-subdir test/cases/compile_errors/async being opened and read.
-
-IOWs, in the good case it's doing a depth first directory traversal.
-
-In the bad case, there's no subdirectories being opened and read.
-
-I see the same difference in other traces that involve directory
-traversal.
-
-The reason for this difference seems obvious: there's a distinct
-lack of stat() calls in the ftype=0 (bad) case. dirent->d_type in
-this situation will be reporting DT_UNKNOWN for all entries except
-'.' and '..'. It is the application's responsibility to handle this,
-as the only way to determine if a DT_UNKNOWN entry is a directory is
-to stat() the pathname and look at the st_mode returned.
-
-The code is clearly not doing this, and so I'm guessing that the zig
-people have rolled their own nftw() function and didn't pay
-attention to the getdents() man page:
-
-	Currently,  only some filesystems (among them: Btrfs, ext2,
-	ext3, and ext4) have full support for returning the file
-	type in d_type.  All applications must properly handle a
-	return of DT_UNKNOWN.
-
-So, yeah, looks like someone didn't read the getdents man page
-completely and it's not a filesystem issue.
+And then in the get uuid  ioctl, if s_uuid_len is zero we can return
+-ENOENT to indicate the filesystem doesn't have a UUID, rather that
+require userspace to determine a filesystem doesn't have a valid
+UUID somehow...
 
 -Dave.
 -- 
