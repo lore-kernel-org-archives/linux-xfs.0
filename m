@@ -1,76 +1,87 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBBB11198
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Feb 2024 06:45:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5879611197;
+	Mon,  5 Feb 2024 08:12:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707115529; cv=none; b=MlS33Zrc8gydlmBWiexhlZqvROGPeHF5j8ejBgZrC/XlSAnWtmtLBvy9rzQYSWb8heFB1ZCpRSpdFdw7fnxPu/EcVYgIlx7JaQGMjwYDYJc4Pn5UOIegSSIbjn4EYEzTZMVbRe0ppcMnCcMFi4WaNjc4UXs5HUzV0ZcAyfZT9EI=
+	t=1707120769; cv=none; b=m0k3f1LH6x6JbsZMtAeOH+db6e4Nr2GkVZQx0J1Pjj8Fs0abAdtQjde9bgfg6hMu/3N48HG/+vHuQmMte91A8yQ9l5rf6qPb1JZ/rkeNVU28hsbpvdw22uQZX2frh1YuNMtxzxFQ56Y+bj/5e3yg238O2lPCPlDb/f4AztS95Ys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707115529; c=relaxed/simple;
-	bh=g4HnpUBNuh+h8+VzqKt9YmfDla2C6EhCPYVGMztXMiw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AvfrPiOOqv445WQaj82i79xjo0becf6yZxCzq3X4DVS09ZWXRgH0deyx1cjm+ErizHi16LyhYnZ6gHxkc8a42LVgE7m2PNZOy/v0YGdnqP+NQY3sn5CfY7h8VdZrRysijx/2itvOyRFdS3AvK72tXpkSP+8BSxv839INMJO2jtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nfNut5Qm; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nfNut5Qm"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=jcJ7AL9FUpX8TD4+SQJsm4jsHslRBM23bjoCU/QKrSc=; b=nfNut5QmUGMEgEP8ZxqtP8DN3a
-	jrEROhtf3yiVz8UVtRX3HhPY3WP8uaCpymJFrk5wlKiYjl2Lt2bZcV0qZHvAEN1CnLTnsYZf/vqld
-	OldyiXfkOKOZqcmhlkC5M+2RS+lqCnxuvyVkDtN0kgmHIdLWJv9NZDoSr+ZciITliuEk1ODOnKieT
-	4hcQQH3ksr3CIXJhcc6sdibpUTKncY7WJVehRYVABb7QA82pt0+/VOjrvvxtgqpBp8zhmSTzryVE6
-	svaX/Kf9kRYb8GUov/8hHHqnH5n1fJRq35/etshPcMGDwAvq6XiEQbK+4bj0WaeZDCamsc351ycd2
-	nh1WD84g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rWsjP-00000002C44-072W;
-	Mon, 05 Feb 2024 06:45:27 +0000
-Date: Sun, 4 Feb 2024 22:45:26 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_clear_incompat_log_features considered harmful?
-Message-ID: <ZcCEBkVrMUBeXu78@infradead.org>
-References: <20240131230043.GA6180@frogsfrogsfrogs>
- <ZcA1Q5gvboA/uFCC@dread.disaster.area>
+	s=arc-20240116; t=1707120769; c=relaxed/simple;
+	bh=rfUa0HdmE6ij/bFudS3tT0s17llFqfefDKIJnb9AgNE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lAEuOPxdnPpRCmVwHRRitLOA2E1/n/qvs/Vqd4Jnrnm6erDM1kWVQRN325HYPa4O3ugW/6/kFINT10btYeVh7pg0thm9MybrXQkhyMwxirvHW+TDjZK/9NCmlHmOTMfPcN7d0EyoiSGOypEKaga71nr/D/3eexkQgt69aMTr9+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 1ae78dc8005d4e47a8ded7444ee00e25-20240205
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.35,REQID:aee657ed-6156-4f0f-8642-ad02761df660,IP:10,
+	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACT
+	ION:release,TS:20
+X-CID-INFO: VERSION:1.1.35,REQID:aee657ed-6156-4f0f-8642-ad02761df660,IP:10,UR
+	L:0,TC:0,Content:0,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-META: VersionHash:5d391d7,CLOUDID:c956a183-8d4f-477b-89d2-1e3bdbef96d1,B
+	ulkID:240205161243P4PVZV2C,BulkQuantity:0,Recheck:0,SF:24|17|19|44|66|38|1
+	02,TC:nil,Content:0,EDM:5,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL
+	:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
+X-UUID: 1ae78dc8005d4e47a8ded7444ee00e25-20240205
+Received: from mail.kylinos.cn [(39.156.73.10)] by mailgw
+	(envelope-from <chentao@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 979480105; Mon, 05 Feb 2024 16:12:40 +0800
+Received: from mail.kylinos.cn (localhost [127.0.0.1])
+	by mail.kylinos.cn (NSMail) with SMTP id 1DB37E000EBC;
+	Mon,  5 Feb 2024 16:12:40 +0800 (CST)
+X-ns-mid: postfix-65C09877-93077738
+Received: from kernel.. (unknown [172.20.15.254])
+	by mail.kylinos.cn (NSMail) with ESMTPA id A7178E000EBC;
+	Mon,  5 Feb 2024 16:12:39 +0800 (CST)
+From: Kunwu Chan <chentao@kylinos.cn>
+To: chandan.babu@oracle.com,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Kunwu Chan <chentao@kylinos.cn>
+Subject: [PATCH] xfs: Simplify the allocation of slab caches in xfs_rmap_intent_init_cache
+Date: Mon,  5 Feb 2024 16:12:27 +0800
+Message-Id: <20240205081227.434198-1-chentao@kylinos.cn>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZcA1Q5gvboA/uFCC@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Feb 05, 2024 at 12:09:23PM +1100, Dave Chinner wrote:
-> The issue arises if the host tries to mount the guest VM image to
-> configure the clone of a golden image prior to first start. If there
-> are log incompat fields set in the golden image that was generated
-> by a newer kernel/OS image builder then the provisioning
-> host cannot mount the filesystem even though the log is clean and
-> recovery is unnecessary to mount the filesystem.
+Use the new KMEM_CACHE() macro instead of direct kmem_cache_create
+to simplify the creation of SLAB caches.
 
-Well, even with the current code base in Darrick's queue a mount alone
-won't upgrade features, you need to do an explicit exchrange or online
-repair operation.  And I think we should basically never do log or
-other format incompatible changes without an explicit user action.
-The only exception would be if the feature is so old that we finally
-want to get rid of the old implementation, in which case we can think
-of automatically doing the upgrade with a big fat warning.
+Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
+---
+ fs/xfs/libxfs/xfs_rmap.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-> Hence on unmount we really want the journal contents based log
-> incompat bits cleared because there is nothing incompatible in the
-> log and so there is no reason to prevent older kernels from
-> mounting the filesytsem.
-
-Doing the clearing at unmount time only (and maybe freeze if someone
-really cares) sounds perfectly fine.
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 76bf7f48cb5a..99aac6f6f6b1 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2931,9 +2931,7 @@ const struct xfs_owner_info XFS_RMAP_OINFO_COW =3D =
+{
+ int __init
+ xfs_rmap_intent_init_cache(void)
+ {
+-	xfs_rmap_intent_cache =3D kmem_cache_create("xfs_rmap_intent",
+-			sizeof(struct xfs_rmap_intent),
+-			0, 0, NULL);
++	xfs_rmap_intent_cache =3D KMEM_CACHE(xfs_rmap_intent, 0);
+=20
+ 	return xfs_rmap_intent_cache !=3D NULL ? 0 : -ENOMEM;
+ }
+--=20
+2.39.2
 
