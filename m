@@ -1,93 +1,221 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DCC8127B6B
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Feb 2024 06:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2D812AAF6;
+	Tue,  6 Feb 2024 08:24:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707201938; cv=none; b=sooz/ATn6mVqP9mWuSOINHqoLPhLb6L1sVvgexCW3r4PS6S3ETu2e85hFORRhhAQdjjs5e/7svtPlek8jggleQ/RhLYSoU8s9Sb98G3mfZ9JDSQApjclIa3A5Jvb1A+X9sVEwyrYdiyL6nxLpVck3PljHkb6CVUsRQwFcL4xvis=
+	t=1707207900; cv=none; b=jl2+M6kP8lo38Fd3gH6Whnr2FgRrxLMgm+ntLN/YmI+UXYIwGa91Jx5o9qhQ69dkJlicnZD8/+2yTQxSLRDb7Y0bAbH/r8KQoYeiOCsySP+R5x5V9KoUmJThiRym4bjGmwqOsBG7URDvgWfvnCb3nl3MTonSp9Zk7eEos9ttgv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707201938; c=relaxed/simple;
-	bh=gpGcYWZ/RqijVBiIVZCzl8XRP6D9ch1xlS3XgGqLOGg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DAczoO4DnUqJxw97uZbX1p+GVgZwpxMB8PaYCs9Xyo7HqFT8KX5aD0lwtTOCFUhg11LOGYz6mms8bDnbcLseqGeXy1OLnF0uFbKxdhvobFN9B7wM/PYOzcx1gZTBmTFJhWCw3zOqJfCz+xFjEOYLJrrtrcXwBQXmaUGNHcDfqL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.1.122] (ip5f5ae993.dynamic.kabel-deutschland.de [95.90.233.147])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: buczek)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id DD97E61E5FE01;
-	Tue,  6 Feb 2024 07:45:22 +0100 (CET)
-Message-ID: <c171c058-fc69-4e47-aca1-c1a35a774038@molgen.mpg.de>
-Date: Tue, 6 Feb 2024 07:45:22 +0100
+	s=arc-20240116; t=1707207900; c=relaxed/simple;
+	bh=X/L1gjIUUtX0kI2V+7LgpEWJjGlNkaFiW5R2AxG8xts=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ct8kwR9ocu8MtifYp/k5RphWRHhDGeuchTNBH1uRfP/+A1dfE4pXVUQY7ZhqwAqXO8MvOp1meqXS6PP6QRRKOAlHMvNEhN3fw6LSax//uoUKpN2Sw5uxJjh4ikou/xDiDU57dqtj7xcgABq+P+PfNdqrTBz495vy2y3MBm+d9K8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P5FcuUUb; arc=none smtp.client-ip=209.85.222.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P5FcuUUb"
+Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-783d4b3ad96so340510385a.3;
+        Tue, 06 Feb 2024 00:24:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1707207897; x=1707812697; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xJnh/hZwLgWNEfFoS0DdwaPWX2fntWPodX2RriYMeW8=;
+        b=P5FcuUUbyQLdEdm2FzuwsUlN+uuNNETGSb8E0uCPEO7s1gXTsk/fQ5RAlDsY6REOGP
+         YZOpJ66IOCThCukZCoykJmZIl5ULj8RRLdiRvctD5PFCL3kPJbohzoDvJssdN4uIyGFa
+         L8j09rMqAgKKUiUn7Z6seDPScja9CsVI8j/AYICVo/PBpfBjBsYG0agm3BZGifmpdYmh
+         +wsVVZW9Qzd70w6eYc7TfcHZG09a4xkMMxH90wj7qFlBDN6WjXICcYCQGjRvoDZewYhG
+         fXgxn6+iXRTVRFQfzj0VZcJwjFY+WBvaqOusWrXwUa/YvQuteMu47tOMgQ+vb7bbT+lZ
+         +mqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707207897; x=1707812697;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=xJnh/hZwLgWNEfFoS0DdwaPWX2fntWPodX2RriYMeW8=;
+        b=GUoxlwySZJC2V4tMm7NAvNRTuBQIlmHPHQpJEX0bABMKPnh/cZ9r+w8NXAouaduaLk
+         Zuoi4qRNnVwy28RpCQVPuF9sHqvCqPvb6KKhWaojEwDE10Lk+oP+bJmfWROPmxa7P0d9
+         ndx05NtNLv5axv5GlBmMfQcFJ/NWfYlEFfE4UPHSJfDFVnMr8O2zvkHQwYQcPvRiesMU
+         mKBFK3TJX6ZO+6Qb5tJ9xojx/bDObgm5i/ai/mkNAcqhPIa/HCHXeD8P3OZC5D73ODV2
+         /XWfY90vq1GsUWVbEOaU5jAXu6i5tLrTl584Ctl97PE3QjoJfu3ofqAr7xm1ukChkL7c
+         h8hg==
+X-Gm-Message-State: AOJu0Yx2VnfzIxhiGDb9Looeo29ybnGQlFSGJ/IZ864Ra6d5EbrHC1S7
+	YUF29qCvoqIiMuOaqYuX+bSLu0cVlUVjQHiUdBYHYewkxT4cunVbHV8fqpCGS+OQVhO1fMNItHz
+	KadUsHcPe+1ATMolcV3Du5sUfV9s=
+X-Google-Smtp-Source: AGHT+IGXqi4PAj7TUaBvOsy8jESmmmnmPMJhVrfK/FpfU5yWKUUDHXIKx2eSRTrGXTZRCuV+q1/jMEgqnONnIm2x0TU=
+X-Received: by 2002:ad4:5de3:0:b0:68c:805e:e354 with SMTP id
+ jn3-20020ad45de3000000b0068c805ee354mr2122756qvb.38.1707207897461; Tue, 06
+ Feb 2024 00:24:57 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [QUESTION] zig build systems fails on XFS V4 volumes
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-References: <1b0bde1a-4bde-493c-9772-ad821b5c20db@molgen.mpg.de>
- <ZcAICW2o5pg7eVlM@dread.disaster.area>
- <39caab25-bf87-4a62-814d-b67f9c81a6e0@molgen.mpg.de>
- <ZcFPf8R8geZwBgIV@dread.disaster.area>
-Content-Language: en-US
-From: Donald Buczek <buczek@molgen.mpg.de>
-In-Reply-To: <ZcFPf8R8geZwBgIV@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240205200529.546646-1-kent.overstreet@linux.dev>
+ <20240205200529.546646-3-kent.overstreet@linux.dev> <ZcFelmKPb374aebH@dread.disaster.area>
+ <l2zdnuczo24zxc6z6hh7q5mmux3wr5iltscnrc7axdugt6ct2k@qzrpj6vc2ct5>
+In-Reply-To: <l2zdnuczo24zxc6z6hh7q5mmux3wr5iltscnrc7axdugt6ct2k@qzrpj6vc2ct5>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 6 Feb 2024 10:24:45 +0200
+Message-ID: <CAOQ4uxjvEL4P4vV5SKpHVS5DtOwKpxAn4n4+Kfqawcu+H-MC5g@mail.gmail.com>
+Subject: Re: [PATCH 2/6] fs: FS_IOC_GETUUID
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, "Theodore Ts'o" <tytso@mit.edu>, linux-fsdevel@vger.kernel.or, 
+	Miklos Szeredi <miklos@szeredi.hu>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2/5/24 22:13, Dave Chinner wrote:
-> On Mon, Feb 05, 2024 at 02:12:43PM +0100, Donald Buczek wrote:
->> On 2/4/24 22:56, Dave Chinner wrote:
->>> On Sat, Feb 03, 2024 at 06:50:31PM +0100, Donald Buczek wrote:
->>>> Dear Experts,
->>>>
->>>> I'm encountering consistent build failures with the Zig
->>>> language from source on certain systems, and I'm seeking
->>>> insights into the issue.
->>>>
+On Tue, Feb 6, 2024 at 12:49=E2=80=AFAM Kent Overstreet
+<kent.overstreet@linux.dev> wrote:
+>
+> On Tue, Feb 06, 2024 at 09:17:58AM +1100, Dave Chinner wrote:
+> > On Mon, Feb 05, 2024 at 03:05:13PM -0500, Kent Overstreet wrote:
+> > > Add a new generic ioctls for querying the filesystem UUID.
+> > >
+> > > These are lifted versions of the ext4 ioctls, with one change: we're =
+not
+> > > using a flexible array member, because UUIDs will never be more than =
+16
+> > > bytes.
+> > >
+> > > This patch adds a generic implementation of FS_IOC_GETFSUUID, which
+> > > reads from super_block->s_uuid; FS_IOC_SETFSUUID is left for individu=
+al
+> > > filesystems to implement.
+> > >
 
-> The reason for this difference seems obvious: there's a distinct
-> lack of stat() calls in the ftype=0 (bad) case. dirent->d_type in
-> this situation will be reporting DT_UNKNOWN for all entries except
-> '.' and '..'. It is the application's responsibility to handle this,
-> as the only way to determine if a DT_UNKNOWN entry is a directory is
-> to stat() the pathname and look at the st_mode returned.
+It's fine to have a generic implementation, but the filesystem should
+have the option to opt-in for a specific implementation.
 
-You've nailed it. [1][2]
+There are several examples, even with xfs and btrfs where ->s_uuid
+does not contain the filesystem's UUID or there is more than one
+uuid and ->s_uuid is not the correct one to expose to the user.
 
-I'll take this over to the zig community.
+A model like ioctl_[gs]etflags() looks much more appropriate
+and could be useful for network filesystems/FUSE as well.
 
-Thanks!
+> > > Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+> > > Cc: Christian Brauner <brauner@kernel.org>
+> > > Cc: Jan Kara <jack@suse.cz>
+> > > Cc: Dave Chinner <dchinner@redhat.com>
+> > > Cc: "Darrick J. Wong" <djwong@kernel.org>
+> > > Cc: Theodore Ts'o <tytso@mit.edu>
+> > > Cc: linux-fsdevel@vger.kernel.or
+> > > Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+> > > ---
+> > >  fs/ioctl.c              | 16 ++++++++++++++++
+> > >  include/uapi/linux/fs.h | 16 ++++++++++++++++
+> > >  2 files changed, 32 insertions(+)
+> > >
+> > > diff --git a/fs/ioctl.c b/fs/ioctl.c
+> > > index 76cf22ac97d7..858801060408 100644
+> > > --- a/fs/ioctl.c
+> > > +++ b/fs/ioctl.c
+> > > @@ -763,6 +763,19 @@ static int ioctl_fssetxattr(struct file *file, v=
+oid __user *argp)
+> > >     return err;
+> > >  }
+> > >
+> > > +static int ioctl_getfsuuid(struct file *file, void __user *argp)
+> > > +{
+> > > +   struct super_block *sb =3D file_inode(file)->i_sb;
+> > > +
+> > > +   if (WARN_ON(sb->s_uuid_len > sizeof(sb->s_uuid)))
+> > > +           sb->s_uuid_len =3D sizeof(sb->s_uuid);
+> >
+> > A "get"/read only ioctl should not be change superblock fields -
+> > this is not the place for enforcing superblock filed constraints.
+> > Make a helper function super_set_uuid(sb, uuid, uuid_len) for the
+> > filesystems to call that does all the validity checking and then
+> > sets the superblock fields appropriately.
+>
+> *nod* good thought...
+>
+> > > +struct fsuuid2 {
+> > > +   __u32       fsu_len;
+> > > +   __u32       fsu_flags;
+> > > +   __u8        fsu_uuid[16];
+> > > +};
+> >
+> > Nobody in userspace will care that this is "version 2" of the ext4
+> > ioctl. I'd just name it "fs_uuid" as though the ext4 version didn't
+> > ever exist.
+>
+> I considered that - but I decided I wanted the explicit versioning,
+> because too often we live with unfixed mistakes because versioning is
+> ugly, or something?
+>
+> Doing a new revision of an API should be a normal, frequent thing, and I
+> want to start making it a convention.
+>
+> >
+> > > +
+> > >  /* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl def=
+initions */
+> > >  #define FILE_DEDUPE_RANGE_SAME             0
+> > >  #define FILE_DEDUPE_RANGE_DIFFERS  1
+> > > @@ -215,6 +229,8 @@ struct fsxattr {
+> > >  #define FS_IOC_FSSETXATTR          _IOW('X', 32, struct fsxattr)
+> > >  #define FS_IOC_GETFSLABEL          _IOR(0x94, 49, char[FSLABEL_MAX])
+> > >  #define FS_IOC_SETFSLABEL          _IOW(0x94, 50, char[FSLABEL_MAX])
+> > > +#define FS_IOC_GETFSUUID           _IOR(0x94, 51, struct fsuuid2)
+> > > +#define FS_IOC_SETFSUUID           _IOW(0x94, 52, struct fsuuid2)
+> >
+> > 0x94 is the btrfs ioctl space, not the VFS space - why did you
+> > choose that? That said, what is the VFS ioctl space identifier? 'v',
+> > perhaps?
+>
+> "Promoting ioctls from fs to vfs without revising and renaming
+> considered harmful"... this is a mess that could have been avoided if we
+> weren't taking the lazy route.
+>
+> And 'v' doesn't look like it to me, I really have no idea what to use
+> here. Does anyone?
+>
 
-   Donald
+All the other hoisted FS_IOC_* use the original fs ioctl namespace they
+came from. Although it is not an actual hoist, I'd use:
 
-[1]: https://github.com/ziglang/zig/blob/39ec3d311673716e145957d6d81f9d4ec7848471/lib/std/fs/Dir.zig#L372
-[2]: https://github.com/ziglang/zig/blob/39ec3d311673716e145957d6d81f9d4ec7848471/lib/std/fs/Dir.zig#L669
+struct fsuuid128 {
+       __u32       fsu_len;
+       __u32       fsu_flags;
+       __u8        fsu_uuid[16];
+};
 
-> 
-> The code is clearly not doing this, and so I'm guessing that the zig
-> people have rolled their own nftw() function and didn't pay
-> attention to the getdents() man page:
-> 
-> 	Currently,  only some filesystems (among them: Btrfs, ext2,
-> 	ext3, and ext4) have full support for returning the file
-> 	type in d_type.  All applications must properly handle a
-> 	return of DT_UNKNOWN.
-> 
-> So, yeah, looks like someone didn't read the getdents man page
-> completely and it's not a filesystem issue.
-> 
-> -Dave.
+#define FS_IOC_GETFSUUID              _IOR('f', 45, struct fsuuid128)
+#define FS_IOC_SETFSUUID              _IOW('f', 46, struct fsuuid128)
 
--- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
+Technically, could also overload EXT4_IOC_[GS]ETFSUUID numbers
+because of the different type:
+
+#define FS_IOC_GETFSUUID              _IOR('f', 44, struct fsuuid128)
+#define FS_IOC_SETFSUUID              _IOW('f', 44, struct fsuuid128)
+
+and then ext4 can follow up with this patch, because as far as I can tell,
+the ext4 implementation is already compatible with the new ioctls.
+
+Thanks,
+Amir.
+
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -1613,8 +1613,10 @@ static long __ext4_ioctl(struct file *filp,
+unsigned int cmd, unsigned long arg)
+                return ext4_ioctl_setlabel(filp,
+                                           (const void __user *)arg);
+
++       case FS_IOC_GETFSUUID:
+         case EXT4_IOC_GETFSUUID:
+                 return ext4_ioctl_getuuid(EXT4_SB(sb), (void __user *)arg)=
+;
++       case FS_IOC_SETFSUUID:
+         case EXT4_IOC_SETFSUUID:
+                 return ext4_ioctl_setuuid(filp, (const void __user *)arg);
