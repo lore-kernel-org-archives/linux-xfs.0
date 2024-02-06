@@ -1,229 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A9F51332BD
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Feb 2024 14:52:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCB381E49B;
+	Tue,  6 Feb 2024 16:22:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707231177; cv=none; b=klLyloRymKthimKvFT0sSAL1Co4C4mPNcnsA50vjRptextZs1uno5tMdJYtw/p3f4j+QX0IKHVAdszX0AZT3NFsfz1c8xwD+o83LhLjPwwEMzrTLok5xTfzbnakhli56QyeIhXU6sktjHNiJ9y3mSXW2SkLMKXktzaJ+UfrXwrU=
+	t=1707236562; cv=none; b=A0a5qXxFqUuL1Q+4vPlj/+oX43lBNhEWmRyvVijoj+8vAkC8rJ/beBN/uXbj95nbOY47dTtKVRTqynpAgn5BDOZLTFGOge8Grx9iGXVEDPTmrJk8+46eUXx58xEjvSF4ukhZfssgcCdzxN/3DQhkupAVqbu8wSUYm5U9ZrWOWnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707231177; c=relaxed/simple;
-	bh=Qrpa+uGtUHpG2JAA82HSPm/TG8ygOkhkTJPlA2/C7bk=;
+	s=arc-20240116; t=1707236562; c=relaxed/simple;
+	bh=9CPWKpsQYkI3BqJRpaVlLK8ZC0X64MdLzyKCF7APEVc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UDlxhM7QQz+syjSfr6NEMVZLZklaax4tdUyT1WGb7hwAbdY3R8JgMMcKXNwEmhpUtFECcgnIHue7eAMCCVw7XQ9bNOUm6Rhwu5nOCXJ2lXZZh1EhwDiDGvMVHUix/882Vvn2WfiS3SMkfkPTSrPKmneUwAYIj21b0TvUVlzf7qQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=G/QPfuB8; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q2f6JLFlNWtRkvtUf+PdGxI5wOhXLaTkUK/adnB7awxzin568ynk5Lq3lNOgrEgkDzJXJMzxbJBXD0TN2Dljr7Y/qlRzPlimTUFwwuNoV2GNvv7cBpkjA5W6sFRyYURj3XNcOInEWiObT9VXmpqBAvk157hkoOtLw03GVftaNX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oAZh3RV4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G/QPfuB8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1707231174;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ICNu3j0RxsXSNnJAkw6sqT5jyTGFKxvpyFp2l0saKd0=;
-	b=G/QPfuB8nA55vGWKfsMBZC5QLvEGUCK/j0sT+DD+LMdxEjmapOwGJSE8WFrNXwrA9ingQL
-	ePYYyeRP18TAL71Tv9j8kVXpREClUTpaipScobzAV05jHj1wkmEZ3wfbnpY/2zPheW4FbV
-	W4Tb14TiMPQCy/eK995v+Q/jRN66pXo=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-167-zB82_cyAMDOOlBX9rRInSA-1; Tue, 06 Feb 2024 09:52:44 -0500
-X-MC-Unique: zB82_cyAMDOOlBX9rRInSA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D5715185A782;
-	Tue,  6 Feb 2024 14:52:43 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.186])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 6A5E51C060B3;
-	Tue,  6 Feb 2024 14:52:43 +0000 (UTC)
-Date: Tue, 6 Feb 2024 09:54:01 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-mm@kvack.org, Matthew Wilcox <willy@infradead.org>,
-	Jan Kara <jack@suse.com>, David Howells <dhowells@redhat.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 12/13] writeback: add a writeback iterator
-Message-ID: <ZcJICXOyW7XbiEPp@bfoster>
-References: <20240203071147.862076-1-hch@lst.de>
- <20240203071147.862076-13-hch@lst.de>
- <ZcD/4HNZt1zu2eZF@bfoster>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oAZh3RV4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2A20C433C7;
+	Tue,  6 Feb 2024 16:22:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707236561;
+	bh=9CPWKpsQYkI3BqJRpaVlLK8ZC0X64MdLzyKCF7APEVc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oAZh3RV4A3dRMoUBvHujL1RRdxTuJ+l92+NuYuNT7GwO4J89xoZoJsJVq5jZp/gvR
+	 Lj13jxd5GmPmn5dGIn920C97f9XEKaGgVOhkMEklD/I+2y8/HKg5sgL7veiooFk2gZ
+	 H8HlnZJdxb56K0vQCda9dMRcRQwYPOBzdsBDNfhkeWWjwSRzzFFf8YU6dBirT4Gq2a
+	 CbU7chUZXwWFj0M4uyiRaFkENxCmG0a5p/yQDSeIIYOESg4P3LzIbgyiriVsvIDwMD
+	 77USiQ1IZaVfzfJpUs+IQ0+BpMuCND8a8vWThW5AYBL6paMB0ZFPuThM8o0Wro/Ujn
+	 WtOW4LMz1e1Jg==
+Date: Tue, 6 Feb 2024 17:22:37 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 0/6] filesystem visibility ioctls
+Message-ID: <20240206-aufwuchs-atomkraftgegner-dc53ce1e435f@brauner>
+References: <20240205200529.546646-1-kent.overstreet@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZcD/4HNZt1zu2eZF@bfoster>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.7
+In-Reply-To: <20240205200529.546646-1-kent.overstreet@linux.dev>
 
-On Mon, Feb 05, 2024 at 10:33:52AM -0500, Brian Foster wrote:
-> On Sat, Feb 03, 2024 at 08:11:46AM +0100, Christoph Hellwig wrote:
-> > Refactor the code left in write_cache_pages into an iterator that the
-> > file system can call to get the next folio for a writeback operation:
-> > 
-> > 	struct folio *folio = NULL;
-> > 
-> > 	while ((folio = writeback_iter(mapping, wbc, folio, &error))) {
-> > 		error = <do per-foli writeback>;
-> > 	}
-> > 
-> > The twist here is that the error value is passed by reference, so that
-> > the iterator can restore it when breaking out of the loop.
-> > 
-> > Handling of the magic AOP_WRITEPAGE_ACTIVATE value stays outside the
-> > iterator and needs is just kept in the write_cache_pages legacy wrapper.
-> > in preparation for eventually killing it off.
-> > 
-> > Heavily based on a for_each* based iterator from Matthew Wilcox.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  include/linux/writeback.h |   4 +
-> >  mm/page-writeback.c       | 192 ++++++++++++++++++++++----------------
-> >  2 files changed, 118 insertions(+), 78 deletions(-)
-> > 
-> ...
-> > diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> > index 3abb053e70580e..5fe4cdb7dbd61a 100644
-> > --- a/mm/page-writeback.c
-> > +++ b/mm/page-writeback.c
-> ...
-> > @@ -2434,69 +2434,68 @@ static struct folio *writeback_get_folio(struct address_space *mapping,
-> >  }
-> >  
-> >  /**
-> ...
-> >   */
-> > -int write_cache_pages(struct address_space *mapping,
-> > -		      struct writeback_control *wbc, writepage_t writepage,
-> > -		      void *data)
-> > +struct folio *writeback_iter(struct address_space *mapping,
-> > +		struct writeback_control *wbc, struct folio *folio, int *error)
-> >  {
-> ...
-> > +	} else {
-> >  		wbc->nr_to_write -= folio_nr_pages(folio);
-> >  
-> > -		if (error == AOP_WRITEPAGE_ACTIVATE) {
-> > -			folio_unlock(folio);
-> > -			error = 0;
-> > -		}
-> > +		WARN_ON_ONCE(*error > 0);
+On Mon, Feb 05, 2024 at 03:05:11PM -0500, Kent Overstreet wrote:
+> Hi all,
 > 
-> Why the warning on writeback error here? It looks like new behavior, but
-> maybe I missed something. Otherwise the factoring LGTM.
+> this patchset adds a few new ioctls to standardize a few interfaces we
+> want
+>  - get/set UUID
 
-Err, sorry.. I glossed over the > 0 check and read it as < 0.
-Disregard, this seems reasonable to me as long as we no longer expect
-those AOP returns (which I'm not really clear on either, but anyways..):
+Last time I spoke in favor of exposing the UUID as a generic ioctl most
+were supportive. But I remember that setting the UUID was a lot more
+contentious. If that's changed though then great.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+>  - get sysfs path
+> 
+> The get/set UUID ioctls are lifted versions of the ext4 ioctls with one
+> difference, killing the flexible array member - we'll never have UUIDs
+> more than 16 bytes, and getting rid of the flexible array member makes
+> them easier to use.
+> 
+> FS_IOC_GETSYSFSNAME is new, but it addresses something that we've been
+> doing in fs specific code for awhile - "given a path on a mounted
+> filesystem, tell me where it lives in sysfs".
+> 
+> Cheers,
+> Kent
 
-> 
-> Brian
-> 
-> >  
-> >  		/*
-> >  		 * For integrity writeback we have to keep going until we have
-> > @@ -2510,33 +2509,70 @@ int write_cache_pages(struct address_space *mapping,
-> >  		 * wbc->nr_to_write or encounter the first error.
-> >  		 */
-> >  		if (wbc->sync_mode == WB_SYNC_ALL) {
-> > -			if (error && !ret)
-> > -				ret = error;
-> > +			if (*error && !wbc->saved_err)
-> > +				wbc->saved_err = *error;
-> >  		} else {
-> > -			if (error || wbc->nr_to_write <= 0)
-> > +			if (*error || wbc->nr_to_write <= 0)
-> >  				goto done;
-> >  		}
-> >  	}
-> >  
-> > -	/*
-> > -	 * For range cyclic writeback we need to remember where we stopped so
-> > -	 * that we can continue there next time we are called.  If  we hit the
-> > -	 * last page and there is more work to be done, wrap back to the start
-> > -	 * of the file.
-> > -	 *
-> > -	 * For non-cyclic writeback we always start looking up at the beginning
-> > -	 * of the file if we are called again, which can only happen due to
-> > -	 * -ENOMEM from the file system.
-> > -	 */
-> > -	folio_batch_release(&wbc->fbatch);
-> > -	if (wbc->range_cyclic)
-> > -		mapping->writeback_index = 0;
-> > -	return ret;
-> > +	folio = writeback_get_folio(mapping, wbc);
-> > +	if (!folio) {
-> > +		/*
-> > +		 * To avoid deadlocks between range_cyclic writeback and callers
-> > +		 * that hold pages in PageWriteback to aggregate I/O until
-> > +		 * the writeback iteration finishes, we do not loop back to the
-> > +		 * start of the file.  Doing so causes a page lock/page
-> > +		 * writeback access order inversion - we should only ever lock
-> > +		 * multiple pages in ascending page->index order, and looping
-> > +		 * back to the start of the file violates that rule and causes
-> > +		 * deadlocks.
-> > +		 */
-> > +		if (wbc->range_cyclic)
-> > +			mapping->writeback_index = 0;
-> > +
-> > +		/*
-> > +		 * Return the first error we encountered (if there was any) to
-> > +		 * the caller.
-> > +		 */
-> > +		*error = wbc->saved_err;
-> > +	}
-> > +	return folio;
-> >  
-> >  done:
-> >  	folio_batch_release(&wbc->fbatch);
-> >  	if (wbc->range_cyclic)
-> >  		mapping->writeback_index = folio->index + folio_nr_pages(folio);
-> > +	return NULL;
-> > +}
-> > +
-> > +/**
-> > + * write_cache_pages - walk the list of dirty pages of the given address space and write all of them.
-> > + * @mapping: address space structure to write
-> > + * @wbc: subtract the number of written pages from *@wbc->nr_to_write
-> > + * @writepage: function called for each page
-> > + * @data: data passed to writepage function
-> > + *
-> > + * Return: %0 on success, negative error code otherwise
-> > + *
-> > + * Note: please use writeback_iter() instead.
-> > + */
-> > +int write_cache_pages(struct address_space *mapping,
-> > +		      struct writeback_control *wbc, writepage_t writepage,
-> > +		      void *data)
-> > +{
-> > +	struct folio *folio = NULL;
-> > +	int error;
-> > +
-> > +	while ((folio = writeback_iter(mapping, wbc, folio, &error))) {
-> > +		error = writepage(folio, wbc, data);
-> > +		if (error == AOP_WRITEPAGE_ACTIVATE) {
-> > +			folio_unlock(folio);
-> > +			error = 0;
-> > +		}
-> > +	}
-> > +
-> >  	return error;
-> >  }
-> >  EXPORT_SYMBOL(write_cache_pages);
-> > -- 
-> > 2.39.2
-> > 
-> > 
-> 
-> 
-
+When you send v2 could you please just put me in to. Makes it easier for
+me to pick this series from the list. Thanks!
