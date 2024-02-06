@@ -1,49 +1,40 @@
-Received: from out-175.mta1.migadu.com (out-175.mta1.migadu.com [95.215.58.175])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A9F7C092
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Feb 2024 05:13:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C5FA7F48C
+	for <linux-xfs@vger.kernel.org>; Tue,  6 Feb 2024 05:23:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707196405; cv=none; b=XsGKbzrb2bbBsgtcjnPQ7wLbhN3Z0oEKpnhzkg49D8k1JOGNtagoFc2tNyqirARN2qxDfN9VaFDcfP6HaHQbZ+X7v/VguV/z1b/Bmy0hElImqMxW8d+80B3DEn03e8D1iWf8ufoTS2xj4A6R7I8iB9AciXcan2sNVjKdUlTVnw0=
+	t=1707197011; cv=none; b=BxOjs4D3nAdgraSjN3NV5S7XAk4tV58zch91e9fMVjBg/7qfFjpEeXYiNdnQBNW3TXifYHmCI+w3mHBSUSmpAJmVkSCGBF2R3fr89Vsf8qTVzGjQ6vpZA9MDfASjOjhpaeEp0Uq7WvLwGelo9/tUHVBOsIuCwY44krhk7rTyajk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707196405; c=relaxed/simple;
-	bh=Dx6Og2qKBOC9/kdVvY6Nv9dhBbtczwNYqoJh2KK9vQE=;
+	s=arc-20240116; t=1707197011; c=relaxed/simple;
+	bh=L1r0BvywqiO5hKHjomAN90wC0c+SOF7G1ZcENdhZBtI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VVnFCRGl5bgAGBvHETQuV3wFRDuiuCCeNXToZwzyFilfRgY2udM9IbmQBUIaGWAt50QyIYXnbMZf6CNP4a/CZAqOgJB6hmz0MG3U5eIB7kATosDXc7b8RyUtzte97UnkB5GRQslTy0ad579CE6w3+MvX9TD+9X005dPUAWVV9tQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=VdauWuR6; arc=none smtp.client-ip=95.215.58.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=uAoS1CFnmNp6E2zApQ5v5ZcP1T1XO1CjYCOFuHqcbG2OuvRDwNJ3Mi4Ab7xmPcZyEY9iJhaH+QENFyxbSiLp4m2ZlAx0GixKH+1mztsFUHTKV1yxS/+ItpM32vSpyigFMMUGl/b3QZbyZUEw5+36SUXYWsI0kz+IwOUvntWOCgc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dWBknzwz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="VdauWuR6"
-Date: Tue, 6 Feb 2024 00:13:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1707196401;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M67dP06bznKXKLynj8t19rv2NZMnEI3pdWkIiizmI8g=;
-	b=VdauWuR6rRX/kTjcpWCglj6tRGZomg4I15P8WkjLZyMJhYTFbHhQlv4QODRcKc/vLbyBII
-	AbG/gam9CRZVaM2TvvJ6WrOAJxgTSVHdKSjLFgzT9Qe1fQV7C9O5a0ecXElwHBsLtbp2UI
-	LDFouBB4MGbZuYM/hLSKuGP8rbON4aE=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Randy Dunlap <rdunlap@infradead.org>, dsterba@suse.cz, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>, 
-	Theodore Ts'o <tytso@mit.edu>, Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH 4/6] fs: FS_IOC_GETSYSFSNAME
-Message-ID: <bhxmfqyqjkpjtxhyj2w2pnzbx2whnc2qurg2fcjpphuli2lyzc@bea4fzncsnhc>
-References: <20240205200529.546646-1-kent.overstreet@linux.dev>
- <20240205200529.546646-5-kent.overstreet@linux.dev>
- <20240205222732.GO616564@frogsfrogsfrogs>
- <7si54ajkdqbauf2w64xnzfdglkokifgsjptmkxwdhgymxpk353@zf6nfn53manb>
- <20240206013931.GK355@twin.jikos.cz>
- <ca885dd8-4ac1-43a9-9b0c-79b63cae0620@infradead.org>
- <xutnab3bbeeyp7gq2wwy36lus275d5tapdclmcg5sl7bfngo6a@ek5u4ja56gut>
- <20240206050853.GQ616564@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dWBknzwz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B90BC433C7;
+	Tue,  6 Feb 2024 05:23:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707197010;
+	bh=L1r0BvywqiO5hKHjomAN90wC0c+SOF7G1ZcENdhZBtI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dWBknzwzsdxkf0Hir3wAU5ooaae4T6+N/VcT/zvFLOUkDgTMvTcCjGxUFNlkPOnQg
+	 Jpn0p0GaE7Ey6gSWtBWRoqAq1aWqm42W5DMy9At+fUSdze/cU0YA5WQETQlugdIUxn
+	 EcDUv++obMvOpxTp+YMvwDsbxDTEwsU7Y793eR8Ax6d7bDAFyxQj9IzzjuiHvr7vby
+	 l7ltWyXOaTAEZ/Zqxa3PZDFcOd/IG2icKiEFYFbz1qOTefX1LHnudZrk6j7K5CSw5B
+	 swzVWesfD9jsmPWCkYDU1HUzUqXCvGCGn/Lk1QU/0yQdAM1Vucn+SoVWmEBi6fFcDb
+	 FK80MV+8ZDw8w==
+Date: Mon, 5 Feb 2024 21:23:29 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: xfs_clear_incompat_log_features considered harmful?
+Message-ID: <20240206052329.GR616564@frogsfrogsfrogs>
+References: <20240131230043.GA6180@frogsfrogsfrogs>
+ <ZcA1Q5gvboA/uFCC@dread.disaster.area>
+ <ZcCEBkVrMUBeXu78@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,62 +43,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240206050853.GQ616564@frogsfrogsfrogs>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <ZcCEBkVrMUBeXu78@infradead.org>
 
-On Mon, Feb 05, 2024 at 09:08:53PM -0800, Darrick J. Wong wrote:
-> On Mon, Feb 05, 2024 at 11:33:11PM -0500, Kent Overstreet wrote:
-> > On Mon, Feb 05, 2024 at 08:20:10PM -0800, Randy Dunlap wrote:
-> > > 
-> > > 
-> > > On 2/5/24 17:39, David Sterba wrote:
-> > > > On Mon, Feb 05, 2024 at 05:43:37PM -0500, Kent Overstreet wrote:
-> > > >> On Mon, Feb 05, 2024 at 02:27:32PM -0800, Darrick J. Wong wrote:
-> > > >>> On Mon, Feb 05, 2024 at 03:05:15PM -0500, Kent Overstreet wrote:
-> > > >>>> @@ -231,6 +235,7 @@ struct fsxattr {
-> > > >>>>  #define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
-> > > >>>>  #define FS_IOC_GETFSUUID		_IOR(0x94, 51, struct fsuuid2)
-> > > >>>>  #define FS_IOC_SETFSUUID		_IOW(0x94, 52, struct fsuuid2)
-> > > >>>> +#define FS_IOC_GETFSSYSFSNAME		_IOR(0x94, 53, struct fssysfsname)
-> > > >>>
-> > > >>> 0x94 is btrfs, don't add things to their "name" space.
-> > > >>
-> > > >> Can we please document this somewhere!?
-> > > >>
-> > > >> What, dare I ask, is the "namespace" I should be using?
-> > > > 
-> > > > Grep for _IOCTL_MAGIC in include/uapi:
-> > > > 
-> > > > uapi/linux/aspeed-lpc-ctrl.h:#define __ASPEED_LPC_CTRL_IOCTL_MAGIC 0xb2
-> > > > uapi/linux/aspeed-p2a-ctrl.h:#define __ASPEED_P2A_CTRL_IOCTL_MAGIC 0xb3
-> > > > uapi/linux/bt-bmc.h:#define __BT_BMC_IOCTL_MAGIC        0xb1
-> > > > uapi/linux/btrfs.h:#define BTRFS_IOCTL_MAGIC 0x94
-> > > > uapi/linux/f2fs.h:#define F2FS_IOCTL_MAGIC              0xf5
-> > > > uapi/linux/ipmi_bmc.h:#define __IPMI_BMC_IOCTL_MAGIC        0xB1
-> > > > uapi/linux/pfrut.h:#define PFRUT_IOCTL_MAGIC 0xEE
-> > > > uapi/rdma/rdma_user_ioctl.h:#define IB_IOCTL_MAGIC RDMA_IOCTL_MAGIC
-> > > > uapi/rdma/rdma_user_ioctl_cmds.h:#define RDMA_IOCTL_MAGIC       0x1b
-> > > > 
-> > > > The label ioctls inherited the 0x94 namespace for backward
-> > > > compatibility but as already said, it's the private namespace of btrfs.
-> > > > 
-> > > 
-> > > or more generally, see Documentation/userspace-api/ioctl/ioctl-number.rst.
-> > > 
-> > > For 0x94, it says:
-> > > 
-> > > 0x94  all    fs/btrfs/ioctl.h                                        Btrfs filesystem
-> > >              and linux/fs.h                                          some lifted to vfs/generic
-> > 
-> > You guys keep giving the same info over and over again, instead of
-> > anything that would be actually helpful...
-> > 
-> > Does anyone know what the proper "namespace" is for new VFS level
-> > ioctls?
-> > 
-> > ...Anyone?
+On Sun, Feb 04, 2024 at 10:45:26PM -0800, Christoph Hellwig wrote:
+> On Mon, Feb 05, 2024 at 12:09:23PM +1100, Dave Chinner wrote:
+> > The issue arises if the host tries to mount the guest VM image to
+> > configure the clone of a golden image prior to first start. If there
+> > are log incompat fields set in the golden image that was generated
+> > by a newer kernel/OS image builder then the provisioning
+> > host cannot mount the filesystem even though the log is clean and
+> > recovery is unnecessary to mount the filesystem.
 > 
-> I propose you use 0x15 (NAK) and add it to the Documentation/ as the
-> official VFS ioctl namespace. ;)
+> Well, even with the current code base in Darrick's queue a mount alone
+> won't upgrade features, you need to do an explicit exchrange or online
+> repair operation.  And I think we should basically never do log or
+> other format incompatible changes without an explicit user action.
 
-Done!
+Should I add a flags bit to the ioctls so that programs can force them
+on if the process has CAP_SYS_ADMIN?  Or would you rather a mount option
+"-o allow_log_upgrades=1" so that's totally under control of whoever
+writes fstab?
+
+The first option probably turns into an "and now everyone sets this"
+thing; the second one clutters up the mount options.
+
+> The only exception would be if the feature is so old that we finally
+> want to get rid of the old implementation, in which case we can think
+> of automatically doing the upgrade with a big fat warning.
+
+Heh, we're probably going to have to do that with bigtime come 2035.
+
+> > Hence on unmount we really want the journal contents based log
+> > incompat bits cleared because there is nothing incompatible in the
+> > log and so there is no reason to prevent older kernels from
+> > mounting the filesytsem.
+> 
+> Doing the clearing at unmount time only (and maybe freeze if someone
+> really cares) sounds perfectly fine.
+
+Ugh, I only want to do this at umount time if I can get away with it.
+Freeze is already hard enough to grok.
+
+--D
