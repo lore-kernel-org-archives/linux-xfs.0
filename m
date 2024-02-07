@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61138FBEB;
-	Wed,  7 Feb 2024 02:19:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC6A5FBE9;
+	Wed,  7 Feb 2024 02:19:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707272360; cv=none; b=VR0yG8UCZ5VFcK2qlSA4upWjDHVSRc0mU1pr5dvpvCl90nykhDDbs29OXGkfbNxYLrIykkggTTXJbKMpguYtAAhAzmhzXe5kHuohCEuSLTPxfx/oDnYytKunc5CqFlpz+GFAFJvxScuSxztQImUp3GRs4E9VgKuRLEtGcPDRDvw=
+	t=1707272365; cv=none; b=l7NYoWMaH5fuGiZ1GOaQF1ZGxl2D/RgqkT8OV+9/LxnNYs34s5XFQGCaqYqugC3Kxg/ku/QnDW4HJ2DDB5Wuzhkt4XW38Wt9+c77rcQD1+xvi/2B5LajOiD8IKXjuMfFMMtTEAxkRyvA5ErnjrQfiJjQ1Y/EcYLAT5YOebKoRnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707272360; c=relaxed/simple;
-	bh=Qmkuef+jv6iUjSWKplTunZ9HuLxmGKijMrmARJaVADE=;
+	s=arc-20240116; t=1707272365; c=relaxed/simple;
+	bh=JY0an+aV7JvYhVNzONkthuKt4vhY7UOlu6g94nyVTr0=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=es5yXz7GhawCjCxTsq77tQa5FIvl3qRwC4lAIfq/Rev4FN6RPuX9upi284KPCh9ma5vSMwymhNycBpxR8/Xednwvj8/qn5P2XEXBSjbtSmtWdv+ynCNqKE/Mkx8/yvTpKgNoBoO/9nQuVNoCvHlfvm7knHXZXydYv8CpcSwK6o8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UAjA+R6f; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hGaz11I0FoIrVLup1TFHUEYwa8NURmnZbIFkSzrNshQTYdPE9QTV9Fhd5TSdhY4STCyWUp2VVxr8GQp6oMJNnzTHEKx7CnNplo0aRnzGVyXZujkXk8IlV/H01ihaCuLc6e5A6l3xYJ+yUWxScPclp/asOxEd+8uZMDFlxqxOA2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ai1z8DXa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UAjA+R6f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF479C433F1;
-	Wed,  7 Feb 2024 02:19:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ai1z8DXa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78908C43390;
+	Wed,  7 Feb 2024 02:19:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707272359;
-	bh=Qmkuef+jv6iUjSWKplTunZ9HuLxmGKijMrmARJaVADE=;
+	s=k20201202; t=1707272365;
+	bh=JY0an+aV7JvYhVNzONkthuKt4vhY7UOlu6g94nyVTr0=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=UAjA+R6fJoqroDB8G75A05o7fXv3IpZru6US/hCUNLsdW+NYtOAH07onkkRGbucF7
-	 kxf6YGDU5D++tkON5I+neV4w3KgNWXJFrhGC5rVAgZPeTmF6jrma4yckhniP5HJ43V
-	 OtRO+KPbZ8Qv+COAxY90UJXpU0LhJeu1qtAnu///lGP0TRgyLMVcWu6DpaSybInHne
-	 Px9kF1baVDEyTNKFTmbQ2blike6REreRhlbxxoZGQxm+M6efHsT1cnVajV3i4ErC7O
-	 bWHGe4ne060UEQwmvftiCxP5CQDuLGLnjdHBfPsOYB68KRdp9LdzixGRVrlDnVg1wR
-	 19Qm/2Ash5ARw==
-Subject: [PATCH 08/10] xfs/503: split copy and metadump into two tests
+	b=ai1z8DXaZINJqPpyww4geaCZrMhkEnzCp8WIVvweIVVLdlELvXN+6eUCovseQGrhY
+	 78UG5kiJQFEnA2xL4sFMonoFdeyacISA45slmvpMaLAdHx9VmQxqWPwMqeDEW0E0Vs
+	 CC9qO9E5aa3XsmRvxetaMOJmVOCfRmne8upDZ2prQHdeF4LfLxhjCIcyK0KwbTs8LG
+	 7Xnh4JAzNoqQYI4N8GTPmaCE/FswFaQ75qiWZm0p4nkawyxKlNXdNlGhStoXkLKEJM
+	 OQ3lwYKdsBr/RfYhtxFN2qLUjkMQnLUm++JakuLSp/EKquhR9HAllkwVnVV3CfmYNB
+	 IPpJQsG2l7zKA==
+Subject: [PATCH 09/10] common/xfs: only pass -l in _xfs_mdrestore for v2
+ metadumps
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
  linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date: Tue, 06 Feb 2024 18:19:19 -0800
-Message-ID: <170727235942.3726171.4745513175828645904.stgit@frogsfrogsfrogs>
+Date: Tue, 06 Feb 2024 18:19:25 -0800
+Message-ID: <170727236500.3726171.13197353676937666826.stgit@frogsfrogsfrogs>
 In-Reply-To: <170727231361.3726171.14834727104549554832.stgit@frogsfrogsfrogs>
 References: <170727231361.3726171.14834727104549554832.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,145 +48,71 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test examines the behavior of xfs_copy and xfs_metadump.  Metadump
-now supports capturing external log contents, but copy does not.  Split
-the test into two to improve coverage on multidevice filesystems.
+fstests has a weird history with external log devices -- prior to the
+introduction of metadump v2, a dump/restore cycle would leave an
+external log unaltered, and most tests worked just fine.  Were those
+tests ignorant?  Or did they pass intentionally?
+
+Either way, we don't want to pass -l to xfs_mdrestore just because we
+have an external log, because that switch is new and causes regressions
+when testing with xfsprogs from before 6.5.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Zorro Lang <zlang@kernel.org>
 ---
- tests/xfs/503     |   17 +++--------------
- tests/xfs/503.out |    2 --
- tests/xfs/601     |   54 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/601.out |    4 ++++
- 4 files changed, 61 insertions(+), 16 deletions(-)
- create mode 100755 tests/xfs/601
- create mode 100755 tests/xfs/601.out
+ common/xfs |   25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/503 b/tests/xfs/503
-index 07d243bc06..01cff7b08d 100755
---- a/tests/xfs/503
-+++ b/tests/xfs/503
-@@ -4,11 +4,11 @@
- #
- # FS QA Test No. 503
- #
--# Populate a XFS filesystem and ensure that metadump, mdrestore, and copy
--# all work properly.
-+# Populate a XFS filesystem and ensure that metadump and mdrestore all work
-+# properly.
- #
- . ./common/preamble
--_begin_fstest auto copy metadump
-+_begin_fstest auto metadump
+diff --git a/common/xfs b/common/xfs
+index 6a48960a7f..65b509691b 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -689,12 +689,25 @@ _xfs_metadump() {
+ 	return $res
+ }
  
- _register_cleanup "_cleanup" BUS
- 
-@@ -32,7 +32,6 @@ _supported_fs xfs
- 
- _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
- _require_loop
--_require_xfs_copy
- _require_scratch_nocheck
- _require_populate_commands
- _xfs_skip_online_rebuild
-@@ -58,16 +57,6 @@ _xfs_verify_metadumps '-o'
- echo "metadump ao and mdrestore"
- _xfs_verify_metadumps '-a -o'
- 
--echo copy
--$XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
--_check_scratch_fs $copy_file
--
--echo recopy
--$XFS_COPY_PROG $copy_file $SCRATCH_DEV >> $seqres.full
--_scratch_mount
--_check_scratch_fs
--_scratch_unmount
--
- # success, all done
- status=0
- exit
-diff --git a/tests/xfs/503.out b/tests/xfs/503.out
-index 5e7488456d..7f3d3a5f24 100644
---- a/tests/xfs/503.out
-+++ b/tests/xfs/503.out
-@@ -4,5 +4,3 @@ metadump and mdrestore
- metadump a and mdrestore
- metadump o and mdrestore
- metadump ao and mdrestore
--copy
--recopy
-diff --git a/tests/xfs/601 b/tests/xfs/601
-new file mode 100755
-index 0000000000..e1e94ca8ff
---- /dev/null
-+++ b/tests/xfs/601
-@@ -0,0 +1,54 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 601
-+#
-+# Populate a XFS filesystem and ensure that xfs_copy works properly.
-+#
-+. ./common/preamble
-+_begin_fstest auto copy
++# What is the version of this metadump file?
++_xfs_metadumpfile_version() {
++	local file="$1"
++	local magic
 +
-+_register_cleanup "_cleanup" BUS
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.* $testdir
++	magic="$($XFS_IO_PROG -c 'pread -q -v 0 4' "$file")"
++	case "$magic" in
++	"00000000:  58 4d 44 32  XMD2") echo 2;;
++	"00000000:  58 46 53 4d  XFSM") echo 1;;
++	esac
 +}
 +
-+# Import common functions.
-+. ./common/filter
-+. ./common/populate
-+
-+testdir=$TEST_DIR/test-$seq
-+
-+# real QA test starts here
-+_supported_fs xfs
-+
-+_require_xfs_copy
-+_require_scratch_nocheck
-+_require_populate_commands
-+_xfs_skip_online_rebuild
-+_xfs_skip_offline_rebuild
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+mkdir -p $testdir
-+copy_file=$testdir/copy.img
-+
-+echo copy
-+$XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
-+_check_scratch_fs $copy_file
-+
-+echo recopy
-+$XFS_COPY_PROG $copy_file $SCRATCH_DEV >> $seqres.full
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/601.out b/tests/xfs/601.out
-new file mode 100755
-index 0000000000..0cbe0c0d09
---- /dev/null
-+++ b/tests/xfs/601.out
-@@ -0,0 +1,4 @@
-+QA output created by 601
-+Format and populate
-+copy
-+recopy
+ _xfs_mdrestore() {
+ 	local metadump="$1"
+ 	local device="$2"
+ 	local logdev="$3"
+ 	shift; shift; shift
+ 	local options="$@"
++	local dumpfile_ver
+ 
+ 	# If we're configured for compressed dumps and there isn't already an
+ 	# uncompressed dump, see if we can use DUMP_COMPRESSOR to decompress
+@@ -705,8 +718,18 @@ _xfs_mdrestore() {
+ 		done
+ 	fi
+ 	test -r "$metadump" || return 1
++	dumpfile_ver="$(_xfs_metadumpfile_version "$metadump")"
+ 
+-	if [ "$logdev" != "none" ]; then
++	if [ "$logdev" != "none" ] && [[ $dumpfile_ver > 1 ]]; then
++		# metadump and mdrestore began capturing and restoring the
++		# contents of external log devices with the addition of the
++		# metadump v2 format.  Hence it only makes sense to specify -l
++		# here if the dump file itself is in v2 format.
++		#
++		# With a v1 metadump, the log device is not changed by the dump
++		# and restore process.  Historically, fstests either didn't
++		# notice or _notrun themselves when external logs were in use.
++		# Don't break that for people testing with xfsprogs < 6.5.
+ 		options="$options -l $logdev"
+ 	fi
+ 
 
