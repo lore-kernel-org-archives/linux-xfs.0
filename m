@@ -1,48 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4214A1E498
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Feb 2024 17:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42BF5200AE
+	for <linux-xfs@vger.kernel.org>; Wed,  7 Feb 2024 20:54:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707327381; cv=none; b=cyGEaSaGobkvIObtoM2qkRbiOS5AH5FD2Eippk2sHjHlNLaZI5A00fl2ZtJdlWK+S/bEdamHB40PMdjRSOT0z+/4ZnqNjS3rsrP8D5GG3SlXLd4c8HNWO3COrp+otFG1WkGVlosCzFbELwljsA9uyFoPNDyoH0/O8IFej5JP2+4=
+	t=1707339288; cv=none; b=ZQEQN/qhLYGO0aH96BSERhMnrLUba6YunNRjGAFAVlJ11FprqNCwb+Hy3VUk8lH2ZOqpa5t0Je6LpqDV/ngBtfCde7YvgTriiQt0+0nsMg7dAGgNs0M4c0Pd6zuv0IevvrqsJ+YhDvEzKan7LsXzEqtPGpC4IBn0s7vcis+uxyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707327381; c=relaxed/simple;
-	bh=AXr7uRL0ufZ01+wOgBuy6TL0EQljeCsABPhihotJFVo=;
+	s=arc-20240116; t=1707339288; c=relaxed/simple;
+	bh=0ODhUkbCs76NCTBzAROMQnicuP+Us/3Ez5rJrhqcSRI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ESvjoYu7dwNkQo6ql7fBPeqSAFPn/PsyYGO8cdL5bPg5agDROqln/pikAftNZrb6Z9y7KHF9JlVOlpMv4ylHOTdI9kJ+rBt3YXwG78Glb9JLLvOSc/YbT5Wr9Tj+v5YKUF2JR5t5v3ifparAllmMIzOf+/ZbMM1xMR8Kduc4Rfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jbmXn5PN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=RPEvXG00tmykQ5isZr89c2OGshxQzjQUE1qqJGt0Hw9dcwBGWvjugclB9QbfGX1Pdyp7c8A1g615XOTg1av9H6k47ug2EUAN50zXXTgsuADeatPYJYrT9WoacPlobo4BEJRzPUrCCRu1ODIKflXppn01YntGW9Rf7S9IKWcaJj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=OBGXfrz7; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jbmXn5PN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B041FC433C7;
-	Wed,  7 Feb 2024 17:36:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707327380;
-	bh=AXr7uRL0ufZ01+wOgBuy6TL0EQljeCsABPhihotJFVo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jbmXn5PNAxrLPBr1osqYK9FGXNpRVJQ7MO6Acqhi7K5pakHtNnO2eFSsqY0CwD/mu
-	 /Qa8Ud1vDjKexc+JzUsvR+oGAznXXBJxsEgpLgPEpM7sZZBhxBfzcqZ5gD0FJIZY9p
-	 SzF5dZ6dWj4LluO4Ctnxu8/PbiHADd6dtwlcBU/LnleN+7DFk2tPqwzHZm0vxGtAIN
-	 usLmB8YBjZ6lhiI0ULv83tFbtIcUtyTcziUbP8NfC4rU0EtoUsq9uD63XzTbxkMBGj
-	 FR8LbndwMx7ZWqxqgSNAwV2oSACEjew/D6T+55B7uvHq51AGah7+tUeHAYbNDq87KF
-	 X95I483j1pjKA==
-Date: Wed, 7 Feb 2024 09:36:20 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
- after reclaim
-Message-ID: <20240207173620.GS616564@frogsfrogsfrogs>
-References: <Za3fwLKtjC+B8aZa@dread.disaster.area>
- <ZbJYP63PgykS1CwU@bfoster>
- <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
- <Zbe9+EY5bLjhPPJn@bfoster>
- <Zbrw07Co5vhrDUfd@dread.disaster.area>
- <Zb1FhDn09pwFvE7O@bfoster>
- <20240202233343.GM616564@frogsfrogsfrogs>
- <Zb+1O+MlTpzHZ595@bfoster>
- <20240205220727.GN616564@frogsfrogsfrogs>
- <ZcIz6V7EAYLW7cgO@bfoster>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="OBGXfrz7"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1d7354ba334so9084545ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Feb 2024 12:54:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707339286; x=1707944086; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=IPDZFDAr8m25erMC4/CtO31Vk29YNq1SvAgfgiB0850=;
+        b=OBGXfrz7jluC1QYtEFUDIOMh4bl72xiyuZxlNUsR40fSeCTRsK3vVXv7KySmS8AM8l
+         OfiErWa6yvSIGVsGjBOQ+Ww+ZDYWZggFRYMHvkiNgp/daf3OfmIITF9mQ2t02XsEZvoO
+         ExeDo6qlc4ibbPVXjpWMJnIJDhHQwSXQZOntvCPZ4tMP+wMMsPe9o2Hs44lptGfxqnXL
+         OuYdAHTvvtopiMmYeojmPD3xRB00JO/Ab9dKvNaPHqCuMHJSXhincRqCIoXCkOg7S1GC
+         HG9+ATap0BZ5x+EW5BsHkpYQaxLVqigvx6DKQ3Q+/CRb0AeSJuXHboxtZ6LY8Yp2cYM8
+         N9DQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707339286; x=1707944086;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=IPDZFDAr8m25erMC4/CtO31Vk29YNq1SvAgfgiB0850=;
+        b=Dhgrqu4DwGWi6rh1luxXRUMdBbi/Glbjs0bUKxraCRj1dAU84GS6alnWAWEqiv0Hhf
+         2fXVEI4HRnpPgm1x6sP+nMs7yuntvdhz+oRiiT3X6vPfcxfIMKwagD8EANeZE9TFC9u8
+         pUj/RKNGuCn8uoVbf7BoPmXBbxwvbE09kHXNgUM/DVFLNTFvXG/BXdxds90ga9gkBAE6
+         PS+HBXMbP5q+nf/pNFrnJBWvpeNYp8cGtkafJ1097gcDlqGncb1MFGAXMvHsoCiQ2wEZ
+         LuYD0ZDEBurZOTUBeKbOrYB4tc815vqAdGRYetHyqLBACA/bXWzUZP9NhOeRKJDaysZQ
+         XFYg==
+X-Gm-Message-State: AOJu0Yz9/HM7nGWlO6sC2mOeGIIIPYnaC/cLHqaZamAkLOZFaXOqIfet
+	yEMnJUsoIpHzwZBqX9pUD8fOy2GvN12w5P3305ooeODRhZYuUueENE0isGX+l/o=
+X-Google-Smtp-Source: AGHT+IF0hSUbjTyX8vY/HtWs256VfTt8IqeYpEfabo6eDnTdMzdlYcYDvRiNMpi6/fhdOt9rauBXOg==
+X-Received: by 2002:a17:903:124a:b0:1d5:c08e:52eb with SMTP id u10-20020a170903124a00b001d5c08e52ebmr6449495plh.65.1707339286546;
+        Wed, 07 Feb 2024 12:54:46 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXQOAy9vIa9qhh3Ig25rCrS55e2XpLLhzxcjIEV5WlSysLiAEEB/jCZiCEpXYVRszsWfZT/JAlPlwf4Rk2lJk3LKz1qnCvf75iaSmbRlN2KX99xK77EkK3AKdmZLJ53Kjlfc6aS5w+VMb+9IDCJ8VwtLkDYy6flKO5oZKrgGBzW5nwPSDNLZppTIkfGbLhstBflJ5QwihOfEkqs0epEkVJdx/XKPRuKMbaZ9Ot765hx/VqZ2a7uC6SMe+0=
+Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
+        by smtp.gmail.com with ESMTPSA id l12-20020a170902d04c00b001d9c1d8a401sm1884646pll.191.2024.02.07.12.54.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Feb 2024 12:54:46 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rXowN-003QdQ-0t;
+	Thu, 08 Feb 2024 07:54:43 +1100
+Date: Thu, 8 Feb 2024 07:54:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: syzbot <syzbot+0260338e3eff65854d1f@syzkaller.appspotmail.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_inodegc_flush
+Message-ID: <ZcPuE4FL9bUu8h0Q@dread.disaster.area>
+References: <00000000000088268a0610c6b3ae@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,217 +72,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZcIz6V7EAYLW7cgO@bfoster>
+In-Reply-To: <00000000000088268a0610c6b3ae@google.com>
 
-On Tue, Feb 06, 2024 at 08:28:09AM -0500, Brian Foster wrote:
-> On Mon, Feb 05, 2024 at 02:07:27PM -0800, Darrick J. Wong wrote:
-> > On Sun, Feb 04, 2024 at 11:03:07AM -0500, Brian Foster wrote:
-> > > On Fri, Feb 02, 2024 at 03:33:43PM -0800, Darrick J. Wong wrote:
-> > > > On Fri, Feb 02, 2024 at 02:41:56PM -0500, Brian Foster wrote:
-> > > > > On Thu, Feb 01, 2024 at 12:16:03PM +1100, Dave Chinner wrote:
-> > > > > > On Mon, Jan 29, 2024 at 10:02:16AM -0500, Brian Foster wrote:
-> > > > > > > On Fri, Jan 26, 2024 at 10:46:12AM +1100, Dave Chinner wrote:
-> > > > > > > > On Thu, Jan 25, 2024 at 07:46:55AM -0500, Brian Foster wrote:
-> > > > > > > > > On Mon, Jan 22, 2024 at 02:23:44PM +1100, Dave Chinner wrote:
-> > > > > > > > > > On Fri, Jan 19, 2024 at 02:36:45PM -0500, Brian Foster wrote:
-> > > > > ...
-> > > > > > Here's the fixes for the iget vs inactive vs freeze problems in the
-> > > > > > upstream kernel:
-> > > > > > 
-> > > > > > https://lore.kernel.org/linux-xfs/20240201005217.1011010-1-david@fromorbit.com/T/#t
-> > > > > > 
-> > > > > > With that sorted, are there any other issues we know about that
-> > > > > > running a blockgc scan during freeze might work around?
-> > > > > > 
-> > > > > 
-> > > > > The primary motivation for the scan patch was the downstream/stable
-> > > > > deadlock issue. The reason I posted it upstream is because when I
-> > > > > considered the overall behavior change, I thought it uniformly
-> > > > > beneficial to both contexts based on the (minor) benefits of the side
-> > > > > effects of the scan. You don't need me to enumerate them, and none of
-> > > > > them are uniquely important or worth overanalyzing.
-> > > > > 
-> > > > > The only real question that matters here is do you agree with the
-> > > > > general reasoning for a blockgc scan during freeze, or shall I drop the
-> > > > > patch?
-> > > > 
-> > > 
-> > > Hi Darrick,
-> > > 
-> > > > I don't see any particular downside to flushing {block,inode}gc work
-> > > > during a freeze, other than the loss of speculative preallocations
-> > > > sounds painful.
-> > > > 
-> > > 
-> > > Yeah, that's definitely a tradeoff. The more I thought about that, the
-> > > more ISTM that any workload that might be sensitive enough to the
-> > > penalty of an extra blockgc scan, the less likely it's probably going to
-> > > see freeze cycles all that often.
-> > > 
-> > > I suspect the same applies to the bit of extra work added to the freeze
-> > > as well , but maybe there's some more painful scenario..?
-> > 
-> > <shrug> I suppose if you had a few gigabytes of speculative
-> > preallocations across a bunch of log files (or log structured tree
-> > files, or whatever) then you could lose those preallocations and make
-> > fragmentation worse.  Since blockgc can run on open files, maybe we
-> > should leave that out of the freeze preparation syncfs?
-> > 
+On Wed, Feb 07, 2024 at 12:44:21AM -0800, syzbot wrote:
+> Hello,
 > 
-> By "leave that out," do you mean leave out the blockgc scan on freeze,
-> or use a special mode that explicitly skips over opened/writeable files?
-
-I meant s/xfs_blockgc_free_space/xfs_inodegc_flush/ in the patch you sent.
-
-But I'd wondered over the years if blockgc ought to ignore files that
-are still opened for write unless we're scouring for free space due to
-an ENOSPC.  Maybe the current heuristic of skipping files with dirty
-pagecache or IOLOCK contention is good enough.
-
-> FWIW, this sounds more like a generic improvement to the background scan
-> to me. Background blockgc currently filters out on things like whether
-> the file is dirty in pagecache. If you have a log file or something, I
-> would think the regular background scan may end up processing such files
-> more frequently than a freeze induced one will..? And for anything that
-> isn't under active or continuous modification, freeze is already going
-> to flush everything out for the first post-unfreeze background scan to
-> take care of.
-
-Mhm.
-
-> So I dunno, I think I agree and disagree. :) I think it would be
-> perfectly reasonable to add an open/writeable file filter check to the
-> regular background scan to make it less aggressive. This patch does
-> invoke the background scan, but only because of the wonky read into a
-> mapped buffer use case.
-
-Does this livelock happen on a non-frozen filesystem too?  I wasn't too
-sure if you wrote about that in the commit message because there's a
-real livelock bug w.r.t. that or if that sentence was simply explaining
-the use of an async scan.
-
-> I still think freeze should (eventually) rather
-> invoke the more aggressive sync scan and process all pending work before
-> quiesce and not alter behavior based on heuristics.
-
-Admittedly, given how much recovery /can/ be required, I'm starting to
-think that we could push more of that work to disk before the freeze.
-
-> > OTOH most of the inodes on those lists are not open at all, so perhaps
-> > we /should/ kick inodegc while preparing for freeze?  Such a patch could
-> > reuse the justification below after s/blockgc/inodegc/.  Too bad we
-> > didn't think far enough into the FIFREEZE design to allow userspace to
-> > indicate if they want us to minimize freeze time or post-freeze
-> > recovery time.
-> > 
+> syzbot found the following issue on:
 > 
-> Yeah, I think this potentially ties in interestingly with the
-> security/post freeze drop caches thing Christian brought up on fsdevel
-> recently.
-
-<nod> Back in the day Luis was trying to rearrange the suspend code so
-that we'd freeze the filesystems in reverse mount order.  I guess the
-trouble with that approach is that for suspend you'd also want to block
-read requests.
-
-> It would be more ideal if freeze actually had some controls
-> that different use cases could use to suggest how aggressive (or not) to
-> be with such things. Maybe that somewhat relates to the per-stage
-> ->freeze_fs() prototype thing I posted earlier in the thread [1] to help
-> support running a sync scan.
-
-Agreed.  Frustratingly, I took a look at the FIFREEZE definition and
-realized that it /does/ actually take a pointer to an int:
-
-include/uapi/linux/fs.h:196:#define FIFREEZE _IOWR('X', 119, int)    /* Freeze */
-include/uapi/linux/fs.h:197:#define FITHAW   _IOWR('X', 120, int)    /* Thaw */
-
-But the current implementation ignores the parameter and Debian code
-search shows that some people call ioctl(fd, FIFREEZE) which means that
-we'd have to create a FIFREEZE2 just to add a parameter.
-
-> Given the current implementation, I think ultimately it just depends on
-> your perspective of what freeze is supposed to do. To me, it should
-> reliably put the filesystem into a predictable state on-disk (based on
-> the common snapshot use case).
-
-I always thought freeze was only supposed to do the bare minimum needed
-to quiesce the filesystem, assuming that the common case is that we
-quickly thaw and resume runtime operations.  OTOH a dirty 1GB log will
-take a while to recover, and if the point was to make a backup or
-something, that just makes IT unhappy.
-
-> It is a big hammer that should be
-> scheduled with care wrt to any performance sensitive workloads, and
-> should be minimally disruptive to the system when held for a
-> non-deterministic/extended amount of time. Departures from that are
-> either optimizations or extra feature/modifiers that we currently don't
-> have a great way to control. Just my .02.
-
-<nod> Is there anyone interested in working on adding a mode parameter
-to FIFREEZE?  What happens if the freeze comes in via the block layer?
-
---D
-
+> HEAD commit:    076d56d74f17 Add linux-next specific files for 20240202
+> git tree:       linux-next
+> console output: https://syzkaller.appspot.com/x/log.txt?x=173b568fe80000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=428086ff1c010d9f
+> dashboard link: https://syzkaller.appspot.com/bug?extid=0260338e3eff65854d1f
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=148b3c9fe80000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=13811004180000
+.....
 > 
-> Brian
-> 
-> [1] Appended to this reply:
->   https://lore.kernel.org/linux-xfs/ZbJYP63PgykS1CwU@bfoster/
-> 
-> > --D
-> > 
-> > > > Does Dave's patchset to recycle NEEDS_INACTIVE inodes eliminate the
-> > > > stall problem?
-> > > > 
-> > > 
-> > > I assume it does. I think some of the confusion here is that I probably
-> > > would have gone in a slightly different direction on that issue, but
-> > > that's a separate discussion.
-> > > 
-> > > As it relates to this patch, in hindsight I probably should have
-> > > rewritten the commit log from the previous version. If I were to do that
-> > > now, it might read more like this (factoring out sync vs. non-sync
-> > > nuance and whatnot):
-> > > 
-> > > "
-> > > xfs: run blockgc on freeze to keep inodes off the inactivation queues
-> > > 
-> > > blockgc processing is disabled when the filesystem is frozen. This means
-> > > <words words words about blockgc> ...
-> > > 
-> > > Rather than hold pending blockgc inodes in inactivation queues when
-> > > frozen, run a blockgc scan during the freeze sequence to process this
-> > > subset of inodes up front. This allows reclaim to potentially free these
-> > > inodes while frozen (by keeping them off inactive lists) and produces a
-> > > more predictable/consistent on-disk freeze state. The latter is
-> > > potentially beneficial for shapshots, as this means no dangling post-eof
-> > > preallocs or cowblock recovery.
-> > > 
-> > > Potential tradeoffs for this are <yadda yadda, more words from above>
-> > > ...
-> > > "
-> > > 
-> > > ... but again, the primary motivation for this was still the whole
-> > > deadlock thing. I think it's perfectly reasonable to look at this change
-> > > and say it's not worth it. Thanks for the feedback.
-> > > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > Brian
-> > > > > 
-> > > > > > -Dave.
-> > > > > > -- 
-> > > > > > Dave Chinner
-> > > > > > david@fromorbit.com
-> > > > > > 
-> > > > > 
-> > > > > 
-> > > > 
-> > > 
-> > > 
-> > 
-> 
-> 
+> If the report is already addressed, let syzbot know by replying with:
+> #syz fix: exact-commit-title
+
+#syz fix: workqueue: Fix pwq->nr_in_flight corruption in try_to_grab_pending()
+
+
+-- 
+Dave Chinner
+david@fromorbit.com
