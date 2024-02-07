@@ -1,78 +1,100 @@
-Received: from mail-io1-f72.google.com (mail-io1-f72.google.com [209.85.166.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B978C05
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Feb 2024 00:24:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03693DDB7;
+	Wed,  7 Feb 2024 02:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707265446; cv=none; b=Z+oXgAQEMsISDdsknO0D+tL0PbWlBnneydljhDHuacH+EJDcL7aI98Te+ZXKjB7Ut+pw+F/hrvfx22V2eewzEiEnmVWwhQCb1QIlXIhuUf6NI4vGO+2DWH4NmQaUzk4zkVrLyK+RIL0Vb8uewyjt6QZoOrB25Up+LnM+or13L5c=
+	t=1707272315; cv=none; b=lL4oWQDCoaXNPUR/51bYeAlBhJqoxI5pMocLAdP8KldOsvX6gONAWpg0u4kdE528Nk9InbhzV4UcRj7Vvv19AAeGsnLtS9aMK20agdVKfO9icYsWRez1Ms5gz4St/1P66+wz1lE2lA880hUa4c5LK6uUKvv3XDqmBFQI69xysSA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707265446; c=relaxed/simple;
-	bh=FvGwLh3a2Cxs8K8H1nUa9MNxFNq9OpjLnn9QY7wF60c=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=aNNmwv5gjWe2Y9hYKq5fjb2ncT9ID6zY04Pn6Ksbui5wcm69ZbzTV1y2wxZB//HWxPBKR2xGghOxmcpLQK2893r7iZ6KBTA/+7XFWvwPJImQdt+Fk14jxP/G/T/3bYcg2BU9Om+YOQoCl/SkLRKdZfNky7m47NBGISOlr+nllpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-7bf2a953988so7244539f.3
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Feb 2024 16:24:04 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707265444; x=1707870244;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=t82BCGkmVQ9OM0x5g9ohFaasHwdqLaYvJRRmgTlXJ0w=;
-        b=ww+IV3ZqrLfJ5eWldY/v9QWNDl2e0hP1uERkSNvaZuYXUc8IJ+Isc5EvZjUc4mizPH
-         T01E9uLLh5NL6baB/JQkVY2JyvC1ujED2Y+Rcvpj/n0BoBj3zXYsLJLemkef9Cmu9HqN
-         a3xlxp5oMM7LSqeKIpMsN1vgIdvMdPDpFpoMeMIL77Napl5XgiDSFUZzrjlGwOgS/J/E
-         YvtJ8kpcSIpOOe6+y8aq65WbGzetplf14it+550lOcf3ZjPx+OnH61YWtn+biV4moGHC
-         t1t5WdZVL0zzllPP0Wqx1eU6y4n3jInsPz40hMOITPcZdhV4At2GKeyviYfi91pv+BSw
-         5r2A==
-X-Gm-Message-State: AOJu0YxFxtpimTg9BkzQoG6N5pX/BR1ZL8zmwSRmYu+yDusrw/vSniRI
-	Ovr9O9VkgE3IH1y2+dkj5iRpPPU7N1Zf5zDCvMJAFPnhMdNbdushexGiubHO4EfLz+6g7l2Q5aq
-	5nOu7/gXMYDkD1KtSGdBSHDEsNFay02xgVJBJhl6ekaQ2FzO1ihXsX6E=
-X-Google-Smtp-Source: AGHT+IGruLywxe70WptZVf6C5ihVm9XYYIv1NvmVukssSd+6s3ITylJhlf/9TmGmL8HB1YPW0wgOOD5Mz6wXVEVNOOqJiBnJIJs4
+	s=arc-20240116; t=1707272315; c=relaxed/simple;
+	bh=NtjFuNssegON7wE/CPdDMN5tol9xingzRprbAtDBhZc=;
+	h=Subject:From:To:Cc:Date:Message-ID:MIME-Version:Content-Type; b=mXBukcRxupcGoQHd0e33eir0Q/0HDg0t5h0EdTZAxwfNnlPhrC3gFxvkJ+eSpgPDyqTTbSh4LiIqg9bKCa51hZWJdbvBnQ8y+6qszqdOBoIBzgRnajFSRHCs1VUwKwbnyGfBPAkdBbzVlAaKuewG4ZhvWbZXKNVogheT1AmbJjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mO5qeEGz; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mO5qeEGz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69F32C433F1;
+	Wed,  7 Feb 2024 02:18:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707272314;
+	bh=NtjFuNssegON7wE/CPdDMN5tol9xingzRprbAtDBhZc=;
+	h=Subject:From:To:Cc:Date:From;
+	b=mO5qeEGzheQwU3+gzQsSnUEZcusMKc3xzARBQlhYNlsd6ZrSqWxwvOhX1gL35QY6Z
+	 BCQbTfsz4/NdKNQpqjKEMQLkelqMmX7cOugsc2tuUEJVLE1lL7+ARgYFv8O9efVrcH
+	 InpkOKurXtmNpJW3YHb9GzMGj2uBBLwlHHhHiGHuUB2HxExcOVOwUGw5QWInyDOWWz
+	 HrDy6926Qd/NRgrt+Mn2h2thZ9RJTpdEDaMyo1x5RvkD0xZrSUkelzq4j8qj4ZY/mO
+	 TVXj0lGLoUktfOC9Dj6e1yJvXZW31HM98w0C8TuZm8ZF+bcZ/49yaor9I9S2AA1Und
+	 MyGNvYmP1xWfQ==
+Subject: [PATCHSET] fstests: random fixes for v2024.01.14
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: Christoph Hellwig <hch@lst.de>, Andrey Albershteyn <aalbersh@redhat.com>,
+ Zorro Lang <zlang@kernel.org>, linux-xfs@vger.kernel.org,
+ fstests@vger.kernel.org, guan@eryu.me
+Date: Tue, 06 Feb 2024 18:18:33 -0800
+Message-ID: <170727231361.3726171.14834727104549554832.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1ca1:b0:363:ba7e:ddc0 with SMTP id
- x1-20020a056e021ca100b00363ba7eddc0mr225431ill.0.1707265444013; Tue, 06 Feb
- 2024 16:24:04 -0800 (PST)
-Date: Tue, 06 Feb 2024 16:24:04 -0800
-In-Reply-To: <000000000000ffcb2e05fe9a445c@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000053ecb50610bfb6f0@google.com>
-Subject: Re: [syzbot] [xfs?] WARNING: Reset corrupted AGFL on AG NUM. NUM
- blocks leaked. Please unmount and run xfs_repair.
-From: syzbot <syzbot+9d0b0d54a8bd799f6ae4@syzkaller.appspotmail.com>
-To: axboe@kernel.dk, brauner@kernel.org, chandan.babu@oracle.com, 
-	david@fromorbit.com, dchinner@redhat.com, djwong@kernel.org, 
-	ebiggers@kernel.org, hch@lst.de, jack@suse.cz, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-syzbot suspects this issue was fixed by commit:
+Hi all,
 
-commit 6f861765464f43a71462d52026fbddfc858239a5
-Author: Jan Kara <jack@suse.cz>
-Date:   Wed Nov 1 17:43:10 2023 +0000
+Here's the usual odd fixes for fstests.  Most of these are cleanups and
+bug fixes for the recently merged xfs metadump v2 testing code.
 
-    fs: Block writes to mounted block devices
+This second attempt fixes a severe bug in the cleanup code from the
+refactored metadump testing code and adds a few adjustments that the
+maintainer asked for.
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1110ad7be80000
-start commit:   40f71e7cd3c6 Merge tag 'net-6.4-rc7' of git://git.kernel.o..
-git tree:       upstream
-kernel config:  https://syzkaller.appspot.com/x/.config?x=7ff8f87c7ab0e04e
-dashboard link: https://syzkaller.appspot.com/bug?extid=9d0b0d54a8bd799f6ae4
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16ab4537280000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=148326ef280000
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-If the result looks correct, please mark the issue as fixed by replying with:
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
-#syz fix: fs: Block writes to mounted block devices
+--D
 
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes-2024.01.14
+---
+Commits in this patchset:
+ * generic/256: constrain runtime with TIME_FACTOR
+ * common/xfs: simplify maximum metadump format detection
+ * common/populate: always metadump full metadata blocks
+ * xfs/336: fix omitted -a and -o in metadump call
+ * common: refactor metadump v1 and v2 tests, version 2
+ * xfs/{129,234,253,605}: disable metadump v1 testing with external devices
+ * xfs/503: test metadump obfuscation, not progressbars
+ * xfs/503: split copy and metadump into two tests
+ * common/xfs: only pass -l in _xfs_mdrestore for v2 metadumps
+ * xfs/122: fix for xfs_attr_shortform removal in 6.8
+---
+ common/metadump   |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ common/populate   |    2 -
+ common/rc         |   10 ---
+ common/xfs        |   49 ++++++++++++++++-
+ tests/generic/256 |    7 ++
+ tests/xfs/122.out |    2 +
+ tests/xfs/129     |   91 ++------------------------------
+ tests/xfs/234     |   92 ++------------------------------
+ tests/xfs/253     |   90 ++-----------------------------
+ tests/xfs/284     |    4 +
+ tests/xfs/291     |   32 ++++-------
+ tests/xfs/336     |    2 -
+ tests/xfs/432     |   31 ++---------
+ tests/xfs/503     |   82 ++++-------------------------
+ tests/xfs/503.out |    6 +-
+ tests/xfs/601     |   54 +++++++++++++++++++
+ tests/xfs/601.out |    4 +
+ tests/xfs/605     |   92 +-------------------------------
+ 18 files changed, 318 insertions(+), 484 deletions(-)
+ create mode 100644 common/metadump
+ create mode 100755 tests/xfs/601
+ create mode 100755 tests/xfs/601.out
+
