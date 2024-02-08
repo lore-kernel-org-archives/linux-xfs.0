@@ -1,34 +1,34 @@
 Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42D1533CDF;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9829625634;
 	Thu,  8 Feb 2024 18:49:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707418178; cv=none; b=GRIk/fPvkruPvib2YK+z8d5MhcwdKBq0PgU5a9bAmL6njZCEpzEEyrf9Cvs8MQpN2sNtF/WZt8QcsZtGpAlNRh0kyS2gA+5oVfv9bfxyXes/7Iwv12TzXHBHZnvurHFmnsKVyf0UKBTGfDjK+wkqefic3j4BlmVnUQ7CR2eB4j8=
+	t=1707418178; cv=none; b=Ek5xibD5ebuoaITrFAhKuU1azeoOi5TEcx6IlytFjXMbgofs5IkklisuPA6UJR25utJ2LFHKM539yvKZrrgELWQ1OAd6mhWyb+1n7NXZqhJeLLQyOkMvt6ALCn80Po4W/aEe8cuDqmFi/xvO0etuEYA6L/4mgjMjraC391mdoGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1707418178; c=relaxed/simple;
-	bh=umcqlnyoni1L+YV9DQVqbsmdwpCSWY7IqX3VvZk7A10=;
+	bh=3qwtk0TzM3yqkpdWTkMn8G1D7Yvm6JJDP82nQNcfpzk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MgNU/V++rIxWK+csXzV6vbHuyLoIWyV5dmbOy/8R+SMBUFkZzigCwVBEqaPHcV7gZpYC4zH+3Urbr6AP7oFG88RAPc8NfiJHx3nbyq1SmnHpMofK/kFCSEK2VSXsTmWXm72XpatAf4jZEvimw/CJ/Gb5OLmHCee7XLry5YSSLVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=FUBQbuoc; arc=none smtp.client-ip=167.114.26.122
+	 MIME-Version; b=EdHb3WzvT7aVq+5nmlb7miLkhblJvZib0QY1ssaDyvLWy7WeQD+RvH1oaVR1hONV57+QXNP3P0+6S9vRcg4f6J7+Rrzc4geuprWleqWo27mmw9s0IpP2sg85QI0jM+LIN6F6Bpd8roO2j7jhHTwXMWZTvzaKm8CUvRYkC6/skT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=TAhR2aeh; arc=none smtp.client-ip=167.114.26.122
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="FUBQbuoc"
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="TAhR2aeh"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
 	s=smtpout1; t=1707418167;
-	bh=umcqlnyoni1L+YV9DQVqbsmdwpCSWY7IqX3VvZk7A10=;
+	bh=3qwtk0TzM3yqkpdWTkMn8G1D7Yvm6JJDP82nQNcfpzk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=FUBQbuoczWUo8k5+ANycG5EnwK2AZwZz+GM2Uz2zImOXhkBzFtGTdwBZAYCenP6fC
-	 DgLffSigWmSC0rW6EM/A/gCcDBjQqYAWbEiusKZCP/jz+pOnSPLQWkJpy21cC8SmOh
-	 7iFVQnDrBxgXCvAMOSe7hVjYTOmI/BykW8ePB+qiKPACpJtReCrtD81c1ldvkSSgXY
-	 169iBhHYQPa5LIPJ3/XYMbbPDKLgg7sPaH9XXE5MMG0A2HDed+b0Hbw+qnFFAYipQh
-	 Ks5Sbzoa+ogU/4NEMlev5PchVfLYxH7lv49QChUb5wmbf1476V86H9j9CkdWhoRXIX
-	 FqmNBGS/mqM+w==
+	b=TAhR2aehSVIy+7kxOHR6NVnmGYlp9kd5ycnTSBAI6hceetyhQOWUUfcm/nFiep+a1
+	 kEkco0j8ZB4aI7AGUsK7I6wOE9xdzR/fBQB/pGe+tbFE1K6mzmAeXB5d7S7zA0bRWj
+	 ip3Ju2dZR0HVfK7H2Y2FckrBH/MiPVeZX1zh4NiDcc1BLONE3/lFUOu67rYwA1XBw6
+	 zqyIy2GXXYMOivh7iSp4mwMGUu1002g4dcG4icNksUO16LHayffi2x7O5HtglehPmp
+	 B5lutv1FF5uLG4qLTgKWQTdXfMpywAxesrzwZXGsCyTz/972b+6tAcEMA0N6RREPQK
+	 fjRsnlrFyE3ww==
 Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TW5cl4DQpzXwg;
-	Thu,  8 Feb 2024 13:49:27 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TW5ck5SmGzY2M;
+	Thu,  8 Feb 2024 13:49:26 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: Dan Williams <dan.j.williams@intel.com>,
 	Arnd Bergmann <arnd@arndb.de>,
@@ -52,9 +52,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Alasdair Kergon <agk@redhat.com>,
 	Mike Snitzer <snitzer@kernel.org>,
 	Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH v4 12/12] virtio: Cleanup alloc_dax() error handling
-Date: Thu,  8 Feb 2024 13:49:13 -0500
-Message-Id: <20240208184913.484340-13-mathieu.desnoyers@efficios.com>
+Subject: [PATCH v4 10/12] dm: Cleanup alloc_dax() error handling
+Date: Thu,  8 Feb 2024 13:49:11 -0500
+Message-Id: <20240208184913.484340-11-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240208184913.484340-1-mathieu.desnoyers@efficios.com>
 References: <20240208184913.484340-1-mathieu.desnoyers@efficios.com>
@@ -88,26 +88,25 @@ Cc: linux-mm@kvack.org
 Cc: linux-xfs@vger.kernel.org
 Cc: dm-devel@lists.linux.dev
 Cc: nvdimm@lists.linux.dev
-Cc: linux-s390@vger.kernel.org
 ---
- fs/fuse/virtio_fs.c | 4 ++--
+ drivers/md/dm.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fuse/virtio_fs.c b/fs/fuse/virtio_fs.c
-index 621b1bca2d55..a28466c2da71 100644
---- a/fs/fuse/virtio_fs.c
-+++ b/fs/fuse/virtio_fs.c
-@@ -809,8 +809,8 @@ static int virtio_fs_setup_dax(struct virtio_device *vdev, struct virtio_fs *fs)
- 		return 0;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 2fc22cae9089..acdc00bc05be 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2124,8 +2124,8 @@ static struct mapped_device *alloc_dev(int minor)
+ 	sprintf(md->disk->disk_name, "dm-%d", minor);
  
- 	dax_dev = alloc_dax(fs, &virtio_fs_dax_ops);
+ 	dax_dev = alloc_dax(md, &dm_dax_ops);
 -	if (IS_ERR_OR_NULL(dax_dev)) {
--		int rc = IS_ERR(dax_dev) ? PTR_ERR(dax_dev) : -EOPNOTSUPP;
+-		if (IS_ERR(dax_dev) && PTR_ERR(dax_dev) != -EOPNOTSUPP)
 +	if (IS_ERR(dax_dev)) {
-+		int rc = PTR_ERR(dax_dev);
- 		return rc == -EOPNOTSUPP ? 0 : rc;
- 	}
- 
++		if (PTR_ERR(dax_dev) != -EOPNOTSUPP)
+ 			goto bad;
+ 	} else {
+ 		set_dax_nocache(dax_dev);
 -- 
 2.39.2
 
