@@ -1,229 +1,369 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA17554FA5;
-	Thu,  8 Feb 2024 23:21:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707434509; cv=fail; b=ROT2haXKrYW9qzu+EtnV7LPNBPXzbYVQARy41D79p1TBItvXRWE748nBRsR4yE1RTv6TH3ADOhctdw5QsBpnZH8V2iihUilNmSQdhHdfdk9azPpJUAoVbANgTFhF2DJ8CpuWfrNLATQ5T2tNX50TjdA0feMslhg7UuYOe3LN0ZI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707434509; c=relaxed/simple;
-	bh=3lMUzZAHK+2msHoQ60bo7TmpmyS7V5I2V/VT+6KvA+k=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Z1l3svWQbpMlJJEE9ocwmvMm7vlnsl6SkEEo3DEVhAZK7lFXlB/7ONQ7o17je95L4xDWT+imFptGBlYq11Sw0uezT6eixWU0FBxLcsnqkQMZZkAO6GxSQtrEYq5B2WCAZJ5bCXxnqQfa2evxBsp+Mxzk8r94nQpS+QoE62PZtR0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MZwMnPbo; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=XEAYvhT0; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40954EAC5
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Feb 2024 00:23:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707438235; cv=none; b=DtLvWgOMEn5akADRF2VGHWx2jBKi10+BUJxN4kDN7NC5xervQgfrGPg2wtfTnxI64yMJ4o65Ysh76gxpTPUwONOLzTm5fUczWOyCBtvebhWCbtQ7XAHPeEi+9jW1hXiIwtzctFK9F0sAJfXs1sbI998b19fAyIQD08AxLSBSdnA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707438235; c=relaxed/simple;
+	bh=eaWvt3jU5Mr5OivybhMzdb3GPiTOsJrbLnNJOAuE9lU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GCTV2A5OI/6oWWKkfeh7pItpsxAXbZJ1N7OoHDdcucNgKG8FSmqN4HJyNAeAWxy9vYaeQN4P7Iq2NnHDmDZn24ztMi+Bh4rIge7sXB1xvu+6vnzVmPElqLyvYcIC7AjtLdsjamXsNpIg9aiQ14pm7o1V7CdbDEOuD+Ntikmb6ps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=CxqJPKvQ; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MZwMnPbo";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="XEAYvhT0"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 418LTmbM001749;
-	Thu, 8 Feb 2024 23:21:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-11-20; bh=FpAMSpWVC7cLAdfk8xIWKcSdrW7WX1GiZti4V6f2T4k=;
- b=MZwMnPbov8mB+82YzyLxbJgPiJIBqnR3TSyqYnSq0T/114bAAFYkq/UhIKqCcu+cyCy8
- kk4PhjmbSgVD+pbFgZA2hqAW4pIkNxtEkr3glLspHh9SeRtZYmP8Js7OEa3s4asiKV0A
- XanGtrUq4hz0AMD22pIP0pUCwf9xGNbj75jM26ORmn+7T9/Uo7wXZzLiEX8dX/DyM/Z7
- ViBlfvk5OWnh2JnWnPDIB9LvFPakxQgTBfQgouUMDAQQah+GJ3Cmmof+f3zcJo6pyHsr
- MpLsIA53d/krTvazAGTHPscZw3/sh1PvUpaGzqoBKY0nqlXvcLuEgsrNYimMviVTtKke 7Q== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w1cdd667h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 08 Feb 2024 23:21:43 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 418LeG8V036817;
-	Thu, 8 Feb 2024 23:21:42 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2169.outbound.protection.outlook.com [104.47.57.169])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3w1bxbdxhj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 08 Feb 2024 23:21:42 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kFKHad2kNkKwOY/g7ecAjqsHFUpZAIAK09KdxgE2Z55OU5BJYqWGDuPSJ7qqMXPXQMv7joL6ZeMpN6HhH9Qdp/mmDxY94P6hcNxA6sGE84ocZFMZMA4N0a/smSaeVD+kqkvEYzJWqjPYjohngLwX/xZV1CM/5NI4Iy99qG4BhwFDrDmgr17VWvQGEBwlj/AU7+0lnRdQ9o7t4b521nWvyQnTyd4BEXvJyUBM5roHERq8cATNv4rCqaeuLB0202Z4dhzQZzLcC6+yV4fPKTOp7+OYyx0hDpzXg0Km5T8mTalxZaU4d80U4qU4mTx55RbFOtcHrTaJVF5mkosb07zTOw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FpAMSpWVC7cLAdfk8xIWKcSdrW7WX1GiZti4V6f2T4k=;
- b=m/D/j21Ijf27s2TfVeI/2D91ptNedXJkMl7x3VruDZWHSPcdUOE62chZbFjBKC01xTq9naCnX5a38DtKi25QQZy8R/f2uckZRlhR/FsRfs5KGjgkOiPpzpcClY7kcP8GfS1UuVVayIlgpRcIJx3iGLjbs0Ly/+koxEbuPHlO0UEHpfJREY/fu4A4BwsmxvqijSv38T+m/OY7myfsLlCzeoSkp9PV9+basGuM/hJHMqXKLlZmgof28qtD9ux11HtI3i5Yk2jxX0wsYRJaFMItaikCVDQg9+5meyhK1sYzNPBPOsb44iefXXEUhEqHrpeqRMcwATZSNXwIJTT1LMXvEg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CxqJPKvQ"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6da4a923b1bso359247b3a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Feb 2024 16:23:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FpAMSpWVC7cLAdfk8xIWKcSdrW7WX1GiZti4V6f2T4k=;
- b=XEAYvhT04BuTyrT1+KDlgbqd3KIDzpr5yaxWg/D73LBY6TCQDhCIyRPhBLb9UUiEUj10aa4uIdNUt9O0KUEU+1Qh2291cgLWnOm1x371jdqiuDmEIMfdzdIpBBkcoO0OvgUu76Xvnsw31oyZWijnvB2RRCpJdaJaCuIJSb73XHY=
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
- by DM4PR10MB6014.namprd10.prod.outlook.com (2603:10b6:8:ad::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7249.37; Thu, 8 Feb
- 2024 23:21:40 +0000
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::abec:4916:93a1:2f72]) by BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::abec:4916:93a1:2f72%6]) with mapi id 15.20.7270.024; Thu, 8 Feb 2024
- 23:21:40 +0000
-From: Catherine Hoang <catherine.hoang@oracle.com>
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 6.6 21/21] xfs: respect the stable writes flag on the RT device
-Date: Thu,  8 Feb 2024 15:20:54 -0800
-Message-Id: <20240208232054.15778-22-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.39.2 (Apple Git-143)
-In-Reply-To: <20240208232054.15778-1-catherine.hoang@oracle.com>
-References: <20240208232054.15778-1-catherine.hoang@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BY5PR17CA0022.namprd17.prod.outlook.com
- (2603:10b6:a03:1b8::35) To BLAPR10MB5316.namprd10.prod.outlook.com
- (2603:10b6:208:326::6)
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707438232; x=1708043032; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=8BfsU6tA1JGScYnKMEeq7GmF2RuUvNF2hKCkweGfik0=;
+        b=CxqJPKvQZ0a0t5Nc6dI8MtowlOqxR3rpf0PqbiMmdZYgBnQdK7Dw0VHyKF5+zHwgRL
+         mXcxHpPtcUycittB9v+jI86NcYp+vLQnX4Hc/ISDVQdsYXtBqTTrj+2QWtTBk+iu+7j5
+         zBnzxmyvsZ8A0/xLyTO7iYwZSy8DEwxnfvWFt0pO84qyZLRejCUZFp36c/N36+BvvEVG
+         qZBPyu6U2mJVCs9BeYfGzdJEWzSP2ivz3hV0AsmyZZbo3dDDjmV3btHPChaHAuHcgC53
+         4aeckU0quOROGYs1nxJsyC1ANkhUsAjQboXIygosySd984hGv7OH3OWsvGmZFbxl4vmR
+         cWsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707438232; x=1708043032;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8BfsU6tA1JGScYnKMEeq7GmF2RuUvNF2hKCkweGfik0=;
+        b=TGBJ/8dIir+RelgUKfAWJKpg72SA+jyzW9d4blinXgvv5n6q1Do/zMETbMLKKi3guN
+         uGVM+3LxteDvWrTti1m1fBexXhQ7V4nVaBRrohvpWtM2WYiKwmCd2ccGxCtfP/ZKbL7E
+         Ez7XhApnk8xgqfVnsdp2BFou5l4xVSs6fVQVsg4zOrT0sAk9vLKoI9H0x3e+9v1esrvc
+         /6jke8F5ZoIi1sBtsaqDFxRC8WfLJaDZZpy04ZS66m7Zfw070sMr9RB9DnegxeEalNni
+         8n8RenQp58ABeydvJfsPaMWS63bV3rDmAnileCq97hngNVOHXD4Ya00znT4khupAeM0s
+         jXvQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXdNIxgN2qMX8Nb08xRtHYie8T7GdFBQVNX29cpFittyt2+vVD/7tNzgLr9TmalR4y9EiV6lQA9aCFE5kVFT7vmwQfvEXWPDCjD
+X-Gm-Message-State: AOJu0YxUK7mBipCYluyjXfyc3c0TY2jZv8Vwvn8Km9ZbkYGK6qZijrps
+	2O66fvSLL5RpDYViSVxrtLfOorG8eb8fC7GHKJinevdSKYAkla2F6cji0tDlnSw=
+X-Google-Smtp-Source: AGHT+IFy5stMWntH8K5LsZy38mfKcIbxoiw7xG21DoxkrObYKP7BdfNJwAnl+439ywDEasid6OXpqg==
+X-Received: by 2002:a62:d413:0:b0:6db:dc33:4e89 with SMTP id a19-20020a62d413000000b006dbdc334e89mr92072pfh.10.1707438232249;
+        Thu, 08 Feb 2024 16:23:52 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWkna7wBdpOG0j4MGjuO1//7auGy+1s9qhYgwL9RPKyFwP7uNepgA7oRExr2jZAoqBCogfhc6GOrOsO4TbbhW8oafDIKvFmKiO0
+Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
+        by smtp.gmail.com with ESMTPSA id y10-20020a056a00190a00b006e085a96bd1sm104636pfi.117.2024.02.08.16.23.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Feb 2024 16:23:51 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rYEgG-003wL9-11;
+	Fri, 09 Feb 2024 11:23:48 +1100
+Date: Fri, 9 Feb 2024 11:23:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH v2] xfs: run blockgc on freeze to avoid iget stalls
+ after reclaim
+Message-ID: <ZcVwlLTVL65KAmdB@dread.disaster.area>
+References: <ZbLyxHSkE5eCCRRZ@dread.disaster.area>
+ <Zbe9+EY5bLjhPPJn@bfoster>
+ <Zbrw07Co5vhrDUfd@dread.disaster.area>
+ <Zb1FhDn09pwFvE7O@bfoster>
+ <20240202233343.GM616564@frogsfrogsfrogs>
+ <Zb+1O+MlTpzHZ595@bfoster>
+ <20240205220727.GN616564@frogsfrogsfrogs>
+ <ZcIz6V7EAYLW7cgO@bfoster>
+ <20240207173620.GS616564@frogsfrogsfrogs>
+ <ZcTO6KyMyMYmeFr/@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|DM4PR10MB6014:EE_
-X-MS-Office365-Filtering-Correlation-Id: 80d214c0-0772-4f4a-6965-08dc28fcb42c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	+h+3bubQbCfMoMMIUIPGmlzEzw2ikowpx58LVDQPYbLgPZQT7IqcQIkvOUhOddmpWTmaXflz4xmL1ncDs+VnF8hjvQj5osMFSn3d5aueHhxiCHcE1CgoNSrhoQn7TiOPlapxotjm47SM4yJ/5z5nRplIsg8r+dVzMoJs5p2dVFIaD56nKNip8bycWwellpVxtPMA6nZAmWDGDUE8t8Yzz6lteetuoAWvYOu62cCV6luEYDgjoVAxH61D5xTQeMTM5PUGEcx3zjzIGR2ZSjlQ+5PWcf9M7T20HCzDwafK81LMqZcdYNoce1THwIGNmw8BKx5pt3Yy/dFGcUD3WWBwdobNaUgh81+IOdUWi9Mpzks6cJkIVXKzUwMy+9YKVQ4Bkmp5ousuTCcQAhlyoG7y/G9FPlatGG48qee5IzlxcPzEE6xur4dgl4NOTiVbi6RtQry5gmaQQM2HAXDv1w0v98UMm+MkmWLu/Yo/UUsu/S8Nw7goejPve3E1eoQPhfrwLD/kfgfF4ay5AoI9zAfoOkD/eMggdTZO44mQHZCAM8c=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(346002)(136003)(396003)(366004)(39860400002)(230922051799003)(64100799003)(186009)(451199024)(1800799012)(86362001)(38100700002)(41300700001)(83380400001)(2906002)(66946007)(2616005)(66476007)(66556008)(6916009)(316002)(6666004)(36756003)(8936002)(1076003)(44832011)(4326008)(8676002)(450100002)(478600001)(6486002)(6506007)(5660300002)(966005)(6512007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?aGznVb9JRC+aXNsBlj8V7N5ESq2/9Lt4iIdJ3npRGa4I8jNNQk4pIGTggT0d?=
- =?us-ascii?Q?V9A2hNWcRusCiInHKOUmnJY340CI4cpm3dELhtObENuvxy71Jndfgbaq0o6o?=
- =?us-ascii?Q?XZUBDWfJCoMIC3k8QFrIl7a44I3swfFuJNEPL6jSZ7MJSZddabJ8Nfk5egWG?=
- =?us-ascii?Q?6EGtzT92Xt1Or/K2Dguon8yZiULGDPqzsNGCbsV8d7V+7t/GlaTJhGFSxaSl?=
- =?us-ascii?Q?7ZmnIprYZYKKCjA0SwOXGGwHviMos2dWk+qqZwnAgOctEP4TYcSFlKCxtea/?=
- =?us-ascii?Q?6dma2tiYINfStT0Gn1qU4BtKZQoAYWRrpNCi/EKU5w7aZvlFB34JuOJBho23?=
- =?us-ascii?Q?4OUvTZpsJcV6XoAar2NSymxgv0kFl6ydSl3wtviwIHeyBkz4ndGFNrK/GYtX?=
- =?us-ascii?Q?ytTiItolCwi4V3GpJ3WWFpZ3aE8Cdpw8yNEKrkAGc7ea+MXCVI3y9eKqN5S5?=
- =?us-ascii?Q?QSbGbq6nvAveRXO2RknSwjRTThek5mvM7gG8CuCE/k6feF2Wkjnw2AB3FvFZ?=
- =?us-ascii?Q?IK8gVwBu+8DfWlADvtDq2jBO1+3j77ImMDp9yDRh1Nu9KVbIevmnngSiPrEo?=
- =?us-ascii?Q?sAFu3tUZtTcuPpFRHA3nIaSbHnE6c/o0F2fZwvmavkpftUsKA54Oz9rk7JjI?=
- =?us-ascii?Q?0JZR43ML+ng8TlSw2a4Dd2A72wbIppjzyjzfWcy0bRXZ2PlwB0/hmn3Q2aPG?=
- =?us-ascii?Q?2ETsN1hjf5ALf0jHI4411Eg1nZS4bmYyqrmJCVAa9h+wMexN3ZBMB7u/Ivkl?=
- =?us-ascii?Q?Y9tok5Tn/buLOtLful6A+fS0aWqrsln9qpbZpa+SFMHL/XNkwrvomK7TmLmA?=
- =?us-ascii?Q?0hVqOCQDcEBfWTom++861MMO6eRQ1zFc9ZVxZbviFw4TYPHJjhzBY98yyBGs?=
- =?us-ascii?Q?k4iSmGjQi4bu9keKSD9Kjl/Iil/nOMmBGMYxiGTblmbMClz3f9h7O53RowO/?=
- =?us-ascii?Q?VuQ5X5KHGoaRqr3IVLpZrtkpbhxKM4zudz+UdpQLV2YakACNKrbq6c550j84?=
- =?us-ascii?Q?ehjIz42hgbRiLa4g6aEHXfmRSden0n+MVHnUkSXqLs3wpWE079TqOagOBTX9?=
- =?us-ascii?Q?API/h8ybuK6edeZ9N6PGOsw5Tlg8qB8hXaedidmXeq9SMq+x2mbwZeQdQZjC?=
- =?us-ascii?Q?/yl+zjfYl08YP9+vT+y+z/tYjyX+v5QHyfDwgYD6SSOg/Usflpr4I9zdaHXL?=
- =?us-ascii?Q?zcX7eT55uZ0aHdPhLMNHOx2Wfbkv/aa/AMx8/zLoCnjHet96Brn+b1opDjkw?=
- =?us-ascii?Q?TPY5wSaXwXUcjJ0U1imiZoZdhx0BAjQhddv98Tl8bxTQrSP4hJTsCQAZ4CLV?=
- =?us-ascii?Q?9ZgqBdcSzdZiPQTbGL6iYMP1ZAHafr3d3uwYDglrC4h/KPDP17OEyMaSpNpj?=
- =?us-ascii?Q?uA6K9+dLjrXsDFzD7dahLl8eSiEcDASEJqOVVfyxncs2WHc8yzGFIrkmynyR?=
- =?us-ascii?Q?VHYXQRNlOTiizBBS0byWH6EUxi6NbipI1pEWnhXHCXcuUGgGrWIJrXfIbIvy?=
- =?us-ascii?Q?elsHQL1g4PD/dWLmcxBIjWvmRF3N0yxLQwhNKArstZ+h27KYnqdFXutPChnX?=
- =?us-ascii?Q?Y/OZtgSH5A4qbVwt/sRuOeQVRNAXhScg99aAjrnUdzs6ajSCmRjaRHfW2CC2?=
- =?us-ascii?Q?PxpHwymF1uwEEU63C0sV3lzqC805+TH7HX53eiibgEsCn4iIczenewX7lKRb?=
- =?us-ascii?Q?bd9t/Q=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	5lWak2RjlZoEM8b90gZOsIDcYKk8L8VXmorAnR3X60SrVtzAMN4RyZ/7y9aKgNjSRm6zZt3H4bkf8+90kuIf1Iyt+isqzY57Y/QWOZXEMwl29xgUmNsCz1rkpLeo2MzZjG8KymCse35oIYXgxj6JszyPE+tBvv4d/+lo7EcJz3LoqpZSd+L2s8/EPXREhdvM/ilYSWqyJXDOPU64/HkchGKWvbZiHPBKDdv9iv1CylWa4FK001qqFm2eMmYAh9jxe0MK/fxyxaPOYMj4ZLnec0QttYjujZSf3e1Zn9ukqLaisd7MyCiEVutEeHiPRJI28P+i9jaXniizvfRGByYpZLnfXxplws0ZiPPZWo/ULp8CVvbnuN6ydkp2lYSAFm96y2nG1VhG4cFBagc9r7hthczZZH76DyXzFBtI4mvzH32qNa+K6Kfqn7GeDSFUVcldBidboZ/kLuc8VCEHWlBeMz+LHoE0WwsJcUfKmC5n+NspaHhkY/BctiAMg9k9iCiJpA4vJQDhsGv271Zo87RN+d2nQZTq+/btEmk4T14c/1Q/W8UUqfOfX5mVSP2ojx0Y/O7rwUjm2n+qVAaLqNVNUyHAngTRxlQ6/QJE/85ciQc=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 80d214c0-0772-4f4a-6965-08dc28fcb42c
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Feb 2024 23:21:40.1019
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sdslSTzcSlyrfGuUHj2c3H2Skckqakmbj2/nFqE+jBIwsITpzi0dB6Ue+XvmjjRos72Zy/h/ug8xKa+ivP9jifVMep9/kA4XABVoI6ZV3XQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6014
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-08_11,2024-02-08_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 spamscore=0 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402080132
-X-Proofpoint-GUID: Q06z-LC7VuKTPS9DQo2MFPbZwd4u9R2X
-X-Proofpoint-ORIG-GUID: Q06z-LC7VuKTPS9DQo2MFPbZwd4u9R2X
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZcTO6KyMyMYmeFr/@bfoster>
 
-From: Christoph Hellwig <hch@lst.de>
+On Thu, Feb 08, 2024 at 07:54:00AM -0500, Brian Foster wrote:
+> On Wed, Feb 07, 2024 at 09:36:20AM -0800, Darrick J. Wong wrote:
+> > On Tue, Feb 06, 2024 at 08:28:09AM -0500, Brian Foster wrote:
+> > > On Mon, Feb 05, 2024 at 02:07:27PM -0800, Darrick J. Wong wrote:
+> > > > On Sun, Feb 04, 2024 at 11:03:07AM -0500, Brian Foster wrote:
+> > But I'd wondered over the years if blockgc ought to ignore files that
+> > are still opened for write unless we're scouring for free space due to
+> > an ENOSPC.  Maybe the current heuristic of skipping files with dirty
+> > pagecache or IOLOCK contention is good enough.
+> > 
+> 
+> The existing heuristic may be fine for the current model of processing,
+> but I think this is interesting in another context. I have a couple
+> prototype variants around that work by keeping blockgc inodes out of
+> eviction until blockgc work is actually processed. To do something like
+> that probably warrants blockgc work to be more shrinker driven to
+> accommodate memory pressure, so ISTM that having some opened/writeable
+> logic to more intelligently select which blockgc inodes to process for
+> the purpose of eviction/reclaim could be rather useful.
+> 
+> > > FWIW, this sounds more like a generic improvement to the background scan
+> > > to me. Background blockgc currently filters out on things like whether
+> > > the file is dirty in pagecache. If you have a log file or something, I
+> > > would think the regular background scan may end up processing such files
+> > > more frequently than a freeze induced one will..? And for anything that
+> > > isn't under active or continuous modification, freeze is already going
+> > > to flush everything out for the first post-unfreeze background scan to
+> > > take care of.
+> > 
+> > Mhm.
+> > 
+> > > So I dunno, I think I agree and disagree. :) I think it would be
+> > > perfectly reasonable to add an open/writeable file filter check to the
+> > > regular background scan to make it less aggressive. This patch does
+> > > invoke the background scan, but only because of the wonky read into a
+> > > mapped buffer use case.
+> > 
+> > Does this livelock happen on a non-frozen filesystem too?  I wasn't too
+> > sure if you wrote about that in the commit message because there's a
+> > real livelock bug w.r.t. that or if that sentence was simply explaining
+> > the use of an async scan.
+> > 
+> 
+> The livelock was purely a SYNC blockgc scan vs. SB_FREEZE_PAGEFAULT
+> thing. The original patch I sent way back when did the sync scan, but
+> appeared to be susceptible to livelock if there was a blocked task
+> reading (i.e. holding iolock) and causing a page fault by copying into a
+> mapped buffer, because the scan will continuously try for the iolock
+> that won't ever be released. So the non-sync variant was a followup
+> suggestion as a best effort scan.
+> 
+> I think that if we could have a mode where the vfs called ->freeze_fs()
+> once per freeze stage instead of only once at the end, then we could
+> actually do a sync scan under SB_FREEZE_WRITE protection (possibly
+> followed by another non-sync scan under PAGEFAULT to catch any races).
 
-commit 9c04138414c00ae61421f36ada002712c4bac94a upstream.
+To what purpose, though? It's being talked about as a way to run a
+blockgc pass during freeze on XFS, but we don't need a blockgc
+passes in freeze for XFS for deadlock avoidance or correct freeze
+behaviour.
 
-Update the per-folio stable writes flag dependening on which device an
-inode resides on.
+Hence I just don't see what problems this complexity is going to
+fix. What am I missing?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Link: https://lore.kernel.org/r/20231025141020.192413-5-hch@lst.de
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Christian Brauner <brauner@kernel.org>
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-Acked-by: Chandan Babu R <chandanbabu@kernel.org>
----
- fs/xfs/xfs_inode.h | 8 ++++++++
- fs/xfs/xfs_ioctl.c | 8 ++++++++
- fs/xfs/xfs_iops.c  | 7 +++++++
- 3 files changed, 23 insertions(+)
+> > > I still think freeze should (eventually) rather
+> > > invoke the more aggressive sync scan and process all pending work before
+> > > quiesce and not alter behavior based on heuristics.
+> > 
+> > Admittedly, given how much recovery /can/ be required, I'm starting to
+> > think that we could push more of that work to disk before the freeze.
+> 
+> I agree, but at least recovery is predictable. If you have a situation
+> where you have a bunch of inodes with post-eof blocks and then take a
+> snapshot, the fact that the snap might now have GBs of space off the end
+> of random inodes somewhere in the fs is pretty wonky behavior to me. I
 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 3dc47937da5d..3beb470f1892 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -569,6 +569,14 @@ extern void xfs_setup_inode(struct xfs_inode *ip);
- extern void xfs_setup_iops(struct xfs_inode *ip);
- extern void xfs_diflags_to_iflags(struct xfs_inode *ip, bool init);
- 
-+static inline void xfs_update_stable_writes(struct xfs_inode *ip)
-+{
-+	if (bdev_stable_writes(xfs_inode_buftarg(ip)->bt_bdev))
-+		mapping_set_stable_writes(VFS_I(ip)->i_mapping);
-+	else
-+		mapping_clear_stable_writes(VFS_I(ip)->i_mapping);
-+}
-+
- /*
-  * When setting up a newly allocated inode, we need to call
-  * xfs_finish_inode_setup() once the inode is fully instantiated at
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index be69e7be713e..535f6d38cdb5 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1149,6 +1149,14 @@ xfs_ioctl_setattr_xflags(
- 	ip->i_diflags2 = i_flags2;
- 
- 	xfs_diflags_to_iflags(ip, false);
-+
-+	/*
-+	 * Make the stable writes flag match that of the device the inode
-+	 * resides on when flipping the RT flag.
-+	 */
-+	if (rtflag != XFS_IS_REALTIME_INODE(ip) && S_ISREG(VFS_I(ip)->i_mode))
-+		xfs_update_stable_writes(ip);
-+
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	XFS_STATS_INC(mp, xs_ig_attrchg);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2b3b05c28e9e..b8ec045708c3 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1298,6 +1298,13 @@ xfs_setup_inode(
- 	gfp_mask = mapping_gfp_mask(inode->i_mapping);
- 	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
- 
-+	/*
-+	 * For real-time inodes update the stable write flags to that of the RT
-+	 * device instead of the data device.
-+	 */
-+	if (S_ISREG(inode->i_mode) && XFS_IS_REALTIME_INODE(ip))
-+		xfs_update_stable_writes(ip);
-+
- 	/*
- 	 * If there is no attribute fork no ACL can exist on this inode,
- 	 * and it can't have any file capabilities attached to it either.
+We've had that behaviour for 20+ years.  There's no evidence that it
+is problematic and, realistically, it's not different to the
+filesystem state after a system crash. i.e. crash your system, and
+every inode in memory that has preallocated blocks beyond EOF now
+has them persistently on disk, and they don't get cleaned up until
+the next time they get cycled through the inode cache.
+
+Further, we intentionally disable blockgc on any inode that has been
+opend O_APPEND or had fallocate() called to preallocate blocks. So
+regardless of anything else, blockgc scans are not a guarantee that
+we clean up post-eof blocks during a freeze - they will exist on
+disk after a freeze regardless of what we do during the freeze
+process.
+
+Also, we use the same quiesce code for remount,ro as we use for
+freeze. Hence remount,ro leaves all the inodes in memory with
+pending blockgc unchanged. The post-eof blocks are persisted on
+disk, and they won't get removed until the filesystem is mounted rw
+again and the inode is cycled through cache.
+
+And then there's system crashes. They leave post-eof blocks
+persistent on disk, too, and there is no possibility of blockgc
+being done on them. Recovery does not run GC on these post-eof
+blocks, nor should it.
+
+So given that remount,ro and system crashes result in exactly the
+same on-disk state as a freeze and we can't do anything about
+crashes resulting in this state, why should we try to avoid
+having post-eof blocks on disk during a freeze? They are going to be
+on disk before a freeze, and then recreated immediately after a
+freeze, so why does a freeze specifically need to remove them?
+
+> suspect the only real way to reclaim that space is to cycle every inode
+> in the snapshot fs through the cache such that the extent list is read
+> and inode reclaim can identify whether there is post-eof space to trim,
+> but I've not actually experimented to see how bad that really is.
+
+We know how expensive that is: quotacheck has this exact same
+requirement.  i.e. quotacheck has to cycle every inode in the
+filesystem through the inode cache, and that will run post-eof block
+removal as the inodes cycle out of cache.
+
+And let's not forget that the reason we journal dquots is so that we
+don't have to run a quotacheck on every mount because the overhead
+is prohibitive on filesystems with millions of inodes.
+
+If a full filesystem inode scan is necessary for blockgc, then do it
+from userspace. A simple bulkstat pass will cycle every inode in the
+filesystem through the cache, and so problem solved without having
+to change a single line of XFS code anywhere.
+
+> > > Given the current implementation, I think ultimately it just depends on
+> > > your perspective of what freeze is supposed to do. To me, it should
+> > > reliably put the filesystem into a predictable state on-disk (based on
+> > > the common snapshot use case).
+> > 
+> > I always thought freeze was only supposed to do the bare minimum needed
+> > to quiesce the filesystem, assuming that the common case is that we
+> > quickly thaw and resume runtime operations.  OTOH a dirty 1GB log will
+> > take a while to recover, and if the point was to make a backup or
+> > something, that just makes IT unhappy.
+> 
+> It seems the reality is that it's neither of these things we think it
+> should be, and rather just the result of a series of short term tweaks
+> and mods over a long period of time. :)
+
+IMO, freeze *requirements* are unchanged from what they were 25
+years ago. Freeze is simply required to bring the filesystem down to
+a consistent state on disk that is entirely readable without
+requiring the filesytem to perform any more write operations to
+perform those read and hold it unchanged in that state until the
+filesystem is thawed.
+
+A further desirable runtime characteristic is that it is
+fast and has minimal runtime impact on application behaviour.
+
+Yes, the implementaiton has changed over the years as we've found
+bugs, changed the way other subsystems work, etc. But the actual
+functional requirements of what freeze is supposed to provide have
+not changed at all.
+
+> I think at one point the entire
+> inode working set was reclaimed on freeze, but that was removed due to
+> being crazy.
+
+Yes, up until 2020 it did do inode reclaim, but that was an
+implementation detail. And it wasn't removed because it was "crazy",
+it was removed because it was no longer necessary for correct
+behaviour.
+
+Back in 2005 we fixed some freeze issues by making it behave like
+remount,ro. They both do largely the same thing in terms of bringing
+the fs down to a consistent clean state on disk, so sharing the
+implementaiton made a lot of sense. At the time, the only way to
+prevent reclaimable inodes from running transactions after a
+specific point in time was to process them all. i.e. inactivate all
+the inodes, write them back and reclaim them. That was the problem
+we needed to fix in freeze, and remount,ro already solved it. It was
+the obvious, simple fix.
+
+Did it cause problems? No, it didn't, because this "inode reclaim"
+doesn't affect the working set of inodes in memory. i.e. the working
+set is pinned in memory by cached dentries and so, by definition,
+they are not on the inactive inode lists that can be purged by
+reclaim during freeze/remount,ro.
+
+To put this in modern context, the old code was essentially:
+
+	xfs_inodegc_flush()
+	xfs_ail_push_all_sync()
+	xfs_reclaim_inodes()
+
+Note that there is no xfs_blockgc_flush_all() call in there - it
+didn't touch inodes in the working set, just processed inodes
+already queued for inactivation work. And in kernels since about
+3.10, the xfs_reclaim_inodes() call simply expedited the reclaim
+that was going to happen in the background within 5 seconds, so it's
+not like this actually changed anything material in terms of inode
+cache behaviour.
+
+Indeed, the commit that removed the inode reclaim in 2020 says this:
+
+    For xfs_quiesce_attr() we can just remove the inode reclaim calls as
+    they are a historic relic that was required to flush dirty inodes
+    that contained unlogged changes. We now log all changes to the
+    inodes, so the sync AIL push from xfs_log_quiesce() called by
+    xfs_quiesce_attr() will do all the required inode writeback for
+    freeze.
+
+IOWs, it was removed because we realised it was redundant and no
+longer necessary for correct behaviour of the freeze operation.
+That's just normal development process, there was nothing "crazy"
+about the old code, it just wasn't necessary anymore.
+
+> But now we obviously leave around blockgc inodes as a side
+> effect.
+
+As per above: we have -always done that-. We have never run blockgc
+on the current working set of inodes during a freeze. We don't want
+to - that will perturb the runtime behaviour of the applications
+beyond the freeze operation, and potentially not in a good way.
+
+This is how we've implemented freeze for 20-odd years, and there's
+no evidence that it is actually a behaviour that needs changing.
+Having a bug in freeze realted to an inode that needs blockgc does
+not mean "freeze should leave no inodes in memory that need
+blockgc". All it means is that we need to handle inodes that need
+blockgc during a freeze in a better way.....
+
+> I think the log is intentionally left dirty (but forced and
+> covered) to ensure the snapshot processes unlinked inodes as well (and I
+> think there's been a lot of back and forth on that over the years), but
+> could be misremembering...
+
+That's a different problem altogether....
+
+> > > It is a big hammer that should be
+> > > scheduled with care wrt to any performance sensitive workloads, and
+> > > should be minimally disruptive to the system when held for a
+> > > non-deterministic/extended amount of time. Departures from that are
+> > > either optimizations or extra feature/modifiers that we currently don't
+> > > have a great way to control. Just my .02.
+> > 
+> > <nod> Is there anyone interested in working on adding a mode parameter
+> > to FIFREEZE?  What happens if the freeze comes in via the block layer?
+> > 
+> 
+> We'd probably want to audit and maybe try to understand the various use
+> cases before getting too far with userspace API (at least defining flags
+> anyways). At least I'm not sure I really have a clear view of anything
+> outside of the simple snapshot case.
+
+That's what I keep asking: what user problems are these proposed
+changes actually trying to solve? Start with use cases, not grand
+designs!
+
+> IOW, suppose in theory freeze by default was the biggest hammer possible
+> and made the filesystem generally flushed and clean on disk, but then
+> grew a flag input for behavior modifiers. What behavior would we modify
+> and why?
+
+It was originally defined by the XFS_IOC_FREEZE API on Irix but we
+never used it for anything on Linux. We didn't even validate it was
+zero, so it really is just a result of a poor API implementation
+done 25 years ago. I can see how this sort of little detail is
+easily missed in the bigger "port an entire filesystem to a
+different OS" picture....
+
+> Would somebody want a NOFLUSH thing that is purely a runtime
+> quiesce? Or something inbetween where data and log are flushed, but no
+> blockgc scanning or log forcing and so forth? Something else?
+
+No idea what the original intent was.  sync() is the filesystem
+integrity flush, freeze is the "on-disk consistent" integrity flush,
+and there's not much between those two things that is actually
+useful to users, admins and/or applications.
+
+The only thing I've seen proposed for the FIFREEZE argument is a
+"timeout" variable to indicate the maximum time the filesystem
+should stay frozen for before it automatically thaws itself (i.e. an
+anti foot-gun mechanism). That went nowhere because it's just not
+possible for admins and applications to use a timeout in a reliable
+way...
+
+-Dave.
 -- 
-2.39.3
-
+Dave Chinner
+david@fromorbit.com
