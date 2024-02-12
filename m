@@ -1,108 +1,160 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7359B15CE
-	for <linux-xfs@vger.kernel.org>; Sun, 11 Feb 2024 20:39:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707683954; cv=none; b=m3/6YHAIhdOgA0Qh8+EadkBiUSUUuz7TlY4BWmP70q5mipdSJ8kZyFYcNG8MaGudWJ9GFIzQo/UU0KeuL3KkrBsdYfwxdNgNdkf8gWdCmLC2KE3OgkPHHqxuOnYphtGrYH1EmfxHweU/SNIzkZJ60He8wYDAxlam/vhWjnIQfsE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707683954; c=relaxed/simple;
-	bh=W80r4kbaGQP/B0vqZ3irgLvCtBb0jITDfW2UuYf1wYA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=pOUcHC1DPYEKbcJrk2lE6LrZfe9qfUioWq8mCIeB0OzapvMI1J+OxPJl2ifAXFXgYk/WUyhZcT8tDbuUVBuOhz9xnbkqZ4+744FadkTcx4jL6uUiImrzqIb5sXF8lli1PcyYheipHX5/f/LCB2S39Rh6HOUWAB0IPHUQaiVtfgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=HMF85bLo; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="HMF85bLo"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 511764CEBA2;
-	Sun, 11 Feb 2024 14:39:05 -0600 (CST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 511764CEBA2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1707683945;
-	bh=GR43HhiY3mLizgIxGcKQMI8KZ+/Af7wmKYM12r6aFEY=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=HMF85bLooXM7+KTb+LIK9LPuuF+UztjyFIscY9MJsZXIXa47jHuZvdyfYO6ypKh5U
-	 Zw92gF89K9JuhRlhHN27QYzShUQqp9eCwKPyc41yaS2EAszhzcXHzeGjbNnZ/SiyZX
-	 n10BLlEadzKIcAAcIEC9r+6PVnZ8Eoqg0FpPCJwZ/yvTUoe9SVx23TYXLU78XN92oy
-	 um+Hs1I99c8+E8vzGmvqsafEmv8M860nF2whwlmyyZMNerbUHqrwIF8rHTc4CUP7S1
-	 JrIRo4OjY1oS9SX9tdlrNrC+o4RVosn2KYkGyFrI/uE4jpLsCImKK3+3GvHMIoBxrb
-	 xLN67ZBmdgGFA==
-Message-ID: <6ecca473-f23e-4bb6-a3c3-ebef6d08cc7e@sandeen.net>
-Date: Sun, 11 Feb 2024 14:39:04 -0600
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCCB320B2E;
+	Mon, 12 Feb 2024 10:55:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707735321; cv=none; b=lRNnfrptcVE59N6mBuzm/Wcqc97VjM/RXD+I6R886kT1Pf2lZ1c8HMLRkPuDsX/0UT5FUNRiU83fXf4I5y4+fU1cBblZWI6woiVkbMIqwVo6cQkk/5XcefFSw3RIp0DkQ+UTx22DzH22YwMIENjpdkgbwpPhTWAbbt30b+LNfS8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707735321; c=relaxed/simple;
+	bh=EawNjPbCYcS/tAMoeRo1vOT1H5rphtp7aMvvQEXuLbA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MHcp+pnAKTudsme8M9HHXbqYC8ji/akbquOHpjYIeFgKmxhDJOaDAGPPYK3VN6/Kll2Jjotn8P+9px0SLKr68TxVg6OdwMAXuo08W4k3CpyJILOPZgc2LLFcSNkgS9d0spPlEPEChsn+EVetqy6plq56E0WbPQqTd6vqFGcncio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Xu1kwmSu; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Xu1kwmSu"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41CAgHcb004087;
+	Mon, 12 Feb 2024 10:54:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=zoVRmRi8SldJa0D8D0wv+7S4X/v7cfA5ay35VLyY9l4=;
+ b=Xu1kwmSu6Aorj1i1sDCBWstHrix6T+AEiVK037yo4yRHX0CITslpJXem8tD1ezVBm4L3
+ HnQUueSsPp9naidq8IUXdLJYQooagAzKEUZT7XH0hlUI0mieGpEJPVdVb4s9xF9BcbCu
+ ExrxuxvKvNAOPivEVVoKJ9afYDqymfFjwD/K9RwjX6vOSv4Vxx4ZfE9d1hYmTUmzaULm
+ UlLF6lbcybPIlA1MycZ79RrgEcw9wO71m9Gd/mnikW/DyWzRmiFc0HYleSSZZO65E9ok
+ JZlfW81n1F0GCw1i9ebyfqhanHJeSo0msDhqOSKnjJthsxbmD38DYVqWL85Ge23A7ODR Pw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w7htf8fnd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 12 Feb 2024 10:54:57 +0000
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41CAgxmI006433;
+	Mon, 12 Feb 2024 10:54:57 GMT
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w7htf8fmu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 12 Feb 2024 10:54:57 +0000
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41C8j2ov009728;
+	Mon, 12 Feb 2024 10:54:55 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 3w6p62fk2b-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 12 Feb 2024 10:54:55 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41CAsom918023054
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 12 Feb 2024 10:54:52 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 16E7F20043;
+	Mon, 12 Feb 2024 10:54:50 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C12292004B;
+	Mon, 12 Feb 2024 10:54:45 +0000 (GMT)
+Received: from li-c9696b4c-3419-11b2-a85c-f9edc3bf8a84.in.ibm.com (unknown [9.109.198.187])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 12 Feb 2024 10:54:45 +0000 (GMT)
+From: Nilay Shroff <nilay@linux.ibm.com>
+To: john.g.garry@oracle.com
+Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
+        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
+        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
+        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
+Subject: Re:[PATCH v3 09/15] block: Add checks to merging of atomic writes
+Date: Mon, 12 Feb 2024 16:24:44 +0530
+Message-ID: <20240212105444.43262-1-nilay@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240124113841.31824-10-john.g.garry@oracle.com>
+References: <20240124113841.31824-10-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: XFS corruption after power surge/outage
-Content-Language: en-US
-To: Jorge Garcia <jgarcia@soe.ucsc.edu>, linux-xfs@vger.kernel.org
-References: <CAMz=2cecSLKwOHuVC31wARcjFO50jtGy8bUzYZHeUT09CVNhxw@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <CAMz=2cecSLKwOHuVC31wARcjFO50jtGy8bUzYZHeUT09CVNhxw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: l6UR2kJ2av9VC-Gz59rrtIFBEPbdj0UY
+X-Proofpoint-ORIG-GUID: Q0gM8ieRkli4blZ8gcHTGllf5lrbi8pv
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-12_07,2024-02-12_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
+ mlxscore=0 mlxlogscore=999 impostorscore=0 lowpriorityscore=0 spamscore=0
+ priorityscore=1501 malwarescore=0 phishscore=0 bulkscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2402120082
 
-On 2/9/24 12:39 PM, Jorge Garcia wrote:
-> Hello,
-> 
-> We have a server with a very large (300+ TB) XFS filesystem that we
-> use to provide downloads to the world. Last week's storms in
-> California caused damage to our machine room, causing unexpected power
-> surges and power outages, even in our UPS and generator backed data
-> center. One of the end results was some data corruption on our server
-> (running Centos 8). After looking around the internet for solutions to
-> our issues, the general consensus seemed to be to run xfs_repair on
-> the filesystem to get it to recover. We tried that (xfs_repair V 5.0)
-> and it seemed to report lots of issues before eventually failing
-> during "Phase 6" with an error like:
-> 
->   Metadata corruption detected at 0x46d6c4, inode 0x8700657ff8 dinode
-> 
->   fatal error -- couldn't map inode 579827236856, err = 117
-> 
-> After another set of internet searches, we found some postings that
-> suggested this could be a bug that may have been fixed in later
-> versions, so we built xfs_repair V 6.5 and tried the repair again. The
-> results were the same. We even tried "xfs_repair -L", and no joy. So
-> now we're desperate. Is the data all lost? We can't mount the
-> filesystem. We tried using xfs_metadump (another suggestion from our
-> searches) and it reports lots of metadata corruption ending with:
-
-I was going to suggest creating an xfs_metadump image for analysis.
-Was that created with xfsprogs v6.5.0 as well?
-
-> Metadata corruption detected at 0x4382f0, xfs_cntbt block 0x1300023518/0x1000
-> Metadata corruption detected at 0x4382f0, xfs_cntbt block 0x1300296bf8/0x1000
-> Metadata corruption detected at 0x4382f0, xfs_bnobt block 0x137fffb258/0x1000
-> Metadata corruption detected at 0x4382f0, xfs_bnobt block 0x138009ebd8/0x1000
-> Metadata corruption detected at 0x467858, xfs_inobt block 0x138067f550/0x1000
-> Metadata corruption detected at 0x467858, xfs_inobt block 0x13834b39e0/0x1000
-> xfs_metadump: bad starting inode offset 5
-
-so the metadump did not complete?
-
-Does the filesystem mount? Can you mount it -o ro or -o ro,norecovery
-to see how much you can read off of it?
-
-If mount fails, what is in the kernel log when it fails?
-
-> Not sure what to try next. Any help would be greatly appreciated. Thanks!
-
-Power losses really should not cause corruption, it's a metadata journaling
-filesytem which should maintain consistency even with a power loss.
-
-What kind of storage do you have, though? Corruption after a power loss often
-stems from a filesystem on a RAID with a write cache that does not honor
-data integrity commands and/or does not have its own battery backup.
-
--Eric
-
-> Jorge
-> 
-
+>+static bool rq_straddles_atomic_write_boundary(struct request *rq,=0D
+>+					unsigned int front,=0D
+>+					unsigned int back)=0D
+>+{=0D
+>+	unsigned int boundary =3D queue_atomic_write_boundary_bytes(rq->q);=0D
+>+	unsigned int mask, imask;=0D
+>+	loff_t start, end;=0D
+>+=0D
+>+	if (!boundary)=0D
+>+		return false;=0D
+>+=0D
+>+	start =3D rq->__sector << SECTOR_SHIFT;=0D
+>+	end =3D start + rq->__data_len;=0D
+>+=0D
+>+	start -=3D front;=0D
+>+	end +=3D back;=0D
+>+=0D
+>+	/* We're longer than the boundary, so must be crossing it */=0D
+>+	if (end - start > boundary)=0D
+>+		return true;=0D
+>+=0D
+>+	mask =3D boundary - 1;=0D
+>+=0D
+>+	/* start/end are boundary-aligned, so cannot be crossing */=0D
+>+	if (!(start & mask) || !(end & mask))=0D
+>+		return false;=0D
+>+=0D
+>+	imask =3D ~mask;=0D
+>+=0D
+>+	/* Top bits are different, so crossed a boundary */=0D
+>+	if ((start & imask) !=3D (end & imask))=0D
+>+		return true;=0D
+>+=0D
+>+	return false;=0D
+>+}=0D
+>+=0D
+=0D
+Shall we ensure here that we don't cross max limit of atomic write supporte=
+d by =0D
+device? It seems that if the boundary size is not advertized by the device =
+=0D
+(in fact, I have one NVMe drive which has boundary size zero i.e. nabo/nabs=
+pf/=0D
+nawupf are all zero but awupf is non-zero) then we (unconditionally) allow =
+=0D
+merging. However it may be possible that post merging the total size of the=
+ =0D
+request may exceed the atomic-write-unit-max-size supported by the device a=
+nd =0D
+if that happens then most probably we would be able to catch it very late i=
+n =0D
+the driver code (if the device is NVMe). =0D
+=0D
+So is it a good idea to validate here whether we could potentially exceed =
+=0D
+the atomic-write-max-unit-size supported by device before we allow merging?=
+ =0D
+In case we exceed the atomic-write-max-unit-size post merge then don't allo=
+w=0D
+merging?=0D
+ =0D
+Thanks,=0D
+--Nilay=0D
+=0D
