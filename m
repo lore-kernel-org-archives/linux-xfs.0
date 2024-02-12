@@ -1,130 +1,140 @@
-Received: from mail-ua1-f48.google.com (mail-ua1-f48.google.com [209.85.222.48])
+Received: from mail-oo1-f42.google.com (mail-oo1-f42.google.com [209.85.161.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27DB34D9F2
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Feb 2024 21:46:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E4E4CE12;
+	Mon, 12 Feb 2024 22:03:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707774395; cv=none; b=NkRUuwtslZDIo+UrJPxJ0H62D9qTBKWjUhCl5/lRf7bELP+Gs15WucVYgNZl3sTR2TTlqrwyDKdoYoQZVYzf6rfGIWbu97orGXHOji9VdYX8jQHhaLHq0m8WpzzmT0DV8+Z5ZhhoivETKEjOfeixKb/YPys/zQbEu/yogHJ2flU=
+	t=1707775427; cv=none; b=asog5OkANs9T1cy54BcvsFRjZRH+7ajuKuPy7IoVmNsNFM1JotE8Dt/lsYxGWgsGR1KbL5BqF2k6Uqx3Z8J6ZqwXFKtcyWaThbH6iDw0NWhvpM2wkyv12praDLcoo4xwE0xvaNqnWVxzV2xAiPGDfmI2pcPJ2kvidqMrttWoYTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707774395; c=relaxed/simple;
-	bh=b6q6rxBxy/pfV15UR8BuGJKyk4adJP1LkSILnVt2Tbo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kIXdygJP+imUsJzyqv7RWT//F5Ja2sfYp19un9dkCRmvytmD5G5lEX8CBPxzrdIddaejQV2ILz1GWnOwxPWotrAaUF5UGtnRMhNzZdMXnKGsf3YeP8I7N02/3Zaud5Ozjt2b9RNyCvy12lm5SAo5C89wFb2WSqHNOd7iePFQe14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=soe.ucsc.edu; spf=pass smtp.mailfrom=soe.ucsc.edu; dkim=pass (2048-bit key) header.d=soe.ucsc.edu header.i=@soe.ucsc.edu header.b=HZhlEv9G; arc=none smtp.client-ip=209.85.222.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=soe.ucsc.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soe.ucsc.edu
+	s=arc-20240116; t=1707775427; c=relaxed/simple;
+	bh=W/bpF4fDyBYCxuho4baujxfsMHNkNNXJSkVJNKjpCzs=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P9z51ZsJwg9T2VktXqCMntst91C/Wn2Va3y2KWtXn9IU3AiARr2PEioj3H7lxgdTKwkZmH6bGk+4fP7TdVn+/OenamEhU8QFwXNfcGuEq5KP8TZ3qHATg+JsO363wOgAvBWWQa8othZtUbHRbdq9Zdd+3svx4H4W/n3jC8QHI+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ol5cDm0Z; arc=none smtp.client-ip=209.85.161.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soe.ucsc.edu header.i=@soe.ucsc.edu header.b="HZhlEv9G"
-Received: by mail-ua1-f48.google.com with SMTP id a1e0cc1a2514c-7d2e1832d4dso1373776241.2
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Feb 2024 13:46:32 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ol5cDm0Z"
+Received: by mail-oo1-f42.google.com with SMTP id 006d021491bc7-59a94c0fb55so175770eaf.0;
+        Mon, 12 Feb 2024 14:03:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soe.ucsc.edu; s=soe-google-2018; t=1707774392; x=1708379192; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=b6q6rxBxy/pfV15UR8BuGJKyk4adJP1LkSILnVt2Tbo=;
-        b=HZhlEv9GSEjt3AntwZZXscN1CXjHc/T/qUlEgCKSPC1N6gsWduxV0SVrre2xJBxd4b
-         BCUgekJLfLliK1YGinBvs3DQQLED4odt88Ij9ZZHmswtOwF4wbWHtaWYwubtk59iAp94
-         PfSvRDNL6AGs2qio3hcvmZRYbXbKvky9Z77xs5R9hzmOQr/P6aRGq0JOLFZaj6xYYO4Z
-         1GW/WyiCgQk+ojPTKzRECW0rZt6qayPwQAKLOlzVvXkeuCVqx1L3CghgHXX4ufQNwI2C
-         TAwdqZtjTz+29Zf3pVcOkp/hO4ZaoK9FT6ZLBmkAhWRmfGoygqrJYXvGyzJbbmbc1Idw
-         YL+Q==
+        d=gmail.com; s=20230601; t=1707775424; x=1708380224; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=93VuehxW8IiZjqg3cy8gX+Dj6JAjR6qHpJt8+OJ38pE=;
+        b=Ol5cDm0ZaoRcnMscYemjlZUGsRllvsyHNvki2ldzAwXTYubOc1PELbHIbhucYB/0Xn
+         bFmJppFfWViJi8aubQXsYOGYy/f+avY+uyaguok0BOJEaPOt+6VdCPJZQYSsu1BwxhE+
+         CG6sjhm7PWbM1JKaXx6WGIx1AABclOolLrsagc2vXQ0H6fVpDlQxeLtkJiqifq/JUcKS
+         LnTSBgvnmJvsdTSUCMi5R4pJVbETweRnwjwKMYsvD+KYV2N0PheIro0hXr7C98vyVnjE
+         fPkVSmsXlLu+R4DkppTJAF+jhulYwoPT56fO5/3rQf1hqIg0lFOCCoxMhrAQbjrF7G4k
+         ZIDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707774392; x=1708379192;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=b6q6rxBxy/pfV15UR8BuGJKyk4adJP1LkSILnVt2Tbo=;
-        b=TQ2I25FXDjzp+QWhn3LzQqL8109XSTh78tEGXaZOtnDyrmdrJtiPmdKheg2Cq2bSjG
-         zjd67ePNcY3YfgICs3MnKKb1qILDhQB+nbBvEFOF7EApY549AySs5jIqXNRW+qgau9jN
-         HEVuuE+DQ6ayMPAKPgmOV/xQTzqPxLKscFkPxtAvEuEjlhmB2ymGhwkBmcKjjO4Uh0iv
-         ppAtrxkBSmlIQkmz2Koue0cvFp1wfjVCpkcrDYkSnLKLcRABSbumc8RjakfAUQnclfcY
-         +3fYpwnJ70k7X9jdwRbHQlIZpxqCCuTmAqnqjq1wFqbyE/vXCgiXAleRcJzSrNI2Tkhv
-         C8sg==
-X-Forwarded-Encrypted: i=1; AJvYcCW19WNvyEdZ6GkbTxnPJzhxpfXkU92rgmBINkIEPsX05r78NgkryqOHpLJ2AEURdTGByPMF7X2WvaNPjE6tMQwyh8VrMHCUQ+hw
-X-Gm-Message-State: AOJu0Yy8vtY3oSBV3zkMMIhCCLNrhzpHP2PoeP1ydfLs5/REAlxUAkEC
-	JyTfdZvIYpZBxkEMwqDUS9231ANNYNYgy8Xy64LSH19ZcdRUua3MVJjzgPwsfbAFR8A23eYpDV/
-	eKD/+eMdscAvCkx1+lMWu0lPB+Ke0WBI/dVL8GDhis9XPJ5gg
-X-Google-Smtp-Source: AGHT+IFQbY5+30ui3XMzuLCbg1SG3TDmYRa9SB/Bb+PsGKpwNSEoPPkStgRmw+OzW4Joy7c14hA/ZkuUGsuPRnzf+jY=
-X-Received: by 2002:a05:6102:4406:b0:46e:b801:ded6 with SMTP id
- df6-20020a056102440600b0046eb801ded6mr2423940vsb.2.1707774391991; Mon, 12 Feb
- 2024 13:46:31 -0800 (PST)
+        d=1e100.net; s=20230601; t=1707775424; x=1708380224;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=93VuehxW8IiZjqg3cy8gX+Dj6JAjR6qHpJt8+OJ38pE=;
+        b=o2Rc+EVNDs7hZiEK2aXma/UOfqjCSoJ19JhhQw8XILGq8K8hHxXcMIJZp23VhSJPrw
+         xu6w1r12QnaWBVo+iDM31YbBboR6j6IpmEGP/MEGlSf7NfcBzFot6a8F8cj80RYo2QEU
+         596i2k5lYnkKE9H7dDq1F5jVHIbLcgdU40pPjmaXxBc2D38/sJ2yqcWKfOMhg3BxJZXu
+         Agjjmm+4L8QfpRBQw0StzXjRwKRtNiqsGyhh3/pPlIQpZnaEdZESSFiTu0zUMi894n9I
+         W+nvZe5vFrkBDpgLMtv1jje0zOeeEJON/JlelrpPQUrFPkagAOy0c3TjTK4sDDTzYPkm
+         umjA==
+X-Forwarded-Encrypted: i=1; AJvYcCXIB/5clU5q86e7wWTez4O+IP+p9sTfNVV6PGQ1cGOHJl21u0DPItfRGJXi4J+vktWOa5RsQ1PHzspgxc4L38x1GRxFKWOGohzjZ0rKHd5rMqwahLy87gbkrYu6IhwXwmOIC+Os4f00taYJOlnOUSflS2uoUyC23gQoJ+wi0LXefmjuA61LrVL6N9908Vz6Z9PoBIDQw7gvhANs8ThI3C8=
+X-Gm-Message-State: AOJu0YzwdryA2pPL/86+tJjObqqB64JlblkLuBUNKuSJpMbMCMDBk2OP
+	phOvx7zDqiY96cKjJJgRJBsBr9OPMwvnH1iYdbTYHPJeRtEjI+8M
+X-Google-Smtp-Source: AGHT+IE5OBKx1zbmYznUgitfUIrZdUAxmS+Eas2NAO7RGcO4j6U6ISP+C6U15Hc5IQBn0IfaRdlLPw==
+X-Received: by 2002:a05:6358:d093:b0:178:67dc:aba8 with SMTP id jc19-20020a056358d09300b0017867dcaba8mr9820912rwb.17.1707775424575;
+        Mon, 12 Feb 2024 14:03:44 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXsq3wUY11a+L7NuGj3BsmexGP6eZMiamdWyBsuJhiWpvO+ZarhxYNh9jN84eNMeJYhoOciFuWzz1ZnHmXsGB1m36yXHC0X6Bvd9KjpNp2fx7VJj0MQPEsh3nsPhRZtad4FDyh1OEF5Sl6qvAdFW4vKJm4/bHT+gbZ3oTrxYFPUKWoaXCU5A2ztB/oOmEw9ipe0214tr1qPrrqu1jsbviotxTqCJoI+OwAKtjNxF//RL0E6DEsDwDfSwF9RXH5EZkhrN3NnBKB8JaxLEB15EJZ4s9CN4fU7ebDUQxUsrv6wIn9BfRO+1c8jZ6oAvubgeK4EOyp07xU2RteUIcVjpr9wRJuXYhpDE83B7le4oDDm3DgtWGzYJcRDGoGD0kcBYSLEQL/C5dNkiJq8bdSCq4mRA3hixJM8UqLw8YsrXx6+qTzJ5QU+i6xDEbeZdz19lsh1rjhdIC0ch55qG4OdAFBwJ3zbYmTinLp2J+1HCDD0D7jt4v3+XiYQwrtu5r7UxNtDUNdE/xZbr6vFtQozelocRvVVtl3CUicsCQ6IAHDrEAdS49M9HFhDKZm+OLaHLGH6GA5d6ktp7067c5t1JpQ8JNUR
+Received: from debian ([2601:641:300:14de:7353:5102:82c6:956f])
+        by smtp.gmail.com with ESMTPSA id x23-20020aa79197000000b006e05c801748sm5994884pfa.199.2024.02.12.14.03.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Feb 2024 14:03:44 -0800 (PST)
+From: fan <nifan.cxl@gmail.com>
+X-Google-Original-From: fan <fan@debian>
+Date: Mon, 12 Feb 2024 14:03:24 -0800
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Matthew Wilcox <willy@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@armlinux.org.uk>, linux-arch@vger.kernel.org,
+	linux-cxl@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+	dm-devel@lists.linux.dev, nvdimm@lists.linux.dev
+Subject: Re: [PATCH] nvdimm/pmem: Fix leak on dax_add_host() failure
+Message-ID: <ZcqVrFKxisIwHR3p@debian>
+References: <20240212162722.19080-1-mathieu.desnoyers@efficios.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAMz=2cecSLKwOHuVC31wARcjFO50jtGy8bUzYZHeUT09CVNhxw@mail.gmail.com>
- <6ecca473-f23e-4bb6-a3c3-ebef6d08cc7e@sandeen.net> <CAMz=2ccSrb9bG3ahRJTpwu2_8-mQDtwRz-YmKjkH+4qoGoURxQ@mail.gmail.com>
- <ZcqITqNBz6pmgiHJ@dread.disaster.area>
-In-Reply-To: <ZcqITqNBz6pmgiHJ@dread.disaster.area>
-From: Jorge Garcia <jgarcia@soe.ucsc.edu>
-Date: Mon, 12 Feb 2024 13:46:20 -0800
-Message-ID: <CAMz=2ceGo3UL-mKmuqXhmfQmhUg0+H=-4f4W7_FvcA2MJh3Zww@mail.gmail.com>
-Subject: Re: XFS corruption after power surge/outage
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240212162722.19080-1-mathieu.desnoyers@efficios.com>
 
-On Mon, Feb 12, 2024 at 1:06=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
+On Mon, Feb 12, 2024 at 11:27:22AM -0500, Mathieu Desnoyers wrote:
+> Fix a leak on dax_add_host() error, where "goto out_cleanup_dax" is done
+> before setting pmem->dax_dev, which therefore issues the two following
+> calls on NULL pointers:
+> 
+> out_cleanup_dax:
+>         kill_dax(pmem->dax_dev);
+>         put_dax(pmem->dax_dev);
+> 
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> Cc: Alasdair Kergon <agk@redhat.com>
+> Cc: Mike Snitzer <snitzer@kernel.org>
+> Cc: Mikulas Patocka <mpatocka@redhat.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Vishal Verma <vishal.l.verma@intel.com>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Russell King <linux@armlinux.org.uk>
+> Cc: linux-arch@vger.kernel.org
+> Cc: linux-cxl@vger.kernel.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: linux-xfs@vger.kernel.org
+> Cc: dm-devel@lists.linux.dev
+> Cc: nvdimm@lists.linux.dev
 
-> Ok, so they don't actually have a BBU on board - it's an option to
-> add via a module, but the basic RAID controller doesn't have any
-> power failure protection. These cards are also pretty old tech now -
-> how old is this card, and when was the last time the cache
-> protection module was tested?
+Reviewed-by: Fan Ni <fan.ni@samsung.com>
 
-The card claims Mfg. Date or 01/26/20, which is not too old. The last
-time the cache protection was tested? No idea.
-The BBU status for the card reports battery state optimal.
-
-> Indeed, how long was the power out for?
-
-I'm not exactly sure how long power was out for, but probably less
-than an hour. The data center is supposed to have UPS power and
-generator power, but a breaker tripped, and we lost power. My guess is
-that power was out for less than an hour, and probably more like a few
-minutes.
-
->
-> The BBU on most RAID controllers is only guaranteed to hold the
-> state for 72 hours (when new) and I've personally seen them last for
-> only a few minutes before dying when the RAID controller had been in
-> continuous service for ~5 years. So the duration of the power
-> failure may be important here.
->
-> Also, how are the back end disks configured? Do they have their
-> volatile write caches turned off? What cache mode was the RAID
-> controller operating in - write-back or write-through?
->
-> What's the rest of your storage stack? Do you have MD, LVM, etc
-> between the storage hardware and the filesystem?
-
-You may be asking questions I'm not sure how to answer. Most of the
-settings are default settings. RAID controller was operating in WB
-mode. No MD or LVM, just 24 disks in MegaRAID RAID-6 configuration,
-then seen by the OS as one device, which was formatted as XFS.
-
-> > Somewhere on one of the discussion threads I saw somebody mention
-> > ufsexplorer, and when I downloaded the trial version, it seemed to see
-> > most of the files on the device. I guess if I can't find a way to
-> > recover the current filesystem, I will try to use that to recover the
-> > data.
->
-> Well, that's a last resort. But if your raid controller is unhealthy
-> or the volume has been corrupted by the raid controller the
-> ufsexplorer won't help you get your data back, either....
-
-The controller is reporting everything as working, all disks are
-Online and Spun Up, and no errors reported as far as I can tell. I did
-get ufsexplorer, and it seems to be recovering data, but it will take
-days or weeks to recover all of the data. Still would like to know
-more of what happened and how to prevent it from happening in the
-future, and what would have been the correct sequence of steps I
-should have done when encountering a problem like this.
-
-Thanks for all your help!
+> ---
+>  drivers/nvdimm/pmem.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> index 4e8fdcb3f1c8..9fe358090720 100644
+> --- a/drivers/nvdimm/pmem.c
+> +++ b/drivers/nvdimm/pmem.c
+> @@ -566,12 +566,11 @@ static int pmem_attach_disk(struct device *dev,
+>  	set_dax_nomc(dax_dev);
+>  	if (is_nvdimm_sync(nd_region))
+>  		set_dax_synchronous(dax_dev);
+> +	pmem->dax_dev = dax_dev;
+>  	rc = dax_add_host(dax_dev, disk);
+>  	if (rc)
+>  		goto out_cleanup_dax;
+>  	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+> -	pmem->dax_dev = dax_dev;
+> -
+>  	rc = device_add_disk(dev, disk, pmem_attribute_groups);
+>  	if (rc)
+>  		goto out_remove_host;
+> -- 
+> 2.39.2
+> 
