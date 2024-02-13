@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1895EBA2D;
-	Tue, 13 Feb 2024 16:30:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE171BA2D;
+	Tue, 13 Feb 2024 16:34:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707841839; cv=none; b=RBo5oMPY3pLb7+OzwXcapXPaHayykD5+LtzmrggOjlaMXFk9ZqoKv91sQWoHg7StLUrtd9icEC6qzDH5uOELYqlVN+ceVE9rNTH/2Ej/lWlf+u/TcMP0AGwZH1woxcB+J/j0/dZ7eeY+b4n55evTOWg4gpkOqFvtNerIR2jqd+4=
+	t=1707842072; cv=none; b=So4weD5D53zZo2s06QkEKthw+cVMmMwM3w9aQ6ZdXro0KeTnWmG+gK/56jO5f9ixahQZVwYx2edr3vw7nyzgwztZAFbOiyAH1Yi39Zyic4fNqeaS8wZnUbTju9swsJemdm2wqz0eAIT9K8nOk7xzVMT7V6Vav8xJ3P8llXWzg8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707841839; c=relaxed/simple;
-	bh=hMxkyWbU9VziSWd2szBRjdbMM8H6CHlLIrWJd+iY0Yo=;
+	s=arc-20240116; t=1707842072; c=relaxed/simple;
+	bh=vOnl585xawDmEhk+WRBKmj9SlAqAoo9n/at+gNzE5oI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cFK9KvYIYLVCFP1SMg8Sfc+T0bKNNQgSAf6yQ2V7ia8D88zdFTcoJuijgq5EB3xjpqUyxGcIh+18hauEYh9qAneO2W0F1l78JDnUUghm2S7752GOTfUuB29RwrqBkwxaZ7aIELXM4J6N1X8Ifn1g8qo+rJf16ZxvgPZe9mA+0lo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YskmkGD7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PeGbXw0Yz16UWlC3sc5BiR/mDAmFcpNNydkR6MaTcLp7lJ5csPBhOzngK3DZlGWItUSvOL7/LOrgTLrVXJfvXZV0XdwD0R8yhzo+LX23Z3nvwpaWrtdC/Hi/a9Iv24A2NKMlq2QWd3mI4QOwe5aEE6kC33GH+2ArT26FzB8fFeg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dTzZ5mKF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YskmkGD7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85CA5C433C7;
-	Tue, 13 Feb 2024 16:30:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dTzZ5mKF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2607AC433C7;
+	Tue, 13 Feb 2024 16:34:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707841838;
-	bh=hMxkyWbU9VziSWd2szBRjdbMM8H6CHlLIrWJd+iY0Yo=;
+	s=k20201202; t=1707842072;
+	bh=vOnl585xawDmEhk+WRBKmj9SlAqAoo9n/at+gNzE5oI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YskmkGD7Xmy8wrH9BYZ8OAidJ3RZKciXSWaiiJlpmFlBevuKSQxq96FFEABloZzrT
-	 mnVmrf7tMi4wB1+qAuP3Ygs6DOqwaePDcHJ05v0hC65Q/p9Uz+eekZrBapEqWU5/8+
-	 hHkRMTJvaFK7rWs3VaKssashfMq4kzsMksFlRrc0yUZd2LdHY4VEqHzxA1KL84j7N4
-	 d7l3lbEuKapaoQNS7IFdMO05XItoZF6o/wpMmJoFVVfpHIftP0lmxY/itQFq2AJDQ4
-	 5+ZLccg8Xw6RKTF2alntVOML74AHDV34irK/Oj0bs4+vyUxwrZl9GpRnAYi3kohV/Y
-	 /gGgI1ys/2G2g==
-Date: Tue, 13 Feb 2024 08:30:37 -0800
+	b=dTzZ5mKFv3NhctkwDebcPGufJ7b49XoS6YNLkyhVH8SjgSI7sIf2tKGQewny/w33s
+	 qXAF4OJBTFY9kl92CGhEiI3ecJOQ2LTdO1jhS88u+Dy/arHIAfveor2b2W40WbGuID
+	 jPPW4DV4U8vIOVoBcImJBXJjLE66NPu3ws1pmT8vJb7K9HLghNi4k8dMpGDDGlpdXM
+	 kJjKZ+s5DM0R0Pl8CSH+VRG5mEgIghuTapg/qWsIvuyzwPXIA6Byr9wQCiJALZ6qp7
+	 LzfFMGej3JbC+Ai5vcS/ogsL5UOY21frem9KkeAKgjZptGYOukc/3LUGGGlGJPu8n9
+	 P0lZU0UGxX1xw==
+Date: Tue, 13 Feb 2024 08:34:31 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -34,11 +34,10 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	kbusch@kernel.org, chandan.babu@oracle.com, p.raghav@samsung.com,
 	linux-kernel@vger.kernel.org, hare@suse.de, willy@infradead.org,
 	linux-mm@kvack.org, david@fromorbit.com
-Subject: Re: [RFC v2 10/14] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <20240213163037.GR6184@frogsfrogsfrogs>
+Subject: Re: [RFC v2 01/14] fs: Allow fine-grained control of folio sizes
+Message-ID: <20240213163431.GS6184@frogsfrogsfrogs>
 References: <20240213093713.1753368-1-kernel@pankajraghav.com>
- <20240213093713.1753368-11-kernel@pankajraghav.com>
+ <20240213093713.1753368-2-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,67 +46,166 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240213093713.1753368-11-kernel@pankajraghav.com>
+In-Reply-To: <20240213093713.1753368-2-kernel@pankajraghav.com>
 
-On Tue, Feb 13, 2024 at 10:37:09AM +0100, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
+On Tue, Feb 13, 2024 at 10:37:00AM +0100, Pankaj Raghav (Samsung) wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
-> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
-> size < page_size. This is true for most filesystems at the moment.
-> 
-> If the block size > page size, this will send the contents of the page
-> next to zero page(as len > PAGE_SIZE) to the underlying block device,
-> causing FS corruption.
-> 
-> iomap is a generic infrastructure and it should not make any assumptions
-> about the fs block size and the page size of the system.
-> 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->  fs/iomap/direct-io.c | 13 +++++++++++--
->  1 file changed, 11 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index bcd3f8cf5ea4..04f6c5548136 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -239,14 +239,23 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
->  	struct page *page = ZERO_PAGE(0);
->  	struct bio *bio;
->  
-> -	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
-> +	WARN_ON_ONCE(len > (BIO_MAX_VECS * PAGE_SIZE));
-> +
-> +	bio = iomap_dio_alloc_bio(iter, dio, BIO_MAX_VECS,
-> +				  REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
->  	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
->  				  GFP_KERNEL);
-> +
->  	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
->  	bio->bi_private = dio;
->  	bio->bi_end_io = iomap_dio_bio_end_io;
->  
-> -	__bio_add_page(bio, page, len, 0);
-> +	while (len) {
-> +		unsigned int io_len = min_t(unsigned int, len, PAGE_SIZE);
+> Some filesystems want to be able to limit the maximum size of folios,
+> and some want to be able to ensure that folios are at least a certain
+> size.  Add mapping_set_folio_orders() to allow this level of control.
+> The max folio order parameter is ignored and it is always set to
+> MAX_PAGECACHE_ORDER.
 
-What was the result of all that discussion about using the PMD-sized
-zero-folio the last time this patch was submitted?  Did that prove to be
-unwieldly, or did it require enough extra surgery to become its own
-series?
-
-(The code here looks good to me.)
+Why?  If MAX_PAGECACHE_ORDER is 8 and I instead pass in max==3, I'm
+going to be surprised by my constraint being ignored.  Maybe I said that
+because I'm not prepared to handle an order-7 folio; or some customer
+will have some weird desire to twist this knob to make their workflow
+faster.
 
 --D
 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
+>  include/linux/pagemap.h | 92 ++++++++++++++++++++++++++++++++---------
+>  1 file changed, 73 insertions(+), 19 deletions(-)
+> 
+> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+> index 2df35e65557d..5618f762187b 100644
+> --- a/include/linux/pagemap.h
+> +++ b/include/linux/pagemap.h
+> @@ -202,13 +202,18 @@ enum mapping_flags {
+>  	AS_EXITING	= 4, 	/* final truncate in progress */
+>  	/* writeback related tags are not used */
+>  	AS_NO_WRITEBACK_TAGS = 5,
+> -	AS_LARGE_FOLIO_SUPPORT = 6,
+> -	AS_RELEASE_ALWAYS,	/* Call ->release_folio(), even if no private data */
+> -	AS_STABLE_WRITES,	/* must wait for writeback before modifying
+> +	AS_RELEASE_ALWAYS = 6,	/* Call ->release_folio(), even if no private data */
+> +	AS_STABLE_WRITES = 7,	/* must wait for writeback before modifying
+>  				   folio contents */
+> -	AS_UNMOVABLE,		/* The mapping cannot be moved, ever */
+> +	AS_FOLIO_ORDER_MIN = 8,
+> +	AS_FOLIO_ORDER_MAX = 13, /* Bit 8-17 are used for FOLIO_ORDER */
+> +	AS_UNMOVABLE = 18,		/* The mapping cannot be moved, ever */
+>  };
+>  
+> +#define AS_FOLIO_ORDER_MIN_MASK 0x00001f00
+> +#define AS_FOLIO_ORDER_MAX_MASK 0x0003e000
+> +#define AS_FOLIO_ORDER_MASK (AS_FOLIO_ORDER_MIN_MASK | AS_FOLIO_ORDER_MAX_MASK)
 > +
-> +		__bio_add_page(bio, page, io_len, 0);
-> +		len -= io_len;
-> +	}
->  	iomap_dio_submit_bio(iter, dio, bio, pos);
+>  /**
+>   * mapping_set_error - record a writeback error in the address_space
+>   * @mapping: the mapping in which an error should be set
+> @@ -344,6 +349,53 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+>  	m->gfp_mask = mask;
 >  }
 >  
+> +/*
+> + * There are some parts of the kernel which assume that PMD entries
+> + * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+> + * limit the maximum allocation order to PMD size.  I'm not aware of any
+> + * assumptions about maximum order if THP are disabled, but 8 seems like
+> + * a good order (that's 1MB if you're using 4kB pages)
+> + */
+> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> +#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+> +#else
+> +#define MAX_PAGECACHE_ORDER	8
+> +#endif
+> +
+> +/*
+> + * mapping_set_folio_orders() - Set the range of folio sizes supported.
+> + * @mapping: The file.
+> + * @min: Minimum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
+> + * @max: Maximum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
+> + *
+> + * The filesystem should call this function in its inode constructor to
+> + * indicate which sizes of folio the VFS can use to cache the contents
+> + * of the file.  This should only be used if the filesystem needs special
+> + * handling of folio sizes (ie there is something the core cannot know).
+> + * Do not tune it based on, eg, i_size.
+> + *
+> + * Context: This should not be called while the inode is active as it
+> + * is non-atomic.
+> + */
+> +static inline void mapping_set_folio_orders(struct address_space *mapping,
+> +					    unsigned int min, unsigned int max)
+> +{
+> +	if (min == 1)
+> +		min = 2;
+> +	if (max < min)
+> +		max = min;
+> +	if (max > MAX_PAGECACHE_ORDER)
+> +		max = MAX_PAGECACHE_ORDER;
+> +
+> +	/*
+> +	 * XXX: max is ignored as only minimum folio order is supported
+> +	 * currently.
+> +	 */
+> +	mapping->flags = (mapping->flags & ~AS_FOLIO_ORDER_MASK) |
+> +			 (min << AS_FOLIO_ORDER_MIN) |
+> +			 (MAX_PAGECACHE_ORDER << AS_FOLIO_ORDER_MAX);
+> +}
+> +
+>  /**
+>   * mapping_set_large_folios() - Indicate the file supports large folios.
+>   * @mapping: The file.
+> @@ -357,7 +409,22 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+>   */
+>  static inline void mapping_set_large_folios(struct address_space *mapping)
+>  {
+> -	__set_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
+> +	mapping_set_folio_orders(mapping, 0, MAX_PAGECACHE_ORDER);
+> +}
+> +
+> +static inline unsigned int mapping_max_folio_order(struct address_space *mapping)
+> +{
+> +	return (mapping->flags & AS_FOLIO_ORDER_MAX_MASK) >> AS_FOLIO_ORDER_MAX;
+> +}
+> +
+> +static inline unsigned int mapping_min_folio_order(struct address_space *mapping)
+> +{
+> +	return (mapping->flags & AS_FOLIO_ORDER_MIN_MASK) >> AS_FOLIO_ORDER_MIN;
+> +}
+> +
+> +static inline unsigned int mapping_min_folio_nrpages(struct address_space *mapping)
+> +{
+> +	return 1U << mapping_min_folio_order(mapping);
+>  }
+>  
+>  /*
+> @@ -367,7 +434,7 @@ static inline void mapping_set_large_folios(struct address_space *mapping)
+>  static inline bool mapping_large_folio_support(struct address_space *mapping)
+>  {
+>  	return IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
+> -		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
+> +	       (mapping_max_folio_order(mapping) > 0);
+>  }
+>  
+>  static inline int filemap_nr_thps(struct address_space *mapping)
+> @@ -528,19 +595,6 @@ static inline void *detach_page_private(struct page *page)
+>  	return folio_detach_private(page_folio(page));
+>  }
+>  
+> -/*
+> - * There are some parts of the kernel which assume that PMD entries
+> - * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+> - * limit the maximum allocation order to PMD size.  I'm not aware of any
+> - * assumptions about maximum order if THP are disabled, but 8 seems like
+> - * a good order (that's 1MB if you're using 4kB pages)
+> - */
+> -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+> -#else
+> -#define MAX_PAGECACHE_ORDER	8
+> -#endif
+> -
+>  #ifdef CONFIG_NUMA
+>  struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
+>  #else
 > -- 
 > 2.43.0
 > 
