@@ -1,241 +1,251 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69542605A3;
-	Tue, 13 Feb 2024 18:08:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707847710; cv=none; b=c/n5/zloO5El/2P6m0MFx3W7upexRkBoo25d7TQWWvDZArXdxNUBb5X87h7pbjVrAOEgZga31YY3suotyB9kFl9C/N/vrbWEf9wxv+6qg38T2Z+Ujz8JFtaK8SS4wEvcdpXDwqg7cEM+LoYrTSEHdFKjhvBzlDvUgGM8QTntHjs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707847710; c=relaxed/simple;
-	bh=rgKIeqWZt/N5yMxignTV2UYSxYoX+Ts53cD2sMPC6S4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jNofCyjwgH7hhKtP+NefMjUkrWgym25LND3FTe+uGq/Z5mnGE4XK1fgPxyJwVvFEGMhJEnGCGMpmox/krNpBeK+ihUlFg5pZeQPepbG8aCSAuO+LP/QulMfGxMCjMJ0Y5CvKRLX3WhW5Wim8RT3M/HuwmVGWQAHF1ZwKxE192Hw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NvrI4gk5; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 255E810A19;
+	Tue, 13 Feb 2024 18:57:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.14
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707850633; cv=fail; b=E3hZN0EU51iygcd5me82qgi2tW/lBW1abunRHD94xj+QOU05Pzx3quuAcGxnyIWct5WyvTM0UcaRjGC6x31NjZT+JU0KNojLU/SMuq1ozUdcTN4h07kKmhubYX/N10uuZRSCF/iy9STAcNca0ZJP0i4U3nsyAegFOczelHklAwA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707850633; c=relaxed/simple;
+	bh=bZg1mwnr0HavwHHubFOlYTFkz976GN8H878yWGtteA4=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=bfBApfzHjiFlZ+wb6dMXE5/gTyUf1ZEcO46q5JPUOjoE/bySxjy3Q59c2JCshOl2//4z9qa/7+1D2GpkG7ogtf6lhG7qrz274QaiPKyb3OgNN/gMCHjDEkUEned5ZEpJAYsJTowinCs3xBBTFObHJiFJIP3u0ShCKLxPKeNuRNQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RWRPB2Gx; arc=fail smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NvrI4gk5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5082C433F1;
-	Tue, 13 Feb 2024 18:08:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707847710;
-	bh=rgKIeqWZt/N5yMxignTV2UYSxYoX+Ts53cD2sMPC6S4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NvrI4gk589ZOgkDJQ0t9KhA8P09BHR8yiwioNPXRKcAHTUs9ObNJLKLQRhu3/mAR3
-	 pwUbfTBi9E2ajp27qCoNI3O8gKtwHBDVn9WAuiO89LWL1pjoYVgkT2Bpt1UX4B5mvy
-	 q2CB0UhCNsQ6OIIj38gwKAh+pYonIpY9uEaUk2yOvP8mWSt0iGFBXGonRz2YleB8sK
-	 rm3zbtGEnpXYHOVdK1b9c3GaCpghYZkaXzEeQEL94SqdBJtC1Q5g+05knTmBVP1hI+
-	 P30hVNniC/laBNBrTg2WAvmfNHb5qglrHICH4xGEW1YSMsx5+u4f3L2Aqfl0/0xcFl
-	 dLpY4iHTPFBEQ==
-Date: Tue, 13 Feb 2024 10:08:29 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	dchinner@redhat.com, jack@suse.cz, chandan.babu@oracle.com,
-	martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH 1/6] fs: iomap: Atomic write support
-Message-ID: <20240213180829.GD6184@frogsfrogsfrogs>
-References: <20240124142645.9334-1-john.g.garry@oracle.com>
- <20240124142645.9334-2-john.g.garry@oracle.com>
- <20240202172513.GZ6226@frogsfrogsfrogs>
- <2f91a71e-413b-47b6-8bc9-a60c86ed6f6b@oracle.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RWRPB2Gx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707850632; x=1739386632;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=bZg1mwnr0HavwHHubFOlYTFkz976GN8H878yWGtteA4=;
+  b=RWRPB2GxSZa6p+LEzSP6PsS/W3K1AxfwsKMeSYy27Oova3B48eVtKFv2
+   1gZfgCc2WMbyJ9ulIM4zk3/WdW7bHF2iHqgvEjMxrc8BVxQoW8nqBmHzI
+   Dz4WyURo4N5kpI+BNFsdZflkWTFSyPwXDNtuy8qYug0T/uQJMRsOOrlel
+   vIjwUvLZVsV9bU4CQdm6m3eCmDtbrc5v1mR1QCvRuzj1yiEUEcofL5g17
+   zIMzY/BeogFqBWKXevOK3nH4g+Iqn0/HeGSS4qhf9XQfVzukcQo0IQNV8
+   j35eRAwX9mV4nar4XpnlxOpGgxUQv8d+xgFROmRQ0gW9tRlkIqnWF5b1I
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10982"; a="2018679"
+X-IronPort-AV: E=Sophos;i="6.06,158,1705392000"; 
+   d="scan'208";a="2018679"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2024 10:56:56 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10982"; a="826192253"
+X-IronPort-AV: E=Sophos;i="6.06,158,1705392000"; 
+   d="scan'208";a="826192253"
+Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
+  by orsmga001.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 13 Feb 2024 10:56:54 -0800
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Tue, 13 Feb 2024 10:56:53 -0800
+Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
+ fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35 via Frontend Transport; Tue, 13 Feb 2024 10:56:53 -0800
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (104.47.58.169)
+ by edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Tue, 13 Feb 2024 10:56:53 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kp/I1s4qvbkq8T/IkqIK/9X6NNVsWAjhnd/LGPJOqsD0+M25CRI3iIzFBbjeawW9H2OQwkBOXZXrZs+me1qE9uoyADS3ohf/UAEr3y5cBqYujFaHKENz6BGUHGZxCcMqusDJHlUrxFlwUgneY4a0uXDPZbX2aDVojMTJ16FJBz0xDWY90J7sj07p38u6yV8rHZsb3xoPUKXrvpaY0wFvyzPT707/56iBa+rcWWtyhqrDvqJmVTr24Nx4HwIe4TUvqEYdT6t0Wdbx0sTtmdL/03zyFtIw9yqAQ+PpJBaHfTkfGmzkZnzryUcSNxMatLsBrTahQNH4sgCPpnzqu+8itQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vdGKjsgJZNtSohmEcSM1zVdl8jCfxU+iOyZ5TLVlUbc=;
+ b=i82eij/XXEkbbZsWefyd6N0gRse3IKLhdoMWN8b+grscmj8w520xfVmRlEVSCqoJ6zDGc0Kumojyz9Gs9IOV+Zx6DS7qzE2mzvRLxbhjyo7tQkP4zr9lZL2we2JIdsiJA3+6CEjqPF5FmCsig3Ng3OW3UqvK8nkNEX6VgDZoa7h+RL6haliA3IfPpzX2DQSFWaLJD8TG9nUIDWxfLxW24Fv0b5EL84MJ/OiCmxgSKsB48gHlsVvocQc+r5PS3JcOQyAQzTIeCpv9d4bPPHuu+GtyRpjZsxULKY4OZx9d2wi7Kb6jS7QbmCelUlDUhQVH5tsixxIa/xuJ+tGzPF5Ljg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by IA1PR11MB6395.namprd11.prod.outlook.com (2603:10b6:208:3ac::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.39; Tue, 13 Feb
+ 2024 18:56:50 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6257:f90:c7dd:f0b2]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6257:f90:c7dd:f0b2%4]) with mapi id 15.20.7270.036; Tue, 13 Feb 2024
+ 18:56:48 +0000
+Date: Tue, 13 Feb 2024 10:56:45 -0800
+From: Dan Williams <dan.j.williams@intel.com>
+To: Lukas Wunner <lukas@wunner.de>, Dan Williams <dan.j.williams@intel.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>, Mathieu Desnoyers
+	<mathieu.desnoyers@efficios.com>, Arnd Bergmann <arnd@arndb.de>, Dave Chinner
+	<david@fromorbit.com>, <linux-kernel@vger.kernel.org>, Andrew Morton
+	<akpm@linux-foundation.org>, Vishal Verma <vishal.l.verma@intel.com>, "Dave
+ Jiang" <dave.jiang@intel.com>, Matthew Wilcox <willy@infradead.org>, "Russell
+ King" <linux@armlinux.org.uk>, <linux-arch@vger.kernel.org>,
+	<linux-cxl@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
+	<dm-devel@lists.linux.dev>, <nvdimm@lists.linux.dev>,
+	<linux-s390@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer
+	<snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH v5 5/8] virtio: Treat alloc_dax() -EOPNOTSUPP failure as
+ non-fatal
+Message-ID: <65cbbb6d24b71_5c7629450@dwillia2-mobl3.amr.corp.intel.com.notmuch>
+References: <20240212163101.19614-1-mathieu.desnoyers@efficios.com>
+ <20240212163101.19614-6-mathieu.desnoyers@efficios.com>
+ <65ca95d086dfd_d2d429470@dwillia2-xfh.jf.intel.com.notmuch>
+ <CAHk-=wiqaENZFBiAihFxdLr2E+kSM4P64M3uPzwT4-K9NiVSmw@mail.gmail.com>
+ <65caa3966caa_5a7f294cf@dwillia2-xfh.jf.intel.com.notmuch>
+ <20240213061823.GB27995@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20240213061823.GB27995@wunner.de>
+X-ClientProxiedBy: MW4P220CA0023.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:303:115::28) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2f91a71e-413b-47b6-8bc9-a60c86ed6f6b@oracle.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|IA1PR11MB6395:EE_
+X-MS-Office365-Filtering-Correlation-Id: a46b3185-d0ed-4d6b-56e8-08dc2cc5881c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 4JakRCxpZjBiFfwAZrQ0i2WEAY8WZi8qnlasOQxWRHp4ZOrDtFEhqyulVJ6V2E8+9aanK1ayQC1BlXyrsuqavyJlgyAB9wbaNZZ878dooeWFp6jxro+daTB4fbZn9n9YLBGWX6LGSJouh47ompIdyhZ4P5vO2Bp+MbY6O6DjyQtPCcxiSBojFeiCmFcNr4smwWNMC+QKoIbnFWgLY4ftA0jxxaiI2ifi00Ba2h5IUdHwGB+iL/FKIfRl9w9NC/s37X8dZ/Lxfx2t0/zv1fEr80dMGq0lxoKJ4YzbAuKFtxVVD58ls9Yk8r7L7mNi0yAOtGb3OnO7XWmmVgmv/Yme5RBpGzjMj7bmcyi7W+/wWmMu272taTo22JflgFF1SovFIb+3poYHjXjyMfzxki5ajUCVNHqGlfMZUYjsRyyAoh6Bm2g04Pz53011J/VEFPLTSM6l+Z5UmATPeF5zLRP85u9WLgVbPcqXcY7hkSql3Ku0O/QtovB9En8oDizBy4tZk2CPZr5qs531Fw1RLflh1qybvURB2bZT/Pdgyq638/kboEO8N2e8Al16Qj3ME/5q
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(396003)(136003)(39860400002)(366004)(376002)(230922051799003)(1800799012)(186009)(64100799003)(451199024)(6506007)(41300700001)(478600001)(83380400001)(66476007)(26005)(66946007)(5660300002)(66556008)(8936002)(4326008)(8676002)(6486002)(6512007)(54906003)(316002)(6666004)(9686003)(86362001)(82960400001)(38100700002)(110136005)(7416002)(2906002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?kSPXZl4X++sSido70YWeqI8KiBJTxCpFjuazLeOmUuWe2YvQVJ+FzzWhQa4Q?=
+ =?us-ascii?Q?eNpDdgL8oyNxr1pYbENKapjX8LsDw1YEwbuWLTyjIQTu6CIpnv5PNnyy3PQG?=
+ =?us-ascii?Q?QR9BU5Kqvw4k3xbPGJz1ZIv/PGW1F0rB3kD5/mw2uxmMmW2mu0Jxucrmlip/?=
+ =?us-ascii?Q?6iRJuIFro+bCGlcfbJbYM4U969w6dQz+YHpQrSKbOOaioh07+MC26teHh9sX?=
+ =?us-ascii?Q?nnRGzsqDE38soy3oED1ZnKhtWDA8rOEN3lw1VUBT7zUpZeX3z3zOgyXmpHHq?=
+ =?us-ascii?Q?lNH24DocQiddA92S1x4Qbe3I/mKjJtjfX0KpyKMKMKHpgCDlcyvMkJO2pCzZ?=
+ =?us-ascii?Q?DaC2ZZdozDQbCjXifVwFwdFqSXhGDZ18HteZbI6a8EDlvy1/xshRE+9VPDIf?=
+ =?us-ascii?Q?0E8yWVuCBCqXv6q0UYos3aSkulxqSLRKCRG3cJzMPenIU6AwueGfBp17tcIA?=
+ =?us-ascii?Q?lUSmJd0+6SnIk9sxtil1h8beZyCp2u5AZp+lRFLHgHgQAgvMvoS4h12x12zZ?=
+ =?us-ascii?Q?0oEp0nfgTe6Y0tfWEe1xyTGp3wLVPrWaywitY/cdDGUxuHtIEj4Ko80W6Uxm?=
+ =?us-ascii?Q?BkuHeVJwXylIPSp2Q9yIoxapUagv3Gajw2BAcFhgkF4ZM9HJd7JTxv7kOkaA?=
+ =?us-ascii?Q?drnR7CSeu2kuU/CN2zOLPAYWAhnb0sEqhC9AL65rx+hOVHnzv5Kncf/sYFIF?=
+ =?us-ascii?Q?3eqwPeQU9HuKneUDbbtOl/g/iABa7Cq51TU5uOB4BpwtViignp/TsHaks9FJ?=
+ =?us-ascii?Q?a2YbLmzhMhHK/kIKlPhez38JKeQw1VWJLwDzIjDxptJRhnSiHhfUI8rRN8ok?=
+ =?us-ascii?Q?d7EH7yY5sLk5Ixsq/MIA13Z9imvS4J2Qa/biDykfpEtcssA8mhgQ2CHVzpK0?=
+ =?us-ascii?Q?6823zy1tEZGshlCkSWXJRkFJrwAojTz+XuurIhp21+5NTIZE3NTUgwNRunCS?=
+ =?us-ascii?Q?7vg5ZVomoEV8BazEShBGH3CnjonUQedU5IdTEqL9CSLywyfVNedyBIhV8x2k?=
+ =?us-ascii?Q?iJrgBBmWkySHWNiuVrhWjLLrMYOERGvVyIjPB8Y4Ebx4VtByGNgy1mNPRm7f?=
+ =?us-ascii?Q?aBqELFNHpg+TyeQwTWrmQDGNx05Je9fPYHDC+68dYaJmYYTMSLkOAA2EDTId?=
+ =?us-ascii?Q?uSFopZyLd4qvswm8k4RGkfMluD4gRVQtB9drAWft1Wjh7sp2XVtcWhJm1/qv?=
+ =?us-ascii?Q?ihgJEc2SEp3SJPG1Fb9JTPXw82QRykcUiRB77UvHImIQR8i55BmXCbycXFxf?=
+ =?us-ascii?Q?3gYLwxOHTH/n6c52NXEJBSfA4w81jQbJHfTG0Q/txXIKqkoViol7SCB7W+BR?=
+ =?us-ascii?Q?wn1taWxp6MhtRkcgP5bDtafQaJQjkStyrjsvgEE1o6nLKsHw/GNYHQvKA7mK?=
+ =?us-ascii?Q?R1G2cNpm4dNmmEe+VcIn04LCUFOHdWFdlC99dbPq89d8uqYJCv9ea2JXTP6u?=
+ =?us-ascii?Q?qVgaHSQck4uNFMXt0jJrTV9Nb7futr+L7HO4HN+ZmNhDIM1BplXe2Wia776R?=
+ =?us-ascii?Q?ERjyX9KeEOWoeVUaVdvAyP5MNwLjBwgklEjDiMxYtU5s6o64nUAey9LPa2Jl?=
+ =?us-ascii?Q?4+30iYBtwlUjQUDahcPLfSZuw8wWtWDrfSQd6mERDlEEMhjpRDySXK4n4uSe?=
+ =?us-ascii?Q?xw=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: a46b3185-d0ed-4d6b-56e8-08dc2cc5881c
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2024 18:56:48.5484
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 64QvyNHPRdaU/kQ6jUlMZBMxqQygW2rsHZQ0qIKNCgF7u6f/LsxoGUx9Sa2talKSVapkyQsBoiNarKTLqVKZf4S0fC0HKNZw31gKtm+1O6M=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB6395
+X-OriginatorOrg: intel.com
 
-On Mon, Feb 05, 2024 at 11:29:57AM +0000, John Garry wrote:
-> On 02/02/2024 17:25, Darrick J. Wong wrote:
-> > On Wed, Jan 24, 2024 at 02:26:40PM +0000, John Garry wrote:
-> > > Add flag IOMAP_ATOMIC_WRITE to indicate to the FS that an atomic write
-> > > bio is being created and all the rules there need to be followed.
-> > > 
-> > > It is the task of the FS iomap iter callbacks to ensure that the mapping
-> > > created adheres to those rules, like size is power-of-2, is at a
-> > > naturally-aligned offset, etc. However, checking for a single iovec, i.e.
-> > > iter type is ubuf, is done in __iomap_dio_rw().
-> > > 
-> > > A write should only produce a single bio, so error when it doesn't.
-> > > 
-> > > Signed-off-by: John Garry <john.g.garry@oracle.com>
-> > > ---
-> > >   fs/iomap/direct-io.c  | 21 ++++++++++++++++++++-
-> > >   fs/iomap/trace.h      |  3 ++-
-> > >   include/linux/iomap.h |  1 +
-> > >   3 files changed, 23 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> > > index bcd3f8cf5ea4..25736d01b857 100644
-> > > --- a/fs/iomap/direct-io.c
-> > > +++ b/fs/iomap/direct-io.c
-> > > @@ -275,10 +275,12 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
-> > >   static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
-> > >   		struct iomap_dio *dio)
-> > >   {
-> > > +	bool atomic_write = iter->flags & IOMAP_ATOMIC;
-> > >   	const struct iomap *iomap = &iter->iomap;
-> > >   	struct inode *inode = iter->inode;
-> > >   	unsigned int fs_block_size = i_blocksize(inode), pad;
-> > >   	loff_t length = iomap_length(iter);
-> > > +	const size_t iter_len = iter->len;
-> > >   	loff_t pos = iter->pos;
-> > >   	blk_opf_t bio_opf;
-> > >   	struct bio *bio;
-> > > @@ -381,6 +383,9 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
-> > >   					  GFP_KERNEL);
-> > >   		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
-> > >   		bio->bi_ioprio = dio->iocb->ki_ioprio;
-> > > +		if (atomic_write)
-> > > +			bio->bi_opf |= REQ_ATOMIC;
+Lukas Wunner wrote:
+> On Mon, Feb 12, 2024 at 03:02:46PM -0800, Dan Williams wrote:
+> > However, Lukas, I think Linus is right, your DEFINE_FREE() should use
+> > IS_ERR_OR_NULL().
+> 
+> Uh... that's a negative, sir. ;)
+> 
+> IS_ERR_OR_NULL() results in...
+> * a superfluous NULL pointer check in x509_key_preparse() and
+> * a superfluous IS_ERR check in x509_cert_parse().
+> 
+> IS_ERR() results *only* in...
+> * a superfluous IS_ERR check in x509_cert_parse().
+> 
+> I can get rid of the IS_ERR() check by using assume().
+> 
+> I can *not* get rid of the NULL pointer check because the compiler
+> is compiled with -fno-delete-null-pointer-checks.  (The compiler
+> seems to ignore __attribute__((returns_nonnull)) due to that.)
+> 
+> 
+> > I.e. the problem is trying to use
+> > __free(x509_free_certificate) in x509_cert_parse().
 > > 
-> > This really ought to be in iomap_dio_bio_opflags.  Unless you can't pass
-> > REQ_ATOMIC to bio_alloc*, in which case there ought to be a comment
-> > about why.
-> 
-> I think that should be ok
-> 
+> > > --- a/crypto/asymmetric_keys/x509_cert_parser.c
+> > > +++ b/crypto/asymmetric_keys/x509_cert_parser.c
+> > > @@ -60,24 +60,24 @@ void x509_free_certificate(struct x509_certificate *cert)
+> > >   */
+> > >  struct x509_certificate *x509_cert_parse(const void *data, size_t datalen)
+> > >  {
+> > > -       struct x509_certificate *cert;
+> > > -       struct x509_parse_context *ctx;
+> > > +       struct x509_certificate *cert __free(x509_free_certificate);
 > > 
-> > Also, what's the meaning of REQ_OP_READ | REQ_ATOMIC?
-> 
-> REQ_ATOMIC will be ignored for REQ_OP_READ. I'm following the same policy as
-> something like RWF_SYNC for a read.
-> 
-> However, if FMODE_CAN_ATOMIC_WRITE is unset, then REQ_ATOMIC will be
-> rejected for both REQ_OP_READ and REQ_OP_WRITE.
-> 
-> > Does that
-> > actually work?  I don't know what that means, and "block: Add REQ_ATOMIC
-> > flag" says that's not a valid combination.  I'll complain about this
-> > more below.
-> 
-> Please note that I do mention that this flag is only meaningful for
-> pwritev2(), like RWF_SYNC, here:
-> https://lore.kernel.org/linux-api/20240124112731.28579-3-john.g.garry@oracle.com/
-> 
+> > ...make this:
 > > 
-> > > +
-> > >   		bio->bi_private = dio;
-> > >   		bio->bi_end_io = iomap_dio_bio_end_io;
-> > > @@ -397,6 +402,12 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
-> > >   		}
-> > >   		n = bio->bi_iter.bi_size;
-> > > +		if (atomic_write && n != iter_len) {
-> > 
-> > s/iter_len/orig_len/ ?
+> >     struct x509_certificate *cert __free(kfree);
 > 
-> ok, I can change the name if you prefer
+> That doesn't work I'm afraid.  x509_cert_parse() needs
+> x509_free_certificate() to be called in the error path,
+> not kfree().  See the existing code in current mainline:
 > 
-> > 
-> > > +			/* This bio should have covered the complete length */
-> > > +			ret = -EINVAL;
-> > > +			bio_put(bio);
-> > > +			goto out;
-> > > +		}
-> > >   		if (dio->flags & IOMAP_DIO_WRITE) {
-> > >   			task_io_account_write(n);
-> > >   		} else {
-> > > @@ -554,12 +565,17 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> > >   	struct blk_plug plug;
-> > >   	struct iomap_dio *dio;
-> > >   	loff_t ret = 0;
-> > > +	bool is_read = iov_iter_rw(iter) == READ;
-> > > +	bool atomic_write = (iocb->ki_flags & IOCB_ATOMIC) && !is_read;
-> > 
-> > Hrmm.  So if the caller passes in an IOCB_ATOMIC iocb with a READ iter,
-> > we'll silently drop IOCB_ATOMIC and do the read anyway?  That seems like
-> > a nonsense combination, but is that ok for some reason?
+> x509_cert_parse() populates three sub-allocations in
+> struct x509_certificate (pub, sig, id) and two
+> sub-sub-allocations (pub->key, pub->params).
 > 
-> Please see above
+> So I'd have to add five additional local variables which
+> get freed by __cleanup().  One of them (pub->key) requires
+> kfree_sensitive() instead of kfree(), so I'd need an extra
+> DEFINE_FREE() for that.
 > 
-> > 
-> > >   	trace_iomap_dio_rw_begin(iocb, iter, dio_flags, done_before);
-> > >   	if (!iomi.len)
-> > >   		return NULL;
-> > > +	if (atomic_write && !iter_is_ubuf(iter))
-> > > +		return ERR_PTR(-EINVAL);
-> > 
-> > Does !iter_is_ubuf actually happen?
-> 
-> Sure, if someone uses iovcnt > 1 for pwritev2
-> 
-> Please see __import_iovec(), where only if iovcnt == 1 we create iter_type
-> == ITER_UBUF, if > 1 then we have iter_type == ITER_IOVEC
+> I haven't tried it but I suspect the result would look
+> terrible and David Howells wouldn't like it.
 
-Ok.  The iter stuff (especially the macros) confuse the hell out of me
-every time I go reading through that.
+Ugh, that's what I was afraid of, so these cases are different.
 
-> > Why don't we support any of the
-> > other ITER_ types?  Is it because hardware doesn't want vectored
-> > buffers?
-> It's related how we can determine atomic_write_unit_max for the bdev.
+> > ...and Mathieu, this should be IS_ERR_OR_NULL() to skip an unnecessary
+> > call to virtio_fs_cleanup_dax() at function exit that the compiler
+> > should elide.
 > 
-> We want to give a definitive max write value which we can guarantee to
-> always fit in a BIO, but not mandate any extra special iovec
-> length/alignment rules.
+> My recommendation is to check for !IS_ERR() in the DEFINE_FREE() clause
+> and amend virtio_fs_cleanup_dax() with a "if (!dax_dev) return;" for
+> defensiveness in case someone calls it with a NULL pointer.
+
+The internal calls (kill_dax(), put_dax()) check for NULL already, so I
+don't think that's needed.
+
+> That's the best solution I could come up with for the x509_certificate
+> conversion.
 > 
-> Without any iovec length or alignment rules (apart from direct IO rules that
-> an iovec needs to be bdev logical block size and length aligned) , if a user
-> provides many iovecs, then we may only be able to only fit bdev LBS of data
-> (typically 512B) in each BIO vector, and thus we need to give a
-> pessimistically low atomic_write_unit_max value.
+> Note that even with superfluous checks avoided, __cleanup() causes
+> gcc-12 to always generate two return paths.  It's very visible in
+> the generated code that all the stack unwinding code gets duplicated
+> in every function using __cleanup().  The existing Assembler code
+> of x509_key_preparse() and x509_cert_parse(), without __cleanup()
+> invocation, has only a single return path.
+
+I saw that too, some NULL checks can indeed be elided with a NULL check
+in the DEFINE_FREE(), but the multiple exit paths still someimtes result
+in __cleanup() using functions being larger than the goto equivalent.
+
+> So __cleanup() bloats the code regardless of superfluous checks,
+> but future gcc versions might avoid that.  clang-15 generates much
+> more compact code (vmlinux is a couple hundred kBytes smaller),
+> but does weird things such as inlining x509_free_certificate()
+> in x509_cert_parse().
 > 
-> If we say that iovcnt max == 1, then we know that we can fit PAGE size of
-> data in each BIO vector (ignoring first/last vectors), and this will give a
-> reasonably large atomic_write_unit_max value.
-> 
-> Note that we do now provide this iovcnt max value via statx, but always
-> return 1 for now. This was agreed with Christoph, please see:
-> https://lore.kernel.org/linux-nvme/20240117150200.GA30112@lst.de/
+> As you may have guessed, I've spent an inordinate amount of time
+> down that rabbit hole. ;(
 
-Got it.  We can always add ITER_IOVEC support later if we figure out a
-sane way to restrain userspace. :)
-
-> > 
-> > I really wish there was more commenting on /why/ we do things here:
-> > 
-> > 	if (iocb->ki_flags & IOCB_ATOMIC) {
-> > 		/* atomic reads do not make sense */
-> > 		if (iov_iter_rw(iter) == READ)
-> > 			return ERR_PTR(-EINVAL);
-> > 
-> > 		/*
-> > 		 * block layer doesn't want to handle handle vectors of
-> > 		 * buffers when performing an atomic write i guess?
-> > 		 */
-> > 		if (!iter_is_ubuf(iter))
-> > 			return ERR_PTR(-EINVAL);
-> > 
-> > 		iomi.flags |= IOMAP_ATOMIC;
-> > 	}
-> 
-> ok, I can make this more clear.
-> 
-> Note: It would be nice if we could check this in xfs_iomap_write_direct() or
-> a common VFS helper (which xfs_iomap_write_direct() calls), but iter is not
-> available there.
-
-No, do not put generic stuff like that in XFS, leave it here in iomap.
-
-> I could just check iter_is_ubuf() on its own in the vfs rw path, but I would
-> like to keep the checks as close together as possible.
-
-Yeah, and I want you to put as many of the checks in the VFS as
-possible so that we (or really Ojaswin) don't end up copy-pasting all
-that validation into ext4 and every other filesystem that wants to
-expose untorn writes.
-
-AFAICT the only things XFS really needs to do on its own is check that
-the xfs_inode_alloc_unit() is a power of two if untorn writes are
-present; and adjusting the awu min/max for statx reporting.
-
---D
-
-> Thanks,
-> John
-> 
+Hey, this is new and interesting stuff, glad we are grappling with it at
+this level.
