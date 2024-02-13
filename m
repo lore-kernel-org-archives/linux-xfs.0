@@ -1,277 +1,191 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA4473A1D9;
-	Tue, 13 Feb 2024 12:20:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707826854; cv=none; b=HTke6XWOkLqh/4ZGqYf8kug6K2SvVpxXv4UI+u7lPLdSYXnDd5CIPpEr6ALYfI6s0XWVv5QedLisazygrtrPy5lVocRjBN6Ptp59Kx/R6Bf51TD8qtqpERygUnsJavrXxerWGY8aSYkshTbGNgTLxDFIReRVHT856rV2Ym81RJU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707826854; c=relaxed/simple;
-	bh=HGeSUbH20H5u8KR22Rjn11xuDbNLM9XCx278xQ/uqQM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B5MUpCkOj2QBMyhsP4ZYC+bLyMh5PooeuVNXnoVUpFU7+tS0WuS4ddiE1FeO72pFqlkOoYXMj91Z1MxD1WDhK7eHWFObI8694rcga5pyFjxASGEpnPKlTxhH1gdM8+6SACQmXUKljhTsB0WtBrV9Tdv03A2qHNPC6uv7Jw8smxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=IzzOuWLp; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0SgjdETk; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1vKe97ng; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=q/cSS8Vb; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E0CA56770;
+	Tue, 13 Feb 2024 14:09:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707833382; cv=fail; b=DdFLDovWqHs15/hRujMjKk1ujDbHkM3ZZrRyRcXe9beviTUJoSHK1Kt24Mq4tTlXmzSzHcKCTZKrMpLJAJYrQAhfi2D9aF6ExYNqQSvOseXkrRbEM+elBtAJNxev3hOhvypkEY29NUlLCw2YurRyC5tkPZMJiFLVFM6x/cKCgag=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707833382; c=relaxed/simple;
+	bh=//6DhNmNXbYX3/JL/3n9zUx+hZRw5en5TJjk5aPnktE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=qfU4OQRXDShmP4Hxmowfcu9VHBWQxWg6vWwXTkFdRErIWcTvyWjJcG3kWuhlTxP9pdic7jfJhXyAY7wEdHxzWIGsmYV5Th29iQk86SCMo3NthHrtx+WgmqXa3cGFpsi0bWHBXqr3LpD1dpnCrgvy8xFxKP5rzTe/iCxEQbVwNXE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nMntoFeh; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=JxW7B0Aw; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="IzzOuWLp";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0SgjdETk";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1vKe97ng";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="q/cSS8Vb"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id DF6AC21FEB;
-	Tue, 13 Feb 2024 12:20:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707826851; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O0U/gj1IRFxhh4wCzcId+uJVmK6EIS7v2JGMcpz+WUE=;
-	b=IzzOuWLpi+MJGssDb+e4PKvMiPOtRIphb6Mc/4K5yV8iaENtK5kM+DLk4vTT+N6PzmvrFv
-	v074P/7sT7x34wkuI2sDX0w45LYFC261+D5QK3yGH4uXw5DjM2cUEEsz6nkTLTSEx6YL4f
-	HdccHqJDWJ/0olxtsgCqpvV2KN6xn8k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707826851;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O0U/gj1IRFxhh4wCzcId+uJVmK6EIS7v2JGMcpz+WUE=;
-	b=0SgjdETkh4AegWI/LgkWHeT8s7QOqYLfLMciIZr94TSi0IfPk6hef+PE111DdNO4Yk3BYm
-	rYVsjD6rhetPRTDA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707826850; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O0U/gj1IRFxhh4wCzcId+uJVmK6EIS7v2JGMcpz+WUE=;
-	b=1vKe97ngXgeKYrqZm8h4h8dCcBkENYItl1Fj7PH7YG/AUYDn6uYn5OQJn8kpjwDuzJGXpd
-	Ycpf5C/D5/CmhWYZraxC0a546nnXcxOeD8zh1aKRg0O6baPFolste5J2YWZIphyCpjzasc
-	DdHfLk2wczx/7L7PTv3E+hz7KLqX4N4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707826850;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O0U/gj1IRFxhh4wCzcId+uJVmK6EIS7v2JGMcpz+WUE=;
-	b=q/cSS8VbW/p6pawJ4xQDhshj4zQ+W/tJGCFkWvz20UQWURwsz3xlqPhS/6QTrZt90knQJb
-	GMxLHeg0wbDD8MBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A21431370C;
-	Tue, 13 Feb 2024 12:20:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id f9brJqJey2WSBwAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 13 Feb 2024 12:20:50 +0000
-Message-ID: <487c0bec-4229-4add-bec4-1711f0b9bbee@suse.de>
-Date: Tue, 13 Feb 2024 13:20:50 +0100
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nMntoFeh";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="JxW7B0Aw"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41DDmnDj014119;
+	Tue, 13 Feb 2024 14:08:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=5fRa+O+Iyufr3AUbxXs96Yw2X43lvGjR6RaHORj+MYE=;
+ b=nMntoFehMGzxwJ1uHHfrWJ0Wcy0tonDJJ/ETb8bRRcSEFfRN3kEmStc5YTQQp0P0Hv/7
+ yrr6XDQ/9VlfCdr5YZdHlW0UE/9IWD0ppNDURdDFo5mjKSEIr6/YoMLEwKrCD8oE0Y1q
+ rY6yQD3eALnIMwDHxbW6PF/0aJimKwu/+tC6Hert3T4s8R2HOKQ6Zhi2RGNQv29FneDA
+ DcYQhV22zlmvuac+hcuJeBYCXS675X0o/fXOUm2hierGFkEFpA9tZlCOcxdFfzfG9ALc
+ ej70UEnc6Krw+jrvMzuX6E+oZrgGqjRAW9d62c63qazjgEGfLj6OCv7H5o6LA3Ltk9Nv vQ== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w89brg31c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 13 Feb 2024 14:08:15 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41DE7BPq000755;
+	Tue, 13 Feb 2024 14:08:15 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3w5yk7cqvu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 13 Feb 2024 14:08:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oJ2VMiwyX37jczxT7FWN1Nny8D1i21yVeC2MP7wIzaHknlsNjiYOuyL6VcMMVhEOfWrlT31N7DBuYbv5g+FXZDgD+gIS7+gYkTGfGvXq3LYiRn/HkVJbg/kwp2JGW2Ov/kpg3IAvusSYaX3qfqEnlAAtW4X5X1n/Jom0PJlEczYAWpqJTxumOyM6y9sKIGTZVwVHfeHbRt36d/vTAHZ138l964H+qP708D04MPUmoZvATQMSY/6W5uv4RIR5268Fw+SXa4eHnjxyfTZRmT5UVtlrSSWmEocs9idfn1ez1ULYbw+Se7tFsgt0KFNTsRYp1PFej/h4EHfFSUI8gmHUwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5fRa+O+Iyufr3AUbxXs96Yw2X43lvGjR6RaHORj+MYE=;
+ b=kMGwryZe/enVStbFJ8UNgo89HIGaANJeTtYIaC59nRWSdeN3Q/MDvFvQfHuqMS4pkv1yDzCE+ieJpcItwy0YMW1GlPzEe879o1ELDUtS49cCCxvU2lVi2842KuHAGAA0mXZdWQu68yrAv3F+P1mfUw9nD8UP6rCvKEZs+VzxXP7ZXVAZCDso2URxO0C6Ms0Jj6kyYvOh0I3Nq8XPqI8KNV6b+ZeRx0WEd8KmdIUBemqxx4un+eGNCIq1cT4DuwagTp2Ag1x6j0rW12gwBdZTSM4/KEs7UTpLBisChW/VPCB20toTS7/DbVsbaDj9MdG6e75EvK0iLHlxo19BH66ohQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5fRa+O+Iyufr3AUbxXs96Yw2X43lvGjR6RaHORj+MYE=;
+ b=JxW7B0Aw/E0Eirq2KG7TPAlJP2DUF2XfDkw6DYRhfip6QqfsvTpPltk8aRma1JwpuOEc+0S1CC290to48prLIsZcHJ8UVhzVorjBrRYhvw4dndbs/guY+Y6yhWXJot/XKwE0Uxc3F4xoeakZS8FbmAsY1CGBHLrFXkfhMXcJIZ8=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by PH0PR10MB4485.namprd10.prod.outlook.com (2603:10b6:510:41::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.39; Tue, 13 Feb
+ 2024 14:08:12 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::56f9:2210:db18:61c4]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::56f9:2210:db18:61c4%4]) with mapi id 15.20.7292.026; Tue, 13 Feb 2024
+ 14:08:12 +0000
+Message-ID: <385ff2e5-ad79-456a-9632-9581c0d26d9a@oracle.com>
+Date: Tue, 13 Feb 2024 14:07:57 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 15/15] nvme: Ensure atomic writes will be executed
+ atomically
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, djwong@kernel.org, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, dchinner@redhat.com, jack@suse.cz,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-scsi@vger.kernel.org, ming.lei@redhat.com, ojaswin@linux.ibm.com,
+        bvanassche@acm.org, Alan Adamson <alan.adamson@oracle.com>
+References: <20240124113841.31824-1-john.g.garry@oracle.com>
+ <20240124113841.31824-16-john.g.garry@oracle.com>
+ <20240213064241.GC23305@lst.de>
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240213064241.GC23305@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SG2P153CA0024.APCP153.PROD.OUTLOOK.COM (2603:1096:4:c7::11)
+ To DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC v2 02/14] filemap: align the index to mapping_min_order in
- the page cache
-Content-Language: en-US
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: mcgrof@kernel.org, gost.dev@samsung.com, akpm@linux-foundation.org,
- kbusch@kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
- p.raghav@samsung.com, linux-kernel@vger.kernel.org, willy@infradead.org,
- linux-mm@kvack.org, david@fromorbit.com
-References: <20240213093713.1753368-1-kernel@pankajraghav.com>
- <20240213093713.1753368-3-kernel@pankajraghav.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240213093713.1753368-3-kernel@pankajraghav.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spamd-Result: default: False [-3.09 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-3.00)[100.00%];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[14];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[samsung.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spam-Score: -3.09
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH0PR10MB4485:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8f500d2d-fdc7-47d3-0ee2-08dc2c9d36ff
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	jvszXZrzgBLmdXw+o5++r5kr0szKH4Surn8XrJVk2oooBm9J/Smjj7xFcDesDA5hap+15vAFzF+HmQ5YE0foF+vhVxUHod3uHBWTZ05V0XLhDq7gC3ygXOzCnfZSe6Q69TN6MJgxTES9RdA0StpLPfsNnwZwgDFXOZhc1x0NWtfmUwC/+WIKZd8e8ddozc6etOlD3fdTheVoXLSicURzwyqqeiFLQgPt08/GcJ4hIeoEHf4FcOUynSUQP6ZjMiCZ/1u/6iSs8LX34cpBJlUNTJwrR7cEMvXuZkxjl5NXN3Uq6qFty6mrl3NMxunBUBA8dFSrln52cMagPJQlYQ6rIZ5aw4scCBaLtl1w5VSINnyvhgQBgoksDdUxzYT2Tmqp8CDpgWCNBQ1ZEG6mtahcW5g6ad44lkjuYTgxs8xCFoHVgTlb0nuhArrJvLLwBihvdjAm/jFw9s5XCNzynYkkTed8jFJW2E/L3NgbXj2i8QcktnXZVVT+K14QpcO19GjuzZwIWOg2Nm7GFe17BQGIDiq/k6wnLXri1kYeX21LAJqu2YdKLchHCbbzv63A15ME
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(346002)(136003)(376002)(366004)(39860400002)(230922051799003)(451199024)(64100799003)(186009)(1800799012)(36756003)(31686004)(316002)(6666004)(86362001)(36916002)(31696002)(8676002)(6916009)(4326008)(8936002)(6506007)(478600001)(5660300002)(6486002)(2906002)(6512007)(7416002)(4744005)(53546011)(38100700002)(107886003)(66946007)(66476007)(66556008)(26005)(2616005)(83380400001)(41300700001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?clRBWmZNbEQrei83Q3JUdWIyWXpDVzdNdzhmd296ZW1CMkFRRnc2UnlBT3VL?=
+ =?utf-8?B?QkFEdlAwZjUwUEMxSjI2VDg1R01Pd2xPcjF2MGhaTm9GRXN3RkZRdzVnWlhr?=
+ =?utf-8?B?YzhQZzN0YjZHMkRzTWNaL0piVTJQY0JMNVArSWFpcHduYy9BdlYwcURUMWxa?=
+ =?utf-8?B?QWxLMkdNU21JNGFtbFlucU0zS2s0YUJuMG9IVXowZ3Btc0c2WXA0bFVIeVhR?=
+ =?utf-8?B?amZ3RkdlTWwyZWd1eGxWbmdib0RGazIzeWJIN2ZzQWROZUI1dERLMHpuMDFy?=
+ =?utf-8?B?a3FZdWZsVmNKNFJHckZZL0hnc3lDQkY0RTJyckhQL2pTSjhqblNqWWozVnor?=
+ =?utf-8?B?UDhtVks1OWFSeXFpSmMxbFpITXJyVHROWVpNcExUa0orZS92T0JTMU4vZWRF?=
+ =?utf-8?B?a2hwRDZSZkk2SC81Z3BhL1grbUZZWDJLSmE3dlM4bG50ak9NaTRSOTBubHpa?=
+ =?utf-8?B?WUFocFowQVF4U2tGSzJBK3hIM1hOWVZNbE8vQnZhSzVXa2pBaVBZNWpidzhQ?=
+ =?utf-8?B?a3pObzdRWUVaQVhyUU9ienorVlg0WE83VXpvbEJRU1ZFNHZkZE1kL1FWQ3Zi?=
+ =?utf-8?B?cnd2OCtYcE96N1FyRVhVenUzZjhlWXRKb3QyeStQc0U3d0RDTzdXRWRPRmM3?=
+ =?utf-8?B?Z3NDUE5aSXZNTVljVnBDaURNYytOcjVLNURBNFBkb3FCdW83TFFCVTcxOXM4?=
+ =?utf-8?B?MTk0enZkbEJBenNwellvOTgxYnhtNnM1cklEL2tFblI0OVI5Tk5wOENzZGdY?=
+ =?utf-8?B?TlpxQndEck1LWHF1S1lIc0t1ajlROVJlT3dJVy9LNE5ERXViNFVsSWxRYzd2?=
+ =?utf-8?B?WUk3M0w4cHgycVMyVmN0R3BlS1pqZUYvSGJZL0NmMzNENzU4WGNSWVVHTUtK?=
+ =?utf-8?B?eDBXZXV4eUxJcW9aTldGSTdGRTdRanpTWjJqV1FKbEhiSkYxMldqbEk0a0R4?=
+ =?utf-8?B?emNnQXYybU9ReUQrdzdkdHA3MDNEOFppS1NmWE11VUdrNG5nVm82NzhiRHNN?=
+ =?utf-8?B?RmRqcUhSa0pXVGZ5OU1wdEovUVpNSDZzR05tbWFQeWNIRDZJczV2dGRsOU02?=
+ =?utf-8?B?T1pWMGRBOS81cVEwYlNkeStQRkhBMnc1NDIyRmRtZ0R3ZURGWmVjaEQvblRy?=
+ =?utf-8?B?T25zVG83Y2tGZlphSEkzV1oyQjhxa1IzTGR1WnpEL1Fpckh3VkplVWpRMkhZ?=
+ =?utf-8?B?MFpmYXpxU2dlcTB6SmVUdHM0ejFJcWtCM05UOG15WUpXcVRaMndpNkN1RW9z?=
+ =?utf-8?B?RlZJNXJjTzNobTZBTURYWmVKbTVtTlhEZGpMRHQ0YWJnM1BidnJ5b3Q1Q2Jp?=
+ =?utf-8?B?L2p0VENGUk5UcWhrYUhSdk9ubUlVb1dDWE5ySmNHQzJxQTZIV04rSGV2YzE3?=
+ =?utf-8?B?SzFrSGYvYmRackxQR1dvNFFxQ1ZaczhHR0lhME9OdTJUZVBrOWRxVmZzVEp0?=
+ =?utf-8?B?N0h0RTRHKzNZVFBPTEs4a1NqaENQYkd6UXA1ZUFLNUVzTlg5Y2NxOUd1ZnlK?=
+ =?utf-8?B?Q21vSHRjck1mT2JpTTFLUUhHV3ZwNlJ0N3RWK1ZjZWEzaTF6R2VQNTFhK1hm?=
+ =?utf-8?B?M1NTMFJESGRFN0E0b0JWTy9TSmJvSVZrQXJCOFVCaFlmbTY5QitSYnNxYXNr?=
+ =?utf-8?B?N1ArR3llY2dTSXljOU5tRG9vZXYxczJLUjlRTURIVDBheVhaZ0pzcFVyRmxa?=
+ =?utf-8?B?V1lRcmJOMTlnUlZVVVZidEVhaC96NWhsOHpmMmJwZnV0U1doQ0xXb2dvWjRa?=
+ =?utf-8?B?OHUvR1FHWWNZUktqY2pIM3VrbHd3ODN5T3NYSlRnOW9lMW9GelJ5R0FRcXdD?=
+ =?utf-8?B?OHVITlNwU24rd05vL3Uxcmo2U0ZkQ2t0ZGtXN0o5U0xLcnRNdHlIWHVFZjlR?=
+ =?utf-8?B?dkpGMWdiUjNaL0dEVUQ4QS9MSTVTTUhCWTVROVVSd3B4cTl3Y2FoamNQQ1dl?=
+ =?utf-8?B?V2haanM1Z2NCa2RwOWhmdmpndzl0NVJRZHlQQitRMVUyOEZpSy92bTlJeit4?=
+ =?utf-8?B?UlRqVmg5TXZDbmhPbW9DckRLREwrNzRsT09KbTN3UDBQemtTY1loOTNhMFZv?=
+ =?utf-8?B?K1htRVV2OXBtdkRBd2dvaUgxNTBORjlYTUlwUldwbGhLRC9jRDBtTGZERjcy?=
+ =?utf-8?Q?84N+6jFiXn4H8oQTi/3zDdl/j?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	eB8fqlNfV/cdHyHieKNqMxKBYDQSL18D2ttudTBVVSVkXkyUZfePzI/8fzcULex7do8C7IrwV28moF2tpaVlNzH7FxNVw48+vmGVBWRfh5AlfCdBHP1FPGb/Yjf7jFIcfAlYDxh88ySWaQHDJw3fs460zqQuD3Y7bqNPgDRp9mp1rPupTAeHl+hbuNqNncusn3zuNgEOKjk7sluANzJLoRkO7hEZG38/FLIo8ydp1ShIJJYuyq0t5eHAWueoFFNjXlW8JqBz0NSp4jbDayCu/6zS1B0SOI9nm28IVdXJQ2uhxx6chWKyBNhMLjSWev0xaVf0awlf+G3ZomhT9d5TDYQN7PEmt3+rLFo3KHglDpc2zjZt+yLvKKxgbn8jla0xXTnT3H36P3fqo1eSRsXcEfchxxfqGAqis1ICxot1B0PQZbR96GWY9sISMPcMbJnJsqZcRAqsG+UYPuqLsrrUvZpRstt3ArDmraqEHlhT0JfsYPu5Ued4AubF/lHt9IXhGCIkj3Ms3P0cIXdA6Rt44SeGrOkSdnTjBDAoh/TLomBmx+LPeUXzPyJvanszafsyhizRKhXhVqSF/dhOgKRGN4oHUXiR3/JjX5McQc+H6Ms=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8f500d2d-fdc7-47d3-0ee2-08dc2c9d36ff
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2024 14:08:12.7506
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RVOaqcZeaNHV6kN78oJNWZ18X7IbbRX0voDjEdmKdU8TLcG4ssDcLW7HywFhsO1ZPVko0oA0YtnLIkIIp7SUOw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4485
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-13_08,2024-02-12_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=732 phishscore=0 mlxscore=0
+ bulkscore=0 spamscore=0 malwarescore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2402130112
+X-Proofpoint-ORIG-GUID: g84YTYG9LBSUF4-dPcUGP_HsXWRONxlE
+X-Proofpoint-GUID: g84YTYG9LBSUF4-dPcUGP_HsXWRONxlE
 
-On 2/13/24 10:37, Pankaj Raghav (Samsung) wrote:
-> From: Luis Chamberlain <mcgrof@kernel.org>
+On 13/02/2024 06:42, Christoph Hellwig wrote:
+> If we don't end up doing the checks in the block layer:
 > 
-> Supporting mapping_min_order implies that we guarantee each folio in the
-> page cache has at least an order of mapping_min_order. So when adding new
-> folios to the page cache we must ensure the index used is aligned to the
-> mapping_min_order as the page cache requires the index to be aligned to
-> the order of the folio.
+>> +	/*
+>> +	 * Ensure that nothing has been sent which cannot be executed
+>> +	 * atomically.
+>> +	 */
+>> +	if (req->cmd_flags & REQ_ATOMIC) {
+>> +		struct nvme_ns_head *head = ns->head;
+>> +		u32 boundary_bytes = head->atomic_boundary;
 > 
-> A higher order folio than min_order by definition is a multiple of the
-> min_order. If an index is aligned to an order higher than a min_order, it
-> will also be aligned to the min order.
+> ... please split the checks into a helper. 
+
+ok
+
+> And merge them into the
+> previous patch.
+
+Fine, if you prefer that.
+
 > 
-> This effectively introduces no new functional changes when min order is
-> not set other than a few rounding computations that should result in the
-> same value.
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->   mm/filemap.c | 34 ++++++++++++++++++++++++++--------
->   1 file changed, 26 insertions(+), 8 deletions(-)
-> 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 750e779c23db..323a8e169581 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -2479,14 +2479,16 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
->   {
->   	struct file *filp = iocb->ki_filp;
->   	struct address_space *mapping = filp->f_mapping;
-> +	unsigned int min_nrpages = mapping_min_folio_nrpages(mapping);
->   	struct file_ra_state *ra = &filp->f_ra;
-> -	pgoff_t index = iocb->ki_pos >> PAGE_SHIFT;
-> +	pgoff_t index = round_down(iocb->ki_pos >> PAGE_SHIFT, min_nrpages);
->   	pgoff_t last_index;
->   	struct folio *folio;
->   	int err = 0;
->   
->   	/* "last_index" is the index of the page beyond the end of the read */
->   	last_index = DIV_ROUND_UP(iocb->ki_pos + count, PAGE_SIZE);
-> +	last_index = round_up(last_index, min_nrpages);
-
-Huh? 'last_index' is unset here; sure you mean 'iocb->ki_pos + count' ?
-
-And what's the rationale to replace 'DIV_ROUND_UP' with 'round_up' ?
-
->   retry:
->   	if (fatal_signal_pending(current))
->   		return -EINTR;
-> @@ -2502,8 +2504,7 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
->   	if (!folio_batch_count(fbatch)) {
->   		if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_WAITQ))
->   			return -EAGAIN;
-> -		err = filemap_create_folio(filp, mapping,
-> -				iocb->ki_pos >> PAGE_SHIFT, fbatch);
-> +		err = filemap_create_folio(filp, mapping, index, fbatch);
->   		if (err == AOP_TRUNCATED_PAGE)
->   			goto retry;
->   		return err;
-> @@ -3095,7 +3096,10 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
->   	struct file *file = vmf->vma->vm_file;
->   	struct file_ra_state *ra = &file->f_ra;
->   	struct address_space *mapping = file->f_mapping;
-> -	DEFINE_READAHEAD(ractl, file, ra, mapping, vmf->pgoff);
-> +	unsigned int min_order = mapping_min_folio_order(mapping);
-> +	unsigned int min_nrpages = mapping_min_folio_nrpages(file->f_mapping);
-> +	pgoff_t index = round_down(vmf->pgoff, min_nrpages);
-> +	DEFINE_READAHEAD(ractl, file, ra, mapping, index);
->   	struct file *fpin = NULL;
->   	unsigned long vm_flags = vmf->vma->vm_flags;
->   	unsigned int mmap_miss;
-> @@ -3147,10 +3151,11 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
->   	 */
->   	fpin = maybe_unlock_mmap_for_io(vmf, fpin);
->   	ra->start = max_t(long, 0, vmf->pgoff - ra->ra_pages / 2);
-> +	ra->start = round_down(ra->start, min_nrpages);
->   	ra->size = ra->ra_pages;
->   	ra->async_size = ra->ra_pages / 4;
->   	ractl._index = ra->start;
-> -	page_cache_ra_order(&ractl, ra, 0);
-> +	page_cache_ra_order(&ractl, ra, min_order);
->   	return fpin;
->   }
->   
-> @@ -3164,7 +3169,9 @@ static struct file *do_async_mmap_readahead(struct vm_fault *vmf,
->   {
->   	struct file *file = vmf->vma->vm_file;
->   	struct file_ra_state *ra = &file->f_ra;
-> -	DEFINE_READAHEAD(ractl, file, ra, file->f_mapping, vmf->pgoff);
-> +	unsigned int min_nrpages = mapping_min_folio_nrpages(file->f_mapping);
-> +	pgoff_t index = round_down(vmf->pgoff, min_nrpages);
-> +	DEFINE_READAHEAD(ractl, file, ra, file->f_mapping, index);
->   	struct file *fpin = NULL;
->   	unsigned int mmap_miss;
->   
-> @@ -3212,13 +3219,17 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
->   	struct file *file = vmf->vma->vm_file;
->   	struct file *fpin = NULL;
->   	struct address_space *mapping = file->f_mapping;
-> +	unsigned int min_order = mapping_min_folio_order(mapping);
-> +	unsigned int nrpages = 1UL << min_order;
->   	struct inode *inode = mapping->host;
-> -	pgoff_t max_idx, index = vmf->pgoff;
-> +	pgoff_t max_idx, index = round_down(vmf->pgoff, nrpages);
->   	struct folio *folio;
->   	vm_fault_t ret = 0;
->   	bool mapping_locked = false;
->   
->   	max_idx = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
-> +	max_idx = round_up(max_idx, nrpages);
-> +
-
-Same here.
-(And the additional whitespace can probably go ...)
-
->   	if (unlikely(index >= max_idx))
->   		return VM_FAULT_SIGBUS;
->   
-> @@ -3317,13 +3328,17 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
->   	 * We must recheck i_size under page lock.
->   	 */
->   	max_idx = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
-> +	max_idx = round_up(max_idx, nrpages);
-> +
-
-See above.
-
->   	if (unlikely(index >= max_idx)) {
->   		folio_unlock(folio);
->   		folio_put(folio);
->   		return VM_FAULT_SIGBUS;
->   	}
->   
-> -	vmf->page = folio_file_page(folio, index);
-> +	VM_BUG_ON_FOLIO(folio_order(folio) < min_order, folio);
-> +
-> +	vmf->page = folio_file_page(folio, vmf->pgoff);
->   	return ret | VM_FAULT_LOCKED;
->   
->   page_not_uptodate:
-> @@ -3658,6 +3673,9 @@ static struct folio *do_read_cache_folio(struct address_space *mapping,
->   {
->   	struct folio *folio;
->   	int err;
-> +	unsigned int min_nrpages = mapping_min_folio_nrpages(mapping);
-> +
-> +	index = round_down(index, min_nrpages);
->   
->   	if (!filler)
->   		filler = mapping->a_ops->read_folio;
-
-Cheers,
-
-Hannes
 
