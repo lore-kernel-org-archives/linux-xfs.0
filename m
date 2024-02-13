@@ -1,169 +1,216 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF251B971;
-	Tue, 13 Feb 2024 09:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4822224CE;
+	Tue, 13 Feb 2024 09:37:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707815438; cv=none; b=F+FHarnfoGV56G2GWhT184FCgCSJishodlyTooGzEjaCBDPdD73BhqGLZNXirU3xurGf4pl3eigyvNeuZvL0JKrA1L6oR65+VnyzgJAbI6AAsJE1xms8hr6Pb5PN6rHWvNjl3HRgpbUTVUUebdOPCqgmZpYJuSBqOtiDcvycsGs=
+	t=1707817048; cv=none; b=uxwzu2Z/7jaFHG09lZI2dyU9A/NnJsXIqf/JaYMjybzSHxy/tKfgqHYnO0TFjiQeGcmVfsRFRXY30eYv+yQ50zQEmerzJe5SXo2isdteGNmqNGRNMzNM8iaTAB+8wcJcQRDsCfZBD8N8LEmsbj5ZyH5Er/qBrM3ipwfcRxaay34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707815438; c=relaxed/simple;
-	bh=tU1izEN1R300M3GRjsbx3Ptb75JlUiW5CWuiqarnev0=;
-	h=Date:Message-Id:From:To:Cc:Subject:In-Reply-To; b=CmgZ/5dOvzkxlS7PdjMeU7rnMozBIANxJy8ASCcbqbewvOvOxBmBxIo+eNzR1CwFlD3nLutF9BkqHYg60xATxXkCIL5RKEYuJyr+IZ91oA1pELzOEriKOZuW4v4GhLGgD/PaLMCxOiC6K59QLyVD1vhv6+PW/Jbu3mY1fWihLpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TE/eMZ9m; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1707817048; c=relaxed/simple;
+	bh=/Tm8koaoLTRmQQMsFa8oq5guCWtVz64YDWKYgTdrMBE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sZnrWhwL/4o4OzdTasjLj2NUTaCD5N79oU7M+1dXkV2CAMb7/9NFNfONn5b1kMsgfd2fEFlPPGNgO0Ito4vxYxsimjaj3A7P1CLz/vIKPZFlub4ZGmM1CfL8dDf37KAVVRwqnC6rsQxF1yvVHh23dU8JvmYI8sNtui2pFOK0SvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=0mK9WM/E; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TE/eMZ9m"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6e09493eb8eso2492439b3a.1;
-        Tue, 13 Feb 2024 01:10:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707815436; x=1708420236; darn=vger.kernel.org;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=W1/O2QjCeIjREkCInLlmtuYFHINhFGizDhhNZ+7JUBQ=;
-        b=TE/eMZ9mWVsdNEIq4TZcvdNMTVbB8yVs98qgNZWR9TUt624gh0idYSINbZZ1PQtPMW
-         aAGfhowUanziPAdm189ryz6kE4wfTi5p6JD8H7XZela7nc+fKK6QWvw64DP3VcnDTolr
-         Kv6sOVJFGf/TVeNk2hn9lBiIu3BdW5ocplk2oQGIpWrehSpCzKKyD7MeEKbj2xwcS9Xn
-         y3Ze7Bf8NzE1uWN8NVkA+w95rfj2nVnDfuMzSZDRJv0Kgj0ScR8mB30o8cCgbOQoBiW9
-         i9ISFxM7sJJBoWN7Cj97Skw66aVMEmB9GWKIYQn0EebODhFCjow6Cq3mbN6Ljln4On68
-         NVNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707815436; x=1708420236;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=W1/O2QjCeIjREkCInLlmtuYFHINhFGizDhhNZ+7JUBQ=;
-        b=H5CNacFj+tdAw3PlkznCgSR1L6Mo/7sTyLv8eaxrzeMKBpmCZ88HTm1roaWY5i3HCM
-         t5yVeCzChe2Gk0twoNa7jw2NhbTQJVRJpHH6Wb1tuoTa79uAcpD/cT0CRW+W/3347awu
-         F87GYewD6lMk+Qwo7yuXDw1cg3A3xNbRLnIhv/UW8p3lH3s28S/u50yzH5EsKsS8nOgm
-         l38NW+9sEQW8Dva+6r89osaAj3jAz3/CNCT1eKlG3oQabgG75Xk0kfqf03COUqvf1IVk
-         VpDAduFbzSPQAjYLPSteFYcP1r56D9Jz1W/PkANtu42/Alhyp2BcdGnqm+ZGQ/QeeyNJ
-         DWNQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV5FnKcaBPIcmLayf7N39FxPuMs6f2W4VPbLNqYUthcMkajyaNn7uR3Hr8AiyhS77hEu80FmZfCEd5Wu4t01hgc7vCHViaRnda/IDBfAL+5hz0gNFNplZtx8M4GNQ5jPB4qrJYExi7m/7m+MX2g2zICqXy8W2lnzeemTmb3WBT+CDto5Z0J+A==
-X-Gm-Message-State: AOJu0YztV6lleTHVwM0Cj+HsGSr5L5dsQrWoQBDGcHQq8r7Ap5yZRg6x
-	UbHcbn25IO1gVEzh38IrfXCFI5qePfqZmJcRSkW166hmjjBaKabw
-X-Google-Smtp-Source: AGHT+IGat9zcEfbh7wFP8V0eWZQEkCCMSR9MkFJn/3a4Dii6KmWVG5zgviI+hT2Whj4qR1SjogI/Eg==
-X-Received: by 2002:a05:6a21:3a87:b0:19e:9da4:1a10 with SMTP id zv7-20020a056a213a8700b0019e9da41a10mr2970622pzb.21.1707815436247;
-        Tue, 13 Feb 2024 01:10:36 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXLgSrCUNLapaSsvzyiglcq5q2LrPXePcu8HJTHizask0YkkN964YKPndHwH/K0nGCRz4THtIq0YTf/2AE+KIxHKMlIyzrAZmMiPyMmILGMvqliGbLyrof8cAEdc/5eqR9ZAvOZJVZVfF2NsLvd0K5m2v1R5EKv/plf4sBosbfxZHs/kZsXO/8rAyxFYv9vIjGv8paofCTlbAKPKxC+u1Fo0t0limMLh35I0LXpEoPnrX+N4ydDNrAiocFzgjER198Q7V7aPZhsHnW0Yl/zQ1Qk2dmxSfFcUCU1NloKjUJPDYW+ju3Mwrd/Y4qI6X5h53P0UpgvVEjcYi0kp36Xl1/I67/zd2ydzfiWB0bPn2tNnTk+GHBIUMUE9M7GzCd74/BdMOjcBhueMXUe1mfHFsOPaRDxl28phiPJY0AHI38aKGvDiEesn1Rb
-Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id lm17-20020a056a003c9100b006e080d792acsm6797067pfb.184.2024.02.13.01.10.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Feb 2024 01:10:35 -0800 (PST)
-Date: Tue, 13 Feb 2024 14:40:29 +0530
-Message-Id: <87a5o4viey.fsf@doe.com>
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, hch@lst.de, djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com, jack@suse.cz, chandan.babu@oracle.com
-Cc: martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com
-Subject: Re: [PATCH 0/6] block atomic writes for XFS
-In-Reply-To: <875feb7e-7e2e-4f91-9b9b-ce4f74854648@oracle.com>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="0mK9WM/E"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4TYx7P5TQGz9sTM;
+	Tue, 13 Feb 2024 10:37:21 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1707817041;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IYsJ32qMRCtWIP7xXM7OP+qt3qi8RVhOs/HaC3Mhi1k=;
+	b=0mK9WM/EFBtMl+dbpHA5NndcygMmv6RRM66I83fovGzWHIsnV7/2VPdQm8kcB3euYKZSFX
+	UatwkePCcSp/Lzf0q+P8t99PuCfm8y7LsDJ0RhTt7Mh+11SSEqyFtQxXyHmbsXW8YXXsnw
+	nQX/tG65TSJ/9vVVm/LW8DSW5GATIO5FBux0ZARu9/qrlU/C6PUxh6YE3l+j1jP5QY70yw
+	ppe/kcPhJTO6Cpl8yT2bPB8K2n3jJXPahl9kOH8NLS+jdVgubCwhPrSbxCg0X/40NgdFXC
+	ptJxZqX4UXs21l8Me8WCfP+0NXi0g5N0JTA/flhbb9ayDk+o55DciZOM3XGHWw==
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: mcgrof@kernel.org,
+	gost.dev@samsung.com,
+	akpm@linux-foundation.org,
+	kbusch@kernel.org,
+	djwong@kernel.org,
+	chandan.babu@oracle.com,
+	p.raghav@samsung.com,
+	linux-kernel@vger.kernel.org,
+	hare@suse.de,
+	willy@infradead.org,
+	linux-mm@kvack.org,
+	david@fromorbit.com
+Subject: [RFC v2 01/14] fs: Allow fine-grained control of folio sizes
+Date: Tue, 13 Feb 2024 10:37:00 +0100
+Message-ID: <20240213093713.1753368-2-kernel@pankajraghav.com>
+In-Reply-To: <20240213093713.1753368-1-kernel@pankajraghav.com>
+References: <20240213093713.1753368-1-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-John Garry <john.g.garry@oracle.com> writes:
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-> On 13/02/2024 07:45, Ritesh Harjani (IBM) wrote:
->> John Garry <john.g.garry@oracle.com> writes:
->> 
->>> This series expands atomic write support to filesystems, specifically
->>> XFS. Since XFS rtvol supports extent alignment already, support will
->>> initially be added there. When XFS forcealign feature is merged, then we
->>> can similarly support atomic writes for a non-rtvol filesystem.
->>>
->>> Flag FS_XFLAG_ATOMICWRITES is added as an enabling flag for atomic writes.
->>>
->>> For XFS rtvol, support can be enabled through xfs_io command:
->>> $xfs_io -c "chattr +W" filename
->>> $xfs_io -c "lsattr -v" filename
->>> [realtime, atomic-writes] filename
->> 
->> Hi John,
->> 
->> I first took your block atomic write patch series [1] and then applied this
->> series on top. I also compiled xfsprogs with chattr atomic write support from [2].
->> 
->> [1]: https://lore.kernel.org/linux-nvme/20240124113841.31824-1-john.g.garry@oracle.com/T/#m4ad28b480a8e12eb51467e17208d98ca50041ff2
->> [2]: https://github.com/johnpgarry/xfsprogs-dev/commits/atomicwrites/
->> 
->> 
->> But while setting +W attr, I see an Invalid argument error. Is there
->> anything I need to do first?
->> 
->> root@ubuntu:~# /root/xt/xfsprogs-dev/io/xfs_io -c "chattr +W" /mnt1/test/f1
->> xfs_io: cannot set flags on /mnt1/test/f1: Invalid argument
->> 
->> root@ubuntu:~# /root/xt/xfsprogs-dev/io/xfs_io -c "lsattr -v" /mnt1/test/f1
->> [realtime] /mnt1/test/f1
->
-> Can you provide your full steps?
->
-> I'm doing something like:
->
-> # /mkfs.xfs -r rtdev=/dev/sdb,extsize=16k -d rtinherit=1 /dev/sda
-> meta-data=/dev/sda               isize=512    agcount=4, agsize=22400 blks
->           =                       sectsz=512   attr=2, projid32bit=1
->           =                       crc=1        finobt=1, sparse=1, rmapbt=0
->           =                       reflink=0    bigtime=1 inobtcount=1 
-> nrext64=0
-> data     =                       bsize=4096   blocks=89600, imaxpct=25
->           =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=16384, version=2
->           =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =/dev/sdb               extsz=16384  blocks=89600, rtextents=22400
-> # mount /dev/sda mnt -o rtdev=/dev/sdb
-> [    5.553482] XFS (sda): EXPERIMENTAL atomic writes feature in use. Use 
-> at your own risk!
+Some filesystems want to be able to limit the maximum size of folios,
+and some want to be able to ensure that folios are at least a certain
+size.  Add mapping_set_folio_orders() to allow this level of control.
+The max folio order parameter is ignored and it is always set to
+MAX_PAGECACHE_ORDER.
 
-My bad, I missed to see your xfsprogs change involve setting this
-feature flag as well during mkfs time itself. I wasn't using the right
-mkfs utility.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ include/linux/pagemap.h | 92 ++++++++++++++++++++++++++++++++---------
+ 1 file changed, 73 insertions(+), 19 deletions(-)
 
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 2df35e65557d..5618f762187b 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -202,13 +202,18 @@ enum mapping_flags {
+ 	AS_EXITING	= 4, 	/* final truncate in progress */
+ 	/* writeback related tags are not used */
+ 	AS_NO_WRITEBACK_TAGS = 5,
+-	AS_LARGE_FOLIO_SUPPORT = 6,
+-	AS_RELEASE_ALWAYS,	/* Call ->release_folio(), even if no private data */
+-	AS_STABLE_WRITES,	/* must wait for writeback before modifying
++	AS_RELEASE_ALWAYS = 6,	/* Call ->release_folio(), even if no private data */
++	AS_STABLE_WRITES = 7,	/* must wait for writeback before modifying
+ 				   folio contents */
+-	AS_UNMOVABLE,		/* The mapping cannot be moved, ever */
++	AS_FOLIO_ORDER_MIN = 8,
++	AS_FOLIO_ORDER_MAX = 13, /* Bit 8-17 are used for FOLIO_ORDER */
++	AS_UNMOVABLE = 18,		/* The mapping cannot be moved, ever */
+ };
+ 
++#define AS_FOLIO_ORDER_MIN_MASK 0x00001f00
++#define AS_FOLIO_ORDER_MAX_MASK 0x0003e000
++#define AS_FOLIO_ORDER_MASK (AS_FOLIO_ORDER_MIN_MASK | AS_FOLIO_ORDER_MAX_MASK)
++
+ /**
+  * mapping_set_error - record a writeback error in the address_space
+  * @mapping: the mapping in which an error should be set
+@@ -344,6 +349,53 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+ 	m->gfp_mask = mask;
+ }
+ 
++/*
++ * There are some parts of the kernel which assume that PMD entries
++ * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
++ * limit the maximum allocation order to PMD size.  I'm not aware of any
++ * assumptions about maximum order if THP are disabled, but 8 seems like
++ * a good order (that's 1MB if you're using 4kB pages)
++ */
++#ifdef CONFIG_TRANSPARENT_HUGEPAGE
++#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
++#else
++#define MAX_PAGECACHE_ORDER	8
++#endif
++
++/*
++ * mapping_set_folio_orders() - Set the range of folio sizes supported.
++ * @mapping: The file.
++ * @min: Minimum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
++ * @max: Maximum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
++ *
++ * The filesystem should call this function in its inode constructor to
++ * indicate which sizes of folio the VFS can use to cache the contents
++ * of the file.  This should only be used if the filesystem needs special
++ * handling of folio sizes (ie there is something the core cannot know).
++ * Do not tune it based on, eg, i_size.
++ *
++ * Context: This should not be called while the inode is active as it
++ * is non-atomic.
++ */
++static inline void mapping_set_folio_orders(struct address_space *mapping,
++					    unsigned int min, unsigned int max)
++{
++	if (min == 1)
++		min = 2;
++	if (max < min)
++		max = min;
++	if (max > MAX_PAGECACHE_ORDER)
++		max = MAX_PAGECACHE_ORDER;
++
++	/*
++	 * XXX: max is ignored as only minimum folio order is supported
++	 * currently.
++	 */
++	mapping->flags = (mapping->flags & ~AS_FOLIO_ORDER_MASK) |
++			 (min << AS_FOLIO_ORDER_MIN) |
++			 (MAX_PAGECACHE_ORDER << AS_FOLIO_ORDER_MAX);
++}
++
+ /**
+  * mapping_set_large_folios() - Indicate the file supports large folios.
+  * @mapping: The file.
+@@ -357,7 +409,22 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+  */
+ static inline void mapping_set_large_folios(struct address_space *mapping)
+ {
+-	__set_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
++	mapping_set_folio_orders(mapping, 0, MAX_PAGECACHE_ORDER);
++}
++
++static inline unsigned int mapping_max_folio_order(struct address_space *mapping)
++{
++	return (mapping->flags & AS_FOLIO_ORDER_MAX_MASK) >> AS_FOLIO_ORDER_MAX;
++}
++
++static inline unsigned int mapping_min_folio_order(struct address_space *mapping)
++{
++	return (mapping->flags & AS_FOLIO_ORDER_MIN_MASK) >> AS_FOLIO_ORDER_MIN;
++}
++
++static inline unsigned int mapping_min_folio_nrpages(struct address_space *mapping)
++{
++	return 1U << mapping_min_folio_order(mapping);
+ }
+ 
+ /*
+@@ -367,7 +434,7 @@ static inline void mapping_set_large_folios(struct address_space *mapping)
+ static inline bool mapping_large_folio_support(struct address_space *mapping)
+ {
+ 	return IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
+-		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
++	       (mapping_max_folio_order(mapping) > 0);
+ }
+ 
+ static inline int filemap_nr_thps(struct address_space *mapping)
+@@ -528,19 +595,6 @@ static inline void *detach_page_private(struct page *page)
+ 	return folio_detach_private(page_folio(page));
+ }
+ 
+-/*
+- * There are some parts of the kernel which assume that PMD entries
+- * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+- * limit the maximum allocation order to PMD size.  I'm not aware of any
+- * assumptions about maximum order if THP are disabled, but 8 seems like
+- * a good order (that's 1MB if you're using 4kB pages)
+- */
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+-#else
+-#define MAX_PAGECACHE_ORDER	8
+-#endif
+-
+ #ifdef CONFIG_NUMA
+ struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
+ #else
+-- 
+2.43.0
 
-> [    5.556752] XFS (sda): Mounting V5 Filesystem 
-> 6e0820e6-4d44-4c3e-89f2-21b4d4480f88
-> [    5.602315] XFS (sda): Ending clean mount
-> #
-> # touch mnt/file
-> # /xfs_io -c "lsattr -v" mnt/file
-> [realtime] mnt/file
-> #
-> #
-> # /xfs_io -c "chattr +W" mnt/file
-> # /xfs_io -c "lsattr -v" mnt/file
-> [realtime, atomic-writes] mnt/file
->
-
-Yup, this seems to work fine. Thanks!
-
-> And then we can check limits:
->
-> # /test-statx -a /root/mnt/file
-> dump_statx results=9fff
->    Size: 0               Blocks: 0          IO Block: 16384   regular file
-> Device: 08:00           Inode: 131         Links: 1
-> Access: (0644/-rw-r--r--)  Uid:     0   Gid:     0
-> Access: 2024-02-13 08:31:51.962900974+0000
-> Modify: 2024-02-13 08:31:51.962900974+0000
-> Change: 2024-02-13 08:31:51.969900974+0000
->   Birth: 2024-02-13 08:31:51.962900974+0000
-> stx_attributes_mask=0x603070
->          STATX_ATTR_WRITE_ATOMIC set
->          unit min: 4096
->          unit max: 16384
->          segments max: 1
-> Attributes: 0000000000400000 (........ ........ ........ ........ 
-> ........ .?-..... ..--.... .---....)
-> #
-> #
->
-> Does xfs_io have a statx function? If so, I can add support for atomic 
-> writes for statx there. In the meantime, that test-statx code is also on 
-> my branch, and can be run on the block device file (to sanity check that 
-> the rtvol device supports atomic writes).
->
-> Thanks,
-> John
