@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5854CB65E;
-	Tue, 13 Feb 2024 16:39:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87A636027F;
+	Tue, 13 Feb 2024 16:46:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707842372; cv=none; b=CqQs/DlfNM3XWeViR1DeJ0+ehYCvRuX0LFTqCA+E+/jkmubikTeVN3r8LFWdcy8QP+plM62P4kf/eJmCOq99FdgsqAt5e6N1b+Xn1xRWm0ovWVmiTwoaRorjT//CuXZ3iuGE+b70CT/2nGnkfpgjiaTtimoFNdacoUDDJTludaE=
+	t=1707842795; cv=none; b=s/83NkovCzOs0x+OBHqbz/EX70FA0JlwtcHzTqcnUOoVHWH8xYzRUH6I1qwSB9/4UdMIYGOR91/agyzWkkeUgEJr8/0nJNTY9uGGMEb6UFvay84+PJc6odQoTujrG5Tuse7JYMtZIVWbXCsrPcJG3/4fPKnKqvAUlsQeaZpmu04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707842372; c=relaxed/simple;
-	bh=Fnf4xgH/e0W3UjNn3m69LYnKo5H+30NDIZsoXhuJPb0=;
+	s=arc-20240116; t=1707842795; c=relaxed/simple;
+	bh=tbs1Z8Amiwm27iNPaiqfjyYdo8SY3K2w682a+PlnzMg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UjbR6Dw7tGadx0PpVXIFy5ICQlrvp1lI+HI3mDWpOyaYctnRAh9UyncTh16Qld8lylSdmcHCHNhAGe7oG855UFLCUCQZh9HJwzlEj/8gRPhrtyyMZNUb//rbWIQDSzr8byMMA1F3zVQH4EVZXJRKP84kDMRWlYnP8IlLco8fJ/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O9m5GsXK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=hSCX3Fj4lALK+GQ569bc+JtbjNwnSATlcjp0FQs6fLtkYv2KZAWKIzfK9H8evARf3qgvxcmVavtcVGJhwg+GvfhiL2sQMHUiYoSi3rbiAJBnIsts3wTdAe71LqQlHfFa2F5eBxuR8MVGlOHiRvlU7KYvR62WDvlaShk5sQoyo9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kqdU2nsu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O9m5GsXK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C27FC32784;
-	Tue, 13 Feb 2024 16:39:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kqdU2nsu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E891AC43399;
+	Tue, 13 Feb 2024 16:46:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707842371;
-	bh=Fnf4xgH/e0W3UjNn3m69LYnKo5H+30NDIZsoXhuJPb0=;
+	s=k20201202; t=1707842795;
+	bh=tbs1Z8Amiwm27iNPaiqfjyYdo8SY3K2w682a+PlnzMg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=O9m5GsXKbg9AI33fOqw69S5E2XdAleUnehXkybhM8JeSjXJaY+MMNYwiXbjJDsoQ/
-	 G4Khoc5Kl0Ag58jKPk2up1CsZhP0muf2C1EnFEKcC47+PbJi4arFT65hLIruWd/yAP
-	 dVei+hZ2iSBa0bKXjcm3HJD80IDiVA9Yg7w97HbwvBYKryADJUhyKYQKore2pbeJmi
-	 Iw1lEcoX9nyYZYKG8RIu9iDVi6wP+OTVObhRGQTLdfFIWR2iaiuUqi7Sg06u0b7Xi/
-	 4TtE9+M7WqhijaSF5o3u0Jw5P/hDetkVydUybJN0dSST6AdJQm0r9QFY2YX5iXW7TO
-	 wlMe/UKFqinIg==
-Date: Tue, 13 Feb 2024 08:39:30 -0800
+	b=kqdU2nsuvjv3jLoYMdzGZFfmMFcTuZrLsbrxNizJjJL86utpl1zF/XWGBUEnKN9PS
+	 90ZQlOXSfZC6yMXzKIJ5CEBf8R6SYiBiXWPP9paDfXDJujmy9FnrpTcsmCwCZXCH3/
+	 sT67w/2LuTb5oNxloyW1b+AVBZNganeWlUs4H5NOBWRfhsYUWi4rgCqF8o1Ym3fSZH
+	 OLpalrT4dHJl5naSP2I2C6dvz12kH3/BxgBT5r/AjSzX6buLRZx5FFJvgrkmxqucHR
+	 Dz5JOkG/vJ0LUJGPHaV3jp3wz7j1xUAEzHsbUtcAAkgp5V2o4aMrMhd+Sp72QrJoXm
+	 t7QiR9zj0ZYpQ==
+Date: Tue, 13 Feb 2024 08:46:34 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -34,10 +34,11 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	kbusch@kernel.org, chandan.babu@oracle.com, p.raghav@samsung.com,
 	linux-kernel@vger.kernel.org, hare@suse.de, willy@infradead.org,
 	linux-mm@kvack.org, david@fromorbit.com
-Subject: Re: [RFC v2 13/14] xfs: add an experimental CONFIG_XFS_LBS option
-Message-ID: <20240213163930.GU6184@frogsfrogsfrogs>
+Subject: Re: [RFC v2 04/14] readahead: set file_ra_state->ra_pages to be at
+ least mapping_min_order
+Message-ID: <20240213164634.GV6184@frogsfrogsfrogs>
 References: <20240213093713.1753368-1-kernel@pankajraghav.com>
- <20240213093713.1753368-14-kernel@pankajraghav.com>
+ <20240213093713.1753368-5-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,67 +47,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240213093713.1753368-14-kernel@pankajraghav.com>
+In-Reply-To: <20240213093713.1753368-5-kernel@pankajraghav.com>
 
-On Tue, Feb 13, 2024 at 10:37:12AM +0100, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
+On Tue, Feb 13, 2024 at 10:37:03AM +0100, Pankaj Raghav (Samsung) wrote:
+> From: Luis Chamberlain <mcgrof@kernel.org>
 > 
-> Add an experimental CONFIG_XFS_LBS option to enable LBS support in XFS.
-> Retain the ASSERT for PAGE_SHIFT if CONFIG_XFS_LBS is not enabled.
+> Set the file_ra_state->ra_pages in file_ra_state_init() to be at least
+> mapping_min_order of pages if the bdi->ra_pages is less than that.
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 
-With the changes I suggested in the next patch,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-(I think you ought to combine this patch and the next patch after
-improving the EXPERIMENTAL log messaging.)
+Looks good to me,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/Kconfig     | 11 +++++++++++
->  fs/xfs/xfs_mount.c |  4 +++-
->  2 files changed, 14 insertions(+), 1 deletion(-)
+>  mm/readahead.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index 567fb37274d3..6b0db2f7dc13 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -216,3 +216,14 @@ config XFS_ASSERT_FATAL
->  	  result in warnings.
->  
->  	  This behavior can be modified at runtime via sysfs.
-> +
-> +config XFS_LBS
-> +	bool "XFS large block size support (EXPERIMENTAL)"
-> +	depends on XFS_FS
-> +	help
-> +	  Set Y to enable support for filesystem block size > system's
-> +	  base page size.
-> +
-> +	  This feature is considered EXPERIMENTAL.  Use with caution!
-> +
-> +	  If unsure, say N.
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index bfbaaecaf668..596aa2cdefbc 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -131,11 +131,13 @@ xfs_sb_validate_fsb_count(
->  	xfs_sb_t	*sbp,
->  	uint64_t	nblocks)
+> diff --git a/mm/readahead.c b/mm/readahead.c
+> index 2648ec4f0494..4fa7d0e65706 100644
+> --- a/mm/readahead.c
+> +++ b/mm/readahead.c
+> @@ -138,7 +138,12 @@
+>  void
+>  file_ra_state_init(struct file_ra_state *ra, struct address_space *mapping)
 >  {
-> -	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
->  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
->  	unsigned long mapping_count;
->  	uint64_t bytes = nblocks << sbp->sb_blocklog;
->  
-> +	if (!IS_ENABLED(CONFIG_XFS_LBS))
-> +		ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+> +	unsigned int min_nrpages = mapping_min_folio_nrpages(mapping);
+> +	unsigned int max_pages = inode_to_bdi(mapping->host)->io_pages;
 > +
->  	mapping_count = bytes >> PAGE_SHIFT;
->  
->  	/* Limited by ULONG_MAX of page cache index */
+>  	ra->ra_pages = inode_to_bdi(mapping->host)->ra_pages;
+> +	if (ra->ra_pages < min_nrpages && min_nrpages < max_pages)
+> +		ra->ra_pages = min_nrpages;
+>  	ra->prev_pos = -1;
+>  }
+>  EXPORT_SYMBOL_GPL(file_ra_state_init);
 > -- 
 > 2.43.0
 > 
