@@ -1,142 +1,126 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0473053E18;
-	Tue, 13 Feb 2024 09:38:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AA5424215;
+	Tue, 13 Feb 2024 09:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707817092; cv=none; b=izdmjXkaM/kC5zsWSuNzk6M0EJoeA0vMclFtecLa3imYfYWpBLwu4t3s9qo4HUUU0sRFjfGAClIrHHEdNePRTGmje8kJQXp8/mFNFpKeQkeW6m0xVrKK5doarWampHtzkcs2UzbfXqBbkrcKolgzGlWDqcdZiQf4C2cUtudwDfA=
+	t=1707817712; cv=none; b=M0PyuvCoALedSxJbbPdvDqEfOltcNa/X620RtJVDYFk7AXqtoxiLQ4Naw5gkDTMUN8u82n6CB6DHnB3v275nIyzBp97J9xE3VTqqHc5ZqShbtvbnSXwfm01HTKH/gtfrM+WaN4KfjQlSq8LXCfCzsoIN9g9Rw9idYZOBQP4htuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707817092; c=relaxed/simple;
-	bh=ua/0/Cz1VYv5tIBaRlFGPxVYgrAUWB1V+tD6GkDOKdY=;
+	s=arc-20240116; t=1707817712; c=relaxed/simple;
+	bh=+jlu/AYL7Pn+riEIViebhkB7TWBJwXJgw9NTINuKLcs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ss3A6nmehEvto6mhjjaqqEhFl88FR8NDq2nKrK0Ty3rczB/T48jy8aCuLJiOFyTS3cpdXHrwVzSDrfo6++mDvVZcw2HxjLhl/cQuO8RZJPJvLm0KM1yszY3VCr2SpnbsFi27S2OVZlfgeO3OLMcxKeFFQLvG5BMSkuEujWKah7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=ENbwnnNB; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 MIME-Version; b=qh/6u+BlGZFRS1MQwOQsZByVsvnX/UmGn/dx7kXCpfqF82FM6EyW4N8Lj0gp6O/OWmiS6Rem6l0gUeRTXA/vrsBRdfXExPf6Nm4HXzEtX5fVyX/kPr7mmEkLfkHzbGGT5hNGsZzBwENxZ3VWHNxprqqvCEkVFQjrMRvCPKpqLLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=tbmsOADy; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="ENbwnnNB"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4TYx8H2fChz9sSH;
-	Tue, 13 Feb 2024 10:38:07 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1707817087;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ydvUqzYBcKzyH4ZGo5x0A9m5vNe3qnV9Z0vpVQaGpLg=;
-	b=ENbwnnNBjOlMkTNsWgmN/QeJZ4bByf9vXC2SH9MWslItb5E3wLNJdxS5OYwgUczoQQxGFa
-	jJLfvCUFWE4S4XIaf/gyJsxDpV54gpCGO6Q09Hr3W1Zl8hpSte2SCg/NxBVzt13u5b+rtn
-	u9QhTF7FnDJlW3xsb7G6zptXw5QVnwjAOVIogxhjlYniqe0K1ORrtaGBSqFIq7XIZecY9G
-	asCnrkLcVOePpZAFLxRLQb3P4hXMoiEeVmElnhxfjx+/5h/OFo9SJwBVx77eiPLb+MoeAw
-	aa/PQKwI9st5rNiozYJhatwuGinu3iv/klvwOtrhhlSPwM2BtJQuDhCzDDR5jA==
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: mcgrof@kernel.org,
-	gost.dev@samsung.com,
-	akpm@linux-foundation.org,
-	kbusch@kernel.org,
-	djwong@kernel.org,
-	chandan.babu@oracle.com,
-	p.raghav@samsung.com,
-	linux-kernel@vger.kernel.org,
-	hare@suse.de,
-	willy@infradead.org,
-	linux-mm@kvack.org,
-	david@fromorbit.com
-Subject: [RFC v2 14/14] xfs: enable block size larger than page size support
-Date: Tue, 13 Feb 2024 10:37:13 +0100
-Message-ID: <20240213093713.1753368-15-kernel@pankajraghav.com>
-In-Reply-To: <20240213093713.1753368-1-kernel@pankajraghav.com>
-References: <20240213093713.1753368-1-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="tbmsOADy"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41D9bvfX002328;
+	Tue, 13 Feb 2024 09:48:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=dT3athFFB1S90PGKQU187mvJ77v2TNl0tjUJCAHu78Q=;
+ b=tbmsOADyQroCb2P3YSOtaq9OGEEPInlOGFMIr4tf8vayEG0/u5BV3S896OqzcacZCt6N
+ nzuikdevQyfoWuU88iPHvKPL/ZMP0xGi96xJywauO0x0jh86pmFNhSku5cALaxQpmutN
+ kBBvVRJAWZP95F5Oasi2XrWSPnDOQrmz9VJMpAJHxo18S7lnaxXozq8DJ247ug3DEVhI
+ 7uKQ1k5XxY1Gqfj/Kw0wLb6KtnOEIdKXNlUqld70iARDf0RoHk0sNlSxkDPCnQgjvGCn
+ MAcHKqj7PB0EtG1rG5/CYKgSbW5rVq1gcyI4Qp4qKmrrsN7j+zMFfEyhXftAYSVdX+i6 Mw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w85y4gbr6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 13 Feb 2024 09:48:11 +0000
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41D9eKse010951;
+	Tue, 13 Feb 2024 09:48:11 GMT
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w85y4gbqm-3
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 13 Feb 2024 09:48:10 +0000
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41D8bokT016184;
+	Tue, 13 Feb 2024 09:36:30 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3w6mymecq5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 13 Feb 2024 09:36:30 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41D9aPsl13501118
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 13 Feb 2024 09:36:27 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9E59A2004B;
+	Tue, 13 Feb 2024 09:36:25 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8A6AA2004E;
+	Tue, 13 Feb 2024 09:36:20 +0000 (GMT)
+Received: from li-c9696b4c-3419-11b2-a85c-f9edc3bf8a84.in.ibm.com (unknown [9.109.198.187])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 13 Feb 2024 09:36:20 +0000 (GMT)
+From: Nilay Shroff <nilay@linux.ibm.com>
+To: john.g.garry@oracle.com
+Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
+        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
+        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
+        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
+Subject: Re:[PATCH v3 10/15] block: Add fops atomic write support
+Date: Tue, 13 Feb 2024 15:06:19 +0530
+Message-ID: <20240213093619.106770-1-nilay@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240124113841.31824-11-john.g.garry@oracle.com>
+References: <20240124113841.31824-11-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4TYx8H2fChz9sSH
+Content-Transfer-Encoding: quoted-printable
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 9Y3xpgl7YZgmt7bLwj052NiHim_kCSSt
+X-Proofpoint-ORIG-GUID: wcW_-f-Ig0-0IoXex2Lkk7VjzuJEeuiu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-13_04,2024-02-12_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ clxscore=1015 priorityscore=1501 spamscore=0 suspectscore=0 malwarescore=0
+ mlxlogscore=998 bulkscore=0 mlxscore=0 phishscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2402130076
 
-From: Pankaj Raghav <p.raghav@samsung.com>
-
-Page cache now has the ability to have a minimum order when allocating
-a folio which is a prerequisite to add support for block size > page
-size. Enable it in XFS under CONFIG_XFS_LBS.
-
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/xfs/xfs_icache.c | 8 ++++++--
- fs/xfs/xfs_super.c  | 8 +++-----
- 2 files changed, 9 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index dba514a2c84d..9de81caf7ad4 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -73,6 +73,7 @@ xfs_inode_alloc(
- 	xfs_ino_t		ino)
- {
- 	struct xfs_inode	*ip;
-+	int			min_order = 0;
- 
- 	/*
- 	 * XXX: If this didn't occur in transactions, we could drop GFP_NOFAIL
-@@ -88,7 +89,8 @@ xfs_inode_alloc(
- 	/* VFS doesn't initialise i_mode or i_state! */
- 	VFS_I(ip)->i_mode = 0;
- 	VFS_I(ip)->i_state = 0;
--	mapping_set_large_folios(VFS_I(ip)->i_mapping);
-+	min_order = max(min_order, ilog2(mp->m_sb.sb_blocksize) - PAGE_SHIFT);
-+	mapping_set_folio_orders(VFS_I(ip)->i_mapping, min_order, MAX_PAGECACHE_ORDER);
- 
- 	XFS_STATS_INC(mp, vn_active);
- 	ASSERT(atomic_read(&ip->i_pincount) == 0);
-@@ -313,6 +315,7 @@ xfs_reinit_inode(
- 	dev_t			dev = inode->i_rdev;
- 	kuid_t			uid = inode->i_uid;
- 	kgid_t			gid = inode->i_gid;
-+	int			min_order = 0;
- 
- 	error = inode_init_always(mp->m_super, inode);
- 
-@@ -323,7 +326,8 @@ xfs_reinit_inode(
- 	inode->i_rdev = dev;
- 	inode->i_uid = uid;
- 	inode->i_gid = gid;
--	mapping_set_large_folios(inode->i_mapping);
-+	min_order = max(min_order, ilog2(mp->m_sb.sb_blocksize) - PAGE_SHIFT);
-+	mapping_set_folio_orders(inode->i_mapping, min_order, MAX_PAGECACHE_ORDER);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5a2512d20bd0..6a3f0f6727eb 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1625,13 +1625,11 @@ xfs_fs_fill_super(
- 		goto out_free_sb;
- 	}
- 
--	/*
--	 * Until this is fixed only page-sized or smaller data blocks work.
--	 */
--	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
-+	if (!IS_ENABLED(CONFIG_XFS_LBS) && mp->m_sb.sb_blocksize > PAGE_SIZE) {
- 		xfs_warn(mp,
- 		"File system with blocksize %d bytes. "
--		"Only pagesize (%ld) or less will currently work.",
-+		"Only pagesize (%ld) or less will currently work. "
-+		"Enable Experimental CONFIG_XFS_LBS for this support",
- 				mp->m_sb.sb_blocksize, PAGE_SIZE);
- 		error = -ENOSYS;
- 		goto out_free_sb;
--- 
-2.43.0
-
+>+static bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t p=
+os,=0D
+>+				      struct iov_iter *iter)=0D
+>+{=0D
+>+	struct request_queue *q =3D bdev_get_queue(bdev);=0D
+>+	unsigned int min_bytes =3D queue_atomic_write_unit_min_bytes(q);=0D
+>+	unsigned int max_bytes =3D queue_atomic_write_unit_max_bytes(q);=0D
+>+=0D
+>+	if (!iter_is_ubuf(iter))=0D
+>+		return false;=0D
+>+	if (iov_iter_count(iter) & (min_bytes - 1))=0D
+>+		return false;=0D
+>+	if (!is_power_of_2(iov_iter_count(iter)))=0D
+>+		return false;=0D
+>+	if (pos & (iov_iter_count(iter) - 1))=0D
+>+		return false;=0D
+>+	if (iov_iter_count(iter) > max_bytes)=0D
+>+		return false;=0D
+>+	return true;=0D
+>+}=0D
+=0D
+Here do we need to also validate whether the IO doesn't straddle =0D
+the atmic bondary limit (if it's non-zero)? We do check that IO =0D
+doesn't straddle the atomic boundary limit but that happens very =0D
+late in the IO code path either during blk-merge or in NVMe driver =0D
+code.=0D
+=0D
+Thanks,=0D
+--Nilay=0D
+=0D
