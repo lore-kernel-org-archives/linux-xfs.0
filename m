@@ -1,61 +1,61 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 231F4627E7
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2024 22:05:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C92A627FC
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2024 22:09:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707861914; cv=none; b=dAmxSPwIKnFiLfLlrAR95nsdklA3O/EoFzqrt3fFoZw6IbR+Pm3LRjglFVnDku8NIV6VRVqAox5hXBCqNyEZL2fJn5PHDw1XVxdZ0aamLIG9l6z4mTldimX9LL7J+7+gyQVMmJTA7+w8egG/+dYsqB5fh0bHJ8ls2ZLyZYLEhQY=
+	t=1707862198; cv=none; b=Cwdkzd3TIdoVRcMidJDs7A8IgLAXCWlPzlBUSQ0kHhju5b4B28kk7hcNDxmxXpEC2M9fQgrMhYzxYjFTFyg/K7TO11I8pEo2QB/Pw8Ew3PUvE1VKL+wo6YZjxlo2E2pN66LuWXhwgldtXWH4DkIrrYOyA+hst0Mx9Q5iUX5CvQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707861914; c=relaxed/simple;
-	bh=suItsco9lbw8hJoRDqg16N7pxhcLhGSZp1ZWz5pz2sk=;
+	s=arc-20240116; t=1707862198; c=relaxed/simple;
+	bh=W8CKXLRXzCPIbeiYhYvLTtnfDtGO8TmN5pF7T5jBlOE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y0DHBct6KZWo4hTIiE3qgiZ06CDelR/7bBfgY/142yAwQSCgWOmK+Fl0UyqAogQfugSLdQVuGWWmqn+U28dwe7jmNSrQLzB/8Axl6HaKPg22UKF1VhWignNAzNDOQffYfOICfnIQxGyPn3VM5yHkMvARSFVXRXA5PgrUWM8UrPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=U6bGLUkR; arc=none smtp.client-ip=209.85.214.173
+	 Content-Type:Content-Disposition:In-Reply-To; b=hS7UvTO87II3WgTipksaGmB8S/kNtJBzbdFkake5MJKOfadkmsIXV4Y1VQmOLLJxFS4GxVXmf9yTmGHo60UEjpNZEW73U4SEuheaMxZcXhKFnzWpDGrjj1x6YNzjbROXHyJcvULcjUm3Re+0oNpZ7glESa94eFo5M4oVBEy+JsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ErAo2G/h; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="U6bGLUkR"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1d780a392fdso40590405ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2024 14:05:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ErAo2G/h"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1d51ba18e1bso47412685ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2024 14:09:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707861912; x=1708466712; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1707862196; x=1708466996; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zxTPnHMwho/QvBEAp6J5gSJOcoigdJFb8fFY0i0+CiE=;
-        b=U6bGLUkRnXzfKBPYYdyJYo2poB8fvKblHB8jllg66OB0P/YTeMp2EPK9pFZG+NLpea
-         KzPz3j6wW9Ja2Afz8UsTb5vM4YPa85IdCyI8QRslbbrkvo5+yU1vwXH0+jg/0oHWMCa3
-         FyQ3AMbtqIls9wHq34lWJ3ZuZATtUjlQRHpbdIhrqvw2NpW5TZGjM3C+BqCqV1YzTDxv
-         j0SQ+6rtvrsc+cbRP3qG/Sdi2T0ZrKQ1Gx2IXCLKcD+u5TjMaaf+t+6Kszg9w5r9dDuE
-         9T1Mokkt3jkYnMmbe6vUl2UIem89tA/AW3MQ/arxJ9Dd9a5JfCsN27GHSgEoIeUpvDBc
-         AbmA==
+        bh=KHrAkUvYa6loZ8pQ9MvgMBm7Y/FcJKqjouZpJd3Deg4=;
+        b=ErAo2G/hJ/ZxmlbuU9tjLAdCWW2ovpypumay2kxa3Q4ub7fwWqDo94g2yvKnIrlZG8
+         eCCec52cAgWrPjktmrsyQqTbFm+lCLeW8GJfPmQi6ekECy4qrXtGKc/XgQICTzaNqYfY
+         LwVBbXwijBQR7+Bq1HCkbdaj101v2hC7wMYESLg7FuYSGh7KWkPMeK/fLri4DZb38mGR
+         Co06+kfrnFyjim5orX5wksGvdzVyN5NvF45lMsb4D6wHE9AvbPBMcgsW25Nv42awDlak
+         jrbjUdD72BLFExhEtghrcyK9kFNBDoxc3iv11fFQpvtnJngncV8BMiGjn45IVsp5ptsr
+         9puQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707861912; x=1708466712;
+        d=1e100.net; s=20230601; t=1707862196; x=1708466996;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zxTPnHMwho/QvBEAp6J5gSJOcoigdJFb8fFY0i0+CiE=;
-        b=NCps8HUPr7XbGamTw4n0+vNdVVcFJUMML20SIw0SXqciue5B4UwDB31xKpEbhH6BC+
-         qg1chYi89Qtb+kRDxzqZ4WEFAvEhAutnO7ZdRvT7In8jobMPyzL3GE3++QbCH/6ou8wC
-         NzwFHFWD7di8Zsvkbvr8apHqLYfMEMb8r0kHV59bUm+C3iuij2zXnfcifESRglQpm1oo
-         iEkzPhAtaWnN/IPl5LjK6ZrFxQ04aLWiaelaLazaMOV69drUsGZw9mJxGAO9KNmGVxM2
-         8djBGqjUFnQUB9rdnzHH+ZrGbgaHExzBGP8NEjbhl5S60ty5Lw4V1d4czuG8X6uAxRnw
-         4X8Q==
-X-Gm-Message-State: AOJu0Yy8g17PW3xyPlWE0arX5caPb9aHQ4DBfLKdSKAsN6K+PNzDglgY
-	iKKm2ELO7e6AvuQa2y1L7UJ+s9suSc00Hryhtgla7v/tCWTQn19iQxjlNP280Vg=
-X-Google-Smtp-Source: AGHT+IF82en1msSr2UUhz5P7myVs3qqnSdr1YnVJOITnYKQsqXLIAKVz29FyzyRjKRLmgtgEUGksBg==
-X-Received: by 2002:a17:902:f54e:b0:1da:2122:be72 with SMTP id h14-20020a170902f54e00b001da2122be72mr877913plf.62.1707861912460;
-        Tue, 13 Feb 2024 14:05:12 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWNVslcy2CAz1NRb/5d+KN3jJLtTQJtXWrTgq/ta8v3FFRBl6CGiVGbsxOxKDs8m422Tfcq+8vCkdU+sYP7LGeX++phm+S55+t26MXMMsndkwwqRnwnU9xZg2Qgi6m/5l3O0VrPOkw9FbLFt1NWtZtryQlowAELa9JkEnPBQ0GrygFTReZIowO/4rLg8f+I7l1HA95NVGHE4YTrLE3iFDiZRboLYSS3YKTsLLA5LbBk5iueCIQUVyhOpfkINgrxD5PSHWE8B015H9REUdxQPXoU+/tVqkS/QdjvmhXJCcsP+ArU7MDdjrOz+M0pX6gIUqgmKcXNXBZldPXK2iPEWrJRrtcgd+kEbeCr9M6oVZWH5bQhn3BU7NRnNRHGSprdqdBbZ3K6qah/usHW1tB+c0gBSzP7rhQ6IlGVzUA=
+        bh=KHrAkUvYa6loZ8pQ9MvgMBm7Y/FcJKqjouZpJd3Deg4=;
+        b=C43qF5EEYvRutHqh/ds//kVilwS4DxD0bmtRs1AGBq6ibecAc2tnLuCTi+UZvQTRoM
+         34OXhl6TKDN9i+e7hONO621aXRzgaolVuZVGLpvATFw/bttVI85Cyy9jLTTp8qjzbc9b
+         S7RtoKGinIYd85EBD9EeynhzyXB1SV4xOlr98WUh+QNMGh78F8door8ytZ7wg7rLmDiH
+         I5hLh2Kc3xcpW45Q0gwvcaF3yWDvfuaaidn01tbQG7sxI66icUuQnxnykzcU99vKE/yp
+         iZTGM20xztJAM7zNFIrj2DF7+LLnTDnKAKtJP3T/D6b0b/sso+3t+tuAEZU6NxnXFMgY
+         Cmqw==
+X-Gm-Message-State: AOJu0YyNaYtbx9QdpaIdZcPhsVClrc26BnwJxq0xtJjgCQ9MZ5ptFCO0
+	cH9lLmIeYBorsovfWDt9RBpYH+/bhfD1CpN7BI6NOqFmNbUUqvFZZeGJnMKUlQI=
+X-Google-Smtp-Source: AGHT+IGgqUUsjn257/XY2P22HF+jK6l4KCqtveCToMslA6YTTEIfSnRD2gkjjAU8E2S7/q7gFf6VFw==
+X-Received: by 2002:a17:902:e5d0:b0:1d9:14fb:d142 with SMTP id u16-20020a170902e5d000b001d914fbd142mr1287192plf.32.1707862196652;
+        Tue, 13 Feb 2024 14:09:56 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCU0ESVTZZSVdnxEus9YiyUaZmdXAgx/Xl1gU3CR6MVu9J4mZ+RaM5oZScWBYV6lzac7Dd70RSYsCsBl6RjMuqdB1SViohyMqK9AjP/0Nubsg9spL66O5OJ9Ilh7PBEprTOECIhR4U6k6dNjIhuTIXL/2IwZhep/x5ggajcUnMC/bk5OAyhKaCOSKT/Fhh0h9gzWNpDTA1yDdR0F3fWjhBlbaaNq9IE4qPiAV6YN6DHzTGkL0o98qmyE1stg1SerRm983++Xdcd9i9cIKm6UmxT76yjpRoBGWL4/rDpAF6zXb4cbDPR+ZUd4YdnTtJs5vpMd34GoiUONqcfhPSbbZ7BjT1L6j/ImosHNqAYul6ynTtmVdRe1uBCKFj0KHY0Z7CP/NUPO++Ga4G3eJACOq5GzM8gHlKkeW/vvvzQ=
 Received: from dread.disaster.area (pa49-181-38-249.pa.nsw.optusnet.com.au. [49.181.38.249])
-        by smtp.gmail.com with ESMTPSA id l4-20020a170903004400b001db45bae92dsm1056308pla.74.2024.02.13.14.05.11
+        by smtp.gmail.com with ESMTPSA id jc19-20020a17090325d300b001db2ff16acasm1894517plb.128.2024.02.13.14.09.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Feb 2024 14:05:11 -0800 (PST)
+        Tue, 13 Feb 2024 14:09:56 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1ra0tp-0067eX-1P;
-	Wed, 14 Feb 2024 09:05:09 +1100
-Date: Wed, 14 Feb 2024 09:05:09 +1100
+	id 1ra0yP-0067hn-1k;
+	Wed, 14 Feb 2024 09:09:53 +1100
+Date: Wed, 14 Feb 2024 09:09:53 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -63,11 +63,11 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	kbusch@kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
 	p.raghav@samsung.com, linux-kernel@vger.kernel.org, hare@suse.de,
 	willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [RFC v2 03/14] filemap: use mapping_min_order while allocating
- folios
-Message-ID: <ZcvnlfyaBRhWaIzD@dread.disaster.area>
+Subject: Re: [RFC v2 04/14] readahead: set file_ra_state->ra_pages to be at
+ least mapping_min_order
+Message-ID: <ZcvosYG9F0ImM9OS@dread.disaster.area>
 References: <20240213093713.1753368-1-kernel@pankajraghav.com>
- <20240213093713.1753368-4-kernel@pankajraghav.com>
+ <20240213093713.1753368-5-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,71 +76,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240213093713.1753368-4-kernel@pankajraghav.com>
+In-Reply-To: <20240213093713.1753368-5-kernel@pankajraghav.com>
 
-On Tue, Feb 13, 2024 at 10:37:02AM +0100, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
+On Tue, Feb 13, 2024 at 10:37:03AM +0100, Pankaj Raghav (Samsung) wrote:
+> From: Luis Chamberlain <mcgrof@kernel.org>
 > 
-> filemap_create_folio() and do_read_cache_folio() were always allocating
-> folio of order 0. __filemap_get_folio was trying to allocate higher
-> order folios when fgp_flags had higher order hint set but it will default
-> to order 0 folio if higher order memory allocation fails.
+> Set the file_ra_state->ra_pages in file_ra_state_init() to be at least
+> mapping_min_order of pages if the bdi->ra_pages is less than that.
 > 
-> As we bring the notion of mapping_min_order, make sure these functions
-> allocate at least folio of mapping_min_order as we need to guarantee it
-> in the page cache.
-> 
-> Add some additional VM_BUG_ON() in page_cache_delete[batch] and
-> __filemap_add_folio to catch errors where we delete or add folios that
-> has order less than min_order.
-> 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 > ---
->  mm/filemap.c | 25 +++++++++++++++++++++----
->  1 file changed, 21 insertions(+), 4 deletions(-)
+>  mm/readahead.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 323a8e169581..7a6e15c47150 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -127,6 +127,7 @@
->  static void page_cache_delete(struct address_space *mapping,
->  				   struct folio *folio, void *shadow)
+> diff --git a/mm/readahead.c b/mm/readahead.c
+> index 2648ec4f0494..4fa7d0e65706 100644
+> --- a/mm/readahead.c
+> +++ b/mm/readahead.c
+> @@ -138,7 +138,12 @@
+>  void
+>  file_ra_state_init(struct file_ra_state *ra, struct address_space *mapping)
 >  {
-> +	unsigned int min_order = mapping_min_folio_order(mapping);
->  	XA_STATE(xas, &mapping->i_pages, folio->index);
->  	long nr = 1;
->  
-> @@ -135,6 +136,7 @@ static void page_cache_delete(struct address_space *mapping,
->  	xas_set_order(&xas, folio->index, folio_order(folio));
->  	nr = folio_nr_pages(folio);
->  
-> +	VM_BUG_ON_FOLIO(folio_order(folio) < min_order, folio);
->  	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
-
-If you are only using min_order in the VM_BUG_ON_FOLIO() macro, then
-please just do:
-
-	VM_BUG_ON_FOLIO(folio_order(folio) < mapping_min_folio_order(mapping),
-			folio);
-
-There is no need to clutter up the function with variables that are
-only used in one debug-only check.
-
-> @@ -1847,6 +1853,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
->  		fgf_t fgp_flags, gfp_t gfp)
->  {
->  	struct folio *folio;
-> +	unsigned int min_order = mapping_min_folio_order(mapping);
 > +	unsigned int min_nrpages = mapping_min_folio_nrpages(mapping);
+> +	unsigned int max_pages = inode_to_bdi(mapping->host)->io_pages;
 > +
-> +	index = round_down(index, min_nrpages);
+>  	ra->ra_pages = inode_to_bdi(mapping->host)->ra_pages;
+> +	if (ra->ra_pages < min_nrpages && min_nrpages < max_pages)
+> +		ra->ra_pages = min_nrpages;
 
-	index = mapping_align_start_index(mapping, index);
+Why do we want to clamp readahead in this case to io_pages?
 
-The rest of the function only cares about min_order, not
-min_nrpages....
+We're still going to be allocating a min_order folio in the page
+cache, but it is far more efficient to initialise the entire folio
+all in a single readahead pass than it is to only partially fill it
+with data here and then have to issue and wait for more IO to bring
+the folio fully up to date before we can read out data out of it,
+right?
 
 -Dave.
 -- 
