@@ -1,174 +1,166 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE3B604A7;
-	Wed, 14 Feb 2024 16:46:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D43C5604AC
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2024 16:50:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707929197; cv=none; b=VHpopRm+Zk8Ce/Mr+nKyT9Fmg+1xQWVKW5jnPmKYkCEHlZeepR8iqQE/NPzZp+5ktKOyEc2VcQ2Q635iM9QzVJTXUkU557KAGJi3zAyO4DM2ZEMnJWfKfFlKmgGDDPo5sh+Z5kx98e9gEi7HypX/c+3gW00djcb4AEH+ZptbFfI=
+	t=1707929458; cv=none; b=j3wrhVQi7FF04s/oLIZtY/nuyCXrssbF/1XBXZ5BLTDUNC5BurVjw8hHLI+rVJqGcQ6NJRdP7vOkgpjfhhmKlOSNRCBN3hFkI/20GIyhJL356Rdl3OusSr6v7Ykg/n5UFS0RohKWPBn06SGyLZzUFPVXLBmRZLWVv2nU5TECLm0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707929197; c=relaxed/simple;
-	bh=yn5SllOUHmTKd7QRKLP+uTGbxLc0Lgu7inDoJtTRlXQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZZIHpBU1p3mbOuljrYCaaVGmEScGEseRUysW62ku4T1AFnAA/0w+RGrGB0NiKwWiYQ/tWO7dX9y4DW8siHvbf7pmXObf/FbEUPq4cJlngEYJ0+GOxG5NEeLRcbLmTlfzRXnUWWQ/zbr7NiF6Guu5l7y+jFoV8I89uKqhE1rAMkw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=PgkUDikR; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1707929458; c=relaxed/simple;
+	bh=P19pZ6alDv9I652YcyaCdM/mvFIEEvOgXljGSYogQ3w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=LqDDMKQo1uShym5Mh/nfmkg1GTdWsZuaLm8zSZ4Y6Z1CjoUjtkeHP2Sre/4XmP+nFf+7B2e234yK/JmpbW0oxc2M/M47//p+PrQFYa3rYGpCip+Rw5Fr7cb1i2bpbCTqlM6K4aepNSyRovFmhrXbBbQIyMuZnAuZEiM/vxfU6OE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cpzTy2B4; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PgkUDikR"
-Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41EGHqX8020289;
-	Wed, 14 Feb 2024 16:46:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=CnFd8ajdxH/cc7VfH42WSgZbWCF+UOq3S7aRofknueM=;
- b=PgkUDikRjBI7x1XiMVyE0fJUYWDpQqAWw6+G4Pyiqbl2T2I1RZ86XjhckO6udra17/M/
- xO6IN7AaFdVFfYDaD3qsrszVlpVR/aziLc5CaLvEERwTPALyRVkd9nVcorjDUXbt8hic
- 7mpJuJLmIXxNZfDufey4LX1BFiPGUpQ85e4c+oQUr257ca3vtBjXxjNZ7bzDOPneA7Vc
- GJS8TwZ/4AxlNh+LWmx2BgZSXyiv9+HVpQ0Q+MY8moz6+xX7KENbXsR252mx9jP33rh8
- BqACwl6rJ1QuUcogFxmLXF7onc+wibvex1Zq1CvzKCWTn7P+iNymsZbuB2qFLibyMzsa eg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w90wp0t8d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 16:46:05 +0000
-Received: from m0353723.ppops.net (m0353723.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41EGJgtK025776;
-	Wed, 14 Feb 2024 16:46:04 GMT
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w90wp0t7p-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 16:46:04 +0000
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41EFVq07032572;
-	Wed, 14 Feb 2024 16:46:03 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3w6kftq9yq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 16:46:03 +0000
-Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
-	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41EGk0Oh5047142
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 14 Feb 2024 16:46:02 GMT
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 568CF58068;
-	Wed, 14 Feb 2024 16:46:00 +0000 (GMT)
-Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8692558059;
-	Wed, 14 Feb 2024 16:45:52 +0000 (GMT)
-Received: from [9.171.46.73] (unknown [9.171.46.73])
-	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 14 Feb 2024 16:45:52 +0000 (GMT)
-Message-ID: <1b4d5860-8044-4a1f-a801-1c69327076c1@linux.ibm.com>
-Date: Wed, 14 Feb 2024 22:15:50 +0530
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cpzTy2B4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1707929455;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=N9gyAXFl2/xBNA9wne5c8TTViljFSIBIulJ5TdKjSuc=;
+	b=cpzTy2B484hFIwoC3nCe/TA2GRZKGHVoh1VgklKRFA+G17SqSOE1gCpCM5abd4IJqsqqMV
+	2daRRZTuo9QIljWGsd2qK4sLzZEB27qqS6zvDvPEfhW0+Ux7UhrP79QuBR9wct6XD0f0aS
+	I6Ok/EBWdP0fKXiLpoEOc9G8KgZGfmo=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-193-rmgKyyWcOvmePpvDS50oyg-1; Wed,
+ 14 Feb 2024 11:50:53 -0500
+X-MC-Unique: rmgKyyWcOvmePpvDS50oyg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 43B6728EC10B;
+	Wed, 14 Feb 2024 16:50:53 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.16.56])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 215661C060B1;
+	Wed, 14 Feb 2024 16:50:53 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org
+Subject: [PATCH] xfs: skip background cowblock trims on inodes open for write
+Date: Wed, 14 Feb 2024 11:52:31 -0500
+Message-ID: <20240214165231.84925-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 14/15] nvme: Support atomic writes
-Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>
-Cc: alan.adamson@oracle.com, axboe@kernel.dk, brauner@kernel.org,
-        bvanassche@acm.org, dchinner@redhat.com, djwong@kernel.org, hch@lst.de,
-        jack@suse.cz, jbongio@google.com, jejb@linux.ibm.com,
-        kbusch@kernel.org, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org, martin.petersen@oracle.com,
-        ming.lei@redhat.com, ojaswin@linux.ibm.com, sagi@grimberg.me,
-        tytso@mit.edu, viro@zeniv.linux.org.uk
-References: <20240124113841.31824-15-john.g.garry@oracle.com>
- <20240214122719.184946-1-nilay@linux.ibm.com>
- <8332ea29-ac17-4b1a-8ed9-e566d03fd220@oracle.com>
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <8332ea29-ac17-4b1a-8ed9-e566d03fd220@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: xU5wfFpy2PP06fiDP3H7bm7SCO6PKL-V
-X-Proofpoint-ORIG-GUID: BUhw35l4XwdwCK0voJZlxVR65GvJzXIC
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-14_09,2024-02-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 spamscore=0
- lowpriorityscore=0 malwarescore=0 mlxscore=0 clxscore=1015 suspectscore=0
- mlxlogscore=999 impostorscore=0 priorityscore=1501 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402140130
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.7
 
+The background blockgc scanner runs on a 5m interval by default and
+trims preallocation (post-eof and cow fork) from inodes that are
+otherwise idle. Idle effectively means that iolock can be acquired
+without blocking and that the inode has no dirty pagecache or I/O in
+flight.
 
+This simple mechanism and heuristic has worked fairly well for
+post-eof speculative preallocations. Support for reflink and COW
+fork preallocations came sometime later and plugged into the same
+mechanism, with similar heuristics. Some recent testing has shown
+that COW fork preallocation may be notably more sensitive to blockgc
+processing than post-eof preallocation, however.
 
-On 2/14/24 18:32, John Garry wrote:
-> On 14/02/2024 12:27, Nilay Shroff wrote:
->>
->>
->>
->>> Use following method to calculate limits:
->>
->>> atomic_write_max_bytes = flp2(NAWUPF ?: AWUPF)
->>
-> 
-> You still need to fix that mail client to not add extra blank lines.
-Yes, I am working on it. I hope it's solved now. 
-> 
->>> atomic_write_unit_min = logical_block_size
->>
->>> atomic_write_unit_max = flp2(NAWUPF ?: AWUPF)
->>
->>> atomic_write_boundary = NABSPF
->>
->>
->>
->> In case the device doesn't support namespace atomic boundary size (i.e. NABSPF
->>
->> is zero) then while merging atomic block-IO we should allow merge.
->>
->>  
->> For example, while front/back merging the atomic block IO, we check whether
->>
->> boundary is defined or not. In case if boundary is not-defined (i.e. it's zero)
->>
->> then we simply reject merging ateempt (as implemented in
->>
->> rq_straddles_atomic_write_boundary()).
-> 
-> Are you sure about that? In rq_straddles_atomic_write_boundary(), if boundary == 0, then we return false, i.e. there is no boundary, so we can never be crossing it.
-> 
-> static bool rq_straddles_atomic_write_boundary(struct request *rq,
-> unsigned int front,
-> unsigned int back)
-> {
->     unsigned int boundary = queue_atomic_write_boundary_bytes(rq->q);
->     unsigned int mask, imask;
->     loff_t start, end;
-> 
->     if (!boundary)
->         return false;
-> 
->     ...
-> }
-> 
-> And then will not reject a merge for that reason, like:
-> 
-> int ll_back_merge_fn(struct request *req, struct bio *bio, unsigned int nr_segs)
-> {
->     ...
-> 
->     if (req->cmd_flags & REQ_ATOMIC) {
->         if (rq_straddles_atomic_write_boundary(req,
->             0, bio->bi_iter.bi_size)) {
->             return 0;
->         }
->     }
-> 
->     return ll_new_hw_segment(req, bio, nr_segs);
-> }
-> 
-> 
-Aargh, you are right. I see that if rq_straddles_atomic_write_boundary() returns true then we avoid merge otherwise the merge is attempted. My bad...
+For example, consider an 8GB reflinked file with a COW extent size
+hint of 1MB. A worst case fully randomized overwrite of this file
+results in ~8k extents of an average size of ~1MB. If the same
+workload is interrupted a couple times for blockgc processing
+(assuming the file goes idle), the resulting extent count explodes
+to over 100k extents with an average size <100kB. This is
+significantly worse than ideal and essentially defeats the COW
+extent size hint mechanism.
 
-Thanks,
---Nilay
+While this particular test is instrumented, it reflects a fairly
+reasonable pattern in practice where random I/Os might spread out
+over a large period of time with varying periods of (in)activity.
+For example, consider a cloned disk image file for a VM or container
+with long uptime and variable and bursty usage. A background blockgc
+scan that races and processes the image file when it happens to be
+clean and idle can have a significant effect on the future
+fragmentation level of the file, even when still in use.
+
+To help combat this, update the heuristic to skip cowblocks inodes
+that are currently opened for write access during non-sync blockgc
+scans. This allows COW fork preallocations to persist for as long as
+possible unless otherwise needed for functional purposes (i.e. a
+sync scan), the file is idle and closed, or the inode is being
+evicted from cache.
+
+Suggested-by: Darrick Wong <djwong@kernel.org>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+This fell out of some of the discussion on a prospective freeze time
+blockgc scan. I ran this through the same random write test described in
+that thread and it prevented all cowblocks trimming until the file is
+released.
+
+Brian
+
+[1] https://lore.kernel.org/linux-xfs/ZcutUN5B2ZCuJfXr@bfoster/
+
+ fs/xfs/xfs_icache.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index dba514a2c84d..d7c54e45043a 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1240,8 +1240,13 @@ xfs_inode_clear_eofblocks_tag(
+  */
+ static bool
+ xfs_prep_free_cowblocks(
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	struct xfs_icwalk	*icw)
+ {
++	bool			sync;
++
++	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
++
+ 	/*
+ 	 * Just clear the tag if we have an empty cow fork or none at all. It's
+ 	 * possible the inode was fully unshared since it was originally tagged.
+@@ -1262,6 +1267,15 @@ xfs_prep_free_cowblocks(
+ 	    atomic_read(&VFS_I(ip)->i_dio_count))
+ 		return false;
+ 
++	/*
++	 * A full cowblocks trim of an inode can have a significant effect on
++	 * fragmentation even when a reasonable COW extent size hint is set.
++	 * Skip cowblocks inodes currently open for write on opportunistic
++	 * blockgc scans.
++	 */
++	if (!sync && inode_is_open_for_write(VFS_I(ip)))
++		return false;
++
+ 	return true;
+ }
+ 
+@@ -1291,7 +1305,7 @@ xfs_inode_free_cowblocks(
+ 	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
+ 		return 0;
+ 
+-	if (!xfs_prep_free_cowblocks(ip))
++	if (!xfs_prep_free_cowblocks(ip, icw))
+ 		return 0;
+ 
+ 	if (!xfs_icwalk_match(ip, icw))
+@@ -1320,7 +1334,7 @@ xfs_inode_free_cowblocks(
+ 	 * Check again, nobody else should be able to dirty blocks or change
+ 	 * the reflink iflag now that we have the first two locks held.
+ 	 */
+-	if (xfs_prep_free_cowblocks(ip))
++	if (xfs_prep_free_cowblocks(ip, icw))
+ 		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+ 	return ret;
+ }
+-- 
+2.42.0
+
