@@ -1,50 +1,53 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E0367E70;
-	Thu, 15 Feb 2024 10:22:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79768526F;
+	Thu, 15 Feb 2024 10:34:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707992529; cv=none; b=T+O91xhubMzydYujEZYnmUqG01Mga02XDCuEPKozStf5UGd1kfM9icRD6CGvZ8KC9deD7iY0qZtVNj0jbaRtgontio99gmewbiCOPYLsxOilznYCKClxtqMqJHNoGashq9Msx98nhCj5kmZdpnAcmHkB/bvgothZ3plzU/ws4kI=
+	t=1707993281; cv=none; b=hdDM7J9LZwvFstVe4SUeRkiTEjIwlf24GaES3mPB7Uw9ZHUT45B4K/OkTCYqZvnYmPv80TBKjjzVK3ayXSyQfjGw038uVg7pJW79XaU3pwEi5yryoeK8PKfKB++aRbjILibRGsc95xBQaE3+lBUuK9R/bxRdA48f2w731fKyYdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707992529; c=relaxed/simple;
-	bh=/Dix1Tteb5N08BuuAiCywdHuTxMwEbP3yQyeqKVeHVU=;
+	s=arc-20240116; t=1707993281; c=relaxed/simple;
+	bh=AqHTAn3N+1KnEOunH/6w/iyxJH/Kil5mim1zRaqivV4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Zm8NsTCxI0wCIQnedHA1CTh/QmyEHZ/iplaS/0eDzsXq+SmcGUqC/G6ftlipPYD75UKzGvSSYvn2oHpWc48EV2egZYvhLR5MtzVKJiVmZcvm+IIfsxZzgfDB9GvnMm9RdDXfan3SXpwkzPPZpCFS65HBvPNPN3fUGPenZCdYmqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=vZX1wpbm; arc=none smtp.client-ip=80.241.56.151
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uk5P06GadfuIF6AftidYtVL2oZL++GNVarJA9Wvo44JSXNG0SY8qOB5MYZ9cqPfuHFGHzNIWmGagzG9Y5AqJgybfCQwjgleO71EWanrHd+RykBm3ZypzSdCugj4WYevK+sV/fgFOOugVYAPO35FKRIM4JL+KK6N7wPYa5UYhwm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=qfjHyfZj; arc=none smtp.client-ip=80.241.56.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="vZX1wpbm"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="qfjHyfZj"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4TbB235Ksfz9sFp;
-	Thu, 15 Feb 2024 11:22:03 +0100 (CET)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4TbBJQ202Dz9sjQ;
+	Thu, 15 Feb 2024 11:34:30 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1707992523;
+	s=MBO0001; t=1707993270;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=5NnZTNxId4HvhxligzacqMgIgq+kndcvJz1yu+v6yYk=;
-	b=vZX1wpbmCLAJnNrZn8YjBNNwyEH1MijDqpNW0HmOFv/2dMP2To5fvdAEKKiI25BCKdlU2K
-	ClXREnsKvLn0KWiW3xaaziOE2H4W9e+Lu3O2yGbOCYVZH/Lb/wdQ95AfVX2jW7EfbaRdtt
-	aaYiZ1dl6DqQ3d19wC7B+LrHuEfkdPzIO+IrKwN1jAARaSmb09V3GT6nCyeBN9plKCeP9J
-	USX9UvJJ+1BwbvnqmIa3hsZQpJTvGkLBLysBufbyDmWPRDmhrG6sKEhb5FeJzlfH1d29Qh
-	bZxjewjRaW+zwxwSq/KWdQfo1GVCAQEXrs+qis1WwGuUSBhLECBBJqSzK4g7Sw==
-Date: Thu, 15 Feb 2024 11:21:58 +0100
+	bh=LtJMv3OpCPMbfXLsBLVXagbPP7DLavp46+ckP2yjejI=;
+	b=qfjHyfZj/UNcjxY50u5f+PTADR/t9f8/pkZtsIsajtcNAnN04HYby3eKmCSOxui0D+eZXm
+	+6XCy3MCNKhPz8scfdNrdTpTyQ3nJo6ULbczuLaaY0VVJCbDzXIdoayNZGXFQ7RH9WHe/z
+	f78mKbiBnlsADlt/2ifu865/to0LO/uSW/xKTb47JP96uT2ZUowlbuuN0QF18OFTn+qKnb
+	5uT1qE17szzBwp6rHr/cPL+bajrGkqIyX0E9WZZMgVumEmEnetiQFSim6WAZuDko07pcSM
+	avoJjlWteDUmtXh8KWWLxp6LtF1MtbId4kCatWRmFFrMMkMrUZbMUzRhatfcQA==
+Date: Thu, 15 Feb 2024 11:34:24 +0100
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	mcgrof@kernel.org, gost.dev@samsung.com, akpm@linux-foundation.org, 
-	kbusch@kernel.org, djwong@kernel.org, chandan.babu@oracle.com, p.raghav@samsung.com, 
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com, 
+	akpm@linux-foundation.org, kbusch@kernel.org, chandan.babu@oracle.com, p.raghav@samsung.com, 
 	linux-kernel@vger.kernel.org, hare@suse.de, linux-mm@kvack.org, david@fromorbit.com
 Subject: Re: [RFC v2 01/14] fs: Allow fine-grained control of folio sizes
-Message-ID: <7tarfabbkcpxseonoakpirh7kxu6z4jnxwe7lpeyam6ujqfoxu@vkwgt4ykhfwp>
+Message-ID: <l4ios6fmq4dpdncqjp3ukgnbahwuyu5pa5ntocj72qpxmnxlnv@awcgkr4fesoo>
 References: <20240213093713.1753368-1-kernel@pankajraghav.com>
  <20240213093713.1753368-2-kernel@pankajraghav.com>
- <Zc0LTcCcgBJnuQRN@casper.infradead.org>
+ <20240213163431.GS6184@frogsfrogsfrogs>
+ <xy45wh2y55oinrvkhea36yxtnqmsoikp7eawaa2b5ejivfv4ku@ob72fvbkj4uh>
+ <20240213212914.GW616564@frogsfrogsfrogs>
+ <Zc0NtZrnHIXrZy53@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,33 +56,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zc0LTcCcgBJnuQRN@casper.infradead.org>
-X-Rspamd-Queue-Id: 4TbB235Ksfz9sFp
+In-Reply-To: <Zc0NtZrnHIXrZy53@casper.infradead.org>
 
-On Wed, Feb 14, 2024 at 06:49:49PM +0000, Matthew Wilcox wrote:
-> On Tue, Feb 13, 2024 at 10:37:00AM +0100, Pankaj Raghav (Samsung) wrote:
-> > +static inline void mapping_set_folio_orders(struct address_space *mapping,
-> > +					    unsigned int min, unsigned int max)
-> > +{
-> > +	if (min == 1)
-> > +		min = 2;
+> > > Maybe I should have been explicit. We are planning to add support
+> > > for min order in the first round, and we want to add support for max order
+> > > once the min order support is upstreamed. It was done mainly to reduce
+> > > the scope and testing of this series.
+> > > 
+> > > I definitely agree there are usecases for setting the max order. It is
+> > > also the feedback we got from LPC.
+> > > 
+> > > So one idea would be not to expose max option until we add the support
+> > > for max order? So filesystems can only set the min_order with the
+> > > initial support?
+> > 
+> > Yeah, there's really no point in having an argument that's deliberately
+> > ignored.
 > 
-> If you order the "support order-1 folios" patch first, you can drop
-> these two lines.
-> 
-Thanks for pointing this out. I actually forgot to update this later in
-my series.
+> I favour introducing the right APIs even if they're not fully implemented.
+> We have no filesystems today that need this, so it doesn't need to
+> be implemented, but if we have to go back and add it, it's more churn
+> for every filesystem.  I'm open to better ideas about the API; I think
+> for a lot of filesystems they only want to set the minimum, so maybe
+> introducing that API now would be a good thing.
 
-The only failure I was noticing for LBS in 8k block sizes (generic/630)
-gets fixed by this change as well :) .
+I will introduce a new API that only exposes the min order for now. I
+agree with you that I don't see a lot of filesystems other than XFS
+using this in the near future.
 
-> > +static inline unsigned int mapping_min_folio_nrpages(struct address_space *mapping)
-> 
-> I'm not sure if you need this, but it should return unsigned long, not
-> unsigned int.  With 64KiB pages on Arm, a PMD page is 512MiB (order 13)
-> and a PUD page will be order 26, which is far too close to 2^32 for
-> my comfort.
+We deduce min order based on the filesystem blocksize but we don't have any
+mechanisms in place from userspace to set the max order for a filesystem.
+So that also needs to be thought through and discussed with the
+community.
 
-There were some suggestions from Chinner which might make this function
-go away. But in case I need it, I will update it to unsigned long to be
-on the safe side.
+I hope to start working on max_order immediately after upstreaming the
+min_order feature.
+
+--
+Pankaj
