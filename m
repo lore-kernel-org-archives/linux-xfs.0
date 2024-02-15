@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9900B12C53A
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598C612C528
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707998974; cv=none; b=q0Tg5DVPizd6qoZWfrbtawI7nC/Dm2y8LsVTgYDc2pWK/rEV8noWL7fGfQRrrppKNRNFyU9KSz71oGZuQ2RQLV1EuYKL5h2qP34pmCBpcWwbD1BzOqk5ziYvfvNPlzcYWF8MnNxGVgUFMf1nRPplfj4QRUO9MkOQuk2GLqFeFq8=
+	t=1707998975; cv=none; b=PGbfWzgr8kj5v6BPmHpVZNJ2WBCezoeLxZDXkHk6aZs80FMk6QUOW24E3vrgkaJ0WQBMbqZwPiNnNiNic6w97Qxu4xwXn21zWoujlNY7vvNk38pAhxw7EwV5etD0uICQFwuYcnhcrtyCnV6fB4LVV4Ut/q8DcxNz0rkbeXTu88A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707998974; c=relaxed/simple;
-	bh=RmXDb4XRDYLkoB9Rn4+TMfoQ5dHfGq6qvQIClnHO/Os=;
+	s=arc-20240116; t=1707998975; c=relaxed/simple;
+	bh=sforYTTci2irX6gJYBl8Bz1X0/VBmVBV2BtOtGD7Ux0=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JLr/zUzGJnmAz/1FCPCWdwmaifIEnR3YKbLjlY9xCj1I4++b67VA/lOE05Tlq9rfcdmQVrPF3rjE8eit2smXqosl08syyaQOym8Cw4iOcD+I4w+oS77xx7YQevb54yo85Ceu175vQ1lqLBWRkptRrUmfdXe0AD8mPn5INUrw6QM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GUZal3+Z; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=mNEVjoA9yRDhp1LcRnmiL43CRzNAd9EdqYswTMNMJuRxA1rVUhpG5F96FxR2CGSPL4JlL3qGPq9F5LrySZrW8XZOrgMOom94PL24Xis0yrd+u6tPbG1qB/dn3FKx6U0XcIWcIN5e1Zzrr5Gy+lmILeVDizoiWCXDMNhttu6ny4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CD19kbNo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GUZal3+Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7787AC43390
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CD19kbNo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95779C433C7
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707998974;
-	bh=RmXDb4XRDYLkoB9Rn4+TMfoQ5dHfGq6qvQIClnHO/Os=;
+	s=k20201202; t=1707998975;
+	bh=sforYTTci2irX6gJYBl8Bz1X0/VBmVBV2BtOtGD7Ux0=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=GUZal3+ZM84XKiUwau6Kqc0Q0Du/umZrZ2fLM9TO0QI/ZbOLAwKc4s9OSDUCkvN7u
-	 fyvRWxBcvYQXJcrYdwgO/Ur1Zp+e+Zrrg+/SpkZ8K3Oe1GDS2yOugiT8AUZl/phU2a
-	 Fh3NU5AenUChAUT7Y63tL3VXGNNUgLXLUpPXzhci2aMw2k6OFZ+3VTMdMoDB6AijKo
-	 zGrBGUj8yaBsiHjEF+1O/0FADzs8KChn2umLPlRE14l/vNU5ELThsPA3vJEgA9K5wX
-	 LzmPfGkpo8WG7qplarxW5WGWFJjgIFy4Ecxtsnd0fzj9YWP0KysomG7hw42i648kRb
-	 Vh67Sq8alIXjQ==
+	b=CD19kbNoRQHif13tH9DlFcCzk8Y92PC829k31man3xtJbROZOQx4lbBOADBLFUYtc
+	 O954XhAOIma140M2qd5bp3SezgZb0Mj/ld+4F2Rcy/XMTFE740pMrG7nbMKTe7Rwa4
+	 3LCUA+52Op7kF5quhyGQr2MCKb7WYXatd1I90TfELccFqbtyUUbI+YXpcgp67hX9GF
+	 VzyilQc6Z5b7ICGHjCp5QvWa2AS8N1Fh2R7gLmy5Fky6j4yJdGK7xJmLkkdMcayIiu
+	 MtRoMISZ7ZSnZE9kHttzG4BHbMEBwi/PihR8OrgsjpinJrmfTe5SX/37BrQY/LpD4y
+	 Ask91JqBtXCfQ==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 18/35] xfs: remove XFS_BLOCKWSIZE and XFS_BLOCKWMASK macros
-Date: Thu, 15 Feb 2024 13:08:30 +0100
-Message-ID: <20240215120907.1542854-19-cem@kernel.org>
+Subject: [PATCH 19/35] xfs: convert open-coded xfs_rtword_t pointer accesses to helper
+Date: Thu, 15 Feb 2024 13:08:31 +0100
+Message-ID: <20240215120907.1542854-20-cem@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240215120907.1542854-1-cem@kernel.org>
 References: <20240215120907.1542854-1-cem@kernel.org>
@@ -44,122 +44,256 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-Source kernel commit: add3cddaea509071d01bf1d34df0d05db1a93a07
+Source kernel commit: a9948626849c2c65dfd201b5e9d855e62937de61
 
-Remove these trivial macros since they're not even part of the ondisk
-format.
+There are a bunch of places where we use open-coded logic to find a
+pointer to an xfs_rtword_t within a rt bitmap buffer.  Convert all that
+to helper functions for better type safety.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_format.h   |  2 --
- libxfs/xfs_rtbitmap.c | 16 ++++++++--------
- libxfs/xfs_rtbitmap.h |  2 +-
- 3 files changed, 9 insertions(+), 11 deletions(-)
+ libxfs/xfs_rtbitmap.c | 59 +++++++++++++++++++++++--------------------
+ libxfs/xfs_rtbitmap.h | 11 ++++++++
+ 2 files changed, 42 insertions(+), 28 deletions(-)
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 0e2ee8202..ac6dd1023 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -1142,8 +1142,6 @@ static inline bool xfs_dinode_has_large_extent_counts(
- 
- #define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
- #define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
--#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
--#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
- 
- /*
-  * RT Summary and bit manipulation macros.
 diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 540cb1481..6776e45c1 100644
+index 6776e45c1..fce88c759 100644
 --- a/libxfs/xfs_rtbitmap.c
 +++ b/libxfs/xfs_rtbitmap.c
-@@ -172,7 +172,7 @@ xfs_rtfind_back(
+@@ -101,7 +101,6 @@ xfs_rtfind_back(
+ 	int		bit;		/* bit number in the word */
+ 	xfs_fileoff_t	block;		/* bitmap block number */
+ 	struct xfs_buf	*bp;		/* buf for the block */
+-	xfs_rtword_t	*bufp;		/* starting word in buffer */
+ 	int		error;		/* error value */
+ 	xfs_rtxnum_t	firstbit;	/* first useful bit in the word */
+ 	xfs_rtxnum_t	i;		/* current bit number rel. to start */
+@@ -119,12 +118,12 @@ xfs_rtfind_back(
+ 	if (error) {
+ 		return error;
+ 	}
+-	bufp = bp->b_addr;
++
+ 	/*
+ 	 * Get the first word's index & point to it.
+ 	 */
+ 	word = xfs_rtx_to_rbmword(mp, start);
+-	b = &bufp[word];
++	b = xfs_rbmblock_wordptr(bp, word);
+ 	bit = (int)(start & (XFS_NBWORD - 1));
+ 	len = start - limit + 1;
+ 	/*
+@@ -171,9 +170,9 @@ xfs_rtfind_back(
+ 			if (error) {
  				return error;
  			}
- 			bufp = bp->b_addr;
--			word = XFS_BLOCKWMASK(mp);
-+			word = mp->m_blockwsize - 1;
- 			b = &bufp[word];
+-			bufp = bp->b_addr;
++
+ 			word = mp->m_blockwsize - 1;
+-			b = &bufp[word];
++			b = xfs_rbmblock_wordptr(bp, word);
  		} else {
  			/*
-@@ -218,7 +218,7 @@ xfs_rtfind_back(
+ 			 * Go on to the previous word in the buffer.
+@@ -217,9 +216,9 @@ xfs_rtfind_back(
+ 			if (error) {
  				return error;
  			}
- 			bufp = bp->b_addr;
--			word = XFS_BLOCKWMASK(mp);
-+			word = mp->m_blockwsize - 1;
- 			b = &bufp[word];
+-			bufp = bp->b_addr;
++
+ 			word = mp->m_blockwsize - 1;
+-			b = &bufp[word];
++			b = xfs_rbmblock_wordptr(bp, word);
  		} else {
  			/*
-@@ -336,7 +336,7 @@ xfs_rtfind_forw(
- 		 * Go on to next block if that's where the next word is
- 		 * and we need the next word.
- 		 */
--		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
-+		if (++word == mp->m_blockwsize && i < len) {
+ 			 * Go on to the previous word in the buffer.
+@@ -276,7 +275,6 @@ xfs_rtfind_forw(
+ 	int		bit;		/* bit number in the word */
+ 	xfs_fileoff_t	block;		/* bitmap block number */
+ 	struct xfs_buf	*bp;		/* buf for the block */
+-	xfs_rtword_t	*bufp;		/* starting word in buffer */
+ 	int		error;		/* error value */
+ 	xfs_rtxnum_t	i;		/* current bit number rel. to start */
+ 	xfs_rtxnum_t	lastbit;	/* last useful bit in the word */
+@@ -294,12 +292,12 @@ xfs_rtfind_forw(
+ 	if (error) {
+ 		return error;
+ 	}
+-	bufp = bp->b_addr;
++
+ 	/*
+ 	 * Get the first word's index & point to it.
+ 	 */
+ 	word = xfs_rtx_to_rbmword(mp, start);
+-	b = &bufp[word];
++	b = xfs_rbmblock_wordptr(bp, word);
+ 	bit = (int)(start & (XFS_NBWORD - 1));
+ 	len = limit - start + 1;
+ 	/*
+@@ -345,8 +343,9 @@ xfs_rtfind_forw(
+ 			if (error) {
+ 				return error;
+ 			}
+-			b = bufp = bp->b_addr;
++
+ 			word = 0;
++			b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
  			/*
- 			 * If done with this block, get the previous one.
- 			 */
-@@ -381,7 +381,7 @@ xfs_rtfind_forw(
- 		 * Go on to next block if that's where the next word is
- 		 * and we need the next word.
- 		 */
--		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
-+		if (++word == mp->m_blockwsize && i < len) {
+ 			 * Go on to the previous word in the buffer.
+@@ -390,8 +389,9 @@ xfs_rtfind_forw(
+ 			if (error) {
+ 				return error;
+ 			}
+-			b = bufp = bp->b_addr;
++
+ 			word = 0;
++			b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
  			/*
- 			 * If done with this block, get the next one.
- 			 */
-@@ -591,7 +591,7 @@ xfs_rtmodify_range(
- 		 * Go on to the next block if that's where the next word is
- 		 * and we need the next word.
- 		 */
--		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
-+		if (++word == mp->m_blockwsize && i < len) {
- 			/*
- 			 * Log the changed part of this block.
+ 			 * Go on to the next word in the buffer.
+@@ -539,7 +539,6 @@ xfs_rtmodify_range(
+ 	int		bit;		/* bit number in the word */
+ 	xfs_fileoff_t	block;		/* bitmap block number */
+ 	struct xfs_buf	*bp;		/* buf for the block */
+-	xfs_rtword_t	*bufp;		/* starting word in buffer */
+ 	int		error;		/* error value */
+ 	xfs_rtword_t	*first;		/* first used word in the buffer */
+ 	int		i;		/* current bit number rel. to start */
+@@ -558,12 +557,12 @@ xfs_rtmodify_range(
+ 	if (error) {
+ 		return error;
+ 	}
+-	bufp = bp->b_addr;
++
+ 	/*
+ 	 * Compute the starting word's address, and starting bit.
+ 	 */
+ 	word = xfs_rtx_to_rbmword(mp, start);
+-	first = b = &bufp[word];
++	first = b = xfs_rbmblock_wordptr(bp, word);
+ 	bit = (int)(start & (XFS_NBWORD - 1));
+ 	/*
+ 	 * 0 (allocated) => all zeroes; 1 (free) => all ones.
+@@ -597,14 +596,15 @@ xfs_rtmodify_range(
  			 * Get the next one.
-@@ -631,7 +631,7 @@ xfs_rtmodify_range(
- 		 * Go on to the next block if that's where the next word is
- 		 * and we need the next word.
- 		 */
--		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
-+		if (++word == mp->m_blockwsize && i < len) {
+ 			 */
+ 			xfs_trans_log_buf(tp, bp,
+-				(uint)((char *)first - (char *)bufp),
+-				(uint)((char *)b - (char *)bufp));
++				(uint)((char *)first - (char *)bp->b_addr),
++				(uint)((char *)b - (char *)bp->b_addr));
+ 			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
+ 			if (error) {
+ 				return error;
+ 			}
+-			first = b = bufp = bp->b_addr;
++
+ 			word = 0;
++			first = b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
  			/*
- 			 * Log the changed part of this block.
+ 			 * Go on to the next word in the buffer
+@@ -637,14 +637,15 @@ xfs_rtmodify_range(
  			 * Get the next one.
-@@ -834,7 +834,7 @@ xfs_rtcheck_range(
- 		 * Go on to next block if that's where the next word is
- 		 * and we need the next word.
- 		 */
--		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
-+		if (++word == mp->m_blockwsize && i < len) {
- 			/*
- 			 * If done with this block, get the next one.
  			 */
-@@ -880,7 +880,7 @@ xfs_rtcheck_range(
- 		 * Go on to next block if that's where the next word is
- 		 * and we need the next word.
- 		 */
--		if (++word == XFS_BLOCKWSIZE(mp) && i < len) {
-+		if (++word == mp->m_blockwsize && i < len) {
+ 			xfs_trans_log_buf(tp, bp,
+-				(uint)((char *)first - (char *)bufp),
+-				(uint)((char *)b - (char *)bufp));
++				(uint)((char *)first - (char *)bp->b_addr),
++				(uint)((char *)b - (char *)bp->b_addr));
+ 			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
+ 			if (error) {
+ 				return error;
+ 			}
+-			first = b = bufp = bp->b_addr;
++
+ 			word = 0;
++			first = b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
  			/*
- 			 * If done with this block, get the next one.
- 			 */
-diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index 5c4325702..a382b38c6 100644
---- a/libxfs/xfs_rtbitmap.h
-+++ b/libxfs/xfs_rtbitmap.h
-@@ -146,7 +146,7 @@ xfs_rtx_to_rbmword(
- 	struct xfs_mount	*mp,
- 	xfs_rtxnum_t		rtx)
- {
--	return (rtx >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp);
-+	return (rtx >> XFS_NBWORDLOG) & (mp->m_blockwsize - 1);
+ 			 * Go on to the next word in the buffer
+@@ -674,8 +675,9 @@ xfs_rtmodify_range(
+ 	 * Log any remaining changed bytes.
+ 	 */
+ 	if (b > first)
+-		xfs_trans_log_buf(tp, bp, (uint)((char *)first - (char *)bufp),
+-			(uint)((char *)b - (char *)bufp - 1));
++		xfs_trans_log_buf(tp, bp,
++			(uint)((char *)first - (char *)bp->b_addr),
++			(uint)((char *)b - (char *)bp->b_addr - 1));
+ 	return 0;
  }
  
- /* Convert a file block offset in the rt bitmap file to an rt extent number. */
+@@ -773,7 +775,6 @@ xfs_rtcheck_range(
+ 	int		bit;		/* bit number in the word */
+ 	xfs_fileoff_t	block;		/* bitmap block number */
+ 	struct xfs_buf	*bp;		/* buf for the block */
+-	xfs_rtword_t	*bufp;		/* starting word in buffer */
+ 	int		error;		/* error value */
+ 	xfs_rtxnum_t	i;		/* current bit number rel. to start */
+ 	xfs_rtxnum_t	lastbit;	/* last useful bit in word */
+@@ -792,12 +793,12 @@ xfs_rtcheck_range(
+ 	if (error) {
+ 		return error;
+ 	}
+-	bufp = bp->b_addr;
++
+ 	/*
+ 	 * Compute the starting word's address, and starting bit.
+ 	 */
+ 	word = xfs_rtx_to_rbmword(mp, start);
+-	b = &bufp[word];
++	b = xfs_rbmblock_wordptr(bp, word);
+ 	bit = (int)(start & (XFS_NBWORD - 1));
+ 	/*
+ 	 * 0 (allocated) => all zero's; 1 (free) => all one's.
+@@ -843,8 +844,9 @@ xfs_rtcheck_range(
+ 			if (error) {
+ 				return error;
+ 			}
+-			b = bufp = bp->b_addr;
++
+ 			word = 0;
++			b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
+ 			/*
+ 			 * Go on to the next word in the buffer.
+@@ -889,8 +891,9 @@ xfs_rtcheck_range(
+ 			if (error) {
+ 				return error;
+ 			}
+-			b = bufp = bp->b_addr;
++
+ 			word = 0;
++			b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
+ 			/*
+ 			 * Go on to the next word in the buffer.
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index a382b38c6..3252ed217 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -158,6 +158,17 @@ xfs_rbmblock_to_rtx(
+ 	return rbmoff << mp->m_blkbit_log;
+ }
+ 
++/* Return a pointer to a bitmap word within a rt bitmap block. */
++static inline xfs_rtword_t *
++xfs_rbmblock_wordptr(
++	struct xfs_buf		*bp,
++	unsigned int		index)
++{
++	xfs_rtword_t		*words = bp->b_addr;
++
++	return words + index;
++}
++
+ /*
+  * Functions for walking free space rtextents in the realtime bitmap.
+  */
 -- 
 2.43.0
 
