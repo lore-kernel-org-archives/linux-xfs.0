@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B269475
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 06:55:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F348F9475
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 06:55:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707980120; cv=none; b=flHzbKGF70FG8JMR9GQbU5FtiyehvaYhk4vHpxJfiOKi//Q6io3xrgG7td/aU3xhcO9lSA72EZv0IU2HY/z8VMTMDJ4PcfFi+mC2dQ7UyEsyPyPZfts+8MDqLwOlfpo2oiyO34WX1GHdAoIULcN67f3oO8/iBNRMf5Q1nmMmasM=
+	t=1707980123; cv=none; b=e0uX/qaNPcJ/b8Nq8iDQpW5K8ns8alz1em8XfKmBopiD3eOQ0dbxJo7P0+A6qT+5eoKMK0ZhncDZbMSU8EDFwhpqq1jUtO9aPNFOev978i4YlDNAEHfpBe9HYUTHLROYt1xTHAZ2Hdp6gjZsQypbVPUjX5yFlEzpofC7uHJSgXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707980120; c=relaxed/simple;
-	bh=mAbM1dnEAk4wKF3Nrzv/FiFuaYTy9gtVqBYoq4TFmFs=;
+	s=arc-20240116; t=1707980123; c=relaxed/simple;
+	bh=E9lrp9CmdaSKLGMmLKiKA0+Z5/xrkYjKMrvwJ7D2Kbw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iVNfLYsydJqkFvXrREk2dSS0jTmm3QMx8+4aXe4NHpeV0mENI9Yexf3wV41UVPl6qWtenN8ls8ScIwIY7aMAyw4SJieBGSNLxH13V5PnxwyGDzjxq8C0Dbes9mPwfWKlWFN21Sz06VSNS+v74SnmMiYtqmjfxttYg8jYxdcEgc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=5EOX89Ga; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=jijM6dafgIwzpv8x8mcphB144i8aXsIzd/lpYfdIe96jK4VJmNU69luL6dO5TQEauGPMyccnL9kloBmmHoV1qm29TiAn7k92HCbLZ0XN8GHicpWzwuZqKtEgUUEUtWT90MXvgI6MYb/cBE//BRgtbFMk2NsNFD2f/LPwVImdHd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zXHyE8vf; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="5EOX89Ga"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zXHyE8vf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=EAWC0DkCpcjMcCXvM3E+/gsv/IraiKV7yR01aUkSeAM=; b=5EOX89GaEdiCHrn+RlC1+ZdZ/B
-	JyWRESrOKPe7CdlSVZ5WVW9pzCsVTQZdmyi1IrDyqx9G64PfGhVpuA4qpHa3Qsf3awVd4JUjvVv3Q
-	hN3q42XJTF6latvCAN/RemjvblHYskKZtf8VtaS0M5RLpWFj+su1rzTjpPCeOerHePldJHSwxPfXb
-	iHuMhELg8DUg5vB+hKekQ6m7psq/DEXu2QBqPxTkWy5UYztsvrsx3+r+UPqE2Iir2yjwzlloFsFYP
-	YEaJ3Ntlo69L9wlSXfMWLJ8SVu0SFNmb18+hj+DqghSD4ksvZp8dcqTIOhdO8EJNzeb/W15ZPsKdJ
-	NBFMdFZg==;
+	bh=ivc/Q6wtYRTykF+MW0Bai6xP+FJehWHLRtV6t4Enh7c=; b=zXHyE8vf1sdLDCduQXv3njiHSF
+	I0p4zMvQFYKgwF6qQmpKUGVHTOii5WmjM88jblV4IRs8uPKlDjXe0ADopCBbaEt4zwWMwITRhTWXW
+	7OvTm6toJnwUM02wf+3+rL3+N2gR56Y1eBsgVh6P5qkrnR7ChQgNha8kxkMd+wYPG//iKEjVS3ZtT
+	n9QIZVhGrXLQgQEV225l8VEM++SAfcskTYvcBHUk91KAQtyYrK9F0/RQEKNYTZwU8uEWV5x8SfZbj
+	heq5HqqqAAZz7LjDJa0ZSpP2Atzp1rK7dbogk9/PQSp8ehssZgkQdV19cDhROuZvqU2NNpFeqBc5y
+	apZhzrCw==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1raVeQ-0000000F9L9-3291;
-	Thu, 15 Feb 2024 06:55:19 +0000
+	id 1raVeT-0000000F9MM-0tZD;
+	Thu, 15 Feb 2024 06:55:21 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 19/26] configure: don't check for preadv and pwritev
-Date: Thu, 15 Feb 2024 07:54:17 +0100
-Message-Id: <20240215065424.2193735-20-hch@lst.de>
+Subject: [PATCH 20/26] configure: don't check for mremap
+Date: Thu, 15 Feb 2024 07:54:18 +0100
+Message-Id: <20240215065424.2193735-21-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240215065424.2193735-1-hch@lst.de>
 References: <20240215065424.2193735-1-hch@lst.de>
@@ -49,182 +49,134 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-preadv and pwritev have been supported since Linux 2.6.30.
+mremap has been around since before the dawn of it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
  configure.ac          |  1 -
  include/builddefs.in  |  1 -
- io/Makefile           |  5 -----
- io/pread.c            |  8 --------
- io/pwrite.c           |  8 --------
- m4/package_libcdev.m4 | 19 -------------------
- 6 files changed, 42 deletions(-)
+ io/Makefile           |  4 ----
+ io/mmap.c             |  8 --------
+ m4/package_libcdev.m4 | 13 -------------
+ 5 files changed, 27 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 4d4ce9051..66feba8f7 100644
+index 66feba8f7..296eb3c1f 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -163,7 +163,6 @@ AC_PACKAGE_NEED_URCU_H
- AC_PACKAGE_NEED_RCU_INIT
- 
+@@ -165,7 +165,6 @@ AC_PACKAGE_NEED_RCU_INIT
  AC_HAVE_PWRITEV2
--AC_HAVE_PREADV
  AC_HAVE_COPY_FILE_RANGE
  AC_HAVE_FSETXATTR
- AC_HAVE_MREMAP
+-AC_HAVE_MREMAP
+ AC_NEED_INTERNAL_FSXATTR
+ AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
+ AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
 diff --git a/include/builddefs.in b/include/builddefs.in
-index cb63751fd..0e0f26144 100644
+index 0e0f26144..4b55f97cd 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -90,7 +90,6 @@ ENABLE_SCRUB	= @enable_scrub@
- 
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- 
--HAVE_PREADV = @have_preadv@
+@@ -93,7 +93,6 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
  HAVE_PWRITEV2 = @have_pwritev2@
  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
  HAVE_FSETXATTR = @have_fsetxattr@
+-HAVE_MREMAP = @have_mremap@
+ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+ NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
+ NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
 diff --git a/io/Makefile b/io/Makefile
-index acef8957d..a81a75fc8 100644
+index a81a75fc8..35b3ebd52 100644
 --- a/io/Makefile
 +++ b/io/Makefile
-@@ -29,11 +29,6 @@ ifeq ($(ENABLE_EDITLINE),yes)
- LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
- endif
- 
--# Also implies PWRITEV
--ifeq ($(HAVE_PREADV),yes)
--LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
--endif
--
- ifeq ($(HAVE_PWRITEV2),yes)
+@@ -33,10 +33,6 @@ ifeq ($(HAVE_PWRITEV2),yes)
  LCFLAGS += -DHAVE_PWRITEV2
  endif
-diff --git a/io/pread.c b/io/pread.c
-index 0f1d8b97b..75b4390a8 100644
---- a/io/pread.c
-+++ b/io/pread.c
-@@ -37,9 +37,7 @@ pread_help(void)
- " -R   -- read at random offsets in the range of bytes\n"
- " -Z N -- zeed the random number generator (used when reading randomly)\n"
- "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
--#ifdef HAVE_PREADV
- " -V N -- use vectored IO with N iovecs of blocksize each (preadv)\n"
--#endif
- "\n"
- " When in \"random\" mode, the number of read operations will equal the\n"
- " number required to do a complete forward/backward scan of the range.\n"
-@@ -160,7 +158,6 @@ dump_buffer(
- 	}
+ 
+-ifeq ($(HAVE_MREMAP),yes)
+-LCFLAGS += -DHAVE_MREMAP
+-endif
+-
+ ifeq ($(HAVE_MAP_SYNC),yes)
+ LCFLAGS += -DHAVE_MAP_SYNC
+ endif
+diff --git a/io/mmap.c b/io/mmap.c
+index 425957d4b..c3bb211a8 100644
+--- a/io/mmap.c
++++ b/io/mmap.c
+@@ -16,9 +16,7 @@ static cmdinfo_t mread_cmd;
+ static cmdinfo_t msync_cmd;
+ static cmdinfo_t munmap_cmd;
+ static cmdinfo_t mwrite_cmd;
+-#ifdef HAVE_MREMAP
+ static cmdinfo_t mremap_cmd;
+-#endif /* HAVE_MREMAP */
+ 
+ mmap_region_t	*maptable;
+ int		mapcount;
+@@ -636,7 +634,6 @@ mwrite_f(
+ 	return 0;
  }
  
--#ifdef HAVE_PREADV
- static ssize_t
- do_preadv(
- 	int		fd,
-@@ -192,9 +189,6 @@ do_preadv(
- 
- 	return bytes;
+-#ifdef HAVE_MREMAP
+ static void
+ mremap_help(void)
+ {
+@@ -712,7 +709,6 @@ mremap_f(
+ 	mapping->length = new_length;
+ 	return 0;
  }
--#else
--#define do_preadv(fd, offset, count) (0)
--#endif
+-#endif /* HAVE_MREMAP */
  
- static ssize_t
- do_pread(
-@@ -414,7 +408,6 @@ pread_f(
- 		case 'v':
- 			vflag = 1;
- 			break;
--#ifdef HAVE_PREADV
- 		case 'V':
- 			vectors = strtoul(optarg, &sp, 0);
- 			if (!sp || sp == optarg) {
-@@ -424,7 +417,6 @@ pread_f(
- 				return 0;
- 			}
- 			break;
--#endif
- 		case 'Z':
- 			zeed = strtoul(optarg, &sp, 0);
- 			if (!sp || sp == optarg) {
-diff --git a/io/pwrite.c b/io/pwrite.c
-index 467bfa9f8..56171a696 100644
---- a/io/pwrite.c
-+++ b/io/pwrite.c
-@@ -40,9 +40,7 @@ pwrite_help(void)
- " -R   -- write at random offsets in the specified range of bytes\n"
- " -Z N -- zeed the random number generator (used when writing randomly)\n"
- "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
--#ifdef HAVE_PWRITEV
- " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
--#endif
- #ifdef HAVE_PWRITEV2
- " -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
- " -D   -- Perform the pwritev2() with RWF_DSYNC\n"
-@@ -50,7 +48,6 @@ pwrite_help(void)
- "\n"));
+ void
+ mmap_init(void)
+@@ -769,7 +765,6 @@ mmap_init(void)
+ 		_("writes data into a region in the current memory mapping");
+ 	mwrite_cmd.help = mwrite_help;
+ 
+-#ifdef HAVE_MREMAP
+ 	mremap_cmd.name = "mremap";
+ 	mremap_cmd.altname = "mrm";
+ 	mremap_cmd.cfunc = mremap_f;
+@@ -780,14 +775,11 @@ mmap_init(void)
+ 	mremap_cmd.oneline =
+ 		_("alters the size of the current memory mapping");
+ 	mremap_cmd.help = mremap_help;
+-#endif /* HAVE_MREMAP */
+ 
+ 	add_command(&mmap_cmd);
+ 	add_command(&mread_cmd);
+ 	add_command(&msync_cmd);
+ 	add_command(&munmap_cmd);
+ 	add_command(&mwrite_cmd);
+-#ifdef HAVE_MREMAP
+ 	add_command(&mremap_cmd);
+-#endif /* HAVE_MREMAP */
  }
- 
--#ifdef HAVE_PWRITEV
- static ssize_t
- do_pwritev(
- 	int		fd,
-@@ -90,9 +87,6 @@ do_pwritev(
- 
- 	return bytes;
- }
--#else
--#define do_pwritev(fd, offset, count, pwritev2_flags) (0)
--#endif
- 
- static ssize_t
- do_pwrite(
-@@ -353,7 +347,6 @@ pwrite_f(
- 		case 'u':
- 			uflag = 1;
- 			break;
--#ifdef HAVE_PWRITEV
- 		case 'V':
- 			vectors = strtoul(optarg, &sp, 0);
- 			if (!sp || sp == optarg) {
-@@ -363,7 +356,6 @@ pwrite_f(
- 				return 0;
- 			}
- 			break;
--#endif
- 		case 'w':
- 			wflag = 1;
- 			break;
 diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 37d11e338..7d7679fa0 100644
+index 7d7679fa0..dd04be5f0 100644
 --- a/m4/package_libcdev.m4
 +++ b/m4/package_libcdev.m4
-@@ -1,22 +1,3 @@
+@@ -48,19 +48,6 @@ AC_DEFUN([AC_HAVE_FSETXATTR],
+     AC_SUBST(have_fsetxattr)
+   ])
+ 
 -#
--# Check if we have a preadv libc call (Linux)
+-# Check if we have a mremap call (not on Mac OS X)
 -#
--AC_DEFUN([AC_HAVE_PREADV],
--  [ AC_MSG_CHECKING([for preadv])
--    AC_LINK_IFELSE(
--    [	AC_LANG_PROGRAM([[
--#define _BSD_SOURCE
--#define _DEFAULT_SOURCE
--#include <sys/uio.h>
--	]], [[
--preadv(0, 0, 0, 0);
--	]])
--    ], have_preadv=yes
--       AC_MSG_RESULT(yes),
--       AC_MSG_RESULT(no))
--    AC_SUBST(have_preadv)
+-AC_DEFUN([AC_HAVE_MREMAP],
+-  [ AC_CHECK_DECL([mremap],
+-       have_mremap=yes,
+-       [],
+-       [#define _GNU_SOURCE
+-        #include <sys/mman.h>]
+-       )
+-    AC_SUBST(have_mremap)
 -  ])
 -
  #
- # Check if we have a pwritev2 libc call (Linux)
- #
+ # Check if we need to override the system struct fsxattr with
+ # the internal definition.  This /only/ happens if the system
 -- 
 2.39.2
 
