@@ -1,75 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02BA131E31;
-	Thu, 15 Feb 2024 14:27:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14EDC37156;
+	Thu, 15 Feb 2024 14:43:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708007257; cv=none; b=Qdcyq55bryOSVMS30+26XWKnR6txnoRKvnHH5eD2p+iw787j4PPamdFS6ns5si8ffeRsc+dhWvGkI+4O8jnGSPrY1D7OnUQUBI8tjnO1M9v2RMKICLdew+EfqDyx1FC4w79Uhv20XNE5SRd9ow/jufmaXqmea0WKDFGOerF7Now=
+	t=1708008226; cv=none; b=F9YS7W2MWRB6oJttrQp567zlyIU/7pMQWEgzMSZ0PnBKOXOC7KoWecjSKr23FLQ5fB4OlaQYs1hXXoKHAINq9EsqlRyh5Si65yYC+Ujcw8TUVveg9T2+mJKGc3bMeSYPOarMkkry9qsGRpv0alOdlQOZz5gLqy9E9YwPNIvvxXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708007257; c=relaxed/simple;
-	bh=PuQ6kn112DYtORmup7aH2j73drGiFmg5nXdIDPUqDz4=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=F9sSICYL81rjz4Q1Rsfl88AVknExYM/wAPqKsyC5BUBUWVi9z+heoefAh7fRfe+4G6vMIcJL9WTvSm+kltfzh2yCtZLB9EvFSL8rRtcz3uC4PXBpVHpylJUeJ6eaAwre/Z4sHJTbfx61Jw++aMavIQpY+8TIrvVkqOkRTa108TI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aurYxMTs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708008226; c=relaxed/simple;
+	bh=ln3eEO71W6a/HB4BpqVFvAzjOL06V7sQyyqCuiIm4o8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e4+tHHMsOm3J5P1+tOWwC9s0mF0mWQwuWQJCSFflk5uADX/lFuotGV1hPSR2MC+VxpoXkdbkl6Hs/ggq5erFIaVak/bukIoITRbqanMHI1mAaEnyfJIYO3T+VOhno22nMdqhg6Bbq6qaqzxObk2fD8eOzg0r1AJ7VDtPgXAxgBM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=mFnMCnWW; arc=none smtp.client-ip=167.114.26.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aurYxMTs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAF3DC433F1;
-	Thu, 15 Feb 2024 14:27:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708007257;
-	bh=PuQ6kn112DYtORmup7aH2j73drGiFmg5nXdIDPUqDz4=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=aurYxMTs058gqHrdBNIWxOsfwJf/pt5vcKMslo5mz/HrjztIH8FWsaICfyyVSvWaE
-	 DgDALkjYj8JXRNbbn3eplaTiJP4LVR0A4ilN4gmcWf6x3FE/n5vT51tZbC9T6JVslc
-	 RgtnGYjD9lF89ml+6d+GgTvgvMMn43lYmr6/mP7ppOm0x9JtK6XYOkxH9jVOVF+Um+
-	 eSIuqXvpKCeDKD1ua5RWKNjVlPUXz8XnZ5gkd6Pk9aonEPO8ZuyNWdC+be4H3BUWPo
-	 OnND4IdQM8HKk1pJKZ6ejhRHnEl6IgIbNQjzU1mjaT1mwafw96uTlDTYAsbPk4Medt
-	 9Pzs5bi716z8g==
-References: <20240111212424.3572189-1-willy@infradead.org>
- <Zc05FiqYKgtNHUL7@casper.infradead.org>
-User-agent: mu4e 1.10.8; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J .
- Wong" <djwong@kernel.org>, Mateusz Guzik <mjguzik@gmail.com>, Peter
- Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will
- Deacon <will@kernel.org>, Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v5 0/3] Remove the XFS mrlock
-Date: Thu, 15 Feb 2024 19:53:21 +0530
-In-reply-to: <Zc05FiqYKgtNHUL7@casper.infradead.org>
-Message-ID: <87wmr5n6p7.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="mFnMCnWW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
+	s=smtpout1; t=1708008217;
+	bh=ln3eEO71W6a/HB4BpqVFvAzjOL06V7sQyyqCuiIm4o8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=mFnMCnWWSY/oz3cfgAglZzFkfce2dfZOYQ36NDRHuc70+Pbjjz2mWVQ6nWjD+rPZ1
+	 WnE4nMw6J5orU72fJQAg/GCstx2ZUapfZLe/PMqhyMNtmgHWX0clQFg34C+3CaNZyU
+	 1ly9rs6uD/lKyBlOHw6VZLJ05n39hjoOnRBll8RamfKOswbZWOhR28yN9vBd3pb8Vj
+	 hAoDrvplCH3rEk/qakzkdJgoqBMHOgnUMi8nxxYB9SB4+g81R+ABljrhLqNo17Tk/K
+	 wyk1n6kXqRHB/uXMNwYIuDE3W3Aj7ZZxG3nVplBs4j48GYzaE1PzLbw2SKxoFY1M/z
+	 YKY+fj3hAQcJQ==
+Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TbHqs08r0zZD5;
+	Thu, 15 Feb 2024 09:43:37 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dave Chinner <david@fromorbit.com>
+Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Fan Ni <fan.ni@samsung.com>,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Russell King <linux@armlinux.org.uk>,
+	linux-arch@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	nvdimm@lists.linux.dev
+Subject: [PATCH v2] nvdimm/pmem: Fix leak on dax_add_host() failure
+Date: Thu, 15 Feb 2024 09:43:24 -0500
+Message-Id: <20240215144324.95436-1-mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-On Wed, Feb 14, 2024 at 10:05:10 PM +0000, Matthew Wilcox wrote:
-> On Thu, Jan 11, 2024 at 09:24:21PM +0000, Matthew Wilcox (Oracle) wrote:
->> XFS has an mrlock wrapper around the rwsem which adds only the
->> functionality of knowing whether the rwsem is currently held in read
->> or write mode.  Both regular rwsems and rt-rwsems know this, they just
->> don't expose it as an API.  By adding that, we can remove the XFS mrlock
->> as well as improving the debug assertions for the mmap_lock when lockdep
->> is disabled.
->> 
->> I have an ack on the first patch from Peter, so I would like to see this
->> merged through the XFS tree since most of what it touches is XFS.
->
-> What needs to happen to get these picked up to not miss the next merge
-> window?
+Fix a leak on dax_add_host() error, where "goto out_cleanup_dax" is done
+before setting pmem->dax_dev, which therefore issues the two following
+calls on NULL pointers:
 
-Sorry, I missed this patchset. I tried applying this patchset on top of XFS'
-current for-next branch. But it failed due to merge conflicts. I would suggest
-that you should wait until the "shmem patches" impasse gets resolved and
-for-next branch becomes stable.
+out_cleanup_dax:
+        kill_dax(pmem->dax_dev);
+        put_dax(pmem->dax_dev);
 
-I will respond to this mail as to when you can rebase your patchset on
-for-next and either send a pull request or post the rebased version of the
-patchset to the mailing list.
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Reviewed-by: Fan Ni <fan.ni@samsung.com>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@kernel.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: linux-arch@vger.kernel.org
+Cc: linux-cxl@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Cc: dm-devel@lists.linux.dev
+Cc: nvdimm@lists.linux.dev
+---
+Changes since v1:
+- Add Reviewed-by tags.
+---
+ drivers/nvdimm/pmem.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 4e8fdcb3f1c8..9fe358090720 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -566,12 +566,11 @@ static int pmem_attach_disk(struct device *dev,
+ 	set_dax_nomc(dax_dev);
+ 	if (is_nvdimm_sync(nd_region))
+ 		set_dax_synchronous(dax_dev);
++	pmem->dax_dev = dax_dev;
+ 	rc = dax_add_host(dax_dev, disk);
+ 	if (rc)
+ 		goto out_cleanup_dax;
+ 	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+-	pmem->dax_dev = dax_dev;
+-
+ 	rc = device_add_disk(dev, disk, pmem_attribute_groups);
+ 	if (rc)
+ 		goto out_remove_host;
 -- 
-Chandan
+2.39.2
+
