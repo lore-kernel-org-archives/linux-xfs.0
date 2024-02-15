@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B97C12BF17
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B8B12C52D
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707998977; cv=none; b=JEOyTt4ffr4Z/thpIpweLZelzRx7Sd3JyG/gBX8nHHQraFk+SZ+jD+ePjvRoWcZrXtfm5x84wX3ux3N6LZEdAJOP9eUNutv5ULI8T7+wT38CbvjRNxJMkrrlaQh4z1MVHzHgPjy4PeeA15HL2wIh902Gye/O1SIBbbVN4GsYO4E=
+	t=1707998978; cv=none; b=DnVTMekP5+UeY34olyCIz03/7HLu4/XkBcnbRD4sodbT4cfQhUjNixms3A0Bf+aol2BbCwcdvhtgHptLmGsSOHzNpmVenPEdWRoXWgz8fcBO4TACAo56oD8TWlXY25lztslzzIecdyqUbRjH6KpHd0dfkko0aogFbd8x9JvGXGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707998977; c=relaxed/simple;
-	bh=/2TRymqznSIRb1u4AXkxfrlF50drOHbBMDHG4ERiNXg=;
+	s=arc-20240116; t=1707998978; c=relaxed/simple;
+	bh=Y/yn3sAcjhMIy3/jQ7defAH55IyOPTHBNnj7zVT7jGY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ePEsSJAFR1nOlJ4Gss1iYE54dh2uJxZZ7lEdvOG7txLfvIqlhOIRcxnYPO7Cl0rhx6vEKtqXT8xjIGIlBhrIZ9sQanL0L2AWcrTe0AiI8Dx/uh7U6lsUd7s3ZVIMFUMPYdZpRBR1Nr7TluZVWKK+aW8Z/pVpIbIvhfrWzoL/mqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=beUVwdbk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=h8O34HeJSuV+pcSME/Yfk5olosqVlXBXs+Heq4CcL+dT9Xjk+gXP3hd4s0YgdGKJho0OKKSLoCdLk//0BvRfGY92tHxIb/aed1drYvFb6INoEwo21IUEEHJP1qnqZUPA9MC2VqLniXHlm4mVetj5lT9Xzu7MEel3gA5oNFFgBS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D9i0rb50; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="beUVwdbk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B625DC433F1
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D9i0rb50"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C87E1C433C7
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707998977;
-	bh=/2TRymqznSIRb1u4AXkxfrlF50drOHbBMDHG4ERiNXg=;
+	s=k20201202; t=1707998978;
+	bh=Y/yn3sAcjhMIy3/jQ7defAH55IyOPTHBNnj7zVT7jGY=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=beUVwdbkVDiUMB7ozP2BB9pBwEdY5v6XG9yMy64WuNndQTlQG9EsEug/EG0EtaU7s
-	 lKyrAsscFRs3efHKVX1xSUJQLGFCD3cgHcSGs5sxnvowIepvoZIRlP/A2WmN2r/kPK
-	 /h46V/OLip+Bfg0+QFRXHLej+W9KfefOjNGSZe1Zo6l+b8wIOJypYSNt0JPvUL3PDy
-	 M6OUeqj8+7SAp02lemGADokNWVhDpXcxPK+10x4pS3Nz4tSIY2UpcXGk1YHoyLG5VZ
-	 D2DwbcgzMFyzd/mflDzTiOJGJ0KLeqkxx0Q60z/rJ/c27ohxznBZzu/AhaekZS2PQ1
-	 aP1UC+gUE1RbQ==
+	b=D9i0rb50uByngULnoHD5g1+uyROQ1b4cuW00EGXJ28KaLhgnQMHpBZPKa1Q9XOMtt
+	 2XVS1uCP/rGXKIBG4XXGAsf7sMG2DliImva8vtNEcgT/BKzCSy0YU88Mn6+W6flbjM
+	 UVGf6RFYZObOQPdsNokMSNsQoG3fkoewQvWEZEBsKH95EUg4LKNY1eZn6v6ebqFiSc
+	 mvWhqM78RxythUisFaDeMQriMd+PrFw1jXG+3JC9mMJOzPOkEA0LXnDFGGDYqvUmyr
+	 S9Ssf/A+zQbi4vhiKz+J23CFQOa/7JSOZxasaIvwAiwE6hcfZ6oWaeAEla33Erp2XR
+	 BHxakNOczeCUQ==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 21/35] xfs: convert to new timestamp accessors
-Date: Thu, 15 Feb 2024 13:08:33 +0100
-Message-ID: <20240215120907.1542854-22-cem@kernel.org>
+Subject: [PATCH 22/35] xfs: create helpers for rtbitmap block/wordcount computations
+Date: Thu, 15 Feb 2024 13:08:34 +0100
+Message-ID: <20240215120907.1542854-23-cem@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240215120907.1542854-1-cem@kernel.org>
 References: <20240215120907.1542854-1-cem@kernel.org>
@@ -42,209 +42,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Jeff Layton <jlayton@kernel.org>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-Source kernel commit: 75d1e312bbbd175fa27ffdd4c4fe9e8cc7d047ec
+Source kernel commit: d0448fe76ac1a9ccbce574577a4c82246d17eec4
 
-Convert to using the new inode timestamp accessor functions.
+Create helper functions that compute the number of blocks or words
+necessary to store the rt bitmap.
 
-[Carlos: Also partially port 077c212f0344ae and 12cd4402365166]
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
-Link: https://lore.kernel.org/r/20231004185347.80880-75-jlayton@kernel.org
-Signed-off-by: Christian Brauner <brauner@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- include/xfs_inode.h      | 74 ++++++++++++++++++++++++++++++++++++++--
- libxfs/util.c            |  2 +-
- libxfs/xfs_inode_buf.c   | 10 +++---
- libxfs/xfs_rtbitmap.c    |  6 +++-
- libxfs/xfs_trans_inode.c |  2 +-
- mkfs/proto.c             |  2 +-
- 6 files changed, 86 insertions(+), 10 deletions(-)
+ libxfs/xfs_rtbitmap.c   | 27 +++++++++++++++++++++++++++
+ libxfs/xfs_rtbitmap.h   | 12 ++++++++++++
+ libxfs/xfs_trans_resv.c |  9 +++++----
+ 3 files changed, 44 insertions(+), 4 deletions(-)
 
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 986815e5c..a351bb0d9 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -41,8 +41,8 @@ struct inode {
- 	unsigned long		i_state; /* Not actually used in userspace */
- 	uint32_t		i_generation;
- 	uint64_t		i_version;
--	struct timespec64	i_atime;
--	struct timespec64	i_mtime;
-+	struct timespec64	__i_atime;
-+	struct timespec64	__i_mtime;
- 	struct timespec64	__i_ctime; /* use inode_*_ctime accessors! */
- 	spinlock_t		i_lock;
- };
-@@ -69,6 +69,76 @@ static inline void ihold(struct inode *inode)
- 	inode->i_count++;
- }
- 
-+static inline time64_t inode_get_atime_sec(const struct inode *inode)
-+{
-+	return inode->__i_atime.tv_sec;
-+}
-+
-+static inline long inode_get_atime_nsec(const struct inode *inode)
-+{
-+	return inode->__i_atime.tv_nsec;
-+}
-+
-+static inline struct timespec64 inode_get_atime(const struct inode *inode)
-+{
-+	return inode->__i_atime;
-+}
-+
-+static inline struct timespec64 inode_set_atime_to_ts(struct inode *inode,
-+						      struct timespec64 ts)
-+{
-+	inode->__i_atime = ts;
-+	return ts;
-+}
-+
-+static inline struct timespec64 inode_set_atime(struct inode *inode,
-+						time64_t sec, long nsec)
-+{
-+	struct timespec64 ts = { .tv_sec = sec,
-+				 .tv_nsec = nsec };
-+	return inode_set_atime_to_ts(inode, ts);
-+}
-+
-+static inline time64_t inode_get_mtime_sec(const struct inode *inode)
-+{
-+	return inode->__i_mtime.tv_sec;
-+}
-+
-+static inline long inode_get_mtime_nsec(const struct inode *inode)
-+{
-+	return inode->__i_mtime.tv_nsec;
-+}
-+
-+static inline struct timespec64 inode_get_mtime(const struct inode *inode)
-+{
-+	return inode->__i_mtime;
-+}
-+
-+static inline struct timespec64 inode_set_mtime_to_ts(struct inode *inode,
-+						      struct timespec64 ts)
-+{
-+	inode->__i_mtime = ts;
-+	return ts;
-+}
-+
-+static inline struct timespec64 inode_set_mtime(struct inode *inode,
-+						time64_t sec, long nsec)
-+{
-+	struct timespec64 ts = { .tv_sec = sec,
-+				 .tv_nsec = nsec };
-+	return inode_set_mtime_to_ts(inode, ts);
-+}
-+
-+static inline time64_t inode_get_ctime_sec(const struct inode *inode)
-+{
-+	return inode->__i_ctime.tv_sec;
-+}
-+
-+static inline long inode_get_ctime_nsec(const struct inode *inode)
-+{
-+	return inode->__i_ctime.tv_nsec;
-+}
-+
- static inline struct timespec64 inode_get_ctime(const struct inode *inode)
- {
- 	return inode->__i_ctime;
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 8f79b0cd1..8517bfb64 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -291,7 +291,7 @@ libxfs_init_new_inode(
- 		if (!pip)
- 			ip->i_diflags2 = xfs_flags2diflags2(ip,
- 							fsx->fsx_xflags);
--		ip->i_crtime = VFS_I(ip)->i_mtime; /* struct copy */
-+		ip->i_crtime = inode_get_mtime(VFS_I(ip)); /* struct copy */
- 		ip->i_cowextsize = pip ? 0 : fsx->fsx_cowextsize;
- 	}
- 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index fccab4193..74a1bd227 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -217,8 +217,10 @@ xfs_inode_from_disk(
- 	 * a time before epoch is converted to a time long after epoch
- 	 * on 64 bit systems.
- 	 */
--	inode->i_atime = xfs_inode_from_disk_ts(from, from->di_atime);
--	inode->i_mtime = xfs_inode_from_disk_ts(from, from->di_mtime);
-+	inode_set_atime_to_ts(inode,
-+			      xfs_inode_from_disk_ts(from, from->di_atime));
-+	inode_set_mtime_to_ts(inode,
-+			      xfs_inode_from_disk_ts(from, from->di_mtime));
- 	inode_set_ctime_to_ts(inode,
- 			      xfs_inode_from_disk_ts(from, from->di_ctime));
- 
-@@ -312,8 +314,8 @@ xfs_inode_to_disk(
- 	to->di_projid_lo = cpu_to_be16(ip->i_projid & 0xffff);
- 	to->di_projid_hi = cpu_to_be16(ip->i_projid >> 16);
- 
--	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
--	to->di_mtime = xfs_inode_to_disk_ts(ip, inode->i_mtime);
-+	to->di_atime = xfs_inode_to_disk_ts(ip, inode_get_atime(inode));
-+	to->di_mtime = xfs_inode_to_disk_ts(ip, inode_get_mtime(inode));
- 	to->di_ctime = xfs_inode_to_disk_ts(ip, inode_get_ctime(inode));
- 	to->di_nlink = cpu_to_be32(inode->i_nlink);
- 	to->di_gen = cpu_to_be32(inode->i_generation);
 diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index c635e8c2e..9a8bd93b7 100644
+index 9a8bd93b7..92473d4a5 100644
 --- a/libxfs/xfs_rtbitmap.c
 +++ b/libxfs/xfs_rtbitmap.c
-@@ -974,6 +974,7 @@ xfs_rtfree_extent(
- 	xfs_mount_t	*mp;		/* file system mount structure */
- 	xfs_fsblock_t	sb;		/* summary file block number */
- 	struct xfs_buf	*sumbp = NULL;	/* summary file block buffer */
-+	struct timespec64 atime;
- 
- 	mp = tp->t_mountp;
- 
-@@ -1003,7 +1004,10 @@ xfs_rtfree_extent(
- 	    mp->m_sb.sb_rextents) {
- 		if (!(mp->m_rbmip->i_diflags & XFS_DIFLAG_NEWRTBM))
- 			mp->m_rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
--		*(uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
-+
-+		atime = inode_get_atime(VFS_I(mp->m_rbmip));
-+		atime.tv_sec = 0;
-+		inode_set_atime_to_ts(VFS_I(mp->m_rbmip), atime);
- 		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
- 	}
+@@ -1137,3 +1137,30 @@ xfs_rtalloc_extent_is_free(
+ 	*is_free = matches;
  	return 0;
-diff --git a/libxfs/xfs_trans_inode.c b/libxfs/xfs_trans_inode.c
-index ca8e82376..c171a525c 100644
---- a/libxfs/xfs_trans_inode.c
-+++ b/libxfs/xfs_trans_inode.c
-@@ -62,7 +62,7 @@ xfs_trans_ichgtime(
- 	tv = current_time(inode);
+ }
++
++/*
++ * Compute the number of rtbitmap blocks needed to track the given number of rt
++ * extents.
++ */
++xfs_filblks_t
++xfs_rtbitmap_blockcount(
++	struct xfs_mount	*mp,
++	xfs_rtbxlen_t		rtextents)
++{
++	return howmany_64(rtextents, NBBY * mp->m_sb.sb_blocksize);
++}
++
++/*
++ * Compute the number of rtbitmap words needed to populate every block of a
++ * bitmap that is large enough to track the given number of rt extents.
++ */
++unsigned long long
++xfs_rtbitmap_wordcount(
++	struct xfs_mount	*mp,
++	xfs_rtbxlen_t		rtextents)
++{
++	xfs_filblks_t		blocks;
++
++	blocks = xfs_rtbitmap_blockcount(mp, rtextents);
++	return XFS_FSB_TO_B(mp, blocks) >> XFS_WORDLOG;
++}
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index 167ea6a08..618c96468 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -283,6 +283,11 @@ xfs_rtfree_extent(
+ /* Same as above, but in units of rt blocks. */
+ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
+ 		xfs_filblks_t rtlen);
++
++xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
++		rtextents);
++unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
++		xfs_rtbxlen_t rtextents);
+ #else /* CONFIG_XFS_RT */
+ # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
+ # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
+@@ -290,6 +295,13 @@ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
+ # define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
+ # define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
+ # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
++static inline xfs_filblks_t
++xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
++{
++	/* shut up gcc */
++	return 0;
++}
++# define xfs_rtbitmap_wordcount(mp, r)			(0)
+ #endif /* CONFIG_XFS_RT */
  
- 	if (flags & XFS_ICHGTIME_MOD)
--		inode->i_mtime = tv;
-+		inode_set_mtime_to_ts(inode, tv);
- 	if (flags & XFS_ICHGTIME_CHG)
- 		inode_set_ctime_to_ts(inode, tv);
- 	if (flags & XFS_ICHGTIME_CREATE)
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index ea31cfe5c..e9c633ed3 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -688,7 +688,7 @@ rtinit(
- 	mp->m_sb.sb_rbmino = rbmip->i_ino;
- 	rbmip->i_disk_size = mp->m_sb.sb_rbmblocks * mp->m_sb.sb_blocksize;
- 	rbmip->i_diflags = XFS_DIFLAG_NEWRTBM;
--	*(uint64_t *)&VFS_I(rbmip)->i_atime = 0;
-+	inode_set_atime(VFS_I(rbmip), 0, 0);
- 	libxfs_trans_log_inode(tp, rbmip, XFS_ILOG_CORE);
- 	libxfs_log_sb(tp);
- 	mp->m_rbmip = rbmip;
+ #endif /* __XFS_RTBITMAP_H__ */
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index 53c190b72..82b3d1522 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -217,11 +217,12 @@ xfs_rtalloc_block_count(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		num_ops)
+ {
+-	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
+-	unsigned int		rtbmp_bytes;
++	unsigned int		rtbmp_blocks;
++	xfs_rtxlen_t		rtxlen;
+ 
+-	rtbmp_bytes = xfs_extlen_to_rtxlen(mp, XFS_MAX_BMBT_EXTLEN) / NBBY;
+-	return (howmany(rtbmp_bytes, blksz) + 1) * num_ops;
++	rtxlen = xfs_extlen_to_rtxlen(mp, XFS_MAX_BMBT_EXTLEN);
++	rtbmp_blocks = xfs_rtbitmap_blockcount(mp, rtxlen);
++	return (rtbmp_blocks + 1) * num_ops;
+ }
+ 
+ /*
 -- 
 2.43.0
 
