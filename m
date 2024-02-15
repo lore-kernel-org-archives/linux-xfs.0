@@ -1,208 +1,136 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7C6127B6D;
-	Thu, 15 Feb 2024 11:09:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707995346; cv=fail; b=AGXPDZyHlG9ieNgwgYi9186vf2HOxzIunRjkzZyJki5kfD3s8LlFJhRt3baCTNnZ/EzFeBwnsT0ofoSZXSbzDFD0Pq1Am20uTCrl3XDs8xrELo4aYk5fXP/7z8mmqPrpboz8UHursxmDh7wcmZT2GmO1w95nIKN01G945EN4ZPA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707995346; c=relaxed/simple;
-	bh=DNqdyqei5l6xuDJG7CQhT+VMHPPgw8q0O24uN6y9urc=;
-	h=Message-ID:Date:Subject:From:To:Cc:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=OAS52oAahOLjtOtl0VP3NStMlLDSqDxHSaSQrIEht106+hltlqWaHcq8k2GUCdPW8FROM7vAECP2HkQ+CJufC18GQc14agLzmywO2FA1vwDk74iWj0Od8LQEv01KFLxv7hzIkFeNK6ztLksKZjczJrkefsEtWvJdUFvdgkrNuXU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=XIycMjcm; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=yKta1aky; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CBED57872
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707998955; cv=none; b=FEWdGfrEXBRBToH5p+9KXFznCGgcbzwyhf1dTyFmgqU9+bMy3SsN/gfGrDWAaMD6sCmbX33VwOsweUs3+rWLkUk0reBez6DNT18/tDSHsq58hLuhHRzVnmLZTz1Ewph1BEg55S0oMkI26sST0nm+xeHaF6N7TKA6p93qDRd/hP4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707998955; c=relaxed/simple;
+	bh=kfyvuik/LU4QB6n6HGh7GX265bbOY4tyR+IM22hCm0U=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=kB+xiXf70N5WUJ1v7G5sGYl8y/VmYdK0+ft1vJrLoMcTHG32ARHgpRypcZBIsQhPzcG26mAeejA2+wlUz70NL6wBoDI7Sc/OSmt1M3rTamzNlUMg32/Dxj534ZEZsOPDOqjenYaWdI//XR4K5d8rIjG5Ze1xv9iSYXpj8MPH5MM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DJXn698k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XIycMjcm";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="yKta1aky"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41F6igCo018109;
-	Thu, 15 Feb 2024 11:08:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : from : to : cc : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=cHANw+pONghhRSkL/qHZwBFBtNyU511T2IX/VVZ9GoM=;
- b=XIycMjcm9nvst48S5rsQK8zH965RvJzTx9V9N9zskfigpDXWVt/FqJ1mw4e9eSbzCxza
- RaTiwLXJeZVdKd2081Uq9peexfeVLJezz4cYC0i/twTrzXAehJvsC3ADAi/ol0CI33TT
- ZPmbAIdvgcozvzhgcKuDeL4CdXq6kYG/H20UoVJ+GQJDq/UsiDT6aWHAAVKOrs+r5kKE
- PIjVScCEatFidZisHGgddpz8EwFRyWb5WE+KFLrFX1Pd9+2O5RjFUGVLJ0Y/n04/6pcP
- s5lgMPoBu7NsRTFRmUCroMfPbJ45r5kqU2yhMgwoyXT6madMvG3AHt+u3ieLExQ68vj1 Xg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w91f02259-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 15 Feb 2024 11:08:47 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41FAtR2G015066;
-	Thu, 15 Feb 2024 11:08:47 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w5yka2v8t-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 15 Feb 2024 11:08:47 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZV9EFzddLxN+PQZ9phnYmsowAy1TWC39D+7eiqv/PqwHH1qLk1zuZ2FRXC48Ho7dm0f/BeM6CqZR94clbCu1hqvmr/IKAoy5pNXRxL7iDb4DYEEhIniPfofgankfF80UPpTn4gkuHcymRaZTYDFADs4gRAZnsbUHEoHFNaTqBTvTQOG4ZOjWX5bqW75TuLpQxLQFybQkNtHEEuHTQdiIdfjNHJqbgdsMk4KmmbUlnKWzbfg8KNbNWOgEehRIKdSd+kR6YgeeL9gjlE0glSQvUnNg81nPFhE0J4lu6Akkb2beZEFllDkcbo7cek/WO0YyIRmbEKrcVZAzcMZPGbwhZA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cHANw+pONghhRSkL/qHZwBFBtNyU511T2IX/VVZ9GoM=;
- b=BpIi62nKe/VtgCsWbYYXsdR/2h6Ki5JsgF7XIQl8GQHBHKWBh5P4DHeMNA5hxGxK0ZKhnDyn9ICOrYj9q5X1W6eCswbMOelboE0kx4mAxBWLfnpqie8S0p1oMq5akgGpOPRuL49Wsjz2vAg7rwhcI9MaGR/fc+GEtykNLlM9VHrTX+kfpHko4Z8HTIDUT9NTgYuiIePCIH/UqYE0KMwllh12ntc9HU68xihnU6gc31QVSwn1Lri80b7jiQUmpWvJ8eTCPQKyVDKZqIF0Lnl9AIiRixMl656HlbZYNA07uwWrHQqYbY5ncalkSFwMDLFg08rM93rHYJpodvc5ytZbGQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cHANw+pONghhRSkL/qHZwBFBtNyU511T2IX/VVZ9GoM=;
- b=yKta1akySv9hDA5udZ0WJzttpdQNzUJGaiZRWZm/umuA/raj+gxoN+kzXsTfFvXAtVmictY8vNfXqD/44ypjFOTwmAKuRls1iAFZFz2Sg6jzfCEL5mg92XNrv7ikgG/nx8N1x8gKiu4RjiG3sy3oqVEV8yNPOswoHz6DfISkQ+c=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by PH7PR10MB6276.namprd10.prod.outlook.com (2603:10b6:510:210::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.44; Thu, 15 Feb
- 2024 11:08:44 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::56f9:2210:db18:61c4]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::56f9:2210:db18:61c4%4]) with mapi id 15.20.7292.026; Thu, 15 Feb 2024
- 11:08:44 +0000
-Message-ID: <8f83e1b3-c9d9-4be2-9c95-249e1b1bd898@oracle.com>
-Date: Thu, 15 Feb 2024 11:08:40 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/6] fs: iomap: Atomic write support
-From: John Garry <john.g.garry@oracle.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, viro@zeniv.linux.org.uk,
-        brauner@kernel.org, dchinner@redhat.com, jack@suse.cz,
-        chandan.babu@oracle.com, martin.petersen@oracle.com,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        ojaswin@linux.ibm.com
-References: <20240124142645.9334-1-john.g.garry@oracle.com>
- <20240124142645.9334-2-john.g.garry@oracle.com>
- <20240202172513.GZ6226@frogsfrogsfrogs>
- <2f91a71e-413b-47b6-8bc9-a60c86ed6f6b@oracle.com>
- <20240213065518.GA23539@lst.de>
- <cf2e7d4b-9ad0-4013-8e5a-48047c588411@oracle.com>
-Content-Language: en-US
-Organization: Oracle Corporation
-In-Reply-To: <cf2e7d4b-9ad0-4013-8e5a-48047c588411@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: LO4P265CA0280.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:37a::17) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DJXn698k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F0B3C433F1
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 12:09:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707998954;
+	bh=kfyvuik/LU4QB6n6HGh7GX265bbOY4tyR+IM22hCm0U=;
+	h=From:To:Subject:Date:From;
+	b=DJXn698kFUb0dkBPsC0N7ychqvxp1scziBPCzJcvKEctGcHoHWNn7THfCDDUTSl4Y
+	 +FiYPYktEn8Xx1DVftDHDH4tud7fVyUU1sEDePT1shHBK9Pv+Ycrsn+jwfr+aj/AAW
+	 UmXfYF5fk2y6BlwiXBpnJIAiGxA0obCixJl59kJWdRs0MvOqimPowcLRx1+p34wd//
+	 Xo77QCg0E184jFyi2VAi8nmjMYg+PTP5C5ABkm8S5/lzUMPOeUTuTRCJmgjkrMcNXY
+	 kQUMXwHYOwi/nSdjCcG8pBH1GRrB0/L2LBGZrDeIk8BA1UZygmjhSyTphDcudeHctC
+	 2LhSe0NEY1/TQ==
+From: cem@kernel.org
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH 00/35] xfsprogs: libxfs-sync for 6.7 
+Date: Thu, 15 Feb 2024 13:08:12 +0100
+Message-ID: <20240215120907.1542854-1-cem@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH7PR10MB6276:EE_
-X-MS-Office365-Filtering-Correlation-Id: 13b6edc7-6611-406f-9742-08dc2e167964
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	HhJzn1VYNn+NepwoAPuMGWJF6fCKctINo7nQ7jqoVFP8XQTQuBA3NxNZgwHjJceTelXN+1WZHLSVfH6U638irdhTTh8gBRgDxF78nUdl9cXQkRiKFoZk+ZaokFCApG9TJ7d21ZPArtDo4LdzaF0kPEJ4E5DLk0FZEyu7vSNhMEqx3fW6nACWVNA3tQa4Ul4kPfdyfIDHpOsUTKQ7M5vJrSClrG6Dm00KSTFBi8KMdUzXJMr5EOsGy4KD9l90CHDNZTvR8pYj7R6cjWo+SnMcTcstylAGgs1//oJENbP4p7zv5/T3+WBF/acD9DKYJ+uubenLFbEklc64mJAG+QSrGNo+jilu7xhoeXDZsAxRPFMBYuf+uDX3XwEs2wwGXf9IJ56y7OoiKghYItY2HsEHSkR7l7Hbj53Rgvd4TEj75zQ4HtypefwZgKp6dRmsS2iSNZsIkDoeRmktqDgU2SmNODmP5mJ3fztvRnyy1dJghEWSHp+pAcneAjMrO4EF978BKwE6etjJ0LvZ6GiqkiOwyfxfb303jO6I6um1KGElPKGaFTLvIkpx9InMIWDFA3Bq
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(39860400002)(376002)(346002)(366004)(396003)(230922051799003)(186009)(64100799003)(1800799012)(451199024)(5660300002)(66476007)(66556008)(66946007)(4744005)(2906002)(8936002)(4326008)(8676002)(7416002)(6916009)(36756003)(31696002)(86362001)(38100700002)(478600001)(6506007)(316002)(36916002)(53546011)(6666004)(6486002)(6512007)(26005)(2616005)(41300700001)(31686004);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?bHNPdUZ3c2NzZmJqdE42THVvMFR0cXM0WkoycnAwTnMwWmVPVkFzVUNrT3hp?=
- =?utf-8?B?eTArM01LcEZmdlNmTGVnMHo5elNlRjA0Y2ZmcUVhK081QnNQbGZQNlZQUitx?=
- =?utf-8?B?TTNtaHJ3b1ZIaExrRUpmbTRQQ00rZDJhQ3JwOFZKdmNDQzQ2Y0NMcnEzUEZ0?=
- =?utf-8?B?M1RvZDNkd1hZVzErSDZMV1loRkEvNFhPNEFIaVJQZFBBcUJPd1NJMDBpb3FU?=
- =?utf-8?B?NEw0RWY0QUNnQzNxMzNvaUFIbmRyWDNjQ3c3U2FhR0xFNFY5amF5d09DV2dB?=
- =?utf-8?B?NC9EV0lpMWpNak9rcGJXR04vK2hSUGVuWjhGU3FqTDk4ZlZZdnZ6dWx6VVRW?=
- =?utf-8?B?R29hUnRFSjE0aGsyR2NZd1Nhb3RZVHFaQU9MSDVGYUsrempSWGQ1M1dFdmYr?=
- =?utf-8?B?dzg4U2tPY3NJY1dvUEMrZkduYzB4UUQ2U2VnKy95VTNNQ3Y3NWlZZU92cFlq?=
- =?utf-8?B?YktIMGRmck1vWUlvNkhUSVlnL21uV0JVMUZ3Z3V5V3RiTDkyYlByTnRlaVRY?=
- =?utf-8?B?ZStpRm9KbklFT3I4eXZKalA2VzFJV2VqN3pseFNyMlZXcVQ4MGFKUCtyZ1NV?=
- =?utf-8?B?Ym1ZcDUzK3kwM09FWUxIT1Q4THBRbmxHQXV2dXd0bmpXc21zMEg1Z3lwMVRZ?=
- =?utf-8?B?K2txUnc5RXBvMDdGdlVwRndLTlJOVDhKN0RjM1FWL3ltUjdXS0tUbFBjUkQ5?=
- =?utf-8?B?QXg1dGVTcXJLTUdYb0ZlSitNR0dNV1JaR3J2cVZkeWRDOTNCcklUUWRaRmV5?=
- =?utf-8?B?aDVYZkc2b1VDVkhYaHBmakY3cDlsZ0VxMGwvVjNuRnMzN2trKzdKaHpmQzlO?=
- =?utf-8?B?QitLMkYvbHBuRW1oSVBlK2lUMi9TeTRoTms2dmhFZ3ZzWlc5T0hKb3B6T1VV?=
- =?utf-8?B?YjVnK2VKRGpsZ1Y4bUR6Q3JCL2lscXY2eVE4U1VDNDBZM2g5Rmt4bSsrcDFk?=
- =?utf-8?B?Sng3c3VOcXVodmx1SHd0VkVUYll6eWxsS2JHdEVsZU1JYzNwZ01ydGZIRlZT?=
- =?utf-8?B?VzRndml1TkRtWFB5UmxjWHVYd0t5MFJtcEVEaWZBWEViLzAxbWtDQjdJV2Vk?=
- =?utf-8?B?U3kvdllGRmdYNyt2MEpPSHN6N3BldWcxb2ZNV3ZDSEZxcG00Q1RuOExRRDVu?=
- =?utf-8?B?anZhdHBLMHI5VDJxZmNPdTBIYTlMcHNQUS95aDBXd092cTlMU0pNTC8wV1RZ?=
- =?utf-8?B?OFhlVU0zR3NNNWYwSVZSSTF3MUhuZVlpaGhld2ZQK0Q2SzhzeDMwcDVtWE5W?=
- =?utf-8?B?YXZCUUszS2t1eTV6ajZLakFnOC9wQXBaMENYcnIvRllNa0RJd045azlyTU02?=
- =?utf-8?B?MUZXNGx1NGhLcGM3cmkyaGZXdjB0VFgzRlZjRGNsSkpzNlU5Y0J2U3FHa2Jm?=
- =?utf-8?B?c01iU0VmcG1MUkhiVFdGNGxrUUkybko1NlFlYWlPNzdmSW81VHlLUEs3djJ6?=
- =?utf-8?B?Z0srbE9Mb25IM2pveHJ0SmhJVjBaelV4SDIxWkRJNXgvSk1pTmYxZHp0bVpv?=
- =?utf-8?B?OGRvZzYyNTJzbm1tK3JWa0tjejd4QnNlZzhyOEZBQjRwWWhDREZxbFVsdUlR?=
- =?utf-8?B?TThLOExGRmFXcWFlUTc4QkJESGdGb25UN0xrTXBFZUhXTERLYVBWQllYTVlp?=
- =?utf-8?B?ME82WVY2QzhJcmVtZktsb2lTWW56R0JvYlo5UnNqMzBJQW5JSDEveWVKdyt3?=
- =?utf-8?B?RWx4UWtvdC84YW0vRm9VMEtEQk8wb3JNQzJYakNkRmwzbjBSakIxc2dua0ZF?=
- =?utf-8?B?R2xSNHgrSjR4cmZNeDA2RFdSaml5ZEUvOXVjL1ZQbFRnait5U1pLaHB0Y1Bj?=
- =?utf-8?B?a3d5K1hOTTA1elArZlBKTXdjQkpqeDV5QTE3VGtBUzFrQldmTlVRY2hyREM2?=
- =?utf-8?B?c2NMVDIxY3pOTWZ2azdNQURNYUNhS2Z3TDFFa3V0NFJJUUYxMGVySVZJM2Nr?=
- =?utf-8?B?U2NLU3EvM1VEckxzT09RbWZiL1l2dkZqMWx1SFl5TnBTZURFN2ZIenhIL2l6?=
- =?utf-8?B?N1ovcnVPazQ0Q0RxdFBkMFg5WDZBVHV0TlpsYmRtb05JT1dpM2VCaUduMHdJ?=
- =?utf-8?B?VUdLaVo4NjkvYzZHQVkzV1dZZnYzWDdLZkpxQUdXSnZOMFlLZG5uYmprSEV2?=
- =?utf-8?B?V2Zia3BoS3JRcmVMYUtHbDRHMXVtK3lCNlRjSUM0MGFSK3dCMHZ4UFhJOUNP?=
- =?utf-8?B?Tmc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	Z6t+SgApPipwzZ9EMYU9X/u/PN1ZjP5c+EL02dqEBUwhGoTLolCBAfGCXjBA8Gx5krpl8N6rXAkicaFO90rIfIB54EDdvdV16gE/BYbw5Q6y3zvPx8XK/Y3leDSJmTnfX6Hhl/CY/HW9jrCXdPDyKhDyCrR1Awh1ve0orAV7Zru9PyWpJ099v2PanxosQg0vBfCk8z+UICtM98xJzP7TWLkTaK7R2uRShdmU5p1Cmp0RO09tmkQXaLA0xr3lkejdCvHw+limB8hqxS9tXkxbjpXuw0A4Ltnlxoh20Z65m0KW2RCnPOrqwot4xR2/n6Ov+iRCANEEKnHmhs3n2B2vysBnS4uou904XuZ2gj7itHFL/fXdd5ZGeEUE2viXBgv3XZwTNjxgsGi5sd1jeAAWz3XTEY7/Aaf96RYS4B193QUG/7lNqKe6L/3zaR6HENYWwPbmiblBIkzKWxAUaLQ6dXMQOE2hiyPn5xsrnXWuTfOrh82CidNl3wl26pcl9GPnIa5xRx5Sc5sgNAWVc1si6fD9OTCek6mQ4iwV6o6X+nAD5nUj1WtgHhTt5UO91aOHOZiUfZnpkKa9pUJp+HaWKHLVeeemcaMgG5jzJhABenw=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 13b6edc7-6611-406f-9742-08dc2e167964
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Feb 2024 11:08:44.2529
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: m2Aqtf9pREcOQi/Kefk3ss/zyYeJm431mxM5iUqC7005HjMZNkTuMa2FW0zH4qXwDSCvrJE8vlfJtPueYzB03Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6276
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-15_10,2024-02-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0
- mlxlogscore=882 bulkscore=0 phishscore=0 mlxscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402150088
-X-Proofpoint-ORIG-GUID: T8S3fRmy1C1QVdMNRfCRuHU_b34VWude
-X-Proofpoint-GUID: T8S3fRmy1C1QVdMNRfCRuHU_b34VWude
+Content-Transfer-Encoding: 8bit
 
-On 13/02/2024 08:20, John Garry wrote:
-> On 13/02/2024 06:55, Christoph Hellwig wrote:
->> On Mon, Feb 05, 2024 at 11:29:57AM +0000, John Garry wrote:
->>>> Also, what's the meaning of REQ_OP_READ | REQ_ATOMIC?
->>> REQ_ATOMIC will be ignored for REQ_OP_READ. I'm following the same 
->>> policy
->>> as something like RWF_SYNC for a read.
->> We've been rather sloppy with these flags in the past, which isn't
->> a good thing.  Let's add proper checking for new interfaces.
+From: Carlos Maiolino <cem@kernel.org>
 
-How about something like this:
+Hello folks,
 
-----8<----
+this is the libxfs-sync for 6.7. I know we don't use to publish the results on
+the list, but this release's sync was a bit more complicated, so, if you can
+spare a few minutes, I'd appreciate an extra pair of eyes on top of it.
+Also I thinkg it's a good idea to publish the patches here before pushing them
+to for-next.
 
--static inline int kiocb_set_rw_flags(struct kiocb *ki, rwf_t flags)
-+static inline int kiocb_set_rw_flags(struct kiocb *ki, rwf_t flags, int 
-type)
-  {
-   int kiocb_flags = 0;
+You can also pull the patches directly from my repository:
 
-...
+git@gitolite.kernel.org:pub/scm/linux/kernel/git/cem/xfsprogs-dev.git libxfs-sync-6.7
 
-+ if (flags & RWF_ATOMIC) {
-+ 	if (type == READ)
-+ 		return -EOPNOTSUPP;
-+ 	if (!(ki->ki_filp->f_mode & FMODE_CAN_ATOMIC_WRITE))
-+ 		return -EOPNOTSUPP;
-+ }
-   kiocb_flags |= (__force int) (flags & RWF_SUPPORTED);
-   if (flags & RWF_SYNC)
-  	 kiocb_flags |= IOCB_DSYNC;
+The sync is under testing now, so far nothing has been found, but it's still
+going.
 
----->8----
 
-I don't see a better place to add this check.
+Darrick J. Wong (27):
+  xfs: bump max fsgeom struct version
+  xfs: hoist freeing of rt data fork extent mappings
+  xfs: fix units conversion error in xfs_bmap_del_extent_delay
+  xfs: move the xfs_rtbitmap.c declarations to xfs_rtbitmap.h
+  xfs: convert xfs_extlen_t to xfs_rtxlen_t in the rt allocator
+  xfs: convert rt bitmap/summary block numbers to xfs_fileoff_t
+  xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
+  xfs: rename xfs_verify_rtext to xfs_verify_rtbext
+  xfs: convert rt extent numbers to xfs_rtxnum_t
+  xfs: create a helper to convert rtextents to rtblocks
+  xfs: create a helper to compute leftovers of realtime extents
+  xfs: create a helper to convert extlen to rtextlen
+  xfs: create helpers to convert rt block numbers to rt extent numbers
+  xfs: convert do_div calls to xfs_rtb_to_rtx helper calls
+  xfs: create rt extent rounding helpers for realtime extent blocks
+  xfs: use shifting and masking when converting rt extents, if possible
+  xfs: convert the rtbitmap block and bit macros to static inline
+    functions
+  xfs: remove XFS_BLOCKWSIZE and XFS_BLOCKWMASK macros
+  xfs: convert open-coded xfs_rtword_t pointer accesses to helper
+  xfs: convert rt summary macros to helpers
+  xfs: create helpers for rtbitmap block/wordcount computations
+  xfs: create a helper to handle logging parts of rt bitmap/summary
+    blocks
+  xfs: use accessor functions for bitmap words
+  xfs: create helpers for rtsummary block/wordcount computations
+  xfs: use accessor functions for summary info words
+  xfs: simplify xfs_rtbuf_get calling conventions
+  xfs: simplify rt bitmap/summary block accessor functions
 
-John
+Dave Chinner (2):
+  xfs: consolidate realtime allocation arguments
+  xfs: inode recovery does not validate the recovered inode
+
+Jeff Layton (1):
+  xfs: convert to new timestamp accessors
+
+Long Li (2):
+  xfs: factor out xfs_defer_pending_abort
+  xfs: abort intent items when recovery intents fail
+
+Omar Sandoval (3):
+  xfs: cache last bitmap block in realtime allocator
+  xfs: invert the realtime summary cache
+  xfs: fix internal error from AGFL exhaustion
+
+ db/check.c               |   5 +-
+ include/libxfs.h         |   1 +
+ include/xfs_inode.h      |  74 +++-
+ include/xfs_mount.h      |   2 +
+ libxfs/libxfs_api_defs.h |   1 +
+ libxfs/libxfs_priv.h     |  79 ++--
+ libxfs/util.c            |   2 +-
+ libxfs/xfs_alloc.c       |  27 +-
+ libxfs/xfs_bmap.c        |  44 +--
+ libxfs/xfs_defer.c       |  28 +-
+ libxfs/xfs_defer.h       |   2 +-
+ libxfs/xfs_format.h      |  34 +-
+ libxfs/xfs_inode_buf.c   |  13 +-
+ libxfs/xfs_rtbitmap.c    | 809 +++++++++++++++++++++------------------
+ libxfs/xfs_rtbitmap.h    | 386 +++++++++++++++++++
+ libxfs/xfs_sb.c          |   2 +
+ libxfs/xfs_sb.h          |   2 +-
+ libxfs/xfs_trans_inode.c |   2 +-
+ libxfs/xfs_trans_resv.c  |  10 +-
+ libxfs/xfs_types.c       |   4 +-
+ libxfs/xfs_types.h       |  10 +-
+ mkfs/proto.c             |   2 +-
+ repair/rt.c              |   5 +-
+ 23 files changed, 1043 insertions(+), 501 deletions(-)
+ create mode 100644 libxfs/xfs_rtbitmap.h
+
+Carlos
+-- 
+2.43.0
+
