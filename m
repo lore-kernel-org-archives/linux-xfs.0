@@ -1,62 +1,75 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 158D112FB27;
-	Thu, 15 Feb 2024 13:14:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02BA131E31;
+	Thu, 15 Feb 2024 14:27:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708002868; cv=none; b=DmJUTx0sX3KYyXm4gIY1GpJx6pWt9Wdfqg07IWehpZabQJuJgrA/ROsiFmJPxzHS3B6sFXE/mzaprxzfy6FHvppJiw4jh83c2gtHg8yAZAV+irsVtYtqJowYTNZzkwkR9gVqh5S+RrrNdTQg6nDYg5dsPb2jszDWCt7G97SPUCI=
+	t=1708007257; cv=none; b=Qdcyq55bryOSVMS30+26XWKnR6txnoRKvnHH5eD2p+iw787j4PPamdFS6ns5si8ffeRsc+dhWvGkI+4O8jnGSPrY1D7OnUQUBI8tjnO1M9v2RMKICLdew+EfqDyx1FC4w79Uhv20XNE5SRd9ow/jufmaXqmea0WKDFGOerF7Now=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708002868; c=relaxed/simple;
-	bh=aSiEOAMP+IX1K7V6GgqsGetPTkw7NYZFyUb+tQIMQaA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jZzNlE43OjhSI+XzG9bz3mSY4ZWg3naGsLgXbt1aPSnOYe562jVJLcJHZHH2RUM8hZoTZ0vBtA+FeOCpP8bwqkuPWNo7jhAFoWUg7EBpY16k18ikSQhgT5QBrl0hFJOQAxoh2Op/ltXF4Fk4Wf3kbnO18WO8KU2Z81mknDSTW4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=tqNyv2lP; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1708007257; c=relaxed/simple;
+	bh=PuQ6kn112DYtORmup7aH2j73drGiFmg5nXdIDPUqDz4=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=F9sSICYL81rjz4Q1Rsfl88AVknExYM/wAPqKsyC5BUBUWVi9z+heoefAh7fRfe+4G6vMIcJL9WTvSm+kltfzh2yCtZLB9EvFSL8rRtcz3uC4PXBpVHpylJUeJ6eaAwre/Z4sHJTbfx61Jw++aMavIQpY+8TIrvVkqOkRTa108TI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aurYxMTs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tqNyv2lP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=aSiEOAMP+IX1K7V6GgqsGetPTkw7NYZFyUb+tQIMQaA=; b=tqNyv2lPaElUwgXN/ZbSzA+Yqd
-	Fb98SIa8PgosPexpaoiiiFLDUr0Dkey/VrclZzHmDBkKDPCutrBSUqsyQZoBSj9SMpS53XTExfmKO
-	ErDVecKRPkTxVG/5wWncItPjvfJXDIGwuGaAIpgy1CHrlG3cjtxweRgKZ6TjB7iPTSDAVQCVOObQ+
-	KJR1SghT/ZByON8CBBhZqwa/EcCFo9Z1aDz5PBWjIkxPu0eTcmHhTyidVlZzFzxYyCFAxeZNwy+BW
-	z5Nq3yS4i1uaDe/UxlKRmTLakgCKMBssQPYUt2uaxlTQw8tsHl6safyFKeDHlwupnGg+E6nfrv4DE
-	2CxocTZw==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rabZG-00000001v7c-0Rda;
-	Thu, 15 Feb 2024 13:14:22 +0000
-Date: Thu, 15 Feb 2024 13:14:22 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Hugh Dickins <hughd@google.com>
-Cc: Christopn Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org
-Subject: Re: shmem patches headsup: Re: [ANNOUNCE] xfs-linux: for-next
- updated to 9ee85f235efe
-Message-ID: <Zc4OLvfTiVUDd_28@casper.infradead.org>
-References: <87frxva65g.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20240214080305.GA10568@lst.de>
- <0e8d50e9-4254-7acc-e9b4-9b6ad63a25da@google.com>
- <38716bcd-f26b-a7f5-2ef9-1ad554d42357@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aurYxMTs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAF3DC433F1;
+	Thu, 15 Feb 2024 14:27:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708007257;
+	bh=PuQ6kn112DYtORmup7aH2j73drGiFmg5nXdIDPUqDz4=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=aurYxMTs058gqHrdBNIWxOsfwJf/pt5vcKMslo5mz/HrjztIH8FWsaICfyyVSvWaE
+	 DgDALkjYj8JXRNbbn3eplaTiJP4LVR0A4ilN4gmcWf6x3FE/n5vT51tZbC9T6JVslc
+	 RgtnGYjD9lF89ml+6d+GgTvgvMMn43lYmr6/mP7ppOm0x9JtK6XYOkxH9jVOVF+Um+
+	 eSIuqXvpKCeDKD1ua5RWKNjVlPUXz8XnZ5gkd6Pk9aonEPO8ZuyNWdC+be4H3BUWPo
+	 OnND4IdQM8HKk1pJKZ6ejhRHnEl6IgIbNQjzU1mjaT1mwafw96uTlDTYAsbPk4Medt
+	 9Pzs5bi716z8g==
+References: <20240111212424.3572189-1-willy@infradead.org>
+ <Zc05FiqYKgtNHUL7@casper.infradead.org>
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J .
+ Wong" <djwong@kernel.org>, Mateusz Guzik <mjguzik@gmail.com>, Peter
+ Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will
+ Deacon <will@kernel.org>, Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v5 0/3] Remove the XFS mrlock
+Date: Thu, 15 Feb 2024 19:53:21 +0530
+In-reply-to: <Zc05FiqYKgtNHUL7@casper.infradead.org>
+Message-ID: <87wmr5n6p7.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <38716bcd-f26b-a7f5-2ef9-1ad554d42357@google.com>
+Content-Type: text/plain
 
-On Wed, Feb 14, 2024 at 11:39:06PM -0800, Hugh Dickins wrote:
-> I wonder what the fuss is: Matthew (thank you) has been giving excellent
-> reviews, and mm is a cooperative not a dickinstatorship (but I was upset
-> that he caught that GFP_HIGHUSER, which I had been eager to point out).
+On Wed, Feb 14, 2024 at 10:05:10 PM +0000, Matthew Wilcox wrote:
+> On Thu, Jan 11, 2024 at 09:24:21PM +0000, Matthew Wilcox (Oracle) wrote:
+>> XFS has an mrlock wrapper around the rwsem which adds only the
+>> functionality of knowing whether the rwsem is currently held in read
+>> or write mode.  Both regular rwsems and rt-rwsems know this, they just
+>> don't expose it as an API.  By adding that, we can remove the XFS mrlock
+>> as well as improving the debug assertions for the mmap_lock when lockdep
+>> is disabled.
+>> 
+>> I have an ack on the first patch from Peter, so I would like to see this
+>> merged through the XFS tree since most of what it touches is XFS.
+>
+> What needs to happen to get these picked up to not miss the next merge
+> window?
 
-Sorry; it's always frustrating when somebody else says the same thing
-you were going to say ;-)
+Sorry, I missed this patchset. I tried applying this patchset on top of XFS'
+current for-next branch. But it failed due to merge conflicts. I would suggest
+that you should wait until the "shmem patches" impasse gets resolved and
+for-next branch becomes stable.
+
+I will respond to this mail as to when you can rebase your patchset on
+for-next and either send a pull request or post the rebased version of the
+patchset to the mailing list.
+
+-- 
+Chandan
