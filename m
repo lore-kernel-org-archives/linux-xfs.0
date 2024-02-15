@@ -1,34 +1,34 @@
 Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD4C2132470;
-	Thu, 15 Feb 2024 14:46:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4820132C1A;
+	Thu, 15 Feb 2024 14:46:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708008403; cv=none; b=cO6foGmzsI5XvlGJusSqjR6nK3GP01aPU5jX8X2rqpDcacRE7F7M8fKR8GmioXxmmsvBqF2BiReN6MQEDOPOJ5pwigFwx7rHLpCwME+hUO/omzFzR7zQa56faiukuNfimPWJPDeSwRhhF9riDvgL6jRWPcuTXH2H1PyaxNQHoI0=
+	t=1708008404; cv=none; b=EvwBmDJ4PzRvQXKHxLqiqRbANRbojkc7uJeB0FVuwZAwy/i7qZ7AfmPqMZIIqM8OCQYfkuWTIf0Zbmtgm/BgJrNTPEPMkfYwdjXm26EmLaEfbIER/JvSTycALZnOeBmvu0esoXRNR+AAc2y/GMTItRJxIOJu6f0pUpjZkzSJqJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708008403; c=relaxed/simple;
-	bh=JafNy954LGAswGK3M3iYUpQrWP3IyrMlG3pf6B1HRm4=;
+	s=arc-20240116; t=1708008404; c=relaxed/simple;
+	bh=xPtmgWiHU56eIOTTAS+sj/oIA68ksqZ/i5VE/RwV8cI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UwEBek/XxdZGS+CaKSfTxD9j1Q+5q2F8oeXew/n/S9pxmnQZsHdPFITsEQwMXUpvUJzCgNLB4L5tiHRmCmZnasccrnpozN/pRDfmmCNjonQrbwxijmR1Xma66pn3b9qncmC0bEKgzb6BtDkvnRpjpNYN6PvOcmDkiQBzxBNk0+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=lJxsuurM; arc=none smtp.client-ip=167.114.26.122
+	 MIME-Version; b=AAl3N9AO2r/NAqnQqV0p1/KNDmc2OLES/ANHaMqbwdVGmMzI63pL8AAyaMDQIj+eX967qL3lsHZt5NamInorkTvyxch9LAq3+VjOZCYzUmzXYVb2JZ5IC8DahuMWO2nj5sttHLJJRTS8L8Fu611fXVFxXfExfHtXIRTsZnT8UXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=vDjxseM3; arc=none smtp.client-ip=167.114.26.122
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="lJxsuurM"
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="vDjxseM3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
-	s=smtpout1; t=1708008399;
-	bh=JafNy954LGAswGK3M3iYUpQrWP3IyrMlG3pf6B1HRm4=;
+	s=smtpout1; t=1708008401;
+	bh=xPtmgWiHU56eIOTTAS+sj/oIA68ksqZ/i5VE/RwV8cI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lJxsuurMOJq5+e74ZxcF+tIqPH0Qs+YhXRuSmvFSmLIGw0LXLL9OmA1TEc/hvC2zZ
-	 o91WMEukwLB1u4oCCHlgydXVguhQi11fEI6Vi8Ku08OyjSoiO2W2yeKDFGbjlSybRo
-	 grKnwo+y78PBVFCkNYKO8rAp12NTsmM88gHsKGJN+nzU5BYHEfglGxTm+PNhXBm4WX
-	 1SH+QbvBu0shB1ITutjbBN/RvzwOVym/BdBANG0CF8gzUqRhhDPi+s7F1/D+ZD8taq
-	 b/ma0zxd+t86Hak1i/GDe5SYOKqW2uCqPPPfo+rNAEbyPVhQvm8B6Y94EIVbT9v+oc
-	 6t/MP5Z/oCexQ==
+	b=vDjxseM3uGoNZMHp7D3FWbwVNMSAeAHOAkwaIfhUFXeFVtAl7YV0zsfJqedaxBmDF
+	 HghiT/IcBK1PufFC4feeduBoLz3Gp/8+aCkduAWpCMuH6F5jrejmF7Yp4EmaKhhPkl
+	 9pSgL1Hoe/1ufK5c+NUXcvwSCQpEvArM7OhGazL/cnqD32qDqsfp/xlaytSQHIAH6e
+	 0p6b0AtWXgLOH1Aj0000Jk7R+51JOUBfKQXKvzzNkvQ8aKQknVyur2HPUJUtJVdE4r
+	 Xxz4siQNkEmiX0+78ojo8dlyKb0loVQa96kddJLDm9aaErHKKPMSEeWOuWwPtv+x3v
+	 dfur/tcl6otfQ==
 Received: from thinkos.internal.efficios.com (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TbHvM4gxZzZS5;
-	Thu, 15 Feb 2024 09:46:39 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4TbHvN67LPzZS8;
+	Thu, 15 Feb 2024 09:46:40 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: Dan Williams <dan.j.williams@intel.com>,
 	Arnd Bergmann <arnd@arndb.de>,
@@ -48,10 +48,14 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	dm-devel@lists.linux.dev,
 	nvdimm@lists.linux.dev,
-	linux-s390@vger.kernel.org
-Subject: [PATCH v6 2/9] dax: alloc_dax() return ERR_PTR(-EOPNOTSUPP) for CONFIG_DAX=n
-Date: Thu, 15 Feb 2024 09:46:26 -0500
-Message-Id: <20240215144633.96437-3-mathieu.desnoyers@efficios.com>
+	linux-s390@vger.kernel.org,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH v6 5/9] dcssblk: Handle alloc_dax() -EOPNOTSUPP failure
+Date: Thu, 15 Feb 2024 09:46:29 -0500
+Message-Id: <20240215144633.96437-6-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240215144633.96437-1-mathieu.desnoyers@efficios.com>
 References: <20240215144633.96437-1-mathieu.desnoyers@efficios.com>
@@ -63,17 +67,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Change the return value from NULL to PTR_ERR(-EOPNOTSUPP) for
-CONFIG_DAX=n to be consistent with the fact that CONFIG_DAX=y
-never returns NULL.
+In preparation for checking whether the architecture has data cache
+aliasing within alloc_dax(), modify the error handling of dcssblk
+dcssblk_add_store() to handle alloc_dax() -EOPNOTSUPP failures.
 
-This is done in preparation for using cpu_dcache_is_aliasing() in a
-following change which will properly support architectures which detect
-data cache aliasing at runtime.
+Considering that s390 is not a data cache aliasing architecture,
+and considering that DCSSBLK selects DAX, a return value of -EOPNOTSUPP
+from alloc_dax() should make dcssblk_add_store() fail.
 
-Fixes: 4e4ced93794a ("dax: Move mandatory ->zero_page_range() check in alloc_dax()")
+Fixes: d92576f1167c ("dax: does not work correctly with virtual aliasing caches")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Acked-by: Heiko Carstens <hca@linux.ibm.com>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@kernel.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Dan Williams <dan.j.williams@intel.com>
@@ -89,44 +97,42 @@ Cc: linux-mm@kvack.org
 Cc: linux-xfs@vger.kernel.org
 Cc: dm-devel@lists.linux.dev
 Cc: nvdimm@lists.linux.dev
+Cc: linux-s390@vger.kernel.org
 ---
- drivers/dax/super.c | 5 +++++
- include/linux/dax.h | 6 +-----
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/s390/block/dcssblk.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 0da9232ea175..205b888d45bf 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -319,6 +319,11 @@ EXPORT_SYMBOL_GPL(dax_alive);
-  * that any fault handlers or operations that might have seen
-  * dax_alive(), have completed.  Any operations that start after
-  * synchronize_srcu() has run will abort upon seeing !dax_alive().
-+ *
-+ * Note, because alloc_dax() returns an ERR_PTR() on error, callers
-+ * typically store its result into a local variable in order to check
-+ * the result. Therefore, care must be taken to populate the struct
-+ * device dax_dev field make sure the dax_dev is not leaked.
-  */
- void kill_dax(struct dax_device *dax_dev)
- {
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index e3ffe7c7f01d..9d3e3327af4c 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -88,11 +88,7 @@ static inline void *dax_holder(struct dax_device *dax_dev)
- static inline struct dax_device *alloc_dax(void *private,
- 		const struct dax_operations *ops)
- {
--	/*
--	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
--	 * NULL is an error or expected.
--	 */
--	return NULL;
-+	return ERR_PTR(-EOPNOTSUPP);
- }
- static inline void put_dax(struct dax_device *dax_dev)
- {
+diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
+index 4b7ecd4fd431..f363c1d51d9a 100644
+--- a/drivers/s390/block/dcssblk.c
++++ b/drivers/s390/block/dcssblk.c
+@@ -549,6 +549,7 @@ dcssblk_add_store(struct device *dev, struct device_attribute *attr, const char
+ 	int rc, i, j, num_of_segments;
+ 	struct dcssblk_dev_info *dev_info;
+ 	struct segment_info *seg_info, *temp;
++	struct dax_device *dax_dev;
+ 	char *local_buf;
+ 	unsigned long seg_byte_size;
+ 
+@@ -677,13 +678,13 @@ dcssblk_add_store(struct device *dev, struct device_attribute *attr, const char
+ 	if (rc)
+ 		goto put_dev;
+ 
+-	dev_info->dax_dev = alloc_dax(dev_info, &dcssblk_dax_ops);
+-	if (IS_ERR(dev_info->dax_dev)) {
+-		rc = PTR_ERR(dev_info->dax_dev);
+-		dev_info->dax_dev = NULL;
++	dax_dev = alloc_dax(dev_info, &dcssblk_dax_ops);
++	if (IS_ERR(dax_dev)) {
++		rc = PTR_ERR(dax_dev);
+ 		goto put_dev;
+ 	}
+-	set_dax_synchronous(dev_info->dax_dev);
++	set_dax_synchronous(dax_dev);
++	dev_info->dax_dev = dax_dev;
+ 	rc = dax_add_host(dev_info->dax_dev, dev_info->gd);
+ 	if (rc)
+ 		goto out_dax;
 -- 
 2.39.2
 
