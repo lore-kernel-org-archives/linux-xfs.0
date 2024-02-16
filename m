@@ -1,123 +1,160 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 565A81419B1
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 22:17:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB05313FF8
+	for <linux-xfs@vger.kernel.org>; Fri, 16 Feb 2024 06:03:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708035467; cv=none; b=GpX1spWVnLyYk+z+R9OPavS+UjS0HQlpuFOD5cGVl5o43a1FEUm08F39Q2OPXOB/ElY9dBMU+a/fa294GGCLvQN00E4Az0VGMZEaySmys8mdsKBfQAyYk/BFMsuJsaA+NWYsxLDyf8V7m5DJeUcRAVVVCkMRx/M03H9fkmrT+sQ=
+	t=1708063400; cv=none; b=Hmq1g3QW0lsNgDQR3YpJACp+V0qS6e9QhnkyzxwdAaDl/l53uO7qE417JORpDgD1E4LZMtxOApgxkKoM46NSa1Q+lvJ9G0pYoSvlcyScs0ADEr6c4H9+GJowN3r1h3OY9JMfcLWFqNgDMbcemoKrGHtAlh7auX2Yc1oA0TWsoXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708035467; c=relaxed/simple;
-	bh=BQqDidOkOg8KsFEst22N7rF6XggxOYOcJqHQu+R7DRo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YQTLD4/fVxutGbcFVDHNQZCUywjAl/a/ATQTqAD1UGfQbTY8dOFKsntEcTiJivbznJfl4Ihv5qSqMzepdFfxkyEYseRt7A1IY2/urisidHnSg/u7P1wD+wdOCnO2Xek+kiNmQPhana1QJ5U69e1x7HDapdSsPInyhKv6blApbNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xfQ9X2XK; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1708063400; c=relaxed/simple;
+	bh=Kcn1M2ytrt69fsdSaS629BXaLFJSZ/rsP09qRds7fzY=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=fObfNtHd6kcg7x1ta2Jp72xPqpiYblMo/m+f3t0pu8OuZbBqpjzwgKNd8/62Mdoge5e5RGfKXxDjUIdrbChrTn7Cqou8J1VaSuOqtI4kxyZNJxm1eNv6vMb/SNdMGHRYPuekAiUXCp75whvvzdQmKbT9V2lwfQW7B0iXCMgPTQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=prhDsBNl; arc=none smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xfQ9X2XK"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6e11a779334so975006b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 14:17:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="prhDsBNl"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-607d9c4fa90so13456597b3.2
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 22:03:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708035465; x=1708640265; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xqLyuCsW475xlDjq9rWu9xXNC03QbYPQjapLSP5f0Io=;
-        b=xfQ9X2XKs9MrO/SLlwLJ27onS3/+9RMeqVmviiSCcbXryhsWH9Hjte0MemFBKbakLK
-         qwskVAKZn/SNqqPfCvG3Gb2SWrhAK5LHmWor7pnmpyrkm5k5rkr0+LU7Lao0XWYhJlqz
-         OHvJRqOJpPwsruRRizGbnD5zRUqCqycAMPmRGrRV06jyDYDBd/fj46zpWOpvtp1Pg5UV
-         r4vscWUqp0pnZAJ2G0mFoDbMXmBSxulUXO1OgQLUYTs+CKkysfRNlJAQo791E8eE/rxk
-         lgXej9PZjxhhX+cScHHmUcJn/Fi2c5Am7ydf5KAhsEbgqsMP8vDIZ+uArbKoMhTSH80P
-         1spQ==
+        d=google.com; s=20230601; t=1708063397; x=1708668197; darn=vger.kernel.org;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=HMM56hZb1Vm6K9SjE4SgV0BStCtli5nOUVFVj7yPx9M=;
+        b=prhDsBNlMIlZRLB1XkH0QhJLdjgrNFNs/nCznvNhZ9YYBDGIu5mgIYTUI67FINT8FU
+         7efqZ84AvKawiQAnGKyxIR2+SUwau9mjTIbtFdDUBk/zY8eWxcl9bWuK9nmTmAJ/DcXf
+         t0XfW/xr3UuRVPlJmyxEbQoL6AGH58m4uiYlpQcjFNQSua2hMJrnQEovyEGiuviBeg3V
+         +moBBNrDto4qvy+4Z/PwFc307+G3HpOjvypvlWuXsW9MJuwbQbjU58FJwuNzukbf1C6r
+         DHk8YhQ+JfkoXwTCD1K1+ySm7YHefTdzkXRxOkIJZZOuuSl+ySyDy+Tk1qa1tV1rMjsm
+         OYUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708035465; x=1708640265;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xqLyuCsW475xlDjq9rWu9xXNC03QbYPQjapLSP5f0Io=;
-        b=hF4+6Mg5LOtztAlaEG6sAmCr6cS5UwfomxD2mBcCik/LqF6aH02Q1dZ7l2s+HdsDsa
-         Nra6AUIPOgdjshkCekcHl5QhKBlpW1XbWW1EqjqmnWOqrGIh1apLcjvxBwZFN0jvXHGp
-         FGMC0xkobB4n94FvI8DumW9AYhJIqjpPSk0YBiUWe4l0zZrrRZ7XomRe40Ef6tRyZ7N1
-         p9BFgY4F+S7FdaUGYEUxYa4kbfcNSWRyYVEBpkmahhMVgBVlE7fQC7cdr2vvZntGo6DC
-         khzIOLpwI8Jrnmn54JLfmal6LP4Xq/cr0PTrCUduCjah0XahY33pSeuJH6/fgYLoASAv
-         EGSQ==
-X-Gm-Message-State: AOJu0YzbY16BGDosqET2eKRQexC2k+feZSihog88PETifJJXqr8lksIL
-	OvpOUpug21twoe6sFEavLze/oLEJbRIB9kgdkBOG41IHoripN1YUOKn2cjD7LtI=
-X-Google-Smtp-Source: AGHT+IF10IvncuJisp6y8CXRYam75Te24+bLDVMAcYz6fel6DiwBkZwF0/fv9w3QDOMhFdZye4KjRg==
-X-Received: by 2002:a05:6a20:d043:b0:199:7628:286d with SMTP id hv3-20020a056a20d04300b001997628286dmr7498930pzb.30.1708035465181;
-        Thu, 15 Feb 2024 14:17:45 -0800 (PST)
-Received: from dread.disaster.area (pa49-195-8-86.pa.nsw.optusnet.com.au. [49.195.8.86])
-        by smtp.gmail.com with ESMTPSA id m22-20020a637116000000b005dc4fc80b21sm1905442pgc.70.2024.02.15.14.17.44
+        d=1e100.net; s=20230601; t=1708063397; x=1708668197;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HMM56hZb1Vm6K9SjE4SgV0BStCtli5nOUVFVj7yPx9M=;
+        b=PYwEjvqFTIWfMdX7PdWSd6jv7rQJG8FGAL/jQsAfXC69F5IVpLYadEAAICs4aXYLW3
+         mPkJmjJ5e7KnS2L6CPFksV1SO2MzLTPEVLXNOBzriDv6xGRsHnoRifoFyKxff0WKfmR3
+         oTLLw4XeI6UY03fydPJooUM9TrYVx/tGiUwPnfU4mt3j605tKB/EytoF7YESONFA0PIe
+         15cIe+mwnpJUc+DQrOxtE45przYkSaZkou8SypUx3EJWHIumQ5SJCnwKJqZN1/2gKduN
+         JYtJ3uEta/Rt12DOJzHLW5iBg7G19MzAmP03BA/hRqSgY+lpRaffOtd0qiHEsfSbURGp
+         6+gA==
+X-Forwarded-Encrypted: i=1; AJvYcCWbr2FnhWy6qu38afLe3hxeNkmEHmD4D+a23EFPK6P8tQUhJ5rFXI4IEKda6qC+J0ktO3AngDA02Eml64dOt0SIqhLl9li5CDoU
+X-Gm-Message-State: AOJu0YwIs/jvqzs/fXy7Li4NuQ5pDfSIXWOu5paBUrPs6v8TQxsJTcbu
+	HyPgYoAXU7TdGIsI3CCEsrX1ddGnp2quY2mjaEwSTjL9scC2THIE9GDEnODCbA==
+X-Google-Smtp-Source: AGHT+IHSLIRCwJ8Aj5LZC9Dr5T3twlSj69RXjK+SmfejRJBCpGGWorVjZHS1LUFkcBz05UbD0yPBRA==
+X-Received: by 2002:a0d:d944:0:b0:5ff:5232:8aa1 with SMTP id b65-20020a0dd944000000b005ff52328aa1mr4514949ywe.21.1708063397364;
+        Thu, 15 Feb 2024 22:03:17 -0800 (PST)
+Received: from darker.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
+        by smtp.gmail.com with ESMTPSA id d12-20020a0ddb0c000000b006078c48a26csm221324ywe.25.2024.02.15.22.03.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Feb 2024 14:17:44 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rak33-0071FQ-33;
-	Fri, 16 Feb 2024 09:17:41 +1100
-Date: Fri, 16 Feb 2024 09:17:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	mcgrof@kernel.org, gost.dev@samsung.com, akpm@linux-foundation.org,
-	kbusch@kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
-	p.raghav@samsung.com, linux-kernel@vger.kernel.org, hare@suse.de,
-	willy@infradead.org, linux-mm@kvack.org
-Subject: Re: [RFC v2 14/14] xfs: enable block size larger than page size
- support
-Message-ID: <Zc6NhXas68+5k84v@dread.disaster.area>
-References: <20240213093713.1753368-1-kernel@pankajraghav.com>
- <20240213093713.1753368-15-kernel@pankajraghav.com>
- <ZcvgSSbIqm4N6TVJ@dread.disaster.area>
- <n45xfink7g4fhdrnp4i7tp6tsebvncxicbe4hooswtwwydlakd@4zviowhp53rs>
+        Thu, 15 Feb 2024 22:03:16 -0800 (PST)
+Date: Thu, 15 Feb 2024 22:03:05 -0800 (PST)
+From: Hugh Dickins <hughd@google.com>
+To: Christoph Hellwig <hch@lst.de>
+cc: Chandan Babu R <chandan.babu@oracle.com>, 
+    "Darrick J. Wong" <djwong@kernel.org>, Hugh Dickins <hughd@google.com>, 
+    Andrew Morton <akpm@linux-foundation.org>, Hui Su <sh_def@163.com>, 
+    Vlastimil Babka <vbabka@suse.cz>, linux-xfs@vger.kernel.org, 
+    linux-mm@kvack.org, Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 02/20] shmem: move shmem_mapping out of line
+In-Reply-To: <20240129143502.189370-3-hch@lst.de>
+Message-ID: <44242679-720b-f55e-c0f8-db5bf919931f@google.com>
+References: <20240129143502.189370-1-hch@lst.de> <20240129143502.189370-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <n45xfink7g4fhdrnp4i7tp6tsebvncxicbe4hooswtwwydlakd@4zviowhp53rs>
+Content-Type: text/plain; charset=US-ASCII
 
-On Wed, Feb 14, 2024 at 05:35:49PM +0100, Pankaj Raghav (Samsung) wrote:
-> > >  	struct xfs_inode	*ip;
-> > > +	int			min_order = 0;
-> > >  
-> > >  	/*
-> > >  	 * XXX: If this didn't occur in transactions, we could drop GFP_NOFAIL
-> > > @@ -88,7 +89,8 @@ xfs_inode_alloc(
-> > >  	/* VFS doesn't initialise i_mode or i_state! */
-> > >  	VFS_I(ip)->i_mode = 0;
-> > >  	VFS_I(ip)->i_state = 0;
-> > > -	mapping_set_large_folios(VFS_I(ip)->i_mapping);
-> > > +	min_order = max(min_order, ilog2(mp->m_sb.sb_blocksize) - PAGE_SHIFT);
-> > > +	mapping_set_folio_orders(VFS_I(ip)->i_mapping, min_order, MAX_PAGECACHE_ORDER);
-> > 
-> > That's pretty nasty. You're using max() to hide underflow in the
-> > subtraction to clamp the value to zero. And you don't need ilog2()
-> > because we have the log of the block size in the superblock already.
-> > 
-> > 	int			min_order = 0;
-> > 	.....
-> > 	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
-> > 		min_order = mp->m_sb.sb_blocklog - PAGE_SHIFT;
-> how is it underflowing if I am comparing two values of type int?
+On Mon, 29 Jan 2024, Christoph Hellwig wrote:
 
-Folio order is supposed to be unsigned. Negative orders are not
-valid values.  So you're hacking around an unsigned underflow by
-using signed ints, then hiding the fact that unsigned subtraction
-would underflow check behind a max(0, underflowing calc) construct
-that works only because you're using signed ints rather than
-unsigned ints for the order.
+> shmem_aops really should not be exported to the world.  Move
+> shmem_mapping and export it as internal for the one semi-legitimate
+> modular user in udmabuf.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-It also implicitly relies on the max_order being zero at that point
-in time, so if we change the value of max order in future before
-this check, this check may not fuction correctly in future.
+I'm okay with this change, but let's be polite and Cc the author
+of the change which this reverts - v5.11's commit 30e6a51dbb05
+("mm/shmem.c: make shmem_mapping() inline").
 
-Please: use unsigned ints for order, and explicitly write the
-code so it doesn't ever need negative values that could underflow.
+Interesting to notice that commit did EXPORT_SYMBOL(shmem_aops),
+whereas shmem_mapping() had not been exported before; you're now
+exporting it _GPL(), like other examples in mm/shmem.c: agreed.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Hugh
+
+> ---
+>  include/linux/shmem_fs.h |  6 +-----
+>  mm/shmem.c               | 11 ++++++++---
+>  2 files changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/include/linux/shmem_fs.h b/include/linux/shmem_fs.h
+> index 2caa6b86106aa3..6b96a87e4bc80a 100644
+> --- a/include/linux/shmem_fs.h
+> +++ b/include/linux/shmem_fs.h
+> @@ -97,11 +97,7 @@ extern unsigned long shmem_get_unmapped_area(struct file *, unsigned long addr,
+>  		unsigned long len, unsigned long pgoff, unsigned long flags);
+>  extern int shmem_lock(struct file *file, int lock, struct ucounts *ucounts);
+>  #ifdef CONFIG_SHMEM
+> -extern const struct address_space_operations shmem_aops;
+> -static inline bool shmem_mapping(struct address_space *mapping)
+> -{
+> -	return mapping->a_ops == &shmem_aops;
+> -}
+> +bool shmem_mapping(struct address_space *mapping);
+>  #else
+>  static inline bool shmem_mapping(struct address_space *mapping)
+>  {
+> diff --git a/mm/shmem.c b/mm/shmem.c
+> index d7c84ff621860b..f607b0cab7e4e2 100644
+> --- a/mm/shmem.c
+> +++ b/mm/shmem.c
+> @@ -254,7 +254,7 @@ static void shmem_inode_unacct_blocks(struct inode *inode, long pages)
+>  }
+>  
+>  static const struct super_operations shmem_ops;
+> -const struct address_space_operations shmem_aops;
+> +static const struct address_space_operations shmem_aops;
+>  static const struct file_operations shmem_file_operations;
+>  static const struct inode_operations shmem_inode_operations;
+>  static const struct inode_operations shmem_dir_inode_operations;
+> @@ -263,6 +263,12 @@ static const struct vm_operations_struct shmem_vm_ops;
+>  static const struct vm_operations_struct shmem_anon_vm_ops;
+>  static struct file_system_type shmem_fs_type;
+>  
+> +bool shmem_mapping(struct address_space *mapping)
+> +{
+> +	return mapping->a_ops == &shmem_aops;
+> +}
+> +EXPORT_SYMBOL_GPL(shmem_mapping);
+> +
+>  bool vma_is_anon_shmem(struct vm_area_struct *vma)
+>  {
+>  	return vma->vm_ops == &shmem_anon_vm_ops;
+> @@ -4466,7 +4472,7 @@ static int shmem_error_remove_folio(struct address_space *mapping,
+>  	return 0;
+>  }
+>  
+> -const struct address_space_operations shmem_aops = {
+> +static const struct address_space_operations shmem_aops = {
+>  	.writepage	= shmem_writepage,
+>  	.dirty_folio	= noop_dirty_folio,
+>  #ifdef CONFIG_TMPFS
+> @@ -4478,7 +4484,6 @@ const struct address_space_operations shmem_aops = {
+>  #endif
+>  	.error_remove_folio = shmem_error_remove_folio,
+>  };
+> -EXPORT_SYMBOL(shmem_aops);
+>  
+>  static const struct file_operations shmem_file_operations = {
+>  	.mmap		= shmem_mmap,
+> -- 
+> 2.39.2
+> 
+> 
