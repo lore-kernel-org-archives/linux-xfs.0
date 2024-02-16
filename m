@@ -1,145 +1,65 @@
-Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECB0614292
-	for <linux-xfs@vger.kernel.org>; Fri, 16 Feb 2024 06:55:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0E014A90
+	for <linux-xfs@vger.kernel.org>; Fri, 16 Feb 2024 07:11:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708066510; cv=none; b=jzY4VAUKbbOnK3TQQNGQYw48hdAjoTkTcpDswNihEhuLSnfdkj7Rl6GlMWHbAwZ6StL8u3w4BRBcbMkv56tGG5Z94swdofmfhY6HKpNumbf0bmM6n3CVaaEdgGGPz3saerRMQxASHNi0UNHb3XllWYPeudB3Sq+BBpMl4jOmnZM=
+	t=1708067518; cv=none; b=bQ3NceYsi1sb/4qqby3AXIWPO7TRZ8iDgMsjc1hQcANu5v7X3SU64Z0nKlOWwcfE4+/kjKg2mqi6z2U4sTtFVS7gsQyhwjbbUzH+DseMtx3mPiHDvSCz96wsPRtHceQuyl6fnw1EL4wWduOtT1ecBXCaR0r1Obh/UPxSXSJ1ejY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708066510; c=relaxed/simple;
-	bh=awn/XCpzgvSume5ebZL+Vju8HtNszDlU3PAz9Qpfuoo=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=ZESRMjs3FakNYodbHhzfGgaNHELvqNfm8h6cWFQbJwGU9EPDpYEBcu+NeFgUesrzH5oOBPBKs8Zj2Fjf+mtb4MSsyKNL37oG3em2DeQ6Klq6R0M1yvyvU90TvSQQe7hboXkuzxt28CH4M38agChmV4NwzoQptb2N5h1+TAZNkmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pB4KSBhn; arc=none smtp.client-ip=209.85.128.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1708067518; c=relaxed/simple;
+	bh=4Z1qzr7PzsNOZgX5sgSKVFa7H/ER90pwq2agbrSHThY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U4mVi7dEyKMdaY/TC7GKRTABKMZ8lEVNgFSCimbngP0q/F0lPGS4cTcQn6qRV8i+jXk23MHgrpHZzpGfl9KGcfX+ceDfayDzjdw+kc0RDeGtuXvV8kR3d1RiA8hODboBjwUTdNOckrKs0lekAoSfjtSeMgBZf9NKr6c14fm7STI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=e0BI3lrZ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pB4KSBhn"
-Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-6002317a427so15240397b3.2
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Feb 2024 22:55:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1708066508; x=1708671308; darn=vger.kernel.org;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=L/Ev7zx1OY2xavG089OEf6t+LzZ1+fWZhEmI/a93zMk=;
-        b=pB4KSBhnNX47JjqJFszyMQL9Qzf9rbTn92L1xoBdrYIHeI2Qn5hwCaWzdsvwxmr8e+
-         fi3kso1i/Azr3jFlTieWtAZDf+8Ejr6tfDAzB84jysFaDXpLem2oTWpM1GZYz+B1jxnA
-         y3MuYChT1a/JtUoCOPhKLHZxVdENdkW9wZjoObxtEcgNuTV5Y24P3CFUJCrSSNJHf/Km
-         Emb7SiSNQuvintdkagVys9oCSwK8oB/g5wNfVNbzeTtvaBoJ6Xpo1OjWT0AurRbs6o6n
-         t4UqqbebpiZakpmrU9zfa+JoQOx72Q89mtXmkyJIxlZOCphYtSKoA8pF2GWxTLu46NNm
-         Czag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708066508; x=1708671308;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=L/Ev7zx1OY2xavG089OEf6t+LzZ1+fWZhEmI/a93zMk=;
-        b=UljwaXEINU8neo/4l8g+1ULHMC0kYmkubqqkDAqPuaG1ci+NbWNoEqnpocGLWsRIMa
-         2HL9z/+kmvcTLOcuD5/O4SSF1LIXuy/pV+oNMPZoxDNfAE8tiklgsRGUMycyj3Be+a6M
-         GjrNpcDHP1cEwgDOWPso2j4MsTcHpxv06rr5hTxC8SE7RZxe/vwdOX0Pw6EvvGdUuNSe
-         A37yyMKIkfhhunu2nKirwJy4UWislclGqryyuwTlwVFR+XoQWEGBTgLMDb2J/Jka4rVC
-         CYd/RUvoGb8Iy/daTjbtZks0ngmYTsuImH/BrErHYAbrsXDukTlJ39ON0vSr2q9gfQQR
-         9oyw==
-X-Forwarded-Encrypted: i=1; AJvYcCXeRKgrp+Bi296GLEiT/YWRGhmwjea9xhbnUalTtaZC5PX9jhnWT8R/KZfJZCrP2lXv4Q1+k9HMJsmwQW/VPqfi60LwSQDfhFOM
-X-Gm-Message-State: AOJu0YzYFlC66stbq45LX1GfoOz7DseHsNnHOpLimpEk3XIZfHnbMZNN
-	rMdzlqNqq8ZmZHRU22WAf+2Wv8xGZOG75qARIZMAR0VTcKlG1s09s1Tr9DBSIw==
-X-Google-Smtp-Source: AGHT+IHiZawZ5tPVjTUC1usJpsLxHJCItFfeYjDx3TyanwgMlnEkKbuj3kFT6PcFPQDRIjp/XIHWOg==
-X-Received: by 2002:a25:f903:0:b0:dc6:c617:7ca with SMTP id q3-20020a25f903000000b00dc6c61707camr4004856ybe.29.1708066507689;
-        Thu, 15 Feb 2024 22:55:07 -0800 (PST)
-Received: from darker.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
-        by smtp.gmail.com with ESMTPSA id r185-20020a25c1c2000000b00dcda90f43d7sm207542ybf.59.2024.02.15.22.55.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Feb 2024 22:55:07 -0800 (PST)
-Date: Thu, 15 Feb 2024 22:55:05 -0800 (PST)
-From: Hugh Dickins <hughd@google.com>
-To: Christoph Hellwig <hch@lst.de>
-cc: Chandan Babu R <chandan.babu@oracle.com>, 
-    "Darrick J. Wong" <djwong@kernel.org>, Hugh Dickins <hughd@google.com>, 
-    Andrew Morton <akpm@linux-foundation.org>, linux-xfs@vger.kernel.org, 
-    linux-mm@kvack.org
-Subject: Re: [PATCH 12/20] xfs: don't modify file and inode flags for shmem
- files
-In-Reply-To: <20240129143502.189370-13-hch@lst.de>
-Message-ID: <c9bac2b7-3c11-ef25-9db4-401a9b22834b@google.com>
-References: <20240129143502.189370-1-hch@lst.de> <20240129143502.189370-13-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="e0BI3lrZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=OiH4oGJUNgxzoCDGkRQgM21iQSlnWYdqKOqgW3HY0BI=; b=e0BI3lrZ3YsPhO/JGVaMvSCsrL
+	vluuXdpF2/ge6zTYvseBQ365/AKdKv+tY24KFVQT9GLmP6a9YJEEZZS7DosxbbKL9F1Nya2K0DZ/d
+	CQUIbpA1yUI46MdpODhGhx9XkIyIDQtBwNrzT5aOQ392bI/YF99nH5vetbubcHpUfwedg/zQtsdx8
+	oZ4cJ4RBXUZzoHk7N97YqK5IrQ+BrZoa/JUS+24v1SoP0IkEtQldWlBunBNio15qGjaaQeUBHYvPQ
+	D+4lSMBgF2BvYAzEmWLmeVKHO1VDJsshAcI9lSWSUQDK54AaXx3o0UtioOQOtiw8sTcAkqMiaWx22
+	DjacjJCw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rasO1-00000001LCe-1i5f;
+	Fri, 16 Feb 2024 07:11:53 +0000
+Date: Thu, 15 Feb 2024 23:11:53 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 00/35] xfsprogs: libxfs-sync for 6.7
+Message-ID: <Zc8KuRnFmm6xTQOn@infradead.org>
+References: <20240215120907.1542854-1-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240215120907.1542854-1-cem@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, 29 Jan 2024, Christoph Hellwig wrote:
-
-> shmem_file_setup is explicitly intended for a file that can be
-> fully read and written by kernel users without restrictions.  Don't
-> poke into internals to change random flags in the file or inode.
+On Thu, Feb 15, 2024 at 01:08:12PM +0100, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/scrub/xfile.c | 17 +----------------
->  1 file changed, 1 insertion(+), 16 deletions(-)
+> Hello folks,
 > 
-> diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-> index 7785afacf21809..7e915385ef0011 100644
-> --- a/fs/xfs/scrub/xfile.c
-> +++ b/fs/xfs/scrub/xfile.c
-> @@ -68,28 +68,13 @@ xfile_create(
->  	if (!xf)
->  		return -ENOMEM;
->  
-> -	xf->file = shmem_file_setup(description, isize, 0);
-> +	xf->file = shmem_kernel_file_setup(description, isize, 0);
+> this is the libxfs-sync for 6.7. I know we don't use to publish the results on
+> the list, but this release's sync was a bit more complicated, so, if you can
+> spare a few minutes, I'd appreciate an extra pair of eyes on top of it.
+> Also I thinkg it's a good idea to publish the patches here before pushing them
+> to for-next.
 
-I think you probably want to say VM_NORESERVE there, instead of 0.
+I've looked over them and done some testing and the changes looks good
+to me:
 
-I see from the (deleted) comment below that "We want a large sparse file",
-and the VM_NORESERVE does become important on large sparse files.  It is
-how normal flles and memfds are set up (whereas SysV SHM says 0 to reserve
-size at setup). It affects the Committed_AS seen in /proc/meminfo, and how
-__vm_enough_memory() behaves (depending on /proc/sys/vm/overcommit_memory).
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Hmm, I think mm/shmem.c is not prepared for the case of flags 0 there,
-and then the file growing bigger than isize later on - I suspect that
-Committed_AS will end up underflowing.  shmem.c ought to be defensive
-against that, sure, but I don't think such a case has come up before.
-
-I see you have two calls to xfile_create(), one with what looks like
-a known fixed non-0 isize, but one with isize 0 which will grow later.
-
->  	if (IS_ERR(xf->file)) {
->  		error = PTR_ERR(xf->file);
->  		goto out_xfile;
->  	}
->  
-> -	/*
-> -	 * We want a large sparse file that we can pread, pwrite, and seek.
-> -	 * xfile users are responsible for keeping the xfile hidden away from
-> -	 * all other callers, so we skip timestamp updates and security checks.
-> -	 * Make the inode only accessible by root, just in case the xfile ever
-> -	 * escapes.
-> -	 */
-> -	xf->file->f_mode |= FMODE_PREAD | FMODE_PWRITE | FMODE_NOCMTIME |
-> -			    FMODE_LSEEK;
-> -	xf->file->f_flags |= O_RDWR | O_LARGEFILE | O_NOATIME;
-
-I've forgotten offhand how O_LARGEFILE propagates down to where a file
-gets grown, and I realize that 32-bit is not your primary concern: but
-please double-check that it works correctly without O_LARGEFILE now
-(maybe the new folio ops avoid everywhere that largefile would be checked).
-
-Hugh
-
->  	inode = file_inode(xf->file);
-> -	inode->i_flags |= S_PRIVATE | S_NOCMTIME | S_NOATIME;
-> -	inode->i_mode &= ~0177;
-> -	inode->i_uid = GLOBAL_ROOT_UID;
-> -	inode->i_gid = GLOBAL_ROOT_GID;
-> -
->  	lockdep_set_class(&inode->i_rwsem, &xfile_i_mutex_key);
->  
->  	trace_xfile_create(xf);
-> -- 
-> 2.39.2
