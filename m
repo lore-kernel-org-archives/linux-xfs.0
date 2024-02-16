@@ -1,84 +1,137 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtpout.efficios.com (smtpout.efficios.com [167.114.26.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 913D812BEBB
-	for <linux-xfs@vger.kernel.org>; Fri, 16 Feb 2024 13:53:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D109D12F58A;
+	Fri, 16 Feb 2024 16:12:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.114.26.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708091596; cv=none; b=C2pJNQs9lyBGmeIUDESAvMxxKOXeanihBJebe90jQwUyS6SDtfbUZ2/9vjv91TdVcS7OpCVlQ7k58UsGLJelEjG0SI2/R5f1ov6xlA3uZ1Pez7AwH186Ac9256/z4NYddCLuVK6aT2nhc/A9ktvgtzk8Xa3GuXBxzFb/VdPARbc=
+	t=1708099946; cv=none; b=lWRraa+Q14LR5I5KG/rIGbcFfPbg4Iji5Tn48FECamsGc/k/pnrSVC1XfGN68VNUeMYBYuCPe/mwZa5R9OOir2LqJWLst9Tw5KYmGGyyO9ctNC/1ZLNn2p0Br6YhJurMKAT21EvA3t2UVwMRXx/7jJT6XwMvzZL167ujqGYvcfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708091596; c=relaxed/simple;
-	bh=feJo708ajudafcVA8+vayDIyprUjar1KqHXMDSnB1y0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YLgUi/2iP/CEMwIOEzOsYtlkdXQuF6V7ALgscEvPZNLe9j8BuxIWiRjT2fDNt0XwAsFNJKGPexEdyaNAIEPiK71lvvZ2T311lzKyrKcs9RpL1B88PqNZZBGzAtyqQ58Ibs04DR2EPJ6JQLn5bEYoEouZPuxIWF7AsQvoJtV9+QE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bHuV0+Ic; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1708099946; c=relaxed/simple;
+	bh=j5ltBz0S3ICkzCrc/XcApSY34K9YqHdS5mIysJ7Jd74=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pUuIR7eE3iPfd5zzmLNm+bU5Bgexbj5OhtBgoa2kOssFFDk4YPgfmD9Cy2mGMdCLM5/6rfPOZzH3m5rSNSk7xaJco2TcFvv62m+nBN1wVhbTY+H4BQ0wgqV6Z1m5rSt4nX7+ncPK6mV5652OGtlUb1cutiN6VvmB2fN57L68c74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=J33MIMhw; arc=none smtp.client-ip=167.114.26.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bHuV0+Ic"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=173zbrHCTEPXtEmszW1jYj3MRJacOHFLh12fNSZQHo8=; b=bHuV0+Ic5LqJhynFqJ5YF53Wbu
-	ozepYGZaIy7Gz1Sx3QMxQjBvaL5urDOClhLVjKsnibPzJjfeMYRmlhxyAh/TB3jezZ2cqAfMN9gMR
-	kkgQNlwkeflEYbRjA6JGEABvW0zd1+yj2IA8RJ1Sr5djNuu9Zo3Rw3nNPODCX6UzS04U/K2RS8Obz
-	aYcFePqraZE1vgvnIRZE+AWoYLm23yACx96HkSu6PLv1pOFC/O5kRUNAdz+/LdT7plzU+7p6ycgGw
-	W/X3WatPg+J2wEoFiWrc73ZjwQVMR/tCjA+5Q8yV+5ZcoRhdgR1+cNSK2SVlQhxmZzqZJGA7rccZa
-	F3B+lHAQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rayeM-00000004o7S-0EQs;
-	Fri, 16 Feb 2024 13:53:10 +0000
-Date: Fri, 16 Feb 2024 13:53:09 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Hugh Dickins <hughd@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 05/20] shmem: export shmem_get_folio
-Message-ID: <Zc9oxYc-amPs0X3V@casper.infradead.org>
-References: <20240129143502.189370-1-hch@lst.de>
- <20240129143502.189370-6-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="J33MIMhw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=efficios.com;
+	s=smtpout1; t=1708099932;
+	bh=j5ltBz0S3ICkzCrc/XcApSY34K9YqHdS5mIysJ7Jd74=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=J33MIMhwZk5o7KEheMPmr1d83pdskjJ17R8laWareJbgXesmkpn6RDFWFkNHcr5Wp
+	 mVpzGv2eFlPhGyKG76pJU7J4ctLWrAqNaDaCe9dnQm572yvxl2Tgf31z1dmiapsKhu
+	 37bHMZ6hPN6Sffp+H0HvNh8icfMjLkUhwv38wV2Uqs1YIfPLJZo9S/D4NnPVUOoduG
+	 H2Y1cTYPGukbVxjb7OuZSzVb9AOhBDLrPLkaxMyaOE7vrsEDvJWZYI8mTfQ+0PD1Pv
+	 WRvy5/PoG7SI9yl9QyYpSAJfFX+l4RQRSyzi8rXEYkPpnZxN5l+D6O4UAG6DmQi48R
+	 56MVY5X4U/yEg==
+Received: from [172.16.0.134] (192-222-143-198.qc.cable.ebox.net [192.222.143.198])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4Tbxlc1zQxzZmV;
+	Fri, 16 Feb 2024 11:12:12 -0500 (EST)
+Message-ID: <8a5ca852-1c83-4479-8e4d-5a274482df25@efficios.com>
+Date: Fri, 16 Feb 2024 11:12:11 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240129143502.189370-6-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] nvdimm/pmem: Fix leak on dax_add_host() failure
+Content-Language: en-US
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Dave Jiang <dave.jiang@intel.com>, Fan Ni <fan.ni@samsung.com>,
+ Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, Matthew Wilcox
+ <willy@infradead.org>, Russell King <linux@armlinux.org.uk>,
+ linux-arch@vger.kernel.org, linux-cxl@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-xfs@vger.kernel.org, dm-devel@lists.linux.dev, nvdimm@lists.linux.dev,
+ Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>,
+ Arnd Bergmann <arnd@arndb.de>
+References: <20240215144324.95436-1-mathieu.desnoyers@efficios.com>
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+In-Reply-To: <20240215144324.95436-1-mathieu.desnoyers@efficios.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jan 29, 2024 at 03:34:47PM +0100, Christoph Hellwig wrote:
-> +/**
-> + * shmem_get_folio - find and get a reference to a shmem folio.
-> + * @inode:	inode to search
-> + * @index:	the page index.
-> + * @foliop:	pointer to the found folio if one was found
-> + * @sgp:	SGP_* flags to control behavior
-> + *
-> + * Looks up the page cache entry at @inode & @index.
-> + *
-> + * If this function returns a folio, it is returned with an increased refcount.
-> + *
-> + * Return: The found folio, %NULL if SGP_READ or SGP_NOALLOC was passed in @sgp
-> + * and no folio was found at @index, or an ERR_PTR() otherwise.
+On 2024-02-15 09:43, Mathieu Desnoyers wrote:
+> Fix a leak on dax_add_host() error, where "goto out_cleanup_dax" is done
+> before setting pmem->dax_dev, which therefore issues the two following
+> calls on NULL pointers:
 
-I know I gave an R-b on this earlier, but Hugh made me look again, and
-this comment clearly does not reflect what the function does.
-Presumably it returns an errno and sets foliop if it returns 0?
+Hi Andrew,
 
-Also, should this function be called shmem_lock_folio() to mirror
-filemap_lock_folio()?
+I notice that you should update the patch you have in your tree
+(https://git.kernel.org/pub/scm/linux/kernel/git/akpm/25-new.git/tree/patches/nvdimm-pmem-fix-leak-on-dax_add_host-failure.patch)
+with this updated version which includes additional Reviewed-by tags and
+removes unneeded context that appears to be taken from the previous cover
+letter.
 
-> + */
->  int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **foliop,
->  		enum sgp_type sgp)
->  {
->  	return shmem_get_folio_gfp(inode, index, foliop, sgp,
->  			mapping_gfp_mask(inode->i_mapping), NULL, NULL);
->  }
-> +EXPORT_SYMBOL_GPL(shmem_get_folio);
+Following your request, I have extracted this patch from the series.
+
+Thanks,
+
+Mathieu
+
+> 
+> out_cleanup_dax:
+>          kill_dax(pmem->dax_dev);
+>          put_dax(pmem->dax_dev);
+> 
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Reviewed-by: Fan Ni <fan.ni@samsung.com>
+> Cc: Alasdair Kergon <agk@redhat.com>
+> Cc: Mike Snitzer <snitzer@kernel.org>
+> Cc: Mikulas Patocka <mpatocka@redhat.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Vishal Verma <vishal.l.verma@intel.com>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Russell King <linux@armlinux.org.uk>
+> Cc: linux-arch@vger.kernel.org
+> Cc: linux-cxl@vger.kernel.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: linux-xfs@vger.kernel.org
+> Cc: dm-devel@lists.linux.dev
+> Cc: nvdimm@lists.linux.dev
+> ---
+> Changes since v1:
+> - Add Reviewed-by tags.
+> ---
+>   drivers/nvdimm/pmem.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> index 4e8fdcb3f1c8..9fe358090720 100644
+> --- a/drivers/nvdimm/pmem.c
+> +++ b/drivers/nvdimm/pmem.c
+> @@ -566,12 +566,11 @@ static int pmem_attach_disk(struct device *dev,
+>   	set_dax_nomc(dax_dev);
+>   	if (is_nvdimm_sync(nd_region))
+>   		set_dax_synchronous(dax_dev);
+> +	pmem->dax_dev = dax_dev;
+>   	rc = dax_add_host(dax_dev, disk);
+>   	if (rc)
+>   		goto out_cleanup_dax;
+>   	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+> -	pmem->dax_dev = dax_dev;
+> -
+>   	rc = device_add_disk(dev, disk, pmem_attribute_groups);
+>   	if (rc)
+>   		goto out_remove_host;
+
+-- 
+Mathieu Desnoyers
+EfficiOS Inc.
+https://www.efficios.com
 
