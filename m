@@ -1,78 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mitropoulos.debian.org (mitropoulos.debian.org [194.177.211.212])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 817FD1CD15
-	for <linux-xfs@vger.kernel.org>; Sat, 17 Feb 2024 07:55:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B94281E
+	for <linux-xfs@vger.kernel.org>; Sat, 17 Feb 2024 12:23:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.177.211.212
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708156500; cv=none; b=Bu95eUR+zyjp0B2IWntxtpZGz4MhV38BMqXXC9WvdojknCEmPQJo6RxsgSbMeh+yxwCbJG3kemvbybvO9KL7T0XOVb3C+uY/yBeSywQfAG+A1aVLLeawxP2A9vuUf/XfzKwCajXP33Oqceyr/a2acAIfsaGvBJ5M3xnX61MBC2I=
+	t=1708172633; cv=none; b=G0VC2j6VoTGRM5OamEq23mtV9U9wJKN+E/hRLpOgwiVTN4eVVbxKhiXZoK8Ffe8rNmvKBH/YVRewNmzysqm2yJ0druJBDRYKKm7+WA5iWpMuKVBTNSBey/K1N4Jsc1jOtSlAEm0ssiEY2L8ZLJLlQFbaVrXzpVfEGw46dDtRfIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708156500; c=relaxed/simple;
-	bh=W4Yl+QOQcGr5pB+8KMomO4gKDZSYGb8I52H5j0OxohE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pleiPmohkIs6jFpm25qd+E3pJgm7L5utaXnu5Rjlx8f/Y6a6DURfKs2l1HuBTxoip/Gy1zUa9pDQ/gKEyaj0zmZ+Kn9SZoftIH+zjchoo9w2Rh8SudjXLoh+2KN6YSFG1Sp3SZnpfhk+tBOD2rzO/0Io/PHdtRowzCthogxlRvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qKN/L6QO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708172633; c=relaxed/simple;
+	bh=8HMuWN8UqH+1h7/7f//CdmogG2GLr2w4Y3tXEukV+ZM=;
+	h=To:From:Subject:Date:Message-Id; b=DR2ZNDeIqmzTCaGYnwzhZLi4PJRhTRCZDGX3WDf98fpiyXsxSDuj9UllPHw7MyGOqeVuz1AbYObt7+95J38PAMG4O/Wgn9nLJrv5VyBjVCtJzGN33Zlc6gnK8osaoELLKvFlu735GZaR+MH1Q7XoSYl9TpWUwJyxc83jjc4l8ms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=v2pgWIIl; arc=none smtp.client-ip=194.177.211.212
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qKN/L6QO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDB84C433C7;
-	Sat, 17 Feb 2024 07:54:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708156500;
-	bh=W4Yl+QOQcGr5pB+8KMomO4gKDZSYGb8I52H5j0OxohE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qKN/L6QOi2L1mJqVJ2RqL7djMGQXJcdoCTY8NjeL8dgK2vRf4JveNwa4laKRyhm2z
-	 TZBErE7QuoK2oV4xJvY6QOjcPmeka1nRKQqxkQbP0XW0PNaiXa76iIDw3wgJTy0Xg/
-	 CAYfB9xpeqbxiHf/Tmi48NIFE2tuB0ibeckn5lBUHTYkAGYu+inzJ0ZCb/or3bwbYq
-	 UYfNARyCAW3nj34AGTnXyCbXpLDa/8mEDA6uuKumlWK+ix2J3NXbJ9DtXZ8I6d75YM
-	 hr2EI0wwXn8e51RemXOPs5ismEm+IM9PDfbmRKPQyF1ZOIPf6KTniqE8nGTH0/TcEc
-	 7HzeW69UMEHbQ==
-Date: Sat, 17 Feb 2024 08:54:55 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, 
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: use kvfree for buf in xfs_ioc_getbmap
-Message-ID: <jdmhruuflukp5osmux43e4geuxtpzbqgbn4mtx54dzfu7bz46x@g6ltam3sc55e>
-References: <1xetTiweC9oejErvoM_w05FWmWBZB1r5p73djCWdW5f8AlRpX9EA8V82PXttdBvZ-n3qCzgDBv6S17-Nt-3ASg==@protonmail.internalid>
- <20240216170230.2468445-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="v2pgWIIl"
+Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:42832)
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+	by mitropoulos.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1rbJjK-0079S1-Q6
+	for linux-xfs@vger.kernel.org; Sat, 17 Feb 2024 12:23:42 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
+	Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=VSAnK4xXZFc9AbcvjFmo0reWOTarbTByS06WBmCmvZc=; b=v2pgWIIlCQjfdXXn+bkJOKOfcc
+	RLwgFpAV1AmUB2ENlTzGDqjIwaiA0+HO8ceegl7su5mkn2ggYYJiykpU8aZ3iZ+OX+9aSDZpV0Ixu
+	VQwEI2EdeTB1H+rYAvVvEW6gVyHQjJQnW76Z5tD6JA+4nRoL7l7Jl82y/W5eeVqz7G9RC7PuzwrLc
+	NvnoIgtEqO/IYQ+1kUYPxv4tqrHcNftwaO8a2oKBk7pavCIGc18i9+Wz4J+gv/KcABlHCrJbkw6lQ
+	3h/PBqP06rPgv9UZLBYHpd0qYoqUqlKrKbQ8cXhg3DrCfILn2k9Rqz09Ssr5O37w6y9YaO2KqT5Ph
+	VufQjqyQ==;
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.94.2)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1rbJjJ-007u91-BN
+	for linux-xfs@vger.kernel.org; Sat, 17 Feb 2024 12:23:41 +0000
+To: linux-xfs@vger.kernel.org
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_6.6.0-1_source.changes
+Date: Sat, 17 Feb 2024 12:23:41 +0000
+X-Debian: DAK
+X-DAK: DAK
+Precedence: bulk
+Auto-Submitted: auto-generated
+X-Debian-Package: xfsprogs
+Message-Id: <E1rbJjJ-007u91-BN@usper.debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240216170230.2468445-1-hch@lst.de>
 
-On Fri, Feb 16, 2024 at 06:02:30PM +0100, Christoph Hellwig wrote:
-> Without this the kernel crashes in kfree for files with a sufficiently
-> large number of extents.
-> 
-> Fixes: d4c75a1b40cd ("xfs: convert remaining kmem_free() to kfree()")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+xfsprogs_6.6.0-1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_6.6.0-1.dsc
+  xfsprogs_6.6.0.orig.tar.xz
+  xfsprogs_6.6.0-1.debian.tar.xz
+  xfsprogs_6.6.0-1_source.buildinfo
 
-LGTM:
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Greetings,
 
-> ---
->  fs/xfs/xfs_ioctl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 7eeebcb6b9250b..7c35d764409720 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1506,7 +1506,7 @@ xfs_ioc_getbmap(
-> 
->  	error = 0;
->  out_free_buf:
-> -	kfree(buf);
-> +	kvfree(buf);
->  	return error;
->  }
-> 
-> --
-> 2.39.2
-> 
-> 
+	Your Debian queue daemon (running on host usper.debian.org)
