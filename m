@@ -1,133 +1,153 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40A852030A
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 06:35:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 830F2381AB;
+	Mon, 19 Feb 2024 15:04:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708324508; cv=none; b=TZiyaiHxC3bPKbJCjn4XUe26Kj+9G6k1aD7GDhaSyr0PyvQPpf4PjqBJuiWk8FqFYZQegZlj1naF4lifeV5TreEl2R7vAmE+Dpkqn8fJ7z8uu6LqfqA+fLnE3gdrrIOizSLtiXQaGs/pm7cU2I/aYz9nLbTmewVA1inbToPObJY=
+	t=1708355092; cv=none; b=YZeaITLQKblozU/2srlJKogNGZjI4x9TMgE8OTfh+poO0cUJy0UXJukgHl/wggF3a0kkf06iDISKLlzPgEoYVdPPFn3a90n+Ic+OTSNz5av1o3pwwFbn0mLyGWH3dErEmNCrquEP4ifjt/+OJQktYlc8gWHYmMgttuUgh7B5yhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708324508; c=relaxed/simple;
-	bh=KCZa70DYZvvRNsV/omFQWfO6XgUPikdfetTKG+bLS44=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZQSbRluakzDAENM82KnDNJFRohz57LBJra3Y+7LaDksKsAGEAAf9K5f8Vwwa3snyTbsrfs56eZfKcee5G1HqEQDt9jme2Sw3wNJVVOtpgSUqh9DY4OcdfP4f+Y3snQ4jh/z2pbelX8DeVWIVazKxxCG2vrQx6fFJP3Hn21sqJcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qSBLe2K7; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1708355092; c=relaxed/simple;
+	bh=eZ3HWDpezrY0KFAZANvuBx9JlcELMR41Z7btSvybG9s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FTyCLlsNgeqtGluXTe+MvWuvZ1qomb7uhj1Tyo5/Bn3W+C/BEM0cX5XmmOVKtbvkiOEEDjfDFFBqSfOMOrtlOdTMtOQKzg35XKHLE6W80HftQbmbEWXJz3cV5LRGl6KNgeCBn0nMQz5PltLv0jn0HesZ18Arq+UN5tehbCW25fg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LF/pbAKl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qSBLe2K7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=04TZ01Gj8drCZSyJ50ldpq0Z70UH8OVMU/rEnQBJfOA=; b=qSBLe2K7EAxZOIptN4BzTjqi+K
-	AU024rFkq/657HkWhosHtcX1OL8/K0s4aK1jaHchGaGOd8O1ZyPecAdCv1NVbjSl8xrJ9cbpfY87v
-	ak5nf3G1gI2nVekmw50sjGXx0JE5atfRKTvzE05Qu/T7CIrSp6Bf9Egs3bojHrj5ij/Hqri+w0lhS
-	bM3/9ttSc5FhsrkYAUKELCmypYiNrbQq+7CuhSsXykAr17zf5ZdQJXG9VystJItmMb+c/csPEx0S1
-	RxhEiJxCFpfaO1+9o/00XKB/Yc9xuL6kyBe9BNQlR1NMcH9qfhpYFWXNcfWsskTU8CcnHTRrqDC8r
-	ENemCIIw==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rbxF4-00000009GOV-1BJ2;
-	Mon, 19 Feb 2024 06:35:06 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 9/9] xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
-Date: Mon, 19 Feb 2024 07:34:50 +0100
-Message-Id: <20240219063450.3032254-10-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240219063450.3032254-1-hch@lst.de>
-References: <20240219063450.3032254-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LF/pbAKl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B499FC433F1;
+	Mon, 19 Feb 2024 15:04:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708355092;
+	bh=eZ3HWDpezrY0KFAZANvuBx9JlcELMR41Z7btSvybG9s=;
+	h=From:To:Cc:Subject:Date:From;
+	b=LF/pbAKlwL+3mG78luGmxy/orTvEe90grZSOMOVDABydD8Nd6xihahAurAb3zkKuO
+	 yQakoyJfphrsJ2llItRLPVf8aQ6Atd9QVud1zA12h6D534zKRyNE1H9Cr1tVkyeAk7
+	 a4L4wov5kf258lBYaLe/KGEx1dSf8NKQLopxJAEy0xlQgK2Xy9szV+zmTmxwaKuwie
+	 82NDfYWq4LGx4ZCzr5kNgIRTi9S047v7PTy0PxVXVMLptdnJqyzcABGIdYib9rFjvu
+	 m6BxHZLZUvWFUb0FF6hxtANIlqxRzHX1Cc40wJEe1NCHTBHztYrcC9IW6Smc08A7YV
+	 scKXv/LNe931g==
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: cmaiolino@redhat.com,dchinner@redhat.com,djwong@kernel.org,hch@lst.de,kch@nvidia.com,leo.lilong@huawei.com,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,sshegde@linux.ibm.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 49c379d3a72a
+Date: Mon, 19 Feb 2024 20:28:33 +0530
+Message-ID: <87edd8wl4f.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
 
-Commit aff3a9edb708 ("xfs: Use preallocation for inodes with extsz
-hints") disabled delayed allocation for all inodes with extent size
-hints due a data exposure problem.  It turns out we fixed this data
-exposure problem since by always creating unwritten extents for
-delalloc conversions due to more data exposure problems, but the
-writeback path doesn't actually support extent size hints when
-converting delalloc these days, which probably isn't a problem given
-that people using the hints know what they get.
+Hi folks,
 
-However due to the way how xfs_get_extsz_hint is implemented, it
-always claims an extent size hint for RT inodes even if the RT
-extent size is a single FSB.  Due to that the above commit effectively
-disabled delalloc support for RT inodes.
+The for-next branch of the xfs-linux repository at:
 
-Switch xfs_get_extsz_hint to return 0 for this case and work around
-that in a few places to reinstate delalloc support for RT inodes on
-file systems with an sb_rextsize of 1.
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_inode.c   | 3 ++-
- fs/xfs/xfs_iomap.c   | 2 --
- fs/xfs/xfs_iops.c    | 2 +-
- fs/xfs/xfs_rtalloc.c | 2 ++
- 4 files changed, 5 insertions(+), 4 deletions(-)
+has just been updated.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 37ec247edc1332..9e12278d1b62cd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -60,7 +60,8 @@ xfs_get_extsz_hint(
- 		return 0;
- 	if ((ip->i_diflags & XFS_DIFLAG_EXTSIZE) && ip->i_extsize)
- 		return ip->i_extsize;
--	if (XFS_IS_REALTIME_INODE(ip))
-+	if (XFS_IS_REALTIME_INODE(ip) &&
-+	    ip->i_mount->m_sb.sb_rextsize > 1)
- 		return ip->i_mount->m_sb.sb_rextsize;
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e6abe56d1f1f23..aea4e29ebd6785 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -992,8 +992,6 @@ xfs_buffered_write_iomap_begin(
- 		return xfs_direct_write_iomap_begin(inode, offset, count,
- 				flags, iomap, srcmap);
- 
--	ASSERT(!XFS_IS_REALTIME_INODE(ip));
--
- 	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index be102fd49560dc..ca60ba060fd5c9 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -521,7 +521,7 @@ xfs_stat_blksize(
- 	 * always return the realtime extent size.
- 	 */
- 	if (XFS_IS_REALTIME_INODE(ip))
--		return XFS_FSB_TO_B(mp, xfs_get_extsz_hint(ip));
-+		return XFS_FSB_TO_B(mp, xfs_get_extsz_hint(ip) ? : 1);
- 
- 	/*
- 	 * Allow large block sizes to be reported to userspace programs if the
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 2f85567f3d756b..9c7fba175b9025 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1340,6 +1340,8 @@ xfs_bmap_rtalloc(
- 	int			error;
- 
- 	align = xfs_get_extsz_hint(ap->ip);
-+	if (!align)
-+		align = 1;
- retry:
- 	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 					align, 1, ap->eof, 0,
--- 
-2.39.2
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
+The new head of the for-next branch is commit:
+
+49c379d3a72a xfs: use kvfree for buf in xfs_ioc_getbmap
+
+I have now dropped previously merged "put the xfs xfile abstraction on a diet"
+patchset.
+
+16 new commits:
+
+Christoph Hellwig (1):
+      [49c379d3a72a] xfs: use kvfree for buf in xfs_ioc_getbmap
+
+Darrick J. Wong (1):
+      [1149314a16f7] xfs: disable sparse inode chunk alignment check when there is no alignment
+
+Dave Chinner (12):
+      [10634530f7ba] xfs: convert kmem_zalloc() to kzalloc()
+      [f078d4ea8276] xfs: convert kmem_alloc() to kmalloc()
+      [afdc115559c5] xfs: move kmem_to_page()
+      [49292576136f] xfs: convert kmem_free() for kvmalloc users to kvfree()
+      [d4c75a1b40cd] xfs: convert remaining kmem_free() to kfree()
+      [178231af2bdc] xfs: use an empty transaction for fstrim
+      [94a69db2367e] xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS
+      [0b3a76e955eb] xfs: use GFP_KERNEL in pure transaction contexts
+      [2c1e31ed5c88] xfs: place intent recovery under NOFS allocation context
+      [c704ecb2410e] xfs: place the CIL under nofs allocation context
+      [204fae32d5f7] xfs: clean up remaining GFP_NOFS users
+      [57b98393b812] xfs: use xfs_defer_alloc a bit more
+
+Long Li (1):
+      [e4c3b72a6ea9] xfs: ensure submit buffers on LSN boundaries in error handlers
+
+Shrikanth Hegde (1):
+      [0164defd0d86] xfs: remove duplicate ifdefs
+
+Code Diffstat:
+
+ fs/xfs/Makefile                   |   3 +-
+ fs/xfs/kmem.c                     |  30 ------
+ fs/xfs/kmem.h                     |  83 ---------------
+ fs/xfs/libxfs/xfs_ag.c            |  10 +-
+ fs/xfs/libxfs/xfs_attr.c          |   3 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c     |  18 ++--
+ fs/xfs/libxfs/xfs_bmap.c          |   2 +-
+ fs/xfs/libxfs/xfs_btree.c         |   2 +-
+ fs/xfs/libxfs/xfs_btree.h         |   4 +-
+ fs/xfs/libxfs/xfs_btree_staging.c |  10 +-
+ fs/xfs/libxfs/xfs_da_btree.c      |  22 ++--
+ fs/xfs/libxfs/xfs_defer.c         |  23 ++---
+ fs/xfs/libxfs/xfs_dir2.c          |  48 ++++-----
+ fs/xfs/libxfs/xfs_dir2_block.c    |   6 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c       |  16 +--
+ fs/xfs/libxfs/xfs_iext_tree.c     |  26 +++--
+ fs/xfs/libxfs/xfs_inode_fork.c    |  29 +++---
+ fs/xfs/libxfs/xfs_refcount.c      |   2 +-
+ fs/xfs/libxfs/xfs_rmap.c          |   2 +-
+ fs/xfs/scrub/cow_repair.c         |   2 +-
+ fs/xfs/scrub/ialloc_repair.c      |   2 +-
+ fs/xfs/xfs_acl.c                  |   4 +-
+ fs/xfs/xfs_attr_item.c            |  14 +--
+ fs/xfs/xfs_attr_list.c            |   6 +-
+ fs/xfs/xfs_bmap_item.c            |   7 +-
+ fs/xfs/xfs_bmap_util.c            |   2 +-
+ fs/xfs/xfs_buf.c                  |  48 +++++----
+ fs/xfs/xfs_buf_item.c             |   8 +-
+ fs/xfs/xfs_buf_item_recover.c     |   8 +-
+ fs/xfs/xfs_discard.c              |  17 +++-
+ fs/xfs/xfs_dquot.c                |   2 +-
+ fs/xfs/xfs_error.c                |   8 +-
+ fs/xfs/xfs_extent_busy.c          |   5 +-
+ fs/xfs/xfs_extfree_item.c         |   8 +-
+ fs/xfs/xfs_filestream.c           |   6 +-
+ fs/xfs/xfs_icache.c               |   5 +-
+ fs/xfs/xfs_icreate_item.c         |   2 +-
+ fs/xfs/xfs_inode.c                |   4 +-
+ fs/xfs/xfs_inode_item.c           |   2 +-
+ fs/xfs/xfs_inode_item_recover.c   |   5 +-
+ fs/xfs/xfs_ioctl.c                |   8 +-
+ fs/xfs/xfs_iops.c                 |   2 +-
+ fs/xfs/xfs_itable.c               |  12 +--
+ fs/xfs/xfs_iwalk.c                |   9 +-
+ fs/xfs/xfs_linux.h                |  14 ++-
+ fs/xfs/xfs_log.c                  |  20 ++--
+ fs/xfs/xfs_log_cil.c              |  31 ++++--
+ fs/xfs/xfs_log_recover.c          | 101 ++++++++++++-------
+ fs/xfs/xfs_mount.c                |   2 +-
+ fs/xfs/xfs_mru_cache.c            |  17 ++--
+ fs/xfs/xfs_qm.c                   |  18 ++--
+ fs/xfs/xfs_refcount_item.c        |  12 +--
+ fs/xfs/xfs_rmap_item.c            |  11 +-
+ fs/xfs/xfs_rtalloc.c              |  10 +-
+ fs/xfs/xfs_super.c                |   4 +-
+ fs/xfs/xfs_sysfs.c                |   4 -
+ fs/xfs/xfs_trace.h                |  25 -----
+ fs/xfs/xfs_trans_ail.c            |   7 +-
+ 58 files changed, 373 insertions(+), 438 deletions(-)
+ delete mode 100644 fs/xfs/kmem.c
+ delete mode 100644 fs/xfs/kmem.h
