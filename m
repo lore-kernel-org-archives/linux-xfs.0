@@ -1,70 +1,69 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36A5E54F88
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 23:47:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F209F54F90
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 23:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708386437; cv=none; b=TIBSmeiLArMcpjHdzlmCPeOWIBOMvaT18Fm44zOzVtWvvYzxzJBCQ9Hm9JcSb5Ls8QE3qDHw+anAAiV/vXvlcVImTJ82Nc549hjx2ToQNhTq9c5aEgPdKrJ5ZiUA/h2owpfSjo2WWw/uounbO0PGq1fOCrzhqfygPSTkRSV8/bA=
+	t=1708386964; cv=none; b=ZbyRES5YZc4Vz44UQw8xgGarWE/PFrD0glRSRWI0fidg/V0LvTFUmi9Sl3VvVC6LEcYXFWDaoMuHcGXQweAaUp/aH+547djz8VUU7EmIz3kTH839Sxs2iGKi40gWadqh+LcJziuXfNOChAs4Do1ZGORA1BYJaUORde9kCB+R3Io=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708386437; c=relaxed/simple;
-	bh=EZFenuCmehn+h8iAPfFMsIFmzTGVJIklUadB2hqv61A=;
+	s=arc-20240116; t=1708386964; c=relaxed/simple;
+	bh=PyisBXT+VPBkjhYsCGwmiBZxaFWuvR2VKu4XcA6coDs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XzlOkqP7n5ZpRUtDWZ17VekMSibNy57CrlVlFIRPjGkmUxt/FZ9EqhwEeg7fRtllk80ywrFj+eYViuDnqDf/YbKOAc1TKLF+iGMWKFeCaGacvBZNUPblJzAzpA7oAcer/Z7eL3sK2ef0Ixnd1NMlwTxjApG7SNW+hVZhdKmo2DY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=yzj7X0Wl; arc=none smtp.client-ip=209.85.210.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uh7Z4NH7ypUuOqsifIWOlQVp25iL7WSwizB0g95/Dt2OrerF371D7KHWGhTRVhlz30Oz20N/SIW8TkqLBWwYA/A2b9lORMwZd2QV17goKCyZRkEruclOjPV83L6UGxePxa1FZzShfsJW6j526LE7trtjKWwnzCePGe9QqVTWad8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=w8wEvbOk; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="yzj7X0Wl"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6e09143c7bdso2436979b3a.3
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 15:47:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="w8wEvbOk"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6e09143c7bdso2439674b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 15:56:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708386435; x=1708991235; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708386962; x=1708991762; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=KPt2+GfeUoRj5gn9EjwOlPKG0sN6+AkzNBgIiHSjiTc=;
-        b=yzj7X0WlBVWwP+7szBIxamGqFddGyg3n8xBtOKW0Lvgl3wNdsP5kAuM28pS7yBq8u4
-         WdzpZIJb3jClG75G3Hv9Wm98flgqSQyBKcbUZex+l24cZ4Ze5eTuN0tt4FzghhkX7n6B
-         tHq18QSFtXNQ15Y8ldOOPTTkuBkNyKNt9A6zDid3tBb3VlUVIt7MJqQjE3EoKSK8ip73
-         GYHotMgwpbuzwKdqKgy5Igwud5Gyq2tf+tdFTWIvXwkyYI6KjQ7bXJUbyqGqZwUUbvWH
-         DyRAR7jiluQ9Psr/3hvNHH3zprEK1HpAR2Ar8s5Cj5o1C8E80EaGeBSD5SQ/KYUt7BRJ
-         Aszw==
+        bh=KaP5kgSGcMzF5vr6150GjgKI2EWs4XaJkSfDeaGk3GU=;
+        b=w8wEvbOkw1kOWhzVFkwkYzKvSCytq+aEimmQTctGu79CMr8AImGN3cM569mOkNhA0z
+         wsb9bNtRWMrD694x06aLXLo0UnWlW7FZN+dV2yFpegHpMQ26Tsxo1ycdpTLwxNQTTKrA
+         ov3gcDo7KlVDAPWEZW87/xvVl5tdQjxhDy0M2WKAGyxeiknfpQ0r2oRCwjKT9pW9M4w8
+         Ms69s+QIb51Fqwb6Qz0GkQ3V/1bBFW6CSQqgdA7gjcl8ffmfBuyHvcP7ps5Fr+wd2VWq
+         Db1CKFggqJXV92vSqN8wmo/drXUBhkPYO4UrXJjpoH9lj0B6RObxbcUFi83VPtyl/spS
+         4z0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708386435; x=1708991235;
+        d=1e100.net; s=20230601; t=1708386962; x=1708991762;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KPt2+GfeUoRj5gn9EjwOlPKG0sN6+AkzNBgIiHSjiTc=;
-        b=cO0fPeq/6Tam3qvU4jbFkINVdK0M4daYv1QS7BdfGXYwnHSFMw4M5wlcxFdADZ2FAb
-         4VMD0i2vgXqmS8yRHZ9Zss+p19lKWxE5EGNtt7DTYj2ZJpq7kqu91cAUHrjeUECQKnOA
-         q17gj858ofp8EJYN4AKcMukwKqdjTIVih/PyzoCeeWkWfxlzFf/eaU204ZUhI9tXAXUc
-         Lzu1GA3CLfAJ5TvEgRyBq0BRCWWZvAQRBXn6gHWk0h2yK3f2fNEi780mZJwLO5Dapc5N
-         sCsVgsCi2TF12eTzFFAy36cv3dHlbiOJdxoapLJLRD4kYw6URlhjyTUlvrz5ljRFZAD+
-         IG9g==
-X-Forwarded-Encrypted: i=1; AJvYcCUskXqJza4KXkP9FbcpVjPXq5Nr8xzTch1e/CWwHqJYDGsNguk1YhkgurNbCd6ng2IMqDZi3KkPZvJ7FGNixk6M/H/3OAY1fo8a
-X-Gm-Message-State: AOJu0YwJVJUoRTZT/eol6oSRgbezhgHFF/MxUi9J9SKmSZMiH/qWckA/
-	0n+g+Jw1iEE1NXW3zzsDdbOqkXzbF3x8XuT3qzOEQ2qAMJ9VCEkke9JmnUnyOGU=
-X-Google-Smtp-Source: AGHT+IEEKUwyX/h/oYgZQAjibTFHmcCLlX24M6h0CLLzE7yTQh4xkXrRFn8/UQML8yo4FQC3AYm9yQ==
-X-Received: by 2002:a05:6a20:f386:b0:19e:9cc9:1bef with SMTP id qr6-20020a056a20f38600b0019e9cc91befmr10349510pzb.22.1708386435564;
-        Mon, 19 Feb 2024 15:47:15 -0800 (PST)
+        bh=KaP5kgSGcMzF5vr6150GjgKI2EWs4XaJkSfDeaGk3GU=;
+        b=CldVO2RC0c5hz5LUms/vXwGByrQmDjlzKkbJO34jSAwP0j7omUBuhEeJ1ktV2HOhdq
+         +FquE9/EjKs5ru0vjWwqTIaHIt9BKHYcRje9NOaat5ta5yZkxyz3xsSTBUPcXiB5z+8T
+         NFxXV9SWpu7Q0d9cusitWnAmu7RUB/8oM3HPufhvztjvCgDz3qai/NJoyM604fCJqjHg
+         0FpgYvgqDYmISs1U/9sNC/TsAYJiYaBWfA7++NK58tarCP2qbuiQssNLl4TuclQR8in8
+         6K/yKm84imT/SgjLH/qfs1Zl66ThUbXVYn5ToKNLYDXkgqE3Kop0TA3sgqIdixSMRr4x
+         BgVA==
+X-Forwarded-Encrypted: i=1; AJvYcCU64zGT1G0pUD+hckRJqwDDuY4M/b6CzcS7oej3eHOLOJg4AGAd/3tzFzfKTNP7DtvkPMg9FEeHWGXXuXdxBIEoBncqg4eDsOaD
+X-Gm-Message-State: AOJu0YyHmpfl/Ew9LOfbjbUhB/6nJEfdCokAnWd0FD/hFdvKX0n3uY2G
+	OR1hibr/qq5P8mECb1PTDgLrip/HXTtSeuYDs1NtJaomw0L34B98MSLHtZnbP5U=
+X-Google-Smtp-Source: AGHT+IGH9JvhlvBDd2YZQ3EisEV+5N7OqW+knXzdmdAE6FBXBsvupRjG4tDtfkJnsFNGueMY5ZfVjw==
+X-Received: by 2002:a05:6a21:1583:b0:19e:cae4:7c07 with SMTP id nr3-20020a056a21158300b0019ecae47c07mr12953997pzb.45.1708386962341;
+        Mon, 19 Feb 2024 15:56:02 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id u21-20020aa78395000000b006e0ad616be3sm5454917pfm.110.2024.02.19.15.47.15
+        by smtp.gmail.com with ESMTPSA id pd6-20020a17090b1dc600b0029930881068sm6094522pjb.49.2024.02.19.15.56.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Feb 2024 15:47:15 -0800 (PST)
+        Mon, 19 Feb 2024 15:56:02 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rcDLs-008pQy-1g;
-	Tue, 20 Feb 2024 10:47:12 +1100
-Date: Tue, 20 Feb 2024 10:47:12 +1100
+	id 1rcDUN-008phz-15;
+	Tue, 20 Feb 2024 10:55:59 +1100
+Date: Tue, 20 Feb 2024 10:55:59 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: stop the steal (of data blocks for RT indirect
- blocks)
-Message-ID: <ZdPogLjdypKDgm0D@dread.disaster.area>
+Subject: Re: [PATCH 2/9] xfs: move RT inode locking out of __xfs_bunmapi
+Message-ID: <ZdPqj0gJhBekH+Kg@dread.disaster.area>
 References: <20240219063450.3032254-1-hch@lst.de>
- <20240219063450.3032254-9-hch@lst.de>
+ <20240219063450.3032254-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,83 +72,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240219063450.3032254-9-hch@lst.de>
+In-Reply-To: <20240219063450.3032254-3-hch@lst.de>
 
-On Mon, Feb 19, 2024 at 07:34:49AM +0100, Christoph Hellwig wrote:
-> When xfs_bmap_del_extent_delay has to split an indirect block it tries
-> to steal blocks from the the part that gets unmapped to increase the
-> indirect block reservation that now needs to cover for two extents
-> instead of one.
+On Mon, Feb 19, 2024 at 07:34:43AM +0100, Christoph Hellwig wrote:
+> __xfs_bunmapi is a bit of an odd place to lock the rtbitmap and rtsummary
+> inodes given that it is very high level code.  While this only looks ugly
+> right now, it will become a problem when supporting delayed allocations
+> for RT inodes as __xfs_bunmapi might end up deleting only delalloc extents
+> and thus never unlock the rt inodes.
 > 
-> This works perfectly fine on the data device, where the data and
-> indirect blocks come from the same pool.  It has no chance of working
-> when the inode sits on the RT device.  To support re-enabling delalloc
-> for inodes on the RT device, make this behavior conditional on not
-> beeing for rt extents.  For an RT extent try allocate new blocks or
-> otherwise just give up.
-> 
-> Note that split of delalloc extents should only happen on writeback
-> failure, as for other kinds of hole punching we first write back all
-> data and thus convert the delalloc reservations covering the hole to
-> a real allocation.
-> 
-> Note that restoring a quota reservation is always a bit problematic,
-> but the force flag should take care of it.  That is, if we actually
-> supported quota with the RT volume, which seems to not be the case
-> at the moment.
+> Move the locking into xfs_rtfree_blocks instead (where it will also be
+> helpful once we support extfree items for RT allocations), and use a new
+> flag in the transaction to ensure they aren't locked twice.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 27 ++++++++++++++++++++++++++-
->  1 file changed, 26 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 8a84b7f0b55f38..a137abf435eeba 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4912,6 +4912,30 @@ xfs_bmap_del_extent_delay(
->  		WARN_ON_ONCE(!got_indlen || !new_indlen);
->  		stolen = xfs_bmap_split_indlen(da_old, &got_indlen, &new_indlen,
->  						       del->br_blockcount);
-> +		if (isrt && stolen) {
-> +			/*
-> +			 * Ugg, we can't just steal reservations from the data
-> +			 * blocks as the data blocks come from a different pool.
-> +			 *
-> +			 * So we have to try to increase out reservations here,
-> +			 * and if that fails we have to fail the unmap.  To
-> +			 * avoid that as much as possible dip into the reserve
-> +			 * pool.
-> +			 *
-> +			 * Note that in theory the user/group/project could
-> +			 * be over the quota limit in the meantime, thus we
-> +			 * force the quota accounting even if it was over the
-> +			 * limit.
-> +			 */
-> +			error = xfs_dec_fdblocks(mp, stolen, true);
-> +			if (error) {
-> +				ip->i_delayed_blks += del->br_blockcount;
-> +				xfs_trans_reserve_quota_nblks(NULL, ip, 0,
-> +						del->br_blockcount, true);
-> +				return error;
-> +			}
-> +			xfs_mod_delalloc(ip, 0, stolen);
-> +		}
+>  fs/xfs/libxfs/xfs_bmap.c     | 10 ----------
+>  fs/xfs/libxfs/xfs_rtbitmap.c | 14 ++++++++++++++
+>  fs/xfs/libxfs/xfs_shared.h   |  3 +++
+>  3 files changed, 17 insertions(+), 10 deletions(-)
 
-Ok. If you delay the ip->i_delayed_blks and quota accounting until
-after the incore extent tree updates are done, this code doesn't
-need to undo anything and can just return an error. We should also
-keep in mind that an error here will likely cause a filesystem
-shutdown when the transaction is canceled....
+Ok, nice cleanup.
 
-FWIW, if we are going to do this for rt, we should probably also
-consider do it for normal delalloc conversion when the indlen
-reservation runs out due to excessive fragmentation of large
-extents. Separate patch and all that, but it doesn't really make
-sense to me to only do this for RT when we know it is also needed in
-reare cases on non-rt workloads...
+I'd also like to see the rest of the rt-only code in __xfs_bunmapi()
+lifted out of the function into a helper. It's a big chunk of code
+inside the loop, and the code structure is:
 
--Dave.
+	loop() {
+		/* common stuff */
+
+		if (!rt)
+			goto delete;
+
+		/* lots of rt only stuff */
+
+	delete:
+		/* common stuff */
+	}
+
+I think this would be much better as
+
+	loop() {
+		/* common stuff */
+
+		if (rt) {
+			error = xfs_bunmapi_rtext()
+			if (error)
+				goto error0;
+		}
+
+		/* common stuff */
+	}
+
+Separate cleanup though, not necessary for this patchset...
+
+Cheers,
+
+Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
