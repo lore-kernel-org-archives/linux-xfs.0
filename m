@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71029200AC
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 06:28:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA57200B7
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2024 06:28:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708324084; cv=none; b=CdHIdP7fiB4bLTxJs/lhx932UCs14NpSY7yXgmzdEmsTmhPJc3EGer4Y10hiv5t67pPjW81UJjAmjSlg/7zSsX2VQEg2OVV2qCLTKuhvx2bvuVXle/gfzIbg8xuvTyjiWRHLMMNlR3kuOYWSBiQj8hFYouBFEBc54EFZEuYu1F4=
+	t=1708324088; cv=none; b=FwZPA7ZahsWCtCshPgz6usfVZPVVhrSsZLc+VzXEwdMdqLdqcvjlrD2MF4ZPtlsag0V3mnL3iImvPfkOgMmjSfH5xOdt+CNDX8jyv7WTXABg2Mx1aqIoPcpKGYJ9E8o7WuA4Egk5F3ns8H3a5T/bLJvO+gYPDuDDekCFG9qIqxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708324084; c=relaxed/simple;
-	bh=4/tv/3bdygZpoU6BLjMCTmyIrcaO9QlbfVW8P0ftS48=;
+	s=arc-20240116; t=1708324088; c=relaxed/simple;
+	bh=1u9NQ6vyaTbY5lvytjJR5I4q07hBMkj1fgG3hRa88Aw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iU9eDOH91qU/bXUjfGYNkP7u/lvvVD+O+7egi/z2Ql41IsIyVvhSLhMoZ2EUJ+e3ubHR+rSNAnSo4s3ZndeBRXD7kR+/rl7WceXfYDloQGfGPeQKo39u4N7MHc1AkSrAx9eNnBq7vrvgUjFsXk1QMflYbPAYf4Hree/XUa1QKPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=l7PjhVSO; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=dYVeM+o4dXmgdScGj83Wu1eGsUyRUAZCWDS6KdYFUES8bSaijwHjgPFfxHMQkEUfeEPoyfd8IadEAj69bz6h05m+2etepk1f4ZAX2xG1w8tlhAEOBLgHDKFprh/nm/4yOehJIdOXizl16xI5pZBgMi3+We35DQmuXhLHpzRFXJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=K0ls48wK; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="l7PjhVSO"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K0ls48wK"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=vMzRny256EkGSWXtzu6dkmMncaSoQLHVAAjTF+P8DPU=; b=l7PjhVSObLkfcFoqyT6zY51FWo
-	13Kloz7QLofMNe0OIsIR/0qVXE3WbIp5jV9zl1I3LG3WVI9ekTkreKtlRH59ecJQO2RXyaFMcNKcK
-	FznVdfnTKaC9yqaH0ImYO17FuUHECDFQjhmEEmiRh/8gfs62BYynfCCSMmaBg1z/RgmcLSrC4iilT
-	YFo5kbXNiW88gPCpO7YaTbesY8BXgM3OS+eiUkPEj+YAboum47aRQkucmi/zdx+k+tOeuBJOpj1Hp
-	Av9yzSMWXNX2woXEb0JM0mcnFwEdK6dTzafn/t4DYeIEuLAyAUeC5Y4/OGiv0AuX63sc/3NIwjzQ3
-	H07cnAtg==;
+	bh=xrj4yc1TectagwrKRxl6KUlUJmMOtbHo6U4sVcgHs4o=; b=K0ls48wK4VPl7lGplCByCy2qS2
+	geFAEADRgLi6t7LWg1z/FXMmJ0itwU1BYFTfhBdUH9pJPD+qLjtyUvdChARsW6pEBkFoARx2vIZrj
+	SI/ss6kgcLRD8ATZVVVDNGFNS6D8/zXbBYfguetpuIAXflGOD589THOcp3aQd4gE+MU5mgH094zip
+	76Kbn1Ez8zG3yiCD7GJr/SgeVr4/4CYuVbfQAfFHLnTeY+//tQzyxvRSHiWQxp1NI/kXwDS+1zzBi
+	LGz0boxbLaNP2imfGV9qDwsIF0bTjiqRdXR0CWqAyiQ4tOjeWgbDTupq5xQmALMldmiUlLZnjfmm7
+	9/E8/DgQ==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rbx8D-00000009FJ8-1eHT;
-	Mon, 19 Feb 2024 06:28:01 +0000
+	id 1rbx8F-00000009FJm-3UmA;
+	Mon, 19 Feb 2024 06:28:04 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
@@ -38,9 +38,9 @@ To: Chandan Babu R <chandan.babu@oracle.com>,
 Cc: Hui Su <sh_def@163.com>,
 	linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 15/22] xfs: don't allow highmem pages in xfile mappings
-Date: Mon, 19 Feb 2024 07:27:23 +0100
-Message-Id: <20240219062730.3031391-16-hch@lst.de>
+Subject: [PATCH 16/22] xfs: use shmem_get_folio in xfile_obj_store
+Date: Mon, 19 Feb 2024 07:27:24 +0100
+Message-Id: <20240219062730.3031391-17-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240219062730.3031391-1-hch@lst.de>
 References: <20240219062730.3031391-1-hch@lst.de>
@@ -53,105 +53,123 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-XFS is generally used on 64-bit, non-highmem platforms and xfile
-mappings are accessed all the time.  Reduce our pain by not allowing
-any highmem mappings in the xfile page cache and remove all the kmap
-calls for it.
+Switch to using shmem_get_folio and manually dirtying the page instead
+of abusing aops->write_begin and aops->write_end in xfile_get_page.
+
+This simplifies the code by not doing indirect calls of not actually
+exported interfaces that don't really fit the use case very well, and
+happens to get us large folio support for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/xfarray.c |  3 +--
- fs/xfs/scrub/xfile.c   | 21 +++++++++------------
- 2 files changed, 10 insertions(+), 14 deletions(-)
+ fs/xfs/scrub/xfile.c | 73 ++++++++++++++++----------------------------
+ 1 file changed, 27 insertions(+), 46 deletions(-)
 
-diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
-index 95ac14bceeadd6..d0f98a43b2ba0a 100644
---- a/fs/xfs/scrub/xfarray.c
-+++ b/fs/xfs/scrub/xfarray.c
-@@ -580,7 +580,7 @@ xfarray_sort_get_page(
- 	 * xfile pages must never be mapped into userspace, so we skip the
- 	 * dcache flush when mapping the page.
- 	 */
--	si->page_kaddr = kmap_local_page(si->xfpage.page);
-+	si->page_kaddr = page_address(si->xfpage.page);
- 	return 0;
- }
- 
-@@ -592,7 +592,6 @@ xfarray_sort_put_page(
- 	if (!si->page_kaddr)
- 		return 0;
- 
--	kunmap_local(si->page_kaddr);
- 	si->page_kaddr = NULL;
- 
- 	return xfile_put_page(si->array->xfile, &si->xfpage);
 diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-index 4ec975977dcd4c..009a760cb690a0 100644
+index 009a760cb690a0..a4480f4020ae16 100644
 --- a/fs/xfs/scrub/xfile.c
 +++ b/fs/xfs/scrub/xfile.c
-@@ -77,6 +77,12 @@ xfile_create(
- 	inode = file_inode(xf->file);
- 	lockdep_set_class(&inode->i_rwsem, &xfile_i_mutex_key);
+@@ -183,11 +183,7 @@ xfile_store(
+ 	loff_t			pos)
+ {
+ 	struct inode		*inode = file_inode(xf->file);
+-	struct address_space	*mapping = inode->i_mapping;
+-	const struct address_space_operations *aops = mapping->a_ops;
+-	struct page		*page = NULL;
+ 	unsigned int		pflags;
+-	int			error = 0;
+ 
+ 	if (count > MAX_RW_COUNT)
+ 		return -ENOMEM;
+@@ -196,60 +192,45 @@ xfile_store(
+ 
+ 	trace_xfile_store(xf, pos, count);
  
 +	/*
-+	 * We don't want to bother with kmapping data during repair, so don't
-+	 * allow highmem pages to back this mapping.
++	 * Increase the file size first so that shmem_get_folio(..., SGP_CACHE),
++	 * actually allocates a folio instead of erroring out.
 +	 */
-+	mapping_set_gfp_mask(inode->i_mapping, GFP_KERNEL);
++	if (pos + count > i_size_read(inode))
++		i_size_write(inode, pos + count);
 +
- 	trace_xfile_create(xf);
- 
- 	*xfilep = xf;
-@@ -126,7 +132,6 @@ xfile_load(
- 
  	pflags = memalloc_nofs_save();
  	while (count > 0) {
+-		void		*fsdata = NULL;
 -		void		*p, *kaddr;
++		struct folio	*folio;
  		unsigned int	len;
+-		int		ret;
++		unsigned int	offset;
  
- 		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
-@@ -153,10 +158,7 @@ xfile_load(
- 		 * xfile pages must never be mapped into userspace, so
- 		 * we skip the dcache flush.
- 		 */
--		kaddr = kmap_local_page(page);
--		p = kaddr + offset_in_page(pos);
--		memcpy(buf, p, len);
--		kunmap_local(kaddr);
-+		memcpy(buf, page_address(page) + offset_in_page(pos), len);
- 		put_page(page);
- 
- advance:
-@@ -221,14 +223,13 @@ xfile_store(
- 		 * the dcache flush.  If the page is not uptodate, zero it
- 		 * before writing data.
- 		 */
--		kaddr = kmap_local_page(page);
-+		kaddr = page_address(page);
- 		if (!PageUptodate(page)) {
- 			memset(kaddr, 0, PAGE_SIZE);
- 			SetPageUptodate(page);
- 		}
- 		p = kaddr + offset_in_page(pos);
- 		memcpy(p, buf, len);
--		kunmap_local(kaddr);
- 
- 		ret = aops->write_end(NULL, mapping, pos, len, len, page,
- 				fsdata);
-@@ -314,11 +315,7 @@ xfile_get_page(
- 	 * to the caller and make sure the backing store will hold on to them.
- 	 */
- 	if (!PageUptodate(page)) {
--		void	*kaddr;
+-		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
 -
--		kaddr = kmap_local_page(page);
--		memset(kaddr, 0, PAGE_SIZE);
--		kunmap_local(kaddr);
-+		memset(page_address(page), 0, PAGE_SIZE);
- 		SetPageUptodate(page);
- 	}
+-		/*
+-		 * We call write_begin directly here to avoid all the freezer
+-		 * protection lock-taking that happens in the normal path.
+-		 * shmem doesn't support fs freeze, but lockdep doesn't know
+-		 * that and will trip over that.
+-		 */
+-		error = aops->write_begin(NULL, mapping, pos, len, &page,
+-				&fsdata);
+-		if (error) {
+-			error = -ENOMEM;
++		if (shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
++				SGP_CACHE) < 0)
+ 			break;
+-		}
+-
+-		/*
+-		 * xfile pages must never be mapped into userspace, so we skip
+-		 * the dcache flush.  If the page is not uptodate, zero it
+-		 * before writing data.
+-		 */
+-		kaddr = page_address(page);
+-		if (!PageUptodate(page)) {
+-			memset(kaddr, 0, PAGE_SIZE);
+-			SetPageUptodate(page);
+-		}
+-		p = kaddr + offset_in_page(pos);
+-		memcpy(p, buf, len);
+-
+-		ret = aops->write_end(NULL, mapping, pos, len, len, page,
+-				fsdata);
+-		if (ret < 0) {
+-			error = -ENOMEM;
++		if (filemap_check_wb_err(inode->i_mapping, 0)) {
++			folio_unlock(folio);
++			folio_put(folio);
+ 			break;
+ 		}
  
+-		if (ret != len) {
+-			error = -ENOMEM;
+-			break;
+-		}
++		offset = offset_in_folio(folio, pos);
++		len = min_t(ssize_t, count, folio_size(folio) - offset);
++		memcpy(folio_address(folio) + offset, buf, len);
++
++		folio_mark_dirty(folio);
++		folio_unlock(folio);
++		folio_put(folio);
+ 
+-		count -= ret;
+-		pos += ret;
+-		buf += ret;
++		count -= len;
++		pos += len;
++		buf += len;
+ 	}
+ 	memalloc_nofs_restore(pflags);
+ 
+-	return error;
++	if (count)
++		return -ENOMEM;
++	return 0;
+ }
+ 
+ /* Find the next written area in the xfile data for a given offset. */
 -- 
 2.39.2
 
