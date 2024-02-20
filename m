@@ -1,41 +1,30 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E21771E49F
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 05:04:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F57481B3
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 05:10:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708405484; cv=none; b=qYxg+oapin7Dmwtb7wOEahKNSCw1opiR3lj4+dod8gEn9y5ZnXTOkFLsBV1rKB5R6nKcVGvIDlHnmLL/E9zRxnDRtAHMHF0AxUQTqaVnATsSCQBm3MsLLeYxcF5J26BPKboEXXWOkTPGgpt9KuTfwCbh08lXTi/MiukppR6D60M=
+	t=1708405813; cv=none; b=nB9WGwa8/syapravqFOhrKQf6BJc5PlFUfbg+l3nmUvs7wnOaG9dKT+2pW2/+mriRrOm09ICP9mBotAcoii6yF9jEtBue98gE1XdSJAYnc2J36iN4ohsXR3X4RlaKNqlW++eSXH3GRIX39Hl8KJb4+a8RnlJmQecuoNVvi188Kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708405484; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1708405813; c=relaxed/simple;
+	bh=OaHwWGOq7mcL0maibXVbF+4duHZ6oXt8uKaFcAEARm4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aT4U0eTG7nmD6w555LyHRTMoKYfsM10k1kNk1RAvWayHJR2OiUvqYuStqSclj2ZXwJI1B9TXK/7mLqzu1uk+CL/ZghKmOUKV1QX50kEFgKPKgzOVTUo8LpNmE4F/S+9SbOyLBVC2Kyxw0d0CYCkq1zmGEe7dm4kGqEqGpZqIoF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=egi1fwwI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="egi1fwwI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=egi1fwwIlp14I2qa7Qx0lxTw9D
-	AB+xf+Ap3oWxWsV+wtl0HAREEA7q1EcRPFnCmZEsCobKCqtBypv6sIMHb1oi3cGr4mM5gBAHkDDdn
-	Cr0RPwkEoJp7KAyHPEiI6m2X8LE0KPO+dwZZFXQSG3Sy0sM7g7tD2wIrR160IySlBUrVav9soazgL
-	vIfgGNHI6awYXtrr7Ved2VqLxjss6bFw0zai4ClEXk77dAYCGRbtU+tvNVBy5WgjcqEjUOETNW/xu
-	9CEdHbAUJw7bl3IRkOFN2lZaETe3qq4FOs3rgsFRWgPVpXajGw9hcUN8m332IBruiTS8xLZucRcbt
-	7JPOVPLg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rcIJ8-0000000DARX-1i0E;
-	Tue, 20 Feb 2024 05:04:42 +0000
-Date: Mon, 19 Feb 2024 21:04:42 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=jWevfe6KHTLiUSA5SSQDbyJuESMJZmxSwwMtQPc11OdBoiEbWiaamlt5XY3VcHdrAUeIB3xp+pLSECt1zlSHZ2PwASKp1ludzMJzPaGYGzNTkpvlPG+JOEiOtQI6xt4QwzvS8MatmRpHxkmDhkd+h/v1zESvqKy59y5OIVpQoFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 80BD668AFE; Tue, 20 Feb 2024 06:10:05 +0100 (CET)
+Date: Tue, 20 Feb 2024 06:10:04 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, chandan.babu@oracle.com
-Subject: Re: [PATCH] xfs: use kvfree in xfs_ioc_getfsmap()
-Message-ID: <ZdQy6jna17dfjQGs@infradead.org>
-References: <20240220002442.4112220-1-david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/9] xfs: move RT inode locking out of __xfs_bunmapi
+Message-ID: <20240220051004.GA5988@lst.de>
+References: <20240219063450.3032254-1-hch@lst.de> <20240219063450.3032254-3-hch@lst.de> <ZdPqj0gJhBekH+Kg@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,9 +33,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240220002442.4112220-1-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZdPqj0gJhBekH+Kg@dread.disaster.area>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Tue, Feb 20, 2024 at 10:55:59AM +1100, Dave Chinner wrote:
+> I'd also like to see the rest of the rt-only code in __xfs_bunmapi()
+> lifted out of the function into a helper. It's a big chunk of code
+> inside the loop, and the code structure is:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yes, this code has been bothering me forever, and I've started at least
+three attempts at cleaning it up and for now given them up due to the
+really compliated exit conditions.  I think it really should be done
+eventually, but I don't plan to add it to this series.  It will probably
+end up changing some of the existing loop logic as some of that is
+pretty questionable and predates the nice iext iterators.
