@@ -1,30 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F57481B3
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 05:10:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8076B58135
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 05:13:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708405813; cv=none; b=nB9WGwa8/syapravqFOhrKQf6BJc5PlFUfbg+l3nmUvs7wnOaG9dKT+2pW2/+mriRrOm09ICP9mBotAcoii6yF9jEtBue98gE1XdSJAYnc2J36iN4ohsXR3X4RlaKNqlW++eSXH3GRIX39Hl8KJb4+a8RnlJmQecuoNVvi188Kg=
+	t=1708406028; cv=none; b=IBnVAWnsj/q8jtiXFF1U+KggcvzA7gr7FcoUGyEIQbwwdNSX7jxqLUzOskfIVe7hDvkeU4dVmJF8QXAoEHbXAyQBCB2qnXANWLrqeT0+RKev2V2F532k/ganWAc82N2tSNzE1m6zD9Hqydd6soy7dJKvbboLOUY1mto0oShKxc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708405813; c=relaxed/simple;
-	bh=OaHwWGOq7mcL0maibXVbF+4duHZ6oXt8uKaFcAEARm4=;
+	s=arc-20240116; t=1708406028; c=relaxed/simple;
+	bh=6U+SpNqUivRkAg9YCeYZYg0cXA22AlitGKnU+ifcPNE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jWevfe6KHTLiUSA5SSQDbyJuESMJZmxSwwMtQPc11OdBoiEbWiaamlt5XY3VcHdrAUeIB3xp+pLSECt1zlSHZ2PwASKp1ludzMJzPaGYGzNTkpvlPG+JOEiOtQI6xt4QwzvS8MatmRpHxkmDhkd+h/v1zESvqKy59y5OIVpQoFc=
+	 Content-Type:Content-Disposition:In-Reply-To; b=EWKJXqw8qjSzRvdbD1dKSGDdx7W37evPsSXkZzST4eeen/xaiqF+eI6nauCJv+bKg7CyXHWv9yHpLBSzBnmPGV8yWeZRjEcf3bsz66up3FSqmsIgeYLfmKidMynUobh24RgxoHg5Bq8ueghYm3kjnBbeXRd28CY4YBEqbnwBAYs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 80BD668AFE; Tue, 20 Feb 2024 06:10:05 +0100 (CET)
-Date: Tue, 20 Feb 2024 06:10:04 +0100
+	id EFFAF68AFE; Tue, 20 Feb 2024 06:13:41 +0100 (CET)
+Date: Tue, 20 Feb 2024 06:13:41 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@lst.de>,
 	Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] xfs: move RT inode locking out of __xfs_bunmapi
-Message-ID: <20240220051004.GA5988@lst.de>
-References: <20240219063450.3032254-1-hch@lst.de> <20240219063450.3032254-3-hch@lst.de> <ZdPqj0gJhBekH+Kg@dread.disaster.area>
+Subject: Re: [PATCH 8/9] xfs: stop the steal (of data blocks for RT
+ indirect blocks)
+Message-ID: <20240220051341.GB5988@lst.de>
+References: <20240219063450.3032254-1-hch@lst.de> <20240219063450.3032254-9-hch@lst.de> <ZdPogLjdypKDgm0D@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,17 +34,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZdPqj0gJhBekH+Kg@dread.disaster.area>
+In-Reply-To: <ZdPogLjdypKDgm0D@dread.disaster.area>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Feb 20, 2024 at 10:55:59AM +1100, Dave Chinner wrote:
-> I'd also like to see the rest of the rt-only code in __xfs_bunmapi()
-> lifted out of the function into a helper. It's a big chunk of code
-> inside the loop, and the code structure is:
+On Tue, Feb 20, 2024 at 10:47:12AM +1100, Dave Chinner wrote:
+> Ok. If you delay the ip->i_delayed_blks and quota accounting until
+> after the incore extent tree updates are done, this code doesn't
+> need to undo anything and can just return an error. We should also
+> keep in mind that an error here will likely cause a filesystem
+> shutdown when the transaction is canceled....
 
-Yes, this code has been bothering me forever, and I've started at least
-three attempts at cleaning it up and for now given them up due to the
-really compliated exit conditions.  I think it really should be done
-eventually, but I don't plan to add it to this series.  It will probably
-end up changing some of the existing loop logic as some of that is
-pretty questionable and predates the nice iext iterators.
+Yes.  However (as documented in the commit log), the only place where
+I think it can actually happen is on a buffered write errors as "real"
+hole punches always flush delalloc space before.
+
+> FWIW, if we are going to do this for rt, we should probably also
+> consider do it for normal delalloc conversion when the indlen
+> reservation runs out due to excessive fragmentation of large
+> extents. Separate patch and all that, but it doesn't really make
+> sense to me to only do this for RT when we know it is also needed in
+> reare cases on non-rt workloads...
+
+Can it happen for non-RT extents?  That would assume the required new
+indirect block reservation for splitting an extent would have to be
+larger than the amount we punch out.
