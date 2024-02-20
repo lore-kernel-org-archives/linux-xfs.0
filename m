@@ -1,61 +1,61 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 385CB2C1B1
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 23:55:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127552C1B1
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 23:56:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708473348; cv=none; b=oq36ptYveFzybq0H2tYMPhoEa1NDG/I+0BjbUr97SfiC3mFXZwk1vaZUsctqwdGBpulJukldK3ZCxAfNFJ4LWgwLcPGpfgTiXFFqngztSE2G6p4A3Jai30s6hMtwYj9JndSX+mPv7s5vFRmKOtCNsKrQRPVBtNRAUb/pmO+d4JY=
+	t=1708473407; cv=none; b=Pcvk6zHjbNhmYL8/NkFU8qaRq92KJOlFzeqkeDkQeo626MKfo+I0wvzfQe8eQa+l/GPkrE8xMFlKOsHgWXh3DupKuMdnlEC1Q8xNRUzTNPGgT55IatI4SiCDUdlCm3Di8LCzJ6gP9oUiGC517px2OafsxKx2MqKJAl6rrqcD5SY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708473348; c=relaxed/simple;
-	bh=y5PYHyd/H/pPgwgAspNoKjkpUAooayv/vKzKiAwatVQ=;
+	s=arc-20240116; t=1708473407; c=relaxed/simple;
+	bh=bOYEmtb8TIAhSRBa2P7+j3npWbNp1Zz2O3N+Wbd9kAg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZPD/plEL7IENY7GpzUOV0GFrFi8m5Z4A8fR2vAxEbZTUipwcIBHw7epA5hVKvwsNuLFl6RbZxK3/2EVzLEWWcdl8jv2rJoFG8ONfn7rCJZbzYaYHJlTKW5+l4ka5FewYuiJHx02yE7Eu02hAlOrLUBSQ9+ASjX82WtuENY2kmQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DtjQ7WiV; arc=none smtp.client-ip=209.85.214.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=EWassz+BNmrOf9jPGCLxEAU7iao3Y15b2laJvpCLtdjR+ccjk7UOFERypw518hBpQ4/o2gTeqFt3o9kPkFw8FYetNHZymIL8AfucJmx3+OsZi/8e9s8ZLfWikf+67YEf9mLtYak23pydhyCsMXdUb7A09actroqLFkAQmFWzfh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Xtdf6P1G; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DtjQ7WiV"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1dbae7b8ff2so25003415ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 15:55:47 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Xtdf6P1G"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1dbae7b8ff2so25007055ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2024 15:56:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708473346; x=1709078146; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708473405; x=1709078205; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wCeoJ7wd2Ym9WpusOgs2eL3q4fWqznt5WpzS/+ydovM=;
-        b=DtjQ7WiVDnW4DGdGk/RFACCBz1zwio+68kf6noNNlvzVt+B0R4vZU3asl+4NDMry3u
-         eebzi9PPyFN58giHNs58Kua25NMXHsZMjL5DYRnUAdV9nrz7QWnHhgmfdFH1BzA6L5Qz
-         0M8HbVqwl+ArOvGxz7clH7yzbYNahUb8TplhvjiZKNTbl7Ocrma9eu9fFSDoLx3GBr3g
-         Kln7LroitQe8ieFDJUvdJD0VrvObNUrTYUeU3iLZV2C6Rjwmanrn831/rtBYrWvg0903
-         rS9UJgFVVvCyQBO6Lpx+KnrwMfRl0kD542jH9ifCCTsM1XbjmddNriXUOPry7+dCxJkx
-         Nsfw==
+        bh=zy/rgs0g/TbA1UDA0cVJ8uBAr2YACRPG8fR71g83JJo=;
+        b=Xtdf6P1GRVOT4XAsqprnd5SBdK7I/KwyCLGppgxn92vGi3wpHCh4rOFX6FhADsU8An
+         8f6GzYnnojy5gkgrhoBctFmbOv0i33LxaB9FMiU2kKemXmwHpwSWanbBq3h1/DEyPooo
+         HlBkLxt7AvgSlWlz04F9BYNPBeZC1u73uslAhvv5dwpUfaMRy2yQDZas04nROm0iq1Se
+         jFx/XgWfoCntaWITEl9ErV/HBCsRKWz0Wgzm8vtRdUjxqxZLzbYiN8MH3UvuY60JMeLU
+         fG+IYpTVJ6OFMlqhMMiDp+x5rhepN+FtB5FPNjQUoj6OkJilqOc6WZDmPSSl9jx/wNkU
+         744w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708473346; x=1709078146;
+        d=1e100.net; s=20230601; t=1708473405; x=1709078205;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wCeoJ7wd2Ym9WpusOgs2eL3q4fWqznt5WpzS/+ydovM=;
-        b=iQ5rb2YoR0ltIFCCBR37Tj6Kb+VcvJS8PRdwwo2Z3PDACBYg8a5QmyV8G1s8rVjwwL
-         0MzIRyHxBUB9qXJ1h9NLwsXxBEBbgm63ZXFlHW7/wPqE8kG9qTuWo6YuFcDKrBmWLVUU
-         a+voyH5DR0GRXIFyGGdWnNFwvfq4E0KMeWb4mp+iNyBDp29xYXZ5uqc2aRRFfPLwT0NC
-         OeviP3Bsi5mrB8Lj6Rwk8ngtj5dr/0rKTjDHOcM6iXB7VCb3h4Jl+jlK102mZ00+9WX5
-         /O34n5UvwgPx15unhG42SEeFMpHDNfUtC4pIsDTXQuMScLgdPXIYidNqchMzl5DrKDNY
-         b4zg==
-X-Forwarded-Encrypted: i=1; AJvYcCX4DNFQj1JmeKo933qiCfkh1yY7MiqCGKYraO9hN81rwFgkFUAf40iAnV+ZnepHKPeTcR5xa+ddrq75jW9dPwayvPuYf5GTt/vI
-X-Gm-Message-State: AOJu0YzW4IYTgi+mkh9t5vJZipQ77/ShLpWj5FqMnBtxZNVhd2/wj/oA
-	OsAPihF2QSkpoydbhxQCYth95OTLKHyVpnC/C3jYcxXD/oue3xa8m7kbFvsD1+o=
-X-Google-Smtp-Source: AGHT+IEzYVQ1RXOWRhg73P6iXAoqf2eMAnWBvhQQZaaY74jbe7V1cTJ22dYomzA8shnl3c12ErUytw==
-X-Received: by 2002:a17:903:32d1:b0:1db:d2f7:6884 with SMTP id i17-20020a17090332d100b001dbd2f76884mr10136234plr.25.1708473346591;
-        Tue, 20 Feb 2024 15:55:46 -0800 (PST)
+        bh=zy/rgs0g/TbA1UDA0cVJ8uBAr2YACRPG8fR71g83JJo=;
+        b=Yls1CARDo7ReNEM8XEVtPjy0nX8JdM66eoJnJme6Zdh6SqJCrX0vc9baal8EUoBgNX
+         m+ArffPh6e43qyaAcRDTq8MxD9gTF9rNNqA/adZLv5+WjUmRQleGTjLwlayKiB8SkbAd
+         HMlOxRmZXtP/HEG2L9lNkh6sF3gubTRXj4qzNJdrd67UuhB2goLbO7ei6s2bYaY2e6CS
+         WIf8IwNxOEpRHXL58cYcO4JkW7k+PdEZgkbYl00/T3yJtAj+8NokWJmziy9J4CXt97i0
+         fDw9lzeNUqVBj/1BPbXoSwCcDPfGIOoc9JdHi0Jv9kzHhDtDdp1I6N6/xfjZF+FGlJbD
+         0I4A==
+X-Forwarded-Encrypted: i=1; AJvYcCUuShnB7VJ4jGjagoMt2hi+34HWxfxaBVbkI7WHFshJo0D2obk8eN4vtfG1OjNUz0xdvLzUzOmnDFaw6qst/vRlNFkt3I/+CFq9
+X-Gm-Message-State: AOJu0Yx54e0vwezdmriiHvg+kTTHRvLYujKRVFsqOF1VVjI18u84xYsc
+	U86MpiUP/ZEDhSbYrvL6pi6+BrRXkStUXJzPJ6B6+ORFWp0htnGj3V16EFqrYfc=
+X-Google-Smtp-Source: AGHT+IFotZJCcbrZixEBtgri2TFS4JXpCO2EQWoDNfr5rKn5a4FAtP5Nc/i6qSkf1cC3p/mg2mPeRw==
+X-Received: by 2002:a17:903:2342:b0:1db:d9ed:f91d with SMTP id c2-20020a170903234200b001dbd9edf91dmr10759987plh.33.1708473405306;
+        Tue, 20 Feb 2024 15:56:45 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id c20-20020a170902c1d400b001dbc3f2e7e8sm6584954plc.98.2024.02.20.15.55.46
+        by smtp.gmail.com with ESMTPSA id 6-20020a170902e9c600b001d706e373a9sm6776810plk.292.2024.02.20.15.56.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Feb 2024 15:55:46 -0800 (PST)
+        Tue, 20 Feb 2024 15:56:44 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rcZxf-009HQO-2D;
-	Wed, 21 Feb 2024 10:55:43 +1100
-Date: Wed, 21 Feb 2024 10:55:43 +1100
+	id 1rcZyc-009HRC-1h;
+	Wed, 21 Feb 2024 10:56:42 +1100
+Date: Wed, 21 Feb 2024 10:56:42 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
@@ -63,10 +63,10 @@ Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Hugh Dickins <hughd@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>, Hui Su <sh_def@163.com>,
 	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 08/22] xfs: use VM_NORESERVE in xfile_create
-Message-ID: <ZdU7/1C+6GS/HBvf@dread.disaster.area>
+Subject: Re: [PATCH 10/22] xfs: use shmem_kernel_file_setup in xfile_create
+Message-ID: <ZdU8Ov0vWsI84Brz@dread.disaster.area>
 References: <20240219062730.3031391-1-hch@lst.de>
- <20240219062730.3031391-9-hch@lst.de>
+ <20240219062730.3031391-11-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,34 +75,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240219062730.3031391-9-hch@lst.de>
+In-Reply-To: <20240219062730.3031391-11-hch@lst.de>
 
-On Mon, Feb 19, 2024 at 07:27:16AM +0100, Christoph Hellwig wrote:
-> xfile_create creates a (potentially large) sparse file.  Pass
-> VM_NORESERVE to shmem_file_setup to not account for the entire file size
-> at file creation time.
+On Mon, Feb 19, 2024 at 07:27:18AM +0100, Christoph Hellwig wrote:
+> shmem_kernel_file_setup is equivalent to shmem_file_setup except that it
+> already sets the S_PRIVATE flag.  Use it instead of open coding the
+> logic.
 > 
-> Reported-by: Hugh Dickins <hughd@google.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/scrub/xfile.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/scrub/xfile.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-> index 090c3ead43fdf1..1cf4b239bdbbd7 100644
+> index e649558351bc5a..99a2b48f5662e6 100644
 > --- a/fs/xfs/scrub/xfile.c
 > +++ b/fs/xfs/scrub/xfile.c
 > @@ -68,7 +68,7 @@ xfile_create(
 >  	if (!xf)
 >  		return -ENOMEM;
 >  
-> -	xf->file = shmem_file_setup(description, isize, 0);
-> +	xf->file = shmem_file_setup(description, isize, VM_NORESERVE);
->  	if (!xf->file)
->  		goto out_xfile;
+> -	xf->file = shmem_file_setup(description, isize, VM_NORESERVE);
+> +	xf->file = shmem_kernel_file_setup(description, isize, VM_NORESERVE);
 >  	if (IS_ERR(xf->file)) {
+>  		error = PTR_ERR(xf->file);
+>  		goto out_xfile;
+> @@ -85,7 +85,7 @@ xfile_create(
+>  			    FMODE_LSEEK;
+>  	xf->file->f_flags |= O_RDWR | O_LARGEFILE | O_NOATIME;
+>  	inode = file_inode(xf->file);
+> -	inode->i_flags |= S_PRIVATE | S_NOCMTIME | S_NOATIME;
+> +	inode->i_flags |= S_NOCMTIME | S_NOATIME;
+>  	inode->i_mode &= ~0177;
+>  	inode->i_uid = GLOBAL_ROOT_UID;
+>  	inode->i_gid = GLOBAL_ROOT_GID;
 
-Make sense.
+Looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
