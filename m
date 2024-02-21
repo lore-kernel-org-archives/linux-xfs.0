@@ -1,89 +1,86 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C4CF3C1D;
-	Wed, 21 Feb 2024 06:35:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4D8E3AC2D;
+	Wed, 21 Feb 2024 07:36:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708497330; cv=none; b=so9H3fEOcpStykcxBsHLwAI0ZdI+LMsYRVyFgKw5zfJehrA0B4ETb20fBSJEFZ7n9IvJzSHbX26gzcuf4mdwu7LozG5XuWzGvjzXaRnS3ZmVTXbhXJVJFr2BZQMiRv6u0TpumL0xpq5XBHcUxwMzfKOjxQm57ndIJXpAx3HFdwA=
+	t=1708500968; cv=none; b=sKubdbNZCv3cl/9GcwrXsWzidpPaP6AVUMY24n6utYA6hG5jz73s9XM7LRIR9Kn5ITL/Syq5PObNgR8Z+lVx8fQMzdsQTSyvU4JRbuoFtA9rz75Wi+tvPNwmg1Xkj0L7e98wF++syV9GrLP4xt80SOac+1ohGapG5IkwvpWie+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708497330; c=relaxed/simple;
-	bh=0yeTZ3OjETOFd8XemPOVecqMystiahoyul/JpImvp10=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Y110Ko7RIaGQRvlCgGXmA59sZoMCJsmyZbv4YlI1zpAgyaLXLRiniD6CyRo29bDIIJgG1ZeqX+6MyPO3i/+CTSh4W51FsPPdiZpFmVwhD4DGGCSwTe6L6CkbMPa4xMs2DasfNsqBTuqcMia9QT9TlnnoHRW8FSJA019eAR0pBJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wk6FgalT; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1708500968; c=relaxed/simple;
+	bh=Xu/mivu9Omjv8pN+LQWQfTamnCS30TCS4XhU3t8yUjk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AyyhfT979xDEvTEAT+NRT8RVZC/9JkNMmf5bHbaq0E15+0svbDWNOzPg76PHP+nkbJ6WhjEmpIQi7p1GadDSuve+S2STWoOmV1dEzgnLkKdE6giwj0lzHrPN1zMa5eTwv+eHaEV4ClcLg7dpXK62hl8EkK/9iEjj7jAnCWB0g9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r4EkjjN2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wk6FgalT"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=vz1234MI/q1d572V2OGpLnsGE/tN67cbxSb0Sk41xns=; b=wk6FgalTxuIuoYY+lhIfHXBDoJ
-	NyvxMzn/3IRtVvUm9EYOT72DKPk1G2RSjRye/2fdMMqdUtkshUYeJwIPNf9Q6/hG3DCS4UuTHhnQO
-	pBK31/8FKR8hEbb/WXifnEXa2iZ1CQHkZv4NaabXydRTVWG4/T2Fjhp0bSVFw1d9l85dogdyiYpUo
-	cs/QNdMYqL4Bnahv0I3NWdsBp1XctURh+t3q6FJ1ZzysvutUTaEs/Xy0hs+oiYRxAYzHm8vMgKrDe
-	jsdSdeRZD8hNwM8bOAU07GXEqcAaVVHPggLAvpl4ZW/1z1dR5EjxEkG2DiQpBjU/J0HWZ0hIPwcNF
-	63Hgfyzw==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rcgCV-0000000HM16-1MqP;
-	Wed, 21 Feb 2024 06:35:27 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: zlang@kernel.org
-Cc: fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] generic/449: don't run with RT devices
-Date: Wed, 21 Feb 2024 07:35:24 +0100
-Message-Id: <20240221063524.3562890-1-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r4EkjjN2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CE7CC433C7;
+	Wed, 21 Feb 2024 07:36:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708500967;
+	bh=Xu/mivu9Omjv8pN+LQWQfTamnCS30TCS4XhU3t8yUjk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=r4EkjjN2rN6/boK0EZlODV0TR7jjemYr4U950rKgH56CTKob338bpI8+wJt03o4QB
+	 EOv5h0cY1XcCd05mTjYl0A3JaccjmOy4Oakql6uNU0V9CPF0o1z3PQ36zQ8xXeqUJH
+	 3La9kd83G1s1Rv7I6yat2xdVEJcA8QokRVBLhhPaIoOFAA2pOLweVOj8Otw+kKZrka
+	 xjHLk3AAtO74IWQeYVzud5pCsho3dkbHJLJz9OkNtbogeDMa+dm2+iZ4f1YK2gKHAO
+	 Vak+4GKV7B6abpo5ul8Biu+xLclemWRkeusryZSaYQkTB9AcCcpfJPMHfcWFaVP5+s
+	 l3obGQ/QOVx1g==
+From: Christian Brauner <brauner@kernel.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	david@fromorbit.com,
+	tytso@mit.edu,
+	jack@suse.cz,
+	yi.zhang@huawei.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH -next] iomap: add pos and dirty_len into trace_iomap_writepage_map
+Date: Wed, 21 Feb 2024 08:35:58 +0100
+Message-ID: <20240221-vorwiegend-klebrig-74a49733a441@brauner>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240220115759.3445025-1-yi.zhang@huaweicloud.com>
+References: <20240220115759.3445025-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1198; i=brauner@kernel.org; h=from:subject:message-id; bh=Xu/mivu9Omjv8pN+LQWQfTamnCS30TCS4XhU3t8yUjk=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaReXX6fyWaPmseh2lMhRuLJ20XXK975YJLO8u3nFFGHz b+T7Fkud5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExk8WxGhs11Tc3JgSmuB6+d ufTmiuZBFomVeTHa5Xu/1hi8Ebt96DMjw4mJFY/OzwxR+HWDg3vFl7Wy3Rv6ZrNYnI0qED3ZVto axgYA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-generic/449 tests of xattr behavior when we run out of disk space for
-xattrs which are on the main device, but _scratch_mkfs_sized will control
-the size of the RT device.
+On Tue, 20 Feb 2024 19:57:59 +0800, Zhang Yi wrote:
+> Since commit fd07e0aa23c4 ("iomap: map multiple blocks at a time"), we
+> could map multi-blocks once a time, and the dirty_len indicates the
+> expected map length, map_len won't large than it. The pos and dirty_len
+> means the dirty range that should be mapped to write, add them into
+> trace_iomap_writepage_map() could be more useful for debug.
+> 
+> 
+> [...]
 
-Skip it when a RT device is in used, as otherwise it won't test what it
-is supposed to while taking a long time to fill the unrestricted data
-device.
+Applied to the vfs.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs.iomap branch should appear in linux-next soon.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/generic/449 | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-diff --git a/tests/generic/449 b/tests/generic/449
-index 2b77a6a49..4269703f6 100755
---- a/tests/generic/449
-+++ b/tests/generic/449
-@@ -24,14 +24,15 @@ _require_test
- _require_acls
- _require_attrs trusted
- 
-+# This is a test of xattr behavior when we run out of disk space for xattrs,
-+# but _scratch_mkfs_sized will control the size of the RT device.  Skip it
-+# when a RT device is in used, as otherwise it won't test what it is supposed
-+# to while taking a long time to fill the unrestricted data device
-+_require_no_realtime
-+
- _scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
- _scratch_mount || _fail "mount failed"
- 
--# This is a test of xattr behavior when we run out of disk space for xattrs,
--# so make sure the pwrite goes to the data device and not the rt volume.
--test "$FSTYP" = "xfs" && \
--	_xfs_force_bdev data $SCRATCH_MNT
--
- TFILE=$SCRATCH_MNT/testfile.$seq
- 
- # Create the test file and choose its permissions
--- 
-2.39.2
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.iomap
+
+[1/1] iomap: add pos and dirty_len into trace_iomap_writepage_map
+      https://git.kernel.org/vfs/vfs/c/1284865eff6a
