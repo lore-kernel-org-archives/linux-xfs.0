@@ -1,225 +1,216 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0544883CBA;
-	Wed, 21 Feb 2024 17:39:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708537159; cv=fail; b=m5IGP6Cy1YB8y4RqxibWeeOJ0nwtLlO9aAiXxf7TI6aKoy5RdjmTnDrFr/8eNeZnresxnYZqGs1xNmMRB0r07TrEeVpJ1ZE92aYKA27T75D8bKI9pDlokPW5vjx1ZF6RKfuEJLJgtb7ImcmgJLc+RwYAweEKTq933wyKltEHxVE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708537159; c=relaxed/simple;
-	bh=3WN3JqizE4XFfXEmvNV8P8FgqiombNklV9426eUM5HA=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=S85AP9WX710RU631C2YlzjfZO4Z17DaXnAUhY80pv36to0jvJh95n3RygJsPuwr5VjX+Uu+z4P+u82OQ6RBUqjMa48cD7mA6ncWXUi66C2akonwWHzbtaQ/ZtoWFaZqC8+R30X0BsFi0uU67fb6frRVywME31Wi5GhwqH7CJEYA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=TCiWo6ch; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=EkRhEgWD; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1853112B168
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Feb 2024 22:47:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1708555668; cv=none; b=lzLHm3zw6PPx0VSqCghlAfj+zyanO0ymfS6sLIfykLPiHCMKZwGHH6pwQDUVEYPze0hPDeAl9SWfL4aRHRhW+TyyxXVqT1gQbgtpap/uYJF9wKlOLDf2hJXateVfgJ40KYvZjZbohn+UD7OW6yti3XyoLpHRIZdiOcJGC1jnPvI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1708555668; c=relaxed/simple;
+	bh=fOAu/unXR1jQhq9SZLLZvpAwofNCivLy6wZBOHdld/4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DorQnCtl8YfsWCb5UDI9g4FZrG3ETprPi10UXNfl9SuGNlXkuufxrYIfTEllmRRSbA7c4kdejb0vFOfvM+x3FBoBib/gKO+GLm1FEolsYB1vJ4hoV5zicCgFcqd50YSGigw/BLZcDVbReBh3gm+bQwLbdP0Z0dgGFCoCyVeSWLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=1H9u1WgT; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TCiWo6ch";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="EkRhEgWD"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41LDinND012105;
-	Wed, 21 Feb 2024 17:39:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=EQ14rKGMvmHz/AOqo+wuDinQVglAUP9NTXChIgsv/Eg=;
- b=TCiWo6chbpmLA2IS+9cvfNUlETf1JQ3mC6OcMXd22OjFbazldWMYHwQMJybjtXZlXm/1
- wUXsOsMqnqYmlaQDBfa1xCL6oCcsC/7IPHHniHKPF2DOa9KLg8SxkLpKzLCyLUdkOXSN
- Uemq5G64QVot1BeC1dTEqJxFx9A5wyTK92wBSO5VLOh3sTLnKlRZUIBpN+3eLfQD3cnJ
- S2aErTprF2Tw9Uswr5fxUwWmVwe2KGnWhebUuUcbXWYq8PN+V5PYqO/NcZeGlkrhalVS
- jM3WmZ7czBKQz9r3uyi7h1hUDhks2zg35vAPw459qrpDfxNcFlNTqiHHdy9JSF9hzG8F RQ== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wamdu2dbv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Feb 2024 17:39:00 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41LGVlaD006627;
-	Wed, 21 Feb 2024 17:38:46 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3wak89k4jh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Feb 2024 17:38:46 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XNzBcMUPbG5vXziplDbQh5rGqbq1cLSB65RdtOVORBUpOeD0xyyvDsAp19H9lMRha+QAHdH9BOk3ybea/WDlvBD8xx4ee7lPIz21SBl30ZBJJoi4qtUR7QFulUEQpVoh5Ke2PsWL8DD9URySVzWn8N1/Y+10o4eBtlJ3kh1efh+Chx6lqqB5KKv+LV1aKSDzXgwkJ7ksKABZHhTWyzllIojqNUXlM5u6dW6ewDNGzclUQGqIKXYw1QtuAW6HzgpoOvUCGZzFV77/0rfgecIXElF3E7ksqVg9UkWLdAv9mNudNyX3KaZtVe5o11MwNIcvBHHh/GA6JCZ/F+66fyS6ZQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EQ14rKGMvmHz/AOqo+wuDinQVglAUP9NTXChIgsv/Eg=;
- b=FrrshDFsE1lLgTvS61StjxnHJZfSefqHuQ+t6DBPdEbH5ORvYx42KOm7MLvM6yhn1wCpwtvpFdOh7aQmvZ3rx0o1F9T6Jxq5pMUVIg7v52fzJDMG5X4jxP9w/gp+uNp/7PXyE249h4s8/kSgfYp2E+RyZSwaVlJUDfM8mVyQ7Zv4P22zILrltvk29bT2ULlrPQsxrCPaYvIJZHUphSbUBD4SXugyd5J9F6CjqO9dNv5CrufAxx5Dyq3Bh78D6BRb/eCPL9tVrri13z5Xl6xi/CxPJ78K2yN2n1sO7Mk7T0heU0r7tNUebMc1GoNtAWw6V+3zipsck6GNdZwH2/viYA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1H9u1WgT"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6e3ffafa708so4399996b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Feb 2024 14:47:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EQ14rKGMvmHz/AOqo+wuDinQVglAUP9NTXChIgsv/Eg=;
- b=EkRhEgWDcaVVe2rFhWYN2MA1EoSJAge/Voy4L9gNLfFQNVbnyZnFVyAQj9OdSBXIW+FvkgRJJtHycYRGgeeMpTNokuRgDTT9t210+CqmF5tO19s66ucXMCdeEYbzEPDRZi/5OnJCKBMx7e2Y6wgHC2DK9P9bWSJEernTI4AV2U4=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by IA1PR10MB5898.namprd10.prod.outlook.com (2603:10b6:208:3d6::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7292.31; Wed, 21 Feb
- 2024 17:38:44 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::56f9:2210:db18:61c4]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::56f9:2210:db18:61c4%4]) with mapi id 15.20.7316.018; Wed, 21 Feb 2024
- 17:38:44 +0000
-Message-ID: <f7ad3aed-3482-4eee-8c81-8e471916ef82@oracle.com>
-Date: Wed, 21 Feb 2024 17:38:39 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/6] fs: xfs: Set FMODE_CAN_ATOMIC_WRITE for
- FS_XFLAG_ATOMICWRITES set
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, viro@zeniv.linux.org.uk, brauner@kernel.org,
-        dchinner@redhat.com, jack@suse.cz, chandan.babu@oracle.com,
-        martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com
-References: <20240124142645.9334-1-john.g.garry@oracle.com>
- <20240124142645.9334-7-john.g.garry@oracle.com>
- <20240202180619.GK6184@frogsfrogsfrogs>
- <7e3b9556-f083-4c14-a48f-46242d1c744b@oracle.com>
- <20240213175954.GV616564@frogsfrogsfrogs>
- <b902bee1-fcfd-4542-8a4e-c6b9861828c9@oracle.com>
- <20240221170031.GI6184@frogsfrogsfrogs>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240221170031.GI6184@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO2P265CA0348.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:d::24) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708555647; x=1709160447; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hxNiWcliLyUh4yua1zpU96lOU34wt/fb6YUdk+3r520=;
+        b=1H9u1WgToeawhUhseAHzycL/APZszc+g2xiNtQOQ/qj0TbKAWbePhCh0ICwWS3aQG1
+         wkfNE8JfLoOueZv4ObqcRq61/DUrG5/dl504+cQqBbgrDJf6o5fGLFL3oJpJS9sLwBtQ
+         wlRDH7L1h69D1DACgcEIM1wX4bdIvywYkFv0WbXhJHGHNEMkjENRwTY2DVdpxsFF5wor
+         W3uu8AxuL3FLfz4grbZEb4S+7ab/ks+YuSBTEikdKxd4xY5axsAPeW98karm4qqmvh7H
+         ODGmSmAgHE22MaISFQlpta4SDD1l6Y4g7VbgExS47nZUm6IXkQGJ4L7BhzZ8vHPLyyWU
+         iG7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708555647; x=1709160447;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hxNiWcliLyUh4yua1zpU96lOU34wt/fb6YUdk+3r520=;
+        b=sxIVg84QsBoyuZidNvgVLVX0KdXuzQmxLVKk+dQ0XR5YnTt9ZkaoCu14O0aXJ7u38D
+         2t3jNif5ErzzVK+cGaTKI/1QEXZ4sQG7TtYG5yTXq969Wd7wUpQqVFtdOw+0at2Fpbv2
+         WrEFx2vmFuBK2fC/XrKskv7Tnn32fB0uQHuJcPAqZNMuYiFJBk5p4cHUDvBX/DgmHy9y
+         eftR2zMP3NiRAtpaY8MWRjalvWMQc/Co71bNUqNN8e4KyhgffIJMC/Fin7aD7sAC7NNd
+         9Hch03FRpOEb7r4KxA2+UziRqpbRf4wsWsuUE73bCChtgWmqp6CKnv0P39jbChthKgbY
+         I9cQ==
+X-Gm-Message-State: AOJu0YycsmJ+wCEN7fbwuFVRlURdKPVZyt49YWieY1gtHxr0ugvuqufT
+	dICl0F+LH4MMOn8pd6WYEehoQ7m4gn4kZUKgdRt55c3bz4+IUcweSzvKEs4/OnZCpwS8fnUFeGy
+	r
+X-Google-Smtp-Source: AGHT+IE62rcC5MaWbo1r9WS2tyhYX5PsTwnJUyeAr3R/vsK23mu34ZPPqIqWYmihfvH3m302/5siKw==
+X-Received: by 2002:a05:6a20:c78e:b0:1a0:a43b:cbd8 with SMTP id hk14-20020a056a20c78e00b001a0a43bcbd8mr7768093pzb.59.1708555647435;
+        Wed, 21 Feb 2024 14:47:27 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
+        by smtp.gmail.com with ESMTPSA id p4-20020aa79e84000000b006e13e202914sm9397893pfq.56.2024.02.21.14.47.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Feb 2024 14:47:27 -0800 (PST)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+	by dread.disaster.area with esmtp (Exim 4.96)
+	(envelope-from <dave@fromorbit.com>)
+	id 1rcvN6-009hrv-1B;
+	Thu, 22 Feb 2024 09:47:24 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.97)
+	(envelope-from <dave@devoid.disaster.area>)
+	id 1rcvN5-00000000TNO-3ecX;
+	Thu, 22 Feb 2024 09:47:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: chandan.babu@oracle.com
+Subject: [PATCH] xfs: don't use current->journal_info
+Date: Thu, 22 Feb 2024 09:47:23 +1100
+Message-ID: <20240221224723.112913-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|IA1PR10MB5898:EE_
-X-MS-Office365-Filtering-Correlation-Id: d6ea3c53-38a6-48a1-afea-08dc3303f384
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	xR9P0JLlrekW3Q5lnV+FddJD5rwFrp0pvjnn0duzjOb5TJ4USY3t5eAYAO5Gh6YguQigprpltl63ga3Rzn0MmQ3vcHfca9im+8HZ9sSonpmE9AY0PKgMn1fuZ0Y5bYHKN1CdvyYtYO9aKoPOEmu0HE6w3BXLxVLmS6mJzbaSd/a8MIR/x1CIO/tG07ZOiqVk+/msg/W7D+0H8yL8pfmrQpX/TUpyzHMfWN7IJXGTOurD0axnswRv3z/TRHhZ3jz/7ZyNKw/RCu1W8SxGarNf0gUBqW0rWWv5N8Kh2IkeRGXvwWSW/udfeic5ExXt2r9cBBbFPy2Lbf0ZnY5WIbS/vx4KXA7ZVtfOYpOJyBF2Wv/ddsoaLXkvgSlOGIWt4tdKle+Y0l0xMsM2K0yPhqB80nBogQHZrECMLX3qO+AjSTwMBgl5EAC9x1VBwEUAm6E8NPI03GTpfup0hlBrR4Vp1mNwlj6VQnwAayaZiLAzZmStPloS83LrPDd2KLmh+cp7SszDQetNASS3KSmGQg9aYW1uAtxVtxcQJwDT6a82iPM=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?b3dqWHBzRkY4UGZMWmxLb0NtdG1vMzRSb01TNzBrK3h4V1VIMVhqN1lDVUtH?=
- =?utf-8?B?MEdKMnYyMzQ4QlhBd2xrM05ZWkphTzYrZm50MFYzTkZMdXZpK1JtaWFVZVlC?=
- =?utf-8?B?ZTE0eDRDZERmZkh5Z3ZYVW9TWDBNQVIxVzZQRi9VdDlQV25ua0s1d0NiUFpH?=
- =?utf-8?B?OFZjci9kOTMzM1lVb2l1bkd2MXY5N2t1UjNlS1NzMUUwWDdBWlNQY0xONnpN?=
- =?utf-8?B?YVlGY1NtVGV5WU1pYTF6Z1o5eUhiTTZYdFVmdGRWY3dDUUE5R3gyVVgvcHJk?=
- =?utf-8?B?TURkaDdLamUvUXIyRlA4TytHL0h0NGZUVnM2Y0M2WXNtdk40Z2FIQldyL21k?=
- =?utf-8?B?YWRka24yWEpUNDRGbXJDS0NDdEZBWjViL0JCSTZBRm5hbEF6eXZHS2x5V0tk?=
- =?utf-8?B?a0lVUU56NDB0Z3NBQ2diWi9aT09zbzN5SDM2WDlGcFFWZStpUVp5TWRyTGZ4?=
- =?utf-8?B?UmV2UFZBUjcwODdvZzBzbnZ1R1NzYWJoSWMwcExZL3AvYWpyMzBJY3VqemZC?=
- =?utf-8?B?WTJjejVBYzlXaWU2bVNBZFZBdXJjMXlhTmNaZGZVakJsN2RjQkRaMnZYZStj?=
- =?utf-8?B?UU9PNDZwd0YvbXZYdENVTGFzd2Z4SW1DeGxmTUhYV2RCdGFmYjIzVWFFYnh4?=
- =?utf-8?B?S1ZrTkhPenQ2Qk4rL1ZZWVpGOTNLYTluejM3MnVMRXpPUkpDSFpDUDBabTN5?=
- =?utf-8?B?OHBUK1ZMVFRSMWxDWkZhV1ZLbGIzMlRLVTdyT3JwNS9lU0d1NG9Zb2o0eWdj?=
- =?utf-8?B?SmRCa0hHUVlyNlYvZmYycmhGOHV3MTZMZDV4K1pPV0N1QjM3NHRlSEpMODZi?=
- =?utf-8?B?N1A4WDZyclM4SG1ZeXh3Y21mak5Xb0dVZTF1d3VpWm5PWVNBRHEzcWY1RXlV?=
- =?utf-8?B?Z3M1V29Va3B2VzVtU1BTblZicHJoUmtMOHZvR2tHL2dDYjBic2hQeWpSN21J?=
- =?utf-8?B?bHZrWHArN1VKK083QXZyVUlQMW8zRVhwMmhPMzYvZlZpYWFnQmdSMTlZVXg0?=
- =?utf-8?B?OXdwdXBmWkdHNkNWN1lJK0dXaUlwVk1TNFhOczcwUDZNT1FYSEFiS3dBWk4v?=
- =?utf-8?B?NXNiT2tPNEE2Nm0rWTZrTllLdGJDVzEwM0tUNWpWc3JDUXJpQ3ByV2FVTUdj?=
- =?utf-8?B?ZWdLTGE0Rk5pN2ZwYzY2TmtzRGwweWtTeVVhQlF5T3pBSGcvTFRrcDdLVmpw?=
- =?utf-8?B?RkxobUt0VE94WGFOWUQvWUVQUnYyd1JjSUo5UENUODFnZE43emdqTFhQaUtL?=
- =?utf-8?B?aW1wYXo1em12Sy9wa242TURKOHo3Y3gxRnh5ck05T1BvOE9XaWV3bmtxdjly?=
- =?utf-8?B?QVM2cnBjbnpIajkwNXhwa0thVCt0VFFSNFNDWHR1akVCTVpxL0t2T05PMkgz?=
- =?utf-8?B?VTlvQk5MaW83WTM3YzlLb0RkVG8yclZqR2hrblYzdGx2MWFlQUtWZEdDNlhQ?=
- =?utf-8?B?OExROWVCK1NtRWVmaU9pb2NOL05UQ3oxa1dOWG14OEo5NHVLVmJJRTlFLzB5?=
- =?utf-8?B?bmV1QkFCLzh0YmpTRC9Gb0RWWVZNWnpJS1RGNlRsbVpubi9NSmRwdk1zRkVD?=
- =?utf-8?B?VXJ1Lzc4ZlNEOGlkbHd0WnBCcTFQd1BLWU0rb1BYMkhSZ0V5ZUV5VFVhNTFs?=
- =?utf-8?B?b1poaHAyZVFSdTNRVEhpd1J6NmJWUmNCelduYkp4ci95K05jYlZxanhQbUJl?=
- =?utf-8?B?KzBNZ2J2ZWlkaHFHV2xDdDBJcFVuZUlBUGp0OGc3WStOcTZoWFZJblV6aG5j?=
- =?utf-8?B?cGNkcTJlc0ltSjJTZ25BWXQrTUF3Zlh1VEZObTNINWdOU09PUzR2SHBKNU51?=
- =?utf-8?B?eitrZ1ViNlh5bHVYY29TeUpOeG5JSnRSSkJuWW5BQ0kycTc3V0JwUUNJUmlW?=
- =?utf-8?B?ejN0Qm45N0prZVY3OStDRWJ0RkdwdGtOaWtLMnltZ29ibFM2WENmbmdxc202?=
- =?utf-8?B?NTk2ZzczNjVheVlhNzZuRExLQ2N3Tk00VFJ4OGRuelhKZ0hJNjN6VHR0WW1v?=
- =?utf-8?B?Y0lOZFh2VzF5aFhjT0NMWW1lY0NnTUNnZjdSSWs3eU8zRkdsSFlUNnBlRzFV?=
- =?utf-8?B?NG4vTndubFA4MVhuTnQxL25iSENyV3lpREpwci8rZjY4S3Y4aGFNU0hMM0sy?=
- =?utf-8?Q?l6q5VjtcxdAeN6WxLt7pwS5kh?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	0uYbOInkbbheUhD7aSzLLAWaIYhlzTvCpe7dReO0ZvHskK2xRT/I35jls3vweEay1ZeBMIe9LRnz5w45NYnPKPvBDKrweT3J5tSzeg7BrvkdVjCCZUlyG91XGTMApjoLngw6xLAEiHwBmawUVcIQWBWh4oi3bzyKUSOtTacJAdmNJcdfL2+ppS6Liqule93IwOlbKsrt+Qy7K8HZiaWXgUXO6cqDQpT9F+tARd93pgFHX/mvx+NmuHD+a6KnKy6Z1qx3zpHo6UG8cUgL3Ml1mIE5xuZMbskxpCCvg2vdkTs5vbsccvBLz2TvtE16Tjg9RWYHNw6O1eVtJLeeFFk0QcldsFgXunCsdkdKsm76O9Tolph9ltmfoEoNLXoPGfjo+tuWb3wjDUXLNT3fSpq35rj0MX5NCMnmeuLySffR52aUkKCJg9pMtZWBHIf3LU7jc9S4Grzx0qOubdCe2Qjnup2mSTR5eiePLZQPX0xWG+RvBH6aDRGU3uQuAMzR6KXI8Dcu9au6ljkAngB6HWJJlcDtwvljrS1wznB4yRTaaguUH4qQaWF1hXNPMBIRFkTId0DDGAwjH7tcsiVMKxTuHYbx4RckIVD7D1FpwVDjoXQ=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d6ea3c53-38a6-48a1-afea-08dc3303f384
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Feb 2024 17:38:44.5312
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: P9B6+yF78A4AtJBTxlAM0gqrYoOVc3JweTCBtidnSqULCdxC9OmNzCtY24dDSyWs2zUAoN6+cyUG9oChmAvSdw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB5898
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-21_05,2024-02-21_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- mlxscore=0 spamscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402210137
-X-Proofpoint-GUID: HDrYK-D-mrZna6dDEvipkEYjyuqqGpzZ
-X-Proofpoint-ORIG-GUID: HDrYK-D-mrZna6dDEvipkEYjyuqqGpzZ
+Content-Transfer-Encoding: 8bit
 
-On 21/02/2024 17:00, Darrick J. Wong wrote:
->>> Hmm.  Well, if we move towards pushing all the hardware checks out of
->>> xfs/iomap and into whatever goes on underneath submit_bio then I guess
->>> we don't need to check device support here at all.
->> Yeah, I have been thinking about this. But I was still planning on putting a
->> "bdev on atomic write" check here, as you mentioned.
->>
->> But is this a proper method to access the bdev for an xfs inode:
->>
->> STATIC bool
->> xfs_file_can_atomic_write(
->> struct xfs_inode *inode)
->> {
->> 	struct xfs_buftarg *target = xfs_inode_buftarg(inode);
->> 	struct block_device *bdev = target->bt_bdev;
->>
->> 	if (!xfs_inode_atomicwrites(inode))
->> 		return false;
->>
->> 	return bdev_can_atomic_write(bdev);
->> }
-> There's still a TOCTOU race problem if the bdev gets reconfigured
-> between xfs_file_can_atomic_write and submit_bio.
+From: Dave Chinner <dchinner@redhat.com>
 
-If that is the case then a check in the bio submit path is required to 
-catch any such reconfigure problems - and we effectively have that in 
-this series.
+syzbot reported an ext4 panic during a page fault where found a
+journal handle when it didn't expect to find one. The structure
+it tripped over had a value of 'TRAN' in the first entry in the
+structure, and that indicates it tripped over a struct xfs_trans
+instead of a jbd2 handle.
 
-I am looking at change some of these XFS bdev_can_atomic_write() checks, 
-but would still have a check in the bio submit path.
+The reason for this is that the page fault was taken during a
+copy-out to a user buffer from an xfs bulkstat operation. XFS uses
+an "empty" transaction context for bulkstat to do automated metadata
+buffer cleanup, and so the transaction context is valid across the
+copyout of the bulkstat info into the user buffer.
 
-> 
-> However, if you're only using this to advertise the capability via statx
-> then I suppose that's fine -- userspace has to have some means of
-> discovering the ability at all.  Userspace is also inherently racy.
-> 
->> I do notice the dax check in xfs_bmbt_to_iomap() when assigning iomap->bdev,
->> which is creating some doubt?
-> Do you mean this?
-> 
-> 	if (mapping_flags & IOMAP_DAX)
-> 		iomap->dax_dev = target->bt_daxdev;
-> 	else
-> 		iomap->bdev = target->bt_bdev;
-> 
-> The dax path wants dax_dev set so that it can do the glorified memcpy
-> operation, and it doesn't need (or want) a block device.
+We are using empty transaction contexts like this in XFS in more
+places to reduce the risk of failing to release objects we reference
+during the operation, especially during error handling. Hence we
+really need to ensure that we can take page faults from these
+contexts without leaving landmines for the code processing the page
+fault to trip over.
 
-Yes, so proper to use target->bt_bdev for checks for bdev atomic write 
-capability, right?
+We really only use current->journal_info for a single warning check
+in xfs_vm_writepages() to ensure we aren't doing writeback from a
+transaction context. Writeback might need to do allocation, so it
+can need to run transactions itself. Hence it's a debug check to
+warn us that we've done something silly, and largely it is not all
+that useful.
 
-Thanks,
-John
+So let's just remove all the use of current->journal_info in XFS and
+get rid of all the potential issues from nested contexts where
+current->journal_info might get misused by another filesytsem
+context.
+
+Reported-by: syzbot+cdee56dbcdf0096ef605@syzkaller.appspotmail.com
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/scrub/common.c | 4 +---
+ fs/xfs/xfs_aops.c     | 7 -------
+ fs/xfs/xfs_icache.c   | 8 +++++---
+ fs/xfs/xfs_trans.h    | 9 +--------
+ 4 files changed, 7 insertions(+), 21 deletions(-)
+
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 81f2b96bb5a7..d853348a48c8 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -1000,9 +1000,7 @@ xchk_irele(
+ 	struct xfs_scrub	*sc,
+ 	struct xfs_inode	*ip)
+ {
+-	if (current->journal_info != NULL) {
+-		ASSERT(current->journal_info == sc->tp);
+-
++	if (sc->tp) {
+ 		/*
+ 		 * If we are in a transaction, we /cannot/ drop the inode
+ 		 * ourselves, because the VFS will trigger writeback, which
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 813f85156b0c..bc3b649d29c4 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -502,13 +502,6 @@ xfs_vm_writepages(
+ {
+ 	struct xfs_writepage_ctx wpc = { };
+ 
+-	/*
+-	 * Writing back data in a transaction context can result in recursive
+-	 * transactions. This is bad, so issue a warning and get out of here.
+-	 */
+-	if (WARN_ON_ONCE(current->journal_info))
+-		return 0;
+-
+ 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+ 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+ }
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 06046827b5fe..9b966af7d55c 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -2030,8 +2030,10 @@ xfs_inodegc_want_queue_work(
+  *  - Memory shrinkers queued the inactivation worker and it hasn't finished.
+  *  - The queue depth exceeds the maximum allowable percpu backlog.
+  *
+- * Note: If the current thread is running a transaction, we don't ever want to
+- * wait for other transactions because that could introduce a deadlock.
++ * Note: If we are in a NOFS context here (e.g. current thread is running a
++ * transaction) the we don't want to block here as inodegc progress may require
++ * filesystem resources we hold to make progress and that could result in a
++ * deadlock. Hence we skip out of here if we are in a scoped NOFS context.
+  */
+ static inline bool
+ xfs_inodegc_want_flush_work(
+@@ -2039,7 +2041,7 @@ xfs_inodegc_want_flush_work(
+ 	unsigned int		items,
+ 	unsigned int		shrinker_hits)
+ {
+-	if (current->journal_info)
++	if (current->flags & PF_MEMALLOC_NOFS)
+ 		return false;
+ 
+ 	if (shrinker_hits > 0)
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index c6d0795085a3..2bd673715ace 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -269,19 +269,14 @@ static inline void
+ xfs_trans_set_context(
+ 	struct xfs_trans	*tp)
+ {
+-	ASSERT(current->journal_info == NULL);
+ 	tp->t_pflags = memalloc_nofs_save();
+-	current->journal_info = tp;
+ }
+ 
+ static inline void
+ xfs_trans_clear_context(
+ 	struct xfs_trans	*tp)
+ {
+-	if (current->journal_info == tp) {
+-		memalloc_nofs_restore(tp->t_pflags);
+-		current->journal_info = NULL;
+-	}
++	memalloc_nofs_restore(tp->t_pflags);
+ }
+ 
+ static inline void
+@@ -289,10 +284,8 @@ xfs_trans_switch_context(
+ 	struct xfs_trans	*old_tp,
+ 	struct xfs_trans	*new_tp)
+ {
+-	ASSERT(current->journal_info == old_tp);
+ 	new_tp->t_pflags = old_tp->t_pflags;
+ 	old_tp->t_pflags = 0;
+-	current->journal_info = new_tp;
+ }
+ 
+ #endif	/* __XFS_TRANS_H__ */
+-- 
+2.43.0
 
