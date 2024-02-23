@@ -1,33 +1,44 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC809BA2B;
-	Fri, 23 Feb 2024 06:57:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54D3311CB2
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 07:05:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708671436; cv=none; b=F9WCW4kZOVuvEYyNrKKmRTUvWtHLYaJfzWoMXXvX1cgZLa1Hy/FtZ3FOyB6dOH0U1KkXi0+kt43x6/Xm/SFvndlp/9KT/dbiBnL9qzhybdLwFS4Q2bZpoAoq+qcOIUR3+7BoG5pW3QLY4cFKjyHR4FoBNmpyWPpK+j/D6I+jgMA=
+	t=1708671955; cv=none; b=RqPcAg8WyJwssiETJGpzTh1Fbi5VIFslxKDdYm4uuD4R46xlKFtxP850BNBFo6RAeK0svYhaFxAAkobgup2zHPSkGB67tbDKFP08NR13Kt6KLE55Cg9kecRjVKnreYhiXkrH1z7F6MzcElbFf8m4VIaG/fOIHuVy4IU04ZaExGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708671436; c=relaxed/simple;
-	bh=hm6XHNj+0gbJT9j6deg6BuO41RjhBehAsR7NQVvqiAo=;
+	s=arc-20240116; t=1708671955; c=relaxed/simple;
+	bh=U6yTnMBlZorWYylVdfw+RZmYXy92hpMrDkM2IcenaOY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JBkUlrXEUvmGbq4HsBUptSpWDTNLpTghDakVQ5ZdemkxjCbt/YMY41xw6e0wGCHQSdyllUvW/4DP8tcTkWf0kfnfU+cxGn8nU6roNNsMl5oqlmKKomaRbzpszqcXKsSdNnByl7eLHCFS0MDrGCL/NBlS5fI4n2v/itM+4Qe8gqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8131A68C7B; Fri, 23 Feb 2024 07:57:10 +0100 (CET)
-Date: Fri, 23 Feb 2024 07:57:10 +0100
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=EFmnE7S2t2y2melDOqz7CWJYi5lv8OWu60J9eAItj2xJ9Xz1q/Ds0V98XL8QqC6F5zQOe3eBvl3ml2aEMcwZ6+zpA3hn5BCj1ZpciDgSfZeO1lJdsZ5QOqa7uh1rreCDvK34UQjKCtMn/4zcS6joqDqXM/hD+S+/aUtLP/RRf20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=U2fmISzq; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U2fmISzq"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=h2uV152jnmLHd4pmCOI4QSfusEhyzLNPErHMOgx3TuY=; b=U2fmISzqzZISBB5VRBl+4pQtSa
+	HCDeKTa4rBQzWIdf2usbHxgDUgV2QrT6Al+4l2VbPyh3fFeICW6VpEItaz3vEzC6A+jZV2oqQJhco
+	HmFM9ZPrJLSEyGwoKyyMbt+ZJOAFV0J4i5cEQd93ZHLoBctxkTOT8ymQt6N9oSCBT8nmkXmrPRJao
+	qbOW8GJiJxmRh6lrpOX7xg/+/9/OVtK5onvOz7js/L3OpuNYoFd3dlyVeWBRT6VIREW0tqeO+UgUV
+	GUkG2cvTQyAv4t6hzYq4I7oJZvMt2Glz3JFQ6czE+jDvPdYLIuRcGNCqcJ0oHwnBGmrQxuP742Git
+	Or+PmNbw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rdPd0-00000008Fgy-0eDz;
+	Fri, 23 Feb 2024 07:05:50 +0000
+Date: Thu, 22 Feb 2024 23:05:50 -0800
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, John Garry <john.g.garry@oracle.com>,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, chandan.babu@oracle.com, martin.petersen@oracle.com,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	ojaswin@linux.ibm.com
-Subject: Re: [PATCH 0/6] block atomic writes for XFS
-Message-ID: <20240223065710.GB11126@lst.de>
-References: <20240124142645.9334-1-john.g.garry@oracle.com> <20240213072237.GA24218@lst.de> <20240213175549.GU616564@frogsfrogsfrogs> <20240214074559.GB10006@lst.de> <20240221165615.GH6184@frogsfrogsfrogs>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Chandan Babu R <chandanrlinux@gmail.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] xfs: fix log recovery erroring out on refcount
+ recovery failure
+Message-ID: <ZdhDzq3dmhsUwq3w@infradead.org>
+References: <20240223054817.GN6188@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,44 +47,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240221165615.GH6184@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240223054817.GN6188@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Feb 21, 2024 at 08:56:15AM -0800, Darrick J. Wong wrote:
-> Hmm.  For rt reflink (whenever I get back to that, ha) I've been
-> starting to think that yes, we actually /do/ want to have a log item
-> that tracks the progress of remap and cow operations.  That would solve
-> the problem of someone wanting to reflink a semi-written rtx.
+On Thu, Feb 22, 2024 at 09:48:17PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> That said, it might complicate the reflink code quite a bit since right
-> now it writes zeroes to the unwritten parts of an rt file's rtx so that
-> there's only one mapping record for the whole rtx, and then it remaps
-> them.  That's most of why I haven't bothered to implement that solution.
+> Per the comment in the error case of xfs_reflink_recover_cow, zero out
+> any error (after shutting down the log) so that we actually kill any new
+> intent items that might have gotten logged by later recovery steps.
+> Discovered by xfs/434, which few people actually seem to run.
 
-I'm still not sure that supporting reflinks for rtextsize > 1 is a good
-idea..
+Talking about xfs/434, it just caused me some nasty debugging headache
+last week.  It is the first of only three tests requiring a loadable
+xfs module, and when there is an xfs.ko for the uname around but xfs
+is built into the kernel as it is for my usual test configs it fails
+in completely weird and hard to debug ways.
 
-> > I'm not planning to make you do it, because such a log item would
-> > generally be pretty useful for always COW mode.
-> 
-> One other thing -- while I was refactoring the swapext code into
-> exch{range,maps}, it occurred to me that doing an exchange between the
-> cow and data forks isn't possible because log recovery won't be able to
-> do anything.  There's no ondisk metadata to map a cow staging extent
-> back to the file it came from, which means we can't generally resume an
-> exchange operation.
+The fact that it requires a modular xfs might also be the reason why
+it's rarely run.
 
-Yeah.
+The fix itself looks good:
 
-> > Also if a file system supports logging data (which I have an
-> > XFS early prototype for that I plan to finish), we can even do
-> > the small double writes more efficiently than the application,
-> > all through the same interface.
-> 
-> Heh.  Ted's been trying to kill data=journal.  Now we've found a use for
-> it after all. :)
-
-Well..  unconditional logging of data just seems like a really bad idea.
-Using it as an optimization for very small and/or synchronous writes
-is a pretty common technique.  
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
