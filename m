@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DCAC140391
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 17:28:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A83C814CADA
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 17:29:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708709285; cv=none; b=BA+1jhIzomW7HUt70oho+nhP0B3145wReBJRJod8l57NWXunfimAYQl/p9uLgHQgUkMkGt9/z2ngoiIvABtOc92PS8UcC5OznlQbPr8BNolz6Q5m8U0VhXMfvZDAUtCahWuNPQBpTh6wKLs12p+v0w2OGoFlDWhP0z0FjdMmvco=
+	t=1708709372; cv=none; b=t0xN+G5C1SMePtzppjAqM5XwuylQ1xNzyzSguZ8xbsrXivNNTEb6QQDX4rxNNjDZHy6m9E4esCGe6FSbL6EsyHnHvw135IGeUMZAALPpx+qaldp2gRTNvQ0Kw/6GDYggtlcRBv9b/loeGrgPpwDImZML77lmZePkXi4MBf6DFxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708709285; c=relaxed/simple;
-	bh=eSkVc9Df0KBHfzDjK6IlyB7Jvmyq82VC/i5RLfkouaQ=;
+	s=arc-20240116; t=1708709372; c=relaxed/simple;
+	bh=AMtk33sWMqwLKIgDWbbm/ajYm1FRBg5T2NLNiKJr4Bs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IlVO6rce6mYbIyfQ+JBpHoaR+jjplhQ6XL/t13bPvsuboMk2tG0dwhaba2mpy+7I2lt0vF6CZZZVr3GlKQA3mxPSeQweSvCMltZ5wmTzqWcC3f/VADbt5UtzaH4jo8CercX9MVHYMkacYiOBLILFtXti+nF5xiviJ7zh6IuK6f4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gFFEB8ev; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Od03AGqITivy7j9mEjdw5Yyhsfuf+O+uMp9z163HnevFTboAbmB/xfyF9t7JUwVRzBeBMmPl3Lc4j+SxGKx3A6xc7CXUdq4S3nJj4DmZjeReJZ9CqI1dLH3UZ1sWlB2ZLVdznmza9A0dkBVom4xa0TFHpzUrYDMqbr6AT8DB1sc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cHE2azDl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gFFEB8ev"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCBFEC433C7;
-	Fri, 23 Feb 2024 17:28:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cHE2azDl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2460EC433C7;
+	Fri, 23 Feb 2024 17:29:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708709284;
-	bh=eSkVc9Df0KBHfzDjK6IlyB7Jvmyq82VC/i5RLfkouaQ=;
+	s=k20201202; t=1708709372;
+	bh=AMtk33sWMqwLKIgDWbbm/ajYm1FRBg5T2NLNiKJr4Bs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gFFEB8evFz95LzQ7MXElycYs723ubEy+RnLJjmdwqudfc7KE7314zd4jJgq6XoNZa
-	 ymHFpvn0+dl4a4I2JxdRBr5bxDW6N0Yt9Mz7GCTaDaASRsXShn126XXGAg3qM++7yj
-	 jtErMn4z9X99E/K1zzpq7HqvzkBTy2xw5slWtA45Nr3TvH7on8UMe+M0qsEe8K6DBI
-	 Gc38Un2wSi6btOq6UX1MLe5c+kVs79GCD22K9uvlLp9mmMl+BKCEKn81Ig7GQpCvne
-	 /OgqRS3s8EfuyGk8MRGeAtS2aSZG3WXfhKFK1tzwWhKoW1brgmovS+jCnox8ZReoxz
-	 1yw8EEt7C7NdQ==
-Date: Fri, 23 Feb 2024 09:28:04 -0800
+	b=cHE2azDlN9nx/Xnb3jeL7XmCUus2UIT4YtNBDdgvvK6V5ITtKKOas9ZkKsXKzXF/5
+	 nNXp/NvikhTtTq73urRMciihuPFFZPatjjOd7UQjAnZLyikGXCURSjDno0fM6Yb9/i
+	 oBMxInRHc4sc5eAjeX1cp0HAmOj1yr6/xzq7Bq1zooEg7mMqi4AXGYkws7KQJN3Syt
+	 rRVZeedOFFhlaTdGpbJym9eGtim6HjAMtYMcZjyreBmE1b8645EXblAz5r8I2JEDcn
+	 /xgb79Jcya3mLZjghwAdeVYhGAEhv0d8tuc/w/I6bE/kwCvw9NMVYNR+DcHPRhtsed
+	 jAAmk9h2MPuXg==
+Date: Fri, 23 Feb 2024 09:29:31 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/10] xfs: split xfs_mod_freecounter
-Message-ID: <20240223172804.GX616564@frogsfrogsfrogs>
+Subject: Re: [PATCH 07/10] xfs: support RT inodes in xfs_mod_delalloc
+Message-ID: <20240223172931.GY616564@frogsfrogsfrogs>
 References: <20240223071506.3968029-1-hch@lst.de>
- <20240223071506.3968029-5-hch@lst.de>
- <20240223170953.GQ616564@frogsfrogsfrogs>
- <20240223171855.GB4579@lst.de>
+ <20240223071506.3968029-8-hch@lst.de>
+ <20240223172028.GT616564@frogsfrogsfrogs>
+ <20240223172220.GA5004@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,34 +45,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240223171855.GB4579@lst.de>
+In-Reply-To: <20240223172220.GA5004@lst.de>
 
-On Fri, Feb 23, 2024 at 06:18:55PM +0100, Christoph Hellwig wrote:
-> On Fri, Feb 23, 2024 at 09:09:53AM -0800, Darrick J. Wong wrote:
-> > > -	lcounter = (long long)mp->m_resblks_avail + delta;
-> > > -	if (lcounter >= 0) {
-> > > -		mp->m_resblks_avail = lcounter;
-> > > +		xfs_warn_once(mp,
-> > > +"Reserve blocks depleted! Consider increasing reserve pool size.");
+On Fri, Feb 23, 2024 at 06:22:20PM +0100, Christoph Hellwig wrote:
+> On Fri, Feb 23, 2024 at 09:20:28AM -0800, Darrick J. Wong wrote:
+> > > +	fsc->frextents -=
+> > > +		xfs_rtb_to_rtx(mp, percpu_counter_sum(&mp->m_delalloc_rtblks));
 > > 
-> > Hmm.  This message gets logged if the __percpu_counter_compare above
-> > returns a negative value and we don't have a reserve pool.  I think
-> > that's a change from the current code, where running out of m_frextents
-> > returns ENOSPC without generating (misleading) log messages about the
-> > reserve pool.
+> > Should m_delalloc_rtblks be measured in rt extents (and not fsblocks)
+> > since a sub-rtx delalloc doesn't make any sense?  As written, here we'd
+> > also have to signal a corruption if (m_delalloc_rtblks % rextsize > 0).
 > 
-> Yes, I'll need to fix that up.
-> 
-> > without all the reserve pool machinery that fdblocks has.  The original
-> > code to implement m_frextents did exactly that, but Dave really wanted
-> > me to optimize this for icache footprint[1] so we ended up with (IMO)
-> > harder to understand xfs_mod_freecounter.
-> 
-> FYI, I have uses for reserved frextents a bit down the road, so
-> I'll make use of that.  Without that splitting them would seem nicer
-> to me.
+> Either way should be fine.  I did it this way around so that we only
+> have to do the conversion in the slow path, but I can change it around.
 
-Oh, ok.  I agree that keeping the combined function makes more sense if
-you'll be adding a reserve pool for rtextents.
+I prefer that all the rt space counters have the same measurement
+unit to avoid confusion later after we've all forgotten rt again. :)
 
 --D
