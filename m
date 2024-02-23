@@ -1,70 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441FE1097D;
-	Fri, 23 Feb 2024 04:26:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A89BEAD2;
+	Fri, 23 Feb 2024 04:36:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708662419; cv=none; b=ANyRDPdSTH1FwmANphPivUZbma4nQybHmHC2djLJjaJ2pjbJGCwF4TETWF936WsgHTXztLSWUkwImEjVujaxClyvaAEx48Ocw/8aqdSI54S0hEZKqOWowIH/qQhN2eYqmo0HiUyRKn1nrVUlGunjWlTMNnhPSi4ahYCRMNbAxdQ=
+	t=1708663005; cv=none; b=PhiGy9lTzTKGtTKF0N+gX2JAD63QCylovTOwzogePv54jsvcq7S+QtcGIKeJ02WR69FStAcozDPjVocTi4CVsqCXL4XhaUenrWyzFSN8fChWu7AyrXT6WrX4KC3vVaXbTioNaUTZHND3f4u9wG5tcI5IALfXUObs9Rh5ZbpQ8Rs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708662419; c=relaxed/simple;
-	bh=gJwJm5b0wNqyzUONKTm6BhlBmk+WHnsxUmzLF29r9/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SNix6kZ7OUF9Naubp1KuuVG7zsNa0Ks0wZfMlG1GOPTO8Qu1trKO/Fe54zh/kEJCEbpBNHJxKXRk9gYq8fd25ZeoKf6awqBuI238tsfCLMmYOwZSI0DdAhXNkNQdQiwJZT/1D+4a/Qc13lwCKYYVaaZ57HbTWWIMvy58LfSqfEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mb3X3mKM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708663005; c=relaxed/simple;
+	bh=/FyjzMk6/1+QlLgjUrBq4h7dcYzZb2xLEL+3ICH2UhY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Mq//SFj70p7NA3goCaBBt6FsHcs5quhDFXOq2x8wbZA5RaJ962GFVMyLEKpm+kZf0YLSgJ7HzREB+mlKRZ57pMrs6miY/V3XBvKKIgqpFnjqlPvn0ROBqLy3sgTEMQqndMKJJ3Av32Sy6+suV1T/Z5ATVKXuNsTDIPloiTraBVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=rKNURIUA; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mb3X3mKM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A80DC433C7;
-	Fri, 23 Feb 2024 04:26:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708662418;
-	bh=gJwJm5b0wNqyzUONKTm6BhlBmk+WHnsxUmzLF29r9/A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Mb3X3mKMANBJpKJpxkNCoqC7UhDEhNkmvkgUTe7KdlbKl++8qfxfjGJ9K4DB9wkFG
-	 tDxIJEVTni0g8VCGZluaSNcExMXcDdQx6M025rKkEZ5B2o9VLhJE3SfqsWiHZvT+Zi
-	 8UVT/y/0XPLgQv6W27bT1e1YNHhqM1y+qwkN4BSlEqSGWdW5KQ4UgiYGIbQ9AMKJXe
-	 /I8p0MPZDhli9uTGlvdqr5HyHoyHbapZe7bbbZLIrJL/HsumRVsW8zK/SBWVeAx7aY
-	 G/rbAjNtUrfPcUSt6ltavPXgwTJ+TH+4xIbZIkhR/5RY2YFVbt3bajTBJmTX5Syph7
-	 OIm1DjR2wtTQg==
-Date: Thu, 22 Feb 2024 20:26:56 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
-	djwong@kernel.org
-Subject: Re: [PATCH v4 06/25] fsverity: pass log_blocksize to
- end_enable_verity()
-Message-ID: <20240223042656.GB25631@sol.localdomain>
-References: <20240212165821.1901300-1-aalbersh@redhat.com>
- <20240212165821.1901300-7-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="rKNURIUA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1708663000;
+	bh=h2FyDHHxJrZbIdFI4oPYrRtlgmcQ6ZJ0mwEOJXqzeCA=;
+	h=Date:From:To:Cc:Subject:From;
+	b=rKNURIUArkXH2hb9+yJKBlzBCSy2bVj5UCWtgVohauxb/i+W18U0KCmVnu//Yuuy6
+	 tNEVFP7vp6Z03QAojPcq59gaIZkd8nrDAlqEoTMvtnvdFhG22pER1pOHsu8U5qc3ka
+	 TSY/AONZBsLwxECgArS9Hbsvf6sPJzC6ZenZgnTVfmc8yg+h8UtjrZcm6QbxHJbK2c
+	 Z1FaRhgAdBGrSLktD30FU9XZQ3XwrfdPmVJauGQ3X0qevK5aG6qgAp/XP6Gy+/P6kf
+	 pDFZZUocDHFAc1TFfd9muOSz9PoJUrkbJ1e9uOiAzchNUuO28q9uXlV+nvzcXxLHKE
+	 4eCmI4gVdtjTw==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Tgxzq1f3xz4wcF;
+	Fri, 23 Feb 2024 15:36:39 +1100 (AEDT)
+Date: Fri, 23 Feb 2024 15:36:36 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: "Darrick J. Wong" <djwong@kernel.org>, David Chinner
+ <david@fromorbit.com>
+Cc: <linux-xfs@vger.kernel.org>, Chandan Babu R <chandanbabu@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>
+Subject: linux-next: build warning after merge of the xfs tree
+Message-ID: <20240223153636.41358be5@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240212165821.1901300-7-aalbersh@redhat.com>
+Content-Type: multipart/signed; boundary="Sig_/SqI874M6Z23o3JjKW/QTqey";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-On Mon, Feb 12, 2024 at 05:58:03PM +0100, Andrey Albershteyn wrote:
-> XFS will need to know log_blocksize to remove the tree in case of an
+--Sig_/SqI874M6Z23o3JjKW/QTqey
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-tree_blocksize
+Hi all,
 
-> diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-> index 1eb7eae580be..ab7b0772899b 100644
-> --- a/include/linux/fsverity.h
-> +++ b/include/linux/fsverity.h
-> @@ -51,6 +51,7 @@ struct fsverity_operations {
->  	 * @desc: the verity descriptor to write, or NULL on failure
->  	 * @desc_size: size of verity descriptor, or 0 on failure
->  	 * @merkle_tree_size: total bytes the Merkle tree took up
-> +	 * @tree_blocksize: size of the Merkle tree block
+After merging the xfs tree, today's linux-next build (htmldocs) produced
+this warning:
 
-There may be many Merkle tree blocks, so it doesn't really make sense to write
-"the Merkle tree block".  Maybe write "the Merkle tree block size".
+Documentation/core-api/mm-api:130: mm/shmem.c:2155: WARNING: Inline emphasi=
+s start-string without end-string.
+Documentation/core-api/mm-api:130: mm/shmem.c:2156: WARNING: Inline emphasi=
+s start-string without end-string.
 
-Likewise in fs/btrfs/verity.c.
+Introduced by commit
 
-- Eric
+  d7468609ee0f ("shmem: export shmem_get_folio")
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/SqI874M6Z23o3JjKW/QTqey
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmXYINQACgkQAVBC80lX
+0Gy6Ywf+LUwcLue/f/XGLbpFZOziQf5znp5r/1uBbjhFeTX4LKYa2fYRf9ZNZXpM
+TXs1Mexiq7mQwizGj8Hs+yG6dAke5HhYnWsMGT6eM9w9Ik0vC0RNR6lP3y0/Yn5C
+DkPnJHDpVDgmK3gf6VNvHfu0T1ZNCsPQgh76iOoraq/PV8x82w8S4TY5Vdlq+bpx
+rda16KzaBejgJytI5nFiBlao87BqeTEchCAilNMwUPDbXXe7ylQ2juy2F0m+6BtA
+EEkBwGuVOYDWdeC+pI98mCJHuhO/X2KIaGwtMMLsPKupKo5zwZUSkSxpfMlKNJA2
+yrgF0+zv+Iy1W2GwH2kYQ5RsgqkDUw==
+=rzkb
+-----END PGP SIGNATURE-----
+
+--Sig_/SqI874M6Z23o3JjKW/QTqey--
