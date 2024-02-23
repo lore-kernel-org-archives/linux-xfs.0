@@ -1,88 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56CC712D758;
-	Fri, 23 Feb 2024 17:59:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54FA414263E;
+	Fri, 23 Feb 2024 18:05:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708711188; cv=none; b=QsR0D0u2S0Ih2wRO1twIh8PqargRk7PRZYIb1/x+FpqVUhsr0pmGgX4oqXGZwqK4dSkUV5V1t8jQ3MC9QCkVrYH7UhpZUmHS1Jsrs+zT1bzxJzBS5/kW6C5Bzbuup3OO1q4+FZabIWSKhZjCH8VPi5E+ERMvpI8/B3gA2XyPqu4=
+	t=1708711506; cv=none; b=dqsRPXUhBgflnNQnAJg8h2CQcKaCCgoGoTAKoQs48//AYlFjz7Qs2O+6lhHNnhCBYxuyThH4Hq5hr8rcInzvTo0BpWeiK1uii8wIKsYJ0OaI16TSkUpibTSFXVv2r3hKW5mhUMIuLnkB52NWyI9eE3yR25DZXiLP3NqqFin1TxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708711188; c=relaxed/simple;
-	bh=yjXKXlzIT1gS1GoeXj15BtCc2qSvC775H+yC8jnLqww=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fuI6dIEaDat3ZCSS+7Qe4IZmTaPOBr0CZJt/omlk8MIGBELBStGXmEvm9LD80VTYA/YyCrlIfC5QaKwFiOMOk1aRvXcuuyABfKmyDSXDH7/9GPu2G6g1GO8pGWqYa+xRTn3OH6ySFiVtHlP7Is9OkWLHc0OV/HwSXpaUhX+F6u8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FULkRoDK; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FULkRoDK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08251C433C7;
-	Fri, 23 Feb 2024 17:59:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708711188;
-	bh=yjXKXlzIT1gS1GoeXj15BtCc2qSvC775H+yC8jnLqww=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FULkRoDKMSrCWza4BnlTCzKFl3yhaQG4xGFUjbVFHaCW+VMyxap32BZ6g5AfzLWMI
-	 XMeHBeyya0ApZwYynz3BiFeUU3mcbdoTEIysAOvrKL0mmnJXiBgu+4wK2H5JebeZlH
-	 NuOTWajjr+muLscVkoXNLXxV06bejNEC+o9He6MQvcByxc79GMX2TP0VXLrAEt7Dk0
-	 1fubcHYEpEilPLWIorFZl6EXX5xOeOGhFSCT+ms+/iJ4ctyozGp/Rx0OcexZtFeaBn
-	 IpS9+j2bra3rkhCh6EhzLP8HVEQir/R17BYLlX9KIDaWQ3MLpdootiterrg25LfQvp
-	 w/TBjq1uGOUow==
-Date: Fri, 23 Feb 2024 09:59:46 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
-	djwong@kernel.org
-Subject: Re: [PATCH v4 05/25] fs: add FS_XFLAG_VERITY for verity files
-Message-ID: <20240223175946.GB1112@sol.localdomain>
-References: <20240212165821.1901300-1-aalbersh@redhat.com>
- <20240212165821.1901300-6-aalbersh@redhat.com>
- <20240223042304.GA25631@sol.localdomain>
- <ck7uzvtsfxikgpvdxw5mwvds5gq2errja7qhru7liy5akijcdg@rlodrbskdprz>
+	s=arc-20240116; t=1708711506; c=relaxed/simple;
+	bh=LnhjvqUeq0CK0kIwGNY2StqDTPb27nbR7qd6jVWv0QA=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WMSzBA10+2Z3T90xbs5EiUSeTqNg7jmyGmiZQOxZXuOFM1nATIvRraeF0YyclHdUwGpK8Ggz0K5mWr53bADO5hQ6lcWXK8E/ZBr/Z92x1oO9dVw+5KByebqUx5GQNBVnqbc3fBCHbRlfBDigxw9Ro+tFUroYHpKhqigrVFFAMPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 370BEC433C7;
+	Fri, 23 Feb 2024 18:05:01 +0000 (UTC)
+Date: Fri, 23 Feb 2024 13:06:53 -0500
+From: Steven Rostedt <rostedt@goodmis.org>
+To: LKML <linux-kernel@vger.kernel.org>, Linux Trace Kernel
+ <linux-trace-kernel@vger.kernel.org>
+Cc: Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers
+ <mathieu.desnoyers@efficios.com>, Linus Torvalds
+ <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org,
+ kvm@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-cxl@vger.kernel.org, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
+ intel-gfx@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+ linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
+ virtualization@lists.linux.dev, linux-rdma@vger.kernel.org,
+ linux-pm@vger.kernel.org, iommu@lists.linux.dev,
+ linux-tegra@vger.kernel.org, netdev@vger.kernel.org,
+ linux-hyperv@vger.kernel.org, ath10k@lists.infradead.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ ath12k@lists.infradead.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-usb@vger.kernel.org,
+ linux-bcachefs@vger.kernel.org, linux-nfs@vger.kernel.org,
+ ocfs2-devel@lists.linux.dev, linux-cifs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-edac@vger.kernel.org,
+ selinux@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-erofs@lists.ozlabs.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-hwmon@vger.kernel.org, io-uring@vger.kernel.org,
+ linux-sound@vger.kernel.org, bpf@vger.kernel.org,
+ linux-wpan@vger.kernel.org, dev@openvswitch.org,
+ linux-s390@vger.kernel.org, tipc-discussion@lists.sourceforge.net, Julia
+ Lawall <Julia.Lawall@inria.fr>
+Subject: Re: [FYI][PATCH] tracing/treewide: Remove second parameter of
+ __assign_str()
+Message-ID: <20240223130653.2cc317a8@gandalf.local.home>
+In-Reply-To: <20240223125634.2888c973@gandalf.local.home>
+References: <20240223125634.2888c973@gandalf.local.home>
+X-Mailer: Claws Mail 3.19.1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ck7uzvtsfxikgpvdxw5mwvds5gq2errja7qhru7liy5akijcdg@rlodrbskdprz>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Feb 23, 2024 at 01:55:21PM +0100, Andrey Albershteyn wrote:
-> On 2024-02-22 20:23:04, Eric Biggers wrote:
-> > On Mon, Feb 12, 2024 at 05:58:02PM +0100, Andrey Albershteyn wrote:
-> > > +FS_IOC_FSGETXATTR
-> > > +-----------------
-> > > +
-> > > +Since Linux v6.9, FS_XFLAG_VERITY (0x00020000) file attribute is set for verity
-> > > +files. The attribute can be observed via lsattr.
-> > > +
-> > > +    [root@vm:~]# lsattr /mnt/test/foo
-> > > +    --------------------V- /mnt/test/foo
-> > > +
-> > > +Note that this attribute cannot be set with FS_IOC_FSSETXATTR as enabling verity
-> > > +requires input parameters. See FS_IOC_ENABLE_VERITY.
-> > 
-> > The lsattr example is irrelevant and misleading because lsattr uses
-> > FS_IOC_GETFLAGS, not FS_IOC_FSGETXATTR.
-> > 
-> > Also, I know that you titled the subsection "FS_IOC_FSGETXATTR", but the text
-> > itself should make it super clear that FS_XFLAG_VERITY is only for
-> > FS_IOC_FSGETXATTR, not FS_IOC_GETFLAGS.
-> 
-> Sure, I will remove the example. Would something like this be clear
-> enough?
-> 
->     FS_IOC_FSGETXATTR
->     -----------------
-> 
->     Since Linux v6.9, FS_XFLAG_VERITY (0x00020000) file attribute is set for verity
->     files. This attribute can be checked with FS_IOC_FSGETXATTR ioctl. Note that
->     this attribute cannot be set with FS_IOC_FSSETXATTR as enabling verity requires
->     input parameters. See FS_IOC_ENABLE_VERITY.
+On Fri, 23 Feb 2024 12:56:34 -0500
+Steven Rostedt <rostedt@goodmis.org> wrote:
 
-It's better, but I'd probably put FS_IOC_FSGETXATTR in the first sentence.
-Like: Since Linux v6.9, the FS_IOC_FSGETXATTR ioctl sets FS_XFLAG_VERITY
-(0x00020000) in the returned flags when the file has verity enabled.
+> Note, the same updates will need to be done for:
+> 
+>   __assign_str_len()
+>   __assign_rel_str()
+>   __assign_rel_str_len()
 
-- Eric
+Correction: The below macros do not pass in their source to the entry
+macros, so they will not need to be updated.
+
+-- Steve
+
+>   __assign_bitmask()
+>   __assign_rel_bitmask()
+>   __assign_cpumask()
+>   __assign_rel_cpumask()
+
