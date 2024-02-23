@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26E9A12EBC6
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 17:25:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9ED13BAC2
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 17:26:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708709124; cv=none; b=cPlE5FtJb8++U/3BvXXxim9Vve7uJuwlU3Dr8F5MywYZVvrZOrKb4aZbxpp3RNL/+eCRBlwgZxFeYF68CRNJtKOMEijZyhBDHfgJaQZYrgCARdkePi43x+iAhp55eCW59s83afAYHCddYgBwUP2GwUpD+siId4Et4Gjxk1kOAF0=
+	t=1708709208; cv=none; b=OBFORFeNjTAm+PBjGNHAXs5RqUlJroFktrSJHl1S7B8dHLOFq/bfPTkImnUrbB5owiU/lDlGWeEkPOHki84v7WEF4cboA5llRy60hgA3hf42eODfjmJIx58eaJMVE214eO+zTySNE0VuXHxUgFNn5v5H2cgt0z4IS/vBWNBOkHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708709124; c=relaxed/simple;
-	bh=KhANuhU77EEBNMamw0DgdNgcu//anNkJUuHL8giO46U=;
+	s=arc-20240116; t=1708709208; c=relaxed/simple;
+	bh=SVgF/pxH9AtCm+PG2RrHf4rkCZQCLNoboTT0/Hh0x0M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jGZACXsX1Rqo2hnictHmEINPts+JhYpmBG6uqgVfTAS/azpP8yfWBGsI+J6FyU1ixCWhZ3YZDtATdkz6ZeDipLk2MGM1e0gRIqHOE2L8vvPMOYzrp8HWGg0ndhyXYEgTY0wwpuM4mgX0LGd9OxEdrgQ6Kxu2hNa4CpSSGzSPT4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G1AmlIXZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bb5mjpcQsBH9wNw605Han8N5KmP2WECB9WjsLsUZ6jifDZfRRZrXiCelpCOfORLpsRFfo0tftMpk+eeEtA496F+cZuQ0UDWioc8UrDk56ofBv6RgM6/HzQJjZ4wjBqs+cY/I72Y9jrEifxD7ccOwfFw6X3Q0JzvpwyOL0xLwblE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bpAqRcYi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G1AmlIXZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F3D1C433F1;
-	Fri, 23 Feb 2024 17:25:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bpAqRcYi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A216C43399;
+	Fri, 23 Feb 2024 17:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708709123;
-	bh=KhANuhU77EEBNMamw0DgdNgcu//anNkJUuHL8giO46U=;
+	s=k20201202; t=1708709207;
+	bh=SVgF/pxH9AtCm+PG2RrHf4rkCZQCLNoboTT0/Hh0x0M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G1AmlIXZz2ARu/4WHPY0bJ+71ITwe/O9AaKo4h0+vIqBjz+S4JEdY6CYLFXzmVLrl
-	 2QEL0nXQ3fnN/TJna9BQde73B9KZO1ZL3cluG+x/nxsqBm2rVgtQ5tO6zwY/uJnMtZ
-	 vNNxRnK5ltWEdsSV+kiXwkmiq4qnkVugLHH/DRC4XjwCC6AR43HDL9tbbmrDyWEqGJ
-	 qorMHUJdsXoU70Ma0EHwMd2k3q90AgdJhiJKXF87B9F8fG5n4OiMEUBvl2EmaDVbOX
-	 mYxpf5D0n3A6tOZb3YqqE/syPzYgz4/EBcfBagJQ60bEju+FgbuYmag1F6rWS6KImJ
-	 2AzqYVcXDJpng==
-Date: Fri, 23 Feb 2024 09:25:23 -0800
+	b=bpAqRcYiTf4E79lt1wSIXm1FZKBlNS2bxEp4riF3R8RySuVZ76Mj6vxvggzEyvr0F
+	 djBnP2wqVTNi/40QeAf/L/da45akTPJNLUecpRGPiKQoMBeCKEwd8x3GtJEtCrqVl3
+	 dgubrTPxFr/SihdxZL9VbIxIveOZMkE1ApkS3rPcqCxDg0OeTJa8qcDiqHzjVgFt/5
+	 NATFhNiPqM8zTgHKgQHeLGcuxpCe2+xnnTCWB36yGQZEQ7ES/GtbpUlrALGJ3XHpM3
+	 mN+n4VAEyvwEeY5VtEveM/y9kwKFZeLR3SY5Bhj4dwhIac2uHunzNoyOqSJ9KSLNBk
+	 0ukRj6o10Aq7w==
+Date: Fri, 23 Feb 2024 09:26:46 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs: stop the steal (of data blocks for RT
- indirect blocks)
-Message-ID: <20240223172523.GV616564@frogsfrogsfrogs>
+Subject: Re: [PATCH 10/10] xfs: reinstate delalloc for RT inodes (if
+ sb_rextsize == 1)
+Message-ID: <20240223172646.GW616564@frogsfrogsfrogs>
 References: <20240223071506.3968029-1-hch@lst.de>
- <20240223071506.3968029-10-hch@lst.de>
+ <20240223071506.3968029-11-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,92 +44,94 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240223071506.3968029-10-hch@lst.de>
+In-Reply-To: <20240223071506.3968029-11-hch@lst.de>
 
-On Fri, Feb 23, 2024 at 08:15:05AM +0100, Christoph Hellwig wrote:
-> When xfs_bmap_del_extent_delay has to split an indirect block it tries
-> to steal blocks from the the part that gets unmapped to increase the
-> indirect block reservation that now needs to cover for two extents
-> instead of one.
+On Fri, Feb 23, 2024 at 08:15:06AM +0100, Christoph Hellwig wrote:
+> Commit aff3a9edb708 ("xfs: Use preallocation for inodes with extsz
+> hints") disabled delayed allocation for all inodes with extent size
+> hints due a data exposure problem.  It turns out we fixed this data
+> exposure problem since by always creating unwritten extents for
+> delalloc conversions due to more data exposure problems, but the
+> writeback path doesn't actually support extent size hints when
+> converting delalloc these days, which probably isn't a problem given
+> that people using the hints know what they get.
 > 
-> This works perfectly fine on the data device, where the data and
-> indirect blocks come from the same pool.  It has no chance of working
-> when the inode sits on the RT device.  To support re-enabling delalloc
-> for inodes on the RT device, make this behavior conditional on not
-> beeing for rt extents.  For an RT extent try allocate new blocks or
-> otherwise just give up.
+> However due to the way how xfs_get_extsz_hint is implemented, it
+> always claims an extent size hint for RT inodes even if the RT
+> extent size is a single FSB.  Due to that the above commit effectively
+> disabled delalloc support for RT inodes.
 > 
-> Note that split of delalloc extents should only happen on writeback
-> failure, as for other kinds of hole punching we first write back all
-> data and thus convert the delalloc reservations covering the hole to
-> a real allocation.
+> Switch xfs_get_extsz_hint to return 0 for this case and work around
+> that in a few places to reinstate delalloc support for RT inodes on
+> file systems with an sb_rextsize of 1.
 > 
-> Note that restoring a quota reservation is always a bit problematic,
-> but the force flag should take care of it.  That is, if we actually
-> supported quota with the RT volume, which seems to not be the case
-> at the moment.
-
-...and for anyone following along at home, this should address that
-problem:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-quotas_2024-02-21
-
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 27 ++++++++++++++++++++++++++-
->  1 file changed, 26 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index d7fda286a4eaa0..4fa178087073b1 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4912,6 +4912,30 @@ xfs_bmap_del_extent_delay(
->  		WARN_ON_ONCE(!got_indlen || !new_indlen);
->  		stolen = xfs_bmap_split_indlen(da_old, &got_indlen, &new_indlen,
->  						       del->br_blockcount);
-> +		if (isrt && stolen) {
-> +			/*
-> +			 * Ugg, we can't just steal reservations from the data
-> +			 * blocks as the data blocks come from a different pool.
-> +			 *
-> +			 * So we have to try to increase out reservations here,
 
-"...try to increase our reservation here..."
-
+Woot!
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +			 * and if that fails we have to fail the unmap.  To
-> +			 * avoid that as much as possible dip into the reserve
-> +			 * pool.
-> +			 *
-> +			 * Note that in theory the user/group/project could
-> +			 * be over the quota limit in the meantime, thus we
-> +			 * force the quota accounting even if it was over the
-> +			 * limit.
-> +			 */
-> +			error = xfs_dec_fdblocks(mp, stolen, true);
-> +			if (error) {
-> +				ip->i_delayed_blks += del->br_blockcount;
-> +				xfs_trans_reserve_quota_nblks(NULL, ip, 0,
-> +						del->br_blockcount, true);
-> +				return error;
-> +			}
-> +			xfs_mod_delalloc(ip, 0, stolen);
-> +		}
+> ---
+>  fs/xfs/xfs_inode.c   | 3 ++-
+>  fs/xfs/xfs_iomap.c   | 2 --
+>  fs/xfs/xfs_iops.c    | 2 +-
+>  fs/xfs/xfs_rtalloc.c | 2 ++
+>  4 files changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 37ec247edc1332..9e12278d1b62cd 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -60,7 +60,8 @@ xfs_get_extsz_hint(
+>  		return 0;
+>  	if ((ip->i_diflags & XFS_DIFLAG_EXTSIZE) && ip->i_extsize)
+>  		return ip->i_extsize;
+> -	if (XFS_IS_REALTIME_INODE(ip))
+> +	if (XFS_IS_REALTIME_INODE(ip) &&
+> +	    ip->i_mount->m_sb.sb_rextsize > 1)
+>  		return ip->i_mount->m_sb.sb_rextsize;
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index e6abe56d1f1f23..aea4e29ebd6785 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -992,8 +992,6 @@ xfs_buffered_write_iomap_begin(
+>  		return xfs_direct_write_iomap_begin(inode, offset, count,
+>  				flags, iomap, srcmap);
 >  
->  		got->br_startblock = nullstartblock((int)got_indlen);
+> -	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+> -
+>  	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index be102fd49560dc..ca60ba060fd5c9 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -521,7 +521,7 @@ xfs_stat_blksize(
+>  	 * always return the realtime extent size.
+>  	 */
+>  	if (XFS_IS_REALTIME_INODE(ip))
+> -		return XFS_FSB_TO_B(mp, xfs_get_extsz_hint(ip));
+> +		return XFS_FSB_TO_B(mp, xfs_get_extsz_hint(ip) ? : 1);
 >  
-> @@ -4924,7 +4948,8 @@ xfs_bmap_del_extent_delay(
->  		xfs_iext_insert(ip, icur, &new, state);
+>  	/*
+>  	 * Allow large block sizes to be reported to userspace programs if the
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 2f85567f3d756b..9c7fba175b9025 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -1340,6 +1340,8 @@ xfs_bmap_rtalloc(
+>  	int			error;
 >  
->  		da_new = got_indlen + new_indlen - stolen;
-> -		del->br_blockcount -= stolen;
-> +		if (!isrt)
-> +			del->br_blockcount -= stolen;
->  		break;
->  	}
->  
+>  	align = xfs_get_extsz_hint(ap->ip);
+> +	if (!align)
+> +		align = 1;
+>  retry:
+>  	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+>  					align, 1, ap->eof, 0,
 > -- 
 > 2.39.2
 > 
