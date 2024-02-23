@@ -1,38 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CAAE7175E
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2024 22:04:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE5872CA5;
+	Fri, 23 Feb 2024 04:23:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708639472; cv=none; b=PgeZWPrSvuqDLp7Y1hH0gg+Uz3PSsmwUqkF/s7OQYGJyHskYjSXPiolEWT6eRPsAlBUhQs+NL9hwvDDlYvH/rO5D+ZcACSJlU/9w5VeBm5eLUnZOwkkmqvM+P7SJmd+hj+x9JWKExhyRwDzJCBqlv/5/jrAXKCkEeJkIuVZlh8s=
+	t=1708662187; cv=none; b=fhVuxsy/3kdjIlnJp9Fz2No+rBybvOiQml6rh2QsjD99l5eJa+STP9XgpJdmzaXCApNwaVbzQEnW5SWme2by2dN6NsrXPO0VfzWJlG/GUJR/xXzI+1zPBF5C+CYUAtfBjXuO84o56M4PVjJogToFMFGQoABD/pTRBMTWqKL9Eu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708639472; c=relaxed/simple;
-	bh=wMWZS8srfgXvUwowkm/jjQ67qHfMh9NIfjCDmqeOA0s=;
+	s=arc-20240116; t=1708662187; c=relaxed/simple;
+	bh=Z3fH/mjawjD50HyMLDsvAaHokkTHzE3vYVMAEur6rcE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NVIbE9E9Va/jIPGuT3arMfkfR+tLLhplAvITe93d4TKCQ3G19+ponQVFKNureZn5OkIn+Q4rR4omSmgro787ghVc3ZmDw4LwUIeARLD50KgOR6MdB4B8iEvhigU3RjLEpMFFVeeDMcSTzB1Ly3igGxKfqqWRzSBtasa6AE13z8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UTQisqDy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=C7eAw0PXDj6+ZcPwu7QDUonEPjSPP+SeRYLD/dJqS9tD1MA8jozkbE/8kVJ0OS2UbKyjUIbNjvMGJK4Uo2uMxi44ULJFTO0HzioflvhYjeqogVWGavsP14lgv6AmF3yY0adXyqHn68kiCA3zy4ZK73dmJtGgexcp5/bmjJQOS5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iRqh3CYj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UTQisqDy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6C3FC433C7;
-	Thu, 22 Feb 2024 22:04:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iRqh3CYj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 443BAC433C7;
+	Fri, 23 Feb 2024 04:23:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708639471;
-	bh=wMWZS8srfgXvUwowkm/jjQ67qHfMh9NIfjCDmqeOA0s=;
+	s=k20201202; t=1708662186;
+	bh=Z3fH/mjawjD50HyMLDsvAaHokkTHzE3vYVMAEur6rcE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UTQisqDyR6KFbSLdcCTQo9n0mH/ZgMksJgZ9UC5vuOErqmmuDxpNE67DUCapDd3o9
-	 KZUfW2rOQOfSty1KSJ++qGLnENb3izVuhN5+d4evNzyci7D/1gmZZKpR7e5XyGpCRG
-	 +5gQSanHqIrn7pGCVAJDiBia9LrXd4bt/WBMA80+MM/QISv/SYaMGfiZL1riDUPl5s
-	 hv+q8PMk/SuRN1PndCzMW4HpM2F5qO8lvCSNxw/18mPCPnN3DY7hg5q5r92OxTRSbe
-	 Vk1rz4wHkTYpPOho7A2/BdKxDoKIDM4Tk5FVWbnYPeebtVXxbZ/ElaJcRVenAavQdn
-	 DOg0w3Mwptplw==
-Date: Thu, 22 Feb 2024 14:04:31 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH v2] xfs_db: don't hardcode 'type data' size at 512b
-Message-ID: <20240222220431.GJ616564@frogsfrogsfrogs>
-References: <20240123041044.GD6226@frogsfrogsfrogs>
+	b=iRqh3CYjRfCP/WctC5UmuFIxsE4NSXgX7oTGl2I9uyDP0lNdiwrsawkv8Lq5r9Cpg
+	 WrQKWPvRUUKSBBr6FLEX/Xi+zY6LFjcmDC3cgCIX1f7Wo87Xqkmx6O5QYhbR249gnS
+	 NcOtiqY6pPBCkb+7BA513+CJcSymo0XmnyAS5AaCi/cEYFg/nbzSXm/sXdcZDQjGv3
+	 qYK2saZ2tGKI2ZlJr5P+n/9/Lc7LTZLu+j78lI2qP/GAkXurVakDkpogfBqAhBLbtK
+	 n8s97oPs9On9kwRG7GvCWv2ReXfP2KLIcwLglyLA7frEw+gCm8CpBfkoteAHDihg4Z
+	 bxgm0EYYfjqWw==
+Date: Thu, 22 Feb 2024 20:23:04 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
+	djwong@kernel.org
+Subject: Re: [PATCH v4 05/25] fs: add FS_XFLAG_VERITY for verity files
+Message-ID: <20240223042304.GA25631@sol.localdomain>
+References: <20240212165821.1901300-1-aalbersh@redhat.com>
+ <20240212165821.1901300-6-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,62 +44,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240123041044.GD6226@frogsfrogsfrogs>
+In-Reply-To: <20240212165821.1901300-6-aalbersh@redhat.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Feb 12, 2024 at 05:58:02PM +0100, Andrey Albershteyn wrote:
+> +FS_IOC_FSGETXATTR
+> +-----------------
+> +
+> +Since Linux v6.9, FS_XFLAG_VERITY (0x00020000) file attribute is set for verity
+> +files. The attribute can be observed via lsattr.
+> +
+> +    [root@vm:~]# lsattr /mnt/test/foo
+> +    --------------------V- /mnt/test/foo
+> +
+> +Note that this attribute cannot be set with FS_IOC_FSSETXATTR as enabling verity
+> +requires input parameters. See FS_IOC_ENABLE_VERITY.
 
-On a disk with 4096-byte LBAs, the xfs_db 'type data' subcommand doesn't
-work:
+The lsattr example is irrelevant and misleading because lsattr uses
+FS_IOC_GETFLAGS, not FS_IOC_FSGETXATTR.
 
-# xfs_io -c 'sb' -c 'type data' /dev/sda
-xfs_db: read failed: Invalid argument
-no current object
+Also, I know that you titled the subsection "FS_IOC_FSGETXATTR", but the text
+itself should make it super clear that FS_XFLAG_VERITY is only for
+FS_IOC_FSGETXATTR, not FS_IOC_GETFLAGS.
 
-The cause of this is the hardcoded initialization of bb_count when we're
-setting type data -- it should be the filesystem sector size, not just 1.
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index 48ad69f7722e..6e63ea832d4f 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -140,6 +140,7 @@ struct fsxattr {
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+>  #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+> +#define FS_XFLAG_VERITY		0x00020000	/* fs-verity sealed inode */
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-v2: rebase to for-next
----
- db/block.c |    3 ++-
- db/io.c    |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+There's currently nowhere in the documentation or code that uses the phrase
+"fs-verity sealed inode".  It's instead called a verity file, or a file that has
+fs-verity enabled.  We should try to avoid inconsistent terminology.
 
-diff --git a/db/block.c b/db/block.c
-index d730c7796710..22930e5a287e 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -124,6 +124,7 @@ daddr_f(
- {
- 	int64_t		d;
- 	char		*p;
-+	int		bb_count = BTOBB(mp->m_sb.sb_sectsize);
- 
- 	if (argc == 1) {
- 		xfs_daddr_t	daddr = iocur_top->off >> BBSHIFT;
-@@ -144,7 +145,7 @@ daddr_f(
- 		return 0;
- 	}
- 	ASSERT(typtab[TYP_DATA].typnm == TYP_DATA);
--	set_cur(&typtab[TYP_DATA], d, 1, DB_RING_ADD, NULL);
-+	set_cur(&typtab[TYP_DATA], d, bb_count, DB_RING_ADD, NULL);
- 	return 0;
- }
- 
-diff --git a/db/io.c b/db/io.c
-index 590dd1f82f7b..9b2c6b4cf7e9 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -652,7 +652,8 @@ void
- set_iocur_type(
- 	const typ_t	*type)
- {
--	int		bb_count = 1;	/* type's size in basic blocks */
-+	/* type's size in basic blocks */
-+	int		bb_count = BTOBB(mp->m_sb.sb_sectsize);
- 	int		boff = iocur_top->boff;
- 
- 	/*
+- Eric
