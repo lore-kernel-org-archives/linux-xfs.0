@@ -1,41 +1,30 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 357031C68E
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 17:21:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D377A12D1E1
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 17:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708708919; cv=none; b=D2/4QJwHr3cp0e1mjZqZLkqhGXfq0mnh+XS0BnnkrwGEx/AfodwPAhyvYcsPB4zPLU7bt9BxgXZ516sCe7Ox57rVIKBxz8DjkGAEfpKZ6ReG1QEo+C+RV2AegksICttibxYeGr0yH3WyF37mFvj8/IKn0A418IDkciUxCae15IU=
+	t=1708708946; cv=none; b=Iz6OpFZSo6Zkd9xXps1HH/UZ+heoWhjrGN/yl0Q8IZDL21VD2SC5vKKjrt3dFwIt3/c/Fzk/L5mPIzh379PCwHWMSwYBB5QNYSFBRCPwfyegmAgysBioy/ZUwOmaARiEMqnnJvb8ny9g11w2FxAXtrTIYfi6bk0/VRLOuIfr+RM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708708919; c=relaxed/simple;
-	bh=enTW9JCWwcAZO4m4nVoxpi8gcFbbvMXZ2NthHeCIQqA=;
+	s=arc-20240116; t=1708708946; c=relaxed/simple;
+	bh=DbqA9ZVl31fMIebsrSDD3/xUJoIGExpLIDnWxplLGCY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fQS+vr0iAuOS8UlAMhMz8E7cqTV3WOWtr1/b5UE3CT2hcqM3THvncXY9cZmVmK0Ny83IqYT11pOulbZk/SpYWpcbN9wevWeUW6P7xpO2XNceFkf0mpxUq3S7AR5absWn6UVvF7A0Hqpp+r6nT5mbvMF9fqRZMfigH7NQpqqL5uI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rXv8Gdqh; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rXv8Gdqh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6E9BC433C7;
-	Fri, 23 Feb 2024 17:21:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708708918;
-	bh=enTW9JCWwcAZO4m4nVoxpi8gcFbbvMXZ2NthHeCIQqA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rXv8GdqhotjWQBYPNMQuWM8poQfqa6gnvYFXdcVnStWmI6U9LyiyN70jLlVgZPjGg
-	 xHCAsIy73otNo/nxB+eU+KXagGV38tZDFbW6kd86lXp4EBQjtucy4aYKlpCreJLHBk
-	 hAygUC8xXe0+rdgaM4ul47+/BT96wwAaC9rubmisESIxRk6JKPJj7Dqb5eBD7E3o39
-	 5k7hBTXTzZTmb1cdAjEmaDx55apP3SnFB/4YI3hse3vkXmamA5gL0Msbulqvt87KLK
-	 GW1XM8AAyGKe6G22lp1j9WYWHmL0TzlfO7I29Shk2BiwPPf7NkY6T9jcSIJ6Yr3eTA
-	 i7e90lZp5pxow==
-Date: Fri, 23 Feb 2024 09:21:58 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=pKKGUBT9zDi2xiokg/3MiYOipuzoFO2ix5xWsZtfOHpHlevlYeqpxO6sxGClXLlzLM4lSrBYolwNWj9kbhj9eiK6lTT7G5J/qQH4ir7FpgCMSXGNPwVs8c4Q/IT0cc55mtjh+XBY3Qe0c9ZvCko1DpC9QaUz4WMF1fXjPyeYoR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DAAF968B05; Fri, 23 Feb 2024 18:22:20 +0100 (CET)
+Date: Fri, 23 Feb 2024 18:22:20 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/10] xfs: look at m_frextents in
- xfs_iomap_prealloc_size for RT allocations
-Message-ID: <20240223172158.GU616564@frogsfrogsfrogs>
-References: <20240223071506.3968029-1-hch@lst.de>
- <20240223071506.3968029-9-hch@lst.de>
+Subject: Re: [PATCH 07/10] xfs: support RT inodes in xfs_mod_delalloc
+Message-ID: <20240223172220.GA5004@lst.de>
+References: <20240223071506.3968029-1-hch@lst.de> <20240223071506.3968029-8-hch@lst.de> <20240223172028.GT616564@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,91 +33,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240223071506.3968029-9-hch@lst.de>
+In-Reply-To: <20240223172028.GT616564@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Feb 23, 2024 at 08:15:04AM +0100, Christoph Hellwig wrote:
-> Add a check for files on the RT subvolume and use m_frextents instead
-> of m_fdblocks to adjust the preallocation size.
+On Fri, Feb 23, 2024 at 09:20:28AM -0800, Darrick J. Wong wrote:
+> > +	fsc->frextents -=
+> > +		xfs_rtb_to_rtx(mp, percpu_counter_sum(&mp->m_delalloc_rtblks));
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Should m_delalloc_rtblks be measured in rt extents (and not fsblocks)
+> since a sub-rtx delalloc doesn't make any sense?  As written, here we'd
+> also have to signal a corruption if (m_delalloc_rtblks % rextsize > 0).
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/xfs_iomap.c | 42 ++++++++++++++++++++++++++++++------------
->  1 file changed, 30 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 18c8f168b1532d..e6abe56d1f1f23 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -27,6 +27,7 @@
->  #include "xfs_dquot_item.h"
->  #include "xfs_dquot.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_rtbitmap.h"
->  
->  #define XFS_ALLOC_ALIGN(mp, off) \
->  	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
-> @@ -398,6 +399,29 @@ xfs_quota_calc_throttle(
->  	}
->  }
->  
-> +static int64_t
-> +xfs_iomap_freesp(
-> +	struct percpu_counter	*counter,
-> +	uint64_t		low_space[XFS_LOWSP_MAX],
-> +	int			*shift)
-> +{
-> +	int64_t			freesp;
-> +
-> +	freesp = percpu_counter_read_positive(counter);
-> +	if (freesp < low_space[XFS_LOWSP_5_PCNT]) {
-> +		*shift = 2;
-> +		if (freesp < low_space[XFS_LOWSP_4_PCNT])
-> +			(*shift)++;
-> +		if (freesp < low_space[XFS_LOWSP_3_PCNT])
-> +			(*shift)++;
-> +		if (freesp < low_space[XFS_LOWSP_2_PCNT])
-> +			(*shift)++;
-> +		if (freesp < low_space[XFS_LOWSP_1_PCNT])
-> +			(*shift)++;
-> +	}
-> +	return freesp;
-> +}
-> +
->  /*
->   * If we don't have a user specified preallocation size, dynamically increase
->   * the preallocation size as the size of the file grows.  Cap the maximum size
-> @@ -480,18 +504,12 @@ xfs_iomap_prealloc_size(
->  	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(XFS_MAX_BMBT_EXTLEN),
->  				       alloc_blocks);
->  
-> -	freesp = percpu_counter_read_positive(&mp->m_fdblocks);
-> -	if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
-> -		shift = 2;
-> -		if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
-> -			shift++;
-> -		if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
-> -			shift++;
-> -		if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
-> -			shift++;
-> -		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
-> -			shift++;
-> -	}
-> +	if (unlikely(XFS_IS_REALTIME_INODE(ip)))
-> +		freesp = xfs_rtx_to_rtb(mp, xfs_iomap_freesp(&mp->m_frextents,
-> +				mp->m_low_rtexts, &shift));
-> +	else
-> +		freesp = xfs_iomap_freesp(&mp->m_fdblocks, mp->m_low_space,
-> +				&shift);
->  
->  	/*
->  	 * Check each quota to cap the prealloc size, provide a shift value to
-> -- 
-> 2.39.2
-> 
-> 
+Either way should be fine.  I did it this way around so that we only
+have to do the conversion in the slow path, but I can change it around.
