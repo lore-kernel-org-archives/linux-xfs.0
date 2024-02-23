@@ -1,62 +1,73 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4350D6FBF
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 14:20:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2020E81ACE
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 16:02:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708698029; cv=none; b=mNzf/0e7Rl1oM7F1bKjlC8p2alypCblnGFlJe8RyIkRjsQzreWLWf9x+7oB+6LW8YA2fB5AUwnPRV0aIynHrrCp/QLCTYuzBPJYw27vFrU9yDNGO6Eow94N0J1OHYoIrhyDwiqrAY6JAajH6NhAAMmDiC50zgk+CpCEIQmjw5Hg=
+	t=1708704179; cv=none; b=uRhfMuXn9IbNumXye8FcyAn1kezq55wUm+lQovjWe+yRQOFkwmN/gipfvHW8XXDKckvswlBndJAcUEIWVkQGl6pY1mH4ikN+srSgH9lylc1p8eKVW/z/QBAzY/Yycuw86XlQ15Op66g81Awz5V9t/ui0XXShNK0kNuch9vlX1wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708698029; c=relaxed/simple;
-	bh=WuvbJ3uZTm71Zt0nssg5tLPcSk1TFJvTbb0PunTVF9w=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=ahwLRC0TeQ65yTxoW1HyC1NFP9swk/p2EEN15CcQGAbMo3Pi1fn4bPeLWZFwO2dPSJzALOYsVsgKgFWI83mSuGVWHvqroti8bvN990d65Kp4dcBHeFL1rYCj1Ctg7XQzdVKCRiJI0Ll8zNmRWBpoZQ6+YjoZrCSt0zGvugSy/Dg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=U+ymLFZq; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1708704179; c=relaxed/simple;
+	bh=iBep7RO8ddpdLRdvlhmb/cZ26L/c96nkdhxMz8MwS+k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T3+BUDn+Y7TAudG6I9+eZiAR1Z7nDU25MtlABaB49uibps/wyq0juAvXcVFOad79jEXY7uwApOipcz3JvW3oX4tuxWSwsmbEK3jkols41u2wHg/fw2U9vltsvoz0Ybu7G6UXtlE2AwDtmiNeAcqKXxQ1RsDeLllll8F/stQrPZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VFIqUCdQ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="U+ymLFZq"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-41296e2c2faso2557965e9.2
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 06:20:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1708698026; x=1709302826; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=POLI0JEOpTm4SThx4D+bXsNSasavy0KNT5gM4crdzL4=;
-        b=U+ymLFZqozmlzb0aMRg4RPG/daqBJX5YaSE+RoyfA4giTJd9OXaUxxgUI+q7VfYrZw
-         wodjLk08mkXPY/trfLda6icH5azmSASt90MKZmZoS3qUP35W269srAsiYq6oKl/xyjg0
-         WfBh+B20sSvHzlZNif72yBus4+wFtHHh/LQyT24aTAgPJuSrA9YkAqFYUFduLaV3w4rp
-         gQ7xcxVGqRdo69sr/3AKpVsV1QJ/GmtfM3c45Cphn1ufvkeYzjYg3m4xHe2t/WduAh5j
-         hObZY1jk7ZB4zpDt6gQSnSd+vOXO964S2KrKzrG9zlkkBXse43vNrtdQ3lzKGlj/2Get
-         xkFA==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VFIqUCdQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1708704170;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8foMIRBo85gMY/Ay5uzImhoC7ZGM46V4y3ehQV8tpF4=;
+	b=VFIqUCdQXgxJ50X/l7V45unokvBhXCXoxnR5uIYocouHw+UgUGN0xa00qiewHZq4Mh1yuC
+	E+JFTalIFirM89QvqjtmtrEsP9qRQK4GQ3gLom9sdv3aaeerBsg5US3+IzpoC9l0DjLjmj
+	mAUvOHMChLVAVn5ESkCH6tIJgFL2F7A=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-451-co4FIurHNa60IqMm6Mv8AA-1; Fri, 23 Feb 2024 11:02:48 -0500
+X-MC-Unique: co4FIurHNa60IqMm6Mv8AA-1
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-512d6483799so389067e87.1
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2024 08:02:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708698026; x=1709302826;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=POLI0JEOpTm4SThx4D+bXsNSasavy0KNT5gM4crdzL4=;
-        b=mG1/czIjTGB0fW7bPEmY5eF/HGDWG1EKVPMjfCb1BlVfMkS0NGbO3+tcn5MulQj713
-         2nKbZe909oWepiJ9bze8BxmUzTPz2HVJ7nElno6ypxyGkp98i7yqEOMEdcBu3THguyVa
-         bWpIetu5Zs6Taa28bQNnH4Aq+t5zBrhq+QZuRo1H4uVKhqq72ja/ybh+wqKesPj17DNx
-         jHNzIZe0abbmQzNfMjQOpw2Vp/5EzR7rU2mYEWH1ssFeTgX84qAKGG8PvbZZhMQvRoNN
-         301iU5Mp5uQ/oDObXwHHXvwLV1HZqD1kObB8oeTwrrMwfDTnulBV1YPs498ZGMhKNE3X
-         RV0Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUU3XLwcjI3zOJD4GZVLkZd8OmVp1nncODuLyWCLBifxEgJ8Fk8J5Sg4T2r/+R38l89FF8nVfUkbYSq/Uqk9/4moGHoMljkbJyz
-X-Gm-Message-State: AOJu0YyydVMy6/kJdI8gbR9UJvTmiBdZXYgjbob1hdVW1MMKjJGJivmI
-	2KFm59H/q68U6VezKS4CI2WxgASMOruxC2BiysTa9ruu6sXYwjwT3o3OENjrctJCSzAabvVDr+l
-	r
-X-Google-Smtp-Source: AGHT+IH7RJt0Yvsbex1jyYde5sE9SXyMR0dFEFOpISoPg0m4i+0dPsykp36etoqV+MqyTL+P05QmGQ==
-X-Received: by 2002:a05:600c:a4f:b0:411:c789:5730 with SMTP id c15-20020a05600c0a4f00b00411c7895730mr1354485wmq.35.1708698026704;
-        Fri, 23 Feb 2024 06:20:26 -0800 (PST)
-Received: from localhost ([102.222.70.76])
-        by smtp.gmail.com with ESMTPSA id k22-20020a7bc416000000b0041061f094a2sm2467429wmi.11.2024.02.23.06.20.25
+        d=1e100.net; s=20230601; t=1708704167; x=1709308967;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8foMIRBo85gMY/Ay5uzImhoC7ZGM46V4y3ehQV8tpF4=;
+        b=rsmhlW/Ku988xQUn1shFpsuI6LJ+NxWxT6sG8EYx+iBFAiFn9ktDhM+l0WH+ey9WjE
+         /zxLNBOOhyyTCeJOlaeIJVoIvF0pNWweB9uvI07Xw/fMAiRW2FctsEADTp9K5N7gwI7x
+         +0GBMXcNe0uBcC/FB97ZuU9b7+AC2nCobgX+2kNXq8bLkcxT14P8Wy6D6UxILC8IBrJP
+         ssLbv7VykUQ22C7N0UOXWQmedO2XjmhodmTfcVW5cZ2OoFOGxmrrJNNbAMRzXPW0Z8m6
+         myMv9FN5aukjuyOgTgbwA7D/SBnbgmiFMcUIBSegx0aIiNCSlqZ0+dCa7tao/8SoCQPg
+         Vqag==
+X-Forwarded-Encrypted: i=1; AJvYcCWwDIK1nixIY4tcaAnxCC/2vVSN0LbEM/YmSDM+4o+vrRJLl7dkXTBZwOmugP0egLoRHaGEgICmPNogNrLtp2hUL7grkskTYt30
+X-Gm-Message-State: AOJu0Yx6390BD8KfG5gaurgc+HG85sfITYBsDUQLkqR2taGe95hGd1ey
+	lmG/qmbStrP+duY13Gs1h3GpXSmRR/Kw7XqaqNqPAa1IuzPmVht7+SaNqh5CpLLXAyyz4MktWVC
+	CwcqRO8n0ITDJmGVf4EFvct6Ox8f1Sdd7FZXmrF+1rcquE2liEGQa8rd1
+X-Received: by 2002:a05:6512:15a2:b0:512:ed89:7152 with SMTP id bp34-20020a05651215a200b00512ed897152mr45820lfb.55.1708704167104;
+        Fri, 23 Feb 2024 08:02:47 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHGTHIKiKzPtGcfPq1ZKnHpQzFxehMSw20qoKFDDdUuvbE+uKn5UPosRaaIaxMC3Y+GN8iW6w==
+X-Received: by 2002:a05:6512:15a2:b0:512:ed89:7152 with SMTP id bp34-20020a05651215a200b00512ed897152mr45778lfb.55.1708704166630;
+        Fri, 23 Feb 2024 08:02:46 -0800 (PST)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id u14-20020ac248ae000000b005115430488bsm2488657lfg.243.2024.02.23.08.02.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Feb 2024 06:20:26 -0800 (PST)
-Date: Fri, 23 Feb 2024 17:20:23 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: dchinner@redhat.com
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [bug report] xfs: convert kmem_zalloc() to kzalloc()
-Message-ID: <4cbe2515-fa82-4883-bdff-d6261ae61179@moroto.mountain>
+        Fri, 23 Feb 2024 08:02:46 -0800 (PST)
+Date: Fri, 23 Feb 2024 17:02:45 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com, djwong@kernel.org
+Subject: Re: [PATCH v4 07/25] fsverity: support block-based Merkle tree
+ caching
+Message-ID: <qojmht7l3lgx5hy7sqh5tru7u3uuowl5siszzcj3futgyqtbtv@pth44gm7ueog>
+References: <20240212165821.1901300-1-aalbersh@redhat.com>
+ <20240212165821.1901300-8-aalbersh@redhat.com>
+ <20240223052459.GC25631@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -65,61 +76,223 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240223052459.GC25631@sol.localdomain>
 
-Hello Dave Chinner,
+On 2024-02-22 21:24:59, Eric Biggers wrote:
+> On Mon, Feb 12, 2024 at 05:58:04PM +0100, Andrey Albershteyn wrote:
+> > diff --git a/fs/verity/read_metadata.c b/fs/verity/read_metadata.c
+> > index f58432772d9e..7e153356e7bc 100644
+> > --- a/fs/verity/read_metadata.c
+> > +++ b/fs/verity/read_metadata.c
+> [...]
+> >  	/*
+> > -	 * Iterate through each Merkle tree page in the requested range and copy
+> > -	 * the requested portion to userspace.  Note that the Merkle tree block
+> > -	 * size isn't important here, as we are returning a byte stream; i.e.,
+> > -	 * we can just work with pages even if the tree block size != PAGE_SIZE.
+> > +	 * Iterate through each Merkle tree block in the requested range and
+> > +	 * copy the requested portion to userspace. Note that we are returning
+> > +	 * a byte stream, so PAGE_SIZE & block_size are not important here.
+> 
+> The block size *is* important here now, because this code is now working with
+> the data in blocks.  Maybe just delete the last sentence from the comment.
+> 
+> > +		fsverity_drop_block(inode, &block);
+> > +		block.kaddr = NULL;
+> 
+> Either the 'block.kaddr = NULL' should not be here, or it should be done
+> automatically in fsverity_drop_block().
+> 
+> > +		num_ra_pages = level == 0 ?
+> > +			min(max_ra_pages, params->tree_pages - hpage_idx) : 0;
+> > +		err = fsverity_read_merkle_tree_block(
+> > +			inode, hblock_idx << params->log_blocksize, block,
+> > +			params->log_blocksize, num_ra_pages);
+> 
+> 'hblock_idx << params->log_blocksize' needs to be
+> '(u64)hblock_idx << params->log_blocksize'
+> 
+> >  	for (; level > 0; level--) {
+> > -		kunmap_local(hblocks[level - 1].addr);
+> > -		put_page(hblocks[level - 1].page);
+> > +		fsverity_drop_block(inode, &hblocks[level - 1].block);
+> >  	}
+> 
+> Braces should be removed above
+> 
+> > +/**
+> > + * fsverity_invalidate_range() - invalidate range of Merkle tree blocks
+> > + * @inode: inode to which this Merkle tree blocks belong
+> > + * @offset: offset into the Merkle tree
+> > + * @size: number of bytes to invalidate starting from @offset
+> 
+> Maybe use @pos instead of @offset, to make it clear that it's in bytes.
+> 
+> But, what happens if the region passed is not Merkle tree block aligned?
+> Perhaps this function should operate on blocks, to avoid that case?
+> 
+> > + * Note! As this function clears fs-verity bitmap and can be run from multiple
+> > + * threads simultaneously, filesystem has to take care of operation ordering
+> > + * while invalidating Merkle tree and caching it. See fsverity_invalidate_page()
+> > + * as reference.
+> 
+> I'm not sure what this means.  What specifically does the filesystem have to do?
+> 
+> > +/* fsverity_invalidate_page() - invalidate Merkle tree blocks in the page
+> 
+> Is this intended to be kerneldoc?  Kerneldoc comments start with /**
+> 
+> Also, this function is only used within fs/verity/verify.c itself.  So it should
+> be static, and it shouldn't be declared in include/linux/fsverity.h.
+> 
+> > + * @inode: inode to which this Merkle tree blocks belong
+> > + * @page: page which contains blocks which need to be invalidated
+> > + * @index: index of the first Merkle tree block in the page
+> 
+> The only value that is assigned to index is 'pos >> PAGE_SHIFT', which implies
+> it is in units of pages, not Merkle tree blocks.  Which is correct?
+> 
+> > + *
+> > + * This function invalidates "verified" state of all Merkle tree blocks within
+> > + * the 'page'.
+> > + *
+> > + * When the Merkle tree block size and page size are the same, then the
+> > + * ->hash_block_verified bitmap isn't allocated, and we use PG_checked
+> > + * to directly indicate whether the page's block has been verified. This
+> > + * function does nothing in this case as page is invalidated by evicting from
+> > + * the memory.
+> > + *
+> > + * Using PG_checked also guarantees that we re-verify hash pages that
+> > + * get evicted and re-instantiated from the backing storage, as new
+> > + * pages always start out with PG_checked cleared.
+> 
+> This comment duplicates information from the comment in the function itself.
+> 
+> > +void fsverity_drop_block(struct inode *inode,
+> > +		struct fsverity_blockbuf *block)
+> > +{
+> > +	if (inode->i_sb->s_vop->drop_block)
+> > +		inode->i_sb->s_vop->drop_block(block);
+> > +	else {
+> > +		struct page *page = (struct page *)block->context;
+> > +
+> > +		/* Merkle tree block size == PAGE_SIZE; */
+> > +		if (block->verified)
+> > +			SetPageChecked(page);
+> > +
+> > +		kunmap_local(block->kaddr);
+> > +		put_page(page);
+> > +	}
+> > +}
+> 
+> I don't think this is the logical place for the call to SetPageChecked().
+> verity_data_block() currently does:
+> 
+>         if (vi->hash_block_verified)
+>                 set_bit(hblock_idx, vi->hash_block_verified);
+>         else
+>                 SetPageChecked(page);
+> 
+> You're proposing moving the SetPageChecked() to fsverity_drop_block().  Why?  We
+> should try to do things in a consistent place.
+> 
+> Similarly, I don't see why is_hash_block_verified() shouldn't keep the
+> PageChecked().
+> 
+> If we just keep PG_checked be get and set in the same places it currently is,
+> then adding fsverity_blockbuf::verified wouldn't be necessary.
+> 
+> Maybe you intended to move the awareness of PG_checked out of fs/verity/ and
+> into the filesystems?
 
-The patch 10634530f7ba: "xfs: convert kmem_zalloc() to kzalloc()"
-from Jan 16, 2024 (linux-next), leads to the following Smatch static
-checker warning:
+yes
 
-	fs/xfs/libxfs/xfs_btree_staging.c:416 xfs_btree_bload_prep_block()
-	error: potential null dereference 'ifp->if_broot'.  (kzalloc returns null)
+> Your change in how PG_checked is get and set is sort of a
+> step towards that, but it doesn't complete it.  It doesn't make sense to leave
+> in this half-finished state.
 
-fs/xfs/libxfs/xfs_btree_staging.c
-    383 STATIC int
-    384 xfs_btree_bload_prep_block(
-    385         struct xfs_btree_cur                *cur,
-    386         struct xfs_btree_bload                *bbl,
-    387         struct list_head                *buffers_list,
-    388         unsigned int                        level,
-    389         unsigned int                        nr_this_block,
-    390         union xfs_btree_ptr                *ptrp, /* in/out */
-    391         struct xfs_buf                        **bpp, /* in/out */
-    392         struct xfs_btree_block                **blockp, /* in/out */
-    393         void                                *priv)
-    394 {
-    395         union xfs_btree_ptr                new_ptr;
-    396         struct xfs_buf                        *new_bp;
-    397         struct xfs_btree_block                *new_block;
-    398         int                                ret;
-    399 
-    400         if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
-    401             level == cur->bc_nlevels - 1) {
-    402                 struct xfs_ifork        *ifp = xfs_btree_ifork_ptr(cur);
-    403                 size_t                        new_size;
-    404 
-    405                 ASSERT(*bpp == NULL);
-    406 
-    407                 /* Allocate a new incore btree root block. */
-    408                 new_size = bbl->iroot_size(cur, level, nr_this_block, priv);
-    409                 ifp->if_broot = kzalloc(new_size, GFP_KERNEL);
+What do you think is missing? I didn't want to make too many changes
+to fs which already use fs-verity and completely change the
+interface, just to shift page handling stuff to middle layer
+functions. So yeah kinda "step towards" only :)
 
-The rest of these were changed to GFP_KERNEL | __GFP_NOFAIL so I suspect
-this was an oversight.
+> IMO, keeping fs/verity/ aware of PG_checked is
+> fine for now.  It avoids the need for some indirect calls, which is nice.
 
-    410                 ifp->if_broot_bytes = (int)new_size;
-    411 
-    412                 /* Initialize it and send it out. */
-    413                 xfs_btree_init_block_int(cur->bc_mp, ifp->if_broot,
-    414                                 XFS_BUF_DADDR_NULL, cur->bc_btnum, level,
-    415                                 nr_this_block, cur->bc_ino.ip->i_ino,
---> 416                                 cur->bc_flags);
-    417 
-    418                 *bpp = NULL;
-    419                 *blockp = ifp->if_broot;
-    420                 xfs_btree_set_ptr_null(cur, ptrp);
-    421                 return 0;
-    422         }
+> > +/**
+> > + * struct fsverity_blockbuf - Merkle Tree block
+> > + * @kaddr: virtual address of the block's data
+> > + * @size: buffer size
+> 
+> Is "buffer size" different from block size?
+> 
+> > + * @verified: true if block is verified against Merkle tree
+> 
+> This field has confusing semantics, as it's not used by the filesystems but only
+> by fs/verity/ internally.  As per my feedback above, I don't think this field is
+> necessary.
+> 
+> > + * Buffer containing single Merkle Tree block. These buffers are passed
+> > + *  - to filesystem, when fs-verity is building/writing merkel tree,
+> > + *  - from filesystem, when fs-verity is reading merkle tree from a disk.
+> > + * Filesystems sets kaddr together with size to point to a memory which contains
+> > + * Merkle tree block. Same is done by fs-verity when Merkle tree is need to be
+> > + * written down to disk.
+> 
+> Writes actually still use fsverity_operations::write_merkle_tree_block(), which
+> does not use this struct.
+> 
+> > + * For Merkle tree block == PAGE_SIZE, fs-verity sets verified flag to true if
+> > + * block in the buffer was verified.
+> 
+> Again, I think we can do without this field.
+> 
+> > +	/**
+> > +	 * Read a Merkle tree block of the given inode.
+> > +	 * @inode: the inode
+> > +	 * @pos: byte offset of the block within the Merkle tree
+> > +	 * @block: block buffer for filesystem to point it to the block
+> > +	 * @log_blocksize: size of the expected block
+> 
+> Presumably @log_blocksize is the log2 of the size of the block?
+> 
+> > +	 * @num_ra_pages: The number of pages with blocks that should be
+> > +	 *		  prefetched starting at @index if the page at @index
+> > +	 *		  isn't already cached.  Implementations may ignore this
+> > +	 *		  argument; it's only a performance optimization.
+> 
+> There's no parameter named @index.
+> 
+> > +	 * As filesystem does caching of the blocks, this functions needs to tell
+> > +	 * fsverity which blocks are not valid anymore (were evicted from memory)
+> > +	 * by calling fsverity_invalidate_range().
+> 
+> This function only reads a single block, so what does this mean by "blocks"?
+> 
+> Since there's only one block being read, why isn't the validation status just
+> conveyed through a bool in fsverity_blockbuf?
 
-regards,
-dan carpenter
+There's the case when XFS also needs to invalidate multiple tree
+blocks when only single one is requested. Same as ext4 invalidates
+all blocks in the page when page is evicted. This happens, for
+example, when PAGE size is 64k and fs block size is 4k. XFS then
+calls fsverity_invalidate_range() for all those blocks; not just for
+requested one.
+
+I can rephrase this comment.
+
+> > +	/**
+> > +	 * Release the reference to a Merkle tree block
+> > +	 *
+> > +	 * @page: the block to release
+> 
+> @block, not @page
+> 
+> - Eric
+> 
+
+Thanks for all the spotted mistakes, I will fix them.
+
+-- 
+- Andrey
+
