@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B077F1864;
-	Sat, 24 Feb 2024 01:12:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 282BD17CE;
+	Sat, 24 Feb 2024 01:13:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708737178; cv=none; b=T4F62Le5Wlb8TAFt2SPm8SI+1Atd3WY5EdARQOiTnnTL4tVMhKtD2UIvQLL3swUPBoBqQQm/+C29sWb/20DhZvIY6mk9+AU1VL5Y4XN2biU1RZS1vhLQwy/ykOWkcroCt/q7rhwpTV05vFLzI6r4EJaJGxGIc+F33e/721krtQM=
+	t=1708737194; cv=none; b=nvuRVFENwynBioxByEPsmm/x3S+GUIzIUUsN6m2qxXt0CUiCNlMm3uurIR5FJI+kowWDZ0AUcr7I6BJFlxlpHRHBBAtZb8f9ZlC+TbpX24Ep2ML6WuDCxSCzhXFD/dwF03ZkuuiZIGB8i4znt/yHwYXGxM6L+iNOjHms/oJhA34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708737178; c=relaxed/simple;
-	bh=WCaATn8+bSWEvtAKAMZilX9KcqT5ML8jRC19G1VrbVo=;
+	s=arc-20240116; t=1708737194; c=relaxed/simple;
+	bh=DBp8UjCLiJ/w+jkBbt8wi3JFjE3Zwtog4RPwwnZZAks=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Uu0QGhF59OPh8iBfGOVJAcIpWhgZdNkZHy2uYJAPXiq5KRSrXAJ7QubxmpzZWALnNP+oqyJ/1j6t1j1udHochYjM/oCs/da46cCDau/i9Xk+X1O9YOVd0QWQNwVzJVjN8jDzkXHuujn1debMjJN93W4PXm2sV6HXgB30jf9okAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h/V15Lgz; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qs5SMl6pvHQRdzQ69GlbcLaLzY+xgejyx4/BC52UnA006BX+MIa0yHWaw4L9BWBqzMYGt7xzYIyoeBoSlGa3rgPYfIXcvNvnSvuZGDQxX52XuoVLEWi2/I37lC/iObzdDsfmwHxBwALpYj7GzaSwHpx78XJapYq5LPKKVUiw+Lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d7l4NwB0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h/V15Lgz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F83EC433C7;
-	Sat, 24 Feb 2024 01:12:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d7l4NwB0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB83FC433C7;
+	Sat, 24 Feb 2024 01:13:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708737178;
-	bh=WCaATn8+bSWEvtAKAMZilX9KcqT5ML8jRC19G1VrbVo=;
+	s=k20201202; t=1708737194;
+	bh=DBp8UjCLiJ/w+jkBbt8wi3JFjE3Zwtog4RPwwnZZAks=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=h/V15Lgz7NzZoZgEcjaRe/Qp9bADe8Va/AY9uVMSdmY73vm203AGqBufCFvuojo0m
-	 HCE0IV+v0kTc0UxYwgqnJHkyFEXTlxmzsSJqgnYN0GD/nC1eICixrCDrZdWRKCz8pm
-	 AXsCh256WTxqyrtoYFRSL1tJVj/5X4/eSwPmXWFBnX8mx2VPxNmE4ePzaeFOZjismm
-	 5KkbdajOQT42reyvhnBiI4bPPvC6ZuRkSRQfx9ArryPoPMjtGieVC+2LG/NvO0SjEB
-	 HqJUoVYAq5KVPsRHvwz1JNbu7OLGuJYdwT3D/tgtZUg1Qqggn/F1koPAQn9EL3hO18
-	 nZg/pCP322tqA==
-Date: Fri, 23 Feb 2024 17:12:57 -0800
-Subject: [PATCH 1/4] xfs: present wait time statistics
+	b=d7l4NwB0b061UmmpmGvDsJQ/xk3iPlg6d6ZUmdJ+t3sIpTii/nsXuWHm6T5gv3fqU
+	 Nv/ZRuYUgjvfq7VkwfgR2d3210nc1c5tpQjc/gxjtXyGx5+DSzf9QqgliicBsGYpWr
+	 MBE50+WqGGfBxiwtQhlCgwde7nYO+4QPBnsW0u4tVZatcXEg0lhjVCPOrxugi0smsi
+	 ZiYJ9EY+t34wmHoD+c41C7ON8lLBqJhAbDQmp99xhYxlUOr7yqfF0/AxycuWhu7Z98
+	 bJt/WXaPAmAVO6/udN3z4wrlE042Xo+f5kGbTJFZFjv+FvYLV4G57ORyadcES/LFcZ
+	 j1sLeCwk4KRpw==
+Date: Fri, 23 Feb 2024 17:13:13 -0800
+Subject: [PATCH 2/4] xfs: present time stats for scrubbers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: kent.overstreet@linux.dev, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org
-Message-ID: <170873668463.1861246.2262291401585063104.stgit@frogsfrogsfrogs>
+Message-ID: <170873668481.1861246.1280832426356255159.stgit@frogsfrogsfrogs>
 In-Reply-To: <170873668436.1861246.6578314737824782019.stgit@frogsfrogsfrogs>
 References: <170873668436.1861246.6578314737824782019.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,491 +46,370 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Plumb in Kent's timestats code so we can observe wait times for log
-grant heads, buffer, inode, and dquot locks.
+Use the timestats code to report statistical information about how much
+time we spend in scrub and repair.  This augments the existing raw scrub
+counters.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Kconfig         |    8 +++
- fs/xfs/Makefile        |    1 
- fs/xfs/xfs_buf.c       |    4 ++
- fs/xfs/xfs_dquot.c     |   11 +++++
- fs/xfs/xfs_dquot.h     |    4 ++
- fs/xfs/xfs_inode.c     |   12 ++++-
- fs/xfs/xfs_linux.h     |    4 ++
- fs/xfs/xfs_log.c       |    9 ++++
- fs/xfs/xfs_mount.h     |   13 +++++
- fs/xfs/xfs_super.c     |    6 +++
- fs/xfs/xfs_timestats.c |  115 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_timestats.h |   34 ++++++++++++++
- 12 files changed, 219 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/xfs_timestats.c
- create mode 100644 fs/xfs/xfs_timestats.h
+ fs/xfs/scrub/repair.c  |    6 +-
+ fs/xfs/scrub/scrub.c   |    6 +-
+ fs/xfs/scrub/stats.c   |  128 +++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/stats.h   |   21 +-------
+ fs/xfs/xfs_linux.h     |    1 
+ fs/xfs/xfs_timestats.h |    2 +
+ 6 files changed, 137 insertions(+), 27 deletions(-)
 
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index b0cac77c90572..e0fa9b382fbeb 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -5,6 +5,7 @@ config XFS_FS
- 	select EXPORTFS
- 	select LIBCRC32C
- 	select FS_IOMAP
-+	select TIME_STATS if XFS_TIME_STATS
- 	help
- 	  XFS is a high performance journaling filesystem which originated
- 	  on the SGI IRIX platform.  It is completely multi-threaded, can
-@@ -120,6 +121,13 @@ config XFS_RT
- 
- 	  If unsure, say N.
- 
-+config XFS_TIME_STATS
-+	bool "Collect time statistics for XFS filesystems"
-+	depends on XFS_FS
-+	default y
-+	help
-+	  Collects time statistics on various operations in the filesystem.
-+
- config XFS_DRAIN_INTENTS
- 	bool
- 	select JUMP_LABEL if HAVE_ARCH_JUMP_LABEL
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 0c3b4cd4f9c84..bf3bacfb7afff 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -153,6 +153,7 @@ xfs-$(CONFIG_XFS_DRAIN_INTENTS)	+= xfs_drain.o
- xfs-$(CONFIG_XFS_LIVE_HOOKS)	+= xfs_hooks.o
- xfs-$(CONFIG_XFS_MEMORY_BUFS)	+= xfs_buf_mem.o
- xfs-$(CONFIG_XFS_BTREE_IN_MEM)	+= libxfs/xfs_btree_mem.o
-+xfs-$(CONFIG_XFS_TIME_STATS)	+= xfs_timestats.o
- 
- # online scrub/repair
- ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 503ce7aff0c30..b11515f7f270f 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -22,6 +22,7 @@
- #include "xfs_error.h"
- #include "xfs_ag.h"
- #include "xfs_buf_mem.h"
-+#include "xfs_timestats.h"
- 
- struct kmem_cache *xfs_buf_cache;
- 
-@@ -1183,11 +1184,14 @@ void
- xfs_buf_lock(
- 	struct xfs_buf		*bp)
- {
-+	DEFINE_XFS_TIMESTAT(start_time);
-+
- 	trace_xfs_buf_lock(bp, _RET_IP_);
- 
- 	if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
- 		xfs_log_force(bp->b_mount, 0);
- 	down(&bp->b_sema);
-+	xfs_timestats_end(&bp->b_mount->m_timestats.ts_buflock, start_time);
- 
- 	trace_xfs_buf_lock_done(bp, _RET_IP_);
- }
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 2919b9bdf0cb0..515ffe0fcfe29 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -25,6 +25,7 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_error.h"
- #include "xfs_health.h"
-+#include "xfs_timestats.h"
- 
- /*
-  * Lock order:
-@@ -45,6 +46,16 @@ static struct kmem_cache	*xfs_dquot_cache;
- static struct lock_class_key xfs_dquot_group_class;
- static struct lock_class_key xfs_dquot_project_class;
- 
-+#ifdef CONFIG_XFS_TIME_STATS
-+void xfs_dqlock(struct xfs_dquot *dqp)
-+{
-+	DEFINE_XFS_TIMESTAT(start_time);
-+
-+	mutex_lock(&dqp->q_qlock);
-+	xfs_timestats_end(&dqp->q_mount->m_timestats.ts_dqlock, start_time);
-+}
-+#endif
-+
- /* Record observations of quota corruption with the health tracking system. */
- static void
- xfs_dquot_mark_sick(
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 677bb2dc9ac91..6523a1f713139 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -120,10 +120,14 @@ static inline int xfs_dqlock_nowait(struct xfs_dquot *dqp)
- 	return mutex_trylock(&dqp->q_qlock);
- }
- 
-+#ifdef CONFIG_XFS_TIME_STATS
-+void xfs_dqlock(struct xfs_dquot *dqp);
-+#else
- static inline void xfs_dqlock(struct xfs_dquot *dqp)
- {
- 	mutex_lock(&dqp->q_qlock);
- }
-+#endif
- 
- static inline void xfs_dqunlock(struct xfs_dquot *dqp)
- {
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d5ce9bd85a111..8d81e6ac77397 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -44,6 +44,7 @@
- #include "xfs_xattr.h"
- #include "xfs_inode_util.h"
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 77db28830ce9e..81955d0a188cf 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -42,6 +42,7 @@
+ #include "xfs_rtalloc.h"
  #include "xfs_imeta.h"
+ #include "xfs_rtrefcount_btree.h"
 +#include "xfs_timestats.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -61,7 +62,6 @@ xrep_attempt(
+ 	struct xfs_scrub	*sc,
+ 	struct xchk_stats_run	*run)
+ {
+-	u64			repair_start;
+ 	int			error = 0;
  
- struct kmem_cache *xfs_inode_cache;
+ 	trace_xrep_attempt(XFS_I(file_inode(sc->file)), sc->sm, error);
+@@ -72,10 +72,10 @@ xrep_attempt(
+ 	/* Repair whatever's broken. */
+ 	ASSERT(sc->ops->repair);
+ 	run->repair_attempted = true;
+-	repair_start = xchk_stats_now();
++	run->repair_start = xchk_stats_now();
+ 	error = sc->ops->repair(sc);
++	run->repair_stop = xchk_stats_now();
+ 	trace_xrep_done(XFS_I(file_inode(sc->file)), sc->sm, error);
+-	run->repair_ns += xchk_stats_elapsed_ns(repair_start);
+ 	switch (error) {
+ 	case 0:
+ 		/*
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 4322743aa5578..fc4a71fab51e6 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -22,6 +22,7 @@
+ #include "xfs_dir2.h"
+ #include "xfs_parent.h"
+ #include "xfs_icache.h"
++#include "xfs_timestats.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -677,7 +678,6 @@ xfs_scrub_metadata(
+ 	struct xchk_stats_run		run = { };
+ 	struct xfs_scrub		*sc;
+ 	struct xfs_mount		*mp = XFS_I(file_inode(file))->i_mount;
+-	u64				check_start;
+ 	int				error = 0;
  
-@@ -161,10 +162,17 @@ xfs_ilock(
- 				 XFS_MMAPLOCK_DEP(lock_flags));
- 	}
+ 	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
+@@ -735,12 +735,12 @@ xfs_scrub_metadata(
+ 		goto out_teardown;
  
--	if (lock_flags & XFS_ILOCK_EXCL)
-+	if (lock_flags & XFS_ILOCK_EXCL) {
-+		DEFINE_XFS_TIMESTAT(start_time);
+ 	/* Scrub for errors. */
+-	check_start = xchk_stats_now();
++	run.scrub_start = xchk_stats_now();
+ 	if ((sc->flags & XREP_ALREADY_FIXED) && sc->ops->repair_eval != NULL)
+ 		error = sc->ops->repair_eval(sc);
+ 	else
+ 		error = sc->ops->scrub(sc);
+-	run.scrub_ns += xchk_stats_elapsed_ns(check_start);
++	run.scrub_stop = xchk_stats_now();
+ 	if (error == -EDEADLOCK && !(sc->flags & XCHK_TRY_HARDER))
+ 		goto try_harder;
+ 	if (error == -ECHRNG && !(sc->flags & XCHK_NEED_DRAIN))
+diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
+index 0e0be23adfcb4..b9e6ace59e572 100644
+--- a/fs/xfs/scrub/stats.c
++++ b/fs/xfs/scrub/stats.c
+@@ -12,6 +12,7 @@
+ #include "xfs_sysfs.h"
+ #include "xfs_btree.h"
+ #include "xfs_super.h"
++#include "xfs_timestats.h"
+ #include "scrub/scrub.h"
+ #include "scrub/stats.h"
+ #include "scrub/trace.h"
+@@ -44,12 +45,24 @@ struct xchk_scrub_stats {
+ 	spinlock_t		css_lock;
+ };
+ 
++struct xchk_timestats {
++#ifdef CONFIG_XFS_TIME_STATS
++	struct dentry		*parent;
++	struct {
++		struct time_stats	scrub;
++		struct time_stats	repair;
++	} scrub[XFS_SCRUB_TYPE_NR];
++#endif
++};
 +
- 		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
--	else if (lock_flags & XFS_ILOCK_SHARED)
-+		xfs_timestats_end(&ip->i_mount->m_timestats.ts_ilock, start_time);
-+	} else if (lock_flags & XFS_ILOCK_SHARED) {
-+		DEFINE_XFS_TIMESTAT(start_time);
+ struct xchk_stats {
+ 	struct dentry		*cs_debugfs;
++#ifdef CONFIG_XFS_TIME_STATS
++	struct xchk_timestats	*cs_timestats;
++#endif
+ 	struct xchk_scrub_stats	cs_stats[XFS_SCRUB_TYPE_NR];
+ };
+ 
+-
+ static struct xchk_stats	global_stats;
+ 
+ static const char *name_map[XFS_SCRUB_TYPE_NR] = {
+@@ -86,6 +99,107 @@ static const char *name_map[XFS_SCRUB_TYPE_NR] = {
+ 	[XFS_SCRUB_TYPE_RTRMAPBT]	= "rtrmapbt",
+ 	[XFS_SCRUB_TYPE_RTREFCBT]	= "rtrefcountbt",
+ };
++#ifdef CONFIG_XFS_TIME_STATS
++static inline void
++xchk_timestats_init(
++	struct xchk_stats	*cs,
++	struct xfs_mount	*mp)
++{
++	struct xchk_timestats	*ts;
++	unsigned int		i;
 +
- 		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-+		xfs_timestats_end(&ip->i_mount->m_timestats.ts_ilock, start_time);
++	/* Only individual mounts have timestats so far */
++	if (!mp) {
++		cs->cs_timestats = NULL;
++		return;
 +	}
++
++	/* timestats are optional */
++	ts = kmalloc(sizeof(struct xchk_timestats), GFP_KERNEL);
++	if (!ts) {
++		cs->cs_timestats = NULL;
++		return;
++	}
++
++	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++) {
++		time_stats_init(&ts->scrub[i].scrub);
++		time_stats_init(&ts->scrub[i].repair);
++	}
++
++	ts->parent = mp->m_timestats.ts_debugfs;
++	cs->cs_timestats = ts;
++}
++
++static inline void
++xchk_timestats_teardown(
++	struct xchk_stats	*cs)
++{
++	struct xchk_timestats	*ts = cs->cs_timestats;
++	unsigned int		i;
++
++	if (!ts)
++		return;
++
++	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++) {
++		time_stats_exit(&ts->scrub[i].scrub);
++		time_stats_exit(&ts->scrub[i].repair);
++	}
++	kfree(ts);
++	cs->cs_timestats = NULL;
++}
++
++static inline void
++xchk_timestats_register(
++	struct xchk_stats	*cs)
++{
++	char			name[32];
++	struct xchk_timestats	*ts = cs->cs_timestats;
++	unsigned int		i;
++
++	if (!ts)
++		return;
++
++	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++) {
++		if (!name_map[i])
++			continue;
++
++		snprintf(name, 32, "scrub::%s", name_map[i]);
++		debugfs_create_file(name, 0444, ts->parent,
++				&ts->scrub[i].scrub, &xfs_timestats_fops);
++
++		snprintf(name, 32, "repair::%s", name_map[i]);
++		debugfs_create_file(name, 0444, ts->parent,
++				&ts->scrub[i].repair, &xfs_timestats_fops);
++	}
++}
++
++STATIC void
++xchk_timestats_merge_one(
++	struct xchk_stats		*cs,
++	const struct xfs_scrub_metadata	*sm,
++	const struct xchk_stats_run	*run)
++{
++	struct xchk_timestats		*ts = cs->cs_timestats;
++
++	if (sm->sm_type >= XFS_SCRUB_TYPE_NR) {
++		ASSERT(sm->sm_type < XFS_SCRUB_TYPE_NR);
++		return;
++	}
++	if (!ts)
++		return;
++
++	xfs_timestats_interval(&ts->scrub[sm->sm_type].scrub,
++			run->scrub_start, run->scrub_stop);
++	xfs_timestats_interval(&ts->scrub[sm->sm_type].repair,
++			run->repair_start, run->repair_stop);
++}
++
++#else
++# define xchk_timestats_init(cs, mp)	((void)0)
++# define xchk_timestats_teardown(cs)	((void)0)
++# define xchk_timestats_register(cs)	((void)0)
++# define xchk_timestats_merge_one(...)	((void)0)
++#endif
+ 
+ /* Format the scrub stats into a text buffer, similar to pcp style. */
+ STATIC ssize_t
+@@ -192,6 +306,7 @@ xchk_stats_merge_one(
+ 	const struct xchk_stats_run	*run)
+ {
+ 	struct xchk_scrub_stats		*css;
++	u64				delta;
+ 
+ 	if (sm->sm_type >= XFS_SCRUB_TYPE_NR) {
+ 		ASSERT(sm->sm_type < XFS_SCRUB_TYPE_NR);
+@@ -216,13 +331,15 @@ xchk_stats_merge_one(
+ 	if (sm->sm_flags & XFS_SCRUB_OFLAG_WARNING)
+ 		css->warning++;
+ 	css->retries += run->retries;
+-	css->checktime_us += howmany_64(run->scrub_ns, NSEC_PER_USEC);
++	delta = max(1, run->scrub_stop - run->scrub_start);
++	css->checktime_us += howmany_64(delta, NSEC_PER_USEC);
+ 
+ 	if (run->repair_attempted)
+ 		css->repair_invocations++;
+ 	if (run->repair_succeeded)
+ 		css->repair_success++;
+-	css->repairtime_us += howmany_64(run->repair_ns, NSEC_PER_USEC);
++	delta = max(1, run->repair_stop - run->repair_start);
++	css->repairtime_us += howmany_64(delta, NSEC_PER_USEC);
+ 	spin_unlock(&css->css_lock);
  }
  
- /*
+@@ -235,6 +352,7 @@ xchk_stats_merge(
+ {
+ 	xchk_stats_merge_one(&global_stats, sm, run);
+ 	xchk_stats_merge_one(mp->m_scrub_stats, sm, run);
++	xchk_timestats_merge_one(mp->m_scrub_stats, sm, run);
+ }
+ 
+ /* debugfs boilerplate */
+@@ -321,6 +439,7 @@ xchk_stats_init(
+ 	for (i = 0; i < XFS_SCRUB_TYPE_NR; i++, css++)
+ 		spin_lock_init(&css->css_lock);
+ 
++	xchk_timestats_init(cs, mp);
+ 	return 0;
+ }
+ 
+@@ -341,6 +460,8 @@ xchk_stats_register(
+ 			&scrub_stats_fops);
+ 	debugfs_create_file("clear_stats", 0400, cs->cs_debugfs, cs,
+ 			&clear_scrub_stats_fops);
++
++	xchk_timestats_register(cs);
+ }
+ 
+ /* Free all resources related to the stats object. */
+@@ -348,6 +469,7 @@ STATIC int
+ xchk_stats_teardown(
+ 	struct xchk_stats	*cs)
+ {
++	xchk_timestats_teardown(cs);
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/scrub/stats.h b/fs/xfs/scrub/stats.h
+index b358ad8d8b90a..f615bff22dd22 100644
+--- a/fs/xfs/scrub/stats.h
++++ b/fs/xfs/scrub/stats.h
+@@ -7,8 +7,8 @@
+ #define __XFS_SCRUB_STATS_H__
+ 
+ struct xchk_stats_run {
+-	u64			scrub_ns;
+-	u64			repair_ns;
++	u64			scrub_start, scrub_stop;
++	u64			repair_start, repair_stop;
+ 	unsigned int		retries;
+ 	bool			repair_attempted;
+ 	bool			repair_succeeded;
+@@ -29,21 +29,7 @@ void xchk_stats_unregister(struct xchk_stats *cs);
+ void xchk_stats_merge(struct xfs_mount *mp, const struct xfs_scrub_metadata *sm,
+ 		const struct xchk_stats_run *run);
+ 
+-static inline u64 xchk_stats_now(void) { return ktime_get_ns(); }
+-static inline u64 xchk_stats_elapsed_ns(u64 since)
+-{
+-	u64 now = xchk_stats_now();
+-
+-	/*
+-	 * If the system doesn't have a high enough resolution clock, charge at
+-	 * least one nanosecond so that our stats don't report instantaneous
+-	 * runtimes.
+-	 */
+-	if (now == since)
+-		return 1;
+-
+-	return now - since;
+-}
++static inline u64 xchk_stats_now(void) { return local_clock(); }
+ #else
+ # define xchk_global_stats_setup(parent)	(0)
+ # define xchk_global_stats_teardown()		((void)0)
+@@ -52,7 +38,6 @@ static inline u64 xchk_stats_elapsed_ns(u64 since)
+ # define xchk_stats_register(cs, parent)	((void)0)
+ # define xchk_stats_unregister(cs)		((void)0)
+ # define xchk_stats_now()			(0)
+-# define xchk_stats_elapsed_ns(x)		(0 * (x))
+ # define xchk_stats_merge(mp, sm, run)		((void)0)
+ #endif /* CONFIG_XFS_ONLINE_SCRUB_STATS */
+ 
 diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 953466922ddf7..27f9ec7721a93 100644
+index 27f9ec7721a93..8598294514aa3 100644
 --- a/fs/xfs/xfs_linux.h
 +++ b/fs/xfs/xfs_linux.h
-@@ -64,6 +64,10 @@ typedef __u32			xfs_nlink_t;
- #include <linux/xattr.h>
- #include <linux/mnt_idmapping.h>
- #include <linux/debugfs.h>
-+#ifdef CONFIG_XFS_TIME_STATS
-+# include <linux/seq_buf.h>
-+# include <linux/time_stats.h>
-+#endif
+@@ -68,6 +68,7 @@ typedef __u32			xfs_nlink_t;
+ # include <linux/seq_buf.h>
+ # include <linux/time_stats.h>
+ #endif
++#include <linux/sched/clock.h>
  
  #include <asm/page.h>
  #include <asm/div64.h>
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a604eac68ea9e..a30be4ab780bb 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -20,6 +20,7 @@
- #include "xfs_sysfs.h"
- #include "xfs_sb.h"
- #include "xfs_health.h"
-+#include "xfs_timestats.h"
- 
- struct kmem_cache	*xfs_log_ticket_cache;
- 
-@@ -403,6 +404,7 @@ xfs_log_regrant(
- 	struct xlog_ticket	*tic)
- {
- 	struct xlog		*log = mp->m_log;
-+	DECLARE_XFS_TIMESTAT(start_time);
- 	int			need_bytes;
- 	int			error = 0;
- 
-@@ -427,12 +429,15 @@ xfs_log_regrant(
- 
- 	trace_xfs_log_regrant(log, tic);
- 
-+	xfs_timestats_start(&start_time);
- 	error = xlog_grant_head_check(log, &log->l_write_head, tic,
- 				      &need_bytes);
- 	if (error)
- 		goto out_error;
- 
- 	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
-+	xfs_timestats_end(&mp->m_timestats.ts_log_regrant, start_time);
-+
- 	trace_xfs_log_regrant_exit(log, tic);
- 	xlog_verify_grant_tail(log);
- 	return 0;
-@@ -466,6 +471,7 @@ xfs_log_reserve(
- {
- 	struct xlog		*log = mp->m_log;
- 	struct xlog_ticket	*tic;
-+	DECLARE_XFS_TIMESTAT(start_time);
- 	int			need_bytes;
- 	int			error = 0;
- 
-@@ -483,6 +489,7 @@ xfs_log_reserve(
- 
- 	trace_xfs_log_reserve(log, tic);
- 
-+	xfs_timestats_start(&start_time);
- 	error = xlog_grant_head_check(log, &log->l_reserve_head, tic,
- 				      &need_bytes);
- 	if (error)
-@@ -490,6 +497,8 @@ xfs_log_reserve(
- 
- 	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
- 	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
-+	xfs_timestats_end(&mp->m_timestats.ts_log_reserve, start_time);
-+
- 	trace_xfs_log_reserve_exit(log, tic);
- 	xlog_verify_grant_tail(log);
- 	return 0;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 01934c567f760..7cfd209404365 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -72,6 +72,17 @@ struct xfs_inodegc {
- 	unsigned int		cpu;
- };
- 
-+struct xfs_timestats {
-+#ifdef CONFIG_XFS_TIME_STATS
-+	struct time_stats	ts_log_reserve;
-+	struct time_stats	ts_log_regrant;
-+	struct time_stats	ts_ilock;
-+	struct time_stats	ts_buflock;
-+	struct time_stats	ts_dqlock;
-+	struct dentry		*ts_debugfs;
-+#endif
-+};
-+
- /*
-  * The struct xfsmount layout is optimised to separate read-mostly variables
-  * from variables that are frequently modified. We put the read-mostly variables
-@@ -271,6 +282,8 @@ typedef struct xfs_mount {
- 
- 	/* Hook to feed dirent updates to an active online repair. */
- 	struct xfs_hooks	m_dir_update_hooks;
-+
-+	struct xfs_timestats	m_timestats;
- } xfs_mount_t;
- 
- #define M_IGEO(mp)		(&(mp)->m_ino_geo)
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fa4db490b74a0..69f1c1d85edf6 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -46,6 +46,7 @@
- #include "xfs_exchmaps_item.h"
- #include "xfs_parent.h"
- #include "xfs_rtalloc.h"
-+#include "xfs_timestats.h"
- #include "scrub/stats.h"
- #include "scrub/rcbag_btree.h"
- 
-@@ -768,6 +769,7 @@ xfs_mount_free(
- 		xfs_free_buftarg(mp->m_ddev_targp);
- 
- 	debugfs_remove(mp->m_debugfs);
-+	xfs_timestats_destroy(mp);
- 	kfree(mp->m_rtname);
- 	kfree(mp->m_logname);
- 	kmem_free(mp);
-@@ -1146,6 +1148,7 @@ xfs_fs_put_super(
- 	xfs_rtmount_freesb(mp);
- 	xfs_freesb(mp);
- 	xchk_mount_stats_free(mp);
-+	xfs_timestats_unexport(mp);
- 	free_percpu(mp->m_stats.xs_stats);
- 	xfs_inodegc_free_percpu(mp);
- 	xfs_destroy_percpu_counters(mp);
-@@ -1580,6 +1583,7 @@ xfs_fs_fill_super(
- 		goto out_destroy_inodegc;
- 	}
- 
-+	xfs_timestats_export(mp);
- 	error = xchk_mount_stats_alloc(mp);
- 	if (error)
- 		goto out_free_stats;
-@@ -1805,6 +1809,7 @@ xfs_fs_fill_super(
- 	xfs_freesb(mp);
-  out_free_scrub_stats:
- 	xchk_mount_stats_free(mp);
-+	xfs_timestats_unexport(mp);
-  out_free_stats:
- 	free_percpu(mp->m_stats.xs_stats);
-  out_destroy_inodegc:
-@@ -2065,6 +2070,7 @@ static int xfs_init_fs_context(
- 	mp->m_allocsize_log = 16; /* 64k */
- 
- 	xfs_hooks_init(&mp->m_dir_update_hooks);
-+	xfs_timestats_init(mp);
- 
- 	fc->s_fs_info = mp;
- 	fc->ops = &xfs_context_ops;
-diff --git a/fs/xfs/xfs_timestats.c b/fs/xfs/xfs_timestats.c
-new file mode 100644
-index 0000000000000..163a37e6717f7
---- /dev/null
-+++ b/fs/xfs/xfs_timestats.c
-@@ -0,0 +1,115 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_timestats.h"
-+
-+/* Format a timestats report into a buffer. */
-+static ssize_t
-+xfs_timestats_read(
-+	struct file		*file,
-+	char __user		*ubuf,
-+	size_t			count,
-+	loff_t			*ppos)
-+{
-+	struct seq_buf		s;
-+	struct time_stats	*ts = file->private_data;
-+	char			*buf;
-+	ssize_t			ret;
-+
-+	/*
-+	 * This generates a stringly snapshot of a timestats report, so we
-+	 * do not want userspace to receive garbled text from multiple calls.
-+	 * If the file position is greater than 0, return a short read.
-+	 */
-+	if (*ppos > 0)
-+		return 0;
-+
-+	buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	seq_buf_init(&s, buf, PAGE_SIZE);
-+	time_stats_to_seq_buf(&s, ts, "mount", TIME_STATS_PRINT_NO_ZEROES);
-+	ret = simple_read_from_buffer(ubuf, count, ppos, buf, seq_buf_used(&s));
-+	kfree(buf);
-+	return ret;
-+}
-+
-+const struct file_operations xfs_timestats_fops = {
-+	.open			= simple_open,
-+	.read			= xfs_timestats_read,
-+};
-+
-+/* Set up timestats collection. */
-+void
-+xfs_timestats_init(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_timestats	*ts = &mp->m_timestats;
-+
-+	time_stats_init(&ts->ts_log_reserve);
-+	time_stats_init(&ts->ts_log_regrant);
-+	time_stats_init(&ts->ts_ilock);
-+	time_stats_init(&ts->ts_buflock);
-+	time_stats_init(&ts->ts_dqlock);
-+}
-+
-+/* Free all resources used by timestats collection. */
-+void
-+xfs_timestats_destroy(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_timestats	*ts = &mp->m_timestats;
-+
-+	time_stats_exit(&ts->ts_log_reserve);
-+	time_stats_exit(&ts->ts_log_regrant);
-+	time_stats_exit(&ts->ts_ilock);
-+	time_stats_exit(&ts->ts_buflock);
-+	time_stats_exit(&ts->ts_dqlock);
-+}
-+
-+/* Export timestats via debugfs */
-+#define X(p, ts, name) \
-+	debugfs_create_file("blocked::" #name, 0444, (p), &(ts)->ts_##name, \
-+			&xfs_timestats_fops)
-+void
-+xfs_timestats_export(
-+	struct xfs_mount	*mp)
-+{
-+	struct dentry		*parent;
-+	struct xfs_timestats	*ts = &mp->m_timestats;
-+
-+	if (!mp->m_debugfs)
-+		return;
-+
-+	parent = xfs_debugfs_mkdir("time_stats", mp->m_debugfs);
-+	if (!parent)
-+		return;
-+	ts->ts_debugfs = parent;
-+
-+	X(parent, ts, log_reserve);
-+	X(parent, ts, log_regrant);
-+	X(parent, ts, ilock);
-+	X(parent, ts, buflock);
-+	X(parent, ts, dqlock);
-+}
-+#undef X
-+
-+/* Delete debugfs entries for timestats */
-+void
-+xfs_timestats_unexport(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_timestats	*ts = &mp->m_timestats;
-+
-+	debugfs_remove(ts->ts_debugfs);
-+}
 diff --git a/fs/xfs/xfs_timestats.h b/fs/xfs/xfs_timestats.h
-new file mode 100644
-index 0000000000000..e53dbb40c8fff
---- /dev/null
+index e53dbb40c8fff..418e5abf2cf12 100644
+--- a/fs/xfs/xfs_timestats.h
 +++ b/fs/xfs/xfs_timestats.h
-@@ -0,0 +1,34 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_TIMESTATS_H__
-+#define __XFS_TIMESTATS_H__
-+
-+#ifdef CONFIG_XFS_TIME_STATS
-+extern const struct file_operations xfs_timestats_fops;
-+
-+void xfs_timestats_init(struct xfs_mount *mp);
-+void xfs_timestats_export(struct xfs_mount *mp);
-+void xfs_timestats_unexport(struct xfs_mount *mp);
-+void xfs_timestats_destroy(struct xfs_mount *mp);
-+
-+# define DECLARE_XFS_TIMESTAT(name)	u64 name
-+# define DEFINE_XFS_TIMESTAT(name)	u64 name = local_clock()
-+# define xfs_timestats_start(b)		do { *(b) = local_clock(); } while (0)
-+# define xfs_timestats_end(a, b)	time_stats_update((a), (b))
-+#else
-+# define xfs_timestats_init(mp)		((void)0)
-+# define xfs_timestats_export(mp)	((void)0)
-+# define xfs_timestats_unexport(mp)	((void)0)
-+# define xfs_timestats_destroy(mp)	((void)0)
-+
-+# define DECLARE_XFS_TIMESTAT(name)
-+# define DEFINE_XFS_TIMESTAT(name)
-+# define xfs_timestats_start(t)		((void)0)
-+# define xfs_timestats_end(s, t)	((void)0)
-+#endif /* CONFIG_XFS_TIME_STATS */
-+
-+#endif /* __XFS_TIMESTATS_H__ */
-+
+@@ -18,6 +18,7 @@ void xfs_timestats_destroy(struct xfs_mount *mp);
+ # define DEFINE_XFS_TIMESTAT(name)	u64 name = local_clock()
+ # define xfs_timestats_start(b)		do { *(b) = local_clock(); } while (0)
+ # define xfs_timestats_end(a, b)	time_stats_update((a), (b))
++# define xfs_timestats_interval(a,b,c)	__time_stats_update((a), (b), (c))
+ #else
+ # define xfs_timestats_init(mp)		((void)0)
+ # define xfs_timestats_export(mp)	((void)0)
+@@ -28,6 +29,7 @@ void xfs_timestats_destroy(struct xfs_mount *mp);
+ # define DEFINE_XFS_TIMESTAT(name)
+ # define xfs_timestats_start(t)		((void)0)
+ # define xfs_timestats_end(s, t)	((void)0)
++# define xfs_timestats_interval(...)	((void)0)
+ #endif /* CONFIG_XFS_TIME_STATS */
+ 
+ #endif /* __XFS_TIMESTATS_H__ */
 
