@@ -1,75 +1,41 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 531713A29B
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 14:11:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E7A3E493;
+	Sat, 24 Feb 2024 17:03:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708783867; cv=none; b=YbJACxfuXtMmTT+HLidzfbQdJTZRx6DbOkVWPxq8lJ7x+xyki1JuiNTFFBsz6NXudFGwpFI0VVdWjo7rLGZrPxLjUTWRoOXifs/BWjiyrkJOF9c6dKe+8L0aCBeDPMyzxoluC4AYQMwMjKcaRK87dd3BjsJWM5B8PwyMKgDvcJY=
+	t=1708794187; cv=none; b=dncamBlwmJlIQQF6CBp57NYAPHDG6HTRbhuB82ztbmw+3X3oAROCebCkzM/Z0Jz5rcOaQRdHTkv6IJ0gOZ71/4rG4wmyzurYxlJ2Y/vUnzVe8ZmETdzlWBkgnGUzR4BiJ5SRVBm0kZbn3rvPwLGCRZShW2PZVimdmX+T/mTqgCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708783867; c=relaxed/simple;
-	bh=wAQeGIpU/b8zq/c8phVMxTlln1DrdldGBZvQmeoDpLs=;
+	s=arc-20240116; t=1708794187; c=relaxed/simple;
+	bh=vf1J4XGP8ttoc+eTT7vjZBCjuz6YX6OyBN3XBleaBGk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iuJJXUdz/8p0VcOtEqictAjbGtnxYEOEGjl5SGTa+f/j2E2NKRSx1YsL637DskWQJcF7Zvdf4T5LzBAIOwUM2npWAbTP1ekRtr0HmjGQvNDt4Gvbf0o/aw8QT1TNUgKoi3jOV1XLCF3UTbZsiQB2I80YuQEhtxwcA9al+I8gxxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RZzG7qP2; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=rKws58EBxJVfwBgCTo4DSJ7HMyk3R9VmNx34TOW4pltle7D3sKfwovE9KWz1ZanaZ72r6a1NX0+Y6tJt/cbnFew1AQ77Bi2c4WtdiMVxTp8/IysAb1p1mxQPaom4H/K+whJ2iJCV773P2dO9gRm3HNZ61L2SsBbkN569eUuKKQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=chNLt8QL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RZzG7qP2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708783864;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AmvOSjy0MC5pHW1g/j3NOZPW4U2msOE708+NWPvQghI=;
-	b=RZzG7qP2TQwk8W6aqNqT1QF0Da0aMI5t8JKM2p7ndUpGh4rQd2ruYQBWUc1zDUs5fnIPhy
-	S3dkmm49uQvPWCnxlyKg3Ntkd36vI0q+nv1pr5aH6HtaCT6YM3JBvsu4rZ96PMs8omE/HT
-	BYWqJXScBK3y0stAKKYrfOdz1Xg7fes=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-479-N2qq2qwLMGq7ryS2_BYpsA-1; Sat, 24 Feb 2024 09:11:01 -0500
-X-MC-Unique: N2qq2qwLMGq7ryS2_BYpsA-1
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-559555e38b0so1476803a12.3
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 06:11:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708783860; x=1709388660;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AmvOSjy0MC5pHW1g/j3NOZPW4U2msOE708+NWPvQghI=;
-        b=eap/7Sbuep6DnTspiwnIQZw7nbs7HQCYacKX1S+f0JWv6l2402CKd2NdkJ98w/27gW
-         lYaOel9e84ZKBd7TfS/Ux/gawEErBwi2whIbqN3t0SsARe7fL0Uu9fwIAlfRwf2nDIBc
-         i3KXrEsR6QF+WKXBjuEeds5GQYmAfpKWsB7UXAaagTkkj0Zj4wAxZs3586fhcvEHMjUZ
-         x9jRXr4IgAJe3p6PX5v2PdN4dVGrbCZvcXKnpnNvkgY+4JA0peAOOAIdGHd2MLaoJ6ho
-         SCSCcLg9pSZV4iCXqO8nZlgUTvh97AfOrRKHMhyxzSHZIWLjcxiZE1R8MTUrETkPuU2X
-         Jzrg==
-X-Forwarded-Encrypted: i=1; AJvYcCWO/SQOfWVR4/63wHJ1WG+bNNc57lG0o8UYMkhdjzAUQcmsyeIOplf1ID/JD3jRYd85eGxmWyE2jqU/Av2vuD1pmqyRROc+kBki
-X-Gm-Message-State: AOJu0YyD2HJZCtNF7RJI5jRCp9oTHz9bWWcxkrdahT2+LiguzV7nDiqI
-	hYolBbIvGwdqQ/ngGdMp1dNDL9DFJrtDfQV0RXqWWUFJ8HCZmy6+xGIWeBcQV+CjZzfB1DKuxGf
-	3E8lpwvy+ofMMz1dvdUfH5SDkc/xcwU321cYYakLj4LcOTchO/ZT2EcY7
-X-Received: by 2002:aa7:d349:0:b0:565:be3f:bc4e with SMTP id m9-20020aa7d349000000b00565be3fbc4emr140216edr.29.1708783859901;
-        Sat, 24 Feb 2024 06:10:59 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGew91maGa6l3f9rKld2WFHMZa748gpse/xrdGzF3S87LGuem4A2sqelzLeBZShQmbV+ViTJw==
-X-Received: by 2002:aa7:d349:0:b0:565:be3f:bc4e with SMTP id m9-20020aa7d349000000b00565be3fbc4emr140209edr.29.1708783859588;
-        Sat, 24 Feb 2024 06:10:59 -0800 (PST)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id r26-20020aa7cb9a000000b00565b8f955b8sm209020edt.57.2024.02.24.06.10.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Feb 2024 06:10:59 -0800 (PST)
-Date: Sat, 24 Feb 2024 15:10:58 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com, djwong@kernel.org
-Subject: Re: [PATCH v4 07/25] fsverity: support block-based Merkle tree
- caching
-Message-ID: <brwo67ff3o3tvkswlgbjselabvhh5hbsagg47hiiogpltkrcr7@yff2orlvntvs>
-References: <20240212165821.1901300-1-aalbersh@redhat.com>
- <20240212165821.1901300-8-aalbersh@redhat.com>
- <20240223052459.GC25631@sol.localdomain>
- <qojmht7l3lgx5hy7sqh5tru7u3uuowl5siszzcj3futgyqtbtv@pth44gm7ueog>
- <20240223180732.GC1112@sol.localdomain>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="chNLt8QL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1019BC433C7;
+	Sat, 24 Feb 2024 17:03:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708794187;
+	bh=vf1J4XGP8ttoc+eTT7vjZBCjuz6YX6OyBN3XBleaBGk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=chNLt8QLPVfpWlo9KfuJvke+7y62wQSPfLUQTSAFpFedmSkflFSilLKG9Vb/ZFbh0
+	 GMlZk80dHYTufgqTvTsM50eu6l5705EAqeD9nlMjM4guqzQ4LpjSkbXyKlHYeV+9Ll
+	 GC7EtpmZtLu63pBmnCG2XUoubZdchLQ7cMw3x7iQ++mM9xGT3gdS8n2I03VVlvWXQI
+	 5nf8zCgaetW5Tu2GhIET8lK9Ge+C6MAHVQ0jYMHtkRwqSzAQBQNQW17WlYb9/Y5h5d
+	 wsCG96Z7FPjHQSfQmW2KmnfcAgKSVZxzGVo06B4FJQtJmjiK7j6yE2MAuT55OsZyaK
+	 hJk/ivBH7BN5g==
+Date: Sat, 24 Feb 2024 09:03:06 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: chengming.zhou@linux.dev
+Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, vbabka@suse.cz,
+	roman.gushchin@linux.dev, Xiongwei.Song@windriver.com,
+	Chengming Zhou <zhouchengming@bytedance.com>
+Subject: Re: [PATCH] xfs: remove SLAB_MEM_SPREAD flag usage
+Message-ID: <20240224170306.GI616564@frogsfrogsfrogs>
+References: <20240224135323.830509-1-chengming.zhou@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,71 +44,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240223180732.GC1112@sol.localdomain>
+In-Reply-To: <20240224135323.830509-1-chengming.zhou@linux.dev>
 
-On 2024-02-23 10:07:32, Eric Biggers wrote:
-> On Fri, Feb 23, 2024 at 05:02:45PM +0100, Andrey Albershteyn wrote:
-> > > > +void fsverity_drop_block(struct inode *inode,
-> > > > +		struct fsverity_blockbuf *block)
-> > > > +{
-> > > > +	if (inode->i_sb->s_vop->drop_block)
-> > > > +		inode->i_sb->s_vop->drop_block(block);
-> > > > +	else {
-> > > > +		struct page *page = (struct page *)block->context;
-> > > > +
-> > > > +		/* Merkle tree block size == PAGE_SIZE; */
-> > > > +		if (block->verified)
-> > > > +			SetPageChecked(page);
-> > > > +
-> > > > +		kunmap_local(block->kaddr);
-> > > > +		put_page(page);
-> > > > +	}
-> > > > +}
-> > > 
-> > > I don't think this is the logical place for the call to SetPageChecked().
-> > > verity_data_block() currently does:
-> > > 
-> > >         if (vi->hash_block_verified)
-> > >                 set_bit(hblock_idx, vi->hash_block_verified);
-> > >         else
-> > >                 SetPageChecked(page);
-> > > 
-> > > You're proposing moving the SetPageChecked() to fsverity_drop_block().  Why?  We
-> > > should try to do things in a consistent place.
-> > > 
-> > > Similarly, I don't see why is_hash_block_verified() shouldn't keep the
-> > > PageChecked().
-> > > 
-> > > If we just keep PG_checked be get and set in the same places it currently is,
-> > > then adding fsverity_blockbuf::verified wouldn't be necessary.
-> > > 
-> > > Maybe you intended to move the awareness of PG_checked out of fs/verity/ and
-> > > into the filesystems?
-> > 
-> > yes
-> > 
-> > > Your change in how PG_checked is get and set is sort of a
-> > > step towards that, but it doesn't complete it.  It doesn't make sense to leave
-> > > in this half-finished state.
-> > 
-> > What do you think is missing? I didn't want to make too many changes
-> > to fs which already use fs-verity and completely change the
-> > interface, just to shift page handling stuff to middle layer
-> > functions. So yeah kinda "step towards" only :)
+On Sat, Feb 24, 2024 at 01:53:23PM +0000, chengming.zhou@linux.dev wrote:
+> From: Chengming Zhou <zhouchengming@bytedance.com>
 > 
-> In your patchset, PG_checked is get and set by fsverity_drop_block() and
-> fsverity_read_merkle_tree_block(), which are located in fs/verity/ and called by
-> other code in fs/verity/.  I don't see this as being a separate layer from the
-> rest of fs/verity/.  If it was done by the individual filesystems (e.g.
-> fs/ext4/) that would be different, but it's not.  I think keeping fs/verity/
-> aware of PG_checked is the right call, and it's not necessary to do the half-way
-> move that sort of moves it to a different place in the stack but not really.
+> The SLAB_MEM_SPREAD flag is already a no-op as of 6.8-rc1, remove
+> its usage so we can delete it from slab. No functional change.
 > 
-> - Eric
+> Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
+
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+
+(acked, as in "this looks right, i don't know why it wasn't removed when
+slab went away, and from the -mm list traffic this seems to be in line
+with [1] but i still had to dig for details)
+
+[1] https://lore.kernel.org/linux-mm/20240131172027.10f64405@gandalf.local.home/T/#u
+
+--D
+
+> ---
+>  fs/xfs/xfs_super.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
 > 
-
-I see, thanks! I will move back
-
--- 
-- Andrey
-
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 56006b877a5d..171a1287b296 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -2042,8 +2042,7 @@ xfs_init_caches(void)
+>  
+>  	xfs_buf_cache = kmem_cache_create("xfs_buf", sizeof(struct xfs_buf), 0,
+>  					 SLAB_HWCACHE_ALIGN |
+> -					 SLAB_RECLAIM_ACCOUNT |
+> -					 SLAB_MEM_SPREAD,
+> +					 SLAB_RECLAIM_ACCOUNT,
+>  					 NULL);
+>  	if (!xfs_buf_cache)
+>  		goto out;
+> @@ -2108,14 +2107,14 @@ xfs_init_caches(void)
+>  					   sizeof(struct xfs_inode), 0,
+>  					   (SLAB_HWCACHE_ALIGN |
+>  					    SLAB_RECLAIM_ACCOUNT |
+> -					    SLAB_MEM_SPREAD | SLAB_ACCOUNT),
+> +					    SLAB_ACCOUNT),
+>  					   xfs_fs_inode_init_once);
+>  	if (!xfs_inode_cache)
+>  		goto out_destroy_efi_cache;
+>  
+>  	xfs_ili_cache = kmem_cache_create("xfs_ili",
+>  					 sizeof(struct xfs_inode_log_item), 0,
+> -					 SLAB_RECLAIM_ACCOUNT | SLAB_MEM_SPREAD,
+> +					 SLAB_RECLAIM_ACCOUNT,
+>  					 NULL);
+>  	if (!xfs_ili_cache)
+>  		goto out_destroy_inode_cache;
+> -- 
+> 2.40.1
+> 
+> 
