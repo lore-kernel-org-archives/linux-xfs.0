@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D27B625
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:32:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F784688
+	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:32:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708738341; cv=none; b=GhH8qPY6YbFuPx+nNM5/lx0bc+L9idbhZquI55BXKZNom0CvGQ98xT1WcCkv/w2YocW6TbAPHtvC4ZVrJn7AZHab1y/cbA+zUrRDYuLotrK85yeRh9h7fIXFAeGxAiWZI2kxlEFfv8ymOztHucjgltTI6jfS4QRV5ygqdsm38Kk=
+	t=1708738357; cv=none; b=ez9tUYQwEH2TmgO4zyUOtQvJpZYi8F8RpDK45HMyv7fPvLgxll9U9DHKCjdTUuKOUZpGNo/e0EBodmcJDmI/ks0H0MsUxAFZ5CR3IIHjzV2ai03gLuUKlAaVGIaH78DV7kRrar7FNeP/jzU7vbb85i/ZLzmNoRDc0hypwBGA1D8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708738341; c=relaxed/simple;
-	bh=zdli9LFL/uqffAQ7xj8g7uM+DK5FlT30fWtkV4A4jN4=;
+	s=arc-20240116; t=1708738357; c=relaxed/simple;
+	bh=+ma+bDQO0E92vjWxNSNah6czrS3mDBVru8Fwu914U8M=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=O10wKHIVqyL9dP0qCmCVxRy1NbnBV3oYpVcqiztjtWYXlxTBetms5ruDgCEKpDDnzfgaDpc4Z4MfMC+p9sVdfhBi8YvBgacouLmNgv13BqEFqJaimQBW+rXF/VrWwlVjlpd1eEa7GYW0LvEgYQ1EdpEYHAGYVZDXmYOw2IEM21o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NtWI7TnJ; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=X5aQv8UpJpJ6QZcsbOsqFFAmsQGHaZmuu2ChpTmZmn2a3eeY3OlKRB05Kj77WN9wrscr0qg5I2afS2m2+p/+LZAjTNLgysTenTBr6G6HieuSBHfk0758gJoma2zPaxKj6Z+hY9TQ/bBZ55Ija8Xd4wu6f3CLW/C2oZiU2+PdLRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LRU7d5I0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NtWI7TnJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B52FC433C7;
-	Sat, 24 Feb 2024 01:32:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LRU7d5I0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23A4C433F1;
+	Sat, 24 Feb 2024 01:32:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708738341;
-	bh=zdli9LFL/uqffAQ7xj8g7uM+DK5FlT30fWtkV4A4jN4=;
+	s=k20201202; t=1708738356;
+	bh=+ma+bDQO0E92vjWxNSNah6czrS3mDBVru8Fwu914U8M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NtWI7TnJNiJpBpWYKkBvad56HUGUa8ee6/jXZGRZdI4lP1IfHEeorvCHmG7H59J4K
-	 7Z3tGizCxY45TzAqBL0ByLozlkN3IEnhaZv71uhdxrMVje7pc37+5RFJrud7uIUz/j
-	 v9u1EFkYeTEe+mYUkw0W7EBkMEcCrAblIX9FTTpSzlyYjcArgQlP1owiogFdYWMcGp
-	 Tv7l76KS4QBklromTIeQyzkzbmLAcRe1IQT91BOFbBoCRgjVxdg4xsykdFUlvAXkE4
-	 uMJIzbCavPGVwRP4SHhNLjUzbD4PlqZo8uNQGrEBemJCqfR4nfdLfnvyXsVeq3ndsB
-	 cIM6/AR/R8iBQ==
-Date: Fri, 23 Feb 2024 17:32:20 -0800
-Subject: [GIT PULL 13/18] xfs: online repair of rmap btrees
+	b=LRU7d5I0fzLpSwhlbaY+wa22hyA7qP8NLOc3MQkGCsOdTwUOyiWLdmESA4BI4Sz7G
+	 BKPnns75C5u2gErbwYbnVcmgTLS5JfyLy/G2rjTh5gGzI9xDoLmlbjc7Qw/lFm9lvA
+	 51aErb4CIP9VNcWQseJhwzKpTX1H0rnIZYX6o0o2NtSDaOJUANPW6xMVz2PM7kcGyd
+	 zkbdTKq7tFt3WoUNCMUSTofBRUsqu8Ps3z2UKR0jch/Wxp/BOw4zxCMmJBS9T/TPmD
+	 Zeeuf3JaVmb8OxEHqVx4c6bYf0UEYfTcmwtXxZlNyXTrZMclcW9S49TJ0wv7B13FE4
+	 /sRdPf1rDToXQ==
+Date: Fri, 23 Feb 2024 17:32:36 -0800
+Subject: [GIT PULL 14/18] xfs: reduce refcount repair memory usage
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170873805592.1891722.8112765815277030914.stg-ugh@frogsfrogsfrogs>
+Message-ID: <170873806024.1891722.15628825342498983385.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,78 +53,83 @@ encounter any problems.
 
 --D
 
-The following changes since commit 0dc63c8a1ce39c1ac7da536ee9174cdc714afae2:
-
-xfs: launder in-memory btree buffers before transaction commit (2024-02-22 12:43:36 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-rmap-btree-6.9_2024-02-23
-
-for you to fetch changes up to 7e1b84b24d257700e417bc9cd724c1efdff653d7:
+The following changes since commit 7e1b84b24d257700e417bc9cd724c1efdff653d7:
 
 xfs: hook live rmap operations during a repair operation (2024-02-22 12:43:40 -0800)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-refcount-scalability-6.9_2024-02-23
+
+for you to fetch changes up to 7fbaab57a80f1639add1c7d02adeb9d17bd50206:
+
+xfs: port refcount repair to the new refcount bag structure (2024-02-22 12:43:42 -0800)
+
 ----------------------------------------------------------------
-xfs: online repair of rmap btrees [v29.3 13/18]
+xfs: reduce refcount repair memory usage [v29.3 14/18]
 
-We have now constructed the four tools that we need to scan the
-filesystem looking for reverse mappings: an inode scanner, hooks to
-receive live updates from other writer threads, the ability to construct
-btrees in memory, and a btree bulk loader.
+The refcountbt repair code has serious memory usage problems when the
+block sharing factor of the filesystem is very high.  This can happen if
+a deduplication tool has been run against the filesystem, or if the fs
+stores reflinked VM images that have been aging for a long time.
 
-This series glues those three together, enabling us to scan the
-filesystem for mappings and keep it up to date while other writers run,
-and then commit the new btree to disk atomically.
+Recall that the original reference counting algorithm walks the reverse
+mapping records of the filesystem to generate reference counts.  For any
+given block in the AG, the rmap bag structure contains the all rmap
+records that cover that block; the refcount is the size of that bag.
 
-To reduce the size of each patch, the functionality is left disabled
-until the end of the series and broken up into three patches: one to
-create the mechanics of scanning the filesystem, a second to transition
-to in-memory btrees, and a third to set up the live hooks.
+For online repair, the bag doesn't need the owner, offset, or state flag
+information, so it discards those.  This halves the record size, but the
+bag structure still stores one excerpted record for each reverse
+mapping.  If the sharing count is high, this will use a LOT of memory
+storing redundant records.  In the extreme case, 100k mappings to the
+same piece of space will consume 100k*16 bytes = 1.6M of memory.
+
+For offline repair, the bag stores the owner values so that we know
+which inodes need to be marked as being reflink inodes.  If a
+deduplication tool has been run and there are many blocks within a file
+pointing to the same physical space, this will stll use a lot of memory
+to store redundant records.
+
+The solution to this problem is to deduplicate the bag records when
+possible by adding a reference count to the bag record, and changing the
+bag add function to detect an existing record to bump the refcount.  In
+the above example, the 100k mappings will now use 24 bytes of memory.
+These lookups can be done efficiently with a btree, so we create a new
+refcount bag btree type (inside of online repair).  This is why we
+refactored the btree code in the previous patchset.
+
+The btree conversion also dramatically reduces the runtime of the
+refcount generation algorithm, because the code to delete all bag
+records that end at a given agblock now only has to delete one record
+instead of (using the example above) 100k records.  As an added benefit,
+record deletion now gives back the unused xfile space, which it did not
+do previously.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (5):
-xfs: create a helper to decide if a file mapping targets the rt volume
-xfs: create agblock bitmap helper to count the number of set regions
-xfs: repair the rmapbt
-xfs: create a shadow rmap btree during rmap repair
-xfs: hook live rmap operations during a repair operation
+Darrick J. Wong (3):
+xfs: define an in-memory btree for storing refcount bag info during repairs
+xfs: create refcount bag structure for btree repairs
+xfs: port refcount repair to the new refcount bag structure
 
-fs/xfs/Makefile                |    1 +
-fs/xfs/libxfs/xfs_ag.c         |    1 +
-fs/xfs/libxfs/xfs_ag.h         |    4 +
-fs/xfs/libxfs/xfs_bmap.c       |   49 +-
-fs/xfs/libxfs/xfs_bmap.h       |    8 +
-fs/xfs/libxfs/xfs_inode_fork.c |    9 +
-fs/xfs/libxfs/xfs_inode_fork.h |    1 +
-fs/xfs/libxfs/xfs_rmap.c       |  199 +++--
-fs/xfs/libxfs/xfs_rmap.h       |   31 +-
-fs/xfs/libxfs/xfs_rmap_btree.c |  163 +++-
-fs/xfs/libxfs/xfs_rmap_btree.h |    6 +
-fs/xfs/libxfs/xfs_shared.h     |   10 +
-fs/xfs/scrub/agb_bitmap.h      |    5 +
-fs/xfs/scrub/bitmap.c          |   14 +
-fs/xfs/scrub/bitmap.h          |    2 +
-fs/xfs/scrub/bmap.c            |    2 +-
-fs/xfs/scrub/common.c          |    5 +-
-fs/xfs/scrub/common.h          |    1 +
-fs/xfs/scrub/newbt.c           |   12 +-
-fs/xfs/scrub/newbt.h           |    7 +
-fs/xfs/scrub/reap.c            |    2 +-
-fs/xfs/scrub/repair.c          |   59 +-
-fs/xfs/scrub/repair.h          |   12 +-
-fs/xfs/scrub/rmap.c            |   11 +-
-fs/xfs/scrub/rmap_repair.c     | 1697 ++++++++++++++++++++++++++++++++++++++++
-fs/xfs/scrub/scrub.c           |    6 +-
-fs/xfs/scrub/scrub.h           |    4 +-
-fs/xfs/scrub/trace.c           |    1 +
-fs/xfs/scrub/trace.h           |   80 +-
-fs/xfs/xfs_stats.c             |    3 +-
-fs/xfs/xfs_stats.h             |    1 +
-31 files changed, 2336 insertions(+), 70 deletions(-)
-create mode 100644 fs/xfs/scrub/rmap_repair.c
+fs/xfs/Makefile                |   2 +
+fs/xfs/scrub/rcbag.c           | 307 ++++++++++++++++++++++++++++++++++
+fs/xfs/scrub/rcbag.h           |  28 ++++
+fs/xfs/scrub/rcbag_btree.c     | 370 +++++++++++++++++++++++++++++++++++++++++
+fs/xfs/scrub/rcbag_btree.h     |  81 +++++++++
+fs/xfs/scrub/refcount.c        |  12 ++
+fs/xfs/scrub/refcount_repair.c | 164 +++++++-----------
+fs/xfs/scrub/repair.h          |   2 +
+fs/xfs/xfs_stats.c             |   3 +-
+fs/xfs/xfs_stats.h             |   1 +
+fs/xfs/xfs_super.c             |  10 +-
+11 files changed, 872 insertions(+), 108 deletions(-)
+create mode 100644 fs/xfs/scrub/rcbag.c
+create mode 100644 fs/xfs/scrub/rcbag.h
+create mode 100644 fs/xfs/scrub/rcbag_btree.c
+create mode 100644 fs/xfs/scrub/rcbag_btree.h
 
