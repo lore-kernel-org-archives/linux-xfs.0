@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30805625
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:33:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED334C69
+	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:33:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708738388; cv=none; b=rNMWCa9RTuVId4GGIIuLz1EHHxbnGV8plSqUvEpqwyt3r35zU9LBnKEGbwBAk2QLOp6dHnjjEkjqxrhfmFnLjbEV1znELI81AN/4TzXLlc+fNedlETHZuRgGJd/U6jhFf6DXZG5xu9rGS8q9pK16+ZlUia/itK05wQ2YHuqrEvI=
+	t=1708738404; cv=none; b=f1ySEi0cv/SacT9j/VtEXfbOHNoWttP1ebo8dZbFdAHmNkW+lJomSOrJ34YUm69PMtFWL7VN1GB9jqEhTQXeaB7hjca83dgpx2f9p4ZB/Jbot3r/bPiSRTpX3lhpeUGKbE1aqFlzZXACluEQFHKkrQbR5VKLCNkSwUPwIWsrRSM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708738388; c=relaxed/simple;
-	bh=VoaECzDnjEtcXqZNRB8bVxY77eJGipW/ebinzO2ZluE=;
+	s=arc-20240116; t=1708738404; c=relaxed/simple;
+	bh=tLBreaeO1uRCaeA/KX1928qw5vWstCx/fifueKSiqRs=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=g3UB9n4WwVKByOaDuN1R19vykvOB8C2bAahTppTuRnBduPiA73DVbpLpp+tdwmRLbASf+B4vWrq1RkJc8AOTQcjLvjhnkjbY3cUEycCsC/yL/6JT84cZ+542OMZ1JGWKjkjnm4AHMJmxWEJ4BbCrxiX5rQliq83d9bsz2KPx/2A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rTMM2T/D; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=aZuZhIQGZrjYLnGw+a63Kt8JDGVDi01gnFWHDcBuen7EWpNb6ytuTj8GOJ6EFiV7aKcBHXigC/POeeNFaRKYdB62lT7BWtTzW4jHF0t0eoM+0Zh/uLPnlDokp94lBDIh9EIDYIllilSFHoZ++fbAE3Xzazt22vUrm4TXzzKDWI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bN8aoags; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rTMM2T/D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F2B8C433F1;
-	Sat, 24 Feb 2024 01:33:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bN8aoags"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9C01C433F1;
+	Sat, 24 Feb 2024 01:33:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708738388;
-	bh=VoaECzDnjEtcXqZNRB8bVxY77eJGipW/ebinzO2ZluE=;
+	s=k20201202; t=1708738403;
+	bh=tLBreaeO1uRCaeA/KX1928qw5vWstCx/fifueKSiqRs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rTMM2T/D/L0KTFZCnp+hR3A5Y5X1TPU1OuGtlPsWG40hG1Q2OSdIjnkUHZhjSm7Xm
-	 KEZfY0kdYg0LUlzDI0eylATlzUK6+tI5VblKpGPrEbD0sMs87xsKhK5rRYHBw072w7
-	 VN+xQoQmLF5SW2GfHwGawBOGEnlV+qidDxpsLaGhDgvfKY/hwiR5x74ZhQi2nTyNTC
-	 k2bWRvrR2n57twuB4b2lqE5vwprMAeegM+dwoo7+kphWJW0PGpyUfskDRCeD254qEe
-	 5Npk3F1IxMfIVBJT4xil9m+44vkkpy1103wlmnYmudfy/yI+v175lqKKEB9FfdZ3VH
-	 2soJNycns9H3A==
-Date: Fri, 23 Feb 2024 17:33:07 -0800
-Subject: [GIT PULL 16/18] xfs: widen BUI formats to support realtime
+	b=bN8aoagsAztVpzVYovA/NT+35klF9mbGHkLjURXvb4gH4PQRw8yoXxk4/dq9L+NUy
+	 vzpgneYhprmCJ0wqMUXBmlJIHWYricl73OGRoMvFUKrzyoSEo9SJ/8zzvGtE0hozCO
+	 ghF2irCGSi9jr5KvZAIidtZMMzcU37z4EYCb4dumbL2Drwb/VuEIZ/MRPfcoOQopol
+	 y2BMJoV1IhfjedkCHF4ItNHbeQmsrmZ3iOW6wE/cUkM0xO6s/HCsd77UQu48gg3uBd
+	 JS6/kGBYDw2S0YueLaQQDbaRj8F8BqRntRes+jkRYEujmHdI+oVJ43/cJ8sn4JHOtY
+	 ci0zPjTM9OO7Q==
+Date: Fri, 23 Feb 2024 17:33:23 -0800
+Subject: [GIT PULL 17/18] xfs: support attrfork and unwritten BUIs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170873806923.1891722.6359185979646674968.stg-ugh@frogsfrogsfrogs>
+Message-ID: <170873807375.1891722.5277726854433420352.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,40 +53,38 @@ encounter any problems.
 
 --D
 
-The following changes since commit c75f1a2c154979287ee12c336e2b8c3122832bf7:
-
-xfs: add a xattr_entry helper (2024-02-22 12:44:22 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/realtime-bmap-intents-6.9_2024-02-23
-
-for you to fetch changes up to 1b5453baed3a43dd4726eda0e8a5618c56a4f3f7:
+The following changes since commit 1b5453baed3a43dd4726eda0e8a5618c56a4f3f7:
 
 xfs: support recovering bmap intent items targetting realtime extents (2024-02-22 12:44:24 -0800)
 
-----------------------------------------------------------------
-xfs: widen BUI formats to support realtime [v29.3 16/18]
+are available in the Git repository at:
 
-Atomic extent swapping (and later, reverse mapping and reflink) on the
-realtime device needs to be able to defer file mapping and extent
-freeing work in much the same manner as is required on the data volume.
-Make the BUI log items operate on rt extents in preparation for atomic
-swapping and realtime rmap.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/expand-bmap-intent-usage_2024-02-23
+
+for you to fetch changes up to 6c8127e93e3ac9c2cf6a13b885dd2d057b7e7d50:
+
+xfs: xfs_bmap_finish_one should map unwritten extents properly (2024-02-22 12:45:00 -0800)
+
+----------------------------------------------------------------
+xfs: support attrfork and unwritten BUIs [v29.3 17/18]
+
+In preparation for atomic extent swapping and the online repair
+functionality that wants atomic extent swaps, enhance the BUI code so
+that we can support deferred work on the extended attribute fork and on
+unwritten extents.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs: fix xfs_bunmapi to allow unmapping of partial rt extents
-xfs: add a realtime flag to the bmap update log redo items
-xfs: support recovering bmap intent items targetting realtime extents
+Darrick J. Wong (2):
+xfs: support deferred bmap updates on the attr fork
+xfs: xfs_bmap_finish_one should map unwritten extents properly
 
-fs/xfs/libxfs/xfs_bmap.c       |  4 ++--
-fs/xfs/libxfs/xfs_log_format.h |  4 +++-
-fs/xfs/xfs_bmap_item.c         | 17 +++++++++++++++++
-fs/xfs/xfs_trace.h             | 23 ++++++++++++++++++-----
-4 files changed, 40 insertions(+), 8 deletions(-)
+fs/xfs/libxfs/xfs_bmap.c | 49 +++++++++++++++++++++---------------------------
+fs/xfs/libxfs/xfs_bmap.h |  4 ++--
+fs/xfs/xfs_bmap_util.c   |  8 ++++----
+fs/xfs/xfs_reflink.c     |  8 ++++----
+4 files changed, 31 insertions(+), 38 deletions(-)
 
