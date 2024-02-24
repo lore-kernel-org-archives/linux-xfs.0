@@ -1,178 +1,213 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B52A2DDD9
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 02:05:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4E86FA9;
+	Sat, 24 Feb 2024 03:42:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708740355; cv=none; b=nxupCvTVgA2DNWp1iDJsoF/0Mme4ArSr1DqiuU/CSkKiHf0K74mpG1DCccMv4bsydAk3KL3FsJQ9lmq/SXOworF4CHu3+eLupJG7h+bclZh6Eje7oEXsXfKrlNPeMsEkPnwyYHooDQNvNFoPo7WC95X2y4s8Yf6UvlLMkInLlZA=
+	t=1708746147; cv=none; b=UFg58CWXwWv5a4alSLqQ8VIwfgb6dYxZuqimhxv1BAjjpKixc2lcDSxwxLgJiAeBf+jeR+pZpIozPh6QgQiyLOEUO3L/KLS6Okcbt0W0Oj6S/+18aoT0spkCvDwv6kYh/w26XP+F5zQzflQrTdp46q88zV2H3jaIrZ95kerM3+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708740355; c=relaxed/simple;
-	bh=/rvZvHXcTF4KXOIn6ccWJVNn3UbM487AiqcORr+9iR4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=De2UxHJPvie5An+RImsjwUsLw49tZQt8EQrTX8b8RDWA4IeQUh6ZUf1pmSodI2zDX3lCVoS3k+DyDRCWtvufRkNKVitiq5jdk5rSGznpstN67c0kAEOHqRqgzMB7F3Xr1zSkZo771J04m00KMLNv2yK5ILnJlTUyIgXFtUuf0zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b83FG1t5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708746147; c=relaxed/simple;
+	bh=Mo84iZeMq5RPlHJjNVe7KdcGc2x7QyIrCKrw9vG9RqA=;
+	h=Date:Message-Id:From:To:Cc:Subject:In-Reply-To; b=S6GQ3t3fsnh5ixvb7OoHR/WoML0iC7EbyAGvIs9TBJIh/hEmIHdvf3Kal7HsZmnaGtyYS35OWiA+BwrUtVBSy767QTwwRtJIKYVOBCeCGPj9YAjdyVQSMTmiB5bLfPWx9Nqmn8UFJtmYYUBVZQo4+JiJdwftsB0OHKDIUPjdk7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eXl7xbeR; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b83FG1t5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D075C433C7;
-	Sat, 24 Feb 2024 02:05:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708740355;
-	bh=/rvZvHXcTF4KXOIn6ccWJVNn3UbM487AiqcORr+9iR4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=b83FG1t5UzZee/lgwnCrkMVKbebaTdBXaX+3L2+/gnW7OoN6wOVweyfYiPISmquK6
-	 eWV9ItK86g5QyjQJYunmmNuMRdqBtyGF8fM7likHZNrH8RuFJMA96uzy7omd8GFU46
-	 IY0dUkhLhl29PwYjoDw26PMLryKKwjhBC1FCpP9HkvoD2byiQF0jqESDOQR2dBcxmd
-	 eOGpfyLy0rrhGUPuW71eZ8ofaIL7Mbs8SGR97jYa3Ip79ORVwisXY4yimQzRbTVZGA
-	 enPPxYQbx/rmgQRY2FrILCmMWI9XhvfaNXX/Lyl/l4pLUb4zejuN1gaRdaGe6XFvIV
-	 ITxu6idGrbcbw==
-Date: Fri, 23 Feb 2024 18:05:54 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: skip background cowblock trims on inodes open for
- write
-Message-ID: <20240224020554.GP6226@frogsfrogsfrogs>
-References: <20240214165231.84925-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eXl7xbeR"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1db6e0996ceso11972805ad.2;
+        Fri, 23 Feb 2024 19:42:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1708746145; x=1709350945; darn=vger.kernel.org;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=82ndwq1r8iJGcKxdTGgyHwEUSv2EnlJPfsRhslovu74=;
+        b=eXl7xbeRtfvcXZ5XZHa2mQL29BnEzu/7k6rTZoSFonpJRwBrJLjSSKZHIqZLEhz/Aj
+         FZ2/1EqJxljlox+BM6tfU04IoDGdDppfLHibNN8oKZZevq3MAyasfj7k8LgFWuUTlXMb
+         zgnbslmi/dZe5bfC4pmbk6FPLDjduHvuU51TP1neSds6cqD0cGenfXXaSCWCw5HGp3xS
+         8uOk+GGzOm+rjncTeACcHgA8b120U3vFGlEok9EZjEIbiUsCi65eQ7UU2LfNp9YOEEyK
+         +O014YScd7enER+FC6m9c7ZXSyKozYIHzmgBQBE6H7RM2XKsWP6nLmy49L7UM1a4y7ro
+         e2Dw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708746145; x=1709350945;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=82ndwq1r8iJGcKxdTGgyHwEUSv2EnlJPfsRhslovu74=;
+        b=KtKRseaXgK/zHolKuqzGfgcAopHtUViHIK6kpyCJCEbcaX4pdKMrsusnxUCif2kvnv
+         daDhGebXbev/svyQ1LnSbh9Nk2zT8/dGQ6dx707wXdRw+MhCT5P3cTYkyekEX49/6ofF
+         g9rXs6/0+SSGU5AYrXV8UUkPCcaZErJ9o2GRwcef+0CavDp1LBoydOzYTXQuvN3e3zuS
+         XNU3eaaJq4HRVizi1Ufd/9GhKBDed8i0M35q+2kRGfKyBZ1O76U/QwHq1Phq/fJjpojS
+         KHnPEs5j0ecunxw3L9UguRwm8WSnCgSuT7QtKjbV+hp5guMYkfivM80aefLOollj9B0w
+         6/kg==
+X-Forwarded-Encrypted: i=1; AJvYcCVjdiL5VLm44gLsM0Z8kAfgVT+eR/npzawBE81x6ogO6SoCuIHjiy8L/IAxT7Uld1XS78J7qFisacSw3C2/Fd2HU/x/JGB0D/4G3B0G4FN5a+94KBZFWCwTqgE+g+nZG1BSi/r35jV3s/rdln6WTmDUnDjXxS1X1rK5pOeEGjPv7+xX5MzgLIs0uxRcGOZE0jwSVKfF+Q17MjNoqXuB5VFqIG5G
+X-Gm-Message-State: AOJu0YwJt/QYFfsPp0QuAIwvVx1eJ755MmOZYH0iJzWfJYUPk5qBfdyX
+	Imwoybke7bNrV7hly1qjccjKkCBI3OhiDnklqfa4gB7CXnXwh5/p
+X-Google-Smtp-Source: AGHT+IEQrDRKH+35dgIZBo9SO/pJ8MqThZb69DMu/QCthz0U4Ww5MeKnFffLUMrgfFg6rI1MgU0MVA==
+X-Received: by 2002:a05:6a21:3403:b0:1a0:e19c:9631 with SMTP id yn3-20020a056a21340300b001a0e19c9631mr1437071pzb.59.1708746145125;
+        Fri, 23 Feb 2024 19:42:25 -0800 (PST)
+Received: from dw-tp ([49.205.218.89])
+        by smtp.gmail.com with ESMTPSA id pv6-20020a17090b3c8600b0029732fc0154sm2368207pjb.3.2024.02.23.19.42.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Feb 2024 19:42:24 -0800 (PST)
+Date: Sat, 24 Feb 2024 09:12:11 +0530
+Message-Id: <878r3acyuk.fsf@doe.com>
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Luis Chamberlain <mcgrof@kernel.org>, lsf-pc@lists.linux-foundation.org, John Garry <john.g.garry@oracle.com>, Tso Ted <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Pankaj Raghav <p.raghav@samsung.com>, Daniel Gomez <da.gomez@samsung.com>, Matthew Wilcox <willy@infradead.org>, "kbus >> Keith Busch" <kbusch@kernel.org>, Bart Van Assche <bvanassche@acm.org>, Dave Chinner <david@fromorbit.com>, hch@lst.de, mcgrof@kernel.org
+Cc: djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz, chandan.babu@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, jbongio@google.com, ojaswin@linux.ibm.com
+Subject: Re: [LSF/MM/BPF TOPIC] no tears atomics & LBS
+In-Reply-To: <ZdfDxN26VOFaT_Tv@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240214165231.84925-1-bfoster@redhat.com>
 
-On Wed, Feb 14, 2024 at 11:52:31AM -0500, Brian Foster wrote:
-> The background blockgc scanner runs on a 5m interval by default and
-> trims preallocation (post-eof and cow fork) from inodes that are
-> otherwise idle. Idle effectively means that iolock can be acquired
-> without blocking and that the inode has no dirty pagecache or I/O in
-> flight.
-> 
-> This simple mechanism and heuristic has worked fairly well for
-> post-eof speculative preallocations. Support for reflink and COW
-> fork preallocations came sometime later and plugged into the same
-> mechanism, with similar heuristics. Some recent testing has shown
-> that COW fork preallocation may be notably more sensitive to blockgc
-> processing than post-eof preallocation, however.
-> 
-> For example, consider an 8GB reflinked file with a COW extent size
-> hint of 1MB. A worst case fully randomized overwrite of this file
-> results in ~8k extents of an average size of ~1MB. If the same
-> workload is interrupted a couple times for blockgc processing
-> (assuming the file goes idle), the resulting extent count explodes
-> to over 100k extents with an average size <100kB. This is
-> significantly worse than ideal and essentially defeats the COW
-> extent size hint mechanism.
-> 
-> While this particular test is instrumented, it reflects a fairly
-> reasonable pattern in practice where random I/Os might spread out
-> over a large period of time with varying periods of (in)activity.
-> For example, consider a cloned disk image file for a VM or container
-> with long uptime and variable and bursty usage. A background blockgc
-> scan that races and processes the image file when it happens to be
-> clean and idle can have a significant effect on the future
-> fragmentation level of the file, even when still in use.
-> 
-> To help combat this, update the heuristic to skip cowblocks inodes
-> that are currently opened for write access during non-sync blockgc
-> scans. This allows COW fork preallocations to persist for as long as
-> possible unless otherwise needed for functional purposes (i.e. a
-> sync scan), the file is idle and closed, or the inode is being
-> evicted from cache.
+Luis Chamberlain <mcgrof@kernel.org> writes:
 
-Hmmm.  Thinking this over a bit more, I wonder if we really want this
-heuristic?
+> At last year's LSFMM we learned through Ted Ts'o about the interest by
+> cloud providers in large atomics [0]. It is a good example where cloud
+> providers innovated in an area perhaps before storage vendors were
+> providing hardware support for such features. An example use case was
+> databases. In short, with large atomics databases can disable their own version
+> of journaling so to increase TPS. Large atomics lets you  disabling things like
+> MySQL innodb_doublewrite. The feature to allow you to disable this and use
+> large atomcis is known as torn write prevention [1]. At least for MySQL the
+> default page size for the database (used for columns) is 16k, and so enabling
+> for example a 16k atomic can allow you to take advantage of this. It was also
+> mentioned how PostgreSQL only supports buffered-IO and so it would be desirable
+> for a solution to support buffered-IO with large atomics as well. The way
+> cloud providers enable torn write protection, is by using direct IO.
+>
+> John Garry has been working on adding an API for atomic writes, it would
+> seem some folks refer to this as the no-tears atomic API. It consists of
+> two parts, one for the block layer [2] and another set of changes for
+> XFS [3]. It enables Direct IO support with large atomics.  It includes
+> a userspace API which lets you peg a FS_XFLAG_ATOMICWRITES flag onto a
+> file, and you then create an XFS filesystem using the XFS realtime
+> subvolume with with an extent alignment. The current users of this API
+> seems to be SCSI, but obviously this can grow to support others. A neat
+> feature of this effort is you can have two separate directories with
+> separate aligment requirements. There is no generic filesystem solution
+> yet.
+>
+> Meanwhile we're now at a v2 RFC for LBS support [4]. Although the LBS
+> effort originally was a completely orthogonal effort to large atomics, it
+> would seem there is a direct relationship here now worth discussing.
+> In short LBS enables buffered-IO large atomic support if the hardware
+> support its.
+> We get both alignment constraints gauranteed and now ensure
+> we use contigous memory for the IOs for DMA too it is built on using large
+> folios. We expect NVMe drives which support support large atomics can
+> easily profit from this without any userspace modification other than
+> when you create the filesystem.
+>
+> We reviewed the possible intersection of both efforts at our last LBS cabal
+> with LBS interested folks and Martin Peterson and John Garry. It is somewhat
+> unclear exactly how to follow up on some aspects of the no-tear API [5]
+> but there was agreement about the possible intersection of both efforts,
+> and that we should discuss this at LSFMM. The goal would be to try to reach
+> consensus on how no-tear API and how LBS could help with those
+> interested in leveraging large atomics.
+>
+> Some things to evaluate or for us to discuss:
+>
+>  * no-tear API:
+>    - allows directories to have separate alignment requirements
+>      - this might be useful for folks who want to use large IOs with
+>        large atomics for some workloads but smaller IOs for another
+>        directory on the same drive. It this a viable option to some
+>        users for large atomics with concerns of being forced to use
+>        only large writes with LBS?
+>    - statx is modified so to display new alignment considerations
+>    - atomics are power of 2
+>    - there seems to be some interest in supporting no-hardware-accel atomic
+>      solution, so a software implemented atomic solution, could someone
+>      clarify if that's accurate? How is the double write avoided? What are
+>      the use cases? Do databases use that today?
+>    - How do we generalize a solution per file? Would extending a min
+>      order per file be desirable? Is that even tenable?
 
-If we're doing our periodic background scan then sure, I think it's ok
-to ignore files that are open for write but aren't actively being
-written to.
+I would also be interested in this discussion. For e.g. let's also try
+and bring below points in the agenda -
 
-This might introduce nastier side effects if OTOH we're doing blockgc
-because we've hit ENOSPC and we're trying to free up any blocks that we
-can.  I /think/ the way you've written the inode_is_open_for_write check
-means that we scan maximally for ENOSPC.
+1. Like LBS, for systems with large page size 64k (PowerPC and ARM), we should
+already be able to utilize the untorn/atomic writes if they format the
+filesystem with a given blocksize (for DIO atleast).
+I think we need not even use bigalloc in such case for ext4.
+So what does it takes from Linux Filesystems to expose an interface
+to user such that they can start utilizing it?
+(Now this has a catch that the FS still needs to be formatted with a
+given blocksize to utilize untorn writes.)
 
-However, xfs_blockgc_free_dquots doesn't seem to do synchronous scans
-for EDQUOT.  So if we hit quota limits, we won't free maximally, right?
-OTOH I guess we don't really do that now either, so maybe it doesn't
-matter?
+2. What others think on adding O_ATOMIC interface similar to O_DIRECT
+such that applications don't need much changes? We should still have
+RWF_ATOMIC for pwrites, but for open/read/write calls an O_ATOMIC will
+be useful too.
 
-<shrug> Thoughts?
+3. Buffered-io is important for Postgres and I have been looking into it
+from the perspective of supporting untorn writes for buffered-io as
+well. It will be again easier maybe to start off with 64k pagesize
+systems or by utilizing large folio support. This way we have less work
+in managing multiple pages which needs to be written atomically.
 
---D
+4. We already have RFC for ext4 multiblock code to support aligned
+allocations which can be used to plug in untorn Direct-io write support
+to ext4 [1]
 
-> Suggested-by: Darrick Wong <djwong@kernel.org>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> This fell out of some of the discussion on a prospective freeze time
-> blockgc scan. I ran this through the same random write test described in
-> that thread and it prevented all cowblocks trimming until the file is
-> released.
-> 
-> Brian
-> 
-> [1] https://lore.kernel.org/linux-xfs/ZcutUN5B2ZCuJfXr@bfoster/
-> 
->  fs/xfs/xfs_icache.c | 20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index dba514a2c84d..d7c54e45043a 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1240,8 +1240,13 @@ xfs_inode_clear_eofblocks_tag(
->   */
->  static bool
->  xfs_prep_free_cowblocks(
-> -	struct xfs_inode	*ip)
-> +	struct xfs_inode	*ip,
-> +	struct xfs_icwalk	*icw)
->  {
-> +	bool			sync;
-> +
-> +	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
-> +
->  	/*
->  	 * Just clear the tag if we have an empty cow fork or none at all. It's
->  	 * possible the inode was fully unshared since it was originally tagged.
-> @@ -1262,6 +1267,15 @@ xfs_prep_free_cowblocks(
->  	    atomic_read(&VFS_I(ip)->i_dio_count))
->  		return false;
->  
-> +	/*
-> +	 * A full cowblocks trim of an inode can have a significant effect on
-> +	 * fragmentation even when a reasonable COW extent size hint is set.
-> +	 * Skip cowblocks inodes currently open for write on opportunistic
-> +	 * blockgc scans.
-> +	 */
-> +	if (!sync && inode_is_open_for_write(VFS_I(ip)))
-> +		return false;
-> +
->  	return true;
->  }
->  
-> @@ -1291,7 +1305,7 @@ xfs_inode_free_cowblocks(
->  	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
->  		return 0;
->  
-> -	if (!xfs_prep_free_cowblocks(ip))
-> +	if (!xfs_prep_free_cowblocks(ip, icw))
->  		return 0;
->  
->  	if (!xfs_icwalk_match(ip, icw))
-> @@ -1320,7 +1334,7 @@ xfs_inode_free_cowblocks(
->  	 * Check again, nobody else should be able to dirty blocks or change
->  	 * the reflink iflag now that we have the first two locks held.
->  	 */
-> -	if (xfs_prep_free_cowblocks(ip))
-> +	if (xfs_prep_free_cowblocks(ip, icw))
->  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
->  	return ret;
->  }
-> -- 
-> 2.42.0
-> 
+[1]: https://lore.kernel.org/linux-ext4/cover.1701339358.git.ojaswin@linux.ibm.com/
+
+
+>
+>   * LBS:
+>     - stat will return the block size set, so userspace applications
+>       using stat / statx will use the larger block size to ensure
+>       alignment
+>     - a drive with support for a large atomic but supporting smaller
+>       logical block sizes will still allow writes to the logical block
+>       size. If a block driver has a "preference" (in NVMe this would
+>       be the NPWG for the IU) to write above the logical block size,
+>       do we want the option to lift the logical block size? In
+>       retrospect I don't think this is needed given Jan Kara's patches
+>       to prevent allowing writes to to mounted devices [4], that should
+>       ensure that if a filesystem takes advantage of a larger physical
+>       block size and creates a filesystem with it as the sector size,
+>       userspace won't be mucking around with lower IOs to the drive
+>       while it is mounted. But, are there any applications which would
+>       get the block device logical block size instead for DIO?
+>     - LBS is transparent to to userspace applications
+>     - We've verified *most* IOs are aligned if you use a 16k block size
+>       but a smaller sector size, the lower IOs were verified to come
+>       from the XFS buffer cache. If your drive supports a large atomic
+>       you can avoid these as you can lift the sector size set as the
+>       physical block size will be larger than the logical block size.
+>       For NVMe today this is possible for drives with a large
+>       NPWG (the IU) and NAWUFP (the large atomic), for example.
+>
+> Tooling:
+>
+>   - Both efforts stand to gain from a shared verification set of tools
+>     for alignment and atomic use
+>   - We have a block layer eBPF alignent tool written by Daniel Gomez [6]
+>     however there is lack of interested parties to help review a simpler
+>     version of this tool this tool so we merge it [7], we can benefit from more
+>     eyeablls from experienced eBPF / block layer folks.
+>   - More advanced tools are typically not encouraged, and this leaves us
+>     wondering what a better home would be other than side forks
+>   - Other than preventing torn writes, do users of the no-tear API care
+>     about WAF? While we have one for NVMe for WAF [8] would
+>     collaborating on a generic tool be of interest ?
+>
+> Any other things folks want to get out of this as a session, provided
+> there is interest?
+>
+> [0] https://lwn.net/Articles/932900/
+> [1] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/storage-twp.html
+> [2] https://lore.kernel.org/linux-nvme/20240124113841.31824-1-john.g.garry@oracle.com/T/#m4ad28b480a8e12eb51467e17208d98ca50041ff2
+> [3] https://lore.kernel.org/all/20240124142645.9334-1-john.g.garry@oracle.com/
+> [4] https://lore.kernel.org/all/20240213093713.1753368-1-kernel@pankajraghav.com/T/#u
+> [5] https://lkml.kernel.org/r/20231101173542.23597-1-jack@suse.cz
+> [6] https://github.com/dagmcr/bcc/tree/blkalgn-dump
+> [7] https://github.com/iovisor/bcc/pull/4813
+> [8] https://github.com/dagmcr/bcc/tree/nvmeiuwaf
+>
+>   Luis
