@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4355B4C69;
-	Sat, 24 Feb 2024 01:19:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C88B63DF;
+	Sat, 24 Feb 2024 01:19:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708737569; cv=none; b=KeW31CycrsMMe3+M0jHtAaiuU3jZO7QK9k1Gp+xro60hqCBJMIDPJTKBnSdAGT6pv1B3F9tEVP7VCQBmjF+zZe21i9Sp6v6gyZTNtt1aPtY4RQsoBt/dlMWH8wKA5gUkPLoVut7fP8EXKKIOuhdwbz35r+V3v5hr00qtHZc/sWM=
+	t=1708737584; cv=none; b=ekCGKHAakSf+dCgGGEC4ffsUgNB10R5NvaBV8Hl+aZeQD2xTQsdcuD3SFqIEaFdNKjrPFbEybVkI7M3eOxv/dH6A2cvfbXCrnZCjWTziiqLhOFZUjhIJng3lCikKHrWD7hYk2PHB6LZTskmjQEE8tB9aXwlda4AyszI7zXhGsg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708737569; c=relaxed/simple;
-	bh=oDh1Ts+hn3lgKzDs3Z2UQdgZ7XQaqh9T+RxuUGk1AxM=;
+	s=arc-20240116; t=1708737584; c=relaxed/simple;
+	bh=U+YdoO2DM8uIKb1ZjbD8XDBMJ18tpX3m2cgKff6+ek0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FYTsYedjzurJ3yaKSFaNojvXN63W6SS5hXrLP/9DdqqgRP8RsmRiqYfD6uQ1GzRlqVhw8BVjVmBopu+ECnTwiByPYrTnxE9I5rAQV2Zr53jQCa4+fJiTXx7Mr753/C9bIyPNHH9ZymZ5L3cNQXCJ1mqxlL+FiZrqz+gFJu9qK8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rtfDDtmu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QCd+deVO8ELU5FMLokGchNTSsVYtjxrzP3v/YtWI6BFCiRRMnDJSKoO3cN/1SKOX+c/9Vw3GuIok1mA7AaZNBdmnxmL2Z5fRKr+lNG8jXTK2ULMjFtt0tQbE8uziJNP37b+zmMVf0fyWrSNl4Qd6KZGGj7HEwqj7g0op33pcw08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eZ/NO1zN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rtfDDtmu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C802BC433C7;
-	Sat, 24 Feb 2024 01:19:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eZ/NO1zN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71632C433C7;
+	Sat, 24 Feb 2024 01:19:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708737568;
-	bh=oDh1Ts+hn3lgKzDs3Z2UQdgZ7XQaqh9T+RxuUGk1AxM=;
+	s=k20201202; t=1708737584;
+	bh=U+YdoO2DM8uIKb1ZjbD8XDBMJ18tpX3m2cgKff6+ek0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rtfDDtmuINlGtSvEIqxW0nJgqBxOrxvl2lgYUM20UK8+FvUm4XE8AFAFVCgW3vm/U
-	 Nr2eHh2742RMf1cVJxMjSlQKvndAQn8J97uOMokc/Kz3+lmagzEdIZeZaAT4aRl8DO
-	 X1RongFHgMQN9Ogv1If1KgISoiqqVLs0OH42oiMAJ/eAM8KkhwlKVNQi5f+QD0B1c7
-	 NzURU5Ga3y3SxDhqltS6A44411c6dUz7NV8lhbzpMSMA8Y4vnixd3NY4faAizOPmSj
-	 /XdAuHyCyyNjWfb+fjAn1/1aGbDx0ooQoojPz7stC3F4NESo/AUBlUk/JZMHqLtJPz
-	 zjS/LZIpYMedQ==
-Date: Fri, 23 Feb 2024 17:19:28 -0800
-Subject: [PATCH 7/8] xfs: allow reconfiguration of the health monitoring
- device
+	b=eZ/NO1zNMpsjpS97ksJkCxo3JnnJwRdO4iQFB840W4G0+eOZxdMHTVUQJWmA9wg83
+	 ySn1/67mKv4F7ZNMyL1wxuAUwD+3PDaCiEkl7pZqnMH7cMTNdduvKulrO7F6jtGgg0
+	 da25qWdBpOOVYGywnXp0PnkchDl7Smw+D/wKxaulrF85Y/rtePnhcuC7Sw2Z7gd/u8
+	 7sEFtRU0u0kgfq/KrBplnbNHosGqAZs4Le5bXwrcnDPPWGqvFC9B0+V5OndhPPOQfC
+	 Hv1Qg1R++cfeW4lXDIDB+BFjczioeOQyQHUW/5MBj1DB3DqA43neiBCC4dmV8qk/fM
+	 hvsM11MabKjcA==
+Date: Fri, 23 Feb 2024 17:19:44 -0800
+Subject: [PATCH 8/8] xfs: send uevents when mounting and unmounting a
+ filesystem
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: kent.overstreet@linux.dev, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org
-Message-ID: <170873669980.1861872.14772003328438659934.stgit@frogsfrogsfrogs>
+Message-ID: <170873669995.1861872.14133497048269679722.stgit@frogsfrogsfrogs>
 In-Reply-To: <170873669843.1861872.1241932246549132485.stgit@frogsfrogsfrogs>
 References: <170873669843.1861872.1241932246549132485.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,63 +47,84 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make it so that we can reconfigure the health monitoring device by
-calling the XFS_IOC_HEALTH_MONITOR ioctl on it.
+Send uevents when we mount and unmount the filesystem, so that we can
+trigger systemd services.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_healthmon.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ fs/xfs/xfs_super.c |   40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-index 34efc5b5d85e3..27cfca98164eb 100644
---- a/fs/xfs/xfs_healthmon.c
-+++ b/fs/xfs/xfs_healthmon.c
-@@ -22,6 +22,8 @@
- #include "xfs_health.h"
- #include "xfs_healthmon.h"
- #include "xfs_notify_failure.h"
-+#include "xfs_fs.h"
-+#include "xfs_ioctl.h"
- 
- /*
-  * Live Health Monitoring
-@@ -995,9 +997,36 @@ xfs_healthmon_validate(
- 	return true;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5aa51d5402809..06f0c00988fc8 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1136,12 +1136,28 @@ xfs_inodegc_free_percpu(
+ 	free_percpu(mp->m_inodegc);
  }
  
-+/* Handle ioctls for the health monitoring thread. */
-+STATIC long
-+xfs_healthmon_ioctl(
-+	struct thread_with_stdio	*thr,
-+	unsigned int			cmd,
-+	unsigned long			p)
++static void
++xfs_send_unmount_uevent(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_health_monitor	hmo;
-+	struct xfs_healthmon		*hm = to_healthmon(thr);
-+	void			__user *arg = (void __user *)p;
++	char			sid[256] = "";
++	char			*env[] = {
++		"TYPE=mount",
++		sid,
++		NULL,
++	};
 +
-+	if (cmd != XFS_IOC_HEALTH_MONITOR)
-+		return -ENOTTY;
-+
-+	if (copy_from_user(&hmo, arg, sizeof(hmo)))
-+		return -EFAULT;
-+
-+	if (!xfs_healthmon_validate(&hmo))
-+		return -EINVAL;
-+
-+	mutex_lock(&hm->lock);
-+	hm->verbose = !!(hmo.flags & XFS_HEALTH_MONITOR_VERBOSE);
-+	mutex_unlock(&hm->lock);
-+	return 0;
++	snprintf(sid, sizeof(sid), "SID=%s", mp->m_super->s_id);
++	kobject_uevent_env(&mp->m_kobj.kobject, KOBJ_REMOVE, env);
 +}
 +
- static const struct thread_with_stdio_ops xfs_healthmon_ops = {
- 	.exit		= xfs_healthmon_exit,
- 	.fn		= xfs_healthmon_run,
-+	.unlocked_ioctl	= xfs_healthmon_ioctl,
- };
+ static void
+ xfs_fs_put_super(
+ 	struct super_block	*sb)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
  
- /*
++	xfs_send_unmount_uevent(mp);
+ 	xfs_notice(mp, "Unmounting Filesystem %pU", &mp->m_sb.sb_uuid);
+ 	xfs_filestream_unmount(mp);
+ 	xfs_unmountfs(mp);
+@@ -1504,6 +1520,29 @@ xfs_debugfs_mkdir(
+ 	return child;
+ }
+ 
++/*
++ * Send a uevent signalling that the mount succeeded so we can use udev rules
++ * to start background services.
++ */
++static void
++xfs_send_mount_uevent(
++	struct fs_context	*fc,
++	struct xfs_mount	*mp)
++{
++	char			source[256] = "";
++	char			sid[256] = "";
++	char			*env[] = {
++		"TYPE=mount",
++		source,
++		sid,
++		NULL,
++	};
++
++	snprintf(source, sizeof(source), "SOURCE=%s", fc->source);
++	snprintf(sid, sizeof(sid), "SID=%s", mp->m_super->s_id);
++	kobject_uevent_env(&mp->m_kobj.kobject, KOBJ_ADD, env);
++}
++
+ static int
+ xfs_fs_fill_super(
+ 	struct super_block	*sb,
+@@ -1810,6 +1849,7 @@ xfs_fs_fill_super(
+ 		mp->m_debugfs_uuid = NULL;
+ 	}
+ 
++	xfs_send_mount_uevent(fc, mp);
+ 	return 0;
+ 
+  out_filestream_unmount:
 
