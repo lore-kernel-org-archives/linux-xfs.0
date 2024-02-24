@@ -1,257 +1,178 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26AAC33D5
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:36:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B52A2DDD9
+	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 02:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708738561; cv=none; b=TGI4dxci+5JuaOMRqShBv7KYrkR3+ezfajh5nsl9NaJHdI7cMd8hPYRHmm6/gNCiDS5EWu1+UjNBtDIgaMtE77SB0TPgPcnhorJMfHuBg3zMccwqgT1+Mz1SyrkIPANTJApiOw8vgqjo18UnDiV4Rh2fxvttM5r6pbZLCcBiFQI=
+	t=1708740355; cv=none; b=nxupCvTVgA2DNWp1iDJsoF/0Mme4ArSr1DqiuU/CSkKiHf0K74mpG1DCccMv4bsydAk3KL3FsJQ9lmq/SXOworF4CHu3+eLupJG7h+bclZh6Eje7oEXsXfKrlNPeMsEkPnwyYHooDQNvNFoPo7WC95X2y4s8Yf6UvlLMkInLlZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708738561; c=relaxed/simple;
-	bh=NFo0oi0tAjlb+uLEH68PJkSolX3bpiE7cFalC9YYbqc=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wk/5AkuRPOmAZxJjtr2E7o0Bu1lXKqZRSZnD3fN2FQlD+GfEIb5yH1oaEJVp1RE8pGNMr1J+5bvNJDtdIzTZdXRFP4PWKndk9FpNlWlKj9AGbXNBiZc2BoTd7+vVEWu1mZ+tuczU8+vvygMmqf/XIRFkR1g8mli5INkXevzir2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ln2xvehw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708740355; c=relaxed/simple;
+	bh=/rvZvHXcTF4KXOIn6ccWJVNn3UbM487AiqcORr+9iR4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=De2UxHJPvie5An+RImsjwUsLw49tZQt8EQrTX8b8RDWA4IeQUh6ZUf1pmSodI2zDX3lCVoS3k+DyDRCWtvufRkNKVitiq5jdk5rSGznpstN67c0kAEOHqRqgzMB7F3Xr1zSkZo771J04m00KMLNv2yK5ILnJlTUyIgXFtUuf0zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b83FG1t5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ln2xvehw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F472C433F1;
-	Sat, 24 Feb 2024 01:36:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b83FG1t5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D075C433C7;
+	Sat, 24 Feb 2024 02:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708738560;
-	bh=NFo0oi0tAjlb+uLEH68PJkSolX3bpiE7cFalC9YYbqc=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ln2xvehw9Uy4QmuPY5CCIPnxy5Ehrxtd0fiNIiadlmMy6Gytnb4D0znEPevi4D76b
-	 OUfTrWOWTZsEV4E3eO2+NXZro4dzp+rzm1t9nKhd0vQ1dDJZYcdhihqrRSR9yyr3Nc
-	 Y1Nbn/Lx/YzX815i5xbms0kOr00WsGnOsnydf6ipTN4Wge9CplFbI/EUiurZh0f4VM
-	 uPeLrBRYxv2rFB+/WBsqZrRzWHu4uBG0a9OgjoAEvMQHjBMKKIOAWSuNeR2/qk+GzN
-	 bmUVT7MPrvW4lwFEaQBzNbyVeJEAfz8VoKNSAneIT0GimMTAR008baSdV3l1WTpDyd
-	 L9sfpIETLj/eA==
-Date: Fri, 23 Feb 2024 17:36:00 -0800
-Subject: [PATCH 7/7] xfs_scrubbed: create a background monitoring service
+	s=k20201202; t=1708740355;
+	bh=/rvZvHXcTF4KXOIn6ccWJVNn3UbM487AiqcORr+9iR4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=b83FG1t5UzZee/lgwnCrkMVKbebaTdBXaX+3L2+/gnW7OoN6wOVweyfYiPISmquK6
+	 eWV9ItK86g5QyjQJYunmmNuMRdqBtyGF8fM7likHZNrH8RuFJMA96uzy7omd8GFU46
+	 IY0dUkhLhl29PwYjoDw26PMLryKKwjhBC1FCpP9HkvoD2byiQF0jqESDOQR2dBcxmd
+	 eOGpfyLy0rrhGUPuW71eZ8ofaIL7Mbs8SGR97jYa3Ip79ORVwisXY4yimQzRbTVZGA
+	 enPPxYQbx/rmgQRY2FrILCmMWI9XhvfaNXX/Lyl/l4pLUb4zejuN1gaRdaGe6XFvIV
+	 ITxu6idGrbcbw==
+Date: Fri, 23 Feb 2024 18:05:54 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, kent.overstreet@linux.dev, djwong@kernel.org
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170873836655.1902540.5434675001559946363.stgit@frogsfrogsfrogs>
-In-Reply-To: <170873836546.1902540.13109376239205481967.stgit@frogsfrogsfrogs>
-References: <170873836546.1902540.13109376239205481967.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+Subject: Re: [PATCH] xfs: skip background cowblock trims on inodes open for
+ write
+Message-ID: <20240224020554.GP6226@frogsfrogsfrogs>
+References: <20240214165231.84925-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240214165231.84925-1-bfoster@redhat.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Feb 14, 2024 at 11:52:31AM -0500, Brian Foster wrote:
+> The background blockgc scanner runs on a 5m interval by default and
+> trims preallocation (post-eof and cow fork) from inodes that are
+> otherwise idle. Idle effectively means that iolock can be acquired
+> without blocking and that the inode has no dirty pagecache or I/O in
+> flight.
+> 
+> This simple mechanism and heuristic has worked fairly well for
+> post-eof speculative preallocations. Support for reflink and COW
+> fork preallocations came sometime later and plugged into the same
+> mechanism, with similar heuristics. Some recent testing has shown
+> that COW fork preallocation may be notably more sensitive to blockgc
+> processing than post-eof preallocation, however.
+> 
+> For example, consider an 8GB reflinked file with a COW extent size
+> hint of 1MB. A worst case fully randomized overwrite of this file
+> results in ~8k extents of an average size of ~1MB. If the same
+> workload is interrupted a couple times for blockgc processing
+> (assuming the file goes idle), the resulting extent count explodes
+> to over 100k extents with an average size <100kB. This is
+> significantly worse than ideal and essentially defeats the COW
+> extent size hint mechanism.
+> 
+> While this particular test is instrumented, it reflects a fairly
+> reasonable pattern in practice where random I/Os might spread out
+> over a large period of time with varying periods of (in)activity.
+> For example, consider a cloned disk image file for a VM or container
+> with long uptime and variable and bursty usage. A background blockgc
+> scan that races and processes the image file when it happens to be
+> clean and idle can have a significant effect on the future
+> fragmentation level of the file, even when still in use.
+> 
+> To help combat this, update the heuristic to skip cowblocks inodes
+> that are currently opened for write access during non-sync blockgc
+> scans. This allows COW fork preallocations to persist for as long as
+> possible unless otherwise needed for functional purposes (i.e. a
+> sync scan), the file is idle and closed, or the inode is being
+> evicted from cache.
 
-Create a systemd service and activate it automatically.
+Hmmm.  Thinking this over a bit more, I wonder if we really want this
+heuristic?
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- scrub/Makefile                 |    8 ++-
- scrub/xfs.rules                |    3 +
- scrub/xfs_scrubbed.in          |    8 +++
- scrub/xfs_scrubbed@.service.in |   95 ++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrubbed_start       |   17 +++++++
- 5 files changed, 128 insertions(+), 3 deletions(-)
- create mode 100644 scrub/xfs_scrubbed@.service.in
- create mode 100755 scrub/xfs_scrubbed_start
+If we're doing our periodic background scan then sure, I think it's ok
+to ignore files that are open for write but aren't actively being
+written to.
 
+This might introduce nastier side effects if OTOH we're doing blockgc
+because we've hit ENOSPC and we're trying to free up any blocks that we
+can.  I /think/ the way you've written the inode_is_open_for_write check
+means that we scan maximally for ENOSPC.
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index cf112018376b..7c1b5c742be2 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -19,6 +19,7 @@ XFS_SCRUB_FAIL_PROG = xfs_scrub_fail
- XFS_SCRUB_ARGS = -p
- XFS_SCRUB_SERVICE_ARGS = -b
- XFS_SCRUBBED_PROG = xfs_scrubbed
-+XFS_SCRUBBED_HELPER = xfs_scrubbed_start
- ifeq ($(HAVE_SYSTEMD),yes)
- INSTALL_SCRUB += install-systemd
- SYSTEMD_SERVICES=\
-@@ -29,8 +30,9 @@ SYSTEMD_SERVICES=\
- 	xfs_scrub_all.service \
- 	xfs_scrub_all_fail.service \
- 	xfs_scrub_all.timer \
--	system-xfs_scrub.slice
--OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
-+	system-xfs_scrub.slice \
-+	xfs_scrubbed@.service
-+OPTIONAL_TARGETS += $(SYSTEMD_SERVICES) $(XFS_SCRUBBED_HELPER)
- endif
- ifeq ($(HAVE_CROND),yes)
- INSTALL_SCRUB += install-crond
-@@ -181,7 +183,7 @@ install-systemd: default $(SYSTEMD_SERVICES)
- 	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
- 	$(INSTALL) -m 644 $(SYSTEMD_SERVICES) $(SYSTEMD_SYSTEM_UNIT_DIR)
- 	$(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
--	$(INSTALL) -m 755 $(XFS_SCRUB_FAIL_PROG) $(PKG_LIBEXEC_DIR)
-+	$(INSTALL) -m 755 $(XFS_SCRUB_FAIL_PROG) $(XFS_SCRUBBED_HELPER) $(PKG_LIBEXEC_DIR)
- 
- install-crond: default $(CRONTABS)
- 	$(INSTALL) -m 755 -d $(CROND_DIR)
-diff --git a/scrub/xfs.rules b/scrub/xfs.rules
-index c3f69b3ab909..f3ec21c322fe 100644
---- a/scrub/xfs.rules
-+++ b/scrub/xfs.rules
-@@ -11,3 +11,6 @@
- # supplying UDISKS_AUTO=0 here changes the HintAuto property of the block
- # device abstraction to mean "do not automatically start" (e.g. mount).
- SUBSYSTEM=="block", ENV{ID_FS_TYPE}=="xfs|xfs_external_log", ENV{UDISKS_AUTO}="0"
-+
-+# Start the background scrubber automatically
-+ACTION=="add", SUBSYSTEM=="xfs", ENV{TYPE}=="mount", RUN+="xfs_scrubbed_start"
-diff --git a/scrub/xfs_scrubbed.in b/scrub/xfs_scrubbed.in
-index 5458d39486bc..6d12efc2998b 100644
---- a/scrub/xfs_scrubbed.in
-+++ b/scrub/xfs_scrubbed.in
-@@ -17,6 +17,7 @@ import datetime
- import errno
- import ctypes
- import ctypes.util
-+import time
- 
- debug = False
- log = False
-@@ -505,6 +506,13 @@ def main():
- 		ret = monitor(args.mountpoint)
- 	except KeyboardInterrupt:
- 		ret = 0
-+
-+	# See the service mode comments in xfs_scrub.c for why we do this.
-+	if 'SERVICE_MODE' in os.environ:
-+		time.sleep(2)
-+		if ret != 0:
-+			ret = 1
-+
- 	sys.exit(ret)
- 
- if __name__ == '__main__':
-diff --git a/scrub/xfs_scrubbed@.service.in b/scrub/xfs_scrubbed@.service.in
-new file mode 100644
-index 000000000000..c33efbbbc7e5
---- /dev/null
-+++ b/scrub/xfs_scrubbed@.service.in
-@@ -0,0 +1,95 @@
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+#
-+# Copyright (C) 2024 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
-+
-+[Unit]
-+Description=Self Healing of XFS Metadata for %f
-+Documentation=man:xfs_scrubbed(8)
-+
-+# Explicitly require the capabilities that this program needs
-+ConditionCapability=CAP_SYS_ADMIN
-+
-+# Must be a mountpoint
-+ConditionPathIsMountPoint=%f
-+RequiresMountsFor=%f
-+
-+[Service]
-+Type=oneshot
-+Environment=SERVICE_MODE=1
-+ExecStart=@pkg_libexec_dir@/xfs_scrubbed --repair --log %f
-+SyslogIdentifier=%N
-+
-+# Run scrub with minimal CPU and IO priority so that nothing else will starve.
-+IOSchedulingClass=idle
-+CPUSchedulingPolicy=idle
-+CPUAccounting=true
-+Nice=19
-+
-+# Create the service underneath the scrub background service slice so that we
-+# can control resource usage.
-+Slice=system-xfs_scrub.slice
-+
-+# No realtime CPU scheduling
-+RestrictRealtime=true
-+
-+# Dynamically create a user that isn't root
-+DynamicUser=true
-+
-+# Make the entire filesystem readonly, but don't hide /home and don't use a
-+# private bind mount like xfs_scrub.  We don't want to pin the filesystem,
-+# because we want umount to work correctly and this service to stop
-+# automatically.
-+ProtectSystem=strict
-+ProtectHome=no
-+PrivateTmp=true
-+PrivateDevices=true
-+
-+# Don't let scrub complain about paths in /etc/projects that have been hidden
-+# by our sandboxing.  scrub doesn't care about project ids anyway.
-+InaccessiblePaths=-/etc/projects
-+
-+# No network access
-+PrivateNetwork=true
-+ProtectHostname=true
-+RestrictAddressFamilies=none
-+IPAddressDeny=any
-+
-+# Don't let the program mess with the kernel configuration at all
-+ProtectKernelLogs=true
-+ProtectKernelModules=true
-+ProtectKernelTunables=true
-+ProtectControlGroups=true
-+ProtectProc=invisible
-+RestrictNamespaces=true
-+
-+# Hide everything in /proc, even /proc/mounts
-+ProcSubset=pid
-+
-+# Only allow the default personality Linux
-+LockPersonality=true
-+
-+# No writable memory pages
-+MemoryDenyWriteExecute=true
-+
-+# Don't let our mounts leak out to the host
-+PrivateMounts=true
-+
-+# Restrict system calls to the native arch and only enough to get things going
-+SystemCallArchitectures=native
-+SystemCallFilter=@system-service
-+SystemCallFilter=~@privileged
-+SystemCallFilter=~@resources
-+SystemCallFilter=~@mount
-+
-+# xfs_scrub needs these privileges to run, and no others
-+CapabilityBoundingSet=CAP_SYS_ADMIN
-+AmbientCapabilities=CAP_SYS_ADMIN
-+NoNewPrivileges=true
-+
-+# xfs_scrubbed doesn't create files
-+UMask=7777
-+
-+# No access to hardware /dev files except for block devices
-+ProtectClock=true
-+DevicePolicy=closed
-diff --git a/scrub/xfs_scrubbed_start b/scrub/xfs_scrubbed_start
-new file mode 100755
-index 000000000000..471fdc99eb16
---- /dev/null
-+++ b/scrub/xfs_scrubbed_start
-@@ -0,0 +1,17 @@
-+#!/bin/sh
-+
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+#
-+# Copyright (C) 2024 Oracle.  All Rights Reserved.
-+# Author: Darrick J. Wong <djwong@kernel.org>
-+
-+# Start the xfs_scrubbed service when the filesystem is mounted
-+
-+command -v systemctl || exit 0
-+
-+grep "^$SOURCE[[:space:]]" /proc/mounts | while read source mntpt therest; do
-+	inst="$(systemd-escape --path "$mntpt")"
-+	systemctl restart --no-block "xfs_scrubbed@$inst" && break
-+done
-+
-+exit 0
+However, xfs_blockgc_free_dquots doesn't seem to do synchronous scans
+for EDQUOT.  So if we hit quota limits, we won't free maximally, right?
+OTOH I guess we don't really do that now either, so maybe it doesn't
+matter?
 
+<shrug> Thoughts?
+
+--D
+
+> Suggested-by: Darrick Wong <djwong@kernel.org>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> This fell out of some of the discussion on a prospective freeze time
+> blockgc scan. I ran this through the same random write test described in
+> that thread and it prevented all cowblocks trimming until the file is
+> released.
+> 
+> Brian
+> 
+> [1] https://lore.kernel.org/linux-xfs/ZcutUN5B2ZCuJfXr@bfoster/
+> 
+>  fs/xfs/xfs_icache.c | 20 +++++++++++++++++---
+>  1 file changed, 17 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index dba514a2c84d..d7c54e45043a 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1240,8 +1240,13 @@ xfs_inode_clear_eofblocks_tag(
+>   */
+>  static bool
+>  xfs_prep_free_cowblocks(
+> -	struct xfs_inode	*ip)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_icwalk	*icw)
+>  {
+> +	bool			sync;
+> +
+> +	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
+> +
+>  	/*
+>  	 * Just clear the tag if we have an empty cow fork or none at all. It's
+>  	 * possible the inode was fully unshared since it was originally tagged.
+> @@ -1262,6 +1267,15 @@ xfs_prep_free_cowblocks(
+>  	    atomic_read(&VFS_I(ip)->i_dio_count))
+>  		return false;
+>  
+> +	/*
+> +	 * A full cowblocks trim of an inode can have a significant effect on
+> +	 * fragmentation even when a reasonable COW extent size hint is set.
+> +	 * Skip cowblocks inodes currently open for write on opportunistic
+> +	 * blockgc scans.
+> +	 */
+> +	if (!sync && inode_is_open_for_write(VFS_I(ip)))
+> +		return false;
+> +
+>  	return true;
+>  }
+>  
+> @@ -1291,7 +1305,7 @@ xfs_inode_free_cowblocks(
+>  	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
+>  		return 0;
+>  
+> -	if (!xfs_prep_free_cowblocks(ip))
+> +	if (!xfs_prep_free_cowblocks(ip, icw))
+>  		return 0;
+>  
+>  	if (!xfs_icwalk_match(ip, icw))
+> @@ -1320,7 +1334,7 @@ xfs_inode_free_cowblocks(
+>  	 * Check again, nobody else should be able to dirty blocks or change
+>  	 * the reflink iflag now that we have the first two locks held.
+>  	 */
+> -	if (xfs_prep_free_cowblocks(ip))
+> +	if (xfs_prep_free_cowblocks(ip, icw))
+>  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+>  	return ret;
+>  }
+> -- 
+> 2.42.0
+> 
