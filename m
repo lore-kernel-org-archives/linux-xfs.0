@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2ED64A07
-	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:31:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD25625
+	for <linux-xfs@vger.kernel.org>; Sat, 24 Feb 2024 01:31:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708738294; cv=none; b=POZH4XzsPu+ZrTd0oR4d+SL1Du+zTYsDawLSGdWPT3M++luQKGqGhHILNtDz5Mtiyd0o5x94Zpb6pH1CW7dVmFe5ckqguQ5DQx0q/0mLBRsJMPv8k4+g5Vmtp3c+GvGmjbrlb3RBuxK7tEmLNii4v/Fa4wBSL53LJG4ba6AWsew=
+	t=1708738310; cv=none; b=tW3yTK7kbsShp7g5vtiXWljzkIDuGqzf2bbYqGiQaOm3+zMjVu/8sEmxWYenm9/m/fzr481p64MB1ikooHf+2SHPTO20wm+G8ceMqaeet1Q/tUekA5Iz1ZnfHvJ+MEQfTbMrvYD672n05NpAruzXzLKnjZQe8Pb7D1OH9VBEzXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708738294; c=relaxed/simple;
-	bh=U9olQcFxe+kYmPDtYLriwQWo3oAL9r+FtBkX3sr0Ws8=;
+	s=arc-20240116; t=1708738310; c=relaxed/simple;
+	bh=pResZIT9N+Z3yPRkJ9mHr6/wyCdmZyUvyRAtV0JUd8E=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=Q1T0C/Jr+Myb8darjqxFDRZZvYlb6rROx8zwEihVTwjFLC4XuEQ3fmkhfh/5B9gc7MIQ3TqRHJKtL09shavsZ6Jda9A5az6RYVVNGMIlKzyrr/f1uPGicIRdJV1YqEGFf7/6xN+etOoCsFbNx7X0MbE0gPrFAA7ePNvS2+oIzP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hDTLmgvm; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=U4/IzyQ6li5Zo/sVSUDfKmwCofheSbcRV38ri/3bvGeuG6TFpf1rusalJRELBE1EUxNfaQyfoBpUMS0JW9MzkqDFl/jfB1puxwaQj5gmQvQdL9GARb0bVnvzPDOt3QCZoqNREp9fsLm3+arXlTNd+EPNhSe+RqRoDigl6KrRhQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FiDyMGsz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hDTLmgvm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 480B9C433F1;
-	Sat, 24 Feb 2024 01:31:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FiDyMGsz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E17E8C433F1;
+	Sat, 24 Feb 2024 01:31:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708738294;
-	bh=U9olQcFxe+kYmPDtYLriwQWo3oAL9r+FtBkX3sr0Ws8=;
+	s=k20201202; t=1708738309;
+	bh=pResZIT9N+Z3yPRkJ9mHr6/wyCdmZyUvyRAtV0JUd8E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hDTLmgvmOVixpRp4SM45DG3JokibzIDx5MROlQP0QtaY296DwSnQdmWpJUYB5GbzV
-	 0fBU4TG9SnL6tSVdGUOrnoJruR8SJA9HWxm6MQQKYeMhj+cVY+dykL8qCcCaif/mXh
-	 1PdSbsdl3nVt7UsyOdFld2eeThqz02IbB+ufhtniFR+mU2wUn4VZXnRVXWocIZntb5
-	 k6jgr6kHr1wuGn4SbKWl/K0k2TgX2REnjGbaIJNbwjOmBcVpsjkzRXABe0XhFys3gP
-	 wNRYs7jiDu6mCV1lNzKFQQF/Bmdsy0xnbWcwFXCd5Y8MLljfE0aeBmNV2Lwp2Yg84x
-	 sg9MItC9tap+Q==
-Date: Fri, 23 Feb 2024 17:31:33 -0800
-Subject: [GIT PULL 10/18] xfs: btree readahead cleanups
+	b=FiDyMGszo/v7FN1w4UjqY14Vgm2jgXBG6dthbUtGM5+UPskEi/bvbFTNjc0sW9mqA
+	 PxbWWKb4wpWoxaEUVL95r0y7U6ZW7HTtKrNYsEScFURp8wfd6BLKpuI25B2Lb4Kq3o
+	 ghrxd7zQkRltUKksrGLYVhkmI7P7ASqYACbqqyoAbrLbfEneSnkOBF+sPiP17uHdZz
+	 BA2gPPGWMCm7EHggUVBr+N62bzS191YM7VfEFpxcrkabHLz4D2U3I0GsEXdvCl0xpS
+	 hPeoX2EQbytoPa8WU2l7jS2xT6p9DNhgU9xFEjunkLsGQKG3ITJu/iyPifeMKrilHd
+	 bgdCCvpE2zWXA==
+Date: Fri, 23 Feb 2024 17:31:49 -0800
+Subject: [GIT PULL 11/18] xfs: buftarg cleanups
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <170873804279.1891722.10129509039878020958.stg-ugh@frogsfrogsfrogs>
+Message-ID: <170873804706.1891722.8290634043484810651.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,38 +53,37 @@ encounter any problems.
 
 --D
 
-The following changes since commit 79e72304dcba471e5c0dea2f3c67fe1a0558c140:
-
-xfs: factor out a __xfs_btree_check_lblock_hdr helper (2024-02-22 12:40:59 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/btree-readahead-cleanups-6.9_2024-02-23
-
-for you to fetch changes up to 24f755e4854e0fddb78d18f610bf1b5cb61db520:
+The following changes since commit 24f755e4854e0fddb78d18f610bf1b5cb61db520:
 
 xfs: split xfs_buf_rele for cached vs uncached buffers (2024-02-22 12:41:02 -0800)
 
-----------------------------------------------------------------
-xfs: btree readahead cleanups [v29.3 10/18]
+are available in the Git repository at:
 
-Minor cleanups for the btree block readahead code.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/buftarg-cleanups-6.9_2024-02-23
+
+for you to fetch changes up to 1c51ac0998ed9baaca3ac75c0083b4c3b4d993ef:
+
+xfs: move setting bt_logical_sectorsize out of xfs_setsize_buftarg (2024-02-22 12:42:45 -0800)
+
+----------------------------------------------------------------
+xfs: buftarg cleanups [v29.3 11/18]
+
+Clean up the buffer target code in preparation for adding the ability to
+target tmpfs files.  That will enable the creation of in memory btrees.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Christoph Hellwig (4):
-xfs: remove xfs_btree_reada_bufl
-xfs: remove xfs_btree_reada_bufs
-xfs: move and rename xfs_btree_read_bufl
-xfs: split xfs_buf_rele for cached vs uncached buffers
+Christoph Hellwig (3):
+xfs: remove the xfs_buftarg_t typedef
+xfs: remove xfs_setsize_buftarg_early
+xfs: move setting bt_logical_sectorsize out of xfs_setsize_buftarg
 
-fs/xfs/libxfs/xfs_bmap.c  | 33 ++++++++++++----
-fs/xfs/libxfs/xfs_btree.c | 98 ++++++++---------------------------------------
-fs/xfs/libxfs/xfs_btree.h | 36 -----------------
-fs/xfs/xfs_buf.c          | 46 ++++++++++++++--------
-fs/xfs/xfs_iwalk.c        |  6 ++-
-5 files changed, 76 insertions(+), 143 deletions(-)
+fs/xfs/xfs_buf.c   | 34 +++++++++++++---------------------
+fs/xfs/xfs_buf.h   |  4 ++--
+fs/xfs/xfs_log.c   | 14 +++++++-------
+fs/xfs/xfs_mount.h |  6 +++---
+4 files changed, 25 insertions(+), 33 deletions(-)
 
