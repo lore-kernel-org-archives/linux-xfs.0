@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D8D15A4;
-	Sat, 24 Feb 2024 01:08:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC444184E;
+	Sat, 24 Feb 2024 01:08:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708736881; cv=none; b=T9JThtXyUxi7+JR2Q3GeNvxHxyiJ2mWyO8ShCfMORxiK+cx46VNQR+vVoD+7PgxYzi2biA0np2zNd12uazi9rjD4ZWC8o6sOuvuPy9WSSt48C9OPg5Ml4M+E2P09LU791zMdkdhWXxyne91kn711JEjdV1eetw9I9ZmghHxFdYE=
+	t=1708736897; cv=none; b=SjrVBO5izYTABybKwwdACLPg7l4TWGQD6vvo0sST66+QmkPf7Ibs6COxJMM8On7RG8mMfyhvhitmLMYATXT88S4eUKFD2EUkCkLDNz04TG+wiNeOON53vdzqex4Vn3SEx0ZJAxDm7LBJEBlQUAGBVAV0oZQuNCpFPKpR52V/+u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708736881; c=relaxed/simple;
-	bh=Qq0rzLht/1C06Vd6Y3S4Q4V/WS1/vFpfOS+XSS40jbk=;
+	s=arc-20240116; t=1708736897; c=relaxed/simple;
+	bh=mOtUKs1fF7YIK54Au+p8vxziPoOMq/LeiWUd5VUrEEk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FmNflHhj3i733ljc/X2QWuvVKBCsaBD7m9WKOSxutHQ9E9y3TK9l8GJmwbN2ttZILbRLnoPoyYTQIePW3KPaZ2vYpMLpXWXloz+2ILw7ltGe4IcbCyRu7Yol4bF1+hg6v9lkw6iGEggbJcvUzro6H6oTnxXXpbh6bw6TpjoHR20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KhgCWzkF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jHO8c+8xO3MSmGRCCJufIcLAcON4Zx3+oCmxH/9kuYimVYsTJ19cN7Xpk+T/VFl0zuTtRIAH/tzzplAZeyv12R+QXlX6WL1EhSxw32UXlGJtGfcNfjaiKV610IY/F++8DxqcVLMMbbu9PxLzzyI1f/pXgkLl3Y31b0zxiuAN4Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mAmAWfoS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KhgCWzkF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCE32C433F1;
-	Sat, 24 Feb 2024 01:08:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mAmAWfoS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AC85C433C7;
+	Sat, 24 Feb 2024 01:08:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708736880;
-	bh=Qq0rzLht/1C06Vd6Y3S4Q4V/WS1/vFpfOS+XSS40jbk=;
+	s=k20201202; t=1708736896;
+	bh=mOtUKs1fF7YIK54Au+p8vxziPoOMq/LeiWUd5VUrEEk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=KhgCWzkFJcIUPRDjBmPCrRDuwRuGBSBsD+UQWlYZpFxeKiwqHfXbXw1N8k15zUCSz
-	 7iBcGoB50xS/0elgYehemUlw/ys0Ira0hKYuAWCIO5ES5qp77o80kwZmsGTyzFE0nB
-	 +YnVVFsoXQfMnuTQkaUjazRboDpTusvDU9SvqJ3eJGErRXh9GA7fifpQ2tLqscUNmd
-	 E1IQjobUul4tDMcnWlqFAGZeBQf4bysB9s0zPtoIl5Ixf+VjItoRZTqJtASp0xDj3I
-	 zXxEvPduaT7qtzzOpQ5U3byMgMNj0PXFeQqYPsxtrZ0iMSsMF6Bd0i5ZKlUTCfxkw4
-	 mF/GxuBaGpQEA==
-Date: Fri, 23 Feb 2024 17:08:00 -0800
-Subject: [PATCHSET 2/6] time_stats: cleanups and fixes
+	b=mAmAWfoSSN8PEFSFQfWS2cyOb8dwXeoRKTX7rVET4S9bhyNubCNU/MpRKw/WClRZI
+	 xLEz+B4q0Pzyoni+BOGsOKwLB9UhhPhLpxGkOnsS1D2iCtpyCQOrXlCRTyn+EN5Ir0
+	 y1blXI6Eu40NYH3iDA7bDTlKWlK/dSdu5a/hmhYl3IXuehRy8ZMcDw8UKv6BoqkGeu
+	 wcIk1nFd+b5mpAABPkfRQIAS/Hdn2Sa7dvmNRiz/rPOwIodemzmTyFWH3A8YKGWdXY
+	 URuLFKCTvsavNESiBeMXjHOWgG4tUGxFazwFLUJqR84RDZQNkrgHW/sqW1YwhNjM8C
+	 MQv8LzKWTABNw==
+Date: Fri, 23 Feb 2024 17:08:16 -0800
+Subject: [PATCHSET RFC 3/6] xfs: capture statistics about wait times
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: akpm@linux-foundation.org, daniel@gluo.nz, kent.overstreet@linux.dev,
- djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Message-ID: <170873667916.1860949.11027844260383646446.stgit@frogsfrogsfrogs>
+To: kent.overstreet@linux.dev, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-bcachefs@vger.kernel.org
+Message-ID: <170873668436.1861246.6578314737824782019.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240224010017.GM6226@frogsfrogsfrogs>
 References: <20240224010017.GM6226@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,11 +46,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series reduces the memory consumption of individual time_stats
-objects, and adds reporting of how long each stat counter has been
-making observations.  It's a prep patch for adding some counters to XFS,
-for which we'll want as low overhead as possible to maximimze
-shotgunning effect.
+This patchset builds off of Kent Overstreet's timestats code to capture
+information about the amount of time we spend waiting for buffer, quota,
+and inode locks; as well as time spent in the scrub code.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -63,29 +59,31 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=timestats-cleanups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=contention-timestats
 ---
 Commits in this patchset:
- * time_stats: report lifetime of the stats object
- * time_stats: split stats-with-quantiles into a separate structure
- * time_stats: fix struct layout bloat
- * time_stats: add larger units
- * time_stats: don't print any output if event count is zero
- * time_stats: allow custom epoch names
- * mean_and_variance: put struct mean_and_variance_weighted on a diet
- * time_stats: shrink time_stat_buffer for better alignment
- * time_stats: report information in json format
- * time_stats: Kill TIME_STATS_HAVE_QUANTILES
+ * xfs: present wait time statistics
+ * xfs: present time stats for scrubbers
+ * xfs: present timestats in json format
+ * xfs: create debugfs uuid aliases
 ---
- fs/bcachefs/bcachefs.h            |    2 -
- fs/bcachefs/io_write.c            |    2 -
- fs/bcachefs/super.c               |   10 +--
- fs/bcachefs/sysfs.c               |    4 +
- fs/bcachefs/util.c                |   15 ++--
- include/linux/mean_and_variance.h |   14 ++--
- include/linux/time_stats.h        |   43 ++++++++++-
- lib/math/mean_and_variance.c      |   28 +++++--
- lib/math/mean_and_variance_test.c |   80 +++++++++++---------
- lib/time_stats.c                  |  148 +++++++++++++++++++++++++++++++------
- 10 files changed, 248 insertions(+), 98 deletions(-)
+ fs/xfs/Kconfig         |    8 ++
+ fs/xfs/Makefile        |    1 
+ fs/xfs/scrub/repair.c  |    6 +-
+ fs/xfs/scrub/scrub.c   |    6 +-
+ fs/xfs/scrub/stats.c   |  136 +++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/stats.h   |   21 +-----
+ fs/xfs/xfs_buf.c       |    4 +
+ fs/xfs/xfs_dquot.c     |   11 +++
+ fs/xfs/xfs_dquot.h     |    4 +
+ fs/xfs/xfs_inode.c     |   12 +++-
+ fs/xfs/xfs_linux.h     |    5 ++
+ fs/xfs/xfs_log.c       |    9 +++
+ fs/xfs/xfs_mount.h     |   14 ++++
+ fs/xfs/xfs_super.c     |   17 +++++
+ fs/xfs/xfs_timestats.c |  156 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_timestats.h |   37 +++++++++++
+ 16 files changed, 418 insertions(+), 29 deletions(-)
+ create mode 100644 fs/xfs/xfs_timestats.c
+ create mode 100644 fs/xfs/xfs_timestats.h
 
