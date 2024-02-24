@@ -1,249 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0D9313FFF;
-	Sat, 24 Feb 2024 06:02:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA99C17579;
+	Sat, 24 Feb 2024 09:07:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708754571; cv=none; b=lU9GO/r1QDaXuQO49mCVKEmzrWPvpvvACplivJ0Ra/Z8TRhzVhmnVunhU0ZbOt4wwQwyGk7q+SsXPAZdplCC/Bhq0Gojll98tan0ypDi/DZJj1QmgDoJmsqJeatv7J00i4lps0UDPgCK1/q3fffaX8RR7ZyU6kOIXX1YLUaiu0A=
+	t=1708765651; cv=none; b=ILCG1Pulj90fTox692EZYFf/8RxRdXJ6UbJD363bCECUHWi90/s+8hJ8WXBLn9uWKROdK/an8mx/EQRBgweY1vYVpGG44CZqi5TUmU0/d6WLLfdvuSph0W2V4Y1c1tFeg8alf2+a8b9OmX5nSA4khojozT5XOVDX9r55iJizQqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708754571; c=relaxed/simple;
-	bh=/X3bKXE+HZeNnSa9dFbKJGwIpGkB5Fuyv4tbi5RHMLA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tMHgolxc2Hq7qHkrKG8PIfkYB1r3vKknG1bM90Tp/QzwRhKRAz8RdObAtKfpYmWUfNgB7vRnovHSWulKAVoOH4Jl/K+TSe4YDJWH3YyvXsZpvIOKnirYpTaOwvM18nhmDG/Ive6WrO2qU/iATYYCAYW0OWMbqRNjTp5cpbWDOco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UUxJ683N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708765651; c=relaxed/simple;
+	bh=4M+bZKyaz20xTlf7slVV/NGOumHE1bHwkyKsYwOdURE=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=G0jyXTlJ5/stwih55y+SpJQs590grnjVzRKVuC8m3LNg4oGQZYkHvILmMAFPHVFbSD90HKb9suE/Gy3tz2WLcEfE13Ut49u7U3IZ7QFSV5UWy39cllDLt17io4LsmfEksEjVNc1JHwrn70MBDxs6Yw3qMNk34fcZOSVNLPGUGik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PbITO3gj; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UUxJ683N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26BBFC433C7;
-	Sat, 24 Feb 2024 06:02:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708754571;
-	bh=/X3bKXE+HZeNnSa9dFbKJGwIpGkB5Fuyv4tbi5RHMLA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UUxJ683N9AQ85d8dDugqMvDFESf/q7Jsn09rE+WHZM1mJ2vI5tMmE4M2b+UUCP+3S
-	 IoANt/bKPHfwAeIj73/nrpKTaMnIwEdWcacdny9IvaSsaovAzGfCPEQo+vyo5e7nf8
-	 VqhtahYb2TxCwkgJEZWi4jyoNKqeuRLdNzuVVyj3oFp5K5/6oaMvmV6ULxjVaPqn5T
-	 6kGwbTq8a5tmItG8/yeaaugXZ/hJiBBYwGzOxA5iC7HY0LMJ3FJ8aCmMMPN96cj5xf
-	 BbO4ibRdBVMj4sa8T9CUjjuJ3ywzGzxgZUNmqIXODaEOGWX+/TM0sl/px3NzBqgmha
-	 a7BKFwBXbq9hw==
-Date: Fri, 23 Feb 2024 22:02:50 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Kent Overstreet <kent.overstreet@linux.dev>
-Cc: akpm@linux-foundation.org, daniel@gluo.nz, linux-xfs@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 09/10] time_stats: report information in json format
-Message-ID: <20240224060250.GQ6226@frogsfrogsfrogs>
-References: <170873667916.1860949.11027844260383646446.stgit@frogsfrogsfrogs>
- <170873668085.1860949.11659237532415596101.stgit@frogsfrogsfrogs>
- <20240224041545.GC616564@frogsfrogsfrogs>
- <hf4u56xx3riqz2wyx3qxqiidccocu6cs5z5qdla3zgo5v3wcbl@dldlaaamx2kn>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PbITO3gj"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-5bdbe2de25fso1375198a12.3;
+        Sat, 24 Feb 2024 01:07:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1708765649; x=1709370449; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=4PdV2VKaPys/RwV9Ux4lRb/Xv8a//cmZyvpKpBTO+ZE=;
+        b=PbITO3gjq0sljbLl9ieVotphLUQXr+zQ0SeQ/nFqT/jBedSSePQUN3qC3gjarqXoVw
+         guy11pZEyvYtEcEDe3B7adpGkXHK7iahDN5Nevu6X8tOkfhxj5WNYPK3v+68XDsugzIj
+         rQ/xKarwKYCr5t9N3JSqOZ4dfeN7O4zsJb3OgaziGMK5qGbfyj8p9WM01YWrIVXq101q
+         RZIM+hnEsd7tl6fWbbIrqjTxkpY2ahyd7YXL1hBB+DB8DgAHTGuC+v3emeAvCR4wpK02
+         le8sIZ6PCmujtGboKcpzu9xf2HfYULeNl2nPDy0OJJjWEzdeJ9lx+QBpl9MFXoe81fsc
+         v0Sg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708765649; x=1709370449;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4PdV2VKaPys/RwV9Ux4lRb/Xv8a//cmZyvpKpBTO+ZE=;
+        b=QT9H/o2qc40fI/c9fCa+F6XYeRkndY/xa2C0UkbBuf0dxD5/ipWTJbnFFKjoR3H530
+         cSrZtFWuA7FyYFODLAa1a0a5iTUa31KgPMJWzDSPiQY1Ls4Q+lHBBTYv2BTAzk9AXolT
+         DhsXdEmDiThCCToUGLqxy9XZw+9chs3Et7jTHLjXonyWTuPXBATxSddgF/tGnCeC5/y4
+         +8v3M2+ilIkZDB/8ZJ7NuX6E1oYRs3/9SlHfP35eWVYVZchPU/tMQkKlfDosZ3IwNS3y
+         yIOl+rY/zoAUuZ9rxUsfJel8S0BkeOM4RjGjEsPS7jGXMC3YBikJ+/Im4CpVv+2+qXFV
+         ZRqg==
+X-Forwarded-Encrypted: i=1; AJvYcCW3bhmjZJngE1l61io4tQ8gNwnDijZPzMe+oUl1bjp80HLb0csLTJJAKkyOL02nlO8SsCS/9kA6gW4fbPkptwF/4u3OeBMHaWNf7xIHgxUF1cLnaP00YLfl/XOQvad0zoZZJ03VzQU49PYGC2I5Ybjf+CZ0s8P579wpKXzHyXFVAEnHrQ==
+X-Gm-Message-State: AOJu0YxBE7dO3bVRVHgpFjoCQBhWBa1ZIe2RC9L0JbzheDHHTGj6F2Z+
+	CpHtK5aiED2vk2hOEy+Ly9ypkcU4MnvgMvRSTHsRnqf0/ml2dY2/5mT9Hb1I
+X-Google-Smtp-Source: AGHT+IHlffaot7kk6mKJc3F2NLJoUKnYQyBLp+zO6mSMscVzXiOV/ygy7I2JnwzeUfjzdPJnRhic2g==
+X-Received: by 2002:a05:6a20:c791:b0:1a0:9ab5:1e83 with SMTP id hk17-20020a056a20c79100b001a09ab51e83mr3221512pzb.24.1708765649023;
+        Sat, 24 Feb 2024 01:07:29 -0800 (PST)
+Received: from [10.0.2.15] (KD106167171201.ppp-bb.dion.ne.jp. [106.167.171.201])
+        by smtp.gmail.com with ESMTPSA id c2-20020a63a402000000b005e45b337b34sm728127pgf.0.2024.02.24.01.07.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 24 Feb 2024 01:07:28 -0800 (PST)
+Message-ID: <22187737-e0ad-4cc4-98fd-5e43ebc5ecee@gmail.com>
+Date: Sat, 24 Feb 2024 18:07:28 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <hf4u56xx3riqz2wyx3qxqiidccocu6cs5z5qdla3zgo5v3wcbl@dldlaaamx2kn>
+User-Agent: Mozilla Thunderbird
+From: Akira Yokosawa <akiyks@gmail.com>
+Subject: Re: linux-next: build warning after merge of the xfs tree
+To: hch@lst.de
+Cc: chandanbabu@kernel.org, corbet@lwn.net, david@fromorbit.com,
+ djwong@kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+ linux-xfs@vger.kernel.org, mchehab@kernel.org, sfr@canb.auug.org.au,
+ Akira Yokosawa <akiyks@gmail.com>
+References: <20240223140619.GA30519@lst.de>
+Content-Language: en-US
+In-Reply-To: <20240223140619.GA30519@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Feb 24, 2024 at 12:10:33AM -0500, Kent Overstreet wrote:
-> On Fri, Feb 23, 2024 at 08:15:45PM -0800, Darrick J. Wong wrote:
-> > On Fri, Feb 23, 2024 at 05:12:26PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Export json versions of time statistics information.  Given the tabular
-> > > nature of the numbers exposed, this will make it a lot easier for higher
-> > > (than C) level languages (e.g. python) to import information without
-> > > needing to write yet another clumsy string parser.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
-> > > ---
-> > >  include/linux/time_stats.h |    2 +
-> > >  lib/time_stats.c           |   87 ++++++++++++++++++++++++++++++++++++++++++++
-> > >  2 files changed, 89 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/include/linux/time_stats.h b/include/linux/time_stats.h
-> > > index b3c810fff963a..4e1f5485ed039 100644
-> > > --- a/include/linux/time_stats.h
-> > > +++ b/include/linux/time_stats.h
-> > > @@ -156,6 +156,8 @@ static inline bool track_event_change(struct time_stats *stats, bool v)
-> > >  struct seq_buf;
-> > >  void time_stats_to_seq_buf(struct seq_buf *, struct time_stats *,
-> > >  		const char *epoch_name, unsigned int flags);
-> > > +void time_stats_to_json(struct seq_buf *, struct time_stats *,
-> > > +		const char *epoch_name, unsigned int flags);
-> > >  
-> > >  void time_stats_exit(struct time_stats *);
-> > >  void time_stats_init(struct time_stats *);
-> > > diff --git a/lib/time_stats.c b/lib/time_stats.c
-> > > index 0fb3d854e503b..c0f209dd9f6dd 100644
-> > > --- a/lib/time_stats.c
-> > > +++ b/lib/time_stats.c
-> > > @@ -266,6 +266,93 @@ void time_stats_to_seq_buf(struct seq_buf *out, struct time_stats *stats,
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(time_stats_to_seq_buf);
-> > >  
-> > > +void time_stats_to_json(struct seq_buf *out, struct time_stats *stats,
-> > > +		const char *epoch_name, unsigned int flags)
-> > > +{
-> > > +	struct quantiles *quantiles = time_stats_to_quantiles(stats);
-> > > +	s64 f_mean = 0, d_mean = 0;
-> > > +	u64 f_stddev = 0, d_stddev = 0;
-> > > +
-> > > +	if (stats->buffer) {
-> > > +		int cpu;
-> > > +
-> > > +		spin_lock_irq(&stats->lock);
-> > > +		for_each_possible_cpu(cpu)
-> > > +			__time_stats_clear_buffer(stats, per_cpu_ptr(stats->buffer, cpu));
-> > > +		spin_unlock_irq(&stats->lock);
-> > > +	}
-> > > +
-> > > +	if (stats->freq_stats.n) {
-> > > +		/* avoid divide by zero */
-> > > +		f_mean = mean_and_variance_get_mean(stats->freq_stats);
-> > > +		f_stddev = mean_and_variance_get_stddev(stats->freq_stats);
-> > > +		d_mean = mean_and_variance_get_mean(stats->duration_stats);
-> > > +		d_stddev = mean_and_variance_get_stddev(stats->duration_stats);
-> > > +	} else if (flags & TIME_STATS_PRINT_NO_ZEROES) {
-> > > +		/* unless we didn't want zeroes anyway */
-> > > +		return;
-> > > +	}
-> > > +
-> > > +	seq_buf_printf(out, "{\n");
-> > > +	seq_buf_printf(out, "  \"epoch\":       \"%s\",\n", epoch_name);
-> > > +	seq_buf_printf(out, "  \"count\":       %llu,\n", stats->duration_stats.n);
-> > > +
-> > > +	seq_buf_printf(out, "  \"duration_ns\": {\n");
-> > > +	seq_buf_printf(out, "    \"min\":       %llu,\n", stats->min_duration);
-> > > +	seq_buf_printf(out, "    \"max\":       %llu,\n", stats->max_duration);
-> > > +	seq_buf_printf(out, "    \"total\":     %llu,\n", stats->total_duration);
-> > > +	seq_buf_printf(out, "    \"mean\":      %llu,\n", d_mean);
-> > > +	seq_buf_printf(out, "    \"stddev\":    %llu\n", d_stddev);
-> > > +	seq_buf_printf(out, "  },\n");
-> > > +
-> > > +	d_mean = mean_and_variance_weighted_get_mean(stats->duration_stats_weighted, TIME_STATS_MV_WEIGHT);
-> > > +	d_stddev = mean_and_variance_weighted_get_stddev(stats->duration_stats_weighted, TIME_STATS_MV_WEIGHT);
-> > > +
-> > > +	seq_buf_printf(out, "  \"duration_ewma_ns\": {\n");
-> > > +	seq_buf_printf(out, "    \"mean\":      %llu,\n", d_mean);
-> > > +	seq_buf_printf(out, "    \"stddev\":    %llu\n", d_stddev);
-> > > +	seq_buf_printf(out, "  },\n");
-> > > +
-> > > +	seq_buf_printf(out, "  \"frequency_ns\": {\n");
-> > 
-> > I took the variable names too literally here; these labels really ought
-> > to be "between_ns" and "between_ewma_ns" to maintain consistency with
-> > the labels in the table format.
-> > 
-> > > +	seq_buf_printf(out, "    \"min\":       %llu,\n", stats->min_freq);
-> > > +	seq_buf_printf(out, "    \"max\":       %llu,\n", stats->max_freq);
-> > > +	seq_buf_printf(out, "    \"mean\":      %llu,\n", f_mean);
-> > > +	seq_buf_printf(out, "    \"stddev\":    %llu\n", f_stddev);
-> > > +	seq_buf_printf(out, "  },\n");
-> > > +
-> > > +	f_mean = mean_and_variance_weighted_get_mean(stats->freq_stats_weighted, TIME_STATS_MV_WEIGHT);
-> > > +	f_stddev = mean_and_variance_weighted_get_stddev(stats->freq_stats_weighted, TIME_STATS_MV_WEIGHT);
-> > > +
-> > > +	seq_buf_printf(out, "  \"frequency_ewma_ns\": {\n");
-> > > +	seq_buf_printf(out, "    \"mean\":      %llu,\n", f_mean);
-> > > +	seq_buf_printf(out, "    \"stddev\":    %llu\n", f_stddev);
-> > > +
-> > > +	if (quantiles) {
-> > > +		u64 last_q = 0;
-> > > +
-> > > +		/* close frequency_ewma_ns but signal more items */
-> > 
-> > (also this comment)
-> > 
-> > > +		seq_buf_printf(out, "  },\n");
-> > > +
-> > > +		seq_buf_printf(out, "  \"quantiles_ns\": [\n");
-> > > +		eytzinger0_for_each(i, NR_QUANTILES) {
-> > > +			bool is_last = eytzinger0_next(i, NR_QUANTILES) == -1;
-> > > +
-> > > +			u64 q = max(quantiles->entries[i].m, last_q);
-> > > +			seq_buf_printf(out, "    %llu", q);
-> > > +			if (!is_last)
-> > > +				seq_buf_printf(out, ", ");
-> > > +			last_q = q;
-> > > +		}
-> > > +		seq_buf_printf(out, "  ]\n");
-> > > +	} else {
-> > > +		/* close frequency_ewma_ns without dumping further */
-> > 
-> > (this one too)
-> > 
-> > Kent, would you mind making that edit the next time you reflow your
-> > branch?
-> > 
-> > --D
-> > 
-> > > +		seq_buf_printf(out, "  }\n");
-> > > +	}
-> > > +
-> > > +	seq_buf_printf(out, "}\n");
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(time_stats_to_json);
-> > > +
-> > >  void time_stats_exit(struct time_stats *stats)
-> > >  {
-> > >  	free_percpu(stats->buffer);
-> > > 
-> > > 
-> 
-> 
-> From 5885a65fa5a0aace7bdf1a8fa58ac2bca3b15900 Mon Sep 17 00:00:00 2001
-> From: Kent Overstreet <kent.overstreet@linux.dev>
-> Date: Sat, 24 Feb 2024 00:10:06 -0500
-> Subject: [PATCH] fixup! time_stats: report information in json format
-> 
-> 
-> diff --git a/lib/time_stats.c b/lib/time_stats.c
-> index 0b90c80cba9f..d7dd64baebb8 100644
-> --- a/lib/time_stats.c
-> +++ b/lib/time_stats.c
-> @@ -313,7 +313,7 @@ void time_stats_to_json(struct seq_buf *out, struct time_stats *stats,
->  	seq_buf_printf(out, "    \"stddev\":    %llu\n", d_stddev);
->  	seq_buf_printf(out, "  },\n");
->  
-> -	seq_buf_printf(out, "  \"frequency_ns\": {\n");
-> +	seq_buf_printf(out, "  \"between_ns\": {\n");
->  	seq_buf_printf(out, "    \"min\":       %llu,\n", stats->min_freq);
->  	seq_buf_printf(out, "    \"max\":       %llu,\n", stats->max_freq);
->  	seq_buf_printf(out, "    \"mean\":      %llu,\n", f_mean);
-> @@ -323,14 +323,14 @@ void time_stats_to_json(struct seq_buf *out, struct time_stats *stats,
->  	f_mean = mean_and_variance_weighted_get_mean(stats->freq_stats_weighted, TIME_STATS_MV_WEIGHT);
->  	f_stddev = mean_and_variance_weighted_get_stddev(stats->freq_stats_weighted, TIME_STATS_MV_WEIGHT);
->  
-> -	seq_buf_printf(out, "  \"frequency_ewma_ns\": {\n");
-> +	seq_buf_printf(out, "  \"between_ewma_ns\": {\n");
+Hi,
 
-Looks good to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On Fri, 23 Feb 2024 15:06:19 +0100, Christoph Hellwig wrote:
+> On Fri, Feb 23, 2024 at 09:55:09AM +0100, Mauro Carvalho Chehab wrote:
+>> but it is very weird for the ones reading the text file. So, what
+>> we do instead for pointers is to escape the entire declaration, like:
+>> 
+>> 	``*inode``
+>> 	``struct inode *inode``
+>> 
+>> I hope that helps.
+> 
+> In this case it says *foliop for an argument that is a double pointer
+> and the comment refers to what it point to.  I'll see what I can do
+> there, but the whole italic and bold thing seems entirely pointless
+> for kerneldoc..
 
---D
+Indeed.
 
->  	seq_buf_printf(out, "    \"mean\":      %llu,\n", f_mean);
->  	seq_buf_printf(out, "    \"stddev\":    %llu\n", f_stddev);
->  
->  	if (quantiles) {
->  		u64 last_q = 0;
->  
-> -		/* close frequency_ewma_ns but signal more items */
-> +		/* close between_ewma_ns but signal more items */
->  		seq_buf_printf(out, "  },\n");
->  
->  		seq_buf_printf(out, "  \"quantiles_ns\": [\n");
-> @@ -345,7 +345,7 @@ void time_stats_to_json(struct seq_buf *out, struct time_stats *stats,
->  		}
->  		seq_buf_printf(out, "  ]\n");
->  	} else {
-> -		/* close frequency_ewma_ns without dumping further */
-> +		/* close between_ewma_ns without dumping further */
->  		seq_buf_printf(out, "  }\n");
->  	}
->  
+How about teaching kernel-doc unary "*" on param?
+
+Substitution would look like:
+
+   (kernel-doc)       (RST)
+   *@param     ->  ***param**
+
+Sphinx detects double asterisk, starts strong emphasis, waits for
+another double asterisk to appear, and stops strong emphasis.
+Hence you would get boldface "*param" in pretty printed docs.
+
+Diff below (against docs-next) should add a rule for param_deref
+(only for RST).
+
+diff --git a/scripts/kernel-doc b/scripts/kernel-doc
+index 136104804375..bdd6f3b489cc 100755
+--- a/scripts/kernel-doc
++++ b/scripts/kernel-doc
+@@ -65,7 +65,7 @@ my $type_constant = '\b``([^\`]+)``\b';
+ my $type_constant2 = '\%([-_\*\w]+)';
+ my $type_func = '(\w+)\(\)';
+ my $type_param = '\@(\w*((\.\w+)|(->\w+))*(\.\.\.)?)';
+-my $type_param_ref = '([\!~]?)\@(\w*((\.\w+)|(->\w+))*(\.\.\.)?)';
++my $type_param_ref = '([\!~\*]?)\@(\w*((\.\w+)|(->\w+))*(\.\.\.)?)';
+ my $type_fp_param = '\@(\w+)\(\)';  # Special RST handling for func ptr params
+ my $type_fp_param2 = '\@(\w+->\S+)\(\)';  # Special RST handling for structs with func ptr params
+ my $type_env = '(\$\w+)';
+-- 
+
+And you would be able to write the kernel-doc comment in question
+as follows:
+
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 750ab1dcae27..0aad0d9a621b 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -2152,8 +2152,8 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+  * There is no need to reserve space before calling folio_mark_dirty().
+  *
+  * When no folio is found, the behavior depends on @sgp:
+- *  - for SGP_READ, *foliop is %NULL and 0 is returned
+- *  - for SGP_NOALLOC, *foliop is %NULL and -ENOENT is returned
++ *  - for SGP_READ, *@foliop is %NULL and 0 is returned
++ *  - for SGP_NOALLOC, *@foliop is %NULL and -ENOENT is returned
+  *  - for all other flags a new folio is allocated, inserted into the
+  *    page cache and returned locked in @foliop.
+  *
+-- 
+
+How does this approach sound to you? 
+
+        Thanks, Akira
+
