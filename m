@@ -1,119 +1,118 @@
-Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E2584C96
-	for <linux-xfs@vger.kernel.org>; Sun, 25 Feb 2024 04:50:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B947A10979
+	for <linux-xfs@vger.kernel.org>; Sun, 25 Feb 2024 12:53:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708836659; cv=none; b=XMMhd2V9ghvGPE5WC6v1TmKfI2mVAYwADJzMVDrQaIDL8TMymddOtDp9oUTjL8pHmM/3EmIRAfhzWB/FW8GO03eVu6whmS+7r7m90zB/+jcICzsK0FPMwGf37UZFF6DgnhuBcDLIxp+RJDIMLEcID84Ettp2vf0RVAuEYO+f6Gg=
+	t=1708865627; cv=none; b=cwf9272eB9F49g0BM37KbD4pqq74OfcnNaHKi6FTEAEe9M+ynxKfSd98vfE3tUsMUQnIXDas3xHktNLMdCzDcVxLf04dd64ZDyL4yHc6xX56Xcf50IoJmN49Cj6ckmSQwdKUsNrE8bfWIfyQEjqpaa/afI9ZMNVH0pSeVw/f/Q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708836659; c=relaxed/simple;
-	bh=kYm60k44TDOflCOI69MPiKPn3EEjAVAaxCL4eVJlSdQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L8VCZNQWS4cI5aXBwEuszdZdoNUvc2544xMw/tjkfrrIr1Woj9xhyy00xlhrQlQZK7+0TAgSTqVD/3BEQ/BN07pGdbQlzpseFMf0yQGEjIgLVnCPPvZXGlp30urmkHLxXKwq6dWEZdjjiq2jBcw0oZR71M9t5HuDtEvocop/R7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tZdU18OU; arc=none smtp.client-ip=95.215.58.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1708865627; c=relaxed/simple;
+	bh=5Y6btHFFh5XDVVslLAjjB5lCJ+nuCvnr/UqJtG1SAr0=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=M0f0Ds/DSu9z+/YBDJZOqNYxz2JgIRtTln12XhQciWQgensF8SyAvmr73AfEUhYWln9Jz27x8cUIfkJZsCkn8nT80p5SXlerQZ6IXdFRYs1gJ0QpS/AtnJ5LokP0Izo1BnaLDnHT2sFraXBtMNLlAAg0Nvvuyw2MwefRHwyUPNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hYPEQuIM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tZdU18OU"
-Message-ID: <ed50835c-80be-491f-a5f9-9a669a84cac5@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1708836655;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=C06gSC6P/Rwm/k9Z3WJ2+aHSbmkMvV5GJOz0ep+CZ0U=;
-	b=tZdU18OUvJpqWrrtwP23W9ROblmTtoli30JqKc7d/W86K18fgROGZg2F2W33mUe9hhWho7
-	e1yqQSFVeRa1AWuo3e+nhc+HMnx4rqZa8H2gp39PsVngGVmEwcnBSsN+KupC3NrokvH+Vu
-	wPif1tGqwZcQ7k6rOrMZNAv3myN+y4Q=
-Date: Sun, 25 Feb 2024 12:50:18 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hYPEQuIM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6E4BC43390;
+	Sun, 25 Feb 2024 12:53:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1708865627;
+	bh=5Y6btHFFh5XDVVslLAjjB5lCJ+nuCvnr/UqJtG1SAr0=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=hYPEQuIMSLtIlgvhhDO3L0r/2UI5BB3aGYtI49G/GAd9J8gA64zc4051PU9AhCAFb
+	 QqdbcV8YxHbziLEwDasZfLGM9+5gRMkzGMYdhxZX8oxzIF2+8ABFlNDqRPsTT0Z2Kx
+	 7T4Xl++QSze3CohwKoVE6o7l4nh8CVGUkOKEYyMVJsM3MT50ZZw8uKwasPbAWDU38A
+	 2GnSngALtl870QglbTvadKpI+dRF/DXXXwSkInKioJ3w2Lcif97XROtyncA71TB5CF
+	 zUvBs4OqzCFYMd6OieqgI/hrtHqVTi5OxexYktcC9PFjOwFCdeA8xtlYpgbRcmfPiV
+	 snj5vrPXOYDxg==
+References: <20240224010220.GN6226@frogsfrogsfrogs>
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Chandan Babu R <chandanrlinux@gmail.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PRBOMB] xfs: online repair patches for 6.9
+Date: Sun, 25 Feb 2024 18:21:19 +0530
+In-reply-to: <20240224010220.GN6226@frogsfrogsfrogs>
+Message-ID: <878r387lif.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: remove SLAB_MEM_SPREAD flag usage
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, vbabka@suse.cz,
- roman.gushchin@linux.dev, Xiongwei.Song@windriver.com,
- Chengming Zhou <zhouchengming@bytedance.com>
-References: <20240224135323.830509-1-chengming.zhou@linux.dev>
- <20240224170306.GI616564@frogsfrogsfrogs>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Chengming Zhou <chengming.zhou@linux.dev>
-In-Reply-To: <20240224170306.GI616564@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain
 
-On 2024/2/25 01:03, Darrick J. Wong wrote:
-> On Sat, Feb 24, 2024 at 01:53:23PM +0000, chengming.zhou@linux.dev wrote:
->> From: Chengming Zhou <zhouchengming@bytedance.com>
->>
->> The SLAB_MEM_SPREAD flag is already a no-op as of 6.8-rc1, remove
->> its usage so we can delete it from slab. No functional change.
->>
->> Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
-> 
-> Acked-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> (acked, as in "this looks right, i don't know why it wasn't removed when
-> slab went away, and from the -mm list traffic this seems to be in line
-> with [1] but i still had to dig for details)
-
-Right, I think it was just forgotten when slab went away. Then Steven reported
-this when he found it obsolete. As discussed in [1], we submit these patches
-independently to remove its usages.
-
-[1] https://lore.kernel.org/all/20240220-slab-cleanup-flags-v1-0-e657e373944a@suse.cz/
-
-Thanks!
-
-> 
-> [1] https://lore.kernel.org/linux-mm/20240131172027.10f64405@gandalf.local.home/T/#u
-> 
+On Fri, Feb 23, 2024 at 05:02:20 PM -0800, Darrick J. Wong wrote:
+> Hi Chandan,
+>
+> Please pull these multiple pull requests containing all the online
+> repair functionality that Christoph and I managed to get reviewed in
+> time for 6.9.
+>
 > --D
-> 
->> ---
->>  fs/xfs/xfs_super.c | 7 +++----
->>  1 file changed, 3 insertions(+), 4 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index 56006b877a5d..171a1287b296 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -2042,8 +2042,7 @@ xfs_init_caches(void)
->>  
->>  	xfs_buf_cache = kmem_cache_create("xfs_buf", sizeof(struct xfs_buf), 0,
->>  					 SLAB_HWCACHE_ALIGN |
->> -					 SLAB_RECLAIM_ACCOUNT |
->> -					 SLAB_MEM_SPREAD,
->> +					 SLAB_RECLAIM_ACCOUNT,
->>  					 NULL);
->>  	if (!xfs_buf_cache)
->>  		goto out;
->> @@ -2108,14 +2107,14 @@ xfs_init_caches(void)
->>  					   sizeof(struct xfs_inode), 0,
->>  					   (SLAB_HWCACHE_ALIGN |
->>  					    SLAB_RECLAIM_ACCOUNT |
->> -					    SLAB_MEM_SPREAD | SLAB_ACCOUNT),
->> +					    SLAB_ACCOUNT),
->>  					   xfs_fs_inode_init_once);
->>  	if (!xfs_inode_cache)
->>  		goto out_destroy_efi_cache;
->>  
->>  	xfs_ili_cache = kmem_cache_create("xfs_ili",
->>  					 sizeof(struct xfs_inode_log_item), 0,
->> -					 SLAB_RECLAIM_ACCOUNT | SLAB_MEM_SPREAD,
->> +					 SLAB_RECLAIM_ACCOUNT,
->>  					 NULL);
->>  	if (!xfs_ili_cache)
->>  		goto out_destroy_inode_cache;
->> -- 
->> 2.40.1
->>
->>
+>
+> PS: Has anyone out there observed the following crash on arm64?
+>
+> run fstests xfs/570 at 2024-02-22 20:32:17
+> spectre-v4 mitigation disabled by command-line option
+> XFS (sda2): Mounting V5 Filesystem 2fd78ebc-692d-46e1-bd8a-9f1591c007f6
+> XFS (sda2): Ending clean mount
+> XFS (sda2): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+> XFS (sda3): Mounting V5 Filesystem ac0b0a07-294f-418e-b4d0-c14cc345fcd4
+> XFS (sda3): Ending clean mount
+> XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+> Unable to handle kernel paging request at virtual address ffffffff80206388
+> Mem abort info:
+>   ESR = 0x0000000096000006
+>   EC = 0x25: DABT (current EL), IL = 32 bits
+>   SET = 0, FnV = 0
+>   EA = 0, S1PTW = 0
+>   FSC = 0x06: level 2 translation fault
+> Data abort info:
+>   ISV = 0, ISS = 0x00000006, ISS2 = 0x00000000
+>   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+>   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+> swapper pgtable: 64k pages, 42-bit VAs, pgdp=0000000040d40000
+> [ffffffff80206388] pgd=0000000000000000, p4d=0000000000000000, pud=0000000000000000, pmd=0000000000000000
+> Internal error: Oops: 0000000096000006 [#1] PREEMPT SMP
+> Dumping ftrace buffer:
+>    (ftrace buffer empty)
+> Modules linked in: xfs rpcsec_gss_krb5 auth_rpcgss nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defra
+> sch_fq_codel fuse configfs efivarfs ip_tables x_tables overlay nfsv4
+> CPU: 0 PID: 38 Comm: 0:1H Not tainted 6.8.0-rc4-djwa #rc4 892edfc98307d2cdb226d4164dfd6775c2b3b52c
+> Hardware name: QEMU KVM Virtual Machine, BIOS 1.6.6 08/22/2023
+> Workqueue: xfs-log/sda3 xlog_ioend_work [xfs]
+> pstate: a0401005 (NzCv daif +PAN -UAO -TCO -DIT +SSBS BTYPE=--)
+> pc : kfree+0x54/0x2d8
+> lr : xlog_cil_committed+0x11c/0x1d8 [xfs]
+> sp : fffffe00830cfbe0
+> x29: fffffe00830cfbe0 x28: fffffc00240e0c80 x27: fffffc00240e0c00
+> x26: 00000005000037a8 x25: 0000000000000000 x24: 0000000000000000
+> x23: fffffc0021e68d40 x22: fffffe00818e0000 x21: fffffc0021e68d88
+> x20: fffffe007a6b93cc x19: ffffffff80206380 x18: 0000000000000000
+> x17: 0000000000000000 x16: 0000000000000000 x15: fffffe008840f620
+> x14: 0000000000000000 x13: 0000000000000020 x12: 0101010101010101
+> x11: 0000000000000040 x10: fffffc0025b0d5d8 x9 : fffffe007a6b93cc
+> x8 : fffffe00830cfbe0 x7 : 0000000000000000 x6 : 0000000000000000
+> x5 : d230261c49c51c03 x4 : fffffc00e1357340 x3 : dead000000000122
+> x2 : fffffc00ea7fa000 x1 : fffffc0021e68d88 x0 : ffffffff00000000
+> Call trace:
+>  kfree+0x54/0x2d8
+>  xlog_cil_committed+0x11c/0x1d8 [xfs 6eb07a1ebfe13a228ea62c550c04c138eaa0de6a]
+>  xlog_cil_process_committed+0x6c/0xa8 [xfs 6eb07a1ebfe13a228ea62c550c04c138eaa0de6a]
+>  xlog_state_do_callback+0x1e0/0x3e0 [xfs 6eb07a1ebfe13a228ea62c550c04c138eaa0de6a]
+>  xlog_state_done_syncing+0x8c/0x158 [xfs 6eb07a1ebfe13a228ea62c550c04c138eaa0de6a]
+>  xlog_ioend_work+0x70/0xd8 [xfs 6eb07a1ebfe13a228ea62c550c04c138eaa0de6a]
+>  process_one_work+0x174/0x3e8
+>  worker_thread+0x2c4/0x3e8
+>  kthread+0x110/0x128
+>  ret_from_fork+0x10/0x20
+> Code: 8b1302d3 b2607fe0 d350fe73 8b131813 (f9400660) 
+> ---[ end trace 0000000000000000 ]---
+
+I just now noticed that generic/019 has failed with the same call trace as
+above on an x86_64 machine. I will try to root cause the problem.
+
+-- 
+Chandan
