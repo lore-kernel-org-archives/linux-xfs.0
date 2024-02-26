@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD4B754BC8
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 10:05:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9ECD54BC8
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 10:05:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708941902; cv=none; b=aEy4QGzBWCQsbo8upH8QhCOW+pNKhYwL93AWa+zioBsp79n7f3eH7iS9CoDLHRuTuOOJkXKVxC2UaGGAarllySQk4M6dbHAN4ligzWYUWiJNsFQdz2V817CS3RSEDbBrtsokCeuLKSmjsQAumM2LlTq6HWQ6Qh1D7WxxE3DIDJg=
+	t=1708941906; cv=none; b=bI+yTmqXVY37QNGshL8G/O5qu1FztU//6Q6Afpzo2Wx28Mq5BVY+uHz2Pd1Loq4WXFDVnJ/TPt9XXRIdKxMSx3PZKFE4N6dQQ51rdKFLJs7g34popX1lzM1+IAuEiJOzsvknYJI6cZq7X1l7ECiVJMJzSwuzxHKDinhjOrCDUP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708941902; c=relaxed/simple;
-	bh=TpqetYzPBONm8yuEWI+1EXygHfqBkIHRHxfcsLTfZOc=;
+	s=arc-20240116; t=1708941906; c=relaxed/simple;
+	bh=cY0udRVwK1Wb4oQfbikjceDk9Z3Av2UEClcit05/eyM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uoSBzBZcu6xbZivpEWPgF0VoiSjVvs6VthWWlaSLoqJ41ehv3BG2InnCsLMMsX5zTRX/8OR97yXj+lG9YLj9AZrAgRCI/E1patk8VzI6g4aufcVgOS6l5iX+0vx6gcsMy6DZEn6lqKrJhNFUF0GfJIPGFhgKlS7rEWu3dP9wjHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4TF8bDd1; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Q1lNDFx0VFsO6ceXw3RE112meGL2pCTLB29flM846NEXYo78ngA9NRSQrEzugympCnaDaKMyGtD10maNPJRRDFScZEWUCAWr+m1pBS/fl3vwlhoh04aL58bvjPktRS3dQ8/34yU980dBQ4SYvZbbB9yMx28WNXAfLSEve2JGZ50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AjGBBDpW; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4TF8bDd1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AjGBBDpW"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=7t0GOm/4NvpUHkIgCmQTOQx/zbBV1omAscpwToEOv+Q=; b=4TF8bDd1jT9UB9t56OFDpr3zla
-	tA0lV37AdN/pGcuwhOEjae8bp4iAFR8kbSge7OXOYrpvm+z6hAyxwUlmXcxMwdL05CVWmauCQJfG+
-	4dALGexBBxOPDZOiEY+ZMhbOnl8X4M0vSCRcALFfjTkIYfrVp/wFYV44N8xRwSAZhgbepUeDTxSE7
-	UdiedmxjIvyB8NVYcrt1OaTY6AfsdbsV3W3jg/D5ZrzZUjHM5559VVpLBs2Y01YP36qKcel5hQAp9
-	5BhIiWSERIXKVxlBpbpzkd1JwlZis3nM8+2B5f96jKghGlJoD2npT0/tJqRY0TxlMzCuAlaJIXY8o
-	bhUiZk7w==;
+	bh=VqPfG349LK4m9SvK8O3naY4cvznh1bnfYeq08bNFzOE=; b=AjGBBDpWHC9nCrf9bwxNvBjzHM
+	IkR2QGTZLOlEUFEaXtbVRaKZGnO7E+nJsiGtTENg9Hu8lq4vDxLDb5LQaWEqLtwJoQ2ELvPvNgfjg
+	4koJG7E+kGe4FfZ8sfWjONZlDhAekFbbG7Krd+wVcwlnzP5/mUVbyBExaFzXhWlBqRQBv6OdCOX6L
+	VEUpKVOYUghxYrqUVg0szKj8Poqm/tRkukQ+mDnrVALBItbWPAKpiYNOQrGdpeZzoMms/p6ACCTun
+	2+eTwROViMpRbRDj+rm+0ZlfbH7V3wlGQBzaW3JEVg/sVNGiSgu4fqtHtIuetNBQwJ8xl/QVkZpZs
+	sTW46mww==;
 Received: from 213-147-167-65.nat.highway.webapn.at ([213.147.167.65] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1reXr1-0000000HX3Y-31Rm;
-	Mon, 26 Feb 2024 10:05:00 +0000
+	id 1reXr5-0000000HX5F-39EY;
+	Mon, 26 Feb 2024 10:05:04 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 07/10] xfs: support RT inodes in xfs_mod_delalloc
-Date: Mon, 26 Feb 2024 11:04:17 +0100
-Message-Id: <20240226100420.280408-8-hch@lst.de>
+Subject: [PATCH 08/10] xfs: look at m_frextents in xfs_iomap_prealloc_size for RT allocations
+Date: Mon, 26 Feb 2024 11:04:18 +0100
+Message-Id: <20240226100420.280408-9-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240226100420.280408-1-hch@lst.de>
 References: <20240226100420.280408-1-hch@lst.de>
@@ -50,187 +50,82 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-To prepare for re-enabling delalloc on RT devices, track the data blocks
-(which use the RT device when the inode sits on it) and the indirect
-blocks (which don't) separately to xfs_mod_delalloc, and add a new
-percpu counter to also track the RT delalloc blocks.
+Add a check for files on the RT subvolume and use m_frextents instead
+of m_fdblocks to adjust the preallocation size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c  | 12 ++++++------
- fs/xfs/scrub/fscounters.c |  2 ++
- fs/xfs/xfs_mount.c        | 18 +++++++++++++++---
- fs/xfs/xfs_mount.h        |  9 ++++++++-
- fs/xfs/xfs_super.c        | 11 ++++++++++-
- 5 files changed, 41 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_iomap.c | 42 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 30 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a4bb46842687cc..fc42f17f86e1f0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1926,7 +1926,7 @@ xfs_bmap_add_extent_delay_real(
- 	}
- 
- 	if (da_new != da_old)
--		xfs_mod_delalloc(mp, (int64_t)da_new - da_old);
-+		xfs_mod_delalloc(bma->ip, 0, (int64_t)da_new - da_old);
- 
- 	if (bma->cur) {
- 		da_new += bma->cur->bc_ino.allocated;
-@@ -2622,7 +2622,7 @@ xfs_bmap_add_extent_hole_delay(
- 		/*
- 		 * Nothing to do for disk quota accounting here.
- 		 */
--		xfs_mod_delalloc(ip->i_mount, (int64_t)newlen - oldlen);
-+		xfs_mod_delalloc(ip, 0, (int64_t)newlen - oldlen);
- 	}
- }
- 
-@@ -3292,7 +3292,7 @@ xfs_bmap_alloc_account(
- 		 * yet.
- 		 */
- 		if (ap->wasdel) {
--			xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
-+			xfs_mod_delalloc(ap->ip, -(int64_t)ap->length, 0);
- 			return;
- 		}
- 
-@@ -3316,7 +3316,7 @@ xfs_bmap_alloc_account(
- 	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
- 	if (ap->wasdel) {
- 		ap->ip->i_delayed_blks -= ap->length;
--		xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
-+		xfs_mod_delalloc(ap->ip, -(int64_t)ap->length, 0);
- 		fld = isrt ? XFS_TRANS_DQ_DELRTBCOUNT : XFS_TRANS_DQ_DELBCOUNT;
- 	} else {
- 		fld = isrt ? XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
-@@ -4041,7 +4041,7 @@ xfs_bmapi_reserve_delalloc(
- 		goto out_unreserve_frextents;
- 
- 	ip->i_delayed_blks += alen;
--	xfs_mod_delalloc(ip->i_mount, alen + indlen);
-+	xfs_mod_delalloc(ip, alen, indlen);
- 
- 	got->br_startoff = aoff;
- 	got->br_startblock = nullstartblock(indlen);
-@@ -4938,7 +4938,7 @@ xfs_bmap_del_extent_delay(
- 		fdblocks += del->br_blockcount;
- 
- 	xfs_add_fdblocks(mp, fdblocks);
--	xfs_mod_delalloc(mp, -(int64_t)fdblocks);
-+	xfs_mod_delalloc(ip, -(int64_t)del->br_blockcount, -da_diff);
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 5c6d7244078942..2268e668e7e3ec 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -426,6 +426,8 @@ xchk_fscount_count_frextents(
- 		goto out_unlock;
- 	}
- 
-+	fsc->frextents -= percpu_counter_sum(&mp->m_delalloc_rtextents);
-+
- out_unlock:
- 	xfs_iunlock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- 	return error;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b9e726a8366f93..805c9d8b99fcc7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -34,6 +34,7 @@
- #include "xfs_health.h"
- #include "xfs_trace.h"
- #include "xfs_ag.h"
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 055cdec2e9ad64..a8267d8ef1c0ed 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -27,6 +27,7 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
 +#include "xfs_rtbitmap.h"
- #include "scrub/stats.h"
  
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
-@@ -1389,9 +1390,20 @@ xfs_clear_incompat_log_features(
- #define XFS_DELALLOC_BATCH	(4096)
- void
- xfs_mod_delalloc(
--	struct xfs_mount	*mp,
--	int64_t			delta)
-+	struct xfs_inode	*ip,
-+	int64_t			data_delta,
-+	int64_t			ind_delta)
- {
--	percpu_counter_add_batch(&mp->m_delalloc_blks, delta,
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	if (XFS_IS_REALTIME_INODE(ip)) {
-+		percpu_counter_add_batch(&mp->m_delalloc_rtextents,
-+				xfs_rtb_to_rtx(mp, data_delta),
-+				XFS_DELALLOC_BATCH);
-+		if (!ind_delta)
-+			return;
-+		data_delta = 0;
-+	}
-+	percpu_counter_add_batch(&mp->m_delalloc_blks, data_delta + ind_delta,
- 			XFS_DELALLOC_BATCH);
+ #define XFS_ALLOC_ALIGN(mp, off) \
+ 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
+@@ -398,6 +399,29 @@ xfs_quota_calc_throttle(
+ 	}
  }
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 891a54d57f576d..0858b3f7bd862b 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -195,6 +195,12 @@ typedef struct xfs_mount {
- 	 * extents or anything related to the rt device.
- 	 */
- 	struct percpu_counter	m_delalloc_blks;
+ 
++static int64_t
++xfs_iomap_freesp(
++	struct percpu_counter	*counter,
++	uint64_t		low_space[XFS_LOWSP_MAX],
++	int			*shift)
++{
++	int64_t			freesp;
 +
-+	/*
-+	 * RT version of the above.
-+	 */
-+	struct percpu_counter	m_delalloc_rtextents;
++	freesp = percpu_counter_read_positive(counter);
++	if (freesp < low_space[XFS_LOWSP_5_PCNT]) {
++		*shift = 2;
++		if (freesp < low_space[XFS_LOWSP_4_PCNT])
++			(*shift)++;
++		if (freesp < low_space[XFS_LOWSP_3_PCNT])
++			(*shift)++;
++		if (freesp < low_space[XFS_LOWSP_2_PCNT])
++			(*shift)++;
++		if (freesp < low_space[XFS_LOWSP_1_PCNT])
++			(*shift)++;
++	}
++	return freesp;
++}
 +
+ /*
+  * If we don't have a user specified preallocation size, dynamically increase
+  * the preallocation size as the size of the file grows.  Cap the maximum size
+@@ -480,18 +504,12 @@ xfs_iomap_prealloc_size(
+ 	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(XFS_MAX_BMBT_EXTLEN),
+ 				       alloc_blocks);
+ 
+-	freesp = percpu_counter_read_positive(&mp->m_fdblocks);
+-	if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
+-		shift = 2;
+-		if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
+-			shift++;
+-		if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
+-			shift++;
+-		if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
+-			shift++;
+-		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
+-			shift++;
+-	}
++	if (unlikely(XFS_IS_REALTIME_INODE(ip)))
++		freesp = xfs_rtx_to_rtb(mp, xfs_iomap_freesp(&mp->m_frextents,
++				mp->m_low_rtexts, &shift));
++	else
++		freesp = xfs_iomap_freesp(&mp->m_fdblocks, mp->m_low_space,
++				&shift);
+ 
  	/*
- 	 * Global count of allocation btree blocks in use across all AGs. Only
- 	 * used when perag reservation is enabled. Helps prevent block
-@@ -586,6 +592,7 @@ struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
- void xfs_force_summary_recalc(struct xfs_mount *mp);
- int xfs_add_incompat_log_feature(struct xfs_mount *mp, uint32_t feature);
- bool xfs_clear_incompat_log_features(struct xfs_mount *mp);
--void xfs_mod_delalloc(struct xfs_mount *mp, int64_t delta);
-+void xfs_mod_delalloc(struct xfs_inode *ip, int64_t data_delta,
-+		int64_t ind_delta);
- 
- #endif	/* __XFS_MOUNT_H__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 3adf2502e09fcf..d387454447a2ed 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1051,12 +1051,18 @@ xfs_init_percpu_counters(
- 	if (error)
- 		goto free_fdblocks;
- 
--	error = percpu_counter_init(&mp->m_frextents, 0, GFP_KERNEL);
-+	error = percpu_counter_init(&mp->m_delalloc_rtextents, 0, GFP_KERNEL);
- 	if (error)
- 		goto free_delalloc;
- 
-+	error = percpu_counter_init(&mp->m_frextents, 0, GFP_KERNEL);
-+	if (error)
-+		goto free_delalloc_rt;
-+
- 	return 0;
- 
-+free_delalloc_rt:
-+	percpu_counter_destroy(&mp->m_delalloc_rtextents);
- free_delalloc:
- 	percpu_counter_destroy(&mp->m_delalloc_blks);
- free_fdblocks:
-@@ -1085,6 +1091,9 @@ xfs_destroy_percpu_counters(
- 	percpu_counter_destroy(&mp->m_icount);
- 	percpu_counter_destroy(&mp->m_ifree);
- 	percpu_counter_destroy(&mp->m_fdblocks);
-+	ASSERT(xfs_is_shutdown(mp) ||
-+	       percpu_counter_sum(&mp->m_delalloc_rtextents) == 0);
-+	percpu_counter_destroy(&mp->m_delalloc_rtextents);
- 	ASSERT(xfs_is_shutdown(mp) ||
- 	       percpu_counter_sum(&mp->m_delalloc_blks) == 0);
- 	percpu_counter_destroy(&mp->m_delalloc_blks);
+ 	 * Check each quota to cap the prealloc size, provide a shift value to
 -- 
 2.39.2
 
