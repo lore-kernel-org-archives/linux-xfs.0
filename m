@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6500D12CD99
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 18:01:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5707812FB3A
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 19:39:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708970492; cv=none; b=gXoXnZHMD7lU54VZf13OvfFJpNPwlf+uCPc6Kig/d7DGG2IwfIccmn5X2vASV2NTcr/0xqnsVguZWIu0mCrFFbLH0EJKayaDZ9RIYkfyr83+pNzY429uVcofh4cnxbjwLsKvMTAz7SBeH7JLD+Q1VDymdvcAtLOTmJCTN7iLlWY=
+	t=1708976362; cv=none; b=S4d9ftzB/IGgpFs8rbU6BlC+d5H+8AWAAZKLeYlDfl/mTZjax07h8dvhG8sZaawiCzjssxDNvRS5DBgSukk8pIo8lqQ2VX1i7KeXQV0jBDo3xKcGXeMAGeyZJCm5VnG5RtJ5M6OYVmCPMXpjT7f2CdJA+ETifx7ggGnrzuL/iyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708970492; c=relaxed/simple;
-	bh=kDZh+3t0yOeuVVr6Jpf/A9HuEyW9viwwlufJ8wE7Llg=;
+	s=arc-20240116; t=1708976362; c=relaxed/simple;
+	bh=4p37IsRX49ChQdAbMXJ7+Uox4caJw+8S9MJgZWm6MwQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZoF3whbmQ23xnuDuWXGkniemW0DRLEEuRdhV40ejIFi69z0NfKvnF2rmuHLqwUpon9vFgGi4tPwb05Z0vQvhC+v4npwm+0JQtuVcd13shu9AS+fkRf8gMgp5dGl5fFnNPVdmiPIEqstiB0JeIIcGK9hTfmejYcLV+2ldwNmAiNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gZzbe0Rp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=WhNrKvX1iYbQ/dNi/znrsFQaTeSpwoJyZpNAvPR+j0CftaOqL9bX7ZvJBunbXyyykXVODNqMpcQF3kxxgMV4FL8A4MdRoUu9uPnH7OZUdhMd9vUinDG6fsjQHLnLiTsnwE3pMNJbOanYN1hYYevxfAhmpmH/UwrCjmANLDIs/Eo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WUYW8xdz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gZzbe0Rp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAF5EC433F1;
-	Mon, 26 Feb 2024 18:01:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WUYW8xdz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2F59C43394;
+	Mon, 26 Feb 2024 19:39:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708970491;
-	bh=kDZh+3t0yOeuVVr6Jpf/A9HuEyW9viwwlufJ8wE7Llg=;
+	s=k20201202; t=1708976362;
+	bh=4p37IsRX49ChQdAbMXJ7+Uox4caJw+8S9MJgZWm6MwQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gZzbe0RpgkXSkHkEPhBE0Pg8H9RoGxWocdkFonySSnMV2a63KgS2Xjw/tpSNi/8t1
-	 MXPXQt7WN31Me6/tL/6qnwLoGNS5Ce0sHXzx8dE/euovzZQdLrnJeNDU3b8V3bVFUR
-	 CR/3Q3D46rZNqy7a7v1SYmTzYFlYU5fwCyOWdtooMwh94jNE5GAW4W4gQ4NCo+Wu+l
-	 4DrbQDhVBngxK7KaaLI8ozMsdbmw3OEIjLmNZFNNG5R5i7I/SWTelGd+ERwvibUpfK
-	 tfou1CbWy0AVhiqhHhtmZzkNEVS72bn6JnkWPxzQ4ldMdxpZBUOJSOLE8oBdDfoTB5
-	 S6u0irZHpa4VA==
-Date: Mon, 26 Feb 2024 10:01:30 -0800
+	b=WUYW8xdzD/zuvX/QyX/3iIGkDbsaxqeshCGorHCLfhrEtnPaV6QuppwmB2NRFAFp8
+	 2gV6jQCnqqrHt5gCVyuy70DOct90CJC/yNB3sQtRozc3nlDkJAC6eVIwQwzcT8UQGI
+	 LVd4F4XUk5E4pAVtG6cWvNNRFI+4er9snRBiu2cEn46O2puNEPAb1YxtVtPAa1STdg
+	 N8kBfnmJFXBGvp4PZqQnf9TkYaarGOUXJ6jYgmE9u5p725pfZCVDMT9KUY86r17zO6
+	 CRuUkyckOyrvQ49TBGzZOFcPxdqdZ5vwBpXkrEaWI0F88Q3hkJ1ZpwviavJJnP25Qs
+	 ErwwUrCIq8fvA==
+Date: Mon, 26 Feb 2024 11:39:21 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/10] xfs: split xfs_mod_freecounter
-Message-ID: <20240226180130.GL616564@frogsfrogsfrogs>
-References: <20240226100420.280408-1-hch@lst.de>
- <20240226100420.280408-5-hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: skip background cowblock trims on inodes open for
+ write
+Message-ID: <20240226193921.GM616564@frogsfrogsfrogs>
+References: <20240214165231.84925-1-bfoster@redhat.com>
+ <20240224020554.GP6226@frogsfrogsfrogs>
+ <Zdyw8i6/DTEgojqm@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,615 +44,185 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240226100420.280408-5-hch@lst.de>
+In-Reply-To: <Zdyw8i6/DTEgojqm@bfoster>
 
-On Mon, Feb 26, 2024 at 11:04:14AM +0100, Christoph Hellwig wrote:
-> xfs_mod_freecounter has two entirely separate code paths for adding or
-> subtracting from the free counters.  Only the subtract case looks at the
-> rsvd flag and can return an error.
+On Mon, Feb 26, 2024 at 10:40:34AM -0500, Brian Foster wrote:
+> On Fri, Feb 23, 2024 at 06:05:54PM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 14, 2024 at 11:52:31AM -0500, Brian Foster wrote:
+> > > The background blockgc scanner runs on a 5m interval by default and
+> > > trims preallocation (post-eof and cow fork) from inodes that are
+> > > otherwise idle. Idle effectively means that iolock can be acquired
+> > > without blocking and that the inode has no dirty pagecache or I/O in
+> > > flight.
+> > > 
+> > > This simple mechanism and heuristic has worked fairly well for
+> > > post-eof speculative preallocations. Support for reflink and COW
+> > > fork preallocations came sometime later and plugged into the same
+> > > mechanism, with similar heuristics. Some recent testing has shown
+> > > that COW fork preallocation may be notably more sensitive to blockgc
+> > > processing than post-eof preallocation, however.
+> > > 
+> > > For example, consider an 8GB reflinked file with a COW extent size
+> > > hint of 1MB. A worst case fully randomized overwrite of this file
+> > > results in ~8k extents of an average size of ~1MB. If the same
+> > > workload is interrupted a couple times for blockgc processing
+> > > (assuming the file goes idle), the resulting extent count explodes
+> > > to over 100k extents with an average size <100kB. This is
+> > > significantly worse than ideal and essentially defeats the COW
+> > > extent size hint mechanism.
+> > > 
+> > > While this particular test is instrumented, it reflects a fairly
+> > > reasonable pattern in practice where random I/Os might spread out
+> > > over a large period of time with varying periods of (in)activity.
+> > > For example, consider a cloned disk image file for a VM or container
+> > > with long uptime and variable and bursty usage. A background blockgc
+> > > scan that races and processes the image file when it happens to be
+> > > clean and idle can have a significant effect on the future
+> > > fragmentation level of the file, even when still in use.
+> > > 
+> > > To help combat this, update the heuristic to skip cowblocks inodes
+> > > that are currently opened for write access during non-sync blockgc
+> > > scans. This allows COW fork preallocations to persist for as long as
+> > > possible unless otherwise needed for functional purposes (i.e. a
+> > > sync scan), the file is idle and closed, or the inode is being
+> > > evicted from cache.
+> > 
+> > Hmmm.  Thinking this over a bit more, I wonder if we really want this
+> > heuristic?
+> > 
+> > If we're doing our periodic background scan then sure, I think it's ok
+> > to ignore files that are open for write but aren't actively being
+> > written to.
+> > 
+> > This might introduce nastier side effects if OTOH we're doing blockgc
+> > because we've hit ENOSPC and we're trying to free up any blocks that we
+> > can.  I /think/ the way you've written the inode_is_open_for_write check
+> > means that we scan maximally for ENOSPC.
+> > 
 > 
-> Split xfs_mod_freecounter into separate helpers for subtracting or
-> adding the freecounter, and remove all the impossible to reach error
-> handling for the addition case.
+> The intent of the patch was to limit the scope of the heuristic to
+> the background (non-sync) scan where there are no real guarantees or
+> predictability. Otherwise I would expect a sync scan to bypass the
+> heuristic and prioritize the need to free space.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This is similar to the existing dirty pagecache check for eofblocks
+> inodes, but I notice that the same check for cowblocks inodes doesn't
+> seem to care about the type of scan. I suppose one thing to consider for
+> why that might not matter that much is that IIRC usually this sort of
+> -ENOSPC handling is preceded by a full fs flush, which probably reduces
+> the significance of a sync check filter (or lack thereof).
+> 
+> > However, xfs_blockgc_free_dquots doesn't seem to do synchronous scans
+> > for EDQUOT.  So if we hit quota limits, we won't free maximally, right?
+> > OTOH I guess we don't really do that now either, so maybe it doesn't
+> > matter?
+> > 
+> > <shrug> Thoughts?
+> > 
+> 
+> Yeah, it seems like it depends on the calling context. I.e.,
+> xfs_file_buffered_write() -> xfs_blockgc_free_quota() passes the sync
+> flag for the -EDQUOT case. That case doesn't invoke a flush for -EDQUOT
+> since it's a a specific quota failure, so ISTM this isn't that much of a
+> departure from the existing heuristic (which skips cowblocks inodes that
+> are dirty). Is there a case I'm missing?
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Not that I can think of.  The SYNC/!SYNC decision is entirely based on
+the caller's state, which (ime) makes me think harder any time I have to
+reason about the {block,inode}gc function calls.
+
+> The question that comes to mind to me is whether those dirty checks in
+> xfs_prep_free_cowblocks() are more of a correctness thing than a
+> heuristic..? For example, is that to prevent races between things like
+> writes allocating some cowblocks and blockgc coming along and removing
+> them before I/O completes, which actually expects them to exist for
+> remapping? If so, I suppose that would make me want to tweak the change
+> a bit to perhaps make the open check first and combine the comments to
+> better explain what is heuristic and what is rule, but that's only if we
+> want to keep the patch..
+
+The dirty/writeback flag testing in xfs_prep_free_cowblocks exists for
+correctness -- any time there's live cow staging blocks (as opposed to
+speculative preallocations) it skips that inode.
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_ag.c      |  4 +--
->  fs/xfs/libxfs/xfs_ag_resv.c | 24 ++++------------
->  fs/xfs/libxfs/xfs_ag_resv.h |  2 +-
->  fs/xfs/libxfs/xfs_alloc.c   |  4 +--
->  fs/xfs/libxfs/xfs_bmap.c    | 23 +++++++--------
->  fs/xfs/scrub/fscounters.c   |  2 +-
->  fs/xfs/scrub/repair.c       |  5 +---
->  fs/xfs/xfs_fsops.c          | 29 ++++++-------------
->  fs/xfs/xfs_fsops.h          |  2 +-
->  fs/xfs/xfs_mount.c          | 56 ++++++++++++++++---------------------
->  fs/xfs/xfs_mount.h          | 32 +++++++++++++++++----
->  fs/xfs/xfs_super.c          |  6 +---
->  fs/xfs/xfs_trace.h          |  1 -
->  fs/xfs/xfs_trans.c          | 25 ++++++-----------
->  14 files changed, 93 insertions(+), 122 deletions(-)
+> Brian
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index 036f4ee43fd3c7..f89fa03b2db7f9 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -967,9 +967,7 @@ xfs_ag_shrink_space(
->  	 * Disable perag reservations so it doesn't cause the allocation request
->  	 * to fail. We'll reestablish reservation before we return.
->  	 */
-> -	error = xfs_ag_resv_free(pag);
-> -	if (error)
-> -		return error;
-> +	xfs_ag_resv_free(pag);
->  
->  	/* internal log shouldn't also show up in the free space btrees */
->  	error = xfs_alloc_vextent_exact_bno(&args,
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index da1057bd0e6067..216423df939e5c 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -126,14 +126,13 @@ xfs_ag_resv_needed(
->  }
->  
->  /* Clean out a reservation */
-> -static int
-> +static void
->  __xfs_ag_resv_free(
->  	struct xfs_perag		*pag,
->  	enum xfs_ag_resv_type		type)
->  {
->  	struct xfs_ag_resv		*resv;
->  	xfs_extlen_t			oldresv;
-> -	int				error;
->  
->  	trace_xfs_ag_resv_free(pag, type, 0);
->  
-> @@ -149,30 +148,19 @@ __xfs_ag_resv_free(
->  		oldresv = resv->ar_orig_reserved;
->  	else
->  		oldresv = resv->ar_reserved;
-> -	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
-> +	xfs_add_fdblocks(pag->pag_mount, oldresv);
->  	resv->ar_reserved = 0;
->  	resv->ar_asked = 0;
->  	resv->ar_orig_reserved = 0;
-> -
-> -	if (error)
-> -		trace_xfs_ag_resv_free_error(pag->pag_mount, pag->pag_agno,
-> -				error, _RET_IP_);
-> -	return error;
->  }
->  
->  /* Free a per-AG reservation. */
-> -int
-> +void
->  xfs_ag_resv_free(
->  	struct xfs_perag		*pag)
->  {
-> -	int				error;
-> -	int				err2;
-> -
-> -	error = __xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
-> -	err2 = __xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
-> -	if (err2 && !error)
-> -		error = err2;
-> -	return error;
-> +	__xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
-> +	__xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
->  }
->  
->  static int
-> @@ -216,7 +204,7 @@ __xfs_ag_resv_init(
->  	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
->  		error = -ENOSPC;
->  	else
-> -		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
-> +		error = xfs_dec_fdblocks(mp, hidden_space, true);
->  	if (error) {
->  		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
->  				error, _RET_IP_);
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-> index b74b210008ea7e..ff20ed93de7724 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.h
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.h
-> @@ -6,7 +6,7 @@
->  #ifndef __XFS_AG_RESV_H__
->  #define	__XFS_AG_RESV_H__
->  
-> -int xfs_ag_resv_free(struct xfs_perag *pag);
-> +void xfs_ag_resv_free(struct xfs_perag *pag);
->  int xfs_ag_resv_init(struct xfs_perag *pag, struct xfs_trans *tp);
->  
->  bool xfs_ag_resv_critical(struct xfs_perag *pag, enum xfs_ag_resv_type type);
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 3bd0a33fee0a64..ba131fecbd236d 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -78,7 +78,7 @@ xfs_prealloc_blocks(
->  }
->  
->  /*
-> - * The number of blocks per AG that we withhold from xfs_mod_fdblocks to
-> + * The number of blocks per AG that we withhold from xfs_dec_fdblocks to
->   * guarantee that we can refill the AGFL prior to allocating space in a nearly
->   * full AG.  Although the space described by the free space btrees, the
->   * blocks used by the freesp btrees themselves, and the blocks owned by the
-> @@ -88,7 +88,7 @@ xfs_prealloc_blocks(
->   * until the fs goes down, we subtract this many AG blocks from the incore
->   * fdblocks to ensure user allocation does not overcommit the space the
->   * filesystem needs for the AGFLs.  The rmap btree uses a per-AG reservation to
-> - * withhold space from xfs_mod_fdblocks, so we do not account for that here.
-> + * withhold space from xfs_dec_fdblocks, so we do not account for that here.
->   */
->  #define XFS_ALLOCBT_AGFL_RESERVE	4
->  
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index ac352cee4950bf..f05a589c1724f2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1934,10 +1934,11 @@ xfs_bmap_add_extent_delay_real(
->  	}
->  
->  	/* adjust for changes in reserved delayed indirect blocks */
-> -	if (da_new != da_old) {
-> -		ASSERT(state == 0 || da_new < da_old);
-> -		error = xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new),
-> -				false);
-> +	if (da_new < da_old) {
-> +		xfs_add_fdblocks(mp, da_old - da_new);
-> +	} else if (da_new > da_old) {
-> +		ASSERT(state == 0);
-> +		error = xfs_dec_fdblocks(mp, da_new - da_old, false);
->  	}
->  
->  	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
-> @@ -2616,8 +2617,8 @@ xfs_bmap_add_extent_hole_delay(
->  	}
->  	if (oldlen != newlen) {
->  		ASSERT(oldlen > newlen);
-> -		xfs_mod_fdblocks(ip->i_mount, (int64_t)(oldlen - newlen),
-> -				 false);
-> +		xfs_add_fdblocks(ip->i_mount, oldlen - newlen);
-> +
->  		/*
->  		 * Nothing to do for disk quota accounting here.
->  		 */
-> @@ -4025,11 +4026,11 @@ xfs_bmapi_reserve_delalloc(
->  	indlen = (xfs_extlen_t)xfs_bmap_worst_indlen(ip, alen);
->  	ASSERT(indlen > 0);
->  
-> -	error = xfs_mod_fdblocks(mp, -((int64_t)alen), false);
-> +	error = xfs_dec_fdblocks(mp, alen, false);
->  	if (error)
->  		goto out_unreserve_quota;
->  
-> -	error = xfs_mod_fdblocks(mp, -((int64_t)indlen), false);
-> +	error = xfs_dec_fdblocks(mp, indlen, false);
->  	if (error)
->  		goto out_unreserve_blocks;
->  
-> @@ -4057,7 +4058,7 @@ xfs_bmapi_reserve_delalloc(
->  	return 0;
->  
->  out_unreserve_blocks:
-> -	xfs_mod_fdblocks(mp, alen, false);
-> +	xfs_add_fdblocks(mp, alen);
->  out_unreserve_quota:
->  	if (XFS_IS_QUOTA_ON(mp))
->  		xfs_quota_unreserve_blkres(ip, alen);
-> @@ -4842,7 +4843,7 @@ xfs_bmap_del_extent_delay(
->  	ASSERT(got_endoff >= del_endoff);
->  
->  	if (isrt)
-> -		xfs_mod_frextents(mp, xfs_rtb_to_rtx(mp, del->br_blockcount));
-> +		xfs_add_frextents(mp, xfs_rtb_to_rtx(mp, del->br_blockcount));
->  
->  	/*
->  	 * Update the inode delalloc counter now and wait to update the
-> @@ -4929,7 +4930,7 @@ xfs_bmap_del_extent_delay(
->  	if (!isrt)
->  		da_diff += del->br_blockcount;
->  	if (da_diff) {
-> -		xfs_mod_fdblocks(mp, da_diff, false);
-> +		xfs_add_fdblocks(mp, da_diff);
->  		xfs_mod_delalloc(mp, -da_diff);
->  	}
->  	return error;
-> diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-> index 5799e9a94f1f66..5c6d7244078942 100644
-> --- a/fs/xfs/scrub/fscounters.c
-> +++ b/fs/xfs/scrub/fscounters.c
-> @@ -516,7 +516,7 @@ xchk_fscounters(
->  
->  	/*
->  	 * If the filesystem is not frozen, the counter summation calls above
-> -	 * can race with xfs_mod_freecounter, which subtracts a requested space
-> +	 * can race with xfs_dec_freecounter, which subtracts a requested space
->  	 * reservation from the counter and undoes the subtraction if that made
->  	 * the counter go negative.  Therefore, it's possible to see negative
->  	 * values here, and we should only flag that as a corruption if we
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 745d5b8f405a91..0412bf7c78e727 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -929,9 +929,7 @@ xrep_reset_perag_resv(
->  	ASSERT(sc->tp);
->  
->  	sc->flags &= ~XREP_RESET_PERAG_RESV;
-> -	error = xfs_ag_resv_free(sc->sa.pag);
-> -	if (error)
-> -		goto out;
-> +	xfs_ag_resv_free(sc->sa.pag);
->  	error = xfs_ag_resv_init(sc->sa.pag, sc->tp);
->  	if (error == -ENOSPC) {
->  		xfs_err(sc->mp,
-> @@ -940,7 +938,6 @@ xrep_reset_perag_resv(
->  		error = 0;
->  	}
->  
-> -out:
->  	return error;
->  }
->  
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 83f708f62ed9f2..c211ea2b63c4dd 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -213,10 +213,8 @@ xfs_growfs_data_private(
->  			struct xfs_perag	*pag;
->  
->  			pag = xfs_perag_get(mp, id.agno);
-> -			error = xfs_ag_resv_free(pag);
-> +			xfs_ag_resv_free(pag);
->  			xfs_perag_put(pag);
-> -			if (error)
-> -				return error;
->  		}
->  		/*
->  		 * Reserve AG metadata blocks. ENOSPC here does not mean there
-> @@ -385,14 +383,14 @@ xfs_reserve_blocks(
->  	 */
->  	if (mp->m_resblks > request) {
->  		lcounter = mp->m_resblks_avail - request;
-> -		if (lcounter  > 0) {		/* release unused blocks */
-> +		if (lcounter > 0) {		/* release unused blocks */
->  			fdblks_delta = lcounter;
->  			mp->m_resblks_avail -= lcounter;
->  		}
->  		mp->m_resblks = request;
->  		if (fdblks_delta) {
->  			spin_unlock(&mp->m_sb_lock);
-> -			error = xfs_mod_fdblocks(mp, fdblks_delta, 0);
-> +			xfs_add_fdblocks(mp, fdblks_delta);
->  			spin_lock(&mp->m_sb_lock);
->  		}
->  
-> @@ -428,9 +426,9 @@ xfs_reserve_blocks(
->  		 */
->  		fdblks_delta = min(free, delta);
->  		spin_unlock(&mp->m_sb_lock);
-> -		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
-> +		error = xfs_dec_fdblocks(mp, fdblks_delta, 0);
->  		if (!error)
-> -			xfs_mod_fdblocks(mp, fdblks_delta, 0);
-> +			xfs_add_fdblocks(mp, fdblks_delta);
->  		spin_lock(&mp->m_sb_lock);
->  	}
->  out:
-> @@ -556,24 +554,13 @@ xfs_fs_reserve_ag_blocks(
->  /*
->   * Free space reserved for per-AG metadata.
->   */
-> -int
-> +void
->  xfs_fs_unreserve_ag_blocks(
->  	struct xfs_mount	*mp)
->  {
->  	xfs_agnumber_t		agno;
->  	struct xfs_perag	*pag;
-> -	int			error = 0;
-> -	int			err2;
->  
-> -	for_each_perag(mp, agno, pag) {
-> -		err2 = xfs_ag_resv_free(pag);
-> -		if (err2 && !error)
-> -			error = err2;
-> -	}
-> -
-> -	if (error)
-> -		xfs_warn(mp,
-> -	"Error %d freeing per-AG metadata reserve pool.", error);
-> -
-> -	return error;
-> +	for_each_perag(mp, agno, pag)
-> +		xfs_ag_resv_free(pag);
->  }
-> diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-> index 44457b0a059376..3e2f73bcf8314b 100644
-> --- a/fs/xfs/xfs_fsops.h
-> +++ b/fs/xfs/xfs_fsops.h
-> @@ -12,6 +12,6 @@ int xfs_reserve_blocks(struct xfs_mount *mp, uint64_t request);
->  int xfs_fs_goingdown(struct xfs_mount *mp, uint32_t inflags);
->  
->  int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
-> -int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
-> +void xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
->  
->  #endif	/* __XFS_FSOPS_H__ */
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 7328034d42ed8d..b9e726a8366f93 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1129,16 +1129,33 @@ xfs_fs_writable(
->  	return true;
->  }
->  
-> -/* Adjust m_fdblocks or m_frextents. */
-> +void
-> +__xfs_add_fdblocks(
-> +	struct xfs_mount	*mp,
-> +	uint64_t		delta)
-> +{
-> +	long long		res_used;
-> +
-> +	spin_lock(&mp->m_sb_lock);
-> +	res_used = (long long)(mp->m_resblks - mp->m_resblks_avail);
-> +	if (res_used > delta) {
-> +		mp->m_resblks_avail += delta;
-> +	} else {
-> +		delta -= res_used;
-> +		mp->m_resblks_avail = mp->m_resblks;
-> +		percpu_counter_add(&mp->m_fdblocks, delta);
-> +	}
-> +	spin_unlock(&mp->m_sb_lock);
-> +}
-> +
->  int
-> -xfs_mod_freecounter(
-> +xfs_dec_freecounter(
->  	struct xfs_mount	*mp,
->  	struct percpu_counter	*counter,
-> -	int64_t			delta,
-> +	uint64_t		delta,
->  	bool			rsvd)
->  {
->  	int64_t			lcounter;
-> -	long long		res_used;
->  	uint64_t		set_aside = 0;
->  	s32			batch;
->  	bool			has_resv_pool;
-> @@ -1148,31 +1165,6 @@ xfs_mod_freecounter(
->  	if (rsvd)
->  		ASSERT(has_resv_pool);
->  
-> -	if (delta > 0) {
-> -		/*
-> -		 * If the reserve pool is depleted, put blocks back into it
-> -		 * first. Most of the time the pool is full.
-> -		 */
-> -		if (likely(!has_resv_pool ||
-> -			   mp->m_resblks == mp->m_resblks_avail)) {
-> -			percpu_counter_add(counter, delta);
-> -			return 0;
-> -		}
-> -
-> -		spin_lock(&mp->m_sb_lock);
-> -		res_used = (long long)(mp->m_resblks - mp->m_resblks_avail);
-> -
-> -		if (res_used > delta) {
-> -			mp->m_resblks_avail += delta;
-> -		} else {
-> -			delta -= res_used;
-> -			mp->m_resblks_avail = mp->m_resblks;
-> -			percpu_counter_add(counter, delta);
-> -		}
-> -		spin_unlock(&mp->m_sb_lock);
-> -		return 0;
-> -	}
-> -
->  	/*
->  	 * Taking blocks away, need to be more accurate the closer we
->  	 * are to zero.
-> @@ -1200,7 +1192,7 @@ xfs_mod_freecounter(
->  	 */
->  	if (has_resv_pool)
->  		set_aside = xfs_fdblocks_unavailable(mp);
-> -	percpu_counter_add_batch(counter, delta, batch);
-> +	percpu_counter_add_batch(counter, -((int64_t)delta), batch);
->  	if (__percpu_counter_compare(counter, set_aside,
->  				     XFS_FDBLOCKS_BATCH) >= 0) {
->  		/* we had space! */
-> @@ -1212,11 +1204,11 @@ xfs_mod_freecounter(
->  	 * that took us to ENOSPC.
->  	 */
->  	spin_lock(&mp->m_sb_lock);
-> -	percpu_counter_add(counter, -delta);
-> +	percpu_counter_add(counter, delta);
->  	if (!has_resv_pool || !rsvd)
->  		goto fdblocks_enospc;
->  
-> -	lcounter = (long long)mp->m_resblks_avail + delta;
-> +	lcounter = (long long)mp->m_resblks_avail - delta;
->  	if (lcounter >= 0) {
->  		mp->m_resblks_avail = lcounter;
->  		spin_unlock(&mp->m_sb_lock);
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 503fe3c7edbf82..891a54d57f576d 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -534,19 +534,39 @@ xfs_fdblocks_unavailable(
->  	return mp->m_alloc_set_aside + atomic64_read(&mp->m_allocbt_blks);
->  }
->  
-> -int xfs_mod_freecounter(struct xfs_mount *mp, struct percpu_counter *counter,
-> -		int64_t delta, bool rsvd);
-> +int xfs_dec_freecounter(struct xfs_mount *mp, struct percpu_counter *counter,
-> +		uint64_t delta, bool rsvd);
->  
->  static inline int
-> -xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta, bool reserved)
-> +xfs_dec_fdblocks(struct xfs_mount *mp, uint64_t delta, bool reserved)
->  {
-> -	return xfs_mod_freecounter(mp, &mp->m_fdblocks, delta, reserved);
-> +	return xfs_dec_freecounter(mp, &mp->m_fdblocks, delta, reserved);
-> +}
-> +
-> +
-> +void __xfs_add_fdblocks(struct xfs_mount *mp, uint64_t delta);
-> +static inline void xfs_add_fdblocks(struct xfs_mount *mp, uint64_t delta)
-> +{
-> +	/*
-> +	 * If the reserve pool is depleted, put blocks back into it first.
-> +	 * Most of the time the pool is full.
-> +	 */
-> +	if (unlikely(mp->m_resblks != mp->m_resblks_avail))
-> +		__xfs_add_fdblocks(mp, delta);
-> +	else
-> +		percpu_counter_add(&mp->m_fdblocks, delta);
->  }
->  
->  static inline int
-> -xfs_mod_frextents(struct xfs_mount *mp, int64_t delta)
-> +xfs_dec_frextents(struct xfs_mount *mp, uint64_t delta)
-> +{
-> +	return xfs_dec_freecounter(mp, &mp->m_frextents, delta, false);
-> +}
-> +
-> +static inline void
-> +xfs_add_frextents(struct xfs_mount *mp, uint64_t delta)
->  {
-> -	return xfs_mod_freecounter(mp, &mp->m_frextents, delta, false);
-> +	percpu_counter_add(&mp->m_frextents, delta);
->  }
->  
->  extern int	xfs_readsb(xfs_mount_t *, int);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index b31652fa70040a..3adf2502e09fcf 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1873,11 +1873,7 @@ xfs_remount_ro(
->  	xfs_inodegc_stop(mp);
->  
->  	/* Free the per-AG metadata reservation pool. */
-> -	error = xfs_fs_unreserve_ag_blocks(mp);
-> -	if (error) {
-> -		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> -		return error;
-> -	}
-> +	xfs_fs_unreserve_ag_blocks(mp);
->  
->  	/*
->  	 * Before we sync the metadata, we need to free up the reserve block
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index c7e57efe035666..d7abb3539d2d92 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2932,7 +2932,6 @@ DEFINE_AG_RESV_EVENT(xfs_ag_resv_free_extent);
->  DEFINE_AG_RESV_EVENT(xfs_ag_resv_critical);
->  DEFINE_AG_RESV_EVENT(xfs_ag_resv_needed);
->  
-> -DEFINE_AG_ERROR_EVENT(xfs_ag_resv_free_error);
->  DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
->  
->  /* refcount tracepoint classes */
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 924b460229e951..b18d478e2c9e85 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -163,7 +163,7 @@ xfs_trans_reserve(
->  	 * fail if the count would go below zero.
->  	 */
->  	if (blocks > 0) {
-> -		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
-> +		error = xfs_dec_fdblocks(mp, blocks, rsvd);
->  		if (error != 0)
->  			return -ENOSPC;
->  		tp->t_blk_res += blocks;
-> @@ -210,7 +210,7 @@ xfs_trans_reserve(
->  	 * fail if the count would go below zero.
->  	 */
->  	if (rtextents > 0) {
-> -		error = xfs_mod_frextents(mp, -((int64_t)rtextents));
-> +		error = xfs_dec_frextents(mp, rtextents);
->  		if (error) {
->  			error = -ENOSPC;
->  			goto undo_log;
-> @@ -234,7 +234,7 @@ xfs_trans_reserve(
->  
->  undo_blocks:
->  	if (blocks > 0) {
-> -		xfs_mod_fdblocks(mp, (int64_t)blocks, rsvd);
-> +		xfs_add_fdblocks(mp, blocks);
->  		tp->t_blk_res = 0;
->  	}
->  	return error;
-> @@ -593,12 +593,10 @@ xfs_trans_unreserve_and_mod_sb(
->  	struct xfs_trans	*tp)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
-> -	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
->  	int64_t			blkdelta = tp->t_blk_res;
->  	int64_t			rtxdelta = tp->t_rtx_res;
->  	int64_t			idelta = 0;
->  	int64_t			ifreedelta = 0;
-> -	int			error;
->  
->  	/*
->  	 * Calculate the deltas.
-> @@ -631,10 +629,8 @@ xfs_trans_unreserve_and_mod_sb(
->  	}
->  
->  	/* apply the per-cpu counters */
-> -	if (blkdelta) {
-> -		error = xfs_mod_fdblocks(mp, blkdelta, rsvd);
-> -		ASSERT(!error);
-> -	}
-> +	if (blkdelta)
-> +		xfs_add_fdblocks(mp, blkdelta);
->  
->  	if (idelta)
->  		percpu_counter_add_batch(&mp->m_icount, idelta,
-> @@ -643,10 +639,8 @@ xfs_trans_unreserve_and_mod_sb(
->  	if (ifreedelta)
->  		percpu_counter_add(&mp->m_ifree, ifreedelta);
->  
-> -	if (rtxdelta) {
-> -		error = xfs_mod_frextents(mp, rtxdelta);
-> -		ASSERT(!error);
-> -	}
-> +	if (rtxdelta)
-> +		xfs_add_frextents(mp, rtxdelta);
->  
->  	if (!(tp->t_flags & XFS_TRANS_SB_DIRTY))
->  		return;
-> @@ -682,7 +676,6 @@ xfs_trans_unreserve_and_mod_sb(
->  	 */
->  	ASSERT(mp->m_sb.sb_imax_pct >= 0);
->  	ASSERT(mp->m_sb.sb_rextslog >= 0);
-> -	return;
->  }
->  
->  /* Add the given log item to the transaction's list of log items. */
-> @@ -1301,9 +1294,9 @@ xfs_trans_reserve_more_inode(
->  		return 0;
->  
->  	/* Quota failed, give back the new reservation. */
-> -	xfs_mod_fdblocks(mp, dblocks, tp->t_flags & XFS_TRANS_RESERVE);
-> +	xfs_add_fdblocks(mp, dblocks);
->  	tp->t_blk_res -= dblocks;
-> -	xfs_mod_frextents(mp, rtx);
-> +	xfs_add_frextents(mp, rtx);
->  	tp->t_rtx_res -= rtx;
->  	return error;
->  }
-> -- 
-> 2.39.2
+> > --D
+> > 
+> > > Suggested-by: Darrick Wong <djwong@kernel.org>
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > This fell out of some of the discussion on a prospective freeze time
+> > > blockgc scan. I ran this through the same random write test described in
+> > > that thread and it prevented all cowblocks trimming until the file is
+> > > released.
+> > > 
+> > > Brian
+> > > 
+> > > [1] https://lore.kernel.org/linux-xfs/ZcutUN5B2ZCuJfXr@bfoster/
+> > > 
+> > >  fs/xfs/xfs_icache.c | 20 +++++++++++++++++---
+> > >  1 file changed, 17 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index dba514a2c84d..d7c54e45043a 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -1240,8 +1240,13 @@ xfs_inode_clear_eofblocks_tag(
+> > >   */
+> > >  static bool
+> > >  xfs_prep_free_cowblocks(
+> > > -	struct xfs_inode	*ip)
+> > > +	struct xfs_inode	*ip,
+> > > +	struct xfs_icwalk	*icw)
+> > >  {
+> > > +	bool			sync;
+> > > +
+> > > +	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
+> > > +
+> > >  	/*
+> > >  	 * Just clear the tag if we have an empty cow fork or none at all. It's
+> > >  	 * possible the inode was fully unshared since it was originally tagged.
+> > > @@ -1262,6 +1267,15 @@ xfs_prep_free_cowblocks(
+> > >  	    atomic_read(&VFS_I(ip)->i_dio_count))
+> > >  		return false;
+> > >  
+> > > +	/*
+> > > +	 * A full cowblocks trim of an inode can have a significant effect on
+> > > +	 * fragmentation even when a reasonable COW extent size hint is set.
+> > > +	 * Skip cowblocks inodes currently open for write on opportunistic
+> > > +	 * blockgc scans.
+> > > +	 */
+> > > +	if (!sync && inode_is_open_for_write(VFS_I(ip)))
+> > > +		return false;
+> > > +
+> > >  	return true;
+> > >  }
+> > >  
+> > > @@ -1291,7 +1305,7 @@ xfs_inode_free_cowblocks(
+> > >  	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
+> > >  		return 0;
+> > >  
+> > > -	if (!xfs_prep_free_cowblocks(ip))
+> > > +	if (!xfs_prep_free_cowblocks(ip, icw))
+> > >  		return 0;
+> > >  
+> > >  	if (!xfs_icwalk_match(ip, icw))
+> > > @@ -1320,7 +1334,7 @@ xfs_inode_free_cowblocks(
+> > >  	 * Check again, nobody else should be able to dirty blocks or change
+> > >  	 * the reflink iflag now that we have the first two locks held.
+> > >  	 */
+> > > -	if (xfs_prep_free_cowblocks(ip))
+> > > +	if (xfs_prep_free_cowblocks(ip, icw))
+> > >  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+> > >  	return ret;
+> > >  }
+> > > -- 
+> > > 2.42.0
+> > > 
+> > 
 > 
 > 
