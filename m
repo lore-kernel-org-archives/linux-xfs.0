@@ -1,79 +1,73 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-oa1-f41.google.com (mail-oa1-f41.google.com [209.85.160.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76880802
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 00:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FEDEAC0
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 02:24:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708906248; cv=none; b=THI5WOHBtir7leVitXZ6zcIZbnkosmBa0mCCmw4c/W1IYCijc58dGaJXgpqm+XbjRQn1B4dwqktZtRQpsNYyc7bSbTUgDedMQ/AQhCmhe9O9Jvc1QhCJLxERShs56wjRT/ZsIaiYKH+eSQt9BTSLbGjNYPbaG6WJBitFITqNam8=
+	t=1708914278; cv=none; b=QD3NiCSscskQxgPn0Ej1YxUTjfECLiBlPtu9f469PRYPHidGPwD8ry6re6S/6eRSKOwyb8XnYsfQqCmA+3N90rTjPynKHPFvNzj4xpW3dGO2fSIKc6mfwOs//FwUmJa8Jm30gwiWCuFwNbUoZDH+rAElVeVXnw8tZVbQqzPB/mA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708906248; c=relaxed/simple;
-	bh=GYBif4eHHYK1VBAeXhKURSAbsWCLixxMn/+30N10GqM=;
+	s=arc-20240116; t=1708914278; c=relaxed/simple;
+	bh=X3AP6Bp6b6ancxowuXLy3iTRG7qx8UMTyerNezwbvHU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pKiTSAcO1uEAi90rsEatItFaCagsWzYCqyUFyO/W5nAkNFKZ2swQLUTg/tMhKsGRnSxfbT2TumSV/uswb535CJhVq1fTfF5kF/YutTqKB5Wf5FNCCU2p8/NuYdJUJcQ5raIaUNqfzs7LUyJgZHM4Tb1G1yaiO1PhLoEzR4k6deI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=GponSIXU; arc=none smtp.client-ip=209.85.214.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=cQ8VbWqLS9Y279znMiOKjPC46aTg0+A49i06B2MhEPorLzGg5nqnZr8VylO9dp8DqeU6iMtiHxOlB+2qZAin4h0uPo47y1I+wNm9vw+kwZgH76AMwoXFm2WcPcjaiye9KImtWmSIeR8J3aLRZxJ4WMd/Wiw3nHPyVCCKObqkqXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=pU/X0DBG; arc=none smtp.client-ip=209.85.160.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="GponSIXU"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1dc98892850so5607985ad.0
-        for <linux-xfs@vger.kernel.org>; Sun, 25 Feb 2024 16:10:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="pU/X0DBG"
+Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-214def5da12so1506129fac.2
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Feb 2024 18:24:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708906246; x=1709511046; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708914276; x=1709519076; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=kj3tL2ojtrovMn5GzkeggiQFgfU3mHccbBEaky3cDrE=;
-        b=GponSIXU0PtTlbcGZVY+04F9/RA5vbLFOTmfarRES6zSFh4wBizKT8IGgt1HgKEttj
-         GPzJEUM2MUq5Ys9cyzGFpgWUp6TGDqJtj4dmncGYbpFJm3TlovKg8oThngzrqzP/4cxU
-         owbbxtOLgVao/RuP/BpRl2oBPr4R7wQRYfU/I8cTN90kC37MwG3S4Q3QytxprqKVCJET
-         I5RAOaQY+6+5/AP52z9WTQJyLk6Xwc1qWgO1cWZO+YKY3RjGZ1jfGdO53Z2O84PTXONL
-         jVHXP1wzDGGdBYsIaNW6ssM7FjmuWFJeWe327xmSCOgYu4ZwGDGqyLublCdIE7g+MJC+
-         GdFg==
+        bh=keFZRzXSEtuuqVK1R31f2mV75CisjCkl0caiItfXYno=;
+        b=pU/X0DBGr5nzKRbhfuS1HdMnXOC2UAgUnm+Fd7JIT3Yxvdwd6RaK+IBjxbPFVi32jt
+         h0HJHoUBO3wGcjh9ylf7dqJnR40HzMmSlhER7g6TKWUEgnEZpQb7aWAofCSwVykmdPeB
+         hcNAGXXQxlrFEDCJBXH7kufKyiDsXOM/IIQbuhV3nSv/ZVPwt51PBMrvnQILP0Qbhq78
+         rXoEVlg/gh23lhLXe8F2kvxpVfifRt3ChUW01FzLbaRa1Bl29BTx+BpTCFSF9AnQRygv
+         zBXsFNdUuXIMYncRG6XIISzbTXBAPzN8Ulm8M5gl67qpCM+MxRdpdMmqcuPPbrMGIVeq
+         vsXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708906246; x=1709511046;
+        d=1e100.net; s=20230601; t=1708914276; x=1709519076;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kj3tL2ojtrovMn5GzkeggiQFgfU3mHccbBEaky3cDrE=;
-        b=ZRXF7zDDIh53Tkqmw72laNMqOyT0W9rLxP8WezTcygU8xJC2PaT2QDV5wB8R1F8Of1
-         V/EayBYogDR2AB5/OwT57tf+dt59OXXLWcVL40BnL7ydkCgysOQJ0reWut1xM+61FjQv
-         UL1kfmND6dqhGYd/LwpnAi3YKb66w66S/WESW4Ozhj9gXFo91PRjnvQZNIeAE9oqdbYd
-         yve5gcLPxg8CwzWAcBm6vSZ/AbiSQ5vagZ5ttflnFnGDtaGsAA/X2g/0oo0M/ADFdkU6
-         rLHlYHXRtOPZq1xR8KhN02RBzT8b49RAw3hNhXJ3sRlt1T3I9yJetHeacT37iBIzHmtV
-         Seaw==
-X-Forwarded-Encrypted: i=1; AJvYcCUXAdUo0ekKwa6oQ3Y6woVyKik+b7tNb2toXTJRGvwSWAQak2cd2WVtFxNI6AAph+2YjLROHwg8hHBxDE+FGilTaH6sfqo1qaBz
-X-Gm-Message-State: AOJu0YxHrbkHjN5LW9fylZcGoWc5wzhNA42VMOMmvt92AdTX9WOGwGtB
-	fUy6I5tBsDFFU1i7LMO00MX+t/ywZ+fEfHIZTCmYahTrhxHfhbHq04xntSb44Ow=
-X-Google-Smtp-Source: AGHT+IFZ8EbjLI7WkBtuaOZd19M5TAQKAFtl3kAlXGLmwfVVBaFV/tBsSmlNW82La8HLKnY8/R7gNQ==
-X-Received: by 2002:a17:903:189:b0:1dc:692:2843 with SMTP id z9-20020a170903018900b001dc06922843mr8247359plg.5.1708906245699;
-        Sun, 25 Feb 2024 16:10:45 -0800 (PST)
+        bh=keFZRzXSEtuuqVK1R31f2mV75CisjCkl0caiItfXYno=;
+        b=vJnqXCUfiFLS7CCcPUq9eth8jmSWn2jXICu04Do5hAoNU8Tkk6puq0P6ni7ZVcMUTW
+         ULMhZtlXMap6VMzss/dorhLo2aIic5ZmRerAVVO4KYyJ3fdbY/OEXWaUSXuSy5KVogMP
+         ui8Jg7+f5+d8lkv2uT8GUF7BEv5gZNvyvU9qM4BX2Y0T4STA9zkpBWDDiqq/xM/T3vNm
+         HhRXUKX7QZb8Ek53mD70+kOudI5mNPH3fdwiItjVowpiJm8Fba+7nXQb+CvO7GQoMpjF
+         3nLHt1s6BoKtl/PERhG/xy5O6GlSl8oe3eToIs7sqXlbHAVOtJ9WG0yQKEW8OCtdExdx
+         /Nbw==
+X-Forwarded-Encrypted: i=1; AJvYcCWfN+0dqNong8MY0AtW9nOt5QTr5QyBgrgH+kohZtWQV0qXTt7lUvhr4oDQwOymZxT9iOIduIdNjkc9vpxSbOinM8LHlSPdnCdJ
+X-Gm-Message-State: AOJu0YwRVQlCG5NZ+x4l0s655IAB5x9lvvwau5Ms/rVdOYJsNjmvUfVW
+	e0hnuDpHxq+yfF7DbjUkokj5fe+OCMhT1FTKlGJTVWL+4MKl1Alxs472sL/Bh7A=
+X-Google-Smtp-Source: AGHT+IEtjhVGkg7sspmH17FkZdrCNpnZ3s/M4MIQx1Fz9aip/f8ld7pswsn1rXp6cfSHQpxNfDG3WQ==
+X-Received: by 2002:a05:6871:14a:b0:21e:8fb4:966a with SMTP id z10-20020a056871014a00b0021e8fb4966amr7455096oab.43.1708914276509;
+        Sun, 25 Feb 2024 18:24:36 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id y17-20020a170902d65100b001dca68a8a00sm219151plh.139.2024.02.25.16.10.44
+        by smtp.gmail.com with ESMTPSA id o7-20020a63f147000000b005dc9439c56bsm2913980pgk.13.2024.02.25.18.24.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Feb 2024 16:10:45 -0800 (PST)
+        Sun, 25 Feb 2024 18:24:36 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1reOZu-00BWTP-1n;
-	Mon, 26 Feb 2024 11:10:42 +1100
-Date: Mon, 26 Feb 2024 11:10:42 +1100
+	id 1reQfR-00BYvq-0r;
+	Mon, 26 Feb 2024 13:24:33 +1100
+Date: Mon, 26 Feb 2024 13:24:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: lsf-pc@lists.linux-foundation.org, John Garry <john.g.garry@oracle.com>,
-	Tso Ted <tytso@mit.edu>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	"kbus @pop.gmail.com>> Keith Busch" <kbusch@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>, hch@lst.de, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	chandan.babu@oracle.com, linux-kernel@vger.kernel.org,
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org, jbongio@google.com,
-	ojaswin@linux.ibm.com
-Subject: Re: [LSF/MM/BPF TOPIC] no tears atomics & LBS
-Message-ID: <ZdvXAn1Q/+QX5sPQ@dread.disaster.area>
-References: <ZdfDxN26VOFaT_Tv@bombadil.infradead.org>
+	chandan.babu@oracle.com, djwong@kernel.org
+Subject: Re: [PATCH v4 09/25] fsverity: add tracepoints
+Message-ID: <Zdv2YZP0sIzDA5UT@dread.disaster.area>
+References: <20240212165821.1901300-1-aalbersh@redhat.com>
+ <20240212165821.1901300-10-aalbersh@redhat.com>
+ <20240223053156.GE25631@sol.localdomain>
+ <copvwl7uhxj7iqlms2tv6shk4ky7lce54jqugg7uiuxgbv34am@3x6pelescjlb>
+ <20240223182735.GD1112@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,174 +76,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZdfDxN26VOFaT_Tv@bombadil.infradead.org>
+In-Reply-To: <20240223182735.GD1112@sol.localdomain>
 
-On Thu, Feb 22, 2024 at 01:59:32PM -0800, Luis Chamberlain wrote:
-> At last year's LSFMM we learned through Ted Ts'o about the interest by
-> cloud providers in large atomics [0]. It is a good example where cloud
-> providers innovated in an area perhaps before storage vendors were
-> providing hardware support for such features. An example use case was
-> databases. In short, with large atomics databases can disable their own version
-> of journaling so to increase TPS. Large atomics lets you  disabling things like
-> MySQL innodb_doublewrite. The feature to allow you to disable this and use
-> large atomcis is known as torn write prevention [1]. At least for MySQL the
-> default page size for the database (used for columns) is 16k, and so enabling
-> for example a 16k atomic can allow you to take advantage of this. It was also
-> mentioned how PostgreSQL only supports buffered-IO and so it would be desirable
-> for a solution to support buffered-IO with large atomics as well. The way
-> cloud providers enable torn write protection, is by using direct IO.
+On Fri, Feb 23, 2024 at 10:27:35AM -0800, Eric Biggers wrote:
+> On Fri, Feb 23, 2024 at 02:23:52PM +0100, Andrey Albershteyn wrote:
+> > On 2024-02-22 21:31:56, Eric Biggers wrote:
+> > > On Mon, Feb 12, 2024 at 05:58:06PM +0100, Andrey Albershteyn wrote:
+> > > > fs-verity previously had debug printk but it was removed. This patch
+> > > > adds trace points to the same places where printk were used (with a
+> > > > few additional ones).
+> > > 
+> > > Are all of these actually useful?  There's a maintenance cost to adding all of
+> > > these.
+> > > 
+> > 
+> > Well, they were useful for me while testing/working on this
+> > patchset. Especially combining -e xfs -e fsverity was quite good for
+> > checking correctness and debugging with xfstests tests. They're
+> > probably could be handy if something breaks.
+> > 
+> > Or you mean if each of them is useful? The ones which I added to
+> > signature verification probably aren't as useful as other; my
+> > intention adding them was to also cover these code paths.
 > 
-> John Garry has been working on adding an API for atomic writes, it would
-> seem some folks refer to this as the no-tears atomic API. It consists of
-> two parts, one for the block layer [2] and another set of changes for
-> XFS [3]. It enables Direct IO support with large atomics.  It includes
-> a userspace API which lets you peg a FS_XFLAG_ATOMICWRITES flag onto a
-> file, and you then create an XFS filesystem using the XFS realtime
-> subvolume with with an extent alignment. The current users of this API
-> seems to be SCSI, but obviously this can grow to support others. A neat
-> feature of this effort is you can have two separate directories with
-> separate aligment requirements. There is no generic filesystem solution
-> yet.
-> 
-> Meanwhile we're now at a v2 RFC for LBS support [4]. Although the LBS
-> effort originally was a completely orthogonal effort to large atomics, it
-> would seem there is a direct relationship here now worth discussing.
-> In short LBS enables buffered-IO large atomic support if the hardware
-> support its.
->
-> We get both alignment constraints gauranteed and now ensure
-> we use contigous memory for the IOs for DMA too it is built on using large
-> folios. We expect NVMe drives which support support large atomics can
-> easily profit from this without any userspace modification other than
-> when you create the filesystem.
+> Well, I'll have to maintain all of these, including reviewing them, keeping them
+> working as code gets refactored, and fixing any bugs that exist or may get
+> introduced later in them.  They also increase the icache footprint of the code.
+> I'd like to make sure that it will be worthwhile.  The pr_debug messages that I
+> had put in fs/verity/ originally were slightly useful when writing fs/verity/
+> originally, but after that I never really used them.  Instead I found they
+> actually made patching fs/verity/ a bit harder, since I had to make sure to keep
+> all the pr_debug statements updated as code changed around them.
 
-If we combine atomic writes with buffered writeback then we create a
-major IO constraint: *all* writes must be atomic in this sort of
-setup because we cannot allow multi-sector writes to be torn
-randomly in the middle of *any* sector. i.e.  the driver needs to
-telling the block device that it's maximum IO size is limited by the
-max atomic write size the device supports.
+pr_debug is largely useless outside of code development purposes.
 
-With that constraint in place, I don't see how the page cache or
-filesystem needs to care about how the underlying storage device
-provides it's atomic sector sized IO. If the underlying device uses
-atomic writes, then it needs to set up all it's published IO
-constraints that are used by filesystems to build bios around the
-limitations of atomic writes.  And that bleeds into userspace as
-well - it needs to know the sector sizes so it can set up the
-filesystem correctly in the first place.
+The value in tracepoints is that they are available for diagnosing
+problems on production systems and should be thought of as such.
+Yes, you can also use them to debug development code, but in that
+environment they are no substitute for custom trace_printk() debug
+output.
 
-Hence I think there is -zero- overlap between LBS and atomic writes.
-Yes, a device can provide a larger sector size via atomic write
-support, but that's orthogonal to LBS infrastructure. All the device
-needs to do is to set all of the device limits to be based on atomic
-write constraints. Nothing else in the kernel or userspace needs to
-care, and then the driver can simply add the REQ_ATOMIC flag to all
-the write IOs itself....
+However, when you have extensive tracepoints coverage, the amount of
+custom trace_printk() stuff you need to add to a kernel to debug an
+issue ends up being limited, because most of the key state and
+object changes in the code are already covered by tracepoints.
 
-Note that I'm not talking about IOCB_ATOMIC here: the page cache
-doesn't give any guarantees about atomic write semantics. e.g. reads
-are allowed to race with writes to the same folio, "atomic" user
-writes that span folios can be written back independently (even
-whilst the write() is in progress!) breaking the atomicity that
-userspace specified.
+> Maybe I am an outlier and other people really do like having these tracepoints
+> around.  But I'd like to see a bit more feedback along those lines first.  If we
+> could keep them to a more minimal set, that would also be helpful.
 
-Hence if we want IOCB_ATOMIC for buffered writes, the first problem
-that needs to be solved is providing guaranteed stable atomic write
-semantics through the page cache right down to the async writeback
-code.....
+For people who are used to subsystems with extensive tracepoint
+coverage (like XFS), the lack of tracepoints in all the surrounding
+code is jarring. It makes the rest of the system feel like a black
+hole where detailed runtime introspection is almost completely
+impossible without a *lot* of work.
 
-> We reviewed the possible intersection of both efforts at our last LBS cabal
-> with LBS interested folks and Martin Peterson and John Garry. It is somewhat
-> unclear exactly how to follow up on some aspects of the no-tear API [5]
-> but there was agreement about the possible intersection of both efforts,
-> and that we should discuss this at LSFMM. The goal would be to try to reach
-> consensus on how no-tear API and how LBS could help with those
-> interested in leveraging large atomics.
-> 
-> Some things to evaluate or for us to discuss:
-> 
->  * no-tear API:
-
-But I like to cry.
-
->    - allows directories to have separate alignment requirements
->      - this might be useful for folks who want to use large IOs with
->        large atomics for some workloads but smaller IOs for another
->        directory on the same drive. It this a viable option to some
->        users for large atomics with concerns of being forced to use
->        only large writes with LBS?
-
-We can already do that with extent size hints in XFS.
-
->    - statx is modified so to display new alignment considerations
->    - atomics are power of 2
->    - there seems to be some interest in supporting no-hardware-accel atomic
->      solution, so a software implemented atomic solution, could someone
->      clarify if that's accurate? How is the double write avoided? What are
->      the use cases? Do databases use that today?
-
-Christoph's proposal for XFS involves using existing internal
-copy-on-write infrastructure for IOCB_ATOMIC writes. i.e. it uses
-the filesystem journal to do the atomic swap of the new data extent
-in place of the old one.
-
->    - How do we generalize a solution per file? Would extending a min
->      order per file be desirable? Is that even tenable?
-
-AFAIA, this is already the plan with XFS via a FORCE_ALIGN inode
-flag in conjunction with extent size hints.
-
->   * LBS:
->     - stat will return the block size set, so userspace applications
->       using stat / statx will use the larger block size to ensure
->       alignment
->     - a drive with support for a large atomic but supporting smaller
->       logical block sizes will still allow writes to the logical block
->       size. If a block driver has a "preference" (in NVMe this would
->       be the NPWG for the IU) to write above the logical block size,
->       do we want the option to lift the logical block size? In
->       retrospect I don't think this is needed given Jan Kara's patches
->       to prevent allowing writes to to mounted devices [4], that should
->       ensure that if a filesystem takes advantage of a larger physical
->       block size and creates a filesystem with it as the sector size,
->       userspace won't be mucking around with lower IOs to the drive
->       while it is mounted. But, are there any applications which would
->       get the block device logical block size instead for DIO?
->     - LBS is transparent to to userspace applications
->     - We've verified *most* IOs are aligned if you use a 16k block size
->       but a smaller sector size, the lower IOs were verified to come
->       from the XFS buffer cache. If your drive supports a large atomic
->       you can avoid these as you can lift the sector size set as the
->       physical block size will be larger than the logical block size.
->       For NVMe today this is possible for drives with a large
->       NPWG (the IU) and NAWUFP (the large atomic), for example.
-
-This is just how the page cache and filesystems behave according to
-sector and block size constraints defined by the block device and
-mkfs. I'm not sure what you're asking that we comment on or discuss
-here...
-
-> Tooling:
-> 
->   - Both efforts stand to gain from a shared verification set of tools
->     for alignment and atomic use
->   - We have a block layer eBPF alignent tool written by Daniel Gomez [6]
->     however there is lack of interested parties to help review a simpler
->     version of this tool this tool so we merge it [7], we can benefit from more
->     eyeablls from experienced eBPF / block layer folks.
-
-Running and maintaining eBPF tools on development systems running
-custom kernels is a PITA in my experience.
-
-Wouldn't it be better just to add block tracepoint analysis filters
-to things like trace-cmd? We already have tracepoints that expose
-all the IO operations like queuing, merging, dispatch, etc that
-users are familiar with and have scripts and tooling written for.
-Adding a filter that calculates IO alignment for traces during
-report generation would by much more useful for IO analysis in
-general as understanding these behaviours is not specific to atomic
-writes.
+Extensive tracepoints help everyone in the production support
+and diagnosis chain understand what is going on by providing easy to
+access runtime introspection for the code. i.e. they provide
+benefit to far more people than just the one kernel developer who
+enables pr_debug on the subsystem when developing new code...
 
 -Dave.
 -- 
