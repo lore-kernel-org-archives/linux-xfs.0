@@ -1,229 +1,199 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BDA68592F
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 15:38:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708961936; cv=none; b=IswGlzMvfGjApcr5dYc79Nk9c7SQ+IWBD5whxCe42QVOEMRtf6XgcJIGlmOYgp4YFD287DNbXZFyPbMSLzBfeEV2uKtIWG8WsUZzNmlS9xVamCf9JmstlksHpbRZDJUn0e0l84wDE1MLS7pOmWXT+pWicYlfPfzXCy2VMQEECpk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708961936; c=relaxed/simple;
-	bh=Db4XQ+h2YqbC/ZRSAQQhNjz59BSCes6pgo4Wx3Sv1nI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Xaf1ghgMHmf8eD0kThpqxeTeoWIe4D0ZQq3uYlRLhAHHutMspTLzGKtAg2zvUfLn08dmHIueYArOU4LpUZP6LOJbzSXmZnV/zpLieBaGz433STz0xVtRAn7mbUXYMRFenArjnfpL02O1c4M74uYBzXbUtkVMaGtdFRoQRZ73bdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AK2qPxW0; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB0B9132C0D
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 16:58:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.16
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1708966711; cv=fail; b=Spc1kMHOfa/LLZViESSi6zteDCaDuA6tfX9VH1qy+wN/cdkoXVmjwy2VI1U5M4NlcU+H97qZVECRollYi0v5dkpOs26Q7M6BPRtgZKtu1UjyvnC06U+989J44JOXjy6vJhbmsnksLggmfQvtffZdZ2TuXq/WGaKtyCPZalnVtQE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1708966711; c=relaxed/simple;
+	bh=J5bwsi6pjMpbXE8JQs3d3YKqX+BOgTKeyUUSNuRNVzw=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=Nc8lg2GNVYmrtpxc+NHrLsudJgD1X660VdAk3/F1RcQOGOtN4RlJP/H30KoL/z/aUPDH7zOAkw7HPMCki7PRUOz6zDIAGW224mzArNs0OMgVxpW9ebEneRG7pFfoaTpVcPsldFyOD4pI6K9QafznOS+DJwy4SctBOaOzdIPeSbU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V56FQ3Pv; arc=fail smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AK2qPxW0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708961934;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2GP8/V9SS9l+S3rpTYm+/2pnbgf2hjknfKHA6NeZLBQ=;
-	b=AK2qPxW0rvshaeWYOiYM5dX7fFmYsTpR5082c1i31YX8K8l2yy/EdXiJzyHw2gQZOEy7jL
-	An0RJoUHmFdAjM4J90qJkQb4tYXMhr/xV/k5oLKNpE/NO0Ol5yVz7nNl1z0rYcyFcfxcBi
-	BjsZxxG7b/GdE9ewmIK9i/Wz36ZDNwM=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-280-kUuf-qdzN56xaxgPZotjjQ-1; Mon,
- 26 Feb 2024 10:38:52 -0500
-X-MC-Unique: kUuf-qdzN56xaxgPZotjjQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5189729AA2F6;
-	Mon, 26 Feb 2024 15:38:52 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.137])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 285A61121312;
-	Mon, 26 Feb 2024 15:38:52 +0000 (UTC)
-Date: Mon, 26 Feb 2024 10:40:34 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: skip background cowblock trims on inodes open for
- write
-Message-ID: <Zdyw8i6/DTEgojqm@bfoster>
-References: <20240214165231.84925-1-bfoster@redhat.com>
- <20240224020554.GP6226@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V56FQ3Pv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1708966710; x=1740502710;
+  h=date:from:to:cc:subject:message-id:references:
+   content-transfer-encoding:in-reply-to:mime-version;
+  bh=J5bwsi6pjMpbXE8JQs3d3YKqX+BOgTKeyUUSNuRNVzw=;
+  b=V56FQ3PvEwXjlFQ+7PRS8Gz69iiCS1BNNLBu7TCbalyRN869EB9uw4Wr
+   iKFg8Xt9atDKKFq0dOrnJAzNKbGNY+CwwNM7RnuBlP7xNLEzMHQBpovkf
+   SXzfuE7O7C+h5a+TYfYWIFUj2eysUc69EDzxfLceqbkDmZ3/TTL2PBu84
+   FiW1NZhbKjAZw73fqR5Jh4YGb/PK/ujlW7cvkKx3tNBojn5MYYDm9T8Uf
+   BaGkI32sorH89nOLJ9S1+JKU7VewSQbjdcmpdBvrMgwrtNYfayAawrAgo
+   KOTf96ed3eRaP1TDtY5jRa4K3Guz6rusLG4sahI+DzKQexZrRUnepON4C
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10996"; a="3812244"
+X-IronPort-AV: E=Sophos;i="6.06,186,1705392000"; 
+   d="scan'208";a="3812244"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2024 08:58:29 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,186,1705392000"; 
+   d="scan'208";a="37747171"
+Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
+  by fmviesa001.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 26 Feb 2024 08:58:28 -0800
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Mon, 26 Feb 2024 08:58:27 -0800
+Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
+ orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35 via Frontend Transport; Mon, 26 Feb 2024 08:58:27 -0800
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.169)
+ by edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Mon, 26 Feb 2024 08:58:27 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ANpJ9c6ZSLfo6ypyddrFn4nodhtOXtL6e30JtjO8StOUJIxHhwTEQu0FshPWQOkN9zXzj1NAL5OJRoo/FcU+j49zjfu+srv0hGRhSPIpAuUG3tBJRP41R4W2wibeNWLku81Vcsl4FGTB4u2eSUu/jbKsMiX3FjLfOOaQ/FrOwLqhOlreeztFj+RlOIfukycMwWp3Etzh9XMeCJrLoP7evh+3y4eoIywIWoXAqEzdPHCOh7SjFWcq16hspbkOvaRj2+8ZToQdwoSn9GLM2sYsye/NA9HX/BhGNwHSGNXHEZMzNeBZZ3o7kkXOt/Kjw1DJ8x04puUBrl2XpwA089IA6Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DAjx51U3FK0NqNX1iiWBV9NsFFF1x6K5/ni11nsPxL8=;
+ b=gVHqTnR++vLgKwcheQu+sbQyL/1ihghAC5d6skCDPnvyYRd7KZOPqcsghMePDDPRacZrvizKG/TmD9pFvsSltiCy4K05sMHG8nuO50E6dUZB2feTkAL/KsEti0WfOGm1ammKPUEaY7rZQyt9q2pQfoM1bJzodmdnWuoZva3yQwPM1oADx8oiIkg+Pq5fL5+t4eu55Kc2VGVZAXGcsOrDHQ4XnG/sEeTT5lPc+4YQcBEAZKP6YXpnFy2iF4tdxYGBHSvv+RvYpKrGCN4mSXON/HcN6V9SQ8l8as1JonjAQl2XQ5P2ddDPg/rxhcC4VXTDTKIzPSU3UFaw+fZ1eRBbEw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by SA0PR11MB4637.namprd11.prod.outlook.com (2603:10b6:806:97::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7339.10; Mon, 26 Feb
+ 2024 16:58:25 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::82fd:75df:40d7:ed71]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::82fd:75df:40d7:ed71%4]) with mapi id 15.20.7339.019; Mon, 26 Feb 2024
+ 16:58:25 +0000
+Date: Mon, 26 Feb 2024 08:58:16 -0800
+From: Dan Williams <dan.j.williams@intel.com>
+To: Shiyang Ruan <ruansy.fnst@fujitsu.com>, "Darrick J. Wong"
+	<djwong@kernel.org>, Bill O'Donnell <bodonnel@redhat.com>,
+	<chandan.babu@oracle.com>
+CC: <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+	<dan.j.williams@intel.com>
+Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
+Message-ID: <65dcc327f2e61_2bce929418@dwillia2-mobl3.amr.corp.intel.com.notmuch>
+References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
+ <ZaAeaRJnfERwwaP7@redhat.com>
+ <20240112022110.GP722975@frogsfrogsfrogs>
+ <d205949b-27ed-4bf3-bfc1-31b13eed3b9f@fujitsu.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d205949b-27ed-4bf3-bfc1-31b13eed3b9f@fujitsu.com>
+X-ClientProxiedBy: MW4PR02CA0016.namprd02.prod.outlook.com
+ (2603:10b6:303:16d::22) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240224020554.GP6226@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SA0PR11MB4637:EE_
+X-MS-Office365-Filtering-Correlation-Id: 068e2124-2424-426d-b2cb-08dc36ec2585
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Xt/wsJ33EZ8kBxPgasBdveen3rPr6dYREGCSvL9czUVPI+mMbFgFmb6Y+u/ys0VQPSCRP3z6GHGqrkwCpm2meGVR6Kk7Y7s3ARYht0/H4r82vI5NYS0nrcBFmYvKYdKoUH3w8MQtJSzjxGHAZis0evj+xqJ6yBHuUKA/vnZLVEJ67bMoT4z72CbSj+ESK2hgca/PWZfI2w8mJMY5gm2wSFKhgMY1bWsrOjcogwtRHRbKd9dn2zCubul4MfMG+xAnTt8IYwe28mKENOfbROQcrpBVrzsyVL9iDHkv6ZFIGXGRhp3gkP9vpohU4HbPybCYaO7UuDFizbTUrtylo9vpllf9yjvoj5Y9FzX5Uwx4yhmD41siAeHkL1JWvh9dmkvT7ZCycMtqY8a9SSvOcAd7Dv4IPUoPevty4GJhGD24mrFhCKN0Dvd/rw85bJF/inmlDeuE5xMPvPkjNPvor8VwlLxy+G6KlylwYEO9YKpCa9Y6LkrddcpQskXE9SytXCDeNzrT7OBRD04kq98WZHTGZI9PRhJcUstQ6AMixrUOjzm7OL8rC9hCERa/mWRELYUgBYLkjFPw94Mhd9bAX0YABsr8YyQTe3mePhmRYHdpL4tZCIbZ1jiQG9YcFcLJzM9uiNSUa0wGlpRro8gIoXHdnCtKAfodU7MJ9cwsUywp9Fs=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(230273577357003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Tjd3V1d1SDZ0dWlEK1kxQUIwc0s5WnZhek05YS9OQ0NPdmw0b2R3NXdpaWlR?=
+ =?utf-8?B?U2wrSFpUdlVmbXRNa1FNNEYxRlh1UXJxVjdKYjVzd3l2NnJqc0NXYmx1cVda?=
+ =?utf-8?B?MVFXdUJOUS96b0p5azk5bUtwaHFSU0tCdm9SVmJBaHdGWXhaZE5TanBpckI4?=
+ =?utf-8?B?VHluWkxPMVFmVkhMSlRpK3dSdURyNGxYcXc3YUdXc1hqbnc2QXpVa2pCMGlR?=
+ =?utf-8?B?TEh6N2NkVDZMMVNvelgzOE4rQUN4ay9lVjliUEtCbHFmTWpPQkhEblJxdzhj?=
+ =?utf-8?B?c25JZkdaWS9vUFdZKzJHNDd4WStsNTBQNDRvSE9LUm0zdWtUN0hRQkl3eld2?=
+ =?utf-8?B?dlI5UXozTzhiRWJ3OXNpcGw2Vmw4Z2hJVjY3UzhRVzF5UmJ5QUJCekhwc1BI?=
+ =?utf-8?B?bTFBVThBcEU5b0V4TmhlS0VuMWNTclRobkk2ZzRNbVpaYVBKNGhIdnF6SWpj?=
+ =?utf-8?B?MEp5aGVqeGVBSlhFZytZbUNVeGxMek4vMEQ4eXp3SGx4d3VGSTNRcHpzUHYv?=
+ =?utf-8?B?cXdad0RwdFRvYS85T1pMdlAwajRreGsyemJGZHcrUTdQb080REFLOGNrU0xD?=
+ =?utf-8?B?bWIwRFNreVI1TjRPNXl2OVp2clZRbUVNN2Jhc1R4U1drOCs0eXJrbjRPd1VJ?=
+ =?utf-8?B?RTBtKy9xa2lrTHZtN3NEUHFzeS9tZEtaMCtYeXhKb2g2aUZHRkNDbUNWN0do?=
+ =?utf-8?B?cmZtOFhYZEpJYVlBeTBDWThmckJEYTFzL3Q1bkhjWjdtVFFxL09BdUgyekFa?=
+ =?utf-8?B?RkhUaVRGeTlISitDZWhqRmN5OXVRdzVtV0JycDdiczhEdFQ1bFpGN1F6LzR4?=
+ =?utf-8?B?ZDVMNnhjS0kwYmlscFdXRUh3c01KREozL3BBMDVKODJnVkhreUpvVGFwVEM3?=
+ =?utf-8?B?RjdTYmR5ZXdOVGJzWjhrTUsxZ0d3NDV6S01YbnR1ZW5CZUF4MVZYNU9xREQ1?=
+ =?utf-8?B?VHhkK0Q2V3k0RzZXOVo1THhjS3cwNDhrZGh3UkxTUEV6TXpXVXNTeERhUjYv?=
+ =?utf-8?B?TEZCaUdyWm1Wc0w5R25jUWZrVWhvWHhsM3psNStCOEp0cm9QVEFVZEowdjdm?=
+ =?utf-8?B?S1NESnNJL3BrNm11NnBaaGhTb0hmSHVla1NQM0E1U3pwYmVZN1BGdTlROG1h?=
+ =?utf-8?B?OFJSb0lyMWdnZERjNWpiNmRHWkd1RXFoVW54ZjRTV2VRbGVSUGk1a1B3UGdV?=
+ =?utf-8?B?a1MwVnBYZE9kdVpRMlJ2S2RHRE5ydnJIN0VGUnFYeURtRTNUdzdOQ2FkT3o4?=
+ =?utf-8?B?bC9xQTcwWGpsbXpYcXovR3BWb0o4N0VPVG9mRG1Dc1hzcWFXdE84Y0h1WUhp?=
+ =?utf-8?B?cXZ6VnUvMHloaUdaYnRiTnA3R2RQM1Z3eXB6K0p6My82S1FVbmlKQWpGRmZo?=
+ =?utf-8?B?SUo0bXczNzVOcDBoTU4rVWpkMHd6S1pHcEh6Sm5tMEJGa29BdXJUdXZwVlRK?=
+ =?utf-8?B?aS9kWDZTTGZrRjU1c09zU3JKVlk0S2tBcVIwbnNHK2h6OFhET2d4cmY3Skl4?=
+ =?utf-8?B?QVZyeVRBRDJtRnIvNmFDNmRhUkgzdnllUHNaQWlodVBzZ0FGYnBVWUJnYXNy?=
+ =?utf-8?B?VGczb1JmZks4U2tsdWVEbDZ1MFNkc013RFhoTDlFR3BZUnVlZHFnSGRQVWg3?=
+ =?utf-8?B?OWtJdlJjNDNTZ21welpzTEkrNWZCZWtGNDdUbkhKRng0aWtDc0liNmNnM3JG?=
+ =?utf-8?B?MnFBY3VZbWxkMExwMnl3cDNkaml0YnU2ZmZsODVTNEhjNVBDdEVzSHd5V3dF?=
+ =?utf-8?B?dEZoSFd0aVRyTmhCeTMwN2Z2QytnMWxDdFhRd3pkY1ZDTnJyVHRwUkJ6TmND?=
+ =?utf-8?B?bnBabzFnTjVXVVpIWG41OUZqd0ZtZ0l5S09ZZzlPVjRPY0VjcEJqUk9uRnoz?=
+ =?utf-8?B?Z3JEa1c4MmRzM0ZBOU1oNER5ait4a0dsZkNkUlhhY0RHS0VuallGR0MrQm0y?=
+ =?utf-8?B?V1pQWVJER1hhbnNnS3hxUXRlZUt3MGt2anJOWDY3UllMckpBVldOeTg4UEpR?=
+ =?utf-8?B?MVoxUklQOUUya3pLcWRxanVmSnhUblZ4ZEFIekxpODR6b2V2d1RocW16Y1Jn?=
+ =?utf-8?B?UFRMZURuV29qclRCUEpIZUEwZ2lJQjhoTkpyYjlacEMrTldZOFZsZ094Tml2?=
+ =?utf-8?B?VCtmczhTcmxwN1Q5dHZoc2VCSGo2SktEbzZweDdkMm1BaUpSN0NtK3NPVTNK?=
+ =?utf-8?B?M1E9PQ==?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 068e2124-2424-426d-b2cb-08dc36ec2585
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Feb 2024 16:58:25.1625
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RswHcfzF91d/bquRdZgwYv2aXr8oZvCFXC1ElbiQK9D8H6SVxp+Wfho7b7J8p6fyOG6wzND4YdbmYeayM7I2bHConIRYJuFjiFYN/JweqrM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR11MB4637
+X-OriginatorOrg: intel.com
 
-On Fri, Feb 23, 2024 at 06:05:54PM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 14, 2024 at 11:52:31AM -0500, Brian Foster wrote:
-> > The background blockgc scanner runs on a 5m interval by default and
-> > trims preallocation (post-eof and cow fork) from inodes that are
-> > otherwise idle. Idle effectively means that iolock can be acquired
-> > without blocking and that the inode has no dirty pagecache or I/O in
-> > flight.
-> > 
-> > This simple mechanism and heuristic has worked fairly well for
-> > post-eof speculative preallocations. Support for reflink and COW
-> > fork preallocations came sometime later and plugged into the same
-> > mechanism, with similar heuristics. Some recent testing has shown
-> > that COW fork preallocation may be notably more sensitive to blockgc
-> > processing than post-eof preallocation, however.
-> > 
-> > For example, consider an 8GB reflinked file with a COW extent size
-> > hint of 1MB. A worst case fully randomized overwrite of this file
-> > results in ~8k extents of an average size of ~1MB. If the same
-> > workload is interrupted a couple times for blockgc processing
-> > (assuming the file goes idle), the resulting extent count explodes
-> > to over 100k extents with an average size <100kB. This is
-> > significantly worse than ideal and essentially defeats the COW
-> > extent size hint mechanism.
-> > 
-> > While this particular test is instrumented, it reflects a fairly
-> > reasonable pattern in practice where random I/Os might spread out
-> > over a large period of time with varying periods of (in)activity.
-> > For example, consider a cloned disk image file for a VM or container
-> > with long uptime and variable and bursty usage. A background blockgc
-> > scan that races and processes the image file when it happens to be
-> > clean and idle can have a significant effect on the future
-> > fragmentation level of the file, even when still in use.
-> > 
-> > To help combat this, update the heuristic to skip cowblocks inodes
-> > that are currently opened for write access during non-sync blockgc
-> > scans. This allows COW fork preallocations to persist for as long as
-> > possible unless otherwise needed for functional purposes (i.e. a
-> > sync scan), the file is idle and closed, or the inode is being
-> > evicted from cache.
+Shiyang Ruan wrote:
 > 
-> Hmmm.  Thinking this over a bit more, I wonder if we really want this
-> heuristic?
 > 
-> If we're doing our periodic background scan then sure, I think it's ok
-> to ignore files that are open for write but aren't actively being
-> written to.
+> 在 2024/1/12 10:21, Darrick J. Wong 写道:
+> > On Thu, Jan 11, 2024 at 10:59:21AM -0600, Bill O'Donnell wrote:
+> >> On Fri, Sep 15, 2023 at 02:38:54PM +0800, Shiyang Ruan wrote:
+> >>> FSDAX and reflink can work together now, let's drop this warning.
+> >>>
+> >>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> >>
+> >> Are there any updates on this?
+> >   
+> > Remind us to slip this in for 6.8-rc7 if nobody complains about the new
+> > dax functionality. :)
 > 
-> This might introduce nastier side effects if OTOH we're doing blockgc
-> because we've hit ENOSPC and we're trying to free up any blocks that we
-> can.  I /think/ the way you've written the inode_is_open_for_write check
-> means that we scan maximally for ENOSPC.
+> Hi,
 > 
+> I have been running tests on weekly -rc release, and so far the fsdax 
+> functionality looks good.  So, I'd like to send this remind since the 
+> -rc7 is not far away.  Please let me know if you have any concerns.
 
-The intent of the patch was to limit the scope of the heuristic to
-the background (non-sync) scan where there are no real guarantees or
-predictability. Otherwise I would expect a sync scan to bypass the
-heuristic and prioritize the need to free space.
+Ruan, thanks for all your effort on this!
 
-This is similar to the existing dirty pagecache check for eofblocks
-inodes, but I notice that the same check for cowblocks inodes doesn't
-seem to care about the type of scan. I suppose one thing to consider for
-why that might not matter that much is that IIRC usually this sort of
--ENOSPC handling is preceded by a full fs flush, which probably reduces
-the significance of a sync check filter (or lack thereof).
+[..]
 
-> However, xfs_blockgc_free_dquots doesn't seem to do synchronous scans
-> for EDQUOT.  So if we hit quota limits, we won't free maximally, right?
-> OTOH I guess we don't really do that now either, so maybe it doesn't
-> matter?
-> 
-> <shrug> Thoughts?
-> 
+> >>> ---
+> >>>   fs/xfs/xfs_super.c | 1 -
+> >>>   1 file changed, 1 deletion(-)
+> >>>
+> >>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> >>> index 1f77014c6e1a..faee773fa026 100644
+> >>> --- a/fs/xfs/xfs_super.c
+> >>> +++ b/fs/xfs/xfs_super.c
+> >>> @@ -371,7 +371,6 @@ xfs_setup_dax_always(
+> >>>   		return -EINVAL;
+> >>>   	}
+> >>>   
+> >>> -	xfs_warn(mp, "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+> >>>   	return 0;
 
-Yeah, it seems like it depends on the calling context. I.e.,
-xfs_file_buffered_write() -> xfs_blockgc_free_quota() passes the sync
-flag for the -EDQUOT case. That case doesn't invoke a flush for -EDQUOT
-since it's a a specific quota failure, so ISTM this isn't that much of a
-departure from the existing heuristic (which skips cowblocks inodes that
-are dirty). Is there a case I'm missing?
-
-The question that comes to mind to me is whether those dirty checks in
-xfs_prep_free_cowblocks() are more of a correctness thing than a
-heuristic..? For example, is that to prevent races between things like
-writes allocating some cowblocks and blockgc coming along and removing
-them before I/O completes, which actually expects them to exist for
-remapping? If so, I suppose that would make me want to tweak the change
-a bit to perhaps make the open check first and combine the comments to
-better explain what is heuristic and what is rule, but that's only if we
-want to keep the patch..
-
-Brian
-
-> --D
-> 
-> > Suggested-by: Darrick Wong <djwong@kernel.org>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > This fell out of some of the discussion on a prospective freeze time
-> > blockgc scan. I ran this through the same random write test described in
-> > that thread and it prevented all cowblocks trimming until the file is
-> > released.
-> > 
-> > Brian
-> > 
-> > [1] https://lore.kernel.org/linux-xfs/ZcutUN5B2ZCuJfXr@bfoster/
-> > 
-> >  fs/xfs/xfs_icache.c | 20 +++++++++++++++++---
-> >  1 file changed, 17 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index dba514a2c84d..d7c54e45043a 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1240,8 +1240,13 @@ xfs_inode_clear_eofblocks_tag(
-> >   */
-> >  static bool
-> >  xfs_prep_free_cowblocks(
-> > -	struct xfs_inode	*ip)
-> > +	struct xfs_inode	*ip,
-> > +	struct xfs_icwalk	*icw)
-> >  {
-> > +	bool			sync;
-> > +
-> > +	sync = icw && (icw->icw_flags & XFS_ICWALK_FLAG_SYNC);
-> > +
-> >  	/*
-> >  	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> >  	 * possible the inode was fully unshared since it was originally tagged.
-> > @@ -1262,6 +1267,15 @@ xfs_prep_free_cowblocks(
-> >  	    atomic_read(&VFS_I(ip)->i_dio_count))
-> >  		return false;
-> >  
-> > +	/*
-> > +	 * A full cowblocks trim of an inode can have a significant effect on
-> > +	 * fragmentation even when a reasonable COW extent size hint is set.
-> > +	 * Skip cowblocks inodes currently open for write on opportunistic
-> > +	 * blockgc scans.
-> > +	 */
-> > +	if (!sync && inode_is_open_for_write(VFS_I(ip)))
-> > +		return false;
-> > +
-> >  	return true;
-> >  }
-> >  
-> > @@ -1291,7 +1305,7 @@ xfs_inode_free_cowblocks(
-> >  	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
-> >  		return 0;
-> >  
-> > -	if (!xfs_prep_free_cowblocks(ip))
-> > +	if (!xfs_prep_free_cowblocks(ip, icw))
-> >  		return 0;
-> >  
-> >  	if (!xfs_icwalk_match(ip, icw))
-> > @@ -1320,7 +1334,7 @@ xfs_inode_free_cowblocks(
-> >  	 * Check again, nobody else should be able to dirty blocks or change
-> >  	 * the reflink iflag now that we have the first two locks held.
-> >  	 */
-> > -	if (xfs_prep_free_cowblocks(ip))
-> > +	if (xfs_prep_free_cowblocks(ip, icw))
-> >  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> >  	return ret;
-> >  }
-> > -- 
-> > 2.42.0
-> > 
-> 
-
+Acked-by: Dan Williams <dan.j.williams@intel.com>
