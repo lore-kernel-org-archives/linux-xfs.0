@@ -1,39 +1,39 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD61F67E79;
-	Mon, 26 Feb 2024 09:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BB6467E79;
+	Mon, 26 Feb 2024 09:50:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708941007; cv=none; b=sHXCN9ojiCJvPN+/yCONfkPT23/WX+T/82RyTRoO/+u7zWxTvrhBE9kr0+/Q0gv3/NR9sNXmVZrdcedHHROILHbeUl28TSZfA6etVXSwx3TItk5BRuJ7G5TmpUf5uJ1c+LtWihPD7RhS/CIr9dQEM0u7kIRcMLgp08HdsshUZR4=
+	t=1708941017; cv=none; b=dAYx5EDivjHCU3dC53xXENCu+wBO+y/fyUDzhey/Z1PsiYIuOViQD+juyFJ0OsJU2ChGZ87hRLlcIatvHFCNMWzxZFBIpDYCysWPW7kFifeG6FiSj2K19+VbNPu5jj5LeQh64lKhF5b3DKIEVRZ8ZJlyWZ1v3BdIRJNh+99zzZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708941007; c=relaxed/simple;
-	bh=8T+7Tu933UIoxtI2pqlAuNX1DDPj7iQH+uJWQ1Gysvw=;
+	s=arc-20240116; t=1708941017; c=relaxed/simple;
+	bh=4ejCWPI5/fRYMUcY9eJYWQ4JohLb3zMfCtxtjMK5oW8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Mo3NIsTmeC5uNVj6NQynaW7UQ8Nr9kyCRSlEobSnRU9zDY9iS6mOj6oE6zwxJbDAcMUdWtGhaocOjMEwjveycaTySiXSyMcucy9ACN5liAaSsR4j97aeOAf6vnlQnGKPdvCwQDm0HbzKCjq3XqZ122qpzMtL9vgt1LHfSt40Im8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=UvS4naGN; arc=none smtp.client-ip=80.241.56.151
+	 MIME-Version; b=ixrAQKVwMXSRNNwXha3A48lmQ3UjpoIoZspHguMfKNmntxesNkoDeBfLT5U/39A5XP4eFC6/2D0t0FtZ9BM7Rw97Tr5+vvDX9AQROnw+yzMyEHomnRfWoTVcj/wuHud2c9LRfMwvxYbR8ctSKEIUsy97KEZ83j4dGxWewQbm1bA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=s1FvJLOV; arc=none smtp.client-ip=80.241.56.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="UvS4naGN"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="s1FvJLOV"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4Tjwp22M3Bz9sTN;
-	Mon, 26 Feb 2024 10:50:02 +0100 (CET)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4TjwpD4yqgz9sQ6;
+	Mon, 26 Feb 2024 10:50:12 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1708941002;
+	s=MBO0001; t=1708941012;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1njdQFWaR2BtfAMszTyy2iO3Y5kDTGCSewwBty7+2Kw=;
-	b=UvS4naGN4B56NJsI1HXSdud2G5jomcFJ6pR8o51SW+VBhDFliKwBLh4YZFda4FACselOUk
-	sr4+d8VOS/b+sN0XHZQ6vaUSG3xl6nmuAanTZxrifjgawftiv6ksfHNzhwGDNJf6w42bDq
-	lmZGaWCeBHrP8LsXhFaYvtWRjZpr6UlNDGjI7mlb47aYk7yS02GDIhAfcwoWIGEpMwbP2y
-	TD3mOqA99RywbbiYZMURMmzzCB8mckCp+XBDQmQZmvggaMnvwZEK0aKR1RuwYYdM4qnyBj
-	WJ8s1ztuAJLE9Fm/QlnPXMTzGrmXUvfuxF5DfPZIOnX717VcvRq0XaL7/vXmgA==
+	bh=i9yxkr7ZYzLuGR2ramAYSlLdnRgu3ddqhwDDXgb/dQg=;
+	b=s1FvJLOV6O9BDoEZy9rfAWAdOmTdsY69l/3r70AQ4MWdtRAAjRw8jrLMD2N1T8oH7bb3FE
+	Zo5P5AF31/WRErUzGHULK/N/M18PaNHpCSVQ/5UjkSyvUBhL6ARcSVNtDNa7LFFihtGyuX
+	zwLRbtKGFial2tfZRA/t6m9w4WUIikd/uSVFERTvKPvVNwLbAywF7r57ufmFDElaWknTj8
+	dQx12H3rSonr9IpI4qrobmgSjtp6J/VscSXIGgYelBUaxhicKdv9lyM5eovuOQEre1YR3i
+	LWU2h+G8ukjtVd6mKiPDMISh406FjzorZrXGDipZ54XIyY/I6PB1osHX3sl0NA==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
@@ -49,9 +49,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-mm@kvack.org,
 	willy@infradead.org,
 	Pankaj Raghav <p.raghav@samsung.com>
-Subject: [PATCH 05/13] readahead: set file_ra_state->ra_pages to be at least mapping_min_order
-Date: Mon, 26 Feb 2024 10:49:28 +0100
-Message-ID: <20240226094936.2677493-6-kernel@pankajraghav.com>
+Subject: [PATCH 07/13] readahead: rework loop in page_cache_ra_unbounded()
+Date: Mon, 26 Feb 2024 10:49:30 +0100
+Message-ID: <20240226094936.2677493-8-kernel@pankajraghav.com>
 In-Reply-To: <20240226094936.2677493-1-kernel@pankajraghav.com>
 References: <20240226094936.2677493-1-kernel@pankajraghav.com>
 Precedence: bulk
@@ -61,35 +61,70 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4Tjwp22M3Bz9sTN
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
 
-Set the file_ra_state->ra_pages in file_ra_state_init() to be at least
-mapping_min_order of pages if the bdi->ra_pages is less than that.
+Rework the loop in page_cache_ra_unbounded() to advance with
+the number of pages in a folio instead of just one page at a time.
 
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- mm/readahead.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ mm/readahead.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/mm/readahead.c b/mm/readahead.c
-index 369c70e2be42..8a610b78d94b 100644
+index 325a25e4ee3a..ef0004147952 100644
 --- a/mm/readahead.c
 +++ b/mm/readahead.c
-@@ -138,7 +138,11 @@
- void
- file_ra_state_init(struct file_ra_state *ra, struct address_space *mapping)
- {
-+	unsigned int min_nrpages = mapping_min_folio_nrpages(mapping);
-+
- 	ra->ra_pages = inode_to_bdi(mapping->host)->ra_pages;
-+	if (ra->ra_pages < min_nrpages)
-+		ra->ra_pages = min_nrpages;
- 	ra->prev_pos = -1;
- }
- EXPORT_SYMBOL_GPL(file_ra_state_init);
+@@ -212,7 +212,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 	struct address_space *mapping = ractl->mapping;
+ 	unsigned long index = readahead_index(ractl);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+-	unsigned long i;
++	unsigned long i = 0;
+ 
+ 	/*
+ 	 * Partway through the readahead operation, we will have added
+@@ -230,7 +230,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 	/*
+ 	 * Preallocate as many pages as we will need.
+ 	 */
+-	for (i = 0; i < nr_to_read; i++) {
++	while (i < nr_to_read) {
+ 		struct folio *folio = xa_load(&mapping->i_pages, index + i);
+ 
+ 		if (folio && !xa_is_value(folio)) {
+@@ -243,8 +243,8 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 			 * not worth getting one just for that.
+ 			 */
+ 			read_pages(ractl);
+-			ractl->_index++;
+-			i = ractl->_index + ractl->_nr_pages - index - 1;
++			ractl->_index += folio_nr_pages(folio);
++			i = ractl->_index + ractl->_nr_pages - index;
+ 			continue;
+ 		}
+ 
+@@ -256,13 +256,14 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 			folio_put(folio);
+ 			read_pages(ractl);
+ 			ractl->_index++;
+-			i = ractl->_index + ractl->_nr_pages - index - 1;
++			i = ractl->_index + ractl->_nr_pages - index;
+ 			continue;
+ 		}
+ 		if (i == nr_to_read - lookahead_size)
+ 			folio_set_readahead(folio);
+ 		ractl->_workingset |= folio_test_workingset(folio);
+-		ractl->_nr_pages++;
++		ractl->_nr_pages += folio_nr_pages(folio);
++		i += folio_nr_pages(folio);
+ 	}
+ 
+ 	/*
 -- 
 2.43.0
 
