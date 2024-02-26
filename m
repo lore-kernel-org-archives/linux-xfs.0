@@ -1,35 +1,35 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02DD6604B7;
-	Mon, 26 Feb 2024 13:22:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B55D127B61;
+	Mon, 26 Feb 2024 13:26:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708953722; cv=none; b=h+AnfZ6dFeiCqzc0CoqDOauYBGvePbRkdHAjQ4y4umhD4xI5V2+mmFbaNu144pWg4TG8w3U43COhxDlmhUnm8vAKhdJaL/bymZb+UlGvHEFZqAVVA2VqWgX3GY4Q2Hh8rZs2IbpGWav3IDMZeIn+aM67YtSTObmZoaEJimhApRk=
+	t=1708953994; cv=none; b=LrOOH+uCKjxREhGuwtNw3Tsw5d61OhQzI1sB2M2Ik5QODejixeJubBHIrUlLDUEQ5ONbexsOYu4tvYBjam5RSqTdgZ1b85H9+gxSt6MmzKtb/5vFUaSlPEoFyGn/JCQLeIHWgSLjbchxAnBpjvs97A0JYOU+Hr7kADGsvDb7/Wc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708953722; c=relaxed/simple;
-	bh=R7d2acqprmU8yb3JpCgLFrgbVNL0FKm8LJuXH4PTBR0=;
+	s=arc-20240116; t=1708953994; c=relaxed/simple;
+	bh=rULkbO3lv9VzQqjPXfntDdnRWFC3fHDArj2MtMhmDIM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gIVW+MI2vCMOl1Pt+DuMVG16A2D0jtPxL9mX5GQYlhZLhMNJNlbbiOhm39dN+uGDLQ89oMJbrrdv94CpzKosvFHWFp5et0VnErKi7KCygYByD5aQrI2CoQ+RuahiRMxfnXlpFyyCMx1SJRHxiGL7RBYkD4DbN7T5GdSM+fFldI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OQr75EHy; arc=none smtp.client-ip=90.155.50.34
+	 Content-Type:Content-Disposition:In-Reply-To; b=eBd147tb2zhmuho1XF1XUN20o5RvoiQpmwwh8I+50ASqLwrAx5+eArUdp4cDxw6ieDeTi5MtpCzxiQ72ZY4dRda1KpGQfNX1tLGBtZ6cLCofBmvK1qbruGcqcrgFCA7M79hWrylBsdTeCg8jwZL6jbCLmfyZbnMSESbZXuFpT5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eeBcRC4Y; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OQr75EHy"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eeBcRC4Y"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
 	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=FOEO53PWfz8jVV9tqBTYQ+FUQRTS1bvm3k8jdLn41jA=; b=OQr75EHyHvbJCafMkmm/u1U9WI
-	rSXH+ccZ23rmyziIKdQuyZHcIOIEAarZQfY3CZ+sW2Bs2bcKF0Jf5btQQux+Fe4wU5/ihvYNKUvZ2
-	3wC21wd5ZMtIyb6yDO1Tl3deOcGLOMsj8hZwpQs/rtG5GSki/I/GJWEMcPnvpzk7Pd9Hn1AE17tDo
-	1XfjuN4IMv3/ZassAySEFV9njPS2tsqul4pzMedj8i6IorgoDdqTU/Xkn4IRSsLLipvXMzJPny8Qo
-	Ximm6jprNiDZNDAd7NUxwMxhCIEOH48MXeQ7ytjySnL5agTbNCVV893+/Iv1RpIHaTBlcUefT/SCp
-	NU/gvkiA==;
+	bh=+cq3hzUEhbXThrvu7ftbcKy0Wd8FG0mI00L77ictR6s=; b=eeBcRC4YHIM1lXSFhfDDRxapuW
+	PdGoIztV67c2/pSrO1a13bqEIjN9KeeAornjhwyu+YHYNXvGnwfG9EZ0lM3RtED5g76Xn4S6HaGp4
+	aX75OImTQXT7D7NrOVljjlxaCOoqN/Z8MaOQFzULiELU6uFzc0LKf/6xtcHppDdp0XhZSEce2ny0r
+	hTVK2GBpe0vdSvJYjEwLmA/zz6MdqV+L//IhNuurwa8vVzs+E36cL3FbWicohSuDTWy87kzTSI1kw
+	8zrAPIeBUxYBIVTkuK0HNFpz0sy1crOvU+DW8Q+eExiII0j/vmFCTkZ9Xt2EnFhknLZueT4CEL91L
+	IY4m3JwA==;
 Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1reavd-0000000HEuq-0Ow6;
-	Mon, 26 Feb 2024 13:21:57 +0000
-Date: Mon, 26 Feb 2024 13:21:56 +0000
+	id 1reb02-0000000HFGx-3ek1;
+	Mon, 26 Feb 2024 13:26:30 +0000
+Date: Mon, 26 Feb 2024 13:26:30 +0000
 From: Matthew Wilcox <willy@infradead.org>
 To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -38,11 +38,11 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	mcgrof@kernel.org, ziy@nvidia.com, hare@suse.de, djwong@kernel.org,
 	gost.dev@samsung.com, linux-mm@kvack.org,
 	Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 12/13] xfs: make the calculation generic in
- xfs_sb_validate_fsb_count()
-Message-ID: <ZdyQdGkSIw9OsSqc@casper.infradead.org>
+Subject: Re: [PATCH 13/13] xfs: enable block size larger than page size
+ support
+Message-ID: <ZdyRhpViddO9TKDs@casper.infradead.org>
 References: <20240226094936.2677493-1-kernel@pankajraghav.com>
- <20240226094936.2677493-13-kernel@pankajraghav.com>
+ <20240226094936.2677493-14-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,22 +51,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240226094936.2677493-13-kernel@pankajraghav.com>
+In-Reply-To: <20240226094936.2677493-14-kernel@pankajraghav.com>
 
-On Mon, Feb 26, 2024 at 10:49:35AM +0100, Pankaj Raghav (Samsung) wrote:
-> +	if (check_mul_overflow(nblocks, (1 << sbp->sb_blocklog), &bytes))
+On Mon, Feb 26, 2024 at 10:49:36AM +0100, Pankaj Raghav (Samsung) wrote:
+> @@ -1625,16 +1625,10 @@ xfs_fs_fill_super(
+>  		goto out_free_sb;
+>  	}
+>  
+> -	/*
+> -	 * Until this is fixed only page-sized or smaller data blocks work.
+> -	 */
+>  	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
+>  		xfs_warn(mp,
+> -		"File system with blocksize %d bytes. "
+> -		"Only pagesize (%ld) or less will currently work.",
+> -				mp->m_sb.sb_blocksize, PAGE_SIZE);
+> -		error = -ENOSYS;
+> -		goto out_free_sb;
+> +"EXPERIMENTAL: Filesystem with Large Block Size (%d bytes) enabled.",
+> +			mp->m_sb.sb_blocksize);
 
-Why would you not use check_shl_overflow()?
+WARN seems a little high for this.  xfs_notice() or xfs_info() would
+seem more appropriate:
 
-> +		return -EFBIG;
-> +
-> +	mapping_count = bytes >> PAGE_SHIFT;
->  	/* Limited by ULONG_MAX of page cache index */
-> -	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-> +	if (mapping_count > ULONG_MAX)
->  		return -EFBIG;
->  	return 0;
->  }
-> -- 
-> 2.43.0
-> 
+#define KERN_WARNING    KERN_SOH "4"    /* warning conditions */
+#define KERN_NOTICE     KERN_SOH "5"    /* normal but significant condition */
+#define KERN_INFO       KERN_SOH "6"    /* informational */
+
