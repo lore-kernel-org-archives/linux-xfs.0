@@ -1,67 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 714077F7F5
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 13:07:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02DD6604B7;
+	Mon, 26 Feb 2024 13:22:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708952828; cv=none; b=sMs3UnJ2ijPSMZ1V9fNhWnka2rEPpgebN7/urlHFSdY3dcY6mtaQxvm2kBEwhx+ZWfMtMSp3iMbRTO5DIo9/ydwImnKXLkMp/eFuZ4xe8fBA9FuXqv0BEpEY4annK+bO20VnXX1MnUxXU8NG0BOas/cxD85UOPFbpzCYbHKH9VY=
+	t=1708953722; cv=none; b=h+AnfZ6dFeiCqzc0CoqDOauYBGvePbRkdHAjQ4y4umhD4xI5V2+mmFbaNu144pWg4TG8w3U43COhxDlmhUnm8vAKhdJaL/bymZb+UlGvHEFZqAVVA2VqWgX3GY4Q2Hh8rZs2IbpGWav3IDMZeIn+aM67YtSTObmZoaEJimhApRk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708952828; c=relaxed/simple;
-	bh=thO+7xJ6QFFutyGSdFip9mdd51zpgqpdOfG/1Z5q+kA=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=sv9JWwiVBra9RSv8JIeWX6REP9gSa66GLAbdTjV56uXLXhL7xtNHWAtNTltclKMVGAPBvXhjaAM69Lgokmw/LwSoOeMfDSjqlEF4aYG+ZHMDeMvY59dVkzzcNdQ61zHTFprJgNz3/AVh7d9rSAjLzDkc/F2xK0CFX79NDf5PWw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rBuyD3B9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708953722; c=relaxed/simple;
+	bh=R7d2acqprmU8yb3JpCgLFrgbVNL0FKm8LJuXH4PTBR0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gIVW+MI2vCMOl1Pt+DuMVG16A2D0jtPxL9mX5GQYlhZLhMNJNlbbiOhm39dN+uGDLQ89oMJbrrdv94CpzKosvFHWFp5et0VnErKi7KCygYByD5aQrI2CoQ+RuahiRMxfnXlpFyyCMx1SJRHxiGL7RBYkD4DbN7T5GdSM+fFldI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OQr75EHy; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rBuyD3B9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6890FC433F1;
-	Mon, 26 Feb 2024 13:07:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708952828;
-	bh=thO+7xJ6QFFutyGSdFip9mdd51zpgqpdOfG/1Z5q+kA=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=rBuyD3B9+a5QvCoVLw/+l4jbLBQT0a3O5+waTpKOIaDmUiBlgcRRZYwa2oajrtgUb
-	 xqLDWek2toCkrE0ANKFB0ncvfjnvvX03TCxmYCKrkt56fB4i3xurT9AUmEud7YWidi
-	 a7oA+nEMB2p7RnjTBh8vT9CyECkwPp39TZlZ0qbVDcoLL+TPaVKA4SxTAgIm+53WDB
-	 qwdFJBdwvTODCBFORBLCtecwBN0Pu/HjyfsQAOO8zhnBEycw2TGXMofAbO5d8XcLX6
-	 kcXXodIkOZf3ujrMErTSQHoz7Elu9pRsWBsa44SQtj1lKEE52+8ijFhMFYunVptIMp
-	 XOyRv4eikkpag==
-References: <20240224010220.GN6226@frogsfrogsfrogs>
- <ZdxnZnmNvdyy_Xil@infradead.org>
- <874jdv5qdh.fsf@debian-BULLSEYE-live-builder-AMD64>
-User-agent: mu4e 1.10.8; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
- <djwong@kernel.org>, Chandan Babu R <chandanrlinux@gmail.com>, xfs
- <linux-xfs@vger.kernel.org>
-Subject: Re: [PRBOMB] xfs: online repair patches for 6.9
-Date: Mon, 26 Feb 2024 18:34:57 +0530
-In-reply-to: <874jdv5qdh.fsf@debian-BULLSEYE-live-builder-AMD64>
-Message-ID: <87zfvn4bnt.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OQr75EHy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=FOEO53PWfz8jVV9tqBTYQ+FUQRTS1bvm3k8jdLn41jA=; b=OQr75EHyHvbJCafMkmm/u1U9WI
+	rSXH+ccZ23rmyziIKdQuyZHcIOIEAarZQfY3CZ+sW2Bs2bcKF0Jf5btQQux+Fe4wU5/ihvYNKUvZ2
+	3wC21wd5ZMtIyb6yDO1Tl3deOcGLOMsj8hZwpQs/rtG5GSki/I/GJWEMcPnvpzk7Pd9Hn1AE17tDo
+	1XfjuN4IMv3/ZassAySEFV9njPS2tsqul4pzMedj8i6IorgoDdqTU/Xkn4IRSsLLipvXMzJPny8Qo
+	Ximm6jprNiDZNDAd7NUxwMxhCIEOH48MXeQ7ytjySnL5agTbNCVV893+/Iv1RpIHaTBlcUefT/SCp
+	NU/gvkiA==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1reavd-0000000HEuq-0Ow6;
+	Mon, 26 Feb 2024 13:21:57 +0000
+Date: Mon, 26 Feb 2024 13:21:56 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, david@fromorbit.com,
+	chandan.babu@oracle.com, akpm@linux-foundation.org,
+	mcgrof@kernel.org, ziy@nvidia.com, hare@suse.de, djwong@kernel.org,
+	gost.dev@samsung.com, linux-mm@kvack.org,
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH 12/13] xfs: make the calculation generic in
+ xfs_sb_validate_fsb_count()
+Message-ID: <ZdyQdGkSIw9OsSqc@casper.infradead.org>
+References: <20240226094936.2677493-1-kernel@pankajraghav.com>
+ <20240226094936.2677493-13-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240226094936.2677493-13-kernel@pankajraghav.com>
 
-On Mon, Feb 26, 2024 at 06:29:43 PM +0530, Chandan Babu R wrote:
-> On Mon, Feb 26, 2024 at 02:26:46 AM -0800, Christoph Hellwig wrote:
->> On Fri, Feb 23, 2024 at 05:02:20PM -0800, Darrick J. Wong wrote:
->>> pc : kfree+0x54/0x2d8
->>> lr : xlog_cil_committed+0x11c/0x1d8 [xfs]
->>
->> This looks a lot like the bug I found in getbmap.  Maybe try changing
->> that kfree to a kvfree?
->
-> CIL context structures are allocated using kzalloc() (i.e. kmalloc() with
-> __GFP_ZERO flag appended to flags argument). So kfree() should work right?
->
+On Mon, Feb 26, 2024 at 10:49:35AM +0100, Pankaj Raghav (Samsung) wrote:
+> +	if (check_mul_overflow(nblocks, (1 << sbp->sb_blocklog), &bytes))
 
-Sorry, I read Dave's email now. I had mistakenly thought that the call to
-kfree() is the one which frees CIL context structure.
+Why would you not use check_shl_overflow()?
 
--- 
-Chandan
+> +		return -EFBIG;
+> +
+> +	mapping_count = bytes >> PAGE_SHIFT;
+>  	/* Limited by ULONG_MAX of page cache index */
+> -	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
+> +	if (mapping_count > ULONG_MAX)
+>  		return -EFBIG;
+>  	return 0;
+>  }
+> -- 
+> 2.43.0
+> 
