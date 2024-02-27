@@ -1,66 +1,66 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B01E1B27D
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:37:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1121CD01
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 03:01:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709001454; cv=none; b=lo59AQoYLU+09YqFuusigdRbIB52rYtS0Dzqf6Ee8hvZkcYvAdBAOWQZT8KRMBkwBS+VFIqMsJsy3ugcTAcCTuzp43mSQkeJmao6dRMR3M26B80YZkOVibmv9TSx/UejMrXsDFEzloxrS+rPyJvp4Tivbn+D+v0/EEMc6uAg1Xs=
+	t=1709002892; cv=none; b=CKVPPHcSlaiNLsZ1oxI+J5fm/Ml5/yfpdFjgsJw/bfq/tBEbtpUatBBfEIlSmuCsup6V301EOJry7QavEN/AJAto++JAPCrxhRDmW2EANlDFV769YsmUSzCZqUfCNqA5oA75xo7b5YhoQOVxP54+cPtTpz0Dy8Wc9prgczB3gYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709001454; c=relaxed/simple;
-	bh=L15phMYx1T1sLT6YH3Us7F/LMTP6M6dzkqxIWCItvpk=;
+	s=arc-20240116; t=1709002892; c=relaxed/simple;
+	bh=fWTNqBcZQqvQUVtWtWygJauLy8CzzHs2Jab9IUPLP7k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qPrLIsgnzhA5JV6hbYwGvvv0NpsVc7wBxvt5orAQIeWcNYOefONU1BrFGo02EfoPlXfKMF12dsSC889EDKE3u/W1XwD4Lk/gXWViDqaHZEfqITdk73M3PLq6psQROSwPXfNcHZCfwxoyiUT87NGwQ7SLOkyXdV3lEPBvjzoIq3Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=v3KiYK7M; arc=none smtp.client-ip=209.85.216.50
+	 Content-Type:Content-Disposition:In-Reply-To; b=WP4aDgV4lVr8lEIa0a1KuaKwWRuin5fyNH48sck7sSvQao0BWe5bFRY923olNnUuyhAn5oVWGqzFTK5sMfMFTH2bCb+8nzvWmD9GtC5iPCstGg44yApvHIfQ7fjG7Sd8WBARBNitmLoyOkGAcgaQbKqTptlGCycuboxHujB8tK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rZpWvJfH; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="v3KiYK7M"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-299e4b352cdso2820953a91.0
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 18:37:32 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rZpWvJfH"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6e459b39e2cso2244534b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 19:01:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709001452; x=1709606252; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709002890; x=1709607690; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/qPV42Y8ErRmVB3z8WrFoN60gZU4anj3wlnwq2ahzmc=;
-        b=v3KiYK7M8Zd21+U1w/JhWM/cgGW2+qdwJGNIzoyyrKvra4wdn1ke+pb0hlEsAdeSfS
-         YNhp+T3HN2fXUwTfCDDFujaN+Zpn7f0xWorjp2WKpTx0tKxBfT09w3YTBFep1CGqfLbF
-         wddJCknX6pflpqY2gqHMm3wEvTRLdQ2GGyLj7k7A/C/aMcFmUOxVHLjIHJ4+tGDKraT4
-         d833Eoi3ux/uyDyIM6be/ClxsR+VNwVDP6UpsK1QqHjNO31HyRWIxBfK4517gQ/iMYEA
-         6aCGU9TlfxLJEoDcLREEzrE17/LQ5piurG9EAESwa3nLgp33wuLZRw9R76WCLGZzHEjE
-         exVw==
+        bh=8YJlK0PrG5SbE64Cqr1BeNiJaz5cqZqhLXP5LI17y80=;
+        b=rZpWvJfH1PGUcrgQFs1J6qYQcUh5aDJgFPybuzDk0DTiEBqIlJua06yrrCHCKmdSdw
+         KI/qlYINjN6Cz9rLsPvfSHX/n09bqRbCddnYaApOCabn5Q7CKtOTnw4ysyBtbi+QRCCy
+         qH+ErSz5bNI/JOu/RtLaoAiJlBjthqkrD7pPtCEcNYzm6Sx4Sjz93Ubecml8bz3UC9JK
+         EXblEQ5tGNcduN/7jHjfhtPyzDcu+lu/5pJrzt7JFLjA8ogpJqlk4QSJ4GX39U8r+Z5M
+         0P8dvgpRsTYzjcjbDUM5jkoYKP6fc4uUgHA7YsTUvR1GJZT/V3fQzvE8n8WDsFKxBSL8
+         qYwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709001452; x=1709606252;
+        d=1e100.net; s=20230601; t=1709002890; x=1709607690;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/qPV42Y8ErRmVB3z8WrFoN60gZU4anj3wlnwq2ahzmc=;
-        b=ZacRznP+mwbj1ggrzjoyXec6PvuB2CQK2vEGXpBToqe6ewZwyH2kZccbjlxVNxnkzs
-         u3RBrJR+f0FViYCpKRaK24217+iqWtUCFxkIn61GZTn62qarq94ossk0CYcp7N3z2xYc
-         /rmkD8AuPVIRq3cJq7AjQ3W3yan4ns97bc7WR+i/MLP+1GFyTUuYwNTJHIqvQfBY4HI5
-         5sZMf0Fhnlberen/5umXe6KgnKGqYxXs4sSoKLXLkVX/xV4IAvIPIcgSPDTfH5jweU5m
-         cOGkZ5AQKy/S2mcAeS/PU3eOjnswRzBGPdh5tw94PHFUlE11DITu9IwuFr9uhRkzPtx7
-         2lrQ==
-X-Gm-Message-State: AOJu0YydmGwz6bERIF755c4A7ptQLQ5Crk7SCg4pA8qMNsL25PZbNj85
-	c1Eemtqe4mZ5D4Amtcm/SgxY1cT+CIE2csIT19GP26NmE3RVh3XhBl14XYZ6eJm/1JoVSGPqQEL
-	e
-X-Google-Smtp-Source: AGHT+IGmmYKKyDS5rKxOePbm8rdT5hdwnDpia4kgWK9nE2GgygFc89lRzpBW402DURYzino6oqq73w==
-X-Received: by 2002:a17:90b:4d92:b0:29a:ce2b:7611 with SMTP id oj18-20020a17090b4d9200b0029ace2b7611mr2793394pjb.28.1709001451759;
-        Mon, 26 Feb 2024 18:37:31 -0800 (PST)
+        bh=8YJlK0PrG5SbE64Cqr1BeNiJaz5cqZqhLXP5LI17y80=;
+        b=v9rCs0kc/qz54+se61KH1LU/91Y3JNzy3OeX0abY65s9emW6+1fAhMoft+ZaMMfkwB
+         Df3pvj3yKLqZs8OPGK9gQKo9tS4iTTOV5rOevvyLyKF+fPe1HC3nBDzaJqV2EXZFL92u
+         14HvZ4eOEZgCumrvYNxg6wHQZKUsuX/B1wb9riMrsfWhI3y8ZzE0Unj1WxTdZxCpYnix
+         VtQyabhq/FWvUw3LTm7BaL+H2K3fXnPL19l/UhFkCKNnQUfTEa50OxtVoFz/1zzoNfDV
+         b4WMLxJ2I0/yfCWJoyuU+9Gztl26WVEoM7UWkybCS1ttK829lPtm7AE3u58iI+OJ67vx
+         NY/w==
+X-Gm-Message-State: AOJu0Yx/7mBk258rHQIAGIivFURt/wHAaBxWgi/VDyhhbhv3CeR+xXsl
+	3xuVAxoh/CTihlRyNfBQ4Cs3Fk895mwciC9XylJyYLshfMfmWG93CxbaOxLaD6e+NwtzbrrdFLU
+	u
+X-Google-Smtp-Source: AGHT+IFXm2AQcquFVRKrawdc5rGcckFanG+slCmfd0DIJqlim5TFT06Q5rlaLv/gkQR4SKHRWqJz5g==
+X-Received: by 2002:a05:6a21:3941:b0:1a0:decd:1b6a with SMTP id ac1-20020a056a21394100b001a0decd1b6amr1519047pzc.16.1709002890149;
+        Mon, 26 Feb 2024 19:01:30 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id p1-20020a17090ac00100b0029969cc66f2sm5146381pjt.48.2024.02.26.18.37.31
+        by smtp.gmail.com with ESMTPSA id h22-20020aa786d6000000b006e089bb3619sm4770836pfo.112.2024.02.26.19.01.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Feb 2024 18:37:31 -0800 (PST)
+        Mon, 26 Feb 2024 19:01:29 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1renLU-00C1P5-2t;
-	Tue, 27 Feb 2024 13:37:28 +1100
-Date: Tue, 27 Feb 2024 13:37:28 +1100
+	id 1renig-00C1uw-2R;
+	Tue, 27 Feb 2024 14:01:26 +1100
+Date: Tue, 27 Feb 2024 14:01:26 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
-Subject: Re: [PATCH 2/2] xfs: use kvfree() in xlog_cil_free_logvec()
-Message-ID: <Zd1K6L/VAn0GMtp0@dread.disaster.area>
+Subject: [PATCH v2 2/2] xfs: use kvfree() in xlog_cil_free_logvec()
+Message-ID: <Zd1QhmIB/SzPDoDf@dread.disaster.area>
 References: <20240227001135.718165-1-david@fromorbit.com>
  <20240227001135.718165-3-david@fromorbit.com>
  <20240227004621.GN616564@frogsfrogsfrogs>
@@ -74,41 +74,44 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20240227004621.GN616564@frogsfrogsfrogs>
 
-On Mon, Feb 26, 2024 at 04:46:21PM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 27, 2024 at 11:05:32AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The xfs_log_vec items are allocated by xlog_kvmalloc(), and so need
-> > to be freed with kvfree. This was missed when coverting from the
-> > kmem_free() API.
-> > 
-> > Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-> > Fixes: 49292576136f ("xfs: convert kmem_free() for kvmalloc users to kvfree()")
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log_cil.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index f15735d0296a..9544ddaef066 100644
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -877,7 +877,7 @@ xlog_cil_free_logvec(
-> >  	while (!list_empty(lv_chain)) {
-> >  		lv = list_first_entry(lv_chain, struct xfs_log_vec, lv_list);
-> >  		list_del_init(&lv->lv_list);
-> > -		kfree(lv);
-> > +		kvfree(lv);
-> 
-> Is it necessary to s/kfree/kvfree/ in xlog_cil_process_intents when we
-> free the xfs_log_vec that's attached to a xfs_log_item?
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, it should, even though intents are pretty much
-guaranteed to be small enough they will never use vmalloc.
+The xfs_log_vec items are allocated by xlog_kvmalloc(), and so need
+to be freed with kvfree. This was missed when coverting from the
+kmem_free() API.
 
-Good catch.
+Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+Fixes: 49292576136f ("xfs: convert kmem_free() for kvmalloc users to kvfree()")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Version 2:
+- also fix kfree() in xlog_cil_process_intents().
+- checked that kvfree() is used for all lip->li_lv_shadow freeing
+  calls.
+
+ fs/xfs/xfs_log_cil.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f15735d0296a..4d52854bcb29 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -877,7 +877,7 @@ xlog_cil_free_logvec(
+ 	while (!list_empty(lv_chain)) {
+ 		lv = list_first_entry(lv_chain, struct xfs_log_vec, lv_list);
+ 		list_del_init(&lv->lv_list);
+-		kfree(lv);
++		kvfree(lv);
+ 	}
+ }
+ 
+@@ -1717,7 +1717,7 @@ xlog_cil_process_intents(
+ 		set_bit(XFS_LI_WHITEOUT, &ilip->li_flags);
+ 		trace_xfs_cil_whiteout_mark(ilip);
+ 		len += ilip->li_lv->lv_bytes;
+-		kfree(ilip->li_lv);
++		kvfree(ilip->li_lv);
+ 		ilip->li_lv = NULL;
+ 
+ 		xfs_trans_del_item(lip);
