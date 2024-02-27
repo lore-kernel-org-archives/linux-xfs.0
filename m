@@ -1,62 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E1112FB18
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 08:46:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A88A4130AF8;
+	Tue, 27 Feb 2024 08:53:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709023615; cv=none; b=lCL7BJRAXnTV5E2CC3gK0///HyWEwVMtES64Mc1Yr+1yd1PAoYwr3T5YNRW/NDRlxQQy8hegxGoyXdkNM4V+fydAyKHo3FySFZH+r3sNWaznyFdSyIvD7bG2F9ZfvsELduEEVpLv9yXLJeSsmAvyNHpvgiMwu3+HHCj6DLx0m6s=
+	t=1709024020; cv=none; b=X4GnoTZGQYl9EwZWL97NuO8UEh2DJn8pyA6xFTyVu66BLnhqEluMG8VH8kXUifxnxq/C309xpSVvxLQOZ0el5X29mCllHslSiOsjS5eMep6EgxNGTz9X2CoFR4RTALsuIpYaZKdcV7BhGsFDBbJyWvlfTughcDyZw8YrAFLAOQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709023615; c=relaxed/simple;
-	bh=ueICFioNlW/vmsb1NBszXYP9xMaMQc7iK3bKdzMObvw=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=O+mW4bxDNo/WRnJPH8ZVQT35qWpQQY0gfpeHjw0Yp5GszDNrYuErWvLVVNj13NCMa4YnSURHp1OSlX7H/Wu4Y4RZ9NDKdiuTpKixjJmzoozIOYyDyO1TohISXgnyhm/e5czSz4gzY40qObMvddFpyiIijSuNttUQPfrI8OxGvso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EThIMngm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709024020; c=relaxed/simple;
+	bh=lzCwQyJEpw1qZT/9M5wpgWtO9LJVM/qhBJBKrIpwRL4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rbc77wNoq4K0a2DsomzqTx8TIHrBrbAOKK6ZnKwVvIhvh2W5r+9+uTypLWolg2OV2YGMA224/w3JtGaznXWp9qLmryA2WE8byp+ZT7+vkYHpgmuxxmGD+8IEnA3x7uyNMCdLsZV0Ius22JkRRBuO1TziNZ8XpoGxmicpa/iq3XM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=bwkd6Fsd; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EThIMngm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FEA5C43399;
-	Tue, 27 Feb 2024 08:46:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709023615;
-	bh=ueICFioNlW/vmsb1NBszXYP9xMaMQc7iK3bKdzMObvw=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=EThIMngmRdHs05R9jG7k9DNtmDUSHoKxY/hyDj/jdvQUrz6x3cp4mhSIzgRXZGj6X
-	 K0lq/nl+EoK7HDQulz4Rs0oQNSrOWMIhoWsk8SUdOECCIZnPfa3cQzici1FmL76QRp
-	 mrjUkagplqxGcLjmSVyTx1ntS00NbTAcZI7xHS3wzyo/RnurjfQ8IlDTLDU0KAXxtL
-	 m5O4qm66d/NIXqJuffJgGBO9R964nMCneeRyHY0B6WYM1s/Fe0Ix/Ok9gqfJF19k0O
-	 8aewLcp8SEy1GPX/EogHShvurJi0Y680YRn1wrpQ8dEg5yQW+eGmBuoQuHYeM6VdNy
-	 ja1RD5Pi9j9tQ==
-References: <20240227001135.718165-1-david@fromorbit.com>
- <20240227001135.718165-3-david@fromorbit.com>
- <20240227004621.GN616564@frogsfrogsfrogs>
- <Zd1QhmIB/SzPDoDf@dread.disaster.area>
-User-agent: mu4e 1.10.8; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="bwkd6Fsd"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4TkWVR1BWbz9sq8;
+	Tue, 27 Feb 2024 09:53:35 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1709024015;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xG7fSz4uiTp34cw0D1g4RsXUHnXCjcPMxUY/Xls6pRo=;
+	b=bwkd6Fsd51NLXnw7/z4WN4Vs9Rq95oo0ECbijUAdGiZjRV8oRKfHkJ+OlRoEwAYUgii4pS
+	MJ6N8K30jVn6Q2b2nLufYhRyspVwGc571+3xnbsWTGqyQylWKNt3/WAB4+3jj22X+uXNGp
+	er7tF/crJ2UnX2wo0x2jAtNDMop+kVMFZZoocmy0PIlDCVAHiGHsq6Xj4hsygm0AemiHN5
+	81IoGf4NY68rYwbeGrdPcrCypTL6kXf9Aq/uHW/fN7QnjwTfj2ooIhy0VjwxMNpP0fLB15
+	6sEDSjk7gxfDiRshE2FVkzv1AJ6fy03HKMgo+Ks7Ky8MNax3pJbMCjpHC+WUYw==
+Date: Tue, 27 Feb 2024 09:53:31 +0100
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: use kvfree() in xlog_cil_free_logvec()
-Date: Tue, 27 Feb 2024 14:15:03 +0530
-In-reply-to: <Zd1QhmIB/SzPDoDf@dread.disaster.area>
-Message-ID: <874jdul2f8.fsf@debian-BULLSEYE-live-builder-AMD64>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, chandan.babu@oracle.com, akpm@linux-foundation.org, 
+	mcgrof@kernel.org, ziy@nvidia.com, hare@suse.de, djwong@kernel.org, 
+	gost.dev@samsung.com, linux-mm@kvack.org, willy@infradead.org, 
+	Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 11/13] xfs: expose block size in stat
+Message-ID: <4ojxfvnqw6d5dytkcw55olpbdcbwy2pgs7d6mchg6nmgt3icbi@rvzrifqb5x3k>
+References: <20240226094936.2677493-1-kernel@pankajraghav.com>
+ <20240226094936.2677493-12-kernel@pankajraghav.com>
+ <ZdyHoOHBQ19JJap2@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZdyHoOHBQ19JJap2@dread.disaster.area>
+X-Rspamd-Queue-Id: 4TkWVR1BWbz9sq8
 
-On Tue, Feb 27, 2024 at 02:01:26 PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> The xfs_log_vec items are allocated by xlog_kvmalloc(), and so need
-> to be freed with kvfree. This was missed when coverting from the
-> kmem_free() API.
->
-> Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+On Mon, Feb 26, 2024 at 11:44:16PM +1100, Dave Chinner wrote:
+> On Mon, Feb 26, 2024 at 10:49:34AM +0100, Pankaj Raghav (Samsung) wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > For block size larger than page size, the unit of efficient IO is
+> > the block size, not the page size. Leaving stat() to report
+> > PAGE_SIZE as the block size causes test programs like fsx to issue
+> > illegal ranges for operations that require block size alignment
+> > (e.g. fallocate() insert range). Hence update the preferred IO size
+> > to reflect the block size in this case.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > dd2d535e3fb29d ("xfs: cleanup calculating the stat optimal I/O size")]
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> 
+> Something screwed up there, and you haven't put your own SOB on
+> this.
+Oops. I will add it.
 
-I have changed the Reported-by tag value to Darrick (since he reported it
-first) when applying the patches to my local Git tree.
+> 
+> > ---
+> >  fs/xfs/xfs_iops.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > index a0d77f5f512e..1b4edfad464f 100644
+> > --- a/fs/xfs/xfs_iops.c
+> > +++ b/fs/xfs/xfs_iops.c
+> > @@ -543,7 +543,7 @@ xfs_stat_blksize(
+> >  			return 1U << mp->m_allocsize_log;
+> >  	}
+> >  
+> > -	return PAGE_SIZE;
+> > +	return max_t(unsigned long, PAGE_SIZE, mp->m_sb.sb_blocksize);
+> >  }
+> 
+> This function returns a uint32_t, same type as
+> mp->m_sb.sb_blocksize. The comparision should use uint32_t casts,
+> not unsigned long.
+> 
+Yeah. Something like this instead of using unsigned long:
 
--- 
-Chandan
+return max_t(uint32_t, PAGE_SIZE, mp->m_sb.sb_blocksize);
+
+> ALso, this bears no resemblence to the original patch I wrote back in
+> 2018. Please remove my SOB from it - you can state that "this change
+> is based on a patch originally from Dave Chinner" to credit the
+> history of it, but it's certainly not the patch I wrote 6 years ago
+> and so my SOB does not belong on it.
+Ok.
+
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
