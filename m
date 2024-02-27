@@ -1,64 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 586474EB4E
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 18:19:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58743D988;
+	Tue, 27 Feb 2024 18:53:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709057951; cv=none; b=Rk5C8gM56bOc9IhfBFtKkBk5goEUFu5JPercUgsMk6bVD4J+GTzmHaDj/wYHqnJMSmS7Bb36cWCOcKfJSq69h2VLfRXDYwG64Oz2gMlo5BWicX8frqHnNhN18pomizXpMeLsdyJcOvsHZYVDmBJcGNLYHqqWge6+6Z0wg4aCSeY=
+	t=1709059992; cv=none; b=Zh/CwcwCeMtlRgXPHn1VL3HCH226OYrzEQw81RyzYbF4+z9scJAnWuQF+VN1LfjkJT9knJV72aiysyZ0SC6aPeMFawTUSdvzbn6GXJp5fkTP0Vwvl2l4n6spP/Oh5ZfHQEQKHOMbPYVkntDv55L5VjMvcoHgKX4umSR2Jy6GWj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709057951; c=relaxed/simple;
-	bh=VyYcUGaFOQItVVZV2LxagKFh8VrJ6FLhrUiMzuxY0Q8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TjRa2Ntxd4I/yYnrC+wK4oj8uRendue7qSxM/hmiE+SMjo0T5uTDBJt6YMSTEzOyd7wIUwlFJekR7TewWmLbDgldHR2we5vLk72JUhkOTPy11ONKxfrtYDeatOnhq+fDDVxJraiMst9akm+IZnTl3VjJbQQ7du66Qf5oLcprVj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lRdAPpdk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709059992; c=relaxed/simple;
+	bh=uGlNX+jTcTfdRzjQAeiy2AnVPMJF4P3RTI9e5B0rT6k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FUGyVQuW8lxAHIZEp9SeuCLx9veERAIzdMJLLrTLLMyiO2BmgGbfHrHPvZDz5BwDQ9aAlZgwmo7KwfO0jGOrxnThvcJnCKPGkMTI0hbcoCfgxa80LhGNadMR14OoVKwoeDVQ6A1wHjb87M0q6taZbejYDI/yz1Adea63M+UG7ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NGK8v8lo; arc=none smtp.client-ip=209.85.210.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lRdAPpdk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1529C433F1;
-	Tue, 27 Feb 2024 18:19:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709057950;
-	bh=VyYcUGaFOQItVVZV2LxagKFh8VrJ6FLhrUiMzuxY0Q8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lRdAPpdkx+tpxL1/HplaeriV485Llx3yMw1ApxNJNxhlptolyDB5WAxVRHvhUguV5
-	 2/iFCfdGTtRnrOXmJa/XleP/ca9IqeUM8RmOFpD0StjlioyIVwDEs/O40G2Ra0wcS5
-	 9QP64nSMxy5F5fL7JrRYJSLyusths8qIelUG6Vcs20uqeZELK1bWcfrQtVuPuXOwhU
-	 a+PSkiNfLGERRxgbyKSt/ovN2fdOXn3TsHie8vtCNiC7JF3S/YEbY6LUgCa3y7fi4Z
-	 Y/QzmEQhVyWExMUfO3CiLAHkFyZfYLv5kTBdbhV3PFoebX8uCJ4n8lBMhs2Mi0PnJS
-	 jPmBnHIRxih+w==
-Date: Tue, 27 Feb 2024 10:19:10 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 2/2] xfs: only add log incompat features with explicit
- permission
-Message-ID: <20240227181910.GY616564@frogsfrogsfrogs>
-References: <170900010739.937966.5871198955451070108.stgit@frogsfrogsfrogs>
- <170900010779.937966.9414612497822598030.stgit@frogsfrogsfrogs>
- <Zd4lUAcj2zSX74R7@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NGK8v8lo"
+Received: by mail-ot1-f50.google.com with SMTP id 46e09a7af769-6e125818649so1984173a34.1;
+        Tue, 27 Feb 2024 10:53:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709059990; x=1709664790; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yJgE4tcZXxdG6qBUOGQDTe43qEXsMbRHBHt7t/okJWc=;
+        b=NGK8v8lo1pE9XKgj+SkR6GgC131Ygvq61TCSLq1lTkdgK5gFRZmhos44+GNpCBkgNA
+         mCKaTnxdxNEkzirpvcZYhCV2PqJJuKfWhfh1/N1kYslQFSnmozst9unkaqxI44e2ync1
+         0xFFZgB3+wKd0w7E99zSTS8iEf1l/YmPyx9FwgFpiFG6m9OwUqMNqmElHdHBsoJ68Oj2
+         wL0yJe7pw2z3ncgdKwn3Zxz49A896IabgJXUCmgR1GWTTv14+0C9IZORloEN31SGdXra
+         dytafljuevVWnELphEITsjviJZmf2eR+m+LO7xr5A+hvAvpqdSgEJVRZUrvFp8y1Dtfi
+         MOMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709059990; x=1709664790;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yJgE4tcZXxdG6qBUOGQDTe43qEXsMbRHBHt7t/okJWc=;
+        b=fY+Eq1Rpbr4OSWT2jZiUNocp4WrAT0ULy0ev35h9ieSyv8uVDTwhY9iDhhdv/yNpwH
+         /wuwcSrA6g/CIWypC/qVH3fFMO4tGGK4LXPk69UYgoZjkvS3boRdNMBRxdxgV1IneefA
+         AMUmLd9W7Ib26DUTR2cCMFI22YlAcRIvSeJxOU2TFtvFpLWADorF5joqkGXlCCOZbPLh
+         sxg/TKf4iVq525jbqS9wAtPe1xEpZAZWg1hdNSXqixmPey6lh8DPFNVDuEfBiztvzy72
+         RF09iTZtfGsR4NU6QE3Sp0HBRatDnwAItjjrDIGNgqWHbucKHj5gnxBdN1SQRdkI5oie
+         4dGg==
+X-Forwarded-Encrypted: i=1; AJvYcCU0OtdvK6bH5Q0TioIIU4azYpeOxacLQVCTQpX44qp7TID2KZZ6+ClBmGp7XHTjGnuhMtx1e0rQAl0+2NVkr/aFkc2OW8V8cvOM
+X-Gm-Message-State: AOJu0YwuIRAMg5aKihbwweYTSrIlO5DLuz0OM6q9HA5gq1PihuhX2xYo
+	q0iIuKpBf3tXzdbYiREiRJGzO9odozU65gTAWocFsP74QXHczyhQwlaTnnHp3QPB39UyF6B13PA
+	b8DOVEwhuE9Cel+mLd+nL5XeqQHY=
+X-Google-Smtp-Source: AGHT+IGgee6map5f0/LWAGvZMZFz4YVnaUlS9R+2e+dWPduZL1ORSwwFai59AbPhG5WTSzRVNE+klUpCOq0oseYx6u8=
+X-Received: by 2002:a05:6358:b3c8:b0:17b:583c:c4b7 with SMTP id
+ pb8-20020a056358b3c800b0017b583cc4b7mr15147861rwc.3.1709059989857; Tue, 27
+ Feb 2024 10:53:09 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zd4lUAcj2zSX74R7@infradead.org>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs> <20240227174649.GL6184@frogsfrogsfrogs>
+In-Reply-To: <20240227174649.GL6184@frogsfrogsfrogs>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 27 Feb 2024 20:52:58 +0200
+Message-ID: <CAOQ4uxiPfno-Hx+fH3LEN_4D6HQgyMAySRNCU=O2R_-ksrxSDQ@mail.gmail.com>
+Subject: Re: [PATCH 14/13] xfs: make XFS_IOC_COMMIT_RANGE freshness data opaque
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de, 
+	jlayton@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Feb 27, 2024 at 10:09:20AM -0800, Christoph Hellwig wrote:
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> (although the CAP_SYS_ADMIN override is a bit odd if we explicitly
-> asked to not do automagic feature upgrades)
+On Tue, Feb 27, 2024 at 7:46=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> To head off bikeshedding about the fields in xfs_commit_range, let's
+> make it an opaque u64 array and require the userspace program to call
+> a third ioctl to sample the freshness data for us.  If we ever converge
+> on a definition for i_version then we can use that; for now we'll just
+> use mtime/ctime like the old swapext ioctl.
 
-Wellll... it's 'add_log_feat' (allow adding log features) or
-"noadd_log_feat" (stop allowing adding log features).  There's no
-setting for "don't allow, even for sysadmins".
+This addresses my concerns about using mtime/ctime.
 
-I could turn it into a stringly typed option "log_feat={allow,forbid}"
-but yuck. ;)
+I have to say, Darrick, that I think that referring to this concern as
+bikeshedding is not being honest.
 
---D
+I do hate nit picking reviews and I do hate "maybe also fix the world"
+review comments, but I think the question about using mtime/ctime in
+this new API was not out of place and I think that making the freshness
+data opaque is better for everyone in the long run and hopefully, this will
+help you move to the things you care about faster.
+
+Thanks,
+Amir.
