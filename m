@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BAC7EAF1;
-	Tue, 27 Feb 2024 02:00:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A12748A;
+	Tue, 27 Feb 2024 02:01:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708999248; cv=none; b=klgXp+z8pwNJgMpN7Pa1qxtq7D24CKcubexWyUnkeb4vKiuVeIGmxpxajGPdYx8oJE6IKQ3jaYsgqIXs1Ih0JR0CeGhPNKXb5/6tbXYjyIyjLE1hE0il84cVC8SGunmD0nY1YzhJJru7huqKM4+4ZF4BKTguGtYQh+rBmFGZSwo=
+	t=1708999264; cv=none; b=MWD+G09ZMCU7GB8uARsC/hC3n2uk/URkYag9HFKrlLA4ocjqd9SKgODPDJEOSNM5Guu2WkCONtULjXr8U8L+skpbuHBbOWLNy/tRRhbIyI6HGVIsmkYU0yQsX5xj5/dSKZXezSCFvt4YjJHurJOJ1Sp+rUJoMaQDYkP12PcZbB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708999248; c=relaxed/simple;
-	bh=2owk3JtNox36xuzddMGB20nlVUgICJzv8/Ftvol8Jc8=;
+	s=arc-20240116; t=1708999264; c=relaxed/simple;
+	bh=Qwrrj296wCF8LsYJGMm83wU+JXfefljQJO69a+BbtMs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CoVDQOQfqLCk85cCXyd6UzaMMxwAuMSi1eLMEbg5sNOTSXAm1kgR76pLXyYGLTBTDgLVf75hP5RjkX1X14e7VARvYCUCYw0eLGHvtRrbQGVyq5WRvDQuxuGbky2+0FHSy3oZQgN4NY3w/PcQWmGJxM6axwQFzHWZT73PzaYjxVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rJI0Sxw3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=N9DzQ83kcaN4cyHg9wtu9xaZqJzoxgrRmj8X9vbTQ6VB1EAIfdpNw3fNPWzqcLBKDG4Irh4+/mIFeq37BUpOsAs8lyw8+lHE1wzEqvn6d7dR5tOYJY6jUoYKWjhfzgr2tQiAz8/eqcOnNMGBVG7xWBsOfJXy1eaOcLUqgICeFcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=StPe0xgB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rJI0Sxw3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1ED8BC433F1;
-	Tue, 27 Feb 2024 02:00:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="StPe0xgB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C81DFC433F1;
+	Tue, 27 Feb 2024 02:01:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708999248;
-	bh=2owk3JtNox36xuzddMGB20nlVUgICJzv8/Ftvol8Jc8=;
+	s=k20201202; t=1708999263;
+	bh=Qwrrj296wCF8LsYJGMm83wU+JXfefljQJO69a+BbtMs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rJI0Sxw3cmyf+GYxBpMiHEGpvI8kpzk4277xKSnH1FikA1I4lj6qL1EBazKYXHfOC
-	 IeVRZBWihzkk/I0KeBbkHmAr1TNV0+r3ndDZMB7sToOrOlho9PFTcmKH2WmUAnUlRP
-	 0mPzGdZYsCV/m7VBx1JlBWULwzMFRvAcP0VrBVqKt0Y5OMNj2tCKzDIKkt/EDy3BOq
-	 SxwlIJuX2eXA24a6iiG26F0izFXD53J1DhAo7cZ6PIO0GUDJTCvThihqf+NF54O9mM
-	 EYz7OdnREBXT3+YmVxStufHV+tPljlXGMtEGvgI/mQwdmZj+jpLbc5Jby1o6q7uxFy
-	 FPzcoGpgiV9jA==
-Date: Mon, 26 Feb 2024 18:00:47 -0800
-Subject: [PATCH 1/8] generic/604: try to make race occur reliably
+	b=StPe0xgBgC3w+WRT5XKj3ao96KXWpifZEdvpcf2pzIVr1EOlND+yMncse59SERRyg
+	 BgNaUcR7h8piajjZjUx9Z4BOzPeUlaENHJyxjkBrAA9WW+I2b3FSZCsOVb/ebVTHIs
+	 QPr8QXGNlfR8g1duHHRMfLKBIr36Uwoe4QkTOyLXfj0uzVqlT5Ir9BsxSKLsBaFtwl
+	 eLHZ0e+W2uUJj8FrolaWgdwIis+TFQgHxAkT0fz4IiGkqeirSWlqgUivpWAhmyc+UU
+	 t349JDJBs3FWDr+2PNEpOjyy25rVqyUlNW3KZir4QN2MNKoT7U91GQhiCsMc6T5sMh
+	 ZyB7VKahKaMZA==
+Date: Mon, 26 Feb 2024 18:01:03 -0800
+Subject: [PATCH 2/8] xfs/155: fail the test if xfs_repair hangs for too long
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: linux-xfs@vger.kernel.org, guan@eryu.me, fstests@vger.kernel.org
-Message-ID: <170899915233.896550.17140520436176386775.stgit@frogsfrogsfrogs>
+Message-ID: <170899915247.896550.12193016117687961302.stgit@frogsfrogsfrogs>
 In-Reply-To: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
 References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,47 +46,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test will occasionaly fail like so:
+There are a few hard to reproduce bugs in xfs_repair where it can
+deadlock trying to lock a buffer that it already owns.  These stalls
+cause fstests never to finish, which is annoying!  To fix this, set up
+the xfs_repair run to abort after 10 minutes, which will affect the
+golden output and capture a core file.
 
---- /tmp/fstests/tests/generic/604.out	2024-02-03 12:08:52.349924277 -0800
-+++ /var/tmp/fstests/generic/604.out.bad	2024-02-05 04:35:55.020000000 -0800
-@@ -1,2 +1,5 @@
- QA output created by 604
--Silence is golden
-+mount: /opt: /dev/sda4 already mounted on /opt.
-+       dmesg(1) may have more information after failed mount system call.
-+mount -o usrquota,grpquota,prjquota, /dev/sda4 /opt failed
-+(see /var/tmp/fstests/generic/604.full for details)
-
-As far as I can tell, the cause of this seems to be _scratch_mount
-getting forked and exec'd before the backgrounded umount process has a
-chance to enter the kernel.  When this occurs, the mount() system call
-will return -EBUSY because this isn't an attempt to make a bind mount.
-Slow things down slightly by stalling the mount by 10ms.
+This doesn't fix xfs_repair, obviously.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/604 |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ tests/xfs/155 |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/tests/generic/604 b/tests/generic/604
-index cc6a4b214f..a0dcdcd58e 100755
---- a/tests/generic/604
-+++ b/tests/generic/604
-@@ -24,10 +24,11 @@ _scratch_mount
- for i in $(seq 0 500); do
- 	$XFS_IO_PROG -f -c "pwrite 0 4K" $SCRATCH_MNT/$i >/dev/null
- done
--# For overlayfs, avoid unmouting the base fs after _scratch_mount
--# tries to mount the base fs
-+# For overlayfs, avoid unmouting the base fs after _scratch_mount tries to
-+# mount the base fs.  Delay the mount attempt by 0.1s in the hope that the
-+# mount() call will try to lock s_umount /after/ umount has already taken it.
- $UMOUNT_PROG $SCRATCH_MNT &
--_scratch_mount
-+sleep 0.01s ; _scratch_mount
- wait
+diff --git a/tests/xfs/155 b/tests/xfs/155
+index 302607b510..fba557bff6 100755
+--- a/tests/xfs/155
++++ b/tests/xfs/155
+@@ -27,6 +27,10 @@ _require_scratch_xfs_crc		# needsrepair only exists for v5
+ _require_populate_commands
+ _require_libxfs_debug_flag LIBXFS_DEBUG_WRITE_CRASH
  
- echo "Silence is golden"
++# Inject a 10 minute abortive timeout on the repair program so that deadlocks
++# in the program do not cause fstests to hang indefinitely.
++XFS_REPAIR_PROG="timeout -s ABRT 10m $XFS_REPAIR_PROG"
++
+ # Populate the filesystem
+ _scratch_populate_cached nofill >> $seqres.full 2>&1
+ 
 
