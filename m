@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA04315C8
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:30:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65E561C2D
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:30:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709001015; cv=none; b=HCBJ9N6/czkU9tz3YaJPHTFeCul0N04BFuumEXQQdH3BqKFTd28xqBuB3euKjaQdK/aeW9xSMnYe8Z0o2wUZGe4RbDfKBsW8/zEtIhDhrBKc/K5uY13PNzdj9ka086pRrHwzQ3HzeCsiAkRGxdjWeys5cHNWFntG9kb8hoqCW48=
+	t=1709001031; cv=none; b=geCcqVMOGYUA+esFnOTWIn34v7wX6ZCBKoaXygu74SGowApniCH1khtQ4hGF4HwCnTc/4Pm9nz+4jP9mhgeLbj4s+6t9WNsXDVknNzzKtXoHVULsYhprTH85dxkpGWItDGTnPcKdahy0dCqdwH5RTYmxOGBrxmytOQ4rWFkN+BM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709001015; c=relaxed/simple;
-	bh=0y1oYfDKxKR1QzaGDFP5U7WqptjLJBZW8DBe55EMoIA=;
+	s=arc-20240116; t=1709001031; c=relaxed/simple;
+	bh=eNkFlj5zubhPRiEL7RIPbhTr1xzqDm5Qsckzt9TH5Xw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ixtRhmSJs5/6Mj/TcyJBm609FM7WK2YUUJsTCzfY4D0V5Co3IgkXMCWAlOIAzm3m4OPxn5sOtuOXvQqDcld+gGFzcCoAv6/tLCs7rpYfsc6Td5+1Oi7A73wZOV2gaBKWhx+5OvC0K24Kp0jo5TpxWE+09uKijvMW9Ordjlp4xMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lnALO7O3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KBRcfp08nkhaYPReZCzKovcuCxjmZttC0Uz/12H9Y+J4AMYhD3WX8ANoAeUSEZkyxwSf1xUFt4hvwHtE4+9fcIPoHkiHZ914FobJlFULNrFkrdU3kBKoCPwJUh/dfabQaDsTIVIHTPUADPRbSHPtRhrSxw4tHmkOyPXP5xIOVpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c+AIcRJV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lnALO7O3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49D14C433F1;
-	Tue, 27 Feb 2024 02:30:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c+AIcRJV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2CA3C433F1;
+	Tue, 27 Feb 2024 02:30:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709001015;
-	bh=0y1oYfDKxKR1QzaGDFP5U7WqptjLJBZW8DBe55EMoIA=;
+	s=k20201202; t=1709001031;
+	bh=eNkFlj5zubhPRiEL7RIPbhTr1xzqDm5Qsckzt9TH5Xw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lnALO7O3ipiWG8TgmL8/DNpI66biWmlQJp+C04h43j0dlQFftSfDV42LEmauJRXUc
-	 kaNkGd3UmBZVME6nrhEsSaPPYYRbIchqTQMw7+kXvm5GpivCsrV1bROVDgy9xbmR2n
-	 nu5kwk3zq/5lrpyhfQ/2IFKCHAOuB1qEvL3ZlRyeYUHSV3YkRla+4n+j0Aauig8zsy
-	 5XkCR9lhMFXN5out/vpIThZXc/6thUByYiDLAR7IO8w7mSbk07g+f9ATXfAXKu8eF/
-	 YEPPIZO9dQM5z4qehDgRN5hgP4lR/fdBW4Ljb+xH3vwfn05OOBCnDzaHs+wureOxD+
-	 VXFBfuRTSCkVQ==
-Date: Mon, 26 Feb 2024 18:30:14 -0800
-Subject: [PATCH 6/6] xfs: create an xattr iteration function for scrub
+	b=c+AIcRJVDYhTG3kaCg6bt6LJlnhvJBhT1w47sJhtclwUFoRBkz26ZS0jgO2JyLWL+
+	 8xoldGyc04P3cLc6YWpfFQi0gZuh1OgZkjCTL2bCT6N2/VL8005fsBnMpsVYuIMUL1
+	 o9Uj9RetElj0tBjSLNELbdT3Wlc5tSSwXpcEQFQNfhtXbhAPzROLhVOEkW/jhdVI8m
+	 HJXXy8datAIt5ltlewwVVYylW6GSORoFDQzgZbVV1EKgm61cFtqDKY9kElDeOijB6S
+	 p0Sp+SdZze87rvOi4Yu5AXrAJbvXshJq2pQ+RiGeaN29FF4uZsdb/6g2ick2qr1Pba
+	 l19PqhPQt0GVA==
+Date: Mon, 26 Feb 2024 18:30:30 -0800
+Subject: [PATCH 1/2] xfs: ensure unlinked list state is consistent with nlink
+ during scrub
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170900013728.939212.1549856082347244818.stgit@frogsfrogsfrogs>
-In-Reply-To: <170900013612.939212.8818215066021410611.stgit@frogsfrogsfrogs>
-References: <170900013612.939212.8818215066021410611.stgit@frogsfrogsfrogs>
+Message-ID: <170900014076.939412.5263933989053425912.stgit@frogsfrogsfrogs>
+In-Reply-To: <170900014056.939412.3163260522615205535.stgit@frogsfrogsfrogs>
+References: <170900014056.939412.3163260522615205535.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,624 +47,153 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a streamlined function to walk a file's xattrs, without all the
-cursor management stuff in the regular listxattr.
+Now that we have the means to tell if an inode is on an unlinked inode
+list or not, we can check that an inode with zero link count is on the
+unlinked list; and an inode that has nonzero link count is not on that
+list.  Make repair clean things up too.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile           |    1 
- fs/xfs/scrub/attr.c       |  125 +++++++-----------
- fs/xfs/scrub/dab_bitmap.h |   37 +++++
- fs/xfs/scrub/listxattr.c  |  310 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/listxattr.h  |   17 ++
- 5 files changed, 412 insertions(+), 78 deletions(-)
- create mode 100644 fs/xfs/scrub/dab_bitmap.h
- create mode 100644 fs/xfs/scrub/listxattr.c
- create mode 100644 fs/xfs/scrub/listxattr.h
+ fs/xfs/scrub/inode.c        |   19 ++++++++++++++++++
+ fs/xfs/scrub/inode_repair.c |   45 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.c          |    5 +----
+ fs/xfs/xfs_inode.h          |    2 ++
+ 4 files changed, 67 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 41f9d78ecd39e..7c2f4ba3335ec 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -166,6 +166,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   ialloc.o \
- 				   inode.o \
- 				   iscan.o \
-+				   listxattr.o \
- 				   nlinks.o \
- 				   parent.o \
- 				   readdir.o \
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 696971204b876..8853e4d0eee3d 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -21,6 +21,7 @@
- #include "scrub/common.h"
- #include "scrub/dabtree.h"
- #include "scrub/attr.h"
-+#include "scrub/listxattr.h"
- #include "scrub/repair.h"
- 
- /* Free the buffers linked from the xattr buffer. */
-@@ -153,90 +154,81 @@ xchk_setup_xattr(
- 
- /* Extended Attributes */
- 
--struct xchk_xattr {
--	struct xfs_attr_list_context	context;
--	struct xfs_scrub		*sc;
--};
--
- /*
-  * Check that an extended attribute key can be looked up by hash.
-  *
-- * We use the XFS attribute list iterator (i.e. xfs_attr_list_ilocked)
-- * to call this function for every attribute key in an inode.  Once
-- * we're here, we load the attribute value to see if any errors happen,
-- * or if we get more or less data than we expected.
-+ * We use the extended attribute walk helper to call this function for every
-+ * attribute key in an inode.  Once we're here, we load the attribute value to
-+ * see if any errors happen, or if we get more or less data than we expected.
-  */
--static void
--xchk_xattr_listent(
--	struct xfs_attr_list_context	*context,
--	int				flags,
--	unsigned char			*name,
--	int				namelen,
--	int				valuelen)
-+static int
-+xchk_xattr_actor(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	unsigned int		attr_flags,
-+	const unsigned char	*name,
-+	unsigned int		namelen,
-+	const void		*value,
-+	unsigned int		valuelen,
-+	void			*priv)
- {
- 	struct xfs_da_args		args = {
- 		.op_flags		= XFS_DA_OP_NOTIME,
--		.attr_filter		= flags & XFS_ATTR_NSP_ONDISK_MASK,
--		.geo			= context->dp->i_mount->m_attr_geo,
-+		.attr_filter		= attr_flags & XFS_ATTR_NSP_ONDISK_MASK,
-+		.geo			= sc->mp->m_attr_geo,
- 		.whichfork		= XFS_ATTR_FORK,
--		.dp			= context->dp,
-+		.dp			= ip,
- 		.name			= name,
- 		.namelen		= namelen,
- 		.hashval		= xfs_da_hashname(name, namelen),
--		.trans			= context->tp,
-+		.trans			= sc->tp,
- 		.valuelen		= valuelen,
--		.owner			= context->dp->i_ino,
-+		.owner			= ip->i_ino,
- 	};
- 	struct xchk_xattr_buf		*ab;
--	struct xchk_xattr		*sx;
- 	int				error = 0;
- 
--	sx = container_of(context, struct xchk_xattr, context);
--	ab = sx->sc->buf;
-+	ab = sc->buf;
- 
--	if (xchk_should_terminate(sx->sc, &error)) {
--		context->seen_enough = error;
--		return;
--	}
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
- 
--	if (flags & XFS_ATTR_INCOMPLETE) {
-+	if (attr_flags & XFS_ATTR_INCOMPLETE) {
- 		/* Incomplete attr key, just mark the inode for preening. */
--		xchk_ino_set_preen(sx->sc, context->dp->i_ino);
--		return;
-+		xchk_ino_set_preen(sc, ip->i_ino);
-+		return 0;
- 	}
- 
- 	/* Only one namespace bit allowed. */
--	if (hweight32(flags & XFS_ATTR_NSP_ONDISK_MASK) > 1) {
--		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
--		goto fail_xref;
-+	if (hweight32(attr_flags & XFS_ATTR_NSP_ONDISK_MASK) > 1) {
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, args.blkno);
-+		return -ECANCELED;
- 	}
- 
- 	/* Does this name make sense? */
- 	if (!xfs_attr_namecheck(name, namelen)) {
--		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
--		goto fail_xref;
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, args.blkno);
-+		return -ECANCELED;
- 	}
- 
- 	/*
--	 * Local xattr values are stored in the attr leaf block, so we don't
--	 * need to retrieve the value from a remote block to detect corruption
--	 * problems.
-+	 * Local and shortform xattr values are stored in the attr leaf block,
-+	 * so we don't need to retrieve the value from a remote block to detect
-+	 * corruption problems.
- 	 */
--	if (flags & XFS_ATTR_LOCAL)
--		goto fail_xref;
-+	if (value)
-+		return 0;
- 
- 	/*
--	 * Try to allocate enough memory to extrat the attr value.  If that
--	 * doesn't work, we overload the seen_enough variable to convey
--	 * the error message back to the main scrub function.
-+	 * Try to allocate enough memory to extract the attr value.  If that
-+	 * doesn't work, return -EDEADLOCK as a signal to try again with a
-+	 * maximally sized buffer.
- 	 */
--	error = xchk_setup_xattr_buf(sx->sc, valuelen);
-+	error = xchk_setup_xattr_buf(sc, valuelen);
- 	if (error == -ENOMEM)
- 		error = -EDEADLOCK;
--	if (error) {
--		context->seen_enough = error;
--		return;
--	}
-+	if (error)
-+		return error;
- 
- 	args.value = ab->value;
- 
-@@ -244,16 +236,13 @@ xchk_xattr_listent(
- 	/* ENODATA means the hash lookup failed and the attr is bad */
- 	if (error == -ENODATA)
- 		error = -EFSCORRUPTED;
--	if (!xchk_fblock_process_error(sx->sc, XFS_ATTR_FORK, args.blkno,
-+	if (!xchk_fblock_process_error(sc, XFS_ATTR_FORK, args.blkno,
- 			&error))
--		goto fail_xref;
-+		return error;
- 	if (args.valuelen != valuelen)
--		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK,
--					     args.blkno);
--fail_xref:
--	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		context->seen_enough = 1;
--	return;
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, args.blkno);
-+
-+	return 0;
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 6e2fe2d6250b3..d32716fb2fecf 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -739,6 +739,23 @@ xchk_inode_check_reflink_iflag(
+ 		xchk_ino_set_corrupt(sc, ino);
  }
  
- /*
-@@ -618,16 +607,6 @@ int
- xchk_xattr(
- 	struct xfs_scrub		*sc)
- {
--	struct xchk_xattr		sx = {
--		.sc			= sc,
--		.context		= {
--			.dp		= sc->ip,
--			.tp		= sc->tp,
--			.resynch	= 1,
--			.put_listent	= xchk_xattr_listent,
--			.allow_incomplete = true,
--		},
--	};
- 	xfs_dablk_t			last_checked = -1U;
- 	int				error = 0;
++/*
++ * If this inode has zero link count, it must be on the unlinked list.  If
++ * it has nonzero link count, it must not be on the unlinked list.
++ */
++STATIC void
++xchk_inode_check_unlinked(
++	struct xfs_scrub	*sc)
++{
++	if (VFS_I(sc->ip)->i_nlink == 0) {
++		if (!xfs_inode_on_unlinked_list(sc->ip))
++			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
++	} else {
++		if (xfs_inode_on_unlinked_list(sc->ip))
++			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
++	}
++}
++
+ /* Scrub an inode. */
+ int
+ xchk_inode(
+@@ -771,6 +788,8 @@ xchk_inode(
+ 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
+ 		xchk_inode_check_reflink_iflag(sc, sc->ip->i_ino);
  
-@@ -656,12 +635,6 @@ xchk_xattr(
- 	/*
- 	 * Look up every xattr in this file by name and hash.
- 	 *
--	 * Use the backend implementation of xfs_attr_list to call
--	 * xchk_xattr_listent on every attribute key in this inode.
--	 * In other words, we use the same iterator/callback mechanism
--	 * that listattr uses to scrub extended attributes, though in our
--	 * _listent function, we check the value of the attribute.
--	 *
- 	 * The VFS only locks i_rwsem when modifying attrs, so keep all
- 	 * three locks held because that's the only way to ensure we're
- 	 * the only thread poking into the da btree.  We traverse the da
-@@ -669,13 +642,9 @@ xchk_xattr(
- 	 * iteration, which doesn't really follow the usual buffer
- 	 * locking order.
- 	 */
--	error = xfs_attr_list_ilocked(&sx.context);
-+	error = xchk_xattr_walk(sc, sc->ip, xchk_xattr_actor, NULL);
- 	if (!xchk_fblock_process_error(sc, XFS_ATTR_FORK, 0, &error))
- 		return error;
- 
--	/* Did our listent function try to return any errors? */
--	if (sx.context.seen_enough < 0)
--		return sx.context.seen_enough;
--
- 	return 0;
++	xchk_inode_check_unlinked(sc);
++
+ 	xchk_inode_xref(sc, sc->ip->i_ino, &di);
+ out:
+ 	return error;
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index eab380e95ef40..2105026d178a2 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -1697,6 +1697,46 @@ xrep_inode_problems(
+ 	return xrep_roll_trans(sc);
  }
-diff --git a/fs/xfs/scrub/dab_bitmap.h b/fs/xfs/scrub/dab_bitmap.h
-new file mode 100644
-index 0000000000000..0c6e3aad43954
---- /dev/null
-+++ b/fs/xfs/scrub/dab_bitmap.h
-@@ -0,0 +1,37 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
+ 
 +/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_SCRUB_DAB_BITMAP_H__
-+#define __XFS_SCRUB_DAB_BITMAP_H__
-+
-+/* Bitmaps, but for type-checked for xfs_dablk_t */
-+
-+struct xdab_bitmap {
-+	struct xbitmap32	dabitmap;
-+};
-+
-+static inline void xdab_bitmap_init(struct xdab_bitmap *bitmap)
-+{
-+	xbitmap32_init(&bitmap->dabitmap);
-+}
-+
-+static inline void xdab_bitmap_destroy(struct xdab_bitmap *bitmap)
-+{
-+	xbitmap32_destroy(&bitmap->dabitmap);
-+}
-+
-+static inline int xdab_bitmap_set(struct xdab_bitmap *bitmap,
-+		xfs_dablk_t dabno, xfs_extlen_t len)
-+{
-+	return xbitmap32_set(&bitmap->dabitmap, dabno, len);
-+}
-+
-+static inline bool xdab_bitmap_test(struct xdab_bitmap *bitmap,
-+		xfs_dablk_t dabno, xfs_extlen_t *len)
-+{
-+	return xbitmap32_test(&bitmap->dabitmap, dabno, len);
-+}
-+
-+#endif	/* __XFS_SCRUB_DAB_BITMAP_H__ */
-diff --git a/fs/xfs/scrub/listxattr.c b/fs/xfs/scrub/listxattr.c
-new file mode 100644
-index 0000000000000..f38d6ea4579ac
---- /dev/null
-+++ b/fs/xfs/scrub/listxattr.c
-@@ -0,0 +1,310 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_leaf.h"
-+#include "xfs_attr_sf.h"
-+#include "xfs_trans.h"
-+#include "scrub/scrub.h"
-+#include "scrub/bitmap.h"
-+#include "scrub/dab_bitmap.h"
-+#include "scrub/listxattr.h"
-+
-+/* Call a function for every entry in a shortform xattr structure. */
-+STATIC int
-+xchk_xattr_walk_sf(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	void				*priv)
-+{
-+	struct xfs_attr_sf_hdr		*hdr = ip->i_af.if_data;
-+	struct xfs_attr_sf_entry	*sfe;
-+	unsigned int			i;
-+	int				error;
-+
-+	sfe = xfs_attr_sf_firstentry(hdr);
-+	for (i = 0; i < hdr->count; i++) {
-+		error = attr_fn(sc, ip, sfe->flags, sfe->nameval, sfe->namelen,
-+				&sfe->nameval[sfe->namelen], sfe->valuelen,
-+				priv);
-+		if (error)
-+			return error;
-+
-+		sfe = xfs_attr_sf_nextentry(sfe);
-+	}
-+
-+	return 0;
-+}
-+
-+/* Call a function for every entry in this xattr leaf block. */
-+STATIC int
-+xchk_xattr_walk_leaf_entries(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	struct xfs_buf			*bp,
-+	void				*priv)
-+{
-+	struct xfs_attr3_icleaf_hdr	ichdr;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_attr_leafblock	*leaf = bp->b_addr;
-+	struct xfs_attr_leaf_entry	*entry;
-+	unsigned int			i;
-+	int				error;
-+
-+	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
-+	entry = xfs_attr3_leaf_entryp(leaf);
-+
-+	for (i = 0; i < ichdr.count; entry++, i++) {
-+		void			*value;
-+		unsigned char		*name;
-+		unsigned int		namelen, valuelen;
-+
-+		if (entry->flags & XFS_ATTR_LOCAL) {
-+			struct xfs_attr_leaf_name_local		*name_loc;
-+
-+			name_loc = xfs_attr3_leaf_name_local(leaf, i);
-+			name = name_loc->nameval;
-+			namelen = name_loc->namelen;
-+			value = &name_loc->nameval[name_loc->namelen];
-+			valuelen = be16_to_cpu(name_loc->valuelen);
-+		} else {
-+			struct xfs_attr_leaf_name_remote	*name_rmt;
-+
-+			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
-+			name = name_rmt->name;
-+			namelen = name_rmt->namelen;
-+			value = NULL;
-+			valuelen = be32_to_cpu(name_rmt->valuelen);
-+		}
-+
-+		error = attr_fn(sc, ip, entry->flags, name, namelen, value,
-+				valuelen, priv);
-+		if (error)
-+			return error;
-+
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Call a function for every entry in a leaf-format xattr structure.  Avoid
-+ * memory allocations for the loop detector since there's only one block.
++ * Make sure this inode's unlinked list pointers are consistent with its
++ * link count.
 + */
 +STATIC int
-+xchk_xattr_walk_leaf(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	void				*priv)
++xrep_inode_unlinked(
++	struct xfs_scrub	*sc)
 +{
-+	struct xfs_buf			*leaf_bp;
-+	int				error;
-+
-+	error = xfs_attr3_leaf_read(sc->tp, ip, ip->i_ino, 0, &leaf_bp);
-+	if (error)
-+		return error;
-+
-+	error = xchk_xattr_walk_leaf_entries(sc, ip, attr_fn, leaf_bp, priv);
-+	xfs_trans_brelse(sc->tp, leaf_bp);
-+	return error;
-+}
-+
-+/* Find the leftmost leaf in the xattr dabtree. */
-+STATIC int
-+xchk_xattr_find_leftmost_leaf(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	struct xdab_bitmap		*seen_dablks,
-+	struct xfs_buf			**leaf_bpp)
-+{
-+	struct xfs_da3_icnode_hdr	nodehdr;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_trans		*tp = sc->tp;
-+	struct xfs_da_intnode		*node;
-+	struct xfs_da_node_entry	*btree;
-+	struct xfs_buf			*bp;
-+	xfs_failaddr_t			fa;
-+	xfs_dablk_t			blkno = 0;
-+	unsigned int			expected_level = 0;
-+	int				error;
-+
-+	for (;;) {
-+		xfs_extlen_t		len = 1;
-+		uint16_t		magic;
-+
-+		/* Make sure we haven't seen this new block already. */
-+		if (xdab_bitmap_test(seen_dablks, blkno, &len))
-+			return -EFSCORRUPTED;
-+
-+		error = xfs_da3_node_read(tp, ip, blkno, &bp, XFS_ATTR_FORK);
-+		if (error)
-+			return error;
-+
-+		node = bp->b_addr;
-+		magic = be16_to_cpu(node->hdr.info.magic);
-+		if (magic == XFS_ATTR_LEAF_MAGIC ||
-+		    magic == XFS_ATTR3_LEAF_MAGIC)
-+			break;
-+
-+		error = -EFSCORRUPTED;
-+		if (magic != XFS_DA_NODE_MAGIC &&
-+		    magic != XFS_DA3_NODE_MAGIC)
-+			goto out_buf;
-+
-+		fa = xfs_da3_node_header_check(bp, ip->i_ino);
-+		if (fa)
-+			goto out_buf;
-+
-+		xfs_da3_node_hdr_from_disk(mp, &nodehdr, node);
-+
-+		if (nodehdr.count == 0 || nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
-+			goto out_buf;
-+
-+		/* Check the level from the root node. */
-+		if (blkno == 0)
-+			expected_level = nodehdr.level - 1;
-+		else if (expected_level != nodehdr.level)
-+			goto out_buf;
-+		else
-+			expected_level--;
-+
-+		/* Remember that we've seen this node. */
-+		error = xdab_bitmap_set(seen_dablks, blkno, 1);
-+		if (error)
-+			goto out_buf;
-+
-+		/* Find the next level towards the leaves of the dabtree. */
-+		btree = nodehdr.btree;
-+		blkno = be32_to_cpu(btree->before);
-+		xfs_trans_brelse(tp, bp);
-+	}
-+
-+	error = -EFSCORRUPTED;
-+	fa = xfs_attr3_leaf_header_check(bp, ip->i_ino);
-+	if (fa)
-+		goto out_buf;
-+
-+	if (expected_level != 0)
-+		goto out_buf;
-+
-+	/* Remember that we've seen this leaf. */
-+	error = xdab_bitmap_set(seen_dablks, blkno, 1);
-+	if (error)
-+		goto out_buf;
-+
-+	*leaf_bpp = bp;
-+	return 0;
-+
-+out_buf:
-+	xfs_trans_brelse(tp, bp);
-+	return error;
-+}
-+
-+/* Call a function for every entry in a node-format xattr structure. */
-+STATIC int
-+xchk_xattr_walk_node(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	void				*priv)
-+{
-+	struct xfs_attr3_icleaf_hdr	leafhdr;
-+	struct xdab_bitmap		seen_dablks;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_attr_leafblock	*leaf;
-+	struct xfs_buf			*leaf_bp;
-+	int				error;
-+
-+	xdab_bitmap_init(&seen_dablks);
-+
-+	error = xchk_xattr_find_leftmost_leaf(sc, ip, &seen_dablks, &leaf_bp);
-+	if (error)
-+		goto out_bitmap;
-+
-+	for (;;) {
-+		xfs_extlen_t	len;
-+
-+		error = xchk_xattr_walk_leaf_entries(sc, ip, attr_fn, leaf_bp,
-+				priv);
-+		if (error)
-+			goto out_leaf;
-+
-+		/* Find the right sibling of this leaf block. */
-+		leaf = leaf_bp->b_addr;
-+		xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+		if (leafhdr.forw == 0)
-+			goto out_leaf;
-+
-+		xfs_trans_brelse(sc->tp, leaf_bp);
-+
-+		/* Make sure we haven't seen this new leaf already. */
-+		len = 1;
-+		if (xdab_bitmap_test(&seen_dablks, leafhdr.forw, &len))
-+			goto out_bitmap;
-+
-+		error = xfs_attr3_leaf_read(sc->tp, ip, ip->i_ino,
-+				leafhdr.forw, &leaf_bp);
-+		if (error)
-+			goto out_bitmap;
-+
-+		/* Remember that we've seen this new leaf. */
-+		error = xdab_bitmap_set(&seen_dablks, leafhdr.forw, 1);
-+		if (error)
-+			goto out_leaf;
-+	}
-+
-+out_leaf:
-+	xfs_trans_brelse(sc->tp, leaf_bp);
-+out_bitmap:
-+	xdab_bitmap_destroy(&seen_dablks);
-+	return error;
-+}
-+
-+/*
-+ * Call a function for every extended attribute in a file.
-+ *
-+ * Callers must hold the ILOCK.  No validation or cursor restarts allowed.
-+ * Returns -EFSCORRUPTED on any problem, including loops in the dabtree.
-+ */
-+int
-+xchk_xattr_walk(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	xchk_xattr_fn		attr_fn,
-+	void			*priv)
-+{
++	unsigned int		nlink = VFS_I(sc->ip)->i_nlink;
 +	int			error;
 +
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++	/*
++	 * If this inode is linked from the directory tree and on the unlinked
++	 * list, remove it from the unlinked list.
++	 */
++	if (nlink > 0 && xfs_inode_on_unlinked_list(sc->ip)) {
++		struct xfs_perag	*pag;
++		int			error;
 +
-+	if (!xfs_inode_hasattr(ip))
-+		return 0;
++		pag = xfs_perag_get(sc->mp,
++				XFS_INO_TO_AGNO(sc->mp, sc->ip->i_ino));
++		error = xfs_iunlink_remove(sc->tp, pag, sc->ip);
++		xfs_perag_put(pag);
++		if (error)
++			return error;
++	}
 +
-+	if (ip->i_af.if_format == XFS_DINODE_FMT_LOCAL)
-+		return xchk_xattr_walk_sf(sc, ip, attr_fn, priv);
++	/*
++	 * If this inode is not linked from the directory tree yet not on the
++	 * unlinked list, put it on the unlinked list.
++	 */
++	if (nlink == 0 && !xfs_inode_on_unlinked_list(sc->ip)) {
++		error = xfs_iunlink(sc->tp, sc->ip);
++		if (error)
++			return error;
++	}
 +
-+	/* attr functions require that the attr fork is loaded */
-+	error = xfs_iread_extents(sc->tp, ip, XFS_ATTR_FORK);
++	return 0;
++}
++
+ /* Repair an inode's fields. */
+ int
+ xrep_inode(
+@@ -1746,5 +1786,10 @@ xrep_inode(
+ 			return error;
+ 	}
+ 
++	/* Reconnect incore unlinked list */
++	error = xrep_inode_unlinked(sc);
 +	if (error)
 +		return error;
 +
-+	if (xfs_attr_is_leaf(ip))
-+		return xchk_xattr_walk_leaf(sc, ip, attr_fn, priv);
-+
-+	return xchk_xattr_walk_node(sc, ip, attr_fn, priv);
-+}
-diff --git a/fs/xfs/scrub/listxattr.h b/fs/xfs/scrub/listxattr.h
-new file mode 100644
-index 0000000000000..48fe89d05946b
---- /dev/null
-+++ b/fs/xfs/scrub/listxattr.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_SCRUB_LISTXATTR_H__
-+#define __XFS_SCRUB_LISTXATTR_H__
-+
-+typedef int (*xchk_xattr_fn)(struct xfs_scrub *sc, struct xfs_inode *ip,
-+		unsigned int attr_flags, const unsigned char *name,
-+		unsigned int namelen, const void *value, unsigned int valuelen,
-+		void *priv);
-+
-+int xchk_xattr_walk(struct xfs_scrub *sc, struct xfs_inode *ip,
-+		xchk_xattr_fn attr_fn, void *priv);
-+
-+#endif /* __XFS_SCRUB_LISTXATTR_H__ */
+ 	return xrep_defer_finish(sc);
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 1eee2f9ad265e..e6588790e39ae 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -42,9 +42,6 @@
+ 
+ struct kmem_cache *xfs_inode_cache;
+ 
+-STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+-	struct xfs_inode *);
+-
+ /*
+  * helper function to extract extent size hint from inode
+  */
+@@ -2263,7 +2260,7 @@ xfs_iunlink_remove_inode(
+ /*
+  * Pull the on-disk inode from the AGI unlinked list.
+  */
+-STATIC int
++int
+ xfs_iunlink_remove(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_perag	*pag,
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index c6e0590c39b67..e15634fcb2638 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -613,6 +613,8 @@ extern struct kmem_cache	*xfs_inode_cache;
+ bool xfs_inode_needs_inactive(struct xfs_inode *ip);
+ 
+ int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
++int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
++		struct xfs_inode *ip);
+ 
+ void xfs_end_io(struct work_struct *work);
+ 
 
