@@ -1,81 +1,62 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B07987E761;
-	Tue, 27 Feb 2024 08:44:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E1112FB18
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 08:46:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709023496; cv=none; b=eHfPCoHJTsexPDx1UVGSpRMxMKW1qVRFI/WTrAHZPJ0nd4kytGyfO/lNze+1LT/ZNXpkHp2I5mHU3m9hIyFMzg+e+NjcMYWqqXDneoNo6p7tEMt2CzLSii3lLnn5L+/mzwKuSVqQxkX2LPfl++kjkam6oQqPK/QEn2ECDxsXvO0=
+	t=1709023615; cv=none; b=lCL7BJRAXnTV5E2CC3gK0///HyWEwVMtES64Mc1Yr+1yd1PAoYwr3T5YNRW/NDRlxQQy8hegxGoyXdkNM4V+fydAyKHo3FySFZH+r3sNWaznyFdSyIvD7bG2F9ZfvsELduEEVpLv9yXLJeSsmAvyNHpvgiMwu3+HHCj6DLx0m6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709023496; c=relaxed/simple;
-	bh=F6Dw1yhuXSn9tDcHzMLVsOx+fa7VDnyjl31zCJLzb7I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uoHJqNXk7EYHVbCnTFQI5N+7PCsm1h7a7z0BTKFxPuEIVjsLquxVUs0dhN+fxL0OOCm7fgbuj7JRYaoN7q2je+dojuH0tDjn1EI7+goVXGMWMzzFbEfXaPhF65zh9uYTKHzNLcbwh+p6CvqDpPBrcKFQHPMvcZIxSgZD9MZkgT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=vhUfu7Uk; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1709023615; c=relaxed/simple;
+	bh=ueICFioNlW/vmsb1NBszXYP9xMaMQc7iK3bKdzMObvw=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=O+mW4bxDNo/WRnJPH8ZVQT35qWpQQY0gfpeHjw0Yp5GszDNrYuErWvLVVNj13NCMa4YnSURHp1OSlX7H/Wu4Y4RZ9NDKdiuTpKixjJmzoozIOYyDyO1TohISXgnyhm/e5czSz4gzY40qObMvddFpyiIijSuNttUQPfrI8OxGvso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EThIMngm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="vhUfu7Uk"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4TkWJL6wn2z9t0M;
-	Tue, 27 Feb 2024 09:44:50 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1709023491;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=28mM1L7VoPpQ2Bxti5OxSfSjhM5DSY0iAhB3xAG9DsE=;
-	b=vhUfu7Ukkzc0sJ3NR4BGYejf5reNNcHuMppL3CH2U9H7P/14zED8PWIe58sugXnGExZkI8
-	yWE9fwlD0rlXjqEW4HgHb1ItUC84CCTD2HKudIo/vn1WQs2xO4gDIQVTcUXPpW4nwpdQY6
-	RiKmh/OvoFKM7M0FnU/Nyw4HAGNa4lHRCiDRD4mRBdQNNRCNX1q2B0vaSi8nehFSqKLoWr
-	kScyJxMdKaa0STuFn5cqUJDhIdUsjXjV2q/qDojeo8kXV6/WwDgUc7JXWz4FlO2bAQWBHe
-	BFikc0eFXVid62NyhvTPH4xx3QiyPOSeWygvw5gXSH9O8iqdS9vtJ4DH/jzjUA==
-Date: Tue, 27 Feb 2024 09:44:46 +0100
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, david@fromorbit.com, chandan.babu@oracle.com, 
-	akpm@linux-foundation.org, mcgrof@kernel.org, ziy@nvidia.com, hare@suse.de, 
-	djwong@kernel.org, gost.dev@samsung.com, linux-mm@kvack.org, 
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 12/13] xfs: make the calculation generic in
- xfs_sb_validate_fsb_count()
-Message-ID: <uw6wet56alvrcj6erv3fwn3hqjsyijhk4ke7f54yowt3mzkreh@hiov5ttykytu>
-References: <20240226094936.2677493-1-kernel@pankajraghav.com>
- <20240226094936.2677493-13-kernel@pankajraghav.com>
- <ZdyQdGkSIw9OsSqc@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EThIMngm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FEA5C43399;
+	Tue, 27 Feb 2024 08:46:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709023615;
+	bh=ueICFioNlW/vmsb1NBszXYP9xMaMQc7iK3bKdzMObvw=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=EThIMngmRdHs05R9jG7k9DNtmDUSHoKxY/hyDj/jdvQUrz6x3cp4mhSIzgRXZGj6X
+	 K0lq/nl+EoK7HDQulz4Rs0oQNSrOWMIhoWsk8SUdOECCIZnPfa3cQzici1FmL76QRp
+	 mrjUkagplqxGcLjmSVyTx1ntS00NbTAcZI7xHS3wzyo/RnurjfQ8IlDTLDU0KAXxtL
+	 m5O4qm66d/NIXqJuffJgGBO9R964nMCneeRyHY0B6WYM1s/Fe0Ix/Ok9gqfJF19k0O
+	 8aewLcp8SEy1GPX/EogHShvurJi0Y680YRn1wrpQ8dEg5yQW+eGmBuoQuHYeM6VdNy
+	 ja1RD5Pi9j9tQ==
+References: <20240227001135.718165-1-david@fromorbit.com>
+ <20240227001135.718165-3-david@fromorbit.com>
+ <20240227004621.GN616564@frogsfrogsfrogs>
+ <Zd1QhmIB/SzPDoDf@dread.disaster.area>
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] xfs: use kvfree() in xlog_cil_free_logvec()
+Date: Tue, 27 Feb 2024 14:15:03 +0530
+In-reply-to: <Zd1QhmIB/SzPDoDf@dread.disaster.area>
+Message-ID: <874jdul2f8.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZdyQdGkSIw9OsSqc@casper.infradead.org>
-X-Rspamd-Queue-Id: 4TkWJL6wn2z9t0M
+Content-Type: text/plain
 
-On Mon, Feb 26, 2024 at 01:21:56PM +0000, Matthew Wilcox wrote:
-> On Mon, Feb 26, 2024 at 10:49:35AM +0100, Pankaj Raghav (Samsung) wrote:
-> > +	if (check_mul_overflow(nblocks, (1 << sbp->sb_blocklog), &bytes))
-> 
-> Why would you not use check_shl_overflow()?
+On Tue, Feb 27, 2024 at 02:01:26 PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> The xfs_log_vec items are allocated by xlog_kvmalloc(), and so need
+> to be freed with kvfree. This was missed when coverting from the
+> kmem_free() API.
+>
+> Reported-by: Chandan Babu R <chandanbabu@kernel.org>
 
-This looks better than check_mul_overflow. I will use this in the next
-version.
-> 
-> > +		return -EFBIG;
-> > +
-> > +	mapping_count = bytes >> PAGE_SHIFT;
-> >  	/* Limited by ULONG_MAX of page cache index */
-> > -	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-> > +	if (mapping_count > ULONG_MAX)
-> >  		return -EFBIG;
-> >  	return 0;
-> >  }
-> > -- 
-> > 2.43.0
-> > 
+I have changed the Reported-by tag value to Darrick (since he reported it
+first) when applying the patches to my local Git tree.
+
+-- 
+Chandan
