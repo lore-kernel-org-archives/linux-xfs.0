@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D656FBEA
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:26:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4E96F4EB
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:26:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709000781; cv=none; b=eJFOqnEh/MUBpDY3dJDpoxeNiEwrBTiDreqQ48JIURoQNngdVgwTz7ZmOKv7wUYeUHSV4LJbZQrczK7+7nhsaEBX72z0FxZDq6G7Q+FHbSTFsMnmsZdobKyTUG2o82cblhjAlwzqvDTQPhCKEcnQ/akqFAknVskmHWBT2IXBk2E=
+	t=1709000796; cv=none; b=RMLvQli1rlgHUR0YQ8Bi97+NkC57RxW5Mz6UWATx8ZAGkd+oVfnYYFmWsRMYzmNfCe0SgH7vIKh22dIq1rK5JEILdZmvv4GKfWsfE8EhcsawZhkvXDAyZG3WMkIhX56DaldPitQtc0VEeNFyC+17WY7Oaz9RZmX+jk807SnmyiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709000781; c=relaxed/simple;
-	bh=b+x7AdgDNTn6UqJnq2x7PJ2h01KUuDls3qe5j5kEYRQ=;
+	s=arc-20240116; t=1709000796; c=relaxed/simple;
+	bh=rKIirMq2+o0O0wG7wYfycE3MEeQFrTG2gb9XfTQT3yE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WAIzbddMqY2imCCZdxQukWG9TyyzpSNp3bjNqRCQqRfJmG37SVzfBtstXAfyh6855pJIonjJNAgj50jef4a17hYjJj+t8TrCnk8/uPKJaeUPVHjYNly6AgIKFiXP0V0LdWT64q++Uy2k4e0da5YIi1un2Lt5J5yN9DrGJGmA668=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AB9EhH7I; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jz65aHPLfMvoToNQVZU2FQ+3rBa7OuQ578pXiPVheUnjlndMxienh796DooDKDqUF6q08jAak/bwiNL6T1UxijBneSR0GmcM+CxRODNsyc0fatC7YSqhYyCQnvFsK4+ZQ0gpWH27YbI1mHly4PJRXAPbmpVkiXA9ak5xPnxrS/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eZhowL5J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AB9EhH7I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FB78C43390;
-	Tue, 27 Feb 2024 02:26:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eZhowL5J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FC10C433F1;
+	Tue, 27 Feb 2024 02:26:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709000780;
-	bh=b+x7AdgDNTn6UqJnq2x7PJ2h01KUuDls3qe5j5kEYRQ=;
+	s=k20201202; t=1709000796;
+	bh=rKIirMq2+o0O0wG7wYfycE3MEeQFrTG2gb9XfTQT3yE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AB9EhH7Iq9PGx25t2CFNxU6IS5D9iIMpzHMDQbZPn12Swwql9spZeksHmEpcnFFgA
-	 vUcGOYKEwt2obe2nRmaRRzoYjDZjhUid8NoSGqL3HO878n+xyZsbT2yEULjWwPkiH5
-	 XqUegG/00phPs36gZeLroYTT7fS6CDgspALiDe6vTgu3cORrpzEaucQQMv2DsqTLOh
-	 2oLsUakZFkNGHit7RPPGY0nUL3EruF0MPajdFKWVwXbUh0NlJsY8abBQBL+uDc6SEd
-	 4kmHkcPxkioLcrdjvej7H+T7TPGibdzyU/NZAP0Y8bqBMu2raMbISy1gMr1npYObfg
-	 7iLr48QLAD/3A==
-Date: Mon, 26 Feb 2024 18:26:20 -0800
-Subject: [PATCH 3/3] xfs: online repair of realtime summaries
+	b=eZhowL5JvH1hwdT35bhru8Om6OjZyhWnIg24mtxoUqoDNOZrNWD+Rg7nKhBdH1hFf
+	 f3qveDSm8xY4UlLfq9w8GDpWvll/vAetWpfOQ3s24JjLshwFr6oXEi2Y0QGYe8fw9K
+	 mlWWGH/D7Db33IS2s5GxRCHNAyYJA6NWOMUJakQx2uCa0Jrv2G5P6okIgTKj8+YyiB
+	 wr24UwvaxiAeeqmWE+AyTkq6zrm7j9ITdzrGN+bzvTulejysDUvGvcCIoVLqHh+xFv
+	 M0wzZzyHoiFSTsraOvByisd1Qu6xOl/2XXJZlnC5GBWkKeQO5x8VhAM2TjGmNvJyyO
+	 smk2fDq4DrJtg==
+Date: Mon, 26 Feb 2024 18:26:35 -0800
+Subject: [PATCH 1/9] xfs: add an explicit owner field to xfs_da_args
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170900012703.938812.1913285500482827975.stgit@frogsfrogsfrogs>
-In-Reply-To: <170900012647.938812.317435406248625314.stgit@frogsfrogsfrogs>
-References: <170900012647.938812.317435406248625314.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <170900013108.938940.17165407332191884972.stgit@frogsfrogsfrogs>
+In-Reply-To: <170900013068.938940.1740993823820687963.stgit@frogsfrogsfrogs>
+References: <170900013068.938940.1740993823820687963.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,398 +46,333 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Repair the realtime summary data by constructing a new rtsummary file in
-the scrub temporary file, then atomically swapping the contents.
+Add an explicit owner field to xfs_da_args, which will make it easier
+for online fsck to set the owner field of the temporary directory and
+xattr structures that it builds to repair damaged metadata.
+
+Note: I hopefully found all the xfs_da_args definitions by looking for
+automatic stack variable declarations and xfs_da_args.dp assignments:
+
+git grep -E '(args.*dp =|struct xfs_da_args[[:space:]]*[a-z0-9][a-z0-9]*)'
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile                 |    1 
- fs/xfs/scrub/common.c           |    1 
- fs/xfs/scrub/repair.h           |    3 +
- fs/xfs/scrub/rtsummary.c        |   33 ++++---
- fs/xfs/scrub/rtsummary.h        |   37 ++++++++
- fs/xfs/scrub/rtsummary_repair.c |  177 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.c            |    3 -
- 7 files changed, 239 insertions(+), 16 deletions(-)
- create mode 100644 fs/xfs/scrub/rtsummary.h
- create mode 100644 fs/xfs/scrub/rtsummary_repair.c
+ fs/xfs/libxfs/xfs_attr_leaf.c |    2 ++
+ fs/xfs/libxfs/xfs_bmap.c      |    1 +
+ fs/xfs/libxfs/xfs_da_btree.h  |    1 +
+ fs/xfs/libxfs/xfs_dir2.c      |    5 +++++
+ fs/xfs/libxfs/xfs_exchmaps.c  |    2 ++
+ fs/xfs/scrub/attr.c           |    1 +
+ fs/xfs/scrub/dabtree.c        |    1 +
+ fs/xfs/scrub/dir.c            |    3 ++-
+ fs/xfs/scrub/readdir.c        |    2 ++
+ fs/xfs/xfs_acl.c              |    2 ++
+ fs/xfs/xfs_attr_item.c        |    1 +
+ fs/xfs/xfs_dir2_readdir.c     |    1 +
+ fs/xfs/xfs_ioctl.c            |    2 ++
+ fs/xfs/xfs_iops.c             |    1 +
+ fs/xfs/xfs_trace.h            |    7 +++++--
+ fs/xfs/xfs_xattr.c            |    2 ++
+ 16 files changed, 31 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 1ea7cacd92a7c..66415ac8f5717 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -213,6 +213,7 @@ xfs-y				+= $(addprefix scrub/, \
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index eb90753e183dd..5982036df61a7 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -905,6 +905,7 @@ xfs_attr_shortform_to_leaf(
+ 	nargs.whichfork = XFS_ATTR_FORK;
+ 	nargs.trans = args->trans;
+ 	nargs.op_flags = XFS_DA_OP_OKNOENT;
++	nargs.owner = args->owner;
  
- xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
- 				   rtbitmap_repair.o \
-+				   rtsummary_repair.o \
- 				   )
+ 	sfe = xfs_attr_sf_firstentry(sf);
+ 	for (i = 0; i < sf->count; i++) {
+@@ -1107,6 +1108,7 @@ xfs_attr3_leaf_to_shortform(
+ 	nargs.whichfork = XFS_ATTR_FORK;
+ 	nargs.trans = args->trans;
+ 	nargs.op_flags = XFS_DA_OP_OKNOENT;
++	nargs.owner = args->owner;
  
- xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix scrub/, \
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index abff79a77c72b..4afaa0a0760c6 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -31,6 +31,7 @@
- #include "xfs_ag.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
-+#include "xfs_exchmaps.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index ce082d941459f..0e2b695ab8f66 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -126,8 +126,10 @@ int xrep_fscounters(struct xfs_scrub *sc);
+ 	for (i = 0; i < ichdr.count; entry++, i++) {
+ 		if (entry->flags & XFS_ATTR_INCOMPLETE)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index ada5047f99da2..a1b27ac7a4505 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -976,6 +976,7 @@ xfs_bmap_add_attrfork_local(
+ 		dargs.total = dargs.geo->fsbcount;
+ 		dargs.whichfork = XFS_DATA_FORK;
+ 		dargs.trans = tp;
++		dargs.owner = ip->i_ino;
+ 		return xfs_dir2_sf_to_block(&dargs);
+ 	}
  
- #ifdef CONFIG_XFS_RT
- int xrep_rtbitmap(struct xfs_scrub *sc);
-+int xrep_rtsummary(struct xfs_scrub *sc);
- #else
- # define xrep_rtbitmap			xrep_notsupported
-+# define xrep_rtsummary			xrep_notsupported
- #endif /* CONFIG_XFS_RT */
- 
- #ifdef CONFIG_XFS_QUOTA
-@@ -212,6 +214,7 @@ xrep_setup_nothing(
- #define xrep_quotacheck			xrep_notsupported
- #define xrep_nlinks			xrep_notsupported
- #define xrep_fscounters			xrep_notsupported
-+#define xrep_rtsummary			xrep_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index 5055092bd9e85..3fee603f52441 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -17,10 +17,14 @@
- #include "xfs_bit.h"
- #include "xfs_bmap.h"
- #include "xfs_sb.h"
-+#include "xfs_exchmaps.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
- #include "scrub/xfile.h"
-+#include "scrub/repair.h"
-+#include "scrub/tempexch.h"
-+#include "scrub/rtsummary.h"
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 706baf36e1751..7fb13f26edaa7 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -79,6 +79,7 @@ typedef struct xfs_da_args {
+ 	int		rmtvaluelen2;	/* remote attr value length in bytes */
+ 	uint32_t	op_flags;	/* operation flags */
+ 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
++	xfs_ino_t	owner;		/* inode that owns the dir/attr data */
+ } xfs_da_args_t;
  
  /*
-  * Realtime Summary
-@@ -32,18 +36,6 @@
-  * (potentially large) amount of data in pageable memory.
-  */
- 
--struct xchk_rtsummary {
--	struct xfs_rtalloc_args	args;
--
--	uint64_t		rextents;
--	uint64_t		rbmblocks;
--	uint64_t		rsumsize;
--	unsigned int		rsumlevels;
--
--	/* Memory buffer for the summary comparison. */
--	union xfs_suminfo_raw	words[];
--};
--
- /* Set us up to check the rtsummary file. */
- int
- xchk_setup_rtsummary(
-@@ -60,6 +52,12 @@ xchk_setup_rtsummary(
- 		return -ENOMEM;
- 	sc->buf = rts;
- 
-+	if (xchk_could_repair(sc)) {
-+		error = xrep_setup_rtsummary(sc, rts);
-+		if (error)
-+			return error;
-+	}
-+
- 	/*
- 	 * Create an xfile to construct a new rtsummary file.  The xfile allows
- 	 * us to avoid pinning kernel memory for this purpose.
-@@ -70,7 +68,7 @@ xchk_setup_rtsummary(
- 	if (error)
- 		return error;
- 
--	error = xchk_trans_alloc(sc, 0);
-+	error = xchk_trans_alloc(sc, rts->resblks);
- 	if (error)
- 		return error;
- 
-@@ -135,7 +133,7 @@ xfsum_store(
- 			sumoff << XFS_WORDLOG);
- }
- 
--static inline int
-+inline int
- xfsum_copyout(
- 	struct xfs_scrub	*sc,
- 	xfs_rtsumoff_t		sumoff,
-@@ -362,7 +360,12 @@ xchk_rtsummary(
- 	error = xchk_rtsum_compare(sc);
- 
- out_rbm:
--	/* Unlock the rtbitmap since we're done with it. */
-+	/*
-+	 * Unlock the rtbitmap since we're done with it.  All other writers of
-+	 * the rt free space metadata grab the bitmap and summary ILOCKs in
-+	 * that order, so we're still protected against allocation activities
-+	 * even if we continue on to the repair function.
-+	 */
- 	xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 847449ce3017b..654583b5190a9 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -250,6 +250,7 @@ xfs_dir_init(
+ 	args->geo = dp->i_mount->m_dir_geo;
+ 	args->dp = dp;
+ 	args->trans = tp;
++	args->owner = dp->i_ino;
+ 	error = xfs_dir2_sf_create(args, pdp->i_ino);
+ 	kmem_free(args);
  	return error;
- }
-diff --git a/fs/xfs/scrub/rtsummary.h b/fs/xfs/scrub/rtsummary.h
-new file mode 100644
-index 0000000000000..e1d50304d8d48
---- /dev/null
-+++ b/fs/xfs/scrub/rtsummary.h
-@@ -0,0 +1,37 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2020-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_SCRUB_RTSUMMARY_H__
-+#define __XFS_SCRUB_RTSUMMARY_H__
-+
-+struct xchk_rtsummary {
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+	struct xrep_tempexch	tempexch;
-+#endif
-+	struct xfs_rtalloc_args	args;
-+
-+	uint64_t		rextents;
-+	uint64_t		rbmblocks;
-+	uint64_t		rsumsize;
-+	unsigned int		rsumlevels;
-+	unsigned int		resblks;
-+
-+	/* suminfo position of xfile as we write buffers to disk. */
-+	xfs_rtsumoff_t		prep_wordoff;
-+
-+	/* Memory buffer for the summary comparison. */
-+	union xfs_suminfo_raw	words[];
-+};
-+
-+int xfsum_copyout(struct xfs_scrub *sc, xfs_rtsumoff_t sumoff,
-+		union xfs_suminfo_raw *rawinfo, unsigned int nr_words);
-+
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+int xrep_setup_rtsummary(struct xfs_scrub *sc, struct xchk_rtsummary *rts);
-+#else
-+# define xrep_setup_rtsummary(sc, rts)	(0)
-+#endif /* CONFIG_XFS_ONLINE_REPAIR */
-+
-+#endif /* __XFS_SCRUB_RTSUMMARY_H__ */
-diff --git a/fs/xfs/scrub/rtsummary_repair.c b/fs/xfs/scrub/rtsummary_repair.c
-new file mode 100644
-index 0000000000000..c8bb6c4f15d05
---- /dev/null
-+++ b/fs/xfs/scrub/rtsummary_repair.c
-@@ -0,0 +1,177 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2020-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_btree.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_inode.h"
-+#include "xfs_bit.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_exchmaps.h"
-+#include "xfs_rtbitmap.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+#include "scrub/tempfile.h"
-+#include "scrub/tempexch.h"
-+#include "scrub/reap.h"
-+#include "scrub/xfile.h"
-+#include "scrub/rtsummary.h"
-+
-+/* Set us up to repair the rtsummary file. */
-+int
-+xrep_setup_rtsummary(
-+	struct xfs_scrub	*sc,
-+	struct xchk_rtsummary	*rts)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	unsigned long long	blocks;
-+	int			error;
-+
-+	error = xrep_tempfile_create(sc, S_IFREG);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If we're doing a repair, we reserve enough blocks to write out a
-+	 * completely new summary file, plus twice as many blocks as we would
-+	 * need if we can only allocate one block per data fork mapping.  This
-+	 * should cover the preallocation of the temporary file and exchanging
-+	 * the extent mappings.
-+	 *
-+	 * We cannot use xfs_exchmaps_estimate because we have not yet
-+	 * constructed the replacement rtsummary and therefore do not know how
-+	 * many extents it will use.  By the time we do, we will have a dirty
-+	 * transaction (which we cannot drop because we cannot drop the
-+	 * rtsummary ILOCK) and cannot ask for more reservation.
-+	 */
-+	blocks = XFS_B_TO_FSB(mp, mp->m_rsumsize);
-+	blocks += xfs_bmbt_calc_size(mp, blocks) * 2;
-+	if (blocks > UINT_MAX)
-+		return -EOPNOTSUPP;
-+
-+	rts->resblks += blocks;
-+
-+	/*
-+	 * Grab support for atomic file content exchanges before we allocate
-+	 * any transactions or grab ILOCKs.
-+	 */
-+	return xrep_tempexch_enable(sc);
-+}
-+
-+static int
-+xrep_rtsummary_prep_buf(
-+	struct xfs_scrub	*sc,
-+	struct xfs_buf		*bp,
-+	void			*data)
-+{
-+	struct xchk_rtsummary	*rts = data;
-+	struct xfs_mount	*mp = sc->mp;
-+	union xfs_suminfo_raw	*ondisk;
-+	int			error;
-+
-+	rts->args.mp = sc->mp;
-+	rts->args.tp = sc->tp;
-+	rts->args.sumbp = bp;
-+	ondisk = xfs_rsumblock_infoptr(&rts->args, 0);
-+	rts->args.sumbp = NULL;
-+
-+	bp->b_ops = &xfs_rtbuf_ops;
-+
-+	error = xfsum_copyout(sc, rts->prep_wordoff, ondisk, mp->m_blockwsize);
-+	if (error)
-+		return error;
-+
-+	rts->prep_wordoff += mp->m_blockwsize;
-+	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_RTSUMMARY_BUF);
-+	return 0;
-+}
-+
-+/* Repair the realtime summary. */
-+int
-+xrep_rtsummary(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xchk_rtsummary	*rts = sc->buf;
-+	struct xfs_mount	*mp = sc->mp;
-+	xfs_filblks_t		rsumblocks;
-+	int			error;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_has_rmapbt(mp))
-+		return -EOPNOTSUPP;
-+
-+	/* Walk away if we disagree on the size of the rt bitmap. */
-+	if (rts->rbmblocks != mp->m_sb.sb_rbmblocks)
-+		return 0;
-+
-+	/* Make sure any problems with the fork are fixed. */
-+	error = xrep_metadata_inode_forks(sc);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Try to take ILOCK_EXCL of the temporary file.  We had better be the
-+	 * only ones holding onto this inode, but we can't block while holding
-+	 * the rtsummary file's ILOCK_EXCL.
-+	 */
-+	while (!xrep_tempfile_ilock_nowait(sc)) {
-+		if (xchk_should_terminate(sc, &error))
-+			return error;
-+		delay(1);
-+	}
-+
-+	/* Make sure we have space allocated for the entire summary file. */
-+	rsumblocks = XFS_B_TO_FSB(mp, rts->rsumsize);
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
-+	error = xrep_tempfile_prealloc(sc, 0, rsumblocks);
-+	if (error)
-+		return error;
-+
-+	/* Last chance to abort before we start committing fixes. */
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
-+
-+	/* Copy the rtsummary file that we generated. */
-+	error = xrep_tempfile_copyin(sc, 0, rsumblocks,
-+			xrep_rtsummary_prep_buf, rts);
-+	if (error)
-+		return error;
-+	error = xrep_tempfile_set_isize(sc, rts->rsumsize);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Now exchange the contents.  Nothing in repair uses the temporary
-+	 * buffer, so we can reuse it for the tempfile exchrange information.
-+	 */
-+	error = xrep_tempexch_trans_reserve(sc, XFS_DATA_FORK, &rts->tempexch);
-+	if (error)
-+		return error;
-+
-+	error = xrep_tempexch_contents(sc, &rts->tempexch);
-+	if (error)
-+		return error;
-+
-+	/* Reset incore state and blow out the summary cache. */
-+	if (mp->m_rsum_cache)
-+		memset(mp->m_rsum_cache, 0xFF, mp->m_sb.sb_rbmblocks);
-+
-+	mp->m_rsumlevels = rts->rsumlevels;
-+	mp->m_rsumsize = rts->rsumsize;
-+
-+	/* Free the old rtsummary blocks if they're not in use. */
-+	return xrep_reap_ifork(sc, sc->tempip, XFS_DATA_FORK);
-+}
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index ff156edf49a08..62a064c1a5d34 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -18,6 +18,7 @@
- #include "xfs_buf_mem.h"
- #include "xfs_rmap.h"
- #include "xfs_exchrange.h"
-+#include "xfs_exchmaps.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -354,7 +355,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_FS,
- 		.setup	= xchk_setup_rtsummary,
- 		.scrub	= xchk_rtsummary,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_rtsummary,
- 	},
- 	[XFS_SCRUB_TYPE_UQUOTA] = {	/* user quota */
- 		.type	= ST_FS,
+@@ -295,6 +296,7 @@ xfs_dir_createname(
+ 	args->whichfork = XFS_DATA_FORK;
+ 	args->trans = tp;
+ 	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
++	args->owner = dp->i_ino;
+ 	if (!inum)
+ 		args->op_flags |= XFS_DA_OP_JUSTCHECK;
+ 
+@@ -389,6 +391,7 @@ xfs_dir_lookup(
+ 	args->whichfork = XFS_DATA_FORK;
+ 	args->trans = tp;
+ 	args->op_flags = XFS_DA_OP_OKNOENT;
++	args->owner = dp->i_ino;
+ 	if (ci_name)
+ 		args->op_flags |= XFS_DA_OP_CILOOKUP;
+ 
+@@ -462,6 +465,7 @@ xfs_dir_removename(
+ 	args->total = total;
+ 	args->whichfork = XFS_DATA_FORK;
+ 	args->trans = tp;
++	args->owner = dp->i_ino;
+ 
+ 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
+ 		rval = xfs_dir2_sf_removename(args);
+@@ -523,6 +527,7 @@ xfs_dir_replace(
+ 	args->total = total;
+ 	args->whichfork = XFS_DATA_FORK;
+ 	args->trans = tp;
++	args->owner = dp->i_ino;
+ 
+ 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
+ 		rval = xfs_dir2_sf_replace(args);
+diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+index 501365cd4cf4e..f04838e639053 100644
+--- a/fs/xfs/libxfs/xfs_exchmaps.c
++++ b/fs/xfs/libxfs/xfs_exchmaps.c
+@@ -429,6 +429,7 @@ xfs_exchmaps_attr_to_sf(
+ 		.geo		= tp->t_mountp->m_attr_geo,
+ 		.whichfork	= XFS_ATTR_FORK,
+ 		.trans		= tp,
++		.owner		= xmi->xmi_ip2->i_ino,
+ 	};
+ 	struct xfs_buf		*bp;
+ 	int			forkoff;
+@@ -459,6 +460,7 @@ xfs_exchmaps_dir_to_sf(
+ 		.geo		= tp->t_mountp->m_dir_geo,
+ 		.whichfork	= XFS_DATA_FORK,
+ 		.trans		= tp,
++		.owner		= xmi->xmi_ip2->i_ino,
+ 	};
+ 	struct xfs_dir2_sf_hdr	sfh;
+ 	struct xfs_buf		*bp;
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 83c7feb387147..0c467f4f8e778 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -169,6 +169,7 @@ xchk_xattr_listent(
+ 		.hashval		= xfs_da_hashname(name, namelen),
+ 		.trans			= context->tp,
+ 		.valuelen		= valuelen,
++		.owner			= context->dp->i_ino,
+ 	};
+ 	struct xchk_xattr_buf		*ab;
+ 	struct xchk_xattr		*sx;
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index 82b150d3b8b70..fa6385a99ac4e 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -494,6 +494,7 @@ xchk_da_btree(
+ 	ds->dargs.whichfork = whichfork;
+ 	ds->dargs.trans = sc->tp;
+ 	ds->dargs.op_flags = XFS_DA_OP_OKNOENT;
++	ds->dargs.owner = sc->ip->i_ino;
+ 	ds->state = xfs_da_state_alloc(&ds->dargs);
+ 	ds->sc = sc;
+ 	ds->private = private;
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 076a310b8eb00..042e28547e044 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -621,10 +621,11 @@ xchk_directory_blocks(
+ {
+ 	struct xfs_bmbt_irec	got;
+ 	struct xfs_da_args	args = {
+-		.dp		= sc ->ip,
++		.dp		= sc->ip,
+ 		.whichfork	= XFS_DATA_FORK,
+ 		.geo		= sc->mp->m_dir_geo,
+ 		.trans		= sc->tp,
++		.owner		= sc->ip->i_ino,
+ 	};
+ 	struct xfs_ifork	*ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
+ 	struct xfs_mount	*mp = sc->mp;
+diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
+index 16462332c897b..442d480b7015b 100644
+--- a/fs/xfs/scrub/readdir.c
++++ b/fs/xfs/scrub/readdir.c
+@@ -273,6 +273,7 @@ xchk_dir_walk(
+ 		.dp		= dp,
+ 		.geo		= dp->i_mount->m_dir_geo,
+ 		.trans		= sc->tp,
++		.owner		= dp->i_ino,
+ 	};
+ 	bool			isblock;
+ 	int			error;
+@@ -324,6 +325,7 @@ xchk_dir_lookup(
+ 		.hashval	= xfs_dir2_hashname(dp->i_mount, name),
+ 		.whichfork	= XFS_DATA_FORK,
+ 		.op_flags	= XFS_DA_OP_OKNOENT,
++		.owner		= dp->i_ino,
+ 	};
+ 	bool			isblock, isleaf;
+ 	int			error;
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 6b840301817a9..505c3069cbaaa 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -135,6 +135,7 @@ xfs_get_acl(struct inode *inode, int type, bool rcu)
+ 		.dp		= ip,
+ 		.attr_filter	= XFS_ATTR_ROOT,
+ 		.valuelen	= XFS_ACL_MAX_SIZE(mp),
++		.owner		= ip->i_ino,
+ 	};
+ 	int			error;
+ 
+@@ -178,6 +179,7 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 	struct xfs_da_args	args = {
+ 		.dp		= ip,
+ 		.attr_filter	= XFS_ATTR_ROOT,
++		.owner		= ip->i_ino,
+ 	};
+ 	int			error;
+ 
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index f8c6c34e348f3..d7ebb54a03870 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -540,6 +540,7 @@ xfs_attri_recover_work(
+ 	args->attr_filter = attrp->alfi_attr_filter & XFS_ATTRI_FILTER_MASK;
+ 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT |
+ 			 XFS_DA_OP_LOGGED;
++	args->owner = args->dp->i_ino;
+ 
+ 	ASSERT(xfs_sb_version_haslogxattrs(&mp->m_sb));
+ 
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 3b3e3f0c3e7ab..b791fbeef736b 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -532,6 +532,7 @@ xfs_readdir(
+ 	args.dp = dp;
+ 	args.geo = dp->i_mount->m_dir_geo;
+ 	args.trans = tp;
++	args.owner = dp->i_ino;
+ 
+ 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+ 		return xfs_dir2_sf_getdents(&args, ctx);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 08fc15881ee51..6263a860c1537 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -480,6 +480,7 @@ xfs_attrmulti_attr_get(
+ 		.name		= name,
+ 		.namelen	= strlen(name),
+ 		.valuelen	= *len,
++		.owner		= XFS_I(inode)->i_ino,
+ 	};
+ 	int			error;
+ 
+@@ -513,6 +514,7 @@ xfs_attrmulti_attr_set(
+ 		.attr_flags	= xfs_attr_flags(flags),
+ 		.name		= name,
+ 		.namelen	= strlen(name),
++		.owner		= XFS_I(inode)->i_ino,
+ 	};
+ 	int			error;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 11382c499c92c..037606e5eee40 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -62,6 +62,7 @@ xfs_initxattrs(
+ 			.namelen	= strlen(xattr->name),
+ 			.value		= xattr->value,
+ 			.valuelen	= xattr->value_len,
++			.owner		= ip->i_ino,
+ 		};
+ 		error = xfs_attr_change(&args);
+ 		if (error < 0)
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index d6666aa6a9529..2d7664a5cabae 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1931,6 +1931,7 @@ DECLARE_EVENT_CLASS(xfs_da_class,
+ 		__field(xfs_dahash_t, hashval)
+ 		__field(xfs_ino_t, inumber)
+ 		__field(uint32_t, op_flags)
++		__field(xfs_ino_t, owner)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(args->dp)->i_sb->s_dev;
+@@ -1941,9 +1942,10 @@ DECLARE_EVENT_CLASS(xfs_da_class,
+ 		__entry->hashval = args->hashval;
+ 		__entry->inumber = args->inumber;
+ 		__entry->op_flags = args->op_flags;
++		__entry->owner = args->owner;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx name %.*s namelen %d hashval 0x%x "
+-		  "inumber 0x%llx op_flags %s",
++		  "inumber 0x%llx op_flags %s owner 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->namelen,
+@@ -1951,7 +1953,8 @@ DECLARE_EVENT_CLASS(xfs_da_class,
+ 		  __entry->namelen,
+ 		  __entry->hashval,
+ 		  __entry->inumber,
+-		  __print_flags(__entry->op_flags, "|", XFS_DA_OP_FLAGS))
++		  __print_flags(__entry->op_flags, "|", XFS_DA_OP_FLAGS),
++		  __entry->owner)
+ )
+ 
+ #define DEFINE_DIR2_EVENT(name) \
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 4ebf7052eb673..0ded8d349f775 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -103,6 +103,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+ 		.namelen	= strlen(name),
+ 		.value		= value,
+ 		.valuelen	= size,
++		.owner		= XFS_I(inode)->i_ino,
+ 	};
+ 	int			error;
+ 
+@@ -129,6 +130,7 @@ xfs_xattr_set(const struct xattr_handler *handler,
+ 		.namelen	= strlen(name),
+ 		.value		= (void *)value,
+ 		.valuelen	= size,
++		.owner		= XFS_I(inode)->i_ino,
+ 	};
+ 	int			error;
+ 
 
