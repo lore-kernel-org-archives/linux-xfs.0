@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2EDEEAD7;
-	Tue, 27 Feb 2024 02:01:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A4A04689;
+	Tue, 27 Feb 2024 02:02:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708999311; cv=none; b=qZ9JAYAIYYwKKA//XT4uXX9p0Kc4fWagUyemvsQTpPVCZnj3SJY5CSjF3GyMa1MNUrkPx61aFqh7ot7Vxh3Wuduv7r7eZY3a8I9FsZ3frYjwxUyHOUuSMHkPhNcWwon5+cAg6T2YpJMorotko2Y71oE+TxqcPkCWBksPL1nQwjg=
+	t=1708999326; cv=none; b=FXc27T04Ik6TlCz8CUFMtjFBjS/fiC0/7ZOfJEWRlvQVL1/AEwK7Iv7EjTkX7CF02DwpWFJp6ENJ/lmrBZ2n3+WYjZZU73f5O2SV+qiocPrBVcSArabrXK/2KwWDpTBQcgXx9gAEbacBmI/juNQiJC+G1fGhD+acSB34ToNOLy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708999311; c=relaxed/simple;
-	bh=dvT9c7kBr+tIQMAf5U4o59zot8fG3gA560mRjYbu2d0=;
+	s=arc-20240116; t=1708999326; c=relaxed/simple;
+	bh=ErRMXqTl92BXMhTv9z7imcrpfDzvCmoTs83req+434M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Aeo7PMGctFvw1/BEZ2U1tigPxBbAW7+6+frEmDftIb9EglMuh/pYhuEMeY3GYv1Q3EBaymE0ZxUz/jCwodbBWjZ9f+vbUgSSJRoPt8IJiWQs67LFq0THKYNXogRCV7Dq8Y1FDSndaj8qr3m8DzK7tipStFEOf+uiYa4xPIwOtqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GsAiRZcD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=cssDL8KN6W31x5Af4AjXOec9BzfESuXh+W21KrcMOWICEncllUlzHL0ypXJGl4+X8lFxsHngO0T2HaRVMpr/kPEdtQmNXl9g9fpgW6z/c25KB921NC1MrmzjfZDqBB6MEIWNZyow/+5sQp9C3wIBTeQD0dVa9UVChWv2Yy3ZIEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ISczvk7I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GsAiRZcD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3B1CC433C7;
-	Tue, 27 Feb 2024 02:01:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ISczvk7I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E567C433F1;
+	Tue, 27 Feb 2024 02:02:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708999310;
-	bh=dvT9c7kBr+tIQMAf5U4o59zot8fG3gA560mRjYbu2d0=;
+	s=k20201202; t=1708999326;
+	bh=ErRMXqTl92BXMhTv9z7imcrpfDzvCmoTs83req+434M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GsAiRZcDqwUJpxXTU2+jT9hMe3dAsAwWmqBFL5ZbtAk/cIxgxDnWPTqvCAlQW5YKm
-	 C8Ooi6wZNGa4lyHUmlcZyom/XJlYtUyyghEpiaqw5AW5L8pyBjq8w7Vxl0Fsv5nVP1
-	 1ZtIRQ1+WGDHfiSiJjeaetvprARoppr8C0iY+zH9U0CVQ7xPBdYcarisMefgyTdkzK
-	 4xg75JeLJWAJMWOi+xEEl96uCFYLKmuavEGPG2ZFOVBpI22Iz6uI0S8sxD9feXJKDb
-	 zwsU3GbU70lS+nAPD29mD52sshqtVrcF8mRaG+xM+71FX1qjQ8YarUCW0cqb9ce+vZ
-	 mmbI45w83hxng==
-Date: Mon, 26 Feb 2024 18:01:50 -0800
-Subject: [PATCH 5/8] xfs/599: reduce the amount of attrs created here
+	b=ISczvk7IkMecOOVzRkJ9hX0HHTyI8vy1pPVQd2Ox+9hxwnBLnDjpgzvyW1bpLBT0U
+	 asu8wG6LZaSO4J3JIFG2wrFpoo/cXR3T2jkipjzBRaKbqy+7cRcEHFHjotjDayvyyl
+	 8oF6u+CeXUWPzE96nKnGEx+NlG2RcC9iZCM3rscvqSBB8apNe4sQGTrTDqNM93Wosz
+	 zf+v9YnLe5B9FjtDfyt0vGLPeod7WWPaJjq7CFUd2bbQEnY/9a9h0m1jnmj7JTD33L
+	 R7/1JigejLjtxxJIxUBt57Ju/DzdzgtbWjrOrDO94ZK12mso2KznPuG0WVQLelWGLk
+	 hJQoJp7s4eQTQ==
+Date: Mon, 26 Feb 2024 18:02:05 -0800
+Subject: [PATCH 6/8] xfs/122: update test to pick up rtword/suminfo ondisk
+ unions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org,
- guan@eryu.me, fstests@vger.kernel.org
-Message-ID: <170899915290.896550.10775908547486721272.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, guan@eryu.me, fstests@vger.kernel.org
+Message-ID: <170899915304.896550.17104868811908659798.stgit@frogsfrogsfrogs>
 In-Reply-To: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
 References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,60 +47,40 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Luis Chamberlain reported insane runtimes in this test:
+Update this test to check that the ondisk unions for rt bitmap word and
+rt summary counts are always the correct size.
 
-"xfs/599 takes a long time on LBS, but it passes. The amount of time it
-takes, however, begs the question if the test is could be trimmed to do
-less work because the larger the block size the larger the number of
-dirents and xattrs are used to create. The large dirents are not a
-problem. The amount of time it takes to create xattrs with hashcol
-however grows exponentially in time.
-
-"n=16k   takes 5   seconds
-"n=32k   takes 30  seconds
-"n=64k     takes 6-7 minutes
-"n=1048576 takes 30 hours
-
-"n=1048576 is what we use for block size 32k.
-
-"Do we really need so many xattrs for larger block sizes for this test?"
-
-No, we don't.  The goal of this test is to create a two-level dabtree of
-xattrs having identical hashes.  However, the test author (me)
-apparently forgot that if a dabtree is created in the attr fork, there
-will be a dabtree entry for each extended attribute, not each attr leaf
-block.  Hence it's a waste of time to multiply da_records_per_block by
-attr_records_per_block.
-
-Reported-by: Luis Chamberlain <mcgrof@kernel.org>
-Fixes: 1cd6b61299 ("xfs: add a couple more tests for ascii-ci problems")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/599 |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ tests/xfs/122     |    2 +-
+ tests/xfs/122.out |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/599 b/tests/xfs/599
-index b55b62d7f5..57a797f0f5 100755
---- a/tests/xfs/599
-+++ b/tests/xfs/599
-@@ -43,14 +43,13 @@ longname="$(mktemp --dry-run "$(perl -e 'print "X" x 255;')" | tr ' ' 'X')"
- echo "creating $nr_dirents dirents from '$longname'" >> $seqres.full
- _scratch_xfs_db -r -c "hashcoll -n $nr_dirents -p $crash_dir $longname"
- 
--# Create enough xattrs to fill two dabtree nodes.  Each attribute leaf block
--# gets its own record in the dabtree, so we have to create enough attr blocks
--# (each full of attrs) to get a dabtree of at least height 2.
-+# Create enough xattrs to fill two dabtree nodes.  Each attribute entry gets
-+# its own record in the dabtree, so we have to create enough attributes to get
-+# a dabtree of at least height 2.
- blksz=$(_get_block_size "$SCRATCH_MNT")
- 
--attr_records_per_block=$((blksz / 255))
- da_records_per_block=$((blksz / 8))	# 32-bit hash and 32-bit before
--nr_attrs=$((da_records_per_block * attr_records_per_block * 2))
-+nr_attrs=$((da_records_per_block * 2))
- 
- longname="$(mktemp --dry-run "$(perl -e 'print "X" x 249;')" | tr ' ' 'X')"
- echo "creating $nr_attrs attrs from '$longname'" >> $seqres.full
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index ba927c77c4..4e5ba1dfee 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -195,7 +195,7 @@ echo 'int main(int argc, char *argv[]) {' >>$cprog
+ #
+ cat /usr/include/xfs/xfs*.h | indent |\
+ _attribute_filter |\
+-grep -E '(} *xfs_.*_t|^struct xfs_[a-z0-9_]*$)' |\
++grep -E '(} *xfs_.*_t|^(union|struct) xfs_[a-z0-9_]*$)' |\
+ grep -E -v -f $tmp.ignore |\
+ sed -e 's/^.*}[[:space:]]*//g' -e 's/;.*$//g' -e 's/_t, /_t\n/g' |\
+ sort | uniq |\
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index 067a0ec76b..a2b57cfb9b 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -124,6 +124,8 @@ sizeof(struct xfs_swap_extent) = 64
+ sizeof(struct xfs_sxd_log_format) = 16
+ sizeof(struct xfs_sxi_log_format) = 80
+ sizeof(struct xfs_unmount_log_format) = 8
++sizeof(union xfs_rtword_raw) = 4
++sizeof(union xfs_suminfo_raw) = 4
+ sizeof(xfs_agf_t) = 224
+ sizeof(xfs_agfl_t) = 36
+ sizeof(xfs_agi_t) = 344
 
