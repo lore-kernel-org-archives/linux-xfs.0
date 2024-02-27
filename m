@@ -1,41 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4195146E8D
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 16:10:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A578514830B
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 16:22:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709050207; cv=none; b=jImKy2nSj5w6jfysHtkjsMOtcrcNoigPigMN3EMAqYfYyjgajln9DkHV81LHincsCxMDvR/dg08RXNGf+PilFCg3cpk2ZR0r4bV4Cn5sNntNcyZv7CDgOGJbREOyVeXq/vYsEf+2+HxZYANKbRcQJ3cdCAH+7dJeWu8J0JeV9FQ=
+	t=1709050954; cv=none; b=R6Gm6dk3mMf9MBzt6QO5lONcj0Vd1/UaQJJXQL3BjuPlWVf15DEbhXke1d3cUuvw38jSM4Ob3Sv3cSme/iYmYi+h4EDS+7lYeJshhpr7noW3DHnEtzH5NH2N484irJcNkbg8w2/zHsiHOoSWC2wlFXngJrWoxB9wbrjbQi48M08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709050207; c=relaxed/simple;
-	bh=K/c5dNgCTVFU5u3QiPRO3//NsnA43gL89ZJNXdPmGEQ=;
+	s=arc-20240116; t=1709050954; c=relaxed/simple;
+	bh=mpaHnrQXVxhzTPAmuA5VRi7J9LYcCMPR3gS0wa9laMA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ea3KECmfXrJuWJMR+9FTXAfKVU3yeNSITvouGg+02mvFXu9/67eAnFRpw8CeGsDbGhUe9Ekm/8MQnLFyJ4iMOp/5K6F2so2B2F7jZYBmPlIoo2MoS6XtMG+uw6YoOHo0n3kZwg51erI69oyZnp0MmyRJu1Aqu7kvrzETKqIT0l4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CQYzeKjo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BwAW4H/NazNbg9pjpqOQu+my0VZVejuZki6ofVSVhIp0kbqKAugHMdlSM8GvuZhRG+fsMtVOBtULVP2/3TROaNBp8zKSwi3SRqg3waaT63V272DnMnMsM04jFltcTSc3/1/Q9Q2bJ0l3bPBsQb824tFFJpAyBLuyfNVcWInI6LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bwO859o9; arc=none smtp.client-ip=95.215.58.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CQYzeKjo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98BCDC433F1;
-	Tue, 27 Feb 2024 16:10:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709050207;
-	bh=K/c5dNgCTVFU5u3QiPRO3//NsnA43gL89ZJNXdPmGEQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CQYzeKjo5/ISpMcL6kvg28FKHoKwt1PS45NJXvUw0OXvieU7Rohf/Z+Jp4waZsnR0
-	 /mE9XdBvQLl0A/Nr9msbAFPN1VbmMIaJ5bywj7mYQIFmtI0ah+f5ylRVLmRcbS49W4
-	 k1/KDX4VH9J53zg5t8eAaExb7AkfZa2vDTR4TJJ0ft1h6wMJY7Yk3h9zAnrYGJG2XF
-	 0H391ROt8gjL3Vu3r8ORDXMII0f71cEOtfFpHGmtV5faywLrmQpo53BZRU7Mn5+M3k
-	 z9mYlaauaLtVTltsMmQKP133YwlKcbaca8cennUf2HTOhxIA5Xp8vJo1hisHViip27
-	 S9tHqQd4HbKvQ==
-Date: Tue, 27 Feb 2024 08:10:07 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 5/6] xfs: hoist multi-fsb allocation unit detection to a
- helper
-Message-ID: <20240227161007.GX616564@frogsfrogsfrogs>
-References: <170900011118.938068.16371783443726140795.stgit@frogsfrogsfrogs>
- <170900011214.938068.18217925414531189912.stgit@frogsfrogsfrogs>
- <Zd4E_0nWedVHXl6s@infradead.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bwO859o9"
+Date: Tue, 27 Feb 2024 11:22:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1709050950;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZpwdoTPDbBoPf3QYWjOhHZc19Xb5Er/Lboo1nmZhqcA=;
+	b=bwO859o9nXk2p9RatAo3p5C1/sszAl7urqmVyqYIj76c/O++eLQ2fFVcxbPxk+/xgYiBF1
+	d/ZtnwEjP6Tl3Ey6WYdXoJAHfQ682oQonvYCCwO5IXX8NTU2/eiI2L2EhFkFB+aWXpZbUi
+	pNflFYXlz5yMYfcD+4N3ENtkARdq5p4=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Kent Overstreet <kent.overstreet@linux.dev>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, david@fromorbit.com, 
+	chandan.babu@oracle.com, akpm@linux-foundation.org, mcgrof@kernel.org, ziy@nvidia.com, 
+	hare@suse.de, djwong@kernel.org, gost.dev@samsung.com, linux-mm@kvack.org, 
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH 03/13] filemap: align the index to mapping_min_order in
+ the page cache
+Message-ID: <hjrsbb34ghop4qbb6owmg3wqkxu4l42yrekshwfleeqattscqp@z2epeibc67lt>
+References: <20240226094936.2677493-1-kernel@pankajraghav.com>
+ <20240226094936.2677493-4-kernel@pankajraghav.com>
+ <Zdyi6lFDAHXi8GPz@casper.infradead.org>
+ <37kubwweih4zwvxzvjbhnhxunrafawdqaqggzcw6xayd6vtrfl@dllnk6n53akf>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,24 +49,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zd4E_0nWedVHXl6s@infradead.org>
+In-Reply-To: <37kubwweih4zwvxzvjbhnhxunrafawdqaqggzcw6xayd6vtrfl@dllnk6n53akf>
+X-Migadu-Flow: FLOW_OUT
 
-On Tue, Feb 27, 2024 at 07:51:27AM -0800, Christoph Hellwig wrote:
-> > +static inline bool xfs_inode_has_bigallocunit(struct xfs_inode *ip)
-> > +{
-> > +	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
-> > +}
+On Tue, Feb 27, 2024 at 11:06:37AM +0100, Pankaj Raghav (Samsung) wrote:
+> On Mon, Feb 26, 2024 at 02:40:42PM +0000, Matthew Wilcox wrote:
+> > On Mon, Feb 26, 2024 at 10:49:26AM +0100, Pankaj Raghav (Samsung) wrote:
+> > > From: Luis Chamberlain <mcgrof@kernel.org>
+> > > 
+> > > Supporting mapping_min_order implies that we guarantee each folio in the
+> > > page cache has at least an order of mapping_min_order. So when adding new
+> > > folios to the page cache we must ensure the index used is aligned to the
+> > > mapping_min_order as the page cache requires the index to be aligned to
+> > > the order of the folio.
+> > 
+> > This seems like a remarkably complicated way of achieving:
+> > 
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 5603ced05fb7..36105dad4440 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -2427,9 +2427,11 @@ static int filemap_update_page(struct kiocb *iocb,
+> >  }
+> >  
+> >  static int filemap_create_folio(struct file *file,
+> > -		struct address_space *mapping, pgoff_t index,
+> > +		struct address_space *mapping, loff_t pos,
+> >  		struct folio_batch *fbatch)
+> >  {
+> > +	pgoff_t index;
+> > +	unsigned int min_order;
+> >  	struct folio *folio;
+> >  	int error;
+> >  
+> > @@ -2451,6 +2453,8 @@ static int filemap_create_folio(struct file *file,
+> >  	 * well to keep locking rules simple.
+> >  	 */
+> >  	filemap_invalidate_lock_shared(mapping);
+> > +	min_order = mapping_min_folio_order(mapping);
+> > +	index = (pos >> (min_order + PAGE_SHIFT)) << min_order;
 > 
-> Given that bigallocunit is an entirely new term in XFS, maybe add
-> a big fat comment explaining it?
-> 
-> Otherwise this looks useful.
+> That is some cool mathfu. I will add a comment here as it might not be
+> that obvious to some people (i.e me).
 
-How about:
-
-/*
- * Decide if the file data allocation unit for this file is larger than
- * a single filesystem block.
- */
-
---D
+you guys are both wrong, just use rounddown()
