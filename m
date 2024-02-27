@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECD674C83
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:33:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307EB16426
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:33:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709001188; cv=none; b=FjfuFMnzfouwYhiWsx60wZUiW9hhCZJ3Vm6/0NjNosfP6/UtZlCDxSvrYoHH7JIXc93ee7OqbosSce8RVQ2Cnaz4j7CKWTHpdepO32iEeXEkg0UQF/TP5500alB7mIvJY0GjPzqGd5z4kTPEfkKWBjAvbHbLrzNLiMlnBvgwrc0=
+	t=1709001203; cv=none; b=JKBDq0/g7U0jIkeuYNEnDcfXyX9JEUbN5B4u6CaCPdav/Pr2LilClGoUPkh0DbWNCVcGyjPJLF0cN0yi31Y+xJr+FLuJYj/ypgP21TsQRooKz5+6inzPlk0rTAl2y+wqPSLL8Mj8bSxGEyAmVUBbCrsmBwobLZD7NJ+LFAn5kY0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709001188; c=relaxed/simple;
-	bh=JMH9p1NVJudSTCvnA0dAQXUHL6bzFenip24BxGPYIK8=;
+	s=arc-20240116; t=1709001203; c=relaxed/simple;
+	bh=2ebxWayivV4A99lq0do+5D7PDk4X1yJdmP+nCenyraY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gEC0ukeMzUTbgw2YAkR3ZA5d1w+AY7A8QEEhXeKJufrW+CNSFDGpBd4XQKjHvB0xpvrUv7i3T+jLT182mPKCg7lolgnq4gw4MUpTcgjDAjS4Z21tI4z9IdzP3gsgxOuNqtBJ3C9WSQcpK010jzlK/RXxY/K2dpkwNTiKWyDo5jU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FbOm501V; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QYTxPodUvlrjxClO4BSBMCaEpgLRUB/CLOkbs2IcMJbyMeAz3OsnsI4zfmI9mKL6YpA+apUEK3KtljTKOLTEgmqsQfQ6S+gH8M/w775jlcGsvb9t4916i/qXWisPiF4h8tLrsEd8tDCeuDNrjsi+05pdXNDt/UQIGH9nIvMHQco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BfIIrGGr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FbOm501V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67CACC433F1;
-	Tue, 27 Feb 2024 02:33:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BfIIrGGr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 073FFC43390;
+	Tue, 27 Feb 2024 02:33:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709001187;
-	bh=JMH9p1NVJudSTCvnA0dAQXUHL6bzFenip24BxGPYIK8=;
+	s=k20201202; t=1709001203;
+	bh=2ebxWayivV4A99lq0do+5D7PDk4X1yJdmP+nCenyraY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FbOm501V/7ttiDUJ14aEIMx4CfR0BTzbVfDusYir2sfzJUOWOjRQqRBe0uNsm+pGV
-	 S+WT2wNYLjo67XnnoJ9H4xYq21xjM9dLGEIPj8De8RTwIybSiiPOOJwIZV6+P42LvV
-	 2ygajNdHYAD1O2B3oEij5vOUf8D0bCkYRMzEd9Pyy0l5di8M/uPr7ij8K3g+zqn3ZQ
-	 0bkWI+jU5gVNYs4aop7URVNSI6Z+ugtKN45GtCok+DV6C/QOGIUtPxeHr/xrS9xBiJ
-	 gz8sWJ/iH2cPEZEQxqsY+6qGfGeZdIAes7H/EeQIsuZxxObyuFiECukeKeqs5pc+jc
-	 8FJ/QdPCwV1OA==
-Date: Mon, 26 Feb 2024 18:33:06 -0800
-Subject: [PATCH 1/3] xfs: check AGI unlinked inode buckets
+	b=BfIIrGGrPGaWvxNc28efeqR2U+/8JT2PjUHoVpPr0ZYIn1R+lfelJKxedGHGkkk+V
+	 /Oyi3HOmTaz/k4yLQAGVn3dS7GD/5OCEwriH4gMa5Y6K2tGiLf0MVq4zsenqrsWNmG
+	 5Bk6S0txIBBbbR+Sr9dvjbjo38ar3sGs5Dg3oNquxGYGcZgqCPUImdCdJ6xmo007Sm
+	 X03yQqiNdIwqwajDW3XL7l2iOgOQabKhqqEJFFmKez85r4P4JzGdgJvdRB7rbAJXRF
+	 VKEOFc7zjyCqXcj7lIDMJJzfgsFuu9UNsRSlsgkN7MoejEK9w6HCdc7pbB0U64sExv
+	 byoiZZbXWn9HA==
+Date: Mon, 26 Feb 2024 18:33:22 -0800
+Subject: [PATCH 2/3] xfs: hoist AGI repair context to a heap object
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170900015649.939876.11902030314177288352.stgit@frogsfrogsfrogs>
+Message-ID: <170900015665.939876.5778128292096427949.stgit@frogsfrogsfrogs>
 In-Reply-To: <170900015625.939876.13962340231526041298.stgit@frogsfrogsfrogs>
 References: <170900015625.939876.13962340231526041298.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,104 +46,207 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Look for corruptions in the AGI unlinked bucket chains.
+Save ~460 bytes of stack space by moving all the repair context to a
+heap object.  We're going to add even more context data in the next
+patch, which is why we really need to do this now.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/agheader.c |   40 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.c      |    2 +-
- fs/xfs/xfs_inode.h      |    1 +
- 3 files changed, 42 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/agheader_repair.c |  105 ++++++++++++++++++++++++----------------
+ 1 file changed, 63 insertions(+), 42 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index e954f07679dd7..1528f14bd9251 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -15,6 +15,7 @@
- #include "xfs_ialloc.h"
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
-+#include "xfs_inode.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 427054b65b238..d210bd7d5eb13 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -796,15 +796,29 @@ enum {
+ 	XREP_AGI_MAX
+ };
  
-@@ -865,6 +866,43 @@ xchk_agi_xref(
- 	/* scrub teardown will take care of sc->sa for us */
- }
- 
-+/*
-+ * Check the unlinked buckets for links to bad inodes.  We hold the AGI, so
-+ * there cannot be any threads updating unlinked list pointers in this AG.
-+ */
-+STATIC void
-+xchk_iunlink(
-+	struct xfs_scrub	*sc,
-+	struct xfs_agi		*agi)
-+{
-+	unsigned int		i;
-+	struct xfs_inode	*ip;
++struct xrep_agi {
++	struct xfs_scrub		*sc;
 +
-+	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
-+		xfs_agino_t	agino = be32_to_cpu(agi->agi_unlinked[i]);
++	/* AGI buffer, tracked separately */
++	struct xfs_buf			*agi_bp;
 +
-+		while (agino != NULLAGINO) {
-+			if (agino % XFS_AGI_UNLINKED_BUCKETS != i) {
-+				xchk_block_set_corrupt(sc, sc->sa.agi_bp);
-+				return;
-+			}
++	/* context for finding btree roots */
++	struct xrep_find_ag_btree	fab[XREP_AGI_MAX];
 +
-+			ip = xfs_iunlink_lookup(sc->sa.pag, agino);
-+			if (!ip) {
-+				xchk_block_set_corrupt(sc, sc->sa.agi_bp);
-+				return;
-+			}
++	/* old AGI contents in case we have to revert */
++	struct xfs_agi			old_agi;
++};
 +
-+			if (!xfs_inode_on_unlinked_list(ip)) {
-+				xchk_block_set_corrupt(sc, sc->sa.agi_bp);
-+				return;
-+			}
-+
-+			agino = ip->i_next_unlinked;
-+		}
-+	}
-+}
-+
- /* Scrub the AGI. */
- int
- xchk_agi(
-@@ -949,6 +987,8 @@ xchk_agi(
- 	if (pag->pagi_freecount != be32_to_cpu(agi->agi_freecount))
- 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
-+	xchk_iunlink(sc, agi);
-+
- 	xchk_agi_xref(sc);
- out:
- 	return error;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b04f5f0e63b4e..b2c287dca611b 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1996,7 +1996,7 @@ xfs_inactive(
-  * only unlinked, referenced inodes can be on the unlinked inode list.  If we
-  * don't find the inode in cache, then let the caller handle the situation.
+ /*
+  * Given the inode btree roots described by *fab, find the roots, check them
+  * for sanity, and pass the root data back out via *fab.
   */
--static struct xfs_inode *
-+struct xfs_inode *
- xfs_iunlink_lookup(
- 	struct xfs_perag	*pag,
- 	xfs_agino_t		agino)
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index cab52bcb64207..3c3e1e48124ac 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -615,6 +615,7 @@ bool xfs_inode_needs_inactive(struct xfs_inode *ip);
- int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
- int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
- 		struct xfs_inode *ip);
-+struct xfs_inode *xfs_iunlink_lookup(struct xfs_perag *pag, xfs_agino_t agino);
+ STATIC int
+ xrep_agi_find_btrees(
+-	struct xfs_scrub		*sc,
+-	struct xrep_find_ag_btree	*fab)
++	struct xrep_agi			*ragi)
+ {
++	struct xfs_scrub		*sc = ragi->sc;
++	struct xrep_find_ag_btree	*fab = ragi->fab;
+ 	struct xfs_buf			*agf_bp;
+ 	struct xfs_mount		*mp = sc->mp;
+ 	int				error;
+@@ -837,10 +851,11 @@ xrep_agi_find_btrees(
+  */
+ STATIC void
+ xrep_agi_init_header(
+-	struct xfs_scrub	*sc,
+-	struct xfs_buf		*agi_bp,
+-	struct xfs_agi		*old_agi)
++	struct xrep_agi		*ragi)
+ {
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_buf		*agi_bp = ragi->agi_bp;
++	struct xfs_agi		*old_agi = &ragi->old_agi;
+ 	struct xfs_agi		*agi = agi_bp->b_addr;
+ 	struct xfs_perag	*pag = sc->sa.pag;
+ 	struct xfs_mount	*mp = sc->mp;
+@@ -868,10 +883,12 @@ xrep_agi_init_header(
+ /* Set btree root information in an AGI. */
+ STATIC void
+ xrep_agi_set_roots(
+-	struct xfs_scrub		*sc,
+-	struct xfs_agi			*agi,
+-	struct xrep_find_ag_btree	*fab)
++	struct xrep_agi			*ragi)
+ {
++	struct xfs_scrub		*sc = ragi->sc;
++	struct xfs_agi			*agi = ragi->agi_bp->b_addr;
++	struct xrep_find_ag_btree	*fab = ragi->fab;
++
+ 	agi->agi_root = cpu_to_be32(fab[XREP_AGI_INOBT].root);
+ 	agi->agi_level = cpu_to_be32(fab[XREP_AGI_INOBT].height);
  
- void xfs_end_io(struct work_struct *work);
+@@ -884,9 +901,10 @@ xrep_agi_set_roots(
+ /* Update the AGI counters. */
+ STATIC int
+ xrep_agi_calc_from_btrees(
+-	struct xfs_scrub	*sc,
+-	struct xfs_buf		*agi_bp)
++	struct xrep_agi		*ragi)
+ {
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_buf		*agi_bp = ragi->agi_bp;
+ 	struct xfs_btree_cur	*cur;
+ 	struct xfs_agi		*agi = agi_bp->b_addr;
+ 	struct xfs_mount	*mp = sc->mp;
+@@ -931,9 +949,10 @@ xrep_agi_calc_from_btrees(
+ /* Trigger reinitialization of the in-core data. */
+ STATIC int
+ xrep_agi_commit_new(
+-	struct xfs_scrub	*sc,
+-	struct xfs_buf		*agi_bp)
++	struct xrep_agi		*ragi)
+ {
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_buf		*agi_bp = ragi->agi_bp;
+ 	struct xfs_perag	*pag;
+ 	struct xfs_agi		*agi = agi_bp->b_addr;
  
+@@ -956,33 +975,36 @@ xrep_agi_commit_new(
+ /* Repair the AGI. */
+ int
+ xrep_agi(
+-	struct xfs_scrub		*sc)
++	struct xfs_scrub	*sc)
+ {
+-	struct xrep_find_ag_btree	fab[XREP_AGI_MAX] = {
+-		[XREP_AGI_INOBT] = {
+-			.rmap_owner = XFS_RMAP_OWN_INOBT,
+-			.buf_ops = &xfs_inobt_buf_ops,
+-			.maxlevels = M_IGEO(sc->mp)->inobt_maxlevels,
+-		},
+-		[XREP_AGI_FINOBT] = {
+-			.rmap_owner = XFS_RMAP_OWN_INOBT,
+-			.buf_ops = &xfs_finobt_buf_ops,
+-			.maxlevels = M_IGEO(sc->mp)->inobt_maxlevels,
+-		},
+-		[XREP_AGI_END] = {
+-			.buf_ops = NULL
+-		},
+-	};
+-	struct xfs_agi			old_agi;
+-	struct xfs_mount		*mp = sc->mp;
+-	struct xfs_buf			*agi_bp;
+-	struct xfs_agi			*agi;
+-	int				error;
++	struct xrep_agi		*ragi;
++	struct xfs_mount	*mp = sc->mp;
++	int			error;
+ 
+ 	/* We require the rmapbt to rebuild anything. */
+ 	if (!xfs_has_rmapbt(mp))
+ 		return -EOPNOTSUPP;
+ 
++	sc->buf = kzalloc(sizeof(struct xrep_agi), XCHK_GFP_FLAGS);
++	if (!sc->buf)
++		return -ENOMEM;
++	ragi = sc->buf;
++	ragi->sc = sc;
++
++	ragi->fab[XREP_AGI_INOBT] = (struct xrep_find_ag_btree){
++		.rmap_owner	= XFS_RMAP_OWN_INOBT,
++		.buf_ops	= &xfs_inobt_buf_ops,
++		.maxlevels	= M_IGEO(sc->mp)->inobt_maxlevels,
++	};
++	ragi->fab[XREP_AGI_FINOBT] = (struct xrep_find_ag_btree){
++		.rmap_owner	= XFS_RMAP_OWN_INOBT,
++		.buf_ops	= &xfs_finobt_buf_ops,
++		.maxlevels	= M_IGEO(sc->mp)->inobt_maxlevels,
++	};
++	ragi->fab[XREP_AGI_END] = (struct xrep_find_ag_btree){
++		.buf_ops	= NULL,
++	};
++
+ 	/*
+ 	 * Make sure we have the AGI buffer, as scrub might have decided it
+ 	 * was corrupt after xfs_ialloc_read_agi failed with -EFSCORRUPTED.
+@@ -990,14 +1012,13 @@ xrep_agi(
+ 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, sc->sa.pag->pag_agno,
+ 						XFS_AGI_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
++			XFS_FSS_TO_BB(mp, 1), 0, &ragi->agi_bp, NULL);
+ 	if (error)
+ 		return error;
+-	agi_bp->b_ops = &xfs_agi_buf_ops;
+-	agi = agi_bp->b_addr;
++	ragi->agi_bp->b_ops = &xfs_agi_buf_ops;
+ 
+ 	/* Find the AGI btree roots. */
+-	error = xrep_agi_find_btrees(sc, fab);
++	error = xrep_agi_find_btrees(ragi);
+ 	if (error)
+ 		return error;
+ 
+@@ -1006,18 +1027,18 @@ xrep_agi(
+ 		return error;
+ 
+ 	/* Start rewriting the header and implant the btrees we found. */
+-	xrep_agi_init_header(sc, agi_bp, &old_agi);
+-	xrep_agi_set_roots(sc, agi, fab);
+-	error = xrep_agi_calc_from_btrees(sc, agi_bp);
++	xrep_agi_init_header(ragi);
++	xrep_agi_set_roots(ragi);
++	error = xrep_agi_calc_from_btrees(ragi);
+ 	if (error)
+ 		goto out_revert;
+ 
+ 	/* Reinitialize in-core state. */
+-	return xrep_agi_commit_new(sc, agi_bp);
++	return xrep_agi_commit_new(ragi);
+ 
+ out_revert:
+ 	/* Mark the incore AGI state stale and revert the AGI. */
+ 	clear_bit(XFS_AGSTATE_AGI_INIT, &sc->sa.pag->pag_opstate);
+-	memcpy(agi, &old_agi, sizeof(old_agi));
++	memcpy(ragi->agi_bp->b_addr, &ragi->old_agi, sizeof(struct xfs_agi));
+ 	return error;
+ }
 
