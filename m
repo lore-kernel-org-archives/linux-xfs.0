@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68BEBF4FC
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:20:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393F2F4F1
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:20:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709000421; cv=none; b=BL4sk0pXta8RZE27UXzHpjGqJQfiWDSz56d6ENg8DehlOTfOYIXVnnDAELneDieTleqLpwwRoZm6z6bkCRA9GAYkRtCFtV6OOjPJWr17zS5ecJEJ/fVp1OGszJq00V0UNCzuO45ThWwZm74IRp/+DEjtqTL6t0Evq19k4I7FAz8=
+	t=1709000437; cv=none; b=NhFM9/rAxQoGTXtaE4DPrTT2OBN1sGzZ5c4cfaOowwNIuZdu0Be43L95KcVhBa+w1pjiax0i/L3xKGFwQhO6RneHK/tHTE+5XziNrcYyxI8psZ2ByAJDCW6/xD/71S5vNa4SclLp4D73G86cRscqeUNtOSDSxnKcjHqG5pVyTmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709000421; c=relaxed/simple;
-	bh=x3Ngt9tmDbuN83m0Phbi73LURLGzz+87zUziZluYG50=;
+	s=arc-20240116; t=1709000437; c=relaxed/simple;
+	bh=9rZI6HX6vbWdmJUIpEmtTMTEomcgFvKWqrDENsKad3Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kXnyz/ZSzyVUBS9d9vV/62WLixI9sF74f/OvgXOHaz1aROzCrQca1MqKs/mvzhM4Pl9XbhLwamf7HDb3NXFqn0rfYWvIl3gKRbwKSZpWE6yFfjmlT11VkXR9aicC+Pu1l0bYD8lmCwyGjjzBADRaz4VWZE9bLAa4bQuRkOLQTNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cleQro++; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kRtBtdR+t5TzuKjXhCQQI++at0vIbgxGBy5GQ1+5/Oxc9sgQnlIei9/LnXa8raZeoU6vlAIBvcgIn7g/niu7ovfzVNTvH1EulZPeiwAh+zqwjHB2rjCujuTUxV1SDZutQnQhUEjYEHHRGyTlP88p0sKlaiJc2IosBlvPL91ICEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LrFhRtSx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cleQro++"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CB5AC433F1;
-	Tue, 27 Feb 2024 02:20:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LrFhRtSx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEE1DC433C7;
+	Tue, 27 Feb 2024 02:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709000421;
-	bh=x3Ngt9tmDbuN83m0Phbi73LURLGzz+87zUziZluYG50=;
+	s=k20201202; t=1709000436;
+	bh=9rZI6HX6vbWdmJUIpEmtTMTEomcgFvKWqrDENsKad3Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cleQro++Bpmc/Ljhn7T6gWf+YAroAz8QB04CFr5ZZ0Mm+4uuFnpA5OK80jVIwliEb
-	 108Bg50QoWu8OaPitB5RRH3Hu/IdJYMLrGGbzukezo0i9VZPndZ+NZFsdY6eiwW51k
-	 ciRvggDl4CBmc5tz/TIPhM133mVgKGQqNA3/NGPvaKRkUxT+3Z2mm2GzMUhwQbNCtU
-	 XK5cXzr/zWBEg/36pElA6t6WnWOYiAfwwDLJSKpX/JNW4u8Nq5Sohg1gAaiO+KRvIG
-	 sxbcqkZYh/lN7lk1QA6twVZaFs3v51MSXj1tlXIxcK0k+Y/K0Zb8hWsCCjsN2WPIlt
-	 Klb6RYPWFQwKg==
-Date: Mon, 26 Feb 2024 18:20:20 -0800
-Subject: [PATCH 4/6] xfs: create a new helper to return a file's allocation
- unit
+	b=LrFhRtSxHRglCfUY0J/QBtpm0xuStyEQor6NWsErN7hC32Esc/T7XLOnnyALPoriY
+	 l59qh1p27aVXR3Jt0Yg3zw3aP2wShG18NthTn7IUaZfHssiNxH79UEJ3PDHzPBn1Eg
+	 EwfXjUFORR0qZd7VYlJj6/VZzDlALpwYKQGdtrPZwQy+8SmUEAxo9wNzAK3BZOW1hU
+	 YcwYWvDxpq+Lcj4Pa2ihGXnyUINnF++A9/85yp4zIr28ewRphTvPIZ1jkn0tHPOxrK
+	 cBnL/WxQEfvKy9GgG8YoPdpNIA1w7zK/6+Ay5Vgv6t3ANOjah5Us4SeOLPwKojGfyK
+	 opYYSpQX1XH7g==
+Date: Mon, 26 Feb 2024 18:20:36 -0800
+Subject: [PATCH 5/6] xfs: hoist multi-fsb allocation unit detection to a
+ helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170900011198.938068.6280271502861171630.stgit@frogsfrogsfrogs>
+Message-ID: <170900011214.938068.18217925414531189912.stgit@frogsfrogsfrogs>
 In-Reply-To: <170900011118.938068.16371783443726140795.stgit@frogsfrogsfrogs>
 References: <170900011118.938068.16371783443726140795.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,114 +47,52 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new helper function to calculate the fundamental allocation
-unit (i.e. the smallest unit of space we can allocate) of a file.
-Things are going to get hairy with range-exchange on the realtime
-device, so prepare for this now.
-
-While we're at it, export xfs_is_falloc_aligned since the next patch
-will need it.
+Replace the open-coded logic to decide if a file has a multi-fsb
+allocation unit to a helper to make the code easier to read.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c  |   28 ++++++++++------------------
- fs/xfs/xfs_file.h  |    3 +++
- fs/xfs/xfs_inode.c |   13 +++++++++++++
- fs/xfs/xfs_inode.h |    1 +
- 4 files changed, 27 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_bmap_util.c |    4 ++--
+ fs/xfs/xfs_inode.h     |    5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9961d4b5efbe6..64278f8acaeee 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -39,33 +39,25 @@ static const struct vm_operations_struct xfs_file_vm_ops;
-  * Decide if the given file range is aligned to the size of the fundamental
-  * allocation unit for the file.
-  */
--static bool
-+bool
- xfs_is_falloc_aligned(
- 	struct xfs_inode	*ip,
- 	loff_t			pos,
- 	long long int		len)
- {
--	struct xfs_mount	*mp = ip->i_mount;
--	uint64_t		mask;
-+	unsigned int		alloc_unit = xfs_inode_alloc_unitsize(ip);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index e58ae3654e7a8..74c42544155d5 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -542,7 +542,7 @@ xfs_can_free_eofblocks(
+ 	 * forever.
+ 	 */
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+-	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
++	if (xfs_inode_has_bigallocunit(ip))
+ 		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+ 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+ 	if (last_fsb <= end_fsb)
+@@ -843,7 +843,7 @@ xfs_free_file_space(
+ 	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
  
--	if (XFS_IS_REALTIME_INODE(ip)) {
--		if (!is_power_of_2(mp->m_sb.sb_rextsize)) {
--			u64	rextbytes;
--			u32	mod;
-+	if (!is_power_of_2(alloc_unit)) {
-+		u32	mod;
- 
--			rextbytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
--			div_u64_rem(pos, rextbytes, &mod);
--			if (mod)
--				return false;
--			div_u64_rem(len, rextbytes, &mod);
--			return mod == 0;
--		}
--		mask = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize) - 1;
--	} else {
--		mask = mp->m_sb.sb_blocksize - 1;
-+		div_u64_rem(pos, alloc_unit, &mod);
-+		if (mod)
-+			return false;
-+		div_u64_rem(len, alloc_unit, &mod);
-+		return mod == 0;
+ 	/* We can only free complete realtime extents. */
+-	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1) {
++	if (xfs_inode_has_bigallocunit(ip)) {
+ 		startoffset_fsb = xfs_rtb_roundup_rtx(mp, startoffset_fsb);
+ 		endoffset_fsb = xfs_rtb_rounddown_rtx(mp, endoffset_fsb);
  	}
- 
--	return !((pos | len) & mask);
-+	return !((pos | len) & (alloc_unit - 1));
- }
- 
- /*
-diff --git a/fs/xfs/xfs_file.h b/fs/xfs/xfs_file.h
-index 7d39e3eca56dc..2ad91f755caf3 100644
---- a/fs/xfs/xfs_file.h
-+++ b/fs/xfs/xfs_file.h
-@@ -9,4 +9,7 @@
- extern const struct file_operations xfs_file_operations;
- extern const struct file_operations xfs_dir_file_operations;
- 
-+bool xfs_is_falloc_aligned(struct xfs_inode *ip, loff_t pos,
-+		long long int len);
-+
- #endif /* __XFS_FILE_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 97ad5e959f65e..440e9c0ebd6b8 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -4019,3 +4019,16 @@ xfs_break_layouts(
- 
- 	return error;
- }
-+
-+/* Returns the size of fundamental allocation unit for a file, in bytes. */
-+unsigned int
-+xfs_inode_alloc_unitsize(
-+	struct xfs_inode	*ip)
-+{
-+	unsigned int		blocks = 1;
-+
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		blocks = ip->i_mount->m_sb.sb_rextsize;
-+
-+	return XFS_FSB_TO_B(ip->i_mount, blocks);
-+}
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 361a3d5efb903..c8799a55d885f 100644
+index c8799a55d885f..b7b238e88f23a 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -625,6 +625,7 @@ int xfs_inode_reload_unlinked(struct xfs_inode *ip);
- bool xfs_ifork_zapped(const struct xfs_inode *ip, int whichfork);
- void xfs_inode_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_filblks_t *dblocks, xfs_filblks_t *rblocks);
-+unsigned int xfs_inode_alloc_unitsize(struct xfs_inode *ip);
+@@ -311,6 +311,11 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+ 	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+ }
  
- struct xfs_dir_update_params {
- 	const struct xfs_inode	*dp;
++static inline bool xfs_inode_has_bigallocunit(struct xfs_inode *ip)
++{
++	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
++}
++
+ /*
+  * Return the buftarg used for data allocations on a given inode.
+  */
 
