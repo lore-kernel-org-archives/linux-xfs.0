@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4E96F4EB
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:26:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14FCCFC0C
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:26:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709000796; cv=none; b=RMLvQli1rlgHUR0YQ8Bi97+NkC57RxW5Mz6UWATx8ZAGkd+oVfnYYFmWsRMYzmNfCe0SgH7vIKh22dIq1rK5JEILdZmvv4GKfWsfE8EhcsawZhkvXDAyZG3WMkIhX56DaldPitQtc0VEeNFyC+17WY7Oaz9RZmX+jk807SnmyiQ=
+	t=1709000812; cv=none; b=rjEAmCmWNSbtUTBWKsa08Kh9D9mxoi+FiUUQNu8MP/Nhj1yOVYIOCgFzDmGelCxx3eZlK1AfMRpaXQQUYfFweJXCKo0rQV29W1jqvOhBlUU7TNDLt+3O0/LYSweR9RsTL1pHzDRqLTeuGHGl8/hcEY/Faf70tNlt0+QgQwZzP8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709000796; c=relaxed/simple;
-	bh=rKIirMq2+o0O0wG7wYfycE3MEeQFrTG2gb9XfTQT3yE=;
+	s=arc-20240116; t=1709000812; c=relaxed/simple;
+	bh=WXnsjZvIhbwJSjJLEoP7QZYZahqpw5qdNzGnITpad10=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jz65aHPLfMvoToNQVZU2FQ+3rBa7OuQ578pXiPVheUnjlndMxienh796DooDKDqUF6q08jAak/bwiNL6T1UxijBneSR0GmcM+CxRODNsyc0fatC7YSqhYyCQnvFsK4+ZQ0gpWH27YbI1mHly4PJRXAPbmpVkiXA9ak5xPnxrS/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eZhowL5J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KIDMjPLZGzTrf9l+ZLWRun+7tz5pvPvhIelZ5IuZ/6hXdNvoh9LD7brBdpKgc1deiyKb/2IyPFIMjfeo/iarnUYAxlxQcJo83kzTGrAfY+5iMgcOwIZblrhZ97mqv0N8oBSMRMotM7z06KaZQjfiGAaYnCtzJYeDifn5jBZ1PEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iU6Qt9ym; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eZhowL5J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FC10C433F1;
-	Tue, 27 Feb 2024 02:26:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iU6Qt9ym"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3241C433C7;
+	Tue, 27 Feb 2024 02:26:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709000796;
-	bh=rKIirMq2+o0O0wG7wYfycE3MEeQFrTG2gb9XfTQT3yE=;
+	s=k20201202; t=1709000811;
+	bh=WXnsjZvIhbwJSjJLEoP7QZYZahqpw5qdNzGnITpad10=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eZhowL5JvH1hwdT35bhru8Om6OjZyhWnIg24mtxoUqoDNOZrNWD+Rg7nKhBdH1hFf
-	 f3qveDSm8xY4UlLfq9w8GDpWvll/vAetWpfOQ3s24JjLshwFr6oXEi2Y0QGYe8fw9K
-	 mlWWGH/D7Db33IS2s5GxRCHNAyYJA6NWOMUJakQx2uCa0Jrv2G5P6okIgTKj8+YyiB
-	 wr24UwvaxiAeeqmWE+AyTkq6zrm7j9ITdzrGN+bzvTulejysDUvGvcCIoVLqHh+xFv
-	 M0wzZzyHoiFSTsraOvByisd1Qu6xOl/2XXJZlnC5GBWkKeQO5x8VhAM2TjGmNvJyyO
-	 smk2fDq4DrJtg==
-Date: Mon, 26 Feb 2024 18:26:35 -0800
-Subject: [PATCH 1/9] xfs: add an explicit owner field to xfs_da_args
+	b=iU6Qt9ymdv8e51SW4HsOMgQ8qmJG6/s1myBQiWdic4pjmQuMFA7YGA18zYUzkTO6A
+	 fNqoc2+vgoWaTHz1sVjzbb1+Ha5FIeUvYyKTjaP/N6+ZySgoQzKDIVfgWaRr1JCcEw
+	 Rqf7EbSAmO5m6mBmk6LU2v+LZ2FjT39fg7w66LerI+qVzL/dCKmPIDuFC7lN6GKIQZ
+	 B9Td1NdzSIdBGaC7QusQI2d33zvxfDvMorYZoGeSFM5fCOUJFML/JvWONWWHuHQTrw
+	 hFVJDu4quT75IrIIISVq3Ajc69rDmcyNTCytq0TUVjODPVCqZTDjWhFzVmTqxrKCGn
+	 bHDujnBoAi/5w==
+Date: Mon, 26 Feb 2024 18:26:51 -0800
+Subject: [PATCH 2/9] xfs: use the xfs_da_args owner field to set new dir/attr
+ block owner
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <170900013108.938940.17165407332191884972.stgit@frogsfrogsfrogs>
+Message-ID: <170900013126.938940.5185893300236524104.stgit@frogsfrogsfrogs>
 In-Reply-To: <170900013068.938940.1740993823820687963.stgit@frogsfrogsfrogs>
 References: <170900013068.938940.1740993823820687963.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,333 +47,194 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add an explicit owner field to xfs_da_args, which will make it easier
-for online fsck to set the owner field of the temporary directory and
-xattr structures that it builds to repair damaged metadata.
-
-Note: I hopefully found all the xfs_da_args definitions by looking for
-automatic stack variable declarations and xfs_da_args.dp assignments:
-
-git grep -E '(args.*dp =|struct xfs_da_args[[:space:]]*[a-z0-9][a-z0-9]*)'
+When we're creating leaf, data, freespace, or dabtree blocks for
+directories and xattrs, use the explicit owner field (instead of the
+xfs_inode) to set the owner field.  This will enable online repair to
+construct replacement data structures in a temporary file without having
+to change the owner fields prior to swapping the new and old structures.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |    2 ++
- fs/xfs/libxfs/xfs_bmap.c      |    1 +
- fs/xfs/libxfs/xfs_da_btree.h  |    1 +
- fs/xfs/libxfs/xfs_dir2.c      |    5 +++++
- fs/xfs/libxfs/xfs_exchmaps.c  |    2 ++
- fs/xfs/scrub/attr.c           |    1 +
- fs/xfs/scrub/dabtree.c        |    1 +
- fs/xfs/scrub/dir.c            |    3 ++-
- fs/xfs/scrub/readdir.c        |    2 ++
- fs/xfs/xfs_acl.c              |    2 ++
- fs/xfs/xfs_attr_item.c        |    1 +
- fs/xfs/xfs_dir2_readdir.c     |    1 +
- fs/xfs/xfs_ioctl.c            |    2 ++
- fs/xfs/xfs_iops.c             |    1 +
- fs/xfs/xfs_trace.h            |    7 +++++--
- fs/xfs/xfs_xattr.c            |    2 ++
- 16 files changed, 31 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c   |    2 +-
+ fs/xfs/libxfs/xfs_attr_remote.c |    4 ++--
+ fs/xfs/libxfs/xfs_da_btree.c    |    2 +-
+ fs/xfs/libxfs/xfs_dir2_block.c  |   19 ++++++++++---------
+ fs/xfs/libxfs/xfs_dir2_data.c   |    2 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c   |   11 +++++------
+ fs/xfs/libxfs/xfs_dir2_node.c   |    2 +-
+ 7 files changed, 21 insertions(+), 21 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index eb90753e183dd..5982036df61a7 100644
+index 5982036df61a7..b7833bf96b953 100644
 --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -905,6 +905,7 @@ xfs_attr_shortform_to_leaf(
- 	nargs.whichfork = XFS_ATTR_FORK;
- 	nargs.trans = args->trans;
- 	nargs.op_flags = XFS_DA_OP_OKNOENT;
-+	nargs.owner = args->owner;
+@@ -1240,7 +1240,7 @@ xfs_attr3_leaf_create(
+ 		ichdr.magic = XFS_ATTR3_LEAF_MAGIC;
  
- 	sfe = xfs_attr_sf_firstentry(sf);
- 	for (i = 0; i < sf->count; i++) {
-@@ -1107,6 +1108,7 @@ xfs_attr3_leaf_to_shortform(
- 	nargs.whichfork = XFS_ATTR_FORK;
- 	nargs.trans = args->trans;
- 	nargs.op_flags = XFS_DA_OP_OKNOENT;
-+	nargs.owner = args->owner;
+ 		hdr3->blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-		hdr3->owner = cpu_to_be64(dp->i_ino);
++		hdr3->owner = cpu_to_be64(args->owner);
+ 		uuid_copy(&hdr3->uuid, &mp->m_sb.sb_meta_uuid);
  
- 	for (i = 0; i < ichdr.count; entry++, i++) {
- 		if (entry->flags & XFS_ATTR_INCOMPLETE)
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ada5047f99da2..a1b27ac7a4505 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -976,6 +976,7 @@ xfs_bmap_add_attrfork_local(
- 		dargs.total = dargs.geo->fsbcount;
- 		dargs.whichfork = XFS_DATA_FORK;
- 		dargs.trans = tp;
-+		dargs.owner = ip->i_ino;
- 		return xfs_dir2_sf_to_block(&dargs);
- 	}
+ 		ichdr.freemap[0].base = sizeof(struct xfs_attr3_leaf_hdr);
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index bb4cf1fa0dc2c..b8cdd15c4e1af 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -522,8 +522,8 @@ xfs_attr_rmtval_set_value(
+ 			return error;
+ 		bp->b_ops = &xfs_attr3_rmt_buf_ops;
  
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 706baf36e1751..7fb13f26edaa7 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -79,6 +79,7 @@ typedef struct xfs_da_args {
- 	int		rmtvaluelen2;	/* remote attr value length in bytes */
- 	uint32_t	op_flags;	/* operation flags */
- 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-+	xfs_ino_t	owner;		/* inode that owns the dir/attr data */
- } xfs_da_args_t;
+-		xfs_attr_rmtval_copyin(mp, bp, args->dp->i_ino, &offset,
+-				       &valuelen, &src);
++		xfs_attr_rmtval_copyin(mp, bp, args->owner, &offset, &valuelen,
++				&src);
  
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 847449ce3017b..654583b5190a9 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -250,6 +250,7 @@ xfs_dir_init(
- 	args->geo = dp->i_mount->m_dir_geo;
- 	args->dp = dp;
- 	args->trans = tp;
-+	args->owner = dp->i_ino;
- 	error = xfs_dir2_sf_create(args, pdp->i_ino);
- 	kmem_free(args);
- 	return error;
-@@ -295,6 +296,7 @@ xfs_dir_createname(
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+	args->owner = dp->i_ino;
- 	if (!inum)
- 		args->op_flags |= XFS_DA_OP_JUSTCHECK;
+ 		error = xfs_bwrite(bp);	/* GROT: NOTE: synchronous write */
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 21fb8aff40df7..a69d04ed74935 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -485,7 +485,7 @@ xfs_da3_node_create(
+ 		memset(hdr3, 0, sizeof(struct xfs_da3_node_hdr));
+ 		ichdr.magic = XFS_DA3_NODE_MAGIC;
+ 		hdr3->info.blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-		hdr3->info.owner = cpu_to_be64(args->dp->i_ino);
++		hdr3->info.owner = cpu_to_be64(args->owner);
+ 		uuid_copy(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid);
+ 	} else {
+ 		ichdr.magic = XFS_DA_NODE_MAGIC;
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index ba9fce415faf9..c5af43ff6ec8e 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -163,12 +163,13 @@ xfs_dir3_block_read(
  
-@@ -389,6 +391,7 @@ xfs_dir_lookup(
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_OKNOENT;
-+	args->owner = dp->i_ino;
- 	if (ci_name)
- 		args->op_flags |= XFS_DA_OP_CILOOKUP;
- 
-@@ -462,6 +465,7 @@ xfs_dir_removename(
- 	args->total = total;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
-+	args->owner = dp->i_ino;
- 
- 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_removename(args);
-@@ -523,6 +527,7 @@ xfs_dir_replace(
- 	args->total = total;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
-+	args->owner = dp->i_ino;
- 
- 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_replace(args);
-diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
-index 501365cd4cf4e..f04838e639053 100644
---- a/fs/xfs/libxfs/xfs_exchmaps.c
-+++ b/fs/xfs/libxfs/xfs_exchmaps.c
-@@ -429,6 +429,7 @@ xfs_exchmaps_attr_to_sf(
- 		.geo		= tp->t_mountp->m_attr_geo,
- 		.whichfork	= XFS_ATTR_FORK,
- 		.trans		= tp,
-+		.owner		= xmi->xmi_ip2->i_ino,
- 	};
- 	struct xfs_buf		*bp;
- 	int			forkoff;
-@@ -459,6 +460,7 @@ xfs_exchmaps_dir_to_sf(
- 		.geo		= tp->t_mountp->m_dir_geo,
- 		.whichfork	= XFS_DATA_FORK,
- 		.trans		= tp,
-+		.owner		= xmi->xmi_ip2->i_ino,
- 	};
- 	struct xfs_dir2_sf_hdr	sfh;
- 	struct xfs_buf		*bp;
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 83c7feb387147..0c467f4f8e778 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -169,6 +169,7 @@ xchk_xattr_listent(
- 		.hashval		= xfs_da_hashname(name, namelen),
- 		.trans			= context->tp,
- 		.valuelen		= valuelen,
-+		.owner			= context->dp->i_ino,
- 	};
- 	struct xchk_xattr_buf		*ab;
- 	struct xchk_xattr		*sx;
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index 82b150d3b8b70..fa6385a99ac4e 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -494,6 +494,7 @@ xchk_da_btree(
- 	ds->dargs.whichfork = whichfork;
- 	ds->dargs.trans = sc->tp;
- 	ds->dargs.op_flags = XFS_DA_OP_OKNOENT;
-+	ds->dargs.owner = sc->ip->i_ino;
- 	ds->state = xfs_da_state_alloc(&ds->dargs);
- 	ds->sc = sc;
- 	ds->private = private;
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 076a310b8eb00..042e28547e044 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -621,10 +621,11 @@ xchk_directory_blocks(
+ static void
+ xfs_dir3_block_init(
+-	struct xfs_mount	*mp,
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*dp)
++	struct xfs_da_args	*args,
++	struct xfs_buf		*bp)
  {
- 	struct xfs_bmbt_irec	got;
- 	struct xfs_da_args	args = {
--		.dp		= sc ->ip,
-+		.dp		= sc->ip,
- 		.whichfork	= XFS_DATA_FORK,
- 		.geo		= sc->mp->m_dir_geo,
- 		.trans		= sc->tp,
-+		.owner		= sc->ip->i_ino,
- 	};
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
- 	struct xfs_mount	*mp = sc->mp;
-diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
-index 16462332c897b..442d480b7015b 100644
---- a/fs/xfs/scrub/readdir.c
-+++ b/fs/xfs/scrub/readdir.c
-@@ -273,6 +273,7 @@ xchk_dir_walk(
- 		.dp		= dp,
- 		.geo		= dp->i_mount->m_dir_geo,
- 		.trans		= sc->tp,
-+		.owner		= dp->i_ino,
- 	};
- 	bool			isblock;
- 	int			error;
-@@ -324,6 +325,7 @@ xchk_dir_lookup(
- 		.hashval	= xfs_dir2_hashname(dp->i_mount, name),
- 		.whichfork	= XFS_DATA_FORK,
- 		.op_flags	= XFS_DA_OP_OKNOENT,
-+		.owner		= dp->i_ino,
- 	};
- 	bool			isblock, isleaf;
- 	int			error;
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 6b840301817a9..505c3069cbaaa 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -135,6 +135,7 @@ xfs_get_acl(struct inode *inode, int type, bool rcu)
- 		.dp		= ip,
- 		.attr_filter	= XFS_ATTR_ROOT,
- 		.valuelen	= XFS_ACL_MAX_SIZE(mp),
-+		.owner		= ip->i_ino,
- 	};
- 	int			error;
+-	struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
++	struct xfs_trans	*tp = args->trans;
++	struct xfs_inode	*dp = args->dp;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
  
-@@ -178,6 +179,7 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 	struct xfs_da_args	args = {
- 		.dp		= ip,
- 		.attr_filter	= XFS_ATTR_ROOT,
-+		.owner		= ip->i_ino,
- 	};
- 	int			error;
+ 	bp->b_ops = &xfs_dir3_block_buf_ops;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_BLOCK_BUF);
+@@ -177,7 +178,7 @@ xfs_dir3_block_init(
+ 		memset(hdr3, 0, sizeof(*hdr3));
+ 		hdr3->magic = cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
+ 		hdr3->blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-		hdr3->owner = cpu_to_be64(dp->i_ino);
++		hdr3->owner = cpu_to_be64(args->owner);
+ 		uuid_copy(&hdr3->uuid, &mp->m_sb.sb_meta_uuid);
+ 		return;
  
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index f8c6c34e348f3..d7ebb54a03870 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -540,6 +540,7 @@ xfs_attri_recover_work(
- 	args->attr_filter = attrp->alfi_attr_filter & XFS_ATTRI_FILTER_MASK;
- 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT |
- 			 XFS_DA_OP_LOGGED;
-+	args->owner = args->dp->i_ino;
+@@ -1009,7 +1010,7 @@ xfs_dir2_leaf_to_block(
+ 	/*
+ 	 * Start converting it to block form.
+ 	 */
+-	xfs_dir3_block_init(mp, tp, dbp, dp);
++	xfs_dir3_block_init(args, dbp);
  
- 	ASSERT(xfs_sb_version_haslogxattrs(&mp->m_sb));
+ 	needlog = 1;
+ 	needscan = 0;
+@@ -1129,7 +1130,7 @@ xfs_dir2_sf_to_block(
+ 	error = xfs_dir3_data_init(args, blkno, &bp);
+ 	if (error)
+ 		goto out_free;
+-	xfs_dir3_block_init(mp, tp, bp, dp);
++	xfs_dir3_block_init(args, bp);
+ 	hdr = bp->b_addr;
  
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 3b3e3f0c3e7ab..b791fbeef736b 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -532,6 +532,7 @@ xfs_readdir(
- 	args.dp = dp;
- 	args.geo = dp->i_mount->m_dir_geo;
- 	args.trans = tp;
-+	args.owner = dp->i_ino;
+ 	/*
+@@ -1169,7 +1170,7 @@ xfs_dir2_sf_to_block(
+ 	 * Create entry for .
+ 	 */
+ 	dep = bp->b_addr + offset;
+-	dep->inumber = cpu_to_be64(dp->i_ino);
++	dep->inumber = cpu_to_be64(args->owner);
+ 	dep->namelen = 1;
+ 	dep->name[0] = '.';
+ 	xfs_dir2_data_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index 7a6d965bea71b..c3ef720b5ff6e 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -725,7 +725,7 @@ xfs_dir3_data_init(
+ 		memset(hdr3, 0, sizeof(*hdr3));
+ 		hdr3->magic = cpu_to_be32(XFS_DIR3_DATA_MAGIC);
+ 		hdr3->blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-		hdr3->owner = cpu_to_be64(dp->i_ino);
++		hdr3->owner = cpu_to_be64(args->owner);
+ 		uuid_copy(&hdr3->uuid, &mp->m_sb.sb_meta_uuid);
  
- 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
- 		return xfs_dir2_sf_getdents(&args, ctx);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 08fc15881ee51..6263a860c1537 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -480,6 +480,7 @@ xfs_attrmulti_attr_get(
- 		.name		= name,
- 		.namelen	= strlen(name),
- 		.valuelen	= *len,
-+		.owner		= XFS_I(inode)->i_ino,
- 	};
- 	int			error;
+ 	} else
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 08dda5ce9d91c..20ce057d12e82 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -304,12 +304,12 @@ xfs_dir3_leafn_read(
+  */
+ static void
+ xfs_dir3_leaf_init(
+-	struct xfs_mount	*mp,
+-	struct xfs_trans	*tp,
++	struct xfs_da_args	*args,
+ 	struct xfs_buf		*bp,
+-	xfs_ino_t		owner,
+ 	uint16_t		type)
+ {
++	struct xfs_mount	*mp = args->dp->i_mount;
++	struct xfs_trans	*tp = args->trans;
+ 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
  
-@@ -513,6 +514,7 @@ xfs_attrmulti_attr_set(
- 		.attr_flags	= xfs_attr_flags(flags),
- 		.name		= name,
- 		.namelen	= strlen(name),
-+		.owner		= XFS_I(inode)->i_ino,
- 	};
- 	int			error;
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 11382c499c92c..037606e5eee40 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -62,6 +62,7 @@ xfs_initxattrs(
- 			.namelen	= strlen(xattr->name),
- 			.value		= xattr->value,
- 			.valuelen	= xattr->value_len,
-+			.owner		= ip->i_ino,
- 		};
- 		error = xfs_attr_change(&args);
- 		if (error < 0)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d6666aa6a9529..2d7664a5cabae 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1931,6 +1931,7 @@ DECLARE_EVENT_CLASS(xfs_da_class,
- 		__field(xfs_dahash_t, hashval)
- 		__field(xfs_ino_t, inumber)
- 		__field(uint32_t, op_flags)
-+		__field(xfs_ino_t, owner)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = VFS_I(args->dp)->i_sb->s_dev;
-@@ -1941,9 +1942,10 @@ DECLARE_EVENT_CLASS(xfs_da_class,
- 		__entry->hashval = args->hashval;
- 		__entry->inumber = args->inumber;
- 		__entry->op_flags = args->op_flags;
-+		__entry->owner = args->owner;
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx name %.*s namelen %d hashval 0x%x "
--		  "inumber 0x%llx op_flags %s",
-+		  "inumber 0x%llx op_flags %s owner 0x%llx",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->namelen,
-@@ -1951,7 +1953,8 @@ DECLARE_EVENT_CLASS(xfs_da_class,
- 		  __entry->namelen,
- 		  __entry->hashval,
- 		  __entry->inumber,
--		  __print_flags(__entry->op_flags, "|", XFS_DA_OP_FLAGS))
-+		  __print_flags(__entry->op_flags, "|", XFS_DA_OP_FLAGS),
-+		  __entry->owner)
- )
- 
- #define DEFINE_DIR2_EVENT(name) \
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 4ebf7052eb673..0ded8d349f775 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -103,6 +103,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
- 		.namelen	= strlen(name),
- 		.value		= value,
- 		.valuelen	= size,
-+		.owner		= XFS_I(inode)->i_ino,
- 	};
+ 	ASSERT(type == XFS_DIR2_LEAF1_MAGIC || type == XFS_DIR2_LEAFN_MAGIC);
+@@ -323,7 +323,7 @@ xfs_dir3_leaf_init(
+ 					 ? cpu_to_be16(XFS_DIR3_LEAF1_MAGIC)
+ 					 : cpu_to_be16(XFS_DIR3_LEAFN_MAGIC);
+ 		leaf3->info.blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-		leaf3->info.owner = cpu_to_be64(owner);
++		leaf3->info.owner = cpu_to_be64(args->owner);
+ 		uuid_copy(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid);
+ 	} else {
+ 		memset(leaf, 0, sizeof(*leaf));
+@@ -356,7 +356,6 @@ xfs_dir3_leaf_get_buf(
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_trans	*tp = args->trans;
+-	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_buf		*bp;
  	int			error;
  
-@@ -129,6 +130,7 @@ xfs_xattr_set(const struct xattr_handler *handler,
- 		.namelen	= strlen(name),
- 		.value		= (void *)value,
- 		.valuelen	= size,
-+		.owner		= XFS_I(inode)->i_ino,
- 	};
- 	int			error;
+@@ -369,7 +368,7 @@ xfs_dir3_leaf_get_buf(
+ 	if (error)
+ 		return error;
  
+-	xfs_dir3_leaf_init(mp, tp, bp, dp->i_ino, magic);
++	xfs_dir3_leaf_init(args, bp, magic);
+ 	xfs_dir3_leaf_log_header(args, bp);
+ 	if (magic == XFS_DIR2_LEAF1_MAGIC)
+ 		xfs_dir3_leaf_log_tail(args, bp);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index be0b8834028c0..1ad7405f9c389 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -349,7 +349,7 @@ xfs_dir3_free_get_buf(
+ 		hdr.magic = XFS_DIR3_FREE_MAGIC;
+ 
+ 		hdr3->hdr.blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
++		hdr3->hdr.owner = cpu_to_be64(args->owner);
+ 		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_meta_uuid);
+ 	} else
+ 		hdr.magic = XFS_DIR2_FREE_MAGIC;
 
