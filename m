@@ -1,71 +1,70 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BFF52F72
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 05:14:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D871352F73
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 05:15:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709010855; cv=none; b=fapE7TyGtVC6FlfoalSsbhBhPtczibzLW8Ero+ik94FEsqjrwECay5rVLZ0ShIJ3ba5hP+Q29izn5PyJkelQPlDWDQ8U1ZAHissr4Rt+5lYUMxLBCbr22Z2KWGxREju7jE59EgxJHi/5Yh4BaDACxylAwS57kmVKfRty+BjBFQY=
+	t=1709010909; cv=none; b=qupWpzXomf0fjL8AC3FQHmHn6m26J0+yI4/WS1e0Et/93rpFqE9dcQlFdqbq8Rbm62yg+Vs3OhurD6ad04offOSw+737nwn0eumEsVirPSz6d69de9R9VIEQ4bu/+1uLsg8cipKCIlE+So3Y/R5meNYGO+dm+KXFg3QiC5RYlzY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709010855; c=relaxed/simple;
-	bh=/0ntdVjkbi+CFlHclQOoQkuKrd0kUByzbCJtOpR+7rE=;
+	s=arc-20240116; t=1709010909; c=relaxed/simple;
+	bh=DrLpN6ng2aMOGRNg1QAj1X/q9SNuOgYRclDkbOr+hKQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FoDtQXgsTcN9Wt19bSpAR8mzrfJILSMQRMTB06x+xkmeQBBqTvNp39HXpDZp65BrkiSeN1+oOD8dVffmr08l4OqXX05oJ9cbwHMcgaSBzcHj0/MSeoQSBMJIwQ+/lEs0jvHnoPsc5BFZV5UJQOKAUpLF5CNnNoZy7EJwwxhUO2w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KKTwuP/f; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=TyMMmncre6s0dHwqDxL6Xdm66eLkJA3Tdq4rudyE2Stgb3WnZi7DKtcWdyMh92VgGeS6WedHy9VW3+hQHXvenjzJHJu3GedYJJ+Nnl7HNiTi7n515DoSGDUWRDFPi87z4W9PDankx4VQz2zNfxPcA4BBq9NkSoLOHd9NIk/WOHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iHTgfKkH; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KKTwuP/f"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iHTgfKkH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709010852;
+	s=mimecast20190719; t=1709010906;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=voNUIgVYueACsrhZm/2IQh1bgotBWzE+hcOWy4uWZbk=;
-	b=KKTwuP/f3yX2uDYtQGnaLaQ3SAX3SIVhoOvt3RgknQaz+Ox+aZ/8FAaLz7+ay6jmWZQjAP
-	r8vPKh3oWB9HxyrBUxoV4CeOImqLfz7SQFRL0cLiTE89ThrWLbH2claQV320M9QNTW03Mj
-	XJJ/k51a2fqe24Pk8V5qn7nGjxnjLug=
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
- [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=94RnUBU789GCXN3tAcemptI74oqgzIecnmT6YemaLoA=;
+	b=iHTgfKkH4t8Vb5DoXyMF/YZzxypT6+1B+896BoePOV9lDT72kxOqKOOL6B2rEn8K8sxxG8
+	XS+VIhpi2GswzIeWbQBIkTEw0GajST09LNhwI5bQZFqs10UFAmWf/GRkwtjWn7FwaE533A
+	NpAZC71+VC7f7wJOv8uIbMTj50Wrq9M=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-338-qOG5cwoVOTi-1y-unn-neA-1; Tue, 27 Feb 2024 00:14:10 -0500
-X-MC-Unique: qOG5cwoVOTi-1y-unn-neA-1
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-6e356790f94so3347443b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 21:14:09 -0800 (PST)
+ us-mta-641-DBYlirnANeqD3kr9bXkJlw-1; Tue, 27 Feb 2024 00:15:04 -0500
+X-MC-Unique: DBYlirnANeqD3kr9bXkJlw-1
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-5c66a69ec8eso2970788a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 21:15:04 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709010848; x=1709615648;
+        d=1e100.net; s=20230601; t=1709010904; x=1709615704;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=voNUIgVYueACsrhZm/2IQh1bgotBWzE+hcOWy4uWZbk=;
-        b=FyKihmtthEY2eJM3MxadDlox51sB9PwIL1bEYZPP5NnJOg6EbNQ4ZcYU8BS7P/OPpO
-         sTopP/Vhr001xp6GgYodqjbjqbHsCk48Su82P4krDX1dEvarsq2eEkLzPkQb8BFyFa7j
-         CpBjfXHv96bzL7mLdp5iFAUCFKCYP662A/zCET/mL3DV9UQhWpTOEziIaAIf5NgjDgfi
-         CXH8YHqgIBupgmbPiOvXjCjXotZb7W9NneNwqGUBGXGoiUSiFPa5cXHmpt7cgaFTjVSH
-         R/GUnQyjPLH0qXAOOGXNO1MnQ8CgvXlMwPe87Ijlh8F1sfh/r00meeG7YioE9CGxw9Nr
-         X7ow==
-X-Gm-Message-State: AOJu0YzzBv9HtACdCFDSOwGi4uNXsFXzTGMKG/5wSUki0BbdR65jI4on
-	ZueRB4c0pNN4UeXrOfDEFbPtWzjIk4pjOiDP4QfdomxBBrWOuBdXnhrvGOJo8kJ9TA5GVRPE2WV
-	hJoAo60vzoP74WFFdPIwU3lTPiJZvW/iAchkmKG60vPs6QFcTOm1Od5xINqIbHNYPDXvI
-X-Received: by 2002:a05:6a00:6ca6:b0:6e4:d354:160a with SMTP id jc38-20020a056a006ca600b006e4d354160amr13088408pfb.1.1709010848651;
-        Mon, 26 Feb 2024 21:14:08 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGAOd1rpJB+9Fukyy1m2hJ04OD1979pCXa69r2TU55j5qlVTm3BgPIwlv5Icp3TF/4kAnH9kA==
-X-Received: by 2002:a05:6a00:6ca6:b0:6e4:d354:160a with SMTP id jc38-20020a056a006ca600b006e4d354160amr13088398pfb.1.1709010848332;
-        Mon, 26 Feb 2024 21:14:08 -0800 (PST)
+        bh=94RnUBU789GCXN3tAcemptI74oqgzIecnmT6YemaLoA=;
+        b=m5ZNHKBPrPHW8WJw+KKuMM0RN7a/CMhaz2Vw651lhP8j8DmwL9BWO8g4W3FMZ7t2J1
+         x1+UR8ouzaGWPqu8Jm4WX1rm1z7ffOFnzxT60KtgvRXYaC+LpZk4rzktMyLo7MMR4mef
+         YKjgwsp39lu2TOvz03hhl0xqlv/A2044482qEl1Uk1Bh/FdfMh/e0FKY0/q+nevhkxhL
+         fsO3jR6a5F1tVIaLce5K5fRbbKOoXoVTmY9ux2b4fcIOFMNvtlSuCnT74hqZABMiVsyN
+         B+Rb2keXeRRS/kDBUuY7qT+VDsZBDCu3MSMN4W+a7zpg4s85WaUZX7Wwb26nAN2vxj3s
+         HTnA==
+X-Gm-Message-State: AOJu0Yz9SLidwBRV5LYdK3fkVleapXMq47fZfw8I1yl1Jc9fABWK1FXw
+	5N0vzAifV0YCfgOmWYfw4If6W1usMWno6axuKYOAcQ5nGTu0B53vHavLc2EdLVD6iRxIVAPb4Pv
+	ZBZieGCyClPjOVzd7eKkxiTTRlUKw/wYuJT6IITxwZZqORYsQmBtHHaZqEA==
+X-Received: by 2002:a05:6a20:9c9b:b0:1a0:b414:a53f with SMTP id mj27-20020a056a209c9b00b001a0b414a53fmr1457261pzb.23.1709010903828;
+        Mon, 26 Feb 2024 21:15:03 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGu0sCnzvxirkLDaEfFm2TasO6uXB/xlu3iPkoiqNAV+eDb3IOjKAzKEaymSygIkyUNZN9n/g==
+X-Received: by 2002:a05:6a20:9c9b:b0:1a0:b414:a53f with SMTP id mj27-20020a056a209c9b00b001a0b414a53fmr1457253pzb.23.1709010903533;
+        Mon, 26 Feb 2024 21:15:03 -0800 (PST)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id fk7-20020a056a003a8700b006e469a6ca72sm5150845pfb.15.2024.02.26.21.14.07
+        by smtp.gmail.com with ESMTPSA id cv17-20020a17090afd1100b00299947ed2efsm5477001pjb.2.2024.02.26.21.15.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Feb 2024 21:14:08 -0800 (PST)
-Date: Tue, 27 Feb 2024 13:14:05 +0800
+        Mon, 26 Feb 2024 21:15:03 -0800 (PST)
+Date: Tue, 27 Feb 2024 13:15:00 +0800
 From: Zorro Lang <zlang@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v1.1 2/8] xfs/155: fail the test if xfs_repair hangs for
- too long
-Message-ID: <20240227051405.tf4gupo26yjzbqe6@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Subject: Re: [PATCH v1.1 1/8] generic/604: try to make race occur reliably
+Message-ID: <20240227051500.5zjn6w4fs7nhyqyx@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
- <170899915247.896550.12193016117687961302.stgit@frogsfrogsfrogs>
- <20240227044100.GU616564@frogsfrogsfrogs>
+ <170899915233.896550.17140520436176386775.stgit@frogsfrogsfrogs>
+ <20240227044021.GT616564@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,44 +73,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240227044100.GU616564@frogsfrogsfrogs>
+In-Reply-To: <20240227044021.GT616564@frogsfrogsfrogs>
 
-On Mon, Feb 26, 2024 at 08:41:00PM -0800, Darrick J. Wong wrote:
-> There are a few hard to reproduce bugs in xfs_repair where it can
-> deadlock trying to lock a buffer that it already owns.  These stalls
-> cause fstests never to finish, which is annoying!  To fix this, set up
-> the xfs_repair run to abort after 10 minutes, which will affect the
-> golden output and capture a core file.
+On Mon, Feb 26, 2024 at 08:40:21PM -0800, Darrick J. Wong wrote:
+> This test will occasionaly fail like so:
 > 
-> This doesn't fix xfs_repair, obviously.
+>   --- /tmp/fstests/tests/generic/604.out	2024-02-03 12:08:52.349924277 -0800
+>   +++ /var/tmp/fstests/generic/604.out.bad	2024-02-05 04:35:55.020000000 -0800
+>   @@ -1,2 +1,5 @@
+>    QA output created by 604
+>   -Silence is golden
+>   +mount: /opt: /dev/sda4 already mounted on /opt.
+>   +       dmesg(1) may have more information after failed mount system call.
+>   +mount -o usrquota,grpquota,prjquota, /dev/sda4 /opt failed
+>   +(see /var/tmp/fstests/generic/604.full for details)
+> 
+> As far as I can tell, the cause of this seems to be _scratch_mount
+> getting forked and exec'd before the backgrounded umount process has a
+> chance to enter the kernel.  When this occurs, the mount() system call
+> will return -EBUSY because this isn't an attempt to make a bind mount.
+> Slow things down slightly by stalling the mount by 10ms.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
-> v1.1: require timeout command
+> v1.1: indent commit message, fix busted comment
 > ---
->  tests/xfs/155 |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/tests/xfs/155 b/tests/xfs/155
-> index 302607b510..3181bfaf6f 100755
-> --- a/tests/xfs/155
-> +++ b/tests/xfs/155
-> @@ -26,6 +26,11 @@ _require_scratch_nocheck
->  _require_scratch_xfs_crc		# needsrepair only exists for v5
->  _require_populate_commands
->  _require_libxfs_debug_flag LIBXFS_DEBUG_WRITE_CRASH
-> +_require_command "$TIMEOUT_PROG" timeout
-> +
-> +# Inject a 10 minute abortive timeout on the repair program so that deadlocks
-> +# in the program do not cause fstests to hang indefinitely.
-> +XFS_REPAIR_PROG="timeout -s ABRT 10m $XFS_REPAIR_PROG"
-
-I'll help to change the time to $TIMEOUT_PROG when I merge it.
 
 Reviewed-by: Zorro Lang <zlang@redhat.com>
 
+>  tests/generic/604 |    8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/tests/generic/604 b/tests/generic/604
+> index cc6a4b214f..00da56dd70 100755
+> --- a/tests/generic/604
+> +++ b/tests/generic/604
+> @@ -24,10 +24,12 @@ _scratch_mount
+>  for i in $(seq 0 500); do
+>  	$XFS_IO_PROG -f -c "pwrite 0 4K" $SCRATCH_MNT/$i >/dev/null
+>  done
+> -# For overlayfs, avoid unmouting the base fs after _scratch_mount
+> -# tries to mount the base fs
+> +# For overlayfs, avoid unmouting the base fs after _scratch_mount tries to
+> +# mount the base fs.  Delay the mount attempt by a small amount in the hope
+> +# that the mount() call will try to lock s_umount /after/ umount has already
+> +# taken it.
+>  $UMOUNT_PROG $SCRATCH_MNT &
+> -_scratch_mount
+> +sleep 0.01s ; _scratch_mount
+>  wait
 >  
->  # Populate the filesystem
->  _scratch_populate_cached nofill >> $seqres.full 2>&1
+>  echo "Silence is golden"
 > 
 
