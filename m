@@ -1,146 +1,109 @@
-Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B5A13541B;
-	Mon, 26 Feb 2024 23:28:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 897A036D
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 00:11:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708990114; cv=none; b=EtMAEFNYkGfe+0Pn3jy6v0N2Z0MUNll96TlU2A8LWZynDuypozqfqp/VtbXg4n1rF287fKAE66eUfTBtVj7iK3Jn5efC+xvTYexhUqmGW6epQdZxox56YTStjLAPrYuMPwtscVSkg9RQqNHkkpMYq8cGGw1pzk6RFGtvOnqeCcU=
+	t=1708992703; cv=none; b=I1PizGNl8zqCd8lmM2sxFjNxzWoVB4wBLQLV10Q7W09hymAg5RdZ0pN1szcSeqT2NF2YQoI/yKqefb2K8stWzOsPWGD3WzmadJHw41y8UYrwuCAio8QGQ1srFP9Rg2/Czu76Wprnb5A57G/CjwCDo875B6TWcDbw0e1d00K2olE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708990114; c=relaxed/simple;
-	bh=vpnQdb+6rc5A4iBkipWUZqFQkOPYet+kLGEWv6NTJ4U=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=S3DO/VXeg4UGS0+HJzbvHcwErRgTVRHW4IV1/RjqAndrc4WKSgUWK00nOOrQ3ko5nTqvpWoqg3HKjnKwVb4gmjxgL3cTvYguob2PGaGopA0plg9IfniZeD9yrS/EaR/jYoYC4fXP/Sn5CdMK2oRim/S6EQ9MlNP1qIXYPotbjWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=MCwtZwGa; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
+	s=arc-20240116; t=1708992703; c=relaxed/simple;
+	bh=64crXQSZ/5UBysia/CDsJkZHR+M7s0Dc783qcDeD8xI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=XcgMaSsLaS90pCkAi9JbPzvO8CBBQp9PuveS7fgWSxpUjNSCMovtEqlQAT4tBj74q3XlaYLRu7RUW4WVEOy1cEG+es1ju8u5wx+nelrjd6zAeHfd5ThwKLmJXXwaeqfjYlTn27LYlQ6s4Rp5KNz+ABufOHKJs7PuufxuBFmTDcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HLHBt1jw; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="MCwtZwGa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-	s=201702; t=1708990108;
-	bh=7/s82SZsxC7vPzBKKfBkGYTuP9xvJQUaq4CPgmdV56c=;
-	h=Date:From:To:Cc:Subject:From;
-	b=MCwtZwGaX48rjnIvqpbI546NJeYqWMA2DuG4VFwG7vtceyrx7N8O97G9b0gf6CQmz
-	 r6JMkAFBT32KjrOAs7DYkOZg3GCK3ABN9WEhSbq7lRCFeb/EoWC0sJB414J/2tRLqj
-	 8mVVi7sEOsjfTaGk/NPg9MV+VsUjp5lH8LKS+LqR/MI9Ug23URenlrtymskpJOHzOO
-	 gmR1cgcIGxXWhjuAAXBRt7ZSIhG8tzkIWr7V+Lza6PGIt26ZXQE9/N0k6gMakNIIiz
-	 5DXodFRRBloosIbnfWx7aprGeiVqh2j4boyU2et+fS1lYhOY5Y/55Ss/0BYOjvfjen
-	 jK4LIYHkGViOQ==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4TkGyM6Tslz4wc1;
-	Tue, 27 Feb 2024 10:28:27 +1100 (AEDT)
-Date: Tue, 27 Feb 2024 10:28:27 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
- <djwong@kernel.org>, David Chinner <david@fromorbit.com>
-Cc: <linux-xfs@vger.kernel.org>, Chandan Babu R <chandanbabu@kernel.org>,
- Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List
- <linux-kernel@vger.kernel.org>, Linux Next Mailing List
- <linux-next@vger.kernel.org>
-Subject: linux-next: manual merge of the vfs-brauner tree with the xfs tree
-Message-ID: <20240227102827.313113cd@canb.auug.org.au>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HLHBt1jw"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-5d8ddbac4fbso3098173a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2024 16:11:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708992701; x=1709597501; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9yQMzRR1nzPIzGwngfqpzOYB9IFBnYUZBhmD1GILZnY=;
+        b=HLHBt1jwjgJ06KdPW2qfV00VegQyBj0jUen0xLpeys/g/Pc9O3xJUZiac25pVLX/H1
+         7XSV9Yh/XwtA+UOscnLoDS4C79cG+T7GCy31olL2kfBCGQ5KXpTxxEgU+LpPlK3c6+0o
+         vrh9n+jithbpob+PE8r4WuEPe/YtK00sqKli/SbYZdNC5ky8UShMdSNMPMwoBASoCF8S
+         JGqE5QoCghkBscsI+jYG3BpMvLcFSZi3vEhRI+frvOjTAdfcPNZhm8HybL5hxM4Bl+ZT
+         T9A2ylwURPU1PxOqc1DDQjE6JVTMhaT77XNqGJO5VI1LCYefE4p5gX/BAyh7aDzi8rS/
+         z1oA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708992701; x=1709597501;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9yQMzRR1nzPIzGwngfqpzOYB9IFBnYUZBhmD1GILZnY=;
+        b=CMistMKDEz7+xoUF85HSs5z9Pr1+etpHQ8ER9PPK/mhkWHgAS7K/PCt2zMmL0j/tEw
+         irX+s9ZnnMl0qrotpe04gmn4wpdxcSrGjdyySby+Xs8lVR7ywLQ9S/IWD39TeGeX00Nd
+         2RpDGPQkLy4xX7nhSx90BRguFwv1RAGYNij6ybnnKXaH/rl9R4JNts4RxCP08a/otANw
+         zY/tCHbCHOyeJhnOo+wL0Orig5N1kfX9/dk3h3DbF2O6497yP1T+iDMgCJ9Zj4rrmbmS
+         DbyJlrqHt8O0VjHkxZ/BGfGlAG53dDeqxEVLwNHyl3S8xATCIEEW9j/v7a9a4jnnFQig
+         VpPg==
+X-Gm-Message-State: AOJu0YzSXYbTUssYQxvOzz+QYKxzbEYwS3+dRetPMM3yGQmdJckn1lxz
+	QooAYMlUXSj5eFAzQf9md3Up2wS7wi+wvpioMN0IC8SubwABawBZDN6AWpriY30YRNYzengx7Qo
+	K
+X-Google-Smtp-Source: AGHT+IHabkE4OWnEWZcOWgki1mQRp9V5Vc5xz+aCbgUkRcSRAX0AQCb3XJkXf2silkf1lmr6+9bIcQ==
+X-Received: by 2002:a05:6a21:398b:b0:1a0:60b2:451 with SMTP id ad11-20020a056a21398b00b001a060b20451mr1063069pzc.7.1708992700830;
+        Mon, 26 Feb 2024 16:11:40 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
+        by smtp.gmail.com with ESMTPSA id k9-20020aa79d09000000b006e4e66d6837sm4618916pfp.216.2024.02.26.16.11.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Feb 2024 16:11:40 -0800 (PST)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+	by dread.disaster.area with esmtp (Exim 4.96)
+	(envelope-from <dave@fromorbit.com>)
+	id 1rel4L-00ByRR-1p;
+	Tue, 27 Feb 2024 11:11:37 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.97)
+	(envelope-from <dave@devoid.disaster.area>)
+	id 1rel4L-000000030ur-0IOc;
+	Tue, 27 Feb 2024 11:11:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: chandanbabu@kernel.org
+Subject: [PATCH 2/2] xfs: use kvfree() in xlog_cil_free_logvec()
+Date: Tue, 27 Feb 2024 11:05:32 +1100
+Message-ID: <20240227001135.718165-3-david@fromorbit.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240227001135.718165-1-david@fromorbit.com>
+References: <20240227001135.718165-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/zMghNRgdfH=5PkYXoN51Xav";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Transfer-Encoding: 8bit
 
---Sig_/zMghNRgdfH=5PkYXoN51Xav
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Dave Chinner <dchinner@redhat.com>
 
-Hi all,
+The xfs_log_vec items are allocated by xlog_kvmalloc(), and so need
+to be freed with kvfree. This was missed when coverting from the
+kmem_free() API.
 
-Today's linux-next merge of the vfs-brauner tree got a conflict in:
+Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+Fixes: 49292576136f ("xfs: convert kmem_free() for kvmalloc users to kvfree()")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  fs/xfs/xfs_buf.c
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f15735d0296a..9544ddaef066 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -877,7 +877,7 @@ xlog_cil_free_logvec(
+ 	while (!list_empty(lv_chain)) {
+ 		lv = list_first_entry(lv_chain, struct xfs_log_vec, lv_list);
+ 		list_del_init(&lv->lv_list);
+-		kfree(lv);
++		kvfree(lv);
+ 	}
+ }
+ 
+-- 
+2.43.0
 
-between commits:
-
-  d4c75a1b40cd ("xfs: convert remaining kmem_free() to kfree()")
-  5076a6040ca1 ("xfs: support in-memory buffer cache targets")
-
-from the xfs tree and commit:
-
-  1b9e2d90141c ("xfs: port block device access to files")
-
-from the vfs-brauner tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
---=20
-Cheers,
-Stephen Rothwell
-
-diff --cc fs/xfs/xfs_buf.c
-index 7fc26e64368d,01b41fabbe3c..000000000000
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@@ -2030,8 -1951,9 +2030,8 @@@ xfs_free_buftarg
-  	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
-  	/* the main block device is closed by kill_block_super */
-  	if (btp->bt_bdev !=3D btp->bt_mount->m_super->s_bdev)
-- 		bdev_release(btp->bt_bdev_handle);
-+ 		fput(btp->bt_bdev_file);
- -
- -	kmem_free(btp);
- +	kfree(btp);
-  }
- =20
-  int
-@@@ -2095,20 -1994,20 +2095,20 @@@ out_destroy_lru
-  struct xfs_buftarg *
-  xfs_alloc_buftarg(
-  	struct xfs_mount	*mp,
-- 	struct bdev_handle	*bdev_handle)
-+ 	struct file		*bdev_file)
-  {
- -	xfs_buftarg_t		*btp;
- +	struct xfs_buftarg	*btp;
-  	const struct dax_holder_operations *ops =3D NULL;
- =20
-  #if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
-  	ops =3D &xfs_dax_holder_operations;
-  #endif
- -	btp =3D kmem_zalloc(sizeof(*btp), KM_NOFS);
- +	btp =3D kzalloc(sizeof(*btp), GFP_KERNEL | __GFP_NOFAIL);
- =20
-  	btp->bt_mount =3D mp;
-- 	btp->bt_bdev_handle =3D bdev_handle;
-- 	btp->bt_dev =3D bdev_handle->bdev->bd_dev;
-- 	btp->bt_bdev =3D bdev_handle->bdev;
-+ 	btp->bt_bdev_file =3D bdev_file;
-+ 	btp->bt_bdev =3D file_bdev(bdev_file);
-+ 	btp->bt_dev =3D btp->bt_bdev->bd_dev;
-  	btp->bt_daxdev =3D fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_of=
-f,
-  					    mp, ops);
- =20
-
---Sig_/zMghNRgdfH=5PkYXoN51Xav
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmXdHpsACgkQAVBC80lX
-0GxrnggAkx3gftIJ07lW96LpqENWFh7RzH4cT5vUQTE2bBbRGNBXCGc/aVwwXrjm
-Y/iZcJE8C1Nj/iw7aFVqHrAia0ua5aI/KmjLvGPIMzhS7AAorZEqpfNj9Hpv6ZHh
-hfla0emge+q2g1vH91aFmr24BAEdpjsjNspmbjsZ+sg2pEljcuF0L61Miqpu8AUd
-YA0apU4pthA+3M9f5EaX6XRmhLxLeYZ73if4a586rldUr/TmF6hgugNY/PbFvVHx
-g3Js19WVLoiHWOLUxM2HB9JjihIasPmka17Dsrn3GVWtv6tU2EMEqvg1OpCPaw+S
-Y9ugshaujilSFahd0skL67Y6A4Rsjg==
-=oNoD
------END PGP SIGNATURE-----
-
---Sig_/zMghNRgdfH=5PkYXoN51Xav--
