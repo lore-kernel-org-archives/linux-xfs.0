@@ -1,34 +1,41 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CF5250F8
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 17:02:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B5A94EB21;
+	Tue, 27 Feb 2024 17:10:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709053377; cv=none; b=d8RPZkI/yu12vHTUauZjNMnxf30xk7Jbedyd57P+0hzy2ZPwIlJRSHpVxZAekF1BoM+aXFICU5qlFcG/N6Dt6G4d7mKc5CYJ/Mf1PmhAm0fLQxW+GfWpLzIgVf2a0uDQ6UGRBaCGGIPh+H60/Q6SIpF07m7eDqVClYQai/QzooA=
+	t=1709053810; cv=none; b=p+g8QwHXmJW0bqHUpUKTR7pVKjPHnMS/KYqsJG7B8KtujZ/wXGDKfRNQK3OJOcBmNpaR5N6jpc/KEHu6gvatO7Abk8o4+waXENFTrWbPNjt1IcJT42gAxmbpXbzwSPvi+Qi34J1aduwtUeDQKe3EogXe/VM/UvlZg1Zm/2ZDqVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709053377; c=relaxed/simple;
-	bh=fYmViQBsuq3KWkkQSjDassbD/MSa99mQLTE6HIwVoXw=;
+	s=arc-20240116; t=1709053810; c=relaxed/simple;
+	bh=gyuDS9EtEKaZucQGaEB4KRJYUmQ89m4Q+KTR4RAwEKU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SLPOV+0oAEsEvnkKxFN0kuTR1OZnc24SnOjje1rk1vTyj1c8o/4+yNQTo2amDpea3CACxx8PmigjDmVw3bgb7o+rQ5GtqYJp4L+lTAngG9BbelxO76oI8hUEQcu2gwiT220OxHSa9k4hRY4Ciie28okbc3UjG75rlZ4n/E3QJn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Zwzw8Db3; arc=none smtp.client-ip=91.218.175.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=t6BTxxmsK3KUGg2PIBjIE55lgm4jDpGLfNtJ7IqS8dXigWUIPdfKwWtKf8m7vXnowD3V+TtmEuK2JVig6f71AO4vHTVkWvysqSAEEG4xevAfqk+wlXR+qLsIqi8fhc0oGr2lTZoPnZz1mhaoz0ONpkiV22r5vY/cqJEWqkFdiNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=Bp8e/1d+; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Zwzw8Db3"
-Date: Tue, 27 Feb 2024 12:02:45 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1709053374;
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="Bp8e/1d+"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4TkkWF4lXLz9stn;
+	Tue, 27 Feb 2024 18:10:01 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1709053801;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=L7UKNUBGlTpDM+CMJiwE59d0Y/y96axVL+XtjpcRUAA=;
-	b=Zwzw8Db3LDsRNenY3gGa6Tbi9kd/j+4+EG0yzxqltzcHBRhreGIzqWUegudphiZIy7OVqz
-	eO//SmJ5XmyEQXUl1CgTYL41h6t2FLjxJGpkdi9zUiUudSS6P9f4h3G9UAmDgDo9owgxi7
-	mkil4OFoWnUlRblZaE0G4d99LhmFBfA=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+	bh=L3rbyqVBPDOPP9EM6vMSpLtzZtbMxF8srL9v40G0eMw=;
+	b=Bp8e/1d+0s6eBqZSdp+nDUYyWX1I3kndK4tVYRukCkdA303SiPrLBul3QkDt5kyngCAxCH
+	CclK+qmQimTSdZ37SJNF9ZyYlxC93pioBZL4JBPcXSnaSjNn4wsAlRppgX5jrhwJxVS9NX
+	rk+zeg2BZoiI5WjnQfuFp9jTA9Fdr8Fuk9FkmCwPZzIFW+auxXD6VRyLQMgnSl02jeT8oe
+	LaWL0DWKVVRHCLtwmfY2MAoo0lGBlMy6M774uvUCrgTYrqzgVjPMSNZ53L/bAQIBVmkAem
+	RnWbBaahhuYcPF6ChRUiqlfzXlCRTxqpmuqKCms8KauMe4oQE/CatYUOSDAc9Q==
+Date: Tue, 27 Feb 2024 18:09:57 +0100
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Kent Overstreet <kent.overstreet@linux.dev>
 Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, david@fromorbit.com, 
 	chandan.babu@oracle.com, akpm@linux-foundation.org, mcgrof@kernel.org, ziy@nvidia.com, 
@@ -36,7 +43,7 @@ Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
 	Pankaj Raghav <p.raghav@samsung.com>
 Subject: Re: [PATCH 03/13] filemap: align the index to mapping_min_order in
  the page cache
-Message-ID: <na2k4nnvkseh2yh27eqkbfyouf7vnerd6i7pt4z7f7xsjsm6pu@ry5tvdcr2ggw>
+Message-ID: <mm47tgwkrk3glymx6hzgp5bshnzqwqt26ja46xckfzzbjuwzic@oupjlfibn4nm>
 References: <20240226094936.2677493-1-kernel@pankajraghav.com>
  <20240226094936.2677493-4-kernel@pankajraghav.com>
  <Zdyi6lFDAHXi8GPz@casper.infradead.org>
@@ -45,6 +52,7 @@ References: <20240226094936.2677493-1-kernel@pankajraghav.com>
  <aajarho6xwi4sphqirwvukofvqy3cl6llpe5fetomj5sz7rgzp@xo2iqdwingtf>
  <vsy43j4pwgh4thcqbhmotap7rgzg5dnet42gd5z6x4yt3zwnu4@5w4ousyue36m>
  <4zpsfvy3e4hkc4avvjjr34rgo7ggpd6hpflptmiauvxwm3dpvk@5wulihwpwbyp>
+ <na2k4nnvkseh2yh27eqkbfyouf7vnerd6i7pt4z7f7xsjsm6pu@ry5tvdcr2ggw>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,49 +61,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4zpsfvy3e4hkc4avvjjr34rgo7ggpd6hpflptmiauvxwm3dpvk@5wulihwpwbyp>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <na2k4nnvkseh2yh27eqkbfyouf7vnerd6i7pt4z7f7xsjsm6pu@ry5tvdcr2ggw>
+X-Rspamd-Queue-Id: 4TkkWF4lXLz9stn
 
-On Tue, Feb 27, 2024 at 05:55:35PM +0100, Pankaj Raghav (Samsung) wrote:
-> > > > 
-> > > > you guys are both wrong, just use rounddown()
-> > > 
-> > > Umm, what do you mean just use rounddown? rounddown to ...?
-> > > 
-> > > We need to get index that are in PAGE units but aligned to min_order
-> > > pages.
-> > > 
-> > > The original patch did this:
-> > > 
-> > > index = mapping_align_start_index(mapping, iocb->ki_pos >> PAGE_SHIFT);
-> > > 
-> > > Which is essentially a rounddown operation (probably this is what you
-> > > are suggesting?).
-> > > 
-> > > So what willy is proposing will do the same. To me, what I proposed is
-> > > less complicated but to willy it is the other way around.
 > > 
-> > Ok, I just found the code for mapping_align_start_index() - it is just a
-> > round_down().
+> > I have one question while I have you here. 
 > > 
-> > Never mind; patch looks fine (aside from perhaps some quibbling over
-> > whether the round_down()) should be done before calling readahead or
-> > within readahead; I think that might have been more what willy was
-> > keying in on)
+> > When we have this support in the page cache, do you think bcachefs can make
+> > use of this support to enable bs > ps in bcachefs as it already makes use 
+> > of large folios? 
 > 
-> Yeah, exactly.
+> Yes, of course.
 > 
-> I have one question while I have you here. 
+> > Do you think it is just a simple mapping_set_large_folios ->
+> > mapping_set_folio_min_order(.., block_size order) or it requires more
+> > effort?
 > 
-> When we have this support in the page cache, do you think bcachefs can make
-> use of this support to enable bs > ps in bcachefs as it already makes use 
-> of large folios? 
+> I think that's all that would be required. There's very little in the
+> way of references to PAGE_SIZE in bcachefs.
 
-Yes, of course.
+Sweet. I will take a look at it once we get this upstream.
 
-> Do you think it is just a simple mapping_set_large_folios ->
-> mapping_set_folio_min_order(.., block_size order) or it requires more
-> effort?
-
-I think that's all that would be required. There's very little in the
-way of references to PAGE_SIZE in bcachefs.
+--
+Pankaj
