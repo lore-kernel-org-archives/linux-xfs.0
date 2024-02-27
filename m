@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF9DEED7
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:25:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3E7F4EB
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 02:26:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709000749; cv=none; b=okt4rjitmwESi9YmTNNP7GeAAqcaomuKlsnrhKxU8/rr0Io/yZ4RP77kQQjQUe8nAz5D4RvAb80CxQTIm9uMUjGcWTIhugGNWlMq45qd5UAzpdXiKsLCXYCdgk8U8Z5n/euVTnjP96+vbteqrebbiWXjjOQ54GSh2t2ZmjCl/rM=
+	t=1709000765; cv=none; b=WpPQNdoYHoOUjXXvwFW7NFCovQKhKKI2cDcGTTA7RMvfU6FHLeYX+s75JEAcKw6FcBmAZRp9zB6yxWFRI5ZmOT0oqZgQ0gNeCRn0CXSTHr5uc2AcIs//vs/gh6ij1I+eiO7RGL6xMMohtUFfCuIqNOYG6dpO/sZ06nmGGuV4vKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709000749; c=relaxed/simple;
-	bh=I8ZX13s9Ri/hvD7tghZpGJ9V6VjvYaGjR2XD6X6AuVg=;
+	s=arc-20240116; t=1709000765; c=relaxed/simple;
+	bh=bjKgWY45mXtW/7csKVH/hkQPe5JO4MM0FK9tJ7A3ezU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Le/cpuRTLL2skQQoRpqIj3vCTWRP7/Usq0AemmxRIbOnzCmZYDYMACG5rGzwKjKU8q4ve8R0RK5sxCVBhcwfb4ERZwW8KHoHq4nvoXP5taBJ1aE+MySp+uFoJLi0D5Js2b2/lscJAK7Ggobh2QY5nTi2x7uuiSoA5B5gqrFmQAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OegYjk2a; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mTIBN0XjTCyKB6jmeZHCXTQA290BhetpK4sVbDg5Va7q+p41mgdqu3Ro9Sg/5hAgkPWHjil9tg49CYpgGqRh7Lv1ZU1kMl6x89PEIyKFJOeGs+mO13f4DRoaF/DabhEeZHaTQbEpnOFb7nqLREP0uLY4JJpDzAW0eSF5gcsbp7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EJXwUgCG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OegYjk2a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CB22C433F1;
-	Tue, 27 Feb 2024 02:25:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EJXwUgCG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01CD5C43394;
+	Tue, 27 Feb 2024 02:26:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709000749;
-	bh=I8ZX13s9Ri/hvD7tghZpGJ9V6VjvYaGjR2XD6X6AuVg=;
+	s=k20201202; t=1709000765;
+	bh=bjKgWY45mXtW/7csKVH/hkQPe5JO4MM0FK9tJ7A3ezU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OegYjk2assfyV7QV2RJ3ySasYP0TdLsu6hIVDeUZ7dPZI6ySRcxskE1lL9TH3ZQPc
-	 FUpfcBnH0Pcf/3LbPI+yFpVlhUORdWhTjdoEmUqRlth2dh2RsG9GftfqYD17y/EVqK
-	 Ps6KHaXdndJmdVJ8qzDVRCRkY7zTZhRmfxYhlENnoMcc5ruANc9UFjVxy2vIUBTECe
-	 E60UjSS/F06G74ngSC2gqBI3XHnUH7d6VxpONzJEQFvRUhbIVz0Xf4I8vNTdHrhkkR
-	 Q8CHBxx3c8XhhiRN7mBZRbzPlcrSy9fgXBJN8QaBSk5LwuZcDsrKYxe+YpT2KRHGjl
-	 UzTQltvS+jv2A==
-Date: Mon, 26 Feb 2024 18:25:48 -0800
-Subject: [PATCH 1/3] xfs: support preallocating and copying content into
- temporary files
+	b=EJXwUgCGb3wwvYGoZq31fMA+zhBHNjTBLOFB+Ep2XT6IebArIdCdK9a2VX5bzmlVf
+	 N+fG8z/aBvohduZqABbe05URKN+zkpyd0lnqDoumBhJnlyUyWk1Mf6HVx+3J4g0spl
+	 w3At2h+Q/ceUDEiqVWf0opNxBxFrsCJa1Ux8u3Qp2AaGgza/uc8i0GFVDikDkrMu4N
+	 /mczJMkN/F2ZJZn9Em8PBgHwcSMbpVVuj9WWjlMGz8sCTeBhSPxFV8HgcLUvaBbzul
+	 6YpXcMsR68VDDeMOiJxotMRvw+HgauYytZTKBIfKd9Ck+PrUYeM1fmvxfu5IivUuUx
+	 Xc6nBrCLnxZ9g==
+Date: Mon, 26 Feb 2024 18:26:04 -0800
+Subject: [PATCH 2/3] xfs: teach the tempfile to set up atomic file content
+ exchanges
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170900012670.938812.12444028906814157466.stgit@frogsfrogsfrogs>
+Message-ID: <170900012687.938812.17754155412825394260.stgit@frogsfrogsfrogs>
 In-Reply-To: <170900012647.938812.317435406248625314.stgit@frogsfrogsfrogs>
 References: <170900012647.938812.317435406248625314.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,315 +47,346 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create the routines we need to preallocate space in a temporary ondisk
-file and then copy the contents of an xfile into the tempfile.  The
-upcoming rtsummary repair feature will construct the contents of a
-realtime summary file in memory, after which it will want to copy all
-that into the ondisk temporary file before atomically committing the new
-rtsummary contents.
+Create some new routines to exchange the contents of a temporary file
+created to stage a repair with another ondisk file.  This will be used
+by the realtime summary repair function to commit atomically the new
+rtsummary data, which will be staged in the tempfile.
+
+The rest of XFS coordinates access to the realtime metadata inodes
+solely through the ILOCK.  For repair to hold its exclusive access to
+the realtime summary file, it has to allocate a single large transaction
+and roll it repeatedly throughout the repair while holding the ILOCK.
+In turn, this means that for now there's only a partial file mapping
+exchange implementation for the temporary file because we can only work
+within an existing transaction.
+
+For now, the only tempswap functions needed here are to estimate the
+resource requirements of the exchange, reserve more space/quota to an
+existing transaction, and kick off the actual exchange.  The rest will
+be added in a later patch in preparation for repairing xattrs and
+directories.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/tempfile.c |  197 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/tempfile.h |   15 ++++
- fs/xfs/scrub/trace.h    |   39 +++++++++
- 3 files changed, 251 insertions(+)
+ fs/xfs/scrub/scrub.c    |    8 +-
+ fs/xfs/scrub/scrub.h    |    7 ++
+ fs/xfs/scrub/tempexch.h |   21 +++++
+ fs/xfs/scrub/tempfile.c |  194 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/trace.h    |    1 
+ 5 files changed, 228 insertions(+), 3 deletions(-)
+ create mode 100644 fs/xfs/scrub/tempexch.h
 
 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index d9012e9a6afd2..ff156edf49a08 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -149,14 +149,15 @@ xchk_probe(
+ 
+ /* Scrub setup and teardown */
+ 
++#define FSGATES_MASK	(XCHK_FSGATES_ALL | XREP_FSGATES_ALL)
+ static inline void
+ xchk_fsgates_disable(
+ 	struct xfs_scrub	*sc)
+ {
+-	if (!(sc->flags & XCHK_FSGATES_ALL))
++	if (!(sc->flags & FSGATES_MASK))
+ 		return;
+ 
+-	trace_xchk_fsgates_disable(sc, sc->flags & XCHK_FSGATES_ALL);
++	trace_xchk_fsgates_disable(sc, sc->flags & FSGATES_MASK);
+ 
+ 	if (sc->flags & XCHK_FSGATES_DRAIN)
+ 		xfs_drain_wait_disable();
+@@ -170,8 +171,9 @@ xchk_fsgates_disable(
+ 	if (sc->flags & XCHK_FSGATES_RMAP)
+ 		xfs_rmap_hook_disable();
+ 
+-	sc->flags &= ~XCHK_FSGATES_ALL;
++	sc->flags &= ~FSGATES_MASK;
+ }
++#undef FSGATES_MASK
+ 
+ /* Free all the resources and finish the transactions. */
+ STATIC int
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index e37d8599718e2..aca3e652343c1 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -131,6 +131,7 @@ struct xfs_scrub {
+ #define XCHK_FSGATES_QUOTA	(1U << 4)  /* quota live update enabled */
+ #define XCHK_FSGATES_DIRENTS	(1U << 5)  /* directory live update enabled */
+ #define XCHK_FSGATES_RMAP	(1U << 6)  /* rmapbt live update enabled */
++#define XREP_FSGATES_EXCHMAPS	(1U << 29) /* uses atomic file content exchange */
+ #define XREP_RESET_PERAG_RESV	(1U << 30) /* must reset AG space reservation */
+ #define XREP_ALREADY_FIXED	(1U << 31) /* checking our repair work */
+ 
+@@ -145,6 +146,12 @@ struct xfs_scrub {
+ 				 XCHK_FSGATES_DIRENTS | \
+ 				 XCHK_FSGATES_RMAP)
+ 
++/*
++ * The sole XREP_FSGATES* flag reflects a log intent item that is protected
++ * by a log-incompat feature flag.  No code patching in use here.
++ */
++#define XREP_FSGATES_ALL	(XREP_FSGATES_EXCHMAPS)
++
+ /* Metadata scrubbers */
+ int xchk_tester(struct xfs_scrub *sc);
+ int xchk_superblock(struct xfs_scrub *sc);
+diff --git a/fs/xfs/scrub/tempexch.h b/fs/xfs/scrub/tempexch.h
+new file mode 100644
+index 0000000000000..98222b684b6a0
+--- /dev/null
++++ b/fs/xfs/scrub/tempexch.h
+@@ -0,0 +1,21 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __XFS_SCRUB_TEMPEXCH_H__
++#define __XFS_SCRUB_TEMPEXCH_H__
++
++#ifdef CONFIG_XFS_ONLINE_REPAIR
++struct xrep_tempexch {
++	struct xfs_exchmaps_req	req;
++};
++
++int xrep_tempexch_enable(struct xfs_scrub *sc);
++int xrep_tempexch_trans_reserve(struct xfs_scrub *sc, int whichfork,
++		struct xrep_tempexch *ti);
++
++int xrep_tempexch_contents(struct xfs_scrub *sc, struct xrep_tempexch *ti);
++#endif /* CONFIG_XFS_ONLINE_REPAIR */
++
++#endif /* __XFS_SCRUB_TEMPEXCH_H__ */
 diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index 68d245749bc1e..83e683e165618 100644
+index 83e683e165618..9ed750699809e 100644
 --- a/fs/xfs/scrub/tempfile.c
 +++ b/fs/xfs/scrub/tempfile.c
-@@ -14,14 +14,18 @@
- #include "xfs_inode.h"
- #include "xfs_ialloc.h"
- #include "xfs_quota.h"
-+#include "xfs_bmap.h"
- #include "xfs_bmap_btree.h"
+@@ -19,12 +19,14 @@
  #include "xfs_trans_space.h"
  #include "xfs_dir2.h"
  #include "xfs_exchrange.h"
-+#include "xfs_defer.h"
++#include "xfs_exchmaps.h"
+ #include "xfs_defer.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
-+#include "scrub/repair.h"
+ #include "scrub/repair.h"
  #include "scrub/trace.h"
  #include "scrub/tempfile.h"
-+#include "scrub/xfile.h"
++#include "scrub/tempexch.h"
+ #include "scrub/xfile.h"
  
  /*
-  * Create a temporary file for reconstructing metadata, with the intention of
-@@ -249,3 +253,196 @@ xrep_tempfile_rele(
- 	xchk_irele(sc, sc->tempip);
- 	sc->tempip = NULL;
+@@ -446,3 +448,195 @@ xrep_tempfile_roll_trans(
+ 	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
+ 	return 0;
  }
 +
-+/*
-+ * Make sure that the given range of the data fork of the temporary file is
-+ * mapped to written blocks.  The caller must ensure that both inodes are
-+ * joined to the transaction.
-+ */
++/* Enable atomic file content exchanges. */
 +int
-+xrep_tempfile_prealloc(
-+	struct xfs_scrub	*sc,
-+	xfs_fileoff_t		off,
-+	xfs_filblks_t		len)
-+{
-+	struct xfs_bmbt_irec	map;
-+	xfs_fileoff_t		end = off + len;
-+	int			error;
-+
-+	ASSERT(sc->tempip != NULL);
-+	ASSERT(!XFS_NOT_DQATTACHED(sc->mp, sc->tempip));
-+
-+	for (; off < end; off = map.br_startoff + map.br_blockcount) {
-+		int		nmaps = 1;
-+
-+		/*
-+		 * If we have a real extent mapping this block then we're
-+		 * in ok shape.
-+		 */
-+		error = xfs_bmapi_read(sc->tempip, off, end - off, &map, &nmaps,
-+				XFS_DATA_FORK);
-+		if (error)
-+			return error;
-+		if (nmaps == 0) {
-+			ASSERT(nmaps != 0);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		if (xfs_bmap_is_written_extent(&map))
-+			continue;
-+
-+		/*
-+		 * If we find a delalloc reservation then something is very
-+		 * very wrong.  Bail out.
-+		 */
-+		if (map.br_startblock == DELAYSTARTBLOCK)
-+			return -EFSCORRUPTED;
-+
-+		/*
-+		 * Make sure this block has a real zeroed extent allocated to
-+		 * it.
-+		 */
-+		nmaps = 1;
-+		error = xfs_bmapi_write(sc->tp, sc->tempip, off, end - off,
-+				XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO, 0, &map,
-+				&nmaps);
-+		if (error)
-+			return error;
-+		if (nmaps != 1)
-+			return -EFSCORRUPTED;
-+
-+		trace_xrep_tempfile_prealloc(sc, XFS_DATA_FORK, &map);
-+
-+		/* Commit new extent and all deferred work. */
-+		error = xfs_defer_finish(&sc->tp);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Write data to each block of a file.  The given range of the tempfile's data
-+ * fork must already be populated with written extents.
-+ */
-+int
-+xrep_tempfile_copyin(
-+	struct xfs_scrub	*sc,
-+	xfs_fileoff_t		off,
-+	xfs_filblks_t		len,
-+	xrep_tempfile_copyin_fn	prep_fn,
-+	void			*data)
-+{
-+	LIST_HEAD(buffers_list);
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_buf		*bp;
-+	xfs_fileoff_t		flush_mask;
-+	xfs_fileoff_t		end = off + len;
-+	loff_t			pos = XFS_FSB_TO_B(mp, off);
-+	int			error = 0;
-+
-+	ASSERT(S_ISREG(VFS_I(sc->tempip)->i_mode));
-+
-+	/* Flush buffers to disk every 512K */
-+	flush_mask = XFS_B_TO_FSBT(mp, (1U << 19)) - 1;
-+
-+	for (; off < end; off++, pos += mp->m_sb.sb_blocksize) {
-+		struct xfs_bmbt_irec	map;
-+		int			nmaps = 1;
-+
-+		/* Read block mapping for this file block. */
-+		error = xfs_bmapi_read(sc->tempip, off, 1, &map, &nmaps, 0);
-+		if (error)
-+			goto out_err;
-+		if (nmaps == 0 || !xfs_bmap_is_written_extent(&map)) {
-+			error = -EFSCORRUPTED;
-+			goto out_err;
-+		}
-+
-+		/* Get the metadata buffer for this offset in the file. */
-+		error = xfs_trans_get_buf(sc->tp, mp->m_ddev_targp,
-+				XFS_FSB_TO_DADDR(mp, map.br_startblock),
-+				mp->m_bsize, 0, &bp);
-+		if (error)
-+			goto out_err;
-+
-+		trace_xrep_tempfile_copyin(sc, XFS_DATA_FORK, &map);
-+
-+		/* Read in a block's worth of data from the xfile. */
-+		error = prep_fn(sc, bp, data);
-+		if (error) {
-+			xfs_trans_brelse(sc->tp, bp);
-+			goto out_err;
-+		}
-+
-+		/* Queue buffer, and flush if we have too much dirty data. */
-+		xfs_buf_delwri_queue_here(bp, &buffers_list);
-+		xfs_trans_brelse(sc->tp, bp);
-+
-+		if (!(off & flush_mask)) {
-+			error = xfs_buf_delwri_submit(&buffers_list);
-+			if (error)
-+				goto out_err;
-+		}
-+	}
-+
-+	/*
-+	 * Write the new blocks to disk.  If the ordered list isn't empty after
-+	 * that, then something went wrong and we have to fail.  This should
-+	 * never happen, but we'll check anyway.
-+	 */
-+	error = xfs_buf_delwri_submit(&buffers_list);
-+	if (error)
-+		goto out_err;
-+
-+	if (!list_empty(&buffers_list)) {
-+		ASSERT(list_empty(&buffers_list));
-+		error = -EIO;
-+		goto out_err;
-+	}
-+
-+	return 0;
-+
-+out_err:
-+	xfs_buf_delwri_cancel(&buffers_list);
-+	return error;
-+}
-+
-+/*
-+ * Set the temporary file's size.  Caller must join the tempfile to the scrub
-+ * transaction and is responsible for adjusting block mappings as needed.
-+ */
-+int
-+xrep_tempfile_set_isize(
-+	struct xfs_scrub	*sc,
-+	unsigned long long	isize)
-+{
-+	if (sc->tempip->i_disk_size == isize)
-+		return 0;
-+
-+	sc->tempip->i_disk_size = isize;
-+	i_size_write(VFS_I(sc->tempip), isize);
-+	return xrep_tempfile_roll_trans(sc);
-+}
-+
-+/*
-+ * Roll a repair transaction involving the temporary file.  Caller must join
-+ * both the temporary file and the file being scrubbed to the transaction.
-+ * This function return with both inodes joined to a new scrub transaction,
-+ * or the usual negative errno.
-+ */
-+int
-+xrep_tempfile_roll_trans(
++xrep_tempexch_enable(
 +	struct xfs_scrub	*sc)
 +{
 +	int			error;
 +
-+	xfs_trans_log_inode(sc->tp, sc->tempip, XFS_ILOG_CORE);
-+	error = xrep_roll_trans(sc);
++	if (sc->flags & XREP_FSGATES_EXCHMAPS)
++		return 0;
++
++	error = xfs_exchrange_enable(sc->mp);
 +	if (error)
 +		return error;
 +
-+	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
++	trace_xchk_fsgates_enable(sc, XREP_FSGATES_EXCHMAPS);
++
++	sc->flags |= XREP_FSGATES_EXCHMAPS;
 +	return 0;
 +}
-diff --git a/fs/xfs/scrub/tempfile.h b/fs/xfs/scrub/tempfile.h
-index e165e0a3faf63..7980f9c4de552 100644
---- a/fs/xfs/scrub/tempfile.h
-+++ b/fs/xfs/scrub/tempfile.h
-@@ -17,6 +17,21 @@ void xrep_tempfile_iounlock(struct xfs_scrub *sc);
- void xrep_tempfile_ilock(struct xfs_scrub *sc);
- bool xrep_tempfile_ilock_nowait(struct xfs_scrub *sc);
- void xrep_tempfile_iunlock(struct xfs_scrub *sc);
 +
-+int xrep_tempfile_prealloc(struct xfs_scrub *sc, xfs_fileoff_t off,
-+		xfs_filblks_t len);
++/*
++ * Fill out the mapping exchange request in preparation for atomically
++ * committing the contents of a metadata file that we've rebuilt in the temp
++ * file.
++ */
++STATIC int
++xrep_tempexch_prep_request(
++	struct xfs_scrub	*sc,
++	int			whichfork,
++	struct xrep_tempexch	*tx)
++{
++	struct xfs_exchmaps_req	*req = &tx->req;
 +
-+enum xfs_blft;
++	memset(tx, 0, sizeof(struct xrep_tempexch));
 +
-+typedef int (*xrep_tempfile_copyin_fn)(struct xfs_scrub *sc,
-+		struct xfs_buf *bp, void *data);
++	/* COW forks don't exist on disk. */
++	if (whichfork == XFS_COW_FORK) {
++		ASSERT(0);
++		return -EINVAL;
++	}
 +
-+int xrep_tempfile_copyin(struct xfs_scrub *sc, xfs_fileoff_t off,
-+		xfs_filblks_t len, xrep_tempfile_copyin_fn fn, void *data);
++	/* Both files should have the relevant forks. */
++	if (!xfs_ifork_ptr(sc->ip, whichfork) ||
++	    !xfs_ifork_ptr(sc->tempip, whichfork)) {
++		ASSERT(xfs_ifork_ptr(sc->ip, whichfork) != NULL);
++		ASSERT(xfs_ifork_ptr(sc->tempip, whichfork) != NULL);
++		return -EINVAL;
++	}
 +
-+int xrep_tempfile_set_isize(struct xfs_scrub *sc, unsigned long long isize);
++	/* Exchange all mappings in both forks. */
++	req->ip1 = sc->tempip;
++	req->ip2 = sc->ip;
++	req->startoff1 = 0;
++	req->startoff2 = 0;
++	switch (whichfork) {
++	case XFS_ATTR_FORK:
++		req->flags |= XFS_EXCHMAPS_ATTR_FORK;
++		break;
++	case XFS_DATA_FORK:
++		/* Always exchange sizes when exchanging data fork mappings. */
++		req->flags |= XFS_EXCHMAPS_SET_SIZES;
++		break;
++	}
++	req->blockcount = XFS_MAX_FILEOFF;
 +
-+int xrep_tempfile_roll_trans(struct xfs_scrub *sc);
- #else
- static inline void xrep_tempfile_iolock_both(struct xfs_scrub *sc)
- {
++	return 0;
++}
++
++/*
++ * Obtain a quota reservation to make sure we don't hit EDQUOT.  We can skip
++ * this if quota enforcement is disabled or if both inodes' dquots are the
++ * same.  The qretry structure must be initialized to zeroes before the first
++ * call to this function.
++ */
++STATIC int
++xrep_tempexch_reserve_quota(
++	struct xfs_scrub		*sc,
++	const struct xrep_tempexch	*tx)
++{
++	struct xfs_trans		*tp = sc->tp;
++	const struct xfs_exchmaps_req	*req = &tx->req;
++	int64_t				ddelta, rdelta;
++	int				error;
++
++	/*
++	 * Don't bother with a quota reservation if we're not enforcing them
++	 * or the two inodes have the same dquots.
++	 */
++	if (!XFS_IS_QUOTA_ON(tp->t_mountp) || req->ip1 == req->ip2 ||
++	    (req->ip1->i_udquot == req->ip2->i_udquot &&
++	     req->ip1->i_gdquot == req->ip2->i_gdquot &&
++	     req->ip1->i_pdquot == req->ip2->i_pdquot))
++		return 0;
++
++	/*
++	 * Quota reservation for each file comes from two sources.  First, we
++	 * need to account for any net gain in mapped blocks during the
++	 * exchange.  Second, we need reservation for the gross gain in mapped
++	 * blocks so that we don't trip over any quota block reservation
++	 * assertions.  We must reserve the gross gain because the quota code
++	 * subtracts from bcount the number of blocks that we unmap; it does
++	 * not add that quantity back to the quota block reservation.
++	 */
++	ddelta = max_t(int64_t, 0, req->ip2_bcount - req->ip1_bcount);
++	rdelta = max_t(int64_t, 0, req->ip2_rtbcount - req->ip1_rtbcount);
++	error = xfs_trans_reserve_quota_nblks(tp, req->ip1,
++			ddelta + req->ip1_bcount, rdelta + req->ip1_rtbcount,
++			true);
++	if (error)
++		return error;
++
++	ddelta = max_t(int64_t, 0, req->ip1_bcount - req->ip2_bcount);
++	rdelta = max_t(int64_t, 0, req->ip1_rtbcount - req->ip2_rtbcount);
++	return xfs_trans_reserve_quota_nblks(tp, req->ip2,
++			ddelta + req->ip2_bcount, rdelta + req->ip2_rtbcount,
++			true);
++}
++
++/*
++ * Prepare an existing transaction for an atomic file contents exchange.
++ *
++ * This function fills out the mapping exchange request and resource estimation
++ * structures in preparation for exchanging the contents of a metadata file
++ * that has been rebuilt in the temp file.  Next, it reserves space and quota
++ * for the transaction.
++ *
++ * The caller must hold ILOCK_EXCL of the scrub target file and the temporary
++ * file.  The caller must join both inodes to the transaction with no unlock
++ * flags, and is responsible for dropping both ILOCKs when appropriate.  Only
++ * use this when those ILOCKs cannot be dropped.
++ */
++int
++xrep_tempexch_trans_reserve(
++	struct xfs_scrub	*sc,
++	int			whichfork,
++	struct xrep_tempexch	*tx)
++{
++	int			error;
++
++	ASSERT(sc->tp != NULL);
++	ASSERT(xfs_isilocked(sc->ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(sc->tempip, XFS_ILOCK_EXCL));
++
++	error = xrep_tempexch_prep_request(sc, whichfork, tx);
++	if (error)
++		return error;
++
++	error = xfs_exchmaps_estimate(&tx->req);
++	if (error)
++		return error;
++
++	error = xfs_trans_reserve_more(sc->tp, tx->req.resblks, 0);
++	if (error)
++		return error;
++
++	return xrep_tempexch_reserve_quota(sc, tx);
++}
++
++/*
++ * Exchange file mappings (and hence file contents) between the file being
++ * repaired and the temporary file.  Returns with both inodes locked and joined
++ * to a clean scrub transaction.
++ */
++int
++xrep_tempexch_contents(
++	struct xfs_scrub	*sc,
++	struct xrep_tempexch	*tx)
++{
++	int			error;
++
++	ASSERT(sc->flags & XREP_FSGATES_EXCHMAPS);
++
++	xfs_exchange_mappings(sc->tp, &tx->req);
++	error = xfs_defer_finish(&sc->tp);
++	if (error)
++		return error;
++
++	/*
++	 * If we exchanged the ondisk sizes of two metadata files, we must
++	 * exchanged the incore sizes as well.
++	 */
++	if (tx->req.flags & XFS_EXCHMAPS_SET_SIZES) {
++		loff_t	temp;
++
++		temp = i_size_read(VFS_I(sc->ip));
++		i_size_write(VFS_I(sc->ip), i_size_read(VFS_I(sc->tempip)));
++		i_size_write(VFS_I(sc->tempip), temp);
++	}
++
++	return 0;
++}
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index e6c15004e6a17..50801d5914839 100644
+index 50801d5914839..5edbabacc31a8 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -2308,6 +2308,45 @@ TRACE_EVENT(xrep_tempfile_create,
- 		  __entry->temp_inum)
- );
+@@ -114,6 +114,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_HEALTHY);
+ 	{ XCHK_FSGATES_QUOTA,			"fsgates_quota" }, \
+ 	{ XCHK_FSGATES_DIRENTS,			"fsgates_dirents" }, \
+ 	{ XCHK_FSGATES_RMAP,			"fsgates_rmap" }, \
++	{ XREP_FSGATES_EXCHMAPS,		"fsgates_exchmaps" }, \
+ 	{ XREP_RESET_PERAG_RESV,		"reset_perag_resv" }, \
+ 	{ XREP_ALREADY_FIXED,			"already_fixed" }
  
-+DECLARE_EVENT_CLASS(xrep_tempfile_class,
-+	TP_PROTO(struct xfs_scrub *sc, int whichfork,
-+		 struct xfs_bmbt_irec *irec),
-+	TP_ARGS(sc, whichfork, irec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(int, whichfork)
-+		__field(xfs_fileoff_t, lblk)
-+		__field(xfs_filblks_t, len)
-+		__field(xfs_fsblock_t, pblk)
-+		__field(int, state)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->ino = sc->tempip->i_ino;
-+		__entry->whichfork = whichfork;
-+		__entry->lblk = irec->br_startoff;
-+		__entry->len = irec->br_blockcount;
-+		__entry->pblk = irec->br_startblock;
-+		__entry->state = irec->br_state;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx whichfork %s fileoff 0x%llx fsbcount 0x%llx startblock 0x%llx state %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
-+		  __entry->lblk,
-+		  __entry->len,
-+		  __entry->pblk,
-+		  __entry->state)
-+);
-+#define DEFINE_XREP_TEMPFILE_EVENT(name) \
-+DEFINE_EVENT(xrep_tempfile_class, name, \
-+	TP_PROTO(struct xfs_scrub *sc, int whichfork, \
-+		 struct xfs_bmbt_irec *irec), \
-+	TP_ARGS(sc, whichfork, irec))
-+DEFINE_XREP_TEMPFILE_EVENT(xrep_tempfile_prealloc);
-+DEFINE_XREP_TEMPFILE_EVENT(xrep_tempfile_copyin);
-+
- TRACE_EVENT(xreap_ifork_extent,
- 	TP_PROTO(struct xfs_scrub *sc, struct xfs_inode *ip, int whichfork,
- 		 const struct xfs_bmbt_irec *irec),
 
