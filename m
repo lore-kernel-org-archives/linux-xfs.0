@@ -1,192 +1,198 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F4E420332
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 04:29:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A97C2D604;
+	Wed, 28 Feb 2024 08:53:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709094545; cv=none; b=JrogoC5Fjo1+ElMZPuu9vyJe4/FHaWbaiamD3vIP/w6NJTeWoajpfaRem87HVLeYGtIbq0I+edHTbAJ7D3jvBQ7c7+q7OeAmgAh2xJRs/u3rFJPqnuf5bB26uJOKfNCszvYnGty9CL2XQ1a545C7Ng9qVzGvs5Ou2d6bCfM7iYo=
+	t=1709110421; cv=none; b=KWG7I93jmhcbzz52vPSmRZ/pASas2GLaKaC6XbsVgZqa4TVIx0YCZfVt2OM4+QnPY0PYAPv/ZvfBw42Q1nj5jTfUzYsusBNUmN3+B9OnUTjpVOzfd2OKfZd7t36ihsKl5UweKAOYF8Huk02Mfh3atPM+6uaV76OR4Tu0/9WlJaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709094545; c=relaxed/simple;
-	bh=RnJbLG/wCSkflRTJ9DXhmGmjhg+znrGK9pG1gnnWZYo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hALcb/buXKmkCKt8AvAvC7acbxmGKpA0Vqg9XF2AOKR7uufnRCxj4QmAna60s+xpEvvzMjVXLzn+ylHrkwpAc2Y9d0mfev1JgLHXODcirr1ZnD1BEuXu16WUjGSfmMoV4BHwpDn+HDKttC88OjAAuLYduv2vcUzy7TcVi7Ijv1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=AhMEiNXp; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="AhMEiNXp"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6e55bb75c9eso471940b3a.3
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2024 20:29:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709094543; x=1709699343; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=GvLGVDkXeXw8ikqc8FjmbAfxHoB2MC+jPP1CVgaet+0=;
-        b=AhMEiNXp7v91JBCAj4iUjFXE55EOMk+6JS8JLjUygRiADj/AwgGDoccMsiuTQf+DAG
-         yv3ZpXDxT1KnEW4rcrZQQNP+Ow6qmNrSCE7XOcPco2dao6vhGEAyvqIMaIUR48bsJc8F
-         VakkQTMPvN6U2hdsBwSQlZyV2ZDessKTa8WxzCFjIeTWNeoz+d6fR2HPecd9V25ANPi+
-         gXOVoTpKMMDAthR8TpB1xwvE3SP5jxWOMIxJcbe56UQrri6mfd5/a8yuaFHXgByirNYT
-         iYMyALHz0G3T2fJxN+MT7sK086w+wdUWPHqY76wlupRGOXSMFmteU1te2eA0/NTYilE9
-         zapg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709094543; x=1709699343;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=GvLGVDkXeXw8ikqc8FjmbAfxHoB2MC+jPP1CVgaet+0=;
-        b=J0KJtBfJ2SvkDqHtsOb6ZmJ0JpC9lTRtGb+15PbbNnqSyZZzYDhWGH+ueFJKfzaLtl
-         22lJPbfu42W3FXZNVPmAio/6JWMkKppfsb5/C4YG8tMXc5IyCakmPipvlSWbI/oqRwox
-         7IjNtmk7DMwJBSjMiPH8S6ECs6rC3OvJNmDj8Mubudi23xIS+ZkciCJhKsv9yRdsgGCs
-         wzwQR4HQsVUJxkcs1+29A9c6APrx8LnhQbw8OmnGHS2cxstSG19bHgZd4PGUXOMfjF2E
-         7gpQwQN4iXgvzGX+DJrPhYtOxAcRbKNB/4QpiI/YqoyuFLYIBJymkGbSswpuSzt7J0b4
-         qc0Q==
-X-Gm-Message-State: AOJu0YxYuR7rp+/eirMhVXz82KvSjm4hvGlzPDEYQBF7OMDd1FpSdQgL
-	NDlV6QovcBzX+j8TWLTFbU/r25ccX+R3EV9FcfSeKuo9Unz/DMelOEqImSPCgBCydBCqNIlThG7
-	Q
-X-Google-Smtp-Source: AGHT+IHGltB03n+8ycK0QOrhos4kvlvRUvr4hRXHQgj7JMMy/aENjVTtsGay5RSsDGC2fJ6Qcd4f4w==
-X-Received: by 2002:a05:6a00:80df:b0:6e5:571d:a60a with SMTP id ei31-20020a056a0080df00b006e5571da60amr2148696pfb.5.1709094542767;
-        Tue, 27 Feb 2024 20:29:02 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id i2-20020a056a00004200b006e558416202sm861787pfk.148.2024.02.27.20.29.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Feb 2024 20:29:02 -0800 (PST)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-	by dread.disaster.area with esmtp (Exim 4.96)
-	(envelope-from <dave@fromorbit.com>)
-	id 1rfBYy-00CVVl-0F;
-	Wed, 28 Feb 2024 15:28:59 +1100
-Received: from dave by devoid.disaster.area with local (Exim 4.97)
-	(envelope-from <dave@devoid.disaster.area>)
-	id 1rfBYx-00000003Wwm-2O5b;
-	Wed, 28 Feb 2024 15:28:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org,
-	jlayton@kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH] xfs: stop advertising SB_I_VERSION
-Date: Wed, 28 Feb 2024 15:28:59 +1100
-Message-ID: <20240228042859.841623-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1709110421; c=relaxed/simple;
+	bh=LmMn4l1GClZilnMTAowDg6HVHEvvOnMdx2YPGsYQJJE=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=dPUJ4hSltk7sFEhkgCSuV6FJQi9ZQkNurciFwsbIDDG0wgQE4pzkKvSsjOIDCyasxzdnitlT/5BSk9R2BH9AabdlGKY9+F2MjazCNA5pYfwLMhVDW/wibwnQDBw5P9+UzS/QbRzWLdc0pmH8N1d5fkwn3N3evS92YkjtFwg+dvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Tl7Rv0pkKz4f3kKQ;
+	Wed, 28 Feb 2024 16:53:31 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 722071A0172;
+	Wed, 28 Feb 2024 16:53:34 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgAn+RGM9N5lUE2aFQ--.30440S3;
+	Wed, 28 Feb 2024 16:53:34 +0800 (CST)
+Subject: Re: [RFC PATCH v3 07/26] iomap: don't increase i_size if it's not a
+ write operation
+To: Christoph Hellwig <hch@infradead.org>, djwong@kernel.org,
+ Dave Chinner <david@fromorbit.com>
+Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.cz,
+ ritesh.list@gmail.com, willy@infradead.org, zokeefe@google.com,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+ wangkefeng.wang@huawei.com
+References: <20240127015825.1608160-1-yi.zhang@huaweicloud.com>
+ <20240127015825.1608160-8-yi.zhang@huaweicloud.com>
+ <ZcsCP4h-ExNOcdD6@infradead.org>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <9b0040ef-3d9d-6246-4bdd-82b9a8f55fa2@huaweicloud.com>
+Date: Wed, 28 Feb 2024 16:53:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <ZcsCP4h-ExNOcdD6@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAn+RGM9N5lUE2aFQ--.30440S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3AF4fXry7uF47AFy5Zw13urg_yoW7GF4rpF
+	909F4jkan7t3yfWr1kZFs5Xry0vwsaqF4UCry7KrW3Z3Z8JFyIgF17uFWYkFWUXr9xAr1a
+	qF4vva4fuF1UCFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a
+	6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UZ18PUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Dave Chinner <dchinner@redhat.com>
+On 2024/2/13 13:46, Christoph Hellwig wrote:
+> Wouldn't it make more sense to just move the size manipulation to the
+> write-only code?  An untested version of that is below.  With this
+> the naming of the status variable becomes even more confusing than
+> it already is, maybe we need to do a cleanup of the *_write_end
+> calling conventions as it always returns the passed in copied value
+> or 0.
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3dab060aed6d7b..8401a9ca702fc0 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -876,34 +876,13 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+>  		size_t copied, struct folio *folio)
+>  {
+>  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> -	loff_t old_size = iter->inode->i_size;
+> -	size_t ret;
+> -
+> -	if (srcmap->type == IOMAP_INLINE) {
+> -		ret = iomap_write_end_inline(iter, folio, pos, copied);
+> -	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+> -		ret = block_write_end(NULL, iter->inode->i_mapping, pos, len,
+> -				copied, &folio->page, NULL);
+> -	} else {
+> -		ret = __iomap_write_end(iter->inode, pos, len, copied, folio);
+> -	}
+> -
+> -	/*
+> -	 * Update the in-memory inode size after copying the data into the page
+> -	 * cache.  It's up to the file system to write the updated size to disk,
+> -	 * preferably after I/O completion so that no stale data is exposed.
+> -	 */
+> -	if (pos + ret > old_size) {
+> -		i_size_write(iter->inode, pos + ret);
+> -		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+> -	}
 
-The redefinition of how NFS wants inode->i_version to be updated is
-incomaptible with the XFS i_version mechanism. The VFS now wants
-inode->i_version to only change when ctime changes (i.e. it has
-become a ctime change counter, not an inode change counter). XFS has
-fine grained timestamps, so it can just use ctime for the NFS change
-cookie like it still does for V4 XFS filesystems.
+I've recently discovered that if we don't increase i_size in
+iomap_zero_iter(), it would break fstests generic/476 on xfs. xfs
+depends on iomap_zero_iter() to increase i_size in some cases.
 
-We still want XFS to update the inode change counter as it currently
-does, so convert all the code that checks SB_I_VERSION to check for
-v5 format support. Then we can remove the SB_I_VERSION flag from the
-VFS superblock to indicate that inode->i_version is not a valid
-change counter and should not be used as such.
+ generic/476 75s ... _check_xfs_filesystem: filesystem on /dev/pmem2 is inconsistent (r)
+ (see /home/zhangyi/xfstests-dev/results//xfs/generic/476.full for details)
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_trans_inode.c | 15 +++++----------
- fs/xfs/xfs_iops.c               | 16 +++-------------
- fs/xfs/xfs_super.c              |  8 --------
- 3 files changed, 8 insertions(+), 31 deletions(-)
+ _check_xfs_filesystem: filesystem on /dev/pmem2 is inconsistent (r)
+ *** xfs_repair -n output ***
+ Phase 1 - find and verify superblock...
+ Phase 2 - using internal log
+         - zero log...
+         - scan filesystem freespace and inode maps...
+ sb_fdblocks 10916, counted 10923
+         - found root inode chunk
+ ...
 
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 70e97ea6eee7..8071aefad728 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -97,17 +97,12 @@ xfs_trans_log_inode(
- 
- 	/*
- 	 * First time we log the inode in a transaction, bump the inode change
--	 * counter if it is configured for this to occur. While we have the
--	 * inode locked exclusively for metadata modification, we can usually
--	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
--	 * the last time it was incremented. If we have XFS_ILOG_CORE already
--	 * set however, then go ahead and bump the i_version counter
--	 * unconditionally.
-+	 * counter if it is configured for this to occur.
- 	 */
--	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
--		if (IS_I_VERSION(inode) &&
--		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
--			flags |= XFS_ILOG_IVERSION;
-+	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags) &&
-+	    xfs_has_crc(ip->i_mount)) {
-+		inode->i_version++;
-+		flags |= XFS_ILOG_IVERSION;
- 	}
- 
- 	iip->ili_dirty_flags |= flags;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index be102fd49560..97e792d9d79a 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -584,11 +584,6 @@ xfs_vn_getattr(
- 		}
- 	}
- 
--	if ((request_mask & STATX_CHANGE_COOKIE) && IS_I_VERSION(inode)) {
--		stat->change_cookie = inode_query_iversion(inode);
--		stat->result_mask |= STATX_CHANGE_COOKIE;
--	}
--
- 	/*
- 	 * Note: If you add another clause to set an attribute flag, please
- 	 * update attributes_mask below.
-@@ -1044,16 +1039,11 @@ xfs_vn_update_time(
- 	struct timespec64	now;
- 
- 	trace_xfs_update_time(ip);
-+	ASSERT(!(flags & S_VERSION));
- 
- 	if (inode->i_sb->s_flags & SB_LAZYTIME) {
--		if (!((flags & S_VERSION) &&
--		      inode_maybe_inc_iversion(inode, false))) {
--			generic_update_time(inode, flags);
--			return 0;
--		}
--
--		/* Capture the iversion update that just occurred */
--		log_flags |= XFS_ILOG_CORE;
-+		generic_update_time(inode, flags);
-+		return 0;
- 	}
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6ce1e6deb7ec..657ce0423f1d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1692,10 +1692,6 @@ xfs_fs_fill_super(
- 
- 	set_posix_acl_flag(sb);
- 
--	/* version 5 superblocks support inode version counters. */
--	if (xfs_has_crc(mp))
--		sb->s_flags |= SB_I_VERSION;
--
- 	if (xfs_has_dax_always(mp)) {
- 		error = xfs_setup_dax_always(mp);
- 		if (error)
-@@ -1917,10 +1913,6 @@ xfs_fs_reconfigure(
- 	int			flags = fc->sb_flags;
- 	int			error;
- 
--	/* version 5 superblocks always support version counters. */
--	if (xfs_has_crc(mp))
--		fc->sb_flags |= SB_I_VERSION;
--
- 	error = xfs_fs_validate_params(new_mp);
- 	if (error)
- 		return error;
--- 
-2.43.0
+After debugging and analysis, I found the root cause of the problem is
+related to the pre-allocations of xfs. xfs pre-allocates some blocks to
+reduce fragmentation during buffer append writing, then if we write new
+data or do file copy(reflink) after the end of the pre-allocating range,
+xfs would zero-out and write back the pre-allocate space(e.g.
+xfs_file_write_checks() -> xfs_zero_range()), so we have to update
+i_size before writing back in iomap_zero_iter(), otherwise, it will
+result in stale delayed extent.
+
+For more details, let's think about this case,
+1. Buffered write from range [A, B) of an empty file foo, and
+   xfs_buffered_write_iomap_begin() prealloc blocks for it, then create
+   a delayed extent from [A, D).
+2. Write back process map blocks but only convert above delayed extent
+   from [A, C) since the lack of a contiguous physical blocks, now we
+   have a left over delayed extent from [C, D), and the file size is B.
+3. Copy range from another file to range [E, F), then
+   xfs_reflink_zero_posteof() would zero-out post eof range [B, E), it
+   writes zero, dirty and write back [C, E).
+4. Since we don't update i_size in iomap_zero_iter()，the writeback
+   doesn't write anything back, also doesn't convert the delayed extent.
+   After copy range, the file size will update to F.
+5. Finally, the delayed extent becomes stale, and the free blocks count
+   becomes incorrect.
+
+So, we have to handle above case for xfs. I suppose we could keep
+increasing i_size if the zeroed folio is entirely outside of i_size,
+make sure we could write back and allocate blocks for the
+zeroed & delayed extent, something like below, any suggestions ?
+
+
+@@ -1390,6 +1390,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+
+ 	do {
+ 		struct folio *folio;
++		loff_t old_size;
+ 		int status;
+ 		size_t offset;
+ 		size_t bytes = min_t(u64, SIZE_MAX, length);
+@@ -1408,6 +1409,28 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 		folio_mark_accessed(folio);
+
+ 		bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
++
++		/*
++		 * If folio is entirely outside of i_size, update the
++		 * in-memory inode size after zeroing the data in the page
++		 * cache to prevent the write-back process from not writing
++		 * back zeroed pages.
++		 */
++		old_size = iter->inode->i_size;
++		if (pos + bytes > old_size) {
++			size_t offset = offset_in_folio(folio, old_size);
++			pgoff_t end_index = old_size >> PAGE_SHIFT;
++
++			if (folio->index > end_index ||
++			    (folio->index == end_index && offset == 0)) {
++				i_size_write(iter->inode, pos + bytes);
++				iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
++			}
++		}
++		__iomap_put_folio(iter, pos, bytes, folio);
++		if (old_size < pos)
++			pagecache_isize_extended(iter->inode, old_size, pos);
++
+ 		if (WARN_ON_ONCE(bytes == 0))
+ 			return -EIO;
+
+Thansk,
+Yi.
 
