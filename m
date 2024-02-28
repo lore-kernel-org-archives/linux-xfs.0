@@ -1,270 +1,175 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from wfout1-smtp.messagingengine.com (wfout1-smtp.messagingengine.com [64.147.123.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 835821C10;
-	Wed, 28 Feb 2024 01:36:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B302261D;
+	Wed, 28 Feb 2024 01:50:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709084174; cv=none; b=OcRXJdVGJl+yo5y/x90VL9WFpcXU4Zk1azPSBI+dWZvX3tknJcWOl8E2A1YBN9dTwrXq8z+A4gtn3yVtqWrGKhMJkRLpFELzMuLLgs/5AQbaFMWnjjNOZewA9OhuN2KaB0ts/H3yl4rrlKfGB6odyLgqUUXIlPOjflHIyarQWqA=
+	t=1709085045; cv=none; b=cjZxWuA3BRdisCNFfXWz5ynIoYeu5pt10sCt2qyJjxgnKPTMZDRLIJwK8+qdfWabo4bVD/qW7VYbzbLxaOokY5Dy7XN9tq0QSggFnidZ618E3yk8B/7zh6TIzeVsN5kqjkzt5NYIyOgMcmh1cux3lUg+e68xe7UWb898nnBj31c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709084174; c=relaxed/simple;
-	bh=fxOrSTygOa4rFTh6gOYci9DPOUjMqg6tIFEGag6in44=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e+kptUTtreb0CrHVsNlTePqolRjZaGKVjJwB8rCiHQqUEKGCAxobq8HhIQsGLBnfVuGwyi9oMvMNgwZO2gUnIbhEZuAq0Lwln7HJOkwpzbPezsmUUspp1zh1+ZrmAkk8X/cnkLJddG/XTequQTI3/fcTyszvO+1sn+6SA3Dh/qM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QccrZZX6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709085045; c=relaxed/simple;
+	bh=Ke3aNtV9K73tJbsU9ct5uM62SlJIbsds7nBelkuc+ks=;
+	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
+	 Subject:Content-Type; b=iyJgW6Z9MZWgIbVbzxWYcH8X7CvFD87A+mehGLFixMYDw7IdOmpQ1jyvDZRhJkcu3x4mbiW3wW6tY87rYr52pTPVNn0nxCKtEEIIdDr2yR8bE/v8ZtHuN6lo9cC5uTk0jOSUbrIkeEw/oaH7tSTdohSOUC3cOilRJaAYOcTNvRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=verbum.org; spf=pass smtp.mailfrom=verbum.org; dkim=pass (2048-bit key) header.d=verbum.org header.i=@verbum.org header.b=Ssgtg48Q; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=XJid94uY; arc=none smtp.client-ip=64.147.123.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=verbum.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=verbum.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QccrZZX6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EA51C433C7;
-	Wed, 28 Feb 2024 01:36:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709084174;
-	bh=fxOrSTygOa4rFTh6gOYci9DPOUjMqg6tIFEGag6in44=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QccrZZX64WMDEjTHo6YWT+JbgiOXJ1c61xZnTOQ7N5sQhyCAhrrZzPP8zqDhwB+L/
-	 YazhHKYkbywydU3F00n67mciRqHq416JHiT3Ub6WfHBxo06qe0jVIE2eWtoa/mo+zr
-	 7HlopDl4iSLAbaX2X/G/J5hK7HPE7w07occaKw1HL5vUliqBwGbQyHC6M6mRM8/UBf
-	 lmj0xlHt5LdjKKs5BtvMu2enECuAonNQiGj+xvAWJlY9QvQQhE4CLYvz2thq6P6lCB
-	 b2fqqdaoSEj4jOYPlbMy69aQ8s2Jh8JKLC+u6ga3a31zPJcoO2JsAdqLCeUb8xy2QP
-	 coCJ03zNlJbrw==
-Date: Tue, 27 Feb 2024 17:36:13 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 8/8] xfs: test for premature ENOSPC with large cow
- delalloc extents
-Message-ID: <20240228013613.GW6188@frogsfrogsfrogs>
-References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
- <170899915333.896550.18395785595853879309.stgit@frogsfrogsfrogs>
- <20240227060021.5hcpvn2ar5xsup6d@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	dkim=pass (2048-bit key) header.d=verbum.org header.i=@verbum.org header.b="Ssgtg48Q";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="XJid94uY"
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+	by mailfout.west.internal (Postfix) with ESMTP id 04A7A1C00078;
+	Tue, 27 Feb 2024 20:50:41 -0500 (EST)
+Received: from imap46 ([10.202.2.96])
+  by compute2.internal (MEProxy); Tue, 27 Feb 2024 20:50:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=verbum.org; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1709085041;
+	 x=1709171441; bh=gULlgmZeqeQInffwbFCAbM0sD+atderJ/Pmd0JUBsHQ=; b=
+	Ssgtg48QP+nKGFfC+jaUjmNF3Frb6w+hVYuqaItO5ArnM0vgbIdJlaxhpQOQ/SG1
+	AAPrmOXrcqu5dsYS24wTBHiDqL49L5E6QszZ/rPdbiEClcnr3nEWJuQ73a1Suvba
+	eqG3JOUPFPFJ2nKvx+qyOrdS+XVkH7/NORnpWgYfdjoxMlfn6lck1dICg2YVPacI
+	eH/MIWjxkNqN/go5WLKZ35AQ75s4Yiam3umoSnzmhPY9mrbg2VQViremf2XjE8Y9
+	qVC6BfIhKvp8Bo92CuNmefA3EnnULJ0VZxSi3YqAckeC92GYze/dXLHKIgMx6CCe
+	HaVF3jDimrS4XrC5uJfmlQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1709085041; x=
+	1709171441; bh=gULlgmZeqeQInffwbFCAbM0sD+atderJ/Pmd0JUBsHQ=; b=X
+	Jid94uYZwKRKHD+orenuRFvzbfQu6LTPLN6Ufg7YKLWDc/wJEvo40f7Y2MEXn1D2
+	oKHKItxqV0tNLArsx88iZVIjeGf8YkdP+nKyneripP9KvOMxYQy77rvLUSIqPbvn
+	B72bqyluj1M49WJoTcag6foIplni93ScbWLKoaXcksbCMAmQztIHag1hbFJCS/B+
+	dKGTo59i8E/ubOLogADXiCbuO6uvo1pMdUqGw1+y+GtjW0xqVCnEGXjAavLkm7KK
+	h9JeMIDNnAx8CYYnFlDwzsL/eygV3FQ0mq0de3N86xE+7cTIIMgFtir/S5X0/DI7
+	REUeQ39HpmmBFvkTwxxUA==
+X-ME-Sender: <xms:cZHeZb7n2mgGpFLpUjCqU1UmpPKecU6Mc43QA8m6Ocko_osl8eKaKQ>
+    <xme:cZHeZQ58hwBygs2r8LUp6SkSog825F-RSEY5tYbgMa_DWiSrmtacYxMzFR9Qf0y_m
+    JIWH1bcDkJtidd_>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrgeeigdeflecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefofgggkfgjfhffhffvvefutgfgsehtqhertderreejnecuhfhrohhmpedfveho
+    lhhinhcuhggrlhhtvghrshdfuceofigrlhhtvghrshesvhgvrhgsuhhmrdhorhhgqeenuc
+    ggtffrrghtthgvrhhnpeduudfhhffhkedvteetgeevffejudejleejtedvfedugfefheef
+    heetgfeiveejfeenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrh
+    fuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfigrlhhtvghrshesvhgvrhgs
+    uhhmrdhorhhg
+X-ME-Proxy: <xmx:cZHeZSe-bGtbe6SQHA9Oqll9Ff6XSIP25s5Nyny0KS3bgxIR8gsj1A>
+    <xmx:cZHeZcJs-9LsgFWMfK4Gl7KBXl626O8PclbTIw8Qz4RaxLCkzeMQlw>
+    <xmx:cZHeZfJe33OWNs6bUcuuXvWuWwyyaXgtFewsaTXEzN5l8aOHeli_LA>
+    <xmx:cZHeZX2qLlhxKNxAuwajVUdPtMZ5AWS9_wIszcok4xQdssoei3Hf-UJaij0>
+Feedback-ID: ibe7c40e9:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+	id 2AE8D2A20090; Tue, 27 Feb 2024 20:50:41 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.11.0-alpha0-182-gaab6630818-fm-20240222.002-gaab66308
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240227060021.5hcpvn2ar5xsup6d@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Message-Id: <87961163-a4b9-4032-aa06-f5126c9c8ca2@app.fastmail.com>
+In-Reply-To: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+Date: Tue, 27 Feb 2024 20:50:20 -0500
+From: "Colin Walters" <walters@verbum.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
+ "Christoph Hellwig" <hch@lst.de>
+Subject: Re: [PATCHSET v29.4 03/13] xfs: atomic file content exchanges
+Content-Type: text/plain;charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Feb 27, 2024 at 02:00:21PM +0800, Zorro Lang wrote:
-> On Mon, Feb 26, 2024 at 06:02:37PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > On a higly fragmented filesystem a Direct IO write can fail with -ENOSPC error
-> > even though the filesystem has sufficient number of free blocks.
-> > 
-> > This occurs if the file offset range on which the write operation is being
-> > performed has a delalloc extent in the cow fork and this delalloc extent
-> > begins much before the Direct IO range.
-> > 
-> > In such a scenario, xfs_reflink_allocate_cow() invokes xfs_bmapi_write() to
-> > allocate the blocks mapped by the delalloc extent. The extent thus allocated
-> > may not cover the beginning of file offset range on which the Direct IO write
-> > was issued. Hence xfs_reflink_allocate_cow() ends up returning -ENOSPC.
-> > 
-> > This test addresses this issue.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  common/rc          |   14 +++++++++
-> >  tests/xfs/1923     |   85 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/1923.out |    8 +++++
-> >  3 files changed, 107 insertions(+)
-> >  create mode 100755 tests/xfs/1923
-> >  create mode 100644 tests/xfs/1923.out
-> > 
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 30c44dddd9..d3a2a0718b 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -1873,6 +1873,20 @@ _require_scratch_delalloc()
-> >  	_scratch_unmount
-> >  }
-> >  
-> > +# Require test fs supports delay allocation.
-> > +_require_test_delalloc()
-> > +{
-> > +	_require_command "$FILEFRAG_PROG" filefrag
-> > +
-> > +	rm -f $TEST_DIR/testy
-> > +	$XFS_IO_PROG -f -c 'pwrite 0 64k' $TEST_DIR/testy &> /dev/null
-> > +	$FILEFRAG_PROG -v $TEST_DIR/testy 2>&1 | grep -q delalloc
-> 
-> I'm wondering if it's a 100% reliable way to get the "delalloc" flag when
-> the delalloc is supported? If not, is it worth testing with several files
-> or a loop, then return 0 if one of them get delalloc ?
-> 
-> > +	res=$?
-> > +	rm -f $TEST_DIR/testy
-> > +	test $res -eq 0 || \
-> > +		_notrun "test requires delayed allocation buffered writes"
-> > +}
-> > +
-> >  # this test needs a test partition - check we're ok & mount it
-> >  #
-> >  _require_test()
-> > diff --git a/tests/xfs/1923 b/tests/xfs/1923
-> > new file mode 100755
-> > index 0000000000..4e494ad8c2
-> > --- /dev/null
-> > +++ b/tests/xfs/1923
-> > @@ -0,0 +1,85 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 1923
-> > +#
-> > +# This is a regression test for "xfs: Fix false ENOSPC when performing direct
-> > +# write on a delalloc extent in cow fork".  If there is a lot of free space but
-> > +# it is very fragmented, it's possible that a very large delalloc reservation
-> > +# could be created in the CoW fork by a buffered write.  If a directio write
-> > +# tries to convert the delalloc reservation to a real extent, it's possible
-> > +# that the allocation will succeed but fail to convert even the first block of
-> > +# the directio write range.  In this case, XFS will return ENOSPC even though
-> > +# all it needed to do was to keep converting until the allocator returns ENOSPC
-> > +# or the first block of the direct write got some space.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick clone
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $file1 $file2 $fragmentedfile
-> > +}
-> > +
-> > +# Import common functions.
-> > +. ./common/reflink
-> > +. ./common/inject
-> > +
-> > +# real QA test starts here
-> > +_fixed_by_kernel_commit XXXXX \
-> > +	"xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
-> 
-> Is it this commit below, or a new fix with same subject?
-> 
-> commit d62113303d691bcd8d0675ae4ac63e7769afc56c
-> Author: Chandan Babu R <chandan.babu@oracle.com>
-> Date:   Thu Aug 4 08:59:27 2022 -0700
-> 
->     xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
-> 
-> If it's an old commit, please replace the "XXXXX" to "d62113303d69".
 
-Ah, yes, it is that one.  Sorry I forgot to update that.  As you can
-tell, this is a really old test that ... I guess we never sent
-upstream.
 
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> 
-> "xfs"? As it's in tests/xfs/ directory.
+On Mon, Feb 26, 2024, at 9:18 PM, Darrick J. Wong wrote:
+> Hi all,
+>
+> This series creates a new FIEXCHANGE_RANGE system call to exchange
+> ranges of bytes between two files atomically.  This new functionality
+> enables data storage programs to stage and commit file updates such th=
+at
+> reader programs will see either the old contents or the new contents in
+> their entirety, with no chance of torn writes.  A successful call
+> completion guarantees that the new contents will be seen even if the
+> system fails.
+>
+> The ability to exchange file fork mappings between files in this manner
+> is critical to supporting online filesystem repair, which is built upon
+> the strategy of constructing a clean copy of a damaged structure and
+> committing the new structure into the metadata file atomically.
+>
+> User programs will be able to update files atomically by opening an
+> O_TMPFILE, reflinking the source file to it, making whatever updates
+> they want to make, and exchange the relevant ranges of the temp file
+> with the original file.=20
 
-<nod>
+It's probably worth noting that the "reflinking the source file" here
+is optional, right?  IOW one can just:
 
-> > +_require_test_program "punch-alternating"
-> > +_require_test_reflink
-> > +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-> > +_require_test_delalloc
-> > +
-> > +file1=$TEST_DIR/file1.$seq
-> > +file2=$TEST_DIR/file2.$seq
-> > +fragmentedfile=$TEST_DIR/fragmentedfile.$seq
-> 
-> As you use the $TEST_DIR, it might be worth making sure these files
-> aren't existed. Due to the files (from other cases) in $TEST_DIR might
-> not be cleaned, especially if they don't take much free space.
+- open(O_TMPFILE)
+- write()
+- ioctl(FIEXCHANGE_RANGE)
 
-Ok.
+I suspect the "simpler" non-database cases (think e.g. editors
+operating on plain text files) are going to be operating on an
+in-memory copy; in theory of course we could identify common ranges
+and reflink, but it's not clear to me it's really worth it at the
+tiny scale most source files are.
 
-> So if these 3 files won't take much space, we can keep them, don't need
-> a specific _cleanup(). And move the "rm -f $file1 $file2 $fragmentedfile"
-> at here.
+> The intent behind this new userspace functionality is to enable atomic
+> rewrites of arbitrary parts of individual files.  For years, applicati=
+on
+> programmers wanting to ensure the atomicity of a file update had to
+> write the changes to a new file in the same directory
 
-Well you make a good point that we should remove those files so that
-they end up in a known state (i.e. nonexistence) where we can't get
-tripped up by someone creating, say, a /dev/sda symlink to
-$TEST_DIR/file1.$seq.
+More sophisticated tools already are using O_TMPFILE I would say,
+just with a final last step of materializing it with a name,
+and then rename() into place.  So if this also
+obviates the need for
+https://lore.kernel.org/linux-fsdevel/364531.1579265357@warthog.procyon.=
+org.uk/
+that seems good.
 
-I don't think the files are all that big, but I'll continue removing
-them anyway.  Deletion is part of aging.
+>        Exchanges  are  atomic  with  regards to concurrent file opera=E2=
+=80=90
+>        tions, so no userspace-level locks need to be taken  to  obtain
+>        consistent  results.  Implementations must guarantee that read=E2=
+=80=90
+>        ers see either the old contents or the new  contents  in  their
+>        entirety, even if the system fails.
 
-> > +
-> > +# COW operates on pages, so we must not perform operations in units smaller
-> > +# than a page.
-> > +blksz=$(_get_file_block_size $TEST_DIR)
-> > +pagesz=$(_get_page_size)
-> > +if (( $blksz < $pagesz )); then
-> > +	blksz=$pagesz
-> > +fi
-> 
-> Just curious, this's a xfs specific test case, can xfs support blocksize >
-> pagesize? If not, can we just use pagesz directly at here ?
+But given that we're reusing the same inode, I don't think that can *rea=
+lly* be true...at least, not without higher level serialization.
 
-It doesn't support bs > ps yet, but the point of clamping $blksz here
-is the fact that we'll never try to writeback less than a page, so we
-might as well run with those units.
+A classic case today is dconf in GNOME is a basic memory-mapped database=
+ file that is atomically replaced by the "create new file, rename into p=
+lace" model.  Clients with mmap() view just see the old data until they =
+reload explicitly.  But with this, clients with mmap'd view *will* immed=
+iately see the new contents (because it's the same inode, right?) and th=
+at's just going to lead to possibly split reads and undefined behavior -=
+ without extra userspace serialization or locking (that more proper data=
+bases) are going to be doing.
 
-(This test has nothing to do with the ongoing bs>ps effort.)
+Arguably of course, dconf is too simple and more sophisticated tools lik=
+e sqlite or LMDB could make use of this.  (There's some special atomic w=
+rite that got added to f2fs for sqlite last I saw...I'm curious if this =
+could replace it)
 
-> > +
-> > +echo "Create source file"
-> > +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 256))" $file1 >> $seqres.full
-> > +
-> > +sync
-> > +
-> > +echo "Create Reflinked file"
-> > +_cp_reflink $file1 $file2 >> $seqres.full
-> > +#$XFS_IO_PROG -f -c "reflink $file1" $file2 >> $seqres.full
-> 
-> There's a "#", do you hope to run it or not?
+But still...it seems to me like there's going to be quite a lot of the "=
+potentially concurrent reader, atomic replace desired" pattern and since=
+ this can't replace that, we should call that out explicitly in the man =
+page.  And also if so, then there's still a need for the linkat(AT_REPLA=
+CE) etc.
 
-Oops.  That's redundant with the _cp_reflink.
+>            XFS_EXCHRANGE_TO_EOF
 
---D
+I kept reading this as some sort of typo...would it really be too onerou=
+s to spell it out as XFS_EXCHANGE_RANGE_TO_EOF e.g.?  Echoes of unix "cr=
+eat" here =3D)
 
-> > +
-> > +echo "Set cowextsize"
-> > +$XFS_IO_PROG -c "cowextsize $((blksz * 128))" -c stat $file1 >> $seqres.full
-> > +
-> > +echo "Fragment FS"
-> > +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 512))" $fragmentedfile >> $seqres.full
-> > +sync
-> > +$here/src/punch-alternating $fragmentedfile
-> > +
-> > +echo "Allocate block sized extent from now onwards"
-> > +_test_inject_error bmap_alloc_minlen_extent 1
-> > +
-> > +echo "Create big delalloc extent in CoW fork"
-> > +$XFS_IO_PROG -c "pwrite 0 $blksz" $file1 >> $seqres.full
-> > +
-> > +sync
-> > +
-> > +$XFS_IO_PROG -c 'bmap -elpv' -c 'bmap -celpv' $file1 >> $seqres.full
-> > +
-> > +echo "Direct I/O write at offset 3FSB"
-> > +$XFS_IO_PROG -d -c "pwrite $((blksz * 3)) $((blksz * 2))" $file1 >> $seqres.full
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/1923.out b/tests/xfs/1923.out
-> > new file mode 100644
-> > index 0000000000..a0553cf3ee
-> > --- /dev/null
-> > +++ b/tests/xfs/1923.out
-> > @@ -0,0 +1,8 @@
-> > +QA output created by 1923
-> > +Create source file
-> > +Create Reflinked file
-> > +Set cowextsize
-> > +Fragment FS
-> > +Allocate block sized extent from now onwards
-> > +Create big delalloc extent in CoW fork
-> > +Direct I/O write at offset 3FSB
-> > 
-> 
-> 
