@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD71015B98B;
-	Wed, 28 Feb 2024 16:08:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E52F1E4A8
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 16:52:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709136530; cv=none; b=RC4F5qnHUGULILtRWv/CeLMxVoS1ydrdM/gcLqwKbvmx5MTZma1sjd1e2h8N5R9HsCUlkp3Lhhl0Bgj+9H4HyJiouI+dza5hgYPTUPELo5cClzT/GIvIPbTrb8h54vcqf9J3CnfqtRB0DNqsExfFs+7nxAlwX58hwjMHld9nDDI=
+	t=1709139148; cv=none; b=JG4dGgtkddtoFuDNmC4cyObai/6UWnSzah0R2iBkicZQDZeAnQD2WfVI90GLrAM3uRjxaFZ1mjvatJ2C7GqmCf17M1Y90J6E5NqQYvjvROC4P0MxuRYBMPgmAOwsAlybLE7i7N8vHW7UaXVMGJhfMt1nCyeU0sboG5dDAOfareU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709136530; c=relaxed/simple;
-	bh=UUR5O/tTBUC3FaIt6kvDQy2doFjzYWlQUtOdknsZ3Hg=;
+	s=arc-20240116; t=1709139148; c=relaxed/simple;
+	bh=aum1jmUrDMyK4Wq9shgxJqNqnJ/8y0PLvqH2hl94Gmw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P3Yyp6z/tSfNPA05Mnd/9C4jcgGkABdO0FZry4xEEA3Al55buDHF0YYObznK7HU8as3LibouYbwsc6Lc7rBie9lBfhWiRfhcUVwLoM9rgJKk6e/fpcZMVe61i/R+VFub8u8qZ41jV+VQzTcCk2iYkWS479qKH+LKAiFMf66o3p0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XMUjyMjK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=droQQ8u93xJJhaW4WQb+EH+m+dOw+4eLmM20pcSHhJGn64j0aQfNMaQTHus8VN72TRIXmKdZg8Q+akWTajOnZl5xZEz05Afh2Dfm56Z3+N+3YVNuafwrlx+ErQ8q5FrkOkr2BZ7BZsLv4FGxUtDGBrAlxVAFS1kk67367X5hFr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eyVpJtqH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XMUjyMjK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50B62C433C7;
-	Wed, 28 Feb 2024 16:08:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eyVpJtqH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABDD9C433F1;
+	Wed, 28 Feb 2024 16:52:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709136529;
-	bh=UUR5O/tTBUC3FaIt6kvDQy2doFjzYWlQUtOdknsZ3Hg=;
+	s=k20201202; t=1709139147;
+	bh=aum1jmUrDMyK4Wq9shgxJqNqnJ/8y0PLvqH2hl94Gmw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XMUjyMjKLhg1ceGo393w+fwOmRYwutRP8+Y0J3IFRXGiitYEsrn6accAF8CRoao1l
-	 wZ5uRJKwjz3Kpg1HGN/FIctss4WyyHQPHO/tl5dwDo1Ppv3BSH5kP+5ApF0rcuW+PB
-	 9+vTE2KrarSs67aRSMeqGc9VyTrDcquQmppxTUC2xCnni5N8nSb7YAGn68sdSJ+pu/
-	 xWkaVQZC1K2GP7HF0sWBFgbIVzZQ7tY2LBh8UbJelr3TyKhvJgnd2qsE7rBq4YFBh3
-	 69owrOEvC5npbRvohLmaavZLym2Fbhw3HK05tQ/E4QHUdmDRBGjugxtHxx4YmJUyty
-	 RzIxM0ROS5N8g==
-Date: Wed, 28 Feb 2024 08:08:48 -0800
+	b=eyVpJtqHepuOy7GEW9LmKgAdTf7vUHYTvu7eCKKusKtPmL6zcyVDhIJowihus3q0m
+	 erVC/O8cg+GngEtF5yvX0PNk3Xj6UY8o3n7Tr1YVFwEVmDBuG6aEYAoZj8OHBmB1GF
+	 EgHUMblHgN3M3cw0i46bsk12yLy0c9c3o8PlLfxdx5MzLGgpK76iENxjCi+kok/kOB
+	 +4NDg7HNALHl/XJEKobUT+pgjIqae/pKDS0VL8JCpW9sqYbnfpeQr+NSJepzG9pZwf
+	 j52nhbBhelNuAshIG4Mcf81YiTfPvlqPwTPIaMcnQfLP2gc2h/i7oPD1Wqq1ltepU8
+	 4XHWeTUwx5KGQ==
+Date: Wed, 28 Feb 2024 08:52:27 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, jlayton@kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] xfs: stop advertising SB_I_VERSION
-Message-ID: <20240228160848.GF1927156@frogsfrogsfrogs>
-References: <20240228042859.841623-1-david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: hide private inodes from bulkstat and handle
+ functions
+Message-ID: <20240228165227.GH1927156@frogsfrogsfrogs>
+References: <170900012206.938660.3603038404932438747.stgit@frogsfrogsfrogs>
+ <170900012232.938660.16382530364290848736.stgit@frogsfrogsfrogs>
+ <Zd4mxB5alRUsAS7o@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,136 +44,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240228042859.841623-1-david@fromorbit.com>
+In-Reply-To: <Zd4mxB5alRUsAS7o@infradead.org>
 
-On Wed, Feb 28, 2024 at 03:28:59PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Feb 27, 2024 at 10:15:32AM -0800, Christoph Hellwig wrote:
+> On Mon, Feb 26, 2024 at 06:24:46PM -0800, Darrick J. Wong wrote:
+> > Callers are not allowed to link these
+> > files into the directory tree, which should suffice to make these
+> > private inodes actually private.
 > 
-> The redefinition of how NFS wants inode->i_version to be updated is
-> incomaptible with the XFS i_version mechanism. The VFS now wants
-> inode->i_version to only change when ctime changes (i.e. it has
-> become a ctime change counter, not an inode change counter). XFS has
-> fine grained timestamps, so it can just use ctime for the NFS change
-> cookie like it still does for V4 XFS filesystems.
+> I'm a bit confused about this commit log.  The only files with
+> i_nlink == 0 that can be linked into the namespace or O_TMPFILE
+> files that have I_LINKABLE.
 > 
-> We still want XFS to update the inode change counter as it currently
-> does, so convert all the code that checks SB_I_VERSION to check for
-> v5 format support. Then we can remove the SB_I_VERSION flag from the
-> VFS superblock to indicate that inode->i_version is not a valid
-> change counter and should not be used as such.
+> The only think that cares about S_PRIVATE are the security modules
+> (and reiserfs for it's own xattr inodes).
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> So I think setting the flag is a good thing and gets us out of nasty
+> interaction with LSMs, but the commit log could use a little update.
 
-Seeing as NFS and XFS' definition of i_version have diverged, I suppose
-divorce is the only option.  But please, let's get rid of all the
-*iversion() calls in the codebase.
+How about:
 
-With my paranoia hat on: let's add an i_changecounter to xfs_inode and
-completely stop using the inode.i_version to prevent the vfs from
-messing with us.
+"We're about to start adding functionality that uses internal inodes
+that are private to XFS.  What this means is that userspace should never
+be able to access any information about these files, and should not be
+able to open these files by handle.
 
-At some point we can rev the ondisk format to add a new field so that
-"di_version" can be whatever u64 cookie the vfs passes us through
-i_version.
+"Callers must not be allowed to link these files into the directory
+tree, which should suffice to keep these private inodes actually
+private.  I_LINKABLE is therefore left unset.
+
+"To prevent mis-interactions with LSMs, and the rest of the security
+apparatus, set S_PRIVATE."
 
 --D
-
-> ---
->  fs/xfs/libxfs/xfs_trans_inode.c | 15 +++++----------
->  fs/xfs/xfs_iops.c               | 16 +++-------------
->  fs/xfs/xfs_super.c              |  8 --------
->  3 files changed, 8 insertions(+), 31 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> index 70e97ea6eee7..8071aefad728 100644
-> --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> @@ -97,17 +97,12 @@ xfs_trans_log_inode(
->  
->  	/*
->  	 * First time we log the inode in a transaction, bump the inode change
-> -	 * counter if it is configured for this to occur. While we have the
-> -	 * inode locked exclusively for metadata modification, we can usually
-> -	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
-> -	 * the last time it was incremented. If we have XFS_ILOG_CORE already
-> -	 * set however, then go ahead and bump the i_version counter
-> -	 * unconditionally.
-> +	 * counter if it is configured for this to occur.
->  	 */
-> -	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
-> -		if (IS_I_VERSION(inode) &&
-> -		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
-> -			flags |= XFS_ILOG_IVERSION;
-> +	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags) &&
-> +	    xfs_has_crc(ip->i_mount)) {
-> +		inode->i_version++;
-> +		flags |= XFS_ILOG_IVERSION;
->  	}
->  
->  	iip->ili_dirty_flags |= flags;
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index be102fd49560..97e792d9d79a 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -584,11 +584,6 @@ xfs_vn_getattr(
->  		}
->  	}
->  
-> -	if ((request_mask & STATX_CHANGE_COOKIE) && IS_I_VERSION(inode)) {
-> -		stat->change_cookie = inode_query_iversion(inode);
-> -		stat->result_mask |= STATX_CHANGE_COOKIE;
-> -	}
-> -
->  	/*
->  	 * Note: If you add another clause to set an attribute flag, please
->  	 * update attributes_mask below.
-> @@ -1044,16 +1039,11 @@ xfs_vn_update_time(
->  	struct timespec64	now;
->  
->  	trace_xfs_update_time(ip);
-> +	ASSERT(!(flags & S_VERSION));
->  
->  	if (inode->i_sb->s_flags & SB_LAZYTIME) {
-> -		if (!((flags & S_VERSION) &&
-> -		      inode_maybe_inc_iversion(inode, false))) {
-> -			generic_update_time(inode, flags);
-> -			return 0;
-> -		}
-> -
-> -		/* Capture the iversion update that just occurred */
-> -		log_flags |= XFS_ILOG_CORE;
-> +		generic_update_time(inode, flags);
-> +		return 0;
->  	}
->  
->  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 6ce1e6deb7ec..657ce0423f1d 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1692,10 +1692,6 @@ xfs_fs_fill_super(
->  
->  	set_posix_acl_flag(sb);
->  
-> -	/* version 5 superblocks support inode version counters. */
-> -	if (xfs_has_crc(mp))
-> -		sb->s_flags |= SB_I_VERSION;
-> -
->  	if (xfs_has_dax_always(mp)) {
->  		error = xfs_setup_dax_always(mp);
->  		if (error)
-> @@ -1917,10 +1913,6 @@ xfs_fs_reconfigure(
->  	int			flags = fc->sb_flags;
->  	int			error;
->  
-> -	/* version 5 superblocks always support version counters. */
-> -	if (xfs_has_crc(mp))
-> -		fc->sb_flags |= SB_I_VERSION;
-> -
->  	error = xfs_fs_validate_params(new_mp);
->  	if (error)
->  		return error;
-> -- 
-> 2.43.0
-> 
-> 
