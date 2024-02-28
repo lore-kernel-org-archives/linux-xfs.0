@@ -1,42 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5887D70026
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 20:52:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A70A1361A0
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 22:08:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709153534; cv=none; b=HlB22+t3v+cq6H8yS9ErfEflMTVj5RFbGxnWErG5rXtdWzXQc3KWFJNrlMb7iIow2GrcIo61NjfVAVYmPbavvpqsThkHkDJ9D3FrT0T1DP2+bAvFmPzeXcZ9b0MGt5u8Oyvflx3tySmf8SYGjo8gWKu41/U6B+Br+YzJ5PMHQZA=
+	t=1709158135; cv=none; b=Kxfa29SK5xpYVnWLXg/PsGrcjcMVMQqL8J43BG6fBqB97nBYOrl+pwVECuAW0ll4bci3Zhsq/csxI12kRu4fpG2+xdJlpfnHm5SCZ/DK3dJ62vN028Fs4IBY6UmmnIk97iZXK/nsr/J9IVnj6Lebyqt+XMz/xKrO4eSEgbI9h2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709153534; c=relaxed/simple;
-	bh=kjb8MFHgzd/B+I/2HocFu+glNxWLRJ21eCrXN413zTo=;
+	s=arc-20240116; t=1709158135; c=relaxed/simple;
+	bh=zoxzB1kiqHA5GSTx4L/97gZe4jyiKxfrzn6nojLTqFk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=llvIVi/ikn03vogWitrgrOTWF4Y7AMKZe2Jobu9HQAT0za3q35WB6bCsRDZiyC3jm2dzDt5Ih3fo5pWOgM7CLiDvb1y+9G5eFO73aErC2ErnQ3XeV6KuB6ni9vtowuILgJefFVsjy0hprE3TIlhIUdxfohchhgQAiP+II7h7gF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T5DoDjHo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mO40VfgnaDS9UBCGBiEOXUTsBX2Gg8hLt5qSuVHTb4Ld6nx6C77ZqeXXYnENOED+y7rud7+y3gnJM+8XPyja9AH4SXvllQa3rewKNTg7ZEALZ392aRpLg7/4iRMtNtelmRPr6tKNiXNlSNS4JO+hGJGxDakwvgqwg9txWW5mu4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vqKJ9Slv; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T5DoDjHo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDDCEC433C7;
-	Wed, 28 Feb 2024 20:52:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709153533;
-	bh=kjb8MFHgzd/B+I/2HocFu+glNxWLRJ21eCrXN413zTo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T5DoDjHo0RqnzcBA78e5JNctR5u2O1Z4WLa64CUOaRlCtdpUIKusmT3zxJm8OpUl2
-	 UpE2I94zEXQ5Q9+n6fIfws4c6L++E0vf9BVpEtrsqWAicTKsCpnQB+0QjFqls3Zfts
-	 jpgQXL42XkNsvaE8fvfxbVPXHQe8UMs3Tmp08hPugbgUreoOnjSfVECgvb7A40Mn35
-	 1wn+2D2JqoP2V+0Ru/rOq72YxQUkikyJ6XV/j4Pl77dwPDSNWLyJMSAPjKgpga2Nhb
-	 iT9qnDTh1E9lf+K/I6oHKR8H61q7o48AD1FmOzFqO4H3VHRyMp7L+W8mfSWrNwAbEb
-	 4KZfl9TJMwoIg==
-Date: Wed, 28 Feb 2024 12:52:13 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: online repair of symbolic links
-Message-ID: <20240228205213.GS1927156@frogsfrogsfrogs>
-References: <170900015254.939796.8033314539322473598.stgit@frogsfrogsfrogs>
- <170900015273.939796.12650929826491519393.stgit@frogsfrogsfrogs>
- <Zd9sqALoZMOvHm8P@infradead.org>
- <20240228183740.GO1927156@frogsfrogsfrogs>
- <Zd-BHo96SoY4Camr@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vqKJ9Slv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=IF1E6cEBm3zlGUwhPNQSFPyFzlY7uziVbGAbgEv1F40=; b=vqKJ9SlvhqpdFO34TE/l9yU0K6
+	l6blzaeYFH2Bv1/en0G5Veu/BGgeXACKHuWkF0LAyHOQRxtswzHqv5Kipl2ajUQ/CcoZLMx0wy8FS
+	4INMzcOqYuNNkiVKguFBmD6srEXn6YiGs53irOrwjeRbKwEinBFPpom2QHAU+6rZ5EBcPGGf6b1+6
+	PWeG5ohCJkflyBMO94diPEQ+xbJTszzJSgBXWKw5WOyWyvMmh8ftO06cQeHoXsLgxKnchHj3Ky+IY
+	U29spcsMXfbWHegXuM0LsQW5t/4VKeIhBrD5kVit75w+nyJxHRhomcmPAMaY4h1F8GGPMRQYmJo2e
+	/EYIfkBQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfS6d-0000000B5w5-3V6f;
+	Wed, 28 Feb 2024 22:08:51 +0000
+Date: Wed, 28 Feb 2024 14:08:51 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH 05/14] xfs: create deferred log items for file mapping
+ exchanges
+Message-ID: <Zd-u89-cPQAxsCIG@infradead.org>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <170900011723.938268.9127095506680684172.stgit@frogsfrogsfrogs>
+ <Zd9V8VIoA6WpZUDM@infradead.org>
+ <20240228195532.GR1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,55 +49,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zd-BHo96SoY4Camr@infradead.org>
+In-Reply-To: <20240228195532.GR1927156@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Feb 28, 2024 at 10:53:18AM -0800, Christoph Hellwig wrote:
-> On Wed, Feb 28, 2024 at 10:37:40AM -0800, Darrick J. Wong wrote:
-> > Going back to [1] from last year, I finally /did/ find a magic symlink
-> > target that actually does trip EIO.  That solution is to set the buffer
-> > contents to a string that is so long that it exceeds NAME_MAX.
-> > Userspace can readlink this string, but it will never resolve anywhere
-> > in the directory tree.
-> > 
-> > What if this unconditionally set the link target to DUMMY_TARGET instead
-> > of salvaging partial targets?
+On Wed, Feb 28, 2024 at 11:55:32AM -0800, Darrick J. Wong wrote:
+> static inline bool
+> xmi_can_merge_all(
+> 	const struct xfs_bmbt_irec	*l,
+> 	const struct xfs_bmbt_irec	*m,
+> 	const struct xfs_bmbt_irec	*r)
+> {
+> 	xfs_filblks_t			new_len;
 > 
-> Sounds good to me.
+> 	new_len = l->br_blockcount + m->br_blockcount + r->br_blockcount;
+> 	return new_len <= XFS_MAX_BMBT_EXTLEN;
+> }
 
-I overlooked something this morning -- if the caller passes in
-XFS_SCRUB_IFLAG_FORCE_REBUILD, that might be the free space defragmenter
-trying to get us to move the remote target block somewhere else.  For
-that usecase, if the symlink scrub doesn't find any problems and we read
-in exactly i_size bytes, I think we want to write that back to the
-symlink, and not the DUMMY_TARGET.
-
-Something like:
-
-	if (FORCE_REBUILD && !CORRUPT) {
-		if (sc->ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-			ret = xrep_symlink_salvage_inline(sc);
-		else
-			ret = xrep_symlink_salvage_remote(sc);
-		if (ret < 0)
-			return ret;
-
-		if (ret != ip->i_disk_size)
-			ret = 0;
-	}
-
-	target_buf[ret] = 0;
-
-	/*
-	 * Change an empty target into a dummy target and clear the symlink
-	 * target zapped flag.
-	 */
-	if (target_buf[0] == 0) {
-		sc->sick_mask |= XFS_SICK_INO_SYMLINK_ZAPPED;
-		sprintf(target_buf, DUMMY_TARGET);
-	}
-
-Can we allow that without risking truncation making the symlink point to
-some unintended place?
-
---D
-
+Dumb question:  can the addition overflow?
