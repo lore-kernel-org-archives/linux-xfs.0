@@ -1,109 +1,76 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F4614DFD6
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 13:53:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9793612FC;
+	Wed, 28 Feb 2024 15:39:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709128396; cv=none; b=EfWV5CI9+TIoEr77mn9T6SibVzm7QCFLIkfJbBc7Jk4A7ADnFaE+egeEBZwlPhwo5HgHI45U5/cWKZeBR8ks8iaTOHmr1phlb4A7xhhEK9PZd00q7yabv6PxSgYnPj3QSrGA9eydRkGtcjHzpvimkzZYGpUq0ePrkj6etJwu1EY=
+	t=1709134773; cv=none; b=EdSK5UwooDMEoqbuQRhVmJGDqf6s6r1zNkz7mFdDDfsfsd3eMawKDs7JX+Y/11gP/UGf1Op4rVwNG9hT+z2ymzzO1rqcodcxlFilL/6EO9jVI9erv4IZ72g+yVVCmE8VdEbiw9WL2VQiSvmBwkehT8KchnFo1fDU/2aFhWUhViw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709128396; c=relaxed/simple;
-	bh=YglHG1yXcxmgwylo84DkEsmfa2R6xBEC8mHdrAwPWPY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=vClTxW02KD/ytLILJeFXAViaJN7hvruphiPZsLf8XilrI83FpvzZoRV3km2ZZ0V6m1ELGvkZEnbqzrKQcjsxA/phPyXePJK6ldW+/Gv8RFEwADpTsQoGNqL8tu1xwBhcbt4q3CjAQStMeavaKyIarBJtoVveShu96Layto4jAJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GhiNoLvB; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1709134773; c=relaxed/simple;
+	bh=G/QBBfig6n658qCIRIUYdjBKRkyLshegXU/GT3hM7aI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dCXRwgZZqyW64qoepyGMiYnMoyQjrQ4QNGowgtJXIttrBowlfu5rmeU5cOCL1nDPJQxLtXdC9RZNupOUD1yqrUzzVfQHwm3IoRqJCFwVf8wtes2SHVRgWnMUjnrZCDVlfqdFdDfHyeRHXJ9v6WBJ2ZU5ld5LCvpEY96LRT2IstQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=tGCWzAop; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GhiNoLvB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tGCWzAop"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=ok9hoGHAKJyj4+gkPdGiLyzuFd/tRGbhTw0LZ1l54Wk=; b=GhiNoLvByKHvyCsZ6CgLDjbVS8
-	XxqCmx3HPByBdLaD8347zEwh1n3qQrZbmezCdp6Xqn/rxA1uij8tFb7W8nDP1jyPeTXN8KfBGqCz1
-	cvGD1JmkQcgsb0zT0pKKDCuLiJz+Il6E4Hda/EetkoXYmu4us+0tF5XTCzNjbEp3PhLV7lVEJblcD
-	LNZ3ys3YlHLeHs4Y2E+MtPV3CpIYnKS2KJbGhQtU7bVIiwfcQuNb2USG4bcMQnDFH2k9wCTMSkUn0
-	W3Dimbb7EIMliyMJGmHxJgV0kMZ9EIvThvO+r5hErwz6oPy4o/2W8tAs5lEvqfmbiX+icj/bfNIhI
-	VL2qAlSw==;
-Received: from [12.229.247.3] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rfKMz-00000009YtS-3zaY;
-	Wed, 28 Feb 2024 13:53:14 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfsdump/xfsrestore: don't use O_DIRECT on the RT device
-Date: Wed, 28 Feb 2024 05:53:13 -0800
-Message-Id: <20240228135313.854307-2-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240228135313.854307-1-hch@lst.de>
-References: <20240228135313.854307-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=5FACmNrXMsLC5ZSFfuWMjCBgOJTNUS3gd0mH93L3uS8=; b=tGCWzAopNYxYn/eVezCam2su/J
+	6NoJB5aaJICO9fbIbyxStwDZ0409cQwQfRlU41Mtvf+RtYce+z/9n5IipsKp3XrDo4QFFgOchDG71
+	nRDU9Dk9z9UWyYgaeoVjyqigxiTHSMzcYkCHcWbQJUJ6QpT69236jmL044Uy/Er8OiQiCRz2GGzVj
+	zUaMz+canEI2f6Vq3mpMYjbjKpCexJnA2gNZTnmz82vDJmu0k//36ffaaAPMhG3R1E7leD7p/SE6i
+	apQprFQm0wU6tnelIGd7WkcXf+Nq9QZOq5PVH5/i44bLfmQqSy+qP6jt9jvgHC9aPu8+Bf/6u0Dqs
+	38NVNKtQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfM1p-00000009vfz-3gGY;
+	Wed, 28 Feb 2024 15:39:29 +0000
+Date: Wed, 28 Feb 2024 07:39:29 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
+	linux-xfs@vger.kernel.org, guan@eryu.me, fstests@vger.kernel.org
+Subject: Re: [PATCH 6/8] xfs/122: update test to pick up rtword/suminfo
+ ondisk unions
+Message-ID: <Zd9TsVxjRTXu8sa5@infradead.org>
+References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
+ <170899915304.896550.17104868811908659798.stgit@frogsfrogsfrogs>
+ <Zd33sVBc4GSA5y1I@infradead.org>
+ <20240228012704.GU6188@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240228012704.GU6188@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-For undocumented reasons xfsdump and xfsrestore use O_DIRECT for RT
-files.  On a rt device with 4k sector size this runs into alignment
-issues, e.g. xfs/060 fails with this message:
+On Tue, Feb 27, 2024 at 05:27:04PM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 27, 2024 at 06:54:41AM -0800, Christoph Hellwig wrote:
+> > Can we please just kill the goddamn test?  Just waiting for the
+> > xfsprogs 6.8 resync to submit the static_asserts for libxfs that
+> > will handle this much better.
+> 
+> I'll be very happen when we scuttle xfs/122 finally.
+> 
+> However, in theory it's still be useful for QA departments to make sure
+> that xfsprogs backports (HA!) don't accidentally break things.
+> 
+> IOWs, I advocate for _notrunning this test if xfsprogs >= 6.8 is
+> detected, not removing it completely.
+> 
+> Unless someone wants to chime in and say that actually, nobody backports
+> stuff to old xfsprogs?  (We don't really...)
 
-xfsrestore: attempt to write 237568 bytes to dumpdir/large000 at offset 54947844 failed: Invalid argument
-
-Switch to using buffered I/O to match the main device and make these
-alignment issues go away.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- doc/xfsdump.html  | 1 -
- dump/content.c    | 3 ---
- restore/content.c | 3 ---
- 3 files changed, 7 deletions(-)
-
-diff --git a/doc/xfsdump.html b/doc/xfsdump.html
-index efd3890..eec7dac 100644
---- a/doc/xfsdump.html
-+++ b/doc/xfsdump.html
-@@ -884,7 +884,6 @@ Initialize the mmap files of:
-                    <ul>
-                    <li> S_IFREG -> <b>restore_reg</b> - restore regular file
-                       <ul>
--                      <li>if realtime set O_DIRECT
-                       <li>truncate file to bs_size
-                       <li>set the bs_xflags for extended attributes
-                       <li>set DMAPI fields if necessary
-diff --git a/dump/content.c b/dump/content.c
-index 9117d39..f06dda1 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -4325,9 +4325,6 @@ init_extent_group_context(jdm_fshandle_t *fshandlep,
- 
- 	isrealtime = (bool_t)(statp->bs_xflags & XFS_XFLAG_REALTIME);
- 	oflags = O_RDONLY;
--	if (isrealtime) {
--		oflags |= O_DIRECT;
--	}
- 	(void)memset((void *)gcp, 0, sizeof(*gcp));
- 	gcp->eg_bmap[0].bmv_offset = 0;
- 	gcp->eg_bmap[0].bmv_length = -1;
-diff --git a/restore/content.c b/restore/content.c
-index 488ae20..c80ff34 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -7471,9 +7471,6 @@ restore_reg(drive_t *drivep,
- 		return BOOL_TRUE;
- 
- 	oflags = O_CREAT | O_RDWR;
--	if (persp->a.dstdirisxfspr && bstatp->bs_xflags & XFS_XFLAG_REALTIME)
--		oflags |= O_DIRECT;
--
- 	*fdp = open(path, oflags, S_IRUSR | S_IWUSR);
- 	if (*fdp < 0) {
- 		mlog(MLOG_NORMAL | MLOG_WARNING,
--- 
-2.39.2
+Well, who is going to backport changes to the on-disk format in a way
+that is complex enough to change strutures, and not also backport the
+patch to actually check the sizes?  Sounds like a weird use case to
+optimize for.
 
