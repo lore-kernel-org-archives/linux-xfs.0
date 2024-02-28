@@ -1,42 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3257A159588
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 17:26:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51FFA3BBC5
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 17:33:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709141162; cv=none; b=seP4tvCeXFy2l9YPaUWqj10U3eu5NFyE/cDEoFZenOvOib2iH990hR0KvKY3trK5bI2NO7P0GfLGi2kOOJaXRlA358OjmkVwAvpTIc+uAxfx23ZqS/L8pB+LMd2xILYr6kuyH46SWZZmALYLcmJl7JLL4QGATq2b6KVdloAx92k=
+	t=1709141606; cv=none; b=k3dFRQOxXkwrn1xkFH60TWPtoLz0WofToiMIQGR9F3FIBPpihysv5obSuDH13F0NFnCLt49cW3NyaV9IbYjgKmk30cBu7DyYiTDJ+CQ9tNbhh0gnzzuAqhHcGS5y65a9dtOjYCvQYiVKMnEUcvXMJrclMULb/ncTwnhA6htfIpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709141162; c=relaxed/simple;
-	bh=ZHWDoec4gQaGZSeXUR29Vcv5qu53mdzjYehya+VZDiE=;
+	s=arc-20240116; t=1709141606; c=relaxed/simple;
+	bh=AkchHvxOqPK7Ih5+D73ffCNaIzrN2AXSrtOhzFsN+ys=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O/k5XngbOBwmt7nx073EzgNicGovCKEHwZpJ09XItoeLyX8grl2NkanehJgyUS+i63hZy4hOfO5HLtLKCUYmQ4/oOjSTFn5O8b2vzxH4lKNsf/N3SFRDDBd5+uIpjD0rhNRKHg/V2jR8iPRUBjPAwOZwtY2CNrQkfPdB7+VqbaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WoJMeGi0; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=eakSsm/DiS1/dIL59jVWWAlYXKwUK9y7BUxCrne3xysleh5oVqZKpn+p/lJIc+UK2fNoLbVBMN/MH08Vg7AFKbgWPuKK/9Apr1I1kqe8vP0Pb3FSX4vBoQWooUnNvOr7gEJuHTReRdVnOQ9M/PYsPNRY/crX32lygheZwMXz7jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UqlNzms3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WoJMeGi0"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=9wuuYwnShbU5Nr2tif9jDwAoGxVpWQf7vz0V8j1r1no=; b=WoJMeGi0IYRxElysldj0g8/oYQ
-	7ISwaol9ilrKDxLYss3b9GWQZtDy7gM9LNjBvLJ8tP4F748/ORSOQBRtbcYEgUmw+1IzK+et4cB0p
-	fj70m/96VZx3G/GlU+aHf3sGqfpGhSrgioyizDqlkjKGkvU5wfcyJplde+NG4MFB1HOTxGqHYTbyU
-	4bVGLLTOElGeGKxGdUmQmIhVtivngeebh2cwLXPmDOOgd1N3ngS+GRUE4JC7Lbj3RvZD8iRI8/EwA
-	u+5waeGB90xngGQ+er3OFuKR/e0wvZtldeD+qhpb9t69ZNRbdi8H+P0o/Mg5h2hjd4/JeQQjT27BD
-	RMDrvHig==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rfNgu-0000000AHtv-3V3n;
-	Wed, 28 Feb 2024 17:26:00 +0000
-Date: Wed, 28 Feb 2024 09:26:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UqlNzms3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23AAC433C7;
+	Wed, 28 Feb 2024 17:33:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709141605;
+	bh=AkchHvxOqPK7Ih5+D73ffCNaIzrN2AXSrtOhzFsN+ys=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UqlNzms3FAp/FAKjZdiblgvv5Pay+4J2pQpmUsa2jPb+/YeuxWe/1+uesVlNoFvWJ
+	 Q3dtcgf9YdCdbvYh9fq59ck/al8wn6iFsvQyfVhFsk+FXOMF63dlP+yWBAnFtGGOSp
+	 ruVaP14dbQseVzCgDhnMwsw5k8Ln/BG7MPJ8MQC3bH88DdFTixazseYCoMcQjzpnzp
+	 GKwlbVUh6yTELM6VZecTXFoiIZaBkakpWinpIYtGkvyLGqKL+q9V2nIOu4TMQpR6mG
+	 ukX0/t0srlGHUGLc7LsQeGF0BS22XaYK+W6vwg049+KP/13q19c2XThZjljLMACbp9
+	 tXGisdNq/QNEQ==
+Date: Wed, 28 Feb 2024 09:33:25 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: online repair of symbolic links
-Message-ID: <Zd9sqALoZMOvHm8P@infradead.org>
-References: <170900015254.939796.8033314539322473598.stgit@frogsfrogsfrogs>
- <170900015273.939796.12650929826491519393.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/4] xfs: hide private inodes from bulkstat and handle
+ functions
+Message-ID: <20240228173325.GI1927156@frogsfrogsfrogs>
+References: <170900012206.938660.3603038404932438747.stgit@frogsfrogsfrogs>
+ <170900012232.938660.16382530364290848736.stgit@frogsfrogsfrogs>
+ <Zd4mxB5alRUsAS7o@infradead.org>
+ <20240228165227.GH1927156@frogsfrogsfrogs>
+ <Zd9nJj3Lw4kUYIY6@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,18 +46,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170900015273.939796.12650929826491519393.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Zd9nJj3Lw4kUYIY6@infradead.org>
 
-On Mon, Feb 26, 2024 at 06:32:51PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Feb 28, 2024 at 09:02:30AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 28, 2024 at 08:52:27AM -0800, Darrick J. Wong wrote:
+> > that are private to XFS.  What this means is that userspace should never
+> > be able to access any information about these files, and should not be
+> > able to open these files by handle.
+> > 
+> > "Callers must not be allowed to link these files into the directory
+> > tree, which should suffice to keep these private inodes actually
+> > private.  I_LINKABLE is therefore left unset.
 > 
-> If a symbolic link target looks bad, try to sift through the rubble to
-> find as much of the target buffer that we can, and stage a new target
-> (short or remote format as needed) in a temporary file and use the
-> atomic extent swapping mechanism to commit the results.
+> I_LINKABLE is only set for O_TMPFILE, so I wouldn't even bother with
+> that.  But thinking about this:  what i_nlink do these private inodes
+> have?  If it is >= 1, we probably want to add an IS_PRIVATE check
+> to xfs_link just in case they ever leak out to a place where ->link
+> could be called.
 
-So this basically injects new link paths, which looks really dangerous
-to me, as it creates odd attack vectors.  I'd much prefer to not
-"repair" the path, but mark the link bad so that any access but unlike
-returns -EIO.
+Ooh, that's a good catch.  I'll check for IS_PRIVATE in xfs_vn_link.
+
+"We're about to start adding functionality that uses internal inodes
+that are private to XFS.  What this means is that userspace should never
+be able to access any information about these files, and should not be
+able to open these files by handle.
+
+"To prevent userspace from ever finding the file, or mis-interactions
+with the security apparatus, set S_PRIVATE on the inode.  Don't allow
+bulkstat, open-by-handle, or linking of S_PRIVATE files into the
+directory tree.  This should keep private inodes actually private."
+
+--D
