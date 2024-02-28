@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B3F70055
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 22:56:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF47E72936
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 23:00:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709161002; cv=none; b=r4SFntKHQ2J/V128fe5SDmgSL489PaXZG0LpG8rnvKddaiIQbFxuCcrY9OZxHBJgTFZrxaN334+dixsxLJC4pC5bv8+DOgLG+W2cvMGgUy4GB9bjRx9DJkCC+y1OVXdc+VnhpXFAGxnAR80mQQbRZMPRdyXatzWR0MlMCg35mcs=
+	t=1709161258; cv=none; b=l7QPUmUd0a2Wh6Z6CfbyscTP2Ji35KW+8bqNiK8YRtGwf2k596YZFalS9L+Wv5biuS+2LH/2DxAMhfUZ3EDIM01n7LEo0fwisElWefCaO8TL9+3TdYygL0qkvT/oqR6yBZ0EdxH38IdTh5A6VuO/hIo1/TIDS+1kRhmokGVHhJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709161002; c=relaxed/simple;
-	bh=XWPwiJ76kzMBH7gwi/eARp7RzCM7oXAHdjS3YXQTBF0=;
+	s=arc-20240116; t=1709161258; c=relaxed/simple;
+	bh=lyMe189KyEYO7XOBHvEX+3c3r1fIequm9rX0DNW4Dno=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L1JIP43BtMI+AG0tX5Zqn5RYUjrE2LdhmUj4lO7UfJSsLvgNHvTPq8yPDkTAYrA2mWlSZMFRe8lB1lmThZhEsMeQ+zE3KgcQDHi7d5lX2fT657PyuyOA0q4Y/4k+kmG08oHj4+z0CR3NKOuwe4bX+6tbi8h/vvCXah4djzpBWic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m0HvNHi7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fWlXIqd996QANbFGBPZdaTP4F5AClMOP16H0jA9EL9y7owzl/fJlkBbPAIqU6JX3aON7wm3m54hjEBordE0yP6keR+lQlVxq7o/COPo3yFz9Ftz998sVwTaS+5Vlymy7b4HYWF8QWxlRnYBrm2kNxKlQP52+29+8+IPl1+FSQog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AlgRmQp+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m0HvNHi7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B6A9C433C7;
-	Wed, 28 Feb 2024 22:56:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AlgRmQp+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ECD1C433F1;
+	Wed, 28 Feb 2024 23:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709161001;
-	bh=XWPwiJ76kzMBH7gwi/eARp7RzCM7oXAHdjS3YXQTBF0=;
+	s=k20201202; t=1709161258;
+	bh=lyMe189KyEYO7XOBHvEX+3c3r1fIequm9rX0DNW4Dno=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=m0HvNHi7gqREn/HaNu3+eK/6oL9hWslVqWlAaVf4uoHel4Ylq9ZNhKX3Vg31ZkkW9
-	 jbRh6tZrJqL7in2zOJ8TyABCPKoy0fDM3PdcUVKcOliaS0XmSE1FRIB9MCZE/i8Gwg
-	 Ln09uezfzK3s80wiKzXxhRbhnD1TmJiK7BBFWUywWD2assRlAyb1anNYnQk9F/Pn27
-	 VdbZ8QRY/pXtCPRihzuIuMh9eHXiel+52VVLSsuB05vqd21PaD5N723vbxk+ywLOig
-	 JUhdUD/0MUVtjIEqnb+IRKVBwO2YLFjTflDZW44w5R8lBhq0ooBYqegPtTyPsHrfS4
-	 T4G0kjwnDcoZQ==
-Date: Wed, 28 Feb 2024 14:56:40 -0800
+	b=AlgRmQp++DaaiDcBL79BdwCa/LqwFkQkXHzgiJ6mEy+dy0a13WPAuwm8pTAaguWnB
+	 p+nf05RyYR/di5dFImWQ50UQ7RrGx+Ij4b+IFy71FOlqomqCMe94JY4ksGapdmChBp
+	 BwPSBe1f/tkFBiDZhPUSKpDxLaLk0gRRtzr3c6CLl+iH8GlHiHxpLLq9w242R0AaRl
+	 hwLc747VG5lxI55GegtyZkztWg2L/KebO38ey1+elK4A/KBdR3Mlt60foRQ/0SHnMP
+	 e6kdHmCXWV4CHYeYyCJwg7j2pzzWtRoWHPcI5RuhHvnZSxC7fWmHCm0vK8IkkSN1h+
+	 J7HyglrvyitJA==
+Date: Wed, 28 Feb 2024 15:00:57 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 05/14] xfs: create deferred log items for file mapping
- exchanges
-Message-ID: <20240228225640.GT1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 02/14] xfs: introduce new file range exchange ioctls
+Message-ID: <20240228230057.GU1927156@frogsfrogsfrogs>
 References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
- <170900011723.938268.9127095506680684172.stgit@frogsfrogsfrogs>
- <Zd9V8VIoA6WpZUDM@infradead.org>
- <20240228195532.GR1927156@frogsfrogsfrogs>
- <Zd-u89-cPQAxsCIG@infradead.org>
+ <170900011673.938268.12940080187778287002.stgit@frogsfrogsfrogs>
+ <Zd9U4GAYxqw7zpXe@infradead.org>
+ <20240228193547.GQ1927156@frogsfrogsfrogs>
+ <Zd-LdqtoruWBSVc6@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,34 +45,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zd-u89-cPQAxsCIG@infradead.org>
+In-Reply-To: <Zd-LdqtoruWBSVc6@infradead.org>
 
-On Wed, Feb 28, 2024 at 02:08:51PM -0800, Christoph Hellwig wrote:
-> On Wed, Feb 28, 2024 at 11:55:32AM -0800, Darrick J. Wong wrote:
-> > static inline bool
-> > xmi_can_merge_all(
-> > 	const struct xfs_bmbt_irec	*l,
-> > 	const struct xfs_bmbt_irec	*m,
-> > 	const struct xfs_bmbt_irec	*r)
-> > {
-> > 	xfs_filblks_t			new_len;
+On Wed, Feb 28, 2024 at 11:37:26AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 28, 2024 at 11:35:47AM -0800, Darrick J. Wong wrote:
+> > > How about only doing this checks once further up?  As the same sb also
+> > > applies the same mount.
 > > 
-> > 	new_len = l->br_blockcount + m->br_blockcount + r->br_blockcount;
-> > 	return new_len <= XFS_MAX_BMBT_EXTLEN;
-> > }
+> > I'll remove this check entirely, since we've already checked that the
+> > vfsmnt are the same.  Assuming that's what you meant-- I was slightly
+> > confused by "same sb also applies the same mount" and decided to
+> > interpret that as "same sb implies the same mount".
 > 
-> Dumb question:  can the addition overflow?
+> You interpreted the correctly.  Sorry for my jetlagged early morning
+> incoherence.
 
-No.
+So it occurs to me that I've mismatched the signedness in struct
+xfs_exchange_range:
 
-Both callsites of xmi_can_merge_all trigger only if both LEFT_CONTIG and
-RIGHT_CONTIG have been set.  Both of thse _CONTIG flags are set only if
-xmi_can_merge returned true, which it only does for real mappings.  Real
-mappings are derived from ondisk bmbt mappings, which means they won't
-be larger than 2^21 blocks in length.
+struct xfs_exchange_range {
+	...
+	__s64		file1_offset;	/* file1 offset, bytes */
+	__s64		file2_offset;	/* file2 offset, bytes */
+	__u64		length;		/* bytes to exchange */
 
-Therefore, [lmr]->br_blockcount each can only be up to 2^21, and adding
-them all together only requires 23 bits.  The u64 here is overkill, but
-it matches xfs_bmbt_irec.br_blockcount.
+Compare this to FICLONERANGE:
+
+struct file_clone_range {
+	...
+	__u64 src_offset;
+	__u64 src_length;
+	__u64 dest_offset;
+};
+
+The offsets and lengths for FICLONERANGE are unsigned, so I think
+xfs_exchange_range ought to follow that.
 
 --D
