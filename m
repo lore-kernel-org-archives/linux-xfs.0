@@ -1,38 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F89C15B98B;
-	Wed, 28 Feb 2024 15:59:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F0915B98B
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 15:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709135971; cv=none; b=eZpkYV+5ChPToU2az3lj6zDYeaw2Rfb4/3AoJifFYfZTjN/ixsclJqb/2zcGne207kUm8owWh2ztAziS2P8gmPUeDzz0u4RA8lv2B2oBNALxP8H8A2o5jMmt3R+fFrdx7yxnLnqaOTTXgjxFpAB0mzbp6Qv/bJB7vIsTT4wk4Yw=
+	t=1709135992; cv=none; b=UArtrQyjVnaMN4R2J+Tm1FNDMhwPsgzMeMW1+/shrk6w0279jvOLr9G/HcBOB7mnldQmymmQMHAKlAt6VPPoq331uvXUqxZU1lk5p3A8Xg2BXhsqkxAycE3F4OnbXFBFHZ/vzC/Tw3fHPpx0rUbU38p4PjUP6rf/3qdQYs4dQ4A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709135971; c=relaxed/simple;
-	bh=kQ5+t1j1ZKEV2cfC/903k6n4OIu4xKbMKcdblukLsDY=;
+	s=arc-20240116; t=1709135992; c=relaxed/simple;
+	bh=n549ns73JMTIwlrexX57kNXzbNjR6WBVdAjrpx/8YXo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V7b0z647NF6LrnDCkkRzdzpQOB2huscHMUnkeWU8JC6CHq6e3Cai4SyS3YAn8VGMp69WgtPhNBP4Z+3J8q2/KSGzXvpFWJqbRQN6JLCDwY6VMdMlbhFhgmoSZr/lOgFbRzrrvj+gqVfzOiONrY1TVG1H0ORzGM+tUdqhJNG66yg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cZOKs4bj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gi9gSaBFREaYhKAZ4zykiU5LUXybzrik2NRszwzmli3PAjWc87EFGaBBBJqE/ZM/s/XkkA7iqMDyX+xOTxyxp8Kv9VrgPSD6QYN5qyIk/OO6J7QbSo9RkDub4WVXrDADbCEuUaLN2zZ+3xC7Z+3iZheKqP36uO8EUQXnLsp5Y4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Yv2yiPKh; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cZOKs4bj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94200C433C7;
-	Wed, 28 Feb 2024 15:59:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709135970;
-	bh=kQ5+t1j1ZKEV2cfC/903k6n4OIu4xKbMKcdblukLsDY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cZOKs4bjptxEDVSZaDrpfhRN44yj3i6zoODIaFDZ5KSbVTp5jgTUIMZ1LRjRTH0HT
-	 Fb8RmOxyAqP74vbvlctVDzyrEtwp6JQtEzko8NAL1/LAPpuJL7P+BPVZoBHavws8Cz
-	 9rpANqGg9roFOvLeMA3I2eYDRWQExiq5RVfyCzQpF7hGdqpbFs3hIXEKBr6pWhz8qU
-	 p//ISZeebGTOOfF1IEKY4lte84klFinrSdKLBK+0JunnjhFTyPURG9RYmX25yuBRbQ
-	 EvsE9T1JprpSmf3kMGfpndptjbrL0fIYI15NCr5M4vqlPxRiSYNtR2AG1tsQK2jyy4
-	 y3PKDqoOlXHfQ==
-Date: Wed, 28 Feb 2024 07:59:29 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] generic: check logical-sector sized O_DIRECT
-Message-ID: <20240228155929.GD1927156@frogsfrogsfrogs>
-References: <20221107045618.2772009-1-zlang@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Yv2yiPKh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=n549ns73JMTIwlrexX57kNXzbNjR6WBVdAjrpx/8YXo=; b=Yv2yiPKhWbM6HSHE2zQk9qtzQG
+	Z+a1kxF157+ptCh/3bqyls3ZHeyaz3+YsLCUNxmkDJJewSjPQoy3cSUXhWsNJuwS7IhYKLvGzlflZ
+	Z21Xdi1c1c8U9EWM8AYIw5DNZaayIIKTDv56n2f3ECXtIEz6odtrtQ+5tKDYhCdW2DDpI5wOYurT0
+	LK0ff+5qcWfcZvNdrCyBNsn+vTaOzIxWFKEysn8VzBtPJpqGby9VSkfD7ChbIY391gIRHlhMgs/l0
+	cVWEpmuoBzJR8/a0l/6oCMTvH+xPJsbKlbnljJbRN0q0qlFJemhJrzzyG7pWEbiSL8iD+x67OgQ8J
+	Qstt/94g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfMLX-0000000A0Uz-10oo;
+	Wed, 28 Feb 2024 15:59:51 +0000
+Date: Wed, 28 Feb 2024 07:59:51 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 9/9] xfs: validate explicit directory free block owners
+Message-ID: <Zd9Yd50w5vskYZrA@infradead.org>
+References: <170900013068.938940.1740993823820687963.stgit@frogsfrogsfrogs>
+ <170900013243.938940.4243130142867918052.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,134 +45,11 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221107045618.2772009-1-zlang@kernel.org>
+In-Reply-To: <170900013243.938940.4243130142867918052.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Nov 07, 2022 at 12:56:18PM +0800, Zorro Lang wrote:
-> If the physical sector size is 4096, but the logical sector size
-> is 512, the 512b dio write/read should be allowed.
+Same comment about the extern as for the last one.
 
-Huh, did we all completely forget to review this patch?
+Otherwise:
 
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
-> ---
-> 
-> Hi,
-> 
-> This reproducer was written for xfs, I try to make it to be a generic
-> test case for localfs. Current it test passed on xfs, extN and btrfs,
-> the bug can be reproduced on old rhel-6.6 [1]. If it's not right for
-> someone fs, please feel free to tell me.
-> 
-> Thanks,
-> Zorro
-> 
-> [1]
-> # ./check generic/888
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 xxx-xxxxx-xxxxxx 2.6.32-504.el6.x86_64
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-> MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/loop1 /mnt/scratch
-> 
-> generic/888      - output mismatch (see /root/xfstests-dev/results//generic/888.out.bad)
->     --- tests/generic/888.out   2022-11-06 23:42:44.683040977 -0500
->     +++ /root/xfstests-dev/results//generic/888.out.bad 2022-11-06 23:48:33.986481844 -0500
->     @@ -4,3 +4,4 @@
->      512
->      mkfs and mount
->      DIO read/write 512 bytes
->     +pwrite64: Invalid argument
->     ...
->     (Run 'diff -u tests/generic/888.out /root/xfstests-dev/results//generic/888.out.bad'  to see the entire diff)
-> Ran: generic/888
-> Failures: generic/888
-> Failed 1 of 1 tests
-> 
->  tests/generic/888     | 52 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/888.out |  6 +++++
->  2 files changed, 58 insertions(+)
->  create mode 100755 tests/generic/888
->  create mode 100644 tests/generic/888.out
-> 
-> diff --git a/tests/generic/888 b/tests/generic/888
-> new file mode 100755
-> index 00000000..b5075d1e
-> --- /dev/null
-> +++ b/tests/generic/888
-> @@ -0,0 +1,52 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 888
-> +#
-> +# Make sure logical-sector sized O_DIRECT write is allowed
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	[ -d "$SCSI_DEBUG_MNT" ] && $UMOUNT_PROG $SCSI_DEBUG_MNT 2>/dev/null
-> +	_put_scsi_debug_dev
-> +}
-> +
-> +# Import common functions.
-> +. ./common/scsi_debug
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_fixed_by_kernel_commit 7c71ee78031c "xfs: allow logical-sector sized O_DIRECT"
-> +_require_scsi_debug
-> +# If TEST_DEV is block device, make sure current fs is a localfs which can be
-> +# written on scsi_debug device
-> +_require_test
-> +_require_block_device $TEST_DEV
-
-_require_odirect?
-
-> +
-> +echo "Get a device with 4096 physical sector size and 512 logical sector size"
-> +SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 512 0 256`
-> +blockdev --getpbsz --getss $SCSI_DEBUG_DEV
-> +
-> +echo "mkfs and mount"
-> +_mkfs_dev $SCSI_DEBUG_DEV || _fail "Can't make $FSTYP on scsi_debug device"
-> +SCSI_DEBUG_MNT="$TEST_DIR/scsi_debug_$seq"
-> +rm -rf $SCSI_DEBUG_MNT
-> +mkdir $SCSI_DEBUG_MNT
-> +run_check _mount $SCSI_DEBUG_DEV $SCSI_DEBUG_MNT
-
-/me wonders, should we try to use $MKFS_OPTIONS and $MOUNT_OPTIONS
-on the scsidebug device?  To catch cases where the config actually
-matters for that kind of thing?
-
---D
-
-> +
-> +echo "DIO read/write 512 bytes"
-> +# This dio write should succeed, even the physical sector size is 4096, but
-> +# the logical sector size is 512
-> +$XFS_IO_PROG -d -f -c "pwrite 0 512" $SCSI_DEBUG_MNT/testfile >> $seqres.full
-> +$XFS_IO_PROG -d -c "pread 0 512" $SCSI_DEBUG_MNT/testfile >> $seqres.full
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/888.out b/tests/generic/888.out
-> new file mode 100644
-> index 00000000..0f142ce9
-> --- /dev/null
-> +++ b/tests/generic/888.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 888
-> +Get a device with 4096 physical sector size and 512 logical sector size
-> +4096
-> +512
-> +mkfs and mount
-> +DIO read/write 512 bytes
-> -- 
-> 2.31.1
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
