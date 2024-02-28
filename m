@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69B5E7441E
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 19:55:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5887D70026
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Feb 2024 20:52:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709150134; cv=none; b=b1XilQ9EmOB/6ydrp2tHccQxqcTb5HhN+fQf48qHECTlPb0AXF3q/w50MJBdslknDQNARtCjE6EWOTpZ/eOXO4Hh/ztN1yXVqICs7GY9iqkm6vC0Df0N45BoHyyKsnkvHaQ+io3eGb3sgziGo0cNV9Axl0fZx3Nu5Lo1U3QHB4I=
+	t=1709153534; cv=none; b=HlB22+t3v+cq6H8yS9ErfEflMTVj5RFbGxnWErG5rXtdWzXQc3KWFJNrlMb7iIow2GrcIo61NjfVAVYmPbavvpqsThkHkDJ9D3FrT0T1DP2+bAvFmPzeXcZ9b0MGt5u8Oyvflx3tySmf8SYGjo8gWKu41/U6B+Br+YzJ5PMHQZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709150134; c=relaxed/simple;
-	bh=I+Ar517lwnHNDkb1jeYECs9iOgByu8DQQ9LLA/ZE1OM=;
+	s=arc-20240116; t=1709153534; c=relaxed/simple;
+	bh=kjb8MFHgzd/B+I/2HocFu+glNxWLRJ21eCrXN413zTo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a7hQPZtkHCvAjN9m2JNXiKLR3tDw2qs9F1iSHggc1QK1vGh1/ZMCGbOotfQX5vQGH11FwcyFEk0k68LDDbY9QZr8aa2UgsoxrmG2xVK0bbQg9y9kToSeTys3PpxbRKDzWXJtX88eMGcmLj2/Ceb+ZCk/Z3zQFag1fZ1va84rd9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/ZKLN3K; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=llvIVi/ikn03vogWitrgrOTWF4Y7AMKZe2Jobu9HQAT0za3q35WB6bCsRDZiyC3jm2dzDt5Ih3fo5pWOgM7CLiDvb1y+9G5eFO73aErC2ErnQ3XeV6KuB6ni9vtowuILgJefFVsjy0hprE3TIlhIUdxfohchhgQAiP+II7h7gF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T5DoDjHo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/ZKLN3K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6701C433A6;
-	Wed, 28 Feb 2024 19:55:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T5DoDjHo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDDCEC433C7;
+	Wed, 28 Feb 2024 20:52:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709150132;
-	bh=I+Ar517lwnHNDkb1jeYECs9iOgByu8DQQ9LLA/ZE1OM=;
+	s=k20201202; t=1709153533;
+	bh=kjb8MFHgzd/B+I/2HocFu+glNxWLRJ21eCrXN413zTo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=R/ZKLN3KOcYF6f1RtqPGJle+eK2dfBIWCrhK7zN4PNbwnoOOq2JqLsBVwmi+o5/a7
-	 Hjw7vvr83vy0bbHQjokfjBhb+TKMwjBmOMmENyVMTpZcFsaNUEZE9FPct1Ry8++mXY
-	 Py0kNfESNyqoO+EGEL0B7QAZbSA466EgEv2Txd8wCizumUL90iMu5thFp98ZRaA407
-	 EYZqsg4qiNEAiLDyO55h+3fzZqVcGXgBylgRzFAGFP8zJf5GAW1wX5Deo+6nbODA2u
-	 bDA+hoMiovOh89TkyqlPoeoaI9OziptRKk/4kDaHznVD5jIF68lOxL/z5i1prvej5A
-	 nZKq/Sb7fpoJg==
-Date: Wed, 28 Feb 2024 11:55:32 -0800
+	b=T5DoDjHo0RqnzcBA78e5JNctR5u2O1Z4WLa64CUOaRlCtdpUIKusmT3zxJm8OpUl2
+	 UpE2I94zEXQ5Q9+n6fIfws4c6L++E0vf9BVpEtrsqWAicTKsCpnQB+0QjFqls3Zfts
+	 jpgQXL42XkNsvaE8fvfxbVPXHQe8UMs3Tmp08hPugbgUreoOnjSfVECgvb7A40Mn35
+	 1wn+2D2JqoP2V+0Ru/rOq72YxQUkikyJ6XV/j4Pl77dwPDSNWLyJMSAPjKgpga2Nhb
+	 iT9qnDTh1E9lf+K/I6oHKR8H61q7o48AD1FmOzFqO4H3VHRyMp7L+W8mfSWrNwAbEb
+	 4KZfl9TJMwoIg==
+Date: Wed, 28 Feb 2024 12:52:13 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 05/14] xfs: create deferred log items for file mapping
- exchanges
-Message-ID: <20240228195532.GR1927156@frogsfrogsfrogs>
-References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
- <170900011723.938268.9127095506680684172.stgit@frogsfrogsfrogs>
- <Zd9V8VIoA6WpZUDM@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: online repair of symbolic links
+Message-ID: <20240228205213.GS1927156@frogsfrogsfrogs>
+References: <170900015254.939796.8033314539322473598.stgit@frogsfrogsfrogs>
+ <170900015273.939796.12650929826491519393.stgit@frogsfrogsfrogs>
+ <Zd9sqALoZMOvHm8P@infradead.org>
+ <20240228183740.GO1927156@frogsfrogsfrogs>
+ <Zd-BHo96SoY4Camr@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,63 +45,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zd9V8VIoA6WpZUDM@infradead.org>
+In-Reply-To: <Zd-BHo96SoY4Camr@infradead.org>
 
-On Wed, Feb 28, 2024 at 07:49:05AM -0800, Christoph Hellwig wrote:
-> > -static inline bool xfs_bmap_is_written_extent(struct xfs_bmbt_irec *irec)
-> > +static inline bool xfs_bmap_is_written_extent(const struct xfs_bmbt_irec *irec)
+On Wed, Feb 28, 2024 at 10:53:18AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 28, 2024 at 10:37:40AM -0800, Darrick J. Wong wrote:
+> > Going back to [1] from last year, I finally /did/ find a magic symlink
+> > target that actually does trip EIO.  That solution is to set the buffer
+> > contents to a string that is so long that it exceeds NAME_MAX.
+> > Userspace can readlink this string, but it will never resolve anywhere
+> > in the directory tree.
+> > 
+> > What if this unconditionally set the link target to DUMMY_TARGET instead
+> > of salvaging partial targets?
 > 
-> This seems entirely unrelated, can you split it into a cleanup patch?
+> Sounds good to me.
 
-Done.
+I overlooked something this morning -- if the caller passes in
+XFS_SCRUB_IFLAG_FORCE_REBUILD, that might be the free space defragmenter
+trying to get us to move the remote target block somewhere else.  For
+that usecase, if the symlink scrub doesn't find any problems and we read
+in exactly i_size bytes, I think we want to write that back to the
+symlink, and not the DUMMY_TARGET.
 
-> > +		state |= CRIGHT_CONTIG;
-> > +	if ((state & CBOTH_CONTIG) == CBOTH_CONTIG &&
-> > +	    left->br_startblock + curr->br_startblock +
-> > +					right->br_startblock > XFS_MAX_BMBT_EXTLEN)
+Something like:
 
-Oh yikes, that should be br_blockcount, not br_startblock.
+	if (FORCE_REBUILD && !CORRUPT) {
+		if (sc->ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+			ret = xrep_symlink_salvage_inline(sc);
+		else
+			ret = xrep_symlink_salvage_remote(sc);
+		if (ret < 0)
+			return ret;
 
-> Overly long line here (and pretty weird formatting causing it..)
+		if (ret != ip->i_disk_size)
+			ret = 0;
+	}
 
-I'll change it to this helper:
+	target_buf[ret] = 0;
 
-static inline bool
-xmi_can_merge_all(
-	const struct xfs_bmbt_irec	*l,
-	const struct xfs_bmbt_irec	*m,
-	const struct xfs_bmbt_irec	*r)
-{
-	xfs_filblks_t			new_len;
+	/*
+	 * Change an empty target into a dummy target and clear the symlink
+	 * target zapped flag.
+	 */
+	if (target_buf[0] == 0) {
+		sc->sick_mask |= XFS_SICK_INO_SYMLINK_ZAPPED;
+		sprintf(target_buf, DUMMY_TARGET);
+	}
 
-	new_len = l->br_blockcount + m->br_blockcount + r->br_blockcount;
-	return new_len <= XFS_MAX_BMBT_EXTLEN;
-}
-
-Then the call sites become:
-
-	if ((state & CBOTH_CONTIG) == CBOTH_CONTIG &&
-	    !xmi_can_merge_all(left, curr, right))
-		state &= ~CRIGHT_CONTIG;
-
-> > +	if ((state & NBOTH_CONTIG) == NBOTH_CONTIG &&
-> > +	    left->br_startblock + new->br_startblock +
-> > +					right->br_startblock > XFS_MAX_BMBT_EXTLEN)
-> 
-> Same here.
-
-Here too.
-
-> > +/* XFS-specific parts of file exchanges */
-> 
-> Well, everything really is XFS-specific :)  I'd drop this comment.
-
-Ok.
-
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
+Can we allow that without risking truncation making the symlink point to
+some unintended place?
 
 --D
+
