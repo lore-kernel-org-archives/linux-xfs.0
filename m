@@ -1,491 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633302D60A;
-	Wed, 28 Feb 2024 09:00:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84DD85D8FA;
+	Wed, 28 Feb 2024 10:30:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709110844; cv=none; b=HB8fdRfOM3IB+xt8bXHsMg9CFHq9CR0ZJKv+ZpG4wkyjKhUJBG/aXNevjwJSAL/olmWnnpGO6Bd2OMutSr1ifqGgXJfar8PUn5ygQG835vI5lBr9nBZyRKb3VnFzSrPmzUSfU/V3Ea5xtd3OYEfQnygWMJ1gsQDphEz5+fVRp9E=
+	t=1709116212; cv=none; b=EE9E/FJF9UCg2lGKNtF8H967EFhAWrmd3xEk4FKMprqv0EPKbX8y1sJOhTZ5WPGa3qq4eAo3gPZj5rEqM+WiwhlE/1/VQcYV/5278PtxYEt2W6j6Ornd106A4qz1EijeW/0b4D7lR1hyiqEn70HVLpmvpVaMzp4spn9qStwogzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709110844; c=relaxed/simple;
-	bh=l3Nf7rYafdKS7l+jv0WO7+chiP/FFMmHMZueUl/mxF8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KkxYje2fELNZp8DqdPswG6zRrluUpItj2Xfbz8v08x4LxdXq1HuHf/vGV9Yz9KFUAJZPCK3H/l5n8PKAz34Rrb0Sf8vRXioAVs6WjNmRMsZFslXkXz6Ydmv21W8pIm5UHEWlwqIQuGXxzo09TKZGeg0ETgGK7PBJS9is/oPQWnU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TJzfOEPg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709116212; c=relaxed/simple;
+	bh=hpolM+N5y6/sz+KjaBNoo1IPYVCGk1h3yY40YMb19/g=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=KCBkIofcfXnDrelPFT7fXX8JQFgKDs2nYHVYu8UCcbwd/vgj36LYKQAzILgeWI4u8t81Evpzp3u52uYPn5T0syOXAxGebK5BirjPi0Aeag4eqNFwfvWPsWfjLbvWA+eN57f+IjkiYOr7D27DFddp77fYHDA4jyuN3E9wrb2xhn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jp/67nMY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TJzfOEPg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23156C433C7;
-	Wed, 28 Feb 2024 09:00:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jp/67nMY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65AA5C433C7;
+	Wed, 28 Feb 2024 10:30:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709110843;
-	bh=l3Nf7rYafdKS7l+jv0WO7+chiP/FFMmHMZueUl/mxF8=;
-	h=From:To:Cc:Subject:Date:From;
-	b=TJzfOEPgKRowAizgaHPJAAO06DpMKTRI8YJ8oxpHi7iJhsJAB0trhGAdsw7Vf1c4d
-	 ehqXN6d8uvUKls/9f0RX7W5xNmjEWkW+si4e8IlwHwUfNhWdWYYa+TdiXvEdh/unRW
-	 YIPMuoyOjQtqDecwSckkHhrbyTU7rFxkyPnbiKhwuPDJWHCauOAac58ihE1HsXQEXh
-	 4Fr7+bzQbR5R/4DNqosetWVX+nOBbN/QbD5lULsJyeqAiQIEbrcQGeew/PImwfT1PW
-	 OWV7HV0bgXCMtReAdGU7PU7PAzemvOhnNHbndYarPUkZpX2It0oA9PJ3O9uTfrKrPO
-	 FY+uYpt4BQ1/w==
-User-agent: mu4e 1.10.8; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: cmaiolino@redhat.com,dan.carpenter@linaro.org,dan.j.williams@intel.com,dchinner@redhat.com,djwong@kernel.org,hch@lst.de,hughd@google.com,kch@nvidia.com,kent.overstreet@linux.dev,leo.lilong@huawei.com,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,longman@redhat.com,peterz@infradead.org,ruansy.fnst@fujitsu.com,sshegde@linux.ibm.com,willy@infradead.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 56ac4314cfe9
-Date: Wed, 28 Feb 2024 14:29:07 +0530
-Message-ID: <87wmqpezev.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1709116212;
+	bh=hpolM+N5y6/sz+KjaBNoo1IPYVCGk1h3yY40YMb19/g=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=jp/67nMYDmoSWg5Nzka4TO/i+jF5BwwL2ruGmkHjkx+xD+XLVs0vVJD8ua/NHuCQY
+	 ITKnRh2ryCrlA0kuD/85mSPSKDia6APDEe6yXNZv6cchiTy8yOB4za1Sd/Cb6FOISZ
+	 DONgSt/vU9cMqnaVDhQRBhju4GWTx9lmLvMajDkHSat3JEKbXWx30kGj7/qy1o8+cO
+	 YYzsPRPaLA/HFWjAr+1xNkOpifG9TD5l27+VCofQTF9KcM3epIjKNXou9eZXT2R49G
+	 whroiaE5R5JRQxOhM3//pbz74AG9i3OQa+Jcx3oSFrxBiW2uCYCwqWjWbdzK/pb2/H
+	 l0opUMpgoqX1Q==
+Message-ID: <4f15410284805166ee39d831adb3f492d2ef2937.camel@kernel.org>
+Subject: Re: [PATCHSET v29.4 03/13] xfs: atomic file content exchanges
+From: Jeff Layton <jlayton@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J. Wong"
+ <djwong@kernel.org>,  linux-fsdevel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, hch@lst.de
+Date: Wed, 28 Feb 2024 05:30:10 -0500
+In-Reply-To: <Zd50P9TH5TAdqFyU@dread.disaster.area>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+	 <CAOQ4uxh-gKGuwrvuQnWKcKLKQe2j9s__Yx2T-gCrDJMUbm5ZYA@mail.gmail.com>
+	 <4e29a0395b3963e6a48f916baaf16394acd017ca.camel@kernel.org>
+	 <Zd50P9TH5TAdqFyU@dread.disaster.area>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+	kZWuOsJdJQdmwlWC5L5ln9xgfr/4mOY38B0U=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.4 (3.50.4-1.fc39) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
 
-Hi folks,
+On Wed, 2024-02-28 at 10:46 +1100, Dave Chinner wrote:
+> On Tue, Feb 27, 2024 at 05:53:46AM -0500, Jeff Layton wrote:
+> > On Tue, 2024-02-27 at 11:23 +0200, Amir Goldstein wrote:
+> > > On Tue, Feb 27, 2024 at 4:18=E2=80=AFAM Darrick J. Wong <djwong@kerne=
+l.org> wrote:
+> > > And for a new API, wouldn't it be better to use change_cookie (a.k.a =
+i_version)?
+>=20
+> Like xfs_fsr doing online defrag, we really only care about explicit
+> user data changes here, not internal layout and metadata changes to
+> the files...
+>=20
+> > > Even if this API is designed to be hoisted out of XFS at some future =
+time,
+> > > Is there a real need to support it on filesystems that do not support
+> > > i_version(?)
+> > >=20
+> > > Not to mention the fact that POSIX does not explicitly define how cti=
+me should
+> > > behave with changes to fiemap (uninitialized extent and all), so who =
+knows
+> > > how other filesystems may update ctime in those cases.
+> > >=20
+> > > I realize that STATX_CHANGE_COOKIE is currently kernel internal, but
+> > > it seems that XFS_IOC_EXCHANGE_RANGE is a case where userspace
+> > > really explicitly requests a bump of i_version on the next change.
+> > >=20
+> >=20
+> >=20
+> > I agree. Using an opaque change cookie would be a lot nicer from an API
+> > standpoint, and shouldn't be subject to timestamp granularity issues.
+> >=20
+> > That said, XFS's change cookie is currently broken. Dave C. said he had
+> > some patches in progress to fix that however.
+>=20
+> By "fix", I meant "remove".
+>=20
+> i.e. the patches I was proposing were to remove SB_I_VERSION support
+> from XFS so NFS just uses the ctime on XFS because the recent
+> changes to i_version make it a ctime change counter, not an inode
+> change counter.
+>=20
+> Then patches were posted for finer grained inode timestamps to allow
+> everything to use ctime instead of i_version, and with that I
+> thought NFS was just going to change to ctime for everyone with that
+> the whole change cookie issue was going away.
+>=20
+> It now sounds like that isn't happening, so I'll just ressurect the
+> patch to remove published SB_I_VERSION and STATX_CHANGE_COOKIE
+> support from XFS for now and us XFS people can just go back to
+> ignoring this problem again.
 
-The for-next branch of the xfs-linux repository at:
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I must have misunderstood what you said when we were at LPC this year:
 
-has just been updated.
+After the multigrain ctime patches were reverted, you mentioned that you
+were working on a patchset that used the unused bits in the tv_nsec
+field as counter for counting changes that have occurred within the same
+tv_nsec value.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-56ac4314cfe9 Merge tag 'xfs-6.8-fixes-4' into xfs-for-next
-
-200 new commits:
-
-Chandan Babu R (19):
-      [8e3ef44f9bcd] Merge tag 'repair-inode-mode-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [aa03f524a2e3] Merge tag 'repair-quotacheck-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [128d0fd1ab09] Merge tag 'scrub-nlinks-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [6fe1910e8557] Merge tag 'corruption-health-reports-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [f10775795302] Merge tag 'indirect-health-reporting-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [5d1bd19d8305] Merge tag 'repair-fscounters-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [681cb87b6a0c] Merge tag 'btree-geometry-in-ops-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [ee138217c32c] Merge tag 'btree-remove-btnum-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [169c030a95d5] Merge tag 'btree-check-cleanups-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [a7ade7e13db5] Merge tag 'btree-readahead-cleanups-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [aa8fb4bb7d03] Merge tag 'buftarg-cleanups-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [8394a97c4b5a] Merge tag 'in-memory-btrees-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [fd43925cad85] Merge tag 'repair-rmap-btree-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [74acb705354c] Merge tag 'repair-refcount-scalability-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [10ea6158b4cb] Merge tag 'bmap-intent-cleanups-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [4e3f7e7ab854] Merge tag 'realtime-bmap-intents-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [6723ca9997a1] Merge tag 'expand-bmap-intent-usage_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [e6469b22bd99] Merge tag 'symlink-cleanups-6.9_2024-02-23' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.9-mergeC
-      [56ac4314cfe9] Merge tag 'xfs-6.8-fixes-4' into xfs-for-next
-
-Christoph Hellwig (70):
-      [49c379d3a72a] xfs: use kvfree for buf in xfs_ioc_getbmap
-      [b64e74e95aa6] mm: move mapping_set_update out of <linux/swap.h>
-      [aefacb2041f7] shmem: move shmem_mapping out of line
-      [e11381d83d72] shmem: set a_ops earlier in shmem_symlink
-      [1cd81faaf61b] shmem: move the shmem_mapping assert into shmem_get_folio_gfp
-      [d7468609ee0f] shmem: export shmem_get_folio
-      [be9d93661d54] shmem: export shmem_kernel_file_setup
-      [9d8b36744935] shmem: document how to "persist" data when using shmem_*file_setup
-      [b44c0eb8ae9c] xfs: use VM_NORESERVE in xfile_create
-      [1b07ea2ab3dc] xfs: shmem_file_setup can't return NULL
-      [efc9dc096399] xfs: use shmem_kernel_file_setup in xfile_create
-      [a2078df025d9] xfs: don't modify file and inode flags for shmem files
-      [0473635d46e2] xfs: remove xfile_stat
-      [e47e2e0ba910] xfs: remove the xfile_pread/pwrite APIs
-      [0e2a24afb992] xfs: don't try to handle non-update pages in xfile_obj_load
-      [e62e26acc9ab] xfs: don't allow highmem pages in xfile mappings
-      [fd2634e2dd45] xfs: use shmem_get_folio in xfile_obj_store
-      [e97d70a57370] xfs: use shmem_get_folio in in xfile_load
-      [fd3d46e63040] xfs: remove xfarray_sortinfo.page_kaddr
-      [b2fdfe19dfd7] xfs: fix a comment in xfarray.c
-      [e9e66df8bfa4] xfs: remove bc_ino.flags
-      [73a8fd93c421] xfs: consolidate the xfs_alloc_lookup_* helpers
-      [b20775ed644a] xfs: turn the allocbt cursor active field into a btree flag
-      [07b7f2e3172b] xfs: move the btree stats offset into struct btree_ops
-      [4f0cd5a55507] xfs: split out a btree type from the btree ops geometry flags
-      [88ee2f484911] xfs: split the per-btree union in struct xfs_btree_cur
-      [72c2070f3f52] xfs: move comment about two 2 keys per pointer in the rmap btree
-      [f9c18129e57d] xfs: add a xfs_btree_init_ptr_from_cur
-      [2b9e7f2668c5] xfs: don't override bc_ops for staging btrees
-      [fb518f8eeb90] xfs: fold xfs_allocbt_init_common into xfs_allocbt_init_cursor
-      [91796b2eef8b] xfs: remove xfs_allocbt_stage_cursor
-      [f6c98d921a9e] xfs: fold xfs_inobt_init_common into xfs_inobt_init_cursor
-      [6234dee7e6f5] xfs: remove xfs_inobt_stage_cursor
-      [4f2dc69e4bcb] xfs: fold xfs_refcountbt_init_common into xfs_refcountbt_init_cursor
-      [a5c2194406f3] xfs: remove xfs_refcountbt_stage_cursor
-      [c49a4b2f0ef0] xfs: fold xfs_rmapbt_init_common into xfs_rmapbt_init_cursor
-      [1317813290be] xfs: remove xfs_rmapbt_stage_cursor
-      [579d7022d1af] xfs: make full use of xfs_btree_stage_ifakeroot in xfs_bmbt_stage_cursor
-      [802f91f7b1d5] xfs: fold xfs_bmbt_init_common into xfs_bmbt_init_cursor
-      [02f7ebf5f99c] xfs: remove xfs_bmbt_stage_cursor
-      [e45ea3645178] xfs: split the agf_roots and agf_levels arrays
-      [77953b97bb19] xfs: add a name field to struct xfs_btree_ops
-      [7f47734ad61a] xfs: add a sick_mask to struct xfs_btree_ops
-      [480399261975] xfs: refactor the btree cursor allocation logic in xchk_ag_btcur_init
-      [1c8b9fd278c0] xfs: split xfs_allocbt_init_cursor
-      [3038fd812938] xfs: remove xfs_inobt_cur
-      [4bfb028a4c00] xfs: remove the btnum argument to xfs_inobt_count_blocks
-      [c81a01a74a67] xfs: remove the which variable in xchk_iallocbt
-      [8541a7d9da2d] xfs: split xfs_inobt_insert_sprec
-      [14dd46cf31f4] xfs: split xfs_inobt_init_cursor
-      [fbeef4e061ab] xfs: pass a 'bool is_finobt' to xfs_inobt_insert
-      [ec793e690f80] xfs: remove xfs_btnum_t
-      [4bc94bf640e0] xfs: simplify xfs_btree_check_sblock_siblings
-      [8b8ada973cac] xfs: simplify xfs_btree_check_lblock_siblings
-      [fb0793f20670] xfs: open code xfs_btree_check_lptr in xfs_bmap_btree_to_extents
-      [57982d6c835a] xfs: consolidate btree ptr checking
-      [43be09192ce1] xfs: misc cleanups for __xfs_btree_check_sblock
-      [bd45019d9aa9] xfs: remove the crc variable in __xfs_btree_check_lblock
-      [d477f1749f00] xfs: tighten up validation of root block in inode forks
-      [4ce0c711d9ab] xfs: consolidate btree block verification
-      [5ef819c34f95] xfs: rename btree helpers that depends on the block number representation
-      [79e72304dcba] xfs: factor out a __xfs_btree_check_lblock_hdr helper
-      [5eec8fa30dfa] xfs: remove xfs_btree_reada_bufl
-      [6324b00c9ecb] xfs: remove xfs_btree_reada_bufs
-      [6a701eb8fbbb] xfs: move and rename xfs_btree_read_bufl
-      [24f755e4854e] xfs: split xfs_buf_rele for cached vs uncached buffers
-      [21e308e64855] xfs: remove the xfs_buftarg_t typedef
-      [60335cc0fb5c] xfs: remove xfs_setsize_buftarg_early
-      [1c51ac0998ed] xfs: move setting bt_logical_sectorsize out of xfs_setsize_buftarg
-      [8c1771c45dfa] xfs: add a xfs_btree_ptrs_equal helper
-
-Darrick J. Wong (88):
-      [1149314a16f7] xfs: disable sparse inode chunk alignment check when there is no alignment
-      [6907e3c00a40] xfs: add file_{get,put}_folio
-      [ee13fc67205b] xfs: convert xfarray_pagesort to deal with large folios
-      [e5a2f47cff81] xfs: remove xfile_{get,put}_page
-      [ae05eb117108] xfs: speed up xfs_iwalk_adjust_start a little bit
-      [8660c7b74aea] xfs: implement live inode scan for scrub
-      [4e98cc905c0f] xfs: allow scrub to hook metadata updates in other writers
-      [c473a3320be3] xfs: stagger the starting AG of scrub iscans to reduce contention
-      [a7a686cb0720] xfs: cache a bunch of inodes for repair scans
-      [82334a79c6eb] xfs: iscan batching should handle unallocated inodes too
-      [e99bfc9e687e] xfs: create a static name for the dot entry too
-      [d9c077589714] xfs: create a predicate to determine if two xfs_names are the same
-      [3c79e6a87221] xfs: create a macro for decoding ftypes in tracepoints
-      [3d8f1426977f] xfs: report the health of quota counts
-      [5385f1a60d4e] xfs: repair file modes by scanning for a dirent pointing to us
-      [564fee6d2053] xfs: create a xchk_trans_alloc_empty helper for scrub
-      [ebd610fe82c1] xfs: create a helper to count per-device inode block usage
-      [5a3ab5849583] xfs: create a sparse load xfarray function
-      [48dd9117a34f] xfs: implement live quotacheck inode scan
-      [200491875ce1] xfs: track quota updates during live quotacheck
-      [7038c6e5261e] xfs: repair cannot update the summary counters when logging quota flags
-      [96ed2ae4a9b0] xfs: repair dquots based on live quotacheck results
-      [93687ee2e374] xfs: report health of inode link counts
-      [f1184081ac97] xfs: teach scrub to check file nlinks
-      [86a1746eea91] xfs: track directory entry updates during live nlinks fsck
-      [6b631c60c90a] xfs: teach repair to fix file nlinks
-      [0b8686f19879] xfs: separate the marking of sick and checked metadata
-      [50645ce8822d] xfs: report fs corruption errors to the health tracking system
-      [de6077ec4198] xfs: report ag header corruption errors to the health tracking system
-      [1196f3f5abf7] xfs: report block map corruption errors to the health tracking system
-      [a78d10f45b23] xfs: report btree block corruption errors to the health system
-      [ca14c0968c1f] xfs: report dir/attr block corruption errors to the health system
-      [b280fb0cbf48] xfs: report symlink block corruption errors to the health system
-      [baf44fa5c37a] xfs: report inode corruption errors to the health system
-      [841a5f87e2d0] xfs: report quota block corruption errors to the health system
-      [8368ad49aaf7] xfs: report realtime metadata corruption errors to the health system
-      [989d5ec3175b] xfs: report XFS_IS_CORRUPT errors to the health system
-      [4e587917ee1c] xfs: add secondary and indirect classes to the health tracking system
-      [0e24ec3c56fb] xfs: remember sick inodes that get inactivated
-      [a1f3e0cca410] xfs: update health status if we get a clean bill of health
-      [4ed080cd7cb0] xfs: repair summary counters
-      [78067b92b909] xfs: consolidate btree block freeing tracepoints
-      [2ed0b2c7f331] xfs: consolidate btree block allocation tracepoints
-      [056d22c87132] xfs: set the btree cursor bc_ops in xfs_btree_alloc_cursor
-      [f9e325bf61d1] xfs: drop XFS_BTREE_CRC_BLOCKS
-      [c0afba9a8363] xfs: fix imprecise logic in xchk_btree_check_block_owner
-      [fd9c7f7722d8] xfs: encode the btree geometry flags in the btree ops structure
-      [d8d6df4253ad] xfs: extern some btree ops structures
-      [c87e3bf78024] xfs: initialize btree blocks using btree_ops structure
-      [3c68858b264f] xfs: rename btree block/buffer init functions
-      [7771f7030007] xfs: btree convert xfs_btree_init_block to xfs_btree_init_buf calls
-      [11388f6581f4] xfs: remove the unnecessary daddr paramter to _init_block
-      [ad065ef0d2fc] xfs: set btree block buffer ops in _init_buf
-      [90cfae818dac] xfs: move lru refs to the btree ops structure
-      [2054cf051698] xfs: factor out a xfs_btree_owner helper
-      [186f20c00319] xfs: factor out a btree block owner check
-      [1a9d26291c68] xfs: store the btree pointer length in struct xfs_btree_ops
-      [f73def90a7cd] xfs: create predicate to determine if cursor is at inode root level
-      [42e357c806c8] xfs: make staging file forks explicit
-      [e7b58f7c1be2] xfs: teach buftargs to maintain their own buffer hashtable
-      [5076a6040ca1] xfs: support in-memory buffer cache targets
-      [a095686a2383] xfs: support in-memory btrees
-      [5049ff4d140c] xfs: create a helper to decide if a file mapping targets the rt volume
-      [0dc63c8a1ce3] xfs: launder in-memory btree buffers before transaction commit
-      [e4fd1def3098] xfs: create agblock bitmap helper to count the number of set regions
-      [32080a9b9b2e] xfs: repair the rmapbt
-      [4787fc802752] xfs: create a shadow rmap btree during rmap repair
-      [18a1e644b094] xfs: define an in-memory btree for storing refcount bag info during repairs
-      [7e1b84b24d25] xfs: hook live rmap operations during a repair operation
-      [7a2192ac1099] xfs: create refcount bag structure for btree repairs
-      [7fbaab57a80f] xfs: port refcount repair to the new refcount bag structure
-      [ef2d4a00df38] xfs: split tracepoint classes for deferred items
-      [2a15e7686094] xfs: clean up bmap log intent item tracepoint callsites
-      [372fe0b8ce4f] xfs: remove xfs_trans_set_bmap_flags
-      [de47e4c9ad2d] xfs: add a bi_entry helper
-      [5d3d0a6ad287] xfs: reuse xfs_bmap_update_cancel_item
-      [80284115854e] xfs: move xfs_bmap_defer_add to xfs_bmap_item.c
-      [2b6a5ec26887] xfs: fix xfs_bunmapi to allow unmapping of partial rt extents
-      [c75f1a2c1549] xfs: add a xattr_entry helper
-      [7302cda7f8b0] xfs: add a realtime flag to the bmap update log redo items
-      [1b5453baed3a] xfs: support recovering bmap intent items targetting realtime extents
-      [52f807067ba4] xfs: support deferred bmap updates on the attr fork
-      [6c8127e93e3a] xfs: xfs_bmap_finish_one should map unwritten extents properly
-      [622d88e2ad79] xfs: move xfs_symlink_remote.c declarations to xfs_symlink_remote.h
-      [376b4f052248] xfs: move remote symlink target read function to libxfs
-      [b8102b61f7b8] xfs: move symlink target write function to libxfs
-      [1e5efd72a29e] xfs: fix log recovery erroring out on refcount recovery failure
-      [e610e856b938] xfs: fix scrub stats file permissions
-
-Dave Chinner (17):
-      [10634530f7ba] xfs: convert kmem_zalloc() to kzalloc()
-      [f078d4ea8276] xfs: convert kmem_alloc() to kmalloc()
-      [afdc115559c5] xfs: move kmem_to_page()
-      [49292576136f] xfs: convert kmem_free() for kvmalloc users to kvfree()
-      [d4c75a1b40cd] xfs: convert remaining kmem_free() to kfree()
-      [178231af2bdc] xfs: use an empty transaction for fstrim
-      [94a69db2367e] xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS
-      [0b3a76e955eb] xfs: use GFP_KERNEL in pure transaction contexts
-      [2c1e31ed5c88] xfs: place intent recovery under NOFS allocation context
-      [c704ecb2410e] xfs: place the CIL under nofs allocation context
-      [204fae32d5f7] xfs: clean up remaining GFP_NOFS users
-      [57b98393b812] xfs: use xfs_defer_alloc a bit more
-      [661723c3bdaf] xfs: use kvfree() in xfs_ioc_attr_list()
-      [7d5ba7ca6a45] xfs: use kvfree in xfs_ioc_getfsmap()
-      [4b2f459d8625] xfs: fix SEEK_HOLE/DATA for regions with active COW extents
-      [3aca0676a114] xfs: xfs_btree_bload_prep_block() should use __GFP_NOFAIL
-      [b8c0d6fa4165] xfs: use kvfree() in xlog_cil_free_logvec()
-
-Long Li (1):
-      [e4c3b72a6ea9] xfs: ensure submit buffers on LSN boundaries in error handlers
-
-Matthew Wilcox (Oracle) (3):
-      [f70405afc99b] locking: Add rwsem_assert_held() and rwsem_assert_held_write()
-      [3fed24fffc76] xfs: Replace xfs_isilocked with xfs_assert_ilocked
-      [785dd1315250] xfs: Remove mrlock wrapper
-
-Shiyang Ruan (1):
-      [27c86d43bcdb] xfs: drop experimental warning for FSDAX
-
-Shrikanth Hegde (1):
-      [0164defd0d86] xfs: remove duplicate ifdefs
-
-Code Diffstat:
-
- .../filesystems/xfs/xfs-online-fsck-design.rst    |   30 +-
- fs/xfs/Kconfig                                    |   13 +
- fs/xfs/Makefile                                   |   15 +-
- fs/xfs/kmem.c                                     |   30 -
- fs/xfs/kmem.h                                     |   83 -
- fs/xfs/libxfs/xfs_ag.c                            |   68 +-
- fs/xfs/libxfs/xfs_ag.h                            |   18 +-
- fs/xfs/libxfs/xfs_alloc.c                         |  258 ++-
- fs/xfs/libxfs/xfs_alloc_btree.c                   |  191 +-
- fs/xfs/libxfs/xfs_alloc_btree.h                   |   10 +-
- fs/xfs/libxfs/xfs_attr.c                          |    5 +-
- fs/xfs/libxfs/xfs_attr_leaf.c                     |   22 +-
- fs/xfs/libxfs/xfs_attr_remote.c                   |   37 +-
- fs/xfs/libxfs/xfs_bmap.c                          |  365 ++--
- fs/xfs/libxfs/xfs_bmap.h                          |   19 +-
- fs/xfs/libxfs/xfs_bmap_btree.c                    |  152 +-
- fs/xfs/libxfs/xfs_bmap_btree.h                    |    5 +-
- fs/xfs/libxfs/xfs_btree.c                         | 1098 ++++++-----
- fs/xfs/libxfs/xfs_btree.h                         |  274 ++-
- fs/xfs/libxfs/xfs_btree_mem.c                     |  347 ++++
- fs/xfs/libxfs/xfs_btree_mem.h                     |   75 +
- fs/xfs/libxfs/xfs_btree_staging.c                 |  133 +-
- fs/xfs/libxfs/xfs_btree_staging.h                 |   10 +-
- fs/xfs/libxfs/xfs_da_btree.c                      |   59 +-
- fs/xfs/libxfs/xfs_da_format.h                     |   11 +
- fs/xfs/libxfs/xfs_defer.c                         |   25 +-
- fs/xfs/libxfs/xfs_dir2.c                          |   59 +-
- fs/xfs/libxfs/xfs_dir2.h                          |   13 +
- fs/xfs/libxfs/xfs_dir2_block.c                    |    8 +-
- fs/xfs/libxfs/xfs_dir2_data.c                     |    3 +
- fs/xfs/libxfs/xfs_dir2_leaf.c                     |    3 +
- fs/xfs/libxfs/xfs_dir2_node.c                     |    7 +
- fs/xfs/libxfs/xfs_dir2_sf.c                       |   16 +-
- fs/xfs/libxfs/xfs_format.h                        |   21 +-
- fs/xfs/libxfs/xfs_fs.h                            |    8 +-
- fs/xfs/libxfs/xfs_health.h                        |   95 +-
- fs/xfs/libxfs/xfs_ialloc.c                        |  240 ++-
- fs/xfs/libxfs/xfs_ialloc_btree.c                  |  159 +-
- fs/xfs/libxfs/xfs_ialloc_btree.h                  |   11 +-
- fs/xfs/libxfs/xfs_iext_tree.c                     |   26 +-
- fs/xfs/libxfs/xfs_inode_buf.c                     |   12 +-
- fs/xfs/libxfs/xfs_inode_fork.c                    |   49 +-
- fs/xfs/libxfs/xfs_inode_fork.h                    |    1 +
- fs/xfs/libxfs/xfs_log_format.h                    |    4 +-
- fs/xfs/libxfs/xfs_refcount.c                      |   69 +-
- fs/xfs/libxfs/xfs_refcount_btree.c                |   80 +-
- fs/xfs/libxfs/xfs_refcount_btree.h                |    2 -
- fs/xfs/libxfs/xfs_rmap.c                          |  284 ++-
- fs/xfs/libxfs/xfs_rmap.h                          |   31 +-
- fs/xfs/libxfs/xfs_rmap_btree.c                    |  239 ++-
- fs/xfs/libxfs/xfs_rmap_btree.h                    |    8 +-
- fs/xfs/libxfs/xfs_rtbitmap.c                      |   11 +-
- fs/xfs/libxfs/xfs_sb.c                            |    2 +
- fs/xfs/libxfs/xfs_shared.h                        |   67 +-
- fs/xfs/libxfs/xfs_symlink_remote.c                |  155 +-
- fs/xfs/libxfs/xfs_symlink_remote.h                |   26 +
- fs/xfs/libxfs/xfs_trans_inode.c                   |    6 +-
- fs/xfs/libxfs/xfs_types.h                         |   26 +-
- fs/xfs/mrlock.h                                   |   78 -
- fs/xfs/scrub/agb_bitmap.h                         |    5 +
- fs/xfs/scrub/agheader.c                           |   12 +-
- fs/xfs/scrub/agheader_repair.c                    |   47 +-
- fs/xfs/scrub/alloc_repair.c                       |   27 +-
- fs/xfs/scrub/bitmap.c                             |   14 +
- fs/xfs/scrub/bitmap.h                             |    2 +
- fs/xfs/scrub/bmap.c                               |    2 +-
- fs/xfs/scrub/bmap_repair.c                        |    8 +-
- fs/xfs/scrub/btree.c                              |   58 +-
- fs/xfs/scrub/common.c                             |  133 +-
- fs/xfs/scrub/common.h                             |   13 +
- fs/xfs/scrub/cow_repair.c                         |    2 +-
- fs/xfs/scrub/dir.c                                |    4 +-
- fs/xfs/scrub/fscounters.c                         |   29 +-
- fs/xfs/scrub/fscounters.h                         |   20 +
- fs/xfs/scrub/fscounters_repair.c                  |   72 +
- fs/xfs/scrub/health.c                             |  140 +-
- fs/xfs/scrub/health.h                             |    5 +-
- fs/xfs/scrub/ialloc.c                             |   20 +-
- fs/xfs/scrub/ialloc_repair.c                      |   10 +-
- fs/xfs/scrub/inode_repair.c                       |  237 ++-
- fs/xfs/scrub/iscan.c                              |  767 ++++++++
- fs/xfs/scrub/iscan.h                              |   84 +
- fs/xfs/scrub/newbt.c                              |   14 +-
- fs/xfs/scrub/newbt.h                              |    7 +
- fs/xfs/scrub/nlinks.c                             |  930 ++++++++++
- fs/xfs/scrub/nlinks.h                             |  102 ++
- fs/xfs/scrub/nlinks_repair.c                      |  223 +++
- fs/xfs/scrub/quotacheck.c                         |  867 +++++++++
- fs/xfs/scrub/quotacheck.h                         |   76 +
- fs/xfs/scrub/quotacheck_repair.c                  |  261 +++
- fs/xfs/scrub/rcbag.c                              |  307 ++++
- fs/xfs/scrub/rcbag.h                              |   28 +
- fs/xfs/scrub/rcbag_btree.c                        |  370 ++++
- fs/xfs/scrub/rcbag_btree.h                        |   81 +
- fs/xfs/scrub/readdir.c                            |    4 +-
- fs/xfs/scrub/reap.c                               |    2 +-
- fs/xfs/scrub/refcount.c                           |   12 +
- fs/xfs/scrub/refcount_repair.c                    |  177 +-
- fs/xfs/scrub/repair.c                             |  120 +-
- fs/xfs/scrub/repair.h                             |   23 +-
- fs/xfs/scrub/rmap.c                               |   26 +-
- fs/xfs/scrub/rmap_repair.c                        | 1697 ++++++++++++++++++
- fs/xfs/scrub/rtsummary.c                          |    6 +-
- fs/xfs/scrub/scrub.c                              |   37 +-
- fs/xfs/scrub/scrub.h                              |   18 +-
- fs/xfs/scrub/stats.c                              |    6 +-
- fs/xfs/scrub/symlink.c                            |    3 +-
- fs/xfs/scrub/trace.c                              |    8 +-
- fs/xfs/scrub/trace.h                              |  637 ++++++-
- fs/xfs/scrub/xfarray.c                            |  234 ++-
- fs/xfs/scrub/xfarray.h                            |   30 +-
- fs/xfs/scrub/xfile.c                              |  345 ++--
- fs/xfs/scrub/xfile.h                              |   62 +-
- fs/xfs/xfs_acl.c                                  |    4 +-
- fs/xfs/xfs_attr_inactive.c                        |    4 +
- fs/xfs/xfs_attr_item.c                            |   25 +-
- fs/xfs/xfs_attr_list.c                            |   26 +-
- fs/xfs/xfs_bmap_item.c                            |  119 +-
- fs/xfs/xfs_bmap_item.h                            |    4 +
- fs/xfs/xfs_bmap_util.c                            |   20 +-
- fs/xfs/xfs_buf.c                                  |  320 ++--
- fs/xfs/xfs_buf.h                                  |   21 +-
- fs/xfs/xfs_buf_item.c                             |    8 +-
- fs/xfs/xfs_buf_item_recover.c                     |    8 +-
- fs/xfs/xfs_buf_mem.c                              |  270 +++
- fs/xfs/xfs_buf_mem.h                              |   34 +
- fs/xfs/xfs_dir2_readdir.c                         |    8 +-
- fs/xfs/xfs_discard.c                              |   19 +-
- fs/xfs/xfs_dquot.c                                |   36 +-
- fs/xfs/xfs_error.c                                |    8 +-
- fs/xfs/xfs_extent_busy.c                          |    5 +-
- fs/xfs/xfs_extfree_item.c                         |    8 +-
- fs/xfs/xfs_file.c                                 |    4 +-
- fs/xfs/xfs_filestream.c                           |    6 +-
- fs/xfs/xfs_fsmap.c                                |    4 +-
- fs/xfs/xfs_health.c                               |  202 ++-
- fs/xfs/xfs_hooks.c                                |   52 +
- fs/xfs/xfs_hooks.h                                |   65 +
- fs/xfs/xfs_icache.c                               |   14 +-
- fs/xfs/xfs_icreate_item.c                         |    2 +-
- fs/xfs/xfs_inode.c                                |  274 ++-
- fs/xfs/xfs_inode.h                                |   37 +-
- fs/xfs/xfs_inode_item.c                           |    6 +-
- fs/xfs/xfs_inode_item_recover.c                   |    5 +-
- fs/xfs/xfs_ioctl.c                                |    8 +-
- fs/xfs/xfs_iomap.c                                |   19 +-
- fs/xfs/xfs_iops.c                                 |    9 +-
- fs/xfs/xfs_itable.c                               |   12 +-
- fs/xfs/xfs_iwalk.c                                |   41 +-
- fs/xfs/xfs_linux.h                                |   17 +-
- fs/xfs/xfs_log.c                                  |   34 +-
- fs/xfs/xfs_log_cil.c                              |   31 +-
- fs/xfs/xfs_log_recover.c                          |  102 +-
- fs/xfs/xfs_mount.c                                |    2 +-
- fs/xfs/xfs_mount.h                                |   12 +-
- fs/xfs/xfs_mru_cache.c                            |   17 +-
- fs/xfs/xfs_qm.c                                   |   59 +-
- fs/xfs/xfs_qm.h                                   |   16 +
- fs/xfs/xfs_qm_bhv.c                               |    1 +
- fs/xfs/xfs_quota.h                                |   46 +
- fs/xfs/xfs_refcount_item.c                        |   12 +-
- fs/xfs/xfs_reflink.c                              |   16 +-
- fs/xfs/xfs_rmap_item.c                            |   11 +-
- fs/xfs/xfs_rtalloc.c                              |   18 +-
- fs/xfs/xfs_stats.c                                |    4 +-
- fs/xfs/xfs_stats.h                                |    2 +
- fs/xfs/xfs_super.c                                |   21 +-
- fs/xfs/xfs_symlink.c                              |  158 +-
- fs/xfs/xfs_symlink.h                              |    1 -
- fs/xfs/xfs_sysfs.c                                |    4 -
- fs/xfs/xfs_trace.c                                |    3 +
- fs/xfs/xfs_trace.h                                |  607 +++++--
- fs/xfs/xfs_trans.c                                |    2 +-
- fs/xfs/xfs_trans.h                                |    1 +
- fs/xfs/xfs_trans_ail.c                            |    7 +-
- fs/xfs/xfs_trans_buf.c                            |   42 +
- fs/xfs/xfs_trans_dquot.c                          |  171 +-
- include/linux/rwbase_rt.h                         |    9 +-
- include/linux/rwsem.h                             |   46 +-
- include/linux/shmem_fs.h                          |    6 +-
- include/linux/swap.h                              |   10 -
- mm/filemap.c                                      |    9 +
- mm/internal.h                                     |    4 +
- mm/shmem.c                                        |   42 +-
- mm/workingset.c                                   |    1 +
- 185 files changed, 13263 insertions(+), 3584 deletions(-)
- delete mode 100644 fs/xfs/kmem.c
- delete mode 100644 fs/xfs/kmem.h
- create mode 100644 fs/xfs/libxfs/xfs_btree_mem.c
- create mode 100644 fs/xfs/libxfs/xfs_btree_mem.h
- create mode 100644 fs/xfs/libxfs/xfs_symlink_remote.h
- delete mode 100644 fs/xfs/mrlock.h
- create mode 100644 fs/xfs/scrub/fscounters.h
- create mode 100644 fs/xfs/scrub/fscounters_repair.c
- create mode 100644 fs/xfs/scrub/iscan.c
- create mode 100644 fs/xfs/scrub/iscan.h
- create mode 100644 fs/xfs/scrub/nlinks.c
- create mode 100644 fs/xfs/scrub/nlinks.h
- create mode 100644 fs/xfs/scrub/nlinks_repair.c
- create mode 100644 fs/xfs/scrub/quotacheck.c
- create mode 100644 fs/xfs/scrub/quotacheck.h
- create mode 100644 fs/xfs/scrub/quotacheck_repair.c
- create mode 100644 fs/xfs/scrub/rcbag.c
- create mode 100644 fs/xfs/scrub/rcbag.h
- create mode 100644 fs/xfs/scrub/rcbag_btree.c
- create mode 100644 fs/xfs/scrub/rcbag_btree.h
- create mode 100644 fs/xfs/scrub/rmap_repair.c
- create mode 100644 fs/xfs/xfs_buf_mem.c
- create mode 100644 fs/xfs/xfs_buf_mem.h
- create mode 100644 fs/xfs/xfs_hooks.c
- create mode 100644 fs/xfs/xfs_hooks.h
-
+Did those not pan out for some reason?
+--=20
+Jeff Layton <jlayton@kernel.org>
