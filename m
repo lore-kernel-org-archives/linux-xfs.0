@@ -1,39 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE65134430;
-	Thu, 29 Feb 2024 16:00:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF914383BB
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 17:10:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709222450; cv=none; b=Ffw5UOwkEk51Xu75UP6f5+tS24kp6Rkkh25qEjrjlZVUh7sFbWdnfOJlXcOI98xqxQE0IjZ+at1dx6FAu3O2PNbFdLFzJoJsF601Jz6h+f2j6IX2Bs13nBlDD+L+1/1GbvtJb89VKCNmkiUJ4kAClWCGX5TpkOOGtBmi8TErb2M=
+	t=1709226645; cv=none; b=bVvGO5JdFj466V6FbBWTYfgTdBCaReON/H78ha4DruAYdQeZsIC1OocxyMfWBW78aCUSz79AZqzv8Vo5AZyeBaVbROGfbDSRChCM2WEJ4VGKkC6KbR6L1iiDBUqwSUi+FWujSitv++qEV2whao1eNsG4iKvmUpZKWJwCW92m8n4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709222450; c=relaxed/simple;
-	bh=lnjqrM8Lfog5fV1cL5NQmbG9UmOGAw+pkjMKhL6L9FI=;
+	s=arc-20240116; t=1709226645; c=relaxed/simple;
+	bh=ChhtmMibOmTZUcDhTGdzCFyRQ8St/iVQNvu3TdmkOI4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y+0eTuqlReR66qiRXNGH+VMPctkdx0RKru58+0gEAanT4WSJoM/mP2mDvBbqLbAFYoR171+3uIA5rW+PkyfOjt6HZZmj7LMUMt7awk07Yah+wK0VJM7E00jbv/r/kxgo6wMGRv2N3OcAJewvWaig1q0rUQiPc0RjNRm5Qdv3HCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJgt7a/I; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bR58fF7A5SdDxSBE2GcCAQeTF96p50+O7+Bma2eqT0rtHe0MSl20BJvI19FSs3In8KxEd3PIvlIn5GbBBVkntDtnGoyGcr4bBS3YzpZTIpKdqcS7Zqy2FyODkytRYh158oEsT3ECSBc8mn+SW5yHtujcLgifZOmhtXDv6QtVknw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t/ACR1VR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJgt7a/I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69F6C433F1;
-	Thu, 29 Feb 2024 16:00:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t/ACR1VR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61406C43390;
+	Thu, 29 Feb 2024 17:10:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709222449;
-	bh=lnjqrM8Lfog5fV1cL5NQmbG9UmOGAw+pkjMKhL6L9FI=;
+	s=k20201202; t=1709226644;
+	bh=ChhtmMibOmTZUcDhTGdzCFyRQ8St/iVQNvu3TdmkOI4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RJgt7a/I08xUFVWKGUQUt/CbnrRwSeuWuOVZB/GRli+J4DfxIBlU8I4rOQ8iTiOsv
-	 E104t5JtWqdIRhuavFMU2rVQoMQjnnkpulToS3t8V47AIInq31/SnL3CC4g8o3a0VD
-	 1rumGN985aN5g2VIfW/FMygt4zS/00Li3OIULshxEyZz3fPc8gJXcu0vh0AjruHdzD
-	 zS6n9bsWeyH1KcnctMPBo6kLtaGy6d6XnD6E5CsE1zi/P/Bzcp8efTp/DTzbjpxzQV
-	 ygabbPCyn45uZ3XmdlLQzBlTYGnl72qMikVI/D8OYaperNbR0CT1TizT4tX5sFpQ80
-	 3jRxkXx54nuuQ==
-Date: Thu, 29 Feb 2024 08:00:49 -0800
+	b=t/ACR1VRvxzmrYMfDPEhz106hDTOVGIndaG/Y8MI2K8qtdsz1vGg5oiUlhv+YrPOC
+	 Fw+pWxLHmZUp+BjoDc3Nu5SmDNr2xJ0C1ffRNcr4p6zZ1uzVfBpVx5rqFOK1esHoVW
+	 Sj5jX/AmEOuDE82S+nq4y+FwL1ywpu+YCKkTGrPUfxqm1rMF2hvh8vVEqnJsnCOQgS
+	 11wD5xkkaa30GJUIGGR7hrcu+v0PRQ5ht4Pb74+NUPbrBDfKhLfCF82iunZZc59Cfx
+	 xNch4gw4bBOrqELFZyKgQhILs9LlJu/CC9jQ4uaTyvu63n8u7civ41PyFH6AnTsQcp
+	 xtkM7gsyBgm6g==
+Date: Thu, 29 Feb 2024 09:10:43 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: kunwu.chan@linux.dev
-Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Kunwu Chan <chentao@kylinos.cn>
-Subject: Re: [PATCH] xfs: use KMEM_CACHE() to create xfs_defer_pending cache
-Message-ID: <20240229160049.GY1927156@frogsfrogsfrogs>
-References: <20240229083342.1128686-1-kunwu.chan@linux.dev>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 02/14] xfs: introduce new file range exchange ioctls
+Message-ID: <20240229171043.GZ1927156@frogsfrogsfrogs>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <170900011673.938268.12940080187778287002.stgit@frogsfrogsfrogs>
+ <Zd9U4GAYxqw7zpXe@infradead.org>
+ <20240228193547.GQ1927156@frogsfrogsfrogs>
+ <Zd-LdqtoruWBSVc6@infradead.org>
+ <20240228230057.GU1927156@frogsfrogsfrogs>
+ <ZeCFBZVX2yjAw-5n@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,54 +47,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240229083342.1128686-1-kunwu.chan@linux.dev>
+In-Reply-To: <ZeCFBZVX2yjAw-5n@infradead.org>
 
-On Thu, Feb 29, 2024 at 04:33:42PM +0800, kunwu.chan@linux.dev wrote:
-> From: Kunwu Chan <chentao@kylinos.cn>
+On Thu, Feb 29, 2024 at 05:22:13AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 28, 2024 at 03:00:57PM -0800, Darrick J. Wong wrote:
+> > The offsets and lengths for FICLONERANGE are unsigned, so I think
+> > xfs_exchange_range ought to follow that.
 > 
-> Use the KMEM_CACHE() macro instead of kmem_cache_create() to simplify
-> the creation of SLAB caches when the default values are used.
-> 
-> Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
+> Yes.  I though I had actually brought that up before, but I might have
+> wanted to and not actually sent the comments out..
 
-Why bother? The vast majority of the kernel is still using
-kmem_cache_create(), not the weird, shouty macro that doesn't actually
-tell us what it is doing with said kmem_cache......
+You mentioned it in passing, but I misinterpreted what you'd said and
+took the signedness in the wrong direction.  Here's what I went with in
+the end:
 
-Up until now we've chosen not switch XFS to use it because many of the
-slab caches we use in XFS are not just "default" slab caches.  IOWs, we
-still have to use kmem_cache_create() for a lot of the caches we create,
-so we may as well use kmem_cache_create() for all of them rather than
-have to go look up what KMEM_CACHE() translates to every time we are
-looking at how slab caches are created.
+struct xfs_exchange_range {
+	__s32		file1_fd;
+	__u32		pad;		/* must be zeroes */
+	__u64		file1_offset;	/* file1 offset, bytes */
+	__u64		file2_offset;	/* file2 offset, bytes */
+	__u64		length;		/* bytes to exchange */
 
-Also, if you are going to change simple API stuff like this in XFS,
-please do all the conversions in a single patch. It takes much less time
-and resources to review and merge a single patch compared to a pile of
-dozen independent one line patches...
+	__u64		flags;		/* see XFS_EXCHANGE_RANGE_* below */
+};
 
 --D
-
-> ---
->  fs/xfs/libxfs/xfs_defer.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 66a17910d021..6d957fcc17f2 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -1143,9 +1143,7 @@ xfs_defer_resources_rele(
->  static inline int __init
->  xfs_defer_init_cache(void)
->  {
-> -	xfs_defer_pending_cache = kmem_cache_create("xfs_defer_pending",
-> -			sizeof(struct xfs_defer_pending),
-> -			0, 0, NULL);
-> +	xfs_defer_pending_cache = KMEM_CACHE(xfs_defer_pending, 0);
->  
->  	return xfs_defer_pending_cache != NULL ? 0 : -ENOMEM;
->  }
-> -- 
-> 2.39.2
-> 
-> 
