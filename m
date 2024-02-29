@@ -1,86 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F60E39840;
-	Thu, 29 Feb 2024 05:25:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB3846B9F
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 08:34:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709184345; cv=none; b=T/BjvKb3vcHzEF+VIl9qN85CXq72VZgs3snMFdBo/TL4Brc0Obyk1W39nFl7VCJNW8N4xRRunGS5SE+lJH3BbEbz//uekH+aANHF15TdQmmAOe1+hCpAegW6bfiOu6f4Qw6yctkywxgXxLPmE4wb55sg4HtoBgY1Ud79uGFiI58=
+	t=1709195681; cv=none; b=coMmIEs904yQJBlTJPnsHKu8EzsAh9pCanrp5V/DkD0CesLUJZkeELD/NqedWTWlw5eaxzPqSWy42ew+J8CjPeqmbb96vN2VZ7QwqQIDEYHzvc4N1JZkl5Zyf0BNPWCV6c3rPFH3+s8eCOlQ5cC6bJdbKPXQtY6yFW9KBxvneOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709184345; c=relaxed/simple;
-	bh=FCoZRFNi4zITcIlLN0RV/YfVYRQCko+oEZMNxFjEmOI=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=qkcxe6vkgcF5LEE1y1dXEogV6tsUtti42FgFWtzo0XuxaxV2oOXJUBNR5KAyYdMLXjKmllAg/dyq84sbUmTwzGV1S4dGxfSMOSs5IAjhE93R3u5U8X2Oy+ZbujhYbcSTpgCe7kUPmWG/3+r3fl7Lu3j7/c8rO8PpAeKA884kP88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHfcur02; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709195681; c=relaxed/simple;
+	bh=PtmJDoA1H7SAn1CqzqBzHGTEfAfkzw/1rSUcVqWa4Ig=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pJXkCEa4TVyu8GvxyYMiVjlMwZPUmlO+HjuebGPvDmHPaJr5WEKbuIjLBxOYqzKUrN7XY1vRR34afUxQpvFDo/g17kkjRGx0V8rwH4mIz2ORlNyZrsWUsgwAzX3pg6i8EsHDkY4H+j4AiZ/WHr7FhLHrD0KRC2404Qy9EluMnTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mQLRID5R; arc=none smtp.client-ip=91.218.175.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHfcur02"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3631EC433C7;
-	Thu, 29 Feb 2024 05:25:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709184344;
-	bh=FCoZRFNi4zITcIlLN0RV/YfVYRQCko+oEZMNxFjEmOI=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=FHfcur02gFf7e7AWEgaOUOX+c3jW7gBCwXYq4tMrhCesDWNlTofnur7lAtJFGo43E
-	 b3yP5shQydcD2nYCBElfQfPNCacw7Q5TX7PI5ifky8svIC7ZUY95BcK8txVIj85nEW
-	 h34ebX4NfUyranltkd9s+QFQAtw4IdkGuUG2mSVF1djhGNzD2+CrLdNHkGPt9ksKiV
-	 dK2i4Tkd6PvsJxP8UCTnc6szGcLlymyHxBBlC/haSZEnfK38q/bsbPglhe2tWV1gWU
-	 KbO7bL9in2D1zAD7XeD+n9eAyJ9191sBzdF/YR+X69ghbMULKCF2ko5cXEu5x8cmje
-	 CIYyfUizdlHgQ==
-References: <87r0gvna3j.fsf@debian-BULLSEYE-live-builder-AMD64>
- <ZeAP01ULpmV0u9Ba@casper.infradead.org>
-User-agent: mu4e 1.10.8; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: akiyks@gmail.com, cmaiolino@redhat.com, corbet@lwn.net,
- dan.carpenter@linaro.org, dan.j.williams@intel.com, dchinner@redhat.com,
- djwong@kernel.org, hch@lst.de, hughd@google.com, kch@nvidia.com,
- kent.overstreet@linux.dev, leo.lilong@huawei.com,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- longman@redhat.com, mchehab@kernel.org, peterz@infradead.org,
- ruansy.fnst@fujitsu.com, sfr@canb.auug.org.au, sshegde@linux.ibm.com
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 601f8bc2440a
-Date: Thu, 29 Feb 2024 10:39:16 +0530
-In-reply-to: <ZeAP01ULpmV0u9Ba@casper.infradead.org>
-Message-ID: <87msrjn8ob.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mQLRID5R"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1709195675;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=c4hqPXVYzAPKLJpLD1lYkRxhseQa0+qO76gLH6MQGf8=;
+	b=mQLRID5RGJsIYKfmSTAqOY53BAsA4WAZ0BePYmie39/1QizuzOovA5S4I5TBOiAVyoWp3H
+	CNJjh9ZM5cv+BCAsrdYIudxwvCfWG/jGFQcnfH3xj7SVFa3QkHEHr0UFNmJ4+yKZpbndt8
+	jVp0H/m+WelwzyxcDMbdVU+sfssmHAs=
+From: kunwu.chan@linux.dev
+To: chandan.babu@oracle.com,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Kunwu Chan <chentao@kylinos.cn>
+Subject: [PATCH] xfs: use KMEM_CACHE() to create xfs_defer_pending cache
+Date: Thu, 29 Feb 2024 16:33:42 +0800
+Message-Id: <20240229083342.1128686-1-kunwu.chan@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Feb 29, 2024 at 05:02:11 AM +0000, Matthew Wilcox wrote:
-> On Thu, Feb 29, 2024 at 10:23:45AM +0530, Chandan Babu R wrote:
->> Hi folks,
->> 
->> The for-next branch of the xfs-linux repository at:
->> 
->> 	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
->> 
->> has just been updated.
->> 
->> Patches often get missed, so please check if your outstanding patches
->> were in this update. If they have not been in this update, please
->> resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
->> the next update.
->> 
->> The new head of the for-next branch is commit:
->> 
->> 601f8bc2440a Merge tag 'xfs-6.8-fixes-4' into xfs-for-next
->
-> Some kind of merge snafu?  It looks like you merged all of 6.8-rc6 into
-> for-next:
->
-> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next
+From: Kunwu Chan <chentao@kylinos.cn>
 
-Apart from the patches destined for v6.9 cycle, The for-next branch has one
-patch (i.e. xfs: drop experimental warning for FSDAX) that needs to be pulled
-into v6.8-rc7. This patch is committed on v6.8-rc6. Hence, commits from
-v6.8-rc6 got pulled into tree.
+Use the KMEM_CACHE() macro instead of kmem_cache_create() to simplify
+the creation of SLAB caches when the default values are used.
 
-This issue will go away after I send a pull request for v6.8-rc7 to Linus and
-drop the v6.8-* stuff from for-next.
+Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
+---
+ fs/xfs/libxfs/xfs_defer.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 66a17910d021..6d957fcc17f2 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -1143,9 +1143,7 @@ xfs_defer_resources_rele(
+ static inline int __init
+ xfs_defer_init_cache(void)
+ {
+-	xfs_defer_pending_cache = kmem_cache_create("xfs_defer_pending",
+-			sizeof(struct xfs_defer_pending),
+-			0, 0, NULL);
++	xfs_defer_pending_cache = KMEM_CACHE(xfs_defer_pending, 0);
+ 
+ 	return xfs_defer_pending_cache != NULL ? 0 : -ENOMEM;
+ }
 -- 
-Chandan
+2.39.2
+
