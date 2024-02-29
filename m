@@ -1,76 +1,185 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32D5913C9F0
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 19:42:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9779A2E410;
+	Thu, 29 Feb 2024 20:18:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709235781; cv=none; b=mx0tseHQPUqELrh0OA1QTFH7/qWYYsQxnOAB/FpbgVKZ4vMVFAkohsHgxY0D64IxpfTJUl4pz4hJDi4V85wVlXYDCekud7P8OT9N45KzPxeHvTmfux0EcZn7wE5UYdtJ2TXURm8uhTz4y0J/5X9+B3XyRItporJIRvnb2q4OfN0=
+	t=1709237922; cv=none; b=DAoU9ax9G2dF6GZzGBfYTV5PlWdx4pXHbJ+Kd1VnA1WkGFRdySyEwRGJhyOfeqTR3oUWNCSuj3EjiHiD3YRIRMM8pGpaP0a1F6ytOnVz2yEMd/ndghBTFLaVReEW0Xwu0/8PqUlQ1Qe6cQry8dCbBpzTBG4oSKWyeTfaphUOR7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709235781; c=relaxed/simple;
-	bh=j03rqgyaSkbiW/H/jTTK9AwrjEIpWTG5etOhlZUqc3c=;
+	s=arc-20240116; t=1709237922; c=relaxed/simple;
+	bh=b/iUEhuGwZIlSsVnb6MBaptGvHOkdwDsH2T5H3Lxydo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sO1ZyKCjlxMkPTOKPmgt3t5iL/3PO+qMZyXlSPTP6S0VWkvjlXYFP5vgwoLselSBM0wKq2WYGhxTxAfEhffkj5WckqOVtwEvRnMaqN4ZQeaX7VTYxqHwe5ZkO2jbrMAQRUEBC/JRMs8zqV+fRUFkBJvhTDrst8VJeZhULVTjNE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=n8wA6OB9; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=QTQN852vAl2UDdUPtJF8Clx1DcDi59Gc3k8wgUTKOcuvMUznWBjiDaMMSrlx70SctdfKTbaffV6/la/LJKit9fG/PSlIr4u6+t5t80YWzvZonMw6hVOzAgmB/JCc2ay6ffuLJPB8JcrBe3nyius9cpcWKtqQmAKh59j3E64Y5pE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=diU+V4Th; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n8wA6OB9"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=n6+IRijBeQFc6cyQrMzblt4bTW+6SriLOtp42zsuemQ=; b=n8wA6OB99ViFH8NHww8Y7uyMox
-	NH29hNWiSvGVmuU3XUYpLTXvdHex3vaEYdmlXLsd61wyUOSnULSl2mcwego8I3rMDvIWHIMRK5ccd
-	dlymDdJZrlmqxpnJcv1oGn9j1eLQe78KoAvWuqcamHb8Ypb8f7xu+D1BU4rQYPLlVf70gFXOIn9V4
-	vOQflpzUkPnp0M7acemwPG0l62cYYI4Y0mETYIOVZTGBrIT64pJQvq2qKJP1nqG4ArGXIVLoFaB12
-	5F6cUkoms8nby8JEA1CKL0xZ/x2CRD6OJuqTjCrOU5kiMhfsC6i0sj0TERjEuGVxjKH+5ifNCL6fZ
-	WSFM1zDg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rfmJ0-0000000Evvp-2PA2;
-	Thu, 29 Feb 2024 19:42:58 +0000
-Date: Thu, 29 Feb 2024 11:42:58 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: online repair of symbolic links
-Message-ID: <ZeDeQqFNCHnq-Ux4@infradead.org>
-References: <170900015254.939796.8033314539322473598.stgit@frogsfrogsfrogs>
- <170900015273.939796.12650929826491519393.stgit@frogsfrogsfrogs>
- <Zd9sqALoZMOvHm8P@infradead.org>
- <20240228183740.GO1927156@frogsfrogsfrogs>
- <Zd-BHo96SoY4Camr@infradead.org>
- <20240228205213.GS1927156@frogsfrogsfrogs>
- <Zd-vaC5xjJ_YgeD6@infradead.org>
- <20240228234630.GV1927156@frogsfrogsfrogs>
- <ZeCFrUVJ54Grt8qy@infradead.org>
- <20240229171632.GA1927156@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="diU+V4Th"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D09ECC433C7;
+	Thu, 29 Feb 2024 20:18:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709237920;
+	bh=b/iUEhuGwZIlSsVnb6MBaptGvHOkdwDsH2T5H3Lxydo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=diU+V4ThMF7itixmLUEptHBFI1uoIo3WcV2nTfCJPxPa4ljT15j1vGeJT5aYsXZzE
+	 MooXJ0drDuP7CuGfbvnSOZpDAwGIsu64BCoUP6Fw4FK/pkneQt+zsW1HIta5JcDVTp
+	 lro9iC53vXetK721EtLXoOWC6CCcbo+5wjP2CVzjTZH8jj9vZGFJwLMW26AgfebDqn
+	 Ny4/tgXDTNjQUNQrIC5nO30IpYcOKfO+7TQ9bY6/JZVWMz1Z0IIqFq3RFGAThQyiWD
+	 CCIDGxzreeBedq6LFLi1fRUXnkw5SPU1OZfkFQEwnJzSpfI0f7qLwlzv1o+znL9CXA
+	 F0IEAZz7f+lOQ==
+Date: Thu, 29 Feb 2024 12:18:40 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Colin Walters <walters@verbum.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHSET v29.4 03/13] xfs: atomic file content exchanges
+Message-ID: <20240229201840.GC1927156@frogsfrogsfrogs>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <87961163-a4b9-4032-aa06-f5126c9c8ca2@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240229171632.GA1927156@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87961163-a4b9-4032-aa06-f5126c9c8ca2@app.fastmail.com>
 
-On Thu, Feb 29, 2024 at 09:16:32AM -0800, Darrick J. Wong wrote:
-> We don't want to salvage in that case.  I forgot to finish that last
-> paragraph:
+On Tue, Feb 27, 2024 at 08:50:20PM -0500, Colin Walters wrote:
 > 
-> "If salvage recovers more bytes than i_disk_size then we have no idea if
-> di_size was broken or not because the target isn't null-terminated.  In
-> theory the kernel will never do this (because it zeroes the xfs_buf
-> contents in xfs_trans_buf_get) but fuzzers could do that.  Set the
-> target to DUMMY_TARGET in this case."
 > 
-> and maybe add:
+> On Mon, Feb 26, 2024, at 9:18 PM, Darrick J. Wong wrote:
+> > Hi all,
+> >
+> > This series creates a new FIEXCHANGE_RANGE system call to exchange
+> > ranges of bytes between two files atomically.  This new functionality
+> > enables data storage programs to stage and commit file updates such that
+> > reader programs will see either the old contents or the new contents in
+> > their entirety, with no chance of torn writes.  A successful call
+> > completion guarantees that the new contents will be seen even if the
+> > system fails.
+> >
+> > The ability to exchange file fork mappings between files in this manner
+> > is critical to supporting online filesystem repair, which is built upon
+> > the strategy of constructing a clean copy of a damaged structure and
+> > committing the new structure into the metadata file atomically.
+> >
+> > User programs will be able to update files atomically by opening an
+> > O_TMPFILE, reflinking the source file to it, making whatever updates
+> > they want to make, and exchange the relevant ranges of the temp file
+> > with the original file. 
 > 
-> "The symlink target will be preserved if scrub does not find any errors
-> in the symlink file, the number of bytes recovered matches i_disk_size,
-> and there are no nulls in the recovered target.  In all other cases it
-> is set to DUMMY_TARGET."
+> It's probably worth noting that the "reflinking the source file" here
+> is optional, right?  IOW one can just:
+> 
+> - open(O_TMPFILE)
+> - write()
+> - ioctl(FIEXCHANGE_RANGE)
 
-Sounds good.
+If the write() rewrites the entire file, then yes, that'll also work.
+
+> I suspect the "simpler" non-database cases (think e.g. editors
+> operating on plain text files) are going to be operating on an
+> in-memory copy; in theory of course we could identify common ranges
+> and reflink, but it's not clear to me it's really worth it at the
+> tiny scale most source files are.
+
+Correct, there's no built-in dedupe.  For small files you'll probably
+end up with a single allocation anyway, which is ideal in terms of
+ondisk metadata overhead.
+
+One advantage that EXCHANGE_RANGE has over the rename dance is that the
+calling application doesn't have to copy all the file attributes and
+xattrs to the temporary file before the switch.
+
+> > The intent behind this new userspace functionality is to enable atomic
+> > rewrites of arbitrary parts of individual files.  For years, application
+> > programmers wanting to ensure the atomicity of a file update had to
+> > write the changes to a new file in the same directory
+> 
+> More sophisticated tools already are using O_TMPFILE I would say,
+> just with a final last step of materializing it with a name,
+> and then rename() into place.  So if this also
+> obviates the need for
+> https://lore.kernel.org/linux-fsdevel/364531.1579265357@warthog.procyon.org.uk/
+> that seems good.
+
+It would, though I would bet that extending linkat (or rename, or
+whatever) is going to be the only workable solution for old / simple
+filesystems (e.g. fat32).
+
+> >        Exchanges  are  atomic  with  regards to concurrent file opera‐
+> >        tions, so no userspace-level locks need to be taken  to  obtain
+> >        consistent  results.  Implementations must guarantee that read‐
+> >        ers see either the old contents or the new  contents  in  their
+> >        entirety, even if the system fails.
+> 
+> But given that we're reusing the same inode, I don't think that can
+> *really* be true...at least, not without higher level serialization.
+
+Higher level coordination is required, yes.  It doesn't have to be
+serialization, though.  The committing thread could signal all the other
+readers that they should invalidate and restart whatever they're working
+on if that work depends on the file that was COMMIT_RANGE'd.  The
+readers could detect unexpected data and resample mtime of the files
+they've read and restart if it's changed.
+
+> A classic case today is dconf in GNOME is a basic memory-mapped
+> database file that is atomically replaced by the "create new file,
+> rename into place" model.  Clients with mmap() view just see the old
+> data until they reload explicitly.  But with this, clients with mmap'd
+> view *will* immediately see the new contents (because it's the same
+> inode, right?)
+
+Correct, they'll start seeing the new contents as soon as they access
+the affected pages.
+
+How /does/ dconf handle those changes?  Does it rename the file and
+signal all the other dconf threads to reopen the file?  And then those
+threads get the new file contents?
+
+>                and that's just going to lead to possibly split reads
+> and undefined behavior - without extra userspace serialization or
+> locking (that more proper databases) are going to be doing.
+
+Huurrrh hurrrh.  That's right, I don't see how exchange can mesh well
+with mmap without actual flock()ing. :(
+
+fsnotify will send a message out to userspace after the exchange
+finishes, which means that userspace could watch for the notifications
+via fanotify.  However, that's still a bit racy... :/
+
+> Arguably of course, dconf is too simple and more sophisticated tools
+> like sqlite or LMDB could make use of this.  (There's some special
+> atomic write that got added to f2fs for sqlite last I saw...I'm
+> curious if this could replace it)
+
+I think so:
+
+F2FS_IOC_START_ATOMIC_WRITE -> XFS_IOC_START_COMMIT,
+F2FS_IOC_COMMIT_ATOMIC_WRITE -> XFS_IOC_COMMIT_RANGE, and
+F2FS_IOC_ABORT_VOLATILE_WRITE merely turns into close(temp_fd);
+
+> But still...it seems to me like there's going to be quite a lot of the
+> "potentially concurrent reader, atomic replace desired" pattern and
+> since this can't replace that, we should call that out explicitly in
+> the man page.  And also if so, then there's still a need for the
+> linkat(AT_REPLACE) etc.
+
+Hmm, I think I'll shrink that paragraph of the manpage:
+
+"Exchanges are atomic with regards to concurrent file operations.
+Implementations must guarantee that readers see either the old contents
+or the new contents in their entirety, even if the system fails."
+
+> 
+> >            XFS_EXCHRANGE_TO_EOF
+> 
+> I kept reading this as some sort of typo...would it really be too
+> onerous to spell it out as XFS_EXCHANGE_RANGE_TO_EOF e.g.?  Echoes of
+> unix "creat" here =)
+
+Yeah, I've expanded that to XFS_EXCHANGE_RANGE_TO_EOF for v29.5.
+
+--D
