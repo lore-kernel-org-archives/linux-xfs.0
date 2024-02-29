@@ -1,118 +1,123 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF05C74BF1
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 23:26:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78BA7433B6;
+	Thu, 29 Feb 2024 23:27:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709249211; cv=none; b=W18dS+xfhl+CWmlQlvllEGR5o7pgqBxyXRsO5rGA37vb69Sp4kyfu8OuVe+bhDr8hZldExrr/bjgDmFKpP++E2QKjG77jVyqAvoFGZKVr12TnGCU9FEzHHV7z9TvJGQwtRUbwivdSzR8O455e5xUk+P5TzEpy6LF19sLynirIq0=
+	t=1709249245; cv=none; b=oV69NKlAO88w90DpXm8LzgMpQYvcRwJqj2lXR20pYhwRIuh8/3UqRWaouwfQS1+/gjgSV0T1/z2if5GZ0UQq9d4f2Nj6C1CK+6zw9MpfzSOjeZkjo2eUkJ/H3Anv3nbJoZAPnWHuxYkKv8OQncGJjqmm7hwn8QutIPGFjZk/lD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709249211; c=relaxed/simple;
-	bh=vFGe/JPM+D98FYRCFhoM8TP+K+kv3fj2cPK6Z4iL8bQ=;
+	s=arc-20240116; t=1709249245; c=relaxed/simple;
+	bh=b8Qm3rCBoWy8fkyvnmrpn8jhJfFl0SiOkCNBpykNakk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jI9p7FJU3IXFIsCeqbFfax2iBYq/yLSx1A8FnczYg2n4yPA+J5w3O5NsfmtsSFO02GSHg4Onbm6BhGuLZa6mkOcuJ7BbF8Qzt3mf8NSgVuh0yw2/llmAsBRV/m42qc+ntTDtMBOzS/8kBVF0qTGiAMr1tcL2xM+6cW8hAc8pOdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xM8dEdSI; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=iSu1CzXsYWzvP7OX1zJDHhvMPvAKkQY/xqzs8YQx8PNtIuIpST/dIQ8zcYJ90MJaM5e+tCnOgJC+CnlafuVwLOT9Q+QuagsZ9X6DgsJG9ggSDFsxosw85len+B+PIZc/mTjIG/j4RHtx+lgOZVMW+XqyFJVMsbRPwqB5udMMmns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=omQPBdGJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xM8dEdSI"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5cedfc32250so1303877a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 15:26:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709249208; x=1709854008; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=grHdyJH43EDqTr7lOlPpsv2LnOtPCDv7mkz6AEIU0ok=;
-        b=xM8dEdSI0/FTFjeiVslj0L5JrHinrkZRbK0wIXgaF8BK0/xXK48R39MUEVILrw2tlZ
-         0y/HJuwAJxr1wFMOoWiyYc3EtldxtiVFQgPvAeoOiXMAUMHcGUScmnsLYYWUbhyLyU6q
-         pcaS1Expi4zbTjBNaun9f5cSG0m2dzOOiYpMW5OOG547M9uUewSBC6N3I4yUX3OoKPra
-         5yAWS88QIpu0mxdp25Zi96Pl94/StNz/wZOGOQBGxoqeUxMxftRsNi7NgDEwTahvjtrY
-         4DUiPcf8eGyEX1ShqWsUB0ZO7Fcd5+wrB6NhB2Z+EOKWDoS+fSOeQAT948ZgqnUtpbqz
-         KWmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709249208; x=1709854008;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=grHdyJH43EDqTr7lOlPpsv2LnOtPCDv7mkz6AEIU0ok=;
-        b=e49IS7MoGRi05/dO3LExktI0BQ3z/hUpxtjpnVSMRgFERDWWOp4G8Qh+UBCcQEnDOU
-         EQO3FozK9kXmdKwJUVtzHebpA1Guyk3MScs04IeD5sveUTp6lRU8g0FrLrSRLGy4zgnf
-         TjGxdIgeHUi+VYuTYmy/4Ou7OdJZjYjxZO+rTsU8rDt7CxPpuS6Aqecs64UEEjQSVJdr
-         x0np25qSgWhtp2hOagjbntySbtZgfNXVUjyR4nnfcHjTF05f+0eyv/zwdN/h7P0S1BQh
-         n+kSYzdKIKFJ/sA2aCeA9o7tq8rUrMoq7gEHYnrs1Vd77FwmM12wrmkOfaxaxgOB2b9w
-         7PKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWNLXVM1GZCuE6HPbFIPDsM+iES5OncnUv62CQfYvPwKJJswuIdrbX7bsAqtEeYNzdEjGkzCU+FCPQ1q1WMLt7bLBKiqI1p4KTf
-X-Gm-Message-State: AOJu0Yx+lZ7YRg3xhIMg4YyiVgQnR+g8dLJ1a/lkx9ya374mIwWApoof
-	dm5qBMO97qTL9uzQdw3A/yA4pKzZUMgDrS08GkFB8bZFsI9i1rJXMD0zIcWGmqU=
-X-Google-Smtp-Source: AGHT+IGiSfuRv3Y76uLW0YYRJRv2KJMhOadB6A35s9PgdU0SN6q4L74ZxSAPem4Amsho3fTWY8H25g==
-X-Received: by 2002:a17:90a:a618:b0:29a:795:a132 with SMTP id c24-20020a17090aa61800b0029a0795a132mr99168pjq.18.1709249208246;
-        Thu, 29 Feb 2024 15:26:48 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id sj5-20020a17090b2d8500b0029ad78306d8sm4245337pjb.3.2024.02.29.15.26.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Feb 2024 15:26:47 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rfpnY-00DJUd-1S;
-	Fri, 01 Mar 2024 10:26:44 +1100
-Date: Fri, 1 Mar 2024 10:26:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: kunwu.chan@linux.dev
-Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Kunwu Chan <chentao@kylinos.cn>
-Subject: Re: [PATCH] xfs: use KMEM_CACHE() to create xfs_defer_pending cache
-Message-ID: <ZeEStFZwMu068YTc@dread.disaster.area>
-References: <20240229083342.1128686-1-kunwu.chan@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="omQPBdGJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB270C43390;
+	Thu, 29 Feb 2024 23:27:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709249244;
+	bh=b8Qm3rCBoWy8fkyvnmrpn8jhJfFl0SiOkCNBpykNakk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=omQPBdGJoV9eTZfIOIoQmoFXuyiogIdWcLJcD/bhJRZNEs194Zu886gYpEVZW3RqS
+	 kxZ3tfrBVAoE8oROw2pACEn1U6dVJTwl9nbUB0Q7Q9FTYBGKDtu1kFMisfdcEUeFMB
+	 5n4x2fa+x1nrFCuucuMh/pyjp91MFyaId5q4+i69viB+BPucFGwru/5cpDd5grNFuq
+	 nPmrc1v1I4avQoF07s4lj0lxhj+yXETGmRqF/r1/Jq9wFT0/Xm06k296sBiWhI+kR+
+	 OuspmPVJAMyRS+v4vog4c9p4X2q+m4ES+eRb8eGIsyMHwDMYfNDxCkLzV7WNVClOgn
+	 ZJrLm5lHm1zSg==
+Date: Thu, 29 Feb 2024 15:27:24 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
+	jlayton@kernel.org
+Subject: Re: [PATCH 14/13] xfs: make XFS_IOC_COMMIT_RANGE freshness data
+ opaque
+Message-ID: <20240229232724.GD1927156@frogsfrogsfrogs>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <20240227174649.GL6184@frogsfrogsfrogs>
+ <CAOQ4uxiPfno-Hx+fH3LEN_4D6HQgyMAySRNCU=O2R_-ksrxSDQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240229083342.1128686-1-kunwu.chan@linux.dev>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxiPfno-Hx+fH3LEN_4D6HQgyMAySRNCU=O2R_-ksrxSDQ@mail.gmail.com>
 
-On Thu, Feb 29, 2024 at 04:33:42PM +0800, kunwu.chan@linux.dev wrote:
-> From: Kunwu Chan <chentao@kylinos.cn>
+On Tue, Feb 27, 2024 at 08:52:58PM +0200, Amir Goldstein wrote:
+> On Tue, Feb 27, 2024 at 7:46 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > To head off bikeshedding about the fields in xfs_commit_range, let's
+> > make it an opaque u64 array and require the userspace program to call
+> > a third ioctl to sample the freshness data for us.  If we ever converge
+> > on a definition for i_version then we can use that; for now we'll just
+> > use mtime/ctime like the old swapext ioctl.
 > 
-> Use the KMEM_CACHE() macro instead of kmem_cache_create() to simplify
-> the creation of SLAB caches when the default values are used.
+> This addresses my concerns about using mtime/ctime.
+
+Oh good! :)
+
+> I have to say, Darrick, that I think that referring to this concern as
+> bikeshedding is not being honest.
 > 
-> Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
-> ---
->  fs/xfs/libxfs/xfs_defer.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> I do hate nit picking reviews and I do hate "maybe also fix the world"
+> review comments, but I think the question about using mtime/ctime in
+> this new API was not out of place
+
+I agree, your question about mtime/ctime:
+
+"Maybe a stupid question, but under which circumstances would mtime
+change and ctime not change? Why are both needed?"
+
+was a very good question.  But perhaps that statement referred to the
+other part of that thread.
+
+>                                   and I think that making the freshness
+> data opaque is better for everyone in the long run and hopefully, this will
+> help you move to the things you care about faster.
+
+I wish you'd suggested an opaque blob that the fs can lay out however it
+wants instead of suggesting specifically the change cookie.  I'm very
+much ok with an opaque freshness blob that allows future flexibility in
+how we define the blob's contents.
+
+I was however very upset about the Jeff's suggestion of using i_version.
+I apologize for using all caps in that reply, and snarling about it in
+the commit message here.  The final version of this patch will not have
+that.
+
+That said, I don't think it is at all helpful to suggest using a file
+attribute whose behavior is as yet unresolved.  Multigrain timestamps
+were a clever idea, regrettably reverted.  As far as I could tell when I
+wrote my reply, neither had NFS implemented a better behavior and
+quietly merged it; nor have Jeff and Dave produced any sort of candidate
+patchset to fix all the resulting issues in XFS.
+
+Reading "I realize that STATX_CHANGE_COOKIE is currently kernel
+internal" made me think "OH $deity, they wants me to do that work
+too???"
+
+A better way to have woreded that might've been "How about switching
+this to a fs-determined structure so that we can switch the freshness
+check to i_version when that's fully working on XFS?"
+
+The problem I have with reading patch review emails is that I can't
+easily tell whether an author's suggestion is being made in a casual
+offhand manner?  Or if it reflects something they feel strongly needs
+change before merging.
+
+In fairness to you, Amir, I don't know how much you've kept on top of
+that i_version vs. XFS discussion.  So I have no idea if you were aware
+of the status of that work.
+
+--D
+
+> Thanks,
+> Amir.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 66a17910d021..6d957fcc17f2 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -1143,9 +1143,7 @@ xfs_defer_resources_rele(
->  static inline int __init
->  xfs_defer_init_cache(void)
->  {
-> -	xfs_defer_pending_cache = kmem_cache_create("xfs_defer_pending",
-> -			sizeof(struct xfs_defer_pending),
-> -			0, 0, NULL);
-> +	xfs_defer_pending_cache = KMEM_CACHE(xfs_defer_pending, 0);
->  
->  	return xfs_defer_pending_cache != NULL ? 0 : -ENOMEM;
->  }
-
-Please stop wasting our time by trying to make changes that have
-already been rejected. I gave you good reasons last time for why we
-aren't going to make this change in XFS, and now you've forced
-Darrick to waste time repeating all those same reasons. You did not
-respond to my review comments last time, and now you are posting
-more patches that make the same rejected change.
-
-PLease listen to the feedback you are given. Indeed, please respond
-and acknowledge that you have read and understood the feedback you
-have been given, otherwise I'll consider anything from this email
-address as "just another annoying bot" and killfile it.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
