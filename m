@@ -1,41 +1,38 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 206917C6D2;
-	Thu, 29 Feb 2024 11:45:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F23157E0E4;
+	Thu, 29 Feb 2024 11:45:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709207137; cv=none; b=FkwW9lJP2IkkEs2JpH/KlataUMMQuMAxX5At28vnfOjXvdTF95uIv5dA4+1l9vUVzU/86h3DApvlNzmy+z5eC181oB5hQLF3nnBNdmcDzMmjwu/09iuPEizAQWJ0TQJDU0AmpW+HCa+p2LcUeY+Pc3Xvf1CVIhrSdK28Nv0c4XY=
+	t=1709207141; cv=none; b=IDbsgHKrUU1PszECizn4PCUyAJJhA7s03+WvWe+hHv6DaQWD7uwpJsSNdYWfVV2L9h3dTkk7pUw0Hb06RL0t+2VOqvi0ShM5Tm5JhWfHnfS5kI7DJPTwOmpr+gke1mSFmp4OzkaDyNWNsw344o5qSEkelQ0byXH6d00/UF5actw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709207137; c=relaxed/simple;
-	bh=jsKCtJRRKaJUiyg4hQpnl4lXKjzxpQzJM96ZLAswM1U=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nTJk4a7ox/Ysm5+VTRp66E6CKzWiemB1swaS/Comtsy6GX8qN7jhGJNTsTGBDAIBsGvm1ASv7MaG3wyqth0mLE+yKSt3kuPJMJQYDFVF9OnHYQGV0DHhuyhP32TdWHp8ZMvFQmQKP7FKYEhlTv7X6mG9rP6JO6qi7QfUKb0mtsw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+	s=arc-20240116; t=1709207141; c=relaxed/simple;
+	bh=hngxUyHulZ27eylXtud4AjMHhGagOr3zuKNraEBD/S0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sh2+t9C8oNY7wNuXmIivoSKqym6/ZyrpyatMUpa4EYcsI+FlSM3iOQ1KQ9Lvcima6rbFiRGuQLEfXEOVZfZgQy1MRDnsZCQu51wlAMigCEHlbguCA6VSAwGMfWdoKz+9Q2V+w06o2/xajaH0mUbdDQPCruk67GgOoMVQ+oyAjA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Tlq9J2Zkdz1Q9Mp;
-	Thu, 29 Feb 2024 19:43:16 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Tlq9M6mSQzvW29;
+	Thu, 29 Feb 2024 19:43:19 +0800 (CST)
 Received: from kwepemm600013.china.huawei.com (unknown [7.193.23.68])
-	by mail.maildlp.com (Postfix) with ESMTPS id 9670D140390;
-	Thu, 29 Feb 2024 19:45:32 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 067BB1404DB;
+	Thu, 29 Feb 2024 19:45:31 +0800 (CST)
 Received: from huawei.com (10.175.104.67) by kwepemm600013.china.huawei.com
  (7.193.23.68) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Thu, 29 Feb
- 2024 19:45:31 +0800
+ 2024 19:45:30 +0800
 From: Zhihao Cheng <chengzhihao1@huawei.com>
 To: <brauner@kernel.org>, <david@fromorbit.com>, <djwong@kernel.org>,
 	<jack@suse.cz>, <tytso@mit.edu>
 CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, <linux-ext4@vger.kernel.org>,
 	<yi.zhang@huawei.com>
-Subject: [PATCH RFC 2/2] ext4: Optimize endio process for DIO overwrites
-Date: Thu, 29 Feb 2024 19:38:49 +0800
-Message-ID: <20240229113849.2222577-3-chengzhihao1@huawei.com>
+Subject: [PATCH RFC 0/2] ext4: Do endio process under irq context for DIO overwrites
+Date: Thu, 29 Feb 2024 19:38:47 +0800
+Message-ID: <20240229113849.2222577-1-chengzhihao1@huawei.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240229113849.2222577-1-chengzhihao1@huawei.com>
-References: <20240229113849.2222577-1-chengzhihao1@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,56 +44,57 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  kwepemm600013.china.huawei.com (7.193.23.68)
 
-In DIO overwriting case, there is no need to convert unwritten exntents
-and ext4_handle_inode_extension() can be ignored, which means that endio
-process can be executed under irq context. Since commit 240930fb7e6b5
-("ext4: dio take shared inode lock when overwriting preallocated blocks")
-has provided a method to judge whether overwriting is happening, just do
-nothing in endio process if DIO overwriting happens.
-This patch enables ext4 processing endio under irq context in DIO
-overwriting case, which brings a performance improvement in the
-following fio test on a x86 physical machine with nvme when irq
-and fio run on the same cpu:
+Recently we found an ext4 performance regression problem between 4.18
+and 5.10 by following test command on a x86 physical machine with nvme:
+  fio -direct=1 -iodepth=128 -rw=randwrite -ioengine=libaio -bs=4k
+      -size=2G -numjobs=1 -time_based -runtime=60 -group_reporting
+      -filename=/test/test -name=Rand_write_Testing --cpus_allowed=1
+4.18: 288k IOPS    5.10: 234k IOPS
 
-Test: fio -direct=1 -iodepth=128 -rw=randwrite -ioengine=libaio -bs=4k
--size=2G -numjobs=1 -overwrite=1 -time_based -runtime=60 -group_reporting
--filename=/test/test -name=Rand_write_Testing --cpus_allowed=1
+After anlayzing the changes between above two versions, we found that
+the endio context changed since commit 378f32bab3714("ext4: introduce
+direct I/O write using iomap infrastructure"), in aio DIO overwriting
+case. And the problem still exist in latest mainline.
+4.18: endio is processed under irq context
+ dio_bio_end_aio
+  defer_completion = dio->defer_completion || ... // defer_completion is
+                                                  // false for overwrite
+  if (defer_completion) {
+    queue_work
+  } else {
+    dio_complete                          // endio in irq context
+  }
+mainline: endio is processed in kworker
+ iomap_dio_bio_end_io
+  if (dio->flags & IOMAP_DIO_INLINE_COMP) // false, only for read
+  if (dio->flags & IOMAP_DIO_CALLER_COMP) // false, only for io_uring
+  queue_work                              // endio in kworker context
 
-before: 953 MiB/s  after: 1350 MiB/s, ~41% perf improvement.
+Assume that nvme irq registers on cpu 1, and fio runs on cpu 1, it could
+be possible(Actually we did reproduce it easily) that fio, nvme irq and
+kworker all run on cpu 1. Firstly, compared with 4.18, there are extra
+operations(eg. queue work and wake up kworker) while processing endio,
+which is slower than processing endio under nvme irq context. Secondly,
+fio and kworker will race to get cpu resource, which will slow down fio.
 
-Suggested-by: Zhang Yi <yi.zhang@huawei.com>
-Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
----
- fs/ext4/file.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+There is no need to do
+ext4_convert_unwritten_extents/ext4_handle_inode_extension under
+ext4_dio_write_end_io in overwriting case, so we can put ext4 dio endio
+under irq context.
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 54d6ff22585c..411a05c6b96e 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -503,6 +503,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	loff_t offset = iocb->ki_pos;
- 	size_t count = iov_iter_count(from);
- 	const struct iomap_ops *iomap_ops = &ext4_iomap_ops;
-+	const struct iomap_dio_ops *iomap_dops = &ext4_dio_write_ops;
- 	bool extend = false, unwritten = false;
- 	bool ilock_shared = true;
- 	int dio_flags = 0;
-@@ -572,9 +573,12 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		ext4_journal_stop(handle);
- 	}
- 
--	if (ilock_shared && !unwritten)
-+	if (ilock_shared && !unwritten) {
- 		iomap_ops = &ext4_iomap_overwrite_ops;
--	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
-+		iomap_dops = NULL;
-+		dio_flags = IOMAP_DIO_MAY_INLINE_COMP;
-+	}
-+	ret = iomap_dio_rw(iocb, from, iomap_ops, iomap_dops,
- 			   dio_flags, NULL, 0);
- 	if (ret == -ENOTBLK)
- 		ret = 0;
+It is worth noting that iomap_dio_complete shouldn't be executed under
+irq context if datasync is required(IOMAP_DIO_NEED_SYNC), so overwriting
+endio is still done in kworker for this situation.
+
+Zhihao Cheng (2):
+  iomap: Add a IOMAP_DIO_MAY_INLINE_COMP flag
+  ext4: Optimize endio process for DIO overwrites
+
+ fs/ext4/file.c        |  8 ++++++--
+ fs/iomap/direct-io.c  | 10 ++++++++--
+ include/linux/iomap.h |  6 ++++++
+ 3 files changed, 20 insertions(+), 4 deletions(-)
+
 -- 
 2.39.2
 
