@@ -1,108 +1,259 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03DDE59167;
-	Thu, 29 Feb 2024 09:20:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FDA17B3C5
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 11:40:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709198412; cv=none; b=l9bI09sc8Di4ZFkKZQrcnfk3icHA90p+dMkGZq4n666FyBk7tsmkPXPXw+hl1N0bi6FXCSs0RrbU8qZwJ6I1G3u3QNxjucuhn5/hL1T6LUuDCH4QCaO6Q5nQ1kmSUBxBKcGWcD/moc0m88iW5cL3b7u/Rwtw2YcmMbvh3QPaHvM=
+	t=1709206808; cv=none; b=B/k6xz4MUA16eEwMLc5U+J9aQymLuDwGPnev8/pJxDSEjXhTxEs22Qk8Spve1xgea15dA6nymilOxYvbtWX+ph7cuW5zkc7iiSnZpoGplH7eHolThRO2et9RrxnXnJQl3N25szmrtCLRZGLhnkixwMZVIl7rl6SqpYoIwA4y0Ks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709198412; c=relaxed/simple;
-	bh=iGHP7pwpeOVDDFpZ0noQ898rYHBuWLE3gLeIZkVM71E=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=aiDzo7P3A4GhJGuqlczsZ/MSdeg33AebzehUaCDn0LjtGBn/5knAN/8rKWKCBEpgMO4lls6T2KU8WwlzSdKlbXkcsRsJRRF58dcgwbilD9RCsEOm5VhryTInY1eKSfrz/3AXYWm6jfek+IqH1v6v3IqNN5QSpF+srZb6A9bRWeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Tllzz1psXz4f3jHd;
-	Thu, 29 Feb 2024 17:19:59 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7E5281A0F7F;
-	Thu, 29 Feb 2024 17:20:04 +0800 (CST)
-Received: from [10.174.176.34] (unknown [10.174.176.34])
-	by APP1 (Coremail) with SMTP id cCh0CgBHZQ5BTOBl5aoEFg--.45042S3;
-	Thu, 29 Feb 2024 17:20:04 +0800 (CST)
-Subject: Re: [RFC PATCH v3 07/26] iomap: don't increase i_size if it's not a
- write operation
-To: Christoph Hellwig <hch@infradead.org>
-Cc: djwong@kernel.org, Dave Chinner <david@fromorbit.com>,
- linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.cz,
- ritesh.list@gmail.com, willy@infradead.org, zokeefe@google.com,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
- wangkefeng.wang@huawei.com
-References: <20240127015825.1608160-1-yi.zhang@huaweicloud.com>
- <20240127015825.1608160-8-yi.zhang@huaweicloud.com>
- <ZcsCP4h-ExNOcdD6@infradead.org>
- <9b0040ef-3d9d-6246-4bdd-82b9a8f55fa2@huaweicloud.com>
- <Zd-v_25DKYI1hn-l@infradead.org>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <9c9f1831-a772-299b-072b-1c8116c3fb35@huaweicloud.com>
-Date: Thu, 29 Feb 2024 17:20:01 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1709206808; c=relaxed/simple;
+	bh=Vr4XqUeTB3QMdPUr91fnbjV2uoHjfAzfzJlB0dlzj2o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z/wrMWmqPoa3H8EuBOjYI8XCmbTu/m/TsgvidRvFMEEy1Dh2shPMhoIwaavK7I+BL5BzS94xVW4lTRzj6Sljvx3ytRcwYU1MHbwM641BMgcQ/EMTbvs05rVnR+RCLbQ+MRsp4B2QgWA4drpq/D5IguBzrrYQ63QTcl5SVKUbFWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Pa4IcbfE; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Pa4IcbfE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1709206804;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=13GnZXU0qbANNRDEiYRIXhFGscFc23PREgerHpFd+fM=;
+	b=Pa4IcbfEpuPWw4HgM1P4tAQ5Ybpqv0ZjQdEugDuCprxyv1CJUlQ9G9ZNxO9acLObXu4C3t
+	he38EsKq9PYJnOXdT4Mi5TBXVmEbnbG2gWMxHuHGIBsizbrYsrFCeyi305pZhVP4hqynyR
+	69mEl/oLu5X9JlXAp4XHLKujFC/IJew=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-372-AvoZV3OBM5KLAWvOe2P98w-1; Thu, 29 Feb 2024 06:40:02 -0500
+X-MC-Unique: AvoZV3OBM5KLAWvOe2P98w-1
+Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-566aa1c194bso270632a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 03:40:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709206801; x=1709811601;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=13GnZXU0qbANNRDEiYRIXhFGscFc23PREgerHpFd+fM=;
+        b=HCb+inzLZA46Uf2BPEgSyzYg1bOG+3JHBwHRBzosFVb40QKKXIu4GO+KD9weW/lF+p
+         UEUQ1ZhQthyg3YYwxxueXbMs0nsBlEPIH/rrIIgp7SG2Tzr4cUPCMy8lhK9bzJp9uzaM
+         gAdKAeitf0I7Z0hjMnqv55TFzvRcHpQ61PIyGVjQD1D91TZCDi2W53VJPDiBTmRK/otl
+         Xdw0n8IT4djy1GTODhb7X7Rsgoyh6Wj1E1QAS4jAWgWHy6qQ4bxhqXwCZoMcnzrszbVG
+         VlvQO8rbDdDDmqVLTRYdWmVelR8WCyZBpbCiYDjjlrTjMq2rPlSZ6VsBnLxYjpfx4yRA
+         f4XQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUdNxJ/mQwmiG1OIg9FZo8ITo5LvvqSbk53NXTLz1eLT9Lzr/FSAbsG77C5OHbm6jj5AO+Wf46P0xShGjYYLMN71hib51htXhkv
+X-Gm-Message-State: AOJu0Ywzr6gsJ5nbyt3d9z64qTA3UaBaHsDlVMQNDcJSOgsGFSkyc7SL
+	j+rFEsEBH+0mxSg//P/he0Wn+ViUrYde9AXBD3abxy4cKqev2Xz2l4lkUUQR0EMyhVBJZvRujH2
+	3TzZ7L80rw9ij3SgiiMPOPPEZhcUVnrCslTrr4APeSnCIy257hP2sp46u
+X-Received: by 2002:a05:6402:5247:b0:566:a44d:c642 with SMTP id t7-20020a056402524700b00566a44dc642mr1084465edd.15.1709206801460;
+        Thu, 29 Feb 2024 03:40:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFJkYHFAWvLdcumzwYhhjCC6QYC9n2jJDV5utuSTJf29rD4f2IvH8bD+Zt6Z5Lq6d8IuHp0Bg==
+X-Received: by 2002:a05:6402:5247:b0:566:a44d:c642 with SMTP id t7-20020a056402524700b00566a44dc642mr1084404edd.15.1709206799452;
+        Thu, 29 Feb 2024 03:39:59 -0800 (PST)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id j1-20020a50ed01000000b005667629f6e1sm537935eds.39.2024.02.29.03.39.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Feb 2024 03:39:58 -0800 (PST)
+Date: Thu, 29 Feb 2024 12:39:58 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] generic: check logical-sector sized O_DIRECT
+Message-ID: <kxhp3he7t53sr2g3khet3lw3nq47uqku7ttr3rwn2ai7nlw2hk@lo5f677t7svz>
+References: <20221107045618.2772009-1-zlang@kernel.org>
+ <20240228155929.GD1927156@frogsfrogsfrogs>
+ <20240229005218.pwgakn5x3fwwcjnj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20240229014140.GU6226@frogsfrogsfrogs>
+ <20240229015521.yuof45wulkneq5ij@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <Zd-v_25DKYI1hn-l@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgBHZQ5BTOBl5aoEFg--.45042S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZF1UWFy7tF1xCryxKw15urg_yoW8GF1Dpr
-	WF9FykKr1qg3y5ur1kuay7Jw10kw1fZrW8Aryjgw45Gan3XFyxZryjgay09FWqgrZ7Zw1Y
-	qF4UWaySyry0vaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvab4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a
-	6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv
-	67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyT
-	uYvjxUFDGOUUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240229015521.yuof45wulkneq5ij@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-Hello Christoph!
-
-On 2024/2/29 6:13, Christoph Hellwig wrote:
-> On Wed, Feb 28, 2024 at 04:53:32PM +0800, Zhang Yi wrote:
->> So, we have to handle above case for xfs. I suppose we could keep
->> increasing i_size if the zeroed folio is entirely outside of i_size,
->> make sure we could write back and allocate blocks for the
->> zeroed & delayed extent, something like below, any suggestions ?
+On 2024-02-29 09:55:21, Zorro Lang wrote:
+> On Wed, Feb 28, 2024 at 05:41:40PM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 29, 2024 at 08:52:18AM +0800, Zorro Lang wrote:
+> > > On Wed, Feb 28, 2024 at 07:59:29AM -0800, Darrick J. Wong wrote:
+> > > > On Mon, Nov 07, 2022 at 12:56:18PM +0800, Zorro Lang wrote:
+> > > > > If the physical sector size is 4096, but the logical sector size
+> > > > > is 512, the 512b dio write/read should be allowed.
+> > > > 
+> > > > Huh, did we all completely forget to review this patch?
+> > > 
+> > > Hmm?? This patch has been reviewed and merged in 2022, refer to g/704.
+> > > Why did it appear (be refreshed) at here suddenly ?
+> > 
+> > Doh!
+> > 
+> > Sorry, I saw this patch sitting by itself with no replies or "Hey I
+> > merged this" messages and thought we'd forgotten it.
 > 
-> Sorry for being dumb, but what was the problem solved by not updating
-> the size for ext4 again?  (for unshare I can't see any reason to
-> ever update the inode size)
+> Thanks for taking care this test :)
+> 
+> There was a RVB for this patch:
+> https://lore.kernel.org/fstests/20221107105309.khksga5m7p766sed@aalbersh.remote.csb/
+
+Sorry, it's probably because I somehow dropped CC to linux-xfs
+
+> 
+> This remind me that I still have some patches in my local branch, they were
+> not merged by some reasons. I'll check if some of them are suitable for now :)
+> 
+> Thanks,
+> Zorro
+> 
+> > 
+> > And if it's running without problems (I haven't seen any in generic/704)
+> > then I'll leave well enough alone.
+> > 
+> > --D
+> > 
+> > > > 
+> > > > > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > > > > ---
+> > > > > 
+> > > > > Hi,
+> > > > > 
+> > > > > This reproducer was written for xfs, I try to make it to be a generic
+> > > > > test case for localfs. Current it test passed on xfs, extN and btrfs,
+> > > > > the bug can be reproduced on old rhel-6.6 [1]. If it's not right for
+> > > > > someone fs, please feel free to tell me.
+> > > > > 
+> > > > > Thanks,
+> > > > > Zorro
+> > > > > 
+> > > > > [1]
+> > > > > # ./check generic/888
+> > > > > FSTYP         -- xfs (non-debug)
+> > > > > PLATFORM      -- Linux/x86_64 xxx-xxxxx-xxxxxx 2.6.32-504.el6.x86_64
+> > > > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
+> > > > > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/loop1 /mnt/scratch
+> > > > > 
+> > > > > generic/888      - output mismatch (see /root/xfstests-dev/results//generic/888.out.bad)
+> > > > >     --- tests/generic/888.out   2022-11-06 23:42:44.683040977 -0500
+> > > > >     +++ /root/xfstests-dev/results//generic/888.out.bad 2022-11-06 23:48:33.986481844 -0500
+> > > > >     @@ -4,3 +4,4 @@
+> > > > >      512
+> > > > >      mkfs and mount
+> > > > >      DIO read/write 512 bytes
+> > > > >     +pwrite64: Invalid argument
+> > > > >     ...
+> > > > >     (Run 'diff -u tests/generic/888.out /root/xfstests-dev/results//generic/888.out.bad'  to see the entire diff)
+> > > > > Ran: generic/888
+> > > > > Failures: generic/888
+> > > > > Failed 1 of 1 tests
+> > > > > 
+> > > > >  tests/generic/888     | 52 +++++++++++++++++++++++++++++++++++++++++++
+> > > > >  tests/generic/888.out |  6 +++++
+> > > > >  2 files changed, 58 insertions(+)
+> > > > >  create mode 100755 tests/generic/888
+> > > > >  create mode 100644 tests/generic/888.out
+> > > > > 
+> > > > > diff --git a/tests/generic/888 b/tests/generic/888
+> > > > > new file mode 100755
+> > > > > index 00000000..b5075d1e
+> > > > > --- /dev/null
+> > > > > +++ b/tests/generic/888
+> > > > > @@ -0,0 +1,52 @@
+> > > > > +#! /bin/bash
+> > > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > > +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
+> > > > > +#
+> > > > > +# FS QA Test No. 888
+> > > > > +#
+> > > > > +# Make sure logical-sector sized O_DIRECT write is allowed
+> > > > > +#
+> > > > > +. ./common/preamble
+> > > > > +_begin_fstest auto quick
+> > > > > +
+> > > > > +# Override the default cleanup function.
+> > > > > +_cleanup()
+> > > > > +{
+> > > > > +	cd /
+> > > > > +	rm -r -f $tmp.*
+> > > > > +	[ -d "$SCSI_DEBUG_MNT" ] && $UMOUNT_PROG $SCSI_DEBUG_MNT 2>/dev/null
+> > > > > +	_put_scsi_debug_dev
+> > > > > +}
+> > > > > +
+> > > > > +# Import common functions.
+> > > > > +. ./common/scsi_debug
+> > > > > +
+> > > > > +# real QA test starts here
+> > > > > +_supported_fs generic
+> > > > > +_fixed_by_kernel_commit 7c71ee78031c "xfs: allow logical-sector sized O_DIRECT"
+> > > > > +_require_scsi_debug
+> > > > > +# If TEST_DEV is block device, make sure current fs is a localfs which can be
+> > > > > +# written on scsi_debug device
+> > > > > +_require_test
+> > > > > +_require_block_device $TEST_DEV
+> > > > 
+> > > > _require_odirect?
+> > > > 
+> > > > > +
+> > > > > +echo "Get a device with 4096 physical sector size and 512 logical sector size"
+> > > > > +SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 512 0 256`
+> > > > > +blockdev --getpbsz --getss $SCSI_DEBUG_DEV
+> > > > > +
+> > > > > +echo "mkfs and mount"
+> > > > > +_mkfs_dev $SCSI_DEBUG_DEV || _fail "Can't make $FSTYP on scsi_debug device"
+> > > > > +SCSI_DEBUG_MNT="$TEST_DIR/scsi_debug_$seq"
+> > > > > +rm -rf $SCSI_DEBUG_MNT
+> > > > > +mkdir $SCSI_DEBUG_MNT
+> > > > > +run_check _mount $SCSI_DEBUG_DEV $SCSI_DEBUG_MNT
+> > > > 
+> > > > /me wonders, should we try to use $MKFS_OPTIONS and $MOUNT_OPTIONS
+> > > > on the scsidebug device?  To catch cases where the config actually
+> > > > matters for that kind of thing?
+> > > 
+> > > It's been merged, if we need to change something, better to send a new
+> > > patch to change that :)
+> > > 
+> > > Thanks,
+> > > Zorro
+> > > 
+> > > > 
+> > > > --D
+> > > > 
+> > > > > +
+> > > > > +echo "DIO read/write 512 bytes"
+> > > > > +# This dio write should succeed, even the physical sector size is 4096, but
+> > > > > +# the logical sector size is 512
+> > > > > +$XFS_IO_PROG -d -f -c "pwrite 0 512" $SCSI_DEBUG_MNT/testfile >> $seqres.full
+> > > > > +$XFS_IO_PROG -d -c "pread 0 512" $SCSI_DEBUG_MNT/testfile >> $seqres.full
+> > > > > +
+> > > > > +# success, all done
+> > > > > +status=0
+> > > > > +exit
+> > > > > diff --git a/tests/generic/888.out b/tests/generic/888.out
+> > > > > new file mode 100644
+> > > > > index 00000000..0f142ce9
+> > > > > --- /dev/null
+> > > > > +++ b/tests/generic/888.out
+> > > > > @@ -0,0 +1,6 @@
+> > > > > +QA output created by 888
+> > > > > +Get a device with 4096 physical sector size and 512 logical sector size
+> > > > > +4096
+> > > > > +512
+> > > > > +mkfs and mount
+> > > > > +DIO read/write 512 bytes
+> > > > > -- 
+> > > > > 2.31.1
+> > > > > 
+> > > > 
+> > > 
+> > 
+> 
 > 
 
-The problem I want to slove by not updating the size for ext4 is
-truncate. Now ext4 use iomap_zero_range() for the case of zero
-partial blocks, and ext4's truncate is different from xfs.
-
-Let's think about a simple case, we have a reg file with size 3K,
-then truncate it to 1K. ext4 first set i_size to 1K and then call
-ext4_block_truncate_page() to zero out data after 1K(EOF) through
-iomap_zero_range(). But now it will update i_size in
-iomap_write_end(), so the size of the file will increase to 4K,
-this is wrong. xfs first zero out data through iomap_truncate_page()
-and then set file size to 1K, so the file size is 3K->4K->1K.
-Although the result is correct, but the increasing in
-iomap_zero_range() is also not necessary, so so I'm just gonna
-delete the i_size updating in iomap_zero_range(). It's not for
-unhare.
-
-Thanks,
-Yi.
-
+-- 
+- Andrey
 
