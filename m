@@ -1,306 +1,116 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7975345957
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 23:19:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF05C74BF1
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 23:26:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709248778; cv=none; b=Lddj2nGmAbZT7ql79SrOc718mcxgl+Rtx9pp2UCT96iGaJEujyOQXI902hOl9jA4jlqjlwzIYDf8uRPLKEPyg2jWa18f3wxX08GkBSFcL2RydhCD+6GWPCo5cFBXQafmINyfjFa90aSOATVRtw7f3Ztv4Fc2UY1xUjaeQxbl/9o=
+	t=1709249211; cv=none; b=W18dS+xfhl+CWmlQlvllEGR5o7pgqBxyXRsO5rGA37vb69Sp4kyfu8OuVe+bhDr8hZldExrr/bjgDmFKpP++E2QKjG77jVyqAvoFGZKVr12TnGCU9FEzHHV7z9TvJGQwtRUbwivdSzR8O455e5xUk+P5TzEpy6LF19sLynirIq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709248778; c=relaxed/simple;
-	bh=2kotFClL0JGImFY2aTTcMd9xMgn5EvihRb8H2+B4YgY=;
+	s=arc-20240116; t=1709249211; c=relaxed/simple;
+	bh=vFGe/JPM+D98FYRCFhoM8TP+K+kv3fj2cPK6Z4iL8bQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WOJKF7KpxiNcbqf6MA+qhvv6V1ObINdjM0NHsNeSjTbLu938srmVn1UW11Dz1GLl9Ne+YX2L7x/8URuY3XA9XsUXGwI1qI9tbHQ4KeazhU/K3FII5ijw+s1NaC3V4HlIkYC/VFhXi2z+7c3RbWX/qjAMr6MRGf6olsMYatSDGh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=AOB2YHap; arc=none smtp.client-ip=209.85.214.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=jI9p7FJU3IXFIsCeqbFfax2iBYq/yLSx1A8FnczYg2n4yPA+J5w3O5NsfmtsSFO02GSHg4Onbm6BhGuLZa6mkOcuJ7BbF8Qzt3mf8NSgVuh0yw2/llmAsBRV/m42qc+ntTDtMBOzS/8kBVF0qTGiAMr1tcL2xM+6cW8hAc8pOdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xM8dEdSI; arc=none smtp.client-ip=209.85.215.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="AOB2YHap"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1dcafff3c50so12936665ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 15:19:35 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xM8dEdSI"
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5cedfc32250so1303877a12.0
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 15:26:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709248775; x=1709853575; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=LzB2DcfYOR7VovBPih0jTdeK49M04fl9RE9G+2FG9Wo=;
-        b=AOB2YHapVsMh1EVFpChLVO2gGb6fHNeaYiivJx/Mkc69IYrtxsT7Yhk81bkB7Vfa0c
-         k0KqO/t53HIjAmEzjxYEfPdXoPg2XUyvfcIZH6YHf45Rk4pNs3hDBGVdHcj6aSkGvPna
-         X7DR6fmkpT1go+4lyUcWIB7Xpska3IZW/LSPocgqnSqiT1/N0LztPT/Q+wlEcE6IRuGa
-         QFj0bzHZ7qvHra9Q84iogI5qqP67F0eMEJJci6VzwmfQqYhPFzGeblmvb0fU5vAc+4UZ
-         AJmQQ7rUUiH0bQPwgEVV3gnuOygVTIwqBk1M/ff24vlaxN72mW/2OKEof9IwKv7i6E/7
-         uXew==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709249208; x=1709854008; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=grHdyJH43EDqTr7lOlPpsv2LnOtPCDv7mkz6AEIU0ok=;
+        b=xM8dEdSI0/FTFjeiVslj0L5JrHinrkZRbK0wIXgaF8BK0/xXK48R39MUEVILrw2tlZ
+         0y/HJuwAJxr1wFMOoWiyYc3EtldxtiVFQgPvAeoOiXMAUMHcGUScmnsLYYWUbhyLyU6q
+         pcaS1Expi4zbTjBNaun9f5cSG0m2dzOOiYpMW5OOG547M9uUewSBC6N3I4yUX3OoKPra
+         5yAWS88QIpu0mxdp25Zi96Pl94/StNz/wZOGOQBGxoqeUxMxftRsNi7NgDEwTahvjtrY
+         4DUiPcf8eGyEX1ShqWsUB0ZO7Fcd5+wrB6NhB2Z+EOKWDoS+fSOeQAT948ZgqnUtpbqz
+         KWmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709248775; x=1709853575;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LzB2DcfYOR7VovBPih0jTdeK49M04fl9RE9G+2FG9Wo=;
-        b=dvhKHso6DyJvX1nKbk39thSxxKFtL/ctC5NRhg5lPEIVTh2IbVdyG3SAELUTzF7ylK
-         DHAaDEaGy8KvdkPzVm4T2jlZ/vVHXws7+6/2BkOGgzUjWwnPU18gFOEA1IEUTl4mupt1
-         OhRvfFASzufxovdrOdNQFpIv4BqY6/FxP9el1/wntdVkBbjKRH6AxyIGEBrjoHM2nGXp
-         7MFtxTljUZJjVxP8rVSCbsl/i5ofLS2cCZsa2ruLODfSVRVDIHhkf+LkySef+3MXFyM9
-         4hu0GwA9R8sewqQTDlz2Gco45MREZ87qX9GqK+KZjNoEcfXxSnD9yL2A4jGAkU/wVHDY
-         HWOA==
-X-Forwarded-Encrypted: i=1; AJvYcCVVEhDVoIriWHKvZ+tJ3r6QaJN+iGschMJ+FAKTKzvokcd/bEaO+l/cnFO4+YdNJ/thWVxEQN14iHVwh2gvDn5+QiImhjpqo/lF
-X-Gm-Message-State: AOJu0Yx7XUALn27Y5WkRbVivuxLbagAm4b3Kr0I2rbs68WvgeUWv3oDB
-	nmiXuIh1sVmk8bOg7HvFBmVWpX5Oj6vIhGVkrZqT1VAV8GnoCMcKfkF67nGjCaY=
-X-Google-Smtp-Source: AGHT+IG84xb6+RPgA/S6whpydeQjGZWhjkSRY0cJM2NPzuyxJYlQl4nrAkOGJffUmhItKUU/uGO2fQ==
-X-Received: by 2002:a17:90a:3004:b0:299:6389:2961 with SMTP id g4-20020a17090a300400b0029963892961mr88532pjb.13.1709248774686;
-        Thu, 29 Feb 2024 15:19:34 -0800 (PST)
+        d=1e100.net; s=20230601; t=1709249208; x=1709854008;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=grHdyJH43EDqTr7lOlPpsv2LnOtPCDv7mkz6AEIU0ok=;
+        b=e49IS7MoGRi05/dO3LExktI0BQ3z/hUpxtjpnVSMRgFERDWWOp4G8Qh+UBCcQEnDOU
+         EQO3FozK9kXmdKwJUVtzHebpA1Guyk3MScs04IeD5sveUTp6lRU8g0FrLrSRLGy4zgnf
+         TjGxdIgeHUi+VYuTYmy/4Ou7OdJZjYjxZO+rTsU8rDt7CxPpuS6Aqecs64UEEjQSVJdr
+         x0np25qSgWhtp2hOagjbntySbtZgfNXVUjyR4nnfcHjTF05f+0eyv/zwdN/h7P0S1BQh
+         n+kSYzdKIKFJ/sA2aCeA9o7tq8rUrMoq7gEHYnrs1Vd77FwmM12wrmkOfaxaxgOB2b9w
+         7PKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWNLXVM1GZCuE6HPbFIPDsM+iES5OncnUv62CQfYvPwKJJswuIdrbX7bsAqtEeYNzdEjGkzCU+FCPQ1q1WMLt7bLBKiqI1p4KTf
+X-Gm-Message-State: AOJu0Yx+lZ7YRg3xhIMg4YyiVgQnR+g8dLJ1a/lkx9ya374mIwWApoof
+	dm5qBMO97qTL9uzQdw3A/yA4pKzZUMgDrS08GkFB8bZFsI9i1rJXMD0zIcWGmqU=
+X-Google-Smtp-Source: AGHT+IGiSfuRv3Y76uLW0YYRJRv2KJMhOadB6A35s9PgdU0SN6q4L74ZxSAPem4Amsho3fTWY8H25g==
+X-Received: by 2002:a17:90a:a618:b0:29a:795:a132 with SMTP id c24-20020a17090aa61800b0029a0795a132mr99168pjq.18.1709249208246;
+        Thu, 29 Feb 2024 15:26:48 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
-        by smtp.gmail.com with ESMTPSA id x6-20020a170902a38600b001db86c48221sm2096693pla.22.2024.02.29.15.19.33
+        by smtp.gmail.com with ESMTPSA id sj5-20020a17090b2d8500b0029ad78306d8sm4245337pjb.3.2024.02.29.15.26.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Feb 2024 15:19:34 -0800 (PST)
+        Thu, 29 Feb 2024 15:26:47 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rfpgY-00DJED-2Z;
-	Fri, 01 Mar 2024 10:19:30 +1100
-Date: Fri, 1 Mar 2024 10:19:30 +1100
+	id 1rfpnY-00DJUd-1S;
+	Fri, 01 Mar 2024 10:26:44 +1100
+Date: Fri, 1 Mar 2024 10:26:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Christoph Hellwig <hch@infradead.org>, djwong@kernel.org,
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca,
-	jack@suse.cz, ritesh.list@gmail.com, willy@infradead.org,
-	zokeefe@google.com, yi.zhang@huawei.com, chengzhihao1@huawei.com,
-	yukuai3@huawei.com, wangkefeng.wang@huawei.com
-Subject: Re: [RFC PATCH v3 07/26] iomap: don't increase i_size if it's not a
- write operation
-Message-ID: <ZeERAob9Imwh01bG@dread.disaster.area>
-References: <20240127015825.1608160-1-yi.zhang@huaweicloud.com>
- <20240127015825.1608160-8-yi.zhang@huaweicloud.com>
- <ZcsCP4h-ExNOcdD6@infradead.org>
- <9b0040ef-3d9d-6246-4bdd-82b9a8f55fa2@huaweicloud.com>
- <Zd+y2VP8HpbkDu41@dread.disaster.area>
- <45c1607a-805d-e7a2-a5ca-3fd7e507a664@huaweicloud.com>
+To: kunwu.chan@linux.dev
+Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Kunwu Chan <chentao@kylinos.cn>
+Subject: Re: [PATCH] xfs: use KMEM_CACHE() to create xfs_defer_pending cache
+Message-ID: <ZeEStFZwMu068YTc@dread.disaster.area>
+References: <20240229083342.1128686-1-kunwu.chan@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <45c1607a-805d-e7a2-a5ca-3fd7e507a664@huaweicloud.com>
+In-Reply-To: <20240229083342.1128686-1-kunwu.chan@linux.dev>
 
-On Thu, Feb 29, 2024 at 04:59:34PM +0800, Zhang Yi wrote:
-> Hello, Dave!
+On Thu, Feb 29, 2024 at 04:33:42PM +0800, kunwu.chan@linux.dev wrote:
+> From: Kunwu Chan <chentao@kylinos.cn>
 > 
-> On 2024/2/29 6:25, Dave Chinner wrote:
-> > On Wed, Feb 28, 2024 at 04:53:32PM +0800, Zhang Yi wrote:
-> >> On 2024/2/13 13:46, Christoph Hellwig wrote:
-> >>> Wouldn't it make more sense to just move the size manipulation to the
-> >>> write-only code?  An untested version of that is below.  With this
-> >>> the naming of the status variable becomes even more confusing than
-> >>> it already is, maybe we need to do a cleanup of the *_write_end
-> >>> calling conventions as it always returns the passed in copied value
-> >>> or 0.
-> >>>
-> >>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> >>> index 3dab060aed6d7b..8401a9ca702fc0 100644
-> >>> --- a/fs/iomap/buffered-io.c
-> >>> +++ b/fs/iomap/buffered-io.c
-> >>> @@ -876,34 +876,13 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
-> >>>  		size_t copied, struct folio *folio)
-> >>>  {
-> >>>  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> >>> -	loff_t old_size = iter->inode->i_size;
-> >>> -	size_t ret;
-> >>> -
-> >>> -	if (srcmap->type == IOMAP_INLINE) {
-> >>> -		ret = iomap_write_end_inline(iter, folio, pos, copied);
-> >>> -	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
-> >>> -		ret = block_write_end(NULL, iter->inode->i_mapping, pos, len,
-> >>> -				copied, &folio->page, NULL);
-> >>> -	} else {
-> >>> -		ret = __iomap_write_end(iter->inode, pos, len, copied, folio);
-> >>> -	}
-> >>> -
-> >>> -	/*
-> >>> -	 * Update the in-memory inode size after copying the data into the page
-> >>> -	 * cache.  It's up to the file system to write the updated size to disk,
-> >>> -	 * preferably after I/O completion so that no stale data is exposed.
-> >>> -	 */
-> >>> -	if (pos + ret > old_size) {
-> >>> -		i_size_write(iter->inode, pos + ret);
-> >>> -		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
-> >>> -	}
-> >>
-> >> I've recently discovered that if we don't increase i_size in
-> >> iomap_zero_iter(), it would break fstests generic/476 on xfs. xfs
-> >> depends on iomap_zero_iter() to increase i_size in some cases.
-> >>
-> >>  generic/476 75s ... _check_xfs_filesystem: filesystem on /dev/pmem2 is inconsistent (r)
-> >>  (see /home/zhangyi/xfstests-dev/results//xfs/generic/476.full for details)
-> >>
-> >>  _check_xfs_filesystem: filesystem on /dev/pmem2 is inconsistent (r)
-> >>  *** xfs_repair -n output ***
-> >>  Phase 1 - find and verify superblock...
-> >>  Phase 2 - using internal log
-> >>          - zero log...
-> >>          - scan filesystem freespace and inode maps...
-> >>  sb_fdblocks 10916, counted 10923
-> >>          - found root inode chunk
-> >>  ...
-> >>
-> >> After debugging and analysis, I found the root cause of the problem is
-> >> related to the pre-allocations of xfs. xfs pre-allocates some blocks to
-> >> reduce fragmentation during buffer append writing, then if we write new
-> >> data or do file copy(reflink) after the end of the pre-allocating range,
-> >> xfs would zero-out and write back the pre-allocate space(e.g.
-> >> xfs_file_write_checks() -> xfs_zero_range()), so we have to update
-> >> i_size before writing back in iomap_zero_iter(), otherwise, it will
-> >> result in stale delayed extent.
-> > 
-> > Ok, so this is long because the example is lacking in clear details
-> > so to try to understand it I've laid it out in detail to make sure
-> > I've understood it correctly.
-> > 
+> Use the KMEM_CACHE() macro instead of kmem_cache_create() to simplify
+> the creation of SLAB caches when the default values are used.
 > 
-> Thanks for the graph, the added detail makes things clear and easy to
-> understand. To be honest, it's not exactly the same as the results I
-> captured and described (the position A\B\C\D\E\F I described is
-> increased one by one), but the root cause of the problem is the same,
-> so it doesn't affect our understanding of the problem.
-
-OK, good :)
-
-.....
-
-> > However, if this did actually write zeroes to disk, this would end
-> > up with:
-> > 
-> > 	A          C           B     E       F      D
-> > 	+wwwwwwwwww+DDDDDDDDDDD+zzzzz+rrrrrrr+dddddd+
-> > 	                      EOF   EOF
-> >                       (in memory)   (on disk)
-> > 
-> > Which is wrong - the file extension and zeros should not get exposed
-> > to the user until the entire reflink completes. This would expose
-> > zeros at the EOF and a file size that the user never asked for after
-> > a crash. Experience tells me that they would report this as
-> > "filesystem corrupting data on crash".
-> > 
-> > If we move where i_size gets updated by iomap_zero_iter(), we get:
-> > 
-> > 	A          C           B     E       F      D
-> > 	+wwwwwwwwww+DDDDDDDDDDD+zzzzz+rrrrrrr+dddddd+
-> > 	                            EOF
-> >                                 (in memory)
-> > 		                 (on disk)
-> > 
-> > Which is also wrong, because now the user can see the size change
-> > and read zeros in the middle of the clone operation, which is also
-> > wrong.
-> > 
-> > IOWs, we do not want to move the in-memory or on-disk EOF as a
-> > result of zeroing delalloc extents beyond EOF as it opens up
-> > transient, non-atomic on-disk states in the event of a crash.
-> > 
-> > So, catch-22: we need to move the in-memory EOF to write back zeroes
-> > beyond EOF, but that would move the on-disk EOF to E before the
-> > clone operation starts. i.e. it makes clone non-atomic.
+> Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
+> ---
+>  fs/xfs/libxfs/xfs_defer.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> Make sense. IIUC, I also notice that xfs_file_write_checks() zero
-> out EOF blocks if the later write offset is beyond the size of the
-> file.  Think about if we replace the reflink operation to a buffer
-> write E to F, although it doesn't call xfs_flush_unmap_range()
-> directly, but if it could be raced by another background write
-> back, and trigger the same problem (I've not try to reproduce it,
-> so please correct me if I understand wrong).
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 66a17910d021..6d957fcc17f2 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -1143,9 +1143,7 @@ xfs_defer_resources_rele(
+>  static inline int __init
+>  xfs_defer_init_cache(void)
+>  {
+> -	xfs_defer_pending_cache = kmem_cache_create("xfs_defer_pending",
+> -			sizeof(struct xfs_defer_pending),
+> -			0, 0, NULL);
+> +	xfs_defer_pending_cache = KMEM_CACHE(xfs_defer_pending, 0);
+>  
+>  	return xfs_defer_pending_cache != NULL ? 0 : -ENOMEM;
+>  }
 
-Correct, but the write is about to extend the file size when it
-writes into the cache beyond the zeroed region. There is no cache
-invalidate possible in this path, so the write of data moves the
-in-memory EOF past the zeroes in cache and everything works just
-fine.
+Please stop wasting our time by trying to make changes that have
+already been rejected. I gave you good reasons last time for why we
+aren't going to make this change in XFS, and now you've forced
+Darrick to waste time repeating all those same reasons. You did not
+respond to my review comments last time, and now you are posting
+more patches that make the same rejected change.
 
-If it races with concurrent background writeback, the writeback will
-skip the zeroed range beyond EOF until they are exposed by the first
-data write beyond the zeroed post-eof region which moves the
-in-memory EOF.
-
-truncate(to a larger size) also does this same zeroing - the page
-cache is zeroed before we move the EOF in memory, and so the
-writeback will only occur once the in-memory EOF is moved. i.e. it
-effectively does:
-
-	xfs_zero_range(oldsize to newsize)
-	truncate_setsize(newsize)
-	filemap_write_and_wait_range(old size to new size)
-
-> > What should acutally result from the iomap_zero_range() call from
-> > xfs_reflink_remap_prep() is a state like this:
-> > 
-> > 	A          C           B     E       F      D
-> > 	+wwwwwwwwww+DDDDDDDDDDD+uuuuu+rrrrrrr+dddddd+
-> > 	          EOF         EOF
-> >                (on disk)  (in memory)
-> > 
-> > where 'u' are unwritten extent blocks.
-> > 
-> 
-> Yeah, this is a good solution.
-> 
-> In xfs_file_write_checks(), I don't fully understand why we need
-> the xfs_zero_range().
-
-The EOF block may only be partially written. Hence on extension, we
-have to guarantee the part of that block beyond the current EOF is
-zero if the write leaves a hole between the current EOF and the
-start of the new extending write.
-
-> Theoretically, iomap have already handled
-> partial block zeroing for both buffered IO and DIO, so I guess
-> the only reason we still need it is to handle pre-allocated blocks
-> (no?).
-
-Historically speaking, Linux is able to leak data beyond EOF on
-writeback of partial EOF blocks (e.g. mmap() can write to the EOF
-page beyond EOF without failing. We try to mitigate these cases
-where we can, but we have to consider that at any time the data in
-the cache beyond EOF can be non-zero thanks to mmap() and so any
-file extension *must* zero any region beyond EOF cached in the page
-cache.
-
-> If so，would it be better to call xfs_free_eofblocks() to
-> release all the preallocated extents in range? If not, maybe we
-> could only zero out mapped partial blocks and also release
-> preallocated extents?
-
-No, that will cause all sorts of other performance problems,
-especially for reflinked files that triggering COW
-operations...
-
-> 
-> In xfs_reflink_remap_prep(), I read the commit 410fdc72b05a ("xfs:
-> zero posteof blocks when cloning above eof"), xfs used to release
-> preallocations, the change log said it didn't work because of the
-> PREALLOC flag, but the 'force' parameter is 'true' when calling
-> xfs_can_free_eofblocks(), so I don't get the problem met. Could we
-> fall back to use xfs_free_eofblocks() and make a state like this?
-> 
->  	A          C           B     E       F      D
->  	+wwwwwwwwww+DDDDDDDDDDD+hhhhh+rrrrrrr+dddddd+
->  	          EOF         EOF
->                 (on disk)  (in memory)
-
-It could, but that then requires every place that may call
-xfs_zero_range() to be aware of this need to trim EOF blocks to do
-the right thing in all cases. We don't want to remove speculative
-delalloc in the write() path nor in the truncate(up) case, and so it
-doesn't fix the general problem of zeroing specualtive delalloc
-beyond EOF requiring writeback to push page caceh pages to disk
-before the inode size has been updated.
-
-The general solution is to have zeroing of speculative prealloc
-extents beyond EOF simply convert the range to unwritten and then
-invalidate any cached pages over that range. At this point, we are
-guaranteed to have zeroes across that range, all without needing to
-do any IO at all...
+PLease listen to the feedback you are given. Indeed, please respond
+and acknowledge that you have read and understood the feedback you
+have been given, otherwise I'll consider anything from this email
+address as "just another annoying bot" and killfile it.
 
 -Dave.
 -- 
