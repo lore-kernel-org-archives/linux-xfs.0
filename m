@@ -1,48 +1,39 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F3967C71
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 13:25:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE65134430;
+	Thu, 29 Feb 2024 16:00:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709213107; cv=none; b=rBYWD4G30NPOHZv6pJ2/9yK13nYafTP1sotHg2Um+GbrjHf8DMH2lEBr77zTx+tGwTHG5tllg6V6iBgnHamrNR6A5lThU5IExRmrf1jpT4sq1wJxyhm+1S0Poe+Vst80ls98Abw9tf/xaAw8l7aZPDRLpqVk/DfymJ9moY42Hic=
+	t=1709222450; cv=none; b=Ffw5UOwkEk51Xu75UP6f5+tS24kp6Rkkh25qEjrjlZVUh7sFbWdnfOJlXcOI98xqxQE0IjZ+at1dx6FAu3O2PNbFdLFzJoJsF601Jz6h+f2j6IX2Bs13nBlDD+L+1/1GbvtJb89VKCNmkiUJ4kAClWCGX5TpkOOGtBmi8TErb2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709213107; c=relaxed/simple;
-	bh=ArbwPHcQYv2I2SDq3Ym1RGAW3+smDVZ1T0VCzhJJK8Q=;
+	s=arc-20240116; t=1709222450; c=relaxed/simple;
+	bh=lnjqrM8Lfog5fV1cL5NQmbG9UmOGAw+pkjMKhL6L9FI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hEuz5qc0v/klQfzpNd2E74LLyVI0nMYz8OS+7i0+b9X7gn87CVem3GfkIegLBNgNV/eVhKczfdbGKZffr2FoPpCMeVbv1KoKhOMflx779iRhQAnhPimkc8iXXfx/a/kFtrRr16eLYEr4DJ82WAOC8jfEo0BL1lu9WMXTRM13jaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jOM/A4LQ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y+0eTuqlReR66qiRXNGH+VMPctkdx0RKru58+0gEAanT4WSJoM/mP2mDvBbqLbAFYoR171+3uIA5rW+PkyfOjt6HZZmj7LMUMt7awk07Yah+wK0VJM7E00jbv/r/kxgo6wMGRv2N3OcAJewvWaig1q0rUQiPc0RjNRm5Qdv3HCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJgt7a/I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jOM/A4LQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=NaZ4f8cBIvfLBYYdWeF5ISNztYke3R9bKVgxXlJSndo=; b=jOM/A4LQZBJ/HOmzOjVrrwJbbn
-	pflHiGOV13/pQm4UrdIFg3QZ52Fr/Ii8WdyxxK84eB+iPF9zj0s2zffRAMRZEfS6gV24L8gT1mWcG
-	IMnl12R+noZ9/VcXniVjDV6jVLy7GjFb2FbvHR9b2gN728rtUZbjHWfucILOwMQJkvsLRx+riJr7g
-	AA7U5W5r4zUnSUA0Y32afYsUkb5VfdFdkBPJCFop+8rOp2ipG3u+GYc+7cgL8+WuXM0BmseX4zC7k
-	mar7tUufPvdMRFSash/ETHzOGxv4jnrswuzzO+aHDORVlqgOlH6Q49vT2yxODitFNqUNUbt06yLYE
-	d2uoUlKg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rfgPF-0000000DeTL-2JR6;
-	Thu, 29 Feb 2024 13:25:01 +0000
-Date: Thu, 29 Feb 2024 05:25:01 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: online repair of symbolic links
-Message-ID: <ZeCFrUVJ54Grt8qy@infradead.org>
-References: <170900015254.939796.8033314539322473598.stgit@frogsfrogsfrogs>
- <170900015273.939796.12650929826491519393.stgit@frogsfrogsfrogs>
- <Zd9sqALoZMOvHm8P@infradead.org>
- <20240228183740.GO1927156@frogsfrogsfrogs>
- <Zd-BHo96SoY4Camr@infradead.org>
- <20240228205213.GS1927156@frogsfrogsfrogs>
- <Zd-vaC5xjJ_YgeD6@infradead.org>
- <20240228234630.GV1927156@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJgt7a/I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69F6C433F1;
+	Thu, 29 Feb 2024 16:00:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709222449;
+	bh=lnjqrM8Lfog5fV1cL5NQmbG9UmOGAw+pkjMKhL6L9FI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RJgt7a/I08xUFVWKGUQUt/CbnrRwSeuWuOVZB/GRli+J4DfxIBlU8I4rOQ8iTiOsv
+	 E104t5JtWqdIRhuavFMU2rVQoMQjnnkpulToS3t8V47AIInq31/SnL3CC4g8o3a0VD
+	 1rumGN985aN5g2VIfW/FMygt4zS/00Li3OIULshxEyZz3fPc8gJXcu0vh0AjruHdzD
+	 zS6n9bsWeyH1KcnctMPBo6kLtaGy6d6XnD6E5CsE1zi/P/Bzcp8efTp/DTzbjpxzQV
+	 ygabbPCyn45uZ3XmdlLQzBlTYGnl72qMikVI/D8OYaperNbR0CT1TizT4tX5sFpQ80
+	 3jRxkXx54nuuQ==
+Date: Thu, 29 Feb 2024 08:00:49 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: kunwu.chan@linux.dev
+Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Kunwu Chan <chentao@kylinos.cn>
+Subject: Re: [PATCH] xfs: use KMEM_CACHE() to create xfs_defer_pending cache
+Message-ID: <20240229160049.GY1927156@frogsfrogsfrogs>
+References: <20240229083342.1128686-1-kunwu.chan@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,45 +42,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240228234630.GV1927156@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240229083342.1128686-1-kunwu.chan@linux.dev>
 
-On Wed, Feb 28, 2024 at 03:46:30PM -0800, Darrick J. Wong wrote:
-> If scrub (or the regular verifiers) hit anything, then we end up in
-> symlink_repair.c with CORRUPT set.  In this case we set the target to
-> DUMMY_TARGET.
-
-Yes.
-
-> If the salvage functions recover fewer bytes than i_disk_size, then
-> we'll set the target to DUMMY_TARGET because that could lead to things
-> like:
+On Thu, Feb 29, 2024 at 04:33:42PM +0800, kunwu.chan@linux.dev wrote:
+> From: Kunwu Chan <chentao@kylinos.cn>
 > 
-> 0. touch autoexec autoexec@bat
-> 1. ln -s 'autoexec@bat' victimlink
-> 2. corrupt victimlink by s/@/\0/g' on the target
-> 3. repair salvages the target and ends up with 'autoexec'
+> Use the KMEM_CACHE() macro instead of kmem_cache_create() to simplify
+> the creation of SLAB caches when the default values are used.
 > 
-> Alternately:
-> 
-> 0. touch autoexec autoexec@bat
-> 1. ln -s 'autoexec@bat' victimlink
-> 2. corrupt victimlink by incrementing di_size (it's now 13)
-> 3. repair salvages the target and ends up with "autoexec@bat\0"
-> 
-> In both of those cases, something's inconsistent between the buffer
-> contents and di_size.
+> Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
 
-Yes.
+Why bother? The vast majority of the kernel is still using
+kmem_cache_create(), not the weird, shouty macro that doesn't actually
+tell us what it is doing with said kmem_cache......
 
-> There aren't supposed to be nulls in the target,
-> but whatever might have been in that byte originally is long gone.  The
-> only thing to do here is replace it with DUMMY_TARGET.
+Up until now we've chosen not switch XFS to use it because many of the
+slab caches we use in XFS are not just "default" slab caches.  IOWs, we
+still have to use kmem_cache_create() for a lot of the caches we create,
+so we may as well use kmem_cache_create() for all of them rather than
+have to go look up what KMEM_CACHE() translates to every time we are
+looking at how slab caches are created.
+
+Also, if you are going to change simple API stuff like this in XFS,
+please do all the conversions in a single patch. It takes much less time
+and resources to review and merge a single patch compared to a pile of
+dozen independent one line patches...
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_defer.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> If salvage recovers more bytes than i_disk_size then we have no idea if
-> di_size was broken or not because the target isn't null-terminated.
-> In theory the kernel will never do this (because it zeroes the xfs_buf
-> contents in xfs_trans_buf_get) but fuzzers could do that.
-
-Now why do we even want to salvage parts of the symlink?  A truncated
-symlink generally would cause more harm than just refusing to follow it.
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 66a17910d021..6d957fcc17f2 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -1143,9 +1143,7 @@ xfs_defer_resources_rele(
+>  static inline int __init
+>  xfs_defer_init_cache(void)
+>  {
+> -	xfs_defer_pending_cache = kmem_cache_create("xfs_defer_pending",
+> -			sizeof(struct xfs_defer_pending),
+> -			0, 0, NULL);
+> +	xfs_defer_pending_cache = KMEM_CACHE(xfs_defer_pending, 0);
+>  
+>  	return xfs_defer_pending_cache != NULL ? 0 : -ENOMEM;
+>  }
+> -- 
+> 2.39.2
+> 
+> 
