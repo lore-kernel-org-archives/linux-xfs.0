@@ -1,100 +1,61 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F23157E0E4;
-	Thu, 29 Feb 2024 11:45:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 752C760EDC
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 13:22:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709207141; cv=none; b=IDbsgHKrUU1PszECizn4PCUyAJJhA7s03+WvWe+hHv6DaQWD7uwpJsSNdYWfVV2L9h3dTkk7pUw0Hb06RL0t+2VOqvi0ShM5Tm5JhWfHnfS5kI7DJPTwOmpr+gke1mSFmp4OzkaDyNWNsw344o5qSEkelQ0byXH6d00/UF5actw=
+	t=1709212955; cv=none; b=PzISz+3v/Qts9u5TvOzXCrwGSBkM/ArcPPVvXC0qFtsCUFfp1B7pi+fsnJN8h7SOY4ZPxpZ2daBlhDAwY5bmOBoAtTMgsmA5npSpwGEK/SL5R1I4FLyqcMHDH8s6sMQ6RwxMOaMzYjTP90Hf69ewWnDL0PyMsyOc9SjkEZmlLT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709207141; c=relaxed/simple;
-	bh=hngxUyHulZ27eylXtud4AjMHhGagOr3zuKNraEBD/S0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sh2+t9C8oNY7wNuXmIivoSKqym6/ZyrpyatMUpa4EYcsI+FlSM3iOQ1KQ9Lvcima6rbFiRGuQLEfXEOVZfZgQy1MRDnsZCQu51wlAMigCEHlbguCA6VSAwGMfWdoKz+9Q2V+w06o2/xajaH0mUbdDQPCruk67GgOoMVQ+oyAjA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Tlq9M6mSQzvW29;
-	Thu, 29 Feb 2024 19:43:19 +0800 (CST)
-Received: from kwepemm600013.china.huawei.com (unknown [7.193.23.68])
-	by mail.maildlp.com (Postfix) with ESMTPS id 067BB1404DB;
-	Thu, 29 Feb 2024 19:45:31 +0800 (CST)
-Received: from huawei.com (10.175.104.67) by kwepemm600013.china.huawei.com
- (7.193.23.68) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Thu, 29 Feb
- 2024 19:45:30 +0800
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-To: <brauner@kernel.org>, <david@fromorbit.com>, <djwong@kernel.org>,
-	<jack@suse.cz>, <tytso@mit.edu>
-CC: <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-ext4@vger.kernel.org>,
-	<yi.zhang@huawei.com>
-Subject: [PATCH RFC 0/2] ext4: Do endio process under irq context for DIO overwrites
-Date: Thu, 29 Feb 2024 19:38:47 +0800
-Message-ID: <20240229113849.2222577-1-chengzhihao1@huawei.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1709212955; c=relaxed/simple;
+	bh=GOcr9oX3AhVTAAzXmHEfhtk97erruQK7ksUD+c8Bo10=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V4Mhj5iE+jpEiKT1oH2gcnH6ZmofWi1K/0epmtgUwrADMTxYVBG9JidK8dUH3q6Rq3G9iQ3hDdYYWImzAhUOv+jsKTxwC9tJ7KJUbW5yBHx5lMPZiUjFfceCRUydqW++STB2sBNr2TF5oPnmVX0DVlEf3mbV/O12LRjZygdZ0Mk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Sxjq4uIz; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Sxjq4uIz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Ku9fxY2R2hmjXrPuVZBrfQo+sWvS8n5yR2hb92ZUWK8=; b=Sxjq4uIzZxrr2Heh/pTVnt1DMD
+	41BqDyoD1uq9Wmdc35F5S2+SS/Ng7jLPpmr20ZVPTQcKFeNAy2p8C4kt60XyWdzljMB+9JnjFD3G6
+	MEYfnZRA/yGAl0iKdKRJSVJdYwGjcZmmYJTTv1MxG8+nVmnqTDiIFr18f5fqGg/woHT3PPf0gI7iN
+	hj5rbzYNHqHp6v5eQYV46GcHjbvD16RydSwjJB4Gjp3t1BB7fxP5VhRGNlTHsjwd6Lju3A1AFJIyZ
+	F6Kqv8MZZ0PLk3SqOOVH/tXVsRcbv6cW7qwHeusrUTlQyW5w1PGqGbjKlijAsIP1m9W05OEn6Cz7o
+	g0euKJtw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfgMX-0000000Ddww-3IZR;
+	Thu, 29 Feb 2024 13:22:19 +0000
+Date: Thu, 29 Feb 2024 05:22:13 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH 02/14] xfs: introduce new file range exchange ioctls
+Message-ID: <ZeCFBZVX2yjAw-5n@infradead.org>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <170900011673.938268.12940080187778287002.stgit@frogsfrogsfrogs>
+ <Zd9U4GAYxqw7zpXe@infradead.org>
+ <20240228193547.GQ1927156@frogsfrogsfrogs>
+ <Zd-LdqtoruWBSVc6@infradead.org>
+ <20240228230057.GU1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600013.china.huawei.com (7.193.23.68)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240228230057.GU1927156@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Recently we found an ext4 performance regression problem between 4.18
-and 5.10 by following test command on a x86 physical machine with nvme:
-  fio -direct=1 -iodepth=128 -rw=randwrite -ioengine=libaio -bs=4k
-      -size=2G -numjobs=1 -time_based -runtime=60 -group_reporting
-      -filename=/test/test -name=Rand_write_Testing --cpus_allowed=1
-4.18: 288k IOPS    5.10: 234k IOPS
+On Wed, Feb 28, 2024 at 03:00:57PM -0800, Darrick J. Wong wrote:
+> The offsets and lengths for FICLONERANGE are unsigned, so I think
+> xfs_exchange_range ought to follow that.
 
-After anlayzing the changes between above two versions, we found that
-the endio context changed since commit 378f32bab3714("ext4: introduce
-direct I/O write using iomap infrastructure"), in aio DIO overwriting
-case. And the problem still exist in latest mainline.
-4.18: endio is processed under irq context
- dio_bio_end_aio
-  defer_completion = dio->defer_completion || ... // defer_completion is
-                                                  // false for overwrite
-  if (defer_completion) {
-    queue_work
-  } else {
-    dio_complete                          // endio in irq context
-  }
-mainline: endio is processed in kworker
- iomap_dio_bio_end_io
-  if (dio->flags & IOMAP_DIO_INLINE_COMP) // false, only for read
-  if (dio->flags & IOMAP_DIO_CALLER_COMP) // false, only for io_uring
-  queue_work                              // endio in kworker context
-
-Assume that nvme irq registers on cpu 1, and fio runs on cpu 1, it could
-be possible(Actually we did reproduce it easily) that fio, nvme irq and
-kworker all run on cpu 1. Firstly, compared with 4.18, there are extra
-operations(eg. queue work and wake up kworker) while processing endio,
-which is slower than processing endio under nvme irq context. Secondly,
-fio and kworker will race to get cpu resource, which will slow down fio.
-
-There is no need to do
-ext4_convert_unwritten_extents/ext4_handle_inode_extension under
-ext4_dio_write_end_io in overwriting case, so we can put ext4 dio endio
-under irq context.
-
-It is worth noting that iomap_dio_complete shouldn't be executed under
-irq context if datasync is required(IOMAP_DIO_NEED_SYNC), so overwriting
-endio is still done in kworker for this situation.
-
-Zhihao Cheng (2):
-  iomap: Add a IOMAP_DIO_MAY_INLINE_COMP flag
-  ext4: Optimize endio process for DIO overwrites
-
- fs/ext4/file.c        |  8 ++++++--
- fs/iomap/direct-io.c  | 10 ++++++++--
- include/linux/iomap.h |  6 ++++++
- 3 files changed, 20 insertions(+), 4 deletions(-)
-
--- 
-2.39.2
-
+Yes.  I though I had actually brought that up before, but I might have
+wanted to and not actually sent the comments out..
