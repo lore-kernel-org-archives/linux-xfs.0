@@ -1,153 +1,89 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E891021112;
-	Fri,  1 Mar 2024 17:09:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A572939AE3;
+	Fri,  1 Mar 2024 17:47:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709312948; cv=none; b=MJki/03KoyCKgmYW+ZI98clmqCMsfZo9saGzVdg8z6lMaf7YGK2duGWr02d/uVLdLDDhJRsoCbgZgE/uYDmRbtyIGzm+M27RBAmcwlbMgm1EtE2w5kPGOohTE48GJofdWUyHOI1dvZHtusgpLlO2MZqUlqKkbkI450Nj11rU4Vs=
+	t=1709315277; cv=none; b=Q5XeknhD1zJOw4opTxyuKBFAhOtCLXaouw222qFhqBrFEZDS5HzrGR5XT5Bn6ANJnKQmgBtitKWTmPl7PjkwdychVLRNNAYYOwGm7hFd04qEEWzehZlF16hUGpfK9p8DNOW80O6AkSW2tm08xPzPU7BNmJxf+tzpHFmBIWr4v9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709312948; c=relaxed/simple;
-	bh=BXAWhqT1NINKyMulHYOUhy26KyU4FBqgT5+WH6Vgf3w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uelvWw8ghzgom5KQ2UO0TvE06fDpaK48LBzr1vpVjwd1BBLBHRuEEKGEQrxucYAOTLKMOxf/8BlcHbf9pQV0diuXIXyG6JJikJcdCbwA+R+3K1oGJ24gmXPiMD6Wt0JjRob+FTxmp4H576WfLxZqMrRmY6EbqKzSJrE92gDmjPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=aNj5NV/2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=brc49zDQ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=E6cyCfal; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tSXpszqa; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1709315277; c=relaxed/simple;
+	bh=/Lnzc6duzAPTzKTTWlob3cz+GoTEPyZNY1/b5QKdR9I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L4B8JmQ3EVMK6C/QV1i7JQPlZo+FwrLb6BdwdkTidrzlVR0HJCMebIJpgvvylcfwpIL41031IRz9sAn+U9AuyPXIC5xzPvk+S+g06ZnMeI6juHOJQAy9DKvXjeZrEXfTvmVVbRLAGltVAjbkxgYvBbMIXF5JJJJxyekD5EiMx3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kutQmT3X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="aNj5NV/2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="brc49zDQ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="E6cyCfal";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tSXpszqa"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id D4BD6207BD;
-	Fri,  1 Mar 2024 17:09:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1709312945; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=689mBZGhGQUfWa8VF+TWtCsA1pVDyrfLSy6HHpUKbGs=;
-	b=aNj5NV/2TsPNIpp8peTlN/rk60soZcwTTwHMHYm22eZKR4dADVXjXf/gFFIKnTFBvjvmJT
-	VwQQujjq3MA1r6XqfDzv9LDpYViUh0EWMD3mIhsnxWFqUVFA0Cl0ronQWmIlfkxkqMIMDj
-	xg0iwDlG0j0P4b5Ywlgg0jMUSdRAPdM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1709312945;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=689mBZGhGQUfWa8VF+TWtCsA1pVDyrfLSy6HHpUKbGs=;
-	b=brc49zDQKjpgLipit4Y8pHygcJqL5kAQR9JM04C/sWU2OmaiAGI5b87ucuFykmt29+V2Ob
-	KEUE665ntsyjVCDA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1709312944; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=689mBZGhGQUfWa8VF+TWtCsA1pVDyrfLSy6HHpUKbGs=;
-	b=E6cyCfalcoZAdEfZBxgq3fb7aPh6ewpF1uWo6JIlJ3MIW47kewWeWifp5RC0WTaY37vxab
-	G27etjBjoPx4z6nkhJUKmw0GoZDVsnyS3FUEOs253kBjZOjv9ESKNCbtfShNcnhh3TXbI6
-	wXhnaCbmHxctUnmnbMi8xcWcPngFeNE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1709312944;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=689mBZGhGQUfWa8VF+TWtCsA1pVDyrfLSy6HHpUKbGs=;
-	b=tSXpszqaRek2+cn4bE7MJMw7xTwFXq/QrVhkEQeWw3MpdC/xOYRawc76CrCIbgn+t/SykM
-	U75PYk69pF9GYaAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 99D0813A59;
-	Fri,  1 Mar 2024 17:09:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id CEgAI68L4mVwGQAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 01 Mar 2024 17:09:03 +0000
-Message-ID: <260e8b4a-429f-4b63-bb13-0161dcf7a61e@suse.de>
-Date: Fri, 1 Mar 2024 18:09:03 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kutQmT3X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6387BC433C7;
+	Fri,  1 Mar 2024 17:47:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709315277;
+	bh=/Lnzc6duzAPTzKTTWlob3cz+GoTEPyZNY1/b5QKdR9I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kutQmT3XEFerRN8wbNjdQ5V/m8UHhyGNotwm2uRAN94U4kiLBc4UtuYxmyJQrPAcM
+	 PYU1fY3msWrEPXaKItpgoNJ/gyQaWBg+Lg5SSgGvmFl8bHCb4IfcidW9wAFzA3Txg9
+	 5beeBvWfnT3UJBW4hB+C6KzmfsRrblyduuACY0kRUqyKFW4+VuBkxA04jGAJiU1uig
+	 H4p9J3rf5XTk2vB83DL0gqMNx4moPYrgNnLKwn4wTEyWbg85uAfxvYKQHjXw5jmCvb
+	 UaM70ra/X50B3iCeV5uqemLBN/jfPPT8hFaSthxu76y1+PsLL91Kez74eBEuzxonxm
+	 HX1Ym4fUXJC+Q==
+Date: Fri, 1 Mar 2024 09:47:56 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] shared/298: run xfs_db against the loop device instead
+ of the image file
+Message-ID: <20240301174756.GG1927156@frogsfrogsfrogs>
+References: <20240301152820.1149483-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 02/13] fs: Allow fine-grained control of folio sizes
-Content-Language: en-US
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org, mcgrof@kernel.org, linux-mm@kvack.org,
- david@fromorbit.com, akpm@linux-foundation.org, gost.dev@samsung.com,
- linux-kernel@vger.kernel.org, chandan.babu@oracle.com, willy@infradead.org,
- Pankaj Raghav <p.raghav@samsung.com>
-References: <20240301164444.3799288-1-kernel@pankajraghav.com>
- <20240301164444.3799288-3-kernel@pankajraghav.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240301164444.3799288-3-kernel@pankajraghav.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=E6cyCfal;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=tSXpszqa
-X-Spamd-Result: default: False [-1.52 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 XM_UA_NO_VERSION(0.01)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-1.22)[89.38%];
-	 MIME_GOOD(-0.10)[text/plain];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	 DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_TWELVE(0.00)[13];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: D4BD6207BD
-X-Spam-Level: 
-X-Spam-Score: -1.52
-X-Spam-Flag: NO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240301152820.1149483-1-hch@lst.de>
 
-On 3/1/24 17:44, Pankaj Raghav (Samsung) wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Fri, Mar 01, 2024 at 08:28:20AM -0700, Christoph Hellwig wrote:
+> xfs_db fails to properly detect the device sector size and thus segfaults
+> when run again an image file with 4k sector size.  While that's something
+> we should fix in xfs_db it will require a fair amount of refactoring of
+> the libxfs init code.  For now just change shared/298 to run xfs_db
+> against the loop device created on the image file that is used for I/O,
+> which feels like the right thing to do anyway to avoid cache coherency
+> issues.
 > 
-> Some filesystems want to be able to ensure that folios that are added to
-> the page cache are at least a certain size.
-> Add mapping_set_folio_min_order() to allow this level of control.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   include/linux/pagemap.h | 100 ++++++++++++++++++++++++++++++++--------
->   1 file changed, 80 insertions(+), 20 deletions(-)
+>  tests/shared/298 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/tests/shared/298 b/tests/shared/298
+> index 071c03dee..f657578c7 100755
+> --- a/tests/shared/298
+> +++ b/tests/shared/298
+> @@ -69,7 +69,7 @@ get_free_sectors()
+>  	agsize=`$XFS_INFO_PROG $loop_mnt | $SED_PROG -n 's/.*agsize=\(.*\) blks.*/\1/p'`
+>  	# Convert free space (agno, block, length) to (start sector, end sector)
+>  	_umount $loop_mnt
+> -	$XFS_DB_PROG -r -c "freesp -d" $img_file | $SED_PROG '/^.*from/,$d'| \
+> +	$XFS_DB_PROG -r -c "freesp -d" $loop_dev | $SED_PROG '/^.*from/,$d'| \
 
-Cheers,
+Might want to leave a comment here about why xfs uses $loop_dev unlike
+the other clauses that use $img_file
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+# Use $loop_dev to work around sector size misdetection bugs in xfs_db
+$XFS_DB_PROG...
 
+With that changed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+>  		 $AWK_PROG -v spb=$sectors_per_block -v agsize=$agsize \
+>  		'{ print spb * ($1 * agsize + $2), spb * ($1 * agsize + $2 + $3) - 1 }'
+>  	;;
+> -- 
+> 2.39.2
+> 
+> 
