@@ -1,42 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EEE717E;
-	Fri,  1 Mar 2024 00:03:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 097CD4C73
+	for <linux-xfs@vger.kernel.org>; Fri,  1 Mar 2024 00:40:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709251410; cv=none; b=rAE+Ir+cNmBgELYUOARQG8e9JEDua54JE8uCh6zh8gzXd/QJWInmxQ/boFQMRJ1MhMZLLEwPMhz1rXipgIKy3nahXd4tgJWuYR5iEE2LQbaH/lrb8lvgGy0uE70BGQEVI3Z80VW7z07m8y+VRVlPCZCPVhjzKZWmomgHyzlylcE=
+	t=1709253658; cv=none; b=eb1KO5PsMt+YwQTu1sENbX+djAjnblDA0LUEuI1+vZaHL6zl9S/aicQ8N12BqdOZWrWBMg5i7IHnFSp8ScYEzTxYDIlN5gfpcakkF0e9B8zxS0RS6OLRatz/VyQ+KWhdr5jTu3NE3mjkPHfncm0klMtaKqF+p2HZHR8YcjB+0iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709251410; c=relaxed/simple;
-	bh=QHvk9C3U20n8u+vI2eeOPtcTBK0DSoLTgny0C/YbSBg=;
+	s=arc-20240116; t=1709253658; c=relaxed/simple;
+	bh=Jd55ktx7sIvEBT3eIFkfgxP4nZ+VdQo972+ClU6asOM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sOqvpuG5CWs4GeHEJxJBhm1m3IAPmY/3tcuxdjOKjM8DRLMdEuaUqzjQFymK+VDRT30i55v8gjmR6tRxl9CDlaTUTqYZ9LNJeKKUYWp2+b2bl4f6GkRGFkGI3QuZWv0JiZTeto9VTPbH0i6ATBlkU2HGwKLlNgq2h0JvxXo7GsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Us1rVkPG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=RYK9IlskpVcvXWLN7mc8GXtTwjiiZp8EmdHBRyt3ngotr+SRvZVVnpilJH/sKQRnwxdf9RNB8Zz2SOHlD8LsqgqE8bL3qDdm9RSBrF77vzrvAsz2+kr/gMS0PXJEtZGKtN+dr7c7KC+3Wr+RMjsT4SjhwBOhK8NwYuXkN1fGZOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=RUc4p1qK; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Us1rVkPG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27474C433F1;
-	Fri,  1 Mar 2024 00:03:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709251410;
-	bh=QHvk9C3U20n8u+vI2eeOPtcTBK0DSoLTgny0C/YbSBg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Us1rVkPG5lB1uXCGaXOEK1G6T7lhXsQ9LwCiT5DFoTjU8wJwlsbR2jEYhfnmTLjJt
-	 1Q6KaWeDHb2SmXqc9d9BrGGx1sS+aUtOMxwTYN6uLLjI0tzbT2jPt41lkj6ASpBrAK
-	 yRcP+Qom7WLON4YDD4MxzzSc92G0IYoIzteakZuf5OktA+JJpN/jYHwAFI1oU41XP9
-	 skf9PcGABG29+B/9FbxoZYxp1h5WvTfGPBaBmQDxJJRnKPVF97v6VG05xmolYjTV9A
-	 6oIrq6w0tfOWLfSbIjq6lhch+C9rvtSNz2fNsIFH0BMId2TrG45QThjFeS1vUahO49
-	 JS9KRPripv5jw==
-Date: Thu, 29 Feb 2024 16:03:29 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Colin Walters <walters@verbum.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHSET v29.4 03/13] xfs: atomic file content exchanges
-Message-ID: <20240301000329.GF1927156@frogsfrogsfrogs>
-References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
- <87961163-a4b9-4032-aa06-f5126c9c8ca2@app.fastmail.com>
- <20240229201840.GC1927156@frogsfrogsfrogs>
- <7282e2c3-f44a-4425-b0f7-24d1182e5499@app.fastmail.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="RUc4p1qK"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6e59bbdd8c7so1030478b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Feb 2024 16:40:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709253656; x=1709858456; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=kfSdJtng8toNd1HcgJhNo8INQxZO5f83GRD0aHxNifg=;
+        b=RUc4p1qKmj962PYnox1SZNSUSj04bVdEguBT5lWMAAeHx7mLna89MVimkGihnnwevq
+         jbX0lNdIilTcfxbkGrnwUGGMbrKNrz7T/UGyNt3/Sm4Ee1l6CizK9IDuPIcvyt+58wVK
+         ecR7/VbKL4IaHEg7JgxjdpKTusOHtwMN9xINjoRaWz0o6EiwExSnNE/nRloezuzi8auo
+         PG4K+EGGnbSgq74Y9/g6wTxCBfTpbIxS3zGEDpCh1S19Z0cpyoeXSw66XSD4iy3XN8DL
+         F0bSZPdDQzC6aXIoJOyTD043jONo9zWrVsdRdPRnCNvPnAPpPmhLOClXbYCF9HWrmVp5
+         sNLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709253656; x=1709858456;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kfSdJtng8toNd1HcgJhNo8INQxZO5f83GRD0aHxNifg=;
+        b=J44bvMzYb1c1qCWq3jENwq/hjTbdk9CoV64tIsgYpdFUfCmC5AfqhUE3eiqD0Ehz2F
+         i0Itat67HYdSJQ0/AwZFMx3UCRiZZycvo1NqjszvyLuR1o8roxDNYs/dY3rHTw4zJCDh
+         g6ENjoQg6akMdJdUY/arWMiiO/tJgcVcpCZP5djUPDGayGsO8ZD7why7QB1IG/1nKili
+         SAWUYOSZ4PW3hLAjMJCSvWDHmvNUvPNWKP6eSmlj5xn8WInzLwaehN8O+N/PyatRK9PO
+         /KZj8D3InpUv/21d3Mm57UILNg+i2YbYGyd1Arz3+My17wejYR7HVknbOX/qDr+IrvLY
+         tDhA==
+X-Forwarded-Encrypted: i=1; AJvYcCUJ38g4o2p5HUDAtumMuF6HXj2XxiE3+5ay3cwddwL7OvQHNuC6Q9NWQFwccem2+2gJBVbdw8RFjpR47C8P4FXyNRwBM39MJDYg
+X-Gm-Message-State: AOJu0YywtmlXMY4reWPREzt/K9qv1UpIl+8MzAxQFr4v7euUjaTuYb5q
+	HuyBV89i4SvYBClza6cHSn/oLe04TpWrBzwZ13Yaml+WCE5FKr5jgf8EB7Cs81Q=
+X-Google-Smtp-Source: AGHT+IG9nkRVk+NgGLMyPlKdjw+Y3IsswCmGwjGEj2FO0wwKgpYsp4rScEINGBD3rE4r1rC3yAQIBg==
+X-Received: by 2002:a05:6a00:4f94:b0:6e4:ea68:633f with SMTP id ld20-20020a056a004f9400b006e4ea68633fmr366985pfb.20.1709253656373;
+        Thu, 29 Feb 2024 16:40:56 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
+        by smtp.gmail.com with ESMTPSA id y13-20020aa7854d000000b006e56cc934b8sm1837363pfn.154.2024.02.29.16.40.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Feb 2024 16:40:55 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rfqxJ-00DKr4-1Q;
+	Fri, 01 Mar 2024 11:40:53 +1100
+Date: Fri, 1 Mar 2024 11:40:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Zhihao Cheng <chengzhihao1@huawei.com>
+Cc: brauner@kernel.org, djwong@kernel.org, jack@suse.cz, tytso@mit.edu,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	yi.zhang@huawei.com
+Subject: Re: [PATCH RFC 1/2] iomap: Add a IOMAP_DIO_MAY_INLINE_COMP flag
+Message-ID: <ZeEkFUCUQ4eR7AlX@dread.disaster.area>
+References: <20240229113849.2222577-1-chengzhihao1@huawei.com>
+ <20240229113849.2222577-2-chengzhihao1@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,126 +74,147 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7282e2c3-f44a-4425-b0f7-24d1182e5499@app.fastmail.com>
+In-Reply-To: <20240229113849.2222577-2-chengzhihao1@huawei.com>
 
-On Thu, Feb 29, 2024 at 05:43:21PM -0500, Colin Walters wrote:
+On Thu, Feb 29, 2024 at 07:38:48PM +0800, Zhihao Cheng wrote:
+> It will be more efficient to execute quick endio process(eg. non-sync
+> overwriting case) under irq process rather than starting a worker to
+> do it.
+> Add a flag to control DIO to be finished inline(under irq context), which
+> can be used for non-sync overwriting case.
+> Besides, skip invalidating pages if DIO is finished inline, which will
+> keep the same logic with dio_bio_end_aio in non-sync overwriting case.
 > 
-> 
-> On Thu, Feb 29, 2024, at 3:18 PM, Darrick J. Wong wrote:
-> >
-> > Correct, there's no built-in dedupe.  For small files you'll probably
-> > end up with a single allocation anyway, which is ideal in terms of
-> > ondisk metadata overhead.
-> 
-> Makes sense.
-> 
-> > though I would bet that extending linkat (or rename, or
-> > whatever) is going to be the only workable solution for old / simple
-> > filesystems (e.g. fat32).
-> 
-> Ah, right; that too.
-> 
-> > How /does/ dconf handle those changes?  Does it rename the file and
-> > signal all the other dconf threads to reopen the file?  And then those
-> > threads get the new file contents?
-> 
-> I briefly skimmed the code and couldn't find it, but yes I believe
-> it's basically that clients have an inotify watch that gets handled
-> from the mainloop and clients close and reopen and re-mmap - it's
-> probably nonexistent to have non-mainloop threads reading things from
-> the mmap, so there's no races with any other threads.
+> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
 
-Hrmm.  IIRC inotify and fanotify both use the same fsnotify backend.
-fsnotify events are emitted after i_rwsem drops, which (if I read
-read_write.c correctly) means this is technically racy.
+A nice idea, but I don't think an ext4 specific API flag is the
+right way to go about enabling this. The iomap dio code knows if
+the write is pure overwrite already - we have the IOMAP_F_DIRTY flag
+for that, and we combine this with IOMAP_DIO_WRITE_THROUGH to do the
+pure overwrite FUA optimisations.
 
-That said if they're mostly waiting around in the inotify loop then it
-probably doesn't matter.
+That is:
 
-> > Huurrrh hurrrh.  That's right, I don't see how exchange can mesh well
-> > with mmap without actual flock()ing. :(
-> >
-> > fsnotify will send a message out to userspace after the exchange
-> > finishes, which means that userspace could watch for the notifications
-> > via fanotify.  However, that's still a bit racy... :/
-> 
-> Right.  However...it's not just about mmap.  Sorry this is a minor
-> rant but...near my top ten list of changes to make with a time machine
-> for Unix would be the concept of a contents-immutable file, like all
-> the seals that work on memfd with F_ADD_SEALS (and outside of
-> fsverity, which is good but can be a bit of a heavier hammer).
+		/*
+                 * Use a FUA write if we need datasync semantics, this is a pure
+                 * data IO that doesn't require any metadata updates (including
+                 * after IO completion such as unwritten extent conversion) and
+                 * the underlying device either supports FUA or doesn't have
+                 * a volatile write cache. This allows us to avoid cache flushes
+                 * on IO completion. If we can't use writethrough and need to
+                 * sync, disable in-task completions as dio completion will
+                 * need to call generic_write_sync() which will do a blocking
+                 * fsync / cache flush call.
+                 */
+                if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
+                    (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
+                    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
+                        use_fua = true;
 
-You and me both. :)
+Hence if we want to optimise pure overwrites that have no data sync
+requirements, we already have the detection and triggers in place to
+do this. We just need to change the way we set up the IO flags to
+allow write-through (i.e. non-blocking IO completions) to use inline
+completions.
 
-Also I want a persistent file contents write counter; and a
-file-anything write counter.
+In __iomap_dio_rw():
 
-Oh, and a conditional read where you pass in the file contents write
-counter and returns an error if the file has been changed since sampling
-time.  The changecookie thing mentioned elsewhere gets us towards that,
-if onlty the issues w/ XFS get resolved.
++	/* Always try to complete inline. */
++	dio->flags |= IOMAP_DIO_INLINE_COMP;
+	if (iov_iter_rw(iter) == READ) {                                         
+-               /* reads can always complete inline */                           
+-               dio->flags |= IOMAP_DIO_INLINE_COMP;
+....
 
-> A few times I've been working on shell script in my editor on my
-> desktop, and these shell scripts are tests because shell script is so
-> tempting.  I'm sure this familiar, given (x)fstests.
-> 
-> And if you just run the tests (directly from source in git), and then
-> notice a bug, and start typing in your editor, save the changes, and
-> then and your editor happens to do a generic "open(O_TRUNC), save"
-> instead of an atomic rename.  This happens to be what `nano` and
-> VSCode do, although at least the `vi` I have here does an atomic
-> rename.  (One could say all editors that don't are broken...but...)
+	} else {
++		/* Always try write-through semantics. If we can't
++		 * use writethough, it will be disabled along with
++		 * IOMAP_DIO_INLINE_COMP before dio completion is run
++		 * so it can be deferred to a task completion context
++		 * appropriately.
++		 */
++               dio->flags |= IOMAP_DIO_WRITE | IOMAP_DIO_WRITE_THROUGH;
+		iomi.flags |= IOMAP_WRITE;
+-               dio->flags |= IOMAP_DIO_WRITE;
+.....
+		/* for data sync or sync, we need sync completion processing */
+                if (iocb_is_dsync(iocb)) {
+                        dio->flags |= IOMAP_DIO_NEED_SYNC;
 
-I think they do O_TRUNC because it saves them from having to copy the
-file attrs and xattrs.  Too bad it severely screws up a program running
-in another terminal that just happens to hit the zero-byte file.
+-                      /*
+-                       * For datasync only writes, we optimistically try using
+-                       * WRITE_THROUGH for this IO. This flag requires either
+-                       * FUA writes through the device's write cache, or a
+-                       * normal write to a device without a volatile write
+-                       * cache. For the former, Any non-FUA write that occurs
+-                       * will clear this flag, hence we know before completion
+-                       * whether a cache flush is necessary.
+-                       */
+-                       if (!(iocb->ki_flags & IOCB_SYNC))
+-                               dio->flags |= IOMAP_DIO_WRITE_THROUGH;
++			* For sync writes we know we are going to need
++			* blocking completion processing, so turn off
++			* writethrough now.
++			*/
+			if (iocb->ki_flags & IOCB_SYNC) {
+				dio->flags &= ~(IOMAP_DIO_WRITE_THROUGH |
+						IOMAP_DIO_INLINE_COMP);
+			}
+                }
 
-> And now because the way bash works (and I assume other historical Unix
-> shells) is that they interpret the file *as they're reading it* in
-> this scenario you can get completely undefined behavior.  It could do
-> *anything*.
-> 
-> At least one of those times, I got an error from an `rm -rf`
-> invocation that happened to live in one of those test scripts...that
-> could have in theory just gone off and removed anything.
-> 
-> Basically the contents-immutable is really what you *always* want for
-> executables and really anything that can be parsed without locking
-> (like, almost all config files in /etc too).  With ELF files there's
+This then sets up iomap_dio_bio_iter() to be able to determine if
+the iomap returned is for a pure overwrite and allow for the use of
+inline write completions.
 
-Yes.
+	/*
+	 * If we have a pure overwrite, we know that IO completion
+	 * will not block and so we can use write through completion
+	 * semantics and complete the write inline. If it's not a
+	 * pure overwrite, make sure that we always defer
+	 * completions to a task context.
+	 */
+	if (dio->flags & IOMAP_DIO_WRITE_THROUGH) {
+		if (iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) {
+			dio->flags &= ~(IOMAP_DIO_WRITE_THROUGH |
+					IOMAP_DIO_INLINE_COMP);
+		} else if ((dio->flags & IOMAP_DIO_NEED_SYNC) &&
+			   (bdev_fua(iomap->bdev) ||
+			    !bdev_write_cache(iomap->bdev))) {
+			/*
+			 * Use REQ_FUA for datasync overwrites to
+			 * avoid cache flushes on IO completion on
+			 * devices that support FUA or don't have
+			 * volatile caches.
+			 */
+			use_fua = true;
+		}
+	}
 
-> EXTBUSY if it *happens* to be in use, but that's just a hack.  Also in
 
-A hack that doesn't work for scripts.  Either interpreters have to read
-the entire script into memory before execution, or I guess they can do
-the insane thing that the DOS batch interpreter did, where before each
-statement it would save the file pos, close it, execute the command,
-reopen the batch file, and seek back to that line.
+and iomap_dio_bio_opflags() gets changed to also clear
+IOMAP_DIO_INLINE_COMP when it clears IOMAP_DIO_WRITE_THROUGH....
 
-> that other thread about racing writes to suid executables...well,
-> there'd be no possibility for races if we just denied writing because
-> again - it makes no sense to just make random writes in-place to an
-> executable.  (OK I did see the zig folks are trying an incremental
-> linker, but still I would just assume reflinks are available for that)
-> 
-> Now this is relevant here because, I don't think anything like
-> dpkg/rpm and all those things could ever use this ioctl for this
-> reason.
+That then makes all pure overwrites for every filesystem do inline
+completions without changing calling conventions. i.e. it's up to
+the filesystem ->iomap_begin callouts to indicate whether the write
+mapping returned requires blocking operations to be done in IO
+completion (i.e. set the IOMAP_F_DIRTY flag) appropriately.
 
-Right.  dpkg executable file replacement really doesn't make much sense
-for exchange range.  That's also wasn't the usecase I was targetting
-though admittedly I'm only using this ioctl to test functionality that
-online fsck requires.
+However, this does mean that any spinlock taken in the ->end_io()
+callbacks now needs to be irq safe. e.g. in xfs_dio_write_end_io()
+the spinlock protection around inode size updates will need to use
+an irq safe locking, as will the locking in the DIO submission path
+that it serialises against in xfs_file_write_checks(). That probably
+is best implemented as a separate spinlock.
 
-> So, it seems to me like it should really be more explicitly targeted at
-> - Things that are using open()+write() today and it's safe for that use case
-> - The database cases
-> 
-> And not talk about replacing the general open(O_TMPFILE) + rename() path.
+There will also be other filesystems that need to set IOMAP_F_DIRTY
+unconditionally (e.g. zonefs) because they always take blocking
+locks in their ->end_io callbacks and so must always run in task
+context...
 
-I think I'll change the cover letter to talk about what it does, what
-problems it solves, and what problems it introduces.  Figuring out how
-to take advantage of it is an exercise for application writers.
+Cheers,
 
---D
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
