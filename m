@@ -1,47 +1,45 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 640983A1B7;
-	Fri,  1 Mar 2024 19:26:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AD7D3BB52
+	for <linux-xfs@vger.kernel.org>; Fri,  1 Mar 2024 20:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709321221; cv=none; b=JjvpeU5gpnDM8R+lQnaHmdAO6GPR1c2lDRc1j4Cl1S7M7T2miCMw2UtCvEo4RLFWDamOlOXLL0V4gOCJu8SU56mC5eZK0/T17SyDrqYIymtuHrvgVgGn8IL4RMyNtoGemyk/g4M3fc4PaNPZKW1MrSVwsCHSpTE/tVZGzUYnKe4=
+	t=1709323482; cv=none; b=dNfow3A6nis9AbLuygbRjO7cQ4xVsM21T7Uvna2Rc4uAldGeoMd99Sn620KlZns3nE32x0nySFsy20e7941JMwNny4DsayvnnAg4nmq4tMHQJsN5QO4PAa10t6rSIxFYOwOWI5si44AzSKjWscJ7HNW4i9bE6+yz2Z9aRGzmbhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709321221; c=relaxed/simple;
-	bh=kaSykyFIWcgLYerUBDYqhN2sEqTha2qYZpO3zUJw2GI=;
+	s=arc-20240116; t=1709323482; c=relaxed/simple;
+	bh=f14nCfAkRhWaq3IBXlAwLE7i8TCJBeF4+IGty/g53bQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bYci9eoOxb5v374nUeXmmd0582Y6GLpsaQyaO+feRuQ5Knyt5htLjeKFz0RJBqu1AzLitjUCPC5nKo0KLYIvDWGMSbwOAWK3ugP0TSCVFTTfAtsL0+0kK1PrFrN41XPWpTWbTyh5qX8yt0vyOOqQDZg4z/pAnVPaXxH+pjAE3c8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Ybvg9RV0; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=KlFPn71WTBLWcmXtrAEm41YdTLKpTp/5hAysk3YhK013ZYXViUsxExWSumIchQMclu/N847KNMgFTNrSzIFi8tO3pvEijodf9ADhZlaQH32OSo0TR9Dxy/tKTZSHXWzjLIAh2jsx8aC7SmBqTLid7Ezn3MLPJFUo5eykiQBCWvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=A3CNMZt8; arc=none smtp.client-ip=95.215.58.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ybvg9RV0"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=/2k9Ny7iGQGTNen6Wn7IjRx3a2E4Jj92/u6+1Zea9no=; b=Ybvg9RV0Gde632PiFIc43hHze0
-	iWF8DGBZ7TOlrbN1f5/ZIZ7wcE/sxUzP3jY8eCH/OBRd9eeCx95AC6rnwCVVc/MEOAEw4DV6kbv/x
-	6eQS9KZCEL4JaE9SiTP910MCvJWfrAyb6LG9z3rlYnDqmG/fT+NqN31YVFNYyka0S8bupSuzmrvkY
-	VFoNblpQDTSbUZr2+hV7Kj45r4KdPjQFEVbe7zJXGJGxCXe4OHlGYTU0Ylihekg/aQO/tcLmGNcoc
-	fNdSJPtktbPi0OM11Rd7zM3vvyD3zLUXrxWhuyV0UlPZvrgBXlXLnvnFsiiOCUprp6lIjnAH6whvH
-	fy3nW0Vg==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rg8X1-0000000BhNj-0rOA;
-	Fri, 01 Mar 2024 19:26:55 +0000
-Date: Fri, 1 Mar 2024 19:26:55 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	djwong@kernel.org, mcgrof@kernel.org, linux-mm@kvack.org,
-	hare@suse.de, david@fromorbit.com, akpm@linux-foundation.org,
-	gost.dev@samsung.com, linux-kernel@vger.kernel.org,
-	chandan.babu@oracle.com, Pankaj Raghav <p.raghav@samsung.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="A3CNMZt8"
+Date: Fri, 1 Mar 2024 15:04:33 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1709323478;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ul6pAsiH3Cf2VNyIM/Eaw82KrFx/wNv6iML+Aou3/Pg=;
+	b=A3CNMZt8ut4JztwS+Y5BGVeJ949fLchBZBLX+LjjOB9qhCB37l3Kv4Ia1etW8FyEJCLtbY
+	FJSRMeGGOUTJ7Aicne+l2al3woE36zN1vkYYx6T/1gep55J7tlVJOzBCBgCtnG9kQWE6CI
+	d6DCw1va/+qdTPCdgDZyZryyqthecmE=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Kent Overstreet <kent.overstreet@linux.dev>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, djwong@kernel.org, mcgrof@kernel.org, 
+	linux-mm@kvack.org, hare@suse.de, david@fromorbit.com, akpm@linux-foundation.org, 
+	gost.dev@samsung.com, linux-kernel@vger.kernel.org, chandan.babu@oracle.com, 
+	Pankaj Raghav <p.raghav@samsung.com>
 Subject: Re: [PATCH v2 03/13] filemap: align the index to mapping_min_order
  in the page cache
-Message-ID: <ZeIr_2fiEpWLgmsv@casper.infradead.org>
+Message-ID: <c5rw63nyg2tdkgeuvriu74jjv2vszy2luorhmv3gb4uz2z4msz@2ktshazjwc2n>
 References: <20240301164444.3799288-1-kernel@pankajraghav.com>
  <20240301164444.3799288-4-kernel@pankajraghav.com>
+ <ZeIr_2fiEpWLgmsv@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,33 +48,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240301164444.3799288-4-kernel@pankajraghav.com>
+In-Reply-To: <ZeIr_2fiEpWLgmsv@casper.infradead.org>
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, Mar 01, 2024 at 05:44:34PM +0100, Pankaj Raghav (Samsung) wrote:
-> +#define DEFINE_READAHEAD_ALIGNED(ractl, f, r, m, i)			\
-> +	struct readahead_control ractl = {				\
-> +		.file = f,						\
-> +		.mapping = m,						\
-> +		.ra = r,						\
-> +		._index = mapping_align_start_index(m, i),		\
-> +	}
+On Fri, Mar 01, 2024 at 07:26:55PM +0000, Matthew Wilcox wrote:
+> On Fri, Mar 01, 2024 at 05:44:34PM +0100, Pankaj Raghav (Samsung) wrote:
+> > +#define DEFINE_READAHEAD_ALIGNED(ractl, f, r, m, i)			\
+> > +	struct readahead_control ractl = {				\
+> > +		.file = f,						\
+> > +		.mapping = m,						\
+> > +		.ra = r,						\
+> > +		._index = mapping_align_start_index(m, i),		\
+> > +	}
+> 
+> My point was that you didn't need to do any of this.
+> 
+> Look, I've tried to give constructive review, but I feel like I'm going
+> to have to be blunt.  There is no evidence of design or understanding
+> in these patches or their commit messages.  You don't have a coherent
+> message about "These things have to be aligned; these things can be at
+> arbitrary alignment".  If you have thought about it, it doesn't show.
 
-My point was that you didn't need to do any of this.
+Don't you think you might be going off a bit much? I looked over these
+patches after we talked privately, and they looked pretty sensible to
+me...
 
-Look, I've tried to give constructive review, but I feel like I'm going
-to have to be blunt.  There is no evidence of design or understanding
-in these patches or their commit messages.  You don't have a coherent
-message about "These things have to be aligned; these things can be at
-arbitrary alignment".  If you have thought about it, it doesn't show.
+Yes, we _always_ want more thorough commit messages that properly
+explain the motivations for changes, but in my experience that's the
+thing that takes the longest to learn how to do well as an engineer...
+ease up abit.
 
-Maybe you just need to go back over the patches and read them as a series,
-but it feels like "Oh, there's a hole here, patch it; another hole here,
-patch it" without thinking about what's going on and why.
+> So, let's start off: Is the index in ractl aligned or not, and why do
+> you believe that's the right approach?  And review each of the patches
+> in this series with the answer to that question in mind because you are
+> currently inconsistent.
 
-I want to help, but it feels like it'd be easier to do all the work myself
-at this point, and that's not good for me, and it's not good for you.
-
-So, let's start off: Is the index in ractl aligned or not, and why do
-you believe that's the right approach?  And review each of the patches
-in this series with the answer to that question in mind because you are
-currently inconsistent.
+^ this is a real point though, DEFINE_READAHEAD_ALIGNED() feels off to
+me.
