@@ -1,119 +1,98 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D86E3224;
-	Fri,  1 Mar 2024 02:03:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 759D041C93;
+	Fri,  1 Mar 2024 03:26:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709258589; cv=none; b=RECYbSxZZqUVsgDulGwNIUu0KU3YzOYxLyGwRHcB3tZT0qNFqqNFrUIHhezLLIXi9F8EXu9QGFxcUht1TzY1BXYrJx+1PPR7tm3bvgaCmyIQ7OCUZEi0vSaGzcAGvD9gcJ9+C5j5lz8WUfiKKO2jhwz+kWvLdx5HLxGVNRrFWuo=
+	t=1709263609; cv=none; b=i0AwXvK79ugmf6iU4MGCeRVehj3yuSl8cQMt7vdgveUSn4WxkgdM3lzYin6oWDvzL9SnNumC5AyMuRloe7dnpNDiFhjz+t8nTIL7T38oV/oKV2oGNkWIbo7okk5j0tb8+hFj5P6Wv3tiqrsxHmfNddC4vwBirOZZUpcozR6Rh4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709258589; c=relaxed/simple;
-	bh=9Js/BcMOoQToMxLCHwtKbZX9jOWiO8pycTukIl3M724=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uHXjI9KRx5xGyo06eoX1bsRzLAD3PBeE/QpF/DYakjxfTR8xn9DSU/4LnStfL7lX8Va1N7qj1KAYoHcquQGkktYhK/wftY956q/d+lz3tv7NSAN0kdr9CB8gCI/ieODZk8mHdkNMdaL6FgfMMhvenRIPrs3EtLf9O7iwBAEr0Pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: d26e09735bf44176b9060d3fc684d0aa-20240301
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.37,REQID:3258d14c-7d03-4d48-a8f2-f0347c4a35d0,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:-5
-X-CID-INFO: VERSION:1.1.37,REQID:3258d14c-7d03-4d48-a8f2-f0347c4a35d0,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:6f543d0,CLOUDID:cdf07984-8d4f-477b-89d2-1e3bdbef96d1,B
-	ulkID:240301000056BMI5A10U,BulkQuantity:8,Recheck:0,SF:64|66|38|24|17|19|4
-	4|102,TC:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,QS:nil,B
-	EC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: d26e09735bf44176b9060d3fc684d0aa-20240301
-Received: from mail.kylinos.cn [(39.156.73.10)] by mailgw
-	(envelope-from <chentao@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 625754827; Fri, 01 Mar 2024 10:02:57 +0800
-Received: from mail.kylinos.cn (localhost [127.0.0.1])
-	by mail.kylinos.cn (NSMail) with SMTP id 57FFCE000EBC;
-	Fri,  1 Mar 2024 10:02:57 +0800 (CST)
-X-ns-mid: postfix-65E13751-261948242
-Received: from [172.20.15.254] (unknown [172.20.15.254])
-	by mail.kylinos.cn (NSMail) with ESMTPA id C6881E000EBC;
-	Fri,  1 Mar 2024 10:02:55 +0800 (CST)
-Message-ID: <e7c115a1-a4cd-4fbd-ac54-2bd60a42dc87@kylinos.cn>
-Date: Fri, 1 Mar 2024 10:02:54 +0800
+	s=arc-20240116; t=1709263609; c=relaxed/simple;
+	bh=fW9YFLy50+y8EU/W46CfJW7150cPRI8UIXLaa/73BB0=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=jTETChI0qMyy9KWjruMO71GCx06UdEPDzPvM14/4atweN2mHkjlxf1W0NqLJ4+fD5XVOA2EZQpoGlxdcZs3XkuUBT5q9nx/tfXB7a1VQPO2uD6H+rLJL+QOs3bynMuTEoar2dnKILSow7HphT0aRLqD0vQ8m09nQH+OuKDU2eGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TmD5n336rz4f3jdH;
+	Fri,  1 Mar 2024 11:26:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id AE8E11A0838;
+	Fri,  1 Mar 2024 11:26:42 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgBHZQ7wSuFlmyFSFg--.41524S3;
+	Fri, 01 Mar 2024 11:26:42 +0800 (CST)
+Subject: Re: [RFC PATCH v3 07/26] iomap: don't increase i_size if it's not a
+ write operation
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, djwong@kernel.org,
+ linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.cz,
+ ritesh.list@gmail.com, willy@infradead.org, zokeefe@google.com,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+ wangkefeng.wang@huawei.com
+References: <20240127015825.1608160-1-yi.zhang@huaweicloud.com>
+ <20240127015825.1608160-8-yi.zhang@huaweicloud.com>
+ <ZcsCP4h-ExNOcdD6@infradead.org>
+ <9b0040ef-3d9d-6246-4bdd-82b9a8f55fa2@huaweicloud.com>
+ <Zd+y2VP8HpbkDu41@dread.disaster.area>
+ <45c1607a-805d-e7a2-a5ca-3fd7e507a664@huaweicloud.com>
+ <ZeERAob9Imwh01bG@dread.disaster.area>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <0b316c9a-b2d7-af02-854e-31430d4f53cd@huaweicloud.com>
+Date: Fri, 1 Mar 2024 11:26:40 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: use KMEM_CACHE() to create xfs_defer_pending cache
+In-Reply-To: <ZeERAob9Imwh01bG@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-To: Dave Chinner <david@fromorbit.com>, kunwu.chan@linux.dev
-Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20240229083342.1128686-1-kunwu.chan@linux.dev>
- <ZeEStFZwMu068YTc@dread.disaster.area>
-From: Kunwu Chan <chentao@kylinos.cn>
-In-Reply-To: <ZeEStFZwMu068YTc@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgBHZQ7wSuFlmyFSFg--.41524S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw48KF15uw15Jw1rKw1DAwb_yoWxAFgE9F
+	srAr48Kw4DGw47uw42ka1ktrsFgFWUWa12qrW5Xr4vkrZ8JFWDWr13Gr93Z3sakFsakFnI
+	9F9Y9347ZrnIvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbIxYFVCjjxCrM7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
+	07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_
+	WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAF
+	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
+	7IU13rcDUUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 2024/3/1 07:26, Dave Chinner wrote:
-> On Thu, Feb 29, 2024 at 04:33:42PM +0800, kunwu.chan@linux.dev wrote:
->> From: Kunwu Chan <chentao@kylinos.cn>
+On 2024/3/1 7:19, Dave Chinner wrote:
+> On Thu, Feb 29, 2024 at 04:59:34PM +0800, Zhang Yi wrote:
+>> Hello, Dave!
 >>
->> Use the KMEM_CACHE() macro instead of kmem_cache_create() to simplify
->> the creation of SLAB caches when the default values are used.
->>
->> Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
->> ---
->>   fs/xfs/libxfs/xfs_defer.c | 4 +---
->>   1 file changed, 1 insertion(+), 3 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
->> index 66a17910d021..6d957fcc17f2 100644
->> --- a/fs/xfs/libxfs/xfs_defer.c
->> +++ b/fs/xfs/libxfs/xfs_defer.c
->> @@ -1143,9 +1143,7 @@ xfs_defer_resources_rele(
->>   static inline int __init
->>   xfs_defer_init_cache(void)
->>   {
->> -	xfs_defer_pending_cache = kmem_cache_create("xfs_defer_pending",
->> -			sizeof(struct xfs_defer_pending),
->> -			0, 0, NULL);
->> +	xfs_defer_pending_cache = KMEM_CACHE(xfs_defer_pending, 0);
->>   
->>   	return xfs_defer_pending_cache != NULL ? 0 : -ENOMEM;
->>   }
+>> On 2024/2/29 6:25, Dave Chinner wrote:
+>>> On Wed, Feb 28, 2024 at 04:53:32PM +0800, Zhang Yi wrote:
+>>>> On 2024/2/13 13:46, Christoph Hellwig wrote:
+...
 > 
-> Please stop wasting our time by trying to make changes that have
-> already been rejected. I gave you good reasons last time for why we
-> aren't going to make this change in XFS, and now you've forced
-> Darrick to waste time repeating all those same reasons. You did not
-> respond to my review comments last time, and now you are posting
-> more patches that make the same rejected change.
+> The general solution is to have zeroing of speculative prealloc
+> extents beyond EOF simply convert the range to unwritten and then
+> invalidate any cached pages over that range. At this point, we are
+> guaranteed to have zeroes across that range, all without needing to
+> do any IO at all...
 > 
-Sorry for the bother. It's my bad.That reply email was probably 
-quarantined because of my mailbox server, and I just found it on the 
-quarantine list.
 
-I'll stop from doing this. Apologies again for my interruption.
+Sure, thanks for the explanation, I will try to solve this problem
+for xfs first.
 
-> PLease listen to the feedback you are given. Indeed, please respond
-> and acknowledge that you have read and understood the feedback you
-> have been given, otherwise I'll consider anything from this email
-> address as "just another annoying bot" and killfile it.
-Thank you very much for your detailed reply and explanation, I just saw 
-it, this patch is my problem, I forgot to check the previous mailing 
-list at the time.
-Sorry again for the bad mood I have caused you.
-> 
-> -Dave.
--- 
 Thanks,
-   Kunwu
+Yi.
 
