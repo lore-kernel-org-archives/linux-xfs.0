@@ -1,167 +1,173 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 963536A8D5;
-	Fri,  1 Mar 2024 10:02:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 087C520B3E;
+	Fri,  1 Mar 2024 13:01:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709287349; cv=none; b=pyx6qTMOs7cS8SofLDmrHbsFQnFPbUrTqP1CDtjJuf1IYaXBpHGXSbBvODwW/xgibwv0dHTVeMlCAtIX6j7SnPUZ71OpdQvaBraLNqJHUAiMXrY72eGUheL21oHNr0tLfTzfomkM0lcOgBtdwXF3q6L6NmEgiSH9IXTmfI7a4uM=
+	t=1709298062; cv=none; b=UGtiwdNl1/DOP4/odJLRh5pR2TAiaoewfl21eHs9xL9Comg760Bh/PmY1SqTomnQUKs2We/Ny+BsyfqfidHouaG0BDYdBUD9kgc3DLdDSznO9KYeWJU3kackS2GvANNJRKCeXrMZySAxouh7dU8zl4Q/GdHUDPfGGTLDo56X03s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709287349; c=relaxed/simple;
-	bh=79h4Z6GRUMbULpsIRmWKBRoU0c2r7XfcFM37uKiif9I=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=Ifc0O28lb77D9Xb+rSKWadC4yyCJSLGxX2W7qoIoLDc8jHjQ4atYApqBiPbNath5DjtFc7pfZehEW55//PCO+FDGZNjAJkSKA9km02qPDGqESYH9aWjWN90NhUm3/lq8NZFzOKrMMsr0OGEGhMZj0WqbPLKQPwp0CNuvJwD9Ibs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4TmNqt51m7zvWFc;
-	Fri,  1 Mar 2024 18:00:10 +0800 (CST)
-Received: from kwepemm600013.china.huawei.com (unknown [7.193.23.68])
-	by mail.maildlp.com (Postfix) with ESMTPS id BFCDD140EAE;
-	Fri,  1 Mar 2024 18:02:22 +0800 (CST)
-Received: from [10.174.178.46] (10.174.178.46) by
- kwepemm600013.china.huawei.com (7.193.23.68) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 1 Mar 2024 18:02:21 +0800
-Subject: Re: [PATCH RFC 1/2] iomap: Add a IOMAP_DIO_MAY_INLINE_COMP flag
-To: Dave Chinner <david@fromorbit.com>
-CC: <brauner@kernel.org>, <djwong@kernel.org>, <jack@suse.cz>,
-	<tytso@mit.edu>, <linux-xfs@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-ext4@vger.kernel.org>, <yi.zhang@huawei.com>
-References: <20240229113849.2222577-1-chengzhihao1@huawei.com>
- <20240229113849.2222577-2-chengzhihao1@huawei.com>
- <ZeEkFUCUQ4eR7AlX@dread.disaster.area>
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-Message-ID: <3de3ede5-31e0-2b7b-f523-9fd22090401f@huawei.com>
-Date: Fri, 1 Mar 2024 18:02:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+	s=arc-20240116; t=1709298062; c=relaxed/simple;
+	bh=uVfFW2XHjpHoR39usIXqd7I1dGvGGpVBxuCl102/2WE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=bd6CBvbAySxE0Y1CxQ+AQYbBL4GSFujEZpRMRw31J9hTqnIzZP3Lm08UGAth6jcZloiycdMYj6c6SOW1J24LL9Qf47h59K0YhKqw+bD1hM+T7UbnqSeb2Tx4a5MXHWevpLOmxk5L+l/qJ0jY4wGL2eNxuM/TtMHqN7lA8jgvPtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CCE+Xj+P; arc=none smtp.client-ip=209.85.219.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CCE+Xj+P"
+Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-68f748cdc8bso7914326d6.1;
+        Fri, 01 Mar 2024 05:01:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709298060; x=1709902860; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tQbRMkud0ngrhcazz2OgtLEB0PtLOR5FrU8q1FDLq5M=;
+        b=CCE+Xj+P+XRVKlZo0RDCxpi6+bWizHkaHduDLq5v39dC6f3sBLJU8wGWZerCFHAuqi
+         M/t42IKwc7iKPS5DmWh6JY45pJJECLo26w/+D9Gps9JMhzz/Qykh4gQQSBSFf3TdTcRi
+         t+3xdzmXl43pEzyebjaIAvZiUIyzj80T1tWk88pQsdlQYXCCtzgOceeNtsuwCnxVbMfL
+         NtcvSDXEerEjfuVEaBpObX5zuShKPJdyXlN1giYgdwD3GXpqzwzJcRvEIpk2VvGAIsRZ
+         XxwzT3aw9mO3MqhBQ6LxsGzjtIOjP7e26DVrp4LS2N/a4lKnrZ6t9Ob9TQbbSArrfcrZ
+         b7vA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709298060; x=1709902860;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tQbRMkud0ngrhcazz2OgtLEB0PtLOR5FrU8q1FDLq5M=;
+        b=AHkpbL3BCOrwcjxdBAJZ6faA2UbLuw9vkyVXBnR+h7LI6nPOFNH0ut0LblWDfoh24T
+         u9/k40XXjls50gh+Aw5KeiTZ4StYPhIfMmhwElyhBrFmloL+/u3g9Scdfzam/DU1HjJr
+         52ts329TGXBMt577Qs8Ts1O1YbRYXMUf5o6yB66L6xclyixnRNPoNoq8eOypsiZTSOBI
+         NQCl69Xx1IIZlHUoyypWs3b4CV0Rt5LMA8R1QVvw1VmdUn9BXXaHrJV5NWgXWn/up+fx
+         NndXX/5YjJyefkwXEIEG4gmiNy/yE8b+6Qjyd1fI5Prjul7RFS7+Z4jBWv/D3/q4sfiK
+         Jp+g==
+X-Forwarded-Encrypted: i=1; AJvYcCX9ZeNpHbGYl0S+TBVqTd/ZeYbWLK8hfr0vF1Y+MqPV9f7L9gXC+xtUELMXM7MzDUv9xihCecPAKiTHDWFhWimh2rsFeHdbpe2X
+X-Gm-Message-State: AOJu0YzsYoT7sNpXelkHrfNznJ0IIDjFOjm9CpDxe6ZP5Vt5QMfQWXuy
+	+FWG+hDerDgt7CVLEI+ulOxLp9wa+nEh9VvMA3VfH4nim76bEknCxr+akEQEIKxDAOBpGwsaNyw
+	0M37nyFXT6lB5NPaYQm8jCcYfd6I=
+X-Google-Smtp-Source: AGHT+IHou6/SevcDlKoOp6ptIqFWEUA4GLAdj61km9qBinzv3SQQOQzqWNcS5QkPMoQEoQmZTEJjBIUJQYsGXkps56U=
+X-Received: by 2002:a05:6214:11b1:b0:68f:ea3f:240f with SMTP id
+ u17-20020a05621411b100b0068fea3f240fmr1692892qvv.5.1709298059863; Fri, 01 Mar
+ 2024 05:00:59 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZeEkFUCUQ4eR7AlX@dread.disaster.area>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemm600013.china.huawei.com (7.193.23.68)
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <20240227174649.GL6184@frogsfrogsfrogs> <CAOQ4uxiPfno-Hx+fH3LEN_4D6HQgyMAySRNCU=O2R_-ksrxSDQ@mail.gmail.com>
+ <20240229232724.GD1927156@frogsfrogsfrogs>
+In-Reply-To: <20240229232724.GD1927156@frogsfrogsfrogs>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 1 Mar 2024 15:00:48 +0200
+Message-ID: <CAOQ4uxgKE+2YYo+ikKd_W=mYf1_Y575=9u6S_PaNTwdDupG_Vg@mail.gmail.com>
+Subject: Re: [PATCH 14/13] xfs: make XFS_IOC_COMMIT_RANGE freshness data opaque
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de, 
+	jlayton@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-ÔÚ 2024/3/1 8:40, Dave Chinner Ð´µÀ:
+On Fri, Mar 1, 2024 at 1:27=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
+wrote:
+>
+> On Tue, Feb 27, 2024 at 08:52:58PM +0200, Amir Goldstein wrote:
+> > On Tue, Feb 27, 2024 at 7:46=E2=80=AFPM Darrick J. Wong <djwong@kernel.=
+org> wrote:
+> > >
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > To head off bikeshedding about the fields in xfs_commit_range, let's
+> > > make it an opaque u64 array and require the userspace program to call
+> > > a third ioctl to sample the freshness data for us.  If we ever conver=
+ge
+> > > on a definition for i_version then we can use that; for now we'll jus=
+t
+> > > use mtime/ctime like the old swapext ioctl.
+> >
+> > This addresses my concerns about using mtime/ctime.
+>
+> Oh good! :)
+>
+> > I have to say, Darrick, that I think that referring to this concern as
+> > bikeshedding is not being honest.
+> >
+> > I do hate nit picking reviews and I do hate "maybe also fix the world"
+> > review comments, but I think the question about using mtime/ctime in
+> > this new API was not out of place
+>
+> I agree, your question about mtime/ctime:
+>
+> "Maybe a stupid question, but under which circumstances would mtime
+> change and ctime not change? Why are both needed?"
+>
+> was a very good question.  But perhaps that statement referred to the
+> other part of that thread.
+>
+> >                                   and I think that making the freshness
+> > data opaque is better for everyone in the long run and hopefully, this =
+will
+> > help you move to the things you care about faster.
+>
+> I wish you'd suggested an opaque blob that the fs can lay out however it
+> wants instead of suggesting specifically the change cookie.  I'm very
+> much ok with an opaque freshness blob that allows future flexibility in
+> how we define the blob's contents.
+>
 
-Hi Dave, thanks for your detailed and nice suggestions, I have a few 
-questions below.
-> On Thu, Feb 29, 2024 at 07:38:48PM +0800, Zhihao Cheng wrote:
->> It will be more efficient to execute quick endio process(eg. non-sync
->> overwriting case) under irq process rather than starting a worker to
->> do it.
->> Add a flag to control DIO to be finished inline(under irq context), which
->> can be used for non-sync overwriting case.
->> Besides, skip invalidating pages if DIO is finished inline, which will
->> keep the same logic with dio_bio_end_aio in non-sync overwriting case.
->>
->> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
-> 
-> A nice idea, but I don't think an ext4 specific API flag is the
-> right way to go about enabling this. The iomap dio code knows if
-> the write is pure overwrite already - we have the IOMAP_F_DIRTY flag
-> for that, and we combine this with IOMAP_DIO_WRITE_THROUGH to do the
-> pure overwrite FUA optimisations.
-> 
-> That is:
-> 
-> 		/*
->                   * Use a FUA write if we need datasync semantics, this is a pure
->                   * data IO that doesn't require any metadata updates (including
->                   * after IO completion such as unwritten extent conversion) and
->                   * the underlying device either supports FUA or doesn't have
->                   * a volatile write cache. This allows us to avoid cache flushes
->                   * on IO completion. If we can't use writethrough and need to
->                   * sync, disable in-task completions as dio completion will
->                   * need to call generic_write_sync() which will do a blocking
->                   * fsync / cache flush call.
->                   */
->                  if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
->                      (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
->                      (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
->                          use_fua = true;
-> 
-> Hence if we want to optimise pure overwrites that have no data sync
-> requirements, we already have the detection and triggers in place to
-> do this. We just need to change the way we set up the IO flags to
-> allow write-through (i.e. non-blocking IO completions) to use inline
-> completions.
-> 
-> In __iomap_dio_rw():
-> 
-> +	/* Always try to complete inline. */
-> +	dio->flags |= IOMAP_DIO_INLINE_COMP;
-> 	if (iov_iter_rw(iter) == READ) {
-> -               /* reads can always complete inline */
-> -               dio->flags |= IOMAP_DIO_INLINE_COMP;
-> ....
-> 
-> 	} else {
-> +		/* Always try write-through semantics. If we can't
-> +		 * use writethough, it will be disabled along with
-> +		 * IOMAP_DIO_INLINE_COMP before dio completion is run
-> +		 * so it can be deferred to a task completion context
-> +		 * appropriately.
-> +		 */
-> +               dio->flags |= IOMAP_DIO_WRITE | IOMAP_DIO_WRITE_THROUGH;
+I wish I had thought of it myself - it is a good idea - just did not
+occur to me.
+Using the language of i_changecounter, that is "the current xfs implementat=
+ion
+of i_version", I still think that using it as the content of the
+opaque freshness blob
+makes more sense than mtime+ctime, but it is none of my concern what
+you decide to fill in the freshness blob for the first version.
 
-There is a behavior change here, if we set IOMAP_DIO_WRITE_THROUGH 
-unconditionally, non-datasync IO will be set with REQ_FUA, which means 
-that device will flush writecache for each IO, will it affect the 
-performance in non-sync dio case?
-> 		iomi.flags |= IOMAP_WRITE;
-> -               dio->flags |= IOMAP_DIO_WRITE;
-> .....
-> 		/* for data sync or sync, we need sync completion processing */
->                  if (iocb_is_dsync(iocb)) {
->                          dio->flags |= IOMAP_DIO_NEED_SYNC;
-> 
-> -                      /*
-> -                       * For datasync only writes, we optimistically try using
-> -                       * WRITE_THROUGH for this IO. This flag requires either
-> -                       * FUA writes through the device's write cache, or a
-> -                       * normal write to a device without a volatile write
-> -                       * cache. For the former, Any non-FUA write that occurs
-> -                       * will clear this flag, hence we know before completion
-> -                       * whether a cache flush is necessary.
-> -                       */
-> -                       if (!(iocb->ki_flags & IOCB_SYNC))
-> -                               dio->flags |= IOMAP_DIO_WRITE_THROUGH;
-> +			* For sync writes we know we are going to need
-> +			* blocking completion processing, so turn off
-> +			* writethrough now.
-> +			*/
-> 			if (iocb->ki_flags & IOCB_SYNC) {
-> 				dio->flags &= ~(IOMAP_DIO_WRITE_THROUGH |
-> 						IOMAP_DIO_INLINE_COMP);
-> 			}
->                  }
-> 
+I was not aware of the way xfs_fsr is currently using mtime+ctime when
+I replied and I am not sure if and how it is relevant to the new API.
 
-[...]
-> 
-> However, this does mean that any spinlock taken in the ->end_io()
-> callbacks now needs to be irq safe. e.g. in xfs_dio_write_end_io()
-> the spinlock protection around inode size updates will need to use
-> an irq safe locking, as will the locking in the DIO submission path
-> that it serialises against in xfs_file_write_checks(). That probably
-> is best implemented as a separate spinlock.
-> 
-> There will also be other filesystems that need to set IOMAP_F_DIRTY
-> unconditionally (e.g. zonefs) because they always take blocking
-> locks in their ->end_io callbacks and so must always run in task
-> context...
-Should we add a new flag(eg. IOMAP_F_ENDIO_IRQ ?) to indicate that the 
-endio cannot be done under irq? Because I think IOMAP_F_DIRTY means that 
-the metadata needs to be written, if we add a new semantics(endio must 
-be done in defered work) for this flag, the code will looks a little 
-complicated.
+> I was however very upset about the Jeff's suggestion of using i_version.
+> I apologize for using all caps in that reply, and snarling about it in
+> the commit message here.  The final version of this patch will not have
+> that.
+>
+> That said, I don't think it is at all helpful to suggest using a file
+> attribute whose behavior is as yet unresolved.  Multigrain timestamps
+> were a clever idea, regrettably reverted.  As far as I could tell when I
+> wrote my reply, neither had NFS implemented a better behavior and
+> quietly merged it; nor have Jeff and Dave produced any sort of candidate
+> patchset to fix all the resulting issues in XFS.
+>
+> Reading "I realize that STATX_CHANGE_COOKIE is currently kernel
+> internal" made me think "OH $deity, they wants me to do that work
+> too???"
+>
+> A better way to have woreded that might've been "How about switching
+> this to a fs-determined structure so that we can switch the freshness
+> check to i_version when that's fully working on XFS?"
+>
 
+Yeh, I should have chosen my words more carefully.
+I was perfectly aware of your lack of interest in doing extra work
+and wasn't trying to request any.
+
+> The problem I have with reading patch review emails is that I can't
+> easily tell whether an author's suggestion is being made in a casual
+> offhand manner?  Or if it reflects something they feel strongly needs
+> change before merging.
+>
+
+Can't speak for everyone else, but coming from the middle east,
+I have fewer politeness filters.
+When I write "wouldn't it be better to use change_cookie?"
+I am just asking that question.
+
+When I am asking something to be changed before merge,
+I try to be much more explicit about it and this is what I expect
+others to do when reviewing my patches.
+
+Thanks,
+Amir.
