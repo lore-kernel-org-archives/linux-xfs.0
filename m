@@ -1,171 +1,159 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73EE376022;
-	Fri,  1 Mar 2024 16:45:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A07A47468;
+	Fri,  1 Mar 2024 17:08:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709311538; cv=none; b=ixnTX1zpRV2CEn0rKW9qpTZGL3l7tR0B8Uxf8j3EEmdqTyGBS4vhHjTtZfDe8fGWGWev6Jm8arz92qUP3vHCWkriKTgPfshFKGATmhP4ICbnZemyftqxOs89EKJOyzoSQUDvm5glfefDajBNn2j+USK9Y/YdNi/h8U8NYm8E/Hc=
+	t=1709312891; cv=none; b=nVGkXCj//yqK9KiLG3kE8Qh1b8Nrv6WiiY4YRPOfncJVZVbgvnM+IMB4AEmTXwv1TT26Oej3SXwb6WGp/E+Vwd/6DDNcqvPgnZYkT/9Ug5kbw6AiSFgNVw3EIroVfyo75V8Tfgvx9wgeWXHJthZg8mV59QS8liKWBdI7u3DJkcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709311538; c=relaxed/simple;
-	bh=cVmNfcBZIT2KyKlxzKD0nCUVMT+sJlIw0srzqPxA7t0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ezgw1sSaooHjLz6QoCKZRm52ELnFLfa691pLbUpnJ5GJCKJ/8FMqXvuI9sPTDbhQ4cUTstbTE2pbiRBaPwdDP6nnKKe5pWymwF6TGQ5/CtUcqE6iksi/5IRXuzyCQ6Z2sd5glTPaZW7XhklOFN4xb8R9/DToT2CSDaDK/cs7CR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=rMBOipsj; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1709312891; c=relaxed/simple;
+	bh=w0uFf7UE97zt2wdqPoLkH+UX7mNIxYfpHO1pyRyDbyw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BdsK0A2YXREGL1nPVDV8nBew8VFVD6Zv3ruU4g+PBu2rTeH2KJJ8kudOjnNszoggRQv3CskzhhkmLDqwWfq5+XdhUt7SYRibK9CW5lmOQUuXfHMHUF8ykaEjzqKw0whqWccS266L7/qY7ji8jqtaVM2lJlO3j1Qxd1E0AqnLbso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MBK5sIsS; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=vwK5ViTl; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MBK5sIsS; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=vwK5ViTl; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="rMBOipsj"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MBK5sIsS";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="vwK5ViTl";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MBK5sIsS";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="vwK5ViTl"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4TmYqc6nYkz9t8H;
-	Fri,  1 Mar 2024 17:45:32 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1709311532;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	by smtp-out1.suse.de (Postfix) with ESMTPS id C041133D2E;
+	Fri,  1 Mar 2024 17:08:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1709312887; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=5wzUd/M7ghnUlsNiIWLrpCm78wsb6uIwk5Sv3jrhDE4=;
-	b=rMBOipsj2b50Vol+/PLPN13o213KX6Sgu4s0nw+xplKlK/aVb/eFPsgk0UgrZLst5NUnYW
-	k7Cin8vOiTKFSHGKdhKHNxiiQnBbPZ/xOvRoIOozm0vRrDAZR0ivPF2OrA/Ahch6UutPr9
-	kELko29pYXU4rzAKp13u4BCCV0VMMTTIqQh4ejEPaMlEA3dRoSV60Gjw23hKzMeqH0d+tA
-	2NrlE4euJ9rYg5nglYG1aSRTkTdFTypuO423WTy6PT4qu3eOZpJ3FteUVUiA1NbDSNcoup
-	XO1K1DNBNb8zy27CqmMtnKkkwSNOPs7SPGEMgxquqNsqTsxis0jqCRQqqyTSUA==
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org,
-	mcgrof@kernel.org,
-	linux-mm@kvack.org,
-	hare@suse.de,
-	david@fromorbit.com,
-	akpm@linux-foundation.org,
-	gost.dev@samsung.com,
-	linux-kernel@vger.kernel.org,
-	chandan.babu@oracle.com,
-	willy@infradead.org,
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: [PATCH v2 13/13] xfs: enable block size larger than page size support
-Date: Fri,  1 Mar 2024 17:44:44 +0100
-Message-ID: <20240301164444.3799288-14-kernel@pankajraghav.com>
-In-Reply-To: <20240301164444.3799288-1-kernel@pankajraghav.com>
-References: <20240301164444.3799288-1-kernel@pankajraghav.com>
+	bh=RqJGuSNtEKivYtKHzuQHc54bH1ErddF8H5FukziJrvY=;
+	b=MBK5sIsSId/tyrKP+kU3ieWRHT/L04VfkV/+b/kW3+75gNUaXMlbZnG9aflnFcOdGi/hFB
+	s2zEv0uZgHLZVGM5NcskABpjAo3Jq0fL4SSBSWqfeap6xhee/z2erhzJo8n6dPa25bWs3P
+	01tmrt/7Da0hD2BV1556vS3lz4gK37A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1709312887;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RqJGuSNtEKivYtKHzuQHc54bH1ErddF8H5FukziJrvY=;
+	b=vwK5ViTlttLYWkeoRlfCISz9XtLVUYHzTzXugQbfvnv4s0dbCU8plBXOftlTpm1Pht7gRe
+	l1CIDNn7krPIJYBA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1709312887; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RqJGuSNtEKivYtKHzuQHc54bH1ErddF8H5FukziJrvY=;
+	b=MBK5sIsSId/tyrKP+kU3ieWRHT/L04VfkV/+b/kW3+75gNUaXMlbZnG9aflnFcOdGi/hFB
+	s2zEv0uZgHLZVGM5NcskABpjAo3Jq0fL4SSBSWqfeap6xhee/z2erhzJo8n6dPa25bWs3P
+	01tmrt/7Da0hD2BV1556vS3lz4gK37A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1709312887;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RqJGuSNtEKivYtKHzuQHc54bH1ErddF8H5FukziJrvY=;
+	b=vwK5ViTlttLYWkeoRlfCISz9XtLVUYHzTzXugQbfvnv4s0dbCU8plBXOftlTpm1Pht7gRe
+	l1CIDNn7krPIJYBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A285613A59;
+	Fri,  1 Mar 2024 17:08:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id g35fI3YL4mVwGQAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 01 Mar 2024 17:08:06 +0000
+Message-ID: <1e789901-82a2-40db-b818-cc1c5b6e9ea5@suse.de>
+Date: Fri, 1 Mar 2024 18:08:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/13] mm: Support order-1 folios in the page cache
+Content-Language: en-US
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+ linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org, mcgrof@kernel.org, linux-mm@kvack.org,
+ david@fromorbit.com, akpm@linux-foundation.org, gost.dev@samsung.com,
+ linux-kernel@vger.kernel.org, chandan.babu@oracle.com, willy@infradead.org
+References: <20240301164444.3799288-1-kernel@pankajraghav.com>
+ <20240301164444.3799288-2-kernel@pankajraghav.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240301164444.3799288-2-kernel@pankajraghav.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=MBK5sIsS;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=vwK5ViTl
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-1.54 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 XM_UA_NO_VERSION(0.01)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 BAYES_HAM(-0.04)[59.09%];
+	 MIME_GOOD(-0.10)[text/plain];
+	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 DKIM_TRACE(0.00)[suse.de:+];
+	 MX_GOOD(-0.01)[];
+	 RCPT_COUNT_TWELVE(0.00)[12];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 RCVD_TLS_ALL(0.00)[];
+	 MID_RHS_MATCH_FROM(0.00)[]
+X-Spam-Score: -1.54
+X-Rspamd-Queue-Id: C041133D2E
+X-Spam-Flag: NO
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+On 3/1/24 17:44, Pankaj Raghav (Samsung) wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> 
+> Folios of order 1 have no space to store the deferred list.  This is
+> not a problem for the page cache as file-backed folios are never
+> placed on the deferred list.  All we need to do is prevent the core
+> MM from touching the deferred list for order 1 folios and remove the
+> code which prevented us from allocating order 1 folios.
+> 
+> Link: https://lore.kernel.org/linux-mm/90344ea7-4eec-47ee-5996-0c22f42d6a6a@google.com/
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>   include/linux/huge_mm.h |  7 +++++--
+>   mm/filemap.c            |  2 --
+>   mm/huge_memory.c        | 23 ++++++++++++++++++-----
+>   mm/internal.h           |  4 +---
+>   mm/readahead.c          |  3 ---
+>   5 files changed, 24 insertions(+), 15 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Page cache now has the ability to have a minimum order when allocating
-a folio which is a prerequisite to add support for block size > page
-size.
+Cheers,
 
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- fs/xfs/libxfs/xfs_ialloc.c |  5 +++++
- fs/xfs/libxfs/xfs_shared.h |  3 +++
- fs/xfs/xfs_icache.c        |  6 ++++--
- fs/xfs/xfs_mount.c         |  1 -
- fs/xfs/xfs_super.c         | 10 ++--------
- 5 files changed, 14 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 2361a22035b0..c040bd6271fd 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2892,6 +2892,11 @@ xfs_ialloc_setup_geometry(
- 		igeo->ialloc_align = mp->m_dalign;
- 	else
- 		igeo->ialloc_align = 0;
-+
-+	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
-+		igeo->min_folio_order = mp->m_sb.sb_blocklog - PAGE_SHIFT;
-+	else
-+		igeo->min_folio_order = 0;
- }
- 
- /* Compute the location of the root directory inode that is laid out by mkfs. */
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 4220d3584c1b..67ed406e7a81 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -188,6 +188,9 @@ struct xfs_ino_geometry {
- 	/* precomputed value for di_flags2 */
- 	uint64_t	new_diflags2;
- 
-+	/* minimum folio order of a page cache allocation */
-+	unsigned int	min_folio_order;
-+
- };
- 
- #endif /* __XFS_SHARED_H__ */
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index dba514a2c84d..a1857000e2cd 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -88,7 +88,8 @@ xfs_inode_alloc(
- 	/* VFS doesn't initialise i_mode or i_state! */
- 	VFS_I(ip)->i_mode = 0;
- 	VFS_I(ip)->i_state = 0;
--	mapping_set_large_folios(VFS_I(ip)->i_mapping);
-+	mapping_set_folio_min_order(VFS_I(ip)->i_mapping,
-+				    M_IGEO(mp)->min_folio_order);
- 
- 	XFS_STATS_INC(mp, vn_active);
- 	ASSERT(atomic_read(&ip->i_pincount) == 0);
-@@ -323,7 +324,8 @@ xfs_reinit_inode(
- 	inode->i_rdev = dev;
- 	inode->i_uid = uid;
- 	inode->i_gid = gid;
--	mapping_set_large_folios(inode->i_mapping);
-+	mapping_set_folio_min_order(inode->i_mapping,
-+				    M_IGEO(mp)->min_folio_order);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9cf800586da7..a77e927807e5 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -131,7 +131,6 @@ xfs_sb_validate_fsb_count(
- 	xfs_sb_t	*sbp,
- 	uint64_t	nblocks)
- {
--	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
- 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
- 	uint64_t max_index;
- 	uint64_t max_bytes;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5a2512d20bd0..685ce7bf7324 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1625,16 +1625,10 @@ xfs_fs_fill_super(
- 		goto out_free_sb;
- 	}
- 
--	/*
--	 * Until this is fixed only page-sized or smaller data blocks work.
--	 */
- 	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
- 		xfs_warn(mp,
--		"File system with blocksize %d bytes. "
--		"Only pagesize (%ld) or less will currently work.",
--				mp->m_sb.sb_blocksize, PAGE_SIZE);
--		error = -ENOSYS;
--		goto out_free_sb;
-+"EXPERIMENTAL: Filesystem with Large Block Size (%d bytes) enabled.",
-+			mp->m_sb.sb_blocksize);
- 	}
- 
- 	/* Ensure this filesystem fits in the page cache limits */
+Hannes
 -- 
-2.43.0
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
