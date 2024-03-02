@@ -1,63 +1,61 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FEB33CFC;
-	Sat,  2 Mar 2024 18:22:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FDF13E46D;
+	Sat,  2 Mar 2024 19:51:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709403738; cv=none; b=Uy2zprY5U+8MguJR4KGl/L9W+bsZ5S9qFjRsxCyeJoCtMU/wD7nlm2pPYC13Jx7IUjvugaX4lQBjo0Os+uBP9EDLjXs/0xeu/OmaeBb3RYVyIUWUi1kLT8ZPm+MauRk5xGh4pUkCMpBEXJjup+yS2UMcNqFhBJRRicErv4sia7A=
+	t=1709409111; cv=none; b=pLnxk9RyrsDvy+jgLZLV1aYzxz7A1otwUziOVuBkH10d0kn8iKd1nxtEMLjx+LJI3AyzuG4cDXWawmr1HRQHxx54w+QTNPuN0tkoYEDcBFcRwiyenbKweIa6RXYVXMlX8L0WZkYgK/QpB2gmdFWnwwsRFrRhdRMaNHaRBngPtJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709403738; c=relaxed/simple;
-	bh=7JrmS/DZA6u/wovtmLWR4ct779cHclmnHOclp8AgMPI=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=ufFakSLf9kcjijCh5CPhzyc6LjwUWIXuav1IYA+TJmC3v0j+tHFCHc47x8N4YIQovMBUr+Q6eUCOM8qW0+YrHW8oLkOe8nwwJMMQg4Y33jj4KLFtU/ssAC1K+pYEdZAcqyBaYMYccTqQ+ZOuLeqgpR5GvbvFuW4vx+tB7PcsXVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SYlwhA7o; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709409111; c=relaxed/simple;
+	bh=IPzPH3l6hYEFKcyM8LrHXierWjIrEvvh4J4tKJfl1hY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JXEODFwKg7PNhDx0i4IBd0TvOTgOnE+FJkTkUCDKbrlXwR/e785ZFR7t1jkp6KDj9I3UlXsjD018YD8aLS3LleEHRiCwt3N2stSl0rT0eBKIIU/WcY0U6L9BiIbL6At+IvabBtlXv8eXCl6INLmL/yY5kVGLY5EqY2kMWV021D0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MZAcXkgn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SYlwhA7o"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CE17FC433C7;
-	Sat,  2 Mar 2024 18:22:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MZAcXkgn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE5CEC433C7;
+	Sat,  2 Mar 2024 19:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709403737;
-	bh=7JrmS/DZA6u/wovtmLWR4ct779cHclmnHOclp8AgMPI=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=SYlwhA7o6bgMacHEeh57kwsGk/HtjL5yptqVxFU4xxcsOPkJQSMj7fByvs5iUtqc9
-	 NfSA+w3G7CUYNLFeNPqrXAy8fks+CagI2pE4sI6h6sHutzMltpkOF4BGMEdKjZEwwj
-	 PZib9MEwWnSM0qKGTiLL58PVM0dDShXtrJ4Q/jEBqGu/q6kf9TLL4f+i5xX/+vWYf3
-	 F7JnahnpuzRIe/6TngnDB8Qsxw+fIeb3B6iXYC4A4W1EySYkMq5UN1fnH1xhNqcbBD
-	 T5cGisLefq6/upEvIHYNraSfEkYbKK8ATJ9vPufOPAjFhdziP2EWH/WZUlxL1Uup3T
-	 awhugkMSqR36Q==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id BBBB9C395F1;
-	Sat,  2 Mar 2024 18:22:17 +0000 (UTC)
-Subject: Re: [GIT PULL] xfs: Code changes for 6.8
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <87sf184vwb.fsf@debian-BULLSEYE-live-builder-AMD64>
-References: <87sf184vwb.fsf@debian-BULLSEYE-live-builder-AMD64>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <87sf184vwb.fsf@debian-BULLSEYE-live-builder-AMD64>
-X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.8-fixes-4
-X-PR-Tracked-Commit-Id: 27c86d43bcdb97d00359702713bfff6c006f0d90
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 4640e2be3920168f6b26512466562accb783423a
-Message-Id: <170940373775.2799.4618368138305557070.pr-tracker-bot@kernel.org>
-Date: Sat, 02 Mar 2024 18:22:17 +0000
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: torvalds@linux-foundation.org, chandanbabu@kernel.org, dan.j.williams@intel.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, ruansy.fnst@fujitsu.com
+	s=k20201202; t=1709409110;
+	bh=IPzPH3l6hYEFKcyM8LrHXierWjIrEvvh4J4tKJfl1hY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MZAcXkgn/Qm+UxjqmPvDZtkDX0VaO1yGeNfpsA/ghKZKQ0GIVIbtnpNR9xTjldwRt
+	 FP579Cr3LJ4NX8hyxW8k5aXWwteUoywK5sWVzg3n5jZty4zyQtHmuVXzI+8+Y433fx
+	 Erfj6gaiO3YZS30kB6aZmuUqDOKuRFDgoodA/o2G2dXpmAETM3O5IizZHYTu1ehnFd
+	 erXJXp+CVH3UkgRATNJiYbuHTu+LBA5E5YlGBPSyuROPbw6mc9RVKrvxcmZ91l0hw2
+	 tTjzaEuEtEaHCz3o2s0+enAnjjwGnE+i+ufjnvZr0v2S7+a7ZA+AOAGcqW6tNJeDhK
+	 7evWBtsK5pALQ==
+Date: Sat, 2 Mar 2024 11:51:50 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] shared/298: run xfs_db against the loop device instead
+ of the image file
+Message-ID: <20240302195150.GV6226@frogsfrogsfrogs>
+References: <20240301152820.1149483-1-hch@lst.de>
+ <20240301174756.GG1927156@frogsfrogsfrogs>
+ <20240302140141.GA1170@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240302140141.GA1170@lst.de>
 
-The pull request you sent on Sat, 02 Mar 2024 18:27:36 +0530:
+On Sat, Mar 02, 2024 at 03:01:41PM +0100, Christoph Hellwig wrote:
+> On Fri, Mar 01, 2024 at 09:47:56AM -0800, Darrick J. Wong wrote:
+> > Might want to leave a comment here about why xfs uses $loop_dev unlike
+> > the other clauses that use $img_file
+> 
+> Well, as I tried to explain in my commit message running it against
+> the file always seemed weird.  The loop device is the canonical place
+> to run fs tools against.  I can throw in a cleanup patch to also do
+> this for the other file systems.
 
-> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.8-fixes-4
+That would also work.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/4640e2be3920168f6b26512466562accb783423a
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+--D
