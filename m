@@ -1,87 +1,165 @@
-Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AD7D3BB52
-	for <linux-xfs@vger.kernel.org>; Fri,  1 Mar 2024 20:04:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C39D110A;
+	Sat,  2 Mar 2024 02:48:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709323482; cv=none; b=dNfow3A6nis9AbLuygbRjO7cQ4xVsM21T7Uvna2Rc4uAldGeoMd99Sn620KlZns3nE32x0nySFsy20e7941JMwNny4DsayvnnAg4nmq4tMHQJsN5QO4PAa10t6rSIxFYOwOWI5si44AzSKjWscJ7HNW4i9bE6+yz2Z9aRGzmbhg=
+	t=1709347712; cv=none; b=gYGyaZ6cY/7FSZj0YENG88WiCGu5ifXvt9GTzWUb5SfgmWiHLynQxOrMYf+NpNOVOH4zcLeRjy6vDwnfG1w2ifeypbNYixUwAPLEz22VNQoa8Sg0wFCzNRsbYaAf6JJ9PjGTrShe8F+MDeDJyMmpzWaFcb4z6wDaR6UZAuOWWmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709323482; c=relaxed/simple;
-	bh=f14nCfAkRhWaq3IBXlAwLE7i8TCJBeF4+IGty/g53bQ=;
+	s=arc-20240116; t=1709347712; c=relaxed/simple;
+	bh=rSzHh+yf3pqOy0q5p0puXfA0m9yhsfFdIwnXmfsDPTM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KlFPn71WTBLWcmXtrAEm41YdTLKpTp/5hAysk3YhK013ZYXViUsxExWSumIchQMclu/N847KNMgFTNrSzIFi8tO3pvEijodf9ADhZlaQH32OSo0TR9Dxy/tKTZSHXWzjLIAh2jsx8aC7SmBqTLid7Ezn3MLPJFUo5eykiQBCWvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=A3CNMZt8; arc=none smtp.client-ip=95.215.58.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=fQmYKSQClx5smNSrr6vqxc2njpuflHEOkmRNu5sBMymLBQKm4ya9YY7G5buxyQl/AJkjA+FYoifghWl5fNyZUWbCyWdNU4UhmbV4OEMR9JJGPNFGXLd2VrPLMCieQgChyW/hxukwG/CklGA5l8ITyN41kriG93ZPZ1qSjZgblMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mOHMLjfU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="A3CNMZt8"
-Date: Fri, 1 Mar 2024 15:04:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1709323478;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ul6pAsiH3Cf2VNyIM/Eaw82KrFx/wNv6iML+Aou3/Pg=;
-	b=A3CNMZt8ut4JztwS+Y5BGVeJ949fLchBZBLX+LjjOB9qhCB37l3Kv4Ia1etW8FyEJCLtbY
-	FJSRMeGGOUTJ7Aicne+l2al3woE36zN1vkYYx6T/1gep55J7tlVJOzBCBgCtnG9kQWE6CI
-	d6DCw1va/+qdTPCdgDZyZryyqthecmE=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, djwong@kernel.org, mcgrof@kernel.org, 
-	linux-mm@kvack.org, hare@suse.de, david@fromorbit.com, akpm@linux-foundation.org, 
-	gost.dev@samsung.com, linux-kernel@vger.kernel.org, chandan.babu@oracle.com, 
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH v2 03/13] filemap: align the index to mapping_min_order
- in the page cache
-Message-ID: <c5rw63nyg2tdkgeuvriu74jjv2vszy2luorhmv3gb4uz2z4msz@2ktshazjwc2n>
-References: <20240301164444.3799288-1-kernel@pankajraghav.com>
- <20240301164444.3799288-4-kernel@pankajraghav.com>
- <ZeIr_2fiEpWLgmsv@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mOHMLjfU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30097C433C7;
+	Sat,  2 Mar 2024 02:48:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709347712;
+	bh=rSzHh+yf3pqOy0q5p0puXfA0m9yhsfFdIwnXmfsDPTM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mOHMLjfUhJlAmUo61hDrJCebD0hImIyLXHc/sPNGhNepmi1J4GtHDEhEuBb4nClht
+	 ehPLIo+DnVRLq8IglnDew0FyBYKZofkyJHlczsNaziZpsb5+6I+ZzN6yUcmblqq5GL
+	 0zJkju8Gy4FbpCHup0EXlpfRNS2hoxwrUN9nZcjydiirTDfjTArD0A9iwKgrNwI09q
+	 i2CrzZmA1pd3TOBjzIIMl1/MRZUsMt1klTvU0TULU3hCakR94OyNEkTEnMq+Tk70+C
+	 qaWPeLuFcXRia4g2LGTDlcsEkBGnxkQ07GSlOyz9PC0x9/z9zg/oCYchy/Ti1Kh8lQ
+	 l5YmbFmACbiZA==
+Date: Fri, 1 Mar 2024 18:48:31 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 14/13] xfs: make XFS_IOC_COMMIT_RANGE freshness data
+ opaque
+Message-ID: <20240302024831.GL1927156@frogsfrogsfrogs>
+References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
+ <20240227174649.GL6184@frogsfrogsfrogs>
+ <CAOQ4uxiPfno-Hx+fH3LEN_4D6HQgyMAySRNCU=O2R_-ksrxSDQ@mail.gmail.com>
+ <20240229232724.GD1927156@frogsfrogsfrogs>
+ <bf2f4a0e7033091d34139540737674dc998fe010.camel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZeIr_2fiEpWLgmsv@casper.infradead.org>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <bf2f4a0e7033091d34139540737674dc998fe010.camel@kernel.org>
 
-On Fri, Mar 01, 2024 at 07:26:55PM +0000, Matthew Wilcox wrote:
-> On Fri, Mar 01, 2024 at 05:44:34PM +0100, Pankaj Raghav (Samsung) wrote:
-> > +#define DEFINE_READAHEAD_ALIGNED(ractl, f, r, m, i)			\
-> > +	struct readahead_control ractl = {				\
-> > +		.file = f,						\
-> > +		.mapping = m,						\
-> > +		.ra = r,						\
-> > +		._index = mapping_align_start_index(m, i),		\
-> > +	}
+On Fri, Mar 01, 2024 at 08:31:21AM -0500, Jeff Layton wrote:
+> On Thu, 2024-02-29 at 15:27 -0800, Darrick J. Wong wrote:
+> > On Tue, Feb 27, 2024 at 08:52:58PM +0200, Amir Goldstein wrote:
+> > > On Tue, Feb 27, 2024 at 7:46 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> > > > 
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > To head off bikeshedding about the fields in xfs_commit_range, let's
+> > > > make it an opaque u64 array and require the userspace program to call
+> > > > a third ioctl to sample the freshness data for us.  If we ever converge
+> > > > on a definition for i_version then we can use that; for now we'll just
+> > > > use mtime/ctime like the old swapext ioctl.
+> > > 
+> > > This addresses my concerns about using mtime/ctime.
+> > 
+> > Oh good! :)
+> > 
+> > > I have to say, Darrick, that I think that referring to this concern as
+> > > bikeshedding is not being honest.
+> > > 
+> > > I do hate nit picking reviews and I do hate "maybe also fix the world"
+> > > review comments, but I think the question about using mtime/ctime in
+> > > this new API was not out of place
+> > 
+> > I agree, your question about mtime/ctime:
+> > 
+> > "Maybe a stupid question, but under which circumstances would mtime
+> > change and ctime not change? Why are both needed?"
+> > 
+> > was a very good question.  But perhaps that statement referred to the
+> > other part of that thread.
+> > 
+> > >                                   and I think that making the freshness
+> > > data opaque is better for everyone in the long run and hopefully, this will
+> > > help you move to the things you care about faster.
+> > 
+> > I wish you'd suggested an opaque blob that the fs can lay out however it
+> > wants instead of suggesting specifically the change cookie.  I'm very
+> > much ok with an opaque freshness blob that allows future flexibility in
+> > how we define the blob's contents.
+> > 
+> > I was however very upset about the Jeff's suggestion of using i_version.
+> > I apologize for using all caps in that reply, and snarling about it in
+> > the commit message here.  The final version of this patch will not have
+> > that.
+> > 
+> > That said, I don't think it is at all helpful to suggest using a file
+> > attribute whose behavior is as yet unresolved.  Multigrain timestamps
+> > were a clever idea, regrettably reverted.  As far as I could tell when I
+> > wrote my reply, neither had NFS implemented a better behavior and
+> > quietly merged it; nor have Jeff and Dave produced any sort of candidate
+> > patchset to fix all the resulting issues in XFS.
+> >
+> > Reading "I realize that STATX_CHANGE_COOKIE is currently kernel
+> > internal" made me think "OH $deity, they wants me to do that work
+> > too???"
+> > 
+> > A better way to have woreded that might've been "How about switching
+> > this to a fs-determined structure so that we can switch the freshness
+> > check to i_version when that's fully working on XFS?"
+> > 
+> > The problem I have with reading patch review emails is that I can't
+> > easily tell whether an author's suggestion is being made in a casual
+> > offhand manner?  Or if it reflects something they feel strongly needs
+> > change before merging.
+> > 
+> > In fairness to you, Amir, I don't know how much you've kept on top of
+> > that i_version vs. XFS discussion.  So I have no idea if you were aware
+> > of the status of that work.
+> > 
 > 
-> My point was that you didn't need to do any of this.
+> Sorry, I didn't mean to trigger anyone, but I do have real concerns
+> about any API that attempts to use timestamps to detect whether
+> something has changed.
 > 
-> Look, I've tried to give constructive review, but I feel like I'm going
-> to have to be blunt.  There is no evidence of design or understanding
-> in these patches or their commit messages.  You don't have a coherent
-> message about "These things have to be aligned; these things can be at
-> arbitrary alignment".  If you have thought about it, it doesn't show.
+> We learned that lesson in NFS in the 90's. VFS timestamp resolution is
+> just not enough to show whether there was a change to a file -- full
+> stop.
+> 
+> I get the hand-wringing over i_version definitions and I don't care to
+> rehash that discussion here, but I'll point out that this is a
+> (proposed) XFS-private interface:
+> 
+> What you could do is expose the XFS change counter (the one that gets
+> bumped for everything, even atime updates, possibly via different
+> ioctl), and use that for your "freshness" check.
+> 
+> You'd unfortunately get false negative freshness checks after read
+> operations, but you shouldn't get any false positives (which is real
+> danger with timestamps).
 
-Don't you think you might be going off a bit much? I looked over these
-patches after we talked privately, and they looked pretty sensible to
-me...
+I don't see how would that work for this usecase?  You have to sample
+file2 before reflinking file2's contents to file1, writing the changes
+to file1, and executing COMMIT_RANGE.  Setting the xfs-private REFLINK
+inode flag on file2 will trigger an iversion update even though it won't
+change mtime or ctime.  The COMMIT then fails due to the inode flags
+change.
 
-Yes, we _always_ want more thorough commit messages that properly
-explain the motivations for changes, but in my experience that's the
-thing that takes the longest to learn how to do well as an engineer...
-ease up abit.
+Worse yet, applications aren't going to know if a particular access is
+actually the one that will trigger an atime update.  So this will just
+fail unpredictably.
 
-> So, let's start off: Is the index in ractl aligned or not, and why do
-> you believe that's the right approach?  And review each of the patches
-> in this series with the answer to that question in mind because you are
-> currently inconsistent.
+If iversion was purely a write counter then I would switch the freshness
+implementation to use it.  But it's not, and I know this to be true
+because I tried that and could not get COMMIT_RANGE to work reliably.
+I suppose the advantage of the blob thing is that we actually /can/
+switch over whenever it's ready.
 
-^ this is a real point though, DEFINE_READAHEAD_ALIGNED() feels off to
-me.
+--D
+
+> -- 
+> Jeff Layton <jlayton@kernel.org>
+> 
