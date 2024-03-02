@@ -1,77 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262CB6D39
-	for <linux-xfs@vger.kernel.org>; Sat,  2 Mar 2024 04:55:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 958E9A92F
+	for <linux-xfs@vger.kernel.org>; Sat,  2 Mar 2024 11:44:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709355361; cv=none; b=DReCzyvYPpvl6PC8RbI/P3NYrKGOIID8qVTw+3HBbnAVHDCx6PDlLGhty/wChUAzdwdrbReyj4j8sUm3/WMYRbOda4G1+nGAL/bDBwRYJhflUMoBSl3D32Jis19pQ8ukWc7LS0R1M2u/qMGBH19A7hEuKoUYuxeWcFxuD5s7Vqk=
+	t=1709379886; cv=none; b=cVExNSewXiTk0FVh6Wq01345EPCr2zU1jDdjEP4tfew74C6RcfBkKKzOyWAUEHjU8Mycxxi8tTIe1JhDjhwGQR7joK31j0W4hWitK7FfFpyTwrwLG8Nm6AqnFZQXLJZDRvZtgvOAhlGftweQ6BWvvKxqVHzYdjzjh/mRw4d6D4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709355361; c=relaxed/simple;
-	bh=ELKAZn2jZUtNyzdQvQKmYWmloxvvGBV1ci2VitltL+c=;
+	s=arc-20240116; t=1709379886; c=relaxed/simple;
+	bh=kISp3bhCOxt0BYZt0fgu021JmRNiNY8HUqznGoI7dls=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uTjDySDnSTdP7YYreHSyhPs7C/zoFLtf5Ntnjgcm9gndcsiarIFcFeIYvxgUVReSOOiWu7ZkOOd9DzfYNsmCAdIFB9ZNQEj/0+qIg2X0JlmcOahqqi/cpsICUCdRxSa3Hw4YNK6o+Nub0vfbJIwkWvQMmBSg3XaZyeZlDfNcBY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=D46aT29J; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=InT/VxR8jK90HO0HPzQmWEEGXo5jpSlddEE1MORVZWsn5XLmpg2YAl4xMGPZI5yJJi4ri5G6TUWOPsmR7H23bRqxMBNynfz5z9nX5erPMgSMSavonTfAVa8dMX88MzLBxPxoBSoP+wXP2RM4IVhRPQWy2WoCMlPDP/cpEaN6k3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CAvKCgpg; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D46aT29J"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CAvKCgpg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709355359;
+	s=mimecast20190719; t=1709379883;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=3vEEF94P6LHoJobRm9XM8bCTELFJaK1bASos2j2n+m8=;
-	b=D46aT29Jqi4GLSyBBj1Z+D8zFXncwai7tIKIm6bXb8J6iuVDXCIjK8WejrK5kGSNL5SL3X
-	IxRGpTofw3fmgy2Mmee8X0Og09FDmXurxWygKZ0fA1e1XTkR4dqoLu7tDnqXu1A7UspYnO
-	zWjsRqKphufppoiSAfMHecSNuiY0Yk0=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=waoeQMshhPIHP+ysFHgEEpI9xz6MLHl2AVo370Y4TEs=;
+	b=CAvKCgpgHJRtKRIU8jzKyaKAPl/0EUFZAuUCZIuUvK5GGguVIFiIiXaKImZcqQn/CphBHU
+	xqjvzwN6BZTMfN4AUR4cmk6mwKx0rz/z+ktEdkxEgaVwVxzoNxGIjcg7dFw8H3M9fjWZ0/
+	nhP9KPOJa3sDv0BHOf36Ag2KuoBL/Dg=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-569-gNb6jsuaOyqC82F1cB9vqw-1; Fri, 01 Mar 2024 23:55:57 -0500
-X-MC-Unique: gNb6jsuaOyqC82F1cB9vqw-1
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-6e58ad52f50so1749230b3a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2024 20:55:57 -0800 (PST)
+ us-mta-42-D9xJ_TLLOQ24t2kpFZrxRw-1; Sat, 02 Mar 2024 06:44:42 -0500
+X-MC-Unique: D9xJ_TLLOQ24t2kpFZrxRw-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-29ade776a78so2652436a91.1
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Mar 2024 03:44:41 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709355356; x=1709960156;
+        d=1e100.net; s=20230601; t=1709379881; x=1709984681;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3vEEF94P6LHoJobRm9XM8bCTELFJaK1bASos2j2n+m8=;
-        b=AabvHqOGngVZdwbmInkPn/iKvAOE7dU7jj9yuPRiQTznJELQ+Z8IfYqrmgrYIJhNar
-         J2AltyDIf2peoS8hQoTD1/f0L+rruiryP+bORT8Gip/9RxEAPusxvpBfMaY25qFOB9+X
-         aFacCPEXlhwha/MuJJhfMM8ViulZ/EsdOYJYU+3DegIDvXrSxXWlzByf60F/bI/JM0bQ
-         ic/4aPz2++X/Qqbe2UT363lVlrfD+TDdarpHPQah8JHFP/n8KMMGyBn4aGl6Hq+Sf8+v
-         W1XNd9mt9GxP2pFiaGl1o9O3ueKCBs4cbuEc0Vb17+ulnP9HVPMh93d5Zyog3RD/+Ffu
-         85aQ==
-X-Gm-Message-State: AOJu0YxK9Fm9V6wPkno/G1Uc0F+KHUSqfyaDyr+8Nfzbkwp6UrM67glP
-	sUnKuUS+Up+4QzfJoOJip3sDzURpyljAclAjLiRN3Fg6nQ0G+yP4qui0Q3pViwK8yzW5j1XpEhB
-	bexQ+KPHUpaz/ynDm80Us6mSQ8l6HcBK3n9JWOOkqXeszfW14jeABHzArjw==
-X-Received: by 2002:a05:6a00:2315:b0:6e4:fa4b:b6e0 with SMTP id h21-20020a056a00231500b006e4fa4bb6e0mr4754016pfh.15.1709355356560;
-        Fri, 01 Mar 2024 20:55:56 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEX+/CUQCoWwE5bwh+2jYPNb5NWU9Xp5nCSNDz0WoaWiXH6v2Ujc2DvTNLtNXWyPA+zspIsRQ==
-X-Received: by 2002:a05:6a00:2315:b0:6e4:fa4b:b6e0 with SMTP id h21-20020a056a00231500b006e4fa4bb6e0mr4754005pfh.15.1709355356118;
-        Fri, 01 Mar 2024 20:55:56 -0800 (PST)
+        bh=waoeQMshhPIHP+ysFHgEEpI9xz6MLHl2AVo370Y4TEs=;
+        b=dpVmNejoJ/H6iQn3AmzZ5OlH7rlq+E+Jy6d87lFThtw8w3B+R33HBdqtsu3Q70zjmn
+         YIzRwkgy5SDc1A7PweMyx3u4rI+0RKsaCnbyaFFoc2sucuodimJhwToDWcOnMpmQhyyo
+         Vabe7KVGFCtdpjD+nEricmSVPQMUyi4w6sK04P7PWcJfCku5bK81IyAz7IHtYrOBxHrp
+         g2FA+GDwo9sZL245D3+CIKJmBhc4ioYssyxzR4PeC5uhdB0Rgb2hkzkubKJIiqw3SaZ2
+         i1LzsXrWaVY9zVtPCuZ2r2O472N9l9RJbUlPWKvLh6gtqNobcEZWYwKkwcB6Dpc4GvIe
+         G6/g==
+X-Forwarded-Encrypted: i=1; AJvYcCVsM8Hxd6/X5+4Kbl3UhSyoDL5k5OSPp7HR6M+ZMn44oaVB0LkBIfoBD08Ikilbb5/XhAfatSE/G9zCr2auVxS0IZFd8HqTLZRj
+X-Gm-Message-State: AOJu0YwL8lVQ1skI6/skvgvjNuQrgTfznAwiVRfdzylg0uxeGPzHh0eM
+	GbRuTN1JSqtsM2xt37EJgh80vNTbviJxULZ8V5ZGgxA9W0MChSrAdNFokygZ9nxLt3oFTxkk0TJ
+	KMub6bHeuEHPz+Od/JN0mGuvrQ4p9MIpIVtxyWmhpRpQyXGvYiNUB0MhIvg==
+X-Received: by 2002:a17:902:e843:b0:1dc:faab:3452 with SMTP id t3-20020a170902e84300b001dcfaab3452mr1879661plg.28.1709379881007;
+        Sat, 02 Mar 2024 03:44:41 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEUnvhW4EKTQeqfQmf34Bk3BSz0xt/dD6vf2DGxsnWnbr6pkJuov5yH5lvHz7vkqxYTKZAKmQ==
+X-Received: by 2002:a17:902:e843:b0:1dc:faab:3452 with SMTP id t3-20020a170902e84300b001dcfaab3452mr1879646plg.28.1709379880622;
+        Sat, 02 Mar 2024 03:44:40 -0800 (PST)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id fh8-20020a056a00390800b006e55530067bsm3747721pfb.167.2024.03.01.20.55.54
+        by smtp.gmail.com with ESMTPSA id kw13-20020a170902f90d00b001dc90ac1cecsm5048923plb.284.2024.03.02.03.44.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Mar 2024 20:55:55 -0800 (PST)
-Date: Sat, 2 Mar 2024 12:55:52 +0800
+        Sat, 02 Mar 2024 03:44:40 -0800 (PST)
+Date: Sat, 2 Mar 2024 19:44:36 +0800
 From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 6/8] xfs/122: update test to pick up rtword/suminfo
- ondisk unions
-Message-ID: <20240302045552.cq4dmvvyrkfm2fmv@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH v1.1 1/8] generic/604: try to make race occur reliably
+Message-ID: <20240302114436.wb6uw3w7yrqnozf4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
- <170899915304.896550.17104868811908659798.stgit@frogsfrogsfrogs>
- <Zd33sVBc4GSA5y1I@infradead.org>
- <20240228012704.GU6188@frogsfrogsfrogs>
- <Zd9TsVxjRTXu8sa5@infradead.org>
- <20240229174831.GB1927156@frogsfrogsfrogs>
- <ZeDeD9v9m8C0PsvG@infradead.org>
- <20240301131848.krj2cdt4u6ss74gz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20240301175020.GI1927156@frogsfrogsfrogs>
+ <170899915233.896550.17140520436176386775.stgit@frogsfrogsfrogs>
+ <20240227044021.GT616564@frogsfrogsfrogs>
+ <Zd33JY8qn7urdMjB@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,45 +76,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240301175020.GI1927156@frogsfrogsfrogs>
+In-Reply-To: <Zd33JY8qn7urdMjB@infradead.org>
 
-On Fri, Mar 01, 2024 at 09:50:20AM -0800, Darrick J. Wong wrote:
-> On Fri, Mar 01, 2024 at 09:18:48PM +0800, Zorro Lang wrote:
-> > On Thu, Feb 29, 2024 at 11:42:07AM -0800, Christoph Hellwig wrote:
-> > > On Thu, Feb 29, 2024 at 09:48:31AM -0800, Darrick J. Wong wrote:
-> > > > It turns out that xfs/122 also captures ioctl structure sizes, and those
-> > > > are /not/ captured by xfs_ondisk.h.  I think we should add those before
-> > > > we kill xfs/122.
-> > > 
-> > > Sure, I can look into that.
+On Tue, Feb 27, 2024 at 06:52:21AM -0800, Christoph Hellwig wrote:
+> On Mon, Feb 26, 2024 at 08:40:21PM -0800, Darrick J. Wong wrote:
+> > This test will occasionaly fail like so:
 > > 
-> > Hi Darrick,
+> >   --- /tmp/fstests/tests/generic/604.out	2024-02-03 12:08:52.349924277 -0800
+> >   +++ /var/tmp/fstests/generic/604.out.bad	2024-02-05 04:35:55.020000000 -0800
+> >   @@ -1,2 +1,5 @@
+> >    QA output created by 604
+> >   -Silence is golden
+> >   +mount: /opt: /dev/sda4 already mounted on /opt.
+> >   +       dmesg(1) may have more information after failed mount system call.
+> >   +mount -o usrquota,grpquota,prjquota, /dev/sda4 /opt failed
+> >   +(see /var/tmp/fstests/generic/604.full for details)
 > > 
-> > Do you still want to have this patch?
+> > As far as I can tell, the cause of this seems to be _scratch_mount
+> > getting forked and exec'd before the backgrounded umount process has a
+> > chance to enter the kernel.  When this occurs, the mount() system call
+> > will return -EBUSY because this isn't an attempt to make a bind mount.
+> > Slow things down slightly by stalling the mount by 10ms.
 > > 
-> > Half of this patchset got RVB. As it's a random fix patchset, we can choose
-> > merging those reviewed patches at first. Or you'd like to have them together
-> > in next next release?
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> > v1.1: indent commit message, fix busted comment
+> > ---
+> >  tests/generic/604 |    8 +++++---
+> >  1 file changed, 5 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/tests/generic/604 b/tests/generic/604
+> > index cc6a4b214f..00da56dd70 100755
+> > --- a/tests/generic/604
+> > +++ b/tests/generic/604
+> > @@ -24,10 +24,12 @@ _scratch_mount
+> >  for i in $(seq 0 500); do
+> >  	$XFS_IO_PROG -f -c "pwrite 0 4K" $SCRATCH_MNT/$i >/dev/null
+> >  done
+> > -# For overlayfs, avoid unmouting the base fs after _scratch_mount
+> > -# tries to mount the base fs
+> > +# For overlayfs, avoid unmouting the base fs after _scratch_mount tries to
 > 
-> I was about to resend the second to last patch.  If you decide to remove
-> xfs/122 then I'll drop this one.
+> s/unmouting/unmounting/ ?
 
-xfs/122 is a xfs specific test case, it's more important for xfs list than me.
-As it doesn't break the fstests testing, I respect the decision from xfs folks,
-about keeping or removing it :)
-
-Thanks,
-Zorro
+Sure, I've changed that when I merged it. Thanks for pointing out that.
 
 > 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > > 
-> > > 
-> > 
-> > 
 > 
 
