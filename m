@@ -1,81 +1,47 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3584B7EC;
-	Sat,  2 Mar 2024 13:15:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E8A6179BC;
+	Sat,  2 Mar 2024 14:01:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709385352; cv=none; b=Ktw3zJjvDeKXnJyv1cp/KpR6j+6ejiHt0AnePvbJRL3afpeMf2cdplMi4AhHYi8oIArtaWkW4NpQ+G7JsmzjPKioN1Pemr0YNUXDWbfAhSclQNHZrWG/wa9sb4osOl2Y2XXegQjlOOGUGD3TWLiNcPuRwETYwqS6X1CTp2R2LjI=
+	t=1709388106; cv=none; b=PB8LTV8mctnXcVSHQVKiswb3MJXHcGw2gBzFFb2LZqEiA1XWzraXN58apg07Sj2+2QjndQKCWQiAC1U4q6sb/euvfnhh/DaqOfUKQy180geVPMkOJGGgiQhtkybB8nZj1qfkTJPNivCgZ4A8xJgocIlLbdZC5QWRtv8rXm2KG84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709385352; c=relaxed/simple;
-	bh=UTru0EyJUpG0UwOlr1bMyWP7ILSq2jR/3Vr8JNynXew=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jP4ZkPGNnzAuf4tf/e1YrmEsc9ZBMJeNrQN23GDV61eAm5Eh/oQZ39LE0r+YcXoMStwFp9i8Hu7D1YHIltwfZXWB46JLJTpTTHQSPqpjmvjB0N+9lIzGXnTOg3oa56z35j8DKp+MEkVc6aJrOGdLaeO3wbluDSWfN+eZzjFFJIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CyXYz6GF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CyXYz6GF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A951C433C7;
-	Sat,  2 Mar 2024 13:15:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709385351;
-	bh=UTru0EyJUpG0UwOlr1bMyWP7ILSq2jR/3Vr8JNynXew=;
-	h=From:To:Cc:Subject:Date:From;
-	b=CyXYz6GFHqhiu2Ap1WdzIYfbtHXFLYxivO3E5O5BcPb7Yzvuevkjgr8RSWhwo9lF6
-	 /m+BDSdHJDstFpzfTcH5wnxDC+No9GqN7+Er0Ph+iKzPu4NZYJWGzphUXu4wE6pmDB
-	 IMAMnRiablzWdi7DLnsYxKLeDAYy7gc9sZmItV4ruGQvn/V3ngiBtahX5QIH5UkJb3
-	 cg0lnFj7EQ88/aXKycDODZNeDFXvrOO08+ZpjZwySGhyCu0fk48TpcFgDJ8wLAPuB1
-	 qJ03sUshExBFJ+V5Gtc/S/68uparD/sCetJQA0+o6XFSt4TPIBg/qltwgTBvU7v60i
-	 10h91kfCcy41g==
-User-agent: mu4e 1.10.8; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: chandanbabu@kernel.org,dan.j.williams@intel.com,djwong@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,ruansy.fnst@fujitsu.com
-Subject: [GIT PULL] xfs: Code changes for 6.8
-Date: Sat, 02 Mar 2024 18:27:36 +0530
-Message-ID: <87sf184vwb.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=arc-20240116; t=1709388106; c=relaxed/simple;
+	bh=T+eWyvhiHxks5GPZJvK34JMkOwJq4Lhiy22/9cVRn3w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mC830ZFdM/QkvWY0IFBcp2W04nUAeMs32q+LYLRG50hwHvzo7fqzrILfI/S+Bn9PD3rmiKYIO9ghhaW2KswbrrnyJ+YMFNe6Lv2q9kCpT/RAF3ocPCVd8fVJbH5ivqhczczH7mYt+DxzquGgZvacAfmNtJ3mLGHAHuCNQ7UwIGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 46C3A67373; Sat,  2 Mar 2024 15:01:41 +0100 (CET)
+Date: Sat, 2 Mar 2024 15:01:41 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] shared/298: run xfs_db against the loop device instead
+ of the image file
+Message-ID: <20240302140141.GA1170@lst.de>
+References: <20240301152820.1149483-1-hch@lst.de> <20240301174756.GG1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240301174756.GG1927156@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hi Linus,
+On Fri, Mar 01, 2024 at 09:47:56AM -0800, Darrick J. Wong wrote:
+> Might want to leave a comment here about why xfs uses $loop_dev unlike
+> the other clauses that use $img_file
 
-Please pull this branch with changes for xfs for 6.8-rc7. The changes are
-limited to just one patch where we drop experimental warning message when
-mounting an xfs filesystem on an fsdax device. We now consider xfs on fsdax to
-be stable.
+Well, as I tried to explain in my commit message running it against
+the file always seemed weird.  The loop device is the canonical place
+to run fs tools against.  I can throw in a cleanup patch to also do
+this for the other file systems.
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any
-problems.
-
-The following changes since commit d206a76d7d2726f3b096037f2079ce0bd3ba329b:
-
-  Linux 6.8-rc6 (2024-02-25 15:46:06 -0800)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.8-fixes-4
-
-for you to fetch changes up to 27c86d43bcdb97d00359702713bfff6c006f0d90:
-
-  xfs: drop experimental warning for FSDAX (2024-02-27 09:53:30 +0530)
-
-----------------------------------------------------------------
-Changes for 6.8-rc7:
-
-  * Drop experimental warning for FSDAX.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Shiyang Ruan (1):
-      xfs: drop experimental warning for FSDAX
-
- fs/xfs/xfs_super.c | 1 -
- 1 file changed, 1 deletion(-)
-
--- 
-Chandan
