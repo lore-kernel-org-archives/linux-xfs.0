@@ -1,72 +1,68 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D744667A01
-	for <linux-xfs@vger.kernel.org>; Sun,  3 Mar 2024 14:41:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF797A715
+	for <linux-xfs@vger.kernel.org>; Sun,  3 Mar 2024 23:35:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709476917; cv=none; b=paQ3XOdME3sLTJAFuuB9fKe2Z1X/3itK3IyCiEWz34jwkgV2WQ+k/fvs6rq5UekiNDD/okLdZA4EK3/Q4ECsoj4l5pCAJbEtzsiV7ifoK0y44/AoUwZSQg2YYdCIe6vgbe+ntnyDNrvlCqL3+kSmlXi/EeioZFa5c/lkmj3P/+8=
+	t=1709508960; cv=none; b=Ge6RSVdtc2GvXnnNrrnC9AikmSjPtQIqjpuTwbLaaOlRk0zqwU7unj1ujNdn1lCQ4+6N/HLhIHpGwLoiMgPVnKcc79GHWMu+mo7ftQE9AJQESGdszRtslbN+aZ0cf3nK0eoXZFAsEN1ehz40xkStc5tdBmQChVjjbO1PSqMSZ/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709476917; c=relaxed/simple;
-	bh=SThudsZwnWnGyI6jp7a10bTtZojDmLcZXDe6STXoIc8=;
+	s=arc-20240116; t=1709508960; c=relaxed/simple;
+	bh=Ti9X/FXMtXdtuklTuMvWh2IRJi0XWj0Xg42tOKGD9hs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AidCx8gJTgV4l+IIGoBGiXVka8o2aTnVMpaIxInIamT/2tgE0RJYhChQm2+xlx6GHO+n8fbqbhFEcDMmi4v/52jMYYJfG2qpUaDpAoKBn1E0buSQl9zL1BVhgL8uf8Yo0hTaaR+zMoAVMjwDtqrUY95PgfDZYb6l1iUBXsCDnYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Z0jdUhNC; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=ogqFxYwQaNdx8h7IsMDC+Zp2K2MaMf9ZXY0XbEk3r/ponlr+1Dd8WPQiRZLXBbVfiYWMYW9XZidA8gZqwx37kH29DqkrYO5ChCBXF11Ka6x0n+kE3fE+aa0Wwr1vzimFlB5kpJCwsX+r4KYkaSfHcpZT6kEQ2R6LNkiU1sBsEkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Kv/it71G; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z0jdUhNC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709476914;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rl2ByWGTuIoJFZHZspKAH0Wx8/n3SIks5Pk2qLRqUHw=;
-	b=Z0jdUhNCycE8BF30Jl/yHRUSn4YeoqzcnYxSArmG0OhSsnEf0KnspfHFoHdEtIiosUSwsb
-	xJ8VG6l/eOq16mA2rc9JNtJn3ZUN8FTiBMO9TV7pGWPt1pxDwwjjt3E1vzKjMcz3qWG4Om
-	5MHAL6fBnbaHkh6mJUcra0lc6r4T7z0=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-683-p7Kw86KYPjefSv3EMnkgwQ-1; Sun, 03 Mar 2024 09:41:52 -0500
-X-MC-Unique: p7Kw86KYPjefSv3EMnkgwQ-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1dc4f385c16so36870595ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Mar 2024 06:41:52 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Kv/it71G"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1dccb2edc6dso31769765ad.3
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Mar 2024 15:35:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709508958; x=1710113758; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=L50ZscUmxGgE9iPP8Ug5iQ6+RFUl71GujpMGxH2pRSA=;
+        b=Kv/it71Gp3ffo/PeJd8EmRO2p6bfpwku/a+6aUxHqiA6+VmvzhVu1U5FMjcHEdU5DY
+         ua2vnXDxTIAy5WDch05tm0AXjaLh3QwjwWdivBePJv5GyXL3IztgcspV62vfllFpQC35
+         pJVi5rB7qbHbDofk0l/wuwEo5n69TwF/VcTLdPNkD2GkLVbX8CagAS4nTnu6VjAPwiSb
+         qY0BAGxlArfR9lHLwp60s+CPuaeCoYRBPqlKo3k+qml1oqkA/2r1ssJ6fqJWi5mgCgCM
+         hCkI/ABYyXp5u+oY6tBY5eruXmfSdqBnf5CMmEF1no5q21cxpb9N+kHydiyn98KsBFpk
+         I7QA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709476911; x=1710081711;
+        d=1e100.net; s=20230601; t=1709508958; x=1710113758;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Rl2ByWGTuIoJFZHZspKAH0Wx8/n3SIks5Pk2qLRqUHw=;
-        b=H26AlH9bbOvtjYWvZkBoTmPnfq83IVThSj2AjLRqab3uhrpKo1NRFUlxgsy18U8PC/
-         qQQ2ZBR7DTrQB+j3KHbh0vNUDjpXerSEvvvLHxgCQkb5tKrHdL2mxqj6tnRtHTg5E2rV
-         mlAfalOqox/xjKkiEZzturiCmcsIy/DB8PQIGwO1zMHY61d8HS17or8xR1iunNJsmC5U
-         yLKtoii1zQXnsno11WjC3w91KS2/z+Qghrw0Sfp6rCcMv9HArTD9zU/pE4FheUfzbd6H
-         SttQj9KQE97iOjPBdFq5pLfEnWSsnNjOBVjVAaY+5ksWfRWz8DpFldw6InIY1cfks5sx
-         IziA==
-X-Forwarded-Encrypted: i=1; AJvYcCXectSctd/+St4ee6GPcgfu8HlzsU/m0zQMK290XHurvpVF8nhCl2TXZJOgTSUHkTS/UEPiOuSQAL05m+TXZMSvsIVi4X+29J7y
-X-Gm-Message-State: AOJu0Yx3q2oxVAs9eCQB1ezPJFs67PhDp8MWxSEtLk7knlIVetUt6Phu
-	eRfCqjKWGggRvwM+9g0RFu6E52ib6mavvAPZAdU8FS0cRPFy8QBJtH2oanjlYwLT42e6dIzwJ2z
-	lJn8Jrc9aHbZ1xAX+A7foWK3rjwUMrMqYvig4C1d5vx9XS+dAUmF5VLhZCPqb381lCx60
-X-Received: by 2002:a17:903:2a84:b0:1dc:ccd3:29e5 with SMTP id lv4-20020a1709032a8400b001dcccd329e5mr9452886plb.2.1709476911629;
-        Sun, 03 Mar 2024 06:41:51 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFQI2RXeoq7rInr+07aWOpZQfLoydz35OH36u6e//8L01dmgE0Wq9V8fvL2bPwlGoO13RUxxA==
-X-Received: by 2002:a17:903:2a84:b0:1dc:ccd3:29e5 with SMTP id lv4-20020a1709032a8400b001dcccd329e5mr9452876plb.2.1709476911339;
-        Sun, 03 Mar 2024 06:41:51 -0800 (PST)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id q12-20020a170902dacc00b001dce6c481c1sm5122843plx.301.2024.03.03.06.41.50
+        bh=L50ZscUmxGgE9iPP8Ug5iQ6+RFUl71GujpMGxH2pRSA=;
+        b=MjapgFHkOMTNbI3/cn81bFNHiduf/JfXKg3HBpR249jsqN/bvyIOxYyAelMixtoRwl
+         MVEIvv4YhamnSKLNkWnkwWiHAVKKhbcKdBMUuk8abW1WLgTTNzqCJn/a/A2SNMOLLN3M
+         72xq0yUAJa0coLLGncgErKsty+2ZHcovwn1CHz1DyGLV6LuiLC8rAaYCV2wJBxgkYbnN
+         RCdxJJgncmJMOxkxowZYHqIeXyAa5fUUuEe/XvRIWwXbPZ+o+Co0GeFKRFd1vruxQYhu
+         GWPRnH3fIqYEPhrHm31UqZBWgIyBH8bmEUXPDn2hBwigOC21tCc9GqMWuVyot7nUwu+c
+         d16g==
+X-Gm-Message-State: AOJu0YyXxs8IyPPRCt/bJUDJfG/h0pUh6oCYHPDu/7w78IQd1HKXFALe
+	WgqwGBY+VJEFYfRnLDT/Bh6/uwDarNLc8Kp+te/Q53Hv7XrYQ5MdaFRttDAi5UY=
+X-Google-Smtp-Source: AGHT+IF4RZyHgKHM9fsl+rIVxIHTZH6T4VoeOXKZYPJoGWFDqqasplhyEot9OhnGwKfPC1VTE1IhEQ==
+X-Received: by 2002:a17:902:e5d2:b0:1dd:7b2:3b19 with SMTP id u18-20020a170902e5d200b001dd07b23b19mr3130999plf.9.1709508958144;
+        Sun, 03 Mar 2024 15:35:58 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
+        by smtp.gmail.com with ESMTPSA id jv11-20020a170903058b00b001dc96c5fa13sm7107930plb.295.2024.03.03.15.35.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Mar 2024 06:41:51 -0800 (PST)
-Date: Sun, 3 Mar 2024 22:41:47 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] shared/298: run xfs_db against the loop device instead
- of the image file
-Message-ID: <20240303144147.rjdc3sbx7wdtghzj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240301152820.1149483-1-hch@lst.de>
- <20240303131048.kx4a4b2463deud7t@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20240303141526.GA26420@lst.de>
+        Sun, 03 Mar 2024 15:35:57 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rgvN4-00Ef2o-1m;
+	Mon, 04 Mar 2024 10:35:54 +1100
+Date: Mon, 4 Mar 2024 10:35:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] xfs: stop advertising SB_I_VERSION
+Message-ID: <ZeUJWuO8TkuoodIx@dread.disaster.area>
+References: <20240228042859.841623-1-david@fromorbit.com>
+ <726abff82e992e3e0765e8711e90bf0accb37b2a.camel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,29 +71,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240303141526.GA26420@lst.de>
+In-Reply-To: <726abff82e992e3e0765e8711e90bf0accb37b2a.camel@kernel.org>
 
-On Sun, Mar 03, 2024 at 03:15:26PM +0100, Christoph Hellwig wrote:
-> On Sun, Mar 03, 2024 at 09:10:48PM +0800, Zorro Lang wrote:
-> > >  	# Convert free space (agno, block, length) to (start sector, end sector)
-> > >  	_umount $loop_mnt
-> >         ^^^^^^^
-> > Above line causes a conflict, due to it doesn't match the current shared/298 code. It's
-> > "$UMOUNT_PROG $loop_mnt" in current fstests. So you might have another patch to do this
-> > change.
+On Fri, Mar 01, 2024 at 08:42:17AM -0500, Jeff Layton wrote:
+> On Wed, 2024-02-28 at 15:28 +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The redefinition of how NFS wants inode->i_version to be updated is
+> > incomaptible with the XFS i_version mechanism. The VFS now wants
+> > inode->i_version to only change when ctime changes (i.e. it has
+> > become a ctime change counter, not an inode change counter). XFS has
+> > fine grained timestamps, so it can just use ctime for the NFS change
+> > cookie like it still does for V4 XFS filesystems.
+> > 
 > 
-> That line actually is from a patch in Darrick's patch queue that I'm
-> working ontop of right now for some feture development.  Sorry for not
-> remembering to rebase against current for-next first.
+> Are you saying that XFS has timestamp granularity finer than
+> current_time() reports?
 
-Never mind:) As that "_umount $loop_mnt" isn't needed, I'll change the
-single line only. This patch and the other patch "[PATCH] common:
-dm-error now supports zoned devices" are in fstests' "patches-in-queue"
-branch, they'll be in next release.
+No.
 
-Thanks,
-Zorro
+> I thought XFS used the same clocksource as
+> everyone else.
 
-> 
-> 
+It does.
 
+> At LPC, you mentioned you had some patches in progress to use the unused
+> bits in the tv_nsec field as a change counter to track changes that
+> occurred within the same timer tick.
+
+Still a possibility, but I wasn't going to do anything in that
+direction because it still seemed like you were still trying to make
+progress down the path of generic timestamp granularity
+improvements.
+
+> Did that not pan out for some reason? I'd like to understand why if so.
+> It sounded like a reasonable solution to the problem.
+
+Time. And the fact that ctime granularity isn't SB_I_VERSION at all,
+so whilst we might support statx change cookies in the future, that
+will not be via a SB_I_VERSION mechanism.
+
+i.e. statx doesn't require us to support SB_I_VERSION for the change
+cookies, so until we are in a position to present a higher
+resolution change cookie via ctime we're just going to remove
+support for both.
+
+> Acked-by: Jeff Layton <jlayton@kernel.org>
+
+Thanks!
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
