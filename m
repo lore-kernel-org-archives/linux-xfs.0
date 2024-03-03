@@ -1,71 +1,70 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8238F14010
-	for <linux-xfs@vger.kernel.org>; Sat,  2 Mar 2024 20:51:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53FFFB673
+	for <linux-xfs@vger.kernel.org>; Sun,  3 Mar 2024 13:10:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709412669; cv=none; b=CrHdEOkTEUaQGaNOqbV2o6NP9U+5QqGx2s2zrNxlNBcPDO7zW9xeO1ERywTWixFtGQ8Tp9fiboj8kfc/97HAtasJu/m1I8C8TCq6SYN9iXdjgXnKx6uT1uTjVSBuCJw5PlRoJk+pcRat68VfYiCmFSnZXyEn/aPth7ExXPQdck0=
+	t=1709471458; cv=none; b=taPgvEJ0U82q+jkUSDuh3E/AoKFnS2DWnq7Jq9pXqgMB7Y4zuufJ1Pd9tF9u5ahdU9ctCAftM2nsHPc+1GS3lGa3Jr7qA3pfI8avXqOQnFr8MfhGpjy+sf/3l0Omka2xkwEMuP0F4zeLqPfdVH3uWhoT93+I8aeW00xcdR29Ino=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709412669; c=relaxed/simple;
-	bh=BVrw5LhkTYuopDPUL6smrZOomjBsxOCbR2f5PIrP4PA=;
+	s=arc-20240116; t=1709471458; c=relaxed/simple;
+	bh=aTMzKaZRxU23i409OjT26LlFjB63Hs/hnKqJHhzYDYQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JMBuuyjliG3gX7aHaboPvzcmjMmHxjfsy/i7xh0ED2quwrfDRryyPo84coELT24/2pH+k4h0rK2vb2Azvvp4JftLgTUBYXO34y1FSRMaYm5eEqEdfh5ns8Sf24chTYp6Xqu71/A3vp1IaLRC8Sx8IhXtXrJHHgKbO0Vu4z6c938=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N8CU7PSC; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=RySej3LQlUXwum7FEYcDU8jshbVvYCHyGcijrhFPfHwlQ/wLAxKNlUekLMEhg0m9rVdn5jl/yIvjmW80wyDJIqRTJnV0fxzedGQPKHj3x/eEDcEzoOdQXN4S+/Dh50Nx4EG9B622RWR5DvhsHf+Ehx4h+WanPuyXMPZ1PAoUL+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Lv2T76GV; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N8CU7PSC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Lv2T76GV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709412665;
+	s=mimecast20190719; t=1709471455;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NiyWFGpgIt47rDjjJWLUKS580snu9a6YNBj3glQK/HI=;
-	b=N8CU7PSCtgbWt1A/zuViruyQWDgIq4k3SuQhm/RCQWtUSFbmH9weO6tLKuMkzSfQpbHWp8
-	cuIMdI2pnUuEffegK0m5hOOPGnvFXPuim1FGnDAooKZcwgrOgM4+HcX+RVvHfL2BCblWHs
-	NscIMNOGz+zCqpjeV+LWMWUNZc5P/Nc=
-Received: from mail-oa1-f69.google.com (mail-oa1-f69.google.com
- [209.85.160.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=K7+CBVUOb3nwftCqW3xQMHPRcaIeoQg9DrW8Xr4mB3U=;
+	b=Lv2T76GVX6pjuT8zOz7BU2nu04pozdRKLuRo+4VEBPxblmnaXngYzs2I8wiTcQoDxRQYUp
+	2LVvozY+f5i3yAO3E5HC3tPP/pN7slYACEUDXobbvEEjT5weSz6mpC+Hk48HbalwrCn36A
+	8K+6ZVQ1yO3UxqsqfSCC0f0MoKB5/qE=
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
+ [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-267-7P0ZRgOSNyWZ9085B8cF9A-1; Sat, 02 Mar 2024 15:51:03 -0500
-X-MC-Unique: 7P0ZRgOSNyWZ9085B8cF9A-1
-Received: by mail-oa1-f69.google.com with SMTP id 586e51a60fabf-21e7751f76fso3921243fac.2
-        for <linux-xfs@vger.kernel.org>; Sat, 02 Mar 2024 12:51:03 -0800 (PST)
+ us-mta-245-ARuUYUuaOcKbH4M22zJrxA-1; Sun, 03 Mar 2024 08:10:53 -0500
+X-MC-Unique: ARuUYUuaOcKbH4M22zJrxA-1
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-29ae60ce114so2389102a91.1
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Mar 2024 05:10:53 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709412662; x=1710017462;
+        d=1e100.net; s=20230601; t=1709471452; x=1710076252;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=NiyWFGpgIt47rDjjJWLUKS580snu9a6YNBj3glQK/HI=;
-        b=IdQ3ylo1O/nLRpbaeprhKBuzeZduLpmnHmvVF4T0PHf2u1xyJNW3GTZjTA7n5Cxg+U
-         hPt0qiu8ma2uFZtc31VMwLkqoGli7GaBbr9d0D7CgU8i/hZXydBNjnk89EfGim76q6uH
-         1GZeG9lXYsqxS7iU9v+fD/irfjaRXaq/amN7x+CR26Tn2GbKJKP3nsvkjpwszg4veJlN
-         eR22ebo0wzESxkvQS+OTrXkbzflXxtummC/rqPu+JVNWqBzXMf2tAWZuk8ihbIMp0CCv
-         vGAEFqvTkRIXyidhNU1otzMtTQ5auiRKY4I8eqs1SfN51o7hiKWMnMXRrpmU95EX5uhu
-         7Shw==
-X-Gm-Message-State: AOJu0Yx0Qa/pD/r4TQUI8eiUiouTWUbM1+ntNDH+cDW923PAchZrGicS
-	wN5h4xe26qX9Ppn3DTOwI5hOKQ4391HdNdkF22NwiOWJyPnqYnbue0+I5FEHetCx8bbImLbvmwt
-	qGW1jJUZHbjFXwLC2ir46YxINCG1/9wqcnB43K4iIZbi6269aNnsKaRR/mg==
-X-Received: by 2002:a05:6870:5708:b0:21e:3c57:18d4 with SMTP id k8-20020a056870570800b0021e3c5718d4mr5680427oap.19.1709412661679;
-        Sat, 02 Mar 2024 12:51:01 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHkv2uc4EZFgiv/aeHOSxLVWWmJ3ZKm06w2+fL+h6BsAZrTzzh5lymgtHj6VndwqSkGKD7cFA==
-X-Received: by 2002:a05:6870:5708:b0:21e:3c57:18d4 with SMTP id k8-20020a056870570800b0021e3c5718d4mr5680380oap.19.1709412660431;
-        Sat, 02 Mar 2024 12:51:00 -0800 (PST)
+        bh=K7+CBVUOb3nwftCqW3xQMHPRcaIeoQg9DrW8Xr4mB3U=;
+        b=Lxwok89TJgEfGkT2ubz3DRzPPZc/UlnDVZ2MfSK/Cw52Mnt2VjsbzLGPNFoNhO8t/a
+         AkRSSNKwDiMapnLyW/P0kxwa3HH11U6GGKgOeLHtvPxVlqW+w2x5ctDz7khvY+Ppuuwg
+         sS19h1mIrEax7WG3ag1pw2eFu1ANUzwFgntUQGDwnpmYsCHNubw5NK3V6cpgxlIDiymS
+         JX4AwQRz7vofQFqvj2YQElG1eGklULCGpfR4IPL/0qtxvFSaNJfsiiWaGu98skR9+imv
+         egLSXmdsodAZ8CdJhl590Nm9eY1HYybxRSP/FT5UVwF91Jl/Lbf9OUx5Ykd+gUlvZJlV
+         f6BQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWtgXI7mGSgutOFQcFOBf6pAiVMWYx01JQBv8Wa+MNqyYT3gIMlS91aZdBVVblGcSKMxqy/nu4uz3hoeHpgK6n3c37wLDdpLgIa
+X-Gm-Message-State: AOJu0Yw2Ay70wp1+62L3OhHEpTU5hsDy1HTTQEaiSvK8rTi2gd1z19pT
+	TXiLb27TfxhiV7iV+tm00GCftOiMgVhvfTdhdH4H6w3gmdq+25YlGN/GH5oxVnpLpOeH3aY7e+v
+	jH1zMdXNONBtEA9n/mro1JSiREz7++iAMs4MYf/7FJcnQZy1OgoPh+qQoH6f41vVA7Y2F
+X-Received: by 2002:a17:903:288:b0:1dc:df18:c5c1 with SMTP id j8-20020a170903028800b001dcdf18c5c1mr6473853plr.33.1709471452158;
+        Sun, 03 Mar 2024 05:10:52 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH0JtfiD4ETPl4rGH/BswkXyPj0FZ70SYDWMJOlWEhTAhFy3wQuGYIewUydxmrq5H/Mq39Cig==
+X-Received: by 2002:a17:903:288:b0:1dc:df18:c5c1 with SMTP id j8-20020a170903028800b001dcdf18c5c1mr6473830plr.33.1709471451688;
+        Sun, 03 Mar 2024 05:10:51 -0800 (PST)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id w62-20020a636241000000b005e485fbd455sm4986934pgb.45.2024.03.02.12.50.58
+        by smtp.gmail.com with ESMTPSA id 12-20020a170902c20c00b001dbab519ce7sm6584824pll.212.2024.03.03.05.10.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Mar 2024 12:50:59 -0800 (PST)
-Date: Sun, 3 Mar 2024 04:50:56 +0800
+        Sun, 03 Mar 2024 05:10:51 -0800 (PST)
+Date: Sun, 3 Mar 2024 21:10:48 +0800
 From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v1.1 8/8] xfs: test for premature ENOSPC with large cow
- delalloc extents
-Message-ID: <20240302205056.saexqlexlmwpfy4e@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
- <170899915333.896550.18395785595853879309.stgit@frogsfrogsfrogs>
- <20240301175202.GK1927156@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] shared/298: run xfs_db against the loop device instead
+ of the image file
+Message-ID: <20240303131048.kx4a4b2463deud7t@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240301152820.1149483-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,180 +73,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240301175202.GK1927156@frogsfrogsfrogs>
+In-Reply-To: <20240301152820.1149483-1-hch@lst.de>
 
-On Fri, Mar 01, 2024 at 09:52:02AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Mar 01, 2024 at 08:28:20AM -0700, Christoph Hellwig wrote:
+> xfs_db fails to properly detect the device sector size and thus segfaults
+> when run again an image file with 4k sector size.  While that's something
+> we should fix in xfs_db it will require a fair amount of refactoring of
+> the libxfs init code.  For now just change shared/298 to run xfs_db
+> against the loop device created on the image file that is used for I/O,
+> which feels like the right thing to do anyway to avoid cache coherency
+> issues.
 > 
-> On a higly fragmented filesystem a Direct IO write can fail with -ENOSPC error
-> even though the filesystem has sufficient number of free blocks.
-> 
-> This occurs if the file offset range on which the write operation is being
-> performed has a delalloc extent in the cow fork and this delalloc extent
-> begins much before the Direct IO range.
-> 
-> In such a scenario, xfs_reflink_allocate_cow() invokes xfs_bmapi_write() to
-> allocate the blocks mapped by the delalloc extent. The extent thus allocated
-> may not cover the beginning of file offset range on which the Direct IO write
-> was issued. Hence xfs_reflink_allocate_cow() ends up returning -ENOSPC.
-> 
-> This test addresses this issue.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> v1.1: address some missing bits and remove extraneous code
-> ---
->  common/rc          |   14 ++++++++
->  tests/xfs/1923     |   86 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1923.out |    8 +++++
->  3 files changed, 108 insertions(+)
->  create mode 100755 tests/xfs/1923
->  create mode 100644 tests/xfs/1923.out
+>  tests/shared/298 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/common/rc b/common/rc
-> index 30c44dddd9..d3a2a0718b 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1873,6 +1873,20 @@ _require_scratch_delalloc()
->  	_scratch_unmount
->  }
->  
-> +# Require test fs supports delay allocation.
-> +_require_test_delalloc()
-> +{
-> +	_require_command "$FILEFRAG_PROG" filefrag
-> +
-> +	rm -f $TEST_DIR/testy
-> +	$XFS_IO_PROG -f -c 'pwrite 0 64k' $TEST_DIR/testy &> /dev/null
-> +	$FILEFRAG_PROG -v $TEST_DIR/testy 2>&1 | grep -q delalloc
-> +	res=$?
-> +	rm -f $TEST_DIR/testy
-> +	test $res -eq 0 || \
-> +		_notrun "test requires delayed allocation buffered writes"
-> +}
-> +
->  # this test needs a test partition - check we're ok & mount it
->  #
->  _require_test()
-> diff --git a/tests/xfs/1923 b/tests/xfs/1923
-> new file mode 100755
-> index 0000000000..7068fda64c
-> --- /dev/null
-> +++ b/tests/xfs/1923
-> @@ -0,0 +1,86 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 1923
-> +#
-> +# This is a regression test for "xfs: Fix false ENOSPC when performing direct
-> +# write on a delalloc extent in cow fork".  If there is a lot of free space but
-> +# it is very fragmented, it's possible that a very large delalloc reservation
-> +# could be created in the CoW fork by a buffered write.  If a directio write
-> +# tries to convert the delalloc reservation to a real extent, it's possible
-> +# that the allocation will succeed but fail to convert even the first block of
-> +# the directio write range.  In this case, XFS will return ENOSPC even though
-> +# all it needed to do was to keep converting until the allocator returns ENOSPC
-> +# or the first block of the direct write got some space.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick clone
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $file1 $file2 $fragmentedfile
-> +}
-> +
-> +# Import common functions.
-> +. ./common/reflink
-> +. ./common/inject
-> +
-> +# real QA test starts here
-> +_fixed_by_kernel_commit d62113303d69 \
-> +	"xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_require_test_program "punch-alternating"
-> +_require_test_reflink
-> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-> +_require_test_delalloc
-> +
-> +file1=$TEST_DIR/file1.$seq
-> +file2=$TEST_DIR/file2.$seq
-> +fragmentedfile=$TEST_DIR/fragmentedfile.$seq
-> +
-> +rm -f $file1 $file2 $fragmentedfile
-> +
-> +# COW operates on pages, so we must not perform operations in units smaller
-> +# than a page.
-> +blksz=$(_get_file_block_size $TEST_DIR)
-> +pagesz=$(_get_page_size)
-> +if (( $blksz < $pagesz )); then
-> +	blksz=$pagesz
-> +fi
-> +
-> +echo "Create source file"
-> +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 256))" $file1 >> $seqres.full
-> +
-> +sync
-> +
-> +echo "Create Reflinked file"
-> +_cp_reflink $file1 $file2 >> $seqres.full
-> +
-> +echo "Set cowextsize"
-> +$XFS_IO_PROG -c "cowextsize $((blksz * 128))" -c stat $file1 >> $seqres.full
-> +
-> +echo "Fragment FS"
-> +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 512))" $fragmentedfile >> $seqres.full
-> +sync
-> +$here/src/punch-alternating $fragmentedfile
-> +
-> +echo "Allocate block sized extent from now onwards"
-> +_test_inject_error bmap_alloc_minlen_extent 1
-> +
-> +echo "Create big delalloc extent in CoW fork"
-> +$XFS_IO_PROG -c "pwrite 0 $blksz" $file1 >> $seqres.full
-> +
-> +sync
-> +
-> +$XFS_IO_PROG -c 'bmap -elpv' -c 'bmap -celpv' $file1 >> $seqres.full
+> diff --git a/tests/shared/298 b/tests/shared/298
+> index 071c03dee..f657578c7 100755
+> --- a/tests/shared/298
+> +++ b/tests/shared/298
+> @@ -69,7 +69,7 @@ get_free_sectors()
+>  	agsize=`$XFS_INFO_PROG $loop_mnt | $SED_PROG -n 's/.*agsize=\(.*\) blks.*/\1/p'`
+>  	# Convert free space (agno, block, length) to (start sector, end sector)
+>  	_umount $loop_mnt
+        ^^^^^^^
+Above line causes a conflict, due to it doesn't match the current shared/298 code. It's
+"$UMOUNT_PROG $loop_mnt" in current fstests. So you might have another patch to do this
+change.
 
-The "-c" option might get:
+> -	$XFS_DB_PROG -r -c "freesp -d" $img_file | $SED_PROG '/^.*from/,$d'| \
+> +	$XFS_DB_PROG -r -c "freesp -d" $loop_dev | $SED_PROG '/^.*from/,$d'| \
 
-  $ xfs_io -c "bmap -celpv" testfile 
-  xfs_io: xfsctl(XFS_IOC_GETBMAPX) iflags=0x28 ["testfile"]: Invalid argument
-
-It will break the golden image, can we redirect stderr to $seqres.full,
-as it's just for debug? If you agree, I can help to change that by adding
-"2>&1" at the end. Or you hope to deal with it by other method?
+As this patch focus on this change, so I'll only make this change. But if above
+"_umount $loop_mnt" is needed too, please tell me.
 
 Thanks,
 Zorro
 
-
-> +
-> +echo "Direct I/O write at offset 3FSB"
-> +$XFS_IO_PROG -d -c "pwrite $((blksz * 3)) $((blksz * 2))" $file1 >> $seqres.full
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1923.out b/tests/xfs/1923.out
-> new file mode 100644
-> index 0000000000..a0553cf3ee
-> --- /dev/null
-> +++ b/tests/xfs/1923.out
-> @@ -0,0 +1,8 @@
-> +QA output created by 1923
-> +Create source file
-> +Create Reflinked file
-> +Set cowextsize
-> +Fragment FS
-> +Allocate block sized extent from now onwards
-> +Create big delalloc extent in CoW fork
-> +Direct I/O write at offset 3FSB
+>  		 $AWK_PROG -v spb=$sectors_per_block -v agsize=$agsize \
+>  		'{ print spb * ($1 * agsize + $2), spb * ($1 * agsize + $2 + $3) - 1 }'
+>  	;;
+> -- 
+> 2.39.2
+> 
 > 
 
