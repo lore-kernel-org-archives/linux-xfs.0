@@ -1,63 +1,63 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40AA07B3EB
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Mar 2024 19:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCE657BAE3
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Mar 2024 19:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709579547; cv=none; b=bo9O34fc7KI3WElxrxNsYNhMILGtoeApuyjfIu2phgDXXTOb2+/scLQWjtxaP73zeJ/WMworwNUbLtVcdOZjA5awqlMe8KqLYTILQgBBtLz1TSB13Z+8Hq1AtMOc/ocPv/pLu01zBRzd67CSV1vYWrtLpJhJWXMhAWTC8M/Hedk=
+	t=1709579548; cv=none; b=HEQPMdgkzJ3lweYPTGvzsUXaxv49958q4WGqC0xAkaFHgS5fRUEdbr9iO10jgj0zVMTYOEhUMiWeymoXlziPwMB8UDsXFEnsU2C6J5iOUWNZHI1lTP4clBIgWLngQVzsHc6jDObs1/7JtnQtQVM5KleKz+Vei8uiKaHWuOZUynM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709579547; c=relaxed/simple;
-	bh=Vt7WvP2XhADPbA/qo1mYoxhY+7xb8p2lGDruDcXdPMo=;
+	s=arc-20240116; t=1709579548; c=relaxed/simple;
+	bh=9uF/gGYjOQ5Ye08pQkNJ3SDKEd0FLQXNLEu3pluKIXQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BNh4VKHwAcY1qtdvr/r+qs6IFQdQi2hhMyeKS4c5j72lbC8PI6VL0SnVlJ5D5te1XK9sn8DhCoucVdgw3e8p6CzO+vaHYkyjA3ca0n6kL4x0B7zvqe0qAm0hSsENk8cEtEpMJkQ0PFrXDDjbSdJHQlCO2TAFZm9LSLGpNNlgrQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Sf5scRNu; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=pbRDJzC4R19NjD/PQJb5BO7XO8mbn4t0yoc7emhgRQZojZIis5rDhSwRRyfsDwxMvqMUiPQNLFV8fVqUisdP7IFDocVN6xR6PoJ3B72nNsIQjhOKjvuARsXPpI2D34ItxqsrVrKhpSgVaCVk/eTCsXBrGZ/v4ylDZSAvpZy5TZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iAGYiICd; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Sf5scRNu"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iAGYiICd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709579543;
+	s=mimecast20190719; t=1709579545;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=2/shyD/zHMRWtd9bWbKxXT0byjIZQKYEyRELvQZ4LTg=;
-	b=Sf5scRNuWiA6yiOrDfY5VVTOllNe9WI8PcJq5afUyWM+kJWcQBrYv6+uKoPlgH3fs824zG
-	nj3m3MJrqvEnqHkyTcF/38Oir0INSuhzqAQwVH6FqVMwK4q8mO9xaygKcw8F1T8knYWrdd
-	rFV2kIviwA62IoqQaYfUs/hmftnlLIA=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=xmDanQiWXuoYzgvi/CRZldtSQVaE9CKTrb+6HTaNdLk=;
+	b=iAGYiICdYQJpWWCcLXIgS1kb4zzAytYqVGvcpuspjS7GKuhjHXzcaok11SM+5hA8W7J/mp
+	WdB26DPUG2jC7NcG6HaiHbCSWOqls64oQiVZj5Q3QIKXAPmjZj3omwDDodbtWDY78djbaM
+	8W3wGxOoXNyfke/+8gezqoHL/2ikdZ4=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-108-oE_kvZ4RMzeQQDJkLkVbtQ-1; Mon, 04 Mar 2024 14:12:21 -0500
-X-MC-Unique: oE_kvZ4RMzeQQDJkLkVbtQ-1
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a35ef7abe08so351804366b.2
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 11:12:21 -0800 (PST)
+ us-mta-315-ZCgRGJ9pOxes0KRBzcUTKA-1; Mon, 04 Mar 2024 14:12:23 -0500
+X-MC-Unique: ZCgRGJ9pOxes0KRBzcUTKA-1
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a453443c9acso84260566b.3
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 11:12:23 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709579540; x=1710184340;
+        d=1e100.net; s=20230601; t=1709579542; x=1710184342;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2/shyD/zHMRWtd9bWbKxXT0byjIZQKYEyRELvQZ4LTg=;
-        b=a88OK6q1aRHV0lgjpLx7eB4mVSLnN0/Uh/w0g31itsHZHLKo9TEa15LtJT06lnikhe
-         piSbhgSkm+9CKaICT51vdSt9Epvov0LvmDQ8/o5lZXSzBZeE3eiZJscZKvWbvo0uMA1u
-         mFOXVzswQLkVxO9/n2gZwLjdZ9uat7lETxsC3pmyaYNCUKxcJzSKtzdN0DSeKc1H4LNE
-         jtLSGTTyumbLRNSChj7kxIVu++7iBa+EPlDYMwbU4Nkofzw26rLsKQy7X0xYu4cJ86vK
-         +ghQ0KMm2cdFngXEOutGEK58LEcpf1PsaQYB38exmuP2BBxK3mba8WT0NFH3e6sRJryF
-         CLRQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXP/8gRHYUR1m2ZEmY8WySoauZ9MOIgwUrOXlwkZNUuGqW+EefoS3GDLQ9vqnLcZ3SNJbaouZ7tN6OxQhaeu2Yi71wZJLsconCy
-X-Gm-Message-State: AOJu0YxB4B1fmvhMbk8ulFt2wrd8DjnaNjowSI8IWMO+QD0rD23MTUo9
-	/7NZLevOKGkmDB/u+Wnya/EGsn1IAF9bXoO34KZ/955W6Sq9suJWe1j7qk7108WyDyUwMNFQjuD
-	KgCHlQt5ifSvRykzsRpL5ZpTCqHj44SFi2Q2EaDN7n8hxK+hGg0kHVYSH
-X-Received: by 2002:a17:907:20b9:b0:a3d:4ed8:f5bf with SMTP id pw25-20020a17090720b900b00a3d4ed8f5bfmr5798146ejb.2.1709579540349;
-        Mon, 04 Mar 2024 11:12:20 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEZJKgr6p4QAsWxEf89MCCY1JTA2uvYFezCjzZbDgLzFJTT4VF+2CzblpR+va0nmjLJBQhYdw==
-X-Received: by 2002:a17:907:20b9:b0:a3d:4ed8:f5bf with SMTP id pw25-20020a17090720b900b00a3d4ed8f5bfmr5798135ejb.2.1709579540109;
-        Mon, 04 Mar 2024 11:12:20 -0800 (PST)
+        bh=xmDanQiWXuoYzgvi/CRZldtSQVaE9CKTrb+6HTaNdLk=;
+        b=v/5UebZfsfKeBFPWnWA9uv/WbynfgIhs56Nx6ifVXZFR1DLrzGqqzii48wynnw2n7I
+         xDAotZLpiIp8Pgo1R/E/KUwcWb3/auUmfPTIfSHmyQuO+pJlQWvxcNijJgaOwDixY0I6
+         WVYgQUOfRT2LHbg7znEQSlfY9VXzEC2Z81PzchkUFV+ZcKQQZ0hks09oQtAr5R4pN5l/
+         ojEAdne19gSxFfSXLjJgcowdz9vECsFjNdG5AwrGXkYPWPoYgEzd4KMiBGTKIUWqIUjW
+         xopTfujLE7hHEE89Ypmg9qrJXFZyWBadPbqF4s0fqjvORKwzlMOPIJgs6q2YP9QyNy2J
+         JDPg==
+X-Forwarded-Encrypted: i=1; AJvYcCUHbEjhx1khAtlD9XFSemd2N+JS0WKkEdzpycwTn1dRlitRTLgdWsTWpX2/VsrDDmJM/iixrMldpb0swJFjr9ZsvzoeBIfAieoP
+X-Gm-Message-State: AOJu0YyBguW8fwd48Hhem1+uD8qXAtokaTV3r8YAYHoLET5tdNtm+Cr5
+	gLgfzvhCoCfnxoAB35rWCL+5mI56qxxYZ1hWjMb9kYNogNTm7wG9d/jCs1rjD2Pss5Zal9r4YV0
+	7ssyAuK4JLIaIUnKU2I+C4bi/glPJaFuXteEk5F2mL6RX1oSE49Xp4pmJ
+X-Received: by 2002:a17:906:594d:b0:a43:67c9:8c99 with SMTP id g13-20020a170906594d00b00a4367c98c99mr6545384ejr.40.1709579542538;
+        Mon, 04 Mar 2024 11:12:22 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IE3TyDPXFshe/zEpv5TCj6l9Hs6J3ED58Rj/plqx/9h46KPxC8C0wHuAc9JrQgCu1bY774XWQ==
+X-Received: by 2002:a17:906:594d:b0:a43:67c9:8c99 with SMTP id g13-20020a170906594d00b00a4367c98c99mr6545364ejr.40.1709579541932;
+        Mon, 04 Mar 2024 11:12:21 -0800 (PST)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id a11-20020a1709064a4b00b00a44a04aa3cfsm3783319ejv.225.2024.03.04.11.12.19
+        by smtp.gmail.com with ESMTPSA id a11-20020a1709064a4b00b00a44a04aa3cfsm3783319ejv.225.2024.03.04.11.12.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Mar 2024 11:12:19 -0800 (PST)
+        Mon, 04 Mar 2024 11:12:21 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: fsverity@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
@@ -65,11 +65,10 @@ To: fsverity@lists.linux.dev,
 	chandan.babu@oracle.com,
 	djwong@kernel.org,
 	ebiggers@kernel.org
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 10/24] iomap: integrate fs-verity verification into iomap's read path
-Date: Mon,  4 Mar 2024 20:10:33 +0100
-Message-ID: <20240304191046.157464-12-aalbersh@redhat.com>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v5 12/24] xfs: add XFS_DA_OP_BUFFER to make xfs_attr_get() return buffer
+Date: Mon,  4 Mar 2024 20:10:35 +0100
+Message-ID: <20240304191046.157464-14-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240304191046.157464-2-aalbersh@redhat.com>
 References: <20240304191046.157464-2-aalbersh@redhat.com>
@@ -81,175 +80,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This patch adds fs-verity verification into iomap's read path. After
-BIO's io operation is complete the data are verified against
-fs-verity's Merkle tree. Verification work is done in a separate
-workqueue.
+With XBF_VERITY_SEEN flag on xfs_buf XFS can track which buffers
+contain verified Merkle tree blocks. However, we also need to expose
+the buffer to pass a reference of underlying page to fs-verity.
 
-The read path ioend iomap_read_ioend are stored side by side with
-BIOs if FS_VERITY is enabled.
+This patch adds XFS_DA_OP_BUFFER to tell xfs_attr_get() to
+xfs_buf_hold() underlying buffer and return it as xfs_da_args->bp.
+The caller must then xfs_buf_rele() the buffer. Therefore, XFS will
+hold a reference to xfs_buf till fs-verity is verifying xfs_buf's
+content.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 92 +++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 83 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c        |  5 ++++-
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  7 +++++++
+ fs/xfs/libxfs/xfs_attr_remote.c | 13 +++++++++++--
+ fs/xfs/libxfs/xfs_da_btree.h    |  5 ++++-
+ 4 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 093c4515b22a..e27a8af4b351 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -6,6 +6,7 @@
- #include <linux/module.h>
- #include <linux/compiler.h>
- #include <linux/fs.h>
-+#include <linux/fsverity.h>
- #include <linux/iomap.h>
- #include <linux/pagemap.h>
- #include <linux/uio.h>
-@@ -330,6 +331,56 @@ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
- 		pos >= i_size_read(iter->inode);
- }
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index f0b625d45aa4..ca515e8bd2ed 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -252,6 +252,8 @@ xfs_attr_get_ilocked(
+  * If the attribute is found, but exceeds the size limit set by the caller in
+  * args->valuelen, return -ERANGE with the size of the attribute that was found
+  * in args->valuelen.
++ *
++ * Using XFS_DA_OP_BUFFER the caller have to release the buffer args->bp.
+  */
+ int
+ xfs_attr_get(
+@@ -270,7 +272,8 @@ xfs_attr_get(
+ 	args->hashval = xfs_da_hashname(args->name, args->namelen);
  
-+#ifdef CONFIG_FS_VERITY
-+struct iomap_fsverity_bio {
-+	struct work_struct	work;
-+	struct bio		bio;
-+};
-+static struct bio_set iomap_fsverity_bioset;
-+
-+static void
-+iomap_read_fsverify_end_io_work(struct work_struct *work)
-+{
-+	struct iomap_fsverity_bio *fbio =
-+		container_of(work, struct iomap_fsverity_bio, work);
-+
-+	fsverity_verify_bio(&fbio->bio);
-+	iomap_read_end_io(&fbio->bio);
-+}
-+
-+static void
-+iomap_read_fsverity_end_io(struct bio *bio)
-+{
-+	struct iomap_fsverity_bio *fbio =
-+		container_of(bio, struct iomap_fsverity_bio, bio);
-+
-+	INIT_WORK(&fbio->work, iomap_read_fsverify_end_io_work);
-+	queue_work(bio->bi_private, &fbio->work);
-+}
-+#endif /* CONFIG_FS_VERITY */
-+
-+static struct bio *iomap_read_bio_alloc(struct inode *inode,
-+		struct block_device *bdev, int nr_vecs, gfp_t gfp)
-+{
-+	struct bio *bio;
-+
-+#ifdef CONFIG_FS_VERITY
-+	if (fsverity_active(inode)) {
-+		bio = bio_alloc_bioset(bdev, nr_vecs, REQ_OP_READ, gfp,
-+					&iomap_fsverity_bioset);
-+		if (bio) {
-+			bio->bi_private = inode->i_sb->s_read_done_wq;
-+			bio->bi_end_io = iomap_read_fsverity_end_io;
-+		}
-+		return bio;
-+	}
-+#endif
-+	bio = bio_alloc(bdev, nr_vecs, REQ_OP_READ, gfp);
-+	if (bio)
-+		bio->bi_end_io = iomap_read_end_io;
-+	return bio;
-+}
-+
- static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
- 		struct iomap_readpage_ctx *ctx, loff_t offset)
- {
-@@ -353,6 +404,12 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+ 	/* Entirely possible to look up a name which doesn't exist */
+-	args->op_flags = XFS_DA_OP_OKNOENT;
++	args->op_flags = XFS_DA_OP_OKNOENT |
++					(args->op_flags & XFS_DA_OP_BUFFER);
  
- 	if (iomap_block_needs_zeroing(iter, pos)) {
- 		folio_zero_range(folio, poff, plen);
-+		if (fsverity_active(iter->inode) &&
-+		    !fsverity_verify_blocks(folio, plen, poff)) {
-+			folio_set_error(folio);
-+			goto done;
+ 	lock_mode = xfs_ilock_attr_map_shared(args->dp);
+ 	error = xfs_attr_get_ilocked(args);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index ac904cc1a97b..b51f439e4aed 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -2453,6 +2453,13 @@ xfs_attr3_leaf_getvalue(
+ 		name_loc = xfs_attr3_leaf_name_local(leaf, args->index);
+ 		ASSERT(name_loc->namelen == args->namelen);
+ 		ASSERT(memcmp(args->name, name_loc->nameval, args->namelen) == 0);
++
++		/* must be released by the caller */
++		if (args->op_flags & XFS_DA_OP_BUFFER) {
++			xfs_buf_hold(bp);
++			args->bp = bp;
 +		}
 +
- 		iomap_set_range_uptodate(folio, poff, plen);
- 		goto done;
- 	}
-@@ -370,28 +427,29 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
- 	    !bio_add_folio(ctx->bio, folio, plen, poff)) {
- 		gfp_t gfp = mapping_gfp_constraint(folio->mapping, GFP_KERNEL);
- 		gfp_t orig_gfp = gfp;
--		unsigned int nr_vecs = DIV_ROUND_UP(length, PAGE_SIZE);
+ 		return xfs_attr_copy_value(args,
+ 					&name_loc->nameval[args->namelen],
+ 					be16_to_cpu(name_loc->valuelen));
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index ff0412828772..4b44866479dc 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -429,9 +429,18 @@ xfs_attr_rmtval_get(
+ 			error = xfs_attr_rmtval_copyout(mp, bp, args->dp,
+ 							&offset, &valuelen,
+ 							&dst);
+-			xfs_buf_relse(bp);
+-			if (error)
++			xfs_buf_unlock(bp);
++			/* must be released by the caller */
++			if (args->op_flags & XFS_DA_OP_BUFFER)
++				args->bp = bp;
++			else
++				xfs_buf_rele(bp);
++
++			if (error) {
++				if (args->op_flags & XFS_DA_OP_BUFFER)
++					xfs_buf_rele(args->bp);
+ 				return error;
++			}
  
- 		if (ctx->bio)
- 			submit_bio(ctx->bio);
+ 			/* roll attribute extent map forwards */
+ 			lblkno += map[i].br_blockcount;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 706baf36e175..1534f4102a47 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -59,6 +59,7 @@ typedef struct xfs_da_args {
+ 	uint8_t		filetype;	/* filetype of inode for directories */
+ 	void		*value;		/* set of bytes (maybe contain NULLs) */
+ 	int		valuelen;	/* length of value */
++	struct xfs_buf	*bp;		/* OUT: xfs_buf which contains the attr */
+ 	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
+ 	unsigned int	attr_flags;	/* XATTR_{CREATE,REPLACE} */
+ 	xfs_dahash_t	hashval;	/* hash value of name */
+@@ -93,6 +94,7 @@ typedef struct xfs_da_args {
+ #define XFS_DA_OP_REMOVE	(1u << 6) /* this is a remove operation */
+ #define XFS_DA_OP_RECOVERY	(1u << 7) /* Log recovery operation */
+ #define XFS_DA_OP_LOGGED	(1u << 8) /* Use intent items to track op */
++#define XFS_DA_OP_BUFFER	(1u << 9) /* Return underlying buffer */
  
- 		if (ctx->rac) /* same as readahead_gfp_mask */
- 			gfp |= __GFP_NORETRY | __GFP_NOWARN;
--		ctx->bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs),
--				     REQ_OP_READ, gfp);
-+
-+		ctx->bio = iomap_read_bio_alloc(iter->inode, iomap->bdev,
-+				bio_max_segs(DIV_ROUND_UP(length, PAGE_SIZE)),
-+				gfp);
-+
- 		/*
- 		 * If the bio_alloc fails, try it again for a single page to
- 		 * avoid having to deal with partial page reads.  This emulates
- 		 * what do_mpage_read_folio does.
- 		 */
- 		if (!ctx->bio) {
--			ctx->bio = bio_alloc(iomap->bdev, 1, REQ_OP_READ,
--					     orig_gfp);
-+			ctx->bio = iomap_read_bio_alloc(iter->inode,
-+					iomap->bdev, 1, orig_gfp);
- 		}
- 		if (ctx->rac)
- 			ctx->bio->bi_opf |= REQ_RAHEAD;
- 		ctx->bio->bi_iter.bi_sector = sector;
--		ctx->bio->bi_end_io = iomap_read_end_io;
- 		bio_add_folio_nofail(ctx->bio, folio, plen, poff);
- 	}
+ #define XFS_DA_OP_FLAGS \
+ 	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+@@ -103,7 +105,8 @@ typedef struct xfs_da_args {
+ 	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
+ 	{ XFS_DA_OP_REMOVE,	"REMOVE" }, \
+ 	{ XFS_DA_OP_RECOVERY,	"RECOVERY" }, \
+-	{ XFS_DA_OP_LOGGED,	"LOGGED" }
++	{ XFS_DA_OP_LOGGED,	"LOGGED" }, \
++	{ XFS_DA_OP_BUFFER,	"BUFFER" }
  
-@@ -471,6 +529,7 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
-  * iomap_readahead - Attempt to read pages from a file.
-  * @rac: Describes the pages to be read.
-  * @ops: The operations vector for the filesystem.
-+ * @wq: Workqueue for post-I/O processing (only need for fsverity)
-  *
-  * This function is for filesystems to call to implement their readahead
-  * address_space operation.
-@@ -1996,10 +2055,25 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
- }
- EXPORT_SYMBOL_GPL(iomap_writepages);
- 
-+#define IOMAP_POOL_SIZE		(4 * (PAGE_SIZE / SECTOR_SIZE))
-+
- static int __init iomap_init(void)
- {
--	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
--			   offsetof(struct iomap_ioend, io_inline_bio),
--			   BIOSET_NEED_BVECS);
-+	int error;
-+
-+	error = bioset_init(&iomap_ioend_bioset, IOMAP_POOL_SIZE,
-+			    offsetof(struct iomap_ioend, io_inline_bio),
-+			    BIOSET_NEED_BVECS);
-+#ifdef CONFIG_FS_VERITY
-+	if (error)
-+		return error;
-+
-+	error = bioset_init(&iomap_fsverity_bioset, IOMAP_POOL_SIZE,
-+			    offsetof(struct iomap_fsverity_bio, bio),
-+			    BIOSET_NEED_BVECS);
-+	if (error)
-+		bioset_exit(&iomap_ioend_bioset);
-+#endif
-+	return error;
- }
- fs_initcall(iomap_init);
+ /*
+  * Storage for holding state during Btree searches and split/join ops.
 -- 
 2.42.0
 
