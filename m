@@ -1,68 +1,75 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCDCF79DCA
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Mar 2024 22:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0753F7BB12
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Mar 2024 22:15:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709589756; cv=none; b=JTPcvHgtzjgeE92YogbmWbnDmPBMud2vAMgla5iFBk71fHmEKXc6yWfcXcCu7AT1LUlufnMU4LfncZp5rNBTfJn6vcIZDpw2SRkZ+emjBK4uepw3oQoR35s7olGuSmifLbfr2nKcp7h8zLLN9tkKjFgAQPOzbozCPVZdERTSaLQ=
+	t=1709590541; cv=none; b=bfJnzK3k3l0pcaQ8X4UlOUqp9uQMh2OnrANsMzclchtqI48l+qfoCDdgER05mtD4LfrCKeu3oonMgn8Bqi2DVRa2Apn+JP6OVuU7Tq550zK03tuLOHv5R0UjdbcMkGaS5MrVGgv3eocmp9rbA3F1ifZG9lCfkHVOHalfSBdpMrQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709589756; c=relaxed/simple;
-	bh=PxgCv1xzZmhxk+5KTIdHqPhvX38K1jPFDD1q6fBjSeY=;
+	s=arc-20240116; t=1709590541; c=relaxed/simple;
+	bh=rSGFobPyTkrtYOKrWnakciYsu5Thh2UHXGCu4vHBxx4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hly+TI/ptl+ggrfEjLydQp8eP73o1RGzNN485o0iBh3Gs5MCjeceG321fsu0Kf6ufC+744E5f4VmROBGwwe+SOh5oSFftMjS0vh2b5QMS8VmeKuwq2rxXM3o44dcSqQjEtcA7Gz79ZdBjmIsOgxYnhxqViE0lG38sC6OmaPzs0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Do90Iayl; arc=none smtp.client-ip=209.85.215.174
+	 Content-Type:Content-Disposition:In-Reply-To; b=kSQLuyacsAXzjl0BB27HX75jHpbGZ3wbNXUrZTYu0qJA48RcwEbeqEwvxw2pg4M7GuG1sE5cLfHr9Pa1ymRVBj2CfgKY/Cpe2HM9WhzCXoexmusZcpLsZZLYPVyvs9KHZhuo9OqhCmj7uQj+PQ4rvq5icjaIksenLEqbN38cWho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=nKE7NNwt; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Do90Iayl"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-5d8b276979aso3659868a12.2
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 14:02:33 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="nKE7NNwt"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1dc0e5b223eso43082135ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 14:15:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709589753; x=1710194553; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709590539; x=1710195339; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UPT7qKYJtYEG14x2vaIsLF4YqSY7OCBjPVkjFmTBKcA=;
-        b=Do90Iayl87GoPEWahOTVj8Y1dE3h4eIpO+WzO9RuCdYlzzhrWOtrIzvsr00lXqHKdf
-         cnd6UovWA4OKcVIRijG8s00r1uyH8IsCZ9O6OEOqxAiQjHY36FOu4BCym3d3jrTTRFNP
-         xjqYBzoKacEr1MgGVI+AoqUhWUKA8vmWLkOAUqbQ52Uw4t8ZL8JcjC52wfyCzDA2l6Yq
-         1M1atTJyEnU/bMUZ6qPLJpwNT08lzmVmZCMLcPVVw+L8QqVaLkvDCQQVzmGsGN1lyAAe
-         FEHH1nhjruZBYF0jdMmIVQir++ZWCtNUp7bXrSqvkTDRrIluLdp6z6B7seYICeFKjXkx
-         Wf2Q==
+        bh=CARpH995S3Hk2OhajVVG/E9yFa4bHHeBmVGYbe1yvEM=;
+        b=nKE7NNwtDebQIvzwuNHl5MXrTWR1UYwV5rImMRz1fx4XP2MDAGkd2QtFgsPkmI1Du+
+         wXCtUsUKqskJFBoNfABQdyfii/cyc0e2lhvzqDeACTDNcUxB4rFIPDxRkHxlw4q/LBzE
+         KEHIEjVZskCndd0JygzSttr8UDvQWtOlI662N2fVlVAxc1y7ZQf6H9WH4JHpXNQIVscU
+         gBnbaIDCnr9enEdVG2l2qmplVGSy8wYbLigXTRwDwpA66xljxLSNE4ilcNSzcLbqqWzY
+         6nB1h4GnI52/dzRdr88JxXAZtmYHZshYZuxeEhN6ppCduLyn0g1ncwOd/iZ6gF1IJYnh
+         CPEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709589753; x=1710194553;
+        d=1e100.net; s=20230601; t=1709590539; x=1710195339;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=UPT7qKYJtYEG14x2vaIsLF4YqSY7OCBjPVkjFmTBKcA=;
-        b=pyjWrkMtAhq0bpOHrfAkqnDZ6pmQNCUstUnLYepxt5r+mhgnf87f857OuGgYFxYtIB
-         qwQU1VeS+0z1b9Dj5GWnFLak5cHqGv4eDMWd9dsB8VRboYZC5BZfZXgRG5/BYXvDnnFr
-         dbo0eCI8gIFkVOROxAFLKLSndmOBgkYfuLXS3SDIldet8GiXLN7OPeGHRGsokfmV22uS
-         M1oN8n01xfvYmVGvMe76PTAEo7EnzOzo8PQqEiJxZrQnXDMUG8tVMf4Edvjs/qPWGomO
-         6VaiZ2W2LzpmQEVQ4QV7SdS769ENh7uP2+zisVgypR8p9B9pRADKtamfsvk8+qC5KeR4
-         X6IQ==
-X-Gm-Message-State: AOJu0YyLC/MgwTCARh4bAkvZWpdaZkDd5h3spIx2ZG/BOpwBeOHPjPYQ
-	PyIeOWQBvJt4I37J6xGaT9wysiNbv2Y6KSGyOKaKUt0q9lhv+P6ZkPDHPdGBDWo=
-X-Google-Smtp-Source: AGHT+IGDKaW+p6accsX8sBx9qWgSKW+7eoGdeRhzoClzdXXlDHiVc8S03Pq0PKUsaAYZVYzRmItX2Q==
-X-Received: by 2002:a17:90a:ca8e:b0:29b:4dfc:7107 with SMTP id y14-20020a17090aca8e00b0029b4dfc7107mr3360884pjt.38.1709589752932;
-        Mon, 04 Mar 2024 14:02:32 -0800 (PST)
+        bh=CARpH995S3Hk2OhajVVG/E9yFa4bHHeBmVGYbe1yvEM=;
+        b=JaRJpaqJ3uVzlGe+3onBmtCnMRvXquCsIjwhhM2WQ7h9vjqph42WLGWSEnRPmyalrL
+         zMvF3jUjhRXrxwkZIePEyRr9fLyEmhs/3L8OT7fsr0xduToRwW3K6y1wZaFVGZYwNeFv
+         rxWAVpFg2qgXnbli55oIXsZeMQd1i4tnvn/HkkwmlO4JCOyLtA67Uzp03V/BY+GVxlKl
+         z0SFCUx2d/xxlWDxCSK5LnL+oD+zK/21R41csc49q2uY/kM183ouaZoPseiT8VChzUsA
+         GPMMW34JlWZFkWczGlI5M7dQOvc5tvCyIvYPZRD9FyvtEWBDV9uemFYYaTnABJV9ka+a
+         5Sxw==
+X-Forwarded-Encrypted: i=1; AJvYcCUkMsTlUlmkADHbNd20TBBpXAi9k16nsADudEI39d9Ga9/YMRJJnoYhRev1tlRkyJCyW60ZxLGZU0qXou2apIxWXy3w3rRpX5kO
+X-Gm-Message-State: AOJu0YwjfTdPK3a9Bx/n2AJd6wvYMfBUgPaUIIO18JB1G0nflGkM2ADe
+	iMit/XRZk4Xeawy4UGHnPfzhuIcOVVwFwN1lJBcpZBNiS2YjcY4ekNeYaoLMGOs=
+X-Google-Smtp-Source: AGHT+IHjDF0RDc8u5rnaR/asbdM4SN8DQz/RLkAlmnt/uLBjLn0m2kj8Q8ebupgqkBNzu1lOIT8Y/Q==
+X-Received: by 2002:a17:902:64c9:b0:1d9:f5dd:2480 with SMTP id y9-20020a17090264c900b001d9f5dd2480mr80144pli.54.1709590539370;
+        Mon, 04 Mar 2024 14:15:39 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-192-230.pa.nsw.optusnet.com.au. [49.181.192.230])
-        by smtp.gmail.com with ESMTPSA id q14-20020a17090aa00e00b0029b32b85d3dsm4730701pjp.29.2024.03.04.14.02.32
+        by smtp.gmail.com with ESMTPSA id u12-20020a170902b28c00b001dc94fde843sm9007439plr.177.2024.03.04.14.15.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Mar 2024 14:02:32 -0800 (PST)
+        Mon, 04 Mar 2024 14:15:38 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rhGOD-00F5Fv-1r;
-	Tue, 05 Mar 2024 09:02:29 +1100
-Date: Tue, 5 Mar 2024 09:02:29 +1100
+	id 1rhGat-00F5P7-2j;
+	Tue, 05 Mar 2024 09:15:35 +1100
+Date: Tue, 5 Mar 2024 09:15:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	chandan.babu@oracle.com, djwong@kernel.org
-Subject: Re: [PATCH] xfs: allow cross-linking special files without project
- quota
-Message-ID: <ZeZE9WtwyQq988yb@dread.disaster.area>
-References: <20240304155013.115334-2-aalbersh@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, chandan.babu@oracle.com,
+	axboe@kernel.dk, martin.petersen@oracle.com,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH v2 02/14] fs: xfs: Don't use low-space allocator for
+ alignment > 1
+Message-ID: <ZeZIB0G3zjaq7dWK@dread.disaster.area>
+References: <20240304130428.13026-1-john.g.garry@oracle.com>
+ <20240304130428.13026-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,101 +78,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240304155013.115334-2-aalbersh@redhat.com>
+In-Reply-To: <20240304130428.13026-3-john.g.garry@oracle.com>
 
-On Mon, Mar 04, 2024 at 04:50:14PM +0100, Andrey Albershteyn wrote:
-> There's an issue that if special files is created before quota
-> project is enabled, then it's not possible to link this file. This
-> works fine for normal files. This happens because xfs_quota skips
-> special files (no ioctls to set necessary flags). The check for
-> having the same project ID for source and destination then fails as
-> source file doesn't have any ID.
+On Mon, Mar 04, 2024 at 01:04:16PM +0000, John Garry wrote:
+> The low-space allocator doesn't honour the alignment requirement, so don't
+> attempt to even use it (when we have an alignment requirement).
 > 
-> mkfs.xfs -f /dev/sda
-> mount -o prjquota /dev/sda /mnt/test
-> 
-> mkdir /mnt/test/foo
-> mkfifo /mnt/test/foo/fifo1
-> 
-> xfs_quota -xc "project -sp /mnt/test/foo 9" /mnt/test
-> > Setting up project 9 (path /mnt/test/foo)...
-> > xfs_quota: skipping special file /mnt/test/foo/fifo1
-> > Processed 1 (/etc/projects and cmdline) paths for project 9 with recursion depth infinite (-1).
-> 
-> ln /mnt/test/foo/fifo1 /mnt/test/foo/fifo1_link
-> > ln: failed to create hard link '/mnt/test/testdir/fifo1_link' => '/mnt/test/testdir/fifo1': Invalid cross-device link
-> 
-> mkfifo /mnt/test/foo/fifo2
-> ln /mnt/test/foo/fifo2 /mnt/test/foo/fifo2_link
-> 
-> Fix this by allowing linking of special files to the project quota
-> if special files doesn't have any ID set (ID = 0).
-
-Reasonable.
-
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_inode.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+>  fs/xfs/libxfs/xfs_bmap.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 5ca561634164..641270f4d794 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1232,11 +1232,24 @@ xfs_link(
->  	 * the tree quota mechanism could be circumvented.
->  	 */
->  	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
-> +		     !special_file(VFS_I(sip)->i_mode) &&
->  		     tdp->i_projid != sip->i_projid)) {
->  		error = -EXDEV;
->  		goto error_return;
->  	}
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index f362345467fa..60d100134280 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3584,6 +3584,10 @@ xfs_bmap_btalloc_low_space(
+>  {
+>  	int			error;
 >  
-> +	/*
-> +	 * Don't allow cross-linking of special files. However, allow
-> +	 * cross-linking if original file doesn't have any project.
-> +	 */
+> +	/* The allocator doesn't honour args->alignment */
+> +	if (args->alignment > 1)
+> +		return 0;
 
-The comment should explain why the code exists, not document what
-the code does.
+I think that's wrong.
 
-> +	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
-> +				special_file(VFS_I(sip)->i_mode) &&
-> +				sip->i_projid != 0 &&
-> +				tdp->i_projid != sip->i_projid)) {
-> +		error = -EXDEV;
-> +		goto error_return;
-> +	}
+The alignment argument here is purely a best effort consideration -
+we ignore it several different allocation situations, not just low
+space.
 
-I think this would be better written as:
+e.g. xfs_bmap_btalloc_at_eof() will try exact block
+allocation regardless of whether an alignment parameter is set. It
+will then fall back to stripe alignment if exact block fails.
 
-	/*
-         * If we are using project inheritance, we only allow hard link
-         * creation in our tree when the project IDs are the same; else
-         * the tree quota mechanism could be circumvented.
-         */
-	if ((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
-	    tdp->i_projid != sip->i_projid) {
-		/*
-		 * Project quota setup skips special files which can
-		 * leave inodes in a PROJINHERIT directory without a
-		 * project ID set. We need to allow links to be made
-		 * to these "project-less" inodes because userspace
-		 * expects them to succeed after project ID setup,
-		 * but everything else should be rejected.
-		 */
-		if (!special_file(VFS_I(sip)->i_mode) ||
-		    sip->i_projid != 0) {
-			error = -EXDEV;
-			goto error_return;
-		}
-	}
+If stripe aligned allocation fails, it will then set args->alignment
+= 1 and try a full filesystem allocation scan without alignment.
 
-Cheers,
+And if that fails, then we finally get to the low space allocator
+with args->alignment = 1 even though we might be trying to allocate
+an aligned extent for an atomic IO....
 
-Dave.
+IOWs, I think this indicates deeper surgery is needed to ensure
+aligned allocations fail immediately and don't fall back to
+unaligned allocations and set XFS_TRANS_LOW_MODE...
 
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
