@@ -1,63 +1,63 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDE779DA5
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Mar 2024 19:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29A279958
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Mar 2024 19:12:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709579540; cv=none; b=H0yTwouRc++aFC7AMhMXgUJS7yW+4hH7lG7OroGmN9Th/1zanysKMiO6Wh/+pLzMWUl9lmCfKsnhj/zuWnmSgN45hhiLIR3g07f14v0W6p54PIucFFC284wVePnI0pP7VYvrbVSRuODhpFutHbBLY4WATGKp4AdS86p+va4cRNY=
+	t=1709579544; cv=none; b=hQqlBsr+pcD8ctu0+BBrJzcbNdmhtr/Z0hXAoP7p6EgTyQEdUaozCKcJ65b/a74g/pNGREu4zH0kXW857N3QPShAd7ZwOztBfO2TCb4oAZfPLuvjVeV54mJjP9eZsg4etuPT9lxCY0Lws/WdKCr7uDDDid5Rw0AxH38EVXT+vUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709579540; c=relaxed/simple;
-	bh=ci0FfeM96EeB9lWKNbTR9eYvaxL+beqdoyCcFvRWmhs=;
+	s=arc-20240116; t=1709579544; c=relaxed/simple;
+	bh=o7uJ1D+AEiS9SD66mTegf6KN6epDMi54+pW9bq/3KVk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GStz2F7fnoCVj+GlbkHAms8j+3ON1NiI+Ixq3U46L8hlIco399ggF73j31lRFVrAMeIsZPKhAIL9Fr25IjfsGeK7qFf4y19abnvmzgmS5CEys/sOy5GtGNfKeYXCcH2Ty+znGBMrjV0SmuD+mrsaRzaAIKuClCK8PSQanqCgFEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UYqN/Szv; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=S74NIj9dUBKJHOwmKwmp0Z7bhldiE9oe7VY4od+0y640menQWTMENVBx/lVnQXXkeb4XDyGUnUMF35YO5P0ZkVDMhZJObCXh/4+xKnBSumDAWakp9ftyLEXoog0FbCWwViyEGtC+Zo3XLpG74FqOb2Nz0RnvmiMvnXo0XbyOxHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EBSbc20m; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UYqN/Szv"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EBSbc20m"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709579537;
+	s=mimecast20190719; t=1709579540;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0n+uFZr/Kow5GjcpVhCgELZq9b7RyWnDiaBhPHsxGIE=;
-	b=UYqN/SzvPLRsfvt1TFFl5LZxlFTXc/09ZWyzeiRUnH7eUOqwBMkE/vEifX/JTy2c+bIvSh
-	N8UOMnPba/YfHq5Z9MDTwFXgxSJQqK+/UtMMsdkVcQ0riRFJTeUNS2kszoK8w+7PMt/Ntq
-	8d69xqPfDm2+yZw3w+ohpr4eoJ1xO2E=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=RWpQCn1MqyoizoX+vDeh9HZxEtqyPzNYVKfjAJQ9aww=;
+	b=EBSbc20mxDh+xB5JNdPEgNg4af/ws5EFIfCZJ9Pg1Td0FRkYoYJSc3N3UDpfOPxp7nOJnU
+	xLavQm6qhUWibAfXDGaX7NHpmUYUCIkKxZYRV9PXWVuSRCGOeqU2SSeb+iIYWXL2pMah06
+	WcHabzbiVL0ZA5Apx3pLee9jU7LaK5I=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-513-GsICmF82NNCMtftA8PYcJg-1; Mon, 04 Mar 2024 14:12:16 -0500
-X-MC-Unique: GsICmF82NNCMtftA8PYcJg-1
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-567002485e2so2041755a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 11:12:15 -0800 (PST)
+ us-mta-134-XcBUkgtMMDGM93MVbzBrTQ-1; Mon, 04 Mar 2024 14:12:19 -0500
+X-MC-Unique: XcBUkgtMMDGM93MVbzBrTQ-1
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a4533388b03so86471866b.0
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 11:12:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709579534; x=1710184334;
+        d=1e100.net; s=20230601; t=1709579538; x=1710184338;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0n+uFZr/Kow5GjcpVhCgELZq9b7RyWnDiaBhPHsxGIE=;
-        b=b4rQ7RIPBCAxl6pz9gstX07WTzY/VuiISl3lbpTlJlFuO01jUGVv/ARLlbinuFeVJy
-         x1E/GuJedJOJ/38eqYdTGeLk8yFADIae83w7Qi7hUC1NBn+q5BA5O9Ia55vyZppBF6y9
-         rpVrMXKvK46ZdDsLJpL+F3VxYtuXMKpR5p3r0aMw+md4fAU2QrM8IcgnpaAsAwpBWosT
-         OfFspBIQOqVebPfH1IlNpNQpTVZyRCN2IQabhgzm9Lv0ri8gnY8V/j0w2vpo81XoD1//
-         UwtqAD7lQptaZWBiVCk49DGfd76vnt7xRGjVlzAcsicmYctypR3opaE4Ijz7s1Wq7tU4
-         Mk6A==
-X-Forwarded-Encrypted: i=1; AJvYcCXFF4wUZDGwVoE0GNXb+q6JbE8pYS8Uz49omSbDIlMa2C+vICkKvuK3fVTGIvVOSidldwNdKszHZB78OXD4l/8nVaNXaB7lRVUW
-X-Gm-Message-State: AOJu0YwxnSUoSxDOK6jF+Xv6Bb4bbSb610PjF9NS2JW6KUY5H4KRHK6v
-	+6oPysCaxMHAh/LY2BVkhPoQAjeA5h/NfNKFMA3mtrEKo1UooNGyue1+jwlcijVl6MNDBaIdy1O
-	LuMN+5zYh+dX0f+v0LuQo6SqrH5YvHe7tY1wYqEm0TbaLUicvSeJ9o7FPW0Ah00m5
-X-Received: by 2002:a17:906:d045:b0:a44:5589:c098 with SMTP id bo5-20020a170906d04500b00a445589c098mr7051652ejb.7.1709579534458;
-        Mon, 04 Mar 2024 11:12:14 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IF6jiT77x9PzfXqpjOQ0rV11OPNJD1P3FAvESiqLUsCV3IJKvBKhmkEB0j3Xp+Ywja8OJOpHw==
-X-Received: by 2002:a17:906:d045:b0:a44:5589:c098 with SMTP id bo5-20020a170906d04500b00a445589c098mr7051636ejb.7.1709579534138;
-        Mon, 04 Mar 2024 11:12:14 -0800 (PST)
+        bh=RWpQCn1MqyoizoX+vDeh9HZxEtqyPzNYVKfjAJQ9aww=;
+        b=HIqKiQu0DRcC985O3Cxc5sPbA57RJKe1bKObB0m9MKhLfc+AQOt+NGsMuJ8MqGI/U4
+         2knA5Jm+oKxgksFE2rs2oDw+Yd9BW39aPnj92cHuOH0Lc+UoOySmRve2ohQ6EftBOKLQ
+         LPl9ghutCcIvIqVNvWK8VeRAxM3kFcoxIi8Qgx/sL2njhjNk0pTTAgUsMtS+jGIV4sma
+         SMA0tX5mGRK1GAGQpZKxyRn4/S/R9YNgrzVI+StABmonZ1VXB28BGBmQEYhEzn4W6rC0
+         HfCeuSVWfgCcVSWGSzeI3LcAUeMjlq8lWFLpxNtC+e7AsoPXoTRLuXtn+z4KsxOLIP4J
+         Yp2w==
+X-Forwarded-Encrypted: i=1; AJvYcCVW8tpccvKwbqocGSpi8f4dkqDTYnnMD6FWdda0y/q76t9/5C3zCaoaZdd223VKTPI4m83+i2S/XukWpmo94P70glE/mtWrxKGV
+X-Gm-Message-State: AOJu0YzZh+RcadNKuq9VmDXRc6+MmyBCmmB3Z4YqZLqDcT88L9AzcbrX
+	rL98OZpkNTol16m9w8ryQ+Xalg2a9ho/VthA0a0SyO1qmpMFO7EmSxa3ZUnvORc+NWeSx2olocu
+	oqkrmWCPXpbJwW5Kr4ZAWzqg7mN+pqExRtoE5+b4Mh+h25r0SCueQyq6/
+X-Received: by 2002:a17:906:34c6:b0:a45:7d2d:e30d with SMTP id h6-20020a17090634c600b00a457d2de30dmr1478218ejb.59.1709579538045;
+        Mon, 04 Mar 2024 11:12:18 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IF+LKhizsky/7SBgic7k1nlQC+irhLE9MRjvAA/rgDkvG8WAek47SPe1EqbZrQt+AtMULBp8A==
+X-Received: by 2002:a17:906:34c6:b0:a45:7d2d:e30d with SMTP id h6-20020a17090634c600b00a457d2de30dmr1478193ejb.59.1709579537332;
+        Mon, 04 Mar 2024 11:12:17 -0800 (PST)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id a11-20020a1709064a4b00b00a44a04aa3cfsm3783319ejv.225.2024.03.04.11.12.13
+        by smtp.gmail.com with ESMTPSA id a11-20020a1709064a4b00b00a44a04aa3cfsm3783319ejv.225.2024.03.04.11.12.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Mar 2024 11:12:13 -0800 (PST)
+        Mon, 04 Mar 2024 11:12:16 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: fsverity@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
@@ -65,10 +65,10 @@ To: fsverity@lists.linux.dev,
 	chandan.babu@oracle.com,
 	djwong@kernel.org,
 	ebiggers@kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v5 04/24] xfs: add parent pointer validator functions
-Date: Mon,  4 Mar 2024 20:10:27 +0100
-Message-ID: <20240304191046.157464-6-aalbersh@redhat.com>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v5 07/24] fsverity: support block-based Merkle tree caching
+Date: Mon,  4 Mar 2024 20:10:30 +0100
+Message-ID: <20240304191046.157464-9-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240304191046.157464-2-aalbersh@redhat.com>
 References: <20240304191046.157464-2-aalbersh@redhat.com>
@@ -80,332 +80,494 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Allison Henderson <allison.henderson@oracle.com>
+In the current implementation fs-verity expects filesystem to
+provide PAGEs filled with Merkle tree blocks. Then, when fs-verity
+is done with processing the blocks, reference to PAGE is freed. This
+doesn't fit well with the way XFS manages its memory.
 
-Attribute names of parent pointers are not strings.  So we need to
-modify attr_namecheck to verify parent pointer records when the
-XFS_ATTR_PARENT flag is set.  At the same time, we need to validate attr
-values during log recovery if the xattr is really a parent pointer.
+To allow XFS integrate fs-verity this patch adds ability to
+fs-verity verification code to take Merkle tree blocks instead of
+PAGE reference. This way ext4, f2fs, and btrfs are still able to
+pass PAGE references and XFS can pass reference to Merkle tree
+blocks stored in XFS's buffer infrastructure.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: move functions to xfs_parent.c, adjust for new disk format]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Another addition is invalidation function which tells fs-verity to
+mark part of Merkle tree as not verified. This function is used
+by filesystem to tell fs-verity to invalidate block which was
+evicted from memory.
+
+Depending on Merkle tree block size fs-verity is using either bitmap
+or PG_checked flag to track "verified" status of the blocks. With a
+Merkle tree block caching (XFS) there is no PAGE to flag it as
+verified. fs-verity always uses bitmap to track verified blocks for
+filesystems which use block caching.
+
+Further this patch allows filesystem to make additional processing
+on verified pages via fsverity_drop_block() instead of just dropping
+a reference. This will be used by XFS for internal buffer cache
+manipulation in further patches. The btrfs, ext4, and f2fs just drop
+the reference.
+
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- fs/xfs/Makefile               |   1 +
- fs/xfs/libxfs/xfs_attr.c      |  10 ++-
- fs/xfs/libxfs/xfs_attr.h      |   3 +-
- fs/xfs/libxfs/xfs_da_format.h |   8 +++
- fs/xfs/libxfs/xfs_parent.c    | 113 ++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_parent.h    |  19 ++++++
- fs/xfs/scrub/attr.c           |   2 +-
- fs/xfs/xfs_attr_item.c        |   6 +-
- fs/xfs/xfs_attr_list.c        |  14 +++--
- 9 files changed, 165 insertions(+), 11 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_parent.c
- create mode 100644 fs/xfs/libxfs/xfs_parent.h
+ fs/verity/fsverity_private.h |   8 +++
+ fs/verity/open.c             |   8 ++-
+ fs/verity/read_metadata.c    |  64 +++++++++++-------
+ fs/verity/verify.c           | 125 +++++++++++++++++++++++++++--------
+ include/linux/fsverity.h     |  65 ++++++++++++++++++
+ 5 files changed, 217 insertions(+), 53 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 76674ad5833e..f8845e65cac7 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -41,6 +41,7 @@ xfs-y				+= $(addprefix libxfs/, \
- 				   xfs_inode_buf.o \
- 				   xfs_log_rlimit.o \
- 				   xfs_ag_resv.o \
-+				   xfs_parent.o \
- 				   xfs_rmap.o \
- 				   xfs_rmap_btree.o \
- 				   xfs_refcount.o \
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index ff67a684a452..f0b625d45aa4 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -26,6 +26,7 @@
- #include "xfs_trace.h"
- #include "xfs_attr_item.h"
- #include "xfs_xattr.h"
-+#include "xfs_parent.h"
+diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
+index b3506f56e180..dad33e6ff0d6 100644
+--- a/fs/verity/fsverity_private.h
++++ b/fs/verity/fsverity_private.h
+@@ -154,4 +154,12 @@ static inline void fsverity_init_signature(void)
  
- struct kmem_cache		*xfs_attr_intent_cache;
+ void __init fsverity_init_workqueue(void);
  
-@@ -1515,9 +1516,14 @@ xfs_attr_node_get(
- /* Returns true if the attribute entry name is valid. */
- bool
- xfs_attr_namecheck(
--	const void	*name,
--	size_t		length)
-+	struct xfs_mount	*mp,
-+	const void		*name,
-+	size_t			length,
-+	unsigned int		flags)
- {
-+	if (flags & XFS_ATTR_PARENT)
-+		return xfs_parent_namecheck(mp, name, length, flags);
++/*
++ * Drop 'block' obtained with ->read_merkle_tree_block(). Calls out back to
++ * filesystem if ->drop_block() is set, otherwise, drop the reference in the
++ * block->context.
++ */
++void fsverity_drop_block(struct inode *inode,
++			 struct fsverity_blockbuf *block);
 +
+ #endif /* _FSVERITY_PRIVATE_H */
+diff --git a/fs/verity/open.c b/fs/verity/open.c
+index fdeb95eca3af..6e6922b4b014 100644
+--- a/fs/verity/open.c
++++ b/fs/verity/open.c
+@@ -213,7 +213,13 @@ struct fsverity_info *fsverity_create_info(const struct inode *inode,
+ 	if (err)
+ 		goto fail;
+ 
+-	if (vi->tree_params.block_size != PAGE_SIZE) {
++	/*
++	 * If fs passes Merkle tree blocks to fs-verity (e.g. XFS), then
++	 * fs-verity should use hash_block_verified bitmap as there's no page
++	 * to mark it with PG_checked.
++	 */
++	if (vi->tree_params.block_size != PAGE_SIZE ||
++			inode->i_sb->s_vop->read_merkle_tree_block) {
+ 		/*
+ 		 * When the Merkle tree block size and page size differ, we use
+ 		 * a bitmap to keep track of which hash blocks have been
+diff --git a/fs/verity/read_metadata.c b/fs/verity/read_metadata.c
+index f58432772d9e..5da40b5a81af 100644
+--- a/fs/verity/read_metadata.c
++++ b/fs/verity/read_metadata.c
+@@ -18,50 +18,68 @@ static int fsverity_read_merkle_tree(struct inode *inode,
+ {
+ 	const struct fsverity_operations *vops = inode->i_sb->s_vop;
+ 	u64 end_offset;
+-	unsigned int offs_in_page;
++	unsigned int offs_in_block;
+ 	pgoff_t index, last_index;
+ 	int retval = 0;
+ 	int err = 0;
++	const unsigned int block_size = vi->tree_params.block_size;
++	const u8 log_blocksize = vi->tree_params.log_blocksize;
+ 
+ 	end_offset = min(offset + length, vi->tree_params.tree_size);
+ 	if (offset >= end_offset)
+ 		return 0;
+-	offs_in_page = offset_in_page(offset);
+-	last_index = (end_offset - 1) >> PAGE_SHIFT;
++	offs_in_block = offset & (block_size - 1);
++	last_index = (end_offset - 1) >> log_blocksize;
+ 
  	/*
- 	 * MAXNAMELEN includes the trailing null, but (name/length) leave it
- 	 * out, so use >= for the length check.
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 81be9b3e4004..92711c8d2a9f 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -547,7 +547,8 @@ int xfs_attr_get(struct xfs_da_args *args);
- int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_iter(struct xfs_attr_intent *attr);
- int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
--bool xfs_attr_namecheck(const void *name, size_t length);
-+bool xfs_attr_namecheck(struct xfs_mount *mp, const void *name, size_t length,
-+		unsigned int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
- void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
- 			 unsigned int *total);
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 67e8c33c4e82..839df0e5401b 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -757,6 +757,14 @@ xfs_attr3_leaf_name(xfs_attr_leafblock_t *leafp, int idx)
- 	return &((char *)leafp)[be16_to_cpu(entries[idx].nameidx)];
+-	 * Iterate through each Merkle tree page in the requested range and copy
+-	 * the requested portion to userspace.  Note that the Merkle tree block
+-	 * size isn't important here, as we are returning a byte stream; i.e.,
+-	 * we can just work with pages even if the tree block size != PAGE_SIZE.
++	 * Iterate through each Merkle tree block in the requested range and
++	 * copy the requested portion to userspace. Note that we are returning
++	 * a byte stream.
+ 	 */
+-	for (index = offset >> PAGE_SHIFT; index <= last_index; index++) {
++	for (index = offset >> log_blocksize; index <= last_index; index++) {
+ 		unsigned long num_ra_pages =
+ 			min_t(unsigned long, last_index - index + 1,
+ 			      inode->i_sb->s_bdi->io_pages);
+ 		unsigned int bytes_to_copy = min_t(u64, end_offset - offset,
+-						   PAGE_SIZE - offs_in_page);
+-		struct page *page;
+-		const void *virt;
++						   block_size - offs_in_block);
++		struct fsverity_blockbuf block = {
++			.size = block_size,
++		};
+ 
+-		page = vops->read_merkle_tree_page(inode, index, num_ra_pages);
+-		if (IS_ERR(page)) {
+-			err = PTR_ERR(page);
++		if (!vops->read_merkle_tree_block) {
++			unsigned int blocks_per_page =
++				vi->tree_params.blocks_per_page;
++			unsigned long page_idx =
++				round_down(index, blocks_per_page);
++			struct page *page = vops->read_merkle_tree_page(inode,
++					page_idx, num_ra_pages);
++
++			if (IS_ERR(page)) {
++				err = PTR_ERR(page);
++			} else {
++				block.kaddr = kmap_local_page(page) +
++					((index - page_idx) << log_blocksize);
++				block.context = page;
++			}
++		} else {
++			err = vops->read_merkle_tree_block(inode,
++					index << log_blocksize,
++					&block, log_blocksize, num_ra_pages);
++		}
++
++		if (err) {
+ 			fsverity_err(inode,
+-				     "Error %d reading Merkle tree page %lu",
+-				     err, index);
++				     "Error %d reading Merkle tree block %lu",
++				     err, index << log_blocksize);
+ 			break;
+ 		}
+ 
+-		virt = kmap_local_page(page);
+-		if (copy_to_user(buf, virt + offs_in_page, bytes_to_copy)) {
+-			kunmap_local(virt);
+-			put_page(page);
++		if (copy_to_user(buf, block.kaddr + offs_in_block, bytes_to_copy)) {
++			fsverity_drop_block(inode, &block);
+ 			err = -EFAULT;
+ 			break;
+ 		}
+-		kunmap_local(virt);
+-		put_page(page);
++		fsverity_drop_block(inode, &block);
+ 
+ 		retval += bytes_to_copy;
+ 		buf += bytes_to_copy;
+@@ -72,7 +90,7 @@ static int fsverity_read_merkle_tree(struct inode *inode,
+ 			break;
+ 		}
+ 		cond_resched();
+-		offs_in_page = 0;
++		offs_in_block = 0;
+ 	}
+ 	return retval ? retval : err;
+ }
+diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+index 4fcad0825a12..de71911d400c 100644
+--- a/fs/verity/verify.c
++++ b/fs/verity/verify.c
+@@ -13,14 +13,17 @@
+ static struct workqueue_struct *fsverity_read_workqueue;
+ 
+ /*
+- * Returns true if the hash block with index @hblock_idx in the tree, located in
+- * @hpage, has already been verified.
++ * Returns true if the hash block with index @hblock_idx in the tree has
++ * already been verified.
+  */
+-static bool is_hash_block_verified(struct fsverity_info *vi, struct page *hpage,
++static bool is_hash_block_verified(struct inode *inode,
++				   struct fsverity_blockbuf *block,
+ 				   unsigned long hblock_idx)
+ {
+ 	unsigned int blocks_per_page;
+ 	unsigned int i;
++	struct fsverity_info *vi = inode->i_verity_info;
++	struct page *hpage = (struct page *)block->context;
+ 
+ 	/*
+ 	 * When the Merkle tree block size and page size are the same, then the
+@@ -34,6 +37,12 @@ static bool is_hash_block_verified(struct fsverity_info *vi, struct page *hpage,
+ 	if (!vi->hash_block_verified)
+ 		return PageChecked(hpage);
+ 
++	/*
++	 * Filesystems which use block based caching (e.g. XFS) always use
++	 * bitmap.
++	 */
++	if (inode->i_sb->s_vop->read_merkle_tree_block)
++		return test_bit(hblock_idx, vi->hash_block_verified);
+ 	/*
+ 	 * When the Merkle tree block size and page size differ, we use a bitmap
+ 	 * to indicate whether each hash block has been verified.
+@@ -95,15 +104,15 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+ 	const struct merkle_tree_params *params = &vi->tree_params;
+ 	const unsigned int hsize = params->digest_size;
+ 	int level;
++	int err;
++	int num_ra_pages;
+ 	u8 _want_hash[FS_VERITY_MAX_DIGEST_SIZE];
+ 	const u8 *want_hash;
+ 	u8 real_hash[FS_VERITY_MAX_DIGEST_SIZE];
+ 	/* The hash blocks that are traversed, indexed by level */
+ 	struct {
+-		/* Page containing the hash block */
+-		struct page *page;
+-		/* Mapped address of the hash block (will be within @page) */
+-		const void *addr;
++		/* Buffer containing the hash block */
++		struct fsverity_blockbuf block;
+ 		/* Index of the hash block in the tree overall */
+ 		unsigned long index;
+ 		/* Byte offset of the wanted hash relative to @addr */
+@@ -144,10 +153,11 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+ 		unsigned long next_hidx;
+ 		unsigned long hblock_idx;
+ 		pgoff_t hpage_idx;
++		u64 hblock_pos;
+ 		unsigned int hblock_offset_in_page;
+ 		unsigned int hoffset;
+ 		struct page *hpage;
+-		const void *haddr;
++		struct fsverity_blockbuf *block = &hblocks[level].block;
+ 
+ 		/*
+ 		 * The index of the block in the current level; also the index
+@@ -165,29 +175,49 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+ 		hblock_offset_in_page =
+ 			(hblock_idx << params->log_blocksize) & ~PAGE_MASK;
+ 
++		/* Offset of the Merkle tree block into the tree */
++		hblock_pos = hblock_idx << params->log_blocksize;
++
+ 		/* Byte offset of the hash within the block */
+ 		hoffset = (hidx << params->log_digestsize) &
+ 			  (params->block_size - 1);
+ 
+-		hpage = inode->i_sb->s_vop->read_merkle_tree_page(inode,
+-				hpage_idx, level == 0 ? min(max_ra_pages,
+-					params->tree_pages - hpage_idx) : 0);
+-		if (IS_ERR(hpage)) {
++		num_ra_pages = level == 0 ?
++			min(max_ra_pages, params->tree_pages - hpage_idx) : 0;
++
++		if (inode->i_sb->s_vop->read_merkle_tree_block) {
++			err = inode->i_sb->s_vop->read_merkle_tree_block(
++				inode, hblock_pos, block, params->log_blocksize,
++				num_ra_pages);
++		} else {
++			unsigned int blocks_per_page =
++				vi->tree_params.blocks_per_page;
++			hblock_idx = round_down(hblock_idx, blocks_per_page);
++			hpage = inode->i_sb->s_vop->read_merkle_tree_page(
++				inode, hpage_idx, (num_ra_pages << PAGE_SHIFT));
++
++			if (IS_ERR(hpage)) {
++				err = PTR_ERR(hpage);
++			} else {
++				block->kaddr = kmap_local_page(hpage) +
++					hblock_offset_in_page;
++				block->context = hpage;
++			}
++		}
++
++		if (err) {
+ 			fsverity_err(inode,
+-				     "Error %ld reading Merkle tree page %lu",
+-				     PTR_ERR(hpage), hpage_idx);
++				     "Error %d reading Merkle tree block %lu",
++				     err, hblock_idx);
+ 			goto error;
+ 		}
+-		haddr = kmap_local_page(hpage) + hblock_offset_in_page;
+-		if (is_hash_block_verified(vi, hpage, hblock_idx)) {
+-			memcpy(_want_hash, haddr + hoffset, hsize);
++
++		if (is_hash_block_verified(inode, block, hblock_idx)) {
++			memcpy(_want_hash, block->kaddr + hoffset, hsize);
+ 			want_hash = _want_hash;
+-			kunmap_local(haddr);
+-			put_page(hpage);
++			fsverity_drop_block(inode, block);
+ 			goto descend;
+ 		}
+-		hblocks[level].page = hpage;
+-		hblocks[level].addr = haddr;
+ 		hblocks[level].index = hblock_idx;
+ 		hblocks[level].hoffset = hoffset;
+ 		hidx = next_hidx;
+@@ -197,10 +227,11 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+ descend:
+ 	/* Descend the tree verifying hash blocks. */
+ 	for (; level > 0; level--) {
+-		struct page *hpage = hblocks[level - 1].page;
+-		const void *haddr = hblocks[level - 1].addr;
++		struct fsverity_blockbuf *block = &hblocks[level - 1].block;
++		const void *haddr = block->kaddr;
+ 		unsigned long hblock_idx = hblocks[level - 1].index;
+ 		unsigned int hoffset = hblocks[level - 1].hoffset;
++		struct page *hpage = (struct page *)block->context;
+ 
+ 		if (fsverity_hash_block(params, inode, haddr, real_hash) != 0)
+ 			goto error;
+@@ -217,8 +248,7 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+ 			SetPageChecked(hpage);
+ 		memcpy(_want_hash, haddr + hoffset, hsize);
+ 		want_hash = _want_hash;
+-		kunmap_local(haddr);
+-		put_page(hpage);
++		fsverity_drop_block(inode, block);
+ 	}
+ 
+ 	/* Finally, verify the data block. */
+@@ -235,10 +265,8 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+ 		     params->hash_alg->name, hsize, want_hash,
+ 		     params->hash_alg->name, hsize, real_hash);
+ error:
+-	for (; level > 0; level--) {
+-		kunmap_local(hblocks[level - 1].addr);
+-		put_page(hblocks[level - 1].page);
+-	}
++	for (; level > 0; level--)
++		fsverity_drop_block(inode, &hblocks[level - 1].block);
+ 	return false;
  }
  
-+static inline int
-+xfs_attr3_leaf_flags(xfs_attr_leafblock_t *leafp, int idx)
-+{
-+	struct xfs_attr_leaf_entry *entries = xfs_attr3_leaf_entryp(leafp);
+@@ -362,3 +390,42 @@ void __init fsverity_init_workqueue(void)
+ 	if (!fsverity_read_workqueue)
+ 		panic("failed to allocate fsverity_read_queue");
+ }
 +
-+	return entries[idx].flags;
-+}
-+
- static inline xfs_attr_leaf_name_remote_t *
- xfs_attr3_leaf_name_remote(xfs_attr_leafblock_t *leafp, int idx)
- {
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-new file mode 100644
-index 000000000000..1d45f926c13a
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -0,0 +1,113 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2022-2024 Oracle.
-+ * All rights reserved.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_da_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_shared.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_trans.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr.h"
-+#include "xfs_dir2.h"
-+#include "xfs_dir2_priv.h"
-+#include "xfs_attr_sf.h"
-+#include "xfs_bmap.h"
-+#include "xfs_defer.h"
-+#include "xfs_log.h"
-+#include "xfs_xattr.h"
-+#include "xfs_parent.h"
-+#include "xfs_trans_space.h"
-+
-+/*
-+ * Parent pointer attribute handling.
++/**
++ * fsverity_invalidate_block() - invalidate Merkle tree block
++ * @inode: inode to which this Merkle tree blocks belong
++ * @block: block to be invalidated
 + *
-+ * Because the attribute value is a filename component, it will never be longer
-+ * than 255 bytes. This means the attribute will always be a local format
-+ * attribute as it is xfs_attr_leaf_entsize_local_max() for v5 filesystems will
-+ * always be larger than this (max is 75% of block size).
-+ *
-+ * Creating a new parent attribute will always create a new attribute - there
-+ * should never, ever be an existing attribute in the tree for a new inode.
-+ * ENOSPC behavior is problematic - creating the inode without the parent
-+ * pointer is effectively a corruption, so we allow parent attribute creation
-+ * to dip into the reserve block pool to avoid unexpected ENOSPC errors from
-+ * occurring.
++ * This function invalidates/clears "verified" state of Merkle tree block
++ * in the fs-verity bitmap. The block needs to have ->offset set.
 + */
-+
-+/* Return true if parent pointer EA name is valid. */
-+bool
-+xfs_parent_namecheck(
-+	struct xfs_mount			*mp,
-+	const struct xfs_parent_name_rec	*rec,
-+	size_t					reclen,
-+	unsigned int				attr_flags)
++void fsverity_invalidate_block(struct inode *inode,
++		struct fsverity_blockbuf *block)
 +{
-+	if (!(attr_flags & XFS_ATTR_PARENT))
-+		return false;
++	struct fsverity_info *vi = inode->i_verity_info;
++	const unsigned int log_blocksize = vi->tree_params.log_blocksize;
 +
-+	/* pptr updates use logged xattrs, so we should never see this flag */
-+	if (attr_flags & XFS_ATTR_INCOMPLETE)
-+		return false;
++	if (block->offset > vi->tree_params.tree_size) {
++		fsverity_err(inode,
++"Trying to invalidate beyond Merkle tree (tree %lld, offset %lld)",
++			     vi->tree_params.tree_size, block->offset);
++		return;
++	}
 +
-+	if (reclen != sizeof(struct xfs_parent_name_rec))
-+		return false;
-+
-+	/* Only one namespace bit allowed. */
-+	if (hweight32(attr_flags & XFS_ATTR_NSP_ONDISK_MASK) > 1)
-+		return false;
-+
-+	return true;
++	clear_bit(block->offset >> log_blocksize, vi->hash_block_verified);
 +}
++EXPORT_SYMBOL_GPL(fsverity_invalidate_block);
 +
-+/* Return true if parent pointer EA value is valid. */
-+bool
-+xfs_parent_valuecheck(
-+	struct xfs_mount		*mp,
-+	const void			*value,
-+	size_t				valuelen)
++void fsverity_drop_block(struct inode *inode,
++		struct fsverity_blockbuf *block)
 +{
-+	if (valuelen == 0 || valuelen > XFS_PARENT_DIRENT_NAME_MAX_SIZE)
-+		return false;
++	if (inode->i_sb->s_vop->drop_block)
++		inode->i_sb->s_vop->drop_block(block);
++	else {
++		struct page *page = (struct page *)block->context;
 +
-+	if (value == NULL)
-+		return false;
-+
-+	return true;
++		kunmap_local(block->kaddr);
++		put_page(page);
++	}
++	block->kaddr = NULL;
 +}
-+
-+/* Return true if the ondisk parent pointer is consistent. */
-+bool
-+xfs_parent_hashcheck(
-+	struct xfs_mount		*mp,
-+	const struct xfs_parent_name_rec *rec,
-+	const void			*value,
-+	size_t				valuelen)
-+{
-+	struct xfs_name			dname = {
-+		.name			= value,
-+		.len			= valuelen,
-+	};
-+	xfs_ino_t			p_ino;
-+
-+	/* Valid dirent name? */
-+	if (!xfs_dir2_namecheck(value, valuelen))
-+		return false;
-+
-+	/* Valid inode number? */
-+	p_ino = be64_to_cpu(rec->p_ino);
-+	if (!xfs_verify_dir_ino(mp, p_ino))
-+		return false;
-+
-+	/* Namehash matches name? */
-+	return be32_to_cpu(rec->p_namehash) == xfs_dir2_hashname(mp, &dname);
-+}
-diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-new file mode 100644
-index 000000000000..fcfeddb645f6
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_parent.h
-@@ -0,0 +1,19 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2022-2024 Oracle.
-+ * All Rights Reserved.
-+ */
-+#ifndef	__XFS_PARENT_H__
-+#define	__XFS_PARENT_H__
-+
-+/* Metadata validators */
-+bool xfs_parent_namecheck(struct xfs_mount *mp,
-+		const struct xfs_parent_name_rec *rec, size_t reclen,
-+		unsigned int attr_flags);
-+bool xfs_parent_valuecheck(struct xfs_mount *mp, const void *value,
-+		size_t valuelen);
-+bool xfs_parent_hashcheck(struct xfs_mount *mp,
-+		const struct xfs_parent_name_rec *rec, const void *value,
-+		size_t valuelen);
-+
-+#endif /* __XFS_PARENT_H__ */
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 49f91cc85a65..9a1f59f7b5a4 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -195,7 +195,7 @@ xchk_xattr_listent(
- 	}
+diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+index ac58b19f23d3..0973b521ac5a 100644
+--- a/include/linux/fsverity.h
++++ b/include/linux/fsverity.h
+@@ -26,6 +26,33 @@
+ /* Arbitrary limit to bound the kmalloc() size.  Can be changed. */
+ #define FS_VERITY_MAX_DESCRIPTOR_SIZE	16384
  
- 	/* Does this name make sense? */
--	if (!xfs_attr_namecheck(name, namelen)) {
-+	if (!xfs_attr_namecheck(sx->sc->mp, name, namelen, flags)) {
- 		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
- 		goto fail_xref;
- 	}
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 9b4c61e1c22e..703770cf1482 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -591,7 +591,8 @@ xfs_attr_recover_work(
++/**
++ * struct fsverity_blockbuf - Merkle Tree block buffer
++ * @kaddr: virtual address of the block's data
++ * @offset: block's offset into Merkle tree
++ * @size: the Merkle tree block size
++ * @context: filesystem private context
++ *
++ * Buffer containing single Merkle Tree block. These buffers are passed
++ *  - to filesystem, when fs-verity is building merkel tree,
++ *  - from filesystem, when fs-verity is reading merkle tree from a disk.
++ * Filesystems sets kaddr together with size to point to a memory which contains
++ * Merkle tree block. Same is done by fs-verity when Merkle tree is need to be
++ * written down to disk.
++ *
++ * While reading the tree, fs-verity calls ->read_merkle_tree_block followed by
++ * ->drop_block to let filesystem know that memory can be freed.
++ *
++ * The context is optional. This field can be used by filesystem to passthrough
++ * state from ->read_merkle_tree_block to ->drop_block.
++ */
++struct fsverity_blockbuf {
++	void *kaddr;
++	u64 offset;
++	unsigned int size;
++	void *context;
++};
++
+ /* Verity operations for filesystems */
+ struct fsverity_operations {
+ 
+@@ -107,6 +134,32 @@ struct fsverity_operations {
+ 					      pgoff_t index,
+ 					      unsigned long num_ra_pages);
+ 
++	/**
++	 * Read a Merkle tree block of the given inode.
++	 * @inode: the inode
++	 * @pos: byte offset of the block within the Merkle tree
++	 * @block: block buffer for filesystem to point it to the block
++	 * @log_blocksize: log2 of the size of the expected block
++	 * @ra_bytes: The number of bytes that should be
++	 *		prefetched starting at @pos if the page at @pos
++	 *		isn't already cached.  Implementations may ignore this
++	 *		argument; it's only a performance optimization.
++	 *
++	 * This can be called at any time on an open verity file.  It may be
++	 * called by multiple processes concurrently.
++	 *
++	 * In case that block was evicted from the memory filesystem has to use
++	 * fsverity_invalidate_block() to let fsverity know that block's
++	 * verification state is not valid anymore.
++	 *
++	 * Return: 0 on success, -errno on failure
++	 */
++	int (*read_merkle_tree_block)(struct inode *inode,
++				      u64 pos,
++				      struct fsverity_blockbuf *block,
++				      unsigned int log_blocksize,
++				      u64 ra_bytes);
++
+ 	/**
+ 	 * Write a Merkle tree block to the given inode.
+ 	 *
+@@ -122,6 +175,16 @@ struct fsverity_operations {
  	 */
- 	attrp = &attrip->attri_format;
- 	if (!xfs_attri_validate(mp, attrp) ||
--	    !xfs_attr_namecheck(nv->name.i_addr, nv->name.i_len))
-+	    !xfs_attr_namecheck(mp, nv->name.i_addr, nv->name.i_len,
-+				attrp->alfi_attr_filter))
- 		return -EFSCORRUPTED;
+ 	int (*write_merkle_tree_block)(struct inode *inode, const void *buf,
+ 				       u64 pos, unsigned int size);
++
++	/**
++	 * Release the reference to a Merkle tree block
++	 *
++	 * @block: the block to release
++	 *
++	 * This is called when fs-verity is done with a block obtained with
++	 * ->read_merkle_tree_block().
++	 */
++	void (*drop_block)(struct fsverity_blockbuf *block);
+ };
  
- 	attr = xfs_attri_recover_work(mp, dfp, attrp, &ip, nv);
-@@ -731,7 +732,8 @@ xlog_recover_attri_commit_pass2(
- 		return -EFSCORRUPTED;
- 	}
+ #ifdef CONFIG_FS_VERITY
+@@ -175,6 +238,8 @@ int fsverity_ioctl_read_metadata(struct file *filp, const void __user *uarg);
+ bool fsverity_verify_blocks(struct folio *folio, size_t len, size_t offset);
+ void fsverity_verify_bio(struct bio *bio);
+ void fsverity_enqueue_verify_work(struct work_struct *work);
++void fsverity_invalidate_block(struct inode *inode,
++		struct fsverity_blockbuf *block);
  
--	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
-+	if (!xfs_attr_namecheck(mp, attr_name, attri_formatp->alfi_name_len,
-+				attri_formatp->alfi_attr_filter)) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 				item->ri_buf[1].i_addr, item->ri_buf[1].i_len);
- 		return -EFSCORRUPTED;
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index a6819a642cc0..fa74378577c5 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -59,6 +59,7 @@ xfs_attr_shortform_list(
- 	struct xfs_attr_sf_sort		*sbuf, *sbp;
- 	struct xfs_attr_sf_hdr		*sf = dp->i_af.if_data;
- 	struct xfs_attr_sf_entry	*sfe;
-+	struct xfs_mount		*mp = dp->i_mount;
- 	int				sbsize, nsbuf, count, i;
- 	int				error = 0;
+ #else /* !CONFIG_FS_VERITY */
  
-@@ -82,8 +83,9 @@ xfs_attr_shortform_list(
- 	     (dp->i_af.if_bytes + sf->count * 16) < context->bufsize)) {
- 		for (i = 0, sfe = xfs_attr_sf_firstentry(sf); i < sf->count; i++) {
- 			if (XFS_IS_CORRUPT(context->dp->i_mount,
--					   !xfs_attr_namecheck(sfe->nameval,
--							       sfe->namelen))) {
-+					   !xfs_attr_namecheck(mp, sfe->nameval,
-+							       sfe->namelen,
-+							       sfe->flags))) {
- 				xfs_dirattr_mark_sick(context->dp, XFS_ATTR_FORK);
- 				return -EFSCORRUPTED;
- 			}
-@@ -177,8 +179,9 @@ xfs_attr_shortform_list(
- 			cursor->offset = 0;
- 		}
- 		if (XFS_IS_CORRUPT(context->dp->i_mount,
--				   !xfs_attr_namecheck(sbp->name,
--						       sbp->namelen))) {
-+				   !xfs_attr_namecheck(mp, sbp->name,
-+						       sbp->namelen,
-+						       sbp->flags))) {
- 			xfs_dirattr_mark_sick(context->dp, XFS_ATTR_FORK);
- 			error = -EFSCORRUPTED;
- 			goto out;
-@@ -474,7 +477,8 @@ xfs_attr3_leaf_list_int(
- 		}
- 
- 		if (XFS_IS_CORRUPT(context->dp->i_mount,
--				   !xfs_attr_namecheck(name, namelen))) {
-+				   !xfs_attr_namecheck(mp, name, namelen,
-+						       entry->flags))) {
- 			xfs_dirattr_mark_sick(context->dp, XFS_ATTR_FORK);
- 			return -EFSCORRUPTED;
- 		}
 -- 
 2.42.0
 
