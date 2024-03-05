@@ -1,127 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3226D28F1;
-	Tue,  5 Mar 2024 01:08:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B180724B52;
+	Tue,  5 Mar 2024 02:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709600887; cv=none; b=YQzXErHG84WVBwYH27QKxEmew5xPahPIK1fCx9Zd4c27p6P8X+fvAaxjrhCyZqr4kYheH5R7fdQc0ZyAf3u2xc9OM/hOjnUHO031SlCF841XDiySLotiBJjhuaj6fItds6spVLb40Acsoav+a3xOoMtJZDVez6YwmjhaWbD088E=
+	t=1709606430; cv=none; b=rQrMaJUnDQzOQy32dvAVGfT6nT53+jL6GisK/WCH0zkQXwlpMufrGfyQv5ob/CnpwLdnFQfMjMXDG87nuIrXsfBM/PkVfn0RYqAXE5dQ/z3rB3Copcjbt49qRRJ8V+gI7TMdO2jBCRk4CMsQCxX37Cra/7AMnHvCldsCsbfI2KI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709600887; c=relaxed/simple;
-	bh=jdjo5rKYG4ZK3OODkKBuqmFXqRUFZ7x80BI7gRk+kAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=livEFFgCSKZcFLcJsQyV+l/jBJIhjxfIIE4M0aOBerYiCXYSwXvZvHhH3akUw0OyZ4KJ2dCFbtGnZpgVC4ihIBxvfpftqLaf4sYORYFJgBdqteCfcqjwejE21M9Ob1LGQdJyO22DVxYu6F+lDV0exwkT8H8pLu2rb1FqlZ+X3po=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fAt9nOnC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709606430; c=relaxed/simple;
+	bh=fRWHMTQjwFJaqzyN0S174X822Byn+QS1kRwDKkogl1M=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=oS/k8VE0VEy+IwKjK0dJxnpz2ju0e4HM2jJ9eLzlYHc9qjLKFJoSr38Zg6063GlwpPljIEBsjFFo4a4oxlKLz1kwPHdK++HMiL8FStP6PACXiWzabZkkfei/AakO86XSK2ru3bcHpew36skdCA3bD6x4fBItnZ4O+ZoegIocCyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ieC8Ipyd; arc=none smtp.client-ip=115.124.30.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fAt9nOnC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C11B9C433F1;
-	Tue,  5 Mar 2024 01:08:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709600887;
-	bh=jdjo5rKYG4ZK3OODkKBuqmFXqRUFZ7x80BI7gRk+kAw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fAt9nOnCGZn1AB9GlC9o3THgO6pMf/c7Qk4kP0u2kc9idoUBcGnsqR7c6udRGKPvY
-	 x12ZchO8e75B0TCMV6QYrhZ2IAKP295rMTPknSVRtXSdIt0MO5Aq4A3TGp0FdwDjeG
-	 mi1U/qX6ar31MRHceIrDQ3CxniYNp3YTojcV0R+SawacxlbKLmYw5UspcK0WbpjfAl
-	 iiYGLkMfh/1PUvseFhrDw3AgcccLaG9oCRXpDQ2M+yS/fNyH+nGgU11Ch932a0s2rb
-	 fy+TRP2L6JwnO8kG8KQQHf5hyGo57suM9Wy6mE1KdcdwQkH5zDa4xPA2z8pnTRUPY2
-	 1GSwlvOGgv0pQ==
-Date: Mon, 4 Mar 2024 17:08:05 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
-	djwong@kernel.org
-Subject: Re: [PATCH v5 08/24] fsverity: add per-sb workqueue for post read
- processing
-Message-ID: <20240305010805.GF17145@sol.localdomain>
-References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-10-aalbersh@redhat.com>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ieC8Ipyd"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1709606424; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=rK3JGV3L6aU8lG9JCL3Cyx+JMEoubCfoyYpxxgs2Cls=;
+	b=ieC8IpydKMEnqe3+xcGDvVlwSzxB9uPphkh87/YaN21QNgINViD4OEG8HQQTsScUlUxgKHxrJQ0at7RP905TL+eLcHgt7dIc5LE1h18hsdjHWea38w62nusx8ldSrwb1PUfdG7rty4p1s3aWTfQzwSJFmkhj6s+d7C5NP9/tfC8=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046060;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0W1sbyKp_1709606421;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0W1sbyKp_1709606421)
+          by smtp.aliyun-inc.com;
+          Tue, 05 Mar 2024 10:40:23 +0800
+From: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To: chandan.babu@oracle.com
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+	Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH v2 2/2] xfs: Remove duplicate include
+Date: Tue,  5 Mar 2024 10:40:09 +0800
+Message-Id: <20240305024009.52931-2-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
+In-Reply-To: <20240305024009.52931-1-jiapeng.chong@linux.alibaba.com>
+References: <20240305024009.52931-1-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240304191046.157464-10-aalbersh@redhat.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Mar 04, 2024 at 08:10:31PM +0100, Andrey Albershteyn wrote:
-> For XFS, fsverity's global workqueue is not really suitable due to:
-> 
-> 1. High priority workqueues are used within XFS to ensure that data
->    IO completion cannot stall processing of journal IO completions.
->    Hence using a WQ_HIGHPRI workqueue directly in the user data IO
->    path is a potential filesystem livelock/deadlock vector.
-> 
-> 2. The fsverity workqueue is global - it creates a cross-filesystem
->    contention point.
-> 
-> This patch adds per-filesystem, per-cpu workqueue for fsverity
-> work. This allows iomap to add verification work in the read path on
-> BIO completion.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+./fs/xfs/xfs_trace.c: xfs_bmap.h is included more than once.
 
-Should ext4 and f2fs switch over to this by converting
-fsverity_enqueue_verify_work() to use it?  I'd prefer not to have to maintain
-two separate workqueue strategies as part of the fs/verity/ infrastructure.
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8385
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+Changes in v2:
+  -Remove the second #include.
 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 1fbc72c5f112..5863519ffd51 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1223,6 +1223,8 @@ struct super_block {
->  #endif
->  #ifdef CONFIG_FS_VERITY
->  	const struct fsverity_operations *s_vop;
-> +	/* Completion queue for post read verification */
-> +	struct workqueue_struct *s_read_done_wq;
->  #endif
+ fs/xfs/xfs_trace.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Maybe s_verity_wq?  Or do you anticipate this being used for other purposes too,
-such as fscrypt?  Note that it's behind CONFIG_FS_VERITY and is allocated by an
-fsverity_* function, so at least at the moment it doesn't feel very generic.
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index 1a963382e5e9..3f253884fe5b 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -38,7 +38,6 @@
+ #include "xfs_iomap.h"
+ #include "xfs_buf_mem.h"
+ #include "xfs_btree_mem.h"
+-#include "xfs_bmap.h"
+ 
+ /*
+  * We include this last to have the helpers above available for the trace
+-- 
+2.20.1.7.g153144c
 
-> diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-> index 0973b521ac5a..45b7c613148a 100644
-> --- a/include/linux/fsverity.h
-> +++ b/include/linux/fsverity.h
-> @@ -241,6 +241,22 @@ void fsverity_enqueue_verify_work(struct work_struct *work);
->  void fsverity_invalidate_block(struct inode *inode,
->  		struct fsverity_blockbuf *block);
->  
-> +static inline int fsverity_set_ops(struct super_block *sb,
-> +				   const struct fsverity_operations *ops)
-
-This doesn't just set the ops, but also allocates a workqueue too.  A better
-name for this function might be fsverity_init_sb.
-
-Also this shouldn't really be an inline function.
-
-> +{
-> +	sb->s_vop = ops;
-> +
-> +	/* Create per-sb workqueue for post read bio verification */
-> +	struct workqueue_struct *wq = alloc_workqueue(
-> +		"pread/%s", (WQ_FREEZABLE | WQ_MEM_RECLAIM), 0, sb->s_id);
-
-"pread" is short for "post read", I guess?  Should it really be this generic?
-
-> +static inline int fsverity_set_ops(struct super_block *sb,
-> +				   const struct fsverity_operations *ops)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-
-I think it would be better to just not have a !CONFIG_FS_VERITY stub for this.
-
-You *could* make it work like fscrypt_set_ops(), which the ubifs folks added,
-where it can be called unconditionally if the filesystem has a declaration for
-the operations (but not necessarily a definition).  In that case it would need
-to return 0, rather than an error.  But I think I prefer just omitting the stub
-and having filesystems guard the call to this by CONFIG_FS_VERITY, as you've
-already done in XFS.
-
-- Eric
