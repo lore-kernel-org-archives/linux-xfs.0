@@ -1,41 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAD097F;
-	Tue,  5 Mar 2024 00:33:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDEFA8F5B
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Mar 2024 00:44:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709598836; cv=none; b=tyC9r6EriA1XCpn4wfTFIxtm7BY3BNUczDL4NkgLOMpfovBGSXpd9o8xPh30gJ8NIygsye+AxKLGKtgVF75bE58f46sagFYKs2y5g1wjESnHPYY7xiyl9uGKHk2kvLomxSrbOz5wDcHgMGdrnGUn9gmT9Z1YwzXWrP6NZ3gMA6g=
+	t=1709599449; cv=none; b=V6teUMMG113hUBFvhrPhdQnMt2oTRyvCVaiA+cEBTYAjyT6zkT6kdHo1mzsM7+x7UcqM/+MfLFf8RkGukrmttKojBwh0XSDcn9DmwYWYCtZg1lWkkf6mS6BgtQkO6p7701+UTnOHV1XLTXLtlOuLz+XM3B1HyMcZkLnTj4385lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709598836; c=relaxed/simple;
-	bh=Cg/zW0I8pepL6s5AwV6uMVENIFjhl/PnKbpucTLg7Vc=;
+	s=arc-20240116; t=1709599449; c=relaxed/simple;
+	bh=FCSN2F3wTvR59J3Tc2+6hcLQYXRq7Q3JPDsJPrqBGTQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R5cFiJ4eIMOZUw0pQYj6gunBG3SQ+8/EpiEpw49cie3PQw5j4QcI85h3a323gxGrtb8Qb7ebQdL1SlDisJP5ccjO7E67n5Lc1e0/00AQiBxKnX7LAeNFy7YtPQ8WDuPvoEcMqmJ3PIphC7cglIQ8/M/klVi1DRb/a0fSE3/l3WE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FuMkIlcn; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fD4hw+BOIvMle94DIB2iaooNhPO+90owF25/S1R3S9HQUDxkQBxtWa3CQM3TyZacYYLLol/B9ICbPiXyonLK+rjL4SkNqGnEkemFbu0ecakKD27Di1ipoXZL3l4Vxn/sXhTvuVTAun3xeeh3tO/DC36e19uV3O5D0YoUOs98IL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YOGuIUGc; arc=none smtp.client-ip=209.85.167.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FuMkIlcn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13792C433F1;
-	Tue,  5 Mar 2024 00:33:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709598836;
-	bh=Cg/zW0I8pepL6s5AwV6uMVENIFjhl/PnKbpucTLg7Vc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FuMkIlcnZpiMJsZap6GW67SAYvuKWmfOKIZaviJsCdxh93cqZkMmoClrSWeyRH6qq
-	 anIdMyQ03/KLyxSA68Ey4uqDj5YH32hfkpd7NcZWQIWVHISB78Ek16VJ6l9HcWCRiQ
-	 Xvw2K+V+zO9iEcC8CtsO9E2zgwIbg06nZzu+t8jOUIZxYie7bBw4Dpp6heZl6sSDBG
-	 FJOVMJ2M4KlQW4oAM1zhTtitPYgOxgLGdcJD4tkROFv5k699TvoKDbu9YGjn58X1CK
-	 q8D613OhpEnC7RM8rmj5d6b818IRzpFQXI/KY3Ao2+iqqPljpLDQFN0k8vy/tHCee/
-	 WLbPb5OJC72Lg==
-Date: Mon, 4 Mar 2024 16:33:54 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
-	djwong@kernel.org
-Subject: Re: [PATCH v5 09/24] fsverity: add tracepoints
-Message-ID: <20240305003354.GD17145@sol.localdomain>
-References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-11-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YOGuIUGc"
+Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-3c1f582673bso524775b6e.2
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2024 16:44:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709599446; x=1710204246; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=xPeZoO0bALzx/m/oW1n+JeFHK8ZJCb569gkaMGduVZI=;
+        b=YOGuIUGcv56EbFSq1A5ahSwiITdCRhR1ddacMwqju3g1CyH8FPo864Mf/F5j94EyzC
+         2UXaNL6LvMhklSaZsCLE/Jd9/+Y6+6FC3GB6UhkSiD8kJbGv8G4AtrlCrUNSWoMWNu/8
+         uXpqLjDQsbqn8iyZi2M9Cdlgo2ropiiZ65mVnhFWwehRa4DEKL/1usjJSvPDbcoFEX01
+         3kkS2qliVzHhSn6115o0tMD47DsB1n0tIkisbMhMnppabIxLfvEqhMHPquh8puLdpeo2
+         bJgsiIY8Z4bGV6TXx/Ga8Tt0MPkmyD/rVtnPpA1/ZdlHhAyaHIoV0k6wsw5adzFsaGyF
+         YPPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709599446; x=1710204246;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xPeZoO0bALzx/m/oW1n+JeFHK8ZJCb569gkaMGduVZI=;
+        b=XTT03GF5Q31vlS8cq0Pnwn6riaEmrQwdAc+Gi9hbKxLfglL/ySyB3SD4DgyxedtKgI
+         9QK7Ylcx4RYiDUbwYdQzh7VKeuJCln5mT5GahiKUwZ5vXT8PJCK8qALpW84b3RZ3y5zi
+         qZxMI50/uzJOV0vnf2yF/bp61XpXwD1iucpyu8isOxh1lloirqeCP7IUYuBZ+q8atDm2
+         an72VpP6cmYf/Sd5T7my5Wh8vXN7bjQxNn5BFKyXkhcCkH7vY1n18x1k2UAYHbxHhGfm
+         /MT65Pdz4kw0jmlcumrhqz4PSvnCV9zkgsZUhA7fdfSd8Za4waLB5WrcwVXDTLHV2fma
+         /pMQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXd52iyySdVhsMHfVfw95eX4+VfzlrtmAASVM8oGIrvvoWvdip2BQJOKqdy+54j+ZCMMaelcb+cnxmDySs0Lg6bOxWn8ClnF35p
+X-Gm-Message-State: AOJu0YwuTbxehXO0gVPrDW7akgKodxHK+JzgYy5KTUOKGRu8iyA9S/ks
+	13VawOqVauZZJbdAMU29AtvHmbLuPDvVXYCoibLpZWIbhckd6+T6telSO46UUno=
+X-Google-Smtp-Source: AGHT+IED5DlJm55+yeTSAP67lyXYzh7y9fJgoXg73PjeZWFq6cETXSAVBoBLcxVriWbUTUsN74HBvQ==
+X-Received: by 2002:a05:6871:328b:b0:21e:7a61:5a5a with SMTP id mp11-20020a056871328b00b0021e7a615a5amr334149oac.48.1709599445892;
+        Mon, 04 Mar 2024 16:44:05 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-192-230.pa.nsw.optusnet.com.au. [49.181.192.230])
+        by smtp.gmail.com with ESMTPSA id f42-20020a056a000b2a00b006e623357178sm2358453pfu.176.2024.03.04.16.44.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Mar 2024 16:44:05 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rhIuY-00F8Gg-1h;
+	Tue, 05 Mar 2024 11:44:02 +1100
+Date: Tue, 5 Mar 2024 11:44:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, chandan.babu@oracle.com,
+	axboe@kernel.dk, martin.petersen@oracle.com,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH v2 04/14] fs: xfs: Make file data allocations observe the
+ 'forcealign' flag
+Message-ID: <ZeZq0hRLeEV0PNd6@dread.disaster.area>
+References: <20240304130428.13026-1-john.g.garry@oracle.com>
+ <20240304130428.13026-5-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,248 +78,238 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240304191046.157464-11-aalbersh@redhat.com>
+In-Reply-To: <20240304130428.13026-5-john.g.garry@oracle.com>
 
-On Mon, Mar 04, 2024 at 08:10:32PM +0100, Andrey Albershteyn wrote:
-> diff --git a/include/trace/events/fsverity.h b/include/trace/events/fsverity.h
-> new file mode 100644
-> index 000000000000..82966ecc5722
-> --- /dev/null
-> +++ b/include/trace/events/fsverity.h
-> @@ -0,0 +1,181 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM fsverity
+On Mon, Mar 04, 2024 at 01:04:18PM +0000, John Garry wrote:
+> From: "Darrick J. Wong" <djwong@kernel.org>
+> 
+> The existing extsize hint code already did the work of expanding file
+> range mapping requests so that the range is aligned to the hint value.
+> Now add the code we need to guarantee that the space allocations are
+> also always aligned.
+> 
+> XXX: still need to check all this with reflink
+> 
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> Co-developed-by: John Garry <john.g.garry@oracle.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 22 +++++++++++++++++-----
+>  fs/xfs/xfs_iomap.c       |  4 +++-
+>  2 files changed, 20 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 60d100134280..8dee60795cf4 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3343,6 +3343,19 @@ xfs_bmap_compute_alignments(
+>  		align = xfs_get_cowextsz_hint(ap->ip);
+>  	else if (ap->datatype & XFS_ALLOC_USERDATA)
+>  		align = xfs_get_extsz_hint(ap->ip);
 > +
-> +#if !defined(_TRACE_FSVERITY_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define _TRACE_FSVERITY_H
+> +	/*
+> +	 * xfs_get_cowextsz_hint() returns extsz_hint for when forcealign is
+> +	 * set as forcealign and cowextsz_hint are mutually exclusive
+> +	 */
+> +	if (xfs_inode_forcealign(ap->ip) && align) {
+> +		args->alignment = align;
+> +		if (stripe_align % align)
+> +			stripe_align = align;
+
+This kinda does the right thing, but it strikes me as the wrong
+thing to be doing - it seems to conflates two different physical
+alignment properties in potentially bad ways, and we should never
+get this far into the allocator to discover these issues.
+
+Stripe alignment is alignment to physical disks in a RAID array.
+Inode forced alignment is file offset alignment to specificly
+defined LBA address ranges.  The stripe unit/width is set at mkfs
+time, the inode extent size hint at runtime.
+
+These can only work together in specific situations:
+
+	1. max sized RWF_ATOMIC IO must be the same or smaller size
+	   than the stripe unit. Alternatively: stripe unit must be
+	   an integer (power of 2?) multiple of max atomic IO size.
+
+	   IOWs, stripe unit vs atomic IO constraints must be
+	   resolved in a compatible manner at mkfs time. If they
+	   can't be resolved (e.g. non-power of 2 stripe unit) then
+	   atomic IO cannot be done on the filesystem at all. Stripe
+	   unit constraints always win over atomic IO.
+
+	2. min sized RWF_ATOMIC IO must be an integer divider of
+	   stripe unit so that small atomic IOs are always correctly
+	   aligned to the stripe unit.
+
+	3. Inode forced alignment constraints set at runtime (i.e.
+	   extsize hints) must fit within the above stripe unit vs
+	   min/max atomic IO requirements.
+
+	   i.e. extent size hint will typically need to an integer
+	   multiple of stripe unit size which will always be
+	   compatible with stripe unit and atomic IO size and
+	   alignments...
+
+IOWs, these are static geometry constraints and so should be checked
+and rejected at the point where alignments are specified (i.e.
+mkfs, mount and ioctls). Then the allocator can simply assume that
+forced inode alignments are always stripe alignment compatible and
+we don't need separate handling of two possibly incompatible
+alignments.
+
+Regardless, I think the code as it stands won't work correctly when
+a stripe unit is not set.
+
+The correct functioning of this code appears to be dependent on
+stripe_align being set >= the extent size hint. If stripe align is
+not set, then what does (0 % align) return? If my checks are
+correct, this will return 0, and so the above code will end up with
+stripe_align = 0.
+
+Now, consider that args->alignment is used to signal to the
+allocator what the -start alignment- of the allocation is supposed
+to be, whilst args->prod/args->mod are used to tell the allocator
+what the tail adjustment is supposed to be.
+
+Stripe alignment wants start alignment, extent size hints want tail
+adjustment and force aligned allocation wants both start alignment
+and tail adjustment.
+
+However, the allocator overrides these depending on what it is
+doing. e.g. exact block EOF allocation turns off start alignment but
+has to ensure space is reserved for start alignment if it fails.
+This reserves space for stripe_align in args->minalignslop, but if
+force alignment has a start alignment requirement larger than stripe
+unit alignment, this code fails to reserve the necessary alignment
+slop for the force alignment code.
+
+If we aren't doing exact block EOF allocation, then we do stripe
+unit alignment. Again, if this fails and the forced alignment is
+larger than stripe alignment, this code does not reserve space for
+the larger alignment in args->minalignslop, so it will also do the
+wrong when we fall back to an args->alignment > 1 allocation.
+
+Failing to correctly account for minalignslop is known to cause
+accounting problems when the AG is very near empty, and the usual
+result of that is cancelling of a dirty allocation transaction and a
+forced shutdown. So this is something we need to get right.
+
+More below....
+
+> +	} else {
+> +		args->alignment = 1;
+> +	}
+
+Just initialise the allocation args structure with a value of 1 like
+we already do?
+
 > +
-> +#include <linux/tracepoint.h>
-> +
-> +struct fsverity_descriptor;
-> +struct merkle_tree_params;
-> +struct fsverity_info;
-> +
-> +#define FSVERITY_TRACE_DIR_ASCEND	(1ul << 0)
-> +#define FSVERITY_TRACE_DIR_DESCEND	(1ul << 1)
-> +#define FSVERITY_HASH_SHOWN_LEN		20
-> +
-> +TRACE_EVENT(fsverity_enable,
-> +	TP_PROTO(struct inode *inode, struct fsverity_descriptor *desc,
-> +		struct merkle_tree_params *params),
-> +	TP_ARGS(inode, desc, params),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__field(u64, data_size)
-> +		__field(unsigned int, block_size)
-> +		__field(unsigned int, num_levels)
-> +		__field(u64, tree_size)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		__entry->data_size = desc->data_size;
-> +		__entry->block_size = params->block_size;
-> +		__entry->num_levels = params->num_levels;
-> +		__entry->tree_size = params->tree_size;
-> +	),
-> +	TP_printk("ino %lu data size %llu tree size %llu block size %u levels %u",
-> +		(unsigned long) __entry->ino,
-> +		__entry->data_size,
-> +		__entry->tree_size,
-> +		__entry->block_size,
-> +		__entry->num_levels)
-> +);
+>  	if (align) {
+>  		if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev, align, 0,
+>  					ap->eof, 0, ap->conv, &ap->offset,
+> @@ -3438,7 +3451,6 @@ xfs_bmap_exact_minlen_extent_alloc(
+>  	args.minlen = args.maxlen = ap->minlen;
+>  	args.total = ap->total;
+>  
+> -	args.alignment = 1;
+>  	args.minalignslop = 0;
 
-All pointer parameters to the tracepoints should be const, so that it's clear
-that the pointed-to-data isn't being modified.
+This likely breaks the debug code. This isn't intended for testing
+atomic write capability, it's for exercising low space allocation
+algorithms with worst case fragmentation patterns. This is only
+called when error injection is turned on to trigger this path, so we
+shouldn't need to support forced IO alignment here.
 
-The desc parameter is not needed for fsverity_enable, since it's only being used
-for the file size which is also available in inode->i_size.
+>  
+>  	args.minleft = ap->minleft;
+> @@ -3484,6 +3496,7 @@ xfs_bmap_btalloc_at_eof(
+>  {
+>  	struct xfs_mount	*mp = args->mp;
+>  	struct xfs_perag	*caller_pag = args->pag;
+> +	int			orig_alignment = args->alignment;
+>  	int			error;
+>  
+>  	/*
+> @@ -3558,10 +3571,10 @@ xfs_bmap_btalloc_at_eof(
+>  
+>  	/*
+>  	 * Allocation failed, so turn return the allocation args to their
+> -	 * original non-aligned state so the caller can proceed on allocation
+> -	 * failure as if this function was never called.
+> +	 * original state so the caller can proceed on allocation failure as
+> +	 * if this function was never called.
+>  	 */
+> -	args->alignment = 1;
+> +	args->alignment = orig_alignment;
+>  	return 0;
+>  }
 
-> +TRACE_EVENT(fsverity_tree_done,
-> +	TP_PROTO(struct inode *inode, struct fsverity_descriptor *desc,
-> +		struct merkle_tree_params *params),
-> +	TP_ARGS(inode, desc, params),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__field(unsigned int, levels)
-> +		__field(unsigned int, tree_blocks)
-> +		__field(u64, tree_size)
-> +		__array(u8, tree_hash, 64)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		__entry->levels = params->num_levels;
-> +		__entry->tree_blocks =
-> +			params->tree_size >> params->log_blocksize;
-> +		__entry->tree_size = params->tree_size;
-> +		memcpy(__entry->tree_hash, desc->root_hash, 64);
-> +	),
-> +	TP_printk("ino %lu levels %d tree_blocks %d tree_size %lld root_hash %s",
-> +		(unsigned long) __entry->ino,
-> +		__entry->levels,
-> +		__entry->tree_blocks,
-> +		__entry->tree_size,
-> +		__print_hex(__entry->tree_hash, 64))
-> +);
+As I said above, we can't set an alignment of > 1 here if we haven't
+accounted for that alignment in args->minalignslop above. This leads
+to unexpected ENOSPC conditions and filesystem shutdowns.
 
-tree_blocks is using the wrong type (unsigned int instead of unsigned long), and
-it doesn't seem very useful since there's already tree_size and the
-fsverity_enable event which has block_size.
+I suspect what we need to do is get rid of the separate stripe_align
+variable altogether and always just set args->alignment to what we
+need the extent start alignment to be, regardless of whether it is
+from stripe alignment or forced alignment.
 
-Also, the way this handles the hash is weird.  It shows 64 bytes, even if it's
-shorter, and it doesn't show what algorithm it uses.  That makes the value hard
-to use, as the same string could be shown for two hashes that are actually
-different.  Maybe take a look at how fsverity-utils prints hashes.
+Then the code in xfs_bmap_btalloc_at_eof() doesn't need to know what
+'stripe_align' is - the exact EOF block allocation can simply save
+and restore the args->alignment value and use it for minalignslop
+calculations for the initial exact block allocation.
 
-Also, did you perhaps intend to use the file digest instead?  The "Merkle tree
-root hash" isn't the actual file digest that userspace sees.  There's one more
-level of hashing on top of that.
+Then, if xfs_bmap_btalloc_at_eof() fails and xfs_inode_forcealign()
+is true, we can abort allocation immediately, and not bother to fall
+back on further aligned/unaligned attempts that will also fail or do
+the wrong them.
 
-> +TRACE_EVENT(fsverity_verify_block,
-> +	TP_PROTO(struct inode *inode, u64 offset),
-> +	TP_ARGS(inode, offset),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__field(u64, offset)
-> +		__field(unsigned int, block_size)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		__entry->offset = offset;
-> +		__entry->block_size =
-> +			inode->i_verity_info->tree_params.block_size;
-> +	),
-> +	TP_printk("ino %lu data offset %lld data block size %u",
-> +		(unsigned long) __entry->ino,
-> +		__entry->offset,
-> +		__entry->block_size)
-> +);
+Similarly, if we aren't doing EOF allocation, having args->alignment
+set means it will do the right thing for the first allocation
+attempt. Again, if that fails, we can check if
+xfs_inode_forcealign() is true and fail the aligned allocation
+instead of running the low space algorithm. This now makes it clear
+that we're failing the allocation because of the forced alignment
+requirement, and now the low space allocation code can explicitly
+turn off start alignment as it isn't required...
 
-This should be named fsverity_verify_data_block, since it's invoked when a data
-block is verified, not when a hash block is verified.  Or did you perhaps intend
-for this to be invoked for all blocks?
 
-Also, please don't use 'offset', as it's ambiguous.  We should follow the
-convention used in the pagecache code where 'pos' is used for an offset in
-bytes, and 'index' is used for an offset in something else such as blocks.
-Likewise in the other tracepoints that are using 'offset'.
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 18c8f168b153..70fe873951f3 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -181,7 +181,9 @@ xfs_eof_alignment(
+>  		 * If mounted with the "-o swalloc" option the alignment is
+>  		 * increased from the strip unit size to the stripe width.
+>  		 */
+> -		if (mp->m_swidth && xfs_has_swalloc(mp))
+> +		if (xfs_inode_forcealign(ip))
+> +			align = xfs_get_extsz_hint(ip);
+> +		else if (mp->m_swidth && xfs_has_swalloc(mp))
+>  			align = mp->m_swidth;
+>  		else if (mp->m_dalign)
+>  			align = mp->m_dalign;
 
-Also, the derefenece of ->i_verity_info seems a bit out of place.  This probably
-should be passed the merkle_tree_params directly.
+This doesn't work for files with a current size of less than
+"align". The next line of code does:
 
-> +TRACE_EVENT(fsverity_merkle_tree_block_verified,
-> +	TP_PROTO(struct inode *inode,
-> +		 struct fsverity_blockbuf *block,
-> +		 u8 direction),
-> +	TP_ARGS(inode, block, direction),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__field(u64, offset)
-> +		__field(u8, direction)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		__entry->offset = block->offset;
-> +		__entry->direction = direction;
-> +	),
-> +	TP_printk("ino %lu block offset %llu %s",
-> +		(unsigned long) __entry->ino,
-> +		__entry->offset,
-> +		__entry->direction == 0 ? "ascend" : "descend")
-> +);
+	if (align && XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, align))
+		align = 0;
 
-It looks like 'offset' is the index of the block in the whole Merkle tree, in
-which case it should be called 'index'.  However perhaps it would be more useful
-to provide a (level, index_in_level) pair?
+IOWs, the first aligned write allocation will occur with a file size
+of zero, and that will result in this function returning 0. i.e.
+speculative post EOF delalloc doesn't turn on and align the EOF
+until writes up to offset == align have already been completed.
 
-Also, fsverity_merkle_tree_block_verified isn't just being invoked when a Merkle
-tree block is being verified, but also when an already-verified block is seen.
-That might make it confusing to use.  Perhaps it should be defined to be just
-for when a block is being verified?
+Essentially, this code wants to be:
 
-> +TRACE_EVENT(fsverity_invalidate_block,
-> +	TP_PROTO(struct inode *inode, struct fsverity_blockbuf *block),
-> +	TP_ARGS(inode, block),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__field(u64, offset)
-> +		__field(unsigned int, block_size)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		__entry->offset = block->offset;
-> +		__entry->block_size = block->size;
-> +	),
-> +	TP_printk("ino %lu block position %llu block size %u",
-> +		(unsigned long) __entry->ino,
-> +		__entry->offset,
-> +		__entry->block_size)
-> +);
+	if (xfs_inode_forcealign(ip))
+		return xfs_get_extsz_hint(ip);
 
-fsverity_invalidate_merkle_tree_block?  And again, call 'offset' something else.
+So that any write to the a force aligned inode will always trigger
+extent size hint EOF alignment.
 
-> +TRACE_EVENT(fsverity_read_merkle_tree_block,
-> +	TP_PROTO(struct inode *inode, u64 offset, unsigned int log_blocksize),
-> +	TP_ARGS(inode, offset, log_blocksize),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__field(u64, offset)
-> +		__field(u64, index)
-> +		__field(unsigned int, block_size)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		__entry->offset = offset;
-> +		__entry->index = offset >> log_blocksize;
-> +		__entry->block_size = 1 << log_blocksize;
-> +	),
-> +	TP_printk("ino %lu tree offset %llu block index %llu block hize %u",
-> +		(unsigned long) __entry->ino,
-> +		__entry->offset,
-> +		__entry->index,
-> +		__entry->block_size)
-> +);
-
-This tracepoint is never actually invoked.
-
-Also it seems redundant to have both 'index' and 'offset'.
-
-> +TRACE_EVENT(fsverity_verify_signature,
-> +	TP_PROTO(const struct inode *inode, const u8 *signature, size_t sig_size),
-> +	TP_ARGS(inode, signature, sig_size),
-> +	TP_STRUCT__entry(
-> +		__field(ino_t, ino)
-> +		__dynamic_array(u8, signature, sig_size)
-> +		__field(size_t, sig_size)
-> +		__field(size_t, sig_size_show)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ino = inode->i_ino;
-> +		memcpy(__get_dynamic_array(signature), signature, sig_size);
-> +		__entry->sig_size = sig_size;
-> +		__entry->sig_size_show = (sig_size > FSVERITY_HASH_SHOWN_LEN ?
-> +			FSVERITY_HASH_SHOWN_LEN : sig_size);
-> +	),
-> +	TP_printk("ino %lu sig_size %lu %s%s%s",
-> +		(unsigned long) __entry->ino,
-> +		__entry->sig_size,
-> +		(__entry->sig_size ? "sig " : ""),
-> +		__print_hex(__get_dynamic_array(signature),
-> +			__entry->sig_size_show),
-> +		(__entry->sig_size ? "..." : ""))
-> +);
-
-Do you actually have plans to use the builtin signature support?  It's been
-causing a lot of issues for people, so I've been discouraging people from using
-it.  If there is no use case for this tracepoint then we shouldn't add it.
-
-The way it's printing the signature is also weird.  It's incorrectly referring
-to it a "hash", and it's only showing the first 20 bytes which might just
-contain PKCS#7 boilerplate and not the actual signature.  So I'm not sure what
-the purpose of this is.
-
-Also, this tracepoint gets invoked even when there is no signature, which is
-confusing.
-
-- Eric
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
