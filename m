@@ -1,61 +1,61 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCCA63C8
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 21:22:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE0C1AADA
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 21:31:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709760179; cv=none; b=Etv8pdqCCrLl9llxHjx7k+1s6vxv2PXqJa0aW/9aWpqHzz1AmFMC3Z8ByASHboOGVudryYZPFVlkqife9IWgXsQaimkkTlDoUsaQOvTvYx7uiZsUttm0pZhODlhD9XZlquK9+twSBbeMxDcum7zaXOdb+Lj/kCx+atzHXhcppVo=
+	t=1709760680; cv=none; b=JTqG6sN3d0HYif/cQ2B0NmdZO3zyFb/uyx3X5Ql2BFJzkAEwcJ97iDzdlCs3Wim3miEMn6+HLQyF9CTM4wpRqBEl9Oscs8KAxA2mKypoj20v/R6FBk4uOJmUwppFPiqJknt2jBkoghLewn89P632Yre2KQJiM7yau7KOEUWquCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709760179; c=relaxed/simple;
-	bh=jDwU/FSgX0dPRWta9QWi+N1QVGUQfefYU1X1kDZhOeE=;
+	s=arc-20240116; t=1709760680; c=relaxed/simple;
+	bh=rMXr7jsfzk/3cDZG8HH1UXSju8881T4mve4OBWJqyrc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZA/mCPUTIroScMhF0hp4RjzGbk8sXcNkB4lWSTOXvRjwJp3+xM46Bgn33UIQxUXrHHNMb1a7en7kjNjNFqa2dbpbJuRLUORgjx43SCnT/p1s5xr/seN/zJOOegl4MApkV9DbniQoo47ZKbE7o3WYs+57n424PV6iOCVaoZd/73Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=O6ypum9k; arc=none smtp.client-ip=209.85.215.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=QNtqamMqYzTQhNN/0wdZpmoqzkNOXDEJGXFqEy+dfEyMOZrGN7x31SGK4qCnTs3K+JjDQFnJh8xih8e6jgvxCNYsp0ezK3ZanKn1ngkgxOjXtzsFx9pYVAH1tV24ZVzmdER9puMJlioxJWamXUHqgepTsnqkPgJ7Xrn0vdHO26I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=QlTLvLBl; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="O6ypum9k"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5ce2aada130so148233a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Mar 2024 13:22:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="QlTLvLBl"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6e56787e691so979391b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 06 Mar 2024 13:31:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709760177; x=1710364977; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709760678; x=1710365478; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=baJ4zqh9oXR7f9aDtD31POIXdOIpumdQpgWGwrDWDeI=;
-        b=O6ypum9kwu8eEa+C7YqI1RgmjFIG3Hlr3Yz7dsPyFPU7SICPtDYTCfgcz/SNtiY0EW
-         OibtuMacyl+TKwlOyrcqk/1QybUYVmR14QLeyqSc5aPKCrMlEZ9FvyRqwTP5Tb5fZTJL
-         yAT7zmOcDwlot74aMq1HGkdzKPmxgF6tWwXcv0g5XwZEcSkWPPwg/W5+BXOm86tWFMN2
-         FvJp8PEzXrt7AdbfoQqSDfUs908dtQ4pR/a3prrKjFysDsrRWA9I0WX3eF/WUxtW3ykN
-         KOIua7VimliVmg0lAPdBevVR6nrFCcejej6wOZNQRLcdZJr/6HmBQ78OhrOpGjo25mp8
-         d1eA==
+        bh=tTZZBMyXZZhsAcGoSs512++WWmiGxqEzY30iwWIRVf8=;
+        b=QlTLvLBlJ0GkQwrmvit3s9ouHH/2norMACvfBMwC2vTeAGjIzxPcT1w+srcBEw3VWm
+         Hze9iHJloAF+1v/TtEidTwI0andk15Q+OWsMr/UXl3rEX/ao6EY+WFion6NcXDapmGLq
+         6eIvW4dlCr8GIyMX3Kc0ZyuYYZI+Vqg+TwiFRanih6a5NtkQESvH0F+OYibcC652GChh
+         +cyyTayRx3U2DsrExrZw3E38MjBUN1/t86x2BDrf2lWoaWAhfHcl2jaS0liRUh11AMIa
+         xuia+dX9vZzDAm8t3lLwokECaW1Ol/qcwNWAdsWdGMWxSYEOawEAlPEQDdTVFEuwlOlD
+         dfUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709760177; x=1710364977;
+        d=1e100.net; s=20230601; t=1709760678; x=1710365478;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=baJ4zqh9oXR7f9aDtD31POIXdOIpumdQpgWGwrDWDeI=;
-        b=qD92iqkW937espXPKZQg3tk6NUBWsw7/sTH4G9rIBxL6AIj+c0e3Z7ul8gmpa01Jb3
-         jlpVcZyqLED8hFO7ZukDxkHhuoGDpZS0VcZPLRP9ciYPKo3IL3aISMqqGfeTNk8kJw4Y
-         QWep3T6NcTByVjf5srLixTQKcrQd/XgSu2LJ+9GUxfymm+PHhS71XT+07pT117oWYRHp
-         je9rlIwgXI0mZg1Z+g89J4cJCIWg4kDt5Y6+7HxnwZ2XhcRzoY4nr7Oh1/aOyVliN+GX
-         34Jv/eODzvfRRRPW70/aXbc98B/18jWIBzUkP1lV9jC9Q5M/K6MDw9nSxgkc8by2brik
-         L76A==
-X-Forwarded-Encrypted: i=1; AJvYcCUuxQYComlmqBYSADr49C38NBEyk3PrSqbvOSXFumrwgq9XxPNdZfuIOZWdYsFl+EqIqONFItctxPD5Fw2R7wEA6CLPEf8K3S7L
-X-Gm-Message-State: AOJu0YxGb17+HVsiMu76k4sgcVBbr80YfXlG1BOBvEIrYLAvoq7SfQZX
-	aNkfVWrdceHE9V8JZZJLBlKlMzpyf5V2Xg8V2wXr2tmsKqAnla14T8ZJK2CiUHE=
-X-Google-Smtp-Source: AGHT+IHFP+3O78AL/mN2ueWeIh6787k23eU38trFCaaTH7ta+c0RSWosJj0XfeW0j9oTouH0cszArg==
-X-Received: by 2002:a05:6a20:80c3:b0:1a1:4d4d:ca8d with SMTP id d3-20020a056a2080c300b001a14d4dca8dmr4957747pza.50.1709760177149;
-        Wed, 06 Mar 2024 13:22:57 -0800 (PST)
+        bh=tTZZBMyXZZhsAcGoSs512++WWmiGxqEzY30iwWIRVf8=;
+        b=C5s/DL1f6M3dtmS7Ad8xeGrzC+cz1UdMee62PSlDcRcidqGkbQiUceNczGEyLEjqfz
+         8/ogZPb1BpuYI7pM8164DkZzdNVCSfW6kYnCJH2ee0Tl7jkoexgg1h08sdruLPCYUf1u
+         tReM+791yDxbb3ijRv6mj/iVvmh8MBwQF5Lgsj1pV5XbxwFoGqTKY4yM4NO551qs66qF
+         OrCKPAgJydCJUEN6WPkI/qIhvsYhqqJcTJ+NmMsWVSGJ9JfOw2V3qphccYzPp2gsonFd
+         GkIbE/RlthOkRdyw8b8qcZ/rW6BYmrlKIHxtdSV+Lk3NE4pb4WttXdMTlLYXdNY6I388
+         OJeQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUy/uh39xMmP03QQQajGQi4N/9WepRGw23x9sEXj6wTC9BUOhe5EmM8zAaHsWOuyLGgFqntY9tYdgbZPx2lopi/P4p4x3x9Oc5r
+X-Gm-Message-State: AOJu0YxAR+tCVe5DKcCV25PR8a+0GfZ1WAY4Bvg3xQ2QO1k36330Y8mt
+	w3OSngDuH4xYoWxWOn6BZ6cFC0hbkZ76UrCeBd2+yEEe1idpPZeeB1qBMmvcjxY=
+X-Google-Smtp-Source: AGHT+IGfznG5D7PDYe9f3fE6Psrmx2j5uB4shV1ViWMMUU71YGJuVUBX+veGGNuxS5t7qaLelf0QKQ==
+X-Received: by 2002:a17:90a:d797:b0:298:a422:937d with SMTP id z23-20020a17090ad79700b00298a422937dmr1622405pju.24.1709760677630;
+        Wed, 06 Mar 2024 13:31:17 -0800 (PST)
 Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
-        by smtp.gmail.com with ESMTPSA id b128-20020a62cf86000000b006e510c61d49sm11739679pfg.183.2024.03.06.13.22.56
+        by smtp.gmail.com with ESMTPSA id nh3-20020a17090b364300b0029b7c9319c9sm189240pjb.12.2024.03.06.13.31.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Mar 2024 13:22:56 -0800 (PST)
+        Wed, 06 Mar 2024 13:31:17 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rhyj0-00FyDL-0T;
-	Thu, 07 Mar 2024 08:22:54 +1100
-Date: Thu, 7 Mar 2024 08:22:54 +1100
+	id 1rhyr4-00FyYC-17;
+	Thu, 07 Mar 2024 08:31:14 +1100
+Date: Thu, 7 Mar 2024 08:31:14 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: John Garry <john.g.garry@oracle.com>
 Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
@@ -65,10 +65,10 @@ Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
 	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
 	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
 	linux-block@vger.kernel.org
-Subject: Re: [PATCH v2 13/14] fs: xfs: Validate atomic writes
-Message-ID: <ZejersjddMNdkDqz@dread.disaster.area>
+Subject: Re: [PATCH v2 12/14] fs: xfs: Support atomic write for statx
+Message-ID: <ZejgovFe/pWCQ4uM@dread.disaster.area>
 References: <20240304130428.13026-1-john.g.garry@oracle.com>
- <20240304130428.13026-14-john.g.garry@oracle.com>
+ <20240304130428.13026-13-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,61 +77,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240304130428.13026-14-john.g.garry@oracle.com>
+In-Reply-To: <20240304130428.13026-13-john.g.garry@oracle.com>
 
-On Mon, Mar 04, 2024 at 01:04:27PM +0000, John Garry wrote:
-> Validate that an atomic write adheres to length/offset rules. Since we
-> require extent alignment for atomic writes, this effectively also enforces
-> that the BIO which iomap produces is aligned.
+On Mon, Mar 04, 2024 at 01:04:26PM +0000, John Garry wrote:
+> Support providing info on atomic write unit min and max for an inode.
+> 
+> For simplicity, currently we limit the min at the FS block size, but a
+> lower limit could be supported in future. This is required by iomap
+> DIO.
+> 
+> The atomic write unit min and max is limited by the guaranteed extent
+> alignment for the inode.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_file.c | 11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_iops.c | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index d0bd9d5f596c..cecc5428fd7c 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -709,11 +709,20 @@ xfs_file_dio_write(
->  	struct kiocb		*iocb,
->  	struct iov_iter		*from)
->  {
-> -	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
-> +	struct inode		*inode = file_inode(iocb->ki_filp);
-> +	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
->  	size_t			count = iov_iter_count(from);
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index a0d77f5f512e..6316448083d2 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -546,6 +546,37 @@ xfs_stat_blksize(
+>  	return PAGE_SIZE;
+>  }
 >  
-> +	if (iocb->ki_flags & IOCB_ATOMIC) {
-> +		if (!generic_atomic_write_valid(iocb->ki_pos, from,
-> +			i_blocksize(inode),
+> +static void
+> +xfs_get_atomic_write_attr(
+> +	struct xfs_inode	*ip,
+> +	unsigned int		*unit_min,
+> +	unsigned int		*unit_max)
+> +{
+> +	xfs_extlen_t		extsz = xfs_get_extsz(ip);
+> +	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+> +	struct block_device	*bdev = target->bt_bdev;
+> +	struct request_queue	*q = bdev->bd_queue;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +	unsigned int		awu_min, awu_max;
+> +	unsigned int		extsz_bytes = XFS_FSB_TO_B(mp, extsz);
+> +
+> +	awu_min = queue_atomic_write_unit_min_bytes(q);
+> +	awu_max = queue_atomic_write_unit_max_bytes(q);
 
-a.k.a. mp->m_bsize. If you use that here, then the need for the VFS
-inode goes away, too.
+We really should be storing these in the xfs_buftarg at mount time,
+like we do logical and physical sector sizes. Similar to sector
+sizes, they *must not change* once the filesystem has been created
+on the device, let alone during an active mount. The whole point of
+the xfs_buftarg is to store the information the filesystem
+needs to do IO to the underlying block device so we don't have to
+chase pointers deep into the block device whenever we need to use
+static geometry information.....
 
-> +			XFS_FSB_TO_B(mp, xfs_get_extsz(ip)))) {
-> +			return -EINVAL;
-> +		}
+> +	if (sbp->sb_blocksize > awu_max || awu_min > sbp->sb_blocksize ||
+> +	    !xfs_inode_atomicwrites(ip)) {
+> +		*unit_min = 0;
+> +		*unit_max = 0;
+> +		return;
 > +	}
 
-Also, I think the checks are the wrong way around here. We can only
-do IOCB_ATOMIC IO on force aligned/atomic write inodes, so shouldn't
-we be checking that first, then basing the rest of the checks on the
-assumption that atomic writes are allowed and have been set up
-correctly on the inode? i.e.
+Again, this is comparing static geometry - if the block size doesn't
+allow atomic writes, then the inode flag should never be set. i.e.
+geometry is checked when configuring atomic writes, not in every
+place we need to check if atomic writes are supported. Hence this
+should simply be:
 
-	if (iocb->ki_flags & IOCB_ATOMIC) {
-		if (!xfs_inode_has_atomicwrites(ip))
-			return -EINVAL;
-		if (!generic_atomic_write_valid(iocb->ki_pos, from,
-				mp->m_bsize, ip->i_extsize))
-			return -EINVAL;
+	if (!xfs_inode_has_atomic_writes(ip)) {
+		*unit_min = 0;
+		*unit_max = 0;
+		return;
 	}
 
-because xfs_inode_has_atomicwrites() implies ip->i_extsize has been
-set to the required atomic IO size?
+before we even look at the xfs_buftarg to get the supported min/max
+values for the given device.
 
 Cheers,
 
