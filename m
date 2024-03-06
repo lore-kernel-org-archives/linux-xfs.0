@@ -1,74 +1,74 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA341BDD3
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 05:30:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8055A1BDD6
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 05:30:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709703058; cv=none; b=LMwW6Ga5oFRGlDVjFeQ23kGgvgVx34SUwrduwPmLOJq8Gi4qfs3fZJmY23piBIBYV77Vah1AJki1YrLXJO433/1z5Yw0azkYmeUs9cML/9RiUppOmAnZ4X/jpb4C3UdEprV2kLmMK/6yXhp4+DvT6XpqKCQAbB5rQc7R0rEQnv4=
+	t=1709703059; cv=none; b=XsOSU/3SLXhA0+U+E4bLbHOpi0EGxOQ6iX/1b5PvFGGvcSgSqNiy+iy2T0m/vfc3znQy9e2jjSerg3edU1jmEXCMYlcV0jyqOxV/u0oPi6lkmN+gSiFWvbfG+DgVb/L+8DxMnfRPbyO8ZcvxTlBGxWhfKJ0oX8+8Z6h/PfbX9bI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709703058; c=relaxed/simple;
-	bh=LZ2GHw34VpfRy7qFSIWq4UfNUcbVBiY63OFvftIFtCw=;
+	s=arc-20240116; t=1709703059; c=relaxed/simple;
+	bh=8V/UNrq6anFxrcLsstoH28hj/LpgQW7e9LuklhLINRU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=adFdepQiO2AL38CgGsdZbK9NuWQeA6nRyh9TdgXcBm+l6iNfmT/6sbxDQoG/lhezqUMePRKIKLvVEF8MwLM0gqNl8auJeTgPy0m2iA8SNTA1HSNqH1F8tWoddp4x3N/+lo1pMVDX3EFJ8Jq+eBnNpAhzj0gHCey5DeM/FbJqGYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Uf3Wxaj/; arc=none smtp.client-ip=209.85.210.170
+	 MIME-Version; b=PRvpsnXg/6cblNkyosLU4VqopzL9BKz/izCbu4Q5yk6lMODZ5i6AxyP8XcxHRF696oPN4kwRoZBImmke1p32GbAe2dPWLDDoHR2eg23xJFXdlQV5Nol4bxF4gflp5snC+y2YLMbZ6XwETDL/hl10vyLnK7O5Pa1v3GATN4hwtN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xYJ/OjvF; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Uf3Wxaj/"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6e5eb3dd2f8so2739302b3a.2
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Mar 2024 21:30:56 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xYJ/OjvF"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1dc49b00bdbso58449085ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Mar 2024 21:30:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709703056; x=1710307856; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709703057; x=1710307857; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fnVR35Lc/9BzN1wG8qqWqovotz4yUqWo57lKgFb2Bh0=;
-        b=Uf3Wxaj/GgaPtZ3xWanCVoIG9uaHj9cqlQoFFv6ANafNCC4Pc4v410J0xaBONE0QJR
-         GgaHlerdLpBrujoQLzDQXPwLmtWTxMk3QLAOlIVPka+cOiLTWghjoa9EEocCB2siOYnw
-         HC5FUnr+H61HNVcuMF27O+rRlrmD9qNZWyWs6J5egx0HgasHx4ZL4irCzA0PBGtCdN9m
-         g2JOlrqlj5FNgniQw1OracEbk9Tdh/smYmygVCj/9SiGTs9iZQ8Ww2Bhm0KCQRmm5fJI
-         Goav87x9lo0/1dmYaW9eMF3j4lk4STjEMH/aPuiq0YU7GL7vr6qXz9HK/83JF7FXZinf
-         XN1w==
+        bh=+qH3gbB+If+3pSpMLmVxmMDFt37zGR941038IrgIW/M=;
+        b=xYJ/OjvFAOo/IKEO+T3tkCbSSiBXJaKTvIvTNaNPAqFn2Hq/0Hl4DK7cHv9aOUoVYD
+         YAQUiCnkpattPRmgoHe+T0op2zEtRrnn0vNR+dqcv/DnKTFqVudaBgF5lrjtdqvxk2bd
+         EwAFAGDri/MU2kmyv3a2ExLVkdduYCUoCV1kY4ygSe6gX+m7yVwkP/hD4950nUgK4r+/
+         0thD+Np8wOmFgdklwq6mYLUWa8q5V7Fonyg2iKBokXSKSDTQiDmhRKJai4c8FcH6CH83
+         1ehu5f/sZ/WFV6CbP4ByEgTyx9Cz4Kz+x+a4ODoLaUTwQj4G+HZwQJ14wU5XfUxqfC1x
+         NxMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709703056; x=1710307856;
+        d=1e100.net; s=20230601; t=1709703057; x=1710307857;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fnVR35Lc/9BzN1wG8qqWqovotz4yUqWo57lKgFb2Bh0=;
-        b=bKCZ0xMPELpz+HzKC/WUBVRwI8H0jNwMg/yVmpQq7GwgkwgKzSmcogThlXmLk8KeRk
-         wszmfLj/y+hUNhKips94lH9iG9GTL4QmSygnfxzLHhEkX9rGcvldSPXM4h6O6G9jBzIQ
-         2A2RfcMCMf2lc53GIT8Kek/GykUEKTNZbMCPv9QdW4TUtfU9c/U29wwrgcwLay6/EBOw
-         83gK9bhHukI0Q0aZ06nk9m+3folLcpsQJBC3ZcDcp5HcrrvVlzB0nhJPnqWbzhBbEm44
-         2Ykhsxf8IuanbADTFt0Gfvim4O2LcH9lPFtMGXFntz0DYRlzNmOd4axAJ+L/HnaA6G1Z
-         E9MA==
-X-Gm-Message-State: AOJu0Yz9ICRMjlUW0kRMXBQiitPz4Yp3fODoJnoG1oCpd4AB3pFhr1Ca
-	GrfYuqy9jpKJ2dDpdSdpO7GDE+plpBwx6/QIqITaPI8gXksbx7iZ2DDfTKpyjyNpZmML9M54eg3
-	k
-X-Google-Smtp-Source: AGHT+IETksGNnU4kbJoIQTYAOV37hfsaYvA4t8A1zmietmkIihRsNWjICQsOhJu3YOKWKCdWEiW3vg==
-X-Received: by 2002:a05:6a00:1248:b0:6e4:fc2b:62d5 with SMTP id u8-20020a056a00124800b006e4fc2b62d5mr14640951pfi.0.1709703055881;
-        Tue, 05 Mar 2024 21:30:55 -0800 (PST)
+        bh=+qH3gbB+If+3pSpMLmVxmMDFt37zGR941038IrgIW/M=;
+        b=oi8kCpNW6NBH0vLQia2iPIeW6m6dJa2U9CTYwSU4VfN7ZRrMh/pDFJMhcDDUCIgm07
+         4rqMXd+fqydRpTro/cDxv4VswzetWZo7w3wli0oRmabQyuqD9J8aYRx/pIB3Tz8wfunz
+         xf+q91E231ef7Qbaf4nOOtjaITrVIH1OlhlizPRqT4tLz+Gm2sonkW3L6eLVb73AO+To
+         tZvfRZPEUu5Z/s7jb0qWxYXRTXRChBy0cgnhXAlfodJLXrP9cXssV7TwZ5N9HqD/85fY
+         qq2DavxfyJK1A+KkXRSa6WjmwvzUaEApzWajrowDEkkVO5jMe7dH1lsB6xJst0XELUnN
+         UI4A==
+X-Gm-Message-State: AOJu0YxBBrjfOniDBxS//w2SWevRMFk3NyRGfJNTTNHB+eONiZqNqSnb
+	xXfOwFNnssR4BfamTdJpM0Ajw6QrT09y/0KmrzIxeOu6chMPgSa1MfR5aa8KST5UUufbKC6Z3mA
+	A
+X-Google-Smtp-Source: AGHT+IEj8hahOqCoyFVQQNg3KRD65aiOeLE5xP7mGy1U1e4grz2/RDAdnK260AH3cHYloAZDFfVIAw==
+X-Received: by 2002:a17:902:b48b:b0:1dc:7b6:867a with SMTP id y11-20020a170902b48b00b001dc07b6867amr3371201plr.21.1709703056627;
+        Tue, 05 Mar 2024 21:30:56 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-192-230.pa.nsw.optusnet.com.au. [49.181.192.230])
-        by smtp.gmail.com with ESMTPSA id j36-20020a63fc24000000b0059b2316be86sm9987883pgi.46.2024.03.05.21.30.54
+        by smtp.gmail.com with ESMTPSA id x11-20020a170902a38b00b001dcdb39613fsm11660820pla.244.2024.03.05.21.30.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 05 Mar 2024 21:30:55 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1rhjrg-00FfkF-1e;
+	id 1rhjrg-00FfkK-1j;
 	Wed, 06 Mar 2024 16:30:52 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1rhjrg-00000006xM6-07hD;
+	id 1rhjrg-00000006xMA-0HPB;
 	Wed, 06 Mar 2024 16:30:52 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: linux-xfs@vger.kernel.org
 Cc: john.g.garry@oracle.com,
 	ojaswin@linux.ibm.com,
 	ritesh.list@gmail.com
-Subject: [PATCH 2/3] xfs: make EOF allocation simpler
-Date: Wed,  6 Mar 2024 16:20:12 +1100
-Message-ID: <20240306053048.1656747-3-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: introduce forced allocation alignment
+Date: Wed,  6 Mar 2024 16:20:13 +1100
+Message-ID: <20240306053048.1656747-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240306053048.1656747-1-david@fromorbit.com>
 References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
@@ -83,319 +83,120 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently the allocation at EOF is broken into two cases - when the
-offset is zero and when the offset is non-zero. When the offset is
-non-zero, we try to do exact block allocation for contiguous
-extent allocation. When the offset is zero, the allocation is simply
-an aligned allocation.
+When forced allocation alignment is specified, the extent will
+be aligned to the extent size hint size rather than stripe
+alignment. If aligned allocation cannot be done, then the allocation
+is failed rather than attempting non-aligned fallbacks.
 
-We want aligned allocation as the fallback when exact block
-allocation fails, but that complicates the EOF allocation in that it
-now has to handle two different allocation cases. The
-caller also has to handle allocation when not at EOF, and for the
-upcoming forced alignment changes we need that to also be aligned
-allocation.
-
-To simplify all this, pull the aligned allocation cases back into
-the callers and leave the EOF allocation path for exact block
-allocation only. This means that the EOF exact block allocation
-fallback path is the normal aligned allocation path and that ends up
-making things a lot simpler when forced alignment is introduced.
+Note: none of the per-inode force align configuration is present
+yet, so this just triggers off an "always false" wrapper function
+for the moment.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c   | 131 +++++++++++++++----------------------
- fs/xfs/libxfs/xfs_ialloc.c |   8 +--
- fs/xfs/xfs_trace.h         |   8 +--
- 3 files changed, 62 insertions(+), 85 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.h |  1 +
+ fs/xfs/libxfs/xfs_bmap.c  | 29 +++++++++++++++++++++++------
+ fs/xfs/xfs_inode.h        |  5 +++++
+ 3 files changed, 29 insertions(+), 6 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index aa2c103d98f0..7de2e6f64882 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -66,6 +66,7 @@ typedef struct xfs_alloc_arg {
+ #define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
+ #define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
+ #define XFS_ALLOC_NOBUSY		(1 << 2)/* Busy extents not allowed */
++#define XFS_ALLOC_FORCEALIGN		(1 << 3)/* forced extent alignment */
+ 
+ /* freespace limit calculations */
+ unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d56c82c07505..c2ddf1875e52 100644
+index c2ddf1875e52..7a0ef0900097 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3320,12 +3320,12 @@ xfs_bmap_select_minlen(
- static int
- xfs_bmap_btalloc_select_lengths(
- 	struct xfs_bmalloca	*ap,
--	struct xfs_alloc_arg	*args,
--	xfs_extlen_t		*blen)
-+	struct xfs_alloc_arg	*args)
- {
+@@ -3411,9 +3411,10 @@ xfs_bmap_alloc_account(
+  * Calculate the extent start alignment and the extent length adjustments that
+  * constrain this allocation.
+  *
+- * Extent start alignment is currently determined by stripe configuration and is
+- * carried in args->alignment, whilst extent length adjustment is determined by
+- * extent size hints and is carried by args->prod and args->mod.
++ * Extent start alignment is currently determined by forced inode alignment or
++ * stripe configuration and is carried in args->alignment, whilst extent length
++ * adjustment is determined by extent size hints and is carried by args->prod
++ * and args->mod.
+  *
+  * Low level allocation code is free to either ignore or override these values
+  * as required.
+@@ -3426,11 +3427,18 @@ xfs_bmap_compute_alignments(
  	struct xfs_mount	*mp = args->mp;
- 	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno, startag;
-+	xfs_extlen_t		blen = 0;
- 	int			error = 0;
+ 	xfs_extlen_t		align = 0; /* minimum allocation alignment */
  
- 	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
-@@ -3339,19 +3339,18 @@ xfs_bmap_btalloc_select_lengths(
- 	if (startag == NULLAGNUMBER)
- 		startag = 0;
+-	/* stripe alignment for allocation is determined by mount parameters */
+-	if (mp->m_swidth && xfs_has_swalloc(mp))
++	/*
++	 * Forced inode alignment takes preference over stripe alignment.
++	 * Stripe alignment for allocation is determined by mount parameters.
++	 */
++	if (xfs_inode_has_forcealign(ap->ip)) {
++		args->alignment = xfs_get_extsz_hint(ap->ip);
++		args->datatype |= XFS_ALLOC_FORCEALIGN;
++	} else if (mp->m_swidth && xfs_has_swalloc(mp)) {
+ 		args->alignment = mp->m_swidth;
+-	else if (mp->m_dalign)
++	} else if (mp->m_dalign) {
+ 		args->alignment = mp->m_dalign;
++	}
  
--	*blen = 0;
- 	for_each_perag_wrap(mp, startag, agno, pag) {
--		error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
-+		error = xfs_bmap_longest_free_extent(pag, args->tp, &blen);
- 		if (error && error != -EAGAIN)
- 			break;
- 		error = 0;
--		if (*blen >= args->maxlen)
-+		if (blen >= args->maxlen)
- 			break;
- 	}
- 	if (pag)
- 		xfs_perag_rele(pag);
- 
--	args->minlen = xfs_bmap_select_minlen(ap, args, *blen);
-+	args->minlen = xfs_bmap_select_minlen(ap, args, blen);
- 	return error;
- }
- 
-@@ -3561,78 +3560,40 @@ xfs_bmap_exact_minlen_extent_alloc(
-  * If we are not low on available data blocks and we are allocating at
-  * EOF, optimise allocation for contiguous file extension and/or stripe
-  * alignment of the new extent.
-- *
-- * NOTE: ap->aeof is only set if the allocation length is >= the
-- * stripe unit and the allocation offset is at the end of file.
-  */
- static int
- xfs_bmap_btalloc_at_eof(
- 	struct xfs_bmalloca	*ap,
--	struct xfs_alloc_arg	*args,
--	xfs_extlen_t		blen,
--	bool			ag_only)
-+	struct xfs_alloc_arg	*args)
+ 	if (ap->flags & XFS_BMAPI_COWFORK)
+ 		align = xfs_get_cowextsz_hint(ap->ip);
+@@ -3617,6 +3625,11 @@ xfs_bmap_btalloc_low_space(
  {
- 	struct xfs_mount	*mp = args->mp;
- 	struct xfs_perag	*caller_pag = args->pag;
-+	xfs_extlen_t		alignment = args->alignment;
  	int			error;
  
-+	ASSERT(ap->aeof && ap->offset);
-+	ASSERT(args->alignment >= 1);
++	if (args->alignment > 1 && (args->datatype & XFS_ALLOC_FORCEALIGN)) {
++		args->fsbno = NULLFSBLOCK;
++		return 0;
++	}
 +
- 	/*
--	 * If there are already extents in the file, try an exact EOF block
--	 * allocation to extend the file as a contiguous extent. If that fails,
--	 * or it's the first allocation in a file, just try for a stripe aligned
--	 * allocation.
-+	 * Compute the alignment slop for the fallback path so we ensure
-+	 * we account for the potential alignemnt space required by the
-+	 * fallback paths before we modify the AGF and AGFL here.
- 	 */
--	if (ap->offset) {
--		xfs_extlen_t	alignment = args->alignment;
--
--		/*
--		 * Compute the alignment slop for the fallback path so we ensure
--		 * we account for the potential alignemnt space required by the
--		 * fallback paths before we modify the AGF and AGFL here.
--		 */
--		args->alignment = 1;
--		args->alignslop = alignment - args->alignment;
--
--		if (!caller_pag)
--			args->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ap->blkno));
--		error = xfs_alloc_vextent_exact_bno(args, ap->blkno);
--		if (!caller_pag) {
--			xfs_perag_put(args->pag);
--			args->pag = NULL;
--		}
--		if (error)
--			return error;
--
--		if (args->fsbno != NULLFSBLOCK)
--			return 0;
--		/*
--		 * Exact allocation failed. Reset to try an aligned allocation
--		 * according to the original allocation specification.
--		 */
--		args->alignment = alignment;
--		args->alignslop = 0;
--	}
--
--	if (ag_only) {
--		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
--	} else {
-+	args->alignment = 1;
-+	args->alignslop = alignment - args->alignment;
-+
-+	if (!caller_pag)
-+		args->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ap->blkno));
-+	error = xfs_alloc_vextent_exact_bno(args, ap->blkno);
-+	if (!caller_pag) {
-+		xfs_perag_put(args->pag);
- 		args->pag = NULL;
--		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
--		ASSERT(args->pag == NULL);
--		args->pag = caller_pag;
- 	}
--	if (error)
--		return error;
+ 	args->alignment = 1;
+ 	if (args->minlen > ap->minlen) {
+ 		args->minlen = ap->minlen;
+@@ -3668,6 +3681,8 @@ xfs_bmap_btalloc_filestreams(
  
--	if (args->fsbno != NULLFSBLOCK)
--		return 0;
--
--	/*
--	 * Aligned allocation failed, so all fallback paths from here drop the
--	 * start alignment requirement as we know it will not succeed.
--	 */
--	args->alignment = 1;
--	return 0;
-+	/* Reset alignment to original specifications.  */
-+	args->alignment = alignment;
-+	args->alignslop = 0;
-+	return error;
- }
- 
- /*
-@@ -3698,12 +3659,19 @@ xfs_bmap_btalloc_filestreams(
- 	}
- 
- 	args->minlen = xfs_bmap_select_minlen(ap, args, blen);
--	if (ap->aeof)
--		error = xfs_bmap_btalloc_at_eof(ap, args, blen, true);
-+	if (ap->aeof && ap->offset)
-+		error = xfs_bmap_btalloc_at_eof(ap, args);
- 
-+	/* This may be an aligned allocation attempt. */
- 	if (!error && args->fsbno == NULLFSBLOCK)
+ 	/* Attempt non-aligned allocation if we haven't already. */
+ 	if (!error && args->fsbno == NULLFSBLOCK && args->alignment > 1)  {
++		if (args->datatype & XFS_ALLOC_FORCEALIGN)
++			return error;
+ 		args->alignment = 1;
  		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
- 
-+	/* Attempt non-aligned allocation if we haven't already. */
-+	if (!error && args->fsbno == NULLFSBLOCK && args->alignment > 1)  {
-+		args->alignment = 1;
-+		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
-+	}
-+
- out_low_space:
- 	/*
- 	 * We are now done with the perag reference for the filestreams
-@@ -3725,7 +3693,6 @@ xfs_bmap_btalloc_best_length(
- 	struct xfs_bmalloca	*ap,
- 	struct xfs_alloc_arg	*args)
- {
--	xfs_extlen_t		blen = 0;
- 	int			error;
- 
- 	ap->blkno = XFS_INO_TO_FSB(args->mp, ap->ip->i_ino);
-@@ -3736,23 +3703,33 @@ xfs_bmap_btalloc_best_length(
- 	 * the request.  If one isn't found, then adjust the minimum allocation
- 	 * size to the largest space found.
- 	 */
--	error = xfs_bmap_btalloc_select_lengths(ap, args, &blen);
-+	error = xfs_bmap_btalloc_select_lengths(ap, args);
- 	if (error)
- 		return error;
- 
- 	/*
--	 * Don't attempt optimal EOF allocation if previous allocations barely
--	 * succeeded due to being near ENOSPC. It is highly unlikely we'll get
--	 * optimal or even aligned allocations in this case, so don't waste time
--	 * trying.
-+	 * If we are in low space mode, then optimal allocation will fail so
-+	 * prepare for minimal allocation and run the low space algorithm
-+	 * immediately.
- 	 */
--	if (ap->aeof && !(ap->tp->t_flags & XFS_TRANS_LOWMODE)) {
--		error = xfs_bmap_btalloc_at_eof(ap, args, blen, false);
--		if (error || args->fsbno != NULLFSBLOCK)
--			return error;
-+	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
-+		ASSERT(args->fsbno == NULLFSBLOCK);
-+		return xfs_bmap_btalloc_low_space(ap, args);
-+	}
-+
-+	if (ap->aeof && ap->offset)
-+		error = xfs_bmap_btalloc_at_eof(ap, args);
-+
-+	/* This may be an aligned allocation attempt. */
-+	if (!error && args->fsbno == NULLFSBLOCK)
-+		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
-+
-+	/* Attempt non-aligned allocation if we haven't already. */
-+	if (!error && args->fsbno == NULLFSBLOCK && args->alignment > 1)  {
-+		args->alignment = 1;
-+		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
  	}
+@@ -3726,6 +3741,8 @@ xfs_bmap_btalloc_best_length(
  
--	error = xfs_alloc_vextent_start_ag(args, ap->blkno);
- 	if (error || args->fsbno != NULLFSBLOCK)
- 		return error;
- 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index fa27a50f96ac..fc19d93a9d69 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -758,12 +758,12 @@ xfs_ialloc_ag_alloc(
- 		 *
- 		 * For an exact allocation, alignment must be 1,
- 		 * however we need to take cluster alignment into account when
--		 * fixing up the freelist. Use the minalignslop field to
-+		 * fixing up the freelist. Use the alignslop field to
- 		 * indicate that extra blocks might be required for alignment,
- 		 * but not to use them in the actual exact allocation.
- 		 */
- 		args.alignment = 1;
--		args.minalignslop = igeo->cluster_align - 1;
-+		args.alignslop = igeo->cluster_align - 1;
- 
- 		/* Allow space for the inode btree to split. */
- 		args.minleft = igeo->inobt_maxlevels;
-@@ -780,10 +780,10 @@ xfs_ialloc_ag_alloc(
- 		 * the exact agbno requirement and increase the alignment
- 		 * instead. It is critical that the total size of the request
- 		 * (len + alignment + slop) does not increase from this point
--		 * on, so reset minalignslop to ensure it is not included in
-+		 * on, so reset alignslop to ensure it is not included in
- 		 * subsequent requests.
- 		 */
--		args.minalignslop = 0;
-+		args.alignslop = 0;
+ 	/* Attempt non-aligned allocation if we haven't already. */
+ 	if (!error && args->fsbno == NULLFSBLOCK && args->alignment > 1)  {
++		if (args->datatype & XFS_ALLOC_FORCEALIGN)
++			return error;
+ 		args->alignment = 1;
+ 		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
  	}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 0f9d32cbae72..94fa79ae1591 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -312,6 +312,11 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
+ 	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+ }
  
- 	if (unlikely(args.fsbno == NULLFSBLOCK)) {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 56b07d8ed431..0b4898b39e30 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1800,7 +1800,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__field(xfs_extlen_t, minleft)
- 		__field(xfs_extlen_t, total)
- 		__field(xfs_extlen_t, alignment)
--		__field(xfs_extlen_t, minalignslop)
-+		__field(xfs_extlen_t, alignslop)
- 		__field(xfs_extlen_t, len)
- 		__field(char, wasdel)
- 		__field(char, wasfromfl)
-@@ -1819,7 +1819,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__entry->minleft = args->minleft;
- 		__entry->total = args->total;
- 		__entry->alignment = args->alignment;
--		__entry->minalignslop = args->minalignslop;
-+		__entry->alignslop = args->alignslop;
- 		__entry->len = args->len;
- 		__entry->wasdel = args->wasdel;
- 		__entry->wasfromfl = args->wasfromfl;
-@@ -1828,7 +1828,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__entry->highest_agno = args->tp->t_highest_agno;
- 	),
- 	TP_printk("dev %d:%d agno 0x%x agbno 0x%x minlen %u maxlen %u mod %u "
--		  "prod %u minleft %u total %u alignment %u minalignslop %u "
-+		  "prod %u minleft %u total %u alignment %u alignslop %u "
- 		  "len %u wasdel %d wasfromfl %d resv %d "
- 		  "datatype 0x%x highest_agno 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-@@ -1841,7 +1841,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		  __entry->minleft,
- 		  __entry->total,
- 		  __entry->alignment,
--		  __entry->minalignslop,
-+		  __entry->alignslop,
- 		  __entry->len,
- 		  __entry->wasdel,
- 		  __entry->wasfromfl,
++static inline bool xfs_inode_has_forcealign(struct xfs_inode *ip)
++{
++	return false;
++}
++
+ /*
+  * Return the buftarg used for data allocations on a given inode.
+  */
 -- 
 2.43.0
 
