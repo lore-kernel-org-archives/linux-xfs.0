@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85ED112FF88;
-	Wed,  6 Mar 2024 15:36:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAF9F137904;
+	Wed,  6 Mar 2024 16:30:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709739385; cv=none; b=u2tnpkXqoPTJ0nQ1U9p1Cq9Xs+PJKC8bO3WrfmmMGnG9+ByCkeFeMEIgRzHIhlKdKzun/zqvqTcofwlWeR5u9Q9qcXvq9CswfGSnkf6KOId2tJvLVnRVdljkwAAsyU9B9UJJ78IfOGz0dXRO5+zi9Nf2fl7Bov32WtNceQYQiqY=
+	t=1709742601; cv=none; b=BnbJ/H5gr2Vc0WpqlGqnG52pfWp04lzXRuYhluXMuNRBpodGDZpe7Frp57u+XuOsAFc1NNUMoxDpqghZh8gm2Bh8eC3ygDjguQxl9If5k9BIiDrSnsUnyktraATRk7QaDj2VfQCwMSC418cNIXN0llNtSkG3jBJAEPwfUTM+ay0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709739385; c=relaxed/simple;
-	bh=Bh5Dp27/tqyItLKHwyKeEmWbTpge2ZVnRBPEZ8Itq3M=;
+	s=arc-20240116; t=1709742601; c=relaxed/simple;
+	bh=eZV8riaJEUdxsSABB6D99YhMGQQ6hWkHmvjxZv84qBg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mt39l8ByE56RL4zq72BfMfiPTYU44iEpjdqN8DQAOJooiaproJ4BvFfpNEy+1yXP+/++joCQSUD0wZt6oAiEbwokzKNhxJEDR05Mu95rdi7hav2YjveIf3bEvH04wOJn0NG747IdZW41Q69T3JLtlDjnUtP1cjhCi+Uwt5trPCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T2Cg0Ta0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=eO3A25D7iQkkfdJET2UFalta1ZLbegMbwPygS+pX64PC/Wx9QAzrF5nkwVtfp1OxXnShqFXc4WMzTru27OqObGov8pZPr1n9iMPqPralmQTl/n7ObhoBPoVmPeU68Tgg3l8XdK3xQCvBM7ZaOStzS76FWqSNUDccaLl32s8zfeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PDnwyOFF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T2Cg0Ta0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00797C433F1;
-	Wed,  6 Mar 2024 15:36:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PDnwyOFF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48A58C433F1;
+	Wed,  6 Mar 2024 16:30:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709739385;
-	bh=Bh5Dp27/tqyItLKHwyKeEmWbTpge2ZVnRBPEZ8Itq3M=;
+	s=k20201202; t=1709742601;
+	bh=eZV8riaJEUdxsSABB6D99YhMGQQ6hWkHmvjxZv84qBg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T2Cg0Ta00yUrXeehc7UDXzl+DzKBdm5vDlhzNht5QdJaVU7PyLyIrNrFqrbDl2MLx
-	 SATq9IeRmxZlSCFO5of0MlbhTUQwfK0zSiVp5PgppVoCKfHxXEBTppsWNNk7qncGr/
-	 1teHZ8V9m3uKVTyXP22AdlgG/p8f7NjMecv+MucGbhRcMi7oXtIUjuOWFTXU2XIxmj
-	 lojH5o8xY6MICDuZzBh/XPmtyWGe/oAujETOntqV4W9H9b426KfuQR9/nCtxYRlUzt
-	 nyFZ28Aiiw3TT6bY076xIMvNHLO+1252ccj3jydeSBygCcw09QTAV9/kBdOTDIGO/E
-	 j5GIskJh2KkDQ==
-Date: Wed, 6 Mar 2024 07:36:24 -0800
+	b=PDnwyOFFVdJYfgXJmffTwYOj/bUW6rB1YDbcEXGprSv56hQpl2SRO8NpP+05fhCs8
+	 Pc1oRyQsL1H0EL2nAAALg/+Fo7b648aqnum641Yo6vofMtGj2goSGatwUEgAhmmDzW
+	 NsANXCcCq/h7c3dbfX8ObJDFUzTipdUUhHtlG5BAQD0fCwkMPC7jk2TJsgoYouVlVe
+	 UTtbzehZVe5RzliigtIr+yzy7Vzi2QpGdPoVpnBRT4BN0hRY9qa3grMuDFCd4GrSc7
+	 CWubCSyyC4PM17G9kgXn/B4XTGdwTPAx8ZCQnUhAiwWVvVQYM8DPjWT1JCV0FxdlpV
+	 c2+wF+dZJIknQ==
+Date: Wed, 6 Mar 2024 08:30:00 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH v2 2/2] xfs: Remove duplicate include
-Message-ID: <20240306153624.GO1927156@frogsfrogsfrogs>
-References: <20240305024009.52931-1-jiapeng.chong@linux.alibaba.com>
- <20240305024009.52931-2-jiapeng.chong@linux.alibaba.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	chandan.babu@oracle.com
+Subject: Re: [PATCH v5 06/24] fsverity: pass tree_blocksize to
+ end_enable_verity()
+Message-ID: <20240306163000.GP1927156@frogsfrogsfrogs>
+References: <20240304191046.157464-2-aalbersh@redhat.com>
+ <20240304191046.157464-8-aalbersh@redhat.com>
+ <20240305005242.GE17145@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,39 +46,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240305024009.52931-2-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <20240305005242.GE17145@sol.localdomain>
 
-On Tue, Mar 05, 2024 at 10:40:09AM +0800, Jiapeng Chong wrote:
-> ./fs/xfs/xfs_trace.c: xfs_bmap.h is included more than once.
+On Mon, Mar 04, 2024 at 04:52:42PM -0800, Eric Biggers wrote:
+> On Mon, Mar 04, 2024 at 08:10:29PM +0100, Andrey Albershteyn wrote:
+> > XFS will need to know tree_blocksize to remove the tree in case of an
+> > error. The size is needed to calculate offsets of particular Merkle
+> > tree blocks.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > ---
+> >  fs/btrfs/verity.c        | 4 +++-
+> >  fs/ext4/verity.c         | 3 ++-
+> >  fs/f2fs/verity.c         | 3 ++-
+> >  fs/verity/enable.c       | 6 ++++--
+> >  include/linux/fsverity.h | 4 +++-
+> >  5 files changed, 14 insertions(+), 6 deletions(-)
 > 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8385
-> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+> How will XFS handle dropping a file's incomplete tree if the system crashes
+> while it's being built?
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+AFAICT it simply leaves the half-constructed tree in the xattrs data.
+
+> I think this is why none of the other filesystems have needed the tree_blocksize
+> in ->end_enable_verity() yet.  They need to be able to drop the tree from just
+> the information the filesystem has on-disk anyway.  ext4 and f2fs just truncate
+> past EOF, while btrfs has some code that finds all the verity metadata items and
+> deletes them (see btrfs_drop_verity_items() in fs/btrfs/verity.c).
+> 
+> Technically you don't *have* to drop incomplete trees, since it shouldn't cause
+> a behavior difference.  But it seems like something that should be cleaned up.
+
+If it's required that a failed FS_IOC_ENABLE_VERITY clean up the
+unfinished merkle tree, then you'd have to introduce some kind of log
+intent item to roll back blocks from an unfinished tree.  That log
+item has to be committed as the first item in a chain of transactions,
+each of which adds a merkle tree block and relogs the rollback item.
+When we finish the tree, we log a done item to whiteout the intent.
+
+Log recovery, upon finding an intent without the done item, will replay
+the intent, which (in this case) will remove all the blocks.  In theory
+a failed merkle tree commit also should do this, but most likely that
+will cause an fs shutdown anyway.
+
+(That's a fair amount of work.)
+
+Or you could leave the unfinished tree as-is; that will waste space, but
+if userspace tries again, the xattr code will replace the old merkle
+tree block contents with the new ones.  This assumes that we're not
+using XATTR_CREATE during FS_IOC_ENABLE_VERITY.
 
 --D
 
-> ---
-> Changes in v2:
->   -Remove the second #include.
 > 
->  fs/xfs/xfs_trace.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-> index 1a963382e5e9..3f253884fe5b 100644
-> --- a/fs/xfs/xfs_trace.c
-> +++ b/fs/xfs/xfs_trace.c
-> @@ -38,7 +38,6 @@
->  #include "xfs_iomap.h"
->  #include "xfs_buf_mem.h"
->  #include "xfs_btree_mem.h"
-> -#include "xfs_bmap.h"
->  
->  /*
->   * We include this last to have the helpers above available for the trace
-> -- 
-> 2.20.1.7.g153144c
-> 
+> - Eric
 > 
