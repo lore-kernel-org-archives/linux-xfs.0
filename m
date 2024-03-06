@@ -1,68 +1,74 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F350E14006
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 20:54:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6DD18EA1
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 21:07:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709758468; cv=none; b=gRLBWX9GKGQZnhBHLJMo+Dk4p0un8CjTebuvTUn48l+kMLjXHetBoT3MAGWq0NWMxnsOClakUFK8NyNgvjJ4zD99Cz/bfD0Ug7nIjFxFQOeDhN4lY+Lja1qnmQI7+T06kB3H43uaYueJ1vW8+XDm5enXAJuwkCl0vqoXYZIp0oQ=
+	t=1709759259; cv=none; b=HkwgNcysbPfT6EHUQiuZM/hWadj3NBp2I7NUXNNpgsBZaiNUKoqrgsUNOSIt/lCTvQK4mCNbemtIuxKj/AfFEK+7z0SHQrKGCsWgvX0QHmkd6pJd6qH9BU9MAlkejNrilxir5NwBt+r6ayd/vcFKSoAu0zoMxmlld9MKBywwFx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709758468; c=relaxed/simple;
-	bh=vDoyC2vhdlxrH71gLPj4oJ9gjwBAUxQmq4klIWJsVLM=;
+	s=arc-20240116; t=1709759259; c=relaxed/simple;
+	bh=tOibHT3KCAP4BwPHg+4cB3sRbEspBT3plGcLvPC1OBA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fpXKv++h9su49XvQ9HLZ3CjR9Bs8YP+8x45PnSdtd413t8ENgvegARv+PX/8OkPbOFigLETpeQUyDmJtgUVavQ/Q3IboEpZ9x8OQz/8G3g8IriH3InPDf1GH7pLVP51pAQ/5arUwMh2l95sAWU2FdGMlzp2S4seKZ5JLspDThZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=L3vK2nAo; arc=none smtp.client-ip=209.85.214.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=AHgpWxdMLUKPlgREc21TOtJlS3g46MHh1LDYNPch1+t1s/EC9jJio4Kbt68SqTYvrBZIESykMNFF6UQjy6GuUF1RCAqWfen7yrDiKkSguUhDpvxCtDvhdC6KY7OIU+KWEOMbEFFNNFnEbSvbSB5LZJ343v4fgDMlc5pjy6kTN/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=FAMISjV3; arc=none smtp.client-ip=209.85.214.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="L3vK2nAo"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1dcafff3c50so1225935ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Mar 2024 12:54:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="FAMISjV3"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1dcad814986so1647295ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 06 Mar 2024 13:07:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709758466; x=1710363266; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709759257; x=1710364057; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=a+N0eecURrl+qvmZT/Ue/35NHmLRkoDP9zxRnp5vt+Q=;
-        b=L3vK2nAoLWfazj4y0kpgtPxs2+c0zTa88uaifnvlwjhXn2JVjB58ocsYTQRjQ6Ew8i
-         flBIKI6Lwz+Q8jnQ7Z1WakmLgoLkG7m4umssgNpqnSf60FwJKd7maS5tnZ+RQMHDgWu6
-         Knl5QL8gjzB4i26Oe62EI7xf3tldcyVvuxihAJnk0pAEiBPPEbfzmEJUzDwyIq/AIitC
-         OKqjEQ5gEK5JCm5QaneMSIythQDWOm6C+jHn5Ju7U53NEfvtlnh4jeiBvBWkE33sqHfK
-         +BsyX60SViyVR3AODxljVPHgok9UaFC1XHCMPZk7brK/fjpKx1w9NOQtQ68lal9IcpX0
-         2ZUw==
+        bh=6cKpNpXZLRmjwKPyX505WV6iTHUPCFCbzUC5MpFQ4rY=;
+        b=FAMISjV3bcjanAguuoPgbKa/0d+P3FPoWbuNEfK15Ta5xCbx5pffQAqBIG5i+NEXUY
+         gOW5sk7Io3F+Rba7bZetTl2DoxWAUTXXZ4DcjLaA9EVWra6Ufpz7vuGmAO18Du8xYO6R
+         94/YGEM7PlAVdmNRcM2N+57AqrzEiOfvRumai8LNrWuwZe0LMrNlcRRyEJmNbmHeqUey
+         GSbO0gVufNKoQpTx3RPYrsntl6dd4DeJGesI+VRy+DgBQsV3jqthZMZiFsgzSh0s0xHw
+         Aac2hQrOvIOJHh7Qh5g4841L6yEWuJatdOwrToMZxP3qUevkYSwga8D530AHJBOw5xGh
+         Kesg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709758466; x=1710363266;
+        d=1e100.net; s=20230601; t=1709759257; x=1710364057;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=a+N0eecURrl+qvmZT/Ue/35NHmLRkoDP9zxRnp5vt+Q=;
-        b=Z3lP+PyULIdWKG+lRmuWPrGKYwo3gTCScw3lelX2hbSQ0/ZDD60+yIIzif8x1iU4bw
-         hmFStor5NeBrTzLWMdaobiD+7XB0NwaXtKVIx0CuTJwGbicikSHo8oyUhc2Uj/xPsT4v
-         sDGMT2SxWDtmf0hBTQCOUbRndH221Wa3IDVBkE0G6JYdLU2ozl9K67p5WewIn1gxn0sq
-         pdBwI8IpvIowDVI+Jj3f6z4Bk2e3w8Uv+caCZ2kWPe0oP/UQVBZerh2xPRQRM49e9fcF
-         DYfnMxVXFvqg97P+Vc8PlAuVvkrI6jeZWULDz35f6SEsUXJNnKXhGssRPQUKEPgoicfK
-         LEeQ==
-X-Gm-Message-State: AOJu0Yw9zp8exsj4+sOAWdT4GHS6dZs8J4p9aNr9tsQIeSAkjMXD1A00
-	0knjCBKDD0B5f1K18gR1g1oHDGxPCGB84EGrNdHkn9vhaaxk4AaEMWqoXKEgUxk=
-X-Google-Smtp-Source: AGHT+IEB4VooX+xqGfyaGv/fHQTS9tOS3vTZuML3IW5SzWfFkGyy0QSD9dEGfDG/4qalFdSmwhIamg==
-X-Received: by 2002:a17:903:1248:b0:1dc:3517:1486 with SMTP id u8-20020a170903124800b001dc35171486mr7354247plh.49.1709758466141;
-        Wed, 06 Mar 2024 12:54:26 -0800 (PST)
+        bh=6cKpNpXZLRmjwKPyX505WV6iTHUPCFCbzUC5MpFQ4rY=;
+        b=JipWgEcnr3t+txAbe51F9LozCOz99QDhE9BFrLbQWOlsw6JMrdHZHRMwU6vdbgVSKU
+         tiE4wfVhqFbH2ULApZeFGStTZt7ewiRon2JpIrgY3VXa2pkDfjvgcaWi4bw54WpD6fZW
+         rxn0FDDPU2V0OT+uJ4QfYh3Ri/KwFG/3CQIAbBdO/jrFgY/fQiad1uFiNiDN319qWGnd
+         w41wf2Fee7luPh2cy4mGH/Q1na8aFSo01OUTDpsZxCpma2uHf4+JtOuk4vvY59UL2SES
+         lfzJZPYIESBhrwYCtoCYIUqcNaJVUmznivp9iAVcbnCsY3zipMifEcToPjYIww2oLVWd
+         OfyQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXeGtCMbO3EuXKoOi1IVDbBRlCHleVHu14ZjhOW0MQ20VAZpxky3B9c021QOpaYyYd8jJzb1GeMB72hUdESz2pt1qMdwF1FnRHH
+X-Gm-Message-State: AOJu0YwegGH5jx0u+z8LjqJAeAMKZm1VR9nIjpvxZlnhOjSE7KD5paSu
+	CiGR5vwLaeAnkvBKPXzO1w2041prHnWbxOVgzCTNhNKrhCBaKkNMFqIGk4XN6yY=
+X-Google-Smtp-Source: AGHT+IE/KKiwGtgTsCBG2SHhgsrJE+JCAYQSbIVE/BoI4o24/MkvgSRizsPTMOyQSO5zXN1P/mmluQ==
+X-Received: by 2002:a17:902:e9d4:b0:1d9:a609:dd7e with SMTP id 20-20020a170902e9d400b001d9a609dd7emr5812131plk.55.1709759257059;
+        Wed, 06 Mar 2024 13:07:37 -0800 (PST)
 Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
-        by smtp.gmail.com with ESMTPSA id kv14-20020a17090328ce00b001dcad9cbf8bsm13054592plb.239.2024.03.06.12.54.25
+        by smtp.gmail.com with ESMTPSA id l8-20020a170903120800b001dcc129cc2esm13009813plh.60.2024.03.06.13.07.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Mar 2024 12:54:25 -0800 (PST)
+        Wed, 06 Mar 2024 13:07:36 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rhyHP-00Fxef-1i;
-	Thu, 07 Mar 2024 07:54:23 +1100
-Date: Thu, 7 Mar 2024 07:54:23 +1100
+	id 1rhyUA-00Fy2T-0J;
+	Thu, 07 Mar 2024 08:07:34 +1100
+Date: Thu, 7 Mar 2024 08:07:34 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: John Garry <john.g.garry@oracle.com>
-Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
-Subject: Re: [RFC PATCH 0/3] xfs: forced extent alignment
-Message-ID: <ZejX/7Eqef7nZ6C7@dread.disaster.area>
-References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
- <20240306053048.1656747-1-david@fromorbit.com>
- <53f4519a-6798-4925-ad5a-5d2d17b6a00f@oracle.com>
+Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz, chandan.babu@oracle.com,
+	axboe@kernel.dk, martin.petersen@oracle.com,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH v2 06/14] fs: xfs: Do not free EOF blocks for forcealign
+Message-ID: <ZejbFuavNva4ut/3@dread.disaster.area>
+References: <20240304130428.13026-1-john.g.garry@oracle.com>
+ <20240304130428.13026-7-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,56 +77,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <53f4519a-6798-4925-ad5a-5d2d17b6a00f@oracle.com>
+In-Reply-To: <20240304130428.13026-7-john.g.garry@oracle.com>
 
-On Wed, Mar 06, 2024 at 11:46:38AM +0000, John Garry wrote:
-> On 06/03/2024 05:20, Dave Chinner wrote:
-> > Hi Garry,
-> > 
-> > I figured that it was simpler just to write the forced extent
-> > alignment allocator patches that to make you struggle through them
-> > and require lots of round trips to understand all the weird corner
-> > cases.
+On Mon, Mar 04, 2024 at 01:04:20PM +0000, John Garry wrote:
+> For when forcealign is enabled, we want the EOF to be aligned as well, so
+> do not free EOF blocks.
 > 
-> I appreciate that.
+> Add helper function xfs_get_extsz() to get the guaranteed extent size
+> alignment for forcealign enabled. Since this code is only relevant to
+> forcealign and forcealign is not possible for RT yet, ignore RT.
 > 
-> > 
-> > The following 3 patches:
-> > 
-> > - rework the setup and extent allocation logic a bit to make force
-> >    aligned allocation much easier to implement and understand
-> > - move all the alignment adjustments into the setup logic
-> > - rework the alignment slop calculations and greatly simplify the
-> >    the exact EOF block allocation case
-> > - add a XFS_ALLOC_FORCEALIGN flag so that the inode config only
-> >    needs to be checked once at setup. This also allows other
-> >    allocation types (e.g. inode clusters) use forced alignment
-> >    allocation semantics in future.
-> > - clearly document when we are turning off allocation alignment and
-> >    abort FORCEALIGN allocation at that point rather than doing
-> >    unaligned allocation.
-> > 
-> > I've run this through fstests once so it doesn't let the smoke out,
-> > but I haven't actually tested it against a stripe aligned filesystem
-> > config yet, nor tested the forcealign functionality so it may not be
-> > exactly right yet.
-> > 
-> > Is this sufficiently complete for you to take from here into the
-> > forcealign series?
-> > 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c |  7 ++++++-
+>  fs/xfs/xfs_inode.c     | 14 ++++++++++++++
+>  fs/xfs/xfs_inode.h     |  1 +
+>  3 files changed, 21 insertions(+), 1 deletion(-)
 > 
-> I'll try it out.
-> 
-> What baseline are these against? Mine were against v6.8-rc5, but I guess
-> that you develop against an XFS integration tree. Maybe they apply and build
-> cleanly against v6.8-rc5 ...
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index c2531c28905c..07bfb03c671a 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -542,8 +542,13 @@ xfs_can_free_eofblocks(
+>  	 * forever.
+>  	 */
+>  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+> -	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
+> +
+> +	/* Do not free blocks when forcing extent sizes */
 
-6.8-rc7 + linux-xfs/for-next + some other local patches to other
-parts of XFS that shouldn't overlap with this patch set. I don't
-think there's anything in for-next overlapping this code, so it
-might just apply cleanly to your tree....
+That comment seems wrong - this just rounds up where we start
+trimming from to be aligned...
+
+> +	if (xfs_get_extsz(ip) > 1)
+> +		end_fsb = roundup_64(end_fsb, xfs_get_extsz(ip));
+> +	else if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
+>  		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+
+I think this would be better written as:
+
+	/*
+	 * Forced extent alignment requires us to round up where we
+	 * start trimming from so that result is correctly aligned.
+	 */
+	if (xfs_inode_forcealign(ip)) {
+		if (ip->i_extsize > 1)
+			end_fsb = roundup_64(end_fsb, ip->i_extsize);
+		else if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
+			end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+	}
+
+Because we only want end-fsb alignment when forced alignment is
+required.
+
+Which then makes me wonder: truncate needs this, too, doesn't it?
+And the various fallocate() ops like hole punching and extent
+shifting?
+
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 2c439df8c47f..bbb8886f1d32 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -65,6 +65,20 @@ xfs_get_extsz_hint(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Helper function to extract extent size. It will return a power-of-2,
+> + * as forcealign requires this.
+> + */
+> +xfs_extlen_t
+> +xfs_get_extsz(
+> +	struct xfs_inode	*ip)
+> +{
+> +	if (xfs_inode_forcealign(ip) && ip->i_extsize)
+> +		return ip->i_extsize;
+> +
+> +	return 1;
+> +}
+
+This can go away - if it is needed elsewhere, then I think it would
+be better open coded because it better documents what the code is
+doing...
 
 -Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
