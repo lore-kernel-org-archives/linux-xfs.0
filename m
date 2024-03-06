@@ -1,41 +1,41 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82A3A605DC
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 12:35:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C1927FBDC;
+	Wed,  6 Mar 2024 14:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709728525; cv=none; b=LsdfPAnH+Wf+uVNGxE00OyJnVqX/PxO7Vehuusamhtb+kffIfvwV0ur15tqHY3aUrPJ7dsDAxd52mZfRJBi3GXmnBZLJIHKiDsJIwaxKyQ8KujQ2SQWORowqCQiKBHN9urGrDEFm4BH+jiyxyljEpoFTlEdQu66uVwKNlkH8aZA=
+	t=1709735807; cv=none; b=ISROkhWePIhCt+I5pN+4o9fa0fldcF5ah0bl55sRI/YlbdxD4P+xfCYrwPkI00RhrChDvhuaOUM3nGuKKM61IHnZMk/OXd4mxfxE6N4y+Jg4ubKogSK0f+ZAUCUKC5mGqsM0HF7koKE0pOE9RGKW90PgFdtgIGaXbGJoAF6qRp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709728525; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1709735807; c=relaxed/simple;
+	bh=jOJY5zZ8mvtG66fKCffN8cwLOjFyGF6wcctejCjiG+I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k2ijMzLNnIl50wC7rn25bycL9qQiCpQq4nC+DlREDzP7qdkIDd/J4Dw7rH33UcUizNsnvF2eol0oRUBvh/i8Oy8kFvuhF/Ko/8eUXPYOljgmkDu0kXTVeg391ljuWohnDCgOuUN3kLwzBoHmKg9zX6t528WcoxlzUFxkiFQ0DbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KgHNJokC; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=N/TrCedGr5h4O8rfNqvD9CZ8FKYJ/f2G3vlweRkS8l0LrgKyTwBOu0okXoRp9Gwr6chzPwKugIkSvyCcKqGBBwVGOsyDgzEp6k5ibTWEj9DJDjHDRmOwLSX5F69KVZTLc/uCnzGw/2zre8Q4/jHLTzv+Ajw3IkmPxs8GFGFjyrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EYqXczD2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KgHNJokC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=KgHNJokCy/GUf60W3jTXPQHGwU
-	ShIzTtAC65fvIUK/2u5JXk1LVSOUDBqPq+QjhYKjxz8h3Nmv0GNCLi/d+VzK2j1Q6Gg+C+WAIpnPQ
-	7oS4/kmZ3+Cv1eHZRTvtDSt2IPGw3g9TeIoexaJg6rdELFHUyg2EwYaYXtf2WHH1CVAtYdeUFoiTk
-	YfKPlfxDSqakLm5iJ1CRNrcggTxasqqxF2fbUoxZ6FP3fZ/J5iKTOrTxy1nJAc+13ZL9Z8ap8+roL
-	agn/mp8M3wcCirFs65+3xtbSzfBwFi432lb5EAqoKluuqFs1Ktj/Ol+l/ysT8jlGvOR+FiLU2GQGk
-	0/MI2Vpg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rhqUW-00000000DUm-0IaA;
-	Wed, 06 Mar 2024 12:35:24 +0000
-Date: Wed, 6 Mar 2024 04:35:24 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
-Subject: Re: [PATCH] xfs: shrink failure needs to hold AGI buffer
-Message-ID: <ZehjDCvwhLe6xgNy@infradead.org>
-References: <20240306011246.1631906-1-david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EYqXczD2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52856C433C7;
+	Wed,  6 Mar 2024 14:36:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709735806;
+	bh=jOJY5zZ8mvtG66fKCffN8cwLOjFyGF6wcctejCjiG+I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EYqXczD2957eAx/7ueuQEGjIbo7gvWQteWEum6LBQqndtQuNfqJr552vcmfP8Pr2h
+	 IByelGi+NuRW0QOW/eJY45GQGOFOrt2KnwOYQAUwsI7QcXx4TtgI7E7x4gmM4ghggU
+	 UhfCzXrIg4gtFRxor+sKHCt20H+dJ0JaD8lDasCMBZyP9+joF64Dut6lEu8rLuERaj
+	 SUUnmU9RHSjyorTsUY+5Dq1tGMgm9SKqY/1NHSVRoAAOwks3E04L8c1tuYwgWs2iFw
+	 u9J14ybaDj3q+2o05zxLlt5GLne77aHINSjpFX9Lcf9npQ/0fdgo9PETaxAavKaqge
+	 jGGrQz5WqArSQ==
+Date: Wed, 6 Mar 2024 07:36:43 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chandan Babu R <chandanbabu@kernel.org>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [BUG REPORT] General protection fault while discarding extents
+ on XFS on next-20240305
+Message-ID: <Zeh_e2tUpx-HzCed@kbusch-mbp>
+References: <87y1avlsmw.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <Zehi_bLuwz9PcbN9@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,9 +44,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240306011246.1631906-1-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Zehi_bLuwz9PcbN9@infradead.org>
 
-Looks good:
+On Wed, Mar 06, 2024 at 04:35:09AM -0800, Christoph Hellwig wrote:
+> On Wed, Mar 06, 2024 at 12:49:29PM +0530, Chandan Babu R wrote:
+> > The above *probably* occured because __blkdev_issue_discard() noticed a pending
+> > signal, processed the bio, freed the bio and returned a non-NULL bio pointer
+> > to the caller (i.e. xfs_discard_extents()).
+> > 
+> > xfs_discard_extents() then tries to process the freed bio once again.
+> 
+> Yes, __blkdev_issue_discard really needs to clear *biop to NULL for
+> this case, i.e.:
+> 
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index dc8e35d0a51d6d..26850d4895cdaf 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -99,6 +99,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>  		cond_resched();
+>  		if (fatal_signal_pending(current)) {
+>  			await_bio_chain(bio);
+> +			*biop = NULL;
+>  			return -EINTR;
+>  		}
+>  	}
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+But everyone who calls this already sets their local bio to NULL by
+default, and __blkdev_issue_discard updates *biop only on success, so
+'*biop' should already be NULL here. ?
