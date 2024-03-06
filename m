@@ -1,74 +1,50 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75A361BDDB
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 22:00:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA4314265;
+	Wed,  6 Mar 2024 22:16:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709762426; cv=none; b=JacNfvBgtVbzO1gTcyNem0tgUY6Ron6p347JTm2zsZcaUJBYge7k8w64JsOh2zl8cBdxooRuuwVAdBmS6eWGGnFoxI/iWcg5fGPGqzMnFBockb0gdNCtN+Bnqme+9R1Ys7ozNAbtkkQLYb+B9EbUut1z0Wqi3kkXGZRhFmYxyto=
+	t=1709763402; cv=none; b=T7g+6Na5cHsvIoqNu2zQgTVSx1JuXUW49VPa1O4agt01Xmtp9vlqEZxQwG1UA+CYQPGfj56RbPeGYm2kfe9EmLb5GmKnlpkwKCdU4x98dZgHaBJWwdruYBE64z8PApWRDm+WgLVL/yTebCu/A0Yg6tJP/mMH1CvaZXjBuS6oBkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709762426; c=relaxed/simple;
-	bh=pIV4cjBBCtBTtpNYYrIuTfIHpvgy8urb9H8iYweQDY4=;
+	s=arc-20240116; t=1709763402; c=relaxed/simple;
+	bh=mEsHmfioU7YFUNRDdp7uzT1NPi4KCUrCHsomdtKI1PI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oEs6wb2eTo0XqK7Fbq8pQPNBcjEudmowTSE9XsXxr2KnvBBCbY1ZNLqE3hbWE3JaKKqBKQOPD0SQo/escYXLp1v2BS8DlT7WD6w13/R8/8asFkAnetaMeVAIoxOa/6Jz6fpNMzOfX/sbs/VjU+mQB9yImQ+DHB7jTkFK+/opdP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Y4NTMNyP; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=SyIa0gD58qh79JqLEr4OikYoVeFkap/EdXF5/yayN2waFCEmEBVhr0I9gFFKT2jSpnW5TJ1FgjivJdWQlWaFs4dFhjtZzIpC/d5584AhlIwpzNUtCLwUxrBr1PltVc76J0Vhx+fIzTP5EvM6+McEi4Fjz2n1nZ10eqrXlqwvAzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=px0+GhWR; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Y4NTMNyP"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-5d8ddbac4fbso143036a12.0
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Mar 2024 14:00:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709762423; x=1710367223; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=SWg95yW08D0vwgG2qvaClO3hmbUBx1qNSFvXxAof5Yk=;
-        b=Y4NTMNyP0LvTIaRKcROqdpjKzFSBbp11mcaZEoGv8W4rFRC3LeyE8Q/b9TX3/fJlkD
-         new0hcaqgTBZ4l+8J75zTllrK6AUzNv8j1shlMJOY3F7qFz3xFxEHxlGMzwWSXqMsgRO
-         dNKtvj0BzRsagrCUqNwemsHj6L8+juJ3weFfCGY5u+KHLW4sk18lBske5BUJwO7kc+Kd
-         Mrnx/tFg8ZC4pbGIp19KMv4uIZxQgGq0YXw42AzEPaQX6Nf4vOATG1suiVycgktE5f0b
-         0F0FHPX1PzUlXZCJdp1Zvg/LjAtgIVclDtLz2+kt1BJOjNIBPZMAzlfy/J8sdVv32WRj
-         svTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709762423; x=1710367223;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SWg95yW08D0vwgG2qvaClO3hmbUBx1qNSFvXxAof5Yk=;
-        b=DNmXW+32MF+zRk6NSR44xD68V4vU1Bk8Ud1lsVw4t1PTeUVK/e2YUX93crMH13py+3
-         Fslps5jCCn6uzFBh9PqjFqhBoWiQ+OFssGDhn2wp38sv1G8C/mOx3E9cFKVl8rvzRpsW
-         sAJnu6oLeEqKQeoLjESW7LdlHX5RIJ9iJ2UEffjS/6VaW0/ArpnRoQR3/yOV7EHk63Xu
-         LxRTdnI8K+/B6+K1dVZ98oIE92JR/x3asiQqPuhW400IOOPkpWBi8fUA8gw313OCUsQR
-         5S2Fr+JPAzKBrkT71+G2GVxVEqo+jD1NotzifNiKGl/hRDBHqKWPWKMCbAjEN+ywHY0X
-         9BVQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXjDmb9DdIA/TBZLv0UrDvxW32dz7PWaNlZuhjzxbtZmA9+wbvZOKBwMJoeBqFynelLBxDxLCn+RX6hi9OgWasgIvLNwnmTHAke
-X-Gm-Message-State: AOJu0YxgtcCaF+JbyrpOvfMVpAJQLPGU1lCTckPoe9pVGjfsDv94TXL5
-	kprt6OKXHZ8ro2s1nFnhfgnanr2VskfQT3mDUNwvuCE4ga6WiM9xF+h+icQl6FE=
-X-Google-Smtp-Source: AGHT+IEMxgFRiIgrC0TNH58lu4Sx9PZsPrr7kqi++6UXKWNSWa0Z6dn8DLbnTssOehFcOv9vCwBsZw==
-X-Received: by 2002:a17:902:ea05:b0:1dc:f157:51bc with SMTP id s5-20020a170902ea0500b001dcf15751bcmr7790861plg.3.1709762422545;
-        Wed, 06 Mar 2024 14:00:22 -0800 (PST)
-Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
-        by smtp.gmail.com with ESMTPSA id v11-20020a170902d68b00b001d8f251c8b2sm13040426ply.221.2024.03.06.14.00.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Mar 2024 14:00:22 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rhzJD-00Fz7a-21;
-	Thu, 07 Mar 2024 09:00:19 +1100
-Date: Thu, 7 Mar 2024 09:00:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz, chandan.babu@oracle.com,
-	axboe@kernel.dk, martin.petersen@oracle.com,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	linux-block@vger.kernel.org
-Subject: Re: [PATCH v2 08/14] fs: xfs: iomap: Sub-extent zeroing
-Message-ID: <Zejnc+M32wRIutNZ@dread.disaster.area>
-References: <20240304130428.13026-1-john.g.garry@oracle.com>
- <20240304130428.13026-9-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="px0+GhWR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=4tFlqO+nz+vyD7AtEYeD6vF7kcf1yOgIiulP3wg93hA=; b=px0+GhWRfk7f1OvAjLSOL5uWlB
+	nI7q08XsdLWWH8pUbg6BNETTyYq1PZc+ZzayPM3Re1mJc4L/rF7ztMYaBp0Uc1au8k3Bi1+pjcLgF
+	5gJQCna07qvliThIDugaKjVd+yWnfQZo3i7fG+PwiJvPMYA5hOvjcco+tMuP6itSr/78hFM0JIKjK
+	D3f3dMym2rcKxQFnYXP7W2KT3udJ7vqRgz98D5NjxNTI5+2BZldc5xQcl4SGZF+vEpsru9pMV5xbo
+	9P7D6gX6UtShRSid2oDJCIB8tBde5Nqs40sdWFArL0wEYsx8NmNCfoX3EdhBOR/F8S8rx+hgVjyjx
+	UlZFMbyQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rhzZ1-000000023Ps-3RYb;
+	Wed, 06 Mar 2024 22:16:39 +0000
+Date: Wed, 6 Mar 2024 14:16:39 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Keith Busch <kbusch@kernel.org>,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [BUG REPORT] General protection fault while discarding extents
+ on XFS on next-20240305
+Message-ID: <ZejrR3-aLJy3ere7@infradead.org>
+References: <87y1avlsmw.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <Zehi_bLuwz9PcbN9@infradead.org>
+ <Zeh_e2tUpx-HzCed@kbusch-mbp>
+ <ZeiAQv6ACQgIrsA-@kbusch-mbp>
+ <ZeiBmGXgxNmgyjs4@infradead.org>
+ <ZeiJKmWQoE6ttn6L@infradead.org>
+ <ZejXV1ll+sbgBP48@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,158 +53,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240304130428.13026-9-john.g.garry@oracle.com>
+In-Reply-To: <ZejXV1ll+sbgBP48@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Mar 04, 2024 at 01:04:22PM +0000, John Garry wrote:
-> Set iomap->extent_shift when sub-extent zeroing is required.
+On Thu, Mar 07, 2024 at 07:51:35AM +1100, Dave Chinner wrote:
+> On Wed, Mar 06, 2024 at 07:18:02AM -0800, Christoph Hellwig wrote:
+> > Lookings at this a bit more I'm not sure my fix is enough as the error
+> > handling is really complex.  Also given that some discard callers are
+> > from kernel threads messing with interruptibility I'm not entirely
+> > sure that having this check in the common helper is a good idea.
 > 
-> We treat a sub-extent write same as an unaligned write, so we can leverage
-> the existing sub-FSblock unaligned write support, i.e. try a shared lock
-> with IOMAP_DIO_OVERWRITE_ONLY flag, if this fails then try the exclusive
-> lock.
+> Yeah, this seems like a problem. The only places that userspace
+> should be issuing discards directly and hence be interruptible from
+> are FITRIM, BLKDISCARD and fallocate() on block devices.
+
+Yes.
+
+> Filesystems already handle fatal signals in FITRIM (e.g. see
+> xfs_trim_should_stop(), ext4_trim_interrupted(),
+> btrfs_trim_free_extents(), etc), so it seems to me that the only
+> non-interruptible call from userspace are operations directly on
+> block devices which have no higher level iteration over the range to
+> discard and the user controls the range directly.
+
+Yeah.
+
+> Perhaps the solution is to change BLKDISCARD/fallocate() on bdev to
+> look more like xfs_discard_extents() where it breaks the range up
+> into smaller chunks and intersperses bio chaining with signal
+> checks.
+
+Well, xfs_discard_extents has different extents from the higher
+layers.  __blkdev_issue_discard than breaks it up based on what
+fits into the bio (and does some alignment against our normal
+rule of leaving that to the splitting code).  But I suspect moving
+the loop in __blkdev_issue_discard into the callers could really
+help with this.
+
 > 
-> In xfs_iomap_write_unwritten(), FSB calcs are now based on the extsize.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/xfs/xfs_file.c  | 28 +++++++++++++++-------------
->  fs/xfs/xfs_iomap.c | 15 +++++++++++++--
->  2 files changed, 28 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e33e5e13b95f..d0bd9d5f596c 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -617,18 +617,19 @@ xfs_file_dio_write_aligned(
->   * Handle block unaligned direct I/O writes
->   *
->   * In most cases direct I/O writes will be done holding IOLOCK_SHARED, allowing
-> - * them to be done in parallel with reads and other direct I/O writes.  However,
-> - * if the I/O is not aligned to filesystem blocks, the direct I/O layer may need
-> - * to do sub-block zeroing and that requires serialisation against other direct
-> - * I/O to the same block.  In this case we need to serialise the submission of
-> - * the unaligned I/O so that we don't get racing block zeroing in the dio layer.
-> - * In the case where sub-block zeroing is not required, we can do concurrent
-> - * sub-block dios to the same block successfully.
-> + * them to be done in parallel with reads and other direct I/O writes.
-> + * However if the I/O is not aligned to filesystem blocks/extent, the direct
-> + * I/O layer may need to do sub-block/extent zeroing and that requires
-> + * serialisation against other direct I/O to the same block/extent.  In this
-> + * case we need to serialise the submission of the unaligned I/O so that we
-> + * don't get racing block/extent zeroing in the dio layer.
-> + * In the case where sub-block/extent zeroing is not required, we can do
-> + * concurrent sub-block/extent dios to the same block/extent successfully.
->   *
->   * Optimistically submit the I/O using the shared lock first, but use the
->   * IOMAP_DIO_OVERWRITE_ONLY flag to tell the lower layers to return -EAGAIN
-> - * if block allocation or partial block zeroing would be required.  In that case
-> - * we try again with the exclusive lock.
-> + * if block/extent allocation or partial block/extent zeroing would be
-> + * required.  In that case we try again with the exclusive lock.
->   */
->  static noinline ssize_t
->  xfs_file_dio_write_unaligned(
-> @@ -643,9 +644,9 @@ xfs_file_dio_write_unaligned(
->  	ssize_t			ret;
->  
->  	/*
-> -	 * Extending writes need exclusivity because of the sub-block zeroing
-> -	 * that the DIO code always does for partial tail blocks beyond EOF, so
-> -	 * don't even bother trying the fast path in this case.
-> +	 * Extending writes need exclusivity because of the sub-block/extent
-> +	 * zeroing that the DIO code always does for partial tail blocks
-> +	 * beyond EOF, so don't even bother trying the fast path in this case.
->  	 */
->  	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
->  		if (iocb->ki_flags & IOCB_NOWAIT)
-> @@ -709,13 +710,14 @@ xfs_file_dio_write(
->  	struct iov_iter		*from)
->  {
->  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
->  	size_t			count = iov_iter_count(from);
->  
->  	/* direct I/O must be aligned to device logical sector size */
->  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
->  		return -EINVAL;
-> -	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
-> +	if ((iocb->ki_pos | count) & (XFS_FSB_TO_B(mp, xfs_get_extsz(ip)) - 1))
->  		return xfs_file_dio_write_unaligned(ip, iocb, from);
->  	return xfs_file_dio_write_aligned(ip, iocb, from);
->  }
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 70fe873951f3..88cc20bb19c9 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -98,6 +98,7 @@ xfs_bmbt_to_iomap(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
-> +	xfs_extlen_t		extsz = xfs_get_extsz(ip);
->  
->  	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock)))
->  		return xfs_alert_fsblock_zero(ip, imap);
-> @@ -134,6 +135,8 @@ xfs_bmbt_to_iomap(
->  
->  	iomap->validity_cookie = sequence_cookie;
->  	iomap->folio_ops = &xfs_iomap_folio_ops;
-> +	if (extsz > 1)
-> +		iomap->extent_shift = ffs(extsz) - 1;
+> I suspect the same solution is necessary for blkdev_issue_zeroout()
+> and blkdev_issue_secure_erase(), because both of them have user
+> controlled lengths...
 
-	iomap->extent_size = mp->m_bsize;
-	if (xfs_inode_has_force_align(ip))
-		iomap->extent_size *= ip->i_extsize;
-
-> @@ -563,11 +566,19 @@ xfs_iomap_write_unwritten(
->  	xfs_fsize_t	i_size;
->  	uint		resblks;
->  	int		error;
-> +	xfs_extlen_t	extsz = xfs_get_extsz(ip);
->  
->  	trace_xfs_unwritten_convert(ip, offset, count);
->  
-> -	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> -	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-> +	if (extsz > 1) {
-> +		xfs_extlen_t extsize_bytes = XFS_FSB_TO_B(mp, extsz);
-> +
-> +		offset_fsb = XFS_B_TO_FSBT(mp, round_down(offset, extsize_bytes));
-> +		count_fsb = XFS_B_TO_FSB(mp, round_up(offset + count, extsize_bytes));
-> +	} else {
-> +		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +		count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-> +	}
-
-I don't think this is correct. We should only be converting the
-extent when the entire range has had data written to it. If we are
-doing unaligned writes, we end up running 3 separate unwritten
-conversion transactions - the leading zeroing, the data written and
-the trailing zeroing.
-
-This will end up converting the entire range to written when the
-leading zeroing completes, exposing stale data until the data and
-trailing zeroing completes.
-
-Concurrent reads (both DIO and buffered) can see this stale data
-while the write is in progress, leading to a mechanism where a user
-can issue sub-atomic write range IO and concurrent overlapping reads
-to read arbitrary stale data from the disk just before it is
-overwritten.
-
-I suspect the only way to fix this for sub-force-aligned DIo writes
-if for iomap_dio_bio_iter() to chain the zeroing and data bios so
-the entire range gets a single completion run on it instead of three
-separate sub-aligned extent IO completions. We only need to do this
-in the zeroing case - this is already the DIo slow path, so
-additional submission overhead is not an issue. It would, however,
-reduce completion overhead and latency, as we only need to run a
-single extent conversion instead of 3, so chaining the bios on
-aligned writes may well be a net win...
-
-Thoughts? Christoph probably needs to weigh in on this one...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yes.  (or rather two sub cases of the former and the latter)
