@@ -1,85 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C6E75381;
-	Wed,  6 Mar 2024 05:01:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A2781BDD0
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Mar 2024 05:30:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709701281; cv=none; b=WZxMpRYNDAp5epKaDD045nBw6v/aQpMJelwdYI2zRfTETs1d6TN5P+nSbNMTKrFKqJNpBMEiYudYCtyp2Js8b0b7S4BU4IGyNDBsY803tUyrFByLLLizQVVfs7Ae02BDep4FFJjnhpvyFAzJpNR3nwjn3UtUYRs3SkDNCVTZqLM=
+	t=1709703057; cv=none; b=RLu0xaKaFbTDPu+i057/7VA9EGJMmPsaiiduRaO4fSc8XHo9nEOTarvqClkeSEWoOq7piABybtyJoFuIKm278jRdZK5Qib15YSDBzulcxc1RfnrxrtAxyG9jdXgMQ3IrxNukPzyEghbYpYpXxdLj55VHSYC4b52T9o85m9DNers=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709701281; c=relaxed/simple;
-	bh=v4I57+kN832FV9McH2if26mI6NZU7n2LdcVNv2OU8bM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Im8dMpWjIPGP/szFVrVJXxoUoXKFPMiGPJoyNt5TZLqCtuU80/XWLrA9+a5gzccjAKxQyVc1i7010kBc+8wBub4Q2oNCzsgq5IxAGeBlZBQUmNyuit7+ZuX+FAloysX4VEPbC1BRM0vHEyZsbFnGl9GBQQnQtjr0fIeqcCleFb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UpxJ7Pfe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709703057; c=relaxed/simple;
+	bh=7/aJmX+7PT0+Bj6JqavuTW4WLVYi3uyZ/FZlntEvqYc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LpiaKkERO6lsXIM5fP103i5krux/ncEOh9P00sBN/aX2+WL0EBaHzbEUR6Bb6mDn+VlJ6bxLmpfb6y90iQ4BSTgFXX19gaJKD+gHo6RvEu0QcDUbiERquKKMZLcst02PpxUrqKNAWXlxBE96irESrI5F2KCOT4lbCIg22xv2ZvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=2e5Eczi4; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UpxJ7Pfe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53B6DC433C7;
-	Wed,  6 Mar 2024 05:01:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709701280;
-	bh=v4I57+kN832FV9McH2if26mI6NZU7n2LdcVNv2OU8bM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UpxJ7Pfe6wWLXViu+voobSLZc73ODFab/ZdkaBhRUspXcjA7gHhZI71vanHOUiauQ
-	 Vdi+XvnIMGQ+Ll+U5Q9eYZsF5NTEfTZ1RTG4WO/nz8UfMRhrvw844FAze9PpRghLPv
-	 wGM7d5uukFGkSquHJ81j1wVopX+stMuDnWWTXICo2vIPFdonrkqEP5uIJxLMjg3Lvt
-	 4WwfbyviJBui0943aqLJcD/lYhDbL1Le1FXMuzm5uCHx62S4lHbpmQPJkAQtlgQZKv
-	 bmHoP90kmo/metpRHAjgTl6lQSVZqUmFqf3xOvzDpinLNkrUdjD0vvt43aLsED9GFS
-	 r/IZuXronz/yw==
-Date: Tue, 5 Mar 2024 21:01:18 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com,
-	djwong@kernel.org
-Subject: Re: [PATCH v5 21/24] xfs: add fs-verity support
-Message-ID: <20240306050118.GD68962@sol.localdomain>
-References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-23-aalbersh@redhat.com>
- <20240306045543.GC68962@sol.localdomain>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="2e5Eczi4"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-6da202aa138so4799345b3a.2
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Mar 2024 21:30:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709703056; x=1710307856; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Myq8EY3hxTeJMj+gbWvv9pGi1rqPDiivG8o1mQ1I1qQ=;
+        b=2e5Eczi4B5XX27b8N6YPzR2x6To/xJB8Xpe1mLdLBlRb+9apFSX5wyLuMLG01tV3hh
+         P1Cjy01nj3/3VrtE7+3zbmmuI6yqpoBBulTTQh3ElBLAMq+ULm1nZ/OdMtV4B9EapQzR
+         V6Wo8UwX9hOzsedXTN6sleKyNtEsH210nGTSvrlNHfsV3MNZ/VNiq1BHPYMuO7cPEig/
+         sgWeE1B4uhFDYVHn0+Ui68ObflkuC21/0MBnDQtk+9a1z4oo8lzqc6eozbwbpHCvqe7X
+         ieRGAcP1dZuJm75KH15q86vyuaN4Lrfd91boPiUd6qbbKxa+15dovppiB4dRRVL03WHu
+         xFMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709703056; x=1710307856;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Myq8EY3hxTeJMj+gbWvv9pGi1rqPDiivG8o1mQ1I1qQ=;
+        b=prdT0qz60o54cJkZi6g0OeJEK69Lyr6YTiiXmL4xoQsKLuHDbmi+EasKqtfau7Powq
+         b+rm6Jb8R4OpXM5rEbacdD2e+Now8/hAL0gXAv99zzm0usKuFlNxbk/7HgunfKQ5PFh8
+         VjnSiDaBzcdBNr7JEFu0SYAmNrXwMZ/q4dA5+jH+JN5kWt2bO1/evMMWkVQ/8bhIeDPs
+         BWTYuR3NCOPiGBgGvk2cVvTR220IDYEeUbBwZWg1JtKmr+nOwl3v/+PNrJ/8OZ+AD03O
+         2uR/W6K73+DuugVLShvu5wMIFfgZDLxO2/iqGy+ab3SPlHpjX828TFvqFnKByePAa1vy
+         J/lQ==
+X-Gm-Message-State: AOJu0YyYaBY5QUyQ7hcoDgCBS/WRWgzIQYUI0a7Q+ger/USkm6jRXZwl
+	Hc6vw7q2RlGTFAMJaFLsfnu30XuiqEgcCIgBXy5zphR2rK50DI+F+AI3+Vek8tychKojpETa6ZZ
+	O
+X-Google-Smtp-Source: AGHT+IHwYCYZ3hfXtapic4RxMvaiFSz4x6QvmVADrWYFSXJAoGhcjw4BhssFQ3rZjldgk4yepMBDdQ==
+X-Received: by 2002:a05:6a20:7d92:b0:1a1:492a:c125 with SMTP id v18-20020a056a207d9200b001a1492ac125mr4530143pzj.28.1709703055455;
+        Tue, 05 Mar 2024 21:30:55 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-192-230.pa.nsw.optusnet.com.au. [49.181.192.230])
+        by smtp.gmail.com with ESMTPSA id y6-20020a17090aca8600b0029a78f22bd2sm9655946pjt.33.2024.03.05.21.30.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Mar 2024 21:30:54 -0800 (PST)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+	by dread.disaster.area with esmtp (Exim 4.96)
+	(envelope-from <dave@fromorbit.com>)
+	id 1rhjrg-00FfkB-1P;
+	Wed, 06 Mar 2024 16:30:52 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.97)
+	(envelope-from <dave@devoid.disaster.area>)
+	id 1rhjrf-00000006xLz-3wYr;
+	Wed, 06 Mar 2024 16:30:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: john.g.garry@oracle.com,
+	ojaswin@linux.ibm.com,
+	ritesh.list@gmail.com
+Subject: [RFC PATCH 0/3] xfs: forced extent alignment
+Date: Wed,  6 Mar 2024 16:20:10 +1100
+Message-ID: <20240306053048.1656747-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
+References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240306045543.GC68962@sol.localdomain>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Mar 05, 2024 at 08:55:43PM -0800, Eric Biggers wrote:
-> On Mon, Mar 04, 2024 at 08:10:44PM +0100, Andrey Albershteyn wrote:
-> > +static void
-> > +xfs_verity_put_listent(
-> > +	struct xfs_attr_list_context	*context,
-> > +	int				flags,
-> > +	unsigned char			*name,
-> > +	int				namelen,
-> > +	int				valuelen)
-> > +{
-> > +	struct fsverity_blockbuf	block = {
-> > +		.offset = xfs_fsverity_name_to_block_offset(name),
-> > +		.size = valuelen,
-> > +	};
-> > +	/*
-> > +	 * Verity descriptor is smaller than 1024; verity block min size is
-> > +	 * 1024. Exclude verity descriptor
-> > +	 */
-> > +	if (valuelen < 1024)
-> > +		return;
-> > +
-> 
-> Is there no way to directly check whether it's the verity descriptor?  The
-> 'valuelen < 1024' check is fragile because it will break if support for smaller
-> Merkle tree block sizes is ever added.  (Silently, because this is doing
-> invalidation which is hard to test and we need to be super careful with.)
-> 
-> If you really must introduce the assumption that the Merkle tree block size is
-> at least 1024, this needs to be documented in the comment in
-> fsverity_init_merkle_tree_params() that explains the reasoning behind the
-> current restrictions on the Merkle tree block size.
+Hi Garry,
 
-Also, the verity descriptor can be >= 1024 bytes if there is a large builtin
-signature attached to it.
+I figured that it was simpler just to write the forced extent
+alignment allocator patches that to make you struggle through them
+and require lots of round trips to understand all the weird corner
+cases.
 
-- Eric
+The following 3 patches:
+
+- rework the setup and extent allocation logic a bit to make force
+  aligned allocation much easier to implement and understand
+- move all the alignment adjustments into the setup logic
+- rework the alignment slop calculations and greatly simplify the
+  the exact EOF block allocation case
+- add a XFS_ALLOC_FORCEALIGN flag so that the inode config only
+  needs to be checked once at setup. This also allows other
+  allocation types (e.g. inode clusters) use forced alignment
+  allocation semantics in future.
+- clearly document when we are turning off allocation alignment and
+  abort FORCEALIGN allocation at that point rather than doing
+  unaligned allocation.
+
+I've run this through fstests once so it doesn't let the smoke out,
+but I haven't actually tested it against a stripe aligned filesystem
+config yet, nor tested the forcealign functionality so it may not be
+exactly right yet.
+
+Is this sufficiently complete for you to take from here into the
+forcealign series?
+
+Cheers,
+
+Dave.
