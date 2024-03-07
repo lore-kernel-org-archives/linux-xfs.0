@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9E312EBE8;
-	Thu,  7 Mar 2024 15:12:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EC1212F388;
+	Thu,  7 Mar 2024 15:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709824327; cv=none; b=GdHElU/U5gom50BDa5XpqqxMYxFlwywvzziY9Cq90n00x/ilGNOkf+1zcxoLT9C7L86lWi8Wt7QdBdOb+MZASDsHH0U0AeQMZxAOCGDQDeauMp/if6gOGRbwdza4+YtVrCf9PjSbyt28HSkvj+O8I4OctLVP0IGR1Rqcj0RfES8=
+	t=1709824328; cv=none; b=pHOH6DLdbkfVBANPqc3bUGMp0IcgrfoVsD8Hz5QjBieiMua7hLwDGq+VMYe2vc8X/g9wdWOM4vU44B0HfaYhoU39NH1PptM3UMG9HvCc4Edx4ShaX2EH/bMJ/zkReDuZGAcc7OaBSR2NwHkblVMoUeA+TGPLTLiSsk/6KJnmiUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709824327; c=relaxed/simple;
-	bh=XAM+LwtEk0qr2GpYrr3g7759A/QwQZkYBngcPrPRzEM=;
+	s=arc-20240116; t=1709824328; c=relaxed/simple;
+	bh=xCe+xklm9baPXz5w5r5u0Mvfv0h4wRfFKbRMgYxRqeI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mwNt2TX7lAWcx65N4PYSXJTGugpbLmFM45HlzdixvRGTAIQ636nnrIlGnu+4sBL/PIO88+TwGiCHlUeCosJndeAVGqUONDCezviHnidjqNZbPist3lfALl5uUQI/rwIx0sPSN2K7ZLmulfKWH5GMVDu5rUJzrLL4pCTRR2ynNqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mZnkzLeE; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Lmw6XZcDZuKf9o+E5UeMXCkvVivsxDMaviFnt1cATCl8xJPcfD3VjfKsNdnvxeYeNFtwTo91w71+KLBTCWMv/IACMPC5x7heRSt4Bo0NCgheTZzGcx/GfvUair0WQodadzCw5kdBVVq5K8HFgKATtg74iIkEeNt+0Gyzw34XdYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rJa+Tq1L; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mZnkzLeE"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rJa+Tq1L"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=pWLnUFlzUEJhnbTRDkaJ8/zvGbZPOXeOdQeHsZIHfXk=; b=mZnkzLeE+9tHuzricoH3AfKk/I
-	JwjvFAY2rDlTMKWRjQqJijBwf3D9H5UKl1tJEH+OfBAwkmSgYlv3plwr+vrV3iylPri/kbon2ZlkH
-	LjbhFbogqG0UBH4cbiEuNdVDA8PrZ7/WledrTqUs/PMCgRpaD2Dg8PsHgmtjYjwGOfbEPnaTDO+eK
-	zVK0tcaUXjLjacol+JDOOOdEY/DigZBdek/N6p16dxhQERkEH63ibcA6Xg1LxcdAr/ghvHN3A0plt
-	qhl/pwTrQPWvmBeYhyC5FcLNASBqxJ8MBg1RDnm0hLGQ73GkeU6Rezx3MXIHPL1HNxbi0LncDQfbh
-	pReBxNZA==;
+	bh=K6dAOpH3HfvroaSB45ET9VQSXQtJU2v4720kk0k4xZk=; b=rJa+Tq1Laip28+c966zEelI785
+	Qn0F6MIBM8vVn9g5s2e+7ZigMrwgXcy1C9h1PlZXWWv9XfWddnLpPLXDfP5XzFykujPrqIoVXgEUT
+	8bfv0rHQdJisWFZLq/6JH6glv+/biYReNfuRW20SXaZ0kYmsl1EtZqTzb+Zow0xmeDKmFOVuFAaCy
+	zQbwp7A8fQhJcKMuaOBprBhtu3wmfm1KEm1NHiO4iCm13uk45ZM2r+/CTsWTC/N6fMIRVYguB4vQ8
+	ODgb8hmkIPRo+V4S9r5DgmkVRNsAw3CsDHBYZ1gyP4C8VQaPdQs/+8vySFA3PdvdgsrXBwbl9wadN
+	rpdNWBvA==;
 Received: from [66.60.99.14] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1riFPh-00000005D9c-2TVa;
-	Thu, 07 Mar 2024 15:12:05 +0000
+	id 1riFPi-00000005DA8-0s2Q;
+	Thu, 07 Mar 2024 15:12:06 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Chandan Babu R <chandanbabu@kernel.org>,
@@ -37,9 +37,9 @@ To: Jens Axboe <axboe@kernel.dk>,
 Cc: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 06/10] ext4: switch to using blk_next_discard_bio directly
-Date: Thu,  7 Mar 2024 08:11:53 -0700
-Message-Id: <20240307151157.466013-7-hch@lst.de>
+Subject: [PATCH 07/10] nvmet: switch to using blk_next_discard_bio directly
+Date: Thu,  7 Mar 2024 08:11:54 -0700
+Message-Id: <20240307151157.466013-8-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240307151157.466013-1-hch@lst.de>
 References: <20240307151157.466013-1-hch@lst.de>
@@ -57,36 +57,37 @@ chain and removes the need to handle synchronous errors.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ext4/mballoc.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/nvme/target/io-cmd-bdev.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
-index e4f7cf9d89c45a..73437510bde26c 100644
---- a/fs/ext4/mballoc.c
-+++ b/fs/ext4/mballoc.c
-@@ -3840,12 +3840,16 @@ static inline int ext4_issue_discard(struct super_block *sb,
- 	trace_ext4_discard_blocks(sb,
- 			(unsigned long long) discard_block, count);
- 	if (biop) {
--		return __blkdev_issue_discard(sb->s_bdev,
--			(sector_t)discard_block << (sb->s_blocksize_bits - 9),
--			(sector_t)count << (sb->s_blocksize_bits - 9),
--			GFP_NOFS, biop);
--	} else
--		return sb_issue_discard(sb, discard_block, count, GFP_NOFS, 0);
-+		unsigned int sshift = (sb->s_blocksize_bits - SECTOR_SHIFT);
-+		sector_t sector = (sector_t)discard_block << sshift;
-+		sector_t nr_sects = (sector_t)count << sshift;
-+
-+		while (blk_next_discard_bio(sb->s_bdev, biop, &sector,
-+				&nr_sects, GFP_NOFS))
-+			;
-+		return 0;
-+	}
-+	return sb_issue_discard(sb, discard_block, count, GFP_NOFS, 0);
+diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
+index f11400a908f269..c1345aaf837d93 100644
+--- a/drivers/nvme/target/io-cmd-bdev.c
++++ b/drivers/nvme/target/io-cmd-bdev.c
+@@ -363,17 +363,13 @@ u16 nvmet_bdev_flush(struct nvmet_req *req)
+ static u16 nvmet_bdev_discard_range(struct nvmet_req *req,
+ 		struct nvme_dsm_range *range, struct bio **bio)
+ {
+-	struct nvmet_ns *ns = req->ns;
+-	int ret;
++	sector_t sector = nvmet_lba_to_sect(req->ns, range->slba);
++	sector_t nr_sects = le32_to_cpu(range->nlb) <<
++		(req->ns->blksize_shift - SECTOR_SHIFT);
+ 
+-	ret = __blkdev_issue_discard(ns->bdev,
+-			nvmet_lba_to_sect(ns, range->slba),
+-			le32_to_cpu(range->nlb) << (ns->blksize_shift - 9),
+-			GFP_KERNEL, bio);
+-	if (ret && ret != -EOPNOTSUPP) {
+-		req->error_slba = le64_to_cpu(range->slba);
+-		return errno_to_nvme_status(req, ret);
+-	}
++	while (blk_next_discard_bio(req->ns->bdev, bio, &sector, &nr_sects,
++			GFP_KERNEL))
++		;
+ 	return NVME_SC_SUCCESS;
  }
  
- static void ext4_free_data_in_buddy(struct super_block *sb,
 -- 
 2.39.2
 
