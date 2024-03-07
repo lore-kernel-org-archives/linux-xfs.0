@@ -1,191 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f180.google.com (mail-il1-f180.google.com [209.85.166.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7589F3F9C6;
-	Thu,  7 Mar 2024 23:25:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6A3247784
+	for <linux-xfs@vger.kernel.org>; Thu,  7 Mar 2024 23:38:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709853950; cv=none; b=ZIDDYHDoCELLoLvSFz4kmQqOl4vR7elrREioKsuKr/E+RZQwQzRV5rwF9UI+EeOsJVjgB0J92HWtXg9KYvdlPnaA0i+NwPJgdv1SXPw6nj7WHSdgyT6wrhy/xszsuufs9W15G2OS7aDqMWrxxbgEzN3tqD89td2KDCxSNK0VUHc=
+	t=1709854692; cv=none; b=gvMs87LXM+9RFc3GbCB0I3QuTNMEgsaW/bWJlrjsTbPCp+k/h8sWyrMuA5+I43OTFly7OTBuh07YVFD6oMiiD0bKKL98k8UclUMvNOJBvzrQv6EVDjDom3IYiwgJv51v+dASn2V2zeWFR6BNAsRRIzC69RBa/9I5OP500nlg96U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709853950; c=relaxed/simple;
-	bh=Q7EOO9sACNMTrdopkPP9b92/L32m5EGawjyCVMe2IE4=;
+	s=arc-20240116; t=1709854692; c=relaxed/simple;
+	bh=GqfTloEAhfxVd55v4HgyxxgvXhyD+SGESBGeP5D9XHY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k9h3GGLRSUtaCKRm+Ecn6EQfwOJ61ahltxAM6kVKecyt/KD+splded7uM1wbCcHZXbOcwvK4VG60etDVsR81XsUhkqlA9eme5nolXdASwvluMnDir62xjr6vCz6TZJ27ck0U8qnzfxAc+fh8HLmoGIW+l73nSBCeo3R1xV026D0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SgukGQ/n; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rCCVtrRExGnMW0WH2bb3i93MmeMROPok0t1RbaNjTW2/hVdTFYafp2v9oho5vmGc9lDp1SvO+HzvxZGOedPV2Z1lFHbztp3lYYdUTBWksBppl5oxGMSzxvp58ZhTumWiLGPr3NWGTfaTZGkcm4YdzsbR8J8d2enO1Viyt3ewqZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=EwTr/J8I; arc=none smtp.client-ip=209.85.166.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SgukGQ/n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEA36C433C7;
-	Thu,  7 Mar 2024 23:25:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709853949;
-	bh=Q7EOO9sACNMTrdopkPP9b92/L32m5EGawjyCVMe2IE4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SgukGQ/nGA6LPXD1upS/mbPTe9t8xNUARhOdM0FVIkEIKnJLFS4hR5XZOGfQsBqAH
-	 OceJhviayYDNkxZJMqGrXfkziWqnwsHmL+neEFbiZ2OFbmqacMSVSSLAP056mRMZU4
-	 AfWj+XoD3j2nET+AALXaznJx76K8h49N8PxW4+FKpx9GAkwKv5NguogIpNFy/HNy2N
-	 W2MwiQGsRlZI06fWYeBdcCYWs++crTUWrTJGQfw/X7G1A/WjlPUO+iPXJ1NK7PstV5
-	 99scHwd+ycB7SljR3HmIcsWMUZLz2/iAa6jdxdj8dDLK474mWm8rkJK0H2apJXhhFG
-	 ep7lN5GOYf6qw==
-Date: Thu, 7 Mar 2024 15:25:49 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 14/13] xfs: make XFS_IOC_COMMIT_RANGE freshness data
- opaque
-Message-ID: <20240307232549.GI1927156@frogsfrogsfrogs>
-References: <170900011604.938268.9876750689883987904.stgit@frogsfrogsfrogs>
- <20240227174649.GL6184@frogsfrogsfrogs>
- <CAOQ4uxiPfno-Hx+fH3LEN_4D6HQgyMAySRNCU=O2R_-ksrxSDQ@mail.gmail.com>
- <20240229232724.GD1927156@frogsfrogsfrogs>
- <bf2f4a0e7033091d34139540737674dc998fe010.camel@kernel.org>
- <20240302024831.GL1927156@frogsfrogsfrogs>
- <98b41ce0e577cffcc45c7d29781ca2d85ed19d5e.camel@kernel.org>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EwTr/J8I"
+Received: by mail-il1-f180.google.com with SMTP id e9e14a558f8ab-36620882e56so1616155ab.1
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Mar 2024 15:38:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709854690; x=1710459490; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=w9XXK0kRgFcOrIvcCe6dTK7t3KJh97bLnoMcrrF3eO0=;
+        b=EwTr/J8Ij0S/wbCFMDAxtLnWcaC5OfHnyTB3JBwzjHtmzr4nEaDOf1LGvZ8UYv9HpF
+         IDxPwJIyKk2KzW3Ev8w4GhKqG/WDbrvssXZmtL9mvKe2UwtK4bDESBf0vSVfrAhgT3QT
+         lCHgFfNwW+7/VpZOTFvi7UZAjWa174kG7/K2AqNKkdgMgwtDIGrO3oR4lNs1+SG7othV
+         4e2GY89JFaMnDe/Nts2c7ESP95AmW9pyvtFN0RsdafmQY6Ac72YaA6AUisXkrttvzeNF
+         9q5JDjuapDfuEmDqfAjqFwNcOvwI6rcLBUYGZeOJbjQ9fnHkisEH0GfUOBfJrz+/Dquk
+         zrOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709854690; x=1710459490;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=w9XXK0kRgFcOrIvcCe6dTK7t3KJh97bLnoMcrrF3eO0=;
+        b=I+bFh7kH7ZzWqDFuUSF+d4NlGt8tBl5xb0dsuo6vtkaIDj54CCex86mdXG4TTq678E
+         ydMbh/I6v6RpyWc9JIsQ99l7hflP12XMCN/flVYTZVLYcHo4PFW9K/qLvHmckROFtJ3N
+         PLKliCISOi7/qf3/fSZ+7WLb1oywDVnJ95/tGLYug/wqMaIlCeAHfV0dv21LU0R32XNm
+         lVs5R8IKPiVvWhs/NgSKexUPe0rZ+QbuzSdeay5/QSzqFOZLkwERiFLxGFYeSKrmACAn
+         9XllYqqSx4Pzzody9sqd/pMoVH1CmRAoXdANFv9ZDhbz6p0IYlwqC5rEQYZwGqSEWh8U
+         yWyA==
+X-Forwarded-Encrypted: i=1; AJvYcCWVq9FXEzRyBiNp4J9ooy1Xz/WU2HgL9Wfsx8Yt9ud1/YbL41hVRZpNCSs2rumNQTcMYEwfHvRbaBEJgoX3tguTJIwE/pPjMGfI
+X-Gm-Message-State: AOJu0YxUdh477tMWB7MoV6BL88v9GCuKTudhNfR1DQLV47A211aVKK18
+	0kavNEx7qTk5Rr+gT89A3KRAWkwMmMyWI89HxhHV+neN/Iu5Ycaky5CaEAlFKPw=
+X-Google-Smtp-Source: AGHT+IGNL6A5iRHPg1He/b1HFq1d2XvuWbhVkxIUSPU4jFYqmKIGJG1u1f1OWkoddwSS+RpLnbVr6Q==
+X-Received: by 2002:a05:6e02:1807:b0:365:69a:86b2 with SMTP id a7-20020a056e02180700b00365069a86b2mr26642640ilv.17.1709854689651;
+        Thu, 07 Mar 2024 15:38:09 -0800 (PST)
+Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
+        by smtp.gmail.com with ESMTPSA id t20-20020a056a0021d400b006e64b9d88d4sm3660159pfj.124.2024.03.07.15.38.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Mar 2024 15:38:09 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1riNJO-00GStY-1t;
+	Fri, 08 Mar 2024 10:38:06 +1100
+Date: Fri, 8 Mar 2024 10:38:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	chandan.babu@oracle.com, djwong@kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v5 10/24] iomap: integrate fs-verity verification into
+ iomap's read path
+Message-ID: <ZepP3iAmvQhbbA2t@dread.disaster.area>
+References: <20240304191046.157464-2-aalbersh@redhat.com>
+ <20240304191046.157464-12-aalbersh@redhat.com>
+ <20240304233927.GC17145@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <98b41ce0e577cffcc45c7d29781ca2d85ed19d5e.camel@kernel.org>
+In-Reply-To: <20240304233927.GC17145@sol.localdomain>
 
-On Sat, Mar 02, 2024 at 07:43:53AM -0500, Jeff Layton wrote:
-> On Fri, 2024-03-01 at 18:48 -0800, Darrick J. Wong wrote:
-> > On Fri, Mar 01, 2024 at 08:31:21AM -0500, Jeff Layton wrote:
-> > > On Thu, 2024-02-29 at 15:27 -0800, Darrick J. Wong wrote:
-> > > > On Tue, Feb 27, 2024 at 08:52:58PM +0200, Amir Goldstein wrote:
-> > > > > On Tue, Feb 27, 2024 at 7:46 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > > > > 
-> > > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > > 
-> > > > > > To head off bikeshedding about the fields in xfs_commit_range, let's
-> > > > > > make it an opaque u64 array and require the userspace program to call
-> > > > > > a third ioctl to sample the freshness data for us.  If we ever converge
-> > > > > > on a definition for i_version then we can use that; for now we'll just
-> > > > > > use mtime/ctime like the old swapext ioctl.
-> > > > > 
-> > > > > This addresses my concerns about using mtime/ctime.
-> > > > 
-> > > > Oh good! :)
-> > > > 
-> > > > > I have to say, Darrick, that I think that referring to this concern as
-> > > > > bikeshedding is not being honest.
-> > > > > 
-> > > > > I do hate nit picking reviews and I do hate "maybe also fix the world"
-> > > > > review comments, but I think the question about using mtime/ctime in
-> > > > > this new API was not out of place
-> > > > 
-> > > > I agree, your question about mtime/ctime:
-> > > > 
-> > > > "Maybe a stupid question, but under which circumstances would mtime
-> > > > change and ctime not change? Why are both needed?"
-> > > > 
-> > > > was a very good question.  But perhaps that statement referred to the
-> > > > other part of that thread.
-> > > > 
-> > > > >                                   and I think that making the freshness
-> > > > > data opaque is better for everyone in the long run and hopefully, this will
-> > > > > help you move to the things you care about faster.
-> > > > 
-> > > > I wish you'd suggested an opaque blob that the fs can lay out however it
-> > > > wants instead of suggesting specifically the change cookie.  I'm very
-> > > > much ok with an opaque freshness blob that allows future flexibility in
-> > > > how we define the blob's contents.
-> > > > 
-> > > > I was however very upset about the Jeff's suggestion of using i_version.
-> > > > I apologize for using all caps in that reply, and snarling about it in
-> > > > the commit message here.  The final version of this patch will not have
-> > > > that.
-> > > > 
-> > > > That said, I don't think it is at all helpful to suggest using a file
-> > > > attribute whose behavior is as yet unresolved.  Multigrain timestamps
-> > > > were a clever idea, regrettably reverted.  As far as I could tell when I
-> > > > wrote my reply, neither had NFS implemented a better behavior and
-> > > > quietly merged it; nor have Jeff and Dave produced any sort of candidate
-> > > > patchset to fix all the resulting issues in XFS.
-> > > > 
-> > > > Reading "I realize that STATX_CHANGE_COOKIE is currently kernel
-> > > > internal" made me think "OH $deity, they wants me to do that work
-> > > > too???"
-> > > > 
-> > > > A better way to have woreded that might've been "How about switching
-> > > > this to a fs-determined structure so that we can switch the freshness
-> > > > check to i_version when that's fully working on XFS?"
-> > > > 
-> > > > The problem I have with reading patch review emails is that I can't
-> > > > easily tell whether an author's suggestion is being made in a casual
-> > > > offhand manner?  Or if it reflects something they feel strongly needs
-> > > > change before merging.
-> > > > 
-> > > > In fairness to you, Amir, I don't know how much you've kept on top of
-> > > > that i_version vs. XFS discussion.  So I have no idea if you were aware
-> > > > of the status of that work.
-> > > > 
-> > > 
-> > > Sorry, I didn't mean to trigger anyone, but I do have real concerns
-> > > about any API that attempts to use timestamps to detect whether
-> > > something has changed.
-> > > 
-> > > We learned that lesson in NFS in the 90's. VFS timestamp resolution is
-> > > just not enough to show whether there was a change to a file -- full
-> > > stop.
-> > > 
-> > > I get the hand-wringing over i_version definitions and I don't care to
-> > > rehash that discussion here, but I'll point out that this is a
-> > > (proposed) XFS-private interface:
-> > > 
-> > > What you could do is expose the XFS change counter (the one that gets
-> > > bumped for everything, even atime updates, possibly via different
-> > > ioctl), and use that for your "freshness" check.
-> > > 
-> > > You'd unfortunately get false negative freshness checks after read
-> > > operations, but you shouldn't get any false positives (which is real
-> > > danger with timestamps).
-> > 
-> > I don't see how would that work for this usecase?  You have to sample
-> > file2 before reflinking file2's contents to file1, writing the changes
-> > to file1, and executing COMMIT_RANGE.  Setting the xfs-private REFLINK
-> > inode flag on file2 will trigger an iversion update even though it won't
-> > change mtime or ctime.  The COMMIT then fails due to the inode flags
-> > change.
-> > 
-> > Worse yet, applications aren't going to know if a particular access is
-> > actually the one that will trigger an atime update.  So this will just
-> > fail unpredictably.
-> > 
-> > If iversion was purely a write counter then I would switch the freshness
-> > implementation to use it.  But it's not, and I know this to be true
-> > because I tried that and could not get COMMIT_RANGE to work reliably.
-> > I suppose the advantage of the blob thing is that we actually /can/
-> > switch over whenever it's ready.
-> > 
+On Mon, Mar 04, 2024 at 03:39:27PM -0800, Eric Biggers wrote:
+> On Mon, Mar 04, 2024 at 08:10:33PM +0100, Andrey Albershteyn wrote:
+> > +#ifdef CONFIG_FS_VERITY
+> > +struct iomap_fsverity_bio {
+> > +	struct work_struct	work;
+> > +	struct bio		bio;
+> > +};
 > 
-> Yeah, that's the other part -- you have to be willing to redrive the I/O
-> every time the freshness check fails, which can get expensive depending
-> on how active the file is. Again this is an XFS interface, so I don't
-> really have a dog in this fight. If you think timestamps are good
-> enough, then so be it.
+> Maybe leave a comment above that mentions that bio must be the last field.
 > 
-> All I can do is mention that it has been our experience in the NFS world
-> that relying on timestamps like this will eventually lead to data
-> corruption. The race conditions may be tight, and much of the time the
-> race may be benign, but if you do this enough you'll eventually get
-> bitten, and end up exchanging data when you shouldn't have.
+> > @@ -471,6 +529,7 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
+> >   * iomap_readahead - Attempt to read pages from a file.
+> >   * @rac: Describes the pages to be read.
+> >   * @ops: The operations vector for the filesystem.
+> > + * @wq: Workqueue for post-I/O processing (only need for fsverity)
 > 
-> All of that said, I think this is great discussion fodder for LSF this
-> year. I feel like the time is right to consider these sorts of
-> interfaces that do synchronized I/O without locking. I've already
-> proposed a discussion around the state of the i_version counter, so
-> maybe we can chat about it then?
+> This should not be here.
+> 
+> > +#define IOMAP_POOL_SIZE		(4 * (PAGE_SIZE / SECTOR_SIZE))
+> > +
+> >  static int __init iomap_init(void)
+> >  {
+> > -	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+> > -			   offsetof(struct iomap_ioend, io_inline_bio),
+> > -			   BIOSET_NEED_BVECS);
+> > +	int error;
+> > +
+> > +	error = bioset_init(&iomap_ioend_bioset, IOMAP_POOL_SIZE,
+> > +			    offsetof(struct iomap_ioend, io_inline_bio),
+> > +			    BIOSET_NEED_BVECS);
+> > +#ifdef CONFIG_FS_VERITY
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	error = bioset_init(&iomap_fsverity_bioset, IOMAP_POOL_SIZE,
+> > +			    offsetof(struct iomap_fsverity_bio, bio),
+> > +			    BIOSET_NEED_BVECS);
+> > +	if (error)
+> > +		bioset_exit(&iomap_ioend_bioset);
+> > +#endif
+> > +	return error;
+> >  }
+> >  fs_initcall(iomap_init);
+> 
+> This makes all kernels with CONFIG_FS_VERITY enabled start preallocating memory
+> for these bios, regardless of whether they end up being used or not.  When
+> PAGE_SIZE==4096 it comes out to about 134 KiB of memory total (32 bios at just
+> over 4 KiB per bio, most of which is used for the BIO_MAX_VECS bvecs), and it
+> scales up with PAGE_SIZE such that with PAGE_SIZE==65536 it's about 2144 KiB.
 
-Yes.  I've gotten an invitation, so corporate approval and dumb injuries
-notwithstanding, I'll be there this year. :)
+Honestly: I don't think we care about this.
 
---D
+Indeed, if a system is configured with iomap and does not use XFS,
+GFS2 or zonefs, it's not going to be using the iomap_ioend_bioset at
+all, either. So by you definition that's just wasted memory, too, on
+systems that don't use any of these three filesystems. But we
+aren't going to make that one conditional, because the complexity
+and overhead of checks that never trigger after the first IO doesn't
+actually provide any return for the cost of ongoing maintenance.
 
-> -- 
-> Jeff Layton <jlayton@kernel.org>
+Similarly, once XFS has fsverity enabled, it's going to get used all
+over the place in the container and VM world. So we are *always*
+going to want this bioset to be initialised on these production
+systems, so it falls into the same category as the
+iomap_ioend_bioset. That is, if you don't want that overhead, turn
+the functionality off via CONFIG file options.
+
+> How about allocating the pool when it's known it's actually going to be used,
+> similar to what fs/crypto/ does for fscrypt_bounce_page_pool?  For example,
+> there could be a flag in struct fsverity_operations that says whether filesystem
+> wants the iomap fsverity bioset, and when fs/verity/ sets up the fsverity_info
+> for any file for the first time since boot, it could call into fs/iomap/ to
+> initialize the iomap fsverity bioset if needed.
 > 
+> BTW, errors from builtin initcalls such as iomap_init() get ignored.  So the
+> error handling logic above does not really work as may have been intended.
+
+That's not an iomap problem - lots of fs_initcall() functions return
+errors because they failed things like memory allocation. If this is
+actually problem, then fix the core init infrastructure to handle
+errors properly, eh?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
