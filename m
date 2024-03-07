@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E24A112D754;
-	Thu,  7 Mar 2024 15:12:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA06512F36F;
+	Thu,  7 Mar 2024 15:12:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709824324; cv=none; b=NwwSuud8lDHD1HGfnB5gB3PVJhaQ6qX3peJKyfvCcZMRyeTaVxsQQ8vyBDA86m9rDnxb7jxTnJaqiYLURPKWLsNPozX93DA9gQWlkr9Zn2qiVnNKp93u9eSsa+arZX6Ho2yy5EBkn94blrnHSVVOxgMCFOKp9A6ceqKyjswvK2Q=
+	t=1709824326; cv=none; b=BL7AdH6+TbdFudSsSsaX9gw4pl9D+lCVcABCMht0wXIBE0kt5FB1+u2pr5j6+FYnxLrJtp0PXBBDObqV1sFF96VSmlbteASV0sPuqVctU1j/8q68AUnFLAZT9ESj0SAf4rYfMA8BpqMGaM12areSKDQB2YIzxRcEYikt3Vfc5Nc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709824324; c=relaxed/simple;
-	bh=5j/8sbbwmsIGUTaid4wZisGmjeOMxRtrzYUrsaK1Cck=;
+	s=arc-20240116; t=1709824326; c=relaxed/simple;
+	bh=LFzZsApGcvCLdm6zVuiq8u52+VVD4nNTQaqWvlVOnp0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=VUaE9w92i4B/OYOmQXoOi8HZt19cJK6xRZczeILGsuX/dsozHK+hz3h/L4kj9x2SEUREuX0/G2v75e+RvfJ1Md6S8yfUyZYRd2w8saEQnG3XniXe7ydeScqQpedVNOOGUjzO5Ho7Js5wqIZvk5EXbkdLdKtHvD6dYd+1tEEJ9FE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MRMaDje1; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ukBHVWAQdsVyghemxublVixfkxq9u13EPV8nIxj/BGTzLT8uMFFG+Tr3urdmQkWRLahR56G7oXh+OWfEMj0XjFteG3d+B916XK/z4+oeMGQOKHYm992OmHikX8XZAR5OzLKMpg/OfbztdUDewS3bCniTC3Y3pZEXwY/ZH9TUOjQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dZ8JOSgM; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MRMaDje1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dZ8JOSgM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=4jdyG4CszBpyuc/2KWIWtUkGflIk46hmyZR40KPZHew=; b=MRMaDje10vfg8i3wtj6CHQshJx
-	o+Bp0JaEP98NWOM0uRA5zUnllPbjVkMpZse+6r4sNljem35UrJhDf9/TGNlwSZu97fsZ6WTe1sQwP
-	CXx+fdx2ZHHWfMroopIBE4FWPWzqBkeqIR5KFOrBGA5LJFbFxucOtZzgkc3N1YRMn5Lj38qERG48g
-	z02qg70FUPdPVLWL00jAL0s/S9pXJ0xJYDq2CDdmz5K09n04GtXew8Xogb8ajS8bxA0pT4uTyaEnk
-	OIcsKCS9CJcT/hJiBzhjfEAV0x0lcPqrjsQc7znZDoWo7x7SdupFIV6eVo1cberFrWQ0pEHuwYMhO
-	C5qoAnkA==;
+	bh=pIAa/RpvHRZ8f5i+wX7BbspmDNldfs7/UxcWBp02Rkc=; b=dZ8JOSgMcu7MN3cGccf5sTRPc/
+	FUroHl04qi1ReLZrqfC7poA50rNdJg5vJ+HZEhLxPTktaOHXngwJ/GGiAs7LqZbPqRTC8LavDfRRh
+	q3Q6NFhSdC/G7YEEvdIX/JOxeplMu6xcWabACsICAbVch3f2dl3i93aXZ+CiPMDyKt2VxX38FdzH2
+	9utGSJ1QsuxFGWzcCgrZijX7YxSmCqOXolvRDfluhZhCxAnMuP5HaUOIKGF1DYaUzLFUfuBH5pGzF
+	qs1JscatO/BjNJH7YNZPRRDtGIOorc3drqj7/CKzhOhlPHtq3edjS0dVjocRl3qZ5x0Nc5bcjB6ku
+	dRwEBuzw==;
 Received: from [66.60.99.14] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1riFPe-00000005D7a-0Pty;
-	Thu, 07 Mar 2024 15:12:02 +0000
+	id 1riFPe-00000005D89-3Qh7;
+	Thu, 07 Mar 2024 15:12:03 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Chandan Babu R <chandanbabu@kernel.org>,
@@ -37,9 +37,9 @@ To: Jens Axboe <axboe@kernel.dk>,
 Cc: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 02/10] block: move discard checks into the ioctl handler
-Date: Thu,  7 Mar 2024 08:11:49 -0700
-Message-Id: <20240307151157.466013-3-hch@lst.de>
+Subject: [PATCH 03/10] block: add a blk_next_discard_bio helper
+Date: Thu,  7 Mar 2024 08:11:50 -0700
+Message-Id: <20240307151157.466013-4-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240307151157.466013-1-hch@lst.de>
 References: <20240307151157.466013-1-hch@lst.de>
@@ -52,100 +52,86 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Most bio operations get basic sanity checking in submit_bio and anything
-more complicated than that is done in the callers.  Discards are a bit
-different from that in that a lot of checking is done in
-__blkdev_issue_discard, and the specific errnos for that are returned
-to userspace.  Move the checks that require specific errnos to the ioctl
-handler instead, and just leave the basic sanity checking in submit_bio
-for the other handlers.  This introduces two changes in behavior:
-
- 1) the logical block size alignment check of the start and len is lost
-    for non-ioctl callers.
-    This matches what is done for other operations including reads and
-    writes.  We should probably verify this for all bios, but for now
-    make discards match the normal flow.
- 2) for non-ioctl callers all errors are reported on I/O completion now
-    instead of synchronously.  Callers in general mostly ignore or log
-    errors so this will actually simplify the code once cleaned up
+This factors the guts of __blkdev_issue_discard into a helper that can
+be used by callers avoid the fatal_signal_pending check and to generally
+simplify the bio handling.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-lib.c | 13 -------------
- block/ioctl.c   | 13 +++++++++----
- 2 files changed, 9 insertions(+), 17 deletions(-)
+ block/blk-lib.c        | 41 ++++++++++++++++++++++++-----------------
+ include/linux/blkdev.h |  2 ++
+ 2 files changed, 26 insertions(+), 17 deletions(-)
 
 diff --git a/block/blk-lib.c b/block/blk-lib.c
-index f873eb9a886f63..50923508a32466 100644
+index 50923508a32466..4f2d52210b129c 100644
 --- a/block/blk-lib.c
 +++ b/block/blk-lib.c
-@@ -59,19 +59,6 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+@@ -55,28 +55,35 @@ static void await_bio_chain(struct bio *bio)
+ 	blk_wait_io(&done);
+ }
+ 
++bool blk_next_discard_bio(struct block_device *bdev, struct bio **biop,
++		sector_t *sector, sector_t *nr_sects, gfp_t gfp_mask)
++{
++	sector_t bio_sects = min(*nr_sects, bio_discard_limit(bdev, *sector));
++
++	if (!bio_sects)
++		return false;
++
++	*biop = blk_next_bio(*biop, bdev, 0, REQ_OP_DISCARD, gfp_mask);
++	(*biop)->bi_iter.bi_sector = *sector;
++	(*biop)->bi_iter.bi_size = bio_sects << SECTOR_SHIFT;
++	*sector += bio_sects;
++	*nr_sects -= bio_sects;
++	/*
++	 * We can loop for a long time in here if someone does full device
++	 * discards (like mkfs).  Be nice and allow us to schedule out to avoid
++	 * softlocking if preempt is disabled.
++	 */
++	cond_resched();
++	return true;
++}
++EXPORT_SYMBOL_GPL(blk_next_discard_bio);
++
+ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
  		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop)
  {
  	struct bio *bio = *biop;
--	sector_t bs_mask;
+ 
+-	while (nr_sects) {
+-		sector_t req_sects =
+-			min(nr_sects, bio_discard_limit(bdev, sector));
 -
--	if (bdev_read_only(bdev))
--		return -EPERM;
--	if (!bdev_max_discard_sectors(bdev))
--		return -EOPNOTSUPP;
+-		bio = blk_next_bio(bio, bdev, 0, REQ_OP_DISCARD, gfp_mask);
+-		bio->bi_iter.bi_sector = sector;
+-		bio->bi_iter.bi_size = req_sects << 9;
+-		sector += req_sects;
+-		nr_sects -= req_sects;
 -
--	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
--	if ((sector | nr_sects) & bs_mask)
--		return -EINVAL;
--
--	if (!nr_sects)
--		return -EINVAL;
+-		/*
+-		 * We can loop for a long time in here, if someone does
+-		 * full device discards (like mkfs). Be nice and allow
+-		 * us to schedule out to avoid softlocking if preempt
+-		 * is disabled.
+-		 */
+-		cond_resched();
++	while (blk_next_discard_bio(bdev, &bio, &sector, &nr_sects, gfp_mask)) {
+ 		if (fatal_signal_pending(current)) {
+ 			await_bio_chain(bio);
+ 			return -EINTR;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index a9a0bd6cac4aff..b87cd889008291 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1059,6 +1059,8 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask);
+ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop);
++bool blk_next_discard_bio(struct block_device *bdev, struct bio **biop,
++		sector_t *sector, sector_t *nr_sects, gfp_t gfp_mask);
+ int blkdev_issue_secure_erase(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp);
  
- 	while (nr_sects) {
- 		sector_t req_sects =
-diff --git a/block/ioctl.c b/block/ioctl.c
-index de0cc0d215c633..1d5de0a890c5e8 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -95,6 +95,8 @@ static int compat_blkpg_ioctl(struct block_device *bdev,
- static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
- 		unsigned long arg)
- {
-+	sector_t bs_mask = (bdev_logical_block_size(bdev) >> SECTOR_SHIFT) - 1;
-+	sector_t sector, nr_sects;
- 	uint64_t range[2];
- 	uint64_t start, len;
- 	struct inode *inode = bdev->bd_inode;
-@@ -105,18 +107,21 @@ static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
- 
- 	if (!bdev_max_discard_sectors(bdev))
- 		return -EOPNOTSUPP;
-+	if (bdev_read_only(bdev))
-+		return -EPERM;
- 
- 	if (copy_from_user(range, (void __user *)arg, sizeof(range)))
- 		return -EFAULT;
- 
- 	start = range[0];
- 	len = range[1];
-+	sector = start >> SECTOR_SHIFT;
-+	nr_sects = len >> SECTOR_SHIFT;
- 
--	if (start & 511)
-+	if (!nr_sects)
- 		return -EINVAL;
--	if (len & 511)
-+	if ((sector | nr_sects) & bs_mask)
- 		return -EINVAL;
--
- 	if (start + len > bdev_nr_bytes(bdev))
- 		return -EINVAL;
- 
-@@ -124,7 +129,7 @@ static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
- 	err = truncate_bdev_range(bdev, mode, start, start + len - 1);
- 	if (err)
- 		goto fail;
--	err = blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL);
-+	err = blkdev_issue_discard(bdev, sector, nr_sects, GFP_KERNEL);
- fail:
- 	filemap_invalidate_unlock(inode->i_mapping);
- 	return err;
 -- 
 2.39.2
 
