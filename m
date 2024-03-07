@@ -1,98 +1,136 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA4314265;
-	Wed,  6 Mar 2024 22:16:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B7AF3D6B;
+	Thu,  7 Mar 2024 07:23:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709763402; cv=none; b=T7g+6Na5cHsvIoqNu2zQgTVSx1JuXUW49VPa1O4agt01Xmtp9vlqEZxQwG1UA+CYQPGfj56RbPeGYm2kfe9EmLb5GmKnlpkwKCdU4x98dZgHaBJWwdruYBE64z8PApWRDm+WgLVL/yTebCu/A0Yg6tJP/mMH1CvaZXjBuS6oBkA=
+	t=1709796240; cv=none; b=ooaK79J+a9aHSPCY6xuWtC1thyNcb5aBHXsvf/ftnmaRRMWXiydYSiYGl74hsH5LtxDvMK86jWNMbUrJ+JOKuAWHMmIjrpL0UJ7BT8+AjmQB9KaYMo8yRQaVZEjB9+in0J1EjLXYQP0P8NdWsjXOumosHnJhc0i0pe4cxq+PmdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709763402; c=relaxed/simple;
-	bh=mEsHmfioU7YFUNRDdp7uzT1NPi4KCUrCHsomdtKI1PI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SyIa0gD58qh79JqLEr4OikYoVeFkap/EdXF5/yayN2waFCEmEBVhr0I9gFFKT2jSpnW5TJ1FgjivJdWQlWaFs4dFhjtZzIpC/d5584AhlIwpzNUtCLwUxrBr1PltVc76J0Vhx+fIzTP5EvM6+McEi4Fjz2n1nZ10eqrXlqwvAzg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=px0+GhWR; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1709796240; c=relaxed/simple;
+	bh=gjISR60uq+ya8maqdsGJ9wHx3jkUl2ijmsJeV0ROz/k=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=S8bNIhNcqG+L/Je/uOMoWp8ryFboSbgErSocdhlHPHZw9SpqnWtuLprvVcTUZPgdFGHk2N9zHjNrhUNkyNmpHAZCaPYJgEksN1FUTtpgaxS32vJ1/P0o1Lus9yXskZfzOj4mRTfMF+slpndLSRLsjxHBnH/MHzEnQ41xKKef7R4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=leCBMQTO; arc=none smtp.client-ip=209.85.161.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="px0+GhWR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4tFlqO+nz+vyD7AtEYeD6vF7kcf1yOgIiulP3wg93hA=; b=px0+GhWRfk7f1OvAjLSOL5uWlB
-	nI7q08XsdLWWH8pUbg6BNETTyYq1PZc+ZzayPM3Re1mJc4L/rF7ztMYaBp0Uc1au8k3Bi1+pjcLgF
-	5gJQCna07qvliThIDugaKjVd+yWnfQZo3i7fG+PwiJvPMYA5hOvjcco+tMuP6itSr/78hFM0JIKjK
-	D3f3dMym2rcKxQFnYXP7W2KT3udJ7vqRgz98D5NjxNTI5+2BZldc5xQcl4SGZF+vEpsru9pMV5xbo
-	9P7D6gX6UtShRSid2oDJCIB8tBde5Nqs40sdWFArL0wEYsx8NmNCfoX3EdhBOR/F8S8rx+hgVjyjx
-	UlZFMbyQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rhzZ1-000000023Ps-3RYb;
-	Wed, 06 Mar 2024 22:16:39 +0000
-Date: Wed, 6 Mar 2024 14:16:39 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Keith Busch <kbusch@kernel.org>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [BUG REPORT] General protection fault while discarding extents
- on XFS on next-20240305
-Message-ID: <ZejrR3-aLJy3ere7@infradead.org>
-References: <87y1avlsmw.fsf@debian-BULLSEYE-live-builder-AMD64>
- <Zehi_bLuwz9PcbN9@infradead.org>
- <Zeh_e2tUpx-HzCed@kbusch-mbp>
- <ZeiAQv6ACQgIrsA-@kbusch-mbp>
- <ZeiBmGXgxNmgyjs4@infradead.org>
- <ZeiJKmWQoE6ttn6L@infradead.org>
- <ZejXV1ll+sbgBP48@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="leCBMQTO"
+Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-5a136ac89b3so285756eaf.0;
+        Wed, 06 Mar 2024 23:23:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709796238; x=1710401038; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=VIH6l6TAaG5Cqe0bpJodgiCiZ7ro0zZHdOeKB9khDLM=;
+        b=leCBMQTOEYP8V8TBnHbpA+43I3Yq+B59AKDMgX5VXkUr65j07+uNjXwRh7fzsM5OQO
+         iokqFbIbeSSQy3DxMWmPOzecUAkn7Cszc+HoFd2NvJprgpAkWC579rlqr8+iqklchwJZ
+         NMpcE/O9uy+qcz816YHuASa4oIvU9I04ycsI18jIdDn9uufTYj74+Gaj/2KwYHOTz//U
+         leVGex12iGYwXSWsGx929jBzPUyiaFPRJKzqUj8xqKhA6iHD+WMQExz7Gy1Hn9zKdwbk
+         OMm3rlKISNqevo2e79MjH6WLz2auA8MmRVv7Z/sOtv882lqYcuzvF+rHXZslAh30FIX0
+         atBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709796238; x=1710401038;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VIH6l6TAaG5Cqe0bpJodgiCiZ7ro0zZHdOeKB9khDLM=;
+        b=CNBd017UXPcnWPeXEE6QkuA8BKEbc6EC4pwHOvQAPQ+NyyNloe/PxTLF5RMrmpbIrt
+         cGNQYyM8oK2gnIPQkRUxzArWIB1hvwxDSW2kJGxsEXLXaE2cP5caqHOlPmpdVj81Qik4
+         6wGAe4dNRZivOS9i8Ft/d4dvOHkX0acc1nG3FCGKLeCaLKeJzkT50OBbFaovz/vZWn6i
+         I+37NDdQR5/gpYgC3z9H2TdF+EgGgsh8Dwl62ROebob5ZyHtNSj2eWP2Je7kUuITVmHm
+         xnaDFQfNRbye/f8/h/vNuWclingTsvtGQKfkXQ1Gy0xsFC9xW0PXFQrNHAcY9n386eiQ
+         5iuA==
+X-Forwarded-Encrypted: i=1; AJvYcCWD5BUNIZwqnbp4UIfuLYD6O13oPM6rwL1GHH6SsCWAFe+6MY1i0R2mpdqpnAtJ/VUkeXPHZR/Qvx9zgpiZV6DY9GX4Rbk0iDgR8AhoEmaraa9QeVd7FhDm2bCHjF/pRKOEwWWlEJ2p
+X-Gm-Message-State: AOJu0Yypuz4nvU1niIGRhx+kiJsATrNVY0R9LDiPkuqLB/t6aT4Ci8YA
+	mwbWjqKHbPbccp4J56nGifwS/Sk96uCnK8cT4DoSJxH98HliYvWXLEz80iMDzwm1WhZ2FtevzeV
+	WXtThAOHXoxg9pB8wnLwO/Jkcu/TOsOS1wGw=
+X-Google-Smtp-Source: AGHT+IG9cC2X8lydTyGZzxOiU0q07paTCuhvnq6di0s3iUThXYVZjzJDvz+n3zDfUs1nhEsOpl2RWJu4bu2IRNkQY2A=
+X-Received: by 2002:a4a:3159:0:b0:5a1:b4d7:c8e9 with SMTP id
+ v25-20020a4a3159000000b005a1b4d7c8e9mr709957oog.1.1709796237514; Wed, 06 Mar
+ 2024 23:23:57 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZejXV1ll+sbgBP48@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+From: =?UTF-8?B?5YiY6YCa?= <lyutoon@gmail.com>
+Date: Thu, 7 Mar 2024 15:23:46 +0800
+Message-ID: <CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com>
+Subject: A bug was found in Linux Kernel 5.15.148 and 5.15.150: KASAN:
+ use-after-free in xfs_allocbt_init_key_from_rec (with POC)
+To: leah.rumancik@gmail.com, djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Mar 07, 2024 at 07:51:35AM +1100, Dave Chinner wrote:
-> On Wed, Mar 06, 2024 at 07:18:02AM -0800, Christoph Hellwig wrote:
-> > Lookings at this a bit more I'm not sure my fix is enough as the error
-> > handling is really complex.  Also given that some discard callers are
-> > from kernel threads messing with interruptibility I'm not entirely
-> > sure that having this check in the common helper is a good idea.
-> 
-> Yeah, this seems like a problem. The only places that userspace
-> should be issuing discards directly and hence be interruptible from
-> are FITRIM, BLKDISCARD and fallocate() on block devices.
+Hi upstream community,
 
-Yes.
+I was fuzzing a LTS version of Linux kernel 5.15.148 with my modified
+syzkaller and I found a bug named "KASAN: use-after-free in
+xfs_allocbt_init_key_from_rec".
 
-> Filesystems already handle fatal signals in FITRIM (e.g. see
-> xfs_trim_should_stop(), ext4_trim_interrupted(),
-> btrfs_trim_free_extents(), etc), so it seems to me that the only
-> non-interruptible call from userspace are operations directly on
-> block devices which have no higher level iteration over the range to
-> discard and the user controls the range directly.
+I tested the PoC on 5.15.148, 5.15.149 and 5.15.150 with sanitizer on
+and found sanitizer through a panic as "KASAN: use-after-free in
+xfs_allocbt_init_key_from_rec" on 5.15.148 and 5.15.150, but there was
+no panic and sanitizer error in 5.15.149.
 
-Yeah.
+The syzkaller log, report, kernel config, PoC can be found here:
+https://drive.google.com/file/d/1w6VKKewt4VQzb9FzcGtkELJUOwd1wMcC/view?usp=sharing
 
-> Perhaps the solution is to change BLKDISCARD/fallocate() on bdev to
-> look more like xfs_discard_extents() where it breaks the range up
-> into smaller chunks and intersperses bio chaining with signal
-> checks.
+# Analysis (rough):
+Because that I cannot understand the report0 clearly in the zip file
+above, so I rerun the PoC on my vm (5.15.148) and I get another report
+named as the same but it looks much clearer than the report0. The new
+report can be found in:
+https://drive.google.com/file/d/1Vg_4Qwueow6VgjLrijnUB8QbZVx902sv/view?usp=sharing
+In this report, we can easily see that the memory allocation and free:
+Allocation:
+```
+[   62.995194][ T6349] Allocated by task 6343:
+[   62.995610][ T6349]  kasan_save_stack+0x1b/0x40
+[   62.996044][ T6349]  __kasan_slab_alloc+0x61/0x80
+[   62.996475][ T6349]  kmem_cache_alloc+0x18e/0x6b0
+[   62.996918][ T6349]  getname_flags+0xd2/0x5b0
+[   62.997335][ T6349]  user_path_at_empty+0x2b/0x60
+[   62.997782][ T6349]  vfs_statx+0x13c/0x370
+[   62.998193][ T6349]  __do_sys_newlstat+0x91/0x110
+[   62.998634][ T6349]  do_syscall_64+0x35/0xb0
+[   62.999033][ T6349]  entry_SYSCALL_64_after_hwframe+0x61/0xcb
+```
+Free:
+```
+[   62.999776][ T6349] Freed by task 6343:
+[   63.000135][ T6349]  kasan_save_stack+0x1b/0x40
+[   63.000555][ T6349]  kasan_set_track+0x1c/0x30
+[   63.001053][ T6349]  kasan_set_free_info+0x20/0x30
+[   63.001638][ T6349]  __kasan_slab_free+0xe1/0x110
+[   63.002206][ T6349]  kmem_cache_free+0x82/0x5b0
+[   63.002742][ T6349]  putname+0xfe/0x140
+[   63.003103][ T6349]  user_path_at_empty+0x4d/0x60
+[   63.003551][ T6349]  vfs_statx+0x13c/0x370
+[   63.003943][ T6349]  __do_sys_newlstat+0x91/0x110
+[   63.004378][ T6349]  do_syscall_64+0x35/0xb0
+[   63.004841][ T6349]  entry_SYSCALL_64_after_hwframe+0x61/0xcb
+```
+So this is a use-after-free bug: allocated by `kmem_cache_alloc` and
+freed by `kmem_cache_free`.
+And according to the report, the UAF occurs in
+`xfs_allocbt_init_key_from_rec`, `key->alloc.ar_startblock =
+rec->alloc.ar_startblock;` which indicates that maybe
+`rec->alloc.ar_startblock` was freed before.
 
-Well, xfs_discard_extents has different extents from the higher
-layers.  __blkdev_issue_discard than breaks it up based on what
-fits into the bio (and does some alignment against our normal
-rule of leaving that to the splitting code).  But I suspect moving
-the loop in __blkdev_issue_discard into the callers could really
-help with this.
+# Step to reproduce:
+1. download the zip file
+2. unzip it
+3. compile the kernel (5.15.148, 5.15.150) with kernel_config
+4. start the kernel with qemu vm
+5. scp repro.c to the vm
+6. compile the repro.c and run it: gcc repro.c -o exp && ./exp
+7. you will see the KASAN error
 
-> 
-> I suspect the same solution is necessary for blkdev_issue_zeroout()
-> and blkdev_issue_secure_erase(), because both of them have user
-> controlled lengths...
+# Note:
+I didn't find any related reports on the internet, which indicates
+that it may be a 0day. Hope the upstream can help check and fix it.
+And I'll be happy to provide more information if needed.
 
-Yes.  (or rather two sub cases of the former and the latter)
+Best,
+Tong
