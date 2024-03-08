@@ -1,48 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E07D2C1BF;
-	Fri,  8 Mar 2024 03:57:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDCC32C1BF;
+	Fri,  8 Mar 2024 04:40:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709870229; cv=none; b=nKHlooM70rEkDcB29CCRA6t6tMOpyYsdCkZeknINV11bCohYaLvhcDinhHNpm7bi5XeFNG5kaQe2oCDo7BIREVJDFGBVgO8TF8Eeu4sLoCDoYqFgyFFTXBabFaXbtMVIEgJUiqeRbuX7ITgOoW7ibbzof7z8fd0j8FN0+odPR4A=
+	t=1709872820; cv=none; b=GawvuREtUywonFxQrOL7Fu5qgdNCrBlR8E8Yr37AbOYBTWhlOkjnjQZvMSlRaRi6V/ul6gcNfjPNxn63IfzB6ahQ7ui+5x/yzI3LrmnQKeJQchWlayqaiaOQRSSpHJDpyu3xueM3jw9Hc1M5jY8OI0vyKBEdhI2qo5jKyt6LuDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709870229; c=relaxed/simple;
-	bh=ripCdWhlT1pQlW6KaF2ME2qhgs+ERXBTC8P9/+awXFE=;
+	s=arc-20240116; t=1709872820; c=relaxed/simple;
+	bh=77caZOBVxWdVjB7T0uqv6sdnKxKbhk1L6k5nDRBj+Yg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G2+5B41P8HWAzYIEqLlJLx3GnnHl89RvoGRLwxamn06Jr2YJezh95aaM3v9n5WwW6LoYLhki3mQ6ZIwTkMqs17MXJxeQUqmyKWyOmCQOA3vm7cS44iX0PqNJPpvMFVIgazyVlKXI6CDLKoq10yOMfsG/Ve7cfhn60o3d562tAl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iCBSjAZi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ff+FGWidpQstPaK2f406a7o/y6FSr4uxRTdSZS4C8XFDVO81CIDqqhdsaRkM77FtvasW6KgLA5j/YfUnUTaDauUhcRG8Yg3GUKayxbYQyQ8XLQDOhJUjLrQ8fWivUlMdflEZ/26CVaE4IL7dn8M99sphXphFTPnxyw1Xk4LNCu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hm9KiPhf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iCBSjAZi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02AD1C433C7;
-	Fri,  8 Mar 2024 03:57:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hm9KiPhf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3900BC433F1;
+	Fri,  8 Mar 2024 04:40:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709870229;
-	bh=ripCdWhlT1pQlW6KaF2ME2qhgs+ERXBTC8P9/+awXFE=;
+	s=k20201202; t=1709872819;
+	bh=77caZOBVxWdVjB7T0uqv6sdnKxKbhk1L6k5nDRBj+Yg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iCBSjAZi5qJKqsYiO6vGPUXV5+gkkM5IYdUuU7wyrsoQK3kcN0h7iUnmEHYeT6RcL
-	 lEO+FuPXMzWiFOKaFTjbf5z1LBOgMIVi86CO1lMYNdYlnrn59IRuWIKLZY2mxx/qT2
-	 hX0f+u/QAlP8TkSgIpDPr3RwZWIWn46+Mfl8d5sAK1ngCbR4/0WZbwH9CZAiWOuEYZ
-	 k/29Vm7H/d2/S8DVh6ZsHK5FC/OZAPnqOSpIG0gNvcOWg2n4H6ukhyulfONaILzlIY
-	 jI5ViHvyB+tnPLT4FEXfcqgMpD7sDmklq387obKDY3ysZaz6rM4H3oKbhiw02HKMZa
-	 y+vAw9ehOQRYA==
-Date: Thu, 7 Mar 2024 19:57:08 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>,
-	Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	b=hm9KiPhfozyTAPShF3PtmQ5k2VQ6FJoH7+2EQqAgF2gU6N6zrTSff7zNNALAbIJWy
+	 rJwavwf5xw2+TtsQjrlbhNmQFVxeQtzFSWdcCQKkbdl06VAMoSU3zZlJ4SwMRFLXAC
+	 GeysXa4MoJN92PDt0SLRaVf3LicS68NvyzvUQxpoumyPIwxJON5w0GwPQxnyv2PmLV
+	 h27n+tNp7YWMrBdjxSsY10A5RUkFvPGtg3oGTuWZWTfJGpLbsD5rU6fV8D9SR4qNB3
+	 FMWP5mtjmfcfxfLQqg6EIeqgDKejecR6UvRI013HLVVqdIit4Cngvne4jdroItINSU
+	 DTHsy+QW4miTg==
+Date: Thu, 7 Mar 2024 20:40:17 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	chandan.babu@oracle.com, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 10/24] iomap: integrate fs-verity verification into
- iomap's read path
-Message-ID: <20240308035708.GN1927156@frogsfrogsfrogs>
+	chandan.babu@oracle.com
+Subject: Re: [PATCH v5 06/24] fsverity: pass tree_blocksize to
+ end_enable_verity()
+Message-ID: <20240308044017.GC8111@sol.localdomain>
 References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-12-aalbersh@redhat.com>
- <20240304233927.GC17145@sol.localdomain>
- <ZepP3iAmvQhbbA2t@dread.disaster.area>
- <20240307235907.GA8111@sol.localdomain>
- <Zepn3ycweBrgwgDO@dread.disaster.area>
- <20240308031629.GB8111@sol.localdomain>
+ <20240304191046.157464-8-aalbersh@redhat.com>
+ <20240305005242.GE17145@sol.localdomain>
+ <20240306163000.GP1927156@frogsfrogsfrogs>
+ <20240307220224.GA1799@sol.localdomain>
+ <20240308034650.GK1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,103 +49,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240308031629.GB8111@sol.localdomain>
+In-Reply-To: <20240308034650.GK1927156@frogsfrogsfrogs>
 
-On Thu, Mar 07, 2024 at 07:16:29PM -0800, Eric Biggers wrote:
-> On Fri, Mar 08, 2024 at 12:20:31PM +1100, Dave Chinner wrote:
-> > On Thu, Mar 07, 2024 at 03:59:07PM -0800, Eric Biggers wrote:
-> > > On Fri, Mar 08, 2024 at 10:38:06AM +1100, Dave Chinner wrote:
-> > > > > This makes all kernels with CONFIG_FS_VERITY enabled start preallocating memory
-> > > > > for these bios, regardless of whether they end up being used or not.  When
-> > > > > PAGE_SIZE==4096 it comes out to about 134 KiB of memory total (32 bios at just
-> > > > > over 4 KiB per bio, most of which is used for the BIO_MAX_VECS bvecs), and it
-> > > > > scales up with PAGE_SIZE such that with PAGE_SIZE==65536 it's about 2144 KiB.
-> > > > 
-> > > > Honestly: I don't think we care about this.
-> > > > 
-> > > > Indeed, if a system is configured with iomap and does not use XFS,
-> > > > GFS2 or zonefs, it's not going to be using the iomap_ioend_bioset at
-> > > > all, either. So by you definition that's just wasted memory, too, on
-> > > > systems that don't use any of these three filesystems. But we
-> > > > aren't going to make that one conditional, because the complexity
-> > > > and overhead of checks that never trigger after the first IO doesn't
-> > > > actually provide any return for the cost of ongoing maintenance.
-> > > > 
-> > > > Similarly, once XFS has fsverity enabled, it's going to get used all
-> > > > over the place in the container and VM world. So we are *always*
-> > > > going to want this bioset to be initialised on these production
-> > > > systems, so it falls into the same category as the
-> > > > iomap_ioend_bioset. That is, if you don't want that overhead, turn
-> > > > the functionality off via CONFIG file options.
-> > > 
-> > > "We're already wasting memory, therefore it's fine to waste more" isn't a great
-> > > argument.
-> > 
-> > Adding complexity just because -you- think the memory is wasted
-> > isn't any better argument. I don't think the memory is wasted, and I
-> > expect that fsverity will end up in -very- wide use across
-> > enterprise production systems as container/vm image build
-> > infrastructure moves towards composefs-like algorithms that have a
-> > hard dependency on fsverity functionality being present in the host
-> > filesytsems.
-> > 
-> > > iomap_ioend_bioset is indeed also problematic, though it's also a bit different
-> > > in that it's needed for basic filesystem functionality, not an optional feature.
-> > > Yes, ext4 and f2fs don't actually use iomap for buffered reads, but IIUC at
-> > > least there's a plan to do that.  Meanwhile there's no plan for fsverity to be
-> > > used on every system that may be using a filesystem that supports it.
-> > 
-> > That's not the case I see coming for XFS - by the time we get this
-> > merged and out of experimental support, the distro and application
-> > support will already be there for endemic use of fsverity on XFS.
-> > That's all being prototyped on ext4+fsverity right now, and you
-> > probably don't see any of that happening.
-> > 
-> > > We should take care not to over-estimate how many users use optional features.
-> > > Linux distros turn on most kconfig options just in case, but often the common
-> > > case is that the option is on but the feature is not used.
-> > 
-> > I don't think that fsverity is going to be an optional feature in
-> > future distros - we're already building core infrastructure based on
-> > the data integrity guarantees that fsverity provides us with. IOWs,
-> > I think fsverity support will soon become required core OS
-> > functionality by more than one distro, and so we just don't care
-> > about this overhead because the extra read IO bioset will always be
-> > necessary....
+On Thu, Mar 07, 2024 at 07:46:50PM -0800, Darrick J. Wong wrote:
+> > BTW, is xfs_repair planned to do anything about any such extra blocks?
 > 
-> That's great that you're finding fsverity to be useful!
+> Sorry to answer your question with a question, but how much checking is
+> $filesystem expected to do for merkle trees?
 > 
-> At the same time, please do keep in mind that there's a huge variety of Linux
-> systems besides the "enterprise" systems using XFS that you may have in mind.
+> In theory xfs_repair could learn how to interpret the verity descriptor,
+> walk the merkle tree blocks, and even read the file data to confirm
+> intactness.  If the descriptor specifies the highest block address then
+> we could certainly trim off excess blocks.  But I don't know how much of
+> libfsverity actually lets you do that; I haven't looked into that
+> deeply. :/
 > 
-> The memory allocated for iomap_fsverity_bioset, as proposed, is indeed wasted on
-> any system that isn't using both XFS *and* fsverity (as long as
-> CONFIG_FS_VERITY=y, and either CONFIG_EXT4_FS, CONFIG_F2FS_FS, or
-> CONFIG_BTRFS_FS is enabled too).  The amount is also quadrupled on systems that
-> use a 16K page size, which will become increasingly common in the future.
+> For xfs_scrub I guess the job is theoretically simpler, since we only
+> need to stream reads of the verity files through the page cache and let
+> verity tell us if the file data are consistent.
 > 
-> It may be that part of your intention for pushing back against this optimization
-> is to encourage filesystems to convert their buffered reads to iomap.  I'm not
-> sure it will actually have that effect.  First, it's not clear that it will be
-> technically feasible for the filesystems that support compression, btrfs and
-> f2fs, to convert their buffered reads to iomap.
+> For both tools, if something finds errors in the merkle tree structure
+> itself, do we turn off verity?  Or do we do something nasty like
+> truncate the file?
 
-I do hope more of that happens some day, even if xfs is too obsolete to
-gain those features itself.
+As far as I know (I haven't been following btrfs-progs, but I'm familiar with
+e2fsprogs and f2fs-tools), there isn't yet any precedent for fsck actually
+validating the data of verity inodes against their Merkle trees.
 
->                                                  Second, this sort of thing
-> reinforces an impression that iomap is targeted at enterprise systems using XFS,
-> and that changes that would be helpful on other types of systems are rejected.
+e2fsck does delete the verity metadata of inodes that don't have the verity flag
+enabled.  That handles cleaning up after a crash during FS_IOC_ENABLE_VERITY.
 
-I wouldn't be opposed to iomap_prepare_{filemap,verity}() functions that
-client modules could call from their init methods to ensure that
-static(ish) resources like the biosets have been activated.  You'd still
-waste space in the bss section, but that would be a bit more svelte.
+I suppose that ideally, if an inode's verity metadata is invalid, then fsck
+should delete that inode's verity metadata and remove the verity flag from the
+inode.  Checking for a missing or obviously corrupt fsverity_descriptor would be
+fairly straightforward, but it probably wouldn't catch much compared to actually
+validating the data against the Merkle tree.  And actually validating the data
+against the Merkle tree would be complex and expensive.  Note, none of this
+would work on files that are encrypted.
 
-(Says me, who <cough> might some day end up with 64k page kernels
-again.)
+Re: libfsverity, I think it would be possible to validate a Merkle tree using
+libfsverity_compute_digest() and the callbacks that it supports.  But that's not
+quite what it was designed for.
 
---D
+> Is there an ioctl or something that allows userspace to validate an
+> entire file's contents?  Sort of like what BLKVERIFY would have done for
+> block devices, except that we might believe its answers?
 
-> - Eric
-> 
+Just reading the whole file and seeing whether you get an error would do it.
+
+Though if you want to make sure it's really re-reading the on-disk data, it's
+necessary to drop the file's pagecache first.
+
+> Also -- inconsistencies between the file data and the merkle tree aren't
+> something that xfs can self-heal, right?
+
+Similar to file data itself, only way to self-heal would be via mechanisms that
+provide redundancy.  There's been some interest in adding support forward error
+correction (FEC) to fsverity similar to what dm-verity has, but this would be
+complex, and it's not something that anyone has gotten around to yet.
+
+- Eric
