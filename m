@@ -1,71 +1,47 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3172262B
-	for <linux-xfs@vger.kernel.org>; Fri,  8 Mar 2024 02:00:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79CB22F1E;
+	Fri,  8 Mar 2024 03:16:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709863202; cv=none; b=psNLqBTFiGvf+/JaiFp+fwNSc1PGv2L2Dfi4CCm5DbAUKmVJPfpypH9CFvH92ZPtzm9vgY4+ehSsDbxqHYNSGxlSt9Ng8QEkT8qNzhLUTiUZb5tCF83Vc6Wnl3/yRdug4FHfboQ5jKFC9R3fHwtPx39Q+r0ciALznL9dh15SRfI=
+	t=1709867791; cv=none; b=XrwtZRR19rIS5G0MtjIfj9PY/sMuMheLGGB+vz+4Wq+sr7gI0U4Wgtcj+k3TrKTXQ/8ozJBIYnSdwbRMfRSTN8r4f9FKIJlnxTTACzqL12w7P/d+cJM7Wo1BhNSrA2QgAyUR8d9A+3SDBQIAct5nJOQt1stMX8h4qxamGjJ9KzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709863202; c=relaxed/simple;
-	bh=JjBNnzKC9id9p7QFftineoXbQY243jNuD6d97+uc4cQ=;
+	s=arc-20240116; t=1709867791; c=relaxed/simple;
+	bh=BjpBZkxmyruywoYFAPVgRHonNYrUfOU/ggENIKnuy7U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p7YZe39zo51FQEx4yX5zHKFcOMvzyXPZ9++66ODqCrYd63SkvAG+Cq8+70lxvTm+qGYxQ8A9z5IZOSxmRkCqIrMXPN6i1h9UmKwDgaM9rH9JYkXWMTHc+oIcyoir3u0A/V5EIHgMatUHOv+CIvUjomC4PuT1PgOWfC9e5PpFiUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=dsv6H5q3; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=hKPoa01d8x+75muNC7LyFMhxs7f4mZz0HB8HrS7JHGiEl4qs5H/k10Ves27fzB43+vysb4eIjgqFlkbSTZG6u+sl4Bc3QpZgmm2ruOLS+NhBdvuU4Kzyq9Tx63FoiCZygPnXfW59Pp+F+rWeWTRs3z8r1zy5h2kdfvWTLrEG8HQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AQMqjpaT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="dsv6H5q3"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1dc75972f25so13382065ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Mar 2024 18:00:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709863200; x=1710468000; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2MLYc7BKQVYfFVjsRePJzvoAnkhzhPJ6R/TxL2FyKgY=;
-        b=dsv6H5q3S3tPzSmLnaLXuvvcPCm3E4DiynF+wKtG8Jh5TxAkaqeKvK9r0piLXLa1Fj
-         B/lTiDen00ZuHnrETOVEPhIgcZFCmfyf7eFAxw8UFnjpp+uA1RWsLbc5qYQoOQHzFr8C
-         xOSpg9BRLg/G43NfvtwuS/bGJqPeOyCwl8bPINPKIn8xx3Shbzqj9TKumA+PYuXv4iUQ
-         i4l/vx/iPPqhszF5g/bbSobNEg0/7CGf8nw5bFzTwRutTV4INo+QoAyiFop2XW4YvEre
-         tnh7zIeEcr8nmKR5SzH/IIGo/FgMBHKnDvu/VGrAz6n/A7dm5kbqiiAlrw2TQM2MD2CI
-         +B7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709863200; x=1710468000;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2MLYc7BKQVYfFVjsRePJzvoAnkhzhPJ6R/TxL2FyKgY=;
-        b=Sk+MDzwZ26Wr8rhmpXpDrPrH4c8Xa548v2k9zLBb+l8Ql/shM/h85t61IJdS2AUlsF
-         V97Zrl/llOvOO3ZYF9ZkUDFBN16CcgQeMOoy0Ma0xd+8qhVUGQ+UcMciyR+tOqIBN/sg
-         LDecU0ZyTYhEjvtKlfa5AlkI7/2jQ6M263CMJtVli9TalLnUUGRUu00L7b5CbpIQQqb/
-         xiObJD557HILnW/VW9WKeanMx2ipmaLYnNA6qtDJQCjMQhsMP/Hsm1NTpnN0X/7HKcxP
-         XT/P4X0/ZZAfP2xC9awpfAOEwLLlG34pvb8yhOSuE6wRnMMR7izL2YKyw0ylazIeRaGb
-         KW/w==
-X-Forwarded-Encrypted: i=1; AJvYcCVVUT1Rzdvf8VTF/vSQa2vd6AB/u2xRTXJJgF+nRwvSy8OLJFw5vc/UCCxZF+QXI3q5hW1WuaK9pShwBCSFxeeuFaYIYOeVAFbU
-X-Gm-Message-State: AOJu0YzS0XnlHrdV6+0VUrqFWCE/lYbGGiEBfmEFCXvfV9LSRy51emxI
-	kRAPd+mKTEmmdivqtkVgwVpHfXvuCM9ZDfmmR1J3+NRlgjgPoeqLLjQa98YwgDo=
-X-Google-Smtp-Source: AGHT+IEezWZlZy5CuteXB2TEn2oTd6sCaxkoIZ1Q+l6TmpaJgK87Z5LH44REIf+RAxUhKaLcxM/Xpg==
-X-Received: by 2002:a17:902:f604:b0:1dd:2eed:52a5 with SMTP id n4-20020a170902f60400b001dd2eed52a5mr10668307plg.37.1709863199796;
-        Thu, 07 Mar 2024 17:59:59 -0800 (PST)
-Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
-        by smtp.gmail.com with ESMTPSA id kx3-20020a170902f94300b001dca40bb727sm15350687plb.88.2024.03.07.17.59.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Mar 2024 17:59:59 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1riPWe-00GVgK-19;
-	Fri, 08 Mar 2024 12:59:56 +1100
-Date: Fri, 8 Mar 2024 12:59:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AQMqjpaT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0C2BC433C7;
+	Fri,  8 Mar 2024 03:16:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709867791;
+	bh=BjpBZkxmyruywoYFAPVgRHonNYrUfOU/ggENIKnuy7U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AQMqjpaT6vfJgvoLgOn6CBPU37xA6M2HdRfS4ZqV5ckzCoJhzYE69yI8FVw99PKOT
+	 CEg8/I1ykRnEfokMXzJ0ytu9rgPLsf0qhQtOQem2TpS6jV+LArHnwN7/JXjoz9oafb
+	 3zLor05fFKAMvg2o/DdoqGU84bDvi9u23lybvS1ex4dWXpGB5Dy0EV4Bc3joZRWNHu
+	 b6dbjh23G3wnbXA3N8NcrYZiBn70UY2lvZWUyMN/7ox+ufks07j/tdWzmXUgZx/reg
+	 mYNx2NgIscxB7iEygtznvy7I1LmSfK0u5C0/XSxiEmDCFU5AqGk3nixBgqY4/aoe4k
+	 gVdIndHkj4w0w==
+Date: Thu, 7 Mar 2024 19:16:29 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	chandan.babu@oracle.com, ebiggers@kernel.org
-Subject: Re: [PATCH v5 11/24] xfs: add XBF_VERITY_SEEN xfs_buf flag
-Message-ID: <ZepxHObVLb3JLCl/@dread.disaster.area>
+	chandan.babu@oracle.com, djwong@kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v5 10/24] iomap: integrate fs-verity verification into
+ iomap's read path
+Message-ID: <20240308031629.GB8111@sol.localdomain>
 References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-13-aalbersh@redhat.com>
- <20240307224654.GB1927156@frogsfrogsfrogs>
+ <20240304191046.157464-12-aalbersh@redhat.com>
+ <20240304233927.GC17145@sol.localdomain>
+ <ZepP3iAmvQhbbA2t@dread.disaster.area>
+ <20240307235907.GA8111@sol.localdomain>
+ <Zepn3ycweBrgwgDO@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,159 +50,86 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240307224654.GB1927156@frogsfrogsfrogs>
+In-Reply-To: <Zepn3ycweBrgwgDO@dread.disaster.area>
 
-On Thu, Mar 07, 2024 at 02:46:54PM -0800, Darrick J. Wong wrote:
-> On Mon, Mar 04, 2024 at 08:10:34PM +0100, Andrey Albershteyn wrote:
-> > One of essential ideas of fs-verity is that pages which are already
-> > verified won't need to be re-verified if they still in page cache.
+On Fri, Mar 08, 2024 at 12:20:31PM +1100, Dave Chinner wrote:
+> On Thu, Mar 07, 2024 at 03:59:07PM -0800, Eric Biggers wrote:
+> > On Fri, Mar 08, 2024 at 10:38:06AM +1100, Dave Chinner wrote:
+> > > > This makes all kernels with CONFIG_FS_VERITY enabled start preallocating memory
+> > > > for these bios, regardless of whether they end up being used or not.  When
+> > > > PAGE_SIZE==4096 it comes out to about 134 KiB of memory total (32 bios at just
+> > > > over 4 KiB per bio, most of which is used for the BIO_MAX_VECS bvecs), and it
+> > > > scales up with PAGE_SIZE such that with PAGE_SIZE==65536 it's about 2144 KiB.
+> > > 
+> > > Honestly: I don't think we care about this.
+> > > 
+> > > Indeed, if a system is configured with iomap and does not use XFS,
+> > > GFS2 or zonefs, it's not going to be using the iomap_ioend_bioset at
+> > > all, either. So by you definition that's just wasted memory, too, on
+> > > systems that don't use any of these three filesystems. But we
+> > > aren't going to make that one conditional, because the complexity
+> > > and overhead of checks that never trigger after the first IO doesn't
+> > > actually provide any return for the cost of ongoing maintenance.
+> > > 
+> > > Similarly, once XFS has fsverity enabled, it's going to get used all
+> > > over the place in the container and VM world. So we are *always*
+> > > going to want this bioset to be initialised on these production
+> > > systems, so it falls into the same category as the
+> > > iomap_ioend_bioset. That is, if you don't want that overhead, turn
+> > > the functionality off via CONFIG file options.
 > > 
-> > XFS will store Merkle tree blocks in extended file attributes. When
-> > read extended attribute data is put into xfs_buf.
-> > 
-> > fs-verity uses PG_checked flag to track status of the blocks in the
-> > page. This flag can has two meanings - page was re-instantiated and
-> > the only block in the page is verified.
-> > 
-> > However, in XFS, the data in the buffer is not aligned with xfs_buf
-> > pages and we don't have a reference to these pages. Moreover, these
-> > pages are released when value is copied out in xfs_attr code. In
-> > other words, we can not directly mark underlying xfs_buf's pages as
-> > verified as it's done by fs-verity for other filesystems.
-> > 
-> > One way to track that these pages were processed by fs-verity is to
-> > mark buffer as verified instead. If buffer is evicted the incore
-> > XBF_VERITY_SEEN flag is lost. When the xattr is read again
-> > xfs_attr_get() returns new buffer without the flag. The xfs_buf's
-> > flag is then used to tell fs-verity this buffer was cached or not.
-> > 
-> > The second state indicated by PG_checked is if the only block in the
-> > PAGE is verified. This is not the case for XFS as there could be
-> > multiple blocks in single buffer (page size 64k block size 4k). This
-> > is handled by fs-verity bitmap. fs-verity is always uses bitmap for
-> > XFS despite of Merkle tree block size.
-> > 
-> > The meaning of the flag is that value of the extended attribute in
-> > the buffer is processed by fs-verity.
-> > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > ---
-> >  fs/xfs/xfs_buf.h | 18 ++++++++++--------
-> >  1 file changed, 10 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index 73249abca968..2a73918193ba 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -24,14 +24,15 @@ struct xfs_buf;
-> >  
-> >  #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
-> >  
-> > -#define XBF_READ	 (1u << 0) /* buffer intended for reading from device */
-> > -#define XBF_WRITE	 (1u << 1) /* buffer intended for writing to device */
-> > -#define XBF_READ_AHEAD	 (1u << 2) /* asynchronous read-ahead */
-> > -#define XBF_NO_IOACCT	 (1u << 3) /* bypass I/O accounting (non-LRU bufs) */
-> > -#define XBF_ASYNC	 (1u << 4) /* initiator will not wait for completion */
-> > -#define XBF_DONE	 (1u << 5) /* all pages in the buffer uptodate */
-> > -#define XBF_STALE	 (1u << 6) /* buffer has been staled, do not find it */
-> > -#define XBF_WRITE_FAIL	 (1u << 7) /* async writes have failed on this buffer */
-> > +#define XBF_READ		(1u << 0) /* buffer intended for reading from device */
-> > +#define XBF_WRITE		(1u << 1) /* buffer intended for writing to device */
-> > +#define XBF_READ_AHEAD		(1u << 2) /* asynchronous read-ahead */
-> > +#define XBF_NO_IOACCT		(1u << 3) /* bypass I/O accounting (non-LRU bufs) */
-> > +#define XBF_ASYNC		(1u << 4) /* initiator will not wait for completion */
-> > +#define XBF_DONE		(1u << 5) /* all pages in the buffer uptodate */
-> > +#define XBF_STALE		(1u << 6) /* buffer has been staled, do not find it */
-> > +#define XBF_WRITE_FAIL		(1u << 7) /* async writes have failed on this buffer */
-> > +#define XBF_VERITY_SEEN		(1u << 8) /* buffer was processed by fs-verity */
+> > "We're already wasting memory, therefore it's fine to waste more" isn't a great
+> > argument.
 > 
-> Yuck.  I still dislike this entire approach.
+> Adding complexity just because -you- think the memory is wasted
+> isn't any better argument. I don't think the memory is wasted, and I
+> expect that fsverity will end up in -very- wide use across
+> enterprise production systems as container/vm image build
+> infrastructure moves towards composefs-like algorithms that have a
+> hard dependency on fsverity functionality being present in the host
+> filesytsems.
 > 
-> XBF_DOUBLE_ALLOC doubles the memory consumption of any xattr block that
-> gets loaded on behalf of a merkle tree request, then uses the extra
-> space to shadow the contents of the ondisk block.  AFAICT the shadow
-> doesn't get updated even if the cached data does, which sounds like a
-> landmine for coherency issues.
->
-> XFS_DA_OP_BUFFER is a little gross, since I don't like the idea of
-> exposing the low level buffering details of the xattr code to
-> xfs_attr_get callers.
+> > iomap_ioend_bioset is indeed also problematic, though it's also a bit different
+> > in that it's needed for basic filesystem functionality, not an optional feature.
+> > Yes, ext4 and f2fs don't actually use iomap for buffered reads, but IIUC at
+> > least there's a plan to do that.  Meanwhile there's no plan for fsverity to be
+> > used on every system that may be using a filesystem that supports it.
 > 
-> XBF_VERITY_SEEN is a layering violation because now the overall buffer
-> cache can track file metadata state.  I think the reason why you need
-> this state flag is because the datadev buffer target indexes based on
-> physical xfs_daddr_t, whereas merkle tree blocks have their own internal
-> block numbers.  You can't directly go from the merkle block number to an
-> xfs_daddr_t, so you can't use xfs_buf_incore to figure out if the block
-> fell out of memory.
->
-> ISTR asking for a separation of these indices when I reviewed some
-> previous version of this patchset.  At the time it seems to me that a
-> much more efficient way to cache the merkle tree blocks would be to set
-> up a direct (merkle tree block number) -> (blob of data) lookup table.
-> That I don't see here.
->
-> In the spirit of the recent collaboration style that I've taken with
-> Christoph, I pulled your branch and started appending patches to it to
-> see if the design that I'm asking for is reasonable.  As it so happens,
-> I was working on a simplified version of the xfs buffer cache ("fsbuf")
-> that could be used by simple filesystems to get them off of buffer
-> heads.
+> That's not the case I see coming for XFS - by the time we get this
+> merged and out of experimental support, the distro and application
+> support will already be there for endemic use of fsverity on XFS.
+> That's all being prototyped on ext4+fsverity right now, and you
+> probably don't see any of that happening.
 > 
-> (Ab)using the fsbuf code did indeed work (and passed all the fstests -g
-> verity tests), so now I know the idea is reasonable.  Patches 11, 12,
-> 14, and 15 become unnecessary.  However, this solution is itself grossly
-> overengineered, since all we want are the following operations:
+> > We should take care not to over-estimate how many users use optional features.
+> > Linux distros turn on most kconfig options just in case, but often the common
+> > case is that the option is on but the feature is not used.
 > 
-> peek(key): returns an fsbuf if there's any data cached for key
-> 
-> get(key): returns an fsbuf for key, regardless of state
-> 
-> store(fsbuf, p): attach a memory buffer p to fsbuf
-> 
-> Then the xfs ->read_merkle_tree_block function becomes:
-> 
-> 	bp = peek(key)
-> 	if (bp)
-> 		/* return bp data up to verity */
-> 
-> 	p = xfs_attr_get(key)
-> 	if (!p)
-> 		/* error */
-> 
-> 	bp = get(key)
-> 	store(bp, p)
+> I don't think that fsverity is going to be an optional feature in
+> future distros - we're already building core infrastructure based on
+> the data integrity guarantees that fsverity provides us with. IOWs,
+> I think fsverity support will soon become required core OS
+> functionality by more than one distro, and so we just don't care
+> about this overhead because the extra read IO bioset will always be
+> necessary....
 
-Ok, that looks good - it definitely gets rid of a lot of the
-nastiness, but I have to ask: why does it need to be based on
-xfs_bufs?  That's just wasting 300 bytes of memory on a handle to
-store a key and a opaque blob in a rhashtable.
+That's great that you're finding fsverity to be useful!
 
-IIUC, the key here is a sequential index, so an xarray would be a
-much better choice as it doesn't require internal storage of the
-key.
+At the same time, please do keep in mind that there's a huge variety of Linux
+systems besides the "enterprise" systems using XFS that you may have in mind.
 
-i.e.
+The memory allocated for iomap_fsverity_bioset, as proposed, is indeed wasted on
+any system that isn't using both XFS *and* fsverity (as long as
+CONFIG_FS_VERITY=y, and either CONFIG_EXT4_FS, CONFIG_F2FS_FS, or
+CONFIG_BTRFS_FS is enabled too).  The amount is also quadrupled on systems that
+use a 16K page size, which will become increasingly common in the future.
 
-	p = xa_load(key);
-	if (p)
-		return p;
+It may be that part of your intention for pushing back against this optimization
+is to encourage filesystems to convert their buffered reads to iomap.  I'm not
+sure it will actually have that effect.  First, it's not clear that it will be
+technically feasible for the filesystems that support compression, btrfs and
+f2fs, to convert their buffered reads to iomap.  Second, this sort of thing
+reinforces an impression that iomap is targeted at enterprise systems using XFS,
+and that changes that would be helpful on other types of systems are rejected.
 
-	xfs_attr_get(key);
-	if (!args->value)
-		/* error */
-
-	/*
-	 * store the current value, freeing any old value that we
-	 * replaced at this key. Don't care about failure to store,
-	 * this is optimistic caching.
-	 */
-	p = xa_store(key, args->value, GFP_NOFS);
-	if (p)
-		kvfree(p);
-	return args->value;
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Eric
