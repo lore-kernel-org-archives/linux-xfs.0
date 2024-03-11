@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 883B1446D2;
-	Mon, 11 Mar 2024 15:04:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87383537E3;
+	Mon, 11 Mar 2024 15:25:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710169495; cv=none; b=QQC6/ftfOzkGgFlmxZ4dQT3RhFOwgNULDKIrvf6vydBdLcoup+dNuyq1QB2/IQ3FEPAPqJqqYoYXbFAJ07IjRgr8CjD9CX4AvNkX/AnHUeK62k5uUV4DR1I0ntp3a5aEEyqhz59EmLKu3yLe75f/wv7HBH0K/z4oAxXwJrVwccM=
+	t=1710170706; cv=none; b=QbiI4KDmO5zj0tSHKAyWGQ2pWN5uWqFXR3IAbl/98tZTX7L094xaUDfgMWfzeyjjoOr6g25Dj3I1K9+T2VPB+Ir8VIf2YmiPi/8mznIntPryVXeCzZA//siTF7abrdl6MO8BPB9SrKw/fvgMlOuZbmL00601+c97qBamXKx79So=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710169495; c=relaxed/simple;
-	bh=toyq8dgHTXTBIQy1+EkMWGa5wD0w+lhyiKrdO94wsac=;
+	s=arc-20240116; t=1710170706; c=relaxed/simple;
+	bh=CGzWqsJ7frSAKYWFgtAomBph2AhOzcXXbKmK9G1kT6A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YMYAN+Gs0IZSIoMkPLzSQENcPyBRYcE9kJm4ySiCEYTlrBlGol00GtEigEPe30CkN6kl/mpJmYgKwKCpXfSY5a36/UsSDrmUWVtyOCwtpPm+yKPUy0O7OposoQ0cX5wG1RVFSO0W2gHqWiQ4UktvMPOSIsXfp9RkGZrwYLQvS/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S188yjmt; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ACF1V+b+K6R15HTjuslhnWkoqP9pRT7qlw+Mc419kIjJ0hohtEJBqFU4Yu2BchmRmdRf18qcZ43rk0hjdOAjoqtLzzXEd0W1A5puYhjMPfLUDpXC9NtfSKEg092jUb1EEs01ADsU5ehTn+WCdHNKgoizyIA3mT9Bpmc2Yz7QzIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P8Ibd6nX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S188yjmt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F1BDC433A6;
-	Mon, 11 Mar 2024 15:04:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P8Ibd6nX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D6ABC433F1;
+	Mon, 11 Mar 2024 15:25:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710169495;
-	bh=toyq8dgHTXTBIQy1+EkMWGa5wD0w+lhyiKrdO94wsac=;
+	s=k20201202; t=1710170706;
+	bh=CGzWqsJ7frSAKYWFgtAomBph2AhOzcXXbKmK9G1kT6A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=S188yjmtLk6hTsGlyWbty5vYWJALwJF23tYcvLHL/vjS2xH5A6zUotXzNErk0vdYC
-	 O0jehoNGpOosTPXHKN6RigxLmJGMIKvNl3kXrbWSNrWCXwk7LqAfpH+7bb67ySi33T
-	 NUBLqZkU/WVQQfg1MFXb5vyRsahizbDoJR7azeoygroCoKDNuRANbLr16sdJxK6ZFJ
-	 wbVXP/lceHF0Zdgl8NMzhGbExlUFv5HLdyOH843wTB+cl4291K5OTHC2TCyrTa9gEv
-	 +aGcopDCBQnElyGXnUtmdhoylOtOLKfYBX3R/am7i3I9aAtlD2+Ymfd3cKqw++AxWL
-	 Vmh1NaGnGmj1Q==
-Date: Mon, 11 Mar 2024 08:04:54 -0700
+	b=P8Ibd6nXnzzaiZI3dnQ/A65crvw2Tfw7i2m6lAzO/i7pXlckp6/7kL2+EHJcfICtb
+	 +1aARpi9BnUfU3W4WoV6y2R9M+lUbg47IVBqrB7Mx36rXH97FY9WHseG6/aC9lL9kf
+	 2USgF8tJNld5dHvZMwhxoHwBTya8Hi+kn0aoqG8eveiiryUi+XWJqQX8a0acVobZTJ
+	 4coxpV+cGNvPQQV01TyouU9a1tW/scUN/daSkHkRzzxtvIGjU2ff4ES8QKwgO5o4yo
+	 hdKMv5S7heVBh838511dFLCAiFrTwStvPaepsYb/o3Jx1heuyvyj5NLJ3LkTFRk2VG
+	 6Ng00XFnPvBaA==
+Date: Mon, 11 Mar 2024 08:25:05 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v1.2 8/8] xfs: test for premature ENOSPC with large cow
- delalloc extents
-Message-ID: <20240311150454.GC6188@frogsfrogsfrogs>
-References: <170899915207.896550.7285890351450610430.stgit@frogsfrogsfrogs>
- <170899915333.896550.18395785595853879309.stgit@frogsfrogsfrogs>
- <20240307232255.GG1927156@frogsfrogsfrogs>
- <20240310091734.hn3twqri6cdgtxaf@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20240310162654.GB6226@frogsfrogsfrogs>
- <20240311134001.6qflb7gjyjnwwetr@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	chandan.babu@oracle.com, ebiggers@kernel.org
+Subject: Re: [PATCH v5 11/24] xfs: add XBF_VERITY_SEEN xfs_buf flag
+Message-ID: <20240311152505.GR1927156@frogsfrogsfrogs>
+References: <20240304191046.157464-2-aalbersh@redhat.com>
+ <20240304191046.157464-13-aalbersh@redhat.com>
+ <20240307224654.GB1927156@frogsfrogsfrogs>
+ <ZepxHObVLb3JLCl/@dread.disaster.area>
+ <20240308033138.GN6184@frogsfrogsfrogs>
+ <20240309162828.GQ1927156@frogsfrogsfrogs>
+ <Ze5PsMopkWqZZ1NX@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,202 +49,141 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240311134001.6qflb7gjyjnwwetr@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <Ze5PsMopkWqZZ1NX@dread.disaster.area>
 
-On Mon, Mar 11, 2024 at 09:40:01PM +0800, Zorro Lang wrote:
-> On Sun, Mar 10, 2024 at 09:26:54AM -0700, Darrick J. Wong wrote:
-> > On Sun, Mar 10, 2024 at 05:17:34PM +0800, Zorro Lang wrote:
-> > > On Thu, Mar 07, 2024 at 03:22:55PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Mar 11, 2024 at 11:26:24AM +1100, Dave Chinner wrote:
+> On Sat, Mar 09, 2024 at 08:28:28AM -0800, Darrick J. Wong wrote:
+> > On Thu, Mar 07, 2024 at 07:31:38PM -0800, Darrick J. Wong wrote:
+> > > On Fri, Mar 08, 2024 at 12:59:56PM +1100, Dave Chinner wrote:
+> > > > > (Ab)using the fsbuf code did indeed work (and passed all the fstests -g
+> > > > > verity tests), so now I know the idea is reasonable.  Patches 11, 12,
+> > > > > 14, and 15 become unnecessary.  However, this solution is itself grossly
+> > > > > overengineered, since all we want are the following operations:
+> > > > > 
+> > > > > peek(key): returns an fsbuf if there's any data cached for key
+> > > > > 
+> > > > > get(key): returns an fsbuf for key, regardless of state
+> > > > > 
+> > > > > store(fsbuf, p): attach a memory buffer p to fsbuf
+> > > > > 
+> > > > > Then the xfs ->read_merkle_tree_block function becomes:
+> > > > > 
+> > > > > 	bp = peek(key)
+> > > > > 	if (bp)
+> > > > > 		/* return bp data up to verity */
+> > > > > 
+> > > > > 	p = xfs_attr_get(key)
+> > > > > 	if (!p)
+> > > > > 		/* error */
+> > > > > 
+> > > > > 	bp = get(key)
+> > > > > 	store(bp, p)
 > > > > 
-> > > > On a higly fragmented filesystem a Direct IO write can fail with -ENOSPC error
-> > > > even though the filesystem has sufficient number of free blocks.
-> > > > 
-> > > > This occurs if the file offset range on which the write operation is being
-> > > > performed has a delalloc extent in the cow fork and this delalloc extent
-> > > > begins much before the Direct IO range.
-> > > > 
-> > > > In such a scenario, xfs_reflink_allocate_cow() invokes xfs_bmapi_write() to
-> > > > allocate the blocks mapped by the delalloc extent. The extent thus allocated
-> > > > may not cover the beginning of file offset range on which the Direct IO write
-> > > > was issued. Hence xfs_reflink_allocate_cow() ends up returning -ENOSPC.
-> > > > 
-> > > > This test addresses this issue.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > > v1.1: address some missing bits and remove extraneous code
-> > > > v1.2: fix cow fork dumping screwing up golden output
+> > > > Ok, that looks good - it definitely gets rid of a lot of the
+> > > > nastiness, but I have to ask: why does it need to be based on
+> > > > xfs_bufs?
 > > > 
-> > > This version is good to me, I'll merge it.
+> > > (copying from IRC) It was still warm in my brain L2 after all the xfile
+> > > buftarg cleaning and merging that just got done a few weeks ago.   So I
+> > > went with the simplest thing I could rig up to test my ideas, and now
+> > > we're at the madly iterate until exhaustion stage. ;)
 > > > 
-> > > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > > >            That's just wasting 300 bytes of memory on a handle to
+> > > > store a key and a opaque blob in a rhashtable.
 > > > 
-> > > BTW, I only see this patch for [PATCH 8/8], but I didn't see the "later" patch
-> > > for [PATCH 6/8], just to make sure if I missed something :)
-> > 
-> > Oh!  Yeah, on re-reading that thread, I remembered that Christoph said
-> > he'd look into making xfs_ondisk.h check ioctl structure sizes like
-> > xfs/122 currently does.
-> > 
-> > In the meantime, there weren't any changes other than your RVB tag.  If
-> > you want, I can resend it with that added.
+> > > Yep.  The fsbufs implementation was a lot more slender, but a bunch more
+> > > code.  I agree that I ought to go look at xarrays or something that's
+> > > more of a direct mapping as a next step.  However, i wanted to get
+> > > Andrey's feedback on this general approach first.
+> > > 
+> > > > IIUC, the key here is a sequential index, so an xarray would be a
+> > > > much better choice as it doesn't require internal storage of the
+> > > > key.
+> > > 
+> > > I wonder, what are the access patterns for merkle blobs?  Is it actually
+> > > sequential, or is more like 0 -> N -> N*N as we walk towards leaves?
 > 
-> Oh, if that patch don't need to be changed, I'll merge it directly, don't
-> need resending it :)
+> I think the leaf level (i.e. individual record) access patterns
+> largely match data access patterns, so I'd just treat it like as if
+> it's a normal file being accessed....
 
-That's correct -- the patch itself doesn't need changes, but the test
-itself may get removed some day.
+<nod> The latest version of this tries to avoid letting reclaim take the
+top of the tree.  Logically this makes sense to me to reduce read verify
+latency, but I was hoping Eric or Andrey or someone with more
+familiarity with fsverity would chime in on whether or not that made
+sense.
+
+> > > Also -- the fsverity block interfaces pass in a "u64 pos" argument.  Was
+> > > that done because merkle trees may some day have more than 2^32 blocks
+> > > in them?  That won't play well with things like xarrays on 32-bit
+> > > machines.
+> > > 
+> > > (Granted we've been talking about deprecating XFS on 32-bit for a while
+> > > now but we're not the whole world)
+> > > 
+> > > > i.e.
+> > > > 
+> > > > 	p = xa_load(key);
+> > > > 	if (p)
+> > > > 		return p;
+> > > > 
+> > > > 	xfs_attr_get(key);
+> > > > 	if (!args->value)
+> > > > 		/* error */
+> > > > 
+> > > > 	/*
+> > > > 	 * store the current value, freeing any old value that we
+> > > > 	 * replaced at this key. Don't care about failure to store,
+> > > > 	 * this is optimistic caching.
+> > > > 	 */
+> > > > 	p = xa_store(key, args->value, GFP_NOFS);
+> > > > 	if (p)
+> > > > 		kvfree(p);
+> > > > 	return args->value;
+> > > 
+> > > Attractive.  Will have to take a look at that tomorrow.
+> > 
+> > Done.  I think.  Not sure that I actually got all the interactions
+> > between the shrinker and the xarray correct though.  KASAN and lockdep
+> > don't have any complaints running fstests, so that's a start.
+> > 
+> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity-cleanups-6.9_2024-03-09
+> 
+> My initial impression is "over-engineered".
+
+Overly focused on unfamiliar data structures -- I've never built
+anything with an xarray before.
+
+> I personally would have just allocated the xattr value buffer with a
+> little extra size and added all the external cache information (a
+> reference counter is all we need as these are fixed sized blocks) to
+> the tail of the blob we actually pass to fsverity.
+
+Oho, that's a good idea.  I didn't like the separate allocation anyway.
+Friday was mostly chatting with willy and trying to make sure I got the
+xarray access patterns correct.
+
+>                                                    If we tag the
+> inode in the radix tree as having verity blobs that can be freed, we
+> can then just extend the existing fs sueprblock shrinker callout to
+> also walk all the verity inodes with cached data to try to reclaim
+> some objects...
+
+This too is a wonderful suggestion -- use the third radix tree tag to
+mark inodes with extra incore caches that can be reclaimed, then teach
+xfs_reclaim_inodes_{nr,count} to scan them.  Allocating a per-inode
+shrinker was likely to cause problems with flooding debugfs with too
+many knobs anyway.
+
+> But, if a generic blob cache is what it takes to move this forwards,
+> so be it.
+
+Not necessarily. ;)
 
 --D
 
-> > 
-> > --D
-> > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > > > ---
-> > > >  common/rc          |   14 ++++++++
-> > > >  tests/xfs/1923     |   86 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  tests/xfs/1923.out |    8 +++++
-> > > >  3 files changed, 108 insertions(+)
-> > > >  create mode 100755 tests/xfs/1923
-> > > >  create mode 100644 tests/xfs/1923.out
-> > > > 
-> > > > diff --git a/common/rc b/common/rc
-> > > > index 50dde313b8..9f54ab1e77 100644
-> > > > --- a/common/rc
-> > > > +++ b/common/rc
-> > > > @@ -1883,6 +1883,20 @@ _require_scratch_delalloc()
-> > > >  	_scratch_unmount
-> > > >  }
-> > > >  
-> > > > +# Require test fs supports delay allocation.
-> > > > +_require_test_delalloc()
-> > > > +{
-> > > > +	_require_command "$FILEFRAG_PROG" filefrag
-> > > > +
-> > > > +	rm -f $TEST_DIR/testy
-> > > > +	$XFS_IO_PROG -f -c 'pwrite 0 64k' $TEST_DIR/testy &> /dev/null
-> > > > +	$FILEFRAG_PROG -v $TEST_DIR/testy 2>&1 | grep -q delalloc
-> > > > +	res=$?
-> > > > +	rm -f $TEST_DIR/testy
-> > > > +	test $res -eq 0 || \
-> > > > +		_notrun "test requires delayed allocation buffered writes"
-> > > > +}
-> > > > +
-> > > >  # this test needs a test partition - check we're ok & mount it
-> > > >  #
-> > > >  _require_test()
-> > > > diff --git a/tests/xfs/1923 b/tests/xfs/1923
-> > > > new file mode 100755
-> > > > index 0000000000..4ad3dfa764
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/1923
-> > > > @@ -0,0 +1,86 @@
-> > > > +#! /bin/bash
-> > > > +# SPDX-License-Identifier: GPL-2.0
-> > > > +# Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-> > > > +#
-> > > > +# FS QA Test No. 1923
-> > > > +#
-> > > > +# This is a regression test for "xfs: Fix false ENOSPC when performing direct
-> > > > +# write on a delalloc extent in cow fork".  If there is a lot of free space but
-> > > > +# it is very fragmented, it's possible that a very large delalloc reservation
-> > > > +# could be created in the CoW fork by a buffered write.  If a directio write
-> > > > +# tries to convert the delalloc reservation to a real extent, it's possible
-> > > > +# that the allocation will succeed but fail to convert even the first block of
-> > > > +# the directio write range.  In this case, XFS will return ENOSPC even though
-> > > > +# all it needed to do was to keep converting until the allocator returns ENOSPC
-> > > > +# or the first block of the direct write got some space.
-> > > > +#
-> > > > +. ./common/preamble
-> > > > +_begin_fstest auto quick clone
-> > > > +
-> > > > +_cleanup()
-> > > > +{
-> > > > +	cd /
-> > > > +	rm -f $file1 $file2 $fragmentedfile
-> > > > +}
-> > > > +
-> > > > +# Import common functions.
-> > > > +. ./common/reflink
-> > > > +. ./common/inject
-> > > > +
-> > > > +# real QA test starts here
-> > > > +_fixed_by_kernel_commit d62113303d69 \
-> > > > +	"xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork"
-> > > > +
-> > > > +# Modify as appropriate.
-> > > > +_supported_fs xfs
-> > > > +_require_test_program "punch-alternating"
-> > > > +_require_test_reflink
-> > > > +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-> > > > +_require_test_delalloc
-> > > > +
-> > > > +file1=$TEST_DIR/file1.$seq
-> > > > +file2=$TEST_DIR/file2.$seq
-> > > > +fragmentedfile=$TEST_DIR/fragmentedfile.$seq
-> > > > +
-> > > > +rm -f $file1 $file2 $fragmentedfile
-> > > > +
-> > > > +# COW operates on pages, so we must not perform operations in units smaller
-> > > > +# than a page.
-> > > > +blksz=$(_get_file_block_size $TEST_DIR)
-> > > > +pagesz=$(_get_page_size)
-> > > > +if (( $blksz < $pagesz )); then
-> > > > +	blksz=$pagesz
-> > > > +fi
-> > > > +
-> > > > +echo "Create source file"
-> > > > +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 256))" $file1 >> $seqres.full
-> > > > +
-> > > > +sync
-> > > > +
-> > > > +echo "Create Reflinked file"
-> > > > +_cp_reflink $file1 $file2 >> $seqres.full
-> > > > +
-> > > > +echo "Set cowextsize"
-> > > > +$XFS_IO_PROG -c "cowextsize $((blksz * 128))" -c stat $file1 >> $seqres.full
-> > > > +
-> > > > +echo "Fragment FS"
-> > > > +$XFS_IO_PROG -f -c "pwrite 0 $((blksz * 512))" $fragmentedfile >> $seqres.full
-> > > > +sync
-> > > > +$here/src/punch-alternating $fragmentedfile
-> > > > +
-> > > > +echo "Allocate block sized extent from now onwards"
-> > > > +_test_inject_error bmap_alloc_minlen_extent 1
-> > > > +
-> > > > +echo "Create big delalloc extent in CoW fork"
-> > > > +$XFS_IO_PROG -c "pwrite 0 $blksz" $file1 >> $seqres.full
-> > > > +
-> > > > +sync
-> > > > +
-> > > > +$XFS_IO_PROG -c 'bmap -elpv' -c 'bmap -celpv' $file1 &>> $seqres.full
-> > > > +
-> > > > +echo "Direct I/O write at offset 3FSB"
-> > > > +$XFS_IO_PROG -d -c "pwrite $((blksz * 3)) $((blksz * 2))" $file1 >> $seqres.full
-> > > > +
-> > > > +# success, all done
-> > > > +status=0
-> > > > +exit
-> > > > diff --git a/tests/xfs/1923.out b/tests/xfs/1923.out
-> > > > new file mode 100644
-> > > > index 0000000000..a0553cf3ee
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/1923.out
-> > > > @@ -0,0 +1,8 @@
-> > > > +QA output created by 1923
-> > > > +Create source file
-> > > > +Create Reflinked file
-> > > > +Set cowextsize
-> > > > +Fragment FS
-> > > > +Allocate block sized extent from now onwards
-> > > > +Create big delalloc extent in CoW fork
-> > > > +Direct I/O write at offset 3FSB
-> > > > 
-> > > 
-> > 
-> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
