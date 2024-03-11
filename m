@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A294436E;
-	Mon, 11 Mar 2024 15:48:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8497A4436C;
+	Mon, 11 Mar 2024 16:07:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710172110; cv=none; b=ijXn0KIsTAxMJNS1UlYdTKD0Y/1GZoghhl0VPta58MxwG+7SvzwLsyzdmkzkS+9SpayWBTu6oI6TRFOIe4Zr2oZs+OiVd1sv5jQx0KXBLxOTjAUGut/fBqHSMPoM4gnNxWolVt77YrxK+CmaKggNDHQs8dQ7SQGkrjnmJmu92CA=
+	t=1710173260; cv=none; b=sK8/tedH1iBL9bKmzLq+JGGL973hXFsX8uV7O0EvbCtDWeDFRwl6Bkm/QV0EO46G7KhZw/vcixp6XY+SAVwAdXuybyjdnQUfjz9bA4mkZ9TdE5RtIKua4M3F1wZTjcVl/T2hnyG7Ccwyz7BtMq/e528Ddi5DNzxaUluFhWIDn4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710172110; c=relaxed/simple;
-	bh=RUD9l8K0ik+qMLD3iJPUNnrvnQ/fBcf65l1dnsvJdxM=;
+	s=arc-20240116; t=1710173260; c=relaxed/simple;
+	bh=Z3VLtbgSadjSI/x6kUu32ZF43oQcfZ5oMFjrp5In00U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XzpA99U0CMMPuYQB4WV66BlEfrODBM3GGiEOxTLvqEQRriuOffGrWAwWPt++O47m0KayCaO1obhXpR1aThrCTy86k9wuvoxajhfNvDdokd5/VoukGPoNdVuTP/jFYSU9A3uMGpbwv+4ekj1t8MY97L2X4RgXh3EKs6rwHar6wpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tNh/kVgH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TDhvJKTJaClowQ+wvVWSAoog83RY6mfgeXkpDaXzw0+MS+XrTbpowy1SH0MVqa9Mv4kfxLkUl47v8ZojyDR0SekOH61x2tofO/dysejxABVQC/TvDd/2IJWS4dqiHmOicBMH2qNMeLqOQNQNCdVanFxBkdnp8xuJd6Y2o9cIMcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YDrEiu+m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tNh/kVgH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD5BAC433C7;
-	Mon, 11 Mar 2024 15:48:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YDrEiu+m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01203C433F1;
+	Mon, 11 Mar 2024 16:07:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710172109;
-	bh=RUD9l8K0ik+qMLD3iJPUNnrvnQ/fBcf65l1dnsvJdxM=;
+	s=k20201202; t=1710173260;
+	bh=Z3VLtbgSadjSI/x6kUu32ZF43oQcfZ5oMFjrp5In00U=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tNh/kVgHoGI2BUMioMJwQKAz9a5IxZARg3igTcSTnIZHFAyH8kN//COrjU0tW+NUx
-	 6yMwSbFxCBbX1+t9KNh0+akuqS4Q4e+tNvOwrf8OQdVkpeV/J2MhgqfreMQ3YWvIDI
-	 5iMZQoIiIfOj8kxn501ol9FtrcWQh0n0p2kZwe3ibY43fko6d3Hz+gcQlI8SIwL7NA
-	 z+kaPQCg/RoLImbDMgmqHW0VveS1kJgQM4NMfXQ+IgJr2Tjs3cxrZz4ZzdPKIKsPt2
-	 ipto79hw9MqAJAz+dfTmzkTWMHkVgllhSUb+/Y7Uan6E0zuKcalRie3SFTfPT8Z02G
-	 /CaAz4/Fp2nVg==
-Date: Mon, 11 Mar 2024 08:48:29 -0700
+	b=YDrEiu+mrr/IeG+VuLb+GqeyONl++YsowQWctcdNqdrvnXZ6zxWSW+58mkrmFPXnA
+	 i8inmXsx+nlB9za6NxgaQRzMwVKQwyJRN381/3QiYzl5917n8yeW6AGUJGdM5O0LBm
+	 IHdssvWlau3Ses9J/gHshDr7r98Id5aGzswxUbFeLi5GgFWzUEz6jIuceNoPSLrnRA
+	 B4JD653vipyxVlrUYKByJbzu6lsdlLcCVTnH9i0SheyqbWxj4pAjtd3QkAswWhZWDk
+	 C7/vFPJwPrrIt/mPv5I+/vp9+QFw567EbZ8qnv3R7WbhlhmxfTH/NT0RjiCPmqo80P
+	 9f7nDvTOgO3vQ==
+Date: Mon, 11 Mar 2024 09:07:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Zhang Yi <yi.zhang@huaweicloud.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
 	david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
 	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH 3/4] iomap: don't increase i_size if it's not a write
- operation
-Message-ID: <20240311154829.GU1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/4] iomap: cleanup iomap_write_iter()
+Message-ID: <20240311160739.GV1927156@frogsfrogsfrogs>
 References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
- <20240311122255.2637311-4-yi.zhang@huaweicloud.com>
+ <20240311122255.2637311-5-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,160 +45,131 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240311122255.2637311-4-yi.zhang@huaweicloud.com>
+In-Reply-To: <20240311122255.2637311-5-yi.zhang@huaweicloud.com>
 
-On Mon, Mar 11, 2024 at 08:22:54PM +0800, Zhang Yi wrote:
+On Mon, Mar 11, 2024 at 08:22:55PM +0800, Zhang Yi wrote:
 > From: Zhang Yi <yi.zhang@huawei.com>
 > 
-> Increase i_size in iomap_zero_range() and iomap_unshare_iter() is not
-> needed, the caller should handle it. Especially, when truncate partial
-> block, we could not increase i_size beyond the new EOF here. It doesn't
-> affect xfs and gfs2 now because they set the new file size after zero
-> out, it doesn't matter that a transient increase in i_size, but it will
-> affect ext4 because it set file size before truncate.
-
->                                                       At the same time,
-> iomap_write_failed() is also not needed for above two cases too, so
-> factor them out and move them to iomap_write_iter() and
-> iomap_zero_iter().
-
-This change should be a separate patch with its own justification.
-Which is, AFAICT, something along the lines of:
-
-"Unsharing and zeroing can only happen within EOF, so there is never a
-need to perform posteof pagecache truncation if write begin fails."
-
+> The status variable in iomap_write_iter() is confusing and
+> iomap_write_end() always return 0 or copied bytes, so replace it with a
+> new written variable to represent the written bytes in each cycle, and
+> also do some cleanup, no logic changes.
+> 
 > Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-
-Doesn't this patch fix a bug in ext4?
-
 > ---
->  fs/iomap/buffered-io.c | 59 +++++++++++++++++++++---------------------
->  1 file changed, 30 insertions(+), 29 deletions(-)
+>  fs/iomap/buffered-io.c | 31 +++++++++++++++----------------
+>  1 file changed, 15 insertions(+), 16 deletions(-)
 > 
 > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 093c4515b22a..19f91324c690 100644
+> index 19f91324c690..767af6e67ed4 100644
 > --- a/fs/iomap/buffered-io.c
 > +++ b/fs/iomap/buffered-io.c
-> @@ -786,7 +786,6 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
->  
->  out_unlock:
->  	__iomap_put_folio(iter, pos, 0, folio);
-> -	iomap_write_failed(iter->inode, pos, len);
->  
->  	return status;
->  }
-> @@ -838,34 +837,13 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
->  		size_t copied, struct folio *folio)
->  {
->  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> -	loff_t old_size = iter->inode->i_size;
-> -	size_t ret;
-> -
-> -	if (srcmap->type == IOMAP_INLINE) {
-> -		ret = iomap_write_end_inline(iter, folio, pos, copied);
-> -	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
-> -		ret = block_write_end(NULL, iter->inode->i_mapping, pos, len,
-> -				copied, &folio->page, NULL);
-> -	} else {
-> -		ret = __iomap_write_end(iter->inode, pos, len, copied, folio);
-> -	}
->  
-> -	/*
-> -	 * Update the in-memory inode size after copying the data into the page
-> -	 * cache.  It's up to the file system to write the updated size to disk,
-> -	 * preferably after I/O completion so that no stale data is exposed.
-> -	 */
-> -	if (pos + ret > old_size) {
-> -		i_size_write(iter->inode, pos + ret);
-> -		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
-> -	}
-> -	__iomap_put_folio(iter, pos, ret, folio);
-> -
-> -	if (old_size < pos)
-> -		pagecache_isize_extended(iter->inode, old_size, pos);
-> -	if (ret < len)
-> -		iomap_write_failed(iter->inode, pos + ret, len - ret);
-> -	return ret;
-> +	if (srcmap->type == IOMAP_INLINE)
-> +		return iomap_write_end_inline(iter, folio, pos, copied);
-> +	if (srcmap->flags & IOMAP_F_BUFFER_HEAD)
-> +		return block_write_end(NULL, iter->inode->i_mapping, pos, len,
-> +				       copied, &folio->page, NULL);
-> +	return __iomap_write_end(iter->inode, pos, len, copied, folio);
->  }
->  
->  static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
-> @@ -880,6 +858,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  
->  	do {
->  		struct folio *folio;
-> +		loff_t old_size;
+> @@ -851,7 +851,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  	loff_t length = iomap_length(iter);
+>  	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
+>  	loff_t pos = iter->pos;
+> -	ssize_t written = 0;
+> +	ssize_t total_written = 0;
+>  	long status = 0;
+>  	struct address_space *mapping = iter->inode->i_mapping;
+>  	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
+> @@ -862,6 +862,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
 >  		size_t offset;		/* Offset into folio */
 >  		size_t bytes;		/* Bytes to write to folio */
 >  		size_t copied;		/* Bytes copied from user */
-> @@ -912,8 +891,10 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  		}
+> +		size_t written;		/* Bytes have been written */
 >  
->  		status = iomap_write_begin(iter, pos, bytes, &folio);
-> -		if (unlikely(status))
-> +		if (unlikely(status)) {
-> +			iomap_write_failed(iter->inode, pos, bytes);
->  			break;
-> +		}
->  		if (iter->iomap.flags & IOMAP_F_STALE)
->  			break;
+>  		bytes = iov_iter_count(i);
+>  retry:
+> @@ -906,7 +907,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  			flush_dcache_folio(folio);
 >  
-> @@ -927,6 +908,24 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
 >  		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
->  		status = iomap_write_end(iter, pos, bytes, copied, folio);
+> -		status = iomap_write_end(iter, pos, bytes, copied, folio);
+> +		written = iomap_write_end(iter, pos, bytes, copied, folio);
 >  
-> +		/*
-> +		 * Update the in-memory inode size after copying the data into
-> +		 * the page cache.  It's up to the file system to write the
-> +		 * updated size to disk, preferably after I/O completion so that
-> +		 * no stale data is exposed.
-> +		 */
-> +		old_size = iter->inode->i_size;
-> +		if (pos + status > old_size) {
-> +			i_size_write(iter->inode, pos + status);
-> +			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
-> +		}
-> +		__iomap_put_folio(iter, pos, status, folio);
+>  		/*
+>  		 * Update the in-memory inode size after copying the data into
+> @@ -915,28 +916,26 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  		 * no stale data is exposed.
+>  		 */
+>  		old_size = iter->inode->i_size;
+> -		if (pos + status > old_size) {
+> -			i_size_write(iter->inode, pos + status);
+> +		if (pos + written > old_size) {
+> +			i_size_write(iter->inode, pos + written);
+>  			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+>  		}
+> -		__iomap_put_folio(iter, pos, status, folio);
+> +		__iomap_put_folio(iter, pos, written, folio);
+>  
+>  		if (old_size < pos)
+>  			pagecache_isize_extended(iter->inode, old_size, pos);
+> -		if (status < bytes)
+> -			iomap_write_failed(iter->inode, pos + status,
+> -					   bytes - status);
+> -		if (unlikely(copied != status))
+> -			iov_iter_revert(i, copied - status);
 
-Why is it necessary to hoist the __iomap_put_folio calls from
-iomap_write_end into iomap_write_iter, iomap_unshare_iter, and
-iomap_zero_iter?  None of those functions seem to use it, and it makes
-more sense to me that iomap_write_end releases the folio that
-iomap_write_begin returned.
+I wish you'd made the variable renaming and the function reorganization
+separate patches.  The renaming looks correct to me, but moving these
+calls adds a logic bomb.
+
+If at some point iomap_write_end actually starts returning partial write
+completions (e.g. you wrote 250 bytes, but for some reason the pagecache
+only acknowledges 100 bytes were written) then this code no longer
+reverts the iter or truncates posteof pagecache correctly...
+
+>  
+>  		cond_resched();
+> -		if (unlikely(status == 0)) {
+> +		if (unlikely(written == 0)) {
+>  			/*
+>  			 * A short copy made iomap_write_end() reject the
+>  			 * thing entirely.  Might be memory poisoning
+>  			 * halfway through, might be a race with munmap,
+>  			 * might be severe memory pressure.
+>  			 */
+> +			iomap_write_failed(iter->inode, pos, bytes);
+> +			iov_iter_revert(i, copied);
+
+...because now we only do that if the pagecache refuses to acknowledge
+any bytes written at all.  I think it actually works correctly with
+today's kernel since __iomap_write_end only returns copied or 0, but the
+size_t return type implies that a short acknowledgement is theoretically
+possible.
+
+IOWs, doesn't this adds a logic bomb?
 
 --D
 
 > +
-> +		if (old_size < pos)
-> +			pagecache_isize_extended(iter->inode, old_size, pos);
-> +		if (status < bytes)
-> +			iomap_write_failed(iter->inode, pos + status,
-> +					   bytes - status);
->  		if (unlikely(copied != status))
->  			iov_iter_revert(i, copied - status);
+>  			if (chunk > PAGE_SIZE)
+>  				chunk /= 2;
+>  			if (copied) {
+> @@ -944,17 +943,17 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  				goto retry;
+>  			}
+>  		} else {
+> -			pos += status;
+> -			written += status;
+> -			length -= status;
+> +			pos += written;
+> +			total_written += written;
+> +			length -= written;
+>  		}
+>  	} while (iov_iter_count(i) && length);
 >  
-> @@ -1296,6 +1295,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
->  			bytes = folio_size(folio) - offset;
+>  	if (status == -EAGAIN) {
+> -		iov_iter_revert(i, written);
+> +		iov_iter_revert(i, total_written);
+>  		return -EAGAIN;
+>  	}
+> -	return written ? written : status;
+> +	return total_written ? total_written : status;
+>  }
 >  
->  		bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
-> +		__iomap_put_folio(iter, pos, bytes, folio);
->  		if (WARN_ON_ONCE(bytes == 0))
->  			return -EIO;
->  
-> @@ -1360,6 +1360,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
->  		folio_mark_accessed(folio);
->  
->  		bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
-> +		__iomap_put_folio(iter, pos, bytes, folio);
->  		if (WARN_ON_ONCE(bytes == 0))
->  			return -EIO;
->  
+>  ssize_t
 > -- 
 > 2.39.2
 > 
