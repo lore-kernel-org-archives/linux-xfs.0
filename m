@@ -1,190 +1,189 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 977A8382
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Mar 2024 00:26:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C71F1C33;
+	Mon, 11 Mar 2024 07:55:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710116791; cv=none; b=tKNx44GTZVEYAmb6sC2xrnGW8TF6pD3Htwmb5llv+c/VRCAIp+cFUfylLHnE6Gu9XsII12B2kadcR4FO/Nw37P9ErP5ff9yNz3k6v8WH8Fj+yiJ5xhkK/4xrcLbsqaQYedb97LsKcrCFBmy3Q4aEgvS1dx32hRfMqCc/Uvn1lSU=
+	t=1710143738; cv=none; b=TyESY5/3Gdc4xdXC//ilmlY9HnDz3AAtqh1i8EjBwGqs9wbI+HUkB9sGNE+5Q6n97+RPeQLXgHg7xCKSqb0K939Wii0JNyW+QeiBdOA4QrYsNfbOFYdhoMFCy+KDIv2P9fM9VgTiG4GO6ooCb++3QXTRoViWm9/84eVBJl6xXyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710116791; c=relaxed/simple;
-	bh=iBKjjTrnOHzNOegJJQGLP50ZpI68uONSIDUMvj2s3Po=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZwNIBiczDDOnaikMv0OfboYHFG4N076syrobbddIu235uJ+SsK4j2FUSmI8WCsXgp+eFNZ49XYLlHuYaFqpesKkBA7LdIYeH46zuymfcQt9mKUjBRSJVij0MtXkF3Ic/ysWUIC05JQVUC4lVwTERKOYRux0eHcT8XwreYbsUC/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=tTpsvZuv; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="tTpsvZuv"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1dd611d5645so21505545ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Mar 2024 17:26:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710116788; x=1710721588; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=r+ZDbxeIcvt8eupuU3iHpjDH4gBEwZMYuiYtlmL76Eo=;
-        b=tTpsvZuvNS81KlgYcgGMdbodetSb3JKjdc1wXrfhG/eXGZRPmZXw09rKKwcmC+jA8D
-         pyg3Ddyjv8xYnpIlbvWQ41zCoopZNhwpnf/blxPz+PUBzqaxLpt4QwCWsaJur5DxN4zz
-         UcDqe5vHJNzE9WUgLjtXJOjtc/j2syPP9PKnkOfnZqa5KXjnd5S6M0k5phMvLSQPYJ7F
-         rsg00rVvPyyGWtl1PkYLQNjD8KvquxSfrzB8WZZyFuldzKMTwacBjSGIBhvqPKkYzv90
-         kNXFiivwTNGOcLVeAHz+6MmZXaINwmJeDXLPZggQZCMp+JHaApD6DlL1a5pyfhIsFKx8
-         lUUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710116788; x=1710721588;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=r+ZDbxeIcvt8eupuU3iHpjDH4gBEwZMYuiYtlmL76Eo=;
-        b=svmK5vNC3Y7ocF3RMv/nETB8zl0gfHzt5oM5frdZPLLMqHSh6qABt2mcUbjjw5M9Wm
-         6gavlbiCakQHbER9K+KNlzc1Wdeg+Q7dsTkrEPKpa0/IltdK9SvWhm3wUrPy6dS12d4V
-         DrLHTtHZDGD4ovQ/9u9ls48xKA6n0xKfQjCQyW4AxnUQh5hJAPVAeasy+rk4OZpwuRbR
-         MgouRLSOB3MYIyU0QuGF7KIUUA58CMXLreaVv40tadx10fTm/1G9QIxgE26DwZvxjJie
-         jecOO/ogtbrcgpVbfr/mHUn2doG7eswOSfZz1lRR3HHA/xyunDV/gGs0OtfRa3noAf2x
-         UMJA==
-X-Forwarded-Encrypted: i=1; AJvYcCWVenqWj6ms7xlc1l6u1UtWUZyTs5VZSXmVQEviZeOKyBbYT0JwYBV3kFvUrbEleVNIaz8swDa8SNLnp9WbaxzhWFe8fZWiW4cx
-X-Gm-Message-State: AOJu0Yz03YvlVS+XTY3eABLTB3AdGrQbqiFMOrRjcjp9Nf0FQnHtFU1D
-	cU5XRYrmmfl/oF2MmS+uiGFeKSgNnb509Sc3y2CTWg0kiK8Zn+ARL09UfsGtswA=
-X-Google-Smtp-Source: AGHT+IHzV7FprUI1FoXB5iJZCu3Lbc002VzAsroztma0cmpHQA1DeV9d9zr30wWO4FIBCVe1xGGJhQ==
-X-Received: by 2002:a17:902:e88c:b0:1dd:4cb:cc57 with SMTP id w12-20020a170902e88c00b001dd04cbcc57mr6011101plg.0.1710116788118;
-        Sun, 10 Mar 2024 17:26:28 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
-        by smtp.gmail.com with ESMTPSA id j6-20020a170902c3c600b001dd5f5b1ca4sm3232768plj.309.2024.03.10.17.26.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Mar 2024 17:26:26 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rjTUm-000EB4-1C;
-	Mon, 11 Mar 2024 11:26:24 +1100
-Date: Mon, 11 Mar 2024 11:26:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	chandan.babu@oracle.com, ebiggers@kernel.org
-Subject: Re: [PATCH v5 11/24] xfs: add XBF_VERITY_SEEN xfs_buf flag
-Message-ID: <Ze5PsMopkWqZZ1NX@dread.disaster.area>
-References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-13-aalbersh@redhat.com>
- <20240307224654.GB1927156@frogsfrogsfrogs>
- <ZepxHObVLb3JLCl/@dread.disaster.area>
- <20240308033138.GN6184@frogsfrogsfrogs>
- <20240309162828.GQ1927156@frogsfrogsfrogs>
+	s=arc-20240116; t=1710143738; c=relaxed/simple;
+	bh=/qk/PxlGm1WvdPUtKgJrgC5mcmmOT+1hrUu8hH8Vgts=;
+	h=Subject:From:To:CC:References:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=E4Z2PE1wAv1syUwA6UzdbbR61zS5RVPoXYm97MSlm0bPbm8ecOWPORlxl4I1qzg5Ii3OrI2qCFOrb24vQiBsLoZPB7ChZzHfDl+aG5R9+Q+8TEAAI+SsxQn0gCS7iI3QoAVQ8GplGnLWLISUiQXNv3zjtNR9C4bTcnU90reCR3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4TtTXf6503z1h1v9;
+	Mon, 11 Mar 2024 15:53:06 +0800 (CST)
+Received: from kwepemm600013.china.huawei.com (unknown [7.193.23.68])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1043B1402E1;
+	Mon, 11 Mar 2024 15:55:32 +0800 (CST)
+Received: from [10.174.178.46] (10.174.178.46) by
+ kwepemm600013.china.huawei.com (7.193.23.68) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Mon, 11 Mar 2024 15:55:31 +0800
+Subject: Re: [PATCH RFC 1/2] iomap: Add a IOMAP_DIO_MAY_INLINE_COMP flag
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+To: Dave Chinner <david@fromorbit.com>
+CC: <brauner@kernel.org>, <djwong@kernel.org>, <jack@suse.cz>,
+	<tytso@mit.edu>, <linux-xfs@vger.kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-ext4@vger.kernel.org>, <yi.zhang@huawei.com>
+References: <20240229113849.2222577-1-chengzhihao1@huawei.com>
+ <20240229113849.2222577-2-chengzhihao1@huawei.com>
+ <ZeEkFUCUQ4eR7AlX@dread.disaster.area>
+ <3de3ede5-31e0-2b7b-f523-9fd22090401f@huawei.com>
+Message-ID: <8263025e-15e6-fbc7-2826-f6f9ac3d9043@huawei.com>
+Date: Mon, 11 Mar 2024 15:55:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240309162828.GQ1927156@frogsfrogsfrogs>
+In-Reply-To: <3de3ede5-31e0-2b7b-f523-9fd22090401f@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemm600013.china.huawei.com (7.193.23.68)
 
-On Sat, Mar 09, 2024 at 08:28:28AM -0800, Darrick J. Wong wrote:
-> On Thu, Mar 07, 2024 at 07:31:38PM -0800, Darrick J. Wong wrote:
-> > On Fri, Mar 08, 2024 at 12:59:56PM +1100, Dave Chinner wrote:
-> > > > (Ab)using the fsbuf code did indeed work (and passed all the fstests -g
-> > > > verity tests), so now I know the idea is reasonable.  Patches 11, 12,
-> > > > 14, and 15 become unnecessary.  However, this solution is itself grossly
-> > > > overengineered, since all we want are the following operations:
-> > > > 
-> > > > peek(key): returns an fsbuf if there's any data cached for key
-> > > > 
-> > > > get(key): returns an fsbuf for key, regardless of state
-> > > > 
-> > > > store(fsbuf, p): attach a memory buffer p to fsbuf
-> > > > 
-> > > > Then the xfs ->read_merkle_tree_block function becomes:
-> > > > 
-> > > > 	bp = peek(key)
-> > > > 	if (bp)
-> > > > 		/* return bp data up to verity */
-> > > > 
-> > > > 	p = xfs_attr_get(key)
-> > > > 	if (!p)
-> > > > 		/* error */
-> > > > 
-> > > > 	bp = get(key)
-> > > > 	store(bp, p)
-> > > 
-> > > Ok, that looks good - it definitely gets rid of a lot of the
-> > > nastiness, but I have to ask: why does it need to be based on
-> > > xfs_bufs?
-> > 
-> > (copying from IRC) It was still warm in my brain L2 after all the xfile
-> > buftarg cleaning and merging that just got done a few weeks ago.   So I
-> > went with the simplest thing I could rig up to test my ideas, and now
-> > we're at the madly iterate until exhaustion stage. ;)
-> > 
-> > >            That's just wasting 300 bytes of memory on a handle to
-> > > store a key and a opaque blob in a rhashtable.
-> > 
-> > Yep.  The fsbufs implementation was a lot more slender, but a bunch more
-> > code.  I agree that I ought to go look at xarrays or something that's
-> > more of a direct mapping as a next step.  However, i wanted to get
-> > Andrey's feedback on this general approach first.
-> > 
-> > > IIUC, the key here is a sequential index, so an xarray would be a
-> > > much better choice as it doesn't require internal storage of the
-> > > key.
-> > 
-> > I wonder, what are the access patterns for merkle blobs?  Is it actually
-> > sequential, or is more like 0 -> N -> N*N as we walk towards leaves?
-
-I think the leaf level (i.e. individual record) access patterns
-largely match data access patterns, so I'd just treat it like as if
-it's a normal file being accessed....
-
-> > Also -- the fsverity block interfaces pass in a "u64 pos" argument.  Was
-> > that done because merkle trees may some day have more than 2^32 blocks
-> > in them?  That won't play well with things like xarrays on 32-bit
-> > machines.
-> > 
-> > (Granted we've been talking about deprecating XFS on 32-bit for a while
-> > now but we're not the whole world)
-> > 
-> > > i.e.
-> > > 
-> > > 	p = xa_load(key);
-> > > 	if (p)
-> > > 		return p;
-> > > 
-> > > 	xfs_attr_get(key);
-> > > 	if (!args->value)
-> > > 		/* error */
-> > > 
-> > > 	/*
-> > > 	 * store the current value, freeing any old value that we
-> > > 	 * replaced at this key. Don't care about failure to store,
-> > > 	 * this is optimistic caching.
-> > > 	 */
-> > > 	p = xa_store(key, args->value, GFP_NOFS);
-> > > 	if (p)
-> > > 		kvfree(p);
-> > > 	return args->value;
-> > 
-> > Attractive.  Will have to take a look at that tomorrow.
+在 2024/3/1 18:02, Zhihao Cheng 写道:
+> 在 2024/3/1 8:40, Dave Chinner 写道:
 > 
-> Done.  I think.  Not sure that I actually got all the interactions
-> between the shrinker and the xarray correct though.  KASAN and lockdep
-> don't have any complaints running fstests, so that's a start.
+Hi Dave. Friendly ping.
+> Hi Dave, thanks for your detailed and nice suggestions, I have a few 
+> questions below.
+>> On Thu, Feb 29, 2024 at 07:38:48PM +0800, Zhihao Cheng wrote:
+>>> It will be more efficient to execute quick endio process(eg. non-sync
+>>> overwriting case) under irq process rather than starting a worker to
+>>> do it.
+>>> Add a flag to control DIO to be finished inline(under irq context), 
+>>> which
+>>> can be used for non-sync overwriting case.
+>>> Besides, skip invalidating pages if DIO is finished inline, which will
+>>> keep the same logic with dio_bio_end_aio in non-sync overwriting case.
+>>>
+>>> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+>>
+>> A nice idea, but I don't think an ext4 specific API flag is the
+>> right way to go about enabling this. The iomap dio code knows if
+>> the write is pure overwrite already - we have the IOMAP_F_DIRTY flag
+>> for that, and we combine this with IOMAP_DIO_WRITE_THROUGH to do the
+>> pure overwrite FUA optimisations.
+>>
+>> That is:
+>>
+>>         /*
+>>                   * Use a FUA write if we need datasync semantics, 
+>> this is a pure
+>>                   * data IO that doesn't require any metadata updates 
+>> (including
+>>                   * after IO completion such as unwritten extent 
+>> conversion) and
+>>                   * the underlying device either supports FUA or 
+>> doesn't have
+>>                   * a volatile write cache. This allows us to avoid 
+>> cache flushes
+>>                   * on IO completion. If we can't use writethrough and 
+>> need to
+>>                   * sync, disable in-task completions as dio 
+>> completion will
+>>                   * need to call generic_write_sync() which will do a 
+>> blocking
+>>                   * fsync / cache flush call.
+>>                   */
+>>                  if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
+>>                      (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
+>>                      (bdev_fua(iomap->bdev) || 
+>> !bdev_write_cache(iomap->bdev)))
+>>                          use_fua = true;
+>>
+>> Hence if we want to optimise pure overwrites that have no data sync
+>> requirements, we already have the detection and triggers in place to
+>> do this. We just need to change the way we set up the IO flags to
+>> allow write-through (i.e. non-blocking IO completions) to use inline
+>> completions.
+>>
+>> In __iomap_dio_rw():
+>>
+>> +    /* Always try to complete inline. */
+>> +    dio->flags |= IOMAP_DIO_INLINE_COMP;
+>>     if (iov_iter_rw(iter) == READ) {
+>> -               /* reads can always complete inline */
+>> -               dio->flags |= IOMAP_DIO_INLINE_COMP;
+>> ....
+>>
+>>     } else {
+>> +        /* Always try write-through semantics. If we can't
+>> +         * use writethough, it will be disabled along with
+>> +         * IOMAP_DIO_INLINE_COMP before dio completion is run
+>> +         * so it can be deferred to a task completion context
+>> +         * appropriately.
+>> +         */
+>> +               dio->flags |= IOMAP_DIO_WRITE | IOMAP_DIO_WRITE_THROUGH;
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity-cleanups-6.9_2024-03-09
+> There is a behavior change here, if we set IOMAP_DIO_WRITE_THROUGH 
+> unconditionally, non-datasync IO will be set with REQ_FUA, which means 
+> that device will flush writecache for each IO, will it affect the 
+> performance in non-sync dio case?
+>>         iomi.flags |= IOMAP_WRITE;
+>> -               dio->flags |= IOMAP_DIO_WRITE;
+>> .....
+>>         /* for data sync or sync, we need sync completion processing */
+>>                  if (iocb_is_dsync(iocb)) {
+>>                          dio->flags |= IOMAP_DIO_NEED_SYNC;
+>>
+>> -                      /*
+>> -                       * For datasync only writes, we optimistically 
+>> try using
+>> -                       * WRITE_THROUGH for this IO. This flag 
+>> requires either
+>> -                       * FUA writes through the device's write cache, 
+>> or a
+>> -                       * normal write to a device without a volatile 
+>> write
+>> -                       * cache. For the former, Any non-FUA write 
+>> that occurs
+>> -                       * will clear this flag, hence we know before 
+>> completion
+>> -                       * whether a cache flush is necessary.
+>> -                       */
+>> -                       if (!(iocb->ki_flags & IOCB_SYNC))
+>> -                               dio->flags |= IOMAP_DIO_WRITE_THROUGH;
+>> +            * For sync writes we know we are going to need
+>> +            * blocking completion processing, so turn off
+>> +            * writethrough now.
+>> +            */
+>>             if (iocb->ki_flags & IOCB_SYNC) {
+>>                 dio->flags &= ~(IOMAP_DIO_WRITE_THROUGH |
+>>                         IOMAP_DIO_INLINE_COMP);
+>>             }
+>>                  }
+>>
+> 
+> [...]
+>>
+>> However, this does mean that any spinlock taken in the ->end_io()
+>> callbacks now needs to be irq safe. e.g. in xfs_dio_write_end_io()
+>> the spinlock protection around inode size updates will need to use
+>> an irq safe locking, as will the locking in the DIO submission path
+>> that it serialises against in xfs_file_write_checks(). That probably
+>> is best implemented as a separate spinlock.
+>>
+>> There will also be other filesystems that need to set IOMAP_F_DIRTY
+>> unconditionally (e.g. zonefs) because they always take blocking
+>> locks in their ->end_io callbacks and so must always run in task
+>> context...
+> Should we add a new flag(eg. IOMAP_F_ENDIO_IRQ ?) to indicate that the 
+> endio cannot be done under irq? Because I think IOMAP_F_DIRTY means that 
+> the metadata needs to be written, if we add a new semantics(endio must 
+> be done in defered work) for this flag, the code will looks a little 
+> complicated.
+> 
+> 
+> .
 
-My initial impression is "over-engineered".
-
-I personally would have just allocated the xattr value buffer with a
-little extra size and added all the external cache information (a
-reference counter is all we need as these are fixed sized blocks) to
-the tail of the blob we actually pass to fsverity. If we tag the
-inode in the radix tree as having verity blobs that can be freed, we
-can then just extend the existing fs sueprblock shrinker callout to
-also walk all the verity inodes with cached data to try to reclaim
-some objects...
-
-But, if a generic blob cache is what it takes to move this forwards,
-so be it.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
