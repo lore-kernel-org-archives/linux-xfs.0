@@ -1,42 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8497A4436C;
-	Mon, 11 Mar 2024 16:07:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD34B482C1;
+	Mon, 11 Mar 2024 22:38:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710173260; cv=none; b=sK8/tedH1iBL9bKmzLq+JGGL973hXFsX8uV7O0EvbCtDWeDFRwl6Bkm/QV0EO46G7KhZw/vcixp6XY+SAVwAdXuybyjdnQUfjz9bA4mkZ9TdE5RtIKua4M3F1wZTjcVl/T2hnyG7Ccwyz7BtMq/e528Ddi5DNzxaUluFhWIDn4E=
+	t=1710196697; cv=none; b=CHN8DzBHot1AZJmH4zcrsYNaBhKlJK0xP+kY2nX9+76mKTZR/Tl/UTpPJznRWyd15s9BAw810oWNUJyVQ4gn+HMAOcZyCX+yNWNFpAYKjoTRPaQYSLHQxQ88er4iEEp/Rayy8uSzsUxwIlfzabW7pfHik6Hx9y9UfvS701taj9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710173260; c=relaxed/simple;
-	bh=Z3VLtbgSadjSI/x6kUu32ZF43oQcfZ5oMFjrp5In00U=;
+	s=arc-20240116; t=1710196697; c=relaxed/simple;
+	bh=hJur/pDiHJhAry8SmKfQygvh/y7PJVKL8g1n94l4nyQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TDhvJKTJaClowQ+wvVWSAoog83RY6mfgeXkpDaXzw0+MS+XrTbpowy1SH0MVqa9Mv4kfxLkUl47v8ZojyDR0SekOH61x2tofO/dysejxABVQC/TvDd/2IJWS4dqiHmOicBMH2qNMeLqOQNQNCdVanFxBkdnp8xuJd6Y2o9cIMcc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YDrEiu+m; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ln6llg2fYCJcaFwOS+8PDWU5ayP6YpwmNe2nyv0DwcGdPYVsvqBJ69YPspPP5d52F1QAKB8l+hpo/LvwRFmgzdRSDKWK5rxlZWKO62jiX/Qd/inrj4UVNybKng7l+40VYwb4rzVno+c1TKti/BX/zW1fKKwn8/9udD5R32z0f+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zc5NxIpL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YDrEiu+m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01203C433F1;
-	Mon, 11 Mar 2024 16:07:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zc5NxIpL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D870C43390;
+	Mon, 11 Mar 2024 22:38:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710173260;
-	bh=Z3VLtbgSadjSI/x6kUu32ZF43oQcfZ5oMFjrp5In00U=;
+	s=k20201202; t=1710196696;
+	bh=hJur/pDiHJhAry8SmKfQygvh/y7PJVKL8g1n94l4nyQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YDrEiu+mrr/IeG+VuLb+GqeyONl++YsowQWctcdNqdrvnXZ6zxWSW+58mkrmFPXnA
-	 i8inmXsx+nlB9za6NxgaQRzMwVKQwyJRN381/3QiYzl5917n8yeW6AGUJGdM5O0LBm
-	 IHdssvWlau3Ses9J/gHshDr7r98Id5aGzswxUbFeLi5GgFWzUEz6jIuceNoPSLrnRA
-	 B4JD653vipyxVlrUYKByJbzu6lsdlLcCVTnH9i0SheyqbWxj4pAjtd3QkAswWhZWDk
-	 C7/vFPJwPrrIt/mPv5I+/vp9+QFw567EbZ8qnv3R7WbhlhmxfTH/NT0RjiCPmqo80P
-	 9f7nDvTOgO3vQ==
-Date: Mon, 11 Mar 2024 09:07:39 -0700
+	b=Zc5NxIpLQhKwbRvhfYCZw5nNzCYgx8pGde02Jr+kqIsJ2Ya6IfzJxLXRLmqHVa/MS
+	 PnuRTFTd4GJ5ArL3Y1zv6GA92/Ugc9fzCiTpLObZDi7Foqo3HduW4a9/3GoK9rWHrR
+	 lXigdAJaXtyDSX5ZTBVZeWqh7doOG5Z0lXGC5sKkAG42SR0JDw0xE2LHsxbogyni/t
+	 Cxo3ZccaqAD2AOpLPQTeEwJ3i74ISBWRxe6hXwZbV6zMdUGAII5Xj6cqIYkqNxcZ0C
+	 UFODpOUC+2gOeL1TL0HEYpsvOIRtKBfKrnOYkBMC/uwTOx7W2tssR8OccyvqTpF4fN
+	 BRCOXZOSiWXDw==
+Date: Mon, 11 Mar 2024 15:38:15 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
-	david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH 4/4] iomap: cleanup iomap_write_iter()
-Message-ID: <20240311160739.GV1927156@frogsfrogsfrogs>
-References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
- <20240311122255.2637311-5-yi.zhang@huaweicloud.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	chandan.babu@oracle.com, akpm@linux-foundation.org,
+	linux-mm@kvack.org, Eric Biggers <ebiggers@kernel.org>
+Subject: Re: [PATCH v5 06/24] fsverity: pass tree_blocksize to
+ end_enable_verity()
+Message-ID: <20240311223815.GW1927156@frogsfrogsfrogs>
+References: <20240304191046.157464-2-aalbersh@redhat.com>
+ <20240304191046.157464-8-aalbersh@redhat.com>
+ <20240305005242.GE17145@sol.localdomain>
+ <20240306163000.GP1927156@frogsfrogsfrogs>
+ <20240307220224.GA1799@sol.localdomain>
+ <20240308034650.GK1927156@frogsfrogsfrogs>
+ <20240308044017.GC8111@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,132 +51,114 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240311122255.2637311-5-yi.zhang@huaweicloud.com>
+In-Reply-To: <20240308044017.GC8111@sol.localdomain>
 
-On Mon, Mar 11, 2024 at 08:22:55PM +0800, Zhang Yi wrote:
-> From: Zhang Yi <yi.zhang@huawei.com>
+[add willy and linux-mm]
+
+On Thu, Mar 07, 2024 at 08:40:17PM -0800, Eric Biggers wrote:
+> On Thu, Mar 07, 2024 at 07:46:50PM -0800, Darrick J. Wong wrote:
+> > > BTW, is xfs_repair planned to do anything about any such extra blocks?
+> > 
+> > Sorry to answer your question with a question, but how much checking is
+> > $filesystem expected to do for merkle trees?
+> > 
+> > In theory xfs_repair could learn how to interpret the verity descriptor,
+> > walk the merkle tree blocks, and even read the file data to confirm
+> > intactness.  If the descriptor specifies the highest block address then
+> > we could certainly trim off excess blocks.  But I don't know how much of
+> > libfsverity actually lets you do that; I haven't looked into that
+> > deeply. :/
+> > 
+> > For xfs_scrub I guess the job is theoretically simpler, since we only
+> > need to stream reads of the verity files through the page cache and let
+> > verity tell us if the file data are consistent.
+> > 
+> > For both tools, if something finds errors in the merkle tree structure
+> > itself, do we turn off verity?  Or do we do something nasty like
+> > truncate the file?
 > 
-> The status variable in iomap_write_iter() is confusing and
-> iomap_write_end() always return 0 or copied bytes, so replace it with a
-> new written variable to represent the written bytes in each cycle, and
-> also do some cleanup, no logic changes.
+> As far as I know (I haven't been following btrfs-progs, but I'm familiar with
+> e2fsprogs and f2fs-tools), there isn't yet any precedent for fsck actually
+> validating the data of verity inodes against their Merkle trees.
 > 
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> ---
->  fs/iomap/buffered-io.c | 31 +++++++++++++++----------------
->  1 file changed, 15 insertions(+), 16 deletions(-)
+> e2fsck does delete the verity metadata of inodes that don't have the verity flag
+> enabled.  That handles cleaning up after a crash during FS_IOC_ENABLE_VERITY.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 19f91324c690..767af6e67ed4 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -851,7 +851,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  	loff_t length = iomap_length(iter);
->  	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
->  	loff_t pos = iter->pos;
-> -	ssize_t written = 0;
-> +	ssize_t total_written = 0;
->  	long status = 0;
->  	struct address_space *mapping = iter->inode->i_mapping;
->  	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
-> @@ -862,6 +862,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  		size_t offset;		/* Offset into folio */
->  		size_t bytes;		/* Bytes to write to folio */
->  		size_t copied;		/* Bytes copied from user */
-> +		size_t written;		/* Bytes have been written */
->  
->  		bytes = iov_iter_count(i);
->  retry:
-> @@ -906,7 +907,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  			flush_dcache_folio(folio);
->  
->  		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
-> -		status = iomap_write_end(iter, pos, bytes, copied, folio);
-> +		written = iomap_write_end(iter, pos, bytes, copied, folio);
->  
->  		/*
->  		 * Update the in-memory inode size after copying the data into
-> @@ -915,28 +916,26 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  		 * no stale data is exposed.
->  		 */
->  		old_size = iter->inode->i_size;
-> -		if (pos + status > old_size) {
-> -			i_size_write(iter->inode, pos + status);
-> +		if (pos + written > old_size) {
-> +			i_size_write(iter->inode, pos + written);
->  			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
->  		}
-> -		__iomap_put_folio(iter, pos, status, folio);
-> +		__iomap_put_folio(iter, pos, written, folio);
->  
->  		if (old_size < pos)
->  			pagecache_isize_extended(iter->inode, old_size, pos);
-> -		if (status < bytes)
-> -			iomap_write_failed(iter->inode, pos + status,
-> -					   bytes - status);
-> -		if (unlikely(copied != status))
-> -			iov_iter_revert(i, copied - status);
+> I suppose that ideally, if an inode's verity metadata is invalid, then fsck
+> should delete that inode's verity metadata and remove the verity flag from the
+> inode.  Checking for a missing or obviously corrupt fsverity_descriptor would be
+> fairly straightforward, but it probably wouldn't catch much compared to actually
+> validating the data against the Merkle tree.  And actually validating the data
+> against the Merkle tree would be complex and expensive.  Note, none of this
+> would work on files that are encrypted.
+> 
+> Re: libfsverity, I think it would be possible to validate a Merkle tree using
+> libfsverity_compute_digest() and the callbacks that it supports.  But that's not
+> quite what it was designed for.
+> 
+> > Is there an ioctl or something that allows userspace to validate an
+> > entire file's contents?  Sort of like what BLKVERIFY would have done for
+> > block devices, except that we might believe its answers?
+> 
+> Just reading the whole file and seeing whether you get an error would do it.
+> 
+> Though if you want to make sure it's really re-reading the on-disk data, it's
+> necessary to drop the file's pagecache first.
 
-I wish you'd made the variable renaming and the function reorganization
-separate patches.  The renaming looks correct to me, but moving these
-calls adds a logic bomb.
+I tried a straight pagecache read and it worked like a charm!
 
-If at some point iomap_write_end actually starts returning partial write
-completions (e.g. you wrote 250 bytes, but for some reason the pagecache
-only acknowledges 100 bytes were written) then this code no longer
-reverts the iter or truncates posteof pagecache correctly...
+But then I thought to myself, do I really want to waste memory bandwidth
+copying a bunch of data?  No.  I don't even want to incur system call
+overhead from reading a single byte every $pagesize bytes.
 
->  
->  		cond_resched();
-> -		if (unlikely(status == 0)) {
-> +		if (unlikely(written == 0)) {
->  			/*
->  			 * A short copy made iomap_write_end() reject the
->  			 * thing entirely.  Might be memory poisoning
->  			 * halfway through, might be a race with munmap,
->  			 * might be severe memory pressure.
->  			 */
-> +			iomap_write_failed(iter->inode, pos, bytes);
-> +			iov_iter_revert(i, copied);
+So I created 2M mmap areas and read a byte every $pagesize bytes.  That
+worked too, insofar as SIGBUSes are annoying to handle.  But it's
+annoying to take signals like that.
 
-...because now we only do that if the pagecache refuses to acknowledge
-any bytes written at all.  I think it actually works correctly with
-today's kernel since __iomap_write_end only returns copied or 0, but the
-size_t return type implies that a short acknowledgement is theoretically
-possible.
+Then I started looking at madvise.  MADV_POPULATE_READ looked exactly
+like what I wanted -- it prefaults in the pages, and "If populating
+fails, a SIGBUS signal is not generated; instead, an error is returned."
 
-IOWs, doesn't this adds a logic bomb?
+But then I tried rigging up a test to see if I could catch an EIO, and
+instead I had to SIGKILL the process!  It looks filemap_fault returns
+VM_FAULT_RETRY to __xfs_filemap_fault, which propagates up through
+__do_fault -> do_read_fault -> do_fault -> handle_pte_fault ->
+handle_mm_fault -> faultin_page -> __get_user_pages.  At faultin_pages,
+the VM_FAULT_RETRY is translated to -EBUSY.
+
+__get_user_pages squashes -EBUSY to 0, so faultin_vma_page_range returns
+that to madvise_populate.  Unfortunately, madvise_populate increments
+its loop counter by the return value (still 0) so it runs in an
+infinite loop.  The only way out is SIGKILL.
+
+So I don't know what the correct behavior is here, other than the
+infinite loop seems pretty suspect.  Is it the correct behavior that
+madvise_populate returns EIO if __get_user_pages ever returns zero?
+That doesn't quite sound right if it's the case that a zero return could
+also happen if memory is tight.
+
+I suppose filemap_fault could return VM_FAULT_SIGBUS in this one
+scenario so userspace would get an -EFAULT.  That would solve this one
+case of weird behavior.  But I think that doesn't happen in the
+page_not_uptodate case because fpin is non-null?
+
+As for xfs_scrub validating data files, I suppose it's not /so/
+terrible to read one byte every $fsblocksize so that we can report
+exactly where fsverity and the file data became inconsistent.  The
+POPULATE_READ interface doesn't tell you how many pages it /did/ manage
+to load, so perhaps MADV_POPULATE_READ isn't workable anyway.
+
+(and now I'm just handwaving wildly about pagecache behaviors ;))
 
 --D
 
-> +
->  			if (chunk > PAGE_SIZE)
->  				chunk /= 2;
->  			if (copied) {
-> @@ -944,17 +943,17 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  				goto retry;
->  			}
->  		} else {
-> -			pos += status;
-> -			written += status;
-> -			length -= status;
-> +			pos += written;
-> +			total_written += written;
-> +			length -= written;
->  		}
->  	} while (iov_iter_count(i) && length);
->  
->  	if (status == -EAGAIN) {
-> -		iov_iter_revert(i, written);
-> +		iov_iter_revert(i, total_written);
->  		return -EAGAIN;
->  	}
-> -	return written ? written : status;
-> +	return total_written ? total_written : status;
->  }
->  
->  ssize_t
-> -- 
-> 2.39.2
+> > Also -- inconsistencies between the file data and the merkle tree aren't
+> > something that xfs can self-heal, right?
 > 
+> Similar to file data itself, only way to self-heal would be via mechanisms that
+> provide redundancy.  There's been some interest in adding support forward error
+> correction (FEC) to fsverity similar to what dm-verity has, but this would be
+> complex, and it's not something that anyone has gotten around to yet.
+> 
+> - Eric
 > 
