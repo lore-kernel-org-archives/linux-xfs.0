@@ -1,156 +1,135 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5D8D30B;
-	Tue, 12 Mar 2024 08:18:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B0279DC7
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Mar 2024 12:02:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710231528; cv=none; b=FcF241yVgTlNjZaBFNEbnRhtpbTyI1IB1qaEb80clHK2kXVUKCyUZhn6qVMqsD8mRFSTNII85GPFVAHBQC57H6LgNZZciDfosrR2S3bnYO7XdP+AK3AEccCPMlYJvvRIdCOExygrLV2WUorusm/VWbLMBoLafY9ivz4tV5/j6Rg=
+	t=1710244980; cv=none; b=CdZSKyChTDybTJMiHZrBgdlNJRHLRSWo1NUeUjjgv+fKIf5jXfCvfYQhHY65gASLNE30aDJb76sPyoFCHRMz3E97VBBkgy75eqlSYvVtAkt1BxGJxf2PCSwg1YK+0wl91Etc2/zwQpc/DUwQ2mCGLUqtOsKkjbU0ckjV1yC4bmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710231528; c=relaxed/simple;
-	bh=hPd+xJ5jOSC8o1CG2r+WXG2uyyLrv5AmWrxsGZg+GLg=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=EUXlMogEXL2ovJiojKypNOGRL5R5+89FqNZSc3qX8JCo2Nh0FO/1Jow95Jt7dwbUafTIhku9q+2XHWXgLP2D6+lgcgHLNdQKaFfzkpyrIarovWRLgSH4u8IcnBj8aqnVunv8tbtgXHqc4MfZ09UEKCs+npmMJwVoGdV8xXTIguY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Tv63W6RRPz4f3jqP;
-	Tue, 12 Mar 2024 16:18:31 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 8ADC71A0199;
-	Tue, 12 Mar 2024 16:18:35 +0800 (CST)
-Received: from [10.174.176.34] (unknown [10.174.176.34])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBHZD_BlXa7TGg--.10688S3;
-	Tue, 12 Mar 2024 16:18:35 +0800 (CST)
-Subject: Re: [PATCH 1/4] xfs: match lock mode in
- xfs_buffered_write_iomap_begin()
+	s=arc-20240116; t=1710244980; c=relaxed/simple;
+	bh=gLJ7CIvGElJrM3FH8zc5Ikyx3f1w8B64p7eGgtgMKn4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oQE2X02AnSi9zHaJvDB1V11KVzwyTNHPBuPCoKYftuVTDaR+LIb7o28ckHNfqHTQPogcoL3PIpgtfgQQmcrzr2XCvEdbBDcobJufSmXdYgPFDSUzhX6TfUPO/Hvt04l2oBZFRfcJRQjAkGShZg6OwV2VMx0VTv0ycfoDPwrqYIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hZeHAMtI; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hZeHAMtI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1710244977;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6ZNgBnphBVUjd2R20eoaYssWgOFygTeJ0L4LhcZX464=;
+	b=hZeHAMtIJcefoblhMj1c+qcjPdNi3g46nfDeVg4gbY8QTLbU3LmJg0Jc3wBsY5ZOnSpLhL
+	ajSuGbGYvjhNvSKHvpntbikKCKzVLIk/xuUUjXE19fMPk0Uub3Gni2EPI/IdKAlL2UNXOL
+	Zey0deEU4KIYIbdbeF5Jpjs2gcilHpw=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-498-XNVM7bGqMHm2MqXg5RCVOQ-1; Tue, 12 Mar 2024 08:02:55 -0400
+X-MC-Unique: XNVM7bGqMHm2MqXg5RCVOQ-1
+Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-567002485e2so2463700a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Mar 2024 05:02:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710244974; x=1710849774;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6ZNgBnphBVUjd2R20eoaYssWgOFygTeJ0L4LhcZX464=;
+        b=HzySSsF7Ht/c2zE+iVl0MTA33Uk4EM6arQfTNVqMNh6LHn+b8x7X18Iqq8yGNBODft
+         lzDS6M0B8Mv025AddPO9lkCzoChbrhPuBXHWpNS388J9YXL1/iNm1ZrrlrdrCCWHInTX
+         vRjGymV7y1rNob6FIaguakoqMwx4Jlgt76b0IuzaBp9PlnEH//NocEKsitcFSZlG4fMO
+         hM11UrVlTZIMxg8tOrTRQSdOyksn6GDYZChoiRB89luY8O/UqVqzvVXG1UPfg4N3u4AS
+         g6cWnhCl8cmFd1eBbS7rOexvQIyXu1IblkZnWONP1Q7r/ornqmcqkn0RveBZlQT6WQaR
+         ALvg==
+X-Forwarded-Encrypted: i=1; AJvYcCUlTk3zsE2auYGH82krqa+dCkpVE70FOTjKRsxDv5Lisd3N5QNcEcjxMxQA7DrdRTzYIWg7hjVdYZSqFTKGyZZfCrghMh7zxv9/
+X-Gm-Message-State: AOJu0YxPDrFCTwA48LLEphynXr+MWAY9E/7KL+Jaszr0AM2xooj1THdr
+	MFqY63vxMbRQbpVUP/oK8FDXFPrI0nStGKUtdOgWUR7n0UJgB9x8Q7IthylhlDwhWO+dQoof5PN
+	yeVXNDpv42QL2uwAlDE1gfxxg2dHJNUkpl48LtLaXMZZXniWmhtvICw3w
+X-Received: by 2002:a50:9fc1:0:b0:566:b0fc:1107 with SMTP id c59-20020a509fc1000000b00566b0fc1107mr7059715edf.24.1710244974518;
+        Tue, 12 Mar 2024 05:02:54 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE7xAfun2JnAHXUSEV9ZQaEmUy3Cd7FlaZLul69utVqZ8bARjrEBLt2760n9Q/glLHtlZR+Vw==
+X-Received: by 2002:a50:9fc1:0:b0:566:b0fc:1107 with SMTP id c59-20020a509fc1000000b00566b0fc1107mr7059686edf.24.1710244973994;
+        Tue, 12 Mar 2024 05:02:53 -0700 (PDT)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id x1-20020a056402414100b005683b6d8809sm3807014eda.19.2024.03.12.05.02.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Mar 2024 05:02:53 -0700 (PDT)
+Date: Tue, 12 Mar 2024 13:02:52 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
- david@fromorbit.com, tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com
-References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
- <20240311122255.2637311-2-yi.zhang@huaweicloud.com>
- <20240311153415.GS1927156@frogsfrogsfrogs>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <04c14e02-9968-3fda-39a6-c3b44c78a2ba@huaweicloud.com>
-Date: Tue, 12 Mar 2024 16:18:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com, ebiggers@kernel.org
+Subject: Re: [PATCH v5 20/24] xfs: disable direct read path for fs-verity
+ files
+Message-ID: <w23uzzjqhu7mt4qp532vwjd3c7triq6vfftzsmi6ofium34qic@fghx7nfarmke>
+References: <20240304191046.157464-2-aalbersh@redhat.com>
+ <20240304191046.157464-22-aalbersh@redhat.com>
+ <20240307221108.GX1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240311153415.GS1927156@frogsfrogsfrogs>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgBXKBHZD_BlXa7TGg--.10688S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFyUAr4xCr47JryDuFy8Zrb_yoW5XF15pr
-	n7KayqkrZ2vF1Yvr40qryYvF10g3W7Jw1UAr15Wan3uw1Dtr4fKr4093Wru3W8Ars2k34v
-	gF4UGr1ku34ayFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
-	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
-	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-	9x07UWE__UUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240307221108.GX1927156@frogsfrogsfrogs>
 
-On 2024/3/11 23:34, Darrick J. Wong wrote:
-> On Mon, Mar 11, 2024 at 08:22:52PM +0800, Zhang Yi wrote:
->> From: Zhang Yi <yi.zhang@huawei.com>
->>
->> Commit 1aa91d9c9933 ("xfs: Add async buffered write support") replace
->> xfs_ilock(XFS_ILOCK_EXCL) with xfs_ilock_for_iomap() when locking the
->> writing inode, and a new variable lockmode is used to indicate the lock
->> mode. Although the lockmode should always be XFS_ILOCK_EXCL, it's still
->> better to use this variable instead of useing XFS_ILOCK_EXCL directly
->> when unlocking the inode.
->>
->> Fixes: 1aa91d9c9933 ("xfs: Add async buffered write support")
+On 2024-03-07 14:11:08, Darrick J. Wong wrote:
+> On Mon, Mar 04, 2024 at 08:10:43PM +0100, Andrey Albershteyn wrote:
+> > The direct path is not supported on verity files. Attempts to use direct
+> > I/O path on such files should fall back to buffered I/O path.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > ---
+> >  fs/xfs/xfs_file.c | 15 ++++++++++++---
+> >  1 file changed, 12 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 17404c2e7e31..af3201075066 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -281,7 +281,8 @@ xfs_file_dax_read(
+> >  	struct kiocb		*iocb,
+> >  	struct iov_iter		*to)
+> >  {
+> > -	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+> > +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+> > +	struct xfs_inode	*ip = XFS_I(inode);
+> >  	ssize_t			ret = 0;
+> >  
+> >  	trace_xfs_file_dax_read(iocb, to);
+> > @@ -334,10 +335,18 @@ xfs_file_read_iter(
+> >  
+> >  	if (IS_DAX(inode))
+> >  		ret = xfs_file_dax_read(iocb, to);
+> > -	else if (iocb->ki_flags & IOCB_DIRECT)
+> > +	else if (iocb->ki_flags & IOCB_DIRECT && !fsverity_active(inode))
+> >  		ret = xfs_file_dio_read(iocb, to);
+> > -	else
+> > +	else {
 > 
-> AFAICT, xfs_ilock_for_iomap can change lockmode from SHARED->EXCL, but
-> never changed away from EXCL, right?  
-
-Yes.
-
-> And xfs_buffered_write_iomap_begin
-> sets it to EXCL (and never changes it), right?
-
-Yes.
-
+> I think the earlier cases need curly braces {} too.
 > 
-> This seems like more of a code cleanup/logic bomb removal than an actual
-> defect that someone could actually hit, correct?
+> > +		/*
+> > +		 * In case fs-verity is enabled, we also fallback to the
+> > +		 * buffered read from the direct read path. Therefore,
+> > +		 * IOCB_DIRECT is set and need to be cleared (see
+> > +		 * generic_file_read_iter())
+> > +		 */
+> > +		iocb->ki_flags &= ~IOCB_DIRECT;
 > 
-
-Yes, it's not a real problem.
-
-> If the answers are {yes, yes, yes} then:
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> I'm curious that you added this flag here; how have we gotten along
+> this far without clearing it?
 > 
 > --D
-> 
-> 
->> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
->> ---
->>  fs/xfs/xfs_iomap.c | 10 +++++-----
->>  1 file changed, 5 insertions(+), 5 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
->> index 18c8f168b153..ccf83e72d8ca 100644
->> --- a/fs/xfs/xfs_iomap.c
->> +++ b/fs/xfs/xfs_iomap.c
->> @@ -1149,13 +1149,13 @@ xfs_buffered_write_iomap_begin(
->>  	 * them out if the write happens to fail.
->>  	 */
->>  	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_NEW);
->> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +	xfs_iunlock(ip, lockmode);
->>  	trace_xfs_iomap_alloc(ip, offset, count, allocfork, &imap);
->>  	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, IOMAP_F_NEW, seq);
->>  
->>  found_imap:
->>  	seq = xfs_iomap_inode_sequence(ip, 0);
->> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +	xfs_iunlock(ip, lockmode);
->>  	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
->>  
->>  found_cow:
->> @@ -1165,17 +1165,17 @@ xfs_buffered_write_iomap_begin(
->>  		if (error)
->>  			goto out_unlock;
->>  		seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
->> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +		xfs_iunlock(ip, lockmode);
->>  		return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags,
->>  					 IOMAP_F_SHARED, seq);
->>  	}
->>  
->>  	xfs_trim_extent(&cmap, offset_fsb, imap.br_startoff - offset_fsb);
->> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +	xfs_iunlock(ip, lockmode);
->>  	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, 0, seq);
->>  
->>  out_unlock:
->> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +	xfs_iunlock(ip, lockmode);
->>  	return error;
->>  }
->>  
->> -- 
->> 2.39.2
->>
->>
+
+Do you know any better place? Not sure if that should be somewhere
+before. I've made it same as ext4 does it.
+
+-- 
+- Andrey
 
