@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3590B642;
-	Tue, 12 Mar 2024 02:45:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83D2B66F;
+	Tue, 12 Mar 2024 04:15:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710211509; cv=none; b=F0fAaEmxlyzRqMVMxKOKUg6JE4E1qBRdZtVc05uyu55qIBqLGcK4rTeb89i3ZJ0nj9VbfFUB9GJQeRy9ojGuFeT4J36mLCBR46+hrD+smNU8NmZ1M4chQWLlsXSqGHNHqeTaN0HVIOeC66Dgs4sb8mq9W+DDBLtOFzobLFQ4mFw=
+	t=1710216957; cv=none; b=LmU0yXk88jrGakjLtllOK8T9datfmGfbRH3IsXmgfOMQn7ChqxBpa0N9yNnRtJJRqd/DxvtLDjnCxaEA0vZiR38oCSgPijL+zTZxCJamHqHDQCyWl2tl0PJjUgYccOyJpMBRkbeQEXFdSBdK2o4CqPBUnTdAaeoLI5pofA7dRCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710211509; c=relaxed/simple;
-	bh=IWjRq3Zt9+IbyXWPDrl7NyImTffOcT2SNVcI4dFZ4sg=;
+	s=arc-20240116; t=1710216957; c=relaxed/simple;
+	bh=iNaBzaLVKd3PkwA0GihEpEd2QdBPqa1tnFNQEOd6zYQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UjIWBdNn6KvRJYpwQDrssCvL3dblWD2tThYrBnKC43Z0bNdlXyCQm5yAPJYz+1SrjiNA8Gn6A37oFLSbuAY27MI2zN8HR57og1EbFoIzPw0gG4kL3Z8yPyQFaBDGXmfhuBDkE77ikWHn37tLLLCm7MSg8m3oFR02iwipyTnkYik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wtlmvvkf; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YbESj/c9LOXeTHgsgcOkvTx8GTLzGw7WtZA75eORnZPVceBghxboubPXHsNWWV9UXipsM6Tbdzwu9j2oIM6J7jHPTovXo1na5YBbivuc5VHpTXRpGYWVDMuqevuR4KCJOuiU6/zratuBCasM0ZN8VmciJrH84vtoSr0dKMMvUHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BhsBpi8z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wtlmvvkf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 524B5C43394;
-	Tue, 12 Mar 2024 02:45:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BhsBpi8z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CD67C433F1;
+	Tue, 12 Mar 2024 04:15:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710211508;
-	bh=IWjRq3Zt9+IbyXWPDrl7NyImTffOcT2SNVcI4dFZ4sg=;
+	s=k20201202; t=1710216957;
+	bh=iNaBzaLVKd3PkwA0GihEpEd2QdBPqa1tnFNQEOd6zYQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WtlmvvkfXzfiLIqp6BhVR+GJHWnLHuXrlz3lD/nqKo7++pBVTSoBj7+wZjLAGUfFU
-	 WYHiuSpduYPYrkiofxZXtZTUh1Gyfh0TojDDSoisxyQzC1J8FiE0zSLw0w175y3pJZ
-	 TRRhIJ3SN8gu2RqSolvFUbt7KegUOpobXlKeQd2pPN/vKyZqG2iPdTG+FrQifjkozR
-	 yn34T4BwlrMjuDYqDA9rtKPj34QZ0NKKT5pT0NoRYHHl4nj5lRwHT2J2X3z9dKbvcY
-	 nwGLcSnIL/5xbTNX8Nad/WwiZYUBT7atS7aMoKo1BDKnJvJBsAa0tF15VYpCoC7siF
-	 Qhi7uJ46Eo3Sg==
-Date: Mon, 11 Mar 2024 19:45:07 -0700
+	b=BhsBpi8zLqVXFByby2/rBeogS/r7p5l9WZBLZGqgQkM3onbiNdeWG6gk8NsocyQt1
+	 lR6j+NqdAyf+Onql0PNTcxgCTUX1WUwRrzCWunuF/RD1JJFbOcNoCaxBJdnPxrH+SF
+	 ePSYHnhvu3gn6s/EaUxikWf/IzTMTE9kOQ6eeiAIjsSlFS3XPelzPkJ5OqM4LcjHmz
+	 XWbYDo7qkkqIrs45bRr00jvYX59WsX2LOZ1R4kl11lATC8Jt8lN98UUngEcm0HzvKN
+	 UcqwplmNGFtIjcreW8WRnut9K8Yg+uQWRv+TwrPOc2l0o0cJPLO6+n6/8aOS7etRz2
+	 tMkY2Ts/KEX6w==
+Date: Mon, 11 Mar 2024 21:15:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	chandan.babu@oracle.com, ebiggers@kernel.org
+	chandan.babu@oracle.com
 Subject: Re: [PATCH v5 11/24] xfs: add XBF_VERITY_SEEN xfs_buf flag
-Message-ID: <20240312024507.GY1927156@frogsfrogsfrogs>
+Message-ID: <20240312041556.GZ1927156@frogsfrogsfrogs>
 References: <20240304191046.157464-2-aalbersh@redhat.com>
  <20240304191046.157464-13-aalbersh@redhat.com>
  <20240307224654.GB1927156@frogsfrogsfrogs>
@@ -42,6 +43,7 @@ References: <20240304191046.157464-2-aalbersh@redhat.com>
  <20240309162828.GQ1927156@frogsfrogsfrogs>
  <Ze5PsMopkWqZZ1NX@dread.disaster.area>
  <20240311152505.GR1927156@frogsfrogsfrogs>
+ <20240312024320.GD1182@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,97 +52,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240311152505.GR1927156@frogsfrogsfrogs>
+In-Reply-To: <20240312024320.GD1182@sol.localdomain>
 
-On Mon, Mar 11, 2024 at 08:25:05AM -0700, Darrick J. Wong wrote:
-
-<snip>
-
-> <nod> The latest version of this tries to avoid letting reclaim take the
-> top of the tree.  Logically this makes sense to me to reduce read verify
-> latency, but I was hoping Eric or Andrey or someone with more
-> familiarity with fsverity would chime in on whether or not that made
-> sense.
-> 
-> > > > Also -- the fsverity block interfaces pass in a "u64 pos" argument.  Was
-> > > > that done because merkle trees may some day have more than 2^32 blocks
-> > > > in them?  That won't play well with things like xarrays on 32-bit
-> > > > machines.
-> > > > 
-> > > > (Granted we've been talking about deprecating XFS on 32-bit for a while
-> > > > now but we're not the whole world)
-> > > > 
-> > > > > i.e.
-> > > > > 
-> > > > > 	p = xa_load(key);
-> > > > > 	if (p)
-> > > > > 		return p;
-> > > > > 
-> > > > > 	xfs_attr_get(key);
-> > > > > 	if (!args->value)
-> > > > > 		/* error */
-> > > > > 
-> > > > > 	/*
-> > > > > 	 * store the current value, freeing any old value that we
-> > > > > 	 * replaced at this key. Don't care about failure to store,
-> > > > > 	 * this is optimistic caching.
-> > > > > 	 */
-> > > > > 	p = xa_store(key, args->value, GFP_NOFS);
-> > > > > 	if (p)
-> > > > > 		kvfree(p);
-> > > > > 	return args->value;
-> > > > 
-> > > > Attractive.  Will have to take a look at that tomorrow.
+On Mon, Mar 11, 2024 at 07:43:20PM -0700, Eric Biggers wrote:
+> On Mon, Mar 11, 2024 at 08:25:05AM -0700, Darrick J. Wong wrote:
+> > > > > I wonder, what are the access patterns for merkle blobs?  Is it actually
+> > > > > sequential, or is more like 0 -> N -> N*N as we walk towards leaves?
 > > > 
-> > > Done.  I think.  Not sure that I actually got all the interactions
-> > > between the shrinker and the xarray correct though.  KASAN and lockdep
-> > > don't have any complaints running fstests, so that's a start.
-> > > 
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity-cleanups-6.9_2024-03-09
+> > > I think the leaf level (i.e. individual record) access patterns
+> > > largely match data access patterns, so I'd just treat it like as if
+> > > it's a normal file being accessed....
 > > 
-> > My initial impression is "over-engineered".
+> > <nod> The latest version of this tries to avoid letting reclaim take the
+> > top of the tree.  Logically this makes sense to me to reduce read verify
+> > latency, but I was hoping Eric or Andrey or someone with more
+> > familiarity with fsverity would chime in on whether or not that made
+> > sense.
 > 
-> Overly focused on unfamiliar data structures -- I've never built
-> anything with an xarray before.
-> 
-> > I personally would have just allocated the xattr value buffer with a
-> > little extra size and added all the external cache information (a
-> > reference counter is all we need as these are fixed sized blocks) to
-> > the tail of the blob we actually pass to fsverity.
-> 
-> Oho, that's a good idea.  I didn't like the separate allocation anyway.
-> Friday was mostly chatting with willy and trying to make sure I got the
-> xarray access patterns correct.
-> 
-> >                                                    If we tag the
-> > inode in the radix tree as having verity blobs that can be freed, we
-> > can then just extend the existing fs sueprblock shrinker callout to
-> > also walk all the verity inodes with cached data to try to reclaim
-> > some objects...
-> 
-> This too is a wonderful suggestion -- use the third radix tree tag to
-> mark inodes with extra incore caches that can be reclaimed, then teach
-> xfs_reclaim_inodes_{nr,count} to scan them.  Allocating a per-inode
-> shrinker was likely to cause problems with flooding debugfs with too
-> many knobs anyway.
-> 
-> > But, if a generic blob cache is what it takes to move this forwards,
-> > so be it.
-> 
-> Not necessarily. ;)
+> The levels are stored ordered from root to leaf; they aren't interleaved.  So
+> technically the overall access pattern isn't sequential, but it is sequential
+> within each level, and the leaf level is over 99% of the accesses anyway
+> (assuming the default parameters where each block has 128 children).
 
-And here's today's branch, with xfs_blobcache.[ch] removed and a few
-more cleanups:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/tag/?h=fsverity-cleanups-6.9_2024-03-11
+<nod>
+
+> It makes sense to try to keep the top levels, i.e. the blocks with the lowest
+> indices, cached.  (The other filesystems that support fsverity currently aren't
+> doing anything special to treat them differently from other pagecache pages.)
+
+<nod>
 
 --D
 
-> 
-> --D
-> 
-> > -Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
+> - Eric
 > 
