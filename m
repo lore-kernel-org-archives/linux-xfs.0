@@ -1,120 +1,93 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51DE536AFB
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Mar 2024 12:42:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F189556450;
+	Tue, 12 Mar 2024 12:44:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710247355; cv=none; b=dQVphblGOR2DpGAl9Bp8s5prHtxcjQaEB/vOkEt0v/oDD4LmFFFzB2Vk0hGYh//YxPDUNniNa4SSCbgJ1TgsQzIBLL3d/WL9TlC3qeBQftkejZoVLOBN9Ok/EdpZEdRbzxv4KyJCVZYlHet4e8YG4OxCFihBb+nNhmMJq6bUar4=
+	t=1710247499; cv=none; b=cpV1dlDN2UkGuVUx2yUMTKHI8k2g8bwHHskSUjCQBEymkovLNLsgqraAI/23B0QQvvjpKr7MascU4/5oGiYXcncYsiVH9+/ZsMJYYcb/1YfQLjaKdyM/VjoLSPTI0n2MnozXilF7lX9E70qyMHA0xKHW61Wlq81JQWFGLiyA+ew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710247355; c=relaxed/simple;
-	bh=WdNiCw9a6QyxEfoXxzqePgCN33RJ0NkeRM5mNDnx5Yo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j12ejyFWf0DJNBLC9FbcbWEEKZyRq2a6R2belJNem3UdDADkIATKXa4m5P7Jm6n4nj5VUu2iSRjmL6E0SpKs6szXHh+G0qgGhMvvNz+K2H6OdHY1M8K5oRdVMBT/nAQ4RAhH4J9uwZcQGGdEtgldbxS1OwrqoeSiZnNnvPW44A8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cF4F5tCo; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cF4F5tCo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1710247352;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KVF+T75LwSeiDiQb6FyOLvE1cqevBb5wDY4YhiPNbGQ=;
-	b=cF4F5tCoWQGTVtZ1JX5I/kUc1t5uBou3wXFFYWL0NHQCztpiBoDqPTZT3Jhcnsaan2jKNp
-	cvTS/GTOtRFWSJTPPV1r42aLaaErGLr2g2TblqbGN/LeItTVvnIe63xoMbbg3MS5F1mz75
-	sPHbWupSoCERTcJyh4V1uZrAM2xEfBM=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-333-IOHNlAdyMXmjYjGSV4CQeg-1; Tue, 12 Mar 2024 08:42:31 -0400
-X-MC-Unique: IOHNlAdyMXmjYjGSV4CQeg-1
-Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-558aafe9bf2so3691272a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Mar 2024 05:42:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710247350; x=1710852150;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KVF+T75LwSeiDiQb6FyOLvE1cqevBb5wDY4YhiPNbGQ=;
-        b=iba/Yj/uhAhRZC9e1rIqQo/z35o6wPacYMjY1VTN5nr/VXt5qFtz5mowxzWqlJ3/ga
-         WdMaFsYahFMhDYEmPmMzoL48labNNwvRJqSQZnXqas32jqrppWubqBbCs1DMOYcHIFyr
-         kUDd3e6JoQmx9+Bz3tCDnseyP4hZmvSDpirxcreuSDZUNj4eM2Nao80g2t7qoWTpX1ZT
-         WhVBcOsD2yf8G8LLvuXqOgQ7+GY0L2eEFXXsbYefi70tYdKjEhhCFc7WXIDY/9ldOw5Y
-         pvfdmx0XZiUhYu/IIvQRVaGbwaBeaRFws5FA5PnX7PWkvLP/JH+8FGa9AnIVqKt7KvU3
-         4Q1A==
-X-Forwarded-Encrypted: i=1; AJvYcCWlPKmH7l8ajryVVZgNlsEgBy7RwCXOP9ioG4U4Pb/m43DUGF+baUllnSSdYcMnWYXWV9IFDgbl2g68gNZxmwyb+pJWb/y8XgUl
-X-Gm-Message-State: AOJu0YzpD61e5+lGLMT4AWdg6lbjK5jXmCdjBnMZMqKb+WPkiTOm8oCl
-	0o84eGAJFz1yKNWtU1SKZjxksXax6SE+nK3aHZ/ppaBhiKrDgzRhRjySVniU7E2MDlFHW6bi9EP
-	1ZUmp6xxl5hU3JBJpz0kuXGfdvR9zT+3AvWhmsEB5l6X/jx1aIDr4cwxo
-X-Received: by 2002:a17:906:f850:b0:a3f:29c:c8fa with SMTP id ks16-20020a170906f85000b00a3f029cc8famr134637ejb.66.1710247349535;
-        Tue, 12 Mar 2024 05:42:29 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFW3bzo7NZebTVEL0evFaE30La4fanl7fiHQtvMNtFbdkYJaaT0rzJHzdyOHCS50THEn4Dl9w==
-X-Received: by 2002:a17:906:f850:b0:a3f:29c:c8fa with SMTP id ks16-20020a170906f85000b00a3f029cc8famr134610ejb.66.1710247349003;
-        Tue, 12 Mar 2024 05:42:29 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id l8-20020a170906230800b00a4131367204sm3811243eja.80.2024.03.12.05.42.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Mar 2024 05:42:28 -0700 (PDT)
-Date: Tue, 12 Mar 2024 13:42:27 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, chandan.babu@oracle.com, ebiggers@kernel.org
-Subject: Re: [PATCH v5 23/24] xfs: add fs-verity ioctls
-Message-ID: <3rovt56zfexku6if3d6rgtyyuu7is735sg4u7aglqxf7dec7rh@declezwqfvpp>
-References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-25-aalbersh@redhat.com>
- <20240307221445.GY1927156@frogsfrogsfrogs>
+	s=arc-20240116; t=1710247499; c=relaxed/simple;
+	bh=fo2PUinZrKOftVrEk38HPvk2sVAXUsDtMB8dDlZidUI=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=KdKGVEJ6iCpJg67Dp7OIYNY6MTf2RwfuXlOf9UXzVicOEPI4P+mIqN/pU9G1JJBrGmzUBmRaMdv3FJfFryZZlwxXHhZImbxh05tUyKppYqGcdxxdTOfRzrPF1kR/pxI3J7ksTf+z5W5BU5SQ6s6N0g9UVfg6MVhOjUxuwVYTTmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TvCyj3NKYz4f3lgS;
+	Tue, 12 Mar 2024 20:44:45 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 28E231A0232;
+	Tue, 12 Mar 2024 20:44:53 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgAX6RFDTvBlbtDmGg--.34133S3;
+	Tue, 12 Mar 2024 20:44:52 +0800 (CST)
+Subject: Re: [PATCH 2/4] xfs: convert delayed extents to unwritten when
+ zeroing post eof blocks
+To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
+ <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, brauner@kernel.org, david@fromorbit.com,
+ tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com
+References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
+ <20240311122255.2637311-3-yi.zhang@huaweicloud.com>
+ <20240311153737.GT1927156@frogsfrogsfrogs> <ZfBI1l2l3TWw0tMV@infradead.org>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <ad9c96de-26f3-6ef5-a2ab-37504d371fb1@huaweicloud.com>
+Date: Tue, 12 Mar 2024 20:44:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240307221445.GY1927156@frogsfrogsfrogs>
+In-Reply-To: <ZfBI1l2l3TWw0tMV@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgAX6RFDTvBlbtDmGg--.34133S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Xr4fJw1rWF18Jr4kCrW5trb_yoWfGrX_ua
+	48AF1rGryDJFZxGanrAr13JrZ2vF10gF4UXryftw42q347tFZ8ZF4UArWFqr1qgasIv34a
+	kryrCrnaga4avjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbIkYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
+	07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
+	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UQzVbUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 2024-03-07 14:14:45, Darrick J. Wong wrote:
-> On Mon, Mar 04, 2024 at 08:10:46PM +0100, Andrey Albershteyn wrote:
-> > Add fs-verity ioctls to enable, dump metadata (descriptor and Merkle
-> > tree pages) and obtain file's digest.
-> > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > ---
-> >  fs/xfs/xfs_ioctl.c | 17 +++++++++++++++++
-> >  1 file changed, 17 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index ab61d7d552fb..4763d20c05ff 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -43,6 +43,7 @@
-> >  #include <linux/mount.h>
-> >  #include <linux/namei.h>
-> >  #include <linux/fileattr.h>
-> > +#include <linux/fsverity.h>
-> >  
-> >  /*
-> >   * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
-> > @@ -2174,6 +2175,22 @@ xfs_file_ioctl(
-> >  		return error;
-> >  	}
-> >  
-> > +	case FS_IOC_ENABLE_VERITY:
-> > +		if (!xfs_has_verity(mp))
-> > +			return -EOPNOTSUPP;
-> > +		return fsverity_ioctl_enable(filp, (const void __user *)arg);
+On 2024/3/12 20:21, Christoph Hellwig wrote:
+> On Mon, Mar 11, 2024 at 08:37:37AM -0700, Darrick J. Wong wrote:
+>>> +convert_delay:
+>>> +	end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
+>>> +	xfs_iunlock(ip, lockmode);
+>>> +	truncate_pagecache_range(inode, offset, XFS_FSB_TO_B(mp, end_fsb));
+>>> +	error = xfs_iomap_write_direct(ip, offset_fsb, end_fsb - offset_fsb,
+>>> +				       flags, &imap, &seq);
+>>
+>> I expected this to be a direct call to xfs_bmapi_convert_delalloc.
+>> What was the reason not for using that?
 > 
-> Isn't @arg already declared as a (void __user *) ?
-> 
-> --D
+> Same here.  The fact that we even convert delalloc reservations in
+> xfs_iomap_write_direct is something that doesn't make much sense
+> given that we're punching out delalloc reservations before starting
+> direct I/O.
 > 
 
-Right, will remove that.
+OK, sure, I will use xfs_bmapi_convert_delalloc() in my next iteration.
 
--- 
-- Andrey
+Thanks，
+Yi.
 
