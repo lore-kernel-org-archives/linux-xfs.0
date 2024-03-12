@@ -1,31 +1,41 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3471B13B2BF;
-	Tue, 12 Mar 2024 21:06:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24295142907
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Mar 2024 21:20:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710277578; cv=none; b=aSYPtqLGXtVC/fWK7n3vIW/Qukp45IQmXq/g2cERUVH+EozfsiI20ItK0pIBEj0k7rnY88N99UKrM6qMQ2rYYkrfiTROKepVeGiYq8OmOOuJteaivUxc9FI8lDx6hj1z6J9/oRybl0z06Ouju36pV/68t5Q6wKfVhmZUDCFdhJc=
+	t=1710278433; cv=none; b=ir5oBaqpUoL6pMKPyTQ9+G0c4VFPMxjYPLgZn6GNa4u1dZsEpp0Ug/fWqxR8xQOShMbZrHQF4BPHCVcaYKkQbof4CfGRenFDpE4L0p6y3/MI/KR98XYm39wffDobeEyc1lyJ+T3z9NycoSUjq3/WT+3bnArzcICeozIu39MKln4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710277578; c=relaxed/simple;
-	bh=NZtNQe8FfSLe7l5huBX7qHg3m0jeJ/yz/2Nr1uH4Apw=;
+	s=arc-20240116; t=1710278433; c=relaxed/simple;
+	bh=h9/tykMqzC/MHdurxfvsjwQoU9rUsCfJZy5CMXXdlRw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TcTRKis85VFhJpJhR+QyNDZkd5/B599yRM1b2I/AYC4PBZ+3u2jQLSFtKkLYbTw2HPDlNkSUSIf7HBQYIrP4YVvEwnluBs/F+v11PdjlibZVnASUfQM0boeKXLORkWcru8x8dkq6FeYJUySGitEdmnahpf0Nq+Ye8y2d490olGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9551768BFE; Tue, 12 Mar 2024 22:06:05 +0100 (CET)
-Date: Tue, 12 Mar 2024 22:06:05 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] block: add a bio_chain_and_submit helper
-Message-ID: <20240312210605.GA1500@lst.de>
-References: <20240312144532.1044427-1-hch@lst.de> <20240312144532.1044427-3-hch@lst.de> <ZfBr91m4oQS_VYFg@kbusch-mbp.mynextlight.net>
+	 Content-Type:Content-Disposition:In-Reply-To; b=rS2Syku6X0qCimDL222Z6J9l9hQP8irIwSF9pvIJbmDNuU4kvfVO+cyav0GHHXR5nX9vPjm/nxPYoe2QpOnYIkWTdO85IoYiL02Iz35JZ0Om7mNztB28iVGcOf0iqXDLsFRy1lsJU20MRWIb7UrPaquE5QKYsC1jP7M9Ym5xFWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bkDLcWSI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bkDLcWSI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Y6mZIGyETUk24GFzYvumESxUxxGrvq1+vc7oSp2F0I4=; b=bkDLcWSI/KqAL30JzYj7OiPTsc
+	W8Bl8WaaPWYP3Sb0tV9iQ3TURI0NOfFH+gzx4dk7Q04Strk5CUHU7crz6wlX6GkNdOXv3YZb4SPFC
+	sfPWIwNTUmIxftQpTIqBDizwMs8rFmpzNhjIxNOfZIB/1BxnkD1u1RrG3kXXLA8U2UwwsqZJh5DKQ
+	AwOB5f3l8bHR8G8d1eEoLAYPOj/1d3ifIEmwSNE8G3liW2z32aWudLZwLU1nAaEZ9KjFySd5rvJ5R
+	xmLaZmhS6WUOf43JzEW4Sr0m3USioLq8l/a/NNJ4OnGc1jIgq6PL7rZfdFnX+UpDbptSzTtm26veO
+	SUZGCwiQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rk9Xv-00000007aBG-0wHY;
+	Tue, 12 Mar 2024 21:20:27 +0000
+Date: Tue, 12 Mar 2024 14:20:27 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] misc: fix string buffer compile warnings
+Message-ID: <ZfDHG7arXUYlKGcd@infradead.org>
+References: <20240312161242.GA1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,24 +44,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZfBr91m4oQS_VYFg@kbusch-mbp.mynextlight.net>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240312161242.GA1927156@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Mar 12, 2024 at 08:51:35AM -0600, Keith Busch wrote:
-> > +
-> > +struct bio *blk_next_bio(struct bio *bio, struct block_device *bdev,
-> > +		unsigned int nr_pages, blk_opf_t opf, gfp_t gfp)
-> > +{
-> > +	return bio_chain_and_submit(bio, bio_alloc(bdev, nr_pages, opf, gfp));
-> > +}
-> 
-> I realize you're not changing any behavior here, but I want to ask, is
-> bio_alloc() always guaranteed to return a valid bio? It sure looks like
-> it can return NULL under some uncommon conditions, but I can't find
-> anyone checking the result. So I guess it's safe?
+Funnily enough I just started looking into xfsdump warnings a few
+minutes ago..
 
-bio_alloc can only fail if we don't wait for allocations, that is if
-__GFP_DIRECT_RECLAIM isn't set.
+> --- a/common/global.c
+> +++ b/common/global.c
+> @@ -82,7 +82,7 @@ global_hdr_alloc(int argc, char *argv[])
+>  
+>  	/* fill in the magic number
+>  	 */
+> -	strncpy(ghdrp->gh_magic, GLOBAL_HDR_MAGIC, GLOBAL_HDR_MAGIC_SZ);
+> +	memcpy(ghdrp->gh_magic, GLOBAL_HDR_MAGIC, GLOBAL_HDR_MAGIC_SZ);
 
-We could an assert here.  Or work on killing the gfp_flags argument
-and just add a bio_alloc_nowait for the few cases that need it.
+This chunk and all the other ones switching to memcpy where we have
+a fixed size look good and impossible to improve on to me.
+
+> -	sprintf(question,
+> +	snprintf(question, sizeof(question),
+>  		 "pre-erase (-%c) option specified "
+>  		 "and non-blank media encountered:\n"
+>  		 "please confirm media erase "
+> diff --git a/invutil/fstab.c b/invutil/fstab.c
+
+For this and a few others that just s(n)printf I wonder if just
+switching to asprintf and dynamically allocating the buffer is
+the right thing to do.  That's a GNU/BSD extension, but we probably
+don't care about anything else.
+
+> index 88d849e..56132e1 100644
+> --- a/invutil/fstab.c
+> +++ b/invutil/fstab.c
+> @@ -149,7 +149,7 @@ fstab_select(WINDOW *win, node_t *current, node_t *list)
+>  int
+>  fstab_highlight(WINDOW *win, node_t *current, node_t *list)
+>  {
+> -    static char txt[256];
+> +    static char txt[512];
+
+And for put_info_line/put_line I suspect just passing a format
+string is the best thing to do, as this avoids the extra
+snprintf and buffer entirely.  That's in fact what I had just started
+on.
+
