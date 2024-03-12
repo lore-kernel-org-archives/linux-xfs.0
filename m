@@ -1,37 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3047D3F9
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Mar 2024 16:12:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B048C7D3E9;
+	Tue, 12 Mar 2024 16:21:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710259964; cv=none; b=X46uwECWqltY7kBa0+V8Ofy0jZJKByq+wuJYE4THKWBZY+k7sq01TdZrjP8uiUtz6aMNevEqijQTRVePiEsx9ijspZjGLQHAnJeWat62KV3L//1D8+BNZZSNLcWvJRO0eArq/e8te/kFrnpvzvW27dPUTE0mZqBopxaH80QPUhA=
+	t=1710260511; cv=none; b=VzGnjkOoKiYFYMbAv1vzToKrCaa6hHX9cXrz3RauK+bU2EZ/b1YJwxJGFbnLwF7f09QHj9joMchBjWRgS0wv9fauCExyMryAf+CZnz4a7BkKCrSEqPJHfyVsA0R8A6Xg4EXfQF2WR5BCPwbtYpfmWZYe6ymD06byEy5kN+K1yuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710259964; c=relaxed/simple;
-	bh=dGhsZ8px9E6KxaOQAw2b3U4rGcm4ARU505M1jOxkr2A=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=VCR9+y92QRY8g24cFt9/bERvSMrnK+HmN/BOm26UY04MNGbADxc+evdpXYgikzZ76zKu0wLriXl3jWO//xP6VsGNYUoYBgzSX2D23HtH7Fo40HbP/55idJGCZOXebAv/UXNZlSg6wBeyJXoWTeKY3mdCRbH/hT2rnyWpVCE+iDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kb1fMth2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710260511; c=relaxed/simple;
+	bh=9gouWIccOcWNOC2Wg5Zduc51A/XGK7M/IeuGTXAVNPA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tYvlVMxptSDu09AsYMD1BqqrQP8YuR01JXtWyAUaC2ovqvlztTVykrZmDJP14ZOvr33hM4oqJ0pseHTNbdrn9nib10e02Z3/aNg5f/25ud7m7OwHgP7Pl0I+1DCu4Nm9eFt4iUa0ldk3lv8+rldqLSP8pM1ih1A1IKe/JYipPXQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j3Avj8mx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kb1fMth2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA11FC433F1;
-	Tue, 12 Mar 2024 16:12:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j3Avj8mx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33A9CC433F1;
+	Tue, 12 Mar 2024 16:21:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710259964;
-	bh=dGhsZ8px9E6KxaOQAw2b3U4rGcm4ARU505M1jOxkr2A=;
-	h=Date:From:To:Cc:Subject:From;
-	b=kb1fMth2qqYx0MWqXjKTP3uwZylBkpHliBHE1EcCluiS1fBpVlNcaystgD0D37IXZ
-	 7NhJB0vaSJCdDmdGtOqp4LsQByf7Z4S3JVsUOJXDEkgH/+T12xF3AnlhlJsQGP1DC8
-	 olQrYL7PKfAYy9Felb9ygToA2PrqSiqrVOnVydUQ14cHXbS5Pxmk/fYYAE79/62Vzk
-	 MSXEk5T1TRcdrVfd2KyH9L0uOrW1vsUi0r9Krng3HzkHgkzqDA9LTJqAoS/QnBi7G7
-	 zHm3PnPCJQ8BtQ/CBza15n9Og4vp+3WoUcPXSLddS1z+tT4ZnhF9eUqZCnwFPSztiw
-	 d0bKYzi2vezOg==
-Date: Tue, 12 Mar 2024 09:12:42 -0700
+	s=k20201202; t=1710260511;
+	bh=9gouWIccOcWNOC2Wg5Zduc51A/XGK7M/IeuGTXAVNPA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=j3Avj8mxcInDVki81FNuFDqI9wRb4UlzVI1KiH5d6hqGyTHuRl9N0LUMQ7bjp51ah
+	 P1mKEguRw8x9PqbEuxpGa6iMlzCcY1OZadVQWNsj5KOWjqmeVX60ZtIN9lWzxIyrKX
+	 Ly/NI5INZNUapKVUUc+pl1NSWcp8OY8YhIIavzq1ZxQUcOHHgIJtsX6GGG4XrKtO07
+	 sIsDR7A+gKxdlgCBoMa9T7zQ3w2q6zM0pqqEBh0Iy63CP6e0j6zYDAcMflyGeh5ZWE
+	 oAP7HyvYBO83/f1xqmzuNGEH8CAAyz0cVHqlrRKpJpUi+7sHMFggkaKZ4NVQThtU6E
+	 +zFaMlWjfvjDA==
+Date: Tue, 12 Mar 2024 09:21:50 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] misc: fix string buffer compile warnings
-Message-ID: <20240312161242.GA1927156@frogsfrogsfrogs>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
+	david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
+	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
+Subject: Re: [PATCH 2/4] xfs: convert delayed extents to unwritten when
+ zeroing post eof blocks
+Message-ID: <20240312162150.GB1927156@frogsfrogsfrogs>
+References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
+ <20240311122255.2637311-3-yi.zhang@huaweicloud.com>
+ <20240311153737.GT1927156@frogsfrogsfrogs>
+ <aab454d0-d8f3-61c8-0d14-a5ae4c35746e@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,172 +48,131 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <aab454d0-d8f3-61c8-0d14-a5ae4c35746e@huaweicloud.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Mar 12, 2024 at 08:31:58PM +0800, Zhang Yi wrote:
+> On 2024/3/11 23:37, Darrick J. Wong wrote:
+> > On Mon, Mar 11, 2024 at 08:22:53PM +0800, Zhang Yi wrote:
+> >> From: Zhang Yi <yi.zhang@huawei.com>
+> >>
+> >> Current clone operation could be non-atomic if the destination of a file
+> >> is beyond EOF, user could get a file with corrupted (zeroed) data on
+> >> crash.
+> >>
+> >> The problem is about to pre-alloctions. If you write some data into a
+> >> file [A, B) (the position letters are increased one by one), and xfs
+> >> could pre-allocate some blocks, then we get a delayed extent [A, D).
+> >> Then the writeback path allocate blocks and convert this delayed extent
+> >> [A, C) since lack of enough contiguous physical blocks, so the extent
+> >> [C, D) is still delayed. After that, both the in-memory and the on-disk
+> >> file size are B. If we clone file range into [E, F) from another file,
+> >> xfs_reflink_zero_posteof() would call iomap_zero_range() to zero out the
+> >> range [B, E) beyond EOF and flush range. Since [C, D) is still a delayed
+> >> extent, it will be zeroed and the file's in-memory && on-disk size will
+> >> be updated to D after flushing and before doing the clone operation.
+> >> This is wrong, because user can user can see the size change and read
+> >> zeros in the middle of the clone operation.
+> >>
+> >> We need to keep the in-memory and on-disk size before the clone
+> >> operation starts, so instead of writing zeroes through the page cache
+> >> for delayed ranges beyond EOF, we convert these ranges to unwritten and
+> >> invalidating any cached data over that range beyond EOF.
+> >>
+> >> Suggested-by: Dave Chinner <david@fromorbit.com>
+> >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> >> ---
+> >>  fs/xfs/xfs_iomap.c | 29 +++++++++++++++++++++++++++++
+> >>  1 file changed, 29 insertions(+)
+> >>
+> >> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> >> index ccf83e72d8ca..2b2aace25355 100644
+> >> --- a/fs/xfs/xfs_iomap.c
+> >> +++ b/fs/xfs/xfs_iomap.c
+> >> @@ -957,6 +957,7 @@ xfs_buffered_write_iomap_begin(
+> >>  	struct xfs_mount	*mp = ip->i_mount;
+> >>  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> >>  	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
+> >> +	xfs_fileoff_t		eof_fsb = XFS_B_TO_FSBT(mp, XFS_ISIZE(ip));
+> >>  	struct xfs_bmbt_irec	imap, cmap;
+> >>  	struct xfs_iext_cursor	icur, ccur;
+> >>  	xfs_fsblock_t		prealloc_blocks = 0;
+> >> @@ -1035,6 +1036,22 @@ xfs_buffered_write_iomap_begin(
+> >>  	}
+> >>  
+> >>  	if (imap.br_startoff <= offset_fsb) {
+> >> +		/*
+> >> +		 * For zeroing out delayed allocation extent, we trim it if
+> >> +		 * it's partial beyonds EOF block, or convert it to unwritten
+> >> +		 * extent if it's all beyonds EOF block.
+> >> +		 */
+> >> +		if ((flags & IOMAP_ZERO) &&
+> >> +		    isnullstartblock(imap.br_startblock)) {
+> >> +			if (offset_fsb > eof_fsb)
+> >> +				goto convert_delay;
+> >> +			if (end_fsb > eof_fsb) {
+> >> +				end_fsb = eof_fsb + 1;
+> >> +				xfs_trim_extent(&imap, offset_fsb,
+> >> +						end_fsb - offset_fsb);
+> >> +			}
+> >> +		}
+> >> +
+> >>  		/*
+> >>  		 * For reflink files we may need a delalloc reservation when
+> >>  		 * overwriting shared extents.   This includes zeroing of
+> >> @@ -1158,6 +1175,18 @@ xfs_buffered_write_iomap_begin(
+> >>  	xfs_iunlock(ip, lockmode);
+> >>  	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
+> >>  
+> >> +convert_delay:
+> >> +	end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
+> >> +	xfs_iunlock(ip, lockmode);
+> >> +	truncate_pagecache_range(inode, offset, XFS_FSB_TO_B(mp, end_fsb));
+> >> +	error = xfs_iomap_write_direct(ip, offset_fsb, end_fsb - offset_fsb,
+> >> +				       flags, &imap, &seq);
+> > 
+> > I expected this to be a direct call to xfs_bmapi_convert_delalloc.
+> > What was the reason not for using that?
+> > 
+> 
+> It's because xfs_bmapi_convert_delalloc() isn't guarantee to convert
+> enough blocks once a time, it may convert insufficient blocks since lack
+> of enough contiguous free physical blocks. If we are going to use it, I
+> suppose we need to introduce a new helper something like
+> xfs_convert_blocks(), add a loop to do the conversion.
 
-Fix various minor compiler warnings (gcc 12.2, Debian 12):
+I thought xfs_bmapi_convert_delalloc passes out (via @iomap) the extent
+that xfs_bmapi_allocate (or anyone else) allocated (bma.got).  If that
+mapping is shorter, won't xfs_buffered_write_iomap_begin pass the
+shortened mapping out to the iomap machinery?  In which case that
+iomap_iter loop will call ->iomap_begin on the unfinished delalloc
+conversion work?
 
-Widen various char arrays so that we don't get complaints about buffer
-overflows when doing snprintf.
+> xfs_iomap_write_direct() has done all the work of converting, but the
+> name of this function is non-obviousness than xfs_bmapi_convert_delalloc(),
+> I can change to use it if you think xfs_bmapi_convert_delalloc() is
+> better. :)
 
-Use snprintf over sprintf.
+Yes.
 
-Use memcpy instead of strncpy when copying fixed-width label fields.
+--D
 
-Fix an unused variable warning.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/global.c   |    2 +-
- dump/content.c    |    4 ++--
- invutil/fstab.c   |    2 +-
- invutil/invidx.c  |    4 ++--
- invutil/menu.c    |    2 +-
- invutil/stobj.c   |    6 +++---
- restore/content.c |    5 ++---
- 7 files changed, 12 insertions(+), 13 deletions(-)
-
-diff --git a/common/global.c b/common/global.c
-index 6a4e348..53fb4e0 100644
---- a/common/global.c
-+++ b/common/global.c
-@@ -82,7 +82,7 @@ global_hdr_alloc(int argc, char *argv[])
- 
- 	/* fill in the magic number
- 	 */
--	strncpy(ghdrp->gh_magic, GLOBAL_HDR_MAGIC, GLOBAL_HDR_MAGIC_SZ);
-+	memcpy(ghdrp->gh_magic, GLOBAL_HDR_MAGIC, GLOBAL_HDR_MAGIC_SZ);
- 
- 	/* fill in the hdr version
- 	 */
-diff --git a/dump/content.c b/dump/content.c
-index 6462267..a0d3a84 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -6348,7 +6348,7 @@ static bool_t
- Media_prompt_erase(drive_t *drivep)
- {
- 	fold_t fold;
--	char question[100];
-+	char question[256];
- 	char *preamblestr[PREAMBLEMAX];
- 	size_t preamblecnt;
- 	char *querystr[QUERYMAX];
-@@ -6375,7 +6375,7 @@ Media_prompt_erase(drive_t *drivep)
- 
- 	/* query: ask if overwrite ok
- 	 */
--	sprintf(question,
-+	snprintf(question, sizeof(question),
- 		 "pre-erase (-%c) option specified "
- 		 "and non-blank media encountered:\n"
- 		 "please confirm media erase "
-diff --git a/invutil/fstab.c b/invutil/fstab.c
-index 88d849e..56132e1 100644
---- a/invutil/fstab.c
-+++ b/invutil/fstab.c
-@@ -149,7 +149,7 @@ fstab_select(WINDOW *win, node_t *current, node_t *list)
- int
- fstab_highlight(WINDOW *win, node_t *current, node_t *list)
- {
--    static char txt[256];
-+    static char txt[512];
-     char uuidstr[UUID_STR_LEN + 1];
-     data_t *d;
-     invt_fstab_t *fstabentry;
-diff --git a/invutil/invidx.c b/invutil/invidx.c
-index 5874e8d..0fb55c5 100644
---- a/invutil/invidx.c
-+++ b/invutil/invidx.c
-@@ -115,7 +115,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 	struct stat s;
- 	char dst_stobjfile[MAXPATHLEN];
- 	char *stobjfile;
--	char cmd[1024];
-+	char cmd[(MAXPATHLEN * 2) + 16];
- 
- 	snprintf(dst_idxfile, sizeof(dst_idxfile), "%s/%s", inventory_path, basename(invidx_file[fidx].name));
- 
-@@ -688,7 +688,7 @@ invidx_select(WINDOW *win, node_t *current, node_t *list)
- int
- invidx_highlight(WINDOW *win, node_t *current, node_t *list)
- {
--    static char txt[256];
-+    static char txt[512];
-     data_t *d;
-     invt_entry_t *invtentry;
- 
-diff --git a/invutil/menu.c b/invutil/menu.c
-index 81baa42..89a350c 100644
---- a/invutil/menu.c
-+++ b/invutil/menu.c
-@@ -101,7 +101,7 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
-     int c;
-     int k;
-     int quit;
--    char txt[256];
-+    char txt[512];
-     node_t *current;
-     node_t *last;
-     data_t *d;
-diff --git a/invutil/stobj.c b/invutil/stobj.c
-index 2912e0c..852f160 100644
---- a/invutil/stobj.c
-+++ b/invutil/stobj.c
-@@ -171,7 +171,7 @@ stobjsess_commit(WINDOW *win, node_t *current, node_t *list)
- int
- stobjsess_highlight(WINDOW *win, node_t *current, node_t *list)
- {
--    static char txt[256];
-+    static char txt[512];
-     char uuidstr[UUID_STR_LEN + 1];
-     data_t *d;
-     invt_seshdr_t *stobjhdr;
-@@ -210,7 +210,7 @@ stobjsess_highlight(WINDOW *win, node_t *current, node_t *list)
- int
- stobjstrm_highlight(WINDOW *win, node_t *current, node_t *list)
- {
--    static char txt[256];
-+    static char txt[512];
-     data_t *d;
-     invt_stream_t *stobjstrm;
- 
-@@ -246,7 +246,7 @@ stobjstrm_highlight(WINDOW *win, node_t *current, node_t *list)
- int
- stobjmed_highlight(WINDOW *win, node_t *current, node_t *list)
- {
--    static char txt[256];
-+    static char txt[512];
-     char uuidstr[UUID_STR_LEN + 1];
-     data_t *d;
-     invt_mediafile_t *stobjmed;
-diff --git a/restore/content.c b/restore/content.c
-index 7ec3a4d..5536411 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -5077,7 +5077,7 @@ pi_insertfile(ix_t drivecnt,
- 	     &&
- 	     ! DH2O(objh)->o_idlabvalpr) {
- 		uuid_copy(DH2O(objh)->o_id, *mediaidp);
--		strncpy(DH2O(objh)->o_lab,
-+		memcpy(DH2O(objh)->o_lab,
- 			 medialabel,
- 			 sizeof(DH2O(objh)->o_lab));
- 		DH2O(objh)->o_idlabvalpr = BOOL_TRUE;
-@@ -5107,7 +5107,7 @@ pi_insertfile(ix_t drivecnt,
- 	     &&
- 	     ! DH2O(prevobjh)->o_idlabvalpr) {
- 		uuid_copy(DH2O(prevobjh)->o_id, *prevmediaidp);
--		strncpy(DH2O(prevobjh)->o_lab,
-+		memcpy(DH2O(prevobjh)->o_lab,
- 			       prevmedialabel,
- 			       sizeof(DH2O(prevobjh)->o_lab));
- 		DH2O(prevobjh)->o_idlabvalpr = BOOL_TRUE;
-@@ -8632,7 +8632,6 @@ restore_extattr(drive_t *drivep,
- {
- 	drive_ops_t *dop = drivep->d_opsp;
- 	extattrhdr_t *ahdrp = (extattrhdr_t *)get_extattrbuf(drivep->d_index);
--	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
- 	bstat_t *bstatp = &fhdrp->fh_stat;
- 	bool_t isfilerestored = BOOL_FALSE;
- 
+> Thanks,
+> Yi.
+> 
+> > --D
+> > 
+> >> +	if (error)
+> >> +		return error;
+> >> +
+> >> +	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
+> >> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, IOMAP_F_NEW, seq);
+> >> +
+> >>  found_cow:
+> >>  	seq = xfs_iomap_inode_sequence(ip, 0);
+> >>  	if (imap.br_startoff <= offset_fsb) {
+> >> -- 
+> >> 2.39.2
+> >>
+> >>
+> 
+> 
