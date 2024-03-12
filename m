@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B048C7D3E9;
-	Tue, 12 Mar 2024 16:21:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBDC17C6DE;
+	Tue, 12 Mar 2024 16:24:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710260511; cv=none; b=VzGnjkOoKiYFYMbAv1vzToKrCaa6hHX9cXrz3RauK+bU2EZ/b1YJwxJGFbnLwF7f09QHj9joMchBjWRgS0wv9fauCExyMryAf+CZnz4a7BkKCrSEqPJHfyVsA0R8A6Xg4EXfQF2WR5BCPwbtYpfmWZYe6ymD06byEy5kN+K1yuQ=
+	t=1710260649; cv=none; b=C3h+gLmP7hrnLq3YPEk8iO49TzjzZUlGTWBzZkYInPYbNhNZx5Itmv2ggY62Ne2E8c7UFwYptZBqQygNDkpfQutMyYErL5w4LwraIxV4mvEbguTguiF6yuLGkN48zLeYM1NvNCqMjki0IkROtY88MGrl+dajMSlvsJgLQO8RFoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710260511; c=relaxed/simple;
-	bh=9gouWIccOcWNOC2Wg5Zduc51A/XGK7M/IeuGTXAVNPA=;
+	s=arc-20240116; t=1710260649; c=relaxed/simple;
+	bh=8n2fKf4FY7dMDRLjK5X8wbktc/tbVnl2rTOrGpLEM1k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tYvlVMxptSDu09AsYMD1BqqrQP8YuR01JXtWyAUaC2ovqvlztTVykrZmDJP14ZOvr33hM4oqJ0pseHTNbdrn9nib10e02Z3/aNg5f/25ud7m7OwHgP7Pl0I+1DCu4Nm9eFt4iUa0ldk3lv8+rldqLSP8pM1ih1A1IKe/JYipPXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j3Avj8mx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XlpsjyzgWpBt0JlaCCYtH12yXuYwz/g5IU5Nwrhgz6tW1W/BHQhZkSHuoQXguMQDwOok89BSnLWerOK1lskGjvpMhYLGjQy9rFfi3SGWshjf1iK9rLHaJx3Nt2/HNdsuCguLWA9csCiAi13p6OA25ghZ4TI2mD3Xtgz9zPP64E8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cCeIlxrh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j3Avj8mx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33A9CC433F1;
-	Tue, 12 Mar 2024 16:21:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cCeIlxrh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C614C433F1;
+	Tue, 12 Mar 2024 16:24:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710260511;
-	bh=9gouWIccOcWNOC2Wg5Zduc51A/XGK7M/IeuGTXAVNPA=;
+	s=k20201202; t=1710260648;
+	bh=8n2fKf4FY7dMDRLjK5X8wbktc/tbVnl2rTOrGpLEM1k=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j3Avj8mxcInDVki81FNuFDqI9wRb4UlzVI1KiH5d6hqGyTHuRl9N0LUMQ7bjp51ah
-	 P1mKEguRw8x9PqbEuxpGa6iMlzCcY1OZadVQWNsj5KOWjqmeVX60ZtIN9lWzxIyrKX
-	 Ly/NI5INZNUapKVUUc+pl1NSWcp8OY8YhIIavzq1ZxQUcOHHgIJtsX6GGG4XrKtO07
-	 sIsDR7A+gKxdlgCBoMa9T7zQ3w2q6zM0pqqEBh0Iy63CP6e0j6zYDAcMflyGeh5ZWE
-	 oAP7HyvYBO83/f1xqmzuNGEH8CAAyz0cVHqlrRKpJpUi+7sHMFggkaKZ4NVQThtU6E
-	 +zFaMlWjfvjDA==
-Date: Tue, 12 Mar 2024 09:21:50 -0700
+	b=cCeIlxrh8lgfHk4zmd8tyjDO0plw4Y81Fpmn10i6qA5XBGMCvt00hBI0/qqg26lkW
+	 rJJXoywLn5xbOGQcb6PCqe8yrCmcxghgnmjYeXfLI93WZMNCdQsnFEld3J6y6XDBRy
+	 abQNNGWQcx7NuM5isTdmHr5FqmPeK7d5MmZ3ttSlJCHEGaG3IHdlX8agCbpNeuIQOa
+	 WkI/S4u56GYnIuTLJahUPG5uIkIIyUC2R8K7OXdB6eeZoIl3xCMG5TEDw1pSE+/tlW
+	 P0Gw4LM99S1xNloylybcBYv2qyeLwNEw7Jaakv84EGXE8OO3YdtUo7aB5SQvzF6sCP
+	 sTQDpq+YcScgQ==
+Date: Tue, 12 Mar 2024 09:24:07 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Zhang Yi <yi.zhang@huaweicloud.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
 	david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
 	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH 2/4] xfs: convert delayed extents to unwritten when
- zeroing post eof blocks
-Message-ID: <20240312162150.GB1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/4] iomap: don't increase i_size if it's not a write
+ operation
+Message-ID: <20240312162407.GC1927156@frogsfrogsfrogs>
 References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
- <20240311122255.2637311-3-yi.zhang@huaweicloud.com>
- <20240311153737.GT1927156@frogsfrogsfrogs>
- <aab454d0-d8f3-61c8-0d14-a5ae4c35746e@huaweicloud.com>
+ <20240311122255.2637311-4-yi.zhang@huaweicloud.com>
+ <20240311154829.GU1927156@frogsfrogsfrogs>
+ <4a9e607e-36d1-4ea7-1754-c443906b3a1c@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,131 +48,163 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aab454d0-d8f3-61c8-0d14-a5ae4c35746e@huaweicloud.com>
+In-Reply-To: <4a9e607e-36d1-4ea7-1754-c443906b3a1c@huaweicloud.com>
 
-On Tue, Mar 12, 2024 at 08:31:58PM +0800, Zhang Yi wrote:
-> On 2024/3/11 23:37, Darrick J. Wong wrote:
-> > On Mon, Mar 11, 2024 at 08:22:53PM +0800, Zhang Yi wrote:
+On Tue, Mar 12, 2024 at 08:59:15PM +0800, Zhang Yi wrote:
+> On 2024/3/11 23:48, Darrick J. Wong wrote:
+> > On Mon, Mar 11, 2024 at 08:22:54PM +0800, Zhang Yi wrote:
 > >> From: Zhang Yi <yi.zhang@huawei.com>
 > >>
-> >> Current clone operation could be non-atomic if the destination of a file
-> >> is beyond EOF, user could get a file with corrupted (zeroed) data on
-> >> crash.
-> >>
-> >> The problem is about to pre-alloctions. If you write some data into a
-> >> file [A, B) (the position letters are increased one by one), and xfs
-> >> could pre-allocate some blocks, then we get a delayed extent [A, D).
-> >> Then the writeback path allocate blocks and convert this delayed extent
-> >> [A, C) since lack of enough contiguous physical blocks, so the extent
-> >> [C, D) is still delayed. After that, both the in-memory and the on-disk
-> >> file size are B. If we clone file range into [E, F) from another file,
-> >> xfs_reflink_zero_posteof() would call iomap_zero_range() to zero out the
-> >> range [B, E) beyond EOF and flush range. Since [C, D) is still a delayed
-> >> extent, it will be zeroed and the file's in-memory && on-disk size will
-> >> be updated to D after flushing and before doing the clone operation.
-> >> This is wrong, because user can user can see the size change and read
-> >> zeros in the middle of the clone operation.
-> >>
-> >> We need to keep the in-memory and on-disk size before the clone
-> >> operation starts, so instead of writing zeroes through the page cache
-> >> for delayed ranges beyond EOF, we convert these ranges to unwritten and
-> >> invalidating any cached data over that range beyond EOF.
-> >>
-> >> Suggested-by: Dave Chinner <david@fromorbit.com>
-> >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> >> ---
-> >>  fs/xfs/xfs_iomap.c | 29 +++++++++++++++++++++++++++++
-> >>  1 file changed, 29 insertions(+)
-> >>
-> >> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> >> index ccf83e72d8ca..2b2aace25355 100644
-> >> --- a/fs/xfs/xfs_iomap.c
-> >> +++ b/fs/xfs/xfs_iomap.c
-> >> @@ -957,6 +957,7 @@ xfs_buffered_write_iomap_begin(
-> >>  	struct xfs_mount	*mp = ip->i_mount;
-> >>  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> >>  	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
-> >> +	xfs_fileoff_t		eof_fsb = XFS_B_TO_FSBT(mp, XFS_ISIZE(ip));
-> >>  	struct xfs_bmbt_irec	imap, cmap;
-> >>  	struct xfs_iext_cursor	icur, ccur;
-> >>  	xfs_fsblock_t		prealloc_blocks = 0;
-> >> @@ -1035,6 +1036,22 @@ xfs_buffered_write_iomap_begin(
-> >>  	}
-> >>  
-> >>  	if (imap.br_startoff <= offset_fsb) {
-> >> +		/*
-> >> +		 * For zeroing out delayed allocation extent, we trim it if
-> >> +		 * it's partial beyonds EOF block, or convert it to unwritten
-> >> +		 * extent if it's all beyonds EOF block.
-> >> +		 */
-> >> +		if ((flags & IOMAP_ZERO) &&
-> >> +		    isnullstartblock(imap.br_startblock)) {
-> >> +			if (offset_fsb > eof_fsb)
-> >> +				goto convert_delay;
-> >> +			if (end_fsb > eof_fsb) {
-> >> +				end_fsb = eof_fsb + 1;
-> >> +				xfs_trim_extent(&imap, offset_fsb,
-> >> +						end_fsb - offset_fsb);
-> >> +			}
-> >> +		}
-> >> +
-> >>  		/*
-> >>  		 * For reflink files we may need a delalloc reservation when
-> >>  		 * overwriting shared extents.   This includes zeroing of
-> >> @@ -1158,6 +1175,18 @@ xfs_buffered_write_iomap_begin(
-> >>  	xfs_iunlock(ip, lockmode);
-> >>  	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
-> >>  
-> >> +convert_delay:
-> >> +	end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
-> >> +	xfs_iunlock(ip, lockmode);
-> >> +	truncate_pagecache_range(inode, offset, XFS_FSB_TO_B(mp, end_fsb));
-> >> +	error = xfs_iomap_write_direct(ip, offset_fsb, end_fsb - offset_fsb,
-> >> +				       flags, &imap, &seq);
+> >> Increase i_size in iomap_zero_range() and iomap_unshare_iter() is not
+> >> needed, the caller should handle it. Especially, when truncate partial
+> >> block, we could not increase i_size beyond the new EOF here. It doesn't
+> >> affect xfs and gfs2 now because they set the new file size after zero
+> >> out, it doesn't matter that a transient increase in i_size, but it will
+> >> affect ext4 because it set file size before truncate.
 > > 
-> > I expected this to be a direct call to xfs_bmapi_convert_delalloc.
-> > What was the reason not for using that?
+> >>                                                       At the same time,
+> >> iomap_write_failed() is also not needed for above two cases too, so
+> >> factor them out and move them to iomap_write_iter() and
+> >> iomap_zero_iter().
+> > 
+> > This change should be a separate patch with its own justification.
+> > Which is, AFAICT, something along the lines of:
+> > 
+> > "Unsharing and zeroing can only happen within EOF, so there is never a
+> > need to perform posteof pagecache truncation if write begin fails."
+> 
+> Sure.
+> 
+> > 
+> >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> > 
+> > Doesn't this patch fix a bug in ext4?
+> 
+> Yeah, the same as Christoph answered.
+> 
+> > 
+> >> ---
+> >>  fs/iomap/buffered-io.c | 59 +++++++++++++++++++++---------------------
+> >>  1 file changed, 30 insertions(+), 29 deletions(-)
+> >>
+> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> >> index 093c4515b22a..19f91324c690 100644
+> >> --- a/fs/iomap/buffered-io.c
+> >> +++ b/fs/iomap/buffered-io.c
+> >> @@ -786,7 +786,6 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
+> >>  
+> >>  out_unlock:
+> >>  	__iomap_put_folio(iter, pos, 0, folio);
+> >> -	iomap_write_failed(iter->inode, pos, len);
+> >>  
+> >>  	return status;
+> >>  }
+> >> @@ -838,34 +837,13 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+> >>  		size_t copied, struct folio *folio)
+> >>  {
+> >>  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> >> -	loff_t old_size = iter->inode->i_size;
+> >> -	size_t ret;
+> >> -
+> >> -	if (srcmap->type == IOMAP_INLINE) {
+> >> -		ret = iomap_write_end_inline(iter, folio, pos, copied);
+> >> -	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+> >> -		ret = block_write_end(NULL, iter->inode->i_mapping, pos, len,
+> >> -				copied, &folio->page, NULL);
+> >> -	} else {
+> >> -		ret = __iomap_write_end(iter->inode, pos, len, copied, folio);
+> >> -	}
+> >>  
+> >> -	/*
+> >> -	 * Update the in-memory inode size after copying the data into the page
+> >> -	 * cache.  It's up to the file system to write the updated size to disk,
+> >> -	 * preferably after I/O completion so that no stale data is exposed.
+> >> -	 */
+> >> -	if (pos + ret > old_size) {
+> >> -		i_size_write(iter->inode, pos + ret);
+> >> -		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+> >> -	}
+> >> -	__iomap_put_folio(iter, pos, ret, folio);
+> >> -
+> >> -	if (old_size < pos)
+> >> -		pagecache_isize_extended(iter->inode, old_size, pos);
+> >> -	if (ret < len)
+> >> -		iomap_write_failed(iter->inode, pos + ret, len - ret);
+> >> -	return ret;
+> >> +	if (srcmap->type == IOMAP_INLINE)
+> >> +		return iomap_write_end_inline(iter, folio, pos, copied);
+> >> +	if (srcmap->flags & IOMAP_F_BUFFER_HEAD)
+> >> +		return block_write_end(NULL, iter->inode->i_mapping, pos, len,
+> >> +				       copied, &folio->page, NULL);
+> >> +	return __iomap_write_end(iter->inode, pos, len, copied, folio);
+> >>  }
+> >>  
+> >>  static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+> >> @@ -880,6 +858,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+> >>  
+> >>  	do {
+> >>  		struct folio *folio;
+> >> +		loff_t old_size;
+> >>  		size_t offset;		/* Offset into folio */
+> >>  		size_t bytes;		/* Bytes to write to folio */
+> >>  		size_t copied;		/* Bytes copied from user */
+> >> @@ -912,8 +891,10 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+> >>  		}
+> >>  
+> >>  		status = iomap_write_begin(iter, pos, bytes, &folio);
+> >> -		if (unlikely(status))
+> >> +		if (unlikely(status)) {
+> >> +			iomap_write_failed(iter->inode, pos, bytes);
+> >>  			break;
+> >> +		}
+> >>  		if (iter->iomap.flags & IOMAP_F_STALE)
+> >>  			break;
+> >>  
+> >> @@ -927,6 +908,24 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+> >>  		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+> >>  		status = iomap_write_end(iter, pos, bytes, copied, folio);
+> >>  
+> >> +		/*
+> >> +		 * Update the in-memory inode size after copying the data into
+> >> +		 * the page cache.  It's up to the file system to write the
+> >> +		 * updated size to disk, preferably after I/O completion so that
+> >> +		 * no stale data is exposed.
+> >> +		 */
+> >> +		old_size = iter->inode->i_size;
+> >> +		if (pos + status > old_size) {
+> >> +			i_size_write(iter->inode, pos + status);
+> >> +			iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
+> >> +		}
+> >> +		__iomap_put_folio(iter, pos, status, folio);
+> > 
+> > Why is it necessary to hoist the __iomap_put_folio calls from
+> > iomap_write_end into iomap_write_iter, iomap_unshare_iter, and
+> > iomap_zero_iter?  None of those functions seem to use it, and it makes
+> > more sense to me that iomap_write_end releases the folio that
+> > iomap_write_begin returned.
 > > 
 > 
-> It's because xfs_bmapi_convert_delalloc() isn't guarantee to convert
-> enough blocks once a time, it may convert insufficient blocks since lack
-> of enough contiguous free physical blocks. If we are going to use it, I
-> suppose we need to introduce a new helper something like
-> xfs_convert_blocks(), add a loop to do the conversion.
+> Because we have to update i_size before __iomap_put_folio() in
+> iomap_write_iter(). If not, once we unlock folio, it could be raced
+> by the backgroud write back which could start writing back and call
+> folio_zero_segment() (please see iomap_writepage_handle_eof()) to
+> zero out the valid data beyond the not updated i_size. So we
+> have to move out __iomap_put_folio() out together with the i_size
+> updating.
 
-I thought xfs_bmapi_convert_delalloc passes out (via @iomap) the extent
-that xfs_bmapi_allocate (or anyone else) allocated (bma.got).  If that
-mapping is shorter, won't xfs_buffered_write_iomap_begin pass the
-shortened mapping out to the iomap machinery?  In which case that
-iomap_iter loop will call ->iomap_begin on the unfinished delalloc
-conversion work?
+Ahah.  Please make a note of that in the comment for dunces like me.
 
-> xfs_iomap_write_direct() has done all the work of converting, but the
-> name of this function is non-obviousness than xfs_bmapi_convert_delalloc(),
-> I can change to use it if you think xfs_bmapi_convert_delalloc() is
-> better. :)
-
-Yes.
+	/*
+	 * Update the in-memory inode size after copying the data into
+	 * the page cache.  It's up to the file system to write the
+	 * updated size to disk, preferably after I/O completion so that
+	 * no stale data is exposed.  Only once that's done can we
+	 * unlock and release the folio.
+	 */
 
 --D
 
 > Thanks,
 > Yi.
-> 
-> > --D
-> > 
-> >> +	if (error)
-> >> +		return error;
-> >> +
-> >> +	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
-> >> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, IOMAP_F_NEW, seq);
-> >> +
-> >>  found_cow:
-> >>  	seq = xfs_iomap_inode_sequence(ip, 0);
-> >>  	if (imap.br_startoff <= offset_fsb) {
-> >> -- 
-> >> 2.39.2
-> >>
-> >>
 > 
 > 
