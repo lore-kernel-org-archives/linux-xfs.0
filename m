@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFDF0BA2D
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:05:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A41F79C5
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:05:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710295502; cv=none; b=PpDwxpWJPWPPc1Ozj7T5K8dWeiXTgJpeOhCd+S4wsQEQkUJspL4R5b/IJSiE/V3fvW5apBSQmBS8Gtzqj4z0bcq22C439NsMNebONxs9Vgcc1ILA6QApDi8Bx75bjcn4Txi7ZvYP0cLNGLWa4Z5HzRmP+gHL2DMiXJPROD2RR90=
+	t=1710295518; cv=none; b=XbgHvnQ5uWyQpOTqCsl9K42GEUvCk/1yffdTW4dcB8uvUfAFxwQ01qYm0FiVRhtHQXiKfyPcmQ+L5bUNaLPKlfZp2ic807aWqcFZuqnBSYI/+g5yEkSLKDvb27Axwoakz6HuGG2P1CG/yvLlHaMuraBZrozs54fy4JX4D0SHVKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710295502; c=relaxed/simple;
-	bh=N67Ef6epEgg6F7p1q8Uk6ObyAf+gHU0fOa4NCjoKago=;
+	s=arc-20240116; t=1710295518; c=relaxed/simple;
+	bh=KlaEV1usF/a6VUzPkA4PpxkTHRJxRJNLVNv6waIMthE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TYWtfqqDWYt8KRgUio5CiWikUN3S/+tq6zYi8EIE+izJa/3wvgfRdvPplquDuw8eeUOfrlxHh69id+W9HslVfvq8RaLhmrByCDoTXEWtsg1ePZmspNY5A1Mp9+hfd0JLccdz4hH8f0CTaVi81gM1GMArXjQnKTdA3GW41Fj3dLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=moCsqa6y; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oOME3J04/yKhWhxmrMs/eJq4X43gfmOPCwHyGIAj1+LhJROqLiX/XIysxnx4/S4I6E1Gz1RVC7sZ/2KUykRxXpGr9Z9n8VsxwC5gLzEkWQClpmhlOe6tjCw+zHjF67Ne3w1cZKt6cwZK4zpWzehdPnEyorey1rX8tRvd6G2q8b8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cly6091V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="moCsqa6y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B9A4C433C7;
-	Wed, 13 Mar 2024 02:05:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cly6091V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEC9AC433C7;
+	Wed, 13 Mar 2024 02:05:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710295502;
-	bh=N67Ef6epEgg6F7p1q8Uk6ObyAf+gHU0fOa4NCjoKago=;
+	s=k20201202; t=1710295517;
+	bh=KlaEV1usF/a6VUzPkA4PpxkTHRJxRJNLVNv6waIMthE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=moCsqa6yddVSLcbupWucwmgWmXyAJtRfYLCPd3EikyMv4u1gV0EhPG1iDuvauu/Q/
-	 NPDbsTQFjKqL3QgDi9cCISMhno9cXPv/RVsxVOAogdtEemP9LLchk77PIkCn0m9U8j
-	 XHdhnWirsmZi8smbmLRwyYGKmC3ilkH/AtqF46T69ZeWsLaHU9Ofn392o5TUe+EQxI
-	 dUlk1BvbT6x0agT7pyUoY8VKhohSSLHU19iSno5/TgTUhBMafgg/I7QZVJ2i5wVWwy
-	 bEVwcAyt4lflRkX4F4pSf98cB2WjZrLyJGEZs1C9vT/y5pKPbB7XPpgGIYRkrxfm7E
-	 gW1+oC2lrK4ZA==
-Date: Tue, 12 Mar 2024 19:05:01 -0700
-Subject: [PATCH 46/67] xfs: remove the xfs_alloc_arg argument to
- xfs_bmap_btalloc_accounting
+	b=cly6091VrLR8DZgRhxRTpd6yE//Iwcm0h2t/R39Cef98UXYtYI/l+/30+tC8d+pYo
+	 GLlF86JxinGHvMy7Fasb+mRN1l9VRwF40Oq+nFIXyX3u9z4Vg8B1bvwq8Fqn/sREVZ
+	 pbaW0B6bmkkbtdZ/hW9HRvAJ/+1UhWz9UAaZ/VeGN9RLBksKVlKTntOG/kk/a5xbj7
+	 +xHCiacp8ESZtSe1HK86ysO6nuNr9SQvrMdCajfQkVDBSpuzt3T/9GM1deCUP8WBOd
+	 YBsMayvOq6+QRN1PqoZQsaFl8ZqNJ5ElQjl61jcRm2G09D7adb/4+vKu/sDoFsDorA
+	 G04Syc0XICSmw==
+Date: Tue, 12 Mar 2024 19:05:17 -0700
+Subject: [PATCH 47/67] xfs: also use xfs_bmap_btalloc_accounting for RT
+ allocations
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  linux-xfs@vger.kernel.org
-Message-ID: <171029431857.2061787.3941433054444287759.stgit@frogsfrogsfrogs>
+Message-ID: <171029431871.2061787.5782792122013176872.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 References: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,78 +48,118 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: eef519d746bbfb90cbad4077c2d39d7a359c3282
+Source kernel commit: 58643460546da1dc61593fc6fd78762798b4534f
 
-xfs_bmap_btalloc_accounting only uses the len field from args, but that
-has just been propagated to ap->length field by the caller.
+Make xfs_bmap_btalloc_accounting more generic by handling the RT quota
+reservations and then also use it from xfs_bmap_rtalloc instead of
+open coding the accounting logic there.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_bmap.c |   19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+ libxfs/libxfs_priv.h    |    5 ++++-
+ libxfs/xfs_bmap.c       |   21 ++++++++++++++-------
+ libxfs/xfs_bmap.h       |    2 ++
+ libxfs/xfs_bmap_btree.c |    1 +
+ 4 files changed, 21 insertions(+), 8 deletions(-)
 
 
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 30ff8dba9178..28ee192509c7 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -434,7 +434,10 @@ void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
+ #define xfs_filestream_select_ag(...)		(-ENOSYS)
+ 
+ /* quota bits */
+-#define xfs_trans_mod_dquot_byino(t,i,f,d)		((void) 0)
++#define xfs_trans_mod_dquot_byino(t,i,f,d)		({ \
++	uint _f = (f); \
++	_f = _f; /* shut up gcc */ \
++})
+ #define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
+ 
+ /* hack too silence gcc */
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 3520235b58af..ad058bb126e2 100644
+index ad058bb126e2..4f6bd8dff47e 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -3259,8 +3259,7 @@ xfs_bmap_btalloc_select_lengths(
+@@ -3257,10 +3257,14 @@ xfs_bmap_btalloc_select_lengths(
+ }
+ 
  /* Update all inode and quota accounting for the allocation we just did. */
- static void
- xfs_bmap_btalloc_accounting(
--	struct xfs_bmalloca	*ap,
--	struct xfs_alloc_arg	*args)
-+	struct xfs_bmalloca	*ap)
+-static void
+-xfs_bmap_btalloc_accounting(
++void
++xfs_bmap_alloc_account(
+ 	struct xfs_bmalloca	*ap)
  {
++	bool			isrt = XFS_IS_REALTIME_INODE(ap->ip) &&
++					(ap->flags & XFS_BMAPI_ATTRFORK);
++	uint			fld;
++
  	if (ap->flags & XFS_BMAPI_COWFORK) {
  		/*
-@@ -3273,7 +3272,7 @@ xfs_bmap_btalloc_accounting(
- 		 * yet.
- 		 */
- 		if (ap->wasdel) {
--			xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)args->len);
-+			xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
- 			return;
- 		}
- 
-@@ -3285,22 +3284,22 @@ xfs_bmap_btalloc_accounting(
- 		 * This essentially transfers the transaction quota reservation
+ 		 * COW fork blocks are in-core only and thus are treated as
+@@ -3285,7 +3289,8 @@ xfs_bmap_btalloc_accounting(
  		 * to that of a delalloc extent.
  		 */
--		ap->ip->i_delayed_blks += args->len;
-+		ap->ip->i_delayed_blks += ap->length;
- 		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, XFS_TRANS_DQ_RES_BLKS,
--				-(long)args->len);
-+				-(long)ap->length);
+ 		ap->ip->i_delayed_blks += ap->length;
+-		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, XFS_TRANS_DQ_RES_BLKS,
++		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, isrt ?
++				XFS_TRANS_DQ_RES_RTBLKS : XFS_TRANS_DQ_RES_BLKS,
+ 				-(long)ap->length);
  		return;
  	}
- 
- 	/* data/attr fork only */
--	ap->ip->i_nblocks += args->len;
-+	ap->ip->i_nblocks += ap->length;
- 	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+@@ -3296,10 +3301,12 @@ xfs_bmap_btalloc_accounting(
  	if (ap->wasdel) {
--		ap->ip->i_delayed_blks -= args->len;
--		xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)args->len);
-+		ap->ip->i_delayed_blks -= ap->length;
-+		xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
+ 		ap->ip->i_delayed_blks -= ap->length;
+ 		xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)ap->length);
++		fld = isrt ? XFS_TRANS_DQ_DELRTBCOUNT : XFS_TRANS_DQ_DELBCOUNT;
++	} else {
++		fld = isrt ? XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
  	}
- 	xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
- 		ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT : XFS_TRANS_DQ_BCOUNT,
--		args->len);
-+		ap->length);
+-	xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
+-		ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT : XFS_TRANS_DQ_BCOUNT,
+-		ap->length);
++
++	xfs_trans_mod_dquot_byino(ap->tp, ap->ip, fld, ap->length);
  }
  
  static int
-@@ -3374,7 +3373,7 @@ xfs_bmap_process_allocated_extent(
+@@ -3373,7 +3380,7 @@ xfs_bmap_process_allocated_extent(
  		ap->offset = orig_offset;
  	else if (ap->offset + ap->length < orig_offset + orig_length)
  		ap->offset = orig_offset + orig_length - ap->length;
--	xfs_bmap_btalloc_accounting(ap, args);
-+	xfs_bmap_btalloc_accounting(ap);
+-	xfs_bmap_btalloc_accounting(ap);
++	xfs_bmap_alloc_account(ap);
  }
  
  #ifdef DEBUG
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index 4b83f6148e00..f6b73f1bad5f 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -116,6 +116,8 @@ static inline int xfs_bmapi_whichfork(uint32_t bmapi_flags)
+ 	return XFS_DATA_FORK;
+ }
+ 
++void xfs_bmap_alloc_account(struct xfs_bmalloca *ap);
++
+ /*
+  * Special values for xfs_bmbt_irec_t br_startblock field.
+  */
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 73ba067df06e..887ba56f3b7b 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -21,6 +21,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_quota_defs.h"
+ 
+ static struct kmem_cache	*xfs_bmbt_cur_cache;
+ 
 
