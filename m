@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AE51B652
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:01:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7AAFBA27
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:01:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710295299; cv=none; b=YIvy6pIVem9q4dyuAeEoQSVwEKcDsfCsAkaByTH/gxMJCAlG9IWaLJQ8dn+C+rDpbzdPidJeMfYLI7/mTcNUmgywMqiZN9I3iPStLZA8mYJJ5HFtV0jgnuni55yz937t0vAOtfL/iJFgyj4ZlEo4sL3hDISu3uFwq5ZXS93ArdQ=
+	t=1710295314; cv=none; b=pKeCev4JJEqVdz5gJSuFJrZ7mkK4yzBLxeBqwZSoBXK9WJeyqPtg4E/ZgOuFHxCmPzCkqPqsxDnECab5Qys15G9G3Pj2Q0a2Iwrl586UohiDsQzJajNwfVJdYdjDPwrUA7IVhWfM7exYkv6kYzdNhPdWBkwLcKL3EXpEInGJe9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710295299; c=relaxed/simple;
-	bh=VtSZ2TzdaE00RcjWZI3SncWUw7Rb9INRWxOlmGmIgek=;
+	s=arc-20240116; t=1710295314; c=relaxed/simple;
+	bh=A2Z8L0rySY17juv3ButKhlddM2yPv/JM6uODv9aGJIQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qlIWD3KYdeopyrH693zmeyPcvk+a2hPiT5hko3Ei8VqFRMidnVMMATZ6UbET6vwbrcKP8Bikwz0AxzvVzAJX2/ZbIH0i/T4DZqTt+E7+2TjyJk+CH9Pz+C8OJVnyPBm7hv4BNU6zwjpea++MPOomVLLxSHOwkXnJDv9obnTL760=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J1e5WtiU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rKETzhPoW4sq8KgLM9gqeYyBXPx1FfwCGIDBCeyviAVwFOZWg7vayeHn4LnQ/2kKxK5dNO/sa64P+kHIiW6dp+nWH7oNO7E7I6HHsOqXHkgD0ore5jb18SDqR5MU5wIqVcGJP4p04kIaC0/cWtIuYOuJ3zvpJzuAo7H0j7VoVLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H8viOrLo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J1e5WtiU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD473C433F1;
-	Wed, 13 Mar 2024 02:01:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H8viOrLo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83545C433F1;
+	Wed, 13 Mar 2024 02:01:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710295298;
-	bh=VtSZ2TzdaE00RcjWZI3SncWUw7Rb9INRWxOlmGmIgek=;
+	s=k20201202; t=1710295314;
+	bh=A2Z8L0rySY17juv3ButKhlddM2yPv/JM6uODv9aGJIQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=J1e5WtiU1GGaTZ0ClXLIygeq9dedjhHSl7T3hGj2YBG6JWk8ZwBla/bHgcb2/2o8k
-	 2Key+hk5C7b5xnLTmmSASsAL4gZHEzzZR76fEmueh1m/wviBmLNgPPDXVlf8uVxaNP
-	 UbTlK7Ji+ikzX9I8F+QrvId0UUkU4FqIOYe1wop0tikOF1lSfF2P2z2uEvreCtMlZv
-	 XoEbtDH0Rd65t2R/uU/pJ4EdCACLt3nC4c9RD+M6I95D+Z1AP8HTK318JPKNzYfKvq
-	 EO/fIdLHJCZ+N1gnSAh8elBK9CiVe2a+OBquxBvqP74rs1N6z2oYEfp/3y3wFdIw5M
-	 a+78xiTdcfCZA==
-Date: Tue, 12 Mar 2024 19:01:38 -0700
-Subject: [PATCH 33/67] xfs: constrain dirty buffers while formatting a staged
- btree
+	b=H8viOrLoxKHcFYv3ModHpwZAxG9j74r5uE7GKzg4o5KWZ9wv9lJYJGL3AsCdtT3qk
+	 eV5lX6lxUheb+oQWNYxFBC1pmRYL5j9OlCvL20sX0U1ehbMJmtCqqjYvMCaWtJKDtB
+	 HuxHDQJv6Ahexs+PSqsLAlo0ymTAnK9V3XkdkatZU7tm6bYB5oab+g8SQHQZnbuHuA
+	 v+/OsIfbqERxcKPqVvuJYpGTPs/hrNHk1SWm18UHreImeRBoyYACAZzFJnKdHO6Gl4
+	 B/i5P++2XkBKoY+NH+z+H1DR5b9ISBXhgABmuu7XHi0480ty72aGJkh5pxI4omlhOG
+	 5QL8Od1jrJ5sg==
+Date: Tue, 12 Mar 2024 19:01:54 -0700
+Subject: [PATCH 34/67] xfs: repair free space btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171029431670.2061787.13362373960946016966.stgit@frogsfrogsfrogs>
+Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org
+Message-ID: <171029431684.2061787.4118559152114519725.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 References: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,152 +47,147 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: e069d549705e49841247acf9b3176744e27d5425
+Source kernel commit: 4bdfd7d15747b170ce93a06fafccaf20544b6684
 
-Constrain the number of dirty buffers that are locked by the btree
-staging code at any given time by establishing a threshold at which we
-put them all on the delwri queue and push them to disk.  This limits
-memory consumption while writing out new btrees.
+Rebuild the free space btrees from the gaps in the rmap btree.  Refer to
+the case study in Documentation/filesystems/xfs-online-fsck-design.rst
+for more details.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_btree_staging.c |   50 ++++++++++++++++++++++++++++++++++----------
- libxfs/xfs_btree_staging.h |   10 +++++++++
- repair/agbtree.c           |    1 +
- 3 files changed, 50 insertions(+), 11 deletions(-)
+ libxfs/xfs_ag.h          |    9 +++++++++
+ libxfs/xfs_ag_resv.c     |    2 ++
+ libxfs/xfs_alloc.c       |   10 ++++------
+ libxfs/xfs_alloc.h       |    2 +-
+ libxfs/xfs_alloc_btree.c |   13 ++++++++++++-
+ libxfs/xfs_types.h       |    7 +++++++
+ 6 files changed, 35 insertions(+), 8 deletions(-)
 
 
-diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index a6f0d7d3b286..d4164e37bd38 100644
---- a/libxfs/xfs_btree_staging.c
-+++ b/libxfs/xfs_btree_staging.c
-@@ -333,24 +333,41 @@ xfs_btree_commit_ifakeroot(
- /*
-  * Put a btree block that we're loading onto the ordered list and release it.
-  * The btree blocks will be written to disk when bulk loading is finished.
-+ * If we reach the dirty buffer threshold, flush them to disk before
-+ * continuing.
-  */
--static void
-+static int
- xfs_btree_bload_drop_buf(
--	struct list_head	*buffers_list,
--	struct xfs_buf		**bpp)
-+	struct xfs_btree_bload		*bbl,
-+	struct list_head		*buffers_list,
-+	struct xfs_buf			**bpp)
+diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
+index 2e0aef87d633..f16cb7a174d4 100644
+--- a/libxfs/xfs_ag.h
++++ b/libxfs/xfs_ag.h
+@@ -80,6 +80,15 @@ struct xfs_perag {
+ 	 */
+ 	uint16_t	pag_checked;
+ 	uint16_t	pag_sick;
++
++#ifdef CONFIG_XFS_ONLINE_REPAIR
++	/*
++	 * Alternate btree heights so that online repair won't trip the write
++	 * verifiers while rebuilding the AG btrees.
++	 */
++	uint8_t		pagf_repair_levels[XFS_BTNUM_AGF];
++#endif
++
+ 	spinlock_t	pag_state_lock;
+ 
+ 	spinlock_t	pagb_lock;	/* lock for pagb_tree */
+diff --git a/libxfs/xfs_ag_resv.c b/libxfs/xfs_ag_resv.c
+index 29bbcb55d731..3a80b1613e18 100644
+--- a/libxfs/xfs_ag_resv.c
++++ b/libxfs/xfs_ag_resv.c
+@@ -410,6 +410,8 @@ xfs_ag_resv_free_extent(
+ 		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
++		fallthrough;
++	case XFS_AG_RESV_IGNORE:
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index aaa1596157e9..352efbeca9f4 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -242,11 +242,9 @@ xfs_alloc_btrec_to_irec(
+ /* Simple checks for free space records. */
+ xfs_failaddr_t
+ xfs_alloc_check_irec(
+-	struct xfs_btree_cur		*cur,
+-	const struct xfs_alloc_rec_incore *irec)
++	struct xfs_perag			*pag,
++	const struct xfs_alloc_rec_incore	*irec)
  {
--	if (*bpp == NULL)
--		return;
-+	struct xfs_buf			*bp = *bpp;
-+	int				error;
-+
-+	if (!bp)
-+		return 0;
+-	struct xfs_perag		*pag = cur->bc_ag.pag;
+-
+ 	if (irec->ar_blockcount == 0)
+ 		return __this_address;
  
- 	/*
- 	 * Mark this buffer XBF_DONE (i.e. uptodate) so that a subsequent
- 	 * xfs_buf_read will not pointlessly reread the contents from the disk.
- 	 */
--	(*bpp)->b_flags |= XBF_DONE;
-+	bp->b_flags |= XBF_DONE;
+@@ -295,7 +293,7 @@ xfs_alloc_get_rec(
+ 		return error;
  
--	xfs_buf_delwri_queue_here(*bpp, buffers_list);
--	xfs_buf_relse(*bpp);
-+	xfs_buf_delwri_queue_here(bp, buffers_list);
-+	xfs_buf_relse(bp);
- 	*bpp = NULL;
-+	bbl->nr_dirty++;
-+
-+	if (!bbl->max_dirty || bbl->nr_dirty < bbl->max_dirty)
-+		return 0;
-+
-+	error = xfs_buf_delwri_submit(buffers_list);
-+	if (error)
-+		return error;
-+
-+	bbl->nr_dirty = 0;
-+	return 0;
- }
+ 	xfs_alloc_btrec_to_irec(rec, &irec);
+-	fa = xfs_alloc_check_irec(cur, &irec);
++	fa = xfs_alloc_check_irec(cur->bc_ag.pag, &irec);
+ 	if (fa)
+ 		return xfs_alloc_complain_bad_rec(cur, fa, &irec);
  
- /*
-@@ -422,7 +439,10 @@ xfs_btree_bload_prep_block(
- 	 */
- 	if (*blockp)
- 		xfs_btree_set_sibling(cur, *blockp, &new_ptr, XFS_BB_RIGHTSIB);
--	xfs_btree_bload_drop_buf(buffers_list, bpp);
-+
-+	ret = xfs_btree_bload_drop_buf(bbl, buffers_list, bpp);
-+	if (ret)
-+		return ret;
+@@ -3940,7 +3938,7 @@ xfs_alloc_query_range_helper(
+ 	xfs_failaddr_t				fa;
  
- 	/* Initialize the new btree block. */
- 	xfs_btree_init_block_cur(cur, new_bp, level, nr_this_block);
-@@ -770,6 +790,7 @@ xfs_btree_bload(
- 	cur->bc_nlevels = bbl->btree_height;
- 	xfs_btree_set_ptr_null(cur, &child_ptr);
- 	xfs_btree_set_ptr_null(cur, &ptr);
-+	bbl->nr_dirty = 0;
+ 	xfs_alloc_btrec_to_irec(rec, &irec);
+-	fa = xfs_alloc_check_irec(cur, &irec);
++	fa = xfs_alloc_check_irec(cur->bc_ag.pag, &irec);
+ 	if (fa)
+ 		return xfs_alloc_complain_bad_rec(cur, fa, &irec);
  
- 	xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
- 			&avg_per_block, &blocks, &blocks_with_extra);
-@@ -808,7 +829,10 @@ xfs_btree_bload(
- 			xfs_btree_copy_ptrs(cur, &child_ptr, &ptr, 1);
- 	}
- 	total_blocks += blocks;
--	xfs_btree_bload_drop_buf(&buffers_list, &bp);
-+
-+	ret = xfs_btree_bload_drop_buf(bbl, &buffers_list, &bp);
-+	if (ret)
-+		goto out;
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index 851cafbd6449..0b956f8b9d5a 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -185,7 +185,7 @@ xfs_alloc_get_rec(
+ union xfs_btree_rec;
+ void xfs_alloc_btrec_to_irec(const union xfs_btree_rec *rec,
+ 		struct xfs_alloc_rec_incore *irec);
+-xfs_failaddr_t xfs_alloc_check_irec(struct xfs_btree_cur *cur,
++xfs_failaddr_t xfs_alloc_check_irec(struct xfs_perag *pag,
+ 		const struct xfs_alloc_rec_incore *irec);
  
- 	/* Populate the internal btree nodes. */
- 	for (level = 1; level < cur->bc_nlevels; level++) {
-@@ -850,7 +874,11 @@ xfs_btree_bload(
- 				xfs_btree_copy_ptrs(cur, &first_ptr, &ptr, 1);
- 		}
- 		total_blocks += blocks;
--		xfs_btree_bload_drop_buf(&buffers_list, &bp);
+ int xfs_read_agf(struct xfs_perag *pag, struct xfs_trans *tp, int flags,
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index 5ec14288d570..a472ec6d21a2 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -321,7 +321,18 @@ xfs_allocbt_verify(
+ 	if (bp->b_ops->magic[0] == cpu_to_be32(XFS_ABTC_MAGIC))
+ 		btnum = XFS_BTNUM_CNTi;
+ 	if (pag && xfs_perag_initialised_agf(pag)) {
+-		if (level >= pag->pagf_levels[btnum])
++		unsigned int	maxlevel = pag->pagf_levels[btnum];
 +
-+		ret = xfs_btree_bload_drop_buf(bbl, &buffers_list, &bp);
-+		if (ret)
-+			goto out;
-+
- 		xfs_btree_copy_ptrs(cur, &child_ptr, &first_ptr, 1);
- 	}
- 
-diff --git a/libxfs/xfs_btree_staging.h b/libxfs/xfs_btree_staging.h
-index bd5b3f004823..f0a5007284ef 100644
---- a/libxfs/xfs_btree_staging.h
-+++ b/libxfs/xfs_btree_staging.h
-@@ -112,6 +112,16 @@ struct xfs_btree_bload {
- 	 * height of the new btree.
- 	 */
- 	unsigned int			btree_height;
++#ifdef CONFIG_XFS_ONLINE_REPAIR
++		/*
++		 * Online repair could be rewriting the free space btrees, so
++		 * we'll validate against the larger of either tree while this
++		 * is going on.
++		 */
++		maxlevel = max_t(unsigned int, maxlevel,
++				 pag->pagf_repair_levels[btnum]);
++#endif
++		if (level >= maxlevel)
+ 			return __this_address;
+ 	} else if (level >= mp->m_alloc_maxlevels)
+ 		return __this_address;
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index 533200c4ccc2..035bf703d719 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -208,6 +208,13 @@ enum xfs_ag_resv_type {
+ 	XFS_AG_RESV_AGFL,
+ 	XFS_AG_RESV_METADATA,
+ 	XFS_AG_RESV_RMAPBT,
 +
 +	/*
-+	 * Flush the new btree block buffer list to disk after this many blocks
-+	 * have been formatted.  Zero prohibits writing any buffers until all
-+	 * blocks have been formatted.
++	 * Don't increase fdblocks when freeing extent.  This is a pony for
++	 * the bnobt repair functions to re-free the free space without
++	 * altering fdblocks.  If you think you need this you're wrong.
 +	 */
-+	uint16_t			max_dirty;
-+
-+	/* Number of dirty buffers. */
-+	uint16_t			nr_dirty;
++	XFS_AG_RESV_IGNORE,
  };
  
- int xfs_btree_bload_compute_geometry(struct xfs_btree_cur *cur,
-diff --git a/repair/agbtree.c b/repair/agbtree.c
-index 10a0c7e48c9a..981d8e340bf2 100644
---- a/repair/agbtree.c
-+++ b/repair/agbtree.c
-@@ -23,6 +23,7 @@ init_rebuild(
- 	memset(btr, 0, sizeof(struct bt_rebuild));
- 
- 	bulkload_init_ag(&btr->newbt, sc, oinfo);
-+	btr->bload.max_dirty = XFS_B_TO_FSBT(sc->mp, 256U << 10); /* 256K */
- 	bulkload_estimate_ag_slack(sc, &btr->bload, est_agfreeblocks);
- }
- 
+ /* Results of scanning a btree keyspace to check occupancy. */
 
