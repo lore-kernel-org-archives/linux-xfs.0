@@ -1,37 +1,39 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A3C01A38E7;
-	Wed, 13 Mar 2024 17:08:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E5278272;
+	Wed, 13 Mar 2024 17:10:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710349726; cv=none; b=Yzb+4AxPgIKLawOinA8abmPMaYhgnQSQ7JZNqnvR4TBzRwsBAV7FxcQ9msyDKkGTFpX9Qp5JcZeTN7kP2IzFix/2ih6FDaRA5R/4GPISfFmt3pJGVd5VT7thhebUMlEOYuo+FLnTS5xrqDIG7YJCWtBJIwx2i3lnt1tBf9JFHrE=
+	t=1710349832; cv=none; b=Ev4EwX4IvdNW8gy4CO2P6J4wVbZcO9mWB9u5R1uMInf+1DElyJZYBAvl/2DfpHD62ffEQtllcViDmK+g4T1reDM6F8eiA4b+ttyIjQ+k3SK8ufq6nqEM+r04AWlOLwihxWSseGZk3uJPkWYX3xllLrB9ClvDLfsV/olJg2VmoQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710349726; c=relaxed/simple;
-	bh=Z9LlQsF/EJRNh/l0qXkEZ9zchYi8EVtFMXy+4kSbnFM=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=r6SENM5ZwVaqvLiOuIw2c8Ei77U5f/dD95NrjTSsGhhFY9A/oJ2XI4DZiDihCQDw0tvv+weYFpyw1OP7PtTvR7OBiwnGLemFwgdCnODeHJGOUUMJEUVfrF7b6YEONhnWd3g0oaEEk+0vDln2N9MbHqbnqWTAHs6ctUvJzE4MoXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=YJ9ERQs9; arc=none smtp.client-ip=80.241.56.151
+	s=arc-20240116; t=1710349832; c=relaxed/simple;
+	bh=uEN3+Pd+RH/FPBp58dP39IOAx4Z8ypnrnt80ldJB+Go=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=iI+Pj7VxPqxaXIOeOaqbGK7tvmHeYONUgKm2CNigFniFqQz6etVU2namqMTNdO7TUmentODvW+gVQsZgbzy2ZPpb/g/DmfQ2rK/dZpRbOe8j56VJSyK5rFySfiiH35xv+ysQXm07HSX2wqCWyM8BK+I9HxxMrSvipU/Bjj6MJVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=FKXPUs2f; arc=none smtp.client-ip=80.241.56.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="YJ9ERQs9"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="FKXPUs2f"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4TvxfB298rz9stG;
-	Wed, 13 Mar 2024 18:02:58 +0100 (CET)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4TvxfK4Tbyz9t6h;
+	Wed, 13 Mar 2024 18:03:05 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1710349378;
+	s=MBO0001; t=1710349385;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=+31zPK3/xE4cPa56xvU1Q/V7CpxqVcLqveg5PJbjK2o=;
-	b=YJ9ERQs9DogTXCegYDcipGUl7yqugYFeg2RJ3nO8fuWPStMUU93hIsuUYrbTOzREBvY2py
-	331cM4G70BV4jZplXsArvi7jV0hGBGilWxeZ58S6ehvJgiAP6Q+eZYZ2RK5Xsl/D1mjg96
-	dttySmWJH/HQquMprjMLdz7MY8kVicKjKZDcCDhOEFjgZObUNdmq+fmFhcpIrGfcfUgs6S
-	ubRh2Vj1hiJcAyOHOOhtlK1xULZDVEThlmOV/wdPnPKaT9VNUcvBHzWpp4/E7FMDFKUdz+
-	vwRKicE0zXxIlE2PeidxjIsVd1PCrC/T0Fh2q8VKH0Z4929vqKW1F6KIrCAFZw==
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wozYDNbmy2bEoKve6FiU3MASCD8dtvfm2o2W8jk+gfE=;
+	b=FKXPUs2fuDsWqd/RzRu5+rfCFIpIrPx1U/+fFFTvFbtEhJZ8SHhGthBo8ybr9J0e992Svz
+	pL6C17UJGmdo7r76XOQiQIkixF8r94mI5JB/lkuBCCigSVIkSmN7jHfl3raHipIQ5KAZWb
+	c5Y2eUfhVSB3Z4l6Hj9Vk+Xpk0nZNezMEiaGU+agMZsFVIThR/QPChspgVvoelbmtIKFoo
+	N+9tXSlYmyp77ZLvY7jjB5YwrSO64t+YMYuCAqqIr9//yrcOHRBt1b+m0sOkNlhKL0iDNJ
+	pMAvyd+M8Lb7xTSjI+NfUl+xzmnpF751DjHQbTqryYQnvF9J4GcPLuwO63LOnw==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: willy@infradead.org,
 	linux-xfs@vger.kernel.org,
@@ -46,10 +48,11 @@ Cc: gost.dev@samsung.com,
 	david@fromorbit.com,
 	akpm@linux-foundation.org,
 	Pankaj Raghav <p.raghav@samsung.com>
-Subject: [PATCH v3 00/11] enable bs > ps in XFS
-Date: Wed, 13 Mar 2024 18:02:42 +0100
-Message-ID: <20240313170253.2324812-1-kernel@pankajraghav.com>
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH v3 02/11] fs: Allow fine-grained control of folio sizes
+Date: Wed, 13 Mar 2024 18:02:44 +0100
+Message-ID: <20240313170253.2324812-3-kernel@pankajraghav.com>
+In-Reply-To: <20240313170253.2324812-1-kernel@pankajraghav.com>
+References: <20240313170253.2324812-1-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,141 +60,167 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4TvxfK4Tbyz9t6h
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-This is the third version of the series that enables block size > page size
-(Large Block Size) in XFS. The context and motivation can be seen in cover
-letter of the RFC v1[1]. We also recorded a talk about this effort at LPC [3],
-if someone would like more context on this effort.
+Some filesystems want to be able to ensure that folios that are added to
+the page cache are at least a certain size.
+Add mapping_set_folio_min_order() to allow this level of control.
 
-A lot of emphasis has been put on testing using kdevops. The testing has
-been split into regression and progression.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ include/linux/pagemap.h | 100 ++++++++++++++++++++++++++++++++--------
+ 1 file changed, 80 insertions(+), 20 deletions(-)
 
-Regression testing:
-In regression testing, we ran the whole test suite to check for
-*regression on existing profiles due to the page cache changes.
-
-No regression was found with the patches added on top.
-
-*Baseline for regression was created using SOAK_DURATION of 2.5 hours
-and having used about 7-8 XFS test clusters to test loop fstests over
-70 times. We then scraped for critical failures (crashes, XFS or page
-cache asserts, or hung tasks) and have reported these to the community
-as well.[4]
-
-Progression testing:
-For progression testing, we tested for 8k, 16k, 32k and 64k block sizes.
-To compare it with existing support, an ARM VM with 64k base page system
-(without our patches) was used as a reference to check for actual failures
-due to LBS support in a 4k base page size system.
-
-There are some common failures upstream for bs=64k that needs to be
-fixed[5].
-There are also some tests that assumes block size < page size that needs to
-be fixed. I have a tree with fixes for xfstests here [6], which I will be
-sending soon to the list.
-
-No new failures were found with the LBS support.
-
-We've done some preliminary performance tests with fio on XFS on 4k block
-size against pmem and NVMe with buffered IO and Direct IO on vanilla
-v6.8-rc4 Vs v6.8-rc4 + these patches applied, and detected no regressions.
-
-We also wrote an eBPF tool called blkalgn [7] to see if IO sent to the device
-is aligned and at least filesystem block size in length.
-
-Git tree:
-https://github.com/linux-kdevops/linux/tree/large-block-minorder-6.8
-
-[1] https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
-[2] https://lore.kernel.org/linux-xfs/20240213093713.1753368-1-kernel@pankajraghav.com/
-[3] https://www.youtube.com/watch?v=ar72r5Xf7x4
-[4] https://github.com/linux-kdevops/kdevops/blob/master/docs/xfs-bugs.md
-489 non-critical issues and 55 critical issues. We've determined and reported
-that the 55 critical issues have all fall into 5 common  XFS asserts or hung
-tasks  and 2 memory management asserts.
-[5] https://lore.kernel.org/linux-xfs/fe7fec1c-3b08-430f-9c95-ea76b237acf4@samsung.com/
-[6] https://github.com/Panky-codes/xfstests/tree/lbs-fixes
-[7] https://github.com/iovisor/bcc/pull/4813
-
-Changes since v2:
-- Simplified the filemap and readahead changes. (Thanks willy)
-- Removed DEFINE_READAHEAD_ALIGN.
-- Added minorder support to readahead_expand().
-
-Changes since v1:
-- Round up to nearest min nr pages in ra_init
-- Calculate index in filemap_create instead of doing in
-  filemap_get_pages
-- Remove unnecessary BUG_ONs in the delete path
-- Use check_shl_overflow instead of check_mul_overflow
-- Cast to uint32_t instead of unsigned long in xfs_stat_blksize
-
-Changes since RFC v2:
-- Move order 1 patch above the 1st patch
-- Remove order == 1 conditional in `fs: Allow fine-grained control of
-folio sizes`. This fixed generic/630 that was reported in the previous version.
-- Hide the max order and expose `mapping_set_folio_min_order` instead.
-- Add new helper mapping_start_index_align and DEFINE_READAHEAD_ALIGN
-- don't call `page_cache_ra_order` with min order in do_mmap_sync_readahead
-- simplify ondemand readahead with only aligning the start index at the end
-- Don't cap ra_pages based on bdi->io_pages
-- use `checked_mul_overflow` while calculating bytes in validate_fsb
-- Remove config lbs option
-- Add a warning while mounting a LBS kernel
-- Add Acked-by and Reviewed-by from Hannes and Darrick.
-
-Changes since RFC v1:
-- Added willy's patch to enable order-1 folios.
-- Unified common page cache effort from Hannes LBS work.
-- Added a new helper min_nrpages and added CONFIG_THP for enabling mapping_large_folio_support
-- Don't split a folio if it has minorder set. Remove the old code where we set extra pins if it has that requirement.
-- Split the code in XFS between the validation of mapping count. Put the icache code changes with enabling bs > ps.
-- Added CONFIG_XFS_LBS option
-- align the index in do_read_cache_folio()
-- Removed truncate changes
-- Fixed generic/091 with iomap changes to iomap_dio_zero function.
-- Took care of folio truncation scenario in page_cache_ra_unbounded() that happens after read_pages if a folio was found.
-- Sqaushed and moved commits around
-- Rebased on top of v6.8-rc4
-
-Hannes Reinecke (1):
-  readahead: rework loop in page_cache_ra_unbounded()
-
-Luis Chamberlain (2):
-  filemap: allocate mapping_min_order folios in the page cache
-  readahead: round up file_ra_state->ra_pages to mapping_min_nrpages
-
-Matthew Wilcox (Oracle) (2):
-  mm: Support order-1 folios in the page cache
-  fs: Allow fine-grained control of folio sizes
-
-Pankaj Raghav (6):
-  readahead: allocate folios with mapping_min_order in readahead
-  mm: do not split a folio if it has minimum folio order requirement
-  iomap: fix iomap_dio_zero() for fs bs > system page size
-  xfs: expose block size in stat
-  xfs: make the calculation generic in xfs_sb_validate_fsb_count()
-  xfs: enable block size larger than page size support
-
- fs/iomap/direct-io.c       |  13 ++++-
- fs/xfs/libxfs/xfs_ialloc.c |   5 ++
- fs/xfs/libxfs/xfs_shared.h |   3 ++
- fs/xfs/xfs_icache.c        |   6 ++-
- fs/xfs/xfs_iops.c          |   2 +-
- fs/xfs/xfs_mount.c         |  10 +++-
- fs/xfs/xfs_super.c         |  10 +---
- include/linux/huge_mm.h    |   7 ++-
- include/linux/pagemap.h    | 100 ++++++++++++++++++++++++++++--------
- mm/filemap.c               |  26 ++++++----
- mm/huge_memory.c           |  36 +++++++++++--
- mm/internal.h              |   4 +-
- mm/readahead.c             | 101 +++++++++++++++++++++++++++++--------
- 13 files changed, 247 insertions(+), 76 deletions(-)
-
-
-base-commit: e8f897f4afef0031fe618a8e94127a0934896aba
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 2df35e65557d..fc8eb9c94e9c 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -202,13 +202,18 @@ enum mapping_flags {
+ 	AS_EXITING	= 4, 	/* final truncate in progress */
+ 	/* writeback related tags are not used */
+ 	AS_NO_WRITEBACK_TAGS = 5,
+-	AS_LARGE_FOLIO_SUPPORT = 6,
+-	AS_RELEASE_ALWAYS,	/* Call ->release_folio(), even if no private data */
+-	AS_STABLE_WRITES,	/* must wait for writeback before modifying
++	AS_RELEASE_ALWAYS = 6,	/* Call ->release_folio(), even if no private data */
++	AS_STABLE_WRITES = 7,	/* must wait for writeback before modifying
+ 				   folio contents */
+-	AS_UNMOVABLE,		/* The mapping cannot be moved, ever */
++	AS_FOLIO_ORDER_MIN = 8,
++	AS_FOLIO_ORDER_MAX = 13, /* Bit 8-17 are used for FOLIO_ORDER */
++	AS_UNMOVABLE = 18,		/* The mapping cannot be moved, ever */
+ };
+ 
++#define AS_FOLIO_ORDER_MIN_MASK 0x00001f00
++#define AS_FOLIO_ORDER_MAX_MASK 0x0003e000
++#define AS_FOLIO_ORDER_MASK (AS_FOLIO_ORDER_MIN_MASK | AS_FOLIO_ORDER_MAX_MASK)
++
+ /**
+  * mapping_set_error - record a writeback error in the address_space
+  * @mapping: the mapping in which an error should be set
+@@ -344,9 +349,47 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+ 	m->gfp_mask = mask;
+ }
+ 
++/*
++ * There are some parts of the kernel which assume that PMD entries
++ * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
++ * limit the maximum allocation order to PMD size.  I'm not aware of any
++ * assumptions about maximum order if THP are disabled, but 8 seems like
++ * a good order (that's 1MB if you're using 4kB pages)
++ */
++#ifdef CONFIG_TRANSPARENT_HUGEPAGE
++#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
++#else
++#define MAX_PAGECACHE_ORDER	8
++#endif
++
++/*
++ * mapping_set_folio_min_order() - Set the minimum folio order
++ * @mapping: The address_space.
++ * @min: Minimum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
++ *
++ * The filesystem should call this function in its inode constructor to
++ * indicate which base size of folio the VFS can use to cache the contents
++ * of the file.  This should only be used if the filesystem needs special
++ * handling of folio sizes (ie there is something the core cannot know).
++ * Do not tune it based on, eg, i_size.
++ *
++ * Context: This should not be called while the inode is active as it
++ * is non-atomic.
++ */
++static inline void mapping_set_folio_min_order(struct address_space *mapping,
++					       unsigned int min)
++{
++	if (min > MAX_PAGECACHE_ORDER)
++		min = MAX_PAGECACHE_ORDER;
++
++	mapping->flags = (mapping->flags & ~AS_FOLIO_ORDER_MASK) |
++			 (min << AS_FOLIO_ORDER_MIN) |
++			 (MAX_PAGECACHE_ORDER << AS_FOLIO_ORDER_MAX);
++}
++
+ /**
+  * mapping_set_large_folios() - Indicate the file supports large folios.
+- * @mapping: The file.
++ * @mapping: The address_space.
+  *
+  * The filesystem should call this function in its inode constructor to
+  * indicate that the VFS can use large folios to cache the contents of
+@@ -357,7 +400,37 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+  */
+ static inline void mapping_set_large_folios(struct address_space *mapping)
+ {
+-	__set_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
++	mapping_set_folio_min_order(mapping, 0);
++}
++
++static inline unsigned int mapping_max_folio_order(struct address_space *mapping)
++{
++	return (mapping->flags & AS_FOLIO_ORDER_MAX_MASK) >> AS_FOLIO_ORDER_MAX;
++}
++
++static inline unsigned int mapping_min_folio_order(struct address_space *mapping)
++{
++	return (mapping->flags & AS_FOLIO_ORDER_MIN_MASK) >> AS_FOLIO_ORDER_MIN;
++}
++
++static inline unsigned long mapping_min_folio_nrpages(struct address_space *mapping)
++{
++	return 1UL << mapping_min_folio_order(mapping);
++}
++
++/**
++ * mapping_align_start_index() - Align starting index based on the min
++ * folio order of the page cache.
++ * @mapping: The address_space.
++ *
++ * Ensure the index used is aligned to the minimum folio order when adding
++ * new folios to the page cache by rounding down to the nearest minimum
++ * folio number of pages.
++ */
++static inline pgoff_t mapping_align_start_index(struct address_space *mapping,
++						pgoff_t index)
++{
++	return round_down(index, mapping_min_folio_nrpages(mapping));
+ }
+ 
+ /*
+@@ -367,7 +440,7 @@ static inline void mapping_set_large_folios(struct address_space *mapping)
+ static inline bool mapping_large_folio_support(struct address_space *mapping)
+ {
+ 	return IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
+-		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
++	       (mapping_max_folio_order(mapping) > 0);
+ }
+ 
+ static inline int filemap_nr_thps(struct address_space *mapping)
+@@ -528,19 +601,6 @@ static inline void *detach_page_private(struct page *page)
+ 	return folio_detach_private(page_folio(page));
+ }
+ 
+-/*
+- * There are some parts of the kernel which assume that PMD entries
+- * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+- * limit the maximum allocation order to PMD size.  I'm not aware of any
+- * assumptions about maximum order if THP are disabled, but 8 seems like
+- * a good order (that's 1MB if you're using 4kB pages)
+- */
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+-#else
+-#define MAX_PAGECACHE_ORDER	8
+-#endif
+-
+ #ifdef CONFIG_NUMA
+ struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
+ #else
 -- 
 2.43.0
 
