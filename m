@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314ADAD5D
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:03:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C47CEB652
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:03:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710295424; cv=none; b=cs58qSxV5APdTm4an3M9ZA6gMA2PwrtOIer0AGCNmYJSswMIwICH1sE40FTGO7oZ7XFBrs+mlLhFPD9JzPoHrsMm1i4vailkEQ1Hr3aJSXyQRxbUVigy8GIvGeRBqDMXFc3keOtHWKKoauuRMgGmmBHdq3iSYEVBl9mwAZ1hrA8=
+	t=1710295439; cv=none; b=HZA13MrtaTuTVKutnu/VjMUbpaxmxuzCWj47PecGZmTxQFoeHUodVh7k87kqZ4MnRA7Wi217r3YE0HO56oM0q4j3rQZ+haDlJ3G3MsfTrmcSXllI9Zb8XBMCfdjoJopu3lgn9Rlq9L0jdOoQFMbZHwEn7FHlQTni1VM/reEKYvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710295424; c=relaxed/simple;
-	bh=ryqDiFrYX1eFWkwPVNgihPlJZdToKoXGovI0bDFM++U=;
+	s=arc-20240116; t=1710295439; c=relaxed/simple;
+	bh=kfEd/p39tnm36M9e1MwkD9Sd+S05rXxL6FQnec9v/1w=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z7mPXjzXLpKSFPYvfbgq5Ja30z4+W4n3pHPc6zTVF6LuEszA+bSgLYzngMvTSA2w153vF9ZYJBoPQrNxJ55Tenz73igPNJsEEWgy+O3yOEdbiNMPXq7232Itu4xa/OwC9McOd5jZnw6JgcUa4YCcX1E/22K1mFhEglB9GrMX6SY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fEqbCgZe; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=s3eaiWc1+qHoD/xPuqIHOk4Y3QBVrTFB4FZtP47yvXWH8Q2Spnuo0roWmjEXGP/X9gncBK69B8YZkdweT8KhyQNQE3p7GJCBmtHgrtH+3AdxlFWT4oXQKyDno8N9lmJ2J4NVj3QC5UsBlrqO1v/9+B/txGShKo24mDPCxkadEVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XESKkdzP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fEqbCgZe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11B40C433C7;
-	Wed, 13 Mar 2024 02:03:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XESKkdzP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2750C433C7;
+	Wed, 13 Mar 2024 02:03:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710295424;
-	bh=ryqDiFrYX1eFWkwPVNgihPlJZdToKoXGovI0bDFM++U=;
+	s=k20201202; t=1710295439;
+	bh=kfEd/p39tnm36M9e1MwkD9Sd+S05rXxL6FQnec9v/1w=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fEqbCgZeFdWeETHLRRXMxzn6+vlq05OyntyZsd17PXlVtOD1gMgRSBOKM+6a/obkZ
-	 O4CbXw5TTH8v4RJGLXGGdPrjbMeakQ9k0mcGbDxNnJ5dB/cTg33rdmgJjb4OYCOSZf
-	 1xmiBEUEqQc0A/ydi9mgPeLXyBbQyK+PxEpzyqCj0J6Gt1cQXo1Plidu8q3mKTHWRL
-	 P2oHcjgE+zlXh2B2ryp2cWxWwynEUQjzCwIfnKsUtTs6kZbcCFK+sicmFlQwe7KoHI
-	 XgAVb06RxOxI36YUoFClNhcMBZ4Y0cpF5Gxb9uF/Kd3lRrTYi8819uduxvwL4lRZXk
-	 JBkxSqs78tlTQ==
-Date: Tue, 12 Mar 2024 19:03:43 -0700
-Subject: [PATCH 41/67] xfs: create a ranged query function for refcount btrees
+	b=XESKkdzPr5PriTZMarlBczrCucO5qxVZaAD4B5YLXapnpQQAK7lq75aF4gY1B8xaW
+	 RHoQnA9Wh157ELgkE8GsCwrvPTpLUnH/obKq64l362MvfBFU4NXP+YxKUezCvYTela
+	 ooMAsUXtMoTpio8r0v0BgWW/7E2gnxlAjmYL27QCEJZ+WhWuTrNgwzSwRO7SmeUKey
+	 nWLz/y1qvZ8Ryz48JObv2HOp24FiL6tz/wY54cYuPS/rQrxyKcUzX/oc4UaKvyjeJE
+	 7Iw6BWNDTGBni+QeF6rAnyu22nCPWglMjCdK8Ots0Qo4Vovg1uG3D89mT7FowZQs57
+	 WC8Xnh9KueJrg==
+Date: Tue, 12 Mar 2024 19:03:59 -0700
+Subject: [PATCH 42/67] xfs: create a new inode fork block unmap helper
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171029431784.2061787.504878964029441438.stgit@frogsfrogsfrogs>
+Message-ID: <171029431799.2061787.16604578276243163129.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 References: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,88 +46,95 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: d12bf8bac87a0d93e6e5fab67f399d1e3d3d5767
+Source kernel commit: a59eb5fc21b2a6dc160ee6cdf77f20bc186a88fd
 
-Implement ranged queries for refcount records.  The next patch will use
-this to scan refcount data.
+Create a new helper to unmap blocks from an inode's fork.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_refcount.c |   41 +++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_refcount.h |   10 ++++++++++
- 2 files changed, 51 insertions(+)
+ libxfs/xfs_bmap.c |   41 ++++++++++++++++++++++++++++++++++++++++-
+ libxfs/xfs_bmap.h |    5 ++---
+ 2 files changed, 42 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index 3377fac1283b..de321ab9d91d 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -2030,6 +2030,47 @@ xfs_refcount_has_records(
- 	return xfs_btree_has_records(cur, &low, &high, NULL, outcome);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 534a516b59ba..3520235b58af 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -5233,7 +5233,7 @@ xfs_bmap_del_extent_real(
+  * that value.  If not all extents in the block range can be removed then
+  * *done is set.
+  */
+-int						/* error */
++static int
+ __xfs_bunmapi(
+ 	struct xfs_trans	*tp,		/* transaction pointer */
+ 	struct xfs_inode	*ip,		/* incore inode */
+@@ -6214,3 +6214,42 @@ xfs_bmap_validate_extent(
+ 	return xfs_bmap_validate_extent_raw(ip->i_mount,
+ 			XFS_IS_REALTIME_INODE(ip), whichfork, irec);
  }
- 
-+struct xfs_refcount_query_range_info {
-+	xfs_refcount_query_range_fn	fn;
-+	void				*priv;
-+};
 +
-+/* Format btree record and pass to our callback. */
-+STATIC int
-+xfs_refcount_query_range_helper(
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*rec,
-+	void				*priv)
-+{
-+	struct xfs_refcount_query_range_info	*query = priv;
-+	struct xfs_refcount_irec	irec;
-+	xfs_failaddr_t			fa;
++/*
++ * Used in xfs_itruncate_extents().  This is the maximum number of extents
++ * freed from a file in a single transaction.
++ */
++#define	XFS_ITRUNC_MAX_EXTENTS	2
 +
-+	xfs_refcount_btrec_to_irec(rec, &irec);
-+	fa = xfs_refcount_check_irec(cur->bc_ag.pag, &irec);
-+	if (fa)
-+		return xfs_refcount_complain_bad_rec(cur, fa, &irec);
-+
-+	return query->fn(cur, &irec, query->priv);
-+}
-+
-+/* Find all refcount records between two keys. */
++/*
++ * Unmap every extent in part of an inode's fork.  We don't do any higher level
++ * invalidation work at all.
++ */
 +int
-+xfs_refcount_query_range(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_refcount_irec	*low_rec,
-+	const struct xfs_refcount_irec	*high_rec,
-+	xfs_refcount_query_range_fn	fn,
-+	void				*priv)
++xfs_bunmapi_range(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*ip,
++	uint32_t		flags,
++	xfs_fileoff_t		startoff,
++	xfs_fileoff_t		endoff)
 +{
-+	union xfs_btree_irec		low_brec = { .rc = *low_rec };
-+	union xfs_btree_irec		high_brec = { .rc = *high_rec };
-+	struct xfs_refcount_query_range_info query = { .priv = priv, .fn = fn };
++	xfs_filblks_t		unmap_len = endoff - startoff + 1;
++	int			error = 0;
 +
-+	return xfs_btree_query_range(cur, &low_brec, &high_brec,
-+			xfs_refcount_query_range_helper, &query);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	while (unmap_len > 0) {
++		ASSERT((*tpp)->t_highest_agno == NULLAGNUMBER);
++		error = __xfs_bunmapi(*tpp, ip, startoff, &unmap_len, flags,
++				XFS_ITRUNC_MAX_EXTENTS);
++		if (error)
++			goto out;
++
++		/* free the just unmapped extents */
++		error = xfs_defer_finish(tpp);
++		if (error)
++			goto out;
++	}
++out:
++	return error;
 +}
-+
- int __init
- xfs_refcount_intent_init_cache(void)
- {
-diff --git a/libxfs/xfs_refcount.h b/libxfs/xfs_refcount.h
-index 5c207f1c619c..9b56768a590c 100644
---- a/libxfs/xfs_refcount.h
-+++ b/libxfs/xfs_refcount.h
-@@ -127,4 +127,14 @@ extern struct kmem_cache	*xfs_refcount_intent_cache;
- int __init xfs_refcount_intent_init_cache(void);
- void xfs_refcount_intent_destroy_cache(void);
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index 8518324db285..4b83f6148e00 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -190,9 +190,6 @@ int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
+ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t bno, xfs_filblks_t len, uint32_t flags,
+ 		xfs_extlen_t total, struct xfs_bmbt_irec *mval, int *nmap);
+-int	__xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+-		xfs_fileoff_t bno, xfs_filblks_t *rlen, uint32_t flags,
+-		xfs_extnum_t nexts);
+ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t bno, xfs_filblks_t len, uint32_t flags,
+ 		xfs_extnum_t nexts, int *done);
+@@ -273,6 +270,8 @@ int xfs_bmap_complain_bad_rec(struct xfs_inode *ip, int whichfork,
+ int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
+ 		uint32_t flags);
++int	xfs_bunmapi_range(struct xfs_trans **tpp, struct xfs_inode *ip,
++		uint32_t flags, xfs_fileoff_t startoff, xfs_fileoff_t endoff);
  
-+typedef int (*xfs_refcount_query_range_fn)(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_refcount_irec	*rec,
-+	void				*priv);
-+
-+int xfs_refcount_query_range(struct xfs_btree_cur *cur,
-+		const struct xfs_refcount_irec *low_rec,
-+		const struct xfs_refcount_irec *high_rec,
-+		xfs_refcount_query_range_fn fn, void *priv);
-+
- #endif	/* __XFS_REFCOUNT_H__ */
+ extern struct kmem_cache	*xfs_bmap_intent_cache;
+ 
 
