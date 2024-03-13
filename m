@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E9BA951
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 01:56:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BB83A951
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 01:56:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710294986; cv=none; b=KUuSZBNlhFWFS0RQ0fv/AZBgVQJ7DAb53rym63zsgKe4sAzPVzMOT1Mb3qGDCk15ORCCk9XDl588C+8SK5HxbDeN0Fty+CrRw7Rv1hhDgczsfgNZr0SXsGC7qgWsETEyGqorp+jMrmWI/T+W55gTk252KRCBfGPTVumqWvzeENU=
+	t=1710295002; cv=none; b=ncVtyojCDQWumFRJM/7GP6UO1Zquip0yOtpZQtOFA5hOqnTfwFaqHaB4zksWSrFYxNfZiT2iBbuve4D/mpe0RtV7HrRGIjIjC+pCNOETwc2kUx85S1wlFRA4KHETWc9k9Ft69l1u9MkNPLJWX6Vs5RA6HQc2rUROo4aYZvgztTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710294986; c=relaxed/simple;
-	bh=j7UrZa465552QqaDf/RE5Srf5uO1u55tvH34Dph8SVA=;
+	s=arc-20240116; t=1710295002; c=relaxed/simple;
+	bh=j+TxrkHsBUaK3YnAm3ejQUNPa9VBFzrpfsfwi0/u0BI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=P+omlV9Gle+Je8cnWjpPhGIY49isi0Q5CakDujuTTzxac6BVpY2P7u/nw8Mu44VNEmRMSecd6dNg2pO/EH6kQ8TzIeUXpbamUpb4ZETD47+B+fMxe3w2OXdyZ+QE8222LAd/5CGRxz0LsSbnzXbI3vlLNT6OKYUHZrkCtw4Ic44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iKPcAWMy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QLg8tgTc/I4vB7P0VYjlduFqDJigo8oEfuOcYOibBwec3imTfRYLkHRdpC4ieLHck1uXm5U1MZyJh9v+wWebJDJZJffIeaqi4QoldHrZc+Ph67JClsTeLNHSw1lSQZmfS2rm45x4rTV2kj3ftQ88zHknZW1YJ4pX2pvF2rTbJbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cCWqaiQM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iKPcAWMy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50238C433C7;
-	Wed, 13 Mar 2024 01:56:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cCWqaiQM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3300C433C7;
+	Wed, 13 Mar 2024 01:56:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710294986;
-	bh=j7UrZa465552QqaDf/RE5Srf5uO1u55tvH34Dph8SVA=;
+	s=k20201202; t=1710295001;
+	bh=j+TxrkHsBUaK3YnAm3ejQUNPa9VBFzrpfsfwi0/u0BI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iKPcAWMyLGE/yq6/JkSWaIJBDZJXt3GoIRCNMavicHgKYUnRvMwaa319LDNyR7qZs
-	 HDGbvrNvFQTRT3Cx2PKmg4tkdRIWArrSlT0b4yX4OMHi88FFLvysZBweKLX/gVijkk
-	 cRrfICI80+Dx3a1Cq91on3qns3VANiMDrfTYvcpBfZ3UslCU4rGRNSszhspbukn6Vm
-	 svdkQicGhJB+zgGGa0QgtG8QKjBs8rVFtps9GHHCORmYC49+6RyDJxhPO6aMrCC4xt
-	 3PItsv1d3HMhZvTCPWULOEm0bUw9kyMP7brHg+A6Ig81tW31qEuDYyURvkquxgKYmq
-	 jXlAhiR0P4BRg==
-Date: Tue, 12 Mar 2024 18:56:25 -0700
-Subject: [PATCH 13/67] xfs: don't allow overly small or large realtime volumes
+	b=cCWqaiQMGZL8OmwLIGRK8TOUipgd+P0juViz50uzyLkTs+fw9QsEqY+wtsBgIR7xM
+	 lnsUPzDz9jDExt6gVAEeF/1K643eTop+BNSQLDdV4XfspMTef0NzVrBWe2qG+G0FQ/
+	 +aF5dUSRzA6ClJ7cw1/OJghvE5huqCcHGJJX1WmUkDykbfMB2fO6VguECDh5wuzO31
+	 BsvbNVYEyhB1vnGD37NiSLnHACi/MhMHi+Kr2mAYbjgGYKU75f87qezUPnrTSIMoHF
+	 xBqdaFgTrrwAy0IYhjrHhkqBK0ftQJws9MyFEBJ/I81jPIXJ1ZR0aTy11qugRuM5tb
+	 NFCY/udciTAIw==
+Date: Tue, 12 Mar 2024 18:56:41 -0700
+Subject: [PATCH 14/67] xfs: elide ->create_done calls for unlogged deferred
+ work
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171029431381.2061787.16982684933003745809.stgit@frogsfrogsfrogs>
+Message-ID: <171029431396.2061787.11287740887349817242.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 References: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,95 +47,46 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: e14293803f4e84eb23a417b462b56251033b5a66
+Source kernel commit: 9c07bca793b4ff9f0b7871e2a928a1b28b8fa4e3
 
-Don't allow realtime volumes that are less than one rt extent long.
-This has been broken across 4 LTS kernels with nobody noticing, so let's
-just disable it.
+Extended attribute updates use the deferred work machinery to manage
+state across a chain of smaller transactions.  All previous deferred
+work users have employed log intent items and log done items to manage
+restarting of interrupted operations, which means that ->create_intent
+sets dfp_intent to a log intent item and ->create_done uses that item to
+create a log intent done item.
+
+However, xattrs have used the INCOMPLETE flag to deal with the lack of
+recovery support for an interrupted transaction chain.  Log items are
+optional if the xattr update caller didn't set XFS_DA_OP_LOGGED to
+require a restartable sequence.
+
+In other words, ->create_intent can return NULL to say that there's no
+log intent item.  If that's the case, no log intent done item should be
+created.  Clean up xfs_defer_create_done not to do this, so that the
+->create_done functions don't have to check for non-null dfp_intent
+themselves.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rtbitmap.h |   13 +++++++++++++
- libxfs/xfs_sb.c       |    3 ++-
- mkfs/xfs_mkfs.c       |    5 +++++
- repair/sb.c           |    3 +++
- 4 files changed, 23 insertions(+), 1 deletion(-)
+ libxfs/xfs_defer.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index 6e5bae324cc3..1c84b52de3d4 100644
---- a/libxfs/xfs_rtbitmap.h
-+++ b/libxfs/xfs_rtbitmap.h
-@@ -353,6 +353,18 @@ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 29ec0bd8138c..722ff6a77260 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -195,6 +195,10 @@ xfs_defer_create_done(
+ 	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 	struct xfs_log_item		*lip;
  
- uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
- 
-+/* Do we support an rt volume having this number of rtextents? */
-+static inline bool
-+xfs_validate_rtextents(
-+	xfs_rtbxlen_t		rtextents)
-+{
-+	/* No runt rt volumes */
-+	if (rtextents == 0)
-+		return false;
++	/* If there is no log intent item, there can be no log done item. */
++	if (!dfp->dfp_intent)
++		return;
 +
-+	return true;
-+}
-+
- xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
- 		rtextents);
- unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
-@@ -372,6 +384,7 @@ unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
- # define xfs_rtbuf_cache_relse(a)			(0)
- # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
- # define xfs_compute_rextslog(rtx)			(0)
-+# define xfs_validate_rtextents(rtx)			(false)
- static inline xfs_filblks_t
- xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
- {
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 95a29bf1ffcf..7a72d5a17910 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -507,7 +507,8 @@ xfs_validate_sb_common(
- 		rbmblocks = howmany_64(sbp->sb_rextents,
- 				       NBBY * sbp->sb_blocksize);
- 
--		if (sbp->sb_rextents != rexts ||
-+		if (!xfs_validate_rtextents(rexts) ||
-+		    sbp->sb_rextents != rexts ||
- 		    sbp->sb_rextslog != xfs_compute_rextslog(rexts) ||
- 		    sbp->sb_rbmblocks != rbmblocks) {
- 			xfs_notice(mp,
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index abea61943652..1a0a71dbec78 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3025,6 +3025,11 @@ reported by the device (%u).\n"),
- 	}
- 
- 	cfg->rtextents = cfg->rtblocks / cfg->rtextblocks;
-+	if (cfg->rtextents == 0) {
-+		fprintf(stderr,
-+_("cannot have an rt subvolume with zero extents\n"));
-+		usage();
-+	}
- 	cfg->rtbmblocks = (xfs_extlen_t)howmany(cfg->rtextents,
- 						NBBY * cfg->blocksize);
- }
-diff --git a/repair/sb.c b/repair/sb.c
-index 384840db1cec..faf79d9d0835 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -475,6 +475,9 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- 		if (sb->sb_rblocks / sb->sb_rextsize != sb->sb_rextents)
- 			return(XR_BAD_RT_GEO_DATA);
- 
-+		if (sb->sb_rextents == 0)
-+			return XR_BAD_RT_GEO_DATA;
-+
- 		if (sb->sb_rextslog != libxfs_compute_rextslog(sb->sb_rextents))
- 			return(XR_BAD_RT_GEO_DATA);
- 
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
 
