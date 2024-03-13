@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289D0C122
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:17:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7F1AD21
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:17:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710296237; cv=none; b=WKUVR+MBaTT5LPbX7D5AyIvPlGjc5fs4x7UtY44i9jZ39Le3HRNTzHF5ZL7IK/edD0TJ3yuFgNnIlZn0QVhN4YNjR3pIIyrj2XmffbxHoK0DIrRbcA5n0T3k8XRdOgrsOlCBh9HmJXXwDyw+P6NrlcXTMy0Sx4xzbqBhwgDNgc8=
+	t=1710296252; cv=none; b=fTcOrMMmC22i12Qmo42BGOZShKCTtv++mkj2JjQqB4yadpApRxfvJjK68+hxkcQzgoWp/uFwqa9+uDcDrY5qrLPipOUD+2yXDXlolz0AvBIDNte4vhHxvnIBzC6Q/cgjmL+vBYY/9r3qWxkfqOFrKMtWe5KZT3QaUVXzYNVmEno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710296237; c=relaxed/simple;
-	bh=3cO2YXAMesNcgZ0Rf7ZLllABv1kSgf/xFr6TGPXz5B8=;
+	s=arc-20240116; t=1710296252; c=relaxed/simple;
+	bh=DZMVo8ohj80KEVGlsH9qPBZ7fC4ElR/w1WpSGPRLdbI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BiOIoFH0evia9enCPoUotLNRJVzwv/0z1ca1x0BU94korCzFF9Rqv4rPm8nenBL8FyKHeQb8rYCwJIRfi0qnnWVUrPZ5JFdWQG27rcwA/l7K3jbGsfg6UPLFrLDQ2+7RGCgSmwySSX7yqxcjwh/TR2oej0gdD3cQFe0B7RjdcQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dBJPzaF/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=O5JNf9+TErYUEA0j529g6MUcAtS1cFD776dDs5v8vFqBGJ56M2LKM3Gdae4wg7e9EqyYvgj6ImrRfEE2rcCkCj/rxJWcTf2pzvBesyGyxtta6gRMY3nYW/WSncrRgHEFWaAL7wAljg7BPMfaWP3XVQuEwnzYRUB057VCZY7hkNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pCeURJ08; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dBJPzaF/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01102C433F1;
-	Wed, 13 Mar 2024 02:17:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pCeURJ08"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA43AC433F1;
+	Wed, 13 Mar 2024 02:17:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710296237;
-	bh=3cO2YXAMesNcgZ0Rf7ZLllABv1kSgf/xFr6TGPXz5B8=;
+	s=k20201202; t=1710296252;
+	bh=DZMVo8ohj80KEVGlsH9qPBZ7fC4ElR/w1WpSGPRLdbI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dBJPzaF/ZevSp7pmlzU3gKfcagstEomqZl8uCXRTgsUFiRgM6Jj1hdvR1N9p3Q24v
-	 0vpaurll0RzuomPXqPJQfyvlyIYTBS5zErJBdqd0bTFBWduEFZ6XoHwncaSOJhIOq5
-	 /uWsL41P1AdzVPnMT9Y/fv5e0eS7EM/wQqw8O/BX+8Xdy17wyw6pP7VJW7Vzz47ZHE
-	 PSuqmoE0PlRvdMpqnYUXvB69fHafFggqVwsB9+22rGI49LkrO69c9kZZiH2/dFW5Ai
-	 zG5FKfIvHzNhdRJq1SACES1ljU8rnJ5kLuuE/yCrDI1jMNLY3AiEJhSE7MG6QMOGdH
-	 qnJBgs1toXO3w==
-Date: Tue, 12 Mar 2024 19:17:16 -0700
-Subject: [PATCH 2/3] libxfs: clean up xfs_da_unmount usage
+	b=pCeURJ08/uco6mifMevQ5Dvph2JDZXe0LX1IULydOSBd3miyCczRj+sQq5ewtk3d9
+	 gsNeqCeHm71oPdGAZLIePneDAgbjxjxeWsIr78ULGaXC6vKMVgAK2WWXrtEXeuDXUc
+	 Mr25x5vQjaf6JO3Kfa5+Eb/x/08LzIoZpapIVmLccdvV2fu1aFaoYl3l7jIEavebT7
+	 eve5B4qUCCJHHG/H41OXOYDcAJFC3NnQ1wtSnOuU6v5QBuV68RYJOPKtSk04hI9vVW
+	 xkDI4P8z6xdW95Rx0j7R74Q5bfIE3FuBvroo6OZ8197OfqaRcUrUP3IB5uWOqNEor+
+	 /J71t+jk4oYuw==
+Date: Tue, 12 Mar 2024 19:17:32 -0700
+Subject: [PATCH 3/3] libfrog: create a new scrub group for things requiring
+ full inode scans
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171029435204.2066071.12077621897985625395.stgit@frogsfrogsfrogs>
+Message-ID: <171029435218.2066071.72866513594224796.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029435171.2066071.3261378354922412284.stgit@frogsfrogsfrogs>
 References: <171029435171.2066071.3261378354922412284.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,76 +47,190 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Replace the open-coded xfs_da_unmount usage in libxfs_umount and teach
-libxfs_mount not to leak the dir/attr geometry structures when the mount
-attempt fails.
+Subsequent patches will add online fsck types (quotacheck, link counts)
+that require us to walk every inode in the entire filesystem.  This
+requires the AG metadata and the inodes to be in good enough shape to
+complete the scan without hitting corruption errors.  As such, they
+ought to run after phases 2-4 and before phase 7, which summarizes what
+we've found.
+
+Phase 5 seems like a reasonable place to do this, since it already walks
+every xattr and directory entry in the filesystem to look for suspicious
+looking names.  Add a new XFROG_SCRUB_GROUP, and add it to phase 5.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c |   16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ io/scrub.c        |    1 +
+ libfrog/scrub.h   |    1 +
+ scrub/phase5.c    |   22 ++++++++++++++++++++--
+ scrub/scrub.c     |   33 +++++++++++++++++++++++++++++++++
+ scrub/scrub.h     |    1 +
+ scrub/xfs_scrub.h |    1 +
+ 6 files changed, 57 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index c8d776e3ed50..5641b9bef6bd 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -721,7 +721,7 @@ libxfs_mount(
- 	if (error) {
- 		fprintf(stderr, _("%s: data size check failed\n"), progname);
- 		if (!xfs_is_debugger(mp))
--			return NULL;
-+			goto out_da;
- 	} else
- 		libxfs_buf_relse(bp);
+diff --git a/io/scrub.c b/io/scrub.c
+index 70301c0676c4..a77cd872fede 100644
+--- a/io/scrub.c
++++ b/io/scrub.c
+@@ -184,6 +184,7 @@ parse_args(
+ 	case XFROG_SCRUB_GROUP_FS:
+ 	case XFROG_SCRUB_GROUP_NONE:
+ 	case XFROG_SCRUB_GROUP_SUMMARY:
++	case XFROG_SCRUB_GROUP_ISCAN:
+ 		if (!parse_none(argc, optind)) {
+ 			exitcode = 1;
+ 			return command_usage(cmdinfo);
+diff --git a/libfrog/scrub.h b/libfrog/scrub.h
+index 68f1a968103e..27230c62f71a 100644
+--- a/libfrog/scrub.h
++++ b/libfrog/scrub.h
+@@ -13,6 +13,7 @@ enum xfrog_scrub_group {
+ 	XFROG_SCRUB_GROUP_PERAG,	/* per-AG metadata */
+ 	XFROG_SCRUB_GROUP_FS,		/* per-FS metadata */
+ 	XFROG_SCRUB_GROUP_INODE,	/* per-inode metadata */
++	XFROG_SCRUB_GROUP_ISCAN,	/* metadata requiring full inode scan */
+ 	XFROG_SCRUB_GROUP_SUMMARY,	/* summary metadata */
+ };
  
-@@ -735,7 +735,7 @@ libxfs_mount(
- 			fprintf(stderr, _("%s: log size checks failed\n"),
- 					progname);
- 			if (!xfs_is_debugger(mp))
--				return NULL;
-+				goto out_da;
- 		}
- 		if (bp)
- 			libxfs_buf_relse(bp);
-@@ -746,8 +746,8 @@ libxfs_mount(
- 	/* Initialize realtime fields in the mount structure */
- 	if (rtmount_init(mp)) {
- 		fprintf(stderr, _("%s: realtime device init failed\n"),
--			progname);
--			return NULL;
-+				progname);
-+			goto out_da;
- 	}
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 7e0eaca90422..0a91e4f0640b 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -16,6 +16,8 @@
+ #include "list.h"
+ #include "libfrog/paths.h"
+ #include "libfrog/workqueue.h"
++#include "libfrog/fsgeom.h"
++#include "libfrog/scrub.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "inodes.h"
+@@ -23,8 +25,9 @@
+ #include "scrub.h"
+ #include "descr.h"
+ #include "unicrash.h"
++#include "repair.h"
  
- 	/*
-@@ -765,7 +765,7 @@ libxfs_mount(
- 			fprintf(stderr, _("%s: read of AG %u failed\n"),
- 						progname, sbp->sb_agcount);
- 			if (!xfs_is_debugger(mp))
--				return NULL;
-+				goto out_da;
- 			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
- 								progname);
- 			sbp->sb_agcount = 1;
-@@ -783,6 +783,9 @@ libxfs_mount(
- 	xfs_set_perag_data_loaded(mp);
+-/* Phase 5: Check directory connectivity. */
++/* Phase 5: Full inode scans and check directory connectivity. */
  
- 	return mp;
-+out_da:
-+	xfs_da_unmount(mp);
-+	return NULL;
+ /*
+  * Warn about problematic bytes in a directory/attribute name.  That means
+@@ -386,9 +389,24 @@ int
+ phase5_func(
+ 	struct scrub_ctx	*ctx)
+ {
++	struct action_list	alist;
+ 	bool			aborted = false;
+ 	int			ret;
+ 
++	/*
++	 * Check and fix anything that requires a full inode scan.  We do this
++	 * after we've checked all inodes and repaired anything that could get
++	 * in the way of a scan.
++	 */
++	action_list_init(&alist);
++	ret = scrub_iscan_metadata(ctx, &alist);
++	if (ret)
++		return ret;
++	ret = action_list_process(ctx, ctx->mnt.fd, &alist,
++			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
++	if (ret)
++		return ret;
++
+ 	if (ctx->corruptions_found || ctx->unfixable_errors) {
+ 		str_info(ctx, ctx->mntpoint,
+ _("Filesystem has errors, skipping connectivity checks."));
+@@ -417,7 +435,7 @@ phase5_estimate(
+ 	unsigned int		*nr_threads,
+ 	int			*rshift)
+ {
+-	*items = ctx->mnt_sv.f_files - ctx->mnt_sv.f_ffree;
++	*items = scrub_estimate_iscan_work(ctx);
+ 	*nr_threads = scrub_nproc(ctx);
+ 	*rshift = 0;
+ 	return 0;
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 1c53260cc26c..023cc2c2cd2c 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -47,6 +47,7 @@ format_scrub_descr(
+ 		break;
+ 	case XFROG_SCRUB_GROUP_FS:
+ 	case XFROG_SCRUB_GROUP_SUMMARY:
++	case XFROG_SCRUB_GROUP_ISCAN:
+ 		return snprintf(buf, buflen, _("%s"), _(sc->descr));
+ 		break;
+ 	case XFROG_SCRUB_GROUP_NONE:
+@@ -421,6 +422,15 @@ scrub_summary_metadata(
+ 	return scrub_group(ctx, XFROG_SCRUB_GROUP_SUMMARY, 0, alist);
  }
  
- void
-@@ -905,8 +908,7 @@ libxfs_umount(
- 	if (xfs_is_perag_data_loaded(mp))
- 		libxfs_free_perag(mp);
++/* Scrub all metadata requiring a full inode scan. */
++int
++scrub_iscan_metadata(
++	struct scrub_ctx		*ctx,
++	struct action_list		*alist)
++{
++	return scrub_group(ctx, XFROG_SCRUB_GROUP_ISCAN, 0, alist);
++}
++
+ /* Scrub /only/ the superblock summary counters. */
+ int
+ scrub_fs_counters(
+@@ -456,6 +466,29 @@ scrub_estimate_ag_work(
+ 	return estimate;
+ }
  
--	kmem_free(mp->m_attr_geo);
--	kmem_free(mp->m_dir_geo);
-+	xfs_da_unmount(mp);
++/*
++ * How many kernel calls will we make to scrub everything requiring a full
++ * inode scan?
++ */
++unsigned int
++scrub_estimate_iscan_work(
++	struct scrub_ctx		*ctx)
++{
++	const struct xfrog_scrub_descr	*sc;
++	int				type;
++	unsigned int			estimate;
++
++	estimate = ctx->mnt_sv.f_files - ctx->mnt_sv.f_ffree;
++
++	sc = xfrog_scrubbers;
++	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
++		if (sc->group == XFROG_SCRUB_GROUP_ISCAN)
++			estimate++;
++	}
++
++	return estimate;
++}
++
+ /*
+  * Scrub file metadata of some sort.  If errors occur, this function will log
+  * them and return nonzero.
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 8a999da6a965..0033fe7ed931 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -24,6 +24,7 @@ int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct action_list *alist);
+ int scrub_fs_metadata(struct scrub_ctx *ctx, unsigned int scrub_type,
+ 		struct action_list *alist);
++int scrub_iscan_metadata(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
  
- 	free(mp->m_fsname);
- 	mp->m_fsname = NULL;
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 7aea79d9555e..34d850d8db36 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -99,6 +99,7 @@ int phase7_func(struct scrub_ctx *ctx);
+ 
+ /* Progress estimator functions */
+ unsigned int scrub_estimate_ag_work(struct scrub_ctx *ctx);
++unsigned int scrub_estimate_iscan_work(struct scrub_ctx *ctx);
+ int phase2_estimate(struct scrub_ctx *ctx, uint64_t *items,
+ 		    unsigned int *nr_threads, int *rshift);
+ int phase3_estimate(struct scrub_ctx *ctx, uint64_t *items,
 
