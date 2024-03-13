@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B58BBA2B
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:10:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB5568BE0
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:10:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710295815; cv=none; b=imMtD1GGoqmbHb9Qmggu9+kgHXlB6JnQ04YL9jZEgxOL9ZCnxl6yZiMf4w/vWG9017stOBN2goKlHSeXxPzxzVAbKE2fX9g1HSDk7P8QrnpTmJHL5jEvqPuLuJ+9PoFoA2ZElbEbxJAKPgvf5uYutT9BwxHsyYWRoAnsiMmzvgg=
+	t=1710295830; cv=none; b=NLFqm5aE3Bst4Yy9/2kd7m6xtt2BQvv3UOcLAIL+vsAHlhJcPQJnYZhUfnHj5NkeM5mFdqX2kRcMwx3GYZ5ICxkdJOK9fjwS6SouNpbjTr00SgpZHvuoUFXUV5FD8ayBjs0lgAcUjTazmD8d99P//WtpT1rnNPlcACJz/k6N8Xs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710295815; c=relaxed/simple;
-	bh=N6o2/8nTpWLLDAwSWeybEIU1hl4FviI8I6jq1xXBy9w=;
+	s=arc-20240116; t=1710295830; c=relaxed/simple;
+	bh=4Uf4M8OFY0yBdIIB7AqbYOl+SnkRGBAcqhDWkmJ8khc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=l8HHfbJs2PgCdmIvKQXWndJLvWLqa9Re+gS2p6vIAuBiu7VoU9Jl0rh5YYwl8VS9U5VopM5NA7VLI0OPqJ6aFhBahBW2YPICo6eWnD7oOYWL850hctlBC+Do7pSkuO/zV255MXXgeYjs152xCK4OJOiDUgOJNU9h1G1rvraNQzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QOdv54pi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EyqumYlmFQT8ZMiGBOyXkdUSzTdZqUKQOsINRZdolMfT/uD5l1Lf0B5/LOZYhkB9khTSQ8lUasx2/Klklvy34Lnaut9QWOwLNQFVdhBixrU5A8jaGvQH6SS2pGs6HqRJ9o5xqhO2NKamDs1kUyPz6opgQ4+X2yBgNsC3iB+w4h8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=upZreGeM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QOdv54pi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7395C433F1;
-	Wed, 13 Mar 2024 02:10:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="upZreGeM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99280C433F1;
+	Wed, 13 Mar 2024 02:10:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710295815;
-	bh=N6o2/8nTpWLLDAwSWeybEIU1hl4FviI8I6jq1xXBy9w=;
+	s=k20201202; t=1710295830;
+	bh=4Uf4M8OFY0yBdIIB7AqbYOl+SnkRGBAcqhDWkmJ8khc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=QOdv54pirH6g9WXj07JWXOCTU/90ZKjZqIUBL6WMfPhn5eoJDwH7SHPFr6BlsP1HF
-	 b0eGRq+hsxuGKtovgSCQX1lfAZ1/+nhd3+/n/qExtU4s91E0L8ea7wsRG4d9zO+tVe
-	 nLbF/3p+v+NOqzUApmUUwtBGNzaBTKfrPGCQVEYzZJCfkbqn/dmxldIia5reea0nPT
-	 y4ZwBENId01rVuQAN7hA461XAEAteJEn/NOSMeO3vmPAAf5Kq9pmkicKh3q4vN09kc
-	 1XT/ULxJoWe+pEdHNEcKB0Q4Etx6j1I8k5zdsZuEHy+OU8/sxtzN31LTLx5s+sgIXG
-	 B9Z/jZTeTcoZQ==
-Date: Tue, 12 Mar 2024 19:10:14 -0700
-Subject: [PATCH 66/67] xfs: reset XFS_ATTR_INCOMPLETE filter on node removal
+	b=upZreGeMJyDlWFF+dWFnbZ3R/H9C8Ge93x14UZ+slsmo7Wou/pxf5B5V3y/tMjDWD
+	 VIZ1a1/X0yLD/mD3N5lw1ORDpvPK982RxQjnOpkkbxiZt+BIefTnxOH00xD18cMcud
+	 Vmiux8lFB51x8snxh88DjF7refRYUb52g6rm3cVa0yo7wVGhJ1Dd2E7/81Mothziu6
+	 N6sA1o6F5RCx599K/BL8zIx49WrYkVKIckX+72ox55CElRqbF7x2bLeaIoyQnLapEr
+	 2cUY1rjFWgiGx6MOQOo36RiVY2s80F4HXtCfvdNmFyR08mFHBr4Pc8XZS86gOyD+lp
+	 Vcmw9/21Dc5gg==
+Date: Tue, 12 Mar 2024 19:10:30 -0700
+Subject: [PATCH 67/67] xfs: remove conditional building of rt geometry
+ validator functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, Christoph Hellwig <hch@lst.de>,
- Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-Message-ID: <171029432147.2061787.11984387032713086021.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
+ linux-xfs@vger.kernel.org
+Message-ID: <171029432161.2061787.1232525242604018635.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 References: <171029431107.2061787.680090905906055791.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,47 +46,158 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Andrey Albershteyn <aalbersh@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 82ef1a5356572219f41f9123ca047259a77bd67b
+Source kernel commit: 881f78f472556ed05588172d5b5676b48dc48240
 
-In XFS_DAS_NODE_REMOVE_ATTR case, xfs_attr_mode_remove_attr() sets
-filter to XFS_ATTR_INCOMPLETE. The filter is then reset in
-xfs_attr_complete_op() if XFS_DA_OP_REPLACE operation is performed.
+I mistakenly turned off CONFIG_XFS_RT in the Kconfig file for arm64
+variant of the djwong-wtf git branch.  Unfortunately, it took me a good
+hour to figure out that RT wasn't built because this is what got printed
+to dmesg:
 
-The filter is not reset though if XFS just removes the attribute
-(args->value == NULL) with xfs_attr_defer_remove(). attr code goes
-to XFS_DAS_DONE state.
+XFS (sda2): realtime geometry sanity check failed
+XFS (sda2): Metadata corruption detected at xfs_sb_read_verify+0x170/0x190 [xfs], xfs_sb block 0x0
 
-Fix this by always resetting XFS_ATTR_INCOMPLETE filter. The replace
-operation already resets this filter in anyway and others are
-completed at this step hence don't need it.
+Whereas I would have expected:
 
-Fixes: fdaf1bb3cafc ("xfs: ATTR_REPLACE algorithm with LARP enabled needs rework")
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+XFS (sda2): Not built with CONFIG_XFS_RT
+XFS (sda2): RT mount failed
+
+The root cause of these problems is the conditional compilation of the
+new functions xfs_validate_rtextents and xfs_compute_rextslog that I
+introduced in the two commits listed below.  The !RT versions of these
+functions return false and 0, respectively, which causes primary
+superblock validation to fail, which explains the first message.
+
+Move the two functions to other parts of libxfs that are not
+conditionally defined by CONFIG_XFS_RT and remove the broken stubs so
+that validation works again.
+
+Fixes: e14293803f4e ("xfs: don't allow overly small or large realtime volumes")
+Fixes: a6a38f309afc ("xfs: make rextslog computation consistent with mkfs")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/xfs_attr.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ libxfs/xfs_rtbitmap.c |   14 --------------
+ libxfs/xfs_rtbitmap.h |   16 ----------------
+ libxfs/xfs_sb.c       |   14 ++++++++++++++
+ libxfs/xfs_sb.h       |    2 ++
+ libxfs/xfs_types.h    |   12 ++++++++++++
+ 5 files changed, 28 insertions(+), 30 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 1419846bdf9d..630065f1a392 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -419,10 +419,10 @@ xfs_attr_complete_op(
- 	bool			do_replace = args->op_flags & XFS_DA_OP_REPLACE;
- 
- 	args->op_flags &= ~XFS_DA_OP_REPLACE;
--	if (do_replace) {
--		args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
-+	args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
-+	if (do_replace)
- 		return replace_state;
--	}
-+
- 	return XFS_DAS_DONE;
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 79af7cda3441..08a4128fc524 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1116,20 +1116,6 @@ xfs_rtbitmap_blockcount(
+ 	return howmany_64(rtextents, NBBY * mp->m_sb.sb_blocksize);
  }
  
+-/*
+- * Compute the maximum level number of the realtime summary file, as defined by
+- * mkfs.  The historic use of highbit32 on a 64-bit quantity prohibited correct
+- * use of rt volumes with more than 2^32 extents.
+- */
+-uint8_t
+-xfs_compute_rextslog(
+-	xfs_rtbxlen_t		rtextents)
+-{
+-	if (!rtextents)
+-		return 0;
+-	return xfs_highbit64(rtextents);
+-}
+-
+ /*
+  * Compute the number of rtbitmap words needed to populate every block of a
+  * bitmap that is large enough to track the given number of rt extents.
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index 274dc7dae1fa..152a66750af5 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -351,20 +351,6 @@ xfs_rtfree_extent(
+ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
+ 		xfs_filblks_t rtlen);
+ 
+-uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+-
+-/* Do we support an rt volume having this number of rtextents? */
+-static inline bool
+-xfs_validate_rtextents(
+-	xfs_rtbxlen_t		rtextents)
+-{
+-	/* No runt rt volumes */
+-	if (rtextents == 0)
+-		return false;
+-
+-	return true;
+-}
+-
+ xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
+ 		rtextents);
+ unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
+@@ -383,8 +369,6 @@ unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
+ # define xfs_rtsummary_read_buf(a,b)			(-ENOSYS)
+ # define xfs_rtbuf_cache_relse(a)			(0)
+ # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
+-# define xfs_compute_rextslog(rtx)			(0)
+-# define xfs_validate_rtextents(rtx)			(false)
+ static inline xfs_filblks_t
+ xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
+ {
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 7a72d5a17910..402f03a557e0 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1375,3 +1375,17 @@ xfs_validate_stripe_geometry(
+ 	}
+ 	return true;
+ }
++
++/*
++ * Compute the maximum level number of the realtime summary file, as defined by
++ * mkfs.  The historic use of highbit32 on a 64-bit quantity prohibited correct
++ * use of rt volumes with more than 2^32 extents.
++ */
++uint8_t
++xfs_compute_rextslog(
++	xfs_rtbxlen_t		rtextents)
++{
++	if (!rtextents)
++		return 0;
++	return xfs_highbit64(rtextents);
++}
+diff --git a/libxfs/xfs_sb.h b/libxfs/xfs_sb.h
+index 19134b23c10b..2e8e8d63d4eb 100644
+--- a/libxfs/xfs_sb.h
++++ b/libxfs/xfs_sb.h
+@@ -38,4 +38,6 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+ extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+ 		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
+ 
++uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
++
+ #endif	/* __XFS_SB_H__ */
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index 20b5375f2d9c..62e02d5380ad 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -251,4 +251,16 @@ bool xfs_verify_fileoff(struct xfs_mount *mp, xfs_fileoff_t off);
+ bool xfs_verify_fileext(struct xfs_mount *mp, xfs_fileoff_t off,
+ 		xfs_fileoff_t len);
+ 
++/* Do we support an rt volume having this number of rtextents? */
++static inline bool
++xfs_validate_rtextents(
++	xfs_rtbxlen_t		rtextents)
++{
++	/* No runt rt volumes */
++	if (rtextents == 0)
++		return false;
++
++	return true;
++}
++
+ #endif	/* __XFS_TYPES_H__ */
 
