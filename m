@@ -1,338 +1,200 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A9313FB8B
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 12:29:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D261F224FA;
+	Wed, 13 Mar 2024 13:26:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710332960; cv=none; b=JuOkZUaMlLL5awJmAEIFw26oSlrBMP+smBAogTjmdDF/5+sy1JlmPVlbUg2RJ46BliSyiounkQjUYhs52aePXusiAo4CZSGH0jR1vhGz6NoXkq9hoo3xMRzJJS2o2V77ML0QeQR2vJ+PweqoiGs+yDPpLRjkGAMBtudMR4psKk0=
+	t=1710336365; cv=none; b=kIqyML0W3YtJRERUR7sYLOwq4eLoUtPRsJrhDNp+BERbC/PbqVklFZ0kvyglj4/6YVRLCLpl8riMQ9dnK8mcJTG13I1R1qgFpVn269aljNxY08BCmwipN/LBLhvJoMAsmDKmO1dwBjAnZIhHvMq1WIJX5Ln0+jHqElYPKDml1Oo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710332960; c=relaxed/simple;
-	bh=oSqOOOQXVNftgsoUErcdOE2GsR+PW6IzXyyX4xJ/+gw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fqYjP0wLrB/Qbmtxj6H9mlGrOhMrDCOJQeGui6uB5PYKw3UhF3RkhpRsNyrhyTDjN9Nbo3edVXXoCuLnkR34OL8yaqIXIooIqN2kHaZVucGDy6WV5FM5OF8o3p2IFho77qQEidmE2KrJzvX4gAcCXCzjtBd/CmzhbDJ7td5DUYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MvCsKceH; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MvCsKceH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1710332957;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=k8x5ZSVtO603+A176kqypuw3h2+JLOydtLzQlaAOVxY=;
-	b=MvCsKceHoA1hFeVYQTjQP7FCm7KJ4Qcxhel7n61tRe/eQC3lG4JbjrXljQ3HbKX/UGKkHZ
-	I8mggqVDENJr00Hik0HKRMJfSQBLPNRTIYg5UIfufSukZICHfaOx7OCPvRFqd8W3CnS+oZ
-	aWaFihnWJ6p57BAnJpYyPl3G0ZCtf1w=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-301-DfvySrvgO4qAQPkVvqVdPg-1; Wed, 13 Mar 2024 08:29:16 -0400
-X-MC-Unique: DfvySrvgO4qAQPkVvqVdPg-1
-Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-513c9f60a60so413472e87.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 05:29:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710332954; x=1710937754;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt:from
-         :references:cc:to:content-language:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k8x5ZSVtO603+A176kqypuw3h2+JLOydtLzQlaAOVxY=;
-        b=BoFNUZ1TVz8cKvvLVvB3CYOzW8DPL5x/Vzk2VEJB+RxIBDFsj/9WKmiqyHArmcNyRe
-         RrSFQCZO5EtB979LGIDgTP//fs7XI63bWjyWL38lFIFyUqQfBdFjH3+ZvaQlSWqmINkw
-         Pd43Wu72RYUyjQpUdW4gcSOR+vVW7AtOEQscCVONpgq8v9XeefEnozpA3WnkqjooqiDB
-         IOvP2WVjaNR8M39Dc75pOgXH0r8Ett5Iexi+QyK3s2nZEVKqgCBZCkoDDDCsTcwOaDVW
-         WTmUlwbltYLV6NBIUJsbwOjVbMhWOiaDiWfaKKR9VlvVK/IoVGNjt7X7cEQgUYtDp63W
-         /SMw==
-X-Forwarded-Encrypted: i=1; AJvYcCVRmMoS8ruOE3F8OExWmtLaCq7o7qAr3E3yr+Q0v2kb9NKVp5NHPD56zIxQuGB7gS2W1PxautZvCWCJNjp6rrXYbEB6zh1dlrrh
-X-Gm-Message-State: AOJu0YyCf3D21PAtLG0896xcn3uCKf8F1aeP8w1eF3SE/znqR/5vyjbD
-	6xUxyadvt6xalmXTCunzUky1og5DrTuawhL+/oRQ2Rs8vlhqdHvqmp+Mgvg13E5JFzMLRNU76ac
-	o25Ea8wDFuqvId8dPlMcIIKAST6WQESmPWoxJjTknqEIYCrME6MgQu2291w==
-X-Received: by 2002:ac2:430b:0:b0:513:55ea:7e2e with SMTP id l11-20020ac2430b000000b0051355ea7e2emr3382721lfh.53.1710332954529;
-        Wed, 13 Mar 2024 05:29:14 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGfsCGI3AFEG0mu84otxaoZ5vWsgSIsgkV4jPcCeSYNL14MUNICSC9ePLEwtBpr3UTge2H3bA==
-X-Received: by 2002:ac2:430b:0:b0:513:55ea:7e2e with SMTP id l11-20020ac2430b000000b0051355ea7e2emr3382706lfh.53.1710332954000;
-        Wed, 13 Mar 2024 05:29:14 -0700 (PDT)
-Received: from [10.32.64.142] (nat-pool-muc-t.redhat.com. [149.14.88.26])
-        by smtp.gmail.com with ESMTPSA id q18-20020adf9dd2000000b0033e90e98886sm9006066wre.71.2024.03.13.05.29.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Mar 2024 05:29:13 -0700 (PDT)
-Message-ID: <420b6d5f-adef-4415-b8cb-16c234dcec38@redhat.com>
-Date: Wed, 13 Mar 2024 13:29:12 +0100
+	s=arc-20240116; t=1710336365; c=relaxed/simple;
+	bh=DlSZbREWnIYHJvRGZ3VB0oSAWgJZv07u30LNhA8TdgE=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=rBzNmmukIs6c5lGxtuVMeQCzOj+WvrMqAHB+BzC/OFerowsBZ0BB8bW55bqkDdOXZOi0x9H/1iklLeBcBxtpZirg55iHPj98U/XzaGhDk+PD2g9VmMFsSkgzEjX/TZSIbcALY4UIsaODdEsM09vblfQXWgwfbnNQgaiipVQq1sE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4TvrqY5YLKz4f3jdF;
+	Wed, 13 Mar 2024 21:25:45 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 7A33C1A0568;
+	Wed, 13 Mar 2024 21:25:51 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgBnOBFdqfFlKzJRGw--.43272S3;
+	Wed, 13 Mar 2024 21:25:51 +0800 (CST)
+Subject: Re: [PATCH 2/4] xfs: convert delayed extents to unwritten when
+ zeroing post eof blocks
+To: Zhang Yi <yi.zhang@huaweicloud.com>, "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, hch@infradead.org, brauner@kernel.org,
+ david@fromorbit.com, tytso@mit.edu, jack@suse.cz, chengzhihao1@huawei.com,
+ yukuai3@huawei.com, yi.zhang@huawei.com
+References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
+ <20240311122255.2637311-3-yi.zhang@huaweicloud.com>
+ <20240311153737.GT1927156@frogsfrogsfrogs>
+ <aab454d0-d8f3-61c8-0d14-a5ae4c35746e@huaweicloud.com>
+ <20240312162150.GB1927156@frogsfrogsfrogs>
+ <e29aa6df-5307-5c95-6471-fbaf3452d76f@huaweicloud.com>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <cde25a6b-b468-33be-d82f-0172b840b064@huaweicloud.com>
+Date: Wed, 13 Mar 2024 21:25:49 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 06/24] fsverity: pass tree_blocksize to
- end_enable_verity()
+In-Reply-To: <e29aa6df-5307-5c95-6471-fbaf3452d76f@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>,
- Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- chandan.babu@oracle.com, akpm@linux-foundation.org, linux-mm@kvack.org,
- Eric Biggers <ebiggers@kernel.org>
-References: <20240304191046.157464-2-aalbersh@redhat.com>
- <20240304191046.157464-8-aalbersh@redhat.com>
- <20240305005242.GE17145@sol.localdomain>
- <20240306163000.GP1927156@frogsfrogsfrogs>
- <20240307220224.GA1799@sol.localdomain>
- <20240308034650.GK1927156@frogsfrogsfrogs>
- <20240308044017.GC8111@sol.localdomain>
- <20240311223815.GW1927156@frogsfrogsfrogs>
- <9927568e-9f36-4417-9d26-c8a05c220399@redhat.com>
- <08905bcc-677d-4981-926d-7f407b2f6a4a@redhat.com>
- <20240312164444.GG1927156@frogsfrogsfrogs>
-From: David Hildenbrand <david@redhat.com>
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- WNyWQQ==
-Organization: Red Hat
-In-Reply-To: <20240312164444.GG1927156@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgBnOBFdqfFlKzJRGw--.43272S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3GF1xGF48GFWrGFWxWFyxGrg_yoW7CFyxpr
+	Z3KF1UKa1Utw17Zrn2q3Z8Kwn3Ka4kGr48Xr43Xrn8Z3s0yr1xWryDJ3WY9rykJ39ayF12
+	vF4UWryI9w1YvFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+	04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+	1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+	AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0D
+	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
+	VFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 12.03.24 17:44, Darrick J. Wong wrote:
-> On Tue, Mar 12, 2024 at 04:33:14PM +0100, David Hildenbrand wrote:
->> On 12.03.24 16:13, David Hildenbrand wrote:
->>> On 11.03.24 23:38, Darrick J. Wong wrote:
->>>> [add willy and linux-mm]
->>>>
->>>> On Thu, Mar 07, 2024 at 08:40:17PM -0800, Eric Biggers wrote:
->>>>> On Thu, Mar 07, 2024 at 07:46:50PM -0800, Darrick J. Wong wrote:
->>>>>>> BTW, is xfs_repair planned to do anything about any such extra blocks?
->>>>>>
->>>>>> Sorry to answer your question with a question, but how much checking is
->>>>>> $filesystem expected to do for merkle trees?
->>>>>>
->>>>>> In theory xfs_repair could learn how to interpret the verity descriptor,
->>>>>> walk the merkle tree blocks, and even read the file data to confirm
->>>>>> intactness.  If the descriptor specifies the highest block address then
->>>>>> we could certainly trim off excess blocks.  But I don't know how much of
->>>>>> libfsverity actually lets you do that; I haven't looked into that
->>>>>> deeply. :/
->>>>>>
->>>>>> For xfs_scrub I guess the job is theoretically simpler, since we only
->>>>>> need to stream reads of the verity files through the page cache and let
->>>>>> verity tell us if the file data are consistent.
->>>>>>
->>>>>> For both tools, if something finds errors in the merkle tree structure
->>>>>> itself, do we turn off verity?  Or do we do something nasty like
->>>>>> truncate the file?
+On 2024/3/13 15:07, Zhang Yi wrote:
+> On 2024/3/13 0:21, Darrick J. Wong wrote:
+>> On Tue, Mar 12, 2024 at 08:31:58PM +0800, Zhang Yi wrote:
+>>> On 2024/3/11 23:37, Darrick J. Wong wrote:
+>>>> On Mon, Mar 11, 2024 at 08:22:53PM +0800, Zhang Yi wrote:
+>>>>> From: Zhang Yi <yi.zhang@huawei.com>
 >>>>>
->>>>> As far as I know (I haven't been following btrfs-progs, but I'm familiar with
->>>>> e2fsprogs and f2fs-tools), there isn't yet any precedent for fsck actually
->>>>> validating the data of verity inodes against their Merkle trees.
+>>>>> Current clone operation could be non-atomic if the destination of a file
+>>>>> is beyond EOF, user could get a file with corrupted (zeroed) data on
+>>>>> crash.
 >>>>>
->>>>> e2fsck does delete the verity metadata of inodes that don't have the verity flag
->>>>> enabled.  That handles cleaning up after a crash during FS_IOC_ENABLE_VERITY.
+>>>>> The problem is about to pre-alloctions. If you write some data into a
+>>>>> file [A, B) (the position letters are increased one by one), and xfs
+>>>>> could pre-allocate some blocks, then we get a delayed extent [A, D).
+>>>>> Then the writeback path allocate blocks and convert this delayed extent
+>>>>> [A, C) since lack of enough contiguous physical blocks, so the extent
+>>>>> [C, D) is still delayed. After that, both the in-memory and the on-disk
+>>>>> file size are B. If we clone file range into [E, F) from another file,
+>>>>> xfs_reflink_zero_posteof() would call iomap_zero_range() to zero out the
+>>>>> range [B, E) beyond EOF and flush range. Since [C, D) is still a delayed
+>>>>> extent, it will be zeroed and the file's in-memory && on-disk size will
+>>>>> be updated to D after flushing and before doing the clone operation.
+>>>>> This is wrong, because user can user can see the size change and read
+>>>>> zeros in the middle of the clone operation.
 >>>>>
->>>>> I suppose that ideally, if an inode's verity metadata is invalid, then fsck
->>>>> should delete that inode's verity metadata and remove the verity flag from the
->>>>> inode.  Checking for a missing or obviously corrupt fsverity_descriptor would be
->>>>> fairly straightforward, but it probably wouldn't catch much compared to actually
->>>>> validating the data against the Merkle tree.  And actually validating the data
->>>>> against the Merkle tree would be complex and expensive.  Note, none of this
->>>>> would work on files that are encrypted.
+>>>>> We need to keep the in-memory and on-disk size before the clone
+>>>>> operation starts, so instead of writing zeroes through the page cache
+>>>>> for delayed ranges beyond EOF, we convert these ranges to unwritten and
+>>>>> invalidating any cached data over that range beyond EOF.
 >>>>>
->>>>> Re: libfsverity, I think it would be possible to validate a Merkle tree using
->>>>> libfsverity_compute_digest() and the callbacks that it supports.  But that's not
->>>>> quite what it was designed for.
+>>>>> Suggested-by: Dave Chinner <david@fromorbit.com>
+>>>>> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+>>>>> ---
+>>>>>  fs/xfs/xfs_iomap.c | 29 +++++++++++++++++++++++++++++
+>>>>>  1 file changed, 29 insertions(+)
 >>>>>
->>>>>> Is there an ioctl or something that allows userspace to validate an
->>>>>> entire file's contents?  Sort of like what BLKVERIFY would have done for
->>>>>> block devices, except that we might believe its answers?
->>>>>
->>>>> Just reading the whole file and seeing whether you get an error would do it.
->>>>>
->>>>> Though if you want to make sure it's really re-reading the on-disk data, it's
->>>>> necessary to drop the file's pagecache first.
+>>>>> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+>>>>> index ccf83e72d8ca..2b2aace25355 100644
+>>>>> --- a/fs/xfs/xfs_iomap.c
+>>>>> +++ b/fs/xfs/xfs_iomap.c
+>>>>> @@ -957,6 +957,7 @@ xfs_buffered_write_iomap_begin(
+>>>>>  	struct xfs_mount	*mp = ip->i_mount;
+>>>>>  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>>>>>  	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
+>>>>> +	xfs_fileoff_t		eof_fsb = XFS_B_TO_FSBT(mp, XFS_ISIZE(ip));
+>>>>>  	struct xfs_bmbt_irec	imap, cmap;
+>>>>>  	struct xfs_iext_cursor	icur, ccur;
+>>>>>  	xfs_fsblock_t		prealloc_blocks = 0;
+>>>>> @@ -1035,6 +1036,22 @@ xfs_buffered_write_iomap_begin(
+>>>>>  	}
+>>>>>  
+>>>>>  	if (imap.br_startoff <= offset_fsb) {
+>>>>> +		/*
+>>>>> +		 * For zeroing out delayed allocation extent, we trim it if
+>>>>> +		 * it's partial beyonds EOF block, or convert it to unwritten
+>>>>> +		 * extent if it's all beyonds EOF block.
+>>>>> +		 */
+>>>>> +		if ((flags & IOMAP_ZERO) &&
+>>>>> +		    isnullstartblock(imap.br_startblock)) {
+>>>>> +			if (offset_fsb > eof_fsb)
+>>>>> +				goto convert_delay;
+>>>>> +			if (end_fsb > eof_fsb) {
+>>>>> +				end_fsb = eof_fsb + 1;
+>>>>> +				xfs_trim_extent(&imap, offset_fsb,
+>>>>> +						end_fsb - offset_fsb);
+>>>>> +			}
+>>>>> +		}
+>>>>> +
+>>>>>  		/*
+>>>>>  		 * For reflink files we may need a delalloc reservation when
+>>>>>  		 * overwriting shared extents.   This includes zeroing of
+>>>>> @@ -1158,6 +1175,18 @@ xfs_buffered_write_iomap_begin(
+>>>>>  	xfs_iunlock(ip, lockmode);
+>>>>>  	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
+>>>>>  
+>>>>> +convert_delay:
+>>>>> +	end_fsb = min(end_fsb, imap.br_startoff + imap.br_blockcount);
+>>>>> +	xfs_iunlock(ip, lockmode);
+>>>>> +	truncate_pagecache_range(inode, offset, XFS_FSB_TO_B(mp, end_fsb));
+>>>>> +	error = xfs_iomap_write_direct(ip, offset_fsb, end_fsb - offset_fsb,
+>>>>> +				       flags, &imap, &seq);
 >>>>
->>>> I tried a straight pagecache read and it worked like a charm!
->>>>
->>>> But then I thought to myself, do I really want to waste memory bandwidth
->>>> copying a bunch of data?  No.  I don't even want to incur system call
->>>> overhead from reading a single byte every $pagesize bytes.
->>>>
->>>> So I created 2M mmap areas and read a byte every $pagesize bytes.  That
->>>> worked too, insofar as SIGBUSes are annoying to handle.  But it's
->>>> annoying to take signals like that.
->>>>
->>>> Then I started looking at madvise.  MADV_POPULATE_READ looked exactly
->>>> like what I wanted -- it prefaults in the pages, and "If populating
->>>> fails, a SIGBUS signal is not generated; instead, an error is returned."
+>>>> I expected this to be a direct call to xfs_bmapi_convert_delalloc.
+>>>> What was the reason not for using that?
 >>>>
 >>>
->>> Yes, these were the expected semantics :)
->>>
->>>> But then I tried rigging up a test to see if I could catch an EIO, and
->>>> instead I had to SIGKILL the process!  It looks filemap_fault returns
->>>> VM_FAULT_RETRY to __xfs_filemap_fault, which propagates up through
->>>> __do_fault -> do_read_fault -> do_fault -> handle_pte_fault ->
->>>> handle_mm_fault -> faultin_page -> __get_user_pages.  At faultin_pages,
->>>> the VM_FAULT_RETRY is translated to -EBUSY.
->>>>
->>>> __get_user_pages squashes -EBUSY to 0, so faultin_vma_page_range returns
->>>> that to madvise_populate.  Unfortunately, madvise_populate increments
->>>> its loop counter by the return value (still 0) so it runs in an
->>>> infinite loop.  The only way out is SIGKILL.
->>>
->>> That's certainly unexpected. One user I know is QEMU, which primarily
->>> uses MADV_POPULATE_WRITE to prefault page tables. Prefaulting in QEMU is
->>> primarily used with shmem/hugetlb, where I haven't heard of any such
->>> endless loops.
->>>
->>>>
->>>> So I don't know what the correct behavior is here, other than the
->>>> infinite loop seems pretty suspect.  Is it the correct behavior that
->>>> madvise_populate returns EIO if __get_user_pages ever returns zero?
->>>> That doesn't quite sound right if it's the case that a zero return could
->>>> also happen if memory is tight.
->>>
->>> madvise_populate() ends up calling faultin_vma_page_range() in a loop.
->>> That one calls __get_user_pages().
->>>
->>> __get_user_pages() documents: "0 return value is possible when the fault
->>> would need to be retried."
->>>
->>> So that's what the caller does. IIRC, there are cases where we really
->>> have to retry (at least once) and will make progress, so treating "0" as
->>> an error would be wrong.
->>>
->>> Staring at other __get_user_pages() users, __get_user_pages_locked()
->>> documents: "Please note that this function, unlike __get_user_pages(),
->>> will not return 0 for nr_pages > 0, unless FOLL_NOWAIT is used.".
->>>
->>> But there is some elaborate retry logic in there, whereby the retry will
->>> set FOLL_TRIED->FAULT_FLAG_TRIED, and I think we'd fail on the second
->>> retry attempt (there are cases where we retry more often, but that's
->>> related to something else I believe).
->>>
->>> So maybe we need a similar retry logic in faultin_vma_page_range()? Or
->>> make it use __get_user_pages_locked(), but I recall when I introduced
->>> MADV_POPULATE_READ, there was a catch to it.
+>>> It's because xfs_bmapi_convert_delalloc() isn't guarantee to convert
+>>> enough blocks once a time, it may convert insufficient blocks since lack
+>>> of enough contiguous free physical blocks. If we are going to use it, I
+>>> suppose we need to introduce a new helper something like
+>>> xfs_convert_blocks(), add a loop to do the conversion.
 >>
->> I'm trying to figure out who will be setting the VM_FAULT_SIGBUS in the
->> mmap()+access case you describe above.
->>
->> Staring at arch/x86/mm/fault.c:do_user_addr_fault(), I don't immediately see
->> how we would transition from a VM_FAULT_RETRY loop to VM_FAULT_SIGBUS.
->> Because VM_FAULT_SIGBUS would be required for that function to call
->> do_sigbus().
+>> I thought xfs_bmapi_convert_delalloc passes out (via @iomap) the extent
+>> that xfs_bmapi_allocate (or anyone else) allocated (bma.got).  If that
+>> mapping is shorter, won't xfs_buffered_write_iomap_begin pass the
+>> shortened mapping out to the iomap machinery?  In which case that
+>> iomap_iter loop will call ->iomap_begin on the unfinished delalloc
+>> conversion work?
 > 
-> The code I was looking at yesterday in filemap_fault was:
-> 
-> page_not_uptodate:
-> 	/*
-> 	 * Umm, take care of errors if the page isn't up-to-date.
-> 	 * Try to re-read it _once_. We do this synchronously,
-> 	 * because there really aren't any performance issues here
-> 	 * and we need to check for errors.
-> 	 */
-> 	fpin = maybe_unlock_mmap_for_io(vmf, fpin);
-> 	error = filemap_read_folio(file, mapping->a_ops->read_folio, folio);
-> 	if (fpin)
-> 		goto out_retry;
-> 	folio_put(folio);
-> 
-> 	if (!error || error == AOP_TRUNCATED_PAGE)
-> 		goto retry_find;
-> 	filemap_invalidate_unlock_shared(mapping);
-> 
-> 	return VM_FAULT_SIGBUS;
-> 
-> Wherein I /think/ fpin is non-null in this case, so if
-> filemap_read_folio returns an error, we'll do this instead:
-> 
-> out_retry:
-> 	/*
-> 	 * We dropped the mmap_lock, we need to return to the fault handler to
-> 	 * re-find the vma and come back and find our hopefully still populated
-> 	 * page.
-> 	 */
-> 	if (!IS_ERR(folio))
-> 		folio_put(folio);
-> 	if (mapping_locked)
-> 		filemap_invalidate_unlock_shared(mapping);
-> 	if (fpin)
-> 		fput(fpin);
-> 	return ret | VM_FAULT_RETRY;
-> 
-> and since ret was 0 before the goto, the only return code is
-> VM_FAULT_RETRY.  I had speculated that perhaps we could instead do:
-> 
-> 	if (fpin) {
-> 		if (error)
-> 			ret |= VM_FAULT_SIGBUS;
-> 		goto out_retry;
-> 	}
-> 
-> But I think the hard part here is that there doesn't seem to be any
-> distinction between transient read errors (e.g. disk cable fell out) vs.
-> semi-permanent errors (e.g. verity says the hash doesn't match).
-> AFAICT, either the read(ahead) sets uptodate and callers read the page,
-> or it doesn't set it and callers treat that as an error-retry
-> opportunity.
-> 
-> For the transient error case VM_FAULT_RETRY makes perfect sense; for the
-> second case I imagine we'd want something closer to _SIGBUS.
+> Yeah, make sense, it works, I forgot this loop in iomap_iter().
 
+Sorry, I've found that it doesn't always work. Think about a special case,
+If we have a file below:
 
-Agreed, it's really hard to judge when it's the right time to give up 
-retrying. At least with MADV_POPULATE_READ we should try achieving the 
-same behavior as with mmap()+read access. So if the latter manages to 
-trigger SIGBUS, MADV_POPULATE_READ should return an error.
+	A          B           C                    D
+	+wwwwwwwwww+DDDDDDDDDDD+dddddddddddddddddddd+
+	          EOF         EOF
+               (on disk)  (in memory)
 
-Is there an easy way to for me to reproduce this scenario?
+where 'd' is a delalloc block with no data and 'D' is a delalloc
+block with dirty folios over it.
 
--- 
-Cheers,
+xfs_bmapi_convert_delalloc() might only convert some blocks from B to B',
 
-David / dhildenb
+	A          B   B'       C                    D
+	+wwwwwwwwww+UUU+DDDDDDD+dddddddddddddddddddd+
+	          EOF         EOF
+               (on disk)  (in memory)
+
+After that, it will trigger below warning in iomap_iter_done():
+
+ WARN_ON_ONCE(iter->iomap.offset + iter->iomap.length <= iter->pos);
+
+So I guess the loop is still needed, I plane to revise and use
+xfs_convert_blocks() here.
+
+Yi.
 
