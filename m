@@ -1,43 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E326B59B66
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 21:41:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FF2453E2D
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 21:41:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710366067; cv=none; b=fOJO7VuJ9sRZrSlIAXIsl/yww9WlfD7ux4SKTi7u1bVLMvnwLaKwnMgvcjhEQ8iyok09Z5Fua43WOMZ+3B3yuyGe80KcVK7GKswRM1Prlq3xLGI7yZgVjuBK4isxE0zZmkkXV9iDlPxk3TfWm6JPj86boxhCwyrrQb01BIVkqig=
+	t=1710366070; cv=none; b=AJv/7soHAR4PqQwSjeZtREvxmuo5Sv9kOdCPoFpEA464POxDmcLppwKTYJ4pi5e+ME2yo+R8uOl5zmLQIMHkwaQMevM0KpAsfmtHEKWyz0D2xVaa0xXm2tmJ0tU2h+2ko7ACPZS5RQClCpXPo8oDzHpESjuNGbbp4E13e+Ma4rQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710366067; c=relaxed/simple;
-	bh=tJ9p5WewJpZfyF4FWD953h5IIS7OUPrnuOWyctTMPvo=;
+	s=arc-20240116; t=1710366070; c=relaxed/simple;
+	bh=17H7BoEeHoPlmXT09AGcC3qlK0jGSbehvhViXQ5hx/o=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=G3enSMRas6n9FN+hexxN2QJEB++9P8BFyqhENu0nBGkOVtQiDbThTO9KqSNOEjFj5xTQLDnlHdF+UXU5s7NBHWl/K1mkLB+3j62Z/LRraBsLQrcmUmRz3Jxq16rMhskZD00h/lRv+VLeloTHkhuWa9QP98tF6OQLLLvA0xcQ2B0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UWfjWh8m; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=bkjqeVWIomANwMW5aRiI3l9a/mPPw73/ZgneXbX1YZb8/PXgrbadjfehEO4rHJBkFSwsDneJIupEHRPZtSltO0LYYhEo7YqfIPUMY8nZ6Z+ytMunX8rydfu2iZ98rl/SrdXdlupTUI25VOTAJq+vV2KzzSXQJ3DO7yuOs7e3y6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=skKfXkWo; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UWfjWh8m"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="skKfXkWo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=f3rFV9w3NnEWJ/ARPC3BBPefyCcjjBsG8HPiAaM19xo=; b=UWfjWh8mbpYFkwTLJH78PGg4Cs
-	pr20hUUDiI+4S1ufQIlckrvizQ+h4ehrvmS8EaewLdj+GYLSn7/Kk298sPIPqhfmBMDGPfn31yFJH
-	9sZdMREiVRVBHI6YGPFDiuD1IonwXSpyA68SuwVoVp43qmquJRm60z17xUNq8i11G/G0zIpsVtOUY
-	2qrM7D3zuaUHjHvt8DZjjBTFpK9Rk2RVTROvY0wHWLV+pGUgg2RoWpxgUIPmwDVa+8GDUzCg8z/Yt
-	QhSbg6KetKG44nX1sWi5RT+jteXJcNW5OYu2Kz3uHW1DG5txM68DvFLLjjkhDUuyUlDz+GQOxYoUl
-	cJpBSGVA==;
+	bh=fR3yFr9TnoTUeOUldS7KhaX2T/+fASq+jO38BPUUU7A=; b=skKfXkWo26j5QzRfXj65DhdVCA
+	cV8ttS8+B6ygBlhe30irwdQjaXaR3qRFhxi+hR5mmX/oCeRvEScsBet9ju/gF+qLxRCD6T32FX3De
+	R02zeGiw8y60CQ290zAGRbTOH9iAEoMUe5IKFxFAkYaRpNsrop7Af1/+XNkKfLG5Kpnz28ACCwxhW
+	9XhdfZGL3dAJAHmv6OfKF9VaF+k5eT5oIAjwehNLTAOcnhpeyv/01G3lGuR9ywdCpmT7h0AfPENYW
+	NjpLvzJqRp5Qxsu8YzZ1Kvy8b7kK73wmFNB10Mi97eXCBNqChsxKwyC1VH05zKY77+X/DXHp3b+bf
+	rru8dzOw==;
 Received: from [206.0.71.29] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rkWLR-0000000Bxr2-0LIf;
-	Wed, 13 Mar 2024 21:41:05 +0000
+	id 1rkWLU-0000000Bxry-0eTu;
+	Wed, 13 Mar 2024 21:41:08 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org,
-	Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 4/5] libxfs: also query log device topology in get_topology
-Date: Wed, 13 Mar 2024 14:40:50 -0700
-Message-Id: <20240313214051.1718117-5-hch@lst.de>
+	Dave Chinner <dchinner@redhat.com>,
+	Pankaj Raghav <p.raghav@samsung.com>
+Subject: [PATCH 5/5] mkfs: use a sensible log sector size default
+Date: Wed, 13 Mar 2024 14:40:51 -0700
+Message-Id: <20240313214051.1718117-6-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240313214051.1718117-1-hch@lst.de>
 References: <20240313214051.1718117-1-hch@lst.de>
@@ -50,39 +51,54 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Also query the log device topology in get_topology, which we'll need
-in mkfs in a bit.
+Currently the XFS log sector size defaults to the 512 bytes unless
+explicitly overriden.  Default to the device logical block size queried
+by get_topology instead.  If that is also 512 nothing changes, and if
+the device logical block size is larger this prevents a mkfs failure
+because the libxfs buffer cache blows up and as we obviously can't
+use a smaller than hardware supported sector size.  This fixes xfs/157
+with a 4k block size device.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Tested-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- libxfs/topology.c | 1 +
- libxfs/topology.h | 1 +
- 2 files changed, 2 insertions(+)
+ mkfs/xfs_mkfs.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/libxfs/topology.c b/libxfs/topology.c
-index 706eed022..94adb5be7 100644
---- a/libxfs/topology.c
-+++ b/libxfs/topology.c
-@@ -292,4 +292,5 @@ get_topology(
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index be65ccc1e..022a11a7f 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2075,7 +2075,8 @@ static void
+ validate_log_sectorsize(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct mkfs_default_params *dft)
++	struct mkfs_default_params *dft,
++	struct fs_topology	*ft)
  {
- 	get_device_topology(&xi->data, &ft->data, force_overwrite);
- 	get_device_topology(&xi->rt, &ft->rt, force_overwrite);
-+	get_device_topology(&xi->log, &ft->log, force_overwrite);
- }
-diff --git a/libxfs/topology.h b/libxfs/topology.h
-index ba0c8f669..fa0a23b77 100644
---- a/libxfs/topology.h
-+++ b/libxfs/topology.h
-@@ -20,6 +20,7 @@ struct device_topology {
- struct fs_topology {
- 	struct device_topology	data;
- 	struct device_topology	rt;
-+	struct device_topology	log;
- };
  
- void
+ 	if (cli->loginternal && cli->lsectorsize &&
+@@ -2090,7 +2091,7 @@ _("Can't change sector size on internal log!\n"));
+ 	else if (cli->loginternal)
+ 		cfg->lsectorsize = cfg->sectorsize;
+ 	else
+-		cfg->lsectorsize = dft->sectorsize;
++		cfg->lsectorsize = ft->log.logical_sector_size;
+ 	cfg->lsectorlog = libxfs_highbit32(cfg->lsectorsize);
+ 
+ 	if (cfg->lsectorsize < XFS_MIN_SECTORSIZE ||
+@@ -4196,7 +4197,7 @@ main(
+ 	blocksize = cfg.blocksize;
+ 	sectorsize = cfg.sectorsize;
+ 
+-	validate_log_sectorsize(&cfg, &cli, &dft);
++	validate_log_sectorsize(&cfg, &cli, &dft, &ft);
+ 	validate_sb_features(&cfg, &cli);
+ 
+ 	/*
 -- 
 2.39.2
 
