@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D605BA2B
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:11:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B24D3BA2B
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:11:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710295862; cv=none; b=IM+CCPXwefLrjkWV+IrH+Nsw3mOm/qNeNd3H/jz8T0sX40p75/V8Pg9+aBsxDffgabELcIQvqj9yD2jMqNnMlEdQQnujWjK7A+mkf1ZdwSGswseuiGbD3E4ZhrabO9UKrKmzLOzQJno6bOlTyJhnJqtw7NNiCiUWEjPYMwoOsNA=
+	t=1710295877; cv=none; b=ss2RuaIEpAQwCktIXLuwEp/7HwtuNvYu5VjKi1XGAurq4L2r0kvi5o2nyOIQCcj6iHymARgep6HN1qz9xuk7n4z0VkIMGe0RuRzw8YAEurkgCcZcNJyWjzBp5Cu68nCvqfpfW8FOeKd4GZ47q1IeP6KRFsx+LkKWeZKwCQr/G18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710295862; c=relaxed/simple;
-	bh=oMg+DpkSYbXJe8Wt6irm5nCfjZExmGKIEUPdEfT4T+U=;
+	s=arc-20240116; t=1710295877; c=relaxed/simple;
+	bh=rueMaKh+/92NCEmH2p+zhBdDwkwoe+93c96fGXS5qdA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r/LOvJBjNPLn75BHpyza429TkEGX7hHc+zkb9Z6XIg3ncyAhJS0Fmu66/fUIuQihcMRexcHtdVFnajPEGmGF/4xxp6dStz9ccuE6NrrvR3ebcB5Fp2KLlWV32g9/liwKJr+vSz5FMcs7/SNCEJ1HFeycXg8nswidvxCZeuc2Ctg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OYXjN1mt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pKQiSE8+HcwjYRiANArMGSKfxvZQdAz0iQZf2jBvRhfCqKtBwvdiZdX1bH3Mgt7JeZCkOsytalUrQRCjWwNGVjNQtlSbpEmmOp+ynN/SqewOFgAaV9HGE1LFTYFW3WfWMyn5fP9dhBWkwwlTFDk+abP+bVTvK8pzzMfyGuAvFsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uHzVTjrp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OYXjN1mt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF1BDC433C7;
-	Wed, 13 Mar 2024 02:11:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uHzVTjrp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F12CC433F1;
+	Wed, 13 Mar 2024 02:11:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710295862;
-	bh=oMg+DpkSYbXJe8Wt6irm5nCfjZExmGKIEUPdEfT4T+U=;
+	s=k20201202; t=1710295877;
+	bh=rueMaKh+/92NCEmH2p+zhBdDwkwoe+93c96fGXS5qdA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OYXjN1mttNONpvltqNSUnBAS0JVGAfkUKckEae/fr1a0TnVj6g+vsTXluUcyovNSi
-	 PqE7kY0W0TaZXgCMNsW8lMHUiVGRoxAGIzXvnT+nJy1+MMBr3S1YEOUVTy2vV7K+kF
-	 Sq/yV0fo+2qjGSoTbkmpPmFaYrnVkxrh+ja8tVi+wU04S/GeeBdDtZAzZMCjggqjJG
-	 U32I8ix8mL8gxigReGHB9lIwL8CEOoBjvOc1OS2ucsIdjdbZbdyVL+wU5V31VlS/IC
-	 ktBDxQQFuzSVOBiC/mqO5v/PSYVOQquWJxgY1BbhUdCINqk8oJ3UOgbeH++oKYYG5g
-	 JdzzcWAoytohA==
-Date: Tue, 12 Mar 2024 19:11:01 -0700
-Subject: [PATCH 2/2] xfs_repair: bulk load records into new btree blocks
+	b=uHzVTjrpFe+Un8uvgFxNQSsDBSE4sSDa/QSXTLV7Rcq+adFTnOEEAEvPqxT6Uhgrg
+	 dypdCFT3hsUaRxV8JA9/opOZ4CwCPxPialLxm/+8Orn9C5GgvIxmy7vbWIEMVFtI1G
+	 4K/+x0toLhcqqkTRGSstD321KzZYjhfVKAZvNRtf5Wdxqp0bq6vuumt1e864spHFmz
+	 q+gxeJ02xlDSSadkOYtByHVNvKwdLBlptwVz3RkwdpgfIARfDR7L64ycFS1GBK1td8
+	 oLsPT+TjGSUnJGUKTTeflR7LVtdWGFxC5VQvgqDDvMtWgE3hn1UBW1Rp8WHRQfcM4w
+	 pS4cJ2zUUOAJQ==
+Date: Tue, 12 Mar 2024 19:11:17 -0700
+Subject: [PATCH 1/1] xfs_repair: double-check with shortform attr verifiers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171029432531.2063452.98834952088069975.stgit@frogsfrogsfrogs>
-In-Reply-To: <171029432500.2063452.8809888062166577820.stgit@frogsfrogsfrogs>
-References: <171029432500.2063452.8809888062166577820.stgit@frogsfrogsfrogs>
+Message-ID: <171029432882.2063555.14424210570382825212.stgit@frogsfrogsfrogs>
+In-Reply-To: <171029432867.2063555.10851813376051369769.stgit@frogsfrogsfrogs>
+References: <171029432867.2063555.10851813376051369769.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,221 +46,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Amortize the cost of indirect calls further by loading a batch of
-records into a new btree block instead of one record per ->get_record
-call.  On a rmap btree with 3.9 million records, this reduces the
-runtime of xfs_btree_bload by 3% for xfsprogs.  For the upcoming online
-repair functionality, this will reduce runtime by 6% when spectre
-mitigations are enabled in the kernel.
+Call the shortform attr structure verifier as the last thing we do in
+process_shortform_attr to make sure that we don't leave any latent
+errors for the kernel to stumble over.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/agbtree.c |  161 ++++++++++++++++++++++++++++++------------------------
- 1 file changed, 90 insertions(+), 71 deletions(-)
+ repair/attr_repair.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 
-diff --git a/repair/agbtree.c b/repair/agbtree.c
-index 981d8e340bf2..e014e216e0a5 100644
---- a/repair/agbtree.c
-+++ b/repair/agbtree.c
-@@ -220,15 +220,19 @@ get_bnobt_records(
- 	struct bt_rebuild		*btr = priv;
- 	struct xfs_alloc_rec_incore	*arec = &cur->bc_rec.a;
- 	union xfs_btree_rec		*block_rec;
-+	unsigned int			loaded;
- 
--	btr->bno_rec = get_bno_rec(cur, btr->bno_rec);
--	arec->ar_startblock = btr->bno_rec->ex_startblock;
--	arec->ar_blockcount = btr->bno_rec->ex_blockcount;
--	btr->freeblks += btr->bno_rec->ex_blockcount;
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		btr->bno_rec = get_bno_rec(cur, btr->bno_rec);
-+		arec->ar_startblock = btr->bno_rec->ex_startblock;
-+		arec->ar_blockcount = btr->bno_rec->ex_blockcount;
-+		btr->freeblks += btr->bno_rec->ex_blockcount;
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+	}
-+
-+	return loaded;
- }
- 
- void
-@@ -388,65 +392,72 @@ get_inobt_records(
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 01e4afb90d5c..f117f9aef9ce 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -212,6 +212,7 @@ process_shortform_attr(
  {
- 	struct bt_rebuild		*btr = priv;
- 	struct xfs_inobt_rec_incore	*irec = &cur->bc_rec.i;
--	struct ino_tree_node		*ino_rec;
--	union xfs_btree_rec		*block_rec;
--	int				inocnt = 0;
--	int				finocnt = 0;
--	int				k;
--
--	btr->ino_rec = ino_rec = get_ino_rec(cur, btr->ino_rec);
--
--	/* Transform the incore record into an on-disk record. */
--	irec->ir_startino = ino_rec->ino_startnum;
--	irec->ir_free = ino_rec->ir_free;
--
--	for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
--		ASSERT(is_inode_confirmed(ino_rec, k));
--
--		if (is_inode_sparse(ino_rec, k))
--			continue;
--		if (is_inode_free(ino_rec, k))
--			finocnt++;
--		inocnt++;
--	}
-+	unsigned int			loaded = 0;
-+
-+	while (loaded < nr_wanted) {
-+		struct ino_tree_node	*ino_rec;
-+		union xfs_btree_rec	*block_rec;
-+		int			inocnt = 0;
-+		int			finocnt = 0;
-+		int			k;
-+
-+		btr->ino_rec = ino_rec = get_ino_rec(cur, btr->ino_rec);
+ 	struct xfs_attr_sf_hdr		*hdr = XFS_DFORK_APTR(dip);
+ 	struct xfs_attr_sf_entry	*currententry, *nextentry, *tempentry;
++	xfs_failaddr_t			fa;
+ 	int				i, junkit;
+ 	int				currentsize, remainingspace;
  
--	irec->ir_count = inocnt;
--	irec->ir_freecount = finocnt;
--
--	if (xfs_has_sparseinodes(cur->bc_mp)) {
--		uint64_t		sparse;
--		int			spmask;
--		uint16_t		holemask;
--
--		/*
--		 * Convert the 64-bit in-core sparse inode state to the
--		 * 16-bit on-disk holemask.
--		 */
--		holemask = 0;
--		spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
--		sparse = ino_rec->ir_sparse;
--		for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
--			if (sparse & spmask) {
--				ASSERT((sparse & spmask) == spmask);
--				holemask |= (1 << k);
--			} else
--				ASSERT((sparse & spmask) == 0);
--			sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
-+		/* Transform the incore record into an on-disk record. */
-+		irec->ir_startino = ino_rec->ino_startnum;
-+		irec->ir_free = ino_rec->ir_free;
-+
-+		for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
-+			ASSERT(is_inode_confirmed(ino_rec, k));
-+
-+			if (is_inode_sparse(ino_rec, k))
-+				continue;
-+			if (is_inode_free(ino_rec, k))
-+				finocnt++;
-+			inocnt++;
+@@ -373,6 +374,22 @@ process_shortform_attr(
  		}
+ 	}
  
--		irec->ir_holemask = holemask;
--	} else {
--		irec->ir_holemask = 0;
--	}
-+		irec->ir_count = inocnt;
-+		irec->ir_freecount = finocnt;
- 
--	if (btr->first_agino == NULLAGINO)
--		btr->first_agino = ino_rec->ino_startnum;
--	btr->freecount += finocnt;
--	btr->count += inocnt;
-+		if (xfs_has_sparseinodes(cur->bc_mp)) {
-+			uint64_t		sparse;
-+			int			spmask;
-+			uint16_t		holemask;
-+
-+			/*
-+			 * Convert the 64-bit in-core sparse inode state to the
-+			 * 16-bit on-disk holemask.
-+			 */
-+			holemask = 0;
-+			spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
-+			sparse = ino_rec->ir_sparse;
-+			for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
-+				if (sparse & spmask) {
-+					ASSERT((sparse & spmask) == spmask);
-+					holemask |= (1 << k);
-+				} else
-+					ASSERT((sparse & spmask) == 0);
-+				sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
-+			}
-+
-+			irec->ir_holemask = holemask;
++	fa = libxfs_attr_shortform_verify(hdr, be16_to_cpu(hdr->totsize));
++	if (fa) {
++		if (no_modify) {
++			do_warn(
++	_("inode %" PRIu64 " shortform attr verifier failure, would have cleared attrs\n"),
++				ino);
 +		} else {
-+			irec->ir_holemask = 0;
++			do_warn(
++	_("inode %" PRIu64 " shortform attr verifier failure, cleared attrs\n"),
++				ino);
++			hdr->count = 0;
++			hdr->totsize = cpu_to_be16(sizeof(struct xfs_attr_sf_hdr));
++			*repair = 1;
 +		}
-+
-+		if (btr->first_agino == NULLAGINO)
-+			btr->first_agino = ino_rec->ino_startnum;
-+		btr->freecount += finocnt;
-+		btr->count += inocnt;
-+
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+		loaded++;
-+		idx++;
-+	}
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+	return loaded;
- }
- 
- /* Initialize both inode btree cursors as needed. */
-@@ -585,13 +596,17 @@ get_rmapbt_records(
- 	struct xfs_rmap_irec		*rec;
- 	struct bt_rebuild		*btr = priv;
- 	union xfs_btree_rec		*block_rec;
-+	unsigned int			loaded;
- 
--	rec = pop_slab_cursor(btr->slab_cursor);
--	memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		rec = pop_slab_cursor(btr->slab_cursor);
-+		memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
 +	}
 +
-+	return loaded;
+ 	return(*repair);
  }
  
- /* Set up the rmap rebuild parameters. */
-@@ -663,13 +678,17 @@ get_refcountbt_records(
- 	struct xfs_refcount_irec	*rec;
- 	struct bt_rebuild		*btr = priv;
- 	union xfs_btree_rec		*block_rec;
-+	unsigned int			loaded;
- 
--	rec = pop_slab_cursor(btr->slab_cursor);
--	memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		rec = pop_slab_cursor(btr->slab_cursor);
-+		memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+	}
-+
-+	return loaded;
- }
- 
- /* Set up the refcount rebuild parameters. */
 
