@@ -1,245 +1,338 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 569E83E478
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 11:03:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710327820; cv=fail; b=ALqyP3Zdppjm2P1acAyes9R/sPKu8CuEzrUeykq4K8yl6jpc613sK7vRFgQaMeLO68tcH5kbQysVvAcEexYCDtQyBLL7HMbzHygyk7DVZgaSzNmQu1nDBV15YWzmNTdNkak4YoCt7011TGdS9YP8Mau1ri/UMpsjDMcedWpXoqs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710327820; c=relaxed/simple;
-	bh=AkI4l5U8GKRBJyik+YuXxpP2tcSk/Ga6CX+Tm+1rt2U=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=hxCMdwsiYC+Oyzhh+ff8otPNn0cDS8eqfwlX7MfOLBbwuGyC3yLpvNUceEQK75va8aYsOz7vBe7H4t5Pnw7GLPS0O8Bewqz7+wEx7lk37haXcj1N5d3h0SW7yKzOu+5qeLd4DF60VsfwUcGz4j0C4K6fcwg1JhAGc0IPboSBjOY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=iE6VZ7ZG; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=P8DPA+D+; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A9313FB8B
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 12:29:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1710332960; cv=none; b=JuOkZUaMlLL5awJmAEIFw26oSlrBMP+smBAogTjmdDF/5+sy1JlmPVlbUg2RJ46BliSyiounkQjUYhs52aePXusiAo4CZSGH0jR1vhGz6NoXkq9hoo3xMRzJJS2o2V77ML0QeQR2vJ+PweqoiGs+yDPpLRjkGAMBtudMR4psKk0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1710332960; c=relaxed/simple;
+	bh=oSqOOOQXVNftgsoUErcdOE2GsR+PW6IzXyyX4xJ/+gw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fqYjP0wLrB/Qbmtxj6H9mlGrOhMrDCOJQeGui6uB5PYKw3UhF3RkhpRsNyrhyTDjN9Nbo3edVXXoCuLnkR34OL8yaqIXIooIqN2kHaZVucGDy6WV5FM5OF8o3p2IFho77qQEidmE2KrJzvX4gAcCXCzjtBd/CmzhbDJ7td5DUYI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MvCsKceH; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iE6VZ7ZG";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="P8DPA+D+"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42D8huWw026177;
-	Wed, 13 Mar 2024 11:03:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=oWnczBq+vP3DlgPvM10A1F3EAekotS5uNnCcfsEYDkM=;
- b=iE6VZ7ZGYE2QeMKn64nuenu+WQeBvxB8C/UyAj53fdeFguVcmo3UA1Q4hLzmv1pUrGCy
- +piVlbSDvyAmM/9Zv6olqKFBMKaBRmO8mf9d1ma59qhOGqHDIT/RyVrrVAwRxU0lhEbX
- Aijx9D2/uJss0neLiG976/fXu1qKKrddFxC6LsLt3VIAaSjj/gB+QTARCNadxLoqh0Aq
- FN9XGgX5oI59ZUd6CdKWB3cxNntQXOtAH4lSAlxqMcVh5gpP7GWYqBJxvZ+PEBXpLKKq
- zD9osB7IpmpZuk714/jZkSfSEScc9gTSIki/pORH2XfQ/jb3aQ4/CYCeJEgML+aawQai NA== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wrfcugr3d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 13 Mar 2024 11:03:35 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42D9R52E028539;
-	Wed, 13 Mar 2024 11:03:34 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3wre78mmws-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 13 Mar 2024 11:03:34 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FhDHHPtHveqjTBkkDn64YPK+lBNXY7g7lAZjDsj0Yb6KNBZJ7xGnixIdWSYX1ZkWHCPHhB7rRCKjDONt0Yfi9rDlLKVwh5UMosmz0nQXMCUt4aMU5JCWhyj9TTTAEamQoyhVnKJORFdw4aXerkBY1u/WDleUWAevakC9foftvalXAUo4xg2UXBnaAr4ndLvTMeWAQvumTJ4UU2Zi3Mh2RNszeYT0g9BUlxHFJhDwL3+88sOoHJLqTzih5j0zcnZtbFJV9aQw7hphbv6LPJP0K7v+oM0o05u6yxfCevSnAb6iZsg4wBPio6D11MhFihfTYAbIZsfLETuOLj0jR+kXWA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oWnczBq+vP3DlgPvM10A1F3EAekotS5uNnCcfsEYDkM=;
- b=DAo4e/O1EfRTTYwyF5uCxLbDfzWJrqxrJSzSvOT6Gr7oTow2hd4V+f3VhxmeR9cJ/3OpzyEvtkZ6hjwpJJdiFA04jsNAzhMAEjyyqUs82ghlJc0YyYEDKCyJwSHS/QaUXszBMtUsL+PE3SgqJGbQB0ySy0WCFn/CvLPSlx+ctXfUpIIfDyZ4WOFVfrkgxP1VhOK3lr+UjyQvan5WVzgg/PBf57TGxOyyB+qm7D5iFT6C533JFxyArO/KyNZCtATdVQKmTnC7JCGyqUSY1WzUUTvjSHDWic8aly5bsguTQq9a4i5wnWH2bsp5qxYI0+rToiMSzGGc6O4uK6fXgMOgsg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oWnczBq+vP3DlgPvM10A1F3EAekotS5uNnCcfsEYDkM=;
- b=P8DPA+D+V+k859YDELo8LxljQ2KYvKk8gvJfkjQWN3QDZXzF+7ZIEouoxyc0IFVdkmM3tjtoUxpi9RFDMZ4PFxN6PkWfmLzgaiSpwAWckNVNgmAxho/cS45TYVdk5ncP+95Y3LpgJpc5ujTdw/BH/yKZWe0CSbE5/r4romoDhKo=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SA1PR10MB7634.namprd10.prod.outlook.com (2603:10b6:806:38a::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7362.35; Wed, 13 Mar
- 2024 11:03:33 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324%4]) with mapi id 15.20.7362.035; Wed, 13 Mar 2024
- 11:03:33 +0000
-Message-ID: <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
-Date: Wed, 13 Mar 2024 11:03:18 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: ojaswin@linux.ibm.com, ritesh.list@gmail.com
-References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
- <20240306053048.1656747-1-david@fromorbit.com>
- <20240306053048.1656747-2-david@fromorbit.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240306053048.1656747-2-david@fromorbit.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS4P191CA0022.EURP191.PROD.OUTLOOK.COM
- (2603:10a6:20b:5d9::13) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MvCsKceH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1710332957;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=k8x5ZSVtO603+A176kqypuw3h2+JLOydtLzQlaAOVxY=;
+	b=MvCsKceHoA1hFeVYQTjQP7FCm7KJ4Qcxhel7n61tRe/eQC3lG4JbjrXljQ3HbKX/UGKkHZ
+	I8mggqVDENJr00Hik0HKRMJfSQBLPNRTIYg5UIfufSukZICHfaOx7OCPvRFqd8W3CnS+oZ
+	aWaFihnWJ6p57BAnJpYyPl3G0ZCtf1w=
+Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
+ [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-301-DfvySrvgO4qAQPkVvqVdPg-1; Wed, 13 Mar 2024 08:29:16 -0400
+X-MC-Unique: DfvySrvgO4qAQPkVvqVdPg-1
+Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-513c9f60a60so413472e87.3
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 05:29:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710332954; x=1710937754;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt:from
+         :references:cc:to:content-language:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=k8x5ZSVtO603+A176kqypuw3h2+JLOydtLzQlaAOVxY=;
+        b=BoFNUZ1TVz8cKvvLVvB3CYOzW8DPL5x/Vzk2VEJB+RxIBDFsj/9WKmiqyHArmcNyRe
+         RrSFQCZO5EtB979LGIDgTP//fs7XI63bWjyWL38lFIFyUqQfBdFjH3+ZvaQlSWqmINkw
+         Pd43Wu72RYUyjQpUdW4gcSOR+vVW7AtOEQscCVONpgq8v9XeefEnozpA3WnkqjooqiDB
+         IOvP2WVjaNR8M39Dc75pOgXH0r8Ett5Iexi+QyK3s2nZEVKqgCBZCkoDDDCsTcwOaDVW
+         WTmUlwbltYLV6NBIUJsbwOjVbMhWOiaDiWfaKKR9VlvVK/IoVGNjt7X7cEQgUYtDp63W
+         /SMw==
+X-Forwarded-Encrypted: i=1; AJvYcCVRmMoS8ruOE3F8OExWmtLaCq7o7qAr3E3yr+Q0v2kb9NKVp5NHPD56zIxQuGB7gS2W1PxautZvCWCJNjp6rrXYbEB6zh1dlrrh
+X-Gm-Message-State: AOJu0YyCf3D21PAtLG0896xcn3uCKf8F1aeP8w1eF3SE/znqR/5vyjbD
+	6xUxyadvt6xalmXTCunzUky1og5DrTuawhL+/oRQ2Rs8vlhqdHvqmp+Mgvg13E5JFzMLRNU76ac
+	o25Ea8wDFuqvId8dPlMcIIKAST6WQESmPWoxJjTknqEIYCrME6MgQu2291w==
+X-Received: by 2002:ac2:430b:0:b0:513:55ea:7e2e with SMTP id l11-20020ac2430b000000b0051355ea7e2emr3382721lfh.53.1710332954529;
+        Wed, 13 Mar 2024 05:29:14 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGfsCGI3AFEG0mu84otxaoZ5vWsgSIsgkV4jPcCeSYNL14MUNICSC9ePLEwtBpr3UTge2H3bA==
+X-Received: by 2002:ac2:430b:0:b0:513:55ea:7e2e with SMTP id l11-20020ac2430b000000b0051355ea7e2emr3382706lfh.53.1710332954000;
+        Wed, 13 Mar 2024 05:29:14 -0700 (PDT)
+Received: from [10.32.64.142] (nat-pool-muc-t.redhat.com. [149.14.88.26])
+        by smtp.gmail.com with ESMTPSA id q18-20020adf9dd2000000b0033e90e98886sm9006066wre.71.2024.03.13.05.29.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Mar 2024 05:29:13 -0700 (PDT)
+Message-ID: <420b6d5f-adef-4415-b8cb-16c234dcec38@redhat.com>
+Date: Wed, 13 Mar 2024 13:29:12 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SA1PR10MB7634:EE_
-X-MS-Office365-Filtering-Correlation-Id: f1a6757c-ca97-4179-7091-08dc434d32b0
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	ATUEAkl6Y59qygHV125xgWNoVid4rF68OzPD8Yy9Z1xvGt965PSvyrEXdchTx/qzGJWgs2lCIJ0voMrz/M/7voBQezgyB7VQqdZ/aGxUR/FetXA7H24NkeFly1N0Ul7BatFGHsrscv7RYzzLteOsgZw7DLtxhfqN7azH9Ka1gqnxyXZKC/tevMrDueB10p5geoTyiPpaWYL53gYXJm+jMQCjnP8zwVuETtabl/dkB7QBZ0yXo/k1ZiPgPLWU7lC2+OwU4JoTD75K/EzX2SX/58ZDZXTMHcwvaqFDH4mkONxluZJvFkCSqD7TmnV17T/3UCRWdtK14JQuM5mdcp8GWXNXJ9daeR0KrQ3lcgqnHie74lk9Od8dINcDWtw5Sllgu214anyYQL4E5aEypfQ4iBuIB395ZNQorAUizF7LXJGEGUt9sFd4YeGn5tu10DPpB8Faz8n7oPdClQ+JOQAcO0T7lw+FBktGX2gDNr8Nu6AraxUobLVaJ7Vzyj3fVEEsf91FwwUOiJVuzQSbYiCD2TI1LuDJDhnuBhLG59UZqBXvQDJZaY0HloH394DEhpm0G+4uyv+iYJ4U7lcv/+zSIDyGAashz8Lh9c2exr0g6Xmcx/wK/3S5HvD6P8uE+KZdh8ENrgzBHv6rjjeFDk+URAeXHHzyYCWM/V9OTV3WBtY=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(376005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?VFVxRXlYYUlWaFlFb3lPaFJ5WDBHaXdML3NqN3ZNbTUyTE50dE9ZWVhlSFZh?=
- =?utf-8?B?UUJ3K0t4OUpvdDNXdjJ5U3VVMC9mdzlNOUpYY0dhZUMvNlVuK2tLVnFRdWRl?=
- =?utf-8?B?Y3NWSUxad2tDRHlWTDFRMnpJQnVzUmZKdDFPY0tlTEttL3RBTVZ4TXBteTBv?=
- =?utf-8?B?UnhBNDBReUlYdGU2NEt3cHNIQVN0RnpEOTg5emIydG5vd0dzSVBaejc4Mzdj?=
- =?utf-8?B?OGxaWGZCVENLM05kVkpKTXFMbWc1QXg3ZDdQTEIwRFd4WkU1WkwrNEpCZ3Vx?=
- =?utf-8?B?RUdQVkp5N1VUWElVcDlkVTloTFNGVkZ2WEtkeEVDOHlWeFlHODA4aWttMWxt?=
- =?utf-8?B?Q2o4TU52Y1dkcDFHb0NDaEdtVFVGc2lYcGVHUVkyclU5RDNFL1lXaGI5VFp5?=
- =?utf-8?B?d1lKVnI3Rk1EKy9acG82b2ZjUjM5ZUcvVVpvZFV4SzdxZGtYd2k0M3VEaEhp?=
- =?utf-8?B?OWFUSXdQcS9INW1qRVNseGoyQm1jRDdGT1hoNEpqQUZ1MFZsK0cvUkZYUlZB?=
- =?utf-8?B?aCsya0hwOHBhcjVtMnd6MGFvQmNPQjZjQkJqdHU0OWZJdE9VMGpHeGJsOWc1?=
- =?utf-8?B?TklodHVyNG45SmdNWFVuYjJTcmc4Z0JRSDRHd0tIWnJmbG1qQUFmSlhOdmVI?=
- =?utf-8?B?eFNWR09nbVhXWlErZk1ERGo5RWJxQ3ZhWkx0MUNrQURCUFE0QjI5anE1ZnBk?=
- =?utf-8?B?N05DU1dOSy9rWUNodW5URWRRTk52SnRDVkVML2k0SnRoSXZZdTBObnlKMUdL?=
- =?utf-8?B?dyt0dWN6Smc5SFFoTC9UWHdVaDhyQU82Y3lPUTBOenoya1NVMldNNThpZUhD?=
- =?utf-8?B?Ris2VWJTNmplMUI1Rkc2K0k2ckxtdUcrczFBY01VOHZ2RkRoc1RrQ1QwZ2ZI?=
- =?utf-8?B?WElDK2lKOXpBNFJyZ0F2dUZhSDFzT2ZBOVNoUnFFSVFUL21PREtyTndGcFJJ?=
- =?utf-8?B?Z1BZS3BRQmQ3eThkT1dINmxLbG9udHdmNUdjM1h2TDZjc2dXWER0YmQrNWJk?=
- =?utf-8?B?V1QwNnVlM09yaUNnTzE3MmVjaU5YUWhZMHVKdmJXRUE3dlNJTHk1cUNmamly?=
- =?utf-8?B?NGt0RGU5bFBqOUY5QVZXZHczTzZjdGZ6Tmc4cnpyRzZaeDYwUWw1RGovbjFT?=
- =?utf-8?B?RWpreTg5ZEhrV21mbUlqQU5tdUd0RnNVcVdzMzJDYUg1SThzbHZjcGZTd08z?=
- =?utf-8?B?UUs4LzhxdEplMEZuZGxUTU55REpVamx6SjhLNVdZM3p3b1lSN0NrbkVsU2JS?=
- =?utf-8?B?cHhSQnBDNnBGcEJYM0lmL2luK05NU3duNTN5RFFUZUNPSVRYQmJ1QlR5Uyt1?=
- =?utf-8?B?L0pLb0VvSys4RHRsUWZ6RVBYNlhVYnRBcytwU0ZmV2hOK1VnT3c1Z3Rhb2N2?=
- =?utf-8?B?ZjhDMS9jL0V0TTFVaFdhTFVJRDZQWXlkWno4NWpTSStyenNNa2M3RDc0THFP?=
- =?utf-8?B?QTBhVCtzWk8xdklVZ0o0M3hqWit3bkJaY05od3pWeVRnM2pzM280VWR5RHor?=
- =?utf-8?B?UFFpdnQ2OEI2VU1aaVQzbkhTSWl2MCtaUElpd1MzT3YxbUF1Q3YreGtMSUNp?=
- =?utf-8?B?NnM3cElRWDBpdnFqL1pBdXc1SnVmS3hkZ1VZYnVlYnVYY2JsWUpiWlVwQkxV?=
- =?utf-8?B?ZkR4TFkwTkR2ZFJ2NTVIRVZpZ21ROVhzSks3bGpKKys2UGp1Y3NNMzdPNUtC?=
- =?utf-8?B?ay8xY1VxV1oxeDJBeFNrWlRVeCtyZHNZVzRuZkpubVhlbmVDZGhOY3JaMExn?=
- =?utf-8?B?aDBqakl5RGtreVV6bkE5Y2plcmpyNFdZazdjb01WT3F4TEFIaDlBbXhpK01D?=
- =?utf-8?B?cU1lcDZ1dkY1eVpCck9OdGljMkUzTnFxekkwa2FYQ2cwVWEwdk1UOGlxeEpS?=
- =?utf-8?B?TEJBclg5TVhnYStWajdwbUh4SDQzdzcvaHM2UHBOZThwR2xBck5DQm5McDR1?=
- =?utf-8?B?bk93aTFnQ1Rkc3l6RTdmZnYxNTJDY3F6VlhWUTFBMEVORzlpd2FDZEpUbjZo?=
- =?utf-8?B?UWZaWks0VnFQYTBNQTNJcnFhZEpSSTN2cHgwQlpmSE5lRmYyTFJMZkJrYkNM?=
- =?utf-8?B?elc0T1c1WGx6bVVCS1VBM1BrUnF4Vlh0Vm5McmllUER0RnRrTUljdGJNV0Jh?=
- =?utf-8?Q?T6T1EOCim/KRrKOvy2WHt7qXg?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	Rkn9Dz9xuetAPIP5qmPIPykQmOJCiOmLsNpoYu43JV4zcyb+WJd+aOklV9h3RX8nzjzJqHMnEACKVCxkKzCfr2zjHuki10HeEP1iYUhjbsRAjlqYEjPfdWRMxOYIeuYs2EiJOy8w9cTTkLaHLIsb1iKw82WAgZmaVvkXX2g0CXhSYpiwl91kYYI6EYx99kyfYqBZr7oyV5vgqRLdMkCEx4OtPgPw0Muw3q4qXdrKcQlgh1SIcvVyHUehzMvZV9+s79wEkPv5e0nO+k0ePBXr7H9McTXrIeOzQfTg3anw1pAngRBONz2e7ch1nqOJFToNcSesbiBoEbNevfnhj0nNt66ONGnWR1Io8g23yUfOocsMhG7mLFoshSPYqcM/IPTSUOWsWk53bW2/1R4/oKPS3KVH+BDU86StQ1Ha2QeEWf4nRsS8sapSgqxI+q6jM3njM/YsNWrkZ/SRORUSBoAo/eGCrnEy317Upy+049j6l9C8c4AIyORpLxUzhyNrjNZzyOoykG5k5ER17lA9u58JCVU08o+JTa8MzjuD9m4h9wTf38yL4rUptHZ52F5uGEo8MLpeCKaZ4heL/GOMDVTn/K7+0R7579fYNHNedOmqsqw=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f1a6757c-ca97-4179-7091-08dc434d32b0
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Mar 2024 11:03:33.0522
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ldUplycswtQ3BMJuLjlR8Rv/RcoIwgRovxWUPA37np3Qpa/2F3sjFsCBGIAk04v7EZk0i4XJDEZ4WNkAIElw2g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB7634
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-13_07,2024-03-12_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 adultscore=0
- mlxscore=0 phishscore=0 spamscore=0 suspectscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2403130082
-X-Proofpoint-ORIG-GUID: 2hCtuHZ5tR9qbQZnHIcwy8V9MIzLfM_z
-X-Proofpoint-GUID: 2hCtuHZ5tR9qbQZnHIcwy8V9MIzLfM_z
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 06/24] fsverity: pass tree_blocksize to
+ end_enable_verity()
+Content-Language: en-US
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>,
+ Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ chandan.babu@oracle.com, akpm@linux-foundation.org, linux-mm@kvack.org,
+ Eric Biggers <ebiggers@kernel.org>
+References: <20240304191046.157464-2-aalbersh@redhat.com>
+ <20240304191046.157464-8-aalbersh@redhat.com>
+ <20240305005242.GE17145@sol.localdomain>
+ <20240306163000.GP1927156@frogsfrogsfrogs>
+ <20240307220224.GA1799@sol.localdomain>
+ <20240308034650.GK1927156@frogsfrogsfrogs>
+ <20240308044017.GC8111@sol.localdomain>
+ <20240311223815.GW1927156@frogsfrogsfrogs>
+ <9927568e-9f36-4417-9d26-c8a05c220399@redhat.com>
+ <08905bcc-677d-4981-926d-7f407b2f6a4a@redhat.com>
+ <20240312164444.GG1927156@frogsfrogsfrogs>
+From: David Hildenbrand <david@redhat.com>
+Autocrypt: addr=david@redhat.com; keydata=
+ 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
+ WNyWQQ==
+Organization: Red Hat
+In-Reply-To: <20240312164444.GG1927156@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 06/03/2024 05:20, Dave Chinner wrote:
->   		return false;
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 0b956f8b9d5a..aa2c103d98f0 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -46,7 +46,7 @@ typedef struct xfs_alloc_arg {
->   	xfs_extlen_t	minleft;	/* min blocks must be left after us */
->   	xfs_extlen_t	total;		/* total blocks needed in xaction */
->   	xfs_extlen_t	alignment;	/* align answer to multiple of this */
-> -	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
-> +	xfs_extlen_t	alignslop;	/* slop for alignment calcs */
->   	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
->   	xfs_agblock_t	max_agbno;	/* ... */
->   	xfs_extlen_t	len;		/* output: actual size of extent */
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 656c95a22f2e..d56c82c07505 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3295,6 +3295,10 @@ xfs_bmap_select_minlen(
->   	xfs_extlen_t		blen)
+On 12.03.24 17:44, Darrick J. Wong wrote:
+> On Tue, Mar 12, 2024 at 04:33:14PM +0100, David Hildenbrand wrote:
+>> On 12.03.24 16:13, David Hildenbrand wrote:
+>>> On 11.03.24 23:38, Darrick J. Wong wrote:
+>>>> [add willy and linux-mm]
+>>>>
+>>>> On Thu, Mar 07, 2024 at 08:40:17PM -0800, Eric Biggers wrote:
+>>>>> On Thu, Mar 07, 2024 at 07:46:50PM -0800, Darrick J. Wong wrote:
+>>>>>>> BTW, is xfs_repair planned to do anything about any such extra blocks?
+>>>>>>
+>>>>>> Sorry to answer your question with a question, but how much checking is
+>>>>>> $filesystem expected to do for merkle trees?
+>>>>>>
+>>>>>> In theory xfs_repair could learn how to interpret the verity descriptor,
+>>>>>> walk the merkle tree blocks, and even read the file data to confirm
+>>>>>> intactness.  If the descriptor specifies the highest block address then
+>>>>>> we could certainly trim off excess blocks.  But I don't know how much of
+>>>>>> libfsverity actually lets you do that; I haven't looked into that
+>>>>>> deeply. :/
+>>>>>>
+>>>>>> For xfs_scrub I guess the job is theoretically simpler, since we only
+>>>>>> need to stream reads of the verity files through the page cache and let
+>>>>>> verity tell us if the file data are consistent.
+>>>>>>
+>>>>>> For both tools, if something finds errors in the merkle tree structure
+>>>>>> itself, do we turn off verity?  Or do we do something nasty like
+>>>>>> truncate the file?
+>>>>>
+>>>>> As far as I know (I haven't been following btrfs-progs, but I'm familiar with
+>>>>> e2fsprogs and f2fs-tools), there isn't yet any precedent for fsck actually
+>>>>> validating the data of verity inodes against their Merkle trees.
+>>>>>
+>>>>> e2fsck does delete the verity metadata of inodes that don't have the verity flag
+>>>>> enabled.  That handles cleaning up after a crash during FS_IOC_ENABLE_VERITY.
+>>>>>
+>>>>> I suppose that ideally, if an inode's verity metadata is invalid, then fsck
+>>>>> should delete that inode's verity metadata and remove the verity flag from the
+>>>>> inode.  Checking for a missing or obviously corrupt fsverity_descriptor would be
+>>>>> fairly straightforward, but it probably wouldn't catch much compared to actually
+>>>>> validating the data against the Merkle tree.  And actually validating the data
+>>>>> against the Merkle tree would be complex and expensive.  Note, none of this
+>>>>> would work on files that are encrypted.
+>>>>>
+>>>>> Re: libfsverity, I think it would be possible to validate a Merkle tree using
+>>>>> libfsverity_compute_digest() and the callbacks that it supports.  But that's not
+>>>>> quite what it was designed for.
+>>>>>
+>>>>>> Is there an ioctl or something that allows userspace to validate an
+>>>>>> entire file's contents?  Sort of like what BLKVERIFY would have done for
+>>>>>> block devices, except that we might believe its answers?
+>>>>>
+>>>>> Just reading the whole file and seeing whether you get an error would do it.
+>>>>>
+>>>>> Though if you want to make sure it's really re-reading the on-disk data, it's
+>>>>> necessary to drop the file's pagecache first.
+>>>>
+>>>> I tried a straight pagecache read and it worked like a charm!
+>>>>
+>>>> But then I thought to myself, do I really want to waste memory bandwidth
+>>>> copying a bunch of data?  No.  I don't even want to incur system call
+>>>> overhead from reading a single byte every $pagesize bytes.
+>>>>
+>>>> So I created 2M mmap areas and read a byte every $pagesize bytes.  That
+>>>> worked too, insofar as SIGBUSes are annoying to handle.  But it's
+>>>> annoying to take signals like that.
+>>>>
+>>>> Then I started looking at madvise.  MADV_POPULATE_READ looked exactly
+>>>> like what I wanted -- it prefaults in the pages, and "If populating
+>>>> fails, a SIGBUS signal is not generated; instead, an error is returned."
+>>>>
+>>>
+>>> Yes, these were the expected semantics :)
+>>>
+>>>> But then I tried rigging up a test to see if I could catch an EIO, and
+>>>> instead I had to SIGKILL the process!  It looks filemap_fault returns
+>>>> VM_FAULT_RETRY to __xfs_filemap_fault, which propagates up through
+>>>> __do_fault -> do_read_fault -> do_fault -> handle_pte_fault ->
+>>>> handle_mm_fault -> faultin_page -> __get_user_pages.  At faultin_pages,
+>>>> the VM_FAULT_RETRY is translated to -EBUSY.
+>>>>
+>>>> __get_user_pages squashes -EBUSY to 0, so faultin_vma_page_range returns
+>>>> that to madvise_populate.  Unfortunately, madvise_populate increments
+>>>> its loop counter by the return value (still 0) so it runs in an
+>>>> infinite loop.  The only way out is SIGKILL.
+>>>
+>>> That's certainly unexpected. One user I know is QEMU, which primarily
+>>> uses MADV_POPULATE_WRITE to prefault page tables. Prefaulting in QEMU is
+>>> primarily used with shmem/hugetlb, where I haven't heard of any such
+>>> endless loops.
+>>>
+>>>>
+>>>> So I don't know what the correct behavior is here, other than the
+>>>> infinite loop seems pretty suspect.  Is it the correct behavior that
+>>>> madvise_populate returns EIO if __get_user_pages ever returns zero?
+>>>> That doesn't quite sound right if it's the case that a zero return could
+>>>> also happen if memory is tight.
+>>>
+>>> madvise_populate() ends up calling faultin_vma_page_range() in a loop.
+>>> That one calls __get_user_pages().
+>>>
+>>> __get_user_pages() documents: "0 return value is possible when the fault
+>>> would need to be retried."
+>>>
+>>> So that's what the caller does. IIRC, there are cases where we really
+>>> have to retry (at least once) and will make progress, so treating "0" as
+>>> an error would be wrong.
+>>>
+>>> Staring at other __get_user_pages() users, __get_user_pages_locked()
+>>> documents: "Please note that this function, unlike __get_user_pages(),
+>>> will not return 0 for nr_pages > 0, unless FOLL_NOWAIT is used.".
+>>>
+>>> But there is some elaborate retry logic in there, whereby the retry will
+>>> set FOLL_TRIED->FAULT_FLAG_TRIED, and I think we'd fail on the second
+>>> retry attempt (there are cases where we retry more often, but that's
+>>> related to something else I believe).
+>>>
+>>> So maybe we need a similar retry logic in faultin_vma_page_range()? Or
+>>> make it use __get_user_pages_locked(), but I recall when I introduced
+>>> MADV_POPULATE_READ, there was a catch to it.
+>>
+>> I'm trying to figure out who will be setting the VM_FAULT_SIGBUS in the
+>> mmap()+access case you describe above.
+>>
+>> Staring at arch/x86/mm/fault.c:do_user_addr_fault(), I don't immediately see
+>> how we would transition from a VM_FAULT_RETRY loop to VM_FAULT_SIGBUS.
+>> Because VM_FAULT_SIGBUS would be required for that function to call
+>> do_sigbus().
+> 
+> The code I was looking at yesterday in filemap_fault was:
+> 
+> page_not_uptodate:
+> 	/*
+> 	 * Umm, take care of errors if the page isn't up-to-date.
+> 	 * Try to re-read it _once_. We do this synchronously,
+> 	 * because there really aren't any performance issues here
+> 	 * and we need to check for errors.
+> 	 */
+> 	fpin = maybe_unlock_mmap_for_io(vmf, fpin);
+> 	error = filemap_read_folio(file, mapping->a_ops->read_folio, folio);
+> 	if (fpin)
+> 		goto out_retry;
+> 	folio_put(folio);
+> 
+> 	if (!error || error == AOP_TRUNCATED_PAGE)
+> 		goto retry_find;
+> 	filemap_invalidate_unlock_shared(mapping);
+> 
+> 	return VM_FAULT_SIGBUS;
+> 
+> Wherein I /think/ fpin is non-null in this case, so if
+> filemap_read_folio returns an error, we'll do this instead:
+> 
+> out_retry:
+> 	/*
+> 	 * We dropped the mmap_lock, we need to return to the fault handler to
+> 	 * re-find the vma and come back and find our hopefully still populated
+> 	 * page.
+> 	 */
+> 	if (!IS_ERR(folio))
+> 		folio_put(folio);
+> 	if (mapping_locked)
+> 		filemap_invalidate_unlock_shared(mapping);
+> 	if (fpin)
+> 		fput(fpin);
+> 	return ret | VM_FAULT_RETRY;
+> 
+> and since ret was 0 before the goto, the only return code is
+> VM_FAULT_RETRY.  I had speculated that perhaps we could instead do:
+> 
+> 	if (fpin) {
+> 		if (error)
+> 			ret |= VM_FAULT_SIGBUS;
+> 		goto out_retry;
+> 	}
+> 
+> But I think the hard part here is that there doesn't seem to be any
+> distinction between transient read errors (e.g. disk cable fell out) vs.
+> semi-permanent errors (e.g. verity says the hash doesn't match).
+> AFAICT, either the read(ahead) sets uptodate and callers read the page,
+> or it doesn't set it and callers treat that as an error-retry
+> opportunity.
+> 
+> For the transient error case VM_FAULT_RETRY makes perfect sense; for the
+> second case I imagine we'd want something closer to _SIGBUS.
 
-Hi Dave,
 
->   {
->   
-> +	/* Adjust best length for extent start alignment. */
-> +	if (blen > args->alignment)
-> +		blen -= args->alignment;
-> +
+Agreed, it's really hard to judge when it's the right time to give up 
+retrying. At least with MADV_POPULATE_READ we should try achieving the 
+same behavior as with mmap()+read access. So if the latter manages to 
+trigger SIGBUS, MADV_POPULATE_READ should return an error.
 
-This change seems to be causing or exposing some issue, in that I find 
-that I am being allocated an extent which is aligned to but not a 
-multiple of args->alignment.
+Is there an easy way to for me to reproduce this scenario?
 
-For my test, I have forcealign=16KB and initially I write 1756 * 4096 = 
-7192576B to the file, so I have this:
-
-  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-    0: [0..14079]:      42432..56511      0 (42432..56511)   14080
-
-That is 1760 FSBs for extent #0.
-
-Then I write 340992B from offset 7195648, and I find this:
-  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-    0: [0..14079]:      42432..56511      0 (42432..56511)   14080
-    1: [14080..14711]:  177344..177975    0 (177344..177975)   632
-    2: [14712..14719]:  350720..350727    1 (171520..171527)     8
-
-extent #1 is 79 FSBs, which is not a multiple of 16KB.
-
-In this case, in xfs_bmap_select_minlen() I find initially blen=80 
-args->alignment=4, ->minlen=0, ->maxlen=80. Subsequently blen is reduced 
-to 76 and args->minlen is set to 76, and then 
-xfs_bmap_btalloc_best_length() -> xfs_alloc_vextent_start_ag() happens 
-to find an extent of length 79.
-
-Removing the specific change to modify blen seems to make things ok again.
-
-I will also note something strange which could be the issue, that being 
-that xfs_alloc_fix_len() does not fix this up - I thought that was its 
-job. Firstly, in this same scenario, in xfs_alloc_space_available() we 
-calculate alloc_len = args->minlen + (args->alignment - 1) + 
-args->alignslop = 76 + (4 - 1) + 0 = 79, and then args->maxlen = 79. 
-Then xfs_alloc_fix_len() allows this as args->len == args->maxlen (=79), 
-even though args->prod, mod = 4, 0. To me, that (args->alignment - 1) 
-component in calculating alloc_len is odd. I assume it is done as 
-default args->alignment == 1.
-
-Anyway, let me know what you think.
-
+-- 
 Cheers,
-John
 
->   	/*
->   	 * Since we used XFS_ALLOC_FLAG_TRYLOCK in _longest_free_extent(), it is
->   	 * possible that there is enough contiguous free space for this request.
-> @@ -3310,6 +3314,7 @@ xfs_bmap_select_minlen(
->   	if (blen < args->maxlen)
->   		return blen;
->   	return args->maxlen;
-> +
+David / dhildenb
 
