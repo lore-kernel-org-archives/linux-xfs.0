@@ -1,120 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AD231CF9C
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 09:01:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4212A17580;
+	Wed, 13 Mar 2024 09:23:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710320501; cv=none; b=dEcx4kmKmIhtOYO/QI+O2o0lIbhktw3LRm1mRg/0eOhrmTbUYIjElE35MH+8o31hLhqmX0KKLiFEF847NSB6sg8dgCNyLluzvpK72H0BR6o21j6VseqeOj0Xc3WfXZizIe9FyGvnSH4WjbcX8qCewlR8PVXIPeUPwfPuMnEPKHQ=
+	t=1710321832; cv=none; b=TGAp13ECqg9HE7jDiWLYbfFfgBxR4G9G7KwMSuZpjFzK4IxSL4JDJ7Y+gmOyAgZUFMCfKWToAsOFilIL9VtWR4Hvm6iw9bhQKM1hoSIxV2MbvAshJBOjLdjMk0pAAmdhZvSb7I0nKqKGReKT1FYtkxB5I+V0JaUX2CKFD/GGxHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710320501; c=relaxed/simple;
-	bh=GbdgaaO6TTX+CRJZ6eZP7WcObay4UgFJaPM9NRqlDrs=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=EIvoA7kWPwtR5tsjbNeP4jyPsSvC9Z7snqpI1fJ5pvvtrERaLppdkcWsq6I1oXWsvXwQ3h9gwxq9SPs1gj2LHoYSWNneBfb+cWLZPwv1vFkn7iV2HUAeWeX27Hj9TB1OcITxLYKNUJ8NsZe0yDqUs1ZsXRPbqYDtLNg0r15MhU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RVs1ER/z; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RVs1ER/z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25AD9C43390
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 09:01:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710320500;
-	bh=GbdgaaO6TTX+CRJZ6eZP7WcObay4UgFJaPM9NRqlDrs=;
-	h=Date:From:To:Subject:From;
-	b=RVs1ER/zLR1buwmzTDrK3WXL0Vmy+u0kEdGo9/ntJ1VEkqZtf+hUP/svf2lt8UIa8
-	 Ortg5EUUOKFpkwR9LuOeFz0mMjGxXbvY0WNf5NzkcBwmOlqxhQmcp/++uOM2kOVD7B
-	 hPXZVvyW/ePq6wmidBFl+NVjoHre9UaABAnF/RLhRFYnBTo9hIymhSul8t+RAN1FjG
-	 fKT+vcw7pB7FfV7ZwZxdCUh7CIgEvMSZTsbFZdtSZrT4zWetyMrPuk7X6Bw44sYa1F
-	 68HRru9VLeTt3kXz8Uj/vPPb/l1db5EHiorYzWnj+cGKJZf0PvYHxVbr/EQwMzIp9o
-	 bWIDfK9ua8MJg==
-Date: Wed, 13 Mar 2024 10:01:37 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs: followup for-next update to c6be1c78f
-Message-ID: <i3qm7tnrk3uh5dthmehjwkhvlmssiwixgqnpddc3rvgg6yhwl7@insuyi6oglea>
+	s=arc-20240116; t=1710321832; c=relaxed/simple;
+	bh=DUWA95OUQZ4tb1g6/fDurLWTmlYD9hTjPojdeFcqTrI=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=V+uxRjb9QHAFDMd+WiLd7OOTGpOLyA09a7wD/7qQ12zcpN0xOpMFIZVJ8XqFFCycGa2IVO+vJM9+IBhGJ6AsvbBblnvc/clZTs5ItbnYyil/Jq4ulHZTyuIbDiL8be9DSzkFsp++rqyZC+ZoMASsN7c6X4CfydvAvm7EIWrEWFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TvlS50Vrfz4f3pHc;
+	Wed, 13 Mar 2024 17:23:33 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id C108F1A019F;
+	Wed, 13 Mar 2024 17:23:40 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgAn9g6acPFlcbg_Gw--.27770S3;
+	Wed, 13 Mar 2024 17:23:40 +0800 (CST)
+Subject: Re: [PATCH 4/4] iomap: cleanup iomap_write_iter()
+To: "Darrick J. Wong" <djwong@kernel.org>,
+ Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, brauner@kernel.org, david@fromorbit.com,
+ tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com
+References: <20240311122255.2637311-1-yi.zhang@huaweicloud.com>
+ <20240311122255.2637311-5-yi.zhang@huaweicloud.com>
+ <20240311160739.GV1927156@frogsfrogsfrogs> <ZfBJYG5OHgLGewHv@infradead.org>
+ <20240312162729.GD1927156@frogsfrogsfrogs>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <72683844-f2df-9773-bfb8-7dc2bff76272@huaweicloud.com>
+Date: Wed, 13 Mar 2024 17:23:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20240312162729.GD1927156@frogsfrogsfrogs>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgAn9g6acPFlcbg_Gw--.27770S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7try3GFWkurW3GF15KFW3Jrb_yoW8Xw1DpF
+	9Iga4jka1qga4xZrykAa1avr1Yk397Kry7try8G398Ar15uw13KF1ruF12yF1UAas7Aw4f
+	Xr48Zryku3WqyFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
+	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UWE__UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hello.
+On 2024/3/13 0:27, Darrick J. Wong wrote:
+> On Tue, Mar 12, 2024 at 05:24:00AM -0700, Christoph Hellwig wrote:
+>> On Mon, Mar 11, 2024 at 09:07:39AM -0700, Darrick J. Wong wrote:
+>>> If at some point iomap_write_end actually starts returning partial write
+>>> completions (e.g. you wrote 250 bytes, but for some reason the pagecache
+>>> only acknowledges 100 bytes were written) then this code no longer
+>>> reverts the iter or truncates posteof pagecache correctly...
+>>
+>> I don't think it makes sense to return a partial write from
+>> iomap_write_end.  But to make that clear it really should not return
+>> a byte count by a boolean.  I've been wanting to make that cleanup
+>> for a while, but it would reach all the way into buffer.c.
+> 
+> For now, can we change the return types of iomap_write_end_inline and
+> __iomap_write_end?  Then iomap can WARN_ON if the block_write_end return
+> value isn't 0 or copied:
+> 
+> 	bool ret;
+> 
+> 	if (srcmap->type == IOMAP_INLINE) {
+> 		ret = iomap_write_end_inline(iter, folio, pos, copied);
+> 	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+> 		size_t bh_written;
+> 
+> 		bh_written = block_write_end(NULL, iter->inode->i_mapping,
+> 				pos, len, copied, &folio->page, NULL);
+> 
+> 		WARN_ON(bh_written != copied && bh_written != 0);
+> 		ret = bh_written == copied;
+> 	} else {
+> 		ret = __iomap_write_end(iter->inode, pos, len, copied, folio);
+> 	}
+> 
+> 	...
+> 
+> 	return ret;
+> 
+> Some day later we can circle back to bufferheads, or maybe they'll die
+> before we get to it. ;)
+> 
 
-The xfsprogs for-next branch, located at:
+It looks great to me for now, we can revise iomap first.
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+Thanks,
+Yi.
 
-Has just been updated.
 
-This is a follow-up update on top of yesterday's update, as it was missing a
-series from Christoph. This update just pushes his series to for-next
-
-The new head of the for-next branch is commit:
-
-c6be1c78f1631884ff0befc6b19d762d2b8f4e5d
-
-26 new commits:
-
-Christoph Hellwig (26):
-      [a18202542] include: remove the filldir_t typedef
-      [87d0aad10] include: unconditionally define umode_t
-      [c7820bbb4] repair: refactor the BLKMAP_NEXTS_MAX check
-      [4b641cc08] include: stop using SIZEOF_LONG
-      [0fa9dcb61] include: stop generating platform_defs.h
-      [f367d5629] io: don't redefine SEEK_DATA and SEEK_HOLE
-      [dbe764ee7] configure: don't check for getmntent
-      [bd07eedea] configure: require libblkid
-      [1b8d539cc] configure: don't check for fadvise
-      [04e3bb974] configure: don't check for sendfile
-      [90bcaf5a7] configure: don't check for madvise
-      [6539cd18e] configure: don't check for mincor
-      [920130ef5] configure: don't check for fiemap
-      [2f5de3cee] configure: don't check for sync_file_range
-      [015b44e7f] configure: don't check for readdir
-      [055629e00] configure: don't check for fls
-      [15fb447f8] configure: don't check for fallocate
-      [bafafcb96] configure: don't check for syncfs
-      [636f77efe] configure: don't check for preadv and pwritev
-      [47f7c0445] configure: don't check for mremap
-      [25c2a1981] configure: don't check for fsetxattr
-      [0c026db1e] configure: don't check for the f_flags field in statfs
-      [810b515b4] configure: don't check for openat
-      [86b43bd0d] configure: don't check for fstatat
-      [0b50e9fa9] configure: don't check for SG_IO
-      [c6be1c78f] configure: don't check for HDIO_GETGEO
-
-Code Diffstat:
-
- Makefile                                        |  15 +-
- configure.ac                                    |  32 ---
- fsr/Makefile                                    |   4 -
- fsr/xfs_fsr.c                                   |   2 -
- include/bitops.h                                |   2 -
- include/builddefs.in                            |  36 ---
- include/linux.h                                 |   2 -
- include/{platform_defs.h.in => platform_defs.h} |  10 +-
- io/Makefile                                     |  69 +----
- io/io.h                                         |  36 ---
- io/mmap.c                                       |   8 -
- io/pread.c                                      |   8 -
- io/prealloc.c                                   |   8 -
- io/pwrite.c                                     |   8 -
- io/seek.c                                       |   5 -
- io/stat.c                                       |   2 -
- io/sync.c                                       |   4 -
- libfrog/Makefile                                |   4 -
- libfrog/paths.c                                 |   9 +-
- libxfs/topology.c                               |  37 +--
- m4/Makefile                                     |   1 -
- m4/package_libcdev.m4                           | 329 ------------------------
- m4/package_types.m4                             |  14 -
- repair/bmap.c                                   |  23 +-
- repair/bmap.h                                   |  13 -
- scrub/Makefile                                  |  16 +-
- scrub/common.h                                  |   8 -
- scrub/disk.c                                    |  30 +--
- 28 files changed, 35 insertions(+), 700 deletions(-)
- rename include/{platform_defs.h.in => platform_defs.h} (95%)
- delete mode 100644 m4/package_types.m4
