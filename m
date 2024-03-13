@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B24D3BA2B
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:11:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3D8BA2B
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:11:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710295877; cv=none; b=ss2RuaIEpAQwCktIXLuwEp/7HwtuNvYu5VjKi1XGAurq4L2r0kvi5o2nyOIQCcj6iHymARgep6HN1qz9xuk7n4z0VkIMGe0RuRzw8YAEurkgCcZcNJyWjzBp5Cu68nCvqfpfW8FOeKd4GZ47q1IeP6KRFsx+LkKWeZKwCQr/G18=
+	t=1710295893; cv=none; b=txR/EcECmAFC8/g0LF350ZslvH5rCXrW/JH3MieeQxBHVSo5VwAGtx7qxYKZqtON7jzMU87LiRhkwB0lHvUisPFxm8t6i+Dj4KWtU8MJ30JgrkoGuNQbj12lAByo84qwzyekr5z93dQFFtmsi4xZavCjUuZuS/A3L4l5+Vvp1fk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710295877; c=relaxed/simple;
-	bh=rueMaKh+/92NCEmH2p+zhBdDwkwoe+93c96fGXS5qdA=;
+	s=arc-20240116; t=1710295893; c=relaxed/simple;
+	bh=8kHd6+w53P0AmOt650tLXs73TW5VKvxj9sIN9mLT4tI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pKQiSE8+HcwjYRiANArMGSKfxvZQdAz0iQZf2jBvRhfCqKtBwvdiZdX1bH3Mgt7JeZCkOsytalUrQRCjWwNGVjNQtlSbpEmmOp+ynN/SqewOFgAaV9HGE1LFTYFW3WfWMyn5fP9dhBWkwwlTFDk+abP+bVTvK8pzzMfyGuAvFsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uHzVTjrp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KwfgEA4Ircg00TXGJIFgGfgoam7yMPHZBWrqPdwu8cxXkQ05S4Orf3f3h1NMjNi8mx9sLWcPKjdlILfNa4Guuw/P2CbfT0BY6voVMhamD5QijgrrspeJ+ZWKRednnauxqM0K0luG6VcoFWs238vjG9LLKPDYmJm53IYMoCks+KM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SVUVHySt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uHzVTjrp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F12CC433F1;
-	Wed, 13 Mar 2024 02:11:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SVUVHySt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DAC9C433F1;
+	Wed, 13 Mar 2024 02:11:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710295877;
-	bh=rueMaKh+/92NCEmH2p+zhBdDwkwoe+93c96fGXS5qdA=;
+	s=k20201202; t=1710295893;
+	bh=8kHd6+w53P0AmOt650tLXs73TW5VKvxj9sIN9mLT4tI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uHzVTjrpFe+Un8uvgFxNQSsDBSE4sSDa/QSXTLV7Rcq+adFTnOEEAEvPqxT6Uhgrg
-	 dypdCFT3hsUaRxV8JA9/opOZ4CwCPxPialLxm/+8Orn9C5GgvIxmy7vbWIEMVFtI1G
-	 4K/+x0toLhcqqkTRGSstD321KzZYjhfVKAZvNRtf5Wdxqp0bq6vuumt1e864spHFmz
-	 q+gxeJ02xlDSSadkOYtByHVNvKwdLBlptwVz3RkwdpgfIARfDR7L64ycFS1GBK1td8
-	 oLsPT+TjGSUnJGUKTTeflR7LVtdWGFxC5VQvgqDDvMtWgE3hn1UBW1Rp8WHRQfcM4w
-	 pS4cJ2zUUOAJQ==
-Date: Tue, 12 Mar 2024 19:11:17 -0700
-Subject: [PATCH 1/1] xfs_repair: double-check with shortform attr verifiers
+	b=SVUVHyStrKWavtj9WJkQDR5ojezzQyi0QpXBXGMU8fW3eFoNRAe7qYihqAlcDdfXY
+	 JWhyEPU9gYARLlJ2TZHqgRgL2iMv+O6mMSitWGQxaT2W80fjOksWAMZVEb1NQLt/IB
+	 KoTrYpCt81SzN/my3K/vTsL02IKk7uD9f+GrNNzI6/KNH1HpoSoP1ZybW4zqsJ5nIV
+	 3S7mVnPNaezf1Cdg+NiRFXhfRHoiDdr9kMBGJJ5px5Wb8XKu5MyKGWHqBTw6x9fxQS
+	 kH3Kmaff2uSwmHCEhIghB0vAbm4bBUJrTWwFYxApoyAHdNUBaQIktJq4sSHgauD3OZ
+	 XI6PgqGblZlmA==
+Date: Tue, 12 Mar 2024 19:11:32 -0700
+Subject: [PATCH 1/5] libxfs: remove the unused fs_topology_t typedef
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <171029432882.2063555.14424210570382825212.stgit@frogsfrogsfrogs>
-In-Reply-To: <171029432867.2063555.10851813376051369769.stgit@frogsfrogsfrogs>
-References: <171029432867.2063555.10851813376051369769.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <171029433229.2063634.360630278280106571.stgit@frogsfrogsfrogs>
+In-Reply-To: <171029433208.2063634.9779947272100308270.stgit@frogsfrogsfrogs>
+References: <171029433208.2063634.9779947272100308270.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -44,51 +44,34 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Call the shortform attr structure verifier as the last thing we do in
-process_shortform_attr to make sure that we don't leave any latent
-errors for the kernel to stumble over.
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/attr_repair.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ libxfs/topology.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 01e4afb90d5c..f117f9aef9ce 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -212,6 +212,7 @@ process_shortform_attr(
- {
- 	struct xfs_attr_sf_hdr		*hdr = XFS_DFORK_APTR(dip);
- 	struct xfs_attr_sf_entry	*currententry, *nextentry, *tempentry;
-+	xfs_failaddr_t			fa;
- 	int				i, junkit;
- 	int				currentsize, remainingspace;
+diff --git a/libxfs/topology.h b/libxfs/topology.h
+index 1af5b054947d..3a309a4dae05 100644
+--- a/libxfs/topology.h
++++ b/libxfs/topology.h
+@@ -10,13 +10,13 @@
+ /*
+  * Device topology information.
+  */
+-typedef struct fs_topology {
++struct fs_topology {
+ 	int	dsunit;		/* stripe unit - data subvolume */
+ 	int	dswidth;	/* stripe width - data subvolume */
+ 	int	rtswidth;	/* stripe width - rt subvolume */
+ 	int	lsectorsize;	/* logical sector size &*/
+ 	int	psectorsize;	/* physical sector size */
+-} fs_topology_t;
++};
  
-@@ -373,6 +374,22 @@ process_shortform_attr(
- 		}
- 	}
- 
-+	fa = libxfs_attr_shortform_verify(hdr, be16_to_cpu(hdr->totsize));
-+	if (fa) {
-+		if (no_modify) {
-+			do_warn(
-+	_("inode %" PRIu64 " shortform attr verifier failure, would have cleared attrs\n"),
-+				ino);
-+		} else {
-+			do_warn(
-+	_("inode %" PRIu64 " shortform attr verifier failure, cleared attrs\n"),
-+				ino);
-+			hdr->count = 0;
-+			hdr->totsize = cpu_to_be16(sizeof(struct xfs_attr_sf_hdr));
-+			*repair = 1;
-+		}
-+	}
-+
- 	return(*repair);
- }
- 
+ void
+ get_topology(
 
