@@ -1,236 +1,227 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7F1AD21
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:17:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 431181119B
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 04:56:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710296252; cv=none; b=fTcOrMMmC22i12Qmo42BGOZShKCTtv++mkj2JjQqB4yadpApRxfvJjK68+hxkcQzgoWp/uFwqa9+uDcDrY5qrLPipOUD+2yXDXlolz0AvBIDNte4vhHxvnIBzC6Q/cgjmL+vBYY/9r3qWxkfqOFrKMtWe5KZT3QaUVXzYNVmEno=
+	t=1710305795; cv=none; b=pt2KrTYYRD9uiXUw4m2OfdFCbBviW+g+bU+jlUVe9fkK9bot5IfHtkWx+2N50gDoQouuYyQevYcE0MBjpspoamnqlpHrmdsOWzCZQnQOD2RN3gEU/79/HqawUgpjySevX18EJj2Vvxnx4Zs7En8VmoOxV4osV06MkVwA7XUBGtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710296252; c=relaxed/simple;
-	bh=DZMVo8ohj80KEVGlsH9qPBZ7fC4ElR/w1WpSGPRLdbI=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O5JNf9+TErYUEA0j529g6MUcAtS1cFD776dDs5v8vFqBGJ56M2LKM3Gdae4wg7e9EqyYvgj6ImrRfEE2rcCkCj/rxJWcTf2pzvBesyGyxtta6gRMY3nYW/WSncrRgHEFWaAL7wAljg7BPMfaWP3XVQuEwnzYRUB057VCZY7hkNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pCeURJ08; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710305795; c=relaxed/simple;
+	bh=9mhfnhW4KCClsZ9chpk4FPuIQo090hLwwMZ5wghaXuI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MQZB4c54mdyrgZ79uK3DwhhzujL23s6yxI5+lMheX2F9HRfuVjcrF1ZQl6Zm7pxi8EUU9ZXqmlnN7R8APgjUN+WjdvbEaoRsbIsbj6sREGvvIb0U7JXkMfRJASPSenIhBXF5fajA601F+EjYqvLPUKYp6ogWef9Wz1QrPerVyp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CZ51B1e+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pCeURJ08"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA43AC433F1;
-	Wed, 13 Mar 2024 02:17:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CZ51B1e+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDEF7C433C7;
+	Wed, 13 Mar 2024 04:56:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710296252;
-	bh=DZMVo8ohj80KEVGlsH9qPBZ7fC4ElR/w1WpSGPRLdbI=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pCeURJ08/uco6mifMevQ5Dvph2JDZXe0LX1IULydOSBd3miyCczRj+sQq5ewtk3d9
-	 gsNeqCeHm71oPdGAZLIePneDAgbjxjxeWsIr78ULGaXC6vKMVgAK2WWXrtEXeuDXUc
-	 Mr25x5vQjaf6JO3Kfa5+Eb/x/08LzIoZpapIVmLccdvV2fu1aFaoYl3l7jIEavebT7
-	 eve5B4qUCCJHHG/H41OXOYDcAJFC3NnQ1wtSnOuU6v5QBuV68RYJOPKtSk04hI9vVW
-	 xkDI4P8z6xdW95Rx0j7R74Q5bfIE3FuBvroo6OZ8197OfqaRcUrUP3IB5uWOqNEor+
-	 /J71t+jk4oYuw==
-Date: Tue, 12 Mar 2024 19:17:32 -0700
-Subject: [PATCH 3/3] libfrog: create a new scrub group for things requiring
- full inode scans
+	s=k20201202; t=1710305794;
+	bh=9mhfnhW4KCClsZ9chpk4FPuIQo090hLwwMZ5wghaXuI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CZ51B1e+QuRcV7XfilmIsBfIg6G/TIcDAI5Txy+wG58GINUA6yEIrAge+dZehxgPE
+	 IKPqS3keqacN/ARx+S5htJp2a/OvuF/+MpkpLLqXWdMDiynNg7hNiaGjTBOvkwWNfe
+	 ByXwrGqwqogZu12Jn0majcVGfmTzw8qkZpxAe04D9sx4rK6YsVU4l/E3g6f8gLrhF2
+	 mbNX7tb3cUA3Sw/cbalYqCyIpT4stD+v7oxpdhKmBc564BZa67q2gj0C00C1kvc1oc
+	 r1usCpgPB3O/1E4pkP1ATdXCuyBVmBDwdjSOZPAb1PVR479Wm1yVDOXWxfZyKTt9mm
+	 u//Bst72l6i0Q==
+Date: Tue, 12 Mar 2024 21:56:34 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171029435218.2066071.72866513594224796.stgit@frogsfrogsfrogs>
-In-Reply-To: <171029435171.2066071.3261378354922412284.stgit@frogsfrogsfrogs>
-References: <171029435171.2066071.3261378354922412284.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+Subject: Re: [PATCH] xfs: allow sunit mount option to repair bad primary sb
+ stripe values
+Message-ID: <20240313045634.GK1927156@frogsfrogsfrogs>
+References: <20240312233006.2461827-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240312233006.2461827-1-david@fromorbit.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Mar 13, 2024 at 10:30:06AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> If a filesystem has a busted stripe alignment configuration on disk
+> (e.g. because broken RAID firmware told mkfs that swidth was smaller
+> than sunit), then the filesystem will refuse to mount due to the
+> stripe validation failing. This failure is triggering during distro
+> upgrades from old kernels lacking this check to newer kernels with
+> this check, and currently the only way to fix it is with offline
+> xfs_db surgery.
+> 
+> This runtime validity checking occurs when we read the superblock
+> for the first time and causes the mount to fail immediately. This
+> prevents the rewrite of stripe unit/width via
+> mount options that occurs later in the mount process. Hence there is
+> no way to recover this situation without resorting to offline xfs_db
+> rewrite of the values.
+> 
+> However, we parse the mount options long before we read the
+> superblock, and we know if the mount has been asked to re-write the
+> stripe alignment configuration when we are reading the superblock
+> and verifying it for the first time. Hence we can conditionally
+> ignore stripe verification failures if the mount options specified
+> will correct the issue.
+> 
+> We validate that the new stripe unit/width are valid before we
+> overwrite the superblock values, so we can ignore the invalid config
+> at verification and fail the mount later if the new values are not
+> valid. This, at least, gives users the chance of correcting the
+> issue after a kernel upgrade without having to resort to xfs-db
+> hacks.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_sb.c | 40 +++++++++++++++++++++++++++++++---------
+>  fs/xfs/libxfs/xfs_sb.h |  3 ++-
+>  2 files changed, 33 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index d991eec05436..f51b1efa2cae 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -530,7 +530,8 @@ xfs_validate_sb_common(
+>  	}
+>  
+>  	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+> -			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
+> +			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
+> +			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
+>  		return -EFSCORRUPTED;
+>  
+>  	/*
+> @@ -1323,8 +1324,10 @@ xfs_sb_get_secondary(
+>  }
+>  
+>  /*
+> - * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+> - * so users won't be confused by values in error messages.
+> + * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
+> + * won't be confused by values in error messages. This returns false if a value
+> + * is invalid and it is not the primary superblock that going to be corrected
+> + * later in the mount process.
 
-Subsequent patches will add online fsck types (quotacheck, link counts)
-that require us to walk every inode in the entire filesystem.  This
-requires the AG metadata and the inodes to be in good enough shape to
-complete the scan without hitting corruption errors.  As such, they
-ought to run after phases 2-4 and before phase 7, which summarizes what
-we've found.
+Hmm, I found this last sentence a little confusing.  How about:
 
-Phase 5 seems like a reasonable place to do this, since it already walks
-every xattr and directory entry in the filesystem to look for suspicious
-looking names.  Add a new XFROG_SCRUB_GROUP, and add it to phase 5.
+"This function returns false if the stripe geometry is invalid and no
+attempt will be made to correct it later in the mount process."
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- io/scrub.c        |    1 +
- libfrog/scrub.h   |    1 +
- scrub/phase5.c    |   22 ++++++++++++++++++++--
- scrub/scrub.c     |   33 +++++++++++++++++++++++++++++++++
- scrub/scrub.h     |    1 +
- scrub/xfs_scrub.h |    1 +
- 6 files changed, 57 insertions(+), 2 deletions(-)
+>   */
+>  bool
+>  xfs_validate_stripe_geometry(
+> @@ -1332,20 +1335,21 @@ xfs_validate_stripe_geometry(
+>  	__s64			sunit,
+>  	__s64			swidth,
+>  	int			sectorsize,
+> +	bool			primary_sb,
+>  	bool			silent)
+>  {
+>  	if (swidth > INT_MAX) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "stripe width (%lld) is too large", swidth);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sunit > swidth) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sectorsize && (int)sunit % sectorsize) {
+> @@ -1353,21 +1357,21 @@ xfs_validate_stripe_geometry(
+>  			xfs_notice(mp,
+>  "stripe unit (%lld) must be a multiple of the sector size (%d)",
+>  				   sunit, sectorsize);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sunit && !swidth) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "invalid stripe unit (%lld) and stripe width of 0", sunit);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (!sunit && swidth) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "invalid stripe width (%lld) and stripe unit of 0", swidth);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sunit && (int)swidth % (int)sunit) {
+> @@ -1375,9 +1379,27 @@ xfs_validate_stripe_geometry(
+>  			xfs_notice(mp,
+>  "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+>  				   swidth, sunit);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  	return true;
+> +
+> +check_override:
+> +	if (!primary_sb)
+> +		return false;
+> +	/*
+> +	 * During mount, mp->m_dalign will not be set unless the sunit mount
+> +	 * option was set. If it was set, ignore the bad stripe alignment values
+> +	 * and allow the validation and overwrite later in the mount process to
+> +	 * attempt to overwrite the bad stripe alignment values with the values
+> +	 * supplied by mount options.
 
+What catches the case of if m_dalign/m_swidth also being garbage values?
+Is it xfs_check_new_dalign?  Should that fail the mount if the
+replacement values are also garbage?
 
-diff --git a/io/scrub.c b/io/scrub.c
-index 70301c0676c4..a77cd872fede 100644
---- a/io/scrub.c
-+++ b/io/scrub.c
-@@ -184,6 +184,7 @@ parse_args(
- 	case XFROG_SCRUB_GROUP_FS:
- 	case XFROG_SCRUB_GROUP_NONE:
- 	case XFROG_SCRUB_GROUP_SUMMARY:
-+	case XFROG_SCRUB_GROUP_ISCAN:
- 		if (!parse_none(argc, optind)) {
- 			exitcode = 1;
- 			return command_usage(cmdinfo);
-diff --git a/libfrog/scrub.h b/libfrog/scrub.h
-index 68f1a968103e..27230c62f71a 100644
---- a/libfrog/scrub.h
-+++ b/libfrog/scrub.h
-@@ -13,6 +13,7 @@ enum xfrog_scrub_group {
- 	XFROG_SCRUB_GROUP_PERAG,	/* per-AG metadata */
- 	XFROG_SCRUB_GROUP_FS,		/* per-FS metadata */
- 	XFROG_SCRUB_GROUP_INODE,	/* per-inode metadata */
-+	XFROG_SCRUB_GROUP_ISCAN,	/* metadata requiring full inode scan */
- 	XFROG_SCRUB_GROUP_SUMMARY,	/* summary metadata */
- };
- 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 7e0eaca90422..0a91e4f0640b 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -16,6 +16,8 @@
- #include "list.h"
- #include "libfrog/paths.h"
- #include "libfrog/workqueue.h"
-+#include "libfrog/fsgeom.h"
-+#include "libfrog/scrub.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "inodes.h"
-@@ -23,8 +25,9 @@
- #include "scrub.h"
- #include "descr.h"
- #include "unicrash.h"
-+#include "repair.h"
- 
--/* Phase 5: Check directory connectivity. */
-+/* Phase 5: Full inode scans and check directory connectivity. */
- 
- /*
-  * Warn about problematic bytes in a directory/attribute name.  That means
-@@ -386,9 +389,24 @@ int
- phase5_func(
- 	struct scrub_ctx	*ctx)
- {
-+	struct action_list	alist;
- 	bool			aborted = false;
- 	int			ret;
- 
-+	/*
-+	 * Check and fix anything that requires a full inode scan.  We do this
-+	 * after we've checked all inodes and repaired anything that could get
-+	 * in the way of a scan.
-+	 */
-+	action_list_init(&alist);
-+	ret = scrub_iscan_metadata(ctx, &alist);
-+	if (ret)
-+		return ret;
-+	ret = action_list_process(ctx, ctx->mnt.fd, &alist,
-+			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
-+	if (ret)
-+		return ret;
-+
- 	if (ctx->corruptions_found || ctx->unfixable_errors) {
- 		str_info(ctx, ctx->mntpoint,
- _("Filesystem has errors, skipping connectivity checks."));
-@@ -417,7 +435,7 @@ phase5_estimate(
- 	unsigned int		*nr_threads,
- 	int			*rshift)
- {
--	*items = ctx->mnt_sv.f_files - ctx->mnt_sv.f_ffree;
-+	*items = scrub_estimate_iscan_work(ctx);
- 	*nr_threads = scrub_nproc(ctx);
- 	*rshift = 0;
- 	return 0;
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 1c53260cc26c..023cc2c2cd2c 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -47,6 +47,7 @@ format_scrub_descr(
- 		break;
- 	case XFROG_SCRUB_GROUP_FS:
- 	case XFROG_SCRUB_GROUP_SUMMARY:
-+	case XFROG_SCRUB_GROUP_ISCAN:
- 		return snprintf(buf, buflen, _("%s"), _(sc->descr));
- 		break;
- 	case XFROG_SCRUB_GROUP_NONE:
-@@ -421,6 +422,15 @@ scrub_summary_metadata(
- 	return scrub_group(ctx, XFROG_SCRUB_GROUP_SUMMARY, 0, alist);
- }
- 
-+/* Scrub all metadata requiring a full inode scan. */
-+int
-+scrub_iscan_metadata(
-+	struct scrub_ctx		*ctx,
-+	struct action_list		*alist)
-+{
-+	return scrub_group(ctx, XFROG_SCRUB_GROUP_ISCAN, 0, alist);
-+}
-+
- /* Scrub /only/ the superblock summary counters. */
- int
- scrub_fs_counters(
-@@ -456,6 +466,29 @@ scrub_estimate_ag_work(
- 	return estimate;
- }
- 
-+/*
-+ * How many kernel calls will we make to scrub everything requiring a full
-+ * inode scan?
-+ */
-+unsigned int
-+scrub_estimate_iscan_work(
-+	struct scrub_ctx		*ctx)
-+{
-+	const struct xfrog_scrub_descr	*sc;
-+	int				type;
-+	unsigned int			estimate;
-+
-+	estimate = ctx->mnt_sv.f_files - ctx->mnt_sv.f_ffree;
-+
-+	sc = xfrog_scrubbers;
-+	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
-+		if (sc->group == XFROG_SCRUB_GROUP_ISCAN)
-+			estimate++;
-+	}
-+
-+	return estimate;
-+}
-+
- /*
-  * Scrub file metadata of some sort.  If errors occur, this function will log
-  * them and return nonzero.
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 8a999da6a965..0033fe7ed931 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -24,6 +24,7 @@ int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
- 		struct action_list *alist);
- int scrub_fs_metadata(struct scrub_ctx *ctx, unsigned int scrub_type,
- 		struct action_list *alist);
-+int scrub_iscan_metadata(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
- 
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 7aea79d9555e..34d850d8db36 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -99,6 +99,7 @@ int phase7_func(struct scrub_ctx *ctx);
- 
- /* Progress estimator functions */
- unsigned int scrub_estimate_ag_work(struct scrub_ctx *ctx);
-+unsigned int scrub_estimate_iscan_work(struct scrub_ctx *ctx);
- int phase2_estimate(struct scrub_ctx *ctx, uint64_t *items,
- 		    unsigned int *nr_threads, int *rshift);
- int phase3_estimate(struct scrub_ctx *ctx, uint64_t *items,
+> +	 */
+> +	if (!mp->m_dalign)
+> +		return false;
+> +	if (!silent)
+> +		xfs_notice(mp,
+> +"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
+> +			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
+> +	return true;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 67a40069724c..58798b9c70ba 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -35,7 +35,8 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+>  				struct xfs_buf **bpp);
+>  
+>  extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
 
+This declaration might as well lose the extern here too.
+
+> -		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
+> +		__s64 sunit, __s64 swidth, int sectorsize, bool primary_sb,
+> +		bool silent);
+
+What should value for @primary_sb should mkfs pass into
+xfs_validate_stripe_geometry from calc_stripe_factors?
+
+--D
+
+>  
+>  uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+>  
+> -- 
+> 2.43.0
+> 
+> 
