@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A30FC122
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289D0C122
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Mar 2024 02:17:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710296221; cv=none; b=OS8LW4jRSCsbKLXc4lY06ojSWttRvRmicMsw3CpQHuSxcewe9BylnOMTg/g5ESFqxrq5uqc37vlCJg1dUC2yBiNR1sYS0Vvz470Ll4gLXutAs21kqwH+Kqshsr200jNSbN1X+OQmH12/GFVS7FY7+T3GGA2EOkxa6B3uXurTK9c=
+	t=1710296237; cv=none; b=WKUVR+MBaTT5LPbX7D5AyIvPlGjc5fs4x7UtY44i9jZ39Le3HRNTzHF5ZL7IK/edD0TJ3yuFgNnIlZn0QVhN4YNjR3pIIyrj2XmffbxHoK0DIrRbcA5n0T3k8XRdOgrsOlCBh9HmJXXwDyw+P6NrlcXTMy0Sx4xzbqBhwgDNgc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710296221; c=relaxed/simple;
-	bh=eg0DpmayDb2KZT9A36X4aHSIn3DK16fdTdF6DddoUD8=;
+	s=arc-20240116; t=1710296237; c=relaxed/simple;
+	bh=3cO2YXAMesNcgZ0Rf7ZLllABv1kSgf/xFr6TGPXz5B8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HPkEyVjnqYX+4l3rkkUJ0+1gDKqHeluiTQj2EhwLKrkO0u93TBNxGP8/1IeE27HSFcgoD35v4PZnPtnLfY19ZL0+ZK5z7jmm7ZutSsCiQ1aM3PQJbyQHzGE4QCf+HLStKE6r8vtQo2KqcimPhr3a+xkGh6W8ppXA3Fr78ApFWuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hALvl/14; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=BiOIoFH0evia9enCPoUotLNRJVzwv/0z1ca1x0BU94korCzFF9Rqv4rPm8nenBL8FyKHeQb8rYCwJIRfi0qnnWVUrPZ5JFdWQG27rcwA/l7K3jbGsfg6UPLFrLDQ2+7RGCgSmwySSX7yqxcjwh/TR2oej0gdD3cQFe0B7RjdcQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dBJPzaF/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hALvl/14"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60883C433F1;
-	Wed, 13 Mar 2024 02:17:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dBJPzaF/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01102C433F1;
+	Wed, 13 Mar 2024 02:17:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710296221;
-	bh=eg0DpmayDb2KZT9A36X4aHSIn3DK16fdTdF6DddoUD8=;
+	s=k20201202; t=1710296237;
+	bh=3cO2YXAMesNcgZ0Rf7ZLllABv1kSgf/xFr6TGPXz5B8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hALvl/14DOHcTJ4cZ1O19RnPi6FSRqRa2Me5gohroNnhPgDrUMR3w5HuescDmy9Mm
-	 8afPPKgm5e5e/pQEwjl+pkQH9IWpiQY3pPH5MzQpHJs+9lgVtajyG7jm82dhR+rSM1
-	 tOFHR1pVjH3Yh/gW9niuijf8evM8Hu1Nx9WJJy2Ry38wh4WNldk2xPCbPN/AE+TViT
-	 wvWVMcCqiSid4NDVPQ0bq5AqjdV1UogMcgLDAvbPB8SZ3F+78XfP4QbL5QnvM49a01
-	 lGTAamYELnQ2PjmWwuKdBAQuZtDWMqsItrE7BKIg0CLwfs1A465mTlY0nZxlBltHSH
-	 ypwYVsAU2xSzA==
-Date: Tue, 12 Mar 2024 19:17:00 -0700
-Subject: [PATCH 1/3] libxfs: actually set m_fsname
+	b=dBJPzaF/ZevSp7pmlzU3gKfcagstEomqZl8uCXRTgsUFiRgM6Jj1hdvR1N9p3Q24v
+	 0vpaurll0RzuomPXqPJQfyvlyIYTBS5zErJBdqd0bTFBWduEFZ6XoHwncaSOJhIOq5
+	 /uWsL41P1AdzVPnMT9Y/fv5e0eS7EM/wQqw8O/BX+8Xdy17wyw6pP7VJW7Vzz47ZHE
+	 PSuqmoE0PlRvdMpqnYUXvB69fHafFggqVwsB9+22rGI49LkrO69c9kZZiH2/dFW5Ai
+	 zG5FKfIvHzNhdRJq1SACES1ljU8rnJ5kLuuE/yCrDI1jMNLY3AiEJhSE7MG6QMOGdH
+	 qnJBgs1toXO3w==
+Date: Tue, 12 Mar 2024 19:17:16 -0700
+Subject: [PATCH 2/3] libxfs: clean up xfs_da_unmount usage
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171029435189.2066071.4364534770813261790.stgit@frogsfrogsfrogs>
+Message-ID: <171029435204.2066071.12077621897985625395.stgit@frogsfrogsfrogs>
 In-Reply-To: <171029435171.2066071.3261378354922412284.stgit@frogsfrogsfrogs>
 References: <171029435171.2066071.3261378354922412284.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,41 +46,76 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Set the name of the filesystem before we actually start using it for
-creating xfiles.  This leads to nice(r) output from /proc/maps such as:
-
-7fcd0a44f000-7fcd0a450000 rw-s 021f6000 00:01 3612684 /memfd:xfs_repair (/dev/sda): AG 0 rmap records (deleted)
+Replace the open-coded xfs_da_unmount usage in libxfs_umount and teach
+libxfs_mount not to leak the dir/attr geometry structures when the mount
+attempt fails.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ libxfs/init.c |   16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
 
 diff --git a/libxfs/init.c b/libxfs/init.c
-index 1e035c48f57f..c8d776e3ed50 100644
+index c8d776e3ed50..5641b9bef6bd 100644
 --- a/libxfs/init.c
 +++ b/libxfs/init.c
-@@ -643,6 +643,11 @@ libxfs_mount(
- 		xfs_set_reporting_corruption(mp);
- 	libxfs_buftarg_init(mp, xi);
+@@ -721,7 +721,7 @@ libxfs_mount(
+ 	if (error) {
+ 		fprintf(stderr, _("%s: data size check failed\n"), progname);
+ 		if (!xfs_is_debugger(mp))
+-			return NULL;
++			goto out_da;
+ 	} else
+ 		libxfs_buf_relse(bp);
  
-+	if (xi->data.name)
-+		mp->m_fsname = strdup(xi->data.name);
-+	else
-+		mp->m_fsname = NULL;
-+
- 	mp->m_finobt_nores = true;
- 	xfs_set_inode32(mp);
- 	mp->m_sb = *sb;
-@@ -903,6 +908,9 @@ libxfs_umount(
- 	kmem_free(mp->m_attr_geo);
- 	kmem_free(mp->m_dir_geo);
+@@ -735,7 +735,7 @@ libxfs_mount(
+ 			fprintf(stderr, _("%s: log size checks failed\n"),
+ 					progname);
+ 			if (!xfs_is_debugger(mp))
+-				return NULL;
++				goto out_da;
+ 		}
+ 		if (bp)
+ 			libxfs_buf_relse(bp);
+@@ -746,8 +746,8 @@ libxfs_mount(
+ 	/* Initialize realtime fields in the mount structure */
+ 	if (rtmount_init(mp)) {
+ 		fprintf(stderr, _("%s: realtime device init failed\n"),
+-			progname);
+-			return NULL;
++				progname);
++			goto out_da;
+ 	}
  
-+	free(mp->m_fsname);
-+	mp->m_fsname = NULL;
-+
- 	kmem_free(mp->m_rtdev_targp);
- 	if (mp->m_logdev_targp != mp->m_ddev_targp)
- 		kmem_free(mp->m_logdev_targp);
+ 	/*
+@@ -765,7 +765,7 @@ libxfs_mount(
+ 			fprintf(stderr, _("%s: read of AG %u failed\n"),
+ 						progname, sbp->sb_agcount);
+ 			if (!xfs_is_debugger(mp))
+-				return NULL;
++				goto out_da;
+ 			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
+ 								progname);
+ 			sbp->sb_agcount = 1;
+@@ -783,6 +783,9 @@ libxfs_mount(
+ 	xfs_set_perag_data_loaded(mp);
+ 
+ 	return mp;
++out_da:
++	xfs_da_unmount(mp);
++	return NULL;
+ }
+ 
+ void
+@@ -905,8 +908,7 @@ libxfs_umount(
+ 	if (xfs_is_perag_data_loaded(mp))
+ 		libxfs_free_perag(mp);
+ 
+-	kmem_free(mp->m_attr_geo);
+-	kmem_free(mp->m_dir_geo);
++	xfs_da_unmount(mp);
+ 
+ 	free(mp->m_fsname);
+ 	mp->m_fsname = NULL;
 
