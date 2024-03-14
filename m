@@ -1,79 +1,40 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6584D1EB34;
-	Thu, 14 Mar 2024 16:58:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8A37351C;
+	Thu, 14 Mar 2024 17:06:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710435486; cv=none; b=Vcs77zsqIn9OruxtzeUdAOrJhUYLw+iYoFLIzWGw/W1n/H2zKqN5I1yG9u5alCNlf3pNPTfHuREtZOlBEzJS0fzW7a9v20Ko9xJfnrzJbAb1Is7iRYCAwb5GtlzMLZLZdG1Fn3cHee7QZ7COTyOrYZxE6RDu4X1820poWEiZfbI=
+	t=1710435982; cv=none; b=ufwiXdxkhLQE6ADDm+awo/wkcimGhsLYG6WLL3QLlcdlRXfRaLv3ATvW/TT0065zbaJKgK4bWAwWtDoOD6a+mBAM7U34xVvWa6Tnb4gouqSwtCLQ3AcGcltzUB96/hRfzXmrshRavss6Dkl3yilermQAPFer9L1Z3CDIKWYNqvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710435486; c=relaxed/simple;
-	bh=fcf8GvnNI2NlxwWa/BLBUBs674hhRLyrkoAa66D2RKo=;
+	s=arc-20240116; t=1710435982; c=relaxed/simple;
+	bh=viGiINFDCV7P8QI+dM5uC1tGJDU23A2pJCI1bxg7RKM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nE9Dvb4jlx6h5vXrX4A9HOeg58e+rGh2c7tkkgerxTH4oqbOienOHOVPcy/KYUA6XDZf6V+m6gCBjqy5QTyf7NcGJc9/rDTvrPmiASibu9GsfnMNXtwivmFvh9LqXtIIbs5WA4+yEvd/cAiOkfmsi8qZbL7NfrNIwdhyRUBBxTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Upxp6VnM; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=XdOgZryNKENywxE1jmou56wKKqR7WJ9QpGNt19kRyKuhSlDSczsijmt5DwmnIUflwoNLydwerZKWNLG/0cxe5F8LhOIh4dFfmuAP9dUHxIDcm2MHuH1nmbnryqL1XnHqU6aW4mz/idfPLrE5rF9jt9ju5lPQ9E/5qcEiUXlXARw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Soedy5Z1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Upxp6VnM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1710435484; x=1741971484;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=fcf8GvnNI2NlxwWa/BLBUBs674hhRLyrkoAa66D2RKo=;
-  b=Upxp6VnMtVVIh5OrjLy1m4x53O33vUT82Px9mA1yIg4XVcMfwTQJFixh
-   7LgJMYtNRqx/gFI4UZaFZANBwyUZ2125tyWFO/h/8aNJY3Ssz6Q5mTtSq
-   z2Rj4kEpS4nJkn25okzKvdQv4rbbJF9HCHjqQ9B/Jb64bwio9XG/KBlJp
-   J699SnKSz1nj/E2RkWAJaF9YVeUpsaCsOXlpHs5uHkESF9K3aOaQpXess
-   FCsbM8DPR2tGCmMJCjBmNp+30GvOQOM0FuzvdY/0Dl1c7H5pm+EbBsxtB
-   SWZno7PLV95EK9E7rTZWvtAMKbMAY13rhlzTtvMhwYJfdAqn3LBycbVbu
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11013"; a="22731667"
-X-IronPort-AV: E=Sophos;i="6.07,126,1708416000"; 
-   d="scan'208";a="22731667"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2024 09:58:02 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,126,1708416000"; 
-   d="scan'208";a="16952403"
-Received: from aschofie-mobl2.amr.corp.intel.com (HELO aschofie-mobl2) ([10.209.72.214])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2024 09:57:59 -0700
-Date: Thu, 14 Mar 2024 09:57:57 -0700
-From: Alison Schofield <alison.schofield@intel.com>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux Trace Kernel <linux-trace-kernel@vger.kernel.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-	freedreno@lists.freedesktop.org, virtualization@lists.linux.dev,
-	linux-rdma@vger.kernel.org, linux-pm@vger.kernel.org,
-	iommu@lists.linux.dev, linux-tegra@vger.kernel.org,
-	netdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
-	linux-usb@vger.kernel.org, linux-bcachefs@vger.kernel.org,
-	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-edac@vger.kernel.org, selinux@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-hwmon@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-sound@vger.kernel.org,
-	bpf@vger.kernel.org, linux-wpan@vger.kernel.org,
-	dev@openvswitch.org, linux-s390@vger.kernel.org,
-	tipc-discussion@lists.sourceforge.net,
-	Julia Lawall <Julia.Lawall@inria.fr>
-Subject: Re: [FYI][PATCH] tracing/treewide: Remove second parameter of
- __assign_str()
-Message-ID: <ZfMslbCmCtyEaEWN@aschofie-mobl2>
-References: <20240223125634.2888c973@gandalf.local.home>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Soedy5Z1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D576C433F1;
+	Thu, 14 Mar 2024 17:06:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710435981;
+	bh=viGiINFDCV7P8QI+dM5uC1tGJDU23A2pJCI1bxg7RKM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Soedy5Z1kCcIkRe8UsLOBcXoOy9e/gcvMvYsfy6wFS7Q1QQLm2CkUm/kC9kAkTG5i
+	 dUg6bRt8dv9CA4ROjNUEWtGzMyMFJ43+W0K8Q4GkaLe6UtNX0DVSfTCCYheVmNCjHR
+	 Gz3JvweBGTXTszxLfYJrdhAzwZxtuAuus8siYNow/hqFHpignE/0+YvIDFAiTbX6fO
+	 jSOEF9r4n0eZkmAndOhePy4MXKw9WF9rVoeMhWroiWGtGSjHCHv2LKy9GR9xWqCfhN
+	 5qOPCvWV+/+KcScDL2qtwCXVK2gW8EFohn8tecaWCz5cqLpkKjn1kYCpnLFAjEz+dK
+	 kVTDIiaPU9PVw==
+Date: Thu, 14 Mar 2024 10:06:20 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: aalbersh@redhat.com, ebiggers@kernel.org
+Cc: linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 21/29] xfs: add fs-verity support
+Message-ID: <20240314170620.GR1927156@frogsfrogsfrogs>
+References: <171035223299.2613863.12196197862413309469.stgit@frogsfrogsfrogs>
+ <171035223693.2613863.3986547716372413007.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,121 +43,199 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240223125634.2888c973@gandalf.local.home>
+In-Reply-To: <171035223693.2613863.3986547716372413007.stgit@frogsfrogsfrogs>
 
-On Fri, Feb 23, 2024 at 12:56:34PM -0500, Steven Rostedt wrote:
-> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+On Wed, Mar 13, 2024 at 10:58:03AM -0700, Darrick J. Wong wrote:
+> From: Andrey Albershteyn <aalbersh@redhat.com>
 > 
-> [
->    This is a treewide change. I will likely re-create this patch again in
->    the second week of the merge window of v6.9 and submit it then. Hoping
->    to keep the conflicts that it will cause to a minimum.
-> ]
+> Add integration with fs-verity. The XFS store fs-verity metadata in
+> the extended file attributes. The metadata consist of verity
+> descriptor and Merkle tree blocks.
 > 
-> With the rework of how the __string() handles dynamic strings where it
-> saves off the source string in field in the helper structure[1], the
-> assignment of that value to the trace event field is stored in the helper
-> value and does not need to be passed in again.
+> The descriptor is stored under "vdesc" extended attribute. The
+> Merkle tree blocks are stored under binary indexes which are offsets
+> into the Merkle tree.
 > 
-> This means that with:
+> When fs-verity is enabled on an inode, the XFS_IVERITY_CONSTRUCTION
+> flag is set meaning that the Merkle tree is being build. The
+> initialization ends with storing of verity descriptor and setting
+> inode on-disk flag (XFS_DIFLAG2_VERITY).
 > 
->   __string(field, mystring)
+> The verification on read is done in read path of iomap.
 > 
-> Which use to be assigned with __assign_str(field, mystring), no longer
-> needs the second parameter and it is unused. With this, __assign_str()
-> will now only get a single parameter.
-> 
-> There's over 700 users of __assign_str() and because coccinelle does not
-> handle the TRACE_EVENT() macro I ended up using the following sed script:
-> 
->   git grep -l __assign_str | while read a ; do
->       sed -e 's/\(__assign_str([^,]*[^ ,]\) *,[^;]*/\1)/' $a > /tmp/test-file;
->       mv /tmp/test-file $a;
->   done
-> 
-> I then searched for __assign_str() that did not end with ';' as those
-> were multi line assignments that the sed script above would fail to catch.
-> 
-> Note, the same updates will need to be done for:
-> 
->   __assign_str_len()
->   __assign_rel_str()
->   __assign_rel_str_len()
->   __assign_bitmask()
->   __assign_rel_bitmask()
->   __assign_cpumask()
->   __assign_rel_cpumask()
-> 
-> [1] https://lore.kernel.org/linux-trace-kernel/20240222211442.634192653@goodmis.org/
-> 
-> Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
-> ---
->  arch/arm64/kernel/trace-events-emulation.h    |   2 +-
->  arch/powerpc/include/asm/trace.h              |   4 +-
->  arch/x86/kvm/trace.h                          |   2 +-
->  drivers/base/regmap/trace.h                   |  18 +--
->  drivers/base/trace.h                          |   2 +-
->  drivers/block/rnbd/rnbd-srv-trace.h           |  12 +-
->  drivers/cxl/core/trace.h                      |  24 ++--
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> [djwong: replace caching implementation with an xarray, other cleanups]
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-snip to CXL
+I started writing more of userspace (xfs_db decoding of verity xattrs,
+repair/scrub support) so I think I want to make one more change to this.
 
+This change shortens the key structure name, puts a proper namespace on
+the merkleoff field to match everything else in the ondisk structs, and
+checks it via xfs_ondisk.h.
 
-> diff --git a/drivers/cxl/core/trace.h b/drivers/cxl/core/trace.h
-> index bdf117a33744..07ba4e033347 100644
-> --- a/drivers/cxl/core/trace.h
-> +++ b/drivers/cxl/core/trace.h
+--D
 
-snip to poison
-
-> @@ -668,8 +668,8 @@ TRACE_EVENT(cxl_poison,
->  	    ),
->  
->  	TP_fast_assign(
-> -		__assign_str(memdev, dev_name(&cxlmd->dev));
-> -		__assign_str(host, dev_name(cxlmd->dev.parent));
-> +		__assign_str(memdev);
-> +		__assign_str(host);
-
-I think I get that the above changes work because the TP_STRUCT__entry for
-these did:
-	__string(memdev, dev_name(&cxlmd->dev))
-	__string(host, dev_name(cxlmd->dev.parent))
-
->  		__entry->serial = cxlmd->cxlds->serial;
->  		__entry->overflow_ts = cxl_poison_overflow(flags, overflow_ts);
->  		__entry->dpa = cxl_poison_record_dpa(record);
-> @@ -678,12 +678,12 @@ TRACE_EVENT(cxl_poison,
->  		__entry->trace_type = trace_type;
->  		__entry->flags = flags;
->  		if (region) {
-> -			__assign_str(region, dev_name(&region->dev));
-> +			__assign_str(region);
->  			memcpy(__entry->uuid, &region->params.uuid, 16);
->  			__entry->hpa = cxl_trace_hpa(region, cxlmd,
->  						     __entry->dpa);
->  		} else {
-> -			__assign_str(region, "");
-> +			__assign_str(region);
->  			memset(__entry->uuid, 0, 16);
->  			__entry->hpa = ULLONG_MAX;
-
-For the above 2, there was no helper in TP_STRUCT__entry. A recently
-posted patch is fixing that up to be __string(region, NULL) See [1],
-with the actual assignment still happening in TP_fast_assign.
-
-Does that assign logic need to move to the TP_STRUCT__entry definition
-when you merge these changes? I'm not clear how much logic is able to be
-included, ie like 'C' style code in the TP_STRUCT__entry.
-
-[1]
-https://lore.kernel.org/linux-cxl/20240314044301.2108650-1-alison.schofield@intel.com/
-
-Thanks for helping,
-Alison
-
-
->  		}
-
-
-
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 3280fbc3027ec..c2f1b38683646 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1593,7 +1593,7 @@ xfs_attr_namecheck(
+ 
+ 	if (flags & XFS_ATTR_VERITY) {
+ 		/* Merkle tree pages are stored under u64 indexes */
+-		if (length == sizeof(struct xfs_fsverity_merkle_key))
++		if (length == sizeof(struct xfs_verity_merkle_key))
+ 			return true;
+ 
+ 		/* Verity descriptor blocks are held in a named attribute. */
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 6e3b08d4ad74a..e55e437c47ae3 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -923,10 +923,10 @@ struct xfs_parent_name_rec {
+  * fs-verity attribute name format
+  *
+  * Merkle tree blocks are stored under extended attributes of the inode. The
+- * name of the attributes are offsets into merkle tree.
++ * name of the attributes are byte offsets into merkle tree.
+  */
+-struct xfs_fsverity_merkle_key {
+-	__be64 merkleoff;
++struct xfs_verity_merkle_key {
++	__be64	bk_merkleoff;
+ };
+ 
+ /* ondisk xattr name used for the fsverity descriptor */
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index e4e0e5203ec16..118e993c7d2f3 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -206,8 +206,9 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MAX << XFS_DQ_BIGTIME_SHIFT,
+ 			16299260424LL);
+ 
+-	/* fs-verity descriptor xattr name */
+-	XFS_CHECK_VALUE(sizeof(XFS_VERITY_DESCRIPTOR_NAME), 6);
++	/* fs-verity xattrs */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_verity_merkle_key,	8);
++	XFS_CHECK_VALUE(sizeof(XFS_VERITY_DESCRIPTOR_NAME),	6);
+ }
+ 
+ #endif /* __XFS_ONDISK_H */
+diff --git a/fs/xfs/xfs_verity.c b/fs/xfs/xfs_verity.c
+index 82340c9130494..dca3b68445343 100644
+--- a/fs/xfs/xfs_verity.c
++++ b/fs/xfs/xfs_verity.c
+@@ -201,20 +201,20 @@ xfs_verity_cache_store(
+ }
+ 
+ static inline void
+-xfs_fsverity_merkle_key_to_disk(
+-	struct xfs_fsverity_merkle_key	*key,
++xfs_verity_merkle_key_to_disk(
++	struct xfs_verity_merkle_key	*key,
+ 	u64				offset)
+ {
+-	key->merkleoff = cpu_to_be64(offset);
++	key->bk_merkleoff = cpu_to_be64(offset);
+ }
+ 
+ static inline u64
+-xfs_fsverity_merkle_key_from_disk(
++xfs_verity_merkle_key_from_disk(
+ 	void				*attr_name)
+ {
+-	struct xfs_fsverity_merkle_key	*key = attr_name;
++	struct xfs_verity_merkle_key	*key = attr_name;
+ 
+-	return be64_to_cpu(key->merkleoff);
++	return be64_to_cpu(key->bk_merkleoff);
+ }
+ 
+ static int
+@@ -272,7 +272,7 @@ xfs_drop_merkle_tree(
+ 	u64				merkle_tree_size,
+ 	unsigned int			tree_blocksize)
+ {
+-	struct xfs_fsverity_merkle_key	name;
++	struct xfs_verity_merkle_key	name;
+ 	int				error = 0;
+ 	u64				offset = 0;
+ 	struct xfs_da_args		args = {
+@@ -281,7 +281,7 @@ xfs_drop_merkle_tree(
+ 		.attr_filter		= XFS_ATTR_VERITY,
+ 		.op_flags		= XFS_DA_OP_REMOVE,
+ 		.name			= (const uint8_t *)&name,
+-		.namelen		= sizeof(struct xfs_fsverity_merkle_key),
++		.namelen		= sizeof(struct xfs_verity_merkle_key),
+ 		/* NULL value make xfs_attr_set remove the attr */
+ 		.value			= NULL,
+ 	};
+@@ -290,7 +290,7 @@ xfs_drop_merkle_tree(
+ 		return 0;
+ 
+ 	for (offset = 0; offset < merkle_tree_size; offset += tree_blocksize) {
+-		xfs_fsverity_merkle_key_to_disk(&name, offset);
++		xfs_verity_merkle_key_to_disk(&name, offset);
+ 		error = xfs_attr_set(&args);
+ 		if (error)
+ 			return error;
+@@ -372,12 +372,12 @@ xfs_verity_read_merkle(
+ 	struct fsverity_blockbuf	*block)
+ {
+ 	struct xfs_inode		*ip = XFS_I(req->inode);
+-	struct xfs_fsverity_merkle_key	name;
++	struct xfs_verity_merkle_key	name;
+ 	struct xfs_da_args		args = {
+ 		.dp			= ip,
+ 		.attr_filter		= XFS_ATTR_VERITY,
+ 		.name			= (const uint8_t *)&name,
+-		.namelen		= sizeof(struct xfs_fsverity_merkle_key),
++		.namelen		= sizeof(struct xfs_verity_merkle_key),
+ 		.valuelen		= block->size,
+ 	};
+ 	struct xfs_merkle_blob		*mk, *new_mk;
+@@ -386,7 +386,7 @@ xfs_verity_read_merkle(
+ 
+ 	ASSERT(block->offset >> req->log_blocksize <= ULONG_MAX);
+ 
+-	xfs_fsverity_merkle_key_to_disk(&name, block->offset);
++	xfs_verity_merkle_key_to_disk(&name, block->offset);
+ 
+ 	/* Is the block already cached? */
+ 	mk = xfs_verity_cache_load(ip, key);
+@@ -399,7 +399,7 @@ xfs_verity_read_merkle(
+ 	args.value = new_mk->data;
+ 
+ 	/* Read the block in from disk and try to store it in the cache. */
+-	xfs_fsverity_merkle_key_to_disk(&name, block->offset);
++	xfs_verity_merkle_key_to_disk(&name, block->offset);
+ 
+ 	error = xfs_attr_get(&args);
+ 	if (error)
+@@ -440,19 +440,18 @@ xfs_verity_write_merkle(
+ 	unsigned int		size)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_fsverity_merkle_key	name;
++	struct xfs_verity_merkle_key	name;
+ 	struct xfs_da_args	args = {
+ 		.dp		= ip,
+ 		.whichfork	= XFS_ATTR_FORK,
+ 		.attr_filter	= XFS_ATTR_VERITY,
+-		.namelen	= sizeof(struct xfs_fsverity_merkle_key),
++		.name		= (const uint8_t *)&name,
++		.namelen	= sizeof(struct xfs_verity_merkle_key),
+ 		.value		= (void *)buf,
+ 		.valuelen	= size,
+ 	};
+ 
+-	xfs_fsverity_merkle_key_to_disk(&name, pos);
+-	args.name = (const uint8_t *)&name.merkleoff;
+-
++	xfs_verity_merkle_key_to_disk(&name, pos);
+ 	return xfs_attr_set(&args);
+ }
+ 
