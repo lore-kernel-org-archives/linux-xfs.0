@@ -1,246 +1,339 @@
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5E66CDBC
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2024 09:31:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127F870CCB
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2024 16:35:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710408686; cv=none; b=VbqsphRNinsWc5GzUdjKGeBR5MDo/wzU6oJgAtbHhpayJVD+t0elp4AAweFOcO5jnEb9Ui9dHw7VfAgh4dmRdlYERLS9ztaN2YR+Gpk9MZj1cl8v/NoRoktx2LU773IKNpVeJqj2QtJ9tV0/RKGoAhNCHFEPXk+18xY5zCaq5QQ=
+	t=1710434137; cv=none; b=P4gubsn9TlO+tp0GQvFJ1f7vpXu2MOPtDegSCuvZHI3nKAaP32JO+7rEqUfapDH+dr+NVLCoW7aog7x99aS43rzLGx3t4xh9VLpDaAlm3SjrNDTkYNW6YgErfJaEO30WHS1g+SClM/Xs9I6wdVyjcbIWulnga1qB93VbYgmwhVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710408686; c=relaxed/simple;
-	bh=hMKxZ5S7+ZBl00klWulG1PpgRzwMfKsTjpUQ7uBdNrM=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=h6wThAKxiJwHP95up+P/WEdfaQsNI+ZVc0xPKAwV72x9H8exh4C/FKrCQdPa2SKh9NRzr+cBaS8ABYjBk1LNM/P0Da2VaD5PGCgVUxUeB4R+TbckklmB1Jlki7owCNdFcelXxreqEuSUnLopTY0ek0PuhaT1jsvnYvxz4JOVGfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3663d77a143so9870545ab.2
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2024 02:31:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710408684; x=1711013484;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Gll4Ztt7M0UGElLQXVLWEpzqDUUYuPg1P4YvKq0ZUe4=;
-        b=W/jdSplUMh48XH388Y4GMLcCEai6j+KW8aNgpS3ZI7wqpGZi7riOvNQy9+9UOJyDLo
-         G+2wh5maGfjobiDRvkOiyr9NxMWDP1rY4PzbEan0MwaEpIG4ObwkgIFPqEqNxyLbKbIz
-         +WS1hopoqen46OkO41QoQKGJQN8bRk1zr5PcCf5zLA/TerdgT7b+FjdPfPKLtNNkImKm
-         6yHfLPXWDh+4i9HhSUU724GkTVhdl8cj50n9avsPBRUmanINfL+1MhW/HqNFPUYdQO2+
-         QdjwaHOG1fz1nQ0VXs41KXALpyd+rtKzEoMj/2OA5VS1m9v/WTtchxoWsAiJLRtgMOQs
-         agEA==
-X-Forwarded-Encrypted: i=1; AJvYcCWcXVweqQwPz8iiJC0JBT9GwWk6uQ9HGIGq/GIrje5nJo2JG7NLveryFsiMeYe0xjJaZxgIWyl22Q50QsEKLy+M37h3XbCswXIU
-X-Gm-Message-State: AOJu0YwkAwFvhfYjxld2m03dHxMw2gNZfFbxAijx1LPGNWGutYjR1kUl
-	ZCsDocVi/hERlMrqdtYFrdQuBUkjiNK6CBH+xhYpXJwdtCm+NkQnZB+yQxSksSUf9g5Q57jvEh8
-	FIAFgw5Ra1MkGmZ7AxtIhFCY8xQEfxz/IRousNOs/tFeO0CbKzEczGy8=
-X-Google-Smtp-Source: AGHT+IFWrX0NsTpryB9bD1F2qhaXzg46a4KylBy4kxp5SE7W9VCzIsXMjDXE7FqQt8+Z7CjpAYUbV4X8T41mS8EPgv+ku+Ex28YU
+	s=arc-20240116; t=1710434137; c=relaxed/simple;
+	bh=xaEyNSwtFswPn2Er96KW1azwSMaxfvaPZyJCT7hxQQ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uR6pJRiLE3sEqMCOSQM0sADKquH34QSn3rHVEcSEgBD2XvYysDxmspMpekLQZVwxjt8V4gwpIx/xF7SUKYTHIdfX1kO/NCRBgDGIR1zy5FBwS95mS5dN5YiAWwl30UJl9UfmqQ0vpjZPx3BzyTl2J99Gop+DM+qCel3WDsJzsbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Uzl7DOSu; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Uzl7DOSu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1710434135;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=NRB9vTG1kKTwVMuM3USj3EPm7GRoeAkz+vXVY9ZBgmA=;
+	b=Uzl7DOSuIu0SFgCyYBG/ZMRqYaUnz4IIZl86IqbXSYOB/uOyKc1OZ4oQtzPQePp3yCSXSc
+	Bjwrhg301HHDXUbos9Z1P2sOxd2h2GoYgrKxyRRZQleQUk3kF/1o88pkRVGxjM58WsHk/g
+	xNJL3qpysTbjGy7pCyXFAPmQqFNeJdA=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-145-aCbUAVERNsOXa_PuAry4Qw-1; Thu,
+ 14 Mar 2024 12:35:31 -0400
+X-MC-Unique: aCbUAVERNsOXa_PuAry4Qw-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3F40B3C025AC;
+	Thu, 14 Mar 2024 16:35:31 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.16.77])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id A8128492BD1;
+	Thu, 14 Mar 2024 16:35:30 +0000 (UTC)
+Date: Thu, 14 Mar 2024 11:35:29 -0500
+From: Bill O'Donnell <bodonnel@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs_repair: sync bulkload data structures with
+ kernel newbt code
+Message-ID: <ZfMnUfcxF0641dqF@redhat.com>
+References: <171029434322.2065697.15834513610979167624.stgit@frogsfrogsfrogs>
+ <171029434355.2065697.8914601331036024173.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:12e7:b0:366:725b:57a5 with SMTP id
- l7-20020a056e0212e700b00366725b57a5mr15747iln.3.1710408684433; Thu, 14 Mar
- 2024 02:31:24 -0700 (PDT)
-Date: Thu, 14 Mar 2024 02:31:24 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000000e826906139b8e88@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_ilock
-From: syzbot <syzbot+d247769793ec169e4bf9@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <171029434355.2065697.8914601331036024173.stgit@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
 
-Hello,
+On Tue, Mar 12, 2024 at 07:14:24PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> A lot of the code in repair/bulkload.c was backwardsported from new code
+> that eventually turned into newbt.c in online repair.  Since the offline
+> repair version got merged upstream years before the online repair code,
+> we now need to bring the offline version up to date with the kernel
+> again.
+> 
+> Right now, the bulkload.c code is just a fancy way to track space
+> extents that are fed to it by its callers.  The only caller, of course,
+> is phase 5, which builds new btrees in AG space that wasn't claimed by
+> any other data structure.  Hence there's no need to allocate
+> reservations out of the bnobt or put them back there.
+> 
+> However, the next patch adds the ability to generate new file-based
+> btrees.  For that we need to reorganize the code to allocate and free
+> space for new file-based btrees.  Let's just crib from the kernel
+> version.  Make each bulkload space reservation hold a reference to an AG
+> and track the space reservation in terms of per-AG extents instead of
+> fsblock extents.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-syzbot found the following issue on:
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 
-HEAD commit:    e5e038b7ae9d Merge tag 'fs_for_v6.9-rc1' of git://git.kern..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=1276d246180000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=6ce8d253b68e67fe
-dashboard link: https://syzkaller.appspot.com/bug?extid=d247769793ec169e4bf9
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-userspace arch: i386
+> ---
+>  libxfs/libxfs_api_defs.h |    1 +
+>  repair/agbtree.c         |   22 +++++++++++-----
+>  repair/bulkload.c        |   63 +++++++++++++++++++++++++++++++++-------------
+>  repair/bulkload.h        |   12 +++++----
+>  repair/phase5.c          |    2 +
+>  5 files changed, 69 insertions(+), 31 deletions(-)
+> 
+> 
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 36afc5d0234d..28960317ab6b 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -149,6 +149,7 @@
+>  #define xfs_log_sb			libxfs_log_sb
+>  #define xfs_mode_to_ftype		libxfs_mode_to_ftype
+>  #define xfs_perag_get			libxfs_perag_get
+> +#define xfs_perag_hold			libxfs_perag_hold
+>  #define xfs_perag_put			libxfs_perag_put
+>  #define xfs_prealloc_blocks		libxfs_prealloc_blocks
+>  
+> diff --git a/repair/agbtree.c b/repair/agbtree.c
+> index e014e216e0a5..c6f0512fe7de 100644
+> --- a/repair/agbtree.c
+> +++ b/repair/agbtree.c
+> @@ -77,13 +77,17 @@ reserve_agblocks(
+>  	uint32_t		nr_blocks)
+>  {
+>  	struct extent_tree_node	*ext_ptr;
+> +	struct xfs_perag	*pag;
+>  	uint32_t		blocks_allocated = 0;
+>  	uint32_t		len;
+>  	int			error;
+>  
+> +	pag = libxfs_perag_get(mp, agno);
+> +	if (!pag)
+> +		do_error(_("could not open perag structure for agno 0x%x\n"),
+> +				agno);
+> +
+>  	while (blocks_allocated < nr_blocks)  {
+> -		xfs_fsblock_t	fsbno;
+> -
+>  		/*
+>  		 * Grab the smallest extent and use it up, then get the
+>  		 * next smallest.  This mimics the init_*_cursor code.
+> @@ -94,8 +98,8 @@ reserve_agblocks(
+>  
+>  		/* Use up the extent we've got. */
+>  		len = min(ext_ptr->ex_blockcount, nr_blocks - blocks_allocated);
+> -		fsbno = XFS_AGB_TO_FSB(mp, agno, ext_ptr->ex_startblock);
+> -		error = bulkload_add_blocks(&btr->newbt, fsbno, len);
+> +		error = bulkload_add_extent(&btr->newbt, pag,
+> +				ext_ptr->ex_startblock, len);
+>  		if (error)
+>  			do_error(_("could not set up btree reservation: %s\n"),
+>  				strerror(-error));
+> @@ -113,6 +117,7 @@ reserve_agblocks(
+>  	fprintf(stderr, "blocks_allocated = %d\n",
+>  		blocks_allocated);
+>  #endif
+> +	libxfs_perag_put(pag);
+>  	return blocks_allocated == nr_blocks;
+>  }
+>  
+> @@ -155,18 +160,21 @@ finish_rebuild(
+>  	int			error;
+>  
+>  	for_each_bulkload_reservation(&btr->newbt, resv, n) {
+> +		xfs_fsblock_t	fsbno;
+> +
+>  		if (resv->used == resv->len)
+>  			continue;
+>  
+> -		error = bitmap_set(lost_blocks, resv->fsbno + resv->used,
+> -				   resv->len - resv->used);
+> +		fsbno = XFS_AGB_TO_FSB(mp, resv->pag->pag_agno,
+> +				resv->agbno + resv->used);
+> +		error = bitmap_set(lost_blocks, fsbno, resv->len - resv->used);
+>  		if (error)
+>  			do_error(
+>  _("Insufficient memory saving lost blocks, err=%d.\n"), error);
+>  		resv->used = resv->len;
+>  	}
+>  
+> -	bulkload_destroy(&btr->newbt, 0);
+> +	bulkload_commit(&btr->newbt);
+>  }
+>  
+>  /*
+> diff --git a/repair/bulkload.c b/repair/bulkload.c
+> index 0117f69416cf..18158c397f56 100644
+> --- a/repair/bulkload.c
+> +++ b/repair/bulkload.c
+> @@ -23,39 +23,64 @@ bulkload_init_ag(
+>  }
+>  
+>  /* Designate specific blocks to be used to build our new btree. */
+> -int
+> +static int
+>  bulkload_add_blocks(
+> -	struct bulkload		*bkl,
+> -	xfs_fsblock_t		fsbno,
+> -	xfs_extlen_t		len)
+> +	struct bulkload			*bkl,
+> +	struct xfs_perag		*pag,
+> +	const struct xfs_alloc_arg	*args)
+>  {
+> -	struct bulkload_resv	*resv;
+> +	struct xfs_mount		*mp = bkl->sc->mp;
+> +	struct bulkload_resv		*resv;
+>  
+> -	resv = kmem_alloc(sizeof(struct bulkload_resv), KM_MAYFAIL);
+> +	resv = kmalloc(sizeof(struct bulkload_resv), GFP_KERNEL);
+>  	if (!resv)
+>  		return ENOMEM;
+>  
+>  	INIT_LIST_HEAD(&resv->list);
+> -	resv->fsbno = fsbno;
+> -	resv->len = len;
+> +	resv->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
+> +	resv->len = args->len;
+>  	resv->used = 0;
+> +	resv->pag = libxfs_perag_hold(pag);
+> +
+>  	list_add_tail(&resv->list, &bkl->resv_list);
+> -	bkl->nr_reserved += len;
+> -
+> +	bkl->nr_reserved += args->len;
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Add an extent to the new btree reservation pool.  Callers are required to
+> + * reap this reservation manually if the repair is cancelled.  @pag must be a
+> + * passive reference.
+> + */
+> +int
+> +bulkload_add_extent(
+> +	struct bulkload		*bkl,
+> +	struct xfs_perag	*pag,
+> +	xfs_agblock_t		agbno,
+> +	xfs_extlen_t		len)
+> +{
+> +	struct xfs_mount	*mp = bkl->sc->mp;
+> +	struct xfs_alloc_arg	args = {
+> +		.tp		= NULL, /* no autoreap */
+> +		.oinfo		= bkl->oinfo,
+> +		.fsbno		= XFS_AGB_TO_FSB(mp, pag->pag_agno, agbno),
+> +		.len		= len,
+> +		.resv		= XFS_AG_RESV_NONE,
+> +	};
+> +
+> +	return bulkload_add_blocks(bkl, pag, &args);
+> +}
+> +
+>  /* Free all the accounting info and disk space we reserved for a new btree. */
+>  void
+> -bulkload_destroy(
+> -	struct bulkload		*bkl,
+> -	int			error)
+> +bulkload_commit(
+> +	struct bulkload		*bkl)
+>  {
+>  	struct bulkload_resv	*resv, *n;
+>  
+>  	list_for_each_entry_safe(resv, n, &bkl->resv_list, list) {
+>  		list_del(&resv->list);
+> -		kmem_free(resv);
+> +		kfree(resv);
+>  	}
+>  }
+>  
+> @@ -67,7 +92,8 @@ bulkload_claim_block(
+>  	union xfs_btree_ptr	*ptr)
+>  {
+>  	struct bulkload_resv	*resv;
+> -	xfs_fsblock_t		fsb;
+> +	struct xfs_mount	*mp = cur->bc_mp;
+> +	xfs_agblock_t		agbno;
+>  
+>  	/*
+>  	 * The first item in the list should always have a free block unless
+> @@ -84,7 +110,7 @@ bulkload_claim_block(
+>  	 * decreasing order, which hopefully results in leaf blocks ending up
+>  	 * together.
+>  	 */
+> -	fsb = resv->fsbno + resv->used;
+> +	agbno = resv->agbno + resv->used;
+>  	resv->used++;
+>  
+>  	/* If we used all the blocks in this reservation, move it to the end. */
+> @@ -92,9 +118,10 @@ bulkload_claim_block(
+>  		list_move_tail(&resv->list, &bkl->resv_list);
+>  
+>  	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+> -		ptr->l = cpu_to_be64(fsb);
+> +		ptr->l = cpu_to_be64(XFS_AGB_TO_FSB(mp, resv->pag->pag_agno,
+> +								agbno));
+>  	else
+> -		ptr->s = cpu_to_be32(XFS_FSB_TO_AGBNO(cur->bc_mp, fsb));
+> +		ptr->s = cpu_to_be32(agbno);
+>  	return 0;
+>  }
+>  
+> diff --git a/repair/bulkload.h b/repair/bulkload.h
+> index a84e99b8c892..f4790e3b3de6 100644
+> --- a/repair/bulkload.h
+> +++ b/repair/bulkload.h
+> @@ -17,8 +17,10 @@ struct bulkload_resv {
+>  	/* Link to list of extents that we've reserved. */
+>  	struct list_head	list;
+>  
+> -	/* FSB of the block we reserved. */
+> -	xfs_fsblock_t		fsbno;
+> +	struct xfs_perag	*pag;
+> +
+> +	/* AG block of the block we reserved. */
+> +	xfs_agblock_t		agbno;
+>  
+>  	/* Length of the reservation. */
+>  	xfs_extlen_t		len;
+> @@ -51,11 +53,11 @@ struct bulkload {
+>  
+>  void bulkload_init_ag(struct bulkload *bkl, struct repair_ctx *sc,
+>  		const struct xfs_owner_info *oinfo);
+> -int bulkload_add_blocks(struct bulkload *bkl, xfs_fsblock_t fsbno,
+> -		xfs_extlen_t len);
+> -void bulkload_destroy(struct bulkload *bkl, int error);
+>  int bulkload_claim_block(struct xfs_btree_cur *cur, struct bulkload *bkl,
+>  		union xfs_btree_ptr *ptr);
+> +int bulkload_add_extent(struct bulkload *bkl, struct xfs_perag *pag,
+> +		xfs_agblock_t agbno, xfs_extlen_t len);
+> +void bulkload_commit(struct bulkload *bkl);
+>  void bulkload_estimate_ag_slack(struct repair_ctx *sc,
+>  		struct xfs_btree_bload *bload, unsigned int free);
+>  
+> diff --git a/repair/phase5.c b/repair/phase5.c
+> index d6b8168ea776..b0e208f95af5 100644
+> --- a/repair/phase5.c
+> +++ b/repair/phase5.c
+> @@ -194,7 +194,7 @@ fill_agfl(
+>  	for_each_bulkload_reservation(&btr->newbt, resv, n) {
+>  		xfs_agblock_t	bno;
+>  
+> -		bno = XFS_FSB_TO_AGBNO(mp, resv->fsbno + resv->used);
+> +		bno = resv->agbno + resv->used;
+>  		while (resv->used < resv->len &&
+>  		       *agfl_idx < libxfs_agfl_size(mp)) {
+>  			agfl_bnos[(*agfl_idx)++] = cpu_to_be32(bno++);
+> 
+> 
 
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-e5e038b7.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/82ab7eda09bc/vmlinux-e5e038b7.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/bda17336e65d/bzImage-e5e038b7.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+d247769793ec169e4bf9@syzkaller.appspotmail.com
-
-======================================================
-WARNING: possible circular locking dependency detected
-6.8.0-syzkaller-06619-ge5e038b7ae9d #0 Not tainted
-------------------------------------------------------
-kswapd1/112 is trying to acquire lock:
-ffff88804a8f6d98 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock+0x2ef/0x3e0 fs/xfs/xfs_inode.c:206
-
-but task is already holding lock:
-ffffffff8d92fb40 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x15f/0x1a90 mm/vmscan.c:6774
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #2 (fs_reclaim){+.+.}-{0:0}:
-       __fs_reclaim_acquire mm/page_alloc.c:3692 [inline]
-       fs_reclaim_acquire+0x102/0x150 mm/page_alloc.c:3706
-       might_alloc include/linux/sched/mm.h:303 [inline]
-       slab_pre_alloc_hook mm/slub.c:3746 [inline]
-       slab_alloc_node mm/slub.c:3827 [inline]
-       kmem_cache_alloc+0x4f/0x320 mm/slub.c:3852
-       radix_tree_node_alloc.constprop.0+0x7c/0x350 lib/radix-tree.c:276
-       radix_tree_extend+0x1a2/0x4d0 lib/radix-tree.c:425
-       __radix_tree_create lib/radix-tree.c:613 [inline]
-       radix_tree_insert+0x499/0x630 lib/radix-tree.c:712
-       xfs_qm_dqget_cache_insert.constprop.0+0x38/0x2c0 fs/xfs/xfs_dquot.c:826
-       xfs_qm_dqget+0x182/0x4a0 fs/xfs/xfs_dquot.c:901
-       xfs_qm_vop_dqalloc+0x49a/0xe10 fs/xfs/xfs_qm.c:1755
-       xfs_setattr_nonsize+0x8ca/0xca0 fs/xfs/xfs_iops.c:707
-       xfs_vn_setattr+0x209/0x260 fs/xfs/xfs_iops.c:1027
-       notify_change+0x742/0x11c0 fs/attr.c:497
-       chown_common+0x598/0x660 fs/open.c:790
-       do_fchownat+0x1af/0x210 fs/open.c:821
-       ksys_lchown include/linux/syscalls.h:1243 [inline]
-       __do_sys_lchown16 kernel/uid16.c:30 [inline]
-       __se_sys_lchown16 kernel/uid16.c:28 [inline]
-       __ia32_sys_lchown16+0xe6/0x120 kernel/uid16.c:28
-       do_syscall_32_irqs_on arch/x86/entry/common.c:165 [inline]
-       __do_fast_syscall_32+0x7a/0x120 arch/x86/entry/common.c:321
-       do_fast_syscall_32+0x32/0x80 arch/x86/entry/common.c:346
-       entry_SYSENTER_compat_after_hwframe+0x7a/0x84
-
--> #1 (&qinf->qi_tree_lock){+.+.}-{3:3}:
-       __mutex_lock_common kernel/locking/mutex.c:608 [inline]
-       __mutex_lock+0x175/0x9c0 kernel/locking/mutex.c:752
-       xfs_qm_dqget_cache_lookup+0x66/0x820 fs/xfs/xfs_dquot.c:784
-       xfs_qm_dqget_inode+0x1e7/0x6d0 fs/xfs/xfs_dquot.c:986
-       xfs_qm_dqattach_one+0x26f/0x530 fs/xfs/xfs_qm.c:278
-       xfs_qm_dqattach_locked+0x1c6/0x2d0 fs/xfs/xfs_qm.c:337
-       xfs_qm_vop_dqalloc+0x344/0xe10 fs/xfs/xfs_qm.c:1710
-       xfs_setattr_nonsize+0x8ca/0xca0 fs/xfs/xfs_iops.c:707
-       xfs_vn_setattr+0x209/0x260 fs/xfs/xfs_iops.c:1027
-       notify_change+0x742/0x11c0 fs/attr.c:497
-       chown_common+0x598/0x660 fs/open.c:790
-       do_fchownat+0x1af/0x210 fs/open.c:821
-       ksys_lchown include/linux/syscalls.h:1243 [inline]
-       __do_sys_lchown16 kernel/uid16.c:30 [inline]
-       __se_sys_lchown16 kernel/uid16.c:28 [inline]
-       __ia32_sys_lchown16+0xe6/0x120 kernel/uid16.c:28
-       do_syscall_32_irqs_on arch/x86/entry/common.c:165 [inline]
-       __do_fast_syscall_32+0x7a/0x120 arch/x86/entry/common.c:321
-       do_fast_syscall_32+0x32/0x80 arch/x86/entry/common.c:346
-       entry_SYSENTER_compat_after_hwframe+0x7a/0x84
-
--> #0 (&xfs_dir_ilock_class){++++}-{3:3}:
-       check_prev_add kernel/locking/lockdep.c:3134 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
-       validate_chain kernel/locking/lockdep.c:3869 [inline]
-       __lock_acquire+0x2478/0x3b30 kernel/locking/lockdep.c:5137
-       lock_acquire kernel/locking/lockdep.c:5754 [inline]
-       lock_acquire+0x1b1/0x540 kernel/locking/lockdep.c:5719
-       down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
-       xfs_ilock+0x2ef/0x3e0 fs/xfs/xfs_inode.c:206
-       xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
-       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
-       xfs_icwalk_ag+0xca6/0x1740 fs/xfs/xfs_icache.c:1713
-       xfs_icwalk+0x57/0x100 fs/xfs/xfs_icache.c:1762
-       xfs_reclaim_inodes_nr+0x182/0x250 fs/xfs/xfs_icache.c:1011
-       super_cache_scan+0x409/0x550 fs/super.c:227
-       do_shrink_slab+0x44f/0x1160 mm/shrinker.c:435
-       shrink_slab+0x18a/0x1310 mm/shrinker.c:662
-       shrink_one+0x493/0x7b0 mm/vmscan.c:4767
-       shrink_many mm/vmscan.c:4828 [inline]
-       lru_gen_shrink_node mm/vmscan.c:4929 [inline]
-       shrink_node+0x2191/0x3770 mm/vmscan.c:5888
-       kswapd_shrink_node mm/vmscan.c:6696 [inline]
-       balance_pgdat+0x9d0/0x1a90 mm/vmscan.c:6886
-       kswapd+0x5c1/0xc10 mm/vmscan.c:7146
-       kthread+0x2c1/0x3a0 kernel/kthread.c:388
-       ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
-       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:243
-
-other info that might help us debug this:
-
-Chain exists of:
-  &xfs_dir_ilock_class --> &qinf->qi_tree_lock --> fs_reclaim
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(fs_reclaim);
-                               lock(&qinf->qi_tree_lock);
-                               lock(fs_reclaim);
-  lock(&xfs_dir_ilock_class);
-
- *** DEADLOCK ***
-
-2 locks held by kswapd1/112:
- #0: ffffffff8d92fb40 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x15f/0x1a90 mm/vmscan.c:6774
- #1: ffff8880680100e0 (&type->s_umount_key#81){++++}-{3:3}, at: super_trylock_shared fs/super.c:561 [inline]
- #1: ffff8880680100e0 (&type->s_umount_key#81){++++}-{3:3}, at: super_cache_scan+0x96/0x550 fs/super.c:196
-
-stack backtrace:
-CPU: 2 PID: 112 Comm: kswapd1 Not tainted 6.8.0-syzkaller-06619-ge5e038b7ae9d #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x116/0x1f0 lib/dump_stack.c:114
- check_noncircular+0x31a/0x400 kernel/locking/lockdep.c:2187
- check_prev_add kernel/locking/lockdep.c:3134 [inline]
- check_prevs_add kernel/locking/lockdep.c:3253 [inline]
- validate_chain kernel/locking/lockdep.c:3869 [inline]
- __lock_acquire+0x2478/0x3b30 kernel/locking/lockdep.c:5137
- lock_acquire kernel/locking/lockdep.c:5754 [inline]
- lock_acquire+0x1b1/0x540 kernel/locking/lockdep.c:5719
- down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
- xfs_ilock+0x2ef/0x3e0 fs/xfs/xfs_inode.c:206
- xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
- xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
- xfs_icwalk_ag+0xca6/0x1740 fs/xfs/xfs_icache.c:1713
- xfs_icwalk+0x57/0x100 fs/xfs/xfs_icache.c:1762
- xfs_reclaim_inodes_nr+0x182/0x250 fs/xfs/xfs_icache.c:1011
- super_cache_scan+0x409/0x550 fs/super.c:227
- do_shrink_slab+0x44f/0x1160 mm/shrinker.c:435
- shrink_slab+0x18a/0x1310 mm/shrinker.c:662
- shrink_one+0x493/0x7b0 mm/vmscan.c:4767
- shrink_many mm/vmscan.c:4828 [inline]
- lru_gen_shrink_node mm/vmscan.c:4929 [inline]
- shrink_node+0x2191/0x3770 mm/vmscan.c:5888
- kswapd_shrink_node mm/vmscan.c:6696 [inline]
- balance_pgdat+0x9d0/0x1a90 mm/vmscan.c:6886
- kswapd+0x5c1/0xc10 mm/vmscan.c:7146
- kthread+0x2c1/0x3a0 kernel/kthread.c:388
- ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:243
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
