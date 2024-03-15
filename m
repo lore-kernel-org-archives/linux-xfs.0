@@ -1,50 +1,47 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D4041B940;
-	Fri, 15 Mar 2024 13:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 383084CB3D
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Mar 2024 17:52:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710508879; cv=none; b=iHGXlLyUOhHwjYE/OWT/qlD659vTjQkD/EBhzUc/pvDuoyIHr3+Qy7pDNhbfXk9I4Orjd27W5ZkwqG+/G8Pj3zt7oVQs1BWGxp8e83fRVjH/cUhxvdw7Bf0Vh6bENTpdoLwzRFgiLmf4I2fh+F3pXUxVHvGyo/88vhiEXN0rhF0=
+	t=1710525167; cv=none; b=isfouX0rotbkcfGdOE3lMMt+wRW575rrBRvS642UVFEsKCMNi9v7sra6+zBeEYo6/SwdzezttApUjtLRSPaYJ0bOwV27H/B2KYEASc+HZwj9YItfZiK381ib1f3amTpAmUJFJyPB0Sce1O6W9lxlK6lssCCnNFh9D8m7oWgRlkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710508879; c=relaxed/simple;
-	bh=c6bsZVO4bBgF10Yi8ZqO5zrzwVSEc8zOjEe3crGhLQY=;
+	s=arc-20240116; t=1710525167; c=relaxed/simple;
+	bh=AAhRUVN284uCvdT7GDLroH4Nzdm3dni6XHk6sO7y39I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lwqw+9UXV7gASA/uKlsod4bjZnuwc9T5HZCBp9lZ4+dlSheTc/Wdd50jcQVNG48acdFykJSiuqVD5FlpLUb6mVAhOpi1DsLjTyYDNjFsnj5NBpNhN7bh6RP3yK+dBPybnvwX+jjcxh92IhW2yimkfDxMi9XybwrNGSWQHG9UNmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=0dRpwze5; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=U0EZgryIsEEpTSWJnM8r38s4DyYgMZmnDEL8hoYA16vtTRi6liV3D0f9ijfgLXRj5ycf6xd0BahYt0mZ00FXu7ep+C5LfrB7sPqFB1jN2ltC0YZhRuFGD7HFuxAlsObdNquFzhR/rQfd0rUHvkd2s+v3iWk3s3lq2imr+VLd+j8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=arD1C8JM; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="0dRpwze5"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4Tx4dG2Hc8z9sX2;
-	Fri, 15 Mar 2024 14:21:06 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1710508866;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uL8B8rxdNzZ1QT1jmn8Si5bf2Isce5VLmVW1+mlinGY=;
-	b=0dRpwze54JbtFZYv1021iFawCCzzS/F8earDM4Utcgva9wOF+U/UIJ3TePCdr3If0MjxZM
-	zzTbiM3XRek/OATou7PoENHWHTXGR0kSvT+nBLo/W/Da39wxs8z5AlE65Idzx0ZdSTIwPS
-	8cHKj+IytBGODedJIzr+vcZDnSEX+LEmUUwmsiWaq6vFAf4JYVAqol4u2nba7TeTYFvCds
-	197BXrYfukht9gw4Z2umxZ7ahUuTAxrLxOhxIvbObQwhS0yxBK6HIRzdc6WWUCtv6VnN8P
-	JhZjNWtHwp4ftJXBe/9j0WBAz0V+vVQiiTevPLL8hT8X6mhXsPcmrRZthiDVbw==
-Date: Fri, 15 Mar 2024 14:21:02 +0100
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: willy@infradead.org
-Cc: gost.dev@samsung.com, chandan.babu@oracle.com, hare@suse.de, 
-	mcgrof@kernel.org, djwong@kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, david@fromorbit.com, akpm@linux-foundation.org, 
-	Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 03/11] filemap: allocate mapping_min_order folios in
- the page cache
-Message-ID: <spgk45dlfiohxug6nokmpaakcevr34ml24loatu3764wgxccc6@iwje3all2lxm>
-References: <20240313170253.2324812-1-kernel@pankajraghav.com>
- <20240313170253.2324812-4-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="arD1C8JM"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=n465SUGDscKGxCrF8dO1SOqcCrCuglTFH24OUbZSNB8=; b=arD1C8JMq1NrQhTmHZG1R+EqaR
+	ktPEFpMC4L+k35rWFoPY6IEBD9N6XMpAShT2hi7RHOLEYfkrhk0PhGDp7mpt/9qIg6IgG5yomv/IS
+	L6NO0WfDUvkyGQjj68qb52wD6MqiyvxH/fNT4jtkfXWZ2YiPXJ49RgJrsKjvjf7O2ZQhY5XU4Znfv
+	pJSopzPZBzIW+pX6XWLMytXV8iXYBpqUTL61JghaIjFyOio8hiNaQ/N/ke56/UOilIOLNQ5xD+I37
+	3bmh0VXYMxY2ITuwWLWXaJDz6p66t0Qv6WBFu3UndAYoLalw0joJppHXc6j3GNGdVB31QPN/XAaVC
+	1WixOWhQ==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rlBjX-000000014tL-2XKO;
+	Fri, 15 Mar 2024 17:52:43 +0000
+Date: Fri, 15 Mar 2024 10:52:43 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com, Pankaj Raghav <p.raghav@samsung.com>,
+	Daniel Gomez <da.gomez@samsung.com>
+Subject: Re: Max theoretical XFS filesystem size in review
+Message-ID: <ZfSK68T9jJp8_Q-w@bombadil.infradead.org>
+References: <ZcQDrXwyKxfTYpfL@bombadil.infradead.org>
+ <ZcQYIAmiGdEbJCxG@dread.disaster.area>
+ <ZfOSZnYi-02SoBIJ@bombadil.infradead.org>
+ <ZfOg3dTO/R43FGiZ@dread.disaster.area>
+ <ZfO2-wefNDEJGL5w@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,120 +50,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240313170253.2324812-4-kernel@pankajraghav.com>
-X-Rspamd-Queue-Id: 4Tx4dG2Hc8z9sX2
+In-Reply-To: <ZfO2-wefNDEJGL5w@casper.infradead.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-Hi willy,
-
-> filemap_create_folio() and do_read_cache_folio() were always allocating
-> folio of order 0. __filemap_get_folio was trying to allocate higher
-> order folios when fgp_flags had higher order hint set but it will default
-> to order 0 folio if higher order memory allocation fails.
+On Fri, Mar 15, 2024 at 02:48:27AM +0000, Matthew Wilcox wrote:
+> On Fri, Mar 15, 2024 at 12:14:05PM +1100, Dave Chinner wrote:
+> > On Thu, Mar 14, 2024 at 05:12:22PM -0700, Luis Chamberlain wrote:
+> > > Joining two 8 EB files with device-mapper seems allowed:
+> > > 
+> > > truncate -s 8EB /mnt-pmem/sparse-8eb.1; losetup /dev/loop1 /mnt-pmem/sparse-8eb.1
+> > > truncate -s 8EB /mnt-pmem/sparse-8eb.2; losetup /dev/loop2 /mnt-pmem/sparse-8eb.2
+> > > 
+> > > cat /home/mcgrof/dm-join-multiple.sh 
+> > > #!/bin/sh
+> > > # Join multiple devices with the same size in a linear form
+> > > # We assume the same size for simplicity
+> > > set -e
+> > > size=`blockdev --getsz $1`
+> > > FILE=$(mktemp)
+> > > for i in $(seq 1 $#) ; do
+> > >         offset=$(( ($i -1)  * $size))
+> > > 	echo "$offset $size linear $1 0" >> $FILE
+> > > 	shift
+> > > done
+> > > cat $FILE | dmsetup create joined
+> > > rm -f $FILE
+> > > 
+> > > /home/mcgrof/dm-join-multiple.sh /dev/loop1 /dev/loop2
+> > > 
+> > > And mkfs.xfs seems to go through on them, ie, its not rejected
+> > 
+> > Ah, I think mkfs.xfs has a limit of 8EiB on image files, maybe not
+> > on block devices. What's the actual limit of block device size on
+> > Linux?
 > 
-> Supporting mapping_min_order implies that we guarantee each folio in the
-> page cache has at least an order of mapping_min_order. When adding new
-> folios to the page cache we must also ensure the index used is aligned to
-> the mapping_min_order as the page cache requires the index to be aligned
-> to the order of the folio.
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->  mm/filemap.c | 24 +++++++++++++++++-------
->  1 file changed, 17 insertions(+), 7 deletions(-)
+> We can't seek past 2^63-1.  That's the limit on lseek, llseek, lseek64
+> or whatever we're calling it these days.  If we're missing a check
+> somewhere, that's a bug.
 
-Are the changes more inline with what you had in mind?
+Thanks, I can send fixes, just wanted to review some of these things
+with the community to explore what a big fat linux block device or
+filesystem might be constrained to, if any. The fact that through this
+discussion we're uncovering perhaps some missing checks is already
+useful. I'll try to document some of it.
 
-> 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index a1cb3ea55fb6..57889f206829 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -849,6 +849,8 @@ noinline int __filemap_add_folio(struct address_space *mapping,
->  
->  	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
->  	VM_BUG_ON_FOLIO(folio_test_swapbacked(folio), folio);
-> +	VM_BUG_ON_FOLIO(folio_order(folio) < mapping_min_folio_order(mapping),
-> +			folio);
->  	mapping_set_update(&xas, mapping);
->  
->  	if (!huge) {
-> @@ -1886,8 +1888,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
->  		folio_wait_stable(folio);
->  no_page:
->  	if (!folio && (fgp_flags & FGP_CREAT)) {
-> -		unsigned order = FGF_GET_ORDER(fgp_flags);
-> +		unsigned int min_order = mapping_min_folio_order(mapping);
-> +		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
->  		int err;
-> +		index = mapping_align_start_index(mapping, index);
->  
->  		if ((fgp_flags & FGP_WRITE) && mapping_can_writeback(mapping))
->  			gfp |= __GFP_WRITE;
-> @@ -1927,7 +1931,7 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
->  				break;
->  			folio_put(folio);
->  			folio = NULL;
-> -		} while (order-- > 0);
-> +		} while (order-- > min_order);
->  
->  		if (err == -EEXIST)
->  			goto repeat;
-> @@ -2416,13 +2420,16 @@ static int filemap_update_page(struct kiocb *iocb,
->  }
->  
->  static int filemap_create_folio(struct file *file,
-> -		struct address_space *mapping, pgoff_t index,
-> +		struct address_space *mapping, loff_t pos,
->  		struct folio_batch *fbatch)
->  {
->  	struct folio *folio;
->  	int error;
-> +	unsigned int min_order = mapping_min_folio_order(mapping);
-> +	pgoff_t index;
->  
-> -	folio = filemap_alloc_folio(mapping_gfp_mask(mapping), 0);
-> +	folio = filemap_alloc_folio(mapping_gfp_mask(mapping),
-> +				    min_order);
->  	if (!folio)
->  		return -ENOMEM;
->  
-> @@ -2440,6 +2447,8 @@ static int filemap_create_folio(struct file *file,
->  	 * well to keep locking rules simple.
->  	 */
->  	filemap_invalidate_lock_shared(mapping);
-> +	/* index in PAGE units but aligned to min_order number of pages. */
-> +	index = (pos >> (PAGE_SHIFT + min_order)) << min_order;
->  	error = filemap_add_folio(mapping, folio, index,
->  			mapping_gfp_constraint(mapping, GFP_KERNEL));
->  	if (error == -EEXIST)
-> @@ -2500,8 +2509,7 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
->  	if (!folio_batch_count(fbatch)) {
->  		if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_WAITQ))
->  			return -EAGAIN;
-> -		err = filemap_create_folio(filp, mapping,
-> -				iocb->ki_pos >> PAGE_SHIFT, fbatch);
-> +		err = filemap_create_folio(filp, mapping, iocb->ki_pos, fbatch);
->  		if (err == AOP_TRUNCATED_PAGE)
->  			goto retry;
->  		return err;
-> @@ -3662,9 +3670,11 @@ static struct folio *do_read_cache_folio(struct address_space *mapping,
->  repeat:
->  	folio = filemap_get_folio(mapping, index);
->  	if (IS_ERR(folio)) {
-> -		folio = filemap_alloc_folio(gfp, 0);
-> +		folio = filemap_alloc_folio(gfp,
-> +					    mapping_min_folio_order(mapping));
->  		if (!folio)
->  			return ERR_PTR(-ENOMEM);
-> +		index = mapping_align_start_index(mapping, index);
->  		err = filemap_add_folio(mapping, folio, index, gfp);
->  		if (unlikely(err)) {
->  			folio_put(folio);
-> -- 
-> 2.43.0
-> 
-
--- 
-Pankaj Raghav
+  Luis
