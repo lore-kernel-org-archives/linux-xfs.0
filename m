@@ -1,39 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 182AD6FB8
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Mar 2024 02:28:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 420CF6FA9;
+	Fri, 15 Mar 2024 02:36:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710469714; cv=none; b=Djuny7+4ScCBM9guiTNvRUFHm5hQkZlj2S5MBa03mtcQp4LPbp2XM1twMK+QwvsXoRVq4iO6m6wOZnJYtkLdROzKWFBXfnqGMXXJHNIPt3PRI+OF2b9sUoUycyCiXQ+pth+K9/hifJs46FPrZKWvN4uZC4hlXZg5n4O8UjMq388=
+	t=1710470196; cv=none; b=tCCt6JQrwbioUjcNE1Xc7vln7fgSoG2ROKEfWN8ybRTq+GKyLTwPiTc5SsSYywqgc9nT0IyOVHHlf0lyQNtxdomnww7ifpJatACiv8keT8IbFsBEMnjO0IbIDr76P11hmbacEi2NjBTCMdYSw6xQImR3p4WKg4w24nz6VxLNDew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710469714; c=relaxed/simple;
-	bh=Kh8+VT3ezt0sPYi1QBIREf17f4QBAeK9zHimJbebOzs=;
+	s=arc-20240116; t=1710470196; c=relaxed/simple;
+	bh=IDHZnC8DRlGzREfmab5dkL11UA+OXeGg6l0o1zRoQ6s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qrZ9jmIs+tRaTP5eETuucP6S5Jx5BVSzV5fCUv3zcAl4tmCWrvcjNGZdQCXSI8gFyq5X0uu5c4N2pBXVOnje021oSdmsz9BgfA93KBSUop0EM2SWj7XNon/pZAgHrGqN5agyGKjpjbQ2vosc1LjdcfM2zsvRz8oTnyrkobPsFzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SCTsSpcr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OKGgA2IOsL/7TBdexV89/Y/kNV29+d56maUGsaIYQWTYbZ7tsrUYAUoZ9J/BZ/BZCcL/ukFKkoLNq80onhtRgcyFPr0m0UI1G07QYDcoS8Ko7zDHJtKLwwY/KzjutjPF41ijedDKrgsdbrIF96ABXooUH+b/FCgjp0w9x6q6DGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aPHRd6hW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SCTsSpcr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B606C433F1;
-	Fri, 15 Mar 2024 02:28:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aPHRd6hW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8C71C433F1;
+	Fri, 15 Mar 2024 02:36:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710469713;
-	bh=Kh8+VT3ezt0sPYi1QBIREf17f4QBAeK9zHimJbebOzs=;
+	s=k20201202; t=1710470195;
+	bh=IDHZnC8DRlGzREfmab5dkL11UA+OXeGg6l0o1zRoQ6s=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SCTsSpcrJWYPhVqerLSU7zLEm3xVXJpXjz3gb25JBmz7rd1IM2JluBLRKbTAcs/IB
-	 PV4/JoRp1AhdY2dm59uDkLc+cbEJNtJ7V778vdGwkjOCK97juwqiU54CIIx12Pn2hp
-	 /pVPsCbCz2BxKiEwquL3OTwbpCil/SFLJ8ZrWNantiujEXhnZBgS07NqLbNfm880ca
-	 Lq424HipGMXCngj3JdPs3MfMHS4mjrrS/HBVDUqVDzJ0cwZGY4f3WmvTuogJJNLVwF
-	 pZBsAUXjHab2MI1T9Fd41AKbirFa3MuM+YJUttqgL/4JvVSoGdVi2Y9pxU7Y7wwuPg
-	 lEQfG1P8tWRsw==
-Date: Thu, 14 Mar 2024 19:28:32 -0700
+	b=aPHRd6hW4TLqldoASq97l9h+BSFDg8lphaGFOZv1cXzrQ6qEO4BhTIULZ+wg72nlD
+	 Ujb+uQ1cOnnxwGEi3MelUyFCFIsYGOPvKXODfl1XaPJt3KcYByfiSxhn4NTJ7c6uoj
+	 8mdrOyWV1m4MgrhmJYq/v9Eui42RV6+ATITPAAAJuAeH/HmNv4JO2S8MLPbxzerf9s
+	 NWy/Rr4RKMwdZ/P9HJYG/sfWYLwencwz+H0psIl0KOkDcfX4YvFzwXNbitvLhWFUwH
+	 rCQX6w9jKjGv0cVLW266Qv02YwDQ0LKc6QuixByi4MiKEYlmDapPH+jaml2j7DKZcJ
+	 K77qvv/RS0bfg==
+Date: Thu, 14 Mar 2024 19:36:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
-Subject: Re: [PATCH] xfs: quota radix tree allocations need to be NOFS on
- insert
-Message-ID: <20240315022832.GY1927156@frogsfrogsfrogs>
-References: <20240315011639.2129658-1-david@fromorbit.com>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, akiyks@gmail.com,
+	cmaiolino@redhat.com, corbet@lwn.net, dan.carpenter@linaro.org,
+	dchinner@redhat.com, hch@lst.de, hsiangkao@linux.alibaba.com,
+	hughd@google.com, kch@nvidia.com, kent.overstreet@linux.dev,
+	leo.lilong@huawei.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, longman@redhat.com, mchehab@kernel.org,
+	peterz@infradead.org, sfr@canb.auug.org.au, sshegde@linux.ibm.com,
+	willy@infradead.org
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 75bcffbb9e75
+Message-ID: <20240315023635.GZ1927156@frogsfrogsfrogs>
+References: <87r0gmz82t.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <ZepcRgdO39xIrXG2@dread.disaster.area>
+ <87o7bihb66.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,103 +50,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240315011639.2129658-1-david@fromorbit.com>
+In-Reply-To: <87o7bihb66.fsf@debian-BULLSEYE-live-builder-AMD64>
 
-On Fri, Mar 15, 2024 at 12:16:39PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Mar 13, 2024 at 12:23:17PM +0530, Chandan Babu R wrote:
+> On Fri, Mar 08, 2024 at 11:31:02 AM +1100, Dave Chinner wrote:
+> > On Thu, Mar 07, 2024 at 03:16:56PM +0530, Chandan Babu R wrote:
+> > Hi Chandan,
+> >
+> > I'm finding it difficult to determine what has changed from one
+> > for-next update to the next because there's only a handful of new
+> > commits being added to this list.
+> >
+> > In this case, I think there's only 1 new commit in this update:
+> >
+> >>       [75bcffbb9e75] xfs: shrink failure needs to hold AGI buffer
+> >
+> > And I only found that out when rebasing my local tree and that patch
+> > did not apply.
+> >
+> > When I was doing these for-next tree updates, I tried to only send
+> > out the list of commits that changed since the last for-next tree
+> > update rather than the whole lot since the base kernel it was
+> > started from. That made it easy for everyone to see what I'd just
+> > committed, as opposed to trying to find whether their outstanding
+> > patches were in a big list already committed patches...
+> >
+> > Up to you, but I'm bringing it up because I am finding it difficult
+> > to track when one of my patches has been committed to for-next right
+> > now...
+> >
 > 
-> In converting the XFS code from GFP_NOFS to scoped contexts, we
-> converted the quota radix tree to GFP_KERNEL. Unfortunately, it was
-> not clearly documented that this set was because there is a
-> dependency on the quotainfo->qi_tree_lock being taken in memory
-> reclaim to remove dquots from the radix tree.
-> 
-> In hindsight this is obvious, but the radix tree allocations on
-> insert are not immediately obvious, and we avoid this for the inode
-> cache radix trees by using preloading and hence completely avoiding
-> the radix tree node allocation under tree lock constraints.
-> 
-> Hence there are a few solutions here. The first is to reinstate
-> GFP_NOFS for the radix tree and add a comment explaining why
-> GFP_NOFS is used. The second is to use memalloc_nofs_save() on the
-> radix tree insert context, which makes it obvious that the radix
-> tree insert runs under GFP_NOFS constraints. The third option is to
-> simply replace the radix tree and it's lock with an xarray which can
-> do memory allocation safely in an insert context.
-> 
-> The first is OK, but not really the direction we want to head. The
-> second is my preferred short term solution. The third - converting
-> XFS radix trees to xarray - is the longer term solution.
-> 
-> Hence to fix the regression here, we take option 2 as it moves us in
-> the direction we want to head with memory allocation and GFP_NOFS
-> removal.
-> 
-> Reported-by: syzbot+8fdff861a781522bda4d@syzkaller.appspotmail.com
-> Reported-by: syzbot+d247769793ec169e4bf9@syzkaller.appspotmail.com
-> Fixes: 94a69db2367e ("xfs: use __GFP_NOLOCKDEP instead of GFP_NOFS")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_dquot.c | 18 +++++++++++++-----
->  1 file changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index d2c7fcc2ea6b..9c027e44d88f 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -811,6 +811,12 @@ xfs_qm_dqget_cache_lookup(
->   * caller should throw away the dquot and start over.  Otherwise, the dquot
->   * is returned locked (and held by the cache) as if there had been a cache
->   * hit.
-> + *
-> + * The insert needs to be done under memalloc_nofs context because the radix
-> + * tree can do memory allocation during insert. The qi->qi_tree_lock is taken in
-> + * memory reclaim when freeing unused dquots, so we cannot have the radix tree
-> + * node allocation recursing into filesystem reclaim whilst we hold the
-> + * qi_tree_lock.
+> You are right. I didn't realize this problem. I will limit for-next
+> announcements to include only new patches that were added/removed to/from the
+> existing pile.
 
-Sounds reasonable to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Or tell us what changed since the last push in the first paragraph.
+
+"Hi folks,
+
+"The for-next branch of the xfs-linux repository at:
+
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+"has just been updated.  New since the last push are some bug fixes to
+insulate us from small mammals infiltrating the inode cache and wreaking
+havoc on Riker's trombone.  I also merged the Y2500 support patchset to
+make Geordi happy."
 
 --D
 
->   */
->  static int
->  xfs_qm_dqget_cache_insert(
-> @@ -820,25 +826,27 @@ xfs_qm_dqget_cache_insert(
->  	xfs_dqid_t		id,
->  	struct xfs_dquot	*dqp)
->  {
-> +	unsigned int		nofs_flags;
->  	int			error;
->  
-> +	nofs_flags = memalloc_nofs_save();
->  	mutex_lock(&qi->qi_tree_lock);
->  	error = radix_tree_insert(tree, id, dqp);
->  	if (unlikely(error)) {
->  		/* Duplicate found!  Caller must try again. */
-> -		mutex_unlock(&qi->qi_tree_lock);
->  		trace_xfs_dqget_dup(dqp);
-> -		return error;
-> +		goto out_unlock;
->  	}
->  
->  	/* Return a locked dquot to the caller, with a reference taken. */
->  	xfs_dqlock(dqp);
->  	dqp->q_nrefs = 1;
-> -
->  	qi->qi_dquots++;
-> -	mutex_unlock(&qi->qi_tree_lock);
->  
-> -	return 0;
-> +out_unlock:
-> +	mutex_unlock(&qi->qi_tree_lock);
-> +	memalloc_nofs_restore(nofs_flags);
-> +	return error;
->  }
->  
->  /* Check our input parameters. */
 > -- 
-> 2.43.0
-> 
+> Chandan
 > 
