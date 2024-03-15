@@ -1,40 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA9E6119;
-	Fri, 15 Mar 2024 02:48:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C14DC2C8
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Mar 2024 02:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710470907; cv=none; b=XXOa1HJXREDCX7dhInYc5N1j+6X3NfsDyGrNZetHv0pe6JPtJ4gu+stq/ekkM42ofs+8OA6HuI0eSAFe3RI9QSOxVQkDdlu5Yi0fwCzfAvNYGDTdp4ztiy9Z0zyDyX0MEOSzwRhAimeM4L2hPKMPxoEvz/tt+CvbPPD072czZH0=
+	t=1710470915; cv=none; b=rf894Pd+B3y2RUH7kDTzfqgahPSDQV7MnHAvxY7WMjvK3jWU6W0BdtabK7RNx0ncIYVOUWpLAop63qnsb2CcX9JvTbG7FUANHYsB7yQ7h9wsKaL4tdxNJb32SG+EA2HNR9plhMldxxjIJ+lTwWjlQn/MhGyFljtiiFPrBrmT+dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710470907; c=relaxed/simple;
-	bh=vLuEhKukV2AosJU47Ar2L7Vg5bijeRK06wIesJ6eiw0=;
+	s=arc-20240116; t=1710470915; c=relaxed/simple;
+	bh=lq4QXkAw6HySz+YBIUJEGxQtYvhpyHavrPPSNOUJZJU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LGtzEXydcccRkNYdty8yDqKvh/m17PqSwDEtbVA+b7E4TKEJ8IJeK6+ccTeT44B7aMnSuCAY+/jL1IikGa2c3pz4APArchmSt7Tnsk5xsjwHHuHGL1VYJ3L96hs8+F+y5aDQMInX/cHLRQFTClib6rRZZDPvUQDaGyw1j4KOzOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ClHy/pvM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TNrfSBO468Xmg9oXuQVF5mZy7h8Vkc0mK1ffcplLnwsyI1woqMGPkRx0enrCuDebiHw6ntkbGUYGzwhcS4cantCoOuy+Az8VEnc11qVeP+2fXmE/+5LZdSmw+w0IwKGgFyiCN0odkaensj5pVmKgFx2dB5HVTplDiuInoXyugyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jOhUmESp; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ClHy/pvM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1287DC433C7;
-	Fri, 15 Mar 2024 02:48:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710470907;
-	bh=vLuEhKukV2AosJU47Ar2L7Vg5bijeRK06wIesJ6eiw0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ClHy/pvMYOMBCPGtPbBPhborfE4MX43kvfN7bZhi9dQ//MI2aXwUxPw9FJ+N/1hC+
-	 88eQxFJCZ8dwn8G4fCtdyn31AyI2cPbYDjmjpUwXThZMhKKKZlwCmzqR5Snn4xSLqY
-	 AAMBHjnm7SpgSDvP44N9xDSgsQ9MOzaI+JsEqNef4s+crdoAWBLVXzubBQEd4vUts3
-	 iJXTwb3bBp9myH3mW15EUOPMTyhs3OG5HsOsxrTGqtSBgRS/mrHatH2FrgslesNi7D
-	 H+aIays+2En/AZWPdAYqKEYuDcW+HQvcIFVmdIBxIHhDUjeIULxk2uGWkJsE/Ksyf2
-	 bLuc5we5kLaNA==
-Date: Thu, 14 Mar 2024 19:48:26 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: david@fromorbit.com, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, chandan.babu@oracle.com
-Subject: Re: [PATCH v2] xfs: allow cross-linking special files without
- project quota
-Message-ID: <20240315024826.GA1927156@frogsfrogsfrogs>
-References: <20240314170700.352845-3-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jOhUmESp"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=1kXlVCUzsWHu7LUvV/LZDMbfzkf5pQ2psnCrhAnoqW0=; b=jOhUmESp+nx+WKkMjbLu8x4gmY
+	7F86+q57MZzuu5CbE6HS5RzGCzT96JXT+NGN/PPx1aCiWnoc42nj1RA1kBdaBqp04es/YpWwPs0+5
+	SzE3vFniwn+o/rJ6raKFaGVH5cnRakULvqPxte39d5uvp7gOr9n5vijmlrkr4MBNNG8Yi1XDUOOn6
+	an/VWyybcHTCuKADUSxkf0T7rWc9wIClpB/G4yKMjcXChHl8M24ymugDx6dz4RVWVO9cP2yR90nXx
+	EYsvg1k/bzUHQKHYzyvEepPfgDgaEwBiqOC8WMh5fxO/cdazuEtHKTWDwyEyOfRdD+NmNY8mSqzyr
+	soVloHyw==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rkxcR-00000009Gzs-3n1m;
+	Fri, 15 Mar 2024 02:48:27 +0000
+Date: Fri, 15 Mar 2024 02:48:27 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com, Pankaj Raghav <p.raghav@samsung.com>,
+	Daniel Gomez <da.gomez@samsung.com>
+Subject: Re: Max theoretical XFS filesystem size in review
+Message-ID: <ZfO2-wefNDEJGL5w@casper.infradead.org>
+References: <ZcQDrXwyKxfTYpfL@bombadil.infradead.org>
+ <ZcQYIAmiGdEbJCxG@dread.disaster.area>
+ <ZfOSZnYi-02SoBIJ@bombadil.infradead.org>
+ <ZfOg3dTO/R43FGiZ@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,88 +49,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240314170700.352845-3-aalbersh@redhat.com>
+In-Reply-To: <ZfOg3dTO/R43FGiZ@dread.disaster.area>
 
-On Thu, Mar 14, 2024 at 06:07:02PM +0100, Andrey Albershteyn wrote:
-> There's an issue that if special files is created before quota
-> project is enabled, then it's not possible to link this file. This
-> works fine for normal files. This happens because xfs_quota skips
-> special files (no ioctls to set necessary flags). The check for
-> having the same project ID for source and destination then fails as
-> source file doesn't have any ID.
+On Fri, Mar 15, 2024 at 12:14:05PM +1100, Dave Chinner wrote:
+> On Thu, Mar 14, 2024 at 05:12:22PM -0700, Luis Chamberlain wrote:
+> > Joining two 8 EB files with device-mapper seems allowed:
+> > 
+> > truncate -s 8EB /mnt-pmem/sparse-8eb.1; losetup /dev/loop1 /mnt-pmem/sparse-8eb.1
+> > truncate -s 8EB /mnt-pmem/sparse-8eb.2; losetup /dev/loop2 /mnt-pmem/sparse-8eb.2
+> > 
+> > cat /home/mcgrof/dm-join-multiple.sh 
+> > #!/bin/sh
+> > # Join multiple devices with the same size in a linear form
+> > # We assume the same size for simplicity
+> > set -e
+> > size=`blockdev --getsz $1`
+> > FILE=$(mktemp)
+> > for i in $(seq 1 $#) ; do
+> >         offset=$(( ($i -1)  * $size))
+> > 	echo "$offset $size linear $1 0" >> $FILE
+> > 	shift
+> > done
+> > cat $FILE | dmsetup create joined
+> > rm -f $FILE
+> > 
+> > /home/mcgrof/dm-join-multiple.sh /dev/loop1 /dev/loop2
+> > 
+> > And mkfs.xfs seems to go through on them, ie, its not rejected
 > 
-> mkfs.xfs -f /dev/sda
-> mount -o prjquota /dev/sda /mnt/test
-> 
-> mkdir /mnt/test/foo
-> mkfifo /mnt/test/foo/fifo1
-> 
-> xfs_quota -xc "project -sp /mnt/test/foo 9" /mnt/test
-> > Setting up project 9 (path /mnt/test/foo)...
-> > xfs_quota: skipping special file /mnt/test/foo/fifo1
-> > Processed 1 (/etc/projects and cmdline) paths for project 9 with recursion depth infinite (-1).
-> 
-> ln /mnt/test/foo/fifo1 /mnt/test/foo/fifo1_link
-> > ln: failed to create hard link '/mnt/test/testdir/fifo1_link' => '/mnt/test/testdir/fifo1': Invalid cross-device link
+> Ah, I think mkfs.xfs has a limit of 8EiB on image files, maybe not
+> on block devices. What's the actual limit of block device size on
+> Linux?
 
-Aha.  So hardlinking special files within a directory subtree that all
-have the same nonzero project quota ID fails if that special file
-happened to have been created before the subtree was assigned that pqid.
-And there's nothing we can do about that, because there's no way to call
-XFS_IOC_SETFSXATTR on a special file because opening those gets you a
-different inode from the special block/fifo/chardev filesystem...
+We can't seek past 2^63-1.  That's the limit on lseek, llseek, lseek64
+or whatever we're calling it these days.  If we're missing a check
+somewhere, that's a bug.
 
-> mkfifo /mnt/test/foo/fifo2
-> ln /mnt/test/foo/fifo2 /mnt/test/foo/fifo2_link
-> 
-> Fix this by allowing linking of special files to the project quota
-> if special files doesn't have any ID set (ID = 0).
-
-...and that's the workaround for this situation.  The project quota
-accounting here will be weird because there will be (more) files in a
-directory subtree than is reported by xfs_quota, but the subtree was
-already messed up in that manner.
-
-Question: Should we have a XFS_IOC_SETFSXATTRAT where we can pass in
-relative directory paths and actually query/update special files?
-
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/xfs_inode.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 1fd94958aa97..b7be19be0132 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1240,8 +1240,19 @@ xfs_link(
->  	 */
->  	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
->  		     tdp->i_projid != sip->i_projid)) {
-> -		error = -EXDEV;
-> -		goto error_return;
-> +		/*
-> +		 * Project quota setup skips special files which can
-> +		 * leave inodes in a PROJINHERIT directory without a
-> +		 * project ID set. We need to allow links to be made
-> +		 * to these "project-less" inodes because userspace
-> +		 * expects them to succeed after project ID setup,
-> +		 * but everything else should be rejected.
-> +		 */
-> +		if (!special_file(VFS_I(sip)->i_mode) ||
-> +		    sip->i_projid != 0) {
-> +			error = -EXDEV;
-> +			goto error_return;
-> +		}
->  	}
->  
->  	if (!resblks) {
-> -- 
-> 2.42.0
-> 
-> 
