@@ -1,32 +1,32 @@
 Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9277354FB5;
-	Fri, 15 Mar 2024 20:49:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3AD481BA;
+	Fri, 15 Mar 2024 20:49:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710535772; cv=none; b=upaCErzMZ+FIKtLCbIKCwE3e+jXBieXgalaE0eW+ySjlTvZDIjamNLBBbDYwynFHVWvZNyFnPJ/iKJsaJuvuS/BgUrBuMGVQBgZUfsXM76PZSXy1b3+1KBmmTPm+pYRS8Bto3w6jZziRiYxRJ9bYrXp/ZmJn9Ubs1RnK4qejLYA=
+	t=1710535772; cv=none; b=K5LJFi66paweLxa37F2iNUMANVXgTCJ/PzF1cCjycqz1MlwVxh0JG692u7YMRBP2+b9BbNGLXDNIhRhEJsnddYb1M7FbsHlRFKZSE5t6Ab+gohq9IC/S3jCFgLpoCcDE226y3dO4PIo2e7NJJT0ec3LptfYvnqfmQ6hvVKIaJ8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1710535772; c=relaxed/simple;
-	bh=ioYxjFgUhmgN64D7EqS9neBKa6VPb6OHx0+I2+vtq58=;
+	bh=7M7T8qGemL/J5YUUwWJ0cC9nJ/50fjpcJlm81ezvXMY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=M+Z4awS540WiHsJziYQ4+I+tNZOqCTgrT4y5PSIWNwEMuMYtdzzcUMomZ7ppSeb+Oe9BNhUHMCR0NSfFyVbNSZSjH8IjRwDbW3d8mAsa6b8m6KQ8L0mdgN+CozzprIk/hfKXSwiksUsyx9emMe4N0lNnF5Pzws1AdAME4aqNYek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=U4bUcES3; arc=none smtp.client-ip=159.69.126.157
+	 In-Reply-To:To:Cc; b=r1j/fkxD/kkeuSB8Hes97kmSb1CosQfon9pCHFZSFZUSZuFqUliE+AYeod7R73y2SAheWKwAdVbS4brty8Bl8ZtdFUUe79xI+NY5WVN4tkcQLu1Oqfchaxsw9OAOrPsbo584pyqf/A+m7495hOZeQ3IUOGVRQ+IHRZGo8/hQCWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=nT/oNieE; arc=none smtp.client-ip=159.69.126.157
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="U4bUcES3"
+	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="nT/oNieE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1710535767;
-	bh=ioYxjFgUhmgN64D7EqS9neBKa6VPb6OHx0+I2+vtq58=;
+	s=mail; t=1710535766;
+	bh=7M7T8qGemL/J5YUUwWJ0cC9nJ/50fjpcJlm81ezvXMY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=U4bUcES3s2tjQfaJWa5kyV07tIaEq54seuKRZncSMfN3xTCOuGrLDMLybcDmwJiHY
-	 ATXaHOHgLnm1H38G00+7D2Qr6StGQ2gP0zruWtCyTLYxFxe885rD9AfLaJyLIS6zx1
-	 NmZbFZqMIU/KmrUeGsPfH36Qh5k2WHCdEy49ynD0=
+	b=nT/oNieE+l1Ak2BQAVz0YjBZZ28OhnII6J3mHQ/P4fjSuVwd6BFfbETo9aZ/TJntC
+	 J1FFe4rcB/MZob4cKSTzeiZCxq8CBnF32haIpUyb7ie8VrfmjGbz34Ljgp1qcb3g3Q
+	 lD9ToK9Fe4EXVjNvix4clw2X3PZbisFWZqUa1iLA=
 From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Fri, 15 Mar 2024 21:48:08 +0100
-Subject: [PATCH 10/11] sysctl: constify ctl_table arguments of utility
- function
+Date: Fri, 15 Mar 2024 21:48:05 +0100
+Subject: [PATCH 07/11] ipv6/addrconf: constify ctl_table arguments of
+ utility functions
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20240315-sysctl-const-handler-v1-10-1322ac7cb03d@weissschuh.net>
+Message-Id: <20240315-sysctl-const-handler-v1-7-1322ac7cb03d@weissschuh.net>
 References: <20240315-sysctl-const-handler-v1-0-1322ac7cb03d@weissschuh.net>
 In-Reply-To: <20240315-sysctl-const-handler-v1-0-1322ac7cb03d@weissschuh.net>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -125,125 +125,63 @@ Cc: linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-security-module@vger.kernel.org, 
  =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1710535695; l=4555;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1710535695; l=1733;
  i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=ioYxjFgUhmgN64D7EqS9neBKa6VPb6OHx0+I2+vtq58=;
- b=3ezsimD4t+3/T0cNPSQ4+FYpRTQhNYyohAK+Rbgx8HlPQ+xGzze+WEFqLcmmpL3mfNQxqYUX7
- 1t4oHVoJb7wAVyGZrGoUFlfOOhXQ+0lakf0I5Pzjxrct2orfuAx6LgW
+ bh=7M7T8qGemL/J5YUUwWJ0cC9nJ/50fjpcJlm81ezvXMY=;
+ b=tDrRFBvycsbBg1b0VjT1utAvA72vW/Pfn/OG8rmdlBPllpN3zp995mmaLodLsZ9cR6UItDzEG
+ 934FLotKWacC+9a11IwVotmGV7cUQDZTwgtBLcNNphSOBq2Q6lt1ZQr
 X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
  pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 
 In a future commit the proc_handlers themselves will change to
 "const struct ctl_table". As a preparation for that adapt the internal
-helper.
+helpers.
 
 Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
 ---
- include/linux/sysctl.h |  2 +-
- kernel/sysctl.c        | 21 +++++++++++----------
- 2 files changed, 12 insertions(+), 11 deletions(-)
+ net/ipv6/addrconf.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/sysctl.h b/include/linux/sysctl.h
-index ee7d33b89e9e..99ea26b16c0d 100644
---- a/include/linux/sysctl.h
-+++ b/include/linux/sysctl.h
-@@ -238,7 +238,7 @@ extern struct ctl_table_header *register_sysctl_mount_point(const char *path);
- 
- void do_sysctl_args(void);
- bool sysctl_is_alias(char *param);
--int do_proc_douintvec(struct ctl_table *table, int write,
-+int do_proc_douintvec(const struct ctl_table *table, int write,
- 		      void *buffer, size_t *lenp, loff_t *ppos,
- 		      int (*conv)(unsigned long *lvalp,
- 				  unsigned int *valp,
-diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 157f7ce2942d..93824d8a3636 100644
---- a/kernel/sysctl.c
-+++ b/kernel/sysctl.c
-@@ -205,7 +205,7 @@ static int _proc_do_string(char *data, int maxlen, int write,
- 	return 0;
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index 247bd4d8ee45..c72f3b63e41d 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -862,7 +862,7 @@ static void addrconf_forward_change(struct net *net, __s32 newf)
+ 	}
  }
  
--static void warn_sysctl_write(struct ctl_table *table)
-+static void warn_sysctl_write(const struct ctl_table *table)
+-static int addrconf_fixup_forwarding(struct ctl_table *table, int *p, int newf)
++static int addrconf_fixup_forwarding(const struct ctl_table *table, int *p, int newf)
  {
- 	pr_warn_once("%s wrote to %s when file position was not 0!\n"
- 		"This will not be supported in the future. To silence this\n"
-@@ -223,7 +223,7 @@ static void warn_sysctl_write(struct ctl_table *table)
-  * handlers can ignore the return value.
-  */
- static bool proc_first_pos_non_zero_ignore(loff_t *ppos,
--					   struct ctl_table *table)
-+					   const struct ctl_table *table)
+ 	struct net *net;
+ 	int old;
+@@ -930,7 +930,7 @@ static void addrconf_linkdown_change(struct net *net, __s32 newf)
+ 	}
+ }
+ 
+-static int addrconf_fixup_linkdown(struct ctl_table *table, int *p, int newf)
++static int addrconf_fixup_linkdown(const struct ctl_table *table, int *p, int newf)
  {
- 	if (!*ppos)
- 		return false;
-@@ -468,7 +468,7 @@ static int do_proc_douintvec_conv(unsigned long *lvalp,
- 
- static const char proc_wspace_sep[] = { ' ', '\t', '\n' };
- 
--static int __do_proc_dointvec(void *tbl_data, struct ctl_table *table,
-+static int __do_proc_dointvec(void *tbl_data, const struct ctl_table *table,
- 		  int write, void *buffer,
- 		  size_t *lenp, loff_t *ppos,
- 		  int (*conv)(bool *negp, unsigned long *lvalp, int *valp,
-@@ -541,7 +541,7 @@ static int __do_proc_dointvec(void *tbl_data, struct ctl_table *table,
- 	return err;
+ 	struct net *net;
+ 	int old;
+@@ -6375,7 +6375,7 @@ static void addrconf_disable_change(struct net *net, __s32 newf)
+ 	}
  }
  
--static int do_proc_dointvec(struct ctl_table *table, int write,
-+static int do_proc_dointvec(const struct ctl_table *table, int write,
- 		  void *buffer, size_t *lenp, loff_t *ppos,
- 		  int (*conv)(bool *negp, unsigned long *lvalp, int *valp,
- 			      int write, void *data),
-@@ -552,7 +552,7 @@ static int do_proc_dointvec(struct ctl_table *table, int write,
- }
- 
- static int do_proc_douintvec_w(unsigned int *tbl_data,
--			       struct ctl_table *table,
-+			       const struct ctl_table *table,
- 			       void *buffer,
- 			       size_t *lenp, loff_t *ppos,
- 			       int (*conv)(unsigned long *lvalp,
-@@ -639,7 +639,7 @@ static int do_proc_douintvec_r(unsigned int *tbl_data, void *buffer,
- 	return err;
- }
- 
--static int __do_proc_douintvec(void *tbl_data, struct ctl_table *table,
-+static int __do_proc_douintvec(void *tbl_data, const struct ctl_table *table,
- 			       int write, void *buffer,
- 			       size_t *lenp, loff_t *ppos,
- 			       int (*conv)(unsigned long *lvalp,
-@@ -675,7 +675,7 @@ static int __do_proc_douintvec(void *tbl_data, struct ctl_table *table,
- 	return do_proc_douintvec_r(i, buffer, lenp, ppos, conv, data);
- }
- 
--int do_proc_douintvec(struct ctl_table *table, int write,
-+int do_proc_douintvec(const struct ctl_table *table, int write,
- 		      void *buffer, size_t *lenp, loff_t *ppos,
- 		      int (*conv)(unsigned long *lvalp,
- 				  unsigned int *valp,
-@@ -1023,8 +1023,9 @@ static int sysrq_sysctl_handler(struct ctl_table *table, int write,
- }
- #endif
- 
--static int __do_proc_doulongvec_minmax(void *data, struct ctl_table *table,
--		int write, void *buffer, size_t *lenp, loff_t *ppos,
-+static int __do_proc_doulongvec_minmax(void *data,
-+		const struct ctl_table *table, int write,
-+		void *buffer, size_t *lenp, loff_t *ppos,
- 		unsigned long convmul, unsigned long convdiv)
+-static int addrconf_disable_ipv6(struct ctl_table *table, int *p, int newf)
++static int addrconf_disable_ipv6(const struct ctl_table *table, int *p, int newf)
  {
- 	unsigned long *i, *min, *max;
-@@ -1096,7 +1097,7 @@ static int __do_proc_doulongvec_minmax(void *data, struct ctl_table *table,
- 	return err;
+ 	struct net *net = (struct net *)table->extra2;
+ 	int old;
+@@ -6666,7 +6666,7 @@ void addrconf_disable_policy_idev(struct inet6_dev *idev, int val)
  }
  
--static int do_proc_doulongvec_minmax(struct ctl_table *table, int write,
-+static int do_proc_doulongvec_minmax(const struct ctl_table *table, int write,
- 		void *buffer, size_t *lenp, loff_t *ppos, unsigned long convmul,
- 		unsigned long convdiv)
+ static
+-int addrconf_disable_policy(struct ctl_table *ctl, int *valp, int val)
++int addrconf_disable_policy(const struct ctl_table *ctl, int *valp, int val)
  {
+ 	struct net *net = (struct net *)ctl->extra2;
+ 	struct inet6_dev *idev;
 
 -- 
 2.44.0
