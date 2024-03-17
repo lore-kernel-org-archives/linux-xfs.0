@@ -1,92 +1,273 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39AF41CA87;
-	Sun, 17 Mar 2024 16:39:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1450A1CD26;
+	Sun, 17 Mar 2024 16:51:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710693590; cv=none; b=TTPkTsTtu0JkZJT0nhmUReXUOG2JPBmDcetgCx/74lJveu9UCsPuwuZt54juiIW+l96iDnQsHiGrmktDM2AM/4bG0oylanriT5gPCQ4vPjn5ZIHSz1avfWMs2OTVFNQsOhKgcSXcSNA/59lNNhtpyspQ6l5apn2Wv7/xIG5pOE8=
+	t=1710694318; cv=none; b=HMTu1sjvMRLDeq5nE+GPIZebzVj0xDmbWRWwn2v11KJL9Ie4BklysDwgMDqYdFvykyB5knu3+QR6yuDNad3BVust6C/M0lEtWnJqycZ79VvAi8Hm21Gc2mPey+X4ZwWxPDGvZ4nQVVBuL2e9zPbaaqRNjm007Jr3DyuzBvAPyB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710693590; c=relaxed/simple;
-	bh=tbVDTT9yipK8GZjcwshsu0g1SJYd7tjWpGAO062ZMTU=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dpJJICbxbdTzQyPTjsnEA2/FFb+q28V/kWh6ZUpRqzI/gTsdY+UIEZ3WKqHOLXQtwT1cb+ECiLJrq3wi2ntLszRNLJXG16xf7YJsqz/BAqpVJRIoYKqnRAfTet2zKkhcD0F/K7l1MDpF/yJkN+Hq+MBwtcV7NC0VkT8+mbqvoXw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qNQ9V18F; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710694318; c=relaxed/simple;
+	bh=HxWfd1Znm4cUZamAM6TQvmubUOO81Xy3fg/jRpSm4BI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cd0sJBzft20zdOT3KYoJ0iCrLlJn8+yM5A/4kJIs6B/vOGQN3URRXfiXux2uNznFYWl3buWGvH4zUdXfz+NzCyUZV4PFiBYFauZWHzUUpxhDbUSfGsIDrEbzE/kzkXIWPfhG2qFyDyp7IiHKdnlG674UaVGpqSLmlsgLUyxyke4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=naAqZ7eV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qNQ9V18F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D792C433C7;
-	Sun, 17 Mar 2024 16:39:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="naAqZ7eV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9858EC433C7;
+	Sun, 17 Mar 2024 16:51:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710693590;
-	bh=tbVDTT9yipK8GZjcwshsu0g1SJYd7tjWpGAO062ZMTU=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qNQ9V18FxZtfv39DzSiuY3D67+/ix2uDsFUVsUZEtI8gvghBA1+c61dhlGFjcuqid
-	 pCPP/lmxiu40cfSTGyGj+E9y6wxtGeWwKWNUNJjZEvD7d+Bxdhay+fxNLlf1jpRclo
-	 drgVIpY2BnIKg3lRBDaNy/NqjL1X0CCycnZKpFyrJbc3K1HHVTjFRna3pICe9F/P5N
-	 0Gctmq9D/fsPdcNUr2dCVzxq3b6JZXEf/B+Se91heN5Q5nOe+sqVn33LhiwkEEiofp
-	 3u6BwNEmXTOInzYKM5FuhwToUA/pld8bT9k7z0C+UEt/GPmqnXjWYUwYWjwNi1DSB9
-	 TEkVNQs+yXzgw==
-Date: Sun, 17 Mar 2024 09:39:49 -0700
-Subject: [PATCH 3/3] common/populate: add verity files to populate xfs images
+	s=k20201202; t=1710694317;
+	bh=HxWfd1Znm4cUZamAM6TQvmubUOO81Xy3fg/jRpSm4BI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=naAqZ7eVFLhdBU/5dsNz+CCBzniVgBCPwpb/vhB4+sKkEMaIHcuYIIouHufDX7wLl
+	 qovkE+LrJgC/RmilV5mhExNDlSqFAHNEBC81/Y7zZ6SPOjYHU9uPTyN4qj0eWLsNru
+	 YVO7K7RHFgu3WF4w4Jl2nrcsRnyPYAvj7vf/EosSsTRArVe+IoKo0O4NHFpFjs2lJW
+	 OUhnOvvKy4rQd9op8CWgC8yyQeYmgIqRysmIMcV2wyVevAwEzUgEEjMrQ+zdsb/FQP
+	 G3pvf2VlekezVJlwgKWTAFHz8gGvHzfQW1x7x5JTSHy1iOfNPK2Kg+d6K3B0DpQAtT
+	 yQJaQhcY3KtOw==
+Date: Sun, 17 Mar 2024 09:51:57 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@redhat.com, ebiggers@kernel.org, djwong@kernel.org,
- zlang@redhat.com
-Cc: fsverity@lists.linux.dev, fstests@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, guan@eryu.me, linux-xfs@vger.kernel.org
-Message-ID: <171069248879.2687004.6949510262710192001.stgit@frogsfrogsfrogs>
-In-Reply-To: <171069248832.2687004.7611830288449050659.stgit@frogsfrogsfrogs>
-References: <171069248832.2687004.7611830288449050659.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To: David Hildenbrand <david@redhat.com>, djwong@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: [RFC PATCH] xfs_io: add linux madvise advice codes
+Message-ID: <20240317165157.GE1927156@frogsfrogsfrogs>
+References: <20240314161300.382526-1-david@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240314161300.382526-1-david@redhat.com>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If verity is enabled on a filesystem, we should create some sample
-verity files.
+Add all the Linux-specific madvise codes.  We're going to need
+MADV_POPULATE_READ for a regression test.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/populate |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ configure.ac          |    1 
+ include/builddefs.in  |    1 
+ io/Makefile           |    4 ++
+ io/madvise.c          |  111 +++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   17 ++++++++
+ 5 files changed, 133 insertions(+), 1 deletion(-)
 
-
-diff --git a/common/populate b/common/populate
-index 35071f4210..3f3ec0480d 100644
---- a/common/populate
-+++ b/common/populate
-@@ -520,6 +520,27 @@ _scratch_xfs_populate() {
- 		done
- 	fi
+diff --git a/configure.ac b/configure.ac
+index 3786e44db6fd..723bdca506d1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -187,6 +187,7 @@ AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR
+ AC_CONFIG_CROND_DIR
+ AC_CONFIG_UDEV_DIR
+ AC_HAVE_BLKID_TOPO
++AC_HAVE_KERNEL_MADVISE_FLAGS
  
-+	# verity merkle trees
-+	is_verity="$(_xfs_has_feature "$SCRATCH_MNT" verity -v)"
-+	if [ $is_verity -gt 0 ]; then
-+		echo "+ fsverity"
+ if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
+         AC_PACKAGE_CHECK_UBSAN
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 07428206da45..a04f3e70f19d 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -193,6 +193,7 @@ HAVE_O_TMPFILE = @have_o_tmpfile@
+ HAVE_MKOSTEMP_CLOEXEC = @have_mkostemp_cloexec@
+ USE_RADIX_TREE_FOR_INUMS = @use_radix_tree_for_inums@
+ HAVE_FSVERITY_DESCR = @have_fsverity_descr@
++HAVE_KERNEL_MADVISE = @have_kernel_madvise@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall -Werror -Wextra -Wno-unused-parameter
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/io/Makefile b/io/Makefile
+index 6f903e3df9a7..ce39fda0e82a 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -84,6 +84,10 @@ ifeq ($(HAVE_GETFSMAP),yes)
+ CFILES += fsmap.c
+ endif
+ 
++ifeq ($(HAVE_KERNEL_MADVISE),yes)
++LCFLAGS += -DHAVE_KERNEL_MADVISE
++endif
 +
-+		# Create a biggish file with all zeroes, because metadump
-+		# won't preserve data blocks and we don't want the hashes to
-+		# stop working for our sample fs.
-+		for ((pos = 0, i = 88; pos < 23456789; pos += 234567, i++)); do
-+			$XFS_IO_PROG -f -c "pwrite -S 0 $pos 234567" "$SCRATCH_MNT/verity"
-+		done
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+diff --git a/io/madvise.c b/io/madvise.c
+index 6e9c5b121d72..081666f403bb 100644
+--- a/io/madvise.c
++++ b/io/madvise.c
+@@ -9,6 +9,9 @@
+ #include <sys/mman.h>
+ #include "init.h"
+ #include "io.h"
++#ifdef HAVE_KERNEL_MADVISE
++# include <asm/mman.h>
++#endif
+ 
+ static cmdinfo_t madvise_cmd;
+ 
+@@ -26,6 +29,47 @@ madvise_help(void)
+ " -r -- expect random page references (POSIX_MADV_RANDOM)\n"
+ " -s -- expect sequential page references (POSIX_MADV_SEQUENTIAL)\n"
+ " -w -- will need these pages (POSIX_MADV_WILLNEED) [*]\n"
++"\n"
++"The following Linux-specific advise values are available:\n"
++#ifdef MADV_COLLAPSE
++" -c -- try to collapse range into transparent hugepages (MADV_COLLAPSE)\n"
++#endif
++#ifdef MADV_COLD
++" -D -- deactivate the range (MADV_COLD)\n"
++#endif
++#ifdef MADV_FREE
++" -f -- free the range (MADV_FREE)\n"
++#endif
++#ifdef MADV_NOHUGEPAGE
++" -h -- disable transparent hugepages (MADV_NOHUGEPAGE)\n"
++#endif
++#ifdef MADV_HUGEPAGE
++" -H -- enable transparent hugepages (MADV_HUGEPAGE)\n"
++#endif
++#ifdef MADV_MERGEABLE
++" -m -- mark the range mergeable (MADV_MERGEABLE)\n"
++#endif
++#ifdef MADV_UNMERGEABLE
++" -M -- mark the range unmergeable (MADV_UNMERGEABLE)\n"
++#endif
++#ifdef MADV_SOFT_OFFLINE
++" -o -- mark the range offline (MADV_SOFT_OFFLINE)\n"
++#endif
++#ifdef MADV_REMOVE
++" -p -- punch a hole in the file (MADV_REMOVE)\n"
++#endif
++#ifdef MADV_HWPOISON
++" -P -- poison the page cache (MADV_HWPOISON)\n"
++#endif
++#ifdef MADV_POPULATE_READ
++" -R -- prefault in the range for read (MADV_POPULATE_READ)\n"
++#endif
++#ifdef MADV_POPULATE_WRITE
++" -W -- prefault in the range for write (MADV_POPULATE_WRITE)\n"
++#endif
++#ifdef MADV_PAGEOUT
++" -X -- reclaim the range (MADV_PAGEOUT)\n"
++#endif
+ " Notes:\n"
+ "   NORMAL sets the default readahead setting on the file.\n"
+ "   RANDOM sets the readahead setting on the file to zero.\n"
+@@ -45,20 +89,85 @@ madvise_f(
+ 	int		advise = MADV_NORMAL, c;
+ 	size_t		blocksize, sectsize;
+ 
+-	while ((c = getopt(argc, argv, "drsw")) != EOF) {
++	while ((c = getopt(argc, argv, "cdDfhHmMopPrRswWX")) != EOF) {
+ 		switch (c) {
++#ifdef MADV_COLLAPSE
++		case 'c':	/* collapse to thp */
++			advise = MADV_COLLAPSE;
++			break;
++#endif
+ 		case 'd':	/* Don't need these pages */
+ 			advise = MADV_DONTNEED;
+ 			break;
++#ifdef MADV_COLD
++		case 'D':	/* make more likely to be reclaimed */
++			advise = MADV_COLD;
++			break;
++#endif
++#ifdef MADV_FREE
++		case 'f':	/* page range out of memory */
++			advise = MADV_FREE;
++			break;
++#endif
++#ifdef MADV_HUGEPAGE
++		case 'h':	/* enable thp memory */
++			advise = MADV_HUGEPAGE;
++			break;
++#endif
++#ifdef MADV_NOHUGEPAGE
++		case 'H':	/* disable thp memory */
++			advise = MADV_NOHUGEPAGE;
++			break;
++#endif
++#ifdef MADV_MERGEABLE
++		case 'm':	/* enable merging */
++			advise = MADV_MERGEABLE;
++			break;
++#endif
++#ifdef MADV_UNMERGEABLE
++		case 'M':	/* disable merging */
++			advise = MADV_UNMERGEABLE;
++			break;
++#endif
++#ifdef MADV_SOFT_OFFLINE
++		case 'o':	/* offline */
++			advise = MADV_SOFT_OFFLINE;
++			break;
++#endif
++#ifdef MADV_REMOVE
++		case 'p':	/* punch hole */
++			advise = MADV_REMOVE;
++			break;
++#endif
++#ifdef MADV_HWPOISON
++		case 'P':	/* poison */
++			advise = MADV_HWPOISON;
++			break;
++#endif
+ 		case 'r':	/* Expect random page references */
+ 			advise = MADV_RANDOM;
+ 			break;
++#ifdef MADV_POPULATE_READ
++		case 'R':	/* fault in pages for read */
++			advise = MADV_POPULATE_READ;
++			break;
++#endif
+ 		case 's':	/* Expect sequential page references */
+ 			advise = MADV_SEQUENTIAL;
+ 			break;
+ 		case 'w':	/* Will need these pages */
+ 			advise = MADV_WILLNEED;
+ 			break;
++#ifdef MADV_POPULATE_WRITE
++		case 'W':	/* fault in pages for write */
++			advise = MADV_POPULATE_WRITE;
++			break;
++#endif
++#ifdef MADV_PAGEOUT
++		case 'X':	/* reclaim memory */
++			advise = MADV_PAGEOUT;
++			break;
++#endif
+ 		default:
+ 			exitcode = 1;
+ 			return command_usage(&madvise_cmd);
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 84f288dfcfdb..064d050b2b55 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -322,3 +322,20 @@ struct fsverity_descriptor m = { };
+     AC_SUBST(have_fsverity_descr)
+   ])
+ 
++#
++# Check if asm/mman.h can be included
++#
++AC_DEFUN([AC_HAVE_KERNEL_MADVISE_FLAGS],
++  [ AC_MSG_CHECKING([for kernel madvise flags in asm/mman.h ])
++    AC_COMPILE_IFELSE(
++    [	AC_LANG_PROGRAM([[
++#include <asm/mman.h>
++	]], [[
++int moo = MADV_COLLAPSE;
++	]])
++    ], have_kernel_madvise=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_kernel_madvise)
++  ])
 +
-+		fsverity enable "$SCRATCH_MNT/verity"
-+
-+		# Create a sparse file
-+		$XFS_IO_PROG -f -c "pwrite -S 0 0 3" "$SCRATCH_MNT/sparse_verity"
-+		truncate -s 23456789 "$SCRATCH_MNT/sparse_verity"
-+		$XFS_IO_PROG -f -c "pwrite -S 0 23456789 3" "$SCRATCH_MNT/sparse_verity"
-+		fsverity enable "$SCRATCH_MNT/sparse_verity"
-+	fi
-+
- 	# Copy some real files (xfs tests, I guess...)
- 	echo "+ real files"
- 	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
-
