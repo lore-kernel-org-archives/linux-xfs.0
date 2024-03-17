@@ -1,43 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 774D41862A;
-	Sun, 17 Mar 2024 21:12:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B361E525;
+	Sun, 17 Mar 2024 21:14:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710709936; cv=none; b=Yw9TjEj8ThGuAyFf7TvS4YSUctyIeej/m8UaVeuolMY4J0mzaPUYhWNGXVEdNBhbJbJSGgv9NGBsqDvk5/y2B+G4C79nD5ed5Cu0w4unzBObKMNuwfXe70DytjZ6GRDV05kZN1H8TzUF6I4ZxpT6nvMHvonog35y3zUubtt1jlo=
+	t=1710710058; cv=none; b=BpelAJoSMPF0Cittl/FJJAd911Zh8oJ0R+AzMnVhR4uvxx2sdGFdQVF6NgcbdrkqzOAmLQ6C5GXxVe5LgPraRt7K005xJvjLXQbg7f6hOF6U+0v4YisGz+R/GZQHJ3VLb6+c25QpnKyGMsAcGr8EMWSQMka0MlyCbxgZMU3W6A8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710709936; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1710710058; c=relaxed/simple;
+	bh=/hoO7QwdP4DgNBUhw0wieNFBS6Wc4NbIBy8G9TdddUI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q9LpguGRSD77J+v0peU0Clb7ixrBv5J8R0EPzfejzKVuMz7AWgFcM3bU+hNWIiXvrDQwTMhCQDkWMnNZlxcXdHnITjJNWhg9sLw1yacFNP4sakYzQq6nvA6+bOWE5CPX26V/kftxw5EySqu3mm7U1tt9SGk94i1q7SczHnenTf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZrjPyvCY; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=n2caFU3uDtELEsf4tr07gHIm7whYrnKPyEMklxXh8hg+egRtYG7gK2UMXZfSg3MVI5hfEHQLscN49aZZ56EkxOsI6uQx/uil9KEfrveKU6BpQ+sJhVMFEMVuhF95Hy1AanQ44lpEL3BGhhm49OhGc/EMEJf2TKMA51Jm/3oUno0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Y+s2Jfnv; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZrjPyvCY"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y+s2Jfnv"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=ZrjPyvCY2qHpEMJv7gG+c/stYa
-	7NeQn2xaE+KfnA/DLy4aHX63emZlO3KtO+4JM7K2mCOYc5tsfV9MGlmt8n5ltgCUwEb2R1X1iYXmZ
-	LatRqa5D034VN51mNnuXIEgpYNWcwovYpDXEgtiNwzTTHu6BoKbi70VF85txauvA96jERX915dG/y
-	5rIxy5G7SqyOguiDcwK8Ltv5LKp5YrPqWHKXjuIAX1nU6Mt8jO4xYDLRKIus8kHQaJAOthEnrK9rA
-	4hdY6atNJalkn/H0jb24j+voS2398SN9HVu2Ox/hci+TqoW2MVP6qMwyPqWbXUgoKNFk/BIWv3DPh
-	6E92Jt3w==;
+	bh=TCCmjmMAc3H/rSZhFRq2kqhRinVJ/Se0iD+aRpD6GuU=; b=Y+s2Jfnvr1GLntBNxWu27Jxf7r
+	Wl9Ub4lVpPOUypbTjnBC+PBWROjTPqYdu9guU+7sjnvvPKPAmHlVWrGd/JvTxIsfnP5nkKc7nZk2D
+	JvND9qqmwDaL5NFzTKsQ+uH9fPkT7X6FlhiNpDrBX7xPyv3BfYA+G7j7W5JUFihtKZdPf0ly+dhtr
+	3BE2QeOkdrUjKSi9FLjBDX83/mbLQuwsyvlw6kodbTOfJEncYgRdSVrq9EHtC1ny6UQx1auhY7IFU
+	398h8AA7lT8A6PXWAhQVo/0tDvO8WLde6MlcnelOSsTLKMxD9w6HejJOFWYHrU9Pc+FqlHiJoJOxO
+	avXmaxgg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rlxni-00000006SeZ-3iNU;
-	Sun, 17 Mar 2024 21:12:14 +0000
-Date: Sun, 17 Mar 2024 14:12:14 -0700
+	id 1rlxpg-00000006SyX-3HQ5;
+	Sun, 17 Mar 2024 21:14:16 +0000
+Date: Sun, 17 Mar 2024 14:14:16 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Thorsten Blum <thorsten.blum@toblux.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: Fix typo in comment
-Message-ID: <Zfdcrtk3b6UfgQRF@infradead.org>
-References: <20240317154731.2801-2-thorsten.blum@toblux.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: David Hildenbrand <david@redhat.com>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, fstests <fstests@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC PATCH] xfs_io: add linux madvise advice codes
+Message-ID: <ZfddKAS2GUOG41wb@infradead.org>
+References: <20240314161300.382526-1-david@redhat.com>
+ <20240317165157.GE1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,9 +47,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240317154731.2801-2-thorsten.blum@toblux.com>
+In-Reply-To: <20240317165157.GE1927156@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+> +#
+> +# Check if asm/mman.h can be included
+> +#
+> +AC_DEFUN([AC_HAVE_KERNEL_MADVISE_FLAGS],
+> +  [ AC_MSG_CHECKING([for kernel madvise flags in asm/mman.h ])
+> +    AC_COMPILE_IFELSE(
+> +    [	AC_LANG_PROGRAM([[
+> +#include <asm/mman.h>
+> +	]], [[
+> +int moo = MADV_COLLAPSE;
+> +	]])
+> +    ], have_kernel_madvise=yes
+> +       AC_MSG_RESULT(yes),
+> +       AC_MSG_RESULT(no))
+> +    AC_SUBST(have_kernel_madvise)
+> +  ])
+> +
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I don't think we really need this check, as madvise and asm/mman.h
+have been around forever.  We can probably also drop most of the
+actual flag idefs, probably for everything older than MADV_WIPEONFORK.
+
+The rest looks good to me.
