@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E67973C2D
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 18:32:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1653C2D
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 18:33:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710786763; cv=none; b=UWi9/WJtEuJVLQoa0Q/Uu7dh+FdbW6gBB4phr4t8GdxyAHoXSWubyGrXazL5N+lA/TJKnQO78InMvmUP3hdW0/F1VhN1pMsLPStOHjOtZlLm+ZNmsYuf26YKRca22jWG0loEpTzyePzWWz3p7SO5NFGcguj6nUckPPWS33SoMVM=
+	t=1710786809; cv=none; b=OrkkRr0Vi5iakFW6j0hdkskqsOlGvzRzoBmm0WFZ7PVVgZHJ7ewRobr4T0c9j1qhBOMEXMRubQrWrF2K+ZLInZ1mQgZfWxz6OLt7AD6lj4+B3LkjVThPD5elbkA84cKu5UY0G9jvyszrLU5R0U3qeMqJpR59GxmXtvyF5JWpxc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710786763; c=relaxed/simple;
-	bh=z+1xnTP+ibIVv4m0c+OG9w7hyzqnsfIAFMvT4ORp33A=;
+	s=arc-20240116; t=1710786809; c=relaxed/simple;
+	bh=PHbGWezeLBMiyYShE//ZowMgrKimdvCxyp5pj3DknHw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Io5TsW9qVwuWJd1THDY+mzu+2V8ZSn1tecPFTgBRir2BdN/f5GVI56MFDU7/2iUfAGErkI/l2rNlOVhGtBkJYddEF6tz9PMua4LK5kGEYgBHDXT9uzHyJlm8ap7Le9bDbRjxEytc+VkSPFIDLv2o7MkOirDTMvtOe5BEXyG+6cw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V07EF9+i; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=f0Gw1SE0IMvnZxQmkZEeInurnWsZow3AtLtkhU+bNRMBB5xU+QSuuhoeNawryUkY3m0ofbJ1n6jfrjF7j+jRW8GOqrSF+qvfPA7y8+8SHYMZqvY+NzWZLX4EMAla5d3BtrTdz10ahycSVMgT5ICrq/MKj+EVOjXNkh7M2Kt4u5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVpFvuKp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V07EF9+i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 733CFC433C7;
-	Mon, 18 Mar 2024 18:32:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVpFvuKp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7E62C433F1;
+	Mon, 18 Mar 2024 18:33:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710786762;
-	bh=z+1xnTP+ibIVv4m0c+OG9w7hyzqnsfIAFMvT4ORp33A=;
+	s=k20201202; t=1710786809;
+	bh=PHbGWezeLBMiyYShE//ZowMgrKimdvCxyp5pj3DknHw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=V07EF9+i1EHoBnbumFs+gNiLqvPyW7nOwiDVTUQouCKbpExmzpiJUCOrK/sI2Zi/T
-	 f1l0cHw7rQHrW3jGvGbpZjaxqBgBWXHSG3ILmJWqP0AAemEWqVtGNHEsSo2iPENBs9
-	 STGJRjy/jgzb10TsuDKK9ZBJpMsHCnyLvVROHyShz1FOH++DPj0Sgr6gzJfrJbFmCT
-	 UqYl3IUZ+kHmpadr8SD0OeNG4rsblhHPse9UbXMb1Lakgib+EcE533yXRjKvZdmY+U
-	 Z7N0LmnYhlImRD0NbNSrkV1gx5Y9i5pLHXG+d/zorC4R1fCPyFU+qLCTb//eKqYpfY
-	 2KPS3bvSBaagA==
-Date: Mon, 18 Mar 2024 11:32:41 -0700
+	b=fVpFvuKpCvQ3XF6HaSrsVinzLSQL1mhByCoihvB+Thko1ZHSwt0AUbBLMyIQOUtVh
+	 /MYgWiBopOgIiq7WVbh6LDAg8cREc0Xw7euBR8gUsWgLNIEK/tyriLG71sVu4LcmgE
+	 JR1Mrrlm9+g305713WhvYATczmTaCFn3C7FgW3FSOnO8MmOXgiezLHDhKQVYh74j4n
+	 MRFpN7+xLX7h0xnS/m7wJ2asiyYrG4aBp0NeD3+U6a21x7hjxIWQlx6lpkVPRLJODQ
+	 eTDbK4vHpeJUnTBhP3aMmFYSXT6Ou5rYrWuOVrl1kePmPSDxag9upm1nixo/cES4BR
+	 Kvge7o/iSVQ1w==
+Date: Mon, 18 Mar 2024 11:33:29 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org
-Cc: "Darrick J. Wong" <djwong@djwong.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH v24.5.1 4/8] xfs_repair: support more than 2^32 owners per
- physical block
-Message-ID: <20240318183241.GK1927156@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH v24.5.1 7/8] xfs_repair: don't create block maps for data
+ files
+Message-ID: <20240318183329.GL1927156@frogsfrogsfrogs>
 References: <171029434718.2065824.435823109251685179.stgit@frogsfrogsfrogs>
- <171029434786.2065824.14230923406122272720.stgit@frogsfrogsfrogs>
+ <171029434829.2065824.5706231368777334384.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,101 +43,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171029434786.2065824.14230923406122272720.stgit@frogsfrogsfrogs>
+In-Reply-To: <171029434829.2065824.5706231368777334384.stgit@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@djwong.org>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Now that the incore structures handle more than 2^32 records correctly,
-fix the refcountbt generation code to handle the case of that many rmap
-records pointing to a piece of space in an AG.  This fixes the problem
-where the refcountbt cannot be rebuilt properly because of integer
-truncation if there are more than 4.3 billion owners of a piece of
-space.
+Repair only queries inode block maps for inode forks that map filesystem
+metadata.  IOWs, it only uses it for directories, quota files, symlinks,
+and realtime space metadata.  It doesn't use it for regular files or
+realtime files, so exclude its use for these files to reduce processing
+times for heavily fragmented regular files.
 
-Signed-off-by: Darrick J. Wong <djwong@djwong.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-v24.5.1: use min() instead of open coding it
+v24.5.1: add a comment about why we do skip this now
 ---
- repair/rmap.c |   17 ++++++++---------
- repair/rmap.h |    2 +-
- 2 files changed, 9 insertions(+), 10 deletions(-)
+ repair/dinode.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/repair/rmap.c b/repair/rmap.c
-index c908429c9bf7..032bf494250a 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -713,14 +713,13 @@ mark_inode_rl(
- /*
-  * Emit a refcount object for refcntbt reconstruction during phase 5.
-  */
--#define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
- static void
- refcount_emit(
--	struct xfs_mount		*mp,
-+	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		agbno,
- 	xfs_extlen_t		len,
--	size_t			nr_rmaps)
-+	uint64_t		nr_rmaps)
- {
- 	struct xfs_refcount_irec	rlrec;
- 	int			error;
-@@ -733,7 +732,8 @@ refcount_emit(
- 		agno, agbno, len, nr_rmaps);
- 	rlrec.rc_startblock = agbno;
- 	rlrec.rc_blockcount = len;
--	rlrec.rc_refcount = REFCOUNT_CLAMP(nr_rmaps);
-+	nr_rmaps = min(nr_rmaps, MAXREFCOUNT);
-+	rlrec.rc_refcount = nr_rmaps;
- 	rlrec.rc_domain = XFS_REFC_DOMAIN_SHARED;
+diff --git a/repair/dinode.c b/repair/dinode.c
+index bf93a5790877..94f5fdcb4a37 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -1930,8 +1930,14 @@ process_inode_data_fork(
+ 	if (*nextents > be64_to_cpu(dino->di_nblocks))
+ 		*nextents = 1;
  
- 	error = slab_add(rlslab, &rlrec);
-@@ -741,7 +741,6 @@ refcount_emit(
- 		do_error(
- _("Insufficient memory while recreating refcount tree."));
- }
--#undef REFCOUNT_CLAMP
+-
+-	if (dino->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
++	/*
++	 * Repair doesn't care about the block maps for regular file data
++	 * because it never tries to read data blocks.  Only spend time on
++	 * constructing a block map for directories, quota files, symlinks,
++	 * and realtime space metadata.
++	 */
++	if (dino->di_format != XFS_DINODE_FMT_LOCAL &&
++	    (type != XR_INO_RTDATA && type != XR_INO_DATA))
+ 		*dblkmap = blkmap_alloc(*nextents, XFS_DATA_FORK);
+ 	*nextents = 0;
  
- /*
-  * Transform a pile of physical block mapping observations into refcount data
-@@ -758,11 +757,11 @@ compute_refcounts(
- 	struct xfs_slab_cursor	*rmaps_cur;
- 	struct xfs_rmap_irec	*array_cur;
- 	struct xfs_rmap_irec	*rmap;
-+	uint64_t		n, idx;
-+	uint64_t		old_stack_nr;
- 	xfs_agblock_t		sbno;	/* first bno of this rmap set */
- 	xfs_agblock_t		cbno;	/* first bno of this refcount set */
- 	xfs_agblock_t		nbno;	/* next bno where rmap set changes */
--	size_t			n, idx;
--	size_t			old_stack_nr;
- 	int			error;
- 
- 	if (!xfs_has_reflink(mp))
-@@ -1312,9 +1311,9 @@ _("Unable to fix reflink flag on inode %"PRIu64".\n"),
- /*
-  * Return the number of refcount objects for an AG.
-  */
--size_t
-+uint64_t
- refcount_record_count(
--	struct xfs_mount		*mp,
-+	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno)
- {
- 	return slab_count(ag_rmaps[agno].ar_refcount_items);
-diff --git a/repair/rmap.h b/repair/rmap.h
-index b074e2e87860..1bc8c127d0e5 100644
---- a/repair/rmap.h
-+++ b/repair/rmap.h
-@@ -37,7 +37,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
- 		struct xfs_rmap_irec *key);
- 
- extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
--extern size_t refcount_record_count(struct xfs_mount *, xfs_agnumber_t);
-+uint64_t refcount_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
- extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
- extern void refcount_avoid_check(void);
- void check_refcounts(struct xfs_mount *mp, xfs_agnumber_t agno);
