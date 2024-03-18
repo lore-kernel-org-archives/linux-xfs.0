@@ -1,80 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7103F59140;
-	Mon, 18 Mar 2024 21:04:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81C2859B46
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:30:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710795852; cv=none; b=XiUnNvBeOqan/fyy4bzuppEkXFzlcBEPGrPVLk1mFwQS6t8ut18YK2AXune36z5TIMZ3tF1tmP7+038e2rTLlMFcgdd38GJFBPacN6kwnQuj9OPcM0eee1iWpTyfNMDNSxwrveyPuBQZ9qf65bVqiKzb+7pzonZbMnqVtsBBlBE=
+	t=1710797405; cv=none; b=uUZ+nIBu8iEYo65XoxaTctSyXpnUA2XxQMGV/OA3zPvC/KRAccqpCdG/wl210/NT8ZmDgx1RdzUTrBSaVaYRjeSNJO0zeaEfuXdE8rWgAzPmUrJzNESrE8rI9rhwmacykULSbnCH/k9FtQFtaa8ZTlskoUQIKXRC2P9LwhOII70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710795852; c=relaxed/simple;
-	bh=QT/ehi740JNvXD0Kk69zsxeQiWTWYJhR3CX98vGF494=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dbihepjwxjfa5bqlFELqDQXP5fZqfNKJ+qhFEYjgzMiASfDEU/ogrwzagqcoGpMeZP3JSp1LPJ5XjxI1DEDcg9PzfT4rmz3+0Zm+hkBhrOBUDbrp7eXT3YKkIYGqZjHt09veux1qviSu7PtSZ2l8GIqG/u6nI3zOapgBJDR5Rbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AO0xu0R0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710797405; c=relaxed/simple;
+	bh=WTSxfAA0Bj71WmDHjJ1KIwrY5RjEEIVyXjWrGD4ykXI=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Q02NKY9+E5GBm9COkGwMgeu10IzXZW7joUUAT0zSLV9W9YlPevW/Mf+Jb92jI3Eh5Tb3haeBKdlN/v2uMC4Pu4zSBPrrMTGLnUSp1BYO91VEXnz9XmsGLyUHUD2q2K5AFANIcYv965RjNQnVQW9/tgkHD6NM3lyWS0EXYdp9IP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ugb9FEgm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AO0xu0R0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3BCBC433C7;
-	Mon, 18 Mar 2024 21:04:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugb9FEgm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04EC9C433F1;
+	Mon, 18 Mar 2024 21:30:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710795852;
-	bh=QT/ehi740JNvXD0Kk69zsxeQiWTWYJhR3CX98vGF494=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AO0xu0R08RT5Eefaw+orL+W6OP77jJ6FjwjOS8n4pvT5ssPGS7SbepGDzOOiqrNO4
-	 JIUpTiwCIFQ1gPMdvFHHKb3kud5jTH1tlmw446JGf7SFf8glBViU2/PoANjG3atbf5
-	 Gb1Ud+UWrPVoR7DfbcK5/IAXsSiMyDHMw5X+7K6XGSPFUdUmwH/R3XejhWEWc7wUKv
-	 /PkDNvyabWh5VwgDReL+vq/z1zoEszNEVJ98g0OHZqMGUH/2ReDiskTspH1/hQBrMM
-	 ntpP+m9rGpdk9Gd0vzfgQb7MXR6uFmQc9PKLyQ5r7S15TJ3KR2uSGQ9fr4cTHUdKcU
-	 HasQDXpxbOOFg==
-Date: Mon, 18 Mar 2024 14:04:11 -0700
+	s=k20201202; t=1710797405;
+	bh=WTSxfAA0Bj71WmDHjJ1KIwrY5RjEEIVyXjWrGD4ykXI=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=ugb9FEgmi7uslQvVzkwY1oBfROng3nCXslPW2WQnmNrB5E4lHL/AS+vFrQCAcM9VB
+	 kHP5UhLqXp8LbklqEEEv98H5PUUb0Z6SBZxsaTw7DTSCixsKm+2xrXZnAW1zQeJaPF
+	 yfPheQYVrhEE8J+g/u0kRXnSU914NLjBQBMc/zuRCmsTDaJzeAwiAeH/rpB4XsEesd
+	 w2g4cYtZTw5ddx6EoEJ8HXSY8pzymMc1pf4LGzFd4XwDd1MBtzL95dF8PZ3KHpX4W1
+	 RP1PuajEsOH2aaYI4MtRAhPO2fo16G9AaCP7Jk7wrSHfqQy+IgMe1GXV2tkCJ02UlG
+	 pmuD0xX2rhFEg==
+Date: Mon, 18 Mar 2024 14:30:04 -0700
+Subject: [PATCHSET v29.4] xfsprogs: various bug fixes for 6.8
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: aalbersh@redhat.com, linux-fsdevel@vger.kernel.org,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 16/40] fsverity: pass the zero-hash value to the
- implementation
-Message-ID: <20240318210411.GE6226@frogsfrogsfrogs>
-References: <171069245829.2684506.10682056181611490828.stgit@frogsfrogsfrogs>
- <171069246170.2684506.16175333193381403848.stgit@frogsfrogsfrogs>
- <20240318163847.GC1185@sol.localdomain>
+To: cem@kernel.org, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <171079732970.3790235.16378128492758082769.stgit@frogsfrogsfrogs>
+In-Reply-To: <20240313014127.GJ1927156@frogsfrogsfrogs>
+References: <20240313014127.GJ1927156@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240318163847.GC1185@sol.localdomain>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Mar 18, 2024 at 09:38:47AM -0700, Eric Biggers wrote:
-> On Sun, Mar 17, 2024 at 09:27:34AM -0700, Darrick J. Wong wrote:
-> > diff --git a/fs/verity/open.c b/fs/verity/open.c
-> > index 7a86407732c4..433a70eeca55 100644
-> > --- a/fs/verity/open.c
-> > +++ b/fs/verity/open.c
-> > @@ -144,6 +144,13 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
-> >  		goto out_err;
-> >  	}
-> >  
-> > +	err = fsverity_hash_buffer(params->hash_alg, page_address(ZERO_PAGE(0)),
-> > +				   i_blocksize(inode), params->zero_digest);
-> > +	if (err) {
-> > +		fsverity_err(inode, "Error %d computing zero digest", err);
-> > +		goto out_err;
-> > +	}
-> 
-> This doesn't take the salt into account.  Also it's using the wrong block size
-> (filesystem block size instead of Merkle tree block size).
-> 
-> How about using fsverity_hash_block()?
+Hi all,
 
-/me looks at build_merkle_tree again, realizes that it calls
-hash_one_block on params->block_size bytes of file data.
+More minor bug fixes.
 
-IOWs, fsverity_hash_block is indeed the correct function to call here.
-Thanks for the correction!
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> - Eric
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-6.8-fixes2
+---
+Commits in this patchset:
+ * xfs_db: fix alignment checks in getbitval
+ * xfs_scrub: fix threadcount estimates for phase 6
+ * xfs_scrub: don't fail while reporting media scan errors
+ * xfs_io: add linux madvise advice codes
+---
+ db/bit.c       |    9 +++----
+ io/madvise.c   |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ scrub/phase6.c |   30 ++++++++++++++++------
+ 3 files changed, 102 insertions(+), 14 deletions(-)
+
