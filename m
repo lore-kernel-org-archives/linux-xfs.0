@@ -1,77 +1,72 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0BFE5A4FF
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 22:47:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497895B1F9
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 22:47:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710802044; cv=none; b=Gj5CUT654qWJ9FZf3fn0Sa/sRT32n9JrrwCdQ6veJV7e0qp95ZisTaAVBZYDpezLV+iCO79S1Te1Hg9wCCYa1HJaQTINO+zHU1wgVbuM4C7+Mvd8cqpFylkbcC45a4QiuyAq5jb4Y0EwldQicolFf2uD224dKLAuAuUmWcZ6iAc=
+	t=1710802044; cv=none; b=JBpOKkssBvLTfLdU523AGzIbM0hfxTLpHiFjuqvh253a3xSDoc4X/FRQ65UIEAPQW2yEr5R5i72JgSaeGha395Kqxg4aL4Pce8QsQ+zB0j87M4xr+yvbzcivwzws5BqRDxTAFsRj8ZcQ69aY6/YShe3Z14GuzJxYZJ0PinmVMTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1710802044; c=relaxed/simple;
-	bh=KN/Bekd5u8kmVYWQj6HoyUbqcjubE34QZTtgTLDzCH8=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SoNNNedIIljdQgMYITeMAiqPPVruo55vj4JWtutbw/0OaCsPLK4RvfzGggCQEE76BXUXDAOa/cfJFiMhweAiBRWznxJ9KgPqLUWkGQCBMi2r19gyWNZt6B0YXr0z2+QgjOSP95skVEKjX8ARsLkMNmuLdJd/Rpb7OwjoEKDN+pM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=IUuXa1hN; arc=none smtp.client-ip=209.85.214.180
+	bh=cMY+4+mYBW1VYFJ6gEs40wCD7deEYiySWEj4OnrVNWQ=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=QjwZf7YFek7Q2a8ZMYxjT7uxL4rcbwgB05Q04+goLH8uVdnA81n3hS50OCoc8GebDywNSBMf2uvFcAd+ZpStIQN43aEzmr09wWWRJ0eGJ7deHXeUsFVRcbx5QRpn6rJktf9JIOd+BnEn3BEUJePzR+as0hC3sONvZswmdANs75Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=N7yuhrvl; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="IUuXa1hN"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1def59b537cso21867295ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 15:47:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="N7yuhrvl"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1e034607879so8223455ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 15:47:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710802041; x=1711406841; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ymVBZWX72zOa9zV5H9Y6kFP3Mz8BBFTTAkZU4R1MIwM=;
-        b=IUuXa1hNwbtaE5+D+mU9sHLt/OgYtRDQAOdF60AbTpMewIsVtCv+HmRGaKHohx0sIH
-         5L4T4LOc9Plcw4gYdZvYT4Yqhu7VDcbGlmIUxaPOcymuQFGQqR0qrFSlJdLJh41SO4bS
-         6uCU5/SlF9gZOQGqtfwTvKktB+IAwLozJYEAOY29JZVlYVT94aRKO2+gvrhQ4u0tnK7U
-         OIL6ITJg0dN0sZCc0+AOGAjfqvwAEnWON2g1k/1Lz5IbhtXCBvbhoTt5WpIyThNFa17H
-         1XhxyxauNirQO8j775UtL9MQV8WKTWbKG+pTvPMCAgM11GP51OacEQlG/0LzDwsnOCzT
-         nSoA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710802043; x=1711406843; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=3zsqxD2/0okU7C5M6IfGhexrIXXpp6tXoPYnUrHakoo=;
+        b=N7yuhrvl5duuvSx1P1m3bA0iiC3t8e2VamcdTdm1shqnn7TCQtZXxko68DK/TaEo/U
+         n38/7pk0IBGYbtiIqFNTmeEQIvuOUWvHLX5vIGeIaQkQnCzhZ9qGc8bAd3JvIYhvOGq2
+         CEmrkRrCa/jPOPcNa3lGPHahPl9inESOqQVgESAVLYlHJEQZRxkb+mRy93iI0t7oTHAH
+         x3w0NbVC5fFemMXpKw9YPQMGHlWjNMPul2SN9zyRIpfPvTQyAIoWcrzVVVuq8w4E8TNp
+         9Dv+eAuuUVyDMOoQ4dahoPfYS6m4r3YpD1rVYm6Hk1Ort9I0PsAkCPFNNbqB84dZVhR+
+         f7yQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710802041; x=1711406841;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ymVBZWX72zOa9zV5H9Y6kFP3Mz8BBFTTAkZU4R1MIwM=;
-        b=ZYo0jHIJWUwVBfJ6Mi8GICcnLLEjQbewKtYNcmrexPSi9hq7+BZd8lUtvgP0Nqqx2w
-         pJmcSnkSgKqbdfjd+GtomeZa5y/XZc/3/o7hoDC5nGPbJWV0kkgJTqSuUGCDXyBtoyLl
-         DxmfFBMkZvbq/Q+yaZpILGmRQuvXVQLrxPaEZveDiZEBD/7/hdVrrSTbSkzOD9DzoDOK
-         zpkiiAwbWG2s9FcR05i9O7s+X/dgP6WQRJpowuZcV9X99EGD1omPh9eB7MKELcTpLksa
-         de/HPS0P9GYqtQSApGOLn3meOpqd6g8OPs4f53ZofC9j/92XpQRppbzUBSHeyLqu/rXn
-         X1XQ==
-X-Gm-Message-State: AOJu0Yxa7HTJLgc+fgHrQgYsYD2H1U8RV65Qtd5y4JtrNYpHkVWqiUke
-	onB5GTMfnqC91VNI3MwS/JCxFmGcb0l3Dq3KUXV4AyBReOYWiLZea8vXFOybM5YdSk13tbV4CrC
-	D
-X-Google-Smtp-Source: AGHT+IF9cvaQBWYkA38Qs/H2y2WdTwdoinpxX3b0BB8NAD9p5ueddmWIdxbHygKXSCcslubATapm7g==
-X-Received: by 2002:a17:903:1c4:b0:1dd:e159:3e32 with SMTP id e4-20020a17090301c400b001dde1593e32mr14301409plh.57.1710802041068;
-        Mon, 18 Mar 2024 15:47:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1710802043; x=1711406843;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3zsqxD2/0okU7C5M6IfGhexrIXXpp6tXoPYnUrHakoo=;
+        b=fN2VPebYCXh7yKwv0FS4YcOQoyhbxfQ3s6sFhCjMLvsJ7NK4rUWo6xQavsL7mNz+WU
+         qbHJJZRgZgsO56yrwiAZ06KCvJo52Fe4CZLdgFysfL0hqBnQpYP+VIX4862uL9Nl/WLK
+         bm7lCNZNHwQanZkhmfab/bQcX7Euh0NMcnw196w+hPVwQ6bUG8t5Q1U1AQeZzYHQe96R
+         bsZfNbLMCpuKFsLQNMbm4R9Lpj45DhtJMm2OwzCqWyWgLfSqvDixl1hz4FFqvdEYoGhX
+         k7F6Hbj+D0noPvFbsKpCw4IgcesHRA9saLji1CzGyPjvSCXrIpRQb6jaY2kNcO5eZUjE
+         PdNA==
+X-Gm-Message-State: AOJu0YzkH4Z8lRTZlpqhg37813QLuwLO7Tdxv54MQmRvqoNF+epoSBRU
+	2E8X+czcxqiDUO5eGObjlMqualWZcN2PFtum+uDsou3m7DEAgFEyq7cfO7ky8bAgyojgIP9Wp85
+	J
+X-Google-Smtp-Source: AGHT+IHktBo7ku1hYsWG8mfMzI0m+t/WwLaWu143Log8/mvZ64GwSOjvDtkqaHRzPiFB11rzhfNymw==
+X-Received: by 2002:a17:903:124b:b0:1de:ff81:f650 with SMTP id u11-20020a170903124b00b001deff81f650mr1251754plh.10.1710802042513;
+        Mon, 18 Mar 2024 15:47:22 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-185-123.pa.nsw.optusnet.com.au. [49.180.185.123])
-        by smtp.gmail.com with ESMTPSA id h5-20020a170902680500b001d8f111804asm10033169plk.113.2024.03.18.15.47.19
+        by smtp.gmail.com with ESMTPSA id lh13-20020a170903290d00b001dddccd955asm9865335plb.307.2024.03.18.15.47.19
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 18 Mar 2024 15:47:20 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1rmLlG-003o0b-0D
+	id 1rmLlF-003o0D-2f
 	for linux-xfs@vger.kernel.org;
 	Tue, 19 Mar 2024 09:47:17 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1rmLlF-0000000E836-2Jqq
+	id 1rmLlF-0000000E82f-1Kpy
 	for linux-xfs@vger.kernel.org;
 	Tue, 19 Mar 2024 09:47:17 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 6/9] xfs: map buffers in xfs_buf_alloc_folios
-Date: Tue, 19 Mar 2024 09:45:57 +1100
-Message-ID: <20240318224715.3367463-7-david@fromorbit.com>
+Subject: [PATCH v2 0/9] xfs: use large folios for buffers
+Date: Tue, 19 Mar 2024 09:45:51 +1100
+Message-ID: <20240318224715.3367463-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240318224715.3367463-1-david@fromorbit.com>
-References: <20240318224715.3367463-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,90 +75,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Christoph Hellwig <hch@lst.de>
+The XFS buffer cache supports metadata buffers up to 64kB, and it
+does so by aggregating multiple pages into a single contiguous
+memory region using vmapping. This is expensive (both the setup and
+the runtime TLB mapping cost), and would be unnecessary if we could
+allocate large contiguous memory regions for the buffers in the
+first place.
 
-With the concept of unmapped buffer gone, there is no reason to not
-vmap the buffer pages directly in xfs_buf_alloc_folios.
+Enter multi-page folios.
 
-[dchinner: port to folio-enabled buffers.]
+This patchset converts the buffer cache to use the folio API, then
+enhances it to optimisitically use large folios where possible. It
+retains the old "vmap an array of single page folios" functionality
+as a fallback when large folio allocation fails. This means that,
+like page cache support for large folios, we aren't dependent on
+large folio allocation succeeding all the time.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_buf.c | 37 ++++++-------------------------------
- 1 file changed, 6 insertions(+), 31 deletions(-)
+This relegates the single page array allocation mechanism to the
+"slow path" that we don't have to care so much about performance of
+this path anymore. This might allow us to simplify it a bit in
+future.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2cd3671f3ce3..a77e2d8c8107 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -469,18 +469,7 @@ xfs_buf_alloc_folios(
- 		XFS_STATS_INC(bp->b_mount, xb_page_retries);
- 		memalloc_retry_wait(gfp_mask);
- 	}
--	return 0;
--}
- 
--/*
-- *	Map buffer into kernel address-space if necessary.
-- */
--STATIC int
--_xfs_buf_map_folios(
--	struct xfs_buf		*bp,
--	xfs_buf_flags_t		flags)
--{
--	ASSERT(bp->b_flags & _XBF_FOLIOS);
- 	if (bp->b_folio_count == 1) {
- 		/* A single folio buffer is always mappable */
- 		bp->b_addr = folio_address(bp->b_folios[0]);
-@@ -513,8 +502,13 @@ _xfs_buf_map_folios(
- 		} while (retried++ <= 1);
- 		memalloc_nofs_restore(nofs_flag);
- 
--		if (!bp->b_addr)
-+		if (!bp->b_addr) {
-+			xfs_warn_ratelimited(bp->b_mount,
-+				"%s: failed to map %u folios", __func__,
-+				bp->b_folio_count);
-+			xfs_buf_free_folios(bp);
- 			return -ENOMEM;
-+		}
- 	}
- 
- 	return 0;
-@@ -816,18 +810,6 @@ xfs_buf_get_map(
- 			xfs_perag_put(pag);
- 	}
- 
--	/* We do not hold a perag reference anymore. */
--	if (!bp->b_addr) {
--		error = _xfs_buf_map_folios(bp, flags);
--		if (unlikely(error)) {
--			xfs_warn_ratelimited(btp->bt_mount,
--				"%s: failed to map %u folios", __func__,
--				bp->b_folio_count);
--			xfs_buf_relse(bp);
--			return error;
--		}
--	}
--
- 	/*
- 	 * Clear b_error if this is a lookup from a caller that doesn't expect
- 	 * valid data to be found in the buffer.
-@@ -1068,13 +1050,6 @@ xfs_buf_get_uncached(
- 	if (error)
- 		goto fail_free_buf;
- 
--	error = _xfs_buf_map_folios(bp, 0);
--	if (unlikely(error)) {
--		xfs_warn(target->bt_mount,
--			"%s: failed to map folios", __func__);
--		goto fail_free_buf;
--	}
--
- 	trace_xfs_buf_get_uncached(bp, _RET_IP_);
- 	*bpp = bp;
- 	return 0;
--- 
-2.43.0
+One of the issues with the folio conversion is that we use a couple
+of APIs that take struct page ** (i.e. pointers to page pointer
+arrays) and there aren't folio counterparts. These are the bulk page
+allocator and vm_map_ram(). In the cases where they are used, we
+cast &bp->b_folios[] to (struct page **) knowing that this array
+will only contain single page folios and that single page folios and
+struct page are the same structure and so have the same address.
+This is a bit of a hack, so I've ported Christoph's vmalloc()-only
+fallback patchset on top of these folio changes to remove both the
+bulk page allocator and the calls to vm_map_ram(). This greatly
+simplies the allocation and freeing fallback paths, so it's a win
+all around.
 
+The other issue I tripped over in doing this conversion is that the
+discontiguous buffer straddling code in the buf log item dirty
+region tracking is broken. We don't actually exercise that code on
+existing configurations, and I tripped over it when tracking down a
+bug in the folio conversion. I fixed it and short-circuted the check
+for contiguous buffers, but that left the code still in place and
+not executed. However, Christoph's unmapped buffer removal patch
+gets rid of unmapped buffers, and so we never straddle pages in
+buffers anymore and so that code goes away entirely by the end of
+the patch set. More wins!
+
+Apart from those small complexities that are resolved by the end of
+the patchset, the conversion and enhancement is relatively straight
+forward.  It passes fstests on both 512 and 4096 byte sector size
+storage (512 byte sectors exercise the XBF_KMEM path which has
+non-zero bp->b_offset values) and doesn't appear to cause any
+problems with large 64kB directory buffers on 4kB page machines.
+
+Version 2:
+- use get_order() instead of open coding
+- append in Christoph's unmapped buffer removal
+- rework Christoph's vmalloc-instead-of-vm_map_ram to apply to the
+  large folio based code. This greatly simplifies everything.
+
+Version 1:
+https://lore.kernel.org/linux-xfs/20240118222216.4131379-1-david@fromorbit.com/
