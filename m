@@ -1,74 +1,74 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010555A793
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 22:54:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBCE5A795
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 22:54:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710802454; cv=none; b=P/mqfOT6OaoDUPkPMB28uq8ihJcQLJ8/FK4LDMwEiGOBDsAVdBZ/vh360ok+BvRfROxPmzAMU5dNT9K32plucV+TiJ4cIB4iHNMswZPrkPeYESESvlEgvkT4z4S6Uu+XtvhwMF1vrc8kCkg5F2lS8mNs5Pn7YHWrKtnurBhJjPI=
+	t=1710802454; cv=none; b=ba23OSd7IRlxj3sHp0rJ7UOawfub3UJru6BEghZws9cTgEXMVtPR1a0o50KWfij5fGGgPWEFmctIx/sqNQDOqbzto1qQNkMCMDnjKcP30RhgW0kouvdbSaugsFewiZYMYrhyxSDAXeal+gRHYPjCgAoM9Wwso41PmIFxN1yRo94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1710802454; c=relaxed/simple;
-	bh=Oe9Pd00OjDzkwmcGKySzbDI3c+wJp2rKmIvMFZxHfEM=;
+	bh=K+hXIRmj2UrqHnFyP6YOpZV/9Jj4MJQ7dL8qJxEcEM8=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uXDkuuQzZyZCFRaEW4bhFY0ao4ucBoJZU2Sg5RH+4SMj/xsqoFgP6GnQz0xQiROlas6asTHB8tcQxzEcU11p/Vd0mbsyX+hs3NHFfHldJoKthBEDYyhdCUR6nes9UHRc3iOQzp973GrkcTqp9JPeCYG7OvaE+idZHqXUD/CIudY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KE8vkT6K; arc=none smtp.client-ip=209.85.214.176
+	 MIME-Version; b=NqSTaPWJkV8gW0fTzpvd9GFIscwMEgHG84IUrea29x9OeVza8btYywLT0SpVjOK+AJncVIcejgRv9Q9Hnsp+GGBMjJiEb3cf0JOGMgR1J4do71QAf3ReSusM4P3Hma+E48g+WbmwAuK71q2LGaOX1MMBHvexz4NtXlwacI3BWVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=MIGBWTg/; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KE8vkT6K"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1e032fc60a0so8913205ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 15:54:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="MIGBWTg/"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1dffa5e3f2dso13176635ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 15:54:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710802452; x=1711407252; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710802453; x=1711407253; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=rO/0pOISkOrmL5/qNziapql2KygT0fMo9B6mjjkEdyI=;
-        b=KE8vkT6KomcfKbYEmmpQ81ZDaB38k+9F0wGI7peurRORScg7Abn0B3eYXm20pT+gl8
-         xuww2MCeApGAp2hsQa2oqQjYPHfJZQFijhIv4+9kKTGLh+/DNw9ZxGkv6TW/BbY5kWUC
-         Vaadf0qkxZEzMTs1MthgNbgKWm2DWC8IMHtY00o4Nd2mjvYHgKxpjabTSGvr3Iy9JZXt
-         ZDR2fjQ+a9rGatjuD+jY7NTkH5CK3W2r9kOmApqwgkXrDqDUO9B2akLqBNYoT1P6UTWo
-         daCVwwCxNPTXrpV5tWjXE9hPcalfXsvivcv45im5lo1DstPw5czEplRl/bl71ZBi5DJQ
-         nXRw==
+        bh=vPNKjwUcyb/YsrwpN4HG+VqW4M0Dkp32DMXWxQ+ABjM=;
+        b=MIGBWTg/Hc8ljNw+kz0UoVodJnogAV+BEkxXFnXLWqv8153lF9GbCU+ddK/+fisimp
+         GUnAleDe6f1Ng0kPAXbzm8wTGtxlxReLScB2203ITAZd6qPESVIzYC6eRtOm/VHKrzK5
+         oSLTOMZ56uvGZMiTQHh4Kst0jbBraUZBdJ4mYpbt284/4HLVaxVacjOIJ77TR03Nnh0x
+         c+pC8DdaQM26CbVnGDRIKjRRddR7fDJvTn47+9k5KxjwGC0FiatzOUZuCMLtsim8H84t
+         gs5wfGMVfypyMN339o+LatdsSX131fegu/jIR+EuDmMggZ+b+q8pPUB019Dovs+Nf3BR
+         cmjw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710802452; x=1711407252;
+        d=1e100.net; s=20230601; t=1710802453; x=1711407253;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rO/0pOISkOrmL5/qNziapql2KygT0fMo9B6mjjkEdyI=;
-        b=QaNlDIbC/Y8+sDj5zX5ivEAGUZN3O5VAL8eKSO6+yKU1sPbJlRJyQKmHsD9ZJzDnDi
-         zyfsKBO9ezt326pdqVZg5hNmDLvQvJRbMQnXwrt8oqZ8ntYszKtjtXHZeEmxiGc+m3YT
-         ZcSN++wV7FZUEFFnJhjYuEusxA1cwcyWoJjOTDTRTb1wJ2l2mykuUlm2JWtgt7y+zGPP
-         5rOcaBZ2w4RHqDFf2ORtcq/juWv36kE+eEdWwsnCyfuSm+bJ6AmdJP5RAxjZQB6L29r4
-         7Ktj9zMDmWG/xUDS2fwq7MLEaUUCYbmJeydg6NjSkH7Py5RvoKwUGTXHIaSwGS7Wl0P5
-         SpJQ==
-X-Gm-Message-State: AOJu0YzqOlYCgojfKpUROcFXI1ywI4yhgUQ9Rqf5yykOwzL6WXocUsEM
-	UWEpjAtIe4OEbHCxuYu/2XFW7Cc6CL8W1cM8Ys8SSEpWf5N+hNSYhV43HXW0rZfqKVVn9a05ZaG
-	U
-X-Google-Smtp-Source: AGHT+IHSb7KjNon2igQzSjzLzORb9cGFhjjlHebPK+BwwH+KJKO0Vw6oVN5Tt0S6Zdg7CClEShmiDw==
-X-Received: by 2002:a17:902:e544:b0:1e0:e36:5e45 with SMTP id n4-20020a170902e54400b001e00e365e45mr1290794plf.2.1710802452145;
+        bh=vPNKjwUcyb/YsrwpN4HG+VqW4M0Dkp32DMXWxQ+ABjM=;
+        b=ooc70flOx6hB6LbKc7VYjp50K0i8/P/bFQzrFMl0uver62RWljXFVcH+a9VJN2yaZ4
+         hdbkRrBbVxjFqiBXEByOKUSJXrDtHKKYIz3n+1yy8KonOmpAtHyXMjO9G/F7X2mTpPD4
+         ZOsqoYRb01quz0kifArIjJhL5gd0XrJvI/fLHKB362oIfWG7+wz1ikNYerMk+LRnukIY
+         QgjbI74fXnWVYrVLqOMVT+Z2+sw6mteq7xfiCI8YwZRTAQiDCcw0SWH1ottsf+RiDp51
+         J9LfZv3ng5vl2Mt6wMNKD3Aao79yq24JaQtw9Rd34UMpRl+H4LVC7DfbbcprzBTpcWY7
+         6Nvg==
+X-Gm-Message-State: AOJu0YwCO87ydOUU99PG5pNatikyyBOCtRmoE3sbEyv6Y0OriFUYdmx4
+	VagtmUdG2ZESiauqWNRtauZswnPjT/ql0KPZqLb52DMcwRGUoJy63xSUfQuLXv7KYgSBZ6iD7KR
+	B
+X-Google-Smtp-Source: AGHT+IEUmuZZJgKhWgB1Xm4glkbekdEfv2hk8CqCXepcdPPgnTP+ROyoUPuL0d4Fch3hvfK6ZcJ3AA==
+X-Received: by 2002:a17:902:ecc9:b0:1e0:2377:b23c with SMTP id a9-20020a170902ecc900b001e02377b23cmr1220454plh.51.1710802452564;
         Mon, 18 Mar 2024 15:54:12 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-185-123.pa.nsw.optusnet.com.au. [49.180.185.123])
-        by smtp.gmail.com with ESMTPSA id lf11-20020a170902fb4b00b001dccaafe249sm9856834plb.220.2024.03.18.15.54.11
+        by smtp.gmail.com with ESMTPSA id r10-20020a170903410a00b001d9d4375149sm9934951pld.215.2024.03.18.15.54.11
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 18 Mar 2024 15:54:11 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1rmLrt-003o5v-2v
+	id 1rmLrt-003o5x-31
 	for linux-xfs@vger.kernel.org;
 	Tue, 19 Mar 2024 09:54:09 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1rmLrt-0000000EB3s-1neT
+	id 1rmLrt-0000000EB3w-1woq
 	for linux-xfs@vger.kernel.org;
 	Tue, 19 Mar 2024 09:54:09 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] xfs: stop advertising SB_I_VERSION
-Date: Tue, 19 Mar 2024 09:51:00 +1100
-Message-ID: <20240318225406.3378998-2-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: internalise all remaining i_version support
+Date: Tue, 19 Mar 2024 09:51:01 +1100
+Message-ID: <20240318225406.3378998-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240318225406.3378998-1-david@fromorbit.com>
 References: <20240318225406.3378998-1-david@fromorbit.com>
@@ -82,116 +82,186 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The redefinition of how NFS wants inode->i_version to be updated is
-incomaptible with the XFS i_version mechanism. The VFS now wants
-inode->i_version to only change when ctime changes (i.e. it has
-become a ctime change counter, not an inode change counter). XFS has
-fine grained timestamps, so it can just use ctime for the NFS change
-cookie like it still does for V4 XFS filesystems.
+Now that we don't support SB_I_VERSION, completely internalise the
+remaining usage of inode->i_version. We use our own internal change
+counter now, and leave inode->i_version completely unused. This
+grows the xfs_inode by 8 bytes, but also allows us to use a normal
+uint64_t rather than an expensive atomic64_t for the counter.
 
-We still want XFS to update the inode change counter as it currently
-does, so convert all the code that checks SB_I_VERSION to check for
-v5 format support. Then we can remove the SB_I_VERSION flag from the
-VFS superblock to indicate that inode->i_version is not a valid
-change counter and should not be used as such.
+This clears the way for implementing different inode->i_version
+functionality in the future whilst still maintaining the internal
+XFS change counters as they currently stand.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Acked-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_inode.c | 15 +++++----------
- fs/xfs/xfs_iops.c               | 16 +++-------------
- fs/xfs/xfs_super.c              |  8 --------
- 3 files changed, 8 insertions(+), 31 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c   | 7 ++-----
+ fs/xfs/libxfs/xfs_trans_inode.c | 5 +----
+ fs/xfs/xfs_icache.c             | 4 ----
+ fs/xfs/xfs_inode.c              | 4 +---
+ fs/xfs/xfs_inode.h              | 1 +
+ fs/xfs/xfs_inode_item.c         | 4 +---
+ fs/xfs/xfs_iops.c               | 1 -
+ 7 files changed, 6 insertions(+), 20 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 68989f4bf793..cadd8be83cc4 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -20,8 +20,6 @@
+ #include "xfs_dir2.h"
+ #include "xfs_health.h"
+ 
+-#include <linux/iversion.h>
+-
+ /*
+  * If we are doing readahead on an inode buffer, we might be in log recovery
+  * reading an inode allocation buffer that hasn't yet been replayed, and hence
+@@ -244,8 +242,7 @@ xfs_inode_from_disk(
+ 		xfs_iflags_set(ip, XFS_IPRESERVE_DM_FIELDS);
+ 
+ 	if (xfs_has_v3inodes(ip->i_mount)) {
+-		inode_set_iversion_queried(inode,
+-					   be64_to_cpu(from->di_changecount));
++		ip->i_changecount = be64_to_cpu(from->di_changecount);
+ 		ip->i_crtime = xfs_inode_from_disk_ts(from, from->di_crtime);
+ 		ip->i_diflags2 = be64_to_cpu(from->di_flags2);
+ 		ip->i_cowextsize = be32_to_cpu(from->di_cowextsize);
+@@ -339,7 +336,7 @@ xfs_inode_to_disk(
+ 
+ 	if (xfs_has_v3inodes(ip->i_mount)) {
+ 		to->di_version = 3;
+-		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
++		to->di_changecount = cpu_to_be64(ip->i_changecount);
+ 		to->di_crtime = xfs_inode_to_disk_ts(ip, ip->i_crtime);
+ 		to->di_flags2 = cpu_to_be64(ip->i_diflags2);
+ 		to->di_cowextsize = cpu_to_be32(ip->i_cowextsize);
 diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 69fc5b981352..b82f9c7ff2d5 100644
+index b82f9c7ff2d5..f9196eff6bab 100644
 --- a/fs/xfs/libxfs/xfs_trans_inode.c
 +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -97,17 +97,12 @@ xfs_trans_log_inode(
+@@ -15,8 +15,6 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_inode_item.h"
  
- 	/*
- 	 * First time we log the inode in a transaction, bump the inode change
--	 * counter if it is configured for this to occur. While we have the
--	 * inode locked exclusively for metadata modification, we can usually
--	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
--	 * the last time it was incremented. If we have XFS_ILOG_CORE already
--	 * set however, then go ahead and bump the i_version counter
--	 * unconditionally.
-+	 * counter if it is configured for this to occur.
+-#include <linux/iversion.h>
+-
+ /*
+  * Add a locked inode to the transaction.
+  *
+@@ -87,7 +85,6 @@ xfs_trans_log_inode(
+ 	uint			flags)
+ {
+ 	struct xfs_inode_log_item *iip = ip->i_itemp;
+-	struct inode		*inode = VFS_I(ip);
+ 
+ 	ASSERT(iip);
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+@@ -101,7 +98,7 @@ xfs_trans_log_inode(
  	 */
--	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
--		if (IS_I_VERSION(inode) &&
--		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
--			flags |= XFS_ILOG_IVERSION;
-+	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags) &&
-+	    xfs_has_crc(ip->i_mount)) {
-+		atomic64_inc(&inode->i_version);
-+		flags |= XFS_ILOG_IVERSION;
+ 	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags) &&
+ 	    xfs_has_crc(ip->i_mount)) {
+-		atomic64_inc(&inode->i_version);
++		ip->i_changecount++;
+ 		flags |= XFS_ILOG_IVERSION;
  	}
  
- 	iip->ili_dirty_flags |= flags;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 74f1812b03cb..6c87b90754c4 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -26,8 +26,6 @@
+ #include "xfs_log_priv.h"
+ #include "xfs_health.h"
+ 
+-#include <linux/iversion.h>
+-
+ /* Radix tree tags for incore inode tree. */
+ 
+ /* inode is to be reclaimed */
+@@ -309,7 +307,6 @@ xfs_reinit_inode(
+ 	int			error;
+ 	uint32_t		nlink = inode->i_nlink;
+ 	uint32_t		generation = inode->i_generation;
+-	uint64_t		version = inode_peek_iversion(inode);
+ 	umode_t			mode = inode->i_mode;
+ 	dev_t			dev = inode->i_rdev;
+ 	kuid_t			uid = inode->i_uid;
+@@ -319,7 +316,6 @@ xfs_reinit_inode(
+ 
+ 	set_nlink(inode, nlink);
+ 	inode->i_generation = generation;
+-	inode_set_iversion_queried(inode, version);
+ 	inode->i_mode = mode;
+ 	inode->i_rdev = dev;
+ 	inode->i_uid = uid;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e7a724270423..3ca8e905dbd4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3,8 +3,6 @@
+  * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+  * All Rights Reserved.
+  */
+-#include <linux/iversion.h>
+-
+ #include "xfs.h"
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
+@@ -828,7 +826,7 @@ xfs_init_new_inode(
+ 	ip->i_diflags = 0;
+ 
+ 	if (xfs_has_v3inodes(mp)) {
+-		inode_set_iversion(inode, 1);
++		ip->i_changecount = 1;
+ 		ip->i_cowextsize = 0;
+ 		ip->i_crtime = tv;
+ 	}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ab46ffb3ac19..0f9d32cbae72 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -42,6 +42,7 @@ typedef struct xfs_inode {
+ 	struct rw_semaphore	i_lock;		/* inode lock */
+ 	atomic_t		i_pincount;	/* inode pin count */
+ 	struct llist_node	i_gclist;	/* deferred inactivation list */
++	uint64_t		i_changecount;	/* # of attribute changes */
+ 
+ 	/*
+ 	 * Bitsets of inode metadata that have been checked and/or are sick.
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index f28d653300d1..9ec88a84edfa 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -21,8 +21,6 @@
+ #include "xfs_error.h"
+ #include "xfs_rtbitmap.h"
+ 
+-#include <linux/iversion.h>
+-
+ struct kmem_cache	*xfs_ili_cache;		/* inode log item */
+ 
+ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
+@@ -546,7 +544,7 @@ xfs_inode_to_log_dinode(
+ 
+ 	if (xfs_has_v3inodes(ip->i_mount)) {
+ 		to->di_version = 3;
+-		to->di_changecount = inode_peek_iversion(inode);
++		to->di_changecount = ip->i_changecount;
+ 		to->di_crtime = xfs_inode_to_log_dinode_ts(ip, ip->i_crtime);
+ 		to->di_flags2 = ip->i_diflags2;
+ 		to->di_cowextsize = ip->i_cowextsize;
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 66f8c47642e8..3940ad1ee66e 100644
+index 3940ad1ee66e..8a145ca7d380 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -584,11 +584,6 @@ xfs_vn_getattr(
- 		}
- 	}
+@@ -28,7 +28,6 @@
  
--	if ((request_mask & STATX_CHANGE_COOKIE) && IS_I_VERSION(inode)) {
--		stat->change_cookie = inode_query_iversion(inode);
--		stat->result_mask |= STATX_CHANGE_COOKIE;
--	}
--
- 	/*
- 	 * Note: If you add another clause to set an attribute flag, please
- 	 * update attributes_mask below.
-@@ -1043,16 +1038,11 @@ xfs_vn_update_time(
- 	struct timespec64	now;
+ #include <linux/posix_acl.h>
+ #include <linux/security.h>
+-#include <linux/iversion.h>
+ #include <linux/fiemap.h>
  
- 	trace_xfs_update_time(ip);
-+	ASSERT(!(flags & S_VERSION));
- 
- 	if (inode->i_sb->s_flags & SB_LAZYTIME) {
--		if (!((flags & S_VERSION) &&
--		      inode_maybe_inc_iversion(inode, false))) {
--			generic_update_time(inode, flags);
--			return 0;
--		}
--
--		/* Capture the iversion update that just occurred */
--		log_flags |= XFS_ILOG_CORE;
-+		generic_update_time(inode, flags);
-+		return 0;
- 	}
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index c21f10ab0f5d..bfc5f3a27451 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1690,10 +1690,6 @@ xfs_fs_fill_super(
- 
- 	set_posix_acl_flag(sb);
- 
--	/* version 5 superblocks support inode version counters. */
--	if (xfs_has_crc(mp))
--		sb->s_flags |= SB_I_VERSION;
--
- 	if (xfs_has_dax_always(mp)) {
- 		error = xfs_setup_dax_always(mp);
- 		if (error)
-@@ -1915,10 +1911,6 @@ xfs_fs_reconfigure(
- 	int			flags = fc->sb_flags;
- 	int			error;
- 
--	/* version 5 superblocks always support version counters. */
--	if (xfs_has_crc(mp))
--		fc->sb_flags |= SB_I_VERSION;
--
- 	error = xfs_fs_validate_params(new_mp);
- 	if (error)
- 		return error;
+ /*
 -- 
 2.43.0
 
