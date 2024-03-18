@@ -1,76 +1,62 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17C0722612;
-	Mon, 18 Mar 2024 06:38:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC3FD25745;
+	Mon, 18 Mar 2024 16:35:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710743908; cv=none; b=jrZNTeiFcpXSgWs+sMT5MLrSAQCbHmnSzEeX8PVk3ixBxpCiv61ZaUknQzNr/p/YR3Xm3CN21G+GNXct5vrFGrc7vrxOXajWIelM4trOmMz+qYHg+3kwCRwCurNlgaJPRcmve7qBHVxR4winYYEa41LYtMrnBABmNKh6BtPKkJs=
+	t=1710779715; cv=none; b=Li+e+1eSWvfXbDSN9zsozZqyrHFRLqJvhIvXGH7qgOt3ANfk2/BbliyrpgLTGKhmfxq2t+/UBLvqJ3jEIO1m3NpCzklf0CysRmMaQNC9PXeQIr0H07zmorBXgIMA4FKLBU6psNKbmVyokEUJMGCNWopTRsyjXgB1Llq3g6TlyHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710743908; c=relaxed/simple;
-	bh=QlQ0S93XSrKiyGVVOq6x8ozz/ougIl8fihJ5K/fIWgE=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=MxvVfuvUwcdAaWz8gMLOUjNdlwL8d0OZ7q4ja+yobW8OU+EfFrL83ElG4IT5lEVSyx960I7nuipopLpUNyQ8mY//XoTN1SWKB6Qzhq1sj25el3x6sJCNEiELighPGMhhASKUz/TaJN8b/xOJLKadGHdC/tIG1NumhUL7DWAYUo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TylY73b0Dz4f3lX2;
-	Mon, 18 Mar 2024 14:38:19 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 4F1561A0C9E;
-	Mon, 18 Mar 2024 14:38:23 +0800 (CST)
-Received: from [10.174.176.34] (unknown [10.174.176.34])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBFe4fdlfHU8HQ--.29522S3;
-	Mon, 18 Mar 2024 14:38:23 +0800 (CST)
-Subject: Re: [PATCH v2 04/10] xfs: drop xfs_convert_blocks()
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, brauner@kernel.org,
- david@fromorbit.com, tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com
-References: <20240315125354.2480344-1-yi.zhang@huaweicloud.com>
- <20240315125354.2480344-5-yi.zhang@huaweicloud.com>
- <ZfeZ-yyPaUYFa8ot@infradead.org>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <464005bd-0b68-78ed-a3d7-55035addb761@huaweicloud.com>
-Date: Mon, 18 Mar 2024 14:38:22 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1710779715; c=relaxed/simple;
+	bh=ryLkEWzLxnT2FaDjkiDt1GL9RabpKJpDIqG7E9rjqxI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Xg3KF0z9APNsmKBeRgizoc0wu8Gg7gozGk9BltJSClWHAls04fcSJHvYiGzs+KI0Mj0QFNnmFeICZIZN2CVIigz+3AGzX56lVYe5OWuCyhyuy+Db4nqEd214/h9sEpXhDtM7sfJ1dbZM2ZY4qag7WjWqoRkGHJyyMSLqkxu4sMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=STFrEHOh; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="STFrEHOh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48050C433F1;
+	Mon, 18 Mar 2024 16:35:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710779714;
+	bh=ryLkEWzLxnT2FaDjkiDt1GL9RabpKJpDIqG7E9rjqxI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=STFrEHOhAlB2jd5os10vg002ldDs69KPA8peRQsIEsSMqdAnqCSvcY6nbbVJaT5MI
+	 TECthM9u6W6rgnDKQo4Xlo64PgoRORjNJiccUjwbsKp6ALeoLvqh2+gORUjjtX9kOi
+	 6H0T+Pq9pYyUlu0/jB93+W+5JAw2u/pnahadNfPWDncH04Yc0MF9sc9Z5Av60c6FvB
+	 QM1J60jV2e9nu1iRnSrpkH5X7apYziQXxIqYhWhGL+X5Vd/m3rKRtBAHbFZW4SZ8DM
+	 tbIQVc9QSh6+xgMl2wXRN5QPsdFRJkjEQL3RgYrDKWDQ4DjuH1dljq562Kf0Jz0iOo
+	 MOd5/FDKdJgWg==
+Date: Mon, 18 Mar 2024 09:35:12 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@redhat.com, Mark Tinguely <tinguely@sgi.com>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
+	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET v5.3] fs-verity support for XFS
+Message-ID: <20240318163512.GB1185@sol.localdomain>
+References: <20240317161954.GC1927156@frogsfrogsfrogs>
+ <171069245829.2684506.10682056181611490828.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZfeZ-yyPaUYFa8ot@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgBHGBFe4fdlfHU8HQ--.29522S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYx7kC6x804xWl14x267AKxVW8JVW5JwAF
-	c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-	wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-	x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-	64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r
-	1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Zr0_Wr1U
-	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
-	VFxhVjvjDU0xZFpf9x07UQzVbUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <171069245829.2684506.10682056181611490828.stgit@frogsfrogsfrogs>
 
-On 2024/3/18 9:33, Christoph Hellwig wrote:
-> Maybe just fold this into the previous patch?
+On Sun, Mar 17, 2024 at 09:22:52AM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Otherwise this looks good to me.
+> From Darrick J. Wong:
 > 
-Okay, it's fine by me to fold them
+> This v5.3 patchset builds upon v5.2 of Andrey's patchset to implement
+> fsverity for XFS.
 
-Thanks,
-Yi.
+Is this ready for me to review, or is my feedback on v5 still being worked on?
+From a quick glance, not everything from my feedback has been addressed.
 
+- Eric
