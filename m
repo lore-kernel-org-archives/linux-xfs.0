@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53D5858230
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:46:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7C3C58230
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:46:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710798402; cv=none; b=i8Y0XLQ1xPg65M7BunsrtrKmbFn4gAzOxzjWucIKU/c8/UmdDsP+ZlOnio3WqcsiRizN5lvFHOiRZkuzL9truXRGcHdWiCP8pL2jEFghOL2lA0OMuMYESszO1TfqLz5V3iHf34B/h+wzJz5uRRBiFjJn8w2djLQbwBMkH0kj3Mw=
+	t=1710798418; cv=none; b=n8e5tCWOj9K5eJKwTBtbPU4EGGM5NFNrmg8dYFv2OcL1Bc+SFwpqC3vYBqAmH2LFl7JUScmRiWBR3a3Iks6HznOsm3jy45W+jtedsNj3JkAHl7aX5CKARzZNoxixhKofnAeNEN5a/H0YY9JikFkAqrWwumLYjcgTzzcP1FKPIPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710798402; c=relaxed/simple;
-	bh=paNnZXd0n0wUZOMheq3FtP2o/Xy+TyO/Tmcsoql7kaM=;
+	s=arc-20240116; t=1710798418; c=relaxed/simple;
+	bh=RvFX+K8I9vppY0dqknlmY4o2Q69HVBHm5lRDpBFo2tA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VuNTxyE3ky/JGGQtj4thXJmgyOvsKJbHTeGOJPkJ14qHPTlWXyUe9cMZCanloDss3eOBlURaZRuXIQDB2b5VXYOdMxOOuSCIpWIlBMFuhdvX+kFAUWEBeEqJAm2AMjYRt4JmdkgepAR8l5TayM+8ljuQqSvEEeaIbnQCjZQbsI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IlO4dmND; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jofoTxLUu5+arhOAGFEiPNfeiuh9zrHZKS6mmXZFRmm2czzvriJxeAMo3AVHQ9fQGZIJZz73RvAC+BD3n8RflnIx/q7EVdJGrB0MV1uAvAAwj3UPVVC2KLBB3LA6AeTaDjFjDSqlc2iHAIvMTgcNuwAZ9fcEb5ECcVWUoJldvBc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BjhcPSJk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IlO4dmND"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A65C433C7;
-	Mon, 18 Mar 2024 21:46:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BjhcPSJk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBE32C433C7;
+	Mon, 18 Mar 2024 21:46:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710798402;
-	bh=paNnZXd0n0wUZOMheq3FtP2o/Xy+TyO/Tmcsoql7kaM=;
+	s=k20201202; t=1710798417;
+	bh=RvFX+K8I9vppY0dqknlmY4o2Q69HVBHm5lRDpBFo2tA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IlO4dmNDkE2oFmp+8lF4nuamexAp70vtwKq+A/M80PpH5ipiGxBh1sXeQJOjjHS3p
-	 5f2CNl+e2+DnV4RB3QIkIo1Hj4zCp1ELBwPOfl2thyAAIG+aApRauAYGXWJ+njkmaW
-	 QOXnQnmmZW9dBI19XN+bwnBVLZeSHybthemjEHHqYoXtn09hbBAys80rgK6a5S97fO
-	 AHToPt8CmoTRL2sOax1p29D0vQBim7eL0Md6tB5elCvfbupVWmHD9xtwI+7bFTeA6M
-	 CAvaXwraiw0lTKiEzxGsx4+DkqltN+OxfgS+A7NlIyRXpgz3aaMVfAQQ2vnwNa24Eh
-	 bAJwTKm6hDF+Q==
-Date: Mon, 18 Mar 2024 14:46:41 -0700
-Subject: [PATCH 18/23] xfs: don't remove the attr fork when parent pointers
- are enabled
+	b=BjhcPSJkWOPv/dJD7NTdpDumgL6ch2/ltw6epPHPSj3lKCTNOCBWfQUEuzI4Xlrn6
+	 JlxGdE4cnTOl8M97YW+InDQBmEbilLdotOrb89Gdj48y83Ma9XdHNsQ49leo4KguaZ
+	 pV8uc3m4VdIIXS6UHBU2OXluUFTyesOAqqMOAy6mXj3l2HBRnzjqh4VBFE6mx3G749
+	 tWBiFcMCPBn49a1ysdH4WXo0jGgCVWssP+MDVNrzEFdT/yEYGBg9b1aEqg1Rt3YkTC
+	 DvjjbSWqfGMx2Git6L30ZaU3qtMIjwzi3EvHbMYC2wOa1R/lMHvi7lvB9lMi5mpYhR
+	 Doy7jIRoefHxw==
+Date: Mon, 18 Mar 2024 14:46:57 -0700
+Subject: [PATCH 19/23] xfs: Add the parent pointer support to the superblock
+ version 5.
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>,
- allison.henderson@oracle.com, catherine.hoang@oracle.com,
- linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171079802167.3806377.2275796484801033097.stgit@frogsfrogsfrogs>
+Cc: Mark Tinguely <tinguely@sgi.com>, Dave Chinner <dchinner@redhat.com>,
+ Allison Henderson <allison.henderson@oracle.com>,
+ "Darrick J. Wong" <darrick.wong@oracle.com>, allison.henderson@oracle.com,
+ catherine.hoang@oracle.com, linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <171079802183.3806377.393240646221915919.stgit@frogsfrogsfrogs>
 In-Reply-To: <171079801811.3806377.3956620644680630047.stgit@frogsfrogsfrogs>
 References: <171079801811.3806377.3956620644680630047.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,46 +50,92 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-When an inode is removed, it may also cause the attribute fork to be
-removed if it is the last attribute. This transaction gets flushed to
-the log, but if the system goes down before we could inactivate the symlink,
-the log recovery tries to inactivate this inode (since it is on the unlinked
-list) but the verifier trips over the remote value and leaks it.
+Add the parent pointer superblock flag so that we can actually mount
+filesystems with this feature enabled.
 
-Hence we ended up with a file in this odd state on a "clean" mount.  The
-"obvious" fix is to prohibit erasure of the attr fork to avoid tripping
-over the verifiers when pptrs are enabled.
-
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |    4 +++-
+ fs/xfs/libxfs/xfs_fs.h     |    2 ++
+ fs/xfs/libxfs/xfs_sb.c     |    4 ++++
+ fs/xfs/xfs_super.c         |    4 ++++
+ 4 files changed, 13 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 78a6d4411d2a0..af9e712216ea4 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -877,7 +877,8 @@ xfs_attr_sf_removename(
- 	 */
- 	if (totsize == sizeof(struct xfs_attr_sf_hdr) && xfs_has_attr2(mp) &&
- 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
--	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE))) {
-+	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE)) &&
-+	    !xfs_has_parent(mp)) {
- 		xfs_attr_fork_remove(dp, args->trans);
- 	} else {
- 		xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
-@@ -886,7 +887,8 @@ xfs_attr_sf_removename(
- 		ASSERT(totsize > sizeof(struct xfs_attr_sf_hdr) ||
- 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
- 				!xfs_has_attr2(mp) ||
--				dp->i_df.if_format == XFS_DINODE_FMT_BTREE);
-+				dp->i_df.if_format == XFS_DINODE_FMT_BTREE ||
-+				xfs_has_parent(mp));
- 		xfs_trans_log_inode(args->trans, dp,
- 					XFS_ILOG_CORE | XFS_ILOG_ADATA);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index a823bba1f7d79..859062ab6c306 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -373,13 +373,15 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
+ #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+ #define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
++#define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 6)	/* parent pointers */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+ 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+ 		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
+ 		 XFS_SB_FEAT_INCOMPAT_BIGTIME| \
+ 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR| \
+-		 XFS_SB_FEAT_INCOMPAT_NREXT64)
++		 XFS_SB_FEAT_INCOMPAT_NREXT64| \
++		 XFS_SB_FEAT_INCOMPAT_PARENT)
+ 
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+ static inline bool
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 8ab8de8a6e632..e54938d5b928b 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -243,6 +243,8 @@ typedef struct xfs_fsop_resblks {
+ /* file range exchange available to userspace */
+ #define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE	(1 << 24)
+ 
++#define XFS_FSOP_GEOM_FLAGS_PARENT	(1U << 30) /* parent pointers */
++
+ /*
+  * Minimum and maximum sizes need for growth checks.
+  *
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index c2d86faeee61b..22f5420adb3e5 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -176,6 +176,8 @@ xfs_sb_version_to_features(
+ 		features |= XFS_FEAT_NEEDSREPAIR;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NREXT64)
+ 		features |= XFS_FEAT_NREXT64;
++	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_PARENT)
++		features |= XFS_FEAT_PARENT;
+ 
+ 	return features;
+ }
+@@ -1251,6 +1253,8 @@ xfs_fs_geometry(
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
+ 	if (xfs_has_inobtcounts(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_INOBTCNT;
++	if (xfs_has_parent(mp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
+ 	if (xfs_has_sector(mp)) {
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+ 		geo->logsectsize = sbp->sb_logsectsize;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 15b59c37e0ed1..ecf837f84ec0c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1741,6 +1741,10 @@ xfs_fs_fill_super(
+ 		goto out_filestream_unmount;
  	}
+ 
++	if (xfs_has_parent(mp))
++		xfs_warn(mp,
++	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
++
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
 
