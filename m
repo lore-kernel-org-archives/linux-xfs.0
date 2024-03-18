@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7705915E
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:42:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837645915E
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:42:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710798120; cv=none; b=rCUBJts+5rMo+BEUU68D43SIVWQCZLFbdjAa6Ovu/AK/qw3gCA3UM0U4MXK5GpF0B8FZh9+3soSVfisK9HTnFZY86DWRkJ/a3K8nmgGwPUoNZ9Zz+z3KcSXFb41qMW1e87HsNNBUHpEjT58q8WUxt0FDY3kdCd7hS5lPoek/Kc8=
+	t=1710798136; cv=none; b=o377dNYo54Rgf5kXOOeOny1E7MFwaO4PEE0eWUojKtrAJcsqiC95c3WqpSB56itvtDDmKKwaRucblnkCpSC2H91cJ7yThMA0PbVJ/s/xBS0t99VyZgFCKmYP7wbXaI+Om/EGgMg6NSAG5yGZ1mU6XFhNPkT0SEiSudJ5mLfmYls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710798120; c=relaxed/simple;
-	bh=QkO5X2uf/yDk9/DWlI2NJaXZUyETzPHIn4BimeSSlsE=;
+	s=arc-20240116; t=1710798136; c=relaxed/simple;
+	bh=LZIpVSogOuoOnlFuCnt3bCgyDU26TDMznGLXm3CDAxU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d2ND+8s9Sz5WitdOmrlXEgMwF83pYO0Fh+qw6LIVIl9z+8u6ztsf03XBpUYkkIexTF9vYbSgQKwlLJlltx/PBXBICSusf513Et4GtDjzHMz04itda/L0frnEMpqeu73TIrxQQ1io6EFi5wlS7QhUf9mEL+CvQ2NgMRd6i9i3HjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q+eCe4gC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=BY/nOHZTHeeBZl3yX3wqMX3IZoUMJ8HxEIZIATZDuH4qSkKG5njtPL+hODcbFLPkRf1G7YbcM9HLlpEh7tpt8jVFHdbyyyOE+IZNyoLRiM33P4kBVFS1LQ/wNUi7ru+y5qtndO1YX0wpw69J5T6VXp2tB6480W8Vs9pW67qwlS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ds29p0U6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q+eCe4gC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57001C433C7;
-	Mon, 18 Mar 2024 21:42:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ds29p0U6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08934C433F1;
+	Mon, 18 Mar 2024 21:42:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710798120;
-	bh=QkO5X2uf/yDk9/DWlI2NJaXZUyETzPHIn4BimeSSlsE=;
+	s=k20201202; t=1710798136;
+	bh=LZIpVSogOuoOnlFuCnt3bCgyDU26TDMznGLXm3CDAxU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Q+eCe4gCJ/SIJrTq5JgcaZlYd97ZgQmA/dqWma96oMDuWOvlE8wrW3u0DUfhP0Qty
-	 9TB587N0A5X2smAIL+QnvRkf9poiLqY4LPomg4jPHIt2KWH6x3VsC34Yqd7c6QZRga
-	 Cl/LDgx5H+Yv3C1HGy/ntuAD2zqaBEMjU02gQivDZmAKbEBY8l9DHZEYW2Hopzmku+
-	 eKU3yQPP5paW9bCFS1DIDUWD59dxxilB1ZTnEEUjhH5ZUNWQQtVpNUc/upqTddM3HU
-	 rcAYIKMXq6AtLuHkiS8UhIyZ2/YBUG31J8cEy3MTw5ytTiHVQ0xbMTv4mvf6bCFb3+
-	 81buwYecUdL0Q==
-Date: Mon, 18 Mar 2024 14:41:59 -0700
-Subject: [PATCHSET v13.0 2/2] xfs: fsck for parent pointers
+	b=ds29p0U6EjYh6Oto+ZicUbpeey/OgUDJ8eu6c3kww5zyUAdS1i9B02z6pw806XIzS
+	 imW0o7OjC7l21GmGfngnWNoH7BTmF9lZfuz1DmMo4iyZXL++oeFYeTf28CyfWCZlbB
+	 n2yaZTdXjf/Q/8B06wH0KlUtb24StX2l7qB5lYmuKaGTgujmOoYnNdlXR4porHCqlM
+	 8Kg65Msp4nIudIBOsFeOisf7wWeghb+j5w9/mKQN6qvm440xzFW2iBE+aLPsXpLhTO
+	 AByC7O1kBK4Q/r8EYFic5PzSEWXfKh2Y8HY7Hmdflk/V3lmWEEmfT1CeSxfHqx2xLR
+	 ELq9ssiCFd9hw==
+Date: Mon, 18 Mar 2024 14:42:15 -0700
+Subject: [PATCH 01/23] xfs: Expose init_xattrs in xfs_create_tmpfile
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: allison.henderson@oracle.com, catherine.hoang@oracle.com,
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ allison.henderson@oracle.com, catherine.hoang@oracle.com,
  linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171079802637.3808642.13167687091088855153.stgit@frogsfrogsfrogs>
-In-Reply-To: <20240318213921.GJ6188@frogsfrogsfrogs>
-References: <20240318213921.GJ6188@frogsfrogsfrogs>
+Message-ID: <171079801888.3806377.5178781335830554740.stgit@frogsfrogsfrogs>
+In-Reply-To: <171079801811.3806377.3956620644680630047.stgit@frogsfrogsfrogs>
+References: <171079801811.3806377.3956620644680630047.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -45,103 +46,76 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Allison Henderson <allison.henderson@oracle.com>
 
-This series implements online checking and repair for directory parent
-pointer metadata.  The checking half is fairly straightforward -- for
-each outgoing directory link (forward or backwards), grab the inode at
-the other end, and confirm that there's a corresponding link.  If we
-can't grab an inode or lock it, we'll save that link for a slower loop
-that cycles all the locks, confirms the continued existence of the link,
-and rechecks the link if it's actually still there.
+Tmp files are used as part of rename operations and will need attr forks
+initialized for parent pointers.  Expose the init_xattrs parameter to
+the calling function to initialize the fork.
 
-Repairs are a bit more involved -- for directories, we walk the entire
-filesystem to rebuild the dirents from parent pointer information.
-Parent pointer repairs do the same walk but rebuild the pptrs from the
-dirent information, but with the added twist that it duplicates all the
-xattrs so that it can use the atomic extent swapping code to commit the
-repairs atomically.
-
-This introduces an added twist to the xattr repair code -- we use dirent
-hooks to detect a colliding update to the pptr data while we're not
-holding the ILOCKs; if one is detected, we restart the xattr salvaging
-process but this time hold all the ILOCKs until the end of the scan.
-
-For offline repair, the phase6 directory connectivity scan generates an
-index of all the expected parent pointers in the filesystem.  Then it
-walks each file and compares the parent pointers attached to that file
-against the index generated, and resyncs the results as necessary.
-
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-fsck
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-fsck
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Commits in this patchset:
- * xfs: check dirents have parent pointers
- * xfs: deferred scrub of dirents
- * xfs: create a parent pointer walk function for scrubbers
- * xfs: scrub parent pointers
- * xfs: deferred scrub of parent pointers
- * xfs: walk directory parent pointers to determine backref count
- * xfs: add raw parent pointer apis to support repair
- * xfs: set child file owner in xfs_da_args when changing parent pointers
- * xfs: check parent pointer xattrs when scrubbing
- * xfs: salvage parent pointers when rebuilding xattr structures
- * xfs: replace namebuf with parent pointer in directory repair
- * xfs: repair directories by scanning directory parent pointers
- * xfs: implement live updates for directory repairs
- * xfs: replay unlocked parent pointer updates that accrue during xattr repair
- * xfs: replace namebuf with parent pointer in parent pointer repair
- * xfs: repair directory parent pointers by scanning for dirents
- * xfs: implement live updates for parent pointer repairs
- * xfs: remove pointless unlocked assertion
- * xfs: split xfs_bmap_add_attrfork into two pieces
- * xfs: actually rebuild the parent pointer xattrs
- * xfs: adapt the orphanage code to handle parent pointers
- * xfs: repair link count of nondirectories after rebuilding parent pointers
- * xfs: inode repair should ensure there's an attr fork to store parent pointers
----
- fs/xfs/Makefile              |    2 
- fs/xfs/libxfs/xfs_attr.c     |   39 +
- fs/xfs/libxfs/xfs_attr.h     |    1 
- fs/xfs/libxfs/xfs_bmap.c     |   38 -
- fs/xfs/libxfs/xfs_bmap.h     |    3 
- fs/xfs/libxfs/xfs_dir2.c     |    2 
- fs/xfs/libxfs/xfs_dir2.h     |    2 
- fs/xfs/libxfs/xfs_parent.c   |  107 +++
- fs/xfs/libxfs/xfs_parent.h   |   18 +
- fs/xfs/scrub/attr.c          |   16 -
- fs/xfs/scrub/attr_repair.c   |  502 ++++++++++++++++
- fs/xfs/scrub/attr_repair.h   |    4 
- fs/xfs/scrub/common.h        |    1 
- fs/xfs/scrub/dir.c           |  352 +++++++++++
- fs/xfs/scrub/dir_repair.c    |  568 +++++++++++++++++-
- fs/xfs/scrub/findparent.c    |   12 
- fs/xfs/scrub/findparent.h    |   10 
- fs/xfs/scrub/inode_repair.c  |   41 +
- fs/xfs/scrub/listxattr.c     |   94 +++
- fs/xfs/scrub/listxattr.h     |   13 
- fs/xfs/scrub/nlinks.c        |   71 ++
- fs/xfs/scrub/nlinks.h        |    3 
- fs/xfs/scrub/nlinks_repair.c |    2 
- fs/xfs/scrub/orphanage.c     |   42 +
- fs/xfs/scrub/orphanage.h     |    3 
- fs/xfs/scrub/parent.c        |  695 ++++++++++++++++++++++
- fs/xfs/scrub/parent_repair.c | 1317 +++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/readdir.c       |   78 ++
- fs/xfs/scrub/readdir.h       |    3 
- fs/xfs/scrub/scrub.c         |    2 
- fs/xfs/scrub/trace.c         |    1 
- fs/xfs/scrub/trace.h         |  217 +++++++
- 32 files changed, 4151 insertions(+), 108 deletions(-)
+ fs/xfs/xfs_inode.c |    5 +++--
+ fs/xfs/xfs_inode.h |    2 +-
+ fs/xfs/xfs_iops.c  |    2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 5d12e3911ec57..ab177f82b4302 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1206,6 +1206,7 @@ xfs_create_tmpfile(
+ 	struct mnt_idmap	*idmap,
+ 	struct xfs_inode	*dp,
+ 	umode_t			mode,
++	bool			init_xattrs,
+ 	struct xfs_inode	**ipp)
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -1246,7 +1247,7 @@ xfs_create_tmpfile(
+ 	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
+ 	if (!error)
+ 		error = xfs_init_new_inode(idmap, tp, dp, ino, mode,
+-				0, 0, prid, false, &ip);
++				0, 0, prid, init_xattrs, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -3047,7 +3048,7 @@ xfs_rename_alloc_whiteout(
+ 	int			error;
+ 
+ 	error = xfs_create_tmpfile(idmap, dp, S_IFCHR | WHITEOUT_MODE,
+-				   &tmpfile);
++				   false, &tmpfile);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 34ee1dd01d203..8a3bec482e1f2 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -522,7 +522,7 @@ int		xfs_create(struct mnt_idmap *idmap,
+ 			   umode_t mode, dev_t rdev, bool need_xattr,
+ 			   struct xfs_inode **ipp);
+ int		xfs_create_tmpfile(struct mnt_idmap *idmap,
+-			   struct xfs_inode *dp, umode_t mode,
++			   struct xfs_inode *dp, umode_t mode, bool init_xattrs,
+ 			   struct xfs_inode **ipp);
+ int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
+ 			   struct xfs_inode *ip);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index e1b15a002a8ff..e3d6a5d04ae38 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -202,7 +202,7 @@ xfs_generic_create(
+ 				xfs_create_need_xattr(dir, default_acl, acl),
+ 				&ip);
+ 	} else {
+-		error = xfs_create_tmpfile(idmap, XFS_I(dir), mode, &ip);
++		error = xfs_create_tmpfile(idmap, XFS_I(dir), mode, false, &ip);
+ 	}
+ 	if (unlikely(error))
+ 		goto out_free_acl;
 
