@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A50F458211
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:46:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53D5858230
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:46:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710798386; cv=none; b=XaML5VYggs6hjCuRjsCt0UBRiXBN8U7EZEmRNKsOVYHPFlvjj2+Zd1C2a87EL0Dig9RUWWpwKIJFyyQETriq73UZQVQJ16ivnSczMS6qrnuHxlGze/DjC2SkQuOmuDhBQRT2zNlUWoNXqvOeF3O0K4+bTLJsvbrxwTqh2ZJ/ZNQ=
+	t=1710798402; cv=none; b=i8Y0XLQ1xPg65M7BunsrtrKmbFn4gAzOxzjWucIKU/c8/UmdDsP+ZlOnio3WqcsiRizN5lvFHOiRZkuzL9truXRGcHdWiCP8pL2jEFghOL2lA0OMuMYESszO1TfqLz5V3iHf34B/h+wzJz5uRRBiFjJn8w2djLQbwBMkH0kj3Mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710798386; c=relaxed/simple;
-	bh=bmXyXVFD8TGEn6d0AVvfwWb4bH1hbwzQr9k747LhqaQ=;
+	s=arc-20240116; t=1710798402; c=relaxed/simple;
+	bh=paNnZXd0n0wUZOMheq3FtP2o/Xy+TyO/Tmcsoql7kaM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JJeFzl29mpyawbZvS1u1YiUvCUI4Jv0LK2tPFgTUhUWFKZbyaB9BpH61Q2//fX56AAz6MNEY9EtcPbDHm7nk/FtD7AoHUPSS+4EXdPDbBpHH4LOAyURxqUpWhulBpmj9fzv3WXysVuwyYyARCbH/vrMfrnzCivkG6I34bvZXf6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dxPeDDLc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VuNTxyE3ky/JGGQtj4thXJmgyOvsKJbHTeGOJPkJ14qHPTlWXyUe9cMZCanloDss3eOBlURaZRuXIQDB2b5VXYOdMxOOuSCIpWIlBMFuhdvX+kFAUWEBeEqJAm2AMjYRt4JmdkgepAR8l5TayM+8ljuQqSvEEeaIbnQCjZQbsI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IlO4dmND; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dxPeDDLc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 792CEC433C7;
-	Mon, 18 Mar 2024 21:46:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IlO4dmND"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A65C433C7;
+	Mon, 18 Mar 2024 21:46:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710798386;
-	bh=bmXyXVFD8TGEn6d0AVvfwWb4bH1hbwzQr9k747LhqaQ=;
+	s=k20201202; t=1710798402;
+	bh=paNnZXd0n0wUZOMheq3FtP2o/Xy+TyO/Tmcsoql7kaM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dxPeDDLceWU3ounshIy5g3YYKsBfuKUxkGsOjsGrQKRrf4fWBeFYN+VGSVZAoR4dJ
-	 dzKnZrvsSEjJ0kf4acXTfpRfodXt2/6d08LvkWgVF/mhiR2hnBEEoW6IlDs1bdCzJ8
-	 pqYSfLBEINOGrrUUx36CJcWGVplREV5dbre+fIgbfFxR+crCNi0tLr7EqBDDdUdLAA
-	 sttx2BNObMjuO9qlm3q6jBQZ8P+EdB2avWF6dItBHau7fheuNn14Ynav65Ik1M52eT
-	 EDHv0w7DfTAoN88xOsKIm+Z7J4xS2LtRPnvnP8yItQ/Y/Atb9KLUG4Jh1lHX8mPf97
-	 uAfJUL1yfxQ+w==
-Date: Mon, 18 Mar 2024 14:46:25 -0700
-Subject: [PATCH 17/23] xfs: drop compatibility minimum log size computations
- for reflink
+	b=IlO4dmNDkE2oFmp+8lF4nuamexAp70vtwKq+A/M80PpH5ipiGxBh1sXeQJOjjHS3p
+	 5f2CNl+e2+DnV4RB3QIkIo1Hj4zCp1ELBwPOfl2thyAAIG+aApRauAYGXWJ+njkmaW
+	 QOXnQnmmZW9dBI19XN+bwnBVLZeSHybthemjEHHqYoXtn09hbBAys80rgK6a5S97fO
+	 AHToPt8CmoTRL2sOax1p29D0vQBim7eL0Md6tB5elCvfbupVWmHD9xtwI+7bFTeA6M
+	 CAvaXwraiw0lTKiEzxGsx4+DkqltN+OxfgS+A7NlIyRXpgz3aaMVfAQQ2vnwNa24Eh
+	 bAJwTKm6hDF+Q==
+Date: Mon, 18 Mar 2024 14:46:41 -0700
+Subject: [PATCH 18/23] xfs: don't remove the attr fork when parent pointers
+ are enabled
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Allison Henderson <allison.henderson@oracle.com>,
  allison.henderson@oracle.com, catherine.hoang@oracle.com,
  linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171079802152.3806377.18033460028058163561.stgit@frogsfrogsfrogs>
+Message-ID: <171079802167.3806377.2275796484801033097.stgit@frogsfrogsfrogs>
 In-Reply-To: <171079801811.3806377.3956620644680630047.stgit@frogsfrogsfrogs>
 References: <171079801811.3806377.3956620644680630047.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,39 +47,48 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Allison Henderson <allison.henderson@oracle.com>
 
-Having established that we can reduce the minimum log size computation
-for filesystems with parent pointers or any newer feature, we should
-also drop the compat minlogsize code that we added when we reduced the
-transaction reservation size for rmap and reflink.
+When an inode is removed, it may also cause the attribute fork to be
+removed if it is the last attribute. This transaction gets flushed to
+the log, but if the system goes down before we could inactivate the symlink,
+the log recovery tries to inactivate this inode (since it is on the unlinked
+list) but the verifier trips over the remote value and leaks it.
 
+Hence we ended up with a file in this odd state on a "clean" mount.  The
+"obvious" fix is to prohibit erasure of the attr fork to avoid tripping
+over the verifiers when pptrs are enabled.
+
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_log_rlimit.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ fs/xfs/libxfs/xfs_attr_leaf.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-index b836de0de5b95..1ccd4aa921756 100644
---- a/fs/xfs/libxfs/xfs_log_rlimit.c
-+++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-@@ -81,6 +81,16 @@ xfs_log_calc_trans_resv_for_minlogblocks(
- {
- 	unsigned int		rmap_maxlevels = mp->m_rmap_maxlevels;
- 
-+	/*
-+	 * Starting with the parent pointer feature, every new fs feature
-+	 * drops the oversized minimum log size computation introduced by the
-+	 * original reflink code.
-+	 */
-+	if (xfs_has_parent_or_newer_feature(mp)) {
-+		xfs_trans_resv_calc(mp, resv);
-+		return;
-+	}
-+
- 	/*
- 	 * In the early days of rmap+reflink, we always set the rmap maxlevels
- 	 * to 9 even if the AG was small enough that it would never grow to
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 78a6d4411d2a0..af9e712216ea4 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -877,7 +877,8 @@ xfs_attr_sf_removename(
+ 	 */
+ 	if (totsize == sizeof(struct xfs_attr_sf_hdr) && xfs_has_attr2(mp) &&
+ 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
+-	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE))) {
++	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE)) &&
++	    !xfs_has_parent(mp)) {
+ 		xfs_attr_fork_remove(dp, args->trans);
+ 	} else {
+ 		xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
+@@ -886,7 +887,8 @@ xfs_attr_sf_removename(
+ 		ASSERT(totsize > sizeof(struct xfs_attr_sf_hdr) ||
+ 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
+ 				!xfs_has_attr2(mp) ||
+-				dp->i_df.if_format == XFS_DINODE_FMT_BTREE);
++				dp->i_df.if_format == XFS_DINODE_FMT_BTREE ||
++				xfs_has_parent(mp));
+ 		xfs_trans_log_inode(args->trans, dp,
+ 					XFS_ILOG_CORE | XFS_ILOG_ADATA);
+ 	}
 
