@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D148D5A4C2
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:50:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F68C59B59
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 21:50:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710798605; cv=none; b=mKVwCrSjzvMS9VBx3Nff3ncWAiBsTJa2dgJ0yKLkbewO8DvqWhQPy0GisVpHFaKVriMn3QTAWJXzVLUwMIyCmCgOWzhWVO9Jd6HpIfh3N/gnmucOzoDgIByYEoZRZZwUlYXfCd9wOli9r2VDKwT3gxEwgOfMwL1ETQxI0I6DKNA=
+	t=1710798621; cv=none; b=mSOf9q5Rct3H9Fqkls4VP8VWFLmfauFofSmbAk5Ovy1URMHbiit/f4USm4Y5zgzEbLlW50L/5+cPrVqXadQt41nofV3CqHtmu8vApDUE3ntYwAvQogrbQhIM/Ue3pwOBL4UXEkUPQg0fApW+UDy5Vlp1wUTRz44/GHIU4npe/ak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710798605; c=relaxed/simple;
-	bh=AAh2zwCRiKXP26tuh6koTV2RapJBUqzMqxLP7Y6muVQ=;
+	s=arc-20240116; t=1710798621; c=relaxed/simple;
+	bh=cNQi+7EKFyyGRRO2CSyoNxcF7tigU80bRjedbNsXCks=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SA5TQKtKwsErSHrxuZL10jmYR1aTMTGdNgKeownvlUPxI3Kbgt6aegy37F0pwpqRX+AZ0DJGmf1iQth15IzKmtJcUY9JyqWGSt3wnbvnkL2dcl2sPLMEMs7zdbSbppMAVRWajjr9NpqzVOe05X5RhfLYSU3Y8OM/J6okCKVVk1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MeFdji+r; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=t4nsVlxkIrgVbvmaYKC3ZraXseIl7mG4d3b6DNJoEAceso7w9ryozu/UaboqrXf4gRMQ9bFhGkRaOyv9mllKfMBT9a/oiy53BpvsSEuKxHf7fFDmD9Shsl8bTeYD/cG2iYhTMj9+EAXLX/dfwE/jg1xYYzghqmfH+BhkKJe7TFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B4PCctHo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MeFdji+r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57CA1C433F1;
-	Mon, 18 Mar 2024 21:50:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B4PCctHo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F24D9C433F1;
+	Mon, 18 Mar 2024 21:50:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710798605;
-	bh=AAh2zwCRiKXP26tuh6koTV2RapJBUqzMqxLP7Y6muVQ=;
+	s=k20201202; t=1710798621;
+	bh=cNQi+7EKFyyGRRO2CSyoNxcF7tigU80bRjedbNsXCks=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MeFdji+rIXgaoTrvfTG+1o1mGa1TAbowww9JaRGvtjuIDJRF67sDjOFB+5ipDWX6T
-	 mj9RJ+1b+KPYUnfxgOtJ5vuuQnZhePdjodn7UCqEibDz0Fwvvlyx6aBmx0UIuNhAF4
-	 do2gLZVNVpZxcTUdwXn6iKd65lFqLaJzredBeF43c87HfA42Ef1EWmOIYXr88S9/gR
-	 MIaql+cUQ9K2qE0YVrWnXtQfVILrf/qSTM7a+7KuS81pIxkpRhMaSzGDLAbHv4CSfF
-	 G0HMIYZ/dO9ufATaBGferaT0AvVQ+xgOK/HHES6qvHdbe5e38kw7v9qAmSaKOIRb22
-	 3IiD2haEqyiMQ==
-Date: Mon, 18 Mar 2024 14:50:04 -0700
-Subject: [PATCH 08/23] xfs: set child file owner in xfs_da_args when changing
- parent pointers
+	b=B4PCctHobBs5dISAFEOBZBEViYwvuhYsPgh1IDWZXsifzNB0iPTdXUji6HdEhCP9D
+	 mNzvdoB6WRMbS5YI0A7UwMksn2Xvaxj93bIDHO3Syz91HAzFnC3bAn5vIDa4KsYBC1
+	 byvG/jF6HbyPBFJY42C6kPzmP1dr3Vxy38EuU1mfpfl8hBtvazD+slitTpbc9z+Yd2
+	 HhqCaGKFN0q6nQL3SEg8Pcnkw752f/p6SrfLVA65OVFDJGX+97DuZqqxxat37I5ATU
+	 ZZJbK4sOEGrqw6yjADxAkmebr1klpTj2UHcjOezCiFlCLXjC4ZTa2T5Eels3CYcWEc
+	 8kMnUTAdpF4Qg==
+Date: Mon, 18 Mar 2024 14:50:20 -0700
+Subject: [PATCH 09/23] xfs: check parent pointer xattrs when scrubbing
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: allison.henderson@oracle.com, catherine.hoang@oracle.com,
  linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <171079802825.3808642.13044502785766853653.stgit@frogsfrogsfrogs>
+Message-ID: <171079802841.3808642.11240116549747491201.stgit@frogsfrogsfrogs>
 In-Reply-To: <171079802637.3808642.13167687091088855153.stgit@frogsfrogsfrogs>
 References: <171079802637.3808642.13167687091088855153.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,119 +47,44 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that struct xfs_da_args has an explicit file owner field, we must
-set it when modifying parent pointers.
+Check parent pointer xattrs as part of scrubbing xattrs.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_parent.c |   13 ++++++++++---
- fs/xfs/libxfs/xfs_parent.h |    4 ++--
- 2 files changed, 12 insertions(+), 5 deletions(-)
+ fs/xfs/scrub/attr.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index 3c31c04dd9a20..3c3fcdf8b975b 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -201,6 +201,7 @@ xfs_parent_addname(
- 
- 	args->trans = tp;
- 	args->dp = child;
-+	args->owner = child->i_ino;
- 
- 	xfs_init_parent_davalue(&ppargs->args, parent_name);
- 
-@@ -239,6 +240,7 @@ xfs_parent_removename(
- 
- 	args->trans = tp;
- 	args->dp = child;
-+	args->owner = child->i_ino;
- 
- 	xfs_init_parent_davalue(&ppargs->args, parent_name);
- 
-@@ -288,6 +290,7 @@ xfs_parent_replacename(
- 
- 	args->trans = tp;
- 	args->dp = child;
-+	args->owner = child->i_ino;
- 
- 	xfs_init_parent_davalue(&ppargs->args, old_name);
- 	xfs_init_parent_danewvalue(&ppargs->args, new_name);
-@@ -371,6 +374,7 @@ static inline void
- xfs_parent_scratch_init(
- 	struct xfs_trans		*tp,
- 	struct xfs_inode		*ip,
-+	xfs_ino_t			owner,
- 	const struct xfs_parent_name_irec *pptr,
- 	struct xfs_parent_scratch	*scr)
- {
-@@ -387,6 +391,7 @@ xfs_parent_scratch_init(
- 	scr->args.whichfork	= XFS_ATTR_FORK;
- 	scr->args.hashval	= xfs_da_hashname((const void *)&scr->rec,
- 					sizeof(struct xfs_parent_name_rec));
-+	scr->args.owner		= owner;
- }
- 
- /*
-@@ -415,7 +420,7 @@ xfs_parent_lookup(
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 2ad109fdd1998..46cc284deaac9 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -17,6 +17,7 @@
+ #include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_attr_sf.h"
++#include "xfs_parent.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/dabtree.h"
+@@ -205,6 +206,19 @@ xchk_xattr_actor(
+ 		return -ECANCELED;
  	}
  
- 	xfs_parent_irec_to_disk(&scr->rec, pptr);
--	xfs_parent_scratch_init(tp, ip, pptr, scr);
-+	xfs_parent_scratch_init(tp, ip, ip->i_ino, pptr, scr);
- 	scr->args.op_flags |= XFS_DA_OP_OKNOENT;
- 
- 	return xfs_attr_get_ilocked(&scr->args);
-@@ -429,6 +434,7 @@ xfs_parent_lookup(
- int
- xfs_parent_set(
- 	struct xfs_inode		*ip,
-+	xfs_ino_t			owner,
- 	const struct xfs_parent_name_irec *pptr,
- 	struct xfs_parent_scratch	*scr)
- {
-@@ -438,7 +444,7 @@ xfs_parent_set(
- 	}
- 
- 	xfs_parent_irec_to_disk(&scr->rec, pptr);
--	xfs_parent_scratch_init(NULL, ip, pptr, scr);
-+	xfs_parent_scratch_init(NULL, ip, owner, pptr, scr);
- 	scr->args.op_flags |= XFS_DA_OP_LOGGED;
- 
- 	return xfs_attr_set(&scr->args);
-@@ -452,6 +458,7 @@ xfs_parent_set(
- int
- xfs_parent_unset(
- 	struct xfs_inode		*ip,
-+	xfs_ino_t			owner,
- 	const struct xfs_parent_name_irec *pptr,
- 	struct xfs_parent_scratch	*scr)
- {
-@@ -461,7 +468,7 @@ xfs_parent_unset(
- 	}
- 
- 	xfs_parent_irec_to_disk(&scr->rec, pptr);
--	xfs_parent_scratch_init(NULL, ip, pptr, scr);
-+	xfs_parent_scratch_init(NULL, ip, owner, pptr, scr);
- 	scr->args.op_flags |= XFS_DA_OP_LOGGED | XFS_DA_OP_REMOVE;
- 
- 	return xfs_attr_set(&scr->args);
-diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-index 58e59af818bd2..46bf96c7e3c92 100644
---- a/fs/xfs/libxfs/xfs_parent.h
-+++ b/fs/xfs/libxfs/xfs_parent.h
-@@ -162,11 +162,11 @@ int xfs_parent_lookup(struct xfs_trans *tp, struct xfs_inode *ip,
- 		const struct xfs_parent_name_irec *pptr,
- 		struct xfs_parent_scratch *scratch);
- 
--int xfs_parent_set(struct xfs_inode *ip,
-+int xfs_parent_set(struct xfs_inode *ip, xfs_ino_t owner,
- 		const struct xfs_parent_name_irec *pptr,
- 		struct xfs_parent_scratch *scratch);
- 
--int xfs_parent_unset(struct xfs_inode *ip,
-+int xfs_parent_unset(struct xfs_inode *ip, xfs_ino_t owner,
- 		const struct xfs_parent_name_irec *rec,
- 		struct xfs_parent_scratch *scratch);
- 
++	/* Check parent pointer geometry. */
++	if (attr_flags & XFS_ATTR_PARENT) {
++		if (!xfs_has_parent(sc->mp)) {
++			xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, args.blkno);
++			return -ECANCELED;
++		}
++
++		if (!xfs_parent_valuecheck(sc->mp, value, valuelen)) {
++			xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, args.blkno);
++			return -ECANCELED;
++		}
++	}
++
+ 	/* Does this name make sense? */
+ 	if (!xfs_attr_namecheck(sc->mp, name, namelen, attr_flags)) {
+ 		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, args.blkno);
 
