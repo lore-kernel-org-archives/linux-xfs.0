@@ -1,43 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC13317547;
-	Mon, 18 Mar 2024 01:43:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B9D44C84;
+	Mon, 18 Mar 2024 04:30:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710726221; cv=none; b=WnDv/K1YhsBkyXDxZNpGBdJ2aqMonQ1jwayGj8Q7AdjbCHTb9AGyE8MoQnd3WDXItX2kQJp3zmW53lzIiXOcC9b1QUQsQ8sNBgvG+7ppsQeZ3OhfN2pDdGQiwT/TBVIQ4AQ1maWoA96mOCTSDBun4h/qZmC65KgtsDhXkdmKu5k=
+	t=1710736246; cv=none; b=hS8eaRnZ1NkFBgYPz90SweU8es2+IkhAX9jsAdHqvjhdjiKA3FcbDsfejarnwIkP1ORPSVAnr/8BrEunt5qFfXFn4gzjWEOjZCbhNj3HS/e3gXLfmUWFNJtwJ+TURovgiIdOOP6ZKb/+a2WSld/YQtIqQlSHhyNWSejNXBP4R8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710726221; c=relaxed/simple;
-	bh=6wHEGScGebsB8YZRoj0nM1zwl1+GcBDIVvkwATpv8zw=;
+	s=arc-20240116; t=1710736246; c=relaxed/simple;
+	bh=OoEglyXCIBb+hsmWdgthoIQl796eGQzCE54LqyV1wKg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ifvp53igP515QbwOdA1hBxSqHfRU/PURm7oc+yd4Rulkt+1rhZyniPIPqBve0Bpx/XaRK8gBDfc5aJR2P8/d31PH6wqKQVzjERT/Ut1mNXjZ+wclbJMq0AiPCO8TjZy4tAS4/i3JxF0mUKxT/qyBPBv21aXV3WBdEY5mYG0RQ98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GGjj8klp; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=MlO+l/3LwH2V0M22FcHyXzlNDM62Ut9hK4q3MM34Gy8xFK4m3KKtQ8/ur5F5p+1+al/KrtzkNrsv6EKydA+ry4WqsRLXjUHlRYmACgL3yAGdmQm32Ju8YoFLhy1ZjzdRw8VL+o/PQa4xTCHxC75VKdNJq/YFH6ahptMfYsYtH2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YwpVZ3Qp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GGjj8klp"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=CmiL69yLYxuLopaHcgf4mF4zui4cUo2PKK6V1SVPigA=; b=GGjj8klpW+I8gN7jruJLDZgsSW
-	cTmqGZDEIlJHw0ffydZUOH5HbE7M0xvV68lN5B0M1i/xA7iNww2RbDS+9I6/U+i6G4R9b+NEALtVz
-	pUKV4+f4bwkeEIPV7fsGV75fFRpeZRV5Pnjml1vPDr6GdkOW11k5zHcGJL9QnhOUutUR2m1vPTHJz
-	IWMVes++e1U3tP5/K7PgvK6qO5uxnlZkOqLV4UajjgSshqe1ibPP+kEeD0BUh6kASDhi85NQz134b
-	168eCh4xRbW0XROgrDqhmUgCKY0Vp2KGo9qbuD3G2wJn3rD7RqjOR2WOtKrghVvCnEGaBTNtrDUmV
-	3E6v5EwA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rm22N-00000006xQw-1tZ6;
-	Mon, 18 Mar 2024 01:43:39 +0000
-Date: Sun, 17 Mar 2024 18:43:39 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: ebiggers@kernel.org, aalbersh@redhat.com, linux-fsdevel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YwpVZ3Qp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77B90C433F1;
+	Mon, 18 Mar 2024 04:30:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710736245;
+	bh=OoEglyXCIBb+hsmWdgthoIQl796eGQzCE54LqyV1wKg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YwpVZ3QpTsGNJseLk/1DvqpnxiRQoVk9tTYl+qN+warMNH1jGLn+EdodsHbr9J9h/
+	 8lPfzw1AtO3M8RHYeI1aO6S4QK1yYtXZxed36onqs/tgSLeXHI0cxK49pxdFmMADss
+	 7ux1RqMpLgfA2xd/kIh9Lh4PySQWDMEqqvLP+bFYJbm3Q9aPG8qLgtu53+vcOllF1S
+	 1jT4HbxykPV2UFOe0MUCEUaca8S6uIg55+i2k8vQXvJeHYKiXg6AYdhl7/AMc4rlbN
+	 j16R+zyelx4Oa8bu2Aa2F3axCcS0+xifmVpClU2RTXBIyO2yHeKTMT1TIPBeurcPmh
+	 VFLrFU3mgtIKg==
+Date: Sun, 17 Mar 2024 21:30:44 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aalbersh@redhat.com, ebiggers@kernel.org, linux-fsdevel@vger.kernel.org,
 	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 26/40] xfs: add fs-verity support
-Message-ID: <ZfecSzBoVDW5328l@infradead.org>
-References: <171069245829.2684506.10682056181611490828.stgit@frogsfrogsfrogs>
- <171069246327.2684506.14573441099126414062.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHBOMB v5.3] fs-verity support for XFS
+Message-ID: <20240318043044.GG1927156@frogsfrogsfrogs>
+References: <20240317161954.GC1927156@frogsfrogsfrogs>
+ <ZfebRH_fGx8EoRfu@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,25 +43,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171069246327.2684506.14573441099126414062.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZfebRH_fGx8EoRfu@infradead.org>
 
-Just skimming over the series from the little I've followed from the
-last rounds (sorry, to busy with various projects):
+On Sun, Mar 17, 2024 at 06:39:16PM -0700, Christoph Hellwig wrote:
+> On Sun, Mar 17, 2024 at 09:19:54AM -0700, Darrick J. Wong wrote:
+> > Note that metadump is kinda broken and xfs_scrub media scans do not yet
+> > know how to read verity files.  All that is actually fixed in the
+> > version that's lodged in my development trees, but since Andrey's base
+> > is the 6.9 for-next branch plus only a few of the parent pointers
+> > patches, none of that stuff was easy to port to make a short dev branch.
+> 
+> Maybe we'll need to put the verity work back and do a good review cycle
+> on the parent pointers first?
+> 
+> Can you send out what your currently have?
 
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -92,6 +92,9 @@ typedef struct xfs_inode {
->  	spinlock_t		i_ioend_lock;
->  	struct work_struct	i_ioend_work;
->  	struct list_head	i_ioend_list;
-> +#ifdef CONFIG_FS_VERITY
-> +	struct xarray		i_merkle_blocks;
-> +#endif
+Ok, I'll do that tomorrow.
 
-This looks like very much a blocker to me.  Adding a 16 byte field to
-struct inode that is used just for a few read-only-ish files on
-select few file systems doesn't seem very efficient.  Given that we
-very rarely update it and thus concurrency on the write side doesn't
-matter much, is there any way we could get a away with a fs-wide
-lookup data structure and avoid this?
+--D
