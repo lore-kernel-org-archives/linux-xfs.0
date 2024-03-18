@@ -1,40 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1653C2D
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 18:33:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564F856B60
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 19:48:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710786809; cv=none; b=OrkkRr0Vi5iakFW6j0hdkskqsOlGvzRzoBmm0WFZ7PVVgZHJ7ewRobr4T0c9j1qhBOMEXMRubQrWrF2K+ZLInZ1mQgZfWxz6OLt7AD6lj4+B3LkjVThPD5elbkA84cKu5UY0G9jvyszrLU5R0U3qeMqJpR59GxmXtvyF5JWpxc8=
+	t=1710791337; cv=none; b=FUgRlw70pqrtf9PJI5bQMHITy5d3Sd0MAeZMfdQaVvWFREA7Xiil4pJ2gY+TLxoVnMLQjjRPGI2Ffa/RWld3Sp84kAvCKuOOFWsuEfdTgdJ7/+c+xRFF7Jx+a1A4h5rrGwsB4zfdnSixjoSUU9jGjtfn1Htcp3B20n0qaHRJMOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710786809; c=relaxed/simple;
-	bh=PHbGWezeLBMiyYShE//ZowMgrKimdvCxyp5pj3DknHw=;
+	s=arc-20240116; t=1710791337; c=relaxed/simple;
+	bh=HcyNRAaSvVR/TK1oY1imlZkpQ7tr6zcuYNe1c6B+IZg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f0Gw1SE0IMvnZxQmkZEeInurnWsZow3AtLtkhU+bNRMBB5xU+QSuuhoeNawryUkY3m0ofbJ1n6jfrjF7j+jRW8GOqrSF+qvfPA7y8+8SHYMZqvY+NzWZLX4EMAla5d3BtrTdz10ahycSVMgT5ICrq/MKj+EVOjXNkh7M2Kt4u5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVpFvuKp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aQHgs3+xdio7bQYAWorElmDeE1eQlpfOUjlZ0X6FEQ+iOyOWw2YEdJgL4kuo3x/HPSUOsW3QC/W8FA8n8cd/RUeThhtJywU+8sOPU/Y/2X3dENGyfwgNqpmPAAHaLNjLwJGY0tRyBIKzTup/BbyyBThDRsW7PirnLy8ujr+SHUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Tq3W9y6W; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVpFvuKp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7E62C433F1;
-	Mon, 18 Mar 2024 18:33:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710786809;
-	bh=PHbGWezeLBMiyYShE//ZowMgrKimdvCxyp5pj3DknHw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fVpFvuKpCvQ3XF6HaSrsVinzLSQL1mhByCoihvB+Thko1ZHSwt0AUbBLMyIQOUtVh
-	 /MYgWiBopOgIiq7WVbh6LDAg8cREc0Xw7euBR8gUsWgLNIEK/tyriLG71sVu4LcmgE
-	 JR1Mrrlm9+g305713WhvYATczmTaCFn3C7FgW3FSOnO8MmOXgiezLHDhKQVYh74j4n
-	 MRFpN7+xLX7h0xnS/m7wJ2asiyYrG4aBp0NeD3+U6a21x7hjxIWQlx6lpkVPRLJODQ
-	 eTDbK4vHpeJUnTBhP3aMmFYSXT6Ou5rYrWuOVrl1kePmPSDxag9upm1nixo/cES4BR
-	 Kvge7o/iSVQ1w==
-Date: Mon, 18 Mar 2024 11:33:29 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH v24.5.1 7/8] xfs_repair: don't create block maps for data
- files
-Message-ID: <20240318183329.GL1927156@frogsfrogsfrogs>
-References: <171029434718.2065824.435823109251685179.stgit@frogsfrogsfrogs>
- <171029434829.2065824.5706231368777334384.stgit@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Tq3W9y6W"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1710791332;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oOqdgcxTH2OLnV0pHfnH8Nt0Lqbw8koRvQxc7E7h07s=;
+	b=Tq3W9y6Wd42HMN9TQpwF0M4AUX9R8H+c/6NQ9coZRZZ+5hJMMpg5+OAhfpQw2dKyUNZno4
+	/1DjU+XjmUBHJKlEJrdkjRest48epd1S4GioUyGlUEbPFbRRXmjXSNUDUVwQFadAZh3kNI
+	jrffI1uMufs5gZWI44iTJNPZDXl+890=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-187-D0XbA3CNO22N4LkMmQMPyw-1; Mon, 18 Mar 2024 15:48:50 -0400
+X-MC-Unique: D0XbA3CNO22N4LkMmQMPyw-1
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-33ece03ca5dso2796126f8f.1
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 12:48:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710791329; x=1711396129;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oOqdgcxTH2OLnV0pHfnH8Nt0Lqbw8koRvQxc7E7h07s=;
+        b=stcFwzfjLJzDVmEt8GLKmv0IyN2zxqeSow9MBB/4WLXFOyLTzJVJ5pTylip3OgmL6o
+         tKUzHpdVGbvuRLvQBuGgda0yZoVWauFhS8KmBlysD83WJMKDVYzTr3+MpdDo8sVomOHa
+         obirvnF4XDc9P90FmQk6fY4n1MXrmDtFHoF5FOoaqgs9rj1ouhoUOcYPURod/I7V4F4K
+         moLcJvHwiS6gEDNMU8Ki29Xb+I6RRkLQntU/daOTmFwXp25Ppedl+WFHivkXyfdiOfYD
+         4ajeE9l8sGWNgUPw7neNXai4cgnsTqF0TbmMpUn5ZU2f4v/78lWxMbkghSwlBYUPIlAh
+         3Gbg==
+X-Forwarded-Encrypted: i=1; AJvYcCUvomLpxicqjJ0mflyEwMxqxp4ZzA/mm1GyFczEYejxGBGpcm3X5CjXzzANpeXdqDd0eqSM5FQcoCC1cZlwfsGZOw9CQ+Tf5sNn
+X-Gm-Message-State: AOJu0YzxlGSz9k4pkUboWFQRTByBXajH2H6jOIvSeUc2HYDObNmLgyi4
+	FCTQRAyv/y4WtRXWcoy+8WRREMRF7F8KRi2M3O09Jrjl8KdFZGFNgqysyAmG3Z54fwsXkEv9Aw+
+	YK+t+2FUAm1Qr1bGrORnmDNZc27g/+SqCgE9qpnFqaJ69I1TieSqN/jcFsFhulbDo
+X-Received: by 2002:a05:6000:2c1:b0:33e:75fb:b913 with SMTP id o1-20020a05600002c100b0033e75fbb913mr362546wry.14.1710791329023;
+        Mon, 18 Mar 2024 12:48:49 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEmhHFEmeCMf0/MvrmnUNbFENwn/JsYxFZoXvcdt6TUYYdr+isHkaJA/RtYfMH4u+9ztYUvhg==
+X-Received: by 2002:a05:6000:2c1:b0:33e:75fb:b913 with SMTP id o1-20020a05600002c100b0033e75fbb913mr362530wry.14.1710791328487;
+        Mon, 18 Mar 2024 12:48:48 -0700 (PDT)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id f22-20020a5d58f6000000b0033e7a204dc7sm10493478wrd.32.2024.03.18.12.48.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Mar 2024 12:48:48 -0700 (PDT)
+Date: Mon, 18 Mar 2024 20:48:47 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: ebiggers@kernel.org, linux-fsdevel@vger.kernel.org, 
+	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 24/40] xfs: disable direct read path for fs-verity files
+Message-ID: <eb7rlbfslyht2vmn7ocqcx5fkjyrle4ocgex6hmjxzs4gtkkgm@mvmsrj7sgojd>
+References: <171069245829.2684506.10682056181611490828.stgit@frogsfrogsfrogs>
+ <171069246296.2684506.17423583037447505680.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,42 +74,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171029434829.2065824.5706231368777334384.stgit@frogsfrogsfrogs>
+In-Reply-To: <171069246296.2684506.17423583037447505680.stgit@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 2024-03-17 09:29:39, Darrick J. Wong wrote:
+> From: Andrey Albershteyn <aalbersh@redhat.com>
+> 
+> The direct path is not supported on verity files. Attempts to use direct
+> I/O path on such files should fall back to buffered I/O path.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> [djwong: fix braces]
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_file.c |   15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 74dba917be93..0ce51a020115 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -281,7 +281,8 @@ xfs_file_dax_read(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*to)
+>  {
+> -	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+> +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	ssize_t			ret = 0;
+>  
+>  	trace_xfs_file_dax_read(iocb, to);
+> @@ -334,10 +335,18 @@ xfs_file_read_iter(
+>  
+>  	if (IS_DAX(inode))
+>  		ret = xfs_file_dax_read(iocb, to);
+> -	else if (iocb->ki_flags & IOCB_DIRECT)
+> +	else if (iocb->ki_flags & IOCB_DIRECT && !fsverity_active(inode))
 
-Repair only queries inode block maps for inode forks that map filesystem
-metadata.  IOWs, it only uses it for directories, quota files, symlinks,
-and realtime space metadata.  It doesn't use it for regular files or
-realtime files, so exclude its use for these files to reduce processing
-times for heavily fragmented regular files.
+Brackets missing
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-v24.5.1: add a comment about why we do skip this now
----
- repair/dinode.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+>  		ret = xfs_file_dio_read(iocb, to);
+> -	else
+> +	else {
+> +		/*
+> +		 * In case fs-verity is enabled, we also fallback to the
+> +		 * buffered read from the direct read path. Therefore,
+> +		 * IOCB_DIRECT is set and need to be cleared (see
+> +		 * generic_file_read_iter())
+> +		 */
+> +		iocb->ki_flags &= ~IOCB_DIRECT;
+>  		ret = xfs_file_buffered_read(iocb, to);
+> +	}
+>  
+>  	if (ret > 0)
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+> 
+> 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index bf93a5790877..94f5fdcb4a37 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1930,8 +1930,14 @@ process_inode_data_fork(
- 	if (*nextents > be64_to_cpu(dino->di_nblocks))
- 		*nextents = 1;
- 
--
--	if (dino->di_format != XFS_DINODE_FMT_LOCAL && type != XR_INO_RTDATA)
-+	/*
-+	 * Repair doesn't care about the block maps for regular file data
-+	 * because it never tries to read data blocks.  Only spend time on
-+	 * constructing a block map for directories, quota files, symlinks,
-+	 * and realtime space metadata.
-+	 */
-+	if (dino->di_format != XFS_DINODE_FMT_LOCAL &&
-+	    (type != XR_INO_RTDATA && type != XR_INO_DATA))
- 		*dblkmap = blkmap_alloc(*nextents, XFS_DATA_FORK);
- 	*nextents = 0;
- 
+-- 
+- Andrey
+
