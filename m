@@ -1,215 +1,148 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F13875025E
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 07:37:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819407D071
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 09:00:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710833831; cv=none; b=m9XqU/fZLaGSDQv8RLLk+xVb/Mb0Wbe/Sl0g94zLs/b+iN8MiHkrfLcacgIYIkHyNHCUtS8fgrr8ZTDdC5PN4SSAu2C33l6/ZQhjzm6aeCwc/S7Bb/vf9kmS9wUP5SwfJLJGXZ7pFw87hICf8pmRqOLFuaCkasghMJqhdLug3uY=
+	t=1710838803; cv=none; b=YykqFMTK6rpQwuetAdCVjpT8djcp/1IvWpgTDISSMRvjKC5cnzQe44e1JnDOYXUGl1lFodceemtaYkKMV97api9qf5/DMd67i5zj2P5mC+s/E6cBwuFFNAQ7zp2upG0o0ZqWdJnnHXEiaHCQpWD5XlcAYlyiT1meoziGwKjEzZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710833831; c=relaxed/simple;
-	bh=IJBuGFz7948K1Cb+QLUmhSm9/QvGSwymK6TEpr+y1M4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S86Hh82TQUVamJ7HYAWzhzIpLu409PkuyiaEJgUF+1xq+v+wAVDRmZPzthvtqobGzpyt8J55hLFA7+baKKu4EtzNLHFYgAJvUMvTbzhMeBBH6haqLJniDDeD6607i+CX1u04RxxNAMGC2SL1Qu30Q3MwKDKOtwU9xDQdi/en7Zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=21tLSq1Z; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1710838803; c=relaxed/simple;
+	bh=CgA0e+m8BBExrEbwYamwe1j/QwTE5GIpu4sDF98nzT8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sLN/mDr25ovEH0l15zMsW730AweEbTYccSXWSxeSuTrclPuKrAckBO1ZgfoBqI8HwmxrLLyWZZU+gvWN5ku8fssX+/QQRzs0MeR/fPuLxgHiGXpdgUyYwfUx3YQW66oIytTM9T2+JMmCkQVhNiAnl9TAijsoHC4rkdplxvsemFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dV5QfVVQ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="21tLSq1Z"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=pNyqtHFuPYM5zikJpqlAn16a0rw7DXWHPDlu78VNWQI=; b=21tLSq1ZM5VjVwiLGhSM0YlYEN
-	KE6yMVBzJzlpM/7ehNMYEx+gGMFm/jCeYF/kb/Amx9rRCnOjAHhCuSGW7ZlaevE/8vC0kvPsyzLfu
-	eciMi8EVZgLRIIyR+IAWeUBj/+LQIsEmTTkiW3rWuimccmZF9eGE7TEsVHm/vzmRNSwEVODY2bq2Z
-	nTFfd4WsVtVp9fSb19eknKsHYwjzLr+yt5j3/bBpZ5wnF+XyTp6NDy+eelFbHgzejwC8muSkI4wLd
-	KtCc8AqklnpF/ELPszcELOXYKyjodp6/oCcCnqVzsl5ueqEGdFONUeWoYuSc3A1Jf1Rmfh/baYB3O
-	M6YVoRpg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rmU21-0000000BjOM-20nM;
-	Tue, 19 Mar 2024 07:37:09 +0000
-Date: Tue, 19 Mar 2024 00:37:09 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] xfs: rename bp->b_folio_count
-Message-ID: <ZflApWnBkHDmo4HJ@infradead.org>
-References: <20240318224715.3367463-1-david@fromorbit.com>
- <20240318224715.3367463-10-david@fromorbit.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dV5QfVVQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1710838800;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=5BUiLcNn6QrFnn0+/s3dZixFiyFIk9LWlyemfwmVJOQ=;
+	b=dV5QfVVQGcOTdWd/mOrC2D6Um2ctFC4OJzYlk6r4AvMIb/MfvC975/DmqzzleRsT6eEQu+
+	nwgPIv3/61QUI4LOipMwg4ijP6h7OsaZg1a/dYkjgzVvIfbQeziH8svCaaF8kD6+mzLUr4
+	64BnD50jiYQL9Bt0gmKpecQ3cBaGvpk=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-281-OdrfOG5YP5yhK3J-6kKdIw-1; Tue, 19 Mar 2024 04:59:57 -0400
+X-MC-Unique: OdrfOG5YP5yhK3J-6kKdIw-1
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-33ed2677640so2219393f8f.3
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 01:59:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710838796; x=1711443596;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt:from
+         :references:cc:to:content-language:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5BUiLcNn6QrFnn0+/s3dZixFiyFIk9LWlyemfwmVJOQ=;
+        b=g0rr4Fje+HzuFTrIan5MOYvECZSsbeqjKnVg79dDrBD6wsv6DVmFzdCsE+EPV+Me4I
+         UMY/H5leFSo8RduNO7Bbn1msPdX+bi7okZyv/21ziMZw+gfXRfrp0HIe83lHLXm9ihNS
+         sEiinpE9QypvESKtOsOZve4PzbatoYdxGJ1dJbitJXodjmZOOOtwg2VVKIyjXSQZD519
+         /9rdeHmJde+uMwshLM9NBNAJCsLtU+LYMqFIt74alohdYn2uDkkvE57RaFfuXucldR1P
+         swRZwLUVzOr3KHNJYB8706k4/982P33BWESx2kFyDN8TD4oo5/igWIGnQapaULjm9G01
+         FbEA==
+X-Forwarded-Encrypted: i=1; AJvYcCVZZhCkXKq4OCkZ6EiyYRFvM5VoW5EKFTePCDiycRcqN5zABlU/VVI8rX8yaVwbIB2R42QYyMmGbCF4tP4AWWi6YnBayMgxutqv
+X-Gm-Message-State: AOJu0Yw2qfO7IlrFf8sfinMrWRtOf6iB4GlihqttdG5IRSw8lxBuCero
+	Ztf5ddFjwxhIwa875hRLF84NYkzmeXjElRT+aqhIHz1uyld51dbv8fkmEEjghSjS0N1epkn2f8V
+	jOc6d8CHXGhDY8xRnGbO9pIwpwGzgExZmCa8HiCmDQ8KKGqxbY0awkXWQew==
+X-Received: by 2002:a5d:4112:0:b0:33e:48f9:169d with SMTP id l18-20020a5d4112000000b0033e48f9169dmr1203195wrp.31.1710838796632;
+        Tue, 19 Mar 2024 01:59:56 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFIM4IDI7VXvSvTa0BBGChXMEYTwyRL5BUK1Me/WgRfKde71DR/+U3BeXiu0iUxcOCA442zHw==
+X-Received: by 2002:a5d:4112:0:b0:33e:48f9:169d with SMTP id l18-20020a5d4112000000b0033e48f9169dmr1203183wrp.31.1710838796239;
+        Tue, 19 Mar 2024 01:59:56 -0700 (PDT)
+Received: from ?IPV6:2003:cb:c741:2200:2adc:9a8d:ae91:2e9f? (p200300cbc74122002adc9a8dae912e9f.dip0.t-ipconnect.de. [2003:cb:c741:2200:2adc:9a8d:ae91:2e9f])
+        by smtp.gmail.com with ESMTPSA id k4-20020adfe3c4000000b0033e48db23bdsm11838179wrm.100.2024.03.19.01.59.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Mar 2024 01:59:55 -0700 (PDT)
+Message-ID: <615b39c1-a439-4fe2-aa8e-f8721dbb896a@redhat.com>
+Date: Tue, 19 Mar 2024 09:59:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240318224715.3367463-10-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH] fstests: test MADV_POPULATE_READ with IO errors
+Content-Language: en-US
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+ fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+References: <20240314161300.382526-1-david@redhat.com>
+ <20240317165157.GE1927156@frogsfrogsfrogs>
+ <20240317165333.GF1927156@frogsfrogsfrogs>
+From: David Hildenbrand <david@redhat.com>
+Autocrypt: addr=david@redhat.com; keydata=
+ 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
+ WNyWQQ==
+Organization: Red Hat
+In-Reply-To: <20240317165333.GF1927156@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 19, 2024 at 09:46:00AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 17.03.24 17:53, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> The count is used purely to allocate the correct number of bvecs for
-> submitting IO. Rename it to b_bvec_count.
+> This is a regression test for "mm/madvise: make
+> MADV_POPULATE_(READ|WRITE) handle VM_FAULT_RETRY properly".
+> 
+> Cc: David Hildenbrand <david@redhat.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-Well, I think we should just kill it as it simplies is the rounded
-up length in PAGE_SIZE units.  The patch below passes a quick xfstests
-run and is on top of this series:
+Thanks for including this test, very helpful!
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2a6796c48454f7..8ecf88b5504c18 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -67,27 +67,17 @@ static inline bool xfs_buf_is_uncached(struct xfs_buf *bp)
- }
- 
- /*
-- * Return true if the buffer is vmapped.
-- *
-- * b_addr is always set, so we have to look at bp->b_bvec_count to determine if
-- * the buffer was vmalloc()d or not.
-+ * See comment above xfs_buf_alloc_folios() about the constraints placed on
-+ * allocating vmapped buffers.
-  */
--static inline int
--xfs_buf_is_vmapped(
--	struct xfs_buf	*bp)
-+static inline unsigned int xfs_buf_vmap_len(struct xfs_buf *bp)
- {
--	return bp->b_bvec_count > 1;
-+	return roundup(BBTOB(bp->b_length), PAGE_SIZE);
- }
- 
--/*
-- * See comment above xfs_buf_alloc_folios() about the constraints placed on
-- * allocating vmapped buffers.
-- */
--static inline int
--xfs_buf_vmap_len(
--	struct xfs_buf	*bp)
-+static inline unsigned int xfs_buf_nr_pages(struct xfs_buf *bp)
- {
--	return (bp->b_bvec_count * PAGE_SIZE);
-+	return DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
- }
- 
- /*
-@@ -304,13 +294,15 @@ xfs_buf_free(
- 		goto free;
- 	}
- 
--	if (!(bp->b_flags & _XBF_KMEM))
--		mm_account_reclaimed_pages(bp->b_bvec_count);
--
--	if (bp->b_flags & _XBF_FOLIOS)
--		__folio_put(kmem_to_folio(bp->b_addr));
--	else
-+	if (bp->b_flags & _XBF_FOLIOS) {
-+		/* XXX: should this pass xfs_buf_nr_pages()? */
-+		mm_account_reclaimed_pages(1);
-+		folio_put(kmem_to_folio(bp->b_addr));
-+	} else {
-+		if (!(bp->b_flags & _XBF_KMEM))
-+			mm_account_reclaimed_pages(xfs_buf_nr_pages(bp));
- 		kvfree(bp->b_addr);
-+	}
- 
- 	bp->b_flags &= _XBF_KMEM | _XBF_FOLIOS;
- 
-@@ -341,7 +333,6 @@ xfs_buf_alloc_kmem(
- 		bp->b_addr = NULL;
- 		return -ENOMEM;
- 	}
--	bp->b_bvec_count = 1;
- 	bp->b_flags |= _XBF_KMEM;
- 	return 0;
- }
-@@ -369,7 +360,6 @@ xfs_buf_alloc_folio(
- 		return false;
- 
- 	bp->b_addr = folio_address(folio);
--	bp->b_bvec_count = 1;
- 	bp->b_flags |= _XBF_FOLIOS;
- 	return true;
- }
-@@ -441,7 +431,6 @@ xfs_buf_alloc_folios(
- 			count);
- 		return -ENOMEM;
- 	}
--	bp->b_bvec_count = count;
- 
- 	return 0;
- }
-@@ -1470,7 +1459,9 @@ xfs_buf_bio_end_io(
- 		cmpxchg(&bp->b_io_error, 0, error);
- 	}
- 
--	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
-+	if (!bp->b_error &&
-+	    (bp->b_flags & XBF_READ) &&
-+	    is_vmalloc_addr(bp->b_addr))
- 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
- 
- 	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-@@ -1485,6 +1476,7 @@ xfs_buf_ioapply_map(
- 	unsigned int	*buf_offset,
- 	blk_opf_t	op)
- {
-+	unsigned int	nr_vecs = 1;
- 	struct bio	*bio;
- 	int		size;
- 
-@@ -1494,7 +1486,9 @@ xfs_buf_ioapply_map(
- 
- 	atomic_inc(&bp->b_io_remaining);
- 
--	bio = bio_alloc(bp->b_target->bt_bdev, bp->b_bvec_count, op, GFP_NOIO);
-+	if (is_vmalloc_addr(bp->b_addr))
-+		nr_vecs = xfs_buf_nr_pages(bp);
-+	bio = bio_alloc(bp->b_target->bt_bdev, nr_vecs, op, GFP_NOIO);
- 	bio->bi_iter.bi_sector = bp->b_maps[map].bm_bn;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
-@@ -1511,7 +1505,7 @@ xfs_buf_ioapply_map(
- 		*buf_offset += len;
- 	} while (size);
- 
--	if (xfs_buf_is_vmapped(bp))
-+	if (is_vmalloc_addr(bp->b_addr))
- 		flush_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
- 	submit_bio(bio);
- }
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 32688525890bec..ad92d11f4ae173 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -195,7 +195,6 @@ struct xfs_buf {
- 	int			b_map_count;
- 	atomic_t		b_pin_count;	/* pin count */
- 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
--	unsigned int		b_bvec_count;	/* bvecs needed for IO */
- 	int			b_error;	/* error code on I/O */
- 
- 	/*
-diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-index 30d53ddd6e6980..f082b1a64fc950 100644
---- a/fs/xfs/xfs_buf_mem.c
-+++ b/fs/xfs/xfs_buf_mem.c
-@@ -169,7 +169,6 @@ xmbuf_map_folio(
- 	unlock_page(page);
- 
- 	bp->b_addr = page_address(page);
--	bp->b_bvec_count = 1;
- 	return 0;
- }
- 
-@@ -182,7 +181,6 @@ xmbuf_unmap_folio(
- 
- 	folio_put(kmem_to_folio(bp->b_addr));
- 	bp->b_addr = NULL;
--	bp->b_bvec_count = 0;
- }
- 
- /* Is this a valid daddr within the buftarg? */
+It's my first time reading fstests code, so I cannot give any feedback 
+that would be of a lot of value. Having that said, nothing jumped at me :)
+
+-- 
+Cheers,
+
+David / dhildenb
+
