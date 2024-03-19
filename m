@@ -1,67 +1,67 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-oa1-f42.google.com (mail-oa1-f42.google.com [209.85.160.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AE3363
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 00:29:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0A75363
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 00:44:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710808148; cv=none; b=U5cEH3zRy98gKLVQWuntsE+BZuqsuML9GoEv5MvZnDDhfJs3WcfJetnhoKAx8EgQsfcwdahVSNn2OM/jwwt//948aAhhw058zMaEcicwJdltEKzCaAp/v690eqeQWM2kMapmWjIDFrA5WlCW0GX7k5poEVMoOvub8bCsBCeEOY0=
+	t=1710809059; cv=none; b=MGL2Pc38/+2Ii++A4Y9KRieHedh+ByPCwwWGSfXFLMQsBvieBZIqMfZi64hU0XkDrgxdwM7Hha3ZAn8Z1+L30302WeiacmYtR4v4t2ID6EEbiBRb9D7vWOig04L3F9stS1tF+kVn0r0C5ZZNP1mzzKLjTgLneWq2IdQLUF2pnvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710808148; c=relaxed/simple;
-	bh=InG8Nbdpg6MYsdFrvNxXhxO/Vepg2V6Ep1OugZrMS3o=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=BpKYEacghfSj8qmw4tFRDQNd0IX/z4LaDkSkBl5q79KYTPvRLc8NI1g4rr+2zyn6gXAzd3nzlGG9uTqkJtsYjN16Am3UOYSRDBOQ7eMhk0ddyyIiDkJ4PLaWWbSvC3T9jt+KBRQIzYHM1O6GzMqcja+Rg1T0gOqDQ3QB79k5QEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Glw/3K9p; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1710809059; c=relaxed/simple;
+	bh=O1NDlqU7Ijl8RaWenY4D0+WfGdeMHVfR1IARPmlhim0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=a1Cik/JTlROL+2esnagpMvwZaio4Jmhj96Q/hy8XXsMNAQYnNJoWIexTUkiv3Hgh9CGXLYpJeanUKSmYXdNH5rw5FjzM98KeNfGl9M4yp4ksjNOibagPT3nCLpbel2S9WyaAZeD7KTkA6NbQZh9IgVPrjMB25jSpjfC0HoRcLRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KKNPwyzA; arc=none smtp.client-ip=209.85.160.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Glw/3K9p"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1dde26f7e1dso35189275ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 17:29:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KKNPwyzA"
+Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-221a2d0c5dcso3052379fac.0
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 17:44:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710808146; x=1711412946; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=aHMQrff8B8ROTcTnp7qRliKDke174PskVR5LmOMArlQ=;
-        b=Glw/3K9ptid4OFLHYdmu7PTzC+5hTJMqnz+wCfqciQt16JYSdfINTfF3WrQxe/pTG7
-         Np/lEj/kzbiQioNh9F3/KcdC8YCC49eR6TNZ0F0zitCcC32B+0qCtiy+Acwcp+DZ0i0S
-         I7wNplyAFdSkawjdUYbwKUCMWu3sF35YbfyC4vTB79wlvoyqdtJutw0oCCA9m9ba3D7V
-         ZD0exa+y/3HWSpfBvc/GnwTGE2KDybRUXkIW53EwxL5Cohkws4XZacuTI/0mnr1ywdC8
-         vQzK2w0iSD8aUYcL7P4hElWqWbumiEGcO8e6HdxOcUISlpdImQEGtuOSxxDOIRTF5LAC
-         Jt5A==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710809057; x=1711413857; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=GzOLPrVeb2mRWMtbmDyKdRXI7t1VxL0u9LQEOwyvqVs=;
+        b=KKNPwyzAIjl5nkP8i4s+ZhK9lzORP1bBFsP2vO67wxas8NIqNvVvmyI4YIrAO/pv+6
+         ac1ZhvlvrLZz19IyTFiJKV0zGmHpaaI08y2zPuzCKWiESn8X9KaFkcuq6ifS8HvQGcyV
+         PfbOREeqQN6vIDOmvRa4hua00R9uxoYLRsbmHitMkGvFP3vNyXPpGcbvAJS+Qq+5GDaw
+         pQwwNNg3+NXTUjLmloaVBr2JCHzIMuLsMuZET/lA36GSrQgETNGZlLgmG/AkdI8BqQ//
+         w9ZUEWglEX34tM18TVKY3f/gXB8Aiwy/RZjxefkS4PPRlaX/sjKTchKmaMZ/GxFLJ4Fd
+         ALFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710808146; x=1711412946;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=aHMQrff8B8ROTcTnp7qRliKDke174PskVR5LmOMArlQ=;
-        b=rJ0igduxJO2ePZZWHyq834yM/5fGYhZKaz6HLwCb4CHokkv2B1kTd1duQZq3bbaRqe
-         yqzGEBIE1HaQNkDbtq7Q2HKJOxqHzLKzNK1ndBkc1jkxzM1A5G9rhY73rlr5JkbKg1I4
-         t3n12TEOCLGSJvoN2VBzGr5/jElOxc+aOxXV9seH7mO8Ev4oGWNtjWID8Ynp3oUvfqBF
-         wc23RPfKWoE/fljpvPtqOsfj6dcZUzIxflrIk3lpewF6mjh8K0KM8PUcpmMwZIebn3pC
-         X+jSZJ/JkGQd0WBnUvW08/aJlLTGVJd8jv8YeguZ9WUe59P+TB8FD9x3Ts/Bzvzcwxgb
-         kzlQ==
-X-Gm-Message-State: AOJu0YzSkKMI07Wvs6iigCd2QGgl4vGr9KwQ0t/1MIKLdQ1xbgmgS8hh
-	w0cYeVVOpYTjPwo7U937HME6EiQBvdKPEdSW7Xn+TfOmR6AmsZg3gI9CtpTH+mttyKol4J/ciO9
-	P
-X-Google-Smtp-Source: AGHT+IEjL91dw4l9UJrswDSydUSZtdFT+RuqvQ6/iZzZfHEIi+KL73l0EqZjGGOtmcNw7iaw5+MSEA==
-X-Received: by 2002:a17:902:c109:b0:1d7:4353:aba5 with SMTP id 9-20020a170902c10900b001d74353aba5mr11166488pli.58.1710808145764;
-        Mon, 18 Mar 2024 17:29:05 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1710809057; x=1711413857;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GzOLPrVeb2mRWMtbmDyKdRXI7t1VxL0u9LQEOwyvqVs=;
+        b=UPz9XETL1jXLyPILCIIW2rptZAgqJ5F8oyOCAgoUUH09s0ajsnrd3eOq0ypGg0Za7S
+         4myfEr8370bJUTddmpoo9U9rIymWV7ZScM/L9TMgSPic0u8RKWIQ/8C9H36IZgAcULLL
+         6Q+/fD0fIOLD/0HDaig5yEBOKtCm5BjoUtEEzsAyg+QJ/ssJsgX1xnF1Mc9Io67SZzS1
+         1AtVFuN1WNzpSfIWj6GaPCFmbJMfhmGR6m3SXL0+HRYyE37DiD3Nsixu0IWbbpeGWdzC
+         kG/C8x6oJyv/ck8ODvYPQVFSUe0MN5C0TXg6TZe7H4qeF1gWZ6j3pZmZenzQw332GIl5
+         D/yg==
+X-Gm-Message-State: AOJu0YwUbKL4QRpt4TfL3k4DksU0d3YBGF0h3vlRv6KKCfmXxYdr79NK
+	opdd/eomDGaP0v4F/d1iOfCmndwm1C68L9cMMuol95DqVe0bbze3REUJHTyU8Fk=
+X-Google-Smtp-Source: AGHT+IFP7HC7tILcd3qIuEJi507i+Yc/2izYu7Oyajb8Gp4RRLQ6z56eaLw+pqDXuj1mlEOa04kERQ==
+X-Received: by 2002:a05:6870:220c:b0:227:139b:954d with SMTP id i12-20020a056870220c00b00227139b954dmr5735767oaf.31.1710809056763;
+        Mon, 18 Mar 2024 17:44:16 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-185-123.pa.nsw.optusnet.com.au. [49.180.185.123])
-        by smtp.gmail.com with ESMTPSA id j18-20020a170902c3d200b001ddce57bdbfsm9927381plj.308.2024.03.18.17.29.05
-        for <linux-xfs@vger.kernel.org>
+        by smtp.gmail.com with ESMTPSA id lb3-20020a056a004f0300b006e664031f10sm8613552pfb.51.2024.03.18.17.44.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Mar 2024 17:29:05 -0700 (PDT)
+        Mon, 18 Mar 2024 17:44:16 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rmNLj-003q8W-0B
-	for linux-xfs@vger.kernel.org;
-	Tue, 19 Mar 2024 11:29:03 +1100
-Date: Tue, 19 Mar 2024 11:29:03 +1100
+	id 1rmNaP-003qJ8-2j;
+	Tue, 19 Mar 2024 11:44:13 +1100
+Date: Tue, 19 Mar 2024 11:44:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: linux-xfs@vger.kernel.org
-Subject: [PATCH v2] xfs: allow sunit mount option to repair bad primary sb
- stripe values
-Message-ID: <ZfjcTxZEYl5Mzg9O@dread.disaster.area>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 0/9] xfs: use large folios for buffers
+Message-ID: <Zfjf3TBzCZSUIQc6@dread.disaster.area>
+References: <20240318224715.3367463-1-david@fromorbit.com>
+ <ZfjbKh1Yifn7Ok8x@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,172 +70,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <ZfjbKh1Yifn7Ok8x@infradead.org>
 
+On Mon, Mar 18, 2024 at 05:24:10PM -0700, Christoph Hellwig wrote:
+> On Tue, Mar 19, 2024 at 09:45:51AM +1100, Dave Chinner wrote:
+> > Apart from those small complexities that are resolved by the end of
+> > the patchset, the conversion and enhancement is relatively straight
+> > forward.  It passes fstests on both 512 and 4096 byte sector size
+> > storage (512 byte sectors exercise the XBF_KMEM path which has
+> > non-zero bp->b_offset values) and doesn't appear to cause any
+> > problems with large 64kB directory buffers on 4kB page machines.
+> 
+> Just curious, do you have any benchmark numbers to see if this actually
+> improves performance?
 
-From: Dave Chinner <dchinner@redhat.com>
+I have run some fsmark scalability tests on 64kb directory block
+sizes to check that nothing fails and the numbers are in the
+expected ballpark, but I haven't done any specific back to back
+performance regression testing.
 
-If a filesystem has a busted stripe alignment configuration on disk
-(e.g. because broken RAID firmware told mkfs that swidth was smaller
-than sunit), then the filesystem will refuse to mount due to the
-stripe validation failing. This failure is triggering during distro
-upgrades from old kernels lacking this check to newer kernels with
-this check, and currently the only way to fix it is with offline
-xfs_db surgery.
+The reason for that is two-fold:
 
-This runtime validity checking occurs when we read the superblock
-for the first time and causes the mount to fail immediately. This
-prevents the rewrite of stripe unit/width via
-mount options that occurs later in the mount process. Hence there is
-no way to recover this situation without resorting to offline xfs_db
-rewrite of the values.
+1. scalability on 64kb directory buffer workloads is limited by
+buffer lock latency and journal size. i.e. even a 2GB journal is
+too small for high concurrency and results in significant amounts of
+tail pushing and the directory modifications getting stuck on
+writeback of directory buffers from tail-pushing.
 
-However, we parse the mount options long before we read the
-superblock, and we know if the mount has been asked to re-write the
-stripe alignment configuration when we are reading the superblock
-and verifying it for the first time. Hence we can conditionally
-ignore stripe verification failures if the mount options specified
-will correct the issue.
+2. relogging 64kB directory blocks is -expensive-. Comapred to a 4kB
+block size, the large directory block sizes are relogged much more
+frequently and the memcpy() in each relogging costs *much* more than
+relogging a 4kB directory block. It also hits xlog_kvmalloc() really
+hard, and that's now where we hit vmalloc scalalbility
+issues on large dir block size workloads.
 
-We validate that the new stripe unit/width are valid before we
-overwrite the superblock values, so we can ignore the invalid config
-at verification and fail the mount later if the new values are not
-valid. This, at least, gives users the chance of correcting the
-issue after a kernel upgrade without having to resort to xfs-db
-hacks.
+The result of these things is that there hasn't been any significant
+change in performance one way or the other - what we gain in buffer
+access efficiency, we give back in increased lock contention and
+tail pushing latency issues...
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-Version 2:
-- reworded comment desribing xfs_validate_stripe_geometry() return
-  value.
-- renamed @primary_sb to @may_repair to indicate that the caller may
-  be able to fix any inconsistency that is found, rather than
-  indicate that this is being called to validate the primary
-  superblock during mount.
-- don't need 'extern' for prototypes in headers.
-
- fs/xfs/libxfs/xfs_sb.c | 40 +++++++++++++++++++++++++++++++---------
- fs/xfs/libxfs/xfs_sb.h |  5 +++--
- 2 files changed, 34 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index d991eec05436..73a4b895de67 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -530,7 +530,8 @@ xfs_validate_sb_common(
- 	}
- 
- 	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
--			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
-+			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
-+			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
- 		return -EFSCORRUPTED;
- 
- 	/*
-@@ -1323,8 +1324,10 @@ xfs_sb_get_secondary(
- }
- 
- /*
-- * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
-- * so users won't be confused by values in error messages.
-+ * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
-+ * won't be confused by values in error messages.  This function returns false
-+ * if the stripe geometry is invalid and the caller is unable to repair the
-+ * stripe configuration later in the mount process.
-  */
- bool
- xfs_validate_stripe_geometry(
-@@ -1332,20 +1335,21 @@ xfs_validate_stripe_geometry(
- 	__s64			sunit,
- 	__s64			swidth,
- 	int			sectorsize,
-+	bool			may_repair,
- 	bool			silent)
- {
- 	if (swidth > INT_MAX) {
- 		if (!silent)
- 			xfs_notice(mp,
- "stripe width (%lld) is too large", swidth);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit > swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sectorsize && (int)sunit % sectorsize) {
-@@ -1353,21 +1357,21 @@ xfs_validate_stripe_geometry(
- 			xfs_notice(mp,
- "stripe unit (%lld) must be a multiple of the sector size (%d)",
- 				   sunit, sectorsize);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit && !swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "invalid stripe unit (%lld) and stripe width of 0", sunit);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (!sunit && swidth) {
- 		if (!silent)
- 			xfs_notice(mp,
- "invalid stripe width (%lld) and stripe unit of 0", swidth);
--		return false;
-+		goto check_override;
- 	}
- 
- 	if (sunit && (int)swidth % (int)sunit) {
-@@ -1375,9 +1379,27 @@ xfs_validate_stripe_geometry(
- 			xfs_notice(mp,
- "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
- 				   swidth, sunit);
--		return false;
-+		goto check_override;
- 	}
- 	return true;
-+
-+check_override:
-+	if (!may_repair)
-+		return false;
-+	/*
-+	 * During mount, mp->m_dalign will not be set unless the sunit mount
-+	 * option was set. If it was set, ignore the bad stripe alignment values
-+	 * and allow the validation and overwrite later in the mount process to
-+	 * attempt to overwrite the bad stripe alignment values with the values
-+	 * supplied by mount options.
-+	 */
-+	if (!mp->m_dalign)
-+		return false;
-+	if (!silent)
-+		xfs_notice(mp,
-+"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
-+			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
-+	return true;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index 2e8e8d63d4eb..37b1ed1bc209 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
- 				struct xfs_trans *tp, xfs_agnumber_t agno,
- 				struct xfs_buf **bpp);
- 
--extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
--		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
-+bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
-+		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
-+		bool silent);
- 
- uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
- 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
