@@ -1,43 +1,41 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9412C5A0F4
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 21:33:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 938FA3FE2A
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 21:38:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710884014; cv=none; b=lLaz0R9rjcPTR64X5oFbpzVqTv+4CIf0jan+e4XOSsaOVuY733fvdKWiTHfqtWhZVjFFyhZ+7Au4h2/KyX1PA0Of990pVWPVLfNPu4dnH7vsXVA8ipE6jp2EKvxfyAismykJ2ddNp6bNRJ0YwmBG/77m0wJGFJ2ChIzoEWD1PEo=
+	t=1710884308; cv=none; b=eXYej5L1bwW++MaR2vKoOHTz7HG+/RzZR+VIzw69SS1+TG2Dv2+XzEe5YIZzNk4iAY9+/YH+btoDOWr+yDYjhatugaToy3nDb6xvx6emwtcCTrLKfQrlZ/xxRvjTU/vktZkOxqEvYv29G7HgWd277ea7ErDF3lMJkbcpGHE15wQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710884014; c=relaxed/simple;
-	bh=gTuT+UdHLW3TIqQF2x6bjUMOrC+vv1GB4ugGJ8l43/M=;
+	s=arc-20240116; t=1710884308; c=relaxed/simple;
+	bh=J1OSX8jVDj0/t7F7HsB4hFMmTU0i1niOifkdgsu/r2U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hitkS8+5o+kwc6AeLVEjnpi5bN4nA39GGIPgu7lYAuXFtJyQIN5V360oYdj/OeBDnAQSm/yeEoI3rMQ+YYuBF0PdXbzM4Ig0ntZ2zLa4t4JOgd//xnpHW0EuJXbpDTEcbInlda5J5EUcFcWOIV4J/U0D1PcAHaTEkId+PO541IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oaollk/F; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=MB2gmJ1wu1Cx5OUuruvzbMUHyWq7peFSlHkCXkEa6vZlQpTuosRiIvLdRNa2139a6YdQgqGWF92Vw71e8F1cnF8pcs2wLw5xf6f+PCB6J2FYjkDhCyiVqH42VeAsTEqXSXPsCLjCKefo4hO51ATxslwjcmmolzKU262QBDde5ZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hd87AUt7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oaollk/F"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=1yA4EsrkaW0mUDjiIPmc0vRemzw/CSbtaSjUpXUpFGc=; b=oaollk/FUk3RqJjN0Z3I/tHlSF
-	L7U3e6P0J3h8h1bTumYsu881SFqWfzHZQ3MF2pZV9XwYhDFAX4/hm3+kBcLh2j/jsIovxYW/zwT3r
-	2th6Yc8Enb0VmfJneIqn2k5gO6Q9xXckokgsxs4iuG009rnnkyAKfhHYEdXNlkwlb+OYv52DIJ3NE
-	A7bw4MSnFKQlAPQ+f8KPI63OjeHP1+7sMG12dnARTPva0EswlsToUxChBK4Qi8CjFyTFjE9MoIFFS
-	C40Xugf9dOYxHxw2AoaEsAAQyKi5eFECPeTqrvpyUoM9GjndGdfn7cIE8LKaUIz4yh06TrJVcpFIL
-	Wg4gyK2w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rmh5R-0000000EJJA-01Sb;
-	Tue, 19 Mar 2024 21:33:33 +0000
-Date: Tue, 19 Mar 2024 14:33:32 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hd87AUt7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AEDCC433C7;
+	Tue, 19 Mar 2024 21:38:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710884308;
+	bh=J1OSX8jVDj0/t7F7HsB4hFMmTU0i1niOifkdgsu/r2U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Hd87AUt7a5n0zSUuXZGehRiaa7qzgynfvT7rO5Kzk1ErPvPJkzOePeLvGzAwgediX
+	 W00ecRFVcPYKqnSBECe4cBQrgfjenzA2sID8XJ3Zc6aLas4PenSmbaY46jCdHMhUNA
+	 Asr+QQBK1kXIJ6TvMDk23pGTUOYKovaKQ/JN1utA0NBSTdytUOqki7vsJXSP5I6jue
+	 qmFwXCx3aOjLSS8kwoib7wzTOzylm0cr9kqwBN35DBkugT8UBfzozMtPsKaogvhLnt
+	 xX7DjTTfxUnCJlLoivncYO9640rf7w3K31Lw+Ov4kKZeY4UPbJnxZWpBhIbBZRkVaK
+	 uclLLWKNBZh+g==
+Date: Tue, 19 Mar 2024 14:38:27 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/9] xfs: walk b_addr for buffer I/O
-Message-ID: <ZfoErAfpmQnk6fR-@infradead.org>
+Subject: Re: [PATCH 3/9] xfs: convert buffer cache to use high order folios
+Message-ID: <20240319213827.GQ1927156@frogsfrogsfrogs>
 References: <20240318224715.3367463-1-david@fromorbit.com>
- <20240318224715.3367463-8-david@fromorbit.com>
- <20240319174229.GT1927156@frogsfrogsfrogs>
+ <20240318224715.3367463-4-david@fromorbit.com>
+ <20240319172909.GP1927156@frogsfrogsfrogs>
+ <ZfoEVAxVyPxqzapN@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,25 +44,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319174229.GT1927156@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZfoEVAxVyPxqzapN@infradead.org>
 
-> Huh.  So ... where does b_offset come into play here?
+On Tue, Mar 19, 2024 at 02:32:04PM -0700, Christoph Hellwig wrote:
+> On Tue, Mar 19, 2024 at 10:29:09AM -0700, Darrick J. Wong wrote:
+> > So.... does that mean a 128K folio for a 68k xattr remote value buffer?
 > 
-> OH.  Since we're starting with b_addr and working our way /back/ to
-> folios, we don't need b_offset anymore since we can compute that from
-> (b_addr - folio_address()).  So then the @offset variable in
-> _xfs_buf_ioapply is really a cursor into how far into the xfs_buf we've
-> ioapply'd.
+> I though 64k was the maximum xattr size?
 
-Yes.
+64k is the maximum xattr value size, yes.  But remote xattr value blocks
+now have block headers complete with owner/uuid/magic/etc.  Each block
+can only store $blksz-56 bytes now.  Hence that 64k value needs
+ceil(65536 / 4040) == 17 blocks on a 4k fsb filesystem.
 
-> Would you mind adding a sentence to the commit message?
+(On a 64k fsb filesystem, that bloats up to 128k.)
+
+Luckily we bwrite remote blocks to disk directly, which is why we've
+never blown out the buffer log item bitmap.
+
+> > I've been noticing the 4k merkle tree blobs consume 2 fsb in the xattr
+> > tree, which isn't awesome.
 > 
-> "Instead of walking the folio array just walk the kernel virtual address
-> in ->b_addr.  This prepares for using vmalloc for buffers and removing
-> the b_folio array.  Furthermore, b_offset goes away since we can compute
-> that from b_addr and the folio."
+> Maybe that's a question for the fsverity thread, but how do we end
+> up with these weird sizes?
 
-Fine with me.
+Same reason.  Merkle tree blocks are $blksz by default, but storing a
+4096 blob in the xattrs requires ceil(4096 / 4040) == 2 blocks.  Most of
+that second block is wasted.
 
+--D
