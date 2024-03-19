@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A182825619
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 17:59:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8076B2B9D2
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:01:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710871150; cv=none; b=WH60fgKdXvd/JYGO4emQo4F3NxQMuWZ8TCdHKZhfR/r36o4M6NcIyUfvkBycVREP15fgCOOxrDv8+mdxhj0WWbp4vifUrvJ44FnmZYzBiWnx/Zgy2QBly0ZzsD1dWhN8c0guuUykIZwUbMBRQjvRGgt7T17MCujvQXtFMjA7neA=
+	t=1710871299; cv=none; b=aXncnhF3BvBBlaAkifx/u/nPNNbuvv1YPuaLc4O7yOc1FgBbk7DN5ZhnuC9JWtmEQ9y2WH+G+sVFZEgmFzWJHNYBvLNg+E7ivApqp7ICglD7U7jE/vc+rTbKUV0f1oLYDkSmAZywJT6OxLbiKTgskLj4Hk4asiExK4KbPmnoKRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710871150; c=relaxed/simple;
-	bh=J2sFucbPfukJTQcpfheec7F4TEO5pDMIfBkVakvlJK4=;
+	s=arc-20240116; t=1710871299; c=relaxed/simple;
+	bh=yirifWLVqhs31FXYons23yIW7tQJRYeYwW970vZ21Gw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ji8yTC4/lWcffBa5xJ9sx9lA6zxUO968Hx7hje+dABi1XZCCfAX1pxU9KrU4Bba4iwTGKuQUfZqc2UircFlG5k4j0shEc7PMF/84diq1WVYNQAeH5usTNyVa+eQjp7Ya/TV10Kji9zkNvHZ3EG0/Nu6wVamSrwi2gh3v83hOrs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pEBTi6gi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=S2GNUGy+JoVs2bixWTvT/ceDIryMit/taiT2kmcVToEk4HmXZfd3Z6PO/GOuicUfbaesC88z30lvRLciSll1zaiHyAEmy8mGCtvGB1FxPGS5dwMPOBGDIBdEiqCzLTW+6OpM5Z3jzO2m4lrGWr39Nif1a3ZTbAu9hO+ozrtiAwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=urEP52Vu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pEBTi6gi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31C94C433F1;
-	Tue, 19 Mar 2024 17:59:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="urEP52Vu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2679C433F1;
+	Tue, 19 Mar 2024 18:01:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710871150;
-	bh=J2sFucbPfukJTQcpfheec7F4TEO5pDMIfBkVakvlJK4=;
+	s=k20201202; t=1710871298;
+	bh=yirifWLVqhs31FXYons23yIW7tQJRYeYwW970vZ21Gw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pEBTi6gidASmnE1v8VmFLFnlVYw4tjMSTm8b4zABRBoKmngYL5YgqoZUy4V9ltneC
-	 Weo09GmpKBK063fW+9EZCz3HoAfSUeIC+C7apXW6H0puh4v2AGk61J0w09ZiEGNVRk
-	 ezgGVwcBU4KtGT20AJnUOFXLF9dG6OubbW4mPGRXU5pDQAv0SHFTD4LTmoBTTmuE7J
-	 TBwBErmsmAig6T5K21KH4O4sEvJMTk57II6AipNuIUj199EPibBcZBRKu4+jBlDOcS
-	 iAkiMTUlnv9RvgvzhKcYiQmO89NPjPjcSjnY7IDFkuEPC2chw3bORtP7/BNMRRzUX8
-	 beiPdvgV3G2Ig==
-Date: Tue, 19 Mar 2024 10:59:09 -0700
+	b=urEP52Vu/8v1v5IoWxtWB1j7AUDXdBOjpNNRPgH5dizUOSdwrab6E1xcSv4pRuilX
+	 61vIra45+vf8PRM/xrPcmm+53BI6Jg8ntMfFNWtl+gPB7zWe4G3DVLrEbE/XfSMSaD
+	 gDm7svKswBnsQAvo9+D4NzIN/zWfZeHSoV/xQJ8v1YGcTBZzYKr347aT0GgfUBMder
+	 2A3ltZ2hdxgZerBZb2bBmHliyMICuqWRRRKbf6x6/1VIETcYa0Y7Mmm3M6MCcylu4E
+	 AnZdQKqsXKxs34DpAle2T0j1CMDULkC47Yd1f77GVhJe683uDNdLPdS8Jp9Gm7gvuE
+	 mSqriZuGfJcfw==
+Date: Tue, 19 Mar 2024 11:01:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: compile out v4 support if disabled
-Message-ID: <20240319175909.GY1927156@frogsfrogsfrogs>
-References: <20240319071952.682266-1-hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: make inode inactivation state changes atomic
+Message-ID: <20240319180138.GZ1927156@frogsfrogsfrogs>
+References: <20240319001707.3430251-1-david@fromorbit.com>
+ <20240319001707.3430251-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,93 +42,106 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319071952.682266-1-hch@lst.de>
+In-Reply-To: <20240319001707.3430251-2-david@fromorbit.com>
 
-On Tue, Mar 19, 2024 at 05:19:51PM +1000, Christoph Hellwig wrote:
-> Add a strategic IS_ENABLED to let the compiler eliminate the unused
-> non-crc code is CONFIG_XFS_SUPPORT_V4 is disabled.
+On Tue, Mar 19, 2024 at 11:15:57AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This saves almost 20k worth of .text for my .config:
+> We need the XFS_NEED_INACTIVE flag to correspond to whether the
+> inode is on the inodegc queues so that we can then use this state
+> for lazy removal.
 > 
-> $ size xfs.o.*
->    text	   data	    bss	    dec	    hex	filename
-> 1351126	 294836	    592	1646554	 191fda	xfs.o.new
-> 1371453	 294868	    592	1666913	 196f61	xfs.o.old
+> To do this, move the addition of the inode to the inodegc queue
+> under the ip->i_flags_lock so that it is atomic w.r.t. setting
+> the XFS_NEED_INACTIVE flag.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_mount.h |  7 ++++++-
->  fs/xfs/xfs_super.c | 22 +++++++++++++---------
->  2 files changed, 19 insertions(+), 10 deletions(-)
+> Then, when we remove the inode from the inodegc list to actually run
+> inactivation, clear the XFS_NEED_INACTIVE at the same time we are
+> setting XFS_INACTIVATING to indicate that inactivation is in
+> progress.
 > 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index e880aa48de68bb..24fe6e7913c49f 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -327,6 +327,12 @@ static inline void xfs_add_ ## name (struct xfs_mount *mp) \
->  	xfs_sb_version_add ## name(&mp->m_sb); \
->  }
->  
-> +static inline bool xfs_has_crc(struct xfs_mount *mp)
-> +{
-> +	return IS_ENABLED(CONFIG_XFS_SUPPORT_V4) &&
-> +		(mp->m_features & XFS_FEAT_CRC);
+> These changes result in all the state changes and inodegc queuing
+> being atomic w.r.t. each other and inode lookups via the use of the
+> ip->i_flags lock.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Can you save even more text bytes by defining
-xfs_has_{nlink,v3inodes,projid32,lazysbcount,pquotino,attr2} to 1?
-And I guess defining noattr2 to 0?
+Pretty straightforward lock coverage extension,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +}
+> ---
+>  fs/xfs/xfs_icache.c | 16 ++++++++++++++--
+>  fs/xfs/xfs_inode.h  | 11 +++++++----
+>  2 files changed, 21 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 6c87b90754c4..9a362964f656 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1880,7 +1880,12 @@ xfs_inodegc_worker(
+>  	llist_for_each_entry_safe(ip, n, node, i_gclist) {
+>  		int	error;
+>  
+> -		xfs_iflags_set(ip, XFS_INACTIVATING);
+> +		/* Switch state to inactivating. */
+> +		spin_lock(&ip->i_flags_lock);
+> +		ip->i_flags |= XFS_INACTIVATING;
+> +		ip->i_flags &= ~XFS_NEED_INACTIVE;
+> +		spin_unlock(&ip->i_flags_lock);
 > +
->  /* Superblock features */
->  __XFS_ADD_FEAT(attr, ATTR)
->  __XFS_HAS_FEAT(nlink, NLINK)
-> @@ -341,7 +347,6 @@ __XFS_HAS_FEAT(lazysbcount, LAZYSBCOUNT)
->  __XFS_ADD_FEAT(attr2, ATTR2)
->  __XFS_HAS_FEAT(parent, PARENT)
->  __XFS_ADD_FEAT(projid32, PROJID32)
-> -__XFS_HAS_FEAT(crc, CRC)
->  __XFS_HAS_FEAT(v3inodes, V3INODES)
->  __XFS_HAS_FEAT(pquotino, PQUOTINO)
->  __XFS_HAS_FEAT(ftype, FTYPE)
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 6828c48b15e9bd..7d972e1179255b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1580,17 +1580,21 @@ xfs_fs_fill_super(
->  	if (error)
->  		goto out_free_sb;
+>  		error = xfs_inodegc_inactivate(ip);
+>  		if (error && !gc->error)
+>  			gc->error = error;
+> @@ -2075,9 +2080,14 @@ xfs_inodegc_queue(
+>  	unsigned long		queue_delay = 1;
 >  
-> -	/* V4 support is undergoing deprecation. */
-> -	if (!xfs_has_crc(mp)) {
-> -#ifdef CONFIG_XFS_SUPPORT_V4
+>  	trace_xfs_inode_set_need_inactive(ip);
+> +
 > +	/*
-> +	 * V4 support is undergoing deprecation.
-> +	 *
-> +	 * Note: this has to use an open coded m_features check as xfs_has_crc
-> +	 * always returns false for !CONFIG_XFS_SUPPORT_V4.
+> +	 * Put the addition of the inode to the gc list under the
+> +	 * ip->i_flags_lock so that the state change and list addition are
+> +	 * atomic w.r.t. lookup operations under the ip->i_flags_lock.
 > +	 */
-> +	if (!(mp->m_features & XFS_FEAT_CRC)) {
-> +		if (!IS_ENABLED(CONFIG_XFS_SUPPORT_V4)) {
-> +			xfs_warn(mp,
-> +	"Deprecated V4 format (crc=0) not supported by kernel.");
-> +			error = -EINVAL;
-> +			goto out_free_sb;
-> +		}
->  		xfs_warn_once(mp,
->  	"Deprecated V4 format (crc=0) will not be supported after September 2030.");
-> -#else
-> -		xfs_warn(mp,
-> -	"Deprecated V4 format (crc=0) not supported by kernel.");
-> -		error = -EINVAL;
-> -		goto out_free_sb;
-> -#endif
->  	}
+>  	spin_lock(&ip->i_flags_lock);
+>  	ip->i_flags |= XFS_NEED_INACTIVE;
+> -	spin_unlock(&ip->i_flags_lock);
 >  
->  	/* ASCII case insensitivity is undergoing deprecation. */
+>  	cpu_nr = get_cpu();
+>  	gc = this_cpu_ptr(mp->m_inodegc);
+> @@ -2086,6 +2096,8 @@ xfs_inodegc_queue(
+>  	WRITE_ONCE(gc->items, items + 1);
+>  	shrinker_hits = READ_ONCE(gc->shrinker_hits);
+>  
+> +	spin_unlock(&ip->i_flags_lock);
+> +
+>  	/*
+>  	 * Ensure the list add is always seen by anyone who finds the cpumask
+>  	 * bit set. This effectively gives the cpumask bit set operation
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 94fa79ae1591..b0943d888f5c 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -349,10 +349,13 @@ static inline bool xfs_inode_has_forcealign(struct xfs_inode *ip)
+>  
+>  /*
+>   * If we need to update on-disk metadata before this IRECLAIMABLE inode can be
+> - * freed, then NEED_INACTIVE will be set.  Once we start the updates, the
+> - * INACTIVATING bit will be set to keep iget away from this inode.  After the
+> - * inactivation completes, both flags will be cleared and the inode is a
+> - * plain old IRECLAIMABLE inode.
+> + * freed, then NEED_INACTIVE will be set. If the inode is accessed via iget
+> + * whilst NEED_INACTIVE is set, the inode will be reactivated and become a
+> + * normal inode again. Once we start the inactivation, the INACTIVATING bit will
+> + * be set and the NEED_INACTIVE bit will be cleared. The INACTIVATING bit will
+> + * keep iget away from this inode whilst inactivation is in progress.  After the
+> + * inactivation completes, INACTIVATING will be cleared and the inode
+> + * transitions to a plain old IRECLAIMABLE inode.
+>   */
+>  #define XFS_INACTIVATING	(1 << 13)
+>  
 > -- 
-> 2.39.2
+> 2.43.0
 > 
 > 
