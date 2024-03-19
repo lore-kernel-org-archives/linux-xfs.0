@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D573539FC1
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:40:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DBA39FC6
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:49:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710873602; cv=none; b=T3KtGW/m+Ra63ZBizD9tV/LKPg4szBNytbdfPc5o7vM5RSVGtmQdfk/KoxNOftx8QPYckU9gvg9BLnUSesauXyn+IngxCbclYrPP+glez7KlNCs6vnkIGWJf6LIvJlX+6zgWx8NhNAeXyqlsdKsLzn7lO8N67dmHF3VquAiIMQw=
+	t=1710874200; cv=none; b=WNGdxGm9dhYoqW0PpdBden4IBAQEYT3jAGurgKS3sNxezb8nbm59sJ2hUQNroAHEwC2FUSsj3x/D0e6xGi4XYLkhuMgTU24Y2yn1c5vm4QtiodLkkbK0AxBBAACgK58l5zmCQH0VQtKmYd94NiI6FjcY7n/LvR3NZlK0LDlsn50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710873602; c=relaxed/simple;
-	bh=E9Li3Lruqt7L60M83fSydUyLomOYR9lci6sNMHBEYIY=;
+	s=arc-20240116; t=1710874200; c=relaxed/simple;
+	bh=V1Y0V04vFhSQnt0mi7B4dNnhanHlty43UunLqUTBgv0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qhf+i1ZNB0K6BZRTQ4KAVXxrzW3pVoG87txt0Z/+7tgoEuYkoDw9RInt362r6hwDspxrlrUSR0N6LAGU9kmgRThvilg/xJBObUFUb1nF0QiBVR7yxK9cstZlRgbbczKyimjoKeB4+tZHjfJftAgCNnljV8CO7zqZ5vcZ6OGzWBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SybZ6LpQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wygm4YN4sHozZTMF1CJNkJ5oWADEzjCSb12TMlSVf7rxe8kqTSdlRchWU2UKWevXTJlEGiI7kfA2omA9xV+4MKzAI4dTXEaA2GS1vVCI7Ym5M06Ut/1zzvp6vDhnTYRXStcbUYQX4bYhhFu/oThQg2nNReo6HFkuIPTYnhYCyKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UuTSLqxF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SybZ6LpQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 612D5C433C7;
-	Tue, 19 Mar 2024 18:40:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UuTSLqxF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BD26C433C7;
+	Tue, 19 Mar 2024 18:49:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710873602;
-	bh=E9Li3Lruqt7L60M83fSydUyLomOYR9lci6sNMHBEYIY=;
+	s=k20201202; t=1710874199;
+	bh=V1Y0V04vFhSQnt0mi7B4dNnhanHlty43UunLqUTBgv0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SybZ6LpQEbux67OJuDShVa+Pr6O5AxzgZadFpLh52dOvRZq+cT1ROBHTdj1mi6T2M
-	 OtaxhGGZdzCYDfWwh55OfHnwWk4B5qUxWTPMikAJlQao6DEy87rZzDY/K3Yn9mYpb9
-	 7cWTb1ppIqRiA6HCLzbbL9ZwoeAiYT2fzLGzkSSRsVdzGXA3HspQJiHbIgVDC+J3zZ
-	 mrXspTzLvNwWkC74gUxtdZQYCzsa2OBC6yLmJWUJ3fSfCTMKY1drZPtGZ5k4eIhxkY
-	 QE98xmAu9ilcBuVweBZPQ8srjwwuGEcBdJiZ33TflbglkC7LYfBOg8hMaZR8msiCCk
-	 JRTAgB72o3mfA==
-Date: Tue, 19 Mar 2024 11:40:01 -0700
+	b=UuTSLqxF6GVuAByjAzpyvAb0Rnfx03cIU8rcrosSr7B//ItDBTxUha91G+H9tVYxF
+	 csobMD9SdZkmOoApKqagBe0BTyt3zNV0Qx3HJUqG/9/JaB+28sP0jwtzwhTL1SqkVA
+	 l5CCUywyomJlKeedTnnqHGZ1NPHF9E2Eix4V3cUj4o/YKRt/itOZw2ckQskE9pnqGg
+	 leLIjc4B9XgSJhT1MdRessaD/GZj0AxWqgT13c7WZYPtKwJ5U/5efttXAHou+HiX+l
+	 miiuLN/oRO6wm+3HgiuMAnQBO8UtMVhXF2Z5cmMJdlaY75x1KZBtY10hOBUra/KJsQ
+	 uefJ8h1aoDujw==
+Date: Tue, 19 Mar 2024 11:49:58 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: separate out inode buffer recovery a bit more
-Message-ID: <20240319184001.GC1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/5] xfs: recover dquot buffers unconditionally
+Message-ID: <20240319184958.GD1927156@frogsfrogsfrogs>
 References: <20240319021547.3483050-1-david@fromorbit.com>
- <20240319021547.3483050-3-david@fromorbit.com>
+ <20240319021547.3483050-4-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,151 +42,213 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319021547.3483050-3-david@fromorbit.com>
+In-Reply-To: <20240319021547.3483050-4-david@fromorbit.com>
 
-On Tue, Mar 19, 2024 at 01:15:21PM +1100, Dave Chinner wrote:
+On Tue, Mar 19, 2024 at 01:15:22PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> It really is a unique snowflake, so peal off from normal buffer
-> recovery earlier and shuffle all the unique bits into the inode
-> buffer recovery function.
-> 
-> Also, it looks like the handling of mismatched inode cluster buffer
-> sizes is wrong - we have to write the recovered buffer -before- we
-> mark it stale as we're not supposed to write stale buffers. I don't
-> think we check that anywhere in the buffer IO path, but lets do it
-> the right way anyway.
+> Dquot buffers are only logged when the dquot cluster is allocated.
+> Recovery of them is always done and not conditional on an LSN found
+> in the buffer because there aren't dquots stamped in the buffer when
+> the initialisation is replayed after allocation.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good to me,
+Looks sane,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf_item_recover.c | 99 ++++++++++++++++++++++-------------
->  1 file changed, 63 insertions(+), 36 deletions(-)
+>  fs/xfs/libxfs/xfs_log_format.h |   6 ++
+>  fs/xfs/xfs_buf_item_recover.c  | 129 +++++++++++++++++----------------
+>  2 files changed, 72 insertions(+), 63 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 16872972e1e9..5ac0c3066930 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -508,6 +508,9 @@ struct xfs_log_dinode {
+>  #define XFS_BLF_PDQUOT_BUF	(1<<3)
+>  #define	XFS_BLF_GDQUOT_BUF	(1<<4)
+>  
+> +#define XFS_BLF_DQUOT_BUF	\
+> +	(XFS_BLF_UDQUOT_BUF | XFS_BLF_PDQUOT_BUF | XFS_BLF_GDQUOT_BUF)
+> +
+>  /*
+>   * This is the structure used to lay out a buf log item in the log.  The data
+>   * map describes which 128 byte chunks of the buffer have been logged.
+> @@ -571,6 +574,9 @@ enum xfs_blft {
+>  	XFS_BLFT_MAX_BUF = (1 << XFS_BLFT_BITS),
+>  };
+>  
+> +#define XFS_BLFT_DQUOT_BUF	\
+> +	(XFS_BLFT_UDQUOT_BUF | XFS_BLFT_PDQUOT_BUF | XFS_BLFT_GDQUOT_BUF)
+> +
+>  static inline void
+>  xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
+>  {
 > diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index dba57ee6fa6d..f994a303ad0a 100644
+> index f994a303ad0a..90740fcf2fbe 100644
 > --- a/fs/xfs/xfs_buf_item_recover.c
 > +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -229,7 +229,7 @@ xlog_recover_validate_buf_type(
->  	 * just avoid the verification stage for non-crc filesystems
->  	 */
->  	if (!xfs_has_crc(mp))
-> -		return;
-> +		return 0;
+> @@ -450,8 +450,6 @@ xlog_recover_do_reg_buffer(
+>  	int			i;
+>  	int			bit;
+>  	int			nbits;
+> -	xfs_failaddr_t		fa;
+> -	const size_t		size_disk_dquot = sizeof(struct xfs_disk_dquot);
 >  
->  	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
->  	magic16 = be16_to_cpu(*(__be16*)bp->b_addr);
-> @@ -407,7 +407,7 @@ xlog_recover_validate_buf_type(
->  	 * skipped.
->  	 */
->  	if (current_lsn == NULLCOMMITLSN)
-> -		return 0;;
-> +		return 0;
+>  	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
 >  
->  	if (warnmsg) {
->  		xfs_warn(mp, warnmsg);
-> @@ -567,18 +567,22 @@ xlog_recover_this_dquot_buffer(
+> @@ -481,39 +479,10 @@ xlog_recover_do_reg_buffer(
+>  		if (item->ri_buf[i].i_len < (nbits << XFS_BLF_SHIFT))
+>  			nbits = item->ri_buf[i].i_len >> XFS_BLF_SHIFT;
+>  
+> -		/*
+> -		 * Do a sanity check if this is a dquot buffer. Just checking
+> -		 * the first dquot in the buffer should do. XXXThis is
+> -		 * probably a good thing to do for other buf types also.
+> -		 */
+> -		fa = NULL;
+> -		if (buf_f->blf_flags &
+> -		   (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+> -			if (item->ri_buf[i].i_addr == NULL) {
+> -				xfs_alert(mp,
+> -					"XFS: NULL dquot in %s.", __func__);
+> -				goto next;
+> -			}
+> -			if (item->ri_buf[i].i_len < size_disk_dquot) {
+> -				xfs_alert(mp,
+> -					"XFS: dquot too small (%d) in %s.",
+> -					item->ri_buf[i].i_len, __func__);
+> -				goto next;
+> -			}
+> -			fa = xfs_dquot_verify(mp, item->ri_buf[i].i_addr, -1);
+> -			if (fa) {
+> -				xfs_alert(mp,
+> -	"dquot corrupt at %pS trying to replay into block 0x%llx",
+> -					fa, xfs_buf_daddr(bp));
+> -				goto next;
+> -			}
+> -		}
+> -
+>  		memcpy(xfs_buf_offset(bp,
+>  			(uint)bit << XFS_BLF_SHIFT),	/* dest */
+>  			item->ri_buf[i].i_addr,		/* source */
+>  			nbits<<XFS_BLF_SHIFT);		/* length */
+> - next:
+>  		i++;
+>  		bit += nbits;
+>  	}
+> @@ -566,6 +535,56 @@ xlog_recover_this_dquot_buffer(
+>  	return true;
 >  }
 >  
->  /*
-> - * Perform recovery for a buffer full of inodes.  In these buffers, the only
-> - * data which should be recovered is that which corresponds to the
-> - * di_next_unlinked pointers in the on disk inode structures.  The rest of the
-> - * data for the inodes is always logged through the inodes themselves rather
-> - * than the inode buffer and is recovered in xlog_recover_inode_pass2().
-> + * Perform recovery for a buffer full of inodes. We don't have inode cluster
-> + * buffer specific LSNs, so we always recover inode buffers if they contain
-> + * inodes.
-> + *
-> + * In these buffers, the only inode data which should be recovered is that which
-> + * corresponds to the di_next_unlinked pointers in the on disk inode structures.
-> + * The rest of the data for the inodes is always logged through the inodes
-> + * themselves rather than the inode buffer and is recovered in
-> + * xlog_recover_inode_pass2().
->   *
->   * The only time when buffers full of inodes are fully recovered is when the
-> - * buffer is full of newly allocated inodes.  In this case the buffer will
-> - * not be marked as an inode buffer and so will be sent to
-> - * xlog_recover_do_reg_buffer() below during recovery.
-> + * buffer is full of newly allocated inodes.  In this case the buffer will not
-> + * be marked as an inode buffer and so xlog_recover_do_reg_buffer() will be used
-> + * instead.
->   */
-> -STATIC int
+> +/*
+> + * Do a sanity check of each region in the item to ensure we are actually
+> + * recovering a dquot buffer item.
+> + */
 > +static int
->  xlog_recover_do_inode_buffer(
->  	struct xfs_mount		*mp,
->  	struct xlog_recover_item	*item,
-> @@ -598,6 +602,13 @@ xlog_recover_do_inode_buffer(
->  
->  	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
->  
-> +	/*
-> +	 * If the magic number doesn't match, something has gone wrong. Don't
-> +	 * recover the buffer.
-> +	 */
-> +	if (cpu_to_be16(XFS_DINODE_MAGIC) != *((__be16 *)bp->b_addr))
-> +		return -EFSCORRUPTED;
+> +xlog_recover_verify_dquot_buf_item(
+> +	struct xfs_mount		*mp,
+> +	struct xlog_recover_item	*item,
+> +	struct xfs_buf			*bp,
+> +	struct xfs_buf_log_format	*buf_f)
+> +{
+> +	xfs_failaddr_t			fa;
+> +	int				i;
 > +
->  	/*
->  	 * Post recovery validation only works properly on CRC enabled
->  	 * filesystems.
-> @@ -677,6 +688,31 @@ xlog_recover_do_inode_buffer(
->  
+> +	switch (xfs_blft_from_flags(buf_f)) {
+> +	case XFS_BLFT_UDQUOT_BUF:
+> +	case XFS_BLFT_PDQUOT_BUF:
+> +	case XFS_BLFT_GDQUOT_BUF:
+> +		break;
+> +	default:
+> +		xfs_alert(mp,
+> +			"XFS: dquot buffer log format type mismatch in %s.",
+> +			__func__);
+> +		xfs_buf_corruption_error(bp, __this_address);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+> +	for (i = 1; i < item->ri_total; i++) {
+> +		if (item->ri_buf[i].i_addr == NULL) {
+> +			xfs_alert(mp,
+> +				"XFS: NULL dquot in %s.", __func__);
+> +			return -EFSCORRUPTED;
+> +		}
+> +		if (item->ri_buf[i].i_len < sizeof(struct xfs_disk_dquot)) {
+> +			xfs_alert(mp,
+> +				"XFS: dquot too small (%d) in %s.",
+> +				item->ri_buf[i].i_len, __func__);
+> +			return -EFSCORRUPTED;
+> +		}
+> +		fa = xfs_dquot_verify(mp, item->ri_buf[i].i_addr, -1);
+> +		if (fa) {
+> +			xfs_alert(mp,
+> +"dquot corrupt at %pS trying to replay into block 0x%llx",
+> +				fa, xfs_buf_daddr(bp));
+> +			return -EFSCORRUPTED;
+> +		}
+> +	}
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Perform recovery for a buffer full of inodes. We don't have inode cluster
+>   * buffer specific LSNs, so we always recover inode buffers if they contain
+> @@ -743,7 +762,6 @@ xlog_recover_get_buf_lsn(
+>  	struct xfs_buf_log_format *buf_f)
+>  {
+>  	uint32_t		magic32;
+> -	uint16_t		magic16;
+>  	uint16_t		magicda;
+>  	void			*blk = bp->b_addr;
+>  	uuid_t			*uuid;
+> @@ -862,27 +880,7 @@ xlog_recover_get_buf_lsn(
+>  		return lsn;
 >  	}
 >  
-> +	/*
-> +	 * Make sure that only inode buffers with good sizes remain valid after
-> +	 * recovering this buffer item.
-> +	 *
-> +	 * The kernel moves inodes in buffers of 1 block or inode_cluster_size
-> +	 * bytes, whichever is bigger.  The inode buffers in the log can be a
-> +	 * different size if the log was generated by an older kernel using
-> +	 * unclustered inode buffers or a newer kernel running with a different
-> +	 * inode cluster size.  Regardless, if the inode buffer size isn't
-> +	 * max(blocksize, inode_cluster_size) for *our* value of
-> +	 * inode_cluster_size, then we need to keep the buffer out of the buffer
-> +	 * cache so that the buffer won't overlap with future reads of those
-> +	 * inodes.
-> +	 *
-> +	 * To acheive this, we write the buffer ito recover the inodes then mark
-> +	 * it stale so that it won't be found on overlapping buffer lookups and
-> +	 * caller knows not to queue it for delayed write.
-> +	 */
-> +	if (BBTOB(bp->b_length) != M_IGEO(mp)->inode_cluster_size) {
-> +		int error;
+> -	/*
+> -	 * We do individual object checks on dquot and inode buffers as they
+> -	 * have their own individual LSN records. Also, we could have a stale
+> -	 * buffer here, so we have to at least recognise these buffer types.
+> -	 *
+> -	 * A notd complexity here is inode unlinked list processing - it logs
+> -	 * the inode directly in the buffer, but we don't know which inodes have
+> -	 * been modified, and there is no global buffer LSN. Hence we need to
+> -	 * recover all inode buffer types immediately. This problem will be
+> -	 * fixed by logical logging of the unlinked list modifications.
+> -	 */
+> -	magic16 = be16_to_cpu(*(__be16 *)blk);
+> -	switch (magic16) {
+> -	case XFS_DQUOT_MAGIC:
+> -		goto recover_immediately;
+> -	default:
+> -		break;
+> -	}
+> -
+>  	/* unknown buffer contents, recover immediately */
+> -
+>  recover_immediately:
+>  	return (xfs_lsn_t)-1;
+>  
+> @@ -956,6 +954,21 @@ xlog_recover_buf_commit_pass2(
+>  		goto out_write;
+>  	}
+>  
+> +	if (buf_f->blf_flags & XFS_BLF_DQUOT_BUF) {
+> +		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
+> +			goto out_release;
 > +
-> +		error = xfs_bwrite(bp);
-> +		xfs_buf_stale(bp);
-> +		return error;
-> +	}
->  	return 0;
->  }
->  
-> @@ -840,7 +876,6 @@ xlog_recover_get_buf_lsn(
->  	magic16 = be16_to_cpu(*(__be16 *)blk);
->  	switch (magic16) {
->  	case XFS_DQUOT_MAGIC:
-> -	case XFS_DINODE_MAGIC:
->  		goto recover_immediately;
->  	default:
->  		break;
-> @@ -910,6 +945,17 @@ xlog_recover_buf_commit_pass2(
->  	if (error)
->  		return error;
->  
-> +	/*
-> +	 * Inode buffer recovery is quite unique, so go out separate ways here
-> +	 * to simplify the rest of the code.
-> +	 */
-> +	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
-> +		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
-> +		if (error || (bp->b_flags & XBF_STALE))
+> +		error = xlog_recover_verify_dquot_buf_item(mp, item, bp, buf_f);
+> +		if (error)
+> +			goto out_release;
+> +
+> +		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> +				NULLCOMMITLSN);
+> +		if (error)
 > +			goto out_release;
 > +		goto out_write;
 > +	}
@@ -194,50 +256,25 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 >  	/*
 >  	 * Recover the buffer only if we get an LSN from it and it's less than
 >  	 * the lsn of the transaction we are replaying.
-> @@ -946,9 +992,7 @@ xlog_recover_buf_commit_pass2(
+> @@ -992,17 +1005,7 @@ xlog_recover_buf_commit_pass2(
 >  		goto out_release;
 >  	}
 >  
-> -	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
-> -		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
-> -	} else if (buf_f->blf_flags &
-> +	if (buf_f->blf_flags &
->  		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
->  		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
->  			goto out_release;
-> @@ -965,28 +1009,11 @@ xlog_recover_buf_commit_pass2(
->  	/*
->  	 * Perform delayed write on the buffer.  Asynchronous writes will be
->  	 * slower when taking into account all the buffers to be flushed.
-> -	 *
-> -	 * Also make sure that only inode buffers with good sizes stay in
-> -	 * the buffer cache.  The kernel moves inodes in buffers of 1 block
-> -	 * or inode_cluster_size bytes, whichever is bigger.  The inode
-> -	 * buffers in the log can be a different size if the log was generated
-> -	 * by an older kernel using unclustered inode buffers or a newer kernel
-> -	 * running with a different inode cluster size.  Regardless, if
-> -	 * the inode buffer size isn't max(blocksize, inode_cluster_size)
-> -	 * for *our* value of inode_cluster_size, then we need to keep
-> -	 * the buffer out of the buffer cache so that the buffer won't
-> -	 * overlap with future reads of those inodes.
->  	 */
-> -	if (XFS_DINODE_MAGIC ==
-> -	    be16_to_cpu(*((__be16 *)xfs_buf_offset(bp, 0))) &&
-> -	    (BBTOB(bp->b_length) != M_IGEO(log->l_mp)->inode_cluster_size)) {
-> -		xfs_buf_stale(bp);
-> -		error = xfs_bwrite(bp);
+> -	if (buf_f->blf_flags &
+> -		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+> -		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
+> -			goto out_release;
+> -
+> -		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> -				NULLCOMMITLSN);
 > -	} else {
-> -		ASSERT(bp->b_mount == mp);
-> -		bp->b_flags |= _XBF_LOGRECOVERY;
-> -		xfs_buf_delwri_queue(bp, buffer_list);
+> -		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> -				current_lsn);
 > -	}
-> +out_write:
-> +	ASSERT(bp->b_mount == mp);
-> +	bp->b_flags |= _XBF_LOGRECOVERY;
-> +	xfs_buf_delwri_queue(bp, buffer_list);
+> +	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+>  	if (error)
+>  		goto out_release;
 >  
->  out_release:
->  	xfs_buf_relse(bp);
 > -- 
 > 2.43.0
 > 
