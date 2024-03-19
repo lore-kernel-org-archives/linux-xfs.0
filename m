@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E747E3CF4F
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 20:39:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2536B3BB38
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 20:40:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710880767; cv=none; b=dGT6B10IPFDm3FKu6+QuL/8IcCcLzvPEWAq+xZwdBJ7GtDU+Mn5zT8REq9FxN5McEkqjEG08aRjehEEE3w0y+/auRFv1NijhKpkbe04sl9cRcXwpxIZPU/wnXHGAtn4XEqLQAWWjomaJUuWww1Gxho7QW2CBHxmT/VIP1XxrnEk=
+	t=1710880822; cv=none; b=iCXd/vh0EUky/F9PqbtLCMlDuTgcW7lEmNKU0hIyalsuNHiUG4d+w1nQyMwWl61ndGXlzHFEBVx1SY/KRkOtEixgKibVvPAD2URWH8m5GzuymohHseSpFXjQhJZ4wreY1rG2pyaJ5AC14avZ0IZn76514G96WIb2wBqc1RJokjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710880767; c=relaxed/simple;
-	bh=U7kGLFTKyHWvTihyS/3ta1qqIRdbs1QUY8QSlm50om8=;
+	s=arc-20240116; t=1710880822; c=relaxed/simple;
+	bh=uSOBVAJtCRO9CPosgJAx9Q2dVBm3UG3FwOtVyXp+9VA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=La5HvWsoPYZO3WNGVdtVGSrH2rXF0GtgJ23nFbuH/1s7V1v4mTZREN/zWik3E+rU8l+0/G+AEHazlvEwdpvc4un4XOCZ9IL9BjriejJZhojL0cKWcNLTSR6ckpPx3i1nnjyHjkfycsHD9NLru8t2/3/Gw7qtQ8zIeZ37CfApqOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lPVvQwYK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QsxPDNKUVQggCsaAqAylT9mPlE0xhuqrLk4dBa2viOUS0vKSWpER6cPhOgqRc+hF7wzzyc16cbV57z+9pYIXjSivNa/0YRIdWWI+ShXw4tLpWQ94GkCNpV6t+je3dU+ExfCI+g+QuT5Qa8B4FL0YTYD47Db6r8c1GT2ozvSTaxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BpaiAx18; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lPVvQwYK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B4EAC433C7;
-	Tue, 19 Mar 2024 20:39:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpaiAx18"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C6EDC433C7;
+	Tue, 19 Mar 2024 20:40:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710880766;
-	bh=U7kGLFTKyHWvTihyS/3ta1qqIRdbs1QUY8QSlm50om8=;
+	s=k20201202; t=1710880821;
+	bh=uSOBVAJtCRO9CPosgJAx9Q2dVBm3UG3FwOtVyXp+9VA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lPVvQwYK6nqsIRW1YwQCzO5lE6qUaZZFLjU/xiV5f/nc1kPHmF1QNiW3DN4K9/6ij
-	 f2YvLkB/lEnfSUtVGx5DAKNYJXf0ZRG4dam9n2IF/O7s25zPpUfnkDuf3GxpSQr5rX
-	 DedJ/TkWF9z5p25+KiIMuhFI78EnZ+HDdVk1QjPhsyurll7hIMXFJLLSbI6l+eeonf
-	 8YEJbr+m55Ax3a+0p61HA8Gg+gSl8RgxpB+d9JdkeAMzRFUXssXJeH6nSDNgslMElD
-	 jNqGZlmTTYtJpMAzNFw9ojgXPovPo0DfWlEag8KmqZf81DoNV1wWuwuyk0Y0z8UYdz
-	 E7k7KkzWsGMUw==
-Date: Tue, 19 Mar 2024 13:39:25 -0700
+	b=BpaiAx18r9vs4xmg8HXYk2GNss+HkG+YBbWP+w2K/JzlKRl5bbswM60EkZFhtF76S
+	 uwNKdVUfPNcZuVbvyOyFNEoKAoKQ68ADAHWxN+SaQ02TqkUoZnjj2uIwg57qOur/mY
+	 ky4IEk1lvpOWX85NjHuN+6j8FAyO0Uf0au3pKCgDYEGXzB+r+g2O4Bj2MB11ykMula
+	 SKvN0Vk13IK27z7ce+YOfQtEgCy2bRqNAYW+ouetVOWkyb47PYbGlDiFl4gANXwBwc
+	 W2JmOeXL4ckmFwbDXd02DcrpwH/WLgb2ATUT5jEgrgFG4lQgaz7fLLZRyn4zToWDr1
+	 dVeWzIGBEs9ug==
+Date: Tue, 19 Mar 2024 13:40:21 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: detect partial buffer recovery operations
-Message-ID: <20240319203925.GE1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/5] xfs: consistently use struct xlog in buffer item
+ recovery
+Message-ID: <20240319204021.GF1927156@frogsfrogsfrogs>
 References: <20240319021547.3483050-1-david@fromorbit.com>
- <20240319021547.3483050-5-david@fromorbit.com>
+ <20240319021547.3483050-6-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,346 +43,387 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319021547.3483050-5-david@fromorbit.com>
+In-Reply-To: <20240319021547.3483050-6-david@fromorbit.com>
 
-On Tue, Mar 19, 2024 at 01:15:23PM +1100, Dave Chinner wrote:
+On Tue, Mar 19, 2024 at 01:15:24PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When a compound buffer is logged (e.g. fragmented large directory
-> block) we record it in the log as a series of separate buffer log
-> format items in the journal. These get recovered individually, and
-> because they are for non-contiguous extent ranges, we cannot use
-> buffer addresses to detect that the buffer format items are from the
-> same directory block.
-> 
-> Further, we cannot use LSN checks to determine if the partial
-> block buffers should be recovered - apart from the first buffer we
-> don't have a header with an LSN in it to check.
-> 
-> Finally, we cannot add a verifier to a partial block buffer because,
-> again, it will fail the verifier checks and report corruption. We
-> already skip this step due to bad magic number detection, but we
-> should be able to do better here.
-> 
-> The one thing we can rely on, though, is that each buffer format
-> item is written consecutively in the journal. They are built at
-> commit time into a single log iovec and chained into the iclog write
-> log vector chain as an unbroken sequence. Hence all the parts of a
-> compound buffer should be consecutive buf log format items in the
-> transaction being recovered.
-> 
-> Unfortunately, we don't have the information available in recovery
-> to do a full compound buffer instantiation for recovery. We only
-> have the fragments that contained modifications in the journal, and
-> so there may be missing fragments that are still clean and hence are
-> not in the journal. Hence we cannot use journal state to rebuild the
-> compound buffer entirely and hence recover it as a complete entity
-> and run a verifier over it before writeback.
-> 
-> Hence the first thing we need to do is detect such partial buffer
-> recovery situations and track whether we need to skip all the
-> partial buffers due to the LSN check in the initial header fragment
-> read from disk.
+> Rather than passing a mix of xfs_mount and xlog (and sometimes both)
+> through the call chain of buffer log item recovery, just pass
+> the struct xlog and pull the xfs_mount from that only at the leaf
+> functions where it is needed. This makes it all just a little
+> cleaner.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item_recover.c | 178 +++++++++++++++++++++++++++-------
->  1 file changed, 143 insertions(+), 35 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 90740fcf2fbe..9225baa62755 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -434,18 +434,17 @@ xlog_recover_validate_buf_type(
->  }
->  
->  /*
-> - * Perform a 'normal' buffer recovery.  Each logged region of the
-> + * Perform recovery of the logged regions. Each logged region of the
->   * buffer should be copied over the corresponding region in the
->   * given buffer.  The bitmap in the buf log format structure indicates
->   * where to place the logged data.
->   */
-> -static int
-> -xlog_recover_do_reg_buffer(
-> +static void
-> +xlog_recover_buffer(
->  	struct xfs_mount		*mp,
->  	struct xlog_recover_item	*item,
->  	struct xfs_buf			*bp,
-> -	struct xfs_buf_log_format	*buf_f,
-> -	xfs_lsn_t			current_lsn)
-> +	struct xfs_buf_log_format	*buf_f)
->  {
->  	int			i;
->  	int			bit;
-> @@ -489,7 +488,17 @@ xlog_recover_do_reg_buffer(
->  
->  	/* Shouldn't be any more regions */
->  	ASSERT(i == item->ri_total);
-> +}
->  
-> +static int
-> +xlog_recover_do_reg_buffer(
-> +	struct xfs_mount		*mp,
-> +	struct xlog_recover_item	*item,
-> +	struct xfs_buf			*bp,
-> +	struct xfs_buf_log_format	*buf_f,
-> +	xfs_lsn_t			current_lsn)
-> +{
-> +	xlog_recover_buffer(mp, item, bp, buf_f);
->  	return xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
->  }
->  
-> @@ -735,6 +744,67 @@ xlog_recover_do_inode_buffer(
->  	return 0;
->  }
->  
-> +static bool
-> +xlog_recovery_is_dir_buf(
-> +	struct xfs_buf_log_format	*buf_f)
-> +{
-> +	switch (xfs_blft_from_flags(buf_f)) {
 
-/me wonders if the argument to xlog_recovery_is_dir_buf and
-xfs_blft_from_flags ought to be switched to (const xfs_buf_log_format *).
-
-> +	case XFS_BLFT_DIR_BLOCK_BUF:
-> +	case XFS_BLFT_DIR_DATA_BUF:
-> +	case XFS_BLFT_DIR_FREE_BUF:
-> +	case XFS_BLFT_DIR_LEAF1_BUF:
-> +	case XFS_BLFT_DIR_LEAFN_BUF:
-> +	case XFS_BLFT_DA_NODE_BUF:
-> +		return true;
-> +	default:
-> +		break;
-> +	}
-> +	return false;
-> +}
-> +
-> +/*
-> + * Partial dabuf recovery.
-> + *
-> + * There are two main cases here - a buffer that contains the dabuf header and
-> + * hence can be magic number and LSN checked, and then everything else.
-> + *
-> + * We can determine if the former should be replayed or not via LSN checks, but
-> + * we cannot do that with the latter, so the only choice we have here is to
-> + * always recover the changes regardless of whether this means metadata on disk
-> + * will go backwards in time. This, at least, means that the changes in each
-> + * checkpoint are applied consistently to the dabuf and we don't do really
-> + * stupid things like skip the header fragment replay and then replay all the
-> + * other changes to the dabuf block.
-> + *
-> + * While this is not ideal, finishing log recovery should them replay all the
-> + * remaining changes across this buffer and so bring it back to being consistent
-> + * on disk at the completion of recovery. Hence this "going backwards in time"
-> + * situation will only be relevant to failed journal replay situations. These
-> + * are rare and will require xfs_repair to be run, anyway, so the inconsistency
-> + * that results will be corrected before the filesystem goes back into service,
-> + * anyway.
-
-Does this means that all fragments of logged discontig dabufs will be
-replayed fully?  IOWs, no skipping ahead based on LSNs like we do for
-everything else (except the rtbitmap/rtsummary blocks)?
-
-> + *
-> + * Important: This partial fragment recovery relies on log recovery purging the
-> + * buffer cache after completion of this recovery phase. These partial buffers
-> + * are never used at runtime (discontiguous buffers will be used instead), so
-> + * they must be removed from the buffer cache to prevent them from causing
-> + * overlapping range lookup failures for the entire dabuf range.
-
-Should the comment about the xfs_buftarg_drain call in
-xfs_log_mount_finish gain a comment about needing to do this for
-consistency of discontig directory blocks?
-
-Also, do we have an easy way to fault-inject discontig directory blocks?
-
-> + */
-> +static void
-> +xlog_recover_do_partial_dabuf(
-> +	struct xfs_mount		*mp,
-> +	struct xlog_recover_item	*item,
-> +	struct xfs_buf			*bp,
-> +	struct xfs_buf_log_format	*buf_f)
-> +{
-> +	/*
-> +	 * Always recover without verification or write verifiers. Use delwri
-> +	 * and rely on post pass2 recovery cache purge to clean these out of
-> +	 * memory.
-> +	 */
-> +	xlog_recover_buffer(mp, item, bp, buf_f);
-> +}
-> +
->  /*
->   * V5 filesystems know the age of the buffer on disk being recovered. We can
->   * have newer objects on disk than we are replaying, and so for these cases we
-> @@ -886,6 +956,54 @@ xlog_recover_get_buf_lsn(
->  
->  }
->  
-> +/*
-> + * Recover the buffer only if we get an LSN from it and it's less than the lsn
-> + * of the transaction we are replaying.
-> + *
-> + * Note that we have to be extremely careful of readahead here.  Readahead does
-> + * not attach verfiers to the buffers so if we don't actually do any replay
-
-                 verifiers
-
-> + * after readahead because of the LSN we found in the buffer if more recent than
-
-                                                                is more
-
-> + * that current transaction then we need to attach the verifier directly.
-> + * Failure to do so can lead to future recovery actions (e.g. EFI and unlinked
-> + * list recovery) can operate on the buffers and they won't get the verifier
-
-This sentence reads awkwardly to me.  How about
-
-"Failure to do so can lead to future recovery actions (e.g. EFI and
-unlinked list recovery) operating on the buffers without attaching a
-verifier."
-
-Also, does 'unlinked' refer to unlinked inode processing?
-
-> + * attached. This can lead to blocks on disk having the correct content but a
-> + * stale CRC.
-> + *
-> + * It is safe to assume these clean buffers are currently up to date.  If the
-> + * buffer is dirtied by a later transaction being replayed, then the verifier
-> + * will be reset to match whatever recover turns that buffer into.
-> + *
-> + * Return true if the buffer needs to be recovered, false if it doesn't.
-> + */
-> +static bool
-> +xlog_recover_this_buffer(
-
-I kinda wish this function returned either 0 for "recovery not needed",
-1 for "recovery needed", or a negative errno for corruption.  Then the
-call site looks a little more regular:
-
-	error = xlog_recover_this_buffer(...);
-	if (error)
-		goto out_release;
-
-Except for the 'return 1' behavior.  If you were thinking about that
-already then go ahead and change it; if not, then leave it.
-
-> +	struct xfs_mount		*mp,
-> +	struct xfs_buf			*bp,
-> +	struct xfs_buf_log_format	*buf_f,
-> +	xfs_lsn_t			current_lsn)
-> +{
-> +	xfs_lsn_t			lsn;
-> +
-> +	lsn = xlog_recover_get_buf_lsn(mp, bp, buf_f);
-> +	if (!lsn)
-> +		return true;
-> +	if (lsn == -1)
-> +		return true;
-> +	if (XFS_LSN_CMP(lsn, current_lsn) < 0)
-> +		return true;
-> +
-> +	trace_xfs_log_recover_buf_skip(mp->m_log, buf_f);
-> +	xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-> +
-> +	/*
-> +	 * We're skipping replay of this buffer log item due to the log
-> +	 * item LSN being behind the ondisk buffer.  Verify the buffer
-> +	 * contents since we aren't going to run the write verifier.
-> +	 */
-> +	if (bp->b_ops)
-> +		bp->b_ops->verify_read(bp);
-> +	return false;
-> +}
->  /*
->   * This routine replays a modification made to a buffer at runtime.
->   * There are actually two types of buffer, regular and inode, which
-> @@ -920,7 +1038,6 @@ xlog_recover_buf_commit_pass2(
->  	struct xfs_mount		*mp = log->l_mp;
->  	struct xfs_buf			*bp;
->  	int				error;
-> -	xfs_lsn_t			lsn;
->  
->  	/*
->  	 * In this pass we only want to recover all the buffers which have
-> @@ -962,7 +1079,8 @@ xlog_recover_buf_commit_pass2(
->  		if (error)
->  			goto out_release;
->  
-> -		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
-> +		xlog_recover_buffer(mp, item, bp, buf_f);
-> +		error = xlog_recover_validate_buf_type(mp, bp, buf_f,
->  				NULLCOMMITLSN);
->  		if (error)
->  			goto out_release;
-> @@ -970,41 +1088,31 @@ xlog_recover_buf_commit_pass2(
->  	}
->  
->  	/*
-> -	 * Recover the buffer only if we get an LSN from it and it's less than
-> -	 * the lsn of the transaction we are replaying.
-> -	 *
-> -	 * Note that we have to be extremely careful of readahead here.
-> -	 * Readahead does not attach verfiers to the buffers so if we don't
-> -	 * actually do any replay after readahead because of the LSN we found
-> -	 * in the buffer if more recent than that current transaction then we
-> -	 * need to attach the verifier directly. Failure to do so can lead to
-> -	 * future recovery actions (e.g. EFI and unlinked list recovery) can
-> -	 * operate on the buffers and they won't get the verifier attached. This
-> -	 * can lead to blocks on disk having the correct content but a stale
-> -	 * CRC.
-> -	 *
-> -	 * It is safe to assume these clean buffers are currently up to date.
-> -	 * If the buffer is dirtied by a later transaction being replayed, then
-> -	 * the verifier will be reset to match whatever recover turns that
-> -	 * buffer into.
-> +	 * Directory buffers can be larger than a single filesystem block and
-> +	 * if they are they can be fragmented. There are lots of concerns about
-> +	 * recovering these, so push them out of line where the concerns can be
-> +	 * documented clearly.
->  	 */
-> -	lsn = xlog_recover_get_buf_lsn(mp, bp, buf_f);
-> -	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
-> -		trace_xfs_log_recover_buf_skip(log, buf_f);
-> -		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-> +	if (xlog_recovery_is_dir_buf(buf_f) &&
-> +	    mp->m_dir_geo->blksize != BBTOB(buf_f->blf_len)) {
-> +		xlog_recover_do_partial_dabuf(mp, item, bp, buf_f);
-> +		goto out_write;
-> +	}
->  
-> +	/*
-> +	 * Whole buffer recovery, dependent on the LSN in the on-disk structure.
-> +	 */
-> +	if (!xlog_recover_this_buffer(mp, bp, buf_f, current_lsn)) {
->  		/*
-> -		 * We're skipping replay of this buffer log item due to the log
-> -		 * item LSN being behind the ondisk buffer.  Verify the buffer
-> -		 * contents since we aren't going to run the write verifier.
-> +		 * We may have verified this buffer even though we aren't
-> +		 * recovering it. Return the verifier error for early detection
-> +		 * of recovery inconsistencies.
->  		 */
-> -		if (bp->b_ops) {
-> -			bp->b_ops->verify_read(bp);
-> -			error = bp->b_error;
-> -		}
-> +		error = bp->b_error;
->  		goto out_release;
->  	}
->  
-> +
-
-Extra blank line.
+Looks good to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> ---
+>  fs/xfs/xfs_buf_item_recover.c | 94 +++++++++++++++++------------------
+>  1 file changed, 47 insertions(+), 47 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 9225baa62755..edd03b08c969 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -209,7 +209,7 @@ xlog_recover_buf_commit_pass1(
+>   */
+>  static int
+>  xlog_recover_validate_buf_type(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f,
+>  	xfs_lsn_t			current_lsn)
+> @@ -228,7 +228,7 @@ xlog_recover_validate_buf_type(
+>  	 * inconsistent state resulting in verification failures. Hence for now
+>  	 * just avoid the verification stage for non-crc filesystems
+>  	 */
+> -	if (!xfs_has_crc(mp))
+> +	if (!xfs_has_crc(log->l_mp))
+>  		return 0;
+>  
+>  	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
+> @@ -396,7 +396,7 @@ xlog_recover_validate_buf_type(
+>  		break;
+>  #endif /* CONFIG_XFS_RT */
+>  	default:
+> -		xfs_warn(mp, "Unknown buffer type %d!",
+> +		xfs_warn(log->l_mp, "Unknown buffer type %d!",
+>  			 xfs_blft_from_flags(buf_f));
+>  		break;
+>  	}
+> @@ -410,7 +410,7 @@ xlog_recover_validate_buf_type(
+>  		return 0;
+>  
+>  	if (warnmsg) {
+> -		xfs_warn(mp, warnmsg);
+> +		xfs_warn(log->l_mp, warnmsg);
+>  		xfs_buf_corruption_error(bp, __this_address);
+>  		return -EFSCORRUPTED;
+>  	}
+> @@ -428,7 +428,7 @@ xlog_recover_validate_buf_type(
+>  	 */
+>  	ASSERT(bp->b_ops);
+>  	bp->b_flags |= _XBF_LOGRECOVERY;
+> -	xfs_buf_item_init(bp, mp);
+> +	xfs_buf_item_init(bp, log->l_mp);
+>  	bp->b_log_item->bli_item.li_lsn = current_lsn;
+>  	return 0;
+>  }
+> @@ -441,7 +441,7 @@ xlog_recover_validate_buf_type(
+>   */
+>  static void
+>  xlog_recover_buffer(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f)
+> @@ -450,7 +450,7 @@ xlog_recover_buffer(
+>  	int			bit;
+>  	int			nbits;
+>  
+> -	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
+> +	trace_xfs_log_recover_buf_reg_buf(log, buf_f);
+>  
+>  	bit = 0;
+>  	i = 1;  /* 0 is the buf format structure */
+> @@ -492,14 +492,14 @@ xlog_recover_buffer(
+>  
+>  static int
+>  xlog_recover_do_reg_buffer(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f,
+>  	xfs_lsn_t			current_lsn)
+>  {
+> -	xlog_recover_buffer(mp, item, bp, buf_f);
+> -	return xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+> +	xlog_recover_buffer(log, item, bp, buf_f);
+> +	return xlog_recover_validate_buf_type(log, bp, buf_f, current_lsn);
+>  }
+>  
+>  /*
+> @@ -513,7 +513,6 @@ xlog_recover_do_reg_buffer(
+>   */
+>  static bool
+>  xlog_recover_this_dquot_buffer(
+> -	struct xfs_mount		*mp,
+>  	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+>  	struct xfs_buf			*bp,
+> @@ -526,7 +525,7 @@ xlog_recover_this_dquot_buffer(
+>  	/*
+>  	 * Filesystems are required to send in quota flags at mount time.
+>  	 */
+> -	if (!mp->m_qflags)
+> +	if (!log->l_mp->m_qflags)
+>  		return false;
+>  
+>  	type = 0;
+> @@ -550,7 +549,7 @@ xlog_recover_this_dquot_buffer(
+>   */
+>  static int
+>  xlog_recover_verify_dquot_buf_item(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f)
+> @@ -564,7 +563,7 @@ xlog_recover_verify_dquot_buf_item(
+>  	case XFS_BLFT_GDQUOT_BUF:
+>  		break;
+>  	default:
+> -		xfs_alert(mp,
+> +		xfs_alert(log->l_mp,
+>  			"XFS: dquot buffer log format type mismatch in %s.",
+>  			__func__);
+>  		xfs_buf_corruption_error(bp, __this_address);
+> @@ -573,19 +572,19 @@ xlog_recover_verify_dquot_buf_item(
+>  
+>  	for (i = 1; i < item->ri_total; i++) {
+>  		if (item->ri_buf[i].i_addr == NULL) {
+> -			xfs_alert(mp,
+> +			xfs_alert(log->l_mp,
+>  				"XFS: NULL dquot in %s.", __func__);
+>  			return -EFSCORRUPTED;
+>  		}
+>  		if (item->ri_buf[i].i_len < sizeof(struct xfs_disk_dquot)) {
+> -			xfs_alert(mp,
+> +			xfs_alert(log->l_mp,
+>  				"XFS: dquot too small (%d) in %s.",
+>  				item->ri_buf[i].i_len, __func__);
+>  			return -EFSCORRUPTED;
+>  		}
+> -		fa = xfs_dquot_verify(mp, item->ri_buf[i].i_addr, -1);
+> +		fa = xfs_dquot_verify(log->l_mp, item->ri_buf[i].i_addr, -1);
+>  		if (fa) {
+> -			xfs_alert(mp,
+> +			xfs_alert(log->l_mp,
+>  "dquot corrupt at %pS trying to replay into block 0x%llx",
+>  				fa, xfs_buf_daddr(bp));
+>  			return -EFSCORRUPTED;
+> @@ -612,11 +611,12 @@ xlog_recover_verify_dquot_buf_item(
+>   */
+>  static int
+>  xlog_recover_do_inode_buffer(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f)
+>  {
+> +	struct xfs_sb			*sbp = &log->l_mp->m_sb;
+>  	int				i;
+>  	int				item_index = 0;
+>  	int				bit = 0;
+> @@ -628,7 +628,7 @@ xlog_recover_do_inode_buffer(
+>  	xfs_agino_t			*logged_nextp;
+>  	xfs_agino_t			*buffer_nextp;
+>  
+> -	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
+> +	trace_xfs_log_recover_buf_inode_buf(log, buf_f);
+>  
+>  	/*
+>  	 * If the magic number doesn't match, something has gone wrong. Don't
+> @@ -641,12 +641,12 @@ xlog_recover_do_inode_buffer(
+>  	 * Post recovery validation only works properly on CRC enabled
+>  	 * filesystems.
+>  	 */
+> -	if (xfs_has_crc(mp))
+> +	if (xfs_has_crc(log->l_mp))
+>  		bp->b_ops = &xfs_inode_buf_ops;
+>  
+> -	inodes_per_buf = BBTOB(bp->b_length) >> mp->m_sb.sb_inodelog;
+> +	inodes_per_buf = BBTOB(bp->b_length) >> sbp->sb_inodelog;
+>  	for (i = 0; i < inodes_per_buf; i++) {
+> -		next_unlinked_offset = (i * mp->m_sb.sb_inodesize) +
+> +		next_unlinked_offset = (i * sbp->sb_inodesize) +
+>  			offsetof(struct xfs_dinode, di_next_unlinked);
+>  
+>  		while (next_unlinked_offset >=
+> @@ -695,8 +695,8 @@ xlog_recover_do_inode_buffer(
+>  		 */
+>  		logged_nextp = item->ri_buf[item_index].i_addr +
+>  				next_unlinked_offset - reg_buf_offset;
+> -		if (XFS_IS_CORRUPT(mp, *logged_nextp == 0)) {
+> -			xfs_alert(mp,
+> +		if (XFS_IS_CORRUPT(log->l_mp, *logged_nextp == 0)) {
+> +			xfs_alert(log->l_mp,
+>  		"Bad inode buffer log record (ptr = "PTR_FMT", bp = "PTR_FMT"). "
+>  		"Trying to replay bad (0) inode di_next_unlinked field.",
+>  				item, bp);
+> @@ -711,8 +711,8 @@ xlog_recover_do_inode_buffer(
+>  		 * have to leave the inode in a consistent state for whoever
+>  		 * reads it next....
+>  		 */
+> -		xfs_dinode_calc_crc(mp,
+> -				xfs_buf_offset(bp, i * mp->m_sb.sb_inodesize));
+> +		xfs_dinode_calc_crc(log->l_mp,
+> +				xfs_buf_offset(bp, i * sbp->sb_inodesize));
+>  
+>  	}
+>  
+> @@ -734,7 +734,7 @@ xlog_recover_do_inode_buffer(
+>  	 * it stale so that it won't be found on overlapping buffer lookups and
+>  	 * caller knows not to queue it for delayed write.
+>  	 */
+> -	if (BBTOB(bp->b_length) != M_IGEO(mp)->inode_cluster_size) {
+> +	if (BBTOB(bp->b_length) != M_IGEO(log->l_mp)->inode_cluster_size) {
+>  		int error;
+>  
+>  		error = xfs_bwrite(bp);
+> @@ -792,7 +792,7 @@ xlog_recovery_is_dir_buf(
+>   */
+>  static void
+>  xlog_recover_do_partial_dabuf(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f)
+> @@ -802,7 +802,7 @@ xlog_recover_do_partial_dabuf(
+>  	 * and rely on post pass2 recovery cache purge to clean these out of
+>  	 * memory.
+>  	 */
+> -	xlog_recover_buffer(mp, item, bp, buf_f);
+> +	xlog_recover_buffer(log, item, bp, buf_f);
+>  }
+>  
+>  /*
+> @@ -827,7 +827,7 @@ xlog_recover_do_partial_dabuf(
+>   */
+>  static xfs_lsn_t
+>  xlog_recover_get_buf_lsn(
+> -	struct xfs_mount	*mp,
+> +	struct xlog		*log,
+>  	struct xfs_buf		*bp,
+>  	struct xfs_buf_log_format *buf_f)
+>  {
+> @@ -839,7 +839,7 @@ xlog_recover_get_buf_lsn(
+>  	uint16_t		blft;
+>  
+>  	/* v4 filesystems always recover immediately */
+> -	if (!xfs_has_crc(mp))
+> +	if (!xfs_has_crc(log->l_mp))
+>  		goto recover_immediately;
+>  
+>  	/*
+> @@ -916,7 +916,7 @@ xlog_recover_get_buf_lsn(
+>  		 * the relevant UUID in the superblock.
+>  		 */
+>  		lsn = be64_to_cpu(((struct xfs_dsb *)blk)->sb_lsn);
+> -		if (xfs_has_metauuid(mp))
+> +		if (xfs_has_metauuid(log->l_mp))
+>  			uuid = &((struct xfs_dsb *)blk)->sb_meta_uuid;
+>  		else
+>  			uuid = &((struct xfs_dsb *)blk)->sb_uuid;
+> @@ -926,7 +926,7 @@ xlog_recover_get_buf_lsn(
+>  	}
+>  
+>  	if (lsn != (xfs_lsn_t)-1) {
+> -		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
+> +		if (!uuid_equal(&log->l_mp->m_sb.sb_meta_uuid, uuid))
+>  			goto recover_immediately;
+>  		return lsn;
+>  	}
+> @@ -945,7 +945,7 @@ xlog_recover_get_buf_lsn(
+>  	}
+>  
+>  	if (lsn != (xfs_lsn_t)-1) {
+> -		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
+> +		if (!uuid_equal(&log->l_mp->m_sb.sb_meta_uuid, uuid))
+>  			goto recover_immediately;
+>  		return lsn;
+>  	}
+> @@ -977,14 +977,14 @@ xlog_recover_get_buf_lsn(
+>   */
+>  static bool
+>  xlog_recover_this_buffer(
+> -	struct xfs_mount		*mp,
+> +	struct xlog			*log,
+>  	struct xfs_buf			*bp,
+>  	struct xfs_buf_log_format	*buf_f,
+>  	xfs_lsn_t			current_lsn)
+>  {
+>  	xfs_lsn_t			lsn;
+>  
+> -	lsn = xlog_recover_get_buf_lsn(mp, bp, buf_f);
+> +	lsn = xlog_recover_get_buf_lsn(log, bp, buf_f);
+>  	if (!lsn)
+>  		return true;
+>  	if (lsn == -1)
+> @@ -992,8 +992,8 @@ xlog_recover_this_buffer(
+>  	if (XFS_LSN_CMP(lsn, current_lsn) < 0)
+>  		return true;
+>  
+> -	trace_xfs_log_recover_buf_skip(mp->m_log, buf_f);
+> -	xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
+> +	trace_xfs_log_recover_buf_skip(log, buf_f);
+> +	xlog_recover_validate_buf_type(log, bp, buf_f, NULLCOMMITLSN);
+>  
+>  	/*
+>  	 * We're skipping replay of this buffer log item due to the log
+> @@ -1065,22 +1065,22 @@ xlog_recover_buf_commit_pass2(
+>  	 * to simplify the rest of the code.
+>  	 */
+>  	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
+> -		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
+> +		error = xlog_recover_do_inode_buffer(log, item, bp, buf_f);
+>  		if (error || (bp->b_flags & XBF_STALE))
+>  			goto out_release;
+>  		goto out_write;
+>  	}
+>  
+>  	if (buf_f->blf_flags & XFS_BLF_DQUOT_BUF) {
+> -		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
+> +		if (!xlog_recover_this_dquot_buffer(log, item, bp, buf_f))
+>  			goto out_release;
+>  
+> -		error = xlog_recover_verify_dquot_buf_item(mp, item, bp, buf_f);
+> +		error = xlog_recover_verify_dquot_buf_item(log, item, bp, buf_f);
+>  		if (error)
+>  			goto out_release;
+>  
+> -		xlog_recover_buffer(mp, item, bp, buf_f);
+> -		error = xlog_recover_validate_buf_type(mp, bp, buf_f,
+> +		xlog_recover_buffer(log, item, bp, buf_f);
+> +		error = xlog_recover_validate_buf_type(log, bp, buf_f,
+>  				NULLCOMMITLSN);
+>  		if (error)
+>  			goto out_release;
+> @@ -1095,14 +1095,14 @@ xlog_recover_buf_commit_pass2(
+>  	 */
+>  	if (xlog_recovery_is_dir_buf(buf_f) &&
+>  	    mp->m_dir_geo->blksize != BBTOB(buf_f->blf_len)) {
+> -		xlog_recover_do_partial_dabuf(mp, item, bp, buf_f);
+> +		xlog_recover_do_partial_dabuf(log, item, bp, buf_f);
+>  		goto out_write;
+>  	}
+>  
+>  	/*
+>  	 * Whole buffer recovery, dependent on the LSN in the on-disk structure.
+>  	 */
+> -	if (!xlog_recover_this_buffer(mp, bp, buf_f, current_lsn)) {
+> +	if (!xlog_recover_this_buffer(log, bp, buf_f, current_lsn)) {
+>  		/*
+>  		 * We may have verified this buffer even though we aren't
+>  		 * recovering it. Return the verifier error for early detection
+> @@ -1113,7 +1113,7 @@ xlog_recover_buf_commit_pass2(
+>  	}
+>  
+>  
+> -	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> +	error = xlog_recover_do_reg_buffer(log, item, bp, buf_f, current_lsn);
 >  	if (error)
 >  		goto out_release;
+>  
 > -- 
 > 2.43.0
 > 
