@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 936FE2B9D7
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:11:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 807DB381CC
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:16:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710871865; cv=none; b=mAfpwhl+xgEbqWHU2lWxZhX7SfHHS0y8osK+p7PDsn34An5bWkwohnP8jEUfsdPS+4rYRbroLfRFkArmb6qzmFZ4lTX2juwCQDnbyQFpFBI3xThrwCGFEQQ2PXSpsoPmOc+j8W+Dr9T75VcO6MEl9tp4kxLN1Ue4HEeFazR5hww=
+	t=1710872182; cv=none; b=YGJSlRVgPX8y3nO59YCmz8wib2AG+vL0kfu6eQ/c4k7oDGofXVfsaMdfzBJi+O+/qZPdnK8kakC13E9dKU54cCbZz6ysM9n4597xiMnfgbU5Vj9gyUj+rjUa+JYMs6hWBTjhn2seTh3PLX5VStixMfXtjogY287+ucNMDcSLuWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710871865; c=relaxed/simple;
-	bh=Np+f9ULg1aiXDCOJD0oO/St3flOp5A4bATa3Hp1JR6M=;
+	s=arc-20240116; t=1710872182; c=relaxed/simple;
+	bh=raeLtgwu9/Ue6uCLe1soUDPUFQ7bhTasT63KJW9QeOA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P9UocrA5UvTeFlAdP4IPeNsusXCkhwntF+2rZ1VQDQMLrGtW5sXWKZQw3i/5bhOMvx8XXet6nUmDCZCGLBpcmrlelaiR3iQ5cYS+OQhTf+D03oqUmsGmQj9Ry4QsBB49+SQxrY6D2U41wg3dVxRD8FQ/rUk1StjfdNDwSBPCCXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pBDic7Dm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=u0IIafsk3dibv9zEpbVLsKLjrhNLZ/AN3PTjweKKjfoOn1KqalRbfgl2m6/PP+NGi/nOad0TSfhCsmIYIfCRjTcvICWSpjyHnItMJkUOHm+d6gGIb50Y8We1+DS6MnV5FETwALhmy08yJqawLZd0Xr5V6dbyFqR5WSM4uGEG3hM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MeBmDeSL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pBDic7Dm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 197ECC433F1;
-	Tue, 19 Mar 2024 18:11:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MeBmDeSL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 474A3C433F1;
+	Tue, 19 Mar 2024 18:16:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710871865;
-	bh=Np+f9ULg1aiXDCOJD0oO/St3flOp5A4bATa3Hp1JR6M=;
+	s=k20201202; t=1710872182;
+	bh=raeLtgwu9/Ue6uCLe1soUDPUFQ7bhTasT63KJW9QeOA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pBDic7DmucVfysFgPkHgm3Q1jJNH4nw6RcJB4Bkl3+NmZTKNGRCZHpnufHx2MtssQ
-	 iYIYHFyXmUUZUPwuRaa16++jcVJv0Y6/mf5RuJdCzsXkr8IjFCl9iqcu+HmGtJnkVJ
-	 a4JSc8gMwjCDdLCOzGzyXYFJqrI2Uvn0kdPIIpt3WTps6HFDcFcpibW3lU24cco+uS
-	 N4RRNal3M33fohsHMcAIMtIByIbf3Y7ddz8GJUVrqco043/ABVSjGLSCjzF0LU1d48
-	 Xhgo4gmj/dR1Pp2ufoA8QyJ4Cs7qg5AkXrZIkMWuPCd2r+Ph+4E+AcP/17z4i9Ein4
-	 ISPpe3SHZc8ng==
-Date: Tue, 19 Mar 2024 11:11:04 -0700
+	b=MeBmDeSLk7C6qu6emeuKZ15RAXx+24STrfJLLoJclR2JZTXks16gKNyZUb4ch57tJ
+	 LY/wf873Gih4qL56NiZvQ7wRIsRUG5NwMcTSh0yCy1qCbFeIWuKg8OneLjvQPuHj8T
+	 7gpiVXzO632ZrTWRhiXsk2S/eJ43LreYVO48eVCwAvJJNaDUYJlLJXjsPVLhKag/hi
+	 bxgyfwLKNYHz7xXl2A9w5k7Wnanq1M190FLxGOjdNxMLJVcF5+Q9HV0VK18AOZUe2e
+	 bvEE3yOYTix0l8jBqVtt3KGBNnCIOLCzBW75i24Gpl34Yb/Pxjsy5Ymi0d4mRvKRp9
+	 T7o6B6WS54Mvg==
+Date: Tue, 19 Mar 2024 11:16:21 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from
- xfs_iget
-Message-ID: <20240319181104.GA1927156@frogsfrogsfrogs>
-References: <20240319001707.3430251-1-david@fromorbit.com>
- <20240319001707.3430251-5-david@fromorbit.com>
+Subject: Re: [PATCH 1/5] xfs: buffer log item type mismatches are corruption
+Message-ID: <20240319181621.GB1927156@frogsfrogsfrogs>
+References: <20240319021547.3483050-1-david@fromorbit.com>
+ <20240319021547.3483050-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,210 +42,156 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319001707.3430251-5-david@fromorbit.com>
+In-Reply-To: <20240319021547.3483050-2-david@fromorbit.com>
 
-On Tue, Mar 19, 2024 at 11:16:00AM +1100, Dave Chinner wrote:
+On Tue, Mar 19, 2024 at 01:15:20PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When xfs_iget() finds an inode that is queued for inactivation, it
-> issues an inodegc flush to trigger the inactivation work and then
-> retries the lookup.
+> We detect when a buffer log format type and the magic number in the
+> buffer do not match. We issue a warning, but do not return an error
+> nor do we write back the recovered buffer. If no further recover
+> action is performed on that buffer, then recovery has left the
+> buffer in an inconsistent (out of date) state on disk. i.e. the
+> structure is corrupt on disk.
 > 
-> However, when the filesystem is frozen, inodegc is turned off and
-> the flush does nothing and does not block. This results in lookup
-> spinning on NEED_INACTIVE inodes and being unable to make progress
-> until the filesystem is thawed. This is less than ideal.
-> 
-> The only reason we can't immediately recycle the inode is that it
-> queued on a lockless list we can't remove it from. However, those
-> lists now support lazy removal, and so we can now modify the lookup
-> code to reactivate inode queued for inactivation. The process is
-> identical to how we recycle reclaimable inodes from xfs_iget(), so
-> this ends up being a relatively simple change to make.
+> If this mismatch occurs, return a -EFSCORRUPTED error and cause
+> recovery to abort instead of letting recovery corrupt the filesystem
+> and continue onwards.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_icache.c | 110 +++++++++++++++++++++++++++++++++++---------
->  1 file changed, 87 insertions(+), 23 deletions(-)
+>  fs/xfs/xfs_buf_item_recover.c | 51 +++++++++++++++++------------------
+>  1 file changed, 24 insertions(+), 27 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 7359753b892b..56de3e843df2 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -63,6 +63,8 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
->  					 XFS_ICWALK_FLAG_RECLAIM_SICK | \
->  					 XFS_ICWALK_FLAG_UNION)
->  
-> +static void xfs_inodegc_queue(struct xfs_inode *ip);
-> +
->  /*
->   * Allocate and initialise an xfs_inode.
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index d74bf7bb7794..dba57ee6fa6d 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -207,7 +207,7 @@ xlog_recover_buf_commit_pass1(
+>   *	the first 32 bits of the buffer (most blocks),
+>   *	inside a struct xfs_da_blkinfo at the start of the buffer.
 >   */
-> @@ -325,6 +327,7 @@ xfs_reinit_inode(
->  	return error;
->  }
->  
-> +
->  /*
->   * Carefully nudge an inode whose VFS state has been torn down back into a
->   * usable state.  Drops the i_flags_lock and the rcu read lock.
-> @@ -388,7 +391,82 @@ xfs_iget_recycle(
->  	inode->i_state = I_NEW;
->  	spin_unlock(&ip->i_flags_lock);
->  	spin_unlock(&pag->pag_ici_lock);
-> +	XFS_STATS_INC(mp, xs_ig_frecycle);
-> +	return 0;
-> +}
->  
+> -static void
 > +static int
-> +xfs_iget_reactivate(
-> +	struct xfs_perag	*pag,
-> +	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct inode		*inode = VFS_I(ip);
-> +	int			error;
-> +
-> +	trace_xfs_iget_recycle(ip);
-> +
-> +	/*
-> +	 * If the inode has been unlinked, then the lookup must not find it
-> +	 * until inactivation has actually freed the inode.
-> +	 */
-> +	if (VFS_I(ip)->i_nlink == 0) {
-> +		spin_unlock(&ip->i_flags_lock);
-> +		rcu_read_unlock();
-> +		return -ENOENT;
-> +	}
-> +
-> +	/*
-> +	 * Take the ILOCK here to serialise against lookup races with putting
-> +	 * the inode back on the inodegc queue during error handling.
-> +	 */
-> +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-> +		return -EAGAIN;
-> +
-> +	/*
-> +	 * Move the state to inactivating so both inactivation and racing
-> +	 * lookups will skip over this inode until we've finished reactivating
-> +	 * it and can return it to the XFS_INEW state.
-> +	 */
-> +	ip->i_flags &= ~XFS_NEED_INACTIVE;
-> +	ip->i_flags |= XFS_INACTIVATING;
-> +	spin_unlock(&ip->i_flags_lock);
-> +	rcu_read_unlock();
-> +
-> +	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
-> +	error = xfs_reinit_inode(mp, inode);
-> +	if (error) {
-> +		/*
-> +		 * Well, that sucks. Put the inode back on the inactive queue.
-> +		 * Do this while still under the ILOCK so that we can set the
-> +		 * NEED_INACTIVE flag and clear the INACTIVATING flag an not
+>  xlog_recover_validate_buf_type(
+>  	struct xfs_mount		*mp,
+>  	struct xfs_buf			*bp,
+> @@ -407,11 +407,12 @@ xlog_recover_validate_buf_type(
+>  	 * skipped.
+>  	 */
+>  	if (current_lsn == NULLCOMMITLSN)
+> -		return;
+> +		return 0;;
 
-The sentence structure here is a little funky to me.  How about:
+Unnecessary double-semicolon.
 
-"...and clear the INACTIVATING flag without another lookup racing with us..."
-
-?
-
-With that changed,
+With that fixed,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 
-> +		 * have another lookup race with us before we've finished
-> +		 * putting the inode back on the inodegc queue.
-> +		 */
-> +		spin_unlock(&ip->i_flags_lock);
-> +		ip->i_flags |= XFS_NEED_INACTIVE;
-> +		ip->i_flags &= ~XFS_INACTIVATING;
-> +		spin_unlock(&ip->i_flags_lock);
-> +
-> +		xfs_inodegc_queue(ip);
-> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +		trace_xfs_iget_recycle_fail(ip);
-> +		return error;
-> +	}
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +	/*
-> +	 * Reset the inode state to new so that xfs_iget() will complete
-> +	 * the required remaining inode initialisation before it returns the
-> +	 * inode to the caller.
-> +	 */
-> +	spin_lock(&ip->i_flags_lock);
-> +	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
-> +	ip->i_flags |= XFS_INEW;
-> +	inode->i_state = I_NEW;
-> +	spin_unlock(&ip->i_flags_lock);
-> +	XFS_STATS_INC(mp, xs_ig_frecycle);
->  	return 0;
->  }
 >  
-> @@ -526,15 +604,6 @@ xfs_iget_cache_hit(
->  	if (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_INACTIVATING))
->  		goto out_skip;
+>  	if (warnmsg) {
+>  		xfs_warn(mp, warnmsg);
+> -		ASSERT(0);
+> +		xfs_buf_corruption_error(bp, __this_address);
+> +		return -EFSCORRUPTED;
+>  	}
 >  
-> -	if (ip->i_flags & XFS_NEED_INACTIVE) {
-> -		/* Unlinked inodes cannot be re-grabbed. */
-> -		if (VFS_I(ip)->i_nlink == 0) {
-> -			error = -ENOENT;
-> -			goto out_error;
-> -		}
-> -		goto out_inodegc_flush;
-> -	}
-> -
 >  	/*
->  	 * Check the inode free state is valid. This also detects lookup
->  	 * racing with unlinks.
-> @@ -545,11 +614,18 @@ xfs_iget_cache_hit(
->  
->  	/* Skip inodes that have no vfs state. */
->  	if ((flags & XFS_IGET_INCORE) &&
-> -	    (ip->i_flags & XFS_IRECLAIMABLE))
-> +	    (ip->i_flags & (XFS_IRECLAIMABLE | XFS_NEED_INACTIVE)))
->  		goto out_skip;
->  
->  	/* The inode fits the selection criteria; process it. */
-> -	if (ip->i_flags & XFS_IRECLAIMABLE) {
-> +	if (ip->i_flags & XFS_NEED_INACTIVE) {
-> +		/* Drops i_flags_lock and RCU read lock. */
-> +		error = xfs_iget_reactivate(pag, ip);
-> +		if (error == -EAGAIN)
-> +			goto out_skip;
-> +		if (error)
-> +			return error;
-> +	} else if (ip->i_flags & XFS_IRECLAIMABLE) {
->  		/* Drops i_flags_lock and RCU read lock. */
->  		error = xfs_iget_recycle(pag, ip);
->  		if (error == -EAGAIN)
-> @@ -578,23 +654,11 @@ xfs_iget_cache_hit(
->  
->  out_skip:
->  	trace_xfs_iget_skip(ip);
-> -	XFS_STATS_INC(mp, xs_ig_frecycle);
->  	error = -EAGAIN;
->  out_error:
->  	spin_unlock(&ip->i_flags_lock);
->  	rcu_read_unlock();
->  	return error;
+> @@ -425,14 +426,11 @@ xlog_recover_validate_buf_type(
+>  	 * the buffer. Therefore, initialize a bli purely to carry the LSN to
+>  	 * the verifier.
+>  	 */
+> -	if (bp->b_ops) {
+> -		struct xfs_buf_log_item	*bip;
 > -
-> -out_inodegc_flush:
-> -	spin_unlock(&ip->i_flags_lock);
-> -	rcu_read_unlock();
-> -	/*
-> -	 * Do not wait for the workers, because the caller could hold an AGI
-> -	 * buffer lock.  We're just going to sleep in a loop anyway.
-> -	 */
-> -	if (xfs_is_inodegc_enabled(mp))
-> -		xfs_inodegc_queue_all(mp);
-> -	return -EAGAIN;
+> -		bp->b_flags |= _XBF_LOGRECOVERY;
+> -		xfs_buf_item_init(bp, mp);
+> -		bip = bp->b_log_item;
+> -		bip->bli_item.li_lsn = current_lsn;
+> -	}
+> +	ASSERT(bp->b_ops);
+> +	bp->b_flags |= _XBF_LOGRECOVERY;
+> +	xfs_buf_item_init(bp, mp);
+> +	bp->b_log_item->bli_item.li_lsn = current_lsn;
+> +	return 0;
 >  }
 >  
->  static int
+>  /*
+> @@ -441,7 +439,7 @@ xlog_recover_validate_buf_type(
+>   * given buffer.  The bitmap in the buf log format structure indicates
+>   * where to place the logged data.
+>   */
+> -STATIC void
+> +static int
+>  xlog_recover_do_reg_buffer(
+>  	struct xfs_mount		*mp,
+>  	struct xlog_recover_item	*item,
+> @@ -523,20 +521,20 @@ xlog_recover_do_reg_buffer(
+>  	/* Shouldn't be any more regions */
+>  	ASSERT(i == item->ri_total);
+>  
+> -	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+> +	return xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+>  }
+>  
+>  /*
+> - * Perform a dquot buffer recovery.
+> + * Test if this dquot buffer item should be recovered.
+>   * Simple algorithm: if we have found a QUOTAOFF log item of the same type
+>   * (ie. USR or GRP), then just toss this buffer away; don't recover it.
+>   * Else, treat it as a regular buffer and do recovery.
+>   *
+> - * Return false if the buffer was tossed and true if we recovered the buffer to
+> - * indicate to the caller if the buffer needs writing.
+> + * Return false if the buffer should be tossed and true if the buffer needs
+> + * to be recovered.
+>   */
+> -STATIC bool
+> -xlog_recover_do_dquot_buffer(
+> +static bool
+> +xlog_recover_this_dquot_buffer(
+>  	struct xfs_mount		*mp,
+>  	struct xlog			*log,
+>  	struct xlog_recover_item	*item,
+> @@ -565,8 +563,6 @@ xlog_recover_do_dquot_buffer(
+>  	 */
+>  	if (log->l_quotaoffs_flag & type)
+>  		return false;
+> -
+> -	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
+>  	return true;
+>  }
+>  
+> @@ -952,18 +948,19 @@ xlog_recover_buf_commit_pass2(
+>  
+>  	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
+>  		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
+> -		if (error)
+> -			goto out_release;
+>  	} else if (buf_f->blf_flags &
+>  		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+> -		bool	dirty;
+> -
+> -		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+> -		if (!dirty)
+> +		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
+>  			goto out_release;
+> +
+> +		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> +				NULLCOMMITLSN);
+>  	} else {
+> -		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+> +		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
+> +				current_lsn);
+>  	}
+> +	if (error)
+> +		goto out_release;
+>  
+>  	/*
+>  	 * Perform delayed write on the buffer.  Asynchronous writes will be
 > -- 
 > 2.43.0
 > 
