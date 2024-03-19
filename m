@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE1DA2D03B
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 17:54:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 173532C84F
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 17:55:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710870852; cv=none; b=mMDk9lAMFQhtHdJlNNZg49c7RLzlUIC/EUt1d7L7AdKl3XN5hWoCmBL3/XkYsBydlxNnT2azBI9d5nEP5mGQoFS6cQhEGBjP2xhQh8FTrAYktQyNCkfMOkJwVA2Kh/qCo/L3xHzuaWmApqkdLC+oMbO4TeIviAgimZ7YvQJ6Fd8=
+	t=1710870916; cv=none; b=aIlQ/ulGy0pjm9lUhT+2hRr54xRiCJYfCq4w0kg577F0ORs5QY7+q6p4oSDMtunS7iD65zEB3DGnOvP765JQ1U6U0Rx2LxGQT0n7u3oMhWcS7kf2Yy4aJf0PA8DxCDAXfA8fzICkauuVuTLbpgvZlOfNpm1KIis8QPhot/bOVtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710870852; c=relaxed/simple;
-	bh=vhGYCFZtXZ3Z4fKbsA7FZ8gxOR0WTJhLWpuwd1PBNz4=;
+	s=arc-20240116; t=1710870916; c=relaxed/simple;
+	bh=lL8qj6nY5iECZapADnXblYGP6Bds6bwFTupf+fx9Euc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k2iuj5YRye/DXQKAvU+SeWJwiuQp5jIeVlLcJak5QNmU5r2sTOuMsmEa20zIsiqkGPf0c7U87k0Tw8xCc5A/J9BN5cRSUOSdKXD4yOsWoexW0WHLk8sHmKNM+cE6PX0bcAT+GnFAoLzLKfxTc6wX2t26dZRk3yMaMdPstFTuZhc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EL+i9lf+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HbY8XBwd94ZM8c0D9jAUF/759ySOcP6mrv2cWakqp5kxFUp3AnTqT/93DBEh/OMp8OlQpXkZeI6MwGgoj+L5N63zq4ibTSJnHmjsjGEg/XfIDP+DRqzcuvMnq+WyYFI3tCqedfj79CmzVrQJsjK1+JxeTdiwJdX05nukMwu4vpo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pXdpoKIT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EL+i9lf+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BB35C433F1;
-	Tue, 19 Mar 2024 17:54:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pXdpoKIT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99F10C433F1;
+	Tue, 19 Mar 2024 17:55:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710870852;
-	bh=vhGYCFZtXZ3Z4fKbsA7FZ8gxOR0WTJhLWpuwd1PBNz4=;
+	s=k20201202; t=1710870915;
+	bh=lL8qj6nY5iECZapADnXblYGP6Bds6bwFTupf+fx9Euc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EL+i9lf+O+Sw/Dzz/s/H3U/hsRQMgGuwVNw+HrOGatv0Cffi5+/paxjumzCMOqrUW
-	 iByrxImG7MiBGux+JbfNbHhTZGtstJ4mx7h2SsA4ogVDe/5uqq4eFkQi51AZ1htWDT
-	 Zke8f1GGr7A+olgJD3+I1mLAtY9S3YKgBwpo6N0p6EuaCQpgigH8y9DvkwDMpkZkcs
-	 VL9UPqmo5azBp7qaln5yoTEup5vzOlr4gr8/5NIK+QNOBEMVvuEjclaDtCaCe/E/Do
-	 rUAXUim8EGHpM7CvLUN0+Js5E9qNJFKc4DHEA/cQLHhcammtzUhvt9qTui2bj+Cwh4
-	 Xbi8kKNW4jBiw==
-Date: Tue, 19 Mar 2024 10:54:11 -0700
+	b=pXdpoKITzd7EZSAOhZE2o8yme160tYHn4jN4YGcitQwi1EQU1rD3XKo+m3U6oiVL7
+	 /ts33si4w4leUTORrqLzM2UYeRsAlirJy+TpdoLDDimhttRweARmJN0gW0FWD9At56
+	 WIDE9st6oUX2+C/wBqWyz1F0KW9Ex2edHB/Zg5m7EfxF9xT6NvNHBH/2RLZw8oukLd
+	 upXHRfOFEMb/dLqyHiMhSW8zHQ2M/i0+7bhb8xx8/eVU/ONQTO7F1PAg/jx4S9pL5F
+	 m7rervhXiYyXFkcWejbxPJ43LVSY9wDb3maU51QTKXFSIqlbX6IvRzTExW2hqCUiES
+	 RcFDu0a/Vdgig==
+Date: Tue, 19 Mar 2024 10:55:15 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: internalise all remaining i_version support
-Message-ID: <20240319175411.GW1927156@frogsfrogsfrogs>
-References: <20240318225406.3378998-1-david@fromorbit.com>
- <20240318225406.3378998-3-david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: allow sunit mount option to repair bad primary
+ sb stripe values
+Message-ID: <20240319175515.GX1927156@frogsfrogsfrogs>
+References: <ZfjcTxZEYl5Mzg9O@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,201 +42,180 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240318225406.3378998-3-david@fromorbit.com>
+In-Reply-To: <ZfjcTxZEYl5Mzg9O@dread.disaster.area>
 
-On Tue, Mar 19, 2024 at 09:51:01AM +1100, Dave Chinner wrote:
+On Tue, Mar 19, 2024 at 11:29:03AM +1100, Dave Chinner wrote:
+> 
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Now that we don't support SB_I_VERSION, completely internalise the
-> remaining usage of inode->i_version. We use our own internal change
-> counter now, and leave inode->i_version completely unused. This
-> grows the xfs_inode by 8 bytes, but also allows us to use a normal
-> uint64_t rather than an expensive atomic64_t for the counter.
+> If a filesystem has a busted stripe alignment configuration on disk
+> (e.g. because broken RAID firmware told mkfs that swidth was smaller
+> than sunit), then the filesystem will refuse to mount due to the
+> stripe validation failing. This failure is triggering during distro
+> upgrades from old kernels lacking this check to newer kernels with
+> this check, and currently the only way to fix it is with offline
+> xfs_db surgery.
 > 
-> This clears the way for implementing different inode->i_version
-> functionality in the future whilst still maintaining the internal
-> XFS change counters as they currently stand.
+> This runtime validity checking occurs when we read the superblock
+> for the first time and causes the mount to fail immediately. This
+> prevents the rewrite of stripe unit/width via
+> mount options that occurs later in the mount process. Hence there is
+> no way to recover this situation without resorting to offline xfs_db
+> rewrite of the values.
+> 
+> However, we parse the mount options long before we read the
+> superblock, and we know if the mount has been asked to re-write the
+> stripe alignment configuration when we are reading the superblock
+> and verifying it for the first time. Hence we can conditionally
+> ignore stripe verification failures if the mount options specified
+> will correct the issue.
+> 
+> We validate that the new stripe unit/width are valid before we
+> overwrite the superblock values, so we can ignore the invalid config
+> at verification and fail the mount later if the new values are not
+> valid. This, at least, gives users the chance of correcting the
+> issue after a kernel upgrade without having to resort to xfs-db
+> hacks.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_inode_buf.c   | 7 ++-----
->  fs/xfs/libxfs/xfs_trans_inode.c | 5 +----
->  fs/xfs/xfs_icache.c             | 4 ----
->  fs/xfs/xfs_inode.c              | 4 +---
->  fs/xfs/xfs_inode.h              | 1 +
->  fs/xfs/xfs_inode_item.c         | 4 +---
->  fs/xfs/xfs_iops.c               | 1 -
->  7 files changed, 6 insertions(+), 20 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 68989f4bf793..cadd8be83cc4 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -20,8 +20,6 @@
->  #include "xfs_dir2.h"
->  #include "xfs_health.h"
->  
-> -#include <linux/iversion.h>
-> -
->  /*
->   * If we are doing readahead on an inode buffer, we might be in log recovery
->   * reading an inode allocation buffer that hasn't yet been replayed, and hence
-> @@ -244,8 +242,7 @@ xfs_inode_from_disk(
->  		xfs_iflags_set(ip, XFS_IPRESERVE_DM_FIELDS);
->  
->  	if (xfs_has_v3inodes(ip->i_mount)) {
-> -		inode_set_iversion_queried(inode,
-> -					   be64_to_cpu(from->di_changecount));
-> +		ip->i_changecount = be64_to_cpu(from->di_changecount);
->  		ip->i_crtime = xfs_inode_from_disk_ts(from, from->di_crtime);
->  		ip->i_diflags2 = be64_to_cpu(from->di_flags2);
->  		ip->i_cowextsize = be32_to_cpu(from->di_cowextsize);
-> @@ -339,7 +336,7 @@ xfs_inode_to_disk(
->  
->  	if (xfs_has_v3inodes(ip->i_mount)) {
->  		to->di_version = 3;
-> -		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
-> +		to->di_changecount = cpu_to_be64(ip->i_changecount);
->  		to->di_crtime = xfs_inode_to_disk_ts(ip, ip->i_crtime);
->  		to->di_flags2 = cpu_to_be64(ip->i_diflags2);
->  		to->di_cowextsize = cpu_to_be32(ip->i_cowextsize);
-> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> index b82f9c7ff2d5..f9196eff6bab 100644
-> --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> @@ -15,8 +15,6 @@
->  #include "xfs_trans_priv.h"
->  #include "xfs_inode_item.h"
->  
-> -#include <linux/iversion.h>
-> -
->  /*
->   * Add a locked inode to the transaction.
->   *
-> @@ -87,7 +85,6 @@ xfs_trans_log_inode(
->  	uint			flags)
->  {
->  	struct xfs_inode_log_item *iip = ip->i_itemp;
-> -	struct inode		*inode = VFS_I(ip);
->  
->  	ASSERT(iip);
->  	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
-> @@ -101,7 +98,7 @@ xfs_trans_log_inode(
->  	 */
->  	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags) &&
->  	    xfs_has_crc(ip->i_mount)) {
-> -		atomic64_inc(&inode->i_version);
-> +		ip->i_changecount++;
->  		flags |= XFS_ILOG_IVERSION;
->  	}
->  
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 74f1812b03cb..6c87b90754c4 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -26,8 +26,6 @@
->  #include "xfs_log_priv.h"
->  #include "xfs_health.h"
->  
-> -#include <linux/iversion.h>
-> -
->  /* Radix tree tags for incore inode tree. */
->  
->  /* inode is to be reclaimed */
-> @@ -309,7 +307,6 @@ xfs_reinit_inode(
->  	int			error;
->  	uint32_t		nlink = inode->i_nlink;
->  	uint32_t		generation = inode->i_generation;
-> -	uint64_t		version = inode_peek_iversion(inode);
->  	umode_t			mode = inode->i_mode;
->  	dev_t			dev = inode->i_rdev;
->  	kuid_t			uid = inode->i_uid;
-> @@ -319,7 +316,6 @@ xfs_reinit_inode(
->  
->  	set_nlink(inode, nlink);
->  	inode->i_generation = generation;
-> -	inode_set_iversion_queried(inode, version);
->  	inode->i_mode = mode;
->  	inode->i_rdev = dev;
->  	inode->i_uid = uid;
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index e7a724270423..3ca8e905dbd4 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3,8 +3,6 @@
->   * Copyright (c) 2000-2006 Silicon Graphics, Inc.
->   * All Rights Reserved.
->   */
-> -#include <linux/iversion.h>
-> -
->  #include "xfs.h"
->  #include "xfs_fs.h"
->  #include "xfs_shared.h"
-> @@ -828,7 +826,7 @@ xfs_init_new_inode(
->  	ip->i_diflags = 0;
->  
->  	if (xfs_has_v3inodes(mp)) {
-> -		inode_set_iversion(inode, 1);
-> +		ip->i_changecount = 1;
->  		ip->i_cowextsize = 0;
->  		ip->i_crtime = tv;
->  	}
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index ab46ffb3ac19..0f9d32cbae72 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -42,6 +42,7 @@ typedef struct xfs_inode {
->  	struct rw_semaphore	i_lock;		/* inode lock */
->  	atomic_t		i_pincount;	/* inode pin count */
->  	struct llist_node	i_gclist;	/* deferred inactivation list */
-> +	uint64_t		i_changecount;	/* # of attribute changes */
 
-Now that we've separated this from i_version, should we export this via
-bulkstat or something?
-
-The code itself looks fine so
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+> Version 2:
+> - reworded comment desribing xfs_validate_stripe_geometry() return
+>   value.
+> - renamed @primary_sb to @may_repair to indicate that the caller may
+>   be able to fix any inconsistency that is found, rather than
+>   indicate that this is being called to validate the primary
+>   superblock during mount.
+> - don't need 'extern' for prototypes in headers.
+> 
+>  fs/xfs/libxfs/xfs_sb.c | 40 +++++++++++++++++++++++++++++++---------
+>  fs/xfs/libxfs/xfs_sb.h |  5 +++--
+>  2 files changed, 34 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index d991eec05436..73a4b895de67 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -530,7 +530,8 @@ xfs_validate_sb_common(
+>  	}
+>  
+>  	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+> -			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
+> +			XFS_FSB_TO_B(mp, sbp->sb_width), 0,
+> +			xfs_buf_daddr(bp) == XFS_SB_DADDR, false))
+>  		return -EFSCORRUPTED;
 >  
 >  	/*
->  	 * Bitsets of inode metadata that have been checked and/or are sick.
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index f28d653300d1..9ec88a84edfa 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -21,8 +21,6 @@
->  #include "xfs_error.h"
->  #include "xfs_rtbitmap.h"
->  
-> -#include <linux/iversion.h>
-> -
->  struct kmem_cache	*xfs_ili_cache;		/* inode log item */
->  
->  static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
-> @@ -546,7 +544,7 @@ xfs_inode_to_log_dinode(
->  
->  	if (xfs_has_v3inodes(ip->i_mount)) {
->  		to->di_version = 3;
-> -		to->di_changecount = inode_peek_iversion(inode);
-> +		to->di_changecount = ip->i_changecount;
->  		to->di_crtime = xfs_inode_to_log_dinode_ts(ip, ip->i_crtime);
->  		to->di_flags2 = ip->i_diflags2;
->  		to->di_cowextsize = ip->i_cowextsize;
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 3940ad1ee66e..8a145ca7d380 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -28,7 +28,6 @@
->  
->  #include <linux/posix_acl.h>
->  #include <linux/security.h>
-> -#include <linux/iversion.h>
->  #include <linux/fiemap.h>
+> @@ -1323,8 +1324,10 @@ xfs_sb_get_secondary(
+>  }
 >  
 >  /*
-> -- 
-> 2.43.0
-> 
+> - * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+> - * so users won't be confused by values in error messages.
+> + * sunit, swidth, sectorsize(optional with 0) should be all in bytes, so users
+> + * won't be confused by values in error messages.  This function returns false
+> + * if the stripe geometry is invalid and the caller is unable to repair the
+> + * stripe configuration later in the mount process.
+>   */
+>  bool
+>  xfs_validate_stripe_geometry(
+> @@ -1332,20 +1335,21 @@ xfs_validate_stripe_geometry(
+>  	__s64			sunit,
+>  	__s64			swidth,
+>  	int			sectorsize,
+> +	bool			may_repair,
+>  	bool			silent)
+>  {
+>  	if (swidth > INT_MAX) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "stripe width (%lld) is too large", swidth);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sunit > swidth) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sectorsize && (int)sunit % sectorsize) {
+> @@ -1353,21 +1357,21 @@ xfs_validate_stripe_geometry(
+>  			xfs_notice(mp,
+>  "stripe unit (%lld) must be a multiple of the sector size (%d)",
+>  				   sunit, sectorsize);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sunit && !swidth) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "invalid stripe unit (%lld) and stripe width of 0", sunit);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (!sunit && swidth) {
+>  		if (!silent)
+>  			xfs_notice(mp,
+>  "invalid stripe width (%lld) and stripe unit of 0", swidth);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  
+>  	if (sunit && (int)swidth % (int)sunit) {
+> @@ -1375,9 +1379,27 @@ xfs_validate_stripe_geometry(
+>  			xfs_notice(mp,
+>  "stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+>  				   swidth, sunit);
+> -		return false;
+> +		goto check_override;
+>  	}
+>  	return true;
+> +
+> +check_override:
+> +	if (!may_repair)
+> +		return false;
+> +	/*
+> +	 * During mount, mp->m_dalign will not be set unless the sunit mount
+> +	 * option was set. If it was set, ignore the bad stripe alignment values
+> +	 * and allow the validation and overwrite later in the mount process to
+> +	 * attempt to overwrite the bad stripe alignment values with the values
+> +	 * supplied by mount options.
+> +	 */
+> +	if (!mp->m_dalign)
+> +		return false;
+> +	if (!silent)
+> +		xfs_notice(mp,
+> +"Will try to correct with specified mount options sunit (%d) and swidth (%d)",
+> +			BBTOB(mp->m_dalign), BBTOB(mp->m_swidth));
+> +	return true;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 2e8e8d63d4eb..37b1ed1bc209 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -35,8 +35,9 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+>  				struct xfs_trans *tp, xfs_agnumber_t agno,
+>  				struct xfs_buf **bpp);
+>  
+> -extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+> -		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
+> +bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+> +		__s64 sunit, __s64 swidth, int sectorsize, bool may_repair,
+> +		bool silent);
+>  
+>  uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+>  
 > 
