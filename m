@@ -1,48 +1,77 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f52.google.com (mail-oo1-f52.google.com [209.85.161.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24D0D64CE6;
-	Tue, 19 Mar 2024 01:36:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E3A664CF2
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 02:15:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710812191; cv=none; b=JVD5VFaMbR7vnoXhfo9aN+/v5O15tcfe+UH15U9rAJvdicqnYxCIIXmk/+ugFbCj07kH96jpoSLxvtQq2fkysMrrYsRaq4BiWebTZN6LUDynyZ/8NjzdgSLiNQBwRv+EDhdWB6puYV1cxzerTwl7ofsY/KMzlCgmSnJrASlh3aU=
+	t=1710814554; cv=none; b=B/ZupEHbOynDUZVqZAUXGyWy9mrZNRVjiuqmK8iu5yDhv23+AwqjqeEJb6hm+RZ6Ev+j342GKcsAN6dnCWK/Ut8489XhvcC/oFLjv6s4eSgSEiJ6Gd3AX64aC2hqk30Ke6PnsbBzp7bnFWNKYHMjYHbEm1VJ+6QVu4EXvadaj6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710812191; c=relaxed/simple;
-	bh=o4H8PrhpY77bG69iFjnWF46CIYn0Hh8JwxDCfzb70ns=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=QbIk05Hg3F1D06VpG6LMlus5mKb78vWPB94qJGqCS13Jb4MWi3HTMtvsL+5nWUA6IwFaly1z8QZrCX3VTV4uh5EyfOEJN5JFUo4Bzsg1jb7J8klmXl6ET6OkvhXnWXGYkInuUIDvgC+GvymNI+bcff0JDdknJv8Tehp+GhG/3vc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TzDPZ2LBvz4f3mJ1;
-	Tue, 19 Mar 2024 09:18:26 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 338D31A0E78;
-	Tue, 19 Mar 2024 09:18:34 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgAn9g7O5_hlUIGNHQ--.34497S8;
-	Tue, 19 Mar 2024 09:18:33 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	brauner@kernel.org,
-	david@fromorbit.com,
-	tytso@mit.edu,
-	jack@suse.cz,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com
-Subject: [PATCH v3 4/9] xfs: convert delayed extents to unwritten when zeroing post eof blocks
-Date: Tue, 19 Mar 2024 09:10:57 +0800
-Message-Id: <20240319011102.2929635-5-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240319011102.2929635-1-yi.zhang@huaweicloud.com>
-References: <20240319011102.2929635-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1710814554; c=relaxed/simple;
+	bh=Yf94FY864Fwa7x4u2KYqLTej0wzrVk59PEiLDqIhPHs=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YJV0IyJJ2vIpSfOup9JRrbtuk2yPqY9L8cB87LsnUS+VkIMzksOV7wxtonIsTiWOA/FT1ApcucAKuZ8hCP/QrUI0acPyaT/Jujtj96VGasS0NgONTHU1w3vFPmKoDP0yK7dXQOsT1Sk7lis3FyPDGWGXW5blGqOHUrk8vBpEu4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=QSGccO2i; arc=none smtp.client-ip=209.85.161.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="QSGccO2i"
+Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-5a21859a4b8so2290087eaf.0
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 19:15:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710814552; x=1711419352; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=u19OYdpiE5iqRxNzLdEz7cY57m3mFVh4j8humQaHnUA=;
+        b=QSGccO2iroOeNHJjnD116c5k++xo2c2pUo1TtvGUst1EUX3i3z8K12c/ZdfKrtPXC0
+         KjELquKlslPZ7Bu9eukwlgxuKq2ntRmJMlnlckwqbrltHLunk5LHRPopOnzPoDvi6FfL
+         kj9uhb8xsCZP1mXc6TyYDD5B9pTKP7yok9xOfEGTzV4pEKzyqtLNOsDyiOk/bW0aSBRw
+         e2FvfzWvXmUmBjyNkWW/eRM7h7sKJSP6o29b+oNoyAZtpPQtzVA2/qJF5bpJqCBkiWIy
+         0PwX6+mPdffO4zhiPRMzSoM4VkQE6peHNNLoBqNuF2oCK6ut63jVMTFs3kPO4mkN6kVT
+         4QeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710814552; x=1711419352;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=u19OYdpiE5iqRxNzLdEz7cY57m3mFVh4j8humQaHnUA=;
+        b=GFK+vS59jZzHLDAa8uYPpJIWzT/Kfpk9Ta32H0SVCq3HNXAWIJRxj+V9ZAncH9Kyla
+         9+iAaHUQ0dK9/2Mi8b0UoywZCgeDZEdVsZcq9thnUAtAlNNBuiRKHh1Ik3IjTUdhjqPK
+         h+W7agsYmBfAh0NyvOpnNoid/ov8wp1ehoxTd+xFxd+WbblQ51YdhCmQ6Sho6xB9OKx1
+         6wf6rnoCLq1//5FENvE7wmEEk3lusFdOv0RjtcqeFXD9x/rnnnaFCfdn0rD8ZJIA/P+g
+         xkGDzUG1YWpYneJc7XK5WDuTbarB/qcuQ+HvJNHBAfvrbwBQp0gDASiSeJnL2iA4HCS6
+         XH/A==
+X-Gm-Message-State: AOJu0Yxj2wwMXXap0vH4bN2LbqzUSmty7KsffQEC3tlnuT4w+t77Q1O0
+	9xoSFfPgm/fF00D+IxANyQ0nfMNsROmqghwjQIK28Z88gsKDyTBZ+9u586PO9LUXuKqPYO/e1oG
+	j
+X-Google-Smtp-Source: AGHT+IFo26MD8UjzexDgXp2Jr+vMCLYMP7GGG7kL81yV9Tv6MbAKeLoUN2BaGF5dtc4KCyBrZPPYcg==
+X-Received: by 2002:a05:6358:2799:b0:17b:f11f:5cc3 with SMTP id l25-20020a056358279900b0017bf11f5cc3mr14741795rwb.18.1710814551881;
+        Mon, 18 Mar 2024 19:15:51 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-185-123.pa.nsw.optusnet.com.au. [49.180.185.123])
+        by smtp.gmail.com with ESMTPSA id i124-20020a62c182000000b006e24991dd5bsm9244033pfg.98.2024.03.18.19.15.51
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Mar 2024 19:15:51 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+	by dread.disaster.area with esmtp (Exim 4.96)
+	(envelope-from <dave@fromorbit.com>)
+	id 1rmP13-003s4y-1t
+	for linux-xfs@vger.kernel.org;
+	Tue, 19 Mar 2024 13:15:49 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.97)
+	(envelope-from <dave@devoid.disaster.area>)
+	id 1rmP13-0000000Ec6j-0LWf
+	for linux-xfs@vger.kernel.org;
+	Tue, 19 Mar 2024 13:15:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH 1/5] xfs: buffer log item type mismatches are corruption
+Date: Tue, 19 Mar 2024 13:15:20 +1100
+Message-ID: <20240319021547.3483050-2-david@fromorbit.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240319021547.3483050-1-david@fromorbit.com>
+References: <20240319021547.3483050-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,105 +79,145 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAn9g7O5_hlUIGNHQ--.34497S8
-X-Coremail-Antispam: 1UD129KBjvJXoWxGw4ktry7GF4Utw4UurW8Crg_yoW5Aw15pF
-	Z3Kwn8GrsxGw13Zws3AFnagw1F9wn5Cw4UJryfWwn3Xas8tr1IgryIy3WYgw18ArZ3A3Wj
-	gF4YgF1I934UuaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
-	UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Zhang Yi <yi.zhang@huawei.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Current clone operation could be non-atomic if the destination of a file
-is beyond EOF, user could get a file with corrupted (zeroed) data on
-crash.
+We detect when a buffer log format type and the magic number in the
+buffer do not match. We issue a warning, but do not return an error
+nor do we write back the recovered buffer. If no further recover
+action is performed on that buffer, then recovery has left the
+buffer in an inconsistent (out of date) state on disk. i.e. the
+structure is corrupt on disk.
 
-The problem is about to pre-alloctions. If you write some data into a
-file [A, B) (the position letters are increased one by one), and xfs
-could pre-allocate some blocks, then we get a delayed extent [A, D).
-Then the writeback path allocate blocks and convert this delayed extent
-[A, C) since lack of enough contiguous physical blocks, so the extent
-[C, D) is still delayed. After that, both the in-memory and the on-disk
-file size are B. If we clone file range into [E, F) from another file,
-xfs_reflink_zero_posteof() would call iomap_zero_range() to zero out the
-range [B, E) beyond EOF and flush range. Since [C, D) is still a delayed
-extent, it will be zeroed and the file's in-memory && on-disk size will
-be updated to D after flushing and before doing the clone operation.
-This is wrong, because user can user can see the size change and read
-zeros in the middle of the clone operation.
+If this mismatch occurs, return a -EFSCORRUPTED error and cause
+recovery to abort instead of letting recovery corrupt the filesystem
+and continue onwards.
 
-We need to keep the in-memory and on-disk size before the clone
-operation starts, so instead of writing zeroes through the page cache
-for delayed ranges beyond EOF, we convert these ranges to unwritten and
-invalidating any cached data over that range beyond EOF.
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_iomap.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ fs/xfs/xfs_buf_item_recover.c | 51 +++++++++++++++++------------------
+ 1 file changed, 24 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ccf83e72d8ca..1a6d05830433 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1035,6 +1035,24 @@ xfs_buffered_write_iomap_begin(
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index d74bf7bb7794..dba57ee6fa6d 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -207,7 +207,7 @@ xlog_recover_buf_commit_pass1(
+  *	the first 32 bits of the buffer (most blocks),
+  *	inside a struct xfs_da_blkinfo at the start of the buffer.
+  */
+-static void
++static int
+ xlog_recover_validate_buf_type(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_buf			*bp,
+@@ -407,11 +407,12 @@ xlog_recover_validate_buf_type(
+ 	 * skipped.
+ 	 */
+ 	if (current_lsn == NULLCOMMITLSN)
+-		return;
++		return 0;;
+ 
+ 	if (warnmsg) {
+ 		xfs_warn(mp, warnmsg);
+-		ASSERT(0);
++		xfs_buf_corruption_error(bp, __this_address);
++		return -EFSCORRUPTED;
  	}
  
- 	if (imap.br_startoff <= offset_fsb) {
-+		/*
-+		 * For zeroing out delayed allocation extent, we trim it if
-+		 * it's partial beyonds EOF block, or convert it to unwritten
-+		 * extent if it's all beyonds EOF block.
-+		 */
-+		if ((flags & IOMAP_ZERO) &&
-+		    isnullstartblock(imap.br_startblock)) {
-+			xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-+
-+			if (offset_fsb >= eof_fsb)
-+				goto convert_delay;
-+			if (end_fsb > eof_fsb) {
-+				end_fsb = eof_fsb;
-+				xfs_trim_extent(&imap, offset_fsb,
-+						end_fsb - offset_fsb);
-+			}
-+		}
-+
- 		/*
- 		 * For reflink files we may need a delalloc reservation when
- 		 * overwriting shared extents.   This includes zeroing of
-@@ -1158,6 +1176,17 @@ xfs_buffered_write_iomap_begin(
- 	xfs_iunlock(ip, lockmode);
- 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
- 
-+convert_delay:
-+	xfs_iunlock(ip, lockmode);
-+	truncate_pagecache(inode, offset);
-+	error = xfs_bmapi_convert_delalloc(ip, XFS_DATA_FORK, offset,
-+					iomap, NULL);
-+	if (error)
-+		return error;
-+
-+	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
+ 	/*
+@@ -425,14 +426,11 @@ xlog_recover_validate_buf_type(
+ 	 * the buffer. Therefore, initialize a bli purely to carry the LSN to
+ 	 * the verifier.
+ 	 */
+-	if (bp->b_ops) {
+-		struct xfs_buf_log_item	*bip;
+-
+-		bp->b_flags |= _XBF_LOGRECOVERY;
+-		xfs_buf_item_init(bp, mp);
+-		bip = bp->b_log_item;
+-		bip->bli_item.li_lsn = current_lsn;
+-	}
++	ASSERT(bp->b_ops);
++	bp->b_flags |= _XBF_LOGRECOVERY;
++	xfs_buf_item_init(bp, mp);
++	bp->b_log_item->bli_item.li_lsn = current_lsn;
 +	return 0;
+ }
+ 
+ /*
+@@ -441,7 +439,7 @@ xlog_recover_validate_buf_type(
+  * given buffer.  The bitmap in the buf log format structure indicates
+  * where to place the logged data.
+  */
+-STATIC void
++static int
+ xlog_recover_do_reg_buffer(
+ 	struct xfs_mount		*mp,
+ 	struct xlog_recover_item	*item,
+@@ -523,20 +521,20 @@ xlog_recover_do_reg_buffer(
+ 	/* Shouldn't be any more regions */
+ 	ASSERT(i == item->ri_total);
+ 
+-	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
++	return xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+ }
+ 
+ /*
+- * Perform a dquot buffer recovery.
++ * Test if this dquot buffer item should be recovered.
+  * Simple algorithm: if we have found a QUOTAOFF log item of the same type
+  * (ie. USR or GRP), then just toss this buffer away; don't recover it.
+  * Else, treat it as a regular buffer and do recovery.
+  *
+- * Return false if the buffer was tossed and true if we recovered the buffer to
+- * indicate to the caller if the buffer needs writing.
++ * Return false if the buffer should be tossed and true if the buffer needs
++ * to be recovered.
+  */
+-STATIC bool
+-xlog_recover_do_dquot_buffer(
++static bool
++xlog_recover_this_dquot_buffer(
+ 	struct xfs_mount		*mp,
+ 	struct xlog			*log,
+ 	struct xlog_recover_item	*item,
+@@ -565,8 +563,6 @@ xlog_recover_do_dquot_buffer(
+ 	 */
+ 	if (log->l_quotaoffs_flag & type)
+ 		return false;
+-
+-	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
+ 	return true;
+ }
+ 
+@@ -952,18 +948,19 @@ xlog_recover_buf_commit_pass2(
+ 
+ 	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
+ 		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
+-		if (error)
+-			goto out_release;
+ 	} else if (buf_f->blf_flags &
+ 		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+-		bool	dirty;
+-
+-		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
+-		if (!dirty)
++		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
+ 			goto out_release;
 +
- found_cow:
- 	seq = xfs_iomap_inode_sequence(ip, 0);
- 	if (imap.br_startoff <= offset_fsb) {
++		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
++				NULLCOMMITLSN);
+ 	} else {
+-		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
++		error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f,
++				current_lsn);
+ 	}
++	if (error)
++		goto out_release;
+ 
+ 	/*
+ 	 * Perform delayed write on the buffer.  Asynchronous writes will be
 -- 
-2.39.2
+2.43.0
 
