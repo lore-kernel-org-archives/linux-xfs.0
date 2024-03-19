@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 089E65EE67
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 23:14:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D1C57874
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 23:17:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710890088; cv=none; b=rIFvNvNSL1Y5d0lbyyeGdMqOwtMvP+UNOqc5WOv2+MamqlJRGm+ZKT4FhSAB/TGVsIzC2Wm+HG88RJULNQpszAcwDlQ7pf3pc9DG64YSDEUIkotRqVfMLFG7WRMQAjyanGiooV2rozWpK+jkoGY/Fb0lTbV/ZNrAA1gNKg17D2o=
+	t=1710890240; cv=none; b=StOHNc+QDVGKofWbYtqqjm5iC/cxyPnrLAYSLe/XnC7Y6Ttq0rgQAlLb42iqRK7c02W/IeF8DksjpZKUQCq8mYQFFw/OApPSxERLK90/oSCByhVGXuVo3i8RrIPFwFxXLTwGEX0k8ZJ15/tN4jRaW7rB7mNmO0mwbY5/fHfPv3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710890088; c=relaxed/simple;
-	bh=hx7tFt287CXQ4efiChS4xhZ9mEX2q6u4Cy8TimAim/0=;
+	s=arc-20240116; t=1710890240; c=relaxed/simple;
+	bh=0gF1aHBoJ7sfbKMIXG7bz8oFoxTFuZobhIU+TxZr0uM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CqwUwkwCL/r7NtvJWyM06Y8xiSme2ySoLkMSgqcdwWnESfpGHORGNV464Weo3O+BYbpak+uFK5GxAV0/AAEUo/NhH2qZeClB8J2rkVb7XlGt54l0FmN2MfzeKfJG67ZZ4nBLQzEGXrRObkuiVX+RguAIQXbbI8CYiSGyZCU9zZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fbDW4ntA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=knPi3DQj/52eQS/bAxAibyM7uNnSTkcuEkOnm0yMoVC6yjLwVEBQNbKrEntUa5/GruIU9W4IIVd+ewUF3Tv8q9Tv8FBt70+Pa2lI0TazkO3JHWrjyFD+JV6HgSzgALwu4V5V+EKlRNALX8aJEINjSaGMoji84i3NdTx7p9WIBuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BXAR8QSn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbDW4ntA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5CFAC433C7;
-	Tue, 19 Mar 2024 23:14:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BXAR8QSn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27BF4C433C7;
+	Tue, 19 Mar 2024 23:17:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710890087;
-	bh=hx7tFt287CXQ4efiChS4xhZ9mEX2q6u4Cy8TimAim/0=;
+	s=k20201202; t=1710890240;
+	bh=0gF1aHBoJ7sfbKMIXG7bz8oFoxTFuZobhIU+TxZr0uM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fbDW4ntA/KIoDYswVQBx57MKbqHoMNE32CvasgNnLdZr7h4oBXRh5IFxc6jhy/DA4
-	 H2R+ht3iKHYtrigUQKHdd7bzOsed+YCDtxa13k7LgLkN9z+huS6s0xExfY1GVgkByI
-	 eTvF59kwEq7J60HRRjyXXPrOk9MtbQeSHai6rrtM5C2vVlP22bVN0ZkTtqnhM+rI9m
-	 6buFRDufZOTYF4qYeuJwKjrNQKQW31xNmKSzZxse3iTVu5yi2Orouj0OiRB6ZRsDqY
-	 eic3kTfJl7nduHDeQHGJP88SmekXzO+y3iuNYbg9cGwRQJGUIT16sLm+/fSwLw+Tz0
-	 OUSwA+9CdzKJA==
-Date: Tue, 19 Mar 2024 16:14:47 -0700
+	b=BXAR8QSnPdrm7eZPKjhzWzII8di2cQ1037B+NArF53KB1I3GZ+MTTFOFrgHo5pAXR
+	 tgdfZtQ6uTrm/kj0AkUhJyOwESv9cnWiyimRtPAFvcndX3llVyq+4YsPoUUUkz/5hd
+	 B/AkeVy4VjfXVpml3hcK/t3utP55NBQzcT7b99UQudVs4xZvUCJpu9pwG6OHQAdmP9
+	 kMyL4k9hjL8xN1vYtOWPO6aAa25DKhmLd+RNQKSgXZVUu+rje7NohosUw0+/M4BxAK
+	 MmQ7Zg/nKpmp1nyuszlO20f3sQxsweL7gwnjtcn3UfOw8qJhV+rNzwUB94KLVlH4EP
+	 +uWdQBKLSlmzg==
+Date: Tue, 19 Mar 2024 16:17:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: detect partial buffer recovery operations
-Message-ID: <20240319231447.GS1927156@frogsfrogsfrogs>
-References: <20240319021547.3483050-1-david@fromorbit.com>
- <20240319021547.3483050-5-david@fromorbit.com>
- <ZfoXihIirJ1PZrs5@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: internalise all remaining i_version support
+Message-ID: <20240319231719.GT1927156@frogsfrogsfrogs>
+References: <20240318225406.3378998-1-david@fromorbit.com>
+ <20240318225406.3378998-3-david@fromorbit.com>
+ <20240319175411.GW1927156@frogsfrogsfrogs>
+ <ZfoadKGgatGjTM_5@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,37 +44,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZfoXihIirJ1PZrs5@infradead.org>
+In-Reply-To: <ZfoadKGgatGjTM_5@infradead.org>
 
-On Tue, Mar 19, 2024 at 03:54:02PM -0700, Christoph Hellwig wrote:
-> > +static bool
-> > +xlog_recovery_is_dir_buf(
-> > +	struct xfs_buf_log_format	*buf_f)
-> > +{
-> > +	switch (xfs_blft_from_flags(buf_f)) {
-> > +	case XFS_BLFT_DIR_BLOCK_BUF:
-> > +	case XFS_BLFT_DIR_DATA_BUF:
-> > +	case XFS_BLFT_DIR_FREE_BUF:
-> > +	case XFS_BLFT_DIR_LEAF1_BUF:
-> > +	case XFS_BLFT_DIR_LEAFN_BUF:
-> > +	case XFS_BLFT_DA_NODE_BUF:
-> 
-> XFS_BLFT_DA_NODE_BUF can also be a non-directory buffer.  Maybe this
-> should be named something like xlog_recover_maybe_is_partial_dabuf?
-> 
-> > +		error = bp->b_error;
-> >  		goto out_release;
-> >  	}
-> >  
-> > +
-> 
-> This adds a spurious new line.
-> 
-> Otherwise this looks good to me, but the lack over verifiation for these
-> multi-buffer recoveries really scares me..
+On Tue, Mar 19, 2024 at 04:06:28PM -0700, Christoph Hellwig wrote:
+> Is there much of a good reason to do this now vs oing it whenverer
+> we actually sort out i_version semantics?  It adds size to the inode
+> and I don't see how the atomics actually cost us much.  The patch
+> itself does looks good, though.
 
-I wondered if there was a good way to reconstruct the discontiguous
-buffer, but the only things I could think of relied on guessing from the
-subsequent buffer log items.  Does anyone have a better idea?
+I /think/ it's safe because all the callers I found gated their
+inode*inc_iversion calls on IS_I_VERSION(), but as di_changecount is now
+a totally internal inode attribute, I don't think it should be out where
+the VFS can mess with it.
 
 --D
