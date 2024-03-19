@@ -1,457 +1,206 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05A656519F
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 02:15:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73E6B7BAE5
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 03:33:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710814556; cv=none; b=fNj6ckRp5A7ktZ+qaLHSTJ671ksZpvraBsv9v2OJm+v31LPYE/uLWVMQv4PR+8VbPjPeyb1qnxuXUWlqqlLZmUShC4HupuBFNVFBE0wY9ZtvjPJvBt1awnBv1tdY/zJjOL9F6WQ8iYehnvts6QSRbiLtybJ8/gMJoPTcP6Kk2O4=
+	t=1710819206; cv=none; b=dsIO3VP1TPEskaiBjxRSeXBqNzfnaxvSxh5rloykbxA6YCQLlJqwUJ8YbSMgd8kXqF+OGF6tjwpRryaVbq0yAVHV3m7muQ30ubb7FDkv2cABW3yKIm8Vp+O7jtwREMEeJKXLXim2skuCV6d61JFi1Rtiq6it0VwGdQhoOGChZNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710814556; c=relaxed/simple;
-	bh=NC1t73V1iGHLmA7XX3Q34tvP/yUNPUOpBaKT8dqWnBE=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hO/JW5oObdf5iprO4KWQ3gi3smGXKR/Uy54j6yloESQes103iOXUC/HyclxpCMoyTh6AbYrGN8ix03uHxzcs/CsX1LkcQcHsV+wx7SySIqP2zENSYY5V2uqYK5CwQKDqrDLR8cCdeW7FymJIdmMXNDUVjirxnTM6iYOXcJ7vJpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=k7cWUkhx; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="k7cWUkhx"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6e6b6e000a4so3649006b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 19:15:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1710814554; x=1711419354; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=24o4gVkaqlIvornYMOTOaMU+m9Aa0KOswsQ0d2h0+Co=;
-        b=k7cWUkhxywgXS41zeEt9cnm82pDpHLiAO/LEkBZY0TwmEbsFAn6za26qgWZl84m/t+
-         07kRmKx9/8D5QyhCE2PY0OFH7hycMfFkXZzfb1+nErEXy/cWHEBTXd4FzLQeG/LiGc2a
-         zi2MiawXYoPQCmW49G4SHNslnKoBH4yEdgm3N49k01+tUz6/+S0Zt0kTRflKgtwmEi7e
-         6BOlTWtPBf/5T5htrg3zpHyUylkQBt8wvmSkLN+GBiXTk6OTGvdyO3/SbKYWdvKdvJpu
-         YwvpEzn2ANPi/YZ67lyPY0od5fB+cc6JCr21plT0frNYxHz6M+QqYoY/6cBjNPtazbHr
-         TVIw==
+	s=arc-20240116; t=1710819206; c=relaxed/simple;
+	bh=foU7Dh8htpgGcaSBFSwvBOAYFXfZVzC57V6NEB1PYeI=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=fOgApTKxOgbVpERnxdYcid+lNoAbY3FqEtJ6n1sslxyIkh6ZKozobzgDXiw0UHjcrZzalPyyGLc5l/bbMt4WDhwAAw9JD36PL5qzi5jumOIFfc/QML8e6ktSToEujZ5Mv7OV5UpvQKScV2GpfUn4Aje04fMzGN+9Xr+fQKfPpjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3684bee9c40so1756465ab.0
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2024 20:33:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710814554; x=1711419354;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=24o4gVkaqlIvornYMOTOaMU+m9Aa0KOswsQ0d2h0+Co=;
-        b=kjgNQti1lI1N27aHtQOWnvwFOowch9faCwOv7XLSjYF7MAKGGzukoOtsgVxQu4rtLk
-         nYcP0tdOSL3weLT/rqhFrYrupjo2cusQ6wE5F2U2EqQRWxTvPwsgSvO3pxahSKhI/yzf
-         Ezyb+WohAbxcpeoK8SQJCkswP3n55GnYmXUcuNH0fnhVdAmd+L2q11X3VjduSeqKMiF0
-         P8MEwApnl7c2WFE3k59aNDNs+VJ3vB9gZs6BEodxZTHD8GKPEX88w8aBLHbYFBgDGrvX
-         QSrunMCbOKuNVwMnWd3HIVb7ybODUM8ojA9ghehop6eRao4czMcrOvmfUK67CXB89S0e
-         tAVg==
-X-Gm-Message-State: AOJu0Yy/GZY2MLcwt3abQsBCTuIh5RGKlibSlQExkayOLnlHOHNe5qO8
-	RYgB0QAYILsbzyHoxdl0oBX7WOYnfZZp7ydK8DAIfLqXfw6OH20yssKjkmlvKJDwPPgJuWECZaa
-	7
-X-Google-Smtp-Source: AGHT+IFpijfPaDf24mhmetWim78HpEuXOvXikdmOGW8luRkPQlZeE4VA8FDwY9ziP0oEnKS6PX9YqQ==
-X-Received: by 2002:a05:6a21:398b:b0:1a3:639a:d546 with SMTP id ad11-20020a056a21398b00b001a3639ad546mr1915433pzc.7.1710814554043;
-        Mon, 18 Mar 2024 19:15:54 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-185-123.pa.nsw.optusnet.com.au. [49.180.185.123])
-        by smtp.gmail.com with ESMTPSA id v14-20020aa799ce000000b006da96503d9fsm8626280pfi.109.2024.03.18.19.15.51
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Mar 2024 19:15:52 -0700 (PDT)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-	by dread.disaster.area with esmtp (Exim 4.96)
-	(envelope-from <dave@fromorbit.com>)
-	id 1rmP13-003s5F-2X
-	for linux-xfs@vger.kernel.org;
-	Tue, 19 Mar 2024 13:15:49 +1100
-Received: from dave by devoid.disaster.area with local (Exim 4.97)
-	(envelope-from <dave@devoid.disaster.area>)
-	id 1rmP13-0000000Ec72-17st
-	for linux-xfs@vger.kernel.org;
-	Tue, 19 Mar 2024 13:15:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: consistently use struct xlog in buffer item recovery
-Date: Tue, 19 Mar 2024 13:15:24 +1100
-Message-ID: <20240319021547.3483050-6-david@fromorbit.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240319021547.3483050-1-david@fromorbit.com>
-References: <20240319021547.3483050-1-david@fromorbit.com>
+        d=1e100.net; s=20230601; t=1710819203; x=1711424003;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Csjh0lxNo0sPgq8PGq+TzcEtEY7UHn0bf829ioXWN0c=;
+        b=LkzNuwjzIxP3vooVBmw0Xm9Mzp4hMGXzGhUevvFm7qcRB6e+eAgNetvL7p2VQ+4xM2
+         7kV53VhN//Kv7BSnQWTJIsWiCqoSx4VtJQQZra3hI+vjte0GAxbUxPY9L8X9U53xbaQ+
+         pg37MzQfw7hiYVKiyJrjA3neO9BQV7uQHNDzhmkseOBAarVyezfldkKTFZLbHHWKShOZ
+         ZtP5IzjYCMbl1XnPZt8GfXwbcBBokUopyUqgUCYjB60HrQ5vopMAsB5YwjxPDcF4/tbB
+         AFTjOENEPjLGSiH9rt5scp9uO+Ky6ysabakEa3ojipF/DjnBFydHYO7HANp5wZsfdpwS
+         8Z4g==
+X-Forwarded-Encrypted: i=1; AJvYcCVjF/G/kFMQE09aUOl4LyVot4ljNSn6BPHqlGRSEeGaWxqJJAiMUUuo7Tj76pljBU3i4l5rQAQ7jS96Gr0QyIFP6tj9vb8B5uZf
+X-Gm-Message-State: AOJu0YyG+0fBPXca3H4aAZ/aMbtVGeg3m2L+fvFX036FbrCPVgMn9SRm
+	Hc1TaM0eB0hPNAyXU6VAZ0e5bP/XniSUaToC+c+feRuTWyooMe8S/S4J8CvguJe2D6nwgUNBiJ2
+	URBuij4cm8S5qnWjua3tgTtf3YBStfcdl3L+qWcYYOkqfkItfoTb//vc=
+X-Google-Smtp-Source: AGHT+IHCxtljGz0UAMsiGPWn/AccGbvldt5Q9YBlfC9M01nPa2qg+X1j8BikjRevWbkLwxSWbIWGJA2tNIdFANltpQFhwgUeAouO
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6e02:1d97:b0:366:97fc:b9cf with SMTP id
+ h23-20020a056e021d9700b0036697fcb9cfmr91886ila.0.1710819203707; Mon, 18 Mar
+ 2024 20:33:23 -0700 (PDT)
+Date: Mon, 18 Mar 2024 20:33:23 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000e981c10613fb227e@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_qm_dqfree_one
+From: syzbot <syzbot+b44399433a41aaed7a9f@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-From: Dave Chinner <dchinner@redhat.com>
+Hello,
 
-Rather than passing a mix of xfs_mount and xlog (and sometimes both)
-through the call chain of buffer log item recovery, just pass
-the struct xlog and pull the xfs_mount from that only at the leaf
-functions where it is needed. This makes it all just a little
-cleaner.
+syzbot found the following issue on:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+HEAD commit:    906a93befec8 Merge tag 'efi-fixes-for-v6.9-1' of git://git..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=12d6ea6e180000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5206351398500a90
+dashboard link: https://syzkaller.appspot.com/bug?extid=b44399433a41aaed7a9f
+compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-906a93be.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/f096ab7eaede/vmlinux-906a93be.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/52e0859d6157/bzImage-906a93be.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+b44399433a41aaed7a9f@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.8.0-syzkaller-11405-g906a93befec8 #0 Not tainted
+------------------------------------------------------
+kswapd0/109 is trying to acquire lock:
+ffff888022fc0958 (&qinf->qi_tree_lock){+.+.}-{3:3}, at: xfs_qm_dqfree_one+0x6f/0x1a0 fs/xfs/xfs_qm.c:1654
+
+but task is already holding lock:
+ffffffff8d930be0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x166/0x19a0 mm/vmscan.c:6782
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (fs_reclaim){+.+.}-{0:0}:
+       __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
+       fs_reclaim_acquire+0x102/0x160 mm/page_alloc.c:3712
+       might_alloc include/linux/sched/mm.h:312 [inline]
+       slab_pre_alloc_hook mm/slub.c:3746 [inline]
+       slab_alloc_node mm/slub.c:3827 [inline]
+       kmem_cache_alloc+0x4f/0x320 mm/slub.c:3852
+       radix_tree_node_alloc.constprop.0+0x7c/0x350 lib/radix-tree.c:276
+       radix_tree_extend+0x1a2/0x4d0 lib/radix-tree.c:425
+       __radix_tree_create lib/radix-tree.c:613 [inline]
+       radix_tree_insert+0x499/0x630 lib/radix-tree.c:712
+       xfs_qm_dqget_cache_insert.constprop.0+0x38/0x2c0 fs/xfs/xfs_dquot.c:826
+       xfs_qm_dqget+0x182/0x4a0 fs/xfs/xfs_dquot.c:901
+       xfs_qm_scall_setqlim+0x172/0x1980 fs/xfs/xfs_qm_syscalls.c:300
+       xfs_fs_set_dqblk+0x166/0x1e0 fs/xfs/xfs_quotaops.c:267
+       quota_setquota+0x4c5/0x5f0 fs/quota/quota.c:310
+       do_quotactl+0xb03/0x13e0 fs/quota/quota.c:802
+       __do_sys_quotactl fs/quota/quota.c:961 [inline]
+       __se_sys_quotactl fs/quota/quota.c:917 [inline]
+       __x64_sys_quotactl+0x1b4/0x440 fs/quota/quota.c:917
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xd2/0x260 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x6d/0x75
+
+-> #0 (&qinf->qi_tree_lock){+.+.}-{3:3}:
+       check_prev_add kernel/locking/lockdep.c:3134 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+       validate_chain kernel/locking/lockdep.c:3869 [inline]
+       __lock_acquire+0x2478/0x3b30 kernel/locking/lockdep.c:5137
+       lock_acquire kernel/locking/lockdep.c:5754 [inline]
+       lock_acquire+0x1b1/0x540 kernel/locking/lockdep.c:5719
+       __mutex_lock_common kernel/locking/mutex.c:608 [inline]
+       __mutex_lock+0x175/0x9c0 kernel/locking/mutex.c:752
+       xfs_qm_dqfree_one+0x6f/0x1a0 fs/xfs/xfs_qm.c:1654
+       xfs_qm_shrink_scan+0x25c/0x3f0 fs/xfs/xfs_qm.c:531
+       do_shrink_slab+0x44f/0x1160 mm/shrinker.c:435
+       shrink_slab+0x18a/0x1310 mm/shrinker.c:662
+       shrink_one+0x493/0x7c0 mm/vmscan.c:4774
+       shrink_many mm/vmscan.c:4835 [inline]
+       lru_gen_shrink_node mm/vmscan.c:4935 [inline]
+       shrink_node+0x231f/0x3a80 mm/vmscan.c:5894
+       kswapd_shrink_node mm/vmscan.c:6704 [inline]
+       balance_pgdat+0x9a0/0x19a0 mm/vmscan.c:6895
+       kswapd+0x5ea/0xb90 mm/vmscan.c:7164
+       kthread+0x2c1/0x3a0 kernel/kthread.c:388
+       ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:243
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(fs_reclaim);
+                               lock(&qinf->qi_tree_lock);
+                               lock(fs_reclaim);
+  lock(&qinf->qi_tree_lock);
+
+ *** DEADLOCK ***
+
+1 lock held by kswapd0/109:
+ #0: ffffffff8d930be0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x166/0x19a0 mm/vmscan.c:6782
+
+stack backtrace:
+CPU: 3 PID: 109 Comm: kswapd0 Not tainted 6.8.0-syzkaller-11405-g906a93befec8 #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x116/0x1f0 lib/dump_stack.c:114
+ check_noncircular+0x31a/0x400 kernel/locking/lockdep.c:2187
+ check_prev_add kernel/locking/lockdep.c:3134 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+ validate_chain kernel/locking/lockdep.c:3869 [inline]
+ __lock_acquire+0x2478/0x3b30 kernel/locking/lockdep.c:5137
+ lock_acquire kernel/locking/lockdep.c:5754 [inline]
+ lock_acquire+0x1b1/0x540 kernel/locking/lockdep.c:5719
+ __mutex_lock_common kernel/locking/mutex.c:608 [inline]
+ __mutex_lock+0x175/0x9c0 kernel/locking/mutex.c:752
+ xfs_qm_dqfree_one+0x6f/0x1a0 fs/xfs/xfs_qm.c:1654
+ xfs_qm_shrink_scan+0x25c/0x3f0 fs/xfs/xfs_qm.c:531
+ do_shrink_slab+0x44f/0x1160 mm/shrinker.c:435
+ shrink_slab+0x18a/0x1310 mm/shrinker.c:662
+ shrink_one+0x493/0x7c0 mm/vmscan.c:4774
+ shrink_many mm/vmscan.c:4835 [inline]
+ lru_gen_shrink_node mm/vmscan.c:4935 [inline]
+ shrink_node+0x231f/0x3a80 mm/vmscan.c:5894
+ kswapd_shrink_node mm/vmscan.c:6704 [inline]
+ balance_pgdat+0x9a0/0x19a0 mm/vmscan.c:6895
+ kswapd+0x5ea/0xb90 mm/vmscan.c:7164
+ kthread+0x2c1/0x3a0 kernel/kthread.c:388
+ ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:243
+ </TASK>
+
+
 ---
- fs/xfs/xfs_buf_item_recover.c | 94 +++++++++++++++++------------------
- 1 file changed, 47 insertions(+), 47 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 9225baa62755..edd03b08c969 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -209,7 +209,7 @@ xlog_recover_buf_commit_pass1(
-  */
- static int
- xlog_recover_validate_buf_type(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f,
- 	xfs_lsn_t			current_lsn)
-@@ -228,7 +228,7 @@ xlog_recover_validate_buf_type(
- 	 * inconsistent state resulting in verification failures. Hence for now
- 	 * just avoid the verification stage for non-crc filesystems
- 	 */
--	if (!xfs_has_crc(mp))
-+	if (!xfs_has_crc(log->l_mp))
- 		return 0;
- 
- 	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
-@@ -396,7 +396,7 @@ xlog_recover_validate_buf_type(
- 		break;
- #endif /* CONFIG_XFS_RT */
- 	default:
--		xfs_warn(mp, "Unknown buffer type %d!",
-+		xfs_warn(log->l_mp, "Unknown buffer type %d!",
- 			 xfs_blft_from_flags(buf_f));
- 		break;
- 	}
-@@ -410,7 +410,7 @@ xlog_recover_validate_buf_type(
- 		return 0;
- 
- 	if (warnmsg) {
--		xfs_warn(mp, warnmsg);
-+		xfs_warn(log->l_mp, warnmsg);
- 		xfs_buf_corruption_error(bp, __this_address);
- 		return -EFSCORRUPTED;
- 	}
-@@ -428,7 +428,7 @@ xlog_recover_validate_buf_type(
- 	 */
- 	ASSERT(bp->b_ops);
- 	bp->b_flags |= _XBF_LOGRECOVERY;
--	xfs_buf_item_init(bp, mp);
-+	xfs_buf_item_init(bp, log->l_mp);
- 	bp->b_log_item->bli_item.li_lsn = current_lsn;
- 	return 0;
- }
-@@ -441,7 +441,7 @@ xlog_recover_validate_buf_type(
-  */
- static void
- xlog_recover_buffer(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xlog_recover_item	*item,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f)
-@@ -450,7 +450,7 @@ xlog_recover_buffer(
- 	int			bit;
- 	int			nbits;
- 
--	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
-+	trace_xfs_log_recover_buf_reg_buf(log, buf_f);
- 
- 	bit = 0;
- 	i = 1;  /* 0 is the buf format structure */
-@@ -492,14 +492,14 @@ xlog_recover_buffer(
- 
- static int
- xlog_recover_do_reg_buffer(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xlog_recover_item	*item,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f,
- 	xfs_lsn_t			current_lsn)
- {
--	xlog_recover_buffer(mp, item, bp, buf_f);
--	return xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
-+	xlog_recover_buffer(log, item, bp, buf_f);
-+	return xlog_recover_validate_buf_type(log, bp, buf_f, current_lsn);
- }
- 
- /*
-@@ -513,7 +513,6 @@ xlog_recover_do_reg_buffer(
-  */
- static bool
- xlog_recover_this_dquot_buffer(
--	struct xfs_mount		*mp,
- 	struct xlog			*log,
- 	struct xlog_recover_item	*item,
- 	struct xfs_buf			*bp,
-@@ -526,7 +525,7 @@ xlog_recover_this_dquot_buffer(
- 	/*
- 	 * Filesystems are required to send in quota flags at mount time.
- 	 */
--	if (!mp->m_qflags)
-+	if (!log->l_mp->m_qflags)
- 		return false;
- 
- 	type = 0;
-@@ -550,7 +549,7 @@ xlog_recover_this_dquot_buffer(
-  */
- static int
- xlog_recover_verify_dquot_buf_item(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xlog_recover_item	*item,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f)
-@@ -564,7 +563,7 @@ xlog_recover_verify_dquot_buf_item(
- 	case XFS_BLFT_GDQUOT_BUF:
- 		break;
- 	default:
--		xfs_alert(mp,
-+		xfs_alert(log->l_mp,
- 			"XFS: dquot buffer log format type mismatch in %s.",
- 			__func__);
- 		xfs_buf_corruption_error(bp, __this_address);
-@@ -573,19 +572,19 @@ xlog_recover_verify_dquot_buf_item(
- 
- 	for (i = 1; i < item->ri_total; i++) {
- 		if (item->ri_buf[i].i_addr == NULL) {
--			xfs_alert(mp,
-+			xfs_alert(log->l_mp,
- 				"XFS: NULL dquot in %s.", __func__);
- 			return -EFSCORRUPTED;
- 		}
- 		if (item->ri_buf[i].i_len < sizeof(struct xfs_disk_dquot)) {
--			xfs_alert(mp,
-+			xfs_alert(log->l_mp,
- 				"XFS: dquot too small (%d) in %s.",
- 				item->ri_buf[i].i_len, __func__);
- 			return -EFSCORRUPTED;
- 		}
--		fa = xfs_dquot_verify(mp, item->ri_buf[i].i_addr, -1);
-+		fa = xfs_dquot_verify(log->l_mp, item->ri_buf[i].i_addr, -1);
- 		if (fa) {
--			xfs_alert(mp,
-+			xfs_alert(log->l_mp,
- "dquot corrupt at %pS trying to replay into block 0x%llx",
- 				fa, xfs_buf_daddr(bp));
- 			return -EFSCORRUPTED;
-@@ -612,11 +611,12 @@ xlog_recover_verify_dquot_buf_item(
-  */
- static int
- xlog_recover_do_inode_buffer(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xlog_recover_item	*item,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f)
- {
-+	struct xfs_sb			*sbp = &log->l_mp->m_sb;
- 	int				i;
- 	int				item_index = 0;
- 	int				bit = 0;
-@@ -628,7 +628,7 @@ xlog_recover_do_inode_buffer(
- 	xfs_agino_t			*logged_nextp;
- 	xfs_agino_t			*buffer_nextp;
- 
--	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
-+	trace_xfs_log_recover_buf_inode_buf(log, buf_f);
- 
- 	/*
- 	 * If the magic number doesn't match, something has gone wrong. Don't
-@@ -641,12 +641,12 @@ xlog_recover_do_inode_buffer(
- 	 * Post recovery validation only works properly on CRC enabled
- 	 * filesystems.
- 	 */
--	if (xfs_has_crc(mp))
-+	if (xfs_has_crc(log->l_mp))
- 		bp->b_ops = &xfs_inode_buf_ops;
- 
--	inodes_per_buf = BBTOB(bp->b_length) >> mp->m_sb.sb_inodelog;
-+	inodes_per_buf = BBTOB(bp->b_length) >> sbp->sb_inodelog;
- 	for (i = 0; i < inodes_per_buf; i++) {
--		next_unlinked_offset = (i * mp->m_sb.sb_inodesize) +
-+		next_unlinked_offset = (i * sbp->sb_inodesize) +
- 			offsetof(struct xfs_dinode, di_next_unlinked);
- 
- 		while (next_unlinked_offset >=
-@@ -695,8 +695,8 @@ xlog_recover_do_inode_buffer(
- 		 */
- 		logged_nextp = item->ri_buf[item_index].i_addr +
- 				next_unlinked_offset - reg_buf_offset;
--		if (XFS_IS_CORRUPT(mp, *logged_nextp == 0)) {
--			xfs_alert(mp,
-+		if (XFS_IS_CORRUPT(log->l_mp, *logged_nextp == 0)) {
-+			xfs_alert(log->l_mp,
- 		"Bad inode buffer log record (ptr = "PTR_FMT", bp = "PTR_FMT"). "
- 		"Trying to replay bad (0) inode di_next_unlinked field.",
- 				item, bp);
-@@ -711,8 +711,8 @@ xlog_recover_do_inode_buffer(
- 		 * have to leave the inode in a consistent state for whoever
- 		 * reads it next....
- 		 */
--		xfs_dinode_calc_crc(mp,
--				xfs_buf_offset(bp, i * mp->m_sb.sb_inodesize));
-+		xfs_dinode_calc_crc(log->l_mp,
-+				xfs_buf_offset(bp, i * sbp->sb_inodesize));
- 
- 	}
- 
-@@ -734,7 +734,7 @@ xlog_recover_do_inode_buffer(
- 	 * it stale so that it won't be found on overlapping buffer lookups and
- 	 * caller knows not to queue it for delayed write.
- 	 */
--	if (BBTOB(bp->b_length) != M_IGEO(mp)->inode_cluster_size) {
-+	if (BBTOB(bp->b_length) != M_IGEO(log->l_mp)->inode_cluster_size) {
- 		int error;
- 
- 		error = xfs_bwrite(bp);
-@@ -792,7 +792,7 @@ xlog_recovery_is_dir_buf(
-  */
- static void
- xlog_recover_do_partial_dabuf(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xlog_recover_item	*item,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f)
-@@ -802,7 +802,7 @@ xlog_recover_do_partial_dabuf(
- 	 * and rely on post pass2 recovery cache purge to clean these out of
- 	 * memory.
- 	 */
--	xlog_recover_buffer(mp, item, bp, buf_f);
-+	xlog_recover_buffer(log, item, bp, buf_f);
- }
- 
- /*
-@@ -827,7 +827,7 @@ xlog_recover_do_partial_dabuf(
-  */
- static xfs_lsn_t
- xlog_recover_get_buf_lsn(
--	struct xfs_mount	*mp,
-+	struct xlog		*log,
- 	struct xfs_buf		*bp,
- 	struct xfs_buf_log_format *buf_f)
- {
-@@ -839,7 +839,7 @@ xlog_recover_get_buf_lsn(
- 	uint16_t		blft;
- 
- 	/* v4 filesystems always recover immediately */
--	if (!xfs_has_crc(mp))
-+	if (!xfs_has_crc(log->l_mp))
- 		goto recover_immediately;
- 
- 	/*
-@@ -916,7 +916,7 @@ xlog_recover_get_buf_lsn(
- 		 * the relevant UUID in the superblock.
- 		 */
- 		lsn = be64_to_cpu(((struct xfs_dsb *)blk)->sb_lsn);
--		if (xfs_has_metauuid(mp))
-+		if (xfs_has_metauuid(log->l_mp))
- 			uuid = &((struct xfs_dsb *)blk)->sb_meta_uuid;
- 		else
- 			uuid = &((struct xfs_dsb *)blk)->sb_uuid;
-@@ -926,7 +926,7 @@ xlog_recover_get_buf_lsn(
- 	}
- 
- 	if (lsn != (xfs_lsn_t)-1) {
--		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
-+		if (!uuid_equal(&log->l_mp->m_sb.sb_meta_uuid, uuid))
- 			goto recover_immediately;
- 		return lsn;
- 	}
-@@ -945,7 +945,7 @@ xlog_recover_get_buf_lsn(
- 	}
- 
- 	if (lsn != (xfs_lsn_t)-1) {
--		if (!uuid_equal(&mp->m_sb.sb_meta_uuid, uuid))
-+		if (!uuid_equal(&log->l_mp->m_sb.sb_meta_uuid, uuid))
- 			goto recover_immediately;
- 		return lsn;
- 	}
-@@ -977,14 +977,14 @@ xlog_recover_get_buf_lsn(
-  */
- static bool
- xlog_recover_this_buffer(
--	struct xfs_mount		*mp,
-+	struct xlog			*log,
- 	struct xfs_buf			*bp,
- 	struct xfs_buf_log_format	*buf_f,
- 	xfs_lsn_t			current_lsn)
- {
- 	xfs_lsn_t			lsn;
- 
--	lsn = xlog_recover_get_buf_lsn(mp, bp, buf_f);
-+	lsn = xlog_recover_get_buf_lsn(log, bp, buf_f);
- 	if (!lsn)
- 		return true;
- 	if (lsn == -1)
-@@ -992,8 +992,8 @@ xlog_recover_this_buffer(
- 	if (XFS_LSN_CMP(lsn, current_lsn) < 0)
- 		return true;
- 
--	trace_xfs_log_recover_buf_skip(mp->m_log, buf_f);
--	xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-+	trace_xfs_log_recover_buf_skip(log, buf_f);
-+	xlog_recover_validate_buf_type(log, bp, buf_f, NULLCOMMITLSN);
- 
- 	/*
- 	 * We're skipping replay of this buffer log item due to the log
-@@ -1065,22 +1065,22 @@ xlog_recover_buf_commit_pass2(
- 	 * to simplify the rest of the code.
- 	 */
- 	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
--		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
-+		error = xlog_recover_do_inode_buffer(log, item, bp, buf_f);
- 		if (error || (bp->b_flags & XBF_STALE))
- 			goto out_release;
- 		goto out_write;
- 	}
- 
- 	if (buf_f->blf_flags & XFS_BLF_DQUOT_BUF) {
--		if (!xlog_recover_this_dquot_buffer(mp, log, item, bp, buf_f))
-+		if (!xlog_recover_this_dquot_buffer(log, item, bp, buf_f))
- 			goto out_release;
- 
--		error = xlog_recover_verify_dquot_buf_item(mp, item, bp, buf_f);
-+		error = xlog_recover_verify_dquot_buf_item(log, item, bp, buf_f);
- 		if (error)
- 			goto out_release;
- 
--		xlog_recover_buffer(mp, item, bp, buf_f);
--		error = xlog_recover_validate_buf_type(mp, bp, buf_f,
-+		xlog_recover_buffer(log, item, bp, buf_f);
-+		error = xlog_recover_validate_buf_type(log, bp, buf_f,
- 				NULLCOMMITLSN);
- 		if (error)
- 			goto out_release;
-@@ -1095,14 +1095,14 @@ xlog_recover_buf_commit_pass2(
- 	 */
- 	if (xlog_recovery_is_dir_buf(buf_f) &&
- 	    mp->m_dir_geo->blksize != BBTOB(buf_f->blf_len)) {
--		xlog_recover_do_partial_dabuf(mp, item, bp, buf_f);
-+		xlog_recover_do_partial_dabuf(log, item, bp, buf_f);
- 		goto out_write;
- 	}
- 
- 	/*
- 	 * Whole buffer recovery, dependent on the LSN in the on-disk structure.
- 	 */
--	if (!xlog_recover_this_buffer(mp, bp, buf_f, current_lsn)) {
-+	if (!xlog_recover_this_buffer(log, bp, buf_f, current_lsn)) {
- 		/*
- 		 * We may have verified this buffer even though we aren't
- 		 * recovering it. Return the verifier error for early detection
-@@ -1113,7 +1113,7 @@ xlog_recover_buf_commit_pass2(
- 	}
- 
- 
--	error = xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
-+	error = xlog_recover_do_reg_buffer(log, item, bp, buf_f, current_lsn);
- 	if (error)
- 		goto out_release;
- 
--- 
-2.43.0
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
