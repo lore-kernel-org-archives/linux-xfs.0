@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8076B2B9D2
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:01:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 936FE2B9D7
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 18:11:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710871299; cv=none; b=aXncnhF3BvBBlaAkifx/u/nPNNbuvv1YPuaLc4O7yOc1FgBbk7DN5ZhnuC9JWtmEQ9y2WH+G+sVFZEgmFzWJHNYBvLNg+E7ivApqp7ICglD7U7jE/vc+rTbKUV0f1oLYDkSmAZywJT6OxLbiKTgskLj4Hk4asiExK4KbPmnoKRM=
+	t=1710871865; cv=none; b=mAfpwhl+xgEbqWHU2lWxZhX7SfHHS0y8osK+p7PDsn34An5bWkwohnP8jEUfsdPS+4rYRbroLfRFkArmb6qzmFZ4lTX2juwCQDnbyQFpFBI3xThrwCGFEQQ2PXSpsoPmOc+j8W+Dr9T75VcO6MEl9tp4kxLN1Ue4HEeFazR5hww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710871299; c=relaxed/simple;
-	bh=yirifWLVqhs31FXYons23yIW7tQJRYeYwW970vZ21Gw=;
+	s=arc-20240116; t=1710871865; c=relaxed/simple;
+	bh=Np+f9ULg1aiXDCOJD0oO/St3flOp5A4bATa3Hp1JR6M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S2GNUGy+JoVs2bixWTvT/ceDIryMit/taiT2kmcVToEk4HmXZfd3Z6PO/GOuicUfbaesC88z30lvRLciSll1zaiHyAEmy8mGCtvGB1FxPGS5dwMPOBGDIBdEiqCzLTW+6OpM5Z3jzO2m4lrGWr39Nif1a3ZTbAu9hO+ozrtiAwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=urEP52Vu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=P9UocrA5UvTeFlAdP4IPeNsusXCkhwntF+2rZ1VQDQMLrGtW5sXWKZQw3i/5bhOMvx8XXet6nUmDCZCGLBpcmrlelaiR3iQ5cYS+OQhTf+D03oqUmsGmQj9Ry4QsBB49+SQxrY6D2U41wg3dVxRD8FQ/rUk1StjfdNDwSBPCCXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pBDic7Dm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="urEP52Vu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2679C433F1;
-	Tue, 19 Mar 2024 18:01:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pBDic7Dm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 197ECC433F1;
+	Tue, 19 Mar 2024 18:11:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710871298;
-	bh=yirifWLVqhs31FXYons23yIW7tQJRYeYwW970vZ21Gw=;
+	s=k20201202; t=1710871865;
+	bh=Np+f9ULg1aiXDCOJD0oO/St3flOp5A4bATa3Hp1JR6M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=urEP52Vu/8v1v5IoWxtWB1j7AUDXdBOjpNNRPgH5dizUOSdwrab6E1xcSv4pRuilX
-	 61vIra45+vf8PRM/xrPcmm+53BI6Jg8ntMfFNWtl+gPB7zWe4G3DVLrEbE/XfSMSaD
-	 gDm7svKswBnsQAvo9+D4NzIN/zWfZeHSoV/xQJ8v1YGcTBZzYKr347aT0GgfUBMder
-	 2A3ltZ2hdxgZerBZb2bBmHliyMICuqWRRRKbf6x6/1VIETcYa0Y7Mmm3M6MCcylu4E
-	 AnZdQKqsXKxs34DpAle2T0j1CMDULkC47Yd1f77GVhJe683uDNdLPdS8Jp9Gm7gvuE
-	 mSqriZuGfJcfw==
-Date: Tue, 19 Mar 2024 11:01:38 -0700
+	b=pBDic7DmucVfysFgPkHgm3Q1jJNH4nw6RcJB4Bkl3+NmZTKNGRCZHpnufHx2MtssQ
+	 iYIYHFyXmUUZUPwuRaa16++jcVJv0Y6/mf5RuJdCzsXkr8IjFCl9iqcu+HmGtJnkVJ
+	 a4JSc8gMwjCDdLCOzGzyXYFJqrI2Uvn0kdPIIpt3WTps6HFDcFcpibW3lU24cco+uS
+	 N4RRNal3M33fohsHMcAIMtIByIbf3Y7ddz8GJUVrqco043/ABVSjGLSCjzF0LU1d48
+	 Xhgo4gmj/dR1Pp2ufoA8QyJ4Cs7qg5AkXrZIkMWuPCd2r+Ph+4E+AcP/17z4i9Ein4
+	 ISPpe3SHZc8ng==
+Date: Tue, 19 Mar 2024 11:11:04 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: make inode inactivation state changes atomic
-Message-ID: <20240319180138.GZ1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from
+ xfs_iget
+Message-ID: <20240319181104.GA1927156@frogsfrogsfrogs>
 References: <20240319001707.3430251-1-david@fromorbit.com>
- <20240319001707.3430251-2-david@fromorbit.com>
+ <20240319001707.3430251-5-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,105 +43,210 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319001707.3430251-2-david@fromorbit.com>
+In-Reply-To: <20240319001707.3430251-5-david@fromorbit.com>
 
-On Tue, Mar 19, 2024 at 11:15:57AM +1100, Dave Chinner wrote:
+On Tue, Mar 19, 2024 at 11:16:00AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We need the XFS_NEED_INACTIVE flag to correspond to whether the
-> inode is on the inodegc queues so that we can then use this state
-> for lazy removal.
+> When xfs_iget() finds an inode that is queued for inactivation, it
+> issues an inodegc flush to trigger the inactivation work and then
+> retries the lookup.
 > 
-> To do this, move the addition of the inode to the inodegc queue
-> under the ip->i_flags_lock so that it is atomic w.r.t. setting
-> the XFS_NEED_INACTIVE flag.
+> However, when the filesystem is frozen, inodegc is turned off and
+> the flush does nothing and does not block. This results in lookup
+> spinning on NEED_INACTIVE inodes and being unable to make progress
+> until the filesystem is thawed. This is less than ideal.
 > 
-> Then, when we remove the inode from the inodegc list to actually run
-> inactivation, clear the XFS_NEED_INACTIVE at the same time we are
-> setting XFS_INACTIVATING to indicate that inactivation is in
-> progress.
-> 
-> These changes result in all the state changes and inodegc queuing
-> being atomic w.r.t. each other and inode lookups via the use of the
-> ip->i_flags lock.
+> The only reason we can't immediately recycle the inode is that it
+> queued on a lockless list we can't remove it from. However, those
+> lists now support lazy removal, and so we can now modify the lookup
+> code to reactivate inode queued for inactivation. The process is
+> identical to how we recycle reclaimable inodes from xfs_iget(), so
+> this ends up being a relatively simple change to make.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_icache.c | 110 +++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 87 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 7359753b892b..56de3e843df2 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -63,6 +63,8 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
+>  					 XFS_ICWALK_FLAG_RECLAIM_SICK | \
+>  					 XFS_ICWALK_FLAG_UNION)
+>  
+> +static void xfs_inodegc_queue(struct xfs_inode *ip);
+> +
+>  /*
+>   * Allocate and initialise an xfs_inode.
+>   */
+> @@ -325,6 +327,7 @@ xfs_reinit_inode(
+>  	return error;
+>  }
+>  
+> +
+>  /*
+>   * Carefully nudge an inode whose VFS state has been torn down back into a
+>   * usable state.  Drops the i_flags_lock and the rcu read lock.
+> @@ -388,7 +391,82 @@ xfs_iget_recycle(
+>  	inode->i_state = I_NEW;
+>  	spin_unlock(&ip->i_flags_lock);
+>  	spin_unlock(&pag->pag_ici_lock);
+> +	XFS_STATS_INC(mp, xs_ig_frecycle);
+> +	return 0;
+> +}
+>  
+> +static int
+> +xfs_iget_reactivate(
+> +	struct xfs_perag	*pag,
+> +	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct inode		*inode = VFS_I(ip);
+> +	int			error;
+> +
+> +	trace_xfs_iget_recycle(ip);
+> +
+> +	/*
+> +	 * If the inode has been unlinked, then the lookup must not find it
+> +	 * until inactivation has actually freed the inode.
+> +	 */
+> +	if (VFS_I(ip)->i_nlink == 0) {
+> +		spin_unlock(&ip->i_flags_lock);
+> +		rcu_read_unlock();
+> +		return -ENOENT;
+> +	}
+> +
+> +	/*
+> +	 * Take the ILOCK here to serialise against lookup races with putting
+> +	 * the inode back on the inodegc queue during error handling.
+> +	 */
+> +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+> +		return -EAGAIN;
+> +
+> +	/*
+> +	 * Move the state to inactivating so both inactivation and racing
+> +	 * lookups will skip over this inode until we've finished reactivating
+> +	 * it and can return it to the XFS_INEW state.
+> +	 */
+> +	ip->i_flags &= ~XFS_NEED_INACTIVE;
+> +	ip->i_flags |= XFS_INACTIVATING;
+> +	spin_unlock(&ip->i_flags_lock);
+> +	rcu_read_unlock();
+> +
+> +	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+> +	error = xfs_reinit_inode(mp, inode);
+> +	if (error) {
+> +		/*
+> +		 * Well, that sucks. Put the inode back on the inactive queue.
+> +		 * Do this while still under the ILOCK so that we can set the
+> +		 * NEED_INACTIVE flag and clear the INACTIVATING flag an not
 
-Pretty straightforward lock coverage extension,
+The sentence structure here is a little funky to me.  How about:
+
+"...and clear the INACTIVATING flag without another lookup racing with us..."
+
+?
+
+With that changed,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/xfs_icache.c | 16 ++++++++++++++--
->  fs/xfs/xfs_inode.h  | 11 +++++++----
->  2 files changed, 21 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 6c87b90754c4..9a362964f656 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1880,7 +1880,12 @@ xfs_inodegc_worker(
->  	llist_for_each_entry_safe(ip, n, node, i_gclist) {
->  		int	error;
->  
-> -		xfs_iflags_set(ip, XFS_INACTIVATING);
-> +		/* Switch state to inactivating. */
-> +		spin_lock(&ip->i_flags_lock);
-> +		ip->i_flags |= XFS_INACTIVATING;
-> +		ip->i_flags &= ~XFS_NEED_INACTIVE;
+
+> +		 * have another lookup race with us before we've finished
+> +		 * putting the inode back on the inodegc queue.
+> +		 */
+> +		spin_unlock(&ip->i_flags_lock);
+> +		ip->i_flags |= XFS_NEED_INACTIVE;
+> +		ip->i_flags &= ~XFS_INACTIVATING;
 > +		spin_unlock(&ip->i_flags_lock);
 > +
->  		error = xfs_inodegc_inactivate(ip);
->  		if (error && !gc->error)
->  			gc->error = error;
-> @@ -2075,9 +2080,14 @@ xfs_inodegc_queue(
->  	unsigned long		queue_delay = 1;
->  
->  	trace_xfs_inode_set_need_inactive(ip);
+> +		xfs_inodegc_queue(ip);
+> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +		trace_xfs_iget_recycle_fail(ip);
+> +		return error;
+> +	}
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > +
 > +	/*
-> +	 * Put the addition of the inode to the gc list under the
-> +	 * ip->i_flags_lock so that the state change and list addition are
-> +	 * atomic w.r.t. lookup operations under the ip->i_flags_lock.
+> +	 * Reset the inode state to new so that xfs_iget() will complete
+> +	 * the required remaining inode initialisation before it returns the
+> +	 * inode to the caller.
 > +	 */
->  	spin_lock(&ip->i_flags_lock);
->  	ip->i_flags |= XFS_NEED_INACTIVE;
-> -	spin_unlock(&ip->i_flags_lock);
->  
->  	cpu_nr = get_cpu();
->  	gc = this_cpu_ptr(mp->m_inodegc);
-> @@ -2086,6 +2096,8 @@ xfs_inodegc_queue(
->  	WRITE_ONCE(gc->items, items + 1);
->  	shrinker_hits = READ_ONCE(gc->shrinker_hits);
->  
+> +	spin_lock(&ip->i_flags_lock);
+> +	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
+> +	ip->i_flags |= XFS_INEW;
+> +	inode->i_state = I_NEW;
 > +	spin_unlock(&ip->i_flags_lock);
-> +
+> +	XFS_STATS_INC(mp, xs_ig_frecycle);
+>  	return 0;
+>  }
+>  
+> @@ -526,15 +604,6 @@ xfs_iget_cache_hit(
+>  	if (ip->i_flags & (XFS_INEW | XFS_IRECLAIM | XFS_INACTIVATING))
+>  		goto out_skip;
+>  
+> -	if (ip->i_flags & XFS_NEED_INACTIVE) {
+> -		/* Unlinked inodes cannot be re-grabbed. */
+> -		if (VFS_I(ip)->i_nlink == 0) {
+> -			error = -ENOENT;
+> -			goto out_error;
+> -		}
+> -		goto out_inodegc_flush;
+> -	}
+> -
 >  	/*
->  	 * Ensure the list add is always seen by anyone who finds the cpumask
->  	 * bit set. This effectively gives the cpumask bit set operation
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 94fa79ae1591..b0943d888f5c 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -349,10 +349,13 @@ static inline bool xfs_inode_has_forcealign(struct xfs_inode *ip)
+>  	 * Check the inode free state is valid. This also detects lookup
+>  	 * racing with unlinks.
+> @@ -545,11 +614,18 @@ xfs_iget_cache_hit(
 >  
->  /*
->   * If we need to update on-disk metadata before this IRECLAIMABLE inode can be
-> - * freed, then NEED_INACTIVE will be set.  Once we start the updates, the
-> - * INACTIVATING bit will be set to keep iget away from this inode.  After the
-> - * inactivation completes, both flags will be cleared and the inode is a
-> - * plain old IRECLAIMABLE inode.
-> + * freed, then NEED_INACTIVE will be set. If the inode is accessed via iget
-> + * whilst NEED_INACTIVE is set, the inode will be reactivated and become a
-> + * normal inode again. Once we start the inactivation, the INACTIVATING bit will
-> + * be set and the NEED_INACTIVE bit will be cleared. The INACTIVATING bit will
-> + * keep iget away from this inode whilst inactivation is in progress.  After the
-> + * inactivation completes, INACTIVATING will be cleared and the inode
-> + * transitions to a plain old IRECLAIMABLE inode.
->   */
->  #define XFS_INACTIVATING	(1 << 13)
+>  	/* Skip inodes that have no vfs state. */
+>  	if ((flags & XFS_IGET_INCORE) &&
+> -	    (ip->i_flags & XFS_IRECLAIMABLE))
+> +	    (ip->i_flags & (XFS_IRECLAIMABLE | XFS_NEED_INACTIVE)))
+>  		goto out_skip;
 >  
+>  	/* The inode fits the selection criteria; process it. */
+> -	if (ip->i_flags & XFS_IRECLAIMABLE) {
+> +	if (ip->i_flags & XFS_NEED_INACTIVE) {
+> +		/* Drops i_flags_lock and RCU read lock. */
+> +		error = xfs_iget_reactivate(pag, ip);
+> +		if (error == -EAGAIN)
+> +			goto out_skip;
+> +		if (error)
+> +			return error;
+> +	} else if (ip->i_flags & XFS_IRECLAIMABLE) {
+>  		/* Drops i_flags_lock and RCU read lock. */
+>  		error = xfs_iget_recycle(pag, ip);
+>  		if (error == -EAGAIN)
+> @@ -578,23 +654,11 @@ xfs_iget_cache_hit(
+>  
+>  out_skip:
+>  	trace_xfs_iget_skip(ip);
+> -	XFS_STATS_INC(mp, xs_ig_frecycle);
+>  	error = -EAGAIN;
+>  out_error:
+>  	spin_unlock(&ip->i_flags_lock);
+>  	rcu_read_unlock();
+>  	return error;
+> -
+> -out_inodegc_flush:
+> -	spin_unlock(&ip->i_flags_lock);
+> -	rcu_read_unlock();
+> -	/*
+> -	 * Do not wait for the workers, because the caller could hold an AGI
+> -	 * buffer lock.  We're just going to sleep in a loop anyway.
+> -	 */
+> -	if (xfs_is_inodegc_enabled(mp))
+> -		xfs_inodegc_queue_all(mp);
+> -	return -EAGAIN;
+>  }
+>  
+>  static int
 > -- 
 > 2.43.0
 > 
