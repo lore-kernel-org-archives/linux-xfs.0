@@ -1,43 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1389C3D55D
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 23:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 089E65EE67
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2024 23:14:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710889590; cv=none; b=YhzVpXRvUw5XV7+w1JOb6OE0jMjrb4PoA60/iaKBPHyWepBEwfgcFuA+VoaIkC29TvSoGN2+I2l4Rz6EJiRb/HncG/NL/gFEnbQ3UGfIfOwO10Mqgaf97ZGO3qzoS6HKjNs7XeYOJTtBtuxxL5HhlKy8air4uiXtrQnfFhN/Czo=
+	t=1710890088; cv=none; b=rIFvNvNSL1Y5d0lbyyeGdMqOwtMvP+UNOqc5WOv2+MamqlJRGm+ZKT4FhSAB/TGVsIzC2Wm+HG88RJULNQpszAcwDlQ7pf3pc9DG64YSDEUIkotRqVfMLFG7WRMQAjyanGiooV2rozWpK+jkoGY/Fb0lTbV/ZNrAA1gNKg17D2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710889590; c=relaxed/simple;
-	bh=qzXOUDWQ3/p0Mbx42PLXyKiu8+S4127zuRm+qZmyjkA=;
+	s=arc-20240116; t=1710890088; c=relaxed/simple;
+	bh=hx7tFt287CXQ4efiChS4xhZ9mEX2q6u4Cy8TimAim/0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JQC4LYCXq6bvgCd5g650RNfX5cyMRH/05MeUG2H2CBjHwA3W3L6/AV5S1TjN6gk//+48r5ZpKqc1iSrvIgsRyPMum2mKA4RKVTfUTkHjyM7tYEP3OFtaY+JCmx2aGOMgA+xzdihGJPBDWcmqIoftegFmwLavxJtwePr+eTARagg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=B0WA26Ea; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=CqwUwkwCL/r7NtvJWyM06Y8xiSme2ySoLkMSgqcdwWnESfpGHORGNV464Weo3O+BYbpak+uFK5GxAV0/AAEUo/NhH2qZeClB8J2rkVb7XlGt54l0FmN2MfzeKfJG67ZZ4nBLQzEGXrRObkuiVX+RguAIQXbbI8CYiSGyZCU9zZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fbDW4ntA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B0WA26Ea"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=CVMfC+y+IVcPJm4qN1ocO3J3zqxuoD6GnzoL5MsUN7Y=; b=B0WA26EaGsXwYoPZr1nuETP66v
-	gjwXYYX9ha0ypfwdiH6OQfZS44SQQ1NTOQbgUPJLtQP6YKf5sxSCbLqmxJcmXc2r8aMCbBOrutsVh
-	9AGv4+vE6PUEMIiJQgwfPtgG/0IM6iqbOayxukWPZD2mgI8uOAP7mN1nv1YlH6iCaPv0hl3WOIqSA
-	Bl7bCu1/KZmjEkfpKeo3U8J+LiWzCmUSyFi1AQgGOIcX0tD44JNBRWkB3fDwJkse0M2YB85warHSp
-	KawUihPEKY8GPY4vZlTGnJbWFjnXnowtm6KszC93Luiv/BOqfVCSXnIPboT15AsfaCEOFwBRyNA0h
-	/NfRJiyg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rmiXM-0000000EZCW-1zXm;
-	Tue, 19 Mar 2024 23:06:28 +0000
-Date: Tue, 19 Mar 2024 16:06:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbDW4ntA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5CFAC433C7;
+	Tue, 19 Mar 2024 23:14:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710890087;
+	bh=hx7tFt287CXQ4efiChS4xhZ9mEX2q6u4Cy8TimAim/0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fbDW4ntA/KIoDYswVQBx57MKbqHoMNE32CvasgNnLdZr7h4oBXRh5IFxc6jhy/DA4
+	 H2R+ht3iKHYtrigUQKHdd7bzOsed+YCDtxa13k7LgLkN9z+huS6s0xExfY1GVgkByI
+	 eTvF59kwEq7J60HRRjyXXPrOk9MtbQeSHai6rrtM5C2vVlP22bVN0ZkTtqnhM+rI9m
+	 6buFRDufZOTYF4qYeuJwKjrNQKQW31xNmKSzZxse3iTVu5yi2Orouj0OiRB6ZRsDqY
+	 eic3kTfJl7nduHDeQHGJP88SmekXzO+y3iuNYbg9cGwRQJGUIT16sLm+/fSwLw+Tz0
+	 OUSwA+9CdzKJA==
+Date: Tue, 19 Mar 2024 16:14:47 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: internalise all remaining i_version support
-Message-ID: <ZfoadKGgatGjTM_5@infradead.org>
-References: <20240318225406.3378998-1-david@fromorbit.com>
- <20240318225406.3378998-3-david@fromorbit.com>
- <20240319175411.GW1927156@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/5] xfs: detect partial buffer recovery operations
+Message-ID: <20240319231447.GS1927156@frogsfrogsfrogs>
+References: <20240319021547.3483050-1-david@fromorbit.com>
+ <20240319021547.3483050-5-david@fromorbit.com>
+ <ZfoXihIirJ1PZrs5@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,11 +43,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240319175411.GW1927156@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZfoXihIirJ1PZrs5@infradead.org>
 
-Is there much of a good reason to do this now vs oing it whenverer
-we actually sort out i_version semantics?  It adds size to the inode
-and I don't see how the atomics actually cost us much.  The patch
-itself does looks good, though.
+On Tue, Mar 19, 2024 at 03:54:02PM -0700, Christoph Hellwig wrote:
+> > +static bool
+> > +xlog_recovery_is_dir_buf(
+> > +	struct xfs_buf_log_format	*buf_f)
+> > +{
+> > +	switch (xfs_blft_from_flags(buf_f)) {
+> > +	case XFS_BLFT_DIR_BLOCK_BUF:
+> > +	case XFS_BLFT_DIR_DATA_BUF:
+> > +	case XFS_BLFT_DIR_FREE_BUF:
+> > +	case XFS_BLFT_DIR_LEAF1_BUF:
+> > +	case XFS_BLFT_DIR_LEAFN_BUF:
+> > +	case XFS_BLFT_DA_NODE_BUF:
+> 
+> XFS_BLFT_DA_NODE_BUF can also be a non-directory buffer.  Maybe this
+> should be named something like xlog_recover_maybe_is_partial_dabuf?
+> 
+> > +		error = bp->b_error;
+> >  		goto out_release;
+> >  	}
+> >  
+> > +
+> 
+> This adds a spurious new line.
+> 
+> Otherwise this looks good to me, but the lack over verifiation for these
+> multi-buffer recoveries really scares me..
 
+I wondered if there was a good way to reconstruct the discontiguous
+buffer, but the only things I could think of relied on guessing from the
+subsequent buffer log items.  Does anyone have a better idea?
+
+--D
