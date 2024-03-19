@@ -1,77 +1,81 @@
-Received: from mail-oo1-f52.google.com (mail-oo1-f52.google.com [209.85.161.52])
+Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BD4C376
-	for <linux-xfs@vger.kernel.org>; Fri, 22 Mar 2024 01:00:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1B910F2
+	for <linux-xfs@vger.kernel.org>; Fri, 22 Mar 2024 01:00:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711069231; cv=none; b=hVmpZUaS4dXSYgxBMsT1pqi2Zr35mFw1T0gO9jWAoPHEDrZw4uIDDoSznY7ymDmKKrV9fKTYTCqEIw1aZgdEXbUtYK3pvax5gxDaLqwFGguBMDbrAX9+csLBF7O+hz8INf1qJ1ni7albzIA7hq6iFkvAtSmIM3gALT5kunDc7Zk=
+	t=1711069253; cv=none; b=jA4ox0tOw5ImhxTHdRZCIhl9fdWGMkLLf+EPdZLq0zHV7sqHjPgHpbIJ2Oynn7A6ymWs47Bm+h7bLriXhh0Gz7vJWx3YUn9VQYlr9P6xMSyDFv30MtXapSsG9NWZiYDYI5k8v781ODCOMfI70Js7C5eLcR57f1xSvZGQA2w+xWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711069231; c=relaxed/simple;
-	bh=R/n9TvbmbKIAIifKXoWEDN0Gi0anl3Oy7twO9B1t0BI=;
+	s=arc-20240116; t=1711069253; c=relaxed/simple;
+	bh=KvoAF7df7YsAv4HtcPH8gUSIXw7LYl1fOSpxkpqRr3A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bymFQrbihi9hpQhWxRwolUZivWT+FskeZ+k+VFoBwryuocd4qC6W2KWHfxMugwNu/7cdg3QvUIUsSQaA3OyFJLI85PpwcNv+AbgsPwNGQfJhaPm35uCEG0mslgdqmCE2JsymgJSudWMIkMh9uYd3ZLY8B8Sxm0tnTpqn8qRqv2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=2QLpDCL0; arc=none smtp.client-ip=209.85.161.52
+	 Content-Type:Content-Disposition:In-Reply-To; b=sbYPCS2LAR90Dx0iC66+wUPAn7Xf+hlAV7SodZ+5gK74OuuXh85wtUxlIHMKMQNrytLKD4I8hHZxXAWVQscnFAq6TK79HYw3uqZkT+YRgjts94tngjAikzMhS0yYjaw1EUozYj8C+VC22sj2nkMmmRO2JA6BY2FBXkVdfLPlfYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=w3yYjdld; arc=none smtp.client-ip=209.85.219.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="2QLpDCL0"
-Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-5a4a2d99598so826867eaf.2
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Mar 2024 18:00:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="w3yYjdld"
+Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-6962e6fbf60so16052746d6.1
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Mar 2024 18:00:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711069228; x=1711674028; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711069251; x=1711674051; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:resent-to:resent-message-id:resent-date
          :resent-from:from:to:cc:subject:date:message-id:reply-to;
-        bh=zAF2OQsdd50jyNFznhxA8Yvx5VgWEhwogk7UZowB/ws=;
-        b=2QLpDCL0LqupBP2clQL0jCoi6EPHN5BsBaJywjEGC8WE3y/k+pYmNojv6uwSKW1PuQ
-         A2P0/24cQ73oqrqZJWfOGYHEKm4nlYMP4iItnUq2FL6iQt3+YAg0kmdGKmgKUHncEYXj
-         HMWrXnhDdHflzNL40hAeAXx+EpSOeMHWQ16hM8D/Vguo/GNZ76KOKJmZ9uhUAvfVi3Lt
-         CC0g4w8q8AHHUBsX/oOsDsIE6M7/roxj8G4ikZ2aZgP5c/gHM8iGBWFTmZxvoVkXv36X
-         LNsRW9vw0viYm7ZnAZn/Z0ny9VBIV9DKLkuwnUdNWUvCOpj8u1uJcGF/GKTCllmjZGkH
-         dI5Q==
+        bh=L2hcaTEbriam9/7FssVKUi7kol9l4gPNKSXgZqspLoI=;
+        b=w3yYjdldJAh6p2iQ8qLxu5YR7Pop6APcdfATgZX6edOSUph5dic0NhlxNFAT737l/E
+         Yo3NiYyDUgO+AdtUGLEdIOXaP1bds019A4/leWr18Rt8BapAWjy+HBqrOhWP0bMQC6BE
+         buHEA85sAD1JqoElMMXNFzct18KbjEBjHRoepn/6IOX2w8MfnUTjNgUMApB9XWR6qRbS
+         hNBxMJu3vhFX2u6SPx/jCN+YuiOaQnxXjjiXR7B5b7B193neH6zsOvMlUN6LoXdwcVn8
+         cTfhFo7h6JaxlZb9ELI0BSvhWmjYs7mue1l0MxikmsOq4M812ze3ENe2IAdiH/aV6P6z
+         amvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711069228; x=1711674028;
+        d=1e100.net; s=20230601; t=1711069251; x=1711674051;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:resent-to:resent-message-id:resent-date
          :resent-from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=zAF2OQsdd50jyNFznhxA8Yvx5VgWEhwogk7UZowB/ws=;
-        b=rpVs1IgQBc4KiDZ/y/AL9PYlwsf/3PN2R9N4d7lXoBXuPjHyunV0j3DLDl/N0Bc1cf
-         9TFAj/3elA9IWlBcaoe/5fopKYg36VD2BCZpmfyVYHOcKGmcT/suaUz63cWARBVLzpla
-         q/I7Uht/YYiiTXqliwnmYMdvrVN2KM2AOQJ+Tx4yicbYIB8n3BgkNUWrPsA0zx9zo3C2
-         46SwnYQ5xyw7sQhROoHzzXXEQNTSHTXwoHwWnrC4xEjyMROgUYEyR5b9d9ueyjQwlNaC
-         qcz0AnMukD9VmYGtMBcjkQ8QmMj8SOBKA5q3vWDVnkoTN2tkaIvlhnNGy7Np7ou1hZgB
-         lRHQ==
-X-Gm-Message-State: AOJu0Yy2tSVrjdHpn04LrOniR+jKmsx+HMP1UY98dpETReaj/MGD+xsc
-	4NWDGQxAmWZB9eoHNM3h6OYA4ao/ralt96b2loJ9o7i6/RZbxxiXhm4/f8Jc6IpCsGfdkJEaIY4
-	X
-X-Google-Smtp-Source: AGHT+IH2TlF6cvXzWBsvo2PtPT+elIkxeUA9i015xlM5tDxT2Xq2O6gAS4q4lr4UWY4T5ZI2CHy0Yg==
-X-Received: by 2002:a05:6a20:3ca2:b0:1a1:667c:eece with SMTP id b34-20020a056a203ca200b001a1667ceecemr1476787pzj.2.1711068902033;
-        Thu, 21 Mar 2024 17:55:02 -0700 (PDT)
+        bh=L2hcaTEbriam9/7FssVKUi7kol9l4gPNKSXgZqspLoI=;
+        b=ewXVmXNO0WNnWJsqehDrqqFRd6v4KFJfB5fe2h/rBu/K6gUkC2Gl0a89/3g23DV3Ga
+         JW1yp8AhkpfhGLVRxtGk9q4ppSYDDbyUtTxObJiZlv/enLsbpXIcWMJ8it/i9QSDVjci
+         NY3YoL3RfNX2wBqYVqwwrJAB867h//sojScHlDkE4RFgyO0LxOhtgHyjE3M+LRlMLlnU
+         DWvwuX6stYWPkbhnLUcaCTHNMlTnGcN0TeOgX6Ppbp587nXV9vSvtL0DPWSgio/xnOmu
+         XTYz2vemqSYQRBMh+XiaSb4aec5nWNht/SW3m08nd8lHqu8l9pa2eie+kE8CdNqHAPyp
+         f1Kg==
+X-Forwarded-Encrypted: i=1; AJvYcCXnI8ll8DX1fKDH+gcS6r+b8V/ytFe28rcnQR2I9Y0aNtl5X1cryCiHmQVnALT3RCksWSDXoj8xC+xTdkpei3RJ8wYXfS7I0nCn
+X-Gm-Message-State: AOJu0Yy1WhqTvmNdIBUomphUvdNd3mkZhpR3qJoySMSYREsDdA3rLibq
+	5qTlOl0a3Hzy7J7Xj98/1mHlonyQJ9fWepWH43E5rm1pTTO/Bp4io9HdFIuxs1ccbbUUmr4Gx2q
+	t
+X-Google-Smtp-Source: AGHT+IFQujk20HQNp07F05p6OBjCkSRXjL+9L9HkX0g5klynnlOCbrZc0os3Jsvcr82MNXxvqSbFnQ==
+X-Received: by 2002:a05:6a20:3d8d:b0:1a1:484b:bb72 with SMTP id s13-20020a056a203d8d00b001a1484bbb72mr1398954pzi.51.1711068888492;
+        Thu, 21 Mar 2024 17:54:48 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id fd8-20020a056a002e8800b006e6c3753786sm456014pfb.41.2024.03.21.17.55.01
+        by smtp.gmail.com with ESMTPSA id 2-20020a056a00070200b006e58da8bb6asm451344pfl.132.2024.03.21.17.54.48
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Mar 2024 17:55:01 -0700 (PDT)
+        Thu, 21 Mar 2024 17:54:48 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rnTBT-005TZc-0K
+	id 1rnTBF-005TZ2-32
 	for linux-xfs@vger.kernel.org;
-	Fri, 22 Mar 2024 11:54:59 +1100
+	Fri, 22 Mar 2024 11:54:45 +1100
 Resent-From: Dave Chinner <david@fromorbit.com>
-Resent-Date: Fri, 22 Mar 2024 11:54:59 +1100
-Resent-Message-ID: <ZfzW40JtJAuVA/Me@dread.disaster.area>
+Resent-Date: Fri, 22 Mar 2024 11:54:45 +1100
+Resent-Message-ID: <ZfzW1XmqVF66SXzq@dread.disaster.area>
 Resent-To: linux-xfs@vger.kernel.org
-Date: Wed, 20 Mar 2024 10:59:25 +1100
+Date: Wed, 20 Mar 2024 09:23:58 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] xfs: rename bp->b_folio_count
-Message-ID: <Zfom3fCEDR7RyMPc@dread.disaster.area>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/9] xfs: convert buffer cache to use high order folios
+Message-ID: <ZfoQfsuxEoxrhiVP@dread.disaster.area>
 References: <20240318224715.3367463-1-david@fromorbit.com>
- <20240318224715.3367463-10-david@fromorbit.com>
- <ZflApWnBkHDmo4HJ@infradead.org>
+ <20240318224715.3367463-4-david@fromorbit.com>
+ <20240319172909.GP1927156@frogsfrogsfrogs>
+ <ZfoEVAxVyPxqzapN@infradead.org>
+ <20240319213827.GQ1927156@frogsfrogsfrogs>
+ <ZfoGh53HyJuZ_2EG@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,25 +84,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZflApWnBkHDmo4HJ@infradead.org>
+In-Reply-To: <ZfoGh53HyJuZ_2EG@infradead.org>
 
-On Tue, Mar 19, 2024 at 12:37:09AM -0700, Christoph Hellwig wrote:
-> On Tue, Mar 19, 2024 at 09:46:00AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The count is used purely to allocate the correct number of bvecs for
-> > submitting IO. Rename it to b_bvec_count.
+On Tue, Mar 19, 2024 at 02:41:27PM -0700, Christoph Hellwig wrote:
+> On Tue, Mar 19, 2024 at 02:38:27PM -0700, Darrick J. Wong wrote:
+> > 64k is the maximum xattr value size, yes.  But remote xattr value blocks
+> > now have block headers complete with owner/uuid/magic/etc.  Each block
+> > can only store $blksz-56 bytes now.  Hence that 64k value needs
+> > ceil(65536 / 4040) == 17 blocks on a 4k fsb filesystem.
 > 
-> Well, I think we should just kill it as it simplies is the rounded
-> up length in PAGE_SIZE units.  The patch below passes a quick xfstests
-> run and is on top of this series:
+> Uggg, ok.  I thought we'd just treat remote xattrs as data and don't
+> add headers.
 
-This seems like a reasonable approach - fixing the
-mm_account_reclaimed_pages() issues earlier in the patch set meant
-I'd already done the xfs_buf_free() changes you made here. :)
+We needed CRCs for them, and they can be discontiguous so we also
+needed self identifying information so xattrs could be reconstructed
+from the header information.
 
-That just leaves the vmap wrappers to be fixed up - I think I'll
-just replace the b_folio_count rename patch with that cleanup...
+If I was doing the v5 stuff again, I would have put a the
+information in the remote xattr name structure held in the dabtree
+record, not the actual xattr data extent. But hindsight is 20:20....
 
 -Dave.
 -- 
