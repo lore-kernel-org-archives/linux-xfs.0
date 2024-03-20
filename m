@@ -1,161 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD1A40BF2;
-	Tue, 19 Mar 2024 23:30:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A091B6FC3;
+	Wed, 20 Mar 2024 01:51:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710891013; cv=none; b=UdUf9NwQiHMsTh7EjTT9bPECI1I3nk3eXeYtvHWRdC1cffMW26fyuZZVI3ppxAVTbizdNbqiRI5oYt7yPcwTcqrHr2bANpoj17nArhvt520UrrlnW2aAl4OU7Kdp+Sf8cfe6vb9+q3pD9dVV77o/7M78bsEoRMFffkAz9FxdlBI=
+	t=1710899501; cv=none; b=BTm91Gy6zbImI1aA/pRPuxC7fG21ddEneuBZjMqPqAht9e8e4AUo67B9jPv3VC3Pvp2xhSqXL0hMssRbIyTe+BJ6O3Zlr0OK0lb9F3/n1wLkNN0jt7m6dLY9va+R0KhZXBxfuvV0UP2NzPy3VmUGQu8NcFiSmdiD9rS9o1AQfkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710891013; c=relaxed/simple;
-	bh=1NkfHaaq/qk9BWoinhAyqxBdU7ECkk6uQ94U6X/8YWk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q09+VJm1hadI+4w4q20pMHKcdU+V1y0J66Nj5K6+JFRgEBbKZ+Bz9LCaGgw02PpEjN1EZzG0zTVIZsc/CXmYZgPx+BneR1a+rI0x3IivxNaHEBx6V5nxl46K4bhcBhQFhAj1vmKjHAPbeihD6ghCupLCmYUqalSQkyQpj4PrsBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qTqj8MB3; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qTqj8MB3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B34FC433C7;
-	Tue, 19 Mar 2024 23:30:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710891011;
-	bh=1NkfHaaq/qk9BWoinhAyqxBdU7ECkk6uQ94U6X/8YWk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qTqj8MB3arjzjTNmEx40506ehQK3+7w3tN0D/N3mk0Y6ApwdHbUSI4qJszojWTakv
-	 b9h92m41o0zV/CmooK/N4b/ALsK+P52UZ7WUlPyCf1JgnGCtCQicHcS6XObZlYVEQj
-	 XHOky+KJzSS7ukFNJZY4Ip/MUNtVM9PYFPFI/meg/+qzHQZao4MTqlKVuz8YHMVWfJ
-	 7CD/znlPW4aEpOPGQxC378K33/370BZdzV7PwhlY5xnCpcEo2C7+FIqY2it9DsIUPQ
-	 76VVpuwIg/X0S8pCa7s78DCl1l0rMTS7/mwEAMFPkUmePQhllc4EjmKFnEElN7YSGG
-	 nq++6PDEHGypg==
-Date: Tue, 19 Mar 2024 16:30:10 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@redhat.com, ebiggers@kernel.org
-Cc: linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/29] fsverity: add per-sb workqueue for post read
- processing
-Message-ID: <20240319233010.GV1927156@frogsfrogsfrogs>
-References: <171035223299.2613863.12196197862413309469.stgit@frogsfrogsfrogs>
- <171035223488.2613863.7583467519759571221.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1710899501; c=relaxed/simple;
+	bh=saxoGu9UZdW8TBh8QByEj0Of2/jE//AXv/FgCbPO3sI=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=IXXoahQAmVjfVbpAAJqJKHzsE5i4Ay39nhAQfZKcDOJ7rhyq2J4tONfNSaDMvbwUWMwwmjNdFLok5DpW3rJbi9FNt/YEfR6eN2AlPSFCCx6AMZO+sgZ9Wz56hHyZ7jfkCV+UjIOF9sta0/8qWMdSZgCigMod/cCm2gAFLz2EgXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Tzs583xHVz4f3jZT;
+	Wed, 20 Mar 2024 09:51:24 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 672681A0199;
+	Wed, 20 Mar 2024 09:51:28 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgCXaBEeQfplZGn3HQ--.57221S3;
+	Wed, 20 Mar 2024 09:51:28 +0800 (CST)
+Subject: Re: [PATCH v3 3/9] xfs: make xfs_bmapi_convert_delalloc() to allocate
+ the target offset
+To: "Darrick J. Wong" <djwong@kernel.org>, hch@infradead.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, brauner@kernel.org, david@fromorbit.com,
+ tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com
+References: <20240319011102.2929635-1-yi.zhang@huaweicloud.com>
+ <20240319011102.2929635-4-yi.zhang@huaweicloud.com>
+ <20240319204552.GG1927156@frogsfrogsfrogs>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <054ac072-4ccf-b83c-cc9c-cbb5d6f5dbdb@huaweicloud.com>
+Date: Wed, 20 Mar 2024 09:51:26 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <171035223488.2613863.7583467519759571221.stgit@frogsfrogsfrogs>
+In-Reply-To: <20240319204552.GG1927156@frogsfrogsfrogs>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgCXaBEeQfplZGn3HQ--.57221S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CryftrW5trWUZFy8KrWkXrb_yoW8uFW8pF
+	Z3KaySkF4vqw1fuFnayF1Yqa4fKa1xGr4jyF4furn3Z345Zr1fWF12kr1Fq34UCrySq3Wj
+	qa1UJ3W7Ww4Yva7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IE
+	e2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q
+	6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07UWE__UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Wed, Mar 13, 2024 at 10:54:39AM -0700, Darrick J. Wong wrote:
-> From: Andrey Albershteyn <aalbersh@redhat.com>
+On 2024/3/20 4:45, Darrick J. Wong wrote:
+> On Tue, Mar 19, 2024 at 09:10:56AM +0800, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> Since xfs_bmapi_convert_delalloc() only attempts to allocate the entire
+>> delalloc extent and require multiple invocations to allocate the target
+>> offset. So xfs_convert_blocks() add a loop to do this job and we call it
+>> in the write back path, but xfs_convert_blocks() isn't a common helper.
+>> Let's do it in xfs_bmapi_convert_delalloc() and drop
+>> xfs_convert_blocks(), preparing for the post EOF delalloc blocks
+>> converting in the buffered write begin path.
+>>
+>> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>  fs/xfs/libxfs/xfs_bmap.c | 34 +++++++++++++++++++++++--
+>>  fs/xfs/xfs_aops.c        | 54 +++++++++++-----------------------------
+>>  2 files changed, 46 insertions(+), 42 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+>> index 07dc35de8ce5..042e8d3ab0ba 100644
+>> --- a/fs/xfs/libxfs/xfs_bmap.c
+>> +++ b/fs/xfs/libxfs/xfs_bmap.c
+>> @@ -4516,8 +4516,8 @@ xfs_bmapi_write(
+>>   * invocations to allocate the target offset if a large enough physical extent
+>>   * is not available.
+>>   */
+>> -int
+>> -xfs_bmapi_convert_delalloc(
+>> +static int
 > 
-> For XFS, fsverity's global workqueue is not really suitable due to:
+> static inline?
 > 
-> 1. High priority workqueues are used within XFS to ensure that data
->    IO completion cannot stall processing of journal IO completions.
->    Hence using a WQ_HIGHPRI workqueue directly in the user data IO
->    path is a potential filesystem livelock/deadlock vector.
-> 
-> 2. The fsverity workqueue is global - it creates a cross-filesystem
->    contention point.
-> 
-> This patch adds per-filesystem, per-cpu workqueue for fsverity
-> work. This allows iomap to add verification work in the read path on
-> BIO completion.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/super.c               |    7 +++++++
->  include/linux/fs.h       |    2 ++
->  include/linux/fsverity.h |   22 ++++++++++++++++++++++
->  3 files changed, 31 insertions(+)
-> 
-> 
-> diff --git a/fs/super.c b/fs/super.c
-> index d35e85295489..338d86864200 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -642,6 +642,13 @@ void generic_shutdown_super(struct super_block *sb)
->  			sb->s_dio_done_wq = NULL;
->  		}
->  
-> +#ifdef CONFIG_FS_VERITY
-> +		if (sb->s_read_done_wq) {
-> +			destroy_workqueue(sb->s_read_done_wq);
-> +			sb->s_read_done_wq = NULL;
-> +		}
-> +#endif
-> +
->  		if (sop->put_super)
->  			sop->put_super(sb);
->  
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index ed5966a70495..9db24a825d94 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1221,6 +1221,8 @@ struct super_block {
->  #endif
->  #ifdef CONFIG_FS_VERITY
->  	const struct fsverity_operations *s_vop;
-> +	/* Completion queue for post read verification */
-> +	struct workqueue_struct *s_read_done_wq;
->  #endif
->  #if IS_ENABLED(CONFIG_UNICODE)
->  	struct unicode_map *s_encoding;
-> diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-> index 0973b521ac5a..45b7c613148a 100644
-> --- a/include/linux/fsverity.h
-> +++ b/include/linux/fsverity.h
-> @@ -241,6 +241,22 @@ void fsverity_enqueue_verify_work(struct work_struct *work);
->  void fsverity_invalidate_block(struct inode *inode,
->  		struct fsverity_blockbuf *block);
->  
-> +static inline int fsverity_set_ops(struct super_block *sb,
-> +				   const struct fsverity_operations *ops)
-> +{
-> +	sb->s_vop = ops;
-> +
-> +	/* Create per-sb workqueue for post read bio verification */
-> +	struct workqueue_struct *wq = alloc_workqueue(
-> +		"pread/%s", (WQ_FREEZABLE | WQ_MEM_RECLAIM), 0, sb->s_id);
 
-Looking at this more closely, why is it that the fsverity_read_queue
-is unbound and tagged WQ_HIGHPRI, whereas this one is instead FREEZEABLE
-and MEM_RECLAIM and bound?
+I'd suggest to leave that to the compiler too.
 
-If it's really feasible to use /one/ workqueue for all the read
-post-processing then this ought to be a fs/super.c helper ala
-sb_init_dio_done_wq.  That said, from Eric's comments on the v5 thread
-about fsverity and fscrypt locking horns over workqueue stalls I'm not
-convinced that's true.
-
---D
-
-> +	if (!wq)
-> +		return -ENOMEM;
-> +
-> +	sb->s_read_done_wq = wq;
-> +
-> +	return 0;
-> +}
-> +
->  #else /* !CONFIG_FS_VERITY */
->  
->  static inline struct fsverity_info *fsverity_get_info(const struct inode *inode)
-> @@ -318,6 +334,12 @@ static inline void fsverity_enqueue_verify_work(struct work_struct *work)
->  	WARN_ON_ONCE(1);
->  }
->  
-> +static inline int fsverity_set_ops(struct super_block *sb,
-> +				   const struct fsverity_operations *ops)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
->  #endif	/* !CONFIG_FS_VERITY */
->  
->  static inline bool fsverity_verify_folio(struct folio *folio)
+>> +__xfs_bmapi_convert_delalloc(
 > 
+> Double underscore prefixes read to me like "do this without grabbing
+> a lock or a resource", not just one step in a loop.
 > 
+> Would you mind changing it to xfs_bmapi_convert_one_delalloc() ?
+> Then the callsite looks like:
+> 
+> xfs_bmapi_convert_delalloc(...)
+> {
+> 	...
+> 	do {
+> 		error = xfs_bmapi_convert_one_delalloc(ip, whichfork, offset,
+> 					iomap, seq);
+> 		if (error)
+> 			return error;
+> 	} while (iomap->offset + iomap->length <= offset);
+> }
+> 
+
+Thanks for your suggestions, all subsequent improvements in this series are
+also looks fine by me, I will revise them in my next iteration. Christoph,
+I will keep your review tag, please let me know if you have different
+opinion.
+
+Thanks,
+Yi.
+
