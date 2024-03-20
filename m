@@ -1,65 +1,90 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from xmailer.gwdg.de (xmailer.gwdg.de [134.76.10.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26F8B7464;
-	Wed, 20 Mar 2024 01:57:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055B138F84
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Mar 2024 09:23:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.76.10.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710899829; cv=none; b=qF5bdCZ226s/dvuMDtqWtSIqF/iCSMnS0EtXcicyt4yGICJfnvN9eSqkGW5MdaV5yRarenGq8yoDjXzNACOaYdJKP2UghpMCxRBZC/W0QxKJGXqmXw8hw4eRsR0M4I+N0u2BkppT+2zvHNVl8PVVuEr9IVcdhdMBZ0ABSqUN+iY=
+	t=1710926605; cv=none; b=BIlba558+j4J4TpXNm7z9pcwhrnfwENp3cGqj5VlwlbhA1bO4T6adrwzyH76U73yuNHtvFopruoQMmNbYyWW4BQpHJf9tCXkhzuTFU37tma1cAM5bdYMWiaNP/gxHo62kJdMSNK4HimRQjv4hUpeKh/uMvb/+em59QUtJrE6yGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710899829; c=relaxed/simple;
-	bh=XquRaUIAS0JjjCqmDwqYRxEjThd2HstdNp2LDSDJgHc=;
+	s=arc-20240116; t=1710926605; c=relaxed/simple;
+	bh=+AwrJhG/bsFnIVXX++qompnRVxQJl6LH6WyfHj0wU6Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mMfuVfaTxc3z8e//KPBn9PkHbDx012I8a3qNz6w1e7pXNk43tRGMpzMK+gBnYn1df0U3DF/9mvt9Gb7kRIeRqpzHtzd1PjECVLQT5VBmJO2gAcc/gYKTw67R8nNlSY81T7xE3eMSi0zjRp6gI/4lgnuRvPdkuXDBv0+6omhYDUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DVhx/D8Q; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DVhx/D8Q"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=cwil56zbTxFwL2LPEeCyDWZZ3L2Yga7AQv0iusdXD8o=; b=DVhx/D8QKsz5jAE/7m6SGqpkvd
-	oh5RLmT6mKAaLxqxbr1q4q7lgd6bgs0KnVHUQL0cmpeF0hD4/XgGnaupim4aAj0uHKmCzvrjG0b8b
-	Xs4P5OXSxePl0W0hq8hVy1GwbJvIrA4WdHnM7aVCCJ0hgCdkjGzfrEmB2AQUpfxYUDXOADnpOTu60
-	shuyfgsMjWfSLAYxiWUay5uwfpMEhWGFbJIW7rEAh96x+QOZmNA2Ull+h/Mi+fmtlF3j2Ce83V7xC
-	WQ9jZtQmNnYJ6o6fGBRJRXd/o/miOh+D05FlqKBCsoR6kYYeQ8POjnZCxr4F6cG+ioijZG2Et5vYD
-	4lJX2o+Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rmlCU-0000000EygN-3n7R;
-	Wed, 20 Mar 2024 01:57:06 +0000
-Date: Tue, 19 Mar 2024 18:57:06 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, hch@infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, brauner@kernel.org,
-	david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH v3 3/9] xfs: make xfs_bmapi_convert_delalloc() to
- allocate the target offset
-Message-ID: <ZfpCcjTUYqzGum_u@infradead.org>
-References: <20240319011102.2929635-1-yi.zhang@huaweicloud.com>
- <20240319011102.2929635-4-yi.zhang@huaweicloud.com>
- <20240319204552.GG1927156@frogsfrogsfrogs>
- <054ac072-4ccf-b83c-cc9c-cbb5d6f5dbdb@huaweicloud.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=qmIpSd9gveMDZn875Q84NWbP8/66Jd7hTRdA08o3ZPJRkRz7LR/5okvUBfZh1Zx84g1ZSY8YqWmkrMUp1JV4i2k0n1ymzi1BklEwU7ExeHEm7laBFxX/NrqeKV6aoIf+PRGMPYmVpcrB4Yge0wlfcBUQSqc/HRWQVeALdposS5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de; spf=pass smtp.mailfrom=tuebingen.mpg.de; arc=none smtp.client-ip=134.76.10.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuebingen.mpg.de
+Received: from mailgw.tuebingen.mpg.de ([192.124.27.5] helo=tuebingen.mpg.de)
+	by mailer.gwdg.de with esmtp (GWDG Mailer)
+	(envelope-from <maan@tuebingen.mpg.de>)
+	id 1rmrUJ-0002Ps-1x;
+	Wed, 20 Mar 2024 09:39:58 +0100
+Received: from [10.35.40.80] (HELO mailhost.tuebingen.mpg.de)
+  by tuebingen.mpg.de (CommuniGate Pro SMTP 6.2.6)
+  with SMTP id 47078568; Wed, 20 Mar 2024 09:39:57 +0100
+Received: by mailhost.tuebingen.mpg.de (sSMTP sendmail emulation); Wed, 20 Mar 2024 09:39:57 +0100
+Date: Wed, 20 Mar 2024 09:39:57 +0100
+From: Andre Noll <maan@tuebingen.mpg.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from
+ xfs_iget
+Message-ID: <Zfqg3b3mC8Se7GMU@tuebingen.mpg.de>
+References: <20240319001707.3430251-1-david@fromorbit.com>
+ <20240319001707.3430251-5-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GRf8CFhb1TN1zPgJ"
 Content-Disposition: inline
-In-Reply-To: <054ac072-4ccf-b83c-cc9c-cbb5d6f5dbdb@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240319001707.3430251-5-david@fromorbit.com>
+User-Agent: Mutt/2.2.13 (00d56288) (2024-03-09)
+X-Spam-Level: $
+X-Virus-Scanned: (clean) by clamav
 
-On Wed, Mar 20, 2024 at 09:51:26AM +0800, Zhang Yi wrote:
-> Thanks for your suggestions, all subsequent improvements in this series are
-> also looks fine by me, I will revise them in my next iteration. Christoph,
-> I will keep your review tag, please let me know if you have different
-> opinion.
 
-Yes, please keep them.  All changes so far remain pretty trivial.
+--GRf8CFhb1TN1zPgJ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, Mar 19, 11:16, Dave Chinner wrote
+> +		/*
+> +		 * Well, that sucks. Put the inode back on the inactive queue.
+> +		 * Do this while still under the ILOCK so that we can set the
+> +		 * NEED_INACTIVE flag and clear the INACTIVATING flag an not
+> +		 * have another lookup race with us before we've finished
+> +		 * putting the inode back on the inodegc queue.
+> +		 */
+> +		spin_unlock(&ip->i_flags_lock);
+> +		ip->i_flags |=3D XFS_NEED_INACTIVE;
+> +		ip->i_flags &=3D ~XFS_INACTIVATING;
+> +		spin_unlock(&ip->i_flags_lock);
+
+This doesn't look right. Shouldn't the first spin_unlock() be spin_lock()?
+
+Also, there's a typo in the comment (s/an/and).
+
+Best
+Andre
+--=20
+Max Planck Institute for Biology
+Tel: (+49) 7071 601 829
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany
+http://people.tuebingen.mpg.de/maan/
+
+--GRf8CFhb1TN1zPgJ
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCZfqg2gAKCRBa2jVAMQCT
+D68wAJ9m5+7YMmHqSxX2rHsJTXzqi9MHvACfabzgp0v7JptyMukJWidYwDqDsDg=
+=kg5j
+-----END PGP SIGNATURE-----
+
+--GRf8CFhb1TN1zPgJ--
