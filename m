@@ -1,265 +1,141 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from xmailer.gwdg.de (xmailer.gwdg.de [134.76.10.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15DBF12B81
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Mar 2024 09:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6A753E1E
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Mar 2024 09:59:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.76.10.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711011653; cv=none; b=E4xatz05Ie0UKUmg7s958L1SvZxNbmWioaUNF/GjY8FW2JWot5OrpoePndW19HxOTkzAhiAcAzsfIJ0nXBWRNCeqJ3q0i2boV9r/tk5rZO94ceA3sG9dVjDNzVdpm06PXqMpq18qgIcleVDXl4Viq5atgWB7sjTtMFPAzYAfvKk=
+	t=1711015176; cv=none; b=dzA7BBfUQ5wUwm3VDh4Yku5BeCCo6zCT0KCPilsYv3z9FrA5UMZp6jvrlCihe2XDQFDZr2fYb0sLrb9PVfcOp55Q/b9DoWIXhqqrSWD0KbctyjMQ5L49mEcnZgMbNSCZjvmn7eF6reuuOYFrQNn+0eC5nnPAYEv6JhE1vHiEEcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711011653; c=relaxed/simple;
-	bh=nPpeY48von1ITEw8FzyJdgn2XpQfb3D3iwGEe1x1ygY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ozKdZEAVZ1Vh0hU9b5HkZrEw+mL+75pxyDwfB7htY5hKlm8ylmuJgArIYWA2Xa3GPAWFRG1/LU/HH63uH7osLSll6XezCriN4LTH92OdB8e5tlScFJx7lpc14W9M0n+YquTtOkPO3Tg06DWcrFDY2Fpn5QLwROI2XX5Gl+C0xjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=atjugCb4; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="atjugCb4"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42L23uXh016480;
-	Thu, 21 Mar 2024 09:00:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2023-11-20; bh=SxdhjcDSiVlxN5Dnd7LdUTxI4NLBQUK1vUS0xXVc4+c=;
- b=atjugCb4bDnwIZAGw3r8NgZaoie5MCtmDIumdp78mbsF76r3jqhrm/2acQ4kOG02BvQU
- WvvS/CtlrFgFFt6Lozsr1Oe/BAsmMEv0yaL1imE7tlgx4ud2o1OTICuETGgP8lHbKNNj
- 8bdurrW8PRuajK+CXmBCW9YWsxpeW7eriDx2mYUHqOHVuj5QfxVVOCR4bxrz6ZodCGYC
- Nzc65nj3gdTjM8jEjmyWhWJH5oA7PaIGQQZZWnZY0udafIVa05s7+2FBczDXLE7k3OOr
- Zjw795hM4FQ+AIOVGsTYUNXOXKlYrnjP8+JyGK920XUINhhzjcqLs94PxfxlSe4XUGEX vw== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ww27322um-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 21 Mar 2024 09:00:42 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42L8c3Xu007965;
-	Thu, 21 Mar 2024 09:00:41 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ww1v8yjef-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 21 Mar 2024 09:00:41 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42L8uUbd026047;
-	Thu, 21 Mar 2024 09:00:41 GMT
-Received: from srikcs-casa.osdevelopmeniad.oraclevcn.com (srikcs-casa.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.255.56])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3ww1v8yjdj-1;
-	Thu, 21 Mar 2024 09:00:41 +0000
-From: Srikanth C S <srikanth.c.s@oracle.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org, rajesh.sivaramasubramaniom@oracle.com,
-        srikanth.c.s@oracle.com
-Subject: [PATCH RFC] xfs_repair: Dump both inode details in Phase 6 duplicate file check
-Date: Thu, 21 Mar 2024 09:00:05 +0000
-Message-Id: <20240321090005.2234459-1-srikanth.c.s@oracle.com>
-X-Mailer: git-send-email 2.39.3
+	s=arc-20240116; t=1711015176; c=relaxed/simple;
+	bh=V+wfSujrcvImCTBMnzB9WGV1eTnDGG9qt83MHNoaL0w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DcikZdXcIoB0kyZIBG015XNEmM/NXYKXD9FJlEhRYYXS8TZemUO7x+7Gfv+0HFwo6/zHyQs7GzbQiP3fMr3QLErumbvZ5Qm7qoqUFWSoQQETuCn6lL3HUhZPFmPipiLEMqB5Tgy4tozLb0TkNT0OhaVrr9Hj1XQh/jIwbyUGlek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de; spf=pass smtp.mailfrom=tuebingen.mpg.de; arc=none smtp.client-ip=134.76.10.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuebingen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuebingen.mpg.de
+Received: from mailgw.tuebingen.mpg.de ([192.124.27.5] helo=tuebingen.mpg.de)
+	by mailer.gwdg.de with esmtp (GWDG Mailer)
+	(envelope-from <maan@tuebingen.mpg.de>)
+	id 1rnFCi-0003O6-2V;
+	Thu, 21 Mar 2024 10:59:23 +0100
+Received: from [10.35.40.80] (HELO mailhost.tuebingen.mpg.de)
+  by tuebingen.mpg.de (CommuniGate Pro SMTP 6.2.6)
+  with SMTP id 47098173; Thu, 21 Mar 2024 10:59:22 +0100
+Received: by mailhost.tuebingen.mpg.de (sSMTP sendmail emulation); Thu, 21 Mar 2024 10:59:22 +0100
+Date: Thu, 21 Mar 2024 10:59:22 +0100
+From: Andre Noll <maan@tuebingen.mpg.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: reactivate XFS_NEED_INACTIVE inodes from
+ xfs_iget
+Message-ID: <ZfwE-k0irgGBfI5r@tuebingen.mpg.de>
+References: <20240319001707.3430251-1-david@fromorbit.com>
+ <20240319001707.3430251-5-david@fromorbit.com>
+ <Zfqg3b3mC8Se7GMU@tuebingen.mpg.de>
+ <20240320145328.GX1927156@frogsfrogsfrogs>
+ <ZfsVzV52CG9ukVn-@tuebingen.mpg.de>
+ <ZftofP8nbKzUdqMZ@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-21_06,2024-03-18_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 adultscore=0
- spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2403140000
- definitions=main-2403210061
-X-Proofpoint-GUID: HOd2s5Wfv6siUHyXAq2e158ihUYsmBR9
-X-Proofpoint-ORIG-GUID: HOd2s5Wfv6siUHyXAq2e158ihUYsmBR9
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0O+klYKTr/vElliM"
+Content-Disposition: inline
+In-Reply-To: <ZftofP8nbKzUdqMZ@dread.disaster.area>
+User-Agent: Mutt/2.2.13 (00d56288) (2024-03-09)
+X-Spam-Level: $
+X-Virus-Scanned: (clean) by clamav
 
-The current check for duplicate names only dumps the inode number of the
-parent directory and the inode number of the actual inode in question.
-But, the inode number of original inode is not dumped. This patch dumps
-the original inode too which can be helpful for diagnosis.
 
-xfs_repair output 
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "dup-name1" (ino 132) in dir 128 is a duplicate name, would junk entry
-entry "dup-name1" (ino 133) in dir 128 is a duplicate name, would junk entry
+--0O+klYKTr/vElliM
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-After this change
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "dup-name1" (ino 132) in dir 128 is a duplicate name (ino 131), would junk entry
-entry "dup-name1" (ino 133) in dir 128 is a duplicate name (ino 131), would junk entry
+On Thu, Mar 21, 09:51, Dave Chinner wrote
+> I just haven't thought to run sparse on XFS recently - running
+> sparse on a full kernel build is just .... awful. I think I'll
+> change my build script so that when I do an '--xfs-only' built it
+> also enables sparse as it's only rebuilding fs/xfs at that point....
 
-The entry_junked() function takes in only 4 arguments. In order to
-print the original inode number, modifying the function to take 5 parameters.
+Would it be less awful to run coccinelle with a selected set of
+semantic patches that catch defective patterns such as double
+unlock/free?
 
-Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
----
- repair/phase6.c | 51 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 30 insertions(+), 21 deletions(-)
+> > > (Doesn't simple lock debugging catch these sorts of things?)
+> >=20
+> > Maybe this error path doesn't get exercised because xfs_reinit_inode()
+> > never fails. AFAICT, it can only fail if security_inode_alloc()
+> > can't allocate the composite inode blob.
+>=20
+> Which syzkaller triggers every so often. I also do all my testing
+> with selinux enabled, so security_inode_alloc() is actually being
+> exercised and definitely has the potential to fail on my small
+> memory configs...
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 3870c5c9..7e17ed75 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -151,9 +151,10 @@ dir_read_buf(
- }
- 
- /*
-- * Returns 0 if the name already exists (ie. a duplicate)
-+ * Returns inode number of original file if the name already exists
-+ * (ie. a duplicate)
-  */
--static int
-+static xfs_ino_t
- dir_hash_add(
- 	struct xfs_mount	*mp,
- 	struct dir_hash_tab	*hashtab,
-@@ -166,7 +167,7 @@ dir_hash_add(
- 	xfs_dahash_t		hash = 0;
- 	int			byhash = 0;
- 	struct dir_hash_ent	*p;
--	int			dup;
-+	xfs_ino_t		dup_inum;
- 	short			junk;
- 	struct xfs_name		xname;
- 	int			error;
-@@ -176,7 +177,7 @@ dir_hash_add(
- 	xname.type = ftype;
- 
- 	junk = name[0] == '/';
--	dup = 0;
-+	dup_inum = 0;
- 
- 	if (!junk) {
- 		hash = libxfs_dir2_hashname(mp, &xname);
-@@ -188,7 +189,7 @@ dir_hash_add(
- 		for (p = hashtab->byhash[byhash]; p; p = p->nextbyhash) {
- 			if (p->hashval == hash && p->name.len == namelen) {
- 				if (memcmp(p->name.name, name, namelen) == 0) {
--					dup = 1;
-+					dup_inum = p->inum;
- 					junk = 1;
- 					break;
- 				}
-@@ -234,7 +235,7 @@ dir_hash_add(
- 	p->name.name = p->namebuf;
- 	p->name.len = namelen;
- 	p->name.type = ftype;
--	return !dup;
-+	return dup_inum;
- }
- 
- /* Mark an existing directory hashtable entry as junk. */
-@@ -1173,9 +1174,13 @@ entry_junked(
- 	const char 	*msg,
- 	const char	*iname,
- 	xfs_ino_t	ino1,
--	xfs_ino_t	ino2)
-+	xfs_ino_t	ino2,
-+	xfs_ino_t	ino3)
- {
--	do_warn(msg, iname, ino1, ino2);
-+	if(ino3)
-+		do_warn(msg, iname, ino1, ino2, ino3);
-+	else
-+		do_warn(msg, iname, ino1, ino2);
- 	if (!no_modify)
- 		do_warn(_("junking entry\n"));
- 	else
-@@ -1470,6 +1475,7 @@ longform_dir2_entry_check_data(
- 	int			i;
- 	int			ino_offset;
- 	xfs_ino_t		inum;
-+	xfs_ino_t		dup_inum;
- 	ino_tree_node_t		*irec;
- 	int			junkit;
- 	int			lastfree;
-@@ -1680,7 +1686,7 @@ longform_dir2_entry_check_data(
- 			nbad++;
- 			if (entry_junked(
- 	_("entry \"%s\" in directory inode %" PRIu64 " points to non-existent inode %" PRIu64 ", "),
--					fname, ip->i_ino, inum)) {
-+					fname, ip->i_ino, inum, 0)) {
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1697,7 +1703,7 @@ longform_dir2_entry_check_data(
- 			nbad++;
- 			if (entry_junked(
- 	_("entry \"%s\" in directory inode %" PRIu64 " points to free inode %" PRIu64 ", "),
--					fname, ip->i_ino, inum)) {
-+					fname, ip->i_ino, inum, 0)) {
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1715,7 +1721,7 @@ longform_dir2_entry_check_data(
- 				nbad++;
- 				if (entry_junked(
- 	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory, "),
--						ORPHANAGE, inum, ip->i_ino)) {
-+						ORPHANAGE, inum, ip->i_ino, 0)) {
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
- 				}
-@@ -1732,12 +1738,13 @@ longform_dir2_entry_check_data(
- 		/*
- 		 * check for duplicate names in directory.
- 		 */
--		if (!dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
--				dep->name, libxfs_dir2_data_get_ftype(mp, dep))) {
-+		dup_inum = dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
-+				dep->name, libxfs_dir2_data_get_ftype(mp, dep));
-+		if (dup_inum) {
- 			nbad++;
- 			if (entry_junked(
--	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name, "),
--					fname, inum, ip->i_ino)) {
-+	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name (ino %" PRIu64 "), "),
-+					fname, inum, ip->i_ino, dup_inum)) {
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1768,7 +1775,7 @@ longform_dir2_entry_check_data(
- 				nbad++;
- 				if (entry_junked(
- 	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is not in the the first block, "), fname,
--						inum, ip->i_ino)) {
-+						inum, ip->i_ino, 0)) {
- 					dir_hash_junkit(hashtab, addr);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
-@@ -1801,7 +1808,7 @@ longform_dir2_entry_check_data(
- 				nbad++;
- 				if (entry_junked(
- 	_("entry \"%s\" in dir %" PRIu64 " is not the first entry, "),
--						fname, inum, ip->i_ino)) {
-+						fname, inum, ip->i_ino, 0)) {
- 					dir_hash_junkit(hashtab, addr);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
-@@ -2456,6 +2463,7 @@ shortform_dir2_entry_check(
- {
- 	xfs_ino_t		lino;
- 	xfs_ino_t		parent;
-+	xfs_ino_t		dup_inum;
- 	struct xfs_dir2_sf_hdr	*sfp;
- 	struct xfs_dir2_sf_entry *sfep;
- 	struct xfs_dir2_sf_entry *next_sfep;
-@@ -2639,13 +2647,14 @@ shortform_dir2_entry_check(
- 		/*
- 		 * check for duplicate names in directory.
- 		 */
--		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
-+		dup_inum = dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
- 				(sfep - xfs_dir2_sf_firstentry(sfp)),
- 				lino, sfep->namelen, sfep->name,
--				libxfs_dir2_sf_get_ftype(mp, sfep))) {
-+				libxfs_dir2_sf_get_ftype(mp, sfep));
-+		if (dup_inum) {
- 			do_warn(
--_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name, "),
--				fname, lino, ino);
-+_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name (ino %" PRIu64 "), "),
-+				fname, lino, ino, dup_inum);
- 			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
- 						&max_size, &i, &bytes_deleted,
- 						ino_dirty);
--- 
-2.25.1
+One could try to trigger ENOMEM more easily in functions like this
+by allocating bigger slab caches for debug builds.
 
+> > > ((It sure would be nice if locking returned a droppable "object" to do
+> > > the unlock ala Rust and then spin_lock could be __must_check.))
+> >=20
+> > There's the *LOCK_GUARD* macros which employ gcc's cleanup attribute
+> > to automatically call e.g. spin_unlock() when a variable goes out of
+> > scope (see 54da6a0924311).
+>=20
+> IMO, the LOCK_GUARD stuff is an awful anti-pattern. It means some
+> error paths -look broken- because they lack unlocks, and we have to
+> explicitly change code to return from functions with the guarded
+> locks held. This is a diametrically opposed locking pattern to the
+> existing non-guarded lockign patterns - correct behaviour in one
+> pattern is broken behaviour in the other, and vice versa.
+>=20
+> That's just -insane- from a code maintenance point of view.
+
+Converting all locks in fs/xfs in one go is not an option either, as
+this would be too big to review, and non-trivial to begin with. There
+are 180+ calls to spin_lock(), and that's just the spinlocks. Also
+these patches would interfere badly with ongoing work.
+
+> And they are completely useless for anythign complex like these
+> XFS icache functions because the lock scope is not balanced across
+> functions.
+>
+> The lock can also be taken by functions called within the guard
+> scope, and so using guarded lock scoping would result in deadlocks.
+> i.e. xfs_inodegc_queue() needs to take the i_flags_lock, so it must
+> be dropped before we call that.
+
+Yup, these can't use the LOCK_GUARD macros, which leads to an unholy
+mix of guarded and unguarded locks.
+
+> So, yeah, lock guards seem to me to be largely just a "look ma, no
+> need for rust because we can mightily abuse the C preprocessor!"
+> anti-pattern looking for a problem to solve.
+
+Do you think there is a valid use case for the cleanup attribute,
+or do you believe that the whole concept is mis-designed?
+
+Thanks for sharing your opinions.
+Andre
+--=20
+Max Planck Institute for Biology
+Tel: (+49) 7071 601 829
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany
+http://people.tuebingen.mpg.de/maan/
+
+--0O+klYKTr/vElliM
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCZfwE9wAKCRBa2jVAMQCT
+D87NAJ456rxseL0kaBINjY8JjKE4Xc6SRwCggecNrHYifDko+dGkreVZlhBXXDk=
+=qtpz
+-----END PGP SIGNATURE-----
+
+--0O+klYKTr/vElliM--
