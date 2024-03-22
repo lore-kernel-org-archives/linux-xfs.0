@@ -1,112 +1,82 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD98814AAE
-	for <linux-xfs@vger.kernel.org>; Fri, 22 Mar 2024 08:10:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F5B45BFF;
+	Fri, 22 Mar 2024 13:37:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711095025; cv=none; b=fU2tOsi13HE523WT+8+AKPHwjhhZys6V47BoHce0vVLrh1jm9t+6c4WrM1bxmBi1THM76dqle8Xb3E76nSIW7K+s4NOdVch3n1YUw1vciahDZo5WBiiqZdK6XQGHCWuk4QllOw6LTYZC9zQAd5vX1uQzZuSRoE9E5NoWWhoNgK0=
+	t=1711114659; cv=none; b=lTRZmaJ0n8mdmiM2md4QEXcerfckyz1SBGJ6BSk1E97j2cUZ2+kIgQuDHkLBxmEN7q3dbjDiiJEQ8NjcM0dPo4Ca2y0JbzVIaQqMYzSlCJPaRiys6GuDkoOj1Gh4WdWVwIeGgsVfNsFZ3oS1cmDV2+gAlu/O2IXWlPiGLSol5z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711095025; c=relaxed/simple;
-	bh=xR1sdQX5u2MbG6wjk8jDKn264TgI/eLkmEGL/JGstoU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bsc0ekxk4+322KHDkq3oZaAwy8lHOM+10FjJIgJJYU0M5dzjIBtU+LgGZ/4lkGIIpQzVrwHBiiXXsQcwSY3ZkfEuBe99WM9jzC5Rb7TS9nzNdtFnDkyacVYJ5wNGaysMAN/8assTyv+XkXv87TOtP50Y0sKyhP7zoOcoMK+mB2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=hIgzbLXn; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1711114659; c=relaxed/simple;
+	bh=6kRXYQHQ09VB0rp2Y0Fn5bU3vT3oHZGNIxJ8xR0YUf0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Mv0pXls6NP5hRef+vg11Wo/NhJhYePfCsOA9H/quBXuhKAg7dc/MFl9wkKQLGOPz7HEB02Z773Y4TnXw6XRrwvRDbUHWfQ5l6ToMWiQjPh1CBfe64CyEyVL9+ht/Xt6M+OmjnW4vHUozpcB2JPVZgb8Vx9SXyzjKCELK7aLIW68=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mMVIeqVt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="hIgzbLXn"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4V1FDS66Qtz9sTs;
-	Fri, 22 Mar 2024 09:02:32 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1711094552;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lsXh5Dx9/bbdIs1tdhNOLGNHeBUMjJd+GS7Sb5LywHQ=;
-	b=hIgzbLXnS+GzopUqaVPxkQPkgjMj3h5VpWSNCfJZO4c9gz/VbsnYcRqaJ/YLCUblegH5X3
-	jR2PdXMwWVP+U6OtP3bpWEanVZS/Mci+qDKkXWH2Iz9IaQEYs8OMkYhBCeppu7Ftht9Fur
-	NMG1UxMjwnMSHo3XG0b4xDRpFeoPhUylYVGi2G20ll1wR2l7zVpeflFRGATsRi4X2b1oJX
-	Gb6xpZIcJ5lufcEg8rzMc8RftVImF2Xi54fK0v9bpbHnUWLpmhwQTZGQJJOO4wGeL0WFHd
-	dxf8Mlbw/YxqTdPa+PjIgBv4Es7uLdbGqOMN3rZXV5+e3XtA1pWXf4saa4D4MQ==
-Date: Fri, 22 Mar 2024 09:02:31 +0100
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/9] xfs: convert buffer cache to use high order folios
-Message-ID: <wa53es767xeoxleltokuhcn5kccv5h2ocys37qqblpbplox2dc@36hvu3j6z5py>
-References: <20240318224715.3367463-1-david@fromorbit.com>
- <20240318224715.3367463-4-david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mMVIeqVt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A94E5C433F1;
+	Fri, 22 Mar 2024 13:37:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711114659;
+	bh=6kRXYQHQ09VB0rp2Y0Fn5bU3vT3oHZGNIxJ8xR0YUf0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=mMVIeqVtLAwpPwV/kcxxAVn46on5nR0HXikq88lh3pA5JqB8PKArhQGXsn9R7V0YJ
+	 cj+uME2mgnvVHHbZKxkkjNQfJP+y/DhmdsS0BqP80IPYB0nt92U/ry1mJFWBHeJTCp
+	 TPyn2KV4cCMnIrM65oWt7EWTUhl+fFlUuJ3QHsNtctLR4zu7GaWw+uC1UvYtjuLhhc
+	 mvmoz0V0mAARmJ92UMhqBo6cK61ZIhukyrEU2AOs+yMKc8SCLMDk6tWsx99fIFuY9P
+	 VoKOzmt+uMH39LjXiPEr2nbU+Nl5WC6Ed60PCtcFSjSZXFKtHxSJirODhWqu3J84SG
+	 7YMJ5wognQG3Q==
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: chandanbabu@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: Bug fixes for 6.9
+Date: Fri, 22 Mar 2024 19:02:00 +0530
+Message-ID: <874jcymlpd.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240318224715.3367463-4-david@fromorbit.com>
+Content-Type: text/plain
 
->  	 * Bulk filling of pages can take multiple calls. Not filling the entire
-> @@ -426,7 +484,7 @@ _xfs_buf_map_folios(
->  {
->  	ASSERT(bp->b_flags & _XBF_FOLIOS);
->  	if (bp->b_folio_count == 1) {
-> -		/* A single page buffer is always mappable */
-> +		/* A single folio buffer is always mappable */
->  		bp->b_addr = folio_address(bp->b_folios[0]);
->  	} else if (flags & XBF_UNMAPPED) {
->  		bp->b_addr = NULL;
-> @@ -1525,20 +1583,28 @@ xfs_buf_ioapply_map(
->  	int		*count,
->  	blk_opf_t	op)
->  {
-> -	int		page_index;
-> -	unsigned int	total_nr_pages = bp->b_folio_count;
-> -	int		nr_pages;
-> +	int		folio_index;
-> +	unsigned int	total_nr_folios = bp->b_folio_count;
-> +	int		nr_folios;
->  	struct bio	*bio;
->  	sector_t	sector =  bp->b_maps[map].bm_bn;
->  	int		size;
->  	int		offset;
->  
-> -	/* skip the pages in the buffer before the start offset */
-> -	page_index = 0;
-> +	/*
-> +	 * If the start offset if larger than a single page, we need to be
-> +	 * careful. We might have a high order folio, in which case the indexing
-> +	 * is from the start of the buffer. However, if we have more than one
-> +	 * folio single page folio in the buffer, we need to skip the folios in
-s/folio single page folio/single page folio/
+Hi Linus,
 
-> +	 * the buffer before the start offset.
-> +	 */
-> +	folio_index = 0;
->  	offset = *buf_offset;
-> -	while (offset >= PAGE_SIZE) {
-> -		page_index++;
-> -		offset -= PAGE_SIZE;
-> +	if (bp->b_folio_count > 1) {
-> +		while (offset >= PAGE_SIZE) {
-> +			folio_index++;
-> +			offset -= PAGE_SIZE;
+Please pull this branch which contains two XFS bug fixes for 6.9-rc1. A brief
+summary of the bug fixes is provided below.
 
-Can this be:
-folio_index = offset >> PAGE_SHIFT;
-offset = offset_in_page(offset);
+I did a test-merge with the main upstream branch as of a few minutes ago and
+didn't see any conflicts.  Please let me know if you encounter any problems.
 
-instead of a loop?
+The following changes since commit 75bcffbb9e7563259b7aed0fa77459d6a3a35627:
 
-> +		}
->  	}
->  
->  	/*
+  xfs: shrink failure needs to hold AGI buffer (2024-03-07 14:59:05 +0530)
 
---
-Pankaj
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.9-merge-9
+
+for you to fetch changes up to 0c6ca06aad84bac097f5c005d911db92dba3ae94:
+
+  xfs: quota radix tree allocations need to be NOFS on insert (2024-03-15 10:30:23 +0530)
+
+----------------------------------------------------------------
+Bug fixes for 6.9:
+
+* Fix invalid pointer dereference by initializing xmbuf before tracepoint
+  function is invoked.
+* Use memalloc_nofs_save() when inserting into quota radix tree.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (1):
+      xfs: fix dev_t usage in xmbuf tracepoints
+
+Dave Chinner (1):
+      xfs: quota radix tree allocations need to be NOFS on insert
+
+ fs/xfs/xfs_buf_mem.c |  4 ++--
+ fs/xfs/xfs_dquot.c   | 18 +++++++++++++-----
+ fs/xfs/xfs_trace.h   |  9 +++++++--
+ 3 files changed, 22 insertions(+), 9 deletions(-)
