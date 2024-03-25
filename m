@@ -1,86 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFD023BF;
-	Sat, 23 Mar 2024 18:45:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A48E14F9CC
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 02:24:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711219503; cv=none; b=dolh6F/Af/ZX29vsVPtxhwmFjQ4Dv21ZuUdvQrJz4jReNaZ324dQgumRz3ll+/VDgShmwPTD/UltXw+HNdz59zKTFaUZt4qs7rLN4efULEZBWA+UWL5Jc9a/J3UFeMtfopsVZW3wTlzKYyFnq6vRSia4es3bEvVJzoNzNF+lFrA=
+	t=1711333459; cv=none; b=Xd12rhQpk3vr6cmP0XnvYb9xp6Z52r+XXgi2A4emVSY85DLJFm7M8+SHtKdKfbeHPvKE0zA1xL+KeyXKJxp4IJgGVkJ49v3mnsoi39lB5uGBOGCWxXQ2uj48/uLWdlKkQFSjsslyq6c4j/M/Q7f2b7uV+Mpe1oXsABQqrQvK8x0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711219503; c=relaxed/simple;
-	bh=+mtJ5IE4P/cFRPbERUs8Q4/5lmsBJRrG3EaPz0KmKmg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bEInWABlgwhE2/+U742UN0c2NVKX2H3qD4y357/9uWLSsZ7ZQTPdV50I8zpl/0dOiQisTeD3ttJQ7zbRrZnqK6FwWHMTnX2N1qi5JJol82V7t1bvADzHq26COCR1Unl727eMPGA2kHS1Br8N51k6EEBjrXB4NboSbuu7459sgNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KcjKT2AY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711333459; c=relaxed/simple;
+	bh=ZtfAnMwm+T6KXxab9UcIbO4h3toNntyAT7NvQhxooMw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pjpIKwDgizyIRgAwqDjWYE94ni4pZ3wmr/wDwLzuXg3jMc+j4fEYQToUNhKOP7Dmr/3/lbT8oN8Yzv+YGJwZJ6/PSK/NXGkZtDjlbzXhgy9JlXDYRDS2Q+cRbvbJylXoJf/HU6RErvPTmGaq+x8S4okYxDSLOHhHh0jImZIECIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Nj22hyp0; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KcjKT2AY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3DA8C433C7;
-	Sat, 23 Mar 2024 18:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711219502;
-	bh=+mtJ5IE4P/cFRPbERUs8Q4/5lmsBJRrG3EaPz0KmKmg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KcjKT2AYphRdGHtYvag4o9ENC0t1Qd6LDvTyNc6dB2w+tLbnyoTB6LZlNEnwpgcvf
-	 UrwOPvlIOoQ5H3MtBKkl5N6uk4LGSYAdQ5afm690OuwLqEkz4+v8SVNB9XJDVtphEQ
-	 6kNt4YmUUtPtqsiPsT+ZQfjSSRGvgNKWLyfMcfFdSzYzDODfJScgIcnY1xoLjDJCR+
-	 rY2+WWsCQQr7QLn9EhlBuDwR4EVBFagiyA7oExyGkIqq/gMR96xAsZWbw0HH/dvr4x
-	 bZyBIn5UfbWHh7ZyILbI0ei0AbK1dAPa0yfnhAsS7AMM3jHfyG5xG8FsxIkxDQetRs
-	 Gfb99Ede3DUHw==
-Date: Sat, 23 Mar 2024 11:45:02 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Shumilin <shum.sdl@nppct.ru>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>,
-	lvc-project@linuxtesting.org, khoroshilov@ispras.ru,
-	ykarpov@ispras.ru, vmerzlyakov@ispras.ru, vefanov@ispras.ru
-Subject: Re: [PATCH 2/2] xfs_refcount: Preventing integer overflow
-Message-ID: <20240323184502.GA6390@frogsfrogsfrogs>
-References: <20240323062603.665572-1-shum.sdl@nppct.ru>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Nj22hyp0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=ipwBWF9GvJgqnNquJGrCFcF/nSxKqDtXCjhGKgoj01M=; b=Nj22hyp0vlC6du8OhdmbhFHMxy
+	JunIRm7DRVdisNEnjZ5xiLagISSW6W7SEhWOL+lNB/zr7KA7ZBje3YKP0CVfiAaxSd/rnSgDsJ5Iv
+	B1xwJn/RervipoliFPLrOSzW+apsR2VonPVO+k0gtnfXsKR8FiXQCFa+xzv02qSDleSv0c12uiBEq
+	sNnMUJ51JTFEjLO9h7Q3+iplJJCoz/8EQ7nlLz2YhqtKPSr7YUtlwnwgP70wWbb4+VsM4hNF8udLX
+	O4JU3A1oqOzM4wLszT5asb5mqm5oY/BFTf5DNd7yPzOK7EtGlt/knHvm6eZtk8lDmUGmhHdgRzd0f
+	1Vh/e18w==;
+Received: from [210.13.83.2] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1roa0W-0000000EeNp-3YQZ;
+	Mon, 25 Mar 2024 02:24:17 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	linux-xfs@vger.kernel.org
+Subject: bring back RT delalloc support v4
+Date: Mon, 25 Mar 2024 10:24:00 +0800
+Message-Id: <20240325022411.2045794-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240323062603.665572-1-shum.sdl@nppct.ru>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sat, Mar 23, 2024 at 09:26:03AM +0300, Andrey Shumilin wrote:
-> Multiplying variables can overflow the "overhead" variable.
-> To fix this, the variable type has been increased.
-> Next, a subtraction operation occurs with it,
-> but before that it is checked.
+Hi all,
 
-Under what circumstances will pre-multiplication @overhead have a large
-enough value to overflow?  The blocksize cannot be larger than 2^16, and
-full splits of three btrees should never require anywhere close to 2^16
-blocks, right?  Did your analysis tool find a scenario where this
-actually happens?
+this series adds back delalloc support for RT inodes, at least if the RT
+extent size is a single file system block.  This shows really nice
+performance improvements for workloads that frequently rewrite or append
+to files, and improves fragmentation for larger writes.  On other
+workloads it sometimes shows small performance improvements or flat
+performance.
 
---D
+Changes since v3:
+ - fix a bug in splitting RT delalloc reservations
+ - fix online repair of RT delalloc fscounters
+ - adjust the freespace counter refactoing to play nicer with an
+   upcoming series of mine
 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> Signed-off-by: Andrey Shumilin <shum.sdl@nppct.ru>
-> ---
->  fs/xfs/libxfs/xfs_refcount.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> index 511c912d515c..cbf07552eaff 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.c
-> +++ b/fs/xfs/libxfs/xfs_refcount.c
-> @@ -1070,7 +1070,7 @@ static bool
->  xfs_refcount_still_have_space(
->  	struct xfs_btree_cur		*cur)
->  {
-> -	unsigned long			overhead;
-> +	unsigned long long		overhead;
->  
->  	/*
->  	 * Worst case estimate: full splits of the free space and rmap btrees
-> -- 
-> 2.30.2
-> 
-> 
+Changes since v3:
+ - drop gratuitous changes to xfs_mod_freecounter/xfs_add_freecounter
+   that caused a warning to be logged when it shouldn't.
+ - track delalloc rtextents instead of rtblocks in xfs_mount
+ - fix commit message spelling an typos
+ 
+Changes since v2:
+ - keep casting to int64_t for xfs_mod_delalloc
+ - add a patch to clarify and assert that the block delta in
+   xfs_trans_unreserve_and_mod_sb can only be positive
+
+Diffstat:
+ libxfs/xfs_ag.c           |    4 -
+ libxfs/xfs_ag_resv.c      |   24 ++-------
+ libxfs/xfs_ag_resv.h      |    2 
+ libxfs/xfs_alloc.c        |    4 -
+ libxfs/xfs_bmap.c         |  118 ++++++++++++++++++++++------------------------
+ libxfs/xfs_rtbitmap.c     |   14 +++++
+ libxfs/xfs_shared.h       |    6 +-
+ scrub/fscounters.c        |    8 ++-
+ scrub/fscounters.h        |    1 
+ scrub/fscounters_repair.c |    3 -
+ scrub/repair.c            |    5 -
+ xfs_fsops.c               |   29 +++--------
+ xfs_fsops.h               |    2 
+ xfs_inode.c               |    3 -
+ xfs_iomap.c               |   44 +++++++++++------
+ xfs_iops.c                |    2 
+ xfs_mount.c               |   85 +++++++++++++++++++--------------
+ xfs_mount.h               |   36 ++++++++++----
+ xfs_rtalloc.c             |    2 
+ xfs_super.c               |   17 ++++--
+ xfs_trace.h               |    1 
+ xfs_trans.c               |   63 ++++++++++++------------
+ 22 files changed, 260 insertions(+), 213 deletions(-)
