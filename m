@@ -1,265 +1,127 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A02615956F
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 06:34:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B9C615B129
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 11:23:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711348499; cv=none; b=ne7KpHI9bsQe+qdw22gd31GhbFyIEB0GwdauyBLS/EaRjbIpRWY/XRvo74mKkE0VOZqQhWfABJqMJF0DP+pri3qEJCJKWwUTn6xPQQhqJ1rUhOZ3bAW5y6vZcejcllgx4UQv+HvcvoP0ac6oDuOKWYbjcHI9QOK5KhcofmRnqi0=
+	t=1711365808; cv=none; b=jMqXhj7t6Hp5d+WUSdpO8/IXVJ1SKDf3N7juSQ/pCDkMf3EB9oiql2qXrPDtlAsY/btiM7Mf5sODZ2HLly2cdjNl1qMUhd0ZXc3wVYKRe+09zP4Eg2U1EOsp50Lhy8Xf2VXtOXf6jUM2MDvYixlkaTb6yMEkLdxzWTnfE93j/54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711348499; c=relaxed/simple;
-	bh=2l4i4UwrZC8fkwZ32BriKxWJXWYlAFUN/wT6n0U7++M=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Fzk0u3w0SowIx0Yv4R/ZgZXbt8+uOVg+NFk0/uEsgO3qUk/74WYB0s8pCn2Wkkfic66EeGG80QQHlfI47PQz0M/le0eJ2KSPb/XDxMMJIPIG69g/ZLtmSZdaEzrUYnjpWB0BQ/B9OLxs9UiXXl05VmR/eSAqL2JUt6+THFBvz50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=h/3Vq8dw; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1711365808; c=relaxed/simple;
+	bh=9a1pwrXnR051S+2McaQMWAEDWH4VYLCdDIJKMcPyviE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=t+Qvu7EP4CphfM3j21M1eDmRIBKWM/AulLRrI9MtWCUBydyZFsAyNTZbXMQELn0Y9LUYLDMTgVSmm59uo5zenjwQTn8Ju3piz3vJs9UDCCJJrzY1GzCN0/2/TTDjYELIIFeGk6qEoXhPmgLMyslGZm7AK3TqMMJ5y2kRXyfRxLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=gS5P1NWz; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="h/3Vq8dw"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42P6M5Z3002218;
-	Mon, 25 Mar 2024 06:34:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2023-11-20; bh=s2wh4SiVsGAgvzDNZ158ztuCBwP2SApQiAaPTcvSkVM=;
- b=h/3Vq8dwip5jG6VbUpozXvdqDV1lrsyZhYyAkDregF8BpFhRc/uKpBD3gtKVUVpeU5U0
- A/uRh6rvsjksLJ0XeSl2zlc4nCZa3LZif6Tac2tc8wH8lwwbUteNtML57cEjxin+SeBV
- rhtxvgFEQyqKffP0yzyy0JuzXHVqq+PjeQJfphPI5ENIZ5okTxOIg9OdSdojLu1MS/gh
- ekcRImuiYNy0eDgF6MrvYqWJ4OOqTUp/A7DYnWKeuO47F7qUjKDW/gr3h4rxjJfd+rGd
- UBw9oRPD+J2q6hJq7oNYEtRrcUAVyujATTAuvtmPNwUjCX/qIONi8OPDm+xlT5lPNHMC 6g== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x28ct190x-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 25 Mar 2024 06:34:53 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42P6VK5S039819;
-	Mon, 25 Mar 2024 06:34:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x1nh5615h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 25 Mar 2024 06:34:52 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42P6Yqmg035669;
-	Mon, 25 Mar 2024 06:34:52 GMT
-Received: from srikcs-casa.osdevelopmeniad.oraclevcn.com (srikcs-casa.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.255.56])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3x1nh56153-1;
-	Mon, 25 Mar 2024 06:34:52 +0000
-From: Srikanth C S <srikanth.c.s@oracle.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org, srikanth.c.s@oracle.com, djwong@kernel.org,
-        rajesh.sivaramasubramaniom@oracle.com
-Subject: [PATCH v2] xfs_repair: Dump both inode details in Phase 6 duplicate file check
-Date: Mon, 25 Mar 2024 06:34:43 +0000
-Message-Id: <20240325063443.2398800-1-srikanth.c.s@oracle.com>
-X-Mailer: git-send-email 2.39.3
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="gS5P1NWz"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4V39QY3Fhbz9spn;
+	Mon, 25 Mar 2024 12:17:57 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1711365477;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/SUZ1hP/5Pgovs9vwAhlpdOizZGMlFGaQSq9NfbN0ZQ=;
+	b=gS5P1NWzCuIaUWumB707Z40Q8oXxuKtemdDWMmt0oX0oUa14FyCfuNcALCBI3BAiCr9KLw
+	FHLZinaStZR2+YJPJM16i1/UoNEWalGjXC7vC+xoFa0ehL34EEuONqwVgsCJtymxNZiluz
+	cCiAcWfP/khfI6hh+gMmzdawKjkmh/oRbozG+8zpxUqdHhXjM/7HekbfB4v3/abMwz2WXS
+	Yj7vlsgRaIV9NLPLzu7SMmwetodgurHfTzFx4IiAK9I7q5c1T2K6lRPcWP/GpoOL5pwJtO
+	4j9WllJEW+P4NgjHSJCkR7WkVhYxvW0+WDyH/SQOAz7uzflCB5ogSkoUiIMdVw==
+Date: Mon, 25 Mar 2024 12:17:55 +0100
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/9] xfs: convert buffer cache to use high order folios
+Message-ID: <p73usozirhag4kembg43hlfaqwyn2oyjzu3au5p4aw3tdf3cj5@2icixk7z7ltz>
+References: <20240318224715.3367463-1-david@fromorbit.com>
+ <20240318224715.3367463-4-david@fromorbit.com>
+ <wa53es767xeoxleltokuhcn5kccv5h2ocys37qqblpbplox2dc@36hvu3j6z5py>
+ <Zf4Ag349VrT/kv8n@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-25_04,2024-03-21_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- bulkscore=0 spamscore=0 adultscore=0 mlxscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2403210000 definitions=main-2403250034
-X-Proofpoint-GUID: yELjdyn6wXS-QEc78n34v_TSZYs2YtVs
-X-Proofpoint-ORIG-GUID: yELjdyn6wXS-QEc78n34v_TSZYs2YtVs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zf4Ag349VrT/kv8n@dread.disaster.area>
+X-Rspamd-Queue-Id: 4V39QY3Fhbz9spn
 
-The current check for duplicate names only dumps the inode number of the
-parent directory and the inode number of the actual inode in question.
-But, the inode number of original inode is not dumped. This patch dumps
-the original inode too.
+On Sat, Mar 23, 2024 at 09:04:51AM +1100, Dave Chinner wrote:
+> On Fri, Mar 22, 2024 at 09:02:31AM +0100, Pankaj Raghav (Samsung) wrote:
+> > >  	 * Bulk filling of pages can take multiple calls. Not filling the entire
+> > > @@ -426,7 +484,7 @@ _xfs_buf_map_folios(
+> > >  {
+> > >  	ASSERT(bp->b_flags & _XBF_FOLIOS);
+> > >  	if (bp->b_folio_count == 1) {
+> > > -		/* A single page buffer is always mappable */
+> > > +		/* A single folio buffer is always mappable */
+> > >  		bp->b_addr = folio_address(bp->b_folios[0]);
+> > >  	} else if (flags & XBF_UNMAPPED) {
+> > >  		bp->b_addr = NULL;
+> > > @@ -1525,20 +1583,28 @@ xfs_buf_ioapply_map(
+> > >  	int		*count,
+> > >  	blk_opf_t	op)
+> > >  {
+> > > -	int		page_index;
+> > > -	unsigned int	total_nr_pages = bp->b_folio_count;
+> > > -	int		nr_pages;
+> > > +	int		folio_index;
+> > > +	unsigned int	total_nr_folios = bp->b_folio_count;
+> > > +	int		nr_folios;
+> > >  	struct bio	*bio;
+> > >  	sector_t	sector =  bp->b_maps[map].bm_bn;
+> > >  	int		size;
+> > >  	int		offset;
+> > >  
+> > > -	/* skip the pages in the buffer before the start offset */
+> > > -	page_index = 0;
+> > > +	/*
+> > > +	 * If the start offset if larger than a single page, we need to be
+> > > +	 * careful. We might have a high order folio, in which case the indexing
+> > > +	 * is from the start of the buffer. However, if we have more than one
+> > > +	 * folio single page folio in the buffer, we need to skip the folios in
+> > s/folio single page folio/single page folio/
+> > 
+> > > +	 * the buffer before the start offset.
+> > > +	 */
+> > > +	folio_index = 0;
+> > >  	offset = *buf_offset;
+> > > -	while (offset >= PAGE_SIZE) {
+> > > -		page_index++;
+> > > -		offset -= PAGE_SIZE;
+> > > +	if (bp->b_folio_count > 1) {
+> > > +		while (offset >= PAGE_SIZE) {
+> > > +			folio_index++;
+> > > +			offset -= PAGE_SIZE;
+> > 
+> > Can this be:
+> > folio_index = offset >> PAGE_SHIFT;
+> > offset = offset_in_page(offset);
+> > 
+> > instead of a loop?
+> 
+> It could, but I'm not going to change it or even bother to fix the
+> comment as this code goes away later in the patch set.
+> 
+> See "[PATCH 7/9] xfs: walk b_addr for buffer I/O" later in the
+> series - once we can rely on bp->b_addr always being set for buffers
+> we convert this code to a simpler and more efficient folio based
+> iteration that is not reliant on pages or PAGE_SIZE at all.
+> 
 
-xfs_repair output before applying this patch
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "dup-name1" (ino 132) in dir 128 is a duplicate name, would junk entry
-entry "dup-name1" (ino 133) in dir 128 is a duplicate name, would junk entry
+Ah, I missed seeing the whole series before replying to individual patches.
+Nvm. 
 
-After this patch
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "dup-name1" (ino 132) in dir 128 already points to ino 131, would junk entry
-entry "dup-name1" (ino 133) in dir 128 already points to ino 131, would junk entry
+Thanks for the pointer on patch 7, and I agree that it does not make 
+sense to change this patch as it goes away later.
 
-The entry_junked() function takes in only 4 arguments. In order to
-print the original inode number, modifying the function to take 5 parameters
-
-Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
----
- repair/phase6.c | 51 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 30 insertions(+), 21 deletions(-)
-
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 3870c5c9..3d5af436 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -151,9 +151,10 @@ dir_read_buf(
- }
- 
- /*
-- * Returns 0 if the name already exists (ie. a duplicate)
-+ * Returns inode number of original file if the name already exists
-+ * (ie. a duplicate)
-  */
--static int
-+static xfs_ino_t
- dir_hash_add(
- 	struct xfs_mount	*mp,
- 	struct dir_hash_tab	*hashtab,
-@@ -166,7 +167,7 @@ dir_hash_add(
- 	xfs_dahash_t		hash = 0;
- 	int			byhash = 0;
- 	struct dir_hash_ent	*p;
--	int			dup;
-+	xfs_ino_t		dup_inum;
- 	short			junk;
- 	struct xfs_name		xname;
- 	int			error;
-@@ -176,7 +177,7 @@ dir_hash_add(
- 	xname.type = ftype;
- 
- 	junk = name[0] == '/';
--	dup = 0;
-+	dup_inum = NULLFSINO;
- 
- 	if (!junk) {
- 		hash = libxfs_dir2_hashname(mp, &xname);
-@@ -188,7 +189,7 @@ dir_hash_add(
- 		for (p = hashtab->byhash[byhash]; p; p = p->nextbyhash) {
- 			if (p->hashval == hash && p->name.len == namelen) {
- 				if (memcmp(p->name.name, name, namelen) == 0) {
--					dup = 1;
-+					dup_inum = p->inum;
- 					junk = 1;
- 					break;
- 				}
-@@ -234,7 +235,7 @@ dir_hash_add(
- 	p->name.name = p->namebuf;
- 	p->name.len = namelen;
- 	p->name.type = ftype;
--	return !dup;
-+	return dup_inum;
- }
- 
- /* Mark an existing directory hashtable entry as junk. */
-@@ -1173,9 +1174,13 @@ entry_junked(
- 	const char 	*msg,
- 	const char	*iname,
- 	xfs_ino_t	ino1,
--	xfs_ino_t	ino2)
-+	xfs_ino_t	ino2,
-+	xfs_ino_t	ino3)
- {
--	do_warn(msg, iname, ino1, ino2);
-+	if(ino3 != NULLFSINO)
-+		do_warn(msg, iname, ino1, ino2, ino3);
-+	else
-+		do_warn(msg, iname, ino1, ino2);
- 	if (!no_modify)
- 		do_warn(_("junking entry\n"));
- 	else
-@@ -1470,6 +1475,7 @@ longform_dir2_entry_check_data(
- 	int			i;
- 	int			ino_offset;
- 	xfs_ino_t		inum;
-+	xfs_ino_t		dup_inum;
- 	ino_tree_node_t		*irec;
- 	int			junkit;
- 	int			lastfree;
-@@ -1680,7 +1686,7 @@ longform_dir2_entry_check_data(
- 			nbad++;
- 			if (entry_junked(
- 	_("entry \"%s\" in directory inode %" PRIu64 " points to non-existent inode %" PRIu64 ", "),
--					fname, ip->i_ino, inum)) {
-+					fname, ip->i_ino, inum, NULLFSINO)) {
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1697,7 +1703,7 @@ longform_dir2_entry_check_data(
- 			nbad++;
- 			if (entry_junked(
- 	_("entry \"%s\" in directory inode %" PRIu64 " points to free inode %" PRIu64 ", "),
--					fname, ip->i_ino, inum)) {
-+					fname, ip->i_ino, inum, NULLFSINO)) {
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1715,7 +1721,7 @@ longform_dir2_entry_check_data(
- 				nbad++;
- 				if (entry_junked(
- 	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory, "),
--						ORPHANAGE, inum, ip->i_ino)) {
-+						ORPHANAGE, inum, ip->i_ino, NULLFSINO)) {
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
- 				}
-@@ -1732,12 +1738,13 @@ longform_dir2_entry_check_data(
- 		/*
- 		 * check for duplicate names in directory.
- 		 */
--		if (!dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
--				dep->name, libxfs_dir2_data_get_ftype(mp, dep))) {
-+		dup_inum = dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
-+				dep->name, libxfs_dir2_data_get_ftype(mp, dep));
-+		if (dup_inum != NULLFSINO) {
- 			nbad++;
- 			if (entry_junked(
--	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name, "),
--					fname, inum, ip->i_ino)) {
-+	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " already points to ino %" PRIu64 ", "),
-+					fname, inum, ip->i_ino, dup_inum)) {
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1768,7 +1775,7 @@ longform_dir2_entry_check_data(
- 				nbad++;
- 				if (entry_junked(
- 	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is not in the the first block, "), fname,
--						inum, ip->i_ino)) {
-+						inum, ip->i_ino, NULLFSINO)) {
- 					dir_hash_junkit(hashtab, addr);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
-@@ -1801,7 +1808,7 @@ longform_dir2_entry_check_data(
- 				nbad++;
- 				if (entry_junked(
- 	_("entry \"%s\" in dir %" PRIu64 " is not the first entry, "),
--						fname, inum, ip->i_ino)) {
-+						fname, inum, ip->i_ino, NULLFSINO)) {
- 					dir_hash_junkit(hashtab, addr);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
-@@ -2456,6 +2463,7 @@ shortform_dir2_entry_check(
- {
- 	xfs_ino_t		lino;
- 	xfs_ino_t		parent;
-+	xfs_ino_t		dup_inum;
- 	struct xfs_dir2_sf_hdr	*sfp;
- 	struct xfs_dir2_sf_entry *sfep;
- 	struct xfs_dir2_sf_entry *next_sfep;
-@@ -2639,13 +2647,14 @@ shortform_dir2_entry_check(
- 		/*
- 		 * check for duplicate names in directory.
- 		 */
--		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
-+		dup_inum = dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
- 				(sfep - xfs_dir2_sf_firstentry(sfp)),
- 				lino, sfep->namelen, sfep->name,
--				libxfs_dir2_sf_get_ftype(mp, sfep))) {
-+				libxfs_dir2_sf_get_ftype(mp, sfep));
-+		if (dup_inum != NULLFSINO) {
- 			do_warn(
--_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name, "),
--				fname, lino, ino);
-+_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " already points to ino %" PRIu64 ", "),
-+				fname, lino, ino, dup_inum);
- 			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
- 						&max_size, &i, &bytes_deleted,
- 						ino_dirty);
--- 
-2.25.1
-
+--
+Pankaj
