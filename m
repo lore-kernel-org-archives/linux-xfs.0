@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5795156659
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 02:24:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A7A7156665
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 02:24:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711333487; cv=none; b=Xd2EgbfnW3S34xjZrgFeo7X1QCiuqxbqJsrzsEtiAO7xqDndGZFJQdPzNr5LTA1bJfgpAeS1yJjN25VG4KMQdAmmVWAxbi7i2YEOJrjbqBeo6n1BZXT2ZeSsP6YrYKZnsV/cPwD1gCXD5FelADkf81cPtX/4vetEzjcrxAwl6JY=
+	t=1711333489; cv=none; b=HAL2JTIphhqIQ+P3rBJBHlgufzDdV47iBpLGvWqyiZmV+0A4k895uqyWy0kdlsIcfdoVMFqA1sM9J23M3WLyvnhrR91qxMwtQQVgfi3YbEGpCuYK6YyfrwtBN1YJ/yneDZQg4UqvGhqtydcvml9e3ebxaW5nNOCaw/XQMfXrjFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711333487; c=relaxed/simple;
-	bh=tDDimlK3KcS14Ap4er9L9iP0ow7XzrUDHYjI4OHeeR0=;
+	s=arc-20240116; t=1711333489; c=relaxed/simple;
+	bh=TTBpS8n3mWnsY/pvLjvSIH/x+lLXcddJRkdW7UzCwd0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=SG/H25oMKi7sZjKZCsku+g2FrIEyGKL9cqbThZKtMbJc/jLAsPQ8K7ertcVTsw3KEW96otLj3cJmIWG1dS7pS5TXM2PPZgHeZmxHU1fjI2rJKruw0jZ8fqSYuAW13HXqBSFk1xDijofY3UlYmhgLnm01A+VnUDcyrrBwPk+5EcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pL9eH866; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=rIMy3VCwHRqgLgwzIPk6q4IwEAhlbWeRU8QoLidwMDUaTHgLOu1TisktRTzeoa6QmpOubh3yovQABHVkp38G1gouG1y7Cfq2xO+NsL5X5G7mfLEfMxM2NAD9OcxT1K7VJyy0dWyy8ztxppQn0BxT/HsLAs7fKt6NCE/PK0Hph/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jQwdeklM; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pL9eH866"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jQwdeklM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=QaS8g5QdZcxipFIWuQjNfQfy+LH0uqF5iFeBJ5awSM4=; b=pL9eH866/pjmAlcYRiFdFeg7Di
-	TCI5fXtUX6dryxAME34o2rSq0xGL55rGMyx1auHJCZdo95gWfzD70Q+hCh4tkaD8a+NO3kfK2rXPF
-	IbfqnhGlgvAkgYSubj7+6aWlRB649q2PnI7mjGc6ZqClYB+sg+FKiBByO6ZVqZuUwJjn7Aoq99GIw
-	ehY5zHvZqtzPBb0Hoj3WfdqvXj4lut/BVue7iSZIk2cGzPsviVTScIIHOwI24NxR6uu4oGzZyTCsG
-	02qR2AoHuvTkmsR17H43bINcRWypo8FNr/hXnTtvDUKaMmu4MsYHOVyNX2Jdue0acdyHKqxTOv0VP
-	JOFXENoQ==;
+	bh=HvdJbqPsaSxcRTVJxIVtN/yLuEdGQxgOf20X/HGyXMk=; b=jQwdeklMKo5LQ1GBMTRVrpXUXV
+	lL7XIVsVCWIfL0jGSx1Y8onFZxBURx7YhX9a0Yp2Y6nKpF7lQUFbz0lMf/k2PVPsKsKjM0V0Fka0R
+	IEaQ+zTnG0QhvpPhRU6lZPWXhfQNW+J3rkl2A54gC1h0LMZviKuX6seXN2xAhX8q2pmIvQ4ROje33
+	9E5IKY+FXfd8kVhQKQhQz+SI+R4PT87CoOEw36Vb/Dvv4YyUQcG88MJ5BgKCJk0EEd1ntmy5mu1SK
+	yS26yOC6GLOCvo52FZvhNDbXB4KXy6cMAucqRpawEbOknhKvcJs8kfIsZ+EbaSm3XEMQoYuKMF4Gp
+	BJiby1bQ==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roa0y-0000000EeXA-0NUk;
-	Mon, 25 Mar 2024 02:24:44 +0000
+	id 1roa11-0000000EeYB-1Wbj;
+	Mon, 25 Mar 2024 02:24:47 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 08/11] xfs: look at m_frextents in xfs_iomap_prealloc_size for RT allocations
-Date: Mon, 25 Mar 2024 10:24:08 +0800
-Message-Id: <20240325022411.2045794-9-hch@lst.de>
+Subject: [PATCH 09/11] xfs: rework splitting of indirect block reservations
+Date: Mon, 25 Mar 2024 10:24:09 +0800
+Message-Id: <20240325022411.2045794-10-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240325022411.2045794-1-hch@lst.de>
 References: <20240325022411.2045794-1-hch@lst.de>
@@ -50,82 +50,102 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a check for files on the RT subvolume and use m_frextents instead
-of m_fdblocks to adjust the preallocation size.
+Move the check if we have enough indirect blocks and the stealing of
+the deleted extent blocks out of xfs_bmap_split_indlen and into the
+caller to prepare for handling delayed allocation of RT extents that
+can't easily be stolen.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 42 ++++++++++++++++++++++++++++++------------
- 1 file changed, 30 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 38 ++++++++++++++++----------------------
+ 1 file changed, 16 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 4087af7f3c9f3f..e0c205bcf03404 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -28,6 +28,7 @@
- #include "xfs_dquot.h"
- #include "xfs_reflink.h"
- #include "xfs_health.h"
-+#include "xfs_rtbitmap.h"
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index cc250c33890bac..dda25a21100836 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4829,31 +4829,17 @@ xfs_bmapi_remap(
+  * ores == 1). The number of stolen blocks is returned. The availability and
+  * subsequent accounting of stolen blocks is the responsibility of the caller.
+  */
+-static xfs_filblks_t
++static void
+ xfs_bmap_split_indlen(
+ 	xfs_filblks_t			ores,		/* original res. */
+ 	xfs_filblks_t			*indlen1,	/* ext1 worst indlen */
+-	xfs_filblks_t			*indlen2,	/* ext2 worst indlen */
+-	xfs_filblks_t			avail)		/* stealable blocks */
++	xfs_filblks_t			*indlen2)	/* ext2 worst indlen */
+ {
+ 	xfs_filblks_t			len1 = *indlen1;
+ 	xfs_filblks_t			len2 = *indlen2;
+ 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+-	xfs_filblks_t			stolen = 0;
+ 	xfs_filblks_t			resfactor;
  
- #define XFS_ALLOC_ALIGN(mp, off) \
- 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
-@@ -404,6 +405,29 @@ xfs_quota_calc_throttle(
- 	}
+-	/*
+-	 * Steal as many blocks as we can to try and satisfy the worst case
+-	 * indlen for both new extents.
+-	 */
+-	if (ores < nres && avail)
+-		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
+-	ores += stolen;
+-
+-	 /* nothing else to do if we've satisfied the new reservation */
+-	if (ores >= nres)
+-		return stolen;
+-
+ 	/*
+ 	 * We can't meet the total required reservation for the two extents.
+ 	 * Calculate the percent of the overall shortage between both extents
+@@ -4898,8 +4884,6 @@ xfs_bmap_split_indlen(
+ 
+ 	*indlen1 = len1;
+ 	*indlen2 = len2;
+-
+-	return stolen;
  }
  
-+static int64_t
-+xfs_iomap_freesp(
-+	struct percpu_counter	*counter,
-+	uint64_t		low_space[XFS_LOWSP_MAX],
-+	int			*shift)
-+{
-+	int64_t			freesp;
-+
-+	freesp = percpu_counter_read_positive(counter);
-+	if (freesp < low_space[XFS_LOWSP_5_PCNT]) {
-+		*shift = 2;
-+		if (freesp < low_space[XFS_LOWSP_4_PCNT])
-+			(*shift)++;
-+		if (freesp < low_space[XFS_LOWSP_3_PCNT])
-+			(*shift)++;
-+		if (freesp < low_space[XFS_LOWSP_2_PCNT])
-+			(*shift)++;
-+		if (freesp < low_space[XFS_LOWSP_1_PCNT])
-+			(*shift)++;
-+	}
-+	return freesp;
-+}
-+
- /*
-  * If we don't have a user specified preallocation size, dynamically increase
-  * the preallocation size as the size of the file grows.  Cap the maximum size
-@@ -486,18 +510,12 @@ xfs_iomap_prealloc_size(
- 	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(XFS_MAX_BMBT_EXTLEN),
- 				       alloc_blocks);
+ int
+@@ -4915,7 +4899,7 @@ xfs_bmap_del_extent_delay(
+ 	struct xfs_bmbt_irec	new;
+ 	int64_t			da_old, da_new, da_diff = 0;
+ 	xfs_fileoff_t		del_endoff, got_endoff;
+-	xfs_filblks_t		got_indlen, new_indlen, stolen;
++	xfs_filblks_t		got_indlen, new_indlen, stolen = 0;
+ 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	uint64_t		fdblocks;
+ 	int			error = 0;
+@@ -4994,8 +4978,19 @@ xfs_bmap_del_extent_delay(
+ 		new_indlen = xfs_bmap_worst_indlen(ip, new.br_blockcount);
  
--	freesp = percpu_counter_read_positive(&mp->m_fdblocks);
--	if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
--		shift = 2;
--		if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
--			shift++;
--		if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
--			shift++;
--		if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
--			shift++;
--		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
--			shift++;
--	}
-+	if (unlikely(XFS_IS_REALTIME_INODE(ip)))
-+		freesp = xfs_rtx_to_rtb(mp, xfs_iomap_freesp(&mp->m_frextents,
-+				mp->m_low_rtexts, &shift));
-+	else
-+		freesp = xfs_iomap_freesp(&mp->m_fdblocks, mp->m_low_space,
-+				&shift);
+ 		WARN_ON_ONCE(!got_indlen || !new_indlen);
+-		stolen = xfs_bmap_split_indlen(da_old, &got_indlen, &new_indlen,
+-						       del->br_blockcount);
++		/*
++		 * Steal as many blocks as we can to try and satisfy the worst
++		 * case indlen for both new extents.
++		 */
++		da_new = got_indlen + new_indlen;
++		if (da_new > da_old) {
++			stolen = XFS_FILBLKS_MIN(da_new - da_old,
++						 new.br_blockcount);
++			da_old += stolen;
++		}
++		if (da_new > da_old)
++			xfs_bmap_split_indlen(da_old, &got_indlen, &new_indlen);
++		da_new = got_indlen + new_indlen;
  
- 	/*
- 	 * Check each quota to cap the prealloc size, provide a shift value to
+ 		got->br_startblock = nullstartblock((int)got_indlen);
+ 
+@@ -5007,7 +5002,6 @@ xfs_bmap_del_extent_delay(
+ 		xfs_iext_next(ifp, icur);
+ 		xfs_iext_insert(ip, icur, &new, state);
+ 
+-		da_new = got_indlen + new_indlen - stolen;
+ 		del->br_blockcount -= stolen;
+ 		break;
+ 	}
 -- 
 2.39.2
 
