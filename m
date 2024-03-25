@@ -1,81 +1,81 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B59D70CC8
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D66AA71739
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711404462; cv=fail; b=JrF/47zbbBQZOA5a/ZO3DOIIRcTUA2Fm3c2vTRuXk6ORHwrtni1UQQfiB8y17l3csfiXM08OlDuadqsxKoCOzXbWU76yS9yTKnma2E2ds/powmW1UGqNbcowDcZMw+/5s4W9WkHsMR80YGqF6KVD+Sqhwsx8Bt6I0iPROtVmznE=
+	t=1711404463; cv=fail; b=VY9fm9DHNHSahEFBbsI5uJMjiZliYs/PhtDDIKBiSXxwMUMdbt9VaEQz+MFYOGjODUAJRPwCEJSWrS5OL6Gnxo2CFoqQWzfprC2i0O8fPNQUu6DbrxHhkvIvDqM4fEzX0keqJribmhbXJe6w2R1WOJgD4otFbSCvZSws2kr7DLk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711404462; c=relaxed/simple;
-	bh=0K4zk+lMoVKo+zwzs/pxH6rmVtX/qqUwMruZ+R9wjbo=;
+	s=arc-20240116; t=1711404463; c=relaxed/simple;
+	bh=/5qo+VfbWAXee5/QDwqbH5Xinqv1lh2Sw73o9/MTn+8=;
 	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nFo0s4i/Nxc1Iu83LBTrOeh8ytTzhuYYC0UwBYYuk0kiJvTOnXItfd67FcDIslrYiFe0npqGA3JqquKdq5VwZ8QFuPCF58JkfwfxxB4fucRpSW2xvD5sYXpfawkVAfV4Mqt7eLuOk5G6cgL2WPXA7tcOY9TA9qV1Pq80NAQWkPI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=JNFzDPRS; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=sBW1WjRI; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=shPH0uwcxEJx9pty75BhCwoyRiDzr7Wlm/yM1jSNCye74Px6XCU67f3Leb/oSckJQ5Zmmpq2xy7+ZN+/pVBXejQ1zBQrL3p1ixq8yQDyhI2I2yv/jdpoG/DXtiVX8TVbW/Ur1mAMg4VMzdGTRtTQoG/242Tvzzyng5KAkEWy4bk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RoG2rEbm; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Hzw08SO8; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JNFzDPRS";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="sBW1WjRI"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RoG2rEbm";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Hzw08SO8"
 Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42PLFuKr012544
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:40 GMT
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42PLFtoF012366
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references : content-transfer-encoding :
  content-type : mime-version; s=corp-2023-11-20;
- bh=xctqRtu0tlSuh0UjmGybbrOqdhfcGs6vdWuB3jjBHJE=;
- b=JNFzDPRSygZPSjKj6KBlq5Poxop/FhWAQvH2j08gPHP+oSDhEuF0tpQgw0uPUDFQX/Jt
- NdM214p9vU0ZW79sVWE9uTBwYvFFMfS3zOS3CnvQBf/G6+6O2LdQTHfQtXwcOjP1Zc/0
- aB61+lYecETEiFkuKFbr0fe4XBuOYgGca0qy+R9ZEdn65nUD/W9RuB6wpdh8WXOptpfa
- ZaD6jCIkE3wyn9qRYIg/VFDepsWj3jntk/vQsmb4ZVDpyfPRBN3yBEpB802hGHhwXTZa
- WMQvqtKSJZvMKkMI+0ikkyfCmXugDb40Ww6gBV8JNoIoNexnL73NsNV+Nv+EvORlcOnU aw== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x2s9gt7dv-1
+ bh=iBJZ8md6C22QZxlOAS2xsu7E1bKOMxjg6SgEc8VEc6Q=;
+ b=RoG2rEbm5ZcC9GF0P0ih0lNMf2Dq7GiF4f/fqIG8Q7dccAjOQ2N7Yo+U8kWVwlglsQlj
+ G0VsPEHAQmPPMmNgBcoGqFOgPo87J783fxXqnKRra1PWRxPnkp/c+etdYAn3tM9/V+FF
+ Mr0tydrilm8lIB7cbcTVSSsHlzQKljgQH4QEHGXXjTRvztzgCDC4dXlBcMyPqpR3a3fU
+ koHC1ZFVRbpLyGgnlZN6qTmmcbOufcWkvrOsvapWvslJfxDu8xOigV1mcxVxA1Sz6b8h
+ eXT+gLQ1P+jOEmAPeuHxWQfMjt3mM4DaT8bGQbXpxjKXGGT9b6bYRs6qnVAbVWQh4ZY3 Xw== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x2s9gt7dw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:39 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42PKGKdI015967
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:38 GMT
-Received: from bn1pr04cu002.outbound.protection.outlook.com (mail-eastus2azlp17012016.outbound.protection.outlook.com [40.93.12.16])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3x1nh64qxx-1
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:40 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42PKCkLI024462
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:40 GMT
+Received: from bn1pr04cu002.outbound.protection.outlook.com (mail-eastus2azlp17012018.outbound.protection.outlook.com [40.93.12.18])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x1nh6cce9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:38 +0000
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2024 22:07:40 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZHZBm7iBTrRA9cM4bn23VOHqnZzYBZJubLAIuYP8BmXnV1nG5uag8BowKEjYCeg0UemHNvKPnhzVbThzyRtaHH95PxdoOUS50ewhu3STImmAxvLkKE2ncnJ0rghmQka7z9U6q0Z4eS9x4kU0BjJuhmv4K/pbgnbC0jvwkFNXGNIfmtn3Q6j3/hwql931zfoyqLrPNW7TGvj23Dy12Ol4vWQdhxKKH9aXSUb1TrbNKOWrtPhoyWwrAcTyod3zu9Nx0RgjmvPkm4ffg4VoUdJZP3FfPfx1xQyMGuOG9O2DPZLmHfA3GOfXuPFmts7OTjBau3wDroebqR1aVj2ykFBGCA==
+ b=eqKf6DAbUrj8UnajAeG0JKUyUA10wVW0m2Zbmz4qcT0c3+WUOI3lgXz3VGap5d3MnQaJWAVhzlEo39nzt/AgLo1VCLgkvXTnQ/qltaAHTDYzKGL4Jvku8So3Fp8ILbh3hXyoFRFubtqeSrdFGaPKCUlxjBiNhC7CZl489DY1UHWy6CUwn+0ZR5hlCHHBJoGy779Bq/MrIpcruXvc9OTHAiBrW/gkzwaeDKl1Ca6PmSDf9YJjm5CBr0RfyhptReeLDwT9dlHoxItftfLYRNARqY7iIXemOb+LLmd0oaiYHJpDR2VJbFt3LrpmIk8msW2OUx/heUjeD20DqpoJy7XRKg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xctqRtu0tlSuh0UjmGybbrOqdhfcGs6vdWuB3jjBHJE=;
- b=B6knnsZBLqT7yn7NXbBZgeYfMNZbN6/HyAlTKkWaoPLkTQYjpbugaRvpAnqbaMI/ga5oo8B0yS+dKvT8ciEt9zGIMoNwyRGCrb8oyFvu/RrAvVNYHNLUwSSiddyuU0OvLILiUpanLy1PkAgHj+/tQwUuM0V0spqe2mqh/nuaw+lD0w6jTNW19m+7pg3MHRSysq5/FVnJ1d8lOjGSdPRicTq6iWcwZ9AZ6rZq+FiTHEto3QijU3naObz2TodT1aiKo0k9OfU24PYB13q+p9J4L+ShHIHAJjbjccXxtxtI0WQ3Cq0kuXDMTwfeBntSCkHG0M3ov5qGOEZqNZingQPNvQ==
+ bh=iBJZ8md6C22QZxlOAS2xsu7E1bKOMxjg6SgEc8VEc6Q=;
+ b=KHmHw6j2oR3lQ9FGHWsbuovNDqocrXep+QJTh0C4b+CAX+YtjE1kcNdCPLNRGPr3HaxRi9Q0z0RqfJjgbpjtlopdO1NxDuuHXQG79HYcqVBfo4CKsaa+Qj+EO8ZGY+d6AblLhdgelOTeqq6JBpTeKfhQYDrq0JRvFTKp3NPE4JWcZvhIEtPcEUQ1a+bMxz+SaCeAto8YGRS9ipAMXjgUMB/YAJyQl6BhTbudpR8NsVTn9pszPzW4ZMwvkJgDqnoAuZdlS7Rsp6uuz4AWRWCxQqN7HEs3pDAVZepXqs4VryZ9kYEI+p7nnbNFoB1poRRuUcHJ5HyswCpYBkuZosKVTA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xctqRtu0tlSuh0UjmGybbrOqdhfcGs6vdWuB3jjBHJE=;
- b=sBW1WjRI1Q6M9h0UzFpMvu6TYxpp0KdEPQBrl4Co29DAkO3r9N8Gq+jV3g4LmHnyNDx5FfmagTFZYMuqv5fx8cSTximhW0q988YvgSHNzlwHd2hQNMgXys4CmvoQMG69PsLvKxvBJPW2GQaiuregDAqirfsGKOcDtOL6prBNA2g=
+ bh=iBJZ8md6C22QZxlOAS2xsu7E1bKOMxjg6SgEc8VEc6Q=;
+ b=Hzw08SO8fCufhFPyfU5ArbATESzWEkAn7ITY9EVlA9p3RCuMvI82VBEbSgIFWYctc356wJcEZNGcAegeW7KHAvbVHsFX/f/sLnw+HEH1nYfjL6GcaVZMsDG88yGEoBMqMsJ3zDsifMZKGEm4wmyUv0VsR6+6JlJH+nGrBZKHjXY=
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
  by DM4PR10MB7476.namprd10.prod.outlook.com (2603:10b6:8:17d::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.31; Mon, 25 Mar
- 2024 22:07:36 +0000
+ 2024 22:07:38 +0000
 Received: from BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::404e:f2ff:fe2c:bd7a]) by BLAPR10MB5316.namprd10.prod.outlook.com
  ([fe80::404e:f2ff:fe2c:bd7a%4]) with mapi id 15.20.7409.031; Mon, 25 Mar 2024
- 22:07:36 +0000
+ 22:07:38 +0000
 From: Catherine Hoang <catherine.hoang@oracle.com>
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 6.6 CANDIDATE 01/24] xfs: move the xfs_rtbitmap.c declarations to xfs_rtbitmap.h
-Date: Mon, 25 Mar 2024 15:07:01 -0700
-Message-Id: <20240325220724.42216-2-catherine.hoang@oracle.com>
+Subject: [PATCH 6.6 CANDIDATE 02/24] xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
+Date: Mon, 25 Mar 2024 15:07:02 -0700
+Message-Id: <20240325220724.42216-3-catherine.hoang@oracle.com>
 X-Mailer: git-send-email 2.39.2 (Apple Git-143)
 In-Reply-To: <20240325220724.42216-1-catherine.hoang@oracle.com>
 References: <20240325220724.42216-1-catherine.hoang@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR13CA0027.namprd13.prod.outlook.com
- (2603:10b6:a03:2c0::32) To BLAPR10MB5316.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR13CA0023.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c0::28) To BLAPR10MB5316.namprd10.prod.outlook.com
  (2603:10b6:208:326::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -89,367 +89,141 @@ X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
 X-Microsoft-Antispam-Message-Info: 
-	xf29q2mPCFh60KpVovjsOCshQ/weLDfIrXHYRsnwmKt1U3CLoCdpBo9WPK7VbINREfmisB2xhl9vaNeSJHIgdqWxjjWWI8wmkhD5/dhI0MLtM0P9tLaJxFVLdM6MjcPstrfqOL8eVNhD+6313wY1T4CE7N6agHmH2fIzAePUeprX8n1dPovGjC++f7g5kLb8yY2mY6lOLeyhFVs4adkkgEnQBvxLvisfHJi6eW0oR0ESr+BWZGdU3NRiLMhOmaZtKySMDRrjGtGVrWXeGzgDIDmLZIWsA6t/DZDfjkMq9P1OQ3UtjTWT6TTg0f91fY27B1pxGFVzsuU5s7AZ5iGIjORINzQd1RPKpt7Sddc52yAI2UtgOlIsYTvsnIbSYCsNjxRruWfV7qd2v1iifSQ3C2BgOvtZvsduBrEj55q7xuMWTKjBHCgrpIyoTWbt/z0Yl7YCmnxldso/t3WQRSXYZpKrWNpDC+8Zj9bsQHQxdLFbtg47hQwIaKpQla30KXBseaqxyVYEXAKwkvl1vbJQ2pmyx3pas0GYFsrePas4okX/mbVE9Dln+pz1TjYqE/ZGrtxkY2dTJKft3CV1VSFL4qQN70UhHt9wXVrjKGYqACUCXmgPt9KHV3ciy+5Zs3Drques6pOLmRFX0qTixtfcQ7gkBfc3XbUewawEbJExqqU=
+	GdXoh5hTrTmUeCTqvZoifkh1PGNv521v+J8WVOpKec0im/ubMZ7oiFrFUo1YJyMTTASGG2cLtpS8HFWdtaDPe18M3TRFEJnKH/UHEWj1drCyqo57Hy5KtNVIqh02mbHc7RgXCb+ZGo0wrKYYH3o1NU22hSWFUFDhIsleGz/lsLwXycy6u98ErkmprkTsyA/3KYZXwMrfZ5wZm3rUtxtHFtjveOw1E3uKS+oDokLAWPKHQMDvb1/wNlRwezRZUrRDSCHSjbJgrcKGqZ/raNsW6MmZrGoshLGlLP9nV7E456KxDN9J55gkI7PzjiKkLhm2yONouBWZmF51QAU30oRz4O4uirGipwaUU3wvcWy0gHu70GsXl7Gp7pfeFcSgUeLmOyAuJzP5B4PQ8Tl0C7WQw51DbReuGlLh7vQGBB0+OBaL4us6pt7/UEhtbfUJaQV1doXsrg+HMvMwSoPinqyTb4MMPV7B3zu3XVpcOSmshvYpBvTvKY2u3R76nBCvxiw55IxTdXZKIrOwyvvNqLLUGqr+Ke/SrOU1TtpEr5EQRuRJmJ6CdmIuWQWlN5tUWI7qDenSBsz4LtjvSF/NluKeks+ZU7ANd8jjA7LjK2rGO4oXFujJbOmMGpE5TzdSkT+CYZhiPIv3GiKEEXJfO0Y2ncGvxr/o/mnLkuPPnMakEJ8=
 X-Forefront-Antispam-Report: 
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?hm7Eeehanrc6I/vNib7YbllFqCd+GQI7AzPSCEWAsn5OvdroMvJO8r4/05Ed?=
- =?us-ascii?Q?bzEe3qKJLztAFwl/Jo88v2v8r6s2v4VfO2NkUNX3YV2EjwCeRxd+A1fLbTDJ?=
- =?us-ascii?Q?kL35pXgyIjmTfibHg9g4GvftNkYjdUGrfKSSiT133gwO5cS4RyiLDMvsxgec?=
- =?us-ascii?Q?oHgglpqj6ueKTcYZ6/5DhTIUelEhX5ynqj/4CUICodWKT3mKWVcSlZz1ltbG?=
- =?us-ascii?Q?F+QCPaGhBUSpU+1+Qa5+JAA9PZXFThYC6QXFvSVkWmtf6pIX1s1oTkZTXypf?=
- =?us-ascii?Q?EBRdoetbP19dU5tDg1K4oeBCXYSru8jzV++IQuKCbeMeE6jLkHG0kJB9aCQf?=
- =?us-ascii?Q?PpHYLTZYGKqWRWmwyp/AJ4JdUjtFJyTCxdazRP6d0vU7R6CKD6z1gbCk9jwn?=
- =?us-ascii?Q?1soFq2eRBZHaapK2VOMVI/4go2X4X95ISv4TlymkboYRP1mT5aOwyhe8ZHje?=
- =?us-ascii?Q?nffO8CZA+ATN5Ro3Gcuk58OjCGC+kLHwdHPYA9LT9epbN7Rjs7RdjGQFYTN0?=
- =?us-ascii?Q?a/3oxprdNdrjJqc+wHgoLyo0srgL8RzCuzr2Do/4pAGq+Gwr1pUdrEH93smq?=
- =?us-ascii?Q?Hb4r5ERYrIY4RIbb0s3VBhGE0tyVMnNtPkO+FXwH6MtfH0m+1zNg5bm+z1fC?=
- =?us-ascii?Q?n2XI8E6Z7/Cgcxo5ymrgDh+AfcCM7USeV7ja2XItFU675GpR8VjQLxfuc+/a?=
- =?us-ascii?Q?cppBFRCl9OI8n0ICV0CiCjrA47cvtGWA+CLEmeWi6tyo+TzPedOFlCQJS03x?=
- =?us-ascii?Q?RybO8c/21i4t5JvjjmvxUzb9D2FJGsHOzrRgqGFFyXxkpngWeMTAi4DToRHh?=
- =?us-ascii?Q?sumBtXKqMmreMhh3TJ70rpUtd8by3j+LQy1f/y1AB/iLWea0G3qJdtETwcUa?=
- =?us-ascii?Q?FlEaTlCs8q7EXr6NDQqlGJGQy8Im8DJclXRM6bZDhSDU+r2knxmtwIuJdhMu?=
- =?us-ascii?Q?602qehsPtvjtW3qhwyUNfi6MJOxlwZ0fPhjQWHSCAjz7oBJM8cZt/uJpHDAg?=
- =?us-ascii?Q?mMO99PdZRaCviUBW77qo6/Tmr1rA0hborfijg14T1QgEOBAGxooyvU0Q/k79?=
- =?us-ascii?Q?i5o+feLazzH416Nl8ih/ck5lCpHZ8GJ/q/q7mKalEE1UXGYYCLyYMtvQuAgA?=
- =?us-ascii?Q?kCbd6HUbkG5Pi3dGy5gMO9VlKkxlMg5ICxYxyB7Cr7CPbStKdjgXuxitnpb6?=
- =?us-ascii?Q?EIKWQWyw+kdLY/mgVPo+Y1dTeM1n9XutPGimZJbOtmxR6DA/AzyZBAVLMlaD?=
- =?us-ascii?Q?MubHxtMgUrHai2jpNDPbGBUXpE3E0sY6xHmSVoAF1vnQ5kPR8+ycD39+05Cy?=
- =?us-ascii?Q?Pq5sTWVjjtZ3zPaVk7bhcrdueCimtcw2vLENmmBtGuKIpNE0v7KfhY7qAcH7?=
- =?us-ascii?Q?Mjc5wYtgQd1u4ZZgR6eh9cO5xDcWqLKDTZO66cdvVv+TolWqxI9Q+0EMUo66?=
- =?us-ascii?Q?VNeQ0k0LKdxptbfhiknbIhXxL/uQe+k52B24gkHGesWQjOQ1JEWOw9ov/9P5?=
- =?us-ascii?Q?ATz95PbZtkZtBRjysCPQje6eqWUJyDFd+I4ZuEDTKqCRMrpExrfWtE50xy8S?=
- =?us-ascii?Q?vhjsGRKZFSBlHDJRKfqMsJvzwHhHfDR8SXglaCigzz7drCaTOOt7mR2vrbXf?=
- =?us-ascii?Q?wG0F+VnLVn0twEQFJMSW9XsguwNefq8rFZmWoZAFC1xtWbvsBInRIHL0JEMf?=
- =?us-ascii?Q?xer8LA=3D=3D?=
+	=?us-ascii?Q?MMpVMGWge2IvHhkk1zi3k4P3HYjkrq2WWDXGhFe7zctZUJCWRkf0YZdGHuQc?=
+ =?us-ascii?Q?oHYGEg90KFu6tCOo+5p6RGsQBWWpnysQGZsmfJcjRoRuqR7c1WAEZA+N77RO?=
+ =?us-ascii?Q?HBOfSruNFMCdQS4V6+tOBuTy9jX2GSkpWV/xfIPp0LpXH4RuaohD6bmh1MPi?=
+ =?us-ascii?Q?TR1yrVQXD1SS7XZHUThcH5zHz0BtF8BhlG6X5vy03MQxmRrMI0HoTQ5ANSHM?=
+ =?us-ascii?Q?8KxnKNSLvq1MKRaEcCkwuyKswaY0XMqdRU9QIRRZ1CSXEUbe3iN8oKdtAeVW?=
+ =?us-ascii?Q?6Fx+fwwrNnINmod9DVxtD2efZ00PYBnuvxJKvELvMi/M3q9TvROwX9Lh3iPj?=
+ =?us-ascii?Q?usqC6ZU1N0xoYhtCjOeoewjM/0ZcBMpuy9fvamF+ajpte8kVLeRbj19GE1FJ?=
+ =?us-ascii?Q?aNPtTGc7c2FtemG7wosixIWn8vt455DKr4u+WWqrp2qUcyL+iJZJx9AdFMDe?=
+ =?us-ascii?Q?111o7YM2V7YvYXbvBy4P7VsN9grqfqGix1W+3OOZQAkxVumjSisDFcAt6zTy?=
+ =?us-ascii?Q?ZyRqvXmSLQbZEDpvQk/u5qpQi3N73Kl2gC+OK9DhWUwH/pV43okcQ2WMhhxF?=
+ =?us-ascii?Q?bXBtz3+e5E6gty/FDYsjEZGFqHHTM8OYklF57xV2jrlz+PndgmIGX/WrKlyx?=
+ =?us-ascii?Q?JAyVDTt/L6M3X86wnHq3AyoOAqe3Za2PTVIeMCGRM3G/XTZALuOfdcIYT/3b?=
+ =?us-ascii?Q?BTRYF45/TaLim2Gy4vnZuxyQuVo2i0zhQcQqB2KumBS+wggNk8eoHB6EoMkw?=
+ =?us-ascii?Q?Zc1KxhP03xs3f6AaS5XZy6ChPy8LUx33m630dleDPdsXY5IQccFdELY83czl?=
+ =?us-ascii?Q?e6vmPMaucYmAcr8ILrGFBR/A1qPZg9fnROK/K1o8tiY2cO+afdKj3/j2glt1?=
+ =?us-ascii?Q?zaLa8o31PfgwIIlPigSOobctF5P9HY8n+Zh8U9yIvL9hLLMQbwMA1jYUdVep?=
+ =?us-ascii?Q?AJoqe21DZqIbBbeUG4BX4mXh+VhUAahQM/E3x37+UnPvjk6pHNEQkiqIVWDm?=
+ =?us-ascii?Q?TO7RePNfBkAFUFNKO0qHtYrwFTUi7o8GOwbcIMspaPoQjuLUkZxU+x5Uz+bO?=
+ =?us-ascii?Q?EVbW9rxRAFlatc6/vMAt5tXyvy1QK+23eUFvH4UcSPrx/6em5J0Qart/SAtr?=
+ =?us-ascii?Q?NjrZ/aQtX5IF5JJosnIueD68Yuv4CHJb8XIS823ZVOPy/kt7gVmsI/UpYo4c?=
+ =?us-ascii?Q?mbsQmp+J93j1w6SwUNYACFsw9KgzO63gCdz70NVSVPV9AJ04euWB4abAaCt9?=
+ =?us-ascii?Q?0FF3ecJBj6yLpN2wJDvKquTUvA9sRNtammds58DgoPkuoy9DnsqFe9Y6NJcz?=
+ =?us-ascii?Q?PDgn3snAt/BB0J4YFgKIUAV5/A9RullyEftizkJAPv+JM/8pZxEXXkH3EalP?=
+ =?us-ascii?Q?uZALC61APUhLcgpkqplPiQy88XO/ULRaReVnkQ/kAgYiEClFpDGhdzt8WCYo?=
+ =?us-ascii?Q?BhsPR4O4dL3mQD1xNQv0FCuU8PGzmI3YDJO3yaG6UTzi9kt6yjjJRH28YbrQ?=
+ =?us-ascii?Q?mXtvxLV0QG+cJeWKaAg+OrEn+yibBqdHr63Evx3Mt/Pio6tD8VesV3iZLXmB?=
+ =?us-ascii?Q?xaINmwC86bl80JhPrfz4+j0EjvLeFLd4TVpW4dFcOO0/OYwBpZRFhowL0hrp?=
+ =?us-ascii?Q?Bi4k9RP6osB/xEW88wYvHB3r3zasE+aa0syqk7ZUZE4TbhRvo4EovryPXD/q?=
+ =?us-ascii?Q?QhDnwA=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	SmIiLzcjzR9UudH0XsIxY0XP2arTdhfTfDQ2nnjXZeoiJVGmraVwNngliU6I3lVSrVDvYgnOFR9xNdJvTLYqe20/wwb4drCAH3pD311wwAncyTj6O5VXtnCHGwYZxP0S6by0154hRj5U4oyC2MS4KhgvdIaVxyB56eON3hhcatLupwUtLt+zmIPowQFW4R9OjX9MSi1zdP4W6qSH2twH0el6013jUv54vIotOAOirByxPlsxmtyni6xXb5Fo3LXRaQwiBaH7OaP0PJyLO61iMllMmW633EFMiTvSwRMtecWRhsJrmbMQIn8QDvNLf/LlmfN95qZViopc7GCoF377r9fTAyma/9xDzTq+dZDFqwL14WZ/QYLHNW2ELqiRSQUrnfIoBzHMb/Y3dLtmhGRIMuldISr50V4jnatrYLcfQgWAS15mvv7V7a8Eunm8BGZrJnxbJsa9/eeNzhN/l0reqPvf2B7UxjnisVzPPJdgIMvo8xbILlihG9sp2eAaNqte4L1EOJv/ecECHoBwI5knwcBl3fQlW9S8mAkw/cx/s+kwcyCr8ziP3sdWDh0h0/wck39eyjMUUk5qOHnnQg7GTwOMyy0YElFwrMj2C+Kc5HQ=
+	S3SBgRRFbFSDYnxxP9LEk8/uH6vDlTvvueQpLYrU42LuvR/oDnelaAs5HQIGT+XTL35Oo6YmIlGEKKY4QTYT8lQE33Iugo8pJpEb+asxRiedkj1ntdtTUx08J4vSvXQbRGbRxKE2+avC9VZnYyyoIVHYxNIAvvq1rFGOXL6qNT/TvtVpYTrwAtSZvpASDAGcZKzYDraN8LHByz6TkPDSzDD4k2Lc+zcE++PeTa/ZErTahdiM3A50TOrwr6MygzWgkVPeIea0AoeAbf6rVFpHpEYy6dBvVjbJ5MhIYTi7EXhZWycBXtMkUIbFzDa0G3QTtCOHEoP2MkHUaV6eVCQtSoKpEl6UyUWxGOgoUNgwgaEIndup7um835CVoK+i1VJx2xksijN5e5ROJIJCrS6gb9XdQIZl/B3SdYBTYVFqkvd5mFQTxqyive65k23k7pQjZgkDm+9FBOB+P5u09CTMFxO4xg761h/x5UJRLzLocjWf1mbht8tiQ9CnkgHqmRYtwbTMbwTnHVKOTmatHqsq24COTcipZRtY0Cx/86A2BStxz2efiOcYbD0sYSu2ybfqi12ni1tJ/xr9YWIEnjgNLxl4d3q42KW8QGq6Pc55pNY=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fa2c2684-c991-4473-4e3f-08dc4d17fa71
+X-MS-Exchange-CrossTenant-Network-Message-Id: f6faf5ba-ffb5-4070-0681-08dc4d17fb7b
 X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2024 22:07:36.2564
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2024 22:07:37.9765
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ZmRX+KPVnYDUMcU+1meH0/DfG5MmneBUUTdey+dwu0qbNBs8gUO2VOI0AD891q0GUGIkgW39CzmXwsDQNOPtcxsYHsOcr5rxXwLdRP5yXVY=
+X-MS-Exchange-CrossTenant-UserPrincipalName: Y3Y21KiQWP495pj/FyYVrTceIOokItQX8NVRVi1Fvq3qdlnaE7GNzYQi2ApUuA9iwDMa8qiv75+/usWuKdbEZbEjQbuiOQ0qQqt1UqvyeCc=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB7476
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-25_22,2024-03-21_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ definitions=2024-03-25_21,2024-03-21_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2403210000 definitions=main-2403250137
-X-Proofpoint-GUID: grG5vILlX9mf6e27zQatvJEJIGGrv1xy
-X-Proofpoint-ORIG-GUID: grG5vILlX9mf6e27zQatvJEJIGGrv1xy
+X-Proofpoint-GUID: 6wTWOURHPOt1wVh2y07rgChgePhGiFCh
+X-Proofpoint-ORIG-GUID: 6wTWOURHPOt1wVh2y07rgChgePhGiFCh
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 13928113fc5b5e79c91796290a99ed991ac0efe2 upstream.
+commit f29c3e745dc253bf9d9d06ddc36af1a534ba1dd0 upstream.
 
-Move all the declarations for functionality in xfs_rtbitmap.c into a
-separate xfs_rtbitmap.h header file.
+XFS uses xfs_rtblock_t for many different uses, which makes it much more
+difficult to perform a unit analysis on the codebase.  One of these
+(ab)uses is when we need to store the length of a free space extent as
+stored in the realtime bitmap.  Because there can be up to 2^64 realtime
+extents in a filesystem, we need a new type that is larger than
+xfs_rtxlen_t for callers that are querying the bitmap directly.  This
+means scrub and growfs.
+
+Create this type as "xfs_rtbxlen_t" and use it to store 64-bit rtx
+lengths.  'b' stands for 'bitmap' or 'big'; reader's choice.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c     |  2 +-
- fs/xfs/libxfs/xfs_rtbitmap.c |  1 +
- fs/xfs/libxfs/xfs_rtbitmap.h | 82 ++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/fscounters.c    |  2 +-
- fs/xfs/scrub/rtbitmap.c      |  2 +-
- fs/xfs/scrub/rtsummary.c     |  2 +-
- fs/xfs/xfs_fsmap.c           |  2 +-
- fs/xfs/xfs_rtalloc.c         |  1 +
- fs/xfs/xfs_rtalloc.h         | 73 --------------------------------
- 9 files changed, 89 insertions(+), 78 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_rtbitmap.h
+ fs/xfs/libxfs/xfs_format.h   | 2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.h | 2 +-
+ fs/xfs/libxfs/xfs_types.h    | 1 +
+ fs/xfs/scrub/trace.h         | 3 ++-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 617cc7e78e38..a47da8d3d1bc 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -21,7 +21,7 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_bmap_btree.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 655108a4cd05..9eb1b5aa7e35 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -16,6 +16,7 @@
- #include "xfs_trans.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
-+#include "xfs_rtbitmap.h"
- 
- /*
-  * Realtime allocator bitmap functions shared with userspace.
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 371dc07233e0..20acb8573d7a 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -98,7 +98,7 @@ typedef struct xfs_sb {
+ 	uint32_t	sb_blocksize;	/* logical block size, bytes */
+ 	xfs_rfsblock_t	sb_dblocks;	/* number of data blocks */
+ 	xfs_rfsblock_t	sb_rblocks;	/* number of realtime blocks */
+-	xfs_rtblock_t	sb_rextents;	/* number of realtime extents */
++	xfs_rtbxlen_t	sb_rextents;	/* number of realtime extents */
+ 	uuid_t		sb_uuid;	/* user-visible file system unique id */
+ 	xfs_fsblock_t	sb_logstart;	/* starting block of log if internal */
+ 	xfs_ino_t	sb_rootino;	/* root inode number */
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-new file mode 100644
-index 000000000000..546dea34bb37
---- /dev/null
+index 546dea34bb37..c3ef22e67aa3 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -0,0 +1,82 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ */
-+#ifndef __XFS_RTBITMAP_H__
-+#define	__XFS_RTBITMAP_H__
-+
-+/*
-+ * XXX: Most of the realtime allocation functions deal in units of realtime
-+ * extents, not realtime blocks.  This looks funny when paired with the type
-+ * name and screams for a larger cleanup.
-+ */
-+struct xfs_rtalloc_rec {
-+	xfs_rtblock_t		ar_startext;
-+	xfs_rtblock_t		ar_extcount;
-+};
-+
-+typedef int (*xfs_rtalloc_query_range_fn)(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	const struct xfs_rtalloc_rec	*rec,
-+	void				*priv);
-+
-+#ifdef CONFIG_XFS_RT
-+int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
-+		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
-+int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		      xfs_rtblock_t start, xfs_extlen_t len, int val,
-+		      xfs_rtblock_t *new, int *stat);
-+int xfs_rtfind_back(struct xfs_mount *mp, struct xfs_trans *tp,
-+		    xfs_rtblock_t start, xfs_rtblock_t limit,
-+		    xfs_rtblock_t *rtblock);
-+int xfs_rtfind_forw(struct xfs_mount *mp, struct xfs_trans *tp,
-+		    xfs_rtblock_t start, xfs_rtblock_t limit,
-+		    xfs_rtblock_t *rtblock);
-+int xfs_rtmodify_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		       xfs_rtblock_t start, xfs_extlen_t len, int val);
-+int xfs_rtmodify_summary_int(struct xfs_mount *mp, struct xfs_trans *tp,
-+			     int log, xfs_rtblock_t bbno, int delta,
-+			     struct xfs_buf **rbpp, xfs_fsblock_t *rsb,
-+			     xfs_suminfo_t *sum);
-+int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
-+			 xfs_rtblock_t bbno, int delta, struct xfs_buf **rbpp,
-+			 xfs_fsblock_t *rsb);
-+int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		     xfs_rtblock_t start, xfs_extlen_t len,
-+		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
-+int xfs_rtalloc_query_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		const struct xfs_rtalloc_rec *low_rec,
-+		const struct xfs_rtalloc_rec *high_rec,
-+		xfs_rtalloc_query_range_fn fn, void *priv);
-+int xfs_rtalloc_query_all(struct xfs_mount *mp, struct xfs_trans *tp,
-+			  xfs_rtalloc_query_range_fn fn,
-+			  void *priv);
-+bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-+int xfs_rtalloc_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
-+			       xfs_rtblock_t start, xfs_extlen_t len,
-+			       bool *is_free);
-+/*
-+ * Free an extent in the realtime subvolume.  Length is expressed in
-+ * realtime extents, as is the block number.
-+ */
-+int					/* error */
-+xfs_rtfree_extent(
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_rtblock_t		bno,	/* starting block number to free */
-+	xfs_extlen_t		len);	/* length of extent freed */
-+
-+/* Same as above, but in units of rt blocks. */
-+int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
-+		xfs_filblks_t rtlen);
-+#else /* CONFIG_XFS_RT */
-+# define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
-+# define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
-+# define xfs_rtalloc_query_range(m,t,l,h,f,p)		(-ENOSYS)
-+# define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
-+# define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
-+# define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
-+#endif /* CONFIG_XFS_RT */
-+
-+#endif /* __XFS_RTBITMAP_H__ */
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 05be757668bb..5799e9a94f1f 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -16,7 +16,7 @@
- #include "xfs_health.h"
- #include "xfs_btree.h"
- #include "xfs_ag.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_inode.h"
- #include "xfs_icache.h"
- #include "scrub/scrub.h"
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 008ddb599e13..2e5fd52f7af3 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -11,7 +11,7 @@
- #include "xfs_mount.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_inode.h"
- #include "xfs_bmap.h"
- #include "scrub/scrub.h"
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index 437ed9acbb27..f4635a920470 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
 @@ -13,7 +13,7 @@
- #include "xfs_inode.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_bit.h"
- #include "xfs_bmap.h"
- #include "scrub/scrub.h"
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 736e5545f584..8982c5d6cbd0 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -23,7 +23,7 @@
- #include "xfs_refcount.h"
- #include "xfs_refcount_btree.h"
- #include "xfs_alloc_btree.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_ag.h"
- 
- /* Convert an xfs_fsmap to an fsmap. */
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 0e4e2df08aed..f2eb0c8b595d 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -19,6 +19,7 @@
- #include "xfs_icache.h"
- #include "xfs_rtalloc.h"
- #include "xfs_sb.h"
-+#include "xfs_rtbitmap.h"
- 
- /*
-  * Read and return the summary information for a given extent size,
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 65c284e9d33e..11859c259a1c 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -11,22 +11,6 @@
- struct xfs_mount;
- struct xfs_trans;
- 
--/*
-- * XXX: Most of the realtime allocation functions deal in units of realtime
-- * extents, not realtime blocks.  This looks funny when paired with the type
-- * name and screams for a larger cleanup.
-- */
--struct xfs_rtalloc_rec {
--	xfs_rtblock_t		ar_startext;
+  */
+ struct xfs_rtalloc_rec {
+ 	xfs_rtblock_t		ar_startext;
 -	xfs_rtblock_t		ar_extcount;
--};
--
--typedef int (*xfs_rtalloc_query_range_fn)(
--	struct xfs_mount		*mp,
--	struct xfs_trans		*tp,
--	const struct xfs_rtalloc_rec	*rec,
--	void				*priv);
--
++	xfs_rtbxlen_t		ar_extcount;
+ };
+ 
+ typedef int (*xfs_rtalloc_query_range_fn)(
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 851220021484..6b1a2e923360 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -31,6 +31,7 @@ typedef uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
+ typedef uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
+ typedef uint64_t	xfs_fileoff_t;	/* block number in a file */
+ typedef uint64_t	xfs_filblks_t;	/* number of blocks in a file */
++typedef uint64_t	xfs_rtbxlen_t;	/* rtbitmap extent length in rtextents */
+ 
+ typedef int64_t		xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
+ 
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index cbd4d01e253c..df49ca2e8c23 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -1037,7 +1037,8 @@ TRACE_EVENT(xfarray_sort_stats,
  #ifdef CONFIG_XFS_RT
- /*
-  * Function prototypes for exported functions.
-@@ -48,19 +32,6 @@ xfs_rtallocate_extent(
- 	xfs_extlen_t		prod,	/* extent product factor */
- 	xfs_rtblock_t		*rtblock); /* out: start block allocated */
- 
--/*
-- * Free an extent in the realtime subvolume.  Length is expressed in
-- * realtime extents, as is the block number.
-- */
--int					/* error */
--xfs_rtfree_extent(
--	struct xfs_trans	*tp,	/* transaction pointer */
--	xfs_rtblock_t		bno,	/* starting block number to free */
--	xfs_extlen_t		len);	/* length of extent freed */
--
--/* Same as above, but in units of rt blocks. */
--int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
--		xfs_filblks_t rtlen);
- 
- /*
-  * Initialize realtime fields in the mount structure.
-@@ -102,55 +73,11 @@ xfs_growfs_rt(
- 	struct xfs_mount	*mp,	/* file system mount structure */
- 	xfs_growfs_rt_t		*in);	/* user supplied growfs struct */
- 
--/*
-- * From xfs_rtbitmap.c
-- */
--int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
--		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
--int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		      xfs_rtblock_t start, xfs_extlen_t len, int val,
--		      xfs_rtblock_t *new, int *stat);
--int xfs_rtfind_back(struct xfs_mount *mp, struct xfs_trans *tp,
--		    xfs_rtblock_t start, xfs_rtblock_t limit,
--		    xfs_rtblock_t *rtblock);
--int xfs_rtfind_forw(struct xfs_mount *mp, struct xfs_trans *tp,
--		    xfs_rtblock_t start, xfs_rtblock_t limit,
--		    xfs_rtblock_t *rtblock);
--int xfs_rtmodify_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		       xfs_rtblock_t start, xfs_extlen_t len, int val);
--int xfs_rtmodify_summary_int(struct xfs_mount *mp, struct xfs_trans *tp,
--			     int log, xfs_rtblock_t bbno, int delta,
--			     struct xfs_buf **rbpp, xfs_fsblock_t *rsb,
--			     xfs_suminfo_t *sum);
--int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
--			 xfs_rtblock_t bbno, int delta, struct xfs_buf **rbpp,
--			 xfs_fsblock_t *rsb);
--int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		     xfs_rtblock_t start, xfs_extlen_t len,
--		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
--int xfs_rtalloc_query_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		const struct xfs_rtalloc_rec *low_rec,
--		const struct xfs_rtalloc_rec *high_rec,
--		xfs_rtalloc_query_range_fn fn, void *priv);
--int xfs_rtalloc_query_all(struct xfs_mount *mp, struct xfs_trans *tp,
--			  xfs_rtalloc_query_range_fn fn,
--			  void *priv);
--bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
--int xfs_rtalloc_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
--			       xfs_rtblock_t start, xfs_extlen_t len,
--			       bool *is_free);
- int xfs_rtalloc_reinit_frextents(struct xfs_mount *mp);
- #else
- # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)	(-ENOSYS)
--# define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
--# define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
- # define xfs_rtpick_extent(m,t,l,rb)			(-ENOSYS)
- # define xfs_growfs_rt(mp,in)				(-ENOSYS)
--# define xfs_rtalloc_query_range(m,t,l,h,f,p)		(-ENOSYS)
--# define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
--# define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
--# define xfs_verify_rtbno(m, r)				(false)
--# define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
- # define xfs_rtalloc_reinit_frextents(m)		(0)
- static inline int		/* error */
- xfs_rtmount_init(
+ TRACE_EVENT(xchk_rtsum_record_free,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_rtblock_t start,
+-		 uint64_t len, unsigned int log, loff_t pos, xfs_suminfo_t v),
++		 xfs_rtbxlen_t len, unsigned int log, loff_t pos,
++		 xfs_suminfo_t v),
+ 	TP_ARGS(mp, start, len, log, pos, v),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
 -- 
 2.39.3
 
