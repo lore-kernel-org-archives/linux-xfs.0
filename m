@@ -1,35 +1,35 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780AA9461;
-	Mon, 25 Mar 2024 19:16:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CC8312B6C;
+	Mon, 25 Mar 2024 19:19:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711394166; cv=none; b=t/0bw7BV9+OCUnbj/GpKLu6Wa5dTXi5aGhFCiTn2Wsx8LUP4rKBBKo+qUocFDFfD5OlFgfxmeZwdTV1JbEmBB43jbU7PUKs5dL+18SW9nR+ekgijwVMM5p+yhLrKU3VWs4mW/LMJPjYkyJctETLJyWL9RkcL9x+jjf8vFRfuzhI=
+	t=1711394351; cv=none; b=t+SuwwD1kvEGjjBrqPezQe/hC91rclxD/CoTVszyV0T3qm8hc7+ktnA3uc9+dbhgm1wWDEGcLAPNa7ko8MWmImjLfjkdZYZ5740nr4/bAaKc2+Iut8bp/zLsCcdx/FYn6l52P6hMCHh2atLQPGvSFMxsaCwfbK+/uS8PIyVwiBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711394166; c=relaxed/simple;
-	bh=l8mYrO7LA7D7hbrR36TT9zl2GYA+uskKnO6cZSSL8pE=;
+	s=arc-20240116; t=1711394351; c=relaxed/simple;
+	bh=T90UZpzDGEueZT19plmw9vcP8zjaY3O5nA88rBtE2Ws=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RFMvZrTF9lKngr+2ia3HmwKXlBpdbE1eyf7sYvsWOg6wUSv6HHOLAKpAaCedCvJczwAkCCH56ARb1APeefAzyZJnlsbNQ7soxWJlYU+s7/v2A/xSIyTi3OJ75puVKwpmGaX7ihQfK0AH7E9Nc2vkr1c5ksLvr8wKsVkjacsHxMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SJro86af; arc=none smtp.client-ip=90.155.50.34
+	 Content-Type:Content-Disposition:In-Reply-To; b=kzUVBEEd/C1Tw7jeVeGhoAkMagr5Sz/p9VBCd6G0LNZZLP6gUJuQ9ySxSQspEtFwo0B1YlDFfp17TgU4jH3rYgmYJtsfwHKdB8NWyNTU9wvxsghVJ4J5Jfcif5YLQjNj3FQRWuhlbsVjkuYjZHabdwkXBhgDqb96Q0mhei5xVXw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Uo4sl+Qh; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SJro86af"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Uo4sl+Qh"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
 	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=eTY9tWsMxZ2K3aQkEZJpivPTdRpw7VkLZH41dnj2hEQ=; b=SJro86afQ01NTvzMF0k9zFPIAC
-	/zDtpbnYDk4Wq8eoVWQaQ+LHAzjV04+AV+k/5bl0HtvL37X6+HOgXTl4f3F+dzJCDkKas5fqqVl0D
-	OMtxfNkM+XfKVaSeT+mrUxjjNtMrfSrzvNvUaL0TuIhy2sO6l8OwwcR+LAt6SwywwbLxtL9ewACEx
-	uBLMVJ3hO0GN0KjqBmNMJYXQcHAf2j39ql2S9LHSNM+DRKd1SLPHiQbXabKxZGdLoqIjqUn0YTvMn
-	BySYDpMd0Wl43aynAvcRrRb6x4Rz7tskCiTSaueKWv95Ne79I399pH+ZOXra7Hi7/7U83/uekccK3
-	szsgYAQA==;
+	bh=S76rMVbjP+0D2W7EDE1El8rQ89zrw/wPuPDN4wnmWiI=; b=Uo4sl+QhnSVYCJFwPLHabt7imN
+	Wls4Z043JkcDZU6AsE8tF6qULidYQ3MtDIi74t8xurHGIQOqrJI7tCVosrIE2ZxtMqUdItlhS4evK
+	VZGKfAbzEPnWqPJ+Wx/Riln3N8T7APwYqubNkOOt2dcXVOdLtGp4AQuOxFxqoX4ll2e7uABxBFQ27
+	pT1wb1JzJQH3uZoVRNGfcWjsJp3OuZkOhdpRBdcDzVcxXEGnaJ2QgfDS4wbE2AphFbRMKyPsZ4k39
+	SLD2bukPPdrcn2x4H9BRPKloNRnHE2i5ZpMK90pbxfqz7bpIPN7EFnxFg6QxXFRvoZwqPa6pQhQVB
+	RdN0GEnQ==;
 Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ropnb-0000000H9QS-2aiZ;
-	Mon, 25 Mar 2024 19:15:59 +0000
-Date: Mon, 25 Mar 2024 19:15:59 +0000
+	id 1ropqd-0000000H9bi-2a8f;
+	Mon, 25 Mar 2024 19:19:07 +0000
+Date: Mon, 25 Mar 2024 19:19:07 +0000
 From: Matthew Wilcox <willy@infradead.org>
 To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -37,11 +37,9 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	mcgrof@kernel.org, djwong@kernel.org, linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org, david@fromorbit.com,
 	akpm@linux-foundation.org, Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH v3 10/11] xfs: make the calculation generic in
- xfs_sb_validate_fsb_count()
-Message-ID: <ZgHNb3Led05RXRd2@casper.infradead.org>
+Subject: Re: [PATCH v3 00/11] enable bs > ps in XFS
+Message-ID: <ZgHOK9T2K9HKkju1@casper.infradead.org>
 References: <20240313170253.2324812-1-kernel@pankajraghav.com>
- <20240313170253.2324812-11-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,45 +48,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240313170253.2324812-11-kernel@pankajraghav.com>
+In-Reply-To: <20240313170253.2324812-1-kernel@pankajraghav.com>
 
-On Wed, Mar 13, 2024 at 06:02:52PM +0100, Pankaj Raghav (Samsung) wrote:
-> From: Pankaj Raghav <p.raghav@samsung.com>
-> 
-> Instead of assuming that PAGE_SHIFT is always higher than the blocklog,
-> make the calculation generic so that page cache count can be calculated
-> correctly for LBS.
-> 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->  fs/xfs/xfs_mount.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index aabb25dc3efa..9cf800586da7 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -133,9 +133,16 @@ xfs_sb_validate_fsb_count(
->  {
->  	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+On Wed, Mar 13, 2024 at 06:02:42PM +0100, Pankaj Raghav (Samsung) wrote:
+> This is the third version of the series that enables block size > page size
+> (Large Block Size) in XFS. The context and motivation can be seen in cover
+> letter of the RFC v1[1]. We also recorded a talk about this effort at LPC [3],
+> if someone would like more context on this effort.
 
-but ... you're still asserting that PAGE_SHIFT is larger than blocklog.
-Shouldn't you delete that assertion?
+Thank you.  This is a lot better.
 
->  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
-> +	uint64_t max_index;
-> +	uint64_t max_bytes;
-> +
-> +	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
-> +		return -EFBIG;
->  
->  	/* Limited by ULONG_MAX of page cache index */
-> -	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-> +	max_index = max_bytes >> PAGE_SHIFT;
-> +
-> +	if (max_index > ULONG_MAX)
->  		return -EFBIG;
-
-This kind of depends on the implementation details of the page cache.
-We have MAX_LFS_FILESIZE to abstract that; maybe that should be used
-here?
+I'm still trying to understand your opinion on the contents of the
+file_ra_state.  Is it supposed to be properly aligned at all times, or
+do we work with it in the terms of "desired number of pages" and then
+force it to conform to the minimum-block-size reality right at the end?
+Because you seem to be doing both at various points.
