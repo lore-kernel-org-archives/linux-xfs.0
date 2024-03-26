@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A12D1128839
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:15:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81D312882F
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:15:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711422922; cv=none; b=Kt9l2J7VdnMDBjHWh0aWnMZ7CNovl85nCwrzSO/VfVrglyIMAyGLLKAwjHiOIjBijIupP9y0GQqE77aZL804Ul2OI+52iryZGrJ96om0RSsXusB5myWPLXfvEALNKRPejNYTiWO3lYdMMYCRMGQYWvOcdbbVJIUAnVQ3VA+dP/w=
+	t=1711422937; cv=none; b=YV16LNXi0tcwkiZDyFHtzRE3VZRVZ8rWy2wIEZ3j2/CJS9S619doeI29FAjzCaen15wdFvVQoXBAVhXICjTPZaDRyQkfJ5YqO3jeosEFvNSVSGMNcbfy6AylqdwGAWMi8HHY13Eujp6d6owQzdn7gWJ5oMf18f99IiPREDzVGQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711422922; c=relaxed/simple;
-	bh=FInAuFYwAz7HpRcEQwYk5/5DYyYkHzae8Q0dw6lN2L8=;
+	s=arc-20240116; t=1711422937; c=relaxed/simple;
+	bh=5jwjkf1jFJ68XlkJNFR7p59L+RL4lxX3yavmKNphXC4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IBrJ9taUadefJlsTtZ+AdPUtlDT806gTi7B9XeH1he3qKTC5BuGPXTMES/Zv6SPkm4ZD1fqaX/vdiCHgFUVmq0tTee9z4eyIS0VBSjkw8Cpzfpc381V2PUw6Jhbn408EfxkxI3PItwCeohvAH6uwTajmfgZC5GODv3IHsjeye/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FFSarb1L; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=NgkTndfVoOu60ANFdxLqFPFErPoorllYMLpFeeiOiwlG5qq6qAZpIuzUfGmBo8zVclA5M+nRENpHVlBQtFI/ZqQ2UvXK6gwy/wEOBRdX6cGpmTPmu9QaRlFKyDxgw9C6X+ZzYQ+6i3UrmzztLU8Sr7vzrNphhNZdn6+p+lmSdHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=szLPZYWm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FFSarb1L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E83F1C43399;
-	Tue, 26 Mar 2024 03:15:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="szLPZYWm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91E43C433C7;
+	Tue, 26 Mar 2024 03:15:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711422922;
-	bh=FInAuFYwAz7HpRcEQwYk5/5DYyYkHzae8Q0dw6lN2L8=;
+	s=k20201202; t=1711422937;
+	bh=5jwjkf1jFJ68XlkJNFR7p59L+RL4lxX3yavmKNphXC4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FFSarb1Lnzmt4ldwb7E1vXB4j4oltBctCrECkXGVs/ORdRqm1Vtb1wwis/03hJJoe
-	 C9JxY/ioJ1fBIPS8iFPzAVOnX+PJSxPiYwHA9DFmGY/LTEx0xUsHsfoM7rI+Aw/VRc
-	 F0M1FoTNchV2VQk21iaz/cNDsNugKM5xUYJayZMJFS5rDb5vXIuTNo0AFciihXlgPw
-	 lN+Y8cRn+45ol4BW+Q/k4MsZL/SZTxTO+AvYtj8pZ/02ag1UwCjGG7VYM+4z5ktPBS
-	 5sEgiCD5NNDE/UwQ+125RE2VSegYfBAxNkhDYGblvqiEbqFRgrbA08C5zWuHD4/Ioo
-	 8RP0obD+Uj4Mw==
-Date: Mon, 25 Mar 2024 20:15:21 -0700
-Subject: [PATCH 48/67] xfs: return -ENOSPC from xfs_rtallocate_*
+	b=szLPZYWmCF2GDIf5OZ5m4iOwfJY9anrATCRe378H+GKoT4GXziLNRFioGspQqVxzu
+	 nXEIiTmYAwO+gK9vpZjUmubayS66VhQrWiSCBZJKYHsVC9cO5n6PU+Qd+LMzVUGXLO
+	 tQEesj/4VeIZBMqQSYcB3nZAxzgWSjVJyTiJDb4+h9Hyiv/M31jYfsIlhvXRWwRW/0
+	 AJ5p22TO6jt2W3Yq5VOOU5zJnSUsnGyrSkbpAs1QHhwN1/6OZQ6PzrBHEeLbnFjLEc
+	 qPDySWxHXA+gbk22RepN2PChkfLgwP4noEbaQtvv39CPzqu+8DrWhLUBTbdg6Pgaae
+	 3+/gnVKUyEZIQ==
+Date: Mon, 25 Mar 2024 20:15:37 -0700
+Subject: [PATCH 49/67] xfs: indicate if xfs_bmap_adjacent changed ap->blkno
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171142127648.2212320.6854165527532312580.stgit@frogsfrogsfrogs>
+Message-ID: <171142127663.2212320.3748659958428283048.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 References: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,31 +47,87 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: ce42b5d37527b282d38413c1b5f7283253f6562d
+Source kernel commit: 676544c27e710aee7f8357f57abd348d98b1ccd4
 
-Just return -ENOSPC instead of returning 0 and setting the return rt
-extent number to NULLRTEXTNO.  This is turn removes all users of
-NULLRTEXTNO, so remove that as well.
+Add a return value to xfs_bmap_adjacent to indicate if it did change
+ap->blkno or not.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_types.h |    1 -
- 1 file changed, 1 deletion(-)
+ libxfs/libxfs_priv.h |    2 +-
+ libxfs/xfs_bmap.c    |   19 ++++++++++++++-----
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-index 035bf703d719..20b5375f2d9c 100644
---- a/libxfs/xfs_types.h
-+++ b/libxfs/xfs_types.h
-@@ -51,7 +51,6 @@ typedef void *		xfs_failaddr_t;
- #define	NULLRFSBLOCK	((xfs_rfsblock_t)-1)
- #define	NULLRTBLOCK	((xfs_rtblock_t)-1)
- #define	NULLFILEOFF	((xfs_fileoff_t)-1)
--#define	NULLRTEXTNO	((xfs_rtxnum_t)-1)
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 28ee192509c7..705b66bed13f 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -565,7 +565,7 @@ int xfs_bmap_extsize_align(struct xfs_mount *mp, struct xfs_bmbt_irec *gotp,
+ 			   struct xfs_bmbt_irec *prevp, xfs_extlen_t extsz,
+ 			   int rt, int eof, int delay, int convert,
+ 			   xfs_fileoff_t *offp, xfs_extlen_t *lenp);
+-void xfs_bmap_adjacent(struct xfs_bmalloca *ap);
++bool xfs_bmap_adjacent(struct xfs_bmalloca *ap);
+ int xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 			 int whichfork, struct xfs_bmbt_irec *rec,
+ 			 int *is_empty);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 4f6bd8dff47e..b977032d8244 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -3038,7 +3038,8 @@ xfs_bmap_extsize_align(
  
- #define	NULLAGBLOCK	((xfs_agblock_t)-1)
- #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
+ #define XFS_ALLOC_GAP_UNITS	4
+ 
+-void
++/* returns true if ap->blkno was modified */
++bool
+ xfs_bmap_adjacent(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
+@@ -3073,13 +3074,14 @@ xfs_bmap_adjacent(
+ 		if (adjust &&
+ 		    ISVALID(ap->blkno + adjust, ap->prev.br_startblock))
+ 			ap->blkno += adjust;
++		return true;
+ 	}
+ 	/*
+ 	 * If not at eof, then compare the two neighbor blocks.
+ 	 * Figure out whether either one gives us a good starting point,
+ 	 * and pick the better one.
+ 	 */
+-	else if (!ap->eof) {
++	if (!ap->eof) {
+ 		xfs_fsblock_t	gotbno;		/* right side block number */
+ 		xfs_fsblock_t	gotdiff=0;	/* right side difference */
+ 		xfs_fsblock_t	prevbno;	/* left side block number */
+@@ -3159,14 +3161,21 @@ xfs_bmap_adjacent(
+ 		 * If both valid, pick the better one, else the only good
+ 		 * one, else ap->blkno is already set (to 0 or the inode block).
+ 		 */
+-		if (prevbno != NULLFSBLOCK && gotbno != NULLFSBLOCK)
++		if (prevbno != NULLFSBLOCK && gotbno != NULLFSBLOCK) {
+ 			ap->blkno = prevdiff <= gotdiff ? prevbno : gotbno;
+-		else if (prevbno != NULLFSBLOCK)
++			return true;
++		}
++		if (prevbno != NULLFSBLOCK) {
+ 			ap->blkno = prevbno;
+-		else if (gotbno != NULLFSBLOCK)
++			return true;
++		}
++		if (gotbno != NULLFSBLOCK) {
+ 			ap->blkno = gotbno;
++			return true;
++		}
+ 	}
+ #undef ISVALID
++	return false;
+ }
+ 
+ int
 
