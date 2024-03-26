@@ -1,71 +1,50 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1BD0129A7A
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 05:49:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FFEC446BA
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 05:50:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711432155; cv=none; b=HeuK3GVO6BO+FDZopdIhpFXIkJskmfNoUmHU26CKNkpJImSHqvAhwu8V2jC4zlSlMbbX+X2fi7sc1f+iEQvchfUzhMiOLSbSGzlzh9wgup8j03sQ8J3tkv6d4esa78PseSunp5vcDwWbmPkY3eNpjufMdc8mYpqxD71YjdRRONQ=
+	t=1711432261; cv=none; b=soGU1fTbJDgpoujbSLwBlVvRVXWwv+xkW9nErQmWJMbePQCfiFcTUcQL3G7YMfOH5ZZow4XINcmGmmRDQ6YlFPGnUi+2CsO0Hwzgtp9c1SrwEks/PbJGwDIo1ofFbGjZbquKXq/kR7X5Si0uR2whztI/Fq6SgFBTsymY34fCtOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711432155; c=relaxed/simple;
-	bh=ZmDDPbfC6r/x7vkNQ2YQT+Fat5VwqwroLy3oIZUIMnE=;
+	s=arc-20240116; t=1711432261; c=relaxed/simple;
+	bh=KMP188u2x4203nk19H7e64ZFFse6FMhREC1EOpelTjg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tRON9w5UE8ThYCSCCIWULIcckatYO8MlnmqsTt7L/xKFokKNHSBkHKSxqAWNwFiqx1AeCM6gIPzHFJRXLhayR1Db6kTP7LS8f1bjYIHty9CSA1CcpujJLL3pHSUqXg8fBu7qOHd3O9DFYCMdMYN4QNaJYqXOH8DBrJ3u23Voby0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AhmNCeRJ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AhmNCeRJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=ZmDDPbfC6r/x7vkNQ2YQT+Fat5VwqwroLy3oIZUIMnE=; b=AhmNCeRJKnlJ3mk1XK889lHSBD
-	G+cNXDU8vgiBGg/NTwwoo3eCFvmCXGCBejVs+o78YfC7IjJDf6PcVkSWJ0Js9/GWNF0TkHXjDdHbH
-	lq/cn/EJxTnflBdntXUw3yoWEFDMBiAFmbLfc09bYZtQRKGVwvMvb7oFaWSBojbb1sLoXuD0O6fxP
-	Zxd4eET20IaVvbCkTEqjhRm0mLEj1x5KhJsm2p2+zLptCcY5pI/vY9/pY7ZVE+50DS+P8TC8HCU6y
-	Alfn+rBT2g3uSnlA1zIQmz2X9KC20fA0oopw6H5LCmi6f1vIxYeUWw+I4pYbxm6zSGXMOqlUOSj7c
-	QMwytEDA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rozgP-00000003B55-1yf4;
-	Tue, 26 Mar 2024 05:49:13 +0000
-Date: Mon, 25 Mar 2024 22:49:13 -0700
-From: Christoph Hellwig <hch@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=lGXc44icSCK0T5blhAlKMkeSMxKhoPPDQnUBrxg6XfNWTJG08zblY6iugA0WaoNcAVSKKNWEMsqPdPbAND4prAEOp09mCAonXSsaLPdWRkdpk4KUwWU6qDLgeUM42P782kIthq/7ZJWMjpxfSqwmdd4EqBbZ8cl+oPeRWfE/iio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id C8CDB68D37; Tue, 26 Mar 2024 06:50:47 +0100 (CET)
+Date: Tue, 26 Mar 2024 06:50:47 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs_repair: convert regular rmap repair to use
- in-memory btrees
-Message-ID: <ZgJh2fqdEUu6r_o_@infradead.org>
-References: <171142134672.2220026.18064456796378653896.stgit@frogsfrogsfrogs>
- <171142134693.2220026.17221087060563357898.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, chandan.babu@oracle.com,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: compile out v4 support if disabled
+Message-ID: <20240326055047.GA6808@lst.de>
+References: <20240325031318.2052017-1-hch@lst.de> <20240326000237.GG6414@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <171142134693.2220026.17221087060563357898.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240326000237.GG6414@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Mar 25, 2024 at 09:00:31PM -0700, Darrick J. Wong wrote:
-> +char *kvasprintf(const char *fmt, va_list ap)
+On Mon, Mar 25, 2024 at 05:02:37PM -0700, Darrick J. Wong wrote:
+> > +/*
+> > + * Some features are always on for v5 file systems, allow the compiler to
+> > + * eliminiate dead code when building without v4 support.
+> > + */
+> > +#define __XFS_HAS_V4_FEAT(name, NAME) \
+> 
+> Shouldn't this be called __XFS_HAS_V5_FEAT?
 
-> +char *kasprintf(const char *fmt, ...)
+They are features for v4 and unconditional for v5.  Given that Dave
+came up with the same names independently they can't be all bad,
+although I don't really care very strongly.
 
-Any reason these implementations don't simply use vasprinf/asprintf?
-The calling conventions are a little differet, but the wrappers are
-pretty trivial, e.g.:
-
-http://git.infradead.org/?p=users/hch/xfsprogs.git;a=commitdiff;h=1f66530b2104b2f5e47aef76fce62df436a8f004
-
-for asprintf.
-
-Also in general іt's nice to split such infrastruture additions into
-separate commits.
-
-The rest looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
