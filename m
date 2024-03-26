@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F140412836A
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:02:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43F912839D
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:03:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711422170; cv=none; b=su5MxPj7fVmYmrl0bDvjSh07kMz7imzz3mzC10SlkIqKUkvdWYeCCNHYPMtoiWUu2DLVjYmi7d0QMFcYosDn9Jeur0GjsXEr6Q0ApYKn7bbpXV/6WOZo0qn5XFvhfLGjxY2Y6X6RgSHNgN7w25jzB045MF4ZDsSASr00ApTZrLs=
+	t=1711422185; cv=none; b=CJJEuyeaSWVeevVLp8KM5Nux2Q8sVmn6+z+RDLNw2brUSzgTJvhHFm6mNcUuPXE0FfRC0HLfkYpEdS5J3Kn1WmO6gpI7vZyI8AEhT6nssuc1rz9daAf/YiIEtXJS4yhgU7gu67izhqaWfILAviqS6v6i2KVg374GpPaJS9nAQbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711422170; c=relaxed/simple;
-	bh=Cyd05sCYdUjl7zfTh9d5KROnXj706mNDnyGaPLioFg8=;
+	s=arc-20240116; t=1711422185; c=relaxed/simple;
+	bh=rAOGugOmoVJpMTV5ILBxnG90kePZZYOq08wzYU4EK8M=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=M+jNlx204+FbUSUvQimGw3D9uxYyOskQXmgFdEC8q0z+ImWs3/GhmHGjBrhdenZsoxaj7/ci0useumm4V5HzBXGOwNzD4RY07j48hqYXpHDqGbUwzL6AfjmlUkpPIwSQZO6G0A+XQfuQ+Keo6ImO8OA/wyLYQYNbHDsAwOO0B2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rn2p1j4F; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LKqEJsYb4vhNSJy3/mfedqR5bPSD1cn6VNm32WAX/qX67wdkPVu0KKdLfAiQr8Kg+QVYhoAW+UQHgD6g7flK0PU6jmFSXRFsStD1WWY7eZUYu+D1FRdm4joNp1VcAThy4SWjDaYk9WnmGbzzZwTpDc8OyGL2DzwqmRmy41y5W4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kyzys7LK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rn2p1j4F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5B45C433F1;
-	Tue, 26 Mar 2024 03:02:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyzys7LK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 731A6C433C7;
+	Tue, 26 Mar 2024 03:03:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711422169;
-	bh=Cyd05sCYdUjl7zfTh9d5KROnXj706mNDnyGaPLioFg8=;
+	s=k20201202; t=1711422185;
+	bh=rAOGugOmoVJpMTV5ILBxnG90kePZZYOq08wzYU4EK8M=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Rn2p1j4FjzIAdLQM33g3yoVC2wVV4WV4w5EWWkAxfJrtqlJVpB3gWQWZR6x9Iewnp
-	 2fuFBqcyHSanDG4SZJRzwt+l7cgS4Zm1AOQ4jSJQoTX9rZM+5yIFnifljjSgt7in7U
-	 1cbGVwOuqDdUIkv9iDQzKy0cYRAdCjLM6PnxDsi5q16ILPuFXGgzlHHRcON+wJd+cd
-	 pKUbXlc4OOTMVDadNaJvpYgZLX5a7dCfIyEJWLH4GCeMLJqX3DnC9Z/MGeWl16QWrQ
-	 R10vZ1eBhvN+bFaQRzUiAOBogwfqpqS9HWdzRRKQhrvKJy99xuRlo4veRrVMr/Qwmo
-	 Z1b4aJERakIvw==
-Date: Mon, 25 Mar 2024 20:02:49 -0700
-Subject: [PATCH 13/13] xfs_{db,repair}: use m_blockwsize instead of
- sb_blocksize for rt blocks
+	b=kyzys7LKc3BE6yC6qQVRyisQ8SWKuMTJfqScUjivfvTwt6In77rzkZHSqYOY9SSHN
+	 TqoePhfiNdu+g8Fn3qvRaWmYGKtZygf9h+8bxocasx0MdeojD7iagTzi7dPT1xbMFD
+	 RXsHfyszGu5CtuPwB/R5BzmeFPjLL0+WxWgYjzIPT+35Jbd4wj/JyetSHRk/eUIA3h
+	 hw+hJbyYJGpCLiUE6VaW8jW3k3SIHQHBDKRalPU9YjBKG23L9mj0TROQtcujSkIzRR
+	 kn06JuGzwgJyy5DoMc39w6o3JSmoV8lCeCInGqbPaYEJWwh8NsJy1ERHpOey62La4P
+	 BY/FxxbOb6a8A==
+Date: Mon, 25 Mar 2024 20:03:04 -0700
+Subject: [PATCH 01/67] xfs: use xfs_defer_pending objects to recover intent
+ items
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171142126495.2211955.12892140886978547219.stgit@frogsfrogsfrogs>
-In-Reply-To: <171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs>
-References: <171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs>
+Message-ID: <171142126978.2212320.8159896843217084310.stgit@frogsfrogsfrogs>
+In-Reply-To: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
+References: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -48,97 +48,215 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In preparation to add block headers to rt bitmap and summary blocks,
-convert all the relevant calculations in the userspace tools to use the
-per-block word count instead of the raw blocksize.  This is key to
-adding this support outside of libxfs.
+Source kernel commit: 03f7767c9f6120ac933378fdec3bfd78bf07bc11
+
+One thing I never quite got around to doing is porting the log intent
+item recovery code to reconstruct the deferred pending work state.  As a
+result, each intent item open codes xfs_defer_finish_one in its recovery
+method, because that's what the EFI code did before xfs_defer.c even
+existed.
+
+This is a gross thing to have left unfixed -- if an EFI cannot proceed
+due to busy extents, we end up creating separate new EFIs for each
+unfinished work item, which is a change in behavior from what runtime
+would have done.
+
+Worse yet, Long Li pointed out that there's a UAF in the recovery code.
+The ->commit_pass2 function adds the intent item to the AIL and drops
+the refcount.  The one remaining refcount is now owned by the recovery
+mechanism (aka the log intent items in the AIL) with the intent of
+giving the refcount to the intent done item in the ->iop_recover
+function.
+
+However, if something fails later in recovery, xlog_recover_finish will
+walk the recovered intent items in the AIL and release them.  If the CIL
+hasn't been pushed before that point (which is possible since we don't
+force the log until later) then the intent done release will try to free
+its associated intent, which has already been freed.
+
+This patch starts to address this mess by having the ->commit_pass2
+functions recreate the xfs_defer_pending state.  The next few patches
+will fix the recovery functions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- db/check.c      |    4 ++--
- repair/phase6.c |    4 ++--
- repair/rt.c     |    9 +++++----
- 3 files changed, 9 insertions(+), 8 deletions(-)
+ libxfs/xfs_defer.c |  105 ++++++++++++++++++++++++++++++++++++++--------------
+ libxfs/xfs_defer.h |    5 ++
+ 2 files changed, 82 insertions(+), 28 deletions(-)
 
 
-diff --git a/db/check.c b/db/check.c
-index 103ea4022c3b..2f2fbc7cbd81 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -3630,7 +3630,7 @@ process_rtbitmap(
- 	int		t;
- 	xfs_rtword_t	*words;
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 7ff125c5fb92..bd6f14a2c0d2 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -240,23 +240,53 @@ xfs_defer_create_intents(
+ 	return ret;
+ }
  
--	bitsperblock = mp->m_sb.sb_blocksize * NBBY;
-+	bitsperblock = mp->m_blockwsize << XFS_NBWORDLOG;
- 	words = malloc(mp->m_blockwsize << XFS_WORDLOG);
- 	if (!words) {
- 		dbprintf(_("could not allocate rtwords buffer\n"));
-@@ -3749,7 +3749,7 @@ process_rtsummary(
+-STATIC void
++static inline void
+ xfs_defer_pending_abort(
++	struct xfs_mount		*mp,
++	struct xfs_defer_pending	*dfp)
++{
++	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
++
++	trace_xfs_defer_pending_abort(mp, dfp);
++
++	if (dfp->dfp_intent && !dfp->dfp_done) {
++		ops->abort_intent(dfp->dfp_intent);
++		dfp->dfp_intent = NULL;
++	}
++}
++
++static inline void
++xfs_defer_pending_cancel_work(
++	struct xfs_mount		*mp,
++	struct xfs_defer_pending	*dfp)
++{
++	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
++	struct list_head		*pwi;
++	struct list_head		*n;
++
++	trace_xfs_defer_cancel_list(mp, dfp);
++
++	list_del(&dfp->dfp_list);
++	list_for_each_safe(pwi, n, &dfp->dfp_work) {
++		list_del(pwi);
++		dfp->dfp_count--;
++		trace_xfs_defer_cancel_item(mp, dfp, pwi);
++		ops->cancel_item(pwi);
++	}
++	ASSERT(dfp->dfp_count == 0);
++	kmem_cache_free(xfs_defer_pending_cache, dfp);
++}
++
++STATIC void
++xfs_defer_pending_abort_list(
+ 	struct xfs_mount		*mp,
+ 	struct list_head		*dop_list)
+ {
+ 	struct xfs_defer_pending	*dfp;
+-	const struct xfs_defer_op_type	*ops;
  
- 		args.sumbp = iocur_top->bp;
- 		ondisk = xfs_rsumblock_infoptr(&args, 0);
--		memcpy(sfile, ondisk, mp->m_sb.sb_blocksize);
-+		memcpy(sfile, ondisk, mp->m_blockwsize << XFS_WORDLOG);
- 		pop_cur();
- 		sfile += mp->m_blockwsize;
- 	}
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 0818ee1a1501..fcb26d594b10 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -626,7 +626,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
+ 	/* Abort intent items that don't have a done item. */
+-	list_for_each_entry(dfp, dop_list, dfp_list) {
+-		ops = defer_op_types[dfp->dfp_type];
+-		trace_xfs_defer_pending_abort(mp, dfp);
+-		if (dfp->dfp_intent && !dfp->dfp_done) {
+-			ops->abort_intent(dfp->dfp_intent);
+-			dfp->dfp_intent = NULL;
+-		}
+-	}
++	list_for_each_entry(dfp, dop_list, dfp_list)
++		xfs_defer_pending_abort(mp, dfp);
+ }
  
- 		args.rbmbp = bp;
- 		ondisk = xfs_rbmblock_wordptr(&args, 0);
--		memcpy(ondisk, bmp, mp->m_sb.sb_blocksize);
-+		memcpy(ondisk, bmp, mp->m_blockwsize << XFS_WORDLOG);
+ /* Abort all the intents that were committed. */
+@@ -266,7 +296,7 @@ xfs_defer_trans_abort(
+ 	struct list_head		*dop_pending)
+ {
+ 	trace_xfs_defer_trans_abort(tp, _RET_IP_);
+-	xfs_defer_pending_abort(tp->t_mountp, dop_pending);
++	xfs_defer_pending_abort_list(tp->t_mountp, dop_pending);
+ }
  
- 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 
-@@ -705,7 +705,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
- 
- 		args.sumbp = bp;
- 		ondisk = xfs_rsumblock_infoptr(&args, 0);
--		memcpy(ondisk, smp, mp->m_sb.sb_blocksize);
-+		memcpy(ondisk, smp, mp->m_blockwsize << XFS_WORDLOG);
- 
- 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 
-diff --git a/repair/rt.c b/repair/rt.c
-index 9aff5a0d3d58..e49487829af2 100644
---- a/repair/rt.c
-+++ b/repair/rt.c
-@@ -25,8 +25,9 @@ rtinit(xfs_mount_t *mp)
- 		return;
+ /*
+@@ -384,27 +414,13 @@ xfs_defer_cancel_list(
+ {
+ 	struct xfs_defer_pending	*dfp;
+ 	struct xfs_defer_pending	*pli;
+-	struct list_head		*pwi;
+-	struct list_head		*n;
+-	const struct xfs_defer_op_type	*ops;
  
  	/*
--	 * realtime init -- blockmap initialization is
--	 * handled by incore_init()
-+	 * Allocate buffers for formatting the collected rt free space
-+	 * information.  The rtbitmap buffer must be large enough to compare
-+	 * against any unused bytes in the last block of the file.
+ 	 * Free the pending items.  Caller should already have arranged
+ 	 * for the intent items to be released.
  	 */
- 	wordcnt = libxfs_rtbitmap_wordcount(mp, mp->m_sb.sb_rextents);
- 	btmcompute = calloc(wordcnt, sizeof(union xfs_rtword_raw));
-@@ -87,7 +88,7 @@ generate_rtinfo(
+-	list_for_each_entry_safe(dfp, pli, dop_list, dfp_list) {
+-		ops = defer_op_types[dfp->dfp_type];
+-		trace_xfs_defer_cancel_list(mp, dfp);
+-		list_del(&dfp->dfp_list);
+-		list_for_each_safe(pwi, n, &dfp->dfp_work) {
+-			list_del(pwi);
+-			dfp->dfp_count--;
+-			trace_xfs_defer_cancel_item(mp, dfp, pwi);
+-			ops->cancel_item(pwi);
+-		}
+-		ASSERT(dfp->dfp_count == 0);
+-		kmem_cache_free(xfs_defer_pending_cache, dfp);
+-	}
++	list_for_each_entry_safe(dfp, pli, dop_list, dfp_list)
++		xfs_defer_pending_cancel_work(mp, dfp);
+ }
  
- 	ASSERT(mp->m_rbmip == NULL);
+ /*
+@@ -660,6 +676,39 @@ xfs_defer_add(
+ 	dfp->dfp_count++;
+ }
  
--	bitsperblock = mp->m_sb.sb_blocksize * NBBY;
-+	bitsperblock = mp->m_blockwsize << XFS_NBWORDLOG;
- 	extno = start_ext = 0;
- 	bmbno = in_extent = start_bmbno = 0;
++/*
++ * Create a pending deferred work item to replay the recovered intent item
++ * and add it to the list.
++ */
++void
++xfs_defer_start_recovery(
++	struct xfs_log_item		*lip,
++	enum xfs_defer_ops_type		dfp_type,
++	struct list_head		*r_dfops)
++{
++	struct xfs_defer_pending	*dfp;
++
++	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
++			GFP_NOFS | __GFP_NOFAIL);
++	dfp->dfp_type = dfp_type;
++	dfp->dfp_intent = lip;
++	INIT_LIST_HEAD(&dfp->dfp_work);
++	list_add_tail(&dfp->dfp_list, r_dfops);
++}
++
++/*
++ * Cancel a deferred work item created to recover a log intent item.  @dfp
++ * will be freed after this function returns.
++ */
++void
++xfs_defer_cancel_recovery(
++	struct xfs_mount		*mp,
++	struct xfs_defer_pending	*dfp)
++{
++	xfs_defer_pending_abort(mp, dfp);
++	xfs_defer_pending_cancel_work(mp, dfp);
++}
++
+ /*
+  * Move deferred ops from one transaction to another and reset the source to
+  * initial state. This is primarily used to carry state forward across
+@@ -764,7 +813,7 @@ xfs_defer_ops_capture_abort(
+ {
+ 	unsigned short			i;
  
-@@ -199,7 +200,7 @@ check_rtfile_contents(
- 			break;
- 		}
+-	xfs_defer_pending_abort(mp, &dfc->dfc_dfops);
++	xfs_defer_pending_abort_list(mp, &dfc->dfc_dfops);
+ 	xfs_defer_cancel_list(mp, &dfc->dfc_dfops);
  
--		if (memcmp(bp->b_addr, buf, mp->m_sb.sb_blocksize))
-+		if (memcmp(bp->b_addr, buf, mp->m_blockwsize << XFS_WORDLOG))
- 			do_warn(_("discrepancy in %s at dblock 0x%llx\n"),
- 					filename, (unsigned long long)bno);
+ 	for (i = 0; i < dfc->dfc_held.dr_bufs; i++)
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 8788ad5f6a73..5dce938ba3d5 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -125,6 +125,11 @@ void xfs_defer_ops_capture_abort(struct xfs_mount *mp,
+ 		struct xfs_defer_capture *d);
+ void xfs_defer_resources_rele(struct xfs_defer_resources *dres);
+ 
++void xfs_defer_start_recovery(struct xfs_log_item *lip,
++		enum xfs_defer_ops_type dfp_type, struct list_head *r_dfops);
++void xfs_defer_cancel_recovery(struct xfs_mount *mp,
++		struct xfs_defer_pending *dfp);
++
+ int __init xfs_defer_init_item_caches(void);
+ void xfs_defer_destroy_item_caches(void);
  
 
