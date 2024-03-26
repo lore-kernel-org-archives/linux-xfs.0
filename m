@@ -1,106 +1,74 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8AAC5D734;
-	Tue, 26 Mar 2024 09:53:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D442D487B5;
+	Tue, 26 Mar 2024 10:00:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711446820; cv=none; b=QJjGw2VT9vUiasgI+FrDPn3XXVUfTJQL2lVIIQW3DELGXD4bZaLepdslqWfZDgT24ZDzdDCWCGsHPqRbA519NRWpaziMpVrdGjlRGfeNbrnPJIHn8qJsgUkWHlo6XYqluD9AUUJlLWdGy20HbgNv2OdjGtPLmQwNVRzUnAbn+Hk=
+	t=1711447201; cv=none; b=jirR0mVvAKGEbt8yHziKmSKqUD3DDBLB/cPRYYK0kGVPHVaxzu05PoE5PtxdeeZHhTT9uBNmU5iI7dZgwp16n/7JM6tj1U0wUQQF5H7XmLtJkWahqCWgfLRLTuNwGhoEl8m/H2frx98/Qj02Y/DhX2/G1tCs3/IKwutrv9LALjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711446820; c=relaxed/simple;
-	bh=s+wXuGTKSM02LS+A7um+eisRIfxf9plFtAzb8lv0d/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qFwbQM6rRsWslgw99KRRIrY/Wdo6AcHp62YfL07HHYjleuyUH2jKbDocRcHMh2M6awNEEztIkCEBTK4RWszCA+TDfKOTiIOkC9Xz943oZnXzKHd/sRK/Bnm8c1pTsE1jlAdfIKHSkpAVkXWHtJV4KR3jglHu7GOO9ILzYoTNZIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=SeKLaveT; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1711447201; c=relaxed/simple;
+	bh=HoMtsd6kpZK9lAYbu1zZb5lFix7RDAFzZH7hSCnmvoY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UgxFKuxMNlrFN5Ogau6UlW6DJfTpedoMnuMTKYNRrf2FOcSRbfUL1pnqKtzuExoteeOhLfY8nJk7KG912u/7Ba85FfN3KZxQur8mkVG8SHF1MtirowlWnHpZW5OM83pY/3CsOPArBcmO7m9sGeCuZsLKhAqDne6a6+PiBeByX7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pPFdDZIK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="SeKLaveT"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4V3lVj1mj0z9smj;
-	Tue, 26 Mar 2024 10:53:33 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1711446813;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XvQvmg7eUJ6XUFSwCSiynxp4lLJbG0KYQHnlFS2Zq7Q=;
-	b=SeKLaveTbGJlCa05UkQhGZe1nbeCvZzFhqOEbHEXZz2NGj7NOa8411XZe51acSHK+ptfUG
-	Ih9TDcPM2ktVGG+ZUraPNDOykE0tAWTc5f/eZcc+2V+z647KlkEEpsEWPzcCQ0LfIXsatn
-	0DwZf20pbBPRSomVcdai4NAIYV5WLuGG7IazYR5P5wGPQlPFLfWzKDUoxb3KV1MqWR0cdp
-	uSeMoocb01Z5BxriVA6nEJyXeVwoKzWk1A0qY0VFzTZbWPVNvp7MnEzfY32hAX0J9/37Y7
-	bb/LKm1W5PV4WYC8bBWlDaNsm8+rj4OgCSA4Qi6t7f4iCJ8+XucX3X5HEU+T0g==
-Date: Tue, 26 Mar 2024 10:53:27 +0100
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	gost.dev@samsung.com, chandan.babu@oracle.com, hare@suse.de, mcgrof@kernel.org, 
-	djwong@kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	david@fromorbit.com, akpm@linux-foundation.org, Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH v3 10/11] xfs: make the calculation generic in
- xfs_sb_validate_fsb_count()
-Message-ID: <7djmiptum72jkug7kijmgy74olkkezeybicxiw2jpwj4yxjilp@2y2l2dyulczt>
-References: <20240313170253.2324812-1-kernel@pankajraghav.com>
- <20240313170253.2324812-11-kernel@pankajraghav.com>
- <ZgHNb3Led05RXRd2@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pPFdDZIK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A39CCC433F1;
+	Tue, 26 Mar 2024 10:00:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711447201;
+	bh=HoMtsd6kpZK9lAYbu1zZb5lFix7RDAFzZH7hSCnmvoY=;
+	h=From:To:Cc:Subject:Date:From;
+	b=pPFdDZIKeG/SJYijHM2h3NK+ISldVuaXj631WcWpgDI/ymibtBG2kZAlL7ap/L8mn
+	 tWhEKbllW8ZBVXUJ24t5sdpcBJpp5LD3T7QfrxAS9crgbqS4C1pGB3StAJPUaw65Jk
+	 IZa1jaWRLgpw3yJUiJdg33XsHkydyERrvNziUO+L+XxkvDO4VDxz4oXGHxytNbeDhb
+	 7PxDvwVKfl2R21TCfbVMYl283ruLfqNSQKaqDS8NafhrbFRewClbqzTt/uekf2yagR
+	 uA2zVH/IIl+dHy9dc+r2FhFR5l2+K3sgLJWwdzGAOb4Vjj/Whx2HuZa69f6Uf9kmxu
+	 XdDRtejHF0ecg==
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,mark.tinguely@oracle.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to f2e812c1522d
+Date: Tue, 26 Mar 2024 15:28:01 +0530
+Message-ID: <874jcte2jm.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZgHNb3Led05RXRd2@casper.infradead.org>
-X-Rspamd-Queue-Id: 4V3lVj1mj0z9smj
+Content-Type: text/plain
 
-On Mon, Mar 25, 2024 at 07:15:59PM +0000, Matthew Wilcox wrote:
-> On Wed, Mar 13, 2024 at 06:02:52PM +0100, Pankaj Raghav (Samsung) wrote:
-> > From: Pankaj Raghav <p.raghav@samsung.com>
-> > 
-> > Instead of assuming that PAGE_SHIFT is always higher than the blocklog,
-> > make the calculation generic so that page cache count can be calculated
-> > correctly for LBS.
-> > 
-> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> > ---
-> >  fs/xfs/xfs_mount.c | 9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index aabb25dc3efa..9cf800586da7 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -133,9 +133,16 @@ xfs_sb_validate_fsb_count(
-> >  {
-> >  	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
-> 
-> but ... you're still asserting that PAGE_SHIFT is larger than blocklog.
-> Shouldn't you delete that assertion?
+Hi folks,
 
-I do that in the next patch when we enable LBS support in XFS by setting
-min order. So we still need the check here that will be removed in the
-next patch.
-> 
-> >  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
-> > +	uint64_t max_index;
-> > +	uint64_t max_bytes;
-> > +
-> > +	if (check_shl_overflow(nblocks, sbp->sb_blocklog, &max_bytes))
-> > +		return -EFBIG;
-> >  
-> >  	/* Limited by ULONG_MAX of page cache index */
-> > -	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-> > +	max_index = max_bytes >> PAGE_SHIFT;
-> > +
-> > +	if (max_index > ULONG_MAX)
-> >  		return -EFBIG;
-> 
-> This kind of depends on the implementation details of the page cache.
-> We have MAX_LFS_FILESIZE to abstract that; maybe that should be used
-> here?
+The for-next branch of the xfs-linux repository at:
 
-Makes sense. I will use it instead of using ULONG_MAX.
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+f2e812c1522d xfs: don't use current->journal_info
+
+2 new commits:
+
+Dave Chinner (2):
+      [15922f5dbf51] xfs: allow sunit mount option to repair bad primary sb stripe values
+      [f2e812c1522d] xfs: don't use current->journal_info
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_sb.c | 40 +++++++++++++++++++++++++++--------
+ fs/xfs/libxfs/xfs_sb.h |  5 +++--
+ fs/xfs/scrub/common.c  |  4 +---
+ fs/xfs/xfs_aops.c      |  7 ------
+ fs/xfs/xfs_icache.c    |  8 ++++---
+ fs/xfs/xfs_trans.h     |  9 +-------
+ 6 files changed, 41 insertions(+), 32 deletions(-)
