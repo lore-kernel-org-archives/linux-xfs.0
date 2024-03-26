@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940861292D6
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:24:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43B35128816
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:24:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423470; cv=none; b=grnf4jfvstoOz0lnAeQ8Lc6UzgKWZCLux2htI6TVcLJJ5zNTtRvnDegQxwYqephOLK2cdZYZUCtNezF8YqH9qTSsTxPXggLziZZkqzLrgC83Wo69BaOrvxbSJFMI7yCfflMrD1EGDvLKuuFAk64BO7kJ9ew2si9zUTyBs4aFvbA=
+	t=1711423486; cv=none; b=fzjALU5NEYlHU0aPpvNp2/qOs79Vp2qH1TrYCtvEJ++/lg9U05BbO/10JplY9IjjoIf2tHYjVoU3AkQc4qOaFBVahcQDpZSJPHJoaKmV2U+2HZQtF2W9wp2swR2lNTcW7yo57MdxeQ4PyXY6SE5fmIkAT0q0gpxVlp5cEhvYai0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423470; c=relaxed/simple;
-	bh=igdX5hG8tSun7ob+Vcnd1UjVf+VnddlKjbBKVZCIMZo=;
+	s=arc-20240116; t=1711423486; c=relaxed/simple;
+	bh=HeJcIP5cOjekUyA18zf3gGnmnbz4i6oXdjBX4o1e1I8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cq/c00AV69bcQQqS2htmx0AXlupZNv7+9ZVMF+D0uyOG/QrJSh2z+m8wFZYL2NtQ/elhSxBtg9VasJzVSqny90UNu+JnEKZsWcVgrA2vEkqh09pygGxCxvOIv2sTcG6tDdHWCjz2zX95t4eQ6LUcwCs0+ffrUcl6/w7/1LY+JKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mVpXtcHn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bnWFBMdN6WS8DWSuGHcbhtx6cuh8Fd/lzmQi7oTpPUvVxEym4bg3wUV2PbKxj75wsvLrRv/Mc0zyCGWIZNDu5O53KFGP/pi9qOqc90xuTnoRQgRYkRb7fwhtbvY76cRJ+9qG8iub1n34GJy0cs5Qr3MalI5oHbhw82HHipMHBt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H1oa9Pgv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mVpXtcHn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EE0EC433C7;
-	Tue, 26 Mar 2024 03:24:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H1oa9Pgv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C93FCC433F1;
+	Tue, 26 Mar 2024 03:24:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423470;
-	bh=igdX5hG8tSun7ob+Vcnd1UjVf+VnddlKjbBKVZCIMZo=;
+	s=k20201202; t=1711423485;
+	bh=HeJcIP5cOjekUyA18zf3gGnmnbz4i6oXdjBX4o1e1I8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mVpXtcHnQsIx9T1fWDYaAw2rXzvHATPzIW/p7xlfLjfw/Fo8wHiq9XQYwSvl9sEm/
-	 kJQ0R/9NJowqWbHfvAnlagD2tvxee8PmTyHKhl4HKpAGqeGEyqSX/yWMGKWtugRGNq
-	 XOAF5CV0WAZD+0AWw/I7D3TOwkJBS5rK+htCrLG2kngnLDeEhhbZ54iaY/mxafj4Gn
-	 kwqfTzBamUxYqFegRq78BhL3DLpy6RmEhjPS4DGueHdcS/LmMRYIg1Mnf/79Mc05tP
-	 /Ls6Vh9m6r+d7FKWjH/g/As5QIZRZyRIEzZByn7SLDQY9BmNRc4OZMWrPTGLf5iM6/
-	 cl0kInwMxXTzg==
-Date: Mon, 25 Mar 2024 20:24:29 -0700
-Subject: [PATCH 2/3] libfrog: promote XFROG_SCRUB_DESCR_SUMMARY to a scrub
- type
+	b=H1oa9PgvuknWwLw2Wx4hAaa3Sm9lXiqJB006/xqjeFjvbzHgVU6SXZEVYfxDGJocB
+	 TFlP8prnSdWQttDosWEfZ4zlqsES+ybUohtXSozyhrJ30sXXngRshavR+th2/W6p9M
+	 SdSogGHz2n35jLFXeAzqN0VviLgoersTPzNnmfu17Z9h4c23HOGhaCWgTvx/ytSRnK
+	 79rOkklREG1ddwiTA24jdxIDiFQ+b/GT77DlNSheeDl1nRQ+5q+nMCf+WRCF+1TDkq
+	 bo40tkS6GEBfnkhjwFuNbkHG0suDejoZYaiBSZ2nFWLCMtc2PFvTSBjJ94i1hgm/O6
+	 srDGeGqG9Wftg==
+Date: Mon, 25 Mar 2024 20:24:45 -0700
+Subject: [PATCH 3/3] xfs_scrub: scan whole-fs metadata files in parallel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171142129685.2214539.14332137750282811390.stgit@frogsfrogsfrogs>
+Message-ID: <171142129700.2214539.13951974519113010382.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142129653.2214539.10745296562375978455.stgit@frogsfrogsfrogs>
 References: <171142129653.2214539.10745296562375978455.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,164 +47,284 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-"Summary" metadata, at least in the scrub context, are metadata whose
-values depend on some kind of computation and therefore can only be
-checked after we've looked at all the other metadata.  Currently, the
-superblock summary counters are the only thing that are like this, but
-since they run in a totally separate xfs_scrub phase (7 vs. 2), make
-them their own group and remove the group+flag mix.
+The realtime bitmap and the three quota files are completely independent
+of each other, which means that we ought to be able to scan them in
+parallel.  Rework the phase2 code so that we can do this.  Note,
+however, that the realtime summary file summarizes the contents of the
+realtime bitmap, so we must coordinate the workqueue threads.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- io/scrub.c      |    1 +
- libfrog/scrub.c |    3 +--
- libfrog/scrub.h |    8 +-------
- scrub/phase4.c  |    2 +-
- scrub/phase7.c  |    4 ++--
- scrub/scrub.c   |   16 ++++++++++++----
- scrub/scrub.h   |    3 ++-
- 7 files changed, 20 insertions(+), 17 deletions(-)
+ scrub/phase2.c |  135 +++++++++++++++++++++++++++++++++++++++++++-------------
+ scrub/scrub.c  |    7 ++-
+ scrub/scrub.h  |    3 +
+ 3 files changed, 110 insertions(+), 35 deletions(-)
 
 
-diff --git a/io/scrub.c b/io/scrub.c
-index d6eda5bea538..70301c0676c4 100644
---- a/io/scrub.c
-+++ b/io/scrub.c
-@@ -183,6 +183,7 @@ parse_args(
- 		break;
- 	case XFROG_SCRUB_GROUP_FS:
- 	case XFROG_SCRUB_GROUP_NONE:
-+	case XFROG_SCRUB_GROUP_SUMMARY:
- 		if (!parse_none(argc, optind)) {
- 			exitcode = 1;
- 			return command_usage(cmdinfo);
-diff --git a/libfrog/scrub.c b/libfrog/scrub.c
-index 90fc2b1a40cd..5a5f522a4258 100644
---- a/libfrog/scrub.c
-+++ b/libfrog/scrub.c
-@@ -132,8 +132,7 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
- 	[XFS_SCRUB_TYPE_FSCOUNTERS] = {
- 		.name	= "fscounters",
- 		.descr	= "filesystem summary counters",
--		.group	= XFROG_SCRUB_GROUP_FS,
--		.flags	= XFROG_SCRUB_DESCR_SUMMARY,
-+		.group	= XFROG_SCRUB_GROUP_SUMMARY,
- 	},
- };
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index 6b88384171f8..80c77b2876ff 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -10,6 +10,8 @@
+ #include "list.h"
+ #include "libfrog/paths.h"
+ #include "libfrog/workqueue.h"
++#include "libfrog/fsgeom.h"
++#include "libfrog/scrub.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "scrub.h"
+@@ -17,6 +19,18 @@
  
-diff --git a/libfrog/scrub.h b/libfrog/scrub.h
-index 43a882321f99..68f1a968103e 100644
---- a/libfrog/scrub.h
-+++ b/libfrog/scrub.h
-@@ -13,6 +13,7 @@ enum xfrog_scrub_group {
- 	XFROG_SCRUB_GROUP_PERAG,	/* per-AG metadata */
- 	XFROG_SCRUB_GROUP_FS,		/* per-FS metadata */
- 	XFROG_SCRUB_GROUP_INODE,	/* per-inode metadata */
-+	XFROG_SCRUB_GROUP_SUMMARY,	/* summary metadata */
- };
+ /* Phase 2: Check internal metadata. */
  
- /* Catalog of scrub types and names, indexed by XFS_SCRUB_TYPE_* */
-@@ -20,15 +21,8 @@ struct xfrog_scrub_descr {
- 	const char		*name;
- 	const char		*descr;
- 	enum xfrog_scrub_group	group;
--	unsigned int		flags;
- };
++struct scan_ctl {
++	/*
++	 * Control mechanism to signal that the rt bitmap file scan is done and
++	 * wake up any waiters.
++	 */
++	pthread_cond_t		rbm_wait;
++	pthread_mutex_t		rbm_waitlock;
++	bool			rbm_done;
++
++	bool			aborted;
++};
++
+ /* Scrub each AG's metadata btrees. */
+ static void
+ scan_ag_metadata(
+@@ -25,7 +39,7 @@ scan_ag_metadata(
+ 	void				*arg)
+ {
+ 	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
+-	bool				*aborted = arg;
++	struct scan_ctl			*sctl = arg;
+ 	struct action_list		alist;
+ 	struct action_list		immediate_alist;
+ 	unsigned long long		broken_primaries;
+@@ -33,7 +47,7 @@ scan_ag_metadata(
+ 	char				descr[DESCR_BUFSZ];
+ 	int				ret;
  
--/*
-- * The type of metadata checked by this scrubber is a summary of other types
-- * of metadata.  This scrubber should be run after all the others.
-- */
--#define XFROG_SCRUB_DESCR_SUMMARY	(1 << 0)
--
- extern const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR];
+-	if (*aborted)
++	if (sctl->aborted)
+ 		return;
  
- int xfrog_scrub_metadata(struct xfs_fd *xfd, struct xfs_scrub_metadata *meta);
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 1228c7cb6545..5dfc3856b82f 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -139,7 +139,7 @@ phase4_func(
- 	 * counters, so counter repairs have to be put on the list now so that
- 	 * they get fixed before we stop retrying unfixed metadata repairs.
- 	 */
--	ret = scrub_fs_summary(ctx, &ctx->action_lists[0]);
-+	ret = scrub_fs_counters(ctx, &ctx->action_lists[0]);
- 	if (ret)
- 		return ret;
- 
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index 2fd96053f6cc..93a074f11513 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -116,9 +116,9 @@ phase7_func(
- 	int			ip;
- 	int			error;
- 
--	/* Check and fix the fs summary counters. */
-+	/* Check and fix the summary metadata. */
  	action_list_init(&alist);
--	error = scrub_fs_summary(ctx, &alist);
-+	error = scrub_summary_metadata(ctx, &alist);
- 	if (error)
- 		return error;
- 	error = action_list_process(ctx, -1, &alist,
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index cde9babc5574..c7ee074fd36c 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -46,6 +46,7 @@ format_scrub_descr(
- 				_(sc->descr));
- 		break;
- 	case XFROG_SCRUB_GROUP_FS:
-+	case XFROG_SCRUB_GROUP_SUMMARY:
- 		return snprintf(buf, buflen, _("%s"), _(sc->descr));
- 		break;
- 	case XFROG_SCRUB_GROUP_NONE:
-@@ -356,8 +357,6 @@ scrub_group(
- 
- 		if (sc->group != group)
- 			continue;
--		if (sc->flags & XFROG_SCRUB_DESCR_SUMMARY)
--			continue;
- 
- 		ret = scrub_meta_type(ctx, type, agno, alist);
- 		if (ret)
-@@ -410,9 +409,18 @@ scrub_fs_metadata(
- 	return scrub_group(ctx, XFROG_SCRUB_GROUP_FS, 0, alist);
+@@ -89,32 +103,40 @@ _("Filesystem might not be repairable."));
+ 	action_list_defer(ctx, agno, &alist);
+ 	return;
+ err:
+-	*aborted = true;
++	sctl->aborted = true;
  }
  
--/* Scrub FS summary metadata. */
-+/* Scrub all FS summary metadata. */
- int
--scrub_fs_summary(
-+scrub_summary_metadata(
-+	struct scrub_ctx		*ctx,
-+	struct action_list		*alist)
-+{
-+	return scrub_group(ctx, XFROG_SCRUB_GROUP_SUMMARY, 0, alist);
-+}
+-/* Scrub whole-FS metadata btrees. */
++/* Scan whole-fs metadata. */
+ static void
+ scan_fs_metadata(
+-	struct workqueue		*wq,
+-	xfs_agnumber_t			agno,
+-	void				*arg)
++	struct workqueue	*wq,
++	xfs_agnumber_t		type,
++	void			*arg)
+ {
+-	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
+-	bool				*aborted = arg;
+-	struct action_list		alist;
+-	int				ret;
++	struct action_list	alist;
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	struct scan_ctl		*sctl = arg;
++	int			ret;
+ 
+-	if (*aborted)
+-		return;
++	if (sctl->aborted)
++		goto out;
+ 
+ 	action_list_init(&alist);
+-	ret = scrub_fs_metadata(ctx, &alist);
++	ret = scrub_fs_metadata(ctx, type, &alist);
+ 	if (ret) {
+-		*aborted = true;
+-		return;
++		sctl->aborted = true;
++		goto out;
+ 	}
+ 
+-	action_list_defer(ctx, agno, &alist);
++	action_list_defer(ctx, 0, &alist);
 +
-+/* Scrub /only/ the superblock summary counters. */
-+int
-+scrub_fs_counters(
++out:
++	if (type == XFS_SCRUB_TYPE_RTBITMAP) {
++		pthread_mutex_lock(&sctl->rbm_waitlock);
++		sctl->rbm_done = true;
++		pthread_cond_broadcast(&sctl->rbm_wait);
++		pthread_mutex_unlock(&sctl->rbm_waitlock);
++	}
+ }
+ 
+ /* Scan all filesystem metadata. */
+@@ -122,17 +144,25 @@ int
+ phase2_func(
+ 	struct scrub_ctx	*ctx)
+ {
+-	struct action_list	alist;
+ 	struct workqueue	wq;
++	struct scan_ctl		sctl = {
++		.aborted	= false,
++		.rbm_done	= false,
++	};
++	struct action_list	alist;
++	const struct xfrog_scrub_descr *sc = xfrog_scrubbers;
+ 	xfs_agnumber_t		agno;
+-	bool			aborted = false;
++	unsigned int		type;
+ 	int			ret, ret2;
+ 
++	pthread_mutex_init(&sctl.rbm_waitlock, NULL);
++	pthread_cond_init(&sctl.rbm_wait, NULL);
++
+ 	ret = -workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+ 		str_liberror(ctx, ret, _("creating scrub workqueue"));
+-		return ret;
++		goto out_wait;
+ 	}
+ 
+ 	/*
+@@ -143,29 +173,67 @@ phase2_func(
+ 	action_list_init(&alist);
+ 	ret = scrub_primary_super(ctx, &alist);
+ 	if (ret)
+-		goto out;
++		goto out_wq;
+ 	ret = action_list_process_or_defer(ctx, 0, &alist);
+ 	if (ret)
+-		goto out;
++		goto out_wq;
+ 
+-	for (agno = 0; !aborted && agno < ctx->mnt.fsgeom.agcount; agno++) {
+-		ret = -workqueue_add(&wq, scan_ag_metadata, agno, &aborted);
++	/* Scan each AG in parallel. */
++	for (agno = 0;
++	     agno < ctx->mnt.fsgeom.agcount && !sctl.aborted;
++	     agno++) {
++		ret = -workqueue_add(&wq, scan_ag_metadata, agno, &sctl);
+ 		if (ret) {
+ 			str_liberror(ctx, ret, _("queueing per-AG scrub work"));
+-			goto out;
++			goto out_wq;
+ 		}
+ 	}
+ 
+-	if (aborted)
+-		goto out;
++	if (sctl.aborted)
++		goto out_wq;
+ 
+-	ret = -workqueue_add(&wq, scan_fs_metadata, 0, &aborted);
++	/*
++	 * Scan all of the whole-fs metadata objects: realtime bitmap, realtime
++	 * summary, and the three quota files.  Each of the metadata files can
++	 * be scanned in parallel except for the realtime summary file, which
++	 * must run after the realtime bitmap has been scanned.
++	 */
++	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
++		if (sc->group != XFROG_SCRUB_GROUP_FS)
++			continue;
++		if (type == XFS_SCRUB_TYPE_RTSUM)
++			continue;
++
++		ret = -workqueue_add(&wq, scan_fs_metadata, type, &sctl);
++		if (ret) {
++			str_liberror(ctx, ret,
++	_("queueing whole-fs scrub work"));
++			goto out_wq;
++		}
++	}
++
++	if (sctl.aborted)
++		goto out_wq;
++
++	/*
++	 * Wait for the rt bitmap to finish scanning, then scan the rt summary
++	 * since the summary can be regenerated completely from the bitmap.
++	 */
++	pthread_mutex_lock(&sctl.rbm_waitlock);
++	while (!sctl.rbm_done)
++		pthread_cond_wait(&sctl.rbm_wait, &sctl.rbm_waitlock);
++	pthread_mutex_unlock(&sctl.rbm_waitlock);
++
++	if (sctl.aborted)
++		goto out_wq;
++
++	ret = -workqueue_add(&wq, scan_fs_metadata, XFS_SCRUB_TYPE_RTSUM, &sctl);
+ 	if (ret) {
+-		str_liberror(ctx, ret, _("queueing per-FS scrub work"));
+-		goto out;
++		str_liberror(ctx, ret, _("queueing rtsummary scrub work"));
++		goto out_wq;
+ 	}
+ 
+-out:
++out_wq:
+ 	ret2 = -workqueue_terminate(&wq);
+ 	if (ret2) {
+ 		str_liberror(ctx, ret2, _("finishing scrub work"));
+@@ -173,8 +241,11 @@ phase2_func(
+ 			ret = ret2;
+ 	}
+ 	workqueue_destroy(&wq);
++out_wait:
++	pthread_cond_destroy(&sctl.rbm_wait);
++	pthread_mutex_destroy(&sctl.rbm_waitlock);
+ 
+-	if (!ret && aborted)
++	if (!ret && sctl.aborted)
+ 		ret = ECANCELED;
+ 	return ret;
+ }
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index c7ee074fd36c..1c53260cc26c 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -400,13 +400,16 @@ scrub_ag_metadata(
+ 	return scrub_group(ctx, XFROG_SCRUB_GROUP_PERAG, agno, alist);
+ }
+ 
+-/* Scrub whole-FS metadata btrees. */
++/* Scrub whole-filesystem metadata. */
+ int
+ scrub_fs_metadata(
  	struct scrub_ctx		*ctx,
++	unsigned int			type,
  	struct action_list		*alist)
  {
+-	return scrub_group(ctx, XFROG_SCRUB_GROUP_FS, 0, alist);
++	ASSERT(xfrog_scrubbers[type].group == XFROG_SCRUB_GROUP_FS);
++
++	return scrub_meta_type(ctx, type, 0, alist);
+ }
+ 
+ /* Scrub all FS summary metadata. */
 diff --git a/scrub/scrub.h b/scrub/scrub.h
-index f7e66bb614b4..35d609f283a4 100644
+index 35d609f283a4..8a999da6a965 100644
 --- a/scrub/scrub.h
 +++ b/scrub/scrub.h
-@@ -23,7 +23,8 @@ int scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+@@ -22,7 +22,8 @@ int scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct action_list *alist);
  int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
  		struct action_list *alist);
- int scrub_fs_metadata(struct scrub_ctx *ctx, struct action_list *alist);
--int scrub_fs_summary(struct scrub_ctx *ctx, struct action_list *alist);
-+int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
-+int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
+-int scrub_fs_metadata(struct scrub_ctx *ctx, struct action_list *alist);
++int scrub_fs_metadata(struct scrub_ctx *ctx, unsigned int scrub_type,
++		struct action_list *alist);
+ int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
  
- bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
- bool can_scrub_inode(struct scrub_ctx *ctx);
 
