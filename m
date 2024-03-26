@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CAD7128814
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:21:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6121292D6
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:21:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423298; cv=none; b=CTln0vVCnLKZDKczAwF72R9rycGcowEtPoAzzNvefGQNF17HtW2pKdL12x+GfUyzaPgFxlWIiaC7/MWzoAqHV+oivqtVFbBIng7COLEmnyWbdfnMcVcg0rjfwBR9xGdvPWxaCZ7dZNIrN9bPZK4Lp2Wy0LwKwQUVhY/v1L8hvxg=
+	t=1711423313; cv=none; b=BxKoWxARarlPYYkmB7vF1MpzDq6J/xKHNtiP/bSQ+24M5ooJaLfbsR9/zzNLraZFd2alYPikd0NkWh+SQpfuG6wFTbzaQfrYS1nZQZCR3CNrHvWWh7D8BIJTDhMFyTdg2SucTqqg0cfzsxmBuMs7fxhlUbDZgwtNeie64CBJC88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423298; c=relaxed/simple;
-	bh=UCHhkStYLy5HgnsYFzJaTmQ4BDCfxwCXiAKPazue0mg=;
+	s=arc-20240116; t=1711423313; c=relaxed/simple;
+	bh=e2citnO+J7GOy6sAtpcJAD8C/+7NhA2p4IsjpgPNTU0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=c6aeaFOu1TwlGPL8lAuNoddsQBpgIDUJlmf4XJ/eSaOo7c3ASPKKNolERPflFBNeI7wj+w6SbIrpqt4TLeTi7PK4jtlQTKirqkMSiDmlkT25OmWImS4eJ+eLzZ8r/LK2COTq9MDQz5kcFUKpaVOoP3BX8hsf17fpJruZhfvo+Uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U4z4ATRA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TTl1XE1kPog9i5+JIKqYgwM6X5ZIeyQWlVvJOfEPtg1tAjPmqmqeuEoDwCqjWjNFLq+yoOq2/AP3qBDM9HCBQ07bKLSfjQfMVUrL+j6TK9qwZda94yzS+iwhYiEF4Ipf2EpSj6sIb2gseOjiMiFZtBddYWPeBRdcxLKuW5mo7Qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZXExwin; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U4z4ATRA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3115C433F1;
-	Tue, 26 Mar 2024 03:21:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZXExwin"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BAC5C43394;
+	Tue, 26 Mar 2024 03:21:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423298;
-	bh=UCHhkStYLy5HgnsYFzJaTmQ4BDCfxwCXiAKPazue0mg=;
+	s=k20201202; t=1711423313;
+	bh=e2citnO+J7GOy6sAtpcJAD8C/+7NhA2p4IsjpgPNTU0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=U4z4ATRAHhX3FDtibnqEzqquP29Az2lJNBuWimLa2vxvKSHPifB0PNNrBRqXq5etX
-	 LZWEffQHnQ0s6PjmJYjsTM/cS0gylrE50nSVwk0hH6kXT3EsGxjig494bGjrWnOr7z
-	 xRqQSqSOSTuc753oFBKo+tU/LyHylbUpk5BhpkKGIh5w5AYZlPuVfPaTqynWRAdoRI
-	 gVhUh41cA8vu5Xrng8n3EMjxDzXK+2ffVJ228fvzR7H9qx2o9QvkmKVo4WHIgB1/N+
-	 VdBJFwA7shWtfmknVsZ+xS9ptUnieftoJXCLD4cQlN915asMFKQ7FiAKGA6W4S1Cww
-	 TZdtbVU2kuhnw==
-Date: Mon, 25 Mar 2024 20:21:37 -0700
-Subject: [PATCH 3/5] xfs_scrub: fix threadcount estimates for phase 6
+	b=OZXExwin5lMRzbV360316My7TzW99IJ3IybeUu58kDyxSpnDfUg+WIyjIJUbPbrQ4
+	 SPkyLSz342aqRPwupAQOfwi4p4GLryzyu7O0VqcdMelpFWxygD89xYuF3gx8y1F0/G
+	 pZZsgC0a1D6UvdrACpUVfh5aejQh9/8qwAUv70oPbfiWEKWegvRN64bFLSagyRgCfk
+	 5E6YsLJSgd4j9i02SGKiyNPxbHb7rRxNs51tJ6NZb09ZUG7D/2u/S/rhpuD98p6z30
+	 KNZGz2txo7XOPewSBghA/t1uYYHlqB/7BxV6AZ+uU1QFZlyVHu7cpfUZDjexU0UatP
+	 6WOu+29dbh4NQ==
+Date: Mon, 25 Mar 2024 20:21:53 -0700
+Subject: [PATCH 4/5] xfs_scrub: don't fail while reporting media scan errors
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171142128608.2214086.995178391368862173.stgit@frogsfrogsfrogs>
+Message-ID: <171142128620.2214086.9691663764474963447.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142128559.2214086.13647333402538596.stgit@frogsfrogsfrogs>
 References: <171142128559.2214086.13647333402538596.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,31 +46,68 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a filesystem has a realtime device or an external log device, the
-media scan can start up a separate readverify controller (and workqueue)
-to handle that.  Each of those controllers can call progress_add, so we
-need to bump up nr_threads so that the progress reports controller knows
-to make its ptvar big enough to handle all these threads.
+If we can't open a file to report that it has media errors, just log
+that fact and move on.  In this case we want to keep going with phase 6
+so we report as many errors as possible.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase6.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ scrub/phase6.c |   26 ++++++++++++++++++--------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
 
 
 diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 99a32bc79620..98d6f08e4727 100644
+index 98d6f08e4727..9ef700d50834 100644
 --- a/scrub/phase6.c
 +++ b/scrub/phase6.c
-@@ -744,6 +744,10 @@ phase6_estimate(
- 	*items = cvt_off_fsb_to_b(&ctx->mnt,
- 			(d_blocks - d_bfree) + (r_blocks - r_bfree));
- 	*nr_threads = disk_heads(ctx->datadev);
-+	if (ctx->rtdev)
-+		*nr_threads += disk_heads(ctx->rtdev);
-+	if (ctx->logdev)
-+		*nr_threads += disk_heads(ctx->logdev);
- 	*rshift = 20;
- 	return 0;
- }
+@@ -21,6 +21,7 @@
+ #include "read_verify.h"
+ #include "spacemap.h"
+ #include "vfs.h"
++#include "common.h"
+ 
+ /*
+  * Phase 6: Verify data file integrity.
+@@ -291,13 +292,14 @@ report_inode_loss(
+ 	/* Try to open the inode. */
+ 	fd = scrub_open_handle(handle);
+ 	if (fd < 0) {
+-		error = errno;
+-		if (error == ESTALE)
+-			return error;
++		/* Handle is stale, try again. */
++		if (errno == ESTALE)
++			return ESTALE;
+ 
+-		str_info(ctx, descr,
+-_("Disappeared during read error reporting."));
+-		return error;
++		str_error(ctx, descr,
++ _("Could not open to report read errors: %s."),
++				strerror(errno));
++		return 0;
+ 	}
+ 
+ 	/* Go find the badness. */
+@@ -353,10 +355,18 @@ report_dirent_loss(
+ 	fd = openat(dir_fd, dirent->d_name,
+ 			O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
+ 	if (fd < 0) {
++		char		descr[PATH_MAX + 1];
++
+ 		if (errno == ENOENT)
+ 			return 0;
+-		str_errno(ctx, path);
+-		return errno;
++
++		snprintf(descr, PATH_MAX, "%s/%s", path, dirent->d_name);
++		descr[PATH_MAX] = 0;
++
++		str_error(ctx, descr,
++ _("Could not open to report read errors: %s."),
++				strerror(errno));
++		return 0;
+ 	}
+ 
+ 	/* Go find the badness. */
 
