@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B007C1D559
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 17:22:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E762A1C6A0
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 17:24:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711473774; cv=none; b=Sm3SMv99LOGzAiBVNlMDIXZcuEv5UTTPFfW2c9gKoQq6Opq/ahB8ixfZpkes5FlQcLtqpr3w2Xjh3YgwK7ShHuGHqFRA4qTTDtxDgsrYR6GTccV7Chw8Y1+peA47bSZ37b/yDXS+NjNI3/W4KdLaPKTWP8QMu00+XmxrPF2OIIc=
+	t=1711473874; cv=none; b=PJjxBcg9cSKIeNv2QPTLuIN1I/MqbQdQJczNpgBnccdxQSbucfSU5BQbuJEReVR/gdiGhu76LiNdFSy2Nyck6RQHYLe6jRx2c6j0jaE9zzsfAd5Wq3syv+6u2Brnvy1Q8Zxb0ToFUTQ+pKn5wxkTe4j1b2XmWd/jp6uLPIk9MIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711473774; c=relaxed/simple;
-	bh=7vmG7Eqx3qEr0Wd9M2YjMLgyZryrGy2K0AMBp+MkeUI=;
+	s=arc-20240116; t=1711473874; c=relaxed/simple;
+	bh=3NY5CW+yydbwPGmA8N2DN+1eiN1pQjI1aZQrZ+1g+Sk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fT2s1NCAZ9CesGcKSin9L7F1w9WeoxxbJiDB5gPv0PSB7eBsiTXun0baPFDoek1aGFZZfRLHp7+unJO6tkJRg5Lw9v46sBmyTOk2JWEUKwVii1ab5E6oNLsDcDwKsZ1JXOE+RSenzn4vpJNa6AzmBvfTfEv+DYruM3vGf87iIgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lqwFef9J; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BNeq1OPyv4dVp1yd+KufuWJMJumxDAzbzwKnx8n2Nmk9x2fn2+nQhdhVTSaDPDLxEKDzyte9tf+EwB0mlBu3YHvLtgC2x9OVfIwSiXYACCbg4LmpSGCSAkvjaYXJv5uJk58T0NP0dRoNk5r8trjo7Y0LJPOrS8VG6W7T+BB8Dts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ngh+OsXg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lqwFef9J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34447C433F1;
-	Tue, 26 Mar 2024 17:22:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ngh+OsXg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD420C433F1;
+	Tue, 26 Mar 2024 17:24:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711473774;
-	bh=7vmG7Eqx3qEr0Wd9M2YjMLgyZryrGy2K0AMBp+MkeUI=;
+	s=k20201202; t=1711473873;
+	bh=3NY5CW+yydbwPGmA8N2DN+1eiN1pQjI1aZQrZ+1g+Sk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lqwFef9JvFFHCp92zrd4t4pKZ3OAfxp2f9eq98ob3wWh1OcBaB6E43/rtyz5RC5MK
-	 1h/jZt0QEbxsricKDXQhM7g1wi/8Zk21qSs5zeGjnbndgxNCvtZWib4SnAkNYaocgU
-	 orzZ4/cK2STrmpSfrB0EINwjs7FHbJOJaZ9szmXnDF5lRmxFsvymKNqbrHVCfr/ygN
-	 /707hmIIrWEIMP8keFDF2VW8hYqk7Zroodf6ZUW9IzvsGvK5afnFXWkaw7K2/XhZIo
-	 Rj8TL//yIyV3uKcf1iMYFpO78EGFct1OWKTh3zH4wLbOMAIIMvPctl4GGt5Gaus2pH
-	 dvep/obECoOLw==
-Date: Tue, 26 Mar 2024 10:22:53 -0700
+	b=Ngh+OsXgm/R/yFlhgZmKw6gB3IOsj28H3IaPckaZqQLcSylmaSIDK127RPAPnFLkz
+	 Gf5mMpCNpALrBtvJFQ8MomnaLAaGWyoaUJhYSJUhy95JvZfNAddIpO/ZUSjbTX9Nf5
+	 IamGRxKKuHLm0T4hzOrcFxNxpYZTikW2dT/87jivnzgQCRjvx4zSqwFQAXdgDfQeHP
+	 eHm6TN5nHoTFl7JWif0JjhYUUQGXsu0C5BPlJpt+g55MpN5swnPe0ucTirysB5Qkvv
+	 2QzhNv0dadhrQE2YrLSYePo8wP/Pq8Dst/898NmWANG2qQQBLDC3aFWaXLhhHQPKm/
+	 wB4cM8Sk/ciog==
+Date: Tue, 26 Mar 2024 10:24:33 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs_repair: define an in-memory btree for storing
- refcount bag info
-Message-ID: <20240326172253.GR6390@frogsfrogsfrogs>
-References: <171142135076.2220204.9878243275175160383.stgit@frogsfrogsfrogs>
- <171142135095.2220204.16042670537695757647.stgit@frogsfrogsfrogs>
- <ZgJj5Y2ORvXhKSXR@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: compile out v4 support if disabled
+Message-ID: <20240326172433.GS6390@frogsfrogsfrogs>
+References: <20240325031318.2052017-1-hch@lst.de>
+ <20240326000237.GG6414@frogsfrogsfrogs>
+ <20240326055047.GA6808@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,28 +43,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZgJj5Y2ORvXhKSXR@infradead.org>
+In-Reply-To: <20240326055047.GA6808@lst.de>
 
-On Mon, Mar 25, 2024 at 10:57:57PM -0700, Christoph Hellwig wrote:
-> On Mon, Mar 25, 2024 at 09:01:50PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Mar 26, 2024 at 06:50:47AM +0100, Christoph Hellwig wrote:
+> On Mon, Mar 25, 2024 at 05:02:37PM -0700, Darrick J. Wong wrote:
+> > > +/*
+> > > + * Some features are always on for v5 file systems, allow the compiler to
+> > > + * eliminiate dead code when building without v4 support.
+> > > + */
+> > > +#define __XFS_HAS_V4_FEAT(name, NAME) \
 > > 
-> > Create a new in-memory btree type so that we can store refcount bag info
-> > in a much more memory-efficient format.
+> > Shouldn't this be called __XFS_HAS_V5_FEAT?
 > 
-> There's probably a reason to not just shared this directly with the
-> kernel?
+> They are features for v4 and unconditional for v5.  Given that Dave
+> came up with the same names independently they can't be all bad,
+> although I don't really care very strongly.
 
-Add to the commit message:
+Ok, you've both persuaded me then.
 
-"The xfs_repair rcbag btree stores inode numbers (unlike the kernel
-rcbag btree) because xfs_repair needs to compute the bitmap of inodes
-that must have the reflink iflag set."
-
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
