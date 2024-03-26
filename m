@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77085129A79
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:37:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC3241292E8
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:37:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711424253; cv=none; b=iao/fVzcmrP1gfMlooDFVGd2BJAMo+/SIDBSmtWMMZ/O6BQa93vbyMODXZafYt0KTAy06D9IrKIhefPJ/T1VXXWY5Si+w5FoJAUbC6MiUxc9w/4KKtgJ1A/57D9oWVZtD53KmudkUM5ulkqWafm2JxQhQcFLYhgyJFFe6C9qgrM=
+	t=1711424268; cv=none; b=XmrbHybSzT3+orCklyhItmh/YKJpmQubiIih0AhiQPG8fjxHHBLDRc8U+fJYxPC3wOsaymPkiCubHCKlo8SDvfADnYUWLKCbuiXhYR51kEdEzvdX6cmj/8KtAB3IFBiM+WjAoN7MxfYrNWieOKgC0b2vgivmJdEwX7lxdVg1Dto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711424253; c=relaxed/simple;
-	bh=PwyWYBkvzMFVd5RBFrfJ/NFldgg3FueMInwYNqckWSc=;
+	s=arc-20240116; t=1711424268; c=relaxed/simple;
+	bh=HZbHqDehyM0yMhhb/UKe0I0sAXizZZgWhK8Vd5BT3/c=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SaI8znnP8uycWPxDjI7CIUlLCLqV/GN8x7mfWTxgGrFhMUICbfGDjHDr4qBb0rBnH8C6haaGKbidXfqvp3iajZEJc7+UcODJ/iLMBC+3sl0c8QCBufig3khKbLM/deLcEyqdXyjPgsYNtbj0HVgtHube+9Cw2ToQb73vHlFn/SA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sAx9TY9G; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=W8u3ENrLUazEIhWU7nwRjFB/2bP81d5XeLjPlFqeQg0QfZsYXKtAKNTK7kM0heUj7PLdXsnppeKa5EXnrhDmA+mmNfgeY5yeGz2zL6syZ6MJ8yMUnHIUGp9oHJHVbP/og4R+H3BqLIfBl8irypAOD6vgDwFAX0U2aXYzdMWOFHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TUWnYVS2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sAx9TY9G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08B68C433C7;
-	Tue, 26 Mar 2024 03:37:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TUWnYVS2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B071EC433F1;
+	Tue, 26 Mar 2024 03:37:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711424253;
-	bh=PwyWYBkvzMFVd5RBFrfJ/NFldgg3FueMInwYNqckWSc=;
+	s=k20201202; t=1711424268;
+	bh=HZbHqDehyM0yMhhb/UKe0I0sAXizZZgWhK8Vd5BT3/c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=sAx9TY9GoDEcyOSNf/23rifLZqbgxni7Ga3Yv4Enw2/L3iV1+TbFbYhrc1uqYRsiK
-	 HDfaR0ljWRWHUSPq2qdVecExpT2/44atEiPzzxFzq5VC8oD9OMIkaikFIW6fyUYkF3
-	 2FhehTZXIOwl9mipYjAzXljGRDfRqpo/059WWaEpXCsiAWGH6700T42XvDb2tiCPEq
-	 +UFRU4iR1ctFByAUp1dNRp7W1Zr/4ApTRCeX7Z4tOnGSMpIDXAFddarBU64VQcHI6K
-	 59Cz0Vw9Q215KcCSM21gATCn9AXCpfAVxgHcgNSaIGVUQwuth+mAo9fLZineaoEwWN
-	 0FrQld+oKikeg==
-Date: Mon, 25 Mar 2024 20:37:32 -0700
-Subject: [PATCH 035/110] xfs: turn the allocbt cursor active field into a
- btree flag
+	b=TUWnYVS2kXPsdFPbe1TsiVY1GtWrD6fAC9Z1b0jIHMdZ4izloBmpnft7fbjVXnezp
+	 rLGWc6A1Q89kcPrmO9dQhHezPpd/jDfFvpRNXdaJ2Z2bWAoZU7nHes2x7/Q5rpJCbc
+	 kVPg/pdN+rmOOxsf6PzobMIUdwJWTIubpxTNkDuKw54sU12zhZADJfJcZdPEnqLPLc
+	 jeyhuYJBkdIiAPKAhmINQytG4GaZWljwQSUs0zkMADBUQxlSBTfzVogfsLBtAKxrrP
+	 6mR6O5E6OdXPQQ5bipL5bNgiYF54SORN2qcmBacCAKPO7956z3ryJDOL/pKNYYdq/M
+	 R03J2jUOJH4DQ==
+Date: Mon, 25 Mar 2024 20:37:48 -0700
+Subject: [PATCH 036/110] xfs: extern some btree ops structures
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142131889.2215168.13460745794958153348.stgit@frogsfrogsfrogs>
+Message-ID: <171142131903.2215168.1127896654994421611.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,108 +44,126 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b20775ed644af0cbaee9632ad63ae6ec5ee502cc
+Source kernel commit: d8d6df4253adcdb5862a9410d962e9168b973c88
 
-Add a new XFS_BTREE_ALLOCBT_ACTIVE flag to replace the active field.
+Expose these static btree ops structures so that we can reference them
+in the AG initialization code in the next patch.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_alloc.c       |   13 ++++++++-----
- libxfs/xfs_alloc_btree.c |    1 -
- libxfs/xfs_btree.h       |    6 +++---
- 3 files changed, 11 insertions(+), 9 deletions(-)
+ libxfs/xfs_alloc_btree.c    |    4 ++--
+ libxfs/xfs_bmap_btree.c     |    2 +-
+ libxfs/xfs_ialloc_btree.c   |    4 ++--
+ libxfs/xfs_refcount_btree.c |    2 +-
+ libxfs/xfs_rmap_btree.c     |    2 +-
+ libxfs/xfs_shared.h         |    9 +++++++++
+ 6 files changed, 16 insertions(+), 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 45843616647d..e5ae5394893a 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -161,7 +161,10 @@ xfs_alloc_lookup(
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
- 	error = xfs_btree_lookup(cur, dir, stat);
--	cur->bc_ag.abt.active = (*stat == 1);
-+	if (*stat == 1)
-+		cur->bc_flags |= XFS_BTREE_ALLOCBT_ACTIVE;
-+	else
-+		cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
- 	return error;
- }
- 
-@@ -210,7 +213,7 @@ static inline bool
- xfs_alloc_cur_active(
- 	struct xfs_btree_cur	*cur)
- {
--	return cur && cur->bc_ag.abt.active;
-+	return cur && (cur->bc_flags & XFS_BTREE_ALLOCBT_ACTIVE);
- }
- 
- /*
-@@ -988,7 +991,7 @@ xfs_alloc_cur_check(
- 		deactivate = true;
- out:
- 	if (deactivate)
--		cur->bc_ag.abt.active = false;
-+		cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
- 	trace_xfs_alloc_cur_check(args->mp, cur->bc_btnum, bno, len, diff,
- 				  *new);
- 	return 0;
-@@ -1363,7 +1366,7 @@ xfs_alloc_walk_iter(
- 		if (error)
- 			return error;
- 		if (i == 0)
--			cur->bc_ag.abt.active = false;
-+			cur->bc_flags &= ~XFS_BTREE_ALLOCBT_ACTIVE;
- 
- 		if (count > 0)
- 			count--;
-@@ -1477,7 +1480,7 @@ xfs_alloc_ag_vextent_locality(
- 		if (error)
- 			return error;
- 		if (i) {
--			acur->cnt->bc_ag.abt.active = true;
-+			acur->cnt->bc_flags |= XFS_BTREE_ALLOCBT_ACTIVE;
- 			fbcur = acur->cnt;
- 			fbinc = false;
- 		}
 diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index d3ecd513d276..e3c2f90eb57a 100644
+index e3c2f90eb57a..6c9781fcf0d2 100644
 --- a/libxfs/xfs_alloc_btree.c
 +++ b/libxfs/xfs_alloc_btree.c
-@@ -521,7 +521,6 @@ xfs_allocbt_init_common(
- 				mp->m_alloc_maxlevels, xfs_allocbt_cur_cache);
- 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
- 	}
--	cur->bc_ag.abt.active = false;
+@@ -452,7 +452,7 @@ xfs_allocbt_keys_contiguous(
+ 				 be32_to_cpu(key2->alloc.ar_startblock));
+ }
  
- 	cur->bc_ag.pag = xfs_perag_hold(pag);
+-static const struct xfs_btree_ops xfs_bnobt_ops = {
++const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
  
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 17a0324a304e..b36530e56df9 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -236,9 +236,6 @@ struct xfs_btree_cur_ag {
- 			unsigned int	nr_ops;	/* # record updates */
- 			unsigned int	shape_changes;	/* # of extent splits */
- 		} refc;
--		struct {
--			bool		active;	/* allocation cursor state */
--		} abt;
- 	};
+@@ -475,7 +475,7 @@ static const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.keys_contiguous	= xfs_allocbt_keys_contiguous,
  };
  
-@@ -321,6 +318,9 @@ xfs_btree_cur_sizeof(unsigned int nlevels)
- /* For extent swap, ignore owner check in verifier (only for bmbt btrees) */
- #define	XFS_BTREE_BMBT_INVALID_OWNER	(1U << 2)
+-static const struct xfs_btree_ops xfs_cntbt_ops = {
++const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.geom_flags		= XFS_BTGEO_LASTREC_UPDATE,
  
-+/* Cursor is active (only for allocbt btrees) */
-+#define	XFS_BTREE_ALLOCBT_ACTIVE	(1U << 3)
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 52a1ce460a1b..41b4419b5e70 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -509,7 +509,7 @@ xfs_bmbt_keys_contiguous(
+ 				 be64_to_cpu(key2->bmbt.br_startoff));
+ }
+ 
+-static const struct xfs_btree_ops xfs_bmbt_ops = {
++const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.geom_flags		= XFS_BTGEO_LONG_PTRS | XFS_BTGEO_ROOT_IN_INODE,
+ 
+ 	.rec_len		= sizeof(xfs_bmbt_rec_t),
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index dea661afc4df..52cc00e4ff1c 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -397,7 +397,7 @@ xfs_inobt_keys_contiguous(
+ 				 be32_to_cpu(key2->inobt.ir_startino));
+ }
+ 
+-static const struct xfs_btree_ops xfs_inobt_ops = {
++const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
+ 
+@@ -419,7 +419,7 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.keys_contiguous	= xfs_inobt_keys_contiguous,
+ };
+ 
+-static const struct xfs_btree_ops xfs_finobt_ops = {
++const struct xfs_btree_ops xfs_finobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
+ 
+diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
+index 1ecd670a9eba..2f91c7b62ef1 100644
+--- a/libxfs/xfs_refcount_btree.c
++++ b/libxfs/xfs_refcount_btree.c
+@@ -316,7 +316,7 @@ xfs_refcountbt_keys_contiguous(
+ 				 be32_to_cpu(key2->refc.rc_startblock));
+ }
+ 
+-static const struct xfs_btree_ops xfs_refcountbt_ops = {
++const struct xfs_btree_ops xfs_refcountbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_refcount_rec),
+ 	.key_len		= sizeof(struct xfs_refcount_key),
+ 
+diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
+index 7f815522c820..c3a113c881d8 100644
+--- a/libxfs/xfs_rmap_btree.c
++++ b/libxfs/xfs_rmap_btree.c
+@@ -470,7 +470,7 @@ xfs_rmapbt_keys_contiguous(
+ 				 be32_to_cpu(key2->rmap.rm_startblock));
+ }
+ 
+-static const struct xfs_btree_ops xfs_rmapbt_ops = {
++const struct xfs_btree_ops xfs_rmapbt_ops = {
+ 	.geom_flags		= XFS_BTGEO_OVERLAPPING,
+ 
+ 	.rec_len		= sizeof(struct xfs_rmap_rec),
+diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
+index 4220d3584c1b..518ea9456eba 100644
+--- a/libxfs/xfs_shared.h
++++ b/libxfs/xfs_shared.h
+@@ -43,6 +43,15 @@ extern const struct xfs_buf_ops xfs_sb_buf_ops;
+ extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
+ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+ 
++/* btree ops */
++extern const struct xfs_btree_ops xfs_bnobt_ops;
++extern const struct xfs_btree_ops xfs_cntbt_ops;
++extern const struct xfs_btree_ops xfs_inobt_ops;
++extern const struct xfs_btree_ops xfs_finobt_ops;
++extern const struct xfs_btree_ops xfs_bmbt_ops;
++extern const struct xfs_btree_ops xfs_refcountbt_ops;
++extern const struct xfs_btree_ops xfs_rmapbt_ops;
 +
- #define	XFS_BTREE_NOERROR	0
- #define	XFS_BTREE_ERROR		1
- 
+ /* log size calculation functions */
+ int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
+ int	xfs_log_calc_minimum_size(struct xfs_mount *);
 
