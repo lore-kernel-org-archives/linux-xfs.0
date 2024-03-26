@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81D312882F
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:15:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6447157314
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:15:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711422937; cv=none; b=YV16LNXi0tcwkiZDyFHtzRE3VZRVZ8rWy2wIEZ3j2/CJS9S619doeI29FAjzCaen15wdFvVQoXBAVhXICjTPZaDRyQkfJ5YqO3jeosEFvNSVSGMNcbfy6AylqdwGAWMi8HHY13Eujp6d6owQzdn7gWJ5oMf18f99IiPREDzVGQA=
+	t=1711422953; cv=none; b=u12lxJN4OLtTl+oGBpQellAqfZm3OWDYLtsKM+/jS/gsQDmFeZKI1kGcHZ90G1J1NYXxOEybEwAgLNegA4IR4ath2D4ueCB3tXTZoGaEmGkAFT7YRFB/Y4jYeG46GXn7yGtfG+9n18cT+7vHoyShPSBC8U89hU9CTy8aIlRUySg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711422937; c=relaxed/simple;
-	bh=5jwjkf1jFJ68XlkJNFR7p59L+RL4lxX3yavmKNphXC4=;
+	s=arc-20240116; t=1711422953; c=relaxed/simple;
+	bh=EEoADi1yhmUsiKondayb4+iWCHa8xtjYSFz7E5ef16E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NgkTndfVoOu60ANFdxLqFPFErPoorllYMLpFeeiOiwlG5qq6qAZpIuzUfGmBo8zVclA5M+nRENpHVlBQtFI/ZqQ2UvXK6gwy/wEOBRdX6cGpmTPmu9QaRlFKyDxgw9C6X+ZzYQ+6i3UrmzztLU8Sr7vzrNphhNZdn6+p+lmSdHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=szLPZYWm; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=I+pTDadvJ2b0p7bYi9c/bU8wPdEorW+urEFUqysLn1NAWYoixPORjTyV50/yuE6U7mq5NWPCKLzZJQbf84pM9sarL0v+BCNU7gms+dXwvtuxKvK493SlnutFrufeTofa3YclUYCFlEmouLhB33Fn7l/0gZ0vQCNmkPTYSWauMSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DcERrVWD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="szLPZYWm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91E43C433C7;
-	Tue, 26 Mar 2024 03:15:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DcERrVWD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FCB9C43390;
+	Tue, 26 Mar 2024 03:15:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711422937;
-	bh=5jwjkf1jFJ68XlkJNFR7p59L+RL4lxX3yavmKNphXC4=;
+	s=k20201202; t=1711422953;
+	bh=EEoADi1yhmUsiKondayb4+iWCHa8xtjYSFz7E5ef16E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=szLPZYWmCF2GDIf5OZ5m4iOwfJY9anrATCRe378H+GKoT4GXziLNRFioGspQqVxzu
-	 nXEIiTmYAwO+gK9vpZjUmubayS66VhQrWiSCBZJKYHsVC9cO5n6PU+Qd+LMzVUGXLO
-	 tQEesj/4VeIZBMqQSYcB3nZAxzgWSjVJyTiJDb4+h9Hyiv/M31jYfsIlhvXRWwRW/0
-	 AJ5p22TO6jt2W3Yq5VOOU5zJnSUsnGyrSkbpAs1QHhwN1/6OZQ6PzrBHEeLbnFjLEc
-	 qPDySWxHXA+gbk22RepN2PChkfLgwP4noEbaQtvv39CPzqu+8DrWhLUBTbdg6Pgaae
-	 3+/gnVKUyEZIQ==
-Date: Mon, 25 Mar 2024 20:15:37 -0700
-Subject: [PATCH 49/67] xfs: indicate if xfs_bmap_adjacent changed ap->blkno
+	b=DcERrVWDWmeGRJF5hoDHsZc+ODkVnfrmR1WoxicVUz//pWMogQvFCcEdi/FoMNIyh
+	 eZhr5MVvQS7NvV05DhL7r9DJVplJgpYom+R/a637zPcDUV6dTE6NPIUS13MyzlyTLS
+	 3xubuu6W2IBP3549RSLxhnOCoqITDhArrZ158voI6KuTgVqG0E0ZF0/gRUknXNLdsy
+	 paBAWDFzELMZxdh8bLtvGIIvASh5A9POmy/wMSFD4g1Z0kUEk8UHx2m0gGyH7Jw9Fp
+	 o0enaaLrYDtmLegxHserQJ7OR66fF66ty1KUaTiw20kHi5ncvywxzqrex0NjkISLo8
+	 FzvPzrFgIhoMg==
+Date: Mon, 25 Mar 2024 20:15:52 -0700
+Subject: [PATCH 50/67] xfs: move xfs_rtget_summary to xfs_rtbitmap.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171142127663.2212320.3748659958428283048.stgit@frogsfrogsfrogs>
+Message-ID: <171142127677.2212320.14061734573077722778.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 References: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,87 +47,60 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 676544c27e710aee7f8357f57abd348d98b1ccd4
+Source kernel commit: c2adcfa31ff606264fab6e69129d6d45c9ddb7cb
 
-Add a return value to xfs_bmap_adjacent to indicate if it did change
-ap->blkno or not.
+xfs_rtmodify_summary_int is only used inside xfs_rtbitmap.c and to
+implement xfs_rtget_summary.  Move xfs_rtget_summary to xfs_rtbitmap.c
+as the exported API and mark xfs_rtmodify_summary_int static.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/libxfs_priv.h |    2 +-
- libxfs/xfs_bmap.c    |   19 ++++++++++++++-----
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ libxfs/xfs_rtbitmap.c |   14 ++++++++++++++
+ libxfs/xfs_rtbitmap.h |    4 ++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 28ee192509c7..705b66bed13f 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -565,7 +565,7 @@ int xfs_bmap_extsize_align(struct xfs_mount *mp, struct xfs_bmbt_irec *gotp,
- 			   struct xfs_bmbt_irec *prevp, xfs_extlen_t extsz,
- 			   int rt, int eof, int delay, int convert,
- 			   xfs_fileoff_t *offp, xfs_extlen_t *lenp);
--void xfs_bmap_adjacent(struct xfs_bmalloca *ap);
-+bool xfs_bmap_adjacent(struct xfs_bmalloca *ap);
- int xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 			 int whichfork, struct xfs_bmbt_irec *rec,
- 			 int *is_empty);
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 4f6bd8dff47e..b977032d8244 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -3038,7 +3038,8 @@ xfs_bmap_extsize_align(
- 
- #define XFS_ALLOC_GAP_UNITS	4
- 
--void
-+/* returns true if ap->blkno was modified */
-+bool
- xfs_bmap_adjacent(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
-@@ -3073,13 +3074,14 @@ xfs_bmap_adjacent(
- 		if (adjust &&
- 		    ISVALID(ap->blkno + adjust, ap->prev.br_startblock))
- 			ap->blkno += adjust;
-+		return true;
- 	}
- 	/*
- 	 * If not at eof, then compare the two neighbor blocks.
- 	 * Figure out whether either one gives us a good starting point,
- 	 * and pick the better one.
- 	 */
--	else if (!ap->eof) {
-+	if (!ap->eof) {
- 		xfs_fsblock_t	gotbno;		/* right side block number */
- 		xfs_fsblock_t	gotdiff=0;	/* right side difference */
- 		xfs_fsblock_t	prevbno;	/* left side block number */
-@@ -3159,14 +3161,21 @@ xfs_bmap_adjacent(
- 		 * If both valid, pick the better one, else the only good
- 		 * one, else ap->blkno is already set (to 0 or the inode block).
- 		 */
--		if (prevbno != NULLFSBLOCK && gotbno != NULLFSBLOCK)
-+		if (prevbno != NULLFSBLOCK && gotbno != NULLFSBLOCK) {
- 			ap->blkno = prevdiff <= gotdiff ? prevbno : gotbno;
--		else if (prevbno != NULLFSBLOCK)
-+			return true;
-+		}
-+		if (prevbno != NULLFSBLOCK) {
- 			ap->blkno = prevbno;
--		else if (gotbno != NULLFSBLOCK)
-+			return true;
-+		}
-+		if (gotbno != NULLFSBLOCK) {
- 			ap->blkno = gotbno;
-+			return true;
-+		}
- 	}
- #undef ISVALID
-+	return false;
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 726543abb51a..adeaffed7764 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -517,6 +517,20 @@ xfs_rtmodify_summary(
+ 	return xfs_rtmodify_summary_int(args, log, bbno, delta, NULL);
  }
  
- int
++/*
++ * Read and return the summary information for a given extent size, bitmap block
++ * combination.
++ */
++int
++xfs_rtget_summary(
++	struct xfs_rtalloc_args	*args,
++	int			log,	/* log2 of extent size */
++	xfs_fileoff_t		bbno,	/* bitmap block number */
++	xfs_suminfo_t		*sum)	/* out: summary info for this block */
++{
++	return xfs_rtmodify_summary_int(args, log, bbno, 0, sum);
++}
++
+ /* Log rtbitmap block from the word @from to the byte before @next. */
+ static inline void
+ xfs_trans_log_rtbitmap(
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index 1c84b52de3d4..274dc7dae1fa 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -321,8 +321,8 @@ int xfs_rtfind_forw(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
+ 		xfs_rtxnum_t limit, xfs_rtxnum_t *rtblock);
+ int xfs_rtmodify_range(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
+ 		xfs_rtxlen_t len, int val);
+-int xfs_rtmodify_summary_int(struct xfs_rtalloc_args *args, int log,
+-		xfs_fileoff_t bbno, int delta, xfs_suminfo_t *sum);
++int xfs_rtget_summary(struct xfs_rtalloc_args *args, int log,
++		xfs_fileoff_t bbno, xfs_suminfo_t *sum);
+ int xfs_rtmodify_summary(struct xfs_rtalloc_args *args, int log,
+ 		xfs_fileoff_t bbno, int delta);
+ int xfs_rtfree_range(struct xfs_rtalloc_args *args, xfs_rtxnum_t start,
 
