@@ -1,83 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BCD2128387
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:00:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE90128387
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:00:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711422029; cv=none; b=P4BaZu8nKwI19UTVUoATsVlBD3d75UfWsWDMjcZW3JZKCLpI9RESmejNHs1GlWHtV7LxmJDvoHZOV5Kv4IziigGQvIvGfLA0n0f7C27T2xphhe88d6NIrjauhzSQFnkCQd2jeJDm7k66rWGkByHR5OIp5AG191ZIrjsb7rcheUQ=
+	t=1711422038; cv=none; b=SgaPsrM7/Dy3D2QyZS8Ydbm8/I6sBRVuvDEe3YnpZv+PTuKGbRFv+19mvGfaDxXLCxo+t2vGXuLSSWLsTWZhuEsdqtznh5pVJhCbKHKJfRGx08phALEUQJ3YELor3JVsBBlcO9Sv5BABi36pVTH4ONoA7UdZNMNUaCn3fbV1MV4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711422029; c=relaxed/simple;
-	bh=NcFnKISJaFmpxBpfnWAPEvWsWdem4m5jojTDmZwr8k8=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZktAn5WK1qlThN/xogNLSWeczPT3WxEd43kcBpi96VMLe63VWwqxGhAQxoOicxkrdZqfgGqtngtbq1LbmH7VrMywqUwZNMVduyI5eUi9fwvHFatepCGSbd4bOZUq60dOlKx0lPTnkI2DcSa0eNy6c0lv4R0At5WlEutbd72r6mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oqImQx+N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711422038; c=relaxed/simple;
+	bh=ldo5DKUegUMZNGS8BgRgdrLDoUsxaG8M0QQI3EIAX7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uwKj86Uj/kOD5n1nzoRGydFfwvWs8V+6EtRqcsLJP/doB18RzCeucRG0edTiOUWSaJ++NbGqa6tvoZK4ZdpmjJY4BSqofhdCK8CqrupCTP0BBOyxqGdN8MOmfWnlLFmF5n+fgwvE5t4GKwEVIkGHpkUcbjXK4nyJiLogucsE5LI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c8Fm3ArA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oqImQx+N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 053F1C433F1;
-	Tue, 26 Mar 2024 03:00:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c8Fm3ArA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A41CC43390;
+	Tue, 26 Mar 2024 03:00:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711422029;
-	bh=NcFnKISJaFmpxBpfnWAPEvWsWdem4m5jojTDmZwr8k8=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=oqImQx+Nlo0KLK7ROlEuuf2JzUbZzunY58ur1+35YSr+J8D0t/61tn+7ZwKn550xr
-	 Cx1dLjaZTbsItXy027zo1IM6028/gu+NdgbP1fNhkmvDbyp5jhLtM+WzOGuOGZNvNM
-	 Mbd0/sqts5h1JMg/1m9WBLr8k+S3gtRJIDvbfR3jpoNR0jHqGLZUVfpgB3XbGqvDNR
-	 dT6OxosRXUeo+1djzXgXTknwWDnBlTCMr22vsrfuoB4dd7UBar7hP8LebjI2sjiVHG
-	 Y5N9VQo1yu9X5ZyFo8APYI37k9TjGo9+ZpylbOTsZjg60QhiUmi4pC83OGbPwA/hDa
-	 x5SaY4RY3w5Hw==
-Date: Mon, 25 Mar 2024 20:00:28 -0700
-Subject: [PATCH 04/13] libxfs: create a helper to compute leftovers of
- realtime extents
+	s=k20201202; t=1711422038;
+	bh=ldo5DKUegUMZNGS8BgRgdrLDoUsxaG8M0QQI3EIAX7Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=c8Fm3ArAKhYMrDd8ONR9l2N0f/7lVcPEvl+xTDrjTFbDmwMU1QNf5gQkq2czvW9nX
+	 RZp/wGWS+L+8JSQEZAydNvX8iaC2K0K0nQXSZU+0R9yleZyHEYQXsYRxk8TwU295JA
+	 XOQ9r7DoiZswzw53aQGuVT5vtwhNiZWoGceuUDWE/1YizlOYhEimjvBQXH8u3TAIUf
+	 FnSWo/w1lnYMBkOYPSyUw2itik3XlEqQphtgxRZNrehREXWtkiPUklANN6/a8YCA9L
+	 sRR6c9hPkAOJKdysnYURepJ7aQkmhQC/rj2V5Vc4qxmSA0xp7HSVfh/rhwUGb1HkvF
+	 /Q1UzD2mKzGXg==
+Date: Mon, 25 Mar 2024 20:00:37 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
- linux-xfs@vger.kernel.org
-Message-ID: <171142126366.2211955.7781387463785521195.stgit@frogsfrogsfrogs>
-In-Reply-To: <171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs>
-References: <171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To: cem@kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+	Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET V2 05/18] xfsprogs: fix log sector size detection
+Message-ID: <20240326030037.GG6390@frogsfrogsfrogs>
+References: <20240326024549.GE6390@frogsfrogsfrogs>
+ <171142128939.2214261.1337637583612320969.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <171142128939.2214261.1337637583612320969.stgit@frogsfrogsfrogs>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Mar 25, 2024 at 07:56:02PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> From Christoph Hellwig,
+> 
+> this series cleans up the libxfs toplogy code and then fixes detection
+> of the log sector size in mkfs.xfs, so that it doesn't create smaller
+> than possible log sectors by default on > 512 byte sector size devices.
+> 
+> Note that this doesn't cleanup the types of the topology members, as
+> that creeps all the way into platform_findsize.  Which has a lot more
+> cruft that should be dealth with and is worth it's own series.
 
-Port the inode item precommunt function to use a helper to compute the
-misalignment between a file extent (xfs_extlen_t) and a realtime extent.
+Oops, heh, in all the rebasing confusion I forgot to update this cover
+letter in my database.  This is actually the V3 patchset, though I
+couldn't tell any difference between V2 and V3..
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
----
- libxfs/logitem.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+--D
 
-
-diff --git a/libxfs/logitem.c b/libxfs/logitem.c
-index 48928f322113..3ce2d7574a37 100644
---- a/libxfs/logitem.c
-+++ b/libxfs/logitem.c
-@@ -15,6 +15,7 @@
- #include "xfs_inode_fork.h"
- #include "xfs_inode.h"
- #include "xfs_trans.h"
-+#include "xfs_rtbitmap.h"
- 
- struct kmem_cache	*xfs_buf_item_cache;
- struct kmem_cache	*xfs_ili_cache;		/* inode log item cache */
-@@ -213,7 +214,7 @@ xfs_inode_item_precommit(
- 	 */
- 	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
- 	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
--	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
-+	    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_extsize) > 0) {
- 		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
- 				   XFS_DIFLAG_EXTSZINHERIT);
- 		ip->i_extsize = 0;
-
+> Changes since v1:
+>  - fix a spelling mistake
+>  - add a few more cleanups
+> 
+> If you're going to start using this code, I strongly recommend pulling
+> from my git trees, which are linked below.
+> 
+> This has been running on the djcloud for months with no problems.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-fix-log-sector-size
+> ---
+> Commits in this patchset:
+>  * libxfs: remove the unused fs_topology_t typedef
+>  * libxfs: refactor the fs_topology structure
+>  * libxfs: remove the S_ISREG check from blkid_get_topology
+>  * libxfs: also query log device topology in get_topology
+>  * mkfs: use a sensible log sector size default
+> ---
+>  libxfs/topology.c |  109 ++++++++++++++++++++++++++---------------------------
+>  libxfs/topology.h |   19 ++++++---
+>  mkfs/xfs_mkfs.c   |   71 ++++++++++++++++-------------------
+>  repair/sb.c       |    2 -
+>  4 files changed, 100 insertions(+), 101 deletions(-)
+> 
+> 
