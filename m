@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 577C221353
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:55:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A41171B50
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:56:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711425350; cv=none; b=Rbnb10dlPgYAk0m7lIH8d2txw5QIHPD0oSptpqbaaUZYF0xnyZ1JCA6lhZGZbWkMj42tXpO2foVWq9RnxVPSjryMBwMqDO4yNt/aiovhVJNFEjUTUs89Zew+KIGNejRBJHnF3H4v3y+Vbey8WOpHG2uYxtU1Zx+rlsa9dF/HEMA=
+	t=1711425366; cv=none; b=G31Y1+CTN7XqPzwx7oQ+V2yA7i084WzQRzDCBO2Ihef+LFkU+7w1SGoDQ/znIXDGr4WbjdyBa5J8AEOMLgDSAwcwoymQnwvsLOff36NSomEE/t249LtCgih/8BS4ApVbupkkibi2k22iBVhdHSiN3T/P+CFt5SGXicTCzu96rNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711425350; c=relaxed/simple;
-	bh=nL4Bef7LX7Xa2ektrRw8u3tQmIIkpXKkn5+bgSJ2tf0=;
+	s=arc-20240116; t=1711425366; c=relaxed/simple;
+	bh=oh3Aj1HsKjtjmhafi6JHJ6G0xexibyBfugsU71jtyp4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hFisIh/DGrCSAnZHqIyaMDk3j4crWIhl/WWZ77T83Abc9BOvLpsNSlCH2fXRiX9H/ObMBN5LfdV84L82Cie0kUC940YQxkSWLMxNztE0q6q62OhnqlBIUCrXrX9HZIVVVh9VoT/KFSCGauJQNLMkohLHDhygM5s5pvjU1TPre+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dsxyXOjN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ClpglZNTaCTuYJkt08tx0oa5ptjN19QGPLlUn8OHvo5Bhrr5JFYK7dRAhudUptpxID1vhZbhPoQO8X9LOOczFI93c3SJnZUrO8/MHt74ugiVofyKFywNptqBzYf012WKX7PE9VtFahANOg5DrXAjpMIn1sz8L9wNrQ70qqvtik0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MTsXjAry; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dsxyXOjN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31082C433C7;
-	Tue, 26 Mar 2024 03:55:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MTsXjAry"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1664C433F1;
+	Tue, 26 Mar 2024 03:56:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711425350;
-	bh=nL4Bef7LX7Xa2ektrRw8u3tQmIIkpXKkn5+bgSJ2tf0=;
+	s=k20201202; t=1711425365;
+	bh=oh3Aj1HsKjtjmhafi6JHJ6G0xexibyBfugsU71jtyp4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dsxyXOjNLkGNtyhyGsEJXkTu4F4fVjG5dPMiiGGVn6CW8fa7iJUPawGu0wPehpaYB
-	 1Tt7n9fd3Immrac6ZC/A0IGpCemywfOZHXNSUYkgJsJsvoVGSv9xCGE9fY9+O0FfZh
-	 /e6Lvgx49YYS3P8RYdKt/jFSRX+54aDWjmb+oh1rTglmjnjbRl/GuHqdlNy90Ts0Hq
-	 rWYav3kJhXnzEASJf/KOl8FfVoyQth6exYEvbyhzraBkuFI0YBUvx5Lp1OxcxV4yqu
-	 rCPqNZC5W1LKnxgziJi5Hfi8jeFvy4c+aFVFSrBnzRGTf78YtGzXCAyYgomrC+mjk+
-	 MfHFHiiMxICWg==
-Date: Mon, 25 Mar 2024 20:55:49 -0700
-Subject: [PATCH 105/110] xfs: xfs_bmap_finish_one should map unwritten extents
- properly
+	b=MTsXjArygMB/edX1w79GEbX/RZaD/Cbuy867kAx9lP++MoFYmSxmLs2ShByBvpe8G
+	 n0V1nLjpacpQMEjp4gHbA+yWIuGWuhVbnREHZth+AjjI2ePJZ2dknJ6rVU0GORXK42
+	 qj25XLomFEOOHwVa25adx9T5gH7ghMC34lj2p6/Ge79EfxiPhTV+4dbKxvZVBhUBdy
+	 AIU4gUYhSAotf7nLbnqkLR4R21vUbtDKBMfCA9Xv01RR/M2yy8O6IGcqqAb+Ggiy6g
+	 +7sZ1NH1/Gs9VU0/bPScoXW6CBFhH1QfKAQnxsSXquR52Q1J5kZDcjaumzmKg15dgk
+	 epHDH+DHd0Obw==
+Date: Mon, 25 Mar 2024 20:56:05 -0700
+Subject: [PATCH 106/110] xfs: move xfs_symlink_remote.c declarations to
+ xfs_symlink_remote.h
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142132890.2215168.13861034094254308324.stgit@frogsfrogsfrogs>
+Message-ID: <171142132905.2215168.1360964140377361133.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,30 +47,122 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 6c8127e93e3ac9c2cf6a13b885dd2d057b7e7d50
+Source kernel commit: 622d88e2ad7960b83af38dabf6b848a22a5a1c1f
 
-The deferred bmap work state and the log item can transmit unwritten
-state, so the XFS_BMAP_MAP handler must map in extents with that
-unwritten state.
+Move declarations for libxfs symlink functions into a separate header
+file like we do for most everything else.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap.c |    2 ++
- 1 file changed, 2 insertions(+)
+ include/libxfs.h            |    1 +
+ libxfs/xfs_bmap.c           |    1 +
+ libxfs/xfs_inode_fork.c     |    1 +
+ libxfs/xfs_shared.h         |   13 -------------
+ libxfs/xfs_symlink_remote.c |    1 +
+ libxfs/xfs_symlink_remote.h |   22 ++++++++++++++++++++++
+ 6 files changed, 26 insertions(+), 13 deletions(-)
+ create mode 100644 libxfs/xfs_symlink_remote.h
 
 
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 563c40e5745e..79df8bc7c138 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -86,6 +86,7 @@ struct iomap;
+ #include "xfs_refcount.h"
+ #include "xfs_btree_staging.h"
+ #include "xfs_rtbitmap.h"
++#include "xfs_symlink_remote.h"
+ 
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index f09ec3dfe0c9..70476c54927a 100644
+index 70476c54927a..b089f53e0df5 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -6239,6 +6239,8 @@ xfs_bmap_finish_one(
+@@ -32,6 +32,7 @@
+ #include "xfs_rtbitmap.h"
+ #include "xfs_health.h"
+ #include "defer_item.h"
++#include "xfs_symlink_remote.h"
  
- 	switch (bi->bi_type) {
- 	case XFS_BMAP_MAP:
-+		if (bi->bi_bmap.br_state == XFS_EXT_UNWRITTEN)
-+			flags |= XFS_BMAPI_PREALLOC;
- 		error = xfs_bmapi_remap(tp, bi->bi_owner, bmap->br_startoff,
- 				bmap->br_blockcount, bmap->br_startblock,
- 				flags);
+ struct kmem_cache		*xfs_bmap_intent_cache;
+ 
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index 052748814841..d9f0a21ac9d6 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -24,6 +24,7 @@
+ #include "xfs_types.h"
+ #include "xfs_errortag.h"
+ #include "xfs_health.h"
++#include "xfs_symlink_remote.h"
+ 
+ struct kmem_cache *xfs_ifork_cache;
+ 
+diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
+index cab49e7116ec..dfd61fa8332e 100644
+--- a/libxfs/xfs_shared.h
++++ b/libxfs/xfs_shared.h
+@@ -182,19 +182,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ #define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
+ #define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
+ 
+-
+-/*
+- * Symlink decoding/encoding functions
+- */
+-int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
+-int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
+-			uint32_t size, struct xfs_buf *bp);
+-bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
+-			uint32_t size, struct xfs_buf *bp);
+-void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+-				 struct xfs_inode *ip, struct xfs_ifork *ifp);
+-xfs_failaddr_t xfs_symlink_shortform_verify(void *sfp, int64_t size);
+-
+ /* Computed inode geometry for the filesystem. */
+ struct xfs_ino_geometry {
+ 	/* Maximum inode count in this filesystem. */
+diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
+index fa90b179314d..33689ba2eac3 100644
+--- a/libxfs/xfs_symlink_remote.c
++++ b/libxfs/xfs_symlink_remote.c
+@@ -13,6 +13,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
++#include "xfs_symlink_remote.h"
+ 
+ 
+ /*
+diff --git a/libxfs/xfs_symlink_remote.h b/libxfs/xfs_symlink_remote.h
+new file mode 100644
+index 000000000000..c6f621a0ec05
+--- /dev/null
++++ b/libxfs/xfs_symlink_remote.h
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2013 Red Hat, Inc.
++ * All Rights Reserved.
++ */
++#ifndef __XFS_SYMLINK_REMOTE_H
++#define __XFS_SYMLINK_REMOTE_H
++
++/*
++ * Symlink decoding/encoding functions
++ */
++int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
++int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
++				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++xfs_failaddr_t xfs_symlink_shortform_verify(void *sfp, int64_t size);
++
++#endif /* __XFS_SYMLINK_REMOTE_H */
 
