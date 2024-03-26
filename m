@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B4457314
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:19:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2E0357314
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:19:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423173; cv=none; b=touH7AL02A2cPnysjIbjFxvUkMkk9MspSs7S+y2ArtDCo0I51+mtMZbX7BL72jl4YZhP5jRqj4X3vlGXnhAztcrbZLevIDJUIsfZewZZE7duaplgIpE+3PzoVr8vo7QgKRzFRgiOEQqolbucgVkutws8pOYtriR6KOqijvdPZwI=
+	t=1711423188; cv=none; b=l4fQ6bIjQnSd7pz+XAHjqrX3iDNkwnHJvnRt1zZGhakY4Jm328GTHWXj0uMqOPNKSvVZ1nn2yAk/kp6D1tyNxGg/L+UHXiBhpnKPvEGSJArLax/MG60N88RYENDCLXKxpgKskX3mydgksqWFNubBv/ezPv6x9xCLhA4jiqlHWxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423173; c=relaxed/simple;
-	bh=eyoBejKVFmja7C3f7CTvIOGGs0Dbcte4qo0L0M+mjyA=;
+	s=arc-20240116; t=1711423188; c=relaxed/simple;
+	bh=/cpd/Wno8DiZtEQPfzes66bd0qh3XmtYVKfARwOOHlU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=enEMJhkL47UpWeuYgOSyHuAw2BETJq8RRY0WbJRR4l92C+WOTomFa1j/g2D+ZT+6Y7wlsUv7pPbFH++uEfJwLJqZxCbztVJnjyTejGur7bki/WN7vCGLBvDZAApwv5knaoROkn/4D5Q2DgVHYwg3HxntCtFWDmXrJEijs7MiqBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PJpeOGGT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KXF3ud3amrioMPGMDgY1YxV20zNvuP2jf+3SCqojISooxDC2BZlx+Kw1SHSCGRPeS9+1hHjIsNTyo5n4Syybdmj4tcMD7xvNAOm1lpFFgNCM5z+QgWVLvDS40u/KAYQHjMhBK99gsZjTUudthUzg/i+rHqd4qHnPqQQV5OQXgec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OlR5/oq1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PJpeOGGT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C958EC433F1;
-	Tue, 26 Mar 2024 03:19:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OlR5/oq1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76A7EC433F1;
+	Tue, 26 Mar 2024 03:19:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423172;
-	bh=eyoBejKVFmja7C3f7CTvIOGGs0Dbcte4qo0L0M+mjyA=;
+	s=k20201202; t=1711423188;
+	bh=/cpd/Wno8DiZtEQPfzes66bd0qh3XmtYVKfARwOOHlU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PJpeOGGTWjA3b6hM3vgikDsimfWg3Yj0dJBgHE+gwB47f4iRfyXX7Xq2oX+4SJj2v
-	 dWjV8I4t13+MbUUXqzGElclhgFPzLBoAI6UVqo0UuCs0aG9xVQ0XydQKhXlihM7F5Q
-	 06m8t35oAZi1nwD86stXrreQ59/hnWWLk6PSNOrt6kycPFSCmE70pYjb5iEQlmqwF9
-	 W6N2yQXwZ9Pk1k1o1USxKzQfZGuMcIPp7/TBXfeVfmKNBfVCEsrTbea32qW0fzBoec
-	 JPZp13iSwVfHrZ6lo+yBo+OtBnsJiVbwHZTjEom0f6+TYTC1SVDsY1wtwzD9lgQk2X
-	 sepAwbW5WXz3A==
-Date: Mon, 25 Mar 2024 20:19:32 -0700
-Subject: [PATCH 64/67] xfs: use the op name in
- trace_xlog_intent_recovery_failed
+	b=OlR5/oq1jcY2WPpjvNvUKw+UQUdb3zNOYIHCTnz++fn9Sr84Le92MOnm2jMLiLwN0
+	 mB2sEhuTA5s8QNRYBL4DQWiaL/qbmLeedrcoptHtZPuz/VgIigCyMQ7lSxXp1sq2ZD
+	 eHeZLiA8fPegfOLyTbhsvW5X6/ILwgkTNWYTQvNKGi0GAkXzxhPZuA+00Uz8kqPYD2
+	 rWoOq3P2LJ4BwR3+OgSExbINx92KJQPixwJLEOILVK11qIODoKRgOMt857CITLlaGA
+	 +QGsF5S82sfIrOCujesbny3oNgOVUeJm8JNgvV4nMRQjUWXY6sI1306lpvDBZMkAB8
+	 WzGb0Go07uJsA==
+Date: Mon, 25 Mar 2024 20:19:48 -0700
+Subject: [PATCH 65/67] xfs: fix backwards logic in xfs_bmap_alloc_account
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171142127880.2212320.14920612127648338200.stgit@frogsfrogsfrogs>
+Message-ID: <171142127895.2212320.13666458658733112622.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 References: <171142126868.2212320.6212071954549567554.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,34 +45,34 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: bcdfae6ee520b665385020fa3e47633a8af84f12
+Source kernel commit: d61b40bf15ce453f3aa71f6b423938e239e7f8f8
 
-Instead of tracing the address of the recovery handler, use the name
-in the defer op, similar to other defer ops related tracepoints.
+We're only allocating from the realtime device if the inode is marked
+for realtime and we're /not/ allocating into the attr fork.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Fixes: 58643460546d ("xfs: also use xfs_bmap_btalloc_accounting for RT allocations")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_defer.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ libxfs/xfs_bmap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 5bdc8f5a258a..bf1d1e06a35b 100644
---- a/libxfs/xfs_defer.c
-+++ b/libxfs/xfs_defer.c
-@@ -915,8 +915,7 @@ xfs_defer_finish_recovery(
- 	/* dfp is freed by recover_work and must not be accessed afterwards */
- 	error = ops->recover_work(dfp, capture_list);
- 	if (error)
--		trace_xlog_intent_recovery_failed(mp, error,
--				ops->recover_work);
-+		trace_xlog_intent_recovery_failed(mp, ops, error);
- 	return error;
- }
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 5e6a5e1f355b..494994d360e4 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -3271,7 +3271,7 @@ xfs_bmap_alloc_account(
+ 	struct xfs_bmalloca	*ap)
+ {
+ 	bool			isrt = XFS_IS_REALTIME_INODE(ap->ip) &&
+-					(ap->flags & XFS_BMAPI_ATTRFORK);
++					!(ap->flags & XFS_BMAPI_ATTRFORK);
+ 	uint			fld;
  
+ 	if (ap->flags & XFS_BMAPI_COWFORK) {
 
