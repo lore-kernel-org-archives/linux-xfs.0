@@ -1,42 +1,50 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F7384D0D
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 05:58:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1479AFBFC;
+	Tue, 26 Mar 2024 08:44:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711432735; cv=none; b=c4wVFx8mGhwU1tSlPd8TN7ggfls4Fa3uIa1diBqO8EwuIXaN0phzrynSB37GEPzlkVdNMlbmSJbP3jzdOfyqemMcFVVuSHVfTgcXrd77KmEU63P0Ix5WZXkMS3Up9TnIusMnd1k/HPY/2B+MJUnAd/4h0RiSanWgZ5TRwCSTfb8=
+	t=1711442658; cv=none; b=BEihGjvEynqNGrnX/hmOz70YaWFfmaI+AYbXKAmxQce5cg0pnkkNN0YgwRyAwKtfsyfSqbhVL7aaKijrw+By3ila5Xythnfs/MsQ3l7V/G169WssEKpwg20ici52QTqAuzSmUa87pAyWxQJrvAZdD0CllF+Zt7Nxa3/6MQqCNWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711432735; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1711442658; c=relaxed/simple;
+	bh=tm+NbvYrGarFYSyqK/ixN59aSdmFMLA9v1r7zEm/Uvg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ctLaCkOH0ymWBO6uiaxpRsUZ3ni9KbeEZ8cZMwrGvyumqiD3nPu9kQ4BVqaWqcIxLLCwoNtzlP53qF8M0XSKyAxsHnbcqMd5Gr1mz7O2GGiw2tPA3di4G1qOGWqey1gTnhgp1AFEFYL2URqL+50hLR5wPXMtaYAKszk+U0pIdJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=x6NAzep7; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=BB1wvc33Q3JBECBfJpBdPJ1xuzOJBgLxHq5GRgoR3Wb3H/2EveYxJJ/D5Ocler9EXJpZ8SjHFRHpG+uVSG+lhpQo6wtVGcfujUF/AggrxKnQAtpStHoDQEYvM6RRQ1tZtuzx5BbkFRl3RmW3O3caGvinGcf5J5NY8pTdCYt/hZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=hrJ58fz4; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="x6NAzep7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=x6NAzep7194oIP5rpf+iXwCxiE
-	cpyEU7XPvGzpr+kL7haJHwsZiFgaq7B1HSAgbhPDOv3PI/w2B2v9Y7DGnTcQ6KRf5o1ku7QTW26BJ
-	BQEcWoAtatveRlri2fPQpRDL6IJalYy8pcyq8tV+48C0p9SrI5ARyiXYzNqt3eWrYxZD3A2RuPb9h
-	bfzyiT19ujAec/aUejrJgiggHgabJnbR+fV+CvswjzmGjnGZoxiW/aO37l7BB4mKH1MqsiZBt3xpK
-	BIb4IrOJU+DNBLIKbGIQGN0+bn6cyG7FnzLQM/ieMqxE0Q/N5Oq0z/CFsoHmnFAHf42PNB1Osnwkk
-	EeMeUxoQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rozpl-00000003Csx-22oY;
-	Tue, 26 Mar 2024 05:58:53 +0000
-Date: Mon, 25 Mar 2024 22:58:53 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs_repair: remove the old bag implementation
-Message-ID: <ZgJkHSDomyJBw94s@infradead.org>
-References: <171142135076.2220204.9878243275175160383.stgit@frogsfrogsfrogs>
- <171142135138.2220204.3087650473605368317.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="hrJ58fz4"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4V3jyb1kR6z9skM;
+	Tue, 26 Mar 2024 09:44:07 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1711442647;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kgtpYMDWWZCofmZ+Xr/eXLBedWKAyq/G32SmuICtiAA=;
+	b=hrJ58fz4Ue65jycC7i4YDw02447kT3KvXWoC6FTQuBcFb+4nZ6Mm0+ODTk4YLfH5jWs/NA
+	ovH5FV/oJAysdNyFyv2ujSm0zy2JqICHjuhl1KzCik5tTzDQHX4lS+Rvyj7HlPOTuDTu2W
+	zWwJgEl3gOBCx6IbQLhfktko0CKJYqIRrpxJoDw7/8jH21wUNMIyhPCaZaw27WKNzQreeb
+	W+vufsc7/cPKw/CCfyZT/+V1vgZr1g8MAVUJL2nB/yBwQSe1bpYs+hW8zyWB0F/eGZM7Tk
+	pnbl2TSyqI7tSWiGf4ODrH+OpLKpZFtnYEJRgBiNxL5MLsByk8JwxRAblu+6ng==
+Date: Tue, 26 Mar 2024 09:44:02 +0100
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	gost.dev@samsung.com, chandan.babu@oracle.com, hare@suse.de, mcgrof@kernel.org, 
+	djwong@kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	david@fromorbit.com, akpm@linux-foundation.org, Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH v3 02/11] fs: Allow fine-grained control of folio sizes
+Message-ID: <hjkct6wz4amxzhr4ndrw7srnjepcr3kmd34kixynznhivxv5og@r7hdu4mqt3j3>
+References: <20240313170253.2324812-1-kernel@pankajraghav.com>
+ <20240313170253.2324812-3-kernel@pankajraghav.com>
+ <ZgHCir0cpYZ4vOa0@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,9 +53,60 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171142135138.2220204.3087650473605368317.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZgHCir0cpYZ4vOa0@casper.infradead.org>
+X-Rspamd-Queue-Id: 4V3jyb1kR6z9skM
 
-Looks good:
+On Mon, Mar 25, 2024 at 06:29:30PM +0000, Matthew Wilcox wrote:
+> On Wed, Mar 13, 2024 at 06:02:44PM +0100, Pankaj Raghav (Samsung) wrote:
+> > +/*
+> > + * mapping_set_folio_min_order() - Set the minimum folio order
+> > + * @mapping: The address_space.
+> > + * @min: Minimum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
+> > + *
+> > + * The filesystem should call this function in its inode constructor to
+> > + * indicate which base size of folio the VFS can use to cache the contents
+> > + * of the file.  This should only be used if the filesystem needs special
+> > + * handling of folio sizes (ie there is something the core cannot know).
+> > + * Do not tune it based on, eg, i_size.
+> > + *
+> > + * Context: This should not be called while the inode is active as it
+> > + * is non-atomic.
+> > + */
+> > +static inline void mapping_set_folio_min_order(struct address_space *mapping,
+> > +					       unsigned int min)
+> > +{
+> > +	if (min > MAX_PAGECACHE_ORDER)
+> > +		min = MAX_PAGECACHE_ORDER;
+> > +
+> > +	mapping->flags = (mapping->flags & ~AS_FOLIO_ORDER_MASK) |
+> > +			 (min << AS_FOLIO_ORDER_MIN) |
+> > +			 (MAX_PAGECACHE_ORDER << AS_FOLIO_ORDER_MAX);
+> > +}
+> 
+> I was surprised when I read this, which indicates it might be surprising
+> for others too.  I think it at least needs a comment to say that the
+> maximum will be set to the MAX_PAGECACHE_ORDER, because I was expecting
+> it to set max == min.  I guess that isn't what XFS wants, but someone
+> doing this to, eg, ext4 is going to have an unpleasant surprise when
+> they call into block_read_full_folio() and overrun 'arr'.
+> 
+> I'm still not entirely convinced this wouldn't be better to do as
+> mapping_set_folio_order_range() and have
+> 
+> static inline void mapping_set_folio_min_order(struct address_space *mapping,
+> 		unsigned int min)
+> {
+> 	mapping_set_folio_range(mapping, min, MAX_PAGECACHE_ORDER);
+> }
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I agree. Having a helper like this will make it more explicit. The
+limits checking can also be done in this helper itself.
+
+Also it makes mapping_set_large_folio() more clear:
+
+static inline void mapping_set_large_folios(struct address_space *mapping)
+{
+      mapping_set_folio_range(mapping, 0, MAX_PAGECACHE_ORDER);
+}
+
+instead of just calling mapping_set_folio_min_order(). Thanks.
