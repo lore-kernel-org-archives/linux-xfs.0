@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43B35128816
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:24:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4FEA12AAD1
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:25:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423486; cv=none; b=fzjALU5NEYlHU0aPpvNp2/qOs79Vp2qH1TrYCtvEJ++/lg9U05BbO/10JplY9IjjoIf2tHYjVoU3AkQc4qOaFBVahcQDpZSJPHJoaKmV2U+2HZQtF2W9wp2swR2lNTcW7yo57MdxeQ4PyXY6SE5fmIkAT0q0gpxVlp5cEhvYai0=
+	t=1711423501; cv=none; b=mGsIIu1BQ+fI3dxLUMkyTmbAN0dSK2rzNUk+UQhfQknWDIXUYso1zo+/h9dOhCOa+BZ5C5eLHV2nLEfJe9Pbygl6YZ7ZEtDAGzBivjqJ8LZMuN4CQNiTHcTB1X7/jPYnJlfVobTgd+xaD7U1fYNdHQ/fMN0fGbzMdsQ3nvfieRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423486; c=relaxed/simple;
-	bh=HeJcIP5cOjekUyA18zf3gGnmnbz4i6oXdjBX4o1e1I8=;
+	s=arc-20240116; t=1711423501; c=relaxed/simple;
+	bh=jFkmkrirSyYwTy7jqirzk2IV7qrQH0wr5Wbl9ZzOQVA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bnWFBMdN6WS8DWSuGHcbhtx6cuh8Fd/lzmQi7oTpPUvVxEym4bg3wUV2PbKxj75wsvLrRv/Mc0zyCGWIZNDu5O53KFGP/pi9qOqc90xuTnoRQgRYkRb7fwhtbvY76cRJ+9qG8iub1n34GJy0cs5Qr3MalI5oHbhw82HHipMHBt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H1oa9Pgv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=H666i7zJH/tluQjZWjrjjVdPm2KiROIFtl/qhuTNFk+LspQQEThemwSQ1jblK8Ux4VLWVecr2pxbhpyTo7NB9mL6tvTWRfXJmCDsQwE3kg1qZG4NK3eF5lcwrmWjmFnAFfph8jzkAHTn9Eq6vJsVKdaOSEWQsGnv0pbIRrahgxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tB+PJQOW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H1oa9Pgv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C93FCC433F1;
-	Tue, 26 Mar 2024 03:24:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tB+PJQOW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7608DC433F1;
+	Tue, 26 Mar 2024 03:25:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423485;
-	bh=HeJcIP5cOjekUyA18zf3gGnmnbz4i6oXdjBX4o1e1I8=;
+	s=k20201202; t=1711423501;
+	bh=jFkmkrirSyYwTy7jqirzk2IV7qrQH0wr5Wbl9ZzOQVA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=H1oa9PgvuknWwLw2Wx4hAaa3Sm9lXiqJB006/xqjeFjvbzHgVU6SXZEVYfxDGJocB
-	 TFlP8prnSdWQttDosWEfZ4zlqsES+ybUohtXSozyhrJ30sXXngRshavR+th2/W6p9M
-	 SdSogGHz2n35jLFXeAzqN0VviLgoersTPzNnmfu17Z9h4c23HOGhaCWgTvx/ytSRnK
-	 79rOkklREG1ddwiTA24jdxIDiFQ+b/GT77DlNSheeDl1nRQ+5q+nMCf+WRCF+1TDkq
-	 bo40tkS6GEBfnkhjwFuNbkHG0suDejoZYaiBSZ2nFWLCMtc2PFvTSBjJ94i1hgm/O6
-	 srDGeGqG9Wftg==
-Date: Mon, 25 Mar 2024 20:24:45 -0700
-Subject: [PATCH 3/3] xfs_scrub: scan whole-fs metadata files in parallel
+	b=tB+PJQOWc+Ub/wsDyMtL669x3Fhcz4l7CSqmvnnndMVdDBRVxWZ9rsFUeV77ysd+W
+	 9GN5zfiW3GsfL/anILWKYPwu0tCxsjJWe7PZ4V9d3C59SO5AAPCDq0mQsukjZFbdum
+	 fkHAbuyOFq216d2TRkKT8j8kDJqI2YINdcEMAYvHkJNRoJTdRWKEkLONP65JkH7TIP
+	 d2ZMAiz/XxBRDqfJCMY3DBY76nApG4x8wnNS5LhtQiosKOw4cz/NrfObMh8bHWLO+E
+	 QzclXH3t/MTOPhwdQpY+jKAzY5BZS/y7oYWkydMKpKi4CXXm1CX3hkO4+5xrV3w5K7
+	 tpsosYUhMFS2A==
+Date: Mon, 25 Mar 2024 20:25:01 -0700
+Subject: [PATCH 1/3] xfs_repair: push inode buf and dinode pointers all the
+ way to inode fork processing
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171142129700.2214539.13951974519113010382.stgit@frogsfrogsfrogs>
-In-Reply-To: <171142129653.2214539.10745296562375978455.stgit@frogsfrogsfrogs>
-References: <171142129653.2214539.10745296562375978455.stgit@frogsfrogsfrogs>
+Message-ID: <171142130014.2214666.762034297111700542.stgit@frogsfrogsfrogs>
+In-Reply-To: <171142129996.2214666.4453203940040588605.stgit@frogsfrogsfrogs>
+References: <171142129996.2214666.4453203940040588605.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,284 +48,266 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The realtime bitmap and the three quota files are completely independent
-of each other, which means that we ought to be able to scan them in
-parallel.  Rework the phase2 code so that we can do this.  Note,
-however, that the realtime summary file summarizes the contents of the
-realtime bitmap, so we must coordinate the workqueue threads.
+Currently, the process_dinode* family of functions assume that they have
+the buffer backing the inodes locked, and therefore the dinode pointer
+won't ever change.  However, the bmbt rebuilding code in the next patch
+will violate that assumption, so we must pass pointers to the inobp and
+the dinode pointer (that is to say, double pointers) all the way through
+to process_inode_{data,attr}_fork so that we can regrab the buffer after
+the rebuilding step finishes.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- scrub/phase2.c |  135 +++++++++++++++++++++++++++++++++++++++++++-------------
- scrub/scrub.c  |    7 ++-
- scrub/scrub.h  |    3 +
- 3 files changed, 110 insertions(+), 35 deletions(-)
+ repair/dino_chunks.c |    5 ++-
+ repair/dinode.c      |   88 ++++++++++++++++++++++++++++----------------------
+ repair/dinode.h      |    7 ++--
+ 3 files changed, 57 insertions(+), 43 deletions(-)
 
 
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-index 6b88384171f8..80c77b2876ff 100644
---- a/scrub/phase2.c
-+++ b/scrub/phase2.c
-@@ -10,6 +10,8 @@
- #include "list.h"
- #include "libfrog/paths.h"
- #include "libfrog/workqueue.h"
-+#include "libfrog/fsgeom.h"
-+#include "libfrog/scrub.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "scrub.h"
-@@ -17,6 +19,18 @@
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 171756818a6a..195361334519 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -851,10 +851,11 @@ process_inode_chunk(
+ 		ino_dirty = 0;
+ 		parent = 0;
  
- /* Phase 2: Check internal metadata. */
+-		status = process_dinode(mp, dino, agno, agino,
++		status = process_dinode(mp, &dino, agno, agino,
+ 				is_inode_free(ino_rec, irec_offset),
+ 				&ino_dirty, &is_used,ino_discovery, check_dups,
+-				extra_attr_check, &isa_dir, &parent);
++				extra_attr_check, &isa_dir, &parent,
++				&bplist[bp_index]);
  
-+struct scan_ctl {
-+	/*
-+	 * Control mechanism to signal that the rt bitmap file scan is done and
-+	 * wake up any waiters.
-+	 */
-+	pthread_cond_t		rbm_wait;
-+	pthread_mutex_t		rbm_waitlock;
-+	bool			rbm_done;
-+
-+	bool			aborted;
-+};
-+
- /* Scrub each AG's metadata btrees. */
- static void
- scan_ag_metadata(
-@@ -25,7 +39,7 @@ scan_ag_metadata(
- 	void				*arg)
+ 		ASSERT(is_used != 3);
+ 		if (ino_dirty) {
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 164f51d4c4fc..a18af3ff7772 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -1893,17 +1893,19 @@ _("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblock
+  */
+ static int
+ process_inode_data_fork(
+-	xfs_mount_t		*mp,
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agino_t		ino,
+-	struct xfs_dinode	*dino,
++	struct xfs_dinode	**dinop,
+ 	int			type,
+ 	int			*dirty,
+ 	xfs_rfsblock_t		*totblocks,
+ 	xfs_extnum_t		*nextents,
+ 	blkmap_t		**dblkmap,
+-	int			check_dups)
++	int			check_dups,
++	struct xfs_buf		**ino_bpp)
  {
- 	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
--	bool				*aborted = arg;
-+	struct scan_ctl			*sctl = arg;
- 	struct action_list		alist;
- 	struct action_list		immediate_alist;
- 	unsigned long long		broken_primaries;
-@@ -33,7 +47,7 @@ scan_ag_metadata(
- 	char				descr[DESCR_BUFSZ];
- 	int				ret;
- 
--	if (*aborted)
-+	if (sctl->aborted)
- 		return;
- 
- 	action_list_init(&alist);
-@@ -89,32 +103,40 @@ _("Filesystem might not be repairable."));
- 	action_list_defer(ctx, agno, &alist);
- 	return;
- err:
--	*aborted = true;
-+	sctl->aborted = true;
- }
- 
--/* Scrub whole-FS metadata btrees. */
-+/* Scan whole-fs metadata. */
- static void
- scan_fs_metadata(
--	struct workqueue		*wq,
--	xfs_agnumber_t			agno,
--	void				*arg)
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		type,
-+	void			*arg)
++	struct xfs_dinode	*dino = *dinop;
+ 	xfs_ino_t		lino = XFS_AGINO_TO_INO(mp, agno, ino);
+ 	int			err = 0;
+ 	xfs_extnum_t		nex, max_nex;
+@@ -2005,20 +2007,22 @@ process_inode_data_fork(
+  */
+ static int
+ process_inode_attr_fork(
+-	xfs_mount_t		*mp,
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agino_t		ino,
+-	struct xfs_dinode	*dino,
++	struct xfs_dinode	**dinop,
+ 	int			type,
+ 	int			*dirty,
+ 	xfs_rfsblock_t		*atotblocks,
+ 	xfs_extnum_t		*anextents,
+ 	int			check_dups,
+ 	int			extra_attr_check,
+-	int			*retval)
++	int			*retval,
++	struct xfs_buf		**ino_bpp)
  {
--	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
--	bool				*aborted = arg;
--	struct action_list		alist;
--	int				ret;
-+	struct action_list	alist;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	struct scan_ctl		*sctl = arg;
-+	int			ret;
+ 	xfs_ino_t		lino = XFS_AGINO_TO_INO(mp, agno, ino);
+-	blkmap_t		*ablkmap = NULL;
++	struct xfs_dinode	*dino = *dinop;
++	struct blkmap		*ablkmap = NULL;
+ 	int			repair = 0;
+ 	int			err;
  
--	if (*aborted)
--		return;
-+	if (sctl->aborted)
-+		goto out;
+@@ -2077,7 +2081,7 @@ process_inode_attr_fork(
+ 		 * XXX - put the inode onto the "move it" list and
+ 		 *	log the the attribute scrubbing
+ 		 */
+-		do_warn(_("bad attribute fork in inode %" PRIu64), lino);
++		do_warn(_("bad attribute fork in inode %" PRIu64 "\n"), lino);
  
- 	action_list_init(&alist);
--	ret = scrub_fs_metadata(ctx, &alist);
-+	ret = scrub_fs_metadata(ctx, type, &alist);
- 	if (ret) {
--		*aborted = true;
--		return;
-+		sctl->aborted = true;
-+		goto out;
- 	}
- 
--	action_list_defer(ctx, agno, &alist);
-+	action_list_defer(ctx, 0, &alist);
-+
-+out:
-+	if (type == XFS_SCRUB_TYPE_RTBITMAP) {
-+		pthread_mutex_lock(&sctl->rbm_waitlock);
-+		sctl->rbm_done = true;
-+		pthread_cond_broadcast(&sctl->rbm_wait);
-+		pthread_mutex_unlock(&sctl->rbm_waitlock);
-+	}
- }
- 
- /* Scan all filesystem metadata. */
-@@ -122,17 +144,25 @@ int
- phase2_func(
- 	struct scrub_ctx	*ctx)
+ 		if (!no_modify)  {
+ 			do_warn(_(", clearing attr fork\n"));
+@@ -2274,21 +2278,22 @@ _("Bad extent size hint %u on inode %" PRIu64 ", "),
+  * for detailed, info, look at process_dinode() comments.
+  */
+ static int
+-process_dinode_int(xfs_mount_t *mp,
+-		struct xfs_dinode *dino,
+-		xfs_agnumber_t agno,
+-		xfs_agino_t ino,
+-		int was_free,		/* 1 if inode is currently free */
+-		int *dirty,		/* out == > 0 if inode is now dirty */
+-		int *used,		/* out == 1 if inode is in use */
+-		int verify_mode,	/* 1 == verify but don't modify inode */
+-		int uncertain,		/* 1 == inode is uncertain */
+-		int ino_discovery,	/* 1 == check dirs for unknown inodes */
+-		int check_dups,		/* 1 == check if inode claims
+-					 * duplicate blocks		*/
+-		int extra_attr_check, /* 1 == do attribute format and value checks */
+-		int *isa_dir,		/* out == 1 if inode is a directory */
+-		xfs_ino_t *parent)	/* out -- parent if ino is a dir */
++process_dinode_int(
++	struct xfs_mount	*mp,
++	struct xfs_dinode	**dinop,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		ino,
++	int			was_free,	/* 1 if inode is currently free */
++	int			*dirty,		/* out == > 0 if inode is now dirty */
++	int			*used,		/* out == 1 if inode is in use */
++	int			verify_mode,	/* 1 == verify but don't modify inode */
++	int			uncertain,	/* 1 == inode is uncertain */
++	int			ino_discovery,	/* 1 == check dirs for unknown inodes */
++	int			check_dups,	/* 1 == check if inode claims duplicate blocks */
++	int			extra_attr_check, /* 1 == do attribute format and value checks */
++	int			*isa_dir,	/* out == 1 if inode is a directory */
++	xfs_ino_t		*parent,	/* out -- parent if ino is a dir */
++	struct xfs_buf		**ino_bpp)
  {
--	struct action_list	alist;
- 	struct workqueue	wq;
-+	struct scan_ctl		sctl = {
-+		.aborted	= false,
-+		.rbm_done	= false,
-+	};
-+	struct action_list	alist;
-+	const struct xfrog_scrub_descr *sc = xfrog_scrubbers;
- 	xfs_agnumber_t		agno;
--	bool			aborted = false;
-+	unsigned int		type;
- 	int			ret, ret2;
+ 	xfs_rfsblock_t		totblocks = 0;
+ 	xfs_rfsblock_t		atotblocks = 0;
+@@ -2301,6 +2306,7 @@ process_dinode_int(xfs_mount_t *mp,
+ 	const int		is_free = 0;
+ 	const int		is_used = 1;
+ 	blkmap_t		*dblkmap = NULL;
++	struct xfs_dinode	*dino = *dinop;
+ 	xfs_agino_t		unlinked_ino;
+ 	struct xfs_perag	*pag;
  
-+	pthread_mutex_init(&sctl.rbm_waitlock, NULL);
-+	pthread_cond_init(&sctl.rbm_wait, NULL);
-+
- 	ret = -workqueue_create(&wq, (struct xfs_mount *)ctx,
- 			scrub_nproc_workqueue(ctx));
- 	if (ret) {
- 		str_liberror(ctx, ret, _("creating scrub workqueue"));
--		return ret;
-+		goto out_wait;
- 	}
+@@ -2324,6 +2330,7 @@ process_dinode_int(xfs_mount_t *mp,
+ 	 * If uncertain is set, verify_mode MUST be set.
+ 	 */
+ 	ASSERT(uncertain == 0 || verify_mode != 0);
++	ASSERT(ino_bpp != NULL || verify_mode != 0);
  
  	/*
-@@ -143,29 +173,67 @@ phase2_func(
- 	action_list_init(&alist);
- 	ret = scrub_primary_super(ctx, &alist);
- 	if (ret)
--		goto out;
-+		goto out_wq;
- 	ret = action_list_process_or_defer(ctx, 0, &alist);
- 	if (ret)
--		goto out;
-+		goto out_wq;
+ 	 * This is the only valid point to check the CRC; after this we may have
+@@ -2863,18 +2870,21 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
+ 	/*
+ 	 * check data fork -- if it's bad, clear the inode
+ 	 */
+-	if (process_inode_data_fork(mp, agno, ino, dino, type, dirty,
+-			&totblocks, &nextents, &dblkmap, check_dups) != 0)
++	if (process_inode_data_fork(mp, agno, ino, dinop, type, dirty,
++			&totblocks, &nextents, &dblkmap, check_dups,
++			ino_bpp) != 0)
+ 		goto bad_out;
++	dino = *dinop;
  
--	for (agno = 0; !aborted && agno < ctx->mnt.fsgeom.agcount; agno++) {
--		ret = -workqueue_add(&wq, scan_ag_metadata, agno, &aborted);
-+	/* Scan each AG in parallel. */
-+	for (agno = 0;
-+	     agno < ctx->mnt.fsgeom.agcount && !sctl.aborted;
-+	     agno++) {
-+		ret = -workqueue_add(&wq, scan_ag_metadata, agno, &sctl);
- 		if (ret) {
- 			str_liberror(ctx, ret, _("queueing per-AG scrub work"));
--			goto out;
-+			goto out_wq;
- 		}
- 	}
+ 	/*
+ 	 * check attribute fork if necessary.  attributes are
+ 	 * always stored in the regular filesystem.
+ 	 */
+-	if (process_inode_attr_fork(mp, agno, ino, dino, type, dirty,
++	if (process_inode_attr_fork(mp, agno, ino, dinop, type, dirty,
+ 			&atotblocks, &anextents, check_dups, extra_attr_check,
+-			&retval))
++			&retval, ino_bpp))
+ 		goto bad_out;
++	dino = *dinop;
  
--	if (aborted)
--		goto out;
-+	if (sctl.aborted)
-+		goto out_wq;
+ 	/*
+ 	 * enforce totblocks is 0 for misc types
+@@ -2992,8 +3002,8 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
  
--	ret = -workqueue_add(&wq, scan_fs_metadata, 0, &aborted);
-+	/*
-+	 * Scan all of the whole-fs metadata objects: realtime bitmap, realtime
-+	 * summary, and the three quota files.  Each of the metadata files can
-+	 * be scanned in parallel except for the realtime summary file, which
-+	 * must run after the realtime bitmap has been scanned.
-+	 */
-+	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
-+		if (sc->group != XFROG_SCRUB_GROUP_FS)
-+			continue;
-+		if (type == XFS_SCRUB_TYPE_RTSUM)
-+			continue;
-+
-+		ret = -workqueue_add(&wq, scan_fs_metadata, type, &sctl);
-+		if (ret) {
-+			str_liberror(ctx, ret,
-+	_("queueing whole-fs scrub work"));
-+			goto out_wq;
-+		}
-+	}
-+
-+	if (sctl.aborted)
-+		goto out_wq;
-+
-+	/*
-+	 * Wait for the rt bitmap to finish scanning, then scan the rt summary
-+	 * since the summary can be regenerated completely from the bitmap.
-+	 */
-+	pthread_mutex_lock(&sctl.rbm_waitlock);
-+	while (!sctl.rbm_done)
-+		pthread_cond_wait(&sctl.rbm_wait, &sctl.rbm_waitlock);
-+	pthread_mutex_unlock(&sctl.rbm_waitlock);
-+
-+	if (sctl.aborted)
-+		goto out_wq;
-+
-+	ret = -workqueue_add(&wq, scan_fs_metadata, XFS_SCRUB_TYPE_RTSUM, &sctl);
- 	if (ret) {
--		str_liberror(ctx, ret, _("queueing per-FS scrub work"));
--		goto out;
-+		str_liberror(ctx, ret, _("queueing rtsummary scrub work"));
-+		goto out_wq;
- 	}
- 
--out:
-+out_wq:
- 	ret2 = -workqueue_terminate(&wq);
- 	if (ret2) {
- 		str_liberror(ctx, ret2, _("finishing scrub work"));
-@@ -173,8 +241,11 @@ phase2_func(
- 			ret = ret2;
- 	}
- 	workqueue_destroy(&wq);
-+out_wait:
-+	pthread_cond_destroy(&sctl.rbm_wait);
-+	pthread_mutex_destroy(&sctl.rbm_waitlock);
- 
--	if (!ret && aborted)
-+	if (!ret && sctl.aborted)
- 		ret = ECANCELED;
- 	return ret;
- }
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index c7ee074fd36c..1c53260cc26c 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -400,13 +400,16 @@ scrub_ag_metadata(
- 	return scrub_group(ctx, XFROG_SCRUB_GROUP_PERAG, agno, alist);
- }
- 
--/* Scrub whole-FS metadata btrees. */
-+/* Scrub whole-filesystem metadata. */
  int
- scrub_fs_metadata(
- 	struct scrub_ctx		*ctx,
-+	unsigned int			type,
- 	struct action_list		*alist)
+ process_dinode(
+-	xfs_mount_t		*mp,
+-	struct xfs_dinode	*dino,
++	struct xfs_mount	*mp,
++	struct xfs_dinode	**dinop,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agino_t		ino,
+ 	int			was_free,
+@@ -3003,7 +3013,8 @@ process_dinode(
+ 	int			check_dups,
+ 	int			extra_attr_check,
+ 	int			*isa_dir,
+-	xfs_ino_t		*parent)
++	xfs_ino_t		*parent,
++	struct xfs_buf		**ino_bpp)
  {
--	return scrub_group(ctx, XFROG_SCRUB_GROUP_FS, 0, alist);
-+	ASSERT(xfrog_scrubbers[type].group == XFROG_SCRUB_GROUP_FS);
-+
-+	return scrub_meta_type(ctx, type, 0, alist);
+ 	const int		verify_mode = 0;
+ 	const int		uncertain = 0;
+@@ -3011,9 +3022,10 @@ process_dinode(
+ #ifdef XR_INODE_TRACE
+ 	fprintf(stderr, _("processing inode %d/%d\n"), agno, ino);
+ #endif
+-	return process_dinode_int(mp, dino, agno, ino, was_free, dirty, used,
+-				verify_mode, uncertain, ino_discovery,
+-				check_dups, extra_attr_check, isa_dir, parent);
++	return process_dinode_int(mp, dinop, agno, ino, was_free, dirty, used,
++			verify_mode, uncertain, ino_discovery,
++			check_dups, extra_attr_check, isa_dir, parent,
++			ino_bpp);
  }
  
- /* Scrub all FS summary metadata. */
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 35d609f283a4..8a999da6a965 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -22,7 +22,8 @@ int scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
- 		struct action_list *alist);
- int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
- 		struct action_list *alist);
--int scrub_fs_metadata(struct scrub_ctx *ctx, struct action_list *alist);
-+int scrub_fs_metadata(struct scrub_ctx *ctx, unsigned int scrub_type,
-+		struct action_list *alist);
- int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
- int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
+ /*
+@@ -3038,9 +3050,9 @@ verify_dinode(
+ 	const int		ino_discovery = 0;
+ 	const int		uncertain = 0;
  
+-	return process_dinode_int(mp, dino, agno, ino, 0, &dirty, &used,
+-				verify_mode, uncertain, ino_discovery,
+-				check_dups, 0, &isa_dir, &parent);
++	return process_dinode_int(mp, &dino, agno, ino, 0, &dirty, &used,
++			verify_mode, uncertain, ino_discovery,
++			check_dups, 0, &isa_dir, &parent, NULL);
+ }
+ 
+ /*
+@@ -3064,7 +3076,7 @@ verify_uncertain_dinode(
+ 	const int		ino_discovery = 0;
+ 	const int		uncertain = 1;
+ 
+-	return process_dinode_int(mp, dino, agno, ino, 0, &dirty, &used,
++	return process_dinode_int(mp, &dino, agno, ino, 0, &dirty, &used,
+ 				verify_mode, uncertain, ino_discovery,
+-				check_dups, 0, &isa_dir, &parent);
++				check_dups, 0, &isa_dir, &parent, NULL);
+ }
+diff --git a/repair/dinode.h b/repair/dinode.h
+index 333d96d26a2f..92df83da6210 100644
+--- a/repair/dinode.h
++++ b/repair/dinode.h
+@@ -43,8 +43,8 @@ void
+ update_rootino(xfs_mount_t *mp);
+ 
+ int
+-process_dinode(xfs_mount_t *mp,
+-		struct xfs_dinode *dino,
++process_dinode(struct xfs_mount *mp,
++		struct xfs_dinode **dinop,
+ 		xfs_agnumber_t agno,
+ 		xfs_agino_t ino,
+ 		int was_free,
+@@ -54,7 +54,8 @@ process_dinode(xfs_mount_t *mp,
+ 		int check_dups,
+ 		int extra_attr_check,
+ 		int *isa_dir,
+-		xfs_ino_t *parent);
++		xfs_ino_t *parent,
++		struct xfs_buf **ino_bpp);
+ 
+ int
+ verify_dinode(xfs_mount_t *mp,
 
