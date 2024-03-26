@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4FEA12AAD1
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:25:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9A811292D6
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:25:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423501; cv=none; b=mGsIIu1BQ+fI3dxLUMkyTmbAN0dSK2rzNUk+UQhfQknWDIXUYso1zo+/h9dOhCOa+BZ5C5eLHV2nLEfJe9Pbygl6YZ7ZEtDAGzBivjqJ8LZMuN4CQNiTHcTB1X7/jPYnJlfVobTgd+xaD7U1fYNdHQ/fMN0fGbzMdsQ3nvfieRQ=
+	t=1711423517; cv=none; b=OVd5wly5CYX+UoTvefyrl/G0AX7gJmpHdo8dxH2LPaRAGWmX/syA1KPieGvXvNS+jO7035Q4ERLTJLkqsxuULPzSDWmZlHrtz1l+IRKedskl2AjFcy6LR8zGozaWkuIQpbBV2qspt9cYUnh9XBkLbVDDLTl20Y3NWSzCk9wgFYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423501; c=relaxed/simple;
-	bh=jFkmkrirSyYwTy7jqirzk2IV7qrQH0wr5Wbl9ZzOQVA=;
+	s=arc-20240116; t=1711423517; c=relaxed/simple;
+	bh=3fXV1AQu8jGokg0pX3AbvIeZNZklHGggc84UPoDN8fo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=H666i7zJH/tluQjZWjrjjVdPm2KiROIFtl/qhuTNFk+LspQQEThemwSQ1jblK8Ux4VLWVecr2pxbhpyTo7NB9mL6tvTWRfXJmCDsQwE3kg1qZG4NK3eF5lcwrmWjmFnAFfph8jzkAHTn9Eq6vJsVKdaOSEWQsGnv0pbIRrahgxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tB+PJQOW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=unpzGZtSs+QlytMaxMWCvfci91YT/2bviZoioLRYSeImosXC0QSrOlvRNywIX2YWht9lQj2Q4incxOLqFBR+xBOnrKmQhXhwUASfDnDdNA8sGAr66lNWcJ+Sa0qGMYUXyG+b4/pAVWZ+G9/j/NS07+ojCYo87btx8G7CJP+aqug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rr1upDXI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tB+PJQOW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7608DC433F1;
-	Tue, 26 Mar 2024 03:25:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rr1upDXI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28FA0C433F1;
+	Tue, 26 Mar 2024 03:25:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423501;
-	bh=jFkmkrirSyYwTy7jqirzk2IV7qrQH0wr5Wbl9ZzOQVA=;
+	s=k20201202; t=1711423517;
+	bh=3fXV1AQu8jGokg0pX3AbvIeZNZklHGggc84UPoDN8fo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tB+PJQOWc+Ub/wsDyMtL669x3Fhcz4l7CSqmvnnndMVdDBRVxWZ9rsFUeV77ysd+W
-	 9GN5zfiW3GsfL/anILWKYPwu0tCxsjJWe7PZ4V9d3C59SO5AAPCDq0mQsukjZFbdum
-	 fkHAbuyOFq216d2TRkKT8j8kDJqI2YINdcEMAYvHkJNRoJTdRWKEkLONP65JkH7TIP
-	 d2ZMAiz/XxBRDqfJCMY3DBY76nApG4x8wnNS5LhtQiosKOw4cz/NrfObMh8bHWLO+E
-	 QzclXH3t/MTOPhwdQpY+jKAzY5BZS/y7oYWkydMKpKi4CXXm1CX3hkO4+5xrV3w5K7
-	 tpsosYUhMFS2A==
-Date: Mon, 25 Mar 2024 20:25:01 -0700
-Subject: [PATCH 1/3] xfs_repair: push inode buf and dinode pointers all the
- way to inode fork processing
+	b=rr1upDXIr6N+jCIR00FCjydxTPI2HsB3RuHn3f9WshnN9tq2wUQzkil8tJ0QL3DP+
+	 PAWxj9V5JbFcxxth308pp7TdjvRLH0H93qDIlWqzFFmjQBpRkN74tfJqS8ME94y0Mw
+	 x+CQshaPLl+UJbevCX9CXm9l6SVOs42FvURYTD29Tj5n9s0GJ2VfZY66PcbQ9cZG+N
+	 tWv+1N/9v95tLsMM9UAudeD1AejeR64f+CZOr7DSBCAzily4HSf3XRPnlaRVmt1GgS
+	 fVawLtNsyeDgxuv3DwGzHzr3SCZs1I9iop9419lVkDBlt+FjJ5iSgxcQeUmyekYuey
+	 Iexf/ixspV5qw==
+Date: Mon, 25 Mar 2024 20:25:16 -0700
+Subject: [PATCH 2/3] xfs_repair: sync bulkload data structures with kernel
+ newbt code
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171142130014.2214666.762034297111700542.stgit@frogsfrogsfrogs>
+Message-ID: <171142130029.2214666.6850964584783102575.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142129996.2214666.4453203940040588605.stgit@frogsfrogsfrogs>
 References: <171142129996.2214666.4453203940040588605.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,266 +48,275 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, the process_dinode* family of functions assume that they have
-the buffer backing the inodes locked, and therefore the dinode pointer
-won't ever change.  However, the bmbt rebuilding code in the next patch
-will violate that assumption, so we must pass pointers to the inobp and
-the dinode pointer (that is to say, double pointers) all the way through
-to process_inode_{data,attr}_fork so that we can regrab the buffer after
-the rebuilding step finishes.
+A lot of the code in repair/bulkload.c was backwardsported from new code
+that eventually turned into newbt.c in online repair.  Since the offline
+repair version got merged upstream years before the online repair code,
+we now need to bring the offline version up to date with the kernel
+again.
+
+Right now, the bulkload.c code is just a fancy way to track space
+extents that are fed to it by its callers.  The only caller, of course,
+is phase 5, which builds new btrees in AG space that wasn't claimed by
+any other data structure.  Hence there's no need to allocate
+reservations out of the bnobt or put them back there.
+
+However, the next patch adds the ability to generate new file-based
+btrees.  For that we need to reorganize the code to allocate and free
+space for new file-based btrees.  Let's just crib from the kernel
+version.  Make each bulkload space reservation hold a reference to an AG
+and track the space reservation in terms of per-AG extents instead of
+fsblock extents.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- repair/dino_chunks.c |    5 ++-
- repair/dinode.c      |   88 ++++++++++++++++++++++++++++----------------------
- repair/dinode.h      |    7 ++--
- 3 files changed, 57 insertions(+), 43 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/agbtree.c         |   22 +++++++++++-----
+ repair/bulkload.c        |   63 +++++++++++++++++++++++++++++++++-------------
+ repair/bulkload.h        |   12 +++++----
+ repair/phase5.c          |    2 +
+ 5 files changed, 69 insertions(+), 31 deletions(-)
 
 
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 171756818a6a..195361334519 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -851,10 +851,11 @@ process_inode_chunk(
- 		ino_dirty = 0;
- 		parent = 0;
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 36afc5d0234d..28960317ab6b 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -149,6 +149,7 @@
+ #define xfs_log_sb			libxfs_log_sb
+ #define xfs_mode_to_ftype		libxfs_mode_to_ftype
+ #define xfs_perag_get			libxfs_perag_get
++#define xfs_perag_hold			libxfs_perag_hold
+ #define xfs_perag_put			libxfs_perag_put
+ #define xfs_prealloc_blocks		libxfs_prealloc_blocks
  
--		status = process_dinode(mp, dino, agno, agino,
-+		status = process_dinode(mp, &dino, agno, agino,
- 				is_inode_free(ino_rec, irec_offset),
- 				&ino_dirty, &is_used,ino_discovery, check_dups,
--				extra_attr_check, &isa_dir, &parent);
-+				extra_attr_check, &isa_dir, &parent,
-+				&bplist[bp_index]);
- 
- 		ASSERT(is_used != 3);
- 		if (ino_dirty) {
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 164f51d4c4fc..a18af3ff7772 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1893,17 +1893,19 @@ _("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblock
-  */
- static int
- process_inode_data_fork(
--	xfs_mount_t		*mp,
-+	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
- 	xfs_agino_t		ino,
--	struct xfs_dinode	*dino,
-+	struct xfs_dinode	**dinop,
- 	int			type,
- 	int			*dirty,
- 	xfs_rfsblock_t		*totblocks,
- 	xfs_extnum_t		*nextents,
- 	blkmap_t		**dblkmap,
--	int			check_dups)
-+	int			check_dups,
-+	struct xfs_buf		**ino_bpp)
+diff --git a/repair/agbtree.c b/repair/agbtree.c
+index e014e216e0a5..c6f0512fe7de 100644
+--- a/repair/agbtree.c
++++ b/repair/agbtree.c
+@@ -77,13 +77,17 @@ reserve_agblocks(
+ 	uint32_t		nr_blocks)
  {
-+	struct xfs_dinode	*dino = *dinop;
- 	xfs_ino_t		lino = XFS_AGINO_TO_INO(mp, agno, ino);
- 	int			err = 0;
- 	xfs_extnum_t		nex, max_nex;
-@@ -2005,20 +2007,22 @@ process_inode_data_fork(
-  */
- static int
- process_inode_attr_fork(
--	xfs_mount_t		*mp,
-+	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
- 	xfs_agino_t		ino,
--	struct xfs_dinode	*dino,
-+	struct xfs_dinode	**dinop,
- 	int			type,
- 	int			*dirty,
- 	xfs_rfsblock_t		*atotblocks,
- 	xfs_extnum_t		*anextents,
- 	int			check_dups,
- 	int			extra_attr_check,
--	int			*retval)
-+	int			*retval,
-+	struct xfs_buf		**ino_bpp)
- {
- 	xfs_ino_t		lino = XFS_AGINO_TO_INO(mp, agno, ino);
--	blkmap_t		*ablkmap = NULL;
-+	struct xfs_dinode	*dino = *dinop;
-+	struct blkmap		*ablkmap = NULL;
- 	int			repair = 0;
- 	int			err;
+ 	struct extent_tree_node	*ext_ptr;
++	struct xfs_perag	*pag;
+ 	uint32_t		blocks_allocated = 0;
+ 	uint32_t		len;
+ 	int			error;
  
-@@ -2077,7 +2081,7 @@ process_inode_attr_fork(
- 		 * XXX - put the inode onto the "move it" list and
- 		 *	log the the attribute scrubbing
- 		 */
--		do_warn(_("bad attribute fork in inode %" PRIu64), lino);
-+		do_warn(_("bad attribute fork in inode %" PRIu64 "\n"), lino);
++	pag = libxfs_perag_get(mp, agno);
++	if (!pag)
++		do_error(_("could not open perag structure for agno 0x%x\n"),
++				agno);
++
+ 	while (blocks_allocated < nr_blocks)  {
+-		xfs_fsblock_t	fsbno;
+-
+ 		/*
+ 		 * Grab the smallest extent and use it up, then get the
+ 		 * next smallest.  This mimics the init_*_cursor code.
+@@ -94,8 +98,8 @@ reserve_agblocks(
  
- 		if (!no_modify)  {
- 			do_warn(_(", clearing attr fork\n"));
-@@ -2274,21 +2278,22 @@ _("Bad extent size hint %u on inode %" PRIu64 ", "),
-  * for detailed, info, look at process_dinode() comments.
-  */
- static int
--process_dinode_int(xfs_mount_t *mp,
--		struct xfs_dinode *dino,
--		xfs_agnumber_t agno,
--		xfs_agino_t ino,
--		int was_free,		/* 1 if inode is currently free */
--		int *dirty,		/* out == > 0 if inode is now dirty */
--		int *used,		/* out == 1 if inode is in use */
--		int verify_mode,	/* 1 == verify but don't modify inode */
--		int uncertain,		/* 1 == inode is uncertain */
--		int ino_discovery,	/* 1 == check dirs for unknown inodes */
--		int check_dups,		/* 1 == check if inode claims
--					 * duplicate blocks		*/
--		int extra_attr_check, /* 1 == do attribute format and value checks */
--		int *isa_dir,		/* out == 1 if inode is a directory */
--		xfs_ino_t *parent)	/* out -- parent if ino is a dir */
-+process_dinode_int(
-+	struct xfs_mount	*mp,
-+	struct xfs_dinode	**dinop,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		ino,
-+	int			was_free,	/* 1 if inode is currently free */
-+	int			*dirty,		/* out == > 0 if inode is now dirty */
-+	int			*used,		/* out == 1 if inode is in use */
-+	int			verify_mode,	/* 1 == verify but don't modify inode */
-+	int			uncertain,	/* 1 == inode is uncertain */
-+	int			ino_discovery,	/* 1 == check dirs for unknown inodes */
-+	int			check_dups,	/* 1 == check if inode claims duplicate blocks */
-+	int			extra_attr_check, /* 1 == do attribute format and value checks */
-+	int			*isa_dir,	/* out == 1 if inode is a directory */
-+	xfs_ino_t		*parent,	/* out -- parent if ino is a dir */
-+	struct xfs_buf		**ino_bpp)
- {
- 	xfs_rfsblock_t		totblocks = 0;
- 	xfs_rfsblock_t		atotblocks = 0;
-@@ -2301,6 +2306,7 @@ process_dinode_int(xfs_mount_t *mp,
- 	const int		is_free = 0;
- 	const int		is_used = 1;
- 	blkmap_t		*dblkmap = NULL;
-+	struct xfs_dinode	*dino = *dinop;
- 	xfs_agino_t		unlinked_ino;
- 	struct xfs_perag	*pag;
- 
-@@ -2324,6 +2330,7 @@ process_dinode_int(xfs_mount_t *mp,
- 	 * If uncertain is set, verify_mode MUST be set.
- 	 */
- 	ASSERT(uncertain == 0 || verify_mode != 0);
-+	ASSERT(ino_bpp != NULL || verify_mode != 0);
- 
- 	/*
- 	 * This is the only valid point to check the CRC; after this we may have
-@@ -2863,18 +2870,21 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
- 	/*
- 	 * check data fork -- if it's bad, clear the inode
- 	 */
--	if (process_inode_data_fork(mp, agno, ino, dino, type, dirty,
--			&totblocks, &nextents, &dblkmap, check_dups) != 0)
-+	if (process_inode_data_fork(mp, agno, ino, dinop, type, dirty,
-+			&totblocks, &nextents, &dblkmap, check_dups,
-+			ino_bpp) != 0)
- 		goto bad_out;
-+	dino = *dinop;
- 
- 	/*
- 	 * check attribute fork if necessary.  attributes are
- 	 * always stored in the regular filesystem.
- 	 */
--	if (process_inode_attr_fork(mp, agno, ino, dino, type, dirty,
-+	if (process_inode_attr_fork(mp, agno, ino, dinop, type, dirty,
- 			&atotblocks, &anextents, check_dups, extra_attr_check,
--			&retval))
-+			&retval, ino_bpp))
- 		goto bad_out;
-+	dino = *dinop;
- 
- 	/*
- 	 * enforce totblocks is 0 for misc types
-@@ -2992,8 +3002,8 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
- 
- int
- process_dinode(
--	xfs_mount_t		*mp,
--	struct xfs_dinode	*dino,
-+	struct xfs_mount	*mp,
-+	struct xfs_dinode	**dinop,
- 	xfs_agnumber_t		agno,
- 	xfs_agino_t		ino,
- 	int			was_free,
-@@ -3003,7 +3013,8 @@ process_dinode(
- 	int			check_dups,
- 	int			extra_attr_check,
- 	int			*isa_dir,
--	xfs_ino_t		*parent)
-+	xfs_ino_t		*parent,
-+	struct xfs_buf		**ino_bpp)
- {
- 	const int		verify_mode = 0;
- 	const int		uncertain = 0;
-@@ -3011,9 +3022,10 @@ process_dinode(
- #ifdef XR_INODE_TRACE
- 	fprintf(stderr, _("processing inode %d/%d\n"), agno, ino);
+ 		/* Use up the extent we've got. */
+ 		len = min(ext_ptr->ex_blockcount, nr_blocks - blocks_allocated);
+-		fsbno = XFS_AGB_TO_FSB(mp, agno, ext_ptr->ex_startblock);
+-		error = bulkload_add_blocks(&btr->newbt, fsbno, len);
++		error = bulkload_add_extent(&btr->newbt, pag,
++				ext_ptr->ex_startblock, len);
+ 		if (error)
+ 			do_error(_("could not set up btree reservation: %s\n"),
+ 				strerror(-error));
+@@ -113,6 +117,7 @@ reserve_agblocks(
+ 	fprintf(stderr, "blocks_allocated = %d\n",
+ 		blocks_allocated);
  #endif
--	return process_dinode_int(mp, dino, agno, ino, was_free, dirty, used,
--				verify_mode, uncertain, ino_discovery,
--				check_dups, extra_attr_check, isa_dir, parent);
-+	return process_dinode_int(mp, dinop, agno, ino, was_free, dirty, used,
-+			verify_mode, uncertain, ino_discovery,
-+			check_dups, extra_attr_check, isa_dir, parent,
-+			ino_bpp);
++	libxfs_perag_put(pag);
+ 	return blocks_allocated == nr_blocks;
+ }
+ 
+@@ -155,18 +160,21 @@ finish_rebuild(
+ 	int			error;
+ 
+ 	for_each_bulkload_reservation(&btr->newbt, resv, n) {
++		xfs_fsblock_t	fsbno;
++
+ 		if (resv->used == resv->len)
+ 			continue;
+ 
+-		error = bitmap_set(lost_blocks, resv->fsbno + resv->used,
+-				   resv->len - resv->used);
++		fsbno = XFS_AGB_TO_FSB(mp, resv->pag->pag_agno,
++				resv->agbno + resv->used);
++		error = bitmap_set(lost_blocks, fsbno, resv->len - resv->used);
+ 		if (error)
+ 			do_error(
+ _("Insufficient memory saving lost blocks, err=%d.\n"), error);
+ 		resv->used = resv->len;
+ 	}
+ 
+-	bulkload_destroy(&btr->newbt, 0);
++	bulkload_commit(&btr->newbt);
  }
  
  /*
-@@ -3038,9 +3050,9 @@ verify_dinode(
- 	const int		ino_discovery = 0;
- 	const int		uncertain = 0;
- 
--	return process_dinode_int(mp, dino, agno, ino, 0, &dirty, &used,
--				verify_mode, uncertain, ino_discovery,
--				check_dups, 0, &isa_dir, &parent);
-+	return process_dinode_int(mp, &dino, agno, ino, 0, &dirty, &used,
-+			verify_mode, uncertain, ino_discovery,
-+			check_dups, 0, &isa_dir, &parent, NULL);
+diff --git a/repair/bulkload.c b/repair/bulkload.c
+index 0117f69416cf..18158c397f56 100644
+--- a/repair/bulkload.c
++++ b/repair/bulkload.c
+@@ -23,39 +23,64 @@ bulkload_init_ag(
  }
  
- /*
-@@ -3064,7 +3076,7 @@ verify_uncertain_dinode(
- 	const int		ino_discovery = 0;
- 	const int		uncertain = 1;
+ /* Designate specific blocks to be used to build our new btree. */
+-int
++static int
+ bulkload_add_blocks(
+-	struct bulkload		*bkl,
+-	xfs_fsblock_t		fsbno,
+-	xfs_extlen_t		len)
++	struct bulkload			*bkl,
++	struct xfs_perag		*pag,
++	const struct xfs_alloc_arg	*args)
+ {
+-	struct bulkload_resv	*resv;
++	struct xfs_mount		*mp = bkl->sc->mp;
++	struct bulkload_resv		*resv;
  
--	return process_dinode_int(mp, dino, agno, ino, 0, &dirty, &used,
-+	return process_dinode_int(mp, &dino, agno, ino, 0, &dirty, &used,
- 				verify_mode, uncertain, ino_discovery,
--				check_dups, 0, &isa_dir, &parent);
-+				check_dups, 0, &isa_dir, &parent, NULL);
+-	resv = kmem_alloc(sizeof(struct bulkload_resv), KM_MAYFAIL);
++	resv = kmalloc(sizeof(struct bulkload_resv), GFP_KERNEL);
+ 	if (!resv)
+ 		return ENOMEM;
+ 
+ 	INIT_LIST_HEAD(&resv->list);
+-	resv->fsbno = fsbno;
+-	resv->len = len;
++	resv->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
++	resv->len = args->len;
+ 	resv->used = 0;
++	resv->pag = libxfs_perag_hold(pag);
++
+ 	list_add_tail(&resv->list, &bkl->resv_list);
+-	bkl->nr_reserved += len;
+-
++	bkl->nr_reserved += args->len;
+ 	return 0;
  }
-diff --git a/repair/dinode.h b/repair/dinode.h
-index 333d96d26a2f..92df83da6210 100644
---- a/repair/dinode.h
-+++ b/repair/dinode.h
-@@ -43,8 +43,8 @@ void
- update_rootino(xfs_mount_t *mp);
  
- int
--process_dinode(xfs_mount_t *mp,
--		struct xfs_dinode *dino,
-+process_dinode(struct xfs_mount *mp,
-+		struct xfs_dinode **dinop,
- 		xfs_agnumber_t agno,
- 		xfs_agino_t ino,
- 		int was_free,
-@@ -54,7 +54,8 @@ process_dinode(xfs_mount_t *mp,
- 		int check_dups,
- 		int extra_attr_check,
- 		int *isa_dir,
--		xfs_ino_t *parent);
-+		xfs_ino_t *parent,
-+		struct xfs_buf **ino_bpp);
++/*
++ * Add an extent to the new btree reservation pool.  Callers are required to
++ * reap this reservation manually if the repair is cancelled.  @pag must be a
++ * passive reference.
++ */
++int
++bulkload_add_extent(
++	struct bulkload		*bkl,
++	struct xfs_perag	*pag,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len)
++{
++	struct xfs_mount	*mp = bkl->sc->mp;
++	struct xfs_alloc_arg	args = {
++		.tp		= NULL, /* no autoreap */
++		.oinfo		= bkl->oinfo,
++		.fsbno		= XFS_AGB_TO_FSB(mp, pag->pag_agno, agbno),
++		.len		= len,
++		.resv		= XFS_AG_RESV_NONE,
++	};
++
++	return bulkload_add_blocks(bkl, pag, &args);
++}
++
+ /* Free all the accounting info and disk space we reserved for a new btree. */
+ void
+-bulkload_destroy(
+-	struct bulkload		*bkl,
+-	int			error)
++bulkload_commit(
++	struct bulkload		*bkl)
+ {
+ 	struct bulkload_resv	*resv, *n;
  
- int
- verify_dinode(xfs_mount_t *mp,
+ 	list_for_each_entry_safe(resv, n, &bkl->resv_list, list) {
+ 		list_del(&resv->list);
+-		kmem_free(resv);
++		kfree(resv);
+ 	}
+ }
+ 
+@@ -67,7 +92,8 @@ bulkload_claim_block(
+ 	union xfs_btree_ptr	*ptr)
+ {
+ 	struct bulkload_resv	*resv;
+-	xfs_fsblock_t		fsb;
++	struct xfs_mount	*mp = cur->bc_mp;
++	xfs_agblock_t		agbno;
+ 
+ 	/*
+ 	 * The first item in the list should always have a free block unless
+@@ -84,7 +110,7 @@ bulkload_claim_block(
+ 	 * decreasing order, which hopefully results in leaf blocks ending up
+ 	 * together.
+ 	 */
+-	fsb = resv->fsbno + resv->used;
++	agbno = resv->agbno + resv->used;
+ 	resv->used++;
+ 
+ 	/* If we used all the blocks in this reservation, move it to the end. */
+@@ -92,9 +118,10 @@ bulkload_claim_block(
+ 		list_move_tail(&resv->list, &bkl->resv_list);
+ 
+ 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+-		ptr->l = cpu_to_be64(fsb);
++		ptr->l = cpu_to_be64(XFS_AGB_TO_FSB(mp, resv->pag->pag_agno,
++								agbno));
+ 	else
+-		ptr->s = cpu_to_be32(XFS_FSB_TO_AGBNO(cur->bc_mp, fsb));
++		ptr->s = cpu_to_be32(agbno);
+ 	return 0;
+ }
+ 
+diff --git a/repair/bulkload.h b/repair/bulkload.h
+index a84e99b8c892..f4790e3b3de6 100644
+--- a/repair/bulkload.h
++++ b/repair/bulkload.h
+@@ -17,8 +17,10 @@ struct bulkload_resv {
+ 	/* Link to list of extents that we've reserved. */
+ 	struct list_head	list;
+ 
+-	/* FSB of the block we reserved. */
+-	xfs_fsblock_t		fsbno;
++	struct xfs_perag	*pag;
++
++	/* AG block of the block we reserved. */
++	xfs_agblock_t		agbno;
+ 
+ 	/* Length of the reservation. */
+ 	xfs_extlen_t		len;
+@@ -51,11 +53,11 @@ struct bulkload {
+ 
+ void bulkload_init_ag(struct bulkload *bkl, struct repair_ctx *sc,
+ 		const struct xfs_owner_info *oinfo);
+-int bulkload_add_blocks(struct bulkload *bkl, xfs_fsblock_t fsbno,
+-		xfs_extlen_t len);
+-void bulkload_destroy(struct bulkload *bkl, int error);
+ int bulkload_claim_block(struct xfs_btree_cur *cur, struct bulkload *bkl,
+ 		union xfs_btree_ptr *ptr);
++int bulkload_add_extent(struct bulkload *bkl, struct xfs_perag *pag,
++		xfs_agblock_t agbno, xfs_extlen_t len);
++void bulkload_commit(struct bulkload *bkl);
+ void bulkload_estimate_ag_slack(struct repair_ctx *sc,
+ 		struct xfs_btree_bload *bload, unsigned int free);
+ 
+diff --git a/repair/phase5.c b/repair/phase5.c
+index d6b8168ea776..b0e208f95af5 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -194,7 +194,7 @@ fill_agfl(
+ 	for_each_bulkload_reservation(&btr->newbt, resv, n) {
+ 		xfs_agblock_t	bno;
+ 
+-		bno = XFS_FSB_TO_AGBNO(mp, resv->fsbno + resv->used);
++		bno = resv->agbno + resv->used;
+ 		while (resv->used < resv->len &&
+ 		       *agfl_idx < libxfs_agfl_size(mp)) {
+ 			agfl_bnos[(*agfl_idx)++] = cpu_to_be32(bno++);
 
