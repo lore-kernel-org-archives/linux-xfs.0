@@ -1,373 +1,187 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4FE113C696
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 16:08:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711469330; cv=fail; b=nB012elRWruXdyIpCNa2k9iPvMufCFn+fHC5ZCBjPTNuRas5lP3rHEdrreARPFOIP4CwQ29pul363fJ5SFs1Vwudjh7D1FLGNbjxw0qGIDPKgEcgfbtDXPMWM5rz0kiKI08aQIBifCGw6R91L9UoyKqWUR9RdFXSMBs6Z3gm7DA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711469330; c=relaxed/simple;
-	bh=VSyKd5+lLVliQG1K/GvQpCM59fYOJyFLD/8ToufZ/g4=;
-	h=Message-ID:Date:From:Subject:To:Cc:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=L6yjDjhfM8NKAq6UF3V9ReF9vlFzpCZ48FiuZYFlxCZoW+wG8AEV0ZTZB8u/jnqjvEIbv3j8fXCjbGkpNYTSRgdEg0PJEG3KrpnMrCiOVRkIxN6dwCXmETVlAx7e9LE+4qi/wDxZqSKOPMQEEPpM2YrQ6tKJD5MDkhRAqiw3KsQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bmvtFA4u; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=olqPx73U; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A1913C9DA;
+	Tue, 26 Mar 2024 16:10:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1711469431; cv=none; b=OFONFl82acBT0QBHlUECca3HO/emSxaapkzVk2DR2SQ6TJ2NrBJO6byzLOXQt4lesZx6Y4n0Y41WoCkXV/tITh92pl+zfySa0zqWldQxhrvodKjFQCddlbJxPoI0eeoJQo38vfu+vrklnNLXcek1z1jpQIMaOnOhSAbsDGJxTUE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1711469431; c=relaxed/simple;
+	bh=/SwuSRn116nG3Z+Fz1PchQ+dbuLiQb7TRnc9ZAa32x0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aAoC0pJCFaa3udlmhmdi395Xm1BCCd8bLuPk5L2xCfIdzoQaoyyVnAkfKAna07wWMlwa2mJxpAGwli7X5btyzk+5VoqjLoU+gSWnbUL4WKTwHUb8oB+tTT8czJtFmdEH/y9FvrpNV9I6tT3GY89mk/lrXeEIk3qSf+/PN3AYY00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=yHdjTcr3; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bmvtFA4u";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="olqPx73U"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42QF43rl026371;
-	Tue, 26 Mar 2024 16:08:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- from : subject : to : cc : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=mMu8jccACNqdQOCcYjntb1PdoWCbLJmLHtIQhwM33xc=;
- b=bmvtFA4u91qLrBXuCgBlEpNLDOvkDEbTn2AWpRkpJz1NODp17p8dF9n6LLbPLyK9Kyza
- oCc1eDqAaxtYm2y8A1ljXKLXajS+Hy3fUrjRZp5V333gHip+RmF7j+SBMlj+q0SoyoGT
- dvaKcd8+L03wUcGfj1aWJgCLgtxQrOuBHPasePdPiFfIMVr6PB2Runmo90Y0ZLbA+Nme
- cK+t2dzdkLLhJqeBSM4+u9vqF1zOTeQhNo9PF2NqQH3o4tFh+EegEOjZqks1uj6d0gzY
- VUh8FV7f8uL1y2TxzyqMc/ED+pywCv0O2Px5k8gnB2v8JKv4v+gtb9hPyXTzIXJVRK4F YQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x1nv45et9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 26 Mar 2024 16:08:39 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42QFDiGq017583;
-	Tue, 26 Mar 2024 16:08:38 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2169.outbound.protection.outlook.com [104.47.73.169])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x1nh7f6j5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 26 Mar 2024 16:08:36 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=elJFKJPjWyW4i0Ik1EP++qaB/8EpU/IHhQptNlZjGvW7XHwAVA2lnj9vExfwt1K87YOPj3YH2oV7p600ltzpt/iKuRtdFk2mZaRVkzTXGjsKuVq8Zw/Vfz3JLH2/eglAh4QXeNl6J3VxQynK54jEnSIvaCvma4vfWWsucr9d/2Ioabhxx6fLfdNDWjyjFPVRlrKQCgSv9O+97O34qvlsGnANfOSZTcNuEoqWLDtmAPf/APhjd2Bld5swKa9O6ylT++TOwPZ8b8OVYvfB7g7Ke+m6bJTIaEtRmCvJHac8bjeEEg4pkTMDhuJxqbiBFXBvIw/0ZnRYq7AC96tYWCuJEg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mMu8jccACNqdQOCcYjntb1PdoWCbLJmLHtIQhwM33xc=;
- b=Mq6uZsfZ8RbGePlFQkjKfSzBhWD1PV4JoKx4tQndaxFq/4hE8ChsnUPDC3koFRTs2lrNAY7jvAnVxFfbxs8uU2Wc+h9vCANKkkp2Rj6rYkP4byNNQSgwhBuY0ePuQWEY68HeAroRi3kjkSc++QZEO7roOdBvnwnQe8r+w+KhvIvu/B2am95iDezpZx8rOrNlDW3pYSzaIqcCzHGTs5M8TAU5MLBywYpNIvKWGO1kW3HsjNxynMtLlj9rZktJJJ9DAmMPUGkcOLFal8vopCFRAHEdJIyw06G+Ls9zJ+S9SP8b24hun1JT89dTOp//ijR4Fye7LptmJ9pgAf0eR2YLjQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mMu8jccACNqdQOCcYjntb1PdoWCbLJmLHtIQhwM33xc=;
- b=olqPx73UtrJx+ggQTtrTfir8QvguuJKtKoS4iDYjxo0ufqOgp2kkb8GlNYwhF/bso0Z2aeS28uq7LiJ/8Zhk8q3v0wDCXI6M8IJOnFSr467FL6KSOKb7eiOAIrx4euXXGcxwanWlK8JkuI8RHx1kZvH8OQfA+aKh9He4EjjECS4=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by CY8PR10MB6586.namprd10.prod.outlook.com (2603:10b6:930:59::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.31; Tue, 26 Mar
- 2024 16:08:08 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324%4]) with mapi id 15.20.7409.031; Tue, 26 Mar 2024
- 16:08:07 +0000
-Message-ID: <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
-Date: Tue, 26 Mar 2024 16:08:04 +0000
-User-Agent: Mozilla Thunderbird
-From: John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
-References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
- <20240306053048.1656747-1-david@fromorbit.com>
- <20240306053048.1656747-2-david@fromorbit.com>
- <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
- <ZfpnfXBU9a6RkR50@dread.disaster.area>
-Content-Language: en-US
-Organization: Oracle Corporation
-In-Reply-To: <ZfpnfXBU9a6RkR50@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS4P192CA0026.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:20b:5e1::10) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="yHdjTcr3"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4V3vsV0n1cz9scM;
+	Tue, 26 Mar 2024 17:10:22 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1711469422;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3WN8iTw5DCvKXICzDy7GvWDFRE7iUHmu0GOhWN9n+ms=;
+	b=yHdjTcr384i1cvB7hFZT30C9uBwMD8Us2p3BaRxE0yzhUO6JeAPk0zbE/aLeBCdkTVl7D5
+	9z4OZ76A4edSg78yhI+sI+LkX0vMgIvnkZ87Umo2iejOCXrLpLweRxhAkG/pX+b5lhwt+1
+	CZf+iNlgRGCVeHaRVugTq+BcwLBVgJS+TnAibuVTetwJsAYtyvFH7+VzgyA0d/xTMPMysY
+	ljgBOdTodJUMIj6yb/ml9uROxuNUdW954fQNFWTMA4SPwNQHnqbUJ/qyPpwP/d4QAelyv9
+	btnQQq2OrXVss98yKjHHtksrbitZ6nra40b6cZZDvZVZdPf3F6Zj5BvBkKPtSA==
+Date: Tue, 26 Mar 2024 17:10:18 +0100
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Matthew Wilcox <willy@infradead.org>, ziy@nvidia.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	gost.dev@samsung.com, chandan.babu@oracle.com, hare@suse.de, mcgrof@kernel.org, 
+	djwong@kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	david@fromorbit.com, akpm@linux-foundation.org, Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH v3 07/11] mm: do not split a folio if it has minimum
+ folio order requirement
+Message-ID: <muprk3zff7dsn3futp3by3t6bxuy5m62rpylmrp77ss3kay24k@wx4fn7uw7y6r>
+References: <20240313170253.2324812-1-kernel@pankajraghav.com>
+ <20240313170253.2324812-8-kernel@pankajraghav.com>
+ <ZgHLHNYdK-kU3UAi@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CY8PR10MB6586:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	1fhF+efJNAlw//moBt1ASBQvNnZBqQUFZuT73r3FK0gnZwDGxP+RH09U2R5eQJXvekzvfGVC9mgarYMfk1drCJCwOu6MXASwnJwaqRr8xTdHLq4IFs11jn6a9p2uCtvwQtxPExO/mMYk9/rBEdNZvAOsr0cIkU3jCvUFunRLBLZ//X5XKW1+BbpSM5ycEs5+ul7IaMU5zn7RmkNc7hAquD0NXBCO3mKG26Jy8vHmmfHKXD2Kjqe+uEicWhhKUYMqbYk9xjUYo1CiZvoL0ysMR/U7rQn9Lb0Q7ec+23Z8OO8z+ltGzlAVkX1taBafxuZ18sxTfVQSxGAG9mUrXDptX7Z4dhH8fkxPg49RKO8Nuwtikf1R0TAgN4W8WP1vJziC2S8Dd3+f2Ttar3Q96yJdKkYgzjfK3BSAwHOTGlZioIfG7akPAF3QAQD3euVWBARW8Zw62aqH4rJOmX+ofyRCfJRxDymGRNqhrKV3ParnLW3jksOgtyM5UeJz9EVnBuO7KYfgV54AbDm+XoCK2zXDCOBo3n8j5scjwVmOfR5VTPhEVhPNuRzOwldfm3P9fZRMR9q781IyyfF+VEo82QkekoQ4ccZhQ/G4a6YGNYSxIQJJfbXcz7hyK5Bt3wUETp9NqVwqgWCdxru5qpvvKwe+a+37EfkQr/7hPSMrLD/ThKo=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?TmI1NUo3bGdvTnBYbHV3M0hmeDBZWHJLMHkxbmNjeW4rNFZWaFdTTm1hWml2?=
- =?utf-8?B?dXhxRFFCTnlPTDJpYktIYW1DWUlieTBvcHRBL0Jyay81RW85dE9QTnBuVyt4?=
- =?utf-8?B?SWRuU0FsVEZuQW5DTTZXUFIvM0JZcldkSEUxdFhtMEcvS3hLZnJ2NWZWQjVQ?=
- =?utf-8?B?OTVaUzZMVGFLWTBzOThOQmw4bjMyRCtJT0JhUnlJWWhad3VNY1lPZ2RIdUFn?=
- =?utf-8?B?UEVPbHVQUHcvbmhpYkNzaWpBSTlpcGZQQWdQWlZuR0tuK09QdkgvcVQ4VjBt?=
- =?utf-8?B?MjF0dzY1eWJoTTlZaERtb05NYkc4L2dIQkVnNWhqVWZvVkl1cWxMS3F5NlZU?=
- =?utf-8?B?YnY3bHppZVZjNGhWOXc2VGR1TDc1SGlkcEt0WFFaMHRsM2o4NVJHa2hrMjUr?=
- =?utf-8?B?MTRMSU01Nk9VVVZ0VkJOOXdDVHpmSEdETFRKM2lYZjdGb2ZQUkVWWG9vNVY3?=
- =?utf-8?B?cXBvdDhqSFpMM1JTcmF5Ri9oOWlmeGMzcVBxb1B1NzRPVWxLdGZTUjM4Uzdi?=
- =?utf-8?B?S0N3a2tLNk5zTnhhVUFQNTJIRkhIQmxQZ0xaMzF6ZnhFb1czNWxpVjcrMnov?=
- =?utf-8?B?RlkvMzhTdkJqbHA3ejAwNTF4UGFqemJiWkU1cW1kaGpncVZFLy9CamFOK0RD?=
- =?utf-8?B?Ly9iM08yK2gxTVdlN2RLSXp5UXM1d3FEQVNNRWM3VEs3Y0lDOWY4ZGIySWNy?=
- =?utf-8?B?aGsrK1gwdC85cllLN3Z1T0JJS3hkTDdEb1RzT1duakx6cnVMWUpoaWFQWnRh?=
- =?utf-8?B?N3lGZmVJZnRJVGQyT2IwRjllYlBmdkNhYXV0dEExcGhKVjRlSEpTVjVKUXpk?=
- =?utf-8?B?MURhRHg4T0JhS0V3WVNXY1ZXdjVtVWRXY0tINTJsQkR2MjdqTWlIakQ3b1hu?=
- =?utf-8?B?dGZHY3Q1QTBLWE5OYUtVR01sREE0dFpyL1lyWWtsSnJ3Um1yS1ZvNDkxTjhF?=
- =?utf-8?B?bE1WZUwwSjF4Y1BUZUYrWmc1SjhFMVV0OXVhQURlUzJ2Y1J1WXdzejZ4MG5H?=
- =?utf-8?B?UFFHZFNxbTUvN0hENjZGR0FrTDRBbnU4bU1WSkN5OHlmL3o5L3JZMnFXUWJq?=
- =?utf-8?B?RVZsZm9tUndyV2sxVlRHYnZxTElKTXljU09jdzdhUFJ2c1VOUEhFYXlDSE53?=
- =?utf-8?B?eGV4N0dNbVNpY0tCSWhLOXRzeXczNEQySy9BV1ZGblhZb2tXUWFUSldmbXBo?=
- =?utf-8?B?VDZEVzd6ZU16R3RTbUlydkFwSUlvTlRkbmVPdy9CSWpsZkExUy95ZE8xWUhP?=
- =?utf-8?B?Y053bVpEZTJsYnZsOU9jUHl2MTRneHdFR3hvNkYzRy8wRTlMQXdDRHFpSWlY?=
- =?utf-8?B?V283cStYRXFmanFNNjhueHZWYnZmN0g4eXpCMGwvRFNKd1hTTWRlN25mNXUz?=
- =?utf-8?B?QjhhNFVaWW8wSDFNUmk4KzBJbS9nUGY5cVkrK1htYWVJWEhHbFBVa0dyOTlK?=
- =?utf-8?B?bnhWWVpsOElRNWlldTZVRlNyZnlGems1R0g0VXp6S1FLZ2NsQkpxT2VEVXVu?=
- =?utf-8?B?Sm8wcVdKd1kya0dZSHF4ZnJKNU5QUjNPZ3hVbXNKa2RobzF5TWdxbmdPb0Iw?=
- =?utf-8?B?WFdOUGhFUGZwYUFPRHMyNWNsbURabXFHcjFhMWxLZk5vT3ZvY2d1QksvaEFt?=
- =?utf-8?B?cUg2c29CUytEWG5oU1NyeWdyQjRZN0I1bzZWejRPTUFDNlpTWmdwNjJjNFVv?=
- =?utf-8?B?VlBvaS9ZOEZPdG1aMk1TQXU3WU84QTUyTWFPNnhUNWNvK2dpSWFoSi83d0VW?=
- =?utf-8?B?Y3ZPRnhRbkZPaDFWSkdnZnltaUE0MFlPcUlSbGhWOGlwVlBmcnpJOWVrTGFp?=
- =?utf-8?B?RlYrTy9oeXZjS0hVckNzS2wwUkVZN0ViR1dVUDRHS20vQlE5cjl5UFNiMTRP?=
- =?utf-8?B?Ui81RU1UUlNHcEdwN3pvUXdoSnliU3VTeVFYc01lOTh1OCtueDVMcUhQVlVU?=
- =?utf-8?B?ZFdzeE9ud1VOanFOTHdFM0V0dFVrKzdwN054Y0VKSm9COUZTYXdsUVU4UUdC?=
- =?utf-8?B?cVNkbURpeEFYb0pHRjdCN3pnd1NZQ3F0cjU2eURTQ1JFNUhpRWR2WVBhVXhQ?=
- =?utf-8?B?VU1jQ0J2RkFrai9nOFdIK0NGaEozc3AyZ0g0U2VRTWFOYUxFL3FmSTVpUklF?=
- =?utf-8?B?NnZjNzRaMnNsWUIreG9nS1MxUE1HeTNsRzB0SUNoRjA5Y2JmK1FucmJ0clJj?=
- =?utf-8?B?RUE9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	oQQAznMfvmmc8syikPwAsVWPRiaXBB1Ga7yXMvsCRUUc3D+SVnF1W9lRYj77FPPP0bb/JIMyuTM9I6i4lGB7GYoKJQfpcFhXnZIfVPjuR/SRFtxe22oOEFc/T0QboepDpdyToDjX+3q3KBV3a/2Gre6EqmmoOkMwzXKSi1EP35N0dnt5V6mCamli4c35xLwL+K7YDM5kK+SN+1JiymHd0xYYK+NWVCmsFbHWLO5vlLZThlGflWMq2JxiqHBvFUAfjKHobbzND/3qRoKxmhN6qrd/Q72mr/JGMJNLxo8ELsGlLF5yT1aL/DTqWVTb2FZ8XaXHSboy0hpL9CQLEeCIRYqMPErUNQ0+fcYHL/CxmtjZJSyKs/W8SsLxAB5AKdfHOxXhYoPzOSjATgizjQeiogLsG3EqTEpgcjIy6joTSHMlx047LWaDgZBznOdlXIOqsTNa3k2mUaca5WH2p1pYHMbECoWqN2Xn4SBGxGMUccZgy1Xx/ZXffgWKDJO4Iu7YePZ2oxxmBQAlU1lZdkNMPbxWxX8HncRD8dKI+SrU4Zg4aLwgPpUN1h/qKzPsAz+SsxUOCT1taYsB4SXWl+fA/Ip2f41mcjKe2o8qPhNx3Hk=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a4ab45c3-da84-442c-edcb-08dc4daeed12
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2024 16:08:07.8810
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 138spLyVJFZB2hCXIkeYstVJnuCy7TxoB+wrGngGKmrgdefCFzFKzMdF55yegDrldVXPDl0QyBmTlH0QOcrlcg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB6586
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-26_06,2024-03-21_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2403210000 definitions=main-2403260114
-X-Proofpoint-ORIG-GUID: VlYRprqAPGRnZgmwinO_JDTVuIWbuVfy
-X-Proofpoint-GUID: VlYRprqAPGRnZgmwinO_JDTVuIWbuVfy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZgHLHNYdK-kU3UAi@casper.infradead.org>
+X-Rspamd-Queue-Id: 4V3vsV0n1cz9scM
 
-On 20/03/2024 04:35, Dave Chinner wrote:
+On Mon, Mar 25, 2024 at 07:06:04PM +0000, Matthew Wilcox wrote:
+> On Wed, Mar 13, 2024 at 06:02:49PM +0100, Pankaj Raghav (Samsung) wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
+> > 
+> > As we don't have a way to split a folio to a any given lower folio
+> > order yet, avoid splitting the folio in split_huge_page_to_list() if it
+> > has a minimum folio order requirement.
+> 
+> FYI, Zi Yan's patch to do that is now in Andrew's tree.
+> c010d47f107f609b9f4d6a103b6dfc53889049e9 in current linux-next (dated
+> Feb 26)
 
-For some reason I never received this mail. I just noticed it on 
-lore.kernel.org today by chance.
+Yes, I started playing with the patches but I am getting a race condition
+resulting in a null-ptr-deref for which I don't have a good answer for
+yet.
 
-> On Wed, Mar 13, 2024 at 11:03:18AM +0000, John Garry wrote:
->> On 06/03/2024 05:20, Dave Chinner wrote:
->>>    		return false;
->>> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
->>> index 0b956f8b9d5a..aa2c103d98f0 100644
->>> --- a/fs/xfs/libxfs/xfs_alloc.h
->>> +++ b/fs/xfs/libxfs/xfs_alloc.h
->>> @@ -46,7 +46,7 @@ typedef struct xfs_alloc_arg {
->>>    	xfs_extlen_t	minleft;	/* min blocks must be left after us */
->>>    	xfs_extlen_t	total;		/* total blocks needed in xaction */
->>>    	xfs_extlen_t	alignment;	/* align answer to multiple of this */
->>> -	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
->>> +	xfs_extlen_t	alignslop;	/* slop for alignment calcs */
->>>    	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
->>>    	xfs_agblock_t	max_agbno;	/* ... */
->>>    	xfs_extlen_t	len;		/* output: actual size of extent */
->>> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
->>> index 656c95a22f2e..d56c82c07505 100644
->>> --- a/fs/xfs/libxfs/xfs_bmap.c
->>> +++ b/fs/xfs/libxfs/xfs_bmap.c
->>> @@ -3295,6 +3295,10 @@ xfs_bmap_select_minlen(
->>>    	xfs_extlen_t		blen)
->>
->> Hi Dave,
->>
->>>    {
->>> +	/* Adjust best length for extent start alignment. */
->>> +	if (blen > args->alignment)
->>> +		blen -= args->alignment;
->>> +
->>
->> This change seems to be causing or exposing some issue, in that I find that
->> I am being allocated an extent which is aligned to but not a multiple of
->> args->alignment.
-> 
-> Entirely possible the logic isn't correct ;)
+@zi yan Did you encounter any issue like this when you were testing?
 
-Out of curiosity, how do you guys normally test all this sort of logic?
+I did the following change (just a prototype) instead of this patch:
 
-I found this issue with the small program which I wrote to generate 
-traffic. I could not find anything similar.
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 9859aa4f7553..63ee7b6ed03d 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3041,6 +3041,10 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ {
+        struct folio *folio = page_folio(page);
+        struct deferred_split *ds_queue = get_deferred_split_queue(folio);
++       unsigned int mapping_min_order = mapping_min_folio_order(folio->mapping);
++
++       if (!folio_test_anon(folio))
++               new_order = max_t(unsigned int, mapping_min_order, new_order);
+        /* reset xarray order to new order after split */
+        XA_STATE_ORDER(xas, &folio->mapping->i_pages, folio->index, new_order);
+        struct anon_vma *anon_vma = NULL;
+@@ -3117,6 +3121,8 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+                        goto out;
+                }
+ 
++               // XXX: Remove it later
++               VM_WARN_ON_FOLIO((new_order < mapping_min_order), folio);
+                gfp = current_gfp_context(mapping_gfp_mask(mapping) &
+                                                        GFP_RECLAIM_MASK);
 
-> 
-> IIRC, I added this because I thought that blen ends up influencing
-> args->maxlen and nothing else. The alignment isn't taken out of
-> "blen", it's supposed to be added to args->maxlen.
-> 
->> For my test, I have forcealign=16KB and initially I write 1756 * 4096 =
->> 7192576B to the file, so I have this:
->>
->>   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
->>     0: [0..14079]:      42432..56511      0 (42432..56511)   14080
->>
->> That is 1760 FSBs for extent #0.
->>
->> Then I write 340992B from offset 7195648, and I find this:
->>   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
->>     0: [0..14079]:      42432..56511      0 (42432..56511)   14080
->>     1: [14080..14711]:  177344..177975    0 (177344..177975)   632
->>     2: [14712..14719]:  350720..350727    1 (171520..171527)     8
->>
->> extent #1 is 79 FSBs, which is not a multiple of 16KB.
-> 
->> In this case, in xfs_bmap_select_minlen() I find initially blen=80
-> 
-> Ah, so you've hit the corner case of the largest free space being
-> exactly 80 in length and args->maxlen = 80.
-> 
->> args->alignment=4, ->minlen=0, ->maxlen=80. Subsequently blen is reduced to
->> 76 and args->minlen is set to 76, and then xfs_bmap_btalloc_best_length() ->
->> xfs_alloc_vextent_start_ag() happens to find an extent of length 79.
-> 
-> So there's nothing wrong here. We've asked for any extent that
-> is between 76 and 80 blocks in length to be allocated, and we found
-> one that is 79 blocks in length.
+I am getting a random null-ptr deref when I run generic/176 multiple
+times with different blksizes. I still don't have a minimal reproducer 
+for this issue. Race condition during writeback:
 
-Sure
+filemap_get_folios_tag+0x171/0x5c0:
+arch_atomic_read at arch/x86/include/asm/atomic.h:23
+(inlined by) raw_atomic_read at include/linux/atomic/atomic-arch-fallback.h:457
+(inlined by) raw_atomic_fetch_add_unless at include/linux/atomic/atomic-arch-fallback.h:2426
+(inlined by) raw_atomic_add_unless at include/linux/atomic/atomic-arch-fallback.h:2456
+(inlined by) atomic_add_unless at include/linux/atomic/atomic-instrumented.h:1518
+(inlined by) page_ref_add_unless at include/linux/page_ref.h:238
+(inlined by) folio_ref_add_unless at include/linux/page_ref.h:247
+(inlined by) folio_ref_try_add_rcu at include/linux/page_ref.h:280
+(inlined by) folio_try_get_rcu at include/linux/page_ref.h:313
+(inlined by) find_get_entry at mm/filemap.c:1984
+(inlined by) filemap_get_folios_tag at mm/filemap.c:2222
 
-> 
-> Finding a 79 block extent instead of an 80 block extent like blen
-> indicated means that there was either:
-> 
-> - a block moved to the AGFL from that 80 block free extent prior to
->    doing the free extent search.
-> - a block was busy and so was trimmed out via
->    xfs_alloc_compute_aligned()
-> - the front edge wasn't aligned so it took a block off the front of
->    the free space to align it. It's this condition that code I added
->    above takes into account - an exact match on size does not imply
->    that aligned allocation of exactly that size can be done.
-> 
-> Given the front edge is aligned, I'd say it was the latter that
-> occurred. The question is this: why wasn't the tail edge aligned
-> down to make the extent length 76 blocks?
-> 
->> Removing the specific change to modify blen seems to make things ok again.
-> 
-> Right, because now the allocation ends up being set up with
-> args->minlen = args->maxlen = 80 and the allocation is unable to
-> align the extent and meet the args->minlen requirement from that
-> same unaligned 80 block free space. Hence that allocation fails and
-> we fall back to a different allocation strategy that searches other
-> AGs for a matching aligned allocation.
 
-ok
 
-> 
-> IOWs, removing the 'blen -= args->alignment' code simply kicks the
-> problem down the road until all AGs run out of 80 block contiguous
-> extents.
-
-right
-
-> 
-> This really smells like a tail alignment bug, not a problem with the
-> allocation setup. Returning an extent that is 76 blocks in length
-> fulfils the 4 block alignment requirement, so why did tail alignment
-> fail?
-> 
->> I will also note something strange which could be the issue, that being that
->> xfs_alloc_fix_len() does not fix this up - I thought that was its job.
-> 
-> Yes, it should fix this up.
-
-As below, xfs_alloc_fix_len() does nothing (useful).
-
-> 
->> Firstly, in this same scenario, in xfs_alloc_space_available() we calculate
->> alloc_len = args->minlen + (args->alignment - 1) + args->alignslop = 76 + (4
->> - 1) + 0 = 79, and then args->maxlen = 79.
-> 
-> That seems OK, we're doing aligned allocation and this is an ENOSPC
-> corner case so the aligned allocation should get rounded down in
-> xfs_alloc_fix_len() or rejected.
-> 
-> One thought I just had is that the args->maxlen adjustment shouldn't
-> be to "available space" - it should probably be set to args->minlen
-> because that's the aligned 'alloc_len' we checked available space
-> against. That would fix this, because then we'd have args->minlen =
-> args->maxlen = 76.
-> 
-> However, that only addresses this specific case, not the general
-> case of xfs_alloc_fix_len() failing to tail align the allocated
-> extent.
-> 
->> Then xfs_alloc_fix_len() allows
->> this as args->len == args->maxlen (=79), even though args->prod, mod = 4, 0.
-> 
-> Yeah, that smells wrong.
-
-Would it be worth adding a debug assert for prod and mod being honoured 
-from the allocator? xfs_alloc_fix_len() does have an assert later on and 
-it does not help here.
-
-> 
-> I'd suggest that we've never noticed this until now because we
-> have never guaranteed extent alignment. Hence the occasional
-> short/unaligned extent being allocated in dark ENOSPC corners was
-> never an issue for anyone.
-> 
-> However, introducing a new alignment guarantee turns these sorts of
-> latent non-issues into bugs that need to be fixed. i.e. This is
-> exactly the sort of rare corner case behaviour I expected to be
-> flushed out by guaranteeing and then extensively testing allocation
-> alignments.
-> 
-> If you drop the rlen == args->maxlen check from
-> xfs_alloc_space_available(),
-
-I assume that you mean xfs_alloc_fix_len()
-
-> the problem should go away and the
-> extent gets trimmed to 76 blocks.
-
-..if so, then, yes, it does. We end up with this:
-
-    0: [0..14079]:      42432..56511      0 (42432..56511)   14080
-    1: [14080..14687]:  177344..177951    0 (177344..177951)   608
-    2: [14688..14719]:  350720..350751    1 (171520..171551)    32
-
-> This shouldn't affect anything
-> else because maxlen allocations should already be properly aligned -
-> it's only when something like ENOSPC causes args->maxlen to be
-> modified to an unaligned value that this issue arises.
-> 
-> In the end, I suspect we'll want to make both changes....
-> 
->> To me, that (args->alignment - 1) component in calculating alloc_len is odd.
->> I assume it is done as default args->alignment == 1.
-> 
-> No, it's done because guaranteeing aligned allocation requires
-> selecting an aligned region from an unaligned free space. i.e.  when
-> alignment is 4, then we can need up to 3 additional blocks to
-> guarantee front alignment for a given length extent.
-> i.e. we have to over-allocate to guarantee we can trim up
-> to alignment at the front edge and still guarantee that the extent
-> is as long as required by args->minlen/maxlen.
-> 
-
-ok, understood.
-
-Thanks,
-John
-
+[  537.863105] ==================================================================                                                                                                                                                                                                                                             
+[  537.863968] BUG: KASAN: null-ptr-deref in filemap_get_folios_tag+0x171/0x5c0                                                                                                                                                                                                                                               
+[  537.864581] Write of size 4 at addr 0000000000000036 by task kworker/u32:5/366                                                                                                                                                                                                                                             
+[  537.865123]                                                                                                                                                       
+[  537.865293] CPU: 6 PID: 366 Comm: kworker/u32:5 Not tainted 6.8.0-11739-g7d0c6e7b5a7d-dirty #795                                                                                                                                                                                                                           
+[  537.867201] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014                                                                                                                                                                                               
+[  537.868444] Workqueue: writeback wb_workfn (flush-254:32)                                                                                                   
+[  537.869055] Call Trace:                                                                                                                                     
+[  537.869341]  <TASK>                                                                                                                                         
+[  537.869569]  dump_stack_lvl+0x4f/0x70                                                                                                                       
+[  537.869938]  kasan_report+0xbd/0xf0                                                                                                                         
+[  537.870293]  ? filemap_get_folios_tag+0x171/0x5c0                                                                                                           
+[  537.870767]  ? filemap_get_folios_tag+0x171/0x5c0                                                                                                           
+[  537.871578]  kasan_check_range+0x101/0x1b0                                                                                                                  
+[  537.871893]  filemap_get_folios_tag+0x171/0x5c0                                                                                                                                                                                                                                                                            
+[  537.872269]  ? __pfx_filemap_get_folios_tag+0x10/0x10                                                                                                       
+[  537.872857]  ? __pfx___submit_bio+0x10/0x10                                                                                                                 
+[  537.873326]  ? mlock_drain_local+0x234/0x3f0                                                                                                                
+[  537.873938]  writeback_iter+0x59a/0xe00                                                                                                                     
+[  537.874477]  ? __pfx_iomap_do_writepage+0x10/0x10                                                                                                           
+[  537.874969]  write_cache_pages+0x7f/0x100                                                                                                                   
+[  537.875396]  ? __pfx_write_cache_pages+0x10/0x10                                                                                                            
+[  537.875892]  ? do_raw_spin_lock+0x12d/0x270                                                                                                                 
+[  537.876345]  ? __pfx_do_raw_spin_lock+0x10/0x10                                                                                                                                                                                                                                                                            
+[  537.876804]  iomap_writepages+0x88/0xf0                                                                                                                     
+[  537.877186]  xfs_vm_writepages+0x120/0x190                                                                                                                  
+[  537.877705]  ? __pfx_xfs_vm_writepages+0x10/0x10                                                                                                            
+[  537.878161]  ? lock_release+0x36f/0x670                                                                                                                                                                                                                                                                                    
+[  537.878521]  ? __wb_calc_thresh+0xe5/0x3b0                                                                                                                                                                                                                                                                                 
+[  537.878892]  ? __pfx_lock_release+0x10/0x10                                                                                                                 
+[  537.879308]  do_writepages+0x170/0x7a0                                                                                                                                                                                                                                                                                     
+[  537.879676]  ? __pfx_do_writepages+0x10/0x10                                                                                                                                                                                                                                                                               
+[  537.880182]  ? writeback_sb_inodes+0x312/0xe40                                                                                                                                                                                                                                                                             
+[  537.880689]  ? reacquire_held_locks+0x1f1/0x4a0                                                                                                                                                                                                                                                                            
+[  537.881193]  ? writeback_sb_inodes+0x312/0xe40                                                                                                                                                                                                                                                                             
+[  537.881665]  ? find_held_lock+0x2d/0x110                                                                                                                                                                                                                                                                                   
+[  537.882104]  ? lock_release+0x36f/0x670                                                                                                                                                                                                                                                                                    
+[  537.883344]  ? wbc_attach_and_unlock_inode+0x3b8/0x710                                                                                                                                                                                                                                                                     
+[  537.883853]  ? __pfx_lock_release+0x10/0x10                                                                                                                                                                                                                                                                                
+[  537.884229]  ? __pfx_lock_release+0x10/0x10                                                                                                                                                                                                                                                                                
+[  537.884604]  ? lock_acquire+0x138/0x2f0                                                                                                                                                                                                                                                                                    
+[  537.884952]  __writeback_single_inode+0xd4/0xa60                                                                                                            
+[  537.885369]  writeback_sb_inodes+0x4cf/0xe40                                                                                                                
+[  537.885760]  ? __pfx_writeback_sb_inodes+0x10/0x10                                                                                                                                                                                                                                                                         
+[  537.886208]  ? __pfx_move_expired_inodes+0x10/0x10                                                                                                          
+[  537.886640]  __writeback_inodes_wb+0xb4/0x200                                                                                                               
+[  537.887037]  wb_writeback+0x55b/0x7c0                                                                                                                       
+[  537.887372]  ? __pfx_wb_writeback+0x10/0x10                                                                                                                                                                                                                                                                                
+[  537.887750]  ? lock_acquire+0x138/0x2f0                                                                                                                     
+[  537.888094]  ? __pfx_register_lock_class+0x10/0x10                                                                                                          
+[  537.888521]  wb_workfn+0x648/0xbb0                                                                                                                          
+[  537.888835]  ? __pfx_wb_workfn+0x10/0x10                                                                                                                                                                                                                                                                                   
+[  537.889192]  ? lock_acquire+0x128/0x2f0                                                                                                                     
+[  537.889539]  ? lock_acquire+0x138/0x2f0                                                                                                                     
+[  537.889890]  process_one_work+0x7ff/0x1710                                                                                                                                                                                                                                                                                 
+[  537.890272]  ? __pfx_process_one_work+0x10/0x10                                                                                                             
+[  537.890685]  ? assign_work+0x16c/0x240                                                                                                                                                                                                                                                                                     
+[  537.891026]  worker_thread+0x6e8/0x12b0                                                                                                                     
+[  537.891381]  ? __pfx_worker_thread+0x10/0x10                                                                                                                
+[  537.891768]  kthread+0x2ad/0x380                                                                                                                                                                                                                                                                                           
+[  537.892064]  ? __pfx_kthread+0x10/0x10                                                                                                                                                                                                                                                                                     
+[  537.892403]  ret_from_fork+0x2d/0x70                                                                                                                                                                                                                                                                                       
+[  537.892728]  ? __pfx_kthread+0x10/0x10                                                                                                                                                                                                                                                                                     
+[  537.893068]  ret_from_fork_asm+0x1a/0x30                                                                                                                                                                                                                                                                                   
+[  537.893434]  </TASK>
