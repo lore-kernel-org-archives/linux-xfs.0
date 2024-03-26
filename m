@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 543A4128816
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:26:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46C48128816
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:27:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423611; cv=none; b=HKWgU+gKbGJYYqUMGrgSgAhM6qw/EIvCW4y09Q/KyJFEmg4yjSZDv2hnpUCrMe6JiLSHqymVrQHsmejQ0MSuaKD4Vwyq4g0pz6ne4DrFf8oQVBgY4+fS53P0pF+fJV6fqZVQ/TrXpCKSeByrRVbAZ07dgaZ68FHNegTprd5rI6U=
+	t=1711423627; cv=none; b=taGSxp3VXJRYeddH8ZqOXfj1cv7md6L5cNXeir/iYHQcWGFzxCXpbl2oUfAHG7fGEd30I+2tY3Z2ia6ufB9A08662TKSofjHxDnZ9HEiNYFSftJwdnttQJMHjFqkJaxoJr1jIKiJGD92D/UrjwGDjp2EbkMhZff1lT4uzoVOmoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423611; c=relaxed/simple;
-	bh=Tb8tIRCjTINr0XN5jaJ63q/tjSxsU5JEI0Frvp0+wb4=;
+	s=arc-20240116; t=1711423627; c=relaxed/simple;
+	bh=YYvaUc1afoBJ5+ZQ8ViiNhLFYQpm9bX9K9ROP0XVHDU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Rlo2xQY3Is2SgZJZLxNskcH5Gcyq/33xjErXewDmJkR4HncRIxCl3U0c2PjmgkyAe0ZAZ/LAWBTkdG2/rqvi8xbtyw67ghxEMP5Z5vzaJoSIqkon6GsRFOwhj9sOX1POEcYCDswCIJZHBL+5scl4W6EAlQ0Ax/Z57DpK0f8MooE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sx7Xh/tr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nBM2qRNf7DRc2/uZ70Cs6+VcN1TjnvRyRjqOYSj3DR5NcTI7Vqlr3d2fFU9yMSghzjvZAPXKk8aXYLrj0DMGl/bOtqw4/ZbwsevdwaxMcY8EgkxN767noa7Vm1SRn12nlhmyzH/zvnC5iZ2VhWbtIt8bmYPq80xevPwbNEcdla8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UGLA+y1+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sx7Xh/tr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30BA7C433F1;
-	Tue, 26 Mar 2024 03:26:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UGLA+y1+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C730DC433F1;
+	Tue, 26 Mar 2024 03:27:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423611;
-	bh=Tb8tIRCjTINr0XN5jaJ63q/tjSxsU5JEI0Frvp0+wb4=;
+	s=k20201202; t=1711423626;
+	bh=YYvaUc1afoBJ5+ZQ8ViiNhLFYQpm9bX9K9ROP0XVHDU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Sx7Xh/triMFLqJmtOmvGfWkcw3ezpqw8PURYYOcTeKWWkX2FW1zVqRHtn62bl7dAU
-	 f4g1m0gsviLyyhpkHHveu0kzF/zu5sFPpucptj8DViBW9TYMG8vmrPAqIL26YGn+QG
-	 V2qBCpPbRL4zX4rrKzbVgnnJ0THj1z1z1/As08/7x6I2t8jQooujMAgfsEfh2STzN7
-	 Dvh7xR0VqMNGnrmibsfumVPVonSZLKHxFrML/2YhAj+lfIuLYwoA58Emlx+iPZweja
-	 yIzqQk/W3M/7P8hlmXnAuqZpZ9v7X6CKGti+8nku2vsPJ7o68XBgnmNCIcBjw6EDtx
-	 LLghXX71lrilg==
-Date: Mon, 25 Mar 2024 20:26:50 -0700
-Subject: [PATCH 5/8] xfs_repair: clean up lock resources
+	b=UGLA+y1+VCIVg5LX3GZmt5VajxR5KvF1aO47BG7i+1ljexH/tO8WMiLVau1y9Y8H7
+	 IZfJaKsb7PQcrXvkbqYA3LfydjxDqdK6OT+gZbecB2qMNr5BbfAtpJBqjm7DOT2ANz
+	 /W8D/eRuHSJB6W12L3UGQQ3KzEvIOEwbsy5bnuxgWT9eB+Ig43hfrC0ghzTTBCoB1Z
+	 Gn/qG5HjSn48ejLCq3CCReIw97y82O4eNHvKxDZrYuZPju/UaNz6oQD5j/7k/vPPe1
+	 XiLwkwwLYG8Jt2qknz+jj5zfvKMFQTpF2azbdX4HP6UGHLCGmH5xS4VYFswaBXwbBD
+	 ECwJhC3qXIQwA==
+Date: Mon, 25 Mar 2024 20:27:06 -0700
+Subject: [PATCH 6/8] xfs_repair: constrain attr fork extent count
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: "Darrick J. Wong" <djwong@djwong.org>, Christoph Hellwig <hch@lst.de>,
- linux-xfs@vger.kernel.org
-Message-ID: <171142130427.2214793.2036648192387219923.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <171142130441.2214793.17223190507849932925.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142130345.2214793.404306215329902244.stgit@frogsfrogsfrogs>
 References: <171142130345.2214793.404306215329902244.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,38 +44,39 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@djwong.org>
+From: Darrick J. Wong <djwong@kernel.org>
 
-When we free all the incore block mapping data, be sure to free the
-locks too.
+Don't let the attr fork extent count exceed the maximum possible value.
 
-Signed-off-by: Darrick J. Wong <djwong@djwong.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/incore.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ repair/dinode.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
 
-diff --git a/repair/incore.c b/repair/incore.c
-index 2ed37a105ca7..06edaf0d6052 100644
---- a/repair/incore.c
-+++ b/repair/incore.c
-@@ -301,8 +301,17 @@ free_bmaps(xfs_mount_t *mp)
- {
- 	xfs_agnumber_t i;
+diff --git a/repair/dinode.c b/repair/dinode.c
+index b8f5bf4e550e..bf93a5790877 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2050,6 +2050,7 @@ process_inode_attr_fork(
+ 	xfs_ino_t		lino = XFS_AGINO_TO_INO(mp, agno, ino);
+ 	struct xfs_dinode	*dino = *dinop;
+ 	struct blkmap		*ablkmap = NULL;
++	xfs_extnum_t		max_nex;
+ 	int			repair = 0;
+ 	int			err;
+ 	int			try_rebuild = -1; /* don't know yet */
+@@ -2071,6 +2072,11 @@ process_inode_attr_fork(
+ 	}
  
-+	pthread_mutex_destroy(&rt_lock.lock);
-+
-+	for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+		pthread_mutex_destroy(&ag_locks[i].lock);
-+
-+	free(ag_locks);
-+	ag_locks = NULL;
-+
- 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
- 		btree_destroy(ag_bmap[i]);
-+
- 	free(ag_bmap);
- 	ag_bmap = NULL;
+ 	*anextents = xfs_dfork_attr_extents(dino);
++	max_nex = xfs_iext_max_nextents(
++			xfs_dinode_has_large_extent_counts(dino),
++			XFS_ATTR_FORK);
++	if (*anextents > max_nex)
++		*anextents = 1;
+ 	if (*anextents > be64_to_cpu(dino->di_nblocks))
+ 		*anextents = 1;
  
 
