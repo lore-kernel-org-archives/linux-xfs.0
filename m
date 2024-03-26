@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3853128387
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 02:58:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479DA128387
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 02:58:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711421919; cv=none; b=Ecd9f4j1KkUaamoAa/MlYuNfzvwbscfSMgBd21pQupVbZOV/oN8UhmkTdLsyGj7tC5XXbpE1NXubqvIsdPfruZVobN7bmsbbBUREKy80+WLj+w3cHVe7yUopEN5teFvKH9oBJj00rmwFn/LCJbS4Z3LFKdJzllCI/aaCnGUJF10=
+	t=1711421935; cv=none; b=A2TEMw5sMx/5McG7AYkrPZrnQoi2wtM40JdaDXg/nAG0Yn4MjrhTlMj2abIKFBk0HYMbsBOQdAop1q78ee3N2RqhB0ZDLqRfCzO/1esraN8s+pYacE7YjaoVnoR9RCxmTOLzFmRHBteJEvQ9wM2Ic9r4dwy2zYtTWo1/5s8CShM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711421919; c=relaxed/simple;
-	bh=t4b6FqXMcYYlfdASueTIkw+fmKE/YmQ+dogefvdJGsY=;
+	s=arc-20240116; t=1711421935; c=relaxed/simple;
+	bh=WGTz7p17NXykxPyCOCILtF8Ni4c2J6P6Q1vOvETK70Y=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZYmV2pieAvb8yhKXqOKeCNijiYSELqaujiQgMKzky4oRUhoKnQ0OYhQWriDBRcHI27EEgrxaHDzwaSxmkoGh0STWWtplrzF8Vkas7k54cXJqWxgfn2XRbJMilUCSTL0ZiRccJn+nM8b66XEBQjomnwYBRwF3KQUcAyQIpm0aaUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A1Jnk1lm; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QP371+DI/mAZmT10yYvFKx3W4bOjoxcEVdDEyBihpp5xUhUMq0Ufs+C6/ZwKSoVnm0SV38ctPs0Sq40V1vdCJmlO2C4519UR2ql2jxaPFLJp4br/7NViQwL7Rp67563KLpC24R5NJXD/8c4+q4u59qctyyCxbMnai54/GDas5Gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W289Cp9o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A1Jnk1lm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61114C433C7;
-	Tue, 26 Mar 2024 02:58:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W289Cp9o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CB12C433C7;
+	Tue, 26 Mar 2024 02:58:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711421919;
-	bh=t4b6FqXMcYYlfdASueTIkw+fmKE/YmQ+dogefvdJGsY=;
+	s=k20201202; t=1711421935;
+	bh=WGTz7p17NXykxPyCOCILtF8Ni4c2J6P6Q1vOvETK70Y=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=A1Jnk1lmDzkAlHLEtBb9L37hGKzkSNU48HNJwSpkyGEmN5XZmGwopJsqOQZ9aC/TJ
-	 IJYUUpSaTp/ayGc4E1NKkZdVUWKLmCGx1EETN0Azlt9OZUsaLkoYjGkVGOR+xiXzCz
-	 2Bo/Z2CuOKsHIguN1zAcJLfVNAS1JnFUBWndDOUobVmleBRPo01cwlUndm4OJFWear
-	 rmAHBEgQjFb6/sCCDgKE/QjlzZFTqkM6wHvQcvt3K76F0v6US0iLpEA3YvHU8B1bBD
-	 3b5Y8kz+B+TORn4FJFuXaifjxIrxyh/E389kYEf9DosYM6kvCnYcQLhYtBtu1ZTHRd
-	 XWyD9SSMSpLNw==
-Date: Mon, 25 Mar 2024 19:58:38 -0700
-Subject: [PATCHSET v29.4 15/18] xfs_scrub: updates for 6.9
+	b=W289Cp9odhRJkg7rREbU1e0qTmopUOS82iKCTW/kvxp2Vs1MPiDyFH0FvST2Q35sy
+	 o8mtNlbCJe+ybXZpVUY8bcRbshTbOC4G54vXos5VD++OZwqRRw7K436m/z9jLQ9NSY
+	 T5lD+PntSFW+4Ow06lrSJe4vVcEan2UlQILI/xoPfUZnkNGWQ/1W+sGw+/KqX+mLgi
+	 yhhT7stU5aGTw9cEwKY4uvpOKt8KPBKJfhylD4OM4VtgM+54AYmUiW3YEsH5mgFmKN
+	 90XUlEWacav+FHECDIaYadx2GPe1SHp6rEhsaKIAHTBYz4R3PM4y52NbAA1AYhwdSr
+	 /0A+f9SQ2xTww==
+Date: Mon, 25 Mar 2024 19:58:54 -0700
+Subject: [PATCHSET v29.4 16/18] xfs_repair: use in-memory rmap btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171142134302.2218196.4456442187285422971.stgit@frogsfrogsfrogs>
+Message-ID: <171142134672.2220026.18064456796378653896.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240326024549.GE6390@frogsfrogsfrogs>
 References: <20240326024549.GE6390@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,13 +46,14 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Now that the kernel has the code for userspace to upload a clean bill of
-health (which clears out all the secondary markers of ill health that
-hint at forgotten sicknesses), let's make xfs_scrub do that if the
-filesystem is actually clean.
-
-Second, restructure the xfs_scrub program so that it scrubs file link
-counts and quotacheck in parallel.
+Now that we've ported support for in-memory btrees to userspace, port
+xfs_repair to use them instead of the clunky slab interface that we
+currently use.  This has the effect of moving memory consumption for
+tracking reverse mappings into a memfd file, which means that we could
+(theoretically) reduce the memory requirements by pointing it at an
+on-disk file or something.  It also enables us to remove the sorting
+step and to avoid having to coalesce adjacent contiguous bmap records
+into a single rmap record.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -63,23 +64,30 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-6.9-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-use-in-memory-btrees
 ---
 Commits in this patchset:
- * xfs_scrub: implement live quotacheck inode scan
- * xfs_scrub: check file link counts
- * xfs_scrub: update health status if we get a clean bill of health
- * xfs_scrub: use multiple threads to run in-kernel metadata scrubs that scan inodes
- * xfs_scrub: upload clean bills of health
+ * xfs_repair: convert regular rmap repair to use in-memory btrees
+ * xfs_repair: verify on-disk rmap btrees with in-memory btree data
+ * xfs_repair: compute refcount data from in-memory rmap btrees
+ * xfs_repair: reduce rmap bag memory usage when creating refcounts
+ * xfs_repair: remove the old rmap collection slabs
 ---
- libfrog/scrub.c                     |   15 ++++
- man/man2/ioctl_xfs_scrub_metadata.2 |   10 ++
- scrub/phase1.c                      |   38 +++++++++
- scrub/phase4.c                      |   17 ++++
- scrub/phase5.c                      |  150 ++++++++++++++++++++++++++++++++---
- scrub/repair.c                      |   18 ++++
- scrub/repair.h                      |    1 
- scrub/scrub.c                       |   43 +++++++---
- scrub/scrub.h                       |    3 +
- 9 files changed, 265 insertions(+), 30 deletions(-)
+ include/libxfs.h         |    3 
+ libfrog/linux.c          |   33 ++
+ libfrog/platform.h       |    3 
+ libxfs/buf_mem.h         |    5 
+ libxfs/libxfs_api_defs.h |   13 +
+ repair/agbtree.c         |   18 +
+ repair/agbtree.h         |    1 
+ repair/dinode.c          |    9 -
+ repair/phase4.c          |   25 --
+ repair/phase5.c          |    2 
+ repair/rmap.c            |  762 ++++++++++++++++++++++++++++++----------------
+ repair/rmap.h            |   25 +-
+ repair/scan.c            |    7 
+ repair/slab.c            |   49 ++-
+ repair/slab.h            |    2 
+ repair/xfs_repair.c      |    6 
+ 16 files changed, 622 insertions(+), 341 deletions(-)
 
