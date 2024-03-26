@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E693021353
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:44:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 941B121353
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:44:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711424661; cv=none; b=rJdDi4NlCCfFqLmF8FNXYCueR/oF2BQljPtIYsnej4C1izsAbM3wrEAD1gHTrX76wfYtGIytLgqf923K4hb4YAxI0uLlH9DYOUGmdx5bmntQIZ7QFpfk4j0BXyO/HrSC4XtFl/gAT3AXh68t9wDX+0qmT4lG85yHZ0ZctcB85/k=
+	t=1711424676; cv=none; b=FcUqKRVvILQ+IMj3dOOp2M//THOzDSn3Nctrsg5hPRVxkjy3Ir+DbHzfQ8QQ7SkfBITCJHS+/2tSSCbXCwmscsrcW6DFeF05+ImqzRU4TkSMsg1HpIY35q1W1nSJQOd27euhvZHjunCYbE1chNrbhLpaHDIJ3AMFnbwQKqNpExI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711424661; c=relaxed/simple;
-	bh=3AiVI+qxcC1h/DYES7/fWAFdzhkD8tL4W/8db6dJ/+g=;
+	s=arc-20240116; t=1711424676; c=relaxed/simple;
+	bh=rsnZ+yIEPXd6jlsvDpOzkVZluyB7t76y7b0f3biIMWg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HUyHgQtWlhWkw5pFGNyUXibrzSflJNARekNT8dBjz2y7EzKbQPOjZD7reERyFOh3OfZtUkgsyJvQWBy75r1lhTnB7Ed2MET40TwaKgDOJpj+lIuptjrey3KZ3hTaiMW7yVR4427Tr71/7mJeVpoSXSfyatoGvR6BfsNadKl446g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z3CdAOe3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=E8qmXtm5Zw+VJNerkA8e1ftg+xu8IP8LFi70olgOZec1k01wgExaA0SgXe3E4OYB6HIpT4F3cU5u/jB2d1znD5+59CScT2A/SoInYXoAW3Vtwye5U6rvwHvB6EwbCIAoS5dMzoPwH0XVMzROF3tV7FxxgW/xsQ5aaw/nu5XPD1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xr5UxS4r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z3CdAOe3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC1BFC433F1;
-	Tue, 26 Mar 2024 03:44:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xr5UxS4r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 681DCC433F1;
+	Tue, 26 Mar 2024 03:44:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711424660;
-	bh=3AiVI+qxcC1h/DYES7/fWAFdzhkD8tL4W/8db6dJ/+g=;
+	s=k20201202; t=1711424676;
+	bh=rsnZ+yIEPXd6jlsvDpOzkVZluyB7t76y7b0f3biIMWg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Z3CdAOe3YPxSM8drAuz4/y1/6hxKEZj6Ipflea1sVquLn0OwKlXUiaTyUMkHnrBLu
-	 rBv3hpweEAONDXuCtYIspOUsq2tmUsNhIoBQwAykqu4G3Uk6QKVuTX7fvHL2d0Xp4c
-	 1oHkhdfCxSI8hhQZ/oOj8r1SQvMD9nSzDm0Ny8JefOA13s/WIBiusAXk15RIhtiOeQ
-	 u6PNj6E/jWJ284NkFhQ90o17oJXu9R+jKVqh791oJcE2jf3rwvt3tYXii5ZahSiEgD
-	 IdjOitHBj2u4Bpm487uXo8Pr2NpCSwIEoCuDeWOnNzDTK8wFn/ygzxJD4W/4U6Xfw0
-	 e3OhotzgVCmqA==
-Date: Mon, 25 Mar 2024 20:44:20 -0700
-Subject: [PATCH 061/110] xfs: make full use of xfs_btree_stage_ifakeroot in
- xfs_bmbt_stage_cursor
+	b=Xr5UxS4r5U+BdgKD3C/iDnh/XRv5DZx8b8QLLGF802kVy+EanCv3G+CL0oHal7xWO
+	 LK+1G4lRs+GR8XXro4A+E1HlC6YekDJ+KVK1ri1yj93DoLwyAeGs4UfdrdS4A6dMdp
+	 sY1Rds2yIiOtbi0WvkcDAz/QKthydzwB/831t7ADIGjW4zJmi2Asel6740DuxquRQQ
+	 KP9ZQznvVXG0FynbpBlhGqqWOxtEJN3wxMt4GXut/T0HJlfNxlanOEZ0L6/Rb9igLM
+	 4nklc3uK0hzrnecoRSpcoT0MCJ+iyODkDOMf+KoiiU3o8O8D1zNoueAceCGROc2/dR
+	 szmgLO2FmEfDA==
+Date: Mon, 25 Mar 2024 20:44:35 -0700
+Subject: [PATCH 062/110] xfs: make staging file forks explicit
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142132257.2215168.15905320920162278350.stgit@frogsfrogsfrogs>
+Message-ID: <171142132271.2215168.4915593680418744915.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,47 +44,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 579d7022d1afea8f4475d1750224ec0b652febee
+Source kernel commit: 42e357c806c8c0ffb9c5c2faa4ad034bfe950d77
 
-Remove the duplicate cur->bc_nlevels assignment in xfs_bmbt_stage_cursor,
-and move the cur->bc_ino.forksize assignment into
-xfs_btree_stage_ifakeroot as it is part of setting up the fake btree
-root.
+Don't open-code "-1" for whichfork when we're creating a staging btree
+for a repair; let's define an actual symbol to make grepping and
+understanding easier.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap_btree.c    |    2 --
- libxfs/xfs_btree_staging.c |    1 +
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ libxfs/xfs_bmap_btree.c |    2 +-
+ libxfs/xfs_types.h      |    8 +++++---
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
 
 diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 611f5ed962bd..dedc33dc5049 100644
+index dedc33dc5049..6b377d129c33 100644
 --- a/libxfs/xfs_bmap_btree.c
 +++ b/libxfs/xfs_bmap_btree.c
-@@ -611,8 +611,6 @@ xfs_bmbt_stage_cursor(
- 
- 	/* data fork always has larger maxheight */
+@@ -613,7 +613,7 @@ xfs_bmbt_stage_cursor(
  	cur = xfs_bmbt_init_common(mp, NULL, ip, XFS_DATA_FORK);
--	cur->bc_nlevels = ifake->if_levels;
--	cur->bc_ino.forksize = ifake->if_fork_size;
  
  	/* Don't let anyone think we're attached to the real fork yet. */
- 	cur->bc_ino.whichfork = -1;
-diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index 5a988a8bfdd2..52410fe4f2e4 100644
---- a/libxfs/xfs_btree_staging.c
-+++ b/libxfs/xfs_btree_staging.c
-@@ -133,6 +133,7 @@ xfs_btree_stage_ifakeroot(
- 
- 	cur->bc_ino.ifake = ifake;
- 	cur->bc_nlevels = ifake->if_levels;
-+	cur->bc_ino.forksize = ifake->if_fork_size;
- 	cur->bc_flags |= XFS_BTREE_STAGING;
+-	cur->bc_ino.whichfork = -1;
++	cur->bc_ino.whichfork = XFS_STAGING_FORK;
+ 	xfs_btree_stage_ifakeroot(cur, ifake);
+ 	return cur;
  }
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index 62e02d5380ad..a1004fb3c8fb 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -80,11 +80,13 @@ typedef void *		xfs_failaddr_t;
+ /*
+  * Inode fork identifiers.
+  */
+-#define	XFS_DATA_FORK	0
+-#define	XFS_ATTR_FORK	1
+-#define	XFS_COW_FORK	2
++#define XFS_STAGING_FORK	(-1)	/* fake fork for staging a btree */
++#define	XFS_DATA_FORK		(0)
++#define	XFS_ATTR_FORK		(1)
++#define	XFS_COW_FORK		(2)
  
+ #define XFS_WHICHFORK_STRINGS \
++	{ XFS_STAGING_FORK, 	"staging" }, \
+ 	{ XFS_DATA_FORK, 	"data" }, \
+ 	{ XFS_ATTR_FORK,	"attr" }, \
+ 	{ XFS_COW_FORK,		"cow" }
 
