@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E762A1C6A0
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 17:24:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E221B285
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 17:31:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711473874; cv=none; b=PJjxBcg9cSKIeNv2QPTLuIN1I/MqbQdQJczNpgBnccdxQSbucfSU5BQbuJEReVR/gdiGhu76LiNdFSy2Nyck6RQHYLe6jRx2c6j0jaE9zzsfAd5Wq3syv+6u2Brnvy1Q8Zxb0ToFUTQ+pKn5wxkTe4j1b2XmWd/jp6uLPIk9MIA=
+	t=1711474269; cv=none; b=tvl0XK4PdDvURC+pa836mfISLEw5jKfEkPlKPjg/mk++zE5689S0Pb5I3eGQ3fKZ4mMlPM5NcOt7TckLCYPvMsET7w4lmrTYFs3y8oyU69sGHgji72chOv0mtWuGLW3iO4bqioSCkE9P+oew+bJMbyK6gSsYl+MJaf75+UNguX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711473874; c=relaxed/simple;
-	bh=3NY5CW+yydbwPGmA8N2DN+1eiN1pQjI1aZQrZ+1g+Sk=;
+	s=arc-20240116; t=1711474269; c=relaxed/simple;
+	bh=ugOlJZ4iHbjWxIdfuLHnCN2gP58Fb/mV/4tos/1T7so=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BNeq1OPyv4dVp1yd+KufuWJMJumxDAzbzwKnx8n2Nmk9x2fn2+nQhdhVTSaDPDLxEKDzyte9tf+EwB0mlBu3YHvLtgC2x9OVfIwSiXYACCbg4LmpSGCSAkvjaYXJv5uJk58T0NP0dRoNk5r8trjo7Y0LJPOrS8VG6W7T+BB8Dts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ngh+OsXg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PAAS3UtrCd8c6qcMn6EQ1pHOYr9tqkafqHqyZY9U2xDq1OCJnWAcepuGsTCjEod4fW/wDQAMmHqmvi0eMNg2qOnCr4ddg2AQuZP/aYyZqQYimTA6FVyPUiT0CxDZWXlOlI4zae1MBagyQZMh75kfhtn15XRETF3eee1KSvmK/pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eLbaeM9k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ngh+OsXg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD420C433F1;
-	Tue, 26 Mar 2024 17:24:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eLbaeM9k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76D46C433C7;
+	Tue, 26 Mar 2024 17:31:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711473873;
-	bh=3NY5CW+yydbwPGmA8N2DN+1eiN1pQjI1aZQrZ+1g+Sk=;
+	s=k20201202; t=1711474268;
+	bh=ugOlJZ4iHbjWxIdfuLHnCN2gP58Fb/mV/4tos/1T7so=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ngh+OsXgm/R/yFlhgZmKw6gB3IOsj28H3IaPckaZqQLcSylmaSIDK127RPAPnFLkz
-	 Gf5mMpCNpALrBtvJFQ8MomnaLAaGWyoaUJhYSJUhy95JvZfNAddIpO/ZUSjbTX9Nf5
-	 IamGRxKKuHLm0T4hzOrcFxNxpYZTikW2dT/87jivnzgQCRjvx4zSqwFQAXdgDfQeHP
-	 eHm6TN5nHoTFl7JWif0JjhYUUQGXsu0C5BPlJpt+g55MpN5swnPe0ucTirysB5Qkvv
-	 2QzhNv0dadhrQE2YrLSYePo8wP/Pq8Dst/898NmWANG2qQQBLDC3aFWaXLhhHQPKm/
-	 wB4cM8Sk/ciog==
-Date: Tue, 26 Mar 2024 10:24:33 -0700
+	b=eLbaeM9kcemFhkJF3iGfQlibhcma5jzNhd0AkkLnbRTHufVyp3h8AeMgqdDXdRpMg
+	 hmlL/e5tzELubLRgKJm45Fr2wMM6Ru5uV9DCNYVfZs9KIwwknroxb/WhIZEq72Yi4M
+	 RjtbWeFzU0vV2Afpatsy7PKFD3a7FdXeBZ7y1eTzgUT6LFslLQbxeeuoBMg0AqLJQl
+	 M9LIJfKlRBFcxnRLgEGIdHHtD69o5S0uSc5/AlSCS5awXvI9ttFyDDLJsHXc5kL4pM
+	 g9lC+H4nUGFeNaJgcnOvrLqznhy2P1JeI3UFSmCc0gyBk3YARaHC3kU7eMOC4YBGyQ
+	 3yGtJ79IBbFBg==
+Date: Tue, 26 Mar 2024 10:31:07 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: compile out v4 support if disabled
-Message-ID: <20240326172433.GS6390@frogsfrogsfrogs>
-References: <20240325031318.2052017-1-hch@lst.de>
- <20240326000237.GG6414@frogsfrogsfrogs>
- <20240326055047.GA6808@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/5] xfs_db: fix alignment checks in getbitval
+Message-ID: <20240326173107.GT6390@frogsfrogsfrogs>
+References: <171142128559.2214086.13647333402538596.stgit@frogsfrogsfrogs>
+ <171142128594.2214086.10085503198183787124.stgit@frogsfrogsfrogs>
+ <ZgJZzSMIWDFBzADm@infradead.org>
+ <20240326162821.GI6390@frogsfrogsfrogs>
+ <ZgL5dH2AIIlz5N0h@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,24 +45,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240326055047.GA6808@lst.de>
+In-Reply-To: <ZgL5dH2AIIlz5N0h@infradead.org>
 
-On Tue, Mar 26, 2024 at 06:50:47AM +0100, Christoph Hellwig wrote:
-> On Mon, Mar 25, 2024 at 05:02:37PM -0700, Darrick J. Wong wrote:
-> > > +/*
-> > > + * Some features are always on for v5 file systems, allow the compiler to
-> > > + * eliminiate dead code when building without v4 support.
-> > > + */
-> > > +#define __XFS_HAS_V4_FEAT(name, NAME) \
-> > 
-> > Shouldn't this be called __XFS_HAS_V5_FEAT?
+On Tue, Mar 26, 2024 at 09:36:04AM -0700, Christoph Hellwig wrote:
+> On Tue, Mar 26, 2024 at 09:28:21AM -0700, Darrick J. Wong wrote:
+> > Well we could still use the regular ones for aligned access, e.g.
 > 
-> They are features for v4 and unconditional for v5.  Given that Dave
-> came up with the same names independently they can't be all bad,
-> although I don't really care very strongly.
+> We could, but is it worth the effort?  The few xfs_db command that
+> do this bit en/decoding are ery much the definition of a slow path.
 
-Ok, you've both persuaded me then.
+Seeing as it's the debugger I don't really care about maximal
+performance anyway. :)
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+You might have noticed that the rtgroups patchset formally defines the
+rtbitmap words to have le32 ordering (instead of host ordering like we
+do now), at which point getbitval will need to be extended to handle
+little endian conversions.  This is also useful for decoding fsverity
+descriptors.
+
+So I'll go with the less clutter approach.
 
 --D
