@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D74955788E
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 02:56:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80C275788E
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 02:56:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711421778; cv=none; b=EyzFk7boPb28tqsugbfb2AKdfyjzgoRN7RzwBH4MqFa33rVgylVs99shVW3Pw+VPKFJAkpGnGSkkJ+A1RpKXeLbq4V8S86NnAcuN08SmSz+o/g/bgVHPNe++G8EwaL8wK2uMdDy9PFJfFabFUOpWpWjbFHDvUCoAYaa36sL1TgQ=
+	t=1711421794; cv=none; b=caoK1R3a00RWVva5WWXse6PMbNhxhhGW8HtEVjSqCfyIBm0PMUUcJ1/bJOeGG0ubXs3UYJY4uxiNag+B1/CWysXHdTyO5OCE04xG0JogUOToP7hDxb5pP2weMSJARMBrUW5ovsx/1KVj8CpLpe1B3npkh5AKBX94ok4okj9ceXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711421778; c=relaxed/simple;
-	bh=qeBoLSQ9bEyhMwGza8nH5VPT3AY4tpA7At8eQtlLFIA=;
+	s=arc-20240116; t=1711421794; c=relaxed/simple;
+	bh=RFruLTeEp7UQ4s8cNgUBTY4ftqtyf6LViBPTeNBybao=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KnSSdRVBCnng3oMpyBK9f/CKqTldGrPWHwUCeZBihYc9rqTuvgJRBA4GmhnfvR6UVLCbc0ui2+jyrEAbd2BRscEhHNTKV+lKbxjDrduRhfzCfYJrDIXRlRc7iRCuL4IwsNaPotLj4cDKIxO2hAwPgOTvnlFGfL0CIcPpSack9oQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LrXDJrDq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AvKjn0+Jed01SYEvJRIRpTfpgCAp9nzjT+lypelr8iVKZ1+7hDv9CRLiHzwFA0R1Tkpvp4W8qbi6r6pCrkA4UH7CZRvQQyBgJp90+YwqQYlVYrpT4POq7RtOQ9HV7wcuo4TkU4qxy6iv5G4c8VIs4TZ1BEZ7FnD6x70hSbFJ9fw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LmNnY9Ur; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LrXDJrDq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F938C433C7;
-	Tue, 26 Mar 2024 02:56:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LmNnY9Ur"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 008FCC433C7;
+	Tue, 26 Mar 2024 02:56:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711421778;
-	bh=qeBoLSQ9bEyhMwGza8nH5VPT3AY4tpA7At8eQtlLFIA=;
+	s=k20201202; t=1711421794;
+	bh=RFruLTeEp7UQ4s8cNgUBTY4ftqtyf6LViBPTeNBybao=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LrXDJrDqPOY+aUvRbm1onc4Bh25bt/YKsUwRK5horoSRYdRggaScygJr7UsPFqIjJ
-	 yitH3SN3geWEsAjRA6V88+jj7l0UD0zD/FcIx0v56gyn2ugx5DKRwICd5WewV1lzvQ
-	 EEOxPralFE8Zr1nx1E3DWSIVqNsQAUCdzIVO/vmxjmDpoCNFq5XNu+CdoEa6nRNe1e
-	 6AHYkksECu1dRn8hnDKlrHJx9ZqZ8O6WarbbmM6pycqBN9fLklZ/achdHJtag/3y1P
-	 WUazXSmFBTjVo2g51UvoZtM3pgZpGoQeAcKP9U7sltz3GJhz3p18CHgbgag1B2Qg6d
-	 bWntcMho9mVTQ==
-Date: Mon, 25 Mar 2024 19:56:17 -0700
-Subject: [PATCHSET 06/18] mkfs: scale shards on ssds
+	b=LmNnY9Ur6lj6YnWVi9/o+AdOPAv7EYqbBqXRqwXiHlJTTvvaN6zo7XWrFdwuZUPJK
+	 x+wA7R9UQ5oLlw+Nz0aNKl2uZK9sZ6FXRKUWv42fphFufTfxAnH+oco9erErGwv9oK
+	 xUJoLVYSEjlroyWodV+Ai/HpVyBvY7LSKZqJjok4aAwjUF5LcoySBJTYhGKmEuCklx
+	 dWU1PdC0xObRWe37Qcr4MyhAhADB+MJ3IXhy1xn97QZGjt9l0Etwg0W9VeDW8/uiB2
+	 3DTE3dPUNxniB+Fr7DvIalDW3inNNfcK3fydiE/qoCLGiHqYk4JMzDwwX5OC9FBLvL
+	 WJgkDLOdRMsZA==
+Date: Mon, 25 Mar 2024 19:56:33 -0700
+Subject: [PATCHSET v29.4 07/18] xfs_scrub: scan metadata files in parallel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
+Cc: Bill O'Donnell <bodonnel@redhat.com>, Christoph Hellwig <hch@lst.de>,
  linux-xfs@vger.kernel.org
-Message-ID: <171142129320.2214436.15874795221168392835.stgit@frogsfrogsfrogs>
+Message-ID: <171142129653.2214539.10745296562375978455.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240326024549.GE6390@frogsfrogsfrogs>
 References: <20240326024549.GE6390@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,22 +47,13 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-For a long time, the maintainers have had a gut feeling that we could
-optimize performance of XFS filesystems on non-mechanical storage by
-scaling the number of allocation groups to be a multiple of the CPU
-count.
-
-With modern ~2022 hardware, it is common for systems to have more than
-four CPU cores and non-striped SSDs ranging in size from 256GB to 4TB.
-The default mkfs geometry still defaults to 4 AGs regardless of core
-count, which was settled on in the age of spinning rust.
-
-This patchset adds a different computation for AG count and log size
-that is based entirely on a desired level of concurrency.  If we detect
-storage that is non-rotational (or the sysadmin provides a CLI option),
-then we will try to match the AG count to the CPU count to minimize AGF
-contention and make the log large enough to minimize grant head
-contention.
+At this point, we need to clean up the libfrog and xfs_scrub code a
+little bit.  First, correct some of the weird naming and organizing
+choices I made in libfrog for scrub types and fs summary counter scans.
+Second, break out metadata file scans as a separate group, and teach
+xfs_scrub that it can ask the kernel to scan them in parallel.  On
+filesystems with quota or realtime volumes, this can speed up that part
+significantly.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -73,16 +64,20 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-scale-geo-on-ssds
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=mkfs-scale-geo-on-ssds
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-metafile-parallel
 ---
 Commits in this patchset:
- * mkfs: allow sizing allocation groups for concurrency
- * mkfs: allow sizing internal logs for concurrency
+ * libfrog: rename XFROG_SCRUB_TYPE_* to XFROG_SCRUB_GROUP_*
+ * libfrog: promote XFROG_SCRUB_DESCR_SUMMARY to a scrub type
+ * xfs_scrub: scan whole-fs metadata files in parallel
 ---
- man/man8/mkfs.xfs.8.in |   46 +++++++++
- mkfs/xfs_mkfs.c        |  251 +++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 291 insertions(+), 6 deletions(-)
+ io/scrub.c      |   13 +++--
+ libfrog/scrub.c |   51 ++++++++++-----------
+ libfrog/scrub.h |   24 ++++------
+ scrub/phase2.c  |  135 ++++++++++++++++++++++++++++++++++++++++++-------------
+ scrub/phase4.c  |    2 -
+ scrub/phase7.c  |    4 +-
+ scrub/scrub.c   |   75 ++++++++++++++++++-------------
+ scrub/scrub.h   |    6 ++
+ 8 files changed, 194 insertions(+), 116 deletions(-)
 
