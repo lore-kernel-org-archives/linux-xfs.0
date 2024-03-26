@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D830C1C6A0
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 17:22:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B007C1D559
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 17:22:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711473729; cv=none; b=SMEFRmPj+9SOHziQYSqhpzi3iBF32ESVDYwvYX1eKh4l9YZddJf6ubpSMngNvMkWbpYa/ODKdKrCpCrXfMDpMkNzFC3gRUcjj4NfBPoqfVeUehs/pQSl8mPkKXH+u/NREifQx77o/dDBUSBBzbg+fGwXT3ffSSRshOXk4i8zTBU=
+	t=1711473774; cv=none; b=Sm3SMv99LOGzAiBVNlMDIXZcuEv5UTTPFfW2c9gKoQq6Opq/ahB8ixfZpkes5FlQcLtqpr3w2Xjh3YgwK7ShHuGHqFRA4qTTDtxDgsrYR6GTccV7Chw8Y1+peA47bSZ37b/yDXS+NjNI3/W4KdLaPKTWP8QMu00+XmxrPF2OIIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711473729; c=relaxed/simple;
-	bh=Zg/7TEksVH14E9xx4P+fOfTfsMByfAWBgrUedEANACM=;
+	s=arc-20240116; t=1711473774; c=relaxed/simple;
+	bh=7vmG7Eqx3qEr0Wd9M2YjMLgyZryrGy2K0AMBp+MkeUI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mvllY/wo0e1/0J0kT4mzfA4KhDLn0oVD2W7G/Pb+FvzcaIc9ezCjsL78xBot4rDhm+tISSe+/SA/DbgS+Lq8cFMu2I3zOUGcg54oCEuFPRTeDo7+wm32cuHVJGt17NstLoYoqf3sEotTGBZIlsxVQxlnjKRQ0LJqmMFgAJOx3AI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OErgXflt; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fT2s1NCAZ9CesGcKSin9L7F1w9WeoxxbJiDB5gPv0PSB7eBsiTXun0baPFDoek1aGFZZfRLHp7+unJO6tkJRg5Lw9v46sBmyTOk2JWEUKwVii1ab5E6oNLsDcDwKsZ1JXOE+RSenzn4vpJNa6AzmBvfTfEv+DYruM3vGf87iIgc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lqwFef9J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OErgXflt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FDCBC433F1;
-	Tue, 26 Mar 2024 17:22:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lqwFef9J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34447C433F1;
+	Tue, 26 Mar 2024 17:22:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711473729;
-	bh=Zg/7TEksVH14E9xx4P+fOfTfsMByfAWBgrUedEANACM=;
+	s=k20201202; t=1711473774;
+	bh=7vmG7Eqx3qEr0Wd9M2YjMLgyZryrGy2K0AMBp+MkeUI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OErgXflt3hmhZoya4FiAqeaN6DWaMtwczpZcGruhKKoQXvNMWNHFYfUvnk7khPgMw
-	 UYeIwTQQWtwEhM/rGyj4EyltsnHF/slILdEhHN/35C+ZXygVzVRRnUYLZL5LiClQNR
-	 3NZHfL87SWuqoTbjoC10Wh4gV2KuIbu99NX6wKfSGdaqOWjOaXaJgUpOm9N2c/eSJz
-	 MhhEm7XAaI46X2BwBL7sjMhwGIBXuKt8fUYqOvep/Add51CyCErLyjTGKp3xL+gwn+
-	 BiyM4/+v40rLgwK7C0y+arnfRk7roQlJExHOR4g9rrWCtPOe8ZY+5QbHD4LqGgnBUg
-	 HbRCEwlD/sNLQ==
-Date: Tue, 26 Mar 2024 10:22:08 -0700
+	b=lqwFef9JvFFHCp92zrd4t4pKZ3OAfxp2f9eq98ob3wWh1OcBaB6E43/rtyz5RC5MK
+	 1h/jZt0QEbxsricKDXQhM7g1wi/8Zk21qSs5zeGjnbndgxNCvtZWib4SnAkNYaocgU
+	 orzZ4/cK2STrmpSfrB0EINwjs7FHbJOJaZ9szmXnDF5lRmxFsvymKNqbrHVCfr/ygN
+	 /707hmIIrWEIMP8keFDF2VW8hYqk7Zroodf6ZUW9IzvsGvK5afnFXWkaw7K2/XhZIo
+	 Rj8TL//yIyV3uKcf1iMYFpO78EGFct1OWKTh3zH4wLbOMAIIMvPctl4GGt5Gaus2pH
+	 dvep/obECoOLw==
+Date: Tue, 26 Mar 2024 10:22:53 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs_repair: compute refcount data from in-memory
- rmap btrees
-Message-ID: <20240326172208.GQ6390@frogsfrogsfrogs>
-References: <171142134672.2220026.18064456796378653896.stgit@frogsfrogsfrogs>
- <171142134722.2220026.9096244249718663362.stgit@frogsfrogsfrogs>
- <ZgJjQgFM6ei1Cknr@infradead.org>
+Subject: Re: [PATCH 1/4] xfs_repair: define an in-memory btree for storing
+ refcount bag info
+Message-ID: <20240326172253.GR6390@frogsfrogsfrogs>
+References: <171142135076.2220204.9878243275175160383.stgit@frogsfrogsfrogs>
+ <171142135095.2220204.16042670537695757647.stgit@frogsfrogsfrogs>
+ <ZgJj5Y2ORvXhKSXR@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,26 +44,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZgJjQgFM6ei1Cknr@infradead.org>
+In-Reply-To: <ZgJj5Y2ORvXhKSXR@infradead.org>
 
-On Mon, Mar 25, 2024 at 10:55:14PM -0700, Christoph Hellwig wrote:
-> > +#define RMAP_NEXT(r)	((r)->rm_startblock + (r)->rm_blockcount)
+On Mon, Mar 25, 2024 at 10:57:57PM -0700, Christoph Hellwig wrote:
+> On Mon, Mar 25, 2024 at 09:01:50PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create a new in-memory btree type so that we can store refcount bag info
+> > in a much more memory-efficient format.
 > 
-> Maybe kill this just like we did in the kernel?
+> There's probably a reason to not just shared this directly with the
+> kernel?
 
-It goes away in patch 3 of the next patchset.
+Add to the commit message:
 
-> Otherwise this looks fine.  Note that it looks very similar but not the
-> same as the kernel code.  I guess sharing more code was considered but
-> didn't work out for some reason?  Mabye document that in the commit
-> log?
-
-Ok.  The rcbag btree in xfs_repair has a different record format than
-the one in the kernel because we store owner numbers so that xfs_repair
-can compute the bitmap of files that need to have the reflink iflag set.
-
-I'll make a note of that in "xfs_repair: define an in-memory btree for
-storing refcount bag info".
+"The xfs_repair rcbag btree stores inode numbers (unlike the kernel
+rcbag btree) because xfs_repair needs to compute the bitmap of inodes
+that must have the reflink iflag set."
 
 > Otherwise looks good:
 > 
