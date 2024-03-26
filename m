@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E94E1292F2
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:31:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D1F128381
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:32:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423908; cv=none; b=EMw9a3A8QptfyphIPOoJMKigDfOxfvBsuSGbfczLykXO42pNB2ng9GDBt0QDL7aYUt0koEVbo3C+Z9IusQdE8p5VOP4nmQObJ9FvSoZ9W7G29TG+y20zs6VgjTOdgzA/nGGGU/darPVYhpFCHhWKLmsagu/0GoUsAUhSopo5cGQ=
+	t=1711423924; cv=none; b=b3eWWwxYVv7H5VyHjHMMpmqt4X6l/m+CS/rxOIYI0a6IMG7VqSJmTeGYXl5z95te9J/Muq9AtJwqJIlPu5Fv4vcdS3x7XTlHf0lrXJxqpwuldHDHo6/5ZRlH7zMBw5HGEPIF5CGAnnrIkkMfb1SbRMtIuuOg22Ii+y5olJYK1EA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423908; c=relaxed/simple;
-	bh=VcAqkA+DuY2ibWKhyzWtL96VktAaUU97DJQSXOkRfIo=;
+	s=arc-20240116; t=1711423924; c=relaxed/simple;
+	bh=GI/xOk5H1D7E+55CfeGa9WXQJBmjwEF/UsvvQXpQ3LY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lGVIMHBXu9FiRDjISQkAZpoCJzjoveZ4DA9uN0Fu4Xk3zAw5AcUiHqzmXlO9zAEIuDsWR5h7rfS2M09WzD9cpga7rxC17fin+wFTT94rPDqIshrkN3L4+6/JXRsLHl+WoG6W8I/y88n/peVloH4B7koqKZSmySyjGk1bItWoZk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YjgcMBkT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mavvrQr+bWxWWB9zu6Osag+HRJ1ZYo3y87KkT3Z9e5uSB6yn/JdT4Zhtxi54AqsNGNF/t41vkYclTA2Y+xppF3Yj65AqDToPtKGSGnGQmsi7SV59nMD/RzWs2dlO6yiNmxJue9y0baTPEyTAzsLvAUFoTNB47g3HQmy5d+EB3ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sdyvuENj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YjgcMBkT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51A8EC433F1;
-	Tue, 26 Mar 2024 03:31:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sdyvuENj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 135EAC433F1;
+	Tue, 26 Mar 2024 03:32:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423908;
-	bh=VcAqkA+DuY2ibWKhyzWtL96VktAaUU97DJQSXOkRfIo=;
+	s=k20201202; t=1711423924;
+	bh=GI/xOk5H1D7E+55CfeGa9WXQJBmjwEF/UsvvQXpQ3LY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YjgcMBkTNu0fbdGgp4UBE06z0zwnjDXq2jrZ8dJmdavBQZUV1LgXC2MwrCx7jUqB4
-	 h8o/1brjW1FvQiIRQuHPPvCovjHF0INASK/p5tegbHeJ2mGgIH+J8WotNHqXvZo5MR
-	 UTpvlDBWkUdLxi6R9JTCDzsm+qBkrCIQ4vd4lhQs4K2MLLkPgdVX4Jx5O6d0AV5LVP
-	 qZaYDRe+K4CVI30jAWOJHN4zPXj53N6oqxTTtkvjnti5lujfzObJZopeFufcLdk/TR
-	 4eIRyP/z5B3XXTCjPcAd0Abt3TX4AResqbAWKAUI23WxblZ/Z1VlqFsif+FZE8n03e
-	 N0KX/8MuSjGsg==
-Date: Mon, 25 Mar 2024 20:31:47 -0700
-Subject: [PATCH 013/110] xfs: implement live quotacheck inode scan
+	b=sdyvuENjXV34gjk3MnMFQiVVNdx6QiVjfDPlg7Mq6hn3ABNGoaGQVHpYpgEqaL+xg
+	 iQuU6E6JhRbM7dcypZBseVncc5yJ5M+20UtyGGB1N/B8AuI4jJZAFemLA13JiDCQxb
+	 Y1IMZ2P+FY5LlWOEh5VZr8h7ELynGIWCbJij7LCNd6nGfhzOaRYJ9BIpCO95V8l+DS
+	 GzPh8I8hrG1R4U9CYks2qviaWSHoTSQc1UYCVivdDuv5hyoQqEgzjENBC9Hyw7u1ox
+	 1wIFIe+FzFL1VtxifLdnJCYSO+CP+TFDkzAWY/I/0fbqrikvJagoIOAA2Yxot6WacO
+	 tUphT8XFfT2jg==
+Date: Mon, 25 Mar 2024 20:32:03 -0700
+Subject: [PATCH 014/110] xfs: report health of inode link counts
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142131573.2215168.15888257018946505811.stgit@frogsfrogsfrogs>
+Message-ID: <171142131587.2215168.6349840306510538212.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,36 +46,50 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 48dd9117a34fe9a34a6be0b1dba5694e0f19cbd4
+Source kernel commit: 93687ee2e3748a4a6b541ff0d83d1480815b00a9
 
-Create a new trio of scrub functions to check quota counters.  While the
-dquots themselves are filesystem metadata and should be checked early,
-the dquot counter values are computed from other metadata and are
-therefore summary counters.  We don't plug these into the scrub dispatch
-just yet, because we still need to be able to watch quota updates while
-doing our scan.
+Report on the health of the inode link counts.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libxfs/xfs_fs.h     |    1 +
+ libxfs/xfs_health.h |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 711e0fc7efab..07acbed9235c 100644
+index 07acbed9235c..f10d0aa0e337 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -710,9 +710,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_GQUOTA	22	/* group quotas */
- #define XFS_SCRUB_TYPE_PQUOTA	23	/* project quotas */
- #define XFS_SCRUB_TYPE_FSCOUNTERS 24	/* fs summary counters */
-+#define XFS_SCRUB_TYPE_QUOTACHECK 25	/* quota counters */
+@@ -196,6 +196,7 @@ struct xfs_fsop_geom {
+ #define XFS_FSOP_GEOM_SICK_RT_BITMAP	(1 << 4)  /* realtime bitmap */
+ #define XFS_FSOP_GEOM_SICK_RT_SUMMARY	(1 << 5)  /* realtime summary */
+ #define XFS_FSOP_GEOM_SICK_QUOTACHECK	(1 << 6)  /* quota counts */
++#define XFS_FSOP_GEOM_SICK_NLINKS	(1 << 7)  /* inode link counts */
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	25
-+#define XFS_SCRUB_TYPE_NR	26
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index 5626e53b3f0f..2bfe2dc404a1 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -42,6 +42,7 @@ struct xfs_fsop_geom;
+ #define XFS_SICK_FS_GQUOTA	(1 << 2)  /* group quota */
+ #define XFS_SICK_FS_PQUOTA	(1 << 3)  /* project quota */
+ #define XFS_SICK_FS_QUOTACHECK	(1 << 4)  /* quota counts */
++#define XFS_SICK_FS_NLINKS	(1 << 5)  /* inode link counts */
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
+ /* Observable health issues for realtime volume metadata. */
+ #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
+@@ -79,7 +80,8 @@ struct xfs_fsop_geom;
+ 				 XFS_SICK_FS_UQUOTA | \
+ 				 XFS_SICK_FS_GQUOTA | \
+ 				 XFS_SICK_FS_PQUOTA | \
+-				 XFS_SICK_FS_QUOTACHECK)
++				 XFS_SICK_FS_QUOTACHECK | \
++				 XFS_SICK_FS_NLINKS)
+ 
+ #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
+ 				 XFS_SICK_RT_SUMMARY)
 
