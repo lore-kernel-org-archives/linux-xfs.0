@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D9621353
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:54:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A6121353
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:54:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711425240; cv=none; b=XuA5zhvbp7UXwJhgJCEE7DBTD+KuAd36506bhY9cMJ4rMCcJuLIPhE+6Nm0E6HZJOnkdOzsUbGXK6HbZ9zo4/gr5CDR7iwk70TjBpSTWy5F+KaBbwyNhZv1eBa0bJ1ZrR7jquhKC5nTD02MTkqSzO2GexsnxW9EDxe9gmPCsF8s=
+	t=1711425256; cv=none; b=GWcZmJ7fixtfK/FG7ckIFuk2M94p+AotNwMQXGUNmllWHMuV6bDU4e8LEYVdDeSWgCgWzxgJbijtPNp0GNZrTfWWtio0DfHL8A5V42kkcx2O7F1XZqigpzLwvRZbZXI4Rv3y5PmbuxqX5Js1UX3+5H6JlnVZlu/3nAsty0KQbtg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711425240; c=relaxed/simple;
-	bh=ZF6OIO4ccxqyE78ooFWSr+MpSNi1N5y0TsoGE1lK0x0=;
+	s=arc-20240116; t=1711425256; c=relaxed/simple;
+	bh=9eL6JX+klCF9CQpsSLOV016EjREF7nGefCdzaBuDVQA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tLSAP+8rH9dLxwPy8IdGne1fuv2MwFJFFQNe8ZFZ/a+imdty4vxxLcLxbZN1l6DId8Zt1LGPP7hR2zZ4COdjvLOU0rY741BD1PpHP6Lty1pmuRH9xW0gfGrmY9gz6I0Fq9pCW8zkBohpMQwrMVM/QRRnFL3KjV1roRdRy0nMmD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ss9kz4CC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UnF6P2O15IjbaUYnRXZa+PqaRKZixe/fthHGXaVqsv8Sf1W6Tl6MJ4IRyRs6aLIuftX0pPCp2TtUhyt27Uu9eCWfXLiHGVZosTKVPi6dvjM5UKeAm4DUBd+vIyBZlThevCZLDRG0O6Qn7Xvm45ySTXi8jE8JEjXsZsEPaJieNG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kL2zsiLL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ss9kz4CC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39155C433F1;
-	Tue, 26 Mar 2024 03:54:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kL2zsiLL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7E6DC433C7;
+	Tue, 26 Mar 2024 03:54:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711425240;
-	bh=ZF6OIO4ccxqyE78ooFWSr+MpSNi1N5y0TsoGE1lK0x0=;
+	s=k20201202; t=1711425256;
+	bh=9eL6JX+klCF9CQpsSLOV016EjREF7nGefCdzaBuDVQA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ss9kz4CCkcnaOC1+Lajwi/B36vvbqNkudpEN9o764sywrE5dErh4bkMkl7hQQtOUg
-	 93Iteg7ysSfkWO+gvKgNeGzvNtocwWoWyuOxlu6ynFdwTz00lvX2K04NZqVWp+iXEw
-	 i8jTfmL+94yc+8Evx8DQIlRpyVmz9zbzJ+qPpeq/3j9Zz2bKaPtRy8xw33C3sjr7N/
-	 8Mi2iJWRZjnlaFJ47917uz8onJ3B32y2cnK3AD+e4foRTDuqmScRi4pBCtq67pVAmQ
-	 XSauX97RQRVC8VhhGmC8+B7ICZJ99VayVWKw0V889djItNd7igikxTEFee21Tmg7hu
-	 QjVdDWZ4ZyBCg==
-Date: Mon, 25 Mar 2024 20:53:59 -0700
-Subject: [PATCH 098/110] xfs: create a shadow rmap btree during rmap repair
+	b=kL2zsiLLHt4RHMv/+VSCKGpV0PmECuc/Gv6UoDxp/yaA/UQnMgQzqfnhQHr+0IRMy
+	 1/cKy1/H3P8DlDi5uYnr+lzqb5Jir9Ca7tnyX6IoCi2vnXipRfSCwm6hs2XfVRwpqb
+	 4HpOfSnC0SgkG/dBdL36lmVuVg/H2q0UEjJZKSmdYnDuBZk1K1v5U2MAeQJjjc58AI
+	 fab8O6r+/D3cQt1UJ9oE+cyrJ8AJY4BSecqPc+bwOYiZryC1GKoQyG6rkFMtEGHyYP
+	 ObdPxWFbyhlsYjW+70AAekt5rLb4CDiQSkUvEM657VGLZLNoQfe6jkIO9VNKrqXozy
+	 HmkXlUi8RCDrQ==
+Date: Mon, 25 Mar 2024 20:54:15 -0700
+Subject: [PATCH 099/110] xfs: hook live rmap operations during a repair
+ operation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142132791.2215168.16141839696808530556.stgit@frogsfrogsfrogs>
+Message-ID: <171142132805.2215168.2190636499688730540.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,322 +47,285 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 4787fc802752c9b73b28ff18860c0560bf4337f2
+Source kernel commit: 7e1b84b24d257700e417bc9cd724c1efdff653d7
 
-Create an in-memory btree of rmap records instead of an array.  This
-enables us to do live record collection instead of freezing the fs.
+Hook the regular rmap code when an rmapbt repair operation is running so
+that we can unlock the AGF buffer to scan the filesystem and keep the
+in-memory btree up to date during the scan.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_rmap.c       |   37 +++++++-----
- libxfs/xfs_rmap_btree.c |  151 +++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rmap_btree.h |    6 ++
- libxfs/xfs_shared.h     |   10 +++
- 4 files changed, 190 insertions(+), 14 deletions(-)
+ libxfs/xfs_ag.c   |    1 
+ libxfs/xfs_ag.h   |    3 +
+ libxfs/xfs_rmap.c |  154 ++++++++++++++++++++++++++++++++++++++++++-----------
+ libxfs/xfs_rmap.h |   29 ++++++++++
+ 4 files changed, 154 insertions(+), 33 deletions(-)
 
 
+diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
+index 06a881285682..e2fc3e88244f 100644
+--- a/libxfs/xfs_ag.c
++++ b/libxfs/xfs_ag.c
+@@ -415,6 +415,7 @@ xfs_initialize_perag(
+ 		init_waitqueue_head(&pag->pag_active_wq);
+ 		pag->pagb_count = 0;
+ 		pag->pagb_tree = RB_ROOT;
++		xfs_hooks_init(&pag->pag_rmap_update_hooks);
+ #endif /* __KERNEL__ */
+ 
+ 		error = xfs_buf_cache_init(&pag->pag_bcache);
+diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
+index e019b79dbbe3..35de09a2516c 100644
+--- a/libxfs/xfs_ag.h
++++ b/libxfs/xfs_ag.h
+@@ -120,6 +120,9 @@ struct xfs_perag {
+ 	 * inconsistencies.
+ 	 */
+ 	struct xfs_defer_drain	pag_intents_drain;
++
++	/* Hook to feed rmapbt updates to an active online repair. */
++	struct xfs_hooks	pag_rmap_update_hooks;
+ #endif /* __KERNEL__ */
+ };
+ 
 diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-index a0b4280fe584..a7be2aa92c0a 100644
+index a7be2aa92c0a..c3195e532366 100644
 --- a/libxfs/xfs_rmap.c
 +++ b/libxfs/xfs_rmap.c
-@@ -268,6 +268,16 @@ xfs_rmap_check_irec(
- 	return NULL;
+@@ -820,6 +820,86 @@ xfs_rmap_unmap(
+ 	return error;
  }
  
-+static inline xfs_failaddr_t
-+xfs_rmap_check_btrec(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*irec)
-+{
-+	if (xfs_btree_is_mem_rmap(cur->bc_ops))
-+		return xfs_rmap_check_irec(cur->bc_mem.pag, irec);
-+	return xfs_rmap_check_irec(cur->bc_ag.pag, irec);
-+}
-+
- static inline int
- xfs_rmap_complain_bad_rec(
- 	struct xfs_btree_cur		*cur,
-@@ -276,9 +286,13 @@ xfs_rmap_complain_bad_rec(
- {
- 	struct xfs_mount		*mp = cur->bc_mp;
- 
--	xfs_warn(mp,
--		"Reverse Mapping BTree record corruption in AG %d detected at %pS!",
--		cur->bc_ag.pag->pag_agno, fa);
-+	if (xfs_btree_is_mem_rmap(cur->bc_ops))
-+		xfs_warn(mp,
-+ "In-Memory Reverse Mapping BTree record corruption detected at %pS!", fa);
-+	else
-+		xfs_warn(mp,
-+ "Reverse Mapping BTree record corruption in AG %d detected at %pS!",
-+			cur->bc_ag.pag->pag_agno, fa);
- 	xfs_warn(mp,
- 		"Owner 0x%llx, flags 0x%x, start block 0x%x block count 0x%x",
- 		irec->rm_owner, irec->rm_flags, irec->rm_startblock,
-@@ -306,7 +320,7 @@ xfs_rmap_get_rec(
- 
- 	fa = xfs_rmap_btrec_to_irec(rec, irec);
- 	if (!fa)
--		fa = xfs_rmap_check_irec(cur->bc_ag.pag, irec);
-+		fa = xfs_rmap_check_btrec(cur, irec);
- 	if (fa)
- 		return xfs_rmap_complain_bad_rec(cur, fa, irec);
- 
-@@ -2403,15 +2417,12 @@ xfs_rmap_map_raw(
- {
- 	struct xfs_owner_info	oinfo;
- 
--	oinfo.oi_owner = rmap->rm_owner;
--	oinfo.oi_offset = rmap->rm_offset;
--	oinfo.oi_flags = 0;
--	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
--		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
--	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
--		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
-+	xfs_owner_info_pack(&oinfo, rmap->rm_owner, rmap->rm_offset,
-+			rmap->rm_flags);
- 
--	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
-+	if ((rmap->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
-+			       XFS_RMAP_UNWRITTEN)) ||
-+	    XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
- 		return xfs_rmap_map(cur, rmap->rm_startblock,
- 				rmap->rm_blockcount,
- 				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
-@@ -2441,7 +2452,7 @@ xfs_rmap_query_range_helper(
- 
- 	fa = xfs_rmap_btrec_to_irec(rec, &irec);
- 	if (!fa)
--		fa = xfs_rmap_check_irec(cur->bc_ag.pag, &irec);
-+		fa = xfs_rmap_check_btrec(cur, &irec);
- 	if (fa)
- 		return xfs_rmap_complain_bad_rec(cur, fa, &irec);
- 
-diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index 956cdc2fd596..a2730e29c8a1 100644
---- a/libxfs/xfs_rmap_btree.c
-+++ b/libxfs/xfs_rmap_btree.c
-@@ -20,6 +20,9 @@
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
- #include "xfs_health.h"
-+#include "xfile.h"
-+#include "buf_mem.h"
-+#include "xfs_btree_mem.h"
- 
- static struct kmem_cache	*xfs_rmapbt_cur_cache;
- 
-@@ -539,6 +542,151 @@ xfs_rmapbt_init_cursor(
- 	return cur;
- }
- 
-+#ifdef CONFIG_XFS_BTREE_IN_MEM
-+static inline unsigned int
-+xfs_rmapbt_mem_block_maxrecs(
-+	unsigned int		blocklen,
-+	bool			leaf)
-+{
-+	if (leaf)
-+		return blocklen / sizeof(struct xfs_rmap_rec);
-+	return blocklen /
-+		(2 * sizeof(struct xfs_rmap_key) + sizeof(__be64));
-+}
-+
++#ifdef CONFIG_XFS_LIVE_HOOKS
 +/*
-+ * Validate an in-memory rmap btree block.  Callers are allowed to generate an
-+ * in-memory btree even if the ondisk feature is not enabled.
++ * Use a static key here to reduce the overhead of rmapbt live updates.  If
++ * the compiler supports jump labels, the static branch will be replaced by a
++ * nop sled when there are no hook users.  Online fsck is currently the only
++ * caller, so this is a reasonable tradeoff.
++ *
++ * Note: Patching the kernel code requires taking the cpu hotplug lock.  Other
++ * parts of the kernel allocate memory with that lock held, which means that
++ * XFS callers cannot hold any locks that might be used by memory reclaim or
++ * writeback when calling the static_branch_{inc,dec} functions.
 + */
-+static xfs_failaddr_t
-+xfs_rmapbt_mem_verify(
-+	struct xfs_buf		*bp)
++DEFINE_STATIC_XFS_HOOK_SWITCH(xfs_rmap_hooks_switch);
++
++void
++xfs_rmap_hook_disable(void)
 +{
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	xfs_failaddr_t		fa;
-+	unsigned int		level;
-+	unsigned int		maxrecs;
-+
-+	if (!xfs_verify_magic(bp, block->bb_magic))
-+		return __this_address;
-+
-+	fa = xfs_btree_fsblock_v5hdr_verify(bp, XFS_RMAP_OWN_UNKNOWN);
-+	if (fa)
-+		return fa;
-+
-+	level = be16_to_cpu(block->bb_level);
-+	if (level >= xfs_rmapbt_maxlevels_ondisk())
-+		return __this_address;
-+
-+	maxrecs = xfs_rmapbt_mem_block_maxrecs(
-+			XFBNO_BLOCKSIZE - XFS_BTREE_LBLOCK_CRC_LEN, level == 0);
-+	return xfs_btree_memblock_verify(bp, maxrecs);
++	xfs_hooks_switch_off(&xfs_rmap_hooks_switch);
 +}
 +
-+static void
-+xfs_rmapbt_mem_rw_verify(
-+	struct xfs_buf	*bp)
++void
++xfs_rmap_hook_enable(void)
 +{
-+	xfs_failaddr_t	fa = xfs_rmapbt_mem_verify(bp);
-+
-+	if (fa)
-+		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
++	xfs_hooks_switch_on(&xfs_rmap_hooks_switch);
 +}
 +
-+/* skip crc checks on in-memory btrees to save time */
-+static const struct xfs_buf_ops xfs_rmapbt_mem_buf_ops = {
-+	.name			= "xfs_rmapbt_mem",
-+	.magic			= { 0, cpu_to_be32(XFS_RMAP_CRC_MAGIC) },
-+	.verify_read		= xfs_rmapbt_mem_rw_verify,
-+	.verify_write		= xfs_rmapbt_mem_rw_verify,
-+	.verify_struct		= xfs_rmapbt_mem_verify,
-+};
-+
-+const struct xfs_btree_ops xfs_rmapbt_mem_ops = {
-+	.name			= "mem_rmap",
-+	.type			= XFS_BTREE_TYPE_MEM,
-+	.geom_flags		= XFS_BTGEO_OVERLAPPING,
-+
-+	.rec_len		= sizeof(struct xfs_rmap_rec),
-+	/* Overlapping btree; 2 keys per pointer. */
-+	.key_len		= 2 * sizeof(struct xfs_rmap_key),
-+	.ptr_len		= XFS_BTREE_LONG_PTR_LEN,
-+
-+	.lru_refs		= XFS_RMAP_BTREE_REF,
-+	.statoff		= XFS_STATS_CALC_INDEX(xs_rmap_mem_2),
-+
-+	.dup_cursor		= xfbtree_dup_cursor,
-+	.set_root		= xfbtree_set_root,
-+	.alloc_block		= xfbtree_alloc_block,
-+	.free_block		= xfbtree_free_block,
-+	.get_minrecs		= xfbtree_get_minrecs,
-+	.get_maxrecs		= xfbtree_get_maxrecs,
-+	.init_key_from_rec	= xfs_rmapbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_rmapbt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_rmapbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfbtree_init_ptr_from_cur,
-+	.key_diff		= xfs_rmapbt_key_diff,
-+	.buf_ops		= &xfs_rmapbt_mem_buf_ops,
-+	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
-+	.keys_inorder		= xfs_rmapbt_keys_inorder,
-+	.recs_inorder		= xfs_rmapbt_recs_inorder,
-+	.keys_contiguous	= xfs_rmapbt_keys_contiguous,
-+};
-+
-+/* Create a cursor for an in-memory btree. */
-+struct xfs_btree_cur *
-+xfs_rmapbt_mem_cursor(
-+	struct xfs_perag	*pag,
-+	struct xfs_trans	*tp,
-+	struct xfbtree		*xfbt)
++/* Call downstream hooks for a reverse mapping update. */
++static inline void
++xfs_rmap_update_hook(
++	struct xfs_trans		*tp,
++	struct xfs_perag		*pag,
++	enum xfs_rmap_intent_type	op,
++	xfs_agblock_t			startblock,
++	xfs_extlen_t			blockcount,
++	bool				unwritten,
++	const struct xfs_owner_info	*oinfo)
 +{
-+	struct xfs_btree_cur	*cur;
-+	struct xfs_mount	*mp = pag->pag_mount;
++	if (xfs_hooks_switched_on(&xfs_rmap_hooks_switch)) {
++		struct xfs_rmap_update_params	p = {
++			.startblock	= startblock,
++			.blockcount	= blockcount,
++			.unwritten	= unwritten,
++			.oinfo		= *oinfo, /* struct copy */
++		};
 +
-+	cur = xfs_btree_alloc_cursor(mp, tp, &xfs_rmapbt_mem_ops,
-+			xfs_rmapbt_maxlevels_ondisk(), xfs_rmapbt_cur_cache);
-+	cur->bc_mem.xfbtree = xfbt;
-+	cur->bc_nlevels = xfbt->nlevels;
-+
-+	cur->bc_mem.pag = xfs_perag_hold(pag);
-+	return cur;
++		if (pag)
++			xfs_hooks_call(&pag->pag_rmap_update_hooks, op, &p);
++	}
 +}
 +
-+/* Create an in-memory rmap btree. */
++/* Call the specified function during a reverse mapping update. */
 +int
-+xfs_rmapbt_mem_init(
-+	struct xfs_mount	*mp,
-+	struct xfbtree		*xfbt,
-+	struct xfs_buftarg	*btp,
-+	xfs_agnumber_t		agno)
++xfs_rmap_hook_add(
++	struct xfs_perag	*pag,
++	struct xfs_rmap_hook	*hook)
 +{
-+	xfbt->owner = agno;
-+	return xfbtree_init(mp, xfbt, btp, &xfs_rmapbt_mem_ops);
++	return xfs_hooks_add(&pag->pag_rmap_update_hooks, &hook->rmap_hook);
 +}
 +
-+/* Compute the max possible height for reverse mapping btrees in memory. */
-+static unsigned int
-+xfs_rmapbt_mem_maxlevels(void)
++/* Stop calling the specified function during a reverse mapping update. */
++void
++xfs_rmap_hook_del(
++	struct xfs_perag	*pag,
++	struct xfs_rmap_hook	*hook)
 +{
-+	unsigned int		minrecs[2];
-+	unsigned int		blocklen;
++	xfs_hooks_del(&pag->pag_rmap_update_hooks, &hook->rmap_hook);
++}
 +
-+	blocklen = XFBNO_BLOCKSIZE - XFS_BTREE_LBLOCK_CRC_LEN;
-+
-+	minrecs[0] = xfs_rmapbt_mem_block_maxrecs(blocklen, true) / 2;
-+	minrecs[1] = xfs_rmapbt_mem_block_maxrecs(blocklen, false) / 2;
-+
-+	/*
-+	 * How tall can an in-memory rmap btree become if we filled the entire
-+	 * AG with rmap records?
-+	 */
-+	return xfs_btree_compute_maxlevels(minrecs,
-+			XFS_MAX_AG_BYTES / sizeof(struct xfs_rmap_rec));
++/* Configure rmap update hook functions. */
++void
++xfs_rmap_hook_setup(
++	struct xfs_rmap_hook	*hook,
++	notifier_fn_t		mod_fn)
++{
++	xfs_hook_setup(&hook->rmap_hook, mod_fn);
 +}
 +#else
-+# define xfs_rmapbt_mem_maxlevels()	(0)
-+#endif /* CONFIG_XFS_BTREE_IN_MEM */
++# define xfs_rmap_update_hook(t, p, o, s, b, u, oi)	do { } while (0)
++#endif /* CONFIG_XFS_LIVE_HOOKS */
 +
  /*
-  * Install a new reverse mapping btree root.  Caller is responsible for
-  * invalidating and freeing the old btree blocks.
-@@ -609,7 +757,8 @@ xfs_rmapbt_maxlevels_ondisk(void)
- 	 * like if it consumes almost all the blocks in the AG due to maximal
- 	 * sharing factor.
- 	 */
--	return xfs_btree_space_to_height(minrecs, XFS_MAX_CRC_AG_BLOCKS);
-+	return max(xfs_btree_space_to_height(minrecs, XFS_MAX_CRC_AG_BLOCKS),
-+		   xfs_rmapbt_mem_maxlevels());
+  * Remove a reference to an extent in the rmap btree.
+  */
+@@ -840,7 +920,7 @@ xfs_rmap_free(
+ 		return 0;
+ 
+ 	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, pag);
+-
++	xfs_rmap_update_hook(tp, pag, XFS_RMAP_UNMAP, bno, len, false, oinfo);
+ 	error = xfs_rmap_unmap(cur, bno, len, false, oinfo);
+ 
+ 	xfs_btree_del_cursor(cur, error);
+@@ -1092,6 +1172,7 @@ xfs_rmap_alloc(
+ 		return 0;
+ 
+ 	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, pag);
++	xfs_rmap_update_hook(tp, pag, XFS_RMAP_MAP, bno, len, false, oinfo);
+ 	error = xfs_rmap_map(cur, bno, len, false, oinfo);
+ 
+ 	xfs_btree_del_cursor(cur, error);
+@@ -2507,6 +2588,38 @@ xfs_rmap_finish_one_cleanup(
+ 		xfs_trans_brelse(tp, agbp);
  }
  
- /* Compute the maximum height of an rmap btree. */
-diff --git a/libxfs/xfs_rmap_btree.h b/libxfs/xfs_rmap_btree.h
-index 27536d7e14aa..eb90d89e8086 100644
---- a/libxfs/xfs_rmap_btree.h
-+++ b/libxfs/xfs_rmap_btree.h
-@@ -10,6 +10,7 @@ struct xfs_buf;
- struct xfs_btree_cur;
- struct xfs_mount;
- struct xbtree_afakeroot;
-+struct xfbtree;
- 
- /* rmaps only exist on crc enabled filesystems */
- #define XFS_RMAP_BLOCK_LEN	XFS_BTREE_SBLOCK_CRC_LEN
-@@ -62,4 +63,9 @@ unsigned int xfs_rmapbt_maxlevels_ondisk(void);
- int __init xfs_rmapbt_init_cur_cache(void);
- void xfs_rmapbt_destroy_cur_cache(void);
- 
-+struct xfs_btree_cur *xfs_rmapbt_mem_cursor(struct xfs_perag *pag,
-+		struct xfs_trans *tp, struct xfbtree *xfbtree);
-+int xfs_rmapbt_mem_init(struct xfs_mount *mp, struct xfbtree *xfbtree,
-+		struct xfs_buftarg *btp, xfs_agnumber_t agno);
-+
- #endif /* __XFS_RMAP_BTREE_H__ */
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 6b8bc276d461..cab49e7116ec 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -51,6 +51,7 @@ extern const struct xfs_btree_ops xfs_finobt_ops;
- extern const struct xfs_btree_ops xfs_bmbt_ops;
- extern const struct xfs_btree_ops xfs_refcountbt_ops;
- extern const struct xfs_btree_ops xfs_rmapbt_ops;
-+extern const struct xfs_btree_ops xfs_rmapbt_mem_ops;
- 
- static inline bool xfs_btree_is_bno(const struct xfs_btree_ops *ops)
- {
-@@ -87,6 +88,15 @@ static inline bool xfs_btree_is_rmap(const struct xfs_btree_ops *ops)
- 	return ops == &xfs_rmapbt_ops;
- }
- 
-+#ifdef CONFIG_XFS_BTREE_IN_MEM
-+static inline bool xfs_btree_is_mem_rmap(const struct xfs_btree_ops *ops)
++/* Commit an rmap operation into the ondisk tree. */
++int
++__xfs_rmap_finish_intent(
++	struct xfs_btree_cur		*rcur,
++	enum xfs_rmap_intent_type	op,
++	xfs_agblock_t			bno,
++	xfs_extlen_t			len,
++	const struct xfs_owner_info	*oinfo,
++	bool				unwritten)
 +{
-+	return ops == &xfs_rmapbt_mem_ops;
++	switch (op) {
++	case XFS_RMAP_ALLOC:
++	case XFS_RMAP_MAP:
++		return xfs_rmap_map(rcur, bno, len, unwritten, oinfo);
++	case XFS_RMAP_MAP_SHARED:
++		return xfs_rmap_map_shared(rcur, bno, len, unwritten, oinfo);
++	case XFS_RMAP_FREE:
++	case XFS_RMAP_UNMAP:
++		return xfs_rmap_unmap(rcur, bno, len, unwritten, oinfo);
++	case XFS_RMAP_UNMAP_SHARED:
++		return xfs_rmap_unmap_shared(rcur, bno, len, unwritten, oinfo);
++	case XFS_RMAP_CONVERT:
++		return xfs_rmap_convert(rcur, bno, len, !unwritten, oinfo);
++	case XFS_RMAP_CONVERT_SHARED:
++		return xfs_rmap_convert_shared(rcur, bno, len, !unwritten,
++				oinfo);
++	default:
++		ASSERT(0);
++		return -EFSCORRUPTED;
++	}
 +}
-+#else
-+# define xfs_btree_is_mem_rmap(...)	(false)
++
+ /*
+  * Process one of the deferred rmap operations.  We pass back the
+  * btree cursor to maintain our lock on the rmapbt between calls.
+@@ -2573,39 +2686,14 @@ xfs_rmap_finish_one(
+ 	unwritten = ri->ri_bmap.br_state == XFS_EXT_UNWRITTEN;
+ 	bno = XFS_FSB_TO_AGBNO(rcur->bc_mp, ri->ri_bmap.br_startblock);
+ 
+-	switch (ri->ri_type) {
+-	case XFS_RMAP_ALLOC:
+-	case XFS_RMAP_MAP:
+-		error = xfs_rmap_map(rcur, bno, ri->ri_bmap.br_blockcount,
+-				unwritten, &oinfo);
+-		break;
+-	case XFS_RMAP_MAP_SHARED:
+-		error = xfs_rmap_map_shared(rcur, bno,
+-				ri->ri_bmap.br_blockcount, unwritten, &oinfo);
+-		break;
+-	case XFS_RMAP_FREE:
+-	case XFS_RMAP_UNMAP:
+-		error = xfs_rmap_unmap(rcur, bno, ri->ri_bmap.br_blockcount,
+-				unwritten, &oinfo);
+-		break;
+-	case XFS_RMAP_UNMAP_SHARED:
+-		error = xfs_rmap_unmap_shared(rcur, bno,
+-				ri->ri_bmap.br_blockcount, unwritten, &oinfo);
+-		break;
+-	case XFS_RMAP_CONVERT:
+-		error = xfs_rmap_convert(rcur, bno, ri->ri_bmap.br_blockcount,
+-				!unwritten, &oinfo);
+-		break;
+-	case XFS_RMAP_CONVERT_SHARED:
+-		error = xfs_rmap_convert_shared(rcur, bno,
+-				ri->ri_bmap.br_blockcount, !unwritten, &oinfo);
+-		break;
+-	default:
+-		ASSERT(0);
+-		error = -EFSCORRUPTED;
+-	}
++	error = __xfs_rmap_finish_intent(rcur, ri->ri_type, bno,
++			ri->ri_bmap.br_blockcount, &oinfo, unwritten);
++	if (error)
++		return error;
+ 
+-	return error;
++	xfs_rmap_update_hook(tp, ri->ri_pag, ri->ri_type, bno,
++			ri->ri_bmap.br_blockcount, unwritten, &oinfo);
++	return 0;
+ }
+ 
+ /*
+diff --git a/libxfs/xfs_rmap.h b/libxfs/xfs_rmap.h
+index 58c67896d12c..9d01fe689497 100644
+--- a/libxfs/xfs_rmap.h
++++ b/libxfs/xfs_rmap.h
+@@ -186,6 +186,10 @@ void xfs_rmap_finish_one_cleanup(struct xfs_trans *tp,
+ 		struct xfs_btree_cur *rcur, int error);
+ int xfs_rmap_finish_one(struct xfs_trans *tp, struct xfs_rmap_intent *ri,
+ 		struct xfs_btree_cur **pcur);
++int __xfs_rmap_finish_intent(struct xfs_btree_cur *rcur,
++		enum xfs_rmap_intent_type op, xfs_agblock_t bno,
++		xfs_extlen_t len, const struct xfs_owner_info *oinfo,
++		bool unwritten);
+ 
+ int xfs_rmap_lookup_le_range(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		uint64_t owner, uint64_t offset, unsigned int flags,
+@@ -235,4 +239,29 @@ extern struct kmem_cache	*xfs_rmap_intent_cache;
+ int __init xfs_rmap_intent_init_cache(void);
+ void xfs_rmap_intent_destroy_cache(void);
+ 
++/*
++ * Parameters for tracking reverse mapping changes.  The hook function arg
++ * parameter is enum xfs_rmap_intent_type, and the rest is below.
++ */
++struct xfs_rmap_update_params {
++	xfs_agblock_t			startblock;
++	xfs_extlen_t			blockcount;
++	struct xfs_owner_info		oinfo;
++	bool				unwritten;
++};
++
++#ifdef CONFIG_XFS_LIVE_HOOKS
++
++struct xfs_rmap_hook {
++	struct xfs_hook			rmap_hook;
++};
++
++void xfs_rmap_hook_disable(void);
++void xfs_rmap_hook_enable(void);
++
++int xfs_rmap_hook_add(struct xfs_perag *pag, struct xfs_rmap_hook *hook);
++void xfs_rmap_hook_del(struct xfs_perag *pag, struct xfs_rmap_hook *hook);
++void xfs_rmap_hook_setup(struct xfs_rmap_hook *hook, notifier_fn_t mod_fn);
 +#endif
 +
- /* log size calculation functions */
- int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
- int	xfs_log_calc_minimum_size(struct xfs_mount *);
+ #endif	/* __XFS_RMAP_H__ */
 
