@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62B111D53C
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:35:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 049661D53C
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:36:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711424159; cv=none; b=IM7ISC2B90UIq2f0zUttX0gD+XY29uMngfUbQ3RfOO6ERpvEPstc4OtZrpWSNgZw3D1V/MuiDgH2GMTqBhS3YLvd8u70AcaukOPn7Ky6ZOImyG4qitNNZCz0el1OlIYlI9HqV5eiO94C0IHYZl9PRm11zaYZHz/DS5vZ+1mHox0=
+	t=1711424175; cv=none; b=ZqFw0gzAeK3lDq0+dP38LxiRKUrysCoSWKY3oxen1zenK+Z6M44LA8+Jyc84n09khhZ6e0sD1asJFQlX/irb/PHnKqrXoaIqGO2uI1ognTYHsHjEMawru0sno/x0jNHtiTKmikNdgL0Ed4mLQv+iyxSYlKTikO2SR+AYT50kLAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711424159; c=relaxed/simple;
-	bh=4Ekpzz1Z0QCSiX2CiuBdEPd23BR1+qL5phPHyOhD6KQ=;
+	s=arc-20240116; t=1711424175; c=relaxed/simple;
+	bh=CSGtP2tpt+gSDJqSTy3nTZfMmaFrkr+smYWLd5Dq234=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AWoM4lw8CAlkRm0BLftWtwihP7eoHdmA/jxKfe0I9Hiep60eJgaDHMleUvQGElj/+ZPcD4xaPo6fwjMwROY18sSAGaS3Xn3EgXUsVUWB11PMJoeW6QG1F5A6srOiI3geZqog+7wPqBQTCfbsbucPRucMju5dj78v2Z6rHSQhqD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f6/6qpz0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=llumMpMpz+W6Yq8Clcsu3VVfw1YtN/buRwbuaJSDt06FwkwMjHqi6oVhIR9KfoS+CBk9NsxupDKt5ZV9wXu2M1nZVUnTur4j1c8oICAYdXQbQOXvULbUhpnpIGaZPYIq/q5OuAQpaOJQQ/KjQmxRSzWiSBILCVXcCaytAzjUOdc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=drflp1Zx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f6/6qpz0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F4154C433C7;
-	Tue, 26 Mar 2024 03:35:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="drflp1Zx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 906F3C433C7;
+	Tue, 26 Mar 2024 03:36:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711424159;
-	bh=4Ekpzz1Z0QCSiX2CiuBdEPd23BR1+qL5phPHyOhD6KQ=;
+	s=k20201202; t=1711424174;
+	bh=CSGtP2tpt+gSDJqSTy3nTZfMmaFrkr+smYWLd5Dq234=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=f6/6qpz0El4j8GtnJw3r6rSeQkrWqs8Wk0ABqCRLHRBRNA8F/UtxrjL9V4HTRVq/e
-	 QkmujmMGMDqMpEZhy/K+aqjG/DmmlrI+vwa/UYHeoj9m1mByOEcd8Tudddm6JiaAAo
-	 H+jkCqLYq2PjH6q68nyVoWNJ0h7b7nXvErvA74N/4M1dAjHhc/ZqI6EayHXCbFISrS
-	 Oyz+ItI7ZW7I3olHZG1GRyJom9xCcqR8sYX5hthHTb/yYP8yrmnP7ptEtmiK5f6DYX
-	 u3Ipl9PVTgocIbyowjt5h1HhR3os3kDvfgQ0Wj1QlD+79FYGMlSLfIsRXxyXtJ3wc5
-	 WJBp3qW1JPJHw==
-Date: Mon, 25 Mar 2024 20:35:58 -0700
-Subject: [PATCH 029/110] xfs: consolidate btree block allocation tracepoints
+	b=drflp1ZxIDxKi7DKdgOckl7SgfAm1Hs7FOiwP19sY8prSX8lihhfHOupizmhS9Sbj
+	 tRWeRqTmzyEL9pXN6k6cO2w8uyU3r4iKn80uYzoN4nsFeYIbQIhumn1s5novBz3O6l
+	 hDoSSv6lQX51ZblFrLS6BR74/V8W+Y6Cf0hlsnbJnk70BHu+nvbyoYsmHCgcq+AeEr
+	 6CNjkFkwvRGeXBXyCBb8G6tJPgxWejrLRHjBEedHOzCIIK0aPOof48ZMHfhhQy7NT4
+	 IB2AAf2OUpaejY3k32stmv7f/ABBJIbUApoF4vwv/1MzNsKk+qsHNMCbHMpbGlGYSh
+	 6s/COXuJHC+6g==
+Date: Mon, 25 Mar 2024 20:36:14 -0700
+Subject: [PATCH 030/110] xfs: set the btree cursor bc_ops in
+ xfs_btree_alloc_cursor
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142131802.2215168.11974263705676509595.stgit@frogsfrogsfrogs>
+Message-ID: <171142131817.2215168.9683633607667076105.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,144 +47,149 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 2ed0b2c7f33159825af1a1a83face66edb52348a
+Source kernel commit: 056d22c87132cf4968f5e702116439bea9795930
 
-Don't waste tracepoint segment memory on per-btree block allocation
-tracepoints when we can do it from the generic btree code.
-
-With this patch applied, two tracepoints are collapsed into one
-tracepoint, with the following effects on objdump -hx xfs.ko output:
-
-Before:
-
-10 __tracepoints_ptrs 00000b38  0000000000000000  0000000000000000  001412f0  2**2
-14 __tracepoints_strings 00005433  0000000000000000  0000000000000000  001689a0  2**5
-29 __tracepoints 00010d30  0000000000000000  0000000000000000  0023fe00  2**5
-
-After:
-
-10 __tracepoints_ptrs 00000b34  0000000000000000  0000000000000000  001417b0  2**2
-14 __tracepoints_strings 00005413  0000000000000000  0000000000000000  00168e80  2**5
-29 __tracepoints 00010cd0  0000000000000000  0000000000000000  00240760  2**5
-
-Column 3 is the section size in bytes; removing these two tracepoints
-reduces the size of the ELF segments by 132 bytes.
+This is a precursor to putting more static data in the btree ops structure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs_trace.h         |    4 +---
- libxfs/xfs_btree.c          |   20 +++++++++++++++++---
- libxfs/xfs_refcount_btree.c |    2 --
- libxfs/xfs_rmap_btree.c     |    2 --
- 4 files changed, 18 insertions(+), 10 deletions(-)
+ libxfs/xfs_alloc_btree.c    |   11 +++++------
+ libxfs/xfs_bmap_btree.c     |    3 +--
+ libxfs/xfs_btree.h          |    2 ++
+ libxfs/xfs_ialloc_btree.c   |   10 ++++++----
+ libxfs/xfs_refcount_btree.c |    4 ++--
+ libxfs/xfs_rmap_btree.c     |    3 +--
+ 6 files changed, 17 insertions(+), 16 deletions(-)
 
 
-diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index 98819653bcb0..e7cbd0d9d416 100644
---- a/include/xfs_trace.h
-+++ b/include/xfs_trace.h
-@@ -69,6 +69,7 @@
- #define trace_xfs_btree_bload_level_geometry(a,b,c,d,e,f,g) ((void) 0)
- #define trace_xfs_btree_bload_block(a,b,c,d,e,f) ((void) 0)
- #define trace_xfs_btree_free_block(...)		((void) 0)
-+#define trace_xfs_btree_alloc_block(...)	((void) 0)
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index a472ec6d21a2..16f683e1dc84 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -510,18 +510,17 @@ xfs_allocbt_init_common(
  
- #define trace_xfs_free_extent(a,b,c,d,e,f,g)	((void) 0)
- #define trace_xfs_agf(a,b,c,d)			((void) 0)
-@@ -257,8 +258,6 @@
- #define trace_xfs_rmap_find_left_neighbor_result(...)	((void) 0)
- #define trace_xfs_rmap_lookup_le_range_result(...)	((void) 0)
+ 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
  
--#define trace_xfs_rmapbt_alloc_block(...)	((void) 0)
+-	cur = xfs_btree_alloc_cursor(mp, tp, btnum, mp->m_alloc_maxlevels,
+-			xfs_allocbt_cur_cache);
+-	cur->bc_ag.abt.active = false;
 -
- #define trace_xfs_ag_resv_critical(...)		((void) 0)
- #define trace_xfs_ag_resv_needed(...)		((void) 0)
- #define trace_xfs_ag_resv_free(...)		((void) 0)
-@@ -276,7 +275,6 @@
- #define trace_xfs_refcount_insert_error(...)	((void) 0)
- #define trace_xfs_refcount_delete(...)		((void) 0)
- #define trace_xfs_refcount_delete_error(...)	((void) 0)
--#define trace_xfs_refcountbt_alloc_block(...)	((void) 0)
- #define trace_xfs_refcount_rec_order_error(...)	((void) 0)
+ 	if (btnum == XFS_BTNUM_CNT) {
+-		cur->bc_ops = &xfs_cntbt_ops;
++		cur = xfs_btree_alloc_cursor(mp, tp, btnum, &xfs_cntbt_ops,
++				mp->m_alloc_maxlevels, xfs_allocbt_cur_cache);
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+ 	} else {
+-		cur->bc_ops = &xfs_bnobt_ops;
++		cur = xfs_btree_alloc_cursor(mp, tp, btnum, &xfs_bnobt_ops,
++				mp->m_alloc_maxlevels, xfs_allocbt_cur_cache);
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+ 	}
++	cur->bc_ag.abt.active = false;
  
- #define trace_xfs_refcount_lookup(...)		((void) 0)
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index fb36a3b69ea0..3a2b627fd6be 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -2690,6 +2690,20 @@ xfs_btree_rshift(
- 	return error;
- }
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
  
-+static inline int
-+xfs_btree_alloc_block(
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*hint_block,
-+	union xfs_btree_ptr		*new_block,
-+	int				*stat)
-+{
-+	int				error;
-+
-+	error = cur->bc_ops->alloc_block(cur, hint_block, new_block, stat);
-+	trace_xfs_btree_alloc_block(cur, new_block, *stat, error);
-+	return error;
-+}
-+
- /*
-  * Split cur/level block in half.
-  * Return new block number and the key to its first
-@@ -2733,7 +2747,7 @@ __xfs_btree_split(
- 	xfs_btree_buf_to_ptr(cur, lbp, &lptr);
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 887ba56f3b7b..751ae73c55cc 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -548,11 +548,10 @@ xfs_bmbt_init_common(
  
- 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
--	error = cur->bc_ops->alloc_block(cur, &lptr, &rptr, stat);
-+	error = xfs_btree_alloc_block(cur, &lptr, &rptr, stat);
- 	if (error)
- 		goto error0;
- 	if (*stat == 0)
-@@ -3013,7 +3027,7 @@ xfs_btree_new_iroot(
- 	pp = xfs_btree_ptr_addr(cur, 1, block);
+ 	ASSERT(whichfork != XFS_COW_FORK);
  
- 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
--	error = cur->bc_ops->alloc_block(cur, pp, &nptr, stat);
-+	error = xfs_btree_alloc_block(cur, pp, &nptr, stat);
- 	if (error)
- 		goto error0;
- 	if (*stat == 0)
-@@ -3113,7 +3127,7 @@ xfs_btree_new_root(
- 	cur->bc_ops->init_ptr_from_cur(cur, &rptr);
+-	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP,
++	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP, &xfs_bmbt_ops,
+ 			mp->m_bm_maxlevels[whichfork], xfs_bmbt_cur_cache);
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
  
- 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
--	error = cur->bc_ops->alloc_block(cur, &rptr, &lptr, stat);
-+	error = xfs_btree_alloc_block(cur, &rptr, &lptr, stat);
- 	if (error)
- 		goto error0;
- 	if (*stat == 0)
+-	cur->bc_ops = &xfs_bmbt_ops;
+ 	cur->bc_flags = XFS_BTREE_LONG_PTRS | XFS_BTREE_ROOT_IN_INODE;
+ 	if (xfs_has_crc(mp))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 75a0e2c8e115..c053fb934dc7 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -720,6 +720,7 @@ xfs_btree_alloc_cursor(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+ 	xfs_btnum_t		btnum,
++	const struct xfs_btree_ops *ops,
+ 	uint8_t			maxlevels,
+ 	struct kmem_cache	*cache)
+ {
+@@ -728,6 +729,7 @@ xfs_btree_alloc_cursor(
+ 	/* BMBT allocations can come through from non-transactional context. */
+ 	cur = kmem_cache_zalloc(cache,
+ 			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
++	cur->bc_ops = ops;
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 593cb1fcc1d9..5ea08cca25b4 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -453,14 +453,16 @@ xfs_inobt_init_common(
+ 	struct xfs_mount	*mp = pag->pag_mount;
+ 	struct xfs_btree_cur	*cur;
+ 
+-	cur = xfs_btree_alloc_cursor(mp, tp, btnum,
+-			M_IGEO(mp)->inobt_maxlevels, xfs_inobt_cur_cache);
+ 	if (btnum == XFS_BTNUM_INO) {
++		cur = xfs_btree_alloc_cursor(mp, tp, btnum, &xfs_inobt_ops,
++				M_IGEO(mp)->inobt_maxlevels,
++				xfs_inobt_cur_cache);
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_ibt_2);
+-		cur->bc_ops = &xfs_inobt_ops;
+ 	} else {
++		cur = xfs_btree_alloc_cursor(mp, tp, btnum, &xfs_finobt_ops,
++				M_IGEO(mp)->inobt_maxlevels,
++				xfs_inobt_cur_cache);
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_fibt_2);
+-		cur->bc_ops = &xfs_finobt_ops;
+ 	}
+ 
+ 	if (xfs_has_crc(mp))
 diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 67551df02bde..9a3c2270c254 100644
+index 9a3c2270c254..561b732b4746 100644
 --- a/libxfs/xfs_refcount_btree.c
 +++ b/libxfs/xfs_refcount_btree.c
-@@ -76,8 +76,6 @@ xfs_refcountbt_alloc_block(
- 					xfs_refc_block(args.mp)));
- 	if (error)
- 		goto out_error;
--	trace_xfs_refcountbt_alloc_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
--			args.agbno, 1);
- 	if (args.fsbno == NULLFSBLOCK) {
- 		*stat = 0;
- 		return 0;
+@@ -352,7 +352,8 @@ xfs_refcountbt_init_common(
+ 	ASSERT(pag->pag_agno < mp->m_sb.sb_agcount);
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_REFC,
+-			mp->m_refc_maxlevels, xfs_refcountbt_cur_cache);
++			&xfs_refcountbt_ops, mp->m_refc_maxlevels,
++			xfs_refcountbt_cur_cache);
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
+ 
+ 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+@@ -360,7 +361,6 @@ xfs_refcountbt_init_common(
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
+ 	cur->bc_ag.refc.nr_ops = 0;
+ 	cur->bc_ag.refc.shape_changes = 0;
+-	cur->bc_ops = &xfs_refcountbt_ops;
+ 	return cur;
+ }
+ 
 diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index 7966a3e6a474..e894a22e087c 100644
+index e894a22e087c..36231272964b 100644
 --- a/libxfs/xfs_rmap_btree.c
 +++ b/libxfs/xfs_rmap_btree.c
-@@ -92,8 +92,6 @@ xfs_rmapbt_alloc_block(
- 				       &bno, 1);
- 	if (error)
- 		return error;
--
--	trace_xfs_rmapbt_alloc_block(cur->bc_mp, pag->pag_agno, bno, 1);
- 	if (bno == NULLAGBLOCK) {
- 		*stat = 0;
- 		return 0;
+@@ -501,11 +501,10 @@ xfs_rmapbt_init_common(
+ 	struct xfs_btree_cur	*cur;
+ 
+ 	/* Overlapping btree; 2 keys per pointer. */
+-	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_RMAP,
++	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_RMAP, &xfs_rmapbt_ops,
+ 			mp->m_rmap_maxlevels, xfs_rmapbt_cur_cache);
+ 	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
+-	cur->bc_ops = &xfs_rmapbt_ops;
+ 
+ 	cur->bc_ag.pag = xfs_perag_hold(pag);
+ 	return cur;
 
