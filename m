@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C2E21353
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:57:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1E821353
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:57:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711425429; cv=none; b=G1sCJYllgrbJ+yKt64e0/mC2h1jaSeWsseveI/o4dD59aU9A6oVhZ81W0frNkYUl7rbwdySpxy6lDEkluq+202UeKAufdnWUrbKXOQXGCW8ASvL/E+Fr5DedSeX4yXxwjW7/Qlt1pTRVC1UNk+509QVN4a7pzh20y7R61LyRW3o=
+	t=1711425445; cv=none; b=I9Eu8glAFEhalfqkxcRQGN+gCucw9R0Ueewp5hsmpGBqgmGHZAwDPYFBfQb5ilvlbtVCU1L8Qw8Vj5+Xat4X+i1PMC31d1fY9fnBC1Z+lSvipqVyB0kFwn08rSE+b3gIKE8cgvVQvRu9fE0Gq+5AzvsuKbchUiSq30ShqcQEdpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711425429; c=relaxed/simple;
-	bh=8O031Tv35PzSuvnUm9KeFBCTQnMu+s7WqX0mbfvPAUg=;
+	s=arc-20240116; t=1711425445; c=relaxed/simple;
+	bh=6hgVt7TFM44YnZUK1+fesc/J36KabdORCmGxTFm5Rew=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SE9t4eOR3K6eSMe22VHGBJoyMLpyeQZ9tStDGX7BbplF/SotR/JVcOaj2FEYR+LI2riXy4PWWTo8o0dwPUvOAD8LXFfkknUN4xHq/TDnPRD/EMQtFWId1PB2GSRzSO8hjOy6yDPcIqWZywTA5EMdoFBPc5sn2hyYxxUVqPlUXYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IoJQLBeo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=K4aRHYXXSiCV4HqfZUbLqte3Q/tlZ7TDIehBJwyC+omdSaW3fsSBBbzdXD7vQqqqYu1/GmSVTKNqEZXJZq3DupColFQHD8MH1VA3v32hZnP5uww02HuUlrbrX3p4/XojQX+vT/lzqELAX+1rK+utm296VVbaFVzoYfavxJwLhx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hHd1FPtJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IoJQLBeo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA9B8C433C7;
-	Tue, 26 Mar 2024 03:57:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hHd1FPtJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CE02C433F1;
+	Tue, 26 Mar 2024 03:57:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711425428;
-	bh=8O031Tv35PzSuvnUm9KeFBCTQnMu+s7WqX0mbfvPAUg=;
+	s=k20201202; t=1711425444;
+	bh=6hgVt7TFM44YnZUK1+fesc/J36KabdORCmGxTFm5Rew=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IoJQLBeoYQziP5X4LPEvJE80d7VFjwsbAEo80rYn5N3PKQeOF6mUNNAJKpB55IcqP
-	 6qW+Q5tg8LjByFejJewMKAAAcZUSnEqeUyWDvkynCX0A+29Eg7ewU53b6+epw3eF/7
-	 CjldRIaLXMzDrjPzPb0ZUBIP0je66Jt7FjUyHWMqsRL39HABCWxVDmPc5MLVva8FXv
-	 LnZh+tnhKkucXBBuB7VREf0w7y4A+AzktsctrHFqBxSSWqxVwppyNYZ2B05tedXVRN
-	 Nvvbn6h9Pe9IZBE1evQ3j8/W3RbbQHUnYhppEpTrGVkPj8XxvefPc1AJoZPfMyvKm7
-	 C+4WrrgnAtMxA==
-Date: Mon, 25 Mar 2024 20:57:08 -0700
-Subject: [PATCH 110/110] xfs: shrink failure needs to hold AGI buffer
+	b=hHd1FPtJN90rReOsTrhhiqV0l//9MDcOLmLzdiepEYHIjKLcFekRqQE2S4/SiAL7Y
+	 ndpK97+Gy8ZUfOQB6IEjj/HmlGuF/G0Km+agakQncluVdqcw2mFuq4Y3occh8iH8Xy
+	 yKcr3NIcbFol0APkFI0zEp3iHCsUG8rMQBdo1gJ1TlAJlFh7A6PepMFzrePcUQfOm/
+	 yYr7cLUfJuKyak0PD6TVwJ8WvCh/3YmXQXzESAR/1E/scBUJtZIFApiO6rtSvIhkSQ
+	 AqW89palpmBbH24bt0YYCHqpreDOUzq4XwPxdlaP8rF/HAYuFrrfe7+SYl8qn4uKXc
+	 DESE5D20J6Krg==
+Date: Mon, 25 Mar 2024 20:57:23 -0700
+Subject: [PATCH 1/4] libxfs: remove kmem_alloc, kmem_zalloc, and kmem_free
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
- Dave Chinner <dchinner@redhat.com>, Gao Xiang <hsiangkao@linux.alibaba.com>,
- Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
- linux-xfs@vger.kernel.org
-Message-ID: <171142132962.2215168.9592594282196819345.stgit@frogsfrogsfrogs>
-In-Reply-To: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
-References: <171142131228.2215168.2795743548791967397.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <171142133305.2217863.6981063627842514508.stgit@frogsfrogsfrogs>
+In-Reply-To: <171142133286.2217863.14915428649465069188.stgit@frogsfrogsfrogs>
+References: <171142133286.2217863.14915428649465069188.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,83 +44,223 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 75bcffbb9e7563259b7aed0fa77459d6a3a35627
+Remove all three of these helpers now that the kernel has dropped them.
 
-Chandan reported a AGI/AGF lock order hang on xfs/168 during recent
-testing. The cause of the problem was the task running xfs_growfs
-to shrink the filesystem. A failure occurred trying to remove the
-free space from the btrees that the shrink would make disappear,
-and that meant it ran the error handling for a partial failure.
-
-This error path involves restoring the per-ag block reservations,
-and that requires calculating the amount of space needed to be
-reserved for the free inode btree. The growfs operation hung here:
-
-[18679.536829]  down+0x71/0xa0
-[18679.537657]  xfs_buf_lock+0xa4/0x290 [xfs]
-[18679.538731]  xfs_buf_find_lock+0xf7/0x4d0 [xfs]
-[18679.539920]  xfs_buf_lookup.constprop.0+0x289/0x500 [xfs]
-[18679.542628]  xfs_buf_get_map+0x2b3/0xe40 [xfs]
-[18679.547076]  xfs_buf_read_map+0xbb/0x900 [xfs]
-[18679.562616]  xfs_trans_read_buf_map+0x449/0xb10 [xfs]
-[18679.569778]  xfs_read_agi+0x1cd/0x500 [xfs]
-[18679.573126]  xfs_ialloc_read_agi+0xc2/0x5b0 [xfs]
-[18679.578708]  xfs_finobt_calc_reserves+0xe7/0x4d0 [xfs]
-[18679.582480]  xfs_ag_resv_init+0x2c5/0x490 [xfs]
-[18679.586023]  xfs_ag_shrink_space+0x736/0xd30 [xfs]
-[18679.590730]  xfs_growfs_data_private.isra.0+0x55e/0x990 [xfs]
-[18679.599764]  xfs_growfs_data+0x2f1/0x410 [xfs]
-[18679.602212]  xfs_file_ioctl+0xd1e/0x1370 [xfs]
-
-trying to get the AGI lock. The AGI lock was held by a fstress task
-trying to do an inode allocation, and it was waiting on the AGF
-lock to allocate a new inode chunk on disk. Hence deadlock.
-
-The fix for this is for the growfs code to hold the AGI over the
-transaction roll it does in the error path. It already holds the AGF
-locked across this, and that is what causes the lock order inversion
-in the xfs_ag_resv_init() call.
-
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-Fixes: 46141dc891f7 ("xfs: introduce xfs_ag_shrink_space()")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_ag.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ db/bmap_inflate.c         |    2 +-
+ include/kmem.h            |   10 +---------
+ libxfs/defer_item.c       |    2 +-
+ libxfs/init.c             |    2 +-
+ libxfs/kmem.c             |   32 ++++++++++----------------------
+ libxlog/xfs_log_recover.c |   19 +++++++++----------
+ repair/bmap_repair.c      |    4 ++--
+ 7 files changed, 25 insertions(+), 46 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index e2fc3e88244f..a9aae0990d93 100644
---- a/libxfs/xfs_ag.c
-+++ b/libxfs/xfs_ag.c
-@@ -973,14 +973,23 @@ xfs_ag_shrink_space(
- 
- 	if (error) {
- 		/*
--		 * if extent allocation fails, need to roll the transaction to
-+		 * If extent allocation fails, need to roll the transaction to
- 		 * ensure that the AGFL fixup has been committed anyway.
-+		 *
-+		 * We need to hold the AGF across the roll to ensure nothing can
-+		 * access the AG for allocation until the shrink is fully
-+		 * cleaned up. And due to the resetting of the AG block
-+		 * reservation space needing to lock the AGI, we also have to
-+		 * hold that so we don't get AGI/AGF lock order inversions in
-+		 * the error handling path.
- 		 */
- 		xfs_trans_bhold(*tpp, agfbp);
-+		xfs_trans_bhold(*tpp, agibp);
- 		err2 = xfs_trans_roll(tpp);
- 		if (err2)
- 			return err2;
- 		xfs_trans_bjoin(*tpp, agfbp);
-+		xfs_trans_bjoin(*tpp, agibp);
- 		goto resv_init_out;
+diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
+index c85d5dc0d64a..00e1aff66567 100644
+--- a/db/bmap_inflate.c
++++ b/db/bmap_inflate.c
+@@ -327,7 +327,7 @@ populate_btree(
+ 	/* Leak any unused blocks */
+ 	list_for_each_entry_safe(resv, n, &bd.resv_list, list) {
+ 		list_del(&resv->list);
+-		kmem_free(resv);
++		kfree(resv);
  	}
+ 	return error;
+ }
+diff --git a/include/kmem.h b/include/kmem.h
+index 6818a404728f..386b4a6be783 100644
+--- a/include/kmem.h
++++ b/include/kmem.h
+@@ -50,15 +50,7 @@ kmem_cache_free(struct kmem_cache *cache, void *ptr)
+ 	free(ptr);
+ }
+ 
+-extern void	*kmem_alloc(size_t, int);
+ extern void	*kvmalloc(size_t, gfp_t);
+-extern void	*kmem_zalloc(size_t, int);
+-
+-static inline void
+-kmem_free(const void *ptr) {
+-	free((void *)ptr);
+-}
+-
+ extern void	*krealloc(void *, size_t, int);
+ 
+ static inline void *kmalloc(size_t size, gfp_t flags)
+@@ -70,7 +62,7 @@ static inline void *kmalloc(size_t size, gfp_t flags)
+ 
+ static inline void kfree(const void *ptr)
+ {
+-	return kmem_free(ptr);
++	free((void *)ptr);
+ }
+ 
+ #endif
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index d67032c26200..680a72664746 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -606,7 +606,7 @@ xfs_attr_free_item(
+ 	if (attr->xattri_da_state)
+ 		xfs_da_state_free(attr->xattri_da_state);
+ 	if (attr->xattri_da_args->op_flags & XFS_DA_OP_RECOVERY)
+-		kmem_free(attr);
++		kfree(attr);
+ 	else
+ 		kmem_cache_free(xfs_attr_intent_cache, attr);
+ }
+diff --git a/libxfs/init.c b/libxfs/init.c
+index f5cd85655cf0..d0478960278a 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -893,7 +893,7 @@ libxfs_buftarg_free(
+ 	struct xfs_buftarg	*btp)
+ {
+ 	cache_destroy(btp->bcache);
+-	kmem_free(btp);
++	kfree(btp);
+ }
+ 
+ /*
+diff --git a/libxfs/kmem.c b/libxfs/kmem.c
+index c264be018bdc..a2a3935d00e8 100644
+--- a/libxfs/kmem.c
++++ b/libxfs/kmem.c
+@@ -65,33 +65,21 @@ kmem_cache_zalloc(struct kmem_cache *cache, gfp_t flags)
+ 	return ptr;
+ }
+ 
+-void *
+-kmem_alloc(size_t size, int flags)
+-{
+-	void	*ptr = malloc(size);
+-
+-	if (ptr == NULL) {
+-		fprintf(stderr, _("%s: malloc failed (%d bytes): %s\n"),
+-			progname, (int)size, strerror(errno));
+-		exit(1);
+-	}
+-	return ptr;
+-}
+-
+ void *
+ kvmalloc(size_t size, gfp_t flags)
+ {
++	void	*ptr;
++
+ 	if (flags & __GFP_ZERO)
+-		return kmem_zalloc(size, 0);
+-	return kmem_alloc(size, 0);
+-}
++		ptr = calloc(1, size);
++	else
++		ptr = malloc(size);
+ 
+-void *
+-kmem_zalloc(size_t size, int flags)
+-{
+-	void	*ptr = kmem_alloc(size, flags);
+-
+-	memset(ptr, 0, size);
++	if (ptr == NULL) {
++		fprintf(stderr, _("%s: malloc failed (%d bytes): %s\n"),
++			progname, (int)size, strerror(errno));
++		exit(1);
++	}
+ 	return ptr;
+ }
+ 
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index 99f759d5cb03..31b11fee9e47 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -991,7 +991,7 @@ xlog_recover_new_tid(
+ {
+ 	struct xlog_recover	*trans;
+ 
+-	trans = kmem_zalloc(sizeof(struct xlog_recover), 0);
++	trans = kzalloc(sizeof(struct xlog_recover), 0);
+ 	trans->r_log_tid   = tid;
+ 	trans->r_lsn	   = lsn;
+ 	INIT_LIST_HEAD(&trans->r_itemq);
+@@ -1006,7 +1006,7 @@ xlog_recover_add_item(
+ {
+ 	struct xlog_recover_item *item;
+ 
+-	item = kmem_zalloc(sizeof(struct xlog_recover_item), 0);
++	item = kzalloc(sizeof(struct xlog_recover_item), 0);
+ 	INIT_LIST_HEAD(&item->ri_list);
+ 	list_add_tail(&item->ri_list, head);
+ }
+@@ -1085,7 +1085,7 @@ xlog_recover_add_to_trans(
+ 		return 0;
+ 	}
+ 
+-	ptr = kmem_alloc(len, 0);
++	ptr = kmalloc(len, 0);
+ 	memcpy(ptr, dp, len);
+ 	in_f = (struct xfs_inode_log_format *)ptr;
+ 
+@@ -1107,13 +1107,12 @@ xlog_recover_add_to_trans(
+ 		"bad number of regions (%d) in inode log format",
+ 				  in_f->ilf_size);
+ 			ASSERT(0);
+-			kmem_free(ptr);
++			kfree(ptr);
+ 			return XFS_ERROR(EIO);
+ 		}
+ 
+ 		item->ri_total = in_f->ilf_size;
+-		item->ri_buf =
+-			kmem_zalloc(item->ri_total * sizeof(xfs_log_iovec_t),
++		item->ri_buf = kzalloc(item->ri_total * sizeof(xfs_log_iovec_t),
+ 				    0);
+ 	}
+ 	ASSERT(item->ri_total > item->ri_cnt);
+@@ -1141,13 +1140,13 @@ xlog_recover_free_trans(
+ 		/* Free the regions in the item. */
+ 		list_del(&item->ri_list);
+ 		for (i = 0; i < item->ri_cnt; i++)
+-			kmem_free(item->ri_buf[i].i_addr);
++			kfree(item->ri_buf[i].i_addr);
+ 		/* Free the item itself */
+-		kmem_free(item->ri_buf);
+-		kmem_free(item);
++		kfree(item->ri_buf);
++		kfree(item);
+ 	}
+ 	/* Free the transaction recover structure */
+-	kmem_free(trans);
++	kfree(trans);
+ }
+ 
+ /*
+diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
+index 845584f18450..317061aa564f 100644
+--- a/repair/bmap_repair.c
++++ b/repair/bmap_repair.c
+@@ -595,7 +595,7 @@ xrep_bmap(
+ 	if (error)
+ 		return error;
+ 
+-	rb = kmem_zalloc(sizeof(struct xrep_bmap), KM_NOFS | KM_MAYFAIL);
++	rb = kzalloc(sizeof(struct xrep_bmap), 0);
+ 	if (!rb)
+ 		return ENOMEM;
+ 	rb->sc = sc;
+@@ -622,7 +622,7 @@ xrep_bmap(
+ out_bitmap:
+ 	free_slab(&rb->bmap_records);
+ out_rb:
+-	kmem_free(rb);
++	kfree(rb);
+ 	return error;
+ }
  
 
