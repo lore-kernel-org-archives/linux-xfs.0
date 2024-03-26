@@ -1,37 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD4C128816
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:25:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97F121292D6
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:26:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711423548; cv=none; b=Z9wQ+qDjta+JpkvM5DJo9XWtNRclxcRdgKI5E/kls1S9uEr5nyqlWer/MYxFlirDI2ZfPuWysjdePVHLglwrkp2hrOChfaaSjmEqbZSiO4BtBDzEXASQPZINpiEiBCXty6Ni4h/8fUQiAvdaPciup/YyijrMzEyFewIoKnohtCo=
+	t=1711423564; cv=none; b=H8W86A3/SADHZwkJzIS27asv82XbGMCCfh02eLyibkMB8V4wNZvXVPfas6J4KizLEQ0q6zoeRfrTorW7oRpZcjTFxO/IwrCCoQmeSHD/7fK4OrgQfPWNDM4lRAs/ar41Y/6hsb8IWIh79C3veHGtBp/9WpNDxXwPzcqqReaXs58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711423548; c=relaxed/simple;
-	bh=96jg6SaE1Ww8PIuFTohArNWan5Ah6zEn7Vv7SFJf+u8=;
+	s=arc-20240116; t=1711423564; c=relaxed/simple;
+	bh=beOZe5C+mTpck5TIr9K6XFr6a31qIMXK3fxegwrll1g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ASH2oll9mQQ0T9u4MGbHre14yeuoMaA+Pr0BAwcjI8tL2f8eqvSzR10CCoRckK3Ekg3MyLm0JW1icHbZ6U49PoltMSm+pxDh813eZhNPhYLtD+Fk26ajCYtk/gZeffT4QOfJrMo/kAW6sqQjtdnLFUCoQR+PwzAEiOsxKn5uBOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aqI8w26K; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jTLgeAbCSD05NjD6aYObPjGNplpfulVF5CF5btyAiEeRcZ+pBYXuA41aRi8heNCpmvp0aVClfc8wSStrRNM1C+f69DA5lls3oH26ltQJQLArCDc51Pc77W3U5C2Bq6ncYB4rZC1M2jj+ZS6ZkQWXznQUdZmrC5ktTGj8QSlcs5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CxZaiRLW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aqI8w26K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 770BEC433F1;
-	Tue, 26 Mar 2024 03:25:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CxZaiRLW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F22AC433F1;
+	Tue, 26 Mar 2024 03:26:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711423548;
-	bh=96jg6SaE1Ww8PIuFTohArNWan5Ah6zEn7Vv7SFJf+u8=;
+	s=k20201202; t=1711423564;
+	bh=beOZe5C+mTpck5TIr9K6XFr6a31qIMXK3fxegwrll1g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aqI8w26KNdbrJ5nT++ArQOGhWIR1E7bR/MaXx+t9thwnPzOwDruLDRvxy4GGQkTe8
-	 c5JasUDMLI+BWXVFHoZYdg4PSu47/7tGFVm9MOzCM/rDOPWn2lOBOO1/5H98TyUCm/
-	 WhEy5gZg1DECd4vCREmc5mFO5Vfv93G9g0FSD1/eBeLtgPZXkoRMATuDkH6tBfoRKe
-	 QbKWY5eOCTd87omEo3/PXdwiVbg3s0Mq/fJlTG3v8D0AH7cFG/kcSvj12XPEViWa/k
-	 4fG6HzXRPrHU6lysQxZyW0wmMyph5b3LWpV0YIuiF8Oku0e2gLXmu64bpM+Igv6yYa
-	 y/qPAtP8pJvLw==
-Date: Mon, 25 Mar 2024 20:25:48 -0700
-Subject: [PATCH 1/8] xfs_db: add a bmbt inflation command
+	b=CxZaiRLWKsYbxeAe67ASsOk2aUDQYJ+7SUiMWLki8kUTBkA2p5EGAQDdpAtHlm9z/
+	 x2mVwJ8EkkqR0jL3LH/MFpCX7oBGeMllXEs4audbleDvaokzOXb08L05is0v3dvRV3
+	 hHfrUa2lpaNawU6SunBKX5YwdzN/DHiIw7j+Ej+ESzNdO94+UNJzHOeOeWyg4T0H+M
+	 BIf9BaO8th2pqrjt1DY4g8MjkuCcytRIFsgABOHy1O/JV8ESBbKzjyCdEjHWA877rf
+	 dhM3z7zWR4JNDItEkOZAFcmUBNcrCjxKMmZb6UQy6Ag7YgFuuDsLk8Jr/IDMmgGVgL
+	 CwlL1Np0EjSdQ==
+Date: Mon, 25 Mar 2024 20:26:03 -0700
+Subject: [PATCH 2/8] xfs_repair: slab and bag structs need to track more than
+ 2^32 items
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171142130370.2214793.8694135788913305667.stgit@frogsfrogsfrogs>
+Cc: "Darrick J. Wong" <djwong@djwong.org>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org
+Message-ID: <171142130384.2214793.3729469892994192371.stgit@frogsfrogsfrogs>
 In-Reply-To: <171142130345.2214793.404306215329902244.stgit@frogsfrogsfrogs>
 References: <171142130345.2214793.404306215329902244.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,707 +46,218 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Darrick J. Wong <djwong@djwong.org>
 
-Add a command to xfs_db to clone a data fork mapping over and over
-again.  This will make it easier to exercise really high sharing counts.
+Currently, the xfs_slab data structure in xfs_repair is used to stage
+incore reverse mapping and reference count records to build the ondisk
+rmapbt and refcountbt during phase 5.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+On a reflink filesystem, it's possible for there to be more than 2^32
+forward mappings in an AG, which means that there could be more than
+2^32 rmapbt records too.  Widen the size_t fields of xfs_slab to u64
+accomodate this.
+
+Similarly, the xfs_bag structure holds pointers to xfs_slab objects.
+This abstraction tracks rmapbt records as we walk through the AG space
+building refcount records.  It's possible for there to be more than 2^32
+mappings to a piece of physical space, so we need to side the size_t
+fields of xfs_bag to u64 as well.
+
+In the next patch we'll fix all the users of these two structures; this
+is merely the preparatory patch.
+
+Signed-off-by: Darrick J. Wong <djwong@djwong.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/Makefile       |   65 +++++-
- db/bmap_inflate.c |  551 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/command.c      |    1 
- db/command.h      |    1 
- man/man8/xfs_db.8 |   23 ++
- 5 files changed, 633 insertions(+), 8 deletions(-)
- create mode 100644 db/bmap_inflate.c
+ repair/slab.c |   36 ++++++++++++++++++------------------
+ repair/slab.h |   36 +++++++++++++++++++-----------------
+ 2 files changed, 37 insertions(+), 35 deletions(-)
 
 
-diff --git a/db/Makefile b/db/Makefile
-index d00801ab4739..83389376c36c 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -7,14 +7,63 @@ include $(TOPDIR)/include/builddefs
+diff --git a/repair/slab.c b/repair/slab.c
+index 165f97efd29d..01bc4d426fea 100644
+--- a/repair/slab.c
++++ b/repair/slab.c
+@@ -41,18 +41,18 @@
+ /* and cannot be larger than 128M */
+ #define MAX_SLAB_SIZE		(128 * 1048576)
+ struct xfs_slab_hdr {
+-	size_t			sh_nr;
+-	size_t			sh_inuse;	/* items in use */
++	uint32_t		sh_nr;
++	uint32_t		sh_inuse;	/* items in use */
+ 	struct xfs_slab_hdr	*sh_next;	/* next slab hdr */
+ 						/* objects follow */
+ };
  
- LTCOMMAND = xfs_db
+ struct xfs_slab {
+-	size_t			s_item_sz;	/* item size */
+-	size_t			s_nr_slabs;	/* # of slabs */
+-	size_t			s_nr_items;	/* # of items */
++	uint64_t		s_nr_slabs;	/* # of slabs */
++	uint64_t		s_nr_items;	/* # of items */
+ 	struct xfs_slab_hdr	*s_first;	/* first slab header */
+ 	struct xfs_slab_hdr	*s_last;	/* last sh_next pointer */
++	size_t			s_item_sz;	/* item size */
+ };
  
--HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
--	btblock.h bmroot.h check.h command.h crc.h debug.h \
--	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
--	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
--	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
--	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
--	fuzz.h obfuscate.h
--CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c iunlink.c namei.c \
-+HFILES = \
-+	addr.h \
-+	agf.h \
-+	agfl.h \
-+	agi.h \
-+	attr.h \
-+	attrset.h \
-+	attrshort.h \
-+	bit.h \
-+	block.h \
-+	bmap.h \
-+	bmroot.h \
-+	btblock.h \
-+	check.h \
-+	command.h \
-+	crc.h \
-+	debug.h \
-+	dir2.h \
-+	dir2sf.h \
-+	dquot.h \
-+	echo.h \
-+	faddr.h \
-+	field.h \
-+	flist.h \
-+	fprint.h \
-+	frag.h \
-+	freesp.h \
-+	fsmap.h \
-+	fuzz.h \
-+	hash.h \
-+	help.h \
-+	init.h \
-+	inode.h \
-+	input.h \
-+	io.h \
-+	logformat.h \
-+	malloc.h \
-+	metadump.h \
-+	obfuscate.h \
-+	output.h \
-+	print.h \
-+	quit.h \
-+	sb.h \
-+	sig.h \
-+	strvec.h \
-+	symlink.h \
-+	text.h \
-+	type.h \
-+	write.h
-+CFILES = $(HFILES:.h=.c) \
-+	bmap_inflate.c \
-+	btdump.c \
-+	btheight.c \
-+	convert.c \
-+	info.c \
-+	iunlink.c \
-+	namei.c \
- 	timelimit.c
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ /*
+@@ -64,13 +64,13 @@ struct xfs_slab {
+  */
+ struct xfs_slab_hdr_cursor {
+ 	struct xfs_slab_hdr	*hdr;		/* a slab header */
+-	size_t			loc;		/* where we are in the slab */
++	uint32_t		loc;		/* where we are in the slab */
+ };
  
-diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
-new file mode 100644
-index 000000000000..33b0c954d8f8
---- /dev/null
-+++ b/db/bmap_inflate.c
-@@ -0,0 +1,551 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2022-2024 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "libxfs.h"
-+#include "command.h"
-+#include "init.h"
-+#include "output.h"
-+#include "io.h"
-+#include "libfrog/convert.h"
-+
-+static void
-+bmapinflate_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" Make the bmbt really big by cloning the first data fork mapping over and over.\n"
-+" -d     Constrain dirty buffers to this many bytes.\n"
-+" -e     Print the size and height of the btree and exit.\n"
-+" -n nr  Create this many copies of the mapping.\n"
-+"\n"
-+));
-+
-+}
-+
-+static int
-+find_mapping(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	struct xfs_iext_cursor	icur;
-+	int			error;
-+
-+	if (!xfs_has_reflink(ip->i_mount)) {
-+		dbprintf(_("filesystem does not support reflink\n"));
-+		return 1;
-+	}
-+
-+	if (ip->i_df.if_nextents != 1) {
-+		dbprintf(_("inode must have only one data fork mapping\n"));
-+		return 1;
-+	}
-+
-+	error = -libxfs_iread_extents(tp, ip, XFS_DATA_FORK);
-+	if (error) {
-+		dbprintf(_("could not read data fork, err %d\n"), error);
-+		return 1;
-+	}
-+
-+	libxfs_iext_first(&ip->i_df, &icur);
-+	if (!xfs_iext_get_extent(&ip->i_df, &icur, irec)) {
-+		dbprintf(_("could not read data fork mapping\n"));
-+		return 1;
-+	}
-+
-+	if (irec->br_state != XFS_EXT_NORM) {
-+		dbprintf(_("cannot duplicate unwritten extent\n"));
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+set_nrext64(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	xfs_extnum_t		nextents)
-+{
-+	xfs_extnum_t		max_extents;
-+	bool			large_extcount;
-+
-+	large_extcount = xfs_inode_has_large_extent_counts(ip);
-+	max_extents = xfs_iext_max_nextents(large_extcount, XFS_DATA_FORK);
-+	if (nextents <= max_extents)
-+		return 0;
-+	if (large_extcount)
-+		return EFSCORRUPTED;
-+	if (!xfs_has_large_extent_counts(ip->i_mount))
-+		return EFSCORRUPTED;
-+
-+	max_extents = xfs_iext_max_nextents(true, XFS_DATA_FORK);
-+	if (nextents > max_extents)
-+		return EFSCORRUPTED;
-+
-+	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
-+static int
-+populate_extents(
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		*ip,
-+	struct xbtree_ifakeroot		*ifake,
-+	const struct xfs_bmbt_irec	*template,
-+	xfs_extnum_t			nextents)
-+{
-+	struct xfs_bmbt_irec		irec = {
-+		.br_startoff		= 0,
-+		.br_startblock		= template->br_startblock,
-+		.br_blockcount		= template->br_blockcount,
-+		.br_state		= XFS_EXT_NORM,
-+	};
-+	struct xfs_iext_cursor		icur;
-+	struct xfs_ifork		*ifp = ifake->if_fork;
-+	unsigned long long		i;
-+
-+	/* Add all the mappings to the incore extent tree. */
-+	libxfs_iext_first(ifp, &icur);
-+	for (i = 0; i < nextents; i++) {
-+		libxfs_iext_insert_raw(ifp, &icur, &irec);
-+		ifp->if_nextents++;
-+		libxfs_iext_next(ifp, &icur);
-+
-+		irec.br_startoff += irec.br_blockcount;
-+	}
-+
-+	ip->i_nblocks = template->br_blockcount * nextents;
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	return 0;
-+}
-+
-+struct bmbt_resv {
-+	struct list_head	list;
-+	xfs_fsblock_t		fsbno;
-+	xfs_extlen_t		len;
-+	xfs_extlen_t		used;
-+};
-+
-+struct bmbt_data {
-+	struct xfs_bmbt_irec	irec;
-+	struct list_head	resv_list;
-+	unsigned long long	iblocks;
-+	unsigned long long	nr;
-+};
-+
-+static int
-+alloc_bmbt_blocks(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	struct bmbt_data	*bd,
-+	uint64_t		nr_blocks)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct list_head	*resv_list = &bd->resv_list;
-+	int			error = 0;
-+
-+	while (nr_blocks > 0) {
-+		struct xfs_alloc_arg	args = {
-+			.tp		= *tpp,
-+			.mp		= mp,
-+			.minlen		= 1,
-+			.maxlen		= nr_blocks,
-+			.prod		= 1,
-+			.resv		= XFS_AG_RESV_NONE,
-+		};
-+		struct bmbt_resv	*resv;
-+		xfs_fsblock_t		target = 0;
-+
-+		if (xfs_has_rmapbt(mp)) {
-+			xfs_agnumber_t		tgt_agno;
-+
-+			/*
-+			 * Try to allocate bmbt blocks in a different AG so
-+			 * that we don't blow up the rmapbt with the bmbt
-+			 * records.
-+			 */
-+			tgt_agno = 1 + XFS_FSB_TO_AGNO(mp,
-+							bd->irec.br_startblock);
-+			if (tgt_agno >= mp->m_sb.sb_agcount)
-+				tgt_agno = 0;
-+			target = XFS_AGB_TO_FSB(mp, tgt_agno, 0);
-+		}
-+
-+		libxfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino,
-+				XFS_DATA_FORK);
-+
-+		error = -libxfs_alloc_vextent_start_ag(&args, target);
-+		if (error)
-+			return error;
-+		if (args.fsbno == NULLFSBLOCK)
-+			return ENOSPC;
-+
-+		resv = kmalloc(sizeof(struct bmbt_resv), 0);
-+		if (!resv)
-+			return ENOMEM;
-+
-+		INIT_LIST_HEAD(&resv->list);
-+		resv->fsbno = args.fsbno;
-+		resv->len = args.len;
-+		resv->used = 0;
-+		list_add_tail(&resv->list, resv_list);
-+
-+		nr_blocks -= args.len;
-+
-+		error = -libxfs_trans_roll_inode(tpp, ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+get_bmbt_records(
-+	struct xfs_btree_cur	*cur,
-+	unsigned int		idx,
-+	struct xfs_btree_block	*block,
-+	unsigned int		nr_wanted,
-+	void			*priv)
-+{
-+	struct xfs_bmbt_irec	*irec = &cur->bc_rec.b;
-+	struct bmbt_data	*bd = priv;
-+	union xfs_btree_rec	*block_rec;
-+	struct xfs_ifork	*ifp = cur->bc_ino.ifake->if_fork;
-+	unsigned int		loaded;
-+
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		memcpy(irec, &bd->irec, sizeof(struct xfs_bmbt_irec));
-+
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+		ifp->if_nextents++;
-+
-+		bd->irec.br_startoff += bd->irec.br_blockcount;
-+	}
-+
-+	return loaded;
-+}
-+
-+static int
-+claim_block(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr,
-+	void			*priv)
-+{
-+	struct bmbt_data	*bd = priv;
-+	struct bmbt_resv	*resv;
-+	xfs_fsblock_t		fsb;
-+
-+	/*
-+	 * The first item in the list should always have a free block unless
-+	 * we're completely out.
-+	 */
-+	resv = list_first_entry(&bd->resv_list, struct bmbt_resv, list);
-+	if (resv->used == resv->len)
-+		return ENOSPC;
-+
-+	fsb = resv->fsbno + resv->used;
-+	resv->used++;
-+
-+	/* If we used all the blocks in this reservation, move it to the end. */
-+	if (resv->used == resv->len)
-+		list_move_tail(&resv->list, &bd->resv_list);
-+
-+	ptr->l = cpu_to_be64(fsb);
-+	bd->iblocks++;
-+	return 0;
-+}
-+
-+static size_t
-+iroot_size(
-+	struct xfs_btree_cur	*cur,
-+	unsigned int		level,
-+	unsigned int		nr_this_level,
-+	void			*priv)
-+{
-+	return XFS_BMAP_BROOT_SPACE_CALC(cur->bc_mp, nr_this_level);
-+}
-+
-+static int
-+populate_btree(
-+	struct xfs_trans		**tpp,
-+	struct xfs_inode		*ip,
-+	uint16_t			dirty_blocks,
-+	struct xbtree_ifakeroot		*ifake,
-+	struct xfs_btree_cur		*bmap_cur,
-+	const struct xfs_bmbt_irec	*template,
-+	xfs_extnum_t			nextents)
-+{
-+	struct xfs_btree_bload		bmap_bload = {
-+		.get_records		= get_bmbt_records,
-+		.claim_block		= claim_block,
-+		.iroot_size		= iroot_size,
-+		.max_dirty		= dirty_blocks,
-+		.leaf_slack		= 1,
-+		.node_slack		= 1,
-+	};
-+	struct bmbt_data		bd = {
-+		.irec			= {
-+			.br_startoff	= 0,
-+			.br_startblock	= template->br_startblock,
-+			.br_blockcount	= template->br_blockcount,
-+			.br_state	= XFS_EXT_NORM,
-+		},
-+		.iblocks		= 0,
-+	};
-+	struct bmbt_resv		*resv, *n;
-+	int				error;
-+
-+	error = -libxfs_btree_bload_compute_geometry(bmap_cur, &bmap_bload,
-+			nextents);
-+	if (error)
-+		return error;
-+
-+	error = -libxfs_trans_reserve_more(*tpp, bmap_bload.nr_blocks, 0);
-+	if (error)
-+		return error;
-+
-+	INIT_LIST_HEAD(&bd.resv_list);
-+	error = alloc_bmbt_blocks(tpp, ip, &bd, bmap_bload.nr_blocks);
-+	if (error)
-+		return error;
-+
-+	error = -libxfs_btree_bload(bmap_cur, &bmap_bload, &bd);
-+	if (error)
-+	       goto out_resv_list;
-+
-+	ip->i_nblocks = bd.iblocks + (template->br_blockcount * nextents);
-+	libxfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+
-+out_resv_list:
-+	/* Leak any unused blocks */
-+	list_for_each_entry_safe(resv, n, &bd.resv_list, list) {
-+		list_del(&resv->list);
-+		kmem_free(resv);
-+	}
-+	return error;
-+}
-+
-+static int
-+build_new_datafork(
-+	struct xfs_trans		**tpp,
-+	struct xfs_inode		*ip,
-+	uint16_t			dirty_blocks,
-+	const struct xfs_bmbt_irec	*irec,
-+	xfs_extnum_t			nextents)
-+{
-+	struct xbtree_ifakeroot		ifake;
-+	struct xfs_btree_cur		*bmap_cur;
-+	int				error;
-+
-+	error = set_nrext64(*tpp, ip, nextents);
-+	if (error)
-+		return error;
-+
-+	/* Set up staging for the new bmbt */
-+	ifake.if_fork = kmem_cache_zalloc(xfs_ifork_cache, 0);
-+	ifake.if_fork_size = xfs_inode_fork_size(ip, XFS_DATA_FORK);
-+	bmap_cur = libxfs_bmbt_stage_cursor(ip->i_mount, ip, &ifake);
-+
-+	/*
-+	 * Figure out the size and format of the new fork, then fill it with
-+	 * the bmap record we want.
-+	 */
-+	if (nextents <= XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK)) {
-+		ifake.if_fork->if_format = XFS_DINODE_FMT_EXTENTS;
-+		error = populate_extents(*tpp, ip, &ifake, irec, nextents);
-+	} else {
-+		ifake.if_fork->if_format = XFS_DINODE_FMT_BTREE;
-+		error = populate_btree(tpp, ip, dirty_blocks, &ifake, bmap_cur,
-+				irec, nextents);
-+	}
-+	if (error) {
-+		libxfs_btree_del_cursor(bmap_cur, 0);
-+		goto err_ifork;
-+	}
-+
-+	/* Install the new fork in the inode. */
-+	libxfs_bmbt_commit_staged_btree(bmap_cur, *tpp, XFS_DATA_FORK);
-+	libxfs_btree_del_cursor(bmap_cur, 0);
-+
-+	/* Mark filesystem as needsrepair */
-+	dbprintf(_("filesystem is now inconsistent, xfs_repair required!\n"));
-+	mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-+	libxfs_log_sb(*tpp);
-+
-+err_ifork:
-+	kmem_cache_free(xfs_ifork_cache, ifake.if_fork);
-+	return error;
-+}
-+
-+static int
-+estimate_size(
-+	struct xfs_inode		*ip,
-+	unsigned long long		dirty_blocks,
-+	xfs_extnum_t			nextents)
-+{
-+	struct xfs_btree_bload		bmap_bload = {
-+		.leaf_slack		= 1,
-+		.node_slack		= 1,
-+	};
-+	struct xbtree_ifakeroot		ifake;
-+	struct xfs_btree_cur		*bmap_cur;
-+	int				error;
-+
-+	/* FMT_EXTENTS means we report zero btblocks and zero height */
-+	if (nextents <= XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
-+		goto report;
-+
-+	ifake.if_fork = kmem_cache_zalloc(xfs_ifork_cache, 0);
-+	ifake.if_fork_size = xfs_inode_fork_size(ip, XFS_DATA_FORK);
-+
-+	bmap_cur = libxfs_bmbt_stage_cursor(ip->i_mount, ip, &ifake);
-+	error = -libxfs_btree_bload_compute_geometry(bmap_cur, &bmap_bload,
-+			nextents);
-+	libxfs_btree_del_cursor(bmap_cur, error);
-+
-+	kmem_cache_free(xfs_ifork_cache, ifake.if_fork);
-+
-+	if (error)
-+		return error;
-+
-+report:
-+	dbprintf(_("ino 0x%llx nextents %llu btblocks %llu btheight %u dirty %u\n"),
-+			ip->i_ino, nextents, bmap_bload.nr_blocks,
-+			bmap_bload.btree_height, dirty_blocks);
-+
-+	return 0;
-+}
-+
-+static int
-+bmapinflate_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct xfs_bmbt_irec	irec;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	char			*p;
-+	unsigned long long	nextents = 0;
-+	unsigned long long	dirty_bytes = 60U << 20; /* 60MiB */
-+	unsigned long long	dirty_blocks;
-+	unsigned int		resblks;
-+	bool			estimate = false;
-+	int			c, error;
-+
-+	if (iocur_top->ino == NULLFSINO) {
-+		dbprintf(_("no current inode\n"));
-+		return 0;
-+	}
-+
-+	optind = 0;
-+	while ((c = getopt(argc, argv, "d:en:")) != EOF) {
-+		switch (c) {
-+		case 'e':
-+			estimate = true;
-+			break;
-+		case 'n':
-+			errno = 0;
-+			nextents = strtoull(optarg, &p, 0);
-+			if (errno) {
-+				perror(optarg);
-+				return 1;
-+			}
-+			break;
-+		case 'd':
-+			errno = 0;
-+			dirty_bytes = cvtnum(mp->m_sb.sb_blocksize,
-+					     mp->m_sb.sb_sectsize, optarg);
-+			if (errno) {
-+				perror(optarg);
-+				return 1;
-+			}
-+			break;
-+		default:
-+			dbprintf(_("bad option for bmap command\n"));
-+			return 0;
-+		}
-+	}
-+
-+	dirty_blocks = XFS_B_TO_FSBT(mp, dirty_bytes);
-+	if (dirty_blocks >= UINT16_MAX)
-+		dirty_blocks = UINT16_MAX - 1;
-+
-+	error = -libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip);
-+	if (error) {
-+		dbprintf(_("could not grab inode 0x%llx, err %d\n"),
-+				iocur_top->ino, error);
-+		return 1;
-+	}
-+
-+	error = estimate_size(ip, dirty_blocks, nextents);
-+	if (error)
-+		goto out_irele;
-+	if (estimate)
-+		goto done;
-+
-+	resblks = libxfs_bmbt_calc_size(mp, nextents);
-+	error = -libxfs_trans_alloc_inode(ip, &M_RES(mp)->tr_itruncate,
-+			resblks, 0, false, &tp);
-+	if (error) {
-+		dbprintf(_("could not allocate transaction, err %d\n"),
-+				error);
-+		return 1;
-+	}
-+
-+	error = find_mapping(tp, ip, &irec);
-+	if (error)
-+		goto out_cancel;
-+
-+	error = build_new_datafork(&tp, ip, dirty_blocks, &irec, nextents);
-+	if (error) {
-+		dbprintf(_("could not build new data fork, err %d\n"),
-+				error);
-+		exitcode = 1;
-+		goto out_cancel;
-+	}
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error) {
-+		dbprintf(_("could not commit transaction, err %d\n"),
-+				error);
-+		exitcode = 1;
-+		return 1;
-+	}
-+
-+done:
-+	libxfs_irele(ip);
-+	return 0;
-+
-+out_cancel:
-+	libxfs_trans_cancel(tp);
-+out_irele:
-+	libxfs_irele(ip);
-+	return 1;
-+}
-+
-+static const struct cmdinfo bmapinflate_cmd = {
-+	.name		= "bmapinflate",
-+	.cfunc		= bmapinflate_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.canpush	= 0,
-+	.args		= N_("[-n copies] [-e] [-d maxdirty]"),
-+	.oneline	= N_("inflate bmbt by copying mappings"),
-+	.help		= bmapinflate_help,
-+};
-+
-+void
-+bmapinflate_init(void)
-+{
-+	if (!expert_mode)
-+		return;
-+
-+	add_command(&bmapinflate_cmd);
-+}
-diff --git a/db/command.c b/db/command.c
-index 2bbd7b0b24f9..6cda03e9856d 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -142,4 +142,5 @@ init_commands(void)
- 	fuzz_init();
- 	timelimit_init();
- 	iunlink_init();
-+	bmapinflate_init();
- }
-diff --git a/db/command.h b/db/command.h
-index a89e71504f9c..2c2926afd7b5 100644
---- a/db/command.h
-+++ b/db/command.h
-@@ -35,3 +35,4 @@ extern void		btheight_init(void);
- extern void		timelimit_init(void);
- extern void		namei_init(void);
- extern void		iunlink_init(void);
-+extern void		bmapinflate_init(void);
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index f53ddd67d87c..a7f6d55ed8be 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -388,6 +388,29 @@ and
- options are used to select the attribute or data
- area of the inode, if neither option is given then both areas are shown.
- .TP
-+.BI "bmapinflate [\-d " dirty_bytes "] [-e] [\-n " nr "]
-+Duplicates the first data fork mapping this many times, as if the mapping had
-+been repeatedly reflinked.
-+This is an expert-mode command for exercising high-refcount filesystems only.
-+Existing data fork mappings will be forgotten and the refcount btree will not
-+be updated.
-+This command leaves at least the refcount btree and the inode inconsistent;
-+.B xfs_repair
-+must be run afterwards.
-+.RS 1.0i
-+.TP 0.4i
-+.B \-d
-+Constrain the memory consumption of new dirty btree blocks to this quantity.
-+Defaults to 60MiB.
-+.TP 0.4i
-+.B \-e
-+Estimate the number of blocks and height of the new data fork mapping
-+structure and exit without changing anything.
-+.TP 0.4i
-+.B \-n
-+Create this many copies of the first mapping.
-+.RE
-+.TP
- .B btdump [-a] [-i]
- If the cursor points to a btree node, dump the btree from that block downward.
- If instead the cursor points to an inode, dump the data fork block mapping btree if there is one.
+ typedef int (*xfs_slab_compare_fn)(const void *, const void *);
+ 
+ struct xfs_slab_cursor {
+-	size_t				nr;		/* # of per-slab cursors */
++	uint64_t			nr;		/* # of per-slab cursors */
+ 	struct xfs_slab			*slab;		/* pointer to the slab */
+ 	struct xfs_slab_hdr_cursor	*last_hcur;	/* last header we took from */
+ 	xfs_slab_compare_fn		compare_fn;	/* compare items */
+@@ -83,8 +83,8 @@ struct xfs_slab_cursor {
+  */
+ #define MIN_BAG_SIZE	4096
+ struct xfs_bag {
+-	size_t			bg_nr;		/* number of pointers */
+-	size_t			bg_inuse;	/* number of slots in use */
++	uint64_t		bg_nr;		/* number of pointers */
++	uint64_t		bg_inuse;	/* number of slots in use */
+ 	void			**bg_ptrs;	/* pointers */
+ };
+ #define BAG_END(bag)	(&(bag)->bg_ptrs[(bag)->bg_nr])
+@@ -137,7 +137,7 @@ static void *
+ slab_ptr(
+ 	struct xfs_slab		*slab,
+ 	struct xfs_slab_hdr	*hdr,
+-	size_t			idx)
++	uint32_t		idx)
+ {
+ 	char			*p;
+ 
+@@ -155,12 +155,12 @@ slab_add(
+ 	struct xfs_slab		*slab,
+ 	void			*item)
+ {
+-	struct xfs_slab_hdr		*hdr;
++	struct xfs_slab_hdr	*hdr;
+ 	void			*p;
+ 
+ 	hdr = slab->s_last;
+ 	if (!hdr || hdr->sh_inuse == hdr->sh_nr) {
+-		size_t n;
++		uint32_t	n;
+ 
+ 		n = (hdr ? hdr->sh_nr * 2 : MIN_SLAB_NR);
+ 		if (n * slab->s_item_sz > MAX_SLAB_SIZE)
+@@ -308,7 +308,7 @@ peek_slab_cursor(
+ 	struct xfs_slab_hdr_cursor	*hcur;
+ 	void			*p = NULL;
+ 	void			*q;
+-	size_t			i;
++	uint64_t		i;
+ 
+ 	cur->last_hcur = NULL;
+ 
+@@ -370,7 +370,7 @@ pop_slab_cursor(
+ /*
+  * Return the number of items in the slab.
+  */
+-size_t
++uint64_t
+ slab_count(
+ 	struct xfs_slab	*slab)
+ {
+@@ -429,7 +429,7 @@ bag_add(
+ 	p = &bag->bg_ptrs[bag->bg_inuse];
+ 	if (p == BAG_END(bag)) {
+ 		/* No free space, alloc more pointers */
+-		size_t nr;
++		uint64_t	nr;
+ 
+ 		nr = bag->bg_nr * 2;
+ 		x = realloc(bag->bg_ptrs, nr * sizeof(void *));
+@@ -450,7 +450,7 @@ bag_add(
+ int
+ bag_remove(
+ 	struct xfs_bag	*bag,
+-	size_t		nr)
++	uint64_t	nr)
+ {
+ 	ASSERT(nr < bag->bg_inuse);
+ 	memmove(&bag->bg_ptrs[nr], &bag->bg_ptrs[nr + 1],
+@@ -462,7 +462,7 @@ bag_remove(
+ /*
+  * Return the number of items in a bag.
+  */
+-size_t
++uint64_t
+ bag_count(
+ 	struct xfs_bag	*bag)
+ {
+@@ -475,7 +475,7 @@ bag_count(
+ void *
+ bag_item(
+ 	struct xfs_bag	*bag,
+-	size_t		nr)
++	uint64_t	nr)
+ {
+ 	if (nr >= bag->bg_inuse)
+ 		return NULL;
+diff --git a/repair/slab.h b/repair/slab.h
+index aab46ecf1f08..077b45822149 100644
+--- a/repair/slab.h
++++ b/repair/slab.h
+@@ -9,29 +9,31 @@
+ struct xfs_slab;
+ struct xfs_slab_cursor;
+ 
+-extern int init_slab(struct xfs_slab **, size_t);
+-extern void free_slab(struct xfs_slab **);
++int init_slab(struct xfs_slab **slabp, size_t item_sz);
++void free_slab(struct xfs_slab **slabp);
+ 
+-extern int slab_add(struct xfs_slab *, void *);
+-extern void qsort_slab(struct xfs_slab *, int (*)(const void *, const void *));
+-extern size_t slab_count(struct xfs_slab *);
++int slab_add(struct xfs_slab *slab, void *item);
++void qsort_slab(struct xfs_slab *slab,
++		int (*compare)(const void *, const void *));
++uint64_t slab_count(struct xfs_slab *slab);
+ 
+-extern int init_slab_cursor(struct xfs_slab *,
+-	int (*)(const void *, const void *), struct xfs_slab_cursor **);
+-extern void free_slab_cursor(struct xfs_slab_cursor **);
++int init_slab_cursor(struct xfs_slab *slab,
++		int (*compare)(const void *, const void *),
++		struct xfs_slab_cursor **curp);
++void free_slab_cursor(struct xfs_slab_cursor **curp);
+ 
+-extern void *peek_slab_cursor(struct xfs_slab_cursor *);
+-extern void advance_slab_cursor(struct xfs_slab_cursor *);
+-extern void *pop_slab_cursor(struct xfs_slab_cursor *);
++void *peek_slab_cursor(struct xfs_slab_cursor *cur);
++void advance_slab_cursor(struct xfs_slab_cursor *cur);
++void *pop_slab_cursor(struct xfs_slab_cursor *cur);
+ 
+ struct xfs_bag;
+ 
+-extern int init_bag(struct xfs_bag **);
+-extern void free_bag(struct xfs_bag **);
+-extern int bag_add(struct xfs_bag *, void *);
+-extern int bag_remove(struct xfs_bag *, size_t);
+-extern size_t bag_count(struct xfs_bag *);
+-extern void *bag_item(struct xfs_bag *, size_t);
++int init_bag(struct xfs_bag **bagp);
++void free_bag(struct xfs_bag **bagp);
++int bag_add(struct xfs_bag *bag, void *item);
++int bag_remove(struct xfs_bag *bag, uint64_t idx);
++uint64_t bag_count(struct xfs_bag *bag);
++void *bag_item(struct xfs_bag *bag, uint64_t idx);
+ 
+ #define foreach_bag_ptr(bag, idx, ptr) \
+ 	for ((idx) = 0, (ptr) = bag_item((bag), (idx)); \
 
