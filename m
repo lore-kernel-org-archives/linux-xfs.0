@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286CA5788E
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 02:56:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D74955788E
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 02:56:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711421763; cv=none; b=b1GqjJmKavhgXwJbDLwnguoFNzvtkTicRQqMXTrkuJYyJVVHIVbr9UVIC2nMTTYt4TERRLhaq/WMrcPjGtMrcpm0Z7nHg26fPHr2Z+30ivzLg2/dWCoDix75zbOwDInfloFoU0HWkABA8MwCO824psEz5paTIVGa5TJeuICZpAs=
+	t=1711421778; cv=none; b=EyzFk7boPb28tqsugbfb2AKdfyjzgoRN7RzwBH4MqFa33rVgylVs99shVW3Pw+VPKFJAkpGnGSkkJ+A1RpKXeLbq4V8S86NnAcuN08SmSz+o/g/bgVHPNe++G8EwaL8wK2uMdDy9PFJfFabFUOpWpWjbFHDvUCoAYaa36sL1TgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711421763; c=relaxed/simple;
-	bh=9IAv3w2S/Di6CQ0aoDxJRexG3TyRmaKj4XdlHUpePYY=;
+	s=arc-20240116; t=1711421778; c=relaxed/simple;
+	bh=qeBoLSQ9bEyhMwGza8nH5VPT3AY4tpA7At8eQtlLFIA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=phyBKVyyzPQKfg62+amPaDLl36nzWcWpdMln9m55UYagewuyA20nUQ1Z5CUH9XLUcqXOjea8r/CixaI9vQ7c8XyQba4nNl8p16JJHqSaCQH1mCwStmbhk8hb2UR4mP38Ah0/tO4h/k8gBmL4MNHFcQIRhVOjJRfD1mEvU6ptpNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G6ydAk3c; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KnSSdRVBCnng3oMpyBK9f/CKqTldGrPWHwUCeZBihYc9rqTuvgJRBA4GmhnfvR6UVLCbc0ui2+jyrEAbd2BRscEhHNTKV+lKbxjDrduRhfzCfYJrDIXRlRc7iRCuL4IwsNaPotLj4cDKIxO2hAwPgOTvnlFGfL0CIcPpSack9oQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LrXDJrDq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G6ydAk3c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CAA4C433C7;
-	Tue, 26 Mar 2024 02:56:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LrXDJrDq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F938C433C7;
+	Tue, 26 Mar 2024 02:56:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711421762;
-	bh=9IAv3w2S/Di6CQ0aoDxJRexG3TyRmaKj4XdlHUpePYY=;
+	s=k20201202; t=1711421778;
+	bh=qeBoLSQ9bEyhMwGza8nH5VPT3AY4tpA7At8eQtlLFIA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G6ydAk3ckJgMfyAbp67XetDn5N2Fvnn1Ciwt8jkumP8CV87DyvPNdiTRo1I4cyfsn
-	 rHTwjMxV7ZozWJy1iT/H/71U0J1kvSWTL00p2XP1glRI/U/mRizjsqtXvytNJlfFKK
-	 v6OSoK+JJk5hC8BW58f+ksa9RDRxnM7FNrKDdMbgWCKysVLGdFbapt1yglWrpPquvS
-	 CgXOm4Qa2yEqOgD1M0SKr6a+CinsRXfdIsEKVPJHBNu4q9Jki4AQqBvqhY5YFHOwg7
-	 Wuww5Jw8ba9erklnh1aFnOM1lrf2XaUtf0POfNgSKUasf6k9urXZ85XdYza7ti6j4G
-	 qi1t7+VXpf33w==
-Date: Mon, 25 Mar 2024 19:56:02 -0700
-Subject: [PATCHSET V2 05/18] xfsprogs: fix log sector size detection
+	b=LrXDJrDqPOY+aUvRbm1onc4Bh25bt/YKsUwRK5horoSRYdRggaScygJr7UsPFqIjJ
+	 yitH3SN3geWEsAjRA6V88+jj7l0UD0zD/FcIx0v56gyn2ugx5DKRwICd5WewV1lzvQ
+	 EEOxPralFE8Zr1nx1E3DWSIVqNsQAUCdzIVO/vmxjmDpoCNFq5XNu+CdoEa6nRNe1e
+	 6AHYkksECu1dRn8hnDKlrHJx9ZqZ8O6WarbbmM6pycqBN9fLklZ/achdHJtag/3y1P
+	 WUazXSmFBTjVo2g51UvoZtM3pgZpGoQeAcKP9U7sltz3GJhz3p18CHgbgag1B2Qg6d
+	 bWntcMho9mVTQ==
+Date: Mon, 25 Mar 2024 19:56:17 -0700
+Subject: [PATCHSET 06/18] mkfs: scale shards on ssds
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
- Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org
-Message-ID: <171142128939.2214261.1337637583612320969.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
+ linux-xfs@vger.kernel.org
+Message-ID: <171142129320.2214436.15874795221168392835.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240326024549.GE6390@frogsfrogsfrogs>
 References: <20240326024549.GE6390@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,19 +47,22 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-From Christoph Hellwig,
+For a long time, the maintainers have had a gut feeling that we could
+optimize performance of XFS filesystems on non-mechanical storage by
+scaling the number of allocation groups to be a multiple of the CPU
+count.
 
-this series cleans up the libxfs toplogy code and then fixes detection
-of the log sector size in mkfs.xfs, so that it doesn't create smaller
-than possible log sectors by default on > 512 byte sector size devices.
+With modern ~2022 hardware, it is common for systems to have more than
+four CPU cores and non-striped SSDs ranging in size from 256GB to 4TB.
+The default mkfs geometry still defaults to 4 AGs regardless of core
+count, which was settled on in the age of spinning rust.
 
-Note that this doesn't cleanup the types of the topology members, as
-that creeps all the way into platform_findsize.  Which has a lot more
-cruft that should be dealth with and is worth it's own series.
-
-Changes since v1:
- - fix a spelling mistake
- - add a few more cleanups
+This patchset adds a different computation for AG count and log size
+that is based entirely on a desired level of concurrency.  If we detect
+storage that is non-rotational (or the sysadmin provides a CLI option),
+then we will try to match the AG count to the CPU count to minimize AGF
+contention and make the log large enough to minimize grant head
+contention.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -70,18 +73,16 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-fix-log-sector-size
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-scale-geo-on-ssds
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=mkfs-scale-geo-on-ssds
 ---
 Commits in this patchset:
- * libxfs: remove the unused fs_topology_t typedef
- * libxfs: refactor the fs_topology structure
- * libxfs: remove the S_ISREG check from blkid_get_topology
- * libxfs: also query log device topology in get_topology
- * mkfs: use a sensible log sector size default
+ * mkfs: allow sizing allocation groups for concurrency
+ * mkfs: allow sizing internal logs for concurrency
 ---
- libxfs/topology.c |  109 ++++++++++++++++++++++++++---------------------------
- libxfs/topology.h |   19 ++++++---
- mkfs/xfs_mkfs.c   |   71 ++++++++++++++++-------------------
- repair/sb.c       |    2 -
- 4 files changed, 100 insertions(+), 101 deletions(-)
+ man/man8/mkfs.xfs.8.in |   46 +++++++++
+ mkfs/xfs_mkfs.c        |  251 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 291 insertions(+), 6 deletions(-)
 
