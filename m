@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22DD512838F
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:58:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C598912838F
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Mar 2024 03:58:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711425507; cv=none; b=qXKDk9d3/YbggW+En5EAKB9OmnEsz0HSnIDC1r07roiTTjDoaCqrmQucfSk4mUmBp3zEJFCW4/m2Of4vUfryASRO6AAVM2fCGEbO+pZNOaO7Le2YVfq7Prha1b6G57gfVkqXtBuEP51ouOxDn4+fcE3KIiaMBa5ukRM6WDXo0tg=
+	t=1711425522; cv=none; b=FaSY6UPqTN5k8gVwJw3+h9rDyuPMJ1lbl3pGmyaPu403ywlAnr9JUQp8K0gbEmwhV7vPWfGaZuxDOLzBOUg8BbK7G6AX2Ki9Hlf18Ay84gFI6dEJlAnEXf6jW9rI2h8B4DTgzkx7Kmq6zGkyfxyMtZtt62VZNTa6eUJIKGXXKJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711425507; c=relaxed/simple;
-	bh=yPJCwn0zwUeAUpQGKD9dXegI5MvA70/YM/74n8fNMmQ=;
+	s=arc-20240116; t=1711425522; c=relaxed/simple;
+	bh=4hqAiu0RcKjERdtqAGwFevKWZh7DCgvibK8B2Wa0nek=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mu+gJijUInCUnl+Ic2v4S8In5mU3tm38RTod2bDnYcDxrPhoLYZhE87RPNTvfGeOCP9WDPLrKvTwbkRiKnjSip9XtE6zoBlaO+OVvgEpCGpDR1Od8Rrf8xxwQfUiaQp+r1+KThK14uFxukvSkQ4ZCMZ3JNwjBeqihGSY8n2uzDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mt+8/+TJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XrQG/8JoGhCZZvwuAAlGDZIiq5B/ZOJruk4FEbLX1itWyZ33X9D4HHxDImNXC66ZvMXCO2zM+8IlWuIVDomWOhm0V2KQmndoc2E8egPJervDy17dOUtbnrN1x3KgswXDFpqZn3rxdK0PP/e1Ac0vDIdM6wP2or8h0/cyUlZQq7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NsKi8hc4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mt+8/+TJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE0EEC433F1;
-	Tue, 26 Mar 2024 03:58:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NsKi8hc4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98107C433C7;
+	Tue, 26 Mar 2024 03:58:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711425507;
-	bh=yPJCwn0zwUeAUpQGKD9dXegI5MvA70/YM/74n8fNMmQ=;
+	s=k20201202; t=1711425522;
+	bh=4hqAiu0RcKjERdtqAGwFevKWZh7DCgvibK8B2Wa0nek=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mt+8/+TJftVQyVxZpIVCIJNy7XRkV5cfcCicvc7MuV+cgfcynNIrWgTe16xTqrC2/
-	 qGAYLc3+bNd+3lJQEAOMkxM8CpEOiWvQQl0RleccBNMSOoMy6lQV/O3RTRaiGrTw5T
-	 m22p0SX0FnQhccScydVG4C4Oaw3rPgp2dWuejHZsGdZbMRz48a/rfBTxi07WxBaNvm
-	 P3fkX8V4073Qr93YNGesMXlDdzSHPyUyETQvNwEv2Mbwa6nvPIQNvDwWOK7Cu6QDpt
-	 A/bqS7soCwwADBNTdJi45kQt3mjf04kpDFhaKNuun6gQLF1gpdtEiWKUcH7pxeg1cZ
-	 90B0MN6tmpy7Q==
-Date: Mon, 25 Mar 2024 20:58:26 -0700
-Subject: [PATCH 1/1] xfs: add a realtime flag to the bmap update log redo
- items
+	b=NsKi8hc4DHowDednyizcm6OLMBooaCWaXUES+LDRkdlKRMQUO0kVs2/px7Tkh6PLM
+	 1dzmIOGEiKOFAkc7SlH9WUU6Yqs2fw9IiYCxeLgA1xsL/9zDn0dd/1vBguBYkRFyZm
+	 vckbuSQsdsyfcDApP3oPUfUyk9fqJBzEawGzPQOVGBZ3MsCOxYTvae73hPcIuXX1RR
+	 mrosuuvFE1vu8PSkU/09+Z9F5OoaHo8ifQUI5b0TM6u2iW8usz4Pm9EFEN7vVpxrEq
+	 2oFunQ1mcFC+fQRKZ5X7sAa/b8ZRwHhGWyLfiQnFYgwtxMCCfO2fLBPm2jQIb5PGf8
+	 V5hbyLOy2P7iw==
+Date: Mon, 25 Mar 2024 20:58:42 -0700
+Subject: [PATCH 1/2] xfs_spaceman: report the health of quota counts
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <171142133677.2218014.4422121913066180413.stgit@frogsfrogsfrogs>
-In-Reply-To: <171142133662.2218014.2765506825958026665.stgit@frogsfrogsfrogs>
-References: <171142133662.2218014.2765506825958026665.stgit@frogsfrogsfrogs>
+Message-ID: <171142133994.2218093.3554558564414039858.stgit@frogsfrogsfrogs>
+In-Reply-To: <171142133977.2218093.3413240563781218051.stgit@frogsfrogsfrogs>
+References: <171142133977.2218093.3413240563781218051.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,43 +46,42 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Extend the bmap update (BUI) log items with a new realtime flag that
-indicates that the updates apply against a realtime file's data fork.
-We'll wire up the actual code later.
+Report the health of quota counts.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/defer_item.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ man/man2/ioctl_xfs_fsgeometry.2 |    3 +++
+ spaceman/health.c               |    4 ++++
+ 2 files changed, 7 insertions(+)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index fdb922f08c39..21dd1d0f416e 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -490,6 +490,9 @@ xfs_bmap_update_get_group(
- {
- 	xfs_agnumber_t		agno;
+diff --git a/man/man2/ioctl_xfs_fsgeometry.2 b/man/man2/ioctl_xfs_fsgeometry.2
+index 6b7c83da7583..f59a6e8a6a20 100644
+--- a/man/man2/ioctl_xfs_fsgeometry.2
++++ b/man/man2/ioctl_xfs_fsgeometry.2
+@@ -256,6 +256,9 @@ Free space bitmap for the realtime device.
+ .TP
+ .B XFS_FSOP_GEOM_SICK_RT_SUMMARY
+ Free space summary for the realtime device.
++.TP
++.B XFS_FSOP_GEOM_SICK_QUOTACHECK
++Quota resource usage counters.
+ .RE
  
-+	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
-+		return;
-+
- 	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
+ .SH RETURN VALUE
+diff --git a/spaceman/health.c b/spaceman/health.c
+index d83c5ccd90d5..3318f9d1a7f4 100644
+--- a/spaceman/health.c
++++ b/spaceman/health.c
+@@ -72,6 +72,10 @@ static const struct flag_map fs_flags[] = {
+ 		.descr = "realtime summary",
+ 		.has_fn = has_realtime,
+ 	},
++	{
++		.mask = XFS_FSOP_GEOM_SICK_QUOTACHECK,
++		.descr = "quota counts",
++	},
+ 	{0},
+ };
  
- 	/*
-@@ -519,10 +522,13 @@ static inline void
- xfs_bmap_update_put_group(
- 	struct xfs_bmap_intent	*bi)
- {
-+	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
-+		return;
-+
- 	xfs_perag_intent_put(bi->bi_pag);
- }
- 
--/* Cancel a deferred rmap update. */
-+/* Cancel a deferred bmap update. */
- STATIC void
- xfs_bmap_update_cancel_item(
- 	struct list_head		*item)
 
