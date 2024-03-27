@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8DD18C36
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 01:49:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FF821CD3B
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 01:49:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711504183; cv=none; b=qGa+sj8FiqLvgVm9skuep/HHNyJaFfcEeP30Rn0LdKd2EEWGGRMspI+/qzEcbjg+5U6w7wcjTD/Fg6SLygl+ofGAg4F8CgdCXcnI/5RIzazMt/taiYQpMrZIblXDtibzw2D1i8sSmYeAu3l+XNNYRSyspyErkITVBKJHW7S6mUE=
+	t=1711504198; cv=none; b=mQIv8Pjlw8RWEKmWyKWADw0p0NXjBy+DbqRuF2nN+z1I3ZJpnpRcGobb5oHfixrwkmU/Bw7dgUI7qJfxpfE84lBjD+M3ozpTxzNNwFen3akhR8Ll4Ia3XahSRtJqC0xyWw8oyS1HN28T7JZC70y89eQ6PUVnUzdR3iaCnWsZXfA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711504183; c=relaxed/simple;
-	bh=C6tYTprx6ZIVWvs1MaZ9iufMr54T+V0aOOgRwMpDXyo=;
+	s=arc-20240116; t=1711504198; c=relaxed/simple;
+	bh=VPgRPIFfvbILCs16h5gz68U9fFeduD8DSvECisHzxrs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=P4R0KI7AY/Okf9rSIQ8Asl7iqorG7kTmCWxjA8as9DczDaZc0Bc4PJ+j40V9g/FLP2hH+/IG2X2vqbEhbCDPrK1RVZkrLlt+7b2NmbWULLfRhXpsoP4E3xd3Wx0bj+bEb9d5IMX7FovQMJF/JpLu9WTK6wKP6/Qo+kC2eTtArHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XgmaC7T/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uEy94Qce9pWCU6FbvsFL6N/JeRFwYKOIZXKyf21xgwnAPgPX8gvM9e+/FxkrH7UDm4C2/Q2GayohrsYQPrlBdkAKsKNBunjg+1UM8nvtuXkyqhdzkvWLkaNAqfGlyxUkjvnt9a6SYCJ9k/l3Tdn8kXoN+UPSut2iU/MXW3u4NOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OH2VECzY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XgmaC7T/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98DF0C433C7;
-	Wed, 27 Mar 2024 01:49:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OH2VECzY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FF66C433C7;
+	Wed, 27 Mar 2024 01:49:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711504182;
-	bh=C6tYTprx6ZIVWvs1MaZ9iufMr54T+V0aOOgRwMpDXyo=;
+	s=k20201202; t=1711504198;
+	bh=VPgRPIFfvbILCs16h5gz68U9fFeduD8DSvECisHzxrs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XgmaC7T/ONZaH7O0T2B2taku0DN0FRVqNtDSXN9GVwoTbd8yDcGqogYlMLGt2kLIE
-	 y197gxaMLaC+iDIsWwBD3mXJ0l699dy2tI80hWDYUYGES5TygT6mXAyt+Pjei6L3l0
-	 x/+Abk4QS33i1b3cGT1lIOlcGYTFr4iE0vRdF1sITLKBHLdIiyVtMAaw2ZiLo9GPN2
-	 SXYvKh/KBW5tXI/IwGpkOewu+sbSIkEs9w+DBNRzw8ycqVmh8PhqfNTuAhbOqtmVwQ
-	 EYe1l4ot9Ap/Z8OupOLT9wpSoTtq+cxJRTt3+72ErCWl19at3Ay/O5lqV4LjHtCoJr
-	 LI5K7YqzA4KPg==
-Date: Tue, 26 Mar 2024 18:49:42 -0700
-Subject: [PATCHSET v30.1 13/15] xfs: online fsck of iunlink buckets
+	b=OH2VECzY7vqkOFB79sFOzaq74ZavOG3XgGUrNuoayRxOAK1je8TXe2VHQr4wjYgzL
+	 DfRWB30D8+4Y/HWk1Pb/EY547X0d6OTndq3tyh8rw1tDdCMrq8fsYOpwsjKNbqdIem
+	 mZzeJj/i01AZHRMSK94iLh5Gb7CpwmRFH/RHlQI6TgnXUhgfRW+O6+R7IRvwbE2rSc
+	 nhV4M6FnJLk0c3mYfzoem0MsgJyk9NWGzdvpEdVff0USbKQZyaYhCSJwOnBxzZiuJQ
+	 byFiJtqx99Cnp7AZqf0poSS8StWMmi1ARGf1wQ+OC/NN7UezjfyS51C8Z06W52q/DS
+	 SWTyHRL0/f73A==
+Date: Tue, 26 Mar 2024 18:49:57 -0700
+Subject: [PATCHSET v30.1 14/15] xfs: inode-related repair fixes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171150384705.3220168.3647633643279321481.stgit@frogsfrogsfrogs>
+Message-ID: <171150385109.3220296.4235209828218476119.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240327014040.GU6390@frogsfrogsfrogs>
 References: <20240327014040.GU6390@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,10 +46,16 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series enhances the AGI scrub code to check the unlinked inode
-bucket lists for errors, and fixes them if necessary.  Now that iunlink
-pointer updates are virtual log items, we can batch updates pretty
-efficiently in the logging code.
+While doing QA of the online fsck code, I made a few observations:
+First, nobody was checking that the di_onlink field is actually zero;
+Second, that allocating a temporary file for repairs can fail (and
+thus bring down the entire fs) if the inode cluster is corrupt; and
+Third, that file link counts do not pin at ~0U to prevent integer
+overflows.  Fourth, the x{chk,rep}_metadata_inode_fork functions
+should be subclassing the main scrub context, not modifying the
+parent's setup willy-nilly.
+
+This scattered patchset fixes those three problems.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -60,22 +66,28 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-iunlink
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=inode-repair-improvements
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-iunlink
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=inode-repair-improvements
 ---
 Commits in this patchset:
- * xfs: check AGI unlinked inode buckets
- * xfs: hoist AGI repair context to a heap object
- * xfs: repair AGI unlinked inode bucket lists
+ * xfs: check unused nlink fields in the ondisk inode
+ * xfs: try to avoid allocating from sick inode clusters
+ * xfs: pin inodes that would otherwise overflow link count
+ * xfs: create subordinate scrub contexts for xchk_metadata_inode_subtype
 ---
- fs/xfs/scrub/agheader.c        |   40 ++
- fs/xfs/scrub/agheader_repair.c |  879 ++++++++++++++++++++++++++++++++++++++--
- fs/xfs/scrub/agino_bitmap.h    |   49 ++
- fs/xfs/scrub/trace.h           |  255 ++++++++++++
- fs/xfs/xfs_inode.c             |    2 
- fs/xfs/xfs_inode.h             |    1 
- 6 files changed, 1179 insertions(+), 47 deletions(-)
- create mode 100644 fs/xfs/scrub/agino_bitmap.h
+ fs/xfs/libxfs/xfs_format.h    |    6 ++++
+ fs/xfs/libxfs/xfs_ialloc.c    |   40 ++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_buf.c |    8 +++++
+ fs/xfs/scrub/common.c         |   23 ++------------
+ fs/xfs/scrub/dir_repair.c     |   11 ++-----
+ fs/xfs/scrub/inode_repair.c   |   12 +++++++
+ fs/xfs/scrub/nlinks.c         |    4 ++
+ fs/xfs/scrub/nlinks_repair.c  |    8 +----
+ fs/xfs/scrub/repair.c         |   67 ++++++++---------------------------------
+ fs/xfs/scrub/scrub.c          |   63 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.h          |   11 +++++++
+ fs/xfs/xfs_inode.c            |   33 +++++++++++++-------
+ 12 files changed, 187 insertions(+), 99 deletions(-)
 
