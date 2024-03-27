@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F591CF92
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:00:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92BF81F93E
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:01:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711504856; cv=none; b=ogf6lXfhDyWyhitMUFJtzndyhgh0K5M1zWN/hik0rmtjMPb3OMx3TGq978ZJ3+NRRSYMkfVTEEZvQ+hw/NLFcyrNKpfBNT7r4XWr8l+P6pNQU4+Q60xjKjlLvSPftpKolJC6omHZA/Lr7Mor0yyfuJelbVSNmp4JCVDdBdBGZ+A=
+	t=1711504871; cv=none; b=o2FIxLx59ePqU0AeyOMeR2+2ECxvBG/CEBJO8J2MoC4VZ0Hm/NX0vvvEnNtSj3Cl6TQxZr2M2+Her0z4Qu+85tl5SR72jV4eBtl9+j+Y0gIqRoYKW2fPIUplSdl/eT+A8O69DYgaTYszHlUw2iaFzIli9FQ788bmnE9773EoYvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711504856; c=relaxed/simple;
-	bh=4aBd2fpEi4pxkwT6L6sgIdk3NhLikis3aQKGp0x7wUA=;
+	s=arc-20240116; t=1711504871; c=relaxed/simple;
+	bh=iTFPkMFSUK2nsVT0SN1HxZ7KJgLHr3geSfUtPqbWleQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cTR4lzB4TK/aVPrMzR0gP0st1N+QbD2bbTvPGDHGy1fPOyH+xUcJIepan5pDPwliMVfrEkGLBP+8e93OFAeQwseLQIvyx78IltJeIF+aQqJbBTH5SP2doEyNyNmze/dJ/w3WikXp1aVShvqr2GHqUK9Otp+mOQkdmJLavwtDGN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P0oCQaZw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=brHWo4/Q2tF8DFT6hfQ/hra/uaZBENwIYYCm7ZYGvws8Cu506okjuczZk43GqIZ/1zBd0PzsXvUldoEqDlOeZiOmiHtYCX1v0AKG0/qyZr+0D8S+AhZMXuT+7guHft0vXYP3GpqsOoZmC+I9HPSIpEr4R4Eo2BUl8JDKKvHdXKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bsd32pQ3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P0oCQaZw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0BB4C433F1;
-	Wed, 27 Mar 2024 02:00:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bsd32pQ3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67CE9C433F1;
+	Wed, 27 Mar 2024 02:01:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711504855;
-	bh=4aBd2fpEi4pxkwT6L6sgIdk3NhLikis3aQKGp0x7wUA=;
+	s=k20201202; t=1711504871;
+	bh=iTFPkMFSUK2nsVT0SN1HxZ7KJgLHr3geSfUtPqbWleQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=P0oCQaZws9l5LE7iGUfj3NW7ecnKWvcNeQjIc/5aAEk+4GgmCYDtL2vtVoyJBaAoU
-	 4qYYVjqEZHPkHUZsKK3uV1xtWvupDlWlL0Upb1ilSF5G6Mn5vcMmTi0WzyCoUmfP6P
-	 r2SbbzgIHNIgdQT9VDQSt8z5lzcJOwASER+Jwt9EK2WkHT/qADxY/kFuydszTs8t3N
-	 83lNAgeVkoyZ5bxjUtkoimJGftU8MCP7ABIPNI89YQmzg3/tVAZ0ohGKF7QA418WAM
-	 XUy86ZoMO0FnCojOAAFetsU/K+vezKRpxixfmw1LJ7MbEQt1DLJrPpOo/XoazAobW4
-	 zEXlK27mfsc1g==
-Date: Tue, 26 Mar 2024 19:00:55 -0700
-Subject: [PATCH 09/10] xfs: validate explicit directory block buffer owners
+	b=Bsd32pQ3XitHW4H5jluihSo7sNpsL/Qod7294E7yBIaMYsJCaVC8BAfNp9kHvMERi
+	 E6ouzqMZOcFyku5a+J03i1yAl6lXKmzT9CrxPFxh2bHu+0rP2/wBWU21Z5SF1JEy5C
+	 fQcK/NjkljaxDGRtTPR08bAUXuIdjyRwGsCZvkJbSReonJdPw5k2MmMjo0S03douL+
+	 K8PpcrKZY43Py6lfYFq2X5ZgM9mSc/z7b8iKnFsj9ldgBXPfIvUiKnxx6hRNyXrbSF
+	 9DCcu6KoLigu0Eysu6yfLAsn3VbL9a9R9aiADpWYRDsOFjgh6DfdDDqlbmBGP/rFMa
+	 Oqo4pLVjtv6IQ==
+Date: Tue, 26 Mar 2024 19:01:10 -0700
+Subject: [PATCH 10/10] xfs: validate explicit directory free block owners
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171150382275.3217370.10209203557287936545.stgit@frogsfrogsfrogs>
+Message-ID: <171150382292.3217370.12070385316435154440.stgit@frogsfrogsfrogs>
 In-Reply-To: <171150382098.3217370.5208665628669220587.stgit@frogsfrogsfrogs>
 References: <171150382098.3217370.5208665628669220587.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,168 +46,179 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Port the existing directory block header checking function to accept an
-owner number instead of an xfs_inode, then update the callsites to use
-xfs_da_args.owner when possible.
+Port the existing directory freespace block header checking function to
+accept an owner number instead of an xfs_inode, then update the
+callsites to use xfs_da_args.owner when possible.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2.h       |    1 +
- fs/xfs/libxfs/xfs_dir2_block.c |   22 ++++++++++++++--------
- fs/xfs/libxfs/xfs_dir2_priv.h  |    4 ++--
- fs/xfs/libxfs/xfs_exchmaps.c   |    2 +-
- fs/xfs/scrub/dir.c             |    2 +-
- fs/xfs/scrub/readdir.c         |    2 +-
- fs/xfs/xfs_dir2_readdir.c      |    2 +-
- 7 files changed, 21 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_leaf.c |    3 ++-
+ fs/xfs/libxfs/xfs_dir2_node.c |   32 ++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_dir2_priv.h |    4 ++--
+ fs/xfs/scrub/dir.c            |    2 +-
+ 4 files changed, 23 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index d623bfdcd4218..eb3a5c35025b5 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -103,6 +103,7 @@ extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
- 
- xfs_failaddr_t xfs_dir3_leaf_header_check(struct xfs_buf *bp, xfs_ino_t owner);
- xfs_failaddr_t xfs_dir3_data_header_check(struct xfs_buf *bp, xfs_ino_t owner);
-+xfs_failaddr_t xfs_dir3_block_header_check(struct xfs_buf *bp, xfs_ino_t owner);
- 
- extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
- extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index b20b08394aa06..91dd0fe0d105f 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -115,18 +115,23 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
- 	.verify_struct = xfs_dir3_block_verify,
- };
- 
--static xfs_failaddr_t
-+xfs_failaddr_t
- xfs_dir3_block_header_check(
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index a6eee26044875..fb78ae79fdc6a 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1805,7 +1805,8 @@ xfs_dir2_node_to_leaf(
+ 	/*
+ 	 * Read the freespace block.
+ 	 */
+-	error = xfs_dir2_free_read(tp, dp,  args->geo->freeblk, &fbp);
++	error = xfs_dir2_free_read(tp, dp, args->owner, args->geo->freeblk,
++			&fbp);
+ 	if (error)
+ 		return error;
+ 	xfs_dir2_free_hdr_from_disk(mp, &freehdr, fbp->b_addr);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index dc85197b8448e..fe8d4fa131289 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -175,11 +175,11 @@ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+ /* Everything ok in the free block header? */
+ static xfs_failaddr_t
+ xfs_dir3_free_header_check(
 -	struct xfs_inode	*dp,
+-	xfs_dablk_t		fbno,
 -	struct xfs_buf		*bp)
 +	struct xfs_buf		*bp,
-+	xfs_ino_t		owner)
++	xfs_ino_t		owner,
++	xfs_dablk_t		fbno)
  {
 -	struct xfs_mount	*mp = dp->i_mount;
 +	struct xfs_mount	*mp = bp->b_mount;
+ 	int			maxbests = mp->m_dir_geo->free_max_bests;
+ 	unsigned int		firstdb;
  
- 	if (xfs_has_crc(mp)) {
- 		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
- 
--		if (be64_to_cpu(hdr3->owner) != dp->i_ino)
-+		ASSERT(hdr3->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
-+
-+		if (be64_to_cpu(hdr3->owner) != owner) {
-+			xfs_err(NULL, "dir block owner 0x%llx doesnt match block 0x%llx", owner, be64_to_cpu(hdr3->owner));
-+			dump_stack();
+@@ -195,7 +195,7 @@ xfs_dir3_free_header_check(
  			return __this_address;
-+		}
- 	}
- 
- 	return NULL;
-@@ -136,6 +141,7 @@ int
- xfs_dir3_block_read(
+ 		if (be32_to_cpu(hdr3->nvalid) < be32_to_cpu(hdr3->nused))
+ 			return __this_address;
+-		if (be64_to_cpu(hdr3->hdr.owner) != dp->i_ino)
++		if (be64_to_cpu(hdr3->hdr.owner) != owner)
+ 			return __this_address;
+ 	} else {
+ 		struct xfs_dir2_free_hdr *hdr = bp->b_addr;
+@@ -214,6 +214,7 @@ static int
+ __xfs_dir3_free_read(
  	struct xfs_trans	*tp,
  	struct xfs_inode	*dp,
 +	xfs_ino_t		owner,
+ 	xfs_dablk_t		fbno,
+ 	unsigned int		flags,
  	struct xfs_buf		**bpp)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
-@@ -148,7 +154,7 @@ xfs_dir3_block_read(
+@@ -227,7 +228,7 @@ __xfs_dir3_free_read(
  		return err;
  
  	/* Check things that we can't do in the verifier. */
--	fa = xfs_dir3_block_header_check(dp, *bpp);
-+	fa = xfs_dir3_block_header_check(*bpp, owner);
+-	fa = xfs_dir3_free_header_check(dp, fbno, *bpp);
++	fa = xfs_dir3_free_header_check(*bpp, owner, fbno);
  	if (fa) {
  		__xfs_buf_mark_corrupt(*bpp, fa);
  		xfs_trans_brelse(tp, *bpp);
-@@ -383,7 +389,7 @@ xfs_dir2_block_addname(
- 	tp = args->trans;
+@@ -299,20 +300,23 @@ int
+ xfs_dir2_free_read(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
++	xfs_ino_t		owner,
+ 	xfs_dablk_t		fbno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return __xfs_dir3_free_read(tp, dp, fbno, 0, bpp);
++	return __xfs_dir3_free_read(tp, dp, owner, fbno, 0, bpp);
+ }
  
- 	/* Read the (one and only) directory block into bp. */
--	error = xfs_dir3_block_read(tp, dp, &bp);
-+	error = xfs_dir3_block_read(tp, dp, args->owner, &bp);
+ static int
+ xfs_dir2_free_try_read(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
++	xfs_ino_t		owner,
+ 	xfs_dablk_t		fbno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return __xfs_dir3_free_read(tp, dp, fbno, XFS_DABUF_MAP_HOLE_OK, bpp);
++	return __xfs_dir3_free_read(tp, dp, owner, fbno, XFS_DABUF_MAP_HOLE_OK,
++			bpp);
+ }
+ 
+ static int
+@@ -717,7 +721,7 @@ xfs_dir2_leafn_lookup_for_addname(
+ 				if (curbp)
+ 					xfs_trans_brelse(tp, curbp);
+ 
+-				error = xfs_dir2_free_read(tp, dp,
++				error = xfs_dir2_free_read(tp, dp, args->owner,
+ 						xfs_dir2_db_to_da(args->geo,
+ 								  newfdb),
+ 						&curbp);
+@@ -1356,8 +1360,8 @@ xfs_dir2_leafn_remove(
+ 		 * read in the free block.
+ 		 */
+ 		fdb = xfs_dir2_db_to_fdb(geo, db);
+-		error = xfs_dir2_free_read(tp, dp, xfs_dir2_db_to_da(geo, fdb),
+-					   &fbp);
++		error = xfs_dir2_free_read(tp, dp, args->owner,
++				xfs_dir2_db_to_da(geo, fdb), &fbp);
+ 		if (error)
+ 			return error;
+ 		free = fbp->b_addr;
+@@ -1716,7 +1720,7 @@ xfs_dir2_node_add_datablk(
+ 	 * that was just allocated.
+ 	 */
+ 	fbno = xfs_dir2_db_to_fdb(args->geo, *dbno);
+-	error = xfs_dir2_free_try_read(tp, dp,
++	error = xfs_dir2_free_try_read(tp, dp, args->owner,
+ 			       xfs_dir2_db_to_da(args->geo, fbno), &fbp);
  	if (error)
  		return error;
- 
-@@ -698,7 +704,7 @@ xfs_dir2_block_lookup_int(
- 	dp = args->dp;
- 	tp = args->trans;
- 
--	error = xfs_dir3_block_read(tp, dp, &bp);
-+	error = xfs_dir3_block_read(tp, dp, args->owner, &bp);
+@@ -1863,7 +1867,7 @@ xfs_dir2_node_find_freeblk(
+ 		 * so this might not succeed.  This should be really rare, so
+ 		 * there's no reason to avoid it.
+ 		 */
+-		error = xfs_dir2_free_try_read(tp, dp,
++		error = xfs_dir2_free_try_read(tp, dp, args->owner,
+ 				xfs_dir2_db_to_da(args->geo, fbno),
+ 				&fbp);
+ 		if (error)
+@@ -2302,7 +2306,7 @@ xfs_dir2_node_trim_free(
+ 	/*
+ 	 * Read the freespace block.
+ 	 */
+-	error = xfs_dir2_free_try_read(tp, dp, fo, &bp);
++	error = xfs_dir2_free_try_read(tp, dp, args->owner, fo, &bp);
  	if (error)
  		return error;
- 
+ 	/*
 diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 879aa2e9fd730..adbc544c9befa 100644
+index adbc544c9befa..3befb32509fa4 100644
 --- a/fs/xfs/libxfs/xfs_dir2_priv.h
 +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -50,8 +50,8 @@ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
+@@ -155,8 +155,8 @@ extern int xfs_dir2_node_removename(struct xfs_da_args *args);
+ extern int xfs_dir2_node_replace(struct xfs_da_args *args);
+ extern int xfs_dir2_node_trim_free(struct xfs_da_args *args, xfs_fileoff_t fo,
+ 		int *rvalp);
+-extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
+-		xfs_dablk_t fbno, struct xfs_buf **bpp);
++int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_ino_t owner, xfs_dablk_t fbno, struct xfs_buf **bpp);
  
- 
- /* xfs_dir2_block.c */
--extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
--			       struct xfs_buf **bpp);
-+int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+		xfs_ino_t owner, struct xfs_buf **bpp);
- extern int xfs_dir2_block_addname(struct xfs_da_args *args);
- extern int xfs_dir2_block_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_block_removename(struct xfs_da_args *args);
-diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
-index 55085d00e4046..743059404f772 100644
---- a/fs/xfs/libxfs/xfs_exchmaps.c
-+++ b/fs/xfs/libxfs/xfs_exchmaps.c
-@@ -476,7 +476,7 @@ xfs_exchmaps_dir_to_sf(
- 	if (!isblock)
- 		return 0;
- 
--	error = xfs_dir3_block_read(tp, xmi->xmi_ip2, &bp);
-+	error = xfs_dir3_block_read(tp, xmi->xmi_ip2, xmi->xmi_ip2->i_ino, &bp);
- 	if (error)
- 		return error;
- 
+ /* xfs_dir2_sf.c */
+ xfs_ino_t xfs_dir2_sf_get_ino(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *hdr,
 diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 6b572196bb43d..43f5bc8ce0d46 100644
+index 43f5bc8ce0d46..7bac74621af77 100644
 --- a/fs/xfs/scrub/dir.c
 +++ b/fs/xfs/scrub/dir.c
-@@ -315,7 +315,7 @@ xchk_directory_data_bestfree(
- 		/* dir block format */
- 		if (lblk != XFS_B_TO_FSBT(mp, XFS_DIR2_DATA_OFFSET))
- 			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
--		error = xfs_dir3_block_read(sc->tp, sc->ip, &bp);
-+		error = xfs_dir3_block_read(sc->tp, sc->ip, sc->ip->i_ino, &bp);
- 	} else {
- 		/* dir data format */
- 		error = xfs_dir3_data_read(sc->tp, sc->ip, sc->ip->i_ino, lblk,
-diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
-index bed15a9524a2f..e940804693151 100644
---- a/fs/xfs/scrub/readdir.c
-+++ b/fs/xfs/scrub/readdir.c
-@@ -99,7 +99,7 @@ xchk_dir_walk_block(
- 	unsigned int		off, next_off, end;
- 	int			error;
+@@ -577,7 +577,7 @@ xchk_directory_free_bestfree(
+ 	int				error;
  
--	error = xfs_dir3_block_read(sc->tp, dp, &bp);
-+	error = xfs_dir3_block_read(sc->tp, dp, dp->i_ino, &bp);
- 	if (error)
+ 	/* Read the free space block */
+-	error = xfs_dir2_free_read(sc->tp, sc->ip, lblk, &bp);
++	error = xfs_dir2_free_read(sc->tp, sc->ip, sc->ip->i_ino, lblk, &bp);
+ 	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
  		return error;
- 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 2c03371b542ae..b3abad5a6cd80 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -157,7 +157,7 @@ xfs_dir2_block_getdents(
- 	if (xfs_dir2_dataptr_to_db(geo, ctx->pos) > geo->datablk)
- 		return 0;
- 
--	error = xfs_dir3_block_read(args->trans, dp, &bp);
-+	error = xfs_dir3_block_read(args->trans, dp, args->owner, &bp);
- 	if (error)
- 		return error;
- 
+ 	xchk_buffer_recheck(sc, bp);
 
