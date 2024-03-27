@@ -1,43 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62DC1EF13
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 11:35:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3FC28DCA
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 14:55:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711539314; cv=none; b=txa2oNwKJn6d3QzuLkbfNW9fPrG+P4Q4BUi7AUBsdZnKSxZwVhG0PI215VlHuuEaQtJIpP6vXNH13Eyy+3CqiGINpJnXe1tKdkJ0FO9CqjYLpHWcoRzI/ohyVTJKR2xjWtD6F9/OcrbRSXvu3X7Twwa4Nyv58pS1RLmBM5fT070=
+	t=1711551341; cv=none; b=YjeKnoUWfjI2REJQ1V9n+ODle/VMnSAaXtSAYgcVOppWmUB8QvAzeLPHMrJI/1yRc4Xb72RU2C4KKlXtehYzp0wWX+ITRT+mvcfAoDlY0R5jbRWfes1KdTuOKvUszUWQoj9nQ4988IEDb1nxXLS1akSSH8/8Xa0FIX/EiDkqbAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711539314; c=relaxed/simple;
-	bh=avlsaJFAERouyJCGh7N/9RuU0rK+DWriFmCKItNT7+Y=;
+	s=arc-20240116; t=1711551341; c=relaxed/simple;
+	bh=fvvosZSnV6iNWILAbAn/TaKIoRdkrb95jqDj8I5UtuI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SO04c95n3lT1Ri6nRZ4jCCuJjGxrZHMUuK4L2Ead7bsWj8d9aLEWs187tmiC8cJBtLGMQOk4zNyQ5c7SgucoTeTXmeV/7Wf/sH64efclaDfjtiqEUlHlw2o2eYkJWkjrxSBa9dOVp5RyCzpOLt59umpT9NlMZp59VS7Zc+7c5/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JjMuS52z; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=bvipicjBbhf8syZEVrr2QxpuYxz5pGLiLU6S79sAyTlw9RXNh2nh15OnKzGpMflSfeOmMKLAowI47Fky9d/cDJJXsQpUES73lsXwltMRMbluFnd1uEcwgKCQnxpvq+5+19FXza+smSokFLGxMy5Ztg6aun8MCuaWZu8Ue7smAqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fwg6mZEn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JjMuS52z"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=a26xyonBKqaHTj/RGR93LtEa34dkWWcypvAVfDBqBdI=; b=JjMuS52zV5nAeu0TSxgYAhOgfN
-	2NM+v9y+giohsIW6UGWBUo+BihpdpzvuVxiLEbeNfUpQ8jj2TtM/UlWPEtdEVxFUvWTuT1J/T7zUN
-	X15NJbL8YcOIrFFAg8oiegM2HkhzPwQ+Uft05EgVTj/fEug+1sijkrhr2z3PJqHPMJJPNMlABbR3N
-	+oZBuDcPdgAr6uX7to/rGcQ+JGK5FIozHswPSW2oQnHolPpmgSl7dkIDDknMNTNKSudtIh4JhrtnM
-	5OS88ARd8RrJX6Zhyx8h+Axacfu3PR3iMUgJxa2nSCGgR4EB911D8gnh+3Pcmmko5yuvKQAfC2JRG
-	cW6cZu8Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rpRYm-00000008dRl-13VJ;
-	Wed, 27 Mar 2024 11:35:12 +0000
-Date: Wed, 27 Mar 2024 04:35:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: fix severe performance problems when fstrimming
- a subset of an AG
-Message-ID: <ZgQEcLACdVZSxJ1_@infradead.org>
-References: <171150385517.3220448.15319110826705438395.stgit@frogsfrogsfrogs>
- <171150385535.3220448.4852463781154330350.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fwg6mZEn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F7D4C433C7;
+	Wed, 27 Mar 2024 14:55:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711551341;
+	bh=fvvosZSnV6iNWILAbAn/TaKIoRdkrb95jqDj8I5UtuI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fwg6mZEnNYxBWb3l2C7l6InyB8SqEkSV3rNcxZ+Mxs7aJq4M2AxgEoNXTKCVNFZLB
+	 YqCF2RYZI/QYVFYrvn8IRo0gTSBV+sqHTpZBryLVUiNWNaqV10uq54kSXk0FeL84S/
+	 95rSlKel2o1JBh61vY6ckgom53HeUKD+SGgd/AhveMgvm7K+Ylnak6qMys3QL3A9Kp
+	 gc5Rd7pHQ8KCTnSh/J6B0il5yP1iJ9ZVUJQ85vANFQF1bLiv8BN25AiuLxRLgQ+2Am
+	 C95gMqrkcT6sdJjKkijEVc4ZfteE6eJMl6csyWaIvyZLjCRxHz24aRaxaedfEiMizs
+	 j/PHZ+VFl7byg==
+Date: Wed, 27 Mar 2024 07:55:40 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/13] xfs: free RT extents after updating the bmap btree
+Message-ID: <20240327145540.GW6390@frogsfrogsfrogs>
+References: <20240327110318.2776850-1-hch@lst.de>
+ <20240327110318.2776850-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,16 +43,97 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171150385535.3220448.4852463781154330350.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240327110318.2776850-4-hch@lst.de>
 
-On Tue, Mar 26, 2024 at 07:07:58PM -0700, Darrick J. Wong wrote:
-> periodically to allow other threads to do work.  This implementation
-> avoids the worst problems of the original code, though it lacks the
-> desirable attribute of freeing the biggest chunks first.
+On Wed, Mar 27, 2024 at 12:03:08PM +0100, Christoph Hellwig wrote:
+> Currently xfs_bmap_del_extent_real frees RT extents before updating
+> the bmap btree, while it frees regular blocks after performing the bmap
+> btree update.  While this behavior goes back to the original commit,
+> I can't find any good reason for handling RT extent vs regular block
+> freeing differently.  We use the same transaction, and unless rmaps
+> or reflink are enabled (which currently aren't support for RT inodes)
+> there are no transactions rolls or deferred ops that can rely on this
+> ordering.
 
-Do we really care much about freeing larger area first?  I don't think
-it really matters for FITRIM at all.
+...and the realtime rmap/reflink patchsets will want to reuse the data
+device's ordering (bmap -> rmap -> refcount -> efi) for the rt volume.
 
-In other words, I suspect we're better off with only the by-bno
-implementation.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+I'm ok with moving this now since I'm mostly going to pave over it later
+anyway :)
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 26 +++++++++-----------------
+>  1 file changed, 9 insertions(+), 17 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 09d4b730ee9709..282b44deb9f864 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5107,8 +5107,7 @@ xfs_bmap_del_extent_real(
+>  {
+>  	xfs_fsblock_t		del_endblock=0;	/* first block past del */
+>  	xfs_fileoff_t		del_endoff;	/* first offset past del */
+> -	int			do_fx;	/* free extent at end of routine */
+> -	int			error;	/* error return value */
+> +	int			error = 0;	/* error return value */
+>  	struct xfs_bmbt_irec	got;	/* current extent entry */
+>  	xfs_fileoff_t		got_endoff;	/* first offset past got */
+>  	int			i;	/* temp state */
+> @@ -5151,20 +5150,10 @@ xfs_bmap_del_extent_real(
+>  		return -ENOSPC;
+>  
+>  	*logflagsp = XFS_ILOG_CORE;
+> -	if (xfs_ifork_is_realtime(ip, whichfork)) {
+> -		if (!(bflags & XFS_BMAPI_REMAP)) {
+> -			error = xfs_rtfree_blocks(tp, del->br_startblock,
+> -					del->br_blockcount);
+> -			if (error)
+> -				return error;
+> -		}
+> -
+> -		do_fx = 0;
+> +	if (xfs_ifork_is_realtime(ip, whichfork))
+>  		qfield = XFS_TRANS_DQ_RTBCOUNT;
+> -	} else {
+> -		do_fx = 1;
+> +	else
+>  		qfield = XFS_TRANS_DQ_BCOUNT;
+> -	}
+>  	nblks = del->br_blockcount;
+>  
+>  	del_endblock = del->br_startblock + del->br_blockcount;
+> @@ -5312,18 +5301,21 @@ xfs_bmap_del_extent_real(
+>  	/*
+>  	 * If we need to, add to list of extents to delete.
+>  	 */
+> -	if (do_fx && !(bflags & XFS_BMAPI_REMAP)) {
+> +	if (!(bflags & XFS_BMAPI_REMAP)) {
+>  		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
+>  			xfs_refcount_decrease_extent(tp, del);
+> +		} else if (xfs_ifork_is_realtime(ip, whichfork)) {
+> +			error = xfs_rtfree_blocks(tp, del->br_startblock,
+> +					del->br_blockcount);
+>  		} else {
+>  			error = xfs_free_extent_later(tp, del->br_startblock,
+>  					del->br_blockcount, NULL,
+>  					XFS_AG_RESV_NONE,
+>  					((bflags & XFS_BMAPI_NODISCARD) ||
+>  					del->br_state == XFS_EXT_UNWRITTEN));
+> -			if (error)
+> -				return error;
+>  		}
+> +		if (error)
+> +			return error;
+>  	}
+>  
+>  	/*
+> -- 
+> 2.39.2
+> 
+> 
