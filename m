@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE19463D0
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:03:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F6131CD2B
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:03:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711505012; cv=none; b=sKOI4J09me/GsoP4JY+RD4uNMNSD6nLnSWMBboIUQNwg/UmARm9ix59OtAEUMz+n9xCGmK5JK9Jx/AznL+19I9skhibqVOIvxUH0tg7xHz7EzPrETcydycGx7Ls3fSS5HydCFRedTI5UJDZRUTxlmQp0toZ4TiYw+3P7zQLfnjw=
+	t=1711505028; cv=none; b=Qi6O3ak0skcKyP0flolahdzf5Lx7yvkDJowjYn5tASKDVErX24uDE/POQKkimajo5QD5vowHX18N1wXIxKoA0oeJQQYqaW4izZIR6RxA4Cz4FHOPWwNR/WqTLLcl9TxcjFsAjOeF4k2jUQ3j7X60N1J20DqVmNCWRmAZ8EDifEY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711505012; c=relaxed/simple;
-	bh=Aqf3yleidtUOcxj1+m8rsJ2eH/DrLvgaOkVPatPMRjA=;
+	s=arc-20240116; t=1711505028; c=relaxed/simple;
+	bh=JPmv4N3mKtXrrupw4rZHm9GMdYhhXprQDPOd6V52Jbk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qNOKAxhaSvuuMQOaX+EmcX9+/RkOnAAZwVr/75fYLu8/UEUvHGG+Z1pbv3DlF/6or0+aBmg23CsSs2xSm6GqI9H8g7+Dh/LFkcR0clHH8euvYLO7Nx/2KdVF11CRXrYrEokykErP/+9Vm6u/34ohNnvGHr6QuhgiRhVrAWZB6o0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tlkNF0NQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UAIyIYAIbApf8R6IaGvH2WzAn90TiPUPswGxrk4quHxt7RnUghnj37PqfUay+rLdrCGgfH6rnfAYUZgEnjGJ56/fVXrnVqsO7UF9ppdD0gO2T1cJJl7rt8DxGUCv/+9AvsUWJFAT781hdVYc1AT2kVxd/x6YpClcmQnaIAs8v18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SDwPimFj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tlkNF0NQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C22FC433F1;
-	Wed, 27 Mar 2024 02:03:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SDwPimFj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21563C43390;
+	Wed, 27 Mar 2024 02:03:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711505012;
-	bh=Aqf3yleidtUOcxj1+m8rsJ2eH/DrLvgaOkVPatPMRjA=;
+	s=k20201202; t=1711505028;
+	bh=JPmv4N3mKtXrrupw4rZHm9GMdYhhXprQDPOd6V52Jbk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tlkNF0NQhLpp8s9mF4MyYdjqf2eemtCKtLdSMd6QlFM8A5tpTLtoR4Lboa04vwyxX
-	 fXqfsL9E6/DtCw6p0oI56zUj+TC31XdG1+01fAGf/oaqY2/ur5VfmeGwOQZp6B0R7e
-	 nLNSd1QsqwcJpNFGNPOHR/AMtIbq2aBi6Z4EzIm1lOtoTSpAOXphCFfvwaEewLBWTi
-	 4vg8ImpRvn1F9hAyrqSwfhnNxsnC6uSglDRoz/UmvRp/LBQi2YzSyOyVxTc7/cRO18
-	 X1pRq7bd6/RjYmj82N8uExQZvoCN7Onj8IcXzGftPLsoPFNOr/Ag9d0vpUWVkvNZjj
-	 bJPJdsqYLP5Dg==
-Date: Tue, 26 Mar 2024 19:03:31 -0700
-Subject: [PATCH 2/2] xfs: update the unlinked list when repairing link counts
+	b=SDwPimFjDjkoj7Votk20P15SEpkQFpQZwRhEs8JEs2kHNt1x0cFfL17rMwoTrCr7q
+	 TNW9nv8aX7PqoiDffan4y4QlowG5YCujHmxdCEkiflG/YZq7EkzCI7Mwg6v13TmLhA
+	 UtqPqlbPrUrbtM2Ad55e7o+IFIeRNbxfgePxtUfrOYy6ZSKP5r68K0ZKFAADJoMUCw
+	 CcGC5mDD6yX7oBik8s4+u7S+4W+6tMLjMlFqBch3XXvJO6NI4SnA/j4D4MQoUHqXEY
+	 X8Y4etbDRMhpHqNBN0QalcSzmXbDIHazaMt2n+scwkafZdreCZ2SmcyC47yjzB5Yhj
+	 ZHy3Xgpd3ImrA==
+Date: Tue, 26 Mar 2024 19:03:47 -0700
+Subject: [PATCH 1/5] xfs: inactivate directory data blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171150383149.3217890.13491142406378584487.stgit@frogsfrogsfrogs>
-In-Reply-To: <171150383111.3217890.14975563638879707412.stgit@frogsfrogsfrogs>
-References: <171150383111.3217890.14975563638879707412.stgit@frogsfrogsfrogs>
+Message-ID: <171150383544.3217994.7825601287133408330.stgit@frogsfrogsfrogs>
+In-Reply-To: <171150383515.3217994.11426825010369201405.stgit@frogsfrogsfrogs>
+References: <171150383515.3217994.11426825010369201405.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,83 +46,98 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're repairing the link counts of a file, we must ensure either
-that the file has zero link count and is on the unlinked list; or that
-it has nonzero link count and is not on the unlinked list.
+Teach inode inactivation to delete all the incore buffers backing a
+directory.  In normal runtime this should never happen because the VFS
+forbids rmdir on a non-empty directory.
+
+In the next patch, online directory repair stands up a new directory,
+exchanges it with the broken directory, and then drops the private
+temporary directory.  If we cancel the repair just prior to exchanging
+the directory contents, the new directory will need to be torn down.
+Note: If we commit the repair, reaping will take care of all the ondisk
+space allocations and incore buffers for the old corrupt directory.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/nlinks_repair.c |   42 +++++++++++++++++++++++++++++++++---------
- 1 file changed, 33 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_inode.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/nlinks_repair.c b/fs/xfs/scrub/nlinks_repair.c
-index b87618322f55b..58cacb8e94c1b 100644
---- a/fs/xfs/scrub/nlinks_repair.c
-+++ b/fs/xfs/scrub/nlinks_repair.c
-@@ -17,6 +17,7 @@
- #include "xfs_iwalk.h"
- #include "xfs_ialloc.h"
- #include "xfs_sb.h"
-+#include "xfs_ag.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/repair.h"
-@@ -36,6 +37,20 @@
-  * inode is locked.
-  */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 98a01a490adcc..e49cbb1c75fb2 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -16,6 +16,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_dir2.h"
+ #include "xfs_attr.h"
++#include "xfs_bit.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+@@ -1540,6 +1541,51 @@ xfs_release(
+ 	return error;
+ }
  
-+/* Remove an inode from the unlinked list. */
-+STATIC int
-+xrep_nlinks_iunlink_remove(
-+	struct xfs_scrub	*sc)
++/*
++ * Mark all the buffers attached to this directory stale.  In theory we should
++ * never be freeing a directory with any blocks at all, but this covers the
++ * case where we've recovered a directory swap with a "temporary" directory
++ * created by online repair and now need to dump it.
++ */
++STATIC void
++xfs_inactive_dir(
++	struct xfs_inode	*dp)
 +{
-+	struct xfs_perag	*pag;
-+	int			error;
++	struct xfs_iext_cursor	icur;
++	struct xfs_bmbt_irec	got;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_da_geometry	*geo = mp->m_dir_geo;
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(dp, XFS_DATA_FORK);
++	xfs_fileoff_t		off;
 +
-+	pag = xfs_perag_get(sc->mp, XFS_INO_TO_AGNO(sc->mp, sc->ip->i_ino));
-+	error = xfs_iunlink_remove(sc->tp, pag, sc->ip);
-+	xfs_perag_put(pag);
-+	return error;
++	/*
++	 * Invalidate each directory block.  All directory blocks are of
++	 * fsbcount length and alignment, so we only need to walk those same
++	 * offsets.  We hold the only reference to this inode, so we must wait
++	 * for the buffer locks.
++	 */
++	for_each_xfs_iext(ifp, &icur, &got) {
++		for (off = round_up(got.br_startoff, geo->fsbcount);
++		     off < got.br_startoff + got.br_blockcount;
++		     off += geo->fsbcount) {
++			struct xfs_buf	*bp = NULL;
++			xfs_fsblock_t	fsbno;
++			int		error;
++
++			fsbno = (off - got.br_startoff) + got.br_startblock;
++			error = xfs_buf_incore(mp->m_ddev_targp,
++					XFS_FSB_TO_DADDR(mp, fsbno),
++					XFS_FSB_TO_BB(mp, geo->fsbcount),
++					XBF_LIVESCAN, &bp);
++			if (error)
++				continue;
++
++			xfs_buf_stale(bp);
++			xfs_buf_relse(bp);
++		}
++	}
 +}
 +
  /*
-  * Correct the link count of the given inode.  Because we have to grab locks
-  * and resources in a certain order, it's possible that this will be a no-op.
-@@ -99,16 +114,25 @@ xrep_nlinks_repair_inode(
+  * xfs_inactive_truncate
+  *
+@@ -1850,6 +1896,11 @@ xfs_inactive(
+ 			goto out;
  	}
  
- 	/*
--	 * We did not find any links to this inode.  If the inode agrees, we
--	 * have nothing further to do.  If not, the inode has a nonzero link
--	 * count and we don't have anywhere to graft the child onto.  Dropping
--	 * a live inode's link count to zero can cause unexpected shutdowns in
--	 * inactivation, so leave it alone.
-+	 * If this inode is linked from the directory tree and on the unlinked
-+	 * list, remove it from the unlinked list.
- 	 */
--	if (total_links == 0) {
--		if (actual_nlink != 0)
--			trace_xrep_nlinks_unfixable_inode(mp, ip, &obs);
--		goto out_trans;
-+	if (total_links > 0 && xfs_inode_on_unlinked_list(ip)) {
-+		error = xrep_nlinks_iunlink_remove(sc);
-+		if (error)
-+			goto out_trans;
-+		dirty = true;
++	if (S_ISDIR(VFS_I(ip)->i_mode) && ip->i_df.if_nextents > 0) {
++		xfs_inactive_dir(ip);
++		truncate = 1;
 +	}
 +
-+	/*
-+	 * If this inode is not linked from the directory tree yet not on the
-+	 * unlinked list, put it on the unlinked list.
-+	 */
-+	if (total_links == 0 && !xfs_inode_on_unlinked_list(ip)) {
-+		error = xfs_iunlink(sc->tp, ip);
-+		if (error)
-+			goto out_trans;
-+		dirty = true;
- 	}
- 
- 	/* Commit the new link count if it changed. */
+ 	if (S_ISLNK(VFS_I(ip)->i_mode))
+ 		error = xfs_inactive_symlink(ip);
+ 	else if (truncate)
 
