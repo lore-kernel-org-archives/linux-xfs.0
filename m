@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 332CA21101;
-	Wed, 27 Mar 2024 02:43:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F37A3219FC;
+	Wed, 27 Mar 2024 02:43:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711507411; cv=none; b=K4bnMdp6j0lru7YnG0qMv0zKYD8Nm9pOddQOzy4cGi1h2B4KXoQsPX8GRgSGtcFQ++iDffB2N/TcxUxE7kW40/9boWfTb/pzFd+VAWiWOiVvdFjPb3rRV/GV8hZSKiTB0rMgetagXHWPkEU92rPIpRKZknwM2vNJa5oCdOpordA=
+	t=1711507417; cv=none; b=i/qC9lA9oCZR2knrcFD0ykxmF9vZb52QosujU8IL1NM41Cj0FT0a1D7BXjYdU2D7PV2EmINC3sHCI87gyN3M6viN+JU8Ax02QFFxk03HW45wr2bSsyHwuXdEWGGeQ85KIJKEA5SsNFSmZGQ3CV1UKvO1dIkCaZeODg8KRk9SMxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711507411; c=relaxed/simple;
-	bh=zh+hQx0zNK6lt/xfZu/rv0SxyEJHegiH5ipJTeXXtb4=;
+	s=arc-20240116; t=1711507417; c=relaxed/simple;
+	bh=dbWgujssVHgH1plok4cUwbq4GEPCjRB748g910qdHQs=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gx9ZaKySN8hcRgu+KtPPkmF+LgSmsiun11OtChPxYBDd7n0m9GghFvRxNe8sUlrF63JTrnkl+V3w6Plf3A5uKwJuFRMP+6ZVVnm5BLAg6YvfmTO+rZ6oo9EK0t9NpY2sQRHBXqXNTBuIJfBTmOVr05Mt/P7I7wLW2tcmMpaKXMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EcEWhOQe; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rBocbH6pFjjpmlfXjTxA1MZGqPSPy4B8G5c3uWq7aTOkZA8chJ1S8G1FPIUShwzeuvqCjXGmztvB4E9yBM62KW4dmjFZJ/OrUvchHVcrfwbvONKLLUFp+cwTmsarp2qh976sWRQgrynCLuNwn2d3x44mp9fSk7qYTUDrk7TC0TM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YV7dsL5C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EcEWhOQe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1C56C433C7;
-	Wed, 27 Mar 2024 02:43:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YV7dsL5C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A5D5C433C7;
+	Wed, 27 Mar 2024 02:43:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711507410;
-	bh=zh+hQx0zNK6lt/xfZu/rv0SxyEJHegiH5ipJTeXXtb4=;
+	s=k20201202; t=1711507416;
+	bh=dbWgujssVHgH1plok4cUwbq4GEPCjRB748g910qdHQs=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=EcEWhOQe0YfgcLh3jwJ5GmOtUcFTMX/2AaN3PFPyyyOZJFspBBTnDNg89fpnI430S
-	 GWA+IaU9y7X3y1M8lXRi8s0QuZqsvXRxKte6okqOlwzUa1IpTh1QMzcLgsR4WtwS2Q
-	 dGkEbeyGZrF109/O2ihfOHPTI9GctZTW0PByBpVAjtESj4cXvRnsEnv8Q5JCUpIGfS
-	 AjMSCqYslMeJQQFhKDqAMtLsE94KGQvE/lg5ZzyEL007ccgEuDCVWcsd+5UFDOqiwV
-	 3q8/2KAA85rQvSXKU10BRmdEQgik+EPCXLVaijmRGg4JQTrYHWPuiOq21sbc+PfWjh
-	 NAtyNVFDudbNQ==
-Subject: [PATCH 2/4] xfs/176: fix stupid failure
+	b=YV7dsL5CAslSGAAqUB6FTbH1KjvnSgYHwCAidL7FWV2aU4GoMOn9Vtg8Hx9YmQUhV
+	 D2UwRlfiMtSd9aRx6dO3I/671tlLn7BBfW5JvICGrqThGoqk6wrnMaEDzpW0BnVQf5
+	 +6b2hiMAcpxWO9AKkHJuSnf1ONGy9tmUZo75hcWv4QcJfq4/hGJpp3j4pIPpbTI0Hv
+	 RyBJcYIosR+1cOOxYzxDtQ998w3N8lhJxLlEg3fGEj8F/etCkMmSAXn13vef0ZeXiB
+	 OMQlCo3LJZjaciVxwVeXK7Z4VBjr00CaYnbFK3IIg5eeFfPD8nrCLHkozT/YgHfaSp
+	 vYMlI/woNBAjg==
+Subject: [PATCH 3/4] generic/{166,167,333,334,671}: actually fill the
+ filesystem with snapshots
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, guan@eryu.me
-Date: Tue, 26 Mar 2024 19:43:30 -0700
-Message-ID: <171150741023.3286541.16393057569793003518.stgit@frogsfrogsfrogs>
+Date: Tue, 26 Mar 2024 19:43:35 -0700
+Message-ID: <171150741593.3286541.18115194618541313905.stgit@frogsfrogsfrogs>
 In-Reply-To: <171150739778.3286541.16038231600708193472.stgit@frogsfrogsfrogs>
 References: <171150739778.3286541.16038231600708193472.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,27 +47,106 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create the $SCRATCH_MNT/urk directory before we fill the filesystem so
-that its creation won't fail and result in find spraying ENOENT errors
-all over the golden output.
+XFS has this behavior in its reflink implementation where it returns
+ENOSPC if one of the AGs that would be involved in the sharing operation
+becomes more than 90% full.  As Kent Overstreet points out, that means
+the snapshot creator shuts down when the filesystem is only about a
+third full.  We could exercise the system harder by not *forcing*
+reflink, which will actually fill the filesystem full.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/176 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common/reflink    |    8 ++++++++
+ tests/generic/166 |    2 +-
+ tests/generic/167 |    2 +-
+ tests/generic/333 |    2 +-
+ tests/generic/334 |    2 +-
+ tests/generic/671 |    2 +-
+ 6 files changed, 13 insertions(+), 5 deletions(-)
 
 
-diff --git a/tests/xfs/176 b/tests/xfs/176
-index 5231b888ba..49f7492c03 100755
---- a/tests/xfs/176
-+++ b/tests/xfs/176
-@@ -51,7 +51,7 @@ _scratch_mount
- _xfs_force_bdev data $SCRATCH_MNT
- old_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
+diff --git a/common/reflink b/common/reflink
+index 22adc4449b..8f30dc6784 100644
+--- a/common/reflink
++++ b/common/reflink
+@@ -226,6 +226,14 @@ _cp_reflink() {
+ 	cp --reflink=always -p -f "$file1" "$file2"
+ }
  
--mkdir $SCRATCH_MNT/save/
-+mkdir $SCRATCH_MNT/save/ $SCRATCH_MNT/urk/
- sino=$(stat -c '%i' $SCRATCH_MNT/save)
- 
- _consume_freesp()
++# Create file2 as a snapshot of file1 via cp and possibly reflink.
++_reflink_snapshot() {
++	file1="$1"
++	file2="$2"
++
++	cp --reflink=auto -p -f "$file1" "$file2"
++}
++
+ # Reflink some file1 into file2
+ _reflink() {
+ 	file1="$1"
+diff --git a/tests/generic/166 b/tests/generic/166
+index 0eb2ec9c3a..941b51b3f1 100755
+--- a/tests/generic/166
++++ b/tests/generic/166
+@@ -60,7 +60,7 @@ snappy() {
+ 			sleep 0.01
+ 			continue;
+ 		fi
+-		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
++		out="$(_reflink_snapshot $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo "$out" | grep -q "No space left" && break
+ 		test -n "$out" && echo "$out"
+diff --git a/tests/generic/167 b/tests/generic/167
+index ae5fa5eb1c..3670940825 100755
+--- a/tests/generic/167
++++ b/tests/generic/167
+@@ -50,7 +50,7 @@ _scratch_cycle_mount
+ snappy() {
+ 	n=0
+ 	while [ ! -e $finished_file ]; do
+-		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
++		out="$(_reflink_snapshot $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo "$out" | grep -q "No space left" && break
+ 		test -n "$out" && echo "$out"
+diff --git a/tests/generic/333 b/tests/generic/333
+index bf1967ce29..19e69993a3 100755
+--- a/tests/generic/333
++++ b/tests/generic/333
+@@ -53,7 +53,7 @@ _scratch_cycle_mount
+ snappy() {
+ 	n=0
+ 	while [ ! -e $finished_file ]; do
+-		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
++		out="$(_reflink_snapshot $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo $out | grep -q "No space left" && break
+ 		test -n "$out" && echo $out
+diff --git a/tests/generic/334 b/tests/generic/334
+index b9c14b87ac..1e4d37b415 100755
+--- a/tests/generic/334
++++ b/tests/generic/334
+@@ -52,7 +52,7 @@ _scratch_cycle_mount
+ snappy() {
+ 	n=0
+ 	while [ ! -e $finished_file ]; do
+-		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
++		out="$(_reflink_snapshot $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo $out | grep -q "No space left" && break
+ 		test -n "$out" && echo $out
+diff --git a/tests/generic/671 b/tests/generic/671
+index b6cc0573f3..24ed24e213 100755
+--- a/tests/generic/671
++++ b/tests/generic/671
+@@ -41,7 +41,7 @@ _scratch_cycle_mount
+ snappy() {
+ 	n=0
+ 	while [ ! -e $finished_file ]; do
+-		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
++		out="$(_reflink_snapshot $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo "$out" | grep -q "No space left" && break
+ 		test -n "$out" && echo "$out"
 
