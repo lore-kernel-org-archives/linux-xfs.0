@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC8D20322
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:07:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EA241B94D
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:07:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711505232; cv=none; b=AfymoLc1YM/3XcKyfP63arS3qOvz1xUoDVoktxnWb46EUSbeYkXyOFFcTt1b4bscTEAS6AkFBTdOQOg8qN8doGUlplsCjz3NsDE+QM1k7NDjJUSlG4OAwWYXfC1t2Ujk2MFH9vSiveRTXkYGA/wiJ6hOUgSLNKCQqYARMZ+Ig4o=
+	t=1711505248; cv=none; b=oYToNfgzEzOR1i2k41QsGGEIhHp+lOCTT6Eieu02wILsy7pp3TlW9Yr/ixdrHplVFNokleN0qV00wJzbU5/6+cMSNXw2oXSjOv7QaEXJ9/wUT5UwGSCGBe3+mGJT1slc6P2d4PUxBeZQ6t+EZ96j7D1fKdQaiOpJm/Wtm+bZ4zM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711505232; c=relaxed/simple;
-	bh=2sWqOig37wWqhGbcS361IXshqkRzjD0z5BmvMZYrGtc=;
+	s=arc-20240116; t=1711505248; c=relaxed/simple;
+	bh=So2hkx5SgLQD2Zy7UIKG9krVAT1klrsrzRok6yX4uY8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y4EGK01nz7sOZYW62VTc+dByChb7DXFR0jBEHn9UkSjUtKMzG56fF2RFtZ9njvbunHS+R+w36sBMKozydx2joq0lMwK32ZRIOTb72J6xMSVtMZT8By17ugLo2rMhWesU/cvBHx4KR6512G9MIsPLymyfVLmt/374vewrTM9tAgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pw0J2A1p; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZI5+Z8stioGL/y9+31ZvQUxheC5fNAWyBpJpH21x/Ezd6hExhslajRnqajw9tPkY9VDK9dUv3keDl3pzx6ihCy2oEbHmbtrUkbPrq8KRDGwrs7MCu4OTk9diDnRzm9Cq2Xfi/S8F5eXUn6CvJyob9wdt4m+ypNK3oFtC0GV7B4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MO+LaIJL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pw0J2A1p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0659DC433F1;
-	Wed, 27 Mar 2024 02:07:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MO+LaIJL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A26C0C433F1;
+	Wed, 27 Mar 2024 02:07:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711505232;
-	bh=2sWqOig37wWqhGbcS361IXshqkRzjD0z5BmvMZYrGtc=;
+	s=k20201202; t=1711505247;
+	bh=So2hkx5SgLQD2Zy7UIKG9krVAT1klrsrzRok6yX4uY8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pw0J2A1paUoVOQ0nX0QkDphEPhgC+SVfInbpxhiAPHfgi1C03IdAUQjhI6OuUFSBZ
-	 8cZbhJdYe4Ev9AVVp60vwevLE9ANgnCU9GVa6OCb5PTtr53l/WS2+o0iMwtu9E25Y7
-	 +nOK9scDxKVUdIB3wCb8ADtWls4sHJUPM/z92XKknTpt1mhJexl0dU9ZwrNl4DBIqo
-	 YUyEnq46QIQNLjXaQ5ymtsF7R+4ivwZKxILYgh3hIb+pypX11Dz3SsTzTjN6vNh1n6
-	 HgESdpJTfvzAzpBmF/V8pJr3sHDh/TDXYcaehPUksgwz+pA7zOTGA78FQqHYtxvBk9
-	 PVE0ERsVL2HOA==
-Date: Tue, 26 Mar 2024 19:07:11 -0700
-Subject: [PATCH 2/4] xfs: try to avoid allocating from sick inode clusters
+	b=MO+LaIJLjnA5wxetdXYm5Qiz4hb9ZHUuRSUcLpUeXnn1i39iinLOJmnQl9B89YMPt
+	 zCbIX2MV6nEnnnPyjwtCQ32wMMmJ2RUnJiA24XMXI1P5LfSci3M2T1DKZLsWj5aD12
+	 FFa0LHP56UbpEpH+f17nRM2t0M5XipDUj3rjtqcikQqbE0FTIL9lGLvIRBZs0TsSfr
+	 Bp3StzCQxjU7i4DvUzuRcR7UGVUMineZ/prBdZyUnOtF5uiOvH0cnYgmySpfCdciRG
+	 ISuSgnlTfxolWiaP1dCgUrLsl4YM7tXfXfvzNooL08avWAVoQFRTPJ7WrOOGsMVLY8
+	 8NsG899Lp5bqQ==
+Date: Tue, 26 Mar 2024 19:07:27 -0700
+Subject: [PATCH 3/4] xfs: pin inodes that would otherwise overflow link count
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171150385152.3220296.8658531433549060600.stgit@frogsfrogsfrogs>
+Message-ID: <171150385168.3220296.14541219555606649161.stgit@frogsfrogsfrogs>
 In-Reply-To: <171150385109.3220296.4235209828218476119.stgit@frogsfrogsfrogs>
 References: <171150385109.3220296.4235209828218476119.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,92 +46,172 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I noticed that xfs/413 and xfs/375 occasionally failed while fuzzing
-core.mode of an inode.  The root cause of these problems is that the
-field we fuzzed (core.mode or core.magic, typically) causes the entire
-inode cluster buffer verification to fail, which affects several inodes
-at once.  The repair process tries to create either a /lost+found or a
-temporary repair file, but regrettably it picks the same inode cluster
-that we just corrupted, with the result that repair triggers the demise
-of the filesystem.
+The VFS inc_nlink function does not explicitly check for integer
+overflows in the i_nlink field.  Instead, it checks the link count
+against s_max_links in the vfs_{link,create,rename} functions.  XFS
+sets the maximum link count to 2.1 billion, so integer overflows should
+not be a problem.
 
-Try avoid this by making the inode allocation path detect when the perag
-health status indicates that someone has found bad inode cluster
-buffers, and try to read the inode cluster buffer.  If the cluster
-buffer fails the verifiers, try another AG.  This isn't foolproof and
-can result in premature ENOSPC, but that might be better than shutting
-down.
+However.  It's possible that online repair could find that a file has
+more than four billion links, particularly if the link count got
+corrupted while creating hardlinks to the file.  The di_nlinkv2 field is
+not large enough to store a value larger than 2^32, so we ought to
+define a magic pin value of ~0U which means that the inode never gets
+deleted.  This will prevent a UAF error if the repair finds this
+situation and users begin deleting links to the file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_ialloc.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ fs/xfs/libxfs/xfs_format.h   |    6 ++++++
+ fs/xfs/scrub/dir_repair.c    |   11 +++--------
+ fs/xfs/scrub/nlinks.c        |    4 +++-
+ fs/xfs/scrub/nlinks_repair.c |    8 ++------
+ fs/xfs/xfs_inode.c           |   33 ++++++++++++++++++++++-----------
+ 5 files changed, 36 insertions(+), 26 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index e5ac3e5430c4e..8279d90da7e7b 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1057,6 +1057,33 @@ xfs_inobt_first_free_inode(
- 	return xfs_lowbit64(realfree);
- }
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index aa2ad7e04202b..de90dae8b1a63 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -911,6 +911,12 @@ static inline uint xfs_dinode_size(int version)
+  */
+ #define	XFS_MAXLINK		((1U << 31) - 1U)
  
 +/*
-+ * If this AG has corrupt inodes, check if allocating this inode would fail
-+ * with corruption errors.  Returns 0 if we're clear, or EAGAIN to try again
-+ * somewhere else.
++ * Any file that hits the maximum ondisk link count should be pinned to avoid
++ * a use-after-free situation.
 + */
-+static int
-+xfs_dialloc_check_ino(
-+	struct xfs_perag	*pag,
-+	struct xfs_trans	*tp,
-+	xfs_ino_t		ino)
-+{
-+	struct xfs_imap		imap;
-+	struct xfs_buf		*bp;
-+	int			error;
-+
-+	error = xfs_imap(pag, tp, ino, &imap, 0);
-+	if (error)
-+		return -EAGAIN;
-+
-+	error = xfs_imap_to_bp(pag->pag_mount, tp, &imap, &bp);
-+	if (error)
-+		return -EAGAIN;
-+
-+	xfs_trans_brelse(tp, bp);
-+	return 0;
-+}
++#define	XFS_NLINK_PINNED	(~0U)
 +
  /*
-  * Allocate an inode using the inobt-only algorithm.
-  */
-@@ -1309,6 +1336,13 @@ xfs_dialloc_ag_inobt(
- 	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
- 				   XFS_INODES_PER_CHUNK) == 0);
- 	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, rec.ir_startino + offset);
-+
-+	if (xfs_ag_has_sickness(pag, XFS_SICK_AG_INODES)) {
-+		error = xfs_dialloc_check_ino(pag, tp, ino);
-+		if (error)
-+			goto error0;
-+	}
-+
- 	rec.ir_free &= ~XFS_INOBT_MASK(offset);
- 	rec.ir_freecount--;
- 	error = xfs_inobt_update(cur, &rec);
-@@ -1584,6 +1618,12 @@ xfs_dialloc_ag(
- 				   XFS_INODES_PER_CHUNK) == 0);
- 	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, rec.ir_startino + offset);
+  * Values for di_format
+  *
+diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+index 983d6519dc3f6..01893f25454b2 100644
+--- a/fs/xfs/scrub/dir_repair.c
++++ b/fs/xfs/scrub/dir_repair.c
+@@ -1147,7 +1147,9 @@ xrep_dir_set_nlink(
+ 	struct xfs_scrub	*sc = rd->sc;
+ 	struct xfs_inode	*dp = sc->ip;
+ 	struct xfs_perag	*pag;
+-	unsigned int		new_nlink = rd->subdirs + 2;
++	unsigned int		new_nlink = min_t(unsigned long long,
++						  rd->subdirs + 2,
++						  XFS_NLINK_PINNED);
+ 	int			error;
  
-+	if (xfs_ag_has_sickness(pag, XFS_SICK_AG_INODES)) {
-+		error = xfs_dialloc_check_ino(pag, tp, ino);
-+		if (error)
-+			goto error_cur;
-+	}
-+
  	/*
- 	 * Modify or remove the finobt record.
+@@ -1203,13 +1205,6 @@ xrep_dir_swap(
+ 	bool			ip_local, temp_local;
+ 	int			error = 0;
+ 
+-	/*
+-	 * If we found enough subdirs to overflow this directory's link count,
+-	 * bail out to userspace before we modify anything.
+-	 */
+-	if (rd->subdirs + 2 > XFS_MAXLINK)
+-		return -EFSCORRUPTED;
+-
+ 	/*
+ 	 * If we never found the parent for this directory, temporarily assign
+ 	 * the root dir as the parent; we'll move this to the orphanage after
+diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
+index b13bbbdf2ad32..15ea06db31545 100644
+--- a/fs/xfs/scrub/nlinks.c
++++ b/fs/xfs/scrub/nlinks.c
+@@ -603,9 +603,11 @@ xchk_nlinks_compare_inode(
+ 	 * this as a corruption.  The VFS won't let users increase the link
+ 	 * count, but it will let them decrease it.
  	 */
+-	if (total_links > XFS_MAXLINK) {
++	if (total_links > XFS_NLINK_PINNED) {
+ 		xchk_ino_set_corrupt(sc, ip->i_ino);
+ 		goto out_corrupt;
++	} else if (total_links > XFS_MAXLINK) {
++		xchk_ino_set_warning(sc, ip->i_ino);
+ 	}
+ 
+ 	/* Link counts should match. */
+diff --git a/fs/xfs/scrub/nlinks_repair.c b/fs/xfs/scrub/nlinks_repair.c
+index 1345c07a95c62..87cb3400ff948 100644
+--- a/fs/xfs/scrub/nlinks_repair.c
++++ b/fs/xfs/scrub/nlinks_repair.c
+@@ -239,14 +239,10 @@ xrep_nlinks_repair_inode(
+ 
+ 	/* Commit the new link count if it changed. */
+ 	if (total_links != actual_nlink) {
+-		if (total_links > XFS_MAXLINK) {
+-			trace_xrep_nlinks_unfixable_inode(mp, ip, &obs);
+-			goto out_trans;
+-		}
+-
+ 		trace_xrep_nlinks_update_inode(mp, ip, &obs);
+ 
+-		set_nlink(VFS_I(ip), total_links);
++		set_nlink(VFS_I(ip), min_t(unsigned long long, total_links,
++					   XFS_NLINK_PINNED));
+ 		dirty = true;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 666bd03cf05c3..90865af01cd35 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -890,22 +890,25 @@ xfs_init_new_inode(
+  */
+ static int			/* error */
+ xfs_droplink(
+-	xfs_trans_t *tp,
+-	xfs_inode_t *ip)
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
+ {
+-	if (VFS_I(ip)->i_nlink == 0) {
+-		xfs_alert(ip->i_mount,
+-			  "%s: Attempt to drop inode (%llu) with nlink zero.",
+-			  __func__, ip->i_ino);
+-		return -EFSCORRUPTED;
+-	}
++	struct inode		*inode = VFS_I(ip);
+ 
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+-	drop_nlink(VFS_I(ip));
++	if (inode->i_nlink == 0) {
++		xfs_info_ratelimited(tp->t_mountp,
++ "Inode 0x%llx link count dropped below zero.  Pinning link count.",
++				ip->i_ino);
++		set_nlink(inode, XFS_NLINK_PINNED);
++	}
++	if (inode->i_nlink != XFS_NLINK_PINNED)
++		drop_nlink(inode);
++
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+-	if (VFS_I(ip)->i_nlink)
++	if (inode->i_nlink)
+ 		return 0;
+ 
+ 	return xfs_iunlink(tp, ip);
+@@ -919,9 +922,17 @@ xfs_bumplink(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip)
+ {
++	struct inode		*inode = VFS_I(ip);
++
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+-	inc_nlink(VFS_I(ip));
++	if (inode->i_nlink == XFS_NLINK_PINNED - 1)
++		xfs_info_ratelimited(tp->t_mountp,
++ "Inode 0x%llx link count exceeded maximum.  Pinning link count.",
++				ip->i_ino);
++	if (inode->i_nlink != XFS_NLINK_PINNED)
++		inc_nlink(inode);
++
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ }
+ 
 
