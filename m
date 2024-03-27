@@ -1,130 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BCE125DB;
-	Wed, 27 Mar 2024 10:33:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65175535BE
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 11:03:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711535627; cv=none; b=SSJC6UHsNU05nTcYWbeg4MsoNOVsFgIge9IBjIZrKWP4JnIjiwoTET1Czfw1FRvIaxEeNMqa4bTXZYl1Rhh8wipn59fIhXJVoCVcTWVphRd4gcSpkVr9cVsQKp4mffcSGoJ80pG461yOgW87x5sACYmUw5VDOFD7jxKfyTBjI6A=
+	t=1711537405; cv=none; b=mlbvzfzt/vc5l1VXEU5tD7ZRPbFGZ9j1N6nVYWB0K6/Mdaun5hddYon+T0J8ErGBSFu68PXMJQYfoNm1S9KCYCu8CFMnlAfYt+eWClV5z0cj1H1KaMf8AokmCmLAhsXmWbm/YZ9HOWpsAjBI2q9g5WkfQKuyEdSkL/Bldji2kzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711535627; c=relaxed/simple;
-	bh=X4s13pQiIMlSxWNycUMvGwb++iXPjn4geNOGBsGcK/Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=c/I0Gqv5G85CKDbnImi5mzJ41ecalm1cDvOiklA5hjD3C6NQUnJInR5w5WzadtaH6ACC5IEQovCgmRd6AbdvWwiWQ98wp7wWtTIuUXnl14+PqQ8wHS73a/T3ScoxHrxZmyBCnHLc3cLhaj5Ud90eolEz9WCvg5jFdVfF+enPH0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RXm571xa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711537405; c=relaxed/simple;
+	bh=fweOrhi5o4u3Y32FZzY06Fc+q87FHj2US2TtsuYNTLU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WVHG+vnH59p8d/XlC5CR4mViky5NOoCyKaFueDVQe5mEa4fznHBbGGI3edbMqrXJZmNBVZ+jlSes4OaApVlJh43fIIB3GDE1nPytfjAZgqrrUTu6UpdVQTzHRbHeCFO712UeJs42zPtsBPW6yFuLK9+ur1MLTxnBMnDTnnE4tAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1aV52Iwc; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RXm571xa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16A00C433F1;
-	Wed, 27 Mar 2024 10:33:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711535627;
-	bh=X4s13pQiIMlSxWNycUMvGwb++iXPjn4geNOGBsGcK/Q=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=RXm571xaFkDpoQNyMD2OrM6Ff4PbI5oyxwIrSn6rh6oTAuAVcMCggPEuRb2mgCuIv
-	 bhNqVRdfaSUyuJvby8XWBnNTa24NpwoV4BQ7Kl1htTkkG04CA5T6Sh48JonEsQiZAV
-	 RigkbGK1bm1IIn1DB6W7IR7SQvCU7ZAPGxvk6/snkBoZpw7bDCYNWSftJOtqL4kvAO
-	 uY5qQehIIb8W9lLjLISE6w78aPCS+aa71c3stOnGl5bPsAnhmCgdSQXaUB9gTy4Aht
-	 jUbAIeeoLZE88ztSmt7l2W/jANxPOnvJ/HtGEEMcM4bJV5bO7930qOpcKvwrFsfqsU
-	 DOfbLOTRqk+Ow==
-Date: Wed, 27 Mar 2024 11:33:41 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: tjackson9431@gmail.com, "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, Seth Forshee <sforshee@kernel.org>, 
-	kernel test robot <oliver.sang@intel.com>, Dave Chinner <david@fromorbit.com>, 
-	Taylor Jackson <taylor.a.jackson@me.com>, oe-lkp@lists.linux.dev, lkp@intel.com, 
-	Linux Memory Management List <linux-mm@kvack.org>, linux-fsdevel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2] vfs/idmapped_mounts.c: Change mount_setattr expected
- output
-Message-ID: <20240327-baubeginn-wahljahr-f4ee7484ec48@brauner>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1aV52Iwc"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=EFKlzEaYSs8G83Z6rvXsqaSK+q6qY2BGBF619G567Xg=; b=1aV52IwcFoZZOhwOq89WMLVmq2
+	1uB7P+OwNBaF+QzqlXu9Vvi+aNg6Ns4kdF5UmdshvxYPAWDPZ5bFqSqli5t15REED9xhaPpkVTEd3
+	Ic6ylrNjWeYRwBef8HGsYYOpALrFtBgU2ZRzVSKfFOQ5oB96gxByss/Gia0suLG/hvSauMySB8wep
+	k1zfIvezMwg3s9cnS58MIePSLZ9SYM0mUz815saFOhgzlV7N1D590MYqyJ850rj05ggSjPTvdQkSQ
+	M8eLI98ShkKGFlPGNZjkLxmpi9cgC/bJ2O7AJAVo2iDnNjTgngLgnBjfVO2LG6pXzvcg/VJNASFnv
+	/LQr1wrg==;
+Received: from [89.144.223.137] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rpR3x-00000008WSE-2ni1;
+	Wed, 27 Mar 2024 11:03:22 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	linux-xfs@vger.kernel.org
+Subject: bring back RT delalloc support v5
+Date: Wed, 27 Mar 2024 12:03:05 +0100
+Message-Id: <20240327110318.2776850-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240326-mount-setattr-test-v1-2-c061b040d0f7@gmail.com>
- <20240326152228.GC6379@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Mar 26, 2024 at 08:33:52PM +0000, Taylor Jackson via B4 Relay wrote:
-> From: Taylor Jackson <tjackson9431@gmail.com>
-> 
-> In kernel commit dacfd001eaf2 (“fs/mnt_idmapping.c: Return -EINVAL
-> when no map is written”), the behavior of mount_setattr changed to
-> return EINVAL when attempting to create an idmapped mount when using
-> a user namespace with no mappings. The following commit updates the test
-> to expect no mount to be created in that case. And since no mount is created,
-> this commit also removes the check for overflow IDs because it does not make
-> sense to check for overflow IDs for a mount that was not created.
-> 
-> Signed-off-by: Taylor Jackson <tjackson9431@gmail.com>
-> ---
+Hi all,
 
-Thanks for fixing this!
-Reviewed-by: Christian Brauner <brauner@kernel.org>
+this series adds back delalloc support for RT inodes, at least if the RT
+extent size is a single file system block.  This shows really nice
+performance improvements for workloads that frequently rewrite or append
+to files, and improves fragmentation for larger writes.  On other
+workloads it sometimes shows small performance improvements or flat
+performance.
 
->  src/vfs/idmapped-mounts.c | 7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/src/vfs/idmapped-mounts.c b/src/vfs/idmapped-mounts.c
-> index 34052ca3..f4dfc3f3 100644
-> --- a/src/vfs/idmapped-mounts.c
-> +++ b/src/vfs/idmapped-mounts.c
-> @@ -6667,7 +6667,7 @@ static int nested_userns(const struct vfstest_info *info)
->  	}
->  
->  	if (sys_mount_setattr(fd_open_tree_level4, "", AT_EMPTY_PATH,
-> -			      &attr_level4, sizeof(attr_level4))) {
-> +			      &attr_level4, sizeof(attr_level4)) != -1 || errno != EINVAL) {
->  		log_stderr("failure: sys_mount_setattr");
->  		goto out;
->  	}
-> @@ -6706,11 +6706,6 @@ static int nested_userns(const struct vfstest_info *info)
->  			log_stderr("failure: check ownership %s", file);
->  			goto out;
->  		}
-> -
-> -		if (!expected_uid_gid(fd_open_tree_level4, file, 0, info->t_overflowuid, info->t_overflowgid)) {
-> -			log_stderr("failure: check ownership %s", file);
-> -			goto out;
-> -		}
->  	}
->  
->  	/* Verify that ownership looks correct for callers in the first userns. */
-> 
-> -- 
-> 2.34.1
-> 
-> 
+Changes since v4:
+ - fix a bug in the fix for splitting RT delalloc reservations
+ - rework where rtbitmap locking happens in the bunmapi patch to
+   avoid churn with a series in development, stealing a patch from
+   Darrick's giant patch queue in the process
 
-On Tue, Mar 26, 2024 at 08:22:28AM -0700, Darrick J. Wong wrote:
-> On Tue, Mar 26, 2024 at 12:43:27PM +0100, Christian Brauner wrote:
-> > On Mon, Mar 25, 2024 at 09:58:09AM -0700, Darrick J. Wong wrote:
-> > > On Tue, Feb 20, 2024 at 09:57:30AM +0100, Christian Brauner wrote:
-> > > > On Mon, Feb 19, 2024 at 02:55:42PM +0800, kernel test robot wrote:
-> > > > > 
-> > > > > 
-> > > > > Hello,
-> > > > > 
-> > > > > kernel test robot noticed "xfstests.generic.645.fail" on:
-> > > > > 
-> > > > > commit: b4291c7fd9e550b91b10c3d7787b9bf5be38de67 ("fs/mnt_idmapping.c: Return -EINVAL when no map is written")
-> > > > > https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
-> > > > 
-> > > > The test needs to be updated. We now explicitly fail when no map is
-> > > > written.
-> > > 
-> > > Has there been any progress on updating generic/645?  6.9-rc1 is out,
-> > > and Dave and I have both noticed this regressing.
-> > 
-> > Iirc, Taylor wanted to fix this but it seems that hasn't happened yet.
-> > I'll ping again and if nothing's happened until tomorrow I'll send a
-> > patch.
-> 
-> Ok, glad to hear that this is still on your radar.  Thank you for
-> following up!
+Changes since v3:
+ - fix a bug in splitting RT delalloc reservations
+ - fix online repair of RT delalloc fscounters
+ - adjust the freespace counter refactoing to play nicer with an
+   upcoming series of mine
 
-@Darrick, Taylor sent fixes for this now (I've took the liberty to
-respond to both mails combined.).
+Changes since v3:
+ - drop gratuitous changes to xfs_mod_freecounter/xfs_add_freecounter
+   that caused a warning to be logged when it shouldn't.
+ - track delalloc rtextents instead of rtblocks in xfs_mount
+ - fix commit message spelling an typos
+ 
+Changes since v2:
+ - keep casting to int64_t for xfs_mod_delalloc
+ - add a patch to clarify and assert that the block delta in
+   xfs_trans_unreserve_and_mod_sb can only be positive
+
+Diffstat:
+ libxfs/xfs_ag.c           |    4 -
+ libxfs/xfs_ag_resv.c      |   24 +------
+ libxfs/xfs_ag_resv.h      |    2 
+ libxfs/xfs_alloc.c        |    4 -
+ libxfs/xfs_bmap.c         |  152 ++++++++++++++++++++++------------------------
+ libxfs/xfs_rtbitmap.c     |   57 +++++++++++++++++
+ libxfs/xfs_rtbitmap.h     |   17 +++++
+ libxfs/xfs_shared.h       |    6 +
+ scrub/common.c            |    1 
+ scrub/fscounters.c        |   12 ++-
+ scrub/fscounters.h        |    1 
+ scrub/fscounters_repair.c |    3 
+ scrub/repair.c            |    5 -
+ xfs_fsmap.c               |    4 -
+ xfs_fsops.c               |   29 ++------
+ xfs_fsops.h               |    2 
+ xfs_inode.c               |    3 
+ xfs_iomap.c               |   44 +++++++++----
+ xfs_iops.c                |    2 
+ xfs_mount.c               |   85 +++++++++++++++----------
+ xfs_mount.h               |   36 ++++++++--
+ xfs_rtalloc.c             |   22 ++----
+ xfs_super.c               |   17 +++--
+ xfs_trace.h               |    1 
+ xfs_trans.c               |   63 +++++++++----------
+ 25 files changed, 348 insertions(+), 248 deletions(-)
