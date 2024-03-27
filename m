@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C80221360
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:06:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC8D20322
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 02:07:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711505216; cv=none; b=MAD9Ug22B4i8fGgV4YXrdgyYlbOWWFaaKirGbU+4rg0I0SdQ4nL8ffdXgZQywANQlInEIwoQtS0xCgGXmEzs/yCpMwOzdbX8TxORJ0RXX6zSX3ZYV0Fu8UcAXIVKnl8M18mg0obwM28O34L3KbCN1lqNCi2jiJGcqvhDNMLW88c=
+	t=1711505232; cv=none; b=AfymoLc1YM/3XcKyfP63arS3qOvz1xUoDVoktxnWb46EUSbeYkXyOFFcTt1b4bscTEAS6AkFBTdOQOg8qN8doGUlplsCjz3NsDE+QM1k7NDjJUSlG4OAwWYXfC1t2Ujk2MFH9vSiveRTXkYGA/wiJ6hOUgSLNKCQqYARMZ+Ig4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711505216; c=relaxed/simple;
-	bh=HWLP0LKmv8ayql9ip13c0eZUwl2Dn8kh3p5gHq2MPPg=;
+	s=arc-20240116; t=1711505232; c=relaxed/simple;
+	bh=2sWqOig37wWqhGbcS361IXshqkRzjD0z5BmvMZYrGtc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hLk2wMMb9TchihejB5BnTwsvQqUJbkNYFm2nIzqUXEPCuTLZwOSHcpFxgi85WEdhkliI2ekYHDxoJiVGviKthzzmUTyahkIbOnb0atlvrP54qUaqBW6kL2sa1BOxbYxRTwVdpK/3NLGigPOc5oh56+HLpscmD46+7CTScgA01DQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UCWwucZ3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Y4EGK01nz7sOZYW62VTc+dByChb7DXFR0jBEHn9UkSjUtKMzG56fF2RFtZ9njvbunHS+R+w36sBMKozydx2joq0lMwK32ZRIOTb72J6xMSVtMZT8By17ugLo2rMhWesU/cvBHx4KR6512G9MIsPLymyfVLmt/374vewrTM9tAgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pw0J2A1p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UCWwucZ3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D96BC433F1;
-	Wed, 27 Mar 2024 02:06:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pw0J2A1p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0659DC433F1;
+	Wed, 27 Mar 2024 02:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711505216;
-	bh=HWLP0LKmv8ayql9ip13c0eZUwl2Dn8kh3p5gHq2MPPg=;
+	s=k20201202; t=1711505232;
+	bh=2sWqOig37wWqhGbcS361IXshqkRzjD0z5BmvMZYrGtc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UCWwucZ3klP6y4ejiazeWiAV4gbmH59toC5BHKzfxNL38fqg/f/kSykSCorHl9oJX
-	 iOp9oQBx7RkTu0Bm6hxGfFRbobeRI5Bzt9wPtJAs/NBE8fhZCdF1EXMLPPVP3Rv7IK
-	 Bgt523RyMAVQs0fTEAveRQWkcceChOeGPYtrG5J03elgFMZdJNPByz7YKV9XUX8Q/+
-	 65vx5Ve8Sr7NXbMPM0phBpm0X+CRQ9UNJRpzEN1ocdPYKCDHtHsUiIdjfnTsuySQu4
-	 5Lra32WJ6av5PE9skSaZ4oi140BF6o04WHov2AbUGLfuG7bqoihZWImPpM/G9XMu6n
-	 zNHvPTTeuT6mg==
-Date: Tue, 26 Mar 2024 19:06:55 -0700
-Subject: [PATCH 1/4] xfs: check unused nlink fields in the ondisk inode
+	b=pw0J2A1paUoVOQ0nX0QkDphEPhgC+SVfInbpxhiAPHfgi1C03IdAUQjhI6OuUFSBZ
+	 8cZbhJdYe4Ev9AVVp60vwevLE9ANgnCU9GVa6OCb5PTtr53l/WS2+o0iMwtu9E25Y7
+	 +nOK9scDxKVUdIB3wCb8ADtWls4sHJUPM/z92XKknTpt1mhJexl0dU9ZwrNl4DBIqo
+	 YUyEnq46QIQNLjXaQ5ymtsF7R+4ivwZKxILYgh3hIb+pypX11Dz3SsTzTjN6vNh1n6
+	 HgESdpJTfvzAzpBmF/V8pJr3sHDh/TDXYcaehPUksgwz+pA7zOTGA78FQqHYtxvBk9
+	 PVE0ERsVL2HOA==
+Date: Tue, 26 Mar 2024 19:07:11 -0700
+Subject: [PATCH 2/4] xfs: try to avoid allocating from sick inode clusters
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171150385136.3220296.7489617025414489165.stgit@frogsfrogsfrogs>
+Message-ID: <171150385152.3220296.8658531433549060600.stgit@frogsfrogsfrogs>
 In-Reply-To: <171150385109.3220296.4235209828218476119.stgit@frogsfrogsfrogs>
 References: <171150385109.3220296.4235209828218476119.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,68 +46,92 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-v2/v3 inodes use di_nlink and not di_onlink; and v1 inodes use di_onlink
-and not di_nlink.  Whichever field is not in use, make sure its contents
-are zero, and teach xfs_scrub to fix that if it is.
+I noticed that xfs/413 and xfs/375 occasionally failed while fuzzing
+core.mode of an inode.  The root cause of these problems is that the
+field we fuzzed (core.mode or core.magic, typically) causes the entire
+inode cluster buffer verification to fail, which affects several inodes
+at once.  The repair process tries to create either a /lost+found or a
+temporary repair file, but regrettably it picks the same inode cluster
+that we just corrupted, with the result that repair triggers the demise
+of the filesystem.
 
-This clears a bunch of missing scrub failure errors in xfs/385 for
-core.onlink.
+Try avoid this by making the inode allocation path detect when the perag
+health status indicates that someone has found bad inode cluster
+buffers, and try to read the inode cluster buffer.  If the cluster
+buffer fails the verifiers, try another AG.  This isn't foolproof and
+can result in premature ENOSPC, but that might be better than shutting
+down.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |    8 ++++++++
- fs/xfs/scrub/inode_repair.c   |   12 ++++++++++++
- 2 files changed, 20 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c |   40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index d0dcce462bf42..d79002343d0b6 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -491,6 +491,14 @@ xfs_dinode_verify(
- 			return __this_address;
- 	}
- 
-+	if (dip->di_version > 1) {
-+		if (dip->di_onlink)
-+			return __this_address;
-+	} else {
-+		if (dip->di_nlink)
-+			return __this_address;
-+	}
-+
- 	/* don't allow invalid i_size */
- 	di_size = be64_to_cpu(dip->di_size);
- 	if (di_size & (1ULL << 63))
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 1851d17f0f2b7..228317b22bcb3 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -514,6 +514,17 @@ xrep_dinode_mode(
- 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index e5ac3e5430c4e..8279d90da7e7b 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1057,6 +1057,33 @@ xfs_inobt_first_free_inode(
+ 	return xfs_lowbit64(realfree);
  }
  
-+/* Fix unused link count fields having nonzero values. */
-+STATIC void
-+xrep_dinode_nlinks(
-+	struct xfs_dinode	*dip)
++/*
++ * If this AG has corrupt inodes, check if allocating this inode would fail
++ * with corruption errors.  Returns 0 if we're clear, or EAGAIN to try again
++ * somewhere else.
++ */
++static int
++xfs_dialloc_check_ino(
++	struct xfs_perag	*pag,
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino)
 +{
-+	if (dip->di_version > 1)
-+		dip->di_onlink = 0;
-+	else
-+		dip->di_nlink = 0;
++	struct xfs_imap		imap;
++	struct xfs_buf		*bp;
++	int			error;
++
++	error = xfs_imap(pag, tp, ino, &imap, 0);
++	if (error)
++		return -EAGAIN;
++
++	error = xfs_imap_to_bp(pag->pag_mount, tp, &imap, &bp);
++	if (error)
++		return -EAGAIN;
++
++	xfs_trans_brelse(tp, bp);
++	return 0;
 +}
 +
- /* Fix any conflicting flags that the verifiers complain about. */
- STATIC void
- xrep_dinode_flags(
-@@ -1375,6 +1386,7 @@ xrep_dinode_core(
- 	iget_error = xrep_dinode_mode(ri, dip);
- 	if (iget_error)
- 		goto write;
-+	xrep_dinode_nlinks(dip);
- 	xrep_dinode_flags(sc, dip, ri->rt_extents > 0);
- 	xrep_dinode_size(ri, dip);
- 	xrep_dinode_extsize_hints(sc, dip);
+ /*
+  * Allocate an inode using the inobt-only algorithm.
+  */
+@@ -1309,6 +1336,13 @@ xfs_dialloc_ag_inobt(
+ 	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
+ 				   XFS_INODES_PER_CHUNK) == 0);
+ 	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, rec.ir_startino + offset);
++
++	if (xfs_ag_has_sickness(pag, XFS_SICK_AG_INODES)) {
++		error = xfs_dialloc_check_ino(pag, tp, ino);
++		if (error)
++			goto error0;
++	}
++
+ 	rec.ir_free &= ~XFS_INOBT_MASK(offset);
+ 	rec.ir_freecount--;
+ 	error = xfs_inobt_update(cur, &rec);
+@@ -1584,6 +1618,12 @@ xfs_dialloc_ag(
+ 				   XFS_INODES_PER_CHUNK) == 0);
+ 	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, rec.ir_startino + offset);
+ 
++	if (xfs_ag_has_sickness(pag, XFS_SICK_AG_INODES)) {
++		error = xfs_dialloc_check_ino(pag, tp, ino);
++		if (error)
++			goto error_cur;
++	}
++
+ 	/*
+ 	 * Modify or remove the finobt record.
+ 	 */
 
