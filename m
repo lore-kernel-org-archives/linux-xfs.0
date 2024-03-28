@@ -1,40 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1540126F19
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 17:39:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E864440842
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 21:25:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711647584; cv=none; b=j8ss32HA2FMGwnrH5VX0ArICX1qakNvY2vln+Qlh+xDz7POCE3r1WfZbPxUsFKIQSEfexpJSOn/ITqWb5/jYcNuFhcb2JL+CF8qh5RsPOik3n4Erj+uvjsiNvK2TbDFrbcY2T49i9xVqx5Nv07+wLaazTShC+PfoJcqRVTVVg3o=
+	t=1711661106; cv=none; b=eobSC9Ay47A2N6+lhQ8xjOacRBSOlwogh7s1Pos8Hx7WaXY5l1Hm/Ne4AxGnwDePb44KyoSF75c8wra2bNd/Xq+wXQBQpRc9lEho+GsGAX96wRimQkqtR3JEK9cY4RXhSY+53rTB8Uf7YpxC8KRFksuJo4Hpwig29DTV5bs+otQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711647584; c=relaxed/simple;
-	bh=iZv/jvqIXDgyqTkrCBNr2iAwHfW8ttoca590b+SoGi8=;
+	s=arc-20240116; t=1711661106; c=relaxed/simple;
+	bh=cGXIxRqy3EEcRnhZqTezUOEWnIGRvMT1wdNPVJNtiPs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vx7nYodlgsFJV6Qr661vHdQE//OvctZ3KLRqECZISfTx7p9XZHYex8+KoTB3eG1JO4BlQmNYVaJQ+3U3IG2NzoBSEqB5j3ZR232mdlYgIo+hMuJWFXYBOtXZZDJyr+j740Nkngdpf5zn1mCsJypHe/b1e3Fgm9qeKegKpz140Pc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tIDdovj/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PKZk6Ea1zWmk9DP63uZCfTVL6SiDY0LuNUK58cQXaVMaflTmabEYK0e4TDDvNhBvJO/cyAMQ+KdlBgkyd+uHfCZiYebU6TTsUBqxV5p4yayzjvj3CZzc2qDFvCrFZmpabB/zQLz1pu18EH9VWgWIjNaVny6iwPzXp39VyqPSu0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wwLPNMGA; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tIDdovj/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6B0FC43390;
-	Thu, 28 Mar 2024 17:39:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711647583;
-	bh=iZv/jvqIXDgyqTkrCBNr2iAwHfW8ttoca590b+SoGi8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tIDdovj/FTWjcixUEsAggSXblpHWdESZdPVva74QXilihiwiQ4CguylSrZIk8rkU2
-	 rB+fLzRLFRU4Y+tmPg9fO8s/NHJSNwSbO0nJuivjpOTWMwG9E9Ksebw/rooh68UTNL
-	 yzd2eM7kiLF1o0Tyx6xa7eD0AYs94pz7uFlQywnM5s7ZYEsWSp8h3C2NgkIn6S+Ij5
-	 TDMXk/i+d1hDAj2CKgYBZyoG7obtwL2rhsoGya8VcPTdX5D3mMALRjpi42doY8VxNG
-	 nmMHIjF3UmFWyfJnS2yMdQRuXT9TRvwJt9XSVexWvxCQ0/awdIg4Gy2TtlAx3ZpD7o
-	 QEidXXCRSTllg==
-Date: Thu, 28 Mar 2024 10:39:43 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/10] xfs: reduce indenting in xfs_attr_node_list
-Message-ID: <20240328173943.GD6390@frogsfrogsfrogs>
-References: <171150382098.3217370.5208665628669220587.stgit@frogsfrogsfrogs>
- <171150382175.3217370.15842303765544950135.stgit@frogsfrogsfrogs>
- <ZgP_Xn6zkn0TY7nm@infradead.org>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wwLPNMGA"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6ead4093f85so1402052b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 14:25:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711661104; x=1712265904; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=H/0EyouVP65gK6t0HBZJCkdFlpKHPEyQGXYDKfB91kc=;
+        b=wwLPNMGArrQ2D3wm2j64pt64BFP9wpzjj4FwynJIalFSRDbaQPcFFXKPQOwdvEpiwE
+         sLZv6X4rdi8tPtv1AISoj0S8ImhIXdFHUMgl0E0/Fb+lAu5VhefY/kzVoN4F0xyPyAwQ
+         tZgDh8mdvQAkmovqm3PK9bE02qxQlz6HBAsq5cJfb15zASI3EqXCrcTL9AEr9hXswvDJ
+         /YFW7s+pcHvl/O7dKvThKFJN/4cy7pvtjJcFmfTrFV9e0HTnaQl1h9tiIE3a6JTNlrvN
+         HN0x9Fa+Q9NrazXwA/+R0YJ+NcnhhkjmTmxMb/DLC/JYXK1O5tmnrt/zIO346avFybfM
+         yK+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711661104; x=1712265904;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=H/0EyouVP65gK6t0HBZJCkdFlpKHPEyQGXYDKfB91kc=;
+        b=RMcUFPxADWOkXtflXKkLaePi7/88QjJs571HiviXPiJy9BQppNEixUYQGiCzTjAFge
+         MMmM0izz0Ym6H2NNV7LOFCmo8+k6fNT/gEP31zyhy8c36l+uBldyh8L2ce7jXd8vv40U
+         MtWLMJBB7lEm56qsbcaC03jCqvkfyo/Gt1ztmal3dpb23u2ZBeb52FkJoUSkjz1zr946
+         zQQcVmpVpaLggioysDxLqsuOXZJXcBOXSntyRk8Aa5N6eUX30iQRt4wv2xpntC5N9zas
+         Zb7+wemJYF1dnEeXe71itV7p3neQQGhlHxRIqDrA7jbvVl1dKyIv352bukDLlBaJqrRT
+         isNQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXGgqklMAl/QXWr4oiLIHd2zjtopkL2A5I3ioNMHS9zEXOJLrPBFwqv7iF0lgMZhpzAHUdMssi9pXAUwD7eGgKbM1y0zHOzPc9Z
+X-Gm-Message-State: AOJu0YzxWksruyKlTAMKmBes7tG57ULdnHS3/SkAUeUCdiDie4z6m4Z3
+	aZGzCGwazbSSFWcvkgbeDA66ubKQHiHk+7rrzZYVbLUeXB3cWzVKRW8diyOlB2A=
+X-Google-Smtp-Source: AGHT+IHEZGAX3bivqmqrLxGrU6dMrVA2rBVpQC8UB4NOLcrCLo62NGmF1AJoxcwzVLuuC1GwNPfOtQ==
+X-Received: by 2002:a05:6a21:9212:b0:1a3:e4fe:f6f1 with SMTP id tl18-20020a056a21921200b001a3e4fef6f1mr339902pzb.58.1711661104075;
+        Thu, 28 Mar 2024 14:25:04 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
+        by smtp.gmail.com with ESMTPSA id w3-20020aa79a03000000b006e24991dd5bsm1877809pfj.98.2024.03.28.14.25.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Mar 2024 14:25:03 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rpxF6-00DWAu-2E;
+	Fri, 29 Mar 2024 08:25:00 +1100
+Date: Fri, 29 Mar 2024 08:25:00 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/13] xfs: support RT inodes in xfs_mod_delalloc
+Message-ID: <ZgXgLDnM62oJH0q2@dread.disaster.area>
+References: <20240327110318.2776850-1-hch@lst.de>
+ <20240327110318.2776850-10-hch@lst.de>
+ <ZgTxuNgPIy6/PujI@dread.disaster.area>
+ <20240328043411.GA13860@lst.de>
+ <ZgT1K2OH/ojXqcu2@dread.disaster.area>
+ <20240328082516.GA19416@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,23 +76,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZgP_Xn6zkn0TY7nm@infradead.org>
+In-Reply-To: <20240328082516.GA19416@lst.de>
 
-On Wed, Mar 27, 2024 at 04:13:34AM -0700, Christoph Hellwig wrote:
-> On Tue, Mar 26, 2024 at 06:59:21PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Mar 28, 2024 at 09:25:16AM +0100, Christoph Hellwig wrote:
+> On Thu, Mar 28, 2024 at 03:42:19PM +1100, Dave Chinner wrote:
+> > > Unfortunately there are different.  For data device blocks we use the
+> > > lazy sb counters and thus never updated the sb version for any file
+> > > system new enough to support scrub.  For RT extents lazy sb counters
+> > > only appear half way down Darrick's giant stack and aren't even
+> > > upstream yet.
 > > 
-> > Reduce the indenting here so that we can add some things in the next
-> > patch without going over the column limits.
+> > Can you add a comment to either the code or commit message to that
+> > effect? Otherwise I'm going to forget about that and not be able to
+> > discover it from looking at the code and/or commit messages...
 > 
-> Wouldn't you normal say 'reduce indentation' and not 'reduce indenting'?
-
-Err... yes.  I'll fix that up. :)
-
-> Either way the change looks good:
+> Does this look good?
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> http://git.infradead.org/?p=users/hch/xfs.git;a=commitdiff;h=91bbe4c2d5518a1f991d7f19aad350d636e42d32
 
-Thanks!
+Spot on. Thanks!
 
---D
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
