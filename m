@@ -1,109 +1,116 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BEA20DF7
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 04:42:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB2728DA4
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 05:48:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711600944; cv=none; b=GKTqLlTg8RimUlt692yWhCk/KikLTT8D5ICW1VHECw015LsfVE/GsjB9xStJETVL21wtmXelIjvNNzWg9QhSBbJFbpF2LsbqgTDsFiE1r1288kgP2UsH4/uTfKaXJ0C8v5aTDmT7TuZbvr2q4tN8zK/n6l07XxeTrMsMVkP9SyU=
+	t=1711604898; cv=none; b=jrcLmEvqzKDh+1M507Uz5KVqut0GaD2GL+QomFml0XYzyHXP5S2EgIl6W7iP09SMXywPKmmTlrhGa8vUEYwdF5OCbaUiDntjPhqV+niLNR0eINdaOQBGXddab76GNQbSg95XnDd0gZCBCtapTmYxFs2OhisEM1ass8rTPtVefzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711600944; c=relaxed/simple;
-	bh=cypJMzDNM9aQ0yAfTDp5MH7UeOIywZsQRCVP2UAeUTw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lOhiZH3xSWUw1X8AMkGex4QOp9BgAYCYcE5nPVnKyqpePgyLscuESxFh6nQcyFbVLSezKxARjaiOSvpRe98uVT1wdCAR/Nfi22FS4JfRASR2xdigTcboEhN7F7u444XJL04uJBPRzMOwIZHuo4IlwA+FjUh30aLY7b3z825xJTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Hzn3y2R6; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1711604898; c=relaxed/simple;
+	bh=qKzbioJcQxk58EFZG1By9qByXS7nGV3/3djdeQxcY0U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tI+GMYofMqL5RPoc1mYCgaVtzfsJNEJpumGrWW5m7BNLO49Pmp+sW2nwWVLGc4pLDKpMj8uTeizUtNHQdpcZpLVJ6PiXWYI4qozLVNJfAyhaRktzdf+XuaQEXcjipycwHX/GbpkoomILr5B/ANPxRByuxQrzIDJ2pdER5ybBalc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XXAd+8Rt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Hzn3y2R6"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1df01161b39so4894435ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 21:42:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711600942; x=1712205742; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OvimWRuTcnfaCDmPxW4Q5Hwc/6PlFWVF8uy1t42rRjo=;
-        b=Hzn3y2R6Vx04zZD2hqjkI2sY8cNKHKdypTtzB8hVSzZBospPjq0lefBF2GdanpwFD3
-         6RL2BajQ6gKj4DI+Wwh2U6iX+/AZjUph1YcHvTyzL8RM8TSieeOizekY1hCUvGpK+hyZ
-         dVUGbLyEIvH4u0RhgiCkRPZO7b/qjUTlW8KNFBr0+d2S3erz6B1si6yAVXly/aOLWNv+
-         WIGrnMFrGHgAC0EWojPk3dxDjf5UVKP1QCodc7MJK23vjM486IdQd6yrVLDuQTR/fZuG
-         SsnR3Mp5ZBtvVxKoE/kJukdiY/BlcIhsC48sq5zwU2qTh8ATt9h+FK9n4Myb+tQ9+s7P
-         pyJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711600942; x=1712205742;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OvimWRuTcnfaCDmPxW4Q5Hwc/6PlFWVF8uy1t42rRjo=;
-        b=Wfjs6xwNIpW0758J/prsFJYvA8gT6mr/iiaNuoROX3kA5W2U1y8jUvfkpRvx9N9s+o
-         WID7f5kZ7ad5kUh3+knlcotXfLpe9097/qFf0kG6pFIY8N1ctJFsOBoBzRJy+PQmvVj0
-         VkFtqIa3Ix1lKForAyPeWeC+Xj7SH6m9nvR3S9jHFMXjnwGo0oaEUbV61dcGWymD5JvW
-         4RMS7SzRuSNH7GF91aA1p1cwyQrYcWtb3btU26OTHzJzZBG42OjtFKrkk1/ukGju6A+G
-         r8k0Esjo0BB2Renhbsaq35aTk63JRAl+IIp6aeEDV3H2Nvk7taYocu2QSLq/1fefzn/t
-         chaA==
-X-Forwarded-Encrypted: i=1; AJvYcCUVh0GgM9SsKQHKSbNYz1i7ZgB566DXOKjRTWF0iITPKjsUUY6tp0sFH9DJchHSc/QEeOvB+zXQBogf3gq9m/H2eY64x810Lj45
-X-Gm-Message-State: AOJu0YxD8DtDcNu9c0JgQJjnvRfzSAl7oNwORnZWyUZJsQzdfKLkn6mx
-	vA1M5aFs+FBaF+Oyg5+dNkoW6JxnoJe68g1TKdJLvCgLroe+fOC30Nm08L+w9gU=
-X-Google-Smtp-Source: AGHT+IEtlBYA2OP49vNj8DN/wqPsbOKbwNlzwE1qNqFMvseQqZavPoKRpeUqLFI88yR3+1j7FvbiOg==
-X-Received: by 2002:a17:902:f643:b0:1e0:9da6:1763 with SMTP id m3-20020a170902f64300b001e09da61763mr2152951plg.4.1711600942194;
-        Wed, 27 Mar 2024 21:42:22 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id q11-20020a170902bd8b00b001e0c91d448fsm428472pls.112.2024.03.27.21.42.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Mar 2024 21:42:21 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rphal-00ChWO-1r;
-	Thu, 28 Mar 2024 15:42:19 +1100
-Date: Thu, 28 Mar 2024 15:42:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/13] xfs: support RT inodes in xfs_mod_delalloc
-Message-ID: <ZgT1K2OH/ojXqcu2@dread.disaster.area>
-References: <20240327110318.2776850-1-hch@lst.de>
- <20240327110318.2776850-10-hch@lst.de>
- <ZgTxuNgPIy6/PujI@dread.disaster.area>
- <20240328043411.GA13860@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XXAd+8Rt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE04FC433C7;
+	Thu, 28 Mar 2024 05:48:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711604898;
+	bh=qKzbioJcQxk58EFZG1By9qByXS7nGV3/3djdeQxcY0U=;
+	h=From:To:Cc:Subject:Date:From;
+	b=XXAd+8RtSYyAelINtYxd+EAv++T5edxWY6mKiA19qx5Sx86ko0gzupZeykCgglg11
+	 vhvuIat9QsrrQUKlfG6uco/wk2QnSUQEdhDs6M0XqrTr0tsOJi8vnmMYiljSEg2zKd
+	 aU5b5HtEsjaaTNsSdcnMkJQdTsCWy+KfgdqqRNFv+WJd4MTx94zSG1Ln3cd4TfMnNW
+	 60kTXu52MUGsHC826oEfddsUEexEr0BtBtRBLOPk0b/v9+WngXcqu6zAtu/pUhtjhL
+	 S99D0i7MqLjIDA5nYTeOACjqO/I0hcnrtOqH4KWt2G0tyglCrpCRyJ9wrxp2wSkE1g
+	 fQb80uE4mMbPw==
+User-agent: mu4e 1.10.8; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [BUG REPORT] writeback: soft lockup encountered on a next-20240327
+ kernel
+Date: Thu, 28 Mar 2024 11:11:05 +0530
+Message-ID: <8734sa3o0x.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240328043411.GA13860@lst.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Mar 28, 2024 at 05:34:11AM +0100, Christoph Hellwig wrote:
-> On Thu, Mar 28, 2024 at 03:27:36PM +1100, Dave Chinner wrote:
-> > >  	percpu_counter_set(&mp->m_fdblocks, fsc->fdblocks);
-> > > -	percpu_counter_set(&mp->m_frextents, fsc->frextents);
-> > > +	percpu_counter_set(&mp->m_frextents,
-> > > +		fsc->frextents - fsc->frextents_delayed);
-> > >  	mp->m_sb.sb_frextents = fsc->frextents;
-> > 
-> > Why do we set mp->m_frextents differently to mp->m_fdblocks?
-> > Surely if we have to care about delalloc blocks here, we have to
-> > process both data device and rt device delalloc block accounting the
-> > same way, right?
-> 
-> Unfortunately there are different.  For data device blocks we use the
-> lazy sb counters and thus never updated the sb version for any file
-> system new enough to support scrub.  For RT extents lazy sb counters
-> only appear half way down Darrick's giant stack and aren't even
-> upstream yet.
+Hi,
 
-Can you add a comment to either the code or commit message to that
-effect? Otherwise I'm going to forget about that and not be able to
-discover it from looking at the code and/or commit messages...
+Executing fstest on XFS on a next-20240327 kernel resulted in two of my test
+VMs getting into soft lockup state.
 
-With such a comment, you can also add
+watchdog: BUG: soft lockup - CPU#0 stuck for 64383s! [kworker/u16:8:1648676]
+Modules linked in: overlay dm_zero dm_thin_pool dm_persistent_data dm_bio_p=
+rison dm_snapshot dm_bufio dm_flakey loop nft_redir ipt_REJECT xt_comment x=
+t_owner nft_compat nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_rejec=
+t_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat=
+ nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 rfkill ip_set cuse vfat fat ext=
+4 mbcache jbd2 intel_rapl_msr intel_rapl_common kvm_amd ccp bochs drm_vram_=
+helper drm_kms_helper kvm drm_ttm_helper pcspkr pvpanic_mmio ttm pvpanic i2=
+c_piix4 joydev sch_fq_codel drm fuse xfs nvme_tcp nvme_fabrics nvme_core sd=
+_mod t10_pi crc64_rocksoft_generic crc64_rocksoft sg virtio_net net_failove=
+r failover virtio_scsi crct10dif_pclmul crc32_pclmul ata_generic pata_acpi =
+ata_piix ghash_clmulni_intel sha512_ssse3 sha256_ssse3 sha1_ssse3 libata vi=
+rtio_pci virtio_pci_legacy_dev virtio_pci_modern_dev serio_raw dm_multipath=
+ btrfs blake2b_generic xor zstd_compress raid6_pq sunrpc dm_mirror dm_regio=
+n_hash dm_log dm_mod be2iscsi bnx2i cnic uio
+ cxgb4i cxgb4 tls cxgb3i cxgb3 mdio libcxgbi libcxgb qla4xxx iscsi_boot_sys=
+fs iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi qemu_fw_cfg aesni_i=
+ntel crypto_simd cryptd [last unloaded: scsi_debug]
+CPU: 0 PID: 1648676 Comm: kworker/u16:8 Kdump: loaded Tainted: G           =
+  L     6.9.0-rc1-next-20240327+ #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.6.6 08/22/2023
+Workqueue: writeback wb_update_bandwidth_workfn
+RIP: 0010:__pv_queued_spin_lock_slowpath+0x4d5/0xc30
+Code: eb c6 45 01 01 41 bc 00 80 00 00 48 c1 e9 03 83 e3 07 41 be 01 00 00 =
+00 48 b8 00 00 00 00 00 fc ff df 4c 8d 2c 01 eb 0c f3 90 <41> 83 ec 01 0f 8=
+4 82 04 00 00 41 0f b6 45 00 38 d8 7f 08 84 c0 0f
+RSP: 0018:ffffc90007167b18 EFLAGS: 00000206
+RAX: 0000000000000003 RBX: 0000000000000000 RCX: 1ffff110211bda18
+RDX: 0000000000000001 RSI: 0000000000000003 RDI: ffff888108ded0c0
+RBP: ffff888108ded0c0 R08: 0000000000000001 R09: ffffed10211bda18
+R10: ffff888108ded0c0 R11: 000000000000000a R12: 0000000000005218
+R13: ffffed10211bda18 R14: 0000000000000001 R15: ffff8883ef246bc0
+FS:  0000000000000000(0000) GS:ffff8883ef200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f9fa7534500 CR3: 0000000146556000 CR4: 0000000000350ef0
+Call Trace:
+ <IRQ>
+ ? watchdog_timer_fn+0x2e2/0x3b0
+ ? __pfx_watchdog_timer_fn+0x10/0x10
+ ? __hrtimer_run_queues+0x300/0x6d0
+ ? __pfx___hrtimer_run_queues+0x10/0x10
+ ? __pfx___raw_spin_lock_irqsave+0x10/0x10
+ ? srso_return_thunk+0x5/0x5f
+ ? srso_return_thunk+0x5/0x5f
+ ? ktime_get_update_offsets_now+0x73/0x280
+ ? hrtimer_interrupt+0x2ce/0x770
+ ? __sysvec_apic_timer_interrupt+0x90/0x2c0
+ ? sysvec_apic_timer_interrupt+0x69/0x90
+ </IRQ>
+ <TASK>
+ _raw_spin_lock+0xd0/0xe0
+ __wb_update_bandwidth+0x72/0x600
+ wb_update_bandwidth+0x97/0xd0
+ process_one_work+0x60d/0x1020
+ worker_thread+0x795/0x1290
+ kthread+0x2a9/0x380
+ ret_from_fork+0x34/0x70
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+I am unable to retrieve any other debug information since the machines are =
+not
+accessible. Hence, I am not sure about the exact test which caused the above
+issue.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--=20
+Chandan
