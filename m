@@ -1,70 +1,70 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB9638389
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 04:15:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50BAC38388
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 04:16:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711599353; cv=none; b=Re7hkJw63IYzrfrSfUoworHpMcHbEATRzVTI4JPnftvX3l9ngD0YW8DpWtVPQmQQQXLKtbgwwC7uAF/dVCfFfOE3gFnkdtfKodnDAXbjZh6SbnppSsHBHBw5HIgXC4uMxlY24dw/7geiS6DsOlzylIQfhCRBNwu/NujeNIJgOPQ=
+	t=1711599381; cv=none; b=mk/e3z7X2SNviMawsLg5/hZU2u+J+U1GcyS5IuLef1YPig7JVQgHHB171TCW4r26iVo4c9N0UrWpZviXMLG34xXUGpXklE5ZchXbco7nSdFh44V+pER668JNlL5BWLUR/vqtFQ5zKynL5cXecBGM3hD65pukBqV3oPmPNKSbMO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711599353; c=relaxed/simple;
-	bh=GNEPjYAF3m54soUrh2Yv6tmegwxywFo1HFKSF1FrTq0=;
+	s=arc-20240116; t=1711599381; c=relaxed/simple;
+	bh=Ke7H98tpQiU54aT2SU6QwJgT3UCOguYxVbN4qBMZgSQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qv32f06kwwFWsoeFWijCjiRvAm4OkvuveVzKzJP8P+Y9aUDPulAV6kiDmR+0Vj5Y41m/pu9c0yuZKZKZ5EXuh1diXSFoDJC7qEi60M3DpVHqBV/r9DpnTJFc8J/9pbMzsly5C5mG4ZQB1lYjvlz8Y6mGjpmRNLQPteuhvJhH000=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=UdVwTJeW; arc=none smtp.client-ip=209.85.210.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=lpbtp2igMZbhJoFgkS9hnmaibwL1oIC5wXz7UVgS6aQDEWezTNDtfmmB04bgkVVU/9vr4EnuSD0cPGD9tkW+iZRauM6qci55iwi58NZJVhWWmzJXmtBQXS4xM5v8/v1lu3PdrnRyBKazl9vn1IMY+9CMJhkx0WhFgr+nHJD8CQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YCe9END3; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="UdVwTJeW"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6e6b729669bso518737b3a.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 21:15:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YCe9END3"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1e04ac4209eso4391805ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2024 21:16:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711599351; x=1712204151; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711599380; x=1712204180; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=VfBp3/cbRPs4BVjzV/tfUCrzotCrErCbx6uEJ47NKAo=;
-        b=UdVwTJeWUTmfXmJdUMkF+Sd+RmsQA2nXfcOTLtEFuX2TfW2GBYIioY7cphC9wZg2tQ
-         Y2BmpoPOWfA77eRfkyPip7Hxom3ZL63Hfexe/Uz9FrER3quSG51+1I3DpWl/dY70ySGN
-         b5PKNLco9CyFhud+frg9ThEFcKJef2pbO9I/POWy3IS4y+JHs0wk4EmPjisCO6sybIiB
-         nxlhk6ZJSTHO4u/xPKfuvp2rbocGdrZrInKJtH6lD1MwugMv6hshI0X+pm5PQIDtp8N5
-         fvpEuRG67n2faH8y2G2lKNxPtniRrZCDl9TfeRSVllhg2MxMqVLFcQnhey/SrrdopGOm
-         ztnw==
+        bh=AKxxyn7/M/hZWBxx4mcVhUIRYmeUaRf9Pio6OvkZtxw=;
+        b=YCe9END3sYFFQOztHG9X8+i5Ufqb6TRNgvKZQNV43DaWHYJngoxQVijJJVwZ3VAF/X
+         3CAiquU7G1D/BwlYdyCpktRjpLc2uVEkutL6Eu0Bk+dA+fazZM7FyP00KvASDZk1Wiys
+         wjAgzTfuR4NfeEFkgfEzXaciE3r2UxxzFZQS7UyfO0ULC42dOG3Yd97yb+YVleMcnL5m
+         VGska6CPQ6BAPm9SczdQ+/hBxo1UE1B4QeQrp0r29U1eMwUruncURh8trP99P66pBS/u
+         6gPBajzIB9H2fM9uJzUFfsDwkbh6kBeUdSaoIMF8pG5F0HxbzE17ukgqVOHJfgANErdT
+         lliw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711599351; x=1712204151;
+        d=1e100.net; s=20230601; t=1711599380; x=1712204180;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=VfBp3/cbRPs4BVjzV/tfUCrzotCrErCbx6uEJ47NKAo=;
-        b=SGDrgELDbSXdajEG/hc3ZqasuHwhlaiNpQ/t593Xa2OcHG6WhS+V3MX03tLyU7m5BC
-         fHRhbJ4Pbi1m4jnE4IUU1MfXz5PZBfcEZHsaaohlfw9RM+w+nq2IP+qec8Vgf8/irSKR
-         ykZ1LtsrQnf/h51KFlulsCCkOmsfcuPFYvZy9Ckz2ChekTaObwcKwcZsdJ6H8magXfZS
-         OWd5h4hlwfVAqDDu513xD0fVVIq7QS+3gVDJ2rXOee3tScstZ2v4W+c8Gc2/DM/2qjf8
-         dAhG4sSa7BEOd2HcOVNWFoXhsh5Pc/ppWFpPqLrpxdX9giJrLegNQ+rqnUvBNIXa1H8C
-         7SQw==
-X-Forwarded-Encrypted: i=1; AJvYcCUk/vB+yReL1vnkCEgBKypmDQjw2uxV2mLatYv3iJ0KcZe95tdeMItj7b7zSarl2jhHNARTOFSIxcw5lQRfYisdp/+LMAd3u8Yh
-X-Gm-Message-State: AOJu0YwOTOQpTMxyhGRBP82pbWcvtuBAKfXO356PtSOjBAWN8GwrNjrU
-	cLytUhtG9Hlxyyt+peLQNIZydh+GBg6vH7Tdk1XrgY9a0NTXH1fEIYl+4Z21zRoWL91a6e7kvQN
-	b
-X-Google-Smtp-Source: AGHT+IGJzQDzuIlNdY8Aok4kDmUGK19az23zGOYKE5CArS3eI2avuBhE3D8mjMiX604dMHGKtVIsmA==
-X-Received: by 2002:a05:6a00:811:b0:6ea:749c:7849 with SMTP id m17-20020a056a00081100b006ea749c7849mr2444925pfk.13.1711599350617;
-        Wed, 27 Mar 2024 21:15:50 -0700 (PDT)
+        bh=AKxxyn7/M/hZWBxx4mcVhUIRYmeUaRf9Pio6OvkZtxw=;
+        b=DHMxYnid8e7Nb6Hgqm7hT4dcO/Nv/Cks7zKKx4FbYHxLyWv166BXh7P3r+h5+1XgKL
+         dx5avE/z+xR9cZpvEXvg6yx62GS1fLV6/rU0BAGyzom0+uChqsYZZulHaPDXTv5zjmGC
+         /D3ZZWaSsasF0D+K5rwznsrfoeibbY33DRg7YVqI0Uv5h5hQjL3papRMKKqcZH6mAkLA
+         hKCdG8Hxg27/3y1VNnprp8OXBEuK/1Ts9Ckg10PPYdaL604Br33Lf7knm95r5Rd/j3QD
+         JQ8BgYVD2pOLP7wHwXtY+sG6t1/jKhZJ9ZSK4tym3Nlt83SY658yesPCLvAxjX+fVDIf
+         4PzQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXP18wGvXy9I0lAAb+JgHMVCFJ1zYGRuovuqRrIMqqo7T++3ZFQqbPUCt3YWwBWdLsCqwNcYdv+bw8jgvTuyBA/1GXX04z7JSQM
+X-Gm-Message-State: AOJu0YzMjS6VNts+tAHubA2FBt3MT6I9kX2EGy1R2vZSaz5BG7H/Yy8w
+	/3s9g0eJ/UQckqFcO5ErrSbroHuwrbSo075BZy9i7c1oXKoQkM9Ni2wrrGyQI0Y=
+X-Google-Smtp-Source: AGHT+IFk7/0c0sdCb567su94zRchlC11s4aPjgHThLQ6mXmk3F/h5pJHTWGkZQPQvTdM3KkcMug36Q==
+X-Received: by 2002:a17:902:7844:b0:1dd:2eed:52a5 with SMTP id e4-20020a170902784400b001dd2eed52a5mr1518549pln.37.1711599379448;
+        Wed, 27 Mar 2024 21:16:19 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id w8-20020a056a0014c800b006eac4b45a88sm374418pfu.90.2024.03.27.21.15.50
+        by smtp.gmail.com with ESMTPSA id u14-20020a17090341ce00b001e0ae032370sm389179ple.58.2024.03.27.21.16.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Mar 2024 21:15:50 -0700 (PDT)
+        Wed, 27 Mar 2024 21:16:19 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rphB5-00Cg8F-34;
-	Thu, 28 Mar 2024 15:15:47 +1100
-Date: Thu, 28 Mar 2024 15:15:47 +1100
+	id 1rphBY-00Cg9s-2R;
+	Thu, 28 Mar 2024 15:16:16 +1100
+Date: Thu, 28 Mar 2024 15:16:16 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/13] xfs: move RT inode locking out of __xfs_bunmapi
-Message-ID: <ZgTu86veQ1aWuHDS@dread.disaster.area>
+Subject: Re: [PATCH 05/13] xfs: block deltas in
+ xfs_trans_unreserve_and_mod_sb must be positive
+Message-ID: <ZgTvEIIV41UGlf2p@dread.disaster.area>
 References: <20240327110318.2776850-1-hch@lst.de>
- <20240327110318.2776850-5-hch@lst.de>
+ <20240327110318.2776850-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,23 +73,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240327110318.2776850-5-hch@lst.de>
+In-Reply-To: <20240327110318.2776850-6-hch@lst.de>
 
-On Wed, Mar 27, 2024 at 12:03:09PM +0100, Christoph Hellwig wrote:
-> __xfs_bunmapi is a bit of an odd place to lock the rtbitmap and rtsummary
-> inodes given that it is very high level code.  While this only looks ugly
-> right now, it will become a problem when supporting delayed allocations
-> for RT inodes as __xfs_bunmapi might end up deleting only delalloc extents
-> and thus never unlock the rt inodes.
-> 
-> Move the locking into xfs_bmap_del_extent_real just before the call to
-> xfs_rtfree_blocks instead and use a new flag in the transaction to ensure
-> that the locking happens only once.
+On Wed, Mar 27, 2024 at 12:03:10PM +0100, Christoph Hellwig wrote:
+> And to make that more clear, rearrange the code a bit and add asserts
+> and a comment.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Not a great fan of using transaction flags for object state, but
-I don't have a better way of doing this.
+Yup, that helps a lot.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
