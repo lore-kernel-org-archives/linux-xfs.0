@@ -1,35 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3413453385;
-	Fri, 29 Mar 2024 09:52:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DAB417550
+	for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2024 16:14:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711705929; cv=none; b=GIQcyGxpcZ4cREddGnN6805P9C3TEjD4bpE34WBBWxuTH9OSCl1h5QFO47i7WG/5O/qEOYln0dqCdgEERfuFV5D03VxYBO51TvS8MtJAL0NeLcadJbZmoWNinM6t0aE7tPaU6JYg3loHNU1v2E1bkuEmTgFakPmsGqGo9Nu7Q4Y=
+	t=1711728870; cv=none; b=icHLg50WgvctRvDnyQGbHdYuYoLbjcoiRndwpScklhbfSJ9OdLB1OzD8mRAvQ7Ss4+AfT7vAFL0IjkoymGndGFlwp3bikj8GsfW/qrRYwFUGPKQCLHShUlyWbF/bmozbCV5FTfnH1xaQ4gx9fLL/YWZGQ8pjxpfKvGcUnEihn6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711705929; c=relaxed/simple;
-	bh=WJQPWy4hBldNTeti1EQIOUtyVFSvPO8pbmNVfA9n16o=;
+	s=arc-20240116; t=1711728870; c=relaxed/simple;
+	bh=Kx1feJOnGcFyKnxvBT3oOO112UB2o9A6KcSE3Fg3NVY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qITUssgzDrIszruAKeTVlzG+GmwKam7KtH37T6miUdJQJyzLNf91MJ3lwcBR0qYIMaEkz98AlyZBxNsrudMZ4F+VlSbe2d6C+cPBUSuZDENKTYTdUGV0yWrsPjfkbZ9exUo3k0Arw/KA5vbQ0ufvyLsCG+3jQUpCOHCUBOLpwQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=x6BfXYsD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=V1T565t/fYtF8huXg+P5ClfSwKKwqk17JNnv4BIRHU1d8zFgFqb9I/337naFeQuZNMDCJD1MwfnWHBczQCNP6yi4hhJHPE2N2nFqv4s2ZkwMmjmESq+GLpmFAjNRAjwMLi/AOXCrtGrQxe7hT+BKOw2k1nGp5954VMv7RF5+xrg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JyrAyEm0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="x6BfXYsD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37133C433F1;
-	Fri, 29 Mar 2024 09:52:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1711705928;
-	bh=WJQPWy4hBldNTeti1EQIOUtyVFSvPO8pbmNVfA9n16o=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JyrAyEm0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20873C433F1;
+	Fri, 29 Mar 2024 16:14:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711728870;
+	bh=Kx1feJOnGcFyKnxvBT3oOO112UB2o9A6KcSE3Fg3NVY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=x6BfXYsDr1w63TkCj6wY6I+jQSzWsWih0e9TJHGEEsuWCJc/XVnzmD61fkKxPpr2Q
-	 sCcEI+H0u/IAt2eMZT7iJAEhpM11+9jVa03Li8uS+GiywBN1fXhogRo47sTU8BlALd
-	 Xkkc8h8oX6VvNzOUb+9dtiJoD0wFvRgfpwoin4gw=
-Date: Fri, 29 Mar 2024 10:52:02 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Catherine Hoang <catherine.hoang@oracle.com>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6.6 00/24] xfs backports for 6.6.y (from 6.8)
-Message-ID: <2024032917-lemon-scallion-ea4d@gregkh>
-References: <20240327001233.51675-1-catherine.hoang@oracle.com>
+	b=JyrAyEm0BgTD5X9b5K/r+a6oyhUb3G6zZHn2iDn9MeJNQgYOe4PkA6d+ssW9ArDmG
+	 MqqCVPWuI5YUHz86C+L9dGjV3S8SkflX/ukkwRKaDEzXsHuy3b2a89bG4TUhzOkHK8
+	 KxN8hEJapSU6T13F1o3c83EEd9TikhmgV0JX8CRvCwsajMs+wDvrF8YnUApa8WS8GQ
+	 IeFD0bzDAoZRck5A8SeXQgCKUJX3OEOWQf6gzu+twW5dzRsk7fOe+MVf57TDxEfyGA
+	 uMSYlk46TpPmZlAbZgpJIcWJZtEc1FawJqnGlsYrvtA0OU6Avqd/OthJCJz259GmQF
+	 zyy8oaT2fRWng==
+Date: Fri, 29 Mar 2024 09:14:29 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: check if_bytes under the ilock in
+ xfs_reflink_end_cow_extent
+Message-ID: <20240329161429.GE6390@frogsfrogsfrogs>
+References: <20240328070256.2918605-1-hch@lst.de>
+ <20240328070256.2918605-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,21 +43,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240327001233.51675-1-catherine.hoang@oracle.com>
+In-Reply-To: <20240328070256.2918605-2-hch@lst.de>
 
-On Tue, Mar 26, 2024 at 05:12:09PM -0700, Catherine Hoang wrote:
-> Hello,
+On Thu, Mar 28, 2024 at 08:02:51AM +0100, Christoph Hellwig wrote:
+> Accessing if_bytes without the ilock is racy.  Move the check a little
+> further down into the ilock critical section.
 > 
-> This series contains backports for 6.6 from the 6.8 release. This patchset
-> has gone through xfs testing and review.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_reflink.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 7da0e8f961d351..df632790a0a51c 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -731,12 +731,6 @@ xfs_reflink_end_cow_extent(
+>  	int			nmaps;
+>  	int			error;
+>  
+> -	/* No COW extents?  That's easy! */
+> -	if (ifp->if_bytes == 0) {
+> -		*offset_fsb = end_fsb;
+> -		return 0;
+> -	}
 
-Normally we want fixes for newer stable kernels too, i.e. 6.7.y, as you
-never want someone to upgrade and have a regression.
+This unlocked access was supposed to short-circuit the case where
+there's absolutely nothing in the cow fork at all, so that we don't have
+to wait for a transaction and the ILOCK.  Is the unlocked access
+causing problems?
 
-But as the next 6.7 release will be the last one, it's probably fine
-here, so I'll just take these for now.  But be aware of this in the
-future please.
+> -
+>  	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+>  			XFS_TRANS_RESERVE, &tp);
+> @@ -751,6 +745,12 @@ xfs_reflink_end_cow_extent(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> +	/* No COW extents?  That's easy! */
+> +	if (ifp->if_bytes == 0) {
+> +		*offset_fsb = end_fsb;
+> +		goto out_cancel;
+> +	}
 
-thanks,
+This is already taken care of by the clause that comes below
+the end of this diff:
 
-greg k-h
+	/*
+	 * In case of racing, overlapping AIO writes no COW extents might be
+	 * left by the time I/O completes for the loser of the race.  In that
+	 * case we are done.
+	 */
+	if (!xfs_iext_lookup_extent(ip, ifp, *offset_fsb, &icur, &got) ||
+	    got.br_startoff >= end_fsb) {
+		*offset_fsb = end_fsb;
+		goto out_cancel;
+	}
+
+Since xfs_iext_lookup_extent will return false if the cow fork tree is
+empty.
+
+That said, I think the xfs_iext_count_may_overflow stuff is misplaced --
+we should be querying the cow fork extent and bouncing out early before
+we bother with checking/upgrading the nextents width.  If
+xfs_iext_count_upgrade dirtied the transaction, the early bailout will
+cause a shutdown.
+
+(The iext upgrade only needs to happen after the bmapi_read.)
+
+--D
+
+> +
+>  	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+>  			XFS_IEXT_REFLINK_END_COW_CNT);
+>  	if (error == -EFBIG)
+> -- 
+> 2.39.2
+> 
+> 
