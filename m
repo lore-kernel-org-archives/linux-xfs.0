@@ -1,203 +1,116 @@
-Received: from mail-il1-f174.google.com (mail-il1-f174.google.com [209.85.166.174])
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CAEF13173E
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 22:04:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B881224D1
+	for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2024 02:56:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711663489; cv=none; b=JYq/GTtlJJZzvatGjeFgkC0NCIzLR7/mUBNTLh7Xa+8ntEJaVkAMKF+jH3+16hEoyVGpm9ivxP4b1iejCn9sEvz9nI1StPiHjtFm/qfNDXVAXwUEJ7AUcuwZ4puwrUFJnCEEKU1WLIZnTmwcHGdLGkzGg2Ma/TnVze5xM0/M1GQ=
+	t=1711680967; cv=none; b=pGwyB1efIGmaPjueDrlXByTPaRixBFqCDrDs4mvAv/gvDOreLHCR/BvlI68WMCsdeHpN8KpICR9jOxBaw4i0Y3QjQ6hEmptC5oo66VESqUNQ1xvVYpdUrnIgr5l9ekAlJ6AUGipelQRiQCC4XRO/IRECC6C7wbGfU9Urtmy21Wc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711663489; c=relaxed/simple;
-	bh=qwdbnhU2IDh168yVkDnQiAieveb+ZK1n1sjeGXSPuBw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FizNrZ9AqPVUZ62HuSz9IDMg6LdJygiEQyMKZs3QmO7lBGlxy2fXrcCxtbmOtkKWAFUFV1TI/nB8SHuCW563/AXZZX9EySfP9HT1404qdhVIXog2P5VIy7mA2V5t5utWU4SEpI0De4ZwUgODfTibPsrl7e2gYXCLM32F5WkO4JE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=hLYfW/k9; arc=none smtp.client-ip=209.85.166.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1711680967; c=relaxed/simple;
+	bh=NiI3YFM0jM5FCH4nZsKTZlHlqzvvgBKSaH8DMM42B2A=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=gQRPgy1NKixCaMz+sCxaJOKsPZED4Klt5MPK1LhHR59/gZXpr+ZB6ZjELnXVXAVPKkBJrbelcHII6I78xXXJIzWbDARkOcvMudhevCNco3r1f4ajFyGtruNB314NFMePBLZ2yDb4v0H8WH3p6cid9qOpMXPpemBppgEGRuZ1EAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MUpiTXzw; arc=none smtp.client-ip=209.85.160.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="hLYfW/k9"
-Received: by mail-il1-f174.google.com with SMTP id e9e14a558f8ab-3688b72d08cso4661805ab.0
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 15:04:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MUpiTXzw"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-42f2d02fbdeso6514331cf.1
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2024 19:56:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1711663486; x=1712268286; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TUtQWGjfVeZSFumuYcDz7mi4EFybqChxCkM+ocMfTpI=;
-        b=hLYfW/k9emSgvDtg6Vm4Alpcv2zEP3e9cQkotoqpPZm6mtPMS4bE8dVWhdI8GkYELF
-         jouhuo6mHnJOX3PdPz9iJ4kfkELn/wBxXoWCvSXbiOQXPYYeuZ5myb/QP6ikhDxNY8w8
-         0Bi7m1p/DeM3AoGUkAdAZ4FbHfcsIE80l61cVmehHTDQMxUYLRa8RNxFcioNGkPzRk1z
-         TvuhXBLl0vp087FD0baFEe8zif8J+M7UZFvHTzQtD72D2qjWtqXFCHtGIYO6tA0fJt3K
-         rQasRI7hRkdo/vVd8OaqQtSdVqxSlJJwq7y2Mv8OKCq8GarP1xc1qy3k3xMo4/VE6whS
-         uKjQ==
+        d=gmail.com; s=20230601; t=1711680965; x=1712285765; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=NiI3YFM0jM5FCH4nZsKTZlHlqzvvgBKSaH8DMM42B2A=;
+        b=MUpiTXzwNHxcQBnj8G9p5+3NxGIx/vNNMbHe/BeHhkGMhB35vubm1qbl7H8u7zpXW6
+         8rFUsY4pXIjGOO9U1iXHyorkGJbW1t7Yft2YxDMtFdVZ1ee9igE1qSQa65urzVjmpNkR
+         F5tM9nFRwVKJtGB3WoJ6WzpcngrQkWrJmxMBbUq5eRj4LYeB6SMmQupVT8LZH+L0ikKI
+         6z9i/TlKBPNeGb3sXq27prSybVCdwM3m5NEHw1J/LYC0n5k0K13eKVW3M5xEJYVgz7yZ
+         ERf0YhBdoJITwEmXGQdict5BQo+1SNXnOz22opdWi4ehVo9VJONfmSVuGax44L3gYOT0
+         tp1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711663486; x=1712268286;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TUtQWGjfVeZSFumuYcDz7mi4EFybqChxCkM+ocMfTpI=;
-        b=pefPy7Jhjj77msjAKww+T7RMXMEPGYQANi4Hm5yW7TCbUAzPbHVEDGwayFjF1VUF91
-         9qjLels3RVm7JOqeVrPBaNSGAFrrc8OUOT4Xu+UMQDDXwivlamXQExmfrm3tZM8Lrld/
-         l4od4HDXTJ7JDzkFi21+AQR3naIZ/pZ7W9Jv7W9Gs9t+0qq7641/V7rG/hK+5ovwUe9a
-         DP4jYSl/MhuGcnU5O4uYdTg/hQpE0yYtdxqtqUnXx3AEyO+PaE2mDoi1Z7qaYkbAjNDJ
-         l3uRfAvaz4EDrwRllKAwdTsu6FbVA6ZdamEjnvEiA8J38PwJApIXyqYZ7nbshVtdJmoK
-         nqtA==
-X-Forwarded-Encrypted: i=1; AJvYcCWnQoyYePXosxQhN46PtDbQ0FzT16m5TtqfP0kU+1GFwXx+ggyC2E2B0+PdUgJMPbH8oGxHcwYolg+EdaepDHONPIQcD1pRHtPb
-X-Gm-Message-State: AOJu0YxSks4jE1CBCl2QhtnHsrOel3qiK6ARmqMCtn2HUoh+fPYBU/xw
-	w99UivzRiVMGfF1FsJ5SsO8ip0X4FQBe9ACCobvOkayZOdKJEZ2ipM8f31RK4bw=
-X-Google-Smtp-Source: AGHT+IFvclNDmqAAyJ8kZ2YnPD2sG1CdcW1cZXRvU2FcWxZHpS1dGvbJAD2/DAB9nVCvIbkFRmdqqA==
-X-Received: by 2002:a05:6e02:3092:b0:368:a502:14e3 with SMTP id bf18-20020a056e02309200b00368a50214e3mr504551ilb.21.1711663486280;
-        Thu, 28 Mar 2024 15:04:46 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id bv6-20020a632e06000000b005ce998b9391sm1770939pgb.67.2024.03.28.15.04.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Mar 2024 15:04:46 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rpxrX-00DYKx-0h;
-	Fri, 29 Mar 2024 09:04:43 +1100
-Date: Fri, 29 Mar 2024 09:04:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/6] xfs: simplify iext overflow checking and upgrade
-Message-ID: <ZgXpewa/XiT7w4wY@dread.disaster.area>
-References: <20240328070256.2918605-1-hch@lst.de>
- <20240328070256.2918605-5-hch@lst.de>
+        d=1e100.net; s=20230601; t=1711680965; x=1712285765;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NiI3YFM0jM5FCH4nZsKTZlHlqzvvgBKSaH8DMM42B2A=;
+        b=ibApJhl+EBt1wtGA01yna8QBlsPSiSX8SqIxXYx8uZ0qebFkWvdSUqBGFICif0GRMd
+         aYLUGEE1g3OLvh/2CTEkO6oJmQLlneJE8S+PACeoXaQ3+fzg+D2deJeJ3um5DXcLw12N
+         kusanOIbk5hbeX/mBlUM7K2N11VKZ0rB/OLtFrvYwbtCmLnvZcLlRKJYzZNaEfOJgVf0
+         Nx6lTZJOU9t+q0DEf+ySWVu7S4Uj8MclIYSzrBqd6QbFpcHdK/+NL6LSwxlz16mBM9u1
+         jm44L76l0anGhjNJ3lOvOH61tdHfEGywJKJUcBz1q3IDlUK4W6dT7XICHYBgK4SD3xal
+         AEwA==
+X-Gm-Message-State: AOJu0YyvGCn8OmT/EEoWmYwJ9eRGdF+KNuo9QCg4/xz+vbYhninOA1TM
+	uxMPcoTJDo24v+16L8qiwN6nPlcT0o2rKG/xT0KIGnBfiNLXfzEw/ffTNTb66QVkUrweq1Atm7o
+	6GWJSaNyfyzw8tFRoaPBGgdSufirKZKpqOSD0IgG4
+X-Google-Smtp-Source: AGHT+IHFa1yhv6Mzf6xnIvVDk37u4bzzmUPzOWSiha/z2W40Oo41nRVDIXlLRH/4iXCQiAPOPqJJM+3FqWA5DgNcisc=
+X-Received: by 2002:ac8:7d82:0:b0:431:8290:716 with SMTP id
+ c2-20020ac87d82000000b0043182900716mr1582205qtd.5.1711680964811; Thu, 28 Mar
+ 2024 19:56:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240328070256.2918605-5-hch@lst.de>
+From: Stephen Zhang <starzhangzsd@gmail.com>
+Date: Fri, 29 Mar 2024 10:55:29 +0800
+Message-ID: <CANubcdXY-otymMxDpzbdy1q5osnruNeU7L-b_+eeNo682U4p+Q@mail.gmail.com>
+Subject: Potential issue with a directory block
+To: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Mar 28, 2024 at 08:02:54AM +0100, Christoph Hellwig wrote:
-> Currently the calls to xfs_iext_count_may_overflow and
-> xfs_iext_count_upgrade are always paired.  Merge them into a single
-> function to simplify the callers and the actual check and upgrade
-> logic itself.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_attr.c       |  5 +--
->  fs/xfs/libxfs/xfs_bmap.c       |  5 +--
->  fs/xfs/libxfs/xfs_inode_fork.c | 62 ++++++++++++++++------------------
->  fs/xfs/libxfs/xfs_inode_fork.h |  4 +--
->  fs/xfs/xfs_bmap_item.c         |  4 +--
->  fs/xfs/xfs_bmap_util.c         | 24 +++----------
->  fs/xfs/xfs_dquot.c             |  5 +--
->  fs/xfs/xfs_iomap.c             |  9 ++---
->  fs/xfs/xfs_reflink.c           |  9 ++---
->  fs/xfs/xfs_rtalloc.c           |  5 +--
->  10 files changed, 44 insertions(+), 88 deletions(-)
+Hi all,
 
-....
+It's all about the commit 09654ed8a18c ("xfs: check sb_meta_uuid for
+dabuf buffer recovery").
 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 7d660a9739090a..235c41eca5edd7 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -765,53 +765,49 @@ xfs_ifork_verify_local_attr(
->  	return 0;
->  }
->  
-> +/*
-> + * Check if the inode fork supports adding nr_to_add more extents.
-> + *
-> + * If it doesn't but we can upgrade it to large extent counters, do the upgrade.
-> + * If we can't upgrade or are already using big counters but still can't fit the
-> + * additional extents, return -EFBIG.
-> + */
->  int
-> -xfs_iext_count_may_overflow(
-> +xfs_iext_count_upgrade(
-> +	struct xfs_trans	*tp,
->  	struct xfs_inode	*ip,
->  	int			whichfork,
-> -	int			nr_to_add)
-> +	uint			nr_to_add)
->  {
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	bool			has_large =
-> +		xfs_inode_has_large_extent_counts(ip);
->  	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
->  	uint64_t		max_exts;
->  	uint64_t		nr_exts;
->  
-> +	ASSERT(nr_to_add <= XFS_MAX_EXTCNT_UPGRADE_NR);
-> +
->  	if (whichfork == XFS_COW_FORK)
->  		return 0;
->  
-> -	max_exts = xfs_iext_max_nextents(xfs_inode_has_large_extent_counts(ip),
-> -				whichfork);
-> -
-> -	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-> -		max_exts = 10;
-> -
->  	nr_exts = ifp->if_nextents + nr_to_add;
-> -	if (nr_exts < ifp->if_nextents || nr_exts > max_exts)
-> +	if (nr_exts < ifp->if_nextents) {
-> +		/* no point in upgrading if if_nextents overflows */
->  		return -EFBIG;
-> +	}
->  
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Upgrade this inode's extent counter fields to be able to handle a potential
-> - * increase in the extent count by nr_to_add.  Normally this is the same
-> - * quantity that caused xfs_iext_count_may_overflow() to return -EFBIG.
-> - */
-> -int
-> -xfs_iext_count_upgrade(
-> -	struct xfs_trans	*tp,
-> -	struct xfs_inode	*ip,
-> -	uint			nr_to_add)
-> -{
-> -	ASSERT(nr_to_add <= XFS_MAX_EXTCNT_UPGRADE_NR);
-> -
-> -	if (!xfs_has_large_extent_counts(ip->i_mount) ||
-> -	    xfs_inode_has_large_extent_counts(ip) ||
-> -	    XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-> -		return -EFBIG;
-> -
-> -	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
-> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> -
-> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-> +		max_exts = 10;
-> +	else
-> +		max_exts = xfs_iext_max_nextents(has_large, whichfork);
-> +	if (nr_exts > max_exts) {
-> +		if (has_large || !xfs_has_large_extent_counts(mp) ||
-> +		    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-> +			return -EFBIG;
-> +		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
-> +		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +	}
+IIUC, any XFS buffer will be in an internally consistent state
+regardless of whether any other buffer is replaying to it.
 
-IIUC, testing the error tag twice won't always give the same result.
-I think this will be more reliable, and it self-documents the error
-injection case better:
+Specifically, for a buffer like:
 
-	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) &&
-	    nr_exts > 10))
-		return -EFBIG;
+...
+bleaf[0].hashval = 0x2e
+bleaf[0].address = 0x8
+bleaf[1].hashval = 0x172e
+bleaf[1].address = 0xa
+bleaf[2].hashval = 0x4eccc517
+bleaf[2].address = 0x36
+bleaf[3].hashval = 0x4eccc519
+bleaf[3].address = 0x2a
+bleaf[4].hashval = 0x4eccc51a
+bleaf[4].address = 0x24
+bleaf[5].hashval = 0x4eccc51b
+bleaf[5].address = 0x1e
+bleaf[6].hashval = 0x4eccc51e
+bleaf[6].address = 0xc
+bleaf[7].hashval = 0x9133c702
+bleaf[7].address = 0x68
+bleaf[8].hashval = 0x9133c704
+bleaf[8].address = 0x52
+bleaf[9].hashval = 0x9133c705
+bleaf[9].address = 0
+bleaf[10].hashval = 0x9133c706
+bleaf[10].address = 0x3c
+bleaf[11].hashval = 0x9133c707
+bleaf[11].address = 0
+btail.count = 12
+btail.stale = 2
 
-	if (nr_exts > xfs_iext_max_nextents(has_large, whichfork)) {
-		if (has_large || !xfs_has_large_extent_counts(mp))
-			return -EFBIG;
-		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-	}
-	return 0;
+and then If we skip a buffer replay during log recovery, the buffer
+will still be in an internally consistent state. This implies that the
+'stale' or 'count' will be consistent with the real count in the
+block, meaning it won't trigger the check in xfs_dir3_leaf_check_int.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+but the commit 09654ed8a18c ("xfs: check sb_meta_uuid for dabuf buffer
+recovery") states that in some scenarios, IIUC, if we skip a buffer
+replay during log recovery, the buffer will not be in an internally
+consistent state.
+
+What could cause this inconsistency? Are there any potential issues
+with the directory block?
+
+Hope my naive question doesn't contaminate your timeline.
+
+Thanks,
+Stephen.
