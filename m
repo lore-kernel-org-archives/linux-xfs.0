@@ -1,75 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99ADBA94B;
-	Sat, 30 Mar 2024 01:00:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 456981C0DE5
+	for <linux-xfs@vger.kernel.org>; Sat, 30 Mar 2024 05:38:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711760435; cv=none; b=KbvEQyTy0lnq86SqkRPJA91528/mdEzW/30CWuDMcgivAQ8Vtu5MLJlt1nqWX5DUhRSREVmqE/CqAwtuUWmR9TtI6RRBd9CwVKYFn5cpTNas8uUHMt5G3W+c4t36AG4u7pqpmP7qed3a+pdVZMyW2mkO+onm08iPrhoYSNxpPNA=
+	t=1711777130; cv=none; b=ER3OHtpTw9R6/iB8olCjwWhiwSdAPBy7epcjY9ursXsKHwtxuPFCPodu2Sr2kWahwaK14GvdaHkphs9BehEQI0vkBPePzMQBA5pbvRh0Ty5I8AQYbWr5JCAZEQsVbMrUwFwdwIOrutgJ9rba5OV+owR54v1nrCJS5HlmLD87RWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711760435; c=relaxed/simple;
-	bh=XF0+li0F9HMsX2i2D7o4wMkgoesOL6yjPc2F5Ji3HAA=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EADtLbL0GE7IkLegqGbxs9n47OCWV0xE3HCka8u90AsoKB1At141GakxU+Yez8FkMZFH3w3PvX2TSS0n9l82td094UX5CmUzPwyWwHZaOpY/Oznw7mDMZyno1e15CyStQlV2Wdxj4RO29H8XrcBj9S9yZDgzERHw0QehjKM8X44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uwcdS32s; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711777130; c=relaxed/simple;
+	bh=jgAaLEciajX915p5vo1p69cBk+sueUuFUExXzpHpJzU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=n8H6Gp+g36cwet3az5nH2q7VoXm3RkWazh7kaJM41PjVpKVbecZPVO7R+EVBfIJa7xn/STvIvtpVZqEOpct4GiGTYbdBWjI7gtHjlwkpfUi+dqL0PdNpgKyvRgNigmLOlHnD+LrEI2RyHSNbnj/UvEFXQdIkhQEYQTxdk4aHzGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yojFm5Il; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uwcdS32s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741A3C433F1;
-	Sat, 30 Mar 2024 01:00:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711760435;
-	bh=XF0+li0F9HMsX2i2D7o4wMkgoesOL6yjPc2F5Ji3HAA=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uwcdS32sx2xseo16O3WHL3dw2d67jg1z425fthJK86c+ZPXxni6ZcQT2IOTn2uDUE
-	 Ohta0HM9sDCLPxQjymI39VqxVgpNajSkl0/vXN8rPNVXdxq77EVPPZRPSQd03JNBpx
-	 uXB4foJ//QT8DJbqfbty3TxJ7HOdHDc97KMKR/BwwZNcoJf8homgMRkIsocE9BsJls
-	 hazsd2sHBD3NOf26nJ8mQLFi17L+YoGvwfI1/InpOiKKaLlwDLQo7dVakTpXUzBsgO
-	 X2jEQ66sb6EaIoULzXZOl95FjZDrnlaICiSKg9f2mbrPSq4Ihfc1mNHmj6sJZsL56/
-	 iUay52konUdGw==
-Date: Fri, 29 Mar 2024 18:00:34 -0700
-Subject: [PATCH 14/14] xfs: enable logged file mapping exchange feature
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <171176018908.2014991.16160550038783958101.stgit@frogsfrogsfrogs>
-In-Reply-To: <171176018639.2014991.12163554496963657299.stgit@frogsfrogsfrogs>
-References: <171176018639.2014991.12163554496963657299.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yojFm5Il"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=yAy7GIIY7PyxgTjUD9V946dMxKuo1QHMQWNZEsrMOmE=; b=yojFm5IlmNvJJ0XooW/NpdyPiX
+	E1Opix4V44PPzJzMYJXZz7iUE/T92SgNLdbCFwYO4JH7JfaEEWkIgFFB82F0Sr2GH2junnnCfb4sP
+	t3G4CuKQjfeZrCF7JPPawJ1MZltxd7g7CJRsHhXbx/mij0DUznnYvCOtszHPV5EPjQgOXEvULxZgY
+	2CWVHFG6NVLT31XbwRwsoMcOcmnzsNxERhveZdJvPuF+s/SbDWxiK2qvRkn5Fgw7/38WfdtWihwzL
+	JOeosteMy6VHQtrTM+xisfpPWyLJeVaHa7F3+5y4ixdgicOy0IZJePscxANPZXWtyhTatIaHNlXYz
+	4RQOSWyw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rqRQV-00000002qiz-0GUH;
+	Sat, 30 Mar 2024 05:38:47 +0000
+Date: Fri, 29 Mar 2024 22:38:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: fix severe performance problems when fstrimming
+ a subset of an AG
+Message-ID: <ZgelZ-O0ZWrci5Y8@infradead.org>
+References: <171150385517.3220448.15319110826705438395.stgit@frogsfrogsfrogs>
+ <171150385535.3220448.4852463781154330350.stgit@frogsfrogsfrogs>
+ <ZgQEcLACdVZSxJ1_@infradead.org>
+ <20240329213520.GQ6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240329213520.GQ6390@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Mar 29, 2024 at 02:35:20PM -0700, Darrick J. Wong wrote:
+> Welll... you could argue that if the underlying "thin provisioning" is
+> actually just an xfs file, that punching tons of tiny holes in that file
+> could increase the height of the bmbt.  In that case, you'd want to
+> reduce the chances of the punch failing with ENOSPC by punching out
+> larger ranges to free up more blocks.
 
-Add the XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS feature to the set of features
-that we will permit when mounting a filesystem.  This turns on support
-for the file range exchange feature.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 753adde56a2d0..aa2ad7e04202b 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -398,7 +398,8 @@ xfs_sb_has_incompat_feature(
-  */
- #define XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS (1 << 1)
- #define XFS_SB_FEAT_INCOMPAT_LOG_ALL \
--	(XFS_SB_FEAT_INCOMPAT_LOG_XATTRS)
-+		(XFS_SB_FEAT_INCOMPAT_LOG_XATTRS | \
-+		 XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS)
- #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
- static inline bool
- xfs_sb_has_incompat_log_feature(
+That is a somewhat reaonable line of thougt.  But is an underprovisioned
+device near ENOSPC really the target here vs an SSD?  Either way,
+if we have good reasons for by-cnt except for it being a little simpler
+I can live with keeping it.  In doubt I just prefer to have simple code
+and one implementation instead of two.
 
