@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16CB64DA14;
-	Mon,  1 Apr 2024 16:51:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9387D41232;
+	Mon,  1 Apr 2024 16:51:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711990288; cv=none; b=T4Qh4gR+t2LJuDKCVEXiTNIVRn0PfuooMs9kGjFVXUndFBiQmDK5ia4dRlYfS2oQXBVmMEJ8j7ktD1b9uJ01NaP4hqgbE8+aepxJuCDngmR+i1QYdmqpkyyy5n9XHBbgDBIwFA71esIEr+uFecn7JdgmnPWblsp2QdbRKXKGAOs=
+	t=1711990303; cv=none; b=ZYISnV2I6M5IKaf/n3fA96lwS0BhPK8qWTc+fvu/Ywu63bYn5fMYXUmtkD2zVlht8wUBRzWfG3xhKm8pAfuiwbRrwzaAcgnZZcN1myX3Dm9KK0KxxWfDDgaMEUUe2fS9yZ3FZa+zIIZTUUmBKQVscb4dv0FoZk4MQ4mS748O4Z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711990288; c=relaxed/simple;
-	bh=6FSI7px96UAhVXt+OVFG8HUJt6C4qhq5alxO+uAP9m4=;
+	s=arc-20240116; t=1711990303; c=relaxed/simple;
+	bh=e603Jd+vGH25Sg0SJewTyCinvPDkr+H6C74rbQkHoRc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nWK8ZyCYeVDN/IiAwQOiB1ayoApqulyHXe+qpUFqNAhg5e+A97thGLJw87925nijbNQrH/P7yZF86H8MqeHcsKeWY0M/2po9EVMf047Bs1VZNBn1kqTviluzA2c5nd6tJF0w4KNCXLmqaqgg03wNWA/u8A3XNYxeEtYJRzhc+aA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=GFGMH6e8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=WWlCO3ewOMQyApMJMyWM/sRymc9urk/4Zcp49m5NfCiaPTpcZlIN5Q1aP/ekuRzzcPTiZ4OrAC9r0QOPGFHC4JaUDI6q2Yi91MvQTy5nBconxaOe4SxTAljpEvqdng5Y7suCnyjOK17IlUOI9as9VKR0sjREN1EsBhkHh/WrR6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=qoz/b9tf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="GFGMH6e8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E44FC433F1;
-	Mon,  1 Apr 2024 16:51:27 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="qoz/b9tf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A308C433F1;
+	Mon,  1 Apr 2024 16:51:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1711990288;
-	bh=6FSI7px96UAhVXt+OVFG8HUJt6C4qhq5alxO+uAP9m4=;
+	s=korg; t=1711990303;
+	bh=e603Jd+vGH25Sg0SJewTyCinvPDkr+H6C74rbQkHoRc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GFGMH6e8suDbrqnhBPkwzpPcAGkrlshVx+xBq789gD5UNutdAdLTzbWs4jPSQ0toz
-	 AzJTj19yYKkkqS9YmPsiX208WOvaVywVvKcexJGFhjliJQKh2aAxNceuspBWzAlWH9
-	 l2xaCcan7i8FKql+jteETuzT6ToDBa1oiUQ5tHiY=
+	b=qoz/b9tf4JUZvpVsgnCqhMnXxzZqZ7F5Ijgmb1IryMfe/2xhpYO7T0dfmHKniPFTK
+	 roSjlxNitlSW0BMAmVelWk8TxrPwArOXZeHKf1+mkAl6p9dgrE/TYB3grC5E/XVUmn
+	 FaPT6NpokMW3QljTg9Aisihv/lJ7dsHg/Q7OrG0w=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>,
+	Long Li <leo.lilong@huawei.com>,
 	Christoph Hellwig <hch@lst.de>,
+	"Darrick J. Wong" <djwong@kernel.org>,
 	Chandan Babu R <chandanbabu@kernel.org>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 276/396] xfs: remove conditional building of rt geometry validator functions
-Date: Mon,  1 Apr 2024 17:45:25 +0200
-Message-ID: <20240401152556.138702541@linuxfoundation.org>
+Subject: [PATCH 6.6 271/396] xfs: add lock protection when remove perag from radix tree
+Date: Mon,  1 Apr 2024 17:45:20 +0200
+Message-ID: <20240401152555.992420168@linuxfoundation.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240401152547.867452742@linuxfoundation.org>
 References: <20240401152547.867452742@linuxfoundation.org>
@@ -53,173 +54,61 @@ Content-Transfer-Encoding: 8bit
 
 ------------------
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Long Li <leo.lilong@huawei.com>
 
-commit 881f78f472556ed05588172d5b5676b48dc48240 upstream.
+commit 07afd3173d0c6d24a47441839a835955ec6cf0d4 upstream.
 
-[backport: resolve merge conflicts due to refactoring rtbitmap/summary
-macros and accessors]
+Take mp->m_perag_lock for deletions from the perag radix tree in
+xfs_initialize_perag to prevent racing with tagging operations.
+Lookups are fine - they are RCU protected so already deal with the
+tree changing shape underneath the lookup - but tagging operations
+require the tree to be stable while the tags are propagated back up
+to the root.
 
-I mistakenly turned off CONFIG_XFS_RT in the Kconfig file for arm64
-variant of the djwong-wtf git branch.  Unfortunately, it took me a good
-hour to figure out that RT wasn't built because this is what got printed
-to dmesg:
+Right now there's nothing stopping radix tree tagging from operating
+while a growfs operation is progress and adding/removing new entries
+into the radix tree.
 
-XFS (sda2): realtime geometry sanity check failed
-XFS (sda2): Metadata corruption detected at xfs_sb_read_verify+0x170/0x190 [xfs], xfs_sb block 0x0
+Hence we can have traversals that require a stable tree occurring at
+the same time we are removing unused entries from the radix tree which
+causes the shape of the tree to change.
 
-Whereas I would have expected:
+Likely this hasn't caused a problem in the past because we are only
+doing append addition and removal so the active AG part of the tree
+is not changing shape, but that doesn't mean it is safe. Just making
+the radix tree modifications serialise against each other is obviously
+correct.
 
-XFS (sda2): Not built with CONFIG_XFS_RT
-XFS (sda2): RT mount failed
-
-The root cause of these problems is the conditional compilation of the
-new functions xfs_validate_rtextents and xfs_compute_rextslog that I
-introduced in the two commits listed below.  The !RT versions of these
-functions return false and 0, respectively, which causes primary
-superblock validation to fail, which explains the first message.
-
-Move the two functions to other parts of libxfs that are not
-conditionally defined by CONFIG_XFS_RT and remove the broken stubs so
-that validation works again.
-
-Fixes: e14293803f4e ("xfs: don't allow overly small or large realtime volumes")
-Fixes: a6a38f309afc ("xfs: make rextslog computation consistent with mkfs")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Long Li <leo.lilong@huawei.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   14 --------------
- fs/xfs/libxfs/xfs_rtbitmap.h |   16 ----------------
- fs/xfs/libxfs/xfs_sb.c       |   14 ++++++++++++++
- fs/xfs/libxfs/xfs_sb.h       |    2 ++
- fs/xfs/libxfs/xfs_types.h    |   12 ++++++++++++
- fs/xfs/scrub/rtbitmap.c      |    1 +
- fs/xfs/scrub/rtsummary.c     |    1 +
- 7 files changed, 30 insertions(+), 30 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1131,17 +1131,3 @@ xfs_rtalloc_extent_is_free(
- 	return 0;
- }
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -424,13 +424,17 @@ xfs_initialize_perag(
  
--/*
-- * Compute the maximum level number of the realtime summary file, as defined by
-- * mkfs.  The historic use of highbit32 on a 64-bit quantity prohibited correct
-- * use of rt volumes with more than 2^32 extents.
-- */
--uint8_t
--xfs_compute_rextslog(
--	xfs_rtbxlen_t		rtextents)
--{
--	if (!rtextents)
--		return 0;
--	return xfs_highbit64(rtextents);
--}
--
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -71,20 +71,6 @@ xfs_rtfree_extent(
- int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
- 		xfs_filblks_t rtlen);
- 
--uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
--
--/* Do we support an rt volume having this number of rtextents? */
--static inline bool
--xfs_validate_rtextents(
--	xfs_rtbxlen_t		rtextents)
--{
--	/* No runt rt volumes */
--	if (rtextents == 0)
--		return false;
--
--	return true;
--}
--
- #else /* CONFIG_XFS_RT */
- # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
- # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
-@@ -92,8 +78,6 @@ xfs_validate_rtextents(
- # define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
- # define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
- # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
--# define xfs_compute_rextslog(rtx)			(0)
--# define xfs_validate_rtextents(rtx)			(false)
- #endif /* CONFIG_XFS_RT */
- 
- #endif /* __XFS_RTBITMAP_H__ */
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1375,3 +1375,17 @@ xfs_validate_stripe_geometry(
- 	}
- 	return true;
- }
-+
-+/*
-+ * Compute the maximum level number of the realtime summary file, as defined by
-+ * mkfs.  The historic use of highbit32 on a 64-bit quantity prohibited correct
-+ * use of rt volumes with more than 2^32 extents.
-+ */
-+uint8_t
-+xfs_compute_rextslog(
-+	xfs_rtbxlen_t		rtextents)
-+{
-+	if (!rtextents)
-+		return 0;
-+	return xfs_highbit64(rtextents);
-+}
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -38,4 +38,6 @@ extern int	xfs_sb_get_secondary(struct x
- extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
- 		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
- 
-+uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
-+
- #endif	/* __XFS_SB_H__ */
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -240,4 +240,16 @@ bool xfs_verify_fileoff(struct xfs_mount
- bool xfs_verify_fileext(struct xfs_mount *mp, xfs_fileoff_t off,
- 		xfs_fileoff_t len);
- 
-+/* Do we support an rt volume having this number of rtextents? */
-+static inline bool
-+xfs_validate_rtextents(
-+	xfs_rtbxlen_t		rtextents)
-+{
-+	/* No runt rt volumes */
-+	if (rtextents == 0)
-+		return false;
-+
-+	return true;
-+}
-+
- #endif	/* __XFS_TYPES_H__ */
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -14,6 +14,7 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_inode.h"
- #include "xfs_bmap.h"
-+#include "xfs_sb.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- 
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -16,6 +16,7 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_bit.h"
- #include "xfs_bmap.h"
-+#include "xfs_sb.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
+ out_remove_pag:
+ 	xfs_defer_drain_free(&pag->pag_intents_drain);
++	spin_lock(&mp->m_perag_lock);
+ 	radix_tree_delete(&mp->m_perag_tree, index);
++	spin_unlock(&mp->m_perag_lock);
+ out_free_pag:
+ 	kmem_free(pag);
+ out_unwind_new_pags:
+ 	/* unwind any prior newly initialized pags */
+ 	for (index = first_initialised; index < agcount; index++) {
++		spin_lock(&mp->m_perag_lock);
+ 		pag = radix_tree_delete(&mp->m_perag_tree, index);
++		spin_unlock(&mp->m_perag_lock);
+ 		if (!pag)
+ 			break;
+ 		xfs_buf_hash_destroy(pag);
 
 
