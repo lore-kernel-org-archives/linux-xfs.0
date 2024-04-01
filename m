@@ -1,90 +1,148 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-io1-f74.google.com (mail-io1-f74.google.com [209.85.166.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1206B4683
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Apr 2024 22:13:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18D9CD28D
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Apr 2024 23:01:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712009583; cv=none; b=U0zteaMHdY8jNgOsUlsUk1koxUWtrDppjswo5YWRU0MTVpHqmQxXDIzxDqTFa6SSEltp7hsLeW7gc33/MUuWEW7wuBmK4f14uJhfUNxkDcARx2a2N3Lh+YNyuqvc+Qd++uzWWLIALhiQZrMnjrnTjQ/VWYR3bdKkd1HRrC/bwuc=
+	t=1712012500; cv=none; b=U5exMo4q+d6QDx+sbxvxS7S0VyS1i7xHntvaAnItDm9LSpaAkg5Q4MP0AiTC5SfH+Drg8JMu1F/L+BWKKqSqWw7Vz+0OryYyeSQM9pDx9bx5JW9PUSw1j4Dk/b/HC2AVZyJ2Ux/YsAASicqVdIvS8VOQEl7T9HxqnFpOYx8tJ9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712009583; c=relaxed/simple;
-	bh=0UpXspg4fGfYZpEouZhNiyt8HWjdJMUluTpK+q5wobo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hy06tO5VSEThhLY+zMOyVxlRZZakQ4lAHGELkbfHu0lxDaF/mH5vM4tI6UDjSZr4cJFiM/reQ844NDCabwHenSa5wP8X6GQ6miEGiP+JEUFo/gUQjYn+6udYKyRJNQgjQdjpNYK3XnOf31YoXcOpVMDVUbEPCxY5TNWejEz7sU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rVb108P0; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1712012500; c=relaxed/simple;
+	bh=Sw17VZ2rI5t1U7w6lSBn7Tgm6w53GtT34jTTgkY57jY=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GvUgH4zdJE6vbF2Hl8se61cmDUesIzishEuwDcd/5pkcXQgYiD+LoSNoGYU3DNpfmfkUhjjabOGNLIv3jYBMit1n1zokdb99QWBZu1Eeq1L4M3RJWo/8Bf+FGej02RPNNh5+E212ZBUVGptUC5OGNy2uB8JpDiOSwSeN/C2P+M4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UZ59IzDo; arc=none smtp.client-ip=209.85.166.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rVb108P0"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6e782e955adso4298577b3a.3
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2024 15:13:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UZ59IzDo"
+Received: by mail-io1-f74.google.com with SMTP id ca18e2360f4ac-7cc012893acso489410739f.2
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2024 16:01:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712009581; x=1712614381; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UHseugE4uxxYp/7oDwY4HmyAwOynEI9Qqf33NNfPDEc=;
-        b=rVb108P0AH7RRnbfX6slNfN2dyCp0CI8YAbSIKdJWQuJaACxifkX88jrFEDSRhmKYl
-         ANy0wgzMRVFkZVjITayGVHR4q2QwWmNu+QlSXFPW11fL/T/pcNyIBwb/4qwoXbmsKJXL
-         xv6/Ib2IosRZsGKzyFunHiOU3GYYtpzmINuKjm6bGt1XeXy5C5rrdg0OYSNzG5QyO/D/
-         n8XT8lQScUYPW7udSbDLid19N6NC0Q3t1eCFBS7K0/LojdhNXJp2utKuCWC8IcfH5oQN
-         qHklbOqwVG7cOwKilinqrfwQX/q2KeKE/+KWop1mqyDVCqTyB+oRBIq0VguBWEVUSKQP
-         TElg==
+        d=google.com; s=20230601; t=1712012498; x=1712617298; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=4UCTUqrCfJ+dpmdPP9hi+yGQv3LbBnFi/puoG4yXu+A=;
+        b=UZ59IzDo+aVZhpLdXkaFdWKK6akcV6wBQsTeuS7s1T6vOJpeIFm24kKSMEUt/XNqFV
+         LckB/5FOUU1VrAROUZ3Ec4Rc7Dwt/IoiX552eMZhXr/hlf8RytRoc5qAm7fePh60MwhK
+         i+nHMTtFtyZjWQO9tM95SS0E3mYrw2Sha2RFNwSJmmNQ6QytgMZs7E5GR8opaMAOQmEg
+         Hl+4K+aagSid0gPJawo3GvntPWHBnigdJfIK+aRivaF/d96c3ayhMha/yBiPjx63n0zj
+         Y4SXbyPYTt2ZogvOde3r5SUYbWdHWVb6JgPxikeFv4FuywDzzlhLRuyRJ6JBKhJPbY2+
+         mJ+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712009581; x=1712614381;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UHseugE4uxxYp/7oDwY4HmyAwOynEI9Qqf33NNfPDEc=;
-        b=cg5Lswe14/n64q0dJpPEYguDXrU9bpLpqsKankqCZUmc3kIqX87lBC+GL96TWIcOJt
-         zOkedWnGy2UzVnmtfzX7D4Zw8VhGqdISrz2rBUm7GZxjdzr9RI4e9ErLFYE40ai5dlTJ
-         Y5jW85P59WGD8vKU/BcGaTYZU6pMY+1YmZaN87uTThii4CK3Mvl3CDRMAyEDSoS4QAVd
-         sRvJ39OJSMeMvt9LPFWCUbxCgUje9xVtZaO18nxSN3ebyH2hEFIWD1O9zBcy0kT7Xakp
-         +V6RYxQoO2swO4Q0dUVjlQTcgEAshXXn500oTmw+TipooE1g2O15kJetddqJFGxK0PCP
-         IgNw==
-X-Gm-Message-State: AOJu0Yz0FEO8kszve+N1OAIhY1bsKyBexfups8sGei7XkW9AyqOTgEkY
-	ly7zaV3O5W8Y3UXvm8RSW0nb8OuX4sigawhRD4G/o+J6mNqzKwpp6dclSCo3XPSUk0gdBlQ73lh
-	r
-X-Google-Smtp-Source: AGHT+IGyGtpIHb/Czw1Afi90Dkwf3nxenKT7Jfm2dUTR9imRqbZDh71IRRiHKpQLO4WASMV+h2JuxA==
-X-Received: by 2002:a05:6a20:5485:b0:1a5:6943:5c96 with SMTP id i5-20020a056a20548500b001a569435c96mr13103711pzk.39.1712009581096;
-        Mon, 01 Apr 2024 15:13:01 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id n19-20020aa78a53000000b006e6c16179dbsm8409742pfa.24.2024.04.01.15.13.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Apr 2024 15:13:00 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rrPth-000e9B-1W;
-	Tue, 02 Apr 2024 09:12:57 +1100
-Date: Tue, 2 Apr 2024 09:12:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: fix severe performance problems when fstrimming
- a subset of an AG
-Message-ID: <ZgsxaZe2sBFeKUS8@dread.disaster.area>
-References: <171150385517.3220448.15319110826705438395.stgit@frogsfrogsfrogs>
- <171150385535.3220448.4852463781154330350.stgit@frogsfrogsfrogs>
- <ZgSaffJmGXBiXwKZ@dread.disaster.area>
- <20240329225149.GR6390@frogsfrogsfrogs>
- <ZgiJWxVcVwag0fIP@dread.disaster.area>
- <20240331224445.GX6390@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1712012498; x=1712617298;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=4UCTUqrCfJ+dpmdPP9hi+yGQv3LbBnFi/puoG4yXu+A=;
+        b=awg/UmIU6FIqPNq07mGNVcvzNBvOgzmLh40iBxDk8wmXXXthxDOhUWWQ5nPSkpjNI5
+         sp20wHYcDUiR73YJRq6R0GwFn8Y7M/QtCPaXQ7JD8zX5QCXbU+CLj4Rs5TkJ4VnGRdOn
+         eMNXk00HOn7K0EO7j5DfTvrxqBmx5V+iQxhl9bNKsXCxi9TPusUQvgDI72Nc/O4X+lnW
+         nYSX4C25uGV97MvB1E2G5jCKcXexpVtwveWLixE14Ge1ejUHT3iwt0/kpzteMnGw3OvK
+         XIKqAhPuBqOa/LE1c3RL+dGferCuDegi3el9Bf+8vWLmG8OwX7zx2+GM1lyWg6hlHwKW
+         wVUg==
+X-Gm-Message-State: AOJu0Yz8iLXZZBuS2BaRO1CbqqltDH0akg2ADYVT5wFWvmgiRxtq5Zvw
+	iWO4fsFDr6HisxzsmRE8pPFs+eKQkHySFzWZBcjWw8x9ezBfUP6VC4jIDtkrgiZjdID1RiU2IBP
+	rJujSw0naJXI9n5hj4HMEtA==
+X-Google-Smtp-Source: AGHT+IFxVfAigFgMJYj0MK1XEtlxuguR9QWg4M5wW3cmX+ehlPJHICAdqbQsd1MUKQyprqYyiz7tRJ0CYxKiBQl4pg==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a05:6602:6b84:b0:7cc:39c:143d with
+ SMTP id ii4-20020a0566026b8400b007cc039c143dmr390494iob.0.1712012498421; Mon,
+ 01 Apr 2024 16:01:38 -0700 (PDT)
+Date: Mon, 01 Apr 2024 23:01:38 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240331224445.GX6390@frogsfrogsfrogs>
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIANE8C2YC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIxMDEwND3eKSorzkgkrdtGLdCgiOz8xPLsnRTda1SEwzT7SwNE1KSzNQAhp QUJSallkBNjw6trYWANLq9zZsAAAA
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1712012497; l=2623;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=Sw17VZ2rI5t1U7w6lSBn7Tgm6w53GtT34jTTgkY57jY=; b=Je+3bNOSl7VFFOi8HXFh39huAOtiEkqd6rPxUqiwOM0mvuBTBLcnq2KhywdxKIOo4cLT9pfWn
+ V/SkR0/wmEZCC2e2cJMcsHJHf83GS2EdKd0Xp+fXHoZtq8eOB+5DclX
+X-Mailer: b4 0.12.3
+Message-ID: <20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com>
+Subject: [PATCH] xfs: cleanup deprecated uses of strncpy
+From: Justin Stitt <justinstitt@google.com>
+To: Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-On Sun, Mar 31, 2024 at 03:44:45PM -0700, Darrick J. Wong wrote:
-> 
-> How's this for a replacement patch, then?
+strncpy() is deprecated for use on NUL-terminated destination strings
+[1] and as such we should prefer more robust and less ambiguous string
+interfaces.
 
-Looks OK to me.
+In xfs_ioctl.c:
+The current code has taken care NUL-termination by memset()'ing @label.
+This is followed by a strncpy() to perform the string copy.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Use strscpy_pad() to get both 1) NUL-termination and 2) NUL-padding
+which may be needed as this is copied out to userspace.
+
+Note that this patch uses the new 2-argument version of strscpy_pad
+introduced in Commit e6584c3964f2f ("string: Allow 2-argument
+strscpy()").
+
+In xfs_xattr.c:
+There's a lot of manual memory management to get a prefix and name into
+a string. Let's use an easier to understand and more robust interface in
+scnprintf() to accomplish the same task.
+
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+Note: build-tested only.
+
+Found with: $ rg "strncpy\("
+---
+ fs/xfs/xfs_ioctl.c | 4 +---
+ fs/xfs/xfs_xattr.c | 6 +-----
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d0e2cec6210d..abef9707a433 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1755,10 +1755,8 @@ xfs_ioc_getlabel(
+ 	/* Paranoia */
+ 	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+ 
+-	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
+-	memset(label, 0, sizeof(label));
+ 	spin_lock(&mp->m_sb_lock);
+-	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
++	strscpy_pad(label, sbp->sb_fname);
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+ 	if (copy_to_user(user_label, label, sizeof(label)))
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 364104e1b38a..b9256988830f 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -220,11 +220,7 @@ __xfs_xattr_put_listent(
+ 		return;
+ 	}
+ 	offset = context->buffer + context->count;
+-	memcpy(offset, prefix, prefix_len);
+-	offset += prefix_len;
+-	strncpy(offset, (char *)name, namelen);			/* real name */
+-	offset += namelen;
+-	*offset = '\0';
++	scnprintf(offset, prefix_len + namelen + 1, "%s%s", prefix, name);
+ 
+ compute_size:
+ 	context->count += prefix_len + namelen + 1;
+
+---
+base-commit: 928a87efa42302a23bb9554be081a28058495f22
+change-id: 20240401-strncpy-fs-xfs-xfs_ioctl-c-8af7a895bff0
+
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
+
