@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166198F5C;
-	Mon,  1 Apr 2024 16:48:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF4B1C0DE7;
+	Mon,  1 Apr 2024 16:49:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711990140; cv=none; b=iedvqCkl7P7jjhBJRbZ1YE2lgRBo7gA+4/5WG5B6Z39ujf56zzfnWb8kSfFYlDW2oK4tUcgjumaxroQQmxBKeGzfUNhV7DLUhhvwU9FMRkmyqi49A96Y+f86i3hBt9AVkCvyVJnPXc8u8Cm/7oTHwjLeX7wxQAZx/u7WqeelheY=
+	t=1711990143; cv=none; b=UDP+1mZNMFwscWYurdimK21K908cs97xYMkXv5J2j4LguDu1Wm1nLsVc2Wfx+gjGM/cRLmTVG/WN8sEfRn/pzNtG47hrwPW/iLflZmjUDhVm4oQDbGkMKLoZnZhBBBU1dCN+MSttUQ5jaZfRInTa9PIErEE2EzZDI8eIuz2uR5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711990140; c=relaxed/simple;
-	bh=FLySU1PwYVt+Bmdvv5oNXfaryWGpks56SfBQhANIO8k=;
+	s=arc-20240116; t=1711990143; c=relaxed/simple;
+	bh=wlRWm2MUCvdLABE/Xx3rP4jiBp2MGTuSZvoU/OSfCtg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fVVYlL+3nbepMgcRtPat17DAY8oGOELW+pQ92KBUe+yCDgXEtgK21wKsxvQPs1+w3U0PCp8Q637gm1AwlYm2125ywIRN6LKg0Nl3r3IOjfBOoK6J1DPXZSNxAmC/QWq8D7I91SeRbD4p+8O5+6I/LgT7oGjz30YF9TN5nluWiX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=0v7ou/qb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=YZ7c+E/2Bi6+OqK98RW2XdSvSgwGAU+XOFHE5dMZA7ugDN6w8uh2/uBk2yT1axbVwTxGdDdi1OXiWS74IaKf5HuLLYHhoODhRR0gERrVSNy1e7sLTg5Bdd/2EQSHsdHeSjKlxqoJKbX2vMDXjzEDwNoKtrpWGb+HMFt3efcwaLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=drV+2Bpg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="0v7ou/qb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2893DC433F1;
-	Mon,  1 Apr 2024 16:48:58 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="drV+2Bpg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59487C433C7;
+	Mon,  1 Apr 2024 16:49:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1711990139;
-	bh=FLySU1PwYVt+Bmdvv5oNXfaryWGpks56SfBQhANIO8k=;
+	s=korg; t=1711990142;
+	bh=wlRWm2MUCvdLABE/Xx3rP4jiBp2MGTuSZvoU/OSfCtg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=0v7ou/qbtWIL40JlmxWW3hYDw3m+Rs967J8NOpBp1Ivu3Ac1owliMlTklc8e8hGvm
-	 j0qkjghLW/NuesNzXFo7sdNJNktlKcCOn9DVVMnDgGC1uZoctPU+izW0mJcS9/BWFR
-	 obll3ozFowAxHx6BxFrOy5bCDLR1wUosu8+HlKiM=
+	b=drV+2BpgVZViemNYuOtB6oMnlg7GDXLAvg5C4ID5/aWdBkkeGwYqw4tI0QFvCWzkH
+	 Ee57i+hgMBMhBy9ag5VQMreTI3O1wrj03cGPoZhxQS7hOk5YO/wdmNX0jZkXs7/RQF
+	 a5R/xpXX+HwyNPUB4RAufn76wMTZD394BBKoi+bE=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -31,9 +31,9 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Christoph Hellwig <hch@lst.de>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 259/396] xfs: transfer recovered intent item ownership in ->iop_recover
-Date: Mon,  1 Apr 2024 17:45:08 +0200
-Message-ID: <20240401152555.630052286@linuxfoundation.org>
+Subject: [PATCH 6.6 260/396] xfs: make rextslog computation consistent with mkfs
+Date: Mon,  1 Apr 2024 17:45:09 +0200
+Message-ID: <20240401152555.659128732@linuxfoundation.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240401152547.867452742@linuxfoundation.org>
 References: <20240401152547.867452742@linuxfoundation.org>
@@ -54,132 +54,149 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit deb4cd8ba87f17b12c72b3827820d9c703e9fd95 upstream.
+commit a6a38f309afc4a7ede01242b603f36c433997780 upstream.
 
-Now that we pass the xfs_defer_pending object into the intent item
-recovery functions, we know exactly when ownership of the sole refcount
-passes from the recovery context to the intent done item.  At that
-point, we need to null out dfp_intent so that the recovery mechanism
-won't release it.  This should fix the UAF problem reported by Long Li.
+[backport: resolve merge conflicts due to refactoring rtbitmap/summary
+macros and accessors]
 
-Note that we still want to recreate the full deferred work state.  That
-will be addressed in the next patches.
+There's a weird discrepancy in xfsprogs dating back to the creation of
+the Linux port -- if there are zero rt extents, mkfs will set
+sb_rextents and sb_rextslog both to zero:
 
-Fixes: 2e76f188fd90 ("xfs: cancel intents immediately if process_intents fails")
+	sbp->sb_rextslog =
+		(uint8_t)(rtextents ?
+			libxfs_highbit32((unsigned int)rtextents) : 0);
+
+However, that's not the check that xfs_repair uses for nonzero rtblocks:
+
+	if (sb->sb_rextslog !=
+			libxfs_highbit32((unsigned int)sb->sb_rextents))
+
+The difference here is that xfs_highbit32 returns -1 if its argument is
+zero.  Unfortunately, this means that in the weird corner case of a
+realtime volume shorter than 1 rt extent, xfs_repair will immediately
+flag a freshly formatted filesystem as corrupt.  Because mkfs has been
+writing ondisk artifacts like this for decades, we have to accept that
+as "correct".  TBH, zero rextslog for zero rtextents makes more sense to
+me anyway.
+
+Regrettably, the superblock verifier checks created in commit copied
+xfs_repair even though mkfs has been writing out such filesystems for
+ages.  Fix the superblock verifier to accept what mkfs spits out; the
+userspace version of this patch will have to fix xfs_repair as well.
+
+Note that the new helper leaves the zeroday bug where the upper 32 bits
+of sb_rextents is ripped off and fed to highbit32.  This leads to a
+seriously undersized rt summary file, which immediately breaks mkfs:
+
+$ hugedisk.sh foo /dev/sdc $(( 0x100000080 * 4096))B
+$ /sbin/mkfs.xfs -f /dev/sda -m rmapbt=0,reflink=0 -r rtdev=/dev/mapper/foo
+meta-data=/dev/sda               isize=512    agcount=4, agsize=1298176 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+data     =                       bsize=4096   blocks=5192704, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =/dev/mapper/foo        extsz=4096   blocks=4294967424, rtextents=4294967424
+Discarding blocks...Done.
+mkfs.xfs: Error initializing the realtime space [117 - Structure needs cleaning]
+
+The next patch will drop support for rt volumes with fewer than 1 or
+more than 2^32-1 rt extents, since they've clearly been broken forever.
+
+Fixes: f8e566c0f5e1f ("xfs: validate the realtime geometry in xfs_validate_sb_common")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_log_recover.h |    2 ++
- fs/xfs/xfs_attr_item.c          |    1 +
- fs/xfs/xfs_bmap_item.c          |    2 ++
- fs/xfs/xfs_extfree_item.c       |    2 ++
- fs/xfs/xfs_log_recover.c        |   19 ++++++++++++-------
- fs/xfs/xfs_refcount_item.c      |    1 +
- fs/xfs/xfs_rmap_item.c          |    2 ++
- 7 files changed, 22 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   13 +++++++++++++
+ fs/xfs/libxfs/xfs_rtbitmap.h |    4 ++++
+ fs/xfs/libxfs/xfs_sb.c       |    3 ++-
+ fs/xfs/xfs_rtalloc.c         |    4 ++--
+ 4 files changed, 21 insertions(+), 3 deletions(-)
 
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -155,5 +155,7 @@ xlog_recover_resv(const struct xfs_trans
- 
- void xlog_recover_intent_item(struct xlog *log, struct xfs_log_item *lip,
- 		xfs_lsn_t lsn, unsigned int dfp_type);
-+void xlog_recover_transfer_intent(struct xfs_trans *tp,
-+		struct xfs_defer_pending *dfp);
- 
- #endif	/* __XFS_LOG_RECOVER_H__ */
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -632,6 +632,7 @@ xfs_attri_item_recover(
- 
- 	args->trans = tp;
- 	done_item = xfs_trans_get_attrd(tp, attrip);
-+	xlog_recover_transfer_intent(tp, dfp);
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -524,6 +524,8 @@ xfs_bui_item_recover(
- 		goto err_rele;
- 
- 	budp = xfs_trans_get_bud(tp, buip);
-+	xlog_recover_transfer_intent(tp, dfp);
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
- 
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -689,7 +689,9 @@ xfs_efi_item_recover(
- 	error = xfs_trans_alloc(mp, &resv, 0, 0, 0, &tp);
- 	if (error)
- 		return error;
-+
- 	efdp = xfs_trans_get_efd(tp, efip, efip->efi_format.efi_nextents);
-+	xlog_recover_transfer_intent(tp, dfp);
- 
- 	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
- 		struct xfs_extent_free_item	fake = {
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2590,13 +2590,6 @@ xlog_recover_process_intents(
- 			break;
- 		}
- 
--		/*
--		 * XXX: @lip could have been freed, so detach the log item from
--		 * the pending item before freeing the pending item.  This does
--		 * not fix the existing UAF bug that occurs if ->iop_recover
--		 * fails after creating the intent done item.
--		 */
--		dfp->dfp_intent = NULL;
- 		xfs_defer_cancel_recovery(log->l_mp, dfp);
- 	}
- 	if (error)
-@@ -2631,6 +2624,18 @@ xlog_recover_cancel_intents(
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1130,3 +1130,16 @@ xfs_rtalloc_extent_is_free(
+ 	*is_free = matches;
+ 	return 0;
  }
- 
- /*
-+ * Transfer ownership of the recovered log intent item to the recovery
-+ * transaction.
-+ */
-+void
-+xlog_recover_transfer_intent(
-+	struct xfs_trans		*tp,
-+	struct xfs_defer_pending	*dfp)
-+{
-+	dfp->dfp_intent = NULL;
-+}
 +
 +/*
-  * This routine performs a transaction to null out a bad inode pointer
-  * in an agi unlinked inode hash bucket.
-  */
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -523,6 +523,7 @@ xfs_cui_item_recover(
- 		return error;
- 
- 	cudp = xfs_trans_get_cud(tp, cuip);
-+	xlog_recover_transfer_intent(tp, dfp);
- 
- 	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
- 		struct xfs_refcount_intent	fake = { };
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -537,7 +537,9 @@ xfs_rui_item_recover(
- 			XFS_TRANS_RESERVE, &tp);
- 	if (error)
- 		return error;
++ * Compute the maximum level number of the realtime summary file, as defined by
++ * mkfs.  The use of highbit32 on a 64-bit quantity is a historic artifact that
++ * prohibits correct use of rt volumes with more than 2^32 extents.
++ */
++uint8_t
++xfs_compute_rextslog(
++	xfs_rtbxlen_t		rtextents)
++{
++	return rtextents ? xfs_highbit32(rtextents) : 0;
++}
 +
- 	rudp = xfs_trans_get_rud(tp, ruip);
-+	xlog_recover_transfer_intent(tp, dfp);
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -70,6 +70,9 @@ xfs_rtfree_extent(
+ /* Same as above, but in units of rt blocks. */
+ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
+ 		xfs_filblks_t rtlen);
++
++uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
++
+ #else /* CONFIG_XFS_RT */
+ # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
+ # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
+@@ -77,6 +80,7 @@ int xfs_rtfree_blocks(struct xfs_trans *
+ # define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
+ # define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
+ # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
++# define xfs_compute_rextslog(rtx)			(0)
+ #endif /* CONFIG_XFS_RT */
  
- 	for (i = 0; i < ruip->rui_format.rui_nextents; i++) {
- 		struct xfs_rmap_intent	fake = { };
+ #endif /* __XFS_RTBITMAP_H__ */
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -25,6 +25,7 @@
+ #include "xfs_da_format.h"
+ #include "xfs_health.h"
+ #include "xfs_ag.h"
++#include "xfs_rtbitmap.h"
+ 
+ /*
+  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+@@ -509,7 +510,7 @@ xfs_validate_sb_common(
+ 				       NBBY * sbp->sb_blocksize);
+ 
+ 		if (sbp->sb_rextents != rexts ||
+-		    sbp->sb_rextslog != xfs_highbit32(sbp->sb_rextents) ||
++		    sbp->sb_rextslog != xfs_compute_rextslog(rexts) ||
+ 		    sbp->sb_rbmblocks != rbmblocks) {
+ 			xfs_notice(mp,
+ 				"realtime geometry sanity check failed");
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -999,7 +999,7 @@ xfs_growfs_rt(
+ 	nrextents = nrblocks;
+ 	do_div(nrextents, in->extsize);
+ 	nrbmblocks = howmany_64(nrextents, NBBY * sbp->sb_blocksize);
+-	nrextslog = xfs_highbit32(nrextents);
++	nrextslog = xfs_compute_rextslog(nrextents);
+ 	nrsumlevels = nrextslog + 1;
+ 	nrsumsize = (uint)sizeof(xfs_suminfo_t) * nrsumlevels * nrbmblocks;
+ 	nrsumblocks = XFS_B_TO_FSB(mp, nrsumsize);
+@@ -1061,7 +1061,7 @@ xfs_growfs_rt(
+ 		nsbp->sb_rextents = nsbp->sb_rblocks;
+ 		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
+ 		ASSERT(nsbp->sb_rextents != 0);
+-		nsbp->sb_rextslog = xfs_highbit32(nsbp->sb_rextents);
++		nsbp->sb_rextslog = xfs_compute_rextslog(nsbp->sb_rextents);
+ 		nrsumlevels = nmp->m_rsumlevels = nsbp->sb_rextslog + 1;
+ 		nrsumsize =
+ 			(uint)sizeof(xfs_suminfo_t) * nrsumlevels *
 
 
