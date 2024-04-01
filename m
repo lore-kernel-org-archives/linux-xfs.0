@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 350664D9FC;
-	Mon,  1 Apr 2024 16:50:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A402481D1;
+	Mon,  1 Apr 2024 16:51:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711990244; cv=none; b=qXl0eduSdzI8oLAcr97/hvBaJD+JndCusn1sCG29gNF2e1PqvXmZYxzRf34v4uUUo/NyLF/YSwvIPS9SQajYFr9PTHX2RP538spOcwzkZ8RlK4/DvxPpCt1Bo/LSjHkxIuKbddxu43qdxG0GYq93yyS6UJnaa4xZPfDaw2xApuw=
+	t=1711990279; cv=none; b=P5a2N46QjaVjZZ5O+RACCwHak2m6Os1Hfq9sTDI4T7ldHIusqAZhyQT3VOTpNax4DAbxkRizSFZ1y6fKALqX6jgHuzSxiQzw2kqtIRqfrHAnz1pNj035qinTRP21rvUfRcHkEf5ojeCAHGnr9RO31Uv07BQXiCc0ysygcrilVFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711990244; c=relaxed/simple;
-	bh=uid9c6OYZp1AGbTsp0zOUD1OjF2Rf0/4s4TadzXxi6E=;
+	s=arc-20240116; t=1711990279; c=relaxed/simple;
+	bh=HS/JVhM1COEUTYhyaGHvp22rW+4QUy6+c62E+T+IcSg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=G/LFGfKbeIioYsUQS3eMGvRue0zEmpiBJ7qAgxpp+Sfdjwu0sPdEao95oYwEtfSVaZL317Z2NqUANsSR1Bn4iXFBVr9vNQJz4MFSJpOhSLdOei0CkvUlPPsweSH+PMfjR438gDXVCDm3Ky0cYjdlUKgju1Lako3sSXLc009jqzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=x9SFxADF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=KZH6lLYsdMCC5hQ0vbF7CCeAMM/yZsbrvU1FFxgjRINjhPywa7hIhNDMyX/Bl2Ba7xw/pSfjR7bDLWQ8N9sPM988706tWH+5qs10DNQTZ16mXZsTFerB+MDstc6WDIpkzhzi3lZUE6MLxtJsKQgWxdMFYZ3zjsG8nBWCgfUHlRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=FMLFPFnk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="x9SFxADF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BD4DC433C7;
-	Mon,  1 Apr 2024 16:50:43 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="FMLFPFnk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BC93C43390;
+	Mon,  1 Apr 2024 16:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1711990244;
-	bh=uid9c6OYZp1AGbTsp0zOUD1OjF2Rf0/4s4TadzXxi6E=;
+	s=korg; t=1711990278;
+	bh=HS/JVhM1COEUTYhyaGHvp22rW+4QUy6+c62E+T+IcSg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=x9SFxADF404dl5Ofy2O6xq1W9jp73+x/X26ZPKr0wCpmH20wZcCzI6RDxgi+DayCq
-	 2Ht/VotvzQscO9jpnOhf5sOtxBGb5cpoCnBnE2MtJkD0Xlrv/JY17dMk41LejEUMP+
-	 mDPtaU2VTqwjHZz6uFS3+mEQR4UCpdczB22VEYFg=
+	b=FMLFPFnkfRoeF0Vtw9tHL595K2iRnj//FG1+PWRYlf8ylBzr/dXTXSoJDdoipwQRn
+	 IuZ+TeVE+vXy+12ul2WpxKMVZjifZwzRUt/6cxjnxKK7zkDNoBSx3hfR9yzX4o1pM1
+	 li7SMIew3krYHuO3H9fyI72cQUB9rtnk3RnXQxAE=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
-	Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>,
-	Christoph Hellwig <hch@lst.de>,
+	Zhang Tianci <zhangtianci.1997@bytedance.com>,
+	Dave Chinner <david@fromorbit.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Chandan Babu R <chandanbabu@kernel.org>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 273/396] xfs: ensure logflagsp is initialized in xfs_bmap_del_extent_real
-Date: Mon,  1 Apr 2024 17:45:22 +0200
-Message-ID: <20240401152556.051182296@linuxfoundation.org>
+Subject: [PATCH 6.6 274/396] xfs: update dir3 leaf block metadata after swap
+Date: Mon,  1 Apr 2024 17:45:23 +0200
+Message-ID: <20240401152556.080265421@linuxfoundation.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240401152547.867452742@linuxfoundation.org>
 References: <20240401152547.867452742@linuxfoundation.org>
@@ -54,226 +54,68 @@ Content-Transfer-Encoding: 8bit
 
 ------------------
 
-From: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
+From: Zhang Tianci <zhangtianci.1997@bytedance.com>
 
-commit e6af9c98cbf0164a619d95572136bfb54d482dd6 upstream.
+commit 5759aa4f956034b289b0ae2c99daddfc775442e1 upstream.
 
-In the case of returning -ENOSPC, ensure logflagsp is initialized by 0.
-Otherwise the caller __xfs_bunmapi will set uninitialized illegal
-tmp_logflags value into xfs log, which might cause unpredictable error
-in the log recovery procedure.
+xfs_da3_swap_lastblock() copy the last block content to the dead block,
+but do not update the metadata in it. We need update some metadata
+for some kinds of type block, such as dir3 leafn block records its
+blkno, we shall update it to the dead block blkno. Otherwise,
+before write the xfs_buf to disk, the verify_write() will fail in
+blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
 
-Also, remove the flags variable and set the *logflagsp directly, so that
-the code should be more robust in the long run.
+We will get this warning:
 
-Fixes: 1b24b633aafe ("xfs: move some more code into xfs_bmap_del_extent_real")
-Signed-off-by: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+  XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
+  XFS (dm-0): Unmount and run xfs_repair
+  XFS (dm-0): First 128 bytes of corrupted metadata buffer:
+  00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
+  000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
+  000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
+  00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
+  00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
+  000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
+  00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
+  0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
+  XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
+  XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
+  XFS (dm-0): Please umount the filesystem and rectify the problem(s)
+
+>>From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
+its blkno is 0x1a0.
+
+Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
+Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   73 +++++++++++++++++++----------------------------
- 1 file changed, 31 insertions(+), 42 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5014,7 +5014,6 @@ xfs_bmap_del_extent_real(
- 	xfs_fileoff_t		del_endoff;	/* first offset past del */
- 	int			do_fx;	/* free extent at end of routine */
- 	int			error;	/* error return value */
--	int			flags = 0;/* inode logging flags */
- 	struct xfs_bmbt_irec	got;	/* current extent entry */
- 	xfs_fileoff_t		got_endoff;	/* first offset past got */
- 	int			i;	/* temp state */
-@@ -5027,6 +5026,8 @@ xfs_bmap_del_extent_real(
- 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
- 	struct xfs_bmbt_irec	old;
- 
-+	*logflagsp = 0;
-+
- 	mp = ip->i_mount;
- 	XFS_STATS_INC(mp, xs_del_exlist);
- 
-@@ -5039,7 +5040,6 @@ xfs_bmap_del_extent_real(
- 	ASSERT(got_endoff >= del_endoff);
- 	ASSERT(!isnullstartblock(got.br_startblock));
- 	qfield = 0;
--	error = 0;
- 
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2316,10 +2316,17 @@ xfs_da3_swap_lastblock(
+ 		return error;
  	/*
- 	 * If it's the case where the directory code is running with no block
-@@ -5055,13 +5055,13 @@ xfs_bmap_del_extent_real(
- 	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
- 		return -ENOSPC;
- 
--	flags = XFS_ILOG_CORE;
-+	*logflagsp = XFS_ILOG_CORE;
- 	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
- 		if (!(bflags & XFS_BMAPI_REMAP)) {
- 			error = xfs_rtfree_blocks(tp, del->br_startblock,
- 					del->br_blockcount);
- 			if (error)
--				goto done;
-+				return error;
- 		}
- 
- 		do_fx = 0;
-@@ -5076,11 +5076,9 @@ xfs_bmap_del_extent_real(
- 	if (cur) {
- 		error = xfs_bmbt_lookup_eq(cur, &got, &i);
- 		if (error)
--			goto done;
--		if (XFS_IS_CORRUPT(mp, i != 1)) {
--			error = -EFSCORRUPTED;
--			goto done;
--		}
-+			return error;
-+		if (XFS_IS_CORRUPT(mp, i != 1))
-+			return -EFSCORRUPTED;
- 	}
- 
- 	if (got.br_startoff == del->br_startoff)
-@@ -5097,17 +5095,15 @@ xfs_bmap_del_extent_real(
- 		xfs_iext_prev(ifp, icur);
- 		ifp->if_nextents--;
- 
--		flags |= XFS_ILOG_CORE;
-+		*logflagsp |= XFS_ILOG_CORE;
- 		if (!cur) {
--			flags |= xfs_ilog_fext(whichfork);
-+			*logflagsp |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
- 		if ((error = xfs_btree_delete(cur, &i)))
--			goto done;
--		if (XFS_IS_CORRUPT(mp, i != 1)) {
--			error = -EFSCORRUPTED;
--			goto done;
--		}
-+			return error;
-+		if (XFS_IS_CORRUPT(mp, i != 1))
-+			return -EFSCORRUPTED;
- 		break;
- 	case BMAP_LEFT_FILLING:
- 		/*
-@@ -5118,12 +5114,12 @@ xfs_bmap_del_extent_real(
- 		got.br_blockcount -= del->br_blockcount;
- 		xfs_iext_update_extent(ip, state, icur, &got);
- 		if (!cur) {
--			flags |= xfs_ilog_fext(whichfork);
-+			*logflagsp |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
- 		error = xfs_bmbt_update(cur, &got);
- 		if (error)
--			goto done;
-+			return error;
- 		break;
- 	case BMAP_RIGHT_FILLING:
- 		/*
-@@ -5132,12 +5128,12 @@ xfs_bmap_del_extent_real(
- 		got.br_blockcount -= del->br_blockcount;
- 		xfs_iext_update_extent(ip, state, icur, &got);
- 		if (!cur) {
--			flags |= xfs_ilog_fext(whichfork);
-+			*logflagsp |= xfs_ilog_fext(whichfork);
- 			break;
- 		}
- 		error = xfs_bmbt_update(cur, &got);
- 		if (error)
--			goto done;
-+			return error;
- 		break;
- 	case 0:
- 		/*
-@@ -5154,18 +5150,18 @@ xfs_bmap_del_extent_real(
- 		new.br_state = got.br_state;
- 		new.br_startblock = del_endblock;
- 
--		flags |= XFS_ILOG_CORE;
-+		*logflagsp |= XFS_ILOG_CORE;
- 		if (cur) {
- 			error = xfs_bmbt_update(cur, &got);
- 			if (error)
--				goto done;
-+				return error;
- 			error = xfs_btree_increment(cur, 0, &i);
- 			if (error)
--				goto done;
-+				return error;
- 			cur->bc_rec.b = new;
- 			error = xfs_btree_insert(cur, &i);
- 			if (error && error != -ENOSPC)
--				goto done;
-+				return error;
- 			/*
- 			 * If get no-space back from btree insert, it tried a
- 			 * split, and we have a zero block reservation.  Fix up
-@@ -5178,33 +5174,28 @@ xfs_bmap_del_extent_real(
- 				 */
- 				error = xfs_bmbt_lookup_eq(cur, &got, &i);
- 				if (error)
--					goto done;
--				if (XFS_IS_CORRUPT(mp, i != 1)) {
--					error = -EFSCORRUPTED;
--					goto done;
--				}
-+					return error;
-+				if (XFS_IS_CORRUPT(mp, i != 1))
-+					return -EFSCORRUPTED;
- 				/*
- 				 * Update the btree record back
- 				 * to the original value.
- 				 */
- 				error = xfs_bmbt_update(cur, &old);
- 				if (error)
--					goto done;
-+					return error;
- 				/*
- 				 * Reset the extent record back
- 				 * to the original value.
- 				 */
- 				xfs_iext_update_extent(ip, state, icur, &old);
--				flags = 0;
--				error = -ENOSPC;
--				goto done;
--			}
--			if (XFS_IS_CORRUPT(mp, i != 1)) {
--				error = -EFSCORRUPTED;
--				goto done;
-+				*logflagsp = 0;
-+				return -ENOSPC;
- 			}
-+			if (XFS_IS_CORRUPT(mp, i != 1))
-+				return -EFSCORRUPTED;
- 		} else
--			flags |= xfs_ilog_fext(whichfork);
-+			*logflagsp |= xfs_ilog_fext(whichfork);
- 
- 		ifp->if_nextents++;
- 		xfs_iext_next(ifp, icur);
-@@ -5228,7 +5219,7 @@ xfs_bmap_del_extent_real(
- 					((bflags & XFS_BMAPI_NODISCARD) ||
- 					del->br_state == XFS_EXT_UNWRITTEN));
- 			if (error)
--				goto done;
-+				return error;
- 		}
- 	}
- 
-@@ -5243,9 +5234,7 @@ xfs_bmap_del_extent_real(
- 	if (qfield && !(bflags & XFS_BMAPI_REMAP))
- 		xfs_trans_mod_dquot_byino(tp, ip, qfield, (long)-nblks);
- 
--done:
--	*logflagsp = flags;
--	return error;
-+	return 0;
- }
- 
- /*
+ 	 * Copy the last block into the dead buffer and log it.
++	 * On CRC-enabled file systems, also update the stamped in blkno.
+ 	 */
+ 	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
++	if (xfs_has_crc(mp)) {
++		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr;
++
++		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
++	}
+ 	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
+ 	dead_info = dead_buf->b_addr;
++
+ 	/*
+ 	 * Get values from the moved block.
+ 	 */
 
 
