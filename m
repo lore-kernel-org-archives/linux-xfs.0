@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05D11C0DE7;
-	Mon,  1 Apr 2024 16:49:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4D9E1C0DE7;
+	Mon,  1 Apr 2024 16:49:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711990160; cv=none; b=HrigC471V7R3zKj8IpAIWGfXdBspLkgVBXtjdf0VyOCJROFhm7yd411EX02dreS5D1pL32EPYAhG5S/yNj5OoaWyjkdZ/LUYFXycvynLe/5CWOZ1pvzkXe+CzhvHRY6kph9oxVidNB072VIpGC6y3MBzgm7jApN3MmScoyF2YRM=
+	t=1711990163; cv=none; b=Cghpoa+/WHnzo6u92yTHRb0dpyc6R6fxp8mEt18OsuR5jMI4eQCG5wFq7AI1eHVoyu0iqHiq0yqSW7AYEikH3qdcOTVMSbo4X12WzPR6YPZgkC6uC8gxZX0jf9KMGc6shuArCILBMATLvlkrS7uQpc5on7WHwda3531zQ4zuVOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711990160; c=relaxed/simple;
-	bh=idlhxL3YJdkllj+fy4JcdQgpylzSgEU9bIeOJ9u+x2w=;
+	s=arc-20240116; t=1711990163; c=relaxed/simple;
+	bh=i2ZJjlbZDbH0CK9ki02+3jM56nI6WFpjudgHWzEEkQo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Wdt5JV6PgOPN+RF2L1QyrAZa1f0fw3Cb3T3xGFGbw1/ytgaRhNUMR2E9QhXjDo8YO/igxfWA3QhdTJ0G3I+sr1DGNpI3BsmF/ihZAoTx64m0gIboYUTH0/oKFpgaUS4EqQNkNKLtO5iNULPVhwAGfCpJgdungvhADxFRvOkWh74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=uxaLzSuF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=uCDQZcsTnTMF7j3U3YbjGPr4vpt6OkSNE33Xsv991B8zY9eisFkQS2e4xoLSA7wP9T3/d+zfC6unmemIFxEGGM9px7fqONM/xnJf38esdVx7UpIXougaapux03eSYL8TPIiQwQuF0ZizM/HKB8FOgAeO4tKjIGR9cp+qfx7fhMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=UDksCHb5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="uxaLzSuF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31C26C433C7;
-	Mon,  1 Apr 2024 16:49:18 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="UDksCHb5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03F23C433C7;
+	Mon,  1 Apr 2024 16:49:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1711990159;
-	bh=idlhxL3YJdkllj+fy4JcdQgpylzSgEU9bIeOJ9u+x2w=;
+	s=korg; t=1711990163;
+	bh=i2ZJjlbZDbH0CK9ki02+3jM56nI6WFpjudgHWzEEkQo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uxaLzSuFPlDCyAUslTcuB0VVxyLBzx7wt5Hh3lvCFSpcGPfQUoefbdYviiKlIYdJX
-	 JhyOaNFUKERKt7OYFBXAwwWdVQG/v5i8M763ViI0f8SLSUxbo4tlTMt6LnYc7VbDXe
-	 pehU+1oamTS6yKsJ6MNgac/wnZHgWPnL0NBhahGU=
+	b=UDksCHb5iHk0uX6a3REtzzGl6cl8km+b2IcXzKOEWXx42LcFxcnu5g1/bQI1ywmTZ
+	 pl5bwp4eFRh0cpzNuaE/XFkwKl9bUtFuGGX8V0qymf027V/8/rDAKDDEy4xJ2Fqp8K
+	 qafUHk1KaaB29iA/wZFbsXYL1cfP0eYqQlhxs4NQ=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	patches@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
+	Christoph Hellwig <hch@lst.de>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 264/396] xfs: remove unused fields from struct xbtree_ifakeroot
-Date: Mon,  1 Apr 2024 17:45:13 +0200
-Message-ID: <20240401152555.776803665@linuxfoundation.org>
+Subject: [PATCH 6.6 265/396] xfs: recompute growfsrtfree transaction reservation while growing rt volume
+Date: Mon,  1 Apr 2024 17:45:14 +0200
+Message-ID: <20240401152555.806638455@linuxfoundation.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240401152547.867452742@linuxfoundation.org>
 References: <20240401152547.867452742@linuxfoundation.org>
@@ -54,37 +54,52 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 4c8ecd1cfdd01fb727121035014d9f654a30bdf2 upstream.
+commit 578bd4ce7100ae34f98c6b0147fe75cfa0dadbac upstream.
 
-Remove these unused fields since nobody uses them.  They should have
-been removed years ago in a different cleanup series from Christoph
-Hellwig.
+While playing with growfs to create a 20TB realtime section on a
+filesystem that didn't previously have an rt section, I noticed that
+growfs would occasionally shut down the log due to a transaction
+reservation overflow.
 
-Fixes: daf83964a3681 ("xfs: move the per-fork nextents fields into struct xfs_ifork")
-Fixes: f7e67b20ecbbc ("xfs: move the fork format fields into struct xfs_ifork")
+xfs_calc_growrtfree_reservation uses the current size of the realtime
+summary file (m_rsumsize) to compute the transaction reservation for a
+growrtfree transaction.  The reservations are computed at mount time,
+which means that m_rsumsize is zero when growfs starts "freeing" the new
+realtime extents into the rt volume.  As a result, the transaction is
+undersized and fails.
+
+Fix this by recomputing the transaction reservations every time we
+change m_rsumsize.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_btree_staging.h |    6 ------
- 1 file changed, 6 deletions(-)
+ fs/xfs/xfs_rtalloc.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
---- a/fs/xfs/libxfs/xfs_btree_staging.h
-+++ b/fs/xfs/libxfs/xfs_btree_staging.h
-@@ -37,12 +37,6 @@ struct xbtree_ifakeroot {
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1070,6 +1070,9 @@ xfs_growfs_rt(
+ 			nsbp->sb_rbmblocks;
+ 		nrsumblocks = XFS_B_TO_FSB(mp, nrsumsize);
+ 		nmp->m_rsumsize = nrsumsize = XFS_FSB_TO_B(mp, nrsumblocks);
++		/* recompute growfsrt reservation from new rsumsize */
++		xfs_trans_resv_calc(nmp, &nmp->m_resv);
++
+ 		/*
+ 		 * Start a transaction, get the log reservation.
+ 		 */
+@@ -1153,6 +1156,8 @@ error_cancel:
+ 		 */
+ 		mp->m_rsumlevels = nrsumlevels;
+ 		mp->m_rsumsize = nrsumsize;
++		/* recompute growfsrt reservation from new rsumsize */
++		xfs_trans_resv_calc(mp, &mp->m_resv);
  
- 	/* Number of bytes available for this fork in the inode. */
- 	unsigned int		if_fork_size;
--
--	/* Fork format. */
--	unsigned int		if_format;
--
--	/* Number of records. */
--	unsigned int		if_extents;
- };
- 
- /* Cursor interactions with fake roots for inode-rooted btrees. */
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
 
 
