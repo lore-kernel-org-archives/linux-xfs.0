@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17F7247A6B;
-	Mon,  1 Apr 2024 16:48:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615F61DFF4;
+	Mon,  1 Apr 2024 16:48:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711990120; cv=none; b=dK6GdwO7fJ/NH8Q1lPj57C38MYhR4AqfwM6iA9WsONx4mEwSbFuQq3aOJkyHy50LRkUjaffuEBPQ4Ol2SYngtxdo4plgfFm4uS1s0OwyPld/j8xyK1XE0vGNIvs66KqFELYiFQ1RGy0rZm3i29SI+MCSm1HWyZ19HXqlGbii280=
+	t=1711990123; cv=none; b=a5kLhvYmIqFqYRHe7U7vwXDWMZtUt184FPhrQHlU3i3eUwqkSfgwZKigsHJH/X4Ka2qkXGJK8MCFqAyFp09L8H7S3ZUzO5r88b2bUBppJVDU46O/1Z8u8TBLQHF9ZpYpop+Zao5XuwzjCOv9R9YMRlCBHUUsaUUYIBBu9jGv2RU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711990120; c=relaxed/simple;
-	bh=eF/og34iSRbebqsdTMvqRc19S2S455qkf4q+RGOULyE=;
+	s=arc-20240116; t=1711990123; c=relaxed/simple;
+	bh=VE2IyDcsw1dI1AvU3FXCaOuxFVI3OwNTMTPtAiHS0sg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GY24axh3iV5fWrq3uMDD0Ks/zlfzQ4V4VCRol+XTO9gZs57GNW8n5DWb1Ga+DGGf3WBcKvKk9NHk4VGsh4jl917SGmR1zhqXjbxQxHn7aYbDsw5+QFa8P1Apzs8wuZvzzXKr96zeE8ukQExUNDsqsL8yX/EFNmtqCHaZSSfl3IM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=fM+DwtjO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IbfXje3THLfU05wGpS6EcflDEySnYABbMiosedS7zI+QMICxMHqwF0aRrngeLiZ3z2fbVdW/0WtVOKv3Tz/FTPoztstB0UcSpv8iqD7nYva4HTRj5HbEiBQzDKANZogvOePuSTCLhFTyBsv3ilCvSZFUP7LDaanfdyMAL3WVE7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=jx+NSk8w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="fM+DwtjO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 805CAC433C7;
-	Mon,  1 Apr 2024 16:48:39 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="jx+NSk8w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3BC5C433C7;
+	Mon,  1 Apr 2024 16:48:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1711990120;
-	bh=eF/og34iSRbebqsdTMvqRc19S2S455qkf4q+RGOULyE=;
+	s=korg; t=1711990123;
+	bh=VE2IyDcsw1dI1AvU3FXCaOuxFVI3OwNTMTPtAiHS0sg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fM+DwtjOKD82ZB66VddYOzSvFZUJl/EabbOyHixVb2Z/ezvkS8Q9dOxVdYKXF2t2+
-	 cYfosjXq+FMxZ1VF4hMxTJ6w0POC0Ab0A62/mAq3hy/3LEUEhrcHWdukdXidS+YFa1
-	 KnzCKL4HFhZ687Dzr/zUBkmD3mWkmqLvTCXYLbqw=
+	b=jx+NSk8wrLC/GuC0zMok3TzKKMQGThI1Y4vRYl6ZNnQ6nM4k1TPTgiFTkqGWai3rc
+	 gx7BHlDe6nEcl11T1IQIe6r0mXrtAOPso5Hk3F47UjFxLSGj6g7qF9aMi4tGRCPTt7
+	 SBUWXeRYLf3BKtz8HyK+jyNa7VwVDpuHXhATl+2c=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -31,9 +31,9 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Christoph Hellwig <hch@lst.de>,
 	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCH 6.6 253/396] xfs: move the xfs_rtbitmap.c declarations to xfs_rtbitmap.h
-Date: Mon,  1 Apr 2024 17:45:02 +0200
-Message-ID: <20240401152555.451778560@linuxfoundation.org>
+Subject: [PATCH 6.6 254/396] xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
+Date: Mon,  1 Apr 2024 17:45:03 +0200
+Message-ID: <20240401152555.481212362@linuxfoundation.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240401152547.867452742@linuxfoundation.org>
 References: <20240401152547.867452742@linuxfoundation.org>
@@ -54,10 +54,18 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 13928113fc5b5e79c91796290a99ed991ac0efe2 upstream.
+commit f29c3e745dc253bf9d9d06ddc36af1a534ba1dd0 upstream.
 
-Move all the declarations for functionality in xfs_rtbitmap.c into a
-separate xfs_rtbitmap.h header file.
+XFS uses xfs_rtblock_t for many different uses, which makes it much more
+difficult to perform a unit analysis on the codebase.  One of these
+(ab)uses is when we need to store the length of a free space extent as
+stored in the realtime bitmap.  Because there can be up to 2^64 realtime
+extents in a filesystem, we need a new type that is larger than
+xfs_rtxlen_t for callers that are querying the bitmap directly.  This
+means scrub and growfs.
+
+Create this type as "xfs_rtbxlen_t" and use it to store 64-bit rtx
+lengths.  'b' stands for 'bitmap' or 'big'; reader's choice.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
@@ -65,278 +73,55 @@ Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c     |    2 -
- fs/xfs/libxfs/xfs_rtbitmap.c |    1 
- fs/xfs/libxfs/xfs_rtbitmap.h |   82 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/fscounters.c    |    2 -
- fs/xfs/scrub/rtbitmap.c      |    2 -
- fs/xfs/scrub/rtsummary.c     |    2 -
- fs/xfs/xfs_fsmap.c           |    2 -
- fs/xfs/xfs_rtalloc.c         |    1 
- fs/xfs/xfs_rtalloc.h         |   73 --------------------------------------
- 9 files changed, 89 insertions(+), 78 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_rtbitmap.h
+ fs/xfs/libxfs/xfs_format.h   |    2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.h |    2 +-
+ fs/xfs/libxfs/xfs_types.h    |    1 +
+ fs/xfs/scrub/trace.h         |    3 ++-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -21,7 +21,7 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_bmap_btree.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -16,6 +16,7 @@
- #include "xfs_trans.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
-+#include "xfs_rtbitmap.h"
- 
- /*
-  * Realtime allocator bitmap functions shared with userspace.
---- /dev/null
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -98,7 +98,7 @@ typedef struct xfs_sb {
+ 	uint32_t	sb_blocksize;	/* logical block size, bytes */
+ 	xfs_rfsblock_t	sb_dblocks;	/* number of data blocks */
+ 	xfs_rfsblock_t	sb_rblocks;	/* number of realtime blocks */
+-	xfs_rtblock_t	sb_rextents;	/* number of realtime extents */
++	xfs_rtbxlen_t	sb_rextents;	/* number of realtime extents */
+ 	uuid_t		sb_uuid;	/* user-visible file system unique id */
+ 	xfs_fsblock_t	sb_logstart;	/* starting block of log if internal */
+ 	xfs_ino_t	sb_rootino;	/* root inode number */
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -0,0 +1,82 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ */
-+#ifndef __XFS_RTBITMAP_H__
-+#define	__XFS_RTBITMAP_H__
-+
-+/*
-+ * XXX: Most of the realtime allocation functions deal in units of realtime
-+ * extents, not realtime blocks.  This looks funny when paired with the type
-+ * name and screams for a larger cleanup.
-+ */
-+struct xfs_rtalloc_rec {
-+	xfs_rtblock_t		ar_startext;
-+	xfs_rtblock_t		ar_extcount;
-+};
-+
-+typedef int (*xfs_rtalloc_query_range_fn)(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	const struct xfs_rtalloc_rec	*rec,
-+	void				*priv);
-+
-+#ifdef CONFIG_XFS_RT
-+int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
-+		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
-+int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		      xfs_rtblock_t start, xfs_extlen_t len, int val,
-+		      xfs_rtblock_t *new, int *stat);
-+int xfs_rtfind_back(struct xfs_mount *mp, struct xfs_trans *tp,
-+		    xfs_rtblock_t start, xfs_rtblock_t limit,
-+		    xfs_rtblock_t *rtblock);
-+int xfs_rtfind_forw(struct xfs_mount *mp, struct xfs_trans *tp,
-+		    xfs_rtblock_t start, xfs_rtblock_t limit,
-+		    xfs_rtblock_t *rtblock);
-+int xfs_rtmodify_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		       xfs_rtblock_t start, xfs_extlen_t len, int val);
-+int xfs_rtmodify_summary_int(struct xfs_mount *mp, struct xfs_trans *tp,
-+			     int log, xfs_rtblock_t bbno, int delta,
-+			     struct xfs_buf **rbpp, xfs_fsblock_t *rsb,
-+			     xfs_suminfo_t *sum);
-+int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
-+			 xfs_rtblock_t bbno, int delta, struct xfs_buf **rbpp,
-+			 xfs_fsblock_t *rsb);
-+int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		     xfs_rtblock_t start, xfs_extlen_t len,
-+		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
-+int xfs_rtalloc_query_range(struct xfs_mount *mp, struct xfs_trans *tp,
-+		const struct xfs_rtalloc_rec *low_rec,
-+		const struct xfs_rtalloc_rec *high_rec,
-+		xfs_rtalloc_query_range_fn fn, void *priv);
-+int xfs_rtalloc_query_all(struct xfs_mount *mp, struct xfs_trans *tp,
-+			  xfs_rtalloc_query_range_fn fn,
-+			  void *priv);
-+bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-+int xfs_rtalloc_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
-+			       xfs_rtblock_t start, xfs_extlen_t len,
-+			       bool *is_free);
-+/*
-+ * Free an extent in the realtime subvolume.  Length is expressed in
-+ * realtime extents, as is the block number.
-+ */
-+int					/* error */
-+xfs_rtfree_extent(
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_rtblock_t		bno,	/* starting block number to free */
-+	xfs_extlen_t		len);	/* length of extent freed */
-+
-+/* Same as above, but in units of rt blocks. */
-+int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
-+		xfs_filblks_t rtlen);
-+#else /* CONFIG_XFS_RT */
-+# define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
-+# define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
-+# define xfs_rtalloc_query_range(m,t,l,h,f,p)		(-ENOSYS)
-+# define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
-+# define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
-+# define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
-+#endif /* CONFIG_XFS_RT */
-+
-+#endif /* __XFS_RTBITMAP_H__ */
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -16,7 +16,7 @@
- #include "xfs_health.h"
- #include "xfs_btree.h"
- #include "xfs_ag.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_inode.h"
- #include "xfs_icache.h"
- #include "scrub/scrub.h"
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -11,7 +11,7 @@
- #include "xfs_mount.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_inode.h"
- #include "xfs_bmap.h"
- #include "scrub/scrub.h"
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
 @@ -13,7 +13,7 @@
- #include "xfs_inode.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_bit.h"
- #include "xfs_bmap.h"
- #include "scrub/scrub.h"
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -23,7 +23,7 @@
- #include "xfs_refcount.h"
- #include "xfs_refcount_btree.h"
- #include "xfs_alloc_btree.h"
--#include "xfs_rtalloc.h"
-+#include "xfs_rtbitmap.h"
- #include "xfs_ag.h"
- 
- /* Convert an xfs_fsmap to an fsmap. */
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -19,6 +19,7 @@
- #include "xfs_icache.h"
- #include "xfs_rtalloc.h"
- #include "xfs_sb.h"
-+#include "xfs_rtbitmap.h"
- 
- /*
-  * Read and return the summary information for a given extent size,
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -11,22 +11,6 @@
- struct xfs_mount;
- struct xfs_trans;
- 
--/*
-- * XXX: Most of the realtime allocation functions deal in units of realtime
-- * extents, not realtime blocks.  This looks funny when paired with the type
-- * name and screams for a larger cleanup.
-- */
--struct xfs_rtalloc_rec {
--	xfs_rtblock_t		ar_startext;
+  */
+ struct xfs_rtalloc_rec {
+ 	xfs_rtblock_t		ar_startext;
 -	xfs_rtblock_t		ar_extcount;
--};
--
--typedef int (*xfs_rtalloc_query_range_fn)(
--	struct xfs_mount		*mp,
--	struct xfs_trans		*tp,
--	const struct xfs_rtalloc_rec	*rec,
--	void				*priv);
--
++	xfs_rtbxlen_t		ar_extcount;
+ };
+ 
+ typedef int (*xfs_rtalloc_query_range_fn)(
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -31,6 +31,7 @@ typedef uint64_t	xfs_rfsblock_t;	/* bloc
+ typedef uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
+ typedef uint64_t	xfs_fileoff_t;	/* block number in a file */
+ typedef uint64_t	xfs_filblks_t;	/* number of blocks in a file */
++typedef uint64_t	xfs_rtbxlen_t;	/* rtbitmap extent length in rtextents */
+ 
+ typedef int64_t		xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
+ 
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -1037,7 +1037,8 @@ TRACE_EVENT(xfarray_sort_stats,
  #ifdef CONFIG_XFS_RT
- /*
-  * Function prototypes for exported functions.
-@@ -48,19 +32,6 @@ xfs_rtallocate_extent(
- 	xfs_extlen_t		prod,	/* extent product factor */
- 	xfs_rtblock_t		*rtblock); /* out: start block allocated */
- 
--/*
-- * Free an extent in the realtime subvolume.  Length is expressed in
-- * realtime extents, as is the block number.
-- */
--int					/* error */
--xfs_rtfree_extent(
--	struct xfs_trans	*tp,	/* transaction pointer */
--	xfs_rtblock_t		bno,	/* starting block number to free */
--	xfs_extlen_t		len);	/* length of extent freed */
--
--/* Same as above, but in units of rt blocks. */
--int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
--		xfs_filblks_t rtlen);
- 
- /*
-  * Initialize realtime fields in the mount structure.
-@@ -102,55 +73,11 @@ xfs_growfs_rt(
- 	struct xfs_mount	*mp,	/* file system mount structure */
- 	xfs_growfs_rt_t		*in);	/* user supplied growfs struct */
- 
--/*
-- * From xfs_rtbitmap.c
-- */
--int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
--		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
--int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		      xfs_rtblock_t start, xfs_extlen_t len, int val,
--		      xfs_rtblock_t *new, int *stat);
--int xfs_rtfind_back(struct xfs_mount *mp, struct xfs_trans *tp,
--		    xfs_rtblock_t start, xfs_rtblock_t limit,
--		    xfs_rtblock_t *rtblock);
--int xfs_rtfind_forw(struct xfs_mount *mp, struct xfs_trans *tp,
--		    xfs_rtblock_t start, xfs_rtblock_t limit,
--		    xfs_rtblock_t *rtblock);
--int xfs_rtmodify_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		       xfs_rtblock_t start, xfs_extlen_t len, int val);
--int xfs_rtmodify_summary_int(struct xfs_mount *mp, struct xfs_trans *tp,
--			     int log, xfs_rtblock_t bbno, int delta,
--			     struct xfs_buf **rbpp, xfs_fsblock_t *rsb,
--			     xfs_suminfo_t *sum);
--int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
--			 xfs_rtblock_t bbno, int delta, struct xfs_buf **rbpp,
--			 xfs_fsblock_t *rsb);
--int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		     xfs_rtblock_t start, xfs_extlen_t len,
--		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
--int xfs_rtalloc_query_range(struct xfs_mount *mp, struct xfs_trans *tp,
--		const struct xfs_rtalloc_rec *low_rec,
--		const struct xfs_rtalloc_rec *high_rec,
--		xfs_rtalloc_query_range_fn fn, void *priv);
--int xfs_rtalloc_query_all(struct xfs_mount *mp, struct xfs_trans *tp,
--			  xfs_rtalloc_query_range_fn fn,
--			  void *priv);
--bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
--int xfs_rtalloc_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
--			       xfs_rtblock_t start, xfs_extlen_t len,
--			       bool *is_free);
- int xfs_rtalloc_reinit_frextents(struct xfs_mount *mp);
- #else
- # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)	(-ENOSYS)
--# define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
--# define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
- # define xfs_rtpick_extent(m,t,l,rb)			(-ENOSYS)
- # define xfs_growfs_rt(mp,in)				(-ENOSYS)
--# define xfs_rtalloc_query_range(m,t,l,h,f,p)		(-ENOSYS)
--# define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
--# define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
--# define xfs_verify_rtbno(m, r)				(false)
--# define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
- # define xfs_rtalloc_reinit_frextents(m)		(0)
- static inline int		/* error */
- xfs_rtmount_init(
+ TRACE_EVENT(xchk_rtsum_record_free,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_rtblock_t start,
+-		 uint64_t len, unsigned int log, loff_t pos, xfs_suminfo_t v),
++		 xfs_rtbxlen_t len, unsigned int log, loff_t pos,
++		 xfs_suminfo_t v),
+ 	TP_ARGS(mp, start, len, log, pos, v),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
 
 
