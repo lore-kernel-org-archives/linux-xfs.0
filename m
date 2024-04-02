@@ -1,41 +1,71 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB55A7764E
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 12:50:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E47F522079
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 12:52:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712062222; cv=none; b=grFjCqkFQU3YCuaJxKrAuIX+0PkPjK/hWWz8c3XQR6yEtcqOa5xThWMWa7LvHE0NtpvhBvSOh2OKIL3dJdaZ5TwTGJXMG25n355zuN17eQuoJTipW0opLAJCmnst98ujzYA4EHRofLnLifUb9jmlhIIKX1gsRkYgu3yEe1t4UQA=
+	t=1712062330; cv=none; b=fOhn8kp082eiRah9WpYUeLyANP6UaVvJfYps/ERO9RQoB2B9av6Dr6gzGRiHyF2nNwoYAyudUoc7XvIdr2rEv2rkwH39XGiD7jxy8Tykzj9mZGA+1anZvIsD15ndp8poWB4XcBV51JxyyaNVvCFdq3b23Fiqo+fzJho9pq40vVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712062222; c=relaxed/simple;
-	bh=9PHdROx8UfCXh4ObqeeSQkHiKyvdHsv4iQn8Fxt8NpE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=NixWD7FXUkt8guQhGogtoFuTM5Xm14tf0fRkAjrdMlEM9ZU7Grj7BFLePZiQ7TMHPEBtDX3mrFKL6ZeQ2AqLlpzHSNSr0KknZxDb44LK7q+C1bna1V5TdDwBzVd1TTn9ReteC8YM8WkFs/oqmOfKPft2KMaIE6sEXXZilF0Uzpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JHTepFVq; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1712062330; c=relaxed/simple;
+	bh=fPTm8EwrxCKUCKlXtMQ46fsMh23VPD/sF98j59+9tqE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=j4I3Bsg90R9+KjPQZoL73q9gVnsZXGjPprDOQrx80Ufd6TjusvueWABGp165uaTteI+h/MZz380qup5DyLdQEQncAE5D1x09QrM4keTfHkNtpbFnAASYeeEHul5BbRXzK3G0Xr3MAwvz6zSJux/tPvj7aRWg0BdLYvMOQBGu1hc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FTLg/Qpb; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JHTepFVq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=Y/jB9O+wgzHQNwYNOPYjPeumA4ZkpgJsP6D7+3M1FjI=; b=JHTepFVq4FzD75rMUDKY1Nx3xS
-	2b1A1WRyXvk/aGYjcphXJw427MzNswqeaqeNmCMve5rq5a8ipps2qwatKaBWzXaQ+fupIyUH7ao/B
-	R+PxgJ7bbM2v2cqkEwR2ew//ngti+gkxHNwhvrVef4pdoMUO5t0R9uNAzheLI78WD7UO+ylte6D39
-	ECx+ATdXoCl2nYz0cthi72VynIPyct/8/lMFr7slw7rnKxq8Jl0DEbiOSiJZcJF1sT68jcbBUmm4x
-	kASovcQlZljAApHxV04eCnWmvY0jVFbRdrP1U41Z31WWId/wagDDcEoU0HUnGmETWem896mNlsFy9
-	g2c/d/ow==;
-Received: from [2001:4bb8:199:60a5:c70:4a89:bc61:2] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rrdak-0000000BAJ8-0Uma;
-	Tue, 02 Apr 2024 12:50:18 +0000
-Date: Tue, 2 Apr 2024 14:50:15 +0200
-From: Christoph Hellwig <hch@infradead.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [GIT PULL] bring back RT delalloc support
-Message-ID: <Zgv_B07xhnE-pl6x@infradead.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FTLg/Qpb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1712062327;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=udjv9FB82NBjappNOEsAL426nV2L32B7yhwcIFshiA0=;
+	b=FTLg/QpbkEVjYVzNCxfYmLbcjrtBs5/fM9mcM09KKFK9ky0Ek4/bru0tGM2XkUzA3v/4ro
+	6RQMNavR9RgHCW1EHll8Tju8sw6DyolIUNx6AySAtvr6abm1Vyex7y7oLg8JCmQCI5FASw
+	APHPtOM0KirwA9kYQdh2dm3N1UXPfNw=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-572-4TCrKqbLP4ObfkTJoMVCDw-1; Tue, 02 Apr 2024 08:52:06 -0400
+X-MC-Unique: 4TCrKqbLP4ObfkTJoMVCDw-1
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a46852c2239so346864366b.1
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 05:52:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712062325; x=1712667125;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=udjv9FB82NBjappNOEsAL426nV2L32B7yhwcIFshiA0=;
+        b=cmA1JSqe5R1z6loBTJpmu15WSl129NPI1AfviAQn3ykt2GEJQLhknd28EMI/LS2r95
+         w/ABI2y9TMePzVV1gAZI6gmxtbWMJx0ax2Y1p0P1cWZXDZRetUKXv7TgMmun2xUSVC+z
+         VVVfzbGMVL7eNxjuhyzXQVuOZJSXtD82A2xfpX1g8B5gHI7U6Xz6lBnN9sXCP94YRQcI
+         +pusptESuBnM36JqQmyhA0X2JnzV/C3l4VOpbZIh+oftMPGj6krhhiHGMXRxdaB9XzCd
+         QRa7m5is340WSpWhl6IIPgZxOXbDxFwoCuzBVyAqe5NuTYo08N+hB1+Hpbpsh4T39PEJ
+         fzoQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUSlQQAsO1NsQoMuFT05o4veeCTUSx9FpZH2OkG92+8zTB0afjqzRXyqHaHdTUWyaqXkFy9gRJoFqb6eQeiBLcdG7BKulqvc7nk
+X-Gm-Message-State: AOJu0YycE0AgS+geeUR56h4E2M2H8C+TjT69dfqy29vHzQlJ8R2BwwN7
+	i6fSurvhSHNwI56sUQHv5XyIALCE7SZWdBWBm3M7cre4rsFOtpE2jiYiOHEqPxZxO3TDQ0woRtd
+	yKZtgrG7NBrE1udvx1IoNYLMI9PESw31hnVce4aiKpFi7kho9EjUq2YxI
+X-Received: by 2002:a17:907:26ce:b0:a4e:67ca:1040 with SMTP id bp14-20020a17090726ce00b00a4e67ca1040mr5256400ejc.14.1712062324654;
+        Tue, 02 Apr 2024 05:52:04 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF5KO71h1979wkCqoKkC7ot0dVk+kkaLg4kpoiFC8fXUDFCkH0e2YdCuNNW7DymBtRtxiSpAQ==
+X-Received: by 2002:a17:907:26ce:b0:a4e:67ca:1040 with SMTP id bp14-20020a17090726ce00b00a4e67ca1040mr5256381ejc.14.1712062324120;
+        Tue, 02 Apr 2024 05:52:04 -0700 (PDT)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id wr1-20020a170907700100b00a473a0f3384sm6544357ejb.16.2024.04.02.05.52.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Apr 2024 05:52:03 -0700 (PDT)
+Date: Tue, 2 Apr 2024 14:52:03 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: ebiggers@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
+Subject: Re: [PATCH 17/29] xfs: only allow the verity iflag for regular files
+Message-ID: <rdonyolmknblerpfl37uvt5i5ica3sjoy2kpmdlcue6qb7pauv@myouxj6bfxjb>
+References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
+ <171175868843.1988170.2809557712645656626.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,71 +74,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <171175868843.1988170.2809557712645656626.stgit@frogsfrogsfrogs>
 
-Hi Chandan,
+On 2024-03-29 17:40:30, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Only regular files can have fsverity enabled on them, so check this in
+> the inode verifier.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index adc457da52ef0..dae0f27d3961b 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -695,6 +695,14 @@ xfs_dinode_verify(
+>  	    !xfs_has_rtreflink(mp))
+>  		return __this_address;
+>  
+> +	/* only regular files can have fsverity */
+> +	if (flags2 & XFS_DIFLAG2_VERITY) {
+> +		if (!xfs_has_verity(mp))
+> +			return __this_address;
+> +		if ((mode & S_IFMT) != S_IFREG)
+> +			return __this_address;
+> +	}
+> +
+>  	/* COW extent size hint validation */
+>  	fa = xfs_inode_validate_cowextsize(mp, be32_to_cpu(dip->di_cowextsize),
+>  			mode, flags, flags2);
+> 
 
-Please pull this branch with changes for 6.10-rc:
+Looks good to me:
+Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
 
-The following changes since commit f2e812c1522dab847912309b00abcc762dd696da:
+-- 
+- Andrey
 
-  xfs: don't use current->journal_info (2024-03-25 10:21:01 +0530)
-
-are available in the Git repository at:
-
-  git://git.infradead.org/users/hch/xfs.git tags/xfs-realtime-delalloc-2024-04-02
-
-for you to fetch changes up to e3b3bbc181dedebc4192f938c98699e127d70c8e:
-
-  xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1) (2024-03-28 09:19:53 +0100)
-
-----------------------------------------------------------------
-xfs:  bring back RT delalloc support
-
-Add back delalloc support for RT inodes, at least if the RT
-extent size is a single file system block.
-
-----------------------------------------------------------------
-Christoph Hellwig (12):
-      xfs: make XFS_TRANS_LOWMODE match the other XFS_TRANS_ definitions
-      xfs: free RT extents after updating the bmap btree
-      xfs: move RT inode locking out of __xfs_bunmapi
-      xfs: block deltas in xfs_trans_unreserve_and_mod_sb must be positive
-      xfs: split xfs_mod_freecounter
-      xfs: reinstate RT support in xfs_bmapi_reserve_delalloc
-      xfs: cleanup fdblock/frextent accounting in xfs_bmap_del_extent_delay
-      xfs: support RT inodes in xfs_mod_delalloc
-      xfs: look at m_frextents in xfs_iomap_prealloc_size for RT allocations
-      xfs: rework splitting of indirect block reservations
-      xfs: stop the steal (of data blocks for RT indirect blocks)
-      xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
-
-Darrick J. Wong (1):
-      xfs: refactor realtime inode locking
-
- fs/xfs/libxfs/xfs_ag.c           |   4 +-
- fs/xfs/libxfs/xfs_ag_resv.c      |  24 ++-----
- fs/xfs/libxfs/xfs_ag_resv.h      |   2 +-
- fs/xfs/libxfs/xfs_alloc.c        |   4 +-
- fs/xfs/libxfs/xfs_bmap.c         | 152 +++++++++++++++++++--------------------
- fs/xfs/libxfs/xfs_rtbitmap.c     |  57 +++++++++++++++
- fs/xfs/libxfs/xfs_rtbitmap.h     |  17 +++++
- fs/xfs/libxfs/xfs_shared.h       |   6 +-
- fs/xfs/scrub/common.c            |   1 +
- fs/xfs/scrub/fscounters.c        |  12 ++--
- fs/xfs/scrub/fscounters.h        |   1 +
- fs/xfs/scrub/fscounters_repair.c |  12 +++-
- fs/xfs/scrub/repair.c            |   5 +-
- fs/xfs/xfs_fsmap.c               |   4 +-
- fs/xfs/xfs_fsops.c               |  29 +++-----
- fs/xfs/xfs_fsops.h               |   2 +-
- fs/xfs/xfs_inode.c               |   3 +-
- fs/xfs/xfs_iomap.c               |  45 ++++++++----
- fs/xfs/xfs_iops.c                |   2 +-
- fs/xfs/xfs_mount.c               |  85 +++++++++++++---------
- fs/xfs/xfs_mount.h               |  36 +++++++---
- fs/xfs/xfs_rtalloc.c             |  22 +++---
- fs/xfs/xfs_super.c               |  17 +++--
- fs/xfs/xfs_trace.h               |   1 -
- fs/xfs/xfs_trans.c               |  63 ++++++++--------
- 25 files changed, 358 insertions(+), 248 deletions(-)
