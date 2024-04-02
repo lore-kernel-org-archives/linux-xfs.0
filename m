@@ -1,144 +1,166 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27A5E2260B
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 23:44:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B9AE2260B;
+	Tue,  2 Apr 2024 23:46:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712101496; cv=none; b=FLO1ChM2NA6dIkfdWHex+BYpI2e1s90j5V4H6zNl7hOBqUggAgXTLKNwsGGSio7KtEXyc1dLNAh2DfsQ4wccZFrpDJr6h5myOdh3mygKz6s2lNBimM6ysLtufakgb7WsqrMnp/P6Umla90lO7MBI+VRnVu5IWCfsWLINoBnwNsA=
+	t=1712101560; cv=none; b=rGKN0CV2kYBqAzy3tLVE9TWyqfy/r2+/0BbhhcdXNUBKuo41ATLdWrp0O74beLefcIgK9ZneM/bDKTQhBupV63iw5x2EVfsEwRD8aw0w+KbHDc8NykFwD5OsLMDP1bG7eYChdF72B50DI6PLVaEyczIm0XnWiQzO2eJNpgAGPyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712101496; c=relaxed/simple;
-	bh=XgXx5l7xBch9FND6YUN58/j+pUnfvAUzLASaxvt7DIY=;
+	s=arc-20240116; t=1712101560; c=relaxed/simple;
+	bh=7RwrlakIY6ett8y22jneeqr+fsl+6Vn7PZkZdQBuuTk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eobuFKl19qE/JB/1GTBnbHPBjP9P3pDghsD36YBMeV/2fne7nx2viWqy5KbPkvRJJcdIwZ5Cjkw2lVVGZQwWk9C2ZCG7rDzCCoP28YBsUIi9Mu8jJHNP2c/rzbB/Xym8QEobfvAB1LmkUXl15bvWlWn3KJnOfz49qjH2v24IlCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=QgLPdoQs; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Brn43yWCcvk5stHpFxK5vzNQdMxbOVN+OtJnkuNF24Y23g91CDdXkntkp7VqPUtTVUgX25pf4YRH1BK+WZftvorH1KP0YHHFZGcBKDyI5OTISIoOBefsHK6wfAP5Cvvfiq6VAh/i+rBIN+gdPQGr2mG14fGcI1Mvd5nkZie/Go8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W2y2zs1h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="QgLPdoQs"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5ce6b5e3c4eso2799194a12.2
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 16:44:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712101494; x=1712706294; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=gmXJDhnLUqGXlQb1NpVSVFi1XoZJFS9VjjCDvCic/QM=;
-        b=QgLPdoQsgVGAefgZ6aLGwwewebK2ncw39RRq7aAbkZQc3BxV2bhmU9eo3OBDFcpNFD
-         wBdxueUr/3JWGoaiOQoo0qu+VQJOm+01exSQF+4/uXlodvZdN8kdVLb0RtPYRm59KO25
-         0J0s5NVHXX91zsFSpqxjSK5O2R/uzmlviza2c0BVAzNv9mUG7GXaApvm6Y73PknydzI8
-         262tsQ3j1UwFC3PrjwJim+QT+9b61MpQGqxkCipxnJYXRsEg9lSE4cND5vKZYDLIYkb5
-         M7VXYLjjW2ORoxVMVhl7YLFesCiJkgET2+57HSwflxKzbbPKNNShVAKoUH6VcEEvqA+j
-         LUMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712101494; x=1712706294;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gmXJDhnLUqGXlQb1NpVSVFi1XoZJFS9VjjCDvCic/QM=;
-        b=SzkF4eHcp9McVuRvff7q3Qs5ZZIVaJXqIPj9zldxMVNyA6sdHUfYBhygTOkiOt5+XL
-         7r+Q/s75iY8Clk2wbwN1SCo0DzY5yoxqqxdSF54BoE0pzKy8GiidlsNAxKR0sFJhQtwA
-         hDVkP7TGYCC4ZjOjnpB34MZJdwzFs0MunJ1aT7r23V+HBGDjObFELN84O0Bcx1lWNun0
-         74ZCrtPb7JxseN2DgVQGc2/y7CsL7XOmoqzLLJGknhKe3pRlOLtzXf4+COxqLcStd+pG
-         WoCwWP7A8ebKwoUq+wOdoGmpyDqNfU+vqJgDjkKKIXXWFid2lrkKEYCUim0d01aKcsN/
-         Gb/g==
-X-Gm-Message-State: AOJu0Yxuh+ygS9w/trzigaeZ3N0qXltjadzpKZBU0/4/rR79v5hJtpPA
-	xX1AysvFPWfcczqi/QmBp0ZndlseMqFSo57fbD7S2CTgxImmuOdTK7hy8gZCb6QiCSSbY7EkJ8u
-	B
-X-Google-Smtp-Source: AGHT+IGmaweiWpTyQUGhRsdbC/SsWvYfOHf7/oe68/X7L42Xn8aXnRivfKUP0bvb+7VUGbSrdk2dag==
-X-Received: by 2002:a05:6a20:d90c:b0:1a6:fe01:5497 with SMTP id jd12-20020a056a20d90c00b001a6fe015497mr12099488pzb.26.1712101493774;
-        Tue, 02 Apr 2024 16:44:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id g7-20020a170902f74700b001e24988b99asm6947704plw.250.2024.04.02.16.44.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Apr 2024 16:44:53 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rrnoA-001tah-35;
-	Wed, 03 Apr 2024 10:44:50 +1100
-Date: Wed, 3 Apr 2024 10:44:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
-Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
-Message-ID: <ZgyYcu7pzsGJzxGX@dread.disaster.area>
-References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
- <20240306053048.1656747-1-david@fromorbit.com>
- <20240306053048.1656747-2-david@fromorbit.com>
- <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
- <ZfpnfXBU9a6RkR50@dread.disaster.area>
- <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
- <ZgueamvcnndUUwYd@dread.disaster.area>
- <11ba4fca-2c89-406a-83e3-cb8d20f72044@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2y2zs1h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEC73C433C7;
+	Tue,  2 Apr 2024 23:45:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712101560;
+	bh=7RwrlakIY6ett8y22jneeqr+fsl+6Vn7PZkZdQBuuTk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=W2y2zs1hyIqHFT+VkEGckFmDU8oUtJDSAMVjdxTaUp5gPE8heKlH/E9uXa8gByX+T
+	 MrNUlGfdkTws+7uJDtAq2gw6Tt2y22J+3Q99Sehj/EytiThppqioPZjQuQe66nk0dy
+	 Mep/GIIOQwrOmU24ZGILJq6bgO+3x3JW8GTNTZcCxR2WYB6wtxQlIgCSpmvExCfgwy
+	 j8pkRGAxNXvCuTyqdzBcAvaG4h7CkHiDNs5HTLv5AMk+rEeHCDLdaa3oI4xp4nGgri
+	 iW1TvQUej0GrhNoDkDF0faXuNbAlK/FTD3lg7SIlHlbvLJFc/nTC8TSWuzQoVPaaVf
+	 LHx8lqsMMFzlw==
+Date: Tue, 2 Apr 2024 16:45:58 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Colin Walters <walters@verbum.org>, aalbersh@redhat.com,
+	xfs <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org,
+	fsverity@lists.linux.dev
+Subject: Re: [PATCH 28/29] xfs: allow verity files to be opened even if the
+ fsverity metadata is damaged
+Message-ID: <20240402234558.GB2576@sol.localdomain>
+References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
+ <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
+ <2afcf2b2-992d-4678-bf68-d70dce0a2289@app.fastmail.com>
+ <20240402225216.GW6414@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <11ba4fca-2c89-406a-83e3-cb8d20f72044@oracle.com>
+In-Reply-To: <20240402225216.GW6414@frogsfrogsfrogs>
 
-On Tue, Apr 02, 2024 at 08:49:09AM +0100, John Garry wrote:
-> 
-> > > > the problem should go away and the
-> > > > extent gets trimmed to 76 blocks.
-> > > ..if so, then, yes, it does. We end up with this:
-> > > 
-> > >     0: [0..14079]:      42432..56511      0 (42432..56511)   14080
-> > >     1: [14080..14687]:  177344..177951    0 (177344..177951)   608
-> > >     2: [14688..14719]:  350720..350751    1 (171520..171551)    32
-> > Good, that's how it should work. 🙂
+On Tue, Apr 02, 2024 at 03:52:16PM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 02, 2024 at 04:00:06PM -0400, Colin Walters wrote:
 > > 
-> > I'll update the patchset I have with these fixes.
+> > 
+> > On Fri, Mar 29, 2024, at 8:43 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > There are more things that one can do with an open file descriptor on
+> > > XFS -- query extended attributes, scan for metadata damage, repair
+> > > metadata, etc.  None of this is possible if the fsverity metadata are
+> > > damaged, because that prevents the file from being opened.
+> > >
+> > > Ignore a selective set of error codes that we know fsverity_file_open to
+> > > return if the verity descriptor is nonsense.
+> > >
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/iomap/buffered-io.c |    8 ++++++++
+> > >  fs/xfs/xfs_file.c      |   19 ++++++++++++++++++-
+> > >  2 files changed, 26 insertions(+), 1 deletion(-)
+> > >
+> > >
+> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > > index 9f9d929dfeebc..e68a15b72dbdd 100644
+> > > --- a/fs/iomap/buffered-io.c
+> > > +++ b/fs/iomap/buffered-io.c
+> > > @@ -487,6 +487,14 @@ static loff_t iomap_readpage_iter(const struct 
+> > > iomap_iter *iter,
+> > >  	size_t poff, plen;
+> > >  	sector_t sector;
+> > > 
+> > > +	/*
+> > > +	 * If this verity file hasn't been activated, fail read attempts.  This
+> > > +	 * can happen if the calling filesystem allows files to be opened even
+> > > +	 * with damaged verity metadata.
+> > > +	 */
+> > > +	if (IS_VERITY(iter->inode) && !fsverity_active(iter->inode))
+> > > +		return -EIO;
+> > > +
+> > >  	if (iomap->type == IOMAP_INLINE)
+> > >  		return iomap_read_inline_data(iter, folio);
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index c0b3e8146b753..36034eaefbf55 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -1431,8 +1431,25 @@ xfs_file_open(
+> > >  			FMODE_DIO_PARALLEL_WRITE | FMODE_CAN_ODIRECT;
+> > > 
+> > >  	error = fsverity_file_open(inode, file);
+> > > -	if (error)
+> > > +	switch (error) {
+> > > +	case -EFBIG:
+> > > +	case -EINVAL:
+> > > +	case -EMSGSIZE:
+> > > +	case -EFSCORRUPTED:
+> > > +		/*
+> > > +		 * Be selective about which fsverity errors we propagate to
+> > > +		 * userspace; we still want to be able to open this file even
+> > > +		 * if reads don't work.  Someone might want to perform an
+> > > +		 * online repair.
+> > > +		 */
+> > > +		if (has_capability_noaudit(current, CAP_SYS_ADMIN))
+> > > +			break;
+> > 
+> > As I understand it, fsverity (and dm-verity) are desirable in
+> > high-safety and integrity requirement cases where the goal is for the
+> > system to "fail closed" if errors in general are detected; anything
+> > that would have the system be in an ill-defined state.
 > 
-> ok, thanks
+> Is "open() fails if verity metadata are trashed" a hard requirement?
 > 
-> Update:
-> So I have some more patches from trying to support both truncate and
-> fallocate + punch/insert/collapse for forcealign.
+> Reads will still fail due to (iomap) readahead returning EIO for a file
+> that is IS_VERITY() && !fsverity_active().  This is (afaict) the state
+> you end up with when the fsverity open fails.  ext4/f2fs don't do that,
+> but they also don't have online fsck so once a file's dead it's dead.
 > 
-> I seem to have at least 2x problems:
-> - unexpected -ENOSPC in some case
-> - sometimes misaligned extents from ordered combo of punch, truncate, write
 
-Punch and truncate do not enforce extent alignment and never have.
-They will trim extents to whatever the new EOF block is supposed to
-be.  This is by design - they are intended to be able to remove
-extents beyond EOF that may have been done due to extent size hints
-and/or speculative delayed allocation to minimise wasted space.
+We really should have the same behavior on all filesystems, and that behavior
+should be documented in Documentation/filesystems/fsverity.rst.  I guess you
+want this for XFS_IOC_SCRUB_METADATA?  That takes in an inode number directly,
+in xfs_scrub_metadata::sm_ino; does it even need to be executed on the same file
+it's checking?  Anyway, allowing the open means that the case of IS_VERITY() &&
+!fsverity_active() needs to be handled later in any case when I/O may be done to
+the file.  We need to be super careful to ensure that all cases are handled.
 
-Again, forced alignment is introducing new constraints, so anything
-that is truncating EOF blocks (punch, truncate, eof block freeing
-during inactivation or blockgc) is going to need to take forced
-extent alignment constraints into account.
+Even just considering this patchset and XFS only, it looks like you got it wrong
+in xfs_file_read_iter().  You're allowing direct I/O to files that have
+IS_VERITY() && !fsverity_active().
 
-This is likely something that needs to be done in
-xfs_itruncate_extents_flags() for the truncate/inactivation/blockgc
-cases (i.e. correct calculation of first_unmap_block). Punching and
-insert/collapse are a bit more complex - they'll need their
-start/end offsets to be aligned, the chunk sizes they work in to be
-aligned, and the rounding in xfs_flush_unmap_range() to be forced
-alignment aware.
+This change also invalidates the documentation for fsverity_active() which is:
 
-> I don't know if it is a good use of time for me to try to debug, as I guess
-> you could spot problems in the changes almost immediately.
-> 
-> Next steps:
-> I would like to send out a new series for XFS support for atomic writes
-> soon, which so far included forcealign support.
-> 
-> Please advise on your preference for what I should do, like wait for your
-> forcealign update and then combine into the XFS support for atomic write
-> series. Or just post the doubtful patches now, as above, and go from there?
+/**
+ * fsverity_active() - do reads from the inode need to go through fs-verity?
+ * @inode: inode to check
+ *
+ * This checks whether ->i_verity_info has been set.
+ *
+ * Filesystems call this from ->readahead() to check whether the pages need to
+ * be verified or not.  Don't use IS_VERITY() for this purpose; it's subject to
+ * a race condition where the file is being read concurrently with
+ * FS_IOC_ENABLE_VERITY completing.  (S_VERITY is set before ->i_verity_info.)
+ *
+ * Return: true if reads need to go through fs-verity, otherwise false
+ */
 
-I just sent out the forced allocation alignment series for review.
-Forced truncate/punch extent alignment will need to be implemented
-and reviewed as a separate patch set...
+I think that if you'd like to move forward with this, it would take a patchset
+that brings the behavior to all filesystems and considers all callers of
+fsverity_active().
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Another consideration will be whether the fsverity builtin signature not
+matching the file, not being trusted, or being malformed counts as "the fsverity
+metadata being damaged".
+
+- Eric
