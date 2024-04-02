@@ -1,72 +1,71 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 091E358AC6
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 09:52:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E924559151
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 10:09:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712051525; cv=none; b=Hc9tPf0YubGYZKqRGFvVoHSITLGyNUqkiSAUVuuzF7bRqgmwsVu8zjHZKKTLbhSbiTlCJduWRE5zcIuUb3IFzmo2fZN4BsKoTw4uRKP11rOMLpdQYo1JRUrMVEG90BKsoEtlqtqTOSa2BiZesA6w4c4yZhjUgiHybw2TsA9KohM=
+	t=1712052574; cv=none; b=kWjHqfwkrEB9j3WO5rkd/I7mUq+qAZ2J1Ub4oYBXg22n74xRV/4lmaYelg0TnlnxIx1pk/Pt9DVc0I8DCBYniJ3pBMVHe/LueKsN3VMNikQYWbw/Ph6HMBQ4a0crFSG3Pqaf7nIMk6sI3GCyN+p14DWflBWyoYwdAYPSxOkqqrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712051525; c=relaxed/simple;
-	bh=BuLeAglhQb+OLxYbcXbn2earzV76rOgrs3rntBWRzGs=;
+	s=arc-20240116; t=1712052574; c=relaxed/simple;
+	bh=OU9f/oHdpSv5so4XxuOO4NXfr+ACnzAx5W/5jBZ/xW8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TAE+VVbgip771NA172SknursMeQ6yfiGN3NokjwFWi8OjnVHjK2i3gW8YZXqzK4uUvZ/kPGrEh/bcKdBgcYPeE1dR19IxMg4tzWk7XOCg6PjxwNlXNrIHFTZpaZlEXc60yV0VP+zeSjQF4k9w0W1t1Xjo0ZxMZBt5Hiq074LQog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DTAfKdVR; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=kSYqejXg3NyIJAXjLMLTtcrzcCMkBhlEt5m8d8FdwpwOLof7r3IxMdusIA8KincN6Z+3eQfLr0Z3KgvEvemYaAM5bgFkGZhywe2vOYp0fu4rM64t905FKk2KSyKfvxvpBOKl/3BV4hORR/Lbfsz1wranHM/gLtaKHiDelYaPuvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Uj1t0NZV; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DTAfKdVR"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Uj1t0NZV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712051523;
+	s=mimecast20190719; t=1712052571;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xE74JKyaieEZ865fOLwKIWnIcIp4KmBPIzJgotjw5B0=;
-	b=DTAfKdVRjqpU63z+4+x+deOH0MP5yYN+vJA0dgSWZJetOtMgbp/FJF3NSIxP3eYvCMEDbt
-	u++otMtXDE8sK2gTWw6XFhJBKGovJnb8uCLwYo0uSZ+2/ucJvMoAAFa3n4G3LIZGQPAy5I
-	3TvgKz+vRUnCpfWN2LCivgszwvfgImo=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=Y2bp0ENkGdxs60VdgrG/Ao+HASiC17rsYdOAl+5ioPU=;
+	b=Uj1t0NZVCzyOACj12i04yK0VfEfK8bVY2DbYTWDClepOy5YaoQ0aXMN9ixxZjn1tOMVT0B
+	6Sf6E/Tr5KLnM+sCI+gF5rnyPkPU+By3orv8lm70Vl8vm4VOJJhpO22YoVxZifwwKquCx6
+	tTwXaJKzd5WlwWcdWByOefyQSwOgb2k=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-652-1mfI8ztaNdq4ft8Hw-U_dw-1; Tue, 02 Apr 2024 05:51:59 -0400
-X-MC-Unique: 1mfI8ztaNdq4ft8Hw-U_dw-1
-Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-51596f968c1so4703148e87.3
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 02:51:59 -0700 (PDT)
+ us-mta-615-kMI6pPpWOoCAHCA6MqMyBg-1; Tue, 02 Apr 2024 06:09:30 -0400
+X-MC-Unique: kMI6pPpWOoCAHCA6MqMyBg-1
+Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-5684bf1440dso2394607a12.3
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 03:09:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712051518; x=1712656318;
+        d=1e100.net; s=20230601; t=1712052569; x=1712657369;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xE74JKyaieEZ865fOLwKIWnIcIp4KmBPIzJgotjw5B0=;
-        b=eXH8uBJ7Fprn//Ss6DI+JIrbNAiPjChpvXNytJg2PkXQf3sbbLqAROAfdVWXSbqRuT
-         zsOW8P5grEB4pOpF0ovym4wTXBiS/lhBoQlbOsoj0zxnUst5YQyhi2roG4Mo077wmixU
-         yyXSKiiMr+xZe8Pbo7+LWnjo815kHBiNv2so9nZYf+wELbl0goersBl0tIyDiZWGTlQR
-         19HViGOSDWHbgVeXJPb+Izs6fUgoKZOne6n77Q0XuzsDGCFt0D63KJQQiyY/W2CsBz7q
-         WECZJZnoNSS+s69hlD1ScgGbCMq3U5Jp2qWp4RYNInYVXpmkPWbxoHw9opo8XFiBerOu
-         fOSA==
-X-Forwarded-Encrypted: i=1; AJvYcCUV4YJFeeoCpj+WwVnUqJVXl+og2CIOF/2HmUWWjnVm2o9YD3umR10kY2mWCNqFDSxUF8JUznMJeMhWznb4Nk4rnikj7kDG5J9v
-X-Gm-Message-State: AOJu0Yy9uGB6OpMgkhZkMSff22EjDMYG1a7tIf+3wkz57EVAt0yFmtDX
-	EVOZ1mfaB1+gweSV8IcxpBkNwVs0BGd6jL6U3wj3IcKKs/03vnZAyt01yFc0s+TvV++0IFj8acN
-	6jShbrzMlFDuCr6iOETveWSqEJ5uMo/CrQatMpmHxRHeTuC4fUwsnjOnuLoRB0dRT
-X-Received: by 2002:ac2:5dc3:0:b0:515:d4bc:c63e with SMTP id x3-20020ac25dc3000000b00515d4bcc63emr6164314lfq.63.1712051517734;
-        Tue, 02 Apr 2024 02:51:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFgP8+1XbBJ5ff68r07k1FqXNHSiMuetoQuLpbDHs4hLQfzFExtQKN0mhpH/OIqMg/05NwZRQ==
-X-Received: by 2002:ac2:5dc3:0:b0:515:d4bc:c63e with SMTP id x3-20020ac25dc3000000b00515d4bcc63emr6164300lfq.63.1712051517095;
-        Tue, 02 Apr 2024 02:51:57 -0700 (PDT)
+        bh=Y2bp0ENkGdxs60VdgrG/Ao+HASiC17rsYdOAl+5ioPU=;
+        b=rNGUJbFRr5hcUudXPSMTcUkXlKtHdQg/N7Rke+BkSOO45G67jr6OypSRfbwn5AnfZ6
+         to2HcOGWN97N7klAQn4c2T4oxoTTVsZCvsEhQeeuEX572DBSgIs7kk20djeZsbbpEITd
+         4aSGIArUs/V3KXW/ClPmlbAzAbh2s/FRQxrFXALyvRX/sk24msEDVeZkoa8zAwGEuTj6
+         zPvk6mETBVyN5VGy49fwgTlT2KKVkUZiq7XlYPaEvcWzjNaPxsrJQGHkSg9EU+mEUd5f
+         dGSP2enO4l35kXAkeNO+kfEGXwUlyTrjs6hlXhQVkbATAYLu2qa1KB9tL/WRGXA/Kx73
+         RFWw==
+X-Forwarded-Encrypted: i=1; AJvYcCXPy7xl5nj20UXMgzBPppSuE0MN8ORsK2mhQGnF/iQffOepB0e1DKdwhtKPCcneH2nszGTWh7ZcIhtH2+Pn5FnzekQDsyfb70cM
+X-Gm-Message-State: AOJu0YyK4lAiRkpYtgzG1UKpmrLqkom4+iY1fKBCo3c4gF6h5I1Xu/A6
+	eRk2wUFnU9jWzW/4EJKrCPgnLu5avy8gQNWXr2GfAP2JIHdPV/lI3tnCQl0RMqs57g06La64dWt
+	uEs9+PM5AE2MODfh61vCAglvoCixzQrNXxfZWJwX6hqG0upGUvHAMBzXI
+X-Received: by 2002:a50:d7d9:0:b0:568:180a:284b with SMTP id m25-20020a50d7d9000000b00568180a284bmr6072563edj.37.1712052569094;
+        Tue, 02 Apr 2024 03:09:29 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF2u/iYin6OUN30jHEOhcY414TrEvqk+AMnddAkYTd2kcCDkV6Z9aKRNEYtCWRv/9yomjo8ZQ==
+X-Received: by 2002:a50:d7d9:0:b0:568:180a:284b with SMTP id m25-20020a50d7d9000000b00568180a284bmr6072551edj.37.1712052568633;
+        Tue, 02 Apr 2024 03:09:28 -0700 (PDT)
 Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id q17-20020a1709060e5100b00a4623030893sm6228283eji.126.2024.04.02.02.51.56
+        by smtp.gmail.com with ESMTPSA id n3-20020a50cc43000000b0056bb1b017besm6549855edi.23.2024.04.02.03.09.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Apr 2024 02:51:56 -0700 (PDT)
-Date: Tue, 2 Apr 2024 11:51:55 +0200
+        Tue, 02 Apr 2024 03:09:28 -0700 (PDT)
+Date: Tue, 2 Apr 2024 12:09:27 +0200
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: ebiggers@kernel.org, linux-xfs@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
-Subject: Re: [PATCH 01/29] xfs: use unsigned ints for non-negative quantities
- in xfs_attr_remote.c
-Message-ID: <nx4hkurupibsk7fgxeh3qhdpeheyewazgay3whw5r55immgbia@6s253r4inkxn>
+Subject: Re: [PATCH 02/29] xfs: turn XFS_ATTR3_RMT_BUF_SPACE into a function
+Message-ID: <33acelck44533qoui3avtjbehb54rvf2j2opmxhpflf4g3kr22@wkipgjny64yn>
 References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
- <171175868577.1988170.1326765772903298581.stgit@frogsfrogsfrogs>
+ <171175868593.1988170.18437361749358268580.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,50 +74,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171175868577.1988170.1326765772903298581.stgit@frogsfrogsfrogs>
+In-Reply-To: <171175868593.1988170.18437361749358268580.stgit@frogsfrogsfrogs>
 
-On 2024-03-29 17:36:19, Darrick J. Wong wrote:
+On 2024-03-29 17:36:35, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> In the next few patches we're going to refactor the attr remote code so
-> that we can support headerless remote xattr values for storing merkle
-> tree blocks.  For now, let's change the code to use unsigned int to
-> describe quantities of bytes and blocks that cannot be negative.
+> Turn this into a properly typechecked function, and actually use the
+> correct blocksize for extended attributes.  The function cannot be
+> static inline because xfsprogs userspace uses it.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_attr_remote.c |   54 ++++++++++++++++++++-------------------
->  fs/xfs/libxfs/xfs_attr_remote.h |    2 +
->  2 files changed, 28 insertions(+), 28 deletions(-)
+>  fs/xfs/libxfs/xfs_attr_remote.c |   19 ++++++++++++++++---
+>  fs/xfs/libxfs/xfs_da_format.h   |    4 +---
+>  2 files changed, 17 insertions(+), 6 deletions(-)
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index a8de9dc1e998a..c778a3a51792e 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -47,13 +47,13 @@
->   * Each contiguous block has a header, so it is not just a simple attribute
->   * length to FSB conversion.
->   */
-> -int
-> +unsigned int
->  xfs_attr3_rmt_blocks(
-> -	struct xfs_mount *mp,
-> -	int		attrlen)
-> +	struct xfs_mount	*mp,
-> +	unsigned int		attrlen)
->  {
->  	if (xfs_has_crc(mp)) {
-> -		int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-> +		unsigned int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
->  		return (attrlen + buflen - 1) / buflen;
->  	}
->  	return XFS_B_TO_FSB(mp, attrlen);
-> @@ -122,9 +122,9 @@ __xfs_attr3_rmt_read_verify(
 
-fsbsize in xfs_attr3_rmt_verify()?
-
-Otherwise, looks good to me:
+Looks good to me:
 Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
 
 -- 
