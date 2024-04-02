@@ -1,202 +1,189 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BBE8412CD8A
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 15:09:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712070576; cv=none; b=Ppe/xKErx7Iv32xByZChkn8tC+uqJjyEhSPVL75zod/5irx8fq+EEjKD3J513Z66FQkjAjNx8A1sR7/7SL/5W+RgN2RcTQAHjGqeqOCZbv03OMkxl/qRXPRiJ7SjMRnyRR6BekXMM6hKyAi4+nw8+UWiKy38J+TYntnyPEj8Yvc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712070576; c=relaxed/simple;
-	bh=sutPQ/58yiSUNXs+JiFodVsv9rLEFF7TOkOQ15mkyLY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
-	 In-Reply-To:Content-Type; b=M8DbEInIOmGhRXKaps62t3/FyATh5oSM/RAQYjqr5jz58/LIIeWZjhBB1tYNnQfK1xNyXAL907srQ9SzEE0kVyc5C4A2FkwcBmxDpH85KZ6VnSJlELPzzITO5LuHqlGFHMcA4Rlu/dubf0Zkc9QQ2WetDfEYjEKCgDxG+boMT70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=aP+xmaIr; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="aP+xmaIr"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id BB57D3289F0;
-	Tue,  2 Apr 2024 10:09:32 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net BB57D3289F0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1712070572;
-	bh=QKwPi/RnmBUs2NbTBEfnglR/l592ohuG6n2rdcGZ5F8=;
-	h=Date:Subject:To:References:Cc:From:In-Reply-To:From;
-	b=aP+xmaIrYPnrOMFqihr3bMHoDd9dxuPr39+iNCx/rjdQro82dpUKv7Yhi1e8frdSH
-	 NEcuY9NgeSjfuRqSTw4l4t47gmTDy9A2ZxyllY7qESWdu7j15i1VnIc2FHnEKJiJER
-	 a3vA4b1GCkkvHp97PLUKFbNYB5zISnH69mdlivEAW6LiZ8vl+OjIbu9N9mqI00N8mx
-	 Q1X23KVyAY4r+/FB1SItzKW9g6A8e+BAhLGkr1i2ZC+eY4bKx/clyWQocDRPP185wo
-	 8OgJPcwwvXOi3B4+054Yrl9yTlcg2APIALspWwQ18nk2dLK4YJhEkpc+BGSNnCqAbd
-	 hHtxOljwDM0hw==
-Message-ID: <e5ca2146-8d39-4af5-80fb-0bd5ab9ed304@sandeen.net>
-Date: Tue, 2 Apr 2024 10:09:31 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C999412C526
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 15:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712070695; cv=fail; b=JTITkaOcw9xjp8zNyyB9LHBaNzDob6fseWRfqjpnt3dLh82BG37xgVYMpbNmqTZ/10t4uxQx11sSUm2Z42ro/hIUE877R4rAIvjw0uXDcYpN3Vu8aGawDmZxTnuPR3QnaeMBHokuaV4sFv11Jzb3Tn4/UkA20LRpjmhQ6PPfphE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712070695; c=relaxed/simple;
+	bh=s+DiM317lgXcA/q2AL4hxDlMzu2vRaqiNh0L2Z24/9k=;
+	h=Message-ID:Date:Subject:From:To:Cc:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=VA1HRm07LrvOKJOJ/j6eitSC396SmKXmFHElcwvmSeLRXVTY1qbguTLCJCtcibdISH1J3eecw/z/CkGxsyLVv8K3z5Y2DywG15SPXaLpGFiUavteTezFI8YPZEa7ToxP4pKp7HF2plKJDGLKrqfIAW32uRVeyocFiCbibLJ/oUY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GelzJpBH; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=lpwZTjrC; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GelzJpBH";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="lpwZTjrC"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4327iuTx006048;
+	Tue, 2 Apr 2024 15:11:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : from : to : cc : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=/A/t2eQsLEQEbHdm5eTbPI9SpX2vqPYWKMJOyptb4ZI=;
+ b=GelzJpBHRNuovAB0NAWed+LSWvMH7U09/3a9VUgP6lyviG6nKAFMsKnRe59KK2DfxbVm
+ 5xIpPkG6aRMfF8qQI29YCUDf+xOumWjgvXAqrUAyrV+ppYetOn+jyJWESjLY8sce4FTt
+ EIVuFF3xDtU1SDHBK+TWZTY0nZcEw9zeKvCNF4cDXI9UttpALu2Rg4pWI096usyEHLJR
+ 2oCE3Nt4FHiLQFVElqZguaNekyZE2qENouD+aA6+uGtxu4oYFsnj1DHgaU5c9e72rGBD
+ fVcJi7yU7B8PcNu82c63P23hRvlaJ+Or7qkLXfHt4HjcNi3RfHVXek6fpDpVHay/NpB6 pw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x69ncmyvc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Apr 2024 15:11:27 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 432ER2gA001305;
+	Tue, 2 Apr 2024 15:11:26 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2169.outbound.protection.outlook.com [104.47.57.169])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3x696d75ug-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Apr 2024 15:11:26 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Z9NA1tG1gJ6c3bBMmzFaXB0W03lK08M6fbAj/vmcg3IT3nf8IHCRR0Wj8Tsddl79oB1H5p3sp6jOY1nLeEFyNcTETrDrPRjLZHHfQsxbo6PH6n5CgeFeXEQ8f4Z8B+4G/cHft1JSRggZV4i8AsOLotsqxMIsMh7M446YzQzJYAo3CM4AMnnobY0dakPoBa0nvD/vLVodyklU3Bn15SlfXDjMZs/qLhBpaCWq7g+bKq2uYQw/V268f2CoUniY8LqkswiEt20RQl/SmafIF9K1ZtQ+wLAgocEAsOkFR2IOsDecO8Nz1T1wBOI3j29svMZZOvvqh8N7hB4NFPcN0K2UGQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/A/t2eQsLEQEbHdm5eTbPI9SpX2vqPYWKMJOyptb4ZI=;
+ b=gQdYnpEZ7++HaJgBS+YiwG/dpTaKu6c0OxN+OjJ9WvZxyF+RSFXFMWq/ukZ2c78NQefxeOESjFEqj2MCfBFvAhFSJX6MlD0uzQDc4DffskN8iCaf5TklMg8ndC0JCsve8FZ8Yg+p1TpFEa0fJxNF/dP0rQ6hTYDo9QtCcwM5Q+LKwyJiB+FAlUyXuBUqVuTy+MQlKWT5awDJJle7yXjr3c5OHau+qiPVUECKFTrpoJVC6V6q3p+A27TkQDJIH70yBgs1qIFWLMokieNK76c9D5QiarTR0NZQvtle/1Y1Cz8EVobZ7/sArMKYzXF/BlxMTWxcrfE1nGXCxBWVCCV0Pw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/A/t2eQsLEQEbHdm5eTbPI9SpX2vqPYWKMJOyptb4ZI=;
+ b=lpwZTjrC6p+or+A6CB0YUpUWLJHmsHnY2MclJsuoZn58nWpdT9MH+U35v3dlKqEcEsm4/xrwhoSweWME1CTiUrPgEgxeUiozJEGg/3qwvhDZw8DJZhGGAQAGa6a+l/P+Yd3Pb82mo8enT6xl9hwfZLF5D/appBRi0Hn/b2af2Xo=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DS0PR10MB7978.namprd10.prod.outlook.com (2603:10b6:8:1aa::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Tue, 2 Apr
+ 2024 15:11:23 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::ae68:7d51:133f:324]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::ae68:7d51:133f:324%4]) with mapi id 15.20.7409.042; Tue, 2 Apr 2024
+ 15:11:23 +0000
+Message-ID: <fd9f99a3-35ef-477e-ad64-08f71223d36b@oracle.com>
+Date: Tue, 2 Apr 2024 16:11:20 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
+From: John Garry <john.g.garry@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
+References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
+ <20240306053048.1656747-1-david@fromorbit.com>
+ <20240306053048.1656747-2-david@fromorbit.com>
+ <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
+ <ZfpnfXBU9a6RkR50@dread.disaster.area>
+ <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
+ <ZgueamvcnndUUwYd@dread.disaster.area>
+ <11ba4fca-2c89-406a-83e3-cb8d20f72044@oracle.com>
+Content-Language: en-US
+Organization: Oracle Corporation
+In-Reply-To: <11ba4fca-2c89-406a-83e3-cb8d20f72044@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0210.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:33a::13) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: A bug was found in Linux Kernel 5.15.148 and 5.15.150: KASAN:
- use-after-free in xfs_allocbt_init_key_from_rec (with POC)
-To: =?UTF-8?B?5YiY6YCa?= <lyutoon@gmail.com>
-References: <CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com>
- <32f02757-70e0-41ed-a0d0-23190a28dad3@sandeen.net>
- <CAEJPjCvK-LATJ5B9-=KXa3oMZwT-zQyFqMNU9EgcfsRD12AWWA@mail.gmail.com>
-Content-Language: en-US
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <CAEJPjCvK-LATJ5B9-=KXa3oMZwT-zQyFqMNU9EgcfsRD12AWWA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB7978:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	91RjA5tVN07i2e0IEb04nDhhrqUr83nl4EHPJcwcL/MasgGG4W2vaUQbSf1tchA/5Y5i262yQ1v5LHplqqdT4Y2WwQH3uHGJ3ke9wKipZJl0RAUglDXCb8EzT3YRw27W0ub/VXrsN5bMWrRhkZutA6xXBosOlFWzMtAJllIbk5VteNxpveodzVya0j4aKhf2Rhzcvz9JuBMP5VNJnwTh4YE5Q94ATRMpAClBo+oSovoqAHv5pSxSB5GbtSD1eZ0Ip0yYZtYoKeTV7osJm72N2Mt50W4SoL5mQoVnH/CzqNBIpbUiW1H9S5BhFMZ8TLL3bbCt6vwvxQHjo8tgpJzbvBO46NS+rThEZpfFmPMiwpW9sPXmSuXyzOr5h7GEHxrSrDvSkzdV47Aa7u5ObHlFqsvDfsd7W8XPpAbYCK3ZZfj1n4kpc1kP47z3vX5RflzJLwvWHJdsoIY7gn3w+MFByJQ80crtDvQaSMWOFfvkjW0/oxGCQfso9eNlGU6xV+Dhey6WjodwLWvmNVRmKLOMM7CE/YmoFijlSR+qTC4SvQEOT9YhJDwHwlpo2UOlHYzLypVNxs07wgrV9KP4szm1n7mtytK9Jgyh3s1U9uDtomD9DtTTIcMKaG/dhQP7nsx9TiLOXUN13lGrFwOEXk8PDd8iufJ9AEqnB4x5j4RBYts=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?RG14ZitjR0xaN1llMlY2Y1lUeU14NWRscVowOHdHUzJEUXRoWG9MRnRhQ3ZR?=
+ =?utf-8?B?UlpIZmZVcEt2NFEvN3p0eE1TQldrNVdMMGhOYzBXWUsvK3ozWDBqYThuSDNO?=
+ =?utf-8?B?QTVJdzFrYWVBdjdBVTRoMUFabXhyRWRXVHVaYjl0TnJVQTV3WmhKMzg4QlBN?=
+ =?utf-8?B?U1J4QjlCSUhPS3NtOTFyUGFHMlRxTTdSRG9PbmhJMkFTZldQZmxZK3pWQ2cy?=
+ =?utf-8?B?bGIwL3VGM2UvYkFFT3g4ME03Qy9HYU56T29HVzdnK2ZnUmdhVkN1akJnbWpp?=
+ =?utf-8?B?b3ZLdE5nWDIycVdjSG9xaHFRNEhLU2tjNXlEN29pcERuZExBR1pxNys2MjJw?=
+ =?utf-8?B?WDh2RUwwbWlxUmdBRWZpZElUckU5UExmaHRUL0lGTVQ3dkVvd3ZrUjl5eXBn?=
+ =?utf-8?B?akdkRTJBSEJwRXMwZGhxMERDbVNaU0F0Nnp0SktkYXdlU1lPR3FOVU5BMGRE?=
+ =?utf-8?B?U0laNzNpYllzRldZMEs3MGdSd0tYMFVqSUZKb0o1cEtkeWR5WGlYWGlxbkZw?=
+ =?utf-8?B?NTZPcEdxd1NRUHpva05mVFpheTI4RWNlUmw5ckF3WG5uaVRjOEZYSk04MWlK?=
+ =?utf-8?B?VXErVVluWjBwMHRuRGdSWlpZTDhlWFgxTUhDTlhoZlFqKzR6djVHWlp6VElH?=
+ =?utf-8?B?Z3RNQ3hDbFQreVdFRDYvVmErbnhnTHVxMjNlZUhORG1POWJoaittUFREdFpW?=
+ =?utf-8?B?VTNKUDJ4TDNqZTE0UDNHZExrMFNmdklKcitzK0xqZ1FhTkRweERZWmR0SnVh?=
+ =?utf-8?B?b0tnTm5QUG4rWmh3TVY1amtqNGhZR09uTndYOEdxZzVEaFl0K3RQK1JyQVNl?=
+ =?utf-8?B?VVp6UHBGZ0JvSnBTbzFZbXloVmZCQ29FckJmQ2U1bnRIQktXRi9WSnFZKzlk?=
+ =?utf-8?B?U3BXdWZFWHpnT00ySVpUMzVxOTRiemRxSkFYUFRHSTVaTW43clhZd1AycXFx?=
+ =?utf-8?B?cVRVazlSSGc5NXR1VmppeksyYWU1VHJiNktEUGFCdkNmc0JTS3hMUFBsSXhR?=
+ =?utf-8?B?bWp4YjdLVGExQ3Z0anZRc1IwdTY0VzdtSVM0bVMzWDRBQ1NmNjV5emlSWTF2?=
+ =?utf-8?B?VThNS25OdmxwZFpqYmN5TDlrWmlMcjgxdTgyVzZGOEFldXpaZy9Fc2kySXJF?=
+ =?utf-8?B?SE05K3dPRm51QlZ6OXpRbGdPZk4xOXB2MjlvVjV3SEdGdmFrUDhPdVFMN2t3?=
+ =?utf-8?B?ZUcwbVFZT0dWU0dGYkxjdmJ2OStDdDdncEtDMHlDNkd3cytqVWdIVDBPQVNh?=
+ =?utf-8?B?TmN6bGVJTmt3a0VDeThJV2R2YzhrODZTT2dsVVpKYitjWG1leE9PQUVPV3Bn?=
+ =?utf-8?B?NEYxNTF4ZnYxVFhWOFZZcHI4dmtrVnN4UkdtZUpKOUFEOTU1MTY4WThDZUlo?=
+ =?utf-8?B?bXhTaFFWK0MwbFR4eFBOdDk5Wnk0cnVNZkxxcUVlRUFWeVoxZ256MXB6Rk5V?=
+ =?utf-8?B?MjgxUG1NeHBBUlJ6S0VBRERTRDZQTUtoQ29NWFJrY0tCYVBuQ09EU0dhaUc1?=
+ =?utf-8?B?ZVFJekF1NGRJNUFhdjRDZjBRbTVHVW5BRlZJc1pxR1lWTXRuZktOQVM4VXhi?=
+ =?utf-8?B?MzlLVVJpTnovMkJSdWZwNUk4NHZKaHpna0YwOVc0S0dUNjVEQlJpRWRQWWhW?=
+ =?utf-8?B?cGZ2QVZYUWIyQzZqbGx4bzZ4YW51L3dBSFkxVUxlcmk4WG1wL2RZeG02Vk5L?=
+ =?utf-8?B?SkJqNm1OT0xTVWh4NUE0clRaUlpkYXFiSmZhRlNtUnBKc2s5ekttTkYxaDhI?=
+ =?utf-8?B?eWZrbGtteTlVWjYxMHdIMDdaMlB4eFRCQlR6amFjZ1V6QlhqbnBUdEZkbjJG?=
+ =?utf-8?B?SEtiUXNjNjNHLzFlcTdvZXh2K215YkdqaUtuNXM5SGxoanZzVDJTby9OVzds?=
+ =?utf-8?B?eHEybjA5OTYwVFM2Z0lqSmNmOFVPOUpENlk5ekRYbzlCUzRSTDRha0FNVWFa?=
+ =?utf-8?B?Zm5TcGhZVmJEcEpIRkZUd1RvZmN2VUJMY0FDRmFOVTNuTHByRjVabUJFY2pP?=
+ =?utf-8?B?VHpkZVZtRzVvZ0ZSSlo5Vm5xWEhGSGhUSDVCV0YraFVPQjlrRm1PYjdsRkcv?=
+ =?utf-8?B?Zy9TRHZBQ0h1c0NoRjIvL2pzYUlXNjA5Q2NMbVFib29yRWt4L0tlaVVSR1dE?=
+ =?utf-8?Q?KbuYEJRu+WOYyGaU3S4nx16lF?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	8F6nWTBykfPISsvKsljGgW0WjgXaXiTGfBv8m6fQPCQwZFMJrXsZO0RD/YjUHBd4l79wN/FOFlSedm/N1VMpyStfxKH3bArNfoXqdD8XB86fzYlTvRxsyS0YCt3EfWv08wI4C+SO6oXDqhvNiuE3oPWUCrZASJS1rchLhkD29gSd9Kr8AbIOVvtsggSnX43xMN79svF5Xnwh95otRXRGkx5SjL9hBcCuHm7jRtdgv2Uv9zp42Q4ASKuZXApudwi+JRbxAGI1BjfXqaUJkwXFPkqQ5j9LW1G5S5GJ6JgBRd5YukFxDJjSJcS5MBs4PQEWGNpklalukMdNTpcrKhiIHs8N3Imr34Ub5ZToMa/0wJDSYWI0oVJ3LepAJ8IqZedDmu+U0OAbz6JgUnCqVDx5CC1gIm+30KaN+zDLXDyGnH8eQWyULXmkFdTp8rVEEipiKSsSOIg4AdNUCR3RThN9wbiBnoTeR0PDmXYROzI+UC9PtlBJPRDUn2WwW9PiZWExQS0/7Nq3I1xp9l15nmLbQJRRDZKT3UcvdVXnYWpjyFYVIjw86ZlAxvohjkPFJg7uaY3vYNLnA5TzhJ+Ol4TdGsEA+plPLgdrdMHYNzRboOA=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b97f8750-2dc2-40cc-7671-08dc532728ca
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2024 15:11:23.5509
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wtkAKT4iJsjRdvvnKPlmLeO4I9ubL3r289xnIt4M0Y1zV/Wov7kZioMjCqFegtp9PCBw8XtYrru7ub1BFJiEPg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7978
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-02_08,2024-04-01_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 spamscore=0
+ bulkscore=0 adultscore=0 mlxlogscore=999 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2403210000
+ definitions=main-2404020111
+X-Proofpoint-GUID: pWoNVwO8rphwE7iNrG_kn6C3WGG8kcii
+X-Proofpoint-ORIG-GUID: pWoNVwO8rphwE7iNrG_kn6C3WGG8kcii
 
-On 4/2/24 5:08 AM, 刘通 wrote:
-> Hi Eric.
+On 02/04/2024 08:49, John Garry wrote:
+> Update:
+> So I have some more patches from trying to support both truncate and 
+> fallocate + punch/insert/collapse for forcealign.
 > 
-> I've actually always followed this principle of vulnerability analysis
-> that you mentioned, but in this case, due to my lack of familiarity
-> with xfs, I wasn't able to construct a sensible PoC. I try to do my
-> best to analyze the root cause when it's in my power to do so, but I
-> couldn't do it in this case.
+> I seem to have at least 2x problems:
+> - unexpected -ENOSPC in some case
 
-Ok, but the things I suggested below don't require deep knowledge
-of xfs - just looking at the POC and understanding/describing what
-it is doing, simplifying it to the fewest syscalls to provoke the
-problem, what privileges are required to form a general assessment
-of a possible threat, etc.
+This -ENOSPC seems related to xfs_bmap_select_minlen() again.
 
-> I'm sorry for adding to your workload,
-> but I don't think that this is an indication that it's a false
-> positive, KASAN's memory detection is justified, so are you 100% sure
-> that the program you constructed is completely correct? I mean, KASAN
-> reported a uaf vulnerability, which is not unfounded. If you are able
-> to reproduce the crash as I said before, then it is a fact that it
-> exists with a high probability, but if when you constructed the
-> simplified program, is it completely consistent with the original
-> repro.c?
+I find that it occurs when calling xfs_bmap_select_minlen() and blen == 
+maxlen again, like:
+blen=64 args->alignment=16, minlen=0, maxlen=64
 
-I did not construct a new reproducer, I ran your exact set of steps
-using your kernel version, your config, and your repro.c, and while
-it triggered a bug in XFS, it did not trigger any KASAN errors.
+And then this gives:
+args->minlen=48 blen=64
 
-As I originally asked - does it do so for you? Looking at the logs,
-it seems very possible that tests that ran prior to the xfs test
-may have corrupted memory, which the xfs repro.c stumbled into during
-your run, and won't be reproduced on a fresh run of that reproducer.
+But xfs_alloc_vextent_start_ag() -> xfs_alloc_vextent_iterate_ags() does 
+not seem to find something suitable.
 
-Thanks,
--Eric
- 
-> Best,
-> Tong
-> 
-> Eric Sandeen <sandeen@sandeen.net> 于2024年4月2日周二 13:54写道：
->>
->> On 3/7/24 1:23 AM, 刘通 wrote:
->>> Hi upstream community,
->>>
->>> I was fuzzing a LTS version of Linux kernel 5.15.148 with my modified
->>> syzkaller and I found a bug named "KASAN: use-after-free in
->>> xfs_allocbt_init_key_from_rec".
->>>
->>> I tested the PoC on 5.15.148, 5.15.149 and 5.15.150 with sanitizer on
->>> and found sanitizer through a panic as "KASAN: use-after-free in
->>> xfs_allocbt_init_key_from_rec" on 5.15.148 and 5.15.150, but there was
->>> no panic and sanitizer error in 5.15.149.
->>>
->>> The syzkaller log, report, kernel config, PoC can be found here:
->>> https://drive.google.com/file/d/1w6VKKewt4VQzb9FzcGtkELJUOwd1wMcC/view?usp=sharing
->>>
->>> # Analysis (rough):
->>> Because that I cannot understand the report0 clearly in the zip file
->>> above, so I rerun the PoC on my vm (5.15.148) and I get another report
->>> named as the same but it looks much clearer than the report0. The new
->>> report can be found in:
->>> https://drive.google.com/file/d/1Vg_4Qwueow6VgjLrijnUB8QbZVx902sv/view?usp=sharing
->>> In this report, we can easily see that the memory allocation and free:
->>> Allocation:
->>
->> As a PhD student interested in security analysis, you could do much more
->> here.
->>
->> For starters, test this on an upstream/mainline kernel to see if it
->> reproduces.
->>
->> Provide the filesystem image that seems to reproduce it, rather than
->> an array in a C file.
->>
->> Look at your reproducer, and identify the ioctls and syscalls that you
->> believe provoked the error. See what privileges are needed to invoke them,
->> if you believe this may be a security flaw.
->>
->> Test your reproducer in isolation, and see if it actually reproduces your
->> use after free (I don't think that it does.)
->>
->> If it doesn't, look back at the tests that ran before it, and see if
->> something is corrupting memory, etc.
->>
->> It's far too easy for someone to turn a syzkaller crank, throw it over
->> the wall, and move on. If you want to help, dig in, don't just pawn off
->> the problem with no effort to investigate what you believe you've found.
->>
->>> ```
->>> [   62.995194][ T6349] Allocated by task 6343:
->>> [   62.995610][ T6349]  kasan_save_stack+0x1b/0x40
->>> [   62.996044][ T6349]  __kasan_slab_alloc+0x61/0x80
->>> [   62.996475][ T6349]  kmem_cache_alloc+0x18e/0x6b0
->>> [   62.996918][ T6349]  getname_flags+0xd2/0x5b0
->>> [   62.997335][ T6349]  user_path_at_empty+0x2b/0x60
->>> [   62.997782][ T6349]  vfs_statx+0x13c/0x370
->>> [   62.998193][ T6349]  __do_sys_newlstat+0x91/0x110
->>> [   62.998634][ T6349]  do_syscall_64+0x35/0xb0
->>> [   62.999033][ T6349]  entry_SYSCALL_64_after_hwframe+0x61/0xcb
->>> ```
->>> Free:
->>> ```
->>> [   62.999776][ T6349] Freed by task 6343:
->>> [   63.000135][ T6349]  kasan_save_stack+0x1b/0x40
->>> [   63.000555][ T6349]  kasan_set_track+0x1c/0x30
->>> [   63.001053][ T6349]  kasan_set_free_info+0x20/0x30
->>> [   63.001638][ T6349]  __kasan_slab_free+0xe1/0x110
->>> [   63.002206][ T6349]  kmem_cache_free+0x82/0x5b0
->>> [   63.002742][ T6349]  putname+0xfe/0x140
->>> [   63.003103][ T6349]  user_path_at_empty+0x4d/0x60
->>> [   63.003551][ T6349]  vfs_statx+0x13c/0x370
->>> [   63.003943][ T6349]  __do_sys_newlstat+0x91/0x110
->>> [   63.004378][ T6349]  do_syscall_64+0x35/0xb0
->>> [   63.004841][ T6349]  entry_SYSCALL_64_after_hwframe+0x61/0xcb
->>> ```
->>> So this is a use-after-free bug: allocated by `kmem_cache_alloc` and
->>> freed by `kmem_cache_free`.
->>> And according to the report, the UAF occurs in
->>> `xfs_allocbt_init_key_from_rec`, `key->alloc.ar_startblock =
->>> rec->alloc.ar_startblock;` which indicates that maybe
->>> `rec->alloc.ar_startblock` was freed before.
->>>
->>> # Step to reproduce:
->>> 1. download the zip file
->>> 2. unzip it
->>> 3. compile the kernel (5.15.148, 5.15.150) with kernel_config
->>> 4. start the kernel with qemu vm
->>> 5. scp repro.c to the vm
->>> 6. compile the repro.c and run it: gcc repro.c -o exp && ./exp
->>> 7. you will see the KASAN error
->>
->> AFAICT you won't. I did exactly this, and got no KASAN error.
->> Did you, after following these steps on a fresh boot of the kernel?
->>
->> -Eric
->>
->>> # Note:
->>> I didn't find any related reports on the internet, which indicates
->>> that it may be a 0day. Hope the upstream can help check and fix it.
->>> And I'll be happy to provide more information if needed.
->>>
->>> Best,
->>> Tong
->>>
->>
-> 
+I'm continuing to look...
+
 
