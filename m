@@ -1,104 +1,161 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from wfhigh7-smtp.messagingengine.com (wfhigh7-smtp.messagingengine.com [64.147.123.158])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469F115AAD5
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 18:05:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A8315AAA1;
+	Tue,  2 Apr 2024 20:00:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.158
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712081107; cv=none; b=QAXStY0R4rwhoRNMM3/K3krDr6wM/Fz92uNagQIlSiS8d4XpW+iNo1Ge0L5mYAckrcIRFDlcbyDnYFyDZOV94r4lcJhGYLh0cdfTClA6D9agp3l00UEkP082PbuMkbCvzcm9uRi1D425A7LUl7HQobrDr89jUW/hJMaGCdyPfH0=
+	t=1712088048; cv=none; b=Ez4gxm3MN4Sx+9+v6XDEQsxgZWVuZ69nAb540xLV7912iOsH4M/tiFfnilnTwYcbsdYThgbVye5r4n6vhzcvySJpp9b+qtMlLOuoFKEUVijwAUHHBre1FniHGlhpc9gH0tyfIieH5zklzGv63fYa1yo9Dcr65TRh2WYZjgFaWzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712081107; c=relaxed/simple;
-	bh=BmvQ+0xao1n5voXSxUVflO7jZ9eSYVUGYxtndPxgVXU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bdYJh2BMl021/YPtHvPQjHsHVI50MYnSMsLDPphM/GZ2VrbgZhTCX/DxRvSPXQlG/E9EunxGcrzTTjZKwkZdeUVKtLk+exx3THZRr2hPiz3m8jWIo4gB5cNbj3gXLOQIqNXrnQJOEIGW2VDLH3HyF5/db9pJMzsy3JT4HmhIa14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PDMP1P0m; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1712088048; c=relaxed/simple;
+	bh=oQG74lIw7JzbfZaqhhdIPaSHwhkDfjMfH91CA0M6Fz0=;
+	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
+	 Subject:Content-Type; b=u8hqNO0QHkYRlgmH/Jt5d2hCkP5r1LmjrBuv9cclpff55QbDYzgmlLV/uo0iNEzbxBSI/teCUKGGM7fQSbrf9VAKSFHRELZDbN3KjC95BKvtLV3r7FySW4Ly8B/EYLpRGT3923DSRdaeIwD9fRTJESh/imw3ff1LiHYm8gqnDVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=verbum.org; spf=pass smtp.mailfrom=verbum.org; dkim=pass (2048-bit key) header.d=verbum.org header.i=@verbum.org header.b=dHrd5vKK; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YJlQJ0A9; arc=none smtp.client-ip=64.147.123.158
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=verbum.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=verbum.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PDMP1P0m"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712081105;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QxsmDw4gKSaDCVTh8/y79dF5qk4AA3NIv/V1UZhqWH0=;
-	b=PDMP1P0mP+SWDoSvcsAsRjTNfE/3oeP1Rrai6o8MzULz1IlI7yY44O3fmxr6RwK26hNQvK
-	ZrmZ+rZYh24aHV3D/SniUuCLzJfQNs+yJCmvdIazn3wklbiP3FfSZpZm2mf/+oeAX6YwPn
-	5zLwz6BFjXKg0Vvdt8dgkkyQFNUTc04=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-372-vbKlzVnNNHqrSF1kVJoWaQ-1; Tue, 02 Apr 2024 14:04:59 -0400
-X-MC-Unique: vbKlzVnNNHqrSF1kVJoWaQ-1
-Received: by mail-lf1-f71.google.com with SMTP id 2adb3069b0e04-516a50d2d1cso1799251e87.3
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 11:04:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712081098; x=1712685898;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QxsmDw4gKSaDCVTh8/y79dF5qk4AA3NIv/V1UZhqWH0=;
-        b=EBRUOX/tABptUv8HPxle1bSPEKh+vghw6K+arzeX1o7ku66GC2gHRw0EPUm2DCMmk0
-         nhaGNoyIiGTIjyYkeFalDfm3JMCnmW9vY6COoyag9D92cxlDCQF0VBNoW/6Mug1imRWt
-         jFPw/7ZNusymZkbTe+CYRltWaqVGmFN2UcAcjLwcSOJI2F10X9lJgfU/6v7QwQtRsrcR
-         qpKFAsbJBVj72VJAoyhJ/4tpFIwefPdwECegpAaV3hoMKo3D5TrdUYV9BK/1+aGgDbhr
-         jVZE7S6lwCePgRzxA4CFxDBVeNrVKPhPe+KPwD3RAacxk5TsO57r724G0JA7dwOWA/Gp
-         JqEA==
-X-Forwarded-Encrypted: i=1; AJvYcCVDGKisy1o4ATTJ+uB25fQY2hiMMd3OUUV+pJ2/VwCCXwpH2WGaPto3gq1k7NNqyKmSu4k247A2rpZjaI4T/nMeGyfdpZGiFACQ
-X-Gm-Message-State: AOJu0YyIW1AAzu3LjjDnExXI0dLw0/3pXryh0OneAtkg12lAxcjcbsPs
-	ztNoSipI44fg24iHNzGK1WlC8BJcxAwgWcaBeqnLC9WWOQW7I26FkyXMczqTLEK2WLH2AnAt/Z+
-	XStN0ZILP+CLblndYniZzTiQlswZtEWErWAElq5pPkHm08A0cNA++fK3N
-X-Received: by 2002:a19:2d4c:0:b0:513:ed0f:36c9 with SMTP id t12-20020a192d4c000000b00513ed0f36c9mr9132291lft.45.1712081097771;
-        Tue, 02 Apr 2024 11:04:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFzWp30/35ol9RiIOdC+Dvt7bTyK8WadGPxAm9ZdLb9mGQnaUhhgWBUQWoANMM+1yaQOUy+yQ==
-X-Received: by 2002:a19:2d4c:0:b0:513:ed0f:36c9 with SMTP id t12-20020a192d4c000000b00513ed0f36c9mr9132275lft.45.1712081097240;
-        Tue, 02 Apr 2024 11:04:57 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id a17-20020a05640233d100b0056ded9bc62esm886769edc.43.2024.04.02.11.04.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Apr 2024 11:04:56 -0700 (PDT)
-Date: Tue, 2 Apr 2024 20:04:56 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: ebiggers@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
-Subject: Re: [PATCH 28/29] xfs: allow verity files to be opened even if the
- fsverity metadata is damaged
-Message-ID: <deqh2ho6ra7tahcuczessc336kmsj3ltgsk6jhu34jrbwwkjqg@uvgkpd5kz542>
-References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
- <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=verbum.org header.i=@verbum.org header.b="dHrd5vKK";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YJlQJ0A9"
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+	by mailfhigh.west.internal (Postfix) with ESMTP id 4692718000AA;
+	Tue,  2 Apr 2024 16:00:45 -0400 (EDT)
+Received: from imap46 ([10.202.2.96])
+  by compute2.internal (MEProxy); Tue, 02 Apr 2024 16:00:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=verbum.org; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm2; t=1712088044; x=1712174444; bh=OW/hxEQUut
+	Xp7x5hTZ4AAb/775nuMaqmDiM9VHgDKFk=; b=dHrd5vKKARetFhs2l68SvwcprX
+	ioKAlXeUlwsOvxxA49OKRLCqfLNDPRuDOKnyuvHTk/CF+CbTOPEdyBVyLe0ScA4j
+	HHA0ApLbcW7hAhUSnxQN/EV267GxUdDsY8nJnfaXok433e4Bh5AVEVXWR5Y38prp
+	zb8eU7arUZrvYkWFoM6++GAPGHX6aZdyvBMOYiL3+9dEWfGgVgmLRhE0X8KOSj0L
+	r3AcIK1EtEhSyEAL1vUr00x7IPAQZOsjcn7JbzlYN3fQC5kfxfx2IS0ymaUvZ/xq
+	8Wm6XATlbpfYEQJOuJRRokD9FAMss5qW9hplrTw+H0jZI7VEMpMY3/f9Gcbg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm2; t=1712088044; x=1712174444; bh=OW/hxEQUutXp7x5hTZ4AAb/775nu
+	MaqmDiM9VHgDKFk=; b=YJlQJ0A9QysXP6BIBmidXnVuYD9xE2CsFFvTBnnjW7pY
+	vfnCNn0HX7WCd99iElTcukxGjzjUxcE9b0t1cS+MCuXmd1sCaJA8YFiIyFl/R3Sb
+	m9jwEQ7EX2KPmQDbYesggRHMHXx1FasbAyyUMtoVIRZ56Hqgp2mg8/Zxxor+blko
+	z8p6eHfuyPNAfeKe9FAxslk3IGWidL0gFf89i8WmNJG7ZH0ZlJeIMJmAFbXNSfMV
+	/IArAaNLJDiBqprZ+M2NbxiN1c3+PQl4sMnxIPyjSRerHJBLk1wZkNa1/6QgC1D/
+	GH+aLzYoKHI12dYlwXp9kp9BmEdGgdpJ0xCqpbO8mg==
+X-ME-Sender: <xms:7GMMZrGaDHYL0raARx7IDtuM-qMNLWS-tmdjtwzlFrrqu_2cL5dUiQ>
+    <xme:7GMMZoX_evcaB7kzFKIJ2l49ZS2u2iASUEg6KGEvWgwfbPYSPHiEhRmMP85UzzjMf
+    8LCxgQN77uFrSyv>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrudefvddgudeggecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdev
+    ohhlihhnucghrghlthgvrhhsfdcuoeifrghlthgvrhhssehvvghrsghumhdrohhrgheqne
+    cuggftrfgrthhtvghrnhephfejuddthedtgfeuueeltdekfeekvdfgveeifeduteekheff
+    jefgieehheekgeetnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
+    hfrhhomhepfigrlhhtvghrshesvhgvrhgsuhhmrdhorhhg
+X-ME-Proxy: <xmx:7GMMZtKh7LwQTiHt5G9YL6mgxpAKysOKoIUcM9mut0RgOCP1XseZ7Q>
+    <xmx:7GMMZpH-nphrXeADRlUrz0lXIn1EE93x68S4waR4LDl8lmhxd3Ybww>
+    <xmx:7GMMZhVuWHzjk-ytc1LdCstihbgJFtvkBhb4e_6n1Uw4fPlMLKUL4A>
+    <xmx:7GMMZkNZ0JZqZZuq_bE2CHOmQXhNgm18nJxS75fhMYSMmbr0P4CWLw>
+    <xmx:7GMMZjIOCjYXlxRv_bVWTm7MbGiOLxaU0fUm5gaOBoActf47nGBSX2Ui>
+Feedback-ID: ibe7c40e9:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+	id 22EDD2A2008B; Tue,  2 Apr 2024 16:00:44 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.11.0-alpha0-333-gbfea15422e-fm-20240327.001-gbfea1542
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
+Message-Id: <2afcf2b2-992d-4678-bf68-d70dce0a2289@app.fastmail.com>
+In-Reply-To: 
+ <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
+References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
+ <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
+Date: Tue, 02 Apr 2024 16:00:06 -0400
+From: "Colin Walters" <walters@verbum.org>
+To: "Darrick J. Wong" <djwong@kernel.org>,
+ "Eric Biggers" <ebiggers@kernel.org>, aalbersh@redhat.com
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org,
+ fsverity@lists.linux.dev
+Subject: Re: [PATCH 28/29] xfs: allow verity files to be opened even if the fsverity
+ metadata is damaged
+Content-Type: text/plain
 
-On 2024-03-29 17:43:22, Darrick J. Wong wrote:
+
+
+On Fri, Mar 29, 2024, at 8:43 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
-> 
+>
 > There are more things that one can do with an open file descriptor on
 > XFS -- query extended attributes, scan for metadata damage, repair
 > metadata, etc.  None of this is possible if the fsverity metadata are
 > damaged, because that prevents the file from being opened.
-> 
+>
 > Ignore a selective set of error codes that we know fsverity_file_open to
 > return if the verity descriptor is nonsense.
-> 
+>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
 >  fs/iomap/buffered-io.c |    8 ++++++++
 >  fs/xfs/xfs_file.c      |   19 ++++++++++++++++++-
 >  2 files changed, 26 insertions(+), 1 deletion(-)
+>
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 9f9d929dfeebc..e68a15b72dbdd 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -487,6 +487,14 @@ static loff_t iomap_readpage_iter(const struct 
+> iomap_iter *iter,
+>  	size_t poff, plen;
+>  	sector_t sector;
 > 
+> +	/*
+> +	 * If this verity file hasn't been activated, fail read attempts.  This
+> +	 * can happen if the calling filesystem allows files to be opened even
+> +	 * with damaged verity metadata.
+> +	 */
+> +	if (IS_VERITY(iter->inode) && !fsverity_active(iter->inode))
+> +		return -EIO;
+> +
+>  	if (iomap->type == IOMAP_INLINE)
+>  		return iomap_read_inline_data(iter, folio);
 > 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index c0b3e8146b753..36034eaefbf55 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1431,8 +1431,25 @@ xfs_file_open(
+>  			FMODE_DIO_PARALLEL_WRITE | FMODE_CAN_ODIRECT;
+> 
+>  	error = fsverity_file_open(inode, file);
+> -	if (error)
+> +	switch (error) {
+> +	case -EFBIG:
+> +	case -EINVAL:
+> +	case -EMSGSIZE:
+> +	case -EFSCORRUPTED:
+> +		/*
+> +		 * Be selective about which fsverity errors we propagate to
+> +		 * userspace; we still want to be able to open this file even
+> +		 * if reads don't work.  Someone might want to perform an
+> +		 * online repair.
+> +		 */
+> +		if (has_capability_noaudit(current, CAP_SYS_ADMIN))
+> +			break;
 
-Looks good to me:
-Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
+As I understand it, fsverity (and dm-verity) are desirable in high-safety and integrity requirement cases where the goal is for the system to "fail closed" if errors in general are detected; anything that would have the system be in an ill-defined state.
 
--- 
-- Andrey
+A lot of ambient processes are going to have CAP_SYS_ADMIN and this will just swallow these errors for those (will things the EFSCORRUPTED path at least have been logged by a lower level function?)...whereas this is only needed just for a very few tools.
+
+At least for composefs the quoted cases of "query extended attributes, scan for metadata damage, repair metadata" are all things that canonically live in the composefs metadata (EROFS) blob, so in theory there's a lot less of a need to query/inspect it for those use cases.  (Maybe for composefs we should force canonicalize all the underlying files to have mode 0400 and no xattrs or something and add that to its repair).
+
+I hesitate to say it but maybe there should be some ioctl for online repair use cases only, or perhaps a new O_NOVERITY special flag to openat2()?
+
+
 
