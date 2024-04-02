@@ -1,74 +1,74 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C9115E5DC
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 21:35:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7082915E5DE
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 21:35:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712093749; cv=none; b=RzrG3aUMYO415exn1I6SGQYGo5Xc1tpzArx+m3OYk2g5TIe815564NQkg6fx31CVudmKpDb4gXv9bJmo+RrXjItdhkTabUhKbgJbnHBpGnJuBXRXW8rP7SMXGHrhRyVHRAsUnlFZ21KxDBsg4VC/rmu0fVyBxQOHWE7O5MaQ7Rk=
+	t=1712093750; cv=none; b=sqCE7b7gRpqnyGNWPxs+o6iqPr4c4BNoZuZU+1A0f9ifV37lnGjKmSDa2q5nyAGEAxSFPwLLUmNdMZPfbfjpECnZu7lnpuevzRZGQJ08jPMDpLEowu7/xkmdFrRSyCEdEMS3+AJGkkBKo1oi51qoFtjRBS4wGsYibdDK3uT2IpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712093749; c=relaxed/simple;
-	bh=lztd+BvvC/tgLjagG/Lp2VpLta0TLp3t8MrR6gBNz0o=;
+	s=arc-20240116; t=1712093750; c=relaxed/simple;
+	bh=UVFaSvKtQtbkxIKww4Gb8H8z9Qia4xQf/EiX/zan0Io=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AgaL5VywlOWqhU2liFje55oIEvQpktrdjxIinxyc8Bq+X5o04e8TsKoyi/KItS9am714ZIjY3E1TXsOk+SLl1WnsuVIIvuvDDHe8jBMcZR4kQzpzegpWJYhaoOQK7U8gler7Sd6/Pnn7MTjW/n1ZxBCA/aWra1JWlk+WSNE8z4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=NXzQZRzH; arc=none smtp.client-ip=209.85.214.173
+	 MIME-Version; b=Pw3/IVpohuxhEq/uUn4vH2M9G/VLxWqKTM7OwQ+1kkBBfiZnj3S3NMznGGw+/UQ74p43KFQi3u+s9THYHRRRbhv+UT4f9BES8xZNpgJ5fnuLpVIrZYCRXp1t8eMeH0ySbuat/e8H4LvN7a2s7optz+rNS/5I1Vrl9RiTRc1bF78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=TIAXUDH/; arc=none smtp.client-ip=209.85.215.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NXzQZRzH"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1e0d82d441bso51165555ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 14:35:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="TIAXUDH/"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-5dcc4076c13so252827a12.0
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 14:35:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712093747; x=1712698547; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712093748; x=1712698548; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=tOw+VF89Und/L8z1kB7MLa5I0o0oJqetO+bP0JEvy/U=;
-        b=NXzQZRzHCMMtlJuXLShLxFwFknVBpkhB9L214Ua2f5zXFC9aoaXkTuYQljOPF9j7IA
-         Hz08lh+omfqBWX488gdGii5sJWhuBe9EiiCaa725DbihnsktE2kN+BAPGxIHrbErThFN
-         LU8u+LOpZERhw+oQ4dgTHXwJmtphCGFQgQUMo7FPELPqjt6656P+TXZse/pUZG+qyc+r
-         QflcheA12RuMqfPNMPLwOh72AuNuoJkAReKi5+aMs2vW3UVXtshgYKtEtSUynl5GPNq3
-         s7cvjyemWHMRH294OplDAie26ZdYHUd6YatYR3WiunnX2xJbu8jXNCYB/tbZQe2eCOk0
-         Onaw==
+        bh=NEnfM+jopKkDMHCtvibf7wJfRopPLPsgM5YkBKMJle0=;
+        b=TIAXUDH/y+xgUwlH2Co7Z9Kb+JikirVUid7aOW+vEr+VWwTCl9juhxbEUu5nSJKzYb
+         9CW7qFBficylkf+WGmUdbzKnu5sAZ99lSMior3cmqPapUM1/7pT7HipAem5XiPfYP6/Z
+         PdESKxsB9ljSuoDSt4GHNB3ndbBQZDSFLyicZc2y5du4jCtSQnLWyCL24VqA+55nryPl
+         KoTVDor88pH+dH8KOPPMF0pefD2LBuJrosnwnReyvPO6LApYzi9Sm3nLTT7G/wurpKP5
+         Qw/3xPS3R+GxKjGme/vO8jC8wh2SRdF8l4Cb1KWOirScrNgOzrg9NLlWu7V1JUPZK5qc
+         Q0/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712093747; x=1712698547;
+        d=1e100.net; s=20230601; t=1712093748; x=1712698548;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=tOw+VF89Und/L8z1kB7MLa5I0o0oJqetO+bP0JEvy/U=;
-        b=NqiVuL2FM8KccKQ4RFBWjl0Aaf3oHmwe4Elbeqa3pbZB8qvGix07qW0UT0hH3h34mn
-         y3P76UfzciiK32fVEPgw2apQK5s290DxFf1e5ZWpXnZPKJNUB6VN/WNT1mdiuEFKQs4N
-         43sp7Lk77mZa1yIwPeM4qxPOi3EFGcgp77dH2dw6QVx98uDpr7lYCq4cdFhKa/+D+8G6
-         iB7671fTT18iroMM3fjyjuBrXeCGPUOGlkhcDna6OaiYIZxIScDpgK37nlAiTfVF8xAQ
-         ZY0Sj7g7NUNTVp1dnSCd2WKur4edMHIM7HW3lMebs5HM7q6+zRnEUjZU8b5qTdyGguOd
-         9d5Q==
-X-Gm-Message-State: AOJu0YxWrnCa0OHAbmDF39hn84BzfNZD4konfShX8ubzA6xGzjOIj00P
-	UI9ZaY53cLIYJALEPcPmIUAglLIhRjw0mKNApmvTEI66rJEdmrqA1DeE9ACrdJGv7a5LkHWjqzg
-	S
-X-Google-Smtp-Source: AGHT+IHn0q1zs2l7SEybokM5u0U2y5B/279zux9CDdtmcH3BlJrxigp8H4BDjuYExthcz13yHElTDg==
-X-Received: by 2002:a17:902:c40f:b0:1df:f859:91bd with SMTP id k15-20020a170902c40f00b001dff85991bdmr877949plk.4.1712093747223;
+        bh=NEnfM+jopKkDMHCtvibf7wJfRopPLPsgM5YkBKMJle0=;
+        b=YU+HzdoYx5gvKOhBIBD9vXUu/IJdBgnyiofLkU6DD/LmhQlm+ozapJZmroaF6o/o18
+         JAiRZEzrADXOMaYSzRE0vxMkACXdcI5dj2Fv7Apdh19Z8V7FiiT5hcRYRnuo1iUQweBH
+         2j2k8t+3K1oE9vScyMmYt6J06u/n+FsJpTb8Kb0sqXaZ7R2GkSvS+u32Xtnw5JQHUTpQ
+         9yd+UXWT9Q6/fO1L/WC7FyiHNPDaUoWBl8GQ2nQN1vCn7IvIlr8K+vmxuxvhpKupUXcb
+         tiepxJtpX4e2yKgCvmyttqjXZNq3+jsB/xGpbHGL+m9MzIDpRun43adbQ6suMiYqHHCo
+         exug==
+X-Gm-Message-State: AOJu0YyRYb1n2KCFlAsoEIVGGMed1PNndjiiT/kjUW2XCKHvV8mb8Wcr
+	acttv3A8Vbwg1PiHfJTb1A8nAtntIDOLor8/Vm+cM4a5mHav7tmLe2N2OVH+LmhXOnQcVWkSmU0
+	C
+X-Google-Smtp-Source: AGHT+IHjmiWuparFR6Fhqk6Oxg3UbvrZuI56Qu0VjhCOhIxeTu4x4cmpxkc0UV8VSJLhgsjLTvzdAw==
+X-Received: by 2002:a17:903:1206:b0:1e0:1a52:3c59 with SMTP id l6-20020a170903120600b001e01a523c59mr1028871plh.23.1712093747514;
         Tue, 02 Apr 2024 14:35:47 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id s2-20020a170902b18200b001ddb505d50asm11643331plr.244.2024.04.02.14.35.46
+        by smtp.gmail.com with ESMTPSA id x5-20020a170902a38500b001e256cb48f7sm2047251pla.197.2024.04.02.14.35.46
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 02 Apr 2024 14:35:46 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
 	by dread.disaster.area with esmtp (Exim 4.96)
 	(envelope-from <dave@fromorbit.com>)
-	id 1rrlnE-001n76-0Q
+	id 1rrlnE-001n7G-0k
 	for linux-xfs@vger.kernel.org;
 	Wed, 03 Apr 2024 08:35:43 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97)
 	(envelope-from <dave@devoid.disaster.area>)
-	id 1rrlnD-000000052FW-2ctf
+	id 1rrlnD-000000052Fi-31Zv
 	for linux-xfs@vger.kernel.org;
 	Wed, 03 Apr 2024 08:35:43 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: linux-xfs@vger.kernel.org
-Subject: [PATCH 2/5] xfs: fix sparse warning in xfs_extent_busy_clear
-Date: Wed,  3 Apr 2024 08:28:29 +1100
-Message-ID: <20240402213541.1199959-3-david@fromorbit.com>
+Subject: [PATCH 5/5] xfs: fix sparse warnings about unused interval tree functions
+Date: Wed,  3 Apr 2024 08:28:32 +1100
+Message-ID: <20240402213541.1199959-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240402213541.1199959-1-david@fromorbit.com>
 References: <20240402213541.1199959-1-david@fromorbit.com>
@@ -82,92 +82,97 @@ Content-Transfer-Encoding: 8bit
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Sparse reports:
+Sparse throws warnings about the interval tree functions that are
+defined and then not used in the scrub bitmap code:
 
-fs/xfs/xfs_extent_busy.c:588:17: warning: context imbalance in 'xfs_extent_busy_clear' - unexpected unlock
+fs/xfs/scrub/bitmap.c:57:1: warning: unused function 'xbitmap64_tree_iter_next' [-Wunused-function]
+INTERVAL_TREE_DEFINE(struct xbitmap64_node, bn_rbnode, uint64_t,
+^
+./include/linux/interval_tree_generic.h:151:33: note: expanded from macro 'INTERVAL_TREE_DEFINE'
+ITSTATIC ITSTRUCT *                                                           \
+                                                                              ^
+<scratch space>:3:1: note: expanded from here
+xbitmap64_tree_iter_next
+^
+fs/xfs/scrub/bitmap.c:331:1: warning: unused function 'xbitmap32_tree_iter_next' [-Wunused-function]
+INTERVAL_TREE_DEFINE(struct xbitmap32_node, bn_rbnode, uint32_t,
+^
+./include/linux/interval_tree_generic.h:151:33: note: expanded from macro 'INTERVAL_TREE_DEFINE'
+ITSTATIC ITSTRUCT *                                                           \
+                                                                              ^
+<scratch space>:59:1: note: expanded from here
+xbitmap32_tree_iter_next
 
-But there is no locking bug here. Sparse simply doesn't understand
-the logic and locking in the busy extent processing loop.
-xfs_extent_busy_put_pag() has an annotation to suppresses an
-unexpected unlock warning, but that isn't sufficient.
-
-If we move the pag existence check into xfs_extent_busy_put_pag() and
-annotate that with a __release() so that this function always
-appears to release the pag->pagb_lock, sparse now thinks the loop
-locking is balanced (one unlock, one lock per loop) but still throws
-an unexpected unlock warning after loop cleanup.
-
-i.e. it does not understand that we enter the loop without any locks
-held and exit it with the last lock still held. Whilst the locking
-within the loop is inow balanced, we need to add an __acquire() to
-xfs_extent_busy_clear() to set the initial lock context needed to
-avoid false warnings.
+Fix these by marking the functions created by the interval tree
+creation macro as __maybe_unused to suppress this warning.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_extent_busy.c | 27 +++++++++++++++++++++++----
- 1 file changed, 23 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/bitmap.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 56cfa1498571..686b67372030 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -534,12 +534,24 @@ xfs_extent_busy_clear_one(
- 	kfree(busyp);
- }
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index 0cb8d43912a8..7ba35a7a7920 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -40,22 +40,23 @@ struct xbitmap64_node {
+  * These functions are defined by the INTERVAL_TREE_DEFINE macro, but we'll
+  * forward-declare them anyway for clarity.
+  */
+-static inline void
++static inline __maybe_unused void
+ xbitmap64_tree_insert(struct xbitmap64_node *node, struct rb_root_cached *root);
  
-+/*
-+ * Sparse has real trouble with the structure of xfs_extent_busy_clear() and it
-+ * is impossible to annotate it correctly if we leave the 'if (pag)' conditional
-+ * in xfs_extent_busy_clear(). Hence we always "release" the lock in
-+ * xfs_extent_busy_put_pag() so sparse only ever sees one possible path to
-+ * drop the lock.
-+ */
- static void
- xfs_extent_busy_put_pag(
- 	struct xfs_perag	*pag,
- 	bool			wakeup)
- 		__releases(pag->pagb_lock)
- {
-+	if (!pag) {
-+		__release(pag->pagb_lock);
-+		return;
-+	}
-+
- 	if (wakeup) {
- 		pag->pagb_gen++;
- 		wake_up_all(&pag->pagb_wait);
-@@ -565,10 +577,18 @@ xfs_extent_busy_clear(
- 	xfs_agnumber_t		agno = NULLAGNUMBER;
- 	bool			wakeup = false;
+-static inline void
++static inline __maybe_unused void
+ xbitmap64_tree_remove(struct xbitmap64_node *node, struct rb_root_cached *root);
  
-+	/*
-+	 * Sparse thinks the locking in the loop below is balanced (one unlock,
-+	 * one lock per loop iteration) and doesn't understand that we enter
-+	 * with no lock held and exit with a lock held. Hence we need to
-+	 * "acquire" the lock to create the correct initial condition for the
-+	 * cleanup after loop termination to avoid an unexpected unlock warning.
-+	 */
-+	__acquire(pag->pagb_lock);
-+
- 	list_for_each_entry_safe(busyp, n, list, list) {
- 		if (busyp->agno != agno) {
--			if (pag)
--				xfs_extent_busy_put_pag(pag, wakeup);
-+			xfs_extent_busy_put_pag(pag, wakeup);
- 			agno = busyp->agno;
- 			pag = xfs_perag_get(mp, agno);
- 			spin_lock(&pag->pagb_lock);
-@@ -584,8 +604,7 @@ xfs_extent_busy_clear(
- 		}
- 	}
+-static inline struct xbitmap64_node *
++static inline __maybe_unused struct xbitmap64_node *
+ xbitmap64_tree_iter_first(struct rb_root_cached *root, uint64_t start,
+ 			uint64_t last);
  
--	if (pag)
--		xfs_extent_busy_put_pag(pag, wakeup);
-+	xfs_extent_busy_put_pag(pag, wakeup);
- }
+-static inline struct xbitmap64_node *
++static inline __maybe_unused struct xbitmap64_node *
+ xbitmap64_tree_iter_next(struct xbitmap64_node *node, uint64_t start,
+ 		       uint64_t last);
  
- /*
+ INTERVAL_TREE_DEFINE(struct xbitmap64_node, bn_rbnode, uint64_t,
+-		__bn_subtree_last, START, LAST, static inline, xbitmap64_tree)
++		__bn_subtree_last, START, LAST, static inline __maybe_unused,
++		xbitmap64_tree)
+ 
+ /* Iterate each interval of a bitmap.  Do not change the bitmap. */
+ #define for_each_xbitmap64_extent(bn, bitmap) \
+@@ -314,22 +315,23 @@ struct xbitmap32_node {
+  * These functions are defined by the INTERVAL_TREE_DEFINE macro, but we'll
+  * forward-declare them anyway for clarity.
+  */
+-static inline void
++static inline __maybe_unused void
+ xbitmap32_tree_insert(struct xbitmap32_node *node, struct rb_root_cached *root);
+ 
+-static inline void
++static inline __maybe_unused void
+ xbitmap32_tree_remove(struct xbitmap32_node *node, struct rb_root_cached *root);
+ 
+-static inline struct xbitmap32_node *
++static inline __maybe_unused struct xbitmap32_node *
+ xbitmap32_tree_iter_first(struct rb_root_cached *root, uint32_t start,
+ 			  uint32_t last);
+ 
+-static inline struct xbitmap32_node *
++static inline __maybe_unused struct xbitmap32_node *
+ xbitmap32_tree_iter_next(struct xbitmap32_node *node, uint32_t start,
+ 			 uint32_t last);
+ 
+ INTERVAL_TREE_DEFINE(struct xbitmap32_node, bn_rbnode, uint32_t,
+-		__bn_subtree_last, START, LAST, static inline, xbitmap32_tree)
++		__bn_subtree_last, START, LAST, static inline __maybe_unused,
++		xbitmap32_tree)
+ 
+ /* Iterate each interval of a bitmap.  Do not change the bitmap. */
+ #define for_each_xbitmap32_extent(bn, bitmap) \
 -- 
 2.43.0
 
