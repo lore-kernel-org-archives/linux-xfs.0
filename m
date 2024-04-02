@@ -1,161 +1,149 @@
-Received: from wfhigh7-smtp.messagingengine.com (wfhigh7-smtp.messagingengine.com [64.147.123.158])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A8315AAA1;
-	Tue,  2 Apr 2024 20:00:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C475715AAA7
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 21:26:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712088048; cv=none; b=Ez4gxm3MN4Sx+9+v6XDEQsxgZWVuZ69nAb540xLV7912iOsH4M/tiFfnilnTwYcbsdYThgbVye5r4n6vhzcvySJpp9b+qtMlLOuoFKEUVijwAUHHBre1FniHGlhpc9gH0tyfIieH5zklzGv63fYa1yo9Dcr65TRh2WYZjgFaWzc=
+	t=1712093196; cv=none; b=eaGIJK5cpbs/NYmcpOry+lij7cOKUInjFFi3L9GQ8DxtBhI1rijhL6CfvCFHklymc3RkAQEZsd+EMkY69mtw3xI9A/9tMJ+HuNUX3NpAtxcDv528HwxJNUWxk30ejsNTmX+28TniCAxswJOc2YbZDTo6J9Ts/+oq2uZ7lRnybHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712088048; c=relaxed/simple;
-	bh=oQG74lIw7JzbfZaqhhdIPaSHwhkDfjMfH91CA0M6Fz0=;
-	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
-	 Subject:Content-Type; b=u8hqNO0QHkYRlgmH/Jt5d2hCkP5r1LmjrBuv9cclpff55QbDYzgmlLV/uo0iNEzbxBSI/teCUKGGM7fQSbrf9VAKSFHRELZDbN3KjC95BKvtLV3r7FySW4Ly8B/EYLpRGT3923DSRdaeIwD9fRTJESh/imw3ff1LiHYm8gqnDVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=verbum.org; spf=pass smtp.mailfrom=verbum.org; dkim=pass (2048-bit key) header.d=verbum.org header.i=@verbum.org header.b=dHrd5vKK; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=YJlQJ0A9; arc=none smtp.client-ip=64.147.123.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=verbum.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=verbum.org
+	s=arc-20240116; t=1712093196; c=relaxed/simple;
+	bh=Usxkw4VvUR39Bow/055WWjQFKD6J5UdAkTBZrOzBcQA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IJTO319u5uZ4cNklCXvLL2gtDNSR54p2MTijRUS20jVN4vNnemo/RpweWFV5RNK3mRrvhOBHS6vf/6W9LZkyDXTBqojkKvtOqN36diGGY7eCBdJXcBX33SNO84k7WTOT+zPdvnYKH/CwUp/79fe5dctl1XMU2k6nLFU8vV8SwVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=cdMyifU2; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=verbum.org header.i=@verbum.org header.b="dHrd5vKK";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="YJlQJ0A9"
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-	by mailfhigh.west.internal (Postfix) with ESMTP id 4692718000AA;
-	Tue,  2 Apr 2024 16:00:45 -0400 (EDT)
-Received: from imap46 ([10.202.2.96])
-  by compute2.internal (MEProxy); Tue, 02 Apr 2024 16:00:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=verbum.org; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm2; t=1712088044; x=1712174444; bh=OW/hxEQUut
-	Xp7x5hTZ4AAb/775nuMaqmDiM9VHgDKFk=; b=dHrd5vKKARetFhs2l68SvwcprX
-	ioKAlXeUlwsOvxxA49OKRLCqfLNDPRuDOKnyuvHTk/CF+CbTOPEdyBVyLe0ScA4j
-	HHA0ApLbcW7hAhUSnxQN/EV267GxUdDsY8nJnfaXok433e4Bh5AVEVXWR5Y38prp
-	zb8eU7arUZrvYkWFoM6++GAPGHX6aZdyvBMOYiL3+9dEWfGgVgmLRhE0X8KOSj0L
-	r3AcIK1EtEhSyEAL1vUr00x7IPAQZOsjcn7JbzlYN3fQC5kfxfx2IS0ymaUvZ/xq
-	8Wm6XATlbpfYEQJOuJRRokD9FAMss5qW9hplrTw+H0jZI7VEMpMY3/f9Gcbg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm2; t=1712088044; x=1712174444; bh=OW/hxEQUutXp7x5hTZ4AAb/775nu
-	MaqmDiM9VHgDKFk=; b=YJlQJ0A9QysXP6BIBmidXnVuYD9xE2CsFFvTBnnjW7pY
-	vfnCNn0HX7WCd99iElTcukxGjzjUxcE9b0t1cS+MCuXmd1sCaJA8YFiIyFl/R3Sb
-	m9jwEQ7EX2KPmQDbYesggRHMHXx1FasbAyyUMtoVIRZ56Hqgp2mg8/Zxxor+blko
-	z8p6eHfuyPNAfeKe9FAxslk3IGWidL0gFf89i8WmNJG7ZH0ZlJeIMJmAFbXNSfMV
-	/IArAaNLJDiBqprZ+M2NbxiN1c3+PQl4sMnxIPyjSRerHJBLk1wZkNa1/6QgC1D/
-	GH+aLzYoKHI12dYlwXp9kp9BmEdGgdpJ0xCqpbO8mg==
-X-ME-Sender: <xms:7GMMZrGaDHYL0raARx7IDtuM-qMNLWS-tmdjtwzlFrrqu_2cL5dUiQ>
-    <xme:7GMMZoX_evcaB7kzFKIJ2l49ZS2u2iASUEg6KGEvWgwfbPYSPHiEhRmMP85UzzjMf
-    8LCxgQN77uFrSyv>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrudefvddgudeggecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdev
-    ohhlihhnucghrghlthgvrhhsfdcuoeifrghlthgvrhhssehvvghrsghumhdrohhrgheqne
-    cuggftrfgrthhtvghrnhephfejuddthedtgfeuueeltdekfeekvdfgveeifeduteekheff
-    jefgieehheekgeetnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
-    hfrhhomhepfigrlhhtvghrshesvhgvrhgsuhhmrdhorhhg
-X-ME-Proxy: <xmx:7GMMZtKh7LwQTiHt5G9YL6mgxpAKysOKoIUcM9mut0RgOCP1XseZ7Q>
-    <xmx:7GMMZpH-nphrXeADRlUrz0lXIn1EE93x68S4waR4LDl8lmhxd3Ybww>
-    <xmx:7GMMZhVuWHzjk-ytc1LdCstihbgJFtvkBhb4e_6n1Uw4fPlMLKUL4A>
-    <xmx:7GMMZkNZ0JZqZZuq_bE2CHOmQXhNgm18nJxS75fhMYSMmbr0P4CWLw>
-    <xmx:7GMMZjIOCjYXlxRv_bVWTm7MbGiOLxaU0fUm5gaOBoActf47nGBSX2Ui>
-Feedback-ID: ibe7c40e9:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-	id 22EDD2A2008B; Tue,  2 Apr 2024 16:00:44 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.11.0-alpha0-333-gbfea15422e-fm-20240327.001-gbfea1542
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="cdMyifU2"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-5d4a1e66750so3346915a12.0
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 14:26:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712093194; x=1712697994; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=yJ+MpWrAm/yV4C8xPtf1zGd3dcExtS3YCwkcl5R0q/Q=;
+        b=cdMyifU2YDa72eRI+Q905zqOf2o7SOpU9ksbb45R5Y8sbbyw2XD+9I7cLTtcHqWauA
+         OJKjA6+JgCeIkA6blukcNgPiHCpag0hi7lrW8MPX+UxOHajn1+oUctkF43OhS/25Ufn0
+         nNOY9PsEdbqy/VGTxICrpr7OJST2r8gICx5aaUgjMZeNEO9Zpx6YVP+z4LJrQYGbt1AV
+         lOPV3q5IBjR2JON78TWFu+HnA1qgXBGp+GuQxYA1tnXpRfzHpUDPSlsOZ4e5/V5LZaKz
+         Y8L1RVLcg7DdzTVWZYYwjGSPZ7TCqNpDf15rc6pxP8b6aZeV6VtH3Q9jFdvhEz+BPyg8
+         Cmlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712093194; x=1712697994;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yJ+MpWrAm/yV4C8xPtf1zGd3dcExtS3YCwkcl5R0q/Q=;
+        b=gKlVXx2KY1xq4gAqwZEyrVQv2UDawOB9TzJjEQBaj29+g4dRQsb53fcfCM0DEKS2rE
+         OlirBVy6mCphVlZLwO4j2VfebTQIqG6lfSlhx21EqB5Crbat8J4dXMyXAVMYR2ZTtOIr
+         SKtu/DRU/Z9KAd+rXVx+ekEtv4npWmpSSphbwheS01i9zgGiWsB+KMtkRnpZRFzlFUJ/
+         3yQJzYRaCOp+c0/C0urRG/vWL945OYTXKa969Q1HRJv3npzg+9QxsH6RHKFUvJxG6pB1
+         98WigjaQPBt99LC9h/nTHGLSyJVNBGbpyW0UDUZsua+jdlGaRld8RKJ9xE6vb2yvZ2pp
+         sZLQ==
+X-Gm-Message-State: AOJu0YxVnBlLvtvM9BzKiZ9o+jwQ0xPjsBqzHOdktIwHILpXKlUjNcdu
+	4fbTtH5BIQjI7dvdxa1GYBun9G4n/PHbl9P/3va6Cc5QIdS/OJ7Rt7HStKTveot+QDBqLrpoDBp
+	9
+X-Google-Smtp-Source: AGHT+IHkzjTLFqni+IByv1LCeRp7AUf8HgdIMowk+tGKtFyhMLNjxaT/u+CKJo2jVZsL3GwsRC5+zA==
+X-Received: by 2002:a05:6a20:3d81:b0:1a5:6e14:369 with SMTP id s1-20020a056a203d8100b001a56e140369mr14519313pzi.6.1712093193914;
+        Tue, 02 Apr 2024 14:26:33 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
+        by smtp.gmail.com with ESMTPSA id o3-20020a056a00214300b006e6288ef4besm10224435pfk.54.2024.04.02.14.26.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Apr 2024 14:26:33 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rrleI-001mfw-2t;
+	Wed, 03 Apr 2024 08:26:30 +1100
+Date: Wed, 3 Apr 2024 08:26:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
+Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
+Message-ID: <Zgx4BhcW9/6XAiq9@dread.disaster.area>
+References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
+ <20240306053048.1656747-1-david@fromorbit.com>
+ <20240306053048.1656747-2-david@fromorbit.com>
+ <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
+ <ZfpnfXBU9a6RkR50@dread.disaster.area>
+ <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
+ <ZgueamvcnndUUwYd@dread.disaster.area>
+ <11ba4fca-2c89-406a-83e3-cb8d20f72044@oracle.com>
+ <fd9f99a3-35ef-477e-ad64-08f71223d36b@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <2afcf2b2-992d-4678-bf68-d70dce0a2289@app.fastmail.com>
-In-Reply-To: 
- <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
-References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
- <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
-Date: Tue, 02 Apr 2024 16:00:06 -0400
-From: "Colin Walters" <walters@verbum.org>
-To: "Darrick J. Wong" <djwong@kernel.org>,
- "Eric Biggers" <ebiggers@kernel.org>, aalbersh@redhat.com
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org,
- fsverity@lists.linux.dev
-Subject: Re: [PATCH 28/29] xfs: allow verity files to be opened even if the fsverity
- metadata is damaged
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fd9f99a3-35ef-477e-ad64-08f71223d36b@oracle.com>
 
-
-
-On Fri, Mar 29, 2024, at 8:43 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> There are more things that one can do with an open file descriptor on
-> XFS -- query extended attributes, scan for metadata damage, repair
-> metadata, etc.  None of this is possible if the fsverity metadata are
-> damaged, because that prevents the file from being opened.
->
-> Ignore a selective set of error codes that we know fsverity_file_open to
-> return if the verity descriptor is nonsense.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/iomap/buffered-io.c |    8 ++++++++
->  fs/xfs/xfs_file.c      |   19 ++++++++++++++++++-
->  2 files changed, 26 insertions(+), 1 deletion(-)
->
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 9f9d929dfeebc..e68a15b72dbdd 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -487,6 +487,14 @@ static loff_t iomap_readpage_iter(const struct 
-> iomap_iter *iter,
->  	size_t poff, plen;
->  	sector_t sector;
+On Tue, Apr 02, 2024 at 04:11:20PM +0100, John Garry wrote:
+> On 02/04/2024 08:49, John Garry wrote:
+> > Update:
+> > So I have some more patches from trying to support both truncate and
+> > fallocate + punch/insert/collapse for forcealign.
+> > 
+> > I seem to have at least 2x problems:
+> > - unexpected -ENOSPC in some case
 > 
-> +	/*
-> +	 * If this verity file hasn't been activated, fail read attempts.  This
-> +	 * can happen if the calling filesystem allows files to be opened even
-> +	 * with damaged verity metadata.
-> +	 */
-> +	if (IS_VERITY(iter->inode) && !fsverity_active(iter->inode))
-> +		return -EIO;
-> +
->  	if (iomap->type == IOMAP_INLINE)
->  		return iomap_read_inline_data(iter, folio);
+> This -ENOSPC seems related to xfs_bmap_select_minlen() again.
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index c0b3e8146b753..36034eaefbf55 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1431,8 +1431,25 @@ xfs_file_open(
->  			FMODE_DIO_PARALLEL_WRITE | FMODE_CAN_ODIRECT;
+> I find that it occurs when calling xfs_bmap_select_minlen() and blen ==
+> maxlen again, like:
+> blen=64 args->alignment=16, minlen=0, maxlen=64
 > 
->  	error = fsverity_file_open(inode, file);
-> -	if (error)
-> +	switch (error) {
-> +	case -EFBIG:
-> +	case -EINVAL:
-> +	case -EMSGSIZE:
-> +	case -EFSCORRUPTED:
-> +		/*
-> +		 * Be selective about which fsverity errors we propagate to
-> +		 * userspace; we still want to be able to open this file even
-> +		 * if reads don't work.  Someone might want to perform an
-> +		 * online repair.
-> +		 */
-> +		if (has_capability_noaudit(current, CAP_SYS_ADMIN))
-> +			break;
+> And then this gives:
+> args->minlen=48 blen=64
 
-As I understand it, fsverity (and dm-verity) are desirable in high-safety and integrity requirement cases where the goal is for the system to "fail closed" if errors in general are detected; anything that would have the system be in an ill-defined state.
+Which is perfectly reasonable - it fits the bounds specified just
+fine, and we'll get a 64 block allocation if that free space is
+exactly aligned. Otherwise we'll get a 48 block allocation.
 
-A lot of ambient processes are going to have CAP_SYS_ADMIN and this will just swallow these errors for those (will things the EFSCORRUPTED path at least have been logged by a lower level function?)...whereas this is only needed just for a very few tools.
+> But xfs_alloc_vextent_start_ag() -> xfs_alloc_vextent_iterate_ags() does not
+> seem to find something suitable.
 
-At least for composefs the quoted cases of "query extended attributes, scan for metadata damage, repair metadata" are all things that canonically live in the composefs metadata (EROFS) blob, so in theory there's a lot less of a need to query/inspect it for those use cases.  (Maybe for composefs we should force canonicalize all the underlying files to have mode 0400 and no xattrs or something and add that to its repair).
+Entirely possible. The AGFL might have needed refilling, so there
+really wasn't enough blocks remaining for an aligned allocation to
+take place after doing that. That's a real ENOSPC condition, despite
+the best length sampling indicating that the allocation could be
+done.
 
-I hesitate to say it but maybe there should be some ioctl for online repair use cases only, or perhaps a new O_NOVERITY special flag to openat2()?
+Remember, bestlen sampling is racy - it does not hold the AGF
+locked from the point of sampling to the point of allocation. Hence
+when we finally go to do the allocation after setting it all up, we
+might have raced with another allocation that took the free space
+sampled during the bestlen pass and so then the allocation fails
+despite the setup saying it should succeed.
 
+Fundamentally, if the filesystem's best free space length is the
+same size as the requested allocation, *failure is expected* and the
+fallback attempts progressively remove restrictions (such as
+alignment) to allow sub-optimal extents to be allocated down to
+minlen in size. Forced alignment turns off these fallbacks, so you
+are going to see hard ENOSPC errors the moment the filesystem runs
+out of contiguous free space extents large enough to hold aligned
+allocations.
 
+This can happen a -long- way away from a real enospc condition -
+depending on alignment constraints, you can start seeing this sort
+of behaviour (IIRC my math correctly) at around 70% full. The larger
+the alignment and the older the filesystem, the earlier this sort of
+ENOSPC event will occur.
 
+Use `xfs_spaceman -c 'freesp'` to dump the free space extent size
+histogram. That will quickly tell you if there is no remaining free
+extents large enough for an aligned 48 block allocation to succeed.
+With an alignment of 16 blocks, this requires at least a 63 block
+free space extent to succeed.
+
+IOWs, we should expect ENOSPC to occur long before the filesystem
+reports that it is out of space when we are doing forced alignment
+allocation.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
