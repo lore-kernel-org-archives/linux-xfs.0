@@ -1,238 +1,156 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5EED41862B;
+	Tue,  2 Apr 2024 06:03:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712037809; cv=none; b=aT3/s8yNrqafz5H3DkQOtnTOc6gcTVLI4bOttPJ/6rNmPO+GnclqM1nbk33l3mCUl1MEwR/gN+sIA6Oyegzx6VJQMqwYq8VoLPJKHVC1OeECpSMWRQJEOtk2Ve0C3ttbdAxCzKsInh9Xf9oVv5KnvEg8wRHYoFw24ooQza6inIM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712037809; c=relaxed/simple;
+	bh=0Bwj3k8d5hovVVaDv7fP+JtwH9U7MWbd2j/5DMgaikM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=fPv8piU8yw7ofEKVL7UWS4LNP37RRMIiczfCtoBD2Sw4V17EOw5Ax0spwyHd/0/encjtQaytFpovoDKNQCZhBuHcfrMNc829Dn7V143lWojD+X5Xnk/DAAtTYttZAtHQhwXarWftzaTtksmbSFLG2A3ASK4EPX0hb2SLTcuqjUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=psIM+jxk; arc=none smtp.client-ip=63.231.237.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="psIM+jxk"
+Received: from [10.0.0.71] (usg [10.0.0.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1290C323D
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Apr 2024 05:58:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712037489; cv=none; b=TCmoHVP7d8q6+QP9FrK0w9CNU6cvfYq26bcWWulCy2+Ypyj2JMRSdpN8BVvIXh4l3ycOZIeMAEB7UG8q6+YOT8VFvMG6S0nutKTf+rmax7CFICw29w1nyZaTV0BEaGNMYOD98/jAgQd97iitEWyUev7hQeKoHX9/I97EinXh04k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712037489; c=relaxed/simple;
-	bh=uiYq7kShrPfh00kz5/Bj39PvwZrxIRsf1hfvwcHFhiw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pQaqofXh7mcnRZpS1EyouERtm9wMWf+ewl7oz/YdnlTSUQrrxRIN6KonfLNmi9R/tUjgfyV1nTwIR8Rqj3D2z+kYLXg+BIx/1/Uh9EvvJ/BuCaNwxy7/PUNK1d88pY0X0nAwCtLMAcdUMhCzY+nsGb/wfFvsPj5Bcf+7IRFjFUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fSiK9k4r; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fSiK9k4r"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-5e4613f2b56so3319638a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2024 22:58:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712037486; x=1712642286; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=z8xoykoQrY5BXFrEZcxyFmhK9D7PYlPVs1HAhWWoKVQ=;
-        b=fSiK9k4rDw+smQz5zzZ/AMFMugi8UIy8N05URYeOtCyvLFLCOVyEAAbq5E15ENvNNG
-         K9gAmiTfFP0Re5fn2gFEaGBsxn2bTOrepiMkz3daFhA3YiLlNxbgVxkctOg+yKh4aKK1
-         z1blzYDW9eJ6gau4p+w7Rbn9lYlGMNlHWSnFDh+b7RAlEHBNc234n4dbenNb4U6LKGyA
-         AXiZBB4yB3XgG9FLdE/RMjMh8yC5EkqxduvXfrsJ4BeCKPVww05dd1wX7ocoPZAnRlkG
-         Uwxi4o69UblqG1a+5NiBou8AYtpGmELIwuLwS2qPOLec+o0JWzlHv4jvizOkDoRc3HQk
-         bjCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712037486; x=1712642286;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=z8xoykoQrY5BXFrEZcxyFmhK9D7PYlPVs1HAhWWoKVQ=;
-        b=qC6S5bBwlzjcBZGabcAc9hbJaYDrIDs138leAUOBFehoPLLBFo7p10zPgrur3PPH72
-         TI0ISGycLUlIfCWN5UeseOFyE3sTjoUPT0mFaHk8pW1tPzFoTW1y+44/DsNH5GfH4rxo
-         PY2P60BpdZwS4WmioW52Na+5SIEhnc6zqetxPQpBhIta8HdATOZPuQMwf/steaIizl9P
-         jQZpE+HjpekYtOZubdBwoWoIlMzXYq6T6BpTjb7bu6Cd50m+2IYhRjOo8Nl368tofUCo
-         y4UXbYzEuhBY4IP6Z4Pk7gfA01EV+U3v7xW1OFwyg/AFNqugt6z6QR0ZNkqw/0FNbqss
-         agjg==
-X-Gm-Message-State: AOJu0Yz0hlSnAgV/I2yswUjgdgeIbWR96uXdAx6QR8fFvv87WDYJdkS7
-	Mg3Y02vVRd7paKUFirJeNxaTpBHUNJZ0qmlaFyEXK/e8b6/8uYfEywoTTnrBRlA=
-X-Google-Smtp-Source: AGHT+IFJBA04C3U/zAaytJIRAGdkgKfvfUYvVwSEw21b2zwMGG1sbj9RMZxZBbUP2saw0i2xQ4eGBg==
-X-Received: by 2002:a05:6a20:2152:b0:1a3:4a1d:1092 with SMTP id z18-20020a056a20215200b001a34a1d1092mr9315463pzz.35.1712037486020;
-        Mon, 01 Apr 2024 22:58:06 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id n16-20020a17090ac69000b002a06260ac96sm8912122pjt.16.2024.04.01.22.58.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Apr 2024 22:58:05 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rrX9m-0011dg-31;
-	Tue, 02 Apr 2024 16:58:02 +1100
-Date: Tue, 2 Apr 2024 16:58:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
-Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
-Message-ID: <ZgueamvcnndUUwYd@dread.disaster.area>
-References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
- <20240306053048.1656747-1-david@fromorbit.com>
- <20240306053048.1656747-2-david@fromorbit.com>
- <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
- <ZfpnfXBU9a6RkR50@dread.disaster.area>
- <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
+	by sandeen.net (Postfix) with ESMTPSA id 4145C147573;
+	Tue,  2 Apr 2024 00:54:05 -0500 (CDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 4145C147573
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
+	s=default; t=1712037245;
+	bh=Yy+BZP28hP+o4Gt45N/r4iLMdVAh1Ejm3fngQ9hVRN8=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=psIM+jxkU9Dkop09cl0fzDTzMkU7TBLC9vEBBUQjlcymL01Os6/y10DBjpydO7OqK
+	 daYNDPYHd+EmftJgicOH7aGFhPBPOwsd+p/sghMNcPRZNWPLEbQYLXX7MKAvutF4ZR
+	 BYra+n4FGEVhoo3J1DzNUfysX7kb2+OiFDg8IAYQCAUGRRybX4c70XW59KRDDMFCTI
+	 nBFlkQtFuhxai8R//V4ZvIdx2sqjvw/Av8vN9lSIEZSV5f5vuQw67yhjgHNaGzllK3
+	 Hjy+wwGhUlVhBHbOtmVikS+6oqcI+ziNSNYDRdPpXiaiRQQmOibp4IAFTVYQkOI0Q3
+	 HMDzZoe9mfSjg==
+Message-ID: <32f02757-70e0-41ed-a0d0-23190a28dad3@sandeen.net>
+Date: Tue, 2 Apr 2024 00:54:04 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: A bug was found in Linux Kernel 5.15.148 and 5.15.150: KASAN:
+ use-after-free in xfs_allocbt_init_key_from_rec (with POC)
+To: =?UTF-8?B?5YiY6YCa?= <lyutoon@gmail.com>, leah.rumancik@gmail.com,
+ djwong@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Mar 26, 2024 at 04:08:04PM +0000, John Garry wrote:
-> On 20/03/2024 04:35, Dave Chinner wrote:
+On 3/7/24 1:23 AM, 刘通 wrote:
+> Hi upstream community,
 > 
-> For some reason I never received this mail. I just noticed it on
-> lore.kernel.org today by chance.
+> I was fuzzing a LTS version of Linux kernel 5.15.148 with my modified
+> syzkaller and I found a bug named "KASAN: use-after-free in
+> xfs_allocbt_init_key_from_rec".
 > 
-> > On Wed, Mar 13, 2024 at 11:03:18AM +0000, John Garry wrote:
-> > > On 06/03/2024 05:20, Dave Chinner wrote:
-> > > >    		return false;
-> > > > diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> > > > index 0b956f8b9d5a..aa2c103d98f0 100644
-> > > > --- a/fs/xfs/libxfs/xfs_alloc.h
-> > > > +++ b/fs/xfs/libxfs/xfs_alloc.h
-> > > > @@ -46,7 +46,7 @@ typedef struct xfs_alloc_arg {
-> > > >    	xfs_extlen_t	minleft;	/* min blocks must be left after us */
-> > > >    	xfs_extlen_t	total;		/* total blocks needed in xaction */
-> > > >    	xfs_extlen_t	alignment;	/* align answer to multiple of this */
-> > > > -	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
-> > > > +	xfs_extlen_t	alignslop;	/* slop for alignment calcs */
-> > > >    	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
-> > > >    	xfs_agblock_t	max_agbno;	/* ... */
-> > > >    	xfs_extlen_t	len;		/* output: actual size of extent */
-> > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > index 656c95a22f2e..d56c82c07505 100644
-> > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > @@ -3295,6 +3295,10 @@ xfs_bmap_select_minlen(
-> > > >    	xfs_extlen_t		blen)
-> > > 
-> > > Hi Dave,
-> > > 
-> > > >    {
-> > > > +	/* Adjust best length for extent start alignment. */
-> > > > +	if (blen > args->alignment)
-> > > > +		blen -= args->alignment;
-> > > > +
-> > > 
-> > > This change seems to be causing or exposing some issue, in that I find that
-> > > I am being allocated an extent which is aligned to but not a multiple of
-> > > args->alignment.
-> > 
-> > Entirely possible the logic isn't correct ;)
+> I tested the PoC on 5.15.148, 5.15.149 and 5.15.150 with sanitizer on
+> and found sanitizer through a panic as "KASAN: use-after-free in
+> xfs_allocbt_init_key_from_rec" on 5.15.148 and 5.15.150, but there was
+> no panic and sanitizer error in 5.15.149.
 > 
-> Out of curiosity, how do you guys normally test all this sort of logic?
-
-With difficulty.
-
-Exercising all the weird corner cases is really hard because the
-combinatory explosion that occurs when you have 20 control
-parameters, up to 5 different failure fallback strategies,
-behavioural variations with delayed allocation, ENOSPC and AGFL
-refilling accounting variations, etc, means it's basically
-impossible to enumerate and iterate the behaviour space fully.
-And then we have filesystem geometry and application concurrency
-to consider, too.
-
-All of the behaviours up to this point in time are best effort - we
-don't guarantee allocation policy is followed when there is not
-enough free space to execute the preferred policy - we slowly fall
-back to mechanisms that are further from the policy but more likely
-to succeed. i.e. as we approach ENOSPC, the allocation policies get
-"looser" - they are less restrictive and more variable and don't
-give as good results as when there is plenty of free space for the
-allocation policy to make good decisions from.
-
-As such, I only check that macro-level behaviour when there is lots
-of free space is largely correct. e.g. by doing something like
-copying a kernel tree onto a new filesystem, then checking inode
-locality follows directories, block locality follows inodes, large
-files are stripe aligned, extent size hint based inodes appear to
-have the correct extent sizes, etc.
-
-I then rely on the ENOSPC tests in fstests to find regressions that
-might occur when the filesystem is stressed with little free space
-available. These are a whole lot better than they used to be; root
-cause analysis of ENOSPC corner case bugs has consumed months of my
-working life over the past 20 years....
-
-> I found this issue with the small program which I wrote to generate traffic.
-> I could not find anything similar.
-
-That's because it's largely impossible to write a test that is
-deterministic and works on all possible test configurations. Even
-changing the size of the filesystem even slightly can result in
-vastly different but still 100% correct allocation
-behaviour....
-
-> > > Firstly, in this same scenario, in xfs_alloc_space_available() we calculate
-> > > alloc_len = args->minlen + (args->alignment - 1) + args->alignslop = 76 + (4
-> > > - 1) + 0 = 79, and then args->maxlen = 79.
-> > 
-> > That seems OK, we're doing aligned allocation and this is an ENOSPC
-> > corner case so the aligned allocation should get rounded down in
-> > xfs_alloc_fix_len() or rejected.
-> > 
-> > One thought I just had is that the args->maxlen adjustment shouldn't
-> > be to "available space" - it should probably be set to args->minlen
-> > because that's the aligned 'alloc_len' we checked available space
-> > against. That would fix this, because then we'd have args->minlen =
-> > args->maxlen = 76.
-> > 
-> > However, that only addresses this specific case, not the general
-> > case of xfs_alloc_fix_len() failing to tail align the allocated
-> > extent.
-> > 
-> > > Then xfs_alloc_fix_len() allows
-> > > this as args->len == args->maxlen (=79), even though args->prod, mod = 4, 0.
-> > 
-> > Yeah, that smells wrong.
+> The syzkaller log, report, kernel config, PoC can be found here:
+> https://drive.google.com/file/d/1w6VKKewt4VQzb9FzcGtkELJUOwd1wMcC/view?usp=sharing
 > 
-> Would it be worth adding a debug assert for prod and mod being honoured from
-> the allocator? xfs_alloc_fix_len() does have an assert later on and it does
-> not help here.
+> # Analysis (rough):
+> Because that I cannot understand the report0 clearly in the zip file
+> above, so I rerun the PoC on my vm (5.15.148) and I get another report
+> named as the same but it looks much clearer than the report0. The new
+> report can be found in:
+> https://drive.google.com/file/d/1Vg_4Qwueow6VgjLrijnUB8QbZVx902sv/view?usp=sharing
+> In this report, we can easily see that the memory allocation and free:
+> Allocation:
 
-I don't see any value in that because it's not actually a "fatal"
-issue. See above about trading off policy strictness for allocation
-success.
+As a PhD student interested in security analysis, you could do much more
+here.
 
-Again, this force alignment stuff is a fundamental change in this
-behaviour - it wants "hard failure" rather than "trade off" and so
-there isn't a general case for asserting that allocation must be
-mod/prod aligned. Extent size hints are a -hint-, not a requirement,
-and I don't want random assert failures in test systems because
-debug kernels start treating hints as "must not fail" requirements.
+For starters, test this on an upstream/mainline kernel to see if it
+reproduces.
 
-> > I'd suggest that we've never noticed this until now because we
-> > have never guaranteed extent alignment. Hence the occasional
-> > short/unaligned extent being allocated in dark ENOSPC corners was
-> > never an issue for anyone.
-> > 
-> > However, introducing a new alignment guarantee turns these sorts of
-> > latent non-issues into bugs that need to be fixed. i.e. This is
-> > exactly the sort of rare corner case behaviour I expected to be
-> > flushed out by guaranteeing and then extensively testing allocation
-> > alignments.
-> > 
-> > If you drop the rlen == args->maxlen check from
-> > xfs_alloc_space_available(),
+Provide the filesystem image that seems to reproduce it, rather than
+an array in a C file.
+
+Look at your reproducer, and identify the ioctls and syscalls that you
+believe provoked the error. See what privileges are needed to invoke them,
+if you believe this may be a security flaw.
+
+Test your reproducer in isolation, and see if it actually reproduces your
+use after free (I don't think that it does.)
+
+If it doesn't, look back at the tests that ran before it, and see if
+something is corrupting memory, etc.
+
+It's far too easy for someone to turn a syzkaller crank, throw it over
+the wall, and move on. If you want to help, dig in, don't just pawn off
+the problem with no effort to investigate what you believe you've found.
+
+> ```
+> [   62.995194][ T6349] Allocated by task 6343:
+> [   62.995610][ T6349]  kasan_save_stack+0x1b/0x40
+> [   62.996044][ T6349]  __kasan_slab_alloc+0x61/0x80
+> [   62.996475][ T6349]  kmem_cache_alloc+0x18e/0x6b0
+> [   62.996918][ T6349]  getname_flags+0xd2/0x5b0
+> [   62.997335][ T6349]  user_path_at_empty+0x2b/0x60
+> [   62.997782][ T6349]  vfs_statx+0x13c/0x370
+> [   62.998193][ T6349]  __do_sys_newlstat+0x91/0x110
+> [   62.998634][ T6349]  do_syscall_64+0x35/0xb0
+> [   62.999033][ T6349]  entry_SYSCALL_64_after_hwframe+0x61/0xcb
+> ```
+> Free:
+> ```
+> [   62.999776][ T6349] Freed by task 6343:
+> [   63.000135][ T6349]  kasan_save_stack+0x1b/0x40
+> [   63.000555][ T6349]  kasan_set_track+0x1c/0x30
+> [   63.001053][ T6349]  kasan_set_free_info+0x20/0x30
+> [   63.001638][ T6349]  __kasan_slab_free+0xe1/0x110
+> [   63.002206][ T6349]  kmem_cache_free+0x82/0x5b0
+> [   63.002742][ T6349]  putname+0xfe/0x140
+> [   63.003103][ T6349]  user_path_at_empty+0x4d/0x60
+> [   63.003551][ T6349]  vfs_statx+0x13c/0x370
+> [   63.003943][ T6349]  __do_sys_newlstat+0x91/0x110
+> [   63.004378][ T6349]  do_syscall_64+0x35/0xb0
+> [   63.004841][ T6349]  entry_SYSCALL_64_after_hwframe+0x61/0xcb
+> ```
+> So this is a use-after-free bug: allocated by `kmem_cache_alloc` and
+> freed by `kmem_cache_free`.
+> And according to the report, the UAF occurs in
+> `xfs_allocbt_init_key_from_rec`, `key->alloc.ar_startblock =
+> rec->alloc.ar_startblock;` which indicates that maybe
+> `rec->alloc.ar_startblock` was freed before.
 > 
-> I assume that you mean xfs_alloc_fix_len()
+> # Step to reproduce:
+> 1. download the zip file
+> 2. unzip it
+> 3. compile the kernel (5.15.148, 5.15.150) with kernel_config
+> 4. start the kernel with qemu vm
+> 5. scp repro.c to the vm
+> 6. compile the repro.c and run it: gcc repro.c -o exp && ./exp
+> 7. you will see the KASAN error
 
-Yes.
+AFAICT you won't. I did exactly this, and got no KASAN error.
+Did you, after following these steps on a fresh boot of the kernel?
 
-> > the problem should go away and the
-> > extent gets trimmed to 76 blocks.
+-Eric
+
+> # Note:
+> I didn't find any related reports on the internet, which indicates
+> that it may be a 0day. Hope the upstream can help check and fix it.
+> And I'll be happy to provide more information if needed.
 > 
-> ..if so, then, yes, it does. We end up with this:
+> Best,
+> Tong
 > 
->    0: [0..14079]:      42432..56511      0 (42432..56511)   14080
->    1: [14080..14687]:  177344..177951    0 (177344..177951)   608
->    2: [14688..14719]:  350720..350751    1 (171520..171551)    32
 
-Good, that's how it should work. :) 
-
-I'll update the patchset I have with these fixes.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
