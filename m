@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68DA1C280
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 03:57:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A135235
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 04:04:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712116648; cv=none; b=se53EM4RjttIgtp6we70PEpeGnsW8tlWxDFb/ETTBMubEIW9MKSy0nZ052YA++DTX8fEOTbTCbPijmw02pfhDKjTQ8iqeWBkd17h49mWqOSRM+1L/UHuFqKJGbyLh6bDzTLg4VPhGjvFgmc+OAnvSRo1vNKk56uVlBbVuFEFdDw=
+	t=1712117069; cv=none; b=ilvYtc3hSFiGDyQYmmFYqLxG3lj1yau+wKNX30ojaLKGAFgPERYdYpPLwhUzzBRyxAP5y+nCYfEVgnWzYyr3QVO3ouHGHVorBdeBIrflozFt0CRklLbEJ53jISAyzm9qKdZSDrBCH1hbYw+EBXVq8qv6R1VJcMxK+UPk6Jlfut4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712116648; c=relaxed/simple;
-	bh=Jr1baXMrY541pl+WZ6KbZu2FigJKzTtCqt8w4Zs65W0=;
+	s=arc-20240116; t=1712117069; c=relaxed/simple;
+	bh=Cn/MdfuisCtf5kSYESNUJNiIgo8+upo2DhttIWGAuHM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HQVTc3FwK1BTufDDV3A9Am2J+YXdL/uEe66jBJ7eXF8FNC21JDoGxj/mJUBS5/ZEVr6PcgoPNsJ4C01E4wSsJXel1GR7lMr51IREScs+K37WW3Uh/pNozX/CE0DjG1k30kdTj/IyLbGX0BxqJf8CjA3NdYuBF5dU5AoFwXzkqFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hwun5vic; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vxdv8Y8/11ceHOEYPfV6pqYVNDE7UL6h3VGfJ71PohnNef8oh74KIlcVvgNq3h1c46ZwLx2Y0+Q7wxyXjJGV0FHFvs66bQwY0i4ad08dbfkAfuM2fWS79J2dTwWDPmanBG1qlfeJA9SLKeGX4u94L8YxfPNPw+Z4+DkbT24a7oA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MSiGyWRz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hwun5vic"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B5BDC433C7;
-	Wed,  3 Apr 2024 03:57:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MSiGyWRz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9F3DC433F1;
+	Wed,  3 Apr 2024 04:04:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712116648;
-	bh=Jr1baXMrY541pl+WZ6KbZu2FigJKzTtCqt8w4Zs65W0=;
+	s=k20201202; t=1712117069;
+	bh=Cn/MdfuisCtf5kSYESNUJNiIgo8+upo2DhttIWGAuHM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hwun5vicnalX40OL2EPlG544/ctsCkyWe3M82zilZ3MlaXuGHgVyXR3kV6pL3wodX
-	 n/JOsxsnn4V7WupwFA891Z8Dgav3PqNqt1t5xqwe30KebTaC+7anPNtw3qGGZ0X7Qx
-	 PbRfKJHrQwVkDWlIg5KGu9oN47fkZ8MlRUzS+8igL4IAU6pDDhbcNfj2mO241y+PVg
-	 mZM0ZtUNsNNBe4q63pnJ5fw/KLWYD3KpslHlc5UzHyjhRKyc8VZjFIcOHx/iYMO41G
-	 XXHtXwgJudKCYrWB3wfeOsPpqDX35dlkDLL4NhoQrZRdVOC/vWGlM9IKzHlnsBO7XK
-	 JrZDXgVVVky7g==
-Date: Tue, 2 Apr 2024 20:57:27 -0700
+	b=MSiGyWRzWyDWRvGLUAahLnYpyDISD9QxfMRKA9qTsrsnlwiWvKD8B3wWqs3lEBLYr
+	 iwsUOsYLfLF+XZGAM2qLr6Q9rHM/Bsz1btGpQs7FtgRwZr4SKJ3GiS0BzDlnhXVfTx
+	 msSIg7V5etCq7c3ISLJg69hWCf7Sw6mExXUuSN4d0BaA+vc0SpKMpmgR7oiSNpTwmy
+	 /FbeDv/axZ7kcnqlFAskPf4s9QoYNqP609pd7eekgs7+zBK+YKEz/zw6W/q5nmyrnQ
+	 d0NbLfW3Xleoa22VLPkOXmZJ8EtH1UbQzY7chjD7dEN5cSKoMc+4ebe5ATCGawZzxA
+	 mG4quln1cQejQ==
+Date: Tue, 2 Apr 2024 21:04:28 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs: silence sparse warning when checking version
- number
-Message-ID: <20240403035727.GO6390@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/5] xfs: fix sparse warning in xfs_extent_busy_clear
+Message-ID: <20240403040428.GP6390@frogsfrogsfrogs>
 References: <20240402213541.1199959-1-david@fromorbit.com>
- <20240402213541.1199959-4-david@fromorbit.com>
+ <20240402213541.1199959-3-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,78 +42,109 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402213541.1199959-4-david@fromorbit.com>
+In-Reply-To: <20240402213541.1199959-3-david@fromorbit.com>
 
-On Wed, Apr 03, 2024 at 08:28:30AM +1100, Dave Chinner wrote:
+On Wed, Apr 03, 2024 at 08:28:29AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Scrub checks the superblock version number against the known good
-> feature bits that can be set in the version mask. It calculates
-> the version mask to compare like so:
+> Sparse reports:
 > 
-> 	vernum_mask = cpu_to_be16(~XFS_SB_VERSION_OKBITS |
->                                   XFS_SB_VERSION_NUMBITS |
->                                   XFS_SB_VERSION_ALIGNBIT |
->                                   XFS_SB_VERSION_DALIGNBIT |
->                                   XFS_SB_VERSION_SHAREDBIT |
->                                   XFS_SB_VERSION_LOGV2BIT |
->                                   XFS_SB_VERSION_SECTORBIT |
->                                   XFS_SB_VERSION_EXTFLGBIT |
->                                   XFS_SB_VERSION_DIRV2BIT);
+> fs/xfs/xfs_extent_busy.c:588:17: warning: context imbalance in 'xfs_extent_busy_clear' - unexpected unlock
 > 
-> This generates a sparse warning:
+> But there is no locking bug here. Sparse simply doesn't understand
+> the logic and locking in the busy extent processing loop.
+> xfs_extent_busy_put_pag() has an annotation to suppresses an
+> unexpected unlock warning, but that isn't sufficient.
 > 
-> fs/xfs/scrub/agheader.c:168:23: warning: cast truncates bits from constant value (ffff3f8f becomes 3f8f)
+> If we move the pag existence check into xfs_extent_busy_put_pag() and
+> annotate that with a __release() so that this function always
+> appears to release the pag->pagb_lock, sparse now thinks the loop
+> locking is balanced (one unlock, one lock per loop) but still throws
+> an unexpected unlock warning after loop cleanup.
 > 
-> This is because '~XFS_SB_VERSION_OKBITS' is considered a 32 bit
-> constant, even though it's value is always under 16 bits.
-> 
-> This is a kinda silly thing to do, because:
-> 
-> /*
->  * Supported feature bit list is just all bits in the versionnum field because
->  * we've used them all up and understand them all. Except, of course, for the
->  * shared superblock bit, which nobody knows what it does and so is unsupported.
->  */
-> #define XFS_SB_VERSION_OKBITS           \
->         ((XFS_SB_VERSION_NUMBITS | XFS_SB_VERSION_ALLFBITS) & \
->                 ~XFS_SB_VERSION_SHAREDBIT)
-> 
-> #define XFS_SB_VERSION_NUMBITS          0x000f
-> #define XFS_SB_VERSION_ALLFBITS         0xfff0
-> #define XFS_SB_VERSION_SHAREDBIT        0x0200
-> 
-> 
-> XFS_SB_VERSION_OKBITS has a value of 0xfdff, and so
-> ~XFS_SB_VERSION_OKBITS == XFS_SB_VERSION_SHAREDBIT.  The calculated
-> mask already sets XFS_SB_VERSION_SHAREDBIT, so starting with
-> ~XFS_SB_VERSION_OKBITS is completely redundant....
+> i.e. it does not understand that we enter the loop without any locks
+> held and exit it with the last lock still held. Whilst the locking
+> within the loop is inow balanced, we need to add an __acquire() to
+> xfs_extent_busy_clear() to set the initial lock context needed to
+> avoid false warnings.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_extent_busy.c | 27 +++++++++++++++++++++++----
+>  1 file changed, 23 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 56cfa1498571..686b67372030 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -534,12 +534,24 @@ xfs_extent_busy_clear_one(
+>  	kfree(busyp);
+>  }
+>  
+> +/*
+> + * Sparse has real trouble with the structure of xfs_extent_busy_clear() and it
+> + * is impossible to annotate it correctly if we leave the 'if (pag)' conditional
+> + * in xfs_extent_busy_clear(). Hence we always "release" the lock in
+> + * xfs_extent_busy_put_pag() so sparse only ever sees one possible path to
+> + * drop the lock.
+> + */
+>  static void
+>  xfs_extent_busy_put_pag(
+>  	struct xfs_perag	*pag,
+>  	bool			wakeup)
+>  		__releases(pag->pagb_lock)
+>  {
+> +	if (!pag) {
+> +		__release(pag->pagb_lock);
+> +		return;
+> +	}
 
-What a tongue twister!
+Passing in a null pointer so we can fake out a compliance tool with a
+nonsense annotation really feels like the height of software bureaucracy
+compliance culture now...
+
+I don't want to RVB this but I'm so tired of fighting pointless battles
+with people over their clearly inadequate tooling, so GIGO:
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/scrub/agheader.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index e954f07679dd..d6a1a9fc63c9 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -165,8 +165,7 @@ xchk_superblock(
->  		xchk_block_set_corrupt(sc, bp);
+> +
+>  	if (wakeup) {
+>  		pag->pagb_gen++;
+>  		wake_up_all(&pag->pagb_wait);
+> @@ -565,10 +577,18 @@ xfs_extent_busy_clear(
+>  	xfs_agnumber_t		agno = NULLAGNUMBER;
+>  	bool			wakeup = false;
 >  
->  	/* Check sb_versionnum bits that are set at mkfs time. */
-> -	vernum_mask = cpu_to_be16(~XFS_SB_VERSION_OKBITS |
-> -				  XFS_SB_VERSION_NUMBITS |
-> +	vernum_mask = cpu_to_be16(XFS_SB_VERSION_NUMBITS |
->  				  XFS_SB_VERSION_ALIGNBIT |
->  				  XFS_SB_VERSION_DALIGNBIT |
->  				  XFS_SB_VERSION_SHAREDBIT |
+> +	/*
+> +	 * Sparse thinks the locking in the loop below is balanced (one unlock,
+> +	 * one lock per loop iteration) and doesn't understand that we enter
+> +	 * with no lock held and exit with a lock held. Hence we need to
+> +	 * "acquire" the lock to create the correct initial condition for the
+> +	 * cleanup after loop termination to avoid an unexpected unlock warning.
+> +	 */
+> +	__acquire(pag->pagb_lock);
+> +
+>  	list_for_each_entry_safe(busyp, n, list, list) {
+>  		if (busyp->agno != agno) {
+> -			if (pag)
+> -				xfs_extent_busy_put_pag(pag, wakeup);
+> +			xfs_extent_busy_put_pag(pag, wakeup);
+>  			agno = busyp->agno;
+>  			pag = xfs_perag_get(mp, agno);
+>  			spin_lock(&pag->pagb_lock);
+> @@ -584,8 +604,7 @@ xfs_extent_busy_clear(
+>  		}
+>  	}
+>  
+> -	if (pag)
+> -		xfs_extent_busy_put_pag(pag, wakeup);
+> +	xfs_extent_busy_put_pag(pag, wakeup);
+>  }
+>  
+>  /*
 > -- 
 > 2.43.0
 > 
