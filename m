@@ -1,234 +1,250 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3264156471
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 08:35:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712133337; cv=none; b=Bzrsx6s5uwU/Ps2u60OfkqrMoRtNSYlyhCEgJbWMhdciGTaR7+t0xxOTQMPBUHRI00oFdyUt/Ohnh2geMWEBQo9L9cZSQ2TFtvFaKEhtIUjT6a/Uce3cFiOfx8sBac2fPKz6yaWX2vxRLMDJ01Ld+XHa4lgTzAXxYb0KWedD14c=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712133337; c=relaxed/simple;
-	bh=OmSFh5VdA8JBtffIKSKqr3t6zAyb8rR95Zwlzv4Z+2I=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=b1h9FocR4JiABLMSjxRyzyGiZe8URz5Vh6yA20nVs9IJEAjUy3/mfO5oqyhBHhy92IybdMC1M/9SnMITkB/WnmcY5NTehJw5A1Mq7SqOK9wmQl9kV731d4I00iHEjzFFg21uY73Z8/Wx9Ka4i95KA94K+JK3V1U1oypucW71mHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ciih9+Gp; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D888A3E48E
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 08:49:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712134178; cv=fail; b=nQWd5xIqOSTIgbcX7ubIysQgqDuSYQkMVcPxKUHVV7hA+Tsi3ecCiwaN4RxaY9b7Oid9PcJY5AA8O1n9FaStoQotmz6DrkXrWJIBSWAzlb5KAuI5vUudQ4zmQXio0gjfv2sTKstG0tMRpUlJLutjyJ+DK/CHXggY+NymlnqdW+4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712134178; c=relaxed/simple;
+	bh=EoJmlxxZyQAy/4/AdVt3yq+elKatdwqVShlqCwjs/Ik=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=ODCZn9MBAs7yVCX1iPURM8cWOMfqLNo+rb8QzGwUHffCXL/H2jo8ssPwVbeH5vwVCbYYeV9WiyBrYAlPcUE1oHQ2jUuKF+PqkOVSrsOiaCtPTtAnUY/IPk0jmS9g0fDddaQkkAjmXPnIQa2eJNJdIjDNt1iCABA9jj6qpMxYmQM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jl2jarVK; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Wfv6lHKH; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ciih9+Gp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712133335;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=o5EWBbXw6HhqIxph/6E6u2gCPJ/TAx8zCkleu1dQeOo=;
-	b=Ciih9+Gp+JFbnG012hZOgqVjFCH2ii6Ym10zQMdxKasB/LvW4NPtAYojOvaMP3zrsyYOnf
-	bLVsr11Go37q1+53jeMSKa20ZKpbQv/hB6n91a3UWz7/KeWt8i+RmaAY7PZnQhpl9CXZpv
-	mx2phksjqoKgLl8RCY5J7fD6aDnU5Dw=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-178-ERLGKgEUPp-TUkIDvsAUyA-1; Wed, 03 Apr 2024 04:35:34 -0400
-X-MC-Unique: ERLGKgEUPp-TUkIDvsAUyA-1
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-5158a80cf1aso6059925e87.0
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Apr 2024 01:35:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712133332; x=1712738132;
-        h=mime-version:user-agent:content-transfer-encoding:autocrypt
-         :references:in-reply-to:date:cc:to:from:subject:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=o5EWBbXw6HhqIxph/6E6u2gCPJ/TAx8zCkleu1dQeOo=;
-        b=SAS/j5FGCKumHVCBqMNtKg4k6QQFp+JoPJAqyZiP3/qJECVM46R2IvhP+URWdhBFk3
-         2z/BlV3WZaiZ0gd8v1gDN02cc9qrocyq31rSzDnnfNJ4C8/X3aLR7dqZkhXJmi/S6v8G
-         Gdugp0J5RZmTIP0cSKu4/gWjoMe0VNU3WIhtxtV60G09YG7/Jupl303gTOYKg9xYgLWT
-         YR5F6AHBxgn8FhcETA42gC+3Z2Tb7CTlb7EqWMsBDkEL4bfXo9Z8MfjNjrVNG8+b6XA6
-         Bwg+YgzGn5RdHXHm44OTBxoxFvAL7JEYGY2hosfA4zTSdIN97kR7dxA+MLxOPynv+lfw
-         Hdgw==
-X-Forwarded-Encrypted: i=1; AJvYcCXc/DHsocL4pvyhou06GYPQgu22FsjZtx/7Rwlv1A12dMNIQSjhVKSG8sTyZgGkbY1Zc8qKwRuJxtLZUBxxKNTWjoUQfX5JjYtI
-X-Gm-Message-State: AOJu0Yw12iBNBzNjcykAvoEFUWqhCUeiQP7bFIF2vivEfZKfhVQy34Hi
-	YE83TIQvJDuQfi3tv6j6b6yaae5TPgWaefQS0FNdxbmJGBK1Dj2QAmaJLymI4atSkXSPLJ1VXew
-	CJeFdwXttjRL1+aUKONhdzyYRzSsQAvb+wEeKUnk1M/6btlycIhqtfjnbJNKcAJf6Pg==
-X-Received: by 2002:a05:6512:3b9d:b0:515:d16b:5ce5 with SMTP id g29-20020a0565123b9d00b00515d16b5ce5mr12483944lfv.7.1712133332223;
-        Wed, 03 Apr 2024 01:35:32 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEG9P4HdLdtvxj3Ce/20jeT4plZ5SS3QziVws73e0CrV1AqWUTnvb6MkTLUw8t6bZWmlyGv0Q==
-X-Received: by 2002:a05:6512:3b9d:b0:515:d16b:5ce5 with SMTP id g29-20020a0565123b9d00b00515d16b5ce5mr12483926lfv.7.1712133331802;
-        Wed, 03 Apr 2024 01:35:31 -0700 (PDT)
-Received: from [172.31.0.10] (c-e6a5e255.022-110-73746f36.bbcust.telenor.se. [85.226.165.230])
-        by smtp.gmail.com with ESMTPSA id g17-20020a19ee11000000b00513d021afd1sm1964715lfb.103.2024.04.03.01.35.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Apr 2024 01:35:31 -0700 (PDT)
-Message-ID: <fffa121a156d92b907136774c41bd83c43e859ca.camel@redhat.com>
-Subject: Re: [PATCH 28/29] xfs: allow verity files to be opened even if the
- fsverity metadata is damaged
-From: Alexander Larsson <alexl@redhat.com>
-To: Colin Walters <walters@verbum.org>, "Darrick J. Wong" <djwong@kernel.org>
-Cc: Eric Biggers <ebiggers@kernel.org>, Andrey Albershteyn
- <aalbersh@redhat.com>,  xfs <linux-xfs@vger.kernel.org>,
- linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
-Date: Wed, 03 Apr 2024 10:35:30 +0200
-In-Reply-To: <992e84c7-66f5-42d2-a042-9a850891b705@app.fastmail.com>
-References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
-	 <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
-	 <2afcf2b2-992d-4678-bf68-d70dce0a2289@app.fastmail.com>
-	 <20240402225216.GW6414@frogsfrogsfrogs>
-	 <992e84c7-66f5-42d2-a042-9a850891b705@app.fastmail.com>
-Autocrypt: addr=alexl@redhat.com; prefer-encrypt=mutual; keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.4 (3.50.4-1.fc39) 
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jl2jarVK";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Wfv6lHKH"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4334pE7W008597;
+	Wed, 3 Apr 2024 08:49:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=2lsPoBKZQfdTDIBNqAgLk5BiSYzdIHJG3UlqMxT8OMo=;
+ b=jl2jarVKAs8gcQ/3aSC2+F7n2YKc7QpeLBVKi18ZAKh/QlTx9IiIWmjJ+1eBFXeJMm3+
+ 5Cfu1IcQOomu3ReVTHBkSkijGcuxsqntGW5JXtvjw4SFQlJFW3k2JB10C4Kbfq+iqi8x
+ IncYXKQWIe/aZwaHAChhJEF3/Dvz7CDLiwzlvgWYXGIJc5xRf0+roVxElkO0Ofe+IzNQ
+ vHSM+R/1aNrew0O+xfDgYcmu18bj1ic50bFgAz3yDrTiEjRw4kmuCQZ4qcmEKXGPDuL+
+ oFTVUn2MQBBwv/iZIrfN0GmQ+zTIR+pjobhJnmdu1sN8LEPlOQUllJxRpdW8JOuXw28S 8w== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x69b2pp2a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 03 Apr 2024 08:49:12 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43372HfX015396;
+	Wed, 3 Apr 2024 08:49:12 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2100.outbound.protection.outlook.com [104.47.55.100])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x696802kt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 03 Apr 2024 08:49:11 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=cBIsBI4zPD+/+ErK2QjRqOcu+J3vyFkEvaYwuHnReq44g/+GL1oQw3ZA5fqh2sWstJvprjfPncCSiK/NgMMyB2E9Sp4T0WT9O5R98039ut3yiEiy4SrttlQHixGy+fToBc4MTNyJtRhURCJLWkH4j8VbuKBIqNih9qbg5VHyLeg66rb1FvQT2efAbxhWnbyl0WKTTEeCGpvJWc7kSp2ptXyqmIoaptd0+Po9X6T1NhXdgTd951dMCNIRSVGB4w9v52GLRaynKVGXhNU/cGNBRARnuOjHuJ/D2jyL9i5GSAL6rNvkr70f0pQkdEB1vagyorCFeBhhiPUlWELN4ONDiw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2lsPoBKZQfdTDIBNqAgLk5BiSYzdIHJG3UlqMxT8OMo=;
+ b=cwGE98edTK/XsuB93neYPuQqjUq3qsq8lKTHNmc+YdHmZ4BKwQilTD3QYzeMeAs6kPUb2F7FBgSlWuLXSJSnRQCWjAd5XlIHAC3tf0s2+Yr9ZtjiHCxq+dOCagwFGfkxxPKTF/wvVCp/gOIom1EW/TCEU5sxOZOfWNyYYqBdO9Dp5z256fPKqLUpo1p3ckiiqZIfwIQkVqzP3d0wP1nZ6FIZD0OSlh+oEBy5QPNm/sq8w5GdVZvSdNpbzyvZryV5WQZ4agS0R5kNBZHSDcP8NO0jaYzg1xXHzjIP4Cf4JAeZepOjH/hTHS4gVBaCCvTPa0zS67CSTAZTHnmPCYKImg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2lsPoBKZQfdTDIBNqAgLk5BiSYzdIHJG3UlqMxT8OMo=;
+ b=Wfv6lHKHXsUCudK+E9CyN6RXeIcOLFnm7YxocOGj17KgnjbUSRwEq1UV0MHsuLtDwboUb86Erj5Y3bV9ahO08vJftI5HWE/n3oXDeyI5rF8Rf6EnibuAZaqyFyZe1gIQ3atvPKE6FftPDeE8yUrnll1NI+Ztf5ryBdyOO8ZB8zg=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DS0PR10MB6104.namprd10.prod.outlook.com (2603:10b6:8:c7::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.7409.46; Wed, 3 Apr 2024 08:49:09 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::ae68:7d51:133f:324]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::ae68:7d51:133f:324%4]) with mapi id 15.20.7409.042; Wed, 3 Apr 2024
+ 08:49:09 +0000
+Message-ID: <d17cbb52-0d30-40c9-b700-6617c50fa86c@oracle.com>
+Date: Wed, 3 Apr 2024 09:49:06 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/3] xfs: simplify extent allocation alignment
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, ritesh.list@gmail.com
+References: <ZeeaKrmVEkcXYjbK@dread.disaster.area>
+ <20240306053048.1656747-1-david@fromorbit.com>
+ <20240306053048.1656747-2-david@fromorbit.com>
+ <9f511c42-c269-4a19-b1a5-21fe904bcdfb@oracle.com>
+ <ZfpnfXBU9a6RkR50@dread.disaster.area>
+ <9cc5d4da-c1cd-41d3-95d9-0373990c2007@oracle.com>
+ <ZgueamvcnndUUwYd@dread.disaster.area>
+ <11ba4fca-2c89-406a-83e3-cb8d20f72044@oracle.com>
+ <fd9f99a3-35ef-477e-ad64-08f71223d36b@oracle.com>
+ <Zgx4BhcW9/6XAiq9@dread.disaster.area>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <Zgx4BhcW9/6XAiq9@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AS4PR10CA0004.EURPRD10.PROD.OUTLOOK.COM
+ (2603:10a6:20b:5dc::8) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB6104:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	8dZOR8BKDQzAtFUF3ZGYhD3cM/qiVuhxkvxopjH3pYfhv8hpUd9QnIe/o8ZW+h4Q3Kk7ABOEtZNX+smLGSVgtoByXfE0//yHk+NHgVqWJ6yqxxxYvazTOwqmJi1hu/1YIkzmUsgSKpYEq2Xuq+JbdkQ29t6Y0IwSEUaIjobtatI0xHA7vIANxiFYkXp9Q+1KGa1W0yM7DvPrXolGvjm6pnmQ4bIpoZC6H2XIaUOubw7K0uMBnZ/jvbVc0Fy0a/pKPw5NVSJwTAufAPDlricycObSUFLMV4Lkg+KNO60QE6GZE90Fq/gK12X8WEiaMXn/UU7iNNeoeRuy1fgYupcAhUd/xVsWofxVbaqa9PlbqHzMhLVWK0l3davOVCjdp8MPaPNnOKOM1d27OUSr5PzTT4DXqgZ35ai7uo+zqEtL/ruGvLta2XorQW1J+EJq7bakCZ33QbZnsFN5rR3ERfuZ36MsrTD85CfQXMgbmf1HUlRez3NslrMpRB6DIJTTsX/j3zvGoR1VyV1QWfC1JMnBSlhDhB7xrv38Vf83lVa7ufL9Ix8YLsRdNx857gSdE0CCsC9d/rUtVmWvQOP4hEyJO24jt7sWe/GlavbAYxfPsS+gGHd4iBZCq/CTGtpqQUVwT5DugU/2bnWtAqSLJvOYZkcQgrefcYoD2ZtGVLmS6Eg=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?MHNCeE1IZjdlZnZJbHBxNjdhdFZlMWZLYy9OQThNWngyVXlLNW9CVXBYcjFi?=
+ =?utf-8?B?RjM4bEgzTUdBaTdjTlpLeExUVjZhLy9ndVFWdE45elN0cVBERk9lSTNsdTUv?=
+ =?utf-8?B?azczeWhNd0ExQlMvK3U4MXBIZ0ROL3k3MW15S3F3em92SDRRc1dINFpJZWNn?=
+ =?utf-8?B?SFFQeXRGQ29yMHFxdHlzR0tFamlyQnZCWUYxeG1qc1Y0eDdjWFh3S2xlUWN1?=
+ =?utf-8?B?VVQxZEdMUndsNmRGYnI3N0tEc0Y0T0tOK0phVDFxeVhlaFFLbHl3dlc1NFFz?=
+ =?utf-8?B?T1NHL0xMMklxMldtejQvK0Zpd2JFYURVc1dCWmkxOGh1anp6VS9ZN2ZncTBO?=
+ =?utf-8?B?Q3NNSEVPOU10N3NVL1JLUm1pQzVqTkJkSWlLdTZzUVh6UjhOSVJwdnY3RnRW?=
+ =?utf-8?B?YjcyTHdRcFd4eEdvNjBheENmR3BSbDE0b05OWEN4TDVtVWRxTW8zMU10MldT?=
+ =?utf-8?B?UW05QkpQMllmcTBaZzN1TDZidEd5dmtnZUkvNk5BWkU3Tm1xOTBEeVVPbHV1?=
+ =?utf-8?B?NHhvb1hkRlNPNXM1KzVzWXdRWmJoRzREVG5oeEkyUFo1NDBML3A0UXQ1VzdQ?=
+ =?utf-8?B?Wll6eTFsR3F0QVRYQmh2VjlOWUJPUFhrNzJBMFdiWHlSdW8rN04rSWtDNEw5?=
+ =?utf-8?B?S3RxZWRucGlJK01rV1VyMXZNOHprYkppbDI5QlBEM2JJTTBzcm5IYWhlZnVz?=
+ =?utf-8?B?b1NvL1o5QzFMNW85QUsrWDhoa05nQU85bVIvckdCUHAra0s5dmdYak81UGpt?=
+ =?utf-8?B?cGtBMDBBRThXS2phN1BvSG9YTEhKalBjdEhxRzFFdlBsbkFuZHR2bU4zNTQr?=
+ =?utf-8?B?bVhyRjRHODZGZm1teHdiY3dnN1E1dVYyOWF3NExUNldXYy9uVTZjT2liV011?=
+ =?utf-8?B?NE9YUHd5bGpsTHo1YzBFd01vTmZkcWlwT1ZESGVrcVlSQkJQUEpXV0tpOUxw?=
+ =?utf-8?B?d2tjV1B5WldJcmNHWSs1UStpQUcrR2VYNjM5QjlORXJrVjdOZks2M0hUWjk5?=
+ =?utf-8?B?L1dBMGp3dlFRZ2Z0TDNmeWFqUmwwU3pJOHBiZkJsYThKNzRST2lJSzg0Qlkx?=
+ =?utf-8?B?ODJzZWo1Q3lFWER4S2FPUGdTcTArQXk3UUVMY2ZHcWtXY0hBVEhKUFh2R2Ez?=
+ =?utf-8?B?RDdaVW8xOU9paExVNW1UTjJSd0dPR1hhTzc4NDFCTUh4LzJPS0t6aXhKRUN1?=
+ =?utf-8?B?QmkrYWV4dGFmUDdaSWg5WFFtQ2tJVUhTdjM0VW5Dc1RLS3hiNXNqcHlkNzE0?=
+ =?utf-8?B?bE9TWXdMdWhNZXpHZ2tVMldLLzlvblordktUUHFtQVlVWjI0TTRaMkpYVkJi?=
+ =?utf-8?B?THdWaDMwUFJ0bEFZVUVwWHp0QWI2S3lEVXBIQ1plTEtNUkViNlU3OFNWM3Mz?=
+ =?utf-8?B?L1dqaFVqTjhneWI0TXJiMURSTDZSc2NYeXN1REgyL1NFVlcyNXBJOGIxdlFs?=
+ =?utf-8?B?UXUwMStlNlhrWCtoZ01XYkdnK1EveUE4RUoxUHhZN0F3dTBrZU9NajNFZEpm?=
+ =?utf-8?B?cVE5OEVWWTQ4b2JOQTVvdXh5MUUyM2I0czVxUE9LRExFZlBhcVRnL2ROL29w?=
+ =?utf-8?B?c0dWSWszakxXQVdITDd5aG0zVGRsd1pPN29hMTJtbW45NVFQOEJ6M3ZhSnJQ?=
+ =?utf-8?B?REpzYkc4RElJTGhjRWQ2K1o5N20rWGs3N2RVaU5GRlZJdFY5SHRjTXNPcnZR?=
+ =?utf-8?B?MU04QzM4SHVJRzNJck1IUzVBZTVTWkhwSlB2ME9KL0JjWGtVNEpwblM5eHI2?=
+ =?utf-8?B?U1YwTlpWUnBWSE80dXRBR0w0KzR5S0FCamNOd2NXV2M3Qkxld1h1eFkxSVZ6?=
+ =?utf-8?B?NjlReGdMNWxTUkxQL0tROXFuYitKL0tVUi9QazZuaDhYazZXTFhwdXUwN2th?=
+ =?utf-8?B?TDU0ZHdVcEVrbnhaNERSb21FYzQ5Sm5qY2pIelkrb2Y3VXVJUDFVQmxUVTRh?=
+ =?utf-8?B?RGRXZ2xZWEZMTkUxbi9jZmR6R09qRmJ1aVBtTEd0YUVmalUxSjF2RDJtNjlm?=
+ =?utf-8?B?MzREWXMxNmNFRVVFRDBIMkJUdTc5YnNTb2xMRktPNUhhUElROTdlUDNXM2xC?=
+ =?utf-8?B?SGNPNldhY2dQcGM2RDQzbG9qL2cvbGY1UkJCdFNTWkNDV0FNeGVoMmZCYlVH?=
+ =?utf-8?Q?sAe7qm1aPU8nt+PCAIMp3XhLz?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	r8KrnqT2tfgSKHzvNVp0GBOki8udcrzAJHlZ2VRayH5f70W1Nej3hvktygFUnnCbpN9A1gtRLIgrRw0r3rwPgzlVp3AoQS4uifAEsgxhvrwUCnJYNmwqjPQSVeq5AL/KfKM5QBgOnNDWxHLhtNLc95bDZlT/9173H0h1eeRGHScSpuCHC6NZCcCGdXDrO9aKE826gjHol8xO/kldN77PXXu3IJm0iK0/HW9H9KtEpuSK8FGRptzYz1g2fH6S2bpcuwueVjRFmT4YPQEZiVAG777HwzaPaPRjzinhlGxGn7gBIm27FU9SNJFZ+fw6MwoBd7dLBaFow5BNYQP361UGX41YQjwri84As4tKmdax7NObyroKOi/hlQqR6HlOV7SW1LYvPg/udF3ACcx7YsQkqdPE9lGKT/CkumivdEE1IzxPYjWMPOzGcAywN+QAZyhFO43vT5wTtge9kwB33oYiN05mw3gHKV/fAekSS6J0sx+cw4eRHKEyKeMEKqIyD3rODSoljC0Rm6vjo+YQHj4bNReTumuTXGWJLzjHD8xtUI04w37TZfLLlK4jWXPY/l0C49bqEf3zms8N/KG7ILF2s20s9WUypm1jLHJ9phugOII=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 27f14924-4499-42df-e736-08dc53baed8d
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Apr 2024 08:49:09.6321
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bKwq37p9bvxCHMr4UxeAyZget0wcfr9xIzYJXQLGXfW1HpVMafI6ogl2g4/iajJl9oK7MCJDtvK6GW8KDmkDbQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6104
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-03_08,2024-04-01_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ bulkscore=0 spamscore=0 suspectscore=0 phishscore=0 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2403210000 definitions=main-2404030060
+X-Proofpoint-GUID: f3fz5bB7gYirr9rOGGGS7CqPLu2dILqA
+X-Proofpoint-ORIG-GUID: f3fz5bB7gYirr9rOGGGS7CqPLu2dILqA
 
-On Tue, 2024-04-02 at 20:10 -0400, Colin Walters wrote:
-> [cc alexl@, retained quotes for context]
->=20
-> On Tue, Apr 2, 2024, at 6:52 PM, Darrick J. Wong wrote:
-> > On Tue, Apr 02, 2024 at 04:00:06PM -0400, Colin Walters wrote:
-> > >=20
-> > >=20
-> > > On Fri, Mar 29, 2024, at 8:43 PM, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > >=20
-> > > > There are more things that one can do with an open file
-> > > > descriptor on
-> > > > XFS -- query extended attributes, scan for metadata damage,
-> > > > repair
-> > > > metadata, etc.=C2=A0 None of this is possible if the fsverity
-> > > > metadata are
-> > > > damaged, because that prevents the file from being opened.
-> > > >=20
-> > > > Ignore a selective set of error codes that we know
-> > > > fsverity_file_open to
-> > > > return if the verity descriptor is nonsense.
-> > > >=20
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > > =C2=A0fs/iomap/buffered-io.c |=C2=A0=C2=A0=C2=A0 8 ++++++++
-> > > > =C2=A0fs/xfs/xfs_file.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=
- 19 ++++++++++++++++++-
-> > > > =C2=A02 files changed, 26 insertions(+), 1 deletion(-)
-> > > >=20
-> > > >=20
-> > > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > > index 9f9d929dfeebc..e68a15b72dbdd 100644
-> > > > --- a/fs/iomap/buffered-io.c
-> > > > +++ b/fs/iomap/buffered-io.c
-> > > > @@ -487,6 +487,14 @@ static loff_t iomap_readpage_iter(const
-> > > > struct=20
-> > > > iomap_iter *iter,
-> > > > =C2=A0	size_t poff, plen;
-> > > > =C2=A0	sector_t sector;
-> > > >=20
-> > > > +	/*
-> > > > +	 * If this verity file hasn't been activated, fail
-> > > > read attempts.=C2=A0 This
-> > > > +	 * can happen if the calling filesystem allows files
-> > > > to be opened even
-> > > > +	 * with damaged verity metadata.
-> > > > +	 */
-> > > > +	if (IS_VERITY(iter->inode) && !fsverity_active(iter-
-> > > > >inode))
-> > > > +		return -EIO;
-> > > > +
-> > > > =C2=A0	if (iomap->type =3D=3D IOMAP_INLINE)
-> > > > =C2=A0		return iomap_read_inline_data(iter, folio);
-> > > >=20
-> > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > > index c0b3e8146b753..36034eaefbf55 100644
-> > > > --- a/fs/xfs/xfs_file.c
-> > > > +++ b/fs/xfs/xfs_file.c
-> > > > @@ -1431,8 +1431,25 @@ xfs_file_open(
-> > > > =C2=A0			FMODE_DIO_PARALLEL_WRITE |
-> > > > FMODE_CAN_ODIRECT;
-> > > >=20
-> > > > =C2=A0	error =3D fsverity_file_open(inode, file);
-> > > > -	if (error)
-> > > > +	switch (error) {
-> > > > +	case -EFBIG:
-> > > > +	case -EINVAL:
-> > > > +	case -EMSGSIZE:
-> > > > +	case -EFSCORRUPTED:
-> > > > +		/*
-> > > > +		 * Be selective about which fsverity errors we
-> > > > propagate to
-> > > > +		 * userspace; we still want to be able to open
-> > > > this file even
-> > > > +		 * if reads don't work.=C2=A0 Someone might want to
-> > > > perform an
-> > > > +		 * online repair.
-> > > > +		 */
-> > > > +		if (has_capability_noaudit(current,
-> > > > CAP_SYS_ADMIN))
-> > > > +			break;
-> > >=20
-> > > As I understand it, fsverity (and dm-verity) are desirable in
-> > > high-safety and integrity requirement cases where the goal is for
-> > > the
-> > > system to "fail closed" if errors in general are detected;
-> > > anything
-> > > that would have the system be in an ill-defined state.
-> >=20
-> > Is "open() fails if verity metadata are trashed" a hard
-> > requirement?
->=20
-> I can't say authoritatively, but I do want to ensure we've dug into
-> the semantics here, and I agree with Eric that it would make the most
-> sense to have this be consistent across filesystems.
+On 02/04/2024 22:26, Dave Chinner wrote:
+>> And then this gives:
+>> args->minlen=48 blen=64
+> Which is perfectly reasonable - it fits the bounds specified just
+> fine, and we'll get a 64 block allocation if that free space is
+> exactly aligned. Otherwise we'll get a 48 block allocation.
+> 
+>> But xfs_alloc_vextent_start_ag() -> xfs_alloc_vextent_iterate_ags() does not
+>> seem to find something suitable.
+> Entirely possible. The AGFL might have needed refilling, so there
+> really wasn't enough blocks remaining for an aligned allocation to
+> take place after doing that. That's a real ENOSPC condition, despite
+> the best length sampling indicating that the allocation could be
+> done.
+> 
+> Remember, bestlen sampling is racy - it does not hold the AGF
+> locked from the point of sampling to the point of allocation.
 
-In terms of userspace I think this semantic change is fine. Even if the
-metadata is broken we will still not see any non-validated data. It's
-as if we didn't try to use the broken fsverity metadata until it needed
-to be used. I agree with others though that having the same behavior
-across all filesystems would make sense. Also, it might be useful
-information that the filesystem has an error, so maybe we should log
-the swallowed errors.
+ok, I assumed that some lock was held.
 
-For kernel use, in overlayfs when using verity_mode=3Drequire, we do use
-open() (in ovl_validate_verity) to trigger the initialization of
-fsverity_info . However I took a look at this code, and it seems to
-properly handle (i.e. fail) the case where IS_VERITY(inode) is true but
-there is no fsverity_info after open.
+> Hence
+> when we finally go to do the allocation after setting it all up, we
+> might have raced with another allocation that took the free space
+> sampled during the bestlen pass and so then the allocation fails
+> despite the setup saying it should succeed.
 
-Similarly, IMA (in ima_get_verity_digest) relies on the digest loaded
-from the header. But it also seems to handle this case correctly.
+My test is single threaded, so I did not think that would be an issue.
 
-> > Reads will still fail due to (iomap) readahead returning EIO for a
-> > file
-> > that is IS_VERITY() && !fsverity_active().=C2=A0 This is (afaict) the
-> > state
-> > you end up with when the fsverity open fails.=C2=A0 ext4/f2fs don't do
-> > that,
-> > but they also don't have online fsck so once a file's dead it's
-> > dead.
->=20
-> OK, right.=C2=A0 Allowing an open() but having read() fail seems like it
-> doesn't weaken things too much in reality.=C2=A0 I think what makes me
-> uncomfortable is the error-swallowing; but yes, in theory we should
-> get the same or similar error on a subsequent read().
+> 
+> Fundamentally, if the filesystem's best free space length is the
+> same size as the requested allocation,*failure is expected*  and the
+> fallback attempts progressively remove restrictions (such as
+> alignment) to allow sub-optimal extents to be allocated down to
+> minlen in size. Forced alignment turns off these fallbacks, so you
+> are going to see hard ENOSPC errors the moment the filesystem runs
+> out of contiguous free space extents large enough to hold aligned
+> allocations.
+> 
+> This can happen a -long- way away from a real enospc condition -
+> depending on alignment constraints, you can start seeing this sort
+> of behaviour (IIRC my math correctly) at around 70% full. The larger
+> the alignment and the older the filesystem, the earlier this sort of
+> ENOSPC event will occur.
 
-If anything the explicit error list seems a bit fragile to me. What if
-the underlying fs reported some new error when reading the metadata,
-should we then suddenly fail here when we didn't before?=C2=A0
+For this scenario, statvfs returns - as a sample - f_blocks=73216, 
+f_bfree=19950, f_bavail=19950
 
->=20
---=20
-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-
-=3D-=3D-=3D
- Alexander Larsson                                            Red Hat,
-Inc=20
-       alexl@redhat.com            alexander.larsson@gmail.com=20
-He's a lonely alcoholic firefighter looking for a cure to the poison=20
-coursing through his veins. She's a tortured insomniac Hell's Angel on=20
-the trail of a serial killer. They fight crime!=20
+So ~27% free.
 
+> 
+> Use `xfs_spaceman -c 'freesp'` to dump the free space extent size
+> histogram. That will quickly tell you if there is no remaining free
+> extents large enough for an aligned 48 block allocation to succeed.
+> With an alignment of 16 blocks, this requires at least a 63 block
+> free space extent to succeed.
+
+# xfs_spaceman -c 'freesp' /root/mnt2/
+    from      to extents  blocks    pct
+       4       7       4      25   0.10
+      16      31      90    1440   5.77
+      32      63      12     400   1.60
+      64     127       1      64   0.26
+     512    1023       1     640   2.56
+   16384   22400       1   22390  89.71
+
+> 
+> IOWs, we should expect ENOSPC to occur long before the filesystem
+> reports that it is out of space when we are doing forced alignment
+> allocation.
+
+For my test, once ENOSPC occurs and statvfs tells us more than 10% space 
+free, we exit as something seems wrong. As you say, deducing an error 
+for this condition may not be the proper thing to do.
+
+I do also note that if I then manually attempt to write the same data to 
+that same empty file after the test exits, it succeeds. So something 
+racy. I also notice that the FSB range we scan in 
+xfs_alloc_ag_vextent_size() -> xfs_alloc_compute_aligned() ->
+xfs_extent_busy_trim() returns busy=1 when ENOSPC occurs - I have not 
+checked that further.
+
+Thanks,
+John
