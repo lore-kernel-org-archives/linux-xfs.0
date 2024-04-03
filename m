@@ -1,75 +1,69 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
+Received: from mail-oa1-f50.google.com (mail-oa1-f50.google.com [209.85.160.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CA4F14006
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 06:41:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4214D13B
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 06:55:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712126501; cv=none; b=T4d9mQbtNvTSOoCwsbrpdlJytLuyAq/jvsMLUhz27R1qW9LLfjz4x5DhLKDvq5dgJgwC3PDWzYuL3Ep4Hn2rhfjrV05A6JzfjtTjFWHIDe6bOMv9T/F1CNqEMZADPacraj5Fdg04vsU6/j5SHOSjViKCgF3vQORaV2HVW1zWsmI=
+	t=1712127329; cv=none; b=hlpWNHxXSbIE2JQIAjo4pVT1mI/DW8q+nO+ACPBBWivp1bXjWTj495dpEr30TcbTiWVak9nJ+jl6dz81UqTcr2R6a2dcvN8k1snqjOslawY6vwDFdQC6F3roP1LMUeotfO6bQ4YRE045WOrlGM1SpMkyzzY1xrWRmWeqXXGrKU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712126501; c=relaxed/simple;
-	bh=N9TUrZCYYb5UGgU07R4+oLfM8IVhUWRKWCbxGTcjd2E=;
+	s=arc-20240116; t=1712127329; c=relaxed/simple;
+	bh=/ptLjQPIOge4S/S8/7Te28AQmko97mh+hmxfZtnjiJI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lkgy5fRY3ZVmVq1QpjvISmjzuC9ssFi+6jyOrG6+v0GbdDJcenQDsjfkugsYUhhQdQFsYYlHQlRbVkIrNHVsoyIGj3ju5CsmwlpYcxfcm6gIzTBujIt3pDeilEIf0x4OxIyMmEdVfMLDJm798We608G1WZaaSRY/KIaA6XoW0uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=A8aRKsfF; arc=none smtp.client-ip=209.85.161.54
+	 Content-Type:Content-Disposition:In-Reply-To; b=E/9B6KzKMYwCpicyrhRARf9ns6hnBM3/hvJB3kRSvtTR+ySmXOJx4Bynjq3AMgQDGTdgbk2vtfcV2tKKMweNOzXoBOzZ5mK/Vq6Mh7YAEex/FxgkH+lsrr3HQfhXRuld5l3jep2TMxlrQAQ/s5R2RSI1s+YqWFUsZiKk5R+Yu4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=1XfEWkKj; arc=none smtp.client-ip=209.85.160.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="A8aRKsfF"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5a7c3dd2556so1328454eaf.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 23:41:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1XfEWkKj"
+Received: by mail-oa1-f50.google.com with SMTP id 586e51a60fabf-2282597eff5so4503763fac.3
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 23:55:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712126499; x=1712731299; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712127327; x=1712732127; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=tftzlaXG5dwNiW7S4aLgiIuJMsH/QPDweoTJWwIOznE=;
-        b=A8aRKsfFezYWstk5DQf3nheZTIMbHDkYIGyc7r5opWZLjZ2yB3p89tRV/RMvIw/keQ
-         faT5xz5AidWvpRQyoEssEsMU9fNoEu7J4jAJF0U49SomjCKaH4+Kw7PZDa7LlxA8T8Al
-         Vb/cLzsWaqfhdLmRgKGZEcGAYy66aBIngf+1KcmuTSrFog1HrPDDS13jss/BufBmQh+t
-         bP2XJI7sYyUN5Wt48+HJuSVRMxDanJ1wKzHw2LBDlo04LI+8QUkfTEbsqhEK/ITXCrK3
-         4fLyOzCoSBvcDVph8tLhCZ/cnptfT4dIye9bM4GtA2QYUHf40kojcWCTY8k2zmRnS1YW
-         rkrA==
+        bh=aUYTvlOrQBfcX/e1Fv8RTEpxQsbFg3+uejjC97rAGjI=;
+        b=1XfEWkKjtA8qdbJnq8Q5Z4tMuk9EMUrjAHFbYwdPU5Xdc67XBwC7LW6ENITXZk0eJB
+         b8Fe8sfv42536tHrnA6H+Cp1r9XhnVAPZcbQBaVmX7F6IWq7LAJzcI6mXdSVjx6mf79K
+         8vJyhqTydUYps74GkvCUkJonI7vClFQ82jFkIvJn7H4rcswFssuTHCkJey6sO+32QafG
+         ZmZgxi+CPcFxMSZ5EmhamA083JvbZcYG9sGCHj3WZf8H3/7f4dpKV9bjxyxJX1GY6JzE
+         5w+9Nj6n0hsVkAVBJtm79UGZx6J1suIWxIkXmODfWxspBM7zTYDwdOdKxKkoisJ1NEym
+         7B7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712126499; x=1712731299;
+        d=1e100.net; s=20230601; t=1712127327; x=1712732127;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=tftzlaXG5dwNiW7S4aLgiIuJMsH/QPDweoTJWwIOznE=;
-        b=DFK0WxzVCdc3swuHoNlYcyJugi1MnddWUMh20fWj9dlhivUixuUt0m2+Q95ZbvNyeh
-         IScHuQuNuXM/ZzTtInBnmn8xaCjiedRxi8fN6sz6mKqto5EnFLRt6xUfgxgix1a+pxou
-         zPAaAqEc8xPN+q2sjHbU4PYDoZcKSJJRiBILi63tGRu1gMd2Ke1ev5trlnE1atATLZNr
-         TiV8JuNB4le1cl7WPzo4fCb1QgAUjA8Hqr5l+ONei9SuTIbXDJiUel6kvCfOgzkNi56I
-         EF8mwzc2Vgwbb1TiUpG+mzvnqcwYt+LHr8dv94ATpN3VepN9hh9OBNZ4gb8EEjQ1q5zP
-         JHoA==
-X-Forwarded-Encrypted: i=1; AJvYcCWPibxmZNuwVWjfxjCsoj1dq2lXUfc6I0W0loWhNDsEzOnKXc1cPhWvWarwnaz+BMra1J1vKoEd5dZbpNZGcgMOBR13RPsyQzfS
-X-Gm-Message-State: AOJu0Ywmsp+7WWrj9RDfjbvC84etm8wzwtqB8Oz7zL0FFn/P34hRfOm9
-	DuFOINuU+N9sMZiMCuXtcvXerusGuL6+sPBDt7dSIn8UHjXwv2V4q9GUjI/elQZBvUHx15lieTG
-	4
-X-Google-Smtp-Source: AGHT+IHCofYGQtEU4+AO49cy/RNPy+R8nWMItJFK1tIeBQVhFFQht15TSqTDyJKQ9zKb5q0CfwODXQ==
-X-Received: by 2002:a05:6870:910d:b0:229:ce58:477a with SMTP id o13-20020a056870910d00b00229ce58477amr2221681oae.19.1712126498872;
-        Tue, 02 Apr 2024 23:41:38 -0700 (PDT)
+        bh=aUYTvlOrQBfcX/e1Fv8RTEpxQsbFg3+uejjC97rAGjI=;
+        b=UYNOQ7CdYwx6IK/vJBLjyEVVh4XGvHPz0mddWNvn1RBcqnRujB+nNHqKHBENcNkc+S
+         iLMSpcRj/NT8EzidVQHtiSTAZ/YWZKL2KnnpDj7OTkSF0mVZR91piVppm5vc8aAF8Vr8
+         BiYs1wEaLoJ7ZUtQ2P7411KX4tx5SFX/OH10Ou1tYyjZLqGjVKtfslG/kmtHbR6CFMW0
+         es8EEuqn5ofVbOl7Li78ZYU2nc310tec4e1mKAyMS+n561qACIc7a6muVAQ9OlKwMnLk
+         6DVnxFvRZ717d+1LEApU8WSzH4KFKw9uIn2muMoyTwEm9mxCMHlEf++Vi63tu85sOQH3
+         hQkw==
+X-Gm-Message-State: AOJu0YxhDFSgRhZLDzxi8p9RlzOjuJh2t8tvkWIUqgc+c2n/MS/jvftA
+	LzYaBoHklwxjd0Bo6cHKMWOzUzoUY2w8jbF8r08hMbludaI/Dx0rtz7x1cg/f+6NgJ4JgOJax+1
+	W
+X-Google-Smtp-Source: AGHT+IFZzyH3gkejULGpBgAUBnWhCoO4efRMUhZ+/nnuKorM2Qnb5U59rV1qUvcpJZV6j3tRAZ5EPg==
+X-Received: by 2002:a05:6871:71c3:b0:221:4fe5:87cb with SMTP id mj3-20020a05687171c300b002214fe587cbmr16156001oac.42.1712127327121;
+        Tue, 02 Apr 2024 23:55:27 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id p19-20020aa78613000000b006e6c10fc87fsm10978609pfn.46.2024.04.02.23.41.38
+        by smtp.gmail.com with ESMTPSA id fi2-20020a056a00398200b006eadfbdcc13sm10185156pfb.67.2024.04.02.23.55.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Apr 2024 23:41:38 -0700 (PDT)
+        Tue, 02 Apr 2024 23:55:26 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rruJT-002Eex-32;
-	Wed, 03 Apr 2024 17:41:35 +1100
-Date: Wed, 3 Apr 2024 17:41:35 +1100
+	id 1rruWq-002FS0-0B;
+	Wed, 03 Apr 2024 17:55:24 +1100
+Date: Wed, 3 Apr 2024 17:55:24 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	chandanbabu@kernel.org
-Subject: Re: [PATCH 3/4] xfs: handle allocation failure in
- xfs_dquot_disk_alloc()
-Message-ID: <Zgz6H7tXehgxOfYC@dread.disaster.area>
+Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
+Subject: Re: [PATCH 4/4] xfs: validate block count for XFS_IOC_SET_RESBLKS
+Message-ID: <Zgz9XG0p8vioG3UB@dread.disaster.area>
 References: <20240402221127.1200501-1-david@fromorbit.com>
- <20240402221127.1200501-4-david@fromorbit.com>
- <ZgzeFIJhkWp40-t7@infradead.org>
- <20240403045456.GR6390@frogsfrogsfrogs>
- <ZgzheEqxrVBg3dbs@infradead.org>
- <20240403050430.GT6390@frogsfrogsfrogs>
+ <20240402221127.1200501-5-david@fromorbit.com>
+ <20240403035314.GL6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,36 +72,77 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240403050430.GT6390@frogsfrogsfrogs>
+In-Reply-To: <20240403035314.GL6390@frogsfrogsfrogs>
 
-On Tue, Apr 02, 2024 at 10:04:30PM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 02, 2024 at 09:56:24PM -0700, Christoph Hellwig wrote:
-> > On Tue, Apr 02, 2024 at 09:54:56PM -0700, Darrick J. Wong wrote:
-> > > Usually this will result in the file write erroring out, right?
+On Tue, Apr 02, 2024 at 08:53:14PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 03, 2024 at 08:38:19AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > quota file allocations usually come originally from a file write or
-> > inode creation.  But I'm not entirely sure if that was the question..
+> > Userspace can pass anything it wants in the reserved block count
+> > and we simply pass that to the reservation code. If a value that is
+> > far too large is passed, we can overflow the free space counter
+> > and df reports things like:
+> > 
+> > Filesystem      Size  Used Avail Use% Mounted on
+> > /dev/loop0       14M  -27Z   27Z    - /home/dave/bugs/file0
+> > 
+> > As reserving space requires CAP_SYS_ADMIN, this is not a problem
+> > that will ever been seen in production systems. However, fuzzers are
+> > running with CAP_SYS_ADMIN, and so they able to run filesystem code
+> > with out-of-band free space accounting.
+> > 
+> > Stop the fuzzers ifrom being able to do this by validating that the
+> > count is within the bounds of the filesystem size and reject
+> > anything outside those bounds as invalid.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_ioctl.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index d0e2cec6210d..18a225d884dd 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -1892,6 +1892,9 @@ xfs_ioctl_getset_resblocks(
+> >  		if (copy_from_user(&fsop, arg, sizeof(fsop)))
+> >  			return -EFAULT;
+> >  
+> > +		if (fsop.resblks >= mp->m_sb.sb_dblocks)
+> > +			return -EINVAL;
 > 
-> Heh, and the question was based on a misreading of your comment. 8-)
-> 
-> AFAICT this can result in dqattach erroring out, which seems mostly
-> benign.
+> Why isn't xfs_reserve_blocks catching this?
 
-Right - this propagates the ENOSPC error back to the caller without
-a shutdown being required. If we get a corruption detected, then
-the allocation will return an error, not nmaps == 0. That error will
-cause a corruption. But an unexpected allocation failure right at
-ENOSPC can occur without there being corruption because of, say, one
-of the many, many near ENOSPC accounting bugs we've had to fix
-over the past 20 years, and if the allocation fails we should just
-clean up and return -ENOSPC without shutting down the filesystem.
-We're right at ENOSPC, so there's every chance that the next
-operation after the dquot was attached would fail with ENOSPC
-anyway....
+xfs_reserve_blocks() assumes that values have already been bounds
+checked and are valid, so calculations won't overflow.  Nothing in
+the internal calls to xfs_reserve_blocks() will pass an out-of-range
+value, but the value coming from userspace via the ioctl is
+completely unbounded. Bounding checks should be done in the code
+processing the unbounded input, not the internal functions.
 
-So, yeah, I don't see any reason to shut the filesytsem down because
-we ended up with a transient ENOSPC error or an off-by one in the
-free space accounting somewhere...
+> Is this due to the odd
+> behavior that a failed xfs_mod_fdblocks is undone and m_resblks simply
+> allowed to remain?
+
+I don't know - I couldn't work out where the overflow was occurring
+from reading the code, and once I realised that all the internal
+calls are using sanitised values and the ioctl didn't sanitise the
+user input, the fix was obvious....
+
+> Also why wouldn't we limit m_resblks to something smaller, like 10% of
+> the fs or half an AG or something like that?
+
+Because now we bikeshed over what is a useful limit for userspace to be
+setting, rather than focussing on fixing the bug. i.e. this bug fix
+doesn't limit the actual usable range that userspace can reserve,
+but it prevents the overflow from occurring.i
+
+If you want to set a limit on this value and update the code,
+manpages, etc to document the new behaviour and then have to change
+it when someone inevitably says "I have a workflow that temporarily
+reserves 75% of the disk space because ....", then do it as a
+separate "new feature" patchset. In the mean time, we just need the
+overflow to go away....
 
 -Dave.
 -- 
