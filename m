@@ -1,48 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6065F1BF5C;
-	Wed,  3 Apr 2024 03:19:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996C044C76
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 03:43:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712114351; cv=none; b=JV3r1H6o2lF/uO5Jd6uChWZCdNK+fdpWpY2w8DWDuITti/6UCo3VILmwJq1/u2ZMnXtpOi4VqnIOwOAdqRtqgo7wLiWmpXbJQI1w04bu+kV3TGpQ125stz2Fqrmhprn8ynKqjJr7Hb47EUVZ0/exXYHpPhr/l0rdlXZMv0SoufU=
+	t=1712115823; cv=none; b=lB00KFa1y3fMxJnk5MPkyxDTrFHRvaF+suitHOvHDf0c/NrCvLnLkj3WJ/ziTcDrKu08+FIH11NhSILpTkD5nAbIva/OMCLBiWZveGug+D57/xX0WZ8z8Bv0Zm84I7sK8GpfDXJFkvGBE3AG2tMvBEnLBC8WKSK4Ph91i/3U3Q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712114351; c=relaxed/simple;
-	bh=0ii2xyB6wjXqNNBKh4pHdJBXfPI3+uhqMoqBXBnA9Bo=;
+	s=arc-20240116; t=1712115823; c=relaxed/simple;
+	bh=cATqwhSHueV6eyasvN/vgcaMsyA+u+DbJ7N1Pzmt94c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z2z2Y0spnnzrtoKugeAcHKjgFnlvop8d9RFMIuTBIjJC44K7eubBBBLaEfDmpdjsLBRt095EdjP+VgFUP/YyIjfAugGm4r/1PQfZFH2MZJ1pIz4fV5J9dZAS3vG+78lWOvBUytBO/21+WLua5nqqQiLpQmKTdCZPSvlYYn/UV6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FGGu6ngP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ug3jZZ0LAoDl8M7M+S5QnmZBftPXBXdmunbTefZWpkeEuj+VCt3H18Kimhr5F/2gt+PozaIMt4GFbHwnG8MQKFfLxpm+VTOUmPIg3KRUITDoDxh/iPFmbP1jqKro1zAAgEjRo6PsseP7pIAj9DwGEGB0sbEtB+CXjkz7FFL5mh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gdK2+Gry; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FGGu6ngP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7A92C433F1;
-	Wed,  3 Apr 2024 03:19:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gdK2+Gry"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19B3CC43399;
+	Wed,  3 Apr 2024 03:43:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712114351;
-	bh=0ii2xyB6wjXqNNBKh4pHdJBXfPI3+uhqMoqBXBnA9Bo=;
+	s=k20201202; t=1712115823;
+	bh=cATqwhSHueV6eyasvN/vgcaMsyA+u+DbJ7N1Pzmt94c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FGGu6ngPhgKkmY7QboSq86OG2FgPy4LcycVuMxuo4zHhbpueruVmAtav344nWxnyZ
-	 GedcjFDMtLtnYOJiuHTrMs2rcquU53MO5zRlFqQtBqNggwOzoOzCTDZHx6JRevGs/z
-	 9iCWe/tuzpy0lsYqMdPdKRDV86FLv2nukAFLinfxy/9Az66Oq5nCClONa7UlV459G2
-	 9rdFVtP5ACVbFn5hJD2e3EDD/u5wJH6gAP2+mQJxrtKeNaGyHft90pQXr3ZgSIrlzN
-	 SdlGoX5pdonl5PXxRV7mrhEX1n+taI+q9a7cjv4CTqCK7DurLvo+4Edyp90nm38CrJ
-	 JMXQyJ8LJw3eg==
-Date: Tue, 2 Apr 2024 20:19:10 -0700
+	b=gdK2+Gryb85A4pZvetC2yIZESQEiF2hhe7aF483Ji9gaWC4Wgpf9HCY3kom7TSE8X
+	 scimjLwclx80IuSwu1x8+UkWRs5o4mEiqoWRU5Sbzrp7rEf+Rw8cLVLCQ+93CA6NBx
+	 KtjmO7ujUykTzt+dhkvyib8b3Cfb8U1GjoBlHv3R1UuaqrRzETT7jQI69RD9QfBh0A
+	 lTzb3Gb3MOYXLJx6sID0uCFb7d6De+E3cBqlZ9WTccJGUmXzgzc3JOf9aQ1csXxpx1
+	 7kpdHncPqkHvAh8e5+MzTzKhJ9Mtfcua0H+L7wKMyvCM/j/0niKkYMXGpOK4br28Af
+	 eHyF+PITMtHYw==
+Date: Tue, 2 Apr 2024 20:43:42 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: Colin Walters <walters@verbum.org>, Eric Biggers <ebiggers@kernel.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	xfs <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org,
-	fsverity@lists.linux.dev, Alexander Larsson <alexl@redhat.com>
-Subject: Re: [PATCH 28/29] xfs: allow verity files to be opened even if the
- fsverity metadata is damaged
-Message-ID: <20240403031910.GH6390@frogsfrogsfrogs>
-References: <171175868489.1988170.9803938936906955260.stgit@frogsfrogsfrogs>
- <171175869022.1988170.16501260874882118498.stgit@frogsfrogsfrogs>
- <2afcf2b2-992d-4678-bf68-d70dce0a2289@app.fastmail.com>
- <20240402225216.GW6414@frogsfrogsfrogs>
- <992e84c7-66f5-42d2-a042-9a850891b705@app.fastmail.com>
- <20240403013903.GG6390@frogsfrogsfrogs>
- <Zgy3+ljJME0pky3d@dread.disaster.area>
+Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
+Subject: Re: [PATCH 1/4] xfs: use kvmalloc for xattr buffers
+Message-ID: <20240403034342.GI6390@frogsfrogsfrogs>
+References: <20240402221127.1200501-1-david@fromorbit.com>
+ <20240402221127.1200501-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,43 +42,114 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zgy3+ljJME0pky3d@dread.disaster.area>
+In-Reply-To: <20240402221127.1200501-2-david@fromorbit.com>
 
-On Wed, Apr 03, 2024 at 12:59:22PM +1100, Dave Chinner wrote:
-> On Tue, Apr 02, 2024 at 06:39:03PM -0700, Darrick J. Wong wrote:
-> > On Tue, Apr 02, 2024 at 08:10:15PM -0400, Colin Walters wrote:
-> > > >> I hesitate to say it but maybe there should be some ioctl for online
-> > > >> repair use cases only, or perhaps a new O_NOVERITY special flag to
-> > > >> openat2()?
-> > > >
-> > > > "openat2 but without meddling from the VFS"?  Tempting... ;)
-> > > 
-> > > Or really any lower level even filesystem-specific API for the online
-> > > fsck case.  Adding a blanket new special case for all CAP_SYS_ADMIN
-> > > processes covers a lot of things that don't need that.
-> > 
-> > I suppose there could be an O_NOVALIDATION to turn off data checksum
-> > validation on btrfs/bcachefs too.  But then you'd want to careful
-> > controls on who gets to use it.  Maybe not liblzma_la-crc64-fast.o.
+On Wed, Apr 03, 2024 at 08:38:16AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Just use XFS_IOC_OPEN_BY_HANDLE same as xfs_fsr and xfsdump do. The
-> handle can be build in userspace from the inode bulkstat
-> information, and for typical inode contents verification purposes we
-> don't actually need path-based open access to the inodes. That would
-> then mean we can simple add our own open flag to return a fd that
-> can do data operations that short-circuit verification...
+> Pankaj Raghav reported that when filesystem block size is larger
+> than page size, the xattr code can use kmalloc() for high order
+> allocations. This triggers a useless warning in the allocator as it
+> is a __GFP_NOFAIL allocation here:
+> 
+> static inline
+> struct page *rmqueue(struct zone *preferred_zone,
+>                         struct zone *zone, unsigned int order,
+>                         gfp_t gfp_flags, unsigned int alloc_flags,
+>                         int migratetype)
+> {
+>         struct page *page;
+> 
+>         /*
+>          * We most definitely don't want callers attempting to
+>          * allocate greater than order-1 page units with __GFP_NOFAIL.
+>          */
+> >>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+> ...
+> 
+> Fix this by changing all these call sites to use kvmalloc(), which
+> will strip the NOFAIL from the kmalloc attempt and if that fails
+> will do a __GFP_NOFAIL vmalloc().
+> 
+> This is not an issue that productions systems will see as
+> filesystems with block size > page size cannot be mounted by the
+> kernel; Pankaj is developing this functionality right now.
+> 
+> Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
+> Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
+> Signed-off-be: Dave Chinner <dchinner@redhat.com>
 
-Heh, ok.  Are there any private flags that get passed via
-xfs_fsop_handlereq_t::oflags?  Or does that mean defining a top level
-O_FLAG that cannot be passed through openat but /can/ be sent via
-open_by_handle?
+Looks fine to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Cheers,
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
 > 
-> Dave.
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index ac904cc1a97b..969abc6efd70 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -1059,10 +1059,7 @@ xfs_attr3_leaf_to_shortform(
+>  
+>  	trace_xfs_attr_leaf_to_sf(args);
+>  
+> -	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+> -	if (!tmpbuffer)
+> -		return -ENOMEM;
+> -
+> +	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+>  	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+>  
+>  	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
+> @@ -1125,7 +1122,7 @@ xfs_attr3_leaf_to_shortform(
+>  	error = 0;
+>  
+>  out:
+> -	kfree(tmpbuffer);
+> +	kvfree(tmpbuffer);
+>  	return error;
+>  }
+>  
+> @@ -1533,7 +1530,7 @@ xfs_attr3_leaf_compact(
+>  
+>  	trace_xfs_attr_leaf_compact(args);
+>  
+> -	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+> +	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+>  	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+>  	memset(bp->b_addr, 0, args->geo->blksize);
+>  	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
+> @@ -1571,7 +1568,7 @@ xfs_attr3_leaf_compact(
+>  	 */
+>  	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
+>  
+> -	kfree(tmpbuffer);
+> +	kvfree(tmpbuffer);
+>  }
+>  
+>  /*
+> @@ -2250,7 +2247,7 @@ xfs_attr3_leaf_unbalance(
+>  		struct xfs_attr_leafblock *tmp_leaf;
+>  		struct xfs_attr3_icleaf_hdr tmphdr;
+>  
+> -		tmp_leaf = kzalloc(state->args->geo->blksize,
+> +		tmp_leaf = kvzalloc(state->args->geo->blksize,
+>  				GFP_KERNEL | __GFP_NOFAIL);
+>  
+>  		/*
+> @@ -2291,7 +2288,7 @@ xfs_attr3_leaf_unbalance(
+>  		}
+>  		memcpy(save_leaf, tmp_leaf, state->args->geo->blksize);
+>  		savehdr = tmphdr; /* struct copy */
+> -		kfree(tmp_leaf);
+> +		kvfree(tmp_leaf);
+>  	}
+>  
+>  	xfs_attr3_leaf_hdr_to_disk(state->args->geo, save_leaf, &savehdr);
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.43.0
+> 
 > 
