@@ -1,42 +1,42 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8626F374CF
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 04:43:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 738403EA97
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 04:54:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712119384; cv=none; b=RkeTWwF/Kt6SEpFdDU7WgzU6UXrs9yGmx3uC+Cyp0uRXdAefTKx8gw9NYisqAKL4SmRNUOCzm2Mz3gXjO4KrJ9rgVRwoeY4hamaYPz+HUfeM4Upl+foD+G9n54DpqDty6qEzcthaL/jWT/jDQMjdcXU0tLYclZkQfqBMfaHEdO0=
+	t=1712120097; cv=none; b=q9RS+m/sb3tVrYz1zTJaa3yz4SUXor7mb395bXQ4vfdrRnXZRjdENHPcfIUUPtiLeggco9SvUcMP6Zd0TdFPar4SDgjItuMTsUJ5rpPu94K+5InMUq0IHN50lLNr8QO80FcIK3U4nOcuO8kjaoGv+fbpApGoaGoXgKJ6PH7D18w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712119384; c=relaxed/simple;
-	bh=6UuxiG+fSKsZNWNd8xUoQxxqpljoLDsibGjkKElTZ98=;
+	s=arc-20240116; t=1712120097; c=relaxed/simple;
+	bh=lPTuXckgkYgaxCtbV6Yea9tUbbxWMnmYULZyPEuJdcg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MJEP4GZrQFC6Vec7yuOASV0gDgG3fOF3NitUNtr1JhDD4vzk1k5Iv1JRVTTOZX7Vr/PD1eQ00j087BX6W8M+QgDIaIiFrwC71RP6MA90Mk/N9OpxSL3+SZsnkplUxNgi6YXHqn/KkNuJHMsLRGzXY02VAgkXPJqAA7tWVEoNn8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1QhnUj8B; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=oNjPpz7qVXnjz/XVdRTEN4kS/blznEFSJf4hc2/lcv5AKlyEZI8lhY+yRUrAX4SGoRPRKNPWTCyNMm+4B+pq6QhuyVqEzJmiVqzrgS2LgR2WVLTV6GrQhYZfpJjOQ0YDlmMeo8Jc8jeFsXWKgsKPAqb1zvEKoZy5SHzHqMF3isg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p2een1BV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1QhnUj8B"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=leDENevaU7sSp3Dg02D0BTTGja+8vHdHAwPMxxVN8gE=; b=1QhnUj8Bxaf4T0bojquOKxdnzn
-	bjpwtNnaWyttHul4X/olByNzWsNpXGGFudn75BIdW/uwF19IhfjVEZvr/SXmDk9dz6Zs70sxaAyCw
-	eLfvNB1K3FLgbn6blV+RQsLluiFSeTCe9MMn0E3hbTgyGH7a4J6NTyLXhIGy05CkBfvGMIuQKSkmm
-	QwsQIP/rgEI1pvkGJ2jKSSO6KyHid6yX5sHxWuJpgdxwEK/qIYTseCWyFOin2oNBr1eeJYXQEm9ql
-	w3VUQvfZ/Slk2GEao+nnG7c9zNicSw2WjIGK++E1Uc1P0Ag6BTmOZ/1nMM4FHtMFNGiuH8eL73zTs
-	r0gKhwPQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rrsSl-0000000Dz8K-0a9F;
-	Wed, 03 Apr 2024 04:43:03 +0000
-Date: Tue, 2 Apr 2024 21:43:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
-Subject: Re: [PATCH 4/4] xfs: validate block count for XFS_IOC_SET_RESBLKS
-Message-ID: <ZgzeV2KDFz4AYS-0@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p2een1BV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B6E2C433F1;
+	Wed,  3 Apr 2024 04:54:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712120097;
+	bh=lPTuXckgkYgaxCtbV6Yea9tUbbxWMnmYULZyPEuJdcg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=p2een1BVtyV7MerKgBIwSmlDOGQbTnNujLvQWCDltOwJXa1wmfeH5CWVh8dXkzP+u
+	 P+pWMHtcoTsYy5gzA9a5YC0vyt2lD/GkIoHqeM3xSCMgiDhU2wt3iazSrBxXpF/MP5
+	 CFl80Ygbn2DCHSWJOJ31sWzXVbN0R2br1iK3WGfr1X/n4SH9pkn+V1vdrfYr6xhSO6
+	 dw10Kx/ao4gwuZKp1Yq4aYxFjuDCiit3VTGzjcXxOYQMY8Yo7xThjv6mCyUKchifm9
+	 /RVyW03/4l6LhNRSZgrZWrwVnRcVoq+R1LdorP/l+ftU9ZVzwDzGk/FZexsNLGZxdS
+	 R2Yx61HdhOHxg==
+Date: Tue, 2 Apr 2024 21:54:56 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+	chandanbabu@kernel.org
+Subject: Re: [PATCH 3/4] xfs: handle allocation failure in
+ xfs_dquot_disk_alloc()
+Message-ID: <20240403045456.GR6390@frogsfrogsfrogs>
 References: <20240402221127.1200501-1-david@fromorbit.com>
- <20240402221127.1200501-5-david@fromorbit.com>
+ <20240402221127.1200501-4-david@fromorbit.com>
+ <ZgzeFIJhkWp40-t7@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,16 +45,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402221127.1200501-5-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZgzeFIJhkWp40-t7@infradead.org>
 
-On Wed, Apr 03, 2024 at 08:38:19AM +1100, Dave Chinner wrote:
-> Stop the fuzzers ifrom being able to do this by validating that the
+On Tue, Apr 02, 2024 at 09:41:56PM -0700, Christoph Hellwig wrote:
+> > +	if (nmaps == 0) {
+> > +		/*
+> > +		 * Unexpected ENOSPC - the transaction reservation should have
+> > +		 * guaranteed that this allocation will succeed. We don't know
+> > +		 * why this happened, so just back out gracefully.
+> > +		 *
+> > +		 * We commit the transaction instead of cancelling it as it may
+> > +		 * be dirty due to extent count upgrade. This avoids a potential
+> > +		 * filesystem shutdown when this happens. We ignore any error
+> > +		 * from the transaction commit - we always return -ENOSPC to the
+> > +		 * caller here so we really don't care if the commit fails for
+> > +		 * some unknown reason...
+> > +		 */
+> > +		xfs_trans_commit(tp);
+> > +		return -ENOSPC;
+> 
+> A cancel and thus shutdown does seem like the right behavior for a trap
+> for an unknown bug..
 
-s/ifrom/from/
+Usually this will result in the file write erroring out, right?
 
-> +		if (fsop.resblks >= mp->m_sb.sb_dblocks)
-
-Even all of dblocks seems too much.  A quarter of all blocks still feels
-very generous.
-
+--D
