@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996C044C76
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 03:43:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9DB91BC3C
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 03:46:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712115823; cv=none; b=lB00KFa1y3fMxJnk5MPkyxDTrFHRvaF+suitHOvHDf0c/NrCvLnLkj3WJ/ziTcDrKu08+FIH11NhSILpTkD5nAbIva/OMCLBiWZveGug+D57/xX0WZ8z8Bv0Zm84I7sK8GpfDXJFkvGBE3AG2tMvBEnLBC8WKSK4Ph91i/3U3Q8=
+	t=1712115964; cv=none; b=S7+lgxmfDVTTNgdzbngBm0cimlg9FA0TqtcSPX4odvrGlxzAODvn9nXHALrbCotncAfUo0SWaIa7kOENT5jLxv04VQqsdflLe+8NbDUsIuHAI/lxNsKXz5w1KA27zjAvcfJlsCu2g3fxiHJ2JghEAQKr875ZnWS21ZseSnV00XM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712115823; c=relaxed/simple;
-	bh=cATqwhSHueV6eyasvN/vgcaMsyA+u+DbJ7N1Pzmt94c=;
+	s=arc-20240116; t=1712115964; c=relaxed/simple;
+	bh=92avr28a42XoqQP3ukWY56khd9qKjFOreWS7YJDtmqg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ug3jZZ0LAoDl8M7M+S5QnmZBftPXBXdmunbTefZWpkeEuj+VCt3H18Kimhr5F/2gt+PozaIMt4GFbHwnG8MQKFfLxpm+VTOUmPIg3KRUITDoDxh/iPFmbP1jqKro1zAAgEjRo6PsseP7pIAj9DwGEGB0sbEtB+CXjkz7FFL5mh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gdK2+Gry; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rFS4c8Go0XhtNEQey9ZAvfEseIfQXI4tKs6NbZd69xO5dXDxurXsZUhCYy1F6CoGYCyvpbrp95RwYGA5fsiUlHO2xrMTLMHzN1VrkUCA4KyyfVilRTtVGzsCfJrBx5yytBcq8yJDU0nTD62cCwIONuvBYdLkBI4MnEeaQplB73I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fh+S7fS+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gdK2+Gry"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19B3CC43399;
-	Wed,  3 Apr 2024 03:43:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fh+S7fS+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C67AC433C7;
+	Wed,  3 Apr 2024 03:46:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712115823;
-	bh=cATqwhSHueV6eyasvN/vgcaMsyA+u+DbJ7N1Pzmt94c=;
+	s=k20201202; t=1712115964;
+	bh=92avr28a42XoqQP3ukWY56khd9qKjFOreWS7YJDtmqg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gdK2+Gryb85A4pZvetC2yIZESQEiF2hhe7aF483Ji9gaWC4Wgpf9HCY3kom7TSE8X
-	 scimjLwclx80IuSwu1x8+UkWRs5o4mEiqoWRU5Sbzrp7rEf+Rw8cLVLCQ+93CA6NBx
-	 KtjmO7ujUykTzt+dhkvyib8b3Cfb8U1GjoBlHv3R1UuaqrRzETT7jQI69RD9QfBh0A
-	 lTzb3Gb3MOYXLJx6sID0uCFb7d6De+E3cBqlZ9WTccJGUmXzgzc3JOf9aQ1csXxpx1
-	 7kpdHncPqkHvAh8e5+MzTzKhJ9Mtfcua0H+L7wKMyvCM/j/0niKkYMXGpOK4br28Af
-	 eHyF+PITMtHYw==
-Date: Tue, 2 Apr 2024 20:43:42 -0700
+	b=fh+S7fS+ohUVmsWjIVLcJzZBUiaAWriFhVsHhGzL6WwZwKSIq7DFCOvYDOEnSGX29
+	 CEiY214/uUB7ilAFKaLCsfdo2MCH6EddYTVSA58v748TIpnUM1TBPamk+eZBJWKaqr
+	 SmF/VLqXxLO5Ynh/53g7qogb3IrkAOJCyAqPBTk91XiBREJfk/32V+nJ0Pfjckz0wq
+	 PSfN61ywox8c8CzFx1F4E/7VdQpiqiL6gtMeTdWE/sOMWZ402QQaBocgq6xrmDtoVp
+	 wo1EU24JOHsMzgzcmJON3C1N13DrKgytrJwpajUX7UJuJWbiBmOatFJACXXMG7IbGr
+	 VeTR8I6gTbU9w==
+Date: Tue, 2 Apr 2024 20:46:03 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
-Subject: Re: [PATCH 1/4] xfs: use kvmalloc for xattr buffers
-Message-ID: <20240403034342.GI6390@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/4] xfs: xfs_alloc_file_space() fails to detect ENOSPC
+Message-ID: <20240403034603.GJ6390@frogsfrogsfrogs>
 References: <20240402221127.1200501-1-david@fromorbit.com>
- <20240402221127.1200501-2-david@fromorbit.com>
+ <20240402221127.1200501-3-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,113 +43,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402221127.1200501-2-david@fromorbit.com>
+In-Reply-To: <20240402221127.1200501-3-david@fromorbit.com>
 
-On Wed, Apr 03, 2024 at 08:38:16AM +1100, Dave Chinner wrote:
+[explicitly cc hch]
+
+On Wed, Apr 03, 2024 at 08:38:17AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Pankaj Raghav reported that when filesystem block size is larger
-> than page size, the xattr code can use kmalloc() for high order
-> allocations. This triggers a useless warning in the allocator as it
-> is a __GFP_NOFAIL allocation here:
+> xfs_alloc_file_space ends up in an endless loop when
+> xfs_bmapi_write() returns nimaps == 0 at ENOSPC. The process is
+> unkillable, and so just runs around in a tight circle burning CPU
+> until the system is rebooted.
 > 
-> static inline
-> struct page *rmqueue(struct zone *preferred_zone,
->                         struct zone *zone, unsigned int order,
->                         gfp_t gfp_flags, unsigned int alloc_flags,
->                         int migratetype)
-> {
->         struct page *page;
+> This is a regression introduced by commit 35dc55b9e80c ("xfs: handle
+> nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space") which
+> specifically removed ENOSPC detection from xfs_alloc_file_space()
+> and replaces it with an endless loop. This attempts to fix an issue
+> converting a delalloc extent when not enough contiguous free space
+> is available to convert the entire delalloc extent.
 > 
->         /*
->          * We most definitely don't want callers attempting to
->          * allocate greater than order-1 page units with __GFP_NOFAIL.
->          */
-> >>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
-> ...
+> Right now just revert the change as it only manifested on code under
+> development and isn't currently a real-world problem.
 > 
-> Fix this by changing all these call sites to use kvmalloc(), which
-> will strip the NOFAIL from the kmalloc attempt and if that fails
-> will do a __GFP_NOFAIL vmalloc().
-> 
-> This is not an issue that productions systems will see as
-> filesystems with block size > page size cannot be mounted by the
-> kernel; Pankaj is developing this functionality right now.
-> 
-> Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
-> Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
-> Signed-off-be: Dave Chinner <dchinner@redhat.com>
+> Fixes: 35dc55b9e80c ("xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space")
 
-Looks fine to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Shouldn't Christoph be cc'd if you're reverting his patch?
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 18 ++++++------------
+>  1 file changed, 6 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 19e11d1da660..262557735d4d 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -735,19 +735,13 @@ xfs_alloc_file_space(
+>  		if (error)
+>  			break;
+>  
+> -		/*
+> -		 * If the allocator cannot find a single free extent large
+> -		 * enough to cover the start block of the requested range,
+> -		 * xfs_bmapi_write will return 0 but leave *nimaps set to 0.
+> -		 *
+> -		 * In that case we simply need to keep looping with the same
+> -		 * startoffset_fsb so that one of the following allocations
+> -		 * will eventually reach the requested range.
+> -		 */
+> -		if (nimaps) {
+> -			startoffset_fsb += imapp->br_blockcount;
+> -			allocatesize_fsb -= imapp->br_blockcount;
+> +		if (nimaps == 0) {
+> +			error = ENOSPC;
+
+-ENOSPC.
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index ac904cc1a97b..969abc6efd70 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -1059,10 +1059,7 @@ xfs_attr3_leaf_to_shortform(
->  
->  	trace_xfs_attr_leaf_to_sf(args);
->  
-> -	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
-> -	if (!tmpbuffer)
-> -		return -ENOMEM;
-> -
-> +	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
->  	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
->  
->  	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
-> @@ -1125,7 +1122,7 @@ xfs_attr3_leaf_to_shortform(
->  	error = 0;
->  
->  out:
-> -	kfree(tmpbuffer);
-> +	kvfree(tmpbuffer);
->  	return error;
->  }
->  
-> @@ -1533,7 +1530,7 @@ xfs_attr3_leaf_compact(
->  
->  	trace_xfs_attr_leaf_compact(args);
->  
-> -	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
-> +	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
->  	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
->  	memset(bp->b_addr, 0, args->geo->blksize);
->  	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
-> @@ -1571,7 +1568,7 @@ xfs_attr3_leaf_compact(
->  	 */
->  	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
->  
-> -	kfree(tmpbuffer);
-> +	kvfree(tmpbuffer);
->  }
->  
->  /*
-> @@ -2250,7 +2247,7 @@ xfs_attr3_leaf_unbalance(
->  		struct xfs_attr_leafblock *tmp_leaf;
->  		struct xfs_attr3_icleaf_hdr tmphdr;
->  
-> -		tmp_leaf = kzalloc(state->args->geo->blksize,
-> +		tmp_leaf = kvzalloc(state->args->geo->blksize,
->  				GFP_KERNEL | __GFP_NOFAIL);
->  
->  		/*
-> @@ -2291,7 +2288,7 @@ xfs_attr3_leaf_unbalance(
+> +			break;
 >  		}
->  		memcpy(save_leaf, tmp_leaf, state->args->geo->blksize);
->  		savehdr = tmphdr; /* struct copy */
-> -		kfree(tmp_leaf);
-> +		kvfree(tmp_leaf);
+> +
+> +		startoffset_fsb += imapp->br_blockcount;
+> +		allocatesize_fsb -= imapp->br_blockcount;
 >  	}
 >  
->  	xfs_attr3_leaf_hdr_to_disk(state->args->geo, save_leaf, &savehdr);
+>  	return error;
 > -- 
 > 2.43.0
 > 
