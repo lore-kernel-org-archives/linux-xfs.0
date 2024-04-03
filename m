@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9DB91BC3C
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 03:46:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD123F9E0
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 03:48:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712115964; cv=none; b=S7+lgxmfDVTTNgdzbngBm0cimlg9FA0TqtcSPX4odvrGlxzAODvn9nXHALrbCotncAfUo0SWaIa7kOENT5jLxv04VQqsdflLe+8NbDUsIuHAI/lxNsKXz5w1KA27zjAvcfJlsCu2g3fxiHJ2JghEAQKr875ZnWS21ZseSnV00XM=
+	t=1712116137; cv=none; b=CEUf1knat9zNnTfUvAt8Dm3euvmXWr/slmjGHFKi7z2B9tUTLy9dacNrTHvBxkEEQ55w4We8qAve45C6MZtZNX79AuxivLw5pEYlfddTmKN6W3qmgBVRNSspilX7S5d133Ty1Fletwb2KSpu6kcsCzNMg80GIB/bLOK8SH3c/pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712115964; c=relaxed/simple;
-	bh=92avr28a42XoqQP3ukWY56khd9qKjFOreWS7YJDtmqg=;
+	s=arc-20240116; t=1712116137; c=relaxed/simple;
+	bh=MZ7motSjNR6nlRh690DLhPjRLRjTjHiKCh8BKXGf83g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rFS4c8Go0XhtNEQey9ZAvfEseIfQXI4tKs6NbZd69xO5dXDxurXsZUhCYy1F6CoGYCyvpbrp95RwYGA5fsiUlHO2xrMTLMHzN1VrkUCA4KyyfVilRTtVGzsCfJrBx5yytBcq8yJDU0nTD62cCwIONuvBYdLkBI4MnEeaQplB73I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fh+S7fS+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mJGb7zLf0Trgn/cPlOsuqFIc1785PUTZoX8xDqeA8R/1eXrjEi3gCRpKnjVU5KNrzNzhIo2egY97ktiUVTZSfs/VuBt5kRL0L37ilhFTcgcJv4fjih5HLE4B6Qmr7OcPCpZRHpNREmDmgl/OiMpXuXAAK4B6fcPcuLcJ40DlThw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mwvOXUSb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fh+S7fS+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C67AC433C7;
-	Wed,  3 Apr 2024 03:46:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mwvOXUSb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2CBDC433C7;
+	Wed,  3 Apr 2024 03:48:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712115964;
-	bh=92avr28a42XoqQP3ukWY56khd9qKjFOreWS7YJDtmqg=;
+	s=k20201202; t=1712116136;
+	bh=MZ7motSjNR6nlRh690DLhPjRLRjTjHiKCh8BKXGf83g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fh+S7fS+ohUVmsWjIVLcJzZBUiaAWriFhVsHhGzL6WwZwKSIq7DFCOvYDOEnSGX29
-	 CEiY214/uUB7ilAFKaLCsfdo2MCH6EddYTVSA58v748TIpnUM1TBPamk+eZBJWKaqr
-	 SmF/VLqXxLO5Ynh/53g7qogb3IrkAOJCyAqPBTk91XiBREJfk/32V+nJ0Pfjckz0wq
-	 PSfN61ywox8c8CzFx1F4E/7VdQpiqiL6gtMeTdWE/sOMWZ402QQaBocgq6xrmDtoVp
-	 wo1EU24JOHsMzgzcmJON3C1N13DrKgytrJwpajUX7UJuJWbiBmOatFJACXXMG7IbGr
-	 VeTR8I6gTbU9w==
-Date: Tue, 2 Apr 2024 20:46:03 -0700
+	b=mwvOXUSbzKCWHlZhLfqNtu5DyljfbEQaOurqnwi1eVF52s+/qNt0y7gomNmSmAd07
+	 BVrgnDr9k0YNL0IW31alVhjldOg4MzvErcIGmPEfm9GRj6xB8OKX9Qiy8t/0eW4v8x
+	 bRLKArP6rQOFExBB8HBlf6XsjqRgOwZlIu2y45AEzDGs1ysylGGC22VPBxDY7oQBYk
+	 v/4KrYxgU2B8+oqFzmIuhHwtdanJo5O5lEHtDj8J9aOEzClApEDwJ4Q5jkCyZt/6/T
+	 ry+VusInFloKsevyPKzJU954W0rrn0VCpfcPLSQLjyAttSouAvUDGct8mq56iZW2nu
+	 noMDd/bACV4dw==
+Date: Tue, 2 Apr 2024 20:48:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] xfs: xfs_alloc_file_space() fails to detect ENOSPC
-Message-ID: <20240403034603.GJ6390@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
+Subject: Re: [PATCH 3/4] xfs: handle allocation failure in
+ xfs_dquot_disk_alloc()
+Message-ID: <20240403034856.GK6390@frogsfrogsfrogs>
 References: <20240402221127.1200501-1-david@fromorbit.com>
- <20240402221127.1200501-3-david@fromorbit.com>
+ <20240402221127.1200501-4-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,72 +43,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402221127.1200501-3-david@fromorbit.com>
+In-Reply-To: <20240402221127.1200501-4-david@fromorbit.com>
 
-[explicitly cc hch]
-
-On Wed, Apr 03, 2024 at 08:38:17AM +1100, Dave Chinner wrote:
+On Wed, Apr 03, 2024 at 08:38:18AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_alloc_file_space ends up in an endless loop when
-> xfs_bmapi_write() returns nimaps == 0 at ENOSPC. The process is
-> unkillable, and so just runs around in a tight circle burning CPU
-> until the system is rebooted.
+> If free space accounting is screwed up, then dquot allocation may go
+> ahead when there is no space available. xfs_dquot_disk_alloc() does
+> not handle allocation failure - it expects that it will not get
+> called when there isn't space available to allocate dquots.
 > 
-> This is a regression introduced by commit 35dc55b9e80c ("xfs: handle
-> nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space") which
-> specifically removed ENOSPC detection from xfs_alloc_file_space()
-> and replaces it with an endless loop. This attempts to fix an issue
-> converting a delalloc extent when not enough contiguous free space
-> is available to convert the entire delalloc extent.
+> Because fuzzers have been screwing up the free space accounting, we
+> are seeing failures in dquot allocation, and they aren't being
+> caught on produciton kernels. Debug kernels will assert fail in this
+> case, so turn that assert fail into more robust error handling to
+> avoid these issues in future.
 > 
-> Right now just revert the change as it only manifested on code under
-> development and isn't currently a real-world problem.
-> 
-> Fixes: 35dc55b9e80c ("xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space")
-
-Shouldn't Christoph be cc'd if you're reverting his patch?
-
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_bmap_util.c | 18 ++++++------------
->  1 file changed, 6 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 19e11d1da660..262557735d4d 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -735,19 +735,13 @@ xfs_alloc_file_space(
->  		if (error)
->  			break;
->  
-> -		/*
-> -		 * If the allocator cannot find a single free extent large
-> -		 * enough to cover the start block of the requested range,
-> -		 * xfs_bmapi_write will return 0 but leave *nimaps set to 0.
-> -		 *
-> -		 * In that case we simply need to keep looping with the same
-> -		 * startoffset_fsb so that one of the following allocations
-> -		 * will eventually reach the requested range.
-> -		 */
-> -		if (nimaps) {
-> -			startoffset_fsb += imapp->br_blockcount;
-> -			allocatesize_fsb -= imapp->br_blockcount;
-> +		if (nimaps == 0) {
-> +			error = ENOSPC;
 
--ENOSPC.
+Sounds fine to me!  It'll be interesting to see what happens the next
+time one of my VMs trips this.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +			break;
->  		}
-> +
-> +		startoffset_fsb += imapp->br_blockcount;
-> +		allocatesize_fsb -= imapp->br_blockcount;
->  	}
+> ---
+>  fs/xfs/xfs_dquot.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index c98cb468c357..a2652e3d5164 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -356,6 +356,23 @@ xfs_dquot_disk_alloc(
+>  	if (error)
+>  		goto err_cancel;
 >  
->  	return error;
+> +	if (nmaps == 0) {
+> +		/*
+> +		 * Unexpected ENOSPC - the transaction reservation should have
+> +		 * guaranteed that this allocation will succeed. We don't know
+> +		 * why this happened, so just back out gracefully.
+> +		 *
+> +		 * We commit the transaction instead of cancelling it as it may
+> +		 * be dirty due to extent count upgrade. This avoids a potential
+> +		 * filesystem shutdown when this happens. We ignore any error
+> +		 * from the transaction commit - we always return -ENOSPC to the
+> +		 * caller here so we really don't care if the commit fails for
+> +		 * some unknown reason...
+> +		 */
+> +		xfs_trans_commit(tp);
+> +		return -ENOSPC;
+> +	}
+> +
+>  	ASSERT(map.br_blockcount == XFS_DQUOT_CLUSTER_SIZE_FSB);
+>  	ASSERT(nmaps == 1);
+>  	ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
 > -- 
 > 2.43.0
 > 
