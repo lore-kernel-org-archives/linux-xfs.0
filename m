@@ -1,258 +1,424 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C3317C98
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 16:31:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712161921; cv=fail; b=frCwK04HoXwG3Oo7a9sPeLBot2Y2rW/dNIAhVGxf0q3IfugD1FK8YG87yW5zmbVK5gsyqydpwsUWcwddPxRdEr5N3yk3I+PsQ6yC0T8QJhLdfP+HSumytxwiSFPUFw+8TyaIc7Si1s2y37or9L3x6u+mWVoAPcsVpj3CfgTYf6A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712161921; c=relaxed/simple;
-	bh=zTI/w6cB23jCXX78hA1gEbP7j6S8MqruS91fP93T3Qo=;
-	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=OipGPXeBAx/sn1/XdDhDVK59K4kYW5p8c6xlrO1GX6qfm+wXs7dR5OhzXlpRlnyO5jTzPCdaSfIjfffcAV2wOtuDYCDzAqiNqJwhTEyx9Gb/z+XTop+qSB07h4zN04otS+nypsZIvSgcDUr3z8eycSi+Xg4kmHHaclh6IuYgEbY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=a6Hf/pqK; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=TVo9VYUs; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5D191534F5
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 18:23:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712168612; cv=none; b=IDqYTF30jvSNYfRXaojiI+lc1o6cmJ5DOxe0BKRrwSewtHYmi7J8oQgMVA+v4hf4Kmu4nOjqhehnWZuXauWFeyIY2mCNOQOIeSwDNMWOwetKA7nBr24FG907dyGoPjDHe9wBeXu0wvX3q3PVic3XRMKbFc4F+c7MTSB8zSWPijo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712168612; c=relaxed/simple;
+	bh=pBgMOLCRxueTmidWkRqh9O1pX+ZXhSiA4GabTpxvpXg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LsD+OnfY6dUGR3yoETsEbO2Q+DK7McsezVXB3wyFKZYelsxikFhF/S2kpwKRDHN9qhREj8m+WbqucVSsVaJQF7pp68ZHkoWzPy2KPJDwPacjK9wA/ER15UtyqeOtbpq5TOXATvqQp9kFVKAY072mHV/arc3aSiHRY9p+i+ynK+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YFb1ozwS; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="a6Hf/pqK";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="TVo9VYUs"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 433GO3Mf014579;
-	Wed, 3 Apr 2024 16:31:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=kLkBMbivGvOEoFi0K0JyjRRiLp0tAM+6BmccvP0DH7A=;
- b=a6Hf/pqK2hUWz1YOk/jZa5ceTmussCiz/nqyFNb05O/IOrXcfGBzsDGkmO1TzUK2SVqV
- rsFAnis/fAVym7HDEqpvJaSWLVn6S9Fc69xywg2iZuRK5ATDp+cL71SBIvZi/qEMWrOA
- wW9gtM+2P6GDbeAd8ONuU1CZwINPqxbJGdUNSSMwHoMkW1LmiFAaIyfV83W/P5e4mxDs
- 1tshonAnItv2uGvUenDJL0vrGOglczNNJxkiMVYajaXb0s3kcEQddqeT4uknEQoEajhL
- vV3yRvxuLw5x8f7vzV/t9rFOilpGJkziuRWyEy6cTkFMbylIdfDiFYDMm9WGFWlItN2s aQ== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x7tb9wnvr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 03 Apr 2024 16:31:56 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 433FZ485009875;
-	Wed, 3 Apr 2024 16:31:55 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2168.outbound.protection.outlook.com [104.47.55.168])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x6968us1f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 03 Apr 2024 16:31:55 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oZvB7Spe2mAZgE1+5GNZ6vZLPzj2Ay687r+E/StAxnXERdeAdnXRrT3AAdIIYRYM6mb/+IYs0KrfOWw450reI2YROAoNwS+CUswlrAsAGbETmxlXmWbe7k4uUkR52S61Ou0WztHxiHU4PHWVFPbgwgtbPzB9kn0XxlYZM3wl/dVK+xE+4F3CevEKDqbz/yO2XyA4x8k+ZXn7g8uRnzZdzfoAQTxC5EIPhsurUbvkzbCP5G7bTRc6nxPiNg+ksaCuc9uiF3MyjJ+0LUcQu916ausRLvWVbWNusbIeZ5EwTOuBvCV/ecgfangV0/Dr1hiCZBkUwGBT8C0ehI17vY613Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kLkBMbivGvOEoFi0K0JyjRRiLp0tAM+6BmccvP0DH7A=;
- b=EI9CH1BFJrsY17CS6SPAldxA6HV6mv3Y1DRAmQJk18Pkiz8VoOaFoDDQ33xYuhrCq7X0meifHAtv8//khK3/hw5rsW1AjJLYI6Eplg11YnYNY8WX9no4JC1oLzO+UHRAHephCo9wAvrIn3tMjTM26VM19BpIYNln+cKbU9etQn+NoDKnar0mGSm64L9buD3GCZUR5v2leUTKcgnl5TecUqwPy4G2gXYvoo6atPLTJrykl63515LbebdWs9FO6siRrGIBix1/oH5OK4M/jaZ/kh2/NqquCF1ve0Adt1yPJOW5bfrL/I4J0J0CaFVw2c/QaqtMrAFgZHAQSxcJybowYA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kLkBMbivGvOEoFi0K0JyjRRiLp0tAM+6BmccvP0DH7A=;
- b=TVo9VYUsBLUKyHETS8oS/Em2ROeKej0KWUrkjn2PbIKlsC/LF39iBoqTfJH1RcS0zrN85BekL6Axuln/PSuYyrW6zCt2V9rdGLv/qV+m8eS6BleI60wf66bds+znEUHO+dE3MB9pv7AMrv97wItogSAF7rPOIlH8BX8VZmOFJ0M=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SA1PR10MB6638.namprd10.prod.outlook.com (2603:10b6:806:2b9::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Wed, 3 Apr
- 2024 16:31:53 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324%4]) with mapi id 15.20.7409.042; Wed, 3 Apr 2024
- 16:31:53 +0000
-Message-ID: <c515119e-5f0e-41ba-8bde-ae9f6283b3d8@oracle.com>
-Date: Wed, 3 Apr 2024 17:31:49 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] xfs: only allow minlen allocations when near ENOSPC
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-References: <20240402233006.1210262-1-david@fromorbit.com>
- <20240402233006.1210262-2-david@fromorbit.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240402233006.1210262-2-david@fromorbit.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM0PR01CA0098.eurprd01.prod.exchangelabs.com
- (2603:10a6:208:10e::39) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YFb1ozwS"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=SFc51O8wxttq2O6E5PnfjjTgUXklYnsvh4anH1eV4EM=; b=YFb1ozwS8I55osvLjQZXJAbY7l
+	nMe9mgB/7GglTq0zZVB69TQ5UNfR4q4YaIgEUSBR/VARtunMFdDcOjei1JzbUzSLQpnp28gntItg4
+	JRcutJbyiC/LNxbtBL4+NP50L2VPAAmO/tuH1Yr6PkBo5T4w02VimM2A1+0RbRr1LT+yGpgk6sgkl
+	5cySXsNeC6uMdrqR/ttMJs6MlJUJzlsqr70MYY9I4S56pMqHoijAG1i/zvCtl/1jxlAd1QRnKK2X2
+	gRU2o3s/Il3SRDi+hiMxo72E8uFX0FRUNVjY8TzrYW/LFbejPOed9KFzKdlHYDmZSo0QJzDMJkCuP
+	Uyd0nljA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rs5Gi-0000000HNEr-2oiU;
+	Wed, 03 Apr 2024 18:23:28 +0000
+Date: Wed, 3 Apr 2024 11:23:28 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	chandanbabu@kernel.org
+Subject: Re: [PATCH 2/4] xfs: xfs_alloc_file_space() fails to detect ENOSPC
+Message-ID: <Zg2eoPeRuPOaeRAd@infradead.org>
+References: <20240402221127.1200501-1-david@fromorbit.com>
+ <20240402221127.1200501-3-david@fromorbit.com>
+ <ZgzdtYGyVN1-UQdM@infradead.org>
+ <Zgz4YXUp+fFEN3qp@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SA1PR10MB6638:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	Cmfz1LSPDtINLFasDBYGG8K4TWnWQw9A+t2apBhTe608oZ1UG4W5r9/Yj37P/1oKE6XYQG1nQPmzIKdEPgDYD2xcpPjHCZIig+VJqJvtxDJ++vtMVr67INpV44GFEBFiKO+XciDMywaaaP5fugzfgSzn4OvjA3Elwy2OKJGW+AUPEjAJPWtPdGg0xdFO79lMgDfkD7lz5J8xxs632DAUqH8/thZMxE2r870ed/CkgwNSI7xJk0FkkFO16APZoHMoUx8MhMVLX6ezxW9S2s+NaJExxxeHn10OckINgbMqhPZL2dFpt/tBnVyggLYvQA8O4ArHUdHNKMYBSGI2Ld8z8qI3ix8LWq4JjZ4tgKfXY36J2n5/Fp60LqKIVy5eGlyT2O+j4zuP9BsGvxtXknKlKga1wDsizWiQaREhh3MHDKoAjjkDeMDHW2yGKAkv9mgfQoqkbK30aA3qxFU7NQdzJNqNzG/SmKJfKD09CoGS4+qst8JmSiuP1/DfUXQeDCQuYZzqd7mol3hW9+AinttPOFUSEQkZSl6S9ww0L8+UdcOy/UKsbBMGb5zIw/c+ZL59alHc+k5OyybDY4n+ox2nqL2nTR0STenbQCm37cJlEBl3cXTHnyes9ItITqDwRGwA
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(366007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?NUgyVlNVWXprZlM0bVhoWHZwRFNVRzQrUDlDSnl0K29JdmJxM1piKysyazRQ?=
- =?utf-8?B?N1dXb0ZpSjBQN1BIZXdrUm12cmVxS09XeWxwU3BwU3V6cHNEcStFcnRYTGZR?=
- =?utf-8?B?dW5XYjFneFdHbnh2TG1rcTdKcXk3cm5FZzA5WVJWaEE4d0s2OGdCWkw2K1BN?=
- =?utf-8?B?bHhoUVJyamZVQVRkbFgrSUtTZlVyeSs3d0pLeUhEb2ppUWxQSEM4RklSUFRE?=
- =?utf-8?B?S2sxNGwxa1hqT2JyYk1ITHZoREI5QVQ4NUIyem5hNUxRWTZjNzRFSWlYdGo3?=
- =?utf-8?B?a09mcDJZOElCZnk2eVlhWG0wbUpnNXhIRFVjVmthRHQvcVMrRG05b3hIR0c5?=
- =?utf-8?B?YVdJU0dvVURwbklIOGIvaUhKd0QvOTdBblc5OUJxTGJrSXlzOTdodzQ1S1B4?=
- =?utf-8?B?YytGZlV3b0w1MkJvTzl2S0ZhZ0tyVlFITGtGZkhqS3U5NmkwRDdoQnZObGhV?=
- =?utf-8?B?VFdEcGVKdmNMdkVhME14dzNrUnNJdDRkZ1BuZHdobHVrYWFyNnh1VmJzcXBo?=
- =?utf-8?B?V0lVR3RLc1FCREFSTTdjYXJuNEFQY1JtMzlGSlFmUmR1UCtLSS9aTERaMC9C?=
- =?utf-8?B?NC9rMzRUMElmODZONVdVYkU2VmpXbHI3T1EzeDdseTVrL1pHcXk1SzZLbmVs?=
- =?utf-8?B?TTRGbHB2U2s4U0dhV1hOZzJhdGNCdkx4RGFjdGI2YkdtdDBkVytLRU9FRWY2?=
- =?utf-8?B?b1E1SEVWbnhGMDdQWFB4Zmt2SzJXU2ZESXIyWi9vRDdxUWllcXZjZ0tKR3l2?=
- =?utf-8?B?aXpVRHhkVGxYOWUvNkF3OE1sT0gzZHFOc05yYm9aNitqZmVGcWFaNjZEMkc1?=
- =?utf-8?B?YnhnYTJBSmdGajZQdjV3Z2hKbVNwYWlpNE9tQ2lFcjlQdFBvWCsvUytDS1lG?=
- =?utf-8?B?QmdDeFJjNEtmbGZTKzZ2UkpaTlpMRk9YZGY3Y0pIS1ZEOTdRbHFtOTFQTTI3?=
- =?utf-8?B?K1RibDZoVkhmV1BNYWQ0K3VtUUVPN1o1NjJodllWaE44S3FKYzNSRFU4K1Y4?=
- =?utf-8?B?TnZJSEVESUxFSjh3cjhwV0RjbytQcXFubEkzOHdQVVlXb3NZazdBeU1LTE82?=
- =?utf-8?B?NkxndTZIZGMvWXBrdUphdUFHYjZ4dzJ3SE15K21OSEZSQWZmK1UxbUVvUUdV?=
- =?utf-8?B?WmJZWjlGT3VDZEpxRzAwbGV5NDQvZUM2bi9KdU5FRVBycUFNRGVLS1pPS054?=
- =?utf-8?B?T2tKQ0RveGEreFVvL1h0Ni9sNDlGY1RCTHlpekhvaUprV0o2Z09RbzZvQmY1?=
- =?utf-8?B?MVYzcmM2NDRuTkhhbTljUVltMnVScHlKUTBUYm4vN21aYjVUTFZJaUI5UVBm?=
- =?utf-8?B?aFArQjgyd2VkMk81S0R4bVhFbGNxaUp4dWVURlVxTFFGZnMrcE9TTWNrK25B?=
- =?utf-8?B?cGRzaTNLc3BCNkhBNVB1RUdZRExrRkVOWWZZekpsMmQweFE1ZzNQUUEvUVVm?=
- =?utf-8?B?dEhjZTBUUk5nK005M20waVlFUnUxU09CemROek5ocC9iMzZOZVRDVFdFK2ZL?=
- =?utf-8?B?YnAvOU9iTVR1ZjdsS0FDaU51b1dJWmpIZGpRaUFXS3F5em85NWQzV0xRQU0w?=
- =?utf-8?B?V3ZVNWFrZDVKbEtScGs2aW1Ic2ZyRGxFYURqcEdQMldLS1N4dzQvMzk4eE40?=
- =?utf-8?B?TDl0c245allkc3RJOVUyT2d1VmhubEIzWVgrM0JKWlVPL29POTFYSlNoc3dG?=
- =?utf-8?B?NFIxRkpueGNNN0xEN29DUmZWc1VTNStlNDlUR3ZxTTNRbjlIeTZJOTROc3dx?=
- =?utf-8?B?bzZzVTYzS1pVQnVBbTQwVnAzb09wYlFsRkxkZ2JlMlpYMFZCYzhFZVNSS2RQ?=
- =?utf-8?B?YWpkdkxmNDBmNnYzWXhHYnVmYjJtS3JwVkg3dGt1cUh3R2pwK295dkJtTHVs?=
- =?utf-8?B?cUo1UnFrczJmMnB0N2ErckFGV2pTK2RrVkYvK055MFV1bVFCSHdWZUJoKzZ6?=
- =?utf-8?B?ZVVFZ2l5YThrSllBNmVrTmxhbGZPbVRNV1o5TmZTVVdKakNFSG5FTEYxVW9B?=
- =?utf-8?B?RGRHWkRLd2xKN2FHc3pmMHdJMG80MjFvL1hRcXFVMzY4cVByeHNjbFZNaDRG?=
- =?utf-8?B?WnorWjBzdnE3WjFKenJGRWhtVTBTcGk1TzRlWmh2enMydDVVWkEySDJXaWE0?=
- =?utf-8?Q?VkNkiQMiqjEijOpqXtFC3A4lc?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	mHRh21AcrluC47MJj0COUkq98dOGglb7FMPAYpZ2kBL8Zxl+ohe0go+reizgetPXGufDrzQmpwXO3q3s3tj3ZuyjErwOBkA6u3IAp3ouMSpn7dXfgnGeBDLjeIPz0hWXciCRxAyZC7H+m1m8KXpNQX82aunzdC/QkAZZcpBjqzmhr9j3lquCTpX+hqV5hvYwDejUiWeodRTKy1J89N0nXes6GC3KsPThBwpvwkYd725hvD10FF0yjyOgYs2bzluzvXQVF0AN6I3p6Ml6EcoA8o1F7B3pcgeM3JSeT+d6IEbEyiXx5lOy3KUhw+87jlcA8BlW4a10OSlEQiF4/9zAHg+gosusRNbmbcbppYBN1QT1q7AEcY1JmAOYmMAQrjszuAJKVTC5SPUE2KnH4YdqzYBphAJL2JEztvK3sYXahNR5CVy4B/Nly4VAc9kp30qwno0ltAcPstoWRL9gJrCBUgCtHRlOpe1vRc+88GdeWue/0QgtO1OBJkWHJxC4lm2Uv2F1WjLmmHBJfcXPgWRNs3DtoQHaRLXRyvLRLHqsJHJDcznd6OdcfQQuX91axJgXr4Ao0qLmuUcmd/RL92fX71d6g9EurIarT3metY2Z8wI=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dbf10e31-77e6-4e42-bfeb-08dc53fb91da
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Apr 2024 16:31:53.0895
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2iJiOCrB7gy84kbYTTDNq6yhcmU9WvmTxwABRURUlyPTczMCFbfkt/GrhJddzQDVtcBaCkBCsD48hbvmZtJjiQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB6638
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-03_16,2024-04-03_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=999 adultscore=0 bulkscore=0 phishscore=0 mlxscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2403210000 definitions=main-2404030112
-X-Proofpoint-GUID: GUTheJ1fA9sP_YoKBIkpMeerG47H4ASr
-X-Proofpoint-ORIG-GUID: GUTheJ1fA9sP_YoKBIkpMeerG47H4ASr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zgz4YXUp+fFEN3qp@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On 03/04/2024 00:28, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we are near ENOSPC and don't have enough free
-> space for an args->maxlen allocation, xfs_alloc_space_available()
-> will trim args->maxlen to equal the available space. However, this
-> function has only checked that there is enough contiguous free space
-> for an aligned args->minlen allocation to succeed. Hence there is no
-> guarantee that an args->maxlen allocation will succeed, nor that the
-> available space will allow for correct alignment of an args->maxlen
-> allocation.
-> 
-> Further, by trimming args->maxlen arbitrarily, it breaks an
-> assumption made in xfs_alloc_fix_len() that if the caller wants
-> aligned allocation, then args->maxlen will be set to an aligned
-> value. It then skips the tail alignment and so we end up with
-> extents that aren't aligned to extent size hint boundaries as we
-> approach ENOSPC.
-> 
-> To avoid this problem, don't reduce args->maxlen by some random,
-> arbitrary amount. If args->maxlen is too large for the available
-> space, reduce the allocation to a minlen allocation as we know we
-> have contiguous free space available for this to succeed and always
-> be correctly aligned.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Wed, Apr 03, 2024 at 05:34:09PM +1100, Dave Chinner wrote:
+> Given that the fix was for something that doesn't currently exist
+> (RT delalloc) the only sane thing to do right now is revert the fix
+> and push that revert back to the stable kernels that are susceptible
+> to this livelock. 
 
-This change seems to cause or at least expose a problem for me - I say 
-that because it is the only difference to what I already had from 
-https://lore.kernel.org/linux-xfs/ZeeaKrmVEkcXYjbK@dread.disaster.area/T/#me7abe09fe85292ca880f169a4af651eac5ed1424 
-and the xfs_alloc_fix_len() fix.
+That was how I originally found it.  I reproduced the problem with
+the normal allocator and very small AGs since then.
 
-With forcealign extsize=64KB, when I write to the end of a file I get 2x 
-new extents, both of which are not a multiple of 64KB in size. Note that 
-I am including 
-https://lore.kernel.org/linux-xfs/20240304130428.13026-7-john.g.garry@oracle.com/, 
-but I don't think it makes a difference.
+Anyway, here is what I came up with today.  TL;DR: xfs_bmapi_write
+calling conventions are complete fucked up and I'm amazed we've survived
+this far.
 
-Before:
-  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-    0: [0..383]:        73216..73599      0 (73216..73599)     384
-    1: [384..511]:      70528..70655      0 (70528..70655)     128
+---
+From 80bb655563fad9757c141df4c47ce9701ed4926a Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 3 Apr 2024 11:04:07 +0200
+Subject: xfs: fix error returns from xfs_bmapi_write
 
-After:
-  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-    0: [0..383]:        73216..73599      0 (73216..73599)     384
-    1: [384..511]:      70528..70655      0 (70528..70655)     128
-    2: [512..751]:      30336..30575      0 (30336..30575)     240
-    3: [752..767]:      48256..48271      0 (48256..48271)      16
+xfs_bmapi_write can return 0 without actually returning a mapping in
+mval in two different cases:
 
-> ---
->   fs/xfs/libxfs/xfs_alloc.c | 19 ++++++++++++++-----
->   1 file changed, 14 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 9da52e92172a..215265e0f68f 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2411,14 +2411,23 @@ xfs_alloc_space_available(
->   	if (available < (int)max(args->total, alloc_len))
->   		return false;
->   
-> +	if (flags & XFS_ALLOC_FLAG_CHECK)
-> +		return true;
-> +
->   	/*
-> -	 * Clamp maxlen to the amount of free space available for the actual
-> -	 * extent allocation.
-> +	 * If we can't do a maxlen allocation, then we must reduce the size of
-> +	 * the allocation to match the available free space. We know how big
-> +	 * the largest contiguous free space we can allocate is, so that's our
-> +	 * upper bound. However, we don't exaclty know what alignment/siz > +	 * constraints have been placed on the allocation, so we can't
-> +	 * arbitrarily select some new max size. Hence make this a minlen
-> +	 * allocation as we know that will definitely succeed and match the
-> +	 * callers alignment constraints.
->   	 */
-> -	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
-> -		args->maxlen = available;
-> +	alloc_len = args->maxlen + (args->alignment - 1) + args->minalignslop;
+ 1) when there is absolutely no space available to do an allocation
+ 2) when converting delalloc space, and the allocation is so small
+    that it only covers parts of the delalloc extent before the
+    range requested by the caller
 
-I added some kernel logs to assist debugging, and if I am reading them 
-correctly, for ext #2 allocation we had at this point:
+Callers at best can handle one of these cases, but in many cases can't
+cope with either one.  Switch xfs_bmapi_write to always return a
+mapping or return an error code instead.  For case 1) above ENOSPC is
+the obvious choice which is very much what the callers expect anyway.
+For case 2) there is no really good error code, so pick a funky one
+from the SysV streams portfolio.
 
-longest = 46, alloc_len = 47, args->minlen=30, maxlen=32, alignslop=0 
-available=392; longest < alloc_len, so we set args->maxlen = 
-args->minlen (= 30)
+This fixes the reproducer here:
 
-For ext3:
-longest = 32, alloc_len = 17, args->minlen=2, args->maxlen=2, 
-alignslop=0, available=362; longest > alloc_len, so do nothing
+    https://lore.kernel.org/linux-xfs/CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com0/
 
-> +	if (longest < alloc_len) {
-> +		args->maxlen = args->minlen;
->   		ASSERT(args->maxlen > 0);
-> -		ASSERT(args->maxlen >= args->minlen);
->   	}
->   
->   	return true;
+which uses reserved blocks to create file systems that are gravely
+out of space and thus cause at least xfs_file_alloc_space to hang
+and trigger the lack of ENOSPC handling in xfs_dquot_disk_alloc.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_attr_remote.c |  1 -
+ fs/xfs/libxfs/xfs_bmap.c        | 43 ++++++++++++++++++++++++++++-----
+ fs/xfs/libxfs/xfs_da_btree.c    | 20 ++++-----------
+ fs/xfs/scrub/quota_repair.c     |  6 -----
+ fs/xfs/scrub/rtbitmap_repair.c  |  2 --
+ fs/xfs/xfs_bmap_util.c          | 31 ++++++++++++------------
+ fs/xfs/xfs_dquot.c              |  1 -
+ fs/xfs/xfs_iomap.c              |  8 ------
+ fs/xfs/xfs_reflink.c            | 14 -----------
+ fs/xfs/xfs_rtalloc.c            |  2 --
+ 10 files changed, 57 insertions(+), 71 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index ff04128287720a..41a02dcc2541b0 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -626,7 +626,6 @@ xfs_attr_rmtval_set_blk(
+ 	if (error)
+ 		return error;
+ 
+-	ASSERT(nmap == 1);
+ 	ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
+ 	       (map->br_startblock != HOLESTARTBLOCK));
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 656c95a22f2e6d..631fd454a832cd 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4226,8 +4226,10 @@ xfs_bmapi_allocate(
+ 	} else {
+ 		error = xfs_bmap_alloc_userdata(bma);
+ 	}
+-	if (error || bma->blkno == NULLFSBLOCK)
++	if (error)
+ 		return error;
++	if (bma->blkno == NULLFSBLOCK)
++		return -ENOSPC;
+ 
+ 	if (bma->flags & XFS_BMAPI_ZERO) {
+ 		error = xfs_zero_extent(bma->ip, bma->blkno, bma->length);
+@@ -4406,6 +4408,15 @@ xfs_bmapi_finish(
+  * extent state if necessary.  Details behaviour is controlled by the flags
+  * parameter.  Only allocates blocks from a single allocation group, to avoid
+  * locking problems.
++ *
++ * Returns 0 on success and places the extent mapings in mval.  nmaps is used as
++ * an input/output parameter where the caller specifies the maximum number
++ * before calling xfs_bmapi_write, and xfs_bmapi_write passes the  number of
++ * mappings (including existing mappings) it found.
++ *
++ * Returns a negative error code on failure, including -ENOSPC when it could not
++ * allocate any blocks and -ENOSR when it did allocated blocks to convert a
++ * delalloc range, but those blocks were before the passed in range.
+  */
+ int
+ xfs_bmapi_write(
+@@ -4534,10 +4545,16 @@ xfs_bmapi_write(
+ 			ASSERT(len > 0);
+ 			ASSERT(bma.length > 0);
+ 			error = xfs_bmapi_allocate(&bma);
+-			if (error)
++			if (error) {
++				/*
++				 * If we already allocated space in a previous
++				 * iteration return what we go so far when
++				 * running out of space.
++				 */
++				if (error == -ENOSPC && bma.nallocs)
++					break;
+ 				goto error0;
+-			if (bma.blkno == NULLFSBLOCK)
+-				break;
++			}
+ 
+ 			/*
+ 			 * If this is a CoW allocation, record the data in
+@@ -4575,7 +4592,6 @@ xfs_bmapi_write(
+ 		if (!xfs_iext_next_extent(ifp, &bma.icur, &bma.got))
+ 			eof = true;
+ 	}
+-	*nmap = n;
+ 
+ 	error = xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logflags,
+ 			whichfork);
+@@ -4586,7 +4602,22 @@ xfs_bmapi_write(
+ 	       ifp->if_nextents > XFS_IFORK_MAXEXT(ip, whichfork));
+ 	xfs_bmapi_finish(&bma, whichfork, 0);
+ 	xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+-		orig_nmap, *nmap);
++		orig_nmap, n);
++
++	/*
++	 * When converting delayed allocations, xfs_bmapi_allocate ignores
++	 * the passed in bno and always converts from the start of the found
++	 * delalloc extent.
++	 *
++	 * To avoid a successful return with *nmap set to 0, return the magic
++	 * -ENOSR error code for this particular case so that the caller can
++	 * handle it.
++	 */
++	if (!n) {
++		ASSERT(bma.nallocs >= *nmap);
++		return -ENOSR;
++	}
++	*nmap = n;
+ 	return 0;
+ error0:
+ 	xfs_bmapi_finish(&bma, whichfork, error);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 718d071bb21ae3..276c710548b5a7 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2167,8 +2167,8 @@ xfs_da_grow_inode_int(
+ 	struct xfs_inode	*dp = args->dp;
+ 	int			w = args->whichfork;
+ 	xfs_rfsblock_t		nblks = dp->i_nblocks;
+-	struct xfs_bmbt_irec	map, *mapp;
+-	int			nmap, error, got, i, mapi;
++	struct xfs_bmbt_irec	map, *mapp = &map;
++	int			nmap, error, got, i, mapi = 1;
+ 
+ 	/*
+ 	 * Find a spot in the file space to put the new block.
+@@ -2184,14 +2184,7 @@ xfs_da_grow_inode_int(
+ 	error = xfs_bmapi_write(tp, dp, *bno, count,
+ 			xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA|XFS_BMAPI_CONTIG,
+ 			args->total, &map, &nmap);
+-	if (error)
+-		return error;
+-
+-	ASSERT(nmap <= 1);
+-	if (nmap == 1) {
+-		mapp = &map;
+-		mapi = 1;
+-	} else if (nmap == 0 && count > 1) {
++	if (error == -ENOSPC && count > 1) {
+ 		xfs_fileoff_t		b;
+ 		int			c;
+ 
+@@ -2209,16 +2202,13 @@ xfs_da_grow_inode_int(
+ 					args->total, &mapp[mapi], &nmap);
+ 			if (error)
+ 				goto out_free_map;
+-			if (nmap < 1)
+-				break;
+ 			mapi += nmap;
+ 			b = mapp[mapi - 1].br_startoff +
+ 			    mapp[mapi - 1].br_blockcount;
+ 		}
+-	} else {
+-		mapi = 0;
+-		mapp = NULL;
+ 	}
++	if (error)
++		goto out_free_map;
+ 
+ 	/*
+ 	 * Count the blocks we got, make sure it matches the total.
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+index 0bab4c30cb85ab..90cd1512bba961 100644
+--- a/fs/xfs/scrub/quota_repair.c
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -77,8 +77,6 @@ xrep_quota_item_fill_bmap_hole(
+ 			irec, &nmaps);
+ 	if (error)
+ 		return error;
+-	if (nmaps != 1)
+-		return -ENOSPC;
+ 
+ 	dq->q_blkno = XFS_FSB_TO_DADDR(mp, irec->br_startblock);
+ 
+@@ -444,10 +442,6 @@ xrep_quota_data_fork(
+ 					XFS_BMAPI_CONVERT, 0, &nrec, &nmap);
+ 			if (error)
+ 				goto out;
+-			if (nmap != 1) {
+-				error = -ENOSPC;
+-				goto out;
+-			}
+ 			ASSERT(nrec.br_startoff == irec.br_startoff);
+ 			ASSERT(nrec.br_blockcount == irec.br_blockcount);
+ 
+diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
+index 46f5d5f605c915..0fef98e9f83409 100644
+--- a/fs/xfs/scrub/rtbitmap_repair.c
++++ b/fs/xfs/scrub/rtbitmap_repair.c
+@@ -108,8 +108,6 @@ xrep_rtbitmap_data_mappings(
+ 				0, &map, &nmaps);
+ 		if (error)
+ 			return error;
+-		if (nmaps != 1)
+-			return -EFSCORRUPTED;
+ 
+ 		/* Commit new extent and all deferred work. */
+ 		error = xrep_defer_finish(sc);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 19e11d1da66074..fbca94170cd386 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -721,33 +721,32 @@ xfs_alloc_file_space(
+ 		if (error)
+ 			goto error;
+ 
+-		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
+-				&nimaps);
+-		if (error)
+-			goto error;
+-
+-		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-		error = xfs_trans_commit(tp);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		if (error)
+-			break;
+-
+ 		/*
+ 		 * If the allocator cannot find a single free extent large
+ 		 * enough to cover the start block of the requested range,
+-		 * xfs_bmapi_write will return 0 but leave *nimaps set to 0.
++		 * xfs_bmapi_write will return -ENOSR.
+ 		 *
+ 		 * In that case we simply need to keep looping with the same
+ 		 * startoffset_fsb so that one of the following allocations
+ 		 * will eventually reach the requested range.
+ 		 */
+-		if (nimaps) {
++		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
++				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
++				&nimaps);
++		if (error) {
++			if (error != -ENOSR)
++				goto error;
++			error = 0;
++		} else {
+ 			startoffset_fsb += imapp->br_blockcount;
+ 			allocatesize_fsb -= imapp->br_blockcount;
+ 		}
++
++		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++		error = xfs_trans_commit(tp);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	}
+ 
+ 	return error;
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index c98cb468c35780..0c9eb8fdeec082 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -357,7 +357,6 @@ xfs_dquot_disk_alloc(
+ 		goto err_cancel;
+ 
+ 	ASSERT(map.br_blockcount == XFS_DQUOT_CLUSTER_SIZE_FSB);
+-	ASSERT(nmaps == 1);
+ 	ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+ 	       (map.br_startblock != HOLESTARTBLOCK));
+ 
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 4087af7f3c9f3f..42155cedefb77d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -321,14 +321,6 @@ xfs_iomap_write_direct(
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	/*
+-	 * Copy any maps to caller's array and return any error.
+-	 */
+-	if (nimaps == 0) {
+-		error = -ENOSPC;
+-		goto out_unlock;
+-	}
+-
+ 	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock))) {
+ 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+ 		error = xfs_alert_fsblock_zero(ip, imap);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 7da0e8f961d351..5ecb52a234becc 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -430,13 +430,6 @@ xfs_reflink_fill_cow_hole(
+ 	if (error)
+ 		return error;
+ 
+-	/*
+-	 * Allocation succeeded but the requested range was not even partially
+-	 * satisfied?  Bail out!
+-	 */
+-	if (nimaps == 0)
+-		return -ENOSPC;
+-
+ convert:
+ 	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
+ 
+@@ -499,13 +492,6 @@ xfs_reflink_fill_delalloc(
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+ 			return error;
+-
+-		/*
+-		 * Allocation succeeded but the requested range was not even
+-		 * partially satisfied?  Bail out!
+-		 */
+-		if (nimaps == 0)
+-			return -ENOSPC;
+ 	} while (cmap->br_startoff + cmap->br_blockcount <= imap->br_startoff);
+ 
+ 	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index e66f9bd5de5cff..46ee8093f797a6 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -709,8 +709,6 @@ xfs_growfs_rt_alloc(
+ 		nmap = 1;
+ 		error = xfs_bmapi_write(tp, ip, oblocks, nblocks - oblocks,
+ 					XFS_BMAPI_METADATA, 0, &map, &nmap);
+-		if (!error && nmap < 1)
+-			error = -ENOSPC;
+ 		if (error)
+ 			goto out_trans_cancel;
+ 		/*
+-- 
+2.39.2
 
