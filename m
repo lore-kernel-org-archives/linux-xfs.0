@@ -1,68 +1,75 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B38171A7
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 06:34:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CA4F14006
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 06:41:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712126055; cv=none; b=POREX3s9ChJPC/il9UVYrBDDgX9KsEjtQeVQ9+dl/vWy5s6qqBA+rMtvWx64L8CZ5kJ+AvajMLDdlGLNvEu1sIHqVmSWvDHEtWYpqPiAF8MZ4GXdcrOS6BeO5OabXFRlt0xF+NYM+yPkPpZM8XVbqLDefa3OwPCjefRDl8CuVnc=
+	t=1712126501; cv=none; b=T4d9mQbtNvTSOoCwsbrpdlJytLuyAq/jvsMLUhz27R1qW9LLfjz4x5DhLKDvq5dgJgwC3PDWzYuL3Ep4Hn2rhfjrV05A6JzfjtTjFWHIDe6bOMv9T/F1CNqEMZADPacraj5Fdg04vsU6/j5SHOSjViKCgF3vQORaV2HVW1zWsmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712126055; c=relaxed/simple;
-	bh=01iyNj8iidz39psJMI5W39R8BCtiBgSwlP6w2Ccjpnw=;
+	s=arc-20240116; t=1712126501; c=relaxed/simple;
+	bh=N9TUrZCYYb5UGgU07R4+oLfM8IVhUWRKWCbxGTcjd2E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=En9HaMEEjn/8TJwVxDnH9jFYbHzsNxqoO36CVWb2ZVzlKpZvKixNedE9BbBGnpG3mUXWdj/k6sHSm1Atwodh+wal7gx8J0WbPnk9gjWbDl08GCj0cIRt34NJQL7gsbqu2016hm9knUvuHisdzBBv58eEyoWOxKsKhA0wvtPF1es=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=PtYYq/+J; arc=none smtp.client-ip=209.85.214.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lkgy5fRY3ZVmVq1QpjvISmjzuC9ssFi+6jyOrG6+v0GbdDJcenQDsjfkugsYUhhQdQFsYYlHQlRbVkIrNHVsoyIGj3ju5CsmwlpYcxfcm6gIzTBujIt3pDeilEIf0x4OxIyMmEdVfMLDJm798We608G1WZaaSRY/KIaA6XoW0uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=A8aRKsfF; arc=none smtp.client-ip=209.85.161.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="PtYYq/+J"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1e28856ed7aso7805475ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 23:34:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="A8aRKsfF"
+Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5a7c3dd2556so1328454eaf.1
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2024 23:41:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712126053; x=1712730853; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712126499; x=1712731299; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=LipPMy6gHKKFzEVh8un5K9NQcpzqdsCvNz1z10g0RiA=;
-        b=PtYYq/+JHvuJ/2M3BPmBHw9qcdbtZGl7mKSzqXj+zPNEY4g9hR6DXq0hCTQqmF0iWA
-         cB9gcsDS4OdfMwCwEQbPkOLASf/nFgqMpmAJMrf9cGg1jS0IzVppQ/uuAIsASbci5OyQ
-         KeFbGPirTkOB37gW6dDQOR6aA7k3pmE6tDeKuD6U8qiPFT6HL8KRULIj+rMnQ0e0nnlv
-         OGhtJGh1J2cDL8lSahCqNusPDOJKZfvgQqgzgu0E9sJv4KdIJGXYqFXIBM42YSPgjBOX
-         YhSz0MLGvteqFMOl5uhMUyu+wd90zhbylX6PcSLBAy7qTVGbu+JiqIXG0/lSXhM9vE90
-         Q/Mw==
+        bh=tftzlaXG5dwNiW7S4aLgiIuJMsH/QPDweoTJWwIOznE=;
+        b=A8aRKsfFezYWstk5DQf3nheZTIMbHDkYIGyc7r5opWZLjZ2yB3p89tRV/RMvIw/keQ
+         faT5xz5AidWvpRQyoEssEsMU9fNoEu7J4jAJF0U49SomjCKaH4+Kw7PZDa7LlxA8T8Al
+         Vb/cLzsWaqfhdLmRgKGZEcGAYy66aBIngf+1KcmuTSrFog1HrPDDS13jss/BufBmQh+t
+         bP2XJI7sYyUN5Wt48+HJuSVRMxDanJ1wKzHw2LBDlo04LI+8QUkfTEbsqhEK/ITXCrK3
+         4fLyOzCoSBvcDVph8tLhCZ/cnptfT4dIye9bM4GtA2QYUHf40kojcWCTY8k2zmRnS1YW
+         rkrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712126053; x=1712730853;
+        d=1e100.net; s=20230601; t=1712126499; x=1712731299;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=LipPMy6gHKKFzEVh8un5K9NQcpzqdsCvNz1z10g0RiA=;
-        b=AWWRs5wx61Iw+j8suVVgq47TUHXeW8Oh+lCNi1lzpIrODXDJHoXdx0aiXnzojhiQG8
-         fM9Zq5cQbuw3QOoPM46yt96Hciym7oIwJicxj1H2+alR12cB2IvksurD6F0+zoDYgxKB
-         zNMlKta+TZepauOU7lZjnOEBWJAA26sdQYI9JwjsrCuWKdVFcGokixuLrbIBbEb9Xs9A
-         esOtzar34XWrFTeJQVSvCDBDS7OsD7ajTPITuT6su9fxkZjygyRMxjqWFAVt02TooH+D
-         s7XsNoII35p3k7GHDLuCVm/bLqZ6H5o2pRCLvXEehypE689mxPUwUK5QTD5JCNvIr+zj
-         tapg==
-X-Gm-Message-State: AOJu0Yz60VJ842ejFuXvZ/UOKeRq2Qofog5yhirEyGhDTkh+GrP2UOd6
-	zHbrxRinPLdk7hJIM9E2JQd8vmYTZ/PYA3l/gn6vTVUNDn9y/+7eaW9oXGkmleY=
-X-Google-Smtp-Source: AGHT+IH5XOhkyQkZSinNMUGoawCAgGakmx1Imhl6rPUBAQJaWOsIbFF65EYoKvS2b6C5BPWHtL69KA==
-X-Received: by 2002:a17:902:d385:b0:1e2:887a:68a7 with SMTP id e5-20020a170902d38500b001e2887a68a7mr1755848pld.33.1712126052699;
-        Tue, 02 Apr 2024 23:34:12 -0700 (PDT)
+        bh=tftzlaXG5dwNiW7S4aLgiIuJMsH/QPDweoTJWwIOznE=;
+        b=DFK0WxzVCdc3swuHoNlYcyJugi1MnddWUMh20fWj9dlhivUixuUt0m2+Q95ZbvNyeh
+         IScHuQuNuXM/ZzTtInBnmn8xaCjiedRxi8fN6sz6mKqto5EnFLRt6xUfgxgix1a+pxou
+         zPAaAqEc8xPN+q2sjHbU4PYDoZcKSJJRiBILi63tGRu1gMd2Ke1ev5trlnE1atATLZNr
+         TiV8JuNB4le1cl7WPzo4fCb1QgAUjA8Hqr5l+ONei9SuTIbXDJiUel6kvCfOgzkNi56I
+         EF8mwzc2Vgwbb1TiUpG+mzvnqcwYt+LHr8dv94ATpN3VepN9hh9OBNZ4gb8EEjQ1q5zP
+         JHoA==
+X-Forwarded-Encrypted: i=1; AJvYcCWPibxmZNuwVWjfxjCsoj1dq2lXUfc6I0W0loWhNDsEzOnKXc1cPhWvWarwnaz+BMra1J1vKoEd5dZbpNZGcgMOBR13RPsyQzfS
+X-Gm-Message-State: AOJu0Ywmsp+7WWrj9RDfjbvC84etm8wzwtqB8Oz7zL0FFn/P34hRfOm9
+	DuFOINuU+N9sMZiMCuXtcvXerusGuL6+sPBDt7dSIn8UHjXwv2V4q9GUjI/elQZBvUHx15lieTG
+	4
+X-Google-Smtp-Source: AGHT+IHCofYGQtEU4+AO49cy/RNPy+R8nWMItJFK1tIeBQVhFFQht15TSqTDyJKQ9zKb5q0CfwODXQ==
+X-Received: by 2002:a05:6870:910d:b0:229:ce58:477a with SMTP id o13-20020a056870910d00b00229ce58477amr2221681oae.19.1712126498872;
+        Tue, 02 Apr 2024 23:41:38 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id ks7-20020a170903084700b001e27aaabc0csm734177plb.78.2024.04.02.23.34.12
+        by smtp.gmail.com with ESMTPSA id p19-20020aa78613000000b006e6c10fc87fsm10978609pfn.46.2024.04.02.23.41.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Apr 2024 23:34:12 -0700 (PDT)
+        Tue, 02 Apr 2024 23:41:38 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rruCI-002ELZ-00;
-	Wed, 03 Apr 2024 17:34:10 +1100
-Date: Wed, 3 Apr 2024 17:34:09 +1100
+	id 1rruJT-002Eex-32;
+	Wed, 03 Apr 2024 17:41:35 +1100
+Date: Wed, 3 Apr 2024 17:41:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, chandanbabu@kernel.org
-Subject: Re: [PATCH 2/4] xfs: xfs_alloc_file_space() fails to detect ENOSPC
-Message-ID: <Zgz4YXUp+fFEN3qp@dread.disaster.area>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	chandanbabu@kernel.org
+Subject: Re: [PATCH 3/4] xfs: handle allocation failure in
+ xfs_dquot_disk_alloc()
+Message-ID: <Zgz6H7tXehgxOfYC@dread.disaster.area>
 References: <20240402221127.1200501-1-david@fromorbit.com>
- <20240402221127.1200501-3-david@fromorbit.com>
- <ZgzdtYGyVN1-UQdM@infradead.org>
+ <20240402221127.1200501-4-david@fromorbit.com>
+ <ZgzeFIJhkWp40-t7@infradead.org>
+ <20240403045456.GR6390@frogsfrogsfrogs>
+ <ZgzheEqxrVBg3dbs@infradead.org>
+ <20240403050430.GT6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,46 +78,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZgzdtYGyVN1-UQdM@infradead.org>
+In-Reply-To: <20240403050430.GT6390@frogsfrogsfrogs>
 
-On Tue, Apr 02, 2024 at 09:40:21PM -0700, Christoph Hellwig wrote:
-> On Wed, Apr 03, 2024 at 08:38:17AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Tue, Apr 02, 2024 at 10:04:30PM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 02, 2024 at 09:56:24PM -0700, Christoph Hellwig wrote:
+> > On Tue, Apr 02, 2024 at 09:54:56PM -0700, Darrick J. Wong wrote:
+> > > Usually this will result in the file write erroring out, right?
 > > 
-> > xfs_alloc_file_space ends up in an endless loop when
-> > xfs_bmapi_write() returns nimaps == 0 at ENOSPC. The process is
-> > unkillable, and so just runs around in a tight circle burning CPU
-> > until the system is rebooted.
+> > quota file allocations usually come originally from a file write or
+> > inode creation.  But I'm not entirely sure if that was the question..
 > 
-> What is your reproducer?  Let's just fix this for real.
+> Heh, and the question was based on a misreading of your comment. 8-)
+> 
+> AFAICT this can result in dqattach erroring out, which seems mostly
+> benign.
 
-Run the reproducer in this bug report on a TOT kernel, and the
-XFS_IOC_RESVSP call will livelock:
+Right - this propagates the ENOSPC error back to the caller without
+a shutdown being required. If we get a corruption detected, then
+the allocation will return an error, not nmaps == 0. That error will
+cause a corruption. But an unexpected allocation failure right at
+ENOSPC can occur without there being corruption because of, say, one
+of the many, many near ENOSPC accounting bugs we've had to fix
+over the past 20 years, and if the allocation fails we should just
+clean up and return -ENOSPC without shutting down the filesystem.
+We're right at ENOSPC, so there's every chance that the next
+operation after the dquot was attached would fail with ENOSPC
+anyway....
 
-https://lore.kernel.org/linux-xfs/CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com/
-
-That has nothing to do with delalloc - free space accounting was
-screwed up by a reserve blocks ioctl, and so when allocation fails
-it just runs around in a tight circle and cannot be broken out of.
-
-Regardless of the reproducer that corrupts free space accounting,
-there is no guarantee that allocations will succeed even if there is
-free space available. Hence this loop must have a way to break out
-when allocation fails. This becomes even more apparent with the
-forced alignment feature - as soon as we run out of contiguous free
-space for aligned allocation, allocations will persistently fail
-when there is plenty of free space still available.
-
-Given that the fix was for something that doesn't currently exist
-(RT delalloc) the only sane thing to do right now is revert the fix
-and push that revert back to the stable kernels that are susceptible
-to this livelock. 
-
-I don't know exactly how the orginal delalloc issue was triggered,
-let alone had the time to time to understand how to actually
-fix it properly. The code as it stands contains a regression and so
-the first thing we need to do is revert the change so we can
-backport it....
+So, yeah, I don't see any reason to shut the filesytsem down because
+we ended up with a transient ENOSPC error or an off-by one in the
+free space accounting somewhere...
 
 -Dave.
 -- 
