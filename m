@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A135235
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Apr 2024 04:04:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C8D5235;
+	Wed,  3 Apr 2024 04:11:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712117069; cv=none; b=ilvYtc3hSFiGDyQYmmFYqLxG3lj1yau+wKNX30ojaLKGAFgPERYdYpPLwhUzzBRyxAP5y+nCYfEVgnWzYyr3QVO3ouHGHVorBdeBIrflozFt0CRklLbEJ53jISAyzm9qKdZSDrBCH1hbYw+EBXVq8qv6R1VJcMxK+UPk6Jlfut4=
+	t=1712117461; cv=none; b=cjmCKAAwAq5ytihICiHlSslOFYLKnAOVz4KiXiR58ey0kG8KVN7tMiUvBwDU/vy80/NzwJY9nBFIBJBPY7cYWzujQs3mf6dHIQ6r39faMJGO7/m8m2Qp+W2/QgIVD5ln/8ppYL3n3TbkM37tre5OIxLnwbORntSQE3JtjWzHYMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712117069; c=relaxed/simple;
-	bh=Cn/MdfuisCtf5kSYESNUJNiIgo8+upo2DhttIWGAuHM=;
+	s=arc-20240116; t=1712117461; c=relaxed/simple;
+	bh=H45nGWOPuI7LoZ/AO3xadw9naJQhXiS9zxu8lyEyAGo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vxdv8Y8/11ceHOEYPfV6pqYVNDE7UL6h3VGfJ71PohnNef8oh74KIlcVvgNq3h1c46ZwLx2Y0+Q7wxyXjJGV0FHFvs66bQwY0i4ad08dbfkAfuM2fWS79J2dTwWDPmanBG1qlfeJA9SLKeGX4u94L8YxfPNPw+Z4+DkbT24a7oA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MSiGyWRz; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=MK6AfZZByPIaEWYhnvS+50h4p6GFClencI2OnWHFYlcmHey0kT1FBZ9JMo6PEWLpDRc3pwC60Co+p05vb0NO5AgfBBNjq4OvE+tlRO5AiCd51dccgyb/xRZLIojAUQR+l5cJRlS+cM2KnhFHNfWM8HffaGf3tuOV1E70PiZC8nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A5cOOgqz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MSiGyWRz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9F3DC433F1;
-	Wed,  3 Apr 2024 04:04:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A5cOOgqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FE4EC433C7;
+	Wed,  3 Apr 2024 04:11:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712117069;
-	bh=Cn/MdfuisCtf5kSYESNUJNiIgo8+upo2DhttIWGAuHM=;
+	s=k20201202; t=1712117461;
+	bh=H45nGWOPuI7LoZ/AO3xadw9naJQhXiS9zxu8lyEyAGo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MSiGyWRzWyDWRvGLUAahLnYpyDISD9QxfMRKA9qTsrsnlwiWvKD8B3wWqs3lEBLYr
-	 iwsUOsYLfLF+XZGAM2qLr6Q9rHM/Bsz1btGpQs7FtgRwZr4SKJ3GiS0BzDlnhXVfTx
-	 msSIg7V5etCq7c3ISLJg69hWCf7Sw6mExXUuSN4d0BaA+vc0SpKMpmgR7oiSNpTwmy
-	 /FbeDv/axZ7kcnqlFAskPf4s9QoYNqP609pd7eekgs7+zBK+YKEz/zw6W/q5nmyrnQ
-	 d0NbLfW3Xleoa22VLPkOXmZJ8EtH1UbQzY7chjD7dEN5cSKoMc+4ebe5ATCGawZzxA
-	 mG4quln1cQejQ==
-Date: Tue, 2 Apr 2024 21:04:28 -0700
+	b=A5cOOgqzeZTVhgi+J8oKU2tClKmR5x98VGD13CodzcshhKAaajlI32qkosA+Zvo+0
+	 hjYwnbZHxBKvvnzlpyLYZulzfkFXUAObJET/dzoBoYlgkJdA9UXtHuszyaIRqH73F3
+	 lbp51pNxqD9mzo9KzhGDbZkQMtJZOXrNu3E0ytM7tpsfpnv2vT2O6SecPElxfsjvto
+	 IcYIOOr3o6MTH3Z4kJsAb0oZG4Rlup22z9dIiUE2U0UcN56FTaOAp1cYhXaTjtTKoq
+	 JeWjmfkmZ0/HKejqEt+tE8N9lFz81xpMmjMygCnh1wI9SHYbvJx0od8wHqX7VA00g3
+	 PENqr2YBcIh7A==
+Date: Tue, 2 Apr 2024 21:11:00 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: fix sparse warning in xfs_extent_busy_clear
-Message-ID: <20240403040428.GP6390@frogsfrogsfrogs>
-References: <20240402213541.1199959-1-david@fromorbit.com>
- <20240402213541.1199959-3-david@fromorbit.com>
+To: Justin Stitt <justinstitt@google.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] xfs: cleanup deprecated uses of strncpy
+Message-ID: <20240403041100.GQ6390@frogsfrogsfrogs>
+References: <20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,110 +42,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402213541.1199959-3-david@fromorbit.com>
+In-Reply-To: <20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com>
 
-On Wed, Apr 03, 2024 at 08:28:29AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Apr 01, 2024 at 11:01:38PM +0000, Justin Stitt wrote:
+> strncpy() is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
 > 
-> Sparse reports:
+> In xfs_ioctl.c:
+> The current code has taken care NUL-termination by memset()'ing @label.
+> This is followed by a strncpy() to perform the string copy.
 > 
-> fs/xfs/xfs_extent_busy.c:588:17: warning: context imbalance in 'xfs_extent_busy_clear' - unexpected unlock
+> Use strscpy_pad() to get both 1) NUL-termination and 2) NUL-padding
+> which may be needed as this is copied out to userspace.
 > 
-> But there is no locking bug here. Sparse simply doesn't understand
-> the logic and locking in the busy extent processing loop.
-> xfs_extent_busy_put_pag() has an annotation to suppresses an
-> unexpected unlock warning, but that isn't sufficient.
+> Note that this patch uses the new 2-argument version of strscpy_pad
+> introduced in Commit e6584c3964f2f ("string: Allow 2-argument
+> strscpy()").
 > 
-> If we move the pag existence check into xfs_extent_busy_put_pag() and
-> annotate that with a __release() so that this function always
-> appears to release the pag->pagb_lock, sparse now thinks the loop
-> locking is balanced (one unlock, one lock per loop) but still throws
-> an unexpected unlock warning after loop cleanup.
+> In xfs_xattr.c:
+> There's a lot of manual memory management to get a prefix and name into
+> a string. Let's use an easier to understand and more robust interface in
+> scnprintf() to accomplish the same task.
 > 
-> i.e. it does not understand that we enter the loop without any locks
-> held and exit it with the last lock still held. Whilst the locking
-> within the loop is inow balanced, we need to add an __acquire() to
-> xfs_extent_busy_clear() to set the initial lock context needed to
-> avoid false warnings.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
 > ---
->  fs/xfs/xfs_extent_busy.c | 27 +++++++++++++++++++++++----
->  1 file changed, 23 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> index 56cfa1498571..686b67372030 100644
-> --- a/fs/xfs/xfs_extent_busy.c
-> +++ b/fs/xfs/xfs_extent_busy.c
-> @@ -534,12 +534,24 @@ xfs_extent_busy_clear_one(
->  	kfree(busyp);
->  }
->  
-> +/*
-> + * Sparse has real trouble with the structure of xfs_extent_busy_clear() and it
-> + * is impossible to annotate it correctly if we leave the 'if (pag)' conditional
-> + * in xfs_extent_busy_clear(). Hence we always "release" the lock in
-> + * xfs_extent_busy_put_pag() so sparse only ever sees one possible path to
-> + * drop the lock.
-> + */
->  static void
->  xfs_extent_busy_put_pag(
->  	struct xfs_perag	*pag,
->  	bool			wakeup)
->  		__releases(pag->pagb_lock)
->  {
-> +	if (!pag) {
-> +		__release(pag->pagb_lock);
-> +		return;
-> +	}
+> Note: build-tested only.
 
-Passing in a null pointer so we can fake out a compliance tool with a
-nonsense annotation really feels like the height of software bureaucracy
-compliance culture now...
+fstested would be better. ;)
 
-I don't want to RVB this but I'm so tired of fighting pointless battles
-with people over their clearly inadequate tooling, so GIGO:
-
+Anyway I guess that looks ok so let's find out:
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +
->  	if (wakeup) {
->  		pag->pagb_gen++;
->  		wake_up_all(&pag->pagb_wait);
-> @@ -565,10 +577,18 @@ xfs_extent_busy_clear(
->  	xfs_agnumber_t		agno = NULLAGNUMBER;
->  	bool			wakeup = false;
+> 
+> Found with: $ rg "strncpy\("
+> ---
+>  fs/xfs/xfs_ioctl.c | 4 +---
+>  fs/xfs/xfs_xattr.c | 6 +-----
+>  2 files changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index d0e2cec6210d..abef9707a433 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1755,10 +1755,8 @@ xfs_ioc_getlabel(
+>  	/* Paranoia */
+>  	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
 >  
-> +	/*
-> +	 * Sparse thinks the locking in the loop below is balanced (one unlock,
-> +	 * one lock per loop iteration) and doesn't understand that we enter
-> +	 * with no lock held and exit with a lock held. Hence we need to
-> +	 * "acquire" the lock to create the correct initial condition for the
-> +	 * cleanup after loop termination to avoid an unexpected unlock warning.
-> +	 */
-> +	__acquire(pag->pagb_lock);
-> +
->  	list_for_each_entry_safe(busyp, n, list, list) {
->  		if (busyp->agno != agno) {
-> -			if (pag)
-> -				xfs_extent_busy_put_pag(pag, wakeup);
-> +			xfs_extent_busy_put_pag(pag, wakeup);
->  			agno = busyp->agno;
->  			pag = xfs_perag_get(mp, agno);
->  			spin_lock(&pag->pagb_lock);
-> @@ -584,8 +604,7 @@ xfs_extent_busy_clear(
->  		}
+> -	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
+> -	memset(label, 0, sizeof(label));
+>  	spin_lock(&mp->m_sb_lock);
+> -	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
+> +	strscpy_pad(label, sbp->sb_fname);
+>  	spin_unlock(&mp->m_sb_lock);
+>  
+>  	if (copy_to_user(user_label, label, sizeof(label)))
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 364104e1b38a..b9256988830f 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -220,11 +220,7 @@ __xfs_xattr_put_listent(
+>  		return;
 >  	}
+>  	offset = context->buffer + context->count;
+> -	memcpy(offset, prefix, prefix_len);
+> -	offset += prefix_len;
+> -	strncpy(offset, (char *)name, namelen);			/* real name */
+> -	offset += namelen;
+> -	*offset = '\0';
+> +	scnprintf(offset, prefix_len + namelen + 1, "%s%s", prefix, name);
 >  
-> -	if (pag)
-> -		xfs_extent_busy_put_pag(pag, wakeup);
-> +	xfs_extent_busy_put_pag(pag, wakeup);
->  }
->  
->  /*
-> -- 
-> 2.43.0
+>  compute_size:
+>  	context->count += prefix_len + namelen + 1;
+> 
+> ---
+> base-commit: 928a87efa42302a23bb9554be081a28058495f22
+> change-id: 20240401-strncpy-fs-xfs-xfs_ioctl-c-8af7a895bff0
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
 > 
 > 
