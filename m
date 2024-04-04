@@ -1,38 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 908A913A86C
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Apr 2024 20:55:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3562815EA6
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Apr 2024 21:46:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712264125; cv=none; b=GMps05WGSlApF2GHplDWhHDOs3tfmj+ftoC/xtCrU3i4JXECTvAtI+K2VSkpweYvbK2C8tDSJHzGbXWWmZrZI2wckQq7J7L7yvrvFWiJ5X1zSMx31DVblRuyBGq4vsFwEIgdf3jczSzG8yHgW1TpaGYszrmFr+a4uFuAoN4OvoA=
+	t=1712267188; cv=none; b=gepo7z7DBAGGVB9d3grypOrHdZ+3r7U41NAXroiUcXazk21v4ZTAkVyfMh56r/1axQWaqZK5SAgHmwNopdqnbL6Xnf1feenVPteeob0xMqEz3o0wHyZkS5z3qKQbWn5xEPXjf+r1ckkLwc/CS2ZjZgNf2o7suwlGZ3bWfBYDCig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712264125; c=relaxed/simple;
-	bh=sorFsq488L7ajJS64yjM1MHZTqEJY1vLbzYYcHsFTeg=;
+	s=arc-20240116; t=1712267188; c=relaxed/simple;
+	bh=nTYYhOm9gxnffO7tJe8iIqrB5MxlJxHbRkb58OWR2dk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iZW2s0YzFomp/YYkdNf34K2UKqony6WpVdWPIsoihBhMJ0Kiu8CwYXA0UzPaHqq8sf56j4QPQVKMvXkY+hc1yaOk+tz8wNtH5XQTCbynzp9zanU/EDS9SPk7rJt6Rgaae0MOCtZiqWmG6WjW69Q89shtpY/8CPXF42iaDbsrZEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B229XrXj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fu3pYzVDp7uG1t7tb9U1d3iQdi/NT+Ok5rYv1+NphHgvkxl3mc/5xvwWRvFyA75nLb2VkMBgc6YeJqx6VKUxPz1LD0x0qtzJ2D1jLzfJl6nRMDoPt1qsjUB/xlSb6M8DGPh4EgiRBGLggFr0kguJU3IYGAy6Bi5bfpqVbB9Ny+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=I1sSXQk8; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B229XrXj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19543C433C7;
-	Thu,  4 Apr 2024 20:55:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712264125;
-	bh=sorFsq488L7ajJS64yjM1MHZTqEJY1vLbzYYcHsFTeg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=B229XrXjiz8+SbLmQIpAJxLVhiqNmIG5kcfOOTEXk14W3mFpqJ34ftUFDKei+kjKW
-	 YzVZAzCrfWkAEvjpAK5XuvHWovZEYhr6+9s4y5fJZHoCfLbk66u96IDby2W4cMCjPg
-	 buV2pdonv3AMZYq374sNIyd4Jp0OdioGEb9Zw22BYbCS44JhuBojT6USINABzduktZ
-	 HWMS+OPWxth69CPzU7sxG4pvQaK9Me+hPs8gATVQuNhcUh5sMGJXdHpHOuagLGHNUD
-	 sKlRxd9sylCnBuSb6neGHIjcSqXPhe2/CnS4aWc5OV2+LCEApy3Dtgnm/MEnIPJ/q0
-	 1/LMvscSODF0A==
-Date: Thu, 4 Apr 2024 13:55:24 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [bug report] xfs: repair free space btrees
-Message-ID: <20240404205524.GG6414@frogsfrogsfrogs>
-References: <4e8b2fc3-838a-458e-b306-2f8a0062ba76@moroto.mountain>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="I1sSXQk8"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6e73e8bdea2so1358332b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Apr 2024 14:46:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712267186; x=1712871986; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=PAT7bztQSrSeww6mgHBlY9itDpDqDxKb6Tv5CCWsgO4=;
+        b=I1sSXQk8n6AniRhspXdYGBf/S1KqBIWVGuCm0LrnhRoQbpwTPY+6eroAi+mOdGx0qw
+         hsE3TefEUmpCVCkA8GnZM2yNIob8SHqBv5kBjG7e2ERnRrBEa8EIYjbsoONJS0sE9DwJ
+         aeoFE6sdNNmXew7Nv6jo8hTmt3LnKWZzy4mQGyyC5MEU83ygjMMlrbSWB06bTS8Sm57w
+         oQI5Xxa/uL/5GkbEZdK1wC8Hr+WrlcWN4gg9ZQDcCH4g/Kwu1QEO1QFPu79NRjzKieNL
+         32iQp7ptKm1dP95YR2i22ssCnw01TPtRHIXXqNenkPSrTcAKLC/RAAi94ur56J4vP6xT
+         l17A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712267186; x=1712871986;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PAT7bztQSrSeww6mgHBlY9itDpDqDxKb6Tv5CCWsgO4=;
+        b=rNziV/+QjzR2gONEP99nJwXgcace8DY9RogCp3iTq11ThR4giaGw5+AC4vSkXIhGQO
+         MTkQdhfb+BFSkfkRtXZmBwDCJ37NeMFueqnkzQdgNtnKzYTBdxrGevqSAy5Mg5HA2xsn
+         JvvV41alIm8T0ww0RxGJZaSwz9af14SAHO5UbKzwSRwAA+Rr9QN/HoVFKWJPWBW2Y6cg
+         zdN8+W6T2FAkhjyUkYwohp8LyHw4Oeytbp8CXEE8Wvb9zpIIIwU4y5KVwHVOHETPnPZC
+         F8X7UPGvqmcxwJ5PU72M9LE+BCPQ1vPTe0xFsX3ZB9HyDuiqGwLXelZEJLKLdt6Yt1+p
+         PPfA==
+X-Gm-Message-State: AOJu0YzO9vq78k5gVTLKPhSCLj5/xt+VhbP36PmcOlKgTWe9ofqG6lYP
+	BS2NR0UqWWescxXwCIPpJqvqmZJZCMff2ab5IkiDwPxZMzkRoTZ3zgqO83boOso=
+X-Google-Smtp-Source: AGHT+IF5gJXcHehFM5T62YxuzdG6UP2bGAUdTHl/ULYKUiZc1b4by4N19l5WvbAVI5BQ2HZPCURzWA==
+X-Received: by 2002:a05:6a20:3945:b0:1a3:c3fe:fcaf with SMTP id r5-20020a056a20394500b001a3c3fefcafmr4626843pzg.9.1712267186247;
+        Thu, 04 Apr 2024 14:46:26 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
+        by smtp.gmail.com with ESMTPSA id h7-20020aa786c7000000b006eadfbdcc13sm123669pfo.67.2024.04.04.14.46.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Apr 2024 14:46:25 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rsUud-0049C0-0O;
+	Fri, 05 Apr 2024 08:46:23 +1100
+Date: Fri, 5 Apr 2024 08:46:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v30.2 1/1] xfs: fix severe performance problems when
+ fstrimming a subset of an AG
+Message-ID: <Zg8fr9QqgNRacM4Y@dread.disaster.area>
+References: <171150385517.3220448.15319110826705438395.stgit@frogsfrogsfrogs>
+ <171150385535.3220448.4852463781154330350.stgit@frogsfrogsfrogs>
+ <20240403050718.GU6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,143 +72,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4e8b2fc3-838a-458e-b306-2f8a0062ba76@moroto.mountain>
+In-Reply-To: <20240403050718.GU6390@frogsfrogsfrogs>
 
-On Thu, Apr 04, 2024 at 10:32:32AM +0300, Dan Carpenter wrote:
-> Hello Darrick J. Wong,
+On Tue, Apr 02, 2024 at 10:07:18PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Commit 4bdfd7d15747 ("xfs: repair free space btrees") from Dec 15,
-> 2023 (linux-next), leads to the following Smatch static checker
-> warning:
+> On a 10TB filesystem where the free space in each AG is heavily
+> fragmented, I noticed some very high runtimes on a FITRIM call for the
+> entire filesystem.  xfs_scrub likes to report progress information on
+> each phase of the scrub, which means that a strace for the entire
+> filesystem:
 > 
-> 	fs/xfs/scrub/alloc_repair.c:781 xrep_abt_build_new_trees()
-> 	warn: missing unwind goto?
+> ioctl(3, FITRIM, {start=0x0, len=10995116277760, minlen=0}) = 0 <686.209839>
 > 
-> fs/xfs/scrub/alloc_repair.c
->     702 STATIC int
->     703 xrep_abt_build_new_trees(
->     704         struct xrep_abt                *ra)
->     705 {
->     706         struct xfs_scrub        *sc = ra->sc;
->     707         struct xfs_btree_cur        *bno_cur;
->     708         struct xfs_btree_cur        *cnt_cur;
->     709         struct xfs_perag        *pag = sc->sa.pag;
->     710         bool                        needs_resort = false;
->     711         int                        error;
->     712 
->     713         /*
->     714          * Sort the free extents by length so that we can set up the free space
->     715          * btrees in as few extents as possible.  This reduces the amount of
->     716          * deferred rmap / free work we have to do at the end.
->     717          */
->     718         error = xrep_cntbt_sort_records(ra, false);
->     719         if (error)
->     720                 return error;
->     721 
->     722         /*
->     723          * Prepare to construct the new btree by reserving disk space for the
->     724          * new btree and setting up all the accounting information we'll need
->     725          * to root the new btree while it's under construction and before we
->     726          * attach it to the AG header.
->     727          */
->     728         xrep_newbt_init_bare(&ra->new_bnobt, sc);
->     729         xrep_newbt_init_bare(&ra->new_cntbt, sc);
->     730 
->     731         ra->new_bnobt.bload.get_records = xrep_abt_get_records;
->     732         ra->new_cntbt.bload.get_records = xrep_abt_get_records;
->     733 
->     734         ra->new_bnobt.bload.claim_block = xrep_abt_claim_block;
->     735         ra->new_cntbt.bload.claim_block = xrep_abt_claim_block;
->     736 
->     737         /* Allocate cursors for the staged btrees. */
->     738         bno_cur = xfs_bnobt_init_cursor(sc->mp, NULL, NULL, pag);
->     739         xfs_btree_stage_afakeroot(bno_cur, &ra->new_bnobt.afake);
->     740 
->     741         cnt_cur = xfs_cntbt_init_cursor(sc->mp, NULL, NULL, pag);
->     742         xfs_btree_stage_afakeroot(cnt_cur, &ra->new_cntbt.afake);
->     743 
->     744         /* Last chance to abort before we start committing fixes. */
->     745         if (xchk_should_terminate(sc, &error))
->     746                 goto err_cur;
->     747 
->     748         /* Reserve the space we'll need for the new btrees. */
->     749         error = xrep_abt_reserve_space(ra, bno_cur, cnt_cur, &needs_resort);
->     750         if (error)
->     751                 goto err_cur;
->     752 
->     753         /*
->     754          * If we need to re-sort the free extents by length, do so so that we
->     755          * can put the records into the cntbt in the correct order.
->     756          */
->     757         if (needs_resort) {
->     758                 error = xrep_cntbt_sort_records(ra, needs_resort);
->     759                 if (error)
->     760                         goto err_cur;
->     761         }
->     762 
->     763         /*
->     764          * Due to btree slack factors, it's possible for a new btree to be one
->     765          * level taller than the old btree.  Update the alternate incore btree
->     766          * height so that we don't trip the verifiers when writing the new
->     767          * btree blocks to disk.
->     768          */
->     769         pag->pagf_repair_bno_level = ra->new_bnobt.bload.btree_height;
->     770         pag->pagf_repair_cnt_level = ra->new_cntbt.bload.btree_height;
->     771 
->     772         /* Load the free space by length tree. */
->     773         ra->array_cur = XFARRAY_CURSOR_INIT;
->     774         ra->longest = 0;
->     775         error = xfs_btree_bload(cnt_cur, &ra->new_cntbt.bload, ra);
->     776         if (error)
->     777                 goto err_levels;
->                         ^^^^^^^^^^^^^^^^
->     778 
->     779         error = xrep_bnobt_sort_records(ra);
->     780         if (error)
-> --> 781                 return error;
->                         ^^^^^^^^^^^^^
-> Should this be a goto err_levels?
+> shows that scrub is uncommunicative for the entire duration.  Reducing
+> the size of the FITRIM requests to a single AG at a time produces lower
+> times for each individual call, but even this isn't quite acceptable,
+> because the time between progress reports are still very high:
+> 
+> Strace for the first 4x 1TB AGs looks like (2):
+> ioctl(3, FITRIM, {start=0x0, len=1099511627776, minlen=0}) = 0 <68.352033>
+> ioctl(3, FITRIM, {start=0x10000000000, len=1099511627776, minlen=0}) = 0 <68.760323>
+> ioctl(3, FITRIM, {start=0x20000000000, len=1099511627776, minlen=0}) = 0 <67.235226>
+> ioctl(3, FITRIM, {start=0x30000000000, len=1099511627776, minlen=0}) = 0 <69.465744>
+> 
+> I then had the idea to limit the length parameter of each call to a
+> smallish amount (~11GB) so that we could report progress relatively
+> quickly, but much to my surprise, each FITRIM call still took ~68
+> seconds!
+> 
+> Unfortunately, the by-length fstrim implementation handles this poorly
+> because it walks the entire free space by length index (cntbt), which is
+> a very inefficient way to walk a subset of the blocks of an AG.
+> 
+> Therefore, create a second implementation that will walk the bnobt and
+> perform the trims in block number order.  This implementation avoids the
+> worst problems of the original code, though it lacks the desirable
+> attribute of freeing the biggest chunks first.
+> 
+> On the other hand, this second implementation will be much easier to
+> constrain the system call latency, and makes it much easier to report
+> fstrim progress to anyone who's running xfs_scrub.
+> 
+> Inspired-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_discard.c |  153 ++++++++++++++++++++++++++++++--------------------
+>  1 file changed, 93 insertions(+), 60 deletions(-)
 
-Yep.  Thanks for the report.
+Looks OK.
 
---D
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
->     782 
->     783         /* Load the free space by block number tree. */
->     784         ra->array_cur = XFARRAY_CURSOR_INIT;
->     785         error = xfs_btree_bload(bno_cur, &ra->new_bnobt.bload, ra);
->     786         if (error)
->     787                 goto err_levels;
->     788 
->     789         /*
->     790          * Install the new btrees in the AG header.  After this point the old
->     791          * btrees are no longer accessible and the new trees are live.
->     792          */
->     793         xfs_allocbt_commit_staged_btree(bno_cur, sc->tp, sc->sa.agf_bp);
->     794         xfs_btree_del_cursor(bno_cur, 0);
->     795         xfs_allocbt_commit_staged_btree(cnt_cur, sc->tp, sc->sa.agf_bp);
->     796         xfs_btree_del_cursor(cnt_cur, 0);
->     797 
->     798         /* Reset the AGF counters now that we've changed the btree shape. */
->     799         error = xrep_abt_reset_counters(ra);
->     800         if (error)
->     801                 goto err_newbt;
->     802 
->     803         /* Dispose of any unused blocks and the accounting information. */
->     804         xrep_abt_dispose_reservations(ra, error);
->     805 
->     806         return xrep_roll_ag_trans(sc);
->     807 
->     808 err_levels:
->     809         pag->pagf_repair_bno_level = 0;
->     810         pag->pagf_repair_cnt_level = 0;
->     811 err_cur:
->     812         xfs_btree_del_cursor(cnt_cur, error);
->     813         xfs_btree_del_cursor(bno_cur, error);
->     814 err_newbt:
->     815         xrep_abt_dispose_reservations(ra, error);
->     816         return error;
->     817 }
-> 
-> regards,
-> dan carpenter
+-- 
+Dave Chinner
+david@fromorbit.com
