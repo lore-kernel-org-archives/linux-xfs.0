@@ -1,102 +1,135 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f202.google.com (mail-yb1-f202.google.com [209.85.219.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62AED200CB
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 17:00:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7DA173336
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 19:45:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712336449; cv=none; b=dsIr+stjwf6SESv3vJeR/36y/EtGGQ3tmdIoFik6wTJQR21HaopCO2cvzdmbodQaTgGfu7yxMv592qZrWVrIr/YBAqzEnDaGxzPYhGBiIsqF4atQZFtQzP+UnsNpcYtk/vVDkrTotAYiYtcHopbdBp0qRvsPv95i60n1bIwP6dY=
+	t=1712346311; cv=none; b=sS/RU/ebroqUBSXRb6BMqg+ej/9bgR6iEAAvCr1KFlFT67nYhUgh/nOjWAlMmtfOb+rTVU4yaW1tk7gNgYKgN7rKAuxSzHGjSEYaYr/vWjLFb5eRKOLlgU6gMkFmXiooIdHEcdR5eHFdfVi2ZKOA3S4Mj0gGrpM5dtty3gpB18U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712336449; c=relaxed/simple;
-	bh=RTC6AQxraLfmouVsgkeIm6SjU4zd28XmNMJ3IvK9jQ8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a3czQ6iW/smXIzyAbDrPXliijRZpo8jxRcIJftnhhMY2q45UG6jk+fIwYpIxOn9aR6xgGM1BrdQvvVejONPmKpf0MgFLM9tBiEznBphVUTEyGyx6RxBHray+7fl9TIHHKTMw1by6NZsj1BoSNF84WOaSOYg1lXl80OPY5BFU7pE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 0902068D07; Fri,  5 Apr 2024 19:00:43 +0200 (CEST)
-Date: Fri, 5 Apr 2024 19:00:42 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, chandanbabu@kernel.org,
-	david@fromorbit.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix error returns from xfs_bmapi_write
-Message-ID: <20240405170042.GA15760@lst.de>
-References: <20240405051929.191633-1-hch@lst.de> <20240405160742.GB6390@frogsfrogsfrogs>
+	s=arc-20240116; t=1712346311; c=relaxed/simple;
+	bh=T3ejxbb56c+nrn15llqrQ7RzaittgP9efQjwG4WBQuo=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Mf0Xpitr+MR2QroBuNRSzkoVtx6HsHnMo/V7Zt7ZI9eI4KHbNnBszmP1uIkCthHcU7OrhS7IfIhjD4LE9HWdPuQH5SapopeiqTlMIMqMK/JBnOcDjVqrF9An0UCNnX0rh9ID/iVxjTTtMPRc8do1SNTaVoJ8gIjSU+SOgMNLxLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=4Pmp957s; arc=none smtp.client-ip=209.85.219.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="4Pmp957s"
+Received: by mail-yb1-f202.google.com with SMTP id 3f1490d57ef6-dc647f65573so4491690276.2
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Apr 2024 12:45:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1712346308; x=1712951108; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=2vtixN1wtkWuNV0Qa4mXNUhaVbrMuwdt0CR0qhCTFhg=;
+        b=4Pmp957sWq/92GZ0Wc/xV8rICwS0Nq62eLltef3DLe1QSq61I/W+yCR7PyyG+LSZ0p
+         68WXe2aczCWywL8r5EH4EORFAldWfoTizAyc4vGQVjX7fPmXFHZYpE634xw0UVmcr28e
+         RrChrp6TiatQgaKYwoUw05BGCfSqIsSH120KbgvAVZOOROjKobAS/n4KVTA85wcmyHm1
+         GEMLhg20PRXl+ZZOs+vRb4XIsFs54a3HTkz5XrGs/0jSVPEuP2Q/T1P29n07Ofaw15kg
+         84bEEbqSaJ8TJq/MJ5hM/ahj2lTpcfGYXY+wyBMR3okvki2I9diPt9gIAVzsaINdYjiS
+         51vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712346308; x=1712951108;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=2vtixN1wtkWuNV0Qa4mXNUhaVbrMuwdt0CR0qhCTFhg=;
+        b=WsOs+RxItduey9ZZeTNEx+fMclmtsjzDJhu1x+27TpsZXepPEAe4rbfUZbzYEJB8zf
+         FI/J3lEXTFlK2m2ARllqa4Ux0LAtM9ol1uIHboetPR8zCopJ1wVMf9OAar1iirTXbaji
+         wil57IMUWnpx2a4GSqeUyO5QTDy+y3hT7jUiSGiK2Lsda3RgaUgqEulG7N6Hw0gWlGBZ
+         P6hCBC8voJ40pLN45HlIa93P7RGAzQsUZPYOnfY0cD6jHyYigdryfFunLJRSTJ5ySMXT
+         Z6hMICeLDB2wFgBhVC3+SH79NaAaKzMaGOkg2JJxiDZMddpwUFWnbAePqkscReKodPK2
+         urbg==
+X-Gm-Message-State: AOJu0YzWG2JR3ykTjt/Ryf9EQqOEHGqISx9tAf0xpZIPPhRxkdC799xl
+	JOgM3SIPe0s7qPSq5Habskwl30u/6lgG5U3EA33zuDq1pe/1+jbGEwGqa2hJBMcueLUsw8cDwup
+	0nXlhEnn4atU0O3LqxtAbqQ==
+X-Google-Smtp-Source: AGHT+IGQaWsEMLLYQanS2Lwqb6aaiWTFAVRKofb23kbm/JtMo/+pr+L8fTYQOVjDpYmss57BpRnWpLm22Llm8Gso7A==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a25:8411:0:b0:dcd:5e5d:458b with SMTP
+ id u17-20020a258411000000b00dcd5e5d458bmr602236ybk.3.1712346308719; Fri, 05
+ Apr 2024 12:45:08 -0700 (PDT)
+Date: Fri, 05 Apr 2024 19:45:08 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240405160742.GB6390@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAMNUEGYC/x3MwQqDMAyA4VeRnBeIVXfYqwwPoaYaGF1JylDEd
+ 1/x+B3+/wQXU3F4dSeY/NT1mxv6Rwdx47wK6tIMgcJII03o1XIsB+5cq6GXj9aAxAOnRPHJgaC lxSTpfm/f83X9AQuPS9JmAAAA
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1712346307; l=2126;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=T3ejxbb56c+nrn15llqrQ7RzaittgP9efQjwG4WBQuo=; b=vM4znULoH125X+4VZ0HIeV+udu59Elb7Dpzi4RgxOBcA1cIaWxOo2FSqK8bf9iocWinmC32eH
+ FxLPTDU2wM/BbG0Jq6CPnD7D5QkYleqzvrhLT8U2VTYV8JrH2frfGaa
+X-Mailer: b4 0.12.3
+Message-ID: <20240405-strncpy-xattr-split2-v1-1-90ab18232407@google.com>
+Subject: [PATCH] xfs: xattr: replace strncpy and check for truncation
+From: Justin Stitt <justinstitt@google.com>
+To: Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-On Fri, Apr 05, 2024 at 09:07:42AM -0700, Darrick J. Wong wrote:
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -321,14 +321,6 @@ xfs_iomap_write_direct(
-> >  	if (error)
-> >  		goto out_unlock;
-> >  
-> > -	/*
-> > -	 * Copy any maps to caller's array and return any error.
-> > -	 */
-> > -	if (nimaps == 0) {
-> > -		error = -ENOSPC;
-> > -		goto out_unlock;
-> > -	}
-> 
-> Can xfs_bmapi_write return ENOSR here such that it leaks out to
-> userspace?
+strncpy is deprecated and as such we should prefer less ambiguous and
+more robust string interfaces [1].
 
-It shouldn't because we invalidated all pages before, although I guess
-if we race badly enough with page_mkwrite new a new delalloc region
-could have been created and merged with one before the write and then if
-the file system was fragmented to death we could hit the case where
-we hit ENOSR now (and the wrong ENOSPC before).
+There's a lot of manual memory management to get a prefix and name into
+a string. Let's use an easier to understand and more robust interface in
+scnprintf() to accomplish the same task while enabling us to check for
+possible truncation, resulting in a soft warning.
 
-That being said handling the error everywhere doesn't really scale.
-I've actually looked into not converting the entire delalloc extent
-(which btw is behavior that goes back to the initial commit of delalloc
-support in XFS), but that quickly ran into asserts in the low-level
-xfs_bmap.c.  I plan to get back into it because it feels like the
-right thing to do outside of the buffered writeback code, and whatever
-lingering problem I found there needs attention.  But for now I'd
-rather keep this fix as minimally invasive as it gets.
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+Split from https://lore.kernel.org/all/20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com/
+with feedback from Christoph H.
+---
+ fs/xfs/xfs_xattr.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -430,13 +430,6 @@ xfs_reflink_fill_cow_hole(
-> >  	if (error)
-> >  		return error;
-> >  
-> > -	/*
-> > -	 * Allocation succeeded but the requested range was not even partially
-> > -	 * satisfied?  Bail out!
-> > -	 */
-> > -	if (nimaps == 0)
-> > -		return -ENOSPC;
-> 
-> Hmm.  xfs_find_trim_cow_extent returns with @found==false if a delalloc
-> reservation appeared in the cow fork while we weren't holding the ILOCK.
-> So shouldn't this xfs_bmapi_write call also handle ENOSR?
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 364104e1b38a..bc7246eaebdd 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -206,6 +206,7 @@ __xfs_xattr_put_listent(
+ {
+ 	char *offset;
+ 	int arraytop;
++	size_t combined_len, actual_len;
+ 
+ 	if (context->count < 0 || context->seen_enough)
+ 		return;
+@@ -220,11 +221,16 @@ __xfs_xattr_put_listent(
+ 		return;
+ 	}
+ 	offset = context->buffer + context->count;
+-	memcpy(offset, prefix, prefix_len);
+-	offset += prefix_len;
+-	strncpy(offset, (char *)name, namelen);			/* real name */
+-	offset += namelen;
+-	*offset = '\0';
++
++	combined_len = prefix_len + namelen;
++
++	/* plus one byte for \0 */
++	actual_len = scnprintf(offset, combined_len + 1, "%s%s", prefix, name);
++
++	if (actual_len < combined_len)
++		xfs_warn(context->dp->i_mount,
++	"cannot completely copy %s%s to context buffer resulting in truncation",
++			prefix, name);
+ 
+ compute_size:
+ 	context->count += prefix_len + namelen + 1;
 
-Probably.  Incremental patch, though.
+---
+base-commit: c85af715cac0a951eea97393378e84bb49384734
+change-id: 20240405-strncpy-xattr-split2-0a3aff0c6a20
 
-> > -		/*
-> > -		 * Allocation succeeded but the requested range was not even
-> > -		 * partially satisfied?  Bail out!
-> > -		 */
-> > -		if (nimaps == 0)
-> > -			return -ENOSPC;
-> 
-> This xfs_bmapi_write call converts delalloc reservations to unwritten
-> mappings, which means that should catch ENOSR and just run around the
-> loop again, right?
-
-Probably..
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
 
