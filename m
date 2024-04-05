@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A130116EC0B
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 15:44:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB85316F917
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 15:45:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712331870; cv=none; b=Wg8qDqEAadNeyD/QZ4QXOFwGNVzJ9SIH6kUJf8UC1AgQxoYCbiFIqFUX7Hj10ubb1OvcDAXYqGPBC7NqQQvSyYm1booxocLFunSX0aGHZi0hgN/gajVuO/xEP78MwF/UTWEwATG1W3nrBEb21xAKJA/TuCIoeC1JRKRyBJ1gxUo=
+	t=1712331919; cv=none; b=t99d6jn2WVkp1+SyJSQ+J3EAGnGRrnqGXmosOtoVffxM+XgUHLSWZ13ENSe17l5MF4ZoRHVXksXSCFjACwQzDT2FxMCS7gHNMbelQD7CxCAtJfTDzUMFQpio8UWB/XDnpTTAyxFd9zLYNwbrWFwyLy/P1XPM3eAEPDjGvwSHa00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712331870; c=relaxed/simple;
-	bh=C7d3ghMdprrypqa6qNV3v92XAwVPNAZTwHuWd6xnTjc=;
+	s=arc-20240116; t=1712331919; c=relaxed/simple;
+	bh=L8VmGwN9qPLYak2Y+KCHl9XQ7E+gLZSkOTmLxGssLAA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RGIPKr9Qfcgq2SxxKliaDvHa77ScMtqLu/aZOVlX6FweY+KjONQvhyiz+JUPuyWgDcvBhL5UaRI8P7hO3kQSTDb45wrsTFecSJ+ifd2EMNGH3n2YruUHEx5JXUJS75emTUhX3XNwqfc4BcdukpcPv7xq40xkHRi6jtivUyrW3uA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AL7eIkZh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cZb7PmlF07SRL1wVrmFTNdhE1MXFHib95e9mOLYSshgWcd5psYP96h+JLd7hb5g3iwjciRJFMyueediWRD0edk7mvsNJTORxeLw0WHPppejhrr7jdq8mQHlWKtO/By/0f2HR453Jt9JotAGfD7a4BaV2Isrt4zwr9KoXbShSNVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ir+ykwLn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AL7eIkZh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 273F1C433F1;
-	Fri,  5 Apr 2024 15:44:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ir+ykwLn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4795FC433F1;
+	Fri,  5 Apr 2024 15:45:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712331870;
-	bh=C7d3ghMdprrypqa6qNV3v92XAwVPNAZTwHuWd6xnTjc=;
+	s=k20201202; t=1712331919;
+	bh=L8VmGwN9qPLYak2Y+KCHl9XQ7E+gLZSkOTmLxGssLAA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AL7eIkZhUTjArPTX9rO4TOV3eT2sRFXQkscwoy1SvEY6GLz4u+s7qmY//Qfq/qNZO
-	 wDnvyTL308O8bUB0vZ3kK+s5aGERuliPQivRcb738TLm3keBRA6muIMpfhf7oHrW2y
-	 c6FlBbQZPpBbvfFtaWGmHJqS8bgeRiuMTe9xUTsvwSCEz/3ieW2uMwYzU32+xzMaBW
-	 9pwqA8Tka7q7SHBh48q0toyiOGseUubGNrpIKXWC/RYi932r56YQ5m1qberrJHHyGa
-	 iEmn3IOvfmPq5MXKidteytduIDmGTGzJ3kFvf0XM3nBbi2Zsxp91Ho3s+MSIIgpXMA
-	 Hsv2E061qME9g==
-Date: Fri, 5 Apr 2024 08:44:29 -0700
+	b=ir+ykwLnfwRmZ2O8LtZYQZ8iX4WaBN2EB8R5tLTqZyVeq6vWumoPoSyG5jEpbi0Ff
+	 ngBdu3gQJvmRLsHNk0KuV9FRtedly44kAjm6X6QvUd+IrHbDa2ZpQFgviWQ0r/FZEi
+	 j9Xc2v5WAYLGXbC4PwHTNj5i0z8V3Ehla+Pq6qiXcjcN2jQ6DCxGaEYApEm0/4yH96
+	 HeVFiBb4YgjHeM0gngIlF5dQTQ4GeA7vuX64Dnt0YqPI99ioEY9CrMPk2nA2TPID9N
+	 +XIOYPDQuyxeA1l/2se4DR5oT8oInsrJK6FcdYIpNIozuhWNjo77+cCtKa7sW4cJlt
+	 aH+3k2crxjt3A==
+Date: Fri, 5 Apr 2024 08:45:18 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: move more logic into xfs_extent_busy_clear_one
-Message-ID: <20240405154429.GZ6390@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/3] xfs: unwind xfs_extent_busy_clear
+Message-ID: <20240405154518.GA6390@frogsfrogsfrogs>
 References: <20240405060710.227096-1-hch@lst.de>
- <20240405060710.227096-2-hch@lst.de>
+ <20240405060710.227096-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,81 +43,110 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240405060710.227096-2-hch@lst.de>
+In-Reply-To: <20240405060710.227096-3-hch@lst.de>
 
-On Fri, Apr 05, 2024 at 08:07:08AM +0200, Christoph Hellwig wrote:
-> Move the handling of discarded entries into xfs_extent_busy_clear_one
-> to reuse the length check and tidy up the logic in the caller.
+On Fri, Apr 05, 2024 at 08:07:09AM +0200, Christoph Hellwig wrote:
+> The current structure of xfs_extent_busy_clear that locks the first busy
+> extent in each AG and unlocks when switching to a new AG makes sparse
+> unhappy as the lock critical section tracking can't cope with taking the
+> lock conditionally and inside a loop.
+> 
+> Rewrite xfs_extent_busy_clear so that it has an outer loop only advancing
+> when moving to a new AG, and an inner loop that consumes busy extents for
+> the given AG to make life easier for sparse and to also make this logic
+> more obvious to humans.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-AFAICT, the return value of xfs_extent_busy_clear_one is whether
-or not it actually changed the pagb_tree, right?  And if that return
-value is true, then we want to wake up anyone who might be waiting on
-busy extents to clear the pagb_tree, which is what the @wakeup logic
-does, right?
+That is a lot easier to understand!  Thank you for the cleanup.
 
-If the answers are yes and yes, then:
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-
 > ---
->  fs/xfs/xfs_extent_busy.c | 23 ++++++++++++-----------
->  1 file changed, 12 insertions(+), 11 deletions(-)
+>  fs/xfs/xfs_extent_busy.c | 59 +++++++++++++++++-----------------------
+>  1 file changed, 25 insertions(+), 34 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> index 56cfa1498571e3..6fbffa46e5e94b 100644
+> index 6fbffa46e5e94b..a73e7c73b664c6 100644
 > --- a/fs/xfs/xfs_extent_busy.c
 > +++ b/fs/xfs/xfs_extent_busy.c
-> @@ -518,20 +518,26 @@ xfs_extent_busy_trim(
->  	goto out;
+> @@ -540,21 +540,6 @@ xfs_extent_busy_clear_one(
+>  	return true;
 >  }
 >  
-> -STATIC void
-> +static bool
->  xfs_extent_busy_clear_one(
-> -	struct xfs_mount	*mp,
->  	struct xfs_perag	*pag,
-> -	struct xfs_extent_busy	*busyp)
-> +	struct xfs_extent_busy	*busyp,
-> +	bool			do_discard)
+> -static void
+> -xfs_extent_busy_put_pag(
+> -	struct xfs_perag	*pag,
+> -	bool			wakeup)
+> -		__releases(pag->pagb_lock)
+> -{
+> -	if (wakeup) {
+> -		pag->pagb_gen++;
+> -		wake_up_all(&pag->pagb_wait);
+> -	}
+> -
+> -	spin_unlock(&pag->pagb_lock);
+> -	xfs_perag_put(pag);
+> -}
+> -
+>  /*
+>   * Remove all extents on the passed in list from the busy extents tree.
+>   * If do_discard is set skip extents that need to be discarded, and mark
+> @@ -566,27 +551,33 @@ xfs_extent_busy_clear(
+>  	struct list_head	*list,
+>  	bool			do_discard)
 >  {
->  	if (busyp->length) {
-> -		trace_xfs_extent_busy_clear(mp, busyp->agno, busyp->bno,
-> -						busyp->length);
-> +		if (do_discard &&
-> +		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
-> +			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
-> +			return false;
-> +		}
-> +		trace_xfs_extent_busy_clear(pag->pag_mount, busyp->agno,
-> +				busyp->bno, busyp->length);
->  		rb_erase(&busyp->rb_node, &pag->pagb_tree);
->  	}
+> -	struct xfs_extent_busy	*busyp, *n;
+> -	struct xfs_perag	*pag = NULL;
+> -	xfs_agnumber_t		agno = NULLAGNUMBER;
+> -	bool			wakeup = false;
+> -
+> -	list_for_each_entry_safe(busyp, n, list, list) {
+> -		if (busyp->agno != agno) {
+> -			if (pag)
+> -				xfs_extent_busy_put_pag(pag, wakeup);
+> -			agno = busyp->agno;
+> -			pag = xfs_perag_get(mp, agno);
+> -			spin_lock(&pag->pagb_lock);
+> -			wakeup = false;
+> -		}
+> +	struct xfs_extent_busy	*busyp, *next;
 >  
->  	list_del_init(&busyp->list);
->  	kfree(busyp);
-> +	return true;
+> -		if (xfs_extent_busy_clear_one(pag, busyp, do_discard))
+> -			wakeup = true;
+> -	}
+> +	busyp = list_first_entry_or_null(list, typeof(*busyp), list);
+> +	if (!busyp)
+> +		return;
+> +
+> +	do {
+> +		bool			wakeup = false;
+> +		struct xfs_perag	*pag;
+>  
+> -	if (pag)
+> -		xfs_extent_busy_put_pag(pag, wakeup);
+> +		pag = xfs_perag_get(mp, busyp->agno);
+> +		spin_lock(&pag->pagb_lock);
+> +		do {
+> +			next = list_next_entry(busyp, list);
+> +			if (xfs_extent_busy_clear_one(pag, busyp, do_discard))
+> +				wakeup = true;
+> +			busyp = next;
+> +		} while (!list_entry_is_head(busyp, list, list) &&
+> +			 busyp->agno == pag->pag_agno);
+> +
+> +		if (wakeup) {
+> +			pag->pagb_gen++;
+> +			wake_up_all(&pag->pagb_wait);
+> +		}
+> +		spin_unlock(&pag->pagb_lock);
+> +		xfs_perag_put(pag);
+> +	} while (!list_entry_is_head(busyp, list, list));
 >  }
 >  
->  static void
-> @@ -575,13 +581,8 @@ xfs_extent_busy_clear(
->  			wakeup = false;
->  		}
->  
-> -		if (do_discard && busyp->length &&
-> -		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
-> -			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
-> -		} else {
-> -			xfs_extent_busy_clear_one(mp, pag, busyp);
-> +		if (xfs_extent_busy_clear_one(pag, busyp, do_discard))
->  			wakeup = true;
-> -		}
->  	}
->  
->  	if (pag)
+>  /*
 > -- 
 > 2.39.2
 > 
