@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4867012E71;
-	Fri,  5 Apr 2024 02:52:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3479679C4;
+	Fri,  5 Apr 2024 02:57:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712285577; cv=none; b=WUuqEvmdAMOmyBYs6RP0urF1mza6Y0CaRl1HizUzq6xJEKEUZzJuMi3Y4vKpgHgYwSjZa42/vw1pRJaWbmbUtCNHUJGm6HNr1a+5hrYA3l3AvJi3gts5MsJfgBESxx0Jk+XFnh9G985qw/M7Tu5JO3bg6tpSU8KYPIHLinZu9KA=
+	t=1712285873; cv=none; b=uq+oWlmA6A5in3y6k9CYMvaZOD2opZKX/AIMwhHFLfrrzprEr09AjDMlfn15pDuSdAHRny0oHb43F5lV6BFXjDWXdkEGy6cccTYw7j9d6NW98CgBvvIzidQTmfBdMptdwPYkKTvSAu+vwFzh/h9Uy8tyDAs/Ktoz2xjhijXacQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712285577; c=relaxed/simple;
-	bh=ohWSzMGFm3b4flQnMRyMhCS5VqdCXNjD6WIBamQrdNY=;
+	s=arc-20240116; t=1712285873; c=relaxed/simple;
+	bh=m3WXWEEhPhVQl5kxUeImxsYhV8Dw5UIoX9zNL2iPdQc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gqbm9BFxmFXNsUCD3lNwM3IDkqF79en8tkK4Ndd2jhULxeBxC56/6OIq9ymwB89b95vs7AxGYN5PHteFPmG+hNJmCiiRBxQ4rCxCAEULrVFPbJA9ju1Sd8yF1qyGbVbhNRJujSd8w+1jItM0PSbA8C00KH4a6UIaIxHyw6lN14Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FlwXxEFx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=N3f+Fgy8TLWPFGPjw2evz31YX56k/B3KXTauiAuVLg5CAstBVPmsvkOnRubtBbgEkdlyPuy+caZUNST0o00kllRuD3CbU/VzVGTuZaU1+QXQ9bMwPryw2jWLfLwgGxPqYYkvxWbWfmPzOG1FCTdHiU1P4PW8KgHD5CnwZQyawrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G5gASsny; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FlwXxEFx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71207C433F1;
-	Fri,  5 Apr 2024 02:52:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G5gASsny"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45F57C433C7;
+	Fri,  5 Apr 2024 02:57:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712285576;
-	bh=ohWSzMGFm3b4flQnMRyMhCS5VqdCXNjD6WIBamQrdNY=;
+	s=k20201202; t=1712285872;
+	bh=m3WXWEEhPhVQl5kxUeImxsYhV8Dw5UIoX9zNL2iPdQc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FlwXxEFxivLPDMmvVaPMfwQvC17Q9IfoT+B8cIsBnX7X8JswX7rtE3nE5ulIXUX+C
-	 eXYlQw1OWUjMe9p+uPn5u1vsjOdxaGAnMPYxutFiVUODpVdwt1wUqfqVcQTpZcwWMb
-	 wbV63f9Se12wApfnWsnbZL7WCFP36yuXv9Aa3KmW6G3Exg9eEAHgnTIoqPYdPCexsu
-	 RDwApiISiEHVcyypeJ3SQ3bfhbQjW47vtzgwgW5daeE8xzFczlWByDKYFK9TuziRMu
-	 koC3Bk/BFcw9P/x+GLcDnbXP1mdVTZlPhznsJmRPaURxaHP8SdczFPaYNotzrzDq62
-	 dwBdrfA2i49sg==
-Date: Thu, 4 Apr 2024 22:52:54 -0400
+	b=G5gASsnyx7hojCH91Ban2EgZ8gEwcp4Tu+xcLI+crxd3FBgxgeKQXn1couHyqn/Ip
+	 5wNbVbg7n/MwK83IuXiT9PQo03rgBRMI9+yo7qcJbCz0aRtWYfku/11uARkpdBRWpg
+	 mVISHzBJLnpn3Bjvcgwc1irjMoeeKJMRzFLnalIcErZc3eyr140Ld/bs1g4cgeHSai
+	 kxCN3kLaG4uLqPfDtpxRC55tvQqrn+IvKSkFHb5HgFpgK5H2SRZ4whLh4NhltZgq4S
+	 NwxUvSF1vghSMk9I+sZjS/hz5nlachhz9A/urPmRkLTLtMWMjCO4x+aDLzdTogFchU
+	 C8ZaEEflV3/TQ==
+Date: Thu, 4 Apr 2024 22:57:50 -0400
 From: Eric Biggers <ebiggers@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
-Subject: Re: [PATCH 09/13] fsverity: box up the write_merkle_tree_block
- parameters too
-Message-ID: <20240405025254.GG1958@quark.localdomain>
+Subject: Re: [PATCH 10/13] fsverity: pass the zero-hash value to the
+ implementation
+Message-ID: <20240405025750.GH1958@quark.localdomain>
 References: <171175867829.1987804.15934006844321506283.stgit@frogsfrogsfrogs>
- <171175868014.1987804.14065724867005749327.stgit@frogsfrogsfrogs>
+ <171175868031.1987804.13138670908694064691.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,15 +44,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171175868014.1987804.14065724867005749327.stgit@frogsfrogsfrogs>
+In-Reply-To: <171175868031.1987804.13138670908694064691.stgit@frogsfrogsfrogs>
 
-On Fri, Mar 29, 2024 at 05:35:01PM -0700, Darrick J. Wong wrote:
+On Fri, Mar 29, 2024 at 05:35:17PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Box up the tree write request parameters into a structure so that we can
-> add more in the next few patches.
+> Compute the hash of a data block full of zeros, and then supply this to
+> the merkle tree read and write methods.  A subsequent xfs patch will use
 
-This patch actually already adds the struct fields for new parameters.  They
-should go in later patches.
+This should say "hash of a block", not "hash of a data block".  What you
+actually care about is the hash of a Merkle tree block, not the hash of a data
+block.  Yet, there is no difference in how the hashes are calculated for the two
+types of blocks, so we should simply write "hash of a block".
+
+> diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
+> index de8798f141d4a..195a92f203bba 100644
+> --- a/fs/verity/fsverity_private.h
+> +++ b/fs/verity/fsverity_private.h
+> @@ -47,6 +47,8 @@ struct merkle_tree_params {
+>  	u64 tree_size;			/* Merkle tree size in bytes */
+>  	unsigned long tree_pages;	/* Merkle tree size in pages */
+>  
+> +	u8 zero_digest[FS_VERITY_MAX_DIGEST_SIZE]; /* hash of zeroed data block */
+
+Similarly, "block" instead of "data block".
+
+> diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+> index 5dacd30d65353..761a0b76eefec 100644
+> --- a/include/linux/fsverity.h
+> +++ b/include/linux/fsverity.h
+> @@ -66,6 +66,8 @@ struct fsverity_blockbuf {
+>   *		if the page at @block->offset isn't already cached.
+>   *		Implementations may ignore this argument; it's only a
+>   *		performance optimization.
+> + * @zero_digest: the hash for a data block of zeroes
+
+Likewise.
+
+>  /**
+> @@ -81,12 +85,16 @@ struct fsverity_readmerkle {
+>   * @level: level of the block; level 0 are the leaves
+>   * @num_levels: number of levels in the tree total
+>   * @log_blocksize: log2 of the size of the block
+> + * @zero_digest: the hash for a data block of zeroes
+> + * @digest_size: size of zero_digest
+
+Likewise.
 
 - Eric
