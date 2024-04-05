@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA5DA171AA;
-	Fri,  5 Apr 2024 02:42:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2F817BDC;
+	Fri,  5 Apr 2024 02:46:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712284935; cv=none; b=d1eeTRsP30+ie+qKJY5Lkj6Bo8cVqB/EQadDB5uvhlM79pRlhxLkB2mzfFemg36hlv85Czmx773nwoumYo+NHTEpgqYtPUcsDFSoePji6mK6YOvLVbzufImGQxeBz8xp3ubLoNvZXN3yG1plHXgWHO84P/wpMCWM6SXa3yBG/oQ=
+	t=1712285172; cv=none; b=AqAESYFpRPkxUzVZNdHBfwZVkkHnoH6RifOGOu7ok/e1J7b9XaLMWNn/uLhpwrZ76N8US+m1W7uAWMrbbc+x4sEYAeFNBGu+lkHkL34wSj3ifsrmzr4Ervm+LPVhE6F6eFQjbtuHHdUb+ghHrfk8xWF443uhv0nU63L4glU5Wik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712284935; c=relaxed/simple;
-	bh=d53/LKoru6gSZuBHm3s/aQcfyEAiYQQy8rSogjX99bM=;
+	s=arc-20240116; t=1712285172; c=relaxed/simple;
+	bh=GDKLQ+m6QBpK4sfyVDYw9Nxh6vuX1tX9WutpImi4lic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S3WH/qIG2+bORIoQeaEM5cOaIORoX0LHRCaRlifT3co65kSD2TrL3Ma415AR9VmzP0gJtae/YxJv/6bnFusX/ccvRbtFfGBLelmnTubs2Q0UArMFkPVNIfAgaWdm7YwqMJPNJCS+z/BoSNbwfXwHtcnZ1YImd5NekB96ftVCiyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rDnz1m2B; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TxgFKNsh2W8eBuX4g0fikPhc/iNH4X2wO0netlEZNlErf3IVS7FfTMtxA0TUgjxv4FzDszmlE+kJcBXH+DpmbFt+OdDl4vYBpKPq4eV+v2o3+FtgiRv3kSY1fIxL364SaMoe0m4KtRH+3NvBTz0ibvnSU7Y/gMdXAcmTpujSTUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j8gp+Vn6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rDnz1m2B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08D6CC433C7;
-	Fri,  5 Apr 2024 02:42:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j8gp+Vn6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4207C433C7;
+	Fri,  5 Apr 2024 02:46:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712284935;
-	bh=d53/LKoru6gSZuBHm3s/aQcfyEAiYQQy8rSogjX99bM=;
+	s=k20201202; t=1712285172;
+	bh=GDKLQ+m6QBpK4sfyVDYw9Nxh6vuX1tX9WutpImi4lic=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rDnz1m2BMFaNhlUJqO+zVKyFsH3PUSoWegi/BPsEnhkUm7K67gLabaXbylVwAU8DE
-	 HWKhreJP1TFij4CzYUIUwvl2BFZF36IssWBnBCyctkFMCYphF6/10Yf6yP8Yalle2D
-	 v0PytbblzfgPjEWB4QHRRCeCvWLy25Y8/4UwextCijvxliNj7US/dNbhgbCJ/tNIY/
-	 A3KY5Um8uvvbxJFVGCB2UNT3opHKh+6B5MGb5z3XCklAUcA6Xs9Lxi5pldLkb20Y4A
-	 9kli9EeMSUuXL8WKtPtZ+JS3Gn0Qr8yyj+Hs02JdPQDBpivKDNmTxXR6qjJ0vU2D7V
-	 3lAy+4n48w9RQ==
-Date: Thu, 4 Apr 2024 22:42:12 -0400
+	b=j8gp+Vn6RFJqPoiKMFJRXsAVsUzIzrhB8HbpTN3Jk52Zp4KLpBefy2Y4mKvLUFhzP
+	 AT9UpHO/KucmB8gztWEkDkX1pTDkP5rR2wzwDrmTs84YeCOVCqu8uEEN2/gdtMg8fD
+	 AMGHzKFonSp9/XVmHYGA+bDnJys7QAF5oWk4fnyywqlC6dVaIR0P706aMutD3Rm6E6
+	 hOtXvgQTiM+ciarbsAGDVHA/WtWHshTS8yFxlhTCxMInf9EKv8NiZDfyu4FxAgAj8j
+	 QrfPaE2l4HoKJ8EbKcr94jEf1B5fxOlASYgRXHxClWVo+CXk34FGkvO42ydH5qCf0N
+	 NBXDssWoPDx8w==
+Date: Thu, 4 Apr 2024 22:46:09 -0400
 From: Eric Biggers <ebiggers@kernel.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
-Subject: Re: [PATCH 06/13] fsverity: send the level of the merkle tree block
- to ->read_merkle_tree_block
-Message-ID: <20240405024212.GD1958@quark.localdomain>
+Subject: Re: [PATCH 07/13] fsverity: pass the new tree size and block size to
+ ->begin_enable_verity
+Message-ID: <20240405024609.GE1958@quark.localdomain>
 References: <171175867829.1987804.15934006844321506283.stgit@frogsfrogsfrogs>
- <171175867965.1987804.16949621858616176182.stgit@frogsfrogsfrogs>
+ <171175867981.1987804.2143506550606185399.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,30 +44,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171175867965.1987804.16949621858616176182.stgit@frogsfrogsfrogs>
+In-Reply-To: <171175867981.1987804.2143506550606185399.stgit@frogsfrogsfrogs>
 
-On Fri, Mar 29, 2024 at 05:34:14PM -0700, Darrick J. Wong wrote:
-> +/**
-> + * struct fsverity_readmerkle - Request to read a Merkle Tree block buffer
-> + * @inode: the inode to read
-> + * @level: expected level of the block; level 0 are the leaves, -1 means a
-> + * streaming read
-> + * @num_levels: number of levels in the tree total
-> + * @log_blocksize: log2 of the size of the expected block
-> + * @ra_bytes: The number of bytes that should be prefetched starting at pos
-> + *		if the page at @block->offset isn't already cached.
-> + *		Implementations may ignore this argument; it's only a
-> + *		performance optimization.
-> + */
-> +struct fsverity_readmerkle {
-> +	struct inode *inode;
-> +	unsigned long ra_bytes;
-> +	int level;
-> +	int num_levels;
-> +	u8 log_blocksize;
-> +};
+On Fri, Mar 29, 2024 at 05:34:30PM -0700, Darrick J. Wong wrote:
+> diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+> index 52de58d6f021f..030d7094d80fc 100644
+> --- a/include/linux/fsverity.h
+> +++ b/include/linux/fsverity.h
+> @@ -82,6 +82,8 @@ struct fsverity_operations {
+>  	 * Begin enabling verity on the given file.
+>  	 *
+>  	 * @filp: a readonly file descriptor for the file
+> +	 * @merkle_tree_size: total bytes the new Merkle tree will take up
+> +	 * @tree_blocksize: the new Merkle tree block size
 
-This struct should be introduced in the patch that adds ->read_merkle_tree_block
-originally.
+"new Merkle tree block size" is confusing because there's no old Merkle tree
+block size here.  Maybe delete "new" from the above two lines.
 
 - Eric
