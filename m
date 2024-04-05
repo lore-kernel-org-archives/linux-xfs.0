@@ -1,135 +1,102 @@
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F98979E3
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 16:54:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62AED200CB
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 17:00:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712336044; cv=none; b=utuwD2pQmMAyYFdBqnrEzSF+ULixX9Dc64g0ll+3NUsLDRCBfMcwJ2tkGZMoVN6ddUXUAV1X1ngb45ebz6CPFCXQ3dS/uZIZS9SYqvoXvpd4cNT++Mlrb++hwvIRQPKBoh1wqGK0PDu+zxwNHplFfLAu3JnbkADK7+aUt6lweRM=
+	t=1712336449; cv=none; b=dsIr+stjwf6SESv3vJeR/36y/EtGGQ3tmdIoFik6wTJQR21HaopCO2cvzdmbodQaTgGfu7yxMv592qZrWVrIr/YBAqzEnDaGxzPYhGBiIsqF4atQZFtQzP+UnsNpcYtk/vVDkrTotAYiYtcHopbdBp0qRvsPv95i60n1bIwP6dY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712336044; c=relaxed/simple;
-	bh=8hiILCWWT0foGk9QLb/WKs9j1WuDz5G044mYIjzBrOw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Poc5vyxBEQBe2NpqKRj/01vColnvy4QR6/Z0I7z9DxNTywwDcsXfiroqKEserj+5WS94WgSeGtM1gEC9bd5zbGoLrccSWWqNCh/qbRsXjoF+GzQjnE0CUsGB04Z5ED+2n0GjexhIu68IqvS4K7HqlwkttN3nL2A4pZRMgGP44c8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EvAAJqxc; arc=none smtp.client-ip=209.85.128.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EvAAJqxc"
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-615019cd427so22370707b3.3
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Apr 2024 09:54:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1712336041; x=1712940841; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8hiILCWWT0foGk9QLb/WKs9j1WuDz5G044mYIjzBrOw=;
-        b=EvAAJqxcvo5UyCFUeeAUWKvEcYztonFqDDOK+qV98I0itXgMdb1qTPeO++nwBC8PSQ
-         7SW/LzsmVpnJLJvcGJeNsXT4quX0xY8JqlDNso/XXowCcXe+RcEWB9pqdMcm/tPNpvYF
-         DG4+uq5L2b1zxeA+nZVNcYpKwSfcsLyRjyBCDG4XXmHW6WVVR+fBiN6ZeNZcb+iI9864
-         PJCz29aVyq38q+r/nYlU4bL+izZGv9t/kYtqMe2Qf0uYvVpM9lV3EEBBEXv/TNv5S4VS
-         Dd6iw6Wt7vGAO3JLRHT2Y8UDBlkM1uRsu4c1UTERQb8lZXjF+jCigM3OyYoAuarqd0LE
-         fdgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712336041; x=1712940841;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8hiILCWWT0foGk9QLb/WKs9j1WuDz5G044mYIjzBrOw=;
-        b=jw6hVvyELJ9MRLie7mo86oAHl5BHbezUPCVrJDcyPQm6/FeQS8yw8qDs0p8NakvU+0
-         MWi5q6ECBJYKHywpsMsytjKmdE0IDEZiiGQoH20UwOy0npb4eeoJ1TTqvSpgtBLqw6Ls
-         gs+SZ3bpEpJV9Vux1YuD5vC7RGoCY1DsJkr3EBRaN361NCxZPgq/R5ehn2lvxun2MTVe
-         +UxzOj/TaaLKQjtGkNuLGBBUWRq1FaRkv4FbG3U+2UQ14kQeJQco+vdBQvDnMQuKqE3m
-         XOGFyCeYDfOkiQKAV5hkNrUPYEFahEoLpoLmee9f/OBljOjA5vXKop1uzXLX+NpuxD01
-         D/Tw==
-X-Forwarded-Encrypted: i=1; AJvYcCW+zBe6Np6NciDNRt6RRILSEisf1UemU4PtR5A5jR78pTGs7oisWi9znPYfc7cnbFOLTBOtJhnmRcWILRCKbapjTVFJvHzA+39W
-X-Gm-Message-State: AOJu0YyzLURqt4JZaALsJkYsBSWwXNnVLhfya33M6WkgFoKlv20WmeNY
-	HA81YaKryRFrL+IkicWQLCz0VSxtnF37kCHZtdT+gk8K6qgngCN+JoYAeDVKHiGYWjsRWGKF3j5
-	I3rS1eFAddnlaS/j2OJcrkXZBaa8=
-X-Google-Smtp-Source: AGHT+IH3eUjmH2cM4NDicY+PhLqazYFJe/viewiunY5Mmttwwk3xpL2oV/2u1Tr7WDWa/gEkRxENM8+QWi+oFZ/w5EE=
-X-Received: by 2002:a25:6b4c:0:b0:dcc:ec02:38b0 with SMTP id
- o12-20020a256b4c000000b00dccec0238b0mr1585495ybm.64.1712336041553; Fri, 05
- Apr 2024 09:54:01 -0700 (PDT)
+	s=arc-20240116; t=1712336449; c=relaxed/simple;
+	bh=RTC6AQxraLfmouVsgkeIm6SjU4zd28XmNMJ3IvK9jQ8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=a3czQ6iW/smXIzyAbDrPXliijRZpo8jxRcIJftnhhMY2q45UG6jk+fIwYpIxOn9aR6xgGM1BrdQvvVejONPmKpf0MgFLM9tBiEznBphVUTEyGyx6RxBHray+7fl9TIHHKTMw1by6NZsj1BoSNF84WOaSOYg1lXl80OPY5BFU7pE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0902068D07; Fri,  5 Apr 2024 19:00:43 +0200 (CEST)
+Date: Fri, 5 Apr 2024 19:00:42 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, chandanbabu@kernel.org,
+	david@fromorbit.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix error returns from xfs_bmapi_write
+Message-ID: <20240405170042.GA15760@lst.de>
+References: <20240405051929.191633-1-hch@lst.de> <20240405160742.GB6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240403125949.33676-1-mngyadam@amazon.com> <20240403181834.GA6414@frogsfrogsfrogs>
- <CAOQ4uxjFxVXga5tmJ0YvQ-rQdRhoG89r5yzwh7NAjLQTNKDQFw@mail.gmail.com>
- <lrkyqh6ghcwuq.fsf@dev-dsk-mngyadam-1c-a2602c62.eu-west-1.amazon.com>
- <2024040512-selected-prognosis-88a0@gregkh> <CAOQ4uxg32LW0mmH=j9f6yoFOPOAVDaeJ2bLqz=yQ-LJOxWRiBg@mail.gmail.com>
- <lrkyq5xwwcbcm.fsf@dev-dsk-mngyadam-1c-a2602c62.eu-west-1.amazon.com> <CAOQ4uxjqdi=ARyGirFqiBQAwmvcotZ=nOV7xdw8ieyfD4_P4bw@mail.gmail.com>
-In-Reply-To: <CAOQ4uxjqdi=ARyGirFqiBQAwmvcotZ=nOV7xdw8ieyfD4_P4bw@mail.gmail.com>
-From: Leah Rumancik <leah.rumancik@gmail.com>
-Date: Fri, 5 Apr 2024 09:53:50 -0700
-Message-ID: <CACzhbgT8aeY9j2mqeoSBZJ_XeREyhYw3+jfXUoVGQ1OB36S7zA@mail.gmail.com>
-Subject: Re: [PATCH 6.1 0/6] backport xfs fix patches reported by xfs/179/270/557/606
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Mahmoud Adam <mngyadam@amazon.com>, "Theodore Ts'o" <tytso@mit.edu>, 
-	"Darrick J. Wong" <djwong@kernel.org>, Leah Rumancik <lrumancik@google.com>, 
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240405160742.GB6390@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hi!
+On Fri, Apr 05, 2024 at 09:07:42AM -0700, Darrick J. Wong wrote:
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -321,14 +321,6 @@ xfs_iomap_write_direct(
+> >  	if (error)
+> >  		goto out_unlock;
+> >  
+> > -	/*
+> > -	 * Copy any maps to caller's array and return any error.
+> > -	 */
+> > -	if (nimaps == 0) {
+> > -		error = -ENOSPC;
+> > -		goto out_unlock;
+> > -	}
+> 
+> Can xfs_bmapi_write return ENOSR here such that it leaks out to
+> userspace?
 
-I'm happy to run some tests for this. I have a set currently in
-progress. Can do this set next and probably have out in a week or two
-if that timeline works for you.
+It shouldn't because we invalidated all pages before, although I guess
+if we race badly enough with page_mkwrite new a new delalloc region
+could have been created and merged with one before the write and then if
+the file system was fragmented to death we could hit the case where
+we hit ENOSR now (and the wrong ENOSPC before).
 
-- Leah
+That being said handling the error everywhere doesn't really scale.
+I've actually looked into not converting the entire delalloc extent
+(which btw is behavior that goes back to the initial commit of delalloc
+support in XFS), but that quickly ran into asserts in the low-level
+xfs_bmap.c.  I plan to get back into it because it feels like the
+right thing to do outside of the buffered writeback code, and whatever
+lingering problem I found there needs attention.  But for now I'd
+rather keep this fix as minimally invasive as it gets.
 
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -430,13 +430,6 @@ xfs_reflink_fill_cow_hole(
+> >  	if (error)
+> >  		return error;
+> >  
+> > -	/*
+> > -	 * Allocation succeeded but the requested range was not even partially
+> > -	 * satisfied?  Bail out!
+> > -	 */
+> > -	if (nimaps == 0)
+> > -		return -ENOSPC;
+> 
+> Hmm.  xfs_find_trim_cow_extent returns with @found==false if a delalloc
+> reservation appeared in the cow fork while we weren't holding the ILOCK.
+> So shouldn't this xfs_bmapi_write call also handle ENOSR?
 
-On Fri, Apr 5, 2024 at 7:40=E2=80=AFAM Amir Goldstein <amir73il@gmail.com> =
-wrote:
->
-> On Fri, Apr 5, 2024 at 2:12=E2=80=AFPM Mahmoud Adam <mngyadam@amazon.com>=
- wrote:
-> >
-> >
-> > Dropping stable mailing list to avoid spamming the thread
->
-> Adding Chandan and xfs list.
->
-> > Amir Goldstein <amir73il@gmail.com> writes:
-> >
-> > > On Fri, Apr 5, 2024 at 12:27=E2=80=AFPM Greg KH <gregkh@linuxfoundati=
-on.org> wrote:
-> > >>
-> > >> On Thu, Apr 04, 2024 at 11:15:25AM +0200, Mahmoud Adam wrote:
-> > >> > Amir Goldstein <amir73il@gmail.com> writes:
-> > >> >
-> > >> > > On Wed, Apr 3, 2024 at 9:18=E2=80=AFPM Darrick J. Wong <djwong@k=
-ernel.org> wrote:
-> > >> > >> To the group: Who's the appropriate person to handle these?
-> > >> > >>
-> > >> > >> Mahmoud: If the answer to the above is "???" or silence, would =
-you be
-> > >> > >> willing to take on stable testing and maintenance?
-> > >> >
-> > >> > Probably there is an answer now :). But Yes, I'm okay with doing t=
-hat,
-> > >> > Xfstests is already part for our nightly 6.1 testing.
-> > >
-> > > Let's wait for Leah to chime in and then decide.
-> > > Leah's test coverage is larger than the tests that Mahmoud ran.
-> > >
-> >
-> > For curiosity, What kind of larger coverage used?
->
-> If you only run 'xfs/quick' that is a small part of the tests.
-> generic/quick are not a bit least important, but generally speaking
-> several rounds of -g auto is the standard for regression testing.
->
-> kdevops runs these 7 xfs configurations by default:
-> https://github.com/linux-kdevops/kdevops/blob/main/workflows/fstests/xfs/=
-Kconfig#L763
->
-> but every tester can customize the configurations.
-> Leah is running gce-xfstests with some other set of configurations.
->
-> Thanks,
-> Amir.
->
+Probably.  Incremental patch, though.
+
+> > -		/*
+> > -		 * Allocation succeeded but the requested range was not even
+> > -		 * partially satisfied?  Bail out!
+> > -		 */
+> > -		if (nimaps == 0)
+> > -			return -ENOSPC;
+> 
+> This xfs_bmapi_write call converts delalloc reservations to unwritten
+> mappings, which means that should catch ENOSR and just run around the
+> loop again, right?
+
+Probably..
+
