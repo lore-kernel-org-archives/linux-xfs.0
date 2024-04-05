@@ -1,130 +1,174 @@
-Received: from mail-yb1-f202.google.com (mail-yb1-f202.google.com [209.85.219.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F970172BA4
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 19:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14FB174EF6
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 22:22:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712346750; cv=none; b=PFNSxsxNRMpqEElTgmmS6OAC+Jq4p5nNK+TUjGjYw/60WieC2HZ7rofJChqZHFDQzpfbZ9l3hW1KIxzBL00VImLvWE6tOoxcTIVmnBQiyVVg/zNrKCrGUp4EAv54H4ggdOpQTqJJbzYd8oqOJME4ydP4UVV4/+l6uUePVQr5YeM=
+	t=1712355741; cv=none; b=ldZgmx5f1BEbtNAxs2dk0vgKVchif8zUc6lyy0uJbLBOfOXw9rUolATKXHa0vMx+MCvdfTxJ/zR7Rr41fiD/Ci2w8I7HI+ITzxBjiXgQ+wLFdEUlqjwzvJ3F5ogUDMKqhadZTkjSp407MxVTgknOiJVv8foTxMiSccI2Um+hcpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712346750; c=relaxed/simple;
-	bh=vYvlobC0IDZBVBOa7YOXs1X5Fi3hYHEaAkBcmMYioy0=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=jmK/A+zbYsPXgw5Ydhspf81NqOPKNaAFYbKU9Tdpq1gesPcLY8jLpIlB5/MrgWP4W00Acho94hyWPmXY4+NHhnxTMAtLREkOo3qB10kS+eBYNRcJ/dkmBDrx3Xu25A81T02Phis8/HRN5SFpx+tiR1BhkURFIkXHS480RVCR5+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=wiV/V0Aq; arc=none smtp.client-ip=209.85.219.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com
+	s=arc-20240116; t=1712355741; c=relaxed/simple;
+	bh=C3c8/EqeUmfqbwGIriYMFtJaO0XaFVxVfL4OfFTtnCo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=G8lhTocGX7qDONiOFXP2vEpdq2wl7PpV3dWRV8NLFt4EFouYW2xsT88TSXDlXtG6DiDRn5ZKQAa5Hy20P1bJONtZV0ZbyZitYO7lgWBu56RObt9CkE9npxy2z/I90FvEXluJTREtSuPlBz3VSuVZgHLTrtwEnuOgvU9SYf3/ZQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hYQ+iDBP; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="wiV/V0Aq"
-Received: by mail-yb1-f202.google.com with SMTP id 3f1490d57ef6-dcdc3db67f0so4215783276.1
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Apr 2024 12:52:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1712346748; x=1712951548; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=BLLJ3cI5n31IjZX+orm1PoAy1NOT9LFeskEoaayxLEw=;
-        b=wiV/V0AqKJvZ5tfzZe0+mA5svkjycZIJqbxyDR+9yD3xgz0Zax0grKHLJQP90rrOeo
-         Uob5ocw5up39cjmw3VpkaKDnIJhcwhDJb5sgbPKV95ul6aSqIRw26gxcNJDpnvl0KrsW
-         JeQu1R9KXAUy5qCZj/m6RnyaHvErzNYx9TmzYJidMHlWWn5fcQtiu8e35lijJs8DuQn0
-         vu8ZuVNExVFLtokf73UPPyJtAX8mASOQENgEj079KST8Ac65XcGvGnQftAHe4p9VWk+r
-         LT0+ev+/FNjt5CHwscryvKQ03hhA9dHA9AP+g5KYZ2fDFfLmDbzhFDrTbqtaONGoxqf+
-         D6Mg==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hYQ+iDBP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1712355738;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=flb3Hgo6KKlOvZKW6EtqxNKNXHh6F2bGM0rHWpVw7DU=;
+	b=hYQ+iDBP0d+eMCVBYyOhqG0WTmlZQtE2ol8u3X5ez1nNPE8G91u8/2pEVYuM7C45OAzbez
+	VPgd4ko4YgMU79j4w1AKcd+uRVnxNjJdmalC2q9fjPuaXa51SmotzOq/dJrhjN6w8LqNrO
+	9rJ0yInClUTEGogzrcgOKleeJE2bQoo=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-279-sWq7RAjxPBGsH-QKdlujKA-1; Fri, 05 Apr 2024 18:22:15 -0400
+X-MC-Unique: sWq7RAjxPBGsH-QKdlujKA-1
+Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-56c1b105949so2315872a12.3
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Apr 2024 15:22:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712346748; x=1712951548;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=BLLJ3cI5n31IjZX+orm1PoAy1NOT9LFeskEoaayxLEw=;
-        b=iA+l+QYowUIAH6noLoefQ3t5eThtYj3BqfIq6BpnfcfIPHB1AiYAyUhQOX3PxHabyJ
-         qB2aI0+H2XNsgRMrSeLoypOlVlv/e47hHUygt/s11bTPLfnCa8Q8MvXOV+JJvqvURd3T
-         cP8GQyT2wF03KioWLZRlwCLRNn45w2FaQ9c+tFTtrQMuylIGRmYWIotAtnFE+72Jd+/m
-         9gJB7T/dIEG/VpH3pKxYBU2xOhPU5h+q26wx1Xx+lyUoMxZBRamvAWqHZkz2KM9LzmId
-         3GbPmYxA+wcIZou4f8KmHzqe0I6TKSDtL0xM8ee4tLperh+iKxuSr8JN/Sw8NROSfBCe
-         ajyA==
-X-Gm-Message-State: AOJu0YwxbY1HMgiilGCXrCjVOjgiEPsHXm9rTNT32yebIN8tCzR/Jie6
-	v+oAIe03WE9QekbY9YrOx6/FspYA+KBqGOEA7Tkgn0JSfjZ/Z/nYJPkXxmBbbrTYOFLYaCnQFGP
-	eDEeNQSZw1+yL+IdmeVYthQ==
-X-Google-Smtp-Source: AGHT+IFrf+0Q+RKxYR88LmacrwQBohGh6afFQV57l8KEQEbm00Iur/rM9hcf7VoWKLuIVrPhKmQ6d0cvQBc2OXcndg==
-X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:6902:2b8e:b0:dd9:2782:d1c6 with
- SMTP id fj14-20020a0569022b8e00b00dd92782d1c6mr831468ybb.1.1712346748349;
- Fri, 05 Apr 2024 12:52:28 -0700 (PDT)
-Date: Fri, 05 Apr 2024 19:52:27 +0000
+        d=1e100.net; s=20230601; t=1712355734; x=1712960534;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=flb3Hgo6KKlOvZKW6EtqxNKNXHh6F2bGM0rHWpVw7DU=;
+        b=k2Z0oWDIyTg6NEEiO+NkKMJl22Eq/tvlDVf5KB27Tc+zFcTsJbW26sCAX1LbKt0hEe
+         3pvfypvXWxxV8dzACCl7NzJ+gf5TrGZsnr3bQ9YGXxNEkKKqH+V0+CiRs9SAF6onHdEm
+         EJs6Ifg4iDQt0mxeNj62Q4J1RlyXrcQT6GggXX+FNtdRwH+5/loIEw1lTbCEpSHwW/Tr
+         n1v1SGWW7ObVN4vr0K1Y1IHIJSuUheu4B4eIXQYMztTsgNZONkAFrQ5HTbcZlLdYCKZJ
+         CbsV2PMGlwsbm/yjFNvq5joK3MtIrfak6lmTQi96kFqBK4Lmbl+BV5THdm/pZQ29eoAA
+         Mp6Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXYkutf0RuEvmXXQSzJupurViq/7P0+JCcCzEi5EbvJ8XPiSodXV9rfEsUjlOa4NUPqbiC2uglhfjpc7V6b6mWDB68vJxNB09fV
+X-Gm-Message-State: AOJu0Yx2Vn4dXZbvnMiC5OKyVdhyOTb1+3ENlmUHwwO1vMkKrrDyFZ5/
+	sO5SYgKA79TSvk4nurJGnMel9ZntENSj69UxjgZGsMpwybMtQjfzIjHDxRjrXNo3CH+Bv661Utu
+	akYS/yCX4xU/YHcTdzmaBp60g2Qqy/RU4XSe0tpmCvy4mHQAYrb0BqlJI
+X-Received: by 2002:a50:9fce:0:b0:56b:a077:2eee with SMTP id c72-20020a509fce000000b0056ba0772eeemr1842410edf.4.1712355734055;
+        Fri, 05 Apr 2024 15:22:14 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGCxtMSXOienxC9b8zsqXGQAnGXbeCh9mOE4zI4LHQLZ1567C7uE5CANSZ0EEd9+XkYxChYnA==
+X-Received: by 2002:a50:9fce:0:b0:56b:a077:2eee with SMTP id c72-20020a509fce000000b0056ba0772eeemr1842402edf.4.1712355733439;
+        Fri, 05 Apr 2024 15:22:13 -0700 (PDT)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id b9-20020aa7cd09000000b0056c0d96e099sm1198887edw.89.2024.04.05.15.22.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Apr 2024 15:22:13 -0700 (PDT)
+Date: Sat, 6 Apr 2024 00:22:12 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: david@fromorbit.com, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, chandan.babu@oracle.com
+Subject: Re: [PATCH v2] xfs: allow cross-linking special files without
+ project quota
+Message-ID: <whjaeatubnlc5hrawjmfcksnnth2nse5en4da4bpbfr56lwwrl@53c7v4zlrqrv>
+References: <20240314170700.352845-3-aalbersh@redhat.com>
+ <20240315024826.GA1927156@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAHpWEGYC/x3MQQ5AMBBA0avIrE1SVYKriAU1mESq6TRCxN01l
- m/x/wNCgUmgyx4IdLLw4RKKPAO7jW4l5DkZtNJGGVWhxOCsv/FaBMXvHAsctTWqmdrS2BpS6AM tfP3TfnjfDwka6btkAAAA
-X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1712346747; l=2056;
- i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=vYvlobC0IDZBVBOa7YOXs1X5Fi3hYHEaAkBcmMYioy0=; b=4rabEFihQGgrT9i4tCWotZawQeByWYwd6mONPL4Qi8FFBEQ0cnToIfpharV2nq/9OKdtArjxD
- vbgQj4qA8poBnnKHzrz0nWkPWkSKokPN2egccLZ+4bP6npPrh+gfvxl
-X-Mailer: b4 0.12.3
-Message-ID: <20240405-strncpy-xfs-split1-v1-1-3e3df465adb9@google.com>
-Subject: [PATCH] xfs: replace deprecated strncpy with strscpy_pad
-From: Justin Stitt <justinstitt@google.com>
-To: Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-hardening@vger.kernel.org, Justin Stitt <justinstitt@google.com>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240315024826.GA1927156@frogsfrogsfrogs>
 
-strncpy() is deprecated for use on NUL-terminated destination strings
-[1] and as such we should prefer more robust and less ambiguous string
-interfaces.
+On 2024-03-14 19:48:26, Darrick J. Wong wrote:
+> On Thu, Mar 14, 2024 at 06:07:02PM +0100, Andrey Albershteyn wrote:
+> > There's an issue that if special files is created before quota
+> > project is enabled, then it's not possible to link this file. This
+> > works fine for normal files. This happens because xfs_quota skips
+> > special files (no ioctls to set necessary flags). The check for
+> > having the same project ID for source and destination then fails as
+> > source file doesn't have any ID.
+> > 
+> > mkfs.xfs -f /dev/sda
+> > mount -o prjquota /dev/sda /mnt/test
+> > 
+> > mkdir /mnt/test/foo
+> > mkfifo /mnt/test/foo/fifo1
+> > 
+> > xfs_quota -xc "project -sp /mnt/test/foo 9" /mnt/test
+> > > Setting up project 9 (path /mnt/test/foo)...
+> > > xfs_quota: skipping special file /mnt/test/foo/fifo1
+> > > Processed 1 (/etc/projects and cmdline) paths for project 9 with recursion depth infinite (-1).
+> > 
+> > ln /mnt/test/foo/fifo1 /mnt/test/foo/fifo1_link
+> > > ln: failed to create hard link '/mnt/test/testdir/fifo1_link' => '/mnt/test/testdir/fifo1': Invalid cross-device link
+> 
+> Aha.  So hardlinking special files within a directory subtree that all
+> have the same nonzero project quota ID fails if that special file
+> happened to have been created before the subtree was assigned that pqid.
+> And there's nothing we can do about that, because there's no way to call
+> XFS_IOC_SETFSXATTR on a special file because opening those gets you a
+> different inode from the special block/fifo/chardev filesystem...
+> 
+> > mkfifo /mnt/test/foo/fifo2
+> > ln /mnt/test/foo/fifo2 /mnt/test/foo/fifo2_link
+> > 
+> > Fix this by allowing linking of special files to the project quota
+> > if special files doesn't have any ID set (ID = 0).
+> 
+> ...and that's the workaround for this situation.  The project quota
+> accounting here will be weird because there will be (more) files in a
+> directory subtree than is reported by xfs_quota, but the subtree was
+> already messed up in that manner.
+> 
+> Question: Should we have a XFS_IOC_SETFSXATTRAT where we can pass in
+> relative directory paths and actually query/update special files?
 
-The current code has taken care of NUL-termination by memset()'ing
-@label. This is followed by a strncpy() to perform the string copy.
+After some more thinking/looking into the code this is probably the
+only way to make it work the same for special files. Also, I've
+noticed that this workaround can be applied to xfs_rename then.
 
-Instead, use strscpy_pad() to get both 1) NUL-termination and 2)
-NUL-padding which is needed as this is copied out to userspace.
+So, I will start with implementing XFS_IOC_SETFSXATTRAT
 
-Note that this patch uses the new 2-argument version of strscpy_pad
-introduced in Commit e6584c3964f2f ("string: Allow 2-argument
-strscpy()").
+-- 
+- Andrey
 
-Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-Link: https://github.com/KSPP/linux/issues/90
-Cc: linux-hardening@vger.kernel.org
-
-Signed-off-by: Justin Stitt <justinstitt@google.com>
----
-Split from https://lore.kernel.org/all/20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com/
-with feedback from Christoph H.
----
- fs/xfs/xfs_ioctl.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d0e2cec6210d..a1156a8b1e15 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1750,15 +1750,14 @@ xfs_ioc_getlabel(
- 	char			__user *user_label)
- {
- 	struct xfs_sb		*sbp = &mp->m_sb;
-+	/* 1 larger than sb_fname, for a trailing NUL char */
- 	char			label[XFSLABEL_MAX + 1];
- 
- 	/* Paranoia */
- 	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
- 
--	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
--	memset(label, 0, sizeof(label));
- 	spin_lock(&mp->m_sb_lock);
--	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
-+	strscpy_pad(label, sbp->sb_fname);
- 	spin_unlock(&mp->m_sb_lock);
- 
- 	if (copy_to_user(user_label, label, sizeof(label)))
-
----
-base-commit: c85af715cac0a951eea97393378e84bb49384734
-change-id: 20240405-strncpy-xfs-split1-a2c408b934c6
-
-Best regards,
---
-Justin Stitt <justinstitt@google.com>
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> --D
+> 
+> > ---
+> >  fs/xfs/xfs_inode.c | 15 +++++++++++++--
+> >  1 file changed, 13 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 1fd94958aa97..b7be19be0132 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -1240,8 +1240,19 @@ xfs_link(
+> >  	 */
+> >  	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
+> >  		     tdp->i_projid != sip->i_projid)) {
+> > -		error = -EXDEV;
+> > -		goto error_return;
+> > +		/*
+> > +		 * Project quota setup skips special files which can
+> > +		 * leave inodes in a PROJINHERIT directory without a
+> > +		 * project ID set. We need to allow links to be made
+> > +		 * to these "project-less" inodes because userspace
+> > +		 * expects them to succeed after project ID setup,
+> > +		 * but everything else should be rejected.
+> > +		 */
+> > +		if (!special_file(VFS_I(sip)->i_mode) ||
+> > +		    sip->i_projid != 0) {
+> > +			error = -EXDEV;
+> > +			goto error_return;
+> > +		}
+> >  	}
+> >  
+> >  	if (!resblks) {
+> > -- 
+> > 2.42.0
+> > 
+> > 
+> 
 
