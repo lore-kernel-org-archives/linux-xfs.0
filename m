@@ -1,43 +1,41 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB1E41C68
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 14:54:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74D2316F27D
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 15:31:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712328870; cv=none; b=shzUk8V0v/0UkiGKb9C1IKPnWikhCRZL8eOfSYtPLYwXi0VhGEg2qpk/wrPgEt9mwhrkwmNWbGr3zXio6eJTFJDp59LAqMFU8DbSo9P2XKLWRfylro1U/SXVWFDYVV9TPmrDgIF28cGTGiSs0nYBWZ3VkAPHOowhAjEUMLGQvIY=
+	t=1712331115; cv=none; b=Q8nfLEAKRUswj0WfVT5C+/1fbAxEAHZIw7j7jd5bgIixbKYHXMNUEUCj7JH9KXUWTabYDzmEEJeBR2ivPobcBHo74ChQqsyM6FNSPaIjjHDKUoZ8xTk6RkjDgx59MDWVUkvYJoje+NU6MDuSn+w9EZdHUfWttTalhoPs3vgCgeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712328870; c=relaxed/simple;
-	bh=0JrYLRitvHSFTX3KWYZj73N6ctvMvcXNCwFwlGE7vp0=;
+	s=arc-20240116; t=1712331115; c=relaxed/simple;
+	bh=PQIjzd3vRv9Q2V3T0o3/H/zYVz2SWxHh6nnrhSaw0ME=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fUxjyfxbl3Odp2l4Rcu/CjhtxbcDzDCld6ba8Y93ugl9rKHPViSL5/HmgOFmx6jmG5nTEDkTo+1fgKdFc+VurgP59mihpOwW3vLxsnfU5XS3+PbEakIBWuP+vCoIJPg9m5PwCtKVnIj3+Ro8c5MQHKnFDWPuTmhxPSGQLGngnro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=c2WX5rHN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=QlH6JHUSo0SAeJWFF1h9pSFIXzp7a7a3T8Ge2ASM/mQvK1MH02OWXPwT83MQpZ1F/m92XrDaEC5kEewkXko6rVMVuNvGzeQGrF9sEfl90LL7hadRALWpb31AYnI9d1A409aPJMC09Quw4bBv2/ZM6CUBUXdaiqzypBeZboDgWmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qx0BW3Gq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c2WX5rHN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=P4UkeEpVktKSzVTG69kHhT5IIKTYWY790GKmz2Opq44=; b=c2WX5rHNLBbfg7bT50aFf6TpEf
-	VDykBnWaaYrN088QUuok+Nfa8h462klu/T4NGRDfHxIvVAwwqFTjaFFuxFEakQKb/C+MEwcppO1fe
-	VcjBlEKH31VOIlCRvCZf2hPUPqDV0LpaEDoU3G38Sj05XY4AmY77IHxNlBrCTEf5x0aW+p2OoLHwc
-	Uev3nJzLa6o7xMrcfS8ow9W1Tmds36VVDXjmEgvgM3tVFV0wgJPRNgW8fKYrg29rMQjgdG54+X6V4
-	A95FbvMsM0UgFwozSDb9mdghIdrSB15xTD/UJBB2T+ME/w2G09l9RP3G0H9/NAwMHLwgUhiCXL6C4
-	RGOG16aw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rskxW-00000007bIM-2J68;
-	Fri, 05 Apr 2024 14:54:26 +0000
-Date: Fri, 5 Apr 2024 07:54:26 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: fix an AGI lock acquisition ordering problem in
- xrep_dinode_findmode
-Message-ID: <ZhAQom2KGeUw8vpa@infradead.org>
-References: <171212150033.1535150.8307366470561747407.stgit@frogsfrogsfrogs>
- <171212151192.1535150.13198476701217286884.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qx0BW3Gq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06A25C433F1;
+	Fri,  5 Apr 2024 15:31:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712331115;
+	bh=PQIjzd3vRv9Q2V3T0o3/H/zYVz2SWxHh6nnrhSaw0ME=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qx0BW3Gq9DHwr5muJrKNwBPkjPiibG6ZpbDHbFg2oIiyPVJk6qaJ0Q4LBubdj08ug
+	 plO1w/5c3ID4RiZi2ZR3AzTQQVgCVyEIqXwk+3Vrnv3zm2PpLUuyv2R7PQZFbbNNCQ
+	 4FG9YANYfBVhonVo4riF2n6aGOQj8lZBNjfpSaC1FEEmRLMFiLPtDrDBQ9dzmCpcnk
+	 Mw0idYwEWYxMbb1v3nyDViEA80k9CaWad60OdqY7idWt3hlT1Vh8FpkQeFrYd6w0w/
+	 CBO5AtZIKqVoySmdeh77XmnuxkxkasnXDzZbhBrW9KXVYN4Jw6v2DfbV7IsQ25eRfx
+	 KJ2bNU6poZS+A==
+Date: Fri, 5 Apr 2024 08:31:54 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: remove the unused xfs_extent_busy_enomem trace
+ event
+Message-ID: <20240405153154.GY6390@frogsfrogsfrogs>
+References: <20240405060710.227096-1-hch@lst.de>
+ <20240405060710.227096-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,28 +44,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171212151192.1535150.13198476701217286884.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240405060710.227096-4-hch@lst.de>
 
-On Tue, Apr 02, 2024 at 10:18:31PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> While reviewing the next patch which fixes an ABBA deadlock between the
-> AGI and a directory ILOCK, someone asked a question about why we're
-> holding the AGI in the first place.  The reason for that is to quiesce
-> the inode structures for that AG while we do a repair.
-> 
-> I then realized that the xrep_dinode_findmode invokes xchk_iscan_iter,
-> which walks the inobts (and hence the AGIs) to find all the inodes.
-> This itself is also an ABBA vector, since the damaged inode could be in
-> AG 5, which we hold while we scan AG 0 for directories.  5 -> 0 is not
-> allowed.
-> 
-> To address this, modify the iscan to allow trylock of the AGI buffer
-> using the flags argument to xfs_ialloc_read_agi that the previous patch
-> added.
+On Fri, Apr 05, 2024 at 08:07:10AM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Well, I guess we need this as a quick fix, but any scheme based on
-trylock and return is just fundamentally broken.
+If only we got compiler warnings about unused tracepoints -- I've been
+wondering how many more of these are lurking.
 
-Same for the next one.
+Nonetheless, this looks good so
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/xfs_trace.h | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index aea97fc074f8de..62ef0888398b09 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1654,7 +1654,6 @@ DEFINE_EVENT(xfs_extent_busy_class, name, \
+>  		 xfs_agblock_t agbno, xfs_extlen_t len), \
+>  	TP_ARGS(mp, agno, agbno, len))
+>  DEFINE_BUSY_EVENT(xfs_extent_busy);
+> -DEFINE_BUSY_EVENT(xfs_extent_busy_enomem);
+>  DEFINE_BUSY_EVENT(xfs_extent_busy_force);
+>  DEFINE_BUSY_EVENT(xfs_extent_busy_reuse);
+>  DEFINE_BUSY_EVENT(xfs_extent_busy_clear);
+> -- 
+> 2.39.2
+> 
+> 
