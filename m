@@ -1,76 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F4AE546;
-	Sat,  6 Apr 2024 12:36:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 886013F9D4;
+	Sat,  6 Apr 2024 16:19:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712406969; cv=none; b=V8m7SJolcpF1qEiEH9U4kbUoNb3KsJgWw+Qjx5ohM6NFXiiqsIR+AmvN6P5i0MRza6tqEOweX4SbY9qYqYekqt7/j+Eq4D0likxT04RkS+bonZWycB6ZSMtjwuJ/i+nLQlsvABE3X49y+NonY2miS5iYg2BKzM6raclCKkcgTFc=
+	t=1712420345; cv=none; b=K7fFGznYDcv65Bz9xngUop8JK3BvPnBNDdjMvMV8KvYVehy8G+EIougsJIGzWBFlcviIqbOvmEMkGtsM3CJh2Us0Zfn5ptodhxEuKVVBWYWZUtYTRIgMIKzXs6tsONchUBd+Tkl4WAcWg1oi+uN7fGYqDMJs6uqkt0f9W8RBPnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712406969; c=relaxed/simple;
-	bh=cEYndfbvw9bPlpW+QT4N4+8WTIz9UEcA8coJzqYDKfI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Y6VOsX5TQI46Vv2fhAQGMQt7zu5bpUT2qIjJau4OJtD8MCVz7kYHTVdlc+0AN1N/Mp5JeDVJ1OjNNgXTZ23HbcxGpp9RflJbLA2Kfgs492j4eFC4jLlB5e6UpILbHdg4z591AGinEa+CA3+RiZIB8oIc0sP+rcPyAXH86VHAs5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vPzVL3DR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712420345; c=relaxed/simple;
+	bh=H/6btIUI69l3hqvbJuOXI9gKB0Wbv0bWGrQw5jtsO5Y=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=c3di55jXBeHmssdlHglGlbZzEECFxDc3L213bAkQbJYGTMefH2S5a1ekptj5STwKQ1Vp0XJ+N+6RwOZqymC7oWxRRZAMa+2h+RcuBkcOQSYCQ9dM6x98o2w7mwVQCDuuQs12UJR2kF+8Q/KIuO/QlvZfhF331ERvCFm+QLLuKRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p4wpZX/N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vPzVL3DR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E234C433C7;
-	Sat,  6 Apr 2024 12:36:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p4wpZX/N"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 18114C43394;
+	Sat,  6 Apr 2024 16:19:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712406968;
-	bh=cEYndfbvw9bPlpW+QT4N4+8WTIz9UEcA8coJzqYDKfI=;
-	h=From:To:Cc:Subject:Date:From;
-	b=vPzVL3DRtAe8wC38itNZGUVzP00ocl6DlXXRu0UJhUL8a+9cWOOvfhJiOSoukTUrf
-	 93xw7wEh1T22yOqh+iezeNLXLBTYnyXFLcBhlGSNcfokKZHsPR/3cAi0gOcNC97Edt
-	 dXs67mFHIpIj1nirJhXdSASj4DMOikW+P6we4xBa9ALi4Yf7VEFoQ7xk3Ixuy6kaQO
-	 DaLitrxTtEtL4I9UJ8DFBkw8p0Q2RF7s7/Ujp45KxeG+RwMor1n3ABdfvjpLPKVXp5
-	 AN1oZctr0Ut82NFHpxuhDyK0cwROaSKO//hwJgv1E/Xrs4CqKlCZZe2i7mObqkhhE3
-	 NYxkTmKLPFFAg==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: chandanbabu@kernel.org,aalbersh@redhat.com,djwong@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: bug fixes for 6.9
-Date: Sat, 06 Apr 2024 18:02:40 +0530
-Message-ID: <878r1q3byi.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1712420345;
+	bh=H/6btIUI69l3hqvbJuOXI9gKB0Wbv0bWGrQw5jtsO5Y=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=p4wpZX/NOE0Th4WqHf42mdKbFtDoRIkXLG4cX2K6ThjJsLTDS3fvpf/YY0tAueQzG
+	 woAl/kseUD5hBZVTd7KjdPNn600/d+dLbXwOloZmV5vB/ZVF3BFyPSj/+vS/XpEB2X
+	 DSyQ0gLPc8IYGXqhD60Q0ySoLG79QNKBOB3yYaaFdLMFpi87WFgWkAtuyKNt/lRDJm
+	 +p1BzDS6f3IrZ3sUCRhY0Zwnald3jqe/8YIE1cH68nJiEXHY6mvtzwTvRG0IdL585J
+	 8kBfnLmWdc4QBTIyRFItfJ9ssimGgPKCbWnf5Q8145/mU8N5ZlaQ77YKNOO7JE8SOo
+	 iQRoilzJKEMKg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0A55CD8A103;
+	Sat,  6 Apr 2024 16:19:05 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.9
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <878r1q3byi.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <878r1q3byi.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <878r1q3byi.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.9-fixes-2
+X-PR-Tracked-Commit-Id: e23d7e82b707d1d0a627e334fb46370e4f772c11
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 9520c192e853bad2a0029f5ce00fa7774408efad
+Message-Id: <171242034503.494.6533765764306092670.pr-tracker-bot@kernel.org>
+Date: Sat, 06 Apr 2024 16:19:05 +0000
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: torvalds@linux-foundation.org, chandanbabu@kernel.org, aalbersh@redhat.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Hi Linus,
+The pull request you sent on Sat, 06 Apr 2024 18:02:40 +0530:
 
-Please pull this branch which contains an XFS bug fix for 6.9-rc3. A brief
-summary of the bug fix is provided below.
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.9-fixes-2
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/9520c192e853bad2a0029f5ce00fa7774408efad
 
-The following changes since commit 39cd87c4eb2b893354f3b850f916353f2658ae6f:
+Thank you!
 
-  Linux 6.9-rc2 (2024-03-31 14:32:39 -0700)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.9-fixes-2
-
-for you to fetch changes up to e23d7e82b707d1d0a627e334fb46370e4f772c11:
-
-  xfs: allow cross-linking special files without project quota (2024-04-01 11:55:49 +0530)
-
-----------------------------------------------------------------
-Bug fixes for 6.9-rc3:
-
- * Allow creating new links to special files which were not associated with a
-   project quota.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Andrey Albershteyn (1):
-      xfs: allow cross-linking special files without project quota
-
- fs/xfs/xfs_inode.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
