@@ -1,174 +1,76 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14FB174EF6
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Apr 2024 22:22:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F4AE546;
+	Sat,  6 Apr 2024 12:36:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712355741; cv=none; b=ldZgmx5f1BEbtNAxs2dk0vgKVchif8zUc6lyy0uJbLBOfOXw9rUolATKXHa0vMx+MCvdfTxJ/zR7Rr41fiD/Ci2w8I7HI+ITzxBjiXgQ+wLFdEUlqjwzvJ3F5ogUDMKqhadZTkjSp407MxVTgknOiJVv8foTxMiSccI2Um+hcpg=
+	t=1712406969; cv=none; b=V8m7SJolcpF1qEiEH9U4kbUoNb3KsJgWw+Qjx5ohM6NFXiiqsIR+AmvN6P5i0MRza6tqEOweX4SbY9qYqYekqt7/j+Eq4D0likxT04RkS+bonZWycB6ZSMtjwuJ/i+nLQlsvABE3X49y+NonY2miS5iYg2BKzM6raclCKkcgTFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712355741; c=relaxed/simple;
-	bh=C3c8/EqeUmfqbwGIriYMFtJaO0XaFVxVfL4OfFTtnCo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G8lhTocGX7qDONiOFXP2vEpdq2wl7PpV3dWRV8NLFt4EFouYW2xsT88TSXDlXtG6DiDRn5ZKQAa5Hy20P1bJONtZV0ZbyZitYO7lgWBu56RObt9CkE9npxy2z/I90FvEXluJTREtSuPlBz3VSuVZgHLTrtwEnuOgvU9SYf3/ZQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hYQ+iDBP; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1712406969; c=relaxed/simple;
+	bh=cEYndfbvw9bPlpW+QT4N4+8WTIz9UEcA8coJzqYDKfI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Y6VOsX5TQI46Vv2fhAQGMQt7zu5bpUT2qIjJau4OJtD8MCVz7kYHTVdlc+0AN1N/Mp5JeDVJ1OjNNgXTZ23HbcxGpp9RflJbLA2Kfgs492j4eFC4jLlB5e6UpILbHdg4z591AGinEa+CA3+RiZIB8oIc0sP+rcPyAXH86VHAs5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vPzVL3DR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hYQ+iDBP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712355738;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=flb3Hgo6KKlOvZKW6EtqxNKNXHh6F2bGM0rHWpVw7DU=;
-	b=hYQ+iDBP0d+eMCVBYyOhqG0WTmlZQtE2ol8u3X5ez1nNPE8G91u8/2pEVYuM7C45OAzbez
-	VPgd4ko4YgMU79j4w1AKcd+uRVnxNjJdmalC2q9fjPuaXa51SmotzOq/dJrhjN6w8LqNrO
-	9rJ0yInClUTEGogzrcgOKleeJE2bQoo=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-279-sWq7RAjxPBGsH-QKdlujKA-1; Fri, 05 Apr 2024 18:22:15 -0400
-X-MC-Unique: sWq7RAjxPBGsH-QKdlujKA-1
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-56c1b105949so2315872a12.3
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Apr 2024 15:22:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712355734; x=1712960534;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=flb3Hgo6KKlOvZKW6EtqxNKNXHh6F2bGM0rHWpVw7DU=;
-        b=k2Z0oWDIyTg6NEEiO+NkKMJl22Eq/tvlDVf5KB27Tc+zFcTsJbW26sCAX1LbKt0hEe
-         3pvfypvXWxxV8dzACCl7NzJ+gf5TrGZsnr3bQ9YGXxNEkKKqH+V0+CiRs9SAF6onHdEm
-         EJs6Ifg4iDQt0mxeNj62Q4J1RlyXrcQT6GggXX+FNtdRwH+5/loIEw1lTbCEpSHwW/Tr
-         n1v1SGWW7ObVN4vr0K1Y1IHIJSuUheu4B4eIXQYMztTsgNZONkAFrQ5HTbcZlLdYCKZJ
-         CbsV2PMGlwsbm/yjFNvq5joK3MtIrfak6lmTQi96kFqBK4Lmbl+BV5THdm/pZQ29eoAA
-         Mp6Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXYkutf0RuEvmXXQSzJupurViq/7P0+JCcCzEi5EbvJ8XPiSodXV9rfEsUjlOa4NUPqbiC2uglhfjpc7V6b6mWDB68vJxNB09fV
-X-Gm-Message-State: AOJu0Yx2Vn4dXZbvnMiC5OKyVdhyOTb1+3ENlmUHwwO1vMkKrrDyFZ5/
-	sO5SYgKA79TSvk4nurJGnMel9ZntENSj69UxjgZGsMpwybMtQjfzIjHDxRjrXNo3CH+Bv661Utu
-	akYS/yCX4xU/YHcTdzmaBp60g2Qqy/RU4XSe0tpmCvy4mHQAYrb0BqlJI
-X-Received: by 2002:a50:9fce:0:b0:56b:a077:2eee with SMTP id c72-20020a509fce000000b0056ba0772eeemr1842410edf.4.1712355734055;
-        Fri, 05 Apr 2024 15:22:14 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGCxtMSXOienxC9b8zsqXGQAnGXbeCh9mOE4zI4LHQLZ1567C7uE5CANSZ0EEd9+XkYxChYnA==
-X-Received: by 2002:a50:9fce:0:b0:56b:a077:2eee with SMTP id c72-20020a509fce000000b0056ba0772eeemr1842402edf.4.1712355733439;
-        Fri, 05 Apr 2024 15:22:13 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id b9-20020aa7cd09000000b0056c0d96e099sm1198887edw.89.2024.04.05.15.22.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Apr 2024 15:22:13 -0700 (PDT)
-Date: Sat, 6 Apr 2024 00:22:12 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: david@fromorbit.com, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, chandan.babu@oracle.com
-Subject: Re: [PATCH v2] xfs: allow cross-linking special files without
- project quota
-Message-ID: <whjaeatubnlc5hrawjmfcksnnth2nse5en4da4bpbfr56lwwrl@53c7v4zlrqrv>
-References: <20240314170700.352845-3-aalbersh@redhat.com>
- <20240315024826.GA1927156@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vPzVL3DR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E234C433C7;
+	Sat,  6 Apr 2024 12:36:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712406968;
+	bh=cEYndfbvw9bPlpW+QT4N4+8WTIz9UEcA8coJzqYDKfI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=vPzVL3DRtAe8wC38itNZGUVzP00ocl6DlXXRu0UJhUL8a+9cWOOvfhJiOSoukTUrf
+	 93xw7wEh1T22yOqh+iezeNLXLBTYnyXFLcBhlGSNcfokKZHsPR/3cAi0gOcNC97Edt
+	 dXs67mFHIpIj1nirJhXdSASj4DMOikW+P6we4xBa9ALi4Yf7VEFoQ7xk3Ixuy6kaQO
+	 DaLitrxTtEtL4I9UJ8DFBkw8p0Q2RF7s7/Ujp45KxeG+RwMor1n3ABdfvjpLPKVXp5
+	 AN1oZctr0Ut82NFHpxuhDyK0cwROaSKO//hwJgv1E/Xrs4CqKlCZZe2i7mObqkhhE3
+	 NYxkTmKLPFFAg==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: chandanbabu@kernel.org,aalbersh@redhat.com,djwong@kernel.org,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: bug fixes for 6.9
+Date: Sat, 06 Apr 2024 18:02:40 +0530
+Message-ID: <878r1q3byi.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240315024826.GA1927156@frogsfrogsfrogs>
+Content-Type: text/plain
 
-On 2024-03-14 19:48:26, Darrick J. Wong wrote:
-> On Thu, Mar 14, 2024 at 06:07:02PM +0100, Andrey Albershteyn wrote:
-> > There's an issue that if special files is created before quota
-> > project is enabled, then it's not possible to link this file. This
-> > works fine for normal files. This happens because xfs_quota skips
-> > special files (no ioctls to set necessary flags). The check for
-> > having the same project ID for source and destination then fails as
-> > source file doesn't have any ID.
-> > 
-> > mkfs.xfs -f /dev/sda
-> > mount -o prjquota /dev/sda /mnt/test
-> > 
-> > mkdir /mnt/test/foo
-> > mkfifo /mnt/test/foo/fifo1
-> > 
-> > xfs_quota -xc "project -sp /mnt/test/foo 9" /mnt/test
-> > > Setting up project 9 (path /mnt/test/foo)...
-> > > xfs_quota: skipping special file /mnt/test/foo/fifo1
-> > > Processed 1 (/etc/projects and cmdline) paths for project 9 with recursion depth infinite (-1).
-> > 
-> > ln /mnt/test/foo/fifo1 /mnt/test/foo/fifo1_link
-> > > ln: failed to create hard link '/mnt/test/testdir/fifo1_link' => '/mnt/test/testdir/fifo1': Invalid cross-device link
-> 
-> Aha.  So hardlinking special files within a directory subtree that all
-> have the same nonzero project quota ID fails if that special file
-> happened to have been created before the subtree was assigned that pqid.
-> And there's nothing we can do about that, because there's no way to call
-> XFS_IOC_SETFSXATTR on a special file because opening those gets you a
-> different inode from the special block/fifo/chardev filesystem...
-> 
-> > mkfifo /mnt/test/foo/fifo2
-> > ln /mnt/test/foo/fifo2 /mnt/test/foo/fifo2_link
-> > 
-> > Fix this by allowing linking of special files to the project quota
-> > if special files doesn't have any ID set (ID = 0).
-> 
-> ...and that's the workaround for this situation.  The project quota
-> accounting here will be weird because there will be (more) files in a
-> directory subtree than is reported by xfs_quota, but the subtree was
-> already messed up in that manner.
-> 
-> Question: Should we have a XFS_IOC_SETFSXATTRAT where we can pass in
-> relative directory paths and actually query/update special files?
+Hi Linus,
 
-After some more thinking/looking into the code this is probably the
-only way to make it work the same for special files. Also, I've
-noticed that this workaround can be applied to xfs_rename then.
+Please pull this branch which contains an XFS bug fix for 6.9-rc3. A brief
+summary of the bug fix is provided below.
 
-So, I will start with implementing XFS_IOC_SETFSXATTRAT
+I did a test-merge with the main upstream branch as of a few minutes ago and
+didn't see any conflicts.  Please let me know if you encounter any problems.
 
--- 
-- Andrey
+The following changes since commit 39cd87c4eb2b893354f3b850f916353f2658ae6f:
 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
-> 
-> > ---
-> >  fs/xfs/xfs_inode.c | 15 +++++++++++++--
-> >  1 file changed, 13 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 1fd94958aa97..b7be19be0132 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1240,8 +1240,19 @@ xfs_link(
-> >  	 */
-> >  	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
-> >  		     tdp->i_projid != sip->i_projid)) {
-> > -		error = -EXDEV;
-> > -		goto error_return;
-> > +		/*
-> > +		 * Project quota setup skips special files which can
-> > +		 * leave inodes in a PROJINHERIT directory without a
-> > +		 * project ID set. We need to allow links to be made
-> > +		 * to these "project-less" inodes because userspace
-> > +		 * expects them to succeed after project ID setup,
-> > +		 * but everything else should be rejected.
-> > +		 */
-> > +		if (!special_file(VFS_I(sip)->i_mode) ||
-> > +		    sip->i_projid != 0) {
-> > +			error = -EXDEV;
-> > +			goto error_return;
-> > +		}
-> >  	}
-> >  
-> >  	if (!resblks) {
-> > -- 
-> > 2.42.0
-> > 
-> > 
-> 
+  Linux 6.9-rc2 (2024-03-31 14:32:39 -0700)
 
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.9-fixes-2
+
+for you to fetch changes up to e23d7e82b707d1d0a627e334fb46370e4f772c11:
+
+  xfs: allow cross-linking special files without project quota (2024-04-01 11:55:49 +0530)
+
+----------------------------------------------------------------
+Bug fixes for 6.9-rc3:
+
+ * Allow creating new links to special files which were not associated with a
+   project quota.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Andrey Albershteyn (1):
+      xfs: allow cross-linking special files without project quota
+
+ fs/xfs/xfs_inode.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
