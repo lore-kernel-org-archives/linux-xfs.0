@@ -1,68 +1,68 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6041A18C05
-	for <linux-xfs@vger.kernel.org>; Sun,  7 Apr 2024 22:34:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0CD44C85
+	for <linux-xfs@vger.kernel.org>; Sun,  7 Apr 2024 22:48:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712529250; cv=none; b=k2BhiRpdaRz2CzP+j8e1FY1caghRZiaxqIEFdlg2avdAwN3tqUDTJ+fxQN1u0pUYvoT4lnrgkhGz4RpQTntNdylQ7sbJIgJgCVMFsOaMB66Jx7EkwpbQW/192eF8tZODEpEPw/NqcDpHaLvE79B5AbCpG2mvidVjPsy1v+t3QcY=
+	t=1712530087; cv=none; b=i552RAq6BZRJmonThGYcqv7M0TqrW5B6YOr2N9b8TQCdpsXvrvlnW+IkE7dl3vFTtN1Izdv2LJ5rC3Rm7HM7LIE/rhwpJzf9JToV0AWkdNQDuk9PjmMmPHzstsE0X36XGp4LnNTxO8qtRHCiGW1e/ypOyP37Df/tPouCdJIAYvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712529250; c=relaxed/simple;
-	bh=xHph9YcnkY/Bioo1e1XB68YCDqE8lGqjOWc9hCcrfzk=;
+	s=arc-20240116; t=1712530087; c=relaxed/simple;
+	bh=MmT2p+rgTkwRkLjLCqlnbjLBBImSVpkZ7WgEo8iwvTI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qT0bj3QD8YPNivFOxnlC0foyTDOhhXzsphZkH0Y9PzSz2RISxKRM2/EVvi5JdWIWGWMUafzSkz0Sb31J+895aB2v5zwzlSSiN2PwPUphJQ4HWXwMI/vm16+9hlLtFRMn907YXcXbEmuNjfsZfO2oN3VQOITI/6ApsBoRJsrwPqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=0vnXcMUF; arc=none smtp.client-ip=209.85.210.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=ti5GkkRasOAnUOK7PTDaDt1nwoqKGXc+2I20mdwyUrPyKWiScrgB+nSnbCZrvAVY+Io3Njh1XuAj3MHANxFWlADSPMHNKiS2aa0LK8FHAHuGfTyXE+L28qahI8TbHUhKthZdKmrGuReFCcfdHCpANnnSz0OUbwIANBqG+mYR/1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=0r9725Zr; arc=none smtp.client-ip=209.85.210.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="0vnXcMUF"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6eced6fd98aso3403290b3a.0
-        for <linux-xfs@vger.kernel.org>; Sun, 07 Apr 2024 15:34:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="0r9725Zr"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6ed0938cd1dso1870525b3a.2
+        for <linux-xfs@vger.kernel.org>; Sun, 07 Apr 2024 15:48:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712529247; x=1713134047; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712530085; x=1713134885; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=a9zQimG6tRa7Ozw/O66lazkUCG1nGIDicAgziceKaiA=;
-        b=0vnXcMUFeb1J3buAF0aSUn0vBvZrM3wEwuk+IzFGt41v9TXnT/h/0hrSx3gKGtsgDd
-         2Do2J4Uqya4KlvRrBLHO7Ci9qSThhF/064hwkNKqTWpC8j/wxiO8TMrjWl/pPM2LPj8R
-         O3/6FWf/cyF3SbwUaaTYpr2VIMYo+4exwoFgOgYxizRIyLVoXZq0sqiwGEX6Zxf7nF1A
-         wr7fLRN8t7eWU5QdRMSrnbFzdm8h7D2Rv7H7/HpSWekFyJYAHZJZOHinx2yfhBfm2goo
-         bvF7zvvKwbg84kBwUV9FpLCJWII97KFbgny1fh2EnLamk7T6fKGtuKZOpnIDdlK2C+is
-         5XJQ==
+        bh=a9BilUh+84RbGa7/yOUSi5fj5KPvZwdaRGJ+3BKThsk=;
+        b=0r9725Zr0RKewXMSJeIvLBITDBh+2E+KeK80/1jLurcjwAQXwQjdsM5dsR5yHXrF9C
+         IunyZquUW7eMHpmqmFy7cF/0gWBddSHT5yk3aGMZuNItBs6vKolJx3s4IYXGhOcDwVS/
+         W9bOIv15aNH+6xeq3V3A9/25ihDiwWI/6KgokThAkXj2vzVtwX//H0YL25+EBdDe024g
+         RmjkMche8TQBSEW15gS7uc0bUR/GEoE79shV0QjxLbA0vIkq3EDY8ueerBb44sqt7x6D
+         0Nv23vtAYu4Fxy7OiAHFN7HleVWxYZtE49zZ5p7PTQPS8pj5y9ssesj6fTuYdlbVO9Vt
+         EM1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712529247; x=1713134047;
+        d=1e100.net; s=20230601; t=1712530085; x=1713134885;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=a9zQimG6tRa7Ozw/O66lazkUCG1nGIDicAgziceKaiA=;
-        b=hNr3x2XRhBdPlBFSejUxBmCsBS+cqhj7WPj5hrJZeFyWWjleqs1lThD4L99Ue6Ocm+
-         9NDZR0aIw46TltsF0EaelAJJbXEJtau/d75h1q/fwnHPZ9GtNzlD8A3RQWRM4LcalYBt
-         DEIwLnk4ruJowyqAQ65DXMkgVQCLfBugc5NzrChnKTSg2pmMINHRwWuSdZFzOEZFScVr
-         paNnWFOZGMZ85UTJJcbNwbyun7sFFoKevbx96Z/s7P+8Z/acEJ70byq4bp+vOLFzmugz
-         +A4VLzOtIcnrID9XoNdmaLSG575p6Ung8+pgrC/V6ZahdZShbaOjx1fFaWpGoETREsKB
-         h1DQ==
-X-Gm-Message-State: AOJu0YzY1rUTB1cE4p7nHZawvHlpoXYQOK8o8Rbe/ftnfVqauH0ZRqkr
-	YbppIV9cfLlbApsrMtABSBEL40VjHKkykXK9c6w40mytDhqKvE0D1aC2VRkhwJM=
-X-Google-Smtp-Source: AGHT+IEcLyPESVsaTzIm167pOYSUTztt2N8EXZdB23MLfvL7kAbLJbYH1tB0nuEw89xpgOMzC8VC4g==
-X-Received: by 2002:a05:6a00:23c3:b0:6ea:b69a:7c78 with SMTP id g3-20020a056a0023c300b006eab69a7c78mr10080801pfc.14.1712529247455;
-        Sun, 07 Apr 2024 15:34:07 -0700 (PDT)
+        bh=a9BilUh+84RbGa7/yOUSi5fj5KPvZwdaRGJ+3BKThsk=;
+        b=qWEV6y8ZvipQ5PVaI8aWghl1sVqdjO/owmpdpKS/7uqHmD49ErNFzyprcbcCVBI7T+
+         zx1IoeFcMBVTBcmjjVLOCcnm/GcLcEn6AWmFvYywHFg5A8YDYzrpL5d87B/kief9F5Q5
+         62Bh6MZkHjPD1xNqkUzGFP1SLUOfpENQ73J4IuDVIlmIM6g3TKWXLdwPSDKU+CWNV+V6
+         3CMyJX6TlO1WfZxnqiWngVruwXnWYjFoEQ/wmN3qORUFh57/+cnXKnsUbFMImLU1k4yt
+         aX4FtNj9M5bY6CvTQR5/uTHzHSNaZfyTVMqE8YZ3tMrpC2Fnv3I9fvD+kVx8QfbGD7Sp
+         t2AQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXWmR0E+bch8eOorhp4Hk4ckAj4im6hHs2I2eSmlQAkyIRtQRCglZTFEAzKU+KK/SDtQVLC4d0QKKJSV9GacldHU5OiUW6cBJxN
+X-Gm-Message-State: AOJu0Yw6tbRmIcgvG5hSE44bbTzvukkai5ZNcmXEWehwXLZI7SLFCkwy
+	wIHuzsRAhvKA2C5+Zw1TYcMCM9xcXcz2rlXdWtpVeUR214z0yOuXPbo7EedpFiI=
+X-Google-Smtp-Source: AGHT+IEFjksvzhlTQgY7V73g261U7EYhnqQD34RY3zp7vVyTjBV7uBJIG30v0WT/fh4fBIhU8ytwmg==
+X-Received: by 2002:a17:902:ce0c:b0:1e3:f6cb:4e7e with SMTP id k12-20020a170902ce0c00b001e3f6cb4e7emr3758824plg.42.1712530084836;
+        Sun, 07 Apr 2024 15:48:04 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id fb19-20020a056a002d9300b006ea8af2a613sm5088117pfb.208.2024.04.07.15.34.06
+        by smtp.gmail.com with ESMTPSA id jw9-20020a170903278900b001e259719a5fsm5464051plb.103.2024.04.07.15.48.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Apr 2024 15:34:06 -0700 (PDT)
+        Sun, 07 Apr 2024 15:48:04 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rtb5Q-007hXl-0V;
-	Mon, 08 Apr 2024 08:34:04 +1000
-Date: Mon, 8 Apr 2024 08:34:04 +1000
+	id 1rtbIw-007i8b-01;
+	Mon, 08 Apr 2024 08:48:02 +1000
+Date: Mon, 8 Apr 2024 08:48:01 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: fix an AGI lock acquisition ordering problem in
- xrep_dinode_findmode
-Message-ID: <ZhMfXA/1YyRDe869@dread.disaster.area>
-References: <171212150033.1535150.8307366470561747407.stgit@frogsfrogsfrogs>
- <171212151192.1535150.13198476701217286884.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: only clear log incompat flags at clean unmount
+Message-ID: <ZhMioUHDoF9QmI/D@dread.disaster.area>
+References: <171150379721.3216346.4387266050277204544.stgit@frogsfrogsfrogs>
+ <171150379743.3216346.12598577809015628376.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,139 +71,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171212151192.1535150.13198476701217286884.stgit@frogsfrogsfrogs>
+In-Reply-To: <171150379743.3216346.12598577809015628376.stgit@frogsfrogsfrogs>
 
-On Tue, Apr 02, 2024 at 10:18:31PM -0700, Darrick J. Wong wrote:
+On Tue, Mar 26, 2024 at 06:50:44PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> While reviewing the next patch which fixes an ABBA deadlock between the
-> AGI and a directory ILOCK, someone asked a question about why we're
-> holding the AGI in the first place.  The reason for that is to quiesce
-> the inode structures for that AG while we do a repair.
+> While reviewing the online fsck patchset, someone spied the
+> xfs_swapext_can_use_without_log_assistance function and wondered why we
+> go through this inverted-bitmask dance to avoid setting the
+> XFS_SB_FEAT_INCOMPAT_LOG_SWAPEXT feature.
 > 
-> I then realized that the xrep_dinode_findmode invokes xchk_iscan_iter,
-> which walks the inobts (and hence the AGIs) to find all the inodes.
-> This itself is also an ABBA vector, since the damaged inode could be in
-> AG 5, which we hold while we scan AG 0 for directories.  5 -> 0 is not
-> allowed.
+> (The same principles apply to the logged extended attribute update
+> feature bit in the since-merged LARP series.)
 > 
-> To address this, modify the iscan to allow trylock of the AGI buffer
-> using the flags argument to xfs_ialloc_read_agi that the previous patch
-> added.
+> The reason for this dance is that xfs_add_incompat_log_feature is an
+> expensive operation -- it forces the log, pushes the AIL, and then if
+> nobody's beaten us to it, sets the feature bit and issues a synchronous
+> write of the primary superblock.  That could be a one-time cost
+> amortized over the life of the filesystem, but the log quiesce and cover
+> operations call xfs_clear_incompat_log_features to remove feature bits
+> opportunistically.  On a moderately loaded filesystem this leads to us
+> cycling those bits on and off over and over, which hurts performance.
 > 
+> Why do we clear the log incompat bits?  Back in ~2020 I think Dave and I
+> had a conversation on IRC[2] about what the log incompat bits represent.
+> IIRC in that conversation we decided that the log incompat bits protect
+> unrecovered log items so that old kernels won't try to recover them and
+> barf.  Since a clean log has no protected log items, we could clear the
+> bits at cover/quiesce time.
+> 
+> As Dave Chinner pointed out in the thread, clearing log incompat bits at
+> unmount time has positive effects for golden root disk image generator
+> setups, since the generator could be running a newer kernel than what
+> gets written to the golden image -- if there are log incompat fields set
+> in the golden image that was generated by a newer kernel/OS image
+> builder then the provisioning host cannot mount the filesystem even
+> though the log is clean and recovery is unnecessary to mount the
+> filesystem.
+> 
+> Given that it's expensive to set log incompat bits, we really only want
+> to do that once per bit per mount.  Therefore, I propose that we only
+> clear log incompat bits as part of writing a clean unmount record.  Do
+> this by adding an operational state flag to the xfs mount that guards
+> whether or not the feature bit clearing can actually take place.
+> 
+> This eliminates the l_incompat_users rwsem that we use to protect a log
+> cleaning operation from clearing a feature bit that a frontend thread is
+> trying to set -- this lock adds another way to fail w.r.t. locking.  For
+> the swapext series, I shard that into multiple locks just to work around
+> the lockdep complaints, and that's fugly.
+> 
+> Link: https://lore.kernel.org/linux-xfs/20240131230043.GA6180@frogsfrogsfrogs/
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/scrub/inode_repair.c |    1 +
->  fs/xfs/scrub/iscan.c        |   36 +++++++++++++++++++++++++++++++++++-
->  fs/xfs/scrub/iscan.h        |   15 +++++++++++++++
->  fs/xfs/scrub/trace.h        |   10 ++++++++--
->  4 files changed, 59 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-> index eab380e95ef40..35da0193c919e 100644
-> --- a/fs/xfs/scrub/inode_repair.c
-> +++ b/fs/xfs/scrub/inode_repair.c
-> @@ -356,6 +356,7 @@ xrep_dinode_find_mode(
->  	 * so there's a real possibility that _iscan_iter can return EBUSY.
->  	 */
->  	xchk_iscan_start(sc, 5000, 100, &ri->ftype_iscan);
-> +	xchk_iscan_set_agi_trylock(&ri->ftype_iscan);
->  	ri->ftype_iscan.skip_ino = sc->sm->sm_ino;
->  	ri->alleged_ftype = XFS_DIR3_FT_UNKNOWN;
->  	while ((error = xchk_iscan_iter(&ri->ftype_iscan, &dp)) == 1) {
-> diff --git a/fs/xfs/scrub/iscan.c b/fs/xfs/scrub/iscan.c
-> index 66ba0fbd059e0..736ce7c9de6a8 100644
-> --- a/fs/xfs/scrub/iscan.c
-> +++ b/fs/xfs/scrub/iscan.c
-> @@ -243,6 +243,40 @@ xchk_iscan_finish(
->  	mutex_unlock(&iscan->lock);
->  }
->  
-> +/*
-> + * Grab the AGI to advance the inode scan.  Returns 0 if *agi_bpp is now set,
-> + * -ECANCELED if the live scan aborted, -EBUSY if the AGI could not be grabbed,
-> + * or the usual negative errno.
-> + */
-> +STATIC int
-> +xchk_iscan_read_agi(
-> +	struct xchk_iscan	*iscan,
-> +	struct xfs_perag	*pag,
-> +	struct xfs_buf		**agi_bpp)
-> +{
-> +	struct xfs_scrub	*sc = iscan->sc;
-> +	unsigned long		relax;
-> +	int			ret;
-> +
-> +	if (!xchk_iscan_agi_trylock(iscan))
-> +		return xfs_ialloc_read_agi(pag, sc->tp, 0, agi_bpp);
-> +
-> +	relax = msecs_to_jiffies(iscan->iget_retry_delay);
-> +	do {
-> +		ret = xfs_ialloc_read_agi(pag, sc->tp, XFS_IALLOC_FLAG_TRYLOCK,
-> +				agi_bpp);
+>  .../filesystems/xfs/xfs-online-fsck-design.rst     |    3 -
+>  fs/xfs/xfs_log.c                                   |   28 -------------
+>  fs/xfs/xfs_log.h                                   |    2 -
+>  fs/xfs/xfs_log_priv.h                              |    3 -
+>  fs/xfs/xfs_log_recover.c                           |   15 -------
+>  fs/xfs/xfs_mount.c                                 |    8 +++-
+>  fs/xfs/xfs_mount.h                                 |    6 ++-
+>  fs/xfs/xfs_xattr.c                                 |   42 +++-----------------
+>  8 files changed, 19 insertions(+), 88 deletions(-)
 
-Why is this using xfs_ialloc_read_agi() and not xfs_read_agi()?
-How do we get here without the perag AGI state not already
-initialised?
+Looks fine.
 
-i.e. if you just use xfs_read_agi(), all the code that has to plumb
-flags into xfs_ialloc_read_agi() goes away and this change because a
-lot less intrusive....
-
-> +		if (ret != -EAGAIN)
-> +			return ret;
-> +		if (!iscan->iget_timeout ||
-> +		    time_is_before_jiffies(iscan->__iget_deadline))
-> +			return -EBUSY;
-> +
-> +		trace_xchk_iscan_agi_retry_wait(iscan);
-> +	} while (!schedule_timeout_killable(relax) &&
-> +		 !xchk_iscan_aborted(iscan));
-> +	return -ECANCELED;
-> +}
-> +
->  /*
->   * Advance ino to the next inode that the inobt thinks is allocated, being
->   * careful to jump to the next AG if we've reached the right end of this AG's
-> @@ -281,7 +315,7 @@ xchk_iscan_advance(
->  		if (!pag)
->  			return -ECANCELED;
->  
-> -		ret = xfs_ialloc_read_agi(pag, sc->tp, 0, &agi_bp);
-> +		ret = xchk_iscan_read_agi(iscan, pag, &agi_bp);
->  		if (ret)
->  			goto out_pag;
->  
-> diff --git a/fs/xfs/scrub/iscan.h b/fs/xfs/scrub/iscan.h
-> index 71f657552dfac..c9da8f7721f66 100644
-> --- a/fs/xfs/scrub/iscan.h
-> +++ b/fs/xfs/scrub/iscan.h
-> @@ -59,6 +59,9 @@ struct xchk_iscan {
->  /* Set if the scan has been aborted due to some event in the fs. */
->  #define XCHK_ISCAN_OPSTATE_ABORTED	(1)
->  
-> +/* Use trylock to acquire the AGI */
-> +#define XCHK_ISCAN_OPSTATE_TRYLOCK_AGI	(2)
-> +
->  static inline bool
->  xchk_iscan_aborted(const struct xchk_iscan *iscan)
->  {
-> @@ -71,6 +74,18 @@ xchk_iscan_abort(struct xchk_iscan *iscan)
->  	set_bit(XCHK_ISCAN_OPSTATE_ABORTED, &iscan->__opstate);
->  }
->  
-> +static inline bool
-> +xchk_iscan_agi_trylock(const struct xchk_iscan *iscan)
-> +{
-> +	return test_bit(XCHK_ISCAN_OPSTATE_TRYLOCK_AGI, &iscan->__opstate);
-> +}
-
-Function does not actually do any locking, but the name implies it
-is actually doing a trylock operation. Perhaps
-xchk_iscan_agi_needs_trylock()?
-
--Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
