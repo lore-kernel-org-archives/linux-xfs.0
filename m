@@ -1,69 +1,70 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458272628D
-	for <linux-xfs@vger.kernel.org>; Sun,  7 Apr 2024 23:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCF133C082
+	for <linux-xfs@vger.kernel.org>; Sun,  7 Apr 2024 23:17:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712531255; cv=none; b=YzRkwOr/Mm42z+jU7OMkcxAtgZ3rWU79hKCLKvZkkQ1vyuAZ2SxZqcXFMMf1FDpre/1vZS24y9TerB5BdR+CglR8vbF1Lh0TufBWajlwIxwcfDRm4BoSXCvaw/mdLDkp4CTQFVml1tqgD3gfAUg87mecwGm7BFD/Kh/OXnPUafY=
+	t=1712531833; cv=none; b=VhK3Q4WT78Alucf8uENql0+0gkuu6VblaYQ5DzuS7mzy+xvF00WDpTTc4rM+vdZVAxKmk0gDgIVzs4T9Zdb8GVFYonisM+FwozABvrovi03TdtMUYDxMdl2gDpNJ4jvykmhNNj6VJSfQ6EVect1hvJWlGZEwYCO4Z6hRGr7IYls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712531255; c=relaxed/simple;
-	bh=ONGjKFAbP2KwL8tk+cWYx8n07qbkcNEh2mFLOF5mvag=;
+	s=arc-20240116; t=1712531833; c=relaxed/simple;
+	bh=pr4Q/C6Xf0R8fBp3csI7kr6Gq8u2CRZXQ7tvNLUFumI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qtgGmKxEBL4O0WIgKQxmTORJO1hb2IOFcLd5WlTJU6B99R4jaa7aLjB+OStyJBub7lNjtOfnk5YR0lRFaP4GiTY5vObiyERj/rUBxmuhcl27JH77pfAVBqZNSv0OMYCbRQ/2/1FjlsAxpSFso7lgYIz2f2bCBfAiPkcbKuJybyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Clndp4Uf; arc=none smtp.client-ip=209.85.210.170
+	 Content-Type:Content-Disposition:In-Reply-To; b=sO9oObmn72anNj1TYO7bvmuj0ztNMF+b5XE7ij1CQJjFnnJEYKRz24uFJ51WYaBpJybpZfec0nHQMXmsTG5yb9Z0x65IwRL0NHEzuSoK3EPxGuP+/X0MZO+NHF6QdlQ/D+GreSd4nvV76C1TCTHbVnserEiNbswcE3hWApKj9Vs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=CnSsDO55; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Clndp4Uf"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6ecf3f001c5so3121210b3a.1
-        for <linux-xfs@vger.kernel.org>; Sun, 07 Apr 2024 16:07:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CnSsDO55"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6ed2170d89fso398414b3a.1
+        for <linux-xfs@vger.kernel.org>; Sun, 07 Apr 2024 16:17:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712531253; x=1713136053; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712531831; x=1713136631; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wXL05i7JyxmKJkez86hUqR8lOvldxozW+o8Pbcsoq6U=;
-        b=Clndp4Ufd7EDq69ov8RvitMnM4/gn29qSipsJJo6tnn9xkFgq2np6kqaIlNy+FQAqY
-         Ie7Xh5FJ7zjO3NbBpp/nZzJJ+FhTb62Szciad6I56DSawyEJuEi5evO8i7+PD/gwHyqc
-         jlYdFMJDHSWUPHZlSbxq1/Lvg2baxoG4o4ZY2c82rxxFwtG4ssFTHdHSyet9aBU0kMGE
-         KjfG6QDmzPbFsDC3wMr1p6uwo1HOxWUEWEOtgM3I07kAyZLHExqhNSPzw3BEPGl/uBuj
-         zYtKOsbpChR7YnNlf9nUm5XITp2afFLbMRpvAwhuofXJDAG7HEW3SlInct8VAfSf1WCz
-         vpGw==
+        bh=Y0bYRg/l1GD52a9vnArKAmMdPQTp+H0DY3ahkf5b0bw=;
+        b=CnSsDO558mv8D3Bbzn1JDFwvfN8ATTOpUrdHKatCy4s4Q5JOU7Ju3FACReIFvNN5fd
+         BWfoGU2fMZmrbYG7YFwDmxhlXw7D8972aBGX+Xl6LEODJkVTk8INw3OYWxZGQSL0E/Fg
+         6jYImaC39GVv98V9Ib+xMu5woYkt+RwVLHipCSOBZ9hj15/PwidrueyJxBUiruJFCSYd
+         0ZlDp/mnHfTuUwMXQDRuxiy0W6ukSwJP/0a34+f6aF3h8hABr/q/z9k8qkqKnUZtYqAe
+         0Pj3XrMFMJR4fiPKb9dnaL9TvP13zi+jJ2ju5yfP+2+Rub8TUyMObAR5R1CwXhFbrIXQ
+         71jQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712531253; x=1713136053;
+        d=1e100.net; s=20230601; t=1712531831; x=1713136631;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wXL05i7JyxmKJkez86hUqR8lOvldxozW+o8Pbcsoq6U=;
-        b=du3VNBpScdGQl+CXSZj3lLk7sRuobtiqlU2tMORWxEllICClC3xdBt5HKMb9JhcsUv
-         0jhn/FD+xfHvV2Cndhl36gcIAKeqlrTMEsMj8rvlxOU/Qis6IHgztm6dO96IXLENAw6T
-         BIplU66wdyFmm1m2oL2GeGY2ZEcdmxqQUN1dhv/WiGgif8dNQsjFJfLAfbEAMIz2tisq
-         TgPjdeCNT/fgxhAiqUpy9aCCFtJiSfBH8PPwiluWJGCR/zaYMQjaVntSV7jV8u1OcQMk
-         1lmZb2C4C29UGoxscsQr/0IuSpaK+8ciyr8/G/5dywSLds/UrZdir6+8rJqSjPiqFkf2
-         LzRg==
-X-Forwarded-Encrypted: i=1; AJvYcCVetzMf8EXuWWWVeajFWMD2298wdynF9MS+wjBy9Occo1SHm+xLYtL77j4CJgBzbp8I10kLuvqCjPq4JhfXMYr7o3G3aPFjTYte
-X-Gm-Message-State: AOJu0Yz8lWQk37BWNFpPDqNZ5LLT9FBvIFppQRTRCneHU8Qgxvrn+/jU
-	43ZnSUBAu9MrLhODm9hQ14w3oR3ZTvtfcCgB9X/yNxi28nb40Q6YXZp3BGkTXEg=
-X-Google-Smtp-Source: AGHT+IHsSvc4wdwn+oxkQtRqcEQJowrMZfLjcXAmQqT7gaFiEeAos2k8drR5jW2CILt0ZNNJFIap1Q==
-X-Received: by 2002:a05:6a21:1506:b0:1a7:7ac1:a3ba with SMTP id nq6-20020a056a21150600b001a77ac1a3bamr618180pzb.53.1712531253353;
-        Sun, 07 Apr 2024 16:07:33 -0700 (PDT)
+        bh=Y0bYRg/l1GD52a9vnArKAmMdPQTp+H0DY3ahkf5b0bw=;
+        b=i9anM2gapwFjZI8Sr+1MqpMd7U0g+yc2lADAuo29luwVTzEwzOBwLRb4KDQ6zdJs6W
+         +kWUoL10awp17Ymg2Of+h0GdhRziSOILOTrIDQeWwU4MwpvGhV89ILZ+ewuR1j/otbFY
+         KtY/t4uv5+J3OdNARNhEmpd807dr430cs9Atk7hdwXZOTk1jm8BY8z5USvFR7MjmZ0vX
+         u1HxSJxU4lHQf+iQeOT1OWGB0It429FOzKz/bnYVGRHjoOh5VbL8AxtGAAOgH5NQ/7iU
+         ngM21iWzirOtyCNoePDxxPj7t2IJa1GTVlOpEMRtFgfCy+hA0npzHyCfSZeYeygfOoXK
+         Sbcg==
+X-Forwarded-Encrypted: i=1; AJvYcCV/7b0d4ljZeYlh7CC+c/pF55v/3xbUpmr5NRMeoofHQ1mERJ9qTwrT9j7I8cDMubCEu+YYIvujocVe4egzkBmsbUWLqJATK9Zh
+X-Gm-Message-State: AOJu0YwzStTZmc40x724jd4f7pmcXDl813TTnSNPvcu+96XLV8unPzEO
+	deiYwxo+XBF1coAj6wXv9sZE3hqZLV2vUYbMHXQsLg+ocRealmvZNfA/VYDw5ex87iioDVFpVDe
+	c
+X-Google-Smtp-Source: AGHT+IHS3UCEiiXgC4BYACNX1Fi1X271VS20zI2dzR763qP9wJI/HaLjviwi40StwKGORE2iinqRqQ==
+X-Received: by 2002:a17:902:f548:b0:1e2:bb09:6270 with SMTP id h8-20020a170902f54800b001e2bb096270mr9997511plf.28.1712531830984;
+        Sun, 07 Apr 2024 16:17:10 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id ei24-20020a17090ae55800b002a386a4d6b0sm4889235pjb.6.2024.04.07.16.07.32
+        by smtp.gmail.com with ESMTPSA id u4-20020a170902e80400b001e3c972c83bsm4810188plg.76.2024.04.07.16.17.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Apr 2024 16:07:32 -0700 (PDT)
+        Sun, 07 Apr 2024 16:17:10 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rtbbl-007jAi-0k;
-	Mon, 08 Apr 2024 09:07:29 +1000
-Date: Mon, 8 Apr 2024 09:07:29 +1000
+	id 1rtbl5-007jaO-3A;
+	Mon, 08 Apr 2024 09:17:08 +1000
+Date: Mon, 8 Apr 2024 09:17:07 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] xfs: hoist multi-fsb allocation unit detection to a
- helper
-Message-ID: <ZhMnMWaQueOm+0Td@dread.disaster.area>
-References: <171150380117.3216450.660937377362010507.stgit@frogsfrogsfrogs>
- <171150380216.3216450.3675851752965499332.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/15] xfs: create a log incompat flag for atomic file
+ mapping exchanges
+Message-ID: <ZhMpc58ZiQOPWBQE@dread.disaster.area>
+References: <171150380628.3216674.10385855831925961243.stgit@frogsfrogsfrogs>
+ <171150380715.3216674.13307875397061790548.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -72,42 +73,109 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171150380216.3216450.3675851752965499332.stgit@frogsfrogsfrogs>
+In-Reply-To: <171150380715.3216674.13307875397061790548.stgit@frogsfrogsfrogs>
 
-On Tue, Mar 26, 2024 at 06:52:18PM -0700, Darrick J. Wong wrote:
+On Tue, Mar 26, 2024 at 06:53:36PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Replace the open-coded logic to decide if a file has a multi-fsb
-> allocation unit to a helper to make the code easier to read.
+> Create a log incompat flag so that we only attempt to process file
+> mapping exchange log items if the filesystem supports it, and a geometry
+> flag to advertise support if it's present or could be present.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_bmap_util.c |    4 ++--
->  fs/xfs/xfs_inode.h     |    9 +++++++++
->  2 files changed, 11 insertions(+), 2 deletions(-)
+>  fs/xfs/libxfs/xfs_format.h |   13 +++++++++++++
+>  fs/xfs/libxfs/xfs_fs.h     |    3 +++
+>  fs/xfs/libxfs/xfs_sb.c     |    3 +++
+>  fs/xfs/xfs_exchrange.c     |   31 +++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_exchrange.h     |    2 ++
+>  5 files changed, 52 insertions(+)
 > 
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 19e11d1da6607..c17b5858fed62 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -542,7 +542,7 @@ xfs_can_free_eofblocks(
->  	 * forever.
->  	 */
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-> -	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
-> +	if (xfs_inode_has_bigallocunit(ip))
->  		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 2b2f9050fbfbb..753adde56a2d0 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -391,6 +391,12 @@ xfs_sb_has_incompat_feature(
+>  }
+>  
+>  #define XFS_SB_FEAT_INCOMPAT_LOG_XATTRS   (1 << 0)	/* Delayed Attributes */
+> +
+> +/*
+> + * Log contains file mapping exchange log intent items which are not otherwise
+> + * protected by an INCOMPAT/RO_COMPAT feature flag.
+> + */
+> +#define XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS (1 << 1)
+>  #define XFS_SB_FEAT_INCOMPAT_LOG_ALL \
+>  	(XFS_SB_FEAT_INCOMPAT_LOG_XATTRS)
+>  #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
+> @@ -423,6 +429,13 @@ static inline bool xfs_sb_version_haslogxattrs(struct xfs_sb *sbp)
+>  		 XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
+>  }
+>  
+> +static inline bool xfs_sb_version_haslogexchmaps(struct xfs_sb *sbp)
+> +{
+> +	return xfs_sb_is_v5(sbp) &&
+> +		(sbp->sb_features_log_incompat &
+> +		 XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS);
+> +}
+> +
+>  static inline bool
+>  xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+>  {
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 8a1e30cf4dc88..ea07fb7b89722 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -240,6 +240,9 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
+>  #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
+>  
+> +/* file range exchange available to userspace */
+> +#define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE	(1 << 24)
+> +
+>  /*
+>   * Minimum and maximum sizes need for growth checks.
+>   *
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index d991eec054368..c2d86faeee61b 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -26,6 +26,7 @@
+>  #include "xfs_health.h"
+>  #include "xfs_ag.h"
+>  #include "xfs_rtbitmap.h"
+> +#include "xfs_exchrange.h"
+>  
+>  /*
+>   * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+> @@ -1258,6 +1259,8 @@ xfs_fs_geometry(
+>  	}
+>  	if (xfs_has_large_extent_counts(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
+> +	if (xfs_exchrange_possible(mp))
+> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE;
+>  	geo->rtsectsize = sbp->sb_blocksize;
+>  	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
+>  
+> diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
+> index a575e26ae1a58..620cf1eb7464b 100644
+> --- a/fs/xfs/xfs_exchrange.c
+> +++ b/fs/xfs/xfs_exchrange.c
+> @@ -15,6 +15,37 @@
+>  #include "xfs_exchrange.h"
+>  #include <linux/fsnotify.h>
+>  
+> +/*
+> + * If the filesystem has relatively new features enabled, we're willing to
+> + * upgrade the filesystem to have the EXCHMAPS log incompat feature.
+> + * Technically we could do this with any V5 filesystem, but let's not deal
+> + * with really old kernels.
+> + */
 
-This makes no sense with the upcoming forced alignment changes to
-this code.
-
-That essentially brings "big alloc unit" to the data device based on
-extent size hints, and it will need to do different rounding
-calculations depending on whether it is a RT inode or not. Hence I
-don't think hiding the RT specific allocation/truncation setup like
-this is compatible with those changes - it will simply have to be
-undone before it can be reworked....
+Please document tnis in the commit message - this decision needs to
+be seen by anyone reading the commit history rather than the code...
 
 -Dave.
 -- 
