@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4A17BAEE;
-	Mon,  8 Apr 2024 13:32:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C73557BB07;
+	Mon,  8 Apr 2024 13:32:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712583176; cv=none; b=gQSmIMAVubjBUKT9GqSYF1XwriOA7D+5pXDLc9udny/JR5pOX7GbVU2ymFd30gsxeCwWCkT31ancK/LvlxldTfDYTMyJFlmhfHtsHg0Uxx0YztPc0QOWDzlR1Ja0m7smJ59dJ8eP8ihdiduccVVdQIbVi9ij9Rh8wOOa73fHmvc=
+	t=1712583180; cv=none; b=fjhzJNQ+ditllsTOrtjlbVw2jy35FBfFkEWdmHkpYFHGWni97MyqX/5lHDf3BawFi2Da34hBPXCPxjVif7agcZlVSkg9O9URP774/fSXOif7OgyMuxvKjlbKN8YCKiurxrx1fI1EPdlu/Epeth1sAQAL7o+qAIUQBxkcXs4JnwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712583176; c=relaxed/simple;
-	bh=t51xpbJsq1rRZ3gASRj5AMyJPYMbKYa7iPpcse60M0M=;
+	s=arc-20240116; t=1712583180; c=relaxed/simple;
+	bh=hGKSUlWC2holbLVM0LsYK6CcQxVa7Za76kksaoUxSxM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=b+zI2M472CZ06IJh+F/WOQl/D8EKTz1J3OAJV/BNF1i0nfekueldyzMJwVmGtMXriGmNC4G75LERoVuieqp91q/nKmVi1DnqsSgGoZwy6gWbKh3HyhYmrD/yy6EWCQ0U+39P8XNsEEeSSelxIB/SFJZWKdqMVf+Vn/BR2uZXi70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oBjt8pJf; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=jDOQT5C+tMODjLVzJg1nEFHpg5nNxvFrtC0tauUsJVDoSVgUw0k/9c8WdZn0gqUa6mw+z5xFJs0OR8itwUaY+rFDGIJBt8rEWb/jj7GDXmn+bgb96FAA0BCGZPBg6pOhVTvT5sQIShL0djHXMoE61LPcWiTHlO2ah7EOjpSKoOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=djPu+u57; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oBjt8pJf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="djPu+u57"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=qwU5aLGzrSuWoiJb7KyORZqjaJKV5qfAaVa2OrhE5GA=; b=oBjt8pJfbgCvyBVgq+bzE/w3UG
-	b3on1dv02qPfJe3Us2HvFEA4sSOBZpriaqS83onoGzMWtKB234ElGUhMhi3va6fnBH3tELrrldULP
-	YTQsZEALzL6YlygOuDLEdzoyetbPsWeBLEKuQy+dCWTHDueELe5pGbbBDoxKZbuT/2PM+93fVNxn9
-	oIJaA69BhAs+0GPreCsywNRhZDEJWbez2KnWAZ1tnswNVe0xUz6wWJ+Wy1UKDZEJln+ZOTiuVEB+r
-	tbp33wC+N2hRflQD7keGOXwiVPlowCp+ku6D2dVQgaoKxMdvyxeZKsESF25bmxO1yHCtDF5kVH4HL
-	TMiYxTaw==;
+	bh=ly6trlBM5f8+ZeaixRMEQOE+juiohDW+AHB/xVUzhaM=; b=djPu+u57D4avM/Kdkg9dNYLWuz
+	HLhRupm0BMMg39qbldWhzONTXFc7UwQb8J8sg1/dubjaoX5kShn4AN8wMfyy+vynf/PiWXhWIp0s4
+	bwbFsiksZUWAuHboUVSZAMmcYjTYMZi1eyfCmeKrmkG/iSvyGLFQYlyIsD/Pyv+u/VJNgHt5/vfC6
+	D0xHxVGh7pRVdoQBoPSMPQyDzM7Jd41AsdM24/DlYpCTqYWRLIB+gqxLkhinDs//kuCWGsI6XzF3I
+	t+TveUsq6jsrqN4dX1v1RocRBStWV9xONelEC5QbdjSTn3L3KeEw9vliJweMa9Cg/sP+T6sN1eqrk
+	0+knzA1w==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rtp7F-0000000FjRi-0krh;
-	Mon, 08 Apr 2024 13:32:53 +0000
+	id 1rtp7I-0000000FjRw-2LfP;
+	Mon, 08 Apr 2024 13:32:58 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J . Wong " <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	fstests@vger.kernel.org
-Subject: [PATCH 1/6] xfs: remove support for tools and kernels with v5 support
-Date: Mon,  8 Apr 2024 15:32:38 +0200
-Message-Id: <20240408133243.694134-2-hch@lst.de>
+Subject: [PATCH 2/6] remove xfs/096
+Date: Mon,  8 Apr 2024 15:32:39 +0200
+Message-Id: <20240408133243.694134-3-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240408133243.694134-1-hch@lst.de>
 References: <20240408133243.694134-1-hch@lst.de>
@@ -50,230 +50,302 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-v5 file systems have been the default for more than 10 years.  Drop
-support for non-v5 enabled kernels and xfsprogs.
+This test exercises mkfs error handling before strict validation was added
+and thus is useless for xfsprogs > 4.5.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- common/config | 13 -------------
- common/xfs    | 26 --------------------------
- tests/xfs/002 |  3 ---
- tests/xfs/005 |  1 -
- tests/xfs/077 |  1 -
- tests/xfs/083 |  2 --
- tests/xfs/132 |  1 -
- tests/xfs/148 |  1 -
- tests/xfs/263 |  5 -----
- tests/xfs/299 |  2 --
- tests/xfs/304 |  2 --
- tests/xfs/305 |  2 --
- 12 files changed, 59 deletions(-)
+ .gitignore                 |   1 -
+ common/xfs                 |   9 ---
+ tests/xfs/096              | 130 -------------------------------------
+ tests/xfs/096.out.external |  50 --------------
+ tests/xfs/096.out.internal |  51 ---------------
+ 5 files changed, 241 deletions(-)
+ delete mode 100755 tests/xfs/096
+ delete mode 100644 tests/xfs/096.out.external
+ delete mode 100644 tests/xfs/096.out.internal
 
-diff --git a/common/config b/common/config
-index 2a1434bb1..6a0496fdd 100644
---- a/common/config
-+++ b/common/config
-@@ -329,19 +329,6 @@ if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
- 	export SELINUX_MOUNT_OPTIONS
- fi
+diff --git a/.gitignore b/.gitignore
+index 3b160209a..51cda513d 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -211,7 +211,6 @@ tags
+ /tests/generic/050.out
+ /tests/xfs/033.out
+ /tests/xfs/071.out
+-/tests/xfs/096.out
+ /tests/xfs/216.out
  
--# check if mkfs.xfs supports v5 xfs
--if [ "$FSTYP" == "xfs" ]; then
--	XFS_MKFS_HAS_NO_META_SUPPORT=""
--	touch /tmp/crc_check.img
--	$MKFS_XFS_PROG -N -d file,name=/tmp/crc_check.img,size=32m -m crc=0 \
--		>/dev/null 2>&1;
--	if [ $? -ne 0 ]; then
--		XFS_MKFS_HAS_NO_META_SUPPORT=true
--	fi
--	rm -f /tmp/crc_check.img
--	export XFS_MKFS_HAS_NO_META_SUPPORT
--fi
--
- _common_mount_opts()
- {
- 	case $FSTYP in
+ # cscope files
 diff --git a/common/xfs b/common/xfs
-index 65b509691..57d21762c 100644
+index 57d21762c..49ca5a2d5 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -59,11 +59,6 @@ _scratch_mkfs_xfs_opts()
- {
- 	mkfs_opts=$*
- 
--	# remove metadata related mkfs options if mkfs.xfs doesn't them
--	if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
--		mkfs_opts=`echo $mkfs_opts | sed "s/-m\s\+\S\+//g"`
--	fi
--
- 	_scratch_options mkfs
- 
- 	echo "$MKFS_XFS_PROG $SCRATCH_OPTIONS $mkfs_opts"
-@@ -439,24 +434,6 @@ _require_projid16bit()
- 	   || _notrun "16 bit project IDs not supported on $SCRATCH_DEV"
+@@ -1211,15 +1211,6 @@ _require_xfs_mkfs_validation()
+ 	fi
  }
  
--# this test requires the crc feature to be available in mkfs.xfs
--#
--_require_xfs_mkfs_crc()
+-# The opposite of _require_xfs_mkfs_validation.
+-_require_xfs_mkfs_without_validation()
 -{
--	_scratch_mkfs_xfs_supported -m crc=1 >/dev/null 2>&1 \
--	   || _notrun "mkfs.xfs doesn't have crc feature"
+-	_xfs_mkfs_validation_check
+-	if [ "$?" -ne 0 ]; then
+-		_notrun "Requires older mkfs without strict input checks: the last supported version of xfsprogs is 4.5."
+-	fi
 -}
 -
--# this test requires the xfs kernel support crc feature
+ _require_scratch_xfs_shrink()
+ {
+ 	_require_scratch
+diff --git a/tests/xfs/096 b/tests/xfs/096
+deleted file mode 100755
+index a7a5444f8..000000000
+--- a/tests/xfs/096
++++ /dev/null
+@@ -1,130 +0,0 @@
+-#! /bin/bash
+-# SPDX-License-Identifier: GPL-2.0
+-# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
 -#
--_require_xfs_crc()
+-# FS QA Test No. 096
+-#
+-# test out mkfs_xfs output on IRIX/Linux and some of its error handling
+-# ensure pv#920679 is addressed
+-#
+-seqfull=$0
+-. ./common/preamble
+-_begin_fstest mkfs v2log auto quick
+-
+-# Import common functions.
+-. ./common/filter
+-. ./common/log
+-
+-#
+-# filter out counts which will vary
+-#   - extsz, blocks, agsize, agcount, device name, rtextents
+-#   - log version varies for crc enabled fs
+-#   - lsunit varies for 512/4k sector devices
+-# filter out differences between linux and irix:
+-#   - sectsz on Linux
+-#   - mmr, mixed-case on IRIX
+-#   - lazy-count on IRIX
+-#   - inode-paths on IRIX
+-#   - trailing spaces on Linux but not on IRIX
+-#
+-# Example output:
+-#  meta-data=DEV isize=256    agcount=N, agsize=N blks
+-#  data     =                       bsize=4096   blocks=N, imaxpct=25
+-#           =                       sunit=65     swidth=65 blks, unwritten=1
+-#  naming   =version 2              bsize=4096
+-#  log      =internal log           bsize=4096   blocks=N, version=1
+-#           =                       sunit=0 blks
+-#  realtime =none                   extsz=65536  blocks=N, rtextents=N
+-#
+-mkfs_filter()
 -{
--	_scratch_mkfs_xfs -m crc=1 >/dev/null 2>&1
--	_try_scratch_mount >/dev/null 2>&1 \
--	   || _notrun "Kernel doesn't support crc feature"
--	_scratch_unmount
+-   tee -a $seqres.full | \
+-   sed \
+-	-e 's/extsz=[0-9][0-9]*[ ]*/extsz=N, /' \
+-	-e 's/blocks=[0-9][0-9]*/blocks=N/' \
+-	-e 's/imaxpct=[0-9][0-9]*/imaxpct=N/' \
+-	-e 's/agsize=[0-9][0-9]*/agsize=N/' \
+-	-e 's/agcount=[0-9][0-9]*/agcount=N/' \
+-        -e 's/swidth=[0-9][0-9]* blks$/&, unwritten=1/' \
+-	-e 's/rtextents=[0-9][0-9]*/rtextents=N/' \
+-	-e 's/meta-data=[^ ]*/meta-data=DEV/' \
+-        -e 's/ *isize=[0-9]* / isize=N /' \
+-	-e '/ *= *sectsz=[0-9][0-9]* *attr=[0-9][0-9]*.*$/d' \
+-	-e '/ *= *mmr=[0-9][0-9]* *$/d' \
+-	-e 's/ *mixed-case=[YN]//' \
+-	-e 's/ *ascii-ci=[01]//' \
+-	-e 's/\(version=\)\([12]\)/\1N/' \
+-	-e 's/\(sunit=\)\([018] blks\)/\1N blks/' \
+-	-e 's/sectsz=[0-9][0-9]* *//' \
+-	-e 's/, lazy-count.*//' \
+-	-e '/inode-paths/d' \
+-	-e 's/\(log[ 	]*=\).*bsize/\1LOG                    bsize/' \
+-	-e 's/\(realtime[ 	]*=\).*extsz/\1REALTIME               extsz/' \
+-	-e '/.*crc=/d' \
+-	-e 's/ *$//' \
+-	-e 's/ ftype=[01]//' \
+-	-e '/^log stripe unit.*too large/d' \
+-	-e '/^log stripe unit adjusted/d' \
+-	-e '/Discarding/d' \
+-   | grep -v parent
 -}
 -
- # If the xfs_info output for the given XFS filesystem mount mentions the given
- # feature.  If so, return 0 for success.  If not, return 1 for failure.  If the
- # third option is -v, echo 1 for success and 0 for not.
-@@ -1268,9 +1245,6 @@ _require_scratch_xfs_shrink()
- #
- _require_meta_uuid()
- {
--	# This will create a crc fs on $SCRATCH_DEV
--	_require_xfs_crc
+-# real QA test starts here
 -
- 	_scratch_xfs_db -x -c "uuid restore" 2>&1 \
- 	   | grep -q "invalid UUID\|supported on V5 fs" \
- 	   && _notrun "Userspace doesn't support meta_uuid feature"
-diff --git a/tests/xfs/002 b/tests/xfs/002
-index 6c0bb4d04..8dfd2693b 100755
---- a/tests/xfs/002
-+++ b/tests/xfs/002
-@@ -24,9 +24,6 @@ _supported_fs xfs
- _require_scratch_nocheck
- _require_no_large_scratch_dev
- 
--# So we can explicitly turn it _off_:
--_require_xfs_mkfs_crc
+-# Modify as appropriate.
+-_supported_fs xfs
+-_require_scratch
+-_require_v2log
+-_require_xfs_mkfs_without_validation
 -
- _scratch_mkfs_xfs -m crc=0 -d size=128m >> $seqres.full 2>&1 || _fail "mkfs failed"
- 
- # Scribble past a couple V4 secondary superblocks to populate sb_crc
-diff --git a/tests/xfs/005 b/tests/xfs/005
-index 5f1ab8348..019790295 100755
---- a/tests/xfs/005
-+++ b/tests/xfs/005
-@@ -20,7 +20,6 @@ _begin_fstest auto quick
- _supported_fs xfs
- 
- _require_scratch_nocheck
--_require_xfs_mkfs_crc
- 
- _scratch_mkfs_xfs -m crc=1 >> $seqres.full 2>&1 || _fail "mkfs failed"
- 
-diff --git a/tests/xfs/077 b/tests/xfs/077
-index f24f6f004..37ea931f1 100755
---- a/tests/xfs/077
-+++ b/tests/xfs/077
-@@ -24,7 +24,6 @@ _supported_fs xfs
- _require_xfs_copy
- _require_scratch
- _require_no_large_scratch_dev
--_require_xfs_crc
- _require_meta_uuid
- 
- # Takes 2 args, 2nd optional:
-diff --git a/tests/xfs/083 b/tests/xfs/083
-index edab3b7b0..e8ce2221c 100755
---- a/tests/xfs/083
-+++ b/tests/xfs/083
-@@ -28,8 +28,6 @@ _cleanup()
- _supported_fs xfs
- 
- _require_scratch
--#_require_xfs_crc	# checksum not required, but you probably want it anyway...
--#_require_xfs_mkfs_crc
- _require_attrs
- _require_populate_commands
- 
-diff --git a/tests/xfs/132 b/tests/xfs/132
-index fa36c09c2..ee1c8c1ec 100755
---- a/tests/xfs/132
-+++ b/tests/xfs/132
-@@ -24,7 +24,6 @@ _require_scratch_nocheck
- # due to transaction cancellation.  Hence we don't want to check dmesg here.
- _disable_dmesg_check
- 
--_require_xfs_mkfs_crc
- _scratch_mkfs -m crc=0 > $seqres.full 2>&1
- 
- # The files that EIO in the golden output changes if we have quotas enabled
-diff --git a/tests/xfs/148 b/tests/xfs/148
-index 5d0a0bf42..c9f634cfd 100755
---- a/tests/xfs/148
-+++ b/tests/xfs/148
-@@ -27,7 +27,6 @@ _cleanup()
- _supported_fs xfs
- _require_test
- _require_attrs
--_require_xfs_mkfs_crc
- _disable_dmesg_check
- 
- imgfile=$TEST_DIR/img-$seq
-diff --git a/tests/xfs/263 b/tests/xfs/263
-index bce4e13f9..bd30dab11 100755
---- a/tests/xfs/263
-+++ b/tests/xfs/263
-@@ -21,11 +21,6 @@ _supported_fs xfs
- _require_scratch
- _require_xfs_quota
- 
--# We could test older, non-project capable kernels but keep it simpler;
--# Only test crc and beyond (but we will test with and without the feature)
--_require_xfs_mkfs_crc
--_require_xfs_crc
+-# choose .out file based on internal/external log
+-rm -f $seqfull.out
+-if [ "$USE_EXTERNAL" = yes ]; then
+-	ln -s $seq.out.external $seqfull.out
+-else
+-	ln -s $seq.out.internal $seqfull.out
+-fi
 -
- function option_string()
- {
- 	VAL=$1
-diff --git a/tests/xfs/299 b/tests/xfs/299
-index 4b9df3c6a..1df1988ac 100755
---- a/tests/xfs/299
-+++ b/tests/xfs/299
-@@ -31,8 +31,6 @@ chmod a+rwx $seqres.full	# arbitrary users will write here
- 
- _require_scratch
- _require_xfs_quota
--_require_xfs_mkfs_crc
--_require_xfs_crc
- 
- # The actual point at which limit enforcement takes place for the
- # hard block limit is variable depending on filesystem blocksize,
-diff --git a/tests/xfs/304 b/tests/xfs/304
-index 3c38e6132..0ee6dad63 100755
---- a/tests/xfs/304
-+++ b/tests/xfs/304
-@@ -19,8 +19,6 @@ _supported_fs xfs
- 
- _require_scratch
- _require_xfs_quota
--_require_xfs_mkfs_crc
--_require_xfs_crc
- 
- _scratch_mkfs_xfs -m crc=1 >/dev/null 2>&1
- 
-diff --git a/tests/xfs/305 b/tests/xfs/305
-index d8a6712e5..e76dfdec1 100755
---- a/tests/xfs/305
-+++ b/tests/xfs/305
-@@ -19,8 +19,6 @@ _supported_fs xfs
- 
- _require_scratch
- _require_xfs_quota
--_require_xfs_mkfs_crc
--_require_xfs_crc
- _require_command "$KILLALL_PROG" killall
- 
- _scratch_mkfs_xfs -m crc=1 >/dev/null 2>&1
+-# maximum log record size
+-max_lr_size=`expr 256 \* 1024`
+-
+-big_su=`expr $max_lr_size + 4096`
+-
+-#
+-# Test out various mkfs param combinations
+-#
+-cat >$tmp.seq.params <<EOF
+-# su too big but must be a multiple of fs block size too
+-  -l version=2,su=`expr $max_lr_size + 512`
+-# test log stripe greater than LR size
+-  -l version=2,su=$big_su
+-# same test but get log stripe from data stripe
+-  -l version=2 -d su=$big_su,sw=1
+-# test out data stripe
+-  -m crc=0 -l version=1 -d su=$big_su,sw=1
+-# test out data stripe the same but using sunit & swidth
+-  -m crc=0 -l version=1 -d sunit=`expr $big_su / 512`,swidth=`expr $big_su / 512`
+-EOF
+-
+-#
+-# call mkfs in a loop for various params
+-#
+-echo ""
+-cat $tmp.seq.params \
+-| while read mkfs
+-do
+-    if echo $mkfs | grep -q '^#'; then
+-        # print out header & ignore comment
+-	echo $mkfs
+-	continue
+-    fi
+-    echo "--- mkfs=$mkfs ---"
+-    export MKFS_OPTIONS="$mkfs"
+-    _scratch_mkfs_xfs 2>&1 | mkfs_filter
+-    echo ""
+-    echo ""
+-done
+-
+-# success, all done
+-status=0
+-exit
+diff --git a/tests/xfs/096.out.external b/tests/xfs/096.out.external
+deleted file mode 100644
+index 3122330ac..000000000
+--- a/tests/xfs/096.out.external
++++ /dev/null
+@@ -1,50 +0,0 @@
+-QA output created by 096
+-
+-# su too big but must be a multiple of fs block size too
+---- mkfs=-l version=2,su=262656 ---
+-log stripe unit (262656) must be a multiple of the block size (4096)
+-
+-
+-# test log stripe greater than LR size
+---- mkfs=-l version=2,su=266240 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=0      swidth=0 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# same test but get log stripe from data stripe
+---- mkfs=-l version=2 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe
+---- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe the same but using sunit & swidth
+---- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
+-meta-data=DEV isize=N      agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+diff --git a/tests/xfs/096.out.internal b/tests/xfs/096.out.internal
+deleted file mode 100644
+index 80201d25b..000000000
+--- a/tests/xfs/096.out.internal
++++ /dev/null
+@@ -1,51 +0,0 @@
+-QA output created by 096
+-
+-# su too big but must be a multiple of fs block size too
+---- mkfs=-l version=2,su=262656 ---
+-log stripe unit (262656) must be a multiple of the block size (4096)
+-
+-
+-# test log stripe greater than LR size
+---- mkfs=-l version=2,su=266240 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=0      swidth=0 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# same test but get log stripe from data stripe
+---- mkfs=-l version=2 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe
+---- mkfs=-m crc=0 -l version=1 -d su=266240,sw=1 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
+-# test out data stripe the same but using sunit & swidth
+---- mkfs=-m crc=0 -l version=1 -d sunit=520,swidth=520 ---
+-meta-data=DEV isize=N    agcount=N, agsize=N blks
+-data     =                       bsize=4096   blocks=N, imaxpct=N
+-         =                       sunit=65     swidth=65 blks, unwritten=1
+-naming   =version 2              bsize=4096
+-log      =LOG                    bsize=4096   blocks=N, version=N
+-         =                       sunit=N blks
+-realtime =REALTIME               extsz=N, blocks=N, rtextents=N
+-
+-
 -- 
 2.39.2
 
