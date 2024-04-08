@@ -1,85 +1,93 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B57126F07
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Apr 2024 14:55:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1740313F426
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Apr 2024 14:56:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712588120; cv=none; b=h/2aMcstQTd/mvXr6C2LyX4tQA+oTo/H8LChr4i1yZ9AZM/bJ6t9Sz9lHRAJBBbvfXMwje5fQAsU/KtNEwye44xnlyAtwxCwfnJtvEp9XDeEhmw0alqhJiR674/lYzdGRmB+cVXj3HG2jPTntu47bd1njaCgwnZRmWk+RDMbwbw=
+	t=1712588166; cv=none; b=VWfI1F3h607IR3FI8yPSY6Ju8+DSMXis43vz6G9BTxv1eCtOgxVf1IPguUD91b1Ybdyebjg5UGJFBFIo6p47P4hfGMS5JYfBgQq1MVxtVLxGx2qtlYAS4ql9SaTEAJ50PoZgQU1lv9mIfCylpGjQM3IZ7Ou8uv3VzEMaMyploW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712588120; c=relaxed/simple;
-	bh=xSyOvHZ2Rg1meoF7lsgLqvQJ9MKhZrGcG8nQvn73so0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cX/130sG1YQDZC6egoz7vvN5ju1SNR3390zSaVzJnHy5w6GkcrVbr821Cr1xneLz2ba6iiuj4JuGwvbqGk08Gcpu8Wt/BasS7dMffY1hAAb7bYULqVkkUqqJzUWpl/lnMRm/TEDLeuLTaXeEkadSM91wvAb3IbuWGOCHTDdEzSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DnvTM+6c; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1712588166; c=relaxed/simple;
+	bh=sKRkk6UorXV2/hWmh9SiDbiNf3cFzww98iE80iM2CIA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=el4q09nih6abFc8edVcjig7OZ6ssulvq22hb7+XMlWino90ZroK+3tgvd3vKPWWFvqsZqaNuHxVoB3ESOzrwUq7o3cv7PkoaCvC/euvvL1XjV9idPpP0GVTrZZ4crinv6UOiev7s3kpiLEHHeQq0Hz+s+tWtXR/mT1gq26Hb68k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZencpVdr; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DnvTM+6c"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=kaXGpLOIphVjuOCmCreMUGH36Gotq20lkJTAcV8g32o=; b=DnvTM+6cwjAzg4kyzvUqDGPVx9
-	nyuOtzgQGUpjGXPK0zYvb+3LdDDZPQZ6F7syahs91fMjS32qNXCX8HWXPMSkAKyPYxTXFqLZIIDuR
-	CJB1LGExszcpbJLHdgRkLetkP7euU4cZ1Tt0DNq1oDSRyzS/cdXjHwkznIVg0gRFv0BToqy4HofpT
-	C82TKds44rjx2DadIlNwdc6RyXYtfjars1oa2BCQcAOGshmbPucku3+cBldnwJxYZLd0OEfEd1NR3
-	k2grD/iZsbdx1Mx+8/qymFpYJYokKcdHdgkubAKLmoYjjy7sk2H9yT5ckhxM6CNm/9LTW3Njb1DB6
-	/m6KDA1w==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rtqOz-0000000FwbI-1Fgb;
-	Mon, 08 Apr 2024 14:55:17 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>,
-	linux-xfs@vger.kernel.org (open list:XFS FILESYSTEM)
-Subject: [PATCH 8/8] xfs: do not allocate the entire delalloc extent in xfs_bmapi_write
-Date: Mon,  8 Apr 2024 16:54:54 +0200
-Message-Id: <20240408145454.718047-9-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240408145454.718047-1-hch@lst.de>
-References: <20240408145454.718047-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZencpVdr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1712588164;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LyxVVyuhaB0KgaymTkcE64U3/nIUg9t4q/715To/SQM=;
+	b=ZencpVdrVIFxdbrAgVYp+0UnygaGf75m96orruBty61P6niVZ+l47BILnwv2sHbwDICQwN
+	/g9mhnwzNH3/GnPWiZwSxez4OJT/1LSXGrYNX1Itd+MPmT51mXGCBZc5U3wKqH8Uw0aRVf
+	gC5fxWN+DGing3XrG1RM6lh9tTmwcHY=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-8-nCuYq2hcM3KiBOcdhdsVEA-1; Mon, 08 Apr 2024 10:56:02 -0400
+X-MC-Unique: nCuYq2hcM3KiBOcdhdsVEA-1
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-6e6b285aaa4so3709402b3a.2
+        for <linux-xfs@vger.kernel.org>; Mon, 08 Apr 2024 07:56:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712588161; x=1713192961;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LyxVVyuhaB0KgaymTkcE64U3/nIUg9t4q/715To/SQM=;
+        b=rI68hFMzsB8nGjioSte8TCdZRPrLysnYKG/hwYQ6sKzLxNNj5G4udv2KDh8u50RrIR
+         TJeMYHbvZghTZDI0FMmYyo3jgQtDgMVBYncTRogTSxez1r8qcnRe0emXMGUhvxPV1dpb
+         6hBqYBSu2Y6Kc4/3SSLYA6jh1+q+uUbfT6N1OzeI5Ak2IIN/X4nszUhTgshC6BZ07bdC
+         Uok9E5UQ4VNyNuESz4uB60+5yPtellrynyNxqxkjLm1fxQD7EwOpW1Dd0jhAC4VqbS5k
+         5Fm4ErwfmOcAlszPE8IOtAOUNLHGpMFZQl0TyjljqUVQ2RDOnwU6jlaP8ciHHDqxOXNg
+         2+HQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVfaROWF8K8VQvt+V8SKxtqrafQhkuBUSouFlq6yU4JtHQQM9bjCllkwm4vu3IfntZEJqUyK5FhD1jQVQUarCh59e92LKgloaOp
+X-Gm-Message-State: AOJu0Yxk7VjF6wrSYA7KyUFg+RB0TtqJyCZ2U6QOKEpJNJkI56RSWuCN
+	5btVX8pTxxBrB7V7a7PTzBfMg5gqqaYr1NjrZTgvQZ7DG2OhnvaRag3WCARZqVlmJ28/Dzu6aZD
+	iGf99mv17lZUna3oe1+KRR54R+9M9o/f7S6sdVSMCS6JIjMJm9SyF2Btc+Ri9oaVTqh6o
+X-Received: by 2002:a05:6a20:d497:b0:1a3:df1d:deba with SMTP id im23-20020a056a20d49700b001a3df1ddebamr9524233pzb.31.1712588161130;
+        Mon, 08 Apr 2024 07:56:01 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF4kUivFSxO9oiwXu3+PWw9VOhuyMbHjta1nuDXWfWzJJnmB3FmGliXFYglySoc98MdcGr/ew==
+X-Received: by 2002:a05:6a20:d497:b0:1a3:df1d:deba with SMTP id im23-20020a056a20d49700b001a3df1ddebamr9524201pzb.31.1712588160635;
+        Mon, 08 Apr 2024 07:56:00 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id fe9-20020a056a002f0900b006e5571be110sm6603606pfb.214.2024.04.08.07.55.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Apr 2024 07:56:00 -0700 (PDT)
+Date: Mon, 8 Apr 2024 22:55:54 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, "Darrick J . Wong " <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: fix kernels without v5 support
+Message-ID: <20240408145554.ezvbgolzjppua4in@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240408133243.694134-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240408133243.694134-1-hch@lst.de>
 
-While trying to convert the entire delalloc extent is a good decision
-for regular writeback as it leads to larger contigous on-disk extents,
-but for other callers of xfs_bmapi_write is is rather questionable as
-it forced them to loop creating new transactions just in case there
-is no large enough contiguous extent to cover the whole delalloc
-reservation.
+On Mon, Apr 08, 2024 at 03:32:37PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series ensures tests pass on kernels without v5 support.  As a side
+> effect it also removes support for historic kernels and xfsprogs without
+> any v5 support, and without mkfs input validation.
 
-Change xfs_bmapi_write to only allocate the passed in range instead.
+Thanks for doing this! I'm wondering if fstests should do this "removing"
+earlier than xfs? Hope to hear more opinions from xfs list and other fstests
+users (especially from some LTS distro) :)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Thanks,
+Zorro
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7700a48e013d5a..748809b13113ab 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4533,8 +4533,9 @@ xfs_bmapi_write(
- 			bma.length = XFS_FILBLKS_MIN(len, XFS_MAX_BMBT_EXTLEN);
- 
- 			if (wasdelay) {
--				bma.offset = bma.got.br_startoff;
--				bma.length = bma.got.br_blockcount;
-+				bma.length = XFS_FILBLKS_MIN(bma.length,
-+					bma.got.br_blockcount -
-+					(bno - bma.got.br_startoff));
- 			} else {
- 				if (!eof)
- 					bma.length = XFS_FILBLKS_MIN(bma.length,
--- 
-2.39.2
+> 
 
