@@ -1,30 +1,41 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E6C1CD21;
-	Mon,  8 Apr 2024 14:59:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77198127B54;
+	Mon,  8 Apr 2024 15:03:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712588385; cv=none; b=WqBJOf5tzsnrVm8W+52RZXCPZLkcDn1Daq4nKSCO/Ceybeb5NBvwcLq89e8eMQHgHpriIiwufSMBRJ9qSZkg/hnpTz33M9t7TcR0RkCMlZrct6N2cf9Q3BQmeC5dQQbvwwkZFncGcxUXuGUJC2uur/J7ZEtZ5u5zSsy/4yVx+60=
+	t=1712588587; cv=none; b=C5nxJ9dto/U4yoe7ncUC1yh+S2WD9C481hk1k6+ee0hD97SRJnRBPaqxO1RZATEwospGOy56O6tXtjYg0rR7MpqtAae8kMWXxS5YHsonpnCSbZLYclA4Mlx50ZW6haErq21l1quDGt3Bv+1TyXJ2gfIZ1jajdETOqw8hijU170o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712588385; c=relaxed/simple;
-	bh=PliHhqcyNuotRYrc8in33qyvpVFK7nyeUfAscGF/rcg=;
+	s=arc-20240116; t=1712588587; c=relaxed/simple;
+	bh=89G9ISlSu9YTcVmzvHI+/SOGxEbUIZoRox5wVyrzdF0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pjZ+H/fOdLkV4OBEA8og2a2CbXpHsPShl7rw2Uh4/ie50nLKgbYtsSN9Fl5ocaJhRrgtBbWCWNW6wTYD0273dDtQ4wsgn/9JutpAXeva9sEcUNjHMexxmrcflvK6UdAjjuKt13Ipf2dHgj3kMcYJFzHepFi8lEKrS6A3vY8hnBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 85DCD68C4E; Mon,  8 Apr 2024 16:59:39 +0200 (CEST)
-Date: Mon, 8 Apr 2024 16:59:39 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
-	"Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: fix kernels without v5 support
-Message-ID: <20240408145939.GA26949@lst.de>
-References: <20240408133243.694134-1-hch@lst.de> <20240408145554.ezvbgolzjppua4in@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z757hOGv9aSlkmI8ckcSCDvT9Tjp8Q51SWa8VIRnD5mNpRYx+FWJBqU27SMMMHk+UDq7rWYOxeVOItq2vhtPk+EnK1VQNkqDnmEZ98iR1bZXOcQRXDnK1if54ojSn7By/A8oWEcUSOnl0VrhmqkhzSofu64N6pyp//vD4atK2Zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p9yZMdij; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p9yZMdij"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F320C433F1;
+	Mon,  8 Apr 2024 15:03:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712588587;
+	bh=89G9ISlSu9YTcVmzvHI+/SOGxEbUIZoRox5wVyrzdF0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=p9yZMdij79iKRReNqoo+p9m23NAvZQVT3CYSFCN8N7pPk+A3gjXyAJ0qvZv7pQwyx
+	 bq+8ycWmOsEyBkWUwBL5cv1IHiB/uH9C0GNHJufnfHqTfSsfwHIe4JCQZTD0dyT0EA
+	 ywRXPROThaNCKFqUSNirrYi41PUSZq0Mqu7bMHQChM6jd7A8s+CEg5qdtHrXLpajom
+	 eaBW3B305TZyq57aHnpLRB4GzLrD+vH62C3D+8r78ls1K34IlUcCfttWIOghsqtOkL
+	 w3yKIXQ2MCjVGWg1boxYyTAhruAW6zantjbxKU/JS9qdTUI8qXpoktZXgbu6Ea9ZTh
+	 W0FmYTkUXTiGw==
+Date: Mon, 8 Apr 2024 11:03:03 -0400
+From: Eric Biggers <ebiggers@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, "Darrick J . Wong " <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: remove support for tools and kernels with v5
+ support
+Message-ID: <20240408150303.GD732@quark.localdomain>
+References: <20240408133243.694134-1-hch@lst.de>
+ <20240408133243.694134-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,24 +44,11 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408145554.ezvbgolzjppua4in@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20240408133243.694134-2-hch@lst.de>
 
-On Mon, Apr 08, 2024 at 10:55:54PM +0800, Zorro Lang wrote:
-> > this series ensures tests pass on kernels without v5 support.  As a side
-> > effect it also removes support for historic kernels and xfsprogs without
-> > any v5 support, and without mkfs input validation.
-> 
-> Thanks for doing this! I'm wondering if fstests should do this "removing"
-> earlier than xfs? Hope to hear more opinions from xfs list and other fstests
-> users (especially from some LTS distro) :)
+On Mon, Apr 08, 2024 at 03:32:38PM +0200, Christoph Hellwig wrote:
+> xfs: remove support for tools and kernels with v5 support
 
-What is being removed is support for kernels and xfsprogs that do not
-support v5 file systems at all, not testing on v4 file system for the
-test device and the large majority of tests using the scratch device
-without specifying an explicit version.
+I think you mean tools and kernels *without* v5 support.
 
-The exception from the above are two sub-cases for v4 that are removed in
-the this series - if we really care about them I could move them into
-separate tests, but I doubt it's worth it.
-
+- Eric
