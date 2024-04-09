@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 652CB7FBD3;
-	Tue,  9 Apr 2024 13:32:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DCA7EEE0;
+	Tue,  9 Apr 2024 13:33:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712669571; cv=none; b=mJ883A1doDz4FmgO1WTRtTMwE3A3w44gb/VRvcCJPyJ+P+ROSQFbKIgnZE2qsXULkqEwAXNeurV/PxLTjjCVy45vRqawLmuszWBghP3PMUJbsar7ta4hh16xgH/wM4q53jYz/SqaeYL46nYvTFNnUb/59tazddH7ybuGAmL6mOQ=
+	t=1712669631; cv=none; b=ievlKH4R+3eGpCEiy68vvPW1tE35G0r8I1MCtXdfSZ77WOGpcgFR+Q7ToBSZ7b8oJd9z5F2pq2UwoLI5HfqxJOTtTCj7DNiAnNWQN5AJCbY3f5j+/U95IyD8h9x7CeVSnuuEWwP34u/0PNJQu7B5n9onlmgo7QKKYcrQTTQLagc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712669571; c=relaxed/simple;
-	bh=RiIwGLCd0WmHcv9dwUh7ZyBlB74tyvzcwHjtFnzVHoo=;
+	s=arc-20240116; t=1712669631; c=relaxed/simple;
+	bh=bhQVoSeCVQZFmu3xe8QAYmMu2pf0oBRpa0VTQU6dyHA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nb3sBpqh1/R2t40gbQnDGfflTjzNJtJ8Tik6WaXmPRS4tul8Iz2yTPE1ekEnixefEzCLBONVz7MwpFsJL7WYpQTN/n4EQF05StnuiAQtrBjQpY+NF/JNBCRscy2PW0CIe6Gyuz1xcxCbPhxw6e0N5zw87tqJQNFIRlRtOenLdGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xKkGsbU4; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=pwF00M1SlZdyG9BRrHVNg6Qu1BkQu3djxqvpQ4aIGxxeZt36uIXXb5/GIAk93slZFH+yW5p14nQBBXS6jRnGYw8BgpmRWYljfBtGL/Zz970sMYboBjXoW2mZJK1ND/TL6Tc5b4kLpw5xma/vqDy+94xyKTH8Co4YRZubR6Var58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XCeWjdls; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xKkGsbU4"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XCeWjdls"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=tEIbor9pEQA30BeptpyPyxQfeq6lHOGOFBBdte10kwc=; b=xKkGsbU4yDo8cQiMtUTZFLfVV6
-	EW1omNWvMb2sqkmhkizSWTq8vqEdToNCE5w2vIYW8cS5nXnm9oMx6dCTElFXWKGQFX5Z/Vcyhg3wB
-	/OBCRuVg3bplmpxTN6qRTJqTVIKD575IWhWsYooFihI9r4OHKSMrCe2u2tlYc15jhXJDy8mtJVFqD
-	cdBkrkOk9F67cSdr46++B4aVEq6YPdNkgTBxZKKtKpc5V3xVpwQBMOz0P4aUb8/qYtsfR7yHMn0lT
-	rwv0X0L3PPhKw5mGSkHQhaLUtDVeI8asmrM1/99gk6iYF7hSrnEJeZuaumcZSGlbeYXCbDOpLO9ST
-	M485Stbw==;
+	bh=Km3bOLDMGGRWd+5SjvzUlmGCBNDq0fi4QAuHHSAprMw=; b=XCeWjdls5jOcaZ8WfRNfDk2cLy
+	Iyt53U8MAPlr4SgkqhEhBj13dxnpexly1B059JJ+FbmHoX+arhjkHHxgtM2GVtP78xpOgPs7TA0uS
+	5S+frq2RcSoLJNyhnBh/mtIJhLrM+t5OvDiKVfmIXXQ8BwiAEONoL5kqP47fpnBX5v6IJLeVWveqU
+	hTxmSnOwF19QE3Rn79bGdLP9I5sbSOqF9i+gVgULIX9WOeNXqJ/B+0fZr2ExEwf5IOESesGA+44gs
+	6+EAHBae9p3YWJVFG9tU/hPz0dtnZ8jR6CPu2IQTJGtkXqke4fM+vkg3L+Lc6D2IyVXMD+btLMqcq
+	PWKiyT6g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruBaj-000000028qr-3OZQ;
-	Tue, 09 Apr 2024 13:32:49 +0000
-Date: Tue, 9 Apr 2024 06:32:49 -0700
+	id 1ruBbe-0000000296z-2SRm;
+	Tue, 09 Apr 2024 13:33:46 +0000
+Date: Tue, 9 Apr 2024 06:33:46 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Justin Stitt <justinstitt@google.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] xfs: xattr: replace strncpy and check for truncation
-Message-ID: <ZhVDgbRoF9X7JSdt@infradead.org>
-References: <20240405-strncpy-xattr-split2-v1-1-90ab18232407@google.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/14] xfs: create a incompat flag for atomic file
+ mapping exchanges
+Message-ID: <ZhVDuhjxBQ_3EZng@infradead.org>
+References: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
+ <171263348511.2978056.14454078733236237965.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,28 +46,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240405-strncpy-xattr-split2-v1-1-90ab18232407@google.com>
+In-Reply-To: <171263348511.2978056.14454078733236237965.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Apr 05, 2024 at 07:45:08PM +0000, Justin Stitt wrote:
-> -	memcpy(offset, prefix, prefix_len);
-> -	offset += prefix_len;
-> -	strncpy(offset, (char *)name, namelen);			/* real name */
-> -	offset += namelen;
-> -	*offset = '\0';
-> +
-> +	combined_len = prefix_len + namelen;
-> +
-> +	/* plus one byte for \0 */
-> +	actual_len = scnprintf(offset, combined_len + 1, "%s%s", prefix, name);
-> +
-> +	if (actual_len < combined_len)
+On Mon, Apr 08, 2024 at 08:35:17PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Create a incompat flag so that we only attempt to process file mapping
+> exchange log items if the filesystem supports it, and a geometry flag to
+> advertise support if it's present.
 
-Shouldn't this be a != ?
+Looking through the whole series this actually looks a lot cleaner than
+the temporary log incompat flag.  No real changes except for that, so
+still:
 
-That being said I think this is actually wrong - the attr names are
-not NULL-terminated on disk, which is why we have the explicit
-zero terminataion above.
-
-How was this tested?
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
