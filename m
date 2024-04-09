@@ -1,72 +1,41 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19AE41448D4
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Apr 2024 19:00:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08ABA5660
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 01:18:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712602854; cv=none; b=r2s1NdzXuNcVAGAqKPsKQXnsVMyzUPcAqQMS7ASlXej0G5WVkcjWko/WAB5TE7ILZDUYuKjLCROr0rnQyf2SJOuUNs7Ub6LMzSKWQquqeUVFAtBGgaZlB3FuHgaBdoi2/F39GELin65BgxFTN0nd5+zL3xZbDJkVl+/3qyXEHEY=
+	t=1712625530; cv=none; b=PMsGu8pub75SmZMxUNInQRJF00whsQH8X/L3wBV6AkDQE6EsSd4wlPO6vwyhYJrbzSBh4y20aHbCVzdItR64P+juVGqc18G+SBwjxuv8311cdNDuKnW12ftUCdvK4KWiiZ4rk1DgTEmiNtsuOyHjylW6DBR5CHHBvYuShgxuWcE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712602854; c=relaxed/simple;
-	bh=K+7q1REcORZIGhh0XnxohXvlSCUt1Sm5g7l9UwSiUkQ=;
+	s=arc-20240116; t=1712625530; c=relaxed/simple;
+	bh=fM2crRhhroZdtXnyJw8u4cvhTlgQP19K/XEFIMb6rk4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X94Pbmuabv0H6TskimpRKRS+q3pBZFX5I2nZqWbjk2C/ViM1UL0EhQKdfuFV7XIGubHCTe8BgSuZFJ7zSVM6/JRNnDkiF52iSsejWRvdq698MB+zKdMPemYKuRLcuTZpvSu/DqL8pDAKMX4KxUEHS+rBU4N8RwGiyaAms1cTOEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JAso9vbe; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=LFvtEEanSO5k0Y/dV3qIWQJzAYdJm1cBnwas9LcoQRLM3XMmRdtc18AlCW0xLKlRlsdXqhNB0+isJF5sLZcI4AG8F+DaAaZb1z+JqYrWysLIzzxHvtmy4uN+593V6Pe6eQEV4/IXkVtfgaSy447JGl/SHYsHIgxYu8ufzkBWP+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqGElod6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JAso9vbe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712602852;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=88+D8iz1phlu4lJsOrmc5P0Y3kTg5b4oDnCnIoO1Zvg=;
-	b=JAso9vbeW5/ZO69z76h6xHHiL449thzB5tAc3FL5tioYjX882c70WkXGBJsJKDiHx9HeHk
-	r0YeRn1BsOEAmPyrrLFNqac9hOPei7urCzU4zdS8KUvhyzuVlQm4azRGP8PG6iDdExEkD8
-	QVQMfzzI3gD8e7Xc9dTkHe8AWP04LBg=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-241-KBGtqik4OFWHa5Q3uetaPw-1; Mon, 08 Apr 2024 15:00:50 -0400
-X-MC-Unique: KBGtqik4OFWHa5Q3uetaPw-1
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-5c5c8ef7d0dso3906647a12.2
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Apr 2024 12:00:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712602849; x=1713207649;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=88+D8iz1phlu4lJsOrmc5P0Y3kTg5b4oDnCnIoO1Zvg=;
-        b=of6MnT7blfSW5YceRwWwl3ZRLEHHKgbE122l5P5ivxe9VEiNLWWZYW5tzUDTod4gai
-         BkW5o77Lrc21Y3zKyvnIR0iVm0qLA8nEHDEAaCJdOiMb9EaRi7ajjyhcB24aGiQ4VRFR
-         jpmWklA4wS5mHQRlbQ2j6bNkFf4v8qnB4qZEtqneUKcItAR7HHbFAZ7po3S26wrOOdkG
-         uXf6i3Lj8ChrOOCIYyX0KJIkZ/Nggn94E/hOToDuyPQdI8UzgUOVe4ISeSuBlZhSN9Gp
-         bENMCRiefUI1B2k7bJqDOw6kLxjeKsnJq26I9RijiFFa9ucegycAXDtSETSppEF4H9uP
-         APpg==
-X-Forwarded-Encrypted: i=1; AJvYcCW9b2p8xful+bnxGQHZg5tiIHxDv/ftKyYyBpMtvNMfld4ftA9IJNpoYunCDpcpRSNIy3xJjB8kENCUGFWHEvDTr+HxuPHdTl6/
-X-Gm-Message-State: AOJu0YxNRSCra0ue7nkpHfXmBPDkBqfAaBeXpzioYc1Pld0Q9nmLfrUE
-	omYyO86/uPNNwE/aTRA7rQLv6ZptltFplZE4pWmwG66wDiZ4VbZTQLats5ubXIKV2NcqNfia0sk
-	8dKQNs+jaoqY8bZLuAIC6Xzx58dPP0/IdhAJfeGhqg2aqrxcUaWf2rqy2eg==
-X-Received: by 2002:a05:6a20:9c8b:b0:1a7:760f:feec with SMTP id mj11-20020a056a209c8b00b001a7760ffeecmr2919460pzb.20.1712602848823;
-        Mon, 08 Apr 2024 12:00:48 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF5eZNvcTRkAd6yJWfNbNuUTgxlUrWgvWXCU3PsR47PtVtR8dRe/LqVTa3PsraTaI9ft/qq+A==
-X-Received: by 2002:a05:6a20:9c8b:b0:1a7:760f:feec with SMTP id mj11-20020a056a209c8b00b001a7760ffeecmr2919433pzb.20.1712602848323;
-        Mon, 08 Apr 2024 12:00:48 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id s42-20020a056a0017aa00b006ed59179b14sm1329322pfg.83.2024.04.08.12.00.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Apr 2024 12:00:47 -0700 (PDT)
-Date: Tue, 9 Apr 2024 03:00:43 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, "Darrick J . Wong " <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: fix kernels without v5 support
-Message-ID: <20240408190043.oib4lmiri7ssw3ez@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240408133243.694134-1-hch@lst.de>
- <20240408145554.ezvbgolzjppua4in@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20240408145939.GA26949@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqGElod6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65BCCC433F1;
+	Tue,  9 Apr 2024 01:18:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712625529;
+	bh=fM2crRhhroZdtXnyJw8u4cvhTlgQP19K/XEFIMb6rk4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LqGElod6zsimeX7sB3/+fXpN3TNJgGp43XpdFnzkFKVMpahqVE2xh27BinwFumbTE
+	 AAisLY0tl9rOQHSKKzWFQWZDAMNw+3yQdedSxaBJeCRqBllUbkXURwfBi8+jbml4U5
+	 LZxEQ6ymkTIub92Fn+IFQFp5dyk8WmvrPZEfE2aCodq5tGxSZxHkhgNxqjHOm92Q71
+	 Dli+KD88Pzx6Jjj8wfi43CgkvhqBbpKzkwEi/z7+640aWuAiD8Ma93BwCBGEPFe0jY
+	 Je7rbiEN5a8iM4Mktj4C2FQEjmpZKROGZyWz/kjH+aS6VK+IdCKc4GrfeGGpiCjBNb
+	 P7zC7yvolF3Qg==
+Date: Mon, 8 Apr 2024 18:18:48 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/15] xfs: introduce a file mapping exchange log intent
+ item
+Message-ID: <20240409011848.GT6414@frogsfrogsfrogs>
+References: <171150380628.3216674.10385855831925961243.stgit@frogsfrogsfrogs>
+ <171150380732.3216674.5999741892452595331.stgit@frogsfrogsfrogs>
+ <ZhMxZdvk8Tq9WcLu@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,36 +44,219 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408145939.GA26949@lst.de>
+In-Reply-To: <ZhMxZdvk8Tq9WcLu@dread.disaster.area>
 
-On Mon, Apr 08, 2024 at 04:59:39PM +0200, Christoph Hellwig wrote:
-> On Mon, Apr 08, 2024 at 10:55:54PM +0800, Zorro Lang wrote:
-> > > this series ensures tests pass on kernels without v5 support.  As a side
-> > > effect it also removes support for historic kernels and xfsprogs without
-> > > any v5 support, and without mkfs input validation.
+On Mon, Apr 08, 2024 at 09:51:01AM +1000, Dave Chinner wrote:
+> On Tue, Mar 26, 2024 at 06:53:52PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Thanks for doing this! I'm wondering if fstests should do this "removing"
-> > earlier than xfs? Hope to hear more opinions from xfs list and other fstests
-> > users (especially from some LTS distro) :)
+> > Introduce a new intent log item to handle exchanging mappings between
+> > the forks of two files.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/Makefile                 |    1 
+> >  fs/xfs/libxfs/xfs_log_format.h  |   42 ++++++-
+> >  fs/xfs/libxfs/xfs_log_recover.h |    2 
+> >  fs/xfs/xfs_exchmaps_item.c      |  235 +++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_exchmaps_item.h      |   59 ++++++++++
+> >  fs/xfs/xfs_log_recover.c        |    2 
+> >  fs/xfs/xfs_super.c              |   19 +++
+> >  7 files changed, 357 insertions(+), 3 deletions(-)
+> >  create mode 100644 fs/xfs/xfs_exchmaps_item.c
+> >  create mode 100644 fs/xfs/xfs_exchmaps_item.h
+> > 
+> > 
+> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > index 2474242f5a05f..68ca9726e7b7d 100644
+> > --- a/fs/xfs/Makefile
+> > +++ b/fs/xfs/Makefile
+> > @@ -102,6 +102,7 @@ xfs-y				+= xfs_log.o \
+> >  				   xfs_buf_item.o \
+> >  				   xfs_buf_item_recover.o \
+> >  				   xfs_dquot_item_recover.o \
+> > +				   xfs_exchmaps_item.o \
+> >  				   xfs_extfree_item.o \
+> >  				   xfs_attr_item.o \
+> >  				   xfs_icreate_item.o \
+> > diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> > index 16872972e1e97..09024431cae9a 100644
+> > --- a/fs/xfs/libxfs/xfs_log_format.h
+> > +++ b/fs/xfs/libxfs/xfs_log_format.h
+> > @@ -117,8 +117,9 @@ struct xfs_unmount_log_format {
+> >  #define XLOG_REG_TYPE_ATTRD_FORMAT	28
+> >  #define XLOG_REG_TYPE_ATTR_NAME	29
+> >  #define XLOG_REG_TYPE_ATTR_VALUE	30
+> > -#define XLOG_REG_TYPE_MAX		30
+> > -
+> > +#define XLOG_REG_TYPE_XMI_FORMAT	31
+> > +#define XLOG_REG_TYPE_XMD_FORMAT	32
+> > +#define XLOG_REG_TYPE_MAX		32
+> >  
+> >  /*
+> >   * Flags to log operation header
+> > @@ -243,6 +244,8 @@ typedef struct xfs_trans_header {
+> >  #define	XFS_LI_BUD		0x1245
+> >  #define	XFS_LI_ATTRI		0x1246  /* attr set/remove intent*/
+> >  #define	XFS_LI_ATTRD		0x1247  /* attr set/remove done */
+> > +#define	XFS_LI_XMI		0x1248  /* mapping exchange intent */
+> > +#define	XFS_LI_XMD		0x1249  /* mapping exchange done */
+> >  
+> >  #define XFS_LI_TYPE_DESC \
+> >  	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
+> > @@ -260,7 +263,9 @@ typedef struct xfs_trans_header {
+> >  	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
+> >  	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
+> >  	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
+> > -	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
+> > +	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }, \
+> > +	{ XFS_LI_XMI,		"XFS_LI_XMI" }, \
+> > +	{ XFS_LI_XMD,		"XFS_LI_XMD" }
+> >  
+> >  /*
+> >   * Inode Log Item Format definitions.
+> > @@ -878,6 +883,37 @@ struct xfs_bud_log_format {
+> >  	uint64_t		bud_bui_id;	/* id of corresponding bui */
+> >  };
+> >  
+> > +/*
+> > + * XMI/XMD (file mapping exchange) log format definitions
+> > + */
+> > +
+> > +/* This is the structure used to lay out an mapping exchange log item. */
+> > +struct xfs_xmi_log_format {
+> > +	uint16_t		xmi_type;	/* xmi log item type */
+> > +	uint16_t		xmi_size;	/* size of this item */
+> > +	uint32_t		__pad;		/* must be zero */
+> > +	uint64_t		xmi_id;		/* xmi identifier */
 > 
-> What is being removed is support for kernels and xfsprogs that do not
-> support v5 file systems at all, not testing on v4 file system for the
-> test device and the large majority of tests using the scratch device
-> without specifying an explicit version.
+> Why does this ID need to be a 64 bit ID?  If it is 32 bit, then
+> there's no need for any padding, and it doesn't seem likely to me
+> that we'd have millions of exchanges in flight at once.
+> 
+> (Edit: I see why later - I address it there....)
+> 
+> > +
+> > +	uint64_t		xmi_inode1;	/* inumber of first file */
+> > +	uint64_t		xmi_inode2;	/* inumber of second file */
+> 
+> Inode numbers are not unique identifiers. Intents get replayed after
+> everything else has been replayed, including inode unlink and
+> reallocation.
+> 
+> Without a generation number, there is no way to determine if the
+> inode number in the intent is actually pointing at the correct inode
+> when we go to replay the intent.
+> 
+> Yes, I know it's unlikely that this might occur, but I'd much prefer
+> that we fully identify inodes in the on-disk metadata so we can
+> check it at recovery time than leaving it out and just hoping we are
+> operating on the correct inode life-cycle...
 
-Sure, I think most of systems testing doesn't need this, except some old
-LTS distros.
+I suppose I don't mind encoding the generation number, but I'm not
+thrilled that you're suggesting this after I finally got someone to
+complete the review of this patchset after 3 years.
+
+I probably ought to use the u32 pad in the attri log format to do the
+same for parent pointers, seeing as parent pointers have their own attri
+log opcodes now anyway.
 
 > 
-> The exception from the above are two sub-cases for v4 that are removed in
-> the this series - if we really care about them I could move them into
-> separate tests, but I doubt it's worth it.
+> > +	uint64_t		xmi_startoff1;	/* block offset into file1 */
+> > +	uint64_t		xmi_startoff2;	/* block offset into file2 */
+> > +	uint64_t		xmi_blockcount;	/* number of blocks */
+> > +	uint64_t		xmi_flags;	/* XFS_EXCHMAPS_* */
+> > +	uint64_t		xmi_isize1;	/* intended file1 size */
+> > +	uint64_t		xmi_isize2;	/* intended file2 size */
+> 
+> How do these inode sizes differ from xmi_startoff{1,2} +
+> xmi_blockcount?
 
-Let me check and test this patchset more, before acking it. And give some
-time to get more review. Thanks for this patchset!
-
-Thanks,
-Zorro
+If the caller specifies XFS_EXCHANGE_RANGE_TO_EOF then we need to
+exchange the file sizes too so that we preserve a mid-fsblock EOF.
 
 > 
+> > +/* Allocate and initialize an xmi item. */
+> > +STATIC struct xfs_xmi_log_item *
+> > +xfs_xmi_init(
+> > +	struct xfs_mount	*mp)
+> > +
+> > +{
+> > +	struct xfs_xmi_log_item	*xmi_lip;
+> > +
+> > +	xmi_lip = kmem_cache_zalloc(xfs_xmi_cache, GFP_KERNEL | __GFP_NOFAIL);
+> > +
+> > +	xfs_log_item_init(mp, &xmi_lip->xmi_item, XFS_LI_XMI, &xfs_xmi_item_ops);
+> > +	xmi_lip->xmi_format.xmi_id = (uintptr_t)(void *)xmi_lip;
+> 
+> OK. Encoding the pointer as the ID is a mistake we made with EFIs
+> and we should stop repeating it in all new intents. There is no
+> guarantee that the pointer is a unique identifier because these are
+> allocated out of a slab cache. Hence we can allocate an xmi, log it,
+> finish the xmds, free the xmi, then run another exchange and get
+> exactly the same XMI pointer returned to us for the new exchange
+> intent. Now we potentially have multiple exchange items in the
+> journal with the same ID.
+> 
+> Can we use a u32 and get_random_u32() for the ID here, please? We
+> already do this for checkpoint discrimination in the log (i.e. to
+> identify what checkpoint an ophdr belongs to), so we really should
+> be doing the same for all ids we use in the journal for matching
+> items.
+> 
+> Longer term, We probably should move all the intent/done identifiers
+> to a psuedo random identifier mechanism, but that's outside the
+> scope of this change....
 
+Agreed.  I don't think it's appropriate to gate acceptance of this
+patchset on this kind of general change.
+
+> 
+> > +/*
+> > + * This routine is called to create an in-core file mapping exchange item from
+> > + * the xmi format structure which was logged on disk.  It allocates an in-core
+> > + * xmi, copies the exchange information from the format structure into it, and
+> > + * adds the xmi to the AIL with the given LSN.
+> > + */
+> > +STATIC int
+> > +xlog_recover_xmi_commit_pass2(
+> > +	struct xlog			*log,
+> > +	struct list_head		*buffer_list,
+> > +	struct xlog_recover_item	*item,
+> > +	xfs_lsn_t			lsn)
+> > +{
+> > +	struct xfs_mount		*mp = log->l_mp;
+> > +	struct xfs_xmi_log_item		*xmi_lip;
+> > +	struct xfs_xmi_log_format	*xmi_formatp;
+> > +	size_t				len;
+> > +
+> > +	len = sizeof(struct xfs_xmi_log_format);
+> > +	if (item->ri_buf[0].i_len != len) {
+> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > +		return -EFSCORRUPTED;
+> > +	}
+> > +
+> > +	xmi_formatp = item->ri_buf[0].i_addr;
+> > +	if (xmi_formatp->__pad != 0) {
+> > +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+> > +		return -EFSCORRUPTED;
+> > +	}
+> > +
+> > +	xmi_lip = xfs_xmi_init(mp);
+> > +	memcpy(&xmi_lip->xmi_format, xmi_formatp, len);
+> 
+> Should this be validating that the structure contents are within
+> valid ranges?
+
+That's done within _recover_work, like all the other intent items.  If
+you want to clean that up then I'll review those patches, but I am not
+going to prepend more generic cleanups.
+
+--D
+
+> -Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
