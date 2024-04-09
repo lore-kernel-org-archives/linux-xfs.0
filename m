@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9472158DBD
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:17:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B81158DA9
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:17:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712704663; cv=none; b=Bp30u3ttsdMUsFtkMVr2JTHjoV+BZTvpfR8m0h378c6rxWo3YQ8CV6azFwcoXtCvVjwqYtspvF+dnl4JTFcYwHjSNIhqpIf9uiZQuat4NA4odi2gIczWTKExA5Lxxsdll3BkF06TcNKUI/EJqw3dKIhpCPX8HbD8R1fqsYtUh8s=
+	t=1712704672; cv=none; b=K+1ERVtFUIef4wkadSj3/rBr0+1KYbJkWtmi+Xb75qkLaG4tPFj7UU2FTvzEQfdn8GP2goW/gSndpjheHcAzyfdlW76U88pSfOQGlse4JtohLUtRhbJki+MTWH/wv4KAAe9hHkce3OxRore+3/grZOZStyZJQW9JcliQZdCuuNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712704663; c=relaxed/simple;
-	bh=G7cdSdDpOb3A53wElrogGx+A9QF3VakCCv8hcSaRFXQ=;
+	s=arc-20240116; t=1712704672; c=relaxed/simple;
+	bh=rwo3txLKHsUXqLGEt+kWOQ3vbC8Z1jodk8SwN1pPRIE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e/rFjbHebiAXKFk9tRH3Fo38XSg+K2bEQyZDVQdZJ6hGbaF/wekBOWeEDEmNDjcLggqMiTtNxtxvUSkslMBtkEfla6TeE5ELYSPuH9ZbtKbzDX9dAkBZ4m+4NhAk5IEMeddtqn7gFrwZNTjXNU/8LIM+stI0atKpj6jtyHxvJKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwMVzrrB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tYRShc6KQBIQPhjkf3cyhRfIiTHM1wQq1W+UTearMz/Ba1Cj185GLJdNAv5hNpy9IsMn85mgA+ebfMJGycFPog1/9XvA4jAauHmN6jek4FMfju4eeKpEi1rc7f6JpjfgLl8R1OCCQdjOBbgNErokElYNRR/7JIeuwldPizFD2JU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XFZXe+c5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwMVzrrB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 481C9C433F1;
-	Tue,  9 Apr 2024 23:17:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XFZXe+c5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11667C433F1;
+	Tue,  9 Apr 2024 23:17:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712704663;
-	bh=G7cdSdDpOb3A53wElrogGx+A9QF3VakCCv8hcSaRFXQ=;
+	s=k20201202; t=1712704672;
+	bh=rwo3txLKHsUXqLGEt+kWOQ3vbC8Z1jodk8SwN1pPRIE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LwMVzrrBZ7BxMP6CXBZ0tde+bP+W+w0V1YPhXrujnAoT3SGiLi5rUqj0C6SM7VGhO
-	 zt33LBIbjKTFbWPqNYKXyuLCKIal7EeBsDD6Et7b0kvMjNHM36jwfeuzIarPGo9dvB
-	 whGi1Azyt5y4rbiOev8mSNSyAxSGzIH9/bJ87xVIG4VmnBRnTSG72QXJ2Rv6x+XL/a
-	 gtQiojU7aihq6WrBmSIjIxDzoBPNv8TYMPoeKbCqii3ocMZdQlvQUPZ2HNtcdqXlcP
-	 YSFLAa5ekJyg5S3dz3qpkAJwJ5KVf0jV0iwYcUOwrkOXSurx0lJG8jJy6cd9cGjxij
-	 aFHUnXU2TSVNg==
-Date: Tue, 9 Apr 2024 16:17:42 -0700
+	b=XFZXe+c5VIBkNGIoxwIElI94hG1Y0xcEStO30B6n7b+0g+UeLbwwLW099TmyPHUlC
+	 RI9awiwXAbC9UtXekt9DS6IwZTc6vQ7BvKX9sCTMCS98l3vQMN06u2Z7xQ9YavuUeM
+	 0eX5rp+rhA4t9LOV1uQ45NNXs21B5FvX+bYdPzjBchcUvcdWxTQc2eYSGLEfqqAKSZ
+	 PDrd9LwzG0XI7WSKKulUg3zEiKSu+Ts0BAVdel0Bx1XfVv3w0uq0fFENVLbOBKc4X+
+	 ppVCOzL8hxDn0k6k/LuSzDIxgwy4i7T2cnQ8j49DB6IVfAmLQAj9e/OUWg/DMi4tq8
+	 BNP1iA0UHMi6A==
+Date: Tue, 9 Apr 2024 16:17:51 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>,
 	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 3/8] xfs: lifr a xfs_valid_startblock into
+Subject: Re: [PATCH 2/8] xfs: remove the unusued tmp_logflags variable in
  xfs_bmapi_allocate
-Message-ID: <20240409231742.GN6390@frogsfrogsfrogs>
+Message-ID: <20240409231751.GO6390@frogsfrogsfrogs>
 References: <20240408145454.718047-1-hch@lst.de>
- <20240408145454.718047-4-hch@lst.de>
+ <20240408145454.718047-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,56 +45,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408145454.718047-4-hch@lst.de>
+In-Reply-To: <20240408145454.718047-3-hch@lst.de>
 
-On Mon, Apr 08, 2024 at 04:54:49PM +0200, Christoph Hellwig wrote:
-> Subject: [PATCH 3/8] xfs: lifr a xfs_valid_startblock into xfs_bmapi_allocate
-
-                            lift
-
-> xfs_bmapi_convert_delalloc has a xfs_valid_startblock check on the block
-> allocated by xfs_bmapi_allocate.  Lift it into xfs_bmapi_allocate as
-> we should assert the same for xfs_bmapi_write.
+On Mon, Apr 08, 2024 at 04:54:48PM +0200, Christoph Hellwig wrote:
+> tmp_logflags is initialized to 0 and then ORed into bma->logflags, which
+> isn't actually doing anything.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-With the typo fixed,
+Looks good,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index a847159302703a..3b5816de4af2a1 100644
+> index 14196d918865ba..a847159302703a 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4230,6 +4230,11 @@ xfs_bmapi_allocate(
->  	if (bma->blkno == NULLFSBLOCK)
->  		return -ENOSPC;
+> @@ -4191,7 +4191,6 @@ xfs_bmapi_allocate(
+>  	struct xfs_mount	*mp = bma->ip->i_mount;
+>  	int			whichfork = xfs_bmapi_whichfork(bma->flags);
+>  	struct xfs_ifork	*ifp = xfs_ifork_ptr(bma->ip, whichfork);
+> -	int			tmp_logflags = 0;
+>  	int			error;
 >  
-> +	if (WARN_ON_ONCE(!xfs_valid_startblock(bma->ip, bma->blkno))) {
-> +		xfs_bmap_mark_sick(bma->ip, whichfork);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
->  	if (bma->flags & XFS_BMAPI_ZERO) {
->  		error = xfs_zero_extent(bma->ip, bma->blkno, bma->length);
->  		if (error)
-> @@ -4721,12 +4726,6 @@ xfs_bmapi_convert_delalloc(
->  	if (error)
->  		goto out_finish;
->  
-> -	if (WARN_ON_ONCE(!xfs_valid_startblock(ip, bma.got.br_startblock))) {
-> -		xfs_bmap_mark_sick(ip, whichfork);
-> -		error = -EFSCORRUPTED;
-> -		goto out_finish;
-> -	}
+>  	ASSERT(bma->length > 0);
+> @@ -4262,8 +4261,6 @@ xfs_bmapi_allocate(
+>  		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
+>  				whichfork, &bma->icur, &bma->cur, &bma->got,
+>  				&bma->logflags, bma->flags);
 > -
->  	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
->  	XFS_STATS_INC(mp, xs_xstrat_quick);
+> -	bma->logflags |= tmp_logflags;
+>  	if (error)
+>  		return error;
 >  
 > -- 
 > 2.39.2
