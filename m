@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81AC512F381
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:16:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F16157476
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:16:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712704562; cv=none; b=fRn9NPS8E/MfKmBsWsheqarJ0WUf55XoxuVPMMt3+FMjR4ANtEjCeTLn09hsiePpuDnqsmc2Aistp89xuBoHAyR1tUYgrWiaaBUk9j56K9OZRMPYZesUuBAtAjuc6+jKl78h58EtA6hKzNLGo34qx4G63SJChA1yA+e1pwPKwBA=
+	t=1712704606; cv=none; b=hRfrhJi9vDePuvsBMC0FwNKwyJarsKgn/4x4WaBT7iUfv7KbipCy0VotxppYy+ZPmZBilIQb2Bgx4v9DM68eiFHbpOKG5EncmtRifHEQM8dMXoimMwHXe/Qry33UuYh5UopITAG0v21h4LtAC9OT25ddGjoSPPdt27jHwBI/NlA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712704562; c=relaxed/simple;
-	bh=a9Cxmvp61L5dzkcCPu5M5gYJtih4mlSHKM/WVQ7PLoY=;
+	s=arc-20240116; t=1712704606; c=relaxed/simple;
+	bh=Asfv+2nV+QfPfp0VawA4A5VsuHFseOXVyucD9o25JW4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SIDiLblRp7SluxLwaZ/Zduamw09xTaadAdtsu8A2uCBtZcgrZXlloy1RJ/GjFeYD+TMm/sp29jYI5nZRxofmf27cLvNczmB6EucYB9EL+TXAMm6dTiBiQvBiNBA6gHl68haMEOuJVhH/C5V7fRdqWTyISkqp5SNVIWqKp9H5TNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Syxd2pAq; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tceHydKSkbFmGKtFPnHpoBnuWFeEg09pnNLcnLtp0iNdqZnWTa2btialJfHRmUxYUdVRMglirvKCtanjX1w0ENB8YA/9GBwPB1mjfRgThDMpvUuTiJpsUDu+PRsCYA7FK8O+ZyWNCDa4fiM7QmE1aNj4kvQktbU4EhUIzk8mvsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hgxbeHyG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Syxd2pAq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097DEC433C7;
-	Tue,  9 Apr 2024 23:16:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hgxbeHyG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAAEBC433F1;
+	Tue,  9 Apr 2024 23:16:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712704562;
-	bh=a9Cxmvp61L5dzkcCPu5M5gYJtih4mlSHKM/WVQ7PLoY=;
+	s=k20201202; t=1712704605;
+	bh=Asfv+2nV+QfPfp0VawA4A5VsuHFseOXVyucD9o25JW4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Syxd2pAqj8Q6RAdckoeY/IMfkpXRqY7uocJZCoCuvr83a+IKpl863/WxQek73C+S7
-	 y/ngVvHDld+Id2a7Da6NyziHeqLLN02GhlaGWOUbVX32ZZ7PatCXOiNVfqJPqfiaWH
-	 YEMRmSOF7jL0VYtlEJG6T9LFkN4hlIdzC+Jahr3BxPfi2nNEPvcBjy62t1d//HrjRm
-	 6K2wwA1j7UoDg9/blu3tuOTjoVsAxmqwfJ6oa+FY+axBrmUCm5yzO/l+lDV9uOeMoi
-	 uulgfRlpLytm/0J+FipW8QlBBvU4/2Ba67pcxFx7OhA32b0dmL6/QgZChzxyn2f/RL
-	 mDfoecFuXYvxA==
-Date: Tue, 9 Apr 2024 16:16:01 -0700
+	b=hgxbeHyG2jN57h7PyBkfNDamWUL5iDS9c+tleuWfKgIzxgfVdtvE2wZjQUNRVaMyd
+	 Y0L0tw+qQwjM6DUqD7QWoyzXQ40G6P3wtDHBLSBMHXv3rQUylbsnhoyEcxLwkqrxsH
+	 4XSDQOXeIqaQxcqLqeeZAblTG7+75DYohwyS7TfmKqDLSOL0Y3cMdvvQuic/3UZpsq
+	 iRJdaPhEu8DS95XbXTdO2yKJNgqBkTAg4HeGNbH8bLoNXdsPaOHg/xvjK1NFsrSlA6
+	 JWJ3P/gSsDSnHJizckkBipiDUjkZu/RmFFgDgWlUNqmOXC418i921fe23jep921n5I
+	 teWb3mpV0NIpA==
+Date: Tue, 9 Apr 2024 16:16:45 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>,
 	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 8/8] xfs: do not allocate the entire delalloc extent in
- xfs_bmapi_write
-Message-ID: <20240409231601.GJ6390@frogsfrogsfrogs>
+Subject: Re: [PATCH 7/8] xfs: fix xfs_bmap_add_extent_delay_real for partial
+ conversions
+Message-ID: <20240409231645.GK6390@frogsfrogsfrogs>
 References: <20240408145454.718047-1-hch@lst.de>
- <20240408145454.718047-9-hch@lst.de>
+ <20240408145454.718047-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,53 +45,121 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408145454.718047-9-hch@lst.de>
+In-Reply-To: <20240408145454.718047-8-hch@lst.de>
 
-On Mon, Apr 08, 2024 at 04:54:54PM +0200, Christoph Hellwig wrote:
-> While trying to convert the entire delalloc extent is a good decision
-> for regular writeback as it leads to larger contigous on-disk extents,
-> but for other callers of xfs_bmapi_write is is rather questionable as
-> it forced them to loop creating new transactions just in case there
-> is no large enough contiguous extent to cover the whole delalloc
-> reservation.
+On Mon, Apr 08, 2024 at 04:54:53PM +0200, Christoph Hellwig wrote:
+> xfs_bmap_add_extent_delay_real takes parts or all of a delalloc extent
+> and converts them to a real extent.  It is written to deal with any
+> potential overlap of the to be converted range with the delalloc extent,
+> but it turns out that currently only converting the entire extents, or a
+> part starting at the beginning is actually exercised, as the only caller
+> always tries to convert the entire delalloc extent, and either succeeds
+> or at least progresses partially from the start.
 > 
-> Change xfs_bmapi_write to only allocate the passed in range instead.
+> If it only converts a tiny part of a delalloc extent, the indirect block
+> calculation for the new delalloc extent (da_new) might be equivalent to that
+> of the existing delalloc extent (da_new).  If this extent conversion now
 
-Looking at this... I guess xfs_map_blocks -> xfs_convert_blocks ->
-xfs_bmapi_convert_delalloc -> xfs_bmapi_allocate is now how writeback
-converts delalloc extents before scheduling writeout.  This is how the
-mass-conversions of large da reservations got done before this series,
-and that's still how it works, right?
+                                   da_old?
 
-Whereas xfs_bmapi_write is for targeted conversions only?
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-If yes and yes, then:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The code changes make sense to me otherwise.
 
 --D
 
+> requires allocating an indirect block that gets accounted into da_new,
+> leading to the assert that da_new must be smaller or equal to da_new
+> unless we split the extent to trigger.
+> 
+> Except for the assert that case is actually handled by just trying to
+> allocate more space, as that already handled for the split case (which
+> currently can't be reached at all), so just reusing it should be fine.
+> Except that without dipping into the reserved block pool that would make
+> it a bit too easy to trigger a fs shutdown due to ENOSPC.  So in addition
+> to adjusting the assert, also dip into the reserved block pool.
+> 
+> Note that I could only reproduce the assert with a change to only convert
+> the actually asked range instead of the full delalloc extent from
+> xfs_bmapi_write.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 7700a48e013d5a..748809b13113ab 100644
+> index 08e13ebdee1b53..7700a48e013d5a 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4533,8 +4533,9 @@ xfs_bmapi_write(
->  			bma.length = XFS_FILBLKS_MIN(len, XFS_MAX_BMBT_EXTLEN);
+> @@ -1586,6 +1586,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  		}
+> +		ASSERT(da_new <= da_old);
+>  		break;
 >  
->  			if (wasdelay) {
-> -				bma.offset = bma.got.br_startoff;
-> -				bma.length = bma.got.br_blockcount;
-> +				bma.length = XFS_FILBLKS_MIN(bma.length,
-> +					bma.got.br_blockcount -
-> +					(bno - bma.got.br_startoff));
->  			} else {
->  				if (!eof)
->  					bma.length = XFS_FILBLKS_MIN(bma.length,
+>  	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING | BMAP_LEFT_CONTIG:
+> @@ -1616,6 +1617,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  		}
+> +		ASSERT(da_new <= da_old);
+>  		break;
+>  
+>  	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
+> @@ -1650,6 +1652,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  		}
+> +		ASSERT(da_new <= da_old);
+>  		break;
+>  
+>  	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
+> @@ -1684,6 +1687,7 @@ xfs_bmap_add_extent_delay_real(
+>  				goto done;
+>  			}
+>  		}
+> +		ASSERT(da_new <= da_old);
+>  		break;
+>  
+>  	case BMAP_LEFT_FILLING | BMAP_LEFT_CONTIG:
+> @@ -1722,6 +1726,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  		}
+> +		ASSERT(da_new <= da_old);
+>  		break;
+>  
+>  	case BMAP_LEFT_FILLING:
+> @@ -1812,6 +1817,7 @@ xfs_bmap_add_extent_delay_real(
+>  		xfs_iext_update_extent(bma->ip, state, &bma->icur, &PREV);
+>  		xfs_iext_next(ifp, &bma->icur);
+>  		xfs_iext_update_extent(bma->ip, state, &bma->icur, &RIGHT);
+> +		ASSERT(da_new <= da_old);
+>  		break;
+>  
+>  	case BMAP_RIGHT_FILLING:
+> @@ -1861,6 +1867,7 @@ xfs_bmap_add_extent_delay_real(
+>  		PREV.br_blockcount = temp;
+>  		xfs_iext_insert(bma->ip, &bma->icur, &PREV, state);
+>  		xfs_iext_next(ifp, &bma->icur);
+> +		ASSERT(da_new <= da_old);
+>  		break;
+>  
+>  	case 0:
+> @@ -1983,11 +1990,9 @@ xfs_bmap_add_extent_delay_real(
+>  	}
+>  
+>  	/* adjust for changes in reserved delayed indirect blocks */
+> -	if (da_new != da_old) {
+> -		ASSERT(state == 0 || da_new < da_old);
+> +	if (da_new != da_old)
+>  		error = xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new),
+> -				false);
+> -	}
+> +				da_new > da_old);
+>  
+>  	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
+>  done:
 > -- 
 > 2.39.2
 > 
