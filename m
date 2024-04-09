@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5641158A2B
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 22:51:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58247158D8F
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 22:53:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712703082; cv=none; b=hGS+Zio6x7xLmKGTVru4YPqBHvF5SyZTD5PinI3R1uJBv1VqN8jbcnTz7LT66ovv9hdvpBzBkg93Gn5SXEq0hzpU1ZObmzOgO8Aa2HQUxicXv4CVgjACA2h01xtrTXQRZEiUJb2XbwNlnnQr8tO+U7iJCAaF9nm/tJeAiUeTm0E=
+	t=1712703216; cv=none; b=EMjiv+nX3HI9D1fJlqX4NyZXIvXqeD0OsNCuIbt/0Xb34VVjLrWJJvXuVEiRuxsahfw/8C6YUwmYBjpuevdtyM9I6gsi1wY01clvCxPiHGNi7d6goPHwx4nM3uMFHLAzJ0AwQv9fLHzyQSl7p1qZ6isT5B6c3SDqXHYbuUyvk18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712703082; c=relaxed/simple;
-	bh=BsK3FWaEKn957dGzXp5ndRl2rM25uu+jzeX9pNxye3Y=;
+	s=arc-20240116; t=1712703216; c=relaxed/simple;
+	bh=uPxblWno/5SqSFzTSB3rVJclR3IY9u1sNlJtcTmuBbw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Aaqv3H2IYNB4nvKeKJaS1nNxawH8WknnqAWfW9/oig1wT4kfKAsVL3MvCfQVgj5I+FTjfu8mUK1rNzg71qGSGR4+yLpyER5IH2rAq7vOUM20sPRVm+RqHaQ6IDQksYU6ck+ZVqi10zZeISPOYzHVg/MfOGa2KnTnI5cPXYrHRvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uHNUgJYS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=W/PcBoS1D/wQ7twxdGJ/rCDWqaXS2RJQPM7vlPokv0wbEw04FWnfy8kEwomckMaYysE/ZRkk9Vbak+Y9mmyNOXxUTZ5V0O8ozm+jt8pVMCEeInUk3YQRX5LZrXOSSQR8ORr4PDPyqFWDfVIZPIgHsDMU8BHNsqSNmoGjZQ9kvDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aewQCDRe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uHNUgJYS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 496DEC433F1;
-	Tue,  9 Apr 2024 22:51:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aewQCDRe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D754FC433C7;
+	Tue,  9 Apr 2024 22:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712703082;
-	bh=BsK3FWaEKn957dGzXp5ndRl2rM25uu+jzeX9pNxye3Y=;
+	s=k20201202; t=1712703215;
+	bh=uPxblWno/5SqSFzTSB3rVJclR3IY9u1sNlJtcTmuBbw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uHNUgJYSzR7m/86Kbqzzoxni7Y/jLff4bzP0cpBRB6i9QCcFaFMQ2CFqOgxE2FS63
-	 Hn+rYLDRvItEC4T9N7GBDygdezBR6Imvxui5Z0fIgsYuFrBNgqrbyoCTYxy6GNHTsz
-	 IPW4RyaFD9iGxH9y+WpKsOhzkUoE9MmgoCwevWUT7GGISV/cseJDI6ji6ZwZHcXADY
-	 U1f0tH3NWc7Lo1N9HZsdU9c5OQe5UqBEOCVvpWfefd/OxVn2DFAeNX/TlvoOZTfLhR
-	 O07B82b96C1HHl3R7Yx2ueqN2gth7FbvHQjQS2XhmVQSk1e2TjH3ygXju/BqoTcQpu
-	 WF1s6cLyJHA+Q==
-Date: Tue, 9 Apr 2024 15:51:21 -0700
+	b=aewQCDReNlaANMJF0Lbky+hU5rSXKn1oyV3aHtXGS/fN5SPxW4yvHkaBmKaOCOYyo
+	 CVAHyEn0R/vlx/KlxzO9DmuNbmqHc2Y0s7akEMburPM85D0zHGbLtjKTJIAI67l/EX
+	 8jrQS0t0dAEKaTR2qR/uV+MVXCe8PDmYXU4NOLGQJ1lMPhzhyXr1Ok7+xSjXKnKsPU
+	 xucsOO0oOLq0NL9FGtABU8HLZVG7C8nnjv62YP/mXAfxi0+0a/VgxEvLmfVpUvr6g5
+	 /oxmgFCwVXRCj0h2dpAvp49DFkqR9eoJ8i/BiAX1e93XtClFTc9dE5jDRnFCaTpui4
+	 JqZxF4OrHpVog==
+Date: Tue, 9 Apr 2024 15:53:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: fix an AGI lock acquisition ordering problem in
- xrep_dinode_findmode
-Message-ID: <20240409225121.GH6390@frogsfrogsfrogs>
-References: <171212150033.1535150.8307366470561747407.stgit@frogsfrogsfrogs>
- <171212151192.1535150.13198476701217286884.stgit@frogsfrogsfrogs>
- <ZhMfXA/1YyRDe869@dread.disaster.area>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: only add log incompat features with explicit
+ permission
+Message-ID: <20240409225335.GI6390@frogsfrogsfrogs>
+References: <171150379721.3216346.4387266050277204544.stgit@frogsfrogsfrogs>
+ <171150379761.3216346.9053282853553134545.stgit@frogsfrogsfrogs>
+ <ZhMle4U4mwUnqoNZ@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,149 +44,95 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhMfXA/1YyRDe869@dread.disaster.area>
+In-Reply-To: <ZhMle4U4mwUnqoNZ@dread.disaster.area>
 
-On Mon, Apr 08, 2024 at 08:34:04AM +1000, Dave Chinner wrote:
-> On Tue, Apr 02, 2024 at 10:18:31PM -0700, Darrick J. Wong wrote:
+On Mon, Apr 08, 2024 at 09:00:11AM +1000, Dave Chinner wrote:
+> On Tue, Mar 26, 2024 at 06:51:00PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > While reviewing the next patch which fixes an ABBA deadlock between the
-> > AGI and a directory ILOCK, someone asked a question about why we're
-> > holding the AGI in the first place.  The reason for that is to quiesce
-> > the inode structures for that AG while we do a repair.
-> > 
-> > I then realized that the xrep_dinode_findmode invokes xchk_iscan_iter,
-> > which walks the inobts (and hence the AGIs) to find all the inodes.
-> > This itself is also an ABBA vector, since the damaged inode could be in
-> > AG 5, which we hold while we scan AG 0 for directories.  5 -> 0 is not
-> > allowed.
-> > 
-> > To address this, modify the iscan to allow trylock of the AGI buffer
-> > using the flags argument to xfs_ialloc_read_agi that the previous patch
-> > added.
+> > Only allow the addition of new log incompat features to the primary
+> > superblock if the sysadmin provides explicit consent via a mount option
+> > or if the process has administrative privileges.  This should prevent
+> > surprises when trying to recover dirty logs on old kernels.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/scrub/inode_repair.c |    1 +
-> >  fs/xfs/scrub/iscan.c        |   36 +++++++++++++++++++++++++++++++++++-
-> >  fs/xfs/scrub/iscan.h        |   15 +++++++++++++++
-> >  fs/xfs/scrub/trace.h        |   10 ++++++++--
-> >  4 files changed, 59 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-> > index eab380e95ef40..35da0193c919e 100644
-> > --- a/fs/xfs/scrub/inode_repair.c
-> > +++ b/fs/xfs/scrub/inode_repair.c
-> > @@ -356,6 +356,7 @@ xrep_dinode_find_mode(
-> >  	 * so there's a real possibility that _iscan_iter can return EBUSY.
-> >  	 */
-> >  	xchk_iscan_start(sc, 5000, 100, &ri->ftype_iscan);
-> > +	xchk_iscan_set_agi_trylock(&ri->ftype_iscan);
-> >  	ri->ftype_iscan.skip_ino = sc->sm->sm_ino;
-> >  	ri->alleged_ftype = XFS_DIR3_FT_UNKNOWN;
-> >  	while ((error = xchk_iscan_iter(&ri->ftype_iscan, &dp)) == 1) {
-> > diff --git a/fs/xfs/scrub/iscan.c b/fs/xfs/scrub/iscan.c
-> > index 66ba0fbd059e0..736ce7c9de6a8 100644
-> > --- a/fs/xfs/scrub/iscan.c
-> > +++ b/fs/xfs/scrub/iscan.c
-> > @@ -243,6 +243,40 @@ xchk_iscan_finish(
-> >  	mutex_unlock(&iscan->lock);
-> >  }
-> >  
-> > +/*
-> > + * Grab the AGI to advance the inode scan.  Returns 0 if *agi_bpp is now set,
-> > + * -ECANCELED if the live scan aborted, -EBUSY if the AGI could not be grabbed,
-> > + * or the usual negative errno.
-> > + */
-> > +STATIC int
-> > +xchk_iscan_read_agi(
-> > +	struct xchk_iscan	*iscan,
-> > +	struct xfs_perag	*pag,
-> > +	struct xfs_buf		**agi_bpp)
-> > +{
-> > +	struct xfs_scrub	*sc = iscan->sc;
-> > +	unsigned long		relax;
-> > +	int			ret;
-> > +
-> > +	if (!xchk_iscan_agi_trylock(iscan))
-> > +		return xfs_ialloc_read_agi(pag, sc->tp, 0, agi_bpp);
-> > +
-> > +	relax = msecs_to_jiffies(iscan->iget_retry_delay);
-> > +	do {
-> > +		ret = xfs_ialloc_read_agi(pag, sc->tp, XFS_IALLOC_FLAG_TRYLOCK,
-> > +				agi_bpp);
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> Why is this using xfs_ialloc_read_agi() and not xfs_read_agi()?
-> How do we get here without the perag AGI state not already
-> initialised?
-
-!finobt filesystems won't have called xfs_ialloc_read_agi to initialize
-the incore per-ag reservation during mount.  That's a bit of a corner
-case since there shouldn't be /so/ many filesystems without finobt these
-days, but it's theoretically possible.
-
-> i.e. if you just use xfs_read_agi(), all the code that has to plumb
-> flags into xfs_ialloc_read_agi() goes away and this change because a
-> lot less intrusive....
+> As I said originally when this was proposed, the logic needs to
+> default to allow log incompat features to be added rather than
+> disallow.
 > 
-> > +		if (ret != -EAGAIN)
-> > +			return ret;
-> > +		if (!iscan->iget_timeout ||
-> > +		    time_is_before_jiffies(iscan->__iget_deadline))
-> > +			return -EBUSY;
-> > +
-> > +		trace_xchk_iscan_agi_retry_wait(iscan);
-> > +	} while (!schedule_timeout_killable(relax) &&
-> > +		 !xchk_iscan_aborted(iscan));
-> > +	return -ECANCELED;
-> > +}
-> > +
-> >  /*
-> >   * Advance ino to the next inode that the inobt thinks is allocated, being
-> >   * careful to jump to the next AG if we've reached the right end of this AG's
-> > @@ -281,7 +315,7 @@ xchk_iscan_advance(
-> >  		if (!pag)
-> >  			return -ECANCELED;
-> >  
-> > -		ret = xfs_ialloc_read_agi(pag, sc->tp, 0, &agi_bp);
-> > +		ret = xchk_iscan_read_agi(iscan, pag, &agi_bp);
-> >  		if (ret)
-> >  			goto out_pag;
-> >  
-> > diff --git a/fs/xfs/scrub/iscan.h b/fs/xfs/scrub/iscan.h
-> > index 71f657552dfac..c9da8f7721f66 100644
-> > --- a/fs/xfs/scrub/iscan.h
-> > +++ b/fs/xfs/scrub/iscan.h
-> > @@ -59,6 +59,9 @@ struct xchk_iscan {
-> >  /* Set if the scan has been aborted due to some event in the fs. */
-> >  #define XCHK_ISCAN_OPSTATE_ABORTED	(1)
-> >  
-> > +/* Use trylock to acquire the AGI */
-> > +#define XCHK_ISCAN_OPSTATE_TRYLOCK_AGI	(2)
-> > +
-> >  static inline bool
-> >  xchk_iscan_aborted(const struct xchk_iscan *iscan)
-> >  {
-> > @@ -71,6 +74,18 @@ xchk_iscan_abort(struct xchk_iscan *iscan)
-> >  	set_bit(XCHK_ISCAN_OPSTATE_ABORTED, &iscan->__opstate);
-> >  }
-> >  
-> > +static inline bool
-> > +xchk_iscan_agi_trylock(const struct xchk_iscan *iscan)
-> > +{
-> > +	return test_bit(XCHK_ISCAN_OPSTATE_TRYLOCK_AGI, &iscan->__opstate);
-> > +}
+> Essentially, having the default as "not allowed" means in future
+> every single XFS mount on every single system is going to have to
+> add this mount option to allow new log format features to used.
 > 
-> Function does not actually do any locking, but the name implies it
-> is actually doing a trylock operation. Perhaps
-> xchk_iscan_agi_needs_trylock()?
+> This "default = disallow" means our regression test systems will not
+> be exercising features based on this code without explicitly
+> expanding every independent test configuration matrix by another
+> dimension. This essentially means there will be almost no test
+> coverage for these dynamic features..
+> 
+> So, yeah, I think this needs to default to "allow", not "disallow".
 
-Ok.  I apologize for the rage of the last few days.  I need a
-loooooooong vacation.
+This is moot -- I changed exchangerange to use a permanent incompat
+feature so that we can guarantee to users that if the xfs_info output
+says it's enabled then it's 100% ready to go.  Hence I no longer care
+what happens to log incompat bits and this patch no longer needs to
+exist.
 
 --D
 
+> 
+> > ---
+> >  Documentation/admin-guide/xfs.rst |    7 +++++++
+> >  fs/xfs/xfs_mount.c                |   26 ++++++++++++++++++++++++++
+> >  fs/xfs/xfs_mount.h                |    3 +++
+> >  fs/xfs/xfs_super.c                |   12 +++++++++++-
+> >  4 files changed, 47 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+> > index b67772cf36d6d..52acd95b2b754 100644
+> > --- a/Documentation/admin-guide/xfs.rst
+> > +++ b/Documentation/admin-guide/xfs.rst
+> > @@ -21,6 +21,13 @@ Mount Options
+> >  
+> >  When mounting an XFS filesystem, the following options are accepted.
+> >  
+> > +  add_log_feat/noadd_log_feat
+> > +        Permit unprivileged userspace to use functionality that requires
+> > +        the addition of log incompat feature bits to the superblock.
+> > +        The feature bits will be cleared during a clean unmount.
+> > +        Old kernels cannot recover dirty logs if they do not recognize
+> > +        all log incompat feature bits.
+> > +
+> >    allocsize=size
+> >  	Sets the buffered I/O end-of-file preallocation size when
+> >  	doing delayed allocation writeout (default size is 64KiB).
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index d37ba10f5fa33..a0b271758f910 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -1281,6 +1281,27 @@ xfs_force_summary_recalc(
+> >  	xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
+> >  }
+> >  
+> > +/*
+> > + * Allow the log feature upgrade only if the sysadmin permits it via mount
+> > + * option; or the caller is the administrator.  If the @want_audit parameter
+> > + * is true, then a denial due to insufficient privileges will be logged.
+> > + */
+> > +bool
+> > +xfs_can_add_incompat_log_features(
+> > +	struct xfs_mount	*mp,
+> > +	bool			want_audit)
+> > +{
+> > +	/* Always allowed if the mount option is set */
+> > +	if (mp->m_features & XFS_FEAT_ADD_LOG_FEAT)
+> > +		return true;
+> 
+> Please define a __XFS_HAS_FEAT() macro for this feature bit and
+> use xfs_has_log_features_enabled() wrapper for it.
 > 
 > -Dave.
 > -- 
