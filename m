@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2B5157476
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:17:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9472158DBD
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:17:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712704633; cv=none; b=YPSOGQAjldyJGpXoYbyVjDdcdpiA7Y60fW9On+tywWDuNFWXs0t+m80jpVLykdGyhbKnp2drBoCDAyEbN/TKavOjStGyhsy8ai9qP2p14y8CFQpx7derLNlqs6BNkV9f91dWN6woo7pQleTtkNPakULp4kAFnhcv8TFYsWr4MTw=
+	t=1712704663; cv=none; b=Bp30u3ttsdMUsFtkMVr2JTHjoV+BZTvpfR8m0h378c6rxWo3YQ8CV6azFwcoXtCvVjwqYtspvF+dnl4JTFcYwHjSNIhqpIf9uiZQuat4NA4odi2gIczWTKExA5Lxxsdll3BkF06TcNKUI/EJqw3dKIhpCPX8HbD8R1fqsYtUh8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712704633; c=relaxed/simple;
-	bh=g1KK4yNjABR1TOjZMZykyDCtUhE+Jv8FVh4QawTIdzw=;
+	s=arc-20240116; t=1712704663; c=relaxed/simple;
+	bh=G7cdSdDpOb3A53wElrogGx+A9QF3VakCCv8hcSaRFXQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C1I/stfBRyPvURzALZ6GcH1rKttV6dxtUmjgCfoJRYtKaz8apBSq5cltwekZ76wzmZgsbr0sfzEydzEU4kCdlzuKSga4cNOjXwmILtrp9b7OHbfUiN/2sWhWvOmmVgj8Pr9xuhERx/o2YGXQr/ojfinBEr7HHc7wQBU2gqRIXk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=umxRCVZX; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=e/rFjbHebiAXKFk9tRH3Fo38XSg+K2bEQyZDVQdZJ6hGbaF/wekBOWeEDEmNDjcLggqMiTtNxtxvUSkslMBtkEfla6TeE5ELYSPuH9ZbtKbzDX9dAkBZ4m+4NhAk5IEMeddtqn7gFrwZNTjXNU/8LIM+stI0atKpj6jtyHxvJKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwMVzrrB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="umxRCVZX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA90AC433C7;
-	Tue,  9 Apr 2024 23:17:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwMVzrrB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 481C9C433F1;
+	Tue,  9 Apr 2024 23:17:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712704632;
-	bh=g1KK4yNjABR1TOjZMZykyDCtUhE+Jv8FVh4QawTIdzw=;
+	s=k20201202; t=1712704663;
+	bh=G7cdSdDpOb3A53wElrogGx+A9QF3VakCCv8hcSaRFXQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=umxRCVZXFH/DdY+il4Y0t4crr7YRk8lbjTY9q3EtAGAdKGInltVB9llcHq/z3NfKK
-	 A8AErStVzz2yUInVH98n3yFy2LV6yfdcH7oQCobHx60NwFQ5qheDLiWODftEgbHrP/
-	 QKGAvr6xxNYpFIAM7BaI4NxktjXuytgEKNqBAogMt6qQcoiInQeCQSF0hDE8eLT5PX
-	 hTJaKvG0lQgykMpHtL0DtfyhLLuLt/3MVF6Vv4R56sMCRc5ZGIUOcpMHEDROTtcghb
-	 4YacK7HjkjPBGvMW+4sOwxcsHpTVW+nSucH5aggItHD/RC+AQ9/4mTo0nFZY2yZAqR
-	 xJRl3F92V/X8w==
-Date: Tue, 9 Apr 2024 16:17:12 -0700
+	b=LwMVzrrBZ7BxMP6CXBZ0tde+bP+W+w0V1YPhXrujnAoT3SGiLi5rUqj0C6SM7VGhO
+	 zt33LBIbjKTFbWPqNYKXyuLCKIal7EeBsDD6Et7b0kvMjNHM36jwfeuzIarPGo9dvB
+	 whGi1Azyt5y4rbiOev8mSNSyAxSGzIH9/bJ87xVIG4VmnBRnTSG72QXJ2Rv6x+XL/a
+	 gtQiojU7aihq6WrBmSIjIxDzoBPNv8TYMPoeKbCqii3ocMZdQlvQUPZ2HNtcdqXlcP
+	 YSFLAa5ekJyg5S3dz3qpkAJwJ5KVf0jV0iwYcUOwrkOXSurx0lJG8jJy6cd9cGjxij
+	 aFHUnXU2TSVNg==
+Date: Tue, 9 Apr 2024 16:17:42 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>,
 	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 4/8] xfs: don't open code XFS_FILBLKS_MIN in
- xfs_bmapi_write
-Message-ID: <20240409231712.GM6390@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/8] xfs: lifr a xfs_valid_startblock into
+ xfs_bmapi_allocate
+Message-ID: <20240409231742.GN6390@frogsfrogsfrogs>
 References: <20240408145454.718047-1-hch@lst.de>
- <20240408145454.718047-5-hch@lst.de>
+ <20240408145454.718047-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,46 +45,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408145454.718047-5-hch@lst.de>
+In-Reply-To: <20240408145454.718047-4-hch@lst.de>
 
-On Mon, Apr 08, 2024 at 04:54:50PM +0200, Christoph Hellwig wrote:
-> XFS_FILBLKS_MIN uses min_t and thus does the comparison using the correct
-> xfs_filblks_t type.  Use it in xfs_bmapi_write and slightly adjust the
-> comment document th potential pitfall to take account of this
+On Mon, Apr 08, 2024 at 04:54:49PM +0200, Christoph Hellwig wrote:
+> Subject: [PATCH 3/8] xfs: lifr a xfs_valid_startblock into xfs_bmapi_allocate
+
+                            lift
+
+> xfs_bmapi_convert_delalloc has a xfs_valid_startblock check on the block
+> allocated by xfs_bmapi_allocate.  Lift it into xfs_bmapi_allocate as
+> we should assert the same for xfs_bmapi_write.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Pretty straightforward conversion,
+With the typo fixed,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 11 +++++------
+>  1 file changed, 5 insertions(+), 6 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 3b5816de4af2a1..f2e934c2fb423c 100644
+> index a847159302703a..3b5816de4af2a1 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4537,14 +4537,11 @@ xfs_bmapi_write(
->  			 * allocation length request (which can be 64 bits in
->  			 * length) and the bma length request, which is
->  			 * xfs_extlen_t and therefore 32 bits. Hence we have to
-> -			 * check for 32-bit overflows and handle them here.
-> +			 * be careful and do the min() using the larger type to
-> +			 * avoid overflows.
->  			 */
-> -			if (len > (xfs_filblks_t)XFS_MAX_BMBT_EXTLEN)
-> -				bma.length = XFS_MAX_BMBT_EXTLEN;
-> -			else
-> -				bma.length = len;
-> +			bma.length = XFS_FILBLKS_MIN(len, XFS_MAX_BMBT_EXTLEN);
+> @@ -4230,6 +4230,11 @@ xfs_bmapi_allocate(
+>  	if (bma->blkno == NULLFSBLOCK)
+>  		return -ENOSPC;
 >  
-> -			ASSERT(len > 0);
->  			ASSERT(bma.length > 0);
->  			error = xfs_bmapi_allocate(&bma);
->  			if (error) {
+> +	if (WARN_ON_ONCE(!xfs_valid_startblock(bma->ip, bma->blkno))) {
+> +		xfs_bmap_mark_sick(bma->ip, whichfork);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+>  	if (bma->flags & XFS_BMAPI_ZERO) {
+>  		error = xfs_zero_extent(bma->ip, bma->blkno, bma->length);
+>  		if (error)
+> @@ -4721,12 +4726,6 @@ xfs_bmapi_convert_delalloc(
+>  	if (error)
+>  		goto out_finish;
+>  
+> -	if (WARN_ON_ONCE(!xfs_valid_startblock(ip, bma.got.br_startblock))) {
+> -		xfs_bmap_mark_sick(ip, whichfork);
+> -		error = -EFSCORRUPTED;
+> -		goto out_finish;
+> -	}
+> -
+>  	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
+>  	XFS_STATS_INC(mp, xs_xstrat_quick);
+>  
 > -- 
 > 2.39.2
 > 
