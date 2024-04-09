@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58247158D8F
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 22:53:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81AC512F381
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:16:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712703216; cv=none; b=EMjiv+nX3HI9D1fJlqX4NyZXIvXqeD0OsNCuIbt/0Xb34VVjLrWJJvXuVEiRuxsahfw/8C6YUwmYBjpuevdtyM9I6gsi1wY01clvCxPiHGNi7d6goPHwx4nM3uMFHLAzJ0AwQv9fLHzyQSl7p1qZ6isT5B6c3SDqXHYbuUyvk18=
+	t=1712704562; cv=none; b=fRn9NPS8E/MfKmBsWsheqarJ0WUf55XoxuVPMMt3+FMjR4ANtEjCeTLn09hsiePpuDnqsmc2Aistp89xuBoHAyR1tUYgrWiaaBUk9j56K9OZRMPYZesUuBAtAjuc6+jKl78h58EtA6hKzNLGo34qx4G63SJChA1yA+e1pwPKwBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712703216; c=relaxed/simple;
-	bh=uPxblWno/5SqSFzTSB3rVJclR3IY9u1sNlJtcTmuBbw=;
+	s=arc-20240116; t=1712704562; c=relaxed/simple;
+	bh=a9Cxmvp61L5dzkcCPu5M5gYJtih4mlSHKM/WVQ7PLoY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W/PcBoS1D/wQ7twxdGJ/rCDWqaXS2RJQPM7vlPokv0wbEw04FWnfy8kEwomckMaYysE/ZRkk9Vbak+Y9mmyNOXxUTZ5V0O8ozm+jt8pVMCEeInUk3YQRX5LZrXOSSQR8ORr4PDPyqFWDfVIZPIgHsDMU8BHNsqSNmoGjZQ9kvDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aewQCDRe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=SIDiLblRp7SluxLwaZ/Zduamw09xTaadAdtsu8A2uCBtZcgrZXlloy1RJ/GjFeYD+TMm/sp29jYI5nZRxofmf27cLvNczmB6EucYB9EL+TXAMm6dTiBiQvBiNBA6gHl68haMEOuJVhH/C5V7fRdqWTyISkqp5SNVIWqKp9H5TNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Syxd2pAq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aewQCDRe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D754FC433C7;
-	Tue,  9 Apr 2024 22:53:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Syxd2pAq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097DEC433C7;
+	Tue,  9 Apr 2024 23:16:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712703215;
-	bh=uPxblWno/5SqSFzTSB3rVJclR3IY9u1sNlJtcTmuBbw=;
+	s=k20201202; t=1712704562;
+	bh=a9Cxmvp61L5dzkcCPu5M5gYJtih4mlSHKM/WVQ7PLoY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aewQCDReNlaANMJF0Lbky+hU5rSXKn1oyV3aHtXGS/fN5SPxW4yvHkaBmKaOCOYyo
-	 CVAHyEn0R/vlx/KlxzO9DmuNbmqHc2Y0s7akEMburPM85D0zHGbLtjKTJIAI67l/EX
-	 8jrQS0t0dAEKaTR2qR/uV+MVXCe8PDmYXU4NOLGQJ1lMPhzhyXr1Ok7+xSjXKnKsPU
-	 xucsOO0oOLq0NL9FGtABU8HLZVG7C8nnjv62YP/mXAfxi0+0a/VgxEvLmfVpUvr6g5
-	 /oxmgFCwVXRCj0h2dpAvp49DFkqR9eoJ8i/BiAX1e93XtClFTc9dE5jDRnFCaTpui4
-	 JqZxF4OrHpVog==
-Date: Tue, 9 Apr 2024 15:53:35 -0700
+	b=Syxd2pAqj8Q6RAdckoeY/IMfkpXRqY7uocJZCoCuvr83a+IKpl863/WxQek73C+S7
+	 y/ngVvHDld+Id2a7Da6NyziHeqLLN02GhlaGWOUbVX32ZZ7PatCXOiNVfqJPqfiaWH
+	 YEMRmSOF7jL0VYtlEJG6T9LFkN4hlIdzC+Jahr3BxPfi2nNEPvcBjy62t1d//HrjRm
+	 6K2wwA1j7UoDg9/blu3tuOTjoVsAxmqwfJ6oa+FY+axBrmUCm5yzO/l+lDV9uOeMoi
+	 uulgfRlpLytm/0J+FipW8QlBBvU4/2Ba67pcxFx7OhA32b0dmL6/QgZChzxyn2f/RL
+	 mDfoecFuXYvxA==
+Date: Tue, 9 Apr 2024 16:16:01 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: only add log incompat features with explicit
- permission
-Message-ID: <20240409225335.GI6390@frogsfrogsfrogs>
-References: <171150379721.3216346.4387266050277204544.stgit@frogsfrogsfrogs>
- <171150379761.3216346.9053282853553134545.stgit@frogsfrogsfrogs>
- <ZhMle4U4mwUnqoNZ@dread.disaster.area>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	Dave Chinner <david@fromorbit.com>,
+	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 8/8] xfs: do not allocate the entire delalloc extent in
+ xfs_bmapi_write
+Message-ID: <20240409231601.GJ6390@frogsfrogsfrogs>
+References: <20240408145454.718047-1-hch@lst.de>
+ <20240408145454.718047-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,98 +45,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhMle4U4mwUnqoNZ@dread.disaster.area>
+In-Reply-To: <20240408145454.718047-9-hch@lst.de>
 
-On Mon, Apr 08, 2024 at 09:00:11AM +1000, Dave Chinner wrote:
-> On Tue, Mar 26, 2024 at 06:51:00PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Only allow the addition of new log incompat features to the primary
-> > superblock if the sysadmin provides explicit consent via a mount option
-> > or if the process has administrative privileges.  This should prevent
-> > surprises when trying to recover dirty logs on old kernels.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Mon, Apr 08, 2024 at 04:54:54PM +0200, Christoph Hellwig wrote:
+> While trying to convert the entire delalloc extent is a good decision
+> for regular writeback as it leads to larger contigous on-disk extents,
+> but for other callers of xfs_bmapi_write is is rather questionable as
+> it forced them to loop creating new transactions just in case there
+> is no large enough contiguous extent to cover the whole delalloc
+> reservation.
 > 
-> As I said originally when this was proposed, the logic needs to
-> default to allow log incompat features to be added rather than
-> disallow.
-> 
-> Essentially, having the default as "not allowed" means in future
-> every single XFS mount on every single system is going to have to
-> add this mount option to allow new log format features to used.
-> 
-> This "default = disallow" means our regression test systems will not
-> be exercising features based on this code without explicitly
-> expanding every independent test configuration matrix by another
-> dimension. This essentially means there will be almost no test
-> coverage for these dynamic features..
-> 
-> So, yeah, I think this needs to default to "allow", not "disallow".
+> Change xfs_bmapi_write to only allocate the passed in range instead.
 
-This is moot -- I changed exchangerange to use a permanent incompat
-feature so that we can guarantee to users that if the xfs_info output
-says it's enabled then it's 100% ready to go.  Hence I no longer care
-what happens to log incompat bits and this patch no longer needs to
-exist.
+Looking at this... I guess xfs_map_blocks -> xfs_convert_blocks ->
+xfs_bmapi_convert_delalloc -> xfs_bmapi_allocate is now how writeback
+converts delalloc extents before scheduling writeout.  This is how the
+mass-conversions of large da reservations got done before this series,
+and that's still how it works, right?
+
+Whereas xfs_bmapi_write is for targeted conversions only?
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+If yes and yes, then:
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> > ---
-> >  Documentation/admin-guide/xfs.rst |    7 +++++++
-> >  fs/xfs/xfs_mount.c                |   26 ++++++++++++++++++++++++++
-> >  fs/xfs/xfs_mount.h                |    3 +++
-> >  fs/xfs/xfs_super.c                |   12 +++++++++++-
-> >  4 files changed, 47 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-> > index b67772cf36d6d..52acd95b2b754 100644
-> > --- a/Documentation/admin-guide/xfs.rst
-> > +++ b/Documentation/admin-guide/xfs.rst
-> > @@ -21,6 +21,13 @@ Mount Options
-> >  
-> >  When mounting an XFS filesystem, the following options are accepted.
-> >  
-> > +  add_log_feat/noadd_log_feat
-> > +        Permit unprivileged userspace to use functionality that requires
-> > +        the addition of log incompat feature bits to the superblock.
-> > +        The feature bits will be cleared during a clean unmount.
-> > +        Old kernels cannot recover dirty logs if they do not recognize
-> > +        all log incompat feature bits.
-> > +
-> >    allocsize=size
-> >  	Sets the buffered I/O end-of-file preallocation size when
-> >  	doing delayed allocation writeout (default size is 64KiB).
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index d37ba10f5fa33..a0b271758f910 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -1281,6 +1281,27 @@ xfs_force_summary_recalc(
-> >  	xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
-> >  }
-> >  
-> > +/*
-> > + * Allow the log feature upgrade only if the sysadmin permits it via mount
-> > + * option; or the caller is the administrator.  If the @want_audit parameter
-> > + * is true, then a denial due to insufficient privileges will be logged.
-> > + */
-> > +bool
-> > +xfs_can_add_incompat_log_features(
-> > +	struct xfs_mount	*mp,
-> > +	bool			want_audit)
-> > +{
-> > +	/* Always allowed if the mount option is set */
-> > +	if (mp->m_features & XFS_FEAT_ADD_LOG_FEAT)
-> > +		return true;
-> 
-> Please define a __XFS_HAS_FEAT() macro for this feature bit and
-> use xfs_has_log_features_enabled() wrapper for it.
-> 
-> -Dave.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 7700a48e013d5a..748809b13113ab 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4533,8 +4533,9 @@ xfs_bmapi_write(
+>  			bma.length = XFS_FILBLKS_MIN(len, XFS_MAX_BMBT_EXTLEN);
+>  
+>  			if (wasdelay) {
+> -				bma.offset = bma.got.br_startoff;
+> -				bma.length = bma.got.br_blockcount;
+> +				bma.length = XFS_FILBLKS_MIN(bma.length,
+> +					bma.got.br_blockcount -
+> +					(bno - bma.got.br_startoff));
+>  			} else {
+>  				if (!eof)
+>  					bma.length = XFS_FILBLKS_MIN(bma.length,
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.39.2
+> 
 > 
