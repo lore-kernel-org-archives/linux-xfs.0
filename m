@@ -1,40 +1,62 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5512113B2A0;
-	Tue,  9 Apr 2024 15:57:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC8513E059
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 16:22:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712678249; cv=none; b=RmaKumXQRn9QWfPXPqgQouGAViQy0oNnJqPelR/EesDoerf9oXzetRyIoJ3cGAKuCWd2Dkq8/eIrLmkGEO2oGuBD8WTy1xg2N5z4kKFSVOrqNzwEnvoQ8G2wzUTQFicEvNtj9NuMbWqmnXZFvwcqCft/bjR114A2Wp2ANKYquqo=
+	t=1712679737; cv=none; b=q4r7NV4ZCAHOBUo/1NNgrsoLefzFH97JAi4gxSgw4/72A1d2QKezqAStKPh5u5kQQUI6m7jttdpZn9SbzSNVmcX9Eb1N7TahIrrre8djCgMzU3eIsaODwCwX9/gq0OqbViPvE8JM0aaRCPmc2y42bPSRP8vmxRRkMJ/409eQ7rs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712678249; c=relaxed/simple;
-	bh=Uh6NixN/2vdQmlhG192hyhAD2e6JMcn+x92KdjHGB3Q=;
+	s=arc-20240116; t=1712679737; c=relaxed/simple;
+	bh=oFFzmkQFjem8Slp5pGsd7lw06I6XKAmgxLiAx7XwO9o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JK+MMFbr24ud+8o+9bPF6dISfXw8om1kz4uxdhQ1zDtMNMQg0oUdHc5dtjuvRoipcGHsb0vjrxMiZhSywXj3XGPXeusJTNg1gbAZ9fsLuUeUTJjXbxk3sRNukAZIgsBLBLp2pmdm0jjPvRvPwY4hjZBWBIa8ndRYZKKxoYkObSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcXWyLWF; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Omq9jjelIj5586mciaehsVpeQa5lvNMwrGuhrkhxw1kw9cQwGSmOcDkdIdi5QG39w3lDqGoZJnXi43yRL1OS6p+yI0MgSK/e/udhyPlLlh+4Ol83dBvfOE9BNgLnkYxdSoJnKbo9x3l8UoWbjeOZ6bNTA8ynP30W9iIqO7wvBQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=Z7SCVjTW; arc=none smtp.client-ip=209.85.161.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcXWyLWF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE6D6C433C7;
-	Tue,  9 Apr 2024 15:57:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712678248;
-	bh=Uh6NixN/2vdQmlhG192hyhAD2e6JMcn+x92KdjHGB3Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WcXWyLWFFs/BB1YYiDLejMgDxqzQsu7gvOFND0hoBsraNiSahJhzIwRMC4V014fJF
-	 D3aCDmJL3766JlxKBDNKq3WKdWPyR0Zz0Z6rHVEne3M9jAJJ4iICHjp1b0y1dy6caV
-	 zSjNha/Z3Ki3Hh7hThAtACt1jSqTrsjrBMauwlDxUeGNdjiLAZQ2Tjb9VQajQQTac7
-	 /I/zEqW9amKrEqGcLTJrqIpvAKmY4VpQJI1+3Q37fo+tkhkFKdGiANboCI1L+btpc6
-	 SHfvIYKwmQrwmKDrTtWQyxG3YmmhnuGPI10IF1B+8Kxex4U0kOZ6+YJoGoYN5a7mcN
-	 9qwW3CrPun67Q==
-Date: Tue, 9 Apr 2024 08:57:28 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH 4/6] xfs/263: remove the nocrc sub-test
-Message-ID: <20240409155728.GG634366@frogsfrogsfrogs>
-References: <20240408133243.694134-1-hch@lst.de>
- <20240408133243.694134-5-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Z7SCVjTW"
+Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5aa1b7a37b3so1684135eaf.0
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Apr 2024 09:22:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1712679734; x=1713284534; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ESgWP/mXe1bk3eSSg55Zmh/raASjeDKKtmwp4/lqxgE=;
+        b=Z7SCVjTWzGrLp5pMAf1WmKQdPO3YNr7lEywWo4dLGTELvYTyKBHINF8tPQvsZpOneQ
+         dJmTZE5k6/o39v+fD0DzQt5fa8pFnQu3D81wfIC7vPxP37hKrexK8ifWm6irzOLM6yvB
+         qAXnlsWPT3O4A2W26fuBW2YcZHv86di57MteE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712679734; x=1713284534;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ESgWP/mXe1bk3eSSg55Zmh/raASjeDKKtmwp4/lqxgE=;
+        b=tKrAALme2MdmdhmNI5faCA38wvMmp4p6UT6OpE3i/7UGFm8gLQUOsFCMaTcylzEXup
+         2xwnmwXTF4D8FZD9nU9G7jqDE+ujrZ1yHOyNaiHfV2/4rpRHZ8u2s0GP77CcVYj/CeiU
+         2/gMOZ8K/1pUO122fjaw2HN4f0d6Og7JW0ROraCfid42nezm7XbEmZHKpoHP1VHgIwgh
+         ND7JN9+/5F8/fWX271DYpljpUvg9WVNYQdjhJlzTfN8TTrrwHT0wtk/48yZKJfHdsQUW
+         rc4xVewJKADFH06p/N15U+FxnkNUIOQkgXjOb9g4Eew/H7CDyhU0TNFpZ9RO9xU6kyNB
+         OMhA==
+X-Forwarded-Encrypted: i=1; AJvYcCVRl4nljqGVmVPVQG68vS6uSQ5KuwCaG3MHp0RQom8AmeVm5fk6ryb3sXraLSzBZrMWVkw7xWfOMHwhMnvv9eun9v85QqvgRHyx
+X-Gm-Message-State: AOJu0YxqLTjzvcjML9zd13b06Gww5ALb1s6Rqffi+yhCP3/vK740kvxj
+	g454ogLzc0+GdY+PEX9+V3InZZ8QkcXR6UD14ndbGHw/19mqsafGO4cvT7cCsA==
+X-Google-Smtp-Source: AGHT+IH+ThkTK2969Ez6Dj2+W99kQzkH7mmsmVKS7EpvhvBpgbL/Drf9WpykDBO7NmDp/3SLAhuS4w==
+X-Received: by 2002:a05:6358:5bd4:b0:183:f636:8a46 with SMTP id i20-20020a0563585bd400b00183f6368a46mr350390rwf.27.1712679734649;
+        Tue, 09 Apr 2024 09:22:14 -0700 (PDT)
+Received: from www.outflux.net ([198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id h11-20020a63210b000000b005dcc8a3b26esm8129675pgh.16.2024.04.09.09.22.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Apr 2024 09:22:14 -0700 (PDT)
+Date: Tue, 9 Apr 2024 09:22:13 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Justin Stitt <justinstitt@google.com>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] xfs: replace deprecated strncpy with strscpy_pad
+Message-ID: <202404090921.A203626A@keescook>
+References: <20240405-strncpy-xfs-split1-v1-1-3e3df465adb9@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,138 +65,74 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408133243.694134-5-hch@lst.de>
+In-Reply-To: <20240405-strncpy-xfs-split1-v1-1-3e3df465adb9@google.com>
 
-On Mon, Apr 08, 2024 at 03:32:41PM +0200, Christoph Hellwig wrote:
-> Remove the test on nocrc file systems as v5 has been the default for 10
-> years and the kernel has made v4 support optional, which would fail this
-> sub-case.
+On Fri, Apr 05, 2024 at 07:52:27PM +0000, Justin Stitt wrote:
+> strncpy() is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> The current code has taken care of NUL-termination by memset()'ing
+> @label. This is followed by a strncpy() to perform the string copy.
+> 
+> Instead, use strscpy_pad() to get both 1) NUL-termination and 2)
+> NUL-padding which is needed as this is copied out to userspace.
+> 
+> Note that this patch uses the new 2-argument version of strscpy_pad
+> introduced in Commit e6584c3964f2f ("string: Allow 2-argument
+> strscpy()").
+> 
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> 
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
 > ---
->  tests/xfs/263     |  5 ---
->  tests/xfs/263.out | 85 -----------------------------------------------
->  2 files changed, 90 deletions(-)
+> Split from https://lore.kernel.org/all/20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com/
+> with feedback from Christoph H.
+> ---
+>  fs/xfs/xfs_ioctl.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 > 
-> diff --git a/tests/xfs/263 b/tests/xfs/263
-> index bd30dab11..54e9355aa 100755
-> --- a/tests/xfs/263
-> +++ b/tests/xfs/263
-> @@ -66,11 +66,6 @@ function test_all_state()
->  	done
->  }
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index d0e2cec6210d..a1156a8b1e15 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1750,15 +1750,14 @@ xfs_ioc_getlabel(
+>  	char			__user *user_label)
+>  {
+>  	struct xfs_sb		*sbp = &mp->m_sb;
+> +	/* 1 larger than sb_fname, for a trailing NUL char */
+>  	char			label[XFSLABEL_MAX + 1];
 >  
-> -echo "==== NO CRC ===="
-> -_scratch_mkfs_xfs "-m crc=0 -n ftype=0" >> $seqres.full
-> -test_all_state
-
-I think we should continue testing V4 quota options all the way to the
-end of support (~2030) by splitting these into two tests, one of which
-can use the _require_xfs_nocrc predicate introduced in the next patch.
-Thoughts?
-
---D
-
-> -
-> -echo "==== CRC ===="
->  _scratch_mkfs_xfs "-m crc=1" >>$seqres.full
->  test_all_state
+>  	/* Paranoia */
+>  	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
 >  
-> diff --git a/tests/xfs/263.out b/tests/xfs/263.out
-> index 531d45de5..64c1a5876 100644
-> --- a/tests/xfs/263.out
-> +++ b/tests/xfs/263.out
-> @@ -1,89 +1,4 @@
->  QA output created by 263
-> -==== NO CRC ====
-> -== Options: rw ==
-> -== Options: usrquota,rw ==
-> -User quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode: N/A
-> -Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode: N/A
-> -Blocks grace time: [7 days]
-> -Inodes grace time: [7 days]
-> -Realtime Blocks grace time: [7 days]
-> -== Options: grpquota,rw ==
-> -User quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode: N/A
-> -Blocks grace time: [7 days]
-> -Inodes grace time: [7 days]
-> -Realtime Blocks grace time: [7 days]
-> -== Options: usrquota,grpquota,rw ==
-> -User quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode: N/A
-> -Blocks grace time: [7 days]
-> -Inodes grace time: [7 days]
-> -Realtime Blocks grace time: [7 days]
-> -== Options: prjquota,rw ==
-> -User quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode: N/A
-> -Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Blocks grace time: [7 days]
-> -Inodes grace time: [7 days]
-> -Realtime Blocks grace time: [7 days]
-> -== Options: usrquota,prjquota,rw ==
-> -User quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: OFF
-> -  Enforcement: OFF
-> -  Inode: N/A
-> -Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -  Accounting: ON
-> -  Enforcement: ON
-> -  Inode #XXX (1 blocks, 1 extents)
-> -Blocks grace time: [7 days]
-> -Inodes grace time: [7 days]
-> -Realtime Blocks grace time: [7 days]
-> -== Options: grpquota,prjquota,rw ==
-> -== Options: usrquota,grpquota,prjquota,rw ==
-> -==== CRC ====
->  == Options: rw ==
->  == Options: usrquota,rw ==
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
-> -- 
-> 2.39.2
+> -	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
+> -	memset(label, 0, sizeof(label));
+>  	spin_lock(&mp->m_sb_lock);
+> -	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
+> +	strscpy_pad(label, sbp->sb_fname);
+
+Is sbp->sb_fname itself NUL-terminated? This looks like another case of
+needing the memtostr() helper?
+
+-Kees
+
+>  	spin_unlock(&mp->m_sb_lock);
+>  
+>  	if (copy_to_user(user_label, label, sizeof(label)))
+> 
+> ---
+> base-commit: c85af715cac0a951eea97393378e84bb49384734
+> change-id: 20240405-strncpy-xfs-split1-a2c408b934c6
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
 > 
 > 
+
+-- 
+Kees Cook
