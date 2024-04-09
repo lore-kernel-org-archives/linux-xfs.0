@@ -1,41 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2E0E38DC9
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 21:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26358158878
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 21:29:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712697174; cv=none; b=F+zqZ0/WtyDyAu1CCYTTyYMYzWJEE5j93db8BG8z5ABT1EI1RvyPzT3xxo3R978ckqs8er6eeUlt25Rnj7RVh0XDGzaqVMH5uLZgYorlq2jM+Qsv0JBIlVXEj0ab6PdEUUSdzXxTG7KKtGPMvhYOq5Zi9Rwq7lTs9y/ooq+kCeM=
+	t=1712698193; cv=none; b=N8D1VW+DMa8xOkmpk4FWFLz+JOUUzhQ3IC+pzUj/dgp8XKwX7YFEpVHLj0K3kY7JcXqHHBtgd5V6iVvoj0IX+o9CkdC5hR9R6tO8KoA1sHsJtonUFTEgPJ9RVLsssM6k/Hfu1iWbsh5JWjQNsqH0bgDY25/X310H++JRWux4Klo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712697174; c=relaxed/simple;
-	bh=/IyutyKHW7R5/8nsID+KbqbBvpp3qXOFkwxM28/P5Jg=;
+	s=arc-20240116; t=1712698193; c=relaxed/simple;
+	bh=Ubqqm63lKdnzIJduqL2oJ1Vi2+iIgr/cKwTszXup7q0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Eo+75C6wdP9I47DqR2i6ctfTmRen0rlY9YZy97Jp0Gkt5+dgU2ZTlkrZUgrPUrS2ubR70Ta5C7KJB4TXrgQhSNBbxjqpuTzCgjz99LPxON9d/IsSJYej4vZgQm3SzFTK4mhVPzP8djNxy/S7mDxBqS/9p635/wpvGHdmbAyTfNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gqsAu2Y4; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XL/SnQ6WrBb2nChEmSa/iQsZpHVczpJrkyKqu0ZKunaapHmWwcpKtoPoJ/ZRr7x/8t8G5SDYvmwe7CKhrws3rBiFitWRHJ+F4a8lMhZ7J8e/hZzAgcSWSql5y6QCOhG/PE7TKfTDosuicH7w94TqjR2sWC1+iXQPmP6CaurJoRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=VJCJkhDg; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gqsAu2Y4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FE75C433C7;
-	Tue,  9 Apr 2024 21:12:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712697174;
-	bh=/IyutyKHW7R5/8nsID+KbqbBvpp3qXOFkwxM28/P5Jg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gqsAu2Y4zeo2m7J5RH2N6QQ2OKuDwIylo2JIoxy50gdnrH1LMeQfYKzDxXxDxJC4a
-	 vGChkysWaoknonTnlyxMWCVMEG7U8QJlwBkh8Lkq6x2USuizppXhGQFYmL2dJ90WyC
-	 +SKpHAt8KwYjecZuGfjUtNGm0aM5c5lKc5KKChvmapwA88ok1WWrRHgWNL33aAkCwK
-	 b46MCq72fPKM5OPSTVtfiEb6iM2NtRq3X+Eft8bnCewDT9CBTjQt1y30AFbFOyX28F
-	 yR32Sqq/wLt1QC9ZH5xUIJz1voi0OnncoxrMy7VI/frTJkIymPBGU6jipcB5MEXX0W
-	 Dp/dG+bK4aLdQ==
-Date: Tue, 9 Apr 2024 14:12:53 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/15] xfs: create a log incompat flag for atomic file
- mapping exchanges
-Message-ID: <20240409211253.GG6390@frogsfrogsfrogs>
-References: <171150380628.3216674.10385855831925961243.stgit@frogsfrogsfrogs>
- <171150380715.3216674.13307875397061790548.stgit@frogsfrogsfrogs>
- <ZhMpc58ZiQOPWBQE@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="VJCJkhDg"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6ed5109d924so1898837b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Apr 2024 14:29:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1712698191; x=1713302991; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=lppOhDLhaTktGl6lazMPAeBs02NfwHMeHSnwbowOWTw=;
+        b=VJCJkhDga/OfKWeKbdrV+Saj9YmigCMLGWF6BfgnQH3eH/S5yBIWflk+OPpwtREuOe
+         sCZzrABd56f1+kvK3UE8lUjqkbdw9/DIVfraZRmuWWGFbeUgR5nF1Jggriy2kyc8BiT3
+         WG0uqYH+QFP3PCBjxaLWrN9sbyBXT4g4Gjvx+s2sjOqCW92mtMNHWnyE+tbS9iOmvjtL
+         83ocso+vIOzA3YcvmGz8c5BsZDEQZ1yPXn1dlslF78q4D70zvWDphBajBYEfoPJVIDLd
+         tOuVrVGhru5QLUAMuspZ6FEnkvqGtKz1qHoqCWn6fMtLS5aODbw1gspxqRiPljuVMG94
+         tlxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712698191; x=1713302991;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lppOhDLhaTktGl6lazMPAeBs02NfwHMeHSnwbowOWTw=;
+        b=WBMquiOo4XhS8kZWO0oqC4f1ml0xHfUXJv3EF2d3In0SUEjY5byGeXDQjj09iruOks
+         iGOZ8/ReCc9XkoIoebIfWHN5i43qTCqkETcqTsoBhDj1wmIS2DTZEjRunGSm1M+BTudG
+         2ZtvXsuax2t4iRkBbmnaVvwZQnRdO8wcwRxRsHZ8iPvLbqej8H1IA+Pj1izDjg848tVi
+         vxNCf9QfWofFmkpwFDGGVdRvyQvZfhaRRu3v6U/LFK8wxxBCYjOKthsOqGo9RMVjMx/M
+         p7Zlw64qhxRhn5uok4L/1Y7GWE1fquAFwJeKAwiYkU4GscOrTyb0nw8NFZUnihK8K0BD
+         l+OA==
+X-Forwarded-Encrypted: i=1; AJvYcCV75rGStqzHyaRGQX34iLRXpuvciSyLj0k4sxAQs0mKkzGNiisSaY8UYdLpQu9C+sFMDIPHcZlT+GGbat8pj17mEwe++2p8Wk+G
+X-Gm-Message-State: AOJu0Yx0dAmvTWUuqlwX2dwmHwhT7KzhJ7wc5GhlMdHKYBcA7EO+0D+w
+	zFE9qcK7qrG7MWMsi2hYVAG9etfmp7WK1YMvXx7eUA+adDMsWBWhSrFp39t+fG0=
+X-Google-Smtp-Source: AGHT+IFvOqPyH50nuc2JACoXyF6q2DKJ9ivcnsRna4tGd1/cjZ8p4v7GhrD65qleDU/qtwwIyhj4CQ==
+X-Received: by 2002:a05:6a00:14d1:b0:6ec:faef:dd28 with SMTP id w17-20020a056a0014d100b006ecfaefdd28mr932086pfu.23.1712698191116;
+        Tue, 09 Apr 2024 14:29:51 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
+        by smtp.gmail.com with ESMTPSA id x12-20020a056a00270c00b006ed048a7323sm8006356pfv.86.2024.04.09.14.29.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Apr 2024 14:29:50 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1ruJ2J-009xO3-3A;
+	Wed, 10 Apr 2024 07:29:47 +1000
+Date: Wed, 10 Apr 2024 07:29:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: syzbot <syzbot+b417f0468b73945887f0@syzkaller.appspotmail.com>
+Cc: chandan.babu@oracle.com, dwmw2@infradead.org,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-xfs@vger.kernel.org, richard@nod.at,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [ext4?] [jffs2?] [xfs?] kernel BUG in
+ unrefer_xattr_datum
+Message-ID: <ZhWzS47ZvqF2WriS@dread.disaster.area>
+References: <0000000000002444e20615a20456@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,119 +75,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhMpc58ZiQOPWBQE@dread.disaster.area>
+In-Reply-To: <0000000000002444e20615a20456@google.com>
 
-On Mon, Apr 08, 2024 at 09:17:07AM +1000, Dave Chinner wrote:
-> On Tue, Mar 26, 2024 at 06:53:36PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Create a log incompat flag so that we only attempt to process file
-> > mapping exchange log items if the filesystem supports it, and a geometry
-> > flag to advertise support if it's present or could be present.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h |   13 +++++++++++++
-> >  fs/xfs/libxfs/xfs_fs.h     |    3 +++
-> >  fs/xfs/libxfs/xfs_sb.c     |    3 +++
-> >  fs/xfs/xfs_exchrange.c     |   31 +++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_exchrange.h     |    2 ++
-> >  5 files changed, 52 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index 2b2f9050fbfbb..753adde56a2d0 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -391,6 +391,12 @@ xfs_sb_has_incompat_feature(
-> >  }
-> >  
-> >  #define XFS_SB_FEAT_INCOMPAT_LOG_XATTRS   (1 << 0)	/* Delayed Attributes */
-> > +
-> > +/*
-> > + * Log contains file mapping exchange log intent items which are not otherwise
-> > + * protected by an INCOMPAT/RO_COMPAT feature flag.
-> > + */
-> > +#define XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS (1 << 1)
-> >  #define XFS_SB_FEAT_INCOMPAT_LOG_ALL \
-> >  	(XFS_SB_FEAT_INCOMPAT_LOG_XATTRS)
-> >  #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
-> > @@ -423,6 +429,13 @@ static inline bool xfs_sb_version_haslogxattrs(struct xfs_sb *sbp)
-> >  		 XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
-> >  }
-> >  
-> > +static inline bool xfs_sb_version_haslogexchmaps(struct xfs_sb *sbp)
-> > +{
-> > +	return xfs_sb_is_v5(sbp) &&
-> > +		(sbp->sb_features_log_incompat &
-> > +		 XFS_SB_FEAT_INCOMPAT_LOG_EXCHMAPS);
-> > +}
-> > +
-> >  static inline bool
-> >  xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
-> >  {
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 8a1e30cf4dc88..ea07fb7b89722 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -240,6 +240,9 @@ typedef struct xfs_fsop_resblks {
-> >  #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
-> >  #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
-> >  
-> > +/* file range exchange available to userspace */
-> > +#define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE	(1 << 24)
-> > +
-> >  /*
-> >   * Minimum and maximum sizes need for growth checks.
-> >   *
-> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > index d991eec054368..c2d86faeee61b 100644
-> > --- a/fs/xfs/libxfs/xfs_sb.c
-> > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > @@ -26,6 +26,7 @@
-> >  #include "xfs_health.h"
-> >  #include "xfs_ag.h"
-> >  #include "xfs_rtbitmap.h"
-> > +#include "xfs_exchrange.h"
-> >  
-> >  /*
-> >   * Physical superblock buffer manipulations. Shared with libxfs in userspace.
-> > @@ -1258,6 +1259,8 @@ xfs_fs_geometry(
-> >  	}
-> >  	if (xfs_has_large_extent_counts(mp))
-> >  		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
-> > +	if (xfs_exchrange_possible(mp))
-> > +		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE;
-> >  	geo->rtsectsize = sbp->sb_blocksize;
-> >  	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
-> >  
-> > diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
-> > index a575e26ae1a58..620cf1eb7464b 100644
-> > --- a/fs/xfs/xfs_exchrange.c
-> > +++ b/fs/xfs/xfs_exchrange.c
-> > @@ -15,6 +15,37 @@
-> >  #include "xfs_exchrange.h"
-> >  #include <linux/fsnotify.h>
-> >  
-> > +/*
-> > + * If the filesystem has relatively new features enabled, we're willing to
-> > + * upgrade the filesystem to have the EXCHMAPS log incompat feature.
-> > + * Technically we could do this with any V5 filesystem, but let's not deal
-> > + * with really old kernels.
-> > + */
+On Mon, Apr 08, 2024 at 09:04:18PM -0700, syzbot wrote:
+> Hello,
 > 
-> Please document tnis in the commit message - this decision needs to
-> be seen by anyone reading the commit history rather than the code...
-
-This is irrelevant seeing as this whole patchset now uses a regular
-incompat bit, but who actually reads *only* the commit history and
-ignores the code?
-
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> syzbot found the following issue on:
 > 
+> HEAD commit:    707081b61156 Merge branch 'for-next/core', remote-tracking..
+> git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
+> console output: https://syzkaller.appspot.com/x/log.txt?x=1562c52d180000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=caeac3f3565b057a
+> dashboard link: https://syzkaller.appspot.com/bug?extid=b417f0468b73945887f0
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> userspace arch: arm64
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14e74805180000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1613cca9180000
+> 
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/6cad68bf7532/disk-707081b6.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/1a27e5400778/vmlinux-707081b6.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/67dfc53755d0/Image-707081b6.gz.xz
+> mounted in repro #1: https://storage.googleapis.com/syzbot-assets/f039597bec42/mount_0.gz
+> mounted in repro #2: https://storage.googleapis.com/syzbot-assets/b3fe5cff7c96/mount_4.gz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+b417f0468b73945887f0@syzkaller.appspotmail.com
+> 
+> jffs2: nextblock 0x0001d000, expected at 0001f000
+> jffs2: argh. node added in wrong place at 0x0001e03c(2)
+> jffs2: nextblock 0x0001d000, expected at 0001f000
+
+Nothing to do with XFS or ext4 - they are simply being mounted with
+invalid mount options at the same time.
+
+#syz set subsystems: jffs2
+
+-- 
+Dave Chinner
+david@fromorbit.com
