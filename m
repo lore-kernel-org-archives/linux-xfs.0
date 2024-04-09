@@ -1,62 +1,41 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC8513E059
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 16:22:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 566DD38DC9
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 21:09:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712679737; cv=none; b=q4r7NV4ZCAHOBUo/1NNgrsoLefzFH97JAi4gxSgw4/72A1d2QKezqAStKPh5u5kQQUI6m7jttdpZn9SbzSNVmcX9Eb1N7TahIrrre8djCgMzU3eIsaODwCwX9/gq0OqbViPvE8JM0aaRCPmc2y42bPSRP8vmxRRkMJ/409eQ7rs=
+	t=1712696952; cv=none; b=eGkXDkYFZr5Y1MWH1hMXupPyfQiYRWX2RztpP1NplPYySEsCjQgfW57/HfygLbHQKEl2f61OorwjDfvd01RWO273s14wOSveA1nQkUGf2kCBT8NmStGtNJ5Ps3VHDgLHd1ZV6W3SnPDYUY8voryDMSpwgWAcUm7Abl2ytD/2WA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712679737; c=relaxed/simple;
-	bh=oFFzmkQFjem8Slp5pGsd7lw06I6XKAmgxLiAx7XwO9o=;
+	s=arc-20240116; t=1712696952; c=relaxed/simple;
+	bh=3jplTWI0BxSKeWhiQ3OPLeIIslWzaSLQILAGS5mZYQc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Omq9jjelIj5586mciaehsVpeQa5lvNMwrGuhrkhxw1kw9cQwGSmOcDkdIdi5QG39w3lDqGoZJnXi43yRL1OS6p+yI0MgSK/e/udhyPlLlh+4Ol83dBvfOE9BNgLnkYxdSoJnKbo9x3l8UoWbjeOZ6bNTA8ynP30W9iIqO7wvBQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=Z7SCVjTW; arc=none smtp.client-ip=209.85.161.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=mdcNZqEWuafHXTrkKQhJmVzbSAr7XdQKrIltynQRFIGVVY5GFnStowoUvRV/ByQOEbJelB9DtF7hESm4m7loSeZEUeYElsyK6VTTrJbGq+tz6QPbX7fFpmgrFOSSr88nU3WbliHDNaQq3C7Z3IGyX4SDCOhYgO3YbfXW59HRHRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f8JpNUDA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Z7SCVjTW"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5aa1b7a37b3so1684135eaf.0
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Apr 2024 09:22:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1712679734; x=1713284534; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ESgWP/mXe1bk3eSSg55Zmh/raASjeDKKtmwp4/lqxgE=;
-        b=Z7SCVjTWzGrLp5pMAf1WmKQdPO3YNr7lEywWo4dLGTELvYTyKBHINF8tPQvsZpOneQ
-         dJmTZE5k6/o39v+fD0DzQt5fa8pFnQu3D81wfIC7vPxP37hKrexK8ifWm6irzOLM6yvB
-         qAXnlsWPT3O4A2W26fuBW2YcZHv86di57MteE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712679734; x=1713284534;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ESgWP/mXe1bk3eSSg55Zmh/raASjeDKKtmwp4/lqxgE=;
-        b=tKrAALme2MdmdhmNI5faCA38wvMmp4p6UT6OpE3i/7UGFm8gLQUOsFCMaTcylzEXup
-         2xwnmwXTF4D8FZD9nU9G7jqDE+ujrZ1yHOyNaiHfV2/4rpRHZ8u2s0GP77CcVYj/CeiU
-         2/gMOZ8K/1pUO122fjaw2HN4f0d6Og7JW0ROraCfid42nezm7XbEmZHKpoHP1VHgIwgh
-         ND7JN9+/5F8/fWX271DYpljpUvg9WVNYQdjhJlzTfN8TTrrwHT0wtk/48yZKJfHdsQUW
-         rc4xVewJKADFH06p/N15U+FxnkNUIOQkgXjOb9g4Eew/H7CDyhU0TNFpZ9RO9xU6kyNB
-         OMhA==
-X-Forwarded-Encrypted: i=1; AJvYcCVRl4nljqGVmVPVQG68vS6uSQ5KuwCaG3MHp0RQom8AmeVm5fk6ryb3sXraLSzBZrMWVkw7xWfOMHwhMnvv9eun9v85QqvgRHyx
-X-Gm-Message-State: AOJu0YxqLTjzvcjML9zd13b06Gww5ALb1s6Rqffi+yhCP3/vK740kvxj
-	g454ogLzc0+GdY+PEX9+V3InZZ8QkcXR6UD14ndbGHw/19mqsafGO4cvT7cCsA==
-X-Google-Smtp-Source: AGHT+IH+ThkTK2969Ez6Dj2+W99kQzkH7mmsmVKS7EpvhvBpgbL/Drf9WpykDBO7NmDp/3SLAhuS4w==
-X-Received: by 2002:a05:6358:5bd4:b0:183:f636:8a46 with SMTP id i20-20020a0563585bd400b00183f6368a46mr350390rwf.27.1712679734649;
-        Tue, 09 Apr 2024 09:22:14 -0700 (PDT)
-Received: from www.outflux.net ([198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id h11-20020a63210b000000b005dcc8a3b26esm8129675pgh.16.2024.04.09.09.22.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Apr 2024 09:22:14 -0700 (PDT)
-Date: Tue, 9 Apr 2024 09:22:13 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Justin Stitt <justinstitt@google.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] xfs: replace deprecated strncpy with strscpy_pad
-Message-ID: <202404090921.A203626A@keescook>
-References: <20240405-strncpy-xfs-split1-v1-1-3e3df465adb9@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f8JpNUDA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C84A6C433F1;
+	Tue,  9 Apr 2024 21:09:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712696951;
+	bh=3jplTWI0BxSKeWhiQ3OPLeIIslWzaSLQILAGS5mZYQc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=f8JpNUDAbrKlWp4m89km8BIWtx1cd0Jjmlax9kzQeVHO26ElsagiQkA7aGjI2ml54
+	 K7/gaYhUrMvIYw98cqwkViQ0KeAOzcEDnbL1K0GI/SsXuMBjxE4nbqen4cEN6wiB5o
+	 nbRocXaa0KlQEst674AiwGi8g2VESbo7L56bH8AFP/EtPjwJPHV32ARV7eh5lSF9ed
+	 IfeCPCmFPOy0aBDcgsFgxeELKBsnny3GVs9t/gziKqVI8Y6X2RMcRKyxe0X9loBO6V
+	 36Wy7kG9XhPZcydkWnB3wlp+JyjwHRigrGpbXej7wOE9j1w2HVY7d9KPHf5XMcyK1s
+	 L25yqHhHF/Qfw==
+Date: Tue, 9 Apr 2024 14:09:11 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/7] xfs: hoist multi-fsb allocation unit detection to a
+ helper
+Message-ID: <20240409210911.GF6390@frogsfrogsfrogs>
+References: <171150380117.3216450.660937377362010507.stgit@frogsfrogsfrogs>
+ <171150380216.3216450.3675851752965499332.stgit@frogsfrogsfrogs>
+ <ZhMnMWaQueOm+0Td@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -65,74 +44,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240405-strncpy-xfs-split1-v1-1-3e3df465adb9@google.com>
+In-Reply-To: <ZhMnMWaQueOm+0Td@dread.disaster.area>
 
-On Fri, Apr 05, 2024 at 07:52:27PM +0000, Justin Stitt wrote:
-> strncpy() is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces.
+On Mon, Apr 08, 2024 at 09:07:29AM +1000, Dave Chinner wrote:
+> On Tue, Mar 26, 2024 at 06:52:18PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Replace the open-coded logic to decide if a file has a multi-fsb
+> > allocation unit to a helper to make the code easier to read.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_bmap_util.c |    4 ++--
+> >  fs/xfs/xfs_inode.h     |    9 +++++++++
+> >  2 files changed, 11 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 19e11d1da6607..c17b5858fed62 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -542,7 +542,7 @@ xfs_can_free_eofblocks(
+> >  	 * forever.
+> >  	 */
+> >  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+> > -	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
+> > +	if (xfs_inode_has_bigallocunit(ip))
+> >  		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
 > 
-> The current code has taken care of NUL-termination by memset()'ing
-> @label. This is followed by a strncpy() to perform the string copy.
+> This makes no sense with the upcoming forced alignment changes to
+> this code.
 > 
-> Instead, use strscpy_pad() to get both 1) NUL-termination and 2)
-> NUL-padding which is needed as this is copied out to userspace.
-> 
-> Note that this patch uses the new 2-argument version of strscpy_pad
-> introduced in Commit e6584c3964f2f ("string: Allow 2-argument
-> strscpy()").
-> 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> 
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
-> ---
-> Split from https://lore.kernel.org/all/20240401-strncpy-fs-xfs-xfs_ioctl-c-v1-1-02b9feb1989b@google.com/
-> with feedback from Christoph H.
-> ---
->  fs/xfs/xfs_ioctl.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index d0e2cec6210d..a1156a8b1e15 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1750,15 +1750,14 @@ xfs_ioc_getlabel(
->  	char			__user *user_label)
->  {
->  	struct xfs_sb		*sbp = &mp->m_sb;
-> +	/* 1 larger than sb_fname, for a trailing NUL char */
->  	char			label[XFSLABEL_MAX + 1];
->  
->  	/* Paranoia */
->  	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
->  
-> -	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
-> -	memset(label, 0, sizeof(label));
->  	spin_lock(&mp->m_sb_lock);
-> -	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
-> +	strscpy_pad(label, sbp->sb_fname);
+> That essentially brings "big alloc unit" to the data device based on
+> extent size hints, and it will need to do different rounding
+> calculations depending on whether it is a RT inode or not. Hence I
+> don't think hiding the RT specific allocation/truncation setup like
+> this is compatible with those changes - it will simply have to be
+> undone before it can be reworked....
 
-Is sbp->sb_fname itself NUL-terminated? This looks like another case of
-needing the memtostr() helper?
+So undo it when you and John and Catherine have a full patchset
+implementing forced alignment.
 
--Kees
+--D
 
->  	spin_unlock(&mp->m_sb_lock);
->  
->  	if (copy_to_user(user_label, label, sizeof(label)))
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
-> ---
-> base-commit: c85af715cac0a951eea97393378e84bb49384734
-> change-id: 20240405-strncpy-xfs-split1-a2c408b934c6
-> 
-> Best regards,
-> --
-> Justin Stitt <justinstitt@google.com>
-> 
-> 
-
--- 
-Kees Cook
