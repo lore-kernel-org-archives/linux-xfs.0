@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C216621
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:56:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00357391
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:56:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710599; cv=none; b=lRyWGDOeuKGHW2HJiLUDv8gDtBfMiR/CMADbILiklIz9URPBUkPG1hf/tzE3E1LxKXCOTgSM4/kXKPM9SyCiSeWukqbQj2GISer5TGifC5bNoedk80p3QODlQO0docKYu4UNdsYaET+JSn5by0Q0cKxUHPdWC9JD0Udrsv7q4ew=
+	t=1712710615; cv=none; b=NQj4qwrz0mpRlV7OaUlQr4F4fDT6yZAXqL3bhjvx4Iki6XPyyHIAkK19kbbT3NQKss7VaXmCbYuJ+H/Z0UjZIEAJM/hKrlkhiDjDzgh7l3sJzQOHcZg98KV4LBpZn5yf59XhMmcWD56EBhkYBWBJbrS36Fnl4Nn8BS2QkUutRG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710599; c=relaxed/simple;
-	bh=RIepamdrzH8iQ0PwIfrhJ2WCE9DXdkvmpSXySQFTfrY=;
+	s=arc-20240116; t=1712710615; c=relaxed/simple;
+	bh=W0kmeq3lB8TeOF/UVybWcg4I6AA2q4cJGxlOu5y19LE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ah0nYCJa6P+3MLN1SXbkgMCREaZlzPPXAoUakUsDFUn38Rpy2JmgjnMZxpk7cQWk3fa+o7fx7gnS5R4GS4A4jXeP7dnfgseqO9BK3oN/lEaZmLeIM9cLhAhgDcnh3fNgGlTwET3al6mvoAenMrsabOr6JixmkQrB6EfVT2+T7vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FGAmLOAX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Yw8Zr9noI7vM6myWKQfLspQk7XUn4QYKeiNNgZ35yW1SUdWVM1HGoqOWNTQbS6pKgg9JUMIpieIHt+dJSiYFfmngtq8ksDqR20jvx5YdH1AEii2D2mU6W3A9S/1AHXafrxSmY1/Pq8sGDNpFbjboRR02WKnZuI++iyTyfFYrHLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PJVNYlSA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FGAmLOAX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3F48C433C7;
-	Wed, 10 Apr 2024 00:56:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PJVNYlSA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A445C433C7;
+	Wed, 10 Apr 2024 00:56:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710598;
-	bh=RIepamdrzH8iQ0PwIfrhJ2WCE9DXdkvmpSXySQFTfrY=;
+	s=k20201202; t=1712710614;
+	bh=W0kmeq3lB8TeOF/UVybWcg4I6AA2q4cJGxlOu5y19LE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FGAmLOAXJH93v6q1QiAXQ94rOxTtQN7YWrHBOebwFyVP9jkpeZvLe24epmAPxyNx/
-	 TMulpJf217NwQY9v5d/W36SyqlwO3bPsoG1iK3UJZyT8dBAcBFor990yoM7AZw0k/H
-	 khHS0WbnoV9H4P44/9foyLzOEnxv3v3IYf5+B2RJPl16s1IzA9ECHspX3sf7vnC4yA
-	 bKyvJMGhZuI2E1SbbPJ77y3wFi85HSa2xhz2cgqqEAgtsHm9D8L7v3vimUdEbA6Ibx
-	 ZgwfyKCZocK5Et8FYwTaF0NCapLfEiqWoaz1xAmgCUK129UhYMPU2KnGkGkXfOLhwd
-	 w/xlG9RUoOHmg==
-Date: Tue, 09 Apr 2024 17:56:38 -0700
-Subject: [PATCH 12/32] xfs: record inode generation in xattr update log intent
- items
+	b=PJVNYlSALY9vHS3TogcZ7To7dzXDB/80G6fdigqKM7XnUKOnWjflXePiBfOhUODKg
+	 VyA1PtkpsMHsF8EvtbyWbGfFKrw62nkO1ykoS8RItZlns253ABXoIGGr47raXkcJVq
+	 xZSFkDms66WW5iUQwYSPjFjqi7Dzn+3OiK4EuaNNcFTXVVN+txzabHRvyCFdGXp0js
+	 YIY6HqTjLUI8Ck064wujoGqA42S8e5xq3j0OETfWcSTgl/s4vVLHBOz+7Kgcd0rF6v
+	 yJj8xiy9rp8qOw65ydAbQqsYO+7RbhdLonGEqedqxYDTXtszDqvpvkDFumSCHlN6py
+	 TBEAVLTz4N/4A==
+Date: Tue, 09 Apr 2024 17:56:53 -0700
+Subject: [PATCH 13/32] xfs: Expose init_xattrs in xfs_create_tmpfile
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270969756.3631889.2291525923694183307.stgit@frogsfrogsfrogs>
+Message-ID: <171270969773.3631889.2961452043600653365.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,86 +46,76 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Allison Henderson <allison.henderson@oracle.com>
 
-For parent pointer updates, record the i_generation of the file that is
-being updated so that we don't accidentally jump generations.
+Tmp files are used as part of rename operations and will need attr forks
+initialized for parent pointers.  Expose the init_xattrs parameter to
+the calling function to initialize the fork.
 
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_format.h |    2 +-
- fs/xfs/xfs_attr_item.c         |   26 ++++++++++++++++++++++++--
- 2 files changed, 25 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_inode.c |    5 +++--
+ fs/xfs/xfs_inode.h |    2 +-
+ fs/xfs/xfs_iops.c  |    2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 632dd97324557..3e6682ed656b3 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -1049,7 +1049,7 @@ struct xfs_icreate_log {
- struct xfs_attri_log_format {
- 	uint16_t	alfi_type;	/* attri log item type */
- 	uint16_t	alfi_size;	/* size of this item */
--	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint32_t	alfi_igen;	/* generation of alfi_ino for pptr ops */
- 	uint64_t	alfi_id;	/* attri identifier */
- 	uint64_t	alfi_ino;	/* the inode for this attr operation */
- 	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 8d33294217aca..be8660a0b55ff 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -382,14 +382,22 @@ xfs_attr_log_item(
- 	attrp->alfi_op_flags = attr->xattri_op_flags;
- 	attrp->alfi_value_len = attr->xattri_nameval->value.i_len;
- 
--	if (xfs_attr_log_item_op(attrp) == XFS_ATTRI_OP_FLAGS_PPTR_REPLACE) {
-+	switch (xfs_attr_log_item_op(attrp)) {
-+	case XFS_ATTRI_OP_FLAGS_PPTR_REPLACE:
- 		ASSERT(attr->xattri_nameval->value.i_len ==
- 		       attr->xattri_nameval->new_value.i_len);
- 
-+		attrp->alfi_igen = VFS_I(attr->xattri_da_args->dp)->i_generation;
- 		attrp->alfi_old_name_len = attr->xattri_nameval->name.i_len;
- 		attrp->alfi_new_name_len = attr->xattri_nameval->new_name.i_len;
--	} else {
-+		break;
-+	case XFS_ATTRI_OP_FLAGS_PPTR_REMOVE:
-+	case XFS_ATTRI_OP_FLAGS_PPTR_SET:
-+		attrp->alfi_igen = VFS_I(attr->xattri_da_args->dp)->i_generation;
-+		fallthrough;
-+	default:
- 		attrp->alfi_name_len = attr->xattri_nameval->name.i_len;
-+		break;
- 	}
- 
- 	ASSERT(!(attr->xattri_da_args->attr_filter & ~XFS_ATTRI_FILTER_MASK));
-@@ -632,6 +640,19 @@ xfs_attri_recover_work(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 2aec7ab59aeb7..c079114b97ecf 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1184,6 +1184,7 @@ xfs_create_tmpfile(
+ 	struct mnt_idmap	*idmap,
+ 	struct xfs_inode	*dp,
+ 	umode_t			mode,
++	bool			init_xattrs,
+ 	struct xfs_inode	**ipp)
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -1224,7 +1225,7 @@ xfs_create_tmpfile(
+ 	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
+ 	if (!error)
+ 		error = xfs_init_new_inode(idmap, tp, dp, ino, mode,
+-				0, 0, prid, false, &ip);
++				0, 0, prid, init_xattrs, &ip);
  	if (error)
- 		return ERR_PTR(error);
+ 		goto out_trans_cancel;
  
-+	switch (xfs_attr_log_item_op(attrp)) {
-+	case XFS_ATTRI_OP_FLAGS_PPTR_SET:
-+	case XFS_ATTRI_OP_FLAGS_PPTR_REPLACE:
-+	case XFS_ATTRI_OP_FLAGS_PPTR_REMOVE:
-+		if (VFS_I(ip)->i_generation != attrp->alfi_igen) {
-+			xfs_irele(ip);
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+					attrp, sizeof(*attrp));
-+			return ERR_PTR(-EFSCORRUPTED);
-+		}
-+		break;
-+	}
-+
- 	if (xfs_inode_has_attr_fork(ip)) {
- 		error = xfs_attri_iread_extents(ip);
- 		if (error) {
-@@ -782,6 +803,7 @@ xfs_attr_relog_intent(
- 	new_attrp = &new_attrip->attri_format;
+@@ -3036,7 +3037,7 @@ xfs_rename_alloc_whiteout(
+ 	int			error;
  
- 	new_attrp->alfi_ino = old_attrp->alfi_ino;
-+	new_attrp->alfi_igen = old_attrp->alfi_igen;
- 	new_attrp->alfi_op_flags = old_attrp->alfi_op_flags;
- 	new_attrp->alfi_value_len = old_attrp->alfi_value_len;
+ 	error = xfs_create_tmpfile(idmap, dp, S_IFCHR | WHITEOUT_MODE,
+-				   &tmpfile);
++				   false, &tmpfile);
+ 	if (error)
+ 		return error;
  
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index a6da1ab8ab136..04a91e312993b 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -522,7 +522,7 @@ int		xfs_create(struct mnt_idmap *idmap,
+ 			   umode_t mode, dev_t rdev, bool need_xattr,
+ 			   struct xfs_inode **ipp);
+ int		xfs_create_tmpfile(struct mnt_idmap *idmap,
+-			   struct xfs_inode *dp, umode_t mode,
++			   struct xfs_inode *dp, umode_t mode, bool init_xattrs,
+ 			   struct xfs_inode **ipp);
+ int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
+ 			   struct xfs_inode *ip);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 7f0c840f0fd2f..273bc30fd2bad 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -201,7 +201,7 @@ xfs_generic_create(
+ 				xfs_create_need_xattr(dir, default_acl, acl),
+ 				&ip);
+ 	} else {
+-		error = xfs_create_tmpfile(idmap, XFS_I(dir), mode, &ip);
++		error = xfs_create_tmpfile(idmap, XFS_I(dir), mode, false, &ip);
+ 	}
+ 	if (unlikely(error))
+ 		goto out_free_acl;
 
