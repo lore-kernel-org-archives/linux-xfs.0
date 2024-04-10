@@ -1,31 +1,43 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01CC9C127;
-	Wed, 10 Apr 2024 04:14:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EB73C8E2
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 04:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712722449; cv=none; b=eOfxXoTA8sKd1hlnMWZ+6oaMhDWwkvwBuSLEa4AUIPNwQ+XDT/LExwsh2K+cfaKJqK355c8VgmN2IKsjIXIXnf92ngHesfwCJvIiJnIQqDKj3oh0+DgsOu3EIEHOcy47QyyoDJSs1cKIDV6qG+nd2A2kfTb/ReqcgWyy99wusfI=
+	t=1712724014; cv=none; b=IofJgtsSxEPgaloym16Vy3JCxbTDeUh8sMjNf666m+8zWpwqXDKOJZZ2E5l2z9KNWz6IdPK1mfUuUwyDph2xGZKKB5jxh4EqUjtMHVzHxDv5/KBQPiSqiUOTmmBdVM1YUbhwSJ2JhXi/4Kl513wuZbd1isvr3n0h6kEna3bE5oI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712722449; c=relaxed/simple;
-	bh=QHJK+bqcLSoZlrcQcS5OTsEbO9qapYno3pL9GEBB1DE=;
+	s=arc-20240116; t=1712724014; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uCJgzraGnJ5mEJBirb+OjtBxVyifcKt46i9ARAYNU0ihyiosmms95h1XEnA+yR022MtY+WZT+b+Em2lFw3fGX1i/WORM8re31R93j/yHdj5U1DMxnSM32cqvFB1ghrc2DrqbMOlPzLWNm2GSF5uG0Op0Ku5dUxGgDju/THxBJ9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9599068B05; Wed, 10 Apr 2024 06:14:03 +0200 (CEST)
-Date: Wed, 10 Apr 2024 06:14:02 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=jFR32zkx2zmQmp7l2sMkfKuqY1x9LeYo4Xd0lSxZhLX72qVpkOcKTg9hjuj7YJucWw5NgQpoUKKQRyeCaQ+y41+ICTcjwzKEZazAfFGMqYaEBUHZdzrwDDVQr1jyQeO2mWpQDE9hS9uEqlBaNZthqyiktqJs/5uQCg2w6HZluc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PwPe04mw; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PwPe04mw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=PwPe04mwREzd86r74tbSUTdfhk
+	hERnKwS5YqBtKwQrgkcVsEoyiliUPSNFpqFhoyERlZwK+OfimoaXKyT+yw1Rp1uBfcFrzlZOx5JHy
+	fMkqBGDUVioHluIONo8hrQ8Z73/LvF3QlpgL9nqWGvriMDzfuGplq+qVQT8TWz/aPZqhASwopgqRU
+	t3iBLtH6irZ3qRcqQA5hJKEzPxo2YAZkSVCHkY/UHaHLFGgw3UyO2cAS80QSmAvK1UE2UVZfthBD0
+	/3V7eIj5rGqFB+caddh9U91mNtiC/LUuoFDJHj9J6Ujrpqla5QJx9qMDe9Z69i7dWzpFKrgnv2vbB
+	N+6rj1Og==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1ruPko-000000053J7-1ftG;
+	Wed, 10 Apr 2024 04:40:10 +0000
+Date: Tue, 9 Apr 2024 21:40:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@redhat.com>,
-	Zorro Lang <zlang@kernel.org>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: don't run tests that require v4 file systems
- when not supported
-Message-ID: <20240410041402.GB2208@lst.de>
-References: <20240408133243.694134-1-hch@lst.de> <20240408133243.694134-7-hch@lst.de> <20240409155612.GF634366@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] docs: update the parent pointers documentation to
+ the final version
+Message-ID: <ZhYYKj3BZRE8bfGI@infradead.org>
+References: <171270967457.3631017.1709831303627611754.stgit@frogsfrogsfrogs>
+ <171270967483.3631017.15423312733723466021.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,68 +46,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240409155612.GF634366@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <171270967483.3631017.15423312733723466021.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Apr 09, 2024 at 08:56:12AM -0700, Darrick J. Wong wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  common/xfs    | 10 ++++++++++
-> >  tests/xfs/002 |  1 +
-> 
-> Looks fine to me.
-> 
-> >  tests/xfs/045 |  1 +
-> 
-> xfs_db can change uuids on v5 filesystems now, so we don't nee the
-> -mcrc=0 in this test.
+Looks good:
 
-Ok, I'll look into that.
-
-> Looks fine to me.
-> 
-> >  tests/xfs/148 |  2 ++
-> 
-> I wonder if we could rewrite this test to use either the xfs_db write -d
-> command on dirents or attrs directly; or the link/attrset commands,
-> since AFAICT the dir/attr code doesn't itself run namecheck when
-> creating entries/attrs.
-
-Can I leave that to you? :)
-
-> >  tests/xfs/158 |  1 +
-> >  tests/xfs/160 |  1 +
-> 
-> inobtcount and bigtime are new features, maybe these two tests should
-> lose the clause that checks that we can't upgrade a V4 filesystem?
-
-I'll take a look.
-
-> >  tests/xfs/194 |  2 ++
-> 
-> Not sure why this one is fixated on $pagesize/8.  Was that a requirement
-> to induce an error?  Or would this work just as well on a 1k fsblock fs?
-> 
-> (Eric?)
-
-I can check if it could be made to work on $pagesize/4, but I'll
-need to defer to Eric if that even makes sense.
-
-> >  tests/xfs/513 |  1 +
-> 
-> I think we should split this into separate tests for V4/V5 options and
-> only _require_xfs_nocrc the one with V4 options, because I wouldn't want
-> to stop testing V5 codepaths simply because someone turned off V4
-> support in the kernle.
-
-Ok.
-
-> >  tests/xfs/526 |  1 +
-> 
-> I'm at a loss on this one -- what it does is useful, but there aren't
-> any V5 mkfs options that conflict as nicely as crc=0 does.
-
-Yes, I tried to look for conflicting options, but I couldn't find
-anything.  Maybe we'll grow some before the v4 support is retired
-for real :)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
