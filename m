@@ -1,112 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CBE97F;
-	Wed, 10 Apr 2024 00:05:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66765372
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:23:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712707529; cv=none; b=bz2TaNPX5w9NLUFGsEkzLGUbPjRByAADpQ6pMCV434+Pp9KuEkqSANuYMUfhNUK1vhHNgqMQU28pO3iVCk5P5rOJdq/NRWWa9m4B+BHt7nQFO7eZo/UQxHv0tPBDxi68OxtUqV4Ccn0p1yI+A+oAN+pnx2cRPwTPDb4kjDGSv/0=
+	t=1712708632; cv=none; b=j9bldnYEBeyAVFnOroU+BYdQb78D8kXCi6SuzlRJ0ivuJYcRmRrQngPwS3o5slEW56aqJZBEo7CCpwLbSOSxzcV37RwnymwGwpcWWLGqTTV2AdiHffTq3qoNQM2oCoqm+++7hSw020eHt3RQD9MjUoFO1VsXwEvuVTZYGdb/EF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712707529; c=relaxed/simple;
-	bh=bex30GmuVItS5K9f8UWgnHnchq8hiAHRUZt+4vOdORE=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z7ZK5Mw0i75LFZeqb0NSHlxxLVXXr6XXEwgYhW39CMaD+A91D3YGYbuARF7+W1yuOok3eT1lBa10ZwO8zUm7g97XlETefkjkkYTZ1JlNTi4p6oSji8gY31748ysYAEpv9MxeZYt5uMoniSUz9pj0icKp0LoS5O4DgZ095HY+sbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9BZRkPP; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712708632; c=relaxed/simple;
+	bh=M8wkmy0FFgNfHoZTlccX2cdK1u7Ho1Ghmzrr/SjCsVQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cJQx4oqPs4q6VIBz0kDD500FPOhFPnN/QQYvx8JRsNGk2TGZoG8BtJoOoY1PhMsOzQxms/pSQ6SfruMjIJTQcekW3GIslzTAmsHXtLT4LeOTLZ8Rsl5QWZHQFNsw2OTVT4cvZmRtRrN+VfnX5VnAx6iZqhUK5HNezeFIWiPQ4N4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MvNpFUe0; arc=none smtp.client-ip=209.85.218.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9BZRkPP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB0BFC433F1;
-	Wed, 10 Apr 2024 00:05:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712707528;
-	bh=bex30GmuVItS5K9f8UWgnHnchq8hiAHRUZt+4vOdORE=;
-	h=Date:From:To:Subject:References:In-Reply-To:From;
-	b=c9BZRkPP/nSGHb8wWmHqbhh42pF4BrK6Uvjs7aMDfKa/EPcYXyjgobTzSIT6ysuYs
-	 LCDlsACvSjs6RhN4qfQC330twU0ZCh2V6DmPmuTNU4nHbzJo2TJjWYmW86jWnx/QQC
-	 ZTTIunOabsVWCZseEnC6tigh1lyHp0FpWfb5Ev9CE2IX08J4Y92oP1EQ5EfGIiWmR3
-	 Fp5EkaN6VuFNov67yKc+lScNwyjVO/FuXN5quVBtgo4OHmLHBlyQWENlO6sI/Evonz
-	 vm2QAVhJUPq/QuBJO+9iQDkzVKsc6dobfNkNBNit3JyRpvAzjudbolykeys9VyTcpI
-	 WZEcLzXYojFoQ==
-Date: Tue, 9 Apr 2024 17:05:28 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 15/14] xfs: capture inode generation numbers in the ondisk
- exchmaps log item
-Message-ID: <20240410000528.GR6390@frogsfrogsfrogs>
-References: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MvNpFUe0"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a5199906493so620292466b.1
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Apr 2024 17:23:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1712708629; x=1713313429; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=f5KEFu9ntLir/zrgNKi0L8qnCsTF4mTHACifp8EqEFM=;
+        b=MvNpFUe0FCz6ls7M7cj/Uzg54G8xdBa8xZY+m5Kzw1WGuA3ivIW+Qky4tuJWW8dSHN
+         LFVoYO+TcdCElkMeOM1DEdFOGVCybNffVVae6Q8wCrqzS//dk/k0rKwd6XAXcy6IFYxk
+         xEn4ohLovbF0LWKLQMnlHq7GvdJ1IrFLEkH7dKsRZncEooNixBZl/cTCgpLIulChTjkk
+         9J/61Ss3t4BzIo/FM9Q4Z8w+83qIQHzXTT97w8XzBbkx4uxyTDHmCAVvQlRbKa59raJj
+         AGxyp9474vVvaciCripYZmOObZwbmlsIpypTxi3vBmhDfMc+UuDUVnFGDIBMhDo7Sj87
+         uFrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712708629; x=1713313429;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=f5KEFu9ntLir/zrgNKi0L8qnCsTF4mTHACifp8EqEFM=;
+        b=P+BPDUgF2loW5OfPhVVs8/jjHhKxa+vJpG8YL2GmggMGacPJIIqbbov7j4nbvH7CJK
+         FeY1CDLX1UozOt/H1YoHBdTW+RDh6qM5jqjL7QhC54u69TInG/IMp5cf5HNFZiK0DLtm
+         mQZDyM9OIp2dv0P4pIBsUAnvVaqiK9fq/+FSzaORJOn8BCafVZWschbRnH4snvICgj2v
+         /wkd1s5ZbCpeV5xFEckAqaiRbCM4mcoPLtGTcGqoXf0ggwmWtHfgth/xvQiuZsq5RBtP
+         fGy9ATTCJKSGoYGGicxU6RR8jNUOLsKxzRXKuoEOUu+p8Smu8dH2PIb/4uGgvzSek8km
+         xowg==
+X-Forwarded-Encrypted: i=1; AJvYcCU+vhdRng/FKzoiDzDaddxz3qUx1FPXeTDce2RkU8TJAA8eGR33cOS/bG84PAB5zvAiz54Ix/G/JLqcLcB0LR4u7iGx9a6DsEY+
+X-Gm-Message-State: AOJu0YwtScpacUUrOEEomKuniqLNMtdyfVv2Vrt8RnpqzM/IDBLR4Nb1
+	Yhb+UQXA3Kc+YDY0FfXyLC42sZH5Rg+hYbjbJ1dfOfjF3yfx+iiyCVJGSnXC5pjF/ykxqiBnVU8
+	qjIiY7k9EUpVWFgfPvqhmlAM+7l3WszOmfwA0
+X-Google-Smtp-Source: AGHT+IFBzm/AwEpDdiqpg/CwCa4Zosq++tdfYX+7w+FZxqMgXJS+wj0rsmwie4JV2eEKEwKYWPqGyghjmhNvA5np5Qo=
+X-Received: by 2002:a17:907:7da5:b0:a52:40c:7cd2 with SMTP id
+ oz37-20020a1709077da500b00a52040c7cd2mr758664ejc.66.1712708628590; Tue, 09
+ Apr 2024 17:23:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
+References: <20240405-strncpy-xattr-split2-v1-1-90ab18232407@google.com> <ZhVDgbRoF9X7JSdt@infradead.org>
+In-Reply-To: <ZhVDgbRoF9X7JSdt@infradead.org>
+From: Justin Stitt <justinstitt@google.com>
+Date: Tue, 9 Apr 2024 17:23:35 -0700
+Message-ID: <CAFhGd8pwoBSvLDRLX8ekRk+u9uX6s6mcAfTz8E15E6EBsvuSag@mail.gmail.com>
+Subject: Re: [PATCH] xfs: xattr: replace strncpy and check for truncation
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi,
 
-Per some very late review comments, capture the generation numbers of
-both inodes involved in a file content exchange operation so that we
-don't accidentally target files with have been reallocated.
+On Tue, Apr 9, 2024 at 6:32=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> On Fri, Apr 05, 2024 at 07:45:08PM +0000, Justin Stitt wrote:
+> > -     memcpy(offset, prefix, prefix_len);
+> > -     offset +=3D prefix_len;
+> > -     strncpy(offset, (char *)name, namelen);                 /* real n=
+ame */
+> > -     offset +=3D namelen;
+> > -     *offset =3D '\0';
+> > +
+> > +     combined_len =3D prefix_len + namelen;
+> > +
+> > +     /* plus one byte for \0 */
+> > +     actual_len =3D scnprintf(offset, combined_len + 1, "%s%s", prefix=
+, name);
+> > +
+> > +     if (actual_len < combined_len)
+>
+> Shouldn't this be a !=3D ?
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
-I'm throwing this one on the pile since I guess it's not so hard to add
-the generation number to a brand new log item.
----
- fs/xfs/libxfs/xfs_log_format.h |    2 ++
- fs/xfs/xfs_exchmaps_item.c     |   12 ++++++++++++
- 2 files changed, 14 insertions(+)
+I guess it could be. It's a truncation check so I figured just
+checking if the amount of bytes actually copied was less than the
+total would suffice.
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 8dbe1f997dfd5..accba2acd623d 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -896,6 +896,8 @@ struct xfs_xmi_log_format {
- 
- 	uint64_t		xmi_inode1;	/* inumber of first file */
- 	uint64_t		xmi_inode2;	/* inumber of second file */
-+	uint32_t		xmi_igen1;	/* generation of first file */
-+	uint32_t		xmi_igen2;	/* generation of second file */
- 	uint64_t		xmi_startoff1;	/* block offset into file1 */
- 	uint64_t		xmi_startoff2;	/* block offset into file2 */
- 	uint64_t		xmi_blockcount;	/* number of blocks */
-diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
-index a40216f33214c..3c4bb9601c3e0 100644
---- a/fs/xfs/xfs_exchmaps_item.c
-+++ b/fs/xfs/xfs_exchmaps_item.c
-@@ -231,7 +231,9 @@ xfs_exchmaps_create_intent(
- 	xlf = &xmi_lip->xmi_format;
- 
- 	xlf->xmi_inode1 = xmi->xmi_ip1->i_ino;
-+	xlf->xmi_igen1 = VFS_I(xmi->xmi_ip1)->i_generation;
- 	xlf->xmi_inode2 = xmi->xmi_ip2->i_ino;
-+	xlf->xmi_igen2 = VFS_I(xmi->xmi_ip2)->i_generation;
- 	xlf->xmi_startoff1 = xmi->xmi_startoff1;
- 	xlf->xmi_startoff2 = xmi->xmi_startoff2;
- 	xlf->xmi_blockcount = xmi->xmi_blockcount;
-@@ -377,6 +379,14 @@ xfs_xmi_item_recover_intent(
- 	if (error)
- 		goto err_rele1;
- 
-+	if (VFS_I(ip1)->i_generation != xlf->xmi_igen1 ||
-+	    VFS_I(ip2)->i_generation != xlf->xmi_igen2) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+				xlf, sizeof(*xlf));
-+		error = -EFSCORRUPTED;
-+		goto err_rele2;
-+	}
+>
+> That being said I think this is actually wrong - the attr names are
+> not NULL-terminated on disk, which is why we have the explicit
+> zero terminataion above.
+
+Gotcha, in which case we could use the "%.*s" format specifier which
+allows for a length argument. Does something like this look better?
+
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 364104e1b38a..1b7e886e0f29 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -206,6 +206,7 @@ __xfs_xattr_put_listent(
+ {
+  char *offset;
+  int arraytop;
++ size_t combined_len, actual_len;
+
+  if (context->count < 0 || context->seen_enough)
+  return;
+@@ -220,11 +221,16 @@ __xfs_xattr_put_listent(
+  return;
+  }
+  offset =3D context->buffer + context->count;
+- memcpy(offset, prefix, prefix_len);
+- offset +=3D prefix_len;
+- strncpy(offset, (char *)name, namelen); /* real name */
+- offset +=3D namelen;
+- *offset =3D '\0';
 +
- 	req->ip1 = ip1;
- 	req->ip2 = ip2;
- 	req->startoff1 = xlf->xmi_startoff1;
-@@ -485,6 +495,8 @@ xfs_exchmaps_relog_intent(
- 
- 	new_xlf->xmi_inode1	= old_xlf->xmi_inode1;
- 	new_xlf->xmi_inode2	= old_xlf->xmi_inode2;
-+	new_xlf->xmi_igen1	= old_xlf->xmi_igen1;
-+	new_xlf->xmi_igen2	= old_xlf->xmi_igen2;
- 	new_xlf->xmi_startoff1	= old_xlf->xmi_startoff1;
- 	new_xlf->xmi_startoff2	= old_xlf->xmi_startoff2;
- 	new_xlf->xmi_blockcount	= old_xlf->xmi_blockcount;
++ combined_len =3D prefix_len + namelen;
++
++ /* plus one byte for \0 */
++ actual_len =3D scnprintf(offset, combined_len + 1, "%.*s%.*s",
++        prefix_len, prefix, namelen, name);
++
++ if (actual_len < combined_len)
++ xfs_warn(context->dp->i_mount,
++ "cannot completely copy context buffer resulting in truncation");
+
+ compute_size:
+  context->count +=3D prefix_len + namelen + 1;
+---
+
+
+
+>
+> How was this tested?
+
+With https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/about/
+
+but using scripts + image from: https://github.com/tytso/xfstests-bld
+
+here's the output log: https://pastebin.com/V2gFhbNZ wherein I ran the
+5 default ones (I think?):
+
+|        Ran: generic/475 generic/476 generic/521 generic/522 generic/642
+|        Passed all 5 tests
+
+Thanks
+Justin
