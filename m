@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D28C2387
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:48:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73FC237C
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:48:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710082; cv=none; b=odni2klXien46x+l2+eyZGOofhcQMIR5gzyTZhiKYGTTwV+PQOIKLauYrL2j9NLYQBFU6ESHDdxErJESGnnMXfnYhjZXg2zqORzq6cD5uMQKHcV7blK6eTqQa7kmVrU3YI/OQFfFHCcWMpxLlGZ1HEnkrwE6+4zP2geXV0s1ttM=
+	t=1712710098; cv=none; b=Hx0Z+3yKSNZZqW43elTVYXa8O6i9wuZDdIs6Ojap+5LM7n43YBTmQoxWO7e3SFRjPw0GW/klqQR1wVD1fKnbfXS3Yo6dA2PnkIuse5SwQwAkGmrAIJ/D+R2ZPDeT5eB3e2gnyO6xsWMlQHrm47wEssJ+7Qs7jRLTA9uTU4QTGNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710082; c=relaxed/simple;
-	bh=IZnjwdsXxnBSwBCn5WS4jHNLm/hcO3SfqkFCvfYc+nk=;
+	s=arc-20240116; t=1712710098; c=relaxed/simple;
+	bh=9R6yQlLfuCAAAvEDqJSLaF6pr+p8JuCJfxVRx9oUN/g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cFn6ogGp0NBMeQfbn94rxHjxb3Q8og81ObpKuDpDsoEo9Grfc6hMUcXTsAAFobEKt5faII0tzrF9VQdDpY64Yalytm60k5bGAXUWSvE1HHlkq9+g9wrV8IZVg64RejpOHyEQgp9f5wKWdgh6xsGYhqgq42tZYs+CGP0pQJeW+ek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/uD6wZd; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TPqRDpuElRuyp616VxBLWB7Khy/loP8GJwk9MQk2YyorH9MMiaeo00v61MqI9QlXyQ5le+IckpVzu1s//7g1LqMwknZ8Jnfvras9ANG12VuJ3MZyyQHxDG46LQjsJSgivJ9LhMLnu0/B0rthY+IAJIsg8YUv+7+L5i+OxczgP44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lPSgqEGt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/uD6wZd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8882C433F1;
-	Wed, 10 Apr 2024 00:48:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lPSgqEGt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 497AAC433C7;
+	Wed, 10 Apr 2024 00:48:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710082;
-	bh=IZnjwdsXxnBSwBCn5WS4jHNLm/hcO3SfqkFCvfYc+nk=;
+	s=k20201202; t=1712710098;
+	bh=9R6yQlLfuCAAAvEDqJSLaF6pr+p8JuCJfxVRx9oUN/g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=q/uD6wZdBU9mArbqN61/3/gG3C0z3TtIkFi6vv934BSGo1RY285U+geuNIysK3Pnk
-	 VIDcx9g8QzmTUpe07OcyxwjwllWUvWUP8V9hgsZXZtFmYdptskC7s8n3i5RnJ+rycm
-	 8mfpVueDzMWUn69D/A7vNARghiPXV7qNNNatdCtMwKYWSmeYOr9a99gP83Zv5mvYRH
-	 i6eNMpxx1BlP4uLi7DVpaQJ7oCd6YCW+PTGX7NEC/Y91uwnhiK4K4232+/0SD/bqec
-	 xZ6C71OzI3zpQfZecc70Fs9tRFyCWXM61lfeAM93nR+WpdGRcKWjq1nqfaB3IXnrGA
-	 HLJ+FWr0MDsKA==
-Date: Tue, 09 Apr 2024 17:48:02 -0700
-Subject: [PATCH 2/7] xfs: Increase XFS_QM_TRANS_MAXDQS to 5
+	b=lPSgqEGte7BBOcAGnjxSzmWgVojpX9+u/WaFTFoTq8LpKtrT0sI7fQy8xZRe77dbV
+	 K/kEnxeH6n0gQkEQN4/EwivWJkiytxDHqyOINtIWa5N2EEvQBLvDa8jTF47YkrrdiG
+	 eIyG7F5F1WYRr2tnDzmEyN1+u3YF8ffSTt6gyoNX5aAkNsBv7kCq6qA+lDpaOvTUCl
+	 uLu6ocbx7GORtLIouiH7Q2YU9XVk2ArVahpa9r93CyKEC2If3NDsZ6XaUvShfWMl+2
+	 VokrnlAdcrTzScsOx9Qun3iGT9lEiOlLn5zd3EOtEfSMPKL5cVT/380ebLl69hfSTm
+	 ExIiTc+a/61nA==
+Date: Tue, 09 Apr 2024 17:48:17 -0700
+Subject: [PATCH 3/7] xfs: Hold inode locks in xfs_ialloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Allison Henderson <allison.henderson@oracle.com>,
- catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
- linux-xfs@vger.kernel.org
-Message-ID: <171270967939.3631167.6157751007952552705.stgit@frogsfrogsfrogs>
+ Catherine Hoang <catherine.hoang@oracle.com>, catherine.hoang@oracle.com,
+ hch@lst.de, allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <171270967955.3631167.14088032466565972952.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270967888.3631167.1528096915093261854.stgit@frogsfrogsfrogs>
 References: <171270967888.3631167.1528096915093261854.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,137 +48,132 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-With parent pointers enabled, a rename operation can update up to 5
-inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
-their dquots to a be attached to the transaction chain, so we need
-to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
-function xfs_dqlockn to lock an arbitrary number of dquots.
+Modify xfs_ialloc to hold locks after return.  Caller will be
+responsible for manual unlock.  We will need this later to hold locks
+across parent pointer operations
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
+[djwong: hold the parent ilocked across transaction rolls too]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_dquot.c       |   41 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dquot.h       |    1 +
- fs/xfs/xfs_qm.h          |    2 +-
- fs/xfs/xfs_trans_dquot.c |   15 ++++++++++-----
- 4 files changed, 53 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_inode.c   |   12 +++++++++---
+ fs/xfs/xfs_qm.c      |    4 +++-
+ fs/xfs/xfs_symlink.c |    6 ++++--
+ 3 files changed, 16 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index c98cb468c3578..13aba84bd64af 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1371,6 +1371,47 @@ xfs_dqlock2(
- 	}
- }
- 
-+static int
-+xfs_dqtrx_cmp(
-+	const void		*a,
-+	const void		*b)
-+{
-+	const struct xfs_dqtrx	*qa = a;
-+	const struct xfs_dqtrx	*qb = b;
-+
-+	if (qa->qt_dquot->q_id > qb->qt_dquot->q_id)
-+		return 1;
-+	if (qa->qt_dquot->q_id < qb->qt_dquot->q_id)
-+		return -1;
-+	return 0;
-+}
-+
-+void
-+xfs_dqlockn(
-+	struct xfs_dqtrx	*q)
-+{
-+	unsigned int		i;
-+
-+	BUILD_BUG_ON(XFS_QM_TRANS_MAXDQS > MAX_LOCKDEP_SUBCLASSES);
-+
-+	/* Sort in order of dquot id, do not allow duplicates */
-+	for (i = 0; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++) {
-+		unsigned int	j;
-+
-+		for (j = 0; j < i; j++)
-+			ASSERT(q[i].qt_dquot != q[j].qt_dquot);
-+	}
-+	if (i == 0)
-+		return;
-+
-+	sort(q, i, sizeof(struct xfs_dqtrx), xfs_dqtrx_cmp, NULL);
-+
-+	mutex_lock(&q[0].qt_dquot->q_qlock);
-+	for (i = 1; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++)
-+		mutex_lock_nested(&q[i].qt_dquot->q_qlock,
-+				XFS_QLOCK_NESTED + i - 1);
-+}
-+
- int __init
- xfs_qm_init(void)
- {
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 956272d9b302f..677bb2dc9ac91 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -223,6 +223,7 @@ int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
- void		xfs_qm_dqput(struct xfs_dquot *dqp);
- 
- void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-+void		xfs_dqlockn(struct xfs_dqtrx *q);
- 
- void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
- 
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index f5993012bf98f..6e09dfcd13e25 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -136,7 +136,7 @@ enum {
- 	XFS_QM_TRANS_PRJ,
- 	XFS_QM_TRANS_DQTYPES
- };
--#define XFS_QM_TRANS_MAXDQS		2
-+#define XFS_QM_TRANS_MAXDQS		5
- struct xfs_dquot_acct {
- 	struct xfs_dqtrx	dqs[XFS_QM_TRANS_DQTYPES][XFS_QM_TRANS_MAXDQS];
- };
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 577b535a595cb..b368e13424c4f 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -379,24 +379,29 @@ xfs_trans_mod_dquot(
- 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index efd040094753f..2ec005e6c1dab 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -747,6 +747,8 @@ xfs_inode_inherit_flags2(
  /*
-  * Given an array of dqtrx structures, lock all the dquots associated and join
-- * them to the transaction, provided they have been modified.  We know that the
-- * highest number of dquots of one type - usr, grp and prj - involved in a
-- * transaction is 3 so we don't need to make this very generic.
-+ * them to the transaction, provided they have been modified.
+  * Initialise a newly allocated inode and return the in-core inode to the
+  * caller locked exclusively.
++ *
++ * Caller is responsible for unlocking the inode manually upon return
   */
- STATIC void
- xfs_trans_dqlockedjoin(
- 	struct xfs_trans	*tp,
- 	struct xfs_dqtrx	*q)
- {
-+	unsigned int		i;
- 	ASSERT(q[0].qt_dquot != NULL);
- 	if (q[1].qt_dquot == NULL) {
- 		xfs_dqlock(q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
--	} else {
--		ASSERT(XFS_QM_TRANS_MAXDQS == 2);
-+	} else if (q[2].qt_dquot == NULL) {
- 		xfs_dqlock2(q[0].qt_dquot, q[1].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[1].qt_dquot);
-+	} else {
-+		xfs_dqlockn(q);
-+		for (i = 0; i < XFS_QM_TRANS_MAXDQS; i++) {
-+			if (q[i].qt_dquot == NULL)
-+				break;
-+			xfs_trans_dqjoin(tp, q[i].qt_dquot);
-+		}
+ int
+ xfs_init_new_inode(
+@@ -873,7 +875,7 @@ xfs_init_new_inode(
+ 	/*
+ 	 * Log the new values stuffed into the inode.
+ 	 */
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
+ 	xfs_trans_log_inode(tp, ip, flags);
+ 
+ 	/* now that we have an i_mode we can setup the inode structure */
+@@ -1101,8 +1103,7 @@ xfs_create(
+ 	 * the transaction cancel unlocking dp so don't do it explicitly in the
+ 	 * error path.
+ 	 */
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+-	unlock_dp_on_error = false;
++	xfs_trans_ijoin(tp, dp, 0);
+ 
+ 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+ 					resblks - XFS_IALLOC_SPACE_RES(mp));
+@@ -1151,6 +1152,8 @@ xfs_create(
+ 	xfs_qm_dqrele(pdqp);
+ 
+ 	*ipp = ip;
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 	return 0;
+ 
+  out_trans_cancel:
+@@ -1162,6 +1165,7 @@ xfs_create(
+ 	 * transactions and deadlocks from xfs_inactive.
+ 	 */
+ 	if (ip) {
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		xfs_finish_inode_setup(ip);
+ 		xfs_irele(ip);
  	}
+@@ -1247,6 +1251,7 @@ xfs_create_tmpfile(
+ 	xfs_qm_dqrele(pdqp);
+ 
+ 	*ipp = ip;
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return 0;
+ 
+  out_trans_cancel:
+@@ -1258,6 +1263,7 @@ xfs_create_tmpfile(
+ 	 * transactions and deadlocks from xfs_inactive.
+ 	 */
+ 	if (ip) {
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		xfs_finish_inode_setup(ip);
+ 		xfs_irele(ip);
+ 	}
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 0f4cf4170c357..47120b745c47f 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -836,8 +836,10 @@ xfs_qm_qino_alloc(
+ 		ASSERT(xfs_is_shutdown(mp));
+ 		xfs_alert(mp, "%s failed (error %d)!", __func__, error);
+ 	}
+-	if (need_alloc)
++	if (need_alloc) {
++		xfs_iunlock(*ipp, XFS_ILOCK_EXCL);
+ 		xfs_finish_inode_setup(*ipp);
++	}
+ 	return error;
  }
  
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index fb060aaf6d40f..85ef56fdd7dfe 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -172,8 +172,7 @@ xfs_symlink(
+ 	 * the transaction cancel unlocking dp so don't do it explicitly in the
+ 	 * error path.
+ 	 */
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+-	unlock_dp_on_error = false;
++	xfs_trans_ijoin(tp, dp, 0);
+ 
+ 	/*
+ 	 * Also attach the dquot(s) to it, if applicable.
+@@ -215,6 +214,8 @@ xfs_symlink(
+ 	xfs_qm_dqrele(pdqp);
+ 
+ 	*ipp = ip;
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 	return 0;
+ 
+ out_trans_cancel:
+@@ -226,6 +227,7 @@ xfs_symlink(
+ 	 * transactions and deadlocks from xfs_inactive.
+ 	 */
+ 	if (ip) {
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		xfs_finish_inode_setup(ip);
+ 		xfs_irele(ip);
+ 	}
 
