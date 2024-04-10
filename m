@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F6C6181BBF
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 21:04:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B22A1836E4
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 21:13:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712783059; cv=none; b=V7QFLoV0NZJHiQ6TbFEiko768BDApdPWiyu7uxgIAdqubPSHC+rqYALDnFTD5PZs3DUI8EmjgURwWgwfoM58NJcLjcj4iGm6ZZjLrrD+cfnBiqU+3pqSvXOKfE8mt/Uq2ws+nbkIHeiqenoNaHXkV/LqOLHoEukIAHkarrET//M=
+	t=1712783591; cv=none; b=FU1Qv0CAaLF8HU3ybLXfQ/JROVEUdapXb+wGaUqdjnHxkHuMYD1y9xOi/dB0KiU7LSa3rthbeB2tkzM0dnvGpldyRAwBlcnZzSgJGOOyLOUHcWwAvHJhJQ236cWydhbEJX+TPffnm1d5xoDt7KTfM1CmpKY1OxPeLhoQ2OSseMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712783059; c=relaxed/simple;
-	bh=6l7NiH8xyCC3iCTzhiELMpqxluN5NNqzIgCyJO88CQg=;
+	s=arc-20240116; t=1712783591; c=relaxed/simple;
+	bh=ZHsfokBeSLBixEF3NCev4pVgCMatdc+sTCwkAx+DLt4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XxFZMB7UjSrWT9dgJoISxaGdfHR7g3dfU2LkG2dLW0Phpp8niVen+QW8c+xJwLBNJ7TZJzYURYGhEdRFx9CXpDEN2ihn6wqj7mEtXQJLpNXpr8GVX4XuIJiLuELQ71h4QCAtXhF7mvBByCUw+TjTB+d/ormNvYZ4AOEkYN0TwiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FddH1X0t; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PcUrWOIW8jcNpgdUwH/OgNXLS2a0QINXGLmMon/0QoTb0tSqjPnE3VNuKfApbkz3UG9QAjWIsZWTkjJHP0tgVF/9niZSWhBOU9yPH7Cilx1TM+JNA2mUo22DDXasFhEigeVtv+gnYfACaDZdHQ3+PQ9r2cYQb6ET0gvB/71YmdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mUZUf4nd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FddH1X0t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50845C433C7;
-	Wed, 10 Apr 2024 21:04:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mUZUf4nd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD81CC433A6;
+	Wed, 10 Apr 2024 21:13:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712783059;
-	bh=6l7NiH8xyCC3iCTzhiELMpqxluN5NNqzIgCyJO88CQg=;
+	s=k20201202; t=1712783590;
+	bh=ZHsfokBeSLBixEF3NCev4pVgCMatdc+sTCwkAx+DLt4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FddH1X0t3Eb1c0gZeAl2H0S8njRX9k2Y1pTqSilljCs8kzbEXaXbzky8dBMhWokvH
-	 jDLRuX+LGCvalHcdI8GBmcM8ujrqBLnZK05LIhKo+Cap1oVQ2SRTbiAA0aaw6qeCIC
-	 1/GZFEZAdX3P7wIjm2vOzFyDhzfqMKk4cGCIJl2Fgm+rtfnS5DiXT6Cs6qGzvbzRf6
-	 Ys1mD5yWgLZpWfNArNscv/ybbxTYJ4eDEYPc9nU0GfTGW8Q5vSbjB632F9BHZWSwVF
-	 Zi387ww4y6tDiN/PR01aKIc7nLZFaRdVquaTEnv65hzZqDwbmhhS/f8NTGf6QE0czo
-	 hNmWJim/TQiOg==
-Date: Wed, 10 Apr 2024 14:04:18 -0700
+	b=mUZUf4ndZUVsHxk4pohVjfWDgrT7LP2ESMDBdogYNMqskjJJ2QjhOYRqD1g/9ZToX
+	 CJsKyIqyrUen8sjjYyoCgTKXtJe4oMTm95TV6eMn0ovQVM7KhxWOsL3XkptJPWpQqj
+	 F+yLNlMaNKq6aeE2JeGijcKOBRKpQWTFxWY5Nc6ZZrhhiwyu6lmysrLtyON5IsH1Ey
+	 Eiism6Nml1PppvbOs3Zn6WvlghbMUiZHFcIU1io7FfIQVKRBuVQwRPU53+NlpJrvha
+	 15cQjz9xjXudWm7Vvz6kiM+UXMOn7xBE1rWLbgQrRvc86eiub7wx31enk1DyE7HEIh
+	 uATS/712wE93w==
+Date: Wed, 10 Apr 2024 14:13:10 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/12] xfs: fix missing check for invalid attr flags
-Message-ID: <20240410210418.GC6390@frogsfrogsfrogs>
-References: <171270968824.3631545.9037354951123114569.stgit@frogsfrogsfrogs>
- <171270968933.3631545.17328111564626328171.stgit@frogsfrogsfrogs>
- <ZhYefgcsDhixG9AG@infradead.org>
+Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/32] xfs: allow xattr matching on name and value for
+ local/sf attrs
+Message-ID: <20240410211310.GD6390@frogsfrogsfrogs>
+References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
+ <171270969674.3631889.16669894985199358307.stgit@frogsfrogsfrogs>
+ <ZhYgylDdpjtxHdvY@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,29 +45,65 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhYefgcsDhixG9AG@infradead.org>
+In-Reply-To: <ZhYgylDdpjtxHdvY@infradead.org>
 
-On Tue, Apr 09, 2024 at 10:07:10PM -0700, Christoph Hellwig wrote:
-> On Tue, Apr 09, 2024 at 05:51:41PM -0700, Darrick J. Wong wrote:
-> > +#define XFS_ATTR_ONDISK_MASK	(XFS_ATTR_NSP_ONDISK_MASK | \
-> > +				 XFS_ATTR_LOCAL | \
-> > +				 XFS_ATTR_INCOMPLETE)
+On Tue, Apr 09, 2024 at 10:16:58PM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 09, 2024 at 05:55:20PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add a new XFS_DA_OP_PARENT flag to signal that the caller wants to look
 > 
-> Note that XFS_ATTR_LOCAL and XFS_ATTR_INCOMPLETE are not valid for
-> short form directories.  Should we check for that somewhere as well?
+> The flag doesn't actually exist, the match is done on the
+> XFS_ATTR_PARENT namespaces.
 
-Good point, xchk_xattr_check_sf should be flagging those too:
+How about:
 
-	/*
-	 * Shortform entries do not set LOCAL or INCOMPLETE, so the only
-	 * valid flag bits here are for namespaces.
-	 */
-	if (sfe->flags & ~XFS_ATTR_NSP_ONDISK_MASK) {
-		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-		break;
-	}
+"xfs: allow xattr matching on name and value for local/sf pptr attrs
 
-I'll tack that on the end.
+"If a file is hardlinked with the same name but from multiple parents,
+the parent pointers will all have the same dirent name (== attr name)
+but with different parent_ino/parent_gen values.  To disambiguate, we
+need to be able to match on both the attr name and the attr value.  This
+is in contrast to regular xattrs, which are matched only on name.
+
+"Therefore, plumb in the ability to match shortform and local attrs on
+name and value in the XFS_ATTR_PARENT namespace.  Parent pointer attr
+values are never large enough to be stored in a remote attr, so we need
+can reject these cases as corruption."
+
+> >  
+> > @@ -2444,14 +2477,17 @@ xfs_attr3_leaf_lookup_int(
+> >  			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
+> >  			if (!xfs_attr_match(args, entry->flags,
+> >  						name_loc->nameval,
+> > -						name_loc->namelen))
+> > +						name_loc->namelen,
+> > +						&name_loc->nameval[name_loc->namelen],
+> > +						be16_to_cpu(name_loc->valuelen)))
+> 
+> If we'd switch from the odd pre-existing three-tab indent to the normal
+> two-tab indent we'd avoid the overly long line here.
+> 
+> >  				continue;
+> >  			args->index = probe;
+> >  			return -EEXIST;
+> >  		} else {
+> >  			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
+> >  			if (!xfs_attr_match(args, entry->flags, name_rmt->name,
+> > -						name_rmt->namelen))
+> > +						name_rmt->namelen, NULL,
+> > +						be32_to_cpu(name_rmt->valuelen)))
+> 
+> ... and here.
+
+Believe it or not that's what vim autoformat does by default.
+But yes, I'll reduce it to two indents to reduce the indentation and
+overflow.
+
+> The remote side might also benefit from a local variable to store the
+> endian swapped version of the valuelen instead of calculating it twice.
+
+Ok.
 
 > Otherwise looks good:
 > 
