@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC58C19E
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:45:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C69A37C
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:46:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712709957; cv=none; b=gaouux5N3jBPfzXRAjZzhRW76MssHNBwbol85+xXECfOTDCTGZGAfUKwIkafBjuWpzeNtjEEUoFu8WakRzSPqNUY0ivEaHW1fdhgFK++C65h2X9VA7IAPMtlUfJLYoGh6kWvGGaeY+8lm203Uy7d8IjWgsTw8pB+ojLAtkDHovc=
+	t=1712709973; cv=none; b=KYPIv1SPWUAhoYWtgoYUPFZ9LH31C+rOrVb5ZwU3+U0oaH5ti2QFBKU1KOgv9PIiPiy2Fl3GJnWs6ZK6c6tSFM9uZGF9KqEh19nOhpgi6LY+VAx9phXd9x0Q1eyv6Mybm7ztsFPMD9DsbC+w5cTDeK/u3yqGt+QT8rMg5afVW9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712709957; c=relaxed/simple;
-	bh=uedsrlCWNdkT+L/m65ca3+QhvJ37DMFYOtubxj+Ihhc=;
+	s=arc-20240116; t=1712709973; c=relaxed/simple;
+	bh=767j3IrWsrbEcMlJPGtv9cgTDLru52rFfSKYU/rQqtY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TLWidJEGaV6ERW632Hrpx2Wmszl6NfsI82625HhRupIW7PFHaPxv5sDLjQuYOhZJQiS+2uwQ3AJaUkbXrtPSfKERzluFVO1EEWL7URmZQisDRdQ78cgnvClrnqfkaWrX1A0gHLB0Scg9mhoKvQSY3evKrL8kP/vdH+Myr6G469U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PBFWE7Ra; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=n51pR3GecBfkWn1rHKyYjcELFXwFwz+pallnW1qYNOp0wI7O9YAdK8UwyAqRxykExm18idO+nV2vCGyk+/3YRW8jMbjMdisSGVdpUNUFVBYXWlEE+wQ7IoX7IcwG4uszeSbzxq08RYKEOObXcKLPTrKylgRi2f4io+AwHmNK6Ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jT1p0Ykk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PBFWE7Ra"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A9F9C433F1;
-	Wed, 10 Apr 2024 00:45:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jT1p0Ykk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D310C433F1;
+	Wed, 10 Apr 2024 00:46:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712709957;
-	bh=uedsrlCWNdkT+L/m65ca3+QhvJ37DMFYOtubxj+Ihhc=;
+	s=k20201202; t=1712709973;
+	bh=767j3IrWsrbEcMlJPGtv9cgTDLru52rFfSKYU/rQqtY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PBFWE7RafoNSCKsdiSf/seigtBq+XKF6i7AxhuB3h3L8VvTPRlJRJIZKttTkzGVOw
-	 HOSuxGxQXITlu8OuRgJqjEAsiOfGyd1SgG0KEZm9XVQ7oLgSCJgfiavpC8BxUOxOlN
-	 K3igyFXgQWXjzv0/W06yUVqaH5GFqvORtwF4kUibtvwd4h8JXzOj2DLJib38suXzoT
-	 4osqrCzzXNzV51cXGRBOmOc9Vhd8185I7tqeWpK15v+JFoS/XvwNnf25GUen6eIcpJ
-	 VYTmqqQ5F0JCrqWS75fSlGqFEtMk5QWtAK8B6Y8qEWbW0MIBxLE2fyuzPybfAQps6u
-	 AOssMZIiRA+nQ==
-Date: Tue, 09 Apr 2024 17:45:56 -0700
-Subject: [PATCHSET v13.1 7/9] xfs: online repair for parent pointers
+	b=jT1p0YkkSbAsFt2h0Tb+/MGPtBy9WTrkCF56+EqogdAwChJA/Log2YPkOB6KlxPpR
+	 eLuh+BG7owjuZHjvMNVg0V6/aC5DsT22wcXG+IaesliNjS5BAiJObMnL8cada211ub
+	 hgqMzs43ZseFbJZcMWyNn4h8K0kYk9TUjYRMRHYRO8dijIxC9GSKFUFa0whyBQYGXi
+	 TJPoNCy2g4KcyuNtpHsEbObtsZyJmAP+7G3F3ReK8SaEFaV2v97/coUKcmRLSXBaH1
+	 C8KzIGgTnGwfhvvweNSbNFBFq2tc5tkxDDj9ZWeQUGL03VTaeKJtI2tom0P7WaRlXr
+	 HFaxdyrbf6yRA==
+Date: Tue, 09 Apr 2024 17:46:12 -0700
+Subject: [PATCHSET v13.1 8/9] xfs: detect and correct directory tree problems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
- linux-xfs@vger.kernel.org
-Message-ID: <171270970952.3632937.3716036526502072405.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171270971578.3633329.3916047777798574829.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240410003646.GS6390@frogsfrogsfrogs>
 References: <20240410003646.GS6390@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,30 +46,22 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series implements online repair for directory parent pointer
-metadata.  The checking half is fairly straightforward -- for each
-outgoing directory link (forward or backwards), grab the inode at the
-other end, and confirm that there's a corresponding link.  If we can't
-grab an inode or lock it, we'll save that link for a slower loop that
-cycles all the locks, confirms the continued existence of the link, and
-rechecks the link if it's actually still there.
+Historically, checking the tree-ness of the directory tree structure has
+not been complete.  Cycles of subdirectories break the tree properties,
+as do subdirectories with multiple parents.  It's easy enough for DFS to
+detect problems as long as one of the participants is reachable from the
+root, but this technique cannot find unconnected cycles.
 
-Repairs are a bit more involved -- for directories, we walk the entire
-filesystem to rebuild the dirents from parent pointer information.
-Parent pointer repairs do the same walk but rebuild the pptrs from the
-dirent information, but with the added twist that it duplicates all the
-xattrs so that it can use the atomic extent swapping code to commit the
-repairs atomically.
+Directory parent pointers change that, because we can discover all of
+these problems from a simple walk from a subdirectory towards the root.
+For each child we start with, if the walk terminates without reaching
+the root, we know the path is disconnected and ought to be attached to
+the lost and found.  If we find ourselves, we know this is a cycle and
+can delete an incoming edge.  If we find multiple paths to the root, we
+know to delete an incoming edge.
 
-This introduces an added twist to the xattr repair code -- we use dirent
-hooks to detect a colliding update to the pptr data while we're not
-holding the ILOCKs; if one is detected, we restart the xattr salvaging
-process but this time hold all the ILOCKs until the end of the scan.
-
-For offline repair, the phase6 directory connectivity scan generates an
-index of all the expected parent pointers in the filesystem.  Then it
-walks each file and compares the parent pointers attached to that file
-against the index generated, and resyncs the results as necessary.
+Even better, once we've finished walking paths, we've identified the
+good ones and know which other path(s) to remove.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -81,50 +72,44 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-pptrs
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-directory-tree
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-pptrs
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-directory-tree
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-directory-tree
 ---
 Commits in this patchset:
- * xfs: add xattr setname and removename functions for internal users
- * xfs: add raw parent pointer apis to support repair
- * xfs: repair directories by scanning directory parent pointers
- * xfs: implement live updates for directory repairs
- * xfs: replay unlocked parent pointer updates that accrue during xattr repair
- * xfs: repair directory parent pointers by scanning for dirents
- * xfs: implement live updates for parent pointer repairs
- * xfs: remove pointless unlocked assertion
- * xfs: split xfs_bmap_add_attrfork into two pieces
- * xfs: add a per-leaf block callback to xchk_xattr_walk
- * xfs: actually rebuild the parent pointer xattrs
- * xfs: adapt the orphanage code to handle parent pointers
- * xfs: repair link count of nondirectories after rebuilding parent pointers
- * xfs: inode repair should ensure there's an attr fork to store parent pointers
+ * xfs: teach online scrub to find directory tree structure problems
+ * xfs: invalidate dirloop scrub path data when concurrent updates happen
+ * xfs: report directory tree corruption in the health information
+ * xfs: fix corruptions in the directory tree
 ---
- fs/xfs/libxfs/xfs_attr.c     |  230 +++++++
- fs/xfs/libxfs/xfs_attr.h     |    4 
- fs/xfs/libxfs/xfs_bmap.c     |   38 -
- fs/xfs/libxfs/xfs_bmap.h     |    3 
- fs/xfs/libxfs/xfs_dir2.c     |    2 
- fs/xfs/libxfs/xfs_dir2.h     |    2 
- fs/xfs/libxfs/xfs_parent.c   |   64 ++
- fs/xfs/libxfs/xfs_parent.h   |    6 
- fs/xfs/scrub/attr.c          |    2 
- fs/xfs/scrub/attr_repair.c   |  459 +++++++++++++++
- fs/xfs/scrub/attr_repair.h   |    4 
- fs/xfs/scrub/dir_repair.c    |  564 +++++++++++++++++-
- fs/xfs/scrub/findparent.c    |   12 
- fs/xfs/scrub/findparent.h    |   10 
- fs/xfs/scrub/inode_repair.c  |   41 +
- fs/xfs/scrub/listxattr.c     |   10 
- fs/xfs/scrub/listxattr.h     |    4 
- fs/xfs/scrub/nlinks.c        |    3 
- fs/xfs/scrub/orphanage.c     |   38 +
- fs/xfs/scrub/orphanage.h     |    3 
- fs/xfs/scrub/parent.c        |    7 
- fs/xfs/scrub/parent_repair.c | 1301 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.c         |    2 
- fs/xfs/scrub/trace.h         |  115 ++++
- 24 files changed, 2816 insertions(+), 108 deletions(-)
+ fs/xfs/Makefile               |    2 
+ fs/xfs/libxfs/xfs_fs.h        |    4 
+ fs/xfs/libxfs/xfs_health.h    |    4 
+ fs/xfs/scrub/common.h         |    1 
+ fs/xfs/scrub/dirtree.c        |  979 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/dirtree.h        |  178 +++++++
+ fs/xfs/scrub/dirtree_repair.c |  821 ++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/health.c         |    1 
+ fs/xfs/scrub/ino_bitmap.h     |   37 ++
+ fs/xfs/scrub/orphanage.c      |    6 
+ fs/xfs/scrub/orphanage.h      |    8 
+ fs/xfs/scrub/repair.h         |    4 
+ fs/xfs/scrub/scrub.c          |    7 
+ fs/xfs/scrub/scrub.h          |    1 
+ fs/xfs/scrub/stats.c          |    1 
+ fs/xfs/scrub/trace.c          |    4 
+ fs/xfs/scrub/trace.h          |  272 +++++++++++
+ fs/xfs/scrub/xfarray.h        |    1 
+ fs/xfs/xfs_health.c           |    1 
+ fs/xfs/xfs_inode.c            |    2 
+ fs/xfs/xfs_inode.h            |    1 
+ 21 files changed, 2331 insertions(+), 4 deletions(-)
+ create mode 100644 fs/xfs/scrub/dirtree.c
+ create mode 100644 fs/xfs/scrub/dirtree.h
+ create mode 100644 fs/xfs/scrub/dirtree_repair.c
+ create mode 100644 fs/xfs/scrub/ino_bitmap.h
 
