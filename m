@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D77391
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:00:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB204391
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:00:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710818; cv=none; b=Vsjss4L6ZE1qUHm7vwdUYMkobtERk4CBAyLb1zdq5LH+08+tqNUDr5NRm6GLaMhi0qupOJGBoxe9RPxuJ4VVB0Ioy+J8RLWFZdW6WL68eOxpJRwTJCDSZlIGyzSlfFBtuSxro3YCPhJbY3XSUP4W+KyVj5HUQ+8Ih0Qrc/8u+IA=
+	t=1712710833; cv=none; b=Wgo+CSKnDN3dFrg5G9nl7h7xYAz57k7rtCEdbUUQq817V3LkfrGX4RYFHOP9FgkMONk6ET4HIWs/7HwnnmQGa42sIxl3kvFHtXACcYlsIlIFkjZe3FJy3cE9sAd6K+zxsQBV5BLGjctN/WdJgg3y4E6LWWuYihx4Y8Pf7r8wDRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710818; c=relaxed/simple;
-	bh=zKKfDBA/1+ra28LA2fpJU4pkWTO04QB/Sc0Gyve5JfU=;
+	s=arc-20240116; t=1712710833; c=relaxed/simple;
+	bh=GmkNCYJ2fnpJnqgvWP9Oe93IiywJHswsMDN4tNOLvW0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h9xeKukKM0WSYItw7qcFs7/WIhZf3W4r2iRaZSVRm4thEvvLrSGe896bZC4fIvA3E5igd2PznHl0DH6eSbAqfMghuKHVuEs23Qa+IZcBu06+tEbPFysUpOOhOrlsalUOLahqQVG9hrDS8y5ISeXChWTxChaTTZ5ucjqNJJRicyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fpUfAxzj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KKDTCEcXrW/va1OAA0NLD9ZdgdoHZxCXc48GdQIWyTxe0L07RNJ5j9pWtp1s3Lw/VOKnL7ljK6uYUt+Vm6iGQxykiB/LBuatnQZiJUXq8u10LpySFt2aCb8i9zgt+gQrisWA+FAf0Z9HB8pAt+j3+lBMC/cyG7zT4pPanHoYLGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ek03vucg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fpUfAxzj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18DF0C433C7;
-	Wed, 10 Apr 2024 01:00:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ek03vucg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B097AC433C7;
+	Wed, 10 Apr 2024 01:00:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710818;
-	bh=zKKfDBA/1+ra28LA2fpJU4pkWTO04QB/Sc0Gyve5JfU=;
+	s=k20201202; t=1712710833;
+	bh=GmkNCYJ2fnpJnqgvWP9Oe93IiywJHswsMDN4tNOLvW0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fpUfAxzj1rMgugcyOOEOmknD/LFp1ynh2JutFtmQMIT515l1baVXuAnYLr2Nxf3wU
-	 OODxwwQxUe4SiQ+YoZGg9CZ9l2IR6OWNgBXtqvTzcKn7mAvpHB6zuR+utxV9EuQHl+
-	 Akucg9Vky8BLwRIqDxi5rUVSUzU3CpxdybxXDOnADEKkxU1HI+XT6US6JriPKSCvhA
-	 nVPQGJFvzKRD9ofpXuvCo42w8U/VI4tj58inkINwcNP287PxV7s81Co70XDMXhh4Bw
-	 lPbwhIcAI1ZO59A3AsJrd96R/jwfzHi/dJTpIgtkoyI5Ojd8477JSkw97OOzSzCgfy
-	 4emtD7YpqcuSg==
-Date: Tue, 09 Apr 2024 18:00:17 -0700
-Subject: [PATCH 26/32] xfs: split out handle management helpers a bit
+	b=Ek03vucgMW9WvXTbg0SHG/MYWokzCi05xoTqJbRk2kiMfZGM9gnhEkyijg19YVCu3
+	 /oGpQdA5SiDg/kKcWRVeV0/xabiK0nKXugojCpGbekexPH4yRs0c8ovM4nrHtLR20T
+	 J325oemZQA2XRLVKqkD1EVCHAgk1447dcqyPWnUlBKuURanzSbbS8UcLTTq3gqOoiy
+	 oagDpOK7DY2z/zldUzG6wiCqWDH0Uuw+QWOX/3Rcl9G82zm4vxNJWe7mYvrz4xH/v9
+	 BgpGgDEZ6zgpR1D/r3cowdAa7x7TJspXJLR2AfvP6R4mmFU8Yt3HpHW/oIbigYEJVx
+	 5QlcHuzTSoKTw==
+Date: Tue, 09 Apr 2024 18:00:33 -0700
+Subject: [PATCH 27/32] xfs: Add parent pointer ioctls
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270969991.3631889.18004647832726113704.stgit@frogsfrogsfrogs>
+Message-ID: <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,159 +48,631 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Split out the functions that generate file/fs handles and map them back
-into dentries in preparation for the GETPARENTS ioctl next.
+This patch adds a pair of new file ioctls to retrieve the parent pointer
+of a given inode.  They both return the same results, but one operates
+on the file descriptor passed to ioctl() whereas the other allows the
+caller to specify a file handle for which the caller wants results.
 
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: adjust to new ondisk format, split ioctls]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_fs.h |    4 ++
- fs/xfs/xfs_handle.c    |   92 ++++++++++++++++++++++++++++++++----------------
- 2 files changed, 64 insertions(+), 32 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h     |   73 ++++++++++++
+ fs/xfs/libxfs/xfs_ondisk.h |    5 +
+ fs/xfs/libxfs/xfs_parent.c |   35 ++++++
+ fs/xfs/libxfs/xfs_parent.h |    5 +
+ fs/xfs/xfs_handle.c        |  259 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_handle.h        |    5 +
+ fs/xfs/xfs_ioctl.c         |    6 +
+ fs/xfs/xfs_trace.c         |    1 
+ fs/xfs/xfs_trace.h         |   92 ++++++++++++++++
+ 9 files changed, 480 insertions(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 7486dcba8c218..51aa4774f57a2 100644
+index 51aa4774f57a2..fa28c18e521bf 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -633,7 +633,9 @@ typedef struct xfs_fsop_attrmulti_handlereq {
- /*
-  * per machine unique filesystem identifier types.
-  */
--typedef struct { __u32 val[2]; } xfs_fsid_t; /* file system id type */
-+typedef struct xfs_fsid {
-+	__u32	val[2];			/* file system id type */
-+} xfs_fsid_t;
+@@ -840,6 +840,77 @@ struct xfs_commit_range {
+ 					 XFS_EXCHANGE_RANGE_DRY_RUN | \
+ 					 XFS_EXCHANGE_RANGE_FILE1_WRITTEN)
  
- typedef struct xfs_fid {
- 	__u16	fid_len;		/* length of remainder	*/
++/* Iterating parent pointers of files. */
++
++/* target was the root directory */
++#define XFS_GETPARENTS_OFLAG_ROOT	(1U << 0)
++
++/* Cursor is done iterating pptrs */
++#define XFS_GETPARENTS_OFLAG_DONE	(1U << 1)
++
++#define XFS_GETPARENTS_OFLAGS_ALL	(XFS_GETPARENTS_OFLAG_ROOT | \
++					 XFS_GETPARENTS_OFLAG_DONE)
++
++#define XFS_GETPARENTS_IFLAGS_ALL	(0)
++
++struct xfs_getparents_rec {
++	struct xfs_handle	gpr_parent; /* Handle to parent */
++	__u16			gpr_reclen; /* Length of entire record */
++	char			gpr_name[]; /* Null-terminated filename */
++} __packed;
++
++/* Iterate through this file's directory parent pointers */
++struct xfs_getparents {
++	/*
++	 * Structure to track progress in iterating the parent pointers.
++	 * Must be initialized to zeroes before the first ioctl call, and
++	 * not touched by callers after that.
++	 */
++	struct xfs_attrlist_cursor	gp_cursor;
++
++	/* Input flags: XFS_GETPARENTS_IFLAG* */
++	__u16				gp_iflags;
++
++	/* Output flags: XFS_GETPARENTS_OFLAG* */
++	__u16				gp_oflags;
++
++	/* Size of the gp_buffer in bytes */
++	__u32				gp_bufsize;
++
++	/* Must be set to zero */
++	__u64				__pad;
++
++	/* Pointer to a buffer in which to place xfs_getparents_rec */
++	__u64				gp_buffer;
++};
++
++static inline struct xfs_getparents_rec *
++xfs_getparents_first_rec(struct xfs_getparents *gp)
++{
++	return (struct xfs_getparents_rec *)(uintptr_t)gp->gp_buffer;
++}
++
++static inline struct xfs_getparents_rec *
++xfs_getparents_next_rec(struct xfs_getparents *gp,
++			struct xfs_getparents_rec *gpr)
++{
++	char *next = ((char *)gpr + gpr->gpr_reclen);
++	char *end = (char *)(uintptr_t)(gp->gp_buffer + gp->gp_bufsize);
++
++	if (next >= end)
++		return NULL;
++
++	return (struct xfs_getparents_rec *)next;
++}
++
++/* Iterate through this file handle's directory parent pointers. */
++struct xfs_getparents_by_handle {
++	/* Handle to file whose parents we want. */
++	struct xfs_handle		gph_handle;
++
++	struct xfs_getparents		gph_request;
++};
++
+ /*
+  * ioctl commands that are used by Linux filesystems
+  */
+@@ -875,6 +946,8 @@ struct xfs_commit_range {
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+ #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
+ #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
++#define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
++#define XFS_IOC_GETPARENTS_BY_HANDLE _IOWR('X', 63, struct xfs_getparents_by_handle)
+ 
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index 25952ef584eee..34c972113d997 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -156,6 +156,11 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_OFFSET(struct xfs_efi_log_format_32, efi_extents,	16);
+ 	XFS_CHECK_OFFSET(struct xfs_efi_log_format_64, efi_extents,	16);
+ 
++	/* parent pointer ioctls */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_rec,	26);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents,		40);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_by_handle,	64);
++
+ 	/*
+ 	 * The v5 superblock format extended several v4 header structures with
+ 	 * additional data. While new fields are only accessible on v5
+diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+index 86c808157294e..db8cfad0b968e 100644
+--- a/fs/xfs/libxfs/xfs_parent.c
++++ b/fs/xfs/libxfs/xfs_parent.c
+@@ -259,3 +259,38 @@ xfs_parent_replacename(
+ 	xfs_attr_defer_parent(&ppargs->args, XFS_ATTR_DEFER_REPLACE);
+ 	return 0;
+ }
++
++/*
++ * Extract parent pointer information from any xattr into @parent_ino/gen.
++ * The last two parameters can be NULL pointers.
++ *
++ * Returns 1 if this is a valid parent pointer; 0 if this is not a parent
++ * pointer xattr at all; or -EFSCORRUPTED for garbage.
++ */
++int
++xfs_parent_from_xattr(
++	struct xfs_mount	*mp,
++	unsigned int		attr_flags,
++	const unsigned char	*name,
++	unsigned int		namelen,
++	const void		*value,
++	unsigned int		valuelen,
++	xfs_ino_t		*parent_ino,
++	uint32_t		*parent_gen)
++{
++	const struct xfs_parent_rec	*rec = value;
++
++	if (!(attr_flags & XFS_ATTR_PARENT))
++		return 0;
++
++	if (!xfs_parent_namecheck(attr_flags, name, namelen))
++		return -EFSCORRUPTED;
++	if (!xfs_parent_valuecheck(mp, value, valuelen))
++		return -EFSCORRUPTED;
++
++	if (parent_ino)
++		*parent_ino = be64_to_cpu(rec->p_ino);
++	if (parent_gen)
++		*parent_gen = be32_to_cpu(rec->p_gen);
++	return 1;
++}
+diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
+index 768633b313671..3003ab496f854 100644
+--- a/fs/xfs/libxfs/xfs_parent.h
++++ b/fs/xfs/libxfs/xfs_parent.h
+@@ -91,4 +91,9 @@ int xfs_parent_replacename(struct xfs_trans *tp,
+ 		struct xfs_inode *new_dp, const struct xfs_name *new_name,
+ 		struct xfs_inode *child);
+ 
++int xfs_parent_from_xattr(struct xfs_mount *mp, unsigned int attr_flags,
++		const unsigned char *name, unsigned int namelen,
++		const void *value, unsigned int valuelen,
++		xfs_ino_t *parent_ino, uint32_t *parent_gen);
++
+ #endif /* __XFS_PARENT_H__ */
 diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-index a0015dc8cff1a..abeca486a2c91 100644
+index abeca486a2c91..833b0d7d8bea1 100644
 --- a/fs/xfs/xfs_handle.c
 +++ b/fs/xfs/xfs_handle.c
-@@ -30,6 +30,35 @@
- 
- #include <linux/namei.h>
- 
-+static size_t
-+xfs_filehandle_init(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	uint32_t		gen,
-+	struct xfs_handle	*handle)
-+{
-+	memcpy(&handle->ha_fsid, mp->m_fixedfsid, sizeof(struct xfs_fsid));
-+
-+	handle->ha_fid.fid_len = sizeof(struct xfs_fid) -
-+				 sizeof(handle->ha_fid.fid_len);
-+	handle->ha_fid.fid_pad = 0;
-+	handle->ha_fid.fid_gen = gen;
-+	handle->ha_fid.fid_ino = ino;
-+
-+	return sizeof(struct xfs_handle);
-+}
-+
-+static size_t
-+xfs_fshandle_init(
-+	struct xfs_mount	*mp,
-+	struct xfs_handle	*handle)
-+{
-+	memcpy(&handle->ha_fsid, mp->m_fixedfsid, sizeof(struct xfs_fsid));
-+	memset(&handle->ha_fid, 0, sizeof(handle->ha_fid));
-+
-+	return sizeof(struct xfs_fsid);
-+}
-+
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0
  /*
-  * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
-  * a file or fs handle.
-@@ -84,20 +113,11 @@ xfs_find_handle(
- 
- 	memcpy(&handle.ha_fsid, ip->i_mount->m_fixedfsid, sizeof(xfs_fsid_t));
- 
--	if (cmd == XFS_IOC_PATH_TO_FSHANDLE) {
--		/*
--		 * This handle only contains an fsid, zero the rest.
--		 */
--		memset(&handle.ha_fid, 0, sizeof(handle.ha_fid));
--		hsize = sizeof(xfs_fsid_t);
--	} else {
--		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
--					sizeof(handle.ha_fid.fid_len);
--		handle.ha_fid.fid_pad = 0;
--		handle.ha_fid.fid_gen = inode->i_generation;
--		handle.ha_fid.fid_ino = ip->i_ino;
--		hsize = sizeof(xfs_handle_t);
--	}
-+	if (cmd == XFS_IOC_PATH_TO_FSHANDLE)
-+		hsize = xfs_fshandle_init(ip->i_mount, &handle);
-+	else
-+		hsize = xfs_filehandle_init(ip->i_mount, ip->i_ino,
-+				inode->i_generation, &handle);
- 
- 	error = -EFAULT;
- 	if (copy_to_user(hreq->ohandle, &handle, hsize) ||
-@@ -126,6 +146,32 @@ xfs_handle_acceptable(
- 	return 1;
+  * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2022-2024 Oracle.
+  * All rights reserved.
+  */
+ #include "xfs.h"
+@@ -645,3 +646,261 @@ xfs_attrmulti_by_handle(
+ 	dput(dentry);
+ 	return error;
  }
- 
-+/* Convert handle already copied to kernel space into a dentry. */
-+static struct dentry *
-+xfs_khandle_to_dentry(
-+	struct file		*file,
-+	struct xfs_handle	*handle)
++
++struct xfs_getparents_ctx {
++	struct xfs_attr_list_context	context;
++	struct xfs_getparents_by_handle	gph;
++
++	/* File to target */
++	struct xfs_inode		*ip;
++
++	/* Internal buffer where we format records */
++	void				*krecords;
++
++	/* Last record filled out */
++	struct xfs_getparents_rec	*lastrec;
++
++	unsigned int			count;
++};
++
++static inline unsigned int
++xfs_getparents_rec_sizeof(
++	unsigned int		namelen)
 +{
-+	struct xfs_fid64        fid = {
-+		.ino		= handle->ha_fid.fid_ino,
-+		.gen		= handle->ha_fid.fid_gen,
-+	};
++	return round_up(sizeof(struct xfs_getparents_rec) + namelen + 1,
++			sizeof(uint32_t));
++}
++
++static void
++xfs_getparents_put_listent(
++	struct xfs_attr_list_context	*context,
++	int				flags,
++	unsigned char			*name,
++	int				namelen,
++	void				*value,
++	int				valuelen)
++{
++	struct xfs_getparents_ctx	*gpx =
++		container_of(context, struct xfs_getparents_ctx, context);
++	struct xfs_inode		*ip = context->dp;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_getparents		*gp = &gpx->gph.gph_request;
++	struct xfs_getparents_rec	*gpr = gpx->krecords + context->firstu;
++	unsigned short			reclen = xfs_getparents_rec_sizeof(namelen);
++	xfs_ino_t			ino;
++	uint32_t			gen;
++	int				ret;
++
++	ret = xfs_parent_from_xattr(mp, flags, name, namelen, value, valuelen,
++			&ino, &gen);
++	if (ret < 0) {
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_PARENT);
++		context->seen_enough = -EFSCORRUPTED;
++		return;
++	}
++	if (ret != 1)
++		return;
 +
 +	/*
-+	 * Only allow handle opens under a directory.
++	 * We found a parent pointer, but we've filled up the buffer.  Signal
++	 * to the caller that we did /not/ reach the end of the parent pointer
++	 * recordset.
 +	 */
-+	if (!S_ISDIR(file_inode(file)->i_mode))
-+		return ERR_PTR(-ENOTDIR);
++	if (context->firstu > context->bufsize - reclen) {
++		context->seen_enough = 1;
++		return;
++	}
 +
-+	if (handle->ha_fid.fid_len !=
-+	    sizeof(handle->ha_fid) - sizeof(handle->ha_fid.fid_len))
-+		return ERR_PTR(-EINVAL);
++	/* Format the parent pointer directly into the caller buffer. */
++	gpr->gpr_reclen = reclen;
++	xfs_filehandle_init(mp, ino, gen, &gpr->gpr_parent);
++	memcpy(gpr->gpr_name, name, namelen);
++	gpr->gpr_name[namelen] = 0;
 +
-+	return exportfs_decode_fh(file->f_path.mnt, (struct fid *)&fid, 3,
-+			FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG,
-+			xfs_handle_acceptable, NULL);
++	trace_xfs_getparents_put_listent(ip, gp, context, gpr);
++
++	context->firstu += reclen;
++	gpx->count++;
++	gpx->lastrec = gpr;
 +}
 +
++/* Expand the last record to fill the rest of the caller's buffer. */
++static inline void
++xfs_getparents_expand_lastrec(
++	struct xfs_getparents_ctx	*gpx)
++{
++	struct xfs_getparents		*gp = &gpx->gph.gph_request;
++	struct xfs_getparents_rec	*gpr = gpx->lastrec;
++
++	if (!gpx->lastrec)
++		gpr = gpx->krecords;
++
++	gpr->gpr_reclen = gp->gp_bufsize - ((void *)gpr - gpx->krecords);
++
++	trace_xfs_getparents_expand_lastrec(gpx->ip, gp, &gpx->context, gpr);
++}
++
++static inline void __user *u64_to_uptr(u64 val)
++{
++	return (void __user *)(uintptr_t)val;
++}
++
++/* Retrieve the parent pointers for a given inode. */
++STATIC int
++xfs_getparents(
++	struct xfs_getparents_ctx	*gpx)
++{
++	struct xfs_getparents		*gp = &gpx->gph.gph_request;
++	struct xfs_inode		*ip = gpx->ip;
++	struct xfs_mount		*mp = ip->i_mount;
++	size_t				bufsize;
++	int				error;
++
++	/* Check size of buffer requested by user */
++	if (gp->gp_bufsize > XFS_XATTR_LIST_MAX)
++		return -ENOMEM;
++	if (gp->gp_bufsize < xfs_getparents_rec_sizeof(1))
++		return -EINVAL;
++
++	if (gp->gp_iflags & ~XFS_GETPARENTS_IFLAGS_ALL)
++		return -EINVAL;
++	if (gp->__pad)
++		return -EINVAL;
++
++	bufsize = round_down(gp->gp_bufsize, sizeof(uint32_t));
++	gpx->krecords = kvzalloc(bufsize, GFP_KERNEL);
++	if (!gpx->krecords) {
++		bufsize = min(bufsize, PAGE_SIZE);
++		gpx->krecords = kvzalloc(bufsize, GFP_KERNEL);
++		if (!gpx->krecords)
++			return -ENOMEM;
++	}
++
++	gpx->context.dp = ip;
++	gpx->context.resynch = 1;
++	gpx->context.put_listent = xfs_getparents_put_listent;
++	gpx->context.bufsize = bufsize;
++	/* firstu is used to track the bytes filled in the buffer */
++	gpx->context.firstu = 0;
++
++	/* Copy the cursor provided by caller */
++	memcpy(&gpx->context.cursor, &gp->gp_cursor,
++			sizeof(struct xfs_attrlist_cursor));
++	gpx->count = 0;
++	gp->gp_oflags = 0;
++
++	trace_xfs_getparents_begin(ip, gp, &gpx->context.cursor);
++
++	error = xfs_attr_list(&gpx->context);
++	if (error)
++		goto out_free_buf;
++	if (gpx->context.seen_enough < 0) {
++		error = gpx->context.seen_enough;
++		goto out_free_buf;
++	}
++	xfs_getparents_expand_lastrec(gpx);
++
++	/* Update the caller with the current cursor position */
++	memcpy(&gp->gp_cursor, &gpx->context.cursor,
++			sizeof(struct xfs_attrlist_cursor));
++
++	/* Is this the root directory? */
++	if (ip->i_ino == mp->m_sb.sb_rootino)
++		gp->gp_oflags |= XFS_GETPARENTS_OFLAG_ROOT;
++
++	if (gpx->context.seen_enough == 0) {
++		/*
++		 * If we did not run out of buffer space, then we reached the
++		 * end of the pptr recordset, so set the DONE flag.
++		 */
++		gp->gp_oflags |= XFS_GETPARENTS_OFLAG_DONE;
++	} else if (gpx->count == 0) {
++		/*
++		 * If we ran out of buffer space before copying any parent
++		 * pointers at all, the caller's buffer was too short.  Tell
++		 * userspace that, erm, the message is too long.
++		 */
++		error = -EMSGSIZE;
++		goto out_free_buf;
++	}
++
++	trace_xfs_getparents_end(ip, gp, &gpx->context.cursor);
++
++	ASSERT(gpx->context.firstu <= gpx->gph.gph_request.gp_bufsize);
++
++	/* Copy the records to userspace. */
++	if (copy_to_user(u64_to_uptr(gpx->gph.gph_request.gp_buffer),
++				gpx->krecords, gpx->context.firstu))
++		error = -EFAULT;
++
++out_free_buf:
++	kvfree(gpx->krecords);
++	gpx->krecords = NULL;
++	return error;
++}
++
++/* Retrieve the parents of this file and pass them back to userspace. */
++int
++xfs_ioc_getparents(
++	struct file			*file,
++	struct xfs_getparents __user	*ureq)
++{
++	struct xfs_getparents_ctx	gpx = {
++		.ip			= XFS_I(file_inode(file)),
++	};
++	struct xfs_getparents		*kreq = &gpx.gph.gph_request;
++	struct xfs_mount		*mp = gpx.ip->i_mount;
++	int				error;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	if (!xfs_has_parent(mp))
++		return -EOPNOTSUPP;
++	if (copy_from_user(kreq, ureq, sizeof(*kreq)))
++		return -EFAULT;
++
++	error = xfs_getparents(&gpx);
++	if (error)
++		return error;
++
++	if (copy_to_user(ureq, kreq, sizeof(*kreq)))
++		return -EFAULT;
++
++	return 0;
++}
++
++/* Retrieve the parents of this file handle and pass them back to userspace. */
++int
++xfs_ioc_getparents_by_handle(
++	struct file			*file,
++	struct xfs_getparents_by_handle __user	*ureq)
++{
++	struct xfs_getparents_ctx	gpx = { };
++	struct xfs_inode		*ip = XFS_I(file_inode(file));
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_getparents_by_handle	*kreq = &gpx.gph;
++	struct dentry			*dentry;
++	int				error;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	if (!xfs_has_parent(mp))
++		return -EOPNOTSUPP;
++	if (copy_from_user(kreq, ureq, sizeof(*kreq)))
++		return -EFAULT;
++
++	dentry = xfs_khandle_to_dentry(file, &kreq->gph_handle);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++
++	gpx.ip = XFS_I(dentry->d_inode);
++	error = xfs_getparents(&gpx);
++	dput(dentry);
++	if (error)
++		return error;
++
++	if (copy_to_user(ureq, kreq, sizeof(*kreq)))
++		return -EFAULT;
++
++	return 0;
++}
+diff --git a/fs/xfs/xfs_handle.h b/fs/xfs/xfs_handle.h
+index e39eaf4689da9..6799a86d8565c 100644
+--- a/fs/xfs/xfs_handle.h
++++ b/fs/xfs/xfs_handle.h
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0
  /*
-  * Convert userspace handle data into a dentry.
+  * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2022-2024 Oracle.
+  * All rights reserved.
   */
-@@ -136,29 +182,13 @@ xfs_handle_to_dentry(
- 	u32			hlen)
- {
- 	xfs_handle_t		handle;
--	struct xfs_fid64	fid;
+ #ifndef	__XFS_HANDLE_H__
+@@ -25,4 +26,8 @@ int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf,
+ struct dentry *xfs_handle_to_dentry(struct file *parfilp, void __user *uhandle,
+ 		u32 hlen);
+ 
++int xfs_ioc_getparents(struct file *file, struct xfs_getparents __user *arg);
++int xfs_ioc_getparents_by_handle(struct file *file,
++		struct xfs_getparents_by_handle __user *arg);
++
+ #endif	/* __XFS_HANDLE_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 7b347cdd28785..c7a15b5f33aa4 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -35,6 +35,7 @@
+ #include "xfs_health.h"
+ #include "xfs_reflink.h"
+ #include "xfs_ioctl.h"
++#include "xfs_xattr.h"
+ #include "xfs_rtbitmap.h"
+ #include "xfs_file.h"
+ #include "xfs_exchrange.h"
+@@ -1542,7 +1543,10 @@ xfs_file_ioctl(
+ 
+ 	case XFS_IOC_FSGETXATTRA:
+ 		return xfs_ioc_fsgetxattra(ip, arg);
 -
--	/*
--	 * Only allow handle opens under a directory.
--	 */
--	if (!S_ISDIR(file_inode(parfilp)->i_mode))
--		return ERR_PTR(-ENOTDIR);
++	case XFS_IOC_GETPARENTS:
++		return xfs_ioc_getparents(filp, arg);
++	case XFS_IOC_GETPARENTS_BY_HANDLE:
++		return xfs_ioc_getparents_by_handle(filp, arg);
+ 	case XFS_IOC_GETBMAP:
+ 	case XFS_IOC_GETBMAPA:
+ 	case XFS_IOC_GETBMAPX:
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index cf92a3bd56c79..9c7fbaae2717d 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -41,6 +41,7 @@
+ #include "xfs_bmap.h"
+ #include "xfs_exchmaps.h"
+ #include "xfs_exchrange.h"
++#include "xfs_parent.h"
  
- 	if (hlen != sizeof(xfs_handle_t))
- 		return ERR_PTR(-EINVAL);
- 	if (copy_from_user(&handle, uhandle, hlen))
- 		return ERR_PTR(-EFAULT);
--	if (handle.ha_fid.fid_len !=
--	    sizeof(handle.ha_fid) - sizeof(handle.ha_fid.fid_len))
--		return ERR_PTR(-EINVAL);
+ /*
+  * We include this last to have the helpers above available for the trace
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index e6cbdffb14f64..4438b62a8c562 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -87,6 +87,9 @@ struct xfs_bmap_intent;
+ struct xfs_exchmaps_intent;
+ struct xfs_exchmaps_req;
+ struct xfs_exchrange;
++struct xfs_getparents;
++struct xfs_parent_irec;
++struct xfs_attrlist_cursor_kern;
  
--	memset(&fid, 0, sizeof(struct fid));
--	fid.ino = handle.ha_fid.fid_ino;
--	fid.gen = handle.ha_fid.fid_gen;
--
--	return exportfs_decode_fh(parfilp->f_path.mnt, (struct fid *)&fid, 3,
--			FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG,
--			xfs_handle_acceptable, NULL);
-+	return xfs_khandle_to_dentry(parfilp, &handle);
- }
+ #define XFS_ATTR_FILTER_FLAGS \
+ 	{ XFS_ATTR_ROOT,	"ROOT" }, \
+@@ -5158,6 +5161,95 @@ TRACE_EVENT(xfs_exchmaps_delta_nextents,
+ 		  __entry->d_nexts1, __entry->d_nexts2)
+ );
  
- STATIC struct dentry *
++DECLARE_EVENT_CLASS(xfs_getparents_rec_class,
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi,
++		 const struct xfs_attr_list_context *context,
++	         const struct xfs_getparents_rec *pptr),
++	TP_ARGS(ip, ppi, context, pptr),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(unsigned int, firstu)
++		__field(unsigned short, reclen)
++		__field(unsigned int, bufsize)
++		__field(xfs_ino_t, parent_ino)
++		__field(unsigned int, parent_gen)
++		__string(name, pptr->gpr_name)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->firstu = context->firstu;
++		__entry->reclen = pptr->gpr_reclen;
++		__entry->bufsize = ppi->gp_bufsize;
++		__entry->parent_ino = pptr->gpr_parent.ha_fid.fid_ino;
++		__entry->parent_gen = pptr->gpr_parent.ha_fid.fid_gen;
++		__assign_str(name, pptr->gpr_name);
++	),
++	TP_printk("dev %d:%d ino 0x%llx firstu %u reclen %u bufsize %u parent_ino 0x%llx parent_gen 0x%x name '%s'",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->firstu,
++		  __entry->reclen,
++		  __entry->bufsize,
++		  __entry->parent_ino,
++		  __entry->parent_gen,
++		  __get_str(name))
++)
++#define DEFINE_XFS_GETPARENTS_REC_EVENT(name) \
++DEFINE_EVENT(xfs_getparents_rec_class, name, \
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi, \
++		 const struct xfs_attr_list_context *context, \
++	         const struct xfs_getparents_rec *pptr), \
++	TP_ARGS(ip, ppi, context, pptr))
++DEFINE_XFS_GETPARENTS_REC_EVENT(xfs_getparents_put_listent);
++DEFINE_XFS_GETPARENTS_REC_EVENT(xfs_getparents_expand_lastrec);
++
++DECLARE_EVENT_CLASS(xfs_getparents_class,
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi,
++		 const struct xfs_attrlist_cursor_kern *cur),
++	TP_ARGS(ip, ppi, cur),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(unsigned short, iflags)
++		__field(unsigned short, oflags)
++		__field(unsigned int, bufsize)
++		__field(unsigned int, hashval)
++		__field(unsigned int, blkno)
++		__field(unsigned int, offset)
++		__field(int, initted)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->iflags = ppi->gp_iflags;
++		__entry->oflags = ppi->gp_oflags;
++		__entry->bufsize = ppi->gp_bufsize;
++		__entry->hashval = cur->hashval;
++		__entry->blkno = cur->blkno;
++		__entry->offset = cur->offset;
++		__entry->initted = cur->initted;
++	),
++	TP_printk("dev %d:%d ino 0x%llx iflags 0x%x oflags 0x%x bufsize %u cur_init? %d hashval 0x%x blkno %u offset %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->iflags,
++		  __entry->oflags,
++		  __entry->bufsize,
++		  __entry->initted,
++		  __entry->hashval,
++		  __entry->blkno,
++		  __entry->offset)
++)
++#define DEFINE_XFS_GETPARENTS_EVENT(name) \
++DEFINE_EVENT(xfs_getparents_class, name, \
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi, \
++		 const struct xfs_attrlist_cursor_kern *cur), \
++	TP_ARGS(ip, ppi, cur))
++DEFINE_XFS_GETPARENTS_EVENT(xfs_getparents_begin);
++DEFINE_XFS_GETPARENTS_EVENT(xfs_getparents_end);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
 
