@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52F65C8FF;
-	Wed, 10 Apr 2024 18:39:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07E23168D0
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 18:53:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712774373; cv=none; b=uo/EXP0QOdV/2cfM5atVQNIavv6Xq0E4W1JqcNjs19I6wQHZx1WXnZmPekn37qA/DoXRN0H3d5EpFrbzTOHp0Apsw0G4aIPcf7cvIFzGu655qvZ0fc0Jgxgry2Di1RpCV7Vup5ZP04451SJexWAa27Hcv5RIsPKeNM1mtDfx7jY=
+	t=1712775194; cv=none; b=WsjCAj4QkGSoJIAVUU7XlpffbOHkIM9lUDw6pxx7PvnV877Y4BZwisxxskUhKCfai0S0h1GADxVZi/CkuBMKtRt9xOLpypkkihjE4ViHSfCF3KH5XyulD607UdcQNpgvMNOjQDsJszctpz+TdPSq/L4+EDh4//qO/KOqdMxasoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712774373; c=relaxed/simple;
-	bh=bt9nE+uqm+xn3ie0EuHeXa3SkfN+5KGQxLMVr4pfyIE=;
+	s=arc-20240116; t=1712775194; c=relaxed/simple;
+	bh=3N95UymSLbVY4hN/BQXAJ3MiRjMuQNEkt/Xx5dp3ELU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MpRwHg6EytbHgNn1QsR5gsN3aAdY6m+wBxBiZr1ToIEy/FYk75gqYN6YemNaflfkXuBO2tOixB81OcCZTgRNFgMUpP52lkXmJP4lIlyVjnN3rrTSPWq+7otuG+7jL0AH3v8SWbRBj2ItdW1HlGH0Bhaew4adrNSMiMsDu3qTrNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oGySrAye; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UFEDHEQnyuhnxKQE+ObTSUPmV+yTg6EPzI8EZgLC/BQ3ohVTXT1VSmagO/U7EUvDyjzJhBG6F0fFflWX2hBJK9RdUkRN85f/7TWbES6kBFEcsCmKDH3YzOKaIFvthZJn7wzfy4Nq5d7lFybbyKPzZP+X9sPXUNOeW12jnWaI6UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GLNcu7Mr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oGySrAye"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B483DC433C7;
-	Wed, 10 Apr 2024 18:39:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GLNcu7Mr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7648CC433C7;
+	Wed, 10 Apr 2024 18:53:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712774371;
-	bh=bt9nE+uqm+xn3ie0EuHeXa3SkfN+5KGQxLMVr4pfyIE=;
+	s=k20201202; t=1712775193;
+	bh=3N95UymSLbVY4hN/BQXAJ3MiRjMuQNEkt/Xx5dp3ELU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oGySrAye9kFUxQolgsBjkXQ07/pV0jjs52gIUSm6kQd1VS63ndnY1KRsAxYD9Kf0x
-	 8YXU768JeaAFZFC4wbBtXy7VTSu5nMeacpR1nUJwaRMb1gXFdvTIRoSqj5ewrF46hs
-	 2eRR0t8RDNfodMoVpTPper52F4tNmVtgACDCisa5S0iA+3bz8L9HbLwwVVMT9izx2m
-	 gG4B+4L2lZfSGTlSdpEKdn5eGRplLwXEw7XiJyUKVZyU3Ah/40y4v1XNMSj1zczRTX
-	 hqgJMMxqlh8H85r1ZB29pdJrdSv93mBhwDit+02NtHMbf+W3tErQMLZBCa0L51PD5N
-	 ZcGaouzzJoKew==
-Date: Wed, 10 Apr 2024 11:39:31 -0700
+	b=GLNcu7Mr8F2gY1K0c7NYC47RMtkokT55dJToaNXtGn/nf/qfVZfDFblij1nfcZEHZ
+	 bnhuO5oS0nuSUFuEdHV22F3FTSUdziWxt27NXHXMSqboFalpKEj+XUPqptSXKLuyS/
+	 IeRwUe+zLkTJu/fFab38VBU/qr2MN+REYOyLyTNuzq75vZ9IVe6zrSzpaI/vKoUscT
+	 DYN2giSPTUiwiJDgMKs7mRnvmPWR8c+9GJex7neLNyV7jmNJuyfDwA6EJdTY7CCjnT
+	 lSvL17KAySYd6w52hMvjppU+4JXPiaLM10gZZatFUR+WVT7ONWJUbHKPnaUcg9bLcz
+	 B1NRix41PHWPw==
+Date: Wed, 10 Apr 2024 11:53:12 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/14] xfs: capture inode generation numbers in the
- ondisk exchmaps log item
-Message-ID: <20240410183931.GX6390@frogsfrogsfrogs>
-References: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
- <20240410000528.GR6390@frogsfrogsfrogs>
- <20240410040058.GA1883@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+	catherine.hoang@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 14/32] xfs: add parent pointer validator functions
+Message-ID: <20240410185312.GY6390@frogsfrogsfrogs>
+References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
+ <171270969790.3631889.2339349798519269452.stgit@frogsfrogsfrogs>
+ <ZhYkHh2TUmhPPdaw@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,35 +44,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240410040058.GA1883@lst.de>
+In-Reply-To: <ZhYkHh2TUmhPPdaw@infradead.org>
 
-On Wed, Apr 10, 2024 at 06:00:58AM +0200, Christoph Hellwig wrote:
-> On Tue, Apr 09, 2024 at 05:05:28PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Apr 09, 2024 at 10:31:10PM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 09, 2024 at 05:57:09PM -0700, Darrick J. Wong wrote:
+> > From: Allison Henderson <allison.henderson@oracle.com>
 > > 
-> > Per some very late review comments, capture the generation numbers of
-> > both inodes involved in a file content exchange operation so that we
-> > don't accidentally target files with have been reallocated.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> > I'm throwing this one on the pile since I guess it's not so hard to add
-> > the generation number to a brand new log item.
+> > Attribute names of parent pointers are not strings.
 > 
-> It does looks fine to me, but it leaves the question open:  why here
-> and not elsewhere.  And the answer based on the previous discussions
-> is that this is the first new log item after the problem was known
-> and we'll need to eventually rev the other ino based items as well.
-> Maybe capture this in a comment?
+> They are now.  The rest of the commit log also doesn't match the code
+> anymore.  The code itself looks good, though.
 
-	/*
-	 * This log intent item targets inodes, which means that it effectively
-	 * contains a file handle.  Check that the generation numbers match the
-	 * intent item like we do for other file handles.  This is the first
-	 * new log intent item to be defined after this validation weakness was
-	 * identified, which is why recovery for other items do not check this.
-	 */
+How about this, then:
 
-How about that?
+    xfs: add parent pointer validator functions
+
+    The attr name of a parent pointer is a string, and the attr value of a
+    parent pointer is (more or less) a file handle.  So we need to modify
+    attr_namecheck to verify the parent pointer name, and add a
+    xfs_parent_valuecheck function to sanitize the handle.  At the same
+    time, we need to validate attr values during log recovery if the xattr
+    is really a parent pointer.
+
+    Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+    [djwong: move functions to xfs_parent.c, adjust for new disk format]
+    Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
