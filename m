@@ -1,45 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B65818410B
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 22:06:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E63D18412D
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 22:11:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712786810; cv=none; b=TbSPXizTpx3/Vy4VA5IMcXvlxyDBLN3k2L6tZO3e4loap/qGjJ5t09EhguJxNgwmuowfzVfyU5b2mveO5avQLnECG8tXBbDDHHpkUUF45ZItzr7Phc/CBqSc7U8wphTJ/bvr9l0PqMyYJFFW4rzxrDLbNx8xmevrM03qBCEQNZs=
+	t=1712787112; cv=none; b=Y7nhjEvFOYe5bxDJEsJKXdX3aIN/OXOIrjkrIMByTA2R70Nu+uy8uLy/rzVK/9NOAZHr+BbRWb6v+EK9Vxtjlqr0UZKcLJ5aENKBgWI/ItlnE0lxy5SoabUwrzIYKOxUQeESoM7SMC9h9r2luY87MfYo2ASWtjhdYHIvQVWF1xY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712786810; c=relaxed/simple;
-	bh=3Z2sgAmXzYyq3te4KaYWgRuS/1yNsn1YuL4+5SOfvto=;
+	s=arc-20240116; t=1712787112; c=relaxed/simple;
+	bh=/1VYRH7scrwIp2sgxTZOrqN6ATTyw+UgLs3TSyI1rTs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YyU537j9BfP8F9NouTT1ecasGggg9P7Qh0pMcAxXIPfkDDfZONAx4As6jHUsYAR6/aMYRtUqwPNAjN2bUpdVhQwSe44xTDcAyGtLluI3BBRoQHjIVer/Gzw8KBlYOUfLf35Isy+xcDnk0lUSXz0/kdjEzGBhxW2/4Jm3EuUpxLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZIO4jYD+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XspqhLKS5la7EpX08PtHFExhNb/2Ub+ngC6BzdKaB8ZB5RNFDfnTc6B8too1N754d5qeQetX8NOLeFGLSZtRtwZnH+yBDGjOQgyHuv26uyJAbL726lvGz0guEdDRA726RqVpv/4vbYVOXE240heVDZ3gC1dSBg9JbH9XEBTPGW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h8k5s0fV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZIO4jYD+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCF2FC433C7;
-	Wed, 10 Apr 2024 22:06:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h8k5s0fV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0E91C433F1;
+	Wed, 10 Apr 2024 22:11:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712786809;
-	bh=3Z2sgAmXzYyq3te4KaYWgRuS/1yNsn1YuL4+5SOfvto=;
+	s=k20201202; t=1712787111;
+	bh=/1VYRH7scrwIp2sgxTZOrqN6ATTyw+UgLs3TSyI1rTs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZIO4jYD+wMBpR37r8/DxkePtQTHhikwZXVYtg9uq+5Hov1u1WLyZ8IIGDUpJRRiQv
-	 tilgBt7zy3rq5qU8dRbY3Y7EnBGRMPhsCjs9iRcod3tvcprhAd3r8ELw1vj1+ekiwh
-	 sceu+NxSCm1U7OstLogPOl1MJ9oHmwiupF2c8yLTarXr1Bf+9DlE5+6WQousYzX3vB
-	 uqJOWHgxK3cTtLgMnjyCgKNW/EJ8E2Jg4dQv1w9ksssGf9HMNCgVxCVJhdigSEhaYF
-	 FSZSWnfHGaztZQr3Qbatk8kervYx8MN7+SLYcCMLx46VEQSHdodFW/y8x/AuSWj+rr
-	 xThJupqKlSfLQ==
-Date: Wed, 10 Apr 2024 15:06:49 -0700
+	b=h8k5s0fV2SCHkY7OYtjtFFdQNYK+ONMWT1qtnJmNRT/tp5gCGlgVRGF8n6AvWFisT
+	 T7bkN2PjRJp7WP5ycyBYM6qESzwfQQtH5q6+7jMAKBbiaiW7Yj0rx/IX+2DF9yPeeZ
+	 eQMvn+iiukj0Fj7k7ABiYZgt9QhoPEP2Y/w7cC8lxOyDokBMSeWURnuK46SUwqnfdH
+	 FOM/RVGitHuRgHxTvfwkp0U9K8Wg7266L2kqBOkc+dx9kuZDBbeJjsaOixCRp8b8Vj
+	 eJFgp3GFXQH90zEFWmVT9YXTa/AASlGqMYCo4Wa5mjve9aqrbUaQkTxaLBNsW7DQKl
+	 NA2mnhWJWuh+g==
+Date: Wed, 10 Apr 2024 15:11:51 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Tinguely <mark.tinguely@oracle.com>,
-	Dave Chinner <dchinner@redhat.com>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	"Darrick J. Wong" <darrick.wong@oracle.com>,
-	catherine.hoang@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 29/32] xfs: Add the parent pointer support to the
- superblock version 5.
-Message-ID: <20240410220649.GJ6390@frogsfrogsfrogs>
+Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 32/32] xfs: enable parent pointers
+Message-ID: <20240410221151.GK6390@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
- <171270970042.3631889.15727225239821945588.stgit@frogsfrogsfrogs>
- <ZhYsGGe431pONR9Z@infradead.org>
+ <171270970091.3631889.3723065069358160559.stgit@frogsfrogsfrogs>
+ <ZhYsafjrEg4Nb6la@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,28 +44,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhYsGGe431pONR9Z@infradead.org>
+In-Reply-To: <ZhYsafjrEg4Nb6la@infradead.org>
 
-On Tue, Apr 09, 2024 at 11:05:12PM -0700, Christoph Hellwig wrote:
-> On Tue, Apr 09, 2024 at 06:01:04PM -0700, Darrick J. Wong wrote:
-> > From: Allison Henderson <allison.henderson@oracle.com>
+On Tue, Apr 09, 2024 at 11:06:33PM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 09, 2024 at 06:01:51PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Add the parent pointer superblock flag so that we can actually mount
-> > filesystems with this feature enabled.
+> > Add parent pointers to the list of supported features.
 > 
-> The subjcet reads a little weird.  What about
+> Any reason to split this from actually adding the feature bit?
+
+Bisection.  If we don't add the bit to XFS_SB_FEAT_INCOMPAT_ALL, then
+the kernel won't mount the filesystem.
+
+Nowadays I think we could define the xfs_has_foo helpers at the start
+and only add the superblock feature bit and the code that sets
+XFS_FEAT_FOO in the final patch.
+
+BUuut.... this patchset predates the xfs_has_foo helpers and I haven't
+fully adjusted to that yet.
+
+> Otherwise looks good:
 > 
-> "add a incompat feature bit for parent pointers" ?
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Changed to:
-
-"xfs: add a incompat feature bit for parent pointers
-
-"Create an incompat feature bit and a fs geometry flag so that we can
-enable the feature in the ondisk superblock and advertise its existence
-to userspace."
-
-Also I'll change the bit to 1<<25; I was using 1U<<30 to avoid
-collisions with the other patchsets.
+Thanks!
 
 --D
