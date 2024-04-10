@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CA72387
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:49:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 394CF387
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:49:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710145; cv=none; b=DBAXSq5xQXLaYvjAZcOKuqdRTJKgOnMk8PCaBqMB5rEIFFf8osWqDNujwVNFwtSDPkAgFg+HmiGJ9lwQTdyqZ+cG7kVzyM0vF52GqrV9oaawT6YNe+HhBv3uVSwGiefQbwx37H4Axc7J7dBjDl1CU3c4i2lRaOgRjayCT9TpFvM=
+	t=1712710161; cv=none; b=MsqjoMNw97LFaL9SNWw8qlcTEX0+FM1J6c/JwUwZgpDiMGhkwjFvNOHb21DXd+qomzbZjNm7ju/NEU+l38Pl5Smi5BRo5d5AXItJRlFJjNlGE4RmhXVY4IjjCurDNKvZ67k0q3AgnofN8Z6v3GVF8SYsXdZJKi08Ym81kE7zRVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710145; c=relaxed/simple;
-	bh=sigUxlnLRZoWH130xrizHBILFy++An7UJGlA3H6ESHA=;
+	s=arc-20240116; t=1712710161; c=relaxed/simple;
+	bh=vWortD+t4VXVCVqICYf6vmcjQ0DzdCMNCNjNcfiZTRs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rB9fNFisOjxdiXJZe3rBEX5jYHTUFvPWM5xgt6oPrCmluiHKHPYtaxRlzmBr4TcJPmOcdRLgcEAZN5p04ltTzlhZKQKh5zzXJnIfLklpRC8PXNjPyuMucB7x/xW6EoZPdxHrBvWgquTPKhsrNbMAv8APBAukpIsbvsf1qJ/JhJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PlzBL32h; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=LWADjPYgBPOKBHScYRRzyEgl9Qfw95CNOsKslpnOtS2TcwhHU9fK7aagk9kXMhUYsrOtokKqvL1q1VYOj4Vdc0pkyinjotZ6iG0ky6YUl5fWHjuKGR4dNi08W4QsHZs25Wl4c5MZ4nGg3PsHph7KHJjIeuL7q7fPU7bxVAyW4/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j2hfyvDj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PlzBL32h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CA47C433F1;
-	Wed, 10 Apr 2024 00:49:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j2hfyvDj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6062C433F1;
+	Wed, 10 Apr 2024 00:49:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710145;
-	bh=sigUxlnLRZoWH130xrizHBILFy++An7UJGlA3H6ESHA=;
+	s=k20201202; t=1712710160;
+	bh=vWortD+t4VXVCVqICYf6vmcjQ0DzdCMNCNjNcfiZTRs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PlzBL32ho6YMJrHfJIlAmQn1SZMkZ+UgzLSQxI6V//rH3xehNf9GC1BOURTm0kvJr
-	 06xaKb3BN7O/xx5jr7ZeiG2nSumNq/omRuHvwlOc7mllZO2sCNBVsDsBM3k7LSqE2A
-	 //qXooIabOSEjy0m49sDv01k1Jm0r14DAYUK35AHsK91xEoU+QQqo+YpUf59/25RXF
-	 i5dB+HDI4cL0LTxxcxX51FYhiwQDKJmf1lwKTyXmGemzr8stsW6e8gtWJ3LqcAFwq8
-	 huB/O7cON9evTsLfV8nmN9uchzK9LdtJnsJlsn+SdvkrrpegwSiV/x6AtsNvfcXCdB
-	 SdOuFOD6we53Q==
-Date: Tue, 09 Apr 2024 17:49:04 -0700
-Subject: [PATCH 6/7] xfs: don't pick up IOLOCK during rmapbt repair scan
+	b=j2hfyvDjMnGN+uaUOWmM3MHrFy8uQZ9ZTrywEP4VNoVC9JNJ27+3NLmVFowioYoz2
+	 TZWG9mrpT6acbAtS9SKPuqCtF0JZdLp5ENa+zwa7ihjAmEPbDHoi/KwqabKPT++1zv
+	 FYRLNSDTwrj0mT0LBP98zrOl1hQLsJVBW80q6YBQSsrMGFlGtHASQ38PmYwFizaiqe
+	 Czz376vL+s2u7BsCiPCVYbzrA/4HTtzR/72WD/ArR/qFkUAkcj/BAur2tzSBeE8Ixp
+	 U5dSNgNauN837ZZW3ak8XMGjvaSaHRPeuARy+Y6gDUCZN4mXtmyNVz0hSqFjErf51K
+	 2wU9368hYzxxQ==
+Date: Tue, 09 Apr 2024 17:49:20 -0700
+Subject: [PATCH 7/7] xfs: unlock new repair tempfiles after creation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270968005.3631167.11200418428870190784.stgit@frogsfrogsfrogs>
+Message-ID: <171270968021.3631167.3162988716447434676.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270967888.3631167.1528096915093261854.stgit@frogsfrogsfrogs>
 References: <171270967888.3631167.1528096915093261854.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,44 +47,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we've fixed the directory operations to hold the ILOCK until
-they're finished with rmapbt updates for directory shape changes, we no
-longer need to take this lock when scanning directories for rmapbt
-records.
+After creation, drop the ILOCK on temporary files that have been created
+to stage a repair.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/rmap_repair.c |   16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+ fs/xfs/scrub/tempfile.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
-index e8e07b683eab6..25acd69614c2c 100644
---- a/fs/xfs/scrub/rmap_repair.c
-+++ b/fs/xfs/scrub/rmap_repair.c
-@@ -578,23 +578,9 @@ xrep_rmap_scan_inode(
- 	struct xrep_rmap	*rr,
- 	struct xfs_inode	*ip)
- {
--	unsigned int		lock_mode = 0;
-+	unsigned int		lock_mode = xrep_rmap_scan_ilock(ip);
- 	int			error;
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index c72e447eb8ec3..6f39504a216ea 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -153,6 +153,7 @@ xrep_tempfile_create(
+ 	xfs_qm_dqrele(pdqp);
  
--	/*
--	 * Directory updates (create/link/unlink/rename) drop the directory's
--	 * ILOCK before finishing any rmapbt updates associated with directory
--	 * shape changes.  For this scan to coordinate correctly with the live
--	 * update hook, we must take the only lock (i_rwsem) that is held all
--	 * the way to dir op completion.  This will get fixed by the parent
--	 * pointer patchset.
--	 */
--	if (S_ISDIR(VFS_I(ip)->i_mode)) {
--		lock_mode = XFS_IOLOCK_SHARED;
--		xfs_ilock(ip, lock_mode);
--	}
--	lock_mode |= xrep_rmap_scan_ilock(ip);
--
- 	/* Check the data fork. */
- 	error = xrep_rmap_scan_ifork(rr, ip, XFS_DATA_FORK);
- 	if (error)
+ 	/* Finish setting up the incore / vfs context. */
++	xfs_iunlock(sc->tempip, XFS_ILOCK_EXCL);
+ 	xfs_setup_iops(sc->tempip);
+ 	xfs_finish_inode_setup(sc->tempip);
+ 
+@@ -168,6 +169,7 @@ xrep_tempfile_create(
+ 	 * transactions and deadlocks from xfs_inactive.
+ 	 */
+ 	if (sc->tempip) {
++		xfs_iunlock(sc->tempip, XFS_ILOCK_EXCL);
+ 		xfs_finish_inode_setup(sc->tempip);
+ 		xchk_irele(sc, sc->tempip);
+ 	}
 
