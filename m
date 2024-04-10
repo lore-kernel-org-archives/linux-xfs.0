@@ -1,30 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758D2C129;
-	Wed, 10 Apr 2024 04:01:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D63B6BE5A
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 04:02:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712721667; cv=none; b=nohzfOOxRvbbuTfFc1dsfQuRCxz0qEeQ5MQbQR9jwlojoAD92hX5xoZndjEogNnfGR/g4GDi2Injulala2E/wXfkDzteOw0bflaH7BtzW6lz1kkmESFL/xQiEJ/He07DisJcRnHIOyqVcCN9VW4B0ePXgV64K6xKRG8xdfB03b0=
+	t=1712721766; cv=none; b=u99EVWIBDpFNTP8T8gY38b/96JKvFywdOPlaUNHMUemTElRkLCaHw2F7vbIKQNl1MfhoscxDmSlWRCwJNRMH12n50WA/4cwdn4ZfKyjNL0K0oRhaDxsUIfwLL3Buh70aWd7z0mmgvfllgtWgdJxfUnMYRS3NirCF5ZfKp3cXS48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712721667; c=relaxed/simple;
-	bh=z9S602DxMZn4oXUQBg3hReabFanxHpZnF1qc7HBKj4Y=;
+	s=arc-20240116; t=1712721766; c=relaxed/simple;
+	bh=RwZ8FuA777rL9T24wje6idN5r97ibPN99/7NUVkmaLA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lKfynSvyELHh7bISjz2/g3D3GarVwOydy51fel8Ob2arPrFkxPG4ZnFuCECosBJdhOBstwByKeEE7GKMGKJ+d33c3LMq0e7Zjw9O1A4/daTyhxwOkUtDJiJU0sworn11xk/YIP584ZkP1UH2MG9CLNbLBCdUb0qUNiYRUBH10tE=
+	 Content-Type:Content-Disposition:In-Reply-To; b=m8OBOLDujPmUOwMDKFgqgBUiRVVj/KPyPpmT3BgRvPcf/Kh0s642mXTih+7Ayxv6QRBhXXuvykVmdGMM1i90SRIOEfvG2IMFcslytHzCU5M2ziaz0JahA0ukw8+ugFaRk0K2BbAX53uw/2FBZdAP+pSwE6/Klp3Y3zMf6WQdjHQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 6753D68BEB; Wed, 10 Apr 2024 06:00:59 +0200 (CEST)
-Date: Wed, 10 Apr 2024 06:00:58 +0200
+	id 0C37268B05; Wed, 10 Apr 2024 06:02:41 +0200 (CEST)
+Date: Wed, 10 Apr 2024 06:02:40 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/14] xfs: capture inode generation numbers in the
- ondisk exchmaps log item
-Message-ID: <20240410040058.GA1883@lst.de>
-References: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs> <20240410000528.GR6390@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	Dave Chinner <david@fromorbit.com>,
+	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/8] xfs: fix error returns from xfs_bmapi_write
+Message-ID: <20240410040240.GB1883@lst.de>
+References: <20240408145454.718047-1-hch@lst.de> <20240408145454.718047-2-hch@lst.de> <20240409231917.GP6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,24 +34,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240410000528.GR6390@frogsfrogsfrogs>
+In-Reply-To: <20240409231917.GP6390@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Apr 09, 2024 at 05:05:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Per some very late review comments, capture the generation numbers of
-> both inodes involved in a file content exchange operation so that we
-> don't accidentally target files with have been reallocated.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> I'm throwing this one on the pile since I guess it's not so hard to add
-> the generation number to a brand new log item.
+On Tue, Apr 09, 2024 at 04:19:17PM -0700, Darrick J. Wong wrote:
+> Hmm.  So I think the answer to my questions earlier is that with the
+> series applied, ENOSR should never leak out because bmapi_write calls
+> will always do the piece that the caller asked for, right?
 
-It does looks fine to me, but it leaves the question open:  why here
-and not elsewhere.  And the answer based on the previous discussions
-is that this is the first new log item after the problem was known
-and we'll need to eventually rev the other ino based items as well.
-Maybe capture this in a comment?
+Almost.  With the whole series ENOSR goes away again (but then again
+I'm a bit skeptical if it opens new unknown cans of worms, see the
+cover letter).
+
+With just this patch it will leak to user space if we ever hit a case
+where we completely mishandled this error before.  Which we've not
+observed, but which isn't entirely impossible.
 
