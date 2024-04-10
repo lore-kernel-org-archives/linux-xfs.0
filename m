@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DEEE157476
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Apr 2024 23:20:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CBE97F;
+	Wed, 10 Apr 2024 00:05:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712704845; cv=none; b=dUlZhlLo+Sf8UJQz3heS5f4oodiWPd1pFqLHCPpO7v//2RyUxjps7KU8XIYhts8XBhDeLQKP3Q6Ao9/rhbt31P+YRuCHCPNq0IuOj5baXHKLzroDrDe3/Js8x5SbA3KVwMoqlE1GFWvCZdPtF1wZPnG3pY+LmaecNYKZts4O8gM=
+	t=1712707529; cv=none; b=bz2TaNPX5w9NLUFGsEkzLGUbPjRByAADpQ6pMCV434+Pp9KuEkqSANuYMUfhNUK1vhHNgqMQU28pO3iVCk5P5rOJdq/NRWWa9m4B+BHt7nQFO7eZo/UQxHv0tPBDxi68OxtUqV4Ccn0p1yI+A+oAN+pnx2cRPwTPDb4kjDGSv/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712704845; c=relaxed/simple;
-	bh=WO12SLAxNQulhBlZ6QdYrQtuijR7N0ymgjL4qLQxvKg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NxrH1s7w/VDvOWSBPHOc+R4IXHyPfPr56e4ohtp7I7y5zmo8DRAr8cVQWHi2pSSdCDJ9mGHlyhleudpH1fIidnHfwY3XCDUW2ia8yJeh5AHLC07ZK+waNxNdFzsDCxDx+nIfmigue4V33xt/D54N+1D0RuJzwDGQyOFgUCS1WBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sNQsPVn5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712707529; c=relaxed/simple;
+	bh=bex30GmuVItS5K9f8UWgnHnchq8hiAHRUZt+4vOdORE=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z7ZK5Mw0i75LFZeqb0NSHlxxLVXXr6XXEwgYhW39CMaD+A91D3YGYbuARF7+W1yuOok3eT1lBa10ZwO8zUm7g97XlETefkjkkYTZ1JlNTi4p6oSji8gY31748ysYAEpv9MxeZYt5uMoniSUz9pj0icKp0LoS5O4DgZ095HY+sbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9BZRkPP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sNQsPVn5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB961C433F1;
-	Tue,  9 Apr 2024 23:20:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9BZRkPP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB0BFC433F1;
+	Wed, 10 Apr 2024 00:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712704844;
-	bh=WO12SLAxNQulhBlZ6QdYrQtuijR7N0ymgjL4qLQxvKg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sNQsPVn50s2xIei1AJXaANXu4tR2Llscx3IRoNER3jJ559MJb6iIKFkELSOS0+H0x
-	 uPe7ZsYQpujLFkoD0sDmIYv+MKgForRTZJckmZttnzQ7nhJLnmsKhY85BBojvdHkLM
-	 mLxxM2yFZQWJwlu/R8eIO5MKV4kKAd8LERmpBNXl00+kHI0uwqeM6bE0wra9Qr4XTD
-	 SFfH4Tku38KhnxDTBUmFtAtirOHEVgDEEIYr/pMOIJSDCvcyUMwemZ8C2oeSScEf6n
-	 NG4/vxy9OIwtNg1Wyfw8PAbAWWcJUjNJW7dC+oXb+flnvFzpWSdR7Iv4JmWXffAL98
-	 xiBTUjLq+kPJQ==
-Date: Tue, 9 Apr 2024 16:20:44 -0700
+	s=k20201202; t=1712707528;
+	bh=bex30GmuVItS5K9f8UWgnHnchq8hiAHRUZt+4vOdORE=;
+	h=Date:From:To:Subject:References:In-Reply-To:From;
+	b=c9BZRkPP/nSGHb8wWmHqbhh42pF4BrK6Uvjs7aMDfKa/EPcYXyjgobTzSIT6ysuYs
+	 LCDlsACvSjs6RhN4qfQC330twU0ZCh2V6DmPmuTNU4nHbzJo2TJjWYmW86jWnx/QQC
+	 ZTTIunOabsVWCZseEnC6tigh1lyHp0FpWfb5Ev9CE2IX08J4Y92oP1EQ5EfGIiWmR3
+	 Fp5EkaN6VuFNov67yKc+lScNwyjVO/FuXN5quVBtgo4OHmLHBlyQWENlO6sI/Evonz
+	 vm2QAVhJUPq/QuBJO+9iQDkzVKsc6dobfNkNBNit3JyRpvAzjudbolykeys9VyTcpI
+	 WZEcLzXYojFoQ==
+Date: Tue, 9 Apr 2024 17:05:28 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Dave Chinner <david@fromorbit.com>,
-	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 5/8] xfs: pass the actual offset and len to allocate to
- xfs_bmapi_allocate
-Message-ID: <20240409232044.GQ6390@frogsfrogsfrogs>
-References: <20240408145454.718047-1-hch@lst.de>
- <20240408145454.718047-6-hch@lst.de>
+To: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 15/14] xfs: capture inode generation numbers in the ondisk
+ exchmaps log item
+Message-ID: <20240410000528.GR6390@frogsfrogsfrogs>
+References: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,90 +42,71 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240408145454.718047-6-hch@lst.de>
+In-Reply-To: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
 
-On Mon, Apr 08, 2024 at 04:54:51PM +0200, Christoph Hellwig wrote:
-> xfs_bmapi_allocate currently overwrites offset and len when converting
-> delayed allocations, and duplicates the length cap done for non-delalloc
-> allocations.  Move all that logic into the callers to avoid duplication
-> and to make the calling conventions more obvious.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 32 ++++++++++++++++++--------------
->  1 file changed, 18 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index f2e934c2fb423c..aa182937de4641 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4194,21 +4194,11 @@ xfs_bmapi_allocate(
->  	int			error;
->  
->  	ASSERT(bma->length > 0);
-> +	ASSERT(bma->length <= XFS_MAX_BMBT_EXTLEN);
->  
-> -	/*
-> -	 * For the wasdelay case, we could also just allocate the stuff asked
-> -	 * for in this bmap call but that wouldn't be as good.
-> -	 */
->  	if (bma->wasdel) {
-> -		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
-> -		bma->offset = bma->got.br_startoff;
->  		if (!xfs_iext_peek_prev_extent(ifp, &bma->icur, &bma->prev))
->  			bma->prev.br_startoff = NULLFILEOFF;
-> -	} else {
-> -		bma->length = XFS_FILBLKS_MIN(bma->length, XFS_MAX_BMBT_EXTLEN);
-> -		if (!bma->eof)
-> -			bma->length = XFS_FILBLKS_MIN(bma->length,
-> -					bma->got.br_startoff - bma->offset);
->  	}
->  
->  	if (bma->flags & XFS_BMAPI_CONTIG)
-> @@ -4542,6 +4532,15 @@ xfs_bmapi_write(
->  			 */
->  			bma.length = XFS_FILBLKS_MIN(len, XFS_MAX_BMBT_EXTLEN);
->  
-> +			if (wasdelay) {
-> +				bma.offset = bma.got.br_startoff;
-> +				bma.length = bma.got.br_blockcount;
+From: Darrick J. Wong <djwong@kernel.org>
 
-This read funny since we'd previously set bma.{offset,length} above, but
-I guess that preserves the "convert all the delalloc" behavior; and you
-turn it off in patch 8, right?
+Per some very late review comments, capture the generation numbers of
+both inodes involved in a file content exchange operation so that we
+don't accidentally target files with have been reallocated.
 
---D
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+I'm throwing this one on the pile since I guess it's not so hard to add
+the generation number to a brand new log item.
+---
+ fs/xfs/libxfs/xfs_log_format.h |    2 ++
+ fs/xfs/xfs_exchmaps_item.c     |   12 ++++++++++++
+ 2 files changed, 14 insertions(+)
 
-> +			} else {
-> +				if (!eof)
-> +					bma.length = XFS_FILBLKS_MIN(bma.length,
-> +						bma.got.br_startoff - bno);
-> +			}
-> +
->  			ASSERT(bma.length > 0);
->  			error = xfs_bmapi_allocate(&bma);
->  			if (error) {
-> @@ -4694,11 +4693,16 @@ xfs_bmapi_convert_delalloc(
->  	bma.tp = tp;
->  	bma.ip = ip;
->  	bma.wasdel = true;
-> -	bma.offset = bma.got.br_startoff;
-> -	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount,
-> -			XFS_MAX_BMBT_EXTLEN);
->  	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
->  
-> +	/*
-> +	 * Always allocate convert from the start of the delalloc extent even if
-> +	 * that is outside the passed in range to create large contiguous
-> +	 * extents on disk.
-> +	 */
-> +	bma.offset = bma.got.br_startoff;
-> +	bma.length = bma.got.br_blockcount;
-> +
->  	/*
->  	 * When we're converting the delalloc reservations backing dirty pages
->  	 * in the page cache, we must be careful about how we create the new
-> -- 
-> 2.39.2
-> 
-> 
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 8dbe1f997dfd5..accba2acd623d 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -896,6 +896,8 @@ struct xfs_xmi_log_format {
+ 
+ 	uint64_t		xmi_inode1;	/* inumber of first file */
+ 	uint64_t		xmi_inode2;	/* inumber of second file */
++	uint32_t		xmi_igen1;	/* generation of first file */
++	uint32_t		xmi_igen2;	/* generation of second file */
+ 	uint64_t		xmi_startoff1;	/* block offset into file1 */
+ 	uint64_t		xmi_startoff2;	/* block offset into file2 */
+ 	uint64_t		xmi_blockcount;	/* number of blocks */
+diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
+index a40216f33214c..3c4bb9601c3e0 100644
+--- a/fs/xfs/xfs_exchmaps_item.c
++++ b/fs/xfs/xfs_exchmaps_item.c
+@@ -231,7 +231,9 @@ xfs_exchmaps_create_intent(
+ 	xlf = &xmi_lip->xmi_format;
+ 
+ 	xlf->xmi_inode1 = xmi->xmi_ip1->i_ino;
++	xlf->xmi_igen1 = VFS_I(xmi->xmi_ip1)->i_generation;
+ 	xlf->xmi_inode2 = xmi->xmi_ip2->i_ino;
++	xlf->xmi_igen2 = VFS_I(xmi->xmi_ip2)->i_generation;
+ 	xlf->xmi_startoff1 = xmi->xmi_startoff1;
+ 	xlf->xmi_startoff2 = xmi->xmi_startoff2;
+ 	xlf->xmi_blockcount = xmi->xmi_blockcount;
+@@ -377,6 +379,14 @@ xfs_xmi_item_recover_intent(
+ 	if (error)
+ 		goto err_rele1;
+ 
++	if (VFS_I(ip1)->i_generation != xlf->xmi_igen1 ||
++	    VFS_I(ip2)->i_generation != xlf->xmi_igen2) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++				xlf, sizeof(*xlf));
++		error = -EFSCORRUPTED;
++		goto err_rele2;
++	}
++
+ 	req->ip1 = ip1;
+ 	req->ip2 = ip2;
+ 	req->startoff1 = xlf->xmi_startoff1;
+@@ -485,6 +495,8 @@ xfs_exchmaps_relog_intent(
+ 
+ 	new_xlf->xmi_inode1	= old_xlf->xmi_inode1;
+ 	new_xlf->xmi_inode2	= old_xlf->xmi_inode2;
++	new_xlf->xmi_igen1	= old_xlf->xmi_igen1;
++	new_xlf->xmi_igen2	= old_xlf->xmi_igen2;
+ 	new_xlf->xmi_startoff1	= old_xlf->xmi_startoff1;
+ 	new_xlf->xmi_startoff2	= old_xlf->xmi_startoff2;
+ 	new_xlf->xmi_blockcount	= old_xlf->xmi_blockcount;
