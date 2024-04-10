@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC1E38B
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:54:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393F0621
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:55:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710489; cv=none; b=WaV4pqZ4OXBy+unXHYaFV052MWUc1n3QOFglNZvW9iCduTsWypKxqodh8gLOTHKJbZmTeSVdpE2UY5gtOy/JIbca/7qYgcAJgTC7j+fHSCfMndKwi9uJq13JQaeQjLSlZNORY4vzsCqcjFaxy6PspuxevtcE9BK0meEeTGmKVl0=
+	t=1712710505; cv=none; b=BOOSJnl2Ap/hFONa4Kgc21pcxTcq4dGUCE2Icgv8HaCowU+X7ylELj50m2wNaKGgVHxDxSEGd/8pTiQySKa8yUeCw3yaeS6IOpoKJ5n8RHgrVpnNrbdKJ/lAUntQg/dmC2L9+jRTVAJhfFTi2b/IEvnYQMlKPlJVXCMSqUxYMyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710489; c=relaxed/simple;
-	bh=Qxmo4xa8r5cbKZcxkRnMQ1YpKIrj6qYl0iF70Uh/IVM=;
+	s=arc-20240116; t=1712710505; c=relaxed/simple;
+	bh=0kAtjWm7heyS4Y6iSVcGaMLgjbtGTpobvd2kXX7eiFU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m8LVum/xs6KkMbXAO4/cI/RlTgzy80kJlDtNUXMw71go9Ak2UQkgsXs51f0mTEixS67h5ujQ+4imeKD0y2smocT7o1bn+nqAZ9cZEbI5BQ+JaP0oSugblqQHk8wk1zCuPbTOptl3m1rXAICzCevC1qX/vbm893/zQ13t6J5fQDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R4edmQ2W; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=S792MUKOpPq3tQtH0cG22XC0AN5mWPcFcahBRYi8eIDuKnK3oUWQ8LOwO2FFUHiPNqiExpyaCe1hAl76AwDIiDvr/Ld+2HI1PH2TOwEQg5D4idfncqmJNvBYHlg/JETkHvw/0z9o9VgUZcBgfWKcnbpn7bsxtvVLrVCEWwlZ6o0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZvTslu6S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R4edmQ2W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 665C0C433F1;
-	Wed, 10 Apr 2024 00:54:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZvTslu6S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CE3FC433C7;
+	Wed, 10 Apr 2024 00:55:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710489;
-	bh=Qxmo4xa8r5cbKZcxkRnMQ1YpKIrj6qYl0iF70Uh/IVM=;
+	s=k20201202; t=1712710505;
+	bh=0kAtjWm7heyS4Y6iSVcGaMLgjbtGTpobvd2kXX7eiFU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=R4edmQ2WgZRnv/TNoRgCQH1Rf9JQCW/QPHov+5wfLjRDtZs5jWMDlgTTanK399jIM
-	 W8eFsDKNgrSRCN19lDCXpE09dydrR2LJ0tATtDBXm7wKrKpLHr9CBnl8hOzeE1EhMr
-	 /OpYUeOba0FNDrJMXrIJSxGzOSChzNi1RdNJpwlMlDM/FXsAYv5Ib4MFRV/vlTU3Ul
-	 K/f6wIOqJpv86dP23/EAChavYbIALKdg23bk4qOhBJV7QczgHLiOD+Bl/gpXv1QjhP
-	 FhvLo6s9Yc4X55IeO7piRV56DYbhrZwgpVjjob9UDnK1EgtOILRRreZWgGs+pHeU+L
-	 WAWdDDNTy9lvg==
-Date: Tue, 09 Apr 2024 17:54:48 -0700
-Subject: [PATCH 05/32] xfs: add parent pointer support to attribute code
+	b=ZvTslu6So8B4tiofa8tL8r81whxeMcRew3PKyjvnKX9aMXXqi3C/aO0dvPMlNBaKk
+	 Q+UUKCD7YjuGGDsWjB/7fcdwJBpfzSJ/yfbQqhyeJPBFKlQOrSqN11itARP69rEb69
+	 Jh7eOikaUHOJTaCoeldfs80UJRKrOtkOI1/SGaUXZgYX5hF1+DIhze6julg2xfGbKK
+	 Yoy5nA+yekE2vBX43PTan/e1HMk2IfFrMgTuNqAKbhwy43nWPQGnvET7/s0Vfi7iIT
+	 I8rox9YxityA4nCF0SFfy43RgzHKhIbwkowv8QpvKqG9xKFQKgrBfsIO/fEnkNTFxz
+	 isaV05OEIwagg==
+Date: Tue, 09 Apr 2024 17:55:04 -0700
+Subject: [PATCH 06/32] xfs: define parent pointer ondisk extended attribute
+ format
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Mark Tinguely <mark.tinguely@oracle.com>,
- Dave Chinner <dchinner@redhat.com>,
- Allison Henderson <allison.henderson@oracle.com>, catherine.hoang@oracle.com,
- hch@lst.de, allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <171270969640.3631889.7554917757452786883.stgit@frogsfrogsfrogs>
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <171270969657.3631889.9403759718168544689.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,78 +49,71 @@ Content-Transfer-Encoding: 7bit
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for parent pointer
-entries; it uses reserved blocks like XFS_ATTR_ROOT.
+We need to define the parent pointer attribute format before we start
+adding support for it into all the code that needs to use it. The EA
+format we will use encodes the following information:
 
-Signed-off-by: Mark Tinguely <mark.tinguely@oracle.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+        name={dirent name}
+        value={parent inumber, parent inode generation}
+        hash=xfs_dir2_hashname(dirent name) ^ (parent_inumber)
+
+The inode/gen gives all the information we need to reliably identify the
+parent without requiring child->parent lock ordering, and allows
+userspace to do pathname component level reconstruction without the
+kernel ever needing to verify the parent itself as part of ioctl calls.
+
+By using the name-value lookup mode in the extended attribute code to
+match parent pointers using both the xattr name and value, we can
+identify the exact parent pointer EA we need to modify/remove in
+rename/unlink operations without searching the entire EA space.
+
+By storing the dirent name, we have enough information to be able to
+validate and reconstruct damaged directory trees.  Earlier iterations of
+this patchset encoded the directory offset in the parent pointer key,
+but this format required repair to keep that in sync across directory
+rebuilds, which is unnecessary complexity.
+
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_da_format.h  |    9 +++++++--
- fs/xfs/libxfs/xfs_log_format.h |    1 +
- fs/xfs/xfs_trace.h             |    3 ++-
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_da_format.h |   13 +++++++++++++
+ fs/xfs/libxfs/xfs_ondisk.h    |    1 +
+ 2 files changed, 14 insertions(+)
 
 
 diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index ecd0616f5776a..0c80f7ab9475a 100644
+index 0c80f7ab9475a..1395ad1937c53 100644
 --- a/fs/xfs/libxfs/xfs_da_format.h
 +++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -714,13 +714,17 @@ struct xfs_attr3_leafblock {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define	XFS_ATTR_PARENT_BIT	3	/* parent pointer attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+@@ -890,4 +890,17 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+ xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *bp,
+ 				      struct xfs_da3_blkinfo *hdr3);
  
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | \
-+					 XFS_ATTR_SECURE | \
-+					 XFS_ATTR_PARENT)
++/*
++ * Parent pointer attribute format definition
++ *
++ * The xattr name contains the dirent name.
++ * The xattr value encodes the parent inode number and generation to ease
++ * opening parents by handle.
++ * The xattr hashval is xfs_dir2_namehash() ^ p_ino
++ */
++struct xfs_parent_rec {
++	__be64	p_ino;
++	__be32	p_gen;
++} __packed;
++
+ #endif /* __XFS_DA_FORMAT_H__ */
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index 81885a6a028ed..25952ef584eee 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -119,6 +119,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
+ 	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_rec,		12);
  
- #define XFS_ATTR_ONDISK_MASK	(XFS_ATTR_NSP_ONDISK_MASK | \
- 				 XFS_ATTR_LOCAL | \
-@@ -729,7 +733,8 @@ struct xfs_attr3_leafblock {
- #define XFS_ATTR_NAMESPACE_STR \
- 	{ XFS_ATTR_LOCAL,	"local" }, \
- 	{ XFS_ATTR_ROOT,	"root" }, \
--	{ XFS_ATTR_SECURE,	"secure" }
-+	{ XFS_ATTR_SECURE,	"secure" }, \
-+	{ XFS_ATTR_PARENT,	"parent" }
- 
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index accba2acd623d..020aebd101432 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -1034,6 +1034,7 @@ struct xfs_icreate_log {
-  */
- #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
- 					 XFS_ATTR_SECURE | \
-+					 XFS_ATTR_PARENT | \
- 					 XFS_ATTR_INCOMPLETE)
- 
- /*
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e9cf9430ce259..e6cbdffb14f64 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -91,7 +91,8 @@ struct xfs_exchrange;
- #define XFS_ATTR_FILTER_FLAGS \
- 	{ XFS_ATTR_ROOT,	"ROOT" }, \
- 	{ XFS_ATTR_SECURE,	"SECURE" }, \
--	{ XFS_ATTR_INCOMPLETE,	"INCOMPLETE" }
-+	{ XFS_ATTR_INCOMPLETE,	"INCOMPLETE" }, \
-+	{ XFS_ATTR_PARENT,	"PARENT" }
- 
- DECLARE_EVENT_CLASS(xfs_attr_list_class,
- 	TP_PROTO(struct xfs_attr_list_context *ctx),
+ 	/* log structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,	88);
 
