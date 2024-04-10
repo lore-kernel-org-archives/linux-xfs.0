@@ -1,32 +1,32 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF532C127
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 04:03:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A54E8BA2E
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 04:04:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712721838; cv=none; b=bn57VxFzDV3tF5LS4LleXS9q1+Kafz77bp51jga0tsbL3Ujph3M08iFiMCeSqzVFv+Xo6sVB4hdCT3sNDzj9o3PCpahn8Qun67tsTGHKPGa7BY6IMbwMdscuvHInDkxpYdpTQJeJ/GhqpQonlmcCH1KV4D/l7MG2CNt/LLZVmzw=
+	t=1712721862; cv=none; b=ldDC2rg7zlb6R0qy4wYbbmsDXsO2aVlqAWK/QJECGO200pWuJdcWxRxVhnpzoem/kSn0kvKHYP+h+VgKCXfuVgjSJZ1HcXWhgem/qKzbNkpkbA0gehhhjGQ82W2S54zGr6NDJnDQcgLQDggj8XMG6WjW4M8ON24nVeERRLCWevk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712721838; c=relaxed/simple;
-	bh=wTlJVHpqUIATmgRa1iihQu0th0Dvyaa4f+jjKjzQP8o=;
+	s=arc-20240116; t=1712721862; c=relaxed/simple;
+	bh=3btuJ+76Vmy93hCvUe+6fmq0GmmE1/SJp9OaqWbdOGY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lWYU7gDbAZe8NB3c9O1L5DRaDEKMKgB3zXenzJ7BmcJsbQ3EYvjWYzrrW3Y/mwgz7SrHIitARJ7uZwcSzppwjUPxWcv5vxLQ+VdJhLKz/UwzwIu0p6g6QtLQM4pmXXcXzvkRyInI00cV0H+3XUkTQrK/TROVwvPuIfQYtLzVmks=
+	 Content-Type:Content-Disposition:In-Reply-To; b=iQtJT7qkOEYwIiqVx4jzU8QNsjemlGshatrix2RYH3SCevdWmCZcN6JHhI5gSQBN8wGmnIev9fIfSoTYwv1cqn/vy4wKURSXKlCLm3jYDdq4TOaRL/qOkSJi/1lq/DGIXhh/wnZBCGsnQxCzwf8Bl3jdVyl5yTk7at2vFqs07qI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7C5DF68B05; Wed, 10 Apr 2024 06:03:53 +0200 (CEST)
-Date: Wed, 10 Apr 2024 06:03:53 +0200
+	id 96BF568B05; Wed, 10 Apr 2024 06:04:17 +0200 (CEST)
+Date: Wed, 10 Apr 2024 06:04:17 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>,
 	Chandan Babu R <chandan.babu@oracle.com>,
 	Dave Chinner <david@fromorbit.com>,
 	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 5/8] xfs: pass the actual offset and len to allocate to
- xfs_bmapi_allocate
-Message-ID: <20240410040353.GC1883@lst.de>
-References: <20240408145454.718047-1-hch@lst.de> <20240408145454.718047-6-hch@lst.de> <20240409232044.GQ6390@frogsfrogsfrogs>
+Subject: Re: [PATCH 7/8] xfs: fix xfs_bmap_add_extent_delay_real for
+ partial conversions
+Message-ID: <20240410040417.GA2085@lst.de>
+References: <20240408145454.718047-1-hch@lst.de> <20240408145454.718047-8-hch@lst.de> <20240409231645.GK6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,22 +35,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240409232044.GQ6390@frogsfrogsfrogs>
+In-Reply-To: <20240409231645.GK6390@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Apr 09, 2024 at 04:20:44PM -0700, Darrick J. Wong wrote:
-> > @@ -4542,6 +4532,15 @@ xfs_bmapi_write(
-> >  			 */
-> >  			bma.length = XFS_FILBLKS_MIN(len, XFS_MAX_BMBT_EXTLEN);
-> >  
-> > +			if (wasdelay) {
-> > +				bma.offset = bma.got.br_startoff;
-> > +				bma.length = bma.got.br_blockcount;
+On Tue, Apr 09, 2024 at 04:16:45PM -0700, Darrick J. Wong wrote:
+> On Mon, Apr 08, 2024 at 04:54:53PM +0200, Christoph Hellwig wrote:
+> > xfs_bmap_add_extent_delay_real takes parts or all of a delalloc extent
+> > and converts them to a real extent.  It is written to deal with any
+> > potential overlap of the to be converted range with the delalloc extent,
+> > but it turns out that currently only converting the entire extents, or a
+> > part starting at the beginning is actually exercised, as the only caller
+> > always tries to convert the entire delalloc extent, and either succeeds
+> > or at least progresses partially from the start.
+> > 
+> > If it only converts a tiny part of a delalloc extent, the indirect block
+> > calculation for the new delalloc extent (da_new) might be equivalent to that
+> > of the existing delalloc extent (da_new).  If this extent conversion now
 > 
-> This read funny since we'd previously set bma.{offset,length} above, but
-> I guess that preserves the "convert all the delalloc" behavior; and you
-> turn it off in patch 8, right?
+>                                    da_old?
 
-Yes.  That being said I should just move the assignments into the other
-branch here to make things more obvious.
+Yes.
 
