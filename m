@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE8C181CE4
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 22:18:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78BD4181CE4
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 22:19:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712787525; cv=none; b=cm1elsD5/hi4e3nFOc54dsvyOUVc6Xgvyexh82RqCCqzYV5qszoRWjIbPAm9fgZ5HuhSFlCuB/IE0zwauzQ4eyKrJTsRBFvWDcJSPOX3Svla8rVQqAAeAfYd7T6PIApNi8n9dIdOgtIVwMzWlFmFLfYnAvkzuMNnnBnWvff0B8w=
+	t=1712787554; cv=none; b=kUH5Kg4GLy3NMJVDICaWQsp22bDeftW4yZc5MPS/yWRlmhB4Ha7Iih4YZVhfoYr1wOFKXWPjVEtf1lsWehyBPXuUB3K5Z4qea7t9TmSQWLq+6yX4dN9jfkn1bgi6ykNJmfwrvGy6Y+tSx1f+HWtqC9QeBownHIRJIw4kYgVQIZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712787525; c=relaxed/simple;
-	bh=cvoPn2N3keZ7BdXJJjT3aQJKwE1NFtZiBxNxwHXq4+g=;
+	s=arc-20240116; t=1712787554; c=relaxed/simple;
+	bh=5M2y3BnWXyTWWnWdN2PQGi5Q7tpMME06sSosRNUlX3Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nsWTft0gIhEGSAxASVR/lFU/6eCJpiHiEh0I7GYBgeEmHIKxy5hx71h1UvDAu+PwF/FwUctYhjb/PCM1llM+t3ffkp11hQnD77CUHHQ4w7rZjJxuktG87XY3gmjHN5qbEzu2lOy2fDNj07i5tprQqKCXpHdTR741N9pWXDo7JX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=isuhsl64; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=hJ/aQAIFt4NDkBhz1kWG7QAX2NeLNg8z7hU4B/RsDbEDnQpEylkWcQ6xBb0PClfeii7f5Iuqv5YqDL4TWT4SUaTQpwm0IACk7YndXCMXO9JVa0DgbTGjNdfHTKCbYhNtZ1KuecttXvdWV2tIdkEyT6xrTNhD7pmW7A0NznLYRi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o7Xy2jnK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="isuhsl64"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA687C433F1;
-	Wed, 10 Apr 2024 22:18:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o7Xy2jnK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9B72C433C7;
+	Wed, 10 Apr 2024 22:19:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712787524;
-	bh=cvoPn2N3keZ7BdXJJjT3aQJKwE1NFtZiBxNxwHXq4+g=;
+	s=k20201202; t=1712787553;
+	bh=5M2y3BnWXyTWWnWdN2PQGi5Q7tpMME06sSosRNUlX3Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=isuhsl64jcewFZRB4ibjDKUuR2W1fTRGM11zONobajbpgqPvfRfvXYqkTQjWg/TzG
-	 Gl2RXWakcPnKoRj/gVEHbd/1VZiVxUjSO5PEUOpY+54g3khKUltrEIsWPed/aGH1f4
-	 lS3V88PhdKdQwGrLgBAEkoNQ5NZAuBnO1f62qSqqyzuSwTOA+5TkyhCyW8mGgAhqLQ
-	 +219ReRzqMUC3L7zyPs1lR1qGXhtnpYagV8k5LFe6Y9I5aOz3wfdvCCXLtQAZOSxku
-	 fityM+jwBo11fzs2TGFs2J/FjQFyESRXY9MvJ0Iv0DVWIS1PVdsmy82fn23lv1vxgT
-	 r2Ay/KWyloNLA==
-Date: Wed, 10 Apr 2024 15:18:44 -0700
+	b=o7Xy2jnK78WNVzch2RsgbsehkHT8zC4Lzvq8g1lb6Tt4jdrbmjeTOFNErKe7jt2rD
+	 Xao7EMpbP9MKfRepp8WW6YQu8tvwTuAKah1f+opfz7OEVIe/uJbyCiHQVC7o5GOxpL
+	 yJWLYUouMysV7wexhwSWngxXvkeic6sDq7OOLmsEgNlHCMv27YI5w+J4AaTtTLx6k4
+	 U1j1VakQI+XuEMoJZVejWhnes+zLhfiecXQsqlBqUhD7Krbp36F3eg9R4RPBmZvfdD
+	 NM4t5SINrb7cGKdQIU/bcN3Em1ZQOKDSTtfwiuITSDtw+/ucZZiu3Vlr/vct11s6AW
+	 KSQur01O+rB1Q==
+Date: Wed, 10 Apr 2024 15:19:13 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/14] xfs: add xattr setname and removename functions
- for internal users
-Message-ID: <20240410221844.GL6390@frogsfrogsfrogs>
-References: <171270970952.3632937.3716036526502072405.stgit@frogsfrogsfrogs>
- <171270971004.3632937.5852027532367765797.stgit@frogsfrogsfrogs>
- <ZhYvG1_eNLVKu3Ag@infradead.org>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: reduce the rate of cond_resched calls inside
+ scrub
+Message-ID: <20240410221913.GM6390@frogsfrogsfrogs>
+References: <171270972010.3634974.14825641209464509177.stgit@frogsfrogsfrogs>
+ <171270972034.3634974.9974180590154996582.stgit@frogsfrogsfrogs>
+ <ZhaoZ3NefVUXXx0b@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,75 +44,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhYvG1_eNLVKu3Ag@infradead.org>
+In-Reply-To: <ZhaoZ3NefVUXXx0b@infradead.org>
 
-On Tue, Apr 09, 2024 at 11:18:03PM -0700, Christoph Hellwig wrote:
-> > +static int
-> > +xfs_attr_ensure_iext(
-> > +	struct xfs_da_args	*args,
-> > +	int			nr)
-> > +{
-> > +	int			error;
-> > +
-> > +	error = xfs_iext_count_may_overflow(args->dp, XFS_ATTR_FORK, nr);
-> > +	if (error == -EFBIG)
-> > +		return xfs_iext_count_upgrade(args->trans, args->dp, nr);
-> > +	return error;
-> > +}
+On Wed, Apr 10, 2024 at 07:55:35AM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 09, 2024 at 06:08:38PM -0700, Darrick J. Wong wrote:
+> > Surprisingly, this reduces scrub-only fstests runtime by about 2%.  I
+> > used the bmapinflate xfs_db command to produce a billion-extent file and
+> > this stupid gadget reduced the scrub runtime by about 4%.
 > 
-> I'd rather get my consolidation of these merged instead of adding
-> a wrapper like this.  Just waiting for my RT delalloc and your
-> exchrange series to hit for-next to resend it.
+> I wish the scheduler maintainers would just finish sorting out the
+> preemption models mess and kill cond_resched() and we wouldn't need this.
 
-Yeah, I made a mental note to scrub this function out if your patch wins
-the race.
+Yeah, I heard that might not happen or ... something.
 
-> > +/*
-> > + * Ensure that the xattr structure maps @args->name to @args->value.
-> > + *
-> > + * The caller must have initialized @args, attached dquots, and must not hold
-> > + * any ILOCKs.  Only XATTR_CREATE may be specified in @args->xattr_flags.
-> > + * Reserved data blocks may be used if @rsvd is set.
-> > + *
-> > + * Returns -EEXIST if XATTR_CREATE was specified and the name already exists.
-> > + */
-> > +int
-> > +xfs_attr_setname(
+> But until then:
 > 
-> Is there any case where we do not want to pass XATTR_CREATE, that
-> is replace an existing attribute when there is one?
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Yes, verity setup will use xfs_attr_setname to upsert a merkle tree
-block into the attr structure and obliterate stale blocks that might
-already have been there.
-
-> > +int
-> > +xfs_attr_removename(
-> > +	struct xfs_da_args	*args,
-> > +	bool			rsvd)
-> > +{
-> 
-> Is there a good reason to have a separate remove helper and not
-> overload a NULL value like we do for the normal xattr interface?
-
-xfs_repair uses xfs_parent_unset -> xfs_attr_removename to erase any
-XFS_ATTR_PARENT attribute that doesn't validate, so it needs to be able
-to pass in a non-NULL value.  Perhaps I'll add a comment about that,
-since this isn't the first time this has come up.
-
-Come to think of it you can't removename a remote parent value, so I
-guess in that bad case xfs_repair will have to drop the entire attr
-structure <frown>.
-
-/*
- * Ensure that the xattr structure does not map @args->name to @args->value.
- * @args->value must be set for XFS_ATTR_PARENT removal (e.g. xfs_repair).
- *
- * The caller must have initialized @args, attached dquots, and must not hold
- * any ILOCKs.  Reserved data blocks may be used if @rsvd is set.
- *
- * Returns -ENOATTR if the name did not already exist.
- */
-
+Thanks!
 
 --D
