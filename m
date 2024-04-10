@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF4BE1FB4
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:49:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A97AB38B
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:49:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710176; cv=none; b=ARfREjZVo4Mq867JP9+fqVkUPwJ/yIsNQyeGTp7PAbSA+gxA2uUN1AHppCNi6TL5HQwltwXA4pdQ+2k2jUOAThd8Rp0QCW8Tuqonpd+CQbqn3xvnr+eYFFkdcaRLATXb8RPMemmxv6na7NBqdmtamauQGDuoNqT5U7f4pWIcI/I=
+	t=1712710192; cv=none; b=j95/K87gXKcmeKnfd6hMMZEvd2ZYbp/hkf4ibtkRphYc49pMYx5emR4mm8e7BVkkQ64BpCs3oTer+4cLBQbmyzyAec3si6699HHmenlXdyaYd03Lvk7lHNhBTxiIi3uR5Zc8vuQ/m3ktN/6CDFbfKaLis7bUN7TwKapK30vW4pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710176; c=relaxed/simple;
-	bh=onCqnZW7YJ/1vl2RoPqZTWGDg6/UOOS8OCRn3Y7Yq30=;
+	s=arc-20240116; t=1712710192; c=relaxed/simple;
+	bh=6dj3WvNSfJX3+YnPTEoTeoCD49moa4qraMIDCLswJn8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kyvSAQPZFbBsL4DlgInhy39FEIk/gmoDjn8iCilWzZuYP3Q3cNsXm6+qK+9OT9vHybRsIEq/XZnSDoKVHywrzWWXxguzrU4GBd51Yrl97NW1fL1zO662ARmu1GXSdmvDyHYv5X20qK7ExksLfewu4erdtCeoCY6cUQlTJOVqLBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0qwhO/V; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=gA/5OLzK4POeFbTPFf4XhuP2L16GrydLeaub3rshVgAOFqjQgb1uiM22hpVfd4Wf2Xgq0nQT9EjUQqQFOcl/ae+poZAtdyqtnxNU48LGXvPnCliElwbquyNlZ/ZQKcZDHRlq2Osgl4yvMCGZLxZsVauChhTojqEYT5Y83qh8s/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CPUNhKws; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0qwhO/V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8622EC433C7;
-	Wed, 10 Apr 2024 00:49:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CPUNhKws"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DEE5C43394;
+	Wed, 10 Apr 2024 00:49:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710176;
-	bh=onCqnZW7YJ/1vl2RoPqZTWGDg6/UOOS8OCRn3Y7Yq30=;
+	s=k20201202; t=1712710192;
+	bh=6dj3WvNSfJX3+YnPTEoTeoCD49moa4qraMIDCLswJn8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=l0qwhO/VugHqz+WaTh481mF4i3oUiVmNlQX+p5OYKfnB+y+5W2U8elLkrBU/yzb6c
-	 jz9glQBlMWT98rVePBSEV0k43i32dJRaeruMbLG+EEJt8a7SZ8dpkSARRRoZ0QAs9E
-	 5ftxhQmjBSjMYZOeA6uJloF8V12E3E2r9PDPW8zCQYDvHG3DREUlgm5KOnuIyMQiXl
-	 CQgAx/XH1lYKoLZY0HCpkiaERY5u+jMM7a9Kvv06/w9v9qH/L/NJr6bgxr5MFhdjjk
-	 KFhwZci6kdtvUweVJKmEGTOoWmyFZbhrE/7JpwwzDIB7Wm571RfKBI24rYTrjC9CLN
-	 RAzMzC+9rxuLw==
-Date: Tue, 09 Apr 2024 17:49:36 -0700
-Subject: [PATCH 1/4] xfs: remove XFS_DA_OP_REMOVE
+	b=CPUNhKwsChVdZWphULHj24TfGoF7hrI1IPqz7c9QQBntmH44H/HctR6Ec5zdM5pky
+	 F7CCQkb+HkglrhNUnPHdFaVsXFTryVnwi1aRW1X5Ajyeho4RUz9ydCiMiubf6SemTn
+	 jXtymDy6gvnRHxl8o1nQb29trf7Snsll6bPSEOZIB1WIsYzr2SkpTJCPsYfrVsMdyX
+	 QI1u8WzoSJA6SC+yKG37MZ//glKzE9tCh1J7f4aDT0DJnjKXG95i74Qo9o8KjmqAYJ
+	 Mcg0rwnFnySx+IaTgno5pePFeRjUhSjSv7x+RFy2zbNYYIAZL4EEwB1tmTrMh5ksGI
+	 WJjf8CF44Z10g==
+Date: Tue, 09 Apr 2024 17:49:51 -0700
+Subject: [PATCH 2/4] xfs: remove XFS_DA_OP_NOTIME
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171270968401.3631393.447688102804909615.stgit@frogsfrogsfrogs>
+Message-ID: <171270968418.3631393.17581873522746080377.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270968374.3631393.14638451005338881895.stgit@frogsfrogsfrogs>
 References: <171270968374.3631393.14638451005338881895.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,49 +46,74 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Nobody checks this flag, so get rid of it.
+The only user of this flag sets it prior to an xfs_attr_get_ilocked
+call, which doesn't update anything.  Get rid of the flag.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.h     |    1 -
+ fs/xfs/libxfs/xfs_attr.c     |    5 ++---
  fs/xfs/libxfs/xfs_da_btree.h |    6 ++----
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ fs/xfs/scrub/attr.c          |    1 -
+ 3 files changed, 4 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index e4f55008552b4..670ab2a613fc6 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -590,7 +590,6 @@ xfs_attr_init_add_state(struct xfs_da_args *args)
- static inline enum xfs_delattr_state
- xfs_attr_init_remove_state(struct xfs_da_args *args)
- {
--	args->op_flags |= XFS_DA_OP_REMOVE;
- 	if (xfs_attr_is_shortform(args->dp))
- 		return XFS_DAS_SF_REMOVE;
- 	if (xfs_attr_is_leaf(args->dp))
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 05d22c5e38855..30e6084122d8b 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -365,7 +365,7 @@ xfs_attr_try_sf_addname(
+ 	 * Commit the shortform mods, and we're done.
+ 	 * NOTE: this is also the error path (EEXIST, etc).
+ 	 */
+-	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
++	if (!error)
+ 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+ 
+ 	if (xfs_has_wsync(dp->i_mount))
+@@ -1033,8 +1033,7 @@ xfs_attr_set(
+ 	if (xfs_has_wsync(mp))
+ 		xfs_trans_set_sync(args->trans);
+ 
+-	if (!(args->op_flags & XFS_DA_OP_NOTIME))
+-		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+ 
+ 	/*
+ 	 * Commit the last in the sequence of transactions.
 diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 7a004786ee0a2..76e764080d994 100644
+index 76e764080d994..b04a3290ffacc 100644
 --- a/fs/xfs/libxfs/xfs_da_btree.h
 +++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -91,9 +91,8 @@ typedef struct xfs_da_args {
+@@ -90,9 +90,8 @@ typedef struct xfs_da_args {
+ #define XFS_DA_OP_ADDNAME	(1u << 2) /* this is an add operation */
  #define XFS_DA_OP_OKNOENT	(1u << 3) /* lookup op, ENOENT ok, else die */
  #define XFS_DA_OP_CILOOKUP	(1u << 4) /* lookup returns CI name if found */
- #define XFS_DA_OP_NOTIME	(1u << 5) /* don't update inode timestamps */
--#define XFS_DA_OP_REMOVE	(1u << 6) /* this is a remove operation */
--#define XFS_DA_OP_RECOVERY	(1u << 7) /* Log recovery operation */
--#define XFS_DA_OP_LOGGED	(1u << 8) /* Use intent items to track op */
-+#define XFS_DA_OP_RECOVERY	(1u << 6) /* Log recovery operation */
-+#define XFS_DA_OP_LOGGED	(1u << 7) /* Use intent items to track op */
+-#define XFS_DA_OP_NOTIME	(1u << 5) /* don't update inode timestamps */
+-#define XFS_DA_OP_RECOVERY	(1u << 6) /* Log recovery operation */
+-#define XFS_DA_OP_LOGGED	(1u << 7) /* Use intent items to track op */
++#define XFS_DA_OP_RECOVERY	(1u << 5) /* Log recovery operation */
++#define XFS_DA_OP_LOGGED	(1u << 6) /* Use intent items to track op */
  
  #define XFS_DA_OP_FLAGS \
  	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
-@@ -102,7 +101,6 @@ typedef struct xfs_da_args {
+@@ -100,7 +99,6 @@ typedef struct xfs_da_args {
+ 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
- 	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
--	{ XFS_DA_OP_REMOVE,	"REMOVE" }, \
+-	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
  	{ XFS_DA_OP_RECOVERY,	"RECOVERY" }, \
  	{ XFS_DA_OP_LOGGED,	"LOGGED" }
  
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 8853e4d0eee3d..5b855d7c98211 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -173,7 +173,6 @@ xchk_xattr_actor(
+ 	void			*priv)
+ {
+ 	struct xfs_da_args		args = {
+-		.op_flags		= XFS_DA_OP_NOTIME,
+ 		.attr_filter		= attr_flags & XFS_ATTR_NSP_ONDISK_MASK,
+ 		.geo			= sc->mp->m_attr_geo,
+ 		.whichfork		= XFS_ATTR_FORK,
 
