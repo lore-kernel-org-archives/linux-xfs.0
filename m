@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862C68BF7
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:54:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A2138BE7
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:54:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710442; cv=none; b=vGOEtEOrZMdb/zYmYwd+HZGodNpMBg/fOLcC11N59Ju8FDPSN+XyiJFeJa/bZClwYHR0bmc5LaYijNsMzrwnKmY5RQD8wuULrCBWiVPeiV0kdVb9//psnorArDgI/01rWSwjhFWNCiKYruH+ngeKUWHwfIKG5oUQrFDWGLRO6OY=
+	t=1712710458; cv=none; b=CIDKJW9/z9TucNY9YEdIL80KXIqrpb3hcXYLQNAprcH9T6xEKuYSvERnNcRckqKPKiyryuTAAjlzIyVEoKpafz0/OIVOOxoJM/5/PZOLWTqeIKeMwivFMEXOjdCjbQpQCkXUJuoWB+IfsVYqhOwGVFbIF4HZC6QUPFEYkaRieok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710442; c=relaxed/simple;
-	bh=hA+yt9yN8VleVxIll9rThexLpWpT/2vrWsCtU9sMMPk=;
+	s=arc-20240116; t=1712710458; c=relaxed/simple;
+	bh=OpcprZP6RXSQm4IUNQRIzYgFKBBCyZKWiMkMLOkQ18E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m6sTkKQBduU1yNJ/EPrkrRZbtkuotmC4BFP2Zd6yaU1D9+KFhsz4DvQf01hr69SePAT6lTwZzUboRirDQW4ZhiX76KLD4ISgz2EFmizoBn0JvW47Nu8dIDZPEFrVIg67TLYmkLGMpXjI8jWHAS3eagXg5QbzqWhVaQ2nfZLrxdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mh4rArRY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lnTo6MARSTlte0qewJB/lVMVwHVH+YH6GzM8RR6Gl28Ndx2hIf1TLgIyF5K7bFjGwjTnfLD8HtbJza+yEDp8UDF6NYS5SXK7jUhXTr5d2xgiYxSx0nJoSPWvAJqycgDB130umzLk6V2yOEYBEJ+K1eFO1/zXJMnaGX2Kds1V8sM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R92dFnqN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mh4rArRY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E460C433C7;
-	Wed, 10 Apr 2024 00:54:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R92dFnqN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 065B3C433C7;
+	Wed, 10 Apr 2024 00:54:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710442;
-	bh=hA+yt9yN8VleVxIll9rThexLpWpT/2vrWsCtU9sMMPk=;
+	s=k20201202; t=1712710458;
+	bh=OpcprZP6RXSQm4IUNQRIzYgFKBBCyZKWiMkMLOkQ18E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Mh4rArRYGunWMHgcvdAVli6gkf3voZDDUmvXQ0/2jHsT9V7vxODuWhuG3yOMTiSwI
-	 Bi7eaSHlnHv1Q6a+01HPm95fi1ZEKN1MOn4bMoiHJzUwqHgcZTvOPrAyFCR7/NsdQK
-	 kC4VnPQNXjJH8/xBT+w7MftT4lNr9sK1HYZl9vWZvDnmCDZ0s5EmQQc/Z0C4TtlP6T
-	 tf8MqokcXusEochuS3NQksO0uRsBaM2AX0zKNhv7e0EPVUn1UgsA6dm/NoR6Mu/8KY
-	 0C0GRq7ZW+eI2+gI5oI4pww37sdipS/77KDWe9A5b+bhx3ff//g1k2RDdsa5brERZd
-	 DZR69E9KNNzHw==
-Date: Tue, 09 Apr 2024 17:54:01 -0700
-Subject: [PATCH 02/32] xfs: check the flags earlier in xfs_attr_match
+	b=R92dFnqN0N+en+IqmlSEkcTVyFzMNtEufixWDIlf6da8TtYYAxSLp/EHTP+qPhlx3
+	 wZQP4IyGvrcXwDT0ghM3Ms1cfZ3T3FhmYc+ERL6v750SyRKbpb6BFyBvKEFV13KyoQ
+	 bWNk1QDYUGWwg43hjDl8eOeSvMcDVnyYjApjkv84EZywQNaNoq2bGEtF3nfLe7HzVB
+	 hZpLb2QXur53jEIG46ww7msMT3FYp8ISsfOEtuZkRWgsfXeYAp/v2dTlzUMoiO+Qrk
+	 EvDdI4f0xRExyFIeCZac3r68eYVA0DfljbtCHb554o0AGYgN56L6Prv9Yr92gIjMTS
+	 nwOMRQei9Bi0Q==
+Date: Tue, 09 Apr 2024 17:54:17 -0700
+Subject: [PATCH 03/32] xfs: move xfs_attr_defer_add to xfs_attr_item.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, catherine.hoang@oracle.com, hch@lst.de,
- allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <171270969591.3631889.10114648429816387256.stgit@frogsfrogsfrogs>
+Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <171270969608.3631889.469698599262996242.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,61 +45,145 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Checking the flags match is much cheaper than a memcmp, so do it early
-on in xfs_attr_match, and also add a little helper to calculate the
-match mask right under the comment explaining the logic for it.
+Move the code that adds the incore xfs_attr_item deferred work data to a
+transaction live with the ATTRI log item code.  This means that the
+upper level extended attribute code no longer has to know about the
+inner workings of the ATTRI log items.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c |   37 +++----------------------------------
+ fs/xfs/xfs_attr_item.c   |   30 ++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h   |    8 ++++++++
+ 3 files changed, 41 insertions(+), 34 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 53ef784e3049e..9cb3a5d1c07d1 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -506,6 +506,13 @@ xfs_attr3_leaf_read(
-  * INCOMPLETE flag will not be set in attr->attr_filter, but rather
-  * XFS_DA_OP_RECOVERY will be set in args->op_flags.
-  */
-+static inline unsigned int xfs_attr_match_mask(const struct xfs_da_args *args)
-+{
-+	if (args->op_flags & XFS_DA_OP_RECOVERY)
-+		return XFS_ATTR_NSP_ONDISK_MASK;
-+	return XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE;
-+}
-+
- static bool
- xfs_attr_match(
- 	struct xfs_da_args	*args,
-@@ -513,21 +520,15 @@ xfs_attr_match(
- 	const unsigned char	*name,
- 	unsigned int		namelen)
- {
-+	unsigned int		mask = xfs_attr_match_mask(args);
- 
- 	if (args->namelen != namelen)
- 		return false;
-+	if ((args->attr_filter & mask) != (attr_flags & mask))
-+		return false;
- 	if (memcmp(args->name, name, namelen) != 0)
- 		return false;
- 
--	/* Recovery ignores the INCOMPLETE flag. */
--	if ((args->op_flags & XFS_DA_OP_RECOVERY) &&
--	    args->attr_filter == (attr_flags & XFS_ATTR_NSP_ONDISK_MASK))
--		return true;
--
--	/* All remaining matches need to be filtered by INCOMPLETE state. */
--	if (args->attr_filter !=
--	    (attr_flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
--		return false;
- 	return true;
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 426a41b43f641..03df79f63f674 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -903,37 +903,6 @@ xfs_attr_lookup(
+ 	return error;
  }
  
+-static void
+-xfs_attr_defer_add(
+-	struct xfs_da_args	*args,
+-	unsigned int		op_flags)
+-{
+-
+-	struct xfs_attr_intent	*new;
+-
+-	new = kmem_cache_zalloc(xfs_attr_intent_cache,
+-			GFP_KERNEL | __GFP_NOFAIL);
+-	new->xattri_op_flags = op_flags;
+-	new->xattri_da_args = args;
+-
+-	switch (op_flags) {
+-	case XFS_ATTRI_OP_FLAGS_SET:
+-		new->xattri_dela_state = xfs_attr_init_add_state(args);
+-		break;
+-	case XFS_ATTRI_OP_FLAGS_REPLACE:
+-		new->xattri_dela_state = xfs_attr_init_replace_state(args);
+-		break;
+-	case XFS_ATTRI_OP_FLAGS_REMOVE:
+-		new->xattri_dela_state = xfs_attr_init_remove_state(args);
+-		break;
+-	default:
+-		ASSERT(0);
+-	}
+-
+-	xfs_defer_add(args->trans, &new->xattri_list, &xfs_attr_defer_type);
+-	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
+-}
+-
+ /*
+  * Note: If args->value is NULL the attribute will be removed, just like the
+  * Linux ->setattr API.
+@@ -1023,14 +992,14 @@ xfs_attr_set(
+ 	case -EEXIST:
+ 		if (!args->value) {
+ 			/* if no value, we are performing a remove operation */
+-			xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REMOVE);
++			xfs_attr_defer_add(args, XFS_ATTR_DEFER_REMOVE);
+ 			break;
+ 		}
+ 
+ 		/* Pure create fails if the attr already exists */
+ 		if (args->xattr_flags & XATTR_CREATE)
+ 			goto out_trans_cancel;
+-		xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REPLACE);
++		xfs_attr_defer_add(args, XFS_ATTR_DEFER_REPLACE);
+ 		break;
+ 	case -ENOATTR:
+ 		/* Can't remove what isn't there. */
+@@ -1040,7 +1009,7 @@ xfs_attr_set(
+ 		/* Pure replace fails if no existing attr to replace. */
+ 		if (args->xattr_flags & XATTR_REPLACE)
+ 			goto out_trans_cancel;
+-		xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_SET);
++		xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
+ 		break;
+ 	default:
+ 		goto out_trans_cancel;
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 4d4fb804c0016..04aa2c68d5e56 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -723,6 +723,36 @@ xfs_attr_create_done(
+ 	return &attrdp->attrd_item;
+ }
+ 
++void
++xfs_attr_defer_add(
++	struct xfs_da_args	*args,
++	enum xfs_attr_defer_op	op)
++{
++	struct xfs_attr_intent	*new;
++
++	new = kmem_cache_zalloc(xfs_attr_intent_cache,
++			GFP_NOFS | __GFP_NOFAIL);
++	new->xattri_da_args = args;
++
++	switch (op) {
++	case XFS_ATTR_DEFER_SET:
++		new->xattri_op_flags = XFS_ATTRI_OP_FLAGS_SET;
++		new->xattri_dela_state = xfs_attr_init_add_state(args);
++		break;
++	case XFS_ATTR_DEFER_REPLACE:
++		new->xattri_op_flags = XFS_ATTRI_OP_FLAGS_REPLACE;
++		new->xattri_dela_state = xfs_attr_init_replace_state(args);
++		break;
++	case XFS_ATTR_DEFER_REMOVE:
++		new->xattri_op_flags = XFS_ATTRI_OP_FLAGS_REMOVE;
++		new->xattri_dela_state = xfs_attr_init_remove_state(args);
++		break;
++	}
++
++	xfs_defer_add(args->trans, &new->xattri_list, &xfs_attr_defer_type);
++	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
++}
++
+ const struct xfs_defer_op_type xfs_attr_defer_type = {
+ 	.name		= "attr",
+ 	.max_items	= 1,
+diff --git a/fs/xfs/xfs_attr_item.h b/fs/xfs/xfs_attr_item.h
+index 3280a79302876..c32b669b0e16a 100644
+--- a/fs/xfs/xfs_attr_item.h
++++ b/fs/xfs/xfs_attr_item.h
+@@ -51,4 +51,12 @@ struct xfs_attrd_log_item {
+ extern struct kmem_cache	*xfs_attri_cache;
+ extern struct kmem_cache	*xfs_attrd_cache;
+ 
++enum xfs_attr_defer_op {
++	XFS_ATTR_DEFER_SET,
++	XFS_ATTR_DEFER_REMOVE,
++	XFS_ATTR_DEFER_REPLACE,
++};
++
++void xfs_attr_defer_add(struct xfs_da_args *args, enum xfs_attr_defer_op op);
++
+ #endif	/* __XFS_ATTR_ITEM_H__ */
 
