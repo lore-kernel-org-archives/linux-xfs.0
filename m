@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC21621
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:03:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB36621
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:03:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712711022; cv=none; b=FSx2CIVN7kV365Ux3lpzY9aUdvHbmvO6tny+66UeCwg50PNY0u/8VTGrKxFLj/3ntsCzZ0OY0ojOKobsGqJ6UNhaNnv57Wjs9+t9M8fUNBwGR2aPZxR6tq/QeOb3/4lGa/QCK92g3CvW9xFT4iPdld0+JUombIPZxdqmWRXiP2w=
+	t=1712711037; cv=none; b=C6waqiL7ETmqjUxoqTrg4a5Bhs8zLnTIfD07RnV64iWNchx2bRVMHveQR4YOPY8vAlvlWuASKGClciC219xlpycWQQKWf3sn0pE9b5Gc/7xqsGDTFvmj+WOpv6SklKZQRV4ZLffs7YJ8dHfcSZq0eVItcwh+PydLtOAXLK6FNBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712711022; c=relaxed/simple;
-	bh=9uxYOvA/TDMS6M7Yb+Qzg/SxrYeMPsUXyXDGau5bePE=;
+	s=arc-20240116; t=1712711037; c=relaxed/simple;
+	bh=C+I2X9BKXmzUO1laTwHDgBFR9BvPVMowMhDSjhFcJwE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AophBSV1hM5SbVTQSEEnuduZKGDnDmiKbdwRvXsPrRhc6iF0h7chDOf9anwG6lxmXQTZ7DocpLJT2IsPW4/CfQ1221aILtG4bI5MQliP8x0nOsnggN9DQUZqRb/fg6jC9ohv9kZl4RlnK5AUug/vHD8hoo13CqFTpl4u0+aM7Rg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UB8KFoE5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aK0KnqFZ78JvdNgaqEDt5XWnpdrUuXKRj3YPSNxlc56S9xie/hxkZTMvJS52i/nc+uAzqvNYLlTui/bkQ/Txx6OUHacJP6hQ0ANwcEkdkUPvXjASSkyRVx2KZq5CwlXNaBO1P3wTtjf6zv71mTbtkMWTFxlj3uUeMgvQ8DhlPAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CBjCJmgA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UB8KFoE5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81662C433C7;
-	Wed, 10 Apr 2024 01:03:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CBjCJmgA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EFC8C433C7;
+	Wed, 10 Apr 2024 01:03:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712711021;
-	bh=9uxYOvA/TDMS6M7Yb+Qzg/SxrYeMPsUXyXDGau5bePE=;
+	s=k20201202; t=1712711037;
+	bh=C+I2X9BKXmzUO1laTwHDgBFR9BvPVMowMhDSjhFcJwE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UB8KFoE5svXQWJlr4Y40o6/zfTOgmIfMON3M59kL/zqtKb1tV3gK4/IPJwhZ2BXiM
-	 JEp15cG5mAzhPhttWePivd4Ld/4rCz5zXO3ZTrDJBOJEPYNfrLyKm/u3bCeUTlgzkh
-	 Uc48TNRxPtxLzMo7854wkfpQS8Iwas1Aq5IMAfjvi4vNlk/Iie0ZlhR0Hyo6B6sgxr
-	 JDCeO8i2sUK2QqqVvg/No8ODOoWyDWjVGgQDa9B0Ntz4ccp5sG6b66f95wp0g0OmnW
-	 JlmNorVWBPf95igvyTpro5F9Q14QC4Wjp9srIJJ9bggJFNueql9oXZoCjdwh+W0aZ6
-	 S2gr6Z5uT0IZA==
-Date: Tue, 09 Apr 2024 18:03:41 -0700
-Subject: [PATCH 7/7] xfs: salvage parent pointers when rebuilding xattr
- structures
+	b=CBjCJmgAlKPs96+kHHFu6/5K6AxVkhbBW5agVOOCXTiQdznTC8QUOwperyA3sVw4s
+	 iztOw7LSydYTL2R9B6UTgbaTzfRoxY5tn8bADZb42ClVOQIAOmP4BuIfF+X6U4n01W
+	 jdWk7mj5fmO0QySCn+oWfbvm+4mWz4XM6nvUIdY+UatwDYageyiw2rLT+A2rXJ+vxu
+	 lvfM8n26M0P7/5Ru4uwXPFkZpytNVsafd5S97FuIsbARLtNk3By1VYcXD0GpprAl+G
+	 v3xw5HkPjTXdff1VGOEnTkoJdDFzYHra5+XJ5klhZMYQ3Fu6i4RkFfWs/iVQSpTmBo
+	 YA/qEkm/rpflA==
+Date: Tue, 09 Apr 2024 18:03:56 -0700
+Subject: [PATCH 01/14] xfs: add xattr setname and removename functions for
+ internal users
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270970583.3632713.16977275276286469285.stgit@frogsfrogsfrogs>
-In-Reply-To: <171270970449.3632713.16827511408040390390.stgit@frogsfrogsfrogs>
-References: <171270970449.3632713.16827511408040390390.stgit@frogsfrogsfrogs>
+Message-ID: <171270971004.3632937.5852027532367765797.stgit@frogsfrogsfrogs>
+In-Reply-To: <171270970952.3632937.3716036526502072405.stgit@frogsfrogsfrogs>
+References: <171270970952.3632937.3716036526502072405.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -48,130 +48,300 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're salvaging extended attributes, make sure we validate the ones
-that claim to be parent pointers before adding them to the salvage pile.
+Add a couple of internal xattr functions to set or remove attr names
+from the xattr structures.  The upcoming parent pointer and fsverity
+patchsets will want the ability to set and clear xattrs with a fully
+initialized xfs_da_args structure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/attr_repair.c |   34 +++++++++++++++++++++++++---------
- fs/xfs/scrub/trace.h       |   38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 63 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c   |  193 ++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_attr.h   |    3 +
+ fs/xfs/scrub/attr_repair.c |   17 +++-
+ 3 files changed, 191 insertions(+), 22 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index 7228758c2da1a..091cef077cdde 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -28,6 +28,7 @@
- #include "xfs_exchmaps.h"
- #include "xfs_exchrange.h"
- #include "xfs_acl.h"
-+#include "xfs_parent.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -127,6 +128,9 @@ xrep_xattr_want_salvage(
- 		return false;
- 	if (valuelen > XATTR_SIZE_MAX || valuelen < 0)
- 		return false;
-+	if (attr_flags & XFS_ATTR_PARENT)
-+		return xfs_parent_valuecheck(rx->sc->mp, value, valuelen);
-+
- 	return true;
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 99930472e59da..83f8cf551816a 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -950,6 +950,44 @@ xfs_attr_lookup(
+ 	return error;
  }
  
-@@ -154,14 +158,21 @@ xrep_xattr_salvage_key(
- 	 * Truncate the name to the first character that would trip namecheck.
- 	 * If we no longer have a name after that, ignore this attribute.
- 	 */
--	while (i < namelen && name[i] != 0)
--		i++;
--	if (i == 0)
--		return 0;
--	key.namelen = i;
-+	if (flags & XFS_ATTR_PARENT) {
-+		key.namelen = namelen;
- 
--	trace_xrep_xattr_salvage_rec(rx->sc->ip, flags, name, key.namelen,
--			valuelen);
-+		trace_xrep_xattr_salvage_pptr(rx->sc->ip, flags, name,
-+				key.namelen, value, valuelen);
-+	} else {
-+		while (i < namelen && name[i] != 0)
-+			i++;
-+		if (i == 0)
-+			return 0;
-+		key.namelen = i;
++/*
++ * Before updating xattrs, add an attribute fork if the inode doesn't have.
++ * (inode must not be locked when we call this routine)
++ */
++static int
++xfs_attr_ensure_fork(
++	struct xfs_da_args	*args,
++	bool			rsvd)
++{
++	int			sf_size;
 +
-+		trace_xrep_xattr_salvage_rec(rx->sc->ip, flags, name,
-+				key.namelen, valuelen);
-+	}
++	if (xfs_inode_has_attr_fork(args->dp))
++		return 0;
++
++	sf_size = sizeof(struct xfs_attr_sf_hdr) +
++			xfs_attr_sf_entsize_byname(args->namelen,
++						   args->valuelen);
++
++	return xfs_bmap_add_attrfork(args->dp, sf_size, rsvd);
++}
++
++/*
++ * Before updating xattrs, make sure we can handle adding to the extent count.
++ * There must be a transaction and the ILOCK must be held.
++ */
++static int
++xfs_attr_ensure_iext(
++	struct xfs_da_args	*args,
++	int			nr)
++{
++	int			error;
++
++	error = xfs_iext_count_may_overflow(args->dp, XFS_ATTR_FORK, nr);
++	if (error == -EFBIG)
++		return xfs_iext_count_upgrade(args->trans, args->dp, nr);
++	return error;
++}
++
+ /*
+  * Note: If args->value is NULL the attribute will be removed, just like the
+  * Linux ->setattr API.
+@@ -994,19 +1032,9 @@ xfs_attr_set(
+ 		XFS_STATS_INC(mp, xs_attr_set);
+ 		args->total = xfs_attr_calc_size(args, &local);
  
- 	error = xfblob_store(rx->xattr_blobs, &key.name_cookie, name,
- 			key.namelen);
-@@ -596,8 +607,13 @@ xrep_xattr_insert_rec(
+-		/*
+-		 * If the inode doesn't have an attribute fork, add one.
+-		 * (inode must not be locked when we call this routine)
+-		 */
+-		if (xfs_inode_has_attr_fork(dp) == 0) {
+-			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
+-				xfs_attr_sf_entsize_byname(args->namelen,
+-						args->valuelen);
+-
+-			error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
+-			if (error)
+-				return error;
+-		}
++		error = xfs_attr_ensure_fork(args, rsvd);
++		if (error)
++			return error;
+ 
+ 		if (!local)
+ 			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
+@@ -1025,11 +1053,8 @@ xfs_attr_set(
+ 		return error;
+ 
+ 	if (args->value || xfs_inode_hasattr(dp)) {
+-		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
++		error = xfs_attr_ensure_iext(args,
+ 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+-		if (error == -EFBIG)
+-			error = xfs_iext_count_upgrade(args->trans, dp,
+-					XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+ 		if (error)
+ 			goto out_trans_cancel;
+ 	}
+@@ -1086,6 +1111,140 @@ xfs_attr_set(
+ 	goto out_unlock;
+ }
+ 
++/*
++ * Ensure that the xattr structure maps @args->name to @args->value.
++ *
++ * The caller must have initialized @args, attached dquots, and must not hold
++ * any ILOCKs.  Only XATTR_CREATE may be specified in @args->xattr_flags.
++ * Reserved data blocks may be used if @rsvd is set.
++ *
++ * Returns -EEXIST if XATTR_CREATE was specified and the name already exists.
++ */
++int
++xfs_attr_setname(
++	struct xfs_da_args	*args,
++	bool			rsvd)
++{
++	struct xfs_inode	*dp = args->dp;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_trans_res	tres;
++	unsigned int		total;
++	int			rmt_extents = 0;
++	int			error, local;
++
++	ASSERT(!(args->xattr_flags & XATTR_REPLACE));
++	ASSERT(!args->trans);
++
++	args->total = xfs_attr_calc_size(args, &local);
++
++	error = xfs_attr_ensure_fork(args, rsvd);
++	if (error)
++		return error;
++
++	if (!local)
++		rmt_extents = XFS_IEXT_ATTR_MANIP_CNT(
++				xfs_attr3_rmt_blocks(mp, args->valuelen));
++
++	xfs_init_attr_trans(args, &tres, &total);
++	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
++	if (error)
++		return error;
++
++	error = xfs_attr_ensure_iext(args, rmt_extents);
++	if (error)
++		goto out_trans_cancel;
++
++	error = xfs_attr_lookup(args);
++	switch (error) {
++	case -EEXIST:
++		/* Pure create fails if the attr already exists */
++		if (args->xattr_flags & XATTR_CREATE)
++			goto out_trans_cancel;
++		if (args->attr_filter & XFS_ATTR_PARENT)
++			xfs_attr_defer_parent(args, XFS_ATTR_DEFER_REPLACE);
++		else
++			xfs_attr_defer_add(args, XFS_ATTR_DEFER_REPLACE);
++		break;
++	case -ENOATTR:
++		if (args->attr_filter & XFS_ATTR_PARENT)
++			xfs_attr_defer_parent(args, XFS_ATTR_DEFER_SET);
++		else
++			xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
++		break;
++	default:
++		goto out_trans_cancel;
++	}
++
++	xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
++	error = xfs_trans_commit(args->trans);
++out_unlock:
++	args->trans = NULL;
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	return error;
++
++out_trans_cancel:
++	xfs_trans_cancel(args->trans);
++	goto out_unlock;
++}
++
++/*
++ * Ensure that the xattr structure does not map @args->name to @args->value.
++ *
++ * The caller must have initialized @args, attached dquots, and must not hold
++ * any ILOCKs.  Reserved data blocks may be used if @rsvd is set.
++ *
++ * Returns -ENOATTR if the name did not already exist.
++ */
++int
++xfs_attr_removename(
++	struct xfs_da_args	*args,
++	bool			rsvd)
++{
++	struct xfs_inode	*dp = args->dp;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_trans_res	tres;
++	unsigned int		total;
++	int			rmt_extents;
++	int			error;
++
++	ASSERT(!args->trans);
++
++	rmt_extents = XFS_IEXT_ATTR_MANIP_CNT(
++				xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX));
++
++	xfs_init_attr_trans(args, &tres, &total);
++	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
++	if (error)
++		return error;
++
++	if (xfs_inode_hasattr(dp)) {
++		error = xfs_attr_ensure_iext(args, rmt_extents);
++		if (error)
++			goto out_trans_cancel;
++	}
++
++	error = xfs_attr_lookup(args);
++	if (error != -EEXIST)
++		goto out_trans_cancel;
++
++	if (args->attr_filter & XFS_ATTR_PARENT)
++		xfs_attr_defer_parent(args, XFS_ATTR_DEFER_REMOVE);
++	else
++		xfs_attr_defer_add(args, XFS_ATTR_DEFER_REMOVE);
++	xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
++	error = xfs_trans_commit(args->trans);
++out_unlock:
++	args->trans = NULL;
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	return error;
++
++out_trans_cancel:
++	xfs_trans_cancel(args->trans);
++	goto out_unlock;
++}
++
+ /*========================================================================
+  * External routines when attribute list is inside the inode
+  *========================================================================*/
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index cb5ca37000848..d51001c5809fe 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -560,6 +560,9 @@ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
+ 			 unsigned int *total);
+ 
++int xfs_attr_setname(struct xfs_da_args *args, bool rsvd);
++int xfs_attr_removename(struct xfs_da_args *args, bool rsvd);
++
+ /*
+  * Check to see if the attr should be upgraded from non-existent or shortform to
+  * single-leaf-block attribute list.
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+index 091cef077cdde..a3a98051df0fb 100644
+--- a/fs/xfs/scrub/attr_repair.c
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -570,6 +570,9 @@ xrep_xattr_insert_rec(
+ 		.namelen		= key->namelen,
+ 		.valuelen		= key->valuelen,
+ 		.owner			= rx->sc->ip->i_ino,
++		.geo			= rx->sc->mp->m_attr_geo,
++		.whichfork		= XFS_ATTR_FORK,
++		.op_flags		= XFS_DA_OP_OKNOENT,
+ 	};
+ 	struct xchk_xattr_buf		*ab = rx->sc->buf;
+ 	int				error;
+@@ -607,19 +610,23 @@ xrep_xattr_insert_rec(
  
  	ab->name[key->namelen] = 0;
  
--	trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags, ab->name,
--			key->namelen, key->valuelen);
-+	if (key->flags & XFS_ATTR_PARENT)
-+		trace_xrep_xattr_insert_pptr(rx->sc->tempip, key->flags,
-+				ab->name, key->namelen, ab->value,
-+				key->valuelen);
-+	else
-+		trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags,
-+				ab->name, key->namelen, key->valuelen);
+-	if (key->flags & XFS_ATTR_PARENT)
++	if (key->flags & XFS_ATTR_PARENT) {
+ 		trace_xrep_xattr_insert_pptr(rx->sc->tempip, key->flags,
+ 				ab->name, key->namelen, ab->value,
+ 				key->valuelen);
+-	else
++		args.op_flags |= XFS_DA_OP_LOGGED;
++	} else {
+ 		trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags,
+ 				ab->name, key->namelen, key->valuelen);
++	}
  
  	/*
- 	 * xfs_attr_set creates and commits its own transaction.  If the attr
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 3e726610b9e32..4b968df3d840c 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -2540,6 +2540,44 @@ DEFINE_EVENT(xrep_xattr_salvage_class, name, \
- DEFINE_XREP_XATTR_SALVAGE_EVENT(xrep_xattr_salvage_rec);
- DEFINE_XREP_XATTR_SALVAGE_EVENT(xrep_xattr_insert_rec);
+-	 * xfs_attr_set creates and commits its own transaction.  If the attr
+-	 * already exists, we'll just drop it during the rebuild.
++	 * xfs_attr_setname creates and commits its own transaction.  If the
++	 * attr already exists, we'll just drop it during the rebuild.  Don't
++	 * use reserved blocks because we can abort the repair with ENOSPC.
+ 	 */
+-	error = xfs_attr_set(&args);
++	xfs_attr_sethash(&args);
++	error = xfs_attr_setname(&args, false);
+ 	if (error == -EEXIST)
+ 		error = 0;
  
-+DECLARE_EVENT_CLASS(xrep_pptr_salvage_class,
-+	TP_PROTO(struct xfs_inode *ip, unsigned int flags, const void *name,
-+		 unsigned int namelen, const void *value, unsigned int valuelen),
-+	TP_ARGS(ip, flags, name, namelen, value, valuelen),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_ino_t, parent_ino)
-+		__field(unsigned int, parent_gen)
-+		__field(unsigned int, namelen)
-+		__dynamic_array(char, name, namelen)
-+	),
-+	TP_fast_assign(
-+		const struct xfs_parent_rec	*rec = value;
-+
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->parent_ino = be64_to_cpu(rec->p_ino);
-+		__entry->parent_gen = be32_to_cpu(rec->p_gen);
-+		__entry->namelen = namelen;
-+		memcpy(__get_str(name), name, namelen);
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->parent_ino,
-+		  __entry->parent_gen,
-+		  __entry->namelen,
-+		  __get_str(name))
-+)
-+#define DEFINE_XREP_PPTR_SALVAGE_EVENT(name) \
-+DEFINE_EVENT(xrep_pptr_salvage_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, unsigned int flags, const void *name, \
-+		 unsigned int namelen, const void *value, unsigned int valuelen), \
-+	TP_ARGS(ip, flags, name, namelen, value, valuelen))
-+DEFINE_XREP_PPTR_SALVAGE_EVENT(xrep_xattr_salvage_pptr);
-+DEFINE_XREP_PPTR_SALVAGE_EVENT(xrep_xattr_insert_pptr);
-+
- TRACE_EVENT(xrep_xattr_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_inode *arg_ip),
- 	TP_ARGS(ip, arg_ip),
 
