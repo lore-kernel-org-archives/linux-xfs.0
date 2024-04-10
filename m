@@ -1,42 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FF3F16F270
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 15:00:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A4816D9B0;
+	Wed, 10 Apr 2024 15:05:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712761213; cv=none; b=cIW4wGjHLTQeDLF1h4jBH5/nesU0XcsCSTgrZtWSc4LeB34Q+1lf0EPBokZsrD3u6xair9Q7SPWN6j1zBD+DpfirSPx9TGSQKgiFz/OXSwEkzouamGawJGgFI1s+GHyMHd/7r/mKjb+L9qBI2pTtRwNohNNdZSVFy6MHi1T+vDQ=
+	t=1712761523; cv=none; b=JHTLmumjQqxNgDZbyPTqRBPferJ+ydWNg4egXrCcqLHGRyZxHTViPvn+ViAahPdiGBmFI5jAyFfwNoef2i5PKPPAASGLFc3LvMI/JFdffL+0ZghSm0jO9o8H3qzWGJ52UXaGMqH0jDDPofDszzNKS07N7uQMzFpZBvuhq84193w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712761213; c=relaxed/simple;
-	bh=6f+Y7aVVCYPrkFIER9sTX8tjSO5dywc+9gHFjda0LmI=;
+	s=arc-20240116; t=1712761523; c=relaxed/simple;
+	bh=tjuI6dO27kRilxRkFeKZsSI4SFgbM+T4R+64oul27Fg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZPrSITasnlR2ClWyr0MmDp1AZz7LAFNDTnvd9byIpY1kB5ix2Ix9deKaL+/jnSfMWUmgFLvtHJ9E4S2E0sF6Mx/P0Rx2fNjQcYLPy4Gk1orFcqw+rL4D+2opDQlk2koXruWsKC8PZJnpFQJm23uQW5aEcx5pkihPfmvGhk3iw1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oZIgWWpf; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=eCHHGeFquUA0s5Z6ZiEWzam9BTVYQwMla3iCpkR/miKAHIx4+z43YwheYQrvMjvnKBpPbiBpceHvj5B0K1yIu1vLFCWTeUNbVs06D+izsYKhNYGqHKThn1XwmoiF0U9a8TUa0jU1bMO5l/DdN/LdMihocdQmBmWG2r8/e1rsME4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t9TMaVXQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oZIgWWpf"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Hi7wj4RrzwN98lzIZOcha8Qu1ROxRLqab/8M1PvPQGY=; b=oZIgWWpfaLKmvXYMkgxSAwqzCn
-	AWH1120sLvs4bejec+URlBDafrJAEyhZ5DNNHuV55LJv3q6/z8ZTzu59sgMx43oyblLjXr/i9DeDJ
-	alVCkI5vha5aH3iDHFmC9NiXRwr+Tbn9+nFMSTvhrRi55r52TbE/k5awVkb6uXmRSqt4Yq85gIppr
-	CiAoArafD3az57sM7H2+S///noQR6d5n3+dEt4vlt7LaCi+QiwIe6le0f8YNbSaWr3hbT9hSn0vy4
-	icyyMRlKaRGDfVB1k0R/E/2Q3eRx0Fbr0Wmp8Jcs1iE6svBNgIqesYyDG2n+qjAcKha/zPzSj7BLD
-	qeaoZanQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruZQp-00000007emu-1FhJ;
-	Wed, 10 Apr 2024 15:00:11 +0000
-Date: Wed, 10 Apr 2024 08:00:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: introduce vectored scrub mode
-Message-ID: <Zhapez1auz_thPN1@infradead.org>
-References: <171270972010.3634974.14825641209464509177.stgit@frogsfrogsfrogs>
- <171270972051.3634974.4637574179795648493.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t9TMaVXQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9ECF3C433F1;
+	Wed, 10 Apr 2024 15:05:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712761522;
+	bh=tjuI6dO27kRilxRkFeKZsSI4SFgbM+T4R+64oul27Fg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=t9TMaVXQd7kd+YJHRsDhBHFSqgbBh5Ym3G2tnEMSZOdCa0LWbyG5otWJU5Kv2nm7R
+	 QzfeXLLivFVYlg9GNO3amacV5uumUL7Pc9/AWY4UFVO5e1mmUY8u8NMsVO492x1Suj
+	 RaxQZd3RUDB2S1yiTl0yInhRSHNNzsT38RzGJTqqNG11ouEFDWrHndEdAyIo/6ZNcf
+	 qU+aSKMW1P49DBKXQGZ6jBwHpF+2Ver8BwdLsf81mhY6yecqIaF3dPL4ZARJYKvSF4
+	 fHQ2LQFc5ahsTHmtZagHOVDH+RdqZFuhrGUGhfIf0Rgibg3+Jf61jUH8DxWbXi9M3G
+	 n33WwXc7tzGbg==
+Date: Wed, 10 Apr 2024 08:05:21 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Eric Sandeen <sandeen@redhat.com>, Zorro Lang <zlang@kernel.org>,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 6/6] xfs: don't run tests that require v4 file systems
+ when not supported
+Message-ID: <20240410150521.GU6390@frogsfrogsfrogs>
+References: <20240408133243.694134-1-hch@lst.de>
+ <20240408133243.694134-7-hch@lst.de>
+ <20240409155612.GF634366@frogsfrogsfrogs>
+ <20240410041402.GB2208@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,67 +46,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171270972051.3634974.4637574179795648493.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240410041402.GB2208@lst.de>
 
-On Tue, Apr 09, 2024 at 06:08:54PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Apr 10, 2024 at 06:14:02AM +0200, Christoph Hellwig wrote:
+> On Tue, Apr 09, 2024 at 08:56:12AM -0700, Darrick J. Wong wrote:
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  common/xfs    | 10 ++++++++++
+> > >  tests/xfs/002 |  1 +
+> > 
+> > Looks fine to me.
+> > 
+> > >  tests/xfs/045 |  1 +
+> > 
+> > xfs_db can change uuids on v5 filesystems now, so we don't nee the
+> > -mcrc=0 in this test.
 > 
-> Introduce a variant on XFS_SCRUB_METADATA that allows for a vectored
-> mode.  The caller specifies the principal metadata object that they want
-> to scrub (allocation group, inode, etc.) once, followed by an array of
-> scrub types they want called on that object.  The kernel runs the scrub
-> operations and writes the output flags and errno code to the
-> corresponding array element.
+> Ok, I'll look into that.
 > 
-> A new pseudo scrub type BARRIER is introduced to force the kernel to
-> return to userspace if any corruptions have been found when scrubbing
-> the previous scrub types in the array.  This enables userspace to
-> schedule, for example, the sequence:
+> > Looks fine to me.
+> > 
+> > >  tests/xfs/148 |  2 ++
+> > 
+> > I wonder if we could rewrite this test to use either the xfs_db write -d
+> > command on dirents or attrs directly; or the link/attrset commands,
+> > since AFAICT the dir/attr code doesn't itself run namecheck when
+> > creating entries/attrs.
 > 
->  1. data fork
->  2. barrier
->  3. directory
+> Can I leave that to you? :)
+
+Yes.
+
+> > >  tests/xfs/158 |  1 +
+> > >  tests/xfs/160 |  1 +
+> > 
+> > inobtcount and bigtime are new features, maybe these two tests should
+> > lose the clause that checks that we can't upgrade a V4 filesystem?
 > 
-> If the data fork scrub is clean, then the kernel will perform the
-> directory scrub.  If not, the barrier in 2 will exit back to userspace.
+> I'll take a look.
 > 
-> When running fstests in "rebuild all metadata after each test" mode, I
-> observed a 10% reduction in runtime due to fewer transitions across the
-> system call boundary.
+> > >  tests/xfs/194 |  2 ++
+> > 
+> > Not sure why this one is fixated on $pagesize/8.  Was that a requirement
+> > to induce an error?  Or would this work just as well on a 1k fsblock fs?
+> > 
+> > (Eric?)
+> 
+> I can check if it could be made to work on $pagesize/4, but I'll
+> need to defer to Eric if that even makes sense.
+> 
+> > >  tests/xfs/513 |  1 +
+> > 
+> > I think we should split this into separate tests for V4/V5 options and
+> > only _require_xfs_nocrc the one with V4 options, because I wouldn't want
+> > to stop testing V5 codepaths simply because someone turned off V4
+> > support in the kernle.
+> 
+> Ok.
+> 
+> > >  tests/xfs/526 |  1 +
+> > 
+> > I'm at a loss on this one -- what it does is useful, but there aren't
+> > any V5 mkfs options that conflict as nicely as crc=0 does.
+> 
+> Yes, I tried to look for conflicting options, but I couldn't find
+> anything.  Maybe we'll grow some before the v4 support is retired
+> for real :)
 
-Just curius: what is the benefit over shaving a scruball $OBJECT interface
-where the above order is encoded in the kernel instead of in the
-scrub tool?
+Well hilariously just yesterday djwong-wtf just grew one now that you
+can't format rtgroups=1 without exchange=1 so I guess there's some hope.
 
-> +	BUILD_BUG_ON(sizeof(struct xfs_scrub_vec_head) ==
-> +		     sizeof(struct xfs_scrub_metadata));
-> +	BUILD_BUG_ON(XFS_IOC_SCRUB_METADATA == XFS_IOC_SCRUBV_METADATA);
+--D
 
-What is the point of these BUILD_BUG_ONs?
-
-> +	if (copy_from_user(&head, uhead, sizeof(head)))
-> +		return -EFAULT;
-> +
-> +	if (head.svh_reserved)
-> +		return -EINVAL;
-> +
-> +	bytes = sizeof_xfs_scrub_vec(head.svh_nr);
-> +	if (bytes > PAGE_SIZE)
-> +		return -ENOMEM;
-> +	vhead = kvmalloc(bytes, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
-
-Why __GFP_RETRY_MAYFAIL and not just a plain GFP_KERNEL?
-
-> +	if (!vhead)
-> +		return -ENOMEM;
-> +	memcpy(vhead, &head, sizeof(struct xfs_scrub_vec_head));
-> +
-> +	if (copy_from_user(&vhead->svh_vecs, &uhead->svh_vecs,
-> +				head.svh_nr * sizeof(struct xfs_scrub_vec))) {
-
-This should probably use array_size to better deal with overflows.
-
-And maybe it should use an indirection for the vecs so that we can
-simply do a memdup_user to copy the entire array to kernel space?
-
+--D
