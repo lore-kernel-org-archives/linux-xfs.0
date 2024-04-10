@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C975C181BBC
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 20:58:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F6C6181BBF
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 21:04:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712782695; cv=none; b=JnHKZq58SHEEzqHvqI7vv02hiyYx88ckhEp1+gC/GQECzvG/wkITOlfLEvLyyQ0UK+DZ889wbx9yXWjJOmHo4XURovZCqYZddrVV3XLz/7U6fwRdPXB1/I0U01G9kMhM7R2aTekj/lHjqmPiCSYfZ3yFipkfAFDXYmPZq5YlDr0=
+	t=1712783059; cv=none; b=V7QFLoV0NZJHiQ6TbFEiko768BDApdPWiyu7uxgIAdqubPSHC+rqYALDnFTD5PZs3DUI8EmjgURwWgwfoM58NJcLjcj4iGm6ZZjLrrD+cfnBiqU+3pqSvXOKfE8mt/Uq2ws+nbkIHeiqenoNaHXkV/LqOLHoEukIAHkarrET//M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712782695; c=relaxed/simple;
-	bh=Il5uoZLTTC4Vfe/PKvWJX8grKZ+biWLQPnKzoiPIHUQ=;
+	s=arc-20240116; t=1712783059; c=relaxed/simple;
+	bh=6l7NiH8xyCC3iCTzhiELMpqxluN5NNqzIgCyJO88CQg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fzJvh6n8+53L9Bl75a7Lrl/0SikxIMS45FGPtI+9hlx5FJiz3RTv7E/0bFJ4PE2YdnIf1kv/1xBi3pfSjwIuqkYFYiTPyxu9ARK+1kXVLC1QxKTn9plRGELGOzpTmwyRWbwfPC9eymaDVztycdWnub0Zh4ZDktDgpP+WYljG2Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dyfHdGq0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XxFZMB7UjSrWT9dgJoISxaGdfHR7g3dfU2LkG2dLW0Phpp8niVen+QW8c+xJwLBNJ7TZJzYURYGhEdRFx9CXpDEN2ihn6wqj7mEtXQJLpNXpr8GVX4XuIJiLuELQ71h4QCAtXhF7mvBByCUw+TjTB+d/ormNvYZ4AOEkYN0TwiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FddH1X0t; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dyfHdGq0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5810DC433F1;
-	Wed, 10 Apr 2024 20:58:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FddH1X0t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50845C433C7;
+	Wed, 10 Apr 2024 21:04:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712782695;
-	bh=Il5uoZLTTC4Vfe/PKvWJX8grKZ+biWLQPnKzoiPIHUQ=;
+	s=k20201202; t=1712783059;
+	bh=6l7NiH8xyCC3iCTzhiELMpqxluN5NNqzIgCyJO88CQg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dyfHdGq0UBkF36yR7ClMJ0zrxJ4wMRId/LFDuvWJS4pImiuqUGNH3euOVu4fS1/sD
-	 cz4bWFY5mn+eLQdWpM0hQhqmAGhcN3eEIYRX1FU3ayk85myPk7a+bD7zwjCeDW1Qpe
-	 N+Sz6izTTF34Im7V2q2+UZlWlRPM5jfOM/tkQgVHWNY4X1kJ3Ze2JmnQgkGwiTxHQ9
-	 4KeXbaPuya6KBVq7wXLl3wefXY3ZuOp8puo24IneAuGWzf6E6l6oTkNqWju8HTL6bH
-	 lKRkHaUuaiJGZknVDl2abgYAvg+N/cT88RbHxgNLRl1gqpxn/4AsU0ROV4zbqlZP2n
-	 Zlxn/sQUAwCtw==
-Date: Wed, 10 Apr 2024 13:58:14 -0700
+	b=FddH1X0t3Eb1c0gZeAl2H0S8njRX9k2Y1pTqSilljCs8kzbEXaXbzky8dBMhWokvH
+	 jDLRuX+LGCvalHcdI8GBmcM8ujrqBLnZK05LIhKo+Cap1oVQ2SRTbiAA0aaw6qeCIC
+	 1/GZFEZAdX3P7wIjm2vOzFyDhzfqMKk4cGCIJl2Fgm+rtfnS5DiXT6Cs6qGzvbzRf6
+	 Ys1mD5yWgLZpWfNArNscv/ybbxTYJ4eDEYPc9nU0GfTGW8Q5vSbjB632F9BHZWSwVF
+	 Zi387ww4y6tDiN/PR01aKIc7nLZFaRdVquaTEnv65hzZqDwbmhhS/f8NTGf6QE0czo
+	 hNmWJim/TQiOg==
+Date: Wed, 10 Apr 2024 14:04:18 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/12] xfs: attr fork iext must be loaded before calling
- xfs_attr_is_leaf
-Message-ID: <20240410205814.GB6390@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/12] xfs: fix missing check for invalid attr flags
+Message-ID: <20240410210418.GC6390@frogsfrogsfrogs>
 References: <171270968824.3631545.9037354951123114569.stgit@frogsfrogsfrogs>
- <171270968870.3631545.18232340920205425116.stgit@frogsfrogsfrogs>
- <ZhYdyz8n0EU4Hrpc@infradead.org>
+ <171270968933.3631545.17328111564626328171.stgit@frogsfrogsfrogs>
+ <ZhYefgcsDhixG9AG@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,31 +43,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhYdyz8n0EU4Hrpc@infradead.org>
+In-Reply-To: <ZhYefgcsDhixG9AG@infradead.org>
 
-On Tue, Apr 09, 2024 at 10:04:11PM -0700, Christoph Hellwig wrote:
-> On Tue, Apr 09, 2024 at 05:50:38PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Christoph noticed that the xfs_attr_is_leaf in xfs_attr_get_ilocked can
-> > access the incore extent tree of the attr fork, but nothing in the
-> > xfs_attr_get path guarantees that the incore tree is actually loaded.
-> > 
-> > Most of the time it is, but seeing as xfs_attr_is_leaf ignores the
-> > return value of xfs_iext_get_extent I guess we've been making choices
-> > based on random stack contents and nobody's complained?
+On Tue, Apr 09, 2024 at 10:07:10PM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 09, 2024 at 05:51:41PM -0700, Darrick J. Wong wrote:
+> > +#define XFS_ATTR_ONDISK_MASK	(XFS_ATTR_NSP_ONDISK_MASK | \
+> > +				 XFS_ATTR_LOCAL | \
+> > +				 XFS_ATTR_INCOMPLETE)
 > 
-> Yes, I'm kinda puzzled.
+> Note that XFS_ATTR_LOCAL and XFS_ATTR_INCOMPLETE are not valid for
+> short form directories.  Should we check for that somewhere as well?
 
-I suspect that most of the time we get lucky and *someone* has read in
-the attr fork or created it or whatever.
+Good point, xchk_xattr_check_sf should be flagging those too:
 
-> Note that the dir code actually reads the extents in their
-> is_leaf/is_block helpers.  But given how the attr code is structured
-> that would thread through a lot of code so it might not be worth it.
+	/*
+	 * Shortform entries do not set LOCAL or INCOMPLETE, so the only
+	 * valid flag bits here are for namespaces.
+	 */
+	if (sfe->flags & ~XFS_ATTR_NSP_ONDISK_MASK) {
+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
+		break;
+	}
 
-<nod> But it would be more consistent...
+I'll tack that on the end.
 
+> Otherwise looks good:
+> 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 Thanks!
