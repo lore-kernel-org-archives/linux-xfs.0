@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F340621
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:01:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 231DF818
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:01:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710896; cv=none; b=RC+WjEdAm4uOWaHcl2ajdJvz6tFESc0GK3FlAYEOv7oHsSKcxA+zjg07uWnJlIQUVtAilHtCwvNe9WoCDR4H+V10t2GmjviK4d1ga0nJGVwXAfpa/beev2oOSTH4HF9wIVTcjTZgM0pV5FjohPozXdGLp3m5YvYBrjp0bAEEt2Q=
+	t=1712710912; cv=none; b=c6EX/qbqRhf0A3DbFeFsJWceGjJJWDsQoC4QXjPja7smY1hTUf50lmVAbCxHZaWy9c9F0rHofiqvzisgP6HvHWmdXB3FWr1TAA1016WiWpFG+QvD8H/ISxTFPdgQJCRvH6yXX9tZvG4qhRdGjNjh9ystewirsW3V4Bxc0GAY+l8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710896; c=relaxed/simple;
-	bh=a44EIScXpHqAYmMge+z4VGTetNu72SJqVZnLBAQHNAM=;
+	s=arc-20240116; t=1712710912; c=relaxed/simple;
+	bh=Vh0g21My62IAb/SmyG4ANLlu3Q/qVbU4YFw4EOLqXmo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LDi4FLBNGNoIlJBcUydLAE9fHzKBuyYM6uDPootLaye4e6TjD4BNOLqHotEVxuWvZ/dATdCJRLHxI5QlUuDZPktmBKz0NIgcF+nJ03sKNG6DPJSpEuLybf1MiO0xS7mK3YaANwqi0VBNktnn+bSrtCvFbweDpvtDYlpz9Lz+Hz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YK+rTSEC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GkO/ZTvb86G+YHh3AdxeRTlMJc9Jixafti+seUa0f42OvwCeuCeKRiEmra7mSKcyov8hCXKhizD+rnkW15bJAWnWSt+KwPCXf1/b2LrbSiE0fOC15uzukXniKjAfQhzaTsPsHFHLXEwxnGjDHWpwr6G1MbaLLl/oI/4UQmsY3vQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZWOZzyQZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YK+rTSEC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44305C433F1;
-	Wed, 10 Apr 2024 01:01:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZWOZzyQZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAE62C433C7;
+	Wed, 10 Apr 2024 01:01:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710896;
-	bh=a44EIScXpHqAYmMge+z4VGTetNu72SJqVZnLBAQHNAM=;
+	s=k20201202; t=1712710912;
+	bh=Vh0g21My62IAb/SmyG4ANLlu3Q/qVbU4YFw4EOLqXmo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YK+rTSEC4yIcmkO7j1iVolkFW9Zmklxe0Ps0+hudZg0HElDr+xAtYnqDtjlAW48QG
-	 mNwxAG6zt0MirV5rw/uSM+8HwFUzK2dVCW9iDDJFrtbJi3RD4SmQnrrZ/uwFvi2hXV
-	 ePSU18c0tlInZQzCXjjo+15IyMCRIF3G7jc5XSLHw9C0QCRZVtxixMLEfvyy+JDasc
-	 mkgMwOH8kHExF+dZN6RTTdwNZTyzGocNYSkaEDabnRCCkL7pP1o1k0AHRLArtQGviQ
-	 X0qnlGTfZwNBlSG8zfeHMkOwJaBRf6FVFmQIWL5OmdKmOMdLw/AGHABAWcDJ/ImN+3
-	 jkb7OgiXvQA0A==
-Date: Tue, 09 Apr 2024 18:01:35 -0700
-Subject: [PATCH 31/32] xfs: drop compatibility minimum log size computations
- for reflink
+	b=ZWOZzyQZzUxASFbPM2cxKGdq8dmGPoVKjI7qOc8ghVyffw4DR4SiKfThNAlMYP5fZ
+	 pBxIixVfJt8s9WeYDEgA76hLJZ6wxweozZg4Vk58oCADwe3Wxc1r/bT+4HdJE3+toH
+	 ZBP/+agJqXqZbL8Z06mDOw1xv6ipv5zts/b2oTp9359jjRR/cekkgv5a2xuinE/Tva
+	 uTDDt58BBsJ8YAr4KxMyTr6AAUz/TJx1eO6kKtjHo9jn3824AcQmlM390YSFQjifvq
+	 xW8sUVxpc77S9NuStzlWEWzKucVZWhFcoP6MIkveM9ypFZaGG4Iybfl6pqEZs0i0hi
+	 CcA4NjCKsGPFA==
+Date: Tue, 09 Apr 2024 18:01:51 -0700
+Subject: [PATCH 32/32] xfs: enable parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>,
- catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270970075.3631889.13494808585016033882.stgit@frogsfrogsfrogs>
+Message-ID: <171270970091.3631889.3723065069358160559.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,46 +47,26 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Let's also drop the oversized minimum log computations for reflink and
-rmap that were the result of bugs introduced many years ago.
+Add parent pointers to the list of supported features.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_log_rlimit.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-index 3518d5e21df03..d3bd6a86c8fe9 100644
---- a/fs/xfs/libxfs/xfs_log_rlimit.c
-+++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-@@ -24,6 +24,11 @@
-  * because that can create the situation where a newer mkfs writes a new
-  * filesystem that an older kernel won't mount.
-  *
-+ * Several years prior, we also discovered that the transaction reservations
-+ * for rmap and reflink operations were unnecessarily large.  That was fixed,
-+ * but the minimum log size computation was left alone to avoid the
-+ * compatibility problems noted above.  Fix that too.
-+ *
-  * Therefore, we only may correct the computation starting with filesystem
-  * features that didn't exist in 2023.  In other words, only turn this on if
-  * the filesystem has parent pointers.
-@@ -80,6 +85,15 @@ xfs_log_calc_trans_resv_for_minlogblocks(
- {
- 	unsigned int		rmap_maxlevels = mp->m_rmap_maxlevels;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index b457e457e1f71..61f51becff4f7 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -382,7 +382,8 @@ xfs_sb_has_ro_compat_feature(
+ 		 XFS_SB_FEAT_INCOMPAT_BIGTIME | \
+ 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
+ 		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
+-		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE)
++		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE | \
++		 XFS_SB_FEAT_INCOMPAT_PARENT)
  
-+	/*
-+	 * If the feature set is new enough, drop the oversized minimum log
-+	 * size computation introduced by the original reflink code.
-+	 */
-+	if (xfs_want_minlogsize_fixes(&mp->m_sb)) {
-+		xfs_trans_resv_calc(mp, resv);
-+		return;
-+	}
-+
- 	/*
- 	 * In the early days of rmap+reflink, we always set the rmap maxlevels
- 	 * to 9 even if the AG was small enough that it would never grow to
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+ static inline bool
 
