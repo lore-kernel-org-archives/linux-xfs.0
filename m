@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FA5737C
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:44:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0009C37C
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:45:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712709895; cv=none; b=JeggqjoVS6ZDQCRiDbr2rMncbbcqLAUPnht0vQhdvanhIZhGcN8DZPZQOAfGcUeKFPCxtkxegsNlD6Umgj8vBchkQ0csc9YiKf4YKnuFAemooyURhDjDdWMt6K6uvBfHpp5kQJqdkfg4y4bWxkq4DZrPZRqKiK1gRWqh5LVoRQA=
+	t=1712709911; cv=none; b=ljzI4r4UAI3yqDYQNeFKqD/1vpbPTWefsXqoNd/R0qxQKHCYNN7sGB0d/PITH7QDj/azyqm+dhjSOf41en1lEsMaNCjMB1GSpNEB5pYATrKvNTBRIwRnr06iN3ZOp04msszHd0I9vtWJzDRKNi3gRABrpDWQ/7q6tQuvUYvkTOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712709895; c=relaxed/simple;
-	bh=lqTmnnr/qNW4xWt6SU/ZNSlKmEhWv86Mv2bf0JMoK28=;
+	s=arc-20240116; t=1712709911; c=relaxed/simple;
+	bh=Vbfzdrb6ven3KQKsgrkxior/IsKJfcco6y5B+fQCzpo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LGKjc9bL867pf8x3d9Z4qE+NfEQbt4QQ4rKW6iF9pEmEtO5otV3oGJcHgRqouhKz364SfiwQ5VRRTp7fGNaWJMpYau3sJittAuy/mV3xPPYjq2xfb4vOm6tBgZz/QbTCXRfdYCT1iQeVoC3af3V2jPekCldysKIpxSi3Cbi5AdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=InjGPiuk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hdl/9lk5cyeFl/M27rYaxC3Efb0UO34nxYormS1GlziE2xNwNX00iGboZN2dMNHahfDY/CvEY1KItfDiVrzgPjXvJZ7QZEBXs7c4q71wsYE7UaxCj9scudvoOBu9alesbheVjQT5Z+dPU+0RtupTVnM9a9evUNC7lzeSbvM8vOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WNqAgety; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="InjGPiuk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA9DCC433F1;
-	Wed, 10 Apr 2024 00:44:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WNqAgety"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70EE7C433F1;
+	Wed, 10 Apr 2024 00:45:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712709894;
-	bh=lqTmnnr/qNW4xWt6SU/ZNSlKmEhWv86Mv2bf0JMoK28=;
+	s=k20201202; t=1712709910;
+	bh=Vbfzdrb6ven3KQKsgrkxior/IsKJfcco6y5B+fQCzpo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=InjGPiukbN0HygCNnE8GEUx1DnLsvEk+MswN72LeMVR4XQNZMWgSZaOhLhyBq0gTZ
-	 B+FYoIvV+fBlmMLOOyerW2M+O5HhiAf5PGNmUhDPtfwcNoRWaPUfJ2rHczBiLEiwYG
-	 GAlyfF8sH7TNhhU/ZhbqFUblSL6zF/tQUeG462bQ+zGwQXCUQwEUQgP5ck1Ma5jjp4
-	 brZf8/fRDS1uRVTkQTQUa20jnz7ZkjgCbpjMSXH3qZqNWODjJnG6a4bCGWTq9GuEFz
-	 7/70X0pseW1aM459tO035FmVtQap3e7yYoQeEtk/7l9WG7zTRei7cUMdnEy6SQn7Qv
-	 C1iCYUA7ZRs1A==
-Date: Tue, 09 Apr 2024 17:44:54 -0700
-Subject: [PATCHSET v13.1 3/9] xfs: shrink struct xfs_da_args
+	b=WNqAgetylTRznynGCThS7xocoPMjTmGEKDYeX7dW4ggBZmu7UiG2N0FX508UowGRU
+	 Bv7Uir2Ejuf4YPts7AFIRg+6hq/jZ3d9+F8YdXFCE+K2gZgmhkX1UpYawC6HZRsNAo
+	 xBXrUl7zAqU4ets+3k3tUPFLxJzWkGapA1UoarbIMMo3JXh6dG0SQpTJcxjGy1YMpE
+	 FSmCESvqqMxf+P9bDPHQOa0+thNA1CnpBVYurMs8lOZU1bKpDD6D2o6ZEi1i8bkmAM
+	 xsxMX1rBSNzV/wpPc8C0GbpQrk479O9WG1JJbG6e4d+SaH7kxDKvSK9UFvvnhBPnvY
+	 LUNSiTZ4WuyBA==
+Date: Tue, 09 Apr 2024 17:45:10 -0700
+Subject: [PATCHSET v13.1 4/9] xfs: improve extended attribute validation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171270968374.3631393.14638451005338881895.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171270968824.3631545.9037354951123114569.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240410003646.GS6390@frogsfrogsfrogs>
 References: <20240410003646.GS6390@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,7 +46,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Let's clean out some unused flags and fields from struct xfs_da_args.
+Prior to introducing parent pointer extended attributes, let's spend
+some time cleaning up the attr code and strengthening the validation
+that it performs on attrs coming in from the disk.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -57,24 +59,35 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=shrink-dirattr-args
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=improve-attr-validation
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=shrink-dirattr-args
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=improve-attr-validation
 ---
 Commits in this patchset:
- * xfs: remove XFS_DA_OP_REMOVE
- * xfs: remove XFS_DA_OP_NOTIME
- * xfs: rename xfs_da_args.attr_flags
- * xfs: rearrange xfs_da_args a bit to use less space
+ * xfs: attr fork iext must be loaded before calling xfs_attr_is_leaf
+ * xfs: require XFS_SB_FEAT_INCOMPAT_LOG_XATTRS for attr log intent item recovery
+ * xfs: use an XFS_OPSTATE_ flag for detecting if logged xattrs are available
+ * xfs: check opcode and iovec count match in xlog_recover_attri_commit_pass2
+ * xfs: fix missing check for invalid attr flags
+ * xfs: restructure xfs_attr_complete_op a bit
+ * xfs: use helpers to extract xattr op from opflags
+ * xfs: validate recovered name buffers when recovering xattr items
+ * xfs: always set args->value in xfs_attri_item_recover
+ * xfs: use local variables for name and value length in _attri_commit_pass2
+ * xfs: refactor name/length checks in xfs_attri_validate
+ * xfs: enforce one namespace per attribute
 ---
- fs/xfs/libxfs/xfs_attr.c     |    9 ++++-----
- fs/xfs/libxfs/xfs_attr.h     |    1 -
- fs/xfs/libxfs/xfs_da_btree.h |   30 ++++++++++++++----------------
- fs/xfs/scrub/attr.c          |    1 -
- fs/xfs/scrub/attr_repair.c   |    2 +-
- fs/xfs/xfs_ioctl.c           |    6 +++---
- fs/xfs/xfs_trace.h           |    6 +++---
- fs/xfs/xfs_xattr.c           |    2 +-
- 8 files changed, 26 insertions(+), 31 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c      |   41 ++++++++-
+ fs/xfs/libxfs/xfs_attr.h      |    9 ++
+ fs/xfs/libxfs/xfs_attr_leaf.c |    7 +
+ fs/xfs/libxfs/xfs_da_format.h |    5 +
+ fs/xfs/scrub/attr.c           |   25 +++--
+ fs/xfs/scrub/attr_repair.c    |    4 -
+ fs/xfs/xfs_attr_item.c        |  192 ++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_attr_list.c        |   18 +++-
+ fs/xfs/xfs_mount.c            |   16 +++
+ fs/xfs/xfs_mount.h            |    6 +
+ fs/xfs/xfs_xattr.c            |    3 -
+ 11 files changed, 258 insertions(+), 68 deletions(-)
 
