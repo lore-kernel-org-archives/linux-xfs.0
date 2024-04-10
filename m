@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E06C391
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:59:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB09410E5
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:00:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710787; cv=none; b=gQqVjnf1g58l6jk8U4B/iQfYUcMwAwCRrx/NsoqSASvPev0jxfCoHtkdw9HvLO1lsosoSh6Uec97+wxIKIquNjVrwDxcMvTDRJzK87MWmrbLkLG4RJIatVjpXUNWW7i2WDOobhV+n6KAHxjjSpVZeeobVYOP7YX1BkGT6pmJWlA=
+	t=1712710803; cv=none; b=UpnoB7wYSeNh4/YD3wrTId4gkuSYh/G3+Y6LbdXXukeUkpp2tpYxfWUZQRGEN8BStnxxqBpTUUcdWM4A+HVTU3cAOMtmrbUs4FcMld0TnVNbbySKkci7CnPsY1FwDmYzTiuzJ2TaZmQtoMponWzq7AhKfghzeZXFtOKLC4vUgXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710787; c=relaxed/simple;
-	bh=bowjWDD/QOEvUSxk0hlxVuspKIpC3UPkUWr1Ta3j5io=;
+	s=arc-20240116; t=1712710803; c=relaxed/simple;
+	bh=MejuNcP3pgSV4/hLRJmQaLVm3hkOP9fUNOpKm8t7UTE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D+bPoBWPniRa5pgzLZSAt2BuBuMO9lzwXt6O9Tv4CfylJitkcYbrPqPnitPOzO0y5Mb2c05YLay/l1fcKOJ32+s/nMHOkOCDuMaKzLKDSEZfMPfKR1Uvh9VovWFlqJHWgZqNNm2Q4zx6fskLY3puX/H0O2NKZJYbTFWQ3y+CLls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p9oS1Bkv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EWA5IzvTyRTjMPHNaRbdWDbCMv6bZA6nOr2N/PQuHrXmXeWoIMxzKDsB+FgbrHpBHJVF0Y3MWPGtlRmc6qlh8U3TI3Tt6wRwzQaV7UCJ+6SitOHuAqE11ieB0f+XAq0Zzvlr9Ie943Uc1ejDNz5df68NuELP6s3+HlXQ342fBOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gGm7L1mv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p9oS1Bkv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B64BDC433F1;
-	Wed, 10 Apr 2024 00:59:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gGm7L1mv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 681C0C43390;
+	Wed, 10 Apr 2024 01:00:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710786;
-	bh=bowjWDD/QOEvUSxk0hlxVuspKIpC3UPkUWr1Ta3j5io=;
+	s=k20201202; t=1712710802;
+	bh=MejuNcP3pgSV4/hLRJmQaLVm3hkOP9fUNOpKm8t7UTE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=p9oS1Bkv4MMH+lMfNihBSVw0vB4IBQCXFH8uO3kdJdzr0dvFjx3Of/hsZqMVl7i2T
-	 +hJcY/Lc1MrqGjaPN8JgDMxgD5w2pXkOKbyzaMSKyfIBe11AUDEVWVwfxg7J2vKuTc
-	 UWYY+HGs64VKSYeTp0QWguRJpHXJ2yqHZzB85qs8prhaBr/qgj66M4Go155yKbnQh6
-	 1g5aSN5Ua4TbmYro0FBBmK23YxUgK3XZSVJoyOevJ0cHt/PmN/Z9/FNzNq+3LS2tQA
-	 BSYQErYe9MwysZy6hYfa1wpBZnTcSuXx9ELeOmDPftsGZqz74rFz+ZzhCa+x/Iebaq
-	 dz8FmzHS9nA5Q==
-Date: Tue, 09 Apr 2024 17:59:46 -0700
-Subject: [PATCH 24/32] xfs: pass the attr value to put_listent when possible
+	b=gGm7L1mvGHN1zSet5he1v6jAYl6oCgW697KswFtDngUOHT1jTOyEzezLngPdkobbx
+	 wvmMAY/NeSCDhcobnME+dgOgI2G9C0oxwM6mmFDGChjPLfMtR7YxqNDNuHNg0jbp3p
+	 vcBORPKgOBqmfle/P6tBUoVVZwwshCVJcRiskvowE8tNmbPEJfSLRH9LnBKqDCYEXE
+	 62OHM5KjF2SJf5QaU0SmOk0irw0cIYNy+eSBElE9Yq4uVNJx87g3IWrGLr0s9ohb28
+	 Ug+lVT9Gmg+ZezcT9D4/QD+xOdXbOkeirq06d/Dx4gB/Lg0tbuq4KLLjTSYU4EeUWD
+	 vXNkXpurct2Lg==
+Date: Tue, 09 Apr 2024 18:00:01 -0700
+Subject: [PATCH 25/32] xfs: move handle ioctl code to xfs_handle.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Allison Henderson <allison.henderson@oracle.com>,
- catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
+Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270969957.3631889.6582034396609138645.stgit@frogsfrogsfrogs>
+Message-ID: <171270969974.3631889.581031520799249475.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,134 +45,1361 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Pass the attr value to put_listent when we have local xattrs or
-shortform xattrs.
+Move the handle managemnet code (and the attrmulti code that uses it) to
+xfs_handle.c.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.h    |    5 +++--
- fs/xfs/libxfs/xfs_attr_sf.h |    1 +
- fs/xfs/xfs_attr_list.c      |    8 +++++++-
- fs/xfs/xfs_ioctl.c          |    1 +
- fs/xfs/xfs_xattr.c          |    1 +
- 5 files changed, 13 insertions(+), 3 deletions(-)
+ fs/xfs/Makefile      |    1 
+ fs/xfs/xfs_handle.c  |  617 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_handle.h  |   28 ++
+ fs/xfs/xfs_ioctl.c   |  591 ------------------------------------------------
+ fs/xfs/xfs_ioctl.h   |   28 --
+ fs/xfs/xfs_ioctl32.c |    1 
+ 6 files changed, 648 insertions(+), 618 deletions(-)
+ create mode 100644 fs/xfs/xfs_handle.c
+ create mode 100644 fs/xfs/xfs_handle.h
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index d63305fc54155..cb5ca37000848 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -47,8 +47,9 @@ struct xfs_attrlist_cursor_kern {
- 
- 
- /* void; state communicated via *context */
--typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
--			      unsigned char *, int, int);
-+typedef void (*put_listent_func_t)(struct xfs_attr_list_context *context,
-+		int flags, unsigned char *name, int namelen, void *value,
-+		int valuelen);
- 
- struct xfs_attr_list_context {
- 	struct xfs_trans	*tp;
-diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-index bc44222230248..73bdc0e556825 100644
---- a/fs/xfs/libxfs/xfs_attr_sf.h
-+++ b/fs/xfs/libxfs/xfs_attr_sf.h
-@@ -16,6 +16,7 @@ typedef struct xfs_attr_sf_sort {
- 	uint8_t		flags;		/* flags bits (see xfs_attr_leaf.h) */
- 	xfs_dahash_t	hash;		/* this entry's hash value */
- 	unsigned char	*name;		/* name value, pointer into buffer */
-+	void		*value;
- } xfs_attr_sf_sort_t;
- 
- #define XFS_ATTR_SF_ENTSIZE_MAX			/* max space for name&value */ \
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 9bc4b5322539a..5c947e5ce8b88 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -92,6 +92,7 @@ xfs_attr_shortform_list(
- 					     sfe->flags,
- 					     sfe->nameval,
- 					     (int)sfe->namelen,
-+					     &sfe->nameval[sfe->namelen],
- 					     (int)sfe->valuelen);
- 			/*
- 			 * Either search callback finished early or
-@@ -138,6 +139,7 @@ xfs_attr_shortform_list(
- 		sbp->name = sfe->nameval;
- 		sbp->namelen = sfe->namelen;
- 		/* These are bytes, and both on-disk, don't endian-flip */
-+		sbp->value = &sfe->nameval[sfe->namelen],
- 		sbp->valuelen = sfe->valuelen;
- 		sbp->flags = sfe->flags;
- 		sbp->hash = xfs_attr_hashval(dp->i_mount, sfe->flags,
-@@ -192,6 +194,7 @@ xfs_attr_shortform_list(
- 				     sbp->flags,
- 				     sbp->name,
- 				     sbp->namelen,
-+				     sbp->value,
- 				     sbp->valuelen);
- 		if (context->seen_enough)
- 			break;
-@@ -479,6 +482,7 @@ xfs_attr3_leaf_list_int(
- 	 */
- 	for (; i < ichdr.count; entry++, i++) {
- 		char *name;
-+		void *value;
- 		int namelen, valuelen;
- 
- 		if (be32_to_cpu(entry->hashval) != cursor->hashval) {
-@@ -496,6 +500,7 @@ xfs_attr3_leaf_list_int(
- 			name_loc = xfs_attr3_leaf_name_local(leaf, i);
- 			name = name_loc->nameval;
- 			namelen = name_loc->namelen;
-+			value = &name_loc->nameval[name_loc->namelen];
- 			valuelen = be16_to_cpu(name_loc->valuelen);
- 		} else {
- 			xfs_attr_leaf_name_remote_t *name_rmt;
-@@ -503,6 +508,7 @@ xfs_attr3_leaf_list_int(
- 			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
- 			name = name_rmt->name;
- 			namelen = name_rmt->namelen;
-+			value = NULL;
- 			valuelen = be32_to_cpu(name_rmt->valuelen);
- 		}
- 
-@@ -513,7 +519,7 @@ xfs_attr3_leaf_list_int(
- 			return -EFSCORRUPTED;
- 		}
- 		context->put_listent(context, entry->flags,
--					      name, namelen, valuelen);
-+					      name, namelen, value, valuelen);
- 		if (context->seen_enough)
- 			break;
- 		cursor->offset++;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 0c1a0b67af93c..c969b11ce0f47 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -78,6 +78,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_fsmap.o \
+ 				   xfs_fsops.o \
+ 				   xfs_globals.o \
++				   xfs_handle.o \
+ 				   xfs_health.o \
+ 				   xfs_icache.o \
+ 				   xfs_ioctl.o \
+diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
+new file mode 100644
+index 0000000000000..a0015dc8cff1a
+--- /dev/null
++++ b/fs/xfs/xfs_handle.c
+@@ -0,0 +1,617 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * All rights reserved.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_shared.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_trans.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr.h"
++#include "xfs_ioctl.h"
++#include "xfs_parent.h"
++#include "xfs_da_btree.h"
++#include "xfs_handle.h"
++#include "xfs_health.h"
++#include "xfs_icache.h"
++#include "xfs_export.h"
++#include "xfs_xattr.h"
++#include "xfs_acl.h"
++
++#include <linux/namei.h>
++
++/*
++ * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
++ * a file or fs handle.
++ *
++ * XFS_IOC_PATH_TO_FSHANDLE
++ *    returns fs handle for a mount point or path within that mount point
++ * XFS_IOC_FD_TO_HANDLE
++ *    returns full handle for a FD opened in user space
++ * XFS_IOC_PATH_TO_HANDLE
++ *    returns full handle for a path
++ */
++int
++xfs_find_handle(
++	unsigned int		cmd,
++	xfs_fsop_handlereq_t	*hreq)
++{
++	int			hsize;
++	xfs_handle_t		handle;
++	struct inode		*inode;
++	struct fd		f = {NULL};
++	struct path		path;
++	int			error;
++	struct xfs_inode	*ip;
++
++	if (cmd == XFS_IOC_FD_TO_HANDLE) {
++		f = fdget(hreq->fd);
++		if (!f.file)
++			return -EBADF;
++		inode = file_inode(f.file);
++	} else {
++		error = user_path_at(AT_FDCWD, hreq->path, 0, &path);
++		if (error)
++			return error;
++		inode = d_inode(path.dentry);
++	}
++	ip = XFS_I(inode);
++
++	/*
++	 * We can only generate handles for inodes residing on a XFS filesystem,
++	 * and only for regular files, directories or symbolic links.
++	 */
++	error = -EINVAL;
++	if (inode->i_sb->s_magic != XFS_SB_MAGIC)
++		goto out_put;
++
++	error = -EBADF;
++	if (!S_ISREG(inode->i_mode) &&
++	    !S_ISDIR(inode->i_mode) &&
++	    !S_ISLNK(inode->i_mode))
++		goto out_put;
++
++
++	memcpy(&handle.ha_fsid, ip->i_mount->m_fixedfsid, sizeof(xfs_fsid_t));
++
++	if (cmd == XFS_IOC_PATH_TO_FSHANDLE) {
++		/*
++		 * This handle only contains an fsid, zero the rest.
++		 */
++		memset(&handle.ha_fid, 0, sizeof(handle.ha_fid));
++		hsize = sizeof(xfs_fsid_t);
++	} else {
++		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
++					sizeof(handle.ha_fid.fid_len);
++		handle.ha_fid.fid_pad = 0;
++		handle.ha_fid.fid_gen = inode->i_generation;
++		handle.ha_fid.fid_ino = ip->i_ino;
++		hsize = sizeof(xfs_handle_t);
++	}
++
++	error = -EFAULT;
++	if (copy_to_user(hreq->ohandle, &handle, hsize) ||
++	    copy_to_user(hreq->ohandlen, &hsize, sizeof(__s32)))
++		goto out_put;
++
++	error = 0;
++
++ out_put:
++	if (cmd == XFS_IOC_FD_TO_HANDLE)
++		fdput(f);
++	else
++		path_put(&path);
++	return error;
++}
++
++/*
++ * No need to do permission checks on the various pathname components
++ * as the handle operations are privileged.
++ */
++STATIC int
++xfs_handle_acceptable(
++	void			*context,
++	struct dentry		*dentry)
++{
++	return 1;
++}
++
++/*
++ * Convert userspace handle data into a dentry.
++ */
++struct dentry *
++xfs_handle_to_dentry(
++	struct file		*parfilp,
++	void __user		*uhandle,
++	u32			hlen)
++{
++	xfs_handle_t		handle;
++	struct xfs_fid64	fid;
++
++	/*
++	 * Only allow handle opens under a directory.
++	 */
++	if (!S_ISDIR(file_inode(parfilp)->i_mode))
++		return ERR_PTR(-ENOTDIR);
++
++	if (hlen != sizeof(xfs_handle_t))
++		return ERR_PTR(-EINVAL);
++	if (copy_from_user(&handle, uhandle, hlen))
++		return ERR_PTR(-EFAULT);
++	if (handle.ha_fid.fid_len !=
++	    sizeof(handle.ha_fid) - sizeof(handle.ha_fid.fid_len))
++		return ERR_PTR(-EINVAL);
++
++	memset(&fid, 0, sizeof(struct fid));
++	fid.ino = handle.ha_fid.fid_ino;
++	fid.gen = handle.ha_fid.fid_gen;
++
++	return exportfs_decode_fh(parfilp->f_path.mnt, (struct fid *)&fid, 3,
++			FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG,
++			xfs_handle_acceptable, NULL);
++}
++
++STATIC struct dentry *
++xfs_handlereq_to_dentry(
++	struct file		*parfilp,
++	xfs_fsop_handlereq_t	*hreq)
++{
++	return xfs_handle_to_dentry(parfilp, hreq->ihandle, hreq->ihandlen);
++}
++
++int
++xfs_open_by_handle(
++	struct file		*parfilp,
++	xfs_fsop_handlereq_t	*hreq)
++{
++	const struct cred	*cred = current_cred();
++	int			error;
++	int			fd;
++	int			permflag;
++	struct file		*filp;
++	struct inode		*inode;
++	struct dentry		*dentry;
++	fmode_t			fmode;
++	struct path		path;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++	inode = d_inode(dentry);
++
++	/* Restrict xfs_open_by_handle to directories & regular files. */
++	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
++		error = -EPERM;
++		goto out_dput;
++	}
++
++#if BITS_PER_LONG != 32
++	hreq->oflags |= O_LARGEFILE;
++#endif
++
++	permflag = hreq->oflags;
++	fmode = OPEN_FMODE(permflag);
++	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
++	    (fmode & FMODE_WRITE) && IS_APPEND(inode)) {
++		error = -EPERM;
++		goto out_dput;
++	}
++
++	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
++		error = -EPERM;
++		goto out_dput;
++	}
++
++	/* Can't write directories. */
++	if (S_ISDIR(inode->i_mode) && (fmode & FMODE_WRITE)) {
++		error = -EISDIR;
++		goto out_dput;
++	}
++
++	fd = get_unused_fd_flags(0);
++	if (fd < 0) {
++		error = fd;
++		goto out_dput;
++	}
++
++	path.mnt = parfilp->f_path.mnt;
++	path.dentry = dentry;
++	filp = dentry_open(&path, hreq->oflags, cred);
++	dput(dentry);
++	if (IS_ERR(filp)) {
++		put_unused_fd(fd);
++		return PTR_ERR(filp);
++	}
++
++	if (S_ISREG(inode->i_mode)) {
++		filp->f_flags |= O_NOATIME;
++		filp->f_mode |= FMODE_NOCMTIME;
++	}
++
++	fd_install(fd, filp);
++	return fd;
++
++ out_dput:
++	dput(dentry);
++	return error;
++}
++
++int
++xfs_readlink_by_handle(
++	struct file		*parfilp,
++	xfs_fsop_handlereq_t	*hreq)
++{
++	struct dentry		*dentry;
++	__u32			olen;
++	int			error;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++
++	/* Restrict this handle operation to symlinks only. */
++	if (!d_is_symlink(dentry)) {
++		error = -EINVAL;
++		goto out_dput;
++	}
++
++	if (copy_from_user(&olen, hreq->ohandlen, sizeof(__u32))) {
++		error = -EFAULT;
++		goto out_dput;
++	}
++
++	error = vfs_readlink(dentry, hreq->ohandle, olen);
++
++ out_dput:
++	dput(dentry);
++	return error;
++}
++
++/*
++ * Format an attribute and copy it out to the user's buffer.
++ * Take care to check values and protect against them changing later,
++ * we may be reading them directly out of a user buffer.
++ */
++static void
++xfs_ioc_attr_put_listent(
++	struct xfs_attr_list_context *context,
++	int			flags,
++	unsigned char		*name,
++	int			namelen,
++	void			*value,
++	int			valuelen)
++{
++	struct xfs_attrlist	*alist = context->buffer;
++	struct xfs_attrlist_ent	*aep;
++	int			arraytop;
++
++	ASSERT(!context->seen_enough);
++	ASSERT(context->count >= 0);
++	ASSERT(context->count < (ATTR_MAX_VALUELEN/8));
++	ASSERT(context->firstu >= sizeof(*alist));
++	ASSERT(context->firstu <= context->bufsize);
++
++	/*
++	 * Only list entries in the right namespace.
++	 */
++	if (context->attr_filter != (flags & XFS_ATTR_NSP_ONDISK_MASK))
++		return;
++
++	arraytop = sizeof(*alist) +
++			context->count * sizeof(alist->al_offset[0]);
++
++	/* decrement by the actual bytes used by the attr */
++	context->firstu -= round_up(offsetof(struct xfs_attrlist_ent, a_name) +
++			namelen + 1, sizeof(uint32_t));
++	if (context->firstu < arraytop) {
++		trace_xfs_attr_list_full(context);
++		alist->al_more = 1;
++		context->seen_enough = 1;
++		return;
++	}
++
++	aep = context->buffer + context->firstu;
++	aep->a_valuelen = valuelen;
++	memcpy(aep->a_name, name, namelen);
++	aep->a_name[namelen] = 0;
++	alist->al_offset[context->count++] = context->firstu;
++	alist->al_count = context->count;
++	trace_xfs_attr_list_add(context);
++}
++
++static unsigned int
++xfs_attr_filter(
++	u32			ioc_flags)
++{
++	if (ioc_flags & XFS_IOC_ATTR_ROOT)
++		return XFS_ATTR_ROOT;
++	if (ioc_flags & XFS_IOC_ATTR_SECURE)
++		return XFS_ATTR_SECURE;
++	return 0;
++}
++
++static unsigned int
++xfs_xattr_flags(
++	u32			ioc_flags)
++{
++	if (ioc_flags & XFS_IOC_ATTR_CREATE)
++		return XATTR_CREATE;
++	if (ioc_flags & XFS_IOC_ATTR_REPLACE)
++		return XATTR_REPLACE;
++	return 0;
++}
++
++int
++xfs_ioc_attr_list(
++	struct xfs_inode		*dp,
++	void __user			*ubuf,
++	size_t				bufsize,
++	int				flags,
++	struct xfs_attrlist_cursor __user *ucursor)
++{
++	struct xfs_attr_list_context	context = { };
++	struct xfs_attrlist		*alist;
++	void				*buffer;
++	int				error;
++
++	if (bufsize < sizeof(struct xfs_attrlist) ||
++	    bufsize > XFS_XATTR_LIST_MAX)
++		return -EINVAL;
++
++	/*
++	 * Reject flags, only allow namespaces.
++	 */
++	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
++		return -EINVAL;
++	if (flags == (XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
++		return -EINVAL;
++
++	/*
++	 * Validate the cursor.
++	 */
++	if (copy_from_user(&context.cursor, ucursor, sizeof(context.cursor)))
++		return -EFAULT;
++	if (context.cursor.pad1 || context.cursor.pad2)
++		return -EINVAL;
++	if (!context.cursor.initted &&
++	    (context.cursor.hashval || context.cursor.blkno ||
++	     context.cursor.offset))
++		return -EINVAL;
++
++	buffer = kvzalloc(bufsize, GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
++
++	/*
++	 * Initialize the output buffer.
++	 */
++	context.dp = dp;
++	context.resynch = 1;
++	context.attr_filter = xfs_attr_filter(flags);
++	context.buffer = buffer;
++	context.bufsize = round_down(bufsize, sizeof(uint32_t));
++	context.firstu = context.bufsize;
++	context.put_listent = xfs_ioc_attr_put_listent;
++
++	alist = context.buffer;
++	alist->al_count = 0;
++	alist->al_more = 0;
++	alist->al_offset[0] = context.bufsize;
++
++	error = xfs_attr_list(&context);
++	if (error)
++		goto out_free;
++
++	if (copy_to_user(ubuf, buffer, bufsize) ||
++	    copy_to_user(ucursor, &context.cursor, sizeof(context.cursor)))
++		error = -EFAULT;
++out_free:
++	kvfree(buffer);
++	return error;
++}
++
++int
++xfs_attrlist_by_handle(
++	struct file		*parfilp,
++	struct xfs_fsop_attrlist_handlereq __user *p)
++{
++	struct xfs_fsop_attrlist_handlereq al_hreq;
++	struct dentry		*dentry;
++	int			error = -ENOMEM;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	if (copy_from_user(&al_hreq, p, sizeof(al_hreq)))
++		return -EFAULT;
++
++	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++
++	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), al_hreq.buffer,
++				  al_hreq.buflen, al_hreq.flags, &p->pos);
++	dput(dentry);
++	return error;
++}
++
++static int
++xfs_attrmulti_attr_get(
++	struct inode		*inode,
++	unsigned char		*name,
++	unsigned char		__user *ubuf,
++	uint32_t		*len,
++	uint32_t		flags)
++{
++	struct xfs_da_args	args = {
++		.dp		= XFS_I(inode),
++		.attr_filter	= xfs_attr_filter(flags),
++		.xattr_flags	= xfs_xattr_flags(flags),
++		.name		= name,
++		.namelen	= strlen(name),
++		.valuelen	= *len,
++	};
++	int			error;
++
++	if (*len > XFS_XATTR_SIZE_MAX)
++		return -EINVAL;
++
++	error = xfs_attr_get(&args);
++	if (error)
++		goto out_kfree;
++
++	*len = args.valuelen;
++	if (copy_to_user(ubuf, args.value, args.valuelen))
++		error = -EFAULT;
++
++out_kfree:
++	kvfree(args.value);
++	return error;
++}
++
++static int
++xfs_attrmulti_attr_set(
++	struct inode		*inode,
++	unsigned char		*name,
++	const unsigned char	__user *ubuf,
++	uint32_t		len,
++	uint32_t		flags)
++{
++	struct xfs_da_args	args = {
++		.dp		= XFS_I(inode),
++		.attr_filter	= xfs_attr_filter(flags),
++		.xattr_flags	= xfs_xattr_flags(flags),
++		.name		= name,
++		.namelen	= strlen(name),
++	};
++	int			error;
++
++	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
++		return -EPERM;
++
++	if (ubuf) {
++		if (len > XFS_XATTR_SIZE_MAX)
++			return -EINVAL;
++		args.value = memdup_user(ubuf, len);
++		if (IS_ERR(args.value))
++			return PTR_ERR(args.value);
++		args.valuelen = len;
++	}
++
++	error = xfs_attr_change(&args);
++	if (!error && (flags & XFS_IOC_ATTR_ROOT))
++		xfs_forget_acl(inode, name);
++	kfree(args.value);
++	return error;
++}
++
++int
++xfs_ioc_attrmulti_one(
++	struct file		*parfilp,
++	struct inode		*inode,
++	uint32_t		opcode,
++	void __user		*uname,
++	void __user		*value,
++	uint32_t		*len,
++	uint32_t		flags)
++{
++	unsigned char		*name;
++	int			error;
++
++	if ((flags & XFS_IOC_ATTR_ROOT) && (flags & XFS_IOC_ATTR_SECURE))
++		return -EINVAL;
++
++	name = strndup_user(uname, MAXNAMELEN);
++	if (IS_ERR(name))
++		return PTR_ERR(name);
++
++	switch (opcode) {
++	case ATTR_OP_GET:
++		error = xfs_attrmulti_attr_get(inode, name, value, len, flags);
++		break;
++	case ATTR_OP_REMOVE:
++		value = NULL;
++		*len = 0;
++		fallthrough;
++	case ATTR_OP_SET:
++		error = mnt_want_write_file(parfilp);
++		if (error)
++			break;
++		error = xfs_attrmulti_attr_set(inode, name, value, *len, flags);
++		mnt_drop_write_file(parfilp);
++		break;
++	default:
++		error = -EINVAL;
++		break;
++	}
++
++	kfree(name);
++	return error;
++}
++
++int
++xfs_attrmulti_by_handle(
++	struct file		*parfilp,
++	void			__user *arg)
++{
++	int			error;
++	xfs_attr_multiop_t	*ops;
++	xfs_fsop_attrmulti_handlereq_t am_hreq;
++	struct dentry		*dentry;
++	unsigned int		i, size;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	if (copy_from_user(&am_hreq, arg, sizeof(xfs_fsop_attrmulti_handlereq_t)))
++		return -EFAULT;
++
++	/* overflow check */
++	if (am_hreq.opcount >= INT_MAX / sizeof(xfs_attr_multiop_t))
++		return -E2BIG;
++
++	dentry = xfs_handlereq_to_dentry(parfilp, &am_hreq.hreq);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++
++	error = -E2BIG;
++	size = am_hreq.opcount * sizeof(xfs_attr_multiop_t);
++	if (!size || size > 16 * PAGE_SIZE)
++		goto out_dput;
++
++	ops = memdup_user(am_hreq.ops, size);
++	if (IS_ERR(ops)) {
++		error = PTR_ERR(ops);
++		goto out_dput;
++	}
++
++	error = 0;
++	for (i = 0; i < am_hreq.opcount; i++) {
++		ops[i].am_error = xfs_ioc_attrmulti_one(parfilp,
++				d_inode(dentry), ops[i].am_opcode,
++				ops[i].am_attrname, ops[i].am_attrvalue,
++				&ops[i].am_length, ops[i].am_flags);
++	}
++
++	if (copy_to_user(am_hreq.ops, ops, size))
++		error = -EFAULT;
++
++	kfree(ops);
++ out_dput:
++	dput(dentry);
++	return error;
++}
+diff --git a/fs/xfs/xfs_handle.h b/fs/xfs/xfs_handle.h
+new file mode 100644
+index 0000000000000..e39eaf4689da9
+--- /dev/null
++++ b/fs/xfs/xfs_handle.h
+@@ -0,0 +1,28 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * All rights reserved.
++ */
++#ifndef	__XFS_HANDLE_H__
++#define	__XFS_HANDLE_H__
++
++int xfs_attrlist_by_handle(struct file *parfilp,
++		struct xfs_fsop_attrlist_handlereq __user *p);
++int xfs_attrmulti_by_handle(struct file *parfilp, void __user *arg);
++
++int xfs_find_handle(unsigned int cmd, struct xfs_fsop_handlereq *hreq);
++int xfs_open_by_handle(struct file *parfilp, struct xfs_fsop_handlereq *hreq);
++int xfs_readlink_by_handle(struct file *parfilp,
++		struct xfs_fsop_handlereq *hreq);
++
++int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
++		uint32_t opcode, void __user *uname, void __user *value,
++		uint32_t *len, uint32_t flags);
++int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf,
++		      size_t bufsize, int flags,
++		      struct xfs_attrlist_cursor __user *ucursor);
++
++struct dentry *xfs_handle_to_dentry(struct file *parfilp, void __user *uhandle,
++		u32 hlen);
++
++#endif	/* __XFS_HANDLE_H__ */
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 39bdd1034ffab..d56e5c6876eee 100644
+index d56e5c6876eee..7b347cdd28785 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -310,6 +310,7 @@ xfs_ioc_attr_put_listent(
- 	int			flags,
- 	unsigned char		*name,
- 	int			namelen,
-+	void			*value,
- 	int			valuelen)
- {
- 	struct xfs_attrlist	*alist = context->buffer;
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 00b591f6c5ca1..1d57e204c850f 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -214,6 +214,7 @@ xfs_xattr_put_listent(
- 	int		flags,
- 	unsigned char	*name,
- 	int		namelen,
-+	void		*value,
- 	int		valuelen)
- {
- 	char *prefix;
+@@ -23,11 +23,9 @@
+ #include "xfs_fsops.h"
+ #include "xfs_discard.h"
+ #include "xfs_quota.h"
+-#include "xfs_export.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+ #include "xfs_trans.h"
+-#include "xfs_acl.h"
+ #include "xfs_btree.h"
+ #include <linux/fsmap.h>
+ #include "xfs_fsmap.h"
+@@ -37,601 +35,14 @@
+ #include "xfs_health.h"
+ #include "xfs_reflink.h"
+ #include "xfs_ioctl.h"
+-#include "xfs_xattr.h"
+ #include "xfs_rtbitmap.h"
+ #include "xfs_file.h"
+ #include "xfs_exchrange.h"
++#include "xfs_handle.h"
+ 
+ #include <linux/mount.h>
+-#include <linux/namei.h>
+ #include <linux/fileattr.h>
+ 
+-/*
+- * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
+- * a file or fs handle.
+- *
+- * XFS_IOC_PATH_TO_FSHANDLE
+- *    returns fs handle for a mount point or path within that mount point
+- * XFS_IOC_FD_TO_HANDLE
+- *    returns full handle for a FD opened in user space
+- * XFS_IOC_PATH_TO_HANDLE
+- *    returns full handle for a path
+- */
+-int
+-xfs_find_handle(
+-	unsigned int		cmd,
+-	xfs_fsop_handlereq_t	*hreq)
+-{
+-	int			hsize;
+-	xfs_handle_t		handle;
+-	struct inode		*inode;
+-	struct fd		f = {NULL};
+-	struct path		path;
+-	int			error;
+-	struct xfs_inode	*ip;
+-
+-	if (cmd == XFS_IOC_FD_TO_HANDLE) {
+-		f = fdget(hreq->fd);
+-		if (!f.file)
+-			return -EBADF;
+-		inode = file_inode(f.file);
+-	} else {
+-		error = user_path_at(AT_FDCWD, hreq->path, 0, &path);
+-		if (error)
+-			return error;
+-		inode = d_inode(path.dentry);
+-	}
+-	ip = XFS_I(inode);
+-
+-	/*
+-	 * We can only generate handles for inodes residing on a XFS filesystem,
+-	 * and only for regular files, directories or symbolic links.
+-	 */
+-	error = -EINVAL;
+-	if (inode->i_sb->s_magic != XFS_SB_MAGIC)
+-		goto out_put;
+-
+-	error = -EBADF;
+-	if (!S_ISREG(inode->i_mode) &&
+-	    !S_ISDIR(inode->i_mode) &&
+-	    !S_ISLNK(inode->i_mode))
+-		goto out_put;
+-
+-
+-	memcpy(&handle.ha_fsid, ip->i_mount->m_fixedfsid, sizeof(xfs_fsid_t));
+-
+-	if (cmd == XFS_IOC_PATH_TO_FSHANDLE) {
+-		/*
+-		 * This handle only contains an fsid, zero the rest.
+-		 */
+-		memset(&handle.ha_fid, 0, sizeof(handle.ha_fid));
+-		hsize = sizeof(xfs_fsid_t);
+-	} else {
+-		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+-					sizeof(handle.ha_fid.fid_len);
+-		handle.ha_fid.fid_pad = 0;
+-		handle.ha_fid.fid_gen = inode->i_generation;
+-		handle.ha_fid.fid_ino = ip->i_ino;
+-		hsize = sizeof(xfs_handle_t);
+-	}
+-
+-	error = -EFAULT;
+-	if (copy_to_user(hreq->ohandle, &handle, hsize) ||
+-	    copy_to_user(hreq->ohandlen, &hsize, sizeof(__s32)))
+-		goto out_put;
+-
+-	error = 0;
+-
+- out_put:
+-	if (cmd == XFS_IOC_FD_TO_HANDLE)
+-		fdput(f);
+-	else
+-		path_put(&path);
+-	return error;
+-}
+-
+-/*
+- * No need to do permission checks on the various pathname components
+- * as the handle operations are privileged.
+- */
+-STATIC int
+-xfs_handle_acceptable(
+-	void			*context,
+-	struct dentry		*dentry)
+-{
+-	return 1;
+-}
+-
+-/*
+- * Convert userspace handle data into a dentry.
+- */
+-struct dentry *
+-xfs_handle_to_dentry(
+-	struct file		*parfilp,
+-	void __user		*uhandle,
+-	u32			hlen)
+-{
+-	xfs_handle_t		handle;
+-	struct xfs_fid64	fid;
+-
+-	/*
+-	 * Only allow handle opens under a directory.
+-	 */
+-	if (!S_ISDIR(file_inode(parfilp)->i_mode))
+-		return ERR_PTR(-ENOTDIR);
+-
+-	if (hlen != sizeof(xfs_handle_t))
+-		return ERR_PTR(-EINVAL);
+-	if (copy_from_user(&handle, uhandle, hlen))
+-		return ERR_PTR(-EFAULT);
+-	if (handle.ha_fid.fid_len !=
+-	    sizeof(handle.ha_fid) - sizeof(handle.ha_fid.fid_len))
+-		return ERR_PTR(-EINVAL);
+-
+-	memset(&fid, 0, sizeof(struct fid));
+-	fid.ino = handle.ha_fid.fid_ino;
+-	fid.gen = handle.ha_fid.fid_gen;
+-
+-	return exportfs_decode_fh(parfilp->f_path.mnt, (struct fid *)&fid, 3,
+-			FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG,
+-			xfs_handle_acceptable, NULL);
+-}
+-
+-STATIC struct dentry *
+-xfs_handlereq_to_dentry(
+-	struct file		*parfilp,
+-	xfs_fsop_handlereq_t	*hreq)
+-{
+-	return xfs_handle_to_dentry(parfilp, hreq->ihandle, hreq->ihandlen);
+-}
+-
+-int
+-xfs_open_by_handle(
+-	struct file		*parfilp,
+-	xfs_fsop_handlereq_t	*hreq)
+-{
+-	const struct cred	*cred = current_cred();
+-	int			error;
+-	int			fd;
+-	int			permflag;
+-	struct file		*filp;
+-	struct inode		*inode;
+-	struct dentry		*dentry;
+-	fmode_t			fmode;
+-	struct path		path;
+-
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-
+-	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
+-	if (IS_ERR(dentry))
+-		return PTR_ERR(dentry);
+-	inode = d_inode(dentry);
+-
+-	/* Restrict xfs_open_by_handle to directories & regular files. */
+-	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
+-		error = -EPERM;
+-		goto out_dput;
+-	}
+-
+-#if BITS_PER_LONG != 32
+-	hreq->oflags |= O_LARGEFILE;
+-#endif
+-
+-	permflag = hreq->oflags;
+-	fmode = OPEN_FMODE(permflag);
+-	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
+-	    (fmode & FMODE_WRITE) && IS_APPEND(inode)) {
+-		error = -EPERM;
+-		goto out_dput;
+-	}
+-
+-	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+-		error = -EPERM;
+-		goto out_dput;
+-	}
+-
+-	/* Can't write directories. */
+-	if (S_ISDIR(inode->i_mode) && (fmode & FMODE_WRITE)) {
+-		error = -EISDIR;
+-		goto out_dput;
+-	}
+-
+-	fd = get_unused_fd_flags(0);
+-	if (fd < 0) {
+-		error = fd;
+-		goto out_dput;
+-	}
+-
+-	path.mnt = parfilp->f_path.mnt;
+-	path.dentry = dentry;
+-	filp = dentry_open(&path, hreq->oflags, cred);
+-	dput(dentry);
+-	if (IS_ERR(filp)) {
+-		put_unused_fd(fd);
+-		return PTR_ERR(filp);
+-	}
+-
+-	if (S_ISREG(inode->i_mode)) {
+-		filp->f_flags |= O_NOATIME;
+-		filp->f_mode |= FMODE_NOCMTIME;
+-	}
+-
+-	fd_install(fd, filp);
+-	return fd;
+-
+- out_dput:
+-	dput(dentry);
+-	return error;
+-}
+-
+-int
+-xfs_readlink_by_handle(
+-	struct file		*parfilp,
+-	xfs_fsop_handlereq_t	*hreq)
+-{
+-	struct dentry		*dentry;
+-	__u32			olen;
+-	int			error;
+-
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-
+-	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
+-	if (IS_ERR(dentry))
+-		return PTR_ERR(dentry);
+-
+-	/* Restrict this handle operation to symlinks only. */
+-	if (!d_is_symlink(dentry)) {
+-		error = -EINVAL;
+-		goto out_dput;
+-	}
+-
+-	if (copy_from_user(&olen, hreq->ohandlen, sizeof(__u32))) {
+-		error = -EFAULT;
+-		goto out_dput;
+-	}
+-
+-	error = vfs_readlink(dentry, hreq->ohandle, olen);
+-
+- out_dput:
+-	dput(dentry);
+-	return error;
+-}
+-
+-/*
+- * Format an attribute and copy it out to the user's buffer.
+- * Take care to check values and protect against them changing later,
+- * we may be reading them directly out of a user buffer.
+- */
+-static void
+-xfs_ioc_attr_put_listent(
+-	struct xfs_attr_list_context *context,
+-	int			flags,
+-	unsigned char		*name,
+-	int			namelen,
+-	void			*value,
+-	int			valuelen)
+-{
+-	struct xfs_attrlist	*alist = context->buffer;
+-	struct xfs_attrlist_ent	*aep;
+-	int			arraytop;
+-
+-	ASSERT(!context->seen_enough);
+-	ASSERT(context->count >= 0);
+-	ASSERT(context->count < (ATTR_MAX_VALUELEN/8));
+-	ASSERT(context->firstu >= sizeof(*alist));
+-	ASSERT(context->firstu <= context->bufsize);
+-
+-	/*
+-	 * Only list entries in the right namespace.
+-	 */
+-	if (context->attr_filter != (flags & XFS_ATTR_NSP_ONDISK_MASK))
+-		return;
+-
+-	arraytop = sizeof(*alist) +
+-			context->count * sizeof(alist->al_offset[0]);
+-
+-	/* decrement by the actual bytes used by the attr */
+-	context->firstu -= round_up(offsetof(struct xfs_attrlist_ent, a_name) +
+-			namelen + 1, sizeof(uint32_t));
+-	if (context->firstu < arraytop) {
+-		trace_xfs_attr_list_full(context);
+-		alist->al_more = 1;
+-		context->seen_enough = 1;
+-		return;
+-	}
+-
+-	aep = context->buffer + context->firstu;
+-	aep->a_valuelen = valuelen;
+-	memcpy(aep->a_name, name, namelen);
+-	aep->a_name[namelen] = 0;
+-	alist->al_offset[context->count++] = context->firstu;
+-	alist->al_count = context->count;
+-	trace_xfs_attr_list_add(context);
+-}
+-
+-static unsigned int
+-xfs_attr_filter(
+-	u32			ioc_flags)
+-{
+-	if (ioc_flags & XFS_IOC_ATTR_ROOT)
+-		return XFS_ATTR_ROOT;
+-	if (ioc_flags & XFS_IOC_ATTR_SECURE)
+-		return XFS_ATTR_SECURE;
+-	return 0;
+-}
+-
+-static unsigned int
+-xfs_xattr_flags(
+-	u32			ioc_flags)
+-{
+-	if (ioc_flags & XFS_IOC_ATTR_CREATE)
+-		return XATTR_CREATE;
+-	if (ioc_flags & XFS_IOC_ATTR_REPLACE)
+-		return XATTR_REPLACE;
+-	return 0;
+-}
+-
+-int
+-xfs_ioc_attr_list(
+-	struct xfs_inode		*dp,
+-	void __user			*ubuf,
+-	size_t				bufsize,
+-	int				flags,
+-	struct xfs_attrlist_cursor __user *ucursor)
+-{
+-	struct xfs_attr_list_context	context = { };
+-	struct xfs_attrlist		*alist;
+-	void				*buffer;
+-	int				error;
+-
+-	if (bufsize < sizeof(struct xfs_attrlist) ||
+-	    bufsize > XFS_XATTR_LIST_MAX)
+-		return -EINVAL;
+-
+-	/*
+-	 * Reject flags, only allow namespaces.
+-	 */
+-	if (flags & ~(XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
+-		return -EINVAL;
+-	if (flags == (XFS_IOC_ATTR_ROOT | XFS_IOC_ATTR_SECURE))
+-		return -EINVAL;
+-
+-	/*
+-	 * Validate the cursor.
+-	 */
+-	if (copy_from_user(&context.cursor, ucursor, sizeof(context.cursor)))
+-		return -EFAULT;
+-	if (context.cursor.pad1 || context.cursor.pad2)
+-		return -EINVAL;
+-	if (!context.cursor.initted &&
+-	    (context.cursor.hashval || context.cursor.blkno ||
+-	     context.cursor.offset))
+-		return -EINVAL;
+-
+-	buffer = kvzalloc(bufsize, GFP_KERNEL);
+-	if (!buffer)
+-		return -ENOMEM;
+-
+-	/*
+-	 * Initialize the output buffer.
+-	 */
+-	context.dp = dp;
+-	context.resynch = 1;
+-	context.attr_filter = xfs_attr_filter(flags);
+-	context.buffer = buffer;
+-	context.bufsize = round_down(bufsize, sizeof(uint32_t));
+-	context.firstu = context.bufsize;
+-	context.put_listent = xfs_ioc_attr_put_listent;
+-
+-	alist = context.buffer;
+-	alist->al_count = 0;
+-	alist->al_more = 0;
+-	alist->al_offset[0] = context.bufsize;
+-
+-	error = xfs_attr_list(&context);
+-	if (error)
+-		goto out_free;
+-
+-	if (copy_to_user(ubuf, buffer, bufsize) ||
+-	    copy_to_user(ucursor, &context.cursor, sizeof(context.cursor)))
+-		error = -EFAULT;
+-out_free:
+-	kvfree(buffer);
+-	return error;
+-}
+-
+-STATIC int
+-xfs_attrlist_by_handle(
+-	struct file		*parfilp,
+-	struct xfs_fsop_attrlist_handlereq __user *p)
+-{
+-	struct xfs_fsop_attrlist_handlereq al_hreq;
+-	struct dentry		*dentry;
+-	int			error = -ENOMEM;
+-
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-	if (copy_from_user(&al_hreq, p, sizeof(al_hreq)))
+-		return -EFAULT;
+-
+-	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+-	if (IS_ERR(dentry))
+-		return PTR_ERR(dentry);
+-
+-	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), al_hreq.buffer,
+-				  al_hreq.buflen, al_hreq.flags, &p->pos);
+-	dput(dentry);
+-	return error;
+-}
+-
+-static int
+-xfs_attrmulti_attr_get(
+-	struct inode		*inode,
+-	unsigned char		*name,
+-	unsigned char		__user *ubuf,
+-	uint32_t		*len,
+-	uint32_t		flags)
+-{
+-	struct xfs_da_args	args = {
+-		.dp		= XFS_I(inode),
+-		.attr_filter	= xfs_attr_filter(flags),
+-		.xattr_flags	= xfs_xattr_flags(flags),
+-		.name		= name,
+-		.namelen	= strlen(name),
+-		.valuelen	= *len,
+-	};
+-	int			error;
+-
+-	if (*len > XFS_XATTR_SIZE_MAX)
+-		return -EINVAL;
+-
+-	error = xfs_attr_get(&args);
+-	if (error)
+-		goto out_kfree;
+-
+-	*len = args.valuelen;
+-	if (copy_to_user(ubuf, args.value, args.valuelen))
+-		error = -EFAULT;
+-
+-out_kfree:
+-	kvfree(args.value);
+-	return error;
+-}
+-
+-static int
+-xfs_attrmulti_attr_set(
+-	struct inode		*inode,
+-	unsigned char		*name,
+-	const unsigned char	__user *ubuf,
+-	uint32_t		len,
+-	uint32_t		flags)
+-{
+-	struct xfs_da_args	args = {
+-		.dp		= XFS_I(inode),
+-		.attr_filter	= xfs_attr_filter(flags),
+-		.xattr_flags	= xfs_xattr_flags(flags),
+-		.name		= name,
+-		.namelen	= strlen(name),
+-	};
+-	int			error;
+-
+-	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+-		return -EPERM;
+-
+-	if (ubuf) {
+-		if (len > XFS_XATTR_SIZE_MAX)
+-			return -EINVAL;
+-		args.value = memdup_user(ubuf, len);
+-		if (IS_ERR(args.value))
+-			return PTR_ERR(args.value);
+-		args.valuelen = len;
+-	}
+-
+-	error = xfs_attr_change(&args);
+-	if (!error && (flags & XFS_IOC_ATTR_ROOT))
+-		xfs_forget_acl(inode, name);
+-	kfree(args.value);
+-	return error;
+-}
+-
+-int
+-xfs_ioc_attrmulti_one(
+-	struct file		*parfilp,
+-	struct inode		*inode,
+-	uint32_t		opcode,
+-	void __user		*uname,
+-	void __user		*value,
+-	uint32_t		*len,
+-	uint32_t		flags)
+-{
+-	unsigned char		*name;
+-	int			error;
+-
+-	if ((flags & XFS_IOC_ATTR_ROOT) && (flags & XFS_IOC_ATTR_SECURE))
+-		return -EINVAL;
+-
+-	name = strndup_user(uname, MAXNAMELEN);
+-	if (IS_ERR(name))
+-		return PTR_ERR(name);
+-
+-	switch (opcode) {
+-	case ATTR_OP_GET:
+-		error = xfs_attrmulti_attr_get(inode, name, value, len, flags);
+-		break;
+-	case ATTR_OP_REMOVE:
+-		value = NULL;
+-		*len = 0;
+-		fallthrough;
+-	case ATTR_OP_SET:
+-		error = mnt_want_write_file(parfilp);
+-		if (error)
+-			break;
+-		error = xfs_attrmulti_attr_set(inode, name, value, *len, flags);
+-		mnt_drop_write_file(parfilp);
+-		break;
+-	default:
+-		error = -EINVAL;
+-		break;
+-	}
+-
+-	kfree(name);
+-	return error;
+-}
+-
+-STATIC int
+-xfs_attrmulti_by_handle(
+-	struct file		*parfilp,
+-	void			__user *arg)
+-{
+-	int			error;
+-	xfs_attr_multiop_t	*ops;
+-	xfs_fsop_attrmulti_handlereq_t am_hreq;
+-	struct dentry		*dentry;
+-	unsigned int		i, size;
+-
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-	if (copy_from_user(&am_hreq, arg, sizeof(xfs_fsop_attrmulti_handlereq_t)))
+-		return -EFAULT;
+-
+-	/* overflow check */
+-	if (am_hreq.opcount >= INT_MAX / sizeof(xfs_attr_multiop_t))
+-		return -E2BIG;
+-
+-	dentry = xfs_handlereq_to_dentry(parfilp, &am_hreq.hreq);
+-	if (IS_ERR(dentry))
+-		return PTR_ERR(dentry);
+-
+-	error = -E2BIG;
+-	size = am_hreq.opcount * sizeof(xfs_attr_multiop_t);
+-	if (!size || size > 16 * PAGE_SIZE)
+-		goto out_dput;
+-
+-	ops = memdup_user(am_hreq.ops, size);
+-	if (IS_ERR(ops)) {
+-		error = PTR_ERR(ops);
+-		goto out_dput;
+-	}
+-
+-	error = 0;
+-	for (i = 0; i < am_hreq.opcount; i++) {
+-		ops[i].am_error = xfs_ioc_attrmulti_one(parfilp,
+-				d_inode(dentry), ops[i].am_opcode,
+-				ops[i].am_attrname, ops[i].am_attrvalue,
+-				&ops[i].am_length, ops[i].am_flags);
+-	}
+-
+-	if (copy_to_user(am_hreq.ops, ops, size))
+-		error = -EFAULT;
+-
+-	kfree(ops);
+- out_dput:
+-	dput(dentry);
+-	return error;
+-}
+-
+ /* Return 0 on success or positive error */
+ int
+ xfs_fsbulkstat_one_fmt(
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 38be600b5e1e8..12124946f347e 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -14,34 +14,6 @@ int
+ xfs_ioc_swapext(
+ 	xfs_swapext_t	*sxp);
+ 
+-extern int
+-xfs_find_handle(
+-	unsigned int		cmd,
+-	xfs_fsop_handlereq_t	*hreq);
+-
+-extern int
+-xfs_open_by_handle(
+-	struct file		*parfilp,
+-	xfs_fsop_handlereq_t	*hreq);
+-
+-extern int
+-xfs_readlink_by_handle(
+-	struct file		*parfilp,
+-	xfs_fsop_handlereq_t	*hreq);
+-
+-int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
+-		uint32_t opcode, void __user *uname, void __user *value,
+-		uint32_t *len, uint32_t flags);
+-int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf,
+-		      size_t bufsize, int flags,
+-		      struct xfs_attrlist_cursor __user *ucursor);
+-
+-extern struct dentry *
+-xfs_handle_to_dentry(
+-	struct file		*parfilp,
+-	void __user		*uhandle,
+-	u32			hlen);
+-
+ extern int
+ xfs_fileattr_get(
+ 	struct dentry		*dentry,
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index ee35eea1ecce6..b64785dc4354e 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -24,6 +24,7 @@
+ #include "xfs_ioctl32.h"
+ #include "xfs_trace.h"
+ #include "xfs_sb.h"
++#include "xfs_handle.h"
+ 
+ #define  _NATIVE_IOC(cmd, type) \
+ 	  _IOC(_IOC_DIR(cmd), _IOC_TYPE(cmd), _IOC_NR(cmd), sizeof(type))
 
