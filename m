@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8217E621
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:51:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B02F621
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 00:52:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710317; cv=none; b=KHxH3JXjBbpupaJvIXHRPiM+wjrmDqjmxZkAym8eH5S4wR/iaCugYeeYfHyJYnby9BsT8+Yu7dYnLCgZ/CdMleXg7b72mAFmUnDdDV62WDawEA1GzIrXb2iAG2QIn+CJZ3tvnh8mFKDQ3KbfMsYOx+1H0IcZanQmhTV0ZbVA9P4=
+	t=1712710333; cv=none; b=KSwJV1DZy5SQMs6pp/g85J2tcHlfYK1IUCCm3Cb5CJdD5QC6+TJvRxQE6kp7TUw51imMTpeeuQBy5+7Jx2PN1JyhxXOwB3BmKWM1qvp1XXVcTmUcVhhnR91tisup4KJ7uFCtX84DU+0enxT8/K4Se01+/I0169Ol8eHG0n3IM8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710317; c=relaxed/simple;
-	bh=1oW6JbfUMrWpedYRrR91RdEog4KMHWYq0V3FqRiPJH8=;
+	s=arc-20240116; t=1712710333; c=relaxed/simple;
+	bh=h7GRCU2J7c+Cu2hyo+tO+3klScn0o+4kg5+KBghTEn8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KlNi8+ljM/zPD5BEPZ/p0AgH/bnNXQDK0LsYG8hT1BSGHQbaO25Igwe7rv2qhxwGY8MJYpH8iHlsXZMdJn4ywP3d6+lS/qXS9pqvnUzLZma+9zS5a45aHt4Ts8uK4B20ZJm05b2IU3s9kt9z5VMdYkCGroj9DPajiHVugee+LqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B7BHumP2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RjIRR+24w3yUZfvUjg91uMSASHCd0lryPACA8eyimvC/XLTiCdeQ2uDTtBK1V3zwopmr8qRC+BPj9rRCXoY864ZZroCplPPE3ywVpGu3G3j9PjqMYNIUJ9mM9wzXNz5jyckRNgZIUNot8hVcn2ML0FOBthBc2OHnzJrgua6XK7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uOEKLNM1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B7BHumP2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59563C433C7;
-	Wed, 10 Apr 2024 00:51:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uOEKLNM1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0039FC433F1;
+	Wed, 10 Apr 2024 00:52:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710317;
-	bh=1oW6JbfUMrWpedYRrR91RdEog4KMHWYq0V3FqRiPJH8=;
+	s=k20201202; t=1712710333;
+	bh=h7GRCU2J7c+Cu2hyo+tO+3klScn0o+4kg5+KBghTEn8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=B7BHumP2+aIUfNhPhmvwa1qoRSPxYxeYXjyHa/Qnsb40sTHOyTG/dyk78BKflrF3b
-	 PwnkSBNSfOkOyhh3z3iuXfq75da1TjsuD/vWQI0ZZfuFDxpyP3hVYueO9In9kF8czM
-	 FlgsboXuf6c+t+Raz2brc+BZrOkh1OnQHVLqMi55Mc9Adx7GRne8z+Ne9PENij5Rsa
-	 mdnZmgWH/+xiW3ocoK48V3RMRLLSymdlX2/IR6BfaXM23AX6Kss4wz13jUeLJTaElu
-	 Mdqb/Nx1qrJ1EL0aXcX28COlm744rqL9pEIWlT1U0fTjf2QDeDRNlBaJGfL1d1u3u2
-	 7CPZux+vVFtag==
-Date: Tue, 09 Apr 2024 17:51:56 -0700
-Subject: [PATCH 06/12] xfs: restructure xfs_attr_complete_op a bit
+	b=uOEKLNM16GzA6dnE8JXSiLsk2OLdUikolf3OtRIZku6YgpAh0CvOEu7fqjwkF8h3r
+	 zosHFpFjwHm3iLNXsckGAdYryoOh3+pzaBt7Ejbg8mihPS8g/1CQtAtVyJhL7ikQ1Y
+	 5czMf82Zwnw4XX71KEHvFI39JCLghUA9uAQCvA9Dueif+y20jHcDr2+123OPWjNtZd
+	 5pjpgTkIfzsvIY6QBnKMJHz9UUX8IUzz17I7apgLKsIhxD1zkY0FVOQShSKbTRs5T6
+	 qhJIP/ssTISl2bjQnPciKPngLaN9DGCkvMWfFV/ct4z5cH2/vVj7kUZ6k/ZhdUoSc5
+	 18Jgnh8tRqs/w==
+Date: Tue, 09 Apr 2024 17:52:12 -0700
+Subject: [PATCH 07/12] xfs: use helpers to extract xattr op from opflags
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171270968950.3631545.4788373736144068333.stgit@frogsfrogsfrogs>
+Message-ID: <171270968966.3631545.12587444590975333070.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270968824.3631545.9037354951123114569.stgit@frogsfrogsfrogs>
 References: <171270968824.3631545.9037354951123114569.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,36 +46,86 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Eliminate the local variable from this function so that we can
-streamline things a bit later when we add the PPTR_REPLACE op code.
+Create helper functions to extract the xattr op from the ondisk xattri
+log item and the incore attr intent item.  These will get more use in
+the patches that follow.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_attr.h |    5 +++++
+ fs/xfs/xfs_attr_item.c   |   16 ++++++++++------
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index cbc9a1b1c72d3..fda9acb81585d 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -432,14 +432,13 @@ xfs_attr_complete_op(
- 	enum xfs_delattr_state	replace_state)
- {
- 	struct xfs_da_args	*args = attr->xattri_da_args;
--	bool			do_replace = args->op_flags & XFS_DA_OP_REPLACE;
-+
-+	if (!(args->op_flags & XFS_DA_OP_REPLACE))
-+		replace_state = XFS_DAS_DONE;
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 670ab2a613fc6..04ae01ab9a5d8 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -529,6 +529,11 @@ struct xfs_attr_intent {
+ 	struct xfs_bmbt_irec		xattri_map;
+ };
  
- 	args->op_flags &= ~XFS_DA_OP_REPLACE;
- 	args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
--	if (do_replace)
--		return replace_state;
--
--	return XFS_DAS_DONE;
-+	return replace_state;
++static inline unsigned int
++xfs_attr_intent_op(const struct xfs_attr_intent *attr)
++{
++	return attr->xattri_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++}
+ 
+ /*========================================================================
+  * Function prototypes for the kernel.
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index d3559e6b24b7d..b4c2dcb4581bc 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -308,6 +308,12 @@ xfs_attrd_item_intent(
+ 	return &ATTRD_ITEM(lip)->attrd_attrip->attri_item;
  }
  
- static int
++static inline unsigned int
++xfs_attr_log_item_op(const struct xfs_attri_log_format *attrp)
++{
++	return attrp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++}
++
+ /* Log an attr to the intent item. */
+ STATIC void
+ xfs_attr_log_item(
+@@ -466,8 +472,7 @@ xfs_attri_validate(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_attri_log_format	*attrp)
+ {
+-	unsigned int			op = attrp->alfi_op_flags &
+-					     XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++	unsigned int			op = xfs_attr_log_item_op(attrp);
+ 
+ 	if (!xfs_is_using_logged_xattrs(mp))
+ 		return false;
+@@ -551,8 +556,7 @@ xfs_attri_recover_work(
+ 	args = (struct xfs_da_args *)(attr + 1);
+ 
+ 	attr->xattri_da_args = args;
+-	attr->xattri_op_flags = attrp->alfi_op_flags &
+-						XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++	attr->xattri_op_flags = xfs_attr_log_item_op(attrp);
+ 
+ 	/*
+ 	 * We're reconstructing the deferred work state structure from the
+@@ -573,7 +577,7 @@ xfs_attri_recover_work(
+ 			 XFS_DA_OP_LOGGED;
+ 	args->owner = args->dp->i_ino;
+ 
+-	switch (attr->xattri_op_flags) {
++	switch (xfs_attr_intent_op(attr)) {
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
+ 		args->value = nv->value.i_addr;
+@@ -757,7 +761,7 @@ xlog_recover_attri_commit_pass2(
+ 	}
+ 
+ 	/* Check the number of log iovecs makes sense for the op code. */
+-	op = attri_formatp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++	op = xfs_attr_log_item_op(attri_formatp);
+ 	switch (op) {
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
 
