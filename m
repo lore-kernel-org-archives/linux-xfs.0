@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68445EC2
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:02:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B43C010E3
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Apr 2024 01:02:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712710959; cv=none; b=TJT8zoMjdRYC2zNEPMFapX/nU1IOuSapyBOEzPFLegpbsXzkxiqQeRul2p1UAxIUgOojCO22rBKocZcPu/ds22BxJOs6pm19pDZZIJiXjvIvbnn7ZdyYO56QKia0uT9s39TgEKSmfEFWODlshLyVdAKY8OtW61WSSzDHeXvfDHQ=
+	t=1712710974; cv=none; b=H7KQdcmxoNeDnaOnQ3HCvTbaNUehqiufCvrUnavXDvgn+0z17CZasGYcWS99tQcDYHpTFJkcS/8NHAbMmcMcGCqXbc23JDPYNbVKglhFUq6qTUzSvAmUmr9XmfTKlHBIGllMQ53Zm8na/3bnVG/n9Cm8zxqw7BeP5Tz8ZYxXYTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712710959; c=relaxed/simple;
-	bh=NeHtEgvVqOyxaPWjOAfw+wsV5WkN/y9mg1X24axCWk0=;
+	s=arc-20240116; t=1712710974; c=relaxed/simple;
+	bh=KhQcc2+Qzs4Vx4LUEHftIo0HU+DiAmMAx7jwVrBllX0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lDroYNjxTEgn5DK67k2bVFEoqaUf24B3CEN7PA3TomT6LJ8D1y1LfdwfPLJo3J4/Ewju4wSuOyDxCfUfkwuNXX/VnsOUh4iSCHaD1yXgOJo6gCJnRb8Wi1q6KNPfNeWtWUyihjd6ITMDMeFHEHCPzMgfeAVKqFPlVITBC2A8/IQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cj97Q2re; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rZD6AjuvCjLi4/W+q7glB2+JWRmpK7dVs197cn15dD4GxMZTIHwc0o6p2EYN23VG+JJxcMCJsCED3Gx7bf8T236KegLbNlRhTOBPkc9ZWt+hjBR6BF8c5axiFtCe8xk8uzrLW7THElBFaTe4U2s/z0JSh3Nuu/Ai3AOVah4tm8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tWM0icSb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cj97Q2re"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBB2DC433F1;
-	Wed, 10 Apr 2024 01:02:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tWM0icSb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89018C433F1;
+	Wed, 10 Apr 2024 01:02:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712710958;
-	bh=NeHtEgvVqOyxaPWjOAfw+wsV5WkN/y9mg1X24axCWk0=;
+	s=k20201202; t=1712710974;
+	bh=KhQcc2+Qzs4Vx4LUEHftIo0HU+DiAmMAx7jwVrBllX0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cj97Q2reOJSQ5HSRvhGcfGRVhfs7wxhOv7HFgpnwagdQGeDPkEVNkL89ZglUMS4WV
-	 DyOyrVfumQdvjMm9YSYmBh9znV5/jR3C0aKH6H/VN9NWxG0V0puum5PXnFIP/8uull
-	 /aw1MyoQceZXItdPQCWeE18L0pOvCxfggYgqHweXA9N/Lq+UYghuaQHu1Y8D+QrQoS
-	 B1IW+33giuWOEH9qijT5oRmslxGL9pXaW6IlxWlVsR0Eq1hmJnv6gvmEQD0eCl4clv
-	 pPij74XoTZesCmMQDDFBxxqq2vvIIUE4KJslbrCtrJp6xJRQqxi4qYVgxJsCwqj1xW
-	 I4HN6hRuee81A==
-Date: Tue, 09 Apr 2024 18:02:38 -0700
-Subject: [PATCH 3/7] xfs: scrub parent pointers
+	b=tWM0icSbMfcHFJ8+n/yg1pDJCJaj9+UK/IUHxcN5SsviTYal3FI8947Nz9VLG97LZ
+	 Ch/NTMyy7quMYdptylKxAuoxf9R2l1NklMGI8IV5KDVWdFZC+Okm6+9CRhsfb7GGQF
+	 kgB3gRnQ6vG6vTuPo8VlSjLR8340HgpIA3NYcvWjVN/GwVjB5Ojo1IbdK8kQIPn7HE
+	 iX6B/QcNeytDNzRLiXxJvFAIG9iCrLj5usltWUpp7Rs6CLrb5B6G2WesMku3Gf8C81
+	 q/AsoCLt78Ti69dpQWSF+aFc3X+wQbeLLoePqJLZdTZQ8hyPENiZ1njYHBMVqfJM33
+	 xiGiNRi9opeJQ==
+Date: Tue, 09 Apr 2024 18:02:54 -0700
+Subject: [PATCH 4/7] xfs: deferred scrub of parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: catherine.hoang@oracle.com, hch@lst.de, allison.henderson@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <171270970517.3632713.14790309685305343360.stgit@frogsfrogsfrogs>
+Message-ID: <171270970533.3632713.1334905881423990253.stgit@frogsfrogsfrogs>
 In-Reply-To: <171270970449.3632713.16827511408040390390.stgit@frogsfrogsfrogs>
 References: <171270970449.3632713.16827511408040390390.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,61 +47,258 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Actually check parent pointers now.
+If the trylock-based dirent check fails, retain those parent pointers
+and check them at the end.  This may involve dropping the locks on the
+file being scanned, so yay.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/parent.c |  367 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 367 insertions(+)
+ fs/xfs/Makefile       |    2 
+ fs/xfs/scrub/parent.c |  264 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/trace.h  |    3 +
+ 3 files changed, 261 insertions(+), 8 deletions(-)
 
 
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index c969b11ce0f47..af99a455ce4db 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -177,6 +177,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   scrub.o \
+ 				   symlink.o \
+ 				   xfarray.o \
++				   xfblob.o \
+ 				   xfile.o \
+ 				   )
+ 
+@@ -218,7 +219,6 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   rmap_repair.o \
+ 				   symlink_repair.o \
+ 				   tempfile.o \
+-				   xfblob.o \
+ 				   )
+ 
+ xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
 diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index acb6282c3d148..966e106c1fe6d 100644
+index 966e106c1fe6d..cb50e89e7ee64 100644
 --- a/fs/xfs/scrub/parent.c
 +++ b/fs/xfs/scrub/parent.c
-@@ -15,11 +15,15 @@
- #include "xfs_icache.h"
- #include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
-+#include "xfs_attr.h"
-+#include "xfs_parent.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/readdir.h"
+@@ -23,6 +23,9 @@
  #include "scrub/tempfile.h"
  #include "scrub/repair.h"
-+#include "scrub/listxattr.h"
-+#include "scrub/trace.h"
+ #include "scrub/listxattr.h"
++#include "scrub/xfile.h"
++#include "scrub/xfarray.h"
++#include "scrub/xfblob.h"
+ #include "scrub/trace.h"
  
  /* Set us up to scrub parents. */
- int
-@@ -197,6 +201,366 @@ xchk_parent_validate(
- 	return error;
+@@ -211,6 +214,18 @@ xchk_parent_validate(
+  * forward to the child file.
+  */
+ 
++/* Deferred parent pointer entry that we saved for later. */
++struct xchk_pptr {
++	/* Cookie for retrieval of the pptr name. */
++	xfblob_cookie		name_cookie;
++
++	/* Parent pointer record. */
++	struct xfs_parent_rec	pptr_rec;
++
++	/* Length of the pptr name. */
++	uint8_t			namelen;
++};
++
+ struct xchk_pptrs {
+ 	struct xfs_scrub	*sc;
+ 
+@@ -219,6 +234,22 @@ struct xchk_pptrs {
+ 
+ 	/* Parent of this directory. */
+ 	xfs_ino_t		parent_ino;
++
++	/* Fixed-size array of xchk_pptr structures. */
++	struct xfarray		*pptr_entries;
++
++	/* Blobs containing parent pointer names. */
++	struct xfblob		*pptr_names;
++
++	/* Scratch buffer for scanning pptr xattrs */
++	struct xfs_da_args	pptr_args;
++
++	/* If we've cycled the ILOCK, we must revalidate all deferred pptrs. */
++	bool			need_revalidate;
++
++	/* Name buffer */
++	struct xfs_name		xname;
++	char			namebuf[MAXNAMELEN];
+ };
+ 
+ /* Does this parent pointer match the dotdot entry? */
+@@ -457,8 +488,25 @@ xchk_parent_scan_attr(
+ 	/* Try to lock the inode. */
+ 	lockmode = xchk_parent_lock_dir(sc, dp);
+ 	if (!lockmode) {
+-		xchk_set_incomplete(sc);
+-		ret = -ECANCELED;
++		struct xchk_pptr	save_pp = {
++			.pptr_rec	= *pptr_rec, /* struct copy */
++			.namelen	= namelen,
++		};
++
++		/* Couldn't lock the inode, so save the pptr for later. */
++		trace_xchk_parent_defer(sc->ip, &xname, dp->i_ino);
++
++		ret = xfblob_storename(pp->pptr_names, &save_pp.name_cookie,
++				&xname);
++		if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0,
++					&ret))
++			goto out_rele;
++
++		ret = xfarray_append(pp->pptr_entries, &save_pp);
++		if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0,
++					&ret))
++			goto out_rele;
++
+ 		goto out_rele;
+ 	}
+ 
+@@ -473,6 +521,159 @@ xchk_parent_scan_attr(
+ 	return ret;
  }
  
 +/*
-+ * Checking of Parent Pointers
-+ * ===========================
-+ *
-+ * On filesystems with directory parent pointers, we check the referential
-+ * integrity by visiting each parent pointer of a child file and checking that
-+ * the directory referenced by the pointer actually has a dirent pointing
-+ * forward to the child file.
++ * Revalidate a parent pointer that we collected in the past but couldn't check
++ * because of lock contention.  Returns 0 if the parent pointer is still valid,
++ * -ENOENT if it has gone away on us, or a negative errno.
 + */
-+
-+struct xchk_pptrs {
-+	struct xfs_scrub	*sc;
-+
-+	/* How many parent pointers did we find at the end? */
-+	unsigned long long	pptrs_found;
-+
-+	/* Parent of this directory. */
-+	xfs_ino_t		parent_ino;
-+};
-+
-+/* Does this parent pointer match the dotdot entry? */
 +STATIC int
-+xchk_parent_scan_dotdot(
++xchk_parent_revalidate_pptr(
++	struct xchk_pptrs		*pp,
++	const struct xfs_name		*xname,
++	struct xfs_parent_rec		*pptr)
++{
++	struct xfs_scrub		*sc = pp->sc;
++	int				error;
++
++	error = xfs_parent_lookup(sc->tp, sc->ip, xname, pptr, &pp->pptr_args);
++	if (error == -ENOATTR) {
++		/* Parent pointer went away, nothing to revalidate. */
++		return -ENOENT;
++	}
++
++	return error;
++}
++
++/*
++ * Check a parent pointer the slow way, which means we cycle locks a bunch
++ * and put up with revalidation until we get it done.
++ */
++STATIC int
++xchk_parent_slow_pptr(
++	struct xchk_pptrs	*pp,
++	const struct xfs_name	*xname,
++	struct xfs_parent_rec	*pptr)
++{
++	struct xfs_scrub	*sc = pp->sc;
++	struct xfs_inode	*dp = NULL;
++	unsigned int		lockmode;
++	int			error;
++
++	/* Check that the deferred parent pointer still exists. */
++	if (pp->need_revalidate) {
++		error = xchk_parent_revalidate_pptr(pp, xname, pptr);
++		if (error == -ENOENT)
++			return 0;
++		if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0,
++					&error))
++			return error;
++	}
++
++	error = xchk_parent_iget(pp, pptr, &dp);
++	if (error)
++		return error;
++	if (!dp)
++		return 0;
++
++	/*
++	 * If we can grab both IOLOCK and ILOCK of the alleged parent, we
++	 * can proceed with the validation.
++	 */
++	lockmode = xchk_parent_lock_dir(sc, dp);
++	if (lockmode) {
++		trace_xchk_parent_slowpath(sc->ip, xname, dp->i_ino);
++		goto check_dirent;
++	}
++
++	/*
++	 * We couldn't lock the parent dir.  Drop all the locks and try to
++	 * get them again, one at a time.
++	 */
++	xchk_iunlock(sc, sc->ilock_flags);
++	pp->need_revalidate = true;
++
++	trace_xchk_parent_ultraslowpath(sc->ip, xname, dp->i_ino);
++
++	error = xchk_dir_trylock_for_pptrs(sc, dp, &lockmode);
++	if (error)
++		goto out_rele;
++
++	/* Revalidate the parent pointer now that we cycled locks. */
++	error = xchk_parent_revalidate_pptr(pp, xname, pptr);
++	if (error == -ENOENT) {
++		error = 0;
++		goto out_unlock;
++	}
++	if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0, &error))
++		goto out_unlock;
++
++check_dirent:
++	error = xchk_parent_dirent(pp, xname, dp);
++out_unlock:
++	xfs_iunlock(dp, lockmode);
++out_rele:
++	xchk_irele(sc, dp);
++	return error;
++}
++
++/* Check all the parent pointers that we deferred the first time around. */
++STATIC int
++xchk_parent_finish_slow_pptrs(
++	struct xchk_pptrs	*pp)
++{
++	xfarray_idx_t		array_cur;
++	int			error;
++
++	foreach_xfarray_idx(pp->pptr_entries, array_cur) {
++		struct xchk_pptr	pptr;
++
++		if (pp->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++			return 0;
++
++		error = xfarray_load(pp->pptr_entries, array_cur, &pptr);
++		if (error)
++			return error;
++
++		error = xfblob_loadname(pp->pptr_names, pptr.name_cookie,
++				&pp->xname, pptr.namelen);
++		if (error)
++			return error;
++
++		error = xchk_parent_slow_pptr(pp, &pp->xname, &pptr.pptr_rec);
++		if (error)
++			return error;
++	}
++
++	/* Empty out both xfiles now that we've checked everything. */
++	xfarray_truncate(pp->pptr_entries);
++	xfblob_truncate(pp->pptr_names);
++	return 0;
++}
++
++/* Count the number of parent pointers. */
++STATIC int
++xchk_parent_count_pptr(
 +	struct xfs_scrub		*sc,
 +	struct xfs_inode		*ip,
 +	unsigned int			attr_flags,
@@ -112,344 +309,134 @@ index acb6282c3d148..966e106c1fe6d 100644
 +	void				*priv)
 +{
 +	struct xchk_pptrs		*pp = priv;
-+	xfs_ino_t			parent_ino;
 +	int				ret;
 +
 +	ret = xfs_parent_from_xattr(sc->mp, attr_flags, name, namelen,
-+			value, valuelen, &parent_ino, NULL);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (ret == 1 && pp->parent_ino == parent_ino)
-+		return -ECANCELED;
-+
-+	return 0;
-+}
-+
-+/* Look up the dotdot entry so that we can check it as we walk the pptrs. */
-+STATIC int
-+xchk_parent_pptr_and_dotdot(
-+	struct xchk_pptrs	*pp)
-+{
-+	struct xfs_scrub	*sc = pp->sc;
-+	int			error;
-+
-+	/* Look up '..' */
-+	error = xchk_dir_lookup(sc, sc->ip, &xfs_name_dotdot, &pp->parent_ino);
-+	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-+		return error;
-+	if (!xfs_verify_dir_ino(sc->mp, pp->parent_ino)) {
-+		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-+		return 0;
-+	}
-+
-+	/* Is this the root dir?  Then '..' must point to itself. */
-+	if (sc->ip == sc->mp->m_rootip) {
-+		if (sc->ip->i_ino != pp->parent_ino)
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-+		return 0;
-+	}
-+
-+	/*
-+	 * If this is now an unlinked directory, the dotdot value is
-+	 * meaningless as long as it points to a valid inode.
-+	 */
-+	if (VFS_I(sc->ip)->i_nlink == 0)
-+		return 0;
-+
-+	if (pp->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return 0;
-+
-+	/* Otherwise, walk the pptrs again, and check. */
-+	error = xchk_xattr_walk(sc, sc->ip, xchk_parent_scan_dotdot, pp);
-+	if (error == -ECANCELED) {
-+		/* Found a parent pointer that matches dotdot. */
-+		return 0;
-+	}
-+	if (!error || error == -EFSCORRUPTED) {
-+		/* Found a broken parent pointer or no match. */
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return 0;
-+	}
-+	return error;
-+}
-+
-+/*
-+ * Try to lock a parent directory for checking dirents.  Returns the inode
-+ * flags for the locks we now hold, or zero if we failed.
-+ */
-+STATIC unsigned int
-+xchk_parent_lock_dir(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp)
-+{
-+	if (!xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED))
-+		return 0;
-+
-+	if (!xfs_ilock_nowait(dp, XFS_ILOCK_SHARED)) {
-+		xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-+		return 0;
-+	}
-+
-+	if (!xfs_need_iread_extents(&dp->i_df))
-+		return XFS_IOLOCK_SHARED | XFS_ILOCK_SHARED;
-+
-+	xfs_iunlock(dp, XFS_ILOCK_SHARED);
-+
-+	if (!xfs_ilock_nowait(dp, XFS_ILOCK_EXCL)) {
-+		xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-+		return 0;
-+	}
-+
-+	return XFS_IOLOCK_SHARED | XFS_ILOCK_EXCL;
-+}
-+
-+/* Check the forward link (dirent) associated with this parent pointer. */
-+STATIC int
-+xchk_parent_dirent(
-+	struct xchk_pptrs	*pp,
-+	const struct xfs_name	*xname,
-+	struct xfs_inode	*dp)
-+{
-+	struct xfs_scrub	*sc = pp->sc;
-+	xfs_ino_t		child_ino;
-+	int			error;
-+
-+	/*
-+	 * Use the name attached to this parent pointer to look up the
-+	 * directory entry in the alleged parent.
-+	 */
-+	error = xchk_dir_lookup(sc, dp, xname, &child_ino);
-+	if (error == -ENOENT) {
-+		xchk_fblock_xref_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return 0;
-+	}
-+	if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0, &error))
-+		return error;
-+
-+	/* Does the inode number match? */
-+	if (child_ino != sc->ip->i_ino) {
-+		xchk_fblock_xref_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return 0;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Try to grab a parent directory. */
-+STATIC int
-+xchk_parent_iget(
-+	struct xchk_pptrs	*pp,
-+	const struct xfs_parent_rec	*pptr,
-+	struct xfs_inode	**dpp)
-+{
-+	struct xfs_scrub	*sc = pp->sc;
-+	struct xfs_inode	*ip;
-+	xfs_ino_t		parent_ino = be64_to_cpu(pptr->p_ino);
-+	int			error;
-+
-+	/* Validate inode number. */
-+	error = xfs_dir_ino_validate(sc->mp, parent_ino);
-+	if (error) {
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return -ECANCELED;
-+	}
-+
-+	error = xchk_iget(sc, parent_ino, &ip);
-+	if (error == -EINVAL || error == -ENOENT) {
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return -ECANCELED;
-+	}
-+	if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0, &error))
-+		return error;
-+
-+	/* The parent must be a directory. */
-+	if (!S_ISDIR(VFS_I(ip)->i_mode)) {
-+		xchk_fblock_xref_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		goto out_rele;
-+	}
-+
-+	/* Validate generation number. */
-+	if (VFS_I(ip)->i_generation != be32_to_cpu(pptr->p_gen)) {
-+		xchk_fblock_xref_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		goto out_rele;
-+	}
-+
-+	*dpp = ip;
-+	return 0;
-+out_rele:
-+	xchk_irele(sc, ip);
-+	return 0;
-+}
-+
-+/*
-+ * Walk an xattr of a file.  If this xattr is a parent pointer, follow it up
-+ * to a parent directory and check that the parent has a dirent pointing back
-+ * to us.
-+ */
-+STATIC int
-+xchk_parent_scan_attr(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	unsigned int		attr_flags,
-+	const unsigned char	*name,
-+	unsigned int		namelen,
-+	const void		*value,
-+	unsigned int		valuelen,
-+	void			*priv)
-+{
-+	struct xfs_name		xname = {
-+		.name		= name,
-+		.len		= namelen,
-+	};
-+	struct xchk_pptrs	*pp = priv;
-+	struct xfs_inode	*dp = NULL;
-+	const struct xfs_parent_rec *pptr_rec = value;
-+	xfs_ino_t		parent_ino;
-+	unsigned int		lockmode;
-+	int			ret;
-+
-+	ret = xfs_parent_from_xattr(sc->mp, attr_flags, name, namelen,
-+			value, valuelen, &parent_ino, NULL);
-+	if (ret < 0) {
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return -ECANCELED;
-+	}
++			value, valuelen, NULL, NULL);
 +	if (ret != 1)
-+		return 0;
-+
-+	/* No self-referential parent pointers. */
-+	if (parent_ino == sc->ip->i_ino) {
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return -ECANCELED;
-+	}
++		return ret;
 +
 +	pp->pptrs_found++;
-+
-+	ret = xchk_parent_iget(pp, pptr_rec, &dp);
-+	if (ret)
-+		return ret;
-+	if (!dp)
-+		return 0;
-+
-+	/* Try to lock the inode. */
-+	lockmode = xchk_parent_lock_dir(sc, dp);
-+	if (!lockmode) {
-+		xchk_set_incomplete(sc);
-+		ret = -ECANCELED;
-+		goto out_rele;
-+	}
-+
-+	ret = xchk_parent_dirent(pp, &xname, dp);
-+	if (ret)
-+		goto out_unlock;
-+
-+out_unlock:
-+	xfs_iunlock(dp, lockmode);
-+out_rele:
-+	xchk_irele(sc, dp);
-+	return ret;
-+}
-+
-+/*
-+ * Compare the number of parent pointers to the link count.  For
-+ * non-directories these should be the same.  For unlinked directories the
-+ * count should be zero; for linked directories, it should be nonzero.
-+ */
-+STATIC int
-+xchk_parent_count_pptrs(
-+	struct xchk_pptrs	*pp)
-+{
-+	struct xfs_scrub	*sc = pp->sc;
-+
-+	if (S_ISDIR(VFS_I(sc->ip)->i_mode)) {
-+		if (sc->ip == sc->mp->m_rootip)
-+			pp->pptrs_found++;
-+
-+		if (VFS_I(sc->ip)->i_nlink == 0 && pp->pptrs_found > 0)
-+			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
-+		else if (VFS_I(sc->ip)->i_nlink > 0 &&
-+			 pp->pptrs_found == 0)
-+			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
-+	} else {
-+		if (VFS_I(sc->ip)->i_nlink != pp->pptrs_found)
-+			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
-+	}
-+
 +	return 0;
 +}
 +
-+/* Check parent pointers of a file. */
-+STATIC int
-+xchk_parent_pptr(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xchk_pptrs	*pp;
+ /*
+  * Compare the number of parent pointers to the link count.  For
+  * non-directories these should be the same.  For unlinked directories the
+@@ -483,6 +684,23 @@ xchk_parent_count_pptrs(
+ 	struct xchk_pptrs	*pp)
+ {
+ 	struct xfs_scrub	*sc = pp->sc;
 +	int			error;
 +
-+	pp = kvzalloc(sizeof(struct xchk_pptrs), XCHK_GFP_FLAGS);
-+	if (!pp)
-+		return -ENOMEM;
-+	pp->sc = sc;
-+
-+	error = xchk_xattr_walk(sc, sc->ip, xchk_parent_scan_attr, pp);
-+	if (error == -ECANCELED) {
-+		error = 0;
-+		goto out_pp;
-+	}
-+	if (error)
-+		goto out_pp;
-+
-+	if (pp->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		goto out_pp;
-+
 +	/*
-+	 * For subdirectories, make sure the dotdot entry references the same
-+	 * inode as the parent pointers.
-+	 *
-+	 * If we're scanning a /consistent/ directory, there should only be
-+	 * one parent pointer, and it should point to the same directory as
-+	 * the dotdot entry.
-+	 *
-+	 * However, a corrupt directory tree might feature a subdirectory with
-+	 * multiple parents.  The directory loop scanner is responsible for
-+	 * correcting that kind of problem, so for now we only validate that
-+	 * the dotdot entry matches /one/ of the parents.
++	 * If we cycled the ILOCK while cross-checking parent pointers with
++	 * dirents, then we need to recalculate the number of parent pointers.
 +	 */
-+	if (S_ISDIR(VFS_I(sc->ip)->i_mode)) {
-+		error = xchk_parent_pptr_and_dotdot(pp);
++	if (pp->need_revalidate) {
++		pp->pptrs_found = 0;
++		error = xchk_xattr_walk(sc, sc->ip, xchk_parent_count_pptr, pp);
++		if (error == -EFSCORRUPTED) {
++			/* Found a bad parent pointer */
++			xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
++			return 0;
++		}
 +		if (error)
-+			goto out_pp;
++			return error;
 +	}
-+
-+	if (pp->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		goto out_pp;
+ 
+ 	if (S_ISDIR(VFS_I(sc->ip)->i_mode)) {
+ 		if (sc->ip == sc->mp->m_rootip)
+@@ -507,23 +725,51 @@ xchk_parent_pptr(
+ 	struct xfs_scrub	*sc)
+ {
+ 	struct xchk_pptrs	*pp;
++	char			*descr;
+ 	int			error;
+ 
+ 	pp = kvzalloc(sizeof(struct xchk_pptrs), XCHK_GFP_FLAGS);
+ 	if (!pp)
+ 		return -ENOMEM;
+ 	pp->sc = sc;
++	pp->xname.name = pp->namebuf;
 +
 +	/*
-+	 * Complain if the number of parent pointers doesn't match the link
-+	 * count.  This could be a sign of missing parent pointers (or an
-+	 * incorrect link count).
++	 * Set up some staging memory for parent pointers that we can't check
++	 * due to locking contention.
 +	 */
-+	error = xchk_parent_count_pptrs(pp);
++	descr = xchk_xfile_ino_descr(sc, "slow parent pointer entries");
++	error = xfarray_create(descr, 0, sizeof(struct xchk_pptr),
++			&pp->pptr_entries);
++	kfree(descr);
 +	if (error)
 +		goto out_pp;
 +
-+out_pp:
-+	kvfree(pp);
-+	return error;
-+}
-+
- /* Scrub a parent pointer. */
- int
- xchk_parent(
-@@ -206,6 +570,9 @@ xchk_parent(
- 	xfs_ino_t		parent_ino;
- 	int			error = 0;
++	descr = xchk_xfile_ino_descr(sc, "slow parent pointer names");
++	error = xfblob_create(descr, &pp->pptr_names);
++	kfree(descr);
++	if (error)
++		goto out_entries;
  
-+	if (xfs_has_parent(mp))
-+		return xchk_parent_pptr(sc);
+ 	error = xchk_xattr_walk(sc, sc->ip, xchk_parent_scan_attr, pp);
+ 	if (error == -ECANCELED) {
+ 		error = 0;
+-		goto out_pp;
++		goto out_names;
+ 	}
+ 	if (error)
+-		goto out_pp;
++		goto out_names;
 +
++	error = xchk_parent_finish_slow_pptrs(pp);
++	if (error == -ETIMEDOUT) {
++		/* Couldn't grab a lock, scrub was marked incomplete */
++		error = 0;
++		goto out_names;
++	}
++	if (error)
++		goto out_names;
+ 
+ 	if (pp->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-		goto out_pp;
++		goto out_names;
+ 
  	/*
- 	 * If we're a directory, check that the '..' link points up to
- 	 * a directory that has one entry pointing to us.
+ 	 * For subdirectories, make sure the dotdot entry references the same
+@@ -541,7 +787,7 @@ xchk_parent_pptr(
+ 	if (S_ISDIR(VFS_I(sc->ip)->i_mode)) {
+ 		error = xchk_parent_pptr_and_dotdot(pp);
+ 		if (error)
+-			goto out_pp;
++			goto out_names;
+ 	}
+ 
+ 	if (pp->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+@@ -554,8 +800,12 @@ xchk_parent_pptr(
+ 	 */
+ 	error = xchk_parent_count_pptrs(pp);
+ 	if (error)
+-		goto out_pp;
++		goto out_names;
+ 
++out_names:
++	xfblob_destroy(pp->pptr_names);
++out_entries:
++	xfarray_destroy(pp->pptr_entries);
+ out_pp:
+ 	kvfree(pp);
+ 	return error;
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 4db762480b8d4..97a106519b531 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -1544,6 +1544,9 @@ DEFINE_EVENT(xchk_pptr_class, name, \
+ DEFINE_XCHK_PPTR_EVENT(xchk_dir_defer);
+ DEFINE_XCHK_PPTR_EVENT(xchk_dir_slowpath);
+ DEFINE_XCHK_PPTR_EVENT(xchk_dir_ultraslowpath);
++DEFINE_XCHK_PPTR_EVENT(xchk_parent_defer);
++DEFINE_XCHK_PPTR_EVENT(xchk_parent_slowpath);
++DEFINE_XCHK_PPTR_EVENT(xchk_parent_ultraslowpath);
+ 
+ /* repair tracepoints */
+ #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
 
