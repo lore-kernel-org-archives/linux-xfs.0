@@ -1,52 +1,47 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A70C714E2DF
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 14:02:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 591CB149C7F;
+	Thu, 11 Apr 2024 14:10:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712844131; cv=none; b=HMu9gHObo3mOOtdG3PiFyxhNc1JrYzl9TlcmTVnciigf7TaA0nxoFrIEk5ye8YV70k0xtTK3q66Ree05v5YF44hjS+Ybb6ah0LtqXmoI+AOEp1vdYj3U5U/iNnwOMx5Nx/gAU0QrfkA0FsT8blWI4uBsy4/6lCs3tovjvVNaSmw=
+	t=1712844631; cv=none; b=Dmd0OdRGFuin9SW3/ZOKDAIVMp4EeyTpTTW81+zpNg0yq2ivzFhTQP3lnQE0tW2sqm5i0GQZpEGYGcWF6hTQ787RecSHfr1wH0Dqw86KzhJj/MpdEIXSg8vC0XvU2k9dVQxQQjgleqMA36ofJhq6bdwDlOaYi3JRi1iP4B7RAFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712844131; c=relaxed/simple;
-	bh=5r6AX4jpEb3mc3NeluquP5ZdgWxT2CtxAzlyHKU8pcA=;
+	s=arc-20240116; t=1712844631; c=relaxed/simple;
+	bh=G4lNb0v3ZtHlkx0vH6AwvDqD6tsugHAe7upynelVvts=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hHYUbgIjOl6jhlpR2LEBq4ucGM3VE0gtxiqlM6VLcETsJ5zby8e7FOu78VkTC9OLJHWo29PxJqDZMOGc7lBg7nKp1ToaG9YTUvWZ5GrYGDVB6D/NGN58VUragS0iafVi9UUKCLJWx2p5ajLRngmYlzUsUnFw+nfLl0gB01l24iU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=n6zfOP17; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=uR3F16TSWTQY56A12UFFUaknQzG5ZSJt3aOCkyOy6QXchUtZDQXz1Y1YugKdUAZ0d0QnW4eUZCsW2iTiKsFvtxANF3501PGq6anzlb+WsLFuhPeiRX5tBX0dFmPzGDoFGesw2Js2T8/XQkMNPAGb92KvUD9iNBQ5OOqUntjgT1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oDiANBVq; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n6zfOP17"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oDiANBVq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=QopyNy2JSZcbl7DNjJOWzsCgDT+sytvczhsXkj3zbdQ=; b=n6zfOP17csk2uZ9kG37EuwUtU+
-	GTcNzLYeOUcGBJhnuBMDXZq9HJeolf6yAZflbPL5EkOcDRodJFsNSLlHno/XyDku9eLef9TTMbCNu
-	FOcP73PQJ8J03mUuOPUNkTIfO2P2HDbRXQfQt9Z5RwOTAYZgymRdu7UJ0dF0iisANKgjqUKvpZYVk
-	0EMmob2AJpXpZaTsPDl6wj6MCwa8zkV5JHZSgCNIBVVOQEzlHHbEGC9uMYve3o02DpFf1/SQX6Nou
-	8cj2RrTCHd9JG147tGhY1jauVEssDvKW88kN7e5D3iSBIQHXpl2jeLK7Cfrbd6XH8njKeg/gmkJ8D
-	mGX0ZsmA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruv0B-0000000CKkN-2noO;
-	Thu, 11 Apr 2024 14:02:07 +0000
-Date: Thu, 11 Apr 2024 07:02:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH 3/3] xfs: only iget the file once when doing vectored
- scrub-by-handle
-Message-ID: <ZhftX0w0X0XQOor3@infradead.org>
-References: <171270972010.3634974.14825641209464509177.stgit@frogsfrogsfrogs>
- <171270972068.3634974.15204601732623547015.stgit@frogsfrogsfrogs>
- <ZhasUAuV6Ea_nvHh@infradead.org>
- <20240411011502.GR6390@frogsfrogsfrogs>
- <Zhdd01E-ZNYxAnHO@infradead.org>
- <20240411044132.GW6390@frogsfrogsfrogs>
- <ZhdsmeHfGx7WTnNn@infradead.org>
- <20240411045645.GX6390@frogsfrogsfrogs>
- <Zhdu3zJTO3d9gHLO@infradead.org>
- <20240411052107.GY6390@frogsfrogsfrogs>
+	bh=erzRazoUFf0ozboYbu3QcZz8RyM7ffSzd+JFbM6Ge+Q=; b=oDiANBVqfwpUInZAI+qxzHiKs5
+	/Fl/0EBc8p6ZnhZkIiPrXZZ3NQ+4hVXY+UfC+oKQwgIH5215GgNWwbgLWqQIzUp2sNOQk1x8zSeje
+	BllT0miOuQz2XJa8UB0X/HC9IbPZCPR/NqQxjUeQQeIQ4jxAdwu5rK3k5swzrDN7XWoD/LnNzlCoK
+	EWR7cLFWf/Zvz3FJPiXisxDqWcR+/+ltNj1XufULs+9d7Bo896HMc9SZnHHIJZ/i+MXU02q31llB/
+	YlaCfOegPFTe5lCal2aE/znH6zb2wffKGdgbyQvb2kGnpgkQLhvA9QFjbxFFKnFKZYtFP7j6KCeNL
+	FOprjeqw==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1ruv8B-0000000767L-2DcS;
+	Thu, 11 Apr 2024 14:10:23 +0000
+Date: Thu, 11 Apr 2024 15:10:23 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: linux-mm@kvack.org, david@fromorbit.com, dan.j.williams@intel.com,
+	jhubbard@nvidia.com, rcampbell@nvidia.com, jgg@nvidia.com,
+	linux-fsdevel@vger.kernel.org, jack@suse.cz, djwong@kernel.org,
+	hch@lst.de, david@redhat.com, ruansy.fnst@fujitsu.com,
+	nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, jglisse@redhat.com
+Subject: Re: [RFC 07/10] mm: Allow compound zone device pages
+Message-ID: <ZhfvT6SXfCR60NAG@casper.infradead.org>
+References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
+ <9c21d7ed27117f6a2c2ef86fe9d2d88e4c8c8ad4.1712796818.git-series.apopple@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,55 +50,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240411052107.GY6390@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <9c21d7ed27117f6a2c2ef86fe9d2d88e4c8c8ad4.1712796818.git-series.apopple@nvidia.com>
 
-On Wed, Apr 10, 2024 at 10:21:07PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 10, 2024 at 10:02:23PM -0700, Christoph Hellwig wrote:
-> > On Wed, Apr 10, 2024 at 09:56:45PM -0700, Darrick J. Wong wrote:
-> > > > Well, someone needs to own it, it's just not just ext4 but could us.
-> > > 
-> > > Er... I don't understand this?        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > 
-> > If we set current->journal and take a page faul we could not just
-> > recurse into ext4 but into any fs including XFS.  Any everyone
-> > blindly dereferences is as only one fs can own it.
+On Thu, Apr 11, 2024 at 10:57:28AM +1000, Alistair Popple wrote:
+> Supporting compound zone device pages requires compound_head() to
+> distinguish between head and tail pages whilst still preserving the
+> special struct page fields that are specific to zone device pages.
 > 
-> Well back before we ripped it out I had said that XFS should just set
-> current->journal to 1 to prevent memory corruption but then Jan Kara
-> noted that ext4 changes its behavior wrt jbd2 if it sees nonzero
-> current->journal.  That's why Dave dropped it entirely.
-
-If you are in a fs context you own current->journal_info.  But you
-also must make sure to not copy from and especially to user to not
-recurse into another file system.  A per-thread field can't work any
-other way.  So what ext4 is doing here is perfectly fine.  What XFS
-did was to set current->journal_info and then cause page faults, which
-is not ok.  I'm glad we fixed it.
-
-> > That seems a bit dangerous to me.  I guess we rely on the code inside
-> > the transaction context to never race with unmount as lack of SB_ACTIVE
-> > will make the VFS ignore the dontcache flag.
+> A tail page is distinguished by having bit zero being set in
+> page->compound_head, with the remaining bits pointing to the head
+> page. For zone device pages page->compound_head is shared with
+> page->pgmap.
 > 
-> That and we have an open fd to call the ioctl so any unmount will fail,
-> and we can't enter scrub if unmount already starte.
+> The page->pgmap field is common to all pages within a memory section.
+> Therefore pgmap is the same for both head and tail pages and we can
+> use the same scheme to distinguish tail pages. To obtain the pgmap for
+> a tail page a new accessor is introduced to fetch it from
+> compound_head.
 
-Indeed.
-
-So I'm still confused on why this new code keeps the inode around if an
-error happend, but xchk_irele does not.  What is the benefit of keeping
-the inode around here?  Why des it not apply to xchk_irele?
-
-I also don't understand how d_mark_dontcache in
-xfs_ioctl_setattr_prepare_dax is supposed to work.  It'll make the inode
-go away quicker than without, but it can't force the inode by itself.
-
-I'm also lot on the interaction of that with the scrub inodes due to
-both above.  I'd still expect any scrub iget to set uncached for
-a cache miss.  If we then need to keep the inode around in transaction
-context we just keep it.  What is the benefit of playing racing
-games with i_count to delay setting the dontcache flag until irele?
-And why does the DAX mess matter for that?
-
-Maybe I'm just thick and this is all obvious, but then it needs to
-be documented in detailed comments.
+Would it make sense at this point to move pgmap and zone_device_data
+from struct page to struct folio?  That will make any forgotten
+places fail to compile instead of getting a bogus value.
