@@ -1,46 +1,46 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5062E23BF
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 03:29:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E32CF13C666
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 03:32:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712806180; cv=none; b=DSkRmmIXbygmToDvsQr+fepsPPb316JqKfbIOU61AZBacczwQvJMOpB+NlzGKV7uL9+4ydtK8sSdem35hDxEyriKBAgJZZyxEH1rEEcuh0HcOCQMVXkzpADv7YIG9r3C3++I/d03DbGFTBKu57pBiVcIh+E3KRiRAItm0BbbaJY=
+	t=1712806366; cv=none; b=R0sbS7yFBcNhOZwkNHn19SOQILIVtyj65aFBMlHy+1iP/fj+ZBb2BcduEa1T2Co9w5lSZgCfNwSJLD5p+y9OPvzzQN9shf+jVT5YCxQHmM+zPvk5iYc6zXn60wbD3JWFP6FXdC4ycOwYP3wM25KsuDilNZcGzXy13UXZG1093kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712806180; c=relaxed/simple;
-	bh=duer+1EPrpMxE5/L5RHoKIlor2alCBOeo/HtlFsCays=;
+	s=arc-20240116; t=1712806366; c=relaxed/simple;
+	bh=F3eIkfj8oWePTEOaLP86OI8IWLRMWHjFz4FtLiWCUzU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y/l/1fxy8DLbNCXBKgo9rkGtWfjts6sdukWcfCkDUYAeuwn+SddOjOUnQy+45UBhH7YhVbLYKkB11ZG6Q1Mkz7elDX6s9Af+9twloL6ZE0sQZddjA+2ABvfUb/Q+cyWnOwKa9Hyb3hfnELawZKIcPELnf1T4AQbrXslld6j5w7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZlvdB2TW; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=FXlOJnFD2Zi4PkHrjmZ82QUXvYqqUhkm51cTM/dSnsYfYGI0cfqvgAVbJJdMWwAE2fzj43CHWRnjmSVt8Gvt/2Otk8JN/60/pyNHEYKX3CJMzandJqSlcz+87g+Ch3KsbypCu4SaEHhGXCW+PgFrvRNnATMphfRzYQb+yeNh0ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AwZeTwNL; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZlvdB2TW"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AwZeTwNL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6UBqnLaKG/9xdIIygAAIP6C/gug0LDPDc4bRmO1zBDI=; b=ZlvdB2TW7A+kgdDjrheo6Ei6Fy
-	d7Ebsfum+LBcyW/VdBWcgGhfBG7iXWgf2NCUEYsGAe2dIZqBXtMA9DNE+uKah3YWnhRTehMpKOe+n
-	FirH+vQhfjLD8oEolIxq2eqZP7udg1hJa1QDrdry6t5EUAN1U4bEOP3l8cfJ8l1QG4//NCRuD3tP4
-	ZmxQDDpFt2gmzHvl1icc2cp87zKsLLW+MtGUGBCzYEhOK5lpaaZmEUyS5phmLKWHaa3Bc9+T4YWef
-	plIWTxtCwXFV6hLbgcCQBvAY6UJQs7Ai0x9cCl8JWzsPWxCn+UOckNaItX+rWVwc06nkknOfJjYzg
-	DQX1/Ohg==;
+	bh=h3lQBFSe1s+0CjH9Q3QO4IK4q305rJXCKzWEkaElkQo=; b=AwZeTwNLt8ck2k+Wvn0WvGrbQj
+	4mGIZ23TNC2S/QqPwYVneu1SaFOk7F9rq8laTvJo2slRvYL7GXi0Jm24YZ6x8XWcjHGXYkzBQPszs
+	gNkRSZNdACV3MntPcto/gyxBYiNUsUgEkgRWDBERzgY6bMhjW1ne67oKYx/aqvEqNQXp/J4yJeTmM
+	UMcubb7o0ZBHxwnXXSseOGK1w0tAkrrIbC2kHRNUKsx2wbmIRWBc/s3HILFlKhA2f4DRcH1J/aUYb
+	t0WVZ9nfKligJ7aJ+P7pzrzbloick7ertqQ8sFtsbUqPoegHhMrj0z6UoWMgQap9G8UfnUqATx5K5
+	cn7dSggQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rul85-0000000A9yq-2rU4;
-	Thu, 11 Apr 2024 03:29:37 +0000
-Date: Wed, 10 Apr 2024 20:29:37 -0700
+	id 1rulB6-0000000AAVT-1quj;
+	Thu, 11 Apr 2024 03:32:44 +0000
+Date: Wed, 10 Apr 2024 20:32:44 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	catherine.hoang@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 23/32] xfs: Filter XFS_ATTR_PARENT for getfattr
-Message-ID: <ZhdZIStaD--Hdk3g@infradead.org>
-References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
- <171270969941.3631889.11060276222007768999.stgit@frogsfrogsfrogs>
- <ZhYo1hcMYpYQ4gcv@infradead.org>
- <20240410215827.GH6390@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@infradead.org>, catherine.hoang@oracle.com,
+	hch@lst.de, allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/14] xfs: add xattr setname and removename functions
+ for internal users
+Message-ID: <ZhdZ3IjRjdvqtppH@infradead.org>
+References: <171270970952.3632937.3716036526502072405.stgit@frogsfrogsfrogs>
+ <171270971004.3632937.5852027532367765797.stgit@frogsfrogsfrogs>
+ <ZhYvG1_eNLVKu3Ag@infradead.org>
+ <20240410221844.GL6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,24 +49,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240410215827.GH6390@frogsfrogsfrogs>
+In-Reply-To: <20240410221844.GL6390@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Apr 10, 2024 at 02:58:27PM -0700, Darrick J. Wong wrote:
-> "xfs: don't return XFS_ATTR_PARENT attributes via listxattr
+On Wed, Apr 10, 2024 at 03:18:44PM -0700, Darrick J. Wong wrote:
+> > Is there a good reason to have a separate remove helper and not
+> > overload a NULL value like we do for the normal xattr interface?
 > 
-> "Parent pointers are internal filesystem metadata.  They're not intended
-> to be directly visible to userspace, so filter them out of
-> xfs_xattr_put_listent so that they don't appear in listxattr."
-
-Looks good.
-
-> > However I'd make it part of the top of file comment above the include
-> > statements.  And please add it in a separate commit as it has nothing
-> > to do with the other changes here.
+> xfs_repair uses xfs_parent_unset -> xfs_attr_removename to erase any
+> XFS_ATTR_PARENT attribute that doesn't validate, so it needs to be able
+> to pass in a non-NULL value.  Perhaps I'll add a comment about that,
+> since this isn't the first time this has come up.
 > 
-> Or just get rid of the comment entirely?  It came from the verity
-> series.
+> Come to think of it you can't removename a remote parent value, so I
+> guess in that bad case xfs_repair will have to drop the entire attr
+> structure <frown>.
 
-Fine with me.
+Maybe we'll need to fix that.  How about you leave the xattr_flags in
+place for now, and then I or you if you really want) replace it with
+a new enum argument:
+
+enum xfs_attr_change {
+	XFS_ATTR_CREATE,
+	XFS_ATTR_REPLACE,
+	XFS_ATTR_CREATE_OR_REPLACE,
+	XFS_ATTR_REMOVE,
+};
+
+and we pass that to xfs_attr_set and what is current xfs_attr_setname
+(which btw is a name that feels really odd).  That way repair can
+also use the libxfs attr helpers with a value match for parent pointers?
 
