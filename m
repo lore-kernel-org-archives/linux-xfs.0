@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E04A31C0DE7
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 04:31:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B45812A1DC
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 04:41:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712809910; cv=none; b=kuShXSI5zoRYwIYuON4eFQG5RmVYD/XJH5I9dBnD7O4oHrQeuZW8kIFC9+XvfsBCScYx+8XszA9WQv4EVA9E6V2xf5NvxkD1nPUt6xoBPNeIRtRBuj3YCwCP0QXe/D8We3D9OjCQAXruMfSUlaV/1Qtl99zWhgqJrui/oVdFoxI=
+	t=1712810493; cv=none; b=tCejw/OzLUFkBl7SyqKxWuqVfPHQH1Y9FK5uL5As2BbZqmy9akbhOoafhfpIowwxOFcZ9dth6s50fYDIywlAeFTMyP542gX0ci249IMFNbmQVaBqqbKqJAulOqLO5CohzyFr0ONBsxIPdG52/7FEHn9jA1TDCQ44JopWaISCVM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712809910; c=relaxed/simple;
-	bh=LOhCyLNFqXuO6EW1nqFo4FiXK17vutWuS6Tfj0UfHCA=;
+	s=arc-20240116; t=1712810493; c=relaxed/simple;
+	bh=u6nKJuOR9ogkwpUs9lC5WOQVriI2JDIMU2ihQrWGQA0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YM2/15QO5opv9PTBQ9mf/0/+tuVTZJRM4SB7hNsBx6o8EyhFFx1D+SHBvqx9qJIeE0e8OBl3Ykdreyzpnbf0NoBSwQjzm2RZpPAKvjCLxTBmD5/QA1tuSeuxwfHDoRsXQTrEyc4ciAQjrQ33PbrAkxnFbGqUdtDwqcHV2B5H2Bk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sDG1PxuT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q+SCIkWIWLHiL/W/xcLl/7GWHU1DQwnK+pygETEAjw0FQGYtZxqVhcdS6wNf/bfQBAKcQL+Sf2Wb6ZHxR9pn8CixYbOD/4KeUaC5M9IFvcuHbQV7PW1f0GzC1Agsh8ETxev6RGarYILrJN2InRhLb6PExKtcfvqpm7eQnwCAVnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EehSnxUr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sDG1PxuT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59677C433F1;
-	Thu, 11 Apr 2024 04:31:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EehSnxUr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A809C433F1;
+	Thu, 11 Apr 2024 04:41:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712809909;
-	bh=LOhCyLNFqXuO6EW1nqFo4FiXK17vutWuS6Tfj0UfHCA=;
+	s=k20201202; t=1712810493;
+	bh=u6nKJuOR9ogkwpUs9lC5WOQVriI2JDIMU2ihQrWGQA0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sDG1PxuTX3/hePu0XqgnT6whVy0yhthoLynY57ZiNcQREGp3QyiHPAH2LhiEJhpKX
-	 +lzSPSEYh/nAWAypl8lMm3+9mbC6sC1QgbMWzy51TqxxoyrUC9wOVWQ/Ux15b8/Uzu
-	 JeRXnUgg4xhmTmgPo1PwDaEtUeEfiCj56yxhE5ZDi+cCisR37j64Sp3VcCG8Aby9Pf
-	 1jB9K/5CyOnYAEipcDhqLcKtB+7JfI9r6XC7yLQW5/x1ydxelBJhyJVUV6mZH72HCI
-	 3iktVe5DjFQwFrp6/n/6nGk+BCESo3nk8zdo+NWUOTe7Q/ko/rWoL4qijap/BNYVTp
-	 as6cgb9Gj/G8w==
-Date: Wed, 10 Apr 2024 21:31:48 -0700
+	b=EehSnxUr48cmQdzuJkYQAjipmdKCG/epNa8wXtUbrpKWTjfEJ0JHElQrMOnrqfRq6
+	 3KpdR7G0VkROT1+vz5U4y7DPhGKQpBCzOgFXKi/+Rk0bGDSz3xc7wLmZ3JpXS1r3qp
+	 ZLvt1wLVVol0N1eS7jXVU4cvYST0KXUgZwFpwW3fFauov9keec60F1kqZfSI0Gt6j4
+	 qDTGCnXpn8Z2ykisJ4TLHgu1d0/+DJGgNZ/p51cjfrXvz854jiIlsmFpjm4NrassOG
+	 qtYn/LI7Tubcu402E4rFCuwYuH7vjwBMLT/0pc/7wtA0Bg0TEA9SPfdUMIWoaRx7QP
+	 Nw/J02wGK0KUQ==
+Date: Wed, 10 Apr 2024 21:41:32 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: introduce vectored scrub mode
-Message-ID: <20240411043148.GV6390@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [PATCH 3/3] xfs: only iget the file once when doing vectored
+ scrub-by-handle
+Message-ID: <20240411044132.GW6390@frogsfrogsfrogs>
 References: <171270972010.3634974.14825641209464509177.stgit@frogsfrogsfrogs>
- <171270972051.3634974.4637574179795648493.stgit@frogsfrogsfrogs>
- <Zhapez1auz_thPN1@infradead.org>
- <20240411005941.GQ6390@frogsfrogsfrogs>
- <ZhdbPhnf1Usplqfu@infradead.org>
+ <171270972068.3634974.15204601732623547015.stgit@frogsfrogsfrogs>
+ <ZhasUAuV6Ea_nvHh@infradead.org>
+ <20240411011502.GR6390@frogsfrogsfrogs>
+ <Zhdd01E-ZNYxAnHO@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,42 +46,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhdbPhnf1Usplqfu@infradead.org>
+In-Reply-To: <Zhdd01E-ZNYxAnHO@infradead.org>
 
-On Wed, Apr 10, 2024 at 08:38:38PM -0700, Christoph Hellwig wrote:
-> On Wed, Apr 10, 2024 at 05:59:41PM -0700, Darrick J. Wong wrote:
-> > I thought about designing this interface that way, where userspace
-> > passes a pointer to an empty buffer, and the kernel formats that with
-> > xfs_scrub_vecs that tell userspace what it scrubbed and what the outcome
-> > was.  I didn't like that, because now the kernel has to have a way to
-> > communicate that the buffer needed to have been at least X size, even
-> > though for our cases XFS_SCRUB_TYPE_NR + 2 would always be enough.
+On Wed, Apr 10, 2024 at 08:49:39PM -0700, Christoph Hellwig wrote:
+> On Wed, Apr 10, 2024 at 06:15:02PM -0700, Darrick J. Wong wrote:
+> > > This looks a little weird to me.  Can't we simply use XFS_IGET_DONTCACHE
+> > > at iget time and then clear I_DONTCACHE here if we want to keep the
+> > > inode around?
 > > 
-> > Better, I thought, to let userspace figure out what it wants to run, and
-> > tell that explicitly to the kernel, and then the kernel can just do
-> > that.  The downside is that now we need the barriers.
+> > Not anymore, because other threads can mess around with the dontcache
+> > state (yay fsdax access path changes!!) while we are scrubbing the
+> > inode.
 > 
-> And the downside is the userspace needs to known about all the passes
-> and dependencies.  Which I guess it does anyway due to the older
-> scrub interface, but maybe that's worth documenting?
+> You mean xfs_ioctl_setattr_prepare_dax?  Oh lovely, a completely
+> undocumented d_mark_dontcache in a completely non-obvious place.
+> 
+> It sems to have appeared in
+> commit e4f9ba20d3b8c2b86ec71f326882e1a3c4e47953
+> Author: Ira Weiny <ira.weiny@intel.com>
+> Date:   Thu Apr 30 07:41:38 2020 -0700
+> 
+>     fs/xfs: Update xfs_ioctl_setattr_dax_invalidate()
+> 
+> without any explanation either.  And I can't see any reason why
+> we'd prevent inodes and dentries to be cached after DAX mode
+> switches to start with.  I can only guess, maybe the commit thinks
+> d_mark_dontcache is about data caching?
 
-Yes, that's correct that userspace would have needed to know all that
-anyway.  I'll summarize this conversation in the commit message.
+It's the horrible way that fsdax "supports" switching the address ops
+and i_mapping contents at runtime -- set the ondisk iflag, mark the
+inode/dentry for immediate explusion, wait for reclaim to eat the inode,
+then reload it and *presto* new incore iflag and state!
+
+(It's gross but I don't know of a better way to drain i_mapping and
+change address ops and at this point I'm hoping I just plain forget all
+that pmem stuff. :P)
 
 > > 
-> > > > +	BUILD_BUG_ON(sizeof(struct xfs_scrub_vec_head) ==
-> > > > +		     sizeof(struct xfs_scrub_metadata));
-> > > > +	BUILD_BUG_ON(XFS_IOC_SCRUB_METADATA == XFS_IOC_SCRUBV_METADATA);
+> > >                Given that we only set the uncached flag from
+> > > XFS_IGET_DONTCACHE on a cache miss, we won't have set
+> > > DCACHE_DONTCACHE anywhere (and don't really care about the dentries to
+> > > start with).
 > > > 
-> > > What is the point of these BUILD_BUG_ONs?
+> > > But why do we care about keeping the inodes with errors in memory
+> > > here, but not elsewhere?
 > > 
-> > Reusing the same ioctl number instead of burning another one.  It's not
-> > really necessary I suppose.
+> > We actually, do, but it's not obvious...
+> > 
+> > > Maybe this can be explained in an expanded comment.
+> > 
+> > ...because this bit here is basically the same as xchk_irele, but we
+> > don't have a xfs_scrub object to pass in, so it's opencoded.  I could
+> > pull this logic out into:
 > 
-> I find reusing the numbers really confusings even if it does work due
-> to the size encoding.  If you're fine with getting rid of it I'm all
-> for it.
+> Eww, I hadn't seen xchk_irele before.  To me it looks like
+> I_DONTCACHE/d_mark_dontcache is really the wrong vehicle here.
+> 
+> I'd instead have a XFS_IGET_SCRUB, which will set an XFS_ISCRUB or
+> whatever flag on a cache miss.  Any cache hit without XFS_IGET_SCRUB
+> will clear it.
+> 
+> ->drop_inode then always returns true for XFS_ISCRUB inodes unless
+> in a transaction.
 
-Done.
+How does it determine that we're in a transaction?  We just stopped
+storing transactions in current->journal_info due to problems with
+nested transactions and ext4 assuming that it can blind deref that.
+
+>                    Talking about the in transaction part - why do
+> we drop inodes in the transaction in scrub, but not elsewhere?
+
+One example is:
+
+Alloc transaction -> lock rmap btree for repairs -> iscan filesystem to
+find rmap records -> iget/irele.
 
 --D
