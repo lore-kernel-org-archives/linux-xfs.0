@@ -1,376 +1,214 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2090.outbound.protection.outlook.com [40.107.223.90])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB676399
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 00:00:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712793631; cv=none; b=S56BelwH5YsRFwt2F7nATS5tSUpnWbM5hNBgosDKpaehnhldyAgEC91bAms/aH/uC4udWNA2eHPg6wf3285kZ62sMPzNJ4TsT9XFvFllxYWXVsmjbVrgCHzDXUxYkviYsmDkFt+SneJDDWwr2Ml5Nxd9kuo2FikknXyLSZam4oQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712793631; c=relaxed/simple;
-	bh=70ktn1n27hTuyIiQIo8AWh8I3JABsbWBRtiRABw+wGw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=io8NOA8mLa21h7nYBqJT7hlJMroG4YHQKcTJkZXOCPIdGEWeyWMlxwyO+gykWNmoKVuIZZwlEgPESSv3mLkpZCatwtYCw6wX77Tc30X4d9sNYzOZQFv8/NyNSe0GM5dj6wLl0Suk1S7cerjmH3939smjcJw97mTgmvP09nfkzxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J62neN+a; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 126743234;
+	Thu, 11 Apr 2024 00:57:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.223.90
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712797066; cv=fail; b=dkJewr6PYeM0sO6aAzh7EK3kmjrBzt7s4/QCTAtf2SiFzTAah56Jns3Gmn31+anMSXNJrjsNIpkfqa0MBRQRM+erwZSwoIjSY4IDA0Ab7ZdXLSw87V/5CqEpHFWQJpTNhpuHn2A9xtQ2euNfttQGKhmDFnMVBx34QIjxguVGgH8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712797066; c=relaxed/simple;
+	bh=q4sflcCiohDqNUIbRH/z+VKYZd7QZMMNx6Zl3zHknO0=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=DuvgJ4y9VBEtW1USctAoZIeqxRs+JUrEJRpa2BkK9QhE3XkDcL+ovaUPKzhXxV/PcMtANXi1RqiChM7V8ihLyuuRHhMovVlJTv+T7MF6JnkPUEmfP6Xjkhg7tTm1s3cvRzwli/VqYpquiSTsM9l13PP/rFI1rksoLwLjGhLJG+s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=OdkJBitK; arc=fail smtp.client-ip=40.107.223.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J62neN+a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51147C433C7;
-	Thu, 11 Apr 2024 00:00:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712793631;
-	bh=70ktn1n27hTuyIiQIo8AWh8I3JABsbWBRtiRABw+wGw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=J62neN+a7OW6H+JTEYQEN319MMcA1zZx8fw6LWzZbIWKS27qDloWNGmGHsummoNm0
-	 nDUwtr6SMpQG3MvAGCMlenRNPXuNp+wTY16b3GhaW/d8yq61AP+A3HMtRqsbhKPg2n
-	 JIBxDIwbgFkHDR+kX2wJavDX5wzYwl0Gr60zZdCFvDc0dg840BGcdPIC0dWEOF2F/1
-	 OWBMiDw5sF+yEf9ByMY4EJUt+8Wl8BULioeuHjOMZPzW3yBOHnuTgKctr1Sjsu2USl
-	 VwuFOkojweZVKLbb3TDDP3Jz74uO1XpG/Batu9gCJ/TmbjVdGdjTNkJPUiJDKWgk/t
-	 tozglMfBdhpvw==
-Date: Wed, 10 Apr 2024 17:00:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: rename xfs_da_args.attr_flags
-Message-ID: <20240411000030.GP6390@frogsfrogsfrogs>
-References: <171270968374.3631393.14638451005338881895.stgit@frogsfrogsfrogs>
- <171270968435.3631393.4664304714455437765.stgit@frogsfrogsfrogs>
- <ZhYdQ90rqsMOGaa1@infradead.org>
- <20240410205528.GZ6390@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="OdkJBitK"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DVy1aMEu8XAS1WCZan8oRc26UzTmWi1j0T8fYKS9M4srauIMTddD/UZSedCcf1I3LysVRKe2vSaXlc/zBOScZCK6FGKZ9QEoZfhlgSzZbCbG+X58P0W/0ermwCFzrMdxd3Y5j8hn/vMe9Cc2FJofM4MfA888yxXpXwPBMFa28uO7wZzaWo8K6fzy3so0Cc95gBpGZeMTTw8xtvXTIH/w+quRau4B0Efuyjs/vYJpwmvOaOT27M8XH/w/7mRLrnKkyTDFUWRJvPsu4VubnBfX1zzwaVxAuCoRdvnvUGlIVB4EXldis9tT/bby5oZIjQxBtFgBmC1Po+BGdOQCfWSuMA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pwz3G4pVEJdlpyhp4ZtpEgx+/B+YnG1g293zldnpPzg=;
+ b=MyQEpd16nwzltDMGj4wYf/4P3KD3HjTrHsMA9a9q4uwQ+XHYF6KPl50hTptaU4ANu5OlgiNDib5dwtlh5+NhOLU7z7u+HsMSszoeG1DwunhJpGZ5ebTcIGpNUDVR05wC8YU8TTpYhsk21X8vwEMk6sCeM92GQBrI2nIlBGMvepgNDq2VQzuf4V2OJxE9Y7LXecyJkcDBbT+IJ0V8dbG56F3jjnUiDyv4KvgyQhOzEy/jXcOKmtpY9qe8RJnwU5oQQBuTppAVcQmL+jx7fYRkfd9g3bTTq5JSKyk1Friv0LAN3P7oupyt54C/iLPso9IeWIDDiErdg95KOYAKXWshmw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pwz3G4pVEJdlpyhp4ZtpEgx+/B+YnG1g293zldnpPzg=;
+ b=OdkJBitKYplSQAfJL6ZSjLvY5jvc0GrxEZ+7Hw0UyMfyaBtghRaHWPOjpYY2edOxKqTNYCC5TGDLJLpHkoOPlbEBlaLbox7FHevuRD0hrR96crWNp0Id68q+PLXfJrvO/HZ75fx2XBxACKtZpMWxJI/i14tHJimWdmzYR4xqQutM49mRL6s8Z8PDBHZZJAjWvNzQSyWCMPxRwMNC7G701d7da2JbN39p8mbsTCpvH89ZC8g5EFEG2gWeZ4oA87tjKJp+5pxwaOoVlz9/o8N+JH2it0D1QR7KzHh38kBZda3ZuvEA7dIilJXYotAIojILzcW/h4l+lFML8b7K23ejlg==
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ SN7PR12MB7854.namprd12.prod.outlook.com (2603:10b6:806:32b::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Thu, 11 Apr
+ 2024 00:57:41 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::c5de:1187:4532:de80]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::c5de:1187:4532:de80%7]) with mapi id 15.20.7409.042; Thu, 11 Apr 2024
+ 00:57:40 +0000
+From: Alistair Popple <apopple@nvidia.com>
+To: linux-mm@kvack.org
+Cc: david@fromorbit.com,
+	dan.j.williams@intel.com,
+	jhubbard@nvidia.com,
+	rcampbell@nvidia.com,
+	willy@infradead.org,
+	jgg@nvidia.com,
+	linux-fsdevel@vger.kernel.org,
+	jack@suse.cz,
+	djwong@kernel.org,
+	hch@lst.de,
+	david@redhat.com,
+	ruansy.fnst@fujitsu.com,
+	nvdimm@lists.linux.dev,
+	linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	jglisse@redhat.com,
+	Alistair Popple <apopple@nvidia.com>
+Subject: [RFC 00/10] fs/dax: Fix FS DAX page reference counts
+Date: Thu, 11 Apr 2024 10:57:21 +1000
+Message-ID: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SYAPR01CA0003.ausprd01.prod.outlook.com (2603:10c6:1::15)
+ To DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240410205528.GZ6390@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|SN7PR12MB7854:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	stltYl4F6zWa/yARgh08etfvcq+xoDV9XmPuqv6xp7z2hhHz1b2s2t8fl/cOMmpeV0Ms2RBIMvSrTG4WI6QUMOto7TbqEvWt2BdHZdG0DsD2taJKj3pTAcABsQXZWCPOpfsOMtlNNBPQPMHpCs85wllyQ18s0A0OgvnLYCGENQOZjEyk7cprsXMrZ++mWmwMNhcR8CGpHyatwRUleeuGQdOf1JGTM/c8UsQ/apaEYFhT8/B31PO5g/yCML8CUkFx5F66bT9L9gOXimV6mHHcWpEFKvBhC0nJrfG/phHRU8/yuOAndAGg6i8SenZKizJNYavz7z2/9XdmH4u9idYxDfhlGD47v4DecGwfyqQzFv0b0aG1nqZHdz+E7aM/QJ72jDyHSqDv5mupyO3NX//NFNymSZ26qbuAjdWDK0D9lIfkTU6WlaVQ4msSYVzRSOkrcWkgP2q69eVHGW8TvQ+chgRYFdaTqOeWakA6FzkDu+ThuN5u4ow7oGE+FnS+2x0hh1SNVNsTTFZprXcGJ3pwUn6BNbigF/RR4bVdq4A8N3v5kkt70AHbZAUSI8t/ErRebtogKye4Kyecsuy4x8lfzg2qZwkrp2ys4ctlGufjTRtMg9ptiO6DEk8ZVbYXZ3i7OSL1T3Q1BMKuI/vruXDxw5m4cqvFh0KBvEuVwcMQiNQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(366007)(7416005);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?zuR4fKit5gB0Do5otoOLKhaAcoB9jNhaE93cDWtEWXLjDrmN2M5Jr27p7sHK?=
+ =?us-ascii?Q?D2tcV/LDUOu4iAjM6nJWSuq4bHgXCHkTFu7bOLSrCnks+rzr6kpYRDqJjZfC?=
+ =?us-ascii?Q?gwsw+O4bEDOfjSRG3s6echPStLaZ3Y389/TingvKSQxp//d3JCRe0fRT0JYz?=
+ =?us-ascii?Q?GbEplMXA6lj9nnSjvauQHuhDSXpDX2CHeodlOVSWpLn5ls15IzYsuqUxbJy2?=
+ =?us-ascii?Q?ukX1y9eVh3Um2Tv/74JjMXm3OhSQaVBWcMAAWtlfTvd+VF2GItOmaYEeVVaZ?=
+ =?us-ascii?Q?DAQGDnWZj8Hx9L4DjyZJbnDFmnygyX60DuQRyFC/kEmJgN4ZlyGkWQQDe/KT?=
+ =?us-ascii?Q?hW6gbOzXWKmtulOd+toQvk5QV3yrlODDxyXk7D5iLLdMe53r+N0Ms5QK4jRP?=
+ =?us-ascii?Q?KFsXHaHGmY/6MIzsNu5eQ0qwllVoQWDwgxRO0DK5kAFC2l+5uew17Ur+UB9q?=
+ =?us-ascii?Q?Ci8AUwFWb0Av603Gp+Autr4kixLbLI44U3G3zTfNCoJXBkzSIw+RV10iccC5?=
+ =?us-ascii?Q?miK5uzAP7eLZ/IeLwsADuZayl/dipE3itEfEsb1LsThSqakJY/r8hRY+n85Y?=
+ =?us-ascii?Q?6FnJX/ABShaFmUaqYHGUMLD1lrp/x2dyajf782DouVuSJ2QzXOSF9nU2OFQd?=
+ =?us-ascii?Q?9N8XoItbuvuNOO/D/IqRbonlE/toJX8kSg1JdCWp3Qjkhwr6OJVQ2ayhdc19?=
+ =?us-ascii?Q?SZEK2CxDrFlfRMC5GGTHecR1nSU3H4Zx3yLZiiHlnaKOUgZI52mDWtnYMeYj?=
+ =?us-ascii?Q?IB5ubEIatk0ZPwjBrKaNhpLnvwipHn88NEVzIziTiZNzg2JIwLKDS2OqguQD?=
+ =?us-ascii?Q?VjuuhaN0Mm/pRK5C7mGlbKIzuAcD4F19ArnmBZ2ggQfKvHb5+DxWy3eYR3Xx?=
+ =?us-ascii?Q?vP0cFB1sebaqR8YooaAnhEx6O/vnmWlgKNWpXbeMJMAVfWxG6JJK9dURR7ly?=
+ =?us-ascii?Q?Jq9ZZmTOJQNgsNndpFgObZC5oet0vn8eyJzr0dvXXOfn8HtaoS8vr4VjsVO8?=
+ =?us-ascii?Q?1A3DfMSsQwdoB/gNlPNOVbK7HxtaOUJgIY8aHl/ev+3jCzW6gYTCoCzPggjE?=
+ =?us-ascii?Q?I9JqbnBwqzGgdc6pz8hhiXtC3M2Q/jtyGLoSTPNu58cQ741to2RmvF1R/z5s?=
+ =?us-ascii?Q?NhaaEQVTgowqCO7WsopOBBR8TZ5l4h+d0RLM5NWRNIA0Cz4CepeA3OGYoHGX?=
+ =?us-ascii?Q?bW0PuBgb7T5GZlnpRVf/AgOg2T6dw72h6bGj8azz+/43Zfq8+S3bRHPKgzHO?=
+ =?us-ascii?Q?mIQ+nAQdWXMbUs8Uaix6POlJjVWgMWoAFvX1KYfs7UPiBrGyP86Eojd6s33B?=
+ =?us-ascii?Q?imuU2setDqKD9t9Um/sm7T3AlKypwdlhntjVMZuN50XV9ZfnGjYYVXvNGu6W?=
+ =?us-ascii?Q?13P2vZu4jK58GE14K+yFnZrdpVydtTJxvZPv8OQQG/Dcrnt6VVBLLBdQZ9rC?=
+ =?us-ascii?Q?j+dywJlA3D+HUPlGZkq010wJfW74ToRfLgokqeu2lweAq9CyXOPKdWoZIPo3?=
+ =?us-ascii?Q?wxuVPQIg6CgnI5FAuZ4uKYMR28byBaHORbn+vZPpKhMNRbiWtawJhJMPm3Wk?=
+ =?us-ascii?Q?+wqNtk2bI8S4+WfHgjft5DRFNcXVB03+z7AYVLyY?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e00421e9-8ab1-471b-4428-08dc59c262f8
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2024 00:57:40.0373
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BARh95wurK+T2RmCYquye4qi/IUriTQZtZ4UiFDgiiXJJFTgiTAgNt677Ji/+e0cx10ISNjoEiZWHSCHjnkPoA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7854
 
-On Wed, Apr 10, 2024 at 01:55:28PM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 09, 2024 at 10:01:55PM -0700, Christoph Hellwig wrote:
-> > On Tue, Apr 09, 2024 at 05:50:07PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > This field only ever contains XATTR_{CREATE,REPLACE}, so let's change
-> > > the name of the field to make the field and its values consistent.
-> > 
-> > So, these flags only get passed to xfs_attr_set through xfs_attr_change
-> > and xfs_attr_setname, which means we should probably just pass them
-> > directly as in my patch (against your whole stack) below.
-> 
-> Want me to reflow this through the tree, or just tack it on the end
-> after (perhaps?) "xfs: fix corruptions in the directory tree" ?
+FS DAX pages have always maintained their own page reference counts
+without following the normal rules for page reference counting. In
+particular pages are considered free when the refcount hits one rather
+than zero and refcounts are not added when mapping the page.
 
-Ugh, no, that got messy so I just tacked it on the end. :)
+Tracking this requires special PTE bits (PTE_DEVMAP) and a secondary
+mechanism for allowing GUP to hold references on the page (see
+get_dev_pagemap). However there doesn't seem to be any reason why FS
+DAX pages need their own reference counting scheme.
 
-Also I changed the uint8_t parameter to int because the XATTR_* flags
-mostly come from the VFS and that's what it passes us in
-xattr_handler::set().
+This RFC is an initial attempt at removing the special reference
+counting and instead refcount FS DAX pages the same as normal pages.
 
---D
+There are still a couple of rough edges - in particular I haven't
+completely removed the devmap PTE bit references from arch specific
+code and there is probably some more cleanup of dev_pagemap reference
+counting that could be done, particular in mm/gup.c. I also haven't
+yet compiled on anything other than x86_64.
 
-> > Also I suspect we should do an audit of all the internal callers
-> > if they should ever be replace an existing attr, as I guess most
-> > don't.  (and xfs_attr_change really should be folded into xfs_attr_set,
-> > the split is confusing as hell).
-> 
-> I imagine a lot of the security stuff with magic xattrs probably only
-> ever creates xattrs, but I would bet that some of these subsystems
-> actually *want* the upsert behavior -- "the frob for this file should be
-> $foo, make it so".
-> 
-> --D
-> 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index b98d2a908452a0..38d1f4d10baa3b 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -1034,7 +1034,8 @@ xfs_attr_ensure_iext(
-> >   */
-> >  int
-> >  xfs_attr_set(
-> > -	struct xfs_da_args	*args)
-> > +	struct xfs_da_args	*args,
-> > +	uint8_t			xattr_flags)
-> >  {
-> >  	struct xfs_inode	*dp = args->dp;
-> >  	struct xfs_mount	*mp = dp->i_mount;
-> > @@ -1109,7 +1110,7 @@ xfs_attr_set(
-> >  		}
-> >  
-> >  		/* Pure create fails if the attr already exists */
-> > -		if (args->xattr_flags & XATTR_CREATE)
-> > +		if (xattr_flags & XATTR_CREATE)
-> >  			goto out_trans_cancel;
-> >  		xfs_attr_defer_add(args, XFS_ATTR_DEFER_REPLACE);
-> >  		break;
-> > @@ -1119,7 +1120,7 @@ xfs_attr_set(
-> >  			goto out_trans_cancel;
-> >  
-> >  		/* Pure replace fails if no existing attr to replace. */
-> > -		if (args->xattr_flags & XATTR_REPLACE)
-> > +		if (xattr_flags & XATTR_REPLACE)
-> >  			goto out_trans_cancel;
-> >  		xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
-> >  		break;
-> > @@ -1155,7 +1156,7 @@ xfs_attr_set(
-> >   * Ensure that the xattr structure maps @args->name to @args->value.
-> >   *
-> >   * The caller must have initialized @args, attached dquots, and must not hold
-> > - * any ILOCKs.  Only XATTR_CREATE may be specified in @args->xattr_flags.
-> > + * any ILOCKs.  Only XATTR_CREATE may be specified in @xattr_flags.
-> >   * Reserved data blocks may be used if @rsvd is set.
-> >   *
-> >   * Returns -EEXIST if XATTR_CREATE was specified and the name already exists.
-> > @@ -1163,6 +1164,7 @@ xfs_attr_set(
-> >  int
-> >  xfs_attr_setname(
-> >  	struct xfs_da_args	*args,
-> > +	uint8_t			xattr_flags,
-> >  	bool			rsvd)
-> >  {
-> >  	struct xfs_inode	*dp = args->dp;
-> > @@ -1172,7 +1174,7 @@ xfs_attr_setname(
-> >  	int			rmt_extents = 0;
-> >  	int			error, local;
-> >  
-> > -	ASSERT(!(args->xattr_flags & XATTR_REPLACE));
-> > +	ASSERT(!(xattr_flags & ~XATTR_CREATE));
-> >  	ASSERT(!args->trans);
-> >  
-> >  	args->total = xfs_attr_calc_size(args, &local);
-> > @@ -1198,7 +1200,7 @@ xfs_attr_setname(
-> >  	switch (error) {
-> >  	case -EEXIST:
-> >  		/* Pure create fails if the attr already exists */
-> > -		if (args->xattr_flags & XATTR_CREATE)
-> > +		if (xattr_flags & XATTR_CREATE)
-> >  			goto out_trans_cancel;
-> >  		if (args->attr_filter & XFS_ATTR_PARENT)
-> >  			xfs_attr_defer_parent(args, XFS_ATTR_DEFER_REPLACE);
-> > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > index 2a0ef4f633e2d1..b90e04c3e64f60 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.h
-> > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > @@ -550,7 +550,7 @@ int xfs_inode_hasattr(struct xfs_inode *ip);
-> >  bool xfs_attr_is_leaf(struct xfs_inode *ip);
-> >  int xfs_attr_get_ilocked(struct xfs_da_args *args);
-> >  int xfs_attr_get(struct xfs_da_args *args);
-> > -int xfs_attr_set(struct xfs_da_args *args);
-> > +int xfs_attr_set(struct xfs_da_args *args, uint8_t xattr_flags);
-> >  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
-> >  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
-> >  bool xfs_attr_check_namespace(unsigned int attr_flags);
-> > @@ -560,7 +560,7 @@ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-> >  void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
-> >  			 unsigned int *total);
-> >  
-> > -int xfs_attr_setname(struct xfs_da_args *args, bool rsvd);
-> > +int xfs_attr_setname(struct xfs_da_args *args, uint8_t xattr_flags, bool rsvd);
-> >  int xfs_attr_removename(struct xfs_da_args *args, bool rsvd);
-> >  
-> >  /*
-> > diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-> > index 8d7a38fe2a5c07..354d5d65043e43 100644
-> > --- a/fs/xfs/libxfs/xfs_da_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_da_btree.h
-> > @@ -69,7 +69,6 @@ typedef struct xfs_da_args {
-> >  	uint8_t		filetype;	/* filetype of inode for directories */
-> >  	uint8_t		op_flags;	/* operation flags */
-> >  	uint8_t		attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
-> > -	uint8_t		xattr_flags;	/* XATTR_{CREATE,REPLACE} */
-> >  	short		namelen;	/* length of string (maybe no NULL) */
-> >  	short		new_namelen;	/* length of new attr name */
-> >  	xfs_dahash_t	hashval;	/* hash value of name */
-> > diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-> > index 2b6ed8c1ee1522..c5422f714fcc72 100644
-> > --- a/fs/xfs/libxfs/xfs_parent.c
-> > +++ b/fs/xfs/libxfs/xfs_parent.c
-> > @@ -355,7 +355,7 @@ xfs_parent_set(
-> >  
-> >  	memset(scratch, 0, sizeof(struct xfs_da_args));
-> >  	xfs_parent_da_args_init(scratch, NULL, pptr, ip, owner, parent_name);
-> > -	return xfs_attr_setname(scratch, true);
-> > +	return xfs_attr_setname(scratch, 0, true);
-> >  }
-> >  
-> >  /*
-> > diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-> > index e06d00ea828b3e..8863eef5a0b87b 100644
-> > --- a/fs/xfs/scrub/attr_repair.c
-> > +++ b/fs/xfs/scrub/attr_repair.c
-> > @@ -615,7 +615,6 @@ xrep_xattr_insert_rec(
-> >  	struct xfs_da_args		args = {
-> >  		.dp			= rx->sc->tempip,
-> >  		.attr_filter		= key->flags,
-> > -		.xattr_flags		= XATTR_CREATE,
-> >  		.namelen		= key->namelen,
-> >  		.valuelen		= key->valuelen,
-> >  		.owner			= rx->sc->ip->i_ino,
-> > @@ -675,7 +674,7 @@ xrep_xattr_insert_rec(
-> >  	 * use reserved blocks because we can abort the repair with ENOSPC.
-> >  	 */
-> >  	xfs_attr_sethash(&args);
-> > -	error = xfs_attr_setname(&args, false);
-> > +	error = xfs_attr_setname(&args, XATTR_CREATE, false);
-> >  	if (error == -EEXIST)
-> >  		error = 0;
-> >  
-> > diff --git a/fs/xfs/scrub/parent_repair.c b/fs/xfs/scrub/parent_repair.c
-> > index cf79cbcda3ecb4..1bc05efa344036 100644
-> > --- a/fs/xfs/scrub/parent_repair.c
-> > +++ b/fs/xfs/scrub/parent_repair.c
-> > @@ -1031,7 +1031,7 @@ xrep_parent_insert_xattr(
-> >  			rp->xattr_name, key->namelen, key->valuelen);
-> >  
-> >  	xfs_attr_sethash(&args);
-> > -	return xfs_attr_setname(&args, false);
-> > +	return xfs_attr_setname(&args, 0, false);
-> >  }
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> > index 4bf69c9c088e28..1aaf3dc64bcbc1 100644
-> > --- a/fs/xfs/xfs_acl.c
-> > +++ b/fs/xfs/xfs_acl.c
-> > @@ -203,7 +203,7 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
-> >  		xfs_acl_to_disk(args.value, acl);
-> >  	}
-> >  
-> > -	error = xfs_attr_change(&args);
-> > +	error = xfs_attr_change(&args, 0);
-> >  	kvfree(args.value);
-> >  
-> >  	/*
-> > diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-> > index 833b0d7d8bea1c..e3f54817b91557 100644
-> > --- a/fs/xfs/xfs_handle.c
-> > +++ b/fs/xfs/xfs_handle.c
-> > @@ -492,7 +492,6 @@ xfs_attrmulti_attr_get(
-> >  	struct xfs_da_args	args = {
-> >  		.dp		= XFS_I(inode),
-> >  		.attr_filter	= xfs_attr_filter(flags),
-> > -		.xattr_flags	= xfs_xattr_flags(flags),
-> >  		.name		= name,
-> >  		.namelen	= strlen(name),
-> >  		.valuelen	= *len,
-> > @@ -526,7 +525,6 @@ xfs_attrmulti_attr_set(
-> >  	struct xfs_da_args	args = {
-> >  		.dp		= XFS_I(inode),
-> >  		.attr_filter	= xfs_attr_filter(flags),
-> > -		.xattr_flags	= xfs_xattr_flags(flags),
-> >  		.name		= name,
-> >  		.namelen	= strlen(name),
-> >  	};
-> > @@ -544,7 +542,7 @@ xfs_attrmulti_attr_set(
-> >  		args.valuelen = len;
-> >  	}
-> >  
-> > -	error = xfs_attr_change(&args);
-> > +	error = xfs_attr_change(&args, xfs_xattr_flags(flags));
-> >  	if (!error && (flags & XFS_IOC_ATTR_ROOT))
-> >  		xfs_forget_acl(inode, name);
-> >  	kfree(args.value);
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index c4f9c7eec83590..d374be9f8a6e3e 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -64,7 +64,7 @@ xfs_initxattrs(
-> >  			.value		= xattr->value,
-> >  			.valuelen	= xattr->value_len,
-> >  		};
-> > -		error = xfs_attr_change(&args);
-> > +		error = xfs_attr_change(&args, 0);
-> >  		if (error < 0)
-> >  			break;
-> >  	}
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index dc074240ad239f..1292d69087dc0c 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -2131,7 +2131,6 @@ DECLARE_EVENT_CLASS(xfs_attr_class,
-> >  		__field(int, valuelen)
-> >  		__field(xfs_dahash_t, hashval)
-> >  		__field(unsigned int, attr_filter)
-> > -		__field(unsigned int, xattr_flags)
-> >  		__field(uint32_t, op_flags)
-> >  	),
-> >  	TP_fast_assign(
-> > @@ -2143,11 +2142,10 @@ DECLARE_EVENT_CLASS(xfs_attr_class,
-> >  		__entry->valuelen = args->valuelen;
-> >  		__entry->hashval = args->hashval;
-> >  		__entry->attr_filter = args->attr_filter;
-> > -		__entry->xattr_flags = args->xattr_flags;
-> >  		__entry->op_flags = args->op_flags;
-> >  	),
-> >  	TP_printk("dev %d:%d ino 0x%llx name %.*s namelen %d valuelen %d "
-> > -		  "hashval 0x%x filter %s flags %s op_flags %s",
-> > +		  "hashval 0x%x filter %s op_flags %s",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->ino,
-> >  		  __entry->namelen,
-> > @@ -2157,9 +2155,6 @@ DECLARE_EVENT_CLASS(xfs_attr_class,
-> >  		  __entry->hashval,
-> >  		  __print_flags(__entry->attr_filter, "|",
-> >  				XFS_ATTR_FILTER_FLAGS),
-> > -		   __print_flags(__entry->xattr_flags, "|",
-> > -				{ XATTR_CREATE,		"CREATE" },
-> > -				{ XATTR_REPLACE,	"REPLACE" }),
-> >  		  __print_flags(__entry->op_flags, "|", XFS_DA_OP_FLAGS))
-> >  )
-> >  
-> > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> > index 1d57e204c850ff..69fa7b89c68972 100644
-> > --- a/fs/xfs/xfs_xattr.c
-> > +++ b/fs/xfs/xfs_xattr.c
-> > @@ -80,7 +80,8 @@ xfs_attr_want_log_assist(
-> >   */
-> >  int
-> >  xfs_attr_change(
-> > -	struct xfs_da_args	*args)
-> > +	struct xfs_da_args	*args,
-> > +	uint8_t			xattr_flags)
-> >  {
-> >  	struct xfs_mount	*mp = args->dp->i_mount;
-> >  	int			error;
-> > @@ -95,7 +96,7 @@ xfs_attr_change(
-> >  		args->op_flags |= XFS_DA_OP_LOGGED;
-> >  	}
-> >  
-> > -	return xfs_attr_set(args);
-> > +	return xfs_attr_set(args, xattr_flags);
-> >  }
-> >  
-> >  
-> > @@ -131,7 +132,6 @@ xfs_xattr_set(const struct xattr_handler *handler,
-> >  	struct xfs_da_args	args = {
-> >  		.dp		= XFS_I(inode),
-> >  		.attr_filter	= handler->flags,
-> > -		.xattr_flags	= flags,
-> >  		.name		= name,
-> >  		.namelen	= strlen(name),
-> >  		.value		= (void *)value,
-> > @@ -139,7 +139,7 @@ xfs_xattr_set(const struct xattr_handler *handler,
-> >  	};
-> >  	int			error;
-> >  
-> > -	error = xfs_attr_change(&args);
-> > +	error = xfs_attr_change(&args, flags);
-> >  	if (!error && (handler->flags & XFS_ATTR_ROOT))
-> >  		xfs_forget_acl(inode, name);
-> >  	return error;
-> > diff --git a/fs/xfs/xfs_xattr.h b/fs/xfs/xfs_xattr.h
-> > index f097002d06571f..79c0040cc904b4 100644
-> > --- a/fs/xfs/xfs_xattr.h
-> > +++ b/fs/xfs/xfs_xattr.h
-> > @@ -6,7 +6,7 @@
-> >  #ifndef __XFS_XATTR_H__
-> >  #define __XFS_XATTR_H__
-> >  
-> > -int xfs_attr_change(struct xfs_da_args *args);
-> > +int xfs_attr_change(struct xfs_da_args *args, uint8_t xattr_flags);
-> >  int xfs_attr_grab_log_assist(struct xfs_mount *mp);
-> >  void xfs_attr_rele_log_assist(struct xfs_mount *mp);
-> >  
-> > 
-> 
+Before continuing further with this clean-up though I would appreciate
+some feedback on the viability of this approach and any issues I may
+have overlooked, as I am not intimately familiar with FS DAX code (or
+for that matter the FS layer in general).
+
+I have of course run some basic testing which didn't reveal any
+problems.
+
+Signed-off-by: Alistair Popple <apopple@nvidia.com>
+
+Alistair Popple (10):
+  mm/gup.c: Remove redundant check for PCI P2PDMA page
+  mm/hmm: Remove dead check for HugeTLB and FS DAX
+  pci/p2pdma: Don't initialise page refcount to one
+  fs/dax: Don't track page mapping/index
+  fs/dax: Refactor wait for dax idle page
+  fs/dax: Add dax_page_free callback
+  mm: Allow compound zone device pages
+  fs/dax: Properly refcount fs dax pages
+  mm/khugepage.c: Warn if trying to scan devmap pmd
+  mm: Remove pXX_devmap
+
+ Documentation/mm/arch_pgtable_helpers.rst    |   6 +-
+ arch/arm64/include/asm/pgtable.h             |  24 +---
+ arch/powerpc/include/asm/book3s/64/pgtable.h |  42 +-----
+ arch/powerpc/mm/book3s64/hash_pgtable.c      |   3 +-
+ arch/powerpc/mm/book3s64/pgtable.c           |   8 +-
+ arch/powerpc/mm/book3s64/radix_pgtable.c     |   5 +-
+ arch/powerpc/mm/pgtable.c                    |   2 +-
+ arch/x86/include/asm/pgtable.h               |  31 +---
+ drivers/dax/super.c                          |   2 +-
+ drivers/gpu/drm/nouveau/nouveau_dmem.c       |   2 +-
+ drivers/nvdimm/pmem.c                        |  10 +-
+ drivers/pci/p2pdma.c                         |   4 +-
+ fs/dax.c                                     | 158 +++++++-----------
+ fs/ext4/inode.c                              |   5 +-
+ fs/fuse/dax.c                                |   4 +-
+ fs/fuse/virtio_fs.c                          |   8 +-
+ fs/userfaultfd.c                             |   2 +-
+ fs/xfs/xfs_file.c                            |   4 +-
+ include/linux/dax.h                          |  16 ++-
+ include/linux/huge_mm.h                      |  11 +-
+ include/linux/memremap.h                     |  12 +-
+ include/linux/migrate.h                      |   2 +-
+ include/linux/mm.h                           |  41 +-----
+ include/linux/page-flags.h                   |   6 +-
+ include/linux/pgtable.h                      |  17 +--
+ lib/test_hmm.c                               |   2 +-
+ mm/debug_vm_pgtable.c                        |  51 +------
+ mm/gup.c                                     | 165 +------------------
+ mm/hmm.c                                     |  40 +----
+ mm/huge_memory.c                             | 180 +++++++++-----------
+ mm/internal.h                                |   2 +-
+ mm/khugepaged.c                              |   2 +-
+ mm/mapping_dirty_helpers.c                   |   4 +-
+ mm/memory-failure.c                          |   6 +-
+ mm/memory.c                                  | 109 ++++++++----
+ mm/memremap.c                                |  36 +---
+ mm/migrate_device.c                          |   6 +-
+ mm/mm_init.c                                 |   5 +-
+ mm/mprotect.c                                |   2 +-
+ mm/mremap.c                                  |   5 +-
+ mm/page_vma_mapped.c                         |   5 +-
+ mm/pgtable-generic.c                         |   7 +-
+ mm/swap.c                                    |   2 +-
+ mm/vmscan.c                                  |   5 +-
+ 44 files changed, 338 insertions(+), 721 deletions(-)
+
+base-commit: ffc253263a1375a65fa6c9f62a893e9767fbebfa
+-- 
+git-series 0.9.1
