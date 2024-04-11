@@ -1,45 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C369B13BAC3
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 03:49:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF48413BC01;
+	Thu, 11 Apr 2024 04:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712807381; cv=none; b=JqO+olRwEmFOMiHQgWdpji1OwxdLwNek43U4NPw4e3rYGsGKG/VX+PE51yf//MAefaPIqILnnWJb28N1jjkKjN5OLehsHrdwx7arSdy2BhzjEwLd7ef0vL3CAgOaKoHc8uDamzH1GG5kb9uzWjs2hjS1AzTakaTw1FOqI4UBPdk=
+	t=1712808882; cv=none; b=Q/o69N4AEcPoPGmZaived704UL78aLop7MzaJaW4YP6ADMOP4O7q28b04XF90gceftx2HH4k1n2KQ6O8D12U9Z6uw5Wxf/SyZU5Y7z2+r4dHu/uFE+NSZQ5i++lFwn/BEQbnvngA04xYlPZ5thppD5dKp6kEBrOL0R3AbKFYfQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712807381; c=relaxed/simple;
-	bh=4ehmx0nHuN6tzFjefs3xzyVKodhxD/McAg9Z9Iz6S5Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SnD6JRlN8MrPq43Kv2jxBE26ydMsBq4EvZh3lnqgmqSDrXlYwbhWStSnt9NgUaTkss+2mgzy3EPkYt8olg6n/DQlFqcdmfG6scIYTKQgX1VE7ijAYvyCq642LKeVJ0TpODPRlHrKs8n0UNwPcfclOxRulOJ8Nvl0xKkQ+gpomXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gdwsFSDb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1712808882; c=relaxed/simple;
+	bh=U4SKgYUbeO7H/gKAzOS8h5MHwNwiwoKkW0kw4ddURSw=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lhhM/pWF74Zv0sE6OsucJSe7ZfyyIcF8MeyH7GElNSRyBtwquYjK0aDmq025rcpn4Iq8ydhqv4RKKQ7ZsXQKdajiAr/+KI3jVXvNkVjw/bl5ucw+5mMc0dcIMuMaYjO94R6kFmNQbfG7VLg8knKWlgG+X0/JQDLgGGbSRFahrDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IspGiYnJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gdwsFSDb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=jHPnKnVSM0Z9f6m98A6cf5ruoVNckyf0bx7k2Gu1WN4=; b=gdwsFSDbV6+volV/ZO4BMLdu+U
-	5d8ccyo/cloI+vih0syhLyy8EpJIQmPBe18FMayZD5IGZkQPepTevD5r9kOtI9esbxfB9nisEJ0qZ
-	4KjIKTgUhGp3QDM0E+LzAm6lq5BdEMEJOeeI1hPWWPYCWnd8m44RuBWtJcOVRdI+Jnq7O2n2hjj19
-	QcIXms6X5E6tXW4KYvm5vcWuq2Ky8FQm5KnJT69ikXPnvue88hOfIAOQFLAso6P6G8QE9wqoYAjiZ
-	i0Y61ivJsF9/Vn5B8GfqY5OfxBZVq4fw1AN3WdyK/VU4pbv9kKPRQA8OeCtGwyot13NGd+dhYTWX4
-	9/gfalYg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rulRT-0000000ADaO-1cC9;
-	Thu, 11 Apr 2024 03:49:39 +0000
-Date: Wed, 10 Apr 2024 20:49:39 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH 3/3] xfs: only iget the file once when doing vectored
- scrub-by-handle
-Message-ID: <Zhdd01E-ZNYxAnHO@infradead.org>
-References: <171270972010.3634974.14825641209464509177.stgit@frogsfrogsfrogs>
- <171270972068.3634974.15204601732623547015.stgit@frogsfrogsfrogs>
- <ZhasUAuV6Ea_nvHh@infradead.org>
- <20240411011502.GR6390@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IspGiYnJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 466ACC43390;
+	Thu, 11 Apr 2024 04:14:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712808882;
+	bh=U4SKgYUbeO7H/gKAzOS8h5MHwNwiwoKkW0kw4ddURSw=;
+	h=Date:From:To:Subject:References:In-Reply-To:From;
+	b=IspGiYnJCeDK5Y0r0nyPXxTvscY/gCaEFY5Uazvtpvo9rY5awEfC5Mp/B2E3mjnlx
+	 3jVFPrWv0LOqP8WWTZEa8nxor9zxFpd8Ivr1J3reVXxfGSyoc5am3XWWwiCb/SP+HM
+	 xXaN6YskyLerVcY0ooI6dNMlf1R8WNhsjVIqeghO9QMF/lJvbcNE2iZtpB0mubXfgz
+	 mkRM5+/dVp9vx1cLegkZ/o96BRtiwGEBuShmyDtdSasd9x8OGlIsPvjvUsbLP6bn9U
+	 PiAnD4+zXpodZp7zSOEWidjYJR2787UpQhogm7Vm0Xwd/Ff2L4JXpuL7RfQcuGzt6f
+	 npFS6/rH4eLRg==
+Date: Wed, 10 Apr 2024 21:14:41 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v30.2.1 15/14] xfs: capture inode generation numbers in the
+ ondisk exchmaps log item
+Message-ID: <20240411041441.GS6390@frogsfrogsfrogs>
+References: <171263348423.2978056.309570547736145336.stgit@frogsfrogsfrogs>
+ <20240410000528.GR6390@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,58 +43,144 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240411011502.GR6390@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240410000528.GR6390@frogsfrogsfrogs>
 
-On Wed, Apr 10, 2024 at 06:15:02PM -0700, Darrick J. Wong wrote:
-> > This looks a little weird to me.  Can't we simply use XFS_IGET_DONTCACHE
-> > at iget time and then clear I_DONTCACHE here if we want to keep the
-> > inode around?
-> 
-> Not anymore, because other threads can mess around with the dontcache
-> state (yay fsdax access path changes!!) while we are scrubbing the
-> inode.
+From: Darrick J. Wong <djwong@kernel.org>
 
-You mean xfs_ioctl_setattr_prepare_dax?  Oh lovely, a completely
-undocumented d_mark_dontcache in a completely non-obvious place.
+Per some very late review comments, capture the generation numbers of
+both inodes involved in a file content exchange operation so that we
+don't accidentally target files with have been reallocated.
 
-It sems to have appeared in
-commit e4f9ba20d3b8c2b86ec71f326882e1a3c4e47953
-Author: Ira Weiny <ira.weiny@intel.com>
-Date:   Thu Apr 30 07:41:38 2020 -0700
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v30.2.1: make a generic helper for later use, and add more comments
+about why we're doing this in the first place
+---
+ fs/xfs/libxfs/xfs_log_format.h  |    2 ++
+ fs/xfs/libxfs/xfs_log_recover.h |    2 ++
+ fs/xfs/xfs_exchmaps_item.c      |   25 ++++++++++++++++++++-----
+ fs/xfs/xfs_log_recover.c        |   31 +++++++++++++++++++++++++++++++
+ 4 files changed, 55 insertions(+), 5 deletions(-)
 
-    fs/xfs: Update xfs_ioctl_setattr_dax_invalidate()
-
-without any explanation either.  And I can't see any reason why
-we'd prevent inodes and dentries to be cached after DAX mode
-switches to start with.  I can only guess, maybe the commit thinks
-d_mark_dontcache is about data caching?
-
-> 
-> >                Given that we only set the uncached flag from
-> > XFS_IGET_DONTCACHE on a cache miss, we won't have set
-> > DCACHE_DONTCACHE anywhere (and don't really care about the dentries to
-> > start with).
-> > 
-> > But why do we care about keeping the inodes with errors in memory
-> > here, but not elsewhere?
-> 
-> We actually, do, but it's not obvious...
-> 
-> > Maybe this can be explained in an expanded comment.
-> 
-> ...because this bit here is basically the same as xchk_irele, but we
-> don't have a xfs_scrub object to pass in, so it's opencoded.  I could
-> pull this logic out into:
-
-Eww, I hadn't seen xchk_irele before.  To me it looks like
-I_DONTCACHE/d_mark_dontcache is really the wrong vehicle here.
-
-I'd instead have a XFS_IGET_SCRUB, which will set an XFS_ISCRUB or
-whatever flag on a cache miss.  Any cache hit without XFS_IGET_SCRUB
-will clear it.
-
-->drop_inode then always returns true for XFS_ISCRUB inodes unless
-in a transaction.  Talking about the in transaction part - why do
-we drop inodes in the transaction in scrub, but not elsewhere?
-
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 8dbe1f997dfd5..accba2acd623d 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -896,6 +896,8 @@ struct xfs_xmi_log_format {
+ 
+ 	uint64_t		xmi_inode1;	/* inumber of first file */
+ 	uint64_t		xmi_inode2;	/* inumber of second file */
++	uint32_t		xmi_igen1;	/* generation of first file */
++	uint32_t		xmi_igen2;	/* generation of second file */
+ 	uint64_t		xmi_startoff1;	/* block offset into file1 */
+ 	uint64_t		xmi_startoff2;	/* block offset into file2 */
+ 	uint64_t		xmi_blockcount;	/* number of blocks */
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 47b758b49cb35..521d327e4c89e 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -123,6 +123,8 @@ bool xlog_is_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+ 
+ int xlog_recover_iget(struct xfs_mount *mp, xfs_ino_t ino,
+ 		struct xfs_inode **ipp);
++int xlog_recover_iget_handle(struct xfs_mount *mp, xfs_ino_t ino, uint32_t gen,
++		struct xfs_inode **ipp);
+ void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
+ 		uint64_t intent_id);
+ int xlog_alloc_buf_cancel_table(struct xlog *log);
+diff --git a/fs/xfs/xfs_exchmaps_item.c b/fs/xfs/xfs_exchmaps_item.c
+index a40216f33214c..264a121c5e16d 100644
+--- a/fs/xfs/xfs_exchmaps_item.c
++++ b/fs/xfs/xfs_exchmaps_item.c
+@@ -231,7 +231,9 @@ xfs_exchmaps_create_intent(
+ 	xlf = &xmi_lip->xmi_format;
+ 
+ 	xlf->xmi_inode1 = xmi->xmi_ip1->i_ino;
++	xlf->xmi_igen1 = VFS_I(xmi->xmi_ip1)->i_generation;
+ 	xlf->xmi_inode2 = xmi->xmi_ip2->i_ino;
++	xlf->xmi_igen2 = VFS_I(xmi->xmi_ip2)->i_generation;
+ 	xlf->xmi_startoff1 = xmi->xmi_startoff1;
+ 	xlf->xmi_startoff2 = xmi->xmi_startoff2;
+ 	xlf->xmi_blockcount = xmi->xmi_blockcount;
+@@ -368,14 +370,25 @@ xfs_xmi_item_recover_intent(
+ 	/*
+ 	 * Grab both inodes and set IRECOVERY to prevent trimming of post-eof
+ 	 * mappings and freeing of unlinked inodes until we're totally done
+-	 * processing files.
++	 * processing files.  The ondisk format of this new log item contains
++	 * file handle information, which is why recovery for other items do
++	 * not check the inode generation number.
+ 	 */
+-	error = xlog_recover_iget(mp, xlf->xmi_inode1, &ip1);
+-	if (error)
++	error = xlog_recover_iget_handle(mp, xlf->xmi_inode1, xlf->xmi_igen1,
++			&ip1);
++	if (error) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, xlf,
++				sizeof(*xlf));
+ 		return ERR_PTR(error);
+-	error = xlog_recover_iget(mp, xlf->xmi_inode2, &ip2);
+-	if (error)
++	}
++
++	error = xlog_recover_iget_handle(mp, xlf->xmi_inode2, xlf->xmi_igen2,
++			&ip2);
++	if (error) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, xlf,
++				sizeof(*xlf));
+ 		goto err_rele1;
++	}
+ 
+ 	req->ip1 = ip1;
+ 	req->ip2 = ip2;
+@@ -485,6 +498,8 @@ xfs_exchmaps_relog_intent(
+ 
+ 	new_xlf->xmi_inode1	= old_xlf->xmi_inode1;
+ 	new_xlf->xmi_inode2	= old_xlf->xmi_inode2;
++	new_xlf->xmi_igen1	= old_xlf->xmi_igen1;
++	new_xlf->xmi_igen2	= old_xlf->xmi_igen2;
+ 	new_xlf->xmi_startoff1	= old_xlf->xmi_startoff1;
+ 	new_xlf->xmi_startoff2	= old_xlf->xmi_startoff2;
+ 	new_xlf->xmi_blockcount	= old_xlf->xmi_blockcount;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1e5ba95adf2c7..b445e8ce4a7d2 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1767,6 +1767,37 @@ xlog_recover_iget(
+ 	return 0;
+ }
+ 
++/*
++ * Get an inode so that we can recover a log operation.
++ *
++ * Log intent items that target inodes effectively contain a file handle.
++ * Check that the generation number matches the intent item like we do for
++ * other file handles.  Log intent items defined after this validation weakness
++ * was identified must use this function.
++ */
++int
++xlog_recover_iget_handle(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		gen,
++	struct xfs_inode	**ipp)
++{
++	struct xfs_inode	*ip;
++	int			error;
++
++	error = xlog_recover_iget(mp, ino, &ip);
++	if (error)
++		return error;
++
++	if (VFS_I(ip)->i_generation != gen) {
++		xfs_irele(ip);
++		return -EFSCORRUPTED;
++	}
++
++	*ipp = ip;
++	return 0;
++}
++
+ /******************************************************************************
+  *
+  *		Log recover routines
