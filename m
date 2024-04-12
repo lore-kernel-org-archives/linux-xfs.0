@@ -1,145 +1,214 @@
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2046.outbound.protection.outlook.com [40.107.244.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC68A5466B;
-	Fri, 12 Apr 2024 11:53:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.244.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712922841; cv=fail; b=po2KruM1edv3RZuQmi26sS7msHRZae2VhoZL08ca/DEgckmJmMU3NDobTwta7znHh0G2JvQ7rcWRgdAAEESUzRMeDv1UhuuDvi3RZ+rxGqiLfiSqprMN0P7ZJTGAHArTuemg/LFhFe3n+hePGOAdGGf9rWxlp08dDZfxjUQRsio=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712922841; c=relaxed/simple;
-	bh=F8NXIN3MAAxaPfUWYlPBhhmvQ67k4+NabcisOtRfORg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=aN3AWQkAZeeUqOt5Fm+9va/DXF3Udgq8rAPxYAunjRzVoTVVQklYyewwWPkcxcrsiP29YuQSCEgdIcMAHWqrx33rt8J7wLKBYBN8GaTex9/NpoONphmz6ezk8EQsdftzkAYrI+R4jD2lntuEXygR//ZSNZtVl+IooQ2NOKdlIBw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=bwsFpUzN; arc=fail smtp.client-ip=40.107.244.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C8EA1419BA;
+	Fri, 12 Apr 2024 14:38:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712932682; cv=none; b=b++O/tU/e1/BJW5OIuhYf+P0nOFQQU7hlQpG6MX/RmeoZpm1dRtqej2z4VGTzQQYtnc6JmKo7TRHakicSgSXR4QXrNp6jzXrpT3buVJiFoVKX8DtI7aA37YbKL0RPeavSefJQAAG15kzbRU1qUYN00OAsJarqObLnhuyW9SJvKk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712932682; c=relaxed/simple;
+	bh=Z55ySXlFlCDNEjr8HGsGHbc9q5i23Wo3obfcEoNpdvw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rtJeCnfCXQt7Zq1rJskTQyOIR3L6ZLJSdD7lSbcig0kTJ2lLHofklBvqWatIjwcajvRdy00zoa1Kbd1UIcCgVFcOqI4R96NYzZlSCLRSonuHhmP4XZuRZ45ia8OHK8Pkq0we+HOdABZUKTsSqBJPenTshQxy/dX46aFCuXjj97A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=1N4TA4iS; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=91MBCG5d; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=1N4TA4iS; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=91MBCG5d; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="bwsFpUzN"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dWGV5h35MaEgBfX19DLAvccDMR5FZkjQoWtF1xLkGTVwgttoIJf3VQ5IOy9p3rv2pO8zyNy5DzFOHFOqksFaOivCXBckU+d6HQBVKM/c17Bmh5btiwX4MRJ1bvRE1Ft3NdkVBApLNNUgpU8cGgEzH7M2Xph9ywpVfdPIwFZN9w71NLlWvgFXWF6oTWnrdw+wRnDnYp0mr/wxbYV5z3Tb4p50GaFM7xsp3/H0N66N+W+47mmNDSAseRK4KViOH80Ui0qkW3qGJ2Y6DZIBk+8u/JrFAh6XuuiIRFB7nvJqitVtvQTEtQyFivcNJrNPPNrHaN1Xb6CDSfHbd8uzc8mn0Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=F8NXIN3MAAxaPfUWYlPBhhmvQ67k4+NabcisOtRfORg=;
- b=lIHU6GRBgSdwSYutBtsql/nN7u6qVkYG/3yXp1Pibc0Td8bNGO1U4sZ9wIPIXIG3y960s7nL+ncJZxT56qmtagXE3jyrc6xsQkWQ0TQLrMNOALyP/Rsex2jAOlH7AuEuYD7+tGBfbFRIPEcoaXgn5MksYTidItCMhJyn617SXTpeSbPiiDOXc1I7AMP2QGynEYWspOG4BHYNNuznAK6lFJcRq7mkAjAwjFDvvMzLnGPTfkmWs88H2/JkswnMkhLpDtURS1xvfzmryENrIYGJAQ9z6mqoWwXti+dwKPkGawT7r+Cmvsdzn07NBXp6rHlhkakktlgmZMAZljrvI2l+EQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F8NXIN3MAAxaPfUWYlPBhhmvQ67k4+NabcisOtRfORg=;
- b=bwsFpUzN6M+n8HavaeD/q1SfLD2M16OKkA8MB3LZTPezoU9cnJakghB30ysr+065KibyWIbc4dCU7QskYrVSAziXi/nMj8Tj0ANoKFPF2CfHNm2mwc4m3po1ua3YF7DPaT2D9S+ruDWjfKkVWaLnJm7Kla+5nrzH79B5pq1IQRI81NdJA//1l3/goHThmlRGbV+hRfungQJtJvJPrWBto+bgwLapiN/c0kMXgMCrRnObF4BTjFNfu/DBJwPsLqb9OmsHEOcF7xEkKqczJv7/+k+23OF+cxG/I3LOBTl2qwzJmEqNKaFkmTLKh9ZSl3X/hUGhhjm6i3OsELYvRhQdVg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BY5PR12MB3843.namprd12.prod.outlook.com (2603:10b6:a03:1a4::17)
- by PH7PR12MB9073.namprd12.prod.outlook.com (2603:10b6:510:2eb::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Fri, 12 Apr
- 2024 11:53:56 +0000
-Received: from BY5PR12MB3843.namprd12.prod.outlook.com
- ([fe80::1395:49dc:c6cc:5295]) by BY5PR12MB3843.namprd12.prod.outlook.com
- ([fe80::1395:49dc:c6cc:5295%6]) with mapi id 15.20.7409.053; Fri, 12 Apr 2024
- 11:53:54 +0000
-Date: Fri, 12 Apr 2024 08:53:52 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="1N4TA4iS";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="91MBCG5d";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="1N4TA4iS";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="91MBCG5d"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 7044C5FDFC;
+	Fri, 12 Apr 2024 14:37:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1712932678; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sCsDTBKE5BK0xtqcaioV7AbOpY2+77/u8JnnEMWVVZE=;
+	b=1N4TA4iSTfxUqNz5D936xqF5zCSJDUQBPw+YYsE+KfyhAG1A6dw/HnUR1wLb9WFFP5+ICw
+	R2AomD66IAwSQ0BMGElFbfk95nCAX54OM9vkzuZiryQrdIJOCyBwb46nGoHY9m8+EcsH74
+	xlIh0Gucar30XspIjssbnGtftd6g8sg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1712932678;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sCsDTBKE5BK0xtqcaioV7AbOpY2+77/u8JnnEMWVVZE=;
+	b=91MBCG5d18RAvnFExJRBaS9JJp3FA1woZQ557EaPDYo+k1UrUYikDzgpf8/2VIf3HLGlds
+	oNyFG6cVlEl6KjBA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1712932678; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sCsDTBKE5BK0xtqcaioV7AbOpY2+77/u8JnnEMWVVZE=;
+	b=1N4TA4iSTfxUqNz5D936xqF5zCSJDUQBPw+YYsE+KfyhAG1A6dw/HnUR1wLb9WFFP5+ICw
+	R2AomD66IAwSQ0BMGElFbfk95nCAX54OM9vkzuZiryQrdIJOCyBwb46nGoHY9m8+EcsH74
+	xlIh0Gucar30XspIjssbnGtftd6g8sg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1712932678;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sCsDTBKE5BK0xtqcaioV7AbOpY2+77/u8JnnEMWVVZE=;
+	b=91MBCG5d18RAvnFExJRBaS9JJp3FA1woZQ557EaPDYo+k1UrUYikDzgpf8/2VIf3HLGlds
+	oNyFG6cVlEl6KjBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5D1371368B;
+	Fri, 12 Apr 2024 14:37:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Sl+yFkZHGWZJdQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 12 Apr 2024 14:37:58 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 088D3A071E; Fri, 12 Apr 2024 16:37:50 +0200 (CEST)
+Date: Fri, 12 Apr 2024 16:37:49 +0200
+From: Jan Kara <jack@suse.cz>
 To: Alistair Popple <apopple@nvidia.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org,
-	david@fromorbit.com, jhubbard@nvidia.com, rcampbell@nvidia.com,
-	willy@infradead.org, linux-fsdevel@vger.kernel.org, jack@suse.cz,
+Cc: linux-mm@kvack.org, david@fromorbit.com, dan.j.williams@intel.com,
+	jhubbard@nvidia.com, rcampbell@nvidia.com, willy@infradead.org,
+	jgg@nvidia.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
 	djwong@kernel.org, hch@lst.de, david@redhat.com,
 	ruansy.fnst@fujitsu.com, nvdimm@lists.linux.dev,
 	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
 	jglisse@redhat.com
-Subject: Re: [RFC 00/10] fs/dax: Fix FS DAX page reference counts
-Message-ID: <20240412115352.GY5383@nvidia.com>
+Subject: Re: [RFC 05/10] fs/dax: Refactor wait for dax idle page
+Message-ID: <20240412143749.3tryph4khox3euef@quack3>
 References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
- <66181dd83f74e_15786294e8@dwillia2-mobl3.amr.corp.intel.com.notmuch>
- <87frvr5has.fsf@nvdebian.thelocal>
- <877ch35ahu.fsf@nvdebian.thelocal>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <877ch35ahu.fsf@nvdebian.thelocal>
-X-ClientProxiedBy: BL0PR1501CA0034.namprd15.prod.outlook.com
- (2603:10b6:207:17::47) To BY5PR12MB3843.namprd12.prod.outlook.com
- (2603:10b6:a03:1a4::17)
+ <db13f495fc0addcff12b6b065b7a6b25f09c4be7.1712796818.git-series.apopple@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY5PR12MB3843:EE_|PH7PR12MB9073:EE_
-X-MS-Office365-Filtering-Correlation-Id: e3f4a59b-ca2c-4d03-880a-08dc5ae73a3d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	DMWgNlROWRiTdX6CrwpG/26fl0o0xfCK/tdphcc6JaIOf1gVxW6MOaen+7KlvOzpSShf2olKrmQTcpDfORtsdRD7J7RSKveyFHKa9TKdsnE5htGxf6mL0LdtBV0qqcUIHYHObqkq72VukvHyUypv6UYFvFTtLDXcZPhznmJL1ugThOifitU9DzDe1hrRXfgN2fc5jqzLXspMY3vAf7zcOgVJpRPs+YdXVH80GUtXmQN2w1m/WXJhEFDm4UfyqsqePx6PCLtCvvY0Q5mxyCoZICerkVrCW2LJ0mlYPbPzbY2U3bjTg5ziK/i08I0g0KCQKbdtHIk9izdIPhqAMLffCv+NbDS/RftKZYw08LAQddP+dj3KYCdI+ULLXgLsGkDqXfOaitTFllB97L3tBrsH0lA8l65lHDr1IvbG/GyypE3P57gOKTEEIuPyXz4b+w99GXTKm76P5Z+gR0v3KYwv79UlFg0rEPTOm1FZjMvGRtFI1GL9YJFzNpuLQayjAF7H0+8zQxU/cxeVmocDPFbU0iuibWEAEKBm3Yz7K/fKzpH9bM96ZP5RCtU4m0yN3UOiGgFHE0oQp+mHRwaBR4HotzOu9dZrbtTZMYBbcvek4dIHcVUPjNCQXa7v3uIYxM5UyFQIuzWk3zSA2TIvf3whcqVBaiI7TgEJbjzemU4TjSE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR12MB3843.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(7416005)(376005)(366007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?tZgwPiZ453RZMGiSewWKAWHuiMT7BAvdUwO4peHX7YOF2jNdjAPidcqm07jY?=
- =?us-ascii?Q?tFJXD3AlLAvRWGY/PLzrhUC+Ld3r9CWUYjpROKgtICD6JShQrD7qs4tH9M6l?=
- =?us-ascii?Q?aUeWxIvto0O5E0AKZx21g59UsSn4eQgMyGq0QHbpPXT4ClgUcL0fO0yNiryK?=
- =?us-ascii?Q?Y9mIO9nMZGahYCTP3dIGMswUVBzVhJ453xskhETk6ij/qmHVUpohz+E4ndV/?=
- =?us-ascii?Q?SfGfG6VbA2O0jGdsk2CcKCW4nVovUmMtzp+ZSL+pHjgrBzVkXqxngla6uw/P?=
- =?us-ascii?Q?qFJH8AZ7hKGfoJ1jhBWDp1mhl/pid8f0X0gzIKUoInj1pjE+s0cqk8ypTpfl?=
- =?us-ascii?Q?CDPXqyCIXwgpHriWhOGM59oJPEqQkWyzfxV0AsBEjP2qnm9b5XtML0bmCmvJ?=
- =?us-ascii?Q?WVeqEsNy1ht09q4K2mZ2fUzW4Zq6ptja/pwfvmbPqXVacRHmHVHaJHihTG72?=
- =?us-ascii?Q?xYsl72Zfcf5TnD/h6VLp+d6HQCM9fU0ZHjQ4k8J+8gXjJO1k68uhRaCYegj2?=
- =?us-ascii?Q?JLu6i5ISAdFN1pbuILLWkdEhKbDN7xb2f/uve6F/+VP+WvXDN3vEsdeYI3pA?=
- =?us-ascii?Q?TW2uHoc00PUCQ4jRzWGQatZdpOgTiIN8uhaSeHsalzAdCRN8X1MQM9D6jbqM?=
- =?us-ascii?Q?4WPMGCVlC4NscvBRvAL5BaRvjCqF6cTCTACYh4K6S1/4wB0WHFxLHwnmXPQl?=
- =?us-ascii?Q?/96Cim4QFRbQqlZrxOvl1ssQOUac5MCf6ikM8/7lgBNBX8/iLV1iH4XyLbir?=
- =?us-ascii?Q?f0YDWbxwXOWtcD5o/ULQaCiZF7njriV/WkOfuaPJp75ufSL+aNgGJyzAH6a2?=
- =?us-ascii?Q?Po/QW5vGZ5nJkh70j0AiRDL86nR8FynrQfI8d0nxQ73XUKztH/yJYkG0PZpN?=
- =?us-ascii?Q?fa24u2vVKYzsusGuhvcMt6a2Qrf+PZEOkYaYDtS5neJNowONkHUPaAy9Tez7?=
- =?us-ascii?Q?IsZt5upceMIPD2aCRb4GxEx9GxXXxJNPcved/r4n2cQg/5ci0+zkPoVFHn5a?=
- =?us-ascii?Q?m5Qk4cqenZhxKMgY3HFfRG2llvE3H1n+dySgXr+y+JNqiXEeHooWgDeXcymq?=
- =?us-ascii?Q?wywM9EhLqF//ApNAU/j4y5sgLWryr9zKuH0A54BXhNHDtpki+c6HGMU7lywK?=
- =?us-ascii?Q?k27cwV5hrFLuBJh5VVEFUsm+V6TpUj1KJRNKYmRMLBUbdyOI9lLwwS1Ag9xA?=
- =?us-ascii?Q?Obi+YhqlgOpOw63+KPjBOqLFVXv0VGTWyXr+qKZorzvFBpc3QqNRQdkcCdQe?=
- =?us-ascii?Q?z87cSYshKpTf3Lhxe3djk7EQwLTMbGSlphtNlMJp6ksH2IW68X/3gRen4vLf?=
- =?us-ascii?Q?NDlx3o7pF6eYezu6VxVicVjoybpoxfyzurkgVgRr7tbiI9vmECKFfotgpABH?=
- =?us-ascii?Q?1N+q4aY48NL4F3b4Yz+8xxMmg4TtlBN11KDS2CYEkelEpyYJAfjnRQkrzkxd?=
- =?us-ascii?Q?Msea/wzyuAMqAj8qmwGN2bzeUvRZtVm8KE0++Xyz9CGZ/2M49GMVtneOHRmo?=
- =?us-ascii?Q?YUikvfrZClSFSCySD2z6Sq8N8TWnV8CscUKGjUgxIl6aBLk1syiiWEI6LWgP?=
- =?us-ascii?Q?pJlyIqGkQ8/YassyLaE4nhr9RbOtxFa7OhPI6VFC?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e3f4a59b-ca2c-4d03-880a-08dc5ae73a3d
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR12MB3843.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2024 11:53:54.2463
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TDRonoeFkAPV6fzP7cJxVwEa8TuNHXmdJeC1ZuJmedRTJdc80fdJV7nP92Nrr/qH
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB9073
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <db13f495fc0addcff12b6b065b7a6b25f09c4be7.1712796818.git-series.apopple@nvidia.com>
+X-Spam-Flag: NO
+X-Spam-Score: -3.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[18];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:email,nvidia.com:email,suse.com:email]
 
-On Fri, Apr 12, 2024 at 04:55:31PM +1000, Alistair Popple wrote:
+On Thu 11-04-24 10:57:26, Alistair Popple wrote:
+> A FS DAX page is considered idle when its refcount drops to one. This
+> is currently open-coded in all file systems supporting FS DAX. Move
+> the idle detection to a common function to make future changes easier.
+> 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
 
-> Ok, I think I found the dragons you were talking about earlier for
-> device-dax. I completely broke that because as you've already pointed
-> out pmd_trans_huge() won't filter out DAX pages. That's fine for FS DAX
-> (because the pages are essentially normal pages now anyway), but we
-> don't have a PMD equivalent of vm_normal_page() which leads to all sorts
-> of issues for DEVDAX.
+Good cleanup. Feel free to add:
 
-What about vm_normal_page() depends on the radix level ?
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Doesn't DEVDAX memory have struct page too?
+								Honza
 
-> So I will probably have to add something like that unless we only need
-> to support large (pmd/pud) mappings of DEVDAX pages on systems with
-> CONFIG_ARCH_HAS_PTE_SPECIAL in which case I guess we could just filter
-> based on pte_special().
-
-pte_special should only be used by memory without a struct page, is
-that what DEVDAX is?
-
-Jason
+> ---
+>  fs/ext4/inode.c     |  5 +----
+>  fs/fuse/dax.c       |  4 +---
+>  fs/xfs/xfs_file.c   |  4 +---
+>  include/linux/dax.h | 11 +++++++++++
+>  4 files changed, 14 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 4ce35f1..e9cef7d 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3868,10 +3868,7 @@ int ext4_break_layouts(struct inode *inode)
+>  		if (!page)
+>  			return 0;
+>  
+> -		error = ___wait_var_event(&page->_refcount,
+> -				atomic_read(&page->_refcount) == 1,
+> -				TASK_INTERRUPTIBLE, 0, 0,
+> -				ext4_wait_dax_page(inode));
+> +		error = dax_wait_page_idle(page, ext4_wait_dax_page, inode);
+>  	} while (error == 0);
+>  
+>  	return error;
+> diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
+> index 23904a6..8a62483 100644
+> --- a/fs/fuse/dax.c
+> +++ b/fs/fuse/dax.c
+> @@ -676,9 +676,7 @@ static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
+>  		return 0;
+>  
+>  	*retry = true;
+> -	return ___wait_var_event(&page->_refcount,
+> -			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+> -			0, 0, fuse_wait_dax_page(inode));
+> +	return dax_wait_page_idle(page, fuse_wait_dax_page, inode);
+>  }
+>  
+>  /* dmap_end == 0 leads to unmapping of whole file */
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 2037002..099cd70 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -849,9 +849,7 @@ xfs_break_dax_layouts(
+>  		return 0;
+>  
+>  	*retry = true;
+> -	return ___wait_var_event(&page->_refcount,
+> -			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+> -			0, 0, xfs_wait_dax_page(inode));
+> +	return dax_wait_page_idle(page, xfs_wait_dax_page, inode);
+>  }
+>  
+>  int
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 22cd990..bced4d4 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -212,6 +212,17 @@ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+>  int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>  		const struct iomap_ops *ops);
+>  
+> +static inline int dax_wait_page_idle(struct page *page,
+> +				void (cb)(struct inode *),
+> +				struct inode *inode)
+> +{
+> +	int ret;
+> +
+> +	ret = ___wait_var_event(page, page_ref_count(page) == 1,
+> +				TASK_INTERRUPTIBLE, 0, 0, cb(inode));
+> +	return ret;
+> +}
+> +
+>  #if IS_ENABLED(CONFIG_DAX)
+>  int dax_read_lock(void);
+>  void dax_read_unlock(int id);
+> -- 
+> git-series 0.9.1
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
