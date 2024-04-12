@@ -1,150 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2076.outbound.protection.outlook.com [40.107.94.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A05E6AB8
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2024 00:21:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712881294; cv=none; b=quIgT8MMR5UM+XQmr/L7Ox68TD8/E8BzYDgdmCJYH4oGrec2LusJnTBu7YLtM04vS7JMFKAVL6HLPgel/ijTrLYGcwdXr22F8qvuOP+ZDzjRK4E3+sSSCIKMGXbPbkuQPJLQR8C2TiRmgZJqmZyu5IOEHc/m7fD48CqOgSivp+E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712881294; c=relaxed/simple;
-	bh=Lmi0PlgpS6X3AJQUPK0lT5lDa55kxQCilYS27faIaww=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UkCSvDrcK0Kr/VVLYHMDLQTizZJ8wwb7sqiWf5Pi0cHgNHR4IRVuU9WN0QCc85EmR7rEHZV5RR6d9LYctVInlmCZ6eu9c8QBmMOCqG1jdN/cM2QcXfeOCZc5C2+6gO4CGFR1RW325mVg0eZzWuJ7hmn6eMDMMpsaf81PWX9zAow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S0A2rf8S; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B701333F7;
+	Fri, 12 Apr 2024 01:34:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.94.76
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712885644; cv=fail; b=bcBAPe/R4d/JA3/9JWGiRkktlG9X6jl38qYYuaISlachhbkTFdD86jOwYWt4DW1zYzPLJPD/uzoOXcqMxToNpH8RfVr3OviJAEAMd20YxdQbrx6Wu0TSBIULSNqYpR4UcRmDaWTSHBEDB/hMOnfwHg9sDkvcyadVw/fmbhjspKM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712885644; c=relaxed/simple;
+	bh=pbGAr3OJqYBN8ev9Wv9dW8DX9EmJ9NnrMXmHLwFgTmY=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 Content-Type:MIME-Version; b=fqgKFu2ZQE23eh1RhihpRKzirP3LLtQW3HPbtRMpzZ/D2eliIO1wuCPh6rJAGG7ca3dnBiAqq4rBJr/yi1ERpVZaILSpW4cwJ3kk2MMCp43J+DaUYcKx6DiGyxo7LjFNohCJYaEhGlUz/qATf2R4hpxAnMgfc/jzh8hhSpwoRtc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=fhW5Usns; arc=fail smtp.client-ip=40.107.94.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S0A2rf8S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5A72C072AA;
-	Fri, 12 Apr 2024 00:21:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712881294;
-	bh=Lmi0PlgpS6X3AJQUPK0lT5lDa55kxQCilYS27faIaww=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=S0A2rf8SBPNMFpH5PJkOuO+AsTsPFXlZsUoXanH9RBUYVl3NX2vli7BmCcA065jfz
-	 MnAXrIVTMRh06b+ej7dA9VsFfwqMFjDyuYzwVlc/rJP8AczNVOFa1UGDMOckXoEmHp
-	 MHJvMPDrGIydcPsZfeg5X9cBf9DplrsRtyHMatS7fg4oCOjQrlxfauUrsdZHPeA65F
-	 Qc2KBD6OagIWnnryOvSh4nRK4FNOoES+PziXGawa2n4IFySpdkrvjHhzls/I2CNz5P
-	 pyeLO9sZ8p2wYtXRp7kNa53al3j74Njl1HRBiRg0C3tBAjjYp4B1wQSzVYrmBrXgys
-	 wtMepVhLrUchQ==
-Date: Thu, 11 Apr 2024 17:21:33 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH 3/3] xfs: only iget the file once when doing vectored
- scrub-by-handle
-Message-ID: <20240412002133.GZ6390@frogsfrogsfrogs>
-References: <171270972068.3634974.15204601732623547015.stgit@frogsfrogsfrogs>
- <ZhasUAuV6Ea_nvHh@infradead.org>
- <20240411011502.GR6390@frogsfrogsfrogs>
- <Zhdd01E-ZNYxAnHO@infradead.org>
- <20240411044132.GW6390@frogsfrogsfrogs>
- <ZhdsmeHfGx7WTnNn@infradead.org>
- <20240411045645.GX6390@frogsfrogsfrogs>
- <Zhdu3zJTO3d9gHLO@infradead.org>
- <20240411052107.GY6390@frogsfrogsfrogs>
- <ZhftX0w0X0XQOor3@infradead.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="fhW5Usns"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=AvNM44vHK34gCq1kEMdxTEwAb1Io8mwshZG5fztHbQofyuNkcNjB/3UKD6/PqaPFfQy0EQZF6sa0RQ7hYv6OYtdiWN8wD5PddUmrhdcNaQGNUDEMZYEC0/apPSiExcuZ+pi5J0lUrnahTmjioq6GtXAVjYD20um5Ur2osAHwFuRUQK4CWq7W0BsH8onb4ryzOlQFDxIEd0GUlRyDe4Cw4tHFpn0nfOdry7uE+naK5WKKinjehMAn+KeCXoeGNo4Rl9nM5EHCrvyI5kzLvq4tGhwHv7fh6YQLfFwZYTPPvBbIE9dsnryMagh979WhzEtrXb8upsBwTcKgbCOqiHEN/g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=GxkvrIM+iKa0dK34lBZn78uIEVXi+SOQVhBFrz/7NSY=;
+ b=oao/heeXHXt+THo0UqoO2qvbBIO9Mx0ehtcYz1PqxYwyi7q5k42F9dQKXPiDWjRE9ushbBAbQJn4Mt9gqTSVWCa/+Qaqid2hUnktzGAOIsY5tmfglkfFr8j0Kg7vZYNfnO7jg8B+Ner+tgQm5fXgco8fZ5QKsoXvXQyum5yJwj/zrEF7t54MZebPFzhpHgXN+5EmGkQRcv7L27eUQjzXQetaJ8dF2sBDHWCspkJ+wSDeAIwMBR1BW24g4JdP9elz8vOmJ42BtDn/AkVatIEIQrWdDk4Xk4zwYgRutc1rn0C5Gi1cm9819HhQaAz9aPwUH4n49e3mr+mU47QWh+IoPA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GxkvrIM+iKa0dK34lBZn78uIEVXi+SOQVhBFrz/7NSY=;
+ b=fhW5UsnsfpWkPTe0uT08dx/iNSEbFWErF4j57Nm1pv9iCavdQrVpkgtzHdPjh0S2ylNWfMbcjywuj/NmXxBUrhOOdGB2DIB9GJuLHF2g+Mg5STnXFMbTN9ZoW6bsxy7qaTZu6B+JgyO092Y1MsAoVvv8oi585eRPzvgHpsSnyFwj2BjO0YlBGJGOYSr7lbQPhTR+avH9X/kthvEQ0iAGWHyGFruYIdO79pgZ/HvWVjuyWUnLdNzx7SwAWnW99U7YIh/DilKvjYjzykcUpTCcgrPgPHpUF6HqzURDB/atatAIT+j4SBvY+xAsq2liZ4BGRn2laUeCFgInGaDpQBuvhw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CY8PR12MB7705.namprd12.prod.outlook.com (2603:10b6:930:84::9)
+ by MW4PR12MB7440.namprd12.prod.outlook.com (2603:10b6:303:223::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.26; Fri, 12 Apr
+ 2024 01:33:58 +0000
+Received: from CY8PR12MB7705.namprd12.prod.outlook.com
+ ([fe80::e71d:1645:cee5:4d61]) by CY8PR12MB7705.namprd12.prod.outlook.com
+ ([fe80::e71d:1645:cee5:4d61%7]) with mapi id 15.20.7409.042; Fri, 12 Apr 2024
+ 01:33:58 +0000
+References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
+ <e4a877d1f77d778a2e820b9df66f6b7422bf2276.1712796818.git-series.apopple@nvidia.com>
+ <20240411122530.GQ5383@nvidia.com> <ZhfnnYfqWKZn5Inh@x1n>
+User-agent: mu4e 1.10.8; emacs 29.1
+From: Alistair Popple <apopple@nvidia.com>
+To: Peter Xu <peterx@redhat.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, linux-mm@kvack.org,
+ david@fromorbit.com, dan.j.williams@intel.com, jhubbard@nvidia.com,
+ rcampbell@nvidia.com, willy@infradead.org, linux-fsdevel@vger.kernel.org,
+ jack@suse.cz, djwong@kernel.org, hch@lst.de, david@redhat.com,
+ ruansy.fnst@fujitsu.com, nvdimm@lists.linux.dev,
+ linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, jglisse@redhat.com
+Subject: Re: [RFC 02/10] mm/hmm: Remove dead check for HugeTLB and FS DAX
+Date: Fri, 12 Apr 2024 11:28:47 +1000
+In-reply-to: <ZhfnnYfqWKZn5Inh@x1n>
+Message-ID: <87wmp35pq6.fsf@nvdebian.thelocal>
+Content-Type: text/plain
+X-ClientProxiedBy: SY5P300CA0035.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:1fd::10) To CY8PR12MB7705.namprd12.prod.outlook.com
+ (2603:10b6:930:84::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZhftX0w0X0XQOor3@infradead.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PR12MB7705:EE_|MW4PR12MB7440:EE_
+X-MS-Office365-Filtering-Correlation-Id: 741decff-aab6-417a-4234-08dc5a909fb1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	RFL84Dn9y8B3VOL+dLnYr/6eURsqASyOUx7Wnx0J9ZeWS1TCC2tvvIR253Cq1aqPZTvk7bjQKaeqjDJRNVrmstR6wtnc9mEcbQehZ8XfDEKf7rAsHy7Dm/ypWPURpEzyn4+LgqqS3yTRlV/nlV8SQLIfCnnE+KLcTflb7EW8dV6fiYT1ziRSzdcaJVzFHu1Uu7AKA56t/MuSY7IoocALxoH892pV2Mdb7we8vFlRu2rBVIcCiB4ZE2QWFPLYqSYDaoVa6phQr3ULJPtn3z3RA2Vz8xhUsuX/DcZRyZZtZKGiKQBuPwlm7iIx2aYdXfmT0U6WEPnlUMRUtcxH0raU94cNENv5ue5h8G4mYUg7s6Lu/6bN7L9s8RNwWf1yK5YoHWVnChiMDylQ7SH49cgMEoRyta1YPGCKsV81aAJw8RDl0IOO90QuCw8sM1XMGZtbnHPSvhsdnkbaLyOBZOGXeffMYlHh45L89fgc1RZrrmYRFuG7a96QhriVdFkznGfdScNFzciHE7UQ6Eo8GlZJfLqb2z0DdyyVRhv37WgvaG6We1fcuHLpF/DjlNDceZjhQIInr4pSC8MRq+7okE1oW4KiPm3ZeRv+8JXrty5DNXLTNSWBZwa6PFfY8voF+zBo8nIX/BHzbXVmuMkwlHRXst/0P3GX7zJPHQ2TxYcHYDM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR12MB7705.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(7416005)(1800799015);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?EulMncKi8RsyDM+2CrUthNiFPNW/Rr6lMSy5L82kupZ4PKl3D3idNYKwi9MB?=
+ =?us-ascii?Q?FZI1ivOPaNf2Ekol3U4YSEt0nFWdDzVSAjWR0cIahz6WmEQXfZcXIqQEwmpH?=
+ =?us-ascii?Q?8I2rIVcNrTKCM46kpNGcpY48qbSY80DV39BEBoUVr7xRHrUOOd5RX4onqD/U?=
+ =?us-ascii?Q?bI6Os1Vd2mmRGmQc4LsnrNpADrU4p2oEQuUOBBsWH71lIZET0jhieyC9Lpn1?=
+ =?us-ascii?Q?CtbgHFjkPVmSgBkKPFPbyUW2+c/X8ic5laMX+968YTlqA1MoHSFvbQpWPEr5?=
+ =?us-ascii?Q?Oj8GKv/o1l3w93jbSZLnmF4rSXSt2dqzAmMxCXZNixblCgrScbuEIzsboaKA?=
+ =?us-ascii?Q?qzyq3jytzoipfNY+UsViY6eOWXtUkCxekGf+1OSl89bhQraowpEnwfLYdT+9?=
+ =?us-ascii?Q?jmQPb26jfFi4nTt0TIA4ZZsnsvigQBreFZ7huEy0gYESw2eSEH4qqjLc7Skl?=
+ =?us-ascii?Q?a19xys0NMf2IgyI0WFf1EO5pVCghzxeUdZYWv1R2fTum5hPWWhHJPcbvuWiP?=
+ =?us-ascii?Q?Y8je0TWlNBP/uTMiikiGVeIe1R6R0Q2f7aJnmuIrjDU2C9OwkFVwaROysxy8?=
+ =?us-ascii?Q?NNRC7uuAdJw7fpQS/vAMw9P3XOXTPsJ+EIEct1Bua89JtiLEVvBYsWAWJQHQ?=
+ =?us-ascii?Q?H6GDw5s/zdN5VlC7HZD9j4uf6WfqZ4Q9c/auRf7JQ4pS6TiyvmGAJYcL7Q3U?=
+ =?us-ascii?Q?Ym4ik5NSsP15AymOslKtD6QzFsVXCxLMTeFCQdDyYo0IDKap+gFcM3FWegq+?=
+ =?us-ascii?Q?FKvV1V0sDV4TZJ241BoQMZBmngFpOhi0lLz2+AL/YjleVF4ISNOo0WcNqytT?=
+ =?us-ascii?Q?5e7uraucFSUUuI4RPK35tRE9emDRxR35IEkXyFmMXSQtq+9D6peXcCaRlJcj?=
+ =?us-ascii?Q?TQQCPX1NC3qSrNEHGbUv3fA0DnJ6+Ux2WaR00lcJY5BKxeg/6og4TzFqsrn3?=
+ =?us-ascii?Q?PSW5+XH7O7RrnQGyG5Q3OdnRxdwdOKl6Msu76Ph8jq51eh2DUOBa60hsqc5C?=
+ =?us-ascii?Q?ND3vIvhx6cKjN6n6+UkSLc5ItkJoGqWH7WHnMHpIn1hofjkaKEmpzVGhUNtR?=
+ =?us-ascii?Q?j2DZ/iY37Rb8xmSuFxGfmufJKJZw/syld3M4mD+6b9AUg59/URl6XzBnvc5S?=
+ =?us-ascii?Q?jF0naqMvwFCIuYV1xEPqnjnkjM+FH8v4RYq67TdbgN7fg/W/O6bKHx+JX6za?=
+ =?us-ascii?Q?syRiYW/J73gHqKYgi0VT3bvkCm+2INEplxCXYu5lIVI4D2LFo3XW4/ww8uEw?=
+ =?us-ascii?Q?JOWaLucmEv7lphCPKTL/BxbrX8jRwBHoVqzaV07VxQ+so+yX8Ay1TCiGGieS?=
+ =?us-ascii?Q?RWNsuevAGYEMHfQl8ZgedfBgmESxzfc+gB70XWcCCKa961aNSiA55BSVPXC0?=
+ =?us-ascii?Q?2C0v2sD1w8cHrE2ZPLPRQb4Bvcwq30mc3QvCiDzasqSvocsdkoIUKCLu9rwz?=
+ =?us-ascii?Q?B3JGfKK0+nIRYHvbADd5kGxNe2M3ePpF6CH8Dc4G8b+goWU3+Ebn59pS33Tn?=
+ =?us-ascii?Q?4TeE0lYqBYoYK9OlfahdBdk1P5zOGgysJbelddj1QOsldQBi4UmQ8mvgsDTD?=
+ =?us-ascii?Q?lKzLrFwfymj+osRbpepg601nKtJePf7XP+rJRDTI?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 741decff-aab6-417a-4234-08dc5a909fb1
+X-MS-Exchange-CrossTenant-AuthSource: CY8PR12MB7705.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2024 01:33:58.2104
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: a0dQ2EuZn37Zle1IgGj3CbrJq6dQQRgZDBxzjxBoaJ4IjNAufZGQICl05xSVWXJetEoliJqZ0bq6Rh4i+eYWBg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7440
 
-On Thu, Apr 11, 2024 at 07:02:07AM -0700, Christoph Hellwig wrote:
-> On Wed, Apr 10, 2024 at 10:21:07PM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 10, 2024 at 10:02:23PM -0700, Christoph Hellwig wrote:
-> > > On Wed, Apr 10, 2024 at 09:56:45PM -0700, Darrick J. Wong wrote:
-> > > > > Well, someone needs to own it, it's just not just ext4 but could us.
-> > > > 
-> > > > Er... I don't understand this?        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > > 
-> > > If we set current->journal and take a page faul we could not just
-> > > recurse into ext4 but into any fs including XFS.  Any everyone
-> > > blindly dereferences is as only one fs can own it.
-> > 
-> > Well back before we ripped it out I had said that XFS should just set
-> > current->journal to 1 to prevent memory corruption but then Jan Kara
-> > noted that ext4 changes its behavior wrt jbd2 if it sees nonzero
-> > current->journal.  That's why Dave dropped it entirely.
-> 
-> If you are in a fs context you own current->journal_info.  But you
-> also must make sure to not copy from and especially to user to not
-> recurse into another file system.  A per-thread field can't work any
-> other way.  So what ext4 is doing here is perfectly fine.  What XFS
-> did was to set current->journal_info and then cause page faults, which
-> is not ok.  I'm glad we fixed it.
-> 
-> > > That seems a bit dangerous to me.  I guess we rely on the code inside
-> > > the transaction context to never race with unmount as lack of SB_ACTIVE
-> > > will make the VFS ignore the dontcache flag.
-> > 
-> > That and we have an open fd to call the ioctl so any unmount will fail,
-> > and we can't enter scrub if unmount already starte.
-> 
-> Indeed.
-> 
-> So I'm still confused on why this new code keeps the inode around if an
-> error happend, but xchk_irele does not.  What is the benefit of keeping
-> the inode around here?  Why des it not apply to xchk_irele?
 
-OH!  Crap, I forgot that some years ago (after the creation of the
-vectorized scrub patch) I cleaned up that behavior -- previously scrub
-actually did play games with clearing dontcache if the inode was sick.
+Peter Xu <peterx@redhat.com> writes:
 
-Then Dave pointed out that we could just change reclaim not to purge the
-incore inode (and hence preserve the health state) until unmount or the
-fs goes down, and clear I_DONTCACHE any time we notice bad metadata.
-Hopefully the incore inode then survives long enough that anyone
-scanning for filesystem health status will still see the badness state.
+> On Thu, Apr 11, 2024 at 09:25:30AM -0300, Jason Gunthorpe wrote:
+>> On Thu, Apr 11, 2024 at 10:57:23AM +1000, Alistair Popple wrote:
+>> > pud_huge() returns true only for a HugeTLB page. pud_devmap() is only
+>> > used by FS DAX pages. These two things are mutually exclusive so this
+>> > code is dead code and can be removed.
+>> 
+>> I'm not sure this is true.. pud_huge() is mostly a misspelling of pud_leaf()..
+>> 
+>> > -	if (pud_huge(pud) && pud_devmap(pud)) {
+>> 
+>> I suspect this should be written as:
+>> 
+>>    if (pud_leaf(pud) && pud_devmap(pud)) {
 
-Therefore, we don't need the set_dontcache variable in this patch:
+Oh that makes a lot more sense. I'd taken the comment for pud_huge() at
+face value (ie. that it's a hugetlbfs page) without digging further.
 
-	/*
-	 * If we're holding the only reference to an inode opened via
-	 * handle, mark it dontcache so that we don't pollute the cache.
-	 */
-	if (handle_ip) {
-		if (atomic_read(&VFS_I(handle_ip)->i_count) == 1)
-			d_mark_dontcache(VFS_I(handle_ip));
-		xfs_irele(handle_ip);
-	}
+>> In line with Peter's work here:
+>> 
+>> https://lore.kernel.org/linux-mm/20240321220802.679544-1-peterx@redhat.com/
+>
+> Just to provide more information for Alistair, this patch already switched
+> that over to a _leaf():
 
-> I also don't understand how d_mark_dontcache in
-> xfs_ioctl_setattr_prepare_dax is supposed to work.  It'll make the inode
-> go away quicker than without, but it can't force the inode by itself.
+Got it, thanks (and apologies for missing my Cc on that).
 
-That's correct.  You can set the ondisk fsdax iflag and then wait
-centuries for the incore fsdax to catch up.  I think this is a very
-marginal design, but thankfully the intended design is that you set
-daxinherit on the parent dir or mount with dax=always and all new files
-just come up with both fsdax flags set.
+> https://lore.kernel.org/r/20240318200404.448346-12-peterx@redhat.com
+>
+> That's in mm-unstable now, so should see that in a rebase.
+>
+> And btw it's great to see that pxx_devmap() can go away.
 
-> I'm also lot on the interaction of that with the scrub inodes due to
-> both above.  I'd still expect any scrub iget to set uncached for
-> a cache miss.  If we then need to keep the inode around in transaction
-> context we just keep it.  What is the benefit of playing racing
-> games with i_count to delay setting the dontcache flag until irele?
+Yep, AFAICT pxx_devmap only exists to do this special FS DAX
+refcounting. Once that is fixed it can go away.
 
-One thing I don't like about XFS_IGET_DONTCACHE is that a concurrent
-iget call without DONTCACHE won't clear the state from the inode, which
-can lead to unnecessary evictions.  This racy thing means we only set it
-if we think the inode isn't in use anywhere else.
+> Thanks,
 
-At this point, though, I think we could add XFS_IGET_DONTCACHE to all
-the iget calls and drop the irele dontcache thing.
-
-> And why does the DAX mess matter for that?
-
-fsdax doesn't matter, it merely slurped up the functionality and now
-we're tangled up in it.
-
-> Maybe I'm just thick and this is all obvious, but then it needs to
-> be documented in detailed comments.
-
-No, it's ... very twisty and weird.  I wish dontcache had remained our
-private xfs thing.
-
---D
