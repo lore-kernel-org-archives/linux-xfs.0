@@ -1,185 +1,728 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B303414D703;
-	Fri, 12 Apr 2024 17:32:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712943173; cv=fail; b=exlFcK9EkjJukvcWhNdqsUXteHtRMHwaUV8rU7+eVhngYe+ZNDUjDXor/P7y0Js5iaJDN7ORCs7F2jw9FGq7MeOYzyG2bQrIcCvzTHUnCWcpwSVoLuwBlSz9hEZsWrw1z3h/d0G9KuYiMSQDbWbMzEyaFfo3/+rPz43+0kBrVEM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712943173; c=relaxed/simple;
-	bh=lsL7cBieAgaJPlkr3q8ciB9WIMrga/7OFdYnLJmjnew=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=KW+bm9Wk2R2yZDgdAy0hnPyGYw9VjApfMcLNEqTXAUTowq6sqldBTsiL2eTrPs3yTI9fS38RE7pD6afaGIbNIvQXkarEKn7O5XfcZ03+yvi2vMmPendzOqPITjricPgwnbYAtnjluc2aWlxn9bhDYam8XVoF5kaLakhDV61UIMc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LRBHCuUM; arc=fail smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B71EA14D44F
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2024 17:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712943598; cv=none; b=UUbGtHA+tlG1GOpELz98n/sioWgu4Qh8wgPsluByElb5W9lXMqMS75eBLO3YhFvMniJ3n3XbXEYlDnyn/diWAG0RFKdrzcDKzIEJ66qC9zGp9XD5vxeXK5warGDdKEcX/d6VM6eEAHsKantLHS0qGNG2GhK710utyCQzmb+bU3o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712943598; c=relaxed/simple;
+	bh=a/J4C71u0M8a5MYFwNDqtVhOWtrHRYrdLPnMUa2Xbr0=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MUd8ujleIj9mGnSz3xcnllddaHla0ZqZd/cEANMQCaeYQ1AKziZGSWO1cBc+HIsVX9/SYtvdv5w46ijVSTruOtd2Bkb5pNL2Rwq8+sGY20nNpMOJzhMIUlnZXZI/Z86hbPj1Zr0GSGn3XoCOCwZPIRLxr/L5dn2f9GBzgCoKelg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RveCzzx5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LRBHCuUM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1712943172; x=1744479172;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=lsL7cBieAgaJPlkr3q8ciB9WIMrga/7OFdYnLJmjnew=;
-  b=LRBHCuUMgw3Te31Is81aA5MA3sNuvEFGYBqz+Z/txheUoTpmhHOlHEGb
-   cVW35Rswh1Os1+ks64icAM+Lo0fnE7MQ9LP/v8XI67qkD1XK8l5XptoXG
-   JOQLu0/RQ6nryWyQHaXfAY5DQrN54NVq/Vqm5ihGkUaBJJEbTWVH8uLt/
-   mfzHfpWG/vRDbmU57yXcDRfLmCUjoCQ14aki0sAa56ef4CP5+S7w2VpZ/
-   8MGZsdAqvOimZ1kf5fP/ajqvniom/0anGSL/fgIU1k02jnInu+tjk2Fcr
-   LSyJPYUK9nXVjXfpy+gc/xU9txOReF8zE+QXCUf/dzfB8m0F92c0JFBaq
-   A==;
-X-CSE-ConnectionGUID: v5oYumTTTTGizf7ycOrnCQ==
-X-CSE-MsgGUID: cu7/u+DSTLyd7ZRxNFec+A==
-X-IronPort-AV: E=McAfee;i="6600,9927,11042"; a="18966172"
-X-IronPort-AV: E=Sophos;i="6.07,196,1708416000"; 
-   d="scan'208";a="18966172"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Apr 2024 10:32:52 -0700
-X-CSE-ConnectionGUID: Z6y3e5X2SM+85a9/ED4TMw==
-X-CSE-MsgGUID: 3nRWq5+NRJ2hl1RNVpD8Ig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,196,1708416000"; 
-   d="scan'208";a="21207082"
-Received: from fmsmsx601.amr.corp.intel.com ([10.18.126.81])
-  by orviesa010.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 12 Apr 2024 10:32:51 -0700
-Received: from fmsmsx612.amr.corp.intel.com (10.18.126.92) by
- fmsmsx601.amr.corp.intel.com (10.18.126.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Fri, 12 Apr 2024 10:32:50 -0700
-Received: from fmsmsx603.amr.corp.intel.com (10.18.126.83) by
- fmsmsx612.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Fri, 12 Apr 2024 10:32:49 -0700
-Received: from fmsedg601.ED.cps.intel.com (10.1.192.135) by
- fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35 via Frontend Transport; Fri, 12 Apr 2024 10:32:49 -0700
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (104.47.70.100)
- by edgegateway.intel.com (192.55.55.70) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 12 Apr 2024 10:32:49 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bwp34lCgheold++/evNpMjvnM07VgFF3i9xoLczd6PmsVB9Xr6jldRUzO1RoxKblCzQYlqEiLXGDMn9wSXLpZd3tYqWnDV4QoTMHAxeNbj5R3EoBIgBRL3SvscSs8aXsEzswaG/eJpT7Py0TnPL/ZMQYR5ukKDvERR8gel58oadl6nhsxTY2C9OscJ3OmWpM2scHdnLWz0h2LTqmgMWMCst0ldeOMXZ5u/z4ivKDkYARWdqgw1v0UAJEwLktYNIj/gkKndSbq8taHi11NpIOOWtKH2I4t1c1MOIh2ck//4vEkLTqW5I0RFqPvfq/4mmbPGf2LPOSdFg9QZ2zAU/kGQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ocJCAro1U/KdCjJUIaTkOSoMHe44WEaTJcT0qygFLJM=;
- b=C6YyS5BU3YfX7e+duXHIsMRJI75Z64iMvmp+eaTyt9oegqkAcsMyJ8GpFAZ9/Jc1urgk/SgmjMvfzLILZMShDkQpTpRKaDCajBMDNlI+TiYOk1oWaB88pvZOXX0/pA8bQIMhLx+yvWKsXdgPEJqyTqANT5140GBCsgb0cbCQrmF4jpkW9GWowxf7Ub6xsGZEcg/tW2usFFZQCO75DPaglNt90gyqdjeZLOvrHM3GGwY5OvQmrHUW10PZsHi7cx6/7Fu2pEhtTu1uNCMv4aPC3FsXtNVD1hz+EZaz//IqAykhHwpV0Jtq5A1x6Zfv0yzusz2inDBrvpB24Q+qWnwwvQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by SA1PR11MB8350.namprd11.prod.outlook.com (2603:10b6:806:387::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7452.26; Fri, 12 Apr
- 2024 17:32:47 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::82fd:75df:40d7:ed71]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::82fd:75df:40d7:ed71%4]) with mapi id 15.20.7430.045; Fri, 12 Apr 2024
- 17:32:47 +0000
-Date: Fri, 12 Apr 2024 10:32:44 -0700
-From: Dan Williams <dan.j.williams@intel.com>
-To: Jason Gunthorpe <jgg@nvidia.com>, Alistair Popple <apopple@nvidia.com>
-CC: Dan Williams <dan.j.williams@intel.com>, <linux-mm@kvack.org>,
-	<david@fromorbit.com>, <jhubbard@nvidia.com>, <rcampbell@nvidia.com>,
-	<willy@infradead.org>, <linux-fsdevel@vger.kernel.org>, <jack@suse.cz>,
-	<djwong@kernel.org>, <hch@lst.de>, <david@redhat.com>,
-	<ruansy.fnst@fujitsu.com>, <nvdimm@lists.linux.dev>,
-	<linux-xfs@vger.kernel.org>, <linux-ext4@vger.kernel.org>,
-	<jglisse@redhat.com>
-Subject: Re: [RFC 00/10] fs/dax: Fix FS DAX page reference counts
-Message-ID: <6619703c781e4_36222e294f1@dwillia2-xfh.jf.intel.com.notmuch>
-References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
- <66181dd83f74e_15786294e8@dwillia2-mobl3.amr.corp.intel.com.notmuch>
- <87frvr5has.fsf@nvdebian.thelocal>
- <877ch35ahu.fsf@nvdebian.thelocal>
- <20240412115352.GY5383@nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20240412115352.GY5383@nvidia.com>
-X-ClientProxiedBy: MW4PR04CA0346.namprd04.prod.outlook.com
- (2603:10b6:303:8a::21) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RveCzzx5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F461C113CC;
+	Fri, 12 Apr 2024 17:39:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712943598;
+	bh=a/J4C71u0M8a5MYFwNDqtVhOWtrHRYrdLPnMUa2Xbr0=;
+	h=Date:From:To:Subject:References:In-Reply-To:From;
+	b=RveCzzx5rigCivWC8Vfq9hcdinEruh+3Hc8FD5BSslKmsyAeT+uX9IkEo6bzdku/8
+	 sI05qIagC1XJOX13YIemsyWWlkRZL61sOcT59spKSjIoJJB8pYaQLTdQwfzelfjgAF
+	 aP3pm87RkQHFiLOoZWJiAANyH08eHM1T+dWdXUL3QOrsd404e3g2+bdLB0sbcpFCDq
+	 2AML5BVBrbi+7vzDXk87seKP7jbhpi3TTrw7w/+gAQ4sXWPMoZE1egJkHltqgG9Cox
+	 HzqZxVfvCr8xjx7d/WGXQzF3rMGDRrN3V9xzO9wQNxzf///zXcFP+O7DmybBY6XzQA
+	 Lrfi9BzdSm7DQ==
+Date: Fri, 12 Apr 2024 10:39:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Allison Henderson <allison.henderson@oracle.com>,
+	catherine.hoang@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 27/32] xfs: Add parent pointer ioctls
+Message-ID: <20240412173957.GB11948@frogsfrogsfrogs>
+References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
+ <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SA1PR11MB8350:EE_
-X-MS-Office365-Filtering-Correlation-Id: d159644d-d84b-4655-e837-08dc5b1691af
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: RcHQNCsXTbJbCxotdQ4Y5Hakxq0GgKy+sxNml6fR5tP7+P6I4kutdqOEppw/Tv6OxY7t3F69uzNpeXSniN9ymSXZkH/FTf2fBbDMNB/iGn6AGrN8JmDCVJiJQEdal0+jUB0oeBaMyeWcSqv5tpNWP5uHKdiZPV+dlUXfPC8NRae3dOHgckGa7UP6scvNToeFEfS81GF/oMUbImMzM7beO2iI1So68GKwrnh+/6Y5MVRe9/vOeU7cqPOVEuHZ4eH6LLEW01hMRmDawEXX7LfDIJx/dq/jlO5mzGr5kbKVE6s8J8tbSUVtxyDhcepK+jIl7rL2SpfHSoW87ihMc0K42qbJ6lqWnQ44g19Y3pKGRtnSyJ3C/FTYFQR5E6i3qL8Fk/W5cm+KZufg/8qyk680XTtK28N5BxX28dzoRcAsM9amTlyG0fZDHxHErXFXZ48iGSZ9gjixj33Cz+dC12+m1TdZFC7HqSXms/2Mc7rjvBYDD5Qqnw6geQDhgH1iCliEWrKB+QQybDo3GDbXwCY9p8oguDP8N9uXRJXh9vI7X1Bae34OZyPsfNLKnOZgN/pAcmqj9c1mIV2OvTzHtDIU+oMipv6Lad3F2ECJ29woUFXpMywM9JPz18uAIB3Icfvuk2deUAJPk5YN5V/S03R32m4RuJgTld+FnUuUTmgp2XU=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7416005)(1800799015)(376005)(366007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?mhwejgf1I+jatneDts8L9OabCk7hEYEx4TUcKNPhRoRa0Ym0/m4n4DULp1oR?=
- =?us-ascii?Q?/dIqtSyfg4C0F1ahMfzOuIpiZNNHUuNFNxtZeZWgh0T4BqK+89h9Kd+seoKb?=
- =?us-ascii?Q?TjtWjhJy7HPB1/2G6qLg+ypbS6oxlDEn0BbwK8hEx6Sk9PD9DygQgWCbPd3B?=
- =?us-ascii?Q?cGXFvrrpCD4wNDWLkzpnKyu49f8y8yMGqf7jyEywa/iJfjDEDeQShObkewxE?=
- =?us-ascii?Q?cGfnyuhqcYuE8FsXw3TQLWzmzkNa8fudv7UUCBb6/PTVzy73uAGg4SxOZQ6o?=
- =?us-ascii?Q?+ndt7UVjlZIuHwcEAEnbk+kytNx9fBny0F0q8Uy8GQZ+x4ekvuGdO3Kjg/U7?=
- =?us-ascii?Q?s4jNVShREsex6FP3xbQNLGw5iB7wOCqFnJUm8rKsVN05auuVvRqSIXfFZv50?=
- =?us-ascii?Q?fT2cOzVrqp2MqVttXM7t/M7vhA/fuWehicuqb3u6kL2yi+zM+8JQLDECkP1F?=
- =?us-ascii?Q?jDHm/dzupi9TpdDK2V5oyuw3Bpmh8+TH/v3jEZnLn1gpu3ldD5oUveoUGsA3?=
- =?us-ascii?Q?5oqXylVBKcy00RU05Secysvx209knLjV0mLLpDuYCnJC+jPOtZx/OhDEuTzd?=
- =?us-ascii?Q?dQ6SPqSkIGzDU6fsMp1mgxprnf09+b0KPREyGe+EPe10vs6KvozN7TibrpQk?=
- =?us-ascii?Q?DHDIxXklecNkZcDFhfgKdlxEXYDtUI1RI9B5Z3vjKNB/fq3o9YcJB9hT49TZ?=
- =?us-ascii?Q?G5VdSNj3RxS5MlOVzdCcyDNiamytS6NtW0m8bzqNqicSFQafwjmMayFEMJw7?=
- =?us-ascii?Q?uUgqQFPij4m3dTXwtH1kU5Z7Brfdhhfq3GKQX/T75I4NmLjJL33fbx1NGab6?=
- =?us-ascii?Q?ME6zmfcwevRpO/SqZ7BsaV1p5cEl4UPBFw2SaNirjcrj3t6an6H7vFUJXWEP?=
- =?us-ascii?Q?eC9FQor8pCx6D5UIt7HxHXG/yVJr5zeK0jfmUWZfN+mptV/+XbkzF1sRqGzB?=
- =?us-ascii?Q?zqEWwb66Zx1hXT2DlSxNCTz4TS48plxEjsEFw3fGYGmpyz7O3PzCvqyVUJGG?=
- =?us-ascii?Q?0jLs+6TovpCl5t9I9/d1vHPyQgxp9YNGWCoAnlRB/jAko73wKAwzH4tokH3M?=
- =?us-ascii?Q?j5a6C1RD87vHoeUTI4qI/AFiJ6BfNGdJqiOflmvU4P72NbGXmV1jET82EaJr?=
- =?us-ascii?Q?N/tx+Yhrjadujp9dxJyEokYblAK+wm5eiql8PUhugRlAHt++Ywxw6wUgGP3+?=
- =?us-ascii?Q?kiPMTt6s0h3bK9XMI2zWtCCwd73BugnsawEG71K+cxg6f/6UrVw4LMRS6Nmr?=
- =?us-ascii?Q?eDwLU4CoSeZ8TLwj4ows819iqp6qjOBOI/LwkBRvcpza4J6C1Xp1B68S1bcK?=
- =?us-ascii?Q?g0SlZNIVWChrQha5s5l9LpRu/ry92GDP+VS4RcGAKoY+s3fa0NJdLx5fT7M+?=
- =?us-ascii?Q?cwhQnfywRJE5iG7X6p7kjV1HwO044K5VgwILeKmxrfJGF67I/3IQzJ2WLrLn?=
- =?us-ascii?Q?mrXcXTlklTRlGIHomgscRggMf2DQYCfpdUfRWYkudn7zJXg/W8oLlauqeJGB?=
- =?us-ascii?Q?jAvvjEbgKBWP1NKLxRBa8BXk8gAzjEPdP4mxGlR2g188zuIcAUWEZooAJJxe?=
- =?us-ascii?Q?j9q8q/FZrtgIkVZNQ//N/hKn6IHPc/QanfZMlrIPnPE1yDfuBIwIHwaAuoRb?=
- =?us-ascii?Q?6w=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: d159644d-d84b-4655-e837-08dc5b1691af
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2024 17:32:47.2452
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kfny2RppeUhQlyT47Vx23BfvjBlvcHmWLoYwL3rWAXQs/m2IyBBBSMIz+Ay51+dLmAMrGsCvddQ+xFFjzVIAHUlcwoqslO35QSNUpm6dyRU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR11MB8350
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs>
 
-Jason Gunthorpe wrote:
-> On Fri, Apr 12, 2024 at 04:55:31PM +1000, Alistair Popple wrote:
+On Tue, Apr 09, 2024 at 06:00:33PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > Ok, I think I found the dragons you were talking about earlier for
-> > device-dax. I completely broke that because as you've already pointed
-> > out pmd_trans_huge() won't filter out DAX pages. That's fine for FS DAX
-> > (because the pages are essentially normal pages now anyway), but we
-> > don't have a PMD equivalent of vm_normal_page() which leads to all sorts
-> > of issues for DEVDAX.
+> This patch adds a pair of new file ioctls to retrieve the parent pointer
+> of a given inode.  They both return the same results, but one operates
+> on the file descriptor passed to ioctl() whereas the other allows the
+> caller to specify a file handle for which the caller wants results.
 > 
-> What about vm_normal_page() depends on the radix level ?
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> [djwong: adjust to new ondisk format, split ioctls]
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_fs.h     |   73 ++++++++++++
+>  fs/xfs/libxfs/xfs_ondisk.h |    5 +
+>  fs/xfs/libxfs/xfs_parent.c |   35 ++++++
+>  fs/xfs/libxfs/xfs_parent.h |    5 +
+>  fs/xfs/xfs_handle.c        |  259 ++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_handle.h        |    5 +
+>  fs/xfs/xfs_ioctl.c         |    6 +
+>  fs/xfs/xfs_trace.c         |    1 
+>  fs/xfs/xfs_trace.h         |   92 ++++++++++++++++
+>  9 files changed, 480 insertions(+), 1 deletion(-)
 > 
-> Doesn't DEVDAX memory have struct page too?
+> 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 51aa4774f57a2..fa28c18e521bf 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -840,6 +840,77 @@ struct xfs_commit_range {
+>  					 XFS_EXCHANGE_RANGE_DRY_RUN | \
+>  					 XFS_EXCHANGE_RANGE_FILE1_WRITTEN)
+>  
+> +/* Iterating parent pointers of files. */
+> +
+> +/* target was the root directory */
+> +#define XFS_GETPARENTS_OFLAG_ROOT	(1U << 0)
+> +
+> +/* Cursor is done iterating pptrs */
+> +#define XFS_GETPARENTS_OFLAG_DONE	(1U << 1)
+> +
+> +#define XFS_GETPARENTS_OFLAGS_ALL	(XFS_GETPARENTS_OFLAG_ROOT | \
+> +					 XFS_GETPARENTS_OFLAG_DONE)
+> +
+> +#define XFS_GETPARENTS_IFLAGS_ALL	(0)
+> +
+> +struct xfs_getparents_rec {
+> +	struct xfs_handle	gpr_parent; /* Handle to parent */
+> +	__u16			gpr_reclen; /* Length of entire record */
+> +	char			gpr_name[]; /* Null-terminated filename */
+> +} __packed;
+> +
+> +/* Iterate through this file's directory parent pointers */
+> +struct xfs_getparents {
+> +	/*
+> +	 * Structure to track progress in iterating the parent pointers.
+> +	 * Must be initialized to zeroes before the first ioctl call, and
+> +	 * not touched by callers after that.
+> +	 */
+> +	struct xfs_attrlist_cursor	gp_cursor;
+> +
+> +	/* Input flags: XFS_GETPARENTS_IFLAG* */
+> +	__u16				gp_iflags;
+> +
+> +	/* Output flags: XFS_GETPARENTS_OFLAG* */
+> +	__u16				gp_oflags;
+> +
+> +	/* Size of the gp_buffer in bytes */
+> +	__u32				gp_bufsize;
+> +
+> +	/* Must be set to zero */
+> +	__u64				__pad;
+> +
+> +	/* Pointer to a buffer in which to place xfs_getparents_rec */
+> +	__u64				gp_buffer;
+> +};
+> +
+> +static inline struct xfs_getparents_rec *
+> +xfs_getparents_first_rec(struct xfs_getparents *gp)
+> +{
+> +	return (struct xfs_getparents_rec *)(uintptr_t)gp->gp_buffer;
+> +}
+> +
+> +static inline struct xfs_getparents_rec *
+> +xfs_getparents_next_rec(struct xfs_getparents *gp,
+> +			struct xfs_getparents_rec *gpr)
+> +{
+> +	char *next = ((char *)gpr + gpr->gpr_reclen);
+> +	char *end = (char *)(uintptr_t)(gp->gp_buffer + gp->gp_bufsize);
+> +
+> +	if (next >= end)
+> +		return NULL;
+> +
+> +	return (struct xfs_getparents_rec *)next;
+> +}
+> +
+> +/* Iterate through this file handle's directory parent pointers. */
+> +struct xfs_getparents_by_handle {
+> +	/* Handle to file whose parents we want. */
+> +	struct xfs_handle		gph_handle;
+> +
+> +	struct xfs_getparents		gph_request;
+> +};
+> +
+>  /*
+>   * ioctl commands that are used by Linux filesystems
+>   */
+> @@ -875,6 +946,8 @@ struct xfs_commit_range {
+>  /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+>  #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
+>  #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
+> +#define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
+> +#define XFS_IOC_GETPARENTS_BY_HANDLE _IOWR('X', 63, struct xfs_getparents_by_handle)
+>  
+>  /*
+>   * ioctl commands that replace IRIX syssgi()'s
+> diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+> index 25952ef584eee..34c972113d997 100644
+> --- a/fs/xfs/libxfs/xfs_ondisk.h
+> +++ b/fs/xfs/libxfs/xfs_ondisk.h
+> @@ -156,6 +156,11 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_OFFSET(struct xfs_efi_log_format_32, efi_extents,	16);
+>  	XFS_CHECK_OFFSET(struct xfs_efi_log_format_64, efi_extents,	16);
+>  
+> +	/* parent pointer ioctls */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_rec,	26);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents,		40);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_by_handle,	64);
+> +
+>  	/*
+>  	 * The v5 superblock format extended several v4 header structures with
+>  	 * additional data. While new fields are only accessible on v5
+> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+> index 86c808157294e..db8cfad0b968e 100644
+> --- a/fs/xfs/libxfs/xfs_parent.c
+> +++ b/fs/xfs/libxfs/xfs_parent.c
+> @@ -259,3 +259,38 @@ xfs_parent_replacename(
+>  	xfs_attr_defer_parent(&ppargs->args, XFS_ATTR_DEFER_REPLACE);
+>  	return 0;
+>  }
+> +
+> +/*
+> + * Extract parent pointer information from any xattr into @parent_ino/gen.
+> + * The last two parameters can be NULL pointers.
+> + *
+> + * Returns 1 if this is a valid parent pointer; 0 if this is not a parent
+> + * pointer xattr at all; or -EFSCORRUPTED for garbage.
+> + */
+> +int
+> +xfs_parent_from_xattr(
+> +	struct xfs_mount	*mp,
+> +	unsigned int		attr_flags,
+> +	const unsigned char	*name,
+> +	unsigned int		namelen,
+> +	const void		*value,
+> +	unsigned int		valuelen,
+> +	xfs_ino_t		*parent_ino,
+> +	uint32_t		*parent_gen)
+> +{
+> +	const struct xfs_parent_rec	*rec = value;
+> +
+> +	if (!(attr_flags & XFS_ATTR_PARENT))
+> +		return 0;
+> +
+> +	if (!xfs_parent_namecheck(attr_flags, name, namelen))
+> +		return -EFSCORRUPTED;
+> +	if (!xfs_parent_valuecheck(mp, value, valuelen))
+> +		return -EFSCORRUPTED;
+> +
+> +	if (parent_ino)
+> +		*parent_ino = be64_to_cpu(rec->p_ino);
+> +	if (parent_gen)
+> +		*parent_gen = be32_to_cpu(rec->p_gen);
+> +	return 1;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
+> index 768633b313671..3003ab496f854 100644
+> --- a/fs/xfs/libxfs/xfs_parent.h
+> +++ b/fs/xfs/libxfs/xfs_parent.h
+> @@ -91,4 +91,9 @@ int xfs_parent_replacename(struct xfs_trans *tp,
+>  		struct xfs_inode *new_dp, const struct xfs_name *new_name,
+>  		struct xfs_inode *child);
+>  
+> +int xfs_parent_from_xattr(struct xfs_mount *mp, unsigned int attr_flags,
+> +		const unsigned char *name, unsigned int namelen,
+> +		const void *value, unsigned int valuelen,
+> +		xfs_ino_t *parent_ino, uint32_t *parent_gen);
+> +
+>  #endif /* __XFS_PARENT_H__ */
+> diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
+> index abeca486a2c91..833b0d7d8bea1 100644
+> --- a/fs/xfs/xfs_handle.c
+> +++ b/fs/xfs/xfs_handle.c
+> @@ -1,6 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  /*
+>   * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+> + * Copyright (c) 2022-2024 Oracle.
+>   * All rights reserved.
+>   */
+>  #include "xfs.h"
+> @@ -645,3 +646,261 @@ xfs_attrmulti_by_handle(
+>  	dput(dentry);
+>  	return error;
+>  }
+> +
+> +struct xfs_getparents_ctx {
+> +	struct xfs_attr_list_context	context;
+> +	struct xfs_getparents_by_handle	gph;
+> +
+> +	/* File to target */
+> +	struct xfs_inode		*ip;
+> +
+> +	/* Internal buffer where we format records */
+> +	void				*krecords;
+> +
+> +	/* Last record filled out */
+> +	struct xfs_getparents_rec	*lastrec;
+> +
+> +	unsigned int			count;
+> +};
+> +
+> +static inline unsigned int
+> +xfs_getparents_rec_sizeof(
+> +	unsigned int		namelen)
+> +{
+> +	return round_up(sizeof(struct xfs_getparents_rec) + namelen + 1,
+> +			sizeof(uint32_t));
+> +}
+> +
+> +static void
+> +xfs_getparents_put_listent(
+> +	struct xfs_attr_list_context	*context,
+> +	int				flags,
+> +	unsigned char			*name,
+> +	int				namelen,
+> +	void				*value,
+> +	int				valuelen)
+> +{
+> +	struct xfs_getparents_ctx	*gpx =
+> +		container_of(context, struct xfs_getparents_ctx, context);
+> +	struct xfs_inode		*ip = context->dp;
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_getparents		*gp = &gpx->gph.gph_request;
+> +	struct xfs_getparents_rec	*gpr = gpx->krecords + context->firstu;
+> +	unsigned short			reclen = xfs_getparents_rec_sizeof(namelen);
+> +	xfs_ino_t			ino;
+> +	uint32_t			gen;
+> +	int				ret;
+> +
+> +	ret = xfs_parent_from_xattr(mp, flags, name, namelen, value, valuelen,
+> +			&ino, &gen);
+> +	if (ret < 0) {
+> +		xfs_inode_mark_sick(ip, XFS_SICK_INO_PARENT);
+> +		context->seen_enough = -EFSCORRUPTED;
+> +		return;
+> +	}
+> +	if (ret != 1)
+> +		return;
+> +
+> +	/*
+> +	 * We found a parent pointer, but we've filled up the buffer.  Signal
+> +	 * to the caller that we did /not/ reach the end of the parent pointer
+> +	 * recordset.
+> +	 */
+> +	if (context->firstu > context->bufsize - reclen) {
+> +		context->seen_enough = 1;
+> +		return;
+> +	}
+> +
+> +	/* Format the parent pointer directly into the caller buffer. */
+> +	gpr->gpr_reclen = reclen;
+> +	xfs_filehandle_init(mp, ino, gen, &gpr->gpr_parent);
+> +	memcpy(gpr->gpr_name, name, namelen);
+> +	gpr->gpr_name[namelen] = 0;
+> +
+> +	trace_xfs_getparents_put_listent(ip, gp, context, gpr);
+> +
+> +	context->firstu += reclen;
+> +	gpx->count++;
+> +	gpx->lastrec = gpr;
+> +}
+> +
+> +/* Expand the last record to fill the rest of the caller's buffer. */
+> +static inline void
+> +xfs_getparents_expand_lastrec(
+> +	struct xfs_getparents_ctx	*gpx)
+> +{
+> +	struct xfs_getparents		*gp = &gpx->gph.gph_request;
+> +	struct xfs_getparents_rec	*gpr = gpx->lastrec;
+> +
+> +	if (!gpx->lastrec)
+> +		gpr = gpx->krecords;
+> +
+> +	gpr->gpr_reclen = gp->gp_bufsize - ((void *)gpr - gpx->krecords);
+> +
+> +	trace_xfs_getparents_expand_lastrec(gpx->ip, gp, &gpx->context, gpr);
+> +}
+> +
+> +static inline void __user *u64_to_uptr(u64 val)
+> +{
+> +	return (void __user *)(uintptr_t)val;
+> +}
+> +
+> +/* Retrieve the parent pointers for a given inode. */
+> +STATIC int
+> +xfs_getparents(
+> +	struct xfs_getparents_ctx	*gpx)
+> +{
+> +	struct xfs_getparents		*gp = &gpx->gph.gph_request;
+> +	struct xfs_inode		*ip = gpx->ip;
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	size_t				bufsize;
+> +	int				error;
+> +
+> +	/* Check size of buffer requested by user */
+> +	if (gp->gp_bufsize > XFS_XATTR_LIST_MAX)
+> +		return -ENOMEM;
+> +	if (gp->gp_bufsize < xfs_getparents_rec_sizeof(1))
+> +		return -EINVAL;
+> +
+> +	if (gp->gp_iflags & ~XFS_GETPARENTS_IFLAGS_ALL)
+> +		return -EINVAL;
+> +	if (gp->__pad)
+> +		return -EINVAL;
+> +
+> +	bufsize = round_down(gp->gp_bufsize, sizeof(uint32_t));
+> +	gpx->krecords = kvzalloc(bufsize, GFP_KERNEL);
+> +	if (!gpx->krecords) {
+> +		bufsize = min(bufsize, PAGE_SIZE);
+> +		gpx->krecords = kvzalloc(bufsize, GFP_KERNEL);
+> +		if (!gpx->krecords)
+> +			return -ENOMEM;
+> +	}
+> +
+> +	gpx->context.dp = ip;
+> +	gpx->context.resynch = 1;
+> +	gpx->context.put_listent = xfs_getparents_put_listent;
+> +	gpx->context.bufsize = bufsize;
+> +	/* firstu is used to track the bytes filled in the buffer */
+> +	gpx->context.firstu = 0;
+> +
+> +	/* Copy the cursor provided by caller */
+> +	memcpy(&gpx->context.cursor, &gp->gp_cursor,
+> +			sizeof(struct xfs_attrlist_cursor));
+> +	gpx->count = 0;
+> +	gp->gp_oflags = 0;
+> +
+> +	trace_xfs_getparents_begin(ip, gp, &gpx->context.cursor);
+> +
+> +	error = xfs_attr_list(&gpx->context);
+> +	if (error)
+> +		goto out_free_buf;
+> +	if (gpx->context.seen_enough < 0) {
+> +		error = gpx->context.seen_enough;
+> +		goto out_free_buf;
+> +	}
+> +	xfs_getparents_expand_lastrec(gpx);
+> +
+> +	/* Update the caller with the current cursor position */
+> +	memcpy(&gp->gp_cursor, &gpx->context.cursor,
+> +			sizeof(struct xfs_attrlist_cursor));
+> +
+> +	/* Is this the root directory? */
+> +	if (ip->i_ino == mp->m_sb.sb_rootino)
+> +		gp->gp_oflags |= XFS_GETPARENTS_OFLAG_ROOT;
+> +
+> +	if (gpx->context.seen_enough == 0) {
+> +		/*
+> +		 * If we did not run out of buffer space, then we reached the
+> +		 * end of the pptr recordset, so set the DONE flag.
+> +		 */
+> +		gp->gp_oflags |= XFS_GETPARENTS_OFLAG_DONE;
+> +	} else if (gpx->count == 0) {
+> +		/*
+> +		 * If we ran out of buffer space before copying any parent
+> +		 * pointers at all, the caller's buffer was too short.  Tell
+> +		 * userspace that, erm, the message is too long.
+> +		 */
+> +		error = -EMSGSIZE;
+> +		goto out_free_buf;
+> +	}
+> +
+> +	trace_xfs_getparents_end(ip, gp, &gpx->context.cursor);
+> +
+> +	ASSERT(gpx->context.firstu <= gpx->gph.gph_request.gp_bufsize);
+> +
+> +	/* Copy the records to userspace. */
+> +	if (copy_to_user(u64_to_uptr(gpx->gph.gph_request.gp_buffer),
+> +				gpx->krecords, gpx->context.firstu))
+> +		error = -EFAULT;
+> +
+> +out_free_buf:
+> +	kvfree(gpx->krecords);
+> +	gpx->krecords = NULL;
+> +	return error;
+> +}
+> +
+> +/* Retrieve the parents of this file and pass them back to userspace. */
+> +int
+> +xfs_ioc_getparents(
+> +	struct file			*file,
+> +	struct xfs_getparents __user	*ureq)
+> +{
+> +	struct xfs_getparents_ctx	gpx = {
+> +		.ip			= XFS_I(file_inode(file)),
+> +	};
+> +	struct xfs_getparents		*kreq = &gpx.gph.gph_request;
+> +	struct xfs_mount		*mp = gpx.ip->i_mount;
+> +	int				error;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +	if (!xfs_has_parent(mp))
+> +		return -EOPNOTSUPP;
+> +	if (copy_from_user(kreq, ureq, sizeof(*kreq)))
+> +		return -EFAULT;
+> +
+> +	error = xfs_getparents(&gpx);
+> +	if (error)
+> +		return error;
+> +
+> +	if (copy_to_user(ureq, kreq, sizeof(*kreq)))
+> +		return -EFAULT;
+> +
+> +	return 0;
+> +}
+> +
+> +/* Retrieve the parents of this file handle and pass them back to userspace. */
+> +int
+> +xfs_ioc_getparents_by_handle(
+> +	struct file			*file,
+> +	struct xfs_getparents_by_handle __user	*ureq)
+> +{
+> +	struct xfs_getparents_ctx	gpx = { };
+> +	struct xfs_inode		*ip = XFS_I(file_inode(file));
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_getparents_by_handle	*kreq = &gpx.gph;
+> +	struct dentry			*dentry;
+> +	int				error;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +	if (!xfs_has_parent(mp))
+> +		return -EOPNOTSUPP;
+> +	if (copy_from_user(kreq, ureq, sizeof(*kreq)))
+> +		return -EFAULT;
+> +
+> +	dentry = xfs_khandle_to_dentry(file, &kreq->gph_handle);
 
-Yes.
+I noticed a couple of things while doing more testing here -- first,
+xfs_khandle_to_dentry doesn't check that the handle fsid actually
+matches this filesystem, and AFAICT *nothing* actually checks that.
+So I guess that's a longstanding weakness of handle validation, and we
+probably haven't gotten any reports because what's the chance that
+you'll get lucky with an ino/gen from a different filesystem?
 
-> > So I will probably have to add something like that unless we only need
-> > to support large (pmd/pud) mappings of DEVDAX pages on systems with
-> > CONFIG_ARCH_HAS_PTE_SPECIAL in which case I guess we could just filter
-> > based on pte_special().
+(Pretty good what with golden images proliferating, I'd say...)
+
+The second thing is that exportfs_decode_fh does too much work here --
+if the handle references a directory, it'll walk up the directory tree
+to the root to try to reconnect the dentry paths.  For GETPARENTS we
+don't care about that since we're not doing anything with dentries.
+Walking upwards in the directory tree is extra work that doesn't change
+the results.
+
+Worse yet, if there's a loop in in the directory tree due to dotdot
+damage or whatnot, this can livelock the system.  This is unfortunate
+for xfs_scrub because it'll use GETPARENTS to try to report the path of
+a file that it wants to repair ... but it might not have checked those
+parents.  So I really don't want GETPARENTS to be creating a bunch of
+dentries and reconnecting paths and whatnot.
+
+What we really want, I think, is some basic handle validation and then a
+call to something like xfs_nfs_get_inode.
+
+
+	if (!S_ISDIR(VFS_I(ip)->i_mode))
+		return -ENOTDIR;
+
+	if (memcmp(&handle->ha_fsid, mp->m_fixedfsid, sizeof(struct xfs_fsid)))
+		return -ESTALE;
+
+	if (handle->ha_fid.fid_len != xfs_filehandle_fid_len())
+		return -EINVAL;
+
+	inode = xfs_nfs_get_inode(mp->m_super, handle->ha_fid.fid_ino,
+			handle->ha_fid.fid_gen);
+	if (IS_ERR(inode))
+		return PTR_ERR(inode);
+
+	gpx.ip = XFS_I(inode);
+	error = xfs_getparents(&gpx);
+
+And yes, I'll add a big comment explaining why we don't use the regular
+handle functions here.
+
+--D
+
+> +	if (IS_ERR(dentry))
+> +		return PTR_ERR(dentry);
+> +
+> +	gpx.ip = XFS_I(dentry->d_inode);
+> +	error = xfs_getparents(&gpx);
+> +	dput(dentry);
+> +	if (error)
+> +		return error;
+> +
+> +	if (copy_to_user(ureq, kreq, sizeof(*kreq)))
+> +		return -EFAULT;
+> +
+> +	return 0;
+> +}
+> diff --git a/fs/xfs/xfs_handle.h b/fs/xfs/xfs_handle.h
+> index e39eaf4689da9..6799a86d8565c 100644
+> --- a/fs/xfs/xfs_handle.h
+> +++ b/fs/xfs/xfs_handle.h
+> @@ -1,6 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  /*
+>   * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+> + * Copyright (c) 2022-2024 Oracle.
+>   * All rights reserved.
+>   */
+>  #ifndef	__XFS_HANDLE_H__
+> @@ -25,4 +26,8 @@ int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf,
+>  struct dentry *xfs_handle_to_dentry(struct file *parfilp, void __user *uhandle,
+>  		u32 hlen);
+>  
+> +int xfs_ioc_getparents(struct file *file, struct xfs_getparents __user *arg);
+> +int xfs_ioc_getparents_by_handle(struct file *file,
+> +		struct xfs_getparents_by_handle __user *arg);
+> +
+>  #endif	/* __XFS_HANDLE_H__ */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 7b347cdd28785..c7a15b5f33aa4 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -35,6 +35,7 @@
+>  #include "xfs_health.h"
+>  #include "xfs_reflink.h"
+>  #include "xfs_ioctl.h"
+> +#include "xfs_xattr.h"
+>  #include "xfs_rtbitmap.h"
+>  #include "xfs_file.h"
+>  #include "xfs_exchrange.h"
+> @@ -1542,7 +1543,10 @@ xfs_file_ioctl(
+>  
+>  	case XFS_IOC_FSGETXATTRA:
+>  		return xfs_ioc_fsgetxattra(ip, arg);
+> -
+> +	case XFS_IOC_GETPARENTS:
+> +		return xfs_ioc_getparents(filp, arg);
+> +	case XFS_IOC_GETPARENTS_BY_HANDLE:
+> +		return xfs_ioc_getparents_by_handle(filp, arg);
+>  	case XFS_IOC_GETBMAP:
+>  	case XFS_IOC_GETBMAPA:
+>  	case XFS_IOC_GETBMAPX:
+> diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+> index cf92a3bd56c79..9c7fbaae2717d 100644
+> --- a/fs/xfs/xfs_trace.c
+> +++ b/fs/xfs/xfs_trace.c
+> @@ -41,6 +41,7 @@
+>  #include "xfs_bmap.h"
+>  #include "xfs_exchmaps.h"
+>  #include "xfs_exchrange.h"
+> +#include "xfs_parent.h"
+>  
+>  /*
+>   * We include this last to have the helpers above available for the trace
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index e6cbdffb14f64..4438b62a8c562 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -87,6 +87,9 @@ struct xfs_bmap_intent;
+>  struct xfs_exchmaps_intent;
+>  struct xfs_exchmaps_req;
+>  struct xfs_exchrange;
+> +struct xfs_getparents;
+> +struct xfs_parent_irec;
+> +struct xfs_attrlist_cursor_kern;
+>  
+>  #define XFS_ATTR_FILTER_FLAGS \
+>  	{ XFS_ATTR_ROOT,	"ROOT" }, \
+> @@ -5158,6 +5161,95 @@ TRACE_EVENT(xfs_exchmaps_delta_nextents,
+>  		  __entry->d_nexts1, __entry->d_nexts2)
+>  );
+>  
+> +DECLARE_EVENT_CLASS(xfs_getparents_rec_class,
+> +	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi,
+> +		 const struct xfs_attr_list_context *context,
+> +	         const struct xfs_getparents_rec *pptr),
+> +	TP_ARGS(ip, ppi, context, pptr),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_ino_t, ino)
+> +		__field(unsigned int, firstu)
+> +		__field(unsigned short, reclen)
+> +		__field(unsigned int, bufsize)
+> +		__field(xfs_ino_t, parent_ino)
+> +		__field(unsigned int, parent_gen)
+> +		__string(name, pptr->gpr_name)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = ip->i_mount->m_super->s_dev;
+> +		__entry->ino = ip->i_ino;
+> +		__entry->firstu = context->firstu;
+> +		__entry->reclen = pptr->gpr_reclen;
+> +		__entry->bufsize = ppi->gp_bufsize;
+> +		__entry->parent_ino = pptr->gpr_parent.ha_fid.fid_ino;
+> +		__entry->parent_gen = pptr->gpr_parent.ha_fid.fid_gen;
+> +		__assign_str(name, pptr->gpr_name);
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx firstu %u reclen %u bufsize %u parent_ino 0x%llx parent_gen 0x%x name '%s'",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->ino,
+> +		  __entry->firstu,
+> +		  __entry->reclen,
+> +		  __entry->bufsize,
+> +		  __entry->parent_ino,
+> +		  __entry->parent_gen,
+> +		  __get_str(name))
+> +)
+> +#define DEFINE_XFS_GETPARENTS_REC_EVENT(name) \
+> +DEFINE_EVENT(xfs_getparents_rec_class, name, \
+> +	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi, \
+> +		 const struct xfs_attr_list_context *context, \
+> +	         const struct xfs_getparents_rec *pptr), \
+> +	TP_ARGS(ip, ppi, context, pptr))
+> +DEFINE_XFS_GETPARENTS_REC_EVENT(xfs_getparents_put_listent);
+> +DEFINE_XFS_GETPARENTS_REC_EVENT(xfs_getparents_expand_lastrec);
+> +
+> +DECLARE_EVENT_CLASS(xfs_getparents_class,
+> +	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi,
+> +		 const struct xfs_attrlist_cursor_kern *cur),
+> +	TP_ARGS(ip, ppi, cur),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_ino_t, ino)
+> +		__field(unsigned short, iflags)
+> +		__field(unsigned short, oflags)
+> +		__field(unsigned int, bufsize)
+> +		__field(unsigned int, hashval)
+> +		__field(unsigned int, blkno)
+> +		__field(unsigned int, offset)
+> +		__field(int, initted)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = ip->i_mount->m_super->s_dev;
+> +		__entry->ino = ip->i_ino;
+> +		__entry->iflags = ppi->gp_iflags;
+> +		__entry->oflags = ppi->gp_oflags;
+> +		__entry->bufsize = ppi->gp_bufsize;
+> +		__entry->hashval = cur->hashval;
+> +		__entry->blkno = cur->blkno;
+> +		__entry->offset = cur->offset;
+> +		__entry->initted = cur->initted;
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx iflags 0x%x oflags 0x%x bufsize %u cur_init? %d hashval 0x%x blkno %u offset %u",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->ino,
+> +		  __entry->iflags,
+> +		  __entry->oflags,
+> +		  __entry->bufsize,
+> +		  __entry->initted,
+> +		  __entry->hashval,
+> +		  __entry->blkno,
+> +		  __entry->offset)
+> +)
+> +#define DEFINE_XFS_GETPARENTS_EVENT(name) \
+> +DEFINE_EVENT(xfs_getparents_class, name, \
+> +	TP_PROTO(struct xfs_inode *ip, const struct xfs_getparents *ppi, \
+> +		 const struct xfs_attrlist_cursor_kern *cur), \
+> +	TP_ARGS(ip, ppi, cur))
+> +DEFINE_XFS_GETPARENTS_EVENT(xfs_getparents_begin);
+> +DEFINE_XFS_GETPARENTS_EVENT(xfs_getparents_end);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
 > 
-> pte_special should only be used by memory without a struct page, is
-> that what DEVDAX is?
-
-Right, I don't think pte_special is applicable for any DAX pages.
+> 
