@@ -1,74 +1,150 @@
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2626A3CF65
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2024 20:43:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.231.237.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712868242; cv=none; b=CAixu2Oh+0F1IJ6qPBypJMYZwvZCZG7InoyWNymxzJAPiy2NXZm9NGNaI8nBpka595mF++1hqX65PZw+ivHIGgD0uvPTp0Q99TxWfiTgRc9bPYAC+5cZagoCGqH5Epq8qIFDfpbC85NUEtpPPPdOH9mAm3iG9vlmIu3fh3+bG38=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712868242; c=relaxed/simple;
-	bh=1oKO/DSGB6QxWrMeBikX0/BTArAEtOeGqruzQMjkkWU=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=ky3e6kOUoNu6YtomACdqbr+hdrEProoOLeCXqU6SbrkUSKhtUFEWtkXWPsJFhI58exmV5VilN6xumJyZtLyJAumjXrTMDc4db44je4LFg8HRK9mycdpRukvPazzz28ZIhCLsfcJH2yRQStvhIWWA/+74Q5sFNft0HPbE1MpV0/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=ngUPaO8j; arc=none smtp.client-ip=63.231.237.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="ngUPaO8j"
-Received: from [10.0.0.71] (usg [10.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 4B1104CDD5E;
-	Thu, 11 Apr 2024 15:34:16 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 4B1104CDD5E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-	s=default; t=1712867656;
-	bh=1oKO/DSGB6QxWrMeBikX0/BTArAEtOeGqruzQMjkkWU=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=ngUPaO8jOGnPDjkMAm2hS++SbHwAQIgru15fXR7GGfTVC3xrshDFdJnAdijIG7jq3
-	 k4Xt/cCPXLNfcAeFmKw9sSW4RAHwLUAgOpmUszKPrMGE0FNqWcstQ46tosL6Mw1GPt
-	 YkpOd7QQ55rKJZ2Y3ZzWmEKxXxLti2XceYKmS3E1/6V+eXHgJDJfqdZDkOVo3WlqIG
-	 cf14ysm7np2F+nd42iSSScbGhljJdoeHwfCm7xL+0/CGAq2oa4pdnG1YITJDI21iLZ
-	 +EYuu1sQnrzdR2g+wkBy/ySbLE1khq6hVJvLqzBXP6IOwflEoaTxNzuiau+rQJSv9q
-	 vlgCrzbwpqmbA==
-Message-ID: <24467239-e3a3-46db-aa1d-e876abe03cdd@sandeen.net>
-Date: Thu, 11 Apr 2024 15:34:15 -0500
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A05E6AB8
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2024 00:21:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712881294; cv=none; b=quIgT8MMR5UM+XQmr/L7Ox68TD8/E8BzYDgdmCJYH4oGrec2LusJnTBu7YLtM04vS7JMFKAVL6HLPgel/ijTrLYGcwdXr22F8qvuOP+ZDzjRK4E3+sSSCIKMGXbPbkuQPJLQR8C2TiRmgZJqmZyu5IOEHc/m7fD48CqOgSivp+E=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712881294; c=relaxed/simple;
+	bh=Lmi0PlgpS6X3AJQUPK0lT5lDa55kxQCilYS27faIaww=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UkCSvDrcK0Kr/VVLYHMDLQTizZJ8wwb7sqiWf5Pi0cHgNHR4IRVuU9WN0QCc85EmR7rEHZV5RR6d9LYctVInlmCZ6eu9c8QBmMOCqG1jdN/cM2QcXfeOCZc5C2+6gO4CGFR1RW325mVg0eZzWuJ7hmn6eMDMMpsaf81PWX9zAow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S0A2rf8S; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S0A2rf8S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5A72C072AA;
+	Fri, 12 Apr 2024 00:21:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712881294;
+	bh=Lmi0PlgpS6X3AJQUPK0lT5lDa55kxQCilYS27faIaww=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=S0A2rf8SBPNMFpH5PJkOuO+AsTsPFXlZsUoXanH9RBUYVl3NX2vli7BmCcA065jfz
+	 MnAXrIVTMRh06b+ej7dA9VsFfwqMFjDyuYzwVlc/rJP8AczNVOFa1UGDMOckXoEmHp
+	 MHJvMPDrGIydcPsZfeg5X9cBf9DplrsRtyHMatS7fg4oCOjQrlxfauUrsdZHPeA65F
+	 Qc2KBD6OagIWnnryOvSh4nRK4FNOoES+PziXGawa2n4IFySpdkrvjHhzls/I2CNz5P
+	 pyeLO9sZ8p2wYtXRp7kNa53al3j74Njl1HRBiRg0C3tBAjjYp4B1wQSzVYrmBrXgys
+	 wtMepVhLrUchQ==
+Date: Thu, 11 Apr 2024 17:21:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [PATCH 3/3] xfs: only iget the file once when doing vectored
+ scrub-by-handle
+Message-ID: <20240412002133.GZ6390@frogsfrogsfrogs>
+References: <171270972068.3634974.15204601732623547015.stgit@frogsfrogsfrogs>
+ <ZhasUAuV6Ea_nvHh@infradead.org>
+ <20240411011502.GR6390@frogsfrogsfrogs>
+ <Zhdd01E-ZNYxAnHO@infradead.org>
+ <20240411044132.GW6390@frogsfrogsfrogs>
+ <ZhdsmeHfGx7WTnNn@infradead.org>
+ <20240411045645.GX6390@frogsfrogsfrogs>
+ <Zhdu3zJTO3d9gHLO@infradead.org>
+ <20240411052107.GY6390@frogsfrogsfrogs>
+ <ZhftX0w0X0XQOor3@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: A bug was found in Linux Kernel 5.15.148 and 5.15.150: KASAN:
- use-after-free in xfs_allocbt_init_key_from_rec (with POC)
-From: Eric Sandeen <sandeen@sandeen.net>
-To: =?UTF-8?B?5YiY6YCa?= <lyutoon@gmail.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0GCjVVCv29tNHK76Cgg@mail.gmail.com>
- <32f02757-70e0-41ed-a0d0-23190a28dad3@sandeen.net>
- <CAEJPjCvK-LATJ5B9-=KXa3oMZwT-zQyFqMNU9EgcfsRD12AWWA@mail.gmail.com>
- <e5ca2146-8d39-4af5-80fb-0bd5ab9ed304@sandeen.net>
- <CAEJPjCsXGHWzek7AQ1g3byUZe1Uq7KuUxJ0GY2fac3J8y+LFZQ@mail.gmail.com>
- <d1d4df97-307c-4c61-86bc-c83b8f10a745@sandeen.net>
-Content-Language: en-US
-In-Reply-To: <d1d4df97-307c-4c61-86bc-c83b8f10a745@sandeen.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZhftX0w0X0XQOor3@infradead.org>
 
-On 4/2/24 12:55 PM, Eric Sandeen wrote:
->> # Step to reproduce:
->> 1. download the zip file
->> 2. unzip it
->> 3. compile the kernel (5.15.148, 5.15.150) with kernel_config
->> 4. start the kernel with qemu vm
->> 5. scp repro.c to the vm
->> 6. compile the repro.c and run it: gcc repro.c -o exp && ./exp
->> 7. you will see the KASAN error
+On Thu, Apr 11, 2024 at 07:02:07AM -0700, Christoph Hellwig wrote:
+> On Wed, Apr 10, 2024 at 10:21:07PM -0700, Darrick J. Wong wrote:
+> > On Wed, Apr 10, 2024 at 10:02:23PM -0700, Christoph Hellwig wrote:
+> > > On Wed, Apr 10, 2024 at 09:56:45PM -0700, Darrick J. Wong wrote:
+> > > > > Well, someone needs to own it, it's just not just ext4 but could us.
+> > > > 
+> > > > Er... I don't understand this?        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > > 
+> > > If we set current->journal and take a page faul we could not just
+> > > recurse into ext4 but into any fs including XFS.  Any everyone
+> > > blindly dereferences is as only one fs can own it.
+> > 
+> > Well back before we ripped it out I had said that XFS should just set
+> > current->journal to 1 to prevent memory corruption but then Jan Kara
+> > noted that ext4 changes its behavior wrt jbd2 if it sees nonzero
+> > current->journal.  That's why Dave dropped it entirely.
+> 
+> If you are in a fs context you own current->journal_info.  But you
+> also must make sure to not copy from and especially to user to not
+> recurse into another file system.  A per-thread field can't work any
+> other way.  So what ext4 is doing here is perfectly fine.  What XFS
+> did was to set current->journal_info and then cause page faults, which
+> is not ok.  I'm glad we fixed it.
+> 
+> > > That seems a bit dangerous to me.  I guess we rely on the code inside
+> > > the transaction context to never race with unmount as lack of SB_ACTIVE
+> > > will make the VFS ignore the dontcache flag.
+> > 
+> > That and we have an open fd to call the ioctl so any unmount will fail,
+> > and we can't enter scrub if unmount already starte.
+> 
+> Indeed.
+> 
+> So I'm still confused on why this new code keeps the inode around if an
+> error happend, but xchk_irele does not.  What is the benefit of keeping
+> the inode around here?  Why des it not apply to xchk_irele?
 
-> AFAICT you won't. I did exactly this, and got no KASAN error.
-> Did you, after following these steps on a fresh boot of the kernel?
+OH!  Crap, I forgot that some years ago (after the creation of the
+vectorized scrub patch) I cleaned up that behavior -- previously scrub
+actually did play games with clearing dontcache if the inode was sick.
 
-Any follow up here? Do you actually hit a KASAN error after following these
-exact steps?
+Then Dave pointed out that we could just change reclaim not to purge the
+incore inode (and hence preserve the health state) until unmount or the
+fs goes down, and clear I_DONTCACHE any time we notice bad metadata.
+Hopefully the incore inode then survives long enough that anyone
+scanning for filesystem health status will still see the badness state.
 
--Eric
+Therefore, we don't need the set_dontcache variable in this patch:
+
+	/*
+	 * If we're holding the only reference to an inode opened via
+	 * handle, mark it dontcache so that we don't pollute the cache.
+	 */
+	if (handle_ip) {
+		if (atomic_read(&VFS_I(handle_ip)->i_count) == 1)
+			d_mark_dontcache(VFS_I(handle_ip));
+		xfs_irele(handle_ip);
+	}
+
+> I also don't understand how d_mark_dontcache in
+> xfs_ioctl_setattr_prepare_dax is supposed to work.  It'll make the inode
+> go away quicker than without, but it can't force the inode by itself.
+
+That's correct.  You can set the ondisk fsdax iflag and then wait
+centuries for the incore fsdax to catch up.  I think this is a very
+marginal design, but thankfully the intended design is that you set
+daxinherit on the parent dir or mount with dax=always and all new files
+just come up with both fsdax flags set.
+
+> I'm also lot on the interaction of that with the scrub inodes due to
+> both above.  I'd still expect any scrub iget to set uncached for
+> a cache miss.  If we then need to keep the inode around in transaction
+> context we just keep it.  What is the benefit of playing racing
+> games with i_count to delay setting the dontcache flag until irele?
+
+One thing I don't like about XFS_IGET_DONTCACHE is that a concurrent
+iget call without DONTCACHE won't clear the state from the inode, which
+can lead to unnecessary evictions.  This racy thing means we only set it
+if we think the inode isn't in use anywhere else.
+
+At this point, though, I think we could add XFS_IGET_DONTCACHE to all
+the iget calls and drop the irele dontcache thing.
+
+> And why does the DAX mess matter for that?
+
+fsdax doesn't matter, it merely slurped up the functionality and now
+we're tangled up in it.
+
+> Maybe I'm just thick and this is all obvious, but then it needs to
+> be documented in detailed comments.
+
+No, it's ... very twisty and weird.  I wish dontcache had remained our
+private xfs thing.
+
+--D
