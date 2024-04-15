@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E213215885D
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:34:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9632E15885D
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:34:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713224074; cv=none; b=Xhqv42JkofGj1Iytt7hOMFJ3wixhx32F851xGJ3bDVwe2ryzhmRFXwqtvlbVzfcBcb7YNnZrIVOy6bjHpAabXUBFUSflfWmlZe59AtIagnhDpmPnn5AokE0wV4BpUCijcRle4aJQkz1XesLHfwftzE7m4fWYCTpO7zht89tUHZk=
+	t=1713224089; cv=none; b=c0arDT4ZO0OFX9gYDqO2UYx4mykHRcsVgskiLVWcI/f2tXWZG6Q4PKMfpM1FwoXPj40T5URoOKlARc9m79MFOqpX2f7HHHOMoG9RfIwcloaCw7dFV5PdtfX/WI/GQSOALRtJxZkSHjm60wLQ2jPUafhqHjDDhRyilxUTRZ0qd8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713224074; c=relaxed/simple;
-	bh=hVUBloTCvu+0U1mXg/eZWsB6/yFossml/a15iKTeByo=;
+	s=arc-20240116; t=1713224089; c=relaxed/simple;
+	bh=YDP5XFcvyAFSjO3yqkEp7193Em51Byx/aat9Olencqo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pDNY06u5YoImSAnM9cLG4OpAL9AoimPl+nJUSIBXj/C+mQQavlmlEXzdiFSUu1zJz+higaIotDNsWuDjFiLVAEqbtA8emxH678CaD3O+7lREqxQs2TAGZxhfmKV3WsAuiQee7+aiyB8f0heogOJYWq4IFKPvVZh28blKeApJPPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ea0GoY90; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=l1SvnkySO5G6TjfbRnHRGJUVRz3166zkAlQaC+vRW+NhAL8ViD28vzs6bRi1Pcf7DFvcgBMipEs7QRwn/vbTum5x1+9OYEgDd7bx2w1SwsjmDBUFPcm2/lOK1YO46tX7eH9njkrycBEDayWUAGRgAG3rj52TWd8hMs+UL7pLddM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fQ/7mmbI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ea0GoY90"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72317C113CC;
-	Mon, 15 Apr 2024 23:34:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fQ/7mmbI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25DAAC113CC;
+	Mon, 15 Apr 2024 23:34:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713224073;
-	bh=hVUBloTCvu+0U1mXg/eZWsB6/yFossml/a15iKTeByo=;
+	s=k20201202; t=1713224089;
+	bh=YDP5XFcvyAFSjO3yqkEp7193Em51Byx/aat9Olencqo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Ea0GoY90f/6abbW9q5Hs1irhqVDIZbtS4D1MILu1Xoo7TFfrHy4q87WE/GV7BYqWT
-	 krXPhNk3lUXvWaGRyNAiG6U/nSTsfTLfq1CqeVkT5YZ+ifp2NLF700isM8uZ6knHx1
-	 iloBuh2vtOm3x6/LB8E3FWx80tuhkGnrBYhGN2DX8DLVPDzsLFf6k1Qh1D4E5Rn3n5
-	 KwrPxFOHNPcNfBLfxQWZoaFcBe2Bw6NViXEy7kcA19xGeZXb3KH2iJhq1f8DspzzAp
-	 q0QVYoUjmCqhloV2dQ+0X1vxh/GsXqcBbHDGoy/xUx++ghboKvX0RHHzkl5f/Mz85L
-	 OKgt37ZjS9Row==
-Date: Mon, 15 Apr 2024 16:34:32 -0700
-Subject: [PATCHSET v30.3 04/16] xfs: create temporary files for online repair
+	b=fQ/7mmbIQfGI8W6bLMjWY3amouslxfOKwq6eLcdiksE+bsexEONXdU/ngh+Abm7E1
+	 zgeLg6VUXjOxRczUj0VRZo4Ln+UM52PsDcd2GTM7xK6kaZmGvHGf9p/C1MUv3eau44
+	 SBqMiXMDt1k0QXPv7a6Fz4tyN5tSUVk+CerxIO1UU46bkk/O34x/6j5PHbIWSq3ZPQ
+	 Wz+/Pb0EC92IFKdmqcc/4gp1MvU1O4i1kBtmCJOuRDHeRAeIa/r612++cVpscMLs+o
+	 itePwKAk5TYPC5+nL3gY+2982r2wfAQZTdUh7ae5I4r3bbPBkunvH70UImE58IuMEW
+	 DRQR5v5qsJQ8w==
+Date: Mon, 15 Apr 2024 16:34:48 -0700
+Subject: [PATCHSET v30.3 05/16] xfs: online repair of realtime summaries
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Message-ID: <171322381780.87900.770231063979470318.stgit@frogsfrogsfrogs>
+Message-ID: <171322382166.88091.17655506673018704776.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240415232853.GE11948@frogsfrogsfrogs>
 References: <20240415232853.GE11948@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,16 +46,18 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-As mentioned earlier, the repair strategy for file-based metadata is to
-build a new copy in a temporary file and swap the file fork mappings
-with the metadata inode.  We've built the atomic extent swap facility,
-so now we need to build a facility for handling private temporary files.
+We now have all the infrastructure we need to repair file metadata.
+We'll begin with the realtime summary file, because it is the least
+complex data structure.  To support this we need to add three more
+pieces to the temporary file code from the previous patchset --
+preallocating space in the temp file, formatting metadata into that
+space and writing the blocks to disk, and swapping the fork mappings
+atomically.
 
-The first step is to teach the filesystem to ignore the temporary files.
-We'll mark them as PRIVATE in the VFS so that the kernel security
-modules will leave it alone.  The second step is to add the online
-repair code the ability to create a temporary file and reap extents from
-the temporary file after the extent swap.
+After that, the actual reconstruction of the realtime summary
+information is pretty simple, since we can simply write the incore
+copy computed by the rtsummary scrubber to the temporary file, swap the
+contents, and reap the old blocks.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -66,29 +68,27 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-tempfiles-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-rtsummary-6.10
 ---
 Commits in this patchset:
- * xfs: hide private inodes from bulkstat and handle functions
- * xfs: create temporary files and directories for online repair
- * xfs: refactor live buffer invalidation for repairs
- * xfs: add the ability to reap entire inode forks
+ * xfs: support preallocating and copying content into temporary files
+ * xfs: teach the tempfile to set up atomic file content exchanges
+ * xfs: online repair of realtime summaries
 ---
- fs/xfs/Makefile         |    1 
- fs/xfs/scrub/parent.c   |    2 
- fs/xfs/scrub/reap.c     |  445 +++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/scrub/reap.h     |   21 ++
- fs/xfs/scrub/scrub.c    |    3 
- fs/xfs/scrub/scrub.h    |    4 
- fs/xfs/scrub/tempfile.c |  251 +++++++++++++++++++++++++++
- fs/xfs/scrub/tempfile.h |   28 +++
- fs/xfs/scrub/trace.h    |   96 ++++++++++
- fs/xfs/xfs_export.c     |    2 
- fs/xfs/xfs_inode.c      |    3 
- fs/xfs/xfs_inode.h      |    2 
- fs/xfs/xfs_iops.c       |    3 
- fs/xfs/xfs_itable.c     |    8 +
- 14 files changed, 843 insertions(+), 26 deletions(-)
- create mode 100644 fs/xfs/scrub/tempfile.c
- create mode 100644 fs/xfs/scrub/tempfile.h
+ fs/xfs/Makefile                 |    1 
+ fs/xfs/scrub/common.c           |    1 
+ fs/xfs/scrub/repair.h           |    3 
+ fs/xfs/scrub/rtsummary.c        |   33 ++-
+ fs/xfs/scrub/rtsummary.h        |   37 ++++
+ fs/xfs/scrub/rtsummary_repair.c |  177 ++++++++++++++++++
+ fs/xfs/scrub/scrub.c            |   11 +
+ fs/xfs/scrub/scrub.h            |    7 +
+ fs/xfs/scrub/tempexch.h         |   21 ++
+ fs/xfs/scrub/tempfile.c         |  388 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/tempfile.h         |   15 ++
+ fs/xfs/scrub/trace.h            |   40 ++++
+ 12 files changed, 715 insertions(+), 19 deletions(-)
+ create mode 100644 fs/xfs/scrub/rtsummary.h
+ create mode 100644 fs/xfs/scrub/rtsummary_repair.c
+ create mode 100644 fs/xfs/scrub/tempexch.h
 
