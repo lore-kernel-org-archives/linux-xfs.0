@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94340156225
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:36:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE50159200
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:36:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713224183; cv=none; b=KyIbHGTszhcV4pBNLAlCLTsMo6Ns8OYSuO1AmVg2rgBkz6h9dZ4gGa2rzbCJDZEZjXrIQrkhBKZuTSXltCrVyY5dVixw0g0AvmYcRn6xAiyuKsFzdLv4CtnlZo2Cay9+oHMDaYpZZQmku7FhiKiYZ+iIWmnzkP6YUf9tpWN/EeE=
+	t=1713224198; cv=none; b=ctzvrOipwkfFlg4kL09aAnFNIM5GT7ZBHeMSqoAL5Yj5qiNzzS+xNHD/I7MJJCbCPyNMxJyHWzWbdN68f/7Knk9Q87W0TthB79s3fNWut9SK0H5NFz5DAKLVDKKbzadjWHHcDIi9xzbRo4b9xVWu8+LKQfqN1hjbvR3ExIU+cYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713224183; c=relaxed/simple;
-	bh=y3a66VaxJ5nh9Jh2hfBaBbsGjPjs4KurKhDhtqdkqmg=;
+	s=arc-20240116; t=1713224198; c=relaxed/simple;
+	bh=pRRHEGYyAVTEwXD69WaIno6wi7HvoUPumCsaNjv1esA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rP+js+ZzgOqLaXDp+0M4tKMpdrNVOtjDtUJQKUeGBfb2KaEOuMD6UeZVswtT3tCz81likFD0jAx7z5fptGTOO6CLoxDLt1l8auVGvAZdNiifFsy8m3G5+FwzK63OAmKU65XR7paOhbWNIYK23/MpD/De5yXt/XpupQ3cCU8YFUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZbKmecQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jLLR0gZStohHtu5ET2moku6taAfSOJJ4oHQvD+uIZAz2qmbbc4odWwhWKkyvfmjx3yzg5/59qp0R7i70uXvaJqKl6BTnmoDRYISobjBnMrWfsNTN0dN0AqWwU+eGJCR2QoYwYhKbb6R3GxK3HrzgT1sP9Mkpzb+dG4tH+Cf0U2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qef5JcnY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZbKmecQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BA8CC113CC;
-	Mon, 15 Apr 2024 23:36:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qef5JcnY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAC2AC113CC;
+	Mon, 15 Apr 2024 23:36:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713224183;
-	bh=y3a66VaxJ5nh9Jh2hfBaBbsGjPjs4KurKhDhtqdkqmg=;
+	s=k20201202; t=1713224198;
+	bh=pRRHEGYyAVTEwXD69WaIno6wi7HvoUPumCsaNjv1esA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=AZbKmecQh5alpC1QhSXaLRnADKWLjEWRrOO0t5GVJR0FrHE/SHdzwUFbQhL1syOv3
-	 R7PLAst5WJMqYMwBao5tz5wBLHd+ZuU241gROsm2kYI9rVeAYHVplQpWniyOiWlGo0
-	 znxHs7YVtWBPKxM0opxrFnQf3hBNbgrx7fL4RHfieacg1J496qMAbpx2ZioqtFczTE
-	 IH/ZdNBxU2CZUWyrgiWCOV0Xoy/so0IqcsMiG/LOlxdNJw5PFGOH5JlEY7AxA/7vbF
-	 Oew5NnB+y0sytwiISid26222m/437wwuSiY1klh73G5064wcrmYc53RHkx6At91vmJ
-	 HqfmwOSSXlD1Q==
-Date: Mon, 15 Apr 2024 16:36:22 -0700
-Subject: [PATCHSET v30.3 11/16] xfs: online repair of symbolic links
+	b=qef5JcnYvdWHwNTCeUBmEKzY7xI30FIpbqspNJFM88ZJAMAY1t8AvQdsUqqzp9w5t
+	 T2NJaIVFyY2zqVMdme7QAfQ+uMe5WbmkEMgG4d+ekFfxTGUhjD2Bvuapyqr5Tgv6kd
+	 3Y3j7iFIXls9+d6/Knzl3gbsZjzlKKG5WO53FPQ2vUBZbWm/so5c8znRC840Dcuyc0
+	 ZSzyvYwo7iWT07T4/9NAZ50E7ulWFGOjpb6PdV+SArOhDMmejPdVyy3xCVnIqD389F
+	 AUdI3VfKNWFZgj3DkBiQy7PttuT0zqBwMgoxBI+SgZx1xwPliErJBdudAZ5XuIM3df
+	 LQjKWKpRv3ZmQ==
+Date: Mon, 15 Apr 2024 16:36:38 -0700
+Subject: [PATCHSET v30.3 12/16] xfs: online fsck of iunlink buckets
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171322384642.89634.337913867524185398.stgit@frogsfrogsfrogs>
+Message-ID: <171322385012.91285.3470147913307339944.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240415232853.GE11948@frogsfrogsfrogs>
 References: <20240415232853.GE11948@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,9 +46,10 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-The patches in this set adds the ability to repair the target buffer of
-a symbolic link, using the same salvage, rebuild, and swap strategy used
-everywhere else.
+This series enhances the AGI scrub code to check the unlinked inode
+bucket lists for errors, and fixes them if necessary.  Now that iunlink
+pointer updates are virtual log items, we can batch updates pretty
+efficiently in the logging code.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -59,25 +60,19 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-symlink-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-iunlink-6.10
 ---
 Commits in this patchset:
- * xfs: expose xfs_bmap_local_to_extents for online repair
- * xfs: pass the owner to xfs_symlink_write_target
- * xfs: online repair of symbolic links
+ * xfs: check AGI unlinked inode buckets
+ * xfs: hoist AGI repair context to a heap object
+ * xfs: repair AGI unlinked inode bucket lists
 ---
- fs/xfs/Makefile                    |    1 
- fs/xfs/libxfs/xfs_bmap.c           |   11 -
- fs/xfs/libxfs/xfs_bmap.h           |    6 
- fs/xfs/libxfs/xfs_symlink_remote.c |    7 
- fs/xfs/libxfs/xfs_symlink_remote.h |    7 
- fs/xfs/scrub/repair.h              |    8 +
- fs/xfs/scrub/scrub.c               |    2 
- fs/xfs/scrub/symlink.c             |   13 +
- fs/xfs/scrub/symlink_repair.c      |  506 ++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/tempfile.c            |   13 +
- fs/xfs/scrub/trace.h               |   46 +++
- fs/xfs/xfs_symlink.c               |    4 
- 12 files changed, 609 insertions(+), 15 deletions(-)
- create mode 100644 fs/xfs/scrub/symlink_repair.c
+ fs/xfs/scrub/agheader.c        |   40 ++
+ fs/xfs/scrub/agheader_repair.c |  879 ++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/scrub/agino_bitmap.h    |   49 ++
+ fs/xfs/scrub/trace.h           |  255 ++++++++++++
+ fs/xfs/xfs_inode.c             |    2 
+ fs/xfs/xfs_inode.h             |    1 
+ 6 files changed, 1179 insertions(+), 47 deletions(-)
+ create mode 100644 fs/xfs/scrub/agino_bitmap.h
 
