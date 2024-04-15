@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2D6015749D
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:33:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E39315749D;
+	Mon, 15 Apr 2024 23:34:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713224027; cv=none; b=WmXvs2RVBLTUXy/ceJ63c6PDEHyvQSelStGYSStMahOO4IXKJq6qGSwNcYUeB+n9RSc8cWSLiEPtAf8CDIapCMTK6xvHb7WMbaXcYyjIkE3hx7Eo9Di/KXIHfCze0ajWS1jq6ZTuMN86gmf2aeOzsB5KDVx4oxGfDKSkJ/tQX6U=
+	t=1713224042; cv=none; b=bE+BdjNFixTuTCr3KxX8P9BCPd4j3plKfqKEhjMVdQUE7vTvny4GlYN0sQV5YVNjJg8mP/I2Q/wFklG6phIxIboSCae/kcPQTMQz3/pFKzJSRBsLXINhoDdcI4wQ5uSW0xRT5217aEEhQbMcSdzdBguFbOkai+0bfQGE+tMRFsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713224027; c=relaxed/simple;
-	bh=NeKorqjM520ekFMa0IWbS69GnC2P0iwA+++xo16d22I=;
+	s=arc-20240116; t=1713224042; c=relaxed/simple;
+	bh=9wjkw4K2cO9LzwYifdhmRt96sjojvF9SAKcBGEWXJ04=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GIup7GpVL6jOgbX5u3sOnH/TJlsWj5ZUEqgvmQl3by+xXcHj1DmD02Ww7J+qi78GxOMByJQATuKZVW5X3P8ngfvSV4rV4QzSERBrXigTTR40yiLjRgbhq9V4WgpgZoxtqOHKVxe+XqvOgPzVt01QnGitiHOx9yq94Vnd3LcAnd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tKD6aW15; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=L1pGWbo+oQ/eodBByglQNGvOzWzdcqqOgvnZXuUFbP2kv7//0uDRsHfK1ldiTrHVT6/e3aI9Qmg13qVPufOq+Xy8tF2LGb5NUnrnRf+lFWMcSf/LKwgX2ggRoQw4p1YPW8bV7MpGO7MFhbuJIW2zaVL9TsLiCQPMBPLK7wYKFGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H91za7sf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tKD6aW15"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 843DFC113CC;
-	Mon, 15 Apr 2024 23:33:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H91za7sf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D6F6C113CC;
+	Mon, 15 Apr 2024 23:34:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713224026;
-	bh=NeKorqjM520ekFMa0IWbS69GnC2P0iwA+++xo16d22I=;
+	s=k20201202; t=1713224042;
+	bh=9wjkw4K2cO9LzwYifdhmRt96sjojvF9SAKcBGEWXJ04=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tKD6aW15zthNWTNsiHO3Otg3A1vRoVZs1eA06+j5YTdzR9X/FpfPjMkpyLLjUUjUc
-	 20H5+niUrH1Fr6xrFGuWiywhYQthJ8UL9//G+8cDcEB+DtjVnfnRo/JeKwKbzJAXnK
-	 xdqQq5WQ1vF5myTA0F0YV6Svupt4j1Isir9EA57lZYcXW9Y2ThY8QzoOEM5ksUuKbT
-	 TBnBefXB3qj8IIwGiTWtpy9Kx0mUMBjSOHQLARxchKIjiAIi48YhLrZyaDj/zloRK/
-	 C9EyKuKoCUniWAc7E+Ii52lRrLnfwv3Qc94QDxZ9b69GUYHa3wmkMqQDVKVgfrom76
-	 59NsAGqcxjJLw==
-Date: Mon, 15 Apr 2024 16:33:46 -0700
-Subject: [PATCHSET v30.3 01/16] xfs: improve log incompat feature handling
+	b=H91za7sfhn4T6jaPhPnyTVlawuRGHQmPrrLT0snbzRqSsWt+C9A8jhUviLlO19YM9
+	 iAKj2MeLu2GreEa+0kitUyfQxpHZN6UfOayMpmRnMCCrFE76W873SAUUGwEQnhPm+0
+	 tm9CFgiFneuN1GFqYhR1U4z8CwezRO0a7KkMA8UQWaubghDjhDmCM4PWHBe3XNwQYF
+	 xReB/e9AsbW6Nj2pr1s5+Kcp3PmyaGqbZkaoLo9XQJUraeWPLJYfuBHRqtCZ2qIl+n
+	 QrY8+bhlQpwgPSFl4v/0RPkbaEYRtI3dhxzvLlW8ElyCySiE9GOAD4TIkZ4AxyCn0h
+	 1okrGVu1G93Lw==
+Date: Mon, 15 Apr 2024 16:34:01 -0700
+Subject: [PATCHSET v30.3 02/16] xfs: refactorings for atomic file content
+ exchanges
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
- Dan Carpenter <dan.carpenter@linaro.org>, hch@lst.de,
+Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-fsdevel@vger.kernel.org,
  linux-xfs@vger.kernel.org
-Message-ID: <171322380288.86847.5430338887776337667.stgit@frogsfrogsfrogs>
+Message-ID: <171322380710.87068.4499164955656161226.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240415232853.GE11948@frogsfrogsfrogs>
 References: <20240415232853.GE11948@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,14 +48,9 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This patchset improves the performance of log incompat feature bit
-handling by making a few changes to how the filesystem handles them.
-First, we now only clear the bits during a clean unmount to reduce calls
-to the (expensive) upgrade function to once per bit per mount.  Second,
-we now only allow incompat feature upgrades for sysadmins or if the
-sysadmin explicitly allows it via mount option.  Currently the only log
-incompat user is logged xattrs, which requires CONFIG_XFS_DEBUG=y, so
-there should be no user visible impact to this change.
+This series applies various cleanups and refactorings to file IO
+handling code ahead of the main series to implement atomic file content
+exchanges.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -66,36 +61,27 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=log-incompat-permissions-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=file-exchange-refactorings-6.10
 ---
 Commits in this patchset:
- * xfs: pass xfs_buf lookup flags to xfs_*read_agi
- * xfs: fix an AGI lock acquisition ordering problem in xrep_dinode_findmode
- * xfs: fix potential AGI <-> ILOCK ABBA deadlock in xrep_dinode_findmode_walk_directory
- * xfs: fix error bailout in xrep_abt_build_new_trees
- * xfs: only clear log incompat flags at clean unmount
+ * xfs: move inode lease breaking functions to xfs_inode.c
+ * xfs: move xfs_iops.c declarations out of xfs_inode.h
+ * xfs: declare xfs_file.c symbols in xfs_file.h
+ * xfs: create a new helper to return a file's allocation unit
+ * xfs: hoist multi-fsb allocation unit detection to a helper
+ * xfs: refactor non-power-of-two alignment checks
+ * xfs: constify xfs_bmap_is_written_extent
 ---
- .../filesystems/xfs/xfs-online-fsck-design.rst     |    3 -
- fs/xfs/libxfs/xfs_ag.c                             |    8 ++-
- fs/xfs/libxfs/xfs_ialloc.c                         |   16 ++++--
- fs/xfs/libxfs/xfs_ialloc.h                         |    5 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c                   |    4 +-
- fs/xfs/scrub/alloc_repair.c                        |    2 -
- fs/xfs/scrub/common.c                              |    4 +-
- fs/xfs/scrub/fscounters.c                          |    2 -
- fs/xfs/scrub/inode_repair.c                        |   50 ++++++++++++++++++++
- fs/xfs/scrub/iscan.c                               |   36 ++++++++++++++
- fs/xfs/scrub/iscan.h                               |   15 ++++++
- fs/xfs/scrub/repair.c                              |    6 +-
- fs/xfs/scrub/trace.h                               |   10 +++-
- fs/xfs/xfs_inode.c                                 |    8 ++-
- fs/xfs/xfs_iwalk.c                                 |    4 +-
- fs/xfs/xfs_log.c                                   |   28 -----------
- fs/xfs/xfs_log.h                                   |    2 -
- fs/xfs/xfs_log_priv.h                              |    3 -
- fs/xfs/xfs_log_recover.c                           |   19 +-------
- fs/xfs/xfs_mount.c                                 |    8 +++
- fs/xfs/xfs_mount.h                                 |    6 ++
- fs/xfs/xfs_xattr.c                                 |   42 ++---------------
- 22 files changed, 160 insertions(+), 121 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.h |    2 +
+ fs/xfs/xfs_bmap_util.c   |    4 +-
+ fs/xfs/xfs_file.c        |   88 ++++------------------------------------------
+ fs/xfs/xfs_file.h        |   15 ++++++++
+ fs/xfs/xfs_inode.c       |   75 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h       |   16 +++++---
+ fs/xfs/xfs_ioctl.c       |    1 +
+ fs/xfs/xfs_iops.c        |    1 +
+ fs/xfs/xfs_iops.h        |    7 ++--
+ fs/xfs/xfs_linux.h       |    5 +++
+ 10 files changed, 121 insertions(+), 93 deletions(-)
+ create mode 100644 fs/xfs/xfs_file.h
 
