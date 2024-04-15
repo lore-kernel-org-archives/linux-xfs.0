@@ -1,356 +1,155 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2086.outbound.protection.outlook.com [40.107.92.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D1024B34;
-	Mon, 15 Apr 2024 08:10:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713168660; cv=none; b=eANFM2tbDVmra+jT4ucBD2MoTpq8QZhqiVTj7zSOk4wJleM+RS+djKdZzROiGg/swxFJJtV9JgalqsvlCRr2m01UyDaMWhT1/yAgiw94+BHsPhjUKX1N1W5CIpQq8bZpqpwTjXpBvDUsoLf51e/gX7HfbEr2v/iIn8JLTOHUlSY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713168660; c=relaxed/simple;
-	bh=RPKAQr7fYYMhG/1sbT9nzNIa6ykeTCEs8OSl8PHFWxI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NaUZZclfKQjVFV2jemToEJC12971aMIPc+sEXb5CLvCgIlyU+Lqa/Oa2BIh0qWAkXF4d3mPM81uFoPsRUP0NXcXVOdxcrogVMAMISkXMKsDl40iaKGlnUyzJD3DN/9RaG5w5Qd4BlfGiwe6ec/8P1T8pbIXCDeDwrilLX7ssWcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FzbQ1t0p; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2880D47F50;
+	Mon, 15 Apr 2024 08:42:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.92.86
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1713170538; cv=fail; b=RZHAqyj68T/UvKlLkk4zwjxFgoucbIpgJrx4yK/w+Lr9LcWsAvnqHyNlGUStW2Id09ky53qvMa2hgGRNuV1NfzVKQREPsTCi2mdegwCBZB/wW7P50I8fTL96jdLmrYCqwtRWmoBTg0iVogmernrmJ+GMjelOMt41A/lBdY2D7Q8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1713170538; c=relaxed/simple;
+	bh=/L8L0yB024+8lA+0V6fgP23DqNw/ea5kI1BlqwVTWfI=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 Content-Type:MIME-Version; b=g9xlZWtFifkeIHW/dQTkQkPmLAVngzSNJlKKIwn7YNRb4o6n3VfG1XD+bE2QFA7ju9Zyeq+jfw9gfZlbtdrlKnIMxCTBQ1QzlWxTEzpwDdM1sCc+TEsxTSXdxyj417mnFJx9qvj04wtutHHLf5cL/htKGIMdNezNkAOzjvHJE2E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=NG20jgpE; arc=fail smtp.client-ip=40.107.92.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FzbQ1t0p"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=SzKBuO4UZJjLysHYrSmx3tPUhFrnbhHWlG8m5l17y54=; b=FzbQ1t0piLn462pvSE6YK41Yqb
-	R/4jWV7cAgcxk5YLNZwi4idsWhFiJyNNcgD8MSr4E+0ejq7NrxEWpCPVjvP0po+4gvKrd6Ufwdsf6
-	o3Rmv4nB7oqsyrARwq2dlaDMdbSXGKXDL6nbK9iS8DOLIZ1MGF1TJDC0UMlWo9r2AKM2YimlUIKqw
-	I2mwjbz/kXbsBk6yVIh8EcyZ92AVby3LXsu23+30B8Q2VA5hiHPKP2v/TYnRon7xjO9VfWDJJ7qG/
-	4V+FXk9csiSNQmRnxyjxu7CfmlEHCYn4B3WX4Y6uRtS29RETUpg4LYQpiF7jVVfrI49BhG6EWe0AJ
-	+YRM5lBw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwHQX-00000007Tlh-2R6F;
-	Mon, 15 Apr 2024 08:10:57 +0000
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: fstests@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org,
-	willy@infradead.org,
-	p.raghav@samsung.com,
-	da.gomez@samsung.com,
-	hare@suse.de,
-	john.g.garry@oracle.com,
-	linux-xfs@vger.kernel.org,
-	patches@lists.linux.dev,
-	Luis Chamberlain <mcgrof@kernel.org>
-Subject: [RFC] fstests: add mmap page boundary tests
-Date: Mon, 15 Apr 2024 01:10:54 -0700
-Message-ID: <20240415081054.1782715-1-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.44.0
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="NG20jgpE"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=W4Ki3Ec4Bfuj7Su56DyFxzVTLQ8UQ9gkkN/XQnUtvwGyBFGAgFRazZPQEgLoS+tlKlQI4AHECWNZg77k6nGV9zdSPRDYRfVfp1wZPbZOvYmVWrWojKL2yhxKnEMUp7qN7jhH3s5pr+Pco9Qp04/6rXobM/J0s8hnTqFKkJkbSx8bRPMeCSJsK0FY8ZqfGcN+Wiqy+XJUc4pSdsHn6mkZq1+eIm36/afgTERSsAXWd5z6m/a00k+Ge3xTURaWe+GRvqIS8UrfIq2Xbqp5R3CbFripzY0LCPTEulRkf1I6rgOXaer9btnYAQMtV1Sn+SUMaE7+AOWrdGBDDogTtXuxaA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AaMjCNUSAnRHUMePnt6t1aTqESRCYkjmKp2qH1yf244=;
+ b=YK2azDvn8LCH7Zr36JL6FkZU9kd4f434TJGfAQGHeNjXxkpJRTRs9MRVtXCC/JqLfT1ZiKwOzrqhuuGfWRBSeKbmFCpt366odtAzLP4KKKAiI9OdnhccYY5APjLpFzt2QeSw390xqt4VrwGRiil6ka/HlAyE5Kh+AJeROeBFeBtyPbh6372yRBN6qedlegF1I8dXoyngHE57qnPRv7KV9mjGS2AAB9m8iqzl0VYNGMb/MV06ybtGA4ZlBd02I58tFtFVbx+ksvLY65qZ/MrLalsG/TPi0V302Ewv+TH6BqKzwx6LolbAnc8qgbBQxWbug6eY9A+1UVC840UCDp927w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AaMjCNUSAnRHUMePnt6t1aTqESRCYkjmKp2qH1yf244=;
+ b=NG20jgpEG2xEPO9QleeRLtwzS5pfICYS1/XB1++unPkwLaU4gFjBtDN8soShTN05M9bS1F1MFsBHsF9Z6FUJerCDEwNSalEYbuazkyff9j3te6Xs0vPaX18Bj4qO5mQ0zZEEhJjmaxrqQ/alop9IRSXn/kzNvPMZKYHdVbiT5JDUMv/HyqCos772WAqAR/n675pWIO3F0DIPkoOpr9qAOSwGMtUGVmoxJU7u9L7FxXF3nWgJmiZRSZRZMAjOu28AMQAbF4U0tpitT972TV+SdGvs2cMLBfOwaoo/aFKU1XUhvBk6PeUlmSDol7Yy/qzqpX8JQxWPbaJYtATOKYrAqA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
+ DS7PR12MB8290.namprd12.prod.outlook.com (2603:10b6:8:d8::15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.7452.49; Mon, 15 Apr 2024 08:42:12 +0000
+Received: from DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::80b6:af9b:3a9a:9309]) by DS0PR12MB7726.namprd12.prod.outlook.com
+ ([fe80::80b6:af9b:3a9a:9309%7]) with mapi id 15.20.7409.055; Mon, 15 Apr 2024
+ 08:42:11 +0000
+References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
+ <db13f495fc0addcff12b6b065b7a6b25f09c4be7.1712796818.git-series.apopple@nvidia.com>
+ <748fb175-3c5b-4571-9278-1580747a746a@nvidia.com>
+User-agent: mu4e 1.10.8; emacs 29.1
+From: Alistair Popple <apopple@nvidia.com>
+To: John Hubbard <jhubbard@nvidia.com>
+Cc: linux-mm@kvack.org, david@fromorbit.com, dan.j.williams@intel.com,
+ rcampbell@nvidia.com, willy@infradead.org, jgg@nvidia.com,
+ linux-fsdevel@vger.kernel.org, jack@suse.cz, djwong@kernel.org,
+ hch@lst.de, david@redhat.com, ruansy.fnst@fujitsu.com,
+ nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, jglisse@redhat.com
+Subject: Re: [RFC 05/10] fs/dax: Refactor wait for dax idle page
+Date: Mon, 15 Apr 2024 18:41:51 +1000
+In-reply-to: <748fb175-3c5b-4571-9278-1580747a746a@nvidia.com>
+Message-ID: <874jc32f1e.fsf@nvdebian.thelocal>
+Content-Type: text/plain
+X-ClientProxiedBy: SYBPR01CA0183.ausprd01.prod.outlook.com
+ (2603:10c6:10:52::27) To DS0PR12MB7726.namprd12.prod.outlook.com
+ (2603:10b6:8:130::6)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|DS7PR12MB8290:EE_
+X-MS-Office365-Filtering-Correlation-Id: 713834f8-db47-4c5d-1391-08dc5d27f17b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	fA6kpRD+gJThCUREOdD+zlVpVCG1pW33TBGVwHHoey+HPG7H2ZQDyTpQxKk6pVgnRSwVxQtKw8CpCyQdye/i5Z2Lmwx7L12pmyS8JWVwMG+VZk160I6n66xVhEeZaoG4HRQ+ktuwLPIl3qWfrJvymjZ7pnL+v02S5iq8efgZadBknZ+k3kQYX7092S9SsF31foy4+exRoK3H8naxuuKP/5hH4x2Cq1Nj/P/xDBqQxJELazKzQ85H8uZ9DGCppT0kLK6hnFL3YTWRYwMZNhQKWYJY1hoI2LOcQ+jn4V8twT+DB6w6XoutC+5q5830H/DgCqxQ9fRPAQIklpHHmzyYhV7Hd70FVyb/1zKbu9WD1y8/Evk2AQIQBtHaoeyQaS5z83uaUBwsUNlMJjICgPgeQJZ3MNfrShDhlYCml2+/+0yRPIdpKTI465e7zTLNtiQvx9fojYuiqvNu+bUZXFzOFWukn4BWuh9bfLpMhMwqURjUza0BSClJ8JIt+Qa9xIxkHcCUPrk1g3IP1OR7xel0w/6lLNOHVAQgr1m2rUc8tlp3jFxb46alXzviPfhaLTtvphVYClePWhq3Ktk1uU25RvwbWlcuLHq3fWeADc3GfRP9Ly2h0rMqOheNK5zZ0ZqBp349Hbqqw4PDxKpZ398B4ubLWuBDphkKmfzACyp6cME=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(7416005)(366007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?HknGAqPWFN87TD8HJvvpuKbwuoXJ9T4zFhB3nDzJEsKGnI7R7IMDWj8fkG4V?=
+ =?us-ascii?Q?ziuCjBSb9Mp1Ip2TFUButN2qppDCQsC6sZWd8/IzMqEPXU99MQFgTu8KK3+z?=
+ =?us-ascii?Q?VknbdqHaEGvBm/VOeqnP72FXCTM0sG1gsYc5tG0h2tg45XGswteHman2lGAY?=
+ =?us-ascii?Q?zCmHBA3JQJcEaernydaURX3uhaUKVFb4x8JQSPnfcBQphVTmwXpChA1/JsQb?=
+ =?us-ascii?Q?dTa6+y06lNwE1Rf+UeWVejb1qyPMHJGK6Jrn7EAYud5oioFGLUHDqEpTsXe2?=
+ =?us-ascii?Q?eS4cheaJZHjPvuZadov4Z00ftFioaIUn4K6cQJuiw6GHNmuaqTnSF28b7diR?=
+ =?us-ascii?Q?zKgz8qQ/Xjw/Tv3gzWlNliuIo2vwCotLbaSIB1vNkQAEyZ/M+f2q10mJZs7p?=
+ =?us-ascii?Q?nupfPnRHZrZGpItf0FAWLhVJ5L2mxf+aQmoiN4waGuKkAlHVzhnqDVgrWfMx?=
+ =?us-ascii?Q?/+3LNoqXeyIl5/vC6UsyE2gupSsCT44Sk86q16RKtezy/jUvS/yIRpylU47H?=
+ =?us-ascii?Q?q4fgaYQlW88da9OgDFnDDhg6oSPl1Lxj9fpcNg+4DDOXOASj/YMBe+3t61jM?=
+ =?us-ascii?Q?RcGglEAtVqsaYtwg4D36BZTRIY7JRu8emObXr6U6YPSSxNliLq/EW+92kmqc?=
+ =?us-ascii?Q?CFVVniOXpnDulq4YuTAwh99Rw8ArBtkSVSfKGVLhvrM7CzN/Goq4CjtcQcvd?=
+ =?us-ascii?Q?VA1OffOehGJ9FrwfZSmsEiQpyhYPrH/I99q+r6Uxeb9uXLWRUgCZfoe2ASyy?=
+ =?us-ascii?Q?Mf/rqYI42YyoAnSSYjfneFM94GN9uRIHGUDoGITOA7rSQ0eD2LcbeiO5sGSr?=
+ =?us-ascii?Q?BeH7ISM0s8KQTiveRwidgrqUUTUz+MDbJQMxQle/AFh+LItTKg27lt9ArkpD?=
+ =?us-ascii?Q?BIWhTm+Xpy6+b1eZ3KKDI+ysQWNagCjoSHgF+xOg1S+B2a7Nb5ZEAl3zfiIy?=
+ =?us-ascii?Q?2myeScBIWfuWrq7wfZTY9wQXe3QKktJa+XxNDYNkUiTcsyjp+dhYuE9R1xlU?=
+ =?us-ascii?Q?n660YHPWGViX1BsMroFeclrhHw1418tLX5sAkyOm6DEW1BA4eU1YDJeFWH5J?=
+ =?us-ascii?Q?eZeYjFVM9q8Oq6UUWdPr4BTMWkcyEqtG47e47QULsDjVfv7HlG0vNi2MSlVR?=
+ =?us-ascii?Q?5q1GY0DpzaZxx7ytTdpZvgI6xu6vcbV7MkOSzchzYBsM5lChRaoZXqHOhBeN?=
+ =?us-ascii?Q?Q+sl+xiFoMXkWam5Tlz0yUJWnpXqk+C45IivO5j6De7f4ClygJUmJorcfsyY?=
+ =?us-ascii?Q?KRZo+BaOeDGa2vwWkdyqCAGKIIuHXU1b5eUlvb4T5WhTeDBomF1ECSiIQmyz?=
+ =?us-ascii?Q?BPpqxIbdDHzh9FTKeJuXNuHY/ufh0ojfbGWHgjY2/1O1xU+CrDyjbTB+/af2?=
+ =?us-ascii?Q?LI5WOTw52bvdtFSEPgRUZ0IRxAAfCbPTTt6JstcM204FndNXWkAuPNHS17wt?=
+ =?us-ascii?Q?6jromjAVZa1jbIaqWnpYjbpbrW4pYgoVvY3s5KhouggHOrZAuojOCIZ1aGs3?=
+ =?us-ascii?Q?prLDgiAM9St/6YmVF+lFsBIQMwdIL9T5YjGO24FqUhLL/5jfNog8iRmLcjVj?=
+ =?us-ascii?Q?ab0pf7sn74xiaMXspoG5Kgx1SxpgI+lh5CUPbfn3?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 713834f8-db47-4c5d-1391-08dc5d27f17b
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Apr 2024 08:42:11.7223
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mzuc2l8rRaqZ1iw91F8W8nyzrwO7GOwJhzL3aT7WmEXgwtiIs3NH2TxSMKnvgfrTY+3h14Ma5Q8ekW+BJD+7ag==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB8290
 
-mmap() POSIX compliance says we should zero fill data beyond a file
-size up to page boundary, and issue a SIGBUS if we go beyond. While fsx
-helps us test zero-fill sometimes, fsstress also let's us sometimes test
-for SIGBUS however that is based on a random value and its not likley we
-always test it. Dedicate a specic test for this to make testing for
-this specific situation and to easily expand on other corner cases.
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
+John Hubbard <jhubbard@nvidia.com> writes:
 
-Does enough to get us to use to test this, however I'm aware of a bit
-more polishing up to do:
+> On 4/10/24 5:57 PM, Alistair Popple wrote:
+> ...
+>> diff --git a/include/linux/dax.h b/include/linux/dax.h
+>> index 22cd990..bced4d4 100644
+>> --- a/include/linux/dax.h
+>> +++ b/include/linux/dax.h
+>> @@ -212,6 +212,17 @@ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+>>   int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>>   		const struct iomap_ops *ops);
+>>   +static inline int dax_wait_page_idle(struct page *page,
+>> +				void (cb)(struct inode *),
+>> +				struct inode *inode)
+>> +{
+>> +	int ret;
+>> +
+>> +	ret = ___wait_var_event(page, page_ref_count(page) == 1,
+>> +				TASK_INTERRUPTIBLE, 0, 0, cb(inode));
+>> +	return ret;
+>> +}
+>
+> Or just:
+> {
+> 	return ___wait_var_event(page, page_ref_count(page) == 1,
+> 			TASK_INTERRUPTIBLE, 0, 0, cb(inode));
+> }
+>
+> ...yes?
 
-  * maybe moving mread to common as generic/574 did it first
-  * sharing round_up_to_page_boundary() as well
+Yep. Thanks.
 
-generic/574 is special, it was just testing for correctness of
-integrity if we muck with mmap() however if you don't have verity
-stuff available obviously you won't end up testing it.
-
-This generalizes mmap() zero-fill and SIGBUS corner case tests.
-
-I've tested so far only 4k and it works well there. For 16k bs on LBS
-just the SIGBUS issue exists, I'll test smaller block sizes later like
-512, 1k, 2k as well. We'll fix triggering the SIBGUS when LBS is used,
-we'll address that in the next iteration.
-
-Is this a worthy test as a generic test?
-
- common/filter         |   6 ++
- tests/generic/740     | 231 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/740.out |   2 +
- 3 files changed, 239 insertions(+)
- create mode 100755 tests/generic/740
- create mode 100644 tests/generic/740.out
-
-diff --git a/common/filter b/common/filter
-index 36d51bd957dd..d7add06f3be7 100644
---- a/common/filter
-+++ b/common/filter
-@@ -194,6 +194,12 @@ _filter_xfs_io_unique()
-     common_line_filter | _filter_xfs_io
- }
- 
-+_filter_xfs_io_data_unique()
-+{
-+    _filter_xfs_io_offset | sed -e 's| |\n|g' | egrep -v "\.|XX|\*" | \
-+	sort | uniq | tr -d '\n'
-+}
-+
- _filter_xfs_io_units_modified()
- {
- 	UNIT=$1
-diff --git a/tests/generic/740 b/tests/generic/740
-new file mode 100755
-index 000000000000..cbb823014600
---- /dev/null
-+++ b/tests/generic/740
-@@ -0,0 +1,231 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) Luis Chamberlain. All Rights Reserved.
-+#
-+# FS QA Test 740
-+#
-+# As per POSIX NOTES mmap(2) maps multiples of the system page size, but if the
-+# data mapped is not multiples of the page size the remaining bytes are zeroed
-+# out when mapped and modifications to that region are not written to the file.
-+# On Linux when you write data to such partial page after the end of the
-+# object, the data stays in the page cache even after the file is closed and
-+# unmapped and  even  though  the data  is never written to the file itself,
-+# subsequent mappings may see the modified content. If you go *beyond* this
-+# page, you should get a SIGBUS. This test verifies we zero-fill to page
-+# boundary and ensures we get a SIGBUS if we write to data beyond the system
-+# page size even if the block size is greater than the system page size.
-+. ./common/preamble
-+. ./common/rc
-+_begin_fstest auto quick
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.*
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_require_scratch_nocheck
-+_require_test
-+
-+setup_zeroed_file()
-+{
-+	local file_len=$1
-+	local sparse=$2
-+
-+	if $sparse; then
-+		$XFS_IO_PROG -f -c "truncate $file_len" $test_file
-+	else
-+		$XFS_IO_PROG -f -c "falloc 0 $file_len" $test_file
-+	fi
-+}
-+
-+round_up_to_page_boundary()
-+{
-+	local n=$1
-+	local page_size=$(_get_page_size)
-+
-+	echo $(( (n + page_size - 1) & ~(page_size - 1) ))
-+}
-+
-+mread()
-+{
-+	local file=$1
-+	local map_len=$2
-+	local offset=$3
-+	local length=$4
-+
-+	# Some callers expect xfs_io to crash with SIGBUS due to the mread,
-+	# causing the shell to print "Bus error" to stderr.  To allow this
-+	# message to be redirected, execute xfs_io in a new shell instance.
-+	# However, for this to work reliably, we also need to prevent the new
-+	# shell instance from optimizing out the fork and directly exec'ing
-+	# xfs_io.  The easiest way to do that is to append 'true' to the
-+	# commands, so that xfs_io is no longer the last command the shell sees.
-+	bash -c "trap '' SIGBUS; $XFS_IO_PROG -r $file \
-+		-c 'mmap -r 0 $map_len' \
-+		-c 'mread $offset $length'; true"
-+}
-+
-+do_mmap_tests()
-+{
-+	local block_size=$1
-+	local file_len=$2
-+	local offset=$3
-+	local len=$4
-+	local use_sparse_file=${5:-false}
-+	local new_filelen=0
-+	local map_len=0
-+	local csum=0
-+	local fs_block_size=$(_get_block_size $SCRATCH_MNT)
-+
-+	echo -en "\n\n==> Testing blocksize $block_size " >> $seqres.full
-+	echo -en "file_len: $file_len offset: $offset " >> $seqres.full
-+	echo -e "len: $len sparse: $use_sparse_file" >> $seqres.full
-+
-+	if ((fs_block_size != block_size)); then
-+		echo "Block size created ($block_size) doesn't match _get_block_size on mount ($fs_block_size)"
-+		_fail
-+	fi
-+
-+	rm -rf "${SCRATCH_MNT:?}"/*
-+
-+	# This let's us also test against sparse files
-+	setup_zeroed_file $file_len $use_sparse_file
-+
-+	# This will overwrite the old data, the file size is the
-+	# delta between offset and len now.
-+	$XFS_IO_PROG -f -c "pwrite -S 0xaa -b 512 $offset $len" \
-+		$test_file >> $seqres.full
-+
-+	sync
-+	new_filelen=$(_get_filesize $test_file)
-+	map_len=$(round_up_to_page_boundary $new_filelen)
-+	csum_orig="$(_md5_checksum $test_file)"
-+
-+	# A couple of mmap() tests:
-+	#
-+	# We are allowed to mmap() up to the boundary of the page size of a
-+	# data object, but there a few rules to follow we must check for:
-+	#
-+	# a) zero-fill test for the data: POSIX says we should zero fill any
-+	#    partial page after the end of the object. Verify zero-fill.
-+	# b) do not write this bogus data to disk: on Linux, if we write data
-+	#    to a partially filled page, it will stay in the page cache even
-+	#    after the file is closed and unmapped even if it never reaches the
-+	#    file. Subsequent mappings *may* see the modified content, but it
-+	#    also can get other data. Since the data read after the actual
-+	#    object data can vary we just verify the filesize does not change.
-+	#    This is not true for tmpfs.
-+	if [[ $map_len -gt $new_filelen ]]; then
-+		zero_filled_data_len=$((map_len - new_filelen))
-+		_scratch_cycle_mount
-+		expected_zero_data="00"
-+		zero_filled_data=$($XFS_IO_PROG -r $test_file \
-+			-c "mmap -r 0 $map_len" \
-+			-c "mread -v $new_filelen $zero_filled_data_len" \
-+			-c "munmap" | \
-+			_filter_xfs_io_data_unique)
-+		if [[ "$zero_filled_data" != "$expected_zero_data" ]]; then
-+			echo "Expected data: $expected_zero_data"
-+			echo "  Actual data: $zero_filled_data"
-+			echo "Zero-fill broken see mmap() requirements"
-+			_fail
-+		fi
-+
-+		if [[ "$FSTYP" != "tmpfs" ]]; then
-+			_scratch_cycle_mount
-+			$XFS_IO_PROG $test_file \
-+				-c "mmap -w 0 $map_len" \
-+				-c "mwrite $new_filelen $zero_filled_data_len" \
-+				-c "munmap"
-+			sync
-+			csum_post="$(_md5_checksum $test_file)"
-+			if [[ "$csum_orig" != "$csum_post" ]]; then
-+				echo "Expected csum: $csum_orig"
-+				echo " Actual  csum: $csum_post"
-+				_fail
-+			fi
-+
-+			local filelen_test=$(_get_filesize $test_file)
-+			if [[ "$filelen_test" != "$new_filelen" ]]; then
-+				echo "Expected file length: $new_filelen"
-+				echo " Actual  file length: $filelen_test"
-+				_fail
-+			fi
-+		fi
-+	fi
-+
-+	# Now lets ensure we get SIGBUS when we go beyond the page boundary
-+	if [[ "$FSTYP" != "tmpfs" ]]; then
-+		_scratch_cycle_mount
-+		new_filelen=$(_get_filesize $test_file)
-+		map_len=$(round_up_to_page_boundary $new_filelen)
-+		csum_orig="$(_md5_checksum $test_file)"
-+		mread $test_file $map_len 0 $map_len >> $seqres.full  2>$tmp.err
-+		if grep -q 'Bus error' $tmp.err; then
-+			echo "Not expecting SIGBUS when reading up to page boundary"
-+			cat $tmp.err
-+			_fail
-+		fi
-+
-+		# This should just work
-+		mread $test_file $map_len 0 $map_len >> $seqres.full  2>$tmp.err
-+		if [[ $? -ne 0 ]]; then
-+			_fail
-+		fi
-+
-+		# If we mmap() on the boundary but try to read beyond it just
-+		# fails, we don't get a SIGBUS
-+		$XFS_IO_PROG -r $test_file \
-+			-c "mmap -r 0 $map_len" \
-+			-c "mread 0 $((map_len + 10))" >> $seqres.full  2>$tmp.err
-+		local mread_err=$?
-+		if [[ $mread_err -eq 0 ]]; then
-+			echo "mmap() to page boundary works as expected but reading beyond should fail"
-+			echo "err: $?"
-+			_fail
-+		fi
-+
-+		# Now let's go beyond the allowed mmap() page boundary
-+		mread $test_file $((map_len + 10)) 0 $((map_len + 10)) >> $seqres.full  2>$tmp.err
-+		if ! grep -q 'Bus error' $tmp.err; then
-+			echo "Expected SIGBUS when mmap() reading beyond page boundary"
-+			_fail
-+		fi
-+		local filelen_test=$(_get_filesize $test_file)
-+		if [[ "$filelen_test" != "$new_filelen" ]]; then
-+			echo "Expected file length: $new_filelen"
-+			echo " Actual  file length: $filelen_test"
-+			_fail
-+		fi
-+	fi
-+}
-+
-+test_block_size()
-+{
-+	local block_size=$1
-+
-+	do_mmap_tests $block_size 512 3 5
-+	do_mmap_tests $block_size 16k 0 $((16384+3))
-+	do_mmap_tests $block_size 16k $((16384-10)) $((16384+20))
-+	do_mmap_tests $block_size 64k 0 $((65536+3))
-+	do_mmap_tests $block_size 4k 4090 30 true
-+}
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount
-+test_file=$SCRATCH_MNT/file
-+block_size=$(_get_block_size "$SCRATCH_MNT")
-+test_block_size $block_size
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/generic/740.out b/tests/generic/740.out
-new file mode 100644
-index 000000000000..3f841e600ed3
---- /dev/null
-+++ b/tests/generic/740.out
-@@ -0,0 +1,2 @@
-+QA output created by 740
-+Silence is golden
--- 
-2.43.0
+> thanks,
 
