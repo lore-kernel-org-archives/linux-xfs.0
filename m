@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F5C158A23;
-	Mon, 15 Apr 2024 23:44:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761801DA21
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:44:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713224683; cv=none; b=eXXA18lEKSez3CNLF65xFYtr/ix1j1gN8EEgO4EpoWa5Vu2qMX8DD7Gr7BhngLK7XpspKpTfbnfAnvy2yeFaR3TCeO2JVTOqRo+JRnaexuJhiAS48M5nRoQTvCULCnAzshOpyMmXgdCbKebXwHL1xXEnIzDEtF1LPOD2Ge6XrWU=
+	t=1713224699; cv=none; b=YQR+UwiCy7yMOWaxI6d0VvZFdfviTGcrUUsfnBIAneXkGSnzcknbtPQ60D1w+Er3YKrjwuZg5ZQXbKvZsSyHGa/6EU+uLa68Vkim+EzyVldpZTDt1Q32a6l939qkdxIvazuCMiywLTL7u1FUvGsUQXj7FRMrrZls5jl1KC7scRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713224683; c=relaxed/simple;
-	bh=WAI73Uu7nO9tQigS0kmBsLraPFqsatNV7Smfb0EW+qQ=;
+	s=arc-20240116; t=1713224699; c=relaxed/simple;
+	bh=hIYGTMyO0xEBWcCHAx5a68P3A5bqf7KqJHJhQuYoDpQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jy7NcgBSX4lviKq2864k+E2xfU7PPjKG/VhwFceiTlPJ9+0nMOTFYeISi0TEojbbrenc6Dv1HxwHPSSmgS11jsXaexhULoUO3V2sFdBHFhlOaA9Oq9Ej3NhsOp4wS7HMA3jrYNZ0ZYm8cSirb97BhoBmIL7N/Wcuv8Fbs+TnaPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KCvwVho3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tkBFRuNShBBu852ypQB6s0VGkvB2gGeoXpm+78upPlGVL6GmMuUjrlslfn5BbsGCpqE/x8QYkNh2/qXMSaiBFr1TfPDk0GIjBOJrHe0xhpfxE0jL/mrTOo+Yu/0yedFPpdRKMbtdaZWzQ+R71E4rS4iH1RoS0eNtoGEF8Eo0mNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnlZDqPf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KCvwVho3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A929C113CC;
-	Mon, 15 Apr 2024 23:44:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnlZDqPf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D7D4C32783;
+	Mon, 15 Apr 2024 23:44:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713224683;
-	bh=WAI73Uu7nO9tQigS0kmBsLraPFqsatNV7Smfb0EW+qQ=;
+	s=k20201202; t=1713224699;
+	bh=hIYGTMyO0xEBWcCHAx5a68P3A5bqf7KqJHJhQuYoDpQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=KCvwVho3T596FT3QUJEUplGMQCHFjBwhCN9gBfv8qJ/iWBFizKtZjIhZ7gn0x7NI+
-	 rE+feJtM4TlvMPQIKncjtYH9m2axWh/Ne7B9Efqaxb/hLoL6QhwYH7sINMGkUIzs90
-	 YqvNHiZ5d+oq9VjSWZQ+vY4SSVRuUVyQ/ISVf42raftThZh8Bm7sLSbK3Z4jRjZ09P
-	 Iz1iMkaioJ3r03v0nbzC/7vG/tgnhABfgplr520oTyG/Yx3Q04UWYMU20wuLbGhYs1
-	 Ko9oWCaJGlY5ai7HHT7VatR/l50UwW/dn0ZDFnBXlkVupFwwWXBDYw8C+yOMoClDV/
-	 rsy1oV+iSIr8g==
-Date: Mon, 15 Apr 2024 16:44:42 -0700
-Subject: [PATCH 15/15] xfs: enable logged file mapping exchange feature
+	b=gnlZDqPfPnIg0WiCk2IUZw4F1dkee9nPfNn1fiTP9j8Dip9VHf1wKydeL+oKqNj0p
+	 vSelATb1s2YMuE3K0nZNOnL1UtV80it+5CfCsbkGCmV/b69wUeHO6D9BeoVHAgEN+o
+	 fuMfh58idmoFbzCg++ZQcYHAyhvmtpuGU/FN7NX7lQ5gvRQ2bW6Yi20J7E+Sy8si7u
+	 o9bZdCHl/oKG/4sw42aJHygDS2f7HCtwl/ichOR98GJykpLOvygigB3WVoG3Mn9+AD
+	 C219BiU7Tez/Bw4JpEV13C/ev4jZd9wObedkD5/aUR+taEQKv6zJyuEsFBj+Vod3y7
+	 P/8yDC/n/SSJQ==
+Date: Mon, 15 Apr 2024 16:44:58 -0700
+Subject: [PATCH 1/4] xfs: hide private inodes from bulkstat and handle
+ functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-fsdevel@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <171322381474.87355.16799970750666517534.stgit@frogsfrogsfrogs>
-In-Reply-To: <171322381182.87355.15534989930482135103.stgit@frogsfrogsfrogs>
-References: <171322381182.87355.15534989930482135103.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <171322381807.87900.7591580168149492444.stgit@frogsfrogsfrogs>
+In-Reply-To: <171322381780.87900.770231063979470318.stgit@frogsfrogsfrogs>
+References: <171322381780.87900.770231063979470318.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,29 +47,69 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the XFS_SB_FEAT_INCOMPAT_EXCHRANGE feature to the set of features
-that we will permit when mounting a filesystem.  This turns on support
-for the file range exchange feature.
+We're about to start adding functionality that uses internal inodes that
+are private to XFS.  What this means is that userspace should never be
+able to access any information about these files, and should not be able
+to open these files by handle.
+
+To prevent users from ever finding the file or mis-interactions with the
+security apparatus, set S_PRIVATE on the inode.  Don't allow bulkstat,
+open-by-handle, or linking of S_PRIVATE files into the directory tree.
+This should keep private inodes actually private.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_export.c |    2 +-
+ fs/xfs/xfs_iops.c   |    3 +++
+ fs/xfs/xfs_itable.c |    8 ++++++++
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index ff1e28316e1b..10153ce116d4 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -380,7 +380,8 @@ xfs_sb_has_ro_compat_feature(
- 		 XFS_SB_FEAT_INCOMPAT_META_UUID | \
- 		 XFS_SB_FEAT_INCOMPAT_BIGTIME | \
- 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR | \
--		 XFS_SB_FEAT_INCOMPAT_NREXT64)
-+		 XFS_SB_FEAT_INCOMPAT_NREXT64 | \
-+		 XFS_SB_FEAT_INCOMPAT_EXCHRANGE)
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 7cd09c3a82cb..4b03221351c0 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -160,7 +160,7 @@ xfs_nfs_get_inode(
+ 		}
+ 	}
  
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
+-	if (VFS_I(ip)->i_generation != generation) {
++	if (VFS_I(ip)->i_generation != generation || IS_PRIVATE(VFS_I(ip))) {
+ 		xfs_irele(ip);
+ 		return ERR_PTR(-ESTALE);
+ 	}
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 55ed2d1023d6..7f0c840f0fd2 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -365,6 +365,9 @@ xfs_vn_link(
+ 	if (unlikely(error))
+ 		return error;
+ 
++	if (IS_PRIVATE(inode))
++		return -EPERM;
++
+ 	error = xfs_link(XFS_I(dir), XFS_I(inode), &name);
+ 	if (unlikely(error))
+ 		return error;
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 95fc31b9f87d..c0757ab99495 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -97,6 +97,14 @@ xfs_bulkstat_one_int(
+ 	vfsuid = i_uid_into_vfsuid(idmap, inode);
+ 	vfsgid = i_gid_into_vfsgid(idmap, inode);
+ 
++	/* If this is a private inode, don't leak its details to userspace. */
++	if (IS_PRIVATE(inode)) {
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
++		xfs_irele(ip);
++		error = -EINVAL;
++		goto out_advance;
++	}
++
+ 	/* xfs_iget returns the following without needing
+ 	 * further change.
+ 	 */
 
