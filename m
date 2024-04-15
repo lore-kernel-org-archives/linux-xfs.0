@@ -1,63 +1,82 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A47B101F2
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 10:31:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1B60651AE
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 11:23:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.58.85.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713177118; cv=none; b=mo21uAo0+92HW7btTA7oRl7Ni/oK4659jW2JE0waVP2uOpMt4ZjUm8CzWFYPEeufEi2AspSJajf0/+luFrKl9kwf/hVakzP+8LhALhZVpBVxlZAALGqcbsexMyUtetVwvzWxyS4sAfniwATtp2qC+25Xq5CbI4Bg+tjh6E5hE88=
+	t=1713180205; cv=none; b=egzuErBBZ5YNER0u98hn/HOT6t3cHu1QKLA7aV5GiJh/rKXHUc1uqfc87K14CiyHWLPG+q8qTkXX8IIi/L4uRisF3JN7n8rAlKrpyKtopZYNVIU2qTUYzNqPM6S56o8LBLyXL7Ue/ipc3JpowQBbtHTxO4U3Jc7rgrcFka1qcoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713177118; c=relaxed/simple;
-	bh=A4ySGqOI5HPbQMvU8+IZdzZLtFNc4Fvo8RmIagPOR5g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lEG+ecb0esS5/k3MPQlRzA21NvB1ajlXZ4LjKz7usNO4i+T0LLRBXvv4mjJTFjqT/wVtNsueUzBBkhAx8dKAX/U0slHunEgSKLexmB+BpMoBkt1lXDRifNONGHb0zMADlSTuASBF1fLrDzk6uzygOn8yCt5RPvR/diRCQh6KxzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nzxAPWwk; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nzxAPWwk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=A4ySGqOI5HPbQMvU8+IZdzZLtFNc4Fvo8RmIagPOR5g=; b=nzxAPWwke/QPow5Uwz2mNX4IoG
-	CCWPkWgA6CsislfGttiQt8ocT1DGkCjMg0GwcZIlxM1UfnKABPcoD0oonaVeM7FMPNDKoWJlhvdVq
-	4tP0hVb9Nkpu0iXTPmcQs0SJOOx2vrCLGHz3QAQd2z5/wWR3pgMhywVj8hq1OJ+adF9gUWydHEb1r
-	KxW9LK97JyhWkI53bajn5CWc+5V5MaxfMqWAM4ASpFWl+mfIbDmFT8OOhz1DA1jdJRBSw+Fv7pKA2
-	0VderqZNcTenvueGSq8jmaI5I1Ifkf+Kgm+A5nCiPP30qXjJhVPqi1UaSfhMuDL0SmV5o2BnifpHB
-	7thSUZVQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwJcy-00000007sMp-2HdZ;
-	Mon, 15 Apr 2024 10:31:56 +0000
-Date: Mon, 15 Apr 2024 03:31:56 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL] bring back RT delalloc support
-Message-ID: <Zh0CHF5Fl3mqaSvV@infradead.org>
-References: <Zgv_B07xhnE-pl6x@infradead.org>
- <877cgz3rmt.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=arc-20240116; t=1713180205; c=relaxed/simple;
+	bh=CziQs7aMhj9OpqRoP90aag71n2YIwOeug3nO8I1cP8g=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 MIME-Version:Content-Type; b=D1g8uDZJXy4agd8PRuA2F7SyN/KO/pdu6NWAR6ck7Gky5+iVTUchhIopF6ExbT0W2LohDgTT6veAzdZ4gBbiRMsEbHTzZ5yHAccCuYS7xh9lA3/65UbVoRYyfGdGWVAJrEP8fxad4dswpDTRDtOrv5gMHYPGeJfQpKLblY2zQo0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM; spf=pass smtp.mailfrom=aculab.com; arc=none smtp.client-ip=185.58.85.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aculab.com
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-136-tjcp8qf9PhOVYCuOrOzRpw-1; Mon, 15 Apr 2024 12:23:17 +0100
+X-MC-Unique: tjcp8qf9PhOVYCuOrOzRpw-1
+Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
+ (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Mon, 15 Apr
+ 2024 12:22:41 +0100
+Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
+ id 15.00.1497.048; Mon, 15 Apr 2024 12:22:41 +0100
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Kees Cook' <keescook@chromium.org>, Justin Stitt <justinstitt@google.com>
+CC: Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong"
+	<djwong@kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>
+Subject: RE: [PATCH] xfs: replace deprecated strncpy with strscpy_pad
+Thread-Topic: [PATCH] xfs: replace deprecated strncpy with strscpy_pad
+Thread-Index: AQHajCVvxad4w+xafUuF+MG1sYW+JbFpNItw
+Date: Mon, 15 Apr 2024 11:22:41 +0000
+Message-ID: <1a75240d27bb4f2abe3cfae49b2f7605@AcuMS.aculab.com>
+References: <20240405-strncpy-xfs-split1-v1-1-3e3df465adb9@google.com>
+ <202404090921.A203626A@keescook>
+ <CAFhGd8pr5XycTH1iCUgBodCOV8_WY_da=aH+WZGPXfuOY5_Zgg@mail.gmail.com>
+ <202404110829.D3A5A56@keescook>
+In-Reply-To: <202404110829.D3A5A56@keescook>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <877cgz3rmt.fsf@debian-BULLSEYE-live-builder-AMD64>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-On Mon, Apr 15, 2024 at 02:11:16PM +0530, Chandan Babu R wrote:
-> Christoph, The tag "xfs-realtime-delalloc-2024-04-02" is missing your
-> Signed-of-by
-
-Tags aren't suppsoed to have signoffs.
-
->
-> . Also, could you please rebase your patches on top of v6.9-rc4? I
-> start applying patches for the next merge window on top of x.y-rc4.
-
-Sure.
+RnJvbTogS2VlcyBDb29rDQo+IFNlbnQ6IDExIEFwcmlsIDIwMjQgMTY6MzINCj4gDQo+IE9uIFdl
+ZCwgQXByIDEwLCAyMDI0IGF0IDAxOjQ1OjIxUE0gLTA3MDAsIEp1c3RpbiBTdGl0dCB3cm90ZToN
+Cj4gPiBPbiBUdWUsIEFwciA5LCAyMDI0IGF0IDk6MjLigK9BTSBLZWVzIENvb2sgPGtlZXNjb29r
+QGNocm9taXVtLm9yZz4gd3JvdGU6DQo+ID4gPiA+DQo+ID4gPiA+IC0gICAgIC8qIDEgbGFyZ2Vy
+IHRoYW4gc2JfZm5hbWUsIHNvIHRoaXMgZW5zdXJlcyBhIHRyYWlsaW5nIE5VTCBjaGFyICovDQo+
+ID4gPiA+IC0gICAgIG1lbXNldChsYWJlbCwgMCwgc2l6ZW9mKGxhYmVsKSk7DQo+ID4gPiA+ICAg
+ICAgIHNwaW5fbG9jaygmbXAtPm1fc2JfbG9jayk7DQo+ID4gPiA+IC0gICAgIHN0cm5jcHkobGFi
+ZWwsIHNicC0+c2JfZm5hbWUsIFhGU0xBQkVMX01BWCk7DQo+ID4gPiA+ICsgICAgIHN0cnNjcHlf
+cGFkKGxhYmVsLCBzYnAtPnNiX2ZuYW1lKTsNCj4gPiA+DQo+ID4gPiBJcyBzYnAtPnNiX2ZuYW1l
+IGl0c2VsZiBOVUwtdGVybWluYXRlZD8gVGhpcyBsb29rcyBsaWtlIGFub3RoZXIgY2FzZSBvZg0K
+PiA+ID4gbmVlZGluZyB0aGUgbWVtdG9zdHIoKSBoZWxwZXI/DQo+ID4gPg0KPiA+DQo+ID4gSSBz
+ZW50IGEgcGF0Y2ggWzFdLg0KPiA+DQo+ID4gT2J2aW91c2x5IGl0IGRlcGVuZHMgb24geW91ciBp
+bXBsZW1lbnRhdGlvbiBwYXRjaCBsYW5kaW5nIGZpcnN0OyB3aGF0DQo+ID4gdHJlZSBzaG91bGQg
+aXQgZ28gdG8/DQo+IA0KPiBUaGlzICJmbGF2b3IiIG9mIGNvbnZlcnNpb24gbWF5IG5lZWQgdG8g
+d2FpdCBhIHJlbGVhc2U/IFRoZXJlJ3Mgbm8NCj4gdXJnZW5jeSBvbiB0aGUgY29udmVyc2lvbiwg
+YW5kIHRoZXJlIGFyZSBwbGVudHkgbW9yZSB0byBkbyBmb3IgdGhpcw0KPiBjeWNsZS4gOykNCg0K
+SW4gdGhpcyBjYXNlOg0KCWNoYXIgbGFiZWxbc2l6ZW9mIChzYnAtPmZiX2ZuYW1lKSArIDFdOw0K
+CW1lbWNweShsYWJlbCwgc2JwLT5zYl9mbmFtZSwgc2l6ZW9mIChzYnAtPnNiX2ZuYW1lKSk7DQoJ
+bGFiZWxbc2l6ZW9mIChzYnAtPmZuYW1lKV0gPSAwOw0KaXMgcHJvYmFibHkgdGhlIGNsZWFyZXN0
+IGNvZGUuDQooaXQgaXMgWzEyXSAtIHNvIG5vIHBvaW50IGZhZmZpbmcgd2l0aCB0aGUgY29weS4p
+DQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1sZXkgUm9h
+ZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJhdGlvbiBO
+bzogMTM5NzM4NiAoV2FsZXMpDQo=
 
