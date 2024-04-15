@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BB3A15920B
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:56:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC33D2E852
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:56:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713225371; cv=none; b=BwI2CuMEAUOtFaJF5/4H1ElRmuNw7g+Qbf7N5uTh2CCZOqwPlx4l4HzDwaCPfX4eEslSJvkO8HdInJ0LoutOOCvGvUYsGJ8553dWLnVS7eT4atgSmXP0idIs9DpHvrtMxNcZ367zOEy/UF68sbct/efQm0HCG+2kESl+9DA9TzA=
+	t=1713225387; cv=none; b=G6eBo/3Wo0pYmJ3Z69yQ105NPIMadVXt+ZJOotfxi+GI+d0TmL7EUctoAwshMWXTbNa/sxJxNqFyNh8oFDYPGAPZcXcogbfugReUYZU4j8XbIBJBkDjpbXrDCFVQPzD4RPsFppu2j5MgyKlS+FZav6U9pLQHawsLnJuFRZgCWTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713225371; c=relaxed/simple;
-	bh=2qo1gHO87vJZLt5FnVxLuMXm2oWImudLTgY411ptQAo=;
+	s=arc-20240116; t=1713225387; c=relaxed/simple;
+	bh=CybGthTsPxukKaxOBOKvKYgiMZ9Qa3d3g7X/oP+wTPI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bPPnq3k4O7c98qvPSt0Rm629cPxsggzKgnIA0qze2lZ+FnQ5vTgFCeQ49jKEjA6aRPknI3imLbSBdaxdA3eUi0Ta7QIXKXADEoVek8T/86wS85Qhz+0jo6sSd/lWvHBJnS+G75C3qL7RwTDuFY2ILDzO+PDrYCZE/auqA218AWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4YZbtk+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=iMeJmw2x7w0tlps4ftzFhnsHcRlS0810rsZKhgfn3NGPD7MmdNrTa3j1p/Q2gRPQZS8OfoTxgnYbqWxy4+7jzLa6pF3cjiRPTjEMlWcIksjxkKMEMH2ez1yc2qgnTrgVk/Eydbj7vgxoyEnQJht1BzB04RsZPbReThByXb4q4ik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qc5HGtzd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4YZbtk+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2546C113CC;
-	Mon, 15 Apr 2024 23:56:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qc5HGtzd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71DB6C113CC;
+	Mon, 15 Apr 2024 23:56:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713225370;
-	bh=2qo1gHO87vJZLt5FnVxLuMXm2oWImudLTgY411ptQAo=;
+	s=k20201202; t=1713225386;
+	bh=CybGthTsPxukKaxOBOKvKYgiMZ9Qa3d3g7X/oP+wTPI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=F4YZbtk+xtUzO+q/FaJZytv61EUZTpLL6aXk9YkLqLlYcvvRPCw6MJVQ4+dESv2jp
-	 /vf9gGbAhlvQodnd9zln6s2zx1T9/JHMTDsCm9S5UXuyGQac2MBT1FBdOIVDyK6O22
-	 UlsnOyCD9gjPRDlDCcz3gaubthMXua08btOdTlVL7qoKnnEqdj3TprgdsLUquYKY2n
-	 k840R8tptMGmV+lsYiTMRdrv6c746NH2PjDdfmV/Uo2IlAS7VbjyoW40PoiA2GHg/Q
-	 mBVkSo1ie/jC5mIcafwCuGTAANRQW4jMsTjtexJwvUqLN+sriBurasT4Bc2Ey1uSgS
-	 bNHeKGzwFNHZA==
-Date: Mon, 15 Apr 2024 16:56:10 -0700
-Subject: [PATCH 4/4] xfs: create subordinate scrub contexts for
- xchk_metadata_inode_subtype
+	b=qc5HGtzds0h6gKigvNLsQyp/DSjXDw/fFJm4Y/5kOtosxbQQEaULrPtu3kblXZjLR
+	 GnG3M5gtAZfDcTPdf74s4hxHBHvz+9QGjKaKk1J3tP5lRrXKMIO3TN7rQIVUzXyGi7
+	 5lmBqbpfEo2KF8fyLNCEbjMfDa9gqSVxTGI4ddoTISKxf3fJExec7zQs+79q9bL06z
+	 XOCM4A4CjJr3z5ZnWRkMldHRbIcAEyICIpIu9GlKO6Iiaq2jkxAoJT0FT2Trj1u4bV
+	 WrAK+KUyNdjy05gjORjqjmqy4BTaFjQ6IVzn/1REWXufH+6vL7ASPkIlmJbQZtEww1
+	 sW8C8dOZSNcFw==
+Date: Mon, 15 Apr 2024 16:56:26 -0700
+Subject: [PATCH 1/1] xfs: fix performance problems when fstrimming a subset of
+ a fragmented AG
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171322385458.91610.16605492038580103010.stgit@frogsfrogsfrogs>
-In-Reply-To: <171322385380.91610.2309150776734623689.stgit@frogsfrogsfrogs>
-References: <171322385380.91610.2309150776734623689.stgit@frogsfrogsfrogs>
+Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Message-ID: <171322385788.91801.9266824102480292155.stgit@frogsfrogsfrogs>
+In-Reply-To: <171322385769.91801.8743955175385878183.stgit@frogsfrogsfrogs>
+References: <171322385769.91801.8743955175385878183.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,273 +47,320 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When a file-based metadata structure is being scrubbed in
-xchk_metadata_inode_subtype, we should create an entirely new scrub
-context so that each scrubber doesn't trip over another's buffers.
+On a 10TB filesystem where the free space in each AG is heavily
+fragmented, I noticed some very high runtimes on a FITRIM call for the
+entire filesystem.  xfs_scrub likes to report progress information on
+each phase of the scrub, which means that a strace for the entire
+filesystem:
+
+ioctl(3, FITRIM, {start=0x0, len=10995116277760, minlen=0}) = 0 <686.209839>
+
+shows that scrub is uncommunicative for the entire duration.  Reducing
+the size of the FITRIM requests to a single AG at a time produces lower
+times for each individual call, but even this isn't quite acceptable,
+because the time between progress reports are still very high:
+
+Strace for the first 4x 1TB AGs looks like (2):
+ioctl(3, FITRIM, {start=0x0, len=1099511627776, minlen=0}) = 0 <68.352033>
+ioctl(3, FITRIM, {start=0x10000000000, len=1099511627776, minlen=0}) = 0 <68.760323>
+ioctl(3, FITRIM, {start=0x20000000000, len=1099511627776, minlen=0}) = 0 <67.235226>
+ioctl(3, FITRIM, {start=0x30000000000, len=1099511627776, minlen=0}) = 0 <69.465744>
+
+I then had the idea to limit the length parameter of each call to a
+smallish amount (~11GB) so that we could report progress relatively
+quickly, but much to my surprise, each FITRIM call still took ~68
+seconds!
+
+Unfortunately, the by-length fstrim implementation handles this poorly
+because it walks the entire free space by length index (cntbt), which is
+a very inefficient way to walk a subset of the blocks of an AG.
+
+Therefore, create a second implementation that will walk the bnobt and
+perform the trims in block number order.  This implementation avoids the
+worst problems of the original code, though it lacks the desirable
+attribute of freeing the biggest chunks first.
+
+On the other hand, this second implementation will be much easier to
+constrain the system call latency, and makes it much easier to report
+fstrim progress to anyone who's running xfs_scrub.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com
 ---
- fs/xfs/scrub/common.c |   23 +++--------------
- fs/xfs/scrub/repair.c |   67 ++++++++++---------------------------------------
- fs/xfs/scrub/scrub.c  |   63 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.h  |   11 ++++++++
- 4 files changed, 91 insertions(+), 73 deletions(-)
+ fs/xfs/xfs_discard.c |  153 ++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 93 insertions(+), 60 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index a2da2bef509a..48302532d10d 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -1203,27 +1203,12 @@ xchk_metadata_inode_subtype(
- 	struct xfs_scrub	*sc,
- 	unsigned int		scrub_type)
- {
--	__u32			smtype = sc->sm->sm_type;
--	unsigned int		sick_mask = sc->sick_mask;
-+	struct xfs_scrub_subord	*sub;
- 	int			error;
- 
--	sc->sm->sm_type = scrub_type;
--
--	switch (scrub_type) {
--	case XFS_SCRUB_TYPE_INODE:
--		error = xchk_inode(sc);
--		break;
--	case XFS_SCRUB_TYPE_BMBTD:
--		error = xchk_bmap_data(sc);
--		break;
--	default:
--		ASSERT(0);
--		error = -EFSCORRUPTED;
--		break;
--	}
--
--	sc->sick_mask = sick_mask;
--	sc->sm->sm_type = smtype;
-+	sub = xchk_scrub_create_subord(sc, scrub_type);
-+	error = sub->sc.ops->scrub(&sub->sc);
-+	xchk_scrub_free_subord(sub);
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 268bb734dc0a..25fe3b932b5a 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -145,14 +145,18 @@ xfs_discard_extents(
  	return error;
  }
  
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 369f0430e4ba..b6aff89679d5 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -1009,55 +1009,27 @@ xrep_metadata_inode_subtype(
- 	struct xfs_scrub	*sc,
- 	unsigned int		scrub_type)
- {
--	__u32			smtype = sc->sm->sm_type;
--	__u32			smflags = sc->sm->sm_flags;
--	unsigned int		sick_mask = sc->sick_mask;
-+	struct xfs_scrub_subord	*sub;
- 	int			error;
- 
- 	/*
--	 * Let's see if the inode needs repair.  We're going to open-code calls
--	 * to the scrub and repair functions so that we can hang on to the
-+	 * Let's see if the inode needs repair.  Use a subordinate scrub context
-+	 * to call the scrub and repair functions so that we can hang on to the
- 	 * resources that we already acquired instead of using the standard
- 	 * setup/teardown routines.
- 	 */
--	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
--	sc->sm->sm_type = scrub_type;
--
--	switch (scrub_type) {
--	case XFS_SCRUB_TYPE_INODE:
--		error = xchk_inode(sc);
--		break;
--	case XFS_SCRUB_TYPE_BMBTD:
--		error = xchk_bmap_data(sc);
--		break;
--	case XFS_SCRUB_TYPE_BMBTA:
--		error = xchk_bmap_attr(sc);
--		break;
--	default:
--		ASSERT(0);
--		error = -EFSCORRUPTED;
--	}
-+	sub = xchk_scrub_create_subord(sc, scrub_type);
-+	error = sub->sc.ops->scrub(&sub->sc);
- 	if (error)
- 		goto out;
--
--	if (!xrep_will_attempt(sc))
-+	if (!xrep_will_attempt(&sub->sc))
- 		goto out;
- 
- 	/*
- 	 * Repair some part of the inode.  This will potentially join the inode
- 	 * to the transaction.
- 	 */
--	switch (scrub_type) {
--	case XFS_SCRUB_TYPE_INODE:
--		error = xrep_inode(sc);
--		break;
--	case XFS_SCRUB_TYPE_BMBTD:
--		error = xrep_bmap(sc, XFS_DATA_FORK, false);
--		break;
--	case XFS_SCRUB_TYPE_BMBTA:
--		error = xrep_bmap(sc, XFS_ATTR_FORK, false);
--		break;
--	}
-+	error = sub->sc.ops->repair(&sub->sc);
- 	if (error)
- 		goto out;
- 
-@@ -1066,10 +1038,10 @@ xrep_metadata_inode_subtype(
- 	 * that the inode will not be joined to the transaction when we exit
- 	 * the function.
- 	 */
--	error = xfs_defer_finish(&sc->tp);
-+	error = xfs_defer_finish(&sub->sc.tp);
- 	if (error)
- 		goto out;
--	error = xfs_trans_roll(&sc->tp);
-+	error = xfs_trans_roll(&sub->sc.tp);
- 	if (error)
- 		goto out;
- 
-@@ -1077,31 +1049,18 @@ xrep_metadata_inode_subtype(
- 	 * Clear the corruption flags and re-check the metadata that we just
- 	 * repaired.
- 	 */
--	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
--
--	switch (scrub_type) {
--	case XFS_SCRUB_TYPE_INODE:
--		error = xchk_inode(sc);
--		break;
--	case XFS_SCRUB_TYPE_BMBTD:
--		error = xchk_bmap_data(sc);
--		break;
--	case XFS_SCRUB_TYPE_BMBTA:
--		error = xchk_bmap_attr(sc);
--		break;
--	}
-+	sub->sc.sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	error = sub->sc.ops->scrub(&sub->sc);
- 	if (error)
- 		goto out;
- 
- 	/* If corruption persists, the repair has failed. */
--	if (xchk_needs_repair(sc->sm)) {
-+	if (xchk_needs_repair(sub->sc.sm)) {
- 		error = -EFSCORRUPTED;
- 		goto out;
- 	}
- out:
--	sc->sick_mask = sick_mask;
--	sc->sm->sm_type = smtype;
--	sc->sm->sm_flags = smflags;
-+	xchk_scrub_free_subord(sub);
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 301d5b753fdd..ebb06838c31b 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -177,6 +177,39 @@ xchk_fsgates_disable(
- }
- #undef FSGATES_MASK
- 
-+/* Free the resources associated with a scrub subtype. */
-+void
-+xchk_scrub_free_subord(
-+	struct xfs_scrub_subord	*sub)
-+{
-+	struct xfs_scrub	*sc = sub->parent_sc;
-+
-+	ASSERT(sc->ip == sub->sc.ip);
-+	ASSERT(sc->orphanage == sub->sc.orphanage);
-+	ASSERT(sc->tempip == sub->sc.tempip);
-+
-+	sc->sm->sm_type = sub->old_smtype;
-+	sc->sm->sm_flags = sub->old_smflags |
-+				(sc->sm->sm_flags & XFS_SCRUB_FLAGS_OUT);
-+	sc->tp = sub->sc.tp;
-+
-+	if (sub->sc.buf) {
-+		if (sub->sc.buf_cleanup)
-+			sub->sc.buf_cleanup(sub->sc.buf);
-+		kvfree(sub->sc.buf);
-+	}
-+	if (sub->sc.xmbtp)
-+		xmbuf_free(sub->sc.xmbtp);
-+	if (sub->sc.xfile)
-+		xfile_destroy(sub->sc.xfile);
-+
-+	sc->ilock_flags = sub->sc.ilock_flags;
-+	sc->orphanage_ilock_flags = sub->sc.orphanage_ilock_flags;
-+	sc->temp_ilock_flags = sub->sc.temp_ilock_flags;
-+
-+	kfree(sub);
-+}
-+
- /* Free all the resources and finish the transactions. */
- STATIC int
- xchk_teardown(
-@@ -505,6 +538,36 @@ static inline void xchk_postmortem(struct xfs_scrub *sc)
- }
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-+/*
-+ * Create a new scrub context from an existing one, but with a different scrub
-+ * type.
-+ */
-+struct xfs_scrub_subord *
-+xchk_scrub_create_subord(
-+	struct xfs_scrub	*sc,
-+	unsigned int		subtype)
-+{
-+	struct xfs_scrub_subord	*sub;
-+
-+	sub = kzalloc(sizeof(*sub), XCHK_GFP_FLAGS);
-+	if (!sub)
-+		return ERR_PTR(-ENOMEM);
-+
-+	sub->old_smtype = sc->sm->sm_type;
-+	sub->old_smflags = sc->sm->sm_flags;
-+	sub->parent_sc = sc;
-+	memcpy(&sub->sc, sc, sizeof(struct xfs_scrub));
-+	sub->sc.ops = &meta_scrub_ops[subtype];
-+	sub->sc.sm->sm_type = subtype;
-+	sub->sc.sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	sub->sc.buf = NULL;
-+	sub->sc.buf_cleanup = NULL;
-+	sub->sc.xfile = NULL;
-+	sub->sc.xmbtp = NULL;
-+
-+	return sub;
-+}
-+
- /* Dispatch metadata scrubbing. */
- int
- xfs_scrub_metadata(
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 7abe498f7a46..54a4242bc79c 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -156,6 +156,17 @@ struct xfs_scrub {
-  */
- #define XREP_FSGATES_ALL	(XREP_FSGATES_EXCHANGE_RANGE)
- 
-+struct xfs_scrub_subord {
-+	struct xfs_scrub	sc;
-+	struct xfs_scrub	*parent_sc;
-+	unsigned int		old_smtype;
-+	unsigned int		old_smflags;
++struct xfs_trim_cur {
++	xfs_agblock_t	start;
++	xfs_extlen_t	count;
++	xfs_agblock_t	end;
++	xfs_extlen_t	minlen;
++	bool		by_bno;
 +};
+ 
+ static int
+ xfs_trim_gather_extents(
+ 	struct xfs_perag	*pag,
+-	xfs_daddr_t		start,
+-	xfs_daddr_t		end,
+-	xfs_daddr_t		minlen,
+-	struct xfs_alloc_rec_incore *tcur,
++	struct xfs_trim_cur	*tcur,
+ 	struct xfs_busy_extents	*extents,
+ 	uint64_t		*blocks_trimmed)
+ {
+@@ -179,21 +183,26 @@ xfs_trim_gather_extents(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
+-
+-	/*
+-	 * Look up the extent length requested in the AGF and start with it.
+-	 */
+-	if (tcur->ar_startblock == NULLAGBLOCK)
+-		error = xfs_alloc_lookup_ge(cur, 0, tcur->ar_blockcount, &i);
+-	else
+-		error = xfs_alloc_lookup_le(cur, tcur->ar_startblock,
+-				tcur->ar_blockcount, &i);
++	if (tcur->by_bno) {
++		/* sub-AG discard request always starts at tcur->start */
++		cur = xfs_bnobt_init_cursor(mp, tp, agbp, pag);
++		error = xfs_alloc_lookup_le(cur, tcur->start, 0, &i);
++		if (!error && !i)
++			error = xfs_alloc_lookup_ge(cur, tcur->start, 0, &i);
++	} else if (tcur->start == 0) {
++		/* first time through a by-len starts with max length */
++		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
++		error = xfs_alloc_lookup_ge(cur, 0, tcur->count, &i);
++	} else {
++		/* nth time through a by-len starts where we left off */
++		cur = xfs_cntbt_init_cursor(mp, tp, agbp, pag);
++		error = xfs_alloc_lookup_le(cur, tcur->start, tcur->count, &i);
++	}
+ 	if (error)
+ 		goto out_del_cursor;
+ 	if (i == 0) {
+ 		/* nothing of that length left in the AG, we are done */
+-		tcur->ar_blockcount = 0;
++		tcur->count = 0;
+ 		goto out_del_cursor;
+ 	}
+ 
+@@ -204,8 +213,6 @@ xfs_trim_gather_extents(
+ 	while (i) {
+ 		xfs_agblock_t	fbno;
+ 		xfs_extlen_t	flen;
+-		xfs_daddr_t	dbno;
+-		xfs_extlen_t	dlen;
+ 
+ 		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
+ 		if (error)
+@@ -221,37 +228,45 @@ xfs_trim_gather_extents(
+ 			 * Update the cursor to point at this extent so we
+ 			 * restart the next batch from this extent.
+ 			 */
+-			tcur->ar_startblock = fbno;
+-			tcur->ar_blockcount = flen;
+-			break;
+-		}
+-
+-		/*
+-		 * use daddr format for all range/len calculations as that is
+-		 * the format the range/len variables are supplied in by
+-		 * userspace.
+-		 */
+-		dbno = XFS_AGB_TO_DADDR(mp, pag->pag_agno, fbno);
+-		dlen = XFS_FSB_TO_BB(mp, flen);
+-
+-		/*
+-		 * Too small?  Give up.
+-		 */
+-		if (dlen < minlen) {
+-			trace_xfs_discard_toosmall(mp, pag->pag_agno, fbno, flen);
+-			tcur->ar_blockcount = 0;
++			tcur->start = fbno;
++			tcur->count = flen;
+ 			break;
+ 		}
+ 
+ 		/*
+ 		 * If the extent is entirely outside of the range we are
+-		 * supposed to discard skip it.  Do not bother to trim
+-		 * down partially overlapping ranges for now.
++		 * supposed to skip it.  Do not bother to trim down partially
++		 * overlapping ranges for now.
+ 		 */
+-		if (dbno + dlen < start || dbno > end) {
++		if (fbno + flen < tcur->start) {
+ 			trace_xfs_discard_exclude(mp, pag->pag_agno, fbno, flen);
+ 			goto next_extent;
+ 		}
++		if (fbno > tcur->end) {
++			trace_xfs_discard_exclude(mp, pag->pag_agno, fbno, flen);
++			if (tcur->by_bno) {
++				tcur->count = 0;
++				break;
++			}
++			goto next_extent;
++		}
 +
-+struct xfs_scrub_subord *xchk_scrub_create_subord(struct xfs_scrub *sc,
-+		unsigned int subtype);
-+void xchk_scrub_free_subord(struct xfs_scrub_subord *sub);
++		/* Trim the extent returned to the range we want. */
++		if (fbno < tcur->start) {
++			flen -= tcur->start - fbno;
++			fbno = tcur->start;
++		}
++		if (fbno + flen > tcur->end + 1)
++			flen = tcur->end - fbno + 1;
 +
- /* Metadata scrubbers */
- int xchk_tester(struct xfs_scrub *sc);
- int xchk_superblock(struct xfs_scrub *sc);
++		/* Too small?  Give up. */
++		if (flen < tcur->minlen) {
++			trace_xfs_discard_toosmall(mp, pag->pag_agno, fbno, flen);
++			if (tcur->by_bno)
++				goto next_extent;
++			tcur->count = 0;
++			break;
++		}
+ 
+ 		/*
+ 		 * If any blocks in the range are still busy, skip the
+@@ -266,7 +281,10 @@ xfs_trim_gather_extents(
+ 				&extents->extent_list);
+ 		*blocks_trimmed += flen;
+ next_extent:
+-		error = xfs_btree_decrement(cur, 0, &i);
++		if (tcur->by_bno)
++			error = xfs_btree_increment(cur, 0, &i);
++		else
++			error = xfs_btree_decrement(cur, 0, &i);
+ 		if (error)
+ 			break;
+ 
+@@ -276,7 +294,7 @@ xfs_trim_gather_extents(
+ 		 * is no more extents to search.
+ 		 */
+ 		if (i == 0)
+-			tcur->ar_blockcount = 0;
++			tcur->count = 0;
+ 	}
+ 
+ 	/*
+@@ -306,17 +324,22 @@ xfs_trim_should_stop(void)
+ static int
+ xfs_trim_extents(
+ 	struct xfs_perag	*pag,
+-	xfs_daddr_t		start,
+-	xfs_daddr_t		end,
+-	xfs_daddr_t		minlen,
++	xfs_agblock_t		start,
++	xfs_agblock_t		end,
++	xfs_extlen_t		minlen,
+ 	uint64_t		*blocks_trimmed)
+ {
+-	struct xfs_alloc_rec_incore tcur = {
+-		.ar_blockcount = pag->pagf_longest,
+-		.ar_startblock = NULLAGBLOCK,
++	struct xfs_trim_cur	tcur = {
++		.start		= start,
++		.count		= pag->pagf_longest,
++		.end		= end,
++		.minlen		= minlen,
+ 	};
+ 	int			error = 0;
+ 
++	if (start != 0 || end != pag->block_count)
++		tcur.by_bno = true;
++
+ 	do {
+ 		struct xfs_busy_extents	*extents;
+ 
+@@ -330,8 +353,8 @@ xfs_trim_extents(
+ 		extents->owner = extents;
+ 		INIT_LIST_HEAD(&extents->extent_list);
+ 
+-		error = xfs_trim_gather_extents(pag, start, end, minlen,
+-				&tcur, extents, blocks_trimmed);
++		error = xfs_trim_gather_extents(pag, &tcur, extents,
++				blocks_trimmed);
+ 		if (error) {
+ 			kfree(extents);
+ 			break;
+@@ -354,7 +377,7 @@ xfs_trim_extents(
+ 		if (xfs_trim_should_stop())
+ 			break;
+ 
+-	} while (tcur.ar_blockcount != 0);
++	} while (tcur.count != 0);
+ 
+ 	return error;
+ 
+@@ -378,8 +401,10 @@ xfs_ioc_trim(
+ 	unsigned int		granularity =
+ 		bdev_discard_granularity(mp->m_ddev_targp->bt_bdev);
+ 	struct fstrim_range	range;
+-	xfs_daddr_t		start, end, minlen;
+-	xfs_agnumber_t		agno;
++	xfs_daddr_t		start, end;
++	xfs_extlen_t		minlen;
++	xfs_agnumber_t		start_agno, end_agno;
++	xfs_agblock_t		start_agbno, end_agbno;
+ 	uint64_t		blocks_trimmed = 0;
+ 	int			error, last_error = 0;
+ 
+@@ -399,7 +424,8 @@ xfs_ioc_trim(
+ 		return -EFAULT;
+ 
+ 	range.minlen = max_t(u64, granularity, range.minlen);
+-	minlen = BTOBB(range.minlen);
++	minlen = XFS_B_TO_FSB(mp, range.minlen);
++
+ 	/*
+ 	 * Truncating down the len isn't actually quite correct, but using
+ 	 * BBTOB would mean we trivially get overflows for values
+@@ -413,15 +439,21 @@ xfs_ioc_trim(
+ 		return -EINVAL;
+ 
+ 	start = BTOBB(range.start);
+-	end = start + BTOBBT(range.len) - 1;
++	end = min_t(xfs_daddr_t, start + BTOBBT(range.len),
++		    XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)) - 1;
+ 
+-	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
+-		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1;
++	start_agno = xfs_daddr_to_agno(mp, start);
++	start_agbno = xfs_daddr_to_agbno(mp, start);
++	end_agno = xfs_daddr_to_agno(mp, end);
++	end_agbno = xfs_daddr_to_agbno(mp, end);
+ 
+-	agno = xfs_daddr_to_agno(mp, start);
+-	for_each_perag_range(mp, agno, xfs_daddr_to_agno(mp, end), pag) {
+-		error = xfs_trim_extents(pag, start, end, minlen,
+-					  &blocks_trimmed);
++	for_each_perag_range(mp, start_agno, end_agno, pag) {
++		xfs_agblock_t	agend = pag->block_count;
++
++		if (start_agno == end_agno)
++			agend = end_agbno;
++		error = xfs_trim_extents(pag, start_agbno, agend, minlen,
++				&blocks_trimmed);
+ 		if (error)
+ 			last_error = error;
+ 
+@@ -429,6 +461,7 @@ xfs_ioc_trim(
+ 			xfs_perag_rele(pag);
+ 			break;
+ 		}
++		start_agbno = 0;
+ 	}
+ 
+ 	if (last_error)
 
