@@ -1,203 +1,356 @@
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2061.outbound.protection.outlook.com [40.107.223.61])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286AB208A1;
-	Mon, 15 Apr 2024 07:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.223.61
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713164661; cv=fail; b=A72kW9LjEAzTf6z+ncDY8O55tQvyiWvJbOaLmuhnzFJ64XZ0hqd1pWfxE90uCJcsyyf0A3AuQGfVt6mOibAwUb6RdWWiInCm5Jxfw66TOh2PsotsZYcF2arhu+gYtYnewWAeXFJgvGys3Or4FRbgssNABjBYDE4gpdaypkiLl6k=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713164661; c=relaxed/simple;
-	bh=cttoIjtBHodnNSF4KhyqGrfB9Y+2RwNW8DlxQTNWCtI=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 Content-Type:MIME-Version; b=UCZfgNqbXMXARwzx60I8nh+kkC+85UWSiyCBzZGn2dM9qhKfGAr/osKVxX3yucydI0ex1XR0mM1P+i1K7XnKyHVgidYBcv9PkvtttV/5qaNrV7NlkKh5gCKRS1EAnVbS24AGh6/0OBf2sHOll36hheYmqJL+mHttYN8Smn0LCCo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=c9kwfq/U; arc=fail smtp.client-ip=40.107.223.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D1024B34;
+	Mon, 15 Apr 2024 08:10:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1713168660; cv=none; b=eANFM2tbDVmra+jT4ucBD2MoTpq8QZhqiVTj7zSOk4wJleM+RS+djKdZzROiGg/swxFJJtV9JgalqsvlCRr2m01UyDaMWhT1/yAgiw94+BHsPhjUKX1N1W5CIpQq8bZpqpwTjXpBvDUsoLf51e/gX7HfbEr2v/iIn8JLTOHUlSY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1713168660; c=relaxed/simple;
+	bh=RPKAQr7fYYMhG/1sbT9nzNIa6ykeTCEs8OSl8PHFWxI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NaUZZclfKQjVFV2jemToEJC12971aMIPc+sEXb5CLvCgIlyU+Lqa/Oa2BIh0qWAkXF4d3mPM81uFoPsRUP0NXcXVOdxcrogVMAMISkXMKsDl40iaKGlnUyzJD3DN/9RaG5w5Qd4BlfGiwe6ec/8P1T8pbIXCDeDwrilLX7ssWcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FzbQ1t0p; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="c9kwfq/U"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XPQlFHfeg7/RWnz48Jnz9OrdxiFFZlQ3hbuF2XyiSKDDqQwuiNrlGJ/aginaT2YiLxdhaNXRtmZxRnsxTs8KdMKtQY8yP2yEulaij6TJTANlJzy2+ypyHZJXUOY1yGyJrFHX++INZjAgrXT2sbukh5G15aQ0S5txY4mtWLopyCMN+ZgrF8zyVimLtKNGXwVDwf4s9Iq0WaqNrb2Y3vgNx39nbTLj8xlDddyW4BY9nVbie1MfjEHqoHxsmXcj8ptRUJs+ezmcj1CQ/IszUx6Roh4oN2cg3nfpgIkgoyOWuXR2O42z65q0VJDfJG3kSe7chQIvvAMg9SlVbi7MyO2t6g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WIeuIvjipcZiQ8v4UiMDxXQexn9rRxYy6tu8l6VlE2o=;
- b=L3XjIgJA4Vj0RYgAVNZY8+ESs+nG2ZGodIzhfLV+IWqnpLIVZvqtRcF9yocRHnJ6Scitfoa/v7rVUjoY47qVQCzASgj/708o1xR3R5v3V0N6ihSrOER1sQcV/v5J6EjXMeE6ypuMQWAk25SccK758bFRkYmAdOgzTtqY/Cpx2JVWlHkV8SwjPBSdmIW9gagqh+n9eQw1QQ1xXcG6JCqJs9F+4r/38NZ8IRNbAmezXemh4fveM5Yg1bxYnhXpfmHl7Eo7cUPW+IdSFUEFdreMlayeoQqmKRaDhcaV2ukEPo8o9fUZE0gwR4aC9LHo4zX4BlGjR5AI1dvgAnLKWrV8ig==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WIeuIvjipcZiQ8v4UiMDxXQexn9rRxYy6tu8l6VlE2o=;
- b=c9kwfq/UvhwSEn/OnNA4OY9VsZIOROH9yt6iixH8dV5/zQkdKs5Rtmh3dOL5T7myEdbX9yUcXGVMWbu3wzWU7HFgyG4Q/P21DTndVITtKolYJyAlD4rlzJswkOgtftCKgZA+zASwPQ0uePf3GikG8NLMm4fZXkBELCm34QlmOgfmU0bknozblnZ8woddjFQA35gXrEi/oo3jPICggD26Aw8qP+HLBqWliLNknR3ypGA5gbRjyA7CKRnMRoJl411n/FFmmT75oLgdE7exqCb8L+NZ4M9ckyNq7vqa1PMmx+5sF63eT/ywKlAjk4rLe/FxhW7dvYFvJomXXVDFA7+XUQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS0PR12MB7726.namprd12.prod.outlook.com (2603:10b6:8:130::6) by
- PH0PR12MB8775.namprd12.prod.outlook.com (2603:10b6:510:28e::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Mon, 15 Apr
- 2024 07:04:14 +0000
-Received: from DS0PR12MB7726.namprd12.prod.outlook.com
- ([fe80::80b6:af9b:3a9a:9309]) by DS0PR12MB7726.namprd12.prod.outlook.com
- ([fe80::80b6:af9b:3a9a:9309%7]) with mapi id 15.20.7409.055; Mon, 15 Apr 2024
- 07:04:14 +0000
-References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
- <322065d373bb6571b700dba4450f1759b304644a.1712796818.git-series.apopple@nvidia.com>
- <20240412152208.m25mjo3xjfyawcaj@quack3>
- <66197008db9fc_36222e294b8@dwillia2-xfh.jf.intel.com.notmuch>
-User-agent: mu4e 1.10.8; emacs 29.1
-From: Alistair Popple <apopple@nvidia.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-mm@kvack.org, david@fromorbit.com, jhubbard@nvidia.com,
- rcampbell@nvidia.com, willy@infradead.org, jgg@nvidia.com,
- linux-fsdevel@vger.kernel.org, jack@suse.cz, djwong@kernel.org,
- hch@lst.de, david@redhat.com, ruansy.fnst@fujitsu.com,
- nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, jglisse@redhat.com
-Subject: Re: [RFC 04/10] fs/dax: Don't track page mapping/index
-Date: Mon, 15 Apr 2024 17:03:48 +1000
-In-reply-to: <66197008db9fc_36222e294b8@dwillia2-xfh.jf.intel.com.notmuch>
-Message-ID: <878r1f2jko.fsf@nvdebian.thelocal>
-Content-Type: text/plain
-X-ClientProxiedBy: SYBPR01CA0202.ausprd01.prod.outlook.com
- (2603:10c6:10:16::22) To DS0PR12MB7726.namprd12.prod.outlook.com
- (2603:10b6:8:130::6)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FzbQ1t0p"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=SzKBuO4UZJjLysHYrSmx3tPUhFrnbhHWlG8m5l17y54=; b=FzbQ1t0piLn462pvSE6YK41Yqb
+	R/4jWV7cAgcxk5YLNZwi4idsWhFiJyNNcgD8MSr4E+0ejq7NrxEWpCPVjvP0po+4gvKrd6Ufwdsf6
+	o3Rmv4nB7oqsyrARwq2dlaDMdbSXGKXDL6nbK9iS8DOLIZ1MGF1TJDC0UMlWo9r2AKM2YimlUIKqw
+	I2mwjbz/kXbsBk6yVIh8EcyZ92AVby3LXsu23+30B8Q2VA5hiHPKP2v/TYnRon7xjO9VfWDJJ7qG/
+	4V+FXk9csiSNQmRnxyjxu7CfmlEHCYn4B3WX4Y6uRtS29RETUpg4LYQpiF7jVVfrI49BhG6EWe0AJ
+	+YRM5lBw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rwHQX-00000007Tlh-2R6F;
+	Mon, 15 Apr 2024 08:10:57 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org,
+	willy@infradead.org,
+	p.raghav@samsung.com,
+	da.gomez@samsung.com,
+	hare@suse.de,
+	john.g.garry@oracle.com,
+	linux-xfs@vger.kernel.org,
+	patches@lists.linux.dev,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: [RFC] fstests: add mmap page boundary tests
+Date: Mon, 15 Apr 2024 01:10:54 -0700
+Message-ID: <20240415081054.1782715-1-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB7726:EE_|PH0PR12MB8775:EE_
-X-MS-Office365-Filtering-Correlation-Id: e3265b72-f6c5-41eb-6deb-08dc5d1a41e9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	lLoK5JQH7xpsRPXCnTAEErxrasv5KoHIgTpvuGzveXq3GMJgBauOkZcePNZz0hne5SdUvSdJMy+UQa27SFY3FnCkKcZTLDbepmz3r8fC+mS4NpKurOb+i0Tyzii6yF9Tg5qpP20nRsV8bOhV/PuhOm58YL7ellAy7HLVEVu8nu4L58mGdXhtHaYHJ/Xdx62fhAZrC2H7EAquJNQ8hY7izLU9flSMwTGd4EY51tLhxNPQOA2hD3a/CA9xFaWCrMhtDcmxrBzMj5bel/VepQ4R36C9RD5KyTPvpfGmhb5SbPcMGvIhY1tPKjANhIl28DsbvIQbAOJsCScOTBYn0zWdd3FXouVjTRzICsHlTz0OlPL4J1cC8TMvK/oprYn/gVKQ1uq+g/VKvKGkV+Bh84UI3HUIXRBw7qhsfCX/gtW/Tj7OJ55lOkKESg2aI0cLp+SQp25yQQF4bryOICPpEaU+SkoWSAspD3pZ0F8VEfKc2JQDtWc71tKl+ow7lf/+DZLNcb9zBcS38osFvaiVpAIm7ueMCtY6WXR6IeZN4vkC8TaGCTw0zgmjZry+cqPJyf/1sLA/EQ14mvKZrj8CNTbjjcX/CH06QrRPMud4Cn3IBSK/co08VCUgiuML9HtlrvaS6q3IOenTpfX6IoQUd2aJDH5fncLfGTFcgu5l20hlpg8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB7726.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7416005)(1800799015)(376005)(366007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Oxbs4m8nVJL9yCv2LFWsfhlnfP7OPK6q4kGCkjdi+Q95DTBXkexjnNjhoRD5?=
- =?us-ascii?Q?1mjDf1zJWuC0LIQFZdFg5f6ZOO5+o+oXdDo8QF1SjeZy192r9G/y3j3HR3o9?=
- =?us-ascii?Q?R2UpEtCKOWXpdAUlzpUKlfn81w9lTe/M1lczCDsxNLt0EkBshLbSthzhyYxa?=
- =?us-ascii?Q?ruMSm+BxjyCi7GMdJwnNDD3SG0IwzowpZBFh808RmRABJ8+ESb4PJOHE1h1S?=
- =?us-ascii?Q?TrRztrNjGbntmgi/NqsCLUK61yRlH1A03/YIXb47ppUjxQA80V5fymBkLNXW?=
- =?us-ascii?Q?n3GqM0I9greq/5v6Jm8wjF+5gyDeODqn+hIyEkEL8GP0qEWP44RDmU+BIBl+?=
- =?us-ascii?Q?YCp8Dvr94n5AtHSyqMXs+5pzwahTo7xyulSBOOL37ZAxdfU1EJqLFxAM2OXj?=
- =?us-ascii?Q?KC2CLkWF7RyBhFLSl2Ygr6nLG795HffWFgyWmuUXi30bIkgPJV72F1h9Avjc?=
- =?us-ascii?Q?RW4cdMK/ZTlsrI3V1rV7OA/dM2zdg2JXuVecwAj9G75UuuBxawP9hQNLePkl?=
- =?us-ascii?Q?LasOLaQ98xPeHCC4xiRkTDAi286HlE6ViMrpKGbIyS3XcvQvmIVafbojM45O?=
- =?us-ascii?Q?WcmJfmzYdRmcVzn5H2UtoYmmL/ohb4ePPUc9fDTAolYm6puab2pHNW+tLUjP?=
- =?us-ascii?Q?HYzzooacG6+oD06aEnmumyn9n+fpUtFUrhtZTGfTlLe7sqqs2VBKHL3FuMis?=
- =?us-ascii?Q?r7hvf005AXfbueTzdOoNPrJ2ES/1qSQXyg1jIyIJUz7F5P6GIqzNXnaGNsXF?=
- =?us-ascii?Q?mTPZ6JMBKC7LvTpPcA8J1F2+X+JxobjYYyHk5wo6ZNSeFBIGrxqhdt1fIybB?=
- =?us-ascii?Q?nEltrOpXMEeWaxh9uKpHz2cU8+uJ8WNhoosonpvgWop4YYW5WWeLjBDBWign?=
- =?us-ascii?Q?SqrLb4NFKBJxSJhmhtXZOfUlIsKLPJd4xxRD556sGeopUnDuN5iAxhGGwyMs?=
- =?us-ascii?Q?UPafooVKexWzNwlBduxn64w+6HJHyqUhiZ2JpVf6ldlVspIiAaEOdn/mUbPn?=
- =?us-ascii?Q?mUHEUwElLRAsNx0tZZJT7aHRsoIHhyw6uJ8w3uMj+tcR6yXi28jVCGEd7mEL?=
- =?us-ascii?Q?8e0Et8oI1SVOm0VgEs1YBG1A8PaMpVmCjGh4vBUP9krO52jIyk7rJeG503PP?=
- =?us-ascii?Q?ik/1DHAzqylfnxIIL5jmwbHQ9BTtPBhEyyaouKNhuMGXSsZan1OvY6CRtuxL?=
- =?us-ascii?Q?fdChzm/CzCRzLSbo1tF6PsiCPZo0zqPzmtXc/69T1n+vTlysODA+/F8+Z9CV?=
- =?us-ascii?Q?9HgXmTtnCGiOa00DDMeo7VEgutzxdDG3utUMVem/gnTed6+4U7mKF75Nf1Ww?=
- =?us-ascii?Q?LuGTq7INjZQVvwbCg7WwxQG2CAGLPJzqCshwoxi9VDaV37iCJoCXkZdghjGr?=
- =?us-ascii?Q?vCfDK+1f6hwIDvx/jFCTf3bc1MuPFVnwt9ZC5XFV3AXHkP1oKVnA+361Y2qY?=
- =?us-ascii?Q?nZC07cO5O9k+wiBjsudXlSx+xCVu2nIn+Y98ZF0IVP1T9fVvvhOQnsZ+yKxr?=
- =?us-ascii?Q?8k6Bzchoz1rsGWLmAvs/+xtGMa91sEjc+7NGg3sSMRvZZm4iV6xfRMjTOn4o?=
- =?us-ascii?Q?KRIE/QhQ/qdkSW9PrQS1KTAy6wyR+MNCTMiooYL5?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e3265b72-f6c5-41eb-6deb-08dc5d1a41e9
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB7726.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Apr 2024 07:04:13.9207
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: a90xIsbIwgelkM03tc12ef60bgLCh5/tbcC9pWPoUyYQs2pws7/qiDukOd60DGmIXpFjX8yYgB0PSvuKNLpXDg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8775
+Content-Transfer-Encoding: 8bit
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
+mmap() POSIX compliance says we should zero fill data beyond a file
+size up to page boundary, and issue a SIGBUS if we go beyond. While fsx
+helps us test zero-fill sometimes, fsstress also let's us sometimes test
+for SIGBUS however that is based on a random value and its not likley we
+always test it. Dedicate a specic test for this to make testing for
+this specific situation and to easily expand on other corner cases.
 
-Dan Williams <dan.j.williams@intel.com> writes:
+Suggested-by: Matthew Wilcox <willy@infradead.org>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
 
-> Jan Kara wrote:
->> On Thu 11-04-24 10:57:25, Alistair Popple wrote:
->> > The page->mapping and page->index fields are normally used by the
->> > pagecache and rmap for looking up virtual mappings of pages. FS DAX
->> > implements it's own kind of page cache and rmap look ups so these
->> > fields are unnecessary. They are currently only used to detect
->> > error/warning conditions which should never occur.
->> > 
->> > A future change will change the way shared mappings are detected by
->> > doing normal page reference counting instead, so remove the
->> > unnecessary checks.
->> > 
->> > Signed-off-by: Alistair Popple <apopple@nvidia.com>
->> ...
->> > -/*
->> > - * When it is called in dax_insert_entry(), the shared flag will indicate that
->> > - * whether this entry is shared by multiple files.  If so, set the page->mapping
->> > - * PAGE_MAPPING_DAX_SHARED, and use page->share as refcount.
->> > - */
->> > -static void dax_associate_entry(void *entry, struct address_space *mapping,
->> > -		struct vm_area_struct *vma, unsigned long address, bool shared)
->> > -{
->> > -	unsigned long size = dax_entry_size(entry), pfn, index;
->> > -	int i = 0;
->> > -
->> > -	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
->> > -		return;
->> > -
->> > -	index = linear_page_index(vma, address & ~(size - 1));
->> > -	for_each_mapped_pfn(entry, pfn) {
->> > -		struct page *page = pfn_to_page(pfn);
->> > -
->> > -		if (shared) {
->> > -			dax_page_share_get(page);
->> > -		} else {
->> > -			WARN_ON_ONCE(page->mapping);
->> > -			page->mapping = mapping;
->> > -			page->index = index + i++;
->> > -		}
->> > -	}
->> > -}
->> 
->> Hum, but what about existing uses of folio->mapping and folio->index in
->> fs/dax.c? AFAICT this patch breaks them. What am I missing? How can this
->> ever work?
+Does enough to get us to use to test this, however I'm aware of a bit
+more polishing up to do:
 
-I did feel I was missing something here as well, but nothing obviously
-breaks with this change from a test perspective (ie. ndctl tests, manual
-tests). Somehow I missed how this was used in code, but Dan provided
-enough of a hint below though so now I see the errors of my ways :-)
+  * maybe moving mread to common as generic/574 did it first
+  * sharing round_up_to_page_boundary() as well
 
-> Right, as far as I can see every fsdax filesystem would need to be
-> converted to use dax_holder_operations() so that the fs can backfill
-> ->mapping and ->index.
+generic/574 is special, it was just testing for correctness of
+integrity if we muck with mmap() however if you don't have verity
+stuff available obviously you won't end up testing it.
 
-Oh, that was the hint I needed. Thanks. So basically it's just used for
-memory failure like so:
+This generalizes mmap() zero-fill and SIGBUS corner case tests.
 
-memory_failure()
- -> memory_failure_dev_pagemap()
-  -> mf_generic_kill_procs()
-   -> dax_lock_page()
-    -> mapping = READ_ONCE(page->mapping);
+I've tested so far only 4k and it works well there. For 16k bs on LBS
+just the SIGBUS issue exists, I'll test smaller block sizes later like
+512, 1k, 2k as well. We'll fix triggering the SIBGUS when LBS is used,
+we'll address that in the next iteration.
+
+Is this a worthy test as a generic test?
+
+ common/filter         |   6 ++
+ tests/generic/740     | 231 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/740.out |   2 +
+ 3 files changed, 239 insertions(+)
+ create mode 100755 tests/generic/740
+ create mode 100644 tests/generic/740.out
+
+diff --git a/common/filter b/common/filter
+index 36d51bd957dd..d7add06f3be7 100644
+--- a/common/filter
++++ b/common/filter
+@@ -194,6 +194,12 @@ _filter_xfs_io_unique()
+     common_line_filter | _filter_xfs_io
+ }
  
-Somehow I had missed that bleatingly obvious usage of page->mapping. I
-also couldn't understand how it was important if it was safe for it to
-be just randomly overwritten in the shared case.
++_filter_xfs_io_data_unique()
++{
++    _filter_xfs_io_offset | sed -e 's| |\n|g' | egrep -v "\.|XX|\*" | \
++	sort | uniq | tr -d '\n'
++}
++
+ _filter_xfs_io_units_modified()
+ {
+ 	UNIT=$1
+diff --git a/tests/generic/740 b/tests/generic/740
+new file mode 100755
+index 000000000000..cbb823014600
+--- /dev/null
++++ b/tests/generic/740
+@@ -0,0 +1,231 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) Luis Chamberlain. All Rights Reserved.
++#
++# FS QA Test 740
++#
++# As per POSIX NOTES mmap(2) maps multiples of the system page size, but if the
++# data mapped is not multiples of the page size the remaining bytes are zeroed
++# out when mapped and modifications to that region are not written to the file.
++# On Linux when you write data to such partial page after the end of the
++# object, the data stays in the page cache even after the file is closed and
++# unmapped and  even  though  the data  is never written to the file itself,
++# subsequent mappings may see the modified content. If you go *beyond* this
++# page, you should get a SIGBUS. This test verifies we zero-fill to page
++# boundary and ensures we get a SIGBUS if we write to data beyond the system
++# page size even if the block size is greater than the system page size.
++. ./common/preamble
++. ./common/rc
++_begin_fstest auto quick
++
++# Override the default cleanup function.
++_cleanup()
++{
++	cd /
++	rm -r -f $tmp.*
++}
++
++# Import common functions.
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_require_scratch_nocheck
++_require_test
++
++setup_zeroed_file()
++{
++	local file_len=$1
++	local sparse=$2
++
++	if $sparse; then
++		$XFS_IO_PROG -f -c "truncate $file_len" $test_file
++	else
++		$XFS_IO_PROG -f -c "falloc 0 $file_len" $test_file
++	fi
++}
++
++round_up_to_page_boundary()
++{
++	local n=$1
++	local page_size=$(_get_page_size)
++
++	echo $(( (n + page_size - 1) & ~(page_size - 1) ))
++}
++
++mread()
++{
++	local file=$1
++	local map_len=$2
++	local offset=$3
++	local length=$4
++
++	# Some callers expect xfs_io to crash with SIGBUS due to the mread,
++	# causing the shell to print "Bus error" to stderr.  To allow this
++	# message to be redirected, execute xfs_io in a new shell instance.
++	# However, for this to work reliably, we also need to prevent the new
++	# shell instance from optimizing out the fork and directly exec'ing
++	# xfs_io.  The easiest way to do that is to append 'true' to the
++	# commands, so that xfs_io is no longer the last command the shell sees.
++	bash -c "trap '' SIGBUS; $XFS_IO_PROG -r $file \
++		-c 'mmap -r 0 $map_len' \
++		-c 'mread $offset $length'; true"
++}
++
++do_mmap_tests()
++{
++	local block_size=$1
++	local file_len=$2
++	local offset=$3
++	local len=$4
++	local use_sparse_file=${5:-false}
++	local new_filelen=0
++	local map_len=0
++	local csum=0
++	local fs_block_size=$(_get_block_size $SCRATCH_MNT)
++
++	echo -en "\n\n==> Testing blocksize $block_size " >> $seqres.full
++	echo -en "file_len: $file_len offset: $offset " >> $seqres.full
++	echo -e "len: $len sparse: $use_sparse_file" >> $seqres.full
++
++	if ((fs_block_size != block_size)); then
++		echo "Block size created ($block_size) doesn't match _get_block_size on mount ($fs_block_size)"
++		_fail
++	fi
++
++	rm -rf "${SCRATCH_MNT:?}"/*
++
++	# This let's us also test against sparse files
++	setup_zeroed_file $file_len $use_sparse_file
++
++	# This will overwrite the old data, the file size is the
++	# delta between offset and len now.
++	$XFS_IO_PROG -f -c "pwrite -S 0xaa -b 512 $offset $len" \
++		$test_file >> $seqres.full
++
++	sync
++	new_filelen=$(_get_filesize $test_file)
++	map_len=$(round_up_to_page_boundary $new_filelen)
++	csum_orig="$(_md5_checksum $test_file)"
++
++	# A couple of mmap() tests:
++	#
++	# We are allowed to mmap() up to the boundary of the page size of a
++	# data object, but there a few rules to follow we must check for:
++	#
++	# a) zero-fill test for the data: POSIX says we should zero fill any
++	#    partial page after the end of the object. Verify zero-fill.
++	# b) do not write this bogus data to disk: on Linux, if we write data
++	#    to a partially filled page, it will stay in the page cache even
++	#    after the file is closed and unmapped even if it never reaches the
++	#    file. Subsequent mappings *may* see the modified content, but it
++	#    also can get other data. Since the data read after the actual
++	#    object data can vary we just verify the filesize does not change.
++	#    This is not true for tmpfs.
++	if [[ $map_len -gt $new_filelen ]]; then
++		zero_filled_data_len=$((map_len - new_filelen))
++		_scratch_cycle_mount
++		expected_zero_data="00"
++		zero_filled_data=$($XFS_IO_PROG -r $test_file \
++			-c "mmap -r 0 $map_len" \
++			-c "mread -v $new_filelen $zero_filled_data_len" \
++			-c "munmap" | \
++			_filter_xfs_io_data_unique)
++		if [[ "$zero_filled_data" != "$expected_zero_data" ]]; then
++			echo "Expected data: $expected_zero_data"
++			echo "  Actual data: $zero_filled_data"
++			echo "Zero-fill broken see mmap() requirements"
++			_fail
++		fi
++
++		if [[ "$FSTYP" != "tmpfs" ]]; then
++			_scratch_cycle_mount
++			$XFS_IO_PROG $test_file \
++				-c "mmap -w 0 $map_len" \
++				-c "mwrite $new_filelen $zero_filled_data_len" \
++				-c "munmap"
++			sync
++			csum_post="$(_md5_checksum $test_file)"
++			if [[ "$csum_orig" != "$csum_post" ]]; then
++				echo "Expected csum: $csum_orig"
++				echo " Actual  csum: $csum_post"
++				_fail
++			fi
++
++			local filelen_test=$(_get_filesize $test_file)
++			if [[ "$filelen_test" != "$new_filelen" ]]; then
++				echo "Expected file length: $new_filelen"
++				echo " Actual  file length: $filelen_test"
++				_fail
++			fi
++		fi
++	fi
++
++	# Now lets ensure we get SIGBUS when we go beyond the page boundary
++	if [[ "$FSTYP" != "tmpfs" ]]; then
++		_scratch_cycle_mount
++		new_filelen=$(_get_filesize $test_file)
++		map_len=$(round_up_to_page_boundary $new_filelen)
++		csum_orig="$(_md5_checksum $test_file)"
++		mread $test_file $map_len 0 $map_len >> $seqres.full  2>$tmp.err
++		if grep -q 'Bus error' $tmp.err; then
++			echo "Not expecting SIGBUS when reading up to page boundary"
++			cat $tmp.err
++			_fail
++		fi
++
++		# This should just work
++		mread $test_file $map_len 0 $map_len >> $seqres.full  2>$tmp.err
++		if [[ $? -ne 0 ]]; then
++			_fail
++		fi
++
++		# If we mmap() on the boundary but try to read beyond it just
++		# fails, we don't get a SIGBUS
++		$XFS_IO_PROG -r $test_file \
++			-c "mmap -r 0 $map_len" \
++			-c "mread 0 $((map_len + 10))" >> $seqres.full  2>$tmp.err
++		local mread_err=$?
++		if [[ $mread_err -eq 0 ]]; then
++			echo "mmap() to page boundary works as expected but reading beyond should fail"
++			echo "err: $?"
++			_fail
++		fi
++
++		# Now let's go beyond the allowed mmap() page boundary
++		mread $test_file $((map_len + 10)) 0 $((map_len + 10)) >> $seqres.full  2>$tmp.err
++		if ! grep -q 'Bus error' $tmp.err; then
++			echo "Expected SIGBUS when mmap() reading beyond page boundary"
++			_fail
++		fi
++		local filelen_test=$(_get_filesize $test_file)
++		if [[ "$filelen_test" != "$new_filelen" ]]; then
++			echo "Expected file length: $new_filelen"
++			echo " Actual  file length: $filelen_test"
++			_fail
++		fi
++	fi
++}
++
++test_block_size()
++{
++	local block_size=$1
++
++	do_mmap_tests $block_size 512 3 5
++	do_mmap_tests $block_size 16k 0 $((16384+3))
++	do_mmap_tests $block_size 16k $((16384-10)) $((16384+20))
++	do_mmap_tests $block_size 64k 0 $((65536+3))
++	do_mmap_tests $block_size 4k 4090 30 true
++}
++
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount
++test_file=$SCRATCH_MNT/file
++block_size=$(_get_block_size "$SCRATCH_MNT")
++test_block_size $block_size
++_scratch_unmount
++_check_scratch_fs
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/740.out b/tests/generic/740.out
+new file mode 100644
+index 000000000000..3f841e600ed3
+--- /dev/null
++++ b/tests/generic/740.out
+@@ -0,0 +1,2 @@
++QA output created by 740
++Silence is golden
+-- 
+2.43.0
 
-But I think I understand now - shared fs dax pages are only supported on
-xfs and the mapping/index fields aren't used there because xfs provides
-it's own look up for memory failure using dax_holder_operations.
-
-I was initially concerned about these cases because I was wondering if
-folio subpages could ever get different mappings and the shared case
-implied they could. But it seems that's xfs specific and there is a
-separate mechanism to deal with looking up ->mapping/index for that. So
-I guess we should still be able to safely store this on the folio
-head. I will double check and update this change.
