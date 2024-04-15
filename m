@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76BC156225
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:35:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86FBD156225
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 23:36:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713224152; cv=none; b=b5smzAikAIVKj7iOLmyrHGNXy5AyV6lgTFwdbs6XnPFSkBQuJ9WVXVVaa5f7FXc3d9vReihMcVI6eDWbphEMuV5fUBhza2H0Qm/13wu59dt+v8z0kuZYLhGg1ljOQuggW3cnwUaZqY+ZCPgVcdClRQyxvaJ4JtnFCwRfSX2cKNA=
+	t=1713224167; cv=none; b=BsnOLMZfLR6lDvuaXq+6T7Pc3uXkxBc4Tvv1msQMd1Liy8T0jA6ouu3rhlFt1aZLlb+ijk7Iqs7iAyzyfzuoTNNtUsgwo3rxHhzhzzBrHZTdqVUeFcjcyZLcnac+U1m4tVh1yw4GMJ/LVkRUG4ZD47hX5XWJZcILo+O7qBqtrOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713224152; c=relaxed/simple;
-	bh=bEUYyIByTD79O+bIC7emhIn9k/3e3xEboqgS75c4uuM=;
+	s=arc-20240116; t=1713224167; c=relaxed/simple;
+	bh=EQSE/b/pX98cdMEa8VHTlysimCkLzLSAwoN3zyuApt8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HtEXuMISuoWw4WPJXdFYIUmVrKrsbocCalB7tAf6KFi+h59wcNe/Adtz4RzGMWL/FDpnuc1+3pfXEt9IsAPJKLarR0T1lX++cHxdV8RCtuuwgvSxKs/YSjvfw+hhOjT58gNvyMdHgrk6dQpSDL9ZqrdwY84Z65mrHIvH1U7Ybys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HlE1yUJn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pC1euYMbSceTzwn/u2YzMCPqR53k0Un+NL8m2IpOPUV80OceQkUo0O1d463APTF5ZUhvw1Tv3VS8H0ZASbog1CjIn5dXORUK9/hQ2DxPn9bG+6QfLn3WHpo6zh9FQRN4y23EyCbzvLkU71nTmkbWVmgJHKhWQtS2+PHg7oh6i+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ktrzZ0nN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HlE1yUJn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A9DC113CC;
-	Mon, 15 Apr 2024 23:35:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ktrzZ0nN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F8D0C113CC;
+	Mon, 15 Apr 2024 23:36:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713224151;
-	bh=bEUYyIByTD79O+bIC7emhIn9k/3e3xEboqgS75c4uuM=;
+	s=k20201202; t=1713224167;
+	bh=EQSE/b/pX98cdMEa8VHTlysimCkLzLSAwoN3zyuApt8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HlE1yUJnYwxpfOy2oK4aIExEBJPTiXkfAuNZk9IhKvPvDcasIJ1643oueQ7iifu/7
-	 IBckrOz8HsrRY0l0YFP+VhgdMUbAFYWCi+ZfA9Asq7qmAXRKKek8R6kZtIZoZUCDDC
-	 AQF/P1L038vbG9V0cNLoMkjtFN4EWb8RHQUrwcnxOMriETicGeCVKeTFDMtuioP1dG
-	 xwyX1y6KY0VuaUVDa7XK0tC5nCgXOxBfUrkEs1sMrQ92ifKTKroxmdXcS4YrD9WHij
-	 MTD1cnmKQA10BVa/L3n9OQmD2kflD6/Xrw4CkLaGtc0m1lt2V5QRr2XcbymlIJ7TsC
-	 GvGOVp6ZDpCTA==
-Date: Mon, 15 Apr 2024 16:35:51 -0700
-Subject: [PATCHSET v30.3 09/16] xfs: online repair of directories
+	b=ktrzZ0nN0+iZDTwCTQbWR1u/3ScDIkojvKOyrBwQwX1erNcXDaC9PYqIu2N+Sq6OY
+	 YwGdcv9Y+KbgcsxOvtJvyo7TA3Tvp9Kv5ZLmLUN9SnZ+wRme42SmdyTzkzfVkfc7j+
+	 /PnJsTkp8g4kRbT+ICVOqyJj/ScJ88riErRcVYzP+BEzHS7QC6w7T0UGthwVjHlAql
+	 etXSilmna/K81cU+Ch8lGm1cNENNMTK19GpzzDCdJ8WudvqBPVFnIQkLpP8EGMpKmJ
+	 nQxGg2xliJXBPHaLe6Gqr4kzaJC5QgQFLKeyrixXfSd8nDkNMjvyREGsCFlZmBZNuh
+	 2NKYT2RuLUd8Q==
+Date: Mon, 15 Apr 2024 16:36:06 -0700
+Subject: [PATCHSET v30.3 10/16] xfs: move orphan files to lost and found
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171322383857.89193.15436066970892287907.stgit@frogsfrogsfrogs>
+Message-ID: <171322384265.89422.12835876074903686240.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240415232853.GE11948@frogsfrogsfrogs>
 References: <20240415232853.GE11948@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,36 +46,18 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series employs atomic extent swapping to enable safe reconstruction
-of directory data.  For now, XFS does not support reverse directory
-links (aka parent pointers), so we can only salvage the dirents of a
-directory and construct a new structure.
+Orphaned files are defined to be files with nonzero ondisk link count
+but no observable parent directory.  This series enables online repair
+to reparent orphaned files into the filesystem directory tree, and wires
+up this reparenting ability into the directory, file link count, and
+parent pointer repair functions.  This is how we fix files with positive
+link count that are not reachable through the directory tree.
 
-Directory repair therefore consists of five main parts:
-
-First, we walk the existing directory to salvage as many entries as we
-can, by adding them as new directory entries to the repair temp dir.
-
-Second, we validate the parent pointer found in the directory.  If one
-was not found, we scan the entire filesystem looking for a potential
-parent.
-
-Third, we use atomic extent swaps to exchange the entire data fork
-between the two directories.
-
-Fourth, we reap the old directory blocks as carefully as we can.
-
-To wrap up the directory repair code, we need to add to the regular
-filesystem the ability to free all the data fork blocks in a directory.
-This does not change anything with normal directories, since they must
-still unlink and shrink one entry at a time.  However, this will
-facilitate freeing of partially-inactivated temporary directories during
-log recovery.
-
-The second half of this patchset implements repairs for the dotdot
-entries of directories.  For now there is only rudimentary support for
-this, because there are no directory parent pointers, so the best we can
-do is scanning the filesystem and the VFS dcache for answers.
+This patch will also create the orphanage directory (lost+found) if it
+is not present.  In contrast to xfs_repair, we follow e2fsck in creating
+the lost+found without group or other-owner access to avoid accidental
+disclosure of files that were previously hidden by an 0700 directory.
+That's silly security, but people have been known to do it.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -86,39 +68,30 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-dirs-6.10
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-orphanage-6.10
 ---
 Commits in this patchset:
- * xfs: inactivate directory data blocks
- * xfs: online repair of directories
- * xfs: scan the filesystem to repair a directory dotdot entry
- * xfs: online repair of parent pointers
- * xfs: ask the dentry cache if it knows the parent of a directory
+ * xfs: move orphan files to the orphanage
+ * xfs: move files to orphanage instead of letting nlinks drop to zero
+ * xfs: ensure dentry consistency when the orphanage adopts a file
 ---
- fs/xfs/Makefile              |    3 
- fs/xfs/scrub/dir.c           |    9 
- fs/xfs/scrub/dir_repair.c    | 1402 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/findparent.c    |  448 +++++++++++++
- fs/xfs/scrub/findparent.h    |   50 +
- fs/xfs/scrub/inode_repair.c  |    5 
- fs/xfs/scrub/iscan.c         |   18 +
- fs/xfs/scrub/iscan.h         |    1 
- fs/xfs/scrub/nlinks.c        |   23 +
- fs/xfs/scrub/nlinks_repair.c |    9 
- fs/xfs/scrub/parent.c        |   14 
- fs/xfs/scrub/parent_repair.c |  234 +++++++
- fs/xfs/scrub/readdir.c       |    7 
- fs/xfs/scrub/repair.c        |    1 
- fs/xfs/scrub/repair.h        |    8 
- fs/xfs/scrub/scrub.c         |    4 
- fs/xfs/scrub/tempfile.c      |   13 
- fs/xfs/scrub/tempfile.h      |    2 
- fs/xfs/scrub/trace.h         |  115 +++
- fs/xfs/scrub/xfblob.h        |   24 +
- fs/xfs/xfs_inode.c           |   51 ++
- 21 files changed, 2437 insertions(+), 4 deletions(-)
- create mode 100644 fs/xfs/scrub/dir_repair.c
- create mode 100644 fs/xfs/scrub/findparent.c
- create mode 100644 fs/xfs/scrub/findparent.h
- create mode 100644 fs/xfs/scrub/parent_repair.c
+ .../filesystems/xfs/xfs-online-fsck-design.rst     |   20 -
+ fs/xfs/Makefile                                    |    1 
+ fs/xfs/scrub/dir_repair.c                          |  130 ++++
+ fs/xfs/scrub/nlinks.c                              |   20 +
+ fs/xfs/scrub/nlinks.h                              |    7 
+ fs/xfs/scrub/nlinks_repair.c                       |  123 ++++
+ fs/xfs/scrub/orphanage.c                           |  589 ++++++++++++++++++++
+ fs/xfs/scrub/orphanage.h                           |   75 +++
+ fs/xfs/scrub/parent_repair.c                       |  100 +++
+ fs/xfs/scrub/repair.h                              |    2 
+ fs/xfs/scrub/scrub.c                               |    2 
+ fs/xfs/scrub/scrub.h                               |    4 
+ fs/xfs/scrub/trace.c                               |    1 
+ fs/xfs/scrub/trace.h                               |   96 +++
+ fs/xfs/xfs_inode.c                                 |    6 
+ fs/xfs/xfs_inode.h                                 |    1 
+ 16 files changed, 1139 insertions(+), 38 deletions(-)
+ create mode 100644 fs/xfs/scrub/orphanage.c
+ create mode 100644 fs/xfs/scrub/orphanage.h
 
