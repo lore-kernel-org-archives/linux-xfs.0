@@ -1,69 +1,246 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C74C3C30
-	for <linux-xfs@vger.kernel.org>; Sun, 14 Apr 2024 05:18:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE18D817
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2024 00:11:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713071911; cv=none; b=pMsXIr9KZgbj0ufsh8AoiibPluFn2LI4mojOckyht6Z9wpqDtTSe8ETHsecOYQD2YEpfKHKWQIJPkRjcYIohu88+HTHRBXMIWDaLp5sCT+8IZYVs+qNwAfFeAEnewjjOE/osaDtWXsCISPcE4gRcUTX5EUGqivfB/cnRqC/9tLw=
+	t=1713139881; cv=none; b=Y1XFdqpLbCLQrv6kWUbgZrf6CL2sEx7uSnCyz1rKuLn5sKbEdMQfeKJUNR/JKHbCYgJat+y4h4kV+gm6F6SsbLtTIjcL5wvqP/rocnd2qWqxxcErSa23uFblf/TKL7u5XV4W7yMxjyzf9qBCVCrncs09LiywWwCIPqEBEKdG2+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713071911; c=relaxed/simple;
-	bh=uoPNhfTyf4rzZLP4KBzDIyciAvqTVT3A23MFHN1wNDU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f36vkL2xZEfGyJ2X8T/j8kz7ERIRywfpB7lMdsijTKYez3qjDIVxVRNfIqptGGGtdkC2KBZAY6Wa01K4z8A8PZIqKgCvNschMU32+hG6OwPon3W7YsLlOcmptlo/BZEkXcFXeP9DErMQMnZ0kDthOTvRjB01zhSgg7SbXeOGKF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3288B68B05; Sun, 14 Apr 2024 07:18:16 +0200 (CEST)
-Date: Sun, 14 Apr 2024 07:18:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Allison Henderson <allison.henderson@oracle.com>,
-	catherine.hoang@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/32] xfs: Add parent pointer ioctls
-Message-ID: <20240414051816.GA1323@lst.de>
-References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs> <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs> <20240412173957.GB11948@frogsfrogsfrogs>
+	s=arc-20240116; t=1713139881; c=relaxed/simple;
+	bh=y7sLsvC+sIsLPpOLvDRjnaMGEI7DDoGcr6wiZLTi7D0=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=mjMCfG9Z6m7QG2nzMwy8f+JHVBFDIp5BOASMpOse1uEYfLMbc/BtWqlnMSwL8N3PbbydCOGjfJC6wpZtvAP/fEFq1Nb/Ag/P6RhXtoQnZHTvpEvIsxBFNfKMmT/wnuoFV3ycVUlzxkGjmkLnXVhgCFcdUgDR11MeFHbdDUJ9Obc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f71.google.com with SMTP id ca18e2360f4ac-7d65ffc786fso280385839f.2
+        for <linux-xfs@vger.kernel.org>; Sun, 14 Apr 2024 17:11:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713139879; x=1713744679;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9jiKT8kTE1128KEvfOtgwJoNA14ICV6Re1oSVw8v94A=;
+        b=YI9Qxl+LbpuRzUVQU+hFKOQoY4DehvMQO2rAPrgLHBGL7M5bBIU3cys5JSpV8M3ARS
+         /0J9vTNnFngpJfo3HcAiCzUiEB/0D7gVAs00CMJymlei4mAM77dtc0UyMsO3Pd9VgBmB
+         YJgChGO/BaFWpREVQ8yIjenS9nBhLMvZwloft15i/LT63CF8XBSXc1VOzZas1rlf2RFO
+         PXNfEXDgHQvbv2ax7XzntHNCt/v635Av/H/UNsAs3YuWMY1TRp6SFOsB/Z9EoYGLEK+M
+         VCWJN9sqUPavDyhHULbgRLRoFNv8WAtPa7KuBAgao6toTevnHhstaUFJsQSwlrG8ZZkK
+         A14Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVJVV7sw55NPBVPhHprCUvou+6cMAMtQwNZ7lcmEJNCh3X2ugC57+4EvWm9ybbXRcQUVvEjz9DU8dVs6Haxywpvmm4vke/PXD8J
+X-Gm-Message-State: AOJu0YyPjWuZDv+OgcTVtGcDA9pAzVlkwlhnkEN29aPmvhaH+/rXHU9L
+	UQQ7FoDKRbqOWSaMpP4Z0uf0fWh+oA9ZeooWDlwc6yGvxZ00YECz8/nXTJT5O9wfHu7JIQj72Ly
+	xKEUwUTeakzhJc9YcwfoGgcZ//WwbFmy+MvU80cqONnRtwxyAVHihaaU=
+X-Google-Smtp-Source: AGHT+IHnU2W5Tepq6j4kkQWoDzCwwPMiJCBd3BG8rHjbyQZcLrOSra26bYUeME/J2Sg0+54R4zH5NNn+KT3tYSETasXN3ZI1Becn
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240412173957.GB11948@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-Received: by 2002:a05:6638:842a:b0:482:fc0f:e5a8 with SMTP id
+ iq42-20020a056638842a00b00482fc0fe5a8mr198256jab.2.1713139879092; Sun, 14 Apr
+ 2024 17:11:19 -0700 (PDT)
+Date: Sun, 14 Apr 2024 17:11:19 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000f1ae1a06161775de@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_ilock (2)
+From: syzbot <syzbot+c6d7bff58a2218f14632@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-[full quote deleted.  It took me about a minute of scrolling to find
-the actual contents, *sigh*]
+Hello,
 
-On Fri, Apr 12, 2024 at 10:39:57AM -0700, Darrick J. Wong wrote:
-> I noticed a couple of things while doing more testing here -- first,
-> xfs_khandle_to_dentry doesn't check that the handle fsid actually
-> matches this filesystem, and AFAICT *nothing* actually checks that.
+syzbot found the following issue on:
 
-Yes.  Userspace better have resolved that, as the ioctl only works
-on the given file system, so libhandle has to resolve it before
-even calling the ioctl.
+HEAD commit:    72374d71c315 Merge tag 'pull-sysfs-annotation-fix' of git:..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=10639da3180000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=43fc40c117780e9b
+dashboard link: https://syzkaller.appspot.com/bug?extid=c6d7bff58a2218f14632
+compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
+userspace arch: i386
 
-> So I guess that's a longstanding weakness of handle validation, and we
-> probably haven't gotten any reports because what's the chance that
-> you'll get lucky with an ino/gen from a different filesystem?
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Not really, see above.
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-72374d71.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/0ea69c8c9aa6/vmlinux-72374d71.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/fcfb8e2b6b87/bzImage-72374d71.xz
 
-> The second thing is that exportfs_decode_fh does too much work here --
-> if the handle references a directory, it'll walk up the directory tree
-> to the root to try to reconnect the dentry paths.  For GETPARENTS we
-> don't care about that since we're not doing anything with dentries.
-> Walking upwards in the directory tree is extra work that doesn't change
-> the results.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+c6d7bff58a2218f14632@syzkaller.appspotmail.com
 
-In theory no one cares as all operations work just fine with disconnected
-dentries, and exportfs_decode_fh doesn't do these checks unless the
-accpetable parameter is passed to it.  The real question is why we (which
-in this case means 15 years younger me) decided back then we want this
-checking for XFS handle operations?  I can't really think of one
-right now..
+======================================================
+WARNING: possible circular locking dependency detected
+6.9.0-rc3-syzkaller-00399-g72374d71c315 #0 Not tainted
+------------------------------------------------------
+syz-executor.0/6233 is trying to acquire lock:
+ffffffff8d9373c0 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:312 [inline]
+ffffffff8d9373c0 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:3746 [inline]
+ffffffff8d9373c0 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:3827 [inline]
+ffffffff8d9373c0 (fs_reclaim){+.+.}-{0:0}, at: __do_kmalloc_node mm/slub.c:3965 [inline]
+ffffffff8d9373c0 (fs_reclaim){+.+.}-{0:0}, at: __kmalloc+0xb5/0x440 mm/slub.c:3979
 
+but task is already holding lock:
+ffff888028971858 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock+0x16a/0x420 fs/xfs/xfs_inode.c:208
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (&xfs_dir_ilock_class){++++}-{3:3}:
+       down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
+       xfs_ilock+0x2ef/0x420 fs/xfs/xfs_inode.c:206
+       xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
+       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
+       xfs_icwalk_ag+0xca6/0x1780 fs/xfs/xfs_icache.c:1713
+       xfs_icwalk+0x57/0x100 fs/xfs/xfs_icache.c:1762
+       xfs_reclaim_inodes_nr+0x182/0x250 fs/xfs/xfs_icache.c:1011
+       super_cache_scan+0x409/0x550 fs/super.c:227
+       do_shrink_slab+0x44f/0x11c0 mm/shrinker.c:435
+       shrink_slab+0x18a/0x1310 mm/shrinker.c:662
+       shrink_one+0x493/0x7c0 mm/vmscan.c:4774
+       shrink_many mm/vmscan.c:4835 [inline]
+       lru_gen_shrink_node+0x89f/0x1750 mm/vmscan.c:4935
+       shrink_node mm/vmscan.c:5894 [inline]
+       kswapd_shrink_node mm/vmscan.c:6704 [inline]
+       balance_pgdat+0x10d1/0x1a10 mm/vmscan.c:6895
+       kswapd+0x5ea/0xbf0 mm/vmscan.c:7164
+       kthread+0x2c1/0x3a0 kernel/kthread.c:388
+       ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+-> #0 (fs_reclaim){+.+.}-{0:0}:
+       check_prev_add kernel/locking/lockdep.c:3134 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+       validate_chain kernel/locking/lockdep.c:3869 [inline]
+       __lock_acquire+0x2478/0x3b30 kernel/locking/lockdep.c:5137
+       lock_acquire kernel/locking/lockdep.c:5754 [inline]
+       lock_acquire+0x1b1/0x560 kernel/locking/lockdep.c:5719
+       __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
+       fs_reclaim_acquire+0x102/0x160 mm/page_alloc.c:3712
+       might_alloc include/linux/sched/mm.h:312 [inline]
+       slab_pre_alloc_hook mm/slub.c:3746 [inline]
+       slab_alloc_node mm/slub.c:3827 [inline]
+       __do_kmalloc_node mm/slub.c:3965 [inline]
+       __kmalloc+0xb5/0x440 mm/slub.c:3979
+       kmalloc include/linux/slab.h:632 [inline]
+       xfs_attr_shortform_list fs/xfs/xfs_attr_list.c:115 [inline]
+       xfs_attr_list_ilocked+0x8b7/0x1740 fs/xfs/xfs_attr_list.c:527
+       xfs_attr_list+0x1f9/0x2b0 fs/xfs/xfs_attr_list.c:547
+       xfs_vn_listxattr+0x11f/0x1c0 fs/xfs/xfs_xattr.c:314
+       vfs_listxattr+0xb7/0x140 fs/xattr.c:493
+       listxattr+0x69/0x190 fs/xattr.c:840
+       path_listxattr+0xc3/0x160 fs/xattr.c:864
+       do_syscall_32_irqs_on arch/x86/entry/common.c:165 [inline]
+       __do_fast_syscall_32+0x75/0x120 arch/x86/entry/common.c:321
+       do_fast_syscall_32+0x32/0x80 arch/x86/entry/common.c:346
+       entry_SYSENTER_compat_after_hwframe+0x84/0x8e
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  rlock(&xfs_dir_ilock_class);
+                               lock(fs_reclaim);
+                               lock(&xfs_dir_ilock_class);
+  lock(fs_reclaim);
+
+ *** DEADLOCK ***
+
+1 lock held by syz-executor.0/6233:
+ #0: ffff888028971858 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock+0x16a/0x420 fs/xfs/xfs_inode.c:208
+
+stack backtrace:
+CPU: 2 PID: 6233 Comm: syz-executor.0 Not tainted 6.9.0-rc3-syzkaller-00399-g72374d71c315 #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x116/0x1f0 lib/dump_stack.c:114
+ check_noncircular+0x31a/0x400 kernel/locking/lockdep.c:2187
+ check_prev_add kernel/locking/lockdep.c:3134 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+ validate_chain kernel/locking/lockdep.c:3869 [inline]
+ __lock_acquire+0x2478/0x3b30 kernel/locking/lockdep.c:5137
+ lock_acquire kernel/locking/lockdep.c:5754 [inline]
+ lock_acquire+0x1b1/0x560 kernel/locking/lockdep.c:5719
+ __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
+ fs_reclaim_acquire+0x102/0x160 mm/page_alloc.c:3712
+ might_alloc include/linux/sched/mm.h:312 [inline]
+ slab_pre_alloc_hook mm/slub.c:3746 [inline]
+ slab_alloc_node mm/slub.c:3827 [inline]
+ __do_kmalloc_node mm/slub.c:3965 [inline]
+ __kmalloc+0xb5/0x440 mm/slub.c:3979
+ kmalloc include/linux/slab.h:632 [inline]
+ xfs_attr_shortform_list fs/xfs/xfs_attr_list.c:115 [inline]
+ xfs_attr_list_ilocked+0x8b7/0x1740 fs/xfs/xfs_attr_list.c:527
+ xfs_attr_list+0x1f9/0x2b0 fs/xfs/xfs_attr_list.c:547
+ xfs_vn_listxattr+0x11f/0x1c0 fs/xfs/xfs_xattr.c:314
+ vfs_listxattr+0xb7/0x140 fs/xattr.c:493
+ listxattr+0x69/0x190 fs/xattr.c:840
+ path_listxattr+0xc3/0x160 fs/xattr.c:864
+ do_syscall_32_irqs_on arch/x86/entry/common.c:165 [inline]
+ __do_fast_syscall_32+0x75/0x120 arch/x86/entry/common.c:321
+ do_fast_syscall_32+0x32/0x80 arch/x86/entry/common.c:346
+ entry_SYSENTER_compat_after_hwframe+0x84/0x8e
+RIP: 0023:0xf728a579
+Code: b8 01 10 06 03 74 b4 01 10 07 03 74 b0 01 10 08 03 74 d8 01 00 00 00 00 00 00 00 00 00 00 00 00 00 51 52 55 89 e5 0f 34 cd 80 <5d> 5a 59 c3 90 90 90 90 8d b4 26 00 00 00 00 8d b4 26 00 00 00 00
+RSP: 002b:00000000f5e7c5ac EFLAGS: 00000292 ORIG_RAX: 00000000000000e9
+RAX: ffffffffffffffda RBX: 00000000200000c0 RCX: 0000000000000000
+RDX: 0000000000000002 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000292 R12: 0000000000000000
+R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+ </TASK>
+----------------
+Code disassembly (best guess), 2 bytes skipped:
+   0:	10 06                	adc    %al,(%rsi)
+   2:	03 74 b4 01          	add    0x1(%rsp,%rsi,4),%esi
+   6:	10 07                	adc    %al,(%rdi)
+   8:	03 74 b0 01          	add    0x1(%rax,%rsi,4),%esi
+   c:	10 08                	adc    %cl,(%rax)
+   e:	03 74 d8 01          	add    0x1(%rax,%rbx,8),%esi
+  1e:	00 51 52             	add    %dl,0x52(%rcx)
+  21:	55                   	push   %rbp
+  22:	89 e5                	mov    %esp,%ebp
+  24:	0f 34                	sysenter
+  26:	cd 80                	int    $0x80
+* 28:	5d                   	pop    %rbp <-- trapping instruction
+  29:	5a                   	pop    %rdx
+  2a:	59                   	pop    %rcx
+  2b:	c3                   	ret
+  2c:	90                   	nop
+  2d:	90                   	nop
+  2e:	90                   	nop
+  2f:	90                   	nop
+  30:	8d b4 26 00 00 00 00 	lea    0x0(%rsi,%riz,1),%esi
+  37:	8d b4 26 00 00 00 00 	lea    0x0(%rsi,%riz,1),%esi
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
