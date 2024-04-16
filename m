@@ -1,66 +1,100 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2734613791B
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 19:14:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06E0113A24A
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 20:24:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713294867; cv=none; b=o9evnNpDpz1WuTntXP+XSEE4mMgpf1OME+7QBHxFBAiKPomT4FFnEIXa0w4gF7DAIvH453oa11puc+WVvpk3GTqZPyCP7ZPbhQrm6rgyWhiTxC6JIsIk0TY2nNVy7f2UTAVwFfZGJ+2Orwna/2ivVGceWcH48tiwGHXKn+g0Hyo=
+	t=1713299057; cv=none; b=UJGj6bP8qkVzi1dgqCJohQ6blI1d4BYh1YkqaEn614DpRCYjy+cBtcR2+IFoAtD/LZRF5sMrlV84+cVXx2Hmc9mjRIihTnubuO04BQk0I+V+ZTTTKC+ff2PnJUE17XqQYlQnQ03tIqT4ryGAz86/MDHpNUr/CtCPPDNGLwHSOHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713294867; c=relaxed/simple;
-	bh=8SBnpEKhEBn29sV7AUsJPtfG3wmTAhBQegdyHDk69NQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gfn6bx+l7MnKafN8GBKeog1Mbg3duKY/pjdmy5XUStuyb9n4Y9ihlviB1tzjAOEfdCcmMir+1j7V5FVvdIn/hqqyb23LDLagpeZoaNZ6Vh7Z/F5UYZnxk+PJncIan3JrXie0K+iwxGKtxIMWpulAgUQVoad9MUQjvj2TPAHSf9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=E0nOvCgc; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1713299057; c=relaxed/simple;
+	bh=KbPdMOvna67YGQw+67yp+CHNScmYhC66eSON3x9wW3o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SaFN3ac6cgDxYmajbEuDZdQ4v7lLul/zENIYpkukbLqeQbJ4s4eG0xoQnaXouC4n1w4BT/BBgIaKALxiNzkl81/WlY+IFZRtuxjpeBQcqrhXwVlsyKda9pXzn6onfVOr8eLZ3k/i/Ctl2GCXmsSLNCVDvqHO6hZplLZjd5Ow0LE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IFDqwee4; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E0nOvCgc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=RrdTNu+szuIlz6GeYNfcC/qFhzMWAKLGFnHlWX8KE0Q=; b=E0nOvCgcKqoNPQWdynquIt/NKX
-	579/RaVZiXfuEHPx3wucFi5HVyPpO/piHyL75hNxpz6kDm0auAs5gnrAc73dA2DorwaEVGXbI8INo
-	YjpWPwjtSNc2Vqh/7NW2sE/O+gmneESQPsTErdHtkeuSFTTS2IL65Y/P7vAfyfBzU5gMMzE7eCB7j
-	wrjtH9onBGWV6Y4aBdQggi3H42+FArTZHL72FKq4pDUsqgpgX/mPQAzTxtBq4rA0zbxgFS+qxRvoh
-	dwYQAGoTcSDyD+gVQU8uCIFS4zQOEOD+ZRJf2/G65sNTh2VHdexiW0Qy8u+/k2aB6e6il7+oR0zel
-	tY1ycMHg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwoG8-0000000DUzb-3rxo;
-	Tue, 16 Apr 2024 19:14:24 +0000
-Date: Tue, 16 Apr 2024 12:14:24 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	catherine.hoang@oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/32] xfs: Add parent pointer ioctls
-Message-ID: <Zh7OENwAEADcrcvr@infradead.org>
-References: <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs>
- <20240412173957.GB11948@frogsfrogsfrogs>
- <20240414051816.GA1323@lst.de>
- <20240415194036.GD11948@frogsfrogsfrogs>
- <20240416044716.GA23062@lst.de>
- <20240416165056.GO11948@frogsfrogsfrogs>
- <Zh6tNvXga6bGwOSg@infradead.org>
- <20240416185209.GZ11948@frogsfrogsfrogs>
- <Zh7LIMHXwuqVeCdG@infradead.org>
- <20240416190733.GC11948@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IFDqwee4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1713299055;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sFa1WsFcygs2IN5DPW6gGsrOC3+TgkgWfUGNJcnkIPk=;
+	b=IFDqwee4hVC+xfmcdS3F+95/ljZxZ5Un/fgcMuTkEO2CHwk6r+//ZvlpnGRls8JrALOlWL
+	+c1Js3YKcULYuQZuJTFHbwF5lCMtowCHKLWmFfga/Fvwj0FQFXPksjBZQMOnBrUnEC6qGv
+	r6RlgkndfAZSrbi8gKUK00a2RRDGHEk=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-656-Zgaew-2PPy-nbgxgJbL7XA-1; Tue, 16 Apr 2024 16:24:13 -0400
+X-MC-Unique: Zgaew-2PPy-nbgxgJbL7XA-1
+Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-56bf2d59fceso4213979a12.3
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 13:24:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713299051; x=1713903851;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=sFa1WsFcygs2IN5DPW6gGsrOC3+TgkgWfUGNJcnkIPk=;
+        b=lxYwgfIXo8RJWSxdKrh4wrdYA0jAVKFt+un8KYhQuwUYEe8fpwGo8t1j+s6T0Ny+Gk
+         Csm0A9UXk9RTjwGuisxKaToE/nNOIVN+TAWo4W4oRWv6OdYMUyGHyBjtC1u/QVNrX0Ks
+         dKfZU4lrGgB2xZvnBqZL3azKggl+O3WDEd6MlLROWps3A4ANnfbyfsa477pmPSndSdeb
+         1quBfopizAltz63exgV3jgfTHJjDfqOtsUopFx1rb9/j2Np3nmov156avbgXwEZ4GGP4
+         9ffEuk7kpU3xnTKxZyEbxY+pDdVOaxZdLT6niVFNSmTVWj4aKlQNU6tU0H7Rhi4kzcs/
+         MP4w==
+X-Forwarded-Encrypted: i=1; AJvYcCUeR2RVpp5KmR4weBVV0LAvxYz6ehSuwBSH1PxCYr7D3+urgPDaIcXtv1kUKtS01UoV+QEMr1r0TpMjERpXAWbIl/OcVF+815sW
+X-Gm-Message-State: AOJu0YzfSnhh2wpbsqwA98keH2MPmVFP2fX0TjaO7uU0Z5Q96u3jCrwz
+	81CGZ128AVMQPrUu/LQQTU/QQJojG7/x9ExrI7dO2W09EkrM6mKARc0Vwtgy/o0AZX4oAohQLNo
+	9tDMg7p60kIwmyLfBkoN+uqJ4mn5JsgkfKav04No7nD09RTzkC92gfZb5ZkVmWIFi
+X-Received: by 2002:a50:d598:0:b0:56e:743:d4d9 with SMTP id v24-20020a50d598000000b0056e0743d4d9mr9753166edi.42.1713299051196;
+        Tue, 16 Apr 2024 13:24:11 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEDI9UqfDHDpBzYD7VPasC4zp/DWqKK5ZxxMClbQc0AiEebWT1/CAKpXMpHfXgT4jcVdKdHmg==
+X-Received: by 2002:a50:d598:0:b0:56e:743:d4d9 with SMTP id v24-20020a50d598000000b0056e0743d4d9mr9753156edi.42.1713299050725;
+        Tue, 16 Apr 2024 13:24:10 -0700 (PDT)
+Received: from thinky.redhat.com ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id fe1-20020a056402390100b005701df2ea98sm3655687edb.32.2024.04.16.13.24.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Apr 2024 13:24:10 -0700 (PDT)
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v2 0/4] xfsprogs random fixes found by Coverity scan
+Date: Tue, 16 Apr 2024 22:23:58 +0200
+Message-ID: <20240416202402.724492-1-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240416190733.GC11948@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-On Tue, Apr 16, 2024 at 12:07:33PM -0700, Darrick J. Wong wrote:
-> Ohhhh, does that happens outside of XFS then?  No wonder I couldn't find
-> what you were talking about.  Ok I'll go look some more.
+This is bunch of random fixes found by Coverity scan, there's memory
+leak, truncation of time_t to int, access overflow, and freeing of
+uninitialized struct.
 
-Yes. get_name() in fs/exportfs/expfs.c.
+--
+Andrey
+
+Andrey Albershteyn (4):
+  xfs_db: fix leak in flist_find_ftyp()
+  xfs_repair: make duration take time_t
+  xfs_scrub: don't call phase_end if phase_rusage was not initialized
+  xfs_fsr: convert fsrallfs to use time_t instead of int
+
+ db/flist.c          | 4 +++-
+ fsr/xfs_fsr.c       | 8 ++++++--
+ repair/globals.c    | 2 +-
+ repair/globals.h    | 2 +-
+ repair/progress.c   | 7 ++++---
+ repair/progress.h   | 2 +-
+ repair/xfs_repair.c | 2 +-
+ scrub/xfs_scrub.c   | 3 ++-
+ 8 files changed, 19 insertions(+), 11 deletions(-)
+
+-- 
+2.42.0
 
