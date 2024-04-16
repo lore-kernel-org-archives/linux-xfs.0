@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D54A80C
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:28:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2725236E
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:29:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713227337; cv=none; b=BjVV8b3Q7g19M8EsJj/wIE5wS2Usw/cmddvpNm2x+G9dKl+CJNxcIy2RddDcQg16gYuD6R9PptX65RqclhB9uBvDnB1U7ONie9moTb+Shvw+Kku968NwthC0TA+PMioattt3+selmhH4uaTqVjZOws7Ps+70XiMt+7y0WFPHyBg=
+	t=1713227353; cv=none; b=jN2qpKaX3MipAkaoTSDDjkFdvfSdrRHYoY02KFJ2F8YWwqfOBYfHfFvAmnKnId5brHrKQ0L0G7YZvHaLDh+1peCQghmyMDKvggHE5nnZW6Hj0zqNhW/dkzWGc8BNwxcnRcsB93MhjXz6KSffkqqk1CaQAlNE7sKajAcaS6TRR6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713227337; c=relaxed/simple;
-	bh=uFVkcK7Df6DFZOkBIeJBmDPfNNtRqMY2MTHcNkCROhc=;
+	s=arc-20240116; t=1713227353; c=relaxed/simple;
+	bh=vtM452JKPgAJAyoLwqq54glhI1RCRU4xvs/DzMb58U0=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=LoPqk2GQxOf+GrUeaR90ix8+LBpKhHkPHvQryuvi8/WFeF19LYrhEaRD3lmsn9qFNZ4Yz8rXCgoYlFQ6RWxaLXnKj4FT+aVROFhiaqHeSlqSCfQ6JsLw7LX48SVY3Qg8HE6xKeoeTn1J8FlooXTXBchNwKtdrHe+KNPhrKO+N+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gpqsH8ic; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=fT/ideXbaq/I5pGY42k/yEezxfKOMs8REiC7/3Xf5+BmI9Uww7zHjzLong8N6OlG9jrRvQWztwZj0GlfqKInQGLe83ddRN2t7iYvMrIYxGxnEZYY8X5qPbipRIUEuhJ2HZPG/7Rxa2O/DIRm1SadmcjT8kFsph4vE/Yrino7jRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S9nUOxgu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gpqsH8ic"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51082C113CC;
-	Tue, 16 Apr 2024 00:28:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S9nUOxgu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9BE9C113CC;
+	Tue, 16 Apr 2024 00:29:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713227337;
-	bh=uFVkcK7Df6DFZOkBIeJBmDPfNNtRqMY2MTHcNkCROhc=;
+	s=k20201202; t=1713227353;
+	bh=vtM452JKPgAJAyoLwqq54glhI1RCRU4xvs/DzMb58U0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gpqsH8icaCiZUAhV71lvOpXdDLD5PXGbArhYMLyxhliPr3YWENJWLdhl6Y6bkaUBa
-	 6igPqlbjJ4rE8nAWkCYNWpPJGtqLvcb4ACn82E41i6VfZqTSsz2rPIJDr5WcirtjUc
-	 /GRDvZmEeq6BoTATPLDNsMZVrVeXDIdVENq5lF/aCxzD09cNE7pedPhAbx8ZfDcJl1
-	 MJlNVBvdr7kmuWeb8gpUI61awsvuWICNitTNX/SB+6FTZ38SkRVEpOdra96/St7tId
-	 LomoeFKlScNPD8Vedt5PEi3aIiAiqHka0uZDfa0FQq6bYneE5cl4yIW0bLbP1Xy77A
-	 SpS5vuHg+hRqg==
-Date: Mon, 15 Apr 2024 17:28:56 -0700
-Subject: [GIT PULL 06/16] xfs: set and validate dir/attr block owners
+	b=S9nUOxguIX3W27Yh7NXgdp07lCskiSVvIpCJ32Sw+FBwL/HIU3d2ORsluZuCfGKkT
+	 0i8Wr9ZJweYLgPw/LQBaRcOFNmGfrA5LC9sT7MAbOLaaEEQ2X2S6mW+WIE9U9DlzRn
+	 9JDG2U9HdVU347LTwG8xbpQ4NonWF6nIagIITBwvR4VYsoIpzjWN4qvd13s58hrUqV
+	 0x9/qVb15OLmscYYU7L097uTeEksO0172afSoHiXkbUdVErWzBeCo/WGkaMJtwBdXf
+	 Tdt7fuaprLUksKzHOzcIfYAOOJblbz2jOS0Ra2hwvQGw4RtZ+or3ieHWsjoFWX1+Li
+	 6EL3mxZvxXdog==
+Date: Mon, 15 Apr 2024 17:29:12 -0700
+Subject: [GIT PULL 07/16] xfs: online repair of extended attributes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171322716673.141687.7531023432046638316.stg-ugh@frogsfrogsfrogs>
+Cc: dchinner@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171322717007.141687.11748721901437827911.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,77 +53,91 @@ encounter any problems.
 
 --D
 
-The following changes since commit abf039e2e4afde98e448253f9a7ecc784a87924d:
-
-xfs: online repair of realtime summaries (2024-04-15 14:58:49 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/dirattr-validate-owners-6.10_2024-04-15
-
-for you to fetch changes up to fe6c9f8e48e0dcbfc3dba17edd88490c8579b34b:
+The following changes since commit fe6c9f8e48e0dcbfc3dba17edd88490c8579b34b:
 
 xfs: validate explicit directory free block owners (2024-04-15 14:58:52 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-xattrs-6.10_2024-04-15
+
+for you to fetch changes up to 6c631e79e73c7122c890ef943f8ca9aab9e1dec8:
+
+xfs: create an xattr iteration function for scrub (2024-04-15 14:58:54 -0700)
+
 ----------------------------------------------------------------
-xfs: set and validate dir/attr block owners [v30.3 06/16]
+xfs: online repair of extended attributes [v30.3 07/16]
 
-There are a couple of significant changes that need to be made to the
-directory and xattr code before we can support online repairs of those
-data structures.
+This series employs atomic extent swapping to enable safe reconstruction
+of extended attribute data attached to a file.  Because xattrs do not
+have any redundant information to draw off of, we can at best salvage
+as much data as we can and build a new structure.
 
-The first change is because online repair is designed to use libxfs to
-create a replacement dir/xattr structure in a temporary file, and use
-atomic extent swapping to commit the corrected structure.  To avoid the
-performance hit of walking every block of the new structure to rewrite
-the owner number before the swap, we instead change libxfs to allow
-callers of the dir and xattr code the ability to set an explicit owner
-number to be written into the header fields of any new blocks that are
-created.  For regular operation this will be the directory inode number.
+Rebuilding an extended attribute structure consists of these three
+steps:
 
-The second change is to update the dir/xattr code to actually *check*
-the owner number in each block that is read off the disk, since we don't
-currently do that.
+First, we walk the existing attributes to salvage as many of them as we
+can, by adding them as new attributes attached to the repair tempfile.
+We need to add a new xfile-based data structure to hold blobs of
+arbitrary length to stage the xattr names and values.
+
+Second, we write the salvaged attributes to a temporary file, and use
+atomic extent swaps to exchange the entire attribute fork between the
+two files.
+
+Finally, we reap the old xattr blocks (which are now in the temporary
+file) as carefully as we can.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (10):
-xfs: add an explicit owner field to xfs_da_args
-xfs: use the xfs_da_args owner field to set new dir/attr block owner
-xfs: reduce indenting in xfs_attr_node_list
-xfs: validate attr leaf buffer owners
-xfs: validate attr remote value buffer owners
-xfs: validate dabtree node buffer owners
-xfs: validate directory leaf buffer owners
-xfs: validate explicit directory data buffer owners
-xfs: validate explicit directory block buffer owners
-xfs: validate explicit directory free block owners
+Darrick J. Wong (7):
+xfs: enable discarding of folios backing an xfile
+xfs: create a blob array data structure
+xfs: use atomic extent swapping to fix user file fork data
+xfs: repair extended attributes
+xfs: scrub should set preen if attr leaf has holes
+xfs: flag empty xattr leaf blocks for optimization
+xfs: create an xattr iteration function for scrub
 
-fs/xfs/libxfs/xfs_attr.c        |  14 ++--
-fs/xfs/libxfs/xfs_attr_leaf.c   |  60 +++++++++++---
-fs/xfs/libxfs/xfs_attr_leaf.h   |   4 +-
-fs/xfs/libxfs/xfs_attr_remote.c |  13 ++--
-fs/xfs/libxfs/xfs_bmap.c        |   1 +
-fs/xfs/libxfs/xfs_da_btree.c    | 169 +++++++++++++++++++++++++++++++++++++++-
-fs/xfs/libxfs/xfs_da_btree.h    |   3 +
-fs/xfs/libxfs/xfs_dir2.c        |   5 ++
-fs/xfs/libxfs/xfs_dir2.h        |   4 +
-fs/xfs/libxfs/xfs_dir2_block.c  |  42 +++++-----
-fs/xfs/libxfs/xfs_dir2_data.c   |  18 +++--
-fs/xfs/libxfs/xfs_dir2_leaf.c   | 100 ++++++++++++++++++------
-fs/xfs/libxfs/xfs_dir2_node.c   |  44 ++++++-----
-fs/xfs/libxfs/xfs_dir2_priv.h   |  15 ++--
-fs/xfs/libxfs/xfs_exchmaps.c    |   7 +-
-fs/xfs/scrub/attr.c             |   1 +
-fs/xfs/scrub/dabtree.c          |   8 ++
-fs/xfs/scrub/dir.c              |  23 +++---
-fs/xfs/scrub/readdir.c          |   6 +-
-fs/xfs/xfs_attr_item.c          |   1 +
-fs/xfs/xfs_attr_list.c          |  89 ++++++++++++++-------
-fs/xfs/xfs_dir2_readdir.c       |   6 +-
-fs/xfs/xfs_trace.h              |   7 +-
-23 files changed, 492 insertions(+), 148 deletions(-)
+fs/xfs/Makefile               |    3 +
+fs/xfs/libxfs/xfs_attr.c      |    2 +-
+fs/xfs/libxfs/xfs_attr.h      |    2 +
+fs/xfs/libxfs/xfs_da_format.h |    5 +
+fs/xfs/libxfs/xfs_exchmaps.c  |    2 +-
+fs/xfs/libxfs/xfs_exchmaps.h  |    1 +
+fs/xfs/scrub/attr.c           |  158 +++---
+fs/xfs/scrub/attr.h           |    7 +
+fs/xfs/scrub/attr_repair.c    | 1207 +++++++++++++++++++++++++++++++++++++++++
+fs/xfs/scrub/attr_repair.h    |   11 +
+fs/xfs/scrub/dab_bitmap.h     |   37 ++
+fs/xfs/scrub/dabtree.c        |   16 +
+fs/xfs/scrub/dabtree.h        |    3 +
+fs/xfs/scrub/listxattr.c      |  312 +++++++++++
+fs/xfs/scrub/listxattr.h      |   17 +
+fs/xfs/scrub/repair.c         |   46 ++
+fs/xfs/scrub/repair.h         |    6 +
+fs/xfs/scrub/scrub.c          |    2 +-
+fs/xfs/scrub/tempexch.h       |    2 +
+fs/xfs/scrub/tempfile.c       |  204 +++++++
+fs/xfs/scrub/tempfile.h       |    3 +
+fs/xfs/scrub/trace.h          |   85 +++
+fs/xfs/scrub/xfarray.c        |   17 +
+fs/xfs/scrub/xfarray.h        |    2 +
+fs/xfs/scrub/xfblob.c         |  168 ++++++
+fs/xfs/scrub/xfblob.h         |   26 +
+fs/xfs/scrub/xfile.c          |   12 +
+fs/xfs/scrub/xfile.h          |    6 +
+fs/xfs/xfs_buf.c              |    3 +
+fs/xfs/xfs_trace.h            |    2 +
+30 files changed, 2284 insertions(+), 83 deletions(-)
+create mode 100644 fs/xfs/scrub/attr_repair.c
+create mode 100644 fs/xfs/scrub/attr_repair.h
+create mode 100644 fs/xfs/scrub/dab_bitmap.h
+create mode 100644 fs/xfs/scrub/listxattr.c
+create mode 100644 fs/xfs/scrub/listxattr.h
+create mode 100644 fs/xfs/scrub/xfblob.c
+create mode 100644 fs/xfs/scrub/xfblob.h
 
