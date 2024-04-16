@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C9B5227
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:41:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5576FE545
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:41:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713231701; cv=none; b=NZ5ucFFYbQ8pt06yRnj+NuAzFtozUcWCJoSWqDvRcKrDpymZL6bbfGoZmmHy+wUpyaCSeVQ/wQz+nyY6bzAZSGK7Fj2NkcbqkPYgJeXmUwd4h/stgdB2pcSslQnGgRKcOPnHSFQXMT+aymMi3vA/AC8u8pRd/QOqaNrkfedHfRI=
+	t=1713231717; cv=none; b=j3dVNtfMuAuYqe/GevYrbkhXNDNq5ChNpK1N1iTptV61OHhKU4KLsaVElSJ5UKxESHYQawTbO+NhMuaRdJirp7t3uKcj46Mot1MQi5SRyQIUOmShtrR9h/NlBd48JqA1Ogtbq+a/B2wB9uSTTOCYobTj9CLWnAxlhvt9Sp1Kcjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713231701; c=relaxed/simple;
-	bh=nDbQUX2kXKdvlI5CHGsbH6BjKMZnINMaem7HTfyMKwg=;
+	s=arc-20240116; t=1713231717; c=relaxed/simple;
+	bh=z6zhJT0U1xUzup3vwjjF5s0syDGfEghiBAORKW/Sr2U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PAs+hkRjii3j8nR2TLI16+yhvr7WG92Kqasaugl1ICGm8qM++hMqsOsg1RwPkJ90pJeSRl20TXpPs1apenM000VoDqwVN6xHhEISRSMx+9tJJ1JEjdDoCqrNx3aUl5jYRyPtlT+16vMvhscl3MaPz1DXJUYlizjIGPUWU0MF44I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u4cvf9RF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kOEriyWHtKH3FaRa5/w0H0q+2Mj0zBFfrmxB4GoeI8Nn1M9MINKKJrqj+BwFFXi1/Kk8eTTFLediIRw02hZogPvm44dkIo5+bsf45KaptBQYA0OvaGaKiHtFetHYbvElYE40HWrx81RGpO9qlloI5b6N2mBhhmxIci3+YzSjYao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=husROhD4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u4cvf9RF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49586C113CC;
-	Tue, 16 Apr 2024 01:41:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="husROhD4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2714C113CC;
+	Tue, 16 Apr 2024 01:41:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713231701;
-	bh=nDbQUX2kXKdvlI5CHGsbH6BjKMZnINMaem7HTfyMKwg=;
+	s=k20201202; t=1713231716;
+	bh=z6zhJT0U1xUzup3vwjjF5s0syDGfEghiBAORKW/Sr2U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=u4cvf9RFlrHSOOWfpNOnYqcqKwpvLr96sNtyo/wEf8IBTG+KbSSClNJHUiVmFviaL
-	 2p+/i5pgfCx+Fv0L1jBgAYu0ezqT5ojqqH9lvXrt0YO3ce7p3jYdK76+Id/VQGDZPS
-	 rt01JTr1f+OM3jeZT0S4w6AHnVdZ/OAMaV9t+M/K/9y7JY4v3pERkkcZcyS4qulEjG
-	 SQzm8GfDlYwsZUNzrqLWuAdyu6ftJr2dhcn6Qnjmt7vBZmOPPVF3xwRG+YCllXydqO
-	 aPy0JfkPh+LxtWCasAvYkfe/rg7ICfTGoBYwmGJ784W0hix/mJN9+GXPsZEvBMoaM/
-	 XOQ0ARTp5xysw==
-Date: Mon, 15 Apr 2024 18:41:40 -0700
-Subject: [PATCH 1/4] xfs: reduce the rate of cond_resched calls inside scrub
+	b=husROhD4l7Ng1crObwl2YnqOD81d/fR0dUKk2uKD1PTnA1gaYM/UoKjmJBZinOiJU
+	 kqojW75p8QzaiiAOyeKH3O7kmbiKo8GzxfmfogsB0hKDOx3woNRMrXQzEgMxRvPL9K
+	 lfS3NVw7YEE3kmCmHc/kBWZ4ry+SVEPDor2eEiEJbAwRWI7vLawuKlyuKCmKuV4r1V
+	 itYs0FE/vi1eoNRT/qYPoRQdhpv1twKIYrzhVkOMXNfav7DsIeRDWGB5r5TuagzUll
+	 hpbM+ujNv5G8aTxkSyxqNDZKeS/28tp2Ohb4ThuL2ZykqLjeosA//3kDFMZhs7mA7T
+	 i+ndoDfbG2Rgg==
+Date: Mon, 15 Apr 2024 18:41:56 -0700
+Subject: [PATCH 2/4] xfs: move xfs_ioc_scrub_metadata to scrub.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de,
- hch@infradead.org
-Message-ID: <171323030260.253873.3709400504100908629.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, hch@infradead.org
+Message-ID: <171323030277.253873.12950334854150989191.stgit@frogsfrogsfrogs>
 In-Reply-To: <171323030233.253873.6726826444851242926.stgit@frogsfrogsfrogs>
 References: <171323030233.253873.6726826444851242926.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,234 +46,108 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We really don't want to call cond_resched every single time we go
-through a loop in scrub -- there may be billions of records, and probing
-into the scheduler itself has overhead.  Reduce this overhead by only
-calling cond_resched 10x per second; and add a counter so that we only
-check jiffies once every 1000 records or so.
-
-Surprisingly, this reduces scrub-only fstests runtime by about 2%.  I
-used the bmapinflate xfs_db command to produce a billion-extent file and
-this stupid gadget reduced the scrub runtime by about 4%.
-
-From a stupid microbenchmark of calling these things 1 billion times, I
-estimate that cond_resched costs about 5.5ns per call; jiffes costs
-about 0.3ns per read; and fatal_signal_pending costs about 0.4ns per
-call.
+Move the scrub ioctl handler to scrub.c to keep the code together and to
+reduce unnecessary code when CONFIG_XFS_ONLINE_SCRUB=n.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/common.h  |   25 -------------------
- fs/xfs/scrub/scrub.c   |    1 +
- fs/xfs/scrub/scrub.h   |   64 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/xfarray.c |   10 ++++----
- fs/xfs/scrub/xfarray.h |    3 ++
- fs/xfs/scrub/xfile.c   |    2 +-
- 6 files changed, 74 insertions(+), 31 deletions(-)
+ fs/xfs/scrub/scrub.c     |   27 ++++++++++++++++++++++++++-
+ fs/xfs/scrub/xfs_scrub.h |    4 ++--
+ fs/xfs/xfs_ioctl.c       |   24 ------------------------
+ 3 files changed, 28 insertions(+), 27 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 39465e39dc5fd..3d5f1f6b4b7bf 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -6,31 +6,6 @@
- #ifndef __XFS_SCRUB_COMMON_H__
- #define __XFS_SCRUB_COMMON_H__
- 
--/*
-- * We /could/ terminate a scrub/repair operation early.  If we're not
-- * in a good place to continue (fatal signal, etc.) then bail out.
-- * Note that we're careful not to make any judgements about *error.
-- */
--static inline bool
--xchk_should_terminate(
--	struct xfs_scrub	*sc,
--	int			*error)
--{
--	/*
--	 * If preemption is disabled, we need to yield to the scheduler every
--	 * few seconds so that we don't run afoul of the soft lockup watchdog
--	 * or RCU stall detector.
--	 */
--	cond_resched();
--
--	if (fatal_signal_pending(current)) {
--		if (*error == 0)
--			*error = -EINTR;
--		return true;
--	}
--	return false;
--}
--
- int xchk_trans_alloc(struct xfs_scrub *sc, uint resblks);
- int xchk_trans_alloc_empty(struct xfs_scrub *sc);
- void xchk_trans_cancel(struct xfs_scrub *sc);
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index e813b66b603a1..4a81f828f9f13 100644
+index 4a81f828f9f13..1456cc11c406d 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -620,6 +620,7 @@ xfs_scrub_metadata(
- 	sc->sm = sm;
- 	sc->ops = &meta_scrub_ops[sm->sm_type];
- 	sc->sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
-+	sc->relax = INIT_XCHK_RELAX;
- retry_op:
- 	/*
- 	 * When repairs are allowed, prevent freezing or readonly remount while
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 3910270471462..4e7e3edb6350c 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -8,6 +8,49 @@
+@@ -578,7 +578,7 @@ xchk_scrub_create_subord(
+ }
  
- struct xfs_scrub;
- 
-+struct xchk_relax {
-+	unsigned long	next_resched;
-+	unsigned int	resched_nr;
-+	bool		interruptible;
-+};
+ /* Dispatch metadata scrubbing. */
+-int
++STATIC int
+ xfs_scrub_metadata(
+ 	struct file			*file,
+ 	struct xfs_scrub_metadata	*sm)
+@@ -724,3 +724,28 @@ xfs_scrub_metadata(
+ 	run.retries++;
+ 	goto retry_op;
+ }
 +
-+/* Yield to the scheduler at most 10x per second. */
-+#define XCHK_RELAX_NEXT		(jiffies + (HZ / 10))
-+
-+#define INIT_XCHK_RELAX	\
-+	(struct xchk_relax){ \
-+		.next_resched	= XCHK_RELAX_NEXT, \
-+		.resched_nr	= 0, \
-+		.interruptible	= true, \
-+	}
-+
-+/*
-+ * Relax during a scrub operation and exit if there's a fatal signal pending.
-+ *
-+ * If preemption is disabled, we need to yield to the scheduler every now and
-+ * then so that we don't run afoul of the soft lockup watchdog or RCU stall
-+ * detector.  cond_resched calls are somewhat expensive (~5ns) so we want to
-+ * ratelimit this to 10x per second.  Amortize the cost of the other checks by
-+ * only doing it once every 100 calls.
-+ */
-+static inline int xchk_maybe_relax(struct xchk_relax *widget)
++/* Scrub one aspect of one piece of metadata. */
++int
++xfs_ioc_scrub_metadata(
++	struct file			*file,
++	void				__user *arg)
 +{
-+	/* Amortize the cost of scheduling and checking signals. */
-+	if (likely(++widget->resched_nr < 100))
-+		return 0;
-+	widget->resched_nr = 0;
++	struct xfs_scrub_metadata	scrub;
++	int				error;
 +
-+	if (unlikely(widget->next_resched <= jiffies)) {
-+		cond_resched();
-+		widget->next_resched = XCHK_RELAX_NEXT;
-+	}
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
 +
-+	if (widget->interruptible && fatal_signal_pending(current))
-+		return -EINTR;
++	if (copy_from_user(&scrub, arg, sizeof(scrub)))
++		return -EFAULT;
++
++	error = xfs_scrub_metadata(file, &scrub);
++	if (error)
++		return error;
++
++	if (copy_to_user(arg, &scrub, sizeof(scrub)))
++		return -EFAULT;
 +
 +	return 0;
 +}
-+
- /*
-  * Standard flags for allocating memory within scrub.  NOFS context is
-  * configured by the process allocation scope.  Scrub and repair must be able
-@@ -123,6 +166,9 @@ struct xfs_scrub {
- 	 */
- 	unsigned int			sick_mask;
- 
-+	/* next time we want to cond_resched() */
-+	struct xchk_relax		relax;
-+
- 	/* State tracking for single-AG operations. */
- 	struct xchk_ag			sa;
- };
-@@ -167,6 +213,24 @@ struct xfs_scrub_subord *xchk_scrub_create_subord(struct xfs_scrub *sc,
- 		unsigned int subtype);
- void xchk_scrub_free_subord(struct xfs_scrub_subord *sub);
- 
-+/*
-+ * We /could/ terminate a scrub/repair operation early.  If we're not
-+ * in a good place to continue (fatal signal, etc.) then bail out.
-+ * Note that we're careful not to make any judgements about *error.
-+ */
-+static inline bool
-+xchk_should_terminate(
-+	struct xfs_scrub	*sc,
-+	int			*error)
-+{
-+	if (xchk_maybe_relax(&sc->relax)) {
-+		if (*error == 0)
-+			*error = -EINTR;
-+		return true;
-+	}
-+	return false;
-+}
-+
- /* Metadata scrubbers */
- int xchk_tester(struct xfs_scrub *sc);
- int xchk_superblock(struct xfs_scrub *sc);
-diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
-index b65cd3fc5ac9b..9185ae7088d49 100644
---- a/fs/xfs/scrub/xfarray.c
-+++ b/fs/xfs/scrub/xfarray.c
+diff --git a/fs/xfs/scrub/xfs_scrub.h b/fs/xfs/scrub/xfs_scrub.h
+index a39befa743ce0..02c930f175d0b 100644
+--- a/fs/xfs/scrub/xfs_scrub.h
++++ b/fs/xfs/scrub/xfs_scrub.h
 @@ -7,9 +7,9 @@
- #include "xfs_fs.h"
- #include "xfs_shared.h"
- #include "xfs_format.h"
-+#include "scrub/scrub.h"
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
--#include "scrub/scrub.h"
- #include "scrub/trace.h"
+ #define __XFS_SCRUB_H__
  
- /*
-@@ -486,6 +486,9 @@ xfarray_sortinfo_alloc(
+ #ifndef CONFIG_XFS_ONLINE_SCRUB
+-# define xfs_scrub_metadata(file, sm)	(-ENOTTY)
++# define xfs_ioc_scrub_metadata(f, a)	(-ENOTTY)
+ #else
+-int xfs_scrub_metadata(struct file *file, struct xfs_scrub_metadata *sm);
++int xfs_ioc_scrub_metadata(struct file *file, void __user *arg);
+ #endif /* CONFIG_XFS_ONLINE_SCRUB */
  
- 	xfarray_sortinfo_lo(si)[0] = 0;
- 	xfarray_sortinfo_hi(si)[0] = array->nr - 1;
-+	si->relax = INIT_XCHK_RELAX;
-+	if (flags & XFARRAY_SORT_KILLABLE)
-+		si->relax.interruptible = false;
+ #endif	/* __XFS_SCRUB_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6055053a8f6b2..87a45d4dbbd7c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1055,30 +1055,6 @@ xfs_ioc_getfsmap(
+ 	return error;
+ }
  
- 	trace_xfarray_sort(si, nr_bytes);
- 	*infop = si;
-@@ -503,10 +506,7 @@ xfarray_sort_terminated(
- 	 * few seconds so that we don't run afoul of the soft lockup watchdog
- 	 * or RCU stall detector.
- 	 */
--	cond_resched();
+-STATIC int
+-xfs_ioc_scrub_metadata(
+-	struct file			*file,
+-	void				__user *arg)
+-{
+-	struct xfs_scrub_metadata	scrub;
+-	int				error;
 -
--	if ((si->flags & XFARRAY_SORT_KILLABLE) &&
--	    fatal_signal_pending(current)) {
-+	if (xchk_maybe_relax(&si->relax)) {
- 		if (*error == 0)
- 			*error = -EINTR;
- 		return true;
-diff --git a/fs/xfs/scrub/xfarray.h b/fs/xfs/scrub/xfarray.h
-index 8f54c8fc888fa..5eeeeed13ae24 100644
---- a/fs/xfs/scrub/xfarray.h
-+++ b/fs/xfs/scrub/xfarray.h
-@@ -127,6 +127,9 @@ struct xfarray_sortinfo {
- 	/* XFARRAY_SORT_* flags; see below. */
- 	unsigned int		flags;
- 
-+	/* next time we want to cond_resched() */
-+	struct xchk_relax	relax;
-+
- 	/* Cache a folio here for faster scanning for pivots */
- 	struct folio		*folio;
- 
-diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-index 4e254a0ba0036..d848222f802ba 100644
---- a/fs/xfs/scrub/xfile.c
-+++ b/fs/xfs/scrub/xfile.c
-@@ -10,9 +10,9 @@
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
-+#include "scrub/scrub.h"
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
--#include "scrub/scrub.h"
- #include "scrub/trace.h"
- #include <linux/shmem_fs.h>
- 
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-
+-	if (copy_from_user(&scrub, arg, sizeof(scrub)))
+-		return -EFAULT;
+-
+-	error = xfs_scrub_metadata(file, &scrub);
+-	if (error)
+-		return error;
+-
+-	if (copy_to_user(arg, &scrub, sizeof(scrub)))
+-		return -EFAULT;
+-
+-	return 0;
+-}
+-
+ int
+ xfs_ioc_swapext(
+ 	xfs_swapext_t	*sxp)
 
