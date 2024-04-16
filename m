@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 504FB130E30
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 15:49:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1288612BE89
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 16:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713282573; cv=none; b=K1nY9HMbW7RQ4j9v6h2Dm2QSRDev/Oa9SfwTI5U8njKv7MpXj3CrqkSqWxME/3ePPYEVqafVxGDx5RkQ78yy/CkfX7OqoP8ozX/tG4huUHbTzNyRB5Z9aIeS1OSitHOgVnI7J2FIq53NmSGG6xohJL/MnjM4V/lFTBJktpd0sLI=
+	t=1713283556; cv=none; b=Me6OK9da0Fzb2+ZQaL9rjlbasi8ms23rnjnIWF1/oF85zaX3+liVYdhRSLQucEGd1w6vkC0CU55R4KcfUJ3r8wZ1hgatMKsaLhuYFaj0ZeaIKImQlMLSiVvdpxxPw0XsP1u3iYJUaqg8xRapLIr333muDmyvhav4GnpintxSLHY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713282573; c=relaxed/simple;
-	bh=5rqqLpwsbMAGPZnnODgbbMOQxCAtXwXmvUvPA79EjOI=;
+	s=arc-20240116; t=1713283556; c=relaxed/simple;
+	bh=+faEAzHFcseUMdkqB3LzFpqJutX9jQ+GPdXy56VENNM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WZVMFmyqB/17Jwz3sc+jYmXYJZJv1enGF7FwACGkVJ0rLej2XoXcAxdgxoSQxoTzbWL0dYTOouz72cNQc3uZDisHh2k5Q2rr8SJhiRCoqMcJDXCVazWfBHabgRenzZM3tCmn9bZ9Ez9r/irhfCNRF54Re4xFQNe14PPRdk3jZxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pu9b/Mqa; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fCe0c4wp+7jB6KR501YPfntRL0NNcR6OC90EOK7wPZRHz9Jxnfv2JaLp1jCF5jec0seylhDOmp/2z+LpYTdCW2V3RPPMvL7NUC89UnSYlKyJzRbmphF36aJk/5YYIFPFELZDY8q6+wcSOaFXycNFgv66lzmjW8PFwcwXLIdKCZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lbv+A0mk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pu9b/Mqa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFEB3C113CE;
-	Tue, 16 Apr 2024 15:49:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lbv+A0mk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6F6FC113CE;
+	Tue, 16 Apr 2024 16:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713282572;
-	bh=5rqqLpwsbMAGPZnnODgbbMOQxCAtXwXmvUvPA79EjOI=;
+	s=k20201202; t=1713283555;
+	bh=+faEAzHFcseUMdkqB3LzFpqJutX9jQ+GPdXy56VENNM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Pu9b/MqabQ5jWidkTa2XoPskuVz2KUP8Msqx6en+ueTszVZqBMm3i2rdmY3C8D1LP
-	 aCgoA8jmVzeDD7041LrWIxasQU8WpSvqmSqMrImwaYMpc1PZjxyUiThUflRxe6G0fZ
-	 Q9pQLVxAHQFiwZ7fTcE3mNY65WLb38PicmU2IGrEYnU5HmtMlbHiw9PtJ5Qfn0uz+W
-	 h3Y4wwBPZqNcTE7sF4WIsIGAata9+FV15YqwlAm+NfRZ31eV35nvx5ID4qBLFswN8g
-	 b6rupatSqBm9ZiijVKd5TCjkJDLZUBFfC1RVNJcp+/aDrTwmVxTNl0Ej3MeSipMYvk
-	 NgxoY/DfcfEjQ==
-Date: Tue, 16 Apr 2024 08:49:32 -0700
+	b=Lbv+A0mkiv//T3p68xKbOE9YRZUyJG3AjtTiHO+7LI3FqHSOlx0BZiWPskBClfBF+
+	 oJsZqObkWHi32i4dWhVT8WkV8VGjZ3i0p8JCz2CZ+XfjdXyllXQzv2nXRLcZGgcycs
+	 Ld9sI13AMelXGYrdYLe6dfEZajTwsGIY8moYpAagqgA2R1amy6uypy8DYGtw1/88aP
+	 Bnr25uXBBKoxl/zN2QEihmR8Wa37Yz5S7q8IlpF9mr4JtlUCIcSJ0dZ3jHH07UWvmG
+	 aXnTkKhElM8gaLQ0ZZZMbLTkbMvqWIqv0dJqgM/AeD9wfBrQ7rES1A4Ay+yRXyO8Wb
+	 m4Van+l8IkY5Q==
+Date: Tue, 16 Apr 2024 09:05:55 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, cmaiolino@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 090/111] libxfs: partition memfd files to avoid using too
- many fds
-Message-ID: <20240416154932.GH11948@frogsfrogsfrogs>
-References: <171322882240.211103.3776766269442402814.stgit@frogsfrogsfrogs>
- <171322883514.211103.15800307559901643828.stgit@frogsfrogsfrogs>
- <Zh4EpDiu1Egt-4ii@infradead.org>
+Cc: allison.henderson@oracle.com, linux-xfs@vger.kernel.org,
+	catherine.hoang@oracle.com, hch@lst.de
+Subject: Re: [PATCH 03/17] xfs: use xfs_attr_defer_parent for calling
+ xfs_attr_set on pptrs
+Message-ID: <20240416160555.GI11948@frogsfrogsfrogs>
+References: <171323029141.253068.12138115574003345390.stgit@frogsfrogsfrogs>
+ <171323029234.253068.15430807629732077593.stgit@frogsfrogsfrogs>
+ <Zh4MtaGpyL0qf5Pa@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,30 +45,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zh4EpDiu1Egt-4ii@infradead.org>
+In-Reply-To: <Zh4MtaGpyL0qf5Pa@infradead.org>
 
-On Mon, Apr 15, 2024 at 09:55:00PM -0700, Christoph Hellwig wrote:
-> On Mon, Apr 15, 2024 at 06:00:39PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Make it so that we can partition a memfd file to avoid running out of
-> > file descriptors.
+On Mon, Apr 15, 2024 at 10:29:25PM -0700, Christoph Hellwig wrote:
+> On Mon, Apr 15, 2024 at 06:36:43PM -0700, Darrick J. Wong wrote:
+> > +			if (args->attr_filter & XFS_ATTR_PARENT)
+> > +				xfs_attr_defer_parent(args,
+> > +						XFS_ATTR_DEFER_REMOVE);
+> > +			else
+> > +				xfs_attr_defer_add(args, XFS_ATTR_DEFER_REMOVE);
 > 
-> Not a fan of this, but I guess there is a real need somewhere because
-> we run out of the number of open fds otherwise?
+> > +		if (args->attr_filter & XFS_ATTR_PARENT)
+> > +			xfs_attr_defer_parent(args, XFS_ATTR_DEFER_REPLACE);
+> > +		else
+> > +			xfs_attr_defer_add(args, XFS_ATTR_DEFER_REPLACE);
+> 
+> > +		if (args->attr_filter & XFS_ATTR_PARENT)
+> > +			xfs_attr_defer_parent(args, XFS_ATTR_DEFER_SET);
+> > +		else
+> > +			xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
+> 
+> Given how xfs_attr_defer_add/xfs_attr_defer_parent are basically
+> duplicates except for setting op_flags, shouldn't this move into
+> xfs_attr_defer_add?
 
-Yes, we can hit the open fd limit...
-
->                                                  Given that repair
-> generally runs as root wouldn't it make more sense to just raise the
-> limit?
-
-...and we /did/ raise the limit to whatever RLIMIT_NOFILE says is the
-maximum, but sysadmins could have lowered sysctl_nr_open on us, so we
-still ought to partition to try to avoid ENFILE on those environments.
-
-(Granted the /proc/sys/fs/nr_open default is a million, and if you
-actually have more than 500,000 AGs then either wowee you are rich!! or
-clod-init exploded the fs and you get what you deserve :P)
+I prefer to keep the pptr version separate so that we can assert that
+the args contents for parent pointers is really correct.  Looking at
+xfs_attr_defer_parent again, it also ought to be checking that
+args->valuelen == sizeof(xfs_getparents_rec);
 
 --D
