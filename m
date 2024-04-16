@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFD634C98
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:37:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE5C4C98
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:38:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713231466; cv=none; b=GW/9RmzymsGZy0jUsQ/vJW5P7QMQC9hgl/1+JRS4HSAb1nhcLQTd1ZDWQRSoWU70cD89umnsJbrBJnRihCc0Be36WE/AD7QPqpRm2xVaQL1ljNq2RNA4/UMbE+IUWN4QgsbWPMaOa+Ix8TuvGvVAegKQ2pOCGPrqWTZUu1lLzi4=
+	t=1713231482; cv=none; b=JxDLxdfFaPx7eKO46yjpDhzKN6KYevdRapbcHNHNyduCoPh9JW5tC9a8PE9i4gQLefh9Q1XC7eVXwOMuTScn/dAbbgbe5QVrjO+JJ7uX6xaiGwtc+FIB+MwUhF7Qflctz2ZwvkbVMExyeSJ7EQoEM6SGV/v6T7t3vqGbkZbnemU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713231466; c=relaxed/simple;
-	bh=kFiaPFZDEMjoy1H4YsZGc8ijSjXurlg/TvIyJ6mCWXc=;
+	s=arc-20240116; t=1713231482; c=relaxed/simple;
+	bh=lOP9LstyJ30xe3QZOPvciTPmbvFGAJMaPFqQjmdSmIM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mLovw58QiZc934XjTvhl347lQfmiUaFF8R3eeJO9vOeFeVWwI1QRrD63Jmn7KubSOxxMnmK3PmDdV9LQzrIndS6sk+UmDu0XHGcgR+uKQu/UB8IeK8QYPEneWF5huPYkDKr4TIYjBpzoHVfH1pO4xp78o3qXcTuSlulYbwzY0vA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LA+IpCFE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=E2YSqi90lIez/O7RlRZsStjdw7OW2f3InMQDTsLvFQshy3C+FX/CRMo279Ax9y1OMAO0u2btGeV2KpkF8WDnqHasay1uwWZzA5jZ1DuVAz+B+X31pwOo+NmZIGvXXyjauUOFu2ubxCVHpkB7g1hQUD2LqnnhZgyCCbjiqZ4aCqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJGP+rsv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LA+IpCFE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94651C113CC;
-	Tue, 16 Apr 2024 01:37:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJGP+rsv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45DB0C113CC;
+	Tue, 16 Apr 2024 01:38:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713231466;
-	bh=kFiaPFZDEMjoy1H4YsZGc8ijSjXurlg/TvIyJ6mCWXc=;
+	s=k20201202; t=1713231482;
+	bh=lOP9LstyJ30xe3QZOPvciTPmbvFGAJMaPFqQjmdSmIM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LA+IpCFEV1qFmh9GJjV2rup4G5JxaeJHYRPlWNALYPCWakhvR2UYovFiVmPV5gxjK
-	 qQ43T8LRRg8g4Unhxh2LRQzzszk0UolKRPLu8XjimHCVY9HCgYLXgqMJwptofPZgQI
-	 ygfNoEOkAD03qqJzCvqRTKK+1RzT2CB6yW5DbVzXi+BpZLlGd+x/Dx8HRNl1GMasf6
-	 kB6aDsYVpoV9DYLUtY4qMdqahvjENtM0Fjfbx+wjK+VoMQsSb6hfUH3tbXJu7Jwzrm
-	 iyDRopcxba8BINLQ0lHZ325eVKXsSHj4ZuVR1j/wKQYfCuH6cSM0flOsp5KxEb9FdI
-	 waZsh1qGt9YDg==
-Date: Mon, 15 Apr 2024 18:37:46 -0700
-Subject: [PATCH 07/17] xfs: implement live updates for directory repairs
+	b=UJGP+rsvcxG/7xrX0yhyt2geYijm16EVoB8TbeVzvqMmg6JF8mYE0VJSA5PO0RgLa
+	 JJg3EUdlGkz8xBbPp4lIKblihVBnYtoaqE1/wWRfK9cqkal4itcZasqZEywcOiaeO4
+	 FHOUJS6c+6RS4L0WfxTSF+aAArJSxdny29QF8NNgaUJ7Kp2vQsiTS94t4Lygty9cyc
+	 +kj0t/AKTNXUeJXz8JgvaBUvOM5zOC0V3yLMP3FRFO4Za+T0O2/j+bqsn5DW7snNjx
+	 JwMHVWBsbPJH18EEx7LyT8TToPiPDbFHIQEsn2xghe4GSY1S97XDK0LB1A3bPQ/uEo
+	 N0ICXC03zKiXg==
+Date: Mon, 15 Apr 2024 18:38:01 -0700
+Subject: [PATCH 08/17] xfs: replay unlocked parent pointer updates that accrue
+ during xattr repair
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, allison.henderson@oracle.com,
  hch@infradead.org, linux-xfs@vger.kernel.org, catherine.hoang@oracle.com,
  hch@lst.de
-Message-ID: <171323029298.253068.12218798352368474899.stgit@frogsfrogsfrogs>
+Message-ID: <171323029314.253068.15685421835444086157.stgit@frogsfrogsfrogs>
 In-Reply-To: <171323029141.253068.12138115574003345390.stgit@frogsfrogsfrogs>
 References: <171323029141.253068.12138115574003345390.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,373 +49,651 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While we're scanning the filesystem for parent pointers that we can turn
-into dirents, we cannot hold the IOLOCK or ILOCK of the directory being
-repaired.  Therefore, we need to set up a dirent hook so that we can
-keep the temporary directory up to date with the rest of the filesystem.
-Hence we add the ability to *remove* entries from the temporary dir.
+There are a few places where the extended attribute repair code drops
+the ILOCK to apply stashed xattrs to the temporary file.  Although
+setxattr and removexattr are still locked out because we retain our hold
+on the IOLOCK, this doesn't prevent renames from updating parent
+pointers, because the VFS doesn't take i_rwsem on children that are
+being moved.
+
+Therefore, set up a dirent hook to capture parent pointer updates for
+this file, and replay(?) the updates.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/dir_repair.c |  220 +++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/scrub/findparent.c |   10 +-
- fs/xfs/scrub/findparent.h |   10 ++
- fs/xfs/scrub/trace.h      |    2 
- 4 files changed, 219 insertions(+), 23 deletions(-)
+ fs/xfs/scrub/attr_repair.c |  438 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/trace.h       |   73 +++++++
+ 2 files changed, 509 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-index 4e6b0e88b9960..60e31da4451e8 100644
---- a/fs/xfs/scrub/dir_repair.c
-+++ b/fs/xfs/scrub/dir_repair.c
-@@ -85,6 +85,12 @@
-  * other threads.
-  */
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+index 48443e88e298b..87f6c9cb54eb6 100644
+--- a/fs/xfs/scrub/attr_repair.c
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -96,6 +96,52 @@ struct xrep_xattr {
  
-+/* Create a dirent in the tempdir. */
-+#define XREP_DIRENT_ADD		(1)
+ 	/* Number of attributes that we are salvaging. */
+ 	unsigned long long	attrs_found;
 +
-+/* Remove a dirent from the tempdir. */
-+#define XREP_DIRENT_REMOVE	(2)
++	/* Can we flush stashed attrs to the tempfile? */
++	bool			can_flush;
 +
- /* Directory entry to be restored in the new directory. */
- struct xrep_dirent {
- 	/* Cookie for retrieval of the dirent name. */
-@@ -98,6 +104,9 @@ struct xrep_dirent {
- 
- 	/* File type of the dirent. */
- 	uint8_t			ftype;
++	/* Did the live update fail, and hence the repair is now out of date? */
++	bool			live_update_aborted;
 +
-+	/* XREP_DIRENT_{ADD,REMOVE} */
++	/* Lock protecting parent pointer updates */
++	struct mutex		lock;
++
++	/* Fixed-size array of xrep_xattr_pptr structures. */
++	struct xfarray		*pptr_recs;
++
++	/* Blobs containing parent pointer names. */
++	struct xfblob		*pptr_names;
++
++	/* Hook to capture parent pointer updates. */
++	struct xfs_dir_hook	dhook;
++
++	/* Scratch buffer for capturing parent pointers. */
++	struct xfs_da_args	pptr_args;
++
++	/* Name buffer */
++	struct xfs_name		xname;
++	char			namebuf[MAXNAMELEN];
++};
++
++/* Create a parent pointer in the tempfile. */
++#define XREP_XATTR_PPTR_ADD	(1)
++
++/* Remove a parent pointer from the tempfile. */
++#define XREP_XATTR_PPTR_REMOVE	(2)
++
++/* A stashed parent pointer update. */
++struct xrep_xattr_pptr {
++	/* Cookie for retrieval of the pptr name. */
++	xfblob_cookie		name_cookie;
++
++	/* Parent pointer record. */
++	struct xfs_parent_rec	pptr_rec;
++
++	/* Length of the pptr name. */
++	uint8_t			namelen;
++
++	/* XREP_XATTR_PPTR_{ADD,REMOVE} */
 +	uint8_t			action;
  };
  
- /*
-@@ -339,6 +348,7 @@ xrep_dir_stash_createname(
- 	xfs_ino_t		ino)
+ /* Set up to recreate the extended attributes. */
+@@ -103,6 +149,9 @@ int
+ xrep_setup_xattr(
+ 	struct xfs_scrub	*sc)
  {
- 	struct xrep_dirent	dirent = {
-+		.action		= XREP_DIRENT_ADD,
- 		.ino		= ino,
- 		.namelen	= name->len,
- 		.ftype		= name->type,
-@@ -354,6 +364,33 @@ xrep_dir_stash_createname(
- 	return xfarray_append(rd->dir_entries, &dirent);
++	if (xfs_has_parent(sc->mp))
++		xchk_fsgates_enable(sc, XCHK_FSGATES_DIRENTS);
++
+ 	return xrep_tempfile_create(sc, S_IFREG);
+ }
+ 
+@@ -711,11 +760,122 @@ xrep_xattr_want_flush_stashed(
+ {
+ 	unsigned long long	bytes;
+ 
++	if (!rx->can_flush)
++		return false;
++
+ 	bytes = xfarray_bytes(rx->xattr_records) +
+ 		xfblob_bytes(rx->xattr_blobs);
+ 	return bytes > XREP_XATTR_MAX_STASH_BYTES;
  }
  
 +/*
-+ * Remember that we want to remove a dirent from the tempdir.  These stashed
-+ * actions will be replayed later.
++ * Did we observe rename changing parent pointer xattrs while we were flushing
++ * salvaged attrs?
++ */
++static inline bool
++xrep_xattr_saw_pptr_conflict(
++	struct xrep_xattr	*rx)
++{
++	bool			ret;
++
++	ASSERT(rx->can_flush);
++
++	if (!xfs_has_parent(rx->sc->mp))
++		return false;
++
++	xfs_assert_ilocked(rx->sc->ip, XFS_ILOCK_EXCL);
++
++	mutex_lock(&rx->lock);
++	ret = xfarray_bytes(rx->pptr_recs) > 0;
++	mutex_unlock(&rx->lock);
++
++	return ret;
++}
++
++/*
++ * Reset the entire repair state back to initial conditions, now that we've
++ * detected a parent pointer update to the attr structure while we were
++ * flushing salvaged attrs.  See the locking notes in dir_repair.c for more
++ * information on why this is all necessary.
 + */
 +STATIC int
-+xrep_dir_stash_removename(
-+	struct xrep_dir		*rd,
-+	const struct xfs_name	*name,
-+	xfs_ino_t		ino)
++xrep_xattr_full_reset(
++	struct xrep_xattr	*rx)
 +{
-+	struct xrep_dirent	dirent = {
-+		.action		= XREP_DIRENT_REMOVE,
-+		.ino		= ino,
++	struct xfs_scrub	*sc = rx->sc;
++	struct xfs_attr_sf_hdr	*hdr;
++	struct xfs_ifork	*ifp = &sc->tempip->i_af;
++	int			error;
++
++	trace_xrep_xattr_full_reset(sc->ip, sc->tempip);
++
++	/* The temporary file's data fork had better not be in btree format. */
++	if (sc->tempip->i_df.if_format == XFS_DINODE_FMT_BTREE) {
++		ASSERT(0);
++		return -EIO;
++	}
++
++	/*
++	 * We begin in transaction context with sc->ip ILOCKed but not joined
++	 * to the transaction.  To reset to the initial state, we must hold
++	 * sc->ip's ILOCK to prevent rename from updating parent pointer
++	 * information and the tempfile's ILOCK to clear its contents.
++	 */
++	xchk_iunlock(rx->sc, XFS_ILOCK_EXCL);
++	xrep_tempfile_ilock_both(sc);
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
++
++	/*
++	 * Free all the blocks of the attr fork of the temp file, and reset
++	 * it back to local format.
++	 */
++	if (xfs_ifork_has_extents(&sc->tempip->i_af)) {
++		error = xrep_reap_ifork(sc, sc->tempip, XFS_ATTR_FORK);
++		if (error)
++			return error;
++
++		ASSERT(ifp->if_bytes == 0);
++		ifp->if_format = XFS_DINODE_FMT_LOCAL;
++		xfs_idata_realloc(sc->tempip, sizeof(*hdr), XFS_ATTR_FORK);
++	}
++
++	/* Reinitialize the attr fork to an empty shortform structure. */
++	hdr = ifp->if_data;
++	memset(hdr, 0, sizeof(*hdr));
++	hdr->totsize = cpu_to_be16(sizeof(*hdr));
++	xfs_trans_log_inode(sc->tp, sc->tempip, XFS_ILOG_CORE | XFS_ILOG_ADATA);
++
++	/*
++	 * Roll this transaction to commit our reset ondisk.  The tempfile
++	 * should no longer be joined to the transaction, so we drop its ILOCK.
++	 * This should leave us in transaction context with sc->ip ILOCKed but
++	 * not joined to the transaction.
++	 */
++	error = xrep_roll_trans(sc);
++	if (error)
++		return error;
++	xrep_tempfile_iunlock(sc);
++
++	/*
++	 * Erase any accumulated parent pointer updates now that we've erased
++	 * the tempfile's attr fork.  We're resetting the entire repair state
++	 * back to where we were initially, except now we won't flush salvaged
++	 * xattrs until the very end.
++	 */
++	mutex_lock(&rx->lock);
++	xfarray_truncate(rx->pptr_recs);
++	xfblob_truncate(rx->pptr_names);
++	mutex_unlock(&rx->lock);
++
++	rx->can_flush = false;
++	rx->attrs_found = 0;
++
++	ASSERT(xfarray_bytes(rx->xattr_records) == 0);
++	ASSERT(xfblob_bytes(rx->xattr_blobs) == 0);
++	return 0;
++}
++
+ /* Extract as many attribute keys and values as we can. */
+ STATIC int
+ xrep_xattr_recover(
+@@ -730,6 +890,7 @@ xrep_xattr_recover(
+ 	int			nmap;
+ 	int			error;
+ 
++restart:
+ 	/*
+ 	 * Iterate each xattr leaf block in the attr fork to scan them for any
+ 	 * attributes that we might salvage.
+@@ -768,6 +929,14 @@ xrep_xattr_recover(
+ 				error = xrep_xattr_flush_stashed(rx);
+ 				if (error)
+ 					return error;
++
++				if (xrep_xattr_saw_pptr_conflict(rx)) {
++					error = xrep_xattr_full_reset(rx);
++					if (error)
++						return error;
++
++					goto restart;
++				}
+ 			}
+ 		}
+ 	}
+@@ -927,6 +1096,180 @@ xrep_xattr_salvage_attributes(
+ 	return xrep_xattr_flush_stashed(rx);
+ }
+ 
++/*
++ * Add this stashed incore parent pointer to the temporary file.  The caller
++ * must hold the tempdir's IOLOCK, must not hold any ILOCKs, and must not be in
++ * transaction context.
++ */
++STATIC int
++xrep_xattr_replay_pptr_update(
++	struct xrep_xattr		*rx,
++	const struct xfs_name		*xname,
++	struct xrep_xattr_pptr		*pptr)
++{
++	struct xfs_scrub		*sc = rx->sc;
++	int				error;
++
++	switch (pptr->action) {
++	case XREP_XATTR_PPTR_ADD:
++		/* Create parent pointer. */
++		trace_xrep_xattr_replay_parentadd(sc->tempip, xname,
++				&pptr->pptr_rec);
++
++		error = xfs_parent_set(sc->tempip, sc->ip->i_ino, xname,
++				&pptr->pptr_rec, &rx->pptr_args);
++		ASSERT(error != -EEXIST);
++		return error;
++	case XREP_XATTR_PPTR_REMOVE:
++		/* Remove parent pointer. */
++		trace_xrep_xattr_replay_parentremove(sc->tempip, xname,
++				&pptr->pptr_rec);
++
++		error = xfs_parent_unset(sc->tempip, sc->ip->i_ino, xname,
++				&pptr->pptr_rec, &rx->pptr_args);
++		ASSERT(error != -ENOATTR);
++		return error;
++	}
++
++	ASSERT(0);
++	return -EIO;
++}
++
++/*
++ * Flush stashed parent pointer updates that have been recorded by the scanner.
++ * This is done to reduce the memory requirements of the xattr rebuild, since
++ * files can have a lot of hardlinks and the fs can be busy.
++ *
++ * Caller must not hold transactions or ILOCKs.  Caller must hold the tempfile
++ * IOLOCK.
++ */
++STATIC int
++xrep_xattr_replay_pptr_updates(
++	struct xrep_xattr	*rx)
++{
++	xfarray_idx_t		array_cur;
++	int			error;
++
++	mutex_lock(&rx->lock);
++	foreach_xfarray_idx(rx->pptr_recs, array_cur) {
++		struct xrep_xattr_pptr	pptr;
++
++		error = xfarray_load(rx->pptr_recs, array_cur, &pptr);
++		if (error)
++			goto out_unlock;
++
++		error = xfblob_loadname(rx->pptr_names, pptr.name_cookie,
++				&rx->xname, pptr.namelen);
++		if (error)
++			goto out_unlock;
++		mutex_unlock(&rx->lock);
++
++		error = xrep_xattr_replay_pptr_update(rx, &rx->xname, &pptr);
++		if (error)
++			return error;
++
++		mutex_lock(&rx->lock);
++	}
++
++	/* Empty out both arrays now that we've added the entries. */
++	xfarray_truncate(rx->pptr_recs);
++	xfblob_truncate(rx->pptr_names);
++	mutex_unlock(&rx->lock);
++	return 0;
++out_unlock:
++	mutex_unlock(&rx->lock);
++	return error;
++}
++
++/*
++ * Remember that we want to create a parent pointer in the tempfile.  These
++ * stashed actions will be replayed later.
++ */
++STATIC int
++xrep_xattr_stash_parentadd(
++	struct xrep_xattr	*rx,
++	const struct xfs_name	*name,
++	const struct xfs_inode	*dp)
++{
++	struct xrep_xattr_pptr	pptr = {
++		.action		= XREP_XATTR_PPTR_ADD,
 +		.namelen	= name->len,
-+		.ftype		= name->type,
 +	};
 +	int			error;
 +
-+	trace_xrep_dir_stash_removename(rd->sc->tempip, name, ino);
++	trace_xrep_xattr_stash_parentadd(rx->sc->tempip, dp, name);
 +
-+	error = xfblob_storename(rd->dir_names, &dirent.name_cookie, name);
++	xfs_inode_to_parent_rec(&pptr.pptr_rec, dp);
++	error = xfblob_storename(rx->pptr_names, &pptr.name_cookie, name);
 +	if (error)
 +		return error;
 +
-+	return xfarray_append(rd->dir_entries, &dirent);
++	return xfarray_append(rx->pptr_recs, &pptr);
 +}
 +
- /* Allocate an in-core record to hold entries while we rebuild the dir data. */
- STATIC int
- xrep_dir_salvage_entry(
-@@ -705,6 +742,43 @@ xrep_dir_replay_createname(
- 	return xfs_dir2_node_addname(&rd->args);
- }
- 
-+/* Replay a stashed removename onto the temporary directory. */
-+STATIC int
-+xrep_dir_replay_removename(
-+	struct xrep_dir		*rd,
-+	const struct xfs_name	*name,
-+	xfs_extlen_t		total)
-+{
-+	struct xfs_inode	*dp = rd->args.dp;
-+	bool			is_block, is_leaf;
-+	int			error;
-+
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-+
-+	xrep_dir_init_args(rd, dp, name);
-+	rd->args.op_flags = 0;
-+	rd->args.total = total;
-+
-+	trace_xrep_dir_replay_removename(dp, name, 0);
-+
-+	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+		return xfs_dir2_sf_removename(&rd->args);
-+
-+	error = xfs_dir2_isblock(&rd->args, &is_block);
-+	if (error)
-+		return error;
-+	if (is_block)
-+		return xfs_dir2_block_removename(&rd->args);
-+
-+	error = xfs_dir2_isleaf(&rd->args, &is_leaf);
-+	if (error)
-+		return error;
-+	if (is_leaf)
-+		return xfs_dir2_leaf_removename(&rd->args);
-+
-+	return xfs_dir2_node_removename(&rd->args);
-+}
-+
- /*
-  * Add this stashed incore directory entry to the temporary directory.
-  * The caller must hold the tempdir's IOLOCK, must not hold any ILOCKs, and
-@@ -732,26 +806,64 @@ xrep_dir_replay_update(
- 	xrep_tempfile_ilock(rd->sc);
- 	xfs_trans_ijoin(rd->sc->tp, rd->sc->tempip, 0);
- 
--	/*
--	 * Create a replacement dirent in the temporary directory.  Note that
--	 * _createname doesn't check for existing entries.  There shouldn't be
--	 * any in the temporary dir, but we'll verify this in debug mode.
--	 */
-+	switch (dirent->action) {
-+	case XREP_DIRENT_ADD:
-+		/*
-+		 * Create a replacement dirent in the temporary directory.
-+		 * Note that _createname doesn't check for existing entries.
-+		 * There shouldn't be any in the temporary dir, but we'll
-+		 * verify this in debug mode.
-+		 */
- #ifdef DEBUG
--	error = xchk_dir_lookup(rd->sc, rd->sc->tempip, xname, &ino);
--	if (error != -ENOENT) {
--		ASSERT(error != -ENOENT);
-+		error = xchk_dir_lookup(rd->sc, rd->sc->tempip, xname, &ino);
-+		if (error != -ENOENT) {
-+			ASSERT(error != -ENOENT);
-+			goto out_cancel;
-+		}
-+#endif
-+
-+		error = xrep_dir_replay_createname(rd, xname, dirent->ino,
-+				resblks);
-+		if (error)
-+			goto out_cancel;
-+
-+		if (xname->type == XFS_DIR3_FT_DIR)
-+			rd->subdirs++;
-+		rd->dirents++;
-+		break;
-+	case XREP_DIRENT_REMOVE:
-+		/*
-+		 * Remove a dirent from the temporary directory.  Note that
-+		 * _removename doesn't check the inode target of the exist
-+		 * entry.  There should be a perfect match in the temporary
-+		 * dir, but we'll verify this in debug mode.
-+		 */
-+#ifdef DEBUG
-+		error = xchk_dir_lookup(rd->sc, rd->sc->tempip, xname, &ino);
-+		if (error) {
-+			ASSERT(error != 0);
-+			goto out_cancel;
-+		}
-+		if (ino != dirent->ino) {
-+			ASSERT(ino == dirent->ino);
-+			error = -EIO;
-+			goto out_cancel;
-+		}
-+#endif
-+
-+		error = xrep_dir_replay_removename(rd, xname, resblks);
-+		if (error)
-+			goto out_cancel;
-+
-+		if (xname->type == XFS_DIR3_FT_DIR)
-+			rd->subdirs--;
-+		rd->dirents--;
-+		break;
-+	default:
-+		ASSERT(0);
-+		error = -EIO;
- 		goto out_cancel;
- 	}
--#endif
--
--	error = xrep_dir_replay_createname(rd, xname, dirent->ino, resblks);
--	if (error)
--		goto out_cancel;
--
--	if (xname->type == XFS_DIR3_FT_DIR)
--		rd->subdirs++;
--	rd->dirents++;
- 
- 	/* Commit and unlock. */
- 	error = xrep_trans_commit(rd->sc);
-@@ -1284,6 +1396,71 @@ xrep_dir_scan_dirtree(
- 	return 0;
- }
- 
 +/*
-+ * Capture dirent updates being made by other threads which are relevant to the
-+ * directory being repaired.
++ * Remember that we want to remove a parent pointer from the tempfile.  These
++ * stashed actions will be replayed later.
 + */
 +STATIC int
-+xrep_dir_live_update(
++xrep_xattr_stash_parentremove(
++	struct xrep_xattr	*rx,
++	const struct xfs_name	*name,
++	const struct xfs_inode	*dp)
++{
++	struct xrep_xattr_pptr	pptr = {
++		.action		= XREP_XATTR_PPTR_REMOVE,
++		.namelen	= name->len,
++	};
++	int			error;
++
++	trace_xrep_xattr_stash_parentremove(rx->sc->tempip, dp, name);
++
++	xfs_inode_to_parent_rec(&pptr.pptr_rec, dp);
++	error = xfblob_storename(rx->pptr_names, &pptr.name_cookie, name);
++	if (error)
++		return error;
++
++	return xfarray_append(rx->pptr_recs, &pptr);
++}
++
++/*
++ * Capture dirent updates being made by other threads.  We will have to replay
++ * the parent pointer updates before exchanging attr forks.
++ */
++STATIC int
++xrep_xattr_live_dirent_update(
 +	struct notifier_block		*nb,
 +	unsigned long			action,
 +	void				*data)
 +{
 +	struct xfs_dir_update_params	*p = data;
-+	struct xrep_dir			*rd;
++	struct xrep_xattr		*rx;
 +	struct xfs_scrub		*sc;
-+	int				error = 0;
++	int				error;
 +
-+	rd = container_of(nb, struct xrep_dir, pscan.dhook.dirent_hook.nb);
-+	sc = rd->sc;
-+
-+	/*
-+	 * This thread updated a child dirent in the directory that we're
-+	 * rebuilding.  Stash the update for replay against the temporary
-+	 * directory.
-+	 */
-+	if (p->dp->i_ino == sc->ip->i_ino &&
-+	    xchk_iscan_want_live_update(&rd->pscan.iscan, p->ip->i_ino)) {
-+		mutex_lock(&rd->pscan.lock);
-+		if (p->delta > 0)
-+			error = xrep_dir_stash_createname(rd, p->name,
-+					p->ip->i_ino);
-+		else
-+			error = xrep_dir_stash_removename(rd, p->name,
-+					p->ip->i_ino);
-+		mutex_unlock(&rd->pscan.lock);
-+		if (error)
-+			goto out_abort;
-+	}
++	rx = container_of(nb, struct xrep_xattr, dhook.dirent_hook.nb);
++	sc = rx->sc;
 +
 +	/*
-+	 * This thread updated another directory's child dirent that points to
-+	 * the directory that we're rebuilding, so remember the new dotdot
-+	 * target.
++	 * This thread updated a dirent that points to the file that we're
++	 * repairing, so stash the update for replay against the temporary
++	 * file.
 +	 */
-+	if (p->ip->i_ino == sc->ip->i_ino &&
-+	    xchk_iscan_want_live_update(&rd->pscan.iscan, p->dp->i_ino)) {
-+		if (p->delta > 0) {
-+			trace_xrep_dir_stash_createname(sc->tempip,
-+					&xfs_name_dotdot,
-+					p->dp->i_ino);
++	if (p->ip->i_ino != sc->ip->i_ino)
++		return NOTIFY_DONE;
 +
-+			xrep_findparent_scan_found(&rd->pscan, p->dp->i_ino);
-+		} else {
-+			trace_xrep_dir_stash_removename(sc->tempip,
-+					&xfs_name_dotdot,
-+					rd->pscan.parent_ino);
-+
-+			xrep_findparent_scan_found(&rd->pscan, NULLFSINO);
-+		}
-+	}
-+
-+	return NOTIFY_DONE;
-+out_abort:
-+	xchk_iscan_abort(&rd->pscan.iscan);
++	mutex_lock(&rx->lock);
++	if (p->delta > 0)
++		error = xrep_xattr_stash_parentadd(rx, p->name, p->dp);
++	else
++		error = xrep_xattr_stash_parentremove(rx, p->name, p->dp);
++	if (error)
++		rx->live_update_aborted = true;
++	mutex_unlock(&rx->lock);
 +	return NOTIFY_DONE;
 +}
 +
  /*
-  * Free all the directory blocks and reset the data fork.  The caller must
-  * join the inode to the transaction.  This function returns with the inode
-@@ -1633,6 +1810,9 @@ xrep_dir_rebuild_tree(
+  * Prepare both inodes' attribute forks for an exchange.  Promote the tempfile
+  * from short format to leaf format, and if the file being repaired has a short
+@@ -1030,6 +1373,45 @@ xrep_xattr_swap(
+ 	return xrep_tempexch_contents(sc, tx);
+ }
+ 
++/*
++ * Finish replaying stashed parent pointer updates, allocate a transaction for
++ * exchanging extent mappings, and take the ILOCKs of both files before we
++ * commit the new extended attribute structure.
++ */
++STATIC int
++xrep_xattr_finalize_tempfile(
++	struct xrep_xattr	*rx)
++{
++	struct xfs_scrub	*sc = rx->sc;
++	int			error;
++
++	if (!xfs_has_parent(sc->mp))
++		return xrep_tempexch_trans_alloc(sc, XFS_ATTR_FORK, &rx->tx);
++
++	/*
++	 * Repair relies on the ILOCK to quiesce all possible xattr updates.
++	 * Replay all queued parent pointer updates into the tempfile before
++	 * exchanging the contents, even if that means dropping the ILOCKs and
++	 * the transaction.
++	 */
++	do {
++		error = xrep_xattr_replay_pptr_updates(rx);
++		if (error)
++			return error;
++
++		error = xrep_tempexch_trans_alloc(sc, XFS_ATTR_FORK, &rx->tx);
++		if (error)
++			return error;
++
++		if (xfarray_length(rx->pptr_recs) == 0)
++			break;
++
++		xchk_trans_cancel(sc);
++		xrep_tempfile_iunlock_both(sc);
++	} while (!xchk_should_terminate(sc, &error));
++	return error;
++}
++
+ /*
+  * Exchange the new extended attribute data (which we created in the tempfile)
+  * with the file being repaired.
+@@ -1082,8 +1464,12 @@ xrep_xattr_rebuild_tree(
  	if (error)
  		return error;
  
-+	if (xchk_iscan_aborted(&rd->pscan.iscan))
-+		return -ECANCELED;
-+
- 	/*
- 	 * Exchange the tempdir's data fork with the file being repaired.  This
- 	 * recreates the transaction and re-takes the ILOCK in the scrub
-@@ -1688,7 +1868,11 @@ xrep_dir_setup_scan(
+-	/* Allocate exchange transaction and lock both inodes. */
+-	error = xrep_tempexch_trans_alloc(rx->sc, XFS_ATTR_FORK, &rx->tx);
++	/*
++	 * Allocate transaction, lock inodes, and make sure that we've replayed
++	 * all the stashed parent pointer updates to the temp file.  After this
++	 * point, we're ready to exchange attr fork mappings.
++	 */
++	error = xrep_xattr_finalize_tempfile(rx);
  	if (error)
- 		goto out_xfarray;
+ 		return error;
  
--	error = xrep_findparent_scan_start(sc, &rd->pscan);
-+	if (xfs_has_parent(sc->mp))
-+		error = __xrep_findparent_scan_start(sc, &rd->pscan,
-+				xrep_dir_live_update);
-+	else
-+		error = xrep_findparent_scan_start(sc, &rd->pscan);
- 	if (error)
- 		goto out_xfblob;
- 
-diff --git a/fs/xfs/scrub/findparent.c b/fs/xfs/scrub/findparent.c
-index 712dd73e4789f..c78422ad757bf 100644
---- a/fs/xfs/scrub/findparent.c
-+++ b/fs/xfs/scrub/findparent.c
-@@ -238,9 +238,10 @@ xrep_findparent_live_update(
-  * will be called when there is a dotdot update for the inode being repaired.
-  */
- int
--xrep_findparent_scan_start(
-+__xrep_findparent_scan_start(
- 	struct xfs_scrub		*sc,
--	struct xrep_parent_scan_info	*pscan)
-+	struct xrep_parent_scan_info	*pscan,
-+	notifier_fn_t			custom_fn)
+@@ -1124,8 +1510,15 @@ STATIC void
+ xrep_xattr_teardown(
+ 	struct xrep_xattr	*rx)
  {
- 	int				error;
++	if (xfs_has_parent(rx->sc->mp))
++		xfs_dir_hook_del(rx->sc->mp, &rx->dhook);
++	if (rx->pptr_names)
++		xfblob_destroy(rx->pptr_names);
++	if (rx->pptr_recs)
++		xfarray_destroy(rx->pptr_recs);
+ 	xfblob_destroy(rx->xattr_blobs);
+ 	xfarray_destroy(rx->xattr_records);
++	mutex_destroy(&rx->lock);
+ 	kfree(rx);
+ }
  
-@@ -262,7 +263,10 @@ xrep_findparent_scan_start(
- 	 * ILOCK, which means that any in-progress inode updates will finish
- 	 * before we can scan the inode.
- 	 */
--	xfs_dir_hook_setup(&pscan->dhook, xrep_findparent_live_update);
-+	if (custom_fn)
-+		xfs_dir_hook_setup(&pscan->dhook, custom_fn);
-+	else
-+		xfs_dir_hook_setup(&pscan->dhook, xrep_findparent_live_update);
- 	error = xfs_dir_hook_add(sc->mp, &pscan->dhook);
+@@ -1144,6 +1537,10 @@ xrep_xattr_setup_scan(
+ 	if (!rx)
+ 		return -ENOMEM;
+ 	rx->sc = sc;
++	rx->can_flush = true;
++	rx->xname.name = rx->namebuf;
++
++	mutex_init(&rx->lock);
+ 
+ 	/*
+ 	 * Allocate enough memory to handle loading local attr values from the
+@@ -1171,11 +1568,43 @@ xrep_xattr_setup_scan(
  	if (error)
- 		goto out_iscan;
-diff --git a/fs/xfs/scrub/findparent.h b/fs/xfs/scrub/findparent.h
-index 501f99d3164ed..d998c7a88152c 100644
---- a/fs/xfs/scrub/findparent.h
-+++ b/fs/xfs/scrub/findparent.h
-@@ -24,8 +24,14 @@ struct xrep_parent_scan_info {
- 	bool			lookup_parent;
- };
+ 		goto out_keys;
  
--int xrep_findparent_scan_start(struct xfs_scrub *sc,
--		struct xrep_parent_scan_info *pscan);
-+int __xrep_findparent_scan_start(struct xfs_scrub *sc,
-+		struct xrep_parent_scan_info *pscan,
-+		notifier_fn_t custom_fn);
-+static inline int xrep_findparent_scan_start(struct xfs_scrub *sc,
-+		struct xrep_parent_scan_info *pscan)
-+{
-+	return __xrep_findparent_scan_start(sc, pscan, NULL);
-+}
- int xrep_findparent_scan(struct xrep_parent_scan_info *pscan);
- void xrep_findparent_scan_teardown(struct xrep_parent_scan_info *pscan);
++	if (xfs_has_parent(sc->mp)) {
++		ASSERT(sc->flags & XCHK_FSGATES_DIRENTS);
++
++		descr = xchk_xfile_ino_descr(sc,
++				"xattr retained parent pointer entries");
++		error = xfarray_create(descr, 0,
++				sizeof(struct xrep_xattr_pptr),
++				&rx->pptr_recs);
++		kfree(descr);
++		if (error)
++			goto out_values;
++
++		descr = xchk_xfile_ino_descr(sc,
++				"xattr retained parent pointer names");
++		error = xfblob_create(descr, &rx->pptr_names);
++		kfree(descr);
++		if (error)
++			goto out_pprecs;
++
++		xfs_dir_hook_setup(&rx->dhook, xrep_xattr_live_dirent_update);
++		error = xfs_dir_hook_add(sc->mp, &rx->dhook);
++		if (error)
++			goto out_ppnames;
++	}
++
+ 	*rxp = rx;
+ 	return 0;
++out_ppnames:
++	xfblob_destroy(rx->pptr_names);
++out_pprecs:
++	xfarray_destroy(rx->pptr_recs);
++out_values:
++	xfblob_destroy(rx->xattr_blobs);
+ out_keys:
+ 	xfarray_destroy(rx->xattr_records);
+ out_rx:
++	mutex_destroy(&rx->lock);
+ 	kfree(rx);
+ 	return error;
+ }
+@@ -1212,6 +1641,11 @@ xrep_xattr(
+ 	if (error)
+ 		goto out_scan;
  
++	if (rx->live_update_aborted) {
++		error = -EIO;
++		goto out_scan;
++	}
++
+ 	/* Last chance to abort before we start committing fixes. */
+ 	if (xchk_should_terminate(sc, &error))
+ 		goto out_scan;
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 4b968df3d840c..64db413b18884 100644
+index 64db413b18884..68532f686eeb1 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -2692,6 +2692,8 @@ DEFINE_XREP_DIRENT_EVENT(xrep_dir_salvage_entry);
- DEFINE_XREP_DIRENT_EVENT(xrep_dir_stash_createname);
- DEFINE_XREP_DIRENT_EVENT(xrep_dir_replay_createname);
- DEFINE_XREP_DIRENT_EVENT(xrep_adoption_reparent);
-+DEFINE_XREP_DIRENT_EVENT(xrep_dir_stash_removename);
-+DEFINE_XREP_DIRENT_EVENT(xrep_dir_replay_removename);
+@@ -2602,6 +2602,43 @@ DEFINE_EVENT(xrep_xattr_class, name, \
+ 	TP_ARGS(ip, arg_ip))
+ DEFINE_XREP_XATTR_EVENT(xrep_xattr_rebuild_tree);
+ DEFINE_XREP_XATTR_EVENT(xrep_xattr_reset_fork);
++DEFINE_XREP_XATTR_EVENT(xrep_xattr_full_reset);
++
++DECLARE_EVENT_CLASS(xrep_xattr_pptr_scan_class,
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_inode *dp,
++		 const struct xfs_name *name),
++	TP_ARGS(ip, dp, name),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_ino_t, parent_ino)
++		__field(unsigned int, parent_gen)
++		__field(unsigned int, namelen)
++		__dynamic_array(char, name, name->len)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->parent_ino = dp->i_ino;
++		__entry->parent_gen = VFS_IC(dp)->i_generation;
++		__entry->namelen = name->len;
++		memcpy(__get_str(name), name->name, name->len);
++	),
++	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->parent_ino,
++		  __entry->parent_gen,
++		  __entry->namelen,
++		  __get_str(name))
++)
++#define DEFINE_XREP_XATTR_PPTR_SCAN_EVENT(name) \
++DEFINE_EVENT(xrep_xattr_pptr_scan_class, name, \
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_inode *dp, \
++		 const struct xfs_name *name), \
++	TP_ARGS(ip, dp, name))
++DEFINE_XREP_XATTR_PPTR_SCAN_EVENT(xrep_xattr_stash_parentadd);
++DEFINE_XREP_XATTR_PPTR_SCAN_EVENT(xrep_xattr_stash_parentremove);
  
- DECLARE_EVENT_CLASS(xrep_adoption_class,
- 	TP_PROTO(struct xfs_inode *dp, struct xfs_inode *ip, bool moved),
+ TRACE_EVENT(xrep_dir_recover_dirblock,
+ 	TP_PROTO(struct xfs_inode *dp, xfs_dablk_t dabno, uint32_t magic,
+@@ -2748,6 +2785,42 @@ DEFINE_XREP_PARENT_SALVAGE_EVENT(xrep_dir_salvaged_parent);
+ DEFINE_XREP_PARENT_SALVAGE_EVENT(xrep_findparent_dirent);
+ DEFINE_XREP_PARENT_SALVAGE_EVENT(xrep_findparent_from_dcache);
+ 
++DECLARE_EVENT_CLASS(xrep_pptr_class,
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_name *name,
++		 const struct xfs_parent_rec *pptr),
++	TP_ARGS(ip, name, pptr),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_ino_t, parent_ino)
++		__field(unsigned int, parent_gen)
++		__field(unsigned int, namelen)
++		__dynamic_array(char, name, name->len)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->parent_ino = be64_to_cpu(pptr->p_ino);
++		__entry->parent_gen = be32_to_cpu(pptr->p_gen);
++		__entry->namelen = name->len;
++		memcpy(__get_str(name), name->name, name->len);
++	),
++	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->parent_ino,
++		  __entry->parent_gen,
++		  __entry->namelen,
++		  __get_str(name))
++)
++#define DEFINE_XREP_PPTR_EVENT(name) \
++DEFINE_EVENT(xrep_pptr_class, name, \
++	TP_PROTO(struct xfs_inode *ip, const struct xfs_name *name, \
++		 const struct xfs_parent_rec *pptr), \
++	TP_ARGS(ip, name, pptr))
++DEFINE_XREP_PPTR_EVENT(xrep_xattr_replay_parentadd);
++DEFINE_XREP_PPTR_EVENT(xrep_xattr_replay_parentremove);
++
+ TRACE_EVENT(xrep_nlinks_set_record,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino,
+ 		 const struct xchk_nlink *obs),
 
