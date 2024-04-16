@@ -1,70 +1,70 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A0E9139D17
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 20:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7860F13A87C
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 20:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713299062; cv=none; b=ef/qxVC0/uYheFVzLBLZhatRR2qZ27Um0HMfsaOBqnh+2NNzTtq+1ok9FfHYdvdLnpCCe1LCr/oXfl3VT8rOxBR73cRZp7PuBUQycUiKI9UG0xyhOLwXLE99fH9d7PXwP8Y1BXwffDtKOGWVNhz1I/ahxkOOXl1RMXuJWiPU2oc=
+	t=1713299062; cv=none; b=GSSZX45qt4X+HmN/DtQqzB+xgGzi+zVb4/ijq9fL3JYWApwspy+qajaJPMZKQHYNycf909xF/564CfXvYR4ahcJEg6XGjnhJEa3h2b48DzdjTowznJtd0lrSbvOOdGaMGUC844bygYfMOElGF9Di+j99tUwBc5fCE8eernQLkzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1713299062; c=relaxed/simple;
-	bh=V/tjt0tdFAghHcu3N6R2wKQczfbxfAL6UGZFpH6Ta2M=;
+	bh=gle7VWmBPznO5lZOFMUP9sBY5Upvq3wZtt2Re6qobO0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dC7UbSCgYQvrGGTt4R/yBGchXsT3bpy5weWHLazVVgMUIamj5pzr9QK90RrB78ykae2wCeyzPJrrdLdJ0gwpO6O2T5JoKmJatKekPfkZEs016SHoUmB9sbh6fKeEesB77mb90QNv7mX7eMNa99DiLsAWgEqqxJny/B00j8J2UEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Z1tdHWei; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=mmBvj8JZUcIfQ8y7cTxz5bxMEKMcUkvJ8/Vi4PXjrHXE8HwuRljAtlB6ri4xmJrLOCapKxtyTth6OpVzZF3fTEoc+mv0zbWnm8jyIlSDYXXehL0cBTz/H4kN8ct5/QMP48Eve7F7NC8FRL7RHgFAgEiSbCLrzuREVS6HSGu01lY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RcZC3Hi0; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z1tdHWei"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RcZC3Hi0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713299059;
+	s=mimecast20190719; t=1713299060;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=XACU+dctAk7FszI/nYNHcXO931+8urejDikxe9NRQVU=;
-	b=Z1tdHWeiQDyKzcUpiz802usYHAXyTlQBuD26h8U875iebdB4pu1/P5XB9B9fytKHgs8YKc
-	rm9mmpzXGUY7clnLEs4pBz5tb7OkEoszDCOE8XQ88IfPBE1tINB/NF2hT/Z2uM4demPLFT
-	orCtqA9puUiG3sMukFm/8zlmUN2jl98=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=r1nUsgIEwvUZY/Y7sKjmmu2jqnXOcwZbDo8j/OXZNko=;
+	b=RcZC3Hi0pB/Zq5gVa1n5N9L0LlPc1cEbv1hw6c64lzWgV5Hd+/c9SddB4zCGhnwArdALhj
+	9ABdfTy3WJDTYQhc86WdHCFDvCbVIeOnbk0+HEfZbxmYcvtxb0ox8NQywExap7qeFxlwhT
+	CTLdtD+jA7+74RMyX5xRPifATEDB7zM=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-614-X0Gf3ZHENzaStFX3VTyuNQ-1; Tue, 16 Apr 2024 16:24:18 -0400
-X-MC-Unique: X0Gf3ZHENzaStFX3VTyuNQ-1
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-516de13dd48so3113024e87.0
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 13:24:18 -0700 (PDT)
+ us-mta-385-GtaLcJtCMFiEgPw6Qe_o7A-1; Tue, 16 Apr 2024 16:24:19 -0400
+X-MC-Unique: GtaLcJtCMFiEgPw6Qe_o7A-1
+Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-56e573582b9so1597298a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 13:24:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713299057; x=1713903857;
+        d=1e100.net; s=20230601; t=1713299058; x=1713903858;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=XACU+dctAk7FszI/nYNHcXO931+8urejDikxe9NRQVU=;
-        b=qkAcKIl2S/czCXPRTH0L2KFW5Skomn8K/5GeZ8RNwZxFjJtA/6BcyaQmjlxVToPDua
-         30ccD9KOjzmEHOFCbXKLx5JvW9wjzxYzq1iyR5XQlVwCn0ukZ6UXzzcqRVBi/1QIDfPC
-         Sunw22/9O151PFmtv/R8acwnC/dxWmyQ6/oI4iDrcMTzVG7XW9ONGPuNQ8X7gmrDNpss
-         +cgb3bggGU0xdNnAiLyaD8yFolGj+mHezo5bLX0VNQ2Rvsmg6kPHu4nnJNR4AGuC3yCq
-         25kr7gqdl6vIgAnI5c18eCYxZyjaNuQh5+2m/mkxhkX1dRwy5aS3ub91uFLE7FjoL3lP
-         1lRw==
-X-Forwarded-Encrypted: i=1; AJvYcCXBcLgxRG+nA+KznBXjGjD6rreJFRsFTX3l44tdycVyymG0ZstGoliDw3++gveW7SEfLVjIpIa+L8aKNezBvSqSQlmf+S8r4v6r
-X-Gm-Message-State: AOJu0Yy4FFAbGnZjeKYGvP0pQr+ILYF5G3frTk6VhLZt07h9Q7ffll5p
-	OI4/ANcPqPiWUcr2K9waB2nxiprNnHeSwW0ZHXhAz9thHSFEeWwm7CI2KPlXU1qm2LNCdX7glxA
-	8a01EWERG5FCcLQTdBjv/Vpro84WdWLnK92Xh9vWtuismj19sSs50MufDqdDIRmtP
-X-Received: by 2002:ac2:4187:0:b0:518:bdeb:20e1 with SMTP id z7-20020ac24187000000b00518bdeb20e1mr5488855lfh.61.1713299056513;
-        Tue, 16 Apr 2024 13:24:16 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHTZVLOBZHLFPqI1YfCm4gFfiEE9KaYZ2mZnfEFdAFKwttxNw36W/Rqp+RkRlGCDQNtFbiezw==
-X-Received: by 2002:ac2:4187:0:b0:518:bdeb:20e1 with SMTP id z7-20020ac24187000000b00518bdeb20e1mr5488842lfh.61.1713299056008;
-        Tue, 16 Apr 2024 13:24:16 -0700 (PDT)
+        bh=r1nUsgIEwvUZY/Y7sKjmmu2jqnXOcwZbDo8j/OXZNko=;
+        b=sRd3Ld0ipwpu05DmHxqCLs6PLpybQNjD2lqhUb7Oj9/8DlcN+o3YUXICO7EBEeN93k
+         K4v4h2MFZbCbnaKMhpVKzimbIXI5pWshZWH9hTisKHXp3+kCofWGcOl+O7YZ2H2tN8rb
+         OVTLX6oF6yvT77Ko4Mr3u5AstBm0ApbhHnK5te91wA9VP5tYFJj/xRzoTn8J9OLfb7wv
+         gKE3x5hqj9Qdvaw6QYuSVK1VXvPYQOG782den/m7b8oN9KpALPqG9c2Gcl/mV9aoK6im
+         wAy/gvu2JOUt3PQJaorfEo120d1oc27ADwzZgEMwHAnjgShFy8p1Hn3wGuN+kCQ+5s1t
+         7G+g==
+X-Forwarded-Encrypted: i=1; AJvYcCXUIm8N3r5vLikhhC/PzUoWarnPQrzokXYIgK0+11eVBeqQFjPkjR/fM3mbfvh5+bXsXAMw7h/DF+zSUpL4O0awrIsJHW/6j6Pg
+X-Gm-Message-State: AOJu0YwNoRzEsWFKTMgLlOodgK3xpljECoHDrMu7XtB4n2ZY2LSqu4g7
+	GZt7LLvhv/KChxEAymgZqSbnL6NtM3788ANkM6xCuWmFiaMgIS9SgwcG5ya1bMpnif9hV5qDYfT
+	Trx66LtItiDrCLgGutkWFfUC21/b3ZAdABs3I71BhiWf+NCVGKFWx/ZVrBLIfN2QX
+X-Received: by 2002:a50:8e19:0:b0:56e:2b0b:58 with SMTP id 25-20020a508e19000000b0056e2b0b0058mr9431598edw.10.1713299057799;
+        Tue, 16 Apr 2024 13:24:17 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGVMbsxmgbfwPflTCr2me7yhQYX1cvv4Zs5Xqd8KJowgpYMfcShyGnZm7swpMdtnq/oet4cZg==
+X-Received: by 2002:a50:8e19:0:b0:56e:2b0b:58 with SMTP id 25-20020a508e19000000b0056e2b0b0058mr9431587edw.10.1713299057408;
+        Tue, 16 Apr 2024 13:24:17 -0700 (PDT)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id fe1-20020a056402390100b005701df2ea98sm3655687edb.32.2024.04.16.13.24.15
+        by smtp.gmail.com with ESMTPSA id fe1-20020a056402390100b005701df2ea98sm3655687edb.32.2024.04.16.13.24.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Apr 2024 13:24:15 -0700 (PDT)
+        Tue, 16 Apr 2024 13:24:17 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: cem@kernel.org,
 	linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v2 2/4] xfs_repair: make duration take time_t
-Date: Tue, 16 Apr 2024 22:24:00 +0200
-Message-ID: <20240416202402.724492-3-aalbersh@redhat.com>
+Subject: [PATCH v2 4/4] xfs_fsr: convert fsrallfs to use time_t instead of int
+Date: Tue, 16 Apr 2024 22:24:02 +0200
+Message-ID: <20240416202402.724492-5-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240416202402.724492-1-aalbersh@redhat.com>
 References: <20240416202402.724492-1-aalbersh@redhat.com>
@@ -76,102 +76,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In most of the uses of duration() takes time_t instead of int.
-Convert the rest to use time_t and make duration() take time_t to
-not truncate it to int.
+Convert howlong argument to a time_t as it's truncated to int, but in
+practice this is not an issue as duration will never be this big.
 
-While at it remove unnecessary parentheses around 'elapsed'.
+Add check for howlong to fit into int (printf can use int format
+specifier). Even longer interval doesn't make much sense.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- repair/globals.c    | 2 +-
- repair/globals.h    | 2 +-
- repair/progress.c   | 7 ++++---
- repair/progress.h   | 2 +-
- repair/xfs_repair.c | 2 +-
- 5 files changed, 8 insertions(+), 7 deletions(-)
+ fsr/xfs_fsr.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/repair/globals.c b/repair/globals.c
-index c40849853b8f..7c819d70a0ab 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -116,7 +116,7 @@ uint32_t	sb_width;
- struct aglock	*ag_locks;
- struct aglock	rt_lock;
- 
--int		report_interval;
-+time_t		report_interval;
- uint64_t	*prog_rpt_done;
- 
- int		ag_stride;
-diff --git a/repair/globals.h b/repair/globals.h
-index 89f1b0e078f3..2d05c8b2c00f 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -160,7 +160,7 @@ struct aglock {
- extern struct aglock	*ag_locks;
- extern struct aglock	rt_lock;
- 
--extern int		report_interval;
-+extern time_t		report_interval;
- extern uint64_t		*prog_rpt_done;
- 
- extern int		ag_stride;
-diff --git a/repair/progress.c b/repair/progress.c
-index f6c4d988444e..5f80fb68ddfd 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -268,12 +268,13 @@ progress_rpt_thread (void *p)
- 				_("\t- %02d:%02d:%02d: Phase %d: elapsed time %s - processed %d %s per minute\n"),
- 				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
- 				current_phase, duration(elapsed, msgbuf),
--				(int) (60*sum/(elapsed)), *msgp->format->type);
-+				(int) (60*sum/elapsed), *msgp->format->type);
- 			do_log(
- 	_("\t- %02d:%02d:%02d: Phase %d: %" PRIu64 "%% done - estimated remaining time %s\n"),
- 				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
- 				current_phase, percent,
--				duration((int) ((*msgp->total - sum) * (elapsed)/sum), msgbuf));
-+				duration((*msgp->total - sum) * elapsed/sum,
-+					msgbuf));
- 		}
- 
- 		if (pthread_mutex_unlock(&msgp->mutex) != 0) {
-@@ -420,7 +421,7 @@ timestamp(int end, int phase, char *buf)
- }
- 
- char *
--duration(int length, char *buf)
-+duration(time_t length, char *buf)
- {
- 	int sum;
- 	int weeks;
-diff --git a/repair/progress.h b/repair/progress.h
-index 2c1690db1b17..9575df164aa0 100644
---- a/repair/progress.h
-+++ b/repair/progress.h
-@@ -38,7 +38,7 @@ extern void summary_report(void);
- extern int  set_progress_msg(int report, uint64_t total);
- extern uint64_t print_final_rpt(void);
- extern char *timestamp(int end, int phase, char *buf);
--extern char *duration(int val, char *buf);
-+extern char *duration(time_t val, char *buf);
- extern int do_parallel;
- 
- #define	PROG_RPT_INC(a,b) if (ag_stride && prog_rpt_done) (a) += (b)
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index ba9d28330d82..2ceea87dc57d 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -377,7 +377,7 @@ process_args(int argc, char **argv)
- 			do_prefetch = 0;
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 3077d8f4ef46..4e29a8a2c548 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -72,7 +72,7 @@ static int  packfile(char *fname, char *tname, int fd,
+ static void fsrdir(char *dirname);
+ static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
+ static void initallfs(char *mtab);
+-static void fsrallfs(char *mtab, int howlong, char *leftofffile);
++static void fsrallfs(char *mtab, time_t howlong, char *leftofffile);
+ static void fsrall_cleanup(int timeout);
+ static int  getnextents(int);
+ int xfsrtextsize(int fd);
+@@ -165,6 +165,10 @@ main(int argc, char **argv)
  			break;
  		case 't':
--			report_interval = (int)strtol(optarg, NULL, 0);
-+			report_interval = strtol(optarg, NULL, 0);
+ 			howlong = atoi(optarg);
++			if (howlong > INT_MAX) {
++				fprintf(stderr, _("%s: too long\n"), progname);
++				exit(1);
++			}
  			break;
- 		case 'e':
- 			report_corrected = true;
+ 		case 'f':
+ 			leftofffile = optarg;
+@@ -387,7 +391,7 @@ initallfs(char *mtab)
+ }
+ 
+ static void
+-fsrallfs(char *mtab, int howlong, char *leftofffile)
++fsrallfs(char *mtab, time_t howlong, char *leftofffile)
+ {
+ 	int fd;
+ 	int error;
 -- 
 2.42.0
 
