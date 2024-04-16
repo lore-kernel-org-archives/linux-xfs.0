@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A76386
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:28:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D54A80C
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:28:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713227322; cv=none; b=rM07lB8XpMkpwKBj+DChNBLHmgDLKkf6NQtAX+fjBd8cQehBlNi2U9vrrgd9fhP4wHD8dftz4j2Ej4Ox7G8fZzhLg0mvtvPy9Fo7ZlO8pIGRR5+FZc3Ociw9cCNaDN6tgPhUXRB7D2flQjQxhjOU5IrC6Y2S272TdZH57M/NBP8=
+	t=1713227337; cv=none; b=BjVV8b3Q7g19M8EsJj/wIE5wS2Usw/cmddvpNm2x+G9dKl+CJNxcIy2RddDcQg16gYuD6R9PptX65RqclhB9uBvDnB1U7ONie9moTb+Shvw+Kku968NwthC0TA+PMioattt3+selmhH4uaTqVjZOws7Ps+70XiMt+7y0WFPHyBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713227322; c=relaxed/simple;
-	bh=zR3awoOGJm8pFHiWnlP02Ha4ybKSZOmEU9A19Jl/OwE=;
+	s=arc-20240116; t=1713227337; c=relaxed/simple;
+	bh=uFVkcK7Df6DFZOkBIeJBmDPfNNtRqMY2MTHcNkCROhc=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=hs1ohSJTUP29BJHuNlt3xiU7DG0gOPBo0D1uRz+NodpRo/uZIVi2oLqcVq1yr+18YePr8Ewb59QcIgqG0qSX1aYrANZGkjSRl4xAi/a33Bkh49HHoVZqJ29IH+iFK+Umimp9gGTzdgtM0J3BGJlqMykiikWrUrWUgJUq7PueAgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DszOhv3P; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=LoPqk2GQxOf+GrUeaR90ix8+LBpKhHkPHvQryuvi8/WFeF19LYrhEaRD3lmsn9qFNZ4Yz8rXCgoYlFQ6RWxaLXnKj4FT+aVROFhiaqHeSlqSCfQ6JsLw7LX48SVY3Qg8HE6xKeoeTn1J8FlooXTXBchNwKtdrHe+KNPhrKO+N+E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gpqsH8ic; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DszOhv3P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 971BCC113CC;
-	Tue, 16 Apr 2024 00:28:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gpqsH8ic"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51082C113CC;
+	Tue, 16 Apr 2024 00:28:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713227321;
-	bh=zR3awoOGJm8pFHiWnlP02Ha4ybKSZOmEU9A19Jl/OwE=;
+	s=k20201202; t=1713227337;
+	bh=uFVkcK7Df6DFZOkBIeJBmDPfNNtRqMY2MTHcNkCROhc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DszOhv3PN+ZOkqDHYUZuo4+/KiHqeAJPkRojydXc/2bAadxdEq/C05nlodeVIJSea
-	 ZyCkWCCP1HytI5g9t8EQTR5IS/nyuT50Per+ARquJs8ccOcVzEgt7rLqPnbmLy9Kwm
-	 +mKsYG+AAAOkWdjEYoZAxO+WhakEv/hmO07b+dfnjbMbuOjObURspOe5uTkeapOEMd
-	 EtCUA5QcCOc4NHY7VXhHO1rcQd1XQRQXV99C5DYEp0pTSi5+Pohjv8U9CtLuqZho8h
-	 bWe35rZq8NnBADkJOJZDqoUXQqiL7MhacwKR8EHdgNtFGb3kJzvRnqG//Iweaf2un/
-	 T9SsnijjTE/ZA==
-Date: Mon, 15 Apr 2024 17:28:41 -0700
-Subject: [GIT PULL 05/16] xfs: online repair of realtime summaries
+	b=gpqsH8icaCiZUAhV71lvOpXdDLD5PXGbArhYMLyxhliPr3YWENJWLdhl6Y6bkaUBa
+	 6igPqlbjJ4rE8nAWkCYNWpPJGtqLvcb4ACn82E41i6VfZqTSsz2rPIJDr5WcirtjUc
+	 /GRDvZmEeq6BoTATPLDNsMZVrVeXDIdVENq5lF/aCxzD09cNE7pedPhAbx8ZfDcJl1
+	 MJlNVBvdr7kmuWeb8gpUI61awsvuWICNitTNX/SB+6FTZ38SkRVEpOdra96/St7tId
+	 LomoeFKlScNPD8Vedt5PEi3aIiAiqHka0uZDfa0FQq6bYneE5cl4yIW0bLbP1Xy77A
+	 SpS5vuHg+hRqg==
+Date: Mon, 15 Apr 2024 17:28:56 -0700
+Subject: [GIT PULL 06/16] xfs: set and validate dir/attr block owners
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171322716349.141687.11762646937801715481.stg-ugh@frogsfrogsfrogs>
+Message-ID: <171322716673.141687.7531023432046638316.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,58 +53,77 @@ encounter any problems.
 
 --D
 
-The following changes since commit 5befb047b9f4de1747bf48c63cab997a97e0088b:
-
-xfs: add the ability to reap entire inode forks (2024-04-15 14:58:49 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-rtsummary-6.10_2024-04-15
-
-for you to fetch changes up to abf039e2e4afde98e448253f9a7ecc784a87924d:
+The following changes since commit abf039e2e4afde98e448253f9a7ecc784a87924d:
 
 xfs: online repair of realtime summaries (2024-04-15 14:58:49 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/dirattr-validate-owners-6.10_2024-04-15
+
+for you to fetch changes up to fe6c9f8e48e0dcbfc3dba17edd88490c8579b34b:
+
+xfs: validate explicit directory free block owners (2024-04-15 14:58:52 -0700)
+
 ----------------------------------------------------------------
-xfs: online repair of realtime summaries [v30.3 05/16]
+xfs: set and validate dir/attr block owners [v30.3 06/16]
 
-We now have all the infrastructure we need to repair file metadata.
-We'll begin with the realtime summary file, because it is the least
-complex data structure.  To support this we need to add three more
-pieces to the temporary file code from the previous patchset --
-preallocating space in the temp file, formatting metadata into that
-space and writing the blocks to disk, and swapping the fork mappings
-atomically.
+There are a couple of significant changes that need to be made to the
+directory and xattr code before we can support online repairs of those
+data structures.
 
-After that, the actual reconstruction of the realtime summary
-information is pretty simple, since we can simply write the incore
-copy computed by the rtsummary scrubber to the temporary file, swap the
-contents, and reap the old blocks.
+The first change is because online repair is designed to use libxfs to
+create a replacement dir/xattr structure in a temporary file, and use
+atomic extent swapping to commit the corrected structure.  To avoid the
+performance hit of walking every block of the new structure to rewrite
+the owner number before the swap, we instead change libxfs to allow
+callers of the dir and xattr code the ability to set an explicit owner
+number to be written into the header fields of any new blocks that are
+created.  For regular operation this will be the directory inode number.
+
+The second change is to update the dir/xattr code to actually *check*
+the owner number in each block that is read off the disk, since we don't
+currently do that.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs: support preallocating and copying content into temporary files
-xfs: teach the tempfile to set up atomic file content exchanges
-xfs: online repair of realtime summaries
+Darrick J. Wong (10):
+xfs: add an explicit owner field to xfs_da_args
+xfs: use the xfs_da_args owner field to set new dir/attr block owner
+xfs: reduce indenting in xfs_attr_node_list
+xfs: validate attr leaf buffer owners
+xfs: validate attr remote value buffer owners
+xfs: validate dabtree node buffer owners
+xfs: validate directory leaf buffer owners
+xfs: validate explicit directory data buffer owners
+xfs: validate explicit directory block buffer owners
+xfs: validate explicit directory free block owners
 
-fs/xfs/Makefile                 |   1 +
-fs/xfs/scrub/common.c           |   1 +
-fs/xfs/scrub/repair.h           |   3 +
-fs/xfs/scrub/rtsummary.c        |  33 ++--
-fs/xfs/scrub/rtsummary.h        |  37 ++++
-fs/xfs/scrub/rtsummary_repair.c | 177 ++++++++++++++++++
-fs/xfs/scrub/scrub.c            |  11 +-
-fs/xfs/scrub/scrub.h            |   7 +
-fs/xfs/scrub/tempexch.h         |  21 +++
-fs/xfs/scrub/tempfile.c         | 388 ++++++++++++++++++++++++++++++++++++++++
-fs/xfs/scrub/tempfile.h         |  15 ++
-fs/xfs/scrub/trace.h            |  40 +++++
-12 files changed, 715 insertions(+), 19 deletions(-)
-create mode 100644 fs/xfs/scrub/rtsummary.h
-create mode 100644 fs/xfs/scrub/rtsummary_repair.c
-create mode 100644 fs/xfs/scrub/tempexch.h
+fs/xfs/libxfs/xfs_attr.c        |  14 ++--
+fs/xfs/libxfs/xfs_attr_leaf.c   |  60 +++++++++++---
+fs/xfs/libxfs/xfs_attr_leaf.h   |   4 +-
+fs/xfs/libxfs/xfs_attr_remote.c |  13 ++--
+fs/xfs/libxfs/xfs_bmap.c        |   1 +
+fs/xfs/libxfs/xfs_da_btree.c    | 169 +++++++++++++++++++++++++++++++++++++++-
+fs/xfs/libxfs/xfs_da_btree.h    |   3 +
+fs/xfs/libxfs/xfs_dir2.c        |   5 ++
+fs/xfs/libxfs/xfs_dir2.h        |   4 +
+fs/xfs/libxfs/xfs_dir2_block.c  |  42 +++++-----
+fs/xfs/libxfs/xfs_dir2_data.c   |  18 +++--
+fs/xfs/libxfs/xfs_dir2_leaf.c   | 100 ++++++++++++++++++------
+fs/xfs/libxfs/xfs_dir2_node.c   |  44 ++++++-----
+fs/xfs/libxfs/xfs_dir2_priv.h   |  15 ++--
+fs/xfs/libxfs/xfs_exchmaps.c    |   7 +-
+fs/xfs/scrub/attr.c             |   1 +
+fs/xfs/scrub/dabtree.c          |   8 ++
+fs/xfs/scrub/dir.c              |  23 +++---
+fs/xfs/scrub/readdir.c          |   6 +-
+fs/xfs/xfs_attr_item.c          |   1 +
+fs/xfs/xfs_attr_list.c          |  89 ++++++++++++++-------
+fs/xfs/xfs_dir2_readdir.c       |   6 +-
+fs/xfs/xfs_trace.h              |   7 +-
+23 files changed, 492 insertions(+), 148 deletions(-)
 
