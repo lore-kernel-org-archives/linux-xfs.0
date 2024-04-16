@@ -1,49 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E9B837719
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 16:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A7C737719
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 16:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713286456; cv=none; b=jZQV2PL7oRglzOnciKovVJU/gk04aYpJfe+sV1h0IKvQRA3UlgqkVSjqfS6NFFl1IO2uyg1r95gzC++lqxgYroT4x/I3QfVV6h8D7bkOHxjZM2gkhSfVC1HCdLC7agXgByeGZZHt/bMFnEJUEk31lO2gg6fpkp1pCWWb3sNue/8=
+	t=1713286662; cv=none; b=GK+BO4+COhLLVQ5gREoWrhemizxqlQqECxecP1lf0jvHm6EKnWorlr+H6mau9lXIWCKyM6fGq3MaHzZBWUmI5ZrIji86bDjutXY4k9/Z/EO9kFCctW472108u0TLu+EnyNV41sydhk77FWcPPRKw/Q+SZwCHLWIVFoFRwCt1N2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713286456; c=relaxed/simple;
-	bh=oDhxKcnYOPHjJtEHOEBDYNP0RX3k1lqdvXl/YGndcpQ=;
+	s=arc-20240116; t=1713286662; c=relaxed/simple;
+	bh=Xtk9lk3GbIyTMT8mzLA3xDAbyUrNv5wbDhpysTad6p4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K6PfGgwSU0tFG7PDIMsIY/RhBi7Osoi5E3tXBXex3Xx8d0qNlWSNVKPy94ktoGjstuxXHdH4saKF6g2NuNlYwrmOuJzDDSxwqOFsStZMOD76XO5mmD8+xx9W9C9PdaGhxIzE7UIbDYQ9Vd2Jycr+B90j+7u6HOkrTvHQXz//tKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4TY7Z6NP; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=mbHR+I4ROwAA4zVZpLLQj2p+N/5SCD2SQ2ggA0T2mtAn8qSxEoIxvCBUFIdRpdo+AAy+XiRvZveIHsdWXp0NUTlgjaaqvq+0byYg58ntB+WpU2azaTsYW6z0gzRlSDgsvT/WrghDmE3kxb6XYa8Ml8WS3wn+Bplyy7/qVPsv7Mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OSWEAG8u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4TY7Z6NP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=FK0hheNpPXqI/xeJIG48ZGWMVF0r2F35oEaLsAhVQuM=; b=4TY7Z6NPpCFmI/v1WLxuvHilcs
-	+j3VB5spvFCg2QyQ2zivlc1dIaCzydkJujgW6CasuZNzKvQA4JmHXVgCm43QlO0c0uoZ0zlMOOSrO
-	MVrcFfyWPeT9k5OvpUs3y5FYLl6HWebjtoN4ZHKsQiNqqbC2odA6wMPJ6zy/JQU/STafXA9LQm6y8
-	aUrWRzMS45aNbKLr/ll3FitobNgV4Os+hGYSSAawmcp0VhOiXCsPD8Hh3Yq9a8aPA+rVRsLagyKz4
-	kUtnc2Os5YeT01CRlYQDwMqKUYG57KS8VJQ9sJgLMyUrMnSZ7aOfH2DuCYS2VqhxHAdoN0MyXGstK
-	U7Wcxp0w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwm4U-0000000D53x-1iJC;
-	Tue, 16 Apr 2024 16:54:14 +0000
-Date: Tue, 16 Apr 2024 09:54:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	catherine.hoang@oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/32] xfs: Add parent pointer ioctls
-Message-ID: <Zh6tNvXga6bGwOSg@infradead.org>
-References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
- <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs>
- <20240412173957.GB11948@frogsfrogsfrogs>
- <20240414051816.GA1323@lst.de>
- <20240415194036.GD11948@frogsfrogsfrogs>
- <20240416044716.GA23062@lst.de>
- <20240416165056.GO11948@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OSWEAG8u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3BD9C113CE;
+	Tue, 16 Apr 2024 16:57:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713286661;
+	bh=Xtk9lk3GbIyTMT8mzLA3xDAbyUrNv5wbDhpysTad6p4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OSWEAG8uRHgDNcNl8RSwLval8trou8xBo8TUhDcDQp99j3TM7cO8tiweUCW0qCAKU
+	 Mi7YL80xoRL2ay8OKZkuJHarmLu9ExVSguDIFWXdF4/QNe6lWw7kHFTJ4rqhZ0wKj0
+	 oxQWnaFRucG0UONSzxi8jTLnDw/hccJA62JKOuPfiGjGXb8aJXEcI3dxT9m/1F/pVW
+	 Y92eSFyYDjWgruE3mfoymgN0Soq/MJgXOaOKEGBp4EKqhfFm/lo8+dzU4L+mT2xyZn
+	 QmzZPb5pR/wdRcXi5n7RPWYZkDw2Kc0yCYVh1GlupHvFbqEeJqBi0YbmeiB9u1v1EZ
+	 tsAds8tWFWFDw==
+Date: Tue, 16 Apr 2024 09:57:41 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cem@kernel.org, cmaiolino@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 090/111] libxfs: partition memfd files to avoid using too
+ many fds
+Message-ID: <20240416165741.GP11948@frogsfrogsfrogs>
+References: <171322882240.211103.3776766269442402814.stgit@frogsfrogsfrogs>
+ <171322883514.211103.15800307559901643828.stgit@frogsfrogsfrogs>
+ <Zh4EpDiu1Egt-4ii@infradead.org>
+ <20240416154932.GH11948@frogsfrogsfrogs>
+ <Zh6nVRlJXXN87tho@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,53 +46,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240416165056.GO11948@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Zh6nVRlJXXN87tho@infradead.org>
 
-On Tue, Apr 16, 2024 at 09:50:56AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 16, 2024 at 06:47:16AM +0200, Christoph Hellwig wrote:
-> > On Mon, Apr 15, 2024 at 12:40:36PM -0700, Darrick J. Wong wrote:
-> > > True, libhandle is a very nice wrapper for the kernel ioctls.  I wish
-> > > Linux projects did that more often.  But suppose you're calling the
-> > > ioctls directly without libhandle and mess it up?
+On Tue, Apr 16, 2024 at 09:29:09AM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 16, 2024 at 08:49:32AM -0700, Darrick J. Wong wrote:
+> > > Not a fan of this, but I guess there is a real need somewhere because
+> > > we run out of the number of open fds otherwise?
 > > 
-> > The you get different inodes back.  Not really any different from
-> > pointing your path name based code to the wrong fs or directory,
-> > is it?
+> > Yes, we can hit the open fd limit...
+> > 
+> > >                                                  Given that repair
+> > > generally runs as root wouldn't it make more sense to just raise the
+> > > limit?
+> > 
+> > ...and we /did/ raise the limit to whatever RLIMIT_NOFILE says is the
+> > maximum, but sysadmins could have lowered sysctl_nr_open on us, so we
+> > still ought to partition to try to avoid ENFILE on those environments.
+> > 
+> > (Granted the /proc/sys/fs/nr_open default is a million, and if you
+> > actually have more than 500,000 AGs then either wowee you are rich!! or
+> > clod-init exploded the fs and you get what you deserve :P)
 > 
-> I suppose not.  But why bother setting the fsid at all, then?
+> Whar is clod-init?  And where did you see this happen?  
 
-I suspect that's a leftover from IRIX where the by handle operations
-weren't ioctls tied to a specific file system.
+cloud-init is a piece of software that cloud/container vendors install
+in the rootfs that will, upon the first startup, growfs the minified
+root image to cover the entire root disk.  This is why we keep getting
+complaints about 1TB filesystems with 1,000 AGs in them.  It's "fine"
+for ext4 because of the 128M groups, and completely terrible for XFS.
 
-> > But as we never generate the file handles that encode the parent
-> > we already never connect files to their parent directory anyway.
-> 
-> I pondered whether or not we should encode parent info in a regular
-> file's handle.
+(More generally it will also configure networking, accounts, and the
+mandatory vendor agents and whatnot.)
 
-We shouldn't.  It's a really a NFS thing.
-
-
-> Would that result in an invalid handle if the file gets
-> moved to another directory?
-
-Yes.
-
-> That doesn't seem to fit with the behavior
-> that fds remain attached to the file even if it gets moved/deleted.
-
-Exactly.
-
-> 
-> > OTOH we should be able to optimize ->get_parent a bit with parent
-> > pointers, as we can find the name in the parent directory for
-> > a directory instead of doing linear scans in the parent directory.
-> > (for non-directory files we currenty don't fully connect anwyay)
-> 
-> <nod> But does exportfs actually want parent info for a nondirectory?
-> There aren't any stubs or XXX/FIXME comments, and I've never heard any
-> calls (at least on fsdevel) for that functionality.
-
-It doesn't.  It would avoid having disconnected dentries, but
-disconnected non-directory dentries aren't really a problem.
+--D
