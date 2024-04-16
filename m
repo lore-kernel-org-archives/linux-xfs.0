@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B97144C6B
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 21:00:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B42B13792A
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 22:31:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713301239; cv=none; b=NkYzfbb+U/Im6gF+AsfXpmKZCt5NBUzwjklq1eVvOjuqO5w17a8roTuHFaXW5BY+bS6KDed3ADcKaNawPlhYLLxEIymgMWFkT9DcQRCI7hPPjY/VnkVzKOCkMKBWv5kAzCuYf8zm3F8ncu0q3Ums0ukEBtPsY0F6I5Kmu1+RvBM=
+	t=1713306710; cv=none; b=OS1lnQJ7msZB3xbtbgo2xtV8bIJuyu6VdudgLbioQHXVWu+iDWVNuQ+9BMUdZUp5n094Auky69crSiTWywzCqnc2I86gelkVEKbiWK9i5tIiBkqrf2G7u7Xdp/WKyAekjvUpcdmdMZu3FZ5Mh5e9HQxdQiwAHWPwyebk5rjuhek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713301239; c=relaxed/simple;
-	bh=bsRny1v3rD8RKKisIaejRd6VEq8oHTFWqvKxvhjSdXU=;
+	s=arc-20240116; t=1713306710; c=relaxed/simple;
+	bh=FJrNtv25vjcj+ASW88oXvdza1DlRF7EUUdRWzqxP+YY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qgvjoMtewbKWN6EMlcOm2b2xPNZcS6JHHvQZfP16c/FP1OmeO4mkDqFXGrM1EKfpbWRd5+uaIHumfVOFmGyH/RiKfnk2FFb2CBrRyXJId2HJJvieG9LAtAS/cYfxc8pcnaDTzMo2OGk6O4f94uj0j0Ogig7Orgp8kZ0lFAYo39Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i0Xr/+cV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=E/LBm+33FxQ4nR44FQRY45rhAN593eyFQgMxEDZ3WN0aDxIdhV3dC+DKZ8da4EXZyqmNQ6CD50+7AcMyfYlg5fJtlNe2bDGnTovHxN5qBHUrQPHWHABSTVDXxBbdeSgh9xwv8mowPszquinUPl2TWk294W1D1ScZFvvWDTI8M9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DjMBgaca; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i0Xr/+cV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 876ADC3277B;
-	Tue, 16 Apr 2024 21:00:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DjMBgaca"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3395C113CE;
+	Tue, 16 Apr 2024 22:31:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713301238;
-	bh=bsRny1v3rD8RKKisIaejRd6VEq8oHTFWqvKxvhjSdXU=;
+	s=k20201202; t=1713306709;
+	bh=FJrNtv25vjcj+ASW88oXvdza1DlRF7EUUdRWzqxP+YY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=i0Xr/+cVEpWD9/KNvNd/xMNdFXSpN04XvAaDIB1eRCDtb+u6ERvo7BicJEJOENpw3
-	 Kl1KU6lmAqS03MrJ0Q9fI1xW/CvlKax5BlTWYCC0RftdLYiV5VZYjZIHf6OOoi4+Ng
-	 C5jJ98Pktcq+N7nbcVJFrLQHC7MBS3Zxgk7jAvl+/0FWOxOFEukZf5ZqCtgqBL4NCW
-	 5wJxR/9mcPk2sc3i1S9N9C36dfMJBePqOjl3CwHUeAne8JJWR+Fz/UvnDTlM2JsHL8
-	 4eLnSKK3xRDv3wHNJo2E318iC+tywPjzd3nn3/z8C+5V9Ijjgnb2dLKfqr5C+G5Fow
-	 3AOXicn3zhqPA==
-Date: Tue, 16 Apr 2024 14:00:37 -0700
+	b=DjMBgacaGLXbjGSXPg3lwb9fnGYDfpHVttvX4ES7J+TY5BOhBP2MQuZWCSU9ZQvKB
+	 aSvuouDoalaEkKP1Gfz3X2ojvbfMx6igbedIerq6JRwmWdBPnxUQDuHkN2+KkWbeKc
+	 zZ05axGMqps67QWd0i2LSRRxCmMl/KZ/vunL7lbAw9nb6SVtfBRFYReHhc3Q4AleFB
+	 PUNEtqJRP8JmZDiKlKr5VdGDVh7Gf4illVrH0bJVxPlGms+ZP5obmPQpdDez2sv5Ko
+	 xylo03H1zFcdzw4FJUAu81PkUpq7KtZU/hKIIHRYdynDc6Gi5K19jC5KbqkRnVC0/j
+	 TV0kiCXKApfeg==
+Date: Tue, 16 Apr 2024 15:31:48 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] xfs_repair: make duration take time_t
-Message-ID: <20240416210037.GG11948@frogsfrogsfrogs>
-References: <20240416202402.724492-1-aalbersh@redhat.com>
- <20240416202402.724492-3-aalbersh@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 4/4] xfs: only iget the file once when doing vectored
+ scrub-by-handle
+Message-ID: <20240416223148.GH11948@frogsfrogsfrogs>
+References: <171323030233.253873.6726826444851242926.stgit@frogsfrogsfrogs>
+ <171323030309.253873.8649027644659300452.stgit@frogsfrogsfrogs>
+ <Zh4OHi8GI-0v60qB@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,114 +44,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240416202402.724492-3-aalbersh@redhat.com>
+In-Reply-To: <Zh4OHi8GI-0v60qB@infradead.org>
 
-On Tue, Apr 16, 2024 at 10:24:00PM +0200, Andrey Albershteyn wrote:
-> In most of the uses of duration() takes time_t instead of int.
-> Convert the rest to use time_t and make duration() take time_t to
-> not truncate it to int.
+On Mon, Apr 15, 2024 at 10:35:26PM -0700, Christoph Hellwig wrote:
+> >  out_free:
+> > +	/*
+> > +	 * If we're holding the only reference to an inode opened via handle,
+> > +	 * mark it dontcache so that we don't pollute the cache.
+> > +	 */
+> > +	if (handle_ip) {
+> > +		if (atomic_read(&VFS_I(handle_ip)->i_count) == 1)
+> > +			d_mark_dontcache(VFS_I(handle_ip));
+> > +		xfs_irele(handle_ip);
 > 
-> While at it remove unnecessary parentheses around 'elapsed'.
+> This still feels the wrong way around vs just using IGET_UNCACHED?
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  repair/globals.c    | 2 +-
->  repair/globals.h    | 2 +-
->  repair/progress.c   | 7 ++++---
->  repair/progress.h   | 2 +-
->  repair/xfs_repair.c | 2 +-
->  5 files changed, 8 insertions(+), 7 deletions(-)
-> 
-> diff --git a/repair/globals.c b/repair/globals.c
-> index c40849853b8f..7c819d70a0ab 100644
-> --- a/repair/globals.c
-> +++ b/repair/globals.c
-> @@ -116,7 +116,7 @@ uint32_t	sb_width;
->  struct aglock	*ag_locks;
->  struct aglock	rt_lock;
->  
-> -int		report_interval;
-> +time_t		report_interval;
->  uint64_t	*prog_rpt_done;
->  
->  int		ag_stride;
-> diff --git a/repair/globals.h b/repair/globals.h
-> index 89f1b0e078f3..2d05c8b2c00f 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -160,7 +160,7 @@ struct aglock {
->  extern struct aglock	*ag_locks;
->  extern struct aglock	rt_lock;
->  
-> -extern int		report_interval;
-> +extern time_t		report_interval;
->  extern uint64_t		*prog_rpt_done;
->  
->  extern int		ag_stride;
-> diff --git a/repair/progress.c b/repair/progress.c
-> index f6c4d988444e..5f80fb68ddfd 100644
-> --- a/repair/progress.c
-> +++ b/repair/progress.c
-> @@ -268,12 +268,13 @@ progress_rpt_thread (void *p)
->  				_("\t- %02d:%02d:%02d: Phase %d: elapsed time %s - processed %d %s per minute\n"),
->  				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
->  				current_phase, duration(elapsed, msgbuf),
-> -				(int) (60*sum/(elapsed)), *msgp->format->type);
-> +				(int) (60*sum/elapsed), *msgp->format->type);
->  			do_log(
->  	_("\t- %02d:%02d:%02d: Phase %d: %" PRIu64 "%% done - estimated remaining time %s\n"),
->  				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
->  				current_phase, percent,
-> -				duration((int) ((*msgp->total - sum) * (elapsed)/sum), msgbuf));
-> +				duration((*msgp->total - sum) * elapsed/sum,
-> +					msgbuf));
->  		}
->  
->  		if (pthread_mutex_unlock(&msgp->mutex) != 0) {
-> @@ -420,7 +421,7 @@ timestamp(int end, int phase, char *buf)
->  }
->  
->  char *
-> -duration(int length, char *buf)
-> +duration(time_t length, char *buf)
->  {
->  	int sum;
->  	int weeks;
-> diff --git a/repair/progress.h b/repair/progress.h
-> index 2c1690db1b17..9575df164aa0 100644
-> --- a/repair/progress.h
-> +++ b/repair/progress.h
-> @@ -38,7 +38,7 @@ extern void summary_report(void);
->  extern int  set_progress_msg(int report, uint64_t total);
->  extern uint64_t print_final_rpt(void);
->  extern char *timestamp(int end, int phase, char *buf);
-> -extern char *duration(int val, char *buf);
-> +extern char *duration(time_t val, char *buf);
->  extern int do_parallel;
->  
->  #define	PROG_RPT_INC(a,b) if (ag_stride && prog_rpt_done) (a) += (b)
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index ba9d28330d82..2ceea87dc57d 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -377,7 +377,7 @@ process_args(int argc, char **argv)
->  			do_prefetch = 0;
->  			break;
->  		case 't':
-> -			report_interval = (int)strtol(optarg, NULL, 0);
-> +			report_interval = strtol(optarg, NULL, 0);
+> Or did I miss the killer argument why that can't work?
 
-This also needs to clear and check errno to report errors.  However,
-that should be a separate patch.
+No, I missed the killer argument.  In fact, I think the fsdax
+reorganization into d_mark_dontcache makes this counterproductive.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Initially, I had thought that we'd be doing users a favor by only
+marking inodes dontcache at the end of a scrub operation, and only if
+there's only one reference to that inode.  This was more or less true
+back when I_DONTCACHE was an XFS iflag and the only thing it did was
+change the outcome of xfs_fs_drop_inode to 1.  If there are dentries
+pointing to the inode when scrub finishes, the inode will have positive
+i_count and stay around in cache until dentry reclaim.
+
+But now we have d_mark_dontcache, which cause the inode *and* the
+dentries attached to it all to be marked I_DONTCACHE, which means that
+we drop the dentries ASAP, which drops the inode ASAP.
+
+This is bad if scrub found problems with the inode, because now they can
+be scheduled for inactivation, which can cause inodegc to trip on it and
+shut down the filesystem.
+
+Even if the inode isn't bad, this is still suboptimal because phases 3-7
+each initiate inode scans.  Dropping the inode immediately during phase
+3 is silly because phase 5 will reload it and drop it immediately, etc.
+It's fine to mark the inodes dontcache, but if there have been accesses
+to the file that set up dentries, we should keep them.
+
+I validated this by setting up ftrace to capture xfs_iget_recycle*
+tracepoints and ran xfs/285 for 30 seconds.  With current djwong-wtf I
+saw ~30,000 recycle events.  I then dropped the d_mark_dontcache calls
+and set XFS_IGET_DONTCACHE, and the recycle events dropped to ~5,000 per
+30 seconds.
+
+So I think I want to change xchk_irele to clear I_DONTCACHE if we're in
+transaction context or if corruption was found; and to use
+XFS_IGET_DONTCACHE instead of the i_count-based d_mark_dontcache calls.
 
 --D
-
->  			break;
->  		case 'e':
->  			report_corrected = true;
-> -- 
-> 2.42.0
-> 
-> 
