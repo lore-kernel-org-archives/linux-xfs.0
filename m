@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A529B1C06
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:02:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D23F1879
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:02:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713229333; cv=none; b=IzvCMrLLmHK9+S7kWFZvP4saTj7ybqGLPLorix2/pdAlG68mc1uGT2hhfl1L47s0cDvP48hhue5c+E5AFSOmgBZxMs9YbcYzawkiP1S8ace4WKF8A320/NsFqcSkRY9SVKG+PEIMpxS9czndCTPALlhpOjqv0bPSd2WTBGETwnA=
+	t=1713229349; cv=none; b=bAvwEdEX0kAvvtY9oanQaFE+4xkC5iLb1arSxoWyj2mH4Cl7xnKaUTj9QuDoIA4HaiEYxGISl/+CGNiWSeHMgJrdpduYAGwIcGx1ve1MSs2KjaLewvkjp/GXlHSuqnJwM1PYmBvLKIElNzWf7bWh0BtVcIhFqCiusW2NO0ENv30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713229333; c=relaxed/simple;
-	bh=zou1A9NV7RwEqQlnZek6n9QFWNshxUr8pw9xIe13FRs=;
+	s=arc-20240116; t=1713229349; c=relaxed/simple;
+	bh=rV4RXkfzLSJweExMMu1ULfoeb1XIwS0cvyUy9ru3GoQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y1qDo1J5CB2iG7S7OLxVwumhiVsc+qXn0460gJmyXYO5BQnvaKQfj/24UPrSNsJMubQ06PAF/NG0sIaKiS9AJP5PWi4acN2MBzcIxuDRk6KbguEAsAqCFfzZUiYoN9GByyGgDAFzIdGe87gidncWeR6Ul2B7NYLnDCO1va0Jihw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bc+7KGkh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=H4dsaUj3bF7OhoVHJ1rECgrT3kWjpDZLMR8HeVrWymAcMPR8q5of3LRScALPqxMcUkU//1hUG9eKq/oek2JJXuwvk/jaIXP63KDPOT4D6yh+LKYkFyhftAHKu63JoVOoYMRdK3Sr3tdzAQIDEBgNNPaaSWqPoRJ9xv3n88SSsFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ow0hN0Oe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bc+7KGkh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73F67C113CC;
-	Tue, 16 Apr 2024 01:02:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ow0hN0Oe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19200C113CC;
+	Tue, 16 Apr 2024 01:02:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713229333;
-	bh=zou1A9NV7RwEqQlnZek6n9QFWNshxUr8pw9xIe13FRs=;
+	s=k20201202; t=1713229349;
+	bh=rV4RXkfzLSJweExMMu1ULfoeb1XIwS0cvyUy9ru3GoQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bc+7KGkhOcvhINSHVO4W8ORH73Tz3OcDoqDcWcc4axcmD3hMFYDOauNPlk7VZngEM
-	 JbyEwqFKJopBXy24krm+RaXzmzqTu43SF4V3ED7ibUSBvIiMU7513N1lzUfxWTRUoD
-	 xg6+SpdkEN8aZMhWXjhYIU2KCb5zMHekDoqi67Hh496h3hQgbOc7JXYTgi3js+tVd+
-	 qEE/9soOYIOnBP04qHgMMqWmpqbvSL6AxY4RQYDlNzM66+0ue6nsR4N67dzgSe6t0k
-	 4NQ1vi18Ao1BgKfbpvoh6HV1gXqt/umjBbdURJ/eGWbR/iE7wPf88AHSbMtqdjLRws
-	 Ft26tAsqocBew==
-Date: Mon, 15 Apr 2024 18:02:13 -0700
-Subject: [PATCH 4/4] libxfs: add a xattr_entry helper
+	b=ow0hN0OeKXeBJ0LH9DVO6JXK+hpR9SZxrPrThkmOcXA7lwR6rXPS1wnK4wu+Xjd+D
+	 kx2bdVOqBzKkbz8fWfpYrawFwQkWUjzEq5EReWKCobySMc3XxneRgwJ8Yd/3MLDuGK
+	 +tSNE8PMAwmYiQcgQ3vmDHZmA8W29JCS2i0OwQVmbIkNPR0M8YDnPXI0BGe5lfHPPl
+	 bmpNhJXjQHSx/m1iuX0h0prA0GqQmxJZRJboCZApRikCgSU+T2+tAtzhEemusqVLWJ
+	 FVomq7FNqaY7BA4wtWZAybDXNi6f6biiLi6qrSXV8kTB7dsuIlpLgDpVTgHXJegyqO
+	 Jwmm77PYGAebg==
+Date: Mon, 15 Apr 2024 18:02:28 -0700
+Subject: [PATCH 1/1] xfs_repair: check num before bplist[num]
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: cmaiolino@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org
-Message-ID: <171322884149.214718.12923043891090426855.stgit@frogsfrogsfrogs>
-In-Reply-To: <171322884095.214718.11929947909688882584.stgit@frogsfrogsfrogs>
-References: <171322884095.214718.11929947909688882584.stgit@frogsfrogsfrogs>
+Message-ID: <171322884453.214909.10319162748738486901.stgit@frogsfrogsfrogs>
+In-Reply-To: <171322884439.214909.5121967705551682559.stgit@frogsfrogsfrogs>
+References: <171322884439.214909.5121967705551682559.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,58 +46,26 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a helper to translate from the item list head to the attr_intent
-item structure and use it so shorten assignments and avoid the need for
-extra local variables.
+smatch complained about checking an array index before indexing the
+array, so fix that.
 
-Inspired-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/defer_item.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ repair/prefetch.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 36811c7fece1..fdb922f08c39 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -570,6 +570,13 @@ const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
- 	.cancel_item	= xfs_bmap_update_cancel_item,
- };
- 
-+/* Logged extended attributes */
-+
-+static inline struct xfs_attr_intent *attri_entry(const struct list_head *e)
-+{
-+	return list_entry(e, struct xfs_attr_intent, xattri_list);
-+}
-+
- /* Get an ATTRI. */
- static struct xfs_log_item *
- xfs_attr_create_intent(
-@@ -618,11 +625,10 @@ xfs_attr_finish_item(
- 	struct list_head	*item,
- 	struct xfs_btree_cur	**state)
- {
--	struct xfs_attr_intent	*attr;
--	int			error;
-+	struct xfs_attr_intent	*attr = attri_entry(item);
- 	struct xfs_da_args	*args;
-+	int			error;
- 
--	attr = container_of(item, struct xfs_attr_intent, xattri_list);
- 	args = attr->xattri_da_args;
- 
- 	/*
-@@ -651,9 +657,8 @@ static void
- xfs_attr_cancel_item(
- 	struct list_head	*item)
- {
--	struct xfs_attr_intent	*attr;
-+	struct xfs_attr_intent	*attr = attri_entry(item);
- 
--	attr = container_of(item, struct xfs_attr_intent, xattri_list);
- 	xfs_attr_free_item(attr);
- }
- 
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index de36c5fe2cc9..22efd54bf9eb 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -494,7 +494,7 @@ pf_batch_read(
+ 						args->last_bno_read, &fsbno);
+ 			max_fsbno = fsbno + pf_max_fsbs;
+ 		}
+-		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
++		while (num < MAX_BUFS && bplist[num] && fsbno < max_fsbno) {
+ 			/*
+ 			 * Discontiguous buffers need special handling, so stop
+ 			 * gathering new buffers and process the list and this
 
