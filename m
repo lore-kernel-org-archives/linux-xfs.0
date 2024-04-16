@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51D880C
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:30:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B09118D
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:30:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713227415; cv=none; b=FPqHsXv3y9v1l2ciQbx5joCCutbhaSxq4xJnA2/k26OzDBPmSuhH+ddTP9nETVq1vgNkj45cMB9hf9+eJPIXx75BxM/qKpfPXnxijW8zzo3rFzUSaoUPJsd9jZytKr8/1fHwbKfrBOs/GimtOqlJ08vr+ITj52jdHJSvgylmcys=
+	t=1713227431; cv=none; b=GETqyFRXqsz5JUv0K0HVlgvqCZFi1iETN3nAE16NGWg2OoVhgnxUmHJuH856gTRPkqVGPxdnhBalcbtOXQkBvs6wpS7L5fYS4JgTpr6wDYYNA2lcFnuDEyp6X9Oo4/05LZ6hmuuG9NjCGk0EunLyQNCX182RVj1AmMmjlWBJUxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713227415; c=relaxed/simple;
-	bh=wmQgdrhkb7nCdD13c8QmBA8PoCAz/Tr8/ad7ni+hiso=;
+	s=arc-20240116; t=1713227431; c=relaxed/simple;
+	bh=AI9hEIB/KYwfEboozZxfCMiYCum9QjkOm/IWMG1fY2c=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=nsUtAu/uV1YupxldjVoX/5sKfpyQuzxo41zbXTFU4ojp+kuwReza063MOhZrD86yRWHaXxRo6rFuTlj1M0I8tQoggLfC5sr+xMcJJk40ClKBOj4sLgku6pKiqsRTqkE/rxGf0DQgcNAGrdTpzdWjq+iB20aBt7/8RMPhexrtguI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iPeJCPaH; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=f/2FC8r9/kL4wFjWm08SEsBqrDvvAQ5LQtz9noRJh9BsuL0oPYWy2ztYo/xTBQQqohmI0ghhDuGPR2ttI0xq2YWa5pM+YaKFt6oWDQHkwuB3h10Bm98Ps+DvrFjmF3u3VwhA2ZHxgukGrm231NwSZjKra9jXwMWzWHsm7EupegA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ore3sXO5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iPeJCPaH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8633C2BD11;
-	Tue, 16 Apr 2024 00:30:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ore3sXO5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 568E2C2BD11;
+	Tue, 16 Apr 2024 00:30:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713227415;
-	bh=wmQgdrhkb7nCdD13c8QmBA8PoCAz/Tr8/ad7ni+hiso=;
+	s=k20201202; t=1713227431;
+	bh=AI9hEIB/KYwfEboozZxfCMiYCum9QjkOm/IWMG1fY2c=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iPeJCPaHcAyfiVEBdyNIv9ArvwfykTC7gVIpM9qj/MRmKZIPC9y9NWYxT1ATZORgU
-	 fyfEgbqfp3jaxMNhEZiT0vPemiW5z6w4hGKNIJxsBJymYWRju54h2kq9yYSvrCKt//
-	 6VXFa5XIPL+MK+ldY/fKUFUczJSKXK9xoLjyOSG0Ya9ZQwvLuTeJXiFzL2QfeMRng5
-	 yrFjzTL9LnAun+uz/4A2EczfaXZnhkQ1v2YOwdVLSED5IgIE/+In4p4kzGzVD7x5qv
-	 iQLXVzxYpPL0VTizmqrytoB7+/EQDxmLe81aLcky/k8P95dEX82V+hENxieRl59NFx
-	 T1+BZ/yeYl2EA==
-Date: Mon, 15 Apr 2024 17:30:15 -0700
-Subject: [GIT PULL 11/16] xfs: online repair of symbolic links
+	b=ore3sXO5hKUVrf1UseLyBnMfexpXAynmlmjdrhRYZ4p5fz5+hAq3RtA2fN5J+fGk5
+	 tlmr31QSHE6BLIQI4HkL8xMvDW6o3HMD1RjKoaV+qPmC8fzfMtOVHWYTK+PTVcL4aO
+	 KMqmS/Y8pjxZ1bvBmHBW8ryUG0L7a8UJyRAZshBVzFraBEEVEGxBp4xHcMto29Q1dm
+	 YkB0aWSFlbyKAiFUs+XyvomkxAhwr82pZWFVjF2YVpUcBjQnvoI9aOxUmt00YPsr7i
+	 21amgO3OGUD4j/edGt2KnIn0MBD2julb6RnBMVKzMj0M2g7DnUX3TojZXMn8UueTL5
+	 a6L94DJkss3vQ==
+Date: Mon, 15 Apr 2024 17:30:30 -0700
+Subject: [GIT PULL 12/16] xfs: online fsck of iunlink buckets
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171322718349.141687.12197636853097567311.stg-ugh@frogsfrogsfrogs>
+Message-ID: <171322718679.141687.10654155003970611022.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,24 +53,25 @@ encounter any problems.
 
 --D
 
-The following changes since commit 73597e3e42b4a15030e6f93b71b53a04377ea419:
-
-xfs: ensure dentry consistency when the orphanage adopts a file (2024-04-15 14:58:57 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-symlink-6.10_2024-04-15
-
-for you to fetch changes up to 2651923d8d8db00a57665822f017fa7c76758044:
+The following changes since commit 2651923d8d8db00a57665822f017fa7c76758044:
 
 xfs: online repair of symbolic links (2024-04-15 14:58:58 -0700)
 
-----------------------------------------------------------------
-xfs: online repair of symbolic links [v30.3 11/16]
+are available in the Git repository at:
 
-The patches in this set adds the ability to repair the target buffer of
-a symbolic link, using the same salvage, rebuild, and swap strategy used
-everywhere else.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-iunlink-6.10_2024-04-15
+
+for you to fetch changes up to ab97f4b1c030750f2475bf4da8a9554d02206640:
+
+xfs: repair AGI unlinked inode bucket lists (2024-04-15 14:58:58 -0700)
+
+----------------------------------------------------------------
+xfs: online fsck of iunlink buckets [v30.3 12/16]
+
+This series enhances the AGI scrub code to check the unlinked inode
+bucket lists for errors, and fixes them if necessary.  Now that iunlink
+pointer updates are virtual log items, we can batch updates pretty
+efficiently in the logging code.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
@@ -78,22 +79,16 @@ Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
 Darrick J. Wong (3):
-xfs: expose xfs_bmap_local_to_extents for online repair
-xfs: pass the owner to xfs_symlink_write_target
-xfs: online repair of symbolic links
+xfs: check AGI unlinked inode buckets
+xfs: hoist AGI repair context to a heap object
+xfs: repair AGI unlinked inode bucket lists
 
-fs/xfs/Makefile                    |   1 +
-fs/xfs/libxfs/xfs_bmap.c           |  11 +-
-fs/xfs/libxfs/xfs_bmap.h           |   6 +
-fs/xfs/libxfs/xfs_symlink_remote.c |   7 +-
-fs/xfs/libxfs/xfs_symlink_remote.h |   7 +-
-fs/xfs/scrub/repair.h              |   8 +
-fs/xfs/scrub/scrub.c               |   2 +-
-fs/xfs/scrub/symlink.c             |  13 +-
-fs/xfs/scrub/symlink_repair.c      | 506 +++++++++++++++++++++++++++++++++++++
-fs/xfs/scrub/tempfile.c            |  13 +
-fs/xfs/scrub/trace.h               |  46 ++++
-fs/xfs/xfs_symlink.c               |   4 +-
-12 files changed, 609 insertions(+), 15 deletions(-)
-create mode 100644 fs/xfs/scrub/symlink_repair.c
+fs/xfs/scrub/agheader.c        |  40 ++
+fs/xfs/scrub/agheader_repair.c | 879 ++++++++++++++++++++++++++++++++++++++---
+fs/xfs/scrub/agino_bitmap.h    |  49 +++
+fs/xfs/scrub/trace.h           | 255 ++++++++++++
+fs/xfs/xfs_inode.c             |   2 +-
+fs/xfs/xfs_inode.h             |   1 +
+6 files changed, 1179 insertions(+), 47 deletions(-)
+create mode 100644 fs/xfs/scrub/agino_bitmap.h
 
