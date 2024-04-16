@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA3095227
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:26:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB512539C
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:26:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713230778; cv=none; b=sOqfy0ifrgqefbNzBCYKaV0jTbbLeqKLmHQs+V6nO+ZOcJmApn2PJ/lStWBO1mT6EgHuhJzbX/TcQEZBkHUoqE7uxWeF+Kv0/GpiJgfsAqfsXKcDbUw4MSOx4KxSHXUzBMunDlFxvckuxhyjo/4TCmkRbXc8Ip2s7S20ojJv7bM=
+	t=1713230794; cv=none; b=eRPC7ojpaWFq5/kciKHW6J2Y9ZkvpoOQhi7/OO1a5VPWPVKq0mm855+XzlVkD6IN5bFOjZkUGQTq7F1Ux0hhlEsGq9pl4HZK2bwk3CpB4ESEPyBxkeWvPBi+mYxcmpSdsmz2usGhU+9tfimdIh4D7+7iPKtPrkt7Dh2LmI0UCZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713230778; c=relaxed/simple;
-	bh=qZL3N45Bdsj79PQL1rUWck8uA1E6uMO0LZ7Dj/EQ9jA=;
+	s=arc-20240116; t=1713230794; c=relaxed/simple;
+	bh=DU/yNHJGHUDsUNSrGcO4d1NTtLanpgEaVVMr6H3T/DM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tjS7Sglwh1jWjjvN8VRj5AIdMSaQlLpO1/MR5pO5iomHaMF85ZbOflKZRKtoo3wkyZJuhXYed5rWmADrFeV5dxIZd3P/ZX/f3MhUeUleLYlvtSzuK4lW88bRBCBUOogIEkZyjNeB8BfM/ZTYrMeeldrTArPc3MtuCdeqoXrOVr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hE3+S8SV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KKktii4CyqyLc0/RZc0/OS3Up5Med83wp4iYEdAv4CnRB5SbqL3EkYDe+WIyoXt/XI2Yq9egnz3df/iCEw1htoPBK/5rX2EmZrKSAAkq1uMNNGHxXZ4oEi1MoTbPyLEpfxemGlJlM5j6UxIOwhkvF/LbF2TuslPiTwCmX7qDMX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCzHuvcI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hE3+S8SV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98FDEC113CC;
-	Tue, 16 Apr 2024 01:26:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCzHuvcI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C386C113CC;
+	Tue, 16 Apr 2024 01:26:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713230778;
-	bh=qZL3N45Bdsj79PQL1rUWck8uA1E6uMO0LZ7Dj/EQ9jA=;
+	s=k20201202; t=1713230794;
+	bh=DU/yNHJGHUDsUNSrGcO4d1NTtLanpgEaVVMr6H3T/DM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hE3+S8SVbhi+t9b1W8Che/XEoCkZWL27VvgX2EySQv6L4wAF4KwBcIkmG9B8ubURz
-	 VcDLKBSoxbSCNH/90oePXDdcmTVdfjJzIDlYkFbQIHdSP8LMv0K0AA7oxM94IRZ+El
-	 glgWrXCdiLnebfskexAOIhmtbiYR2vKEtmKUnPmQmTpUUVbM8QonTvn33IhASc4ru5
-	 sV3eQ9XQo0XXc8G4GZpZ6OkhpdKMzkVhPT9fs8baE9idjfv+FirJYQmwLGBXKnrBOu
-	 5K7pipVpl1d/yk+gxo8rkpHOKqj2CB+SPCZf1zyo7NwYQ0B1mfclnl71wnJiB+Gtq+
-	 Pdp9sBx0pw3Kg==
-Date: Mon, 15 Apr 2024 18:26:18 -0700
-Subject: [PATCH 01/31] xfs: rearrange xfs_attr_match parameters
+	b=LCzHuvcIQ9vA5mhI9nRMEBzksbQBJObS9tMAOFYnfRlniCXfD+Zv2OcdXk3loFTUG
+	 XpcFE51obKAJa0rAPSV6OyfXLeZMY1iyeB1Yn5+wLLNtJgMaWBN8nO8pOCeIMj5M2p
+	 V0xR/UMbVEf1fI7KvrKLPXnxmB66Mh8VBQqGy7CLgCxQxE9zsoYzJsPBxhHjv1Ngmq
+	 3L1PNyYGrd3AGaXITAisiCPzcUgGbwF5vwT3bs/bftv81ObgevQ4DvyNNzxLLK7oFl
+	 WEAHk+CUMoLseS2+lI4oc5iudwxjwZ4sv9ca+y1HRcdS82wfdqWTAdaaZf3ORS1DJl
+	 rl/nJ98ojHxCg==
+Date: Mon, 15 Apr 2024 18:26:33 -0700
+Subject: [PATCH 02/31] xfs: check the flags earlier in xfs_attr_match
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, allison.henderson@oracle.com,
  hch@infradead.org, linux-xfs@vger.kernel.org, catherine.hoang@oracle.com,
  hch@lst.de
-Message-ID: <171323027803.251715.14078267857153551216.stgit@frogsfrogsfrogs>
+Message-ID: <171323027818.251715.653930288520430859.stgit@frogsfrogsfrogs>
 In-Reply-To: <171323027704.251715.12000080989736970684.stgit@frogsfrogsfrogs>
 References: <171323027704.251715.12000080989736970684.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,80 +46,61 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Rearrange the parameters to this function so that they match the order
-of attr listent: attr_flags -> name -> namelen -> value -> valuelen.
+Checking the flags match is much cheaper than a memcmp, so do it early
+on in xfs_attr_match, and also add a little helper to calculate the
+match mask right under the comment explaining the logic for it.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |   23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 3b024ab892e68..bb00183d13492 100644
+index bb00183d13492..c47fad39744ee 100644
 --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -510,9 +510,9 @@ xfs_attr3_leaf_read(
+@@ -507,6 +507,13 @@ xfs_attr3_leaf_read(
+  * INCOMPLETE flag will not be set in attr->attr_filter, but rather
+  * XFS_DA_OP_RECOVERY will be set in args->op_flags.
+  */
++static inline unsigned int xfs_attr_match_mask(const struct xfs_da_args *args)
++{
++	if (args->op_flags & XFS_DA_OP_RECOVERY)
++		return XFS_ATTR_NSP_ONDISK_MASK;
++	return XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE;
++}
++
  static bool
  xfs_attr_match(
  	struct xfs_da_args	*args,
--	uint8_t			namelen,
--	unsigned char		*name,
--	int			flags)
-+	unsigned int		attr_flags,
-+	const unsigned char	*name,
-+	unsigned int		namelen)
+@@ -514,21 +521,15 @@ xfs_attr_match(
+ 	const unsigned char	*name,
+ 	unsigned int		namelen)
  {
++	unsigned int		mask = xfs_attr_match_mask(args);
  
  	if (args->namelen != namelen)
-@@ -522,12 +522,12 @@ xfs_attr_match(
- 
- 	/* Recovery ignores the INCOMPLETE flag. */
- 	if ((args->op_flags & XFS_DA_OP_RECOVERY) &&
--	    args->attr_filter == (flags & XFS_ATTR_NSP_ONDISK_MASK))
-+	    args->attr_filter == (attr_flags & XFS_ATTR_NSP_ONDISK_MASK))
- 		return true;
- 
- 	/* All remaining matches need to be filtered by INCOMPLETE state. */
- 	if (args->attr_filter !=
--	    (flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
-+	    (attr_flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
  		return false;
++	if ((args->attr_filter & mask) != (attr_flags & mask))
++		return false;
+ 	if (memcmp(args->name, name, namelen) != 0)
+ 		return false;
+ 
+-	/* Recovery ignores the INCOMPLETE flag. */
+-	if ((args->op_flags & XFS_DA_OP_RECOVERY) &&
+-	    args->attr_filter == (attr_flags & XFS_ATTR_NSP_ONDISK_MASK))
+-		return true;
+-
+-	/* All remaining matches need to be filtered by INCOMPLETE state. */
+-	if (args->attr_filter !=
+-	    (attr_flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
+-		return false;
  	return true;
  }
-@@ -746,8 +746,8 @@ xfs_attr_sf_findname(
- 	for (sfe = xfs_attr_sf_firstentry(sf);
- 	     sfe < xfs_attr_sf_endptr(sf);
- 	     sfe = xfs_attr_sf_nextentry(sfe)) {
--		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
--				sfe->flags))
-+		if (xfs_attr_match(args, sfe->flags, sfe->nameval,
-+					sfe->namelen))
- 			return sfe;
- 	}
  
-@@ -2443,15 +2443,16 @@ xfs_attr3_leaf_lookup_int(
-  */
- 		if (entry->flags & XFS_ATTR_LOCAL) {
- 			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
--			if (!xfs_attr_match(args, name_loc->namelen,
--					name_loc->nameval, entry->flags))
-+			if (!xfs_attr_match(args, entry->flags,
-+						name_loc->nameval,
-+						name_loc->namelen))
- 				continue;
- 			args->index = probe;
- 			return -EEXIST;
- 		} else {
- 			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
--			if (!xfs_attr_match(args, name_rmt->namelen,
--					name_rmt->name, entry->flags))
-+			if (!xfs_attr_match(args, entry->flags, name_rmt->name,
-+						name_rmt->namelen))
- 				continue;
- 			args->index = probe;
- 			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
 
