@@ -1,216 +1,102 @@
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E9912A16E
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 12:02:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 374625FEE3
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 12:35:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713268950; cv=none; b=M6FEjtpuHaSo/KHYGPt+3zY0Wtq2UFxQzTAeK3F/5V9QTRL9JxthvXPbRzDhaQ84KVA9YpK7y1Gs5ePZVMgDq0yIjyEKWhpAONdcMQOv8t0oUwGVjxIKV73PVi2p96NeTaMO9uj+0KX29QwIOkQLibMLnVNcfxvV+YGyduO1gUM=
+	t=1713270934; cv=none; b=qHs3NaiF5yyYwtjiQsio52oH0ynIUoi/OUwPlQAv+wEiiuOOjZc9h9psKiRhns682GdllcQJMeouQV/Av/xZOit56ybyK22eZSFldxiD76aZ74XX/Y/wOEiP1VfpoafiQVR50Gz58i3e+Jj3aMiXjy3GWwG2KkDCVwZ0aUNxStM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713268950; c=relaxed/simple;
-	bh=1C8QensAqDcvNf44zqn5EdvvsKL0UVn3tH+ErfAOl+M=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=nInC3tkqgZIhr8ZFODVSOw570q33PzuSasF0SRw0r5XD8bggU57z/7d5YmGWX1wixhzIz6QtOJ3WF6w8FiUbeVxs/4HV7BDfShQpx8cZOwhYXpQ4106XgGgvxefbVYNaITZ8pkiZhRot9GcPASM+2ap7z+AvTrz38hfWvdxBeoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-36a14031548so44652135ab.2
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 05:02:25 -0700 (PDT)
+	s=arc-20240116; t=1713270934; c=relaxed/simple;
+	bh=Otonp36A4CFHFhtku/XaBP+q7N6ndudpSwqeXzv6kfs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WuXzZXTSFwh3EAho+OWJ566c35Pxet0pMH2ujkLtDf3dqM4jehB0WNnbo3h/xeqWbuoMnPELrm7kEkrNAbVqzFLvo2UhNLu7OToGZc7GcUF3iv4CXE7t7twbJ7DP/pmHXjXxkvkTqwf+8kyC9Lr2/El7ZJiJGjfJiY5Nn3K5TXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=a8dj//SA; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a8dj//SA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1713270932;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ilaCBCSVw+rfRJPGDxpVmzC2ZCn4w04I8oG7vFJ1ScA=;
+	b=a8dj//SAQpty13RvKsrrfOU4d69WemIqvIbqK+vPOS028zHPqFBWWMZzsexy+xeaaCFvYu
+	64vSwCIDVrC6T2Fi2nkrb73QrRzBw7nj/qp+GGx1wCzlveDupVzvtm1UmxhYObpJZT1sug
+	o6aXvhYA6tY/ItlTa07W+I8ibPOTJ10=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-88-l2KWRRkWMOG8qm8tGG-CoQ-1; Tue, 16 Apr 2024 08:35:30 -0400
+X-MC-Unique: l2KWRRkWMOG8qm8tGG-CoQ-1
+Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-56e40f82436so1746009a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 05:35:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713268945; x=1713873745;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RliH/lwwNQjo2LcJr03DjdCa5kWkv5xAiJHUNHgwVYw=;
-        b=ZQsLuC5ZLzE/x5uLmlP9GPH3HaQcQr8yjf6gsjjvHA7zTCxbUSNTVjzQpLv7KneHZf
-         82AfUFB23aKpRKaNHBircWH3iF30Egnfzq2PZc1mu3jkNxbQwgNWG0OOehv6rVfsn7z9
-         3DrR4H6BH4bl3G15p3srcTh7YRIrhNX2Kuc2M5WUtOV+OqMweJs7hqqlEDnPe1w1uc7f
-         B01CD/pzriytsL6iesUdwByrga4f/9fV7nRNf3D2sLMubdqq507lbh9XYpysR7W1KxN5
-         7/qVdxwmR++CtfCQdF4xDVdunbcxkVwxB/BdqndwfZaGJehseuZGK1AfgRVRznOWdcDa
-         w4CQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVlRXh0OYagtyZAUe8owYOCM99GX40F6b4csbRjWcDlNVUJtYCD5GpUVrjvJnxvnp/w7CrUsMK5/S4/z03JT4CI3eMJa/uwDfKE
-X-Gm-Message-State: AOJu0Yzxk7N1JzQ/aeFkg1FQ1nLkgWaRxSUNh4LoKCq/fXdIYaczy/xy
-	O8EObP4aIo9O1cte3mnFaTfD9dC0Gij3zIVnLaGER/QvG1DDZR2huzvfn2l5eG2ZLtVhZCBV7WF
-	9wSikw+pPBRUDEb+rQfkeBYYzj8Pns35PL4Ifx7xXj0trX5W/Y5JKyvc=
-X-Google-Smtp-Source: AGHT+IGPHdee8JjKHOeuBQgVBStbNj/c5ul3p6q9T2b8cyMj+j+acL2QyjWoUjWV1FqPD1NBTzOcmL94+78qDTWCLGtM5nTs7iPr
+        d=1e100.net; s=20230601; t=1713270929; x=1713875729;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ilaCBCSVw+rfRJPGDxpVmzC2ZCn4w04I8oG7vFJ1ScA=;
+        b=H7Aa35DIQlFwV40oYnJIPdwvztmIPKh96pgPzBDKfinKIZe7OTxnwuQYin7CZIVvds
+         8U7DkrCzy8qog4K2pzH3klLfv/08gNK28C+kP5xLXdPIUlgrQTyabMXwN6Uk7zyV8y82
+         oxqOcQ3ewq1SwtHfnU7g6sBo4fxL35YrUisgDkAWdfGZpsXbXHwQYcru/gFRYrU6+7XC
+         erYWJvLJAWHXcB5IQR5EI/2uCQChaAObonpzoeKHZBVnimuY7xlJNeoHC2sa5CosVDPX
+         rDMp8U9p1e4Y8EQCtz6saNCQAjxFpWXPlgwz2bd/4aWmvXtEpj9WFJ2IWVbnyxWrDl7/
+         E0EA==
+X-Forwarded-Encrypted: i=1; AJvYcCUmxOX2M8pb3Mp/T3Kyn8BdUa88KTXXVamCVHqKEqgKYLUXLImBxe0C4DhpRkJ89jm+GRxARnxDIN4+M0Jn6rVs4A1wmuDXZx2K
+X-Gm-Message-State: AOJu0YzBrD36g3NXrSj/i9fKMsZ3XsOeTIp3Fk39RXGpgGxkVx8BmYL2
+	jwhaOD2Rxj06uBo4EOR0FmzSyRQnZyVuXubv96ylXLLfMnr6qBFOMFuGiCKXASoAXo1jJKFF5Qq
+	DcaAzQlHkPC58faTvPXroTJgltsXnNZMGE2Sx+vKAWyBFKksnJs85+MdD
+X-Received: by 2002:a50:8e12:0:b0:56e:2433:a0ab with SMTP id 18-20020a508e12000000b0056e2433a0abmr11502657edw.34.1713270929384;
+        Tue, 16 Apr 2024 05:35:29 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE3lY7ewIZHClf4XpOpKtdCZ4mOQaE7j2xtcAe80NB1Dp/nR9NX0kvVON9Dxr81ZJ7B9131ew==
+X-Received: by 2002:a50:8e12:0:b0:56e:2433:a0ab with SMTP id 18-20020a508e12000000b0056e2433a0abmr11502641edw.34.1713270928930;
+        Tue, 16 Apr 2024 05:35:28 -0700 (PDT)
+Received: from thinky.redhat.com ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id p8-20020a05640210c800b005704825e8c3sm465584edu.27.2024.04.16.05.35.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Apr 2024 05:35:28 -0700 (PDT)
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH 0/5] xfsprogs random fixes found by Coverity scan
+Date: Tue, 16 Apr 2024 14:34:22 +0200
+Message-ID: <20240416123427.614899-1-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:2199:b0:36a:3f1f:bd4e with SMTP id
- j25-20020a056e02219900b0036a3f1fbd4emr836028ila.5.1713268945260; Tue, 16 Apr
- 2024 05:02:25 -0700 (PDT)
-Date: Tue, 16 Apr 2024 05:02:25 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000e33add0616358204@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_icwalk_ag (2)
-From: syzbot <syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com>
-To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Hi all,
 
-syzbot found the following issue on:
+This is bunch of random fixes found by Coverity scan, there's memory
+leak, truncation of time_t to int, access overflow, and freeing of
+uninitialized struct.
 
-HEAD commit:    9ed46da14b9b Add linux-next specific files for 20240412
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=100fbfcb180000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=7ea0abc478c49859
-dashboard link: https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+--
+Andrey
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Andrey Albershteyn (5):
+  xfs_db: fix leak in flist_find_ftyp()
+  xfs_repair: make duration take time_t
+  xfs_io: init count to stop loop from execution
+  xfs_scrub: don't call phase_end if phase_rusage was not initialized
+  xfs_fsr: convert fsrallfs to use time_t instead of int
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/fc649744d68c/disk-9ed46da1.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/11eab7b9945d/vmlinux-9ed46da1.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/e7885afd198d/bzImage-9ed46da1.xz
+ db/flist.c          | 4 +++-
+ fsr/xfs_fsr.c       | 4 ++--
+ io/parent.c         | 2 +-
+ repair/progress.c   | 4 ++--
+ repair/progress.h   | 2 +-
+ repair/xfs_repair.c | 2 +-
+ scrub/xfs_scrub.c   | 3 ++-
+ 7 files changed, 12 insertions(+), 9 deletions(-)
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
+-- 
+2.42.0
 
-======================================================
-WARNING: possible circular locking dependency detected
-6.9.0-rc3-next-20240412-syzkaller #0 Not tainted
-------------------------------------------------------
-kswapd0/88 is trying to acquire lock:
-ffff88807b8bc6d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
-ffff88807b8bc6d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
-ffff88807b8bc6d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
-
-but task is already holding lock:
-ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6819 [inline]
-ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbe8/0x38a0 mm/vmscan.c:7201
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (fs_reclaim){+.+.}-{0:0}:
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
-       __fs_reclaim_acquire mm/page_alloc.c:3825 [inline]
-       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3839
-       might_alloc include/linux/sched/mm.h:334 [inline]
-       slab_pre_alloc_hook mm/slub.c:3847 [inline]
-       slab_alloc_node mm/slub.c:3937 [inline]
-       __do_kmalloc_node mm/slub.c:4077 [inline]
-       __kmalloc_noprof+0xae/0x400 mm/slub.c:4091
-       kmalloc_noprof include/linux/slab.h:664 [inline]
-       xfs_attr_shortform_list+0x6f1/0x17b0 fs/xfs/xfs_attr_list.c:115
-       xfs_attr_list_ilocked fs/xfs/xfs_attr_list.c:527 [inline]
-       xfs_attr_list+0x25b/0x350 fs/xfs/xfs_attr_list.c:547
-       xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:314
-       vfs_listxattr fs/xattr.c:493 [inline]
-       listxattr+0x107/0x290 fs/xattr.c:840
-       path_listxattr fs/xattr.c:864 [inline]
-       __do_sys_listxattr fs/xattr.c:876 [inline]
-       __se_sys_listxattr fs/xattr.c:873 [inline]
-       __x64_sys_listxattr+0x176/0x240 fs/xattr.c:873
-       do_syscall_x64 arch/x86/entry/common.c:74 [inline]
-       do_syscall_64+0xfa/0x250 arch/x86/entry/common.c:105
-       entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
--> #0 (&xfs_dir_ilock_class){++++}-{3:3}:
-       check_prev_add kernel/locking/lockdep.c:3134 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
-       validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
-       __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
-       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
-       down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
-       xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
-       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
-       xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
-       xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
-       xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
-       super_cache_scan+0x40f/0x4b0 fs/super.c:227
-       do_shrink_slab+0x705/0x1160 mm/shrinker.c:435
-       shrink_slab+0x1092/0x14d0 mm/shrinker.c:662
-       shrink_one+0x453/0x880 mm/vmscan.c:4809
-       shrink_many mm/vmscan.c:4870 [inline]
-       lru_gen_shrink_node mm/vmscan.c:4970 [inline]
-       shrink_node+0x3b17/0x4310 mm/vmscan.c:5929
-       kswapd_shrink_node mm/vmscan.c:6741 [inline]
-       balance_pgdat mm/vmscan.c:6932 [inline]
-       kswapd+0x1882/0x38a0 mm/vmscan.c:7201
-       kthread+0x2f0/0x390 kernel/kthread.c:389
-       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
-       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(fs_reclaim);
-                               lock(&xfs_dir_ilock_class);
-                               lock(fs_reclaim);
-  lock(&xfs_dir_ilock_class);
-
- *** DEADLOCK ***
-
-2 locks held by kswapd0/88:
- #0: ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6819 [inline]
- #0: ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbe8/0x38a0 mm/vmscan.c:7201
- #1: ffff8880866840e0 (&type->s_umount_key#74){++++}-{3:3}, at: super_trylock_shared fs/super.c:561 [inline]
- #1: ffff8880866840e0 (&type->s_umount_key#74){++++}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
-
-stack backtrace:
-CPU: 1 PID: 88 Comm: kswapd0 Not tainted 6.9.0-rc3-next-20240412-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x241/0x360 lib/dump_stack.c:114
- check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2187
- check_prev_add kernel/locking/lockdep.c:3134 [inline]
- check_prevs_add kernel/locking/lockdep.c:3253 [inline]
- validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
- __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
- lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
- down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
- xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
- xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
- xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
- xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
- xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
- super_cache_scan+0x40f/0x4b0 fs/super.c:227
- do_shrink_slab+0x705/0x1160 mm/shrinker.c:435
- shrink_slab+0x1092/0x14d0 mm/shrinker.c:662
- shrink_one+0x453/0x880 mm/vmscan.c:4809
- shrink_many mm/vmscan.c:4870 [inline]
- lru_gen_shrink_node mm/vmscan.c:4970 [inline]
- shrink_node+0x3b17/0x4310 mm/vmscan.c:5929
- kswapd_shrink_node mm/vmscan.c:6741 [inline]
- balance_pgdat mm/vmscan.c:6932 [inline]
- kswapd+0x1882/0x38a0 mm/vmscan.c:7201
- kthread+0x2f0/0x390 kernel/kthread.c:389
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
