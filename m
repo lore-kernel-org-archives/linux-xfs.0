@@ -1,42 +1,44 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921C110A22
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 16:45:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8882BFC1F
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 16:50:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713285960; cv=none; b=J4kr4TVoK9QBbvH97lcOylwvHhJwpaD1+BNafgIhDiPxNhWNdGcwQcAMYBbQ4BGXV1+P5ZPsf1hJTEAr8+j5U96sEddSPvo0/3HJA24LPEN5Jn5ksJrqwbU7+I4a17W53qBiqtzyoAhorPkTrjIKNaNtjTILlwWUs6Lg4cOSzmM=
+	t=1713286257; cv=none; b=n+cTmPQIZnPLHHXRN2dxALhFbI/I4wwUncGa0NjA3PoTLNf2DnbN7MimbWiAHBHQZvX5wg7N1yF/dxd9walaio8qhnid3W6ueNlvyNH9XUcN4HhVLNZrPN5oMJ30vS8YBv1RO2D0NrFsHkyuLGE/DrxkEbdblyTIu7DCSDqMJH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713285960; c=relaxed/simple;
-	bh=yY/urgVR92vuyS7dmUEHcXw/MtINw5+QRm2mfptgOQk=;
+	s=arc-20240116; t=1713286257; c=relaxed/simple;
+	bh=iLSQmOuilYW6ElH3WpXWetEikrbggq7OPvkqGIw7VW4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a9rCt3A4ppD+gLx+x1Pbk83VtZ5g3pOgozzL2oZleFoCP1EvFPI1L48Xpuq8+lLoH50d+voTtVeAHqayvcuT8aY6RQc0kdGr77AGd/u5oUVKh5RsylZMfLVEwGcFAtaGvRF2zzBVUZTSgCkq5JmjmsVWAO3StZU9tGTH8alYjqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xCToZJOb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=moFzToZs0IihwI8Oar2yLd1U61CQtHb6saUCt8AGGzpIcHgz8ahUnqJITOiIDJmALEeT42+V2W3iDB8c8NxhtQVfrsPb0Ij3mbC4vUAVoTOmGn6qYlhU95ps98Cok9v53C3aA/I5b3Laxrj97yaQSvjPjj1W0n3otwARUfkzajg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uaKWFmRb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xCToZJOb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=QI4dPLJ1fsUnijknChmFAJLYna29BZ6teTfG29hP8zQ=; b=xCToZJOblJAy9w/f7f6/wMHSgf
-	ie9M3VrLpqUlxYAX3Bloz/BjOVuM3+xG4RrpH0dlTF1UjzYNrs+MTkI//BZ/qA7a//WNMAzo7g63I
-	1uwgq/xKts1xFvrKniGeNe+XdUxc9/IWLvnVAZUrtd+YAJLymxks5zMHsfjO3kadR0obkduAzwMu/
-	IWtN1ZDoiPtycle4puCGmY8G0CI9sModWUTWz4pFiJj1dY7hSSKdP7eYJZKyts2xzkBaHGUah+WUb
-	nOhARb7tijfARors7vQjYl7j43/jlvIHHui/chiuoaLRcv4PfJTl6xRd2qdFt3S/rSTlTpC0siJxM
-	bcj7DEgg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwlwV-0000000D4EQ-0okO;
-	Tue, 16 Apr 2024 16:45:59 +0000
-Date: Tue, 16 Apr 2024 09:45:59 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs_repair: make duration take time_t
-Message-ID: <Zh6rRxuTO78gyIKk@infradead.org>
-References: <20240416123427.614899-1-aalbersh@redhat.com>
- <20240416123427.614899-3-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uaKWFmRb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 096A0C113CE;
+	Tue, 16 Apr 2024 16:50:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713286257;
+	bh=iLSQmOuilYW6ElH3WpXWetEikrbggq7OPvkqGIw7VW4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uaKWFmRbpYeXEq9BVkH+/tSXnrAQsfWJVgHWqgiFkFkYXdUmj+6eLrGfLi6SpoeWT
+	 piCktxY33UWPdkxXXY/CYTHUjIm1MtbnA8kXH8vJcyptSmR3ElQZ9XkNTGJICFsLec
+	 A/KH2zYQi+sfHj2YDvbI8IWASrC6lESHXajth3xwCWO+RVFJcQ0egf3PEKbFwcBqL5
+	 usVPYmn+3iXwWy1y/fJEazYOh33F06FvbcO5ABtL4//nm7Km+0O03WQmAgE75tK+cw
+	 SN60gxFsefiD/LxkQf3TtaVlXVeQDjsqJqR0IpKqE/DpEVIIMzP6PtSQJARv1ZNgKk
+	 BxFEn+sCXFd6A==
+Date: Tue, 16 Apr 2024 09:50:56 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+	catherine.hoang@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 27/32] xfs: Add parent pointer ioctls
+Message-ID: <20240416165056.GO11948@frogsfrogsfrogs>
+References: <171270969477.3631889.12488500941186994317.stgit@frogsfrogsfrogs>
+ <171270970008.3631889.8274576756376203769.stgit@frogsfrogsfrogs>
+ <20240412173957.GB11948@frogsfrogsfrogs>
+ <20240414051816.GA1323@lst.de>
+ <20240415194036.GD11948@frogsfrogsfrogs>
+ <20240416044716.GA23062@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,25 +47,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240416123427.614899-3-aalbersh@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240416044716.GA23062@lst.de>
 
-On Tue, Apr 16, 2024 at 02:34:24PM +0200, Andrey Albershteyn wrote:
-> @@ -273,7 +273,7 @@ progress_rpt_thread (void *p)
->  	_("\t- %02d:%02d:%02d: Phase %d: %" PRIu64 "%% done - estimated remaining time %s\n"),
->  				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
->  				current_phase, percent,
-> -				duration((int) ((*msgp->total - sum) * (elapsed)/sum), msgbuf));
-> +				duration((time_t) ((*msgp->total - sum) * (elapsed)/sum), msgbuf));
+On Tue, Apr 16, 2024 at 06:47:16AM +0200, Christoph Hellwig wrote:
+> On Mon, Apr 15, 2024 at 12:40:36PM -0700, Darrick J. Wong wrote:
+> > True, libhandle is a very nice wrapper for the kernel ioctls.  I wish
+> > Linux projects did that more often.  But suppose you're calling the
+> > ioctls directly without libhandle and mess it up?
+> 
+> The you get different inodes back.  Not really any different from
+> pointing your path name based code to the wrong fs or directory,
+> is it?
 
-What is the point of the time_t cast the gets applied to the
-final calculated expression?  Even if time_t is wieder than what
-it was, it would only extent it after we've overlflow the original
-type.  The whole thing also just is formatted and filled with useles
-braces to make it look really odd.  Something like:
+I suppose not.  But why bother setting the fsid at all, then?
 
-				current_phase, percent,
-				duration((*msgp->total - sum) * elapsed / sum,
-					msgbuf));
+> > > In theory no one cares as all operations work just fine with disconnected
+> > > dentries, and exportfs_decode_fh doesn't do these checks unless the
+> > > accpetable parameter is passed to it.  The real question is why we (which
+> > > in this case means 15 years younger me) decided back then we want this
+> > > checking for XFS handle operations?  I can't really think of one
+> > > right now..
+> > 
+> > Me neither.  Though at this point there are a lot of filesystems that
+> > implement ->get_parent, so I think removing XFS's will need a discussion
+> > at least on linux-xfs, if not fsdevel.  In the meantime, getparents can
+> > do minimal validation + iget for now and if it makes sense to port it
+> > back to xfs_khandle_to_dentry, I can do that easily.
+> 
+> Uhh, I'm not advocating for removing ->get_parent at all.  We actually
+> do need that for security on NFS, where the file handles are used
+> undernath pathname based operations.
 
-would be way more readable.
+Ahh, I wasn't aware of that, beyond a sense that "a lot of
+NFS-exportable fses do this, so there's likely a general desire for this
+to be wired up."
+
+> And it turns out my previous analysis wasn't quite sport on.  The
+> exportfs code always reconnects directories, because we basically
+> have to, not connecting them would make the VFS locking scheme
+> not work.
+
+Noted.
+
+> But as we never generate the file handles that encode the parent
+> we already never connect files to their parent directory anyway.
+
+I pondered whether or not we should encode parent info in a regular
+file's handle.  Would that result in an invalid handle if the file gets
+moved to another directory?  That doesn't seem to fit with the behavior
+that fds remain attached to the file even if it gets moved/deleted.
+
+> OTOH we should be able to optimize ->get_parent a bit with parent
+> pointers, as we can find the name in the parent directory for
+> a directory instead of doing linear scans in the parent directory.
+> (for non-directory files we currenty don't fully connect anwyay)
+
+<nod> But does exportfs actually want parent info for a nondirectory?
+There aren't any stubs or XXX/FIXME comments, and I've never heard any
+calls (at least on fsdevel) for that functionality.
+
+--D
