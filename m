@@ -1,179 +1,216 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F3A6BFCF
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 06:51:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713250304; cv=fail; b=uSP2xL/bfbBnoChzIv7HEId3en6pZykqc+nnluHKtlGvi77WSIoDkDhTdm2JzbsXocqOFyRwck7aX67CMUWp4iG6j3DUWk/XcfCGGJK3lpwO822f+ls7vhfc8CsAPedfXXDYGs/WprbCRmoF5+dbEO/xQlwX/4+xeBml9g/Ctho=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713250304; c=relaxed/simple;
-	bh=buRYCBz9xKO7eeGo+TlhH0SIqI30l/yDh/QNC3nJhhM=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=ubv7ify0RhO5Gki+DmRV2z10Rwt/WeF1Zv6Pr3jYOmC6r2hvSl1ysBvwRwIRKsrm1ElFJsoakdLVEP5n3TFa8jlYR9ICa2efQDyCw7s597Ns+D79mLfZwDFc+1ojIuolt8cb66V+0Hf/tJUHoKbGXeP77EaP2YKNvBWoehs6Q5E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=hYSSiE2G; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=qTn31XCN; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hYSSiE2G";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="qTn31XCN"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43G5FXQ9015508;
-	Tue, 16 Apr 2024 06:51:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=B2+MzH3eftOGdG9F99jePqk8j4p+xLanWL9tXldXdZg=;
- b=hYSSiE2GWFvLHUCu7KrqLixjz8XUviMQJyuf4uK1d1+bh2LlaXZWCaLOVnfydPAXy0I8
- L3xhfJep47MXxXgviZHNn7OrpO+DiiKqpLUpXdGqvRi+NwJLMZSxs/luUa+5J23jGrQ1
- 3JYbZsLyljx1Pcm58vr9vG5iHZTrD3Hf5M4fusQ7rNwXzMVZRSHKdkH4DT1fHLF96JC5
- 6RNE0eI3UTOaSk/0vDIz/E6FcNuJjZXAl7RG564CJBPjNEoDu6b7g9R8Lq+T3UkNddVp
- tek5yl+4+KZ/2b69TWRRdPHqWgR8XCYoCHAt00Q5M0RQBtCi6GPB4XfxAwp7dKJXQtmw hg== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xfgn2mfvh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 16 Apr 2024 06:51:35 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43G6UaP5021697;
-	Tue, 16 Apr 2024 06:51:33 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3xfggd30s8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 16 Apr 2024 06:51:33 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=c8d8N78+POTGZ34nHA2CkqXVgdv1FvtiqYu+6Q8riDZqLdBfoT0OLi5vh4GlePupqam6yC4WL8U4sJmnOEYlwXf9Wj56bUsQvSHckeSUXXjxD1ZDWdaUnqBYLseCDiD65SaBUg5vuHJpe1y2r+f8y7JkFEJKIU8PKcf9o0jn2VRp0habAwoKN/5r8CF49kq1qVsphL6DIintIX7xOTkd0cYnhSxU2NUsK4iMrAwm6wWIJ2drpAahCoim3ufAEh4kv/x77zaeeQ9zvDGZlOZJVS5ZIvPMmR9ca8II0H6/TBFVj3ltqP40cJGuvfoGFwO8PeMT3culEC5fOBIjLGsMCA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=B2+MzH3eftOGdG9F99jePqk8j4p+xLanWL9tXldXdZg=;
- b=jWAkl2zvXgv5fuyNfg9dFZqThNt74s5hGny2C0qnTDtGSEP3fS0o6ipfcvMm7I7O7gi0QdJZNs9ss0nRJ36B2zHsfi8k5iV9JIBs1J2c3CzTCnk2dpjT2mSbUEbkFepL0Rg/oYiugiHK0Fvz2+WK+qn+C685vLlhiV6Fd8+Ptm4/PaVMt2hIdPCLdmRFAYHfHeTR4sEZPUz6EJMc7JosHuhzaNvVqdeqTmF61ks2VCQQbITopiM4ayGuBw2LHlihhT9T3TeMbwU9/3XjIDxp9AN1Ua8e+DyTjD3mrq0H5+0KwoN5MZLzOZVTMrsvOlRRr6FnCCD1msR3quYgl109hQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=B2+MzH3eftOGdG9F99jePqk8j4p+xLanWL9tXldXdZg=;
- b=qTn31XCNXhfQ5v8f/2WTqg2yDRVJx8wuQT2tRfVOIer5vS5uHecpQRrgvpv6XxPsM6ZMrX+FbTKPbFZMIRqJpp3Q/4PdRbVyTk0MVcMYNBJlN/ehop8fYJyM7mu3wJWsrkNvtstJY9t8gZ1uUhcZVXsL0ZPReQmwrOqyLotFh6c=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DM4PR10MB6837.namprd10.prod.outlook.com (2603:10b6:8:107::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Tue, 16 Apr
- 2024 06:51:32 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ae68:7d51:133f:324%4]) with mapi id 15.20.7452.049; Tue, 16 Apr 2024
- 06:51:32 +0000
-Message-ID: <90029ad9-5848-4fc1-ac0c-763ca96a3ab3@oracle.com>
-Date: Tue, 16 Apr 2024 07:51:29 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/5] xfs: allocation alignment for forced alignment
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-References: <20240402233006.1210262-1-david@fromorbit.com>
- <205661cb-6d7a-46e6-96fc-a4ac9480bebf@oracle.com>
- <Zh3Ih/T7jqOHGQF/@dread.disaster.area>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <Zh3Ih/T7jqOHGQF/@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P123CA0392.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18f::19) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E9912A16E
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 12:02:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1713268950; cv=none; b=M6FEjtpuHaSo/KHYGPt+3zY0Wtq2UFxQzTAeK3F/5V9QTRL9JxthvXPbRzDhaQ84KVA9YpK7y1Gs5ePZVMgDq0yIjyEKWhpAONdcMQOv8t0oUwGVjxIKV73PVi2p96NeTaMO9uj+0KX29QwIOkQLibMLnVNcfxvV+YGyduO1gUM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1713268950; c=relaxed/simple;
+	bh=1C8QensAqDcvNf44zqn5EdvvsKL0UVn3tH+ErfAOl+M=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=nInC3tkqgZIhr8ZFODVSOw570q33PzuSasF0SRw0r5XD8bggU57z/7d5YmGWX1wixhzIz6QtOJ3WF6w8FiUbeVxs/4HV7BDfShQpx8cZOwhYXpQ4106XgGgvxefbVYNaITZ8pkiZhRot9GcPASM+2ap7z+AvTrz38hfWvdxBeoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-36a14031548so44652135ab.2
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 05:02:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713268945; x=1713873745;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RliH/lwwNQjo2LcJr03DjdCa5kWkv5xAiJHUNHgwVYw=;
+        b=ZQsLuC5ZLzE/x5uLmlP9GPH3HaQcQr8yjf6gsjjvHA7zTCxbUSNTVjzQpLv7KneHZf
+         82AfUFB23aKpRKaNHBircWH3iF30Egnfzq2PZc1mu3jkNxbQwgNWG0OOehv6rVfsn7z9
+         3DrR4H6BH4bl3G15p3srcTh7YRIrhNX2Kuc2M5WUtOV+OqMweJs7hqqlEDnPe1w1uc7f
+         B01CD/pzriytsL6iesUdwByrga4f/9fV7nRNf3D2sLMubdqq507lbh9XYpysR7W1KxN5
+         7/qVdxwmR++CtfCQdF4xDVdunbcxkVwxB/BdqndwfZaGJehseuZGK1AfgRVRznOWdcDa
+         w4CQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVlRXh0OYagtyZAUe8owYOCM99GX40F6b4csbRjWcDlNVUJtYCD5GpUVrjvJnxvnp/w7CrUsMK5/S4/z03JT4CI3eMJa/uwDfKE
+X-Gm-Message-State: AOJu0Yzxk7N1JzQ/aeFkg1FQ1nLkgWaRxSUNh4LoKCq/fXdIYaczy/xy
+	O8EObP4aIo9O1cte3mnFaTfD9dC0Gij3zIVnLaGER/QvG1DDZR2huzvfn2l5eG2ZLtVhZCBV7WF
+	9wSikw+pPBRUDEb+rQfkeBYYzj8Pns35PL4Ifx7xXj0trX5W/Y5JKyvc=
+X-Google-Smtp-Source: AGHT+IGPHdee8JjKHOeuBQgVBStbNj/c5ul3p6q9T2b8cyMj+j+acL2QyjWoUjWV1FqPD1NBTzOcmL94+78qDTWCLGtM5nTs7iPr
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DM4PR10MB6837:EE_
-X-MS-Office365-Filtering-Correlation-Id: d637211f-c87b-4d03-b561-08dc5de1a661
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	gDRe2IVic6VuPGPoQ5wPgjKOWW2ZRomRerIKKRaqNYpUYif6MLqv+KtXHgIl3lCFgOMe7vdKUE8wlRcXNwb1Yy38pTIJ9OG4TtUBgge5uEx9bLBYwWhAp7mZ32TxSC0pggd8FY2MiDzXYdI//zxtnVOpD1nIb2fv+yTbaDelX3N7nGw4k/rxNF/rWepXtnm81bLOsbjqqshGePgOn9DL2AkRtwPtq1IkPTNX+5Bwr7sAWx1VrhZ3t4bq8v7HPSJqUuAK6PdeSlummw+uhSpGcoLWSk9smOsmlhFm7QQyVjncmBweisc8XP1jxPpx1Jzh5m1ufNEpX5e41/D+cuNHeDCxL3G1d3phl1qq0lwxL/+ToKxrS5c2TUWuwkd2vxnf3r9TMkhaaIrJUFkgEWOV23dOYYzwnPyuVtXIjz2WCDBqGmtqNzv9c/pBS3vVPqEgZtNDgWJK9yJxPrcuwpjqFFli2LD7/MNtYzHd4DVLdx1vGpH0lM4TxNRfixAxHqYXJJ7re0sN+uht6fwI99pNyUEpMb31WPmK3ElLRPS0p2jY535mMcX940syaTlcRlAllpu6IdB5rAcpZyti/+fCmSKmnRdo6ppocgxhbLu0z1GWXoxwUtf9Lw2Ub3hmibXghAvlVkEhWziuvwASfgis+myaSDrd2658SKntP8e1zF0=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(376005)(366007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?VTljZ3JCeldsbDdaT2hicVJTcFBWYmQzOXJnd0taK1RaNnV2VzRsQU85dGll?=
- =?utf-8?B?ek5RK3hvNHBJODUvVEh3cktLTlFlLytoUVlJSXRLZTc2M2xLc3dscW9UKytF?=
- =?utf-8?B?dWNOb3prQ3VpM0NkeFc1a3BneFNSbmd2dSt4dGU5VFFQTnVzNVFsRmVkNlk3?=
- =?utf-8?B?UHc0SHZnY0F6a1pzRW9ZdjIzOVdpN1FRbFltc1VtQkpIY25NYWs1cDFac2Nu?=
- =?utf-8?B?dHFKa09icFMzbE9yL3pEdGNjdjJNdmJiTUdiWjVMbk9OV1h3M0NwQWtoUER2?=
- =?utf-8?B?WXVQb3BOSWdvZXpYa09mcittZnptVjQrc2o4dU03S1d5bGEyUDlobEVYbHZp?=
- =?utf-8?B?dlRxZElyb1Z0S2xWOU5KSkJEbU5waHdIajZIZFZ3R1hTNERFeGtFU2VIMCt6?=
- =?utf-8?B?ZGVpckllbC9KZnhXd3hQRkthYTB3YUxDNzNPOVVsUnQyQ0EvTmduWmRqM3Bs?=
- =?utf-8?B?ZE01NkF4d3UrNUl1ODcrYkEwN1hEUm9IT1lGdm9rTXI5Z2Rtb081Tnk2eEtR?=
- =?utf-8?B?K3R6RS9tdk01eldOZkpYdlFBWFVtTkJpRHE3TVdxWVNzc3k1S0w0WUlsQndG?=
- =?utf-8?B?OTJtTkR1YjZRSUhUalVvRnNZYW95b2NrL3Urb0JGbWR2QjZsNVo0S3MxbE9L?=
- =?utf-8?B?YytkeTAvazV1TjBsMXdiWTU3KzRZdVRSTWo0cXNCRmU1ekxienoxdHdBNkVk?=
- =?utf-8?B?VGpUQUxKY2djN0R5WnhWYTBhMCtDQjBUT2lGWHhhYUNiUHFJRG0xT0hEQ0Ez?=
- =?utf-8?B?dm9JUkp6WWJhbUtEWi9ZbU5YV2dzREpNTEIya1ZubzRzRGdrR3BHcjErNU05?=
- =?utf-8?B?TWlaeHFVN1Q1RW9NdEROTndBNjJjTlk5cVhTWEhLSkhQZmJEYnYzUkFHOVR4?=
- =?utf-8?B?QWhURmpBcEhwVFZmek9IS1RUTXFuaTk2SWtrUGJJTGcyTFJxMUozYlhlUDFX?=
- =?utf-8?B?R0tHU3dOQVpwdzZ6bGVWQThOTko0NFRPYURpNTdTRjQ4SHJKcW5HejJDTm9v?=
- =?utf-8?B?L1IxVlRGekdwNkFHT3pzVTZscGg3NWgvMmVvMXBtZEo3SXFNd1laWThmT1hU?=
- =?utf-8?B?K0JFamlaUk5VeThkdXVIWEZWT0VKazl5VDZuRnc3UTNaNzhSVExORzlvSGto?=
- =?utf-8?B?cDRWRDFqZ25qSjg1enRzYUM1dGttMWVoTU10SUNEd20rTjdrb0RIekZVcE9r?=
- =?utf-8?B?alduVlBRQWV1bjZKZmEzaXlDQkwwN2swdXBQNFh4ZVhZSlk2YWxzazRCZWF5?=
- =?utf-8?B?TGFIRDVWd2ltTk8xdnhoVW4vMEIwK0F1NXl1cWx5WUE1RjBWMTdQQmlmTHNG?=
- =?utf-8?B?cFQ0cmRlOVNGSE1vL0lBWnpPajVNdW1SRHdSeGZEYVB2Zy9VV0I2V2Rab3hS?=
- =?utf-8?B?NVNBYTEvcFdDY3VnNGRuR3ROMkk1c0FCbHVvSDhCd1ZXOVFvbkVrQ1k0d3dm?=
- =?utf-8?B?SVB0aWV2OU9aUEFOengrbXppekN0NmtVcEVZRTFHUmhmWDhBZkQ5Z2t4Nkd6?=
- =?utf-8?B?dExYYkJlbklRb1plM2FwaDNKTmZRQXdBVGt1R2ptaDdteEw2R3M5SlphemlM?=
- =?utf-8?B?bmpNR0l1M0JWRTN0QnpxRDJVR1gxc3h4V0N2RHBJalU4anpBZHlweGRvbGRE?=
- =?utf-8?B?NWxMV1ZtR0Z6OXNkbG92V0g0akVlN2ZzQW5YNVhrU1ZDaFdzNXljcTRjNEM4?=
- =?utf-8?B?ci9VbVc1UjhiMGFmRGhuOG04VTlXV1ZOZU9MR29ZcktvRElvUE44bVA3SE5x?=
- =?utf-8?B?Mlcveng3c1ptMUUwS1FIRVVKV3ZlaHdGL0pHbGhyU2ljR3NUeHVTZUl2UHZu?=
- =?utf-8?B?K3g1UjE2Q0N2NDkveU5pcjVlRGR6bGJXa1pOQ0ZhbThYY2NPVzJXeU02YXc2?=
- =?utf-8?B?TkU0RUNWZ09aRkxLZGo3OGtCZmVaNmZPWk4zRGhlTXB1UnFTWnJIMENoUUdK?=
- =?utf-8?B?Z1JuU3VKVlpoR2lWVERFV0R0M1o3TTJxSGdEblB1dWJWQUU3ZGN5dm1LMmxT?=
- =?utf-8?B?SHdwT2hTa0RrbjlnMFdlNG5oeE9hNHprRWU4Q0hRTC9SMW5FcU9CWW9GTTBn?=
- =?utf-8?B?QVNGRGJiaFFKeXI3TlUwc1V6VmJad2JYUUNMR2twVUFWTkhQMlI3ZnYvVStn?=
- =?utf-8?Q?mK3UfhD003Sgqs0tpo1Lz02dE?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	KkLu7WxrPnyws745j1FEGTklxb/2vybrarhnq1Lrsl9p26lbtgwRf7EZJjZzK297J+upKTzjhg8cA12bl6k/u9P04fGjUDfrv1aqPj8WJg1Q7Ec2qeHi6z5RHALi/LUjFDy2kgagfSII6nF9jIoKyEocm6i3/zLI1K2cdEyQDHuZvADI7HQCpDsCqius34BVUjgTGgf70PGOt1YZBrjz3fIo11vzs6HWxlETd5V+NBc4qO2oZekNt2xx28EwhHFtNpiXCql7nkAFN3BnVAg3ZnOoH3Gvi/Hfjk1wSTVbl5R2ZLAVA4FC+y0VWfbWg1WJwTL3+RZDSQNP7ZzNJ+4OCEi8A2CzxxXLQqUrj0NwVh9qAfFgjByl2/Ij40JVdBht3/2wpVeroH9LoTUBe9stGKw0CqnsRxXV9KMrkSoW/0mc5IfNSIFz/FfY2A/wdwazIXD57nGzw2f8GKTR9RhD3zmJHuJYQYGDVTpxLEgk3rjZjq2vnNdZrKQQJUebXIvwGGEJtydyyuERzBHsNHuN5OzLi6jh1mre67/9z56tXU3TsbdtgKXsETx0N5qxXLvc93aFioqRXedW1tl1OAH+f0dOrk+21LStftdFcU+HJxc=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d637211f-c87b-4d03-b561-08dc5de1a661
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2024 06:51:32.2839
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: T74EnMpgx+tcJda+yG3uk/KTkN8tbieNpoCBSkFh5RgU1dLLo+ATAdXbMlH2/ZAAaq1+gWBtQOdetOzxWwAWAA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6837
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-16_04,2024-04-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
- suspectscore=0 adultscore=0 phishscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2404010000
- definitions=main-2404160040
-X-Proofpoint-ORIG-GUID: 4yhlxqEy69fGvZjlw_Y1KS-Iq23_18Ai
-X-Proofpoint-GUID: 4yhlxqEy69fGvZjlw_Y1KS-Iq23_18Ai
+X-Received: by 2002:a05:6e02:2199:b0:36a:3f1f:bd4e with SMTP id
+ j25-20020a056e02219900b0036a3f1fbd4emr836028ila.5.1713268945260; Tue, 16 Apr
+ 2024 05:02:25 -0700 (PDT)
+Date: Tue, 16 Apr 2024 05:02:25 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000e33add0616358204@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_icwalk_ag (2)
+From: syzbot <syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 16/04/2024 01:38, Dave Chinner wrote:
->> This feature is blocking me sending an updated version of my XFS support for
->> block atomic writes series.
-> So just add the patches to the start of your series until they are
-> merged...
+Hello,
 
-Fine, I can do that.
+syzbot found the following issue on:
 
-There was also a couple of patches which I was of unsure of here:
-https://lore.kernel.org/linux-xfs/a7de9521-d101-402d-a59b-f7ce936ba383@oracle.com/
+HEAD commit:    9ed46da14b9b Add linux-next specific files for 20240412
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=100fbfcb180000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7ea0abc478c49859
+dashboard link: https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-I was hoping that you would have a look at those, but I suppose that I 
-can include them in the next series also.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Thanks,
-John
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/fc649744d68c/disk-9ed46da1.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/11eab7b9945d/vmlinux-9ed46da1.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/e7885afd198d/bzImage-9ed46da1.xz
 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+4248e91deb3db78358a2@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.9.0-rc3-next-20240412-syzkaller #0 Not tainted
+------------------------------------------------------
+kswapd0/88 is trying to acquire lock:
+ffff88807b8bc6d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
+ffff88807b8bc6d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
+ffff88807b8bc6d8 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
+
+but task is already holding lock:
+ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6819 [inline]
+ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbe8/0x38a0 mm/vmscan.c:7201
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (fs_reclaim){+.+.}-{0:0}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+       __fs_reclaim_acquire mm/page_alloc.c:3825 [inline]
+       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3839
+       might_alloc include/linux/sched/mm.h:334 [inline]
+       slab_pre_alloc_hook mm/slub.c:3847 [inline]
+       slab_alloc_node mm/slub.c:3937 [inline]
+       __do_kmalloc_node mm/slub.c:4077 [inline]
+       __kmalloc_noprof+0xae/0x400 mm/slub.c:4091
+       kmalloc_noprof include/linux/slab.h:664 [inline]
+       xfs_attr_shortform_list+0x6f1/0x17b0 fs/xfs/xfs_attr_list.c:115
+       xfs_attr_list_ilocked fs/xfs/xfs_attr_list.c:527 [inline]
+       xfs_attr_list+0x25b/0x350 fs/xfs/xfs_attr_list.c:547
+       xfs_vn_listxattr+0x1d2/0x2c0 fs/xfs/xfs_xattr.c:314
+       vfs_listxattr fs/xattr.c:493 [inline]
+       listxattr+0x107/0x290 fs/xattr.c:840
+       path_listxattr fs/xattr.c:864 [inline]
+       __do_sys_listxattr fs/xattr.c:876 [inline]
+       __se_sys_listxattr fs/xattr.c:873 [inline]
+       __x64_sys_listxattr+0x176/0x240 fs/xattr.c:873
+       do_syscall_x64 arch/x86/entry/common.c:74 [inline]
+       do_syscall_64+0xfa/0x250 arch/x86/entry/common.c:105
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #0 (&xfs_dir_ilock_class){++++}-{3:3}:
+       check_prev_add kernel/locking/lockdep.c:3134 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+       validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
+       __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+       down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
+       xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
+       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
+       xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
+       xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
+       xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
+       super_cache_scan+0x40f/0x4b0 fs/super.c:227
+       do_shrink_slab+0x705/0x1160 mm/shrinker.c:435
+       shrink_slab+0x1092/0x14d0 mm/shrinker.c:662
+       shrink_one+0x453/0x880 mm/vmscan.c:4809
+       shrink_many mm/vmscan.c:4870 [inline]
+       lru_gen_shrink_node mm/vmscan.c:4970 [inline]
+       shrink_node+0x3b17/0x4310 mm/vmscan.c:5929
+       kswapd_shrink_node mm/vmscan.c:6741 [inline]
+       balance_pgdat mm/vmscan.c:6932 [inline]
+       kswapd+0x1882/0x38a0 mm/vmscan.c:7201
+       kthread+0x2f0/0x390 kernel/kthread.c:389
+       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(fs_reclaim);
+                               lock(&xfs_dir_ilock_class);
+                               lock(fs_reclaim);
+  lock(&xfs_dir_ilock_class);
+
+ *** DEADLOCK ***
+
+2 locks held by kswapd0/88:
+ #0: ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6819 [inline]
+ #0: ffffffff8e429e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xbe8/0x38a0 mm/vmscan.c:7201
+ #1: ffff8880866840e0 (&type->s_umount_key#74){++++}-{3:3}, at: super_trylock_shared fs/super.c:561 [inline]
+ #1: ffff8880866840e0 (&type->s_umount_key#74){++++}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
+
+stack backtrace:
+CPU: 1 PID: 88 Comm: kswapd0 Not tainted 6.9.0-rc3-next-20240412-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:114
+ check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2187
+ check_prev_add kernel/locking/lockdep.c:3134 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+ validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
+ __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
+ lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+ down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
+ xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
+ xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
+ xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
+ xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
+ xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
+ super_cache_scan+0x40f/0x4b0 fs/super.c:227
+ do_shrink_slab+0x705/0x1160 mm/shrinker.c:435
+ shrink_slab+0x1092/0x14d0 mm/shrinker.c:662
+ shrink_one+0x453/0x880 mm/vmscan.c:4809
+ shrink_many mm/vmscan.c:4870 [inline]
+ lru_gen_shrink_node mm/vmscan.c:4970 [inline]
+ shrink_node+0x3b17/0x4310 mm/vmscan.c:5929
+ kswapd_shrink_node mm/vmscan.c:6741 [inline]
+ balance_pgdat mm/vmscan.c:6932 [inline]
+ kswapd+0x1882/0x38a0 mm/vmscan.c:7201
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
