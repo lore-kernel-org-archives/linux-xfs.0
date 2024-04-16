@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19CA34C98
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:33:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34CF81F
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:33:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713231201; cv=none; b=E2EMyI2rCH7UbPfZLnmfLw2VVGe8i6yrwOMP5Le/qMTPBVKM/VVBTh4y/My9wjMtHkF4F1dBM7/3GSxvGmTlakXYc3EdTWiyICbQoCWgEhBaeXLd4EeD+uXTRn++t1H9srfX2SBPpxny+ON34pzChFNXfV7wJqijTS1d0VobEoo=
+	t=1713231216; cv=none; b=G1b24A6CseQAu/zJbKluifnNdwKPD4wqkFpLxyw7wWV4elKQ6w6SeisePz2ghmmpoFcxkxxe61D96lS2aZUca0zwAyG7bLibpejHFgAAhxiZ7EOgDibcbMkakoJDI/1190pLuAv0HXXhFjfsepgJscDyoQt6CbIkN/QsvWKXDX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713231201; c=relaxed/simple;
-	bh=mi3wER0VBREe2iWqta81cwbLpAsnGm6I87v5AH/6hN0=;
+	s=arc-20240116; t=1713231216; c=relaxed/simple;
+	bh=xtlnnmDduv7nV+UI6U4hcRoPujaEvs9B9lX+yUr9K1Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Yca+R2Blc2tM8NCdus11hBgGUWhJCVwvEq+z5t3TCMlt86raAj+4WIr1dQggeplqtMlU2RixePvxHAr27MdEKc+KnAfl4+wEBv6ryJ2VdvWU8JQEPBO/CacMFH2+QaF/uPbVfOMFP4hAZV65wL4NmQc8HYY8UDNWWDzDbDJGeUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z67xRYK7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=R0deLN2b4ETThbWkbZgBSrijc6Dv5vJIEXINIfH6RA7KQQxrnAyxolY24QBVKywiS/AY72X/3DSGFYbuP0/huZaL7c1Jx28K2wlao1izmfiHSiN+seLpEf2exf5zf5wEGpzPaj4G9FmFhNb//fzD+QjDzPb+cMKKiSvqzTLl3qI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nGmh8AtN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z67xRYK7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBF5BC113CC;
-	Tue, 16 Apr 2024 01:33:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nGmh8AtN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90301C113CC;
+	Tue, 16 Apr 2024 01:33:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713231201;
-	bh=mi3wER0VBREe2iWqta81cwbLpAsnGm6I87v5AH/6hN0=;
+	s=k20201202; t=1713231216;
+	bh=xtlnnmDduv7nV+UI6U4hcRoPujaEvs9B9lX+yUr9K1Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Z67xRYK7aK/HLTBF5B2aJ+HHB+CYOrHKAABg71KfRii+/A2CvoRac0G+a6lBtoYoJ
-	 1cZbKqNYKYvPr696qTIclYPssmyiI6vYPI+xalgmuqrdmcOVpJhFvOYYFTBNv8MCLq
-	 ECPGN6UxMsP82htKXsDz9IriUOZV31JGdHtPV6UrXKVz8oympbuuTb3RPavaHYkyXz
-	 PknFR9ldzVcYtvux2iekVopZ0SfiQjNhcrjaDWbP5HzaDRGru1y3GEKYXQKVarAjup
-	 bV21WJ5rIq18rHXsP7djBGvbjYEb4hi0B7eaWikGio9Y5kLTwHOB63kNTAGqyU+eRI
-	 +jVgHXM+qcqkQ==
-Date: Mon, 15 Apr 2024 18:33:20 -0700
-Subject: [PATCH 28/31] xfs: add a incompat feature bit for parent pointers
+	b=nGmh8AtNrUOS6nsFHWOxCRwYX8Ky6xre/Z/Et2Tu+e7uLYvZ5dDcsnWd6MFdlbEyc
+	 zYEhEdU531gIubeynmMj7RoaiaDcNrMflkU/sNF1vdFiepgRZU55vZm98F3sP0DnaV
+	 DtBDkr4CRzRrXAXxuGel8fa8OtDwoYGF1mGKwDBpAtZNl/aKItxX0gKKj5JLDNXEju
+	 lLZJOFhmEWjnrGI7YoFeg2zn9tokJ5pmbKIm8IpKywgzFKyOxT4zqWdTfZb34z/Itu
+	 MVZFPEQt4YNolNBc1HTOQMBVz4l4Cd6fZzW0iGIzxRUmr0LDTQTdlWKQRmfuNEV+9a
+	 6WUp61ACW3lSQ==
+Date: Mon, 15 Apr 2024 18:33:36 -0700
+Subject: [PATCH 29/31] xfs: fix unit conversion error in
+ xfs_log_calc_max_attrsetm_res
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: Mark Tinguely <mark.tinguely@oracle.com>,
- Dave Chinner <dchinner@redhat.com>,
- Allison Henderson <allison.henderson@oracle.com>,
- "Darrick J. Wong" <darrick.wong@oracle.com>, allison.henderson@oracle.com,
+Cc: Allison Henderson <allison.henderson@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, allison.henderson@oracle.com,
  hch@infradead.org, linux-xfs@vger.kernel.org, catherine.hoang@oracle.com,
  hch@lst.de
-Message-ID: <171323028245.251715.15931129361997171407.stgit@frogsfrogsfrogs>
+Message-ID: <171323028262.251715.506187425628369423.stgit@frogsfrogsfrogs>
 In-Reply-To: <171323027704.251715.12000080989736970684.stgit@frogsfrogsfrogs>
 References: <171323027704.251715.12000080989736970684.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,85 +48,84 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Create an incompat feature bit and a fs geometry flag so that we can
-enable the feature in the ondisk superblock and advertise its existence
-to userspace.
+Dave and I were discussing some recent test regressions as a result of
+me turning on nrext64=1 on realtime filesystems, when we noticed that
+the minimum log size of a 32M filesystem jumped from 954 blocks to 4287
+blocks.
 
-Signed-off-by: Mark Tinguely <mark.tinguely@oracle.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Digging through xfs_log_calc_max_attrsetm_res, Dave noticed that @size
+contains the maximum estimated amount of space needed for a local format
+xattr, in bytes, but we feed this quantity to XFS_NEXTENTADD_SPACE_RES,
+which requires units of blocks.  This has resulted in an overestimation
+of the minimum log size over the years.
+
+We should nominally correct this, but there's a backwards compatibility
+problem -- if we enable it now, the minimum log size will decrease.  If
+a corrected mkfs formats a filesystem with this new smaller log size, a
+user will encounter mount failures on an uncorrected kernel due to the
+larger minimum log size computations there.
+
+Therefore, turn this on for parent pointers because it wasn't merged at
+all upstream when this issue was discovered.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_format.h |    1 +
- fs/xfs/libxfs/xfs_fs.h     |    1 +
- fs/xfs/libxfs/xfs_sb.c     |    4 ++++
- fs/xfs/xfs_super.c         |    4 ++++
- 4 files changed, 10 insertions(+)
+ fs/xfs/libxfs/xfs_log_rlimit.c |   32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index f1818c54af6f8..b457e457e1f71 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -374,6 +374,7 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4) /* needs xfs_repair */
- #define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)  /* large extent counters */
- #define XFS_SB_FEAT_INCOMPAT_EXCHRANGE	(1 << 6)  /* exchangerange supported */
-+#define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 7)  /* parent pointers */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE | \
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES | \
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 29a4e62d4e92b..7e578c4894061 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -240,6 +240,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
- #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
- #define XFS_FSOP_GEOM_FLAGS_EXCHANGE_RANGE (1 << 24) /* exchange range */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	(1 << 25) /* linux parent pointers */
+diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+index 9975b93a7412d..3518d5e21df03 100644
+--- a/fs/xfs/libxfs/xfs_log_rlimit.c
++++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+@@ -16,6 +16,29 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_trace.h"
  
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index c350e259b6855..09e4bf949bf88 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -178,6 +178,8 @@ xfs_sb_version_to_features(
- 		features |= XFS_FEAT_NREXT64;
- 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_EXCHRANGE)
- 		features |= XFS_FEAT_EXCHANGE_RANGE;
-+	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_PARENT)
-+		features |= XFS_FEAT_PARENT;
- 
- 	return features;
- }
-@@ -1254,6 +1256,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
- 	if (xfs_has_inobtcounts(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_INOBTCNT;
-+	if (xfs_has_parent(mp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
- 	if (xfs_has_sector(mp)) {
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
- 		geo->logsectsize = sbp->sb_logsectsize;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 84f37e8474da2..14a7f74b20dbb 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1733,6 +1733,10 @@ xfs_fs_fill_super(
- 		xfs_warn(mp,
- 	"EXPERIMENTAL exchange-range feature enabled. Use at your own risk!");
- 
-+	if (xfs_has_parent(mp))
-+		xfs_warn(mp,
-+	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
++/*
++ * Shortly after enabling the large extents count feature in 2023, longstanding
++ * bugs were found in the code that computes the minimum log size.  Luckily,
++ * the bugs resulted in over-estimates of that size, so there's no impact to
++ * existing users.  However, we don't want to reduce the minimum log size
++ * because that can create the situation where a newer mkfs writes a new
++ * filesystem that an older kernel won't mount.
++ *
++ * Therefore, we only may correct the computation starting with filesystem
++ * features that didn't exist in 2023.  In other words, only turn this on if
++ * the filesystem has parent pointers.
++ *
++ * This function can be called before the XFS_HAS_* flags have been set up,
++ * (e.g. mkfs) so we must check the ondisk superblock.
++ */
++static inline bool
++xfs_want_minlogsize_fixes(
++	struct xfs_sb	*sb)
++{
++	return xfs_sb_is_v5(sb) &&
++	       xfs_sb_has_incompat_feature(sb, XFS_SB_FEAT_INCOMPAT_PARENT);
++}
 +
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
+ /*
+  * Calculate the maximum length in bytes that would be required for a local
+  * attribute value as large attributes out of line are not logged.
+@@ -31,6 +54,15 @@ xfs_log_calc_max_attrsetm_res(
+ 	       MAXNAMELEN - 1;
+ 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+ 	nblks += XFS_B_TO_FSB(mp, size);
++
++	/*
++	 * If the feature set is new enough, correct a unit conversion error in
++	 * the xattr transaction reservation code that resulted in oversized
++	 * minimum log size computations.
++	 */
++	if (xfs_want_minlogsize_fixes(&mp->m_sb))
++		size = XFS_B_TO_FSB(mp, size);
++
+ 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
+ 
+ 	return  M_RES(mp)->tr_attrsetm.tr_logres +
 
