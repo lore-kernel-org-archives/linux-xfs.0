@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49FBE185E
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 00:59:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84C51C06
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:00:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713229193; cv=none; b=H83Lh/cOie+ZIQ5GmedOyRPM6/et1NgCWQSDlf1wQvVu1j7GqyKP6c2SEO4r8TfDnOuxgzdPCSUoNpBFlqaeUKKfaPrAI8znVfrRitHY19+V38sZB7laGWsPPCUxgey8vohvFz6wrcat9X79jGJ+Mg6R/k+s44BDHsseQrpxx3g=
+	t=1713229208; cv=none; b=pElZW3WGTO8VdroKMJWrCco0jhov2e3V/Jms8SS4exdxAOX2JEUzVhFgAKHq7tv6uMtsvPACBnPr1Yt75G47Nr+iIebZI2SbG4UI6S/spR8dhghISSN1BCdq8P/8k0F2sc4rvtXvFT4zHRXwkfNRX1So/i5nCkSns9AuREip5fM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713229193; c=relaxed/simple;
-	bh=ULRUhFiuY27iWFwpZ19CynW7sUZgqRX1GO+VxKW0IjA=;
+	s=arc-20240116; t=1713229208; c=relaxed/simple;
+	bh=3NA0WAMcbyN7KOCWGEqtmcc/8nB4pqQyDV8mRIqXjHE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rcM0X/FWWNLEILRNPOwBXEPFJpoE65s2HbAovcGcpZEjKxCvAcNyJw9/3Uk9Cy7MEJBlY7DQZXSkl96+dXO/G5OzdOCaLqWZjdJ1kZ1fVXWRlnYoEyr6bo1MxKgmQNfhVEb1XUcofLMZGsXNoACra3psdeEAPRMyZg/VwtJf/2A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Of6NRs3p; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=plw8jZsO4jZOTSYobMeLJDyRofl7KwIEX8PzEY7Dmz6t1iUAvGZ/Kl22xTCKz3fdc8ztvjFqHxeqQlKz8iKCUEBDSIaEPk/76GxpL8qJqaQE3NymXyTr0L3wGR+U9d4hhxmmWGr1INF9XqubmCGRjWvC5OH8Vd+lKlU//qZcdhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SvNk0zlV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Of6NRs3p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4133C2BD11;
-	Tue, 16 Apr 2024 00:59:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SvNk0zlV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8238EC113CC;
+	Tue, 16 Apr 2024 01:00:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713229192;
-	bh=ULRUhFiuY27iWFwpZ19CynW7sUZgqRX1GO+VxKW0IjA=;
+	s=k20201202; t=1713229208;
+	bh=3NA0WAMcbyN7KOCWGEqtmcc/8nB4pqQyDV8mRIqXjHE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Of6NRs3pmTrmlv8igSczPHKmpZFZ7cZCGENTHoEaxPfR0NdghFQTk1F5uNR9O5zC/
-	 /kW47xsykbqz0BRhZprs0XDTfTVHPQBLa/PO90p5YaLJM//ewbHxrqDXE+NSMV58Yj
-	 tusvdeIRiZDy661wHe5KNAeA16IaC57WRcLfHT8LqqFoJYEzoqA0o0BRqu6HURNbVD
-	 3z+W0S6LOzhVFkprYu7ryoQlSgWArLcDuH0BvT6TK+Bv+BWIMVIdJmyVjQd/wzNVKV
-	 X4objTr3JPav9P0KrInB86TC9JJXDM9iF++h0cnVLXNNJHF6v7u7SNdS9cJ8DqHYAt
-	 RA5D57emMkgbw==
-Date: Mon, 15 Apr 2024 17:59:52 -0700
-Subject: [PATCH 5/5] xfs_io: add linux madvise advice codes
+	b=SvNk0zlV61UprdrAo0ZbZD7JSPSUPyRDJtb473gc4Sv4YxaZeNsmh/sgLizsmYMbr
+	 HJX83BzG7FICeUmCZZAmoo8QtfYU8GNM8wQW7iv51fNxwnvYuiOdAcTkccvYOhsV7F
+	 wySMcIbB+TP6ydaIK1+qZc4OeMjNvL1mP2SQfzt8VTQd9HbQ2iQmq3HZhpKypNOTNX
+	 TB2AQXFlkaE2ZqP7FzZz9nmE6dixsQdxiU+EW5cAh2dljho+otBbZwdnH2rN1GeYl1
+	 +0ondqNriMMa3NejiRIk9UEVrsJNojN0BvS+NEayh+Hudo6hkZM+k31O+WWxVhtbFG
+	 n/gHn4ZOAElcA==
+Date: Mon, 15 Apr 2024 18:00:08 -0700
+Subject: [PATCH 088/111] libxfs: teach buftargs to maintain their own buffer
+ hashtable
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, cmaiolino@redhat.com,
  linux-xfs@vger.kernel.org, hch@infradead.org
-Message-ID: <171322881873.210882.13529720668713675414.stgit@frogsfrogsfrogs>
-In-Reply-To: <171322881805.210882.5445286603045179895.stgit@frogsfrogsfrogs>
-References: <171322881805.210882.5445286603045179895.stgit@frogsfrogsfrogs>
+Message-ID: <171322883488.211103.12606746845604045696.stgit@frogsfrogsfrogs>
+In-Reply-To: <171322882240.211103.3776766269442402814.stgit@frogsfrogsfrogs>
+References: <171322882240.211103.3776766269442402814.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,129 +48,599 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add all the Linux-specific madvise codes.  We're going to need
-MADV_POPULATE_READ for a regression test.
+Currently, cached buffers are indexed with a single global bcache
+structure.  This works ok for the limited use case where we only support
+reading from the data device, but will fail badly when we want to
+support buffers from in-memory btrees.  Move the bcache structure into
+the buftarg.
+
+As a side effect, we don't need to compare buftarg->bt_bdev anymore
+since libxfs is careful enough not to create more than one buftarg per
+open fd.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- io/madvise.c |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 76 insertions(+), 1 deletion(-)
+ include/libxfs.h    |    1 -
+ libxfs/init.c       |   48 +++++++++++++++++++++---------------------------
+ libxfs/libxfs_io.h  |   10 ++++++----
+ libxfs/logitem.c    |    2 +-
+ libxfs/rdwr.c       |   45 +++++++++++++++++++++++++++++----------------
+ mkfs/xfs_mkfs.c     |    2 +-
+ repair/prefetch.c   |   12 ++++++++----
+ repair/prefetch.h   |    1 +
+ repair/progress.c   |   14 +++++++++-----
+ repair/progress.h   |    2 +-
+ repair/scan.c       |    2 +-
+ repair/xfs_repair.c |   32 +++++++++++++++++---------------
+ 12 files changed, 95 insertions(+), 76 deletions(-)
 
 
-diff --git a/io/madvise.c b/io/madvise.c
-index 6e9c5b121d72..ede233955ced 100644
---- a/io/madvise.c
-+++ b/io/madvise.c
-@@ -9,6 +9,7 @@
- #include <sys/mman.h>
- #include "init.h"
- #include "io.h"
-+#include <asm/mman.h>
+diff --git a/include/libxfs.h b/include/libxfs.h
+index aeec2bc76126..60d3b7968775 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -147,7 +147,6 @@ int		libxfs_init(struct libxfs_init *);
+ void		libxfs_destroy(struct libxfs_init *li);
  
- static cmdinfo_t madvise_cmd;
+ extern int	libxfs_device_alignment (void);
+-extern void	libxfs_report(FILE *);
  
-@@ -26,6 +27,31 @@ madvise_help(void)
- " -r -- expect random page references (POSIX_MADV_RANDOM)\n"
- " -s -- expect sequential page references (POSIX_MADV_SEQUENTIAL)\n"
- " -w -- will need these pages (POSIX_MADV_WILLNEED) [*]\n"
-+"\n"
-+"The following Linux-specific advise values are available:\n"
-+#ifdef MADV_COLLAPSE
-+" -c -- try to collapse range into transparent hugepages (MADV_COLLAPSE)\n"
-+#endif
-+#ifdef MADV_COLD
-+" -D -- deactivate the range (MADV_COLD)\n"
-+#endif
-+" -f -- free the range (MADV_FREE)\n"
-+" -h -- disable transparent hugepages (MADV_NOHUGEPAGE)\n"
-+" -H -- enable transparent hugepages (MADV_HUGEPAGE)\n"
-+" -m -- mark the range mergeable (MADV_MERGEABLE)\n"
-+" -M -- mark the range unmergeable (MADV_UNMERGEABLE)\n"
-+" -o -- mark the range offline (MADV_SOFT_OFFLINE)\n"
-+" -p -- punch a hole in the file (MADV_REMOVE)\n"
-+" -P -- poison the page cache (MADV_HWPOISON)\n"
-+#ifdef MADV_POPULATE_READ
-+" -R -- prefault in the range for read (MADV_POPULATE_READ)\n"
-+#endif
-+#ifdef MADV_POPULATE_WRITE
-+" -W -- prefault in the range for write (MADV_POPULATE_WRITE)\n"
-+#endif
-+#ifdef MADV_PAGEOUT
-+" -X -- reclaim the range (MADV_PAGEOUT)\n"
-+#endif
- " Notes:\n"
- "   NORMAL sets the default readahead setting on the file.\n"
- "   RANDOM sets the readahead setting on the file to zero.\n"
-@@ -45,20 +71,69 @@ madvise_f(
- 	int		advise = MADV_NORMAL, c;
- 	size_t		blocksize, sectsize;
+ /* check or write log footer: specify device, log size in blocks & uuid */
+ typedef char	*(libxfs_get_block_t)(char *, int, void *);
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 5641b9bef6bd..f002dc93cd56 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -36,7 +36,6 @@ pthread_mutex_t	atomic64_lock = PTHREAD_MUTEX_INITIALIZER;
  
--	while ((c = getopt(argc, argv, "drsw")) != EOF) {
-+	while ((c = getopt(argc, argv, "cdDfhHmMopPrRswWX")) != EOF) {
- 		switch (c) {
-+#ifdef MADV_COLLAPSE
-+		case 'c':	/* collapse to thp */
-+			advise = MADV_COLLAPSE;
-+			break;
-+#endif
- 		case 'd':	/* Don't need these pages */
- 			advise = MADV_DONTNEED;
- 			break;
-+#ifdef MADV_COLD
-+		case 'D':	/* make more likely to be reclaimed */
-+			advise = MADV_COLD;
-+			break;
-+#endif
-+		case 'f':	/* page range out of memory */
-+			advise = MADV_FREE;
-+			break;
-+		case 'h':	/* enable thp memory */
-+			advise = MADV_HUGEPAGE;
-+			break;
-+		case 'H':	/* disable thp memory */
-+			advise = MADV_NOHUGEPAGE;
-+			break;
-+		case 'm':	/* enable merging */
-+			advise = MADV_MERGEABLE;
-+			break;
-+		case 'M':	/* disable merging */
-+			advise = MADV_UNMERGEABLE;
-+			break;
-+		case 'o':	/* offline */
-+			advise = MADV_SOFT_OFFLINE;
-+			break;
-+		case 'p':	/* punch hole */
-+			advise = MADV_REMOVE;
-+			break;
-+		case 'P':	/* poison */
-+			advise = MADV_HWPOISON;
-+			break;
- 		case 'r':	/* Expect random page references */
- 			advise = MADV_RANDOM;
- 			break;
-+#ifdef MADV_POPULATE_READ
-+		case 'R':	/* fault in pages for read */
-+			advise = MADV_POPULATE_READ;
-+			break;
-+#endif
- 		case 's':	/* Expect sequential page references */
- 			advise = MADV_SEQUENTIAL;
- 			break;
- 		case 'w':	/* Will need these pages */
- 			advise = MADV_WILLNEED;
- 			break;
-+#ifdef MADV_POPULATE_WRITE
-+		case 'W':	/* fault in pages for write */
-+			advise = MADV_POPULATE_WRITE;
-+			break;
-+#endif
-+#ifdef MADV_PAGEOUT
-+		case 'X':	/* reclaim memory */
-+			advise = MADV_PAGEOUT;
-+			break;
-+#endif
- 		default:
- 			exitcode = 1;
- 			return command_usage(&madvise_cmd);
+ char *progname = "libxfs";	/* default, changed by each tool */
+ 
+-struct cache *libxfs_bcache;	/* global buffer cache */
+ int libxfs_bhash_size;		/* #buckets in bcache */
+ 
+ int	use_xfs_buf_lock;	/* global flag: use xfs_buf locks for MT */
+@@ -267,8 +266,6 @@ libxfs_init(struct libxfs_init *a)
+ 
+ 	if (!libxfs_bhash_size)
+ 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
+-	libxfs_bcache = cache_init(a->bcache_flags, libxfs_bhash_size,
+-				   &libxfs_bcache_operations);
+ 	use_xfs_buf_lock = a->flags & LIBXFS_USEBUFLOCK;
+ 	xfs_dir_startup();
+ 	init_caches();
+@@ -451,6 +448,7 @@ xfs_set_inode_alloc(
+ static struct xfs_buftarg *
+ libxfs_buftarg_alloc(
+ 	struct xfs_mount	*mp,
++	struct libxfs_init	*xi,
+ 	struct libxfs_dev	*dev,
+ 	unsigned long		write_fails)
+ {
+@@ -472,6 +470,9 @@ libxfs_buftarg_alloc(
+ 	}
+ 	pthread_mutex_init(&btp->lock, NULL);
+ 
++	btp->bcache = cache_init(xi->bcache_flags, libxfs_bhash_size,
++			&libxfs_bcache_operations);
++
+ 	return btp;
+ }
+ 
+@@ -568,12 +569,13 @@ libxfs_buftarg_init(
+ 		return;
+ 	}
+ 
+-	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, &xi->data, dfail);
++	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, xi, &xi->data, dfail);
+ 	if (!xi->log.dev || xi->log.dev == xi->data.dev)
+ 		mp->m_logdev_targp = mp->m_ddev_targp;
+ 	else
+-		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, &xi->log, lfail);
+-	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, &xi->rt, rfail);
++		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, xi, &xi->log,
++				lfail);
++	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, xi, &xi->rt, rfail);
+ }
+ 
+ /* Compute maximum possible height for per-AG btree types for this fs. */
+@@ -856,7 +858,7 @@ libxfs_flush_mount(
+ 	 * LOST_WRITE flag to be set in the buftarg.  Once that's done,
+ 	 * instruct the disks to persist their write caches.
+ 	 */
+-	libxfs_bcache_flush();
++	libxfs_bcache_flush(mp);
+ 
+ 	/* Flush all kernel and disk write caches, and report failures. */
+ 	if (mp->m_ddev_targp) {
+@@ -882,6 +884,14 @@ libxfs_flush_mount(
+ 	return error;
+ }
+ 
++static void
++libxfs_buftarg_free(
++	struct xfs_buftarg	*btp)
++{
++	cache_destroy(btp->bcache);
++	kmem_free(btp);
++}
++
+ /*
+  * Release any resource obtained during a mount.
+  */
+@@ -898,7 +908,7 @@ libxfs_umount(
+ 	 * all incore buffers, then pick up the outcome when we tell the disks
+ 	 * to persist their write caches.
+ 	 */
+-	libxfs_bcache_purge();
++	libxfs_bcache_purge(mp);
+ 	error = libxfs_flush_mount(mp);
+ 
+ 	/*
+@@ -913,10 +923,10 @@ libxfs_umount(
+ 	free(mp->m_fsname);
+ 	mp->m_fsname = NULL;
+ 
+-	kmem_free(mp->m_rtdev_targp);
++	libxfs_buftarg_free(mp->m_rtdev_targp);
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp)
+-		kmem_free(mp->m_logdev_targp);
+-	kmem_free(mp->m_ddev_targp);
++		libxfs_buftarg_free(mp->m_logdev_targp);
++	libxfs_buftarg_free(mp->m_ddev_targp);
+ 
+ 	return error;
+ }
+@@ -932,10 +942,7 @@ libxfs_destroy(
+ 
+ 	libxfs_close_devices(li);
+ 
+-	/* Free everything from the buffer cache before freeing buffer cache */
+-	libxfs_bcache_purge();
+ 	libxfs_bcache_free();
+-	cache_destroy(libxfs_bcache);
+ 	leaked = destroy_caches();
+ 	rcu_unregister_thread();
+ 	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
+@@ -947,16 +954,3 @@ libxfs_device_alignment(void)
+ {
+ 	return platform_align_blockdev();
+ }
+-
+-void
+-libxfs_report(FILE *fp)
+-{
+-	time_t t;
+-	char *c;
+-
+-	cache_report(fp, "libxfs_bcache", libxfs_bcache);
+-
+-	t = time(NULL);
+-	c = asctime(localtime(&t));
+-	fprintf(fp, "%s", c);
+-}
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 259c6a7cf771..7877e17685b8 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -28,6 +28,7 @@ struct xfs_buftarg {
+ 	dev_t			bt_bdev;
+ 	int			bt_bdev_fd;
+ 	unsigned int		flags;
++	struct cache		*bcache;	/* buffer cache */
+ };
+ 
+ /* We purged a dirty buffer and lost a write. */
+@@ -36,6 +37,8 @@ struct xfs_buftarg {
+ #define XFS_BUFTARG_CORRUPT_WRITE	(1 << 1)
+ /* Simulate failure after a certain number of writes. */
+ #define XFS_BUFTARG_INJECT_WRITE_FAIL	(1 << 2)
++/* purge buffers when lookups find a size mismatch */
++#define XFS_BUFTARG_MISCOMPARE_PURGE	(1 << 3)
+ 
+ /* Simulate the system crashing after a certain number of writes. */
+ static inline void
+@@ -140,7 +143,6 @@ int libxfs_buf_priority(struct xfs_buf *bp);
+ 
+ /* Buffer Cache Interfaces */
+ 
+-extern struct cache	*libxfs_bcache;
+ extern struct cache_operations	libxfs_bcache_operations;
+ 
+ #define LIBXFS_GETBUF_TRYLOCK	(1 << 0)
+@@ -184,10 +186,10 @@ libxfs_buf_read(
+ 
+ int libxfs_readbuf_verify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ struct xfs_buf *libxfs_getsb(struct xfs_mount *mp);
+-extern void	libxfs_bcache_purge(void);
++extern void	libxfs_bcache_purge(struct xfs_mount *mp);
+ extern void	libxfs_bcache_free(void);
+-extern void	libxfs_bcache_flush(void);
+-extern int	libxfs_bcache_overflowed(void);
++extern void	libxfs_bcache_flush(struct xfs_mount *mp);
++extern int	libxfs_bcache_overflowed(struct xfs_mount *mp);
+ 
+ /* Buffer (Raw) Interfaces */
+ int		libxfs_bwrite(struct xfs_buf *bp);
+diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+index 3ce2d7574a37..7757259dfc5e 100644
+--- a/libxfs/logitem.c
++++ b/libxfs/logitem.c
+@@ -46,7 +46,7 @@ xfs_trans_buf_item_match(
+ 	list_for_each_entry(lip, &tp->t_items, li_trans) {
+ 		blip = (struct xfs_buf_log_item *)lip;
+ 		if (blip->bli_item.li_type == XFS_LI_BUF &&
+-		    blip->bli_buf->b_target->bt_bdev == btp->bt_bdev &&
++		    blip->bli_buf->b_target == btp &&
+ 		    xfs_buf_daddr(blip->bli_buf) == map[0].bm_bn &&
+ 		    blip->bli_buf->b_length == len) {
+ 			ASSERT(blip->bli_buf->b_map_count == nmaps);
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 153007d5fc86..cf986a7e7820 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -198,18 +198,20 @@ libxfs_bhash(cache_key_t key, unsigned int hashsize, unsigned int hashshift)
+ }
+ 
+ static int
+-libxfs_bcompare(struct cache_node *node, cache_key_t key)
++libxfs_bcompare(
++	struct cache_node	*node,
++	cache_key_t		key)
+ {
+ 	struct xfs_buf		*bp = container_of(node, struct xfs_buf,
+ 						   b_node);
+ 	struct xfs_bufkey	*bkey = (struct xfs_bufkey *)key;
++	struct cache		*bcache = bkey->buftarg->bcache;
+ 
+-	if (bp->b_target->bt_bdev == bkey->buftarg->bt_bdev &&
+-	    bp->b_cache_key == bkey->blkno) {
++	if (bp->b_cache_key == bkey->blkno) {
+ 		if (bp->b_length == bkey->bblen)
+ 			return CACHE_HIT;
+ #ifdef IO_BCOMPARE_CHECK
+-		if (!(libxfs_bcache->c_flags & CACHE_MISCOMPARE_PURGE)) {
++		if (!(bcache->c_flags & CACHE_MISCOMPARE_PURGE)) {
+ 			fprintf(stderr,
+ 	"%lx: Badness in key lookup (length)\n"
+ 	"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
+@@ -399,11 +401,12 @@ __cache_lookup(
+ 	struct xfs_buf		**bpp)
+ {
+ 	struct cache_node	*cn = NULL;
++	struct cache		*bcache = key->buftarg->bcache;
+ 	struct xfs_buf		*bp;
+ 
+ 	*bpp = NULL;
+ 
+-	cache_node_get(libxfs_bcache, key, &cn);
++	cache_node_get(bcache, key, &cn);
+ 	if (!cn)
+ 		return -ENOMEM;
+ 	bp = container_of(cn, struct xfs_buf, b_node);
+@@ -415,7 +418,7 @@ __cache_lookup(
+ 		if (ret) {
+ 			ASSERT(ret == EAGAIN);
+ 			if (flags & LIBXFS_GETBUF_TRYLOCK) {
+-				cache_node_put(libxfs_bcache, cn);
++				cache_node_put(bcache, cn);
+ 				return -EAGAIN;
+ 			}
+ 
+@@ -434,7 +437,7 @@ __cache_lookup(
+ 		bp->b_holder = pthread_self();
+ 	}
+ 
+-	cache_node_set_priority(libxfs_bcache, cn,
++	cache_node_set_priority(bcache, cn,
+ 			cache_node_get_priority(cn) - CACHE_PREFETCH_PRIORITY);
+ 	*bpp = bp;
+ 	return 0;
+@@ -550,7 +553,7 @@ libxfs_buf_relse(
+ 	}
+ 
+ 	if (!list_empty(&bp->b_node.cn_hash))
+-		cache_node_put(libxfs_bcache, &bp->b_node);
++		cache_node_put(bp->b_target->bcache, &bp->b_node);
+ 	else if (--bp->b_node.cn_count == 0) {
+ 		if (bp->b_flags & LIBXFS_B_DIRTY)
+ 			libxfs_bwrite(bp);
+@@ -606,7 +609,7 @@ libxfs_readbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno, struct xfs_buf *bp,
+ 
+ 	error = __read_buf(fd, bp->b_addr, bytes, LIBXFS_BBTOOFF64(blkno), flags);
+ 	if (!error &&
+-	    bp->b_target->bt_bdev == btp->bt_bdev &&
++	    bp->b_target == btp &&
+ 	    bp->b_cache_key == blkno &&
+ 	    bp->b_length == len)
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+@@ -1003,21 +1006,31 @@ libxfs_bflush(
+ }
+ 
+ void
+-libxfs_bcache_purge(void)
++libxfs_bcache_purge(struct xfs_mount *mp)
+ {
+-	cache_purge(libxfs_bcache);
++	if (!mp)
++		return;
++	cache_purge(mp->m_ddev_targp->bcache);
++	cache_purge(mp->m_logdev_targp->bcache);
++	cache_purge(mp->m_rtdev_targp->bcache);
+ }
+ 
+ void
+-libxfs_bcache_flush(void)
++libxfs_bcache_flush(struct xfs_mount *mp)
+ {
+-	cache_flush(libxfs_bcache);
++	if (!mp)
++		return;
++	cache_flush(mp->m_ddev_targp->bcache);
++	cache_flush(mp->m_logdev_targp->bcache);
++	cache_flush(mp->m_rtdev_targp->bcache);
+ }
+ 
+ int
+-libxfs_bcache_overflowed(void)
++libxfs_bcache_overflowed(struct xfs_mount *mp)
+ {
+-	return cache_overflowed(libxfs_bcache);
++	return cache_overflowed(mp->m_ddev_targp->bcache) ||
++		cache_overflowed(mp->m_logdev_targp->bcache) ||
++		cache_overflowed(mp->m_rtdev_targp->bcache);
+ }
+ 
+ struct cache_operations libxfs_bcache_operations = {
+@@ -1466,7 +1479,7 @@ libxfs_buf_set_priority(
+ 	struct xfs_buf	*bp,
+ 	int		priority)
+ {
+-	cache_node_set_priority(libxfs_bcache, &bp->b_node, priority);
++	cache_node_set_priority(bp->b_target->bcache, &bp->b_node, priority);
+ }
+ 
+ int
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index f4a9bf20f391..d6fa48edeab5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -4613,7 +4613,7 @@ main(
+ 	 * Need to drop references to inodes we still hold, first.
+ 	 */
+ 	libxfs_rtmount_destroy(mp);
+-	libxfs_bcache_purge();
++	libxfs_bcache_purge(mp);
+ 
+ 	/*
+ 	 * Mark the filesystem ok.
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index b0dd19775ca8..de36c5fe2cc9 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -886,10 +886,12 @@ init_prefetch(
+ 
+ prefetch_args_t *
+ start_inode_prefetch(
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	int			dirs_only,
+ 	prefetch_args_t		*prev_args)
+ {
++	struct cache		*bcache = mp->m_ddev_targp->bcache;
+ 	prefetch_args_t		*args;
+ 	long			max_queue;
+ 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+@@ -914,7 +916,7 @@ start_inode_prefetch(
+ 	 * and not any other associated metadata like directories
+ 	 */
+ 
+-	max_queue = libxfs_bcache->c_maxcount / thread_count / 8;
++	max_queue = bcache->c_maxcount / thread_count / 8;
+ 	if (igeo->inode_cluster_size > mp->m_sb.sb_blocksize)
+ 		max_queue = max_queue * igeo->blocks_per_cluster /
+ 				igeo->ialloc_blks;
+@@ -970,14 +972,16 @@ prefetch_ag_range(
+ 	void			(*func)(struct workqueue *,
+ 					xfs_agnumber_t, void *))
+ {
++	struct xfs_mount	*mp = work->wq_ctx;
+ 	int			i;
+ 	struct prefetch_args	*pf_args[2];
+ 
+-	pf_args[start_ag & 1] = start_inode_prefetch(start_ag, dirs_only, NULL);
++	pf_args[start_ag & 1] = start_inode_prefetch(mp, start_ag, dirs_only,
++			NULL);
+ 	for (i = start_ag; i < end_ag; i++) {
+ 		/* Don't prefetch end_ag */
+ 		if (i + 1 < end_ag)
+-			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
++			pf_args[(~i) & 1] = start_inode_prefetch(mp, i + 1,
+ 						dirs_only, pf_args[i & 1]);
+ 		func(work, i, pf_args[i & 1]);
+ 	}
+@@ -1027,7 +1031,7 @@ do_inode_prefetch(
+ 	 * filesystem - it's all in the cache. In that case, run a thread per
+ 	 * CPU to maximise parallelism of the queue to be processed.
+ 	 */
+-	if (check_cache && !libxfs_bcache_overflowed()) {
++	if (check_cache && !libxfs_bcache_overflowed(mp)) {
+ 		queue.wq_ctx = mp;
+ 		create_work_queue(&queue, mp, platform_nproc());
+ 		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+diff --git a/repair/prefetch.h b/repair/prefetch.h
+index 54ece48ad228..a8c52a1195b6 100644
+--- a/repair/prefetch.h
++++ b/repair/prefetch.h
+@@ -39,6 +39,7 @@ init_prefetch(
+ 
+ prefetch_args_t *
+ start_inode_prefetch(
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	int			dirs_only,
+ 	prefetch_args_t		*prev_args);
+diff --git a/repair/progress.c b/repair/progress.c
+index f6c4d988444e..625dc41c2894 100644
+--- a/repair/progress.c
++++ b/repair/progress.c
+@@ -383,14 +383,18 @@ timediff(int phase)
+ **  array.
+ */
+ char *
+-timestamp(int end, int phase, char *buf)
++timestamp(
++	struct xfs_mount	*mp,
++	int			end,
++	int			phase,
++	char			*buf)
+ {
+ 
+-	time_t    now;
+-	struct tm *tmp;
++	time_t			now;
++	struct tm		*tmp;
+ 
+-	if (verbose > 1)
+-		cache_report(stderr, "libxfs_bcache", libxfs_bcache);
++	if (verbose > 1 && mp && mp->m_ddev_targp)
++		cache_report(stderr, "libxfs_bcache", mp->m_ddev_targp->bcache);
+ 
+ 	now = time(NULL);
+ 
+diff --git a/repair/progress.h b/repair/progress.h
+index 2c1690db1b17..75b751b783b2 100644
+--- a/repair/progress.h
++++ b/repair/progress.h
+@@ -37,7 +37,7 @@ extern void stop_progress_rpt(void);
+ extern void summary_report(void);
+ extern int  set_progress_msg(int report, uint64_t total);
+ extern uint64_t print_final_rpt(void);
+-extern char *timestamp(int end, int phase, char *buf);
++extern char *timestamp(struct xfs_mount *mp, int end, int phase, char *buf);
+ extern char *duration(int val, char *buf);
+ extern int do_parallel;
+ 
+diff --git a/repair/scan.c b/repair/scan.c
+index 7e6d94cfa670..715be1166fc2 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -42,7 +42,7 @@ struct aghdr_cnts {
+ void
+ set_mp(xfs_mount_t *mpp)
+ {
+-	libxfs_bcache_purge();
++	libxfs_bcache_purge(mp);
+ 	mp = mpp;
+ }
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index ba9d28330d82..d4f99f36f71d 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -942,9 +942,11 @@ repair_capture_writeback(
+ }
+ 
+ static inline void
+-phase_end(int phase)
++phase_end(
++	struct xfs_mount	*mp,
++	int			phase)
+ {
+-	timestamp(PHASE_END, phase, NULL);
++	timestamp(mp, PHASE_END, phase, NULL);
+ 
+ 	/* Fail if someone injected an post-phase error. */
+ 	if (fail_after_phase && phase == fail_after_phase)
+@@ -979,8 +981,8 @@ main(int argc, char **argv)
+ 
+ 	msgbuf = malloc(DURATION_BUF_SIZE);
+ 
+-	timestamp(PHASE_START, 0, NULL);
+-	phase_end(0);
++	timestamp(temp_mp, PHASE_START, 0, NULL);
++	phase_end(temp_mp, 0);
+ 
+ 	/* -f forces this, but let's be nice and autodetect it, as well. */
+ 	if (!isa_file) {
+@@ -1002,7 +1004,7 @@ main(int argc, char **argv)
+ 
+ 	/* do phase1 to make sure we have a superblock */
+ 	phase1(temp_mp);
+-	phase_end(1);
++	phase_end(temp_mp, 1);
+ 
+ 	if (no_modify && primary_sb_modified)  {
+ 		do_warn(_("Primary superblock would have been modified.\n"
+@@ -1139,8 +1141,8 @@ main(int argc, char **argv)
+ 		unsigned long	max_mem;
+ 		struct rlimit	rlim;
+ 
+-		libxfs_bcache_purge();
+-		cache_destroy(libxfs_bcache);
++		libxfs_bcache_purge(mp);
++		cache_destroy(mp->m_ddev_targp->bcache);
+ 
+ 		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
+ 					(mp->m_sb.sb_dblocks >> (10 + 1)) +
+@@ -1200,7 +1202,7 @@ main(int argc, char **argv)
+ 			do_log(_("        - block cache size set to %d entries\n"),
+ 				libxfs_bhash_size * HASH_CACHE_RATIO);
+ 
+-		libxfs_bcache = cache_init(0, libxfs_bhash_size,
++		mp->m_ddev_targp->bcache = cache_init(0, libxfs_bhash_size,
+ 						&libxfs_bcache_operations);
+ 	}
+ 
+@@ -1228,16 +1230,16 @@ main(int argc, char **argv)
+ 
+ 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
+ 	phase2(mp, phase2_threads);
+-	phase_end(2);
++	phase_end(mp, 2);
+ 
+ 	if (do_prefetch)
+ 		init_prefetch(mp);
+ 
+ 	phase3(mp, phase2_threads);
+-	phase_end(3);
++	phase_end(mp, 3);
+ 
+ 	phase4(mp);
+-	phase_end(4);
++	phase_end(mp, 4);
+ 
+ 	if (no_modify) {
+ 		printf(_("No modify flag set, skipping phase 5\n"));
+@@ -1247,7 +1249,7 @@ main(int argc, char **argv)
+ 	} else {
+ 		phase5(mp);
+ 	}
+-	phase_end(5);
++	phase_end(mp, 5);
+ 
+ 	/*
+ 	 * Done with the block usage maps, toss them...
+@@ -1257,10 +1259,10 @@ main(int argc, char **argv)
+ 
+ 	if (!bad_ino_btree)  {
+ 		phase6(mp);
+-		phase_end(6);
++		phase_end(mp, 6);
+ 
+ 		phase7(mp, phase2_threads);
+-		phase_end(7);
++		phase_end(mp, 7);
+ 	} else  {
+ 		do_warn(
+ _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
+@@ -1385,7 +1387,7 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+ 	 * verifiers are run (where we discover the max metadata LSN), reformat
+ 	 * the log if necessary and unmount.
+ 	 */
+-	libxfs_bcache_flush();
++	libxfs_bcache_flush(mp);
+ 	format_log_max_lsn(mp);
+ 
+ 	if (xfs_sb_version_needsrepair(&mp->m_sb))
 
