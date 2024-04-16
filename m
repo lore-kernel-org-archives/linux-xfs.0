@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CFE5223
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:22:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD193D76
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 01:22:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713230528; cv=none; b=lBy40Vu01B8ji3wVsAj8M2AAvU8bKX+ksXipTgCpokFnN1z/NiGM/geAasleEnIN/QmSeNRVXa/+qg4k+gaArpbCoaoxqrIY/ZkobM6WrOC79STTsRiFn92KnnZ+gC/mIfBZnrl/Tr6gj47lwj+FmAEFvxERsbGfqmYppb37omk=
+	t=1713230544; cv=none; b=Y02yrbUmjVCQNQVv3X1ILqqCaCa9m3Laq9Z/NGsSKi+IhK7sFqednilZe66ijrS8UqMxIhtVyreN28SMfy7acg2ESDDlDUQbnxQ9/ab6dIez61E4mTuQbbKV9FR6coHO8U6bGRUyrz/SLlOwXsoMWuDt1LrxePxnI/pluLpN+ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713230528; c=relaxed/simple;
-	bh=munX0xASTp/q7rMmkb/k2iZ4pIhxAThPMLlJuptm6Wk=;
+	s=arc-20240116; t=1713230544; c=relaxed/simple;
+	bh=aRmh/oh1p67qmANFZMj+0lOKo4/AMcwlWC3PyQAOkNo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fwlxPG1LdrszRH7OS5tAHG8M8kYEW4R5nzmuW5eg+d9UyFy3SSoiAUrb0Bfv+SPvUqsf0ewyTlaGtaJrDdCxfBU8c/QHjR2u0Xx+XMP049RYBELnPcMJHqi6zBDDey1bCzsUNUeJZVvyKstJpeaakArN85aCQfy7ZmuTQjliJw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZEX4XcJu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=orJy/YPbnXlf/vz/4qJuFaZXBnl8zi4Nsw0qvFzjR+tnqMQe2wZBbzYYeGvDCtRyOcPFZZ02mY9WENfvOYLBHej5emoC6joxJm3hivnQrAWoiQqpa0h01PtwYlkzwBrQvazc5C/Kd5E80KdI+WRgwTxtisOgrL6FRGvkEbrMXWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lLAVVlKP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZEX4XcJu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63FFEC113CC;
-	Tue, 16 Apr 2024 01:22:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lLAVVlKP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF6F4C113CC;
+	Tue, 16 Apr 2024 01:22:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713230528;
-	bh=munX0xASTp/q7rMmkb/k2iZ4pIhxAThPMLlJuptm6Wk=;
+	s=k20201202; t=1713230544;
+	bh=aRmh/oh1p67qmANFZMj+0lOKo4/AMcwlWC3PyQAOkNo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZEX4XcJu/FEFv/h87nlG//KgyZEMfN5CmA7bWwKtnzofw3T/L55d50poBIRFL2PYq
-	 37I85vik+n69UjVho5HzxBZQqnn2xDuhDxDlaCpDKIaegfJUb+UN8TjVbjrIu2woW7
-	 jOB6WxP9MbcEx9++rk5oLjKwOVe68GhO9w9fy57dShoEiLMycUwontDSJTs/pGsLU9
-	 O9AZhgdt8KP4nk74JRm4vBmdm+v4XWeVyPunwM5/olEhZLLyMiufpg+0kU2sZPkw4u
-	 CehbfRosnDgDultYjdP+ApNaDIkfwrLFWkPyeQflquQRrL/y8uhLNyNqPDV1cScjpX
-	 aW7HxIuWgjVXw==
-Date: Mon, 15 Apr 2024 18:22:07 -0700
-Subject: [PATCH 4/5] xfs: make attr removal an explicit operation
+	b=lLAVVlKP83L6XWdsSl4oQXmb4YjR7DVeGIRzvTRDjq9rVNfY5M8yfWWevSVjogKT9
+	 jqdDBUZkb/5oDPyffjAJL3qC+XBX+dL5fPq097X1zs0mPkgUjqAbCF2bsgKFKvyO/M
+	 UtHaqe+vT2l2112GUAdW3vs+5b8u8Jx2Yjyd3YsnkhZMZKfXPFkfITnrvbsC85mvoo
+	 LT8PF3dEzy6K2Mg4HCInjdKayBg0Uj1dXv2SoSdvEldd2cn4M1V3hBdqhNL4DBoRBg
+	 ZUK+B/abyeFSXGD0lVUbV/sTf2YB1eIsUqlXgphIwbkDsksSAAvdsulb4XAENSsalc
+	 +hIWvlIJfn2+g==
+Date: Mon, 15 Apr 2024 18:22:23 -0700
+Subject: [PATCH 5/5] xfs: rearrange xfs_da_args a bit to use less space
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, hch@infradead.org
-Message-ID: <171323026654.250975.17998254398908556664.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, hch@lst.de,
+ hch@infradead.org
+Message-ID: <171323026670.250975.6441911970898087708.stgit@frogsfrogsfrogs>
 In-Reply-To: <171323026574.250975.15677672233833244634.stgit@frogsfrogsfrogs>
 References: <171323026574.250975.15677672233833244634.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,163 +47,74 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Parent pointers match attrs on name+value, unlike everything else which
-matches on only the name.  Therefore, we cannot keep using the heuristic
-that !value means remove.  Make this an explicit operation code.
+A few notes about struct xfs_da_args:
+
+The XFS_ATTR_* flags only go up as far as XFS_ATTR_INCOMPLETE, which
+means that attr_filter could be a u8 field.
+
+The XATTR_* flags only have two values, which means that xattr_flags
+could be shrunk to a u8.
+
+I've reduced the number of XFS_DA_OP_* flags down to the point where
+op_flags would also fit into a u8.
+
+filetype has 7 bytes of slack after it, which is wasteful.
+
+namelen will never be greater than MAXNAMELEN, which is 256.  This field
+could be reduced to a short.
+
+Rearrange the fields in xfs_da_args to waste less space.  This reduces
+the structure size from 136 bytes to 128.  Later when we add extra
+fields to support parent pointer replacement, this will only bloat the
+structure to 144 bytes, instead of 168.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr.c |   19 ++++++++++---------
- fs/xfs/libxfs/xfs_attr.h |    1 +
- fs/xfs/xfs_acl.c         |    3 ++-
- fs/xfs/xfs_ioctl.c       |    7 +++++--
- fs/xfs/xfs_xattr.c       |    7 +++++--
- 5 files changed, 23 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.h |   20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index b04e09143869d..f8f7445b063c0 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -916,10 +916,6 @@ xfs_attr_defer_add(
- 	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
- }
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 706b529a81feb..17cef594b5bbb 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -54,16 +54,20 @@ enum xfs_dacmp {
+  */
+ typedef struct xfs_da_args {
+ 	struct xfs_da_geometry *geo;	/* da block geometry */
+-	const uint8_t		*name;		/* string (maybe not NULL terminated) */
+-	int		namelen;	/* length of string (maybe no NULL) */
+-	uint8_t		filetype;	/* filetype of inode for directories */
++	const uint8_t	*name;		/* string (maybe not NULL terminated) */
+ 	void		*value;		/* set of bytes (maybe contain NULLs) */
+-	int		valuelen;	/* length of value */
+-	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
+-	xfs_dahash_t	hashval;	/* hash value of name */
+-	xfs_ino_t	inumber;	/* input/output inode number */
+ 	struct xfs_inode *dp;		/* directory inode to manipulate */
+ 	struct xfs_trans *trans;	/* current trans (changes over time) */
++
++	xfs_ino_t	inumber;	/* input/output inode number */
++	xfs_ino_t	owner;		/* inode that owns the dir/attr data */
++
++	int		valuelen;	/* length of value */
++	uint8_t		filetype;	/* filetype of inode for directories */
++	uint8_t		op_flags;	/* operation flags */
++	uint8_t		attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
++	short		namelen;	/* length of string (maybe no NULL) */
++	xfs_dahash_t	hashval;	/* hash value of name */
+ 	xfs_extlen_t	total;		/* total blocks needed, for 1st bmap */
+ 	int		whichfork;	/* data or attribute fork */
+ 	xfs_dablk_t	blkno;		/* blkno of attr leaf of interest */
+@@ -76,9 +80,7 @@ typedef struct xfs_da_args {
+ 	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
+ 	int		rmtblkcnt2;	/* remote attr value block count */
+ 	int		rmtvaluelen2;	/* remote attr value length in bytes */
+-	uint32_t	op_flags;	/* operation flags */
+ 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
+-	xfs_ino_t	owner;		/* inode that owns the dir/attr data */
+ } xfs_da_args_t;
  
--/*
-- * Note: If args->value is NULL the attribute will be removed, just like the
-- * Linux ->setattr API.
-- */
- int
- xfs_attr_set(
- 	struct xfs_da_args	*args,
-@@ -955,7 +951,10 @@ xfs_attr_set(
- 	args->op_flags = XFS_DA_OP_OKNOENT |
- 					(args->op_flags & XFS_DA_OP_LOGGED);
- 
--	if (args->value) {
-+	switch (op) {
-+	case XFS_ATTRUPDATE_UPSERT:
-+	case XFS_ATTRUPDATE_CREATE:
-+	case XFS_ATTRUPDATE_REPLACE:
- 		XFS_STATS_INC(mp, xs_attr_set);
- 		args->total = xfs_attr_calc_size(args, &local);
- 
-@@ -975,9 +974,11 @@ xfs_attr_set(
- 
- 		if (!local)
- 			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
--	} else {
-+		break;
-+	case XFS_ATTRUPDATE_REMOVE:
- 		XFS_STATS_INC(mp, xs_attr_remove);
- 		rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
-+		break;
- 	}
- 
- 	/*
-@@ -989,7 +990,7 @@ xfs_attr_set(
- 	if (error)
- 		return error;
- 
--	if (args->value || xfs_inode_hasattr(dp)) {
-+	if (op != XFS_ATTRUPDATE_REMOVE || xfs_inode_hasattr(dp)) {
- 		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
- 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
- 		if (error == -EFBIG)
-@@ -1002,7 +1003,7 @@ xfs_attr_set(
- 	error = xfs_attr_lookup(args);
- 	switch (error) {
- 	case -EEXIST:
--		if (!args->value) {
-+		if (op == XFS_ATTRUPDATE_REMOVE) {
- 			/* if no value, we are performing a remove operation */
- 			xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REMOVE);
- 			break;
-@@ -1015,7 +1016,7 @@ xfs_attr_set(
- 		break;
- 	case -ENOATTR:
- 		/* Can't remove what isn't there. */
--		if (!args->value)
-+		if (op == XFS_ATTRUPDATE_REMOVE)
- 			goto out_trans_cancel;
- 
- 		/* Pure replace fails if no existing attr to replace. */
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 02dca538f6b91..c8005f52102ad 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -546,6 +546,7 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
- 
- enum xfs_attr_update {
-+	XFS_ATTRUPDATE_REMOVE,	/* remove attr */
- 	XFS_ATTRUPDATE_UPSERT,	/* set value, replace any existing attr */
- 	XFS_ATTRUPDATE_CREATE,	/* set value, fail if attr already exists */
- 	XFS_ATTRUPDATE_REPLACE,	/* set value, fail if attr does not exist */
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index ea3ae0acff096..48e93b14b4ab8 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -203,7 +203,8 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 		xfs_acl_to_disk(args.value, acl);
- 	}
- 
--	error = xfs_attr_change(&args, XFS_ATTRUPDATE_UPSERT);
-+	error = xfs_attr_change(&args, args.value ? XFS_ATTRUPDATE_UPSERT :
-+						    XFS_ATTRUPDATE_REMOVE);
- 	kvfree(args.value);
- 
- 	/*
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9cf3f8d16c055..66133b4fc20f7 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -363,8 +363,11 @@ xfs_attr_filter(
- 
- static inline enum xfs_attr_update
- xfs_xattr_flags(
--	u32			ioc_flags)
-+	u32			ioc_flags,
-+	void			*value)
- {
-+	if (!value)
-+		return XFS_ATTRUPDATE_REMOVE;
- 	if (ioc_flags & XFS_IOC_ATTR_CREATE)
- 		return XFS_ATTRUPDATE_CREATE;
- 	if (ioc_flags & XFS_IOC_ATTR_REPLACE)
-@@ -526,7 +529,7 @@ xfs_attrmulti_attr_set(
- 		args.valuelen = len;
- 	}
- 
--	error = xfs_attr_change(&args, xfs_xattr_flags(flags));
-+	error = xfs_attr_change(&args, xfs_xattr_flags(flags, args.value));
- 	if (!error && (flags & XFS_IOC_ATTR_ROOT))
- 		xfs_forget_acl(inode, name);
- 	kfree(args.value);
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index c2d17def7d9d1..0cbb93cf2869c 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -118,8 +118,11 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
- 
- static inline enum xfs_attr_update
- xfs_xattr_flags_to_op(
--	int		flags)
-+	int		flags,
-+	const void	*value)
- {
-+	if (!value)
-+		return XFS_ATTRUPDATE_REMOVE;
- 	if (flags & XATTR_CREATE)
- 		return XFS_ATTRUPDATE_CREATE;
- 	if (flags & XATTR_REPLACE)
-@@ -143,7 +146,7 @@ xfs_xattr_set(const struct xattr_handler *handler,
- 	};
- 	int			error;
- 
--	error = xfs_attr_change(&args, xfs_xattr_flags_to_op(flags));
-+	error = xfs_attr_change(&args, xfs_xattr_flags_to_op(flags, value));
- 	if (!error && (handler->flags & XFS_ATTR_ROOT))
- 		xfs_forget_acl(inode, name);
- 	return error;
+ /*
 
