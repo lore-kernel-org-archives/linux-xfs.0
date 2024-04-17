@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA5508F4A
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:30:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C7C08F4A
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:30:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389439; cv=none; b=neo7/iQ2P72WKDdoeESYgvrTYD1A04Crgyjc6YNTAri0Lu90c1wWnO2kaGXaX1DEc39NmIdZzc666CGcdbOIqAOCQcIqzROm1X+Gs5woXHDMKKEt9j6OoBWm8UBt/xNVdTRSey84h0KqmIO19m8hccQAmI+eyASjN4136wcwsFM=
+	t=1713389455; cv=none; b=RoXYjjXfi05b8tI17n40lqqpgYOjvSI/hNFLYutzU1t45DeBQLpGuj8sVpWzWISfihWWxJO4zGeRD8QsNm1pkqNfK2t44wedx0zh+R6NtIAIvIiIPvxnG8sVDkcEAIkc7ziL62PK73UP2qJLS+5CHg+3hRWz2ZIDn1vv0rmWMgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389439; c=relaxed/simple;
-	bh=SFoFj0jHNTdMTi9BB8BhP3kWCqfW0HM7KroR7M5LvLA=;
+	s=arc-20240116; t=1713389455; c=relaxed/simple;
+	bh=3U6aQJT5gd0HX1sV8J3qQuXB/91KhPXNsndJH2koK8s=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PmjoaxqFdHiOY5RYa2VHDku9qnVJLp3HgoUkpqip1WaqsPPalBEs40GevgNE6w9C3M56/naUT+K4K/M3rl6tdMwTJtgwUrrbNA3+RPu6E93IFHEdSMpyOIoodMHUUDXwCy9c6ntYIEJsAzhFw3py8TFkBaWS/PlmTlRKQ1zn7zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J6I49SCl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ekf8QaT+qjT5hSUlnaPnvI2QkV4yLYjZGk36yybqdV8HKTdTkH6a3o1fAvVK3Awii9sjAbvOfvmTI6DzzL4VxzHXqQ8qagBlqpR27oeSeuFskt9J2CxO9/JxXtUb+V3WDWggS/bAclAWMahqSNOyojfWOsOR6mK0kUB2966YsnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fTCJQLwj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J6I49SCl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EC45C072AA;
-	Wed, 17 Apr 2024 21:30:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fTCJQLwj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4CC3C072AA;
+	Wed, 17 Apr 2024 21:30:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389439;
-	bh=SFoFj0jHNTdMTi9BB8BhP3kWCqfW0HM7KroR7M5LvLA=;
+	s=k20201202; t=1713389454;
+	bh=3U6aQJT5gd0HX1sV8J3qQuXB/91KhPXNsndJH2koK8s=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=J6I49SCl5MQc6VXZSY8syS6k4eNEis2UgsrTRO4IIH6aOxAwxo1nlzsxBIBUUoFtD
-	 a65BU/YLx7SEZDaq9EPPVfk2UpBwKw/MEhxviunibnaAzbM9ks9WfInOC9tWwpj9GE
-	 lk4FsQfzoro4ERJK/c10jVbAvYQKMMz9bpyNhrXZM8CMzt3qm/xEJTkWvQnTMvQu5e
-	 eoU5YtVWs2D054mBGvmb2Qdlx7y4I2AT0eBJyWMIe4W2Xi94xCcS31TjgH6FmRb+WX
-	 gZHdtUFHb2lFWWjyqaKqgqlF867s0WwsgqLvOq7WH8Vgei8MEAxDbSehE6dsBVIv1u
-	 fUYOnwvdZQd2g==
-Date: Wed, 17 Apr 2024 14:30:38 -0700
-Subject: [PATCH 34/67] xfs: repair free space btrees
+	b=fTCJQLwjwJHLPvu05dx2RA2svQEn0k5tCsfqQBuiry0gWiwQXDerWZ+UqejENAecF
+	 8zeMKa4Tjg4X1zQSeQKBWs+zjQg8Qn8X2Lr4J3NTDqxJ2p1WRDoX1jOhmsfxz367z+
+	 1gg13jMCFfdu7E01N1QbXD/41OqfKYLKizVDa0nINhnfbhAIaWtEntuHa7hLRQbIfi
+	 o0HA+hNUJluHAsK/COipnKknISrEHYLtw4+yqfkPIthNt1i9ev1jNelLac5NiDB0EZ
+	 gfv4chsYZo2r32BKEnZTL06k2TbllURjq6ocdJZTZ8xlZtavEIgoDVSB8nUCqbHhSL
+	 M+pq0aZMgbKLg==
+Date: Wed, 17 Apr 2024 14:30:54 -0700
+Subject: [PATCH 35/67] xfs: repair inode btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338842851.1853449.13157860239600549640.stgit@frogsfrogsfrogs>
+Message-ID: <171338842866.1853449.6950259586967609942.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,148 +47,112 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 4bdfd7d15747b170ce93a06fafccaf20544b6684
+Source kernel commit: dbfbf3bdf639a20da7d5fb390cd2e197d25aa418
 
-Rebuild the free space btrees from the gaps in the rmap btree.  Refer to
-the case study in Documentation/filesystems/xfs-online-fsck-design.rst
-for more details.
+Use the rmapbt to find inode chunks, query the chunks to compute hole
+and free masks, and with that information rebuild the inobt and finobt.
+Refer to the case study in
+Documentation/filesystems/xfs-online-fsck-design.rst for more details.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_ag.h          |    9 +++++++++
- libxfs/xfs_ag_resv.c     |    2 ++
- libxfs/xfs_alloc.c       |   10 ++++------
- libxfs/xfs_alloc.h       |    2 +-
- libxfs/xfs_alloc_btree.c |   13 ++++++++++++-
- libxfs/xfs_types.h       |    7 +++++++
- 6 files changed, 35 insertions(+), 8 deletions(-)
+ libxfs/xfs_ialloc.c |   31 ++++++++++++++++++-------------
+ libxfs/xfs_ialloc.h |    3 ++-
+ 2 files changed, 20 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index 2e0aef87d..f16cb7a17 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -80,6 +80,15 @@ struct xfs_perag {
- 	 */
- 	uint16_t	pag_checked;
- 	uint16_t	pag_sick;
-+
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+	/*
-+	 * Alternate btree heights so that online repair won't trip the write
-+	 * verifiers while rebuilding the AG btrees.
-+	 */
-+	uint8_t		pagf_repair_levels[XFS_BTNUM_AGF];
-+#endif
-+
- 	spinlock_t	pag_state_lock;
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 14826280d..5ff09c8c9 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -90,18 +90,28 @@ xfs_inobt_btrec_to_irec(
+ 	irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
+ }
  
- 	spinlock_t	pagb_lock;	/* lock for pagb_tree */
-diff --git a/libxfs/xfs_ag_resv.c b/libxfs/xfs_ag_resv.c
-index 29bbcb55d..3a80b1613 100644
---- a/libxfs/xfs_ag_resv.c
-+++ b/libxfs/xfs_ag_resv.c
-@@ -410,6 +410,8 @@ xfs_ag_resv_free_extent(
- 		fallthrough;
- 	case XFS_AG_RESV_NONE:
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
-+		fallthrough;
-+	case XFS_AG_RESV_IGNORE:
- 		return;
- 	}
- 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index aaa159615..352efbeca 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -242,11 +242,9 @@ xfs_alloc_btrec_to_irec(
- /* Simple checks for free space records. */
++/* Compute the freecount of an incore inode record. */
++uint8_t
++xfs_inobt_rec_freecount(
++	const struct xfs_inobt_rec_incore	*irec)
++{
++	uint64_t				realfree = irec->ir_free;
++
++	if (xfs_inobt_issparse(irec->ir_holemask))
++		realfree &= xfs_inobt_irec_to_allocmask(irec);
++	return hweight64(realfree);
++}
++
+ /* Simple checks for inode records. */
  xfs_failaddr_t
- xfs_alloc_check_irec(
--	struct xfs_btree_cur		*cur,
--	const struct xfs_alloc_rec_incore *irec)
+ xfs_inobt_check_irec(
+-	struct xfs_btree_cur			*cur,
 +	struct xfs_perag			*pag,
-+	const struct xfs_alloc_rec_incore	*irec)
+ 	const struct xfs_inobt_rec_incore	*irec)
  {
--	struct xfs_perag		*pag = cur->bc_ag.pag;
+-	uint64_t			realfree;
 -
- 	if (irec->ar_blockcount == 0)
+ 	/* Record has to be properly aligned within the AG. */
+-	if (!xfs_verify_agino(cur->bc_ag.pag, irec->ir_startino))
++	if (!xfs_verify_agino(pag, irec->ir_startino))
+ 		return __this_address;
+-	if (!xfs_verify_agino(cur->bc_ag.pag,
++	if (!xfs_verify_agino(pag,
+ 				irec->ir_startino + XFS_INODES_PER_CHUNK - 1))
+ 		return __this_address;
+ 	if (irec->ir_count < XFS_INODES_PER_HOLEMASK_BIT ||
+@@ -110,12 +120,7 @@ xfs_inobt_check_irec(
+ 	if (irec->ir_freecount > XFS_INODES_PER_CHUNK)
  		return __this_address;
  
-@@ -295,7 +293,7 @@ xfs_alloc_get_rec(
+-	/* if there are no holes, return the first available offset */
+-	if (!xfs_inobt_issparse(irec->ir_holemask))
+-		realfree = irec->ir_free;
+-	else
+-		realfree = irec->ir_free & xfs_inobt_irec_to_allocmask(irec);
+-	if (hweight64(realfree) != irec->ir_freecount)
++	if (xfs_inobt_rec_freecount(irec) != irec->ir_freecount)
+ 		return __this_address;
+ 
+ 	return NULL;
+@@ -159,7 +164,7 @@ xfs_inobt_get_rec(
  		return error;
  
- 	xfs_alloc_btrec_to_irec(rec, &irec);
--	fa = xfs_alloc_check_irec(cur, &irec);
-+	fa = xfs_alloc_check_irec(cur->bc_ag.pag, &irec);
+ 	xfs_inobt_btrec_to_irec(mp, rec, irec);
+-	fa = xfs_inobt_check_irec(cur, irec);
++	fa = xfs_inobt_check_irec(cur->bc_ag.pag, irec);
  	if (fa)
- 		return xfs_alloc_complain_bad_rec(cur, fa, &irec);
+ 		return xfs_inobt_complain_bad_rec(cur, fa, irec);
  
-@@ -3940,7 +3938,7 @@ xfs_alloc_query_range_helper(
- 	xfs_failaddr_t				fa;
+@@ -2735,7 +2740,7 @@ xfs_ialloc_count_inodes_rec(
+ 	xfs_failaddr_t			fa;
  
- 	xfs_alloc_btrec_to_irec(rec, &irec);
--	fa = xfs_alloc_check_irec(cur, &irec);
-+	fa = xfs_alloc_check_irec(cur->bc_ag.pag, &irec);
+ 	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, &irec);
+-	fa = xfs_inobt_check_irec(cur, &irec);
++	fa = xfs_inobt_check_irec(cur->bc_ag.pag, &irec);
  	if (fa)
- 		return xfs_alloc_complain_bad_rec(cur, fa, &irec);
+ 		return xfs_inobt_complain_bad_rec(cur, fa, &irec);
  
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 851cafbd6..0b956f8b9 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -185,7 +185,7 @@ xfs_alloc_get_rec(
- union xfs_btree_rec;
- void xfs_alloc_btrec_to_irec(const union xfs_btree_rec *rec,
- 		struct xfs_alloc_rec_incore *irec);
--xfs_failaddr_t xfs_alloc_check_irec(struct xfs_btree_cur *cur,
-+xfs_failaddr_t xfs_alloc_check_irec(struct xfs_perag *pag,
- 		const struct xfs_alloc_rec_incore *irec);
+diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
+index fe824bb04..f1412183b 100644
+--- a/libxfs/xfs_ialloc.h
++++ b/libxfs/xfs_ialloc.h
+@@ -79,6 +79,7 @@ int xfs_inobt_lookup(struct xfs_btree_cur *cur, xfs_agino_t ino,
+  */
+ int xfs_inobt_get_rec(struct xfs_btree_cur *cur,
+ 		xfs_inobt_rec_incore_t *rec, int *stat);
++uint8_t xfs_inobt_rec_freecount(const struct xfs_inobt_rec_incore *irec);
  
- int xfs_read_agf(struct xfs_perag *pag, struct xfs_trans *tp, int flags,
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index 5ec14288d..a472ec6d2 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -321,7 +321,18 @@ xfs_allocbt_verify(
- 	if (bp->b_ops->magic[0] == cpu_to_be32(XFS_ABTC_MAGIC))
- 		btnum = XFS_BTNUM_CNTi;
- 	if (pag && xfs_perag_initialised_agf(pag)) {
--		if (level >= pag->pagf_levels[btnum])
-+		unsigned int	maxlevel = pag->pagf_levels[btnum];
-+
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+		/*
-+		 * Online repair could be rewriting the free space btrees, so
-+		 * we'll validate against the larger of either tree while this
-+		 * is going on.
-+		 */
-+		maxlevel = max_t(unsigned int, maxlevel,
-+				 pag->pagf_repair_levels[btnum]);
-+#endif
-+		if (level >= maxlevel)
- 			return __this_address;
- 	} else if (level >= mp->m_alloc_maxlevels)
- 		return __this_address;
-diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-index 533200c4c..035bf703d 100644
---- a/libxfs/xfs_types.h
-+++ b/libxfs/xfs_types.h
-@@ -208,6 +208,13 @@ enum xfs_ag_resv_type {
- 	XFS_AG_RESV_AGFL,
- 	XFS_AG_RESV_METADATA,
- 	XFS_AG_RESV_RMAPBT,
-+
-+	/*
-+	 * Don't increase fdblocks when freeing extent.  This is a pony for
-+	 * the bnobt repair functions to re-free the free space without
-+	 * altering fdblocks.  If you think you need this you're wrong.
-+	 */
-+	XFS_AG_RESV_IGNORE,
- };
- 
- /* Results of scanning a btree keyspace to check occupancy. */
+ /*
+  * Inode chunk initialisation routine
+@@ -93,7 +94,7 @@ union xfs_btree_rec;
+ void xfs_inobt_btrec_to_irec(struct xfs_mount *mp,
+ 		const union xfs_btree_rec *rec,
+ 		struct xfs_inobt_rec_incore *irec);
+-xfs_failaddr_t xfs_inobt_check_irec(struct xfs_btree_cur *cur,
++xfs_failaddr_t xfs_inobt_check_irec(struct xfs_perag *pag,
+ 		const struct xfs_inobt_rec_incore *irec);
+ int xfs_ialloc_has_inodes_at_extent(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len,
 
