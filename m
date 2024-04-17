@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6850A171A1
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:45:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 531B1171A1
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:45:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713390316; cv=none; b=IAC7KGjX8Oh9e+9eYnYSyISVXAtk+MhT/upcwKq6lYvFp3eJjDKEDNPFDRuo1DNNZ22Lm556MxWp9z9ri4RlksKT7UBLESY7FpYz+naG4FQOdFCkHn0o5zyIwUcHTV8YXjQzyu+jpEetubGw3mmRWYi9TGzQ6B25Dlt4HWu/7/Q=
+	t=1713390332; cv=none; b=toFC5CynDMB9C7xUwYaJpwMG8aXpsCVRShI1kSTLGTiWrLz1ofsyZ6NUP8geOKjmToir59CuAVRbwB1+7RiHQiX7k61+8JBIBP8JCRQ3XXA2t12nmenwXTPSCQ88YQln8xs8G4csqUHIz0mdAUCcxwu00jAGCk2hke+ZAaom/AQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713390316; c=relaxed/simple;
-	bh=QMVv42qiJ2NwlcB6qgzJsrbI9AEkZpsNxdh4riLSfKg=;
+	s=arc-20240116; t=1713390332; c=relaxed/simple;
+	bh=9dS1awVl7vN17Uy9uyjOppMj9xyLZaY11JeAWX8wmzw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DlnFEcWi5Hkx/W/yDegl0IG5He6IvvC/kwGqM1Iytfl6yuLLcg+Xug/comZ1WFHwDvOV9ATBKAq86vHLE+ndduToKr/13em+eXPe9nyScB9ud1pYRq6LG1HrNIjPHsCUgPm131UVh/rz4RMXDYSpdRHY4NuMtA4ZDF5YgxX5QpA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DduXJud0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fNxTmriyC0jf5zMntFa6AbhTdy7F5YO95iLKRYuatv81622p2tfRjWKiZ1oaKrs7+VF7UkdFUAGpZNPjJjyb8hSUv+EYIR43P8LCvwF7q8gBIn07UpKp2+IeF0HrMci6Y8FDmYk2kcnxHfN5vB7GmQpPAlXIanoooVMKqN6MxAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fyI13K6h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DduXJud0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42688C072AA;
-	Wed, 17 Apr 2024 21:45:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fyI13K6h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9A97C072AA;
+	Wed, 17 Apr 2024 21:45:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713390316;
-	bh=QMVv42qiJ2NwlcB6qgzJsrbI9AEkZpsNxdh4riLSfKg=;
+	s=k20201202; t=1713390332;
+	bh=9dS1awVl7vN17Uy9uyjOppMj9xyLZaY11JeAWX8wmzw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DduXJud0cZz0kXvS6CKT5RiDpt9B6Or1cHvFtOQVJall5nEaSwEJtE3Qd6CtYTooU
-	 dO4pMheIG6RMhbISAbyHFit4ebRPufSbBVY/1Ax9z7X1C4Yb5ZCnpexB/AbkQZ4IoV
-	 kwl+0R51YDRma/L5XchomJ5UWwpm+Q0qBuDQSbx/C6V20DSdy/U46Ta1gj9OHQsNpY
-	 VaES3XN7RXNv9XGWo5cZVghBTkSxxhQQlD+I9IX6hG0Z7WYm/YIMNKeXxoOfHdusam
-	 jX3McKi0qyGX+rscnMDUg79CcM5ghKCboNTq/6XXnpKk8LL9yOpD45cWWrqcgw0qZE
-	 bpG7pRXr5Ryqg==
-Date: Wed, 17 Apr 2024 14:45:15 -0700
-Subject: [PATCH 3/8] xfs_repair: support more than 2^32 rmapbt records per AG
+	b=fyI13K6hHfUDJcKFFwCKDgm+eMoGbPtTkF5LU3tCNMCAzkQ8m1HaavEiFuoFe1O4h
+	 AXlHOoGMansGMkVtpBl3xc3I/naf1gUDzXkPezbZwAr9r7JFE3DzI3tl/1y1L4V/D2
+	 JPAjcotdjm0IZUxASkxKZFkVd4K55kMrdSqsQkd78L6WdFbhSSWCMJ4YXr5mvlIC49
+	 SulyludY3Ib4M/YFHIiTD4lgmdqlFbXO+BZSZzDakfnyBLRyZlgUBWce/j4+LqCxKM
+	 Nd/aERBO84gQ1nK/UpjntVIl3jweojwDtVYBIkVEdS0g9scr7kg0AWBJXt903WWQkr
+	 4BoYOUy3Ce7Fg==
+Date: Wed, 17 Apr 2024 14:45:31 -0700
+Subject: [PATCH 4/8] xfs_repair: support more than 2^32 owners per physical
+ block
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: "Darrick J. Wong" <djwong@djwong.org>, Christoph Hellwig <hch@lst.de>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338845826.1856674.2136380681034727010.stgit@frogsfrogsfrogs>
+Message-ID: <171338845840.1856674.17637883617247425261.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338845773.1856674.2763970395218819820.stgit@frogsfrogsfrogs>
 References: <171338845773.1856674.2763970395218819820.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,63 +49,96 @@ Content-Transfer-Encoding: 7bit
 From: Darrick J. Wong <djwong@djwong.org>
 
 Now that the incore structures handle more than 2^32 records correctly,
-fix the rmapbt generation code to handle that many records.  This fixes
-the problem where an extremely large rmapbt cannot be rebuilt properly
-because of integer truncation.
+fix the refcountbt generation code to handle the case of that many rmap
+records pointing to a piece of space in an AG.  This fixes the problem
+where the refcountbt cannot be rebuilt properly because of integer
+truncation if there are more than 4.3 billion owners of a piece of
+space.
 
 Signed-off-by: Darrick J. Wong <djwong@djwong.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/rmap.c |    8 ++++----
+ repair/rmap.c |   17 ++++++++---------
  repair/rmap.h |    2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
 
 diff --git a/repair/rmap.c b/repair/rmap.c
-index a2291c7b3..c908429c9 100644
+index c908429c9..032bf4942 100644
 --- a/repair/rmap.c
 +++ b/repair/rmap.c
-@@ -283,7 +283,7 @@ rmap_fold_raw_recs(
- {
- 	struct xfs_slab_cursor	*cur = NULL;
- 	struct xfs_rmap_irec	*prev, *rec;
--	size_t			old_sz;
-+	uint64_t		old_sz;
- 	int			error = 0;
- 
- 	old_sz = slab_count(ag_rmaps[agno].ar_rmaps);
-@@ -690,7 +690,7 @@ mark_inode_rl(
- 	struct xfs_rmap_irec	*rmap;
- 	struct ino_tree_node	*irec;
- 	int			off;
--	size_t			idx;
-+	uint64_t		idx;
- 	xfs_agino_t		ino;
- 
- 	if (bag_count(rmaps) < 2)
-@@ -873,9 +873,9 @@ compute_refcounts(
+@@ -713,14 +713,13 @@ mark_inode_rl(
  /*
-  * Return the number of rmap objects for an AG.
+  * Emit a refcount object for refcntbt reconstruction during phase 5.
+  */
+-#define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
+ static void
+ refcount_emit(
+-	struct xfs_mount		*mp,
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		agbno,
+ 	xfs_extlen_t		len,
+-	size_t			nr_rmaps)
++	uint64_t		nr_rmaps)
+ {
+ 	struct xfs_refcount_irec	rlrec;
+ 	int			error;
+@@ -733,7 +732,8 @@ refcount_emit(
+ 		agno, agbno, len, nr_rmaps);
+ 	rlrec.rc_startblock = agbno;
+ 	rlrec.rc_blockcount = len;
+-	rlrec.rc_refcount = REFCOUNT_CLAMP(nr_rmaps);
++	nr_rmaps = min(nr_rmaps, MAXREFCOUNT);
++	rlrec.rc_refcount = nr_rmaps;
+ 	rlrec.rc_domain = XFS_REFC_DOMAIN_SHARED;
+ 
+ 	error = slab_add(rlslab, &rlrec);
+@@ -741,7 +741,6 @@ refcount_emit(
+ 		do_error(
+ _("Insufficient memory while recreating refcount tree."));
+ }
+-#undef REFCOUNT_CLAMP
+ 
+ /*
+  * Transform a pile of physical block mapping observations into refcount data
+@@ -758,11 +757,11 @@ compute_refcounts(
+ 	struct xfs_slab_cursor	*rmaps_cur;
+ 	struct xfs_rmap_irec	*array_cur;
+ 	struct xfs_rmap_irec	*rmap;
++	uint64_t		n, idx;
++	uint64_t		old_stack_nr;
+ 	xfs_agblock_t		sbno;	/* first bno of this rmap set */
+ 	xfs_agblock_t		cbno;	/* first bno of this refcount set */
+ 	xfs_agblock_t		nbno;	/* next bno where rmap set changes */
+-	size_t			n, idx;
+-	size_t			old_stack_nr;
+ 	int			error;
+ 
+ 	if (!xfs_has_reflink(mp))
+@@ -1312,9 +1311,9 @@ _("Unable to fix reflink flag on inode %"PRIu64".\n"),
+ /*
+  * Return the number of refcount objects for an AG.
   */
 -size_t
 +uint64_t
- rmap_record_count(
+ refcount_record_count(
 -	struct xfs_mount		*mp,
 +	struct xfs_mount	*mp,
  	xfs_agnumber_t		agno)
  {
- 	return slab_count(ag_rmaps[agno].ar_rmaps);
+ 	return slab_count(ag_rmaps[agno].ar_refcount_items);
 diff --git a/repair/rmap.h b/repair/rmap.h
-index 1dad2f589..b074e2e87 100644
+index b074e2e87..1bc8c127d 100644
 --- a/repair/rmap.h
 +++ b/repair/rmap.h
-@@ -26,7 +26,7 @@ extern bool rmaps_are_mergeable(struct xfs_rmap_irec *r1, struct xfs_rmap_irec *
- extern int rmap_add_fixed_ag_rec(struct xfs_mount *, xfs_agnumber_t);
- extern int rmap_store_ag_btree_rec(struct xfs_mount *, xfs_agnumber_t);
+@@ -37,7 +37,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ 		struct xfs_rmap_irec *key);
  
--extern size_t rmap_record_count(struct xfs_mount *, xfs_agnumber_t);
-+uint64_t rmap_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
- extern int rmap_init_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
- extern void rmap_avoid_check(void);
- void rmaps_verify_btree(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
+-extern size_t refcount_record_count(struct xfs_mount *, xfs_agnumber_t);
++uint64_t refcount_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
+ extern void refcount_avoid_check(void);
+ void check_refcounts(struct xfs_mount *mp, xfs_agnumber_t agno);
 
