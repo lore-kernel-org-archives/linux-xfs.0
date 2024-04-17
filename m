@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A33B47F7C
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:35:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E438B47F7C
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:35:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389721; cv=none; b=LFqkRqx2tDihuzYGFuu+PR7wleMwBHZsBCdbrg4i2YdUfe6BWURwAeTxCsgfQwC6yfSJ5DTDTC6zNJZMOPbpU20ew94QnTTBlykPUMwRl9JpOWEUi/jidc/+Lu/hoLqW7Mg/4vP438D4TPdS8hQalGwpUAYvTQMAp83gqVedrfg=
+	t=1713389737; cv=none; b=m0/d9ORws2xJ0id+ofmkBZ1+9DIQRuhua/M1DKsxjValfKGWfMQwSPk/hdQq+7wXWdYNHnax/wr4KRGnpoTo9wxFGk82kMA2k4/xtda5KHd2B4g57ehabqI375VpD2Km9h0mS0pd6nrBepbPS7p9dxLzTpuD7qRYe8JWoWkw0bE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389721; c=relaxed/simple;
-	bh=laL1pfppCxKSERmJnQ2sflGdub/9t0g0aP2NVjICxgg=;
+	s=arc-20240116; t=1713389737; c=relaxed/simple;
+	bh=17e6SfzMbV23DeuJY6sodlN355XrJIUS7Dbs+NAi3oM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ueQFG0KR0GOTlAkC7HPoVWqxvNBtfvvYsCRaoUu9LFzPojkw0mtNOxRjJOOdkeqiLHo4jZ64PBvD7b7W3x1J7BohFbPJkiUsbKT9p8TwLy6/lcdth048XefJppeas5jDuLDbekePYGb0AfwnLT53X5hN+CI+BNhyPAjfR5ZrjkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kk4inBx4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RRiSZC7GG20WwmkzV6UEcQUH+pw1mPSYv2FosO/JH6w3wimI5MMNr6gZVHwa9J9GK1nyVsJwTDtEnt71lImvmcxSdC/Gx1PxxAYHYkE00PRkF6iS94VBxKmfO+AL06PIgNC32hWbtR1DV2U+njTjNydPz31OuoBFe3rAvBdBUHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FipIug0F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kk4inBx4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1504BC072AA;
-	Wed, 17 Apr 2024 21:35:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FipIug0F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1C93C072AA;
+	Wed, 17 Apr 2024 21:35:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389721;
-	bh=laL1pfppCxKSERmJnQ2sflGdub/9t0g0aP2NVjICxgg=;
+	s=k20201202; t=1713389736;
+	bh=17e6SfzMbV23DeuJY6sodlN355XrJIUS7Dbs+NAi3oM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Kk4inBx4BfXTA4PeDTD08MVHM+AhyMxacWPa6+UART9KvD1gfk4/Wu6zZ/rKHF0AT
-	 6p9IEOyOhuYjpkO6fyi3N4AAqtfi1w5ALet300uIPxJkgMtScx4AZj/OR5h8WjqtGK
-	 6YNhVXp9WR0iqfr5HCfubP0k3IZjlnKitx5sxV9kH/x5yq9ECkJvLMA12sSeMJivIy
-	 emuL8SHMVQIKGMqTRKZlYpG16lWT2xrqmgf3dIN4/B2y1b0XvLZLGvl+f2gfu4x3wR
-	 eg/FXaKUqkNkJgsknNWtTn8gk7eRJOEsYaHdJkbXTq4UVuRpEMptw/dLVdtPmiBUrc
-	 DyV/uq0Ty0uOg==
-Date: Wed, 17 Apr 2024 14:35:20 -0700
-Subject: [PATCH 52/67] xfs: remove rt-wrappers from xfs_format.h
+	b=FipIug0FCZxr7MqcWRtRMLL18wlzn61opqDoruitlGQ8JtyBfashSrHaDvU7g9eAC
+	 NGldqlILOBO6DJVbc0Xl/kPOzlx5rfcRMOkLnOfRJ0JiqOAmNfyO/+TEE9EpefVO27
+	 2oIp2v3/olaviS2vW5HnMq3mDDIRLEcNHqEQoXIzKobqV/Arp348PZBPN1r8RaDCs1
+	 mFyIptRhghMsGz2BQCUhtuC2uidvP48fPX0Fi0XHiewr4Cxx1cTl8Z1FGjj7ESzhsX
+	 5zH+t79P8an89Y06PmX72fk66EEIxeX4mMRrW1vuvXif8DZm0DgHTTkqiJv7Zc6top
+	 5NafcLwku70ug==
+Date: Wed, 17 Apr 2024 14:35:36 -0700
+Subject: [PATCH 53/67] xfs: remove XFS_RTMIN/XFS_RTMAX
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338843120.1853449.5390832963341216896.stgit@frogsfrogsfrogs>
+Message-ID: <171338843135.1853449.14162243262449821992.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,212 +47,91 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 3abfe6c2759e2e3000b13f8ce8a1a325e80987a1
+Source kernel commit: a39f5ccc30d5a00b7e6d921aa387ad17d1e6d168
 
-xfs_format.h has a bunch odd wrappers for helper functions and mount
-structure access using RT* prefixes.  Replace them with their open coded
-versions (for those that weren't entirely unused) and remove the wrappers.
+Use the kernel min/max helpers instead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- db/check.c            |    4 ++--
- libxfs/xfs_format.h   |    8 --------
- libxfs/xfs_rtbitmap.c |   24 ++++++++++++------------
- repair/rt.c           |    6 ++----
- 4 files changed, 16 insertions(+), 26 deletions(-)
+ libxfs/xfs_format.h   |    6 ------
+ libxfs/xfs_rtbitmap.c |    8 ++++----
+ mkfs/proto.c          |    4 ++--
+ 3 files changed, 6 insertions(+), 12 deletions(-)
 
 
-diff --git a/db/check.c b/db/check.c
-index 2f2fbc7cb..91d0c0940 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -3688,7 +3688,7 @@ process_rtbitmap(
- 			} else if (prevbit == 1) {
- 				len = ((int)bmbno - start_bmbno) *
- 					bitsperblock + (bit - start_bit);
--				log = XFS_RTBLOCKLOG(len);
-+				log = libxfs_highbit64(len);
- 				offs = xfs_rtsumoffs(mp, log, start_bmbno);
- 				inc_sumcount(mp, sumcompute, offs);
- 				prevbit = 0;
-@@ -3701,7 +3701,7 @@ process_rtbitmap(
- 	if (prevbit == 1) {
- 		len = ((int)bmbno - start_bmbno) * bitsperblock +
- 			(bit - start_bit);
--		log = XFS_RTBLOCKLOG(len);
-+		log = libxfs_highbit64(len);
- 		offs = xfs_rtsumoffs(mp, log, start_bmbno);
- 		inc_sumcount(mp, sumcompute, offs);
- 	}
 diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index e6ca188e2..7d2873a79 100644
+index 7d2873a79..382ab1e71 100644
 --- a/libxfs/xfs_format.h
 +++ b/libxfs/xfs_format.h
-@@ -1156,20 +1156,12 @@ static inline bool xfs_dinode_has_large_extent_counts(
+@@ -1156,12 +1156,6 @@ static inline bool xfs_dinode_has_large_extent_counts(
  #define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
  #define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
  
--#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
--#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
--
- /*
-  * RT bit manipulation macros.
-  */
- #define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
- #define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
- 
--#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
--#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
--
--#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
+-/*
+- * RT bit manipulation macros.
+- */
+-#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+-#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
 -
  /*
   * Dquot and dquot block format definitions
   */
 diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index bbf955be8..eefc45c64 100644
+index eefc45c64..79af7cda3 100644
 --- a/libxfs/xfs_rtbitmap.c
 +++ b/libxfs/xfs_rtbitmap.c
-@@ -193,7 +193,7 @@ xfs_rtfind_back(
- 			/*
- 			 * Different.  Mark where we are and return.
- 			 */
--			i = bit - XFS_RTHIBIT(wdiff);
-+			i = bit - xfs_highbit32(wdiff);
- 			*rtx = start - i + 1;
- 			return 0;
- 		}
-@@ -231,7 +231,7 @@ xfs_rtfind_back(
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
--			i += XFS_NBWORD - 1 - XFS_RTHIBIT(wdiff);
-+			i += XFS_NBWORD - 1 - xfs_highbit32(wdiff);
- 			*rtx = start - i + 1;
- 			return 0;
- 		}
-@@ -270,7 +270,7 @@ xfs_rtfind_back(
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
--			i += XFS_NBWORD - 1 - XFS_RTHIBIT(wdiff);
-+			i += XFS_NBWORD - 1 - xfs_highbit32(wdiff);
- 			*rtx = start - i + 1;
- 			return 0;
- 		} else
-@@ -346,7 +346,7 @@ xfs_rtfind_forw(
- 			/*
- 			 * Different.  Mark where we are and return.
- 			 */
--			i = XFS_RTLOBIT(wdiff) - bit;
-+			i = xfs_lowbit32(wdiff) - bit;
- 			*rtx = start + i - 1;
- 			return 0;
- 		}
-@@ -384,7 +384,7 @@ xfs_rtfind_forw(
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
--			i += XFS_RTLOBIT(wdiff);
-+			i += xfs_lowbit32(wdiff);
- 			*rtx = start + i - 1;
- 			return 0;
- 		}
-@@ -421,7 +421,7 @@ xfs_rtfind_forw(
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
--			i += XFS_RTLOBIT(wdiff);
-+			i += xfs_lowbit32(wdiff);
- 			*rtx = start + i - 1;
- 			return 0;
- 		} else
-@@ -706,7 +706,7 @@ xfs_rtfree_range(
- 	 */
- 	if (preblock < start) {
- 		error = xfs_rtmodify_summary(args,
--				XFS_RTBLOCKLOG(start - preblock),
-+				xfs_highbit64(start - preblock),
- 				xfs_rtx_to_rbmblock(mp, preblock), -1);
- 		if (error) {
- 			return error;
-@@ -718,7 +718,7 @@ xfs_rtfree_range(
- 	 */
- 	if (postblock > end) {
- 		error = xfs_rtmodify_summary(args,
--				XFS_RTBLOCKLOG(postblock - end),
-+				xfs_highbit64(postblock - end),
- 				xfs_rtx_to_rbmblock(mp, end + 1), -1);
- 		if (error) {
- 			return error;
-@@ -729,7 +729,7 @@ xfs_rtfree_range(
- 	 * (new) free extent.
- 	 */
- 	return xfs_rtmodify_summary(args,
--			XFS_RTBLOCKLOG(postblock + 1 - preblock),
-+			xfs_highbit64(postblock + 1 - preblock),
- 			xfs_rtx_to_rbmblock(mp, preblock), 1);
- }
+@@ -182,7 +182,7 @@ xfs_rtfind_back(
+ 		 * Calculate first (leftmost) bit number to look at,
+ 		 * and mask for all the relevant bits in this word.
+ 		 */
+-		firstbit = XFS_RTMAX((xfs_srtblock_t)(bit - len + 1), 0);
++		firstbit = max_t(xfs_srtblock_t, bit - len + 1, 0);
+ 		mask = (((xfs_rtword_t)1 << (bit - firstbit + 1)) - 1) <<
+ 			firstbit;
+ 		/*
+@@ -336,7 +336,7 @@ xfs_rtfind_forw(
+ 		 * Calculate last (rightmost) bit number to look at,
+ 		 * and mask for all the relevant bits in this word.
+ 		 */
+-		lastbit = XFS_RTMIN(bit + len, XFS_NBWORD);
++		lastbit = min(bit + len, XFS_NBWORD);
+ 		mask = (((xfs_rtword_t)1 << (lastbit - bit)) - 1) << bit;
+ 		/*
+ 		 * Calculate the difference between the value there
+@@ -571,7 +571,7 @@ xfs_rtmodify_range(
+ 		/*
+ 		 * Compute first bit not changed and mask of relevant bits.
+ 		 */
+-		lastbit = XFS_RTMIN(bit + len, XFS_NBWORD);
++		lastbit = min(bit + len, XFS_NBWORD);
+ 		mask = (((xfs_rtword_t)1 << (lastbit - bit)) - 1) << bit;
+ 		/*
+ 		 * Set/clear the active bits.
+@@ -785,7 +785,7 @@ xfs_rtcheck_range(
+ 		/*
+ 		 * Compute first bit not examined.
+ 		 */
+-		lastbit = XFS_RTMIN(bit + len, XFS_NBWORD);
++		lastbit = min(bit + len, XFS_NBWORD);
+ 		/*
+ 		 * Mask of relevant bits.
+ 		 */
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index f8e00c4b5..10b929b2e 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -793,8 +793,8 @@ rtfreesp_init(
+ 			res_failed(error);
  
-@@ -798,7 +798,7 @@ xfs_rtcheck_range(
- 			/*
- 			 * Different, compute first wrong bit and return.
- 			 */
--			i = XFS_RTLOBIT(wdiff) - bit;
-+			i = xfs_lowbit32(wdiff) - bit;
- 			*new = start + i;
- 			*stat = 0;
- 			return 0;
-@@ -837,7 +837,7 @@ xfs_rtcheck_range(
- 			/*
- 			 * Different, compute first wrong bit and return.
- 			 */
--			i += XFS_RTLOBIT(wdiff);
-+			i += xfs_lowbit32(wdiff);
- 			*new = start + i;
- 			*stat = 0;
- 			return 0;
-@@ -875,7 +875,7 @@ xfs_rtcheck_range(
- 			/*
- 			 * Different, compute first wrong bit and return.
- 			 */
--			i += XFS_RTLOBIT(wdiff);
-+			i += xfs_lowbit32(wdiff);
- 			*new = start + i;
- 			*stat = 0;
- 			return 0;
-diff --git a/repair/rt.c b/repair/rt.c
-index e49487829..4c81e2114 100644
---- a/repair/rt.c
-+++ b/repair/rt.c
-@@ -14,8 +14,6 @@
- #include "err_protos.h"
- #include "rt.h"
+ 		libxfs_trans_ijoin(tp, mp->m_rbmip, 0);
+-		ertx = XFS_RTMIN(mp->m_sb.sb_rextents,
+-			rtx + NBBY * mp->m_sb.sb_blocksize);
++		ertx = min(mp->m_sb.sb_rextents,
++			   rtx + NBBY * mp->m_sb.sb_blocksize);
  
--#define xfs_highbit64 libxfs_highbit64	/* for XFS_RTBLOCKLOG macro */
--
- void
- rtinit(xfs_mount_t *mp)
- {
-@@ -115,7 +113,7 @@ generate_rtinfo(
- 				}
- 			} else if (in_extent == 1) {
- 				len = (int) (extno - start_ext);
--				log = XFS_RTBLOCKLOG(len);
-+				log = libxfs_highbit64(len);
- 				offs = xfs_rtsumoffs(mp, log, start_bmbno);
- 				inc_sumcount(mp, sumcompute, offs);
- 				in_extent = 0;
-@@ -131,7 +129,7 @@ generate_rtinfo(
- 	}
- 	if (in_extent == 1) {
- 		len = (int) (extno - start_ext);
--		log = XFS_RTBLOCKLOG(len);
-+		log = libxfs_highbit64(len);
- 		offs = xfs_rtsumoffs(mp, log, start_bmbno);
- 		inc_sumcount(mp, sumcompute, offs);
- 	}
+ 		error = -libxfs_rtfree_extent(tp, rtx,
+ 				(xfs_rtxlen_t)(ertx - rtx));
 
