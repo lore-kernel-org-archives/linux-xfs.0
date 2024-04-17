@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B5D88F4A
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:28:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610BF8F4A
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:28:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389298; cv=none; b=aq7JRJQmYU4OUYL9JFF52jZEoQd1twU9B/3nODskCaf/RqXbqxSYaV+W35RDR/sIWXi3o30caVN3384dkNbN+/g3xXpwNNf/YoT51iGBvKrHAh6Sl/OhP4W+Vn4OamL9We+EpaQGeODtT35Haw/vFog7brndivibEZ8lpiFCOXw=
+	t=1713389314; cv=none; b=UaMrXC1idj20LmCtOGcvq18S+aWZpFDwPuczzOhSx1PAGpXSV4rtqb3ASQKhn4G+svuUKpn6ljpI3k1hBplAkxOq9prXrJ/H06pTT1yFn9nGLcc8DcIWT25CWIw1YPlHcyL4UF5duq/Mzrt1bonD/0A5DIpEYf/9I5rStz+e71o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389298; c=relaxed/simple;
-	bh=0lrieo1Ff/Wa6R3mi3mGucWpolWBN2G5AwrUCjidzJo=;
+	s=arc-20240116; t=1713389314; c=relaxed/simple;
+	bh=vw44qe863EDKmNclwtVfFwCukF/HlqK1YcM61aE/ggQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ccvc8lVUjGy7Whw/5lHVbEy67CAhuTfa9Pcq8ftIIm73P7bGrvwTi466dS77n87QulWSUYeiZejuL6qJ4iosBOtCfpAu0HbN7Rv9nL7iRoj+sWg5p8rBMEPyvm2EuDysJlJ3AxLPGiiLxIOPdk4LHSVVbHHo5ZYImbCcZo43rLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nIxIONgV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=PyFE4GNqZ4oaAzb/grOscKA31ncaGakeoP6ndwOL29lCovyGGFDl2+IiyHYbaJhhJQyfk728D48MtGLLQtcy1HyTKzvX6UzHk3XxXibhdpTFdqlF8+pXAdz/S5wl2S0reYyVda5TL1Omm2saPs5rppvWhNGhff4rd6X98tlwT3Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OrtWZp4F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nIxIONgV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42C21C072AA;
-	Wed, 17 Apr 2024 21:28:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OrtWZp4F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7CF9C072AA;
+	Wed, 17 Apr 2024 21:28:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389298;
-	bh=0lrieo1Ff/Wa6R3mi3mGucWpolWBN2G5AwrUCjidzJo=;
+	s=k20201202; t=1713389314;
+	bh=vw44qe863EDKmNclwtVfFwCukF/HlqK1YcM61aE/ggQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nIxIONgV2yK02Fa9Yg6MEju4UfbRzEazt4MLBGZuoMZ2Op2R+YPLq6mbo3q3CEf3k
-	 pgRbftAqmGQpDOio39jTmGokYO3Ms1JcvILKt2guGAaZbEjJ1uxTGN332JYqdW3e5x
-	 /wVqu4v2rFq5kX9yH+fv5+0nsCv7J4pQsVtc659PzfCqp+r3i4K2g1jfBv6IUgq/yJ
-	 wq7fRhCSbEluLf1oOcZYVe5px3tGMn9WT4ZKgvwKMi+j/AbtInRbxodnijkcgZ5/b5
-	 IWulS4rrf5HGuP/IZQttF43TYESjp7+wJTL2cPQPXPhgegh8iDuwm9qb//6uRRA2ar
-	 247TI35uNP6zQ==
-Date: Wed, 17 Apr 2024 14:28:17 -0700
-Subject: [PATCH 25/67] xfs: consolidate the xfs_attr_defer_* helpers
+	b=OrtWZp4FodZqizpL9fUhDKFnVdv4AZSflpvhAOgtX6szqEg0uYDGH5FKLDqXjgTkz
+	 /mJdYbeEIxHAWg66ulYBQCrOReAu9tSGxVUzZh/IVANa0EeM6L23Z31gW7umOqzHNl
+	 uFQwbfq9g0WBguIiC/vviAKaZL2CqFqmUrPNUhq9svkr8FlkmGMPJxgI/EtbC7nQ9/
+	 dT24LtSj0P7csSI88nW70mD5pIaF6xIzxw5eoqWrPIHpTPOu/IQjtLCZupz0dTUrEs
+	 ySrV2/vD9ZLAWqr/TsoFGGDRjgHjc7RRd0mqx2ht6b3h1d0vNjTHifarTwrgUhnkhN
+	 V70K3haJtgVDw==
+Date: Wed, 17 Apr 2024 14:28:33 -0700
+Subject: [PATCH 26/67] xfs: store an ops pointer in struct xfs_defer_pending
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338842715.1853449.8565825912269380630.stgit@frogsfrogsfrogs>
+Message-ID: <171338842730.1853449.5775086177339999155.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,156 +47,286 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: c00eebd09e95757c9c1d08f0a6bbc32c543daf90
+Source kernel commit: 7f2f7531e0d455f1abb9f48fbbe17c37e8742590
 
-Consolidate the xfs_attr_defer_* helpers into a single xfs_attr_defer_add
-one that picks the right dela_state based on the passed in operation.
-Also move to a single trace point as the actual operation is visible
-through the flags in the delta_state passed to the trace point.
+The dfp_type field in struct xfs_defer_pending is only used to either
+look up the operations associated with the pending word or in trace
+points.  Replace it with a direct pointer to the operations vector,
+and store a pretty name in the vector for tracing.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_attr.c |   90 ++++++++++++-----------------------------------------
- 1 file changed, 21 insertions(+), 69 deletions(-)
+ libxfs/defer_item.c |    6 ++++++
+ libxfs/xfs_defer.c  |   43 +++++++++++++++++--------------------------
+ libxfs/xfs_defer.h  |    5 +++--
+ 3 files changed, 26 insertions(+), 28 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 2103a06b9..550ca6b2e 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -878,11 +878,10 @@ xfs_attr_lookup(
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index b8afda0ce..014589f82 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -152,6 +152,7 @@ xfs_extent_free_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
++	.name		= "extent_free",
+ 	.create_intent	= xfs_extent_free_create_intent,
+ 	.abort_intent	= xfs_extent_free_abort_intent,
+ 	.create_done	= xfs_extent_free_create_done,
+@@ -195,6 +196,7 @@ xfs_agfl_free_finish_item(
+ 
+ /* sub-type with special handling for AGFL deferred frees */
+ const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
++	.name		= "agfl_free",
+ 	.create_intent	= xfs_extent_free_create_intent,
+ 	.abort_intent	= xfs_extent_free_abort_intent,
+ 	.create_done	= xfs_extent_free_create_done,
+@@ -306,6 +308,7 @@ xfs_rmap_update_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
++	.name		= "rmap",
+ 	.create_intent	= xfs_rmap_update_create_intent,
+ 	.abort_intent	= xfs_rmap_update_abort_intent,
+ 	.create_done	= xfs_rmap_update_create_done,
+@@ -424,6 +427,7 @@ xfs_refcount_update_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
++	.name		= "refcount",
+ 	.create_intent	= xfs_refcount_update_create_intent,
+ 	.abort_intent	= xfs_refcount_update_abort_intent,
+ 	.create_done	= xfs_refcount_update_create_done,
+@@ -546,6 +550,7 @@ xfs_bmap_update_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
++	.name		= "bmap",
+ 	.create_intent	= xfs_bmap_update_create_intent,
+ 	.abort_intent	= xfs_bmap_update_abort_intent,
+ 	.create_done	= xfs_bmap_update_create_done,
+@@ -641,6 +646,7 @@ xfs_attr_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_attr_defer_type = {
++	.name		= "attr",
+ 	.max_items	= 1,
+ 	.create_intent	= xfs_attr_create_intent,
+ 	.abort_intent	= xfs_attr_abort_intent,
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 98f1cbe6a..bb5411b84 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -245,7 +245,6 @@ xfs_defer_create_done(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_defer_pending	*dfp)
+ {
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 	struct xfs_log_item		*lip;
+ 
+ 	/* If there is no log intent item, there can be no log done item. */
+@@ -260,7 +259,7 @@ xfs_defer_create_done(
+ 	 * 2.) shuts down the filesystem
+ 	 */
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+-	lip = ops->create_done(tp, dfp->dfp_intent, dfp->dfp_count);
++	lip = dfp->dfp_ops->create_done(tp, dfp->dfp_intent, dfp->dfp_count);
+ 	if (!lip)
+ 		return;
+ 
+@@ -281,13 +280,13 @@ xfs_defer_create_intent(
+ 	struct xfs_defer_pending	*dfp,
+ 	bool				sort)
+ {
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 	struct xfs_log_item		*lip;
+ 
+ 	if (dfp->dfp_intent)
+ 		return 1;
+ 
+-	lip = ops->create_intent(tp, &dfp->dfp_work, dfp->dfp_count, sort);
++	lip = dfp->dfp_ops->create_intent(tp, &dfp->dfp_work, dfp->dfp_count,
++			sort);
+ 	if (!lip)
+ 		return 0;
+ 	if (IS_ERR(lip))
+@@ -332,12 +331,10 @@ xfs_defer_pending_abort(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_defer_pending	*dfp)
+ {
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+-
+ 	trace_xfs_defer_pending_abort(mp, dfp);
+ 
+ 	if (dfp->dfp_intent && !dfp->dfp_done) {
+-		ops->abort_intent(dfp->dfp_intent);
++		dfp->dfp_ops->abort_intent(dfp->dfp_intent);
+ 		dfp->dfp_intent = NULL;
+ 	}
+ }
+@@ -347,7 +344,6 @@ xfs_defer_pending_cancel_work(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_defer_pending	*dfp)
+ {
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 	struct list_head		*pwi;
+ 	struct list_head		*n;
+ 
+@@ -358,7 +354,7 @@ xfs_defer_pending_cancel_work(
+ 		list_del(pwi);
+ 		dfp->dfp_count--;
+ 		trace_xfs_defer_cancel_item(mp, dfp, pwi);
+-		ops->cancel_item(pwi);
++		dfp->dfp_ops->cancel_item(pwi);
+ 	}
+ 	ASSERT(dfp->dfp_count == 0);
+ 	kmem_cache_free(xfs_defer_pending_cache, dfp);
+@@ -516,11 +512,10 @@ xfs_defer_relog_intent(
+ 	struct xfs_defer_pending	*dfp)
+ {
+ 	struct xfs_log_item		*lip;
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 
+ 	xfs_defer_create_done(tp, dfp);
+ 
+-	lip = ops->relog_intent(tp, dfp->dfp_intent, dfp->dfp_done);
++	lip = dfp->dfp_ops->relog_intent(tp, dfp->dfp_intent, dfp->dfp_done);
+ 	if (lip) {
+ 		xfs_trans_add_item(tp, lip);
+ 		set_bit(XFS_LI_DIRTY, &lip->li_flags);
+@@ -587,7 +582,7 @@ xfs_defer_finish_one(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_defer_pending	*dfp)
+ {
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
++	const struct xfs_defer_op_type	*ops = dfp->dfp_ops;
+ 	struct xfs_btree_cur		*state = NULL;
+ 	struct list_head		*li, *n;
+ 	int				error;
+@@ -784,7 +779,6 @@ xfs_defer_cancel(
+ static inline struct xfs_defer_pending *
+ xfs_defer_find_last(
+ 	struct xfs_trans		*tp,
+-	enum xfs_defer_ops_type		type,
+ 	const struct xfs_defer_op_type	*ops)
+ {
+ 	struct xfs_defer_pending	*dfp = NULL;
+@@ -797,7 +791,7 @@ xfs_defer_find_last(
+ 			dfp_list);
+ 
+ 	/* Wrong type? */
+-	if (dfp->dfp_type != type)
++	if (dfp->dfp_ops != ops)
+ 		return NULL;
+ 	return dfp;
+ }
+@@ -830,13 +824,13 @@ xfs_defer_can_append(
+ static inline struct xfs_defer_pending *
+ xfs_defer_alloc(
+ 	struct xfs_trans		*tp,
+-	enum xfs_defer_ops_type		type)
++	const struct xfs_defer_op_type	*ops)
+ {
+ 	struct xfs_defer_pending	*dfp;
+ 
+ 	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
+ 			GFP_NOFS | __GFP_NOFAIL);
+-	dfp->dfp_type = type;
++	dfp->dfp_ops = ops;
+ 	INIT_LIST_HEAD(&dfp->dfp_work);
+ 	list_add_tail(&dfp->dfp_list, &tp->t_dfops);
+ 
+@@ -856,9 +850,9 @@ xfs_defer_add(
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
+ 
+-	dfp = xfs_defer_find_last(tp, type, ops);
++	dfp = xfs_defer_find_last(tp, ops);
+ 	if (!dfp || !xfs_defer_can_append(dfp, ops))
+-		dfp = xfs_defer_alloc(tp, type);
++		dfp = xfs_defer_alloc(tp, ops);
+ 
+ 	xfs_defer_add_item(dfp, li);
+ 	trace_xfs_defer_add_item(tp->t_mountp, dfp, li);
+@@ -874,17 +868,15 @@ xfs_defer_add_barrier(
+ 	struct xfs_trans		*tp)
+ {
+ 	struct xfs_defer_pending	*dfp;
+-	const enum xfs_defer_ops_type	type = XFS_DEFER_OPS_TYPE_BARRIER;
+-	const struct xfs_defer_op_type	*ops = defer_op_types[type];
+ 
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 
+ 	/* If the last defer op added was a barrier, we're done. */
+-	dfp = xfs_defer_find_last(tp, type, ops);
++	dfp = xfs_defer_find_last(tp, &xfs_barrier_defer_type);
+ 	if (dfp)
+ 		return;
+ 
+-	xfs_defer_alloc(tp, type);
++	xfs_defer_alloc(tp, &xfs_barrier_defer_type);
+ 
+ 	trace_xfs_defer_add_item(tp->t_mountp, dfp, NULL);
+ }
+@@ -903,7 +895,7 @@ xfs_defer_start_recovery(
+ 
+ 	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
+ 			GFP_NOFS | __GFP_NOFAIL);
+-	dfp->dfp_type = dfp_type;
++	dfp->dfp_ops = defer_op_types[dfp_type];
+ 	dfp->dfp_intent = lip;
+ 	INIT_LIST_HEAD(&dfp->dfp_work);
+ 	list_add_tail(&dfp->dfp_list, r_dfops);
+@@ -929,13 +921,12 @@ xfs_defer_finish_recovery(
+ 	struct xfs_defer_pending	*dfp,
+ 	struct list_head		*capture_list)
+ {
+-	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+ 	int				error;
+ 
+-	error = ops->recover_work(dfp, capture_list);
++	error = dfp->dfp_ops->recover_work(dfp, capture_list);
+ 	if (error)
+ 		trace_xlog_intent_recovery_failed(mp, error,
+-				ops->recover_work);
++				dfp->dfp_ops->recover_work);
  	return error;
  }
  
--static int
--xfs_attr_intent_init(
-+static void
-+xfs_attr_defer_add(
- 	struct xfs_da_args	*args,
--	unsigned int		op_flags,	/* op flag (set or remove) */
--	struct xfs_attr_intent	**attr)		/* new xfs_attr_intent */
-+	unsigned int		op_flags)
- {
- 
- 	struct xfs_attr_intent	*new;
-@@ -891,66 +890,22 @@ xfs_attr_intent_init(
- 	new->xattri_op_flags = op_flags;
- 	new->xattri_da_args = args;
- 
--	*attr = new;
--	return 0;
--}
-+	switch (op_flags) {
-+	case XFS_ATTRI_OP_FLAGS_SET:
-+		new->xattri_dela_state = xfs_attr_init_add_state(args);
-+		break;
-+	case XFS_ATTRI_OP_FLAGS_REPLACE:
-+		new->xattri_dela_state = xfs_attr_init_replace_state(args);
-+		break;
-+	case XFS_ATTRI_OP_FLAGS_REMOVE:
-+		new->xattri_dela_state = xfs_attr_init_remove_state(args);
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
- 
--/* Sets an attribute for an inode as a deferred operation */
--static int
--xfs_attr_defer_add(
--	struct xfs_da_args	*args)
--{
--	struct xfs_attr_intent	*new;
--	int			error = 0;
--
--	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_SET, &new);
--	if (error)
--		return error;
--
--	new->xattri_dela_state = xfs_attr_init_add_state(args);
- 	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
- 	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
--
--	return 0;
--}
--
--/* Sets an attribute for an inode as a deferred operation */
--static int
--xfs_attr_defer_replace(
--	struct xfs_da_args	*args)
--{
--	struct xfs_attr_intent	*new;
--	int			error = 0;
--
--	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
--	if (error)
--		return error;
--
--	new->xattri_dela_state = xfs_attr_init_replace_state(args);
--	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
--	trace_xfs_attr_defer_replace(new->xattri_dela_state, args->dp);
--
--	return 0;
--}
--
--/* Removes an attribute for an inode as a deferred operation */
--static int
--xfs_attr_defer_remove(
--	struct xfs_da_args	*args)
--{
--
--	struct xfs_attr_intent	*new;
--	int			error;
--
--	error  = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REMOVE, &new);
--	if (error)
--		return error;
--
--	new->xattri_dela_state = xfs_attr_init_remove_state(args);
--	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
--	trace_xfs_attr_defer_remove(new->xattri_dela_state, args->dp);
--
--	return 0;
- }
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 5b1990ef3..957a06278 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -34,9 +34,9 @@ struct xfs_defer_pending {
+ 	struct list_head		dfp_work;	/* work items */
+ 	struct xfs_log_item		*dfp_intent;	/* log intent item */
+ 	struct xfs_log_item		*dfp_done;	/* log done item */
++	const struct xfs_defer_op_type	*dfp_ops;
+ 	unsigned int			dfp_count;	/* # extent items */
+ 	unsigned int			dfp_flags;
+-	enum xfs_defer_ops_type		dfp_type;
+ };
  
  /*
-@@ -1036,16 +991,16 @@ xfs_attr_set(
- 	error = xfs_attr_lookup(args);
- 	switch (error) {
- 	case -EEXIST:
--		/* if no value, we are performing a remove operation */
- 		if (!args->value) {
--			error = xfs_attr_defer_remove(args);
-+			/* if no value, we are performing a remove operation */
-+			xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REMOVE);
- 			break;
- 		}
-+
- 		/* Pure create fails if the attr already exists */
- 		if (args->attr_flags & XATTR_CREATE)
- 			goto out_trans_cancel;
--
--		error = xfs_attr_defer_replace(args);
-+		xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REPLACE);
- 		break;
- 	case -ENOATTR:
- 		/* Can't remove what isn't there. */
-@@ -1055,14 +1010,11 @@ xfs_attr_set(
- 		/* Pure replace fails if no existing attr to replace. */
- 		if (args->attr_flags & XATTR_REPLACE)
- 			goto out_trans_cancel;
--
--		error = xfs_attr_defer_add(args);
-+		xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_SET);
- 		break;
- 	default:
- 		goto out_trans_cancel;
- 	}
--	if (error)
--		goto out_trans_cancel;
+@@ -61,6 +61,8 @@ void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
  
- 	/*
- 	 * If this is a synchronous mount, make sure that the
+ /* Description of a deferred type. */
+ struct xfs_defer_op_type {
++	const char		*name;
++	unsigned int		max_items;
+ 	struct xfs_log_item *(*create_intent)(struct xfs_trans *tp,
+ 			struct list_head *items, unsigned int count, bool sort);
+ 	void (*abort_intent)(struct xfs_log_item *intent);
+@@ -76,7 +78,6 @@ struct xfs_defer_op_type {
+ 	struct xfs_log_item *(*relog_intent)(struct xfs_trans *tp,
+ 			struct xfs_log_item *intent,
+ 			struct xfs_log_item *done_item);
+-	unsigned int		max_items;
+ };
+ 
+ extern const struct xfs_defer_op_type xfs_bmap_update_defer_type;
 
