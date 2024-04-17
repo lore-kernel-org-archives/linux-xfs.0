@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBDF1171A1
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:45:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6850A171A1
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:45:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713390300; cv=none; b=aZBfuG+ERkOpqHwyW/6kK01LRNaeg0xyKKzD0Ofz/AJoev63x0zZyTEhfconCWzCPRNApV1B9Qejub9I7cCh7gzxVkX0Aw9PdOmQtPx27OHTjd6zvgoio4WgKsFwWzbK5xwTbywwXEuPWnL8Yw3Ik1HRKAkSCJ0ECT8x/PEtipE=
+	t=1713390316; cv=none; b=IAC7KGjX8Oh9e+9eYnYSyISVXAtk+MhT/upcwKq6lYvFp3eJjDKEDNPFDRuo1DNNZ22Lm556MxWp9z9ri4RlksKT7UBLESY7FpYz+naG4FQOdFCkHn0o5zyIwUcHTV8YXjQzyu+jpEetubGw3mmRWYi9TGzQ6B25Dlt4HWu/7/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713390300; c=relaxed/simple;
-	bh=Vp8ti0kuKfyEorao+46NuD5q8J4TILvzoQ9HXCqv+nk=;
+	s=arc-20240116; t=1713390316; c=relaxed/simple;
+	bh=QMVv42qiJ2NwlcB6qgzJsrbI9AEkZpsNxdh4riLSfKg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=odzOimISCI0UmnrVLD6P9iay2706/OesPHbcR+sS0U4t2+ysUkj0KK/E/GWU2cVIhkr/b/+T1vdHeLMxdwZrU7E205iYcb6Vz6AGbpTorRe9MEfKggDvUqgEPuwXJgN0COha36L6Hwm+cgu0MqCHaxntYt9oY/WQP1qGUm6abZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bi3OTNAO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=DlnFEcWi5Hkx/W/yDegl0IG5He6IvvC/kwGqM1Iytfl6yuLLcg+Xug/comZ1WFHwDvOV9ATBKAq86vHLE+ndduToKr/13em+eXPe9nyScB9ud1pYRq6LG1HrNIjPHsCUgPm131UVh/rz4RMXDYSpdRHY4NuMtA4ZDF5YgxX5QpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DduXJud0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bi3OTNAO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A27ABC072AA;
-	Wed, 17 Apr 2024 21:45:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DduXJud0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42688C072AA;
+	Wed, 17 Apr 2024 21:45:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713390300;
-	bh=Vp8ti0kuKfyEorao+46NuD5q8J4TILvzoQ9HXCqv+nk=;
+	s=k20201202; t=1713390316;
+	bh=QMVv42qiJ2NwlcB6qgzJsrbI9AEkZpsNxdh4riLSfKg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bi3OTNAOCcAp83C9AdGsIzJ7QfCQEyPd2zOkDRsirN+6B5w7HlOdqYUYojcVVN4QA
-	 w418ZRfFjtMxKTC+tuvhMAbdNO16Q7vPgpvlq1smWvAOni6xLwNi7+wrF0yCLakxT/
-	 VhfnaOtz/4N6SjvLEyV7MmNQux0rMDSh0enrHLt1BNRK/y9b5tCXz497GwaZbtoEpz
-	 pY+gW49ypK8CXwiETdmEJHhwoH1BT4GtDN7UyiN1QXGj0DJfN7FypTzskkuV7n4meu
-	 wfO1g+yZXtIbvAN/EZFASlAPC9P3OzjRIlySN2dHuzG18q8SMAKOSslqoihz3s+Ukb
-	 ArYh2dKmXPFVA==
-Date: Wed, 17 Apr 2024 14:45:00 -0700
-Subject: [PATCH 2/8] xfs_repair: slab and bag structs need to track more than
- 2^32 items
+	b=DduXJud0cZz0kXvS6CKT5RiDpt9B6Or1cHvFtOQVJall5nEaSwEJtE3Qd6CtYTooU
+	 dO4pMheIG6RMhbISAbyHFit4ebRPufSbBVY/1Ax9z7X1C4Yb5ZCnpexB/AbkQZ4IoV
+	 kwl+0R51YDRma/L5XchomJ5UWwpm+Q0qBuDQSbx/C6V20DSdy/U46Ta1gj9OHQsNpY
+	 VaES3XN7RXNv9XGWo5cZVghBTkSxxhQQlD+I9IX6hG0Z7WYm/YIMNKeXxoOfHdusam
+	 jX3McKi0qyGX+rscnMDUg79CcM5ghKCboNTq/6XXnpKk8LL9yOpD45cWWrqcgw0qZE
+	 bpG7pRXr5Ryqg==
+Date: Wed, 17 Apr 2024 14:45:15 -0700
+Subject: [PATCH 3/8] xfs_repair: support more than 2^32 rmapbt records per AG
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: "Darrick J. Wong" <djwong@djwong.org>, Christoph Hellwig <hch@lst.de>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338845811.1856674.3595457479236993866.stgit@frogsfrogsfrogs>
+Message-ID: <171338845826.1856674.2136380681034727010.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338845773.1856674.2763970395218819820.stgit@frogsfrogsfrogs>
 References: <171338845773.1856674.2763970395218819820.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,216 +47,64 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@djwong.org>
 
-Currently, the xfs_slab data structure in xfs_repair is used to stage
-incore reverse mapping and reference count records to build the ondisk
-rmapbt and refcountbt during phase 5.
-
-On a reflink filesystem, it's possible for there to be more than 2^32
-forward mappings in an AG, which means that there could be more than
-2^32 rmapbt records too.  Widen the size_t fields of xfs_slab to u64
-accomodate this.
-
-Similarly, the xfs_bag structure holds pointers to xfs_slab objects.
-This abstraction tracks rmapbt records as we walk through the AG space
-building refcount records.  It's possible for there to be more than 2^32
-mappings to a piece of physical space, so we need to side the size_t
-fields of xfs_bag to u64 as well.
-
-In the next patch we'll fix all the users of these two structures; this
-is merely the preparatory patch.
+Now that the incore structures handle more than 2^32 records correctly,
+fix the rmapbt generation code to handle that many records.  This fixes
+the problem where an extremely large rmapbt cannot be rebuilt properly
+because of integer truncation.
 
 Signed-off-by: Darrick J. Wong <djwong@djwong.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/slab.c |   36 ++++++++++++++++++------------------
- repair/slab.h |   36 +++++++++++++++++++-----------------
- 2 files changed, 37 insertions(+), 35 deletions(-)
+ repair/rmap.c |    8 ++++----
+ repair/rmap.h |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/repair/slab.c b/repair/slab.c
-index 165f97efd..01bc4d426 100644
---- a/repair/slab.c
-+++ b/repair/slab.c
-@@ -41,18 +41,18 @@
- /* and cannot be larger than 128M */
- #define MAX_SLAB_SIZE		(128 * 1048576)
- struct xfs_slab_hdr {
--	size_t			sh_nr;
--	size_t			sh_inuse;	/* items in use */
-+	uint32_t		sh_nr;
-+	uint32_t		sh_inuse;	/* items in use */
- 	struct xfs_slab_hdr	*sh_next;	/* next slab hdr */
- 						/* objects follow */
- };
- 
- struct xfs_slab {
--	size_t			s_item_sz;	/* item size */
--	size_t			s_nr_slabs;	/* # of slabs */
--	size_t			s_nr_items;	/* # of items */
-+	uint64_t		s_nr_slabs;	/* # of slabs */
-+	uint64_t		s_nr_items;	/* # of items */
- 	struct xfs_slab_hdr	*s_first;	/* first slab header */
- 	struct xfs_slab_hdr	*s_last;	/* last sh_next pointer */
-+	size_t			s_item_sz;	/* item size */
- };
- 
- /*
-@@ -64,13 +64,13 @@ struct xfs_slab {
-  */
- struct xfs_slab_hdr_cursor {
- 	struct xfs_slab_hdr	*hdr;		/* a slab header */
--	size_t			loc;		/* where we are in the slab */
-+	uint32_t		loc;		/* where we are in the slab */
- };
- 
- typedef int (*xfs_slab_compare_fn)(const void *, const void *);
- 
- struct xfs_slab_cursor {
--	size_t				nr;		/* # of per-slab cursors */
-+	uint64_t			nr;		/* # of per-slab cursors */
- 	struct xfs_slab			*slab;		/* pointer to the slab */
- 	struct xfs_slab_hdr_cursor	*last_hcur;	/* last header we took from */
- 	xfs_slab_compare_fn		compare_fn;	/* compare items */
-@@ -83,8 +83,8 @@ struct xfs_slab_cursor {
-  */
- #define MIN_BAG_SIZE	4096
- struct xfs_bag {
--	size_t			bg_nr;		/* number of pointers */
--	size_t			bg_inuse;	/* number of slots in use */
-+	uint64_t		bg_nr;		/* number of pointers */
-+	uint64_t		bg_inuse;	/* number of slots in use */
- 	void			**bg_ptrs;	/* pointers */
- };
- #define BAG_END(bag)	(&(bag)->bg_ptrs[(bag)->bg_nr])
-@@ -137,7 +137,7 @@ static void *
- slab_ptr(
- 	struct xfs_slab		*slab,
- 	struct xfs_slab_hdr	*hdr,
--	size_t			idx)
-+	uint32_t		idx)
+diff --git a/repair/rmap.c b/repair/rmap.c
+index a2291c7b3..c908429c9 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -283,7 +283,7 @@ rmap_fold_raw_recs(
  {
- 	char			*p;
+ 	struct xfs_slab_cursor	*cur = NULL;
+ 	struct xfs_rmap_irec	*prev, *rec;
+-	size_t			old_sz;
++	uint64_t		old_sz;
+ 	int			error = 0;
  
-@@ -155,12 +155,12 @@ slab_add(
- 	struct xfs_slab		*slab,
- 	void			*item)
- {
--	struct xfs_slab_hdr		*hdr;
-+	struct xfs_slab_hdr	*hdr;
- 	void			*p;
+ 	old_sz = slab_count(ag_rmaps[agno].ar_rmaps);
+@@ -690,7 +690,7 @@ mark_inode_rl(
+ 	struct xfs_rmap_irec	*rmap;
+ 	struct ino_tree_node	*irec;
+ 	int			off;
+-	size_t			idx;
++	uint64_t		idx;
+ 	xfs_agino_t		ino;
  
- 	hdr = slab->s_last;
- 	if (!hdr || hdr->sh_inuse == hdr->sh_nr) {
--		size_t n;
-+		uint32_t	n;
- 
- 		n = (hdr ? hdr->sh_nr * 2 : MIN_SLAB_NR);
- 		if (n * slab->s_item_sz > MAX_SLAB_SIZE)
-@@ -308,7 +308,7 @@ peek_slab_cursor(
- 	struct xfs_slab_hdr_cursor	*hcur;
- 	void			*p = NULL;
- 	void			*q;
--	size_t			i;
-+	uint64_t		i;
- 
- 	cur->last_hcur = NULL;
- 
-@@ -370,7 +370,7 @@ pop_slab_cursor(
+ 	if (bag_count(rmaps) < 2)
+@@ -873,9 +873,9 @@ compute_refcounts(
  /*
-  * Return the number of items in the slab.
+  * Return the number of rmap objects for an AG.
   */
 -size_t
 +uint64_t
- slab_count(
- 	struct xfs_slab	*slab)
+ rmap_record_count(
+-	struct xfs_mount		*mp,
++	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
  {
-@@ -429,7 +429,7 @@ bag_add(
- 	p = &bag->bg_ptrs[bag->bg_inuse];
- 	if (p == BAG_END(bag)) {
- 		/* No free space, alloc more pointers */
--		size_t nr;
-+		uint64_t	nr;
+ 	return slab_count(ag_rmaps[agno].ar_rmaps);
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 1dad2f589..b074e2e87 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -26,7 +26,7 @@ extern bool rmaps_are_mergeable(struct xfs_rmap_irec *r1, struct xfs_rmap_irec *
+ extern int rmap_add_fixed_ag_rec(struct xfs_mount *, xfs_agnumber_t);
+ extern int rmap_store_ag_btree_rec(struct xfs_mount *, xfs_agnumber_t);
  
- 		nr = bag->bg_nr * 2;
- 		x = realloc(bag->bg_ptrs, nr * sizeof(void *));
-@@ -450,7 +450,7 @@ bag_add(
- int
- bag_remove(
- 	struct xfs_bag	*bag,
--	size_t		nr)
-+	uint64_t	nr)
- {
- 	ASSERT(nr < bag->bg_inuse);
- 	memmove(&bag->bg_ptrs[nr], &bag->bg_ptrs[nr + 1],
-@@ -462,7 +462,7 @@ bag_remove(
- /*
-  * Return the number of items in a bag.
-  */
--size_t
-+uint64_t
- bag_count(
- 	struct xfs_bag	*bag)
- {
-@@ -475,7 +475,7 @@ bag_count(
- void *
- bag_item(
- 	struct xfs_bag	*bag,
--	size_t		nr)
-+	uint64_t	nr)
- {
- 	if (nr >= bag->bg_inuse)
- 		return NULL;
-diff --git a/repair/slab.h b/repair/slab.h
-index aab46ecf1..077b45822 100644
---- a/repair/slab.h
-+++ b/repair/slab.h
-@@ -9,29 +9,31 @@
- struct xfs_slab;
- struct xfs_slab_cursor;
- 
--extern int init_slab(struct xfs_slab **, size_t);
--extern void free_slab(struct xfs_slab **);
-+int init_slab(struct xfs_slab **slabp, size_t item_sz);
-+void free_slab(struct xfs_slab **slabp);
- 
--extern int slab_add(struct xfs_slab *, void *);
--extern void qsort_slab(struct xfs_slab *, int (*)(const void *, const void *));
--extern size_t slab_count(struct xfs_slab *);
-+int slab_add(struct xfs_slab *slab, void *item);
-+void qsort_slab(struct xfs_slab *slab,
-+		int (*compare)(const void *, const void *));
-+uint64_t slab_count(struct xfs_slab *slab);
- 
--extern int init_slab_cursor(struct xfs_slab *,
--	int (*)(const void *, const void *), struct xfs_slab_cursor **);
--extern void free_slab_cursor(struct xfs_slab_cursor **);
-+int init_slab_cursor(struct xfs_slab *slab,
-+		int (*compare)(const void *, const void *),
-+		struct xfs_slab_cursor **curp);
-+void free_slab_cursor(struct xfs_slab_cursor **curp);
- 
--extern void *peek_slab_cursor(struct xfs_slab_cursor *);
--extern void advance_slab_cursor(struct xfs_slab_cursor *);
--extern void *pop_slab_cursor(struct xfs_slab_cursor *);
-+void *peek_slab_cursor(struct xfs_slab_cursor *cur);
-+void advance_slab_cursor(struct xfs_slab_cursor *cur);
-+void *pop_slab_cursor(struct xfs_slab_cursor *cur);
- 
- struct xfs_bag;
- 
--extern int init_bag(struct xfs_bag **);
--extern void free_bag(struct xfs_bag **);
--extern int bag_add(struct xfs_bag *, void *);
--extern int bag_remove(struct xfs_bag *, size_t);
--extern size_t bag_count(struct xfs_bag *);
--extern void *bag_item(struct xfs_bag *, size_t);
-+int init_bag(struct xfs_bag **bagp);
-+void free_bag(struct xfs_bag **bagp);
-+int bag_add(struct xfs_bag *bag, void *item);
-+int bag_remove(struct xfs_bag *bag, uint64_t idx);
-+uint64_t bag_count(struct xfs_bag *bag);
-+void *bag_item(struct xfs_bag *bag, uint64_t idx);
- 
- #define foreach_bag_ptr(bag, idx, ptr) \
- 	for ((idx) = 0, (ptr) = bag_item((bag), (idx)); \
+-extern size_t rmap_record_count(struct xfs_mount *, xfs_agnumber_t);
++uint64_t rmap_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int rmap_init_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
+ extern void rmap_avoid_check(void);
+ void rmaps_verify_btree(struct xfs_mount *mp, xfs_agnumber_t agno);
 
