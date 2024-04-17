@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27C63651B1
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:24:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AD1657C5
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:25:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389095; cv=none; b=pkvVr6NhUCTrchFQS+dtIEChCkJ9aqGOkW1gUSv7IxHVXubCRzIZxIRkMvSLaW28umH/KdlHQshj+7UmP9O7t2ZuNTGlEcMxke0Rkdoav4X21uSXdni07vWIDk5pXjcMuWNkIODG6+FVMaZfHG9jz1m1Yz10Dkk5sC4CIJNowHE=
+	t=1713389111; cv=none; b=L+tSphSkyvwYkCZzOtKQPxXzXBTECAs9gFVYaLuQ4xcBOupkYnH5ZepXA6izWjqt8197SFgyaxn8/HS1EbQN48cfXnna62palUWzZ8RBwUcNWfrs4xq8JiPtPkVjMj4vOLIM5DpclQO1b4sxz78KRi3Esob5MpJEp810uzTtUmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389095; c=relaxed/simple;
-	bh=YU41Q1KMRC+1N1+og1TL0UPC6ENjADYW7+reTTWS6is=;
+	s=arc-20240116; t=1713389111; c=relaxed/simple;
+	bh=mFHIVljog5GbxlkZdPh2m3JYfSUUARIqdiQuG6Xe/X4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uMZJlKF0LyO0/xF+oCXIv4SUjSIhLmdZdqhsiyOITTBhcu/59z+VPgnKPMfLf1HAGQy/IQWdWloPEGamFj81Yi8/EFB2x3RPP2h6stzjv1xy3z59HyEY2wlXylS4lF8G1eFFXt6bazxEIh0qGcg7OT5n4a1FzPyJEO2z1xSPjPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ONi6ouQT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WayjYq+V3SZGMRIePYLHEKA3YiXkrbs/wdiSUvm5Wn9XmIN1fZnqhb1m1PYn+wePK7bfYl1vD0nBSWk3YtPIz0+4oeOk8lJu2Q0TktLfBA20Lz8Hax6r8fycjjLWX6bKnV33vMDoI30c69TKSZfSnjByRPeFcdfjfagKHRLGuaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EjYqVKs+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ONi6ouQT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A07EEC072AA;
-	Wed, 17 Apr 2024 21:24:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EjYqVKs+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BF86C072AA;
+	Wed, 17 Apr 2024 21:25:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389094;
-	bh=YU41Q1KMRC+1N1+og1TL0UPC6ENjADYW7+reTTWS6is=;
+	s=k20201202; t=1713389110;
+	bh=mFHIVljog5GbxlkZdPh2m3JYfSUUARIqdiQuG6Xe/X4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ONi6ouQTKXT+PACXv3RbhmZRBtx3Cu9NGM7MKcgnOoxmqQnsOdR/HUAytf4auBgSq
-	 /0ixBv1uAQ6mYpI4J2/ce3MpM1G8no2UO5K8VLxcalPbV9OAWcrVI8U54Vhu5Oi1iT
-	 B9frh7nctkyOnfs98pKmw4fbC02d7uxDE6sHUOmE9K+A9kX9WNvaA6G2narI3uRmqW
-	 QqYEE2Lx1jMUkgqrJdOaqrUMohl9jsijTj2aGDnVWmV7/+Tkk0ie60m2/bmb6s952H
-	 xFPi+D9/uGmaBZ3qeIMNyfzY664PGr82c/E3Y8RSfqCHgfQ2bd3YZ4zVrjDPnusBHl
-	 2Aea3Ah0u71SA==
-Date: Wed, 17 Apr 2024 14:24:54 -0700
-Subject: [PATCH 12/67] xfs: fix 32-bit truncation in xfs_compute_rextslog
+	b=EjYqVKs+thh4PRI2SmQrWoRzaGgsZbilXMpHuIjKqyuAHyxH6Rza1HhZRQeaz0hUX
+	 CGBEh2stjxvZF8legdnoWZ6Guoypn06U/NhvOWgNGj/fsaW8199YcMIpvFhZwFiae/
+	 mYpurzKIzCTK845NJiaUCM/u/jJjRqZ8Qnldbg/g/ye2lG2o3koz1UwGhaL5XmLPMH
+	 gxGxm/YxuSp7Qo50U2bbYBl0medrMUAV4MQ7bNnAC3i4t7psxIjnwJ7Z9iHV00nbXo
+	 kk3PEFrofNS91r3mHtYX52bKGAWwwGx8uWPfoo/Im5NI3l9LsOwetcYTHRLAQmwCBL
+	 aviIww8SNzG6Q==
+Date: Wed, 17 Apr 2024 14:25:09 -0700
+Subject: [PATCH 13/67] xfs: don't allow overly small or large realtime volumes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338842520.1853449.11391750048576321208.stgit@frogsfrogsfrogs>
+Message-ID: <171338842535.1853449.6755368252304502824.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,45 +47,96 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: cf8f0e6c1429be7652869059ea44696b72d5b726
+Source kernel commit: e14293803f4e84eb23a417b462b56251033b5a66
 
-It's quite reasonable that some customer somewhere will want to
-configure a realtime volume with more than 2^32 extents.  If they try to
-do this, the highbit32() call will truncate the upper bits of the
-xfs_rtbxlen_t and produce the wrong value for rextslog.  This in turn
-causes the rsumlevels to be wrong, which results in a realtime summary
-file that is the wrong length.  Fix that.
+Don't allow realtime volumes that are less than one rt extent long.
+This has been broken across 4 LTS kernels with nobody noticing, so let's
+just disable it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_rtbitmap.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ libxfs/xfs_rtbitmap.h |   13 +++++++++++++
+ libxfs/xfs_sb.c       |    3 ++-
+ mkfs/xfs_mkfs.c       |    5 +++++
+ repair/sb.c           |    3 +++
+ 4 files changed, 23 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 90fe90288..726543abb 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -1130,14 +1130,16 @@ xfs_rtbitmap_blockcount(
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index 6e5bae324..1c84b52de 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -353,6 +353,18 @@ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
  
- /*
-  * Compute the maximum level number of the realtime summary file, as defined by
-- * mkfs.  The use of highbit32 on a 64-bit quantity is a historic artifact that
-- * prohibits correct use of rt volumes with more than 2^32 extents.
-+ * mkfs.  The historic use of highbit32 on a 64-bit quantity prohibited correct
-+ * use of rt volumes with more than 2^32 extents.
-  */
- uint8_t
- xfs_compute_rextslog(
- 	xfs_rtbxlen_t		rtextents)
+ uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
+ 
++/* Do we support an rt volume having this number of rtextents? */
++static inline bool
++xfs_validate_rtextents(
++	xfs_rtbxlen_t		rtextents)
++{
++	/* No runt rt volumes */
++	if (rtextents == 0)
++		return false;
++
++	return true;
++}
++
+ xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
+ 		rtextents);
+ unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
+@@ -372,6 +384,7 @@ unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
+ # define xfs_rtbuf_cache_relse(a)			(0)
+ # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
+ # define xfs_compute_rextslog(rtx)			(0)
++# define xfs_validate_rtextents(rtx)			(false)
+ static inline xfs_filblks_t
+ xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
  {
--	return rtextents ? xfs_highbit32(rtextents) : 0;
-+	if (!rtextents)
-+		return 0;
-+	return xfs_highbit64(rtextents);
- }
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 95a29bf1f..7a72d5a17 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -507,7 +507,8 @@ xfs_validate_sb_common(
+ 		rbmblocks = howmany_64(sbp->sb_rextents,
+ 				       NBBY * sbp->sb_blocksize);
  
- /*
+-		if (sbp->sb_rextents != rexts ||
++		if (!xfs_validate_rtextents(rexts) ||
++		    sbp->sb_rextents != rexts ||
+ 		    sbp->sb_rextslog != xfs_compute_rextslog(rexts) ||
+ 		    sbp->sb_rbmblocks != rbmblocks) {
+ 			xfs_notice(mp,
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index abea61943..1a0a71dbe 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3025,6 +3025,11 @@ reported by the device (%u).\n"),
+ 	}
+ 
+ 	cfg->rtextents = cfg->rtblocks / cfg->rtextblocks;
++	if (cfg->rtextents == 0) {
++		fprintf(stderr,
++_("cannot have an rt subvolume with zero extents\n"));
++		usage();
++	}
+ 	cfg->rtbmblocks = (xfs_extlen_t)howmany(cfg->rtextents,
+ 						NBBY * cfg->blocksize);
+ }
+diff --git a/repair/sb.c b/repair/sb.c
+index 384840db1..faf79d9d0 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -475,6 +475,9 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
+ 		if (sb->sb_rblocks / sb->sb_rextsize != sb->sb_rextents)
+ 			return(XR_BAD_RT_GEO_DATA);
+ 
++		if (sb->sb_rextents == 0)
++			return XR_BAD_RT_GEO_DATA;
++
+ 		if (sb->sb_rextslog != libxfs_compute_rextslog(sb->sb_rextents))
+ 			return(XR_BAD_RT_GEO_DATA);
+ 
 
