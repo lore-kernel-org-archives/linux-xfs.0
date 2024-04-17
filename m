@@ -1,68 +1,50 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE742B9A2
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 04:48:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A29ABBE4E
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 05:00:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713329301; cv=none; b=PV2aW+f7agt2oRXrK3mFWxP4DH7qzVrB6EDHLmcTQYKD3ru9vmcvtTFufr+Gb1PYyQRH9BjO/zUdbLN5RI3bzxeGHqVmT+pGCK8a85aJPIGc8cMRA4fPcy4njHGZKifldzr4x+9y74hiEMawfrDb5Vfu1p9CrGKzR6JZfIq4dxk=
+	t=1713330053; cv=none; b=qx6W33rZ6ReX7RT3hm9Ev3HPt4qr3KvJdl5CwHmD0bOtcdvur9wGx3srUiqW15Gyt6NDYbuswnbCD44MgMI3aK43LmrXvoJpwhs+xVLE6JrlOjbx+ifaV9V0F4njf20tdadhuqpp72Rl79kC0QXd6EbJLkQIBq7DeJRBeW7dYtg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713329301; c=relaxed/simple;
-	bh=ZmqDOYxWcizF0cFiG7LzuTUl1GFxnYfdOg88Q+tnYTw=;
+	s=arc-20240116; t=1713330053; c=relaxed/simple;
+	bh=Xx5lj9/7C9IxFUkI5bwMAggnH/yuThzFswjetQSFy14=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XgAbuvtiqXnC3XE1rrAwqWOR6SazX0NxcY178+ipvMOZPb7mMrMtWl9wL/ZnnhK+Ncdtg47EMwZ7EMGpXbZi6bWheZVv8sZNXO5UDFLP/GB79C2z49dJyqtu9684lfeoHm0yRPyJHs9/llwMoEpwvz1XdpxaFMwX2ZxKEpn4raY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=jQ91mlt/; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=ocxGklyiPf2v+JzJE8jG09ciEf98XSescsb9v/R54/kGUhNOK68E6/5SAZ6LzM6R9EGltc0Gjw3aA0nCeiMHHU0a3+ZtIoS7GhnCnzoIqbcOKbLTDfHfPPaSrCQjit5C4j47CoW8SlA2+qTl/kKbH511O3lrJntMEojsCfK4Grk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=B0Mw+5fy; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="jQ91mlt/"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1e455b630acso23833645ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2024 21:48:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1713329299; x=1713934099; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qzYslW1aC2ppMxc5o9XjwDFjTbA8y3cpFfmsZYKNfQg=;
-        b=jQ91mlt/HeY1URw4tJfEZhhV85bQZ76s8PMaOWjxvMfXNjtVVCj/83ZlQCA2rzcMWL
-         ak6cIoB95DYyeSK1oN+QL0liQlVxqxgTUj6XJFNlyUv2bIup5VAJHyfAPoqu4eEOtwTB
-         tMCGbWyob54MNYYmKfNkvJL6vgxVcynlVGsRHLxB7op5lu7TCG9D4mP8woeBCwuM813w
-         MqUr6k1wR1IrZwkvzpY/tAW/adFMf3js2B00zqXbnNpmW5AvwlhbbF9PXUaaVnkywkuD
-         tzwKwfXcmu4qiPYkSCBAuwYowrfMUEKc/qU6FI4ZrhMvRD481dxEfpkDGFSJ+qGc8MKV
-         O8Xw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713329299; x=1713934099;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qzYslW1aC2ppMxc5o9XjwDFjTbA8y3cpFfmsZYKNfQg=;
-        b=iBZOcLi3H365HMCvnUSestwQ4+NtLZNwDwlLi3YV+u4L2/tmyZLwixncHSw0l699Zh
-         xt7vbTiSC2+qWKYIDTozKQXzU8DfBzb+V9aawkgMbHAbDhQDfkU/7+y6wCO81Fn//bpX
-         G0WCsNMCttkub7Hks/yGr1kAFUlCCpqWtgqBNLWdx0+ol9YSDI5LE3mH5oj3ZIDveCLU
-         P9ASnrZ1PdomWl79dLn6hzKXSqAm1PCVOl3pGfAxCBFc9dGqDB2lJmFFMlF2OAezIVej
-         Rxq32qbQIL6rahlTu/0Oaqf69w8FM9CkTiSMJn9A1/0w2B86MVnaD7WerSf+Za+tVfee
-         DcKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU2qiIs8RL0M2zDrWPdo0YnAOHURZoYf1JakNmeFHJQr6aoCS+wdLQ0a1RosGfrhYP+2LNEufKH93GClJKTo1iQjCVPAff4XVXU
-X-Gm-Message-State: AOJu0YxPDE54BhaKiuDng9oEfnQLxozkqPBLyvYVWsZVfV2TvTqPEikr
-	yh9B744adAprE3Drp+lyj5yHJE8BN4pL2HgAkzxAbg24kzOT1gekoTgPm+dn8/nAwC7jCqSlSLt
-	S
-X-Google-Smtp-Source: AGHT+IGP3L6ZnkSdK0N2R99RlDrClJFU7WmERLwKk72JVWuOMF3IA4iL2MKCvC8xBVNG3QoQw2vI/A==
-X-Received: by 2002:a17:903:41c7:b0:1e3:e137:d3af with SMTP id u7-20020a17090341c700b001e3e137d3afmr17134532ple.9.1713329298949;
-        Tue, 16 Apr 2024 21:48:18 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id d5-20020a170902c18500b001e503c555afsm10660421pld.97.2024.04.16.21.48.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Apr 2024 21:48:18 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rwxDU-000nAR-0J;
-	Wed, 17 Apr 2024 14:48:16 +1000
-Date: Wed, 17 Apr 2024 14:48:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: kdevops@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH kdevops] xfs: add xfs/242 as failing on xfs_reflink_2k
-Message-ID: <Zh9UkHEesvrpSQ7J@dread.disaster.area>
-References: <20240416235108.3391394-1-mcgrof@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B0Mw+5fy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=B4y9iOzhu7ZknSLp3gFPSxi4clrzL/YcEQPlRRG/GpM=; b=B0Mw+5fyUOTLV1RG1qizoRWcie
+	zMeH0ndsIw3So9xVxfy+TGyc3Y2hA8QPFOerL4b2/FG/4LSYyE9nZbUyKY5Cxc4eU3eiSGDoU0eqa
+	7J40dzI2c2k1q3djRG2tWrAZVMmIs8ISOAGZPAbNt7alwg3rN2sKCtj+ySXJIe0XFA40TpK14c6MG
+	KHVJHc8d4ZJ5YRjJtJdq/E613FuhYu8vMUIqh8fMEAvEqQ9psJ+CKE4nX4IqddqjT53bPUjQRrZ7D
+	QvCXxPMHImdPRLJHZYKt23O0a1ZcxDJmZRm/Ew98KuzC2HAKwK9li50HV1t+e+1aianrX/umy2AQK
+	5gtYw+0A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rwxPd-0000000Ej5g-2kbR;
+	Wed, 17 Apr 2024 05:00:49 +0000
+Date: Tue, 16 Apr 2024 22:00:49 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, allison.henderson@oracle.com,
+	linux-xfs@vger.kernel.org, catherine.hoang@oracle.com, hch@lst.de
+Subject: Re: [PATCH 03/17] xfs: use xfs_attr_defer_parent for calling
+ xfs_attr_set on pptrs
+Message-ID: <Zh9XgZkF_hZJbQKC@infradead.org>
+References: <171323029141.253068.12138115574003345390.stgit@frogsfrogsfrogs>
+ <171323029234.253068.15430807629732077593.stgit@frogsfrogsfrogs>
+ <Zh4MtaGpyL0qf5Pa@infradead.org>
+ <20240416160555.GI11948@frogsfrogsfrogs>
+ <Zh6nGaPvk3tKf3gg@infradead.org>
+ <20240416184110.GX11948@frogsfrogsfrogs>
+ <Zh7IsJE1HJdzQSZJ@infradead.org>
+ <20240417025407.GN11948@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -71,47 +53,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240416235108.3391394-1-mcgrof@kernel.org>
+In-Reply-To: <20240417025407.GN11948@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Apr 16, 2024 at 04:51:08PM -0700, Luis Chamberlain wrote:
-> This test is rather simple, and somehow we managed to capture a
-> non-crash failure. The test was added to fstests via fstests commit
-> 0c95fadc35c8e450 ("expand 252 with more corner case tests") which
-> essentially does this:
+On Tue, Apr 16, 2024 at 07:54:07PM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 16, 2024 at 11:51:28AM -0700, Christoph Hellwig wrote:
+> > This looks sensible to me.
 > 
-> +       $XFS_IO_PROG $xfs_io_opt -f -c "truncate $block_size" \
-> +               -c "pwrite 0 $block_size" $sync_cmd \
-> +               -c "$zero_cmd 128 128" \
-> +               -c "$map_cmd -v" $testfile | $filter_cmd
+> Ok.  I merged the two functions in the patch where we introduce the new
+> pptr log op codes, because that made more sense to me:
 > 
-> The map_cmd in this case is: 'bmap -p'. So the test does:
-> 
-> a) truncates data to the block size
-> b) sync
-> c) zero-fills the the blocksize
-> 
-> The xfs_io bmap displays the block mapping for the current open file.
-> Since our failed delta is:
-> 
-> -0: [0..7]: data
-> +0: [0..7]: unwritten
+> https://lore.kernel.org/linux-xfs/20240417025208.GM11948@frogsfrogsfrogs/
 
-That's most likely a _filter_bmap() issue, not a kernel code bug.
+Yes, this looks sensible to me.
 
-i.e. 'bmap -vp' output looks like:
-
-EXT: FILE-OFFSET      BLOCK-RANGE            AG AG-OFFSET          TOTAL FLAGS
-   0: [0..231]:        2076367680..2076367911 18 (6251328..6251559)   232 000000
-
-and _filter_bmap has two separate regex matches against different
-fields that both trigger "unwritten" output. The first check is
-against field 5 which is actually the AG-OFFSET in this output, not
-field 7 which is the FLAGS field.
-
-Hence if the ag offset matches '/0[01][01][01][01]/' the filter will
-emit 'unwritten' regardless of what the flags say it actually is.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
