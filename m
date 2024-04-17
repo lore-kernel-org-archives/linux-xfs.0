@@ -1,72 +1,77 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96CB5147C73;
-	Wed, 17 Apr 2024 15:54:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B264148830
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 16:17:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713369289; cv=none; b=BPb5dSn3ozKlzJ07mq0rBTdpdr+PQbFSljebzlT/Sx/ifwxbwAMTggUu7OMc0HpVdeJj4xRgbTq3CdZjtzp0Xw9zpkoDX3CFmYR4kik3EGSCMwEYXXpgWRpcdAL4XzvPVfDx4i4PT64edHj38rREme0ltSjW7Q0DHOrfT8bjv8U=
+	t=1713370621; cv=none; b=papO+OVD7UMtL9TijcwI9tsHuh2n4UHnupGtYkxu1hUQ4liLjN74Lres8rU0dVemyu+rdfv0bFGr08lbIgaHpLUYbYkcNaLF6EistKXgccoiJlcUsdu+M1yEI0qXhqAu2BeUJmY0dNdLnUmceuktzu4YeXXZr35oLZoPraIYXdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713369289; c=relaxed/simple;
-	bh=/0c7qbugORSRDUT3Tao0AyZsP472TFg1XC0KOJ8XIKM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cFzAM4rGDSWpLxMC79Uy/lwl+ypDZejk9Ea7w9RL9KMXQQjY5o+lV1tKJD8tTY53w6VemoNDqC7fO/PI5dCfdIAHbDmAFhptGtJnPUW2u3MHUbXZ9/wXJ2hyOyALCXUmBZVBHdUahXMT8aQ2xXB5Tl6b5iErfrgugF18FMWkffs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ICIBVbOJ; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1713370621; c=relaxed/simple;
+	bh=jmZs/Rr2TbNGy6bBvx9C8vRsEg9yWJsR7UB0d/WoXME=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=DHw+4OCiJVYT70tZnys9YKm8CaQz5zLG4IHGNDJ2SWruv7wcvaYF6tzVYYAzJVErm5uo2mU8VHD3fB+5DAlOje7VwVZt5YLgU946ugUBzddBUzvJwY/dp677mwBhfSkG3z9F5rKxhND3VyXJouYNgGtCT5jHIfsXJxq1Ug2/Blk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JPuT2GF3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ICIBVbOJ"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6ed054f282aso4373131b3a.0;
-        Wed, 17 Apr 2024 08:54:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1713369288; x=1713974088; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WPsrdMv31Rp+1MDJraOEnQqOhO3h8PTSfrt8iLohWrs=;
-        b=ICIBVbOJ+S8JrbS8oBDZEJjACLdd+aLKMFJM9wt4eCxAxndxNgRi4xSjc1PseVGLNI
-         3LQ5KsJ9JJ9zjznp9Pu3xknuUXD1kVVxyShd8BNNLXyymztD4lYaVqlKL2IksPcjeuk2
-         fh6hXlm9Btt1O7xkuFYU6n69eg6RbmJdT5xnZ3W3KF02VPt4lLXVMWLaKvXNZHtOvGb0
-         iu+WD5qryO723XcLC50bFY5mTbmsrMcFjQ9vqGiY1eG0uN+F8QLIZ5iR2YoXhN4v3r34
-         Ai29stj/EBXo4owEGc0Cgd3a3XyMjg0axHSzonfj2Ofu2d9BefPjT+3immFL8gKIdJuT
-         kUbw==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JPuT2GF3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1713370619;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ucrPlEEwO8wLfQcM1iZ0iG+ppc3j8g0VWITOSvUHp3o=;
+	b=JPuT2GF3XudHzzbxqW95KcmDDtS27Te5FmKA1noaYCCLs7NBjUZwbUOJHXRQ+aoX5qsM7O
+	v3zXSSzmRGORTZSbujYhGtoQSE20P11Yvhq91FrW27dOvNd+b+jKDcf0D+JmC/VzjszYAN
+	9aKnqSOwk04X0T/ULNMQJxCML0Z+H4I=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-492-9s9yLXSOMFyRGmIV3vrm8w-1; Wed, 17 Apr 2024 12:16:57 -0400
+X-MC-Unique: 9s9yLXSOMFyRGmIV3vrm8w-1
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a51eb0c14c8so270008866b.0
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 09:16:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713369288; x=1713974088;
+        d=1e100.net; s=20230601; t=1713370616; x=1713975416;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=WPsrdMv31Rp+1MDJraOEnQqOhO3h8PTSfrt8iLohWrs=;
-        b=Ie7gq5fS9EriBal8UfrPn9uXjFd9VYzTab3Ow1ELkyB5vuo5QhlGlws02YNP7bOeLd
-         QY0OTTk1hBEbP/h4JCZpoM6VVTiuuBMLTkIMTGRw38pdEmCSJoMJFlmM3uQV897GxF1P
-         elg2uushJ7SGNAEboq7hQ/MYzebdIK4dO9iXuyhKxSSlnvDUtSp7clomBYnlWcAha4Qv
-         D/3BjUR4RI3RjDbvYpoXFIa3gnvw72zj/uQTBghApw8zP+7aVg9w6Aoz18dzR11ip7wq
-         8J+gtdnzNMMx+JS+vlNXz4qcikAb/HXbjcZLhnCjXbgyZLTelQWt3T+2D2UEDF0nFLTE
-         o1Vw==
-X-Forwarded-Encrypted: i=1; AJvYcCU0VOECl3uIL/Tf0YmKukIz6NYf1CVKnwsnia/kIt70fwzNUDF6AF/iTtResVMtT6jdorCqw00Z/N1HUoe2armjRNb1Wbv1PY38tjCJ2cGYyY5muqEiMm/r9002jp/ToqZe1ccCWVCi
-X-Gm-Message-State: AOJu0YyZf+M4ln+TPXiXDK53JH3/jVqyBBOADFCh8Qd2hsmTTLop49xr
-	wqPF6w/HdbXMoM0AhECAZzuQ0IuWt/8kX/6zosg0jEN1dR0TFhw4
-X-Google-Smtp-Source: AGHT+IG/I5jJESiKZMbj3MkqKSp8f8GJod4j+iEFJdRMX8TKJjReIzCJfALi1V5JNp82LB9aSmhNsw==
-X-Received: by 2002:a05:6a20:7483:b0:1a9:da1f:1679 with SMTP id p3-20020a056a20748300b001a9da1f1679mr33140pzd.34.1713369287698;
-        Wed, 17 Apr 2024 08:54:47 -0700 (PDT)
-Received: from localhost.localdomain ([14.22.11.163])
-        by smtp.gmail.com with ESMTPSA id i15-20020a17090332cf00b001e555697361sm11600037plr.220.2024.04.17.08.54.45
+        bh=ucrPlEEwO8wLfQcM1iZ0iG+ppc3j8g0VWITOSvUHp3o=;
+        b=uBYvE9ksVtClCexJuVPSwWqnvWnkBdrpVdI1ZXWesURB29xeqAwk0E0cVZjweAsxS+
+         l7A1PPxnkMhb3Ft6pIqBbdEAfUwjNpHT99mdUIJhWIOvjVVetK66tXMSVipCGKQ6YeEG
+         8CyQqYXFIfkYGdh0SMDfHhFNa5OeOdzChs2Jz/lne8yOBVBaU7rFjriQtpim3bXWftrL
+         ZIXwBd19hTf/WYMagKDja4Y8ej3zxex3PvutQ6sZN2s+hDIprsopfH8Yn969xPbljCtU
+         3XOREHdnEa0xWt8p2wKdZKLbXoUe4uf6+kMTFFhgxZdiM92i+3omO7ME6Y5py8Vxy6/S
+         X3ng==
+X-Forwarded-Encrypted: i=1; AJvYcCXisJHTERRKMPACx5ZAUI2aDD9XYFHrEZjL0cHRnxAVJJsAL3s+Dlb34P4wFNKEL+1LzrOD16GIuS9GBuShPRxnxwB4/XuVTPLm
+X-Gm-Message-State: AOJu0Yw+wVNM33m9JQJHTKtZ85LIHLdZFgUi9Z2fihGjoYneM8rDIMIn
+	bZhFmpp0UjLKC2X7AsfSyyuvA5Htv6lhlGeG4S6M0EG7vWbjo0rgXgguDV3J6Fq5yTtD9rUYxyV
+	xXm3ItUrrHBWM0VVChJ5Tgmz5Eu5UsBEfb95M8Y51ynRZ8azxXB0tOKnf5hhlcNAN
+X-Received: by 2002:a17:906:369a:b0:a55:5504:6f7c with SMTP id a26-20020a170906369a00b00a5555046f7cmr1546514ejc.20.1713370616065;
+        Wed, 17 Apr 2024 09:16:56 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEFqS0WkbefE2CShW5ylUzUj5B+6EJs5cK3L/Y9ErakLDFZkWdv8w3XXKDVGLErHuRDPK09IQ==
+X-Received: by 2002:a17:906:369a:b0:a55:5504:6f7c with SMTP id a26-20020a170906369a00b00a5555046f7cmr1546490ejc.20.1713370615494;
+        Wed, 17 Apr 2024 09:16:55 -0700 (PDT)
+Received: from thinky.redhat.com ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id p4-20020a17090635c400b00a4a33cfe593sm8272427ejb.39.2024.04.17.09.16.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Apr 2024 08:54:47 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: djwong@kernel.org
-Cc: alexjlzheng@gmail.com,
-	alexjlzheng@tencent.com,
-	chandan.babu@oracle.com,
-	david@fromorbit.com,
-	linux-kernel@vger.kernel.org,
+        Wed, 17 Apr 2024 09:16:55 -0700 (PDT)
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: cem@kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 RESEND] xfs: remove redundant batch variables for serialization
-Date: Wed, 17 Apr 2024 23:54:38 +0800
-Message-Id: <20240417155438.1060996-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.39.3
-In-Reply-To: <20240417152713.GX11948@frogsfrogsfrogs>
-References: <20240417152713.GX11948@frogsfrogsfrogs>
+Cc: djwong@kernel.org,
+	hch@infradead.org,
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	Bill O'Donnell <bodonnel@redhat.com>,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v4 1/4] xfs_db: fix leak in flist_find_ftyp()
+Date: Wed, 17 Apr 2024 18:16:43 +0200
+Message-ID: <20240417161646.963612-2-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20240417161646.963612-1-aalbersh@redhat.com>
+References: <20240417161646.963612-1-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,53 +80,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Wed, 17 Apr 2024 08:27:13 -0700, djwong@kernel.org wrote:
-> On Wed, Apr 17, 2024 at 08:07:35PM +0800, alexjlzheng@gmail.com wrote:
-> > From: Jinliang Zheng <alexjlzheng@tencent.com>
-> > 
-> > Historically, when generic percpu counters were introduced in xfs for
-> > free block counters by commit 0d485ada404b ("xfs: use generic percpu
-> > counters for free block counter"), the counters used a custom batch
-> > size. In xfs_mod_freecounter(), originally named xfs_mod_fdblocks(),
-> > this patch attempted to serialize the program using a smaller batch size
-> > as parameter to the addition function as the counter approaches 0.
-> > 
-> > Commit 8c1903d3081a ("xfs: inode and free block counters need to use
-> > __percpu_counter_compare") pointed out the error in commit 0d485ada404b
-> > ("xfs: use generic percpu counters for free block counter") mentioned
-> > above and said that "Because the counters use a custom batch size, the
-> > comparison functions need to be aware of that batch size otherwise the
-> > comparison does not work correctly". Then percpu_counter_compare() was
-> > replaced with __percpu_counter_compare() with parameter
-> > XFS_FDBLOCKS_BATCH.
-> > 
-> > After commit 8c1903d3081a ("xfs: inode and free block counters need to
-> > use __percpu_counter_compare"), the existence of the batch variable is
-> > no longer necessary, so this patch is proposed to simplify the code by
-> > removing it.
-> > 
-> > Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> > ---
-> > Changelog:
-> > 
-> > v3: Resend for the second time 
-> > 
-> > v2: https://lore.kernel.org/linux-xfs/20230918043344.890817-1-alexjlzheng@tencent.com/
-> > 
-> > v1: https://lore.kernel.org/linux-xfs/20230908235713.GP28202@frogsfrogsfrogs/T/#t
-> 
-> ...you still haven't answered my question from V1: What problem are you
-> solving with this patch?
+When count is zero fl reference is lost. Fix it by freeing the list.
 
-Hi, thank you for your reply. :)
+Fixes: a0d79cb37a36 ("xfs_db: make flist_find_ftyp() to check for field existance on disk")
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ db/flist.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I'm trying to simplify the code. When percpu_counter_add_batch() and
-__percpu_counter_compare() use the same batch size, percpu_counter can count
-correctly, so there is no need to reduce the batch size to 1, which will cause
-unnecessary serialization.
+diff --git a/db/flist.c b/db/flist.c
+index c81d229ab99c..0a6cc5fcee43 100644
+--- a/db/flist.c
++++ b/db/flist.c
+@@ -424,8 +424,10 @@ flist_find_ftyp(
+ 		if (f->ftyp == type)
+ 			return fl;
+ 		count = fcount(f, obj, startoff);
+-		if (!count)
++		if (!count) {
++			flist_free(fl);
+ 			continue;
++		}
+ 		fa = &ftattrtab[f->ftyp];
+ 		if (fa->subfld) {
+ 			flist_t *nfl;
+-- 
+2.42.0
 
-Best regards,
-Jinliang Zheng
-
-> 
-> --D
