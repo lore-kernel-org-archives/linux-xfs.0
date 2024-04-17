@@ -1,45 +1,49 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFD352F62
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 05:03:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB1A13C68C
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 05:22:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713330226; cv=none; b=cH6CUudovJikc3ToZINTUdzlM9d4hfIZTiiogqcsdiiwvFyBdshJ9/9zay+qnc7t2cGp7GvKZ8SXL+Z26Wkmse5ONj+gsx1Kt35ukyEH6MvzgoYK2jZbrFVJGo4D/J38S+Hh1i0K+pA8aHfjqvV9QgmHW0IS1qxL2yCdzsnwtrg=
+	t=1713331366; cv=none; b=THuFonZKXg3wUp/mrYMpQSPMocoaPx172O3hE4iIj3I7WsAKMAWbrjl4BBhwVgayWy+zG6SkVx7/DYiPm0kyuD5cTwPXNwzm0+J9mn/KvwFCdJmVxk9r+dOYcXLcR12S/WlU44NkuTQ//TryVg3CSMnpWcTgoi36nj2bZhLu27c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713330226; c=relaxed/simple;
-	bh=/KvbKBHg8kueSg+YnIeufyAFcyfc5wCXkASQ4hE5s08=;
+	s=arc-20240116; t=1713331366; c=relaxed/simple;
+	bh=Xmp+16IqvKpGb6pmUreDv3PHmO7l6IfuGLMlycG+tbo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JhpPwKjHAjxzvL+uQp8txTKhyImcEgdKoF8pSEnmRCIXRdbpyD2v4GiMYP9M3AFO/wz17S02knunn7QIubpBSpujeaVJ1mkHCnl+HOFfJpQAOXuGP4JQ7BVTMoZExtt5nWctponuWpaCtffwm79kI1FSqx4Iv+ua11nRPBM4TPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=udqvzicQ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=uMX+lXPF65tvNcv07bHVNygCvkmlaNooKqINDGVYA4fccMT9/pcM0qzu3U7PLOsXDyMbIst+HugeJVn0YvZPFIgGUx7b5RWWczdCwk67+sjJVXHhq+oHsfJQy9ZqEL17n50kce1uqwCKGxHyjiBxmB4ZSTmyhwIpOXLNajAGTG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iWL2hkdz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="udqvzicQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6vOAKRYeFgSBedurhxbt+o9AhRn7GvjciDReF0HIMMI=; b=udqvzicQSQts2cgnMy66Y9rarG
-	xQYjd7xsL6BVRW6D4w/E5zYcTqmuTdig95cS20EgnD3+I6wV+tUbNbsIlYWR766E1FDty9TPCT+Xk
-	EFUeO4mj22dev87qTAeRnxKI1C6L6JwZLVHMZAeFzmEXdaerje1HtZrn3mBMWX4OhJ4NPSAMEqZeh
-	s/DvBRgM7u3yqU4XIqjvr2wsCK4x4nlxNPGQKyBxjK4sZNWHFvoEDRuzwU87wNXwTcWT+m4z/VFWj
-	9G17v0KBzcZILPWFtp+KjirZEkFfIR/9/qybkQLTtqCEMa4+36iLW/oMJ660C0ERo/xL7vjlVLUIS
-	xKZVlFhg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwxST-0000000EjJ7-0ewX;
-	Wed, 17 Apr 2024 05:03:45 +0000
-Date: Tue, 16 Apr 2024 22:03:45 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 2/2] xfs_db: add helper for flist_find_type for clearer
- field matching
-Message-ID: <Zh9YMR1WIOB_8kJM@infradead.org>
-References: <20240416202841.725706-2-aalbersh@redhat.com>
- <20240416202841.725706-4-aalbersh@redhat.com>
- <20240416205348.GE11948@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iWL2hkdz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10889C072AA;
+	Wed, 17 Apr 2024 05:22:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713331366;
+	bh=Xmp+16IqvKpGb6pmUreDv3PHmO7l6IfuGLMlycG+tbo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iWL2hkdzpHUAiLJ/UtRDQTSf+cuAV9cR0Hwex6q+NEb6xE5k7gRTLS+40JxW3WYYZ
+	 Nh0sMMCgBavkdROxuSYl6saarQ/QUewcld0t2a4gPr6AQtbt46RJraZUhb+bacrspC
+	 Z6pRXdDL9TLtGloRVkrzZKcJ6IwZLVoa2gOpka8WhUL0qUQxBggSRLKm7poDiZ2UXN
+	 JNNr5eFw52x/voOcNiGKbriw57dpR879vj4tc6jyMJ/9opp/jV1kmXn7cmPkYybuEG
+	 prqM7HUsppAfbIyD9F/xXxjvFtoW+6vk6tbF0qMnBSr8lb0FGN9OL5IAYDjeFloXoy
+	 qRT3oq6tjb0fQ==
+Date: Tue, 16 Apr 2024 22:22:45 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	catherine.hoang@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 27/32] xfs: Add parent pointer ioctls
+Message-ID: <20240417052245.GP11948@frogsfrogsfrogs>
+References: <20240412173957.GB11948@frogsfrogsfrogs>
+ <20240414051816.GA1323@lst.de>
+ <20240415194036.GD11948@frogsfrogsfrogs>
+ <20240416044716.GA23062@lst.de>
+ <20240416165056.GO11948@frogsfrogsfrogs>
+ <Zh6tNvXga6bGwOSg@infradead.org>
+ <20240416185209.GZ11948@frogsfrogsfrogs>
+ <Zh7LIMHXwuqVeCdG@infradead.org>
+ <20240416190733.GC11948@frogsfrogsfrogs>
+ <Zh7OENwAEADcrcvr@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,20 +52,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240416205348.GE11948@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <Zh7OENwAEADcrcvr@infradead.org>
 
-On Tue, Apr 16, 2024 at 01:53:48PM -0700, Darrick J. Wong wrote:
-> You could do:
+On Tue, Apr 16, 2024 at 12:14:24PM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 16, 2024 at 12:07:33PM -0700, Darrick J. Wong wrote:
+> > Ohhhh, does that happens outside of XFS then?  No wonder I couldn't find
+> > what you were talking about.  Ok I'll go look some more.
 > 
-> 	if (!fa->subfld)
-> 		goto out;
-> 
-> 	nfl = flist_find_ftyp(...);
-> 
-> to reduce the indenting here.  But I think you were trying to make
-> before and after as identical as possible, right?
+> Yes. get_name() in fs/exportfs/expfs.c.
 
-FYI, the goto version s what I had in mind with my original suggestion,
-although the version here shoud be ok as well.  We'll need the static
-either way, though.
+Hmm.  Implementing a custom ->get_name for pptrs would work well for
+child files with low hardlink counts.  Certainly there are probably a
+lot more large directories than files that are hardlinked many many
+times.  At what point does it become cheaper to scan the directory?
+
+--D
