@@ -1,75 +1,71 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54D7213D53C
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 12:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD162D60C
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 12:59:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713358386; cv=none; b=LVIDaGfz0pgnrwb9kZv7KcH78fhZkxvTFqH+2ahnPnfbE6dF53Cq2IkzO6Vl7k4MzrKhyzYuJRU61HWofkyw7R5ViGfU1ral4jtAZdZbBiENh7kh7s62SQ246Pf9XjaDPOQ9lXTVYqG1bwhWdUQe5izPiUs1u6jyeatJM8jYcvc=
+	t=1713358787; cv=none; b=U23vhP+dYefF/ua0g7f2HG3uLZa3R9dr9mAthkd9QlNO0PieKmNYEww6TkqZWgqjkWuOjBwadifArcNmOkuG3IAujNn+rQGKcnimPbzHrFTtaD6gVNvxd3ndugsPSNMmE4+grHtuXeHyBb0LLw+tojc4bKgGpvtipL1c6R+XXX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713358386; c=relaxed/simple;
-	bh=QHbXu60hIYPcu2upLEJCNpbT4ZuJuUjUD2HLvj70emw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=S3yajnfStMDEc/azesdp42pSKeJ1GpfH7yktIfTF/Sz4g329q+1k6MDuGUCobTrYt3ltz3RQWChoSIdBX8bRLwo3rb16UobMhelXgrA2OyL1+YBGwOPyjUlbJUA294pZJM5/Ne0yRB5LNnQmKj7pE1kOizRfHZaebenR7vpqXiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hLC2oV5d; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1713358787; c=relaxed/simple;
+	bh=XMQEaJCh4/8EJLUpPA6UOC29KXcVDWcqypRJmNuA/ZI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lYBN1DghMfjFbZL0wyNvS0GbUsFL5ZG35HF2b3wbeGZB4xtjGS86qlRCep37DDkTCMDsQb4KCNLRKhQQ6H7LX0Z54gxyH70EB2DzMy+ZKhHL9PuiHn2SDAmwIa+ygf7AxVL9aeikzaS+VcMNBmKlxL0RCTN3wIfP+KF+LP0xTjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IhVASsP/; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hLC2oV5d"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IhVASsP/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713358383;
+	s=mimecast20190719; t=1713358784;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=yVo/jy69JZgmk6ipt44yooon16rXmwikx8HeguITUzo=;
-	b=hLC2oV5dDY74t6GIkQtaFhwm+o7xTcUiIo8APx96iBATklSomG4EBf649kpnMNPR+IlWOL
-	h/QU/V4qe9q9qVlat9lVmGPbYnzbyBGP82CAXeyMYsgnh161HWdpy1M2tZf9KCCyL7S26g
-	lqUj+8Y8ry+N9sGHD/ZLkhIadWAbOkA=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Sm3Nbp7PsWvZfwvmMXdfPRzKVJgtt2QF7J7AuQo5ZGk=;
+	b=IhVASsP/+AFiq8CHhuMWlifGG3Yu3QsxDhSLcdDdtiGa5BSFSxCxxInNs5z8cInzTFn1N2
+	wPAd7s8JIma9aYVRpF/KzF/O3ApV7WdrxnH6eloEjpxrJGEBG1RADkzHmD3IXmvYZbJTnH
+	+4IfBnH0M9pOWoHzlm+zwKZN4+2JvEA=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-139-ShBpjzFWP6qd7pTchlf9fQ-1; Wed, 17 Apr 2024 08:53:02 -0400
-X-MC-Unique: ShBpjzFWP6qd7pTchlf9fQ-1
-Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-516d6407352so5280907e87.0
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 05:53:01 -0700 (PDT)
+ us-mta-20-7-dS5PG8MR-eXW313uAjHg-1; Wed, 17 Apr 2024 08:59:42 -0400
+X-MC-Unique: 7-dS5PG8MR-eXW313uAjHg-1
+Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-a51abd0d7c6so445915366b.3
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 05:59:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713358380; x=1713963180;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yVo/jy69JZgmk6ipt44yooon16rXmwikx8HeguITUzo=;
-        b=GE2Cmh4EJA3oURG/ipV1t9hg0VOEPggJT5PB+t2d2IVDAqxwkUjVRhqffFflaIahrK
-         WBaFwYN0O9DX8LXOz4CyvWqIeiA5Wf4XRYDzaSOVyxT1w7O30qyb67Tls1/0AloiS71p
-         FzAZKf2MhU5ZeKanCVyN0KtyIMnqrL5oDdX2xttdurmVBmPGq35LJuSnSyE8HgcaXsu/
-         bK1gzTFTXNM6AnVANUD+YqNZpq+f63cD3B9o5n9roMh7mE/HkzN14lPOSWWnWM/M878u
-         XHdJt3Tso5LbRDUnCtgddKxP1EUTcg7OUEtRbxGm+ZkjRJyBRxmzQhuOv/RRvrq+WIlt
-         r/MQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV+FKtHEx//BsHS+Ba1HA0JHvWmtUT3tolzmbcRzFxPlO9ErLXFchAw1YCWnnXPSCViXcTCmNDN+OvGKs0tqQMDgbi7zJIXOVXx
-X-Gm-Message-State: AOJu0Yzym2p9aMxcAzepjqlGdTMclzDwixLebQzaMexaYXw+DNKqqE9Z
-	nC+6wDZEnrkmg4jRP0011KuZwSBa/hsC7gTZrqWgwcF5BdRChmxVnNaNpDF1JkLc/GpTXAhZsxQ
-	rSTH176lgGhBVMONoVZA4mO08wb6IwNWnWCTBg1+XWEl/sljUcVhO4JXr
-X-Received: by 2002:a05:6512:1103:b0:519:3a8d:2ecb with SMTP id l3-20020a056512110300b005193a8d2ecbmr2554668lfg.5.1713358379610;
-        Wed, 17 Apr 2024 05:52:59 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHXT44ukteBDsX7n+bqEUtNqS/qQTWUdPLqsaRmxP5LoZ/jQ4FqydUmt1/Koy2eD2eLvi7FFw==
-X-Received: by 2002:a05:6512:1103:b0:519:3a8d:2ecb with SMTP id l3-20020a056512110300b005193a8d2ecbmr2554656lfg.5.1713358379140;
-        Wed, 17 Apr 2024 05:52:59 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1713358781; x=1713963581;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Sm3Nbp7PsWvZfwvmMXdfPRzKVJgtt2QF7J7AuQo5ZGk=;
+        b=k2a+EWhJZDOOqwu3KVQIBC47m2LfdllbBYSooaHLfycmf6v0h70nbaFfkzm636YQRM
+         Tmx0nqUJ1YMFlAQkh1XuR09ktim+G/FUdye8ApuuTK+/0502TpzvYF2GqiNw2gzTefJ6
+         nAf7bXcR0yV7T+iZBmVIaW9yajSRdmDSWI/nLIVob82zec6n7QY4R+A/ISisOQ8s0GsE
+         2SMMIOkpBPtP5/wimb/TNzVh2QoEu85XVhsiNE4dRVAZP9sZw19OiSZ1qeL2ECvgXvt6
+         Z4qNN5n+pCKxI7YdGf3jQF0M6HAgz6kwU985sUExn7M56WWNJ4VVFa4HVuk//fTrUEDd
+         lOBw==
+X-Forwarded-Encrypted: i=1; AJvYcCXcDXrCMRyTC42jLAX0UwZCLEwo2epX9V08lBgbO0ttXlFPduvqcu14kZxMNt5mnuVkna/ncFJkke2Z2xDkybaCEnPqglkcwpd4
+X-Gm-Message-State: AOJu0Yx9AB6Rqt07hG3b87oFiFREl0ZiDOmlIkSrUAf1Be4B3V7DCVrM
+	7VQyerL5bvr72h9XHE0kT/OQ43BeMGrTFDp5y0rsirSmYixYFIrMpYuVaguNqEPc7xiXCgwr7w7
+	TjE//+EnEwLMsWRkMCtITnT8/aiXAeOh2qNqSWgZ48hm5tFL3UUl3XW+L
+X-Received: by 2002:a17:907:9722:b0:a52:27cc:d03c with SMTP id jg34-20020a170907972200b00a5227ccd03cmr12655959ejc.45.1713358781192;
+        Wed, 17 Apr 2024 05:59:41 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGNxVF/b0mts9BU+RVxioBDV3knSmshRd7wyWKDZ+0sV/k+p2jU9yhN65VovWwwtywJGPqPCA==
+X-Received: by 2002:a17:907:9722:b0:a52:27cc:d03c with SMTP id jg34-20020a170907972200b00a5227ccd03cmr12655930ejc.45.1713358780402;
+        Wed, 17 Apr 2024 05:59:40 -0700 (PDT)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id en8-20020a056402528800b0056e2432d10bsm7258169edb.70.2024.04.17.05.52.58
+        by smtp.gmail.com with ESMTPSA id gc22-20020a170906c8d600b00a534000d525sm3330252ejb.158.2024.04.17.05.59.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Apr 2024 05:52:58 -0700 (PDT)
+        Wed, 17 Apr 2024 05:59:39 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: cem@kernel.org,
 	linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	Bill O'Donnell <bodonnel@redhat.com>
-Subject: [PATCH v3 3/4] xfs_scrub: don't call phase_end if phase_rusage was not initialized
-Date: Wed, 17 Apr 2024 14:52:27 +0200
-Message-ID: <20240417125227.916015-5-aalbersh@redhat.com>
+	hch@infradead.org,
+	Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v2 0/3] Refactoring and error handling from Coverity scan fixes
+Date: Wed, 17 Apr 2024 14:59:34 +0200
+Message-ID: <20240417125937.917910-1-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20240417125227.916015-2-aalbersh@redhat.com>
-References: <20240417125227.916015-2-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,39 +74,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If unicrash_load() fails, all_pi can be used uninitialized in
-phase_end(). Fix it by going to the unload: section if unicrash_load
-fails and just go with unicrash_unload() (the is_service won't be
-initialized here).
+Hi all,
 
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
----
- scrub/xfs_scrub.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Just a few minor patches from feedback on coverity fixes.
 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 752180d646ba..50565857ddd8 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -631,7 +631,7 @@ main(
- 		fprintf(stderr,
- 	_("%s: couldn't initialize Unicode library.\n"),
- 				progname);
--		goto out;
-+		goto out_unicrash;
- 	}
- 
- 	pthread_mutex_init(&ctx.lock, NULL);
-@@ -828,6 +828,7 @@ out:
- 	phase_end(&all_pi, 0);
- 	if (progress_fp)
- 		fclose(progress_fp);
-+out_unicrash:
- 	unicrash_unload();
- 
- 	/*
+v2:
+- reduce unnecessary indentation in new flist_find_type() helper
+- make new helper static
+- add patch to handle strtol() errors
+- set errno to zero to avoid catching random errnos
+
+--
+Andrey
+
+Andrey Albershteyn (3):
+  xfs_fsr: replace atoi() with strtol()
+  xfs_db: add helper for flist_find_type for clearer field matching
+  xfs_repair: catch strtol() errors
+
+ db/flist.c          | 60 ++++++++++++++++++++++++++++-----------------
+ fsr/xfs_fsr.c       | 26 +++++++++++++++++---
+ repair/xfs_repair.c | 40 +++++++++++++++++++++++++++++-
+ 3 files changed, 100 insertions(+), 26 deletions(-)
+
 -- 
 2.42.0
 
