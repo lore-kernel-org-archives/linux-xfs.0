@@ -1,39 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F2513959C
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:20:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07D3213959C
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:20:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713367214; cv=none; b=F1hV/TFyCuvHSlrJTN6t/St8Duh8FEncHB9IIRiYi1xUixMxg2a09X0wrf59B0hPRO/XCK36OJrHKMVSgS1oyFO0tJVVLnI5elUXlNYXyKeD59MsQbakw8czfJEh8G6ZdF5Ww0JB/IxWsM/hkH/dHU2lXnMzdcYbznDNJGMLZrY=
+	t=1713367217; cv=none; b=blco/AaxMOwk9sIHlISRY8sattnz1bBBL9auhvW+Bsh5eEGQMYHmg4tDETF4l9FDY0u1zimhrN2KoIAcIY7XZofIUmd+cvL/aUJ/4hJ/7dkYqOHBDvcnhy+U7L/oNwl6ctx4TY1sWer0jeQaaM43CWnMOXUsL2X+gWWpftcgGPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713367214; c=relaxed/simple;
-	bh=h6DrCZ9mgp3ydpFQ7tg93DRyu8eeacUQzA2W3ADO+NE=;
+	s=arc-20240116; t=1713367217; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fbqrOnM7jUbPxuqIhQcEWoCwP+AZfLPmRrOBD8cS6xa2Snj6YgBjtWAcEmF3k+NJSo6Vg7QXDAZr/pUd+l7AJSJsEGoP5xq+foAmMZEWKPIf4un4vA0xBKhB41nnUc0qSLy0NCq6KcQWeqBbMwN+3RGFm6ISclo0pCwzxWNY/GY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KYjZRdmR; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=st+b9bICqaLP3rj/1WpU0RHwsX2ZBRGrbvn2aiHlheuNz+9o2qnVdWwMIDsg4NfP8WCTpWcgq9WwG9S6MUU9mLxTdMWW6iHNrHvANLYcNqAWR6VTOFg47ypWx/TXiLeaqGchCx5qpijU3obqNvGdW3lj7UM+hqLWlM2GxVjNH9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UQJlXKzf; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KYjZRdmR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1496C072AA;
-	Wed, 17 Apr 2024 15:20:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713367214;
-	bh=h6DrCZ9mgp3ydpFQ7tg93DRyu8eeacUQzA2W3ADO+NE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KYjZRdmRvZcsUyQh7f+d5XvJUIYCYHSHf5AOe/hqTcRl3LGkjjm7hbhXilbM8JkyK
-	 GRg2FVHyjlt9TcMeZZ9+bULWSowAikNS31DZFysLPMIIgef566b418ktjPU4vR5d1y
-	 9f/vW1fikl9DD+lHW1eUTy6e1rVudp+i3p3kv/kdqqSdVIlxQIVjkPsJeJjDWn/9Xt
-	 QMrjXXzlDrBM02RPNm9qiVE0GWo5Jw+qOLaLtZUMWRUOCBjx4N5ABpzsCxhXpQg3HS
-	 3eLWxf+Wh3qIh9utxYdatYBDRbMzGQkDOh0OY2ZOT1ZoMm6oyulj/8hF3CYehPepr8
-	 JmetqnyQ38Mig==
-Date: Wed, 17 Apr 2024 08:20:13 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UQJlXKzf"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=UQJlXKzfNv9zRe8FEzoUOeWPlt
+	sXUeqBoUJP7wFJmMSJUwbeEr4hqAO1/Om6JK9Sziak75vJFxD50OrzRQ9DTuompSZod/+x0pExYWw
+	mJCLJ7ONKaYns3r0anRMIRfuu6mGOlvABEnPWeqKZZw2IqAoA28kXAm2g0a7GXcrtiPj2ynMuNDk7
+	/EvLTD2TKBQt1cWnY42ND2ki8iLofiPZMXzaegtv1Odq5ixVI2b4mvz0SwbXJ77baOKYFPN6fhbln
+	IA0H3Ab/F8A5C7RgFvNcreS2jaVWTZ5fMZUhu1V9DQ+wHY7q4RPcx8OOFlR77QwCuBqPJm3Wh4cAx
+	MK1UW8Cw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rx755-0000000GYZY-1xHV;
+	Wed, 17 Apr 2024 15:20:15 +0000
+Date: Wed, 17 Apr 2024 08:20:15 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH v2 1/3] xfs_fsr: replace atoi() with strtol()
-Message-ID: <20240417152013.GT11948@frogsfrogsfrogs>
-References: <20240417125937.917910-1-aalbersh@redhat.com>
- <20240417125937.917910-2-aalbersh@redhat.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, djwong@kernel.org,
+	Bill O'Donnell <bodonnel@redhat.com>
+Subject: Re: [PATCH v3 1/4] xfs_db: fix leak in flist_find_ftyp()
+Message-ID: <Zh_or2HGs_9tEGJL@infradead.org>
+References: <20240417125227.916015-2-aalbersh@redhat.com>
+ <20240417125227.916015-3-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,73 +46,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240417125937.917910-2-aalbersh@redhat.com>
+In-Reply-To: <20240417125227.916015-3-aalbersh@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Apr 17, 2024 at 02:59:35PM +0200, Andrey Albershteyn wrote:
-> Replace atoi() which silently fails with strtol() and report the
-> error.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  fsr/xfs_fsr.c | 26 +++++++++++++++++++++++---
->  1 file changed, 23 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 02d61ef9399a..cf764755288d 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -164,7 +164,13 @@ main(int argc, char **argv)
->  			usage(1);
->  			break;
->  		case 't':
-> -			howlong = atoi(optarg);
-> +			errno = 0;
-> +			howlong = strtol(optarg, NULL, 10);
-> +			if (errno) {
-> +				fprintf(stderr, _("%s: invalid interval: %s\n"),
+Looks good:
 
-"invalid runtime"?
-
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-
-> +					optarg, strerror(errno));
-> +				exit(1);
-> +			}
->  			if (howlong > INT_MAX) {
->  				fprintf(stderr,
->  				_("%s: the maximum runtime is %d seconds.\n"),
-> @@ -179,10 +185,24 @@ main(int argc, char **argv)
->  			mtab = optarg;
->  			break;
->  		case 'b':
-> -			argv_blksz_dio = atoi(optarg);
-> +			errno = 0;
-> +			argv_blksz_dio = strtol(optarg, NULL, 10);
-> +			if (errno) {
-> +				fprintf(stderr,
-> +					_("%s: invalid block size: %s\n"),
-> +					optarg, strerror(errno));
-> +				exit(1);
-> +			}
->  			break;
->  		case 'p':
-> -			npasses = atoi(optarg);
-> +			errno = 0;
-> +			npasses = strtol(optarg, NULL, 10);
-> +			if (errno) {
-> +				fprintf(stderr,
-> +					_("%s: invalid number of passes: %s\n"),
-> +					optarg, strerror(errno));
-> +				exit(1);
-> +			}
->  			break;
->  		case 'C':
->  			/* Testing opt: coerses frag count in result */
-> -- 
-> 2.42.0
-> 
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
