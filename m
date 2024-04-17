@@ -1,100 +1,75 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260FE84FDF
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 14:35:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70DE4147C89
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:18:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713364530; cv=none; b=Hmv8z/JiLmoPKPOT7WNt9hKu0xcgUhFsU8+qj1iwZryjf3Z081tIY6ceVI1ra43VoNK6LoxnQ+XRJ1uXMUMA6M4D4ZT3UrncaOZUHtBY6pGSEGT7ywtZvUm2ltrTAHSktZSPyrNB0MZQdKq+jdupsCfRnef25/oA2RoUr0kpw0I=
+	t=1713367115; cv=none; b=IuHBvvwEHzFgpFHl7BjRGrKXNCP4QwXmZJgANG+IUqKnc4W3/P0PBiJSeVs5dS6e4/IYIss0Ti2x0X4Olr0tamXQVB1k4T2E7JbAMXwUAyXf03IBu8fKHUHaFSTX8hfV3dGjnH4/8ap8LNCf/k746FsRzH8a7OoZGPMtFuX6OVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713364530; c=relaxed/simple;
-	bh=2KVFFAp5qbVMxuxzS5DtwIqV6na5EHaYON0Sb5QKZA4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nwxdU+f3KN5HmPGQHswX0Y4M1hK2WPtoOyvih4bRv1BHaA6jaQpvoCeyLX8XYy9s4bI2RM4/KGPdYMH7fLDkBi2UZNsIGkRfYysPbX1GOFui2QLe5Dpy6L6bYlBBpd0EYq0XLFZukgLpuy7DbFs+RUZu6+OyOEIoXcyiWCyz2zs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=v6adRhdk; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1713367115; c=relaxed/simple;
+	bh=Lnk9LKLKcpd+4BW/nZNuMKoOxiRT0aHaj5x2VZGXuMc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bTIM/R0roQ2IgDWuibhBaRH/U6v4EunabnRXR8RhW5TYG1IqikxTXzyTzNtUHYrrT1TV0AIakSSiR1P2wM+RuN5UokY+ghyoh4tW98AUYtiyobSB/1wNK2ufgmH2/4eNte9UdYhUnUognyp0eB02rqbLZdR/aE6uXpNppHBJcEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hd8678U9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="v6adRhdk"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4VKNjg0B5mz9smh;
-	Wed, 17 Apr 2024 16:35:19 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1713364519;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dam89vm9YUE3bUwzA6z9BOfQlHgn8Hsthodqm55cmBM=;
-	b=v6adRhdkKJjdanq1hk1mJWIXcAXLhpOZNY8qguUECSKnhbVAieaQNf0W3UKbhvQzyC64/Z
-	+k/bNtcevY1G87Kl8PFk8QfPgl99lbX9UmcIB208eftDXxJkGbXNBvzKuyv6kr4ZHFtstF
-	jO0/PtvSbTU63x9qyZ5HfVEnjoaGLqHTS20mf/TGssjtB/ITkaSlJxwALSUyn6BtsLm+Pc
-	I4Em8MGbnHCqWBXx88SjQk32RHDFbwE2UUDh/H+QKiOzJC7nzLnGoQVt6PzujbsXXVixPv
-	Xa7eV6d21n+jCdBUGvi2NWBfprGVXjgJUF059kPPPPOBqTLtQRzhkf9E4FCIow==
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: david@fromorbit.com
-Cc: chandanbabu@kernel.org,
-	linux-xfs@vger.kernel.org,
-	mcgrof@kernel.org,
-	p.raghav@samsung.com
-Subject: Re: [PATCH 1/4] xfs: use kvmalloc for xattr buffers
-Date: Wed, 17 Apr 2024 16:35:02 +0200
-Message-ID: <20240417143502.1888116-1-kernel@pankajraghav.com>
-In-Reply-To: <20240402221127.1200501-2-david@fromorbit.com>
-References: <20240402221127.1200501-2-david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hd8678U9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED86DC32782;
+	Wed, 17 Apr 2024 15:18:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713367115;
+	bh=Lnk9LKLKcpd+4BW/nZNuMKoOxiRT0aHaj5x2VZGXuMc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hd8678U9vMIitUXK6/+M4G+GzJJ1ldSleWz6r9DBIM4/ODOou6KAVOq2dkNEJVFYU
+	 Nq3gA7hPwsJSvcgcquSGmQ1AohnPHdOrtVMlea+Wt37VBi7E8NTU0spLKAED/JgKUw
+	 gb0k/SViYdskIGlEGldOEvwQ//6EcLC+770J0pW9OKTYXboEeDAMJ2XEG+E0qCB0Pz
+	 p5b7ZuL1yveSPWCp062FCt7qIIeWXHF8Yk5Etg2FZFt1qpZVstnZrombFgg4Fk2kVq
+	 +D1+3S4NQooKSqcyQINmMUEXDsnuVVyiNMgP5ZIdpDcPzOhEUQqBj4REweiAz9bDmD
+	 z3ZdI7AxZ2SeA==
+Date: Wed, 17 Apr 2024 08:18:34 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfsprogs v6.7.0 released
+Message-ID: <20240417151834.GR11948@frogsfrogsfrogs>
+References: <fcm36zohx5vbvsd2houwjsmln4kc4grkazbgn6qlsjjglyozep@knvfxshr2bmy>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fcm36zohx5vbvsd2houwjsmln4kc4grkazbgn6qlsjjglyozep@knvfxshr2bmy>
 
-> Pankaj Raghav reported that when filesystem block size is larger
-> than page size, the xattr code can use kmalloc() for high order
-> allocations. This triggers a useless warning in the allocator as it
-> is a __GFP_NOFAIL allocation here:
+On Wed, Apr 17, 2024 at 10:13:52AM +0200, Carlos Maiolino wrote:
+> Hi folks,
 > 
-> static inline
-> struct page *rmqueue(struct zone *preferred_zone,
->                         struct zone *zone, unsigned int order,
->                         gfp_t gfp_flags, unsigned int alloc_flags,
->                         int migratetype)
-> {
->         struct page *page;
+> The xfsprogs repository at:
 > 
->         /*
->          * We most definitely don't want callers attempting to
->          * allocate greater than order-1 page units with __GFP_NOFAIL.
->          */
-> >>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
-> ...
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 > 
-> Fix this by changing all these call sites to use kvmalloc(), which
-> will strip the NOFAIL from the kmalloc attempt and if that fails
-> will do a __GFP_NOFAIL vmalloc().
+> has just been updated.
 > 
-> This is not an issue that productions systems will see as
-> filesystems with block size > page size cannot be mounted by the
-> kernel; Pankaj is developing this functionality right now.
+> Patches often get missed, so if your outstanding patches are properly reviewed
+> on the list and not included in this update, please let me know.
+
+Ah well, I was hoping to get
+https://lore.kernel.org/linux-xfs/171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs/
+and
+https://lore.kernel.org/linux-xfs/20240326192448.GI6414@frogsfrogsfrogs/
+in for 6.7.
+
+--D
+
 > 
-> Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
-> Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
-> Signed-off-be: Dave Chinner <dchinner@redhat.com>
-
-Thanks. I tested this patch in my LBS branch and it fixes the warning.
-
-Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
-
-For now, I will add it to my LBS branch as I don't see it yet land on
-6.9-rcs.
-
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
-
---
-Pankaj
+> The for-next branch has also been updated to match the state of master.
+> 
+> The new head of the master branch is commit:
+> 
+> 09ba6420a1ee2ca4bfc763e498b4ee6be415b131
+> 
+> -- 
+> Carlos
+> 
