@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70572657B6
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:26:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1489A651A1
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:26:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389173; cv=none; b=nWruiSI4TDlIRLcrxVB+uxdszkT4dnzOOlyv3wAJJzuNL6Xl7BR26i6CgLZWcX7FxmusxEvsNwJGtAS0iA7j74zmukSXUHKoti6UzEquobofsD0+gy3Q9aI/OMtbHBIiK21g59JKkEOWJQ4W4LsNOKYh9wFcJvJjSrRryL6zSc8=
+	t=1713389189; cv=none; b=LM2hFCOy4pf9MIX8NSq2p16La9oYuyGAch0VxgZIGX6W+MlEAPyotYz+oJ9VQWwEA+c1irsPPsKhDldovSGKPqp7fawWRLa7EoQsjTpr9nm+mIr3nC1hFBNNoCWolysoXOk4a0rNuGBZrn2RiunKcEi0wLCreq0ned5xaEy/J24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389173; c=relaxed/simple;
-	bh=Ncy2k1D5pXnM1IIfxJm5YpyK3p/TGGf4VNnf2AlfLV0=;
+	s=arc-20240116; t=1713389189; c=relaxed/simple;
+	bh=08QWJbhpMnnqoOUIotZnOTWsZ+L4S/80SCFkMz4gbzo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WZP9Rl3aaS9kAtc7ApHZ+DVjUm2sqV00XC+fVENUDHnTunDKU6Pkes35l7uLZG/onfBbNn1B9E4uXB1q1irBNi6PoTO+Vm2IypvNkMO5G/ApgMXRaor+BeB+I4LuExtIdiaJOD9SZcGa3QQx6dcI6qT5uQhDKpzyYoZp9815dKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o6VcOJVp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mUupH1blYfjwJai2gjIJKT6aWt1Bm4XTKCu35p4YJMl8wdd1X0TML7ndVpRJSw1/W96xMTICbwmiEkTYTkuq6+OQV54W4slcBKhG+iqI2XdFDaCA4ffMofZBb80vfUOboX5TF5wN+NLkq7HaV9WUNtZrFP0zUmavhPNpDtrneUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=khwZkWXr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o6VcOJVp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36DAC072AA;
-	Wed, 17 Apr 2024 21:26:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="khwZkWXr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91F35C072AA;
+	Wed, 17 Apr 2024 21:26:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389173;
-	bh=Ncy2k1D5pXnM1IIfxJm5YpyK3p/TGGf4VNnf2AlfLV0=;
+	s=k20201202; t=1713389188;
+	bh=08QWJbhpMnnqoOUIotZnOTWsZ+L4S/80SCFkMz4gbzo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=o6VcOJVpa+P1P9hvz3rWTuKO79DQ/gwyH6hmxsT3pfurbIlbkLH3BPIi+tuTjfA7X
-	 21TDpRrKKr6EOS4uvDS+LYdDI3DAR/yg6dJ0Mr5Mt3tSoQMFS2oi3ZjZrwCrnlPVPz
-	 Jq9VXimhcD41KEF59kHAKe3JJq5WbkiODC8XaSWU+4ENFU1eDumD+56jh+4kBbxHjE
-	 3taJjwWV8wG6alIXxf5XlfyblWVjJhWzN6wFBIOoQxBa+2Mgdr90z41cKQpmVtVT3K
-	 bnBevpns0wVbV2Y+AuivPxS/9zFUrSLTpp1N1ZETWTMmBgUtN18sUlLi+lbAyqTa7E
-	 0uTvMBbGrFjFg==
-Date: Wed, 17 Apr 2024 14:26:12 -0700
-Subject: [PATCH 17/67] xfs: remove __xfs_free_extent_later
+	b=khwZkWXrS3BFWMfBAp4GIyODAatWnDRk0phocFoyGB45CmHgJ4eKvil65czOeFWWQ
+	 BqKYc0sfesXU8baWlYdUKwcY1LTPmCP+xvjJhTwTA3xLzOIpGtJlDJV7vsE9CiAjJg
+	 CBgbKhZ0LyjfO7NRo4ga01ktUcof0nUmWL0xkTcSn3X2czHIX8Y+TkC6T8wmzhNJDR
+	 VYQ5nK42LaYNPRQ+nlIUjIggncr6eqk+2Gg63YJODJhzM0lbheSGOfQjWi69pTKVRg
+	 fGcBRXSyyg4xo4TBppAwKbXqj1ZljAQ8ozM8guWJNIvPU5Elb1LnMmNpQBJjk1IZqG
+	 MlD+3lWJaL6lw==
+Date: Wed, 17 Apr 2024 14:26:28 -0700
+Subject: [PATCH 18/67] xfs: automatic freeing of freshly allocated unwritten
+ space
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
- Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338842595.1853449.5811012386058379175.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
+ linux-xfs@vger.kernel.org
+Message-ID: <171338842610.1853449.4004600536321724887.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,201 +48,223 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 4c88fef3af4a51c2cdba6a28237e98da4873e8dc
+Source kernel commit: e3042be36c343207b7af249a09f50b4e37e9fda4
 
-xfs_free_extent_later is a trivial helper, so remove it to reduce the
-amount of thinking required to understand the deferred freeing
-interface.  This will make it easier to introduce automatic reaping of
-speculative allocations in the next patch.
+As mentioned in the previous commit, online repair wants to allocate
+space to write out a new metadata structure, and it also wants to hedge
+against system crashes during repairs by logging (and later cancelling)
+EFIs to free the space if we crash before committing the new data
+structure.
+
+Therefore, create a trio of functions to schedule automatic reaping of
+freshly allocated unwritten space.  xfs_alloc_schedule_autoreap creates
+a paused EFI representing the space we just allocated.  Once the
+allocations are made and the autoreaps scheduled, we can start writing
+to disk.
+
+If the writes succeed, xfs_alloc_cancel_autoreap marks the EFI work
+items as stale and unpauses the pending deferred work item.  Assuming
+that's done in the same transaction that commits the new structure into
+the filesystem, we guarantee that either the new object is fully
+visible, or that all the space gets reclaimed.
+
+If the writes succeed but only part of an extent was used, repair must
+call the same _cancel_autoreap function to kill the first EFI and then
+log a new EFI to free the unused space.  The first EFI is already
+
+For full extents that aren't used, xfs_alloc_commit_autoreap will
+unpause the EFI, which results in the space being freed during the next
+_defer_finish cycle.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_ag.c             |    2 +-
- libxfs/xfs_alloc.c          |    2 +-
- libxfs/xfs_alloc.h          |   14 +-------------
- libxfs/xfs_bmap.c           |    4 ++--
- libxfs/xfs_bmap_btree.c     |    2 +-
- libxfs/xfs_ialloc.c         |    5 +++--
- libxfs/xfs_ialloc_btree.c   |    2 +-
- libxfs/xfs_refcount.c       |    6 +++---
- libxfs/xfs_refcount_btree.c |    2 +-
- 9 files changed, 14 insertions(+), 25 deletions(-)
+ libxfs/defer_item.c |   10 +++--
+ libxfs/xfs_alloc.c  |  104 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ libxfs/xfs_alloc.h  |   12 ++++++
+ 3 files changed, 119 insertions(+), 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index ac34a1c23..bdb8a08bb 100644
---- a/libxfs/xfs_ag.c
-+++ b/libxfs/xfs_ag.c
-@@ -982,7 +982,7 @@ xfs_ag_shrink_space(
- 		if (err2 != -ENOSPC)
- 			goto resv_err;
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 8731d1834..b8afda0ce 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -101,7 +101,7 @@ xfs_extent_free_finish_item(
+ 	struct xfs_owner_info		oinfo = { };
+ 	struct xfs_extent_free_item	*xefi;
+ 	xfs_agblock_t			agbno;
+-	int				error;
++	int				error = 0;
  
--		err2 = __xfs_free_extent_later(*tpp, args.fsbno, delta, NULL,
-+		err2 = xfs_free_extent_later(*tpp, args.fsbno, delta, NULL,
- 				XFS_AG_RESV_NONE, true);
- 		if (err2)
- 			goto resv_err;
+ 	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
+ 
+@@ -112,8 +112,12 @@ xfs_extent_free_finish_item(
+ 		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
+ 
+ 	agbno = XFS_FSB_TO_AGBNO(tp->t_mountp, xefi->xefi_startblock);
+-	error = xfs_free_extent(tp, xefi->xefi_pag, agbno,
+-			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
++
++	if (!(xefi->xefi_flags & XFS_EFI_CANCELLED)) {
++		error = xfs_free_extent(tp, xefi->xefi_pag, agbno,
++				xefi->xefi_blockcount, &oinfo,
++				XFS_AG_RESV_NONE);
++	}
+ 
+ 	/*
+ 	 * Don't free the XEFI if we need a new transaction to complete
 diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 7ac7c2f6c..0a2404466 100644
+index 0a2404466..463381be7 100644
 --- a/libxfs/xfs_alloc.c
 +++ b/libxfs/xfs_alloc.c
-@@ -2519,7 +2519,7 @@ xfs_defer_agfl_block(
+@@ -2518,14 +2518,15 @@ xfs_defer_agfl_block(
+  * Add the extent to the list of extents to be free at transaction end.
   * The list is maintained sorted (by block number).
   */
- int
--__xfs_free_extent_later(
-+xfs_free_extent_later(
+-int
+-xfs_free_extent_later(
++static int
++xfs_defer_extent_free(
  	struct xfs_trans		*tp,
  	xfs_fsblock_t			bno,
  	xfs_filblks_t			len,
+ 	const struct xfs_owner_info	*oinfo,
+ 	enum xfs_ag_resv_type		type,
+-	bool				skip_discard)
++	bool				skip_discard,
++	struct xfs_defer_pending	**dfpp)
+ {
+ 	struct xfs_extent_free_item	*xefi;
+ 	struct xfs_mount		*mp = tp->t_mountp;
+@@ -2573,10 +2574,105 @@ xfs_free_extent_later(
+ 			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
+ 
+ 	xfs_extent_free_get_group(mp, xefi);
+-	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_FREE, &xefi->xefi_list);
++	*dfpp = xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_FREE, &xefi->xefi_list);
+ 	return 0;
+ }
+ 
++int
++xfs_free_extent_later(
++	struct xfs_trans		*tp,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
++	const struct xfs_owner_info	*oinfo,
++	enum xfs_ag_resv_type		type,
++	bool				skip_discard)
++{
++	struct xfs_defer_pending	*dontcare = NULL;
++
++	return xfs_defer_extent_free(tp, bno, len, oinfo, type, skip_discard,
++			&dontcare);
++}
++
++/*
++ * Set up automatic freeing of unwritten space in the filesystem.
++ *
++ * This function attached a paused deferred extent free item to the
++ * transaction.  Pausing means that the EFI will be logged in the next
++ * transaction commit, but the pending EFI will not be finished until the
++ * pending item is unpaused.
++ *
++ * If the system goes down after the EFI has been persisted to the log but
++ * before the pending item is unpaused, log recovery will find the EFI, fail to
++ * find the EFD, and free the space.
++ *
++ * If the pending item is unpaused, the next transaction commit will log an EFD
++ * without freeing the space.
++ *
++ * Caller must ensure that the tp, fsbno, len, oinfo, and resv flags of the
++ * @args structure are set to the relevant values.
++ */
++int
++xfs_alloc_schedule_autoreap(
++	const struct xfs_alloc_arg	*args,
++	bool				skip_discard,
++	struct xfs_alloc_autoreap	*aarp)
++{
++	int				error;
++
++	error = xfs_defer_extent_free(args->tp, args->fsbno, args->len,
++			&args->oinfo, args->resv, skip_discard, &aarp->dfp);
++	if (error)
++		return error;
++
++	xfs_defer_item_pause(args->tp, aarp->dfp);
++	return 0;
++}
++
++/*
++ * Cancel automatic freeing of unwritten space in the filesystem.
++ *
++ * Earlier, we created a paused deferred extent free item and attached it to
++ * this transaction so that we could automatically roll back a new space
++ * allocation if the system went down.  Now we want to cancel the paused work
++ * item by marking the EFI stale so we don't actually free the space, unpausing
++ * the pending item and logging an EFD.
++ *
++ * The caller generally should have already mapped the space into the ondisk
++ * filesystem.  If the reserved space was partially used, the caller must call
++ * xfs_free_extent_later to create a new EFI to free the unused space.
++ */
++void
++xfs_alloc_cancel_autoreap(
++	struct xfs_trans		*tp,
++	struct xfs_alloc_autoreap	*aarp)
++{
++	struct xfs_defer_pending	*dfp = aarp->dfp;
++	struct xfs_extent_free_item	*xefi;
++
++	if (!dfp)
++		return;
++
++	list_for_each_entry(xefi, &dfp->dfp_work, xefi_list)
++		xefi->xefi_flags |= XFS_EFI_CANCELLED;
++
++	xfs_defer_item_unpause(tp, dfp);
++}
++
++/*
++ * Commit automatic freeing of unwritten space in the filesystem.
++ *
++ * This unpauses an earlier _schedule_autoreap and commits to freeing the
++ * allocated space.  Call this if none of the reserved space was used.
++ */
++void
++xfs_alloc_commit_autoreap(
++	struct xfs_trans		*tp,
++	struct xfs_alloc_autoreap	*aarp)
++{
++	if (aarp->dfp)
++		xfs_defer_item_unpause(tp, aarp->dfp);
++}
++
+ #ifdef DEBUG
+ /*
+  * Check if an AGF has a free extent record whose length is equal to
 diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 6bb8d295c..6b95d1d8a 100644
+index 6b95d1d8a..851cafbd6 100644
 --- a/libxfs/xfs_alloc.h
 +++ b/libxfs/xfs_alloc.h
-@@ -231,7 +231,7 @@ xfs_buf_to_agfl_bno(
- 	return bp->b_addr;
- }
- 
--int __xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
-+int xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
- 		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
- 		enum xfs_ag_resv_type type, bool skip_discard);
- 
-@@ -256,18 +256,6 @@ void xfs_extent_free_get_group(struct xfs_mount *mp,
+@@ -255,6 +255,18 @@ void xfs_extent_free_get_group(struct xfs_mount *mp,
+ #define XFS_EFI_SKIP_DISCARD	(1U << 0) /* don't issue discard */
  #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
  #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
++#define XFS_EFI_CANCELLED	(1U << 3) /* dont actually free the space */
++
++struct xfs_alloc_autoreap {
++	struct xfs_defer_pending	*dfp;
++};
++
++int xfs_alloc_schedule_autoreap(const struct xfs_alloc_arg *args,
++		bool skip_discard, struct xfs_alloc_autoreap *aarp);
++void xfs_alloc_cancel_autoreap(struct xfs_trans *tp,
++		struct xfs_alloc_autoreap *aarp);
++void xfs_alloc_commit_autoreap(struct xfs_trans *tp,
++		struct xfs_alloc_autoreap *aarp);
  
--static inline int
--xfs_free_extent_later(
--	struct xfs_trans		*tp,
--	xfs_fsblock_t			bno,
--	xfs_filblks_t			len,
--	const struct xfs_owner_info	*oinfo,
--	enum xfs_ag_resv_type		type)
--{
--	return __xfs_free_extent_later(tp, bno, len, oinfo, type, false);
--}
--
--
  extern struct kmem_cache	*xfs_extfree_item_cache;
  
- int __init xfs_extfree_intent_init_cache(void);
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 8fde0dc25..8c553d22c 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -569,7 +569,7 @@ xfs_bmap_btree_to_extents(
- 
- 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
- 	error = xfs_free_extent_later(cur->bc_tp, cbno, 1, &oinfo,
--			XFS_AG_RESV_NONE);
-+			XFS_AG_RESV_NONE, false);
- 	if (error)
- 		return error;
- 
-@@ -5212,7 +5212,7 @@ xfs_bmap_del_extent_real(
- 		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
- 			xfs_refcount_decrease_extent(tp, del);
- 		} else {
--			error = __xfs_free_extent_later(tp, del->br_startblock,
-+			error = xfs_free_extent_later(tp, del->br_startblock,
- 					del->br_blockcount, NULL,
- 					XFS_AG_RESV_NONE,
- 					((bflags & XFS_BMAPI_NODISCARD) ||
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 925cc153b..c4d5c8a64 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -270,7 +270,7 @@ xfs_bmbt_free_block(
- 
- 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
- 	error = xfs_free_extent_later(cur->bc_tp, fsbno, 1, &oinfo,
--			XFS_AG_RESV_NONE);
-+			XFS_AG_RESV_NONE, false);
- 	if (error)
- 		return error;
- 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index a95675b1d..14826280d 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1849,7 +1849,7 @@ xfs_difree_inode_chunk(
- 		return xfs_free_extent_later(tp,
- 				XFS_AGB_TO_FSB(mp, agno, sagbno),
- 				M_IGEO(mp)->ialloc_blks, &XFS_RMAP_OINFO_INODES,
--				XFS_AG_RESV_NONE);
-+				XFS_AG_RESV_NONE, false);
- 	}
- 
- 	/* holemask is only 16-bits (fits in an unsigned long) */
-@@ -1895,7 +1895,8 @@ xfs_difree_inode_chunk(
- 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
- 		error = xfs_free_extent_later(tp,
- 				XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
--				&XFS_RMAP_OINFO_INODES, XFS_AG_RESV_NONE);
-+				&XFS_RMAP_OINFO_INODES, XFS_AG_RESV_NONE,
-+				false);
- 		if (error)
- 			return error;
- 
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 0c5d7ba1c..593cb1fcc 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -160,7 +160,7 @@ __xfs_inobt_free_block(
- 	xfs_inobt_mod_blockcount(cur, -1);
- 	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp));
- 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
--			&XFS_RMAP_OINFO_INOBT, resv);
-+			&XFS_RMAP_OINFO_INOBT, resv, false);
- }
- 
- STATIC int
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index ae72f2507..2284b45fb 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -1152,7 +1152,7 @@ xfs_refcount_adjust_extents(
- 						tmp.rc_startblock);
- 				error = xfs_free_extent_later(cur->bc_tp, fsbno,
- 						  tmp.rc_blockcount, NULL,
--						  XFS_AG_RESV_NONE);
-+						  XFS_AG_RESV_NONE, false);
- 				if (error)
- 					goto out_error;
- 			}
-@@ -1214,7 +1214,7 @@ xfs_refcount_adjust_extents(
- 					ext.rc_startblock);
- 			error = xfs_free_extent_later(cur->bc_tp, fsbno,
- 					ext.rc_blockcount, NULL,
--					XFS_AG_RESV_NONE);
-+					XFS_AG_RESV_NONE, false);
- 			if (error)
- 				goto out_error;
- 		}
-@@ -1984,7 +1984,7 @@ xfs_refcount_recover_cow_leftovers(
- 		/* Free the block. */
- 		error = xfs_free_extent_later(tp, fsb,
- 				rr->rr_rrec.rc_blockcount, NULL,
--				XFS_AG_RESV_NONE);
-+				XFS_AG_RESV_NONE, false);
- 		if (error)
- 			goto out_trans;
- 
-diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 67cb59e33..bc8bd867e 100644
---- a/libxfs/xfs_refcount_btree.c
-+++ b/libxfs/xfs_refcount_btree.c
-@@ -111,7 +111,7 @@ xfs_refcountbt_free_block(
- 	be32_add_cpu(&agf->agf_refcount_blocks, -1);
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
- 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
--			&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA);
-+			&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA, false);
- }
- 
- STATIC int
 
