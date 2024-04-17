@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498FA262A3
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:17:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01DDB8F4A
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:17:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713388656; cv=none; b=NeEMFbUBOsOj/aD/IFvfvTXSyNR2D6Jb6sIeyqGzmPI699JMFfirQOPozFP2f1e2ycq3AH8gUuY7FhVfUGB2O7cbZj4y06/EPYnipED5ei724tCl0sxBmWIFLbCfunpwoDNlZicMBWuQ9MguNsRz+5z9+urLIAhj3/yFL9tC810=
+	t=1713388672; cv=none; b=OfgF+yPnNith9YjMNxcTaNpLccBsJvBfXXGm8JwLQHvGNGcfGcHiYeNuoHwFtL1of8ACUdGtlhxftIoAy4ckmhrfeYr6XLCE8Ii6U+Oh8Qa3ex+7NtGtk4WuE/sxsUa6jEsaCVf5G+Uvqwd2c+cx2ECRrbFOjEhpIgZ/8giLRus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713388656; c=relaxed/simple;
-	bh=yaZR9FAnxG4FMVdBOgIPp7MHS1812cSAof0w2eEOQ/E=;
+	s=arc-20240116; t=1713388672; c=relaxed/simple;
+	bh=P+ON+C8dlAOfWpAs8y84soqkmk6J3cezPc+QKxkn2ms=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PIY3NMPy5IHrx/YA/BTDqFWNQaDpf4lKRDtd69caeiKMnIFk6D+HybHrlg/ZvbcjQ+aT8T7smkCg1RZNOjWvlm6nfO6IulRNShSBxMt9+/02gNkZjKeyMR65eP1kZzXSYbQ1o9fL7TUmBmKkVX8kT39SP8LPrVxw2YIXPzP/nNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cyaFTzQ/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=q59NSB1BKJUWF+vyn0hEK40rZhTgIQeRAA/2nknM7d1yhmPKZ42EBvNYE8evJB0XEOY+nob3ChRIOulu1YLR+gAHXsWKgZAXX7XmZecKJxYMSdivVaTozZCG7HdLQS7iP39+zYKNcGEaOvhZ8G+wR5tWUhvdeD4snM/MTUiWrw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MlbGnMvU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cyaFTzQ/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 208FFC072AA;
-	Wed, 17 Apr 2024 21:17:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MlbGnMvU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C480FC072AA;
+	Wed, 17 Apr 2024 21:17:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713388656;
-	bh=yaZR9FAnxG4FMVdBOgIPp7MHS1812cSAof0w2eEOQ/E=;
+	s=k20201202; t=1713388671;
+	bh=P+ON+C8dlAOfWpAs8y84soqkmk6J3cezPc+QKxkn2ms=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cyaFTzQ/eEV5cuZKn3V2wI+isqAk2AGO5XFRQxksqyIBNBYxZ3GHCrRySXX5P6tzx
-	 C9tEGVczaiicEYPo2FAdipxk1ycuQbNYDfqYQSu+gPtndnRsk+2EGIB78Xb2oBzOFa
-	 KDxQj7KgSduP2uGEViVrntmI1aHsFz11DLWkrKhzn5fzbdSlxltO9T+gPkVMPSxR9C
-	 6RNF1F7O4XIqdw8My1cSoaqkq2ojnbGszvNEGiybj6EICu47jbMlz0wWQQW9VlBWJ1
-	 KWKLKafS+tAP8TGXP9RbSQbMa6dPmT/hPYman3nbe/1K2rMqi5IUWvFO33WFFokvmo
-	 LG5/zsqJWBjGw==
-Date: Wed, 17 Apr 2024 14:17:35 -0700
-Subject: [PATCHSET v30.3 09/11] xfs_scrub: scan metadata files in parallel
+	b=MlbGnMvUvsjYK0hwGDQ82Lzn1+UVIZ4bY71kfUNLmoqxnx+/HLYUyY8Jlp7LAcI36
+	 y+R7CAaHBjuLzIPYyVm6yYd2Y8EdxGHHI8qbYubyfqQHUbgpEM1wjfmgUXlRptCjOu
+	 64FAXgKxkgx/Z0No+lSTYq/Lm3WV80a4ZE4c41XwmUN+cXrXWzObVCtL34u5j9KMa/
+	 KSg/TomAcnX/U7JKzsrErPpXzYXKv5UKvLNzEs3wWgThxhqPhLKj5mL4O9y9Q+VD22
+	 tWkGIuMqhp9+vloCBPiPvKi95fxo8OBVpggNRo1Ce8+AUGkGZg/Q7fvSxHVhEZ7uWk
+	 LJlwDZRS2XNDw==
+Date: Wed, 17 Apr 2024 14:17:51 -0700
+Subject: [PATCHSET v30.3 10/11] xfs_repair: rebuild inode fork mappings
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
+Cc: Bill O'Donnell <bodonnel@redhat.com>, Christoph Hellwig <hch@lst.de>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338845069.1856356.14579148362990140838.stgit@frogsfrogsfrogs>
+Message-ID: <171338845416.1856515.8750904442149650753.stgit@frogsfrogsfrogs>
 In-Reply-To: <20240417211156.GA11948@frogsfrogsfrogs>
 References: <20240417211156.GA11948@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,13 +47,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-At this point, we need to clean up the libfrog and xfs_scrub code a
-little bit.  First, correct some of the weird naming and organizing
-choices I made in libfrog for scrub types and fs summary counter scans.
-Second, break out metadata file scans as a separate group, and teach
-xfs_scrub that it can ask the kernel to scan them in parallel.  On
-filesystems with quota or realtime volumes, this can speed up that part
-significantly.
+Add the ability to regenerate inode fork mappings if the rmapbt
+otherwise looks ok.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -62,20 +57,30 @@ This has been running on the djcloud for months with no problems.  Enjoy!
 Comments and questions are, as always, welcome.
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-metafile-parallel-6.8
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-rebuild-forks-6.8
 ---
 Commits in this patchset:
- * libfrog: rename XFROG_SCRUB_TYPE_* to XFROG_SCRUB_GROUP_*
- * libfrog: promote XFROG_SCRUB_DESCR_SUMMARY to a scrub type
- * xfs_scrub: scan whole-fs metadata files in parallel
+ * xfs_repair: push inode buf and dinode pointers all the way to inode fork processing
+ * xfs_repair: sync bulkload data structures with kernel newbt code
+ * xfs_repair: rebuild block mappings from rmapbt data
 ---
- io/scrub.c      |   13 +++--
- libfrog/scrub.c |   51 ++++++++++-----------
- libfrog/scrub.h |   24 ++++------
- scrub/phase2.c  |  135 ++++++++++++++++++++++++++++++++++++++++++-------------
- scrub/phase4.c  |    2 -
- scrub/phase7.c  |    4 +-
- scrub/scrub.c   |   75 ++++++++++++++++++-------------
- scrub/scrub.h   |    6 ++
- 8 files changed, 194 insertions(+), 116 deletions(-)
+ include/xfs_trans.h      |    2 
+ libfrog/util.h           |    5 
+ libxfs/libxfs_api_defs.h |   16 +
+ libxfs/trans.c           |   48 +++
+ repair/Makefile          |    2 
+ repair/agbtree.c         |   24 +
+ repair/bmap_repair.c     |  748 ++++++++++++++++++++++++++++++++++++++++++++++
+ repair/bmap_repair.h     |   13 +
+ repair/bulkload.c        |  260 +++++++++++++++-
+ repair/bulkload.h        |   34 ++
+ repair/dino_chunks.c     |    5 
+ repair/dinode.c          |  142 ++++++---
+ repair/dinode.h          |    7 
+ repair/phase5.c          |    2 
+ repair/rmap.c            |    2 
+ repair/rmap.h            |    1 
+ 16 files changed, 1231 insertions(+), 80 deletions(-)
+ create mode 100644 repair/bmap_repair.c
+ create mode 100644 repair/bmap_repair.h
 
