@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D571A1E484
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:38:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9207D1E484
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:38:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389893; cv=none; b=tluYVMpRmPkZoPeQ2QB9JLUrI0uThAnZk7HhfailxX5VLa8h9xUPKndkia5s7xWwhkajH0Bh7gKsY5S6oS5Me8mkxPHW8Irn+Hni+NNkI/66y1MiZyI3lTF9+5+0p8D0WC8wVp1tmWP6RwpM9jS/DGZMMW1DYXOAH0M9ze4Vjj4=
+	t=1713389909; cv=none; b=KVBAzWTfyZbzUtKgYXLab6g+/oXQlmD7XOc+Z3RR9Xnad4EwaGRMwNlxvdt3Lp8axEI2jOWXljtS2m5JLArVhSa2S0V0flq/PxE2Yw5I7gqLVLcLG8J1cjJ4sDLp0LsrYQqg42M84Jk/Mp+EV1Mi72qgfSK8UXZ8Xc76biLHmZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389893; c=relaxed/simple;
-	bh=vGdaFroVnJjz/8Vqwu1fIGIphqX2uQ+9v19niNsgfoM=;
+	s=arc-20240116; t=1713389909; c=relaxed/simple;
+	bh=prQXTYtG+Bf25DKI5Aze/yI7VzkF8Jo/ej0UQ6xbClU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tjqfk/rHK+sjJZKJR4SJPstiP7R5ZzK3Dcq0V0vzrBOmnRjXHXL+wXbyF5QedzVMH/eQ49pWjDqeBcnKRLEMeTMWXYXxPLMICThHpod77JupKDpRbDrTh5C720wUanoERT1elU7o/QBMWi/1cMHbv0KP4VvKbb9k7+BkhyLwkWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uwoJisip; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qRm/sBvhJ0IWXkHKYzDO/z0IJFXQIa8ekNAHIirz7zI88+dD5FDxHJUQKOLicWB1Xh5YAnXu9qUcX8iZ0koC5pSfpuU2I4HAz1bVfA7K41E0yr7nOD6qKGvSq/CflHOmx7fS630MLk/Tb0R+iUX7BB0mVouxke/E22i6sHETY8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gsuK7z3h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uwoJisip"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A350C072AA;
-	Wed, 17 Apr 2024 21:38:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gsuK7z3h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DC4AC072AA;
+	Wed, 17 Apr 2024 21:38:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389893;
-	bh=vGdaFroVnJjz/8Vqwu1fIGIphqX2uQ+9v19niNsgfoM=;
+	s=k20201202; t=1713389909;
+	bh=prQXTYtG+Bf25DKI5Aze/yI7VzkF8Jo/ej0UQ6xbClU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=uwoJisipPiI0eXY+rKIuOJy+2JDYhUecrahTq1BdwVf7HMmdvYnCAdvBZs9jZ9vZH
-	 yIfEA1mni6kVqzdGzQoNnyqtcGi3e1wdejpDn25M4ICYfsHY63MA8svWHvsK+5lXMJ
-	 mIlNuh2vDbM4Y93Umsbj7AKwOgi/idjqBqEH64VPY/BDJZrIHvrBMZ7RjkgI1fKmOU
-	 M4qtEkK/eNOIOFgA9nvNIYcaWhY096Ev9CuJGNCVUeRjKPDNDGust1+bevHSyUpfsf
-	 MLCeqAVot0dBnbcLHpIgz17C8YSA6lfHTtj1OWahfnio0Jk+lfAp4/dnqPb935qSI+
-	 9hgRv5eQ6QpbQ==
-Date: Wed, 17 Apr 2024 14:38:12 -0700
-Subject: [PATCH 63/67] xfs: fix a use after free in xfs_defer_finish_recovery
+	b=gsuK7z3hwpy/5YtYuEpVKpJe1U1zYNPFPDTFK/NRF0W8GbXXB4zd8MRqqAQHoZthe
+	 O//Za4spbNhQuE9LwgTjECPvdfwxX2KLIqgoRZKA6OSYwjMcuVK3Oowzy342B/JyP9
+	 Kkbm2yvCNwhRLYrGkhPY7c5LKKQ6zIrS+4j9EfGzHmhb6vO8+YlLxTh5rY2InGcdAm
+	 EmsLd6dwQGOyKccl4Sa70m3AaJsDS9zDaO1VCcdlHqJrdvD82XIsUIUxDXqtVLWxVW
+	 3CP5MyqwgIqtddM8suqGxZQUUbPtl20xRh7UUy4OwXmMbyuMI6X2/2NY7sl9p6QVgo
+	 iGrQJnByGCmEA==
+Date: Wed, 17 Apr 2024 14:38:28 -0700
+Subject: [PATCH 64/67] xfs: use the op name in
+ trace_xlog_intent_recovery_failed
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: kernel test robot <oliver.sang@intel.com>, Christoph Hellwig <hch@lst.de>,
- Chandan Babu R <chandanbabu@kernel.org>,
+Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338843286.1853449.2542062323932218911.stgit@frogsfrogsfrogs>
+Message-ID: <171338843301.1853449.337154345904134359.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,42 +48,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 4f6ac47b55e3ce6e982807928d6074ec105ab66e
+Source kernel commit: bcdfae6ee520b665385020fa3e47633a8af84f12
 
-dfp will be freed by ->recover_work and thus the tracepoint in case
-of an error can lead to a use after free.
+Instead of tracing the address of the recovery handler, use the name
+in the defer op, similar to other defer ops related tracepoints.
 
-Store the defer ops in a local variable to avoid that.
-
-Fixes: 7f2f7531e0d4 ("xfs: store an ops pointer in struct xfs_defer_pending")
-Reported-by: kernel test robot <oliver.sang@intel.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_defer.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ libxfs/xfs_defer.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 077e99298..5bdc8f5a2 100644
+index 5bdc8f5a2..bf1d1e06a 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -909,12 +909,14 @@ xfs_defer_finish_recovery(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-+	const struct xfs_defer_op_type	*ops = dfp->dfp_ops;
- 	int				error;
- 
--	error = dfp->dfp_ops->recover_work(dfp, capture_list);
-+	/* dfp is freed by recover_work and must not be accessed afterwards */
-+	error = ops->recover_work(dfp, capture_list);
+@@ -915,8 +915,7 @@ xfs_defer_finish_recovery(
+ 	/* dfp is freed by recover_work and must not be accessed afterwards */
+ 	error = ops->recover_work(dfp, capture_list);
  	if (error)
- 		trace_xlog_intent_recovery_failed(mp, error,
--				dfp->dfp_ops->recover_work);
-+				ops->recover_work);
+-		trace_xlog_intent_recovery_failed(mp, error,
+-				ops->recover_work);
++		trace_xlog_intent_recovery_failed(mp, ops, error);
  	return error;
  }
  
