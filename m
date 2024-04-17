@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A6C647F62
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:37:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D571A1E484
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:38:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389878; cv=none; b=JKPtsG1rCx0Fs4kY1ziRu0ItAKo0lBwtow3wj2S+gxXM5ygdfRwsE9FqWOvSv1n88/gLQlrNJdNC23uOq32imluLUwzuDV6wTHUgdB7JAgXr51tYXFcs0PRVa02arS2Izdp65B/dFqI6j9lYj+toC8Wwhqx7gZsKjnzLzMgU6ts=
+	t=1713389893; cv=none; b=tluYVMpRmPkZoPeQ2QB9JLUrI0uThAnZk7HhfailxX5VLa8h9xUPKndkia5s7xWwhkajH0Bh7gKsY5S6oS5Me8mkxPHW8Irn+Hni+NNkI/66y1MiZyI3lTF9+5+0p8D0WC8wVp1tmWP6RwpM9jS/DGZMMW1DYXOAH0M9ze4Vjj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389878; c=relaxed/simple;
-	bh=ypt8NmLmxZ8rglpVjt9MV0fCP+IpOrKs+Cm3vw1shWI=;
+	s=arc-20240116; t=1713389893; c=relaxed/simple;
+	bh=vGdaFroVnJjz/8Vqwu1fIGIphqX2uQ+9v19niNsgfoM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XTEMw0qiU+rLqaDZCGdCgUZP/9LGExtxaiYMuuRlmcjGaabdtxSQLKAJvmgrUHsDf0lyzbUWW+pTfSRdg4NOA6hLm1/AGFRRr8RhSyuI9EmKRAq+pTD36L3ADBugSdszE+WkRWDlG86KspxH1mom2AZUf+1wccWtppioktdbKKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BcHMQ29z; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tjqfk/rHK+sjJZKJR4SJPstiP7R5ZzK3Dcq0V0vzrBOmnRjXHXL+wXbyF5QedzVMH/eQ49pWjDqeBcnKRLEMeTMWXYXxPLMICThHpod77JupKDpRbDrTh5C720wUanoERT1elU7o/QBMWi/1cMHbv0KP4VvKbb9k7+BkhyLwkWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uwoJisip; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BcHMQ29z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC03CC072AA;
-	Wed, 17 Apr 2024 21:37:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uwoJisip"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A350C072AA;
+	Wed, 17 Apr 2024 21:38:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389877;
-	bh=ypt8NmLmxZ8rglpVjt9MV0fCP+IpOrKs+Cm3vw1shWI=;
+	s=k20201202; t=1713389893;
+	bh=vGdaFroVnJjz/8Vqwu1fIGIphqX2uQ+9v19niNsgfoM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BcHMQ29zqKrRfRNrtfSB5AWy3iI0fK/WKrheHxDGpxwMOXM+5f7Q7UzTo6xIaGtRm
-	 Ey0LojFO5P5fEfGGGfn99vpLjET2l7ovp0pEmjA8CYFGltvk/8zpCn6yKaXM1I2YAS
-	 v3W5WEThTYEu3gxJsiTtn8kNQ0OoM7H1LaEiRopjv+RFRJkzmdTF4WUcJ0SMU9DPwi
-	 8kf1VPF/Xaad4/xnC4dXPOF7BP8kBAWwQTDbsHtEkMmx4y0BkvoAWSLm6ybpu6Kqk9
-	 NolLQ4lhO6qSL6Pfz+mDXudGzcycf2ionduUTirMvQDRdVP3EscWUZ8pcfg5aFfeDb
-	 KvvCPbhku0p5A==
-Date: Wed, 17 Apr 2024 14:37:57 -0700
-Subject: [PATCH 62/67] xfs: turn the XFS_DA_OP_REPLACE checks in
- xfs_attr_shortform_addname into asserts
+	b=uwoJisipPiI0eXY+rKIuOJy+2JDYhUecrahTq1BdwVf7HMmdvYnCAdvBZs9jZ9vZH
+	 yIfEA1mni6kVqzdGzQoNnyqtcGi3e1wdejpDn25M4ICYfsHY63MA8svWHvsK+5lXMJ
+	 mIlNuh2vDbM4Y93Umsbj7AKwOgi/idjqBqEH64VPY/BDJZrIHvrBMZ7RjkgI1fKmOU
+	 M4qtEkK/eNOIOFgA9nvNIYcaWhY096Ev9CuJGNCVUeRjKPDNDGust1+bevHSyUpfsf
+	 MLCeqAVot0dBnbcLHpIgz17C8YSA6lfHTtj1OWahfnio0Jk+lfAp4/dnqPb935qSI+
+	 9hgRv5eQ6QpbQ==
+Date: Wed, 17 Apr 2024 14:38:12 -0700
+Subject: [PATCH 63/67] xfs: fix a use after free in xfs_defer_finish_recovery
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
+Cc: kernel test robot <oliver.sang@intel.com>, Christoph Hellwig <hch@lst.de>,
  Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338843271.1853449.15769007156745438916.stgit@frogsfrogsfrogs>
+Message-ID: <171338843286.1853449.2542062323932218911.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,47 +48,43 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 378b6aef9de0f7c3d0de309ecc61c11eb29e57da
+Source kernel commit: 4f6ac47b55e3ce6e982807928d6074ec105ab66e
 
-Since commit deed9512872d ("xfs: Check for -ENOATTR or -EEXIST"), the
-high-level attr code does a lookup for any attr we're trying to set,
-and does the checks to handle the create vs replace cases, which thus
-never hit the low-level attr code.
+dfp will be freed by ->recover_work and thus the tracepoint in case
+of an error can lead to a use after free.
 
-Turn the checks in xfs_attr_shortform_addname as they must never trip.
+Store the defer ops in a local variable to avoid that.
 
+Fixes: 7f2f7531e0d4 ("xfs: store an ops pointer in struct xfs_defer_pending")
+Reported-by: kernel test robot <oliver.sang@intel.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_attr.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ libxfs/xfs_defer.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 055d20410..1419846bd 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -1070,8 +1070,7 @@ xfs_attr_shortform_addname(
- 	if (xfs_attr_sf_findname(args)) {
- 		int		error;
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 077e99298..5bdc8f5a2 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -909,12 +909,14 @@ xfs_defer_finish_recovery(
+ 	struct xfs_defer_pending	*dfp,
+ 	struct list_head		*capture_list)
+ {
++	const struct xfs_defer_op_type	*ops = dfp->dfp_ops;
+ 	int				error;
  
--		if (!(args->op_flags & XFS_DA_OP_REPLACE))
--			return -EEXIST;
-+		ASSERT(args->op_flags & XFS_DA_OP_REPLACE);
+-	error = dfp->dfp_ops->recover_work(dfp, capture_list);
++	/* dfp is freed by recover_work and must not be accessed afterwards */
++	error = ops->recover_work(dfp, capture_list);
+ 	if (error)
+ 		trace_xlog_intent_recovery_failed(mp, error,
+-				dfp->dfp_ops->recover_work);
++				ops->recover_work);
+ 	return error;
+ }
  
- 		error = xfs_attr_sf_removename(args);
- 		if (error)
-@@ -1085,8 +1084,7 @@ xfs_attr_shortform_addname(
- 		 */
- 		args->op_flags &= ~XFS_DA_OP_REPLACE;
- 	} else {
--		if (args->op_flags & XFS_DA_OP_REPLACE)
--			return -ENOATTR;
-+		ASSERT(!(args->op_flags & XFS_DA_OP_REPLACE));
- 	}
- 
- 	if (args->namelen >= XFS_ATTR_SF_ENTSIZE_MAX ||
 
