@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 429D3262A3
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:22:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40CDC262A3
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:22:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713388938; cv=none; b=atU+l56W3lv2lxck3SjkRy3SYBlEJu0Z53EVo//8qtxXoKFCTvcmVVeA7VMNTt/2nA+smi0Jy+ZqsBmgnSvXt2U7GztR/2mShyI46p1Vu1fFNfIyBnQ/W0wGm6Du7rik5zoJmQ7mkDXuwWL3X4rcbcwawwrIlmYhtlRuLoLF4ro=
+	t=1713388954; cv=none; b=jjG7+U8dhpOklib478OwHimDNef4t/qFFmDByRAVEV/ubEF0oohzryE5BN6jDsinMOt0691HreHbVt1c4bKuTJY5QsOYdqJbcuiAUsfts0j54Op/iQhknlbhv381IvcpvTe8o6Q9DvUEJHtdFecjzHrN6y3KIdm333IPR1QQ86o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713388938; c=relaxed/simple;
-	bh=DkuZIUDoTkFQQsIhwJkuBq19CdM8amW1CMrJv5AJ6Xo=;
+	s=arc-20240116; t=1713388954; c=relaxed/simple;
+	bh=eR8gSBlLd/e44Z1nmsa30vwiS17w0B/jTbF5rhbCHqc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HnB78IJqwyNJXTGLQ8U/NhU1yq0Am6yqVzNgBN4JTF6KNnPX3RnCw+3iAl6GnUfvJqtNLRoa7NroXkcnaowUBGAiNxOz6IMyjiCwKaQ+IyHYs/bf9j3TiW7Zpqgi97iuXGUsKq8CTnPVDK0yEDn50ZuvRAM8KPYaqrjnDYhP4Zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WMtx0GDL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fnVv/p3VTXN7ZqbUr6AugNbbDGdsjHmbNvqro0zxxU9PtRT75GJcBZvNuUwoIyII9Cgkox7wjubgR5CfWtzmhliFkP0HV2ppfjHQZjVu7NwKzulnYl0rkPYM8AFe1QHmmItcv0kxVii+JmlG5Msi6RSOg8skKmij4GH7UzUwD/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eAqiwfhF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WMtx0GDL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C49EC072AA;
-	Wed, 17 Apr 2024 21:22:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eAqiwfhF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5091C072AA;
+	Wed, 17 Apr 2024 21:22:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713388938;
-	bh=DkuZIUDoTkFQQsIhwJkuBq19CdM8amW1CMrJv5AJ6Xo=;
+	s=k20201202; t=1713388953;
+	bh=eR8gSBlLd/e44Z1nmsa30vwiS17w0B/jTbF5rhbCHqc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WMtx0GDLYA0mAJyLNXPP3iGINFQg7kgjsxHbXMikYZxaLIHt5WDQ4cVlh7cMwslbD
-	 9NPQjosaEek21fImK/eyTBMs4+IK3mTb5VlIOyfopsnY3X+GV8w2WHi1TCPDpfNG85
-	 w4lBqpUGfFRN2K+kBaZ1+NA6o/45bXU355XedTwvrjqMI6RxoyYy40Cm3VboYyYd4D
-	 s5enZrbmCI5J8qcm7F0RQ0BQFzKF8pM6otimhTGZug7GfhPXJCBci+S4pgYta8kJCX
-	 HAVv9AhRov5zJXT2UOeXhKqSD4fN2ZRcN7cz9TsVjDqlbKF4uDupeT0MXFWDilegRM
-	 ddgrrRCHPC5UQ==
-Date: Wed, 17 Apr 2024 14:22:17 -0700
-Subject: [PATCH 02/67] xfs: recreate work items when recovering intent items
+	b=eAqiwfhFFR9k56pqMlY/PfRh3HsQWv/V0Pc3F2bYA95rdQtf/pQRb5TGcP9iLghV0
+	 YeRFgcwsWr5yRM/DLZgUEK+NhlKa8FUpqkimCL3EARGMnUfwcOUkNCbxw3KcXMuybH
+	 6hQxOxJvmI4x5e9n3SuBB9Yb54CakQAd0s+8VFWTiYnomJUQDCeU0CsSyvfjpryDZO
+	 Ded9HxIuuNibTRub5EgJYgRMpdXPaJURUK8eqs8uGpV9Io8NG169fgbGErWQBRIW2U
+	 9j5XdS8FnTEXpYbdA9xIzcbwOQys1QEBKBUjagvJjRpC4eSLduRQQ7EV7MmXL9wXdp
+	 Xpopqu4/iXcBQ==
+Date: Wed, 17 Apr 2024 14:22:33 -0700
+Subject: [PATCH 03/67] xfs: use xfs_defer_finish_one to finish recovered work
+ items
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338842370.1853449.1456974905203336505.stgit@frogsfrogsfrogs>
+Message-ID: <171338842385.1853449.14503762738762910887.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,53 +48,44 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: e70fb328d5277297ea2d9169a3a046de6412d777
+Source kernel commit: e5f1a5146ec35f3ed5d7f5ac7807a10c0062b6b8
 
-Recreate work items for each xfs_defer_pending object when we are
-recovering intent items.
+Get rid of the open-coded calls to xfs_defer_finish_one.  This also
+means that the recovery transaction takes care of cleaning up the dfp,
+and we have solved (I hope) all the ownership issues in recovery.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_defer.c |    3 +--
- libxfs/xfs_defer.h |    9 +++++++++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ libxfs/xfs_defer.c |    2 +-
+ libxfs/xfs_defer.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index bd6f14a2c..4900a7d62 100644
+index 4900a7d62..4ef9867cc 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -671,9 +671,8 @@ xfs_defer_add(
- 		list_add_tail(&dfp->dfp_list, &tp->t_dfops);
- 	}
- 
--	list_add_tail(li, &dfp->dfp_work);
-+	xfs_defer_add_item(dfp, li);
- 	trace_xfs_defer_add_item(tp->t_mountp, dfp, li);
--	dfp->dfp_count++;
- }
- 
- /*
+@@ -479,7 +479,7 @@ xfs_defer_relog(
+  * Log an intent-done item for the first pending intent, and finish the work
+  * items.
+  */
+-static int
++int
+ xfs_defer_finish_one(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_defer_pending	*dfp)
 diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index 5dce938ba..bef5823f6 100644
+index bef5823f6..c1a648e99 100644
 --- a/libxfs/xfs_defer.h
 +++ b/libxfs/xfs_defer.h
-@@ -130,6 +130,15 @@ void xfs_defer_start_recovery(struct xfs_log_item *lip,
- void xfs_defer_cancel_recovery(struct xfs_mount *mp,
- 		struct xfs_defer_pending *dfp);
- 
-+static inline void
-+xfs_defer_add_item(
-+	struct xfs_defer_pending	*dfp,
-+	struct list_head		*work)
-+{
-+	list_add_tail(work, &dfp->dfp_work);
-+	dfp->dfp_count++;
-+}
-+
- int __init xfs_defer_init_item_caches(void);
- void xfs_defer_destroy_item_caches(void);
+@@ -41,6 +41,7 @@ void xfs_defer_add(struct xfs_trans *tp, enum xfs_defer_ops_type type,
+ 		struct list_head *h);
+ int xfs_defer_finish_noroll(struct xfs_trans **tp);
+ int xfs_defer_finish(struct xfs_trans **tp);
++int xfs_defer_finish_one(struct xfs_trans *tp, struct xfs_defer_pending *dfp);
+ void xfs_defer_cancel(struct xfs_trans *);
+ void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
  
 
