@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB8F147F62
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:36:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E8581E484
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:36:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389799; cv=none; b=k8AGggfmf3zufPLtyhvwCdbrEP3Cpa/a2tE5vLSpxum3xMOuFtlOFHTF29xemOcWhmb2nsMdRecwA0sVw1WmcfPk26J7Rif3IDgmmeCvaeyzRUUlPhqCPhVUPC+nHRpbe6avxIDtZxd1K3M8Lbe6Joe6xJkleGsGZlDlhEf5S3o=
+	t=1713389815; cv=none; b=NRw4RCIKch1/6NwPV2TBCns8CR7y2SwwIreQXrse0cXKcJ3W56CnXtIktDseJ0jZM9iZsnoLLIATO5Cq1O7qyCuF+e79tgzgJLw+9EmYttdfW5HJMnPDs7ldMmxfHJEHqw1/2mx8+LRmYUZPGSmgzkyY1PaMAI9ZJ9UJ68q+sBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389799; c=relaxed/simple;
-	bh=/LpYKTj+jY86im+sSnKK3Mr5EXl6AqI67Ijxya/xuTs=;
+	s=arc-20240116; t=1713389815; c=relaxed/simple;
+	bh=JaRcgnhuBMGfMIUsSNThroB+1McLohh5cyKZ2EURfu0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mciU1T4l+SMFluE+MPR5Zx8K0zCDr5RsWArbFWWXV9jJV5Au/QhQ5nf7p5SaHCpu+mdQsO1W5pekrMsokOL3EpuHr17/o3wzcbAxGF5HEap4vWeKRVodvD2Jh1Ej1JyNaQNpKRfguPbjaxlsyZW7bnIL0u0ZMo3AxUGGUM2xWAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XRTwg37i; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bTRLBBLGkfF2ixasBvupzfN7y1OdWoiOoPx80YsoX1wQNprlViF8Pxbp/qlvvJytFMoqpwDn5q/xejSLFeIvV2mDpOx0hYChjMEbdOoqAHcdb5zYX2safxZlNkWIbaX2Dhy+3P7TCObVbHoigLkv7nVu/y4zXlxsUpzcQgcXw1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFR9Iv6D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XRTwg37i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6249FC072AA;
-	Wed, 17 Apr 2024 21:36:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFR9Iv6D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F080C072AA;
+	Wed, 17 Apr 2024 21:36:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389799;
-	bh=/LpYKTj+jY86im+sSnKK3Mr5EXl6AqI67Ijxya/xuTs=;
+	s=k20201202; t=1713389815;
+	bh=JaRcgnhuBMGfMIUsSNThroB+1McLohh5cyKZ2EURfu0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XRTwg37iI49EJbmBHwoOFf6yvk+tE7gMXUxDttgU5IZ4COIwsDETdTjPNe/duHTfo
-	 wgvBhH1W+1P7GkA1+/FNQQ7bJ/yB02SucnJMrp7jD2Um0pAcKPUxC2u/oiZj0ipAqt
-	 jZNKYXxzUt+jAsOaNTamT4ecCayqwLfRDn949coy9JyniYHjVf26lY4jnVjiN+OGr6
-	 XeEQ+ULAJT7TCewCLamQ5QrZlAHZQFvKE2pIuaNEZThh226QpIfd8EjyHfhnttEGUA
-	 qMvtlVmJbXNfP35xHbQAXzOWBaRFtdMMZs27DiLvUz+x4FwxHhccxY9B4Um2EJEi30
-	 04BEhpge37Ijg==
-Date: Wed, 17 Apr 2024 14:36:38 -0700
-Subject: [PATCH 57/67] xfs: simplify xfs_attr_sf_findname
+	b=fFR9Iv6DviHSgMbvUpFvqCDCg4ZiOQNzm9li337cpyx1n5y9bYSocJeK4EJCYoG8d
+	 jXu+lmVbR0N/oinGAt0JSUMUE58IYCdMEojlAtWt6m5PKkxemEUAaVF7rqUK0m7TtV
+	 ajcO7hwJE9JDXH+V3otbHP7e4oBOwxr9EXBRbmYcbv05CAMkASlGt+2WLNgEfGOyiV
+	 zBV8BLsKg4Ma0cR+UYge9tiB6VhLem3omhvEs85xjEsgBbU+Q46YTWOdd05xAU704N
+	 x9GA2pXH9gfwzkb0jiEX3Q7eiW4sy4CpbtnMPNbWSU7nb5qkRgabk2SAW7xWONT3p+
+	 9ZCkYovCJhKVA==
+Date: Wed, 17 Apr 2024 14:36:54 -0700
+Subject: [PATCH 58/67] xfs: remove xfs_attr_shortform_lookup
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
  Chandan Babu R <chandanbabu@kernel.org>,
  Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338843196.1853449.15129029218977837889.stgit@frogsfrogsfrogs>
+Message-ID: <171338843211.1853449.8700085740456925651.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,18 +48,11 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 6c8d169bbd51fc10d1d0029d495962881315b4c2
+Source kernel commit: 22b7b1f597a6a21fb7b3791a55f3a7ae54d2dfe4
 
-xfs_attr_sf_findname has the simple job of finding a xfs_attr_sf_entry in
-the attr fork, but the convoluted calling convention obfuscates that.
-
-Return the found entry as the return value instead of an pointer
-argument, as the -ENOATTR/-EEXIST can be trivally derived from that, and
-remove the basep argument, as it is equivalent of the offset of sfe in
-the data for if an sfe was found, or an offset of totsize if not was
-found.  To simplify the totsize computation add a xfs_attr_sf_endptr
-helper that returns the imaginative xfs_attr_sf_entry at the end of
-the current attrs.
+xfs_attr_shortform_lookup is only used by xfs_attr_shortform_addname,
+which is much better served by calling xfs_attr_sf_findname.  Switch
+it over and remove xfs_attr_shortform_lookup.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
@@ -67,212 +60,100 @@ Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_attr.c      |    7 ++-
- libxfs/xfs_attr_leaf.c |  102 ++++++++++++++++++------------------------------
- libxfs/xfs_attr_leaf.h |    4 --
- libxfs/xfs_attr_sf.h   |    7 +++
- 4 files changed, 51 insertions(+), 69 deletions(-)
+ libxfs/xfs_attr.c      |   21 +++++++--------------
+ libxfs/xfs_attr_leaf.c |   24 ------------------------
+ libxfs/xfs_attr_leaf.h |    1 -
+ 3 files changed, 7 insertions(+), 39 deletions(-)
 
 
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index d7512efd4..d5a5ae6e2 100644
+index d5a5ae6e2..a383024db 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -860,8 +860,11 @@ xfs_attr_lookup(
- 	if (!xfs_inode_hasattr(dp))
- 		return -ENOATTR;
- 
--	if (dp->i_af.if_format == XFS_DINODE_FMT_LOCAL)
--		return xfs_attr_sf_findname(args, NULL, NULL);
-+	if (dp->i_af.if_format == XFS_DINODE_FMT_LOCAL) {
-+		if (xfs_attr_sf_findname(args))
-+			return -EEXIST;
-+		return -ENOATTR;
-+	}
- 
- 	if (xfs_attr_is_leaf(dp)) {
- 		error = xfs_attr_leaf_hasname(args, &bp);
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 10ed518f3..6ea364059 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -695,47 +695,24 @@ xfs_attr_shortform_create(
- }
- 
- /*
-- * Return -EEXIST if attr is found, or -ENOATTR if not
-- * args:  args containing attribute name and namelen
-- * sfep:  If not null, pointer will be set to the last attr entry found on
--	  -EEXIST.  On -ENOATTR pointer is left at the last entry in the list
-- * basep: If not null, pointer is set to the byte offset of the entry in the
-- *	  list on -EEXIST.  On -ENOATTR, pointer is left at the byte offset of
-- *	  the last entry in the list
-+ * Return the entry if the attr in args is found, or NULL if not.
-  */
--int
-+struct xfs_attr_sf_entry *
- xfs_attr_sf_findname(
--	struct xfs_da_args	 *args,
--	struct xfs_attr_sf_entry **sfep,
--	unsigned int		 *basep)
-+	struct xfs_da_args		*args)
+@@ -1064,19 +1064,14 @@ xfs_attr_shortform_addname(
+ 	struct xfs_da_args	*args)
  {
--	struct xfs_attr_shortform *sf = args->dp->i_af.if_data;
--	struct xfs_attr_sf_entry *sfe;
--	unsigned int		base = sizeof(struct xfs_attr_sf_hdr);
--	int			size = 0;
--	int			end;
--	int			i;
-+	struct xfs_attr_shortform	*sf = args->dp->i_af.if_data;
-+	struct xfs_attr_sf_entry	*sfe;
+ 	int			newsize, forkoff;
+-	int			error;
  
--	sfe = &sf->list[0];
--	end = sf->hdr.count;
--	for (i = 0; i < end; sfe = xfs_attr_sf_nextentry(sfe),
--			     base += size, i++) {
--		size = xfs_attr_sf_entsize(sfe);
--		if (!xfs_attr_match(args, sfe->namelen, sfe->nameval,
--				    sfe->flags))
--			continue;
+ 	trace_xfs_attr_sf_addname(args);
+ 
+-	error = xfs_attr_shortform_lookup(args);
+-	switch (error) {
+-	case -ENOATTR:
+-		if (args->op_flags & XFS_DA_OP_REPLACE)
+-			return error;
 -		break;
-+	for (sfe = &sf->list[0];
-+	     sfe < xfs_attr_sf_endptr(sf);
-+	     sfe = xfs_attr_sf_nextentry(sfe)) {
-+		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
-+				sfe->flags))
-+			return sfe;
+-	case -EEXIST:
++	if (xfs_attr_sf_findname(args)) {
++		int		error;
++
+ 		if (!(args->op_flags & XFS_DA_OP_REPLACE))
+-			return error;
++			return -EEXIST;
+ 
+ 		error = xfs_attr_sf_removename(args);
+ 		if (error)
+@@ -1089,11 +1084,9 @@ xfs_attr_shortform_addname(
+ 		 * around.
+ 		 */
+ 		args->op_flags &= ~XFS_DA_OP_REPLACE;
+-		break;
+-	case 0:
+-		break;
+-	default:
+-		return error;
++	} else {
++		if (args->op_flags & XFS_DA_OP_REPLACE)
++			return -ENOATTR;
  	}
  
--	if (sfep != NULL)
--		*sfep = sfe;
--
--	if (basep != NULL)
--		*basep = base;
--
--	if (i == end)
--		return -ENOATTR;
--	return -EEXIST;
-+	return NULL;
+ 	if (args->namelen >= XFS_ATTR_SF_ENTSIZE_MAX ||
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 6ea364059..8f1678d29 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -834,30 +834,6 @@ xfs_attr_sf_removename(
+ 	return 0;
  }
  
+-/*
+- * Look up a name in a shortform attribute list structure.
+- */
+-/*ARGSUSED*/
+-int
+-xfs_attr_shortform_lookup(
+-	struct xfs_da_args		*args)
+-{
+-	struct xfs_ifork		*ifp = &args->dp->i_af;
+-	struct xfs_attr_shortform	*sf = ifp->if_data;
+-	struct xfs_attr_sf_entry	*sfe;
+-	int				i;
+-
+-	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
+-	sfe = &sf->list[0];
+-	for (i = 0; i < sf->hdr.count;
+-				sfe = xfs_attr_sf_nextentry(sfe), i++) {
+-		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+-				sfe->flags))
+-			return -EEXIST;
+-	}
+-	return -ENOATTR;
+-}
+-
  /*
-@@ -752,21 +729,19 @@ xfs_attr_shortform_add(
- 	struct xfs_ifork		*ifp = &dp->i_af;
- 	struct xfs_attr_shortform	*sf = ifp->if_data;
- 	struct xfs_attr_sf_entry	*sfe;
--	int				offset, size;
-+	int				size;
- 
- 	trace_xfs_attr_sf_add(args);
- 
- 	dp->i_forkoff = forkoff;
- 
- 	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
--	if (xfs_attr_sf_findname(args, &sfe, NULL) == -EEXIST)
--		ASSERT(0);
-+	ASSERT(!xfs_attr_sf_findname(args));
- 
--	offset = (char *)sfe - (char *)sf;
- 	size = xfs_attr_sf_entsize_byname(args->namelen, args->valuelen);
- 	sf = xfs_idata_realloc(dp, size, XFS_ATTR_FORK);
--	sfe = (struct xfs_attr_sf_entry *)((char *)sf + offset);
- 
-+	sfe = xfs_attr_sf_endptr(sf);
- 	sfe->namelen = args->namelen;
- 	sfe->valuelen = args->valuelen;
- 	sfe->flags = args->attr_filter;
-@@ -806,39 +781,38 @@ xfs_attr_sf_removename(
- 	struct xfs_mount		*mp = dp->i_mount;
- 	struct xfs_attr_shortform	*sf = dp->i_af.if_data;
- 	struct xfs_attr_sf_entry	*sfe;
--	int				size = 0, end, totsize;
--	unsigned int			base;
--	int				error;
-+	uint16_t			totsize = be16_to_cpu(sf->hdr.totsize);
-+	void				*next, *end;
-+	int				size = 0;
- 
- 	trace_xfs_attr_sf_remove(args);
- 
--	error = xfs_attr_sf_findname(args, &sfe, &base);
--
--	/*
--	 * If we are recovering an operation, finding nothing to
--	 * remove is not an error - it just means there was nothing
--	 * to clean up.
--	 */
--	if (error == -ENOATTR && (args->op_flags & XFS_DA_OP_RECOVERY))
--		return 0;
--	if (error != -EEXIST)
--		return error;
--	size = xfs_attr_sf_entsize(sfe);
-+	sfe = xfs_attr_sf_findname(args);
-+	if (!sfe) {
-+		/*
-+		 * If we are recovering an operation, finding nothing to remove
-+		 * is not an error, it just means there was nothing to clean up.
-+		 */
-+		if (args->op_flags & XFS_DA_OP_RECOVERY)
-+			return 0;
-+		return -ENOATTR;
-+	}
- 
- 	/*
- 	 * Fix up the attribute fork data, covering the hole
- 	 */
--	end = base + size;
--	totsize = be16_to_cpu(sf->hdr.totsize);
--	if (end != totsize)
--		memmove(&((char *)sf)[base], &((char *)sf)[end], totsize - end);
-+	size = xfs_attr_sf_entsize(sfe);
-+	next = xfs_attr_sf_nextentry(sfe);
-+	end = xfs_attr_sf_endptr(sf);
-+	if (next < end)
-+		memmove(sfe, next, end - next);
- 	sf->hdr.count--;
--	be16_add_cpu(&sf->hdr.totsize, -size);
--
--	/*
--	 * Fix up the start offset of the attribute fork
--	 */
- 	totsize -= size;
-+	sf->hdr.totsize = cpu_to_be16(totsize);
-+
-+	/*
-+	 * Fix up the start offset of the attribute fork
-+	 */
- 	if (totsize == sizeof(xfs_attr_sf_hdr_t) && xfs_has_attr2(mp) &&
- 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
- 	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE))) {
+  * Retrieve the attribute value and length.
+  *
 diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index ce6743463..56fcd689e 100644
+index 56fcd689e..35e668ae7 100644
 --- a/libxfs/xfs_attr_leaf.h
 +++ b/libxfs/xfs_attr_leaf.h
-@@ -51,9 +51,7 @@ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+@@ -47,7 +47,6 @@ struct xfs_attr3_icleaf_hdr {
+  */
+ void	xfs_attr_shortform_create(struct xfs_da_args *args);
+ void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+-int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
  int	xfs_attr_sf_removename(struct xfs_da_args *args);
--int	xfs_attr_sf_findname(struct xfs_da_args *args,
--			     struct xfs_attr_sf_entry **sfep,
--			     unsigned int *basep);
-+struct xfs_attr_sf_entry *xfs_attr_sf_findname(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
- xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_attr_shortform *sfp,
-diff --git a/libxfs/xfs_attr_sf.h b/libxfs/xfs_attr_sf.h
-index 37578b369..a774d4d87 100644
---- a/libxfs/xfs_attr_sf.h
-+++ b/libxfs/xfs_attr_sf.h
-@@ -48,4 +48,11 @@ xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep)
- 	return (void *)sfep + xfs_attr_sf_entsize(sfep);
- }
- 
-+/* pointer to the space after the last entry, e.g. for adding a new one */
-+static inline struct xfs_attr_sf_entry *
-+xfs_attr_sf_endptr(struct xfs_attr_shortform *sf)
-+{
-+	return (void *)sf + be16_to_cpu(sf->hdr.totsize);
-+}
-+
- #endif	/* __XFS_ATTR_SF_H__ */
 
