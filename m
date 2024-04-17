@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A96C262A3
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:18:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE2804D110
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:18:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713388719; cv=none; b=n3ZnSAlRR2aZf1l4DBQ8B0+Et/xCAJMjMIxwcsuBjk9nHkSAYinOKN48eAQPEsZ2uWjVqLIJ1Q95wByhzIzKFr1QBcOa9ZKlZbG3DuQQUErPdOwiD8t/KPrsrvMa6W/2s44dgAFWZ0GQAzfj0wl7LVEgrHhrJ5ZjECqYvfQkDu4=
+	t=1713388734; cv=none; b=cdSpA9b5EmVyVISrXCc/iXItqwUFfgCquwqTherHDaBP2Anj8haun/DSZQ3yq++1CVh7V7UEt+xziV0Tsbqva/JEZG5CKTeB6tA267kkTJFwND0wg/iJmdMDiLgpHG7OIQms/hcW5qmb/p0/OgV8jrmMvvo+UY6PmGxNi8bhPY0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713388719; c=relaxed/simple;
-	bh=1HOu4mJol0Bc9rZPWQHkrn+Qdxf53MtZyAdwiDqPCZE=;
+	s=arc-20240116; t=1713388734; c=relaxed/simple;
+	bh=Y0SBpU4r3Q9Tr8SdKe6swdfnUclLd6zrynxhEM1EILs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O/Qu7s9cQGM0uv430OdRNqI8DKDCVAW84FuC9KqU7NysU0tLX+PqjzIP+KDCikLXma9Qho4QIxLkE8DUvmsk17Q5llKOyTjJElZNk1Xzjtk+1mFNh434qN9tbVUT/qhHGQv6AuC8zzREeslc/vFJiGviqyE0vV8Aehtrzs9TnSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JEswqRtL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=T7W+mt4ljakqoQHlUgOcom/xk6T8GeWY2WRxScgmXI+ZiMjfra/kjnp/QLpltPNkJat9vv/4FCH3DfYWExix8TvxNFkLYx9HSBtd9AUhd1iKh6ZMiERNfIRL1uCNYZ23LiwOyQ7sfpa87hhC0gbH1Z0QLF+m8w0Coca10nsN63I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZG1zYtXV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JEswqRtL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A2BC072AA;
-	Wed, 17 Apr 2024 21:18:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZG1zYtXV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B472C072AA;
+	Wed, 17 Apr 2024 21:18:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713388718;
-	bh=1HOu4mJol0Bc9rZPWQHkrn+Qdxf53MtZyAdwiDqPCZE=;
+	s=k20201202; t=1713388734;
+	bh=Y0SBpU4r3Q9Tr8SdKe6swdfnUclLd6zrynxhEM1EILs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=JEswqRtL8NwJK+RtTrXXqrFsMbHDCsTO9YOgQqPHxgcwd1q5ijlbjw2/xfyC6O+sq
-	 h6fnfpgvUyz0N9Qm1FmpxvBVrYAGRzcYNw5AYJNEq761IJgrPVQCmKF+huXt3zRE8F
-	 Qk5pMtteQdLr/zwMz3kB6qEusNi0Z3HKoegrXibDEgKlEa7SXdlSsuDsLhj/zg0jiy
-	 +GPW3W/FCqepGkEKh57/EAaeP1AF8oznO6Rtfz9ycz586O5rmj6I5vwVDD1o1OBfJS
-	 X6nPVFyJWcqFUaca5spjbSrWdPrqSvIR/p1IZqnDHWCSjU9nyWjRbjPMNj3+LSgrez
-	 MhVnROL3/K09A==
-Date: Wed, 17 Apr 2024 14:18:38 -0700
-Subject: [PATCH 2/2] libxfs: fix incorrect porting to 6.7
+	b=ZG1zYtXVFnZC8bI5Wuw5wjYtKng5inzKfkFxxqfDr07efzZ/NCBGtaQkojzAb9OAZ
+	 T1hVJBhf9OCa32xVPQLMWeC5pwR/DuhYGxRX7lt1TkXjtgGEOJnFaz3l7tK55hyUvt
+	 tu96QcGkvPRZEMx5SnTvPZ6jgrJicBqvad/mJWwjU6nBtxa9FDR36QGA97qOIAEMg+
+	 2ZU8PXflk1wJl9gr7rwFdj7gcR5PLuM4AnS4+onxH5n8JiGU3bBVInlFaZhVs1dSt2
+	 AzCkaDquZPBDPFPRX2hM5MYVVLCofAA2pPDFRbqzNSSnrKjgXdKW+pjO6kSSwjnuaI
+	 u9v+EivvGc+xw==
+Date: Wed, 17 Apr 2024 14:18:53 -0700
+Subject: [PATCH 1/1] mkfs: fix log sunit rounding when external logs are in
+ use
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338841109.1852814.13493721733893449217.stgit@frogsfrogsfrogs>
-In-Reply-To: <171338841078.1852814.8154538108927404452.stgit@frogsfrogsfrogs>
-References: <171338841078.1852814.8154538108927404452.stgit@frogsfrogsfrogs>
+Message-ID: <171338841424.1852939.9557712068449403144.stgit@frogsfrogsfrogs>
+In-Reply-To: <171338841408.1852939.2939418967368399225.stgit@frogsfrogsfrogs>
+References: <171338841408.1852939.2939418967368399225.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,109 +48,105 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Userspace libxfs is supposed to match the kernel libxfs except for the
-preprocessor include directives.  Fix a few discrepancies that came up
-for whatever reason.
+Due to my heinous nature, I set up an external log device with 4k LBAs
+using this command:
 
-To fix the build errors resulting from CONFIG_XFS_RT not being defined,
-add it to libxfs.h and alter the Makefile to track xfs_rtbitmap.h.
+# losetup -b 4096 -o 4096 --sizelimit $(( (128 * 1048576) - 4096 )) -f /dev/sdb
+# blockdev --getsize64 /dev/loop0
+134213632
 
+This creates a log device that is slightly smaller than 128MB in size.
+Next I ran generic/054, which sets the log sunit to 256k and fails:
+
+# mkfs.xfs -f /dev/sda -l logdev=/dev/loop0,su=256k,version=2 -s size=4096
+meta-data=/dev/sda               isize=512    agcount=4, agsize=72448 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+         =                       metadir=0
+data     =                       bsize=4096   blocks=289792, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+log      =/dev/loop0             bsize=4096   blocks=32768, version=2
+         =                       sectsz=4096  sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+         =                       rgcount=0    rgsize=0 blks
+Discarding blocks...Done.
+Discarding blocks...Done.
+mkfs.xfs: libxfs_device_zero write failed: No space left on device
+
+Notice that mkfs thinks it should format a 32768-fsblock external log,
+but the log device itself is 32767 fsblocks.  Hence the write goes off
+the end of the device and we get ENOSPC.
+
+I tracked this behavior down to align_log_size in mkfs, which first
+tries to round the log size up to a stripe boundary, then tries to round
+it down.  Unfortunately, in the case of an external log we call the
+function with XFS_MAX_LOG_BLOCKS without accounting for the possibility
+that the log device might be smaller.
+
+Correct the callsite and clean up the open-coded rounding.
+
+Fixes: 8d1bff2be336 ("mkfs: reduce internal log size when log stripe units are in play")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- db/check.c            |    1 -
- include/libxfs.h      |    4 ++++
- libxfs/Makefile       |    1 +
- libxfs/xfs_rtbitmap.c |    2 +-
- libxfs/xfs_rtbitmap.h |    3 ---
- repair/rt.c           |    1 -
- 6 files changed, 6 insertions(+), 6 deletions(-)
+ mkfs/xfs_mkfs.c |   16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
 
-diff --git a/db/check.c b/db/check.c
-index 9d5576c33..a47a5d9cb 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -20,7 +20,6 @@
- #include "init.h"
- #include "malloc.h"
- #include "dir2.h"
--#include "xfs_rtbitmap.h"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index fcbf54132..b8e2c0da6 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3338,13 +3338,13 @@ _("log size %lld is not a multiple of the log stripe unit %d\n"),
+ 		usage();
+ 	}
  
- typedef enum {
- 	IS_USER_QUOTA, IS_PROJECT_QUOTA, IS_GROUP_QUOTA,
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 9cec394ca..aeec2bc76 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -7,6 +7,9 @@
- #ifndef __LIBXFS_H__
- #define __LIBXFS_H__
+-	tmp_logblocks = ((cfg->logblocks + (sunit - 1)) / sunit) * sunit;
++	tmp_logblocks = roundup_64(cfg->logblocks, sunit);
  
-+/* For userspace XFS_RT is always defined */
-+#define CONFIG_XFS_RT
-+
- #include "libxfs_api_defs.h"
- #include "platform_defs.h"
- #include "xfs.h"
-@@ -80,6 +83,7 @@ struct iomap;
- #include "xfs_refcount_btree.h"
- #include "xfs_refcount.h"
- #include "xfs_btree_staging.h"
-+#include "xfs_rtbitmap.h"
- 
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 010ee68e2..6f688c0ad 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -50,6 +50,7 @@ HFILES = \
- 	xfs_refcount_btree.h \
- 	xfs_rmap.h \
- 	xfs_rmap_btree.h \
-+	xfs_rtbitmap.h \
- 	xfs_sb.h \
- 	xfs_shared.h \
- 	xfs_trans_resv.h \
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 8f313339e..fb0834990 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -931,7 +931,7 @@ xfs_rtcheck_alloc_range(
-  */
- int
- xfs_rtfree_extent(
--	xfs_trans_t		*tp,	/* transaction pointer */
-+	struct xfs_trans	*tp,	/* transaction pointer */
- 	xfs_rtxnum_t		start,	/* starting rtext number to free */
- 	xfs_rtxlen_t		len)	/* length of extent freed */
+ 	/* If the log is too large, round down instead of round up */
+ 	if ((tmp_logblocks > XFS_MAX_LOG_BLOCKS) ||
+ 	    ((tmp_logblocks << cfg->blocklog) > XFS_MAX_LOG_BYTES) ||
+ 	    tmp_logblocks > max_logblocks) {
+-		tmp_logblocks = (cfg->logblocks / sunit) * sunit;
++		tmp_logblocks = rounddown_64(cfg->logblocks, sunit);
+ 	}
+ 	cfg->logblocks = tmp_logblocks;
+ }
+@@ -3465,6 +3465,7 @@ static void
+ calculate_log_size(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
++	struct libxfs_init	*xi,
+ 	struct xfs_mount	*mp)
  {
-diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index db2f8c924..c0637057d 100644
---- a/libxfs/xfs_rtbitmap.h
-+++ b/libxfs/xfs_rtbitmap.h
-@@ -6,9 +6,6 @@
- #ifndef __XFS_RTBITMAP_H__
- #define	__XFS_RTBITMAP_H__
+ 	struct xfs_sb		*sbp = &mp->m_sb;
+@@ -3503,8 +3504,13 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
+ 		}
+ 		cfg->logstart = 0;
+ 		cfg->logagno = 0;
+-		if (cfg->lsunit)
+-			align_log_size(cfg, cfg->lsunit, XFS_MAX_LOG_BLOCKS);
++		if (cfg->lsunit) {
++			uint64_t	max_logblocks;
++
++			max_logblocks = min(DTOBT(xi->log.size, cfg->blocklog),
++					    XFS_MAX_LOG_BLOCKS);
++			align_log_size(cfg, cfg->lsunit, max_logblocks);
++		}
  
--/* For userspace XFS_RT is always defined */
--#define CONFIG_XFS_RT
--
- struct xfs_rtalloc_args {
- 	struct xfs_mount	*mp;
- 	struct xfs_trans	*tp;
-diff --git a/repair/rt.c b/repair/rt.c
-index abe58b569..9f3bc8d53 100644
---- a/repair/rt.c
-+++ b/repair/rt.c
-@@ -13,7 +13,6 @@
- #include "protos.h"
- #include "err_protos.h"
- #include "rt.h"
--#include "xfs_rtbitmap.h"
+ 		validate_log_size(cfg->logblocks, cfg->blocklog, min_logblocks);
+ 		return;
+@@ -4257,7 +4263,7 @@ main(
+ 	 * With the mount set up, we can finally calculate the log size
+ 	 * constraints and do default size calculations and final validation
+ 	 */
+-	calculate_log_size(&cfg, &cli, mp);
++	calculate_log_size(&cfg, &cli, &xi, mp);
  
- #define xfs_highbit64 libxfs_highbit64	/* for XFS_RTBLOCKLOG macro */
+ 	finish_superblock_setup(&cfg, mp, sbp);
  
 
