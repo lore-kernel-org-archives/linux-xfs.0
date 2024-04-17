@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37D0884D3F
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 22:09:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DCC222338
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 22:10:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713391797; cv=none; b=D3lBMdxqOx99Vh312rsb7vTlO5+/wBw3MuHaXYAMmt0TW2uVz9pgacJ+yG/S6v5uDleShjFVWKqjmEvDKxzfSTtat0gO3HNl/ISIxd3rhQzpA8JziH8p4UN/0tE9vB2QuhSZWnXlXWPvLRB2q3J8YHGs4cVo07t/esc05PpX/LM=
+	t=1713391813; cv=none; b=s61q52n5d0VHuG0BaE0dft0am6Zl87GVCb8/GbUsUc2WACyKxJaPU1a8Q59ZCdMrU5vpnD0WVi7jOOmlC9tZ+ffRCJbX+3LiulU8dZDMEh9Xjh798vh4AtVv/jYypYo0ZOwpG5fynLt3RG2pZJNthpQeSwEyMZtAfFZwxZGluI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713391797; c=relaxed/simple;
-	bh=8GD8N805yR9iHfyuY26GuXjLJjHCq3ffEEChskF/7zI=;
+	s=arc-20240116; t=1713391813; c=relaxed/simple;
+	bh=j6JUmIkid4uTfqNbk2EnxgcpfSIAokFgSyDVsYkz01k=;
 	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
-	 References:Content-Type; b=hgCViMFDADGNIgzEMjDTHwNTmSzKAtA052iNxhePFP1xk/87F12fe8sbfnLElfLiZB8rOgB+cRovHNxO7WPP6Nj6nGFuoT36FbxyPWpBHrjpPdsYmqdZHGdF0xI5BbMirSLppzuwrkmFj+ZmJ4kZhJ8wxC5Zg2jI00Ygc0a5etg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dEb92Yk6; arc=none smtp.client-ip=10.30.226.201
+	 References:Content-Type; b=ZyM5Y5uIER+yuepo+yfoIYAgehTEArX51chb+JGALvAgfhdBZ+MjT2T1I7w2/9BlqvFuZrGo/O1SM/PXAkXEYCIUCuQJh1d4MBtqKfgwLRCtRiVNKE1mN//sHILiCAUGJR4/3wUjeZYQUSVvWRFRoFccKdzwRmexoKvbCk0L/kE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tJeDOtEr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dEb92Yk6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11826C072AA;
-	Wed, 17 Apr 2024 22:09:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tJeDOtEr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F87C072AA;
+	Wed, 17 Apr 2024 22:10:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713391797;
-	bh=8GD8N805yR9iHfyuY26GuXjLJjHCq3ffEEChskF/7zI=;
+	s=k20201202; t=1713391812;
+	bh=j6JUmIkid4uTfqNbk2EnxgcpfSIAokFgSyDVsYkz01k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=dEb92Yk6sEhINolxVAiYEnL0eC70eClUIrS9DbKf/PKNvDNgmHSKcwsSOuwSF/OvM
-	 4pC5xKI6FjCe4wQ5PaR0tkDuqtNKoik+mTKVwmOP4XF87xisV9SbbNidXXYe52b39n
-	 5GT+IX65QsjW5sVpA2T1Xv4akAITqyjgYNtspNUkqXLk2TTXVO/01klq3OS9Z96heE
-	 +Esn2Ef//3jGk8LFN/HbEnttrxBur9ymE7h8QzdrieD07J1m+gArkR466h/MO15ubO
-	 knIB3J9Ap0r5TtVJ/pO9KmlMDk7PBitQXo1x4+bpj8AwxPaTq6godGeoXtOM9J1BSM
-	 HOFjuplGBdjfA==
-Date: Wed, 17 Apr 2024 15:09:56 -0700
-Subject: [GIT PULL 10/11] xfs_repair: rebuild inode fork mappings
+	b=tJeDOtEry8lqYndUjUD6KXIHx9OotnaYhVGP+AVbCY04fj/hECyzzsUwfcUH/cfkq
+	 Ff7eC4ZlSod3Mbn5WvWO0mjIVbp7/sAgb6h8sNUevO25CuMA44ytmlJe0RTNSwUkHz
+	 yg1GnFJeCnTCAP/9vaNqpEjwZQFC4aKGC7gnRThKM6c3T18NFttGRs+TXfrAhdVaWt
+	 uPY9/McnmdPbN2kUnU5T0mnH2bSnvRbcCncmlgl7FK8ibgBkIeip0OSrL6MSr7PBaR
+	 8zpn/F1ueUQuBgkxv6dnjPcmd8qNXxDjZUPOQ8JQf8B3shH8XIXOQ4k+y6YJsbjfLY
+	 D8w6DbIVDEbDA==
+Date: Wed, 17 Apr 2024 15:10:12 -0700
+Subject: [GIT PULL 11/11] xfs_repair: support more than 4 billion records
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: bodonnel@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171339161892.1911630.8944244918021763785.stg-ugh@frogsfrogsfrogs>
+Cc: djwong@djwong.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171339162291.1911630.9932999805644506997.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,51 +51,73 @@ As usual, I did a test-merge with the main upstream branch as of a few
 minutes ago, and didn't see any conflicts.  Please let me know if you
 encounter any problems.
 
-The following changes since commit bd35f31ce91bcf5ed9370e94a4a5da89638f37f4:
-
-xfs_scrub: scan whole-fs metadata files in parallel (2024-04-17 14:06:27 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/repair-rebuild-forks-6.8_2024-04-17
-
-for you to fetch changes up to b3bcb8f0a8b5763defc09bc6d9a04da275ad780a:
+The following changes since commit b3bcb8f0a8b5763defc09bc6d9a04da275ad780a:
 
 xfs_repair: rebuild block mappings from rmapbt data (2024-04-17 14:06:28 -0700)
 
-----------------------------------------------------------------
-xfs_repair: rebuild inode fork mappings [v30.3 10/20]
+are available in the Git repository at:
 
-Add the ability to regenerate inode fork mappings if the rmapbt
-otherwise looks ok.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/repair-support-4bn-records-6.8_2024-04-17
+
+for you to fetch changes up to 90ee2c3a94511da87929989a06199fd537c94db4:
+
+xfs_repair: support more than INT_MAX block maps (2024-04-17 14:06:28 -0700)
+
+----------------------------------------------------------------
+xfs_repair: support more than 4 billion records [11/20]
+
+I started looking through all the places where XFS has to deal with the
+rc_refcount attribute of refcount records, and noticed that offline
+repair doesn't handle the situation where there are more than 2^32
+reverse mappings in an AG, or that there are more than 2^32 owners of a
+particular piece of AG space.  I've estimated that it would take several
+months to produce a filesystem with this many records, but we really
+ought to do better at handling them than crashing or (worse) not
+crashing and writing out corrupt btrees due to integer truncation.
+
+Once I started using the bmap_inflate debugger command to create extreme
+reflink scenarios, I noticed that the memory usage of xfs_repair was
+astronomical.  This I observed to be due to the fact that it allocates a
+single huge block mapping array for all files on the system, even though
+it only uses that array for data and attr forks that map metadata blocks
+(e.g. directories, xattrs, symlinks) and does not use it for regular
+data files.
+
+So I got rid of the 2^31-1 limits on the block map array and turned off
+the block mapping for regular data files.  This doesn't answer the
+question of what to do if there are a lot of extents, but it kicks the
+can down the road until someone creates a maximally sized xattr tree,
+which so far nobody's ever stuck to long enough to complain about.
 
 This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs_repair: push inode buf and dinode pointers all the way to inode fork processing
-xfs_repair: sync bulkload data structures with kernel newbt code
-xfs_repair: rebuild block mappings from rmapbt data
+Darrick J. Wong (8):
+xfs_db: add a bmbt inflation command
+xfs_repair: slab and bag structs need to track more than 2^32 items
+xfs_repair: support more than 2^32 rmapbt records per AG
+xfs_repair: support more than 2^32 owners per physical block
+xfs_repair: clean up lock resources
+xfs_repair: constrain attr fork extent count
+xfs_repair: don't create block maps for data files
+xfs_repair: support more than INT_MAX block maps
 
-include/xfs_trans.h      |   2 +
-libfrog/util.h           |   5 +
-libxfs/libxfs_api_defs.h |  16 +-
-libxfs/trans.c           |  48 +++
-repair/Makefile          |   2 +
-repair/agbtree.c         |  24 +-
-repair/bmap_repair.c     | 748 +++++++++++++++++++++++++++++++++++++++++++++++
-repair/bmap_repair.h     |  13 +
-repair/bulkload.c        | 260 ++++++++++++++--
-repair/bulkload.h        |  34 ++-
-repair/dino_chunks.c     |   5 +-
-repair/dinode.c          | 142 ++++++---
-repair/dinode.h          |   7 +-
-repair/phase5.c          |   2 +-
-repair/rmap.c            |   2 +-
-repair/rmap.h            |   1 +
-16 files changed, 1231 insertions(+), 80 deletions(-)
-create mode 100644 repair/bmap_repair.c
-create mode 100644 repair/bmap_repair.h
+db/Makefile       |  65 ++++++-
+db/bmap_inflate.c | 551 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+db/command.c      |   1 +
+db/command.h      |   1 +
+man/man8/xfs_db.8 |  23 +++
+repair/bmap.c     |  23 +--
+repair/bmap.h     |   7 +-
+repair/dinode.c   |  18 +-
+repair/dir2.c     |   2 +-
+repair/incore.c   |   9 +
+repair/rmap.c     |  25 ++-
+repair/rmap.h     |   4 +-
+repair/slab.c     |  36 ++--
+repair/slab.h     |  36 ++--
+14 files changed, 725 insertions(+), 76 deletions(-)
+create mode 100644 db/bmap_inflate.c
 
