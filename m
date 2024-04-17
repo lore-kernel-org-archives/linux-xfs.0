@@ -1,38 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70DE4147C89
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:18:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E57146D77
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:19:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713367115; cv=none; b=IuHBvvwEHzFgpFHl7BjRGrKXNCP4QwXmZJgANG+IUqKnc4W3/P0PBiJSeVs5dS6e4/IYIss0Ti2x0X4Olr0tamXQVB1k4T2E7JbAMXwUAyXf03IBu8fKHUHaFSTX8hfV3dGjnH4/8ap8LNCf/k746FsRzH8a7OoZGPMtFuX6OVg=
+	t=1713367161; cv=none; b=MfChu7ZlD0Vde5LDL0iSs69M7FtLk3SkS+tn0YqO+Na5YFjVUgUjZF2M/N/sVQz2NrvfSPG2vOW/W7YUTZuwYxKSXdffx94zWwH3MWBG7Me2vBPfCxp3AMXooEy0Kx6m3iZ+z8fFATVK14sCDkFJZQoeYh02mVWVsrr7QmIfIjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713367115; c=relaxed/simple;
-	bh=Lnk9LKLKcpd+4BW/nZNuMKoOxiRT0aHaj5x2VZGXuMc=;
+	s=arc-20240116; t=1713367161; c=relaxed/simple;
+	bh=OMwEaeXfE3iIenaDz/KaunKi/HIBEEqlFFrdtK9EO2Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bTIM/R0roQ2IgDWuibhBaRH/U6v4EunabnRXR8RhW5TYG1IqikxTXzyTzNtUHYrrT1TV0AIakSSiR1P2wM+RuN5UokY+ghyoh4tW98AUYtiyobSB/1wNK2ufgmH2/4eNte9UdYhUnUognyp0eB02rqbLZdR/aE6uXpNppHBJcEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hd8678U9; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=u8mX78ahkulia7BZeqwalc1w8punSNL4m8AO5rlk0wvQCBvmt/vWoZJxcCjj9DgbRGPydcI2gl3qdKuzHo3BZuiZ8/R7huaGY5E+jsK61uGQYWpppKOgdund14/NVwsWILXhCBHzKDHhH3CAJfAbr5oBkTe+7pX2iGOpp2Vac2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U/AA9Cec; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hd8678U9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED86DC32782;
-	Wed, 17 Apr 2024 15:18:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U/AA9Cec"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 822C5C32781;
+	Wed, 17 Apr 2024 15:19:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713367115;
-	bh=Lnk9LKLKcpd+4BW/nZNuMKoOxiRT0aHaj5x2VZGXuMc=;
+	s=k20201202; t=1713367160;
+	bh=OMwEaeXfE3iIenaDz/KaunKi/HIBEEqlFFrdtK9EO2Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hd8678U9vMIitUXK6/+M4G+GzJJ1ldSleWz6r9DBIM4/ODOou6KAVOq2dkNEJVFYU
-	 Nq3gA7hPwsJSvcgcquSGmQ1AohnPHdOrtVMlea+Wt37VBi7E8NTU0spLKAED/JgKUw
-	 gb0k/SViYdskIGlEGldOEvwQ//6EcLC+770J0pW9OKTYXboEeDAMJ2XEG+E0qCB0Pz
-	 p5b7ZuL1yveSPWCp062FCt7qIIeWXHF8Yk5Etg2FZFt1qpZVstnZrombFgg4Fk2kVq
-	 +D1+3S4NQooKSqcyQINmMUEXDsnuVVyiNMgP5ZIdpDcPzOhEUQqBj4REweiAz9bDmD
-	 z3ZdI7AxZ2SeA==
-Date: Wed, 17 Apr 2024 08:18:34 -0700
+	b=U/AA9Cec7jD2QTAZdHA2u1U6S+SxpB2YBD4SiGTVJa8FJK/LIPkWZjVmG28PfbTuZ
+	 Xyetmp94dU6Nf6RjmDwNiwlGOZhOQPo4p4EwDB7FGZwIqh5Sz3d9V3bLkAIGWnTVuL
+	 apJLwaaBM98d//LThowRhtDKTnbYhDqA/9usFoL8zjnijLYFRo6wfB6Pfx3OijHtkN
+	 fMN5ISbjmKJ74KQVzJmkxed93mlZqzU0L0KKiCM0W98iCpJyEAQncGTTyEqBRtjS7/
+	 kzsDHIDKyO/0LmqbvjhM4HD91gk6gXE6QZlJ7y2VnoNDsKgUmLsXTWgIX+na4UCQej
+	 /3zJU1btliYYw==
+Date: Wed, 17 Apr 2024 08:19:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfsprogs v6.7.0 released
-Message-ID: <20240417151834.GR11948@frogsfrogsfrogs>
-References: <fcm36zohx5vbvsd2houwjsmln4kc4grkazbgn6qlsjjglyozep@knvfxshr2bmy>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 4/4] xfs_fsr: convert fsrallfs to use time_t instead
+ of int
+Message-ID: <20240417151919.GS11948@frogsfrogsfrogs>
+References: <20240417125227.916015-2-aalbersh@redhat.com>
+ <20240417125227.916015-6-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,35 +43,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fcm36zohx5vbvsd2houwjsmln4kc4grkazbgn6qlsjjglyozep@knvfxshr2bmy>
+In-Reply-To: <20240417125227.916015-6-aalbersh@redhat.com>
 
-On Wed, Apr 17, 2024 at 10:13:52AM +0200, Carlos Maiolino wrote:
-> Hi folks,
+On Wed, Apr 17, 2024 at 02:52:28PM +0200, Andrey Albershteyn wrote:
+> Convert howlong argument to a time_t as it's truncated to int, but in
+> practice this is not an issue as duration will never be this big.
 > 
-> The xfsprogs repository at:
+> Add check for howlong to fit into int (printf can use int format
+> specifier). Even longer interval doesn't make much sense.
 > 
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> 
-> has just been updated.
-> 
-> Patches often get missed, so if your outstanding patches are properly reviewed
-> on the list and not included in this update, please let me know.
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 
-Ah well, I was hoping to get
-https://lore.kernel.org/linux-xfs/171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs/
-and
-https://lore.kernel.org/linux-xfs/20240326192448.GI6414@frogsfrogsfrogs/
-in for 6.7.
+Looks good,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+>  fsr/xfs_fsr.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
-> The for-next branch has also been updated to match the state of master.
-> 
-> The new head of the master branch is commit:
-> 
-> 09ba6420a1ee2ca4bfc763e498b4ee6be415b131
-> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 3077d8f4ef46..02d61ef9399a 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -72,7 +72,7 @@ static int  packfile(char *fname, char *tname, int fd,
+>  static void fsrdir(char *dirname);
+>  static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
+>  static void initallfs(char *mtab);
+> -static void fsrallfs(char *mtab, int howlong, char *leftofffile);
+> +static void fsrallfs(char *mtab, time_t howlong, char *leftofffile);
+>  static void fsrall_cleanup(int timeout);
+>  static int  getnextents(int);
+>  int xfsrtextsize(int fd);
+> @@ -165,6 +165,12 @@ main(int argc, char **argv)
+>  			break;
+>  		case 't':
+>  			howlong = atoi(optarg);
+> +			if (howlong > INT_MAX) {
+> +				fprintf(stderr,
+> +				_("%s: the maximum runtime is %d seconds.\n"),
+> +					optarg, INT_MAX);
+> +				exit(1);
+> +			}
+>  			break;
+>  		case 'f':
+>  			leftofffile = optarg;
+> @@ -387,7 +393,7 @@ initallfs(char *mtab)
+>  }
+>  
+>  static void
+> -fsrallfs(char *mtab, int howlong, char *leftofffile)
+> +fsrallfs(char *mtab, time_t howlong, char *leftofffile)
+>  {
+>  	int fd;
+>  	int error;
 > -- 
-> Carlos
+> 2.42.0
+> 
 > 
