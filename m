@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B59C1411E8;
-	Wed, 17 Apr 2024 15:27:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE1091487D1
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:30:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713367634; cv=none; b=nl/OihOlyqst5VB3kTcfowKaWkD4BHBMuqcA3RCkgFDbC9Bn3FMOPIxeLtU9IVxtL39AVBIFFd9ouK74eZdeBR26NDtf43VtOPItAOCEN67/pN8kH7mhDTmVfOViNg+CG3OXidJ3i521aBsCQlaKHqJI8GgnStgY2xQTioixN0M=
+	t=1713367808; cv=none; b=VsAjeOuFrfpvZDC7rQ9o3c67f4SHw6uBeNrfOL3OJ+B0t3i2SjNMzXqYTNXmy40EOQ3EuAU6oRXS/smmE5C4lD9X8ujusoKvO95JCxpfZvQTECE0lFrh8bQIiDyKb+U1D6H658/gKXrLUnkI5W8OuFM5h+p4HKeKV5ybNp9AvLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713367634; c=relaxed/simple;
-	bh=dg5WTB8j8TY3F8bg0Hm8Zm5lJvymLzPO2JHZ5Byw+sY=;
+	s=arc-20240116; t=1713367808; c=relaxed/simple;
+	bh=Xu7xHAVk4kW4zdTRrYM/6MsQ5sdunfxLamunBrJ9NlQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NTT/KaUX7xWGMn+V012x5ZVdl1cKIZhABg4J6WWfe3hd3EPJgJf7FyGPbjRSFvMUYDA8W0LqS+HonLTFHohcsNks4kQ/lM2aAMg81ScC1YQwStrqcmK1NR554Gjz5VjD6Aj/arM275kXMUjAuRY4/5/AEDVqkJM51TjqNHzqJTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p3A5zOfQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PkuIj7ULH0939uwWa7jPkVxpyX8YfsZdh0rmG5Ibs2YTDwvQ/kS8/RZ5HeQ5K71uLMV1kRA/8uZUOzcYcbXeXTr9zeV8kmk1nZt5rOAGoXlSE60eX5nO2ZLeDfzQTUSleuvip6vqzUYdFN/HkSBEGcLqI6fc2ztibt9htx0sOEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TGuMLeYJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p3A5zOfQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC91EC072AA;
-	Wed, 17 Apr 2024 15:27:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TGuMLeYJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 468C5C32786;
+	Wed, 17 Apr 2024 15:30:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713367633;
-	bh=dg5WTB8j8TY3F8bg0Hm8Zm5lJvymLzPO2JHZ5Byw+sY=;
+	s=k20201202; t=1713367808;
+	bh=Xu7xHAVk4kW4zdTRrYM/6MsQ5sdunfxLamunBrJ9NlQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=p3A5zOfQz3bv0stRAQ3CvC2UK+3R2lF57xEGF/cnQeNosW6hBZFI7PFMT8BOAE24s
-	 nVzdYex+MnlZDKf/Bjzn5UdCo1GxU3U8VcZ862jPQ1Fke+JMhCtWD3hlCd/LvUDr/D
-	 OSNdXLu7vsRoYLADmZUrAsIVzboJow/OEjo+bPCg/nBztF/IFaeTDDr0sQ0EKaH43k
-	 9z7ajxWu8uG8UTF/WNdW9bh82x4htyz/nsjll7BicYz3+BL4jED+t6WOBduwjcVlaR
-	 MvXZqaRMaNrvDD/68mBAVO/7Kh5AFXlrXCtriTd9DItXfV07b9EGjH6bgRjhaDQYHg
-	 amApZglwgxvfA==
-Date: Wed, 17 Apr 2024 08:27:13 -0700
+	b=TGuMLeYJh//c+VaSqoYXbWb9gQ2wWHrwKyw5Ext928JMrS8RJdiDGYjzcviQwxw9U
+	 iYZ4zHwK5kied99psYzWgDBhZtE7jdYLt6STBLyzGJuSoDhdSCVHfzfU/3UjdA+O47
+	 zIgvkcoo+YzmlyFyj4Lk3V+5mrjvJolvQagV49Gzz3za2lwRuMCjkwieu6aeZY0QAm
+	 iyVgl1+tvRzcRpQxUNbvNlQHohp0woG7iK6Mwg4HLcL0ZacCzqQGXT10YrHF9UsDSd
+	 8JfYZl2ZNxVVNu+111lyHAvGdIYmsapKtRQjZ/jNM79DFg0TYBrpmXT3oob6GGeZHi
+	 /P5g+fZAByKJw==
+Date: Wed, 17 Apr 2024 08:30:07 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: alexjlzheng@gmail.com
-Cc: david@fromorbit.com, chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: Re: [PATCH v3 RESEND] xfs: remove redundant batch variables for
- serialization
-Message-ID: <20240417152713.GX11948@frogsfrogsfrogs>
-References: <20240417120734.853960-1-alexjlzheng@tencent.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Bill O'Donnell <bodonnel@redhat.com>, Christoph Hellwig <hch@lst.de>,
+	cmaiolino@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCHSET 1/4] xfsprogs: bug fixes for 6.8
+Message-ID: <20240417153007.GY11948@frogsfrogsfrogs>
+References: <20240416005120.GF11948@frogsfrogsfrogs>
+ <xKvNEWiEWbanDpoNST0eV44uDLvsWDX_SkBPP3ZyelqJLqHGxCFtBonzokZzMuMUge-3CRvMu7D4c3K3gZbhnA==@protonmail.internalid>
+ <171322881805.210882.5445286603045179895.stgit@frogsfrogsfrogs>
+ <ibxnfee3yfdmfthqqcpgm46373s3i57ktazwzrbbce7tjil7gn@6gx7guanmuyo>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,94 +45,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240417120734.853960-1-alexjlzheng@tencent.com>
+In-Reply-To: <ibxnfee3yfdmfthqqcpgm46373s3i57ktazwzrbbce7tjil7gn@6gx7guanmuyo>
 
-On Wed, Apr 17, 2024 at 08:07:35PM +0800, alexjlzheng@gmail.com wrote:
-> From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Wed, Apr 17, 2024 at 09:34:41AM +0200, Carlos Maiolino wrote:
+> On Mon, Apr 15, 2024 at 05:57:47PM -0700, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > Bug fixes for xfsprogs for 6.8.
 > 
-> Historically, when generic percpu counters were introduced in xfs for
-> free block counters by commit 0d485ada404b ("xfs: use generic percpu
-> counters for free block counter"), the counters used a custom batch
-> size. In xfs_mod_freecounter(), originally named xfs_mod_fdblocks(),
-> this patch attempted to serialize the program using a smaller batch size
-> as parameter to the addition function as the counter approaches 0.
-> 
-> Commit 8c1903d3081a ("xfs: inode and free block counters need to use
-> __percpu_counter_compare") pointed out the error in commit 0d485ada404b
-> ("xfs: use generic percpu counters for free block counter") mentioned
-> above and said that "Because the counters use a custom batch size, the
-> comparison functions need to be aware of that batch size otherwise the
-> comparison does not work correctly". Then percpu_counter_compare() was
-> replaced with __percpu_counter_compare() with parameter
-> XFS_FDBLOCKS_BATCH.
-> 
-> After commit 8c1903d3081a ("xfs: inode and free block counters need to
-> use __percpu_counter_compare"), the existence of the batch variable is
-> no longer necessary, so this patch is proposed to simplify the code by
-> removing it.
-> 
-> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> ---
-> Changelog:
-> 
-> v3: Resend for the second time 
-> 
-> v2: https://lore.kernel.org/linux-xfs/20230918043344.890817-1-alexjlzheng@tencent.com/
-> 
-> v1: https://lore.kernel.org/linux-xfs/20230908235713.GP28202@frogsfrogsfrogs/T/#t
+> Hey, do you plan to sent a PR for such patches or you want me to pick them up from the list?
 
-...you still haven't answered my question from V1: What problem are you
-solving with this patch?
+I can send PRs.  Do you want them for just the bugfixes at the start of
+my branch, or should I keep going through libxfs syncs all the way to
+the end?
 
 --D
 
-> ---
->  fs/xfs/xfs_mount.c | 17 +----------------
->  1 file changed, 1 insertion(+), 16 deletions(-)
+> Carlos
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index aed5be5508fe..8e47a3040893 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1144,7 +1144,6 @@ xfs_mod_freecounter(
->  	int64_t			lcounter;
->  	long long		res_used;
->  	uint64_t		set_aside = 0;
-> -	s32			batch;
->  	bool			has_resv_pool;
->  
->  	ASSERT(counter == &mp->m_fdblocks || counter == &mp->m_frextents);
-> @@ -1177,20 +1176,6 @@ xfs_mod_freecounter(
->  		return 0;
->  	}
->  
-> -	/*
-> -	 * Taking blocks away, need to be more accurate the closer we
-> -	 * are to zero.
-> -	 *
-> -	 * If the counter has a value of less than 2 * max batch size,
-> -	 * then make everything serialise as we are real close to
-> -	 * ENOSPC.
-> -	 */
-> -	if (__percpu_counter_compare(counter, 2 * XFS_FDBLOCKS_BATCH,
-> -				     XFS_FDBLOCKS_BATCH) < 0)
-> -		batch = 1;
-> -	else
-> -		batch = XFS_FDBLOCKS_BATCH;
-> -
->  	/*
->  	 * Set aside allocbt blocks because these blocks are tracked as free
->  	 * space but not available for allocation. Technically this means that a
-> @@ -1204,7 +1189,7 @@ xfs_mod_freecounter(
->  	 */
->  	if (has_resv_pool)
->  		set_aside = xfs_fdblocks_unavailable(mp);
-> -	percpu_counter_add_batch(counter, delta, batch);
-> +	percpu_counter_add_batch(counter, delta, XFS_FDBLOCKS_BATCH);
->  	if (__percpu_counter_compare(counter, set_aside,
->  				     XFS_FDBLOCKS_BATCH) >= 0) {
->  		/* we had space! */
-> -- 
-> 2.39.3
-> 
+> > 
+> > If you're going to start using this code, I strongly recommend pulling
+> > from my git trees, which are linked below.
+> > 
+> > This has been running on the djcloud for months with no problems.  Enjoy!
+> > Comments and questions are, as always, welcome.
+> > 
+> > --D
+> > 
+> > xfsprogs git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-6.8-fixes
+> > ---
+> > Commits in this patchset:
+> >  * xfs_repair: double-check with shortform attr verifiers
+> >  * xfs_db: improve number extraction in getbitval
+> >  * xfs_scrub: fix threadcount estimates for phase 6
+> >  * xfs_scrub: don't fail while reporting media scan errors
+> >  * xfs_io: add linux madvise advice codes
+> > ---
+> >  db/bit.c             |   37 ++++++++++--------------
+> >  io/madvise.c         |   77 +++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  repair/attr_repair.c |   17 +++++++++++
+> >  scrub/phase6.c       |   36 ++++++++++++++++++-----
+> >  4 files changed, 137 insertions(+), 30 deletions(-)
+> > 
 > 
