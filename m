@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A3F8F4A
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:31:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA372BAE2
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:32:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389518; cv=none; b=SN3hplMdn//vlqGcpsaqbMPpDC6B+0NWz/xMUSKthLmUBF2hWqxxmot4TOEQ34iBslk6/nTKCkud/pf9/m1K9v0Gf8mRWP50NK+XkCVOZEYVNeFmk4AflgtiphypOHAytZf5QEb9Me2ndW8eNqPCmyIYssSBEfU8tvleOBrpmhg=
+	t=1713389533; cv=none; b=QB1MZTvSK+HLOWXo7dgj+OEuCDNs2AaurCz1xs7/0b86+4njB2c30V0s/HMHjq3j2m4minZXM1goEmXI5yKWVoIYYfnp+at8egbOf1jRWBRwLAdTaUvzEFU/5Vo5mUR6z+NU8IuvCN8wPqtdB0mcDh4tLTwziok71djMxmjsCAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389518; c=relaxed/simple;
-	bh=zTtyNmR31NeqYocOHXIwNv3BckwU+QmYBTy0uZz1AeA=;
+	s=arc-20240116; t=1713389533; c=relaxed/simple;
+	bh=kREFUOQUifPkSOK+tVS4jRSQqT4bQRdImHxvl3l8MIE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PRXhmDcVTgsKL6e7CwSP22fK9ppeOR93YtW6ihwAf9XJ7FIdELxDaf4/mar4ihAxU+VYaZzDlLmYyp9UspN1md900ypp/obhk78WnUSdC3nSRr7owPHIR+b342OaZzOG2J/rGSWINSJ7qn1xYLVYBNzuhhflhCNKRz2qawNtg9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BMRHHnhW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Mmmj5EUCaVqyB8XDALJvf9qD1WJ8k00cDlbfKwtl1NXfuXT5SzGjnqYvKLCqUWgNLZ1IDehvld9LTCYrqTmB37ya6XDrnLFLQ19t8WQApCohthqOZehCTnCLblEvifjwRJ+YH9SX3pfSGjr83hF6ge5ORp4Csi0nhlHGv/3RpG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKPuYxJa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BMRHHnhW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A007C072AA;
-	Wed, 17 Apr 2024 21:31:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKPuYxJa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 342B0C072AA;
+	Wed, 17 Apr 2024 21:32:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389517;
-	bh=zTtyNmR31NeqYocOHXIwNv3BckwU+QmYBTy0uZz1AeA=;
+	s=k20201202; t=1713389533;
+	bh=kREFUOQUifPkSOK+tVS4jRSQqT4bQRdImHxvl3l8MIE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BMRHHnhWNUp2sIJhsmpl6zM0gX8xiI7XwP7l394hoMjpgyX64YPxcRNznSntj8vun
-	 NUc3Fkx8Qg+L3+cS/xRldz43oOlot3d9kEqlu7DFVCL5rrCHdcCDqfvt+S4p1obM4o
-	 h17kSLUhcAC5xcGkHnreKAgRPp5Esc3ME1B/PbI62ENKzY5nJib1+FH1LFzyMRgouz
-	 fvsbhkHrJBy1KJTtbcv66ykGRahSOD+vknqKt/+3+BHn9qyHJt+EjW6L1JM497YOpb
-	 ViPFEyIJsAFylzTP/IPmmmvmYMX0z2UIPdoJddUXqGE1GLNG9KMlaNftleU2eARJaa
-	 jfewn+YGXGfKg==
-Date: Wed, 17 Apr 2024 14:31:56 -0700
-Subject: [PATCH 39/67] xfs: zap broken inode forks
+	b=eKPuYxJaQ0Yy/kKnqCTLmvzib9Auyub8JC4pBpn+1Y6UQdcNBMrVuSMVdUSAp9+rm
+	 LpMLbgqRdtrVBRQSBE+Og87BF5EA6MNNe4a3GYX24NZ3Ggr/HZNaA9xDiWpbHQeYKq
+	 DfelNyqFOCiA9ppOoFwSTH/BkKuOtTkZd+O7dBrICc5tvCnFn0c5H4RnKy8sg4SmEK
+	 5gJYRpFUN3+jejLSY9X6LS3mMtGwm1YC7/auXx+Xvptak5Bb6mANCIAx2xdvqdWA0g
+	 bEaECKIPck/t/uwmnixxScGlBZ1upvWwwXozH+EDFk/ZvUxsmv4xsPJq3spAX+osSu
+	 Mu+LectCQYojg==
+Date: Wed, 17 Apr 2024 14:32:12 -0700
+Subject: [PATCH 40/67] xfs: repair inode fork block mapping data structures
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338842925.1853449.15866884333545240743.stgit@frogsfrogsfrogs>
+Message-ID: <171338842940.1853449.14466542993483882454.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,270 +47,338 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: e744cef206055954517648070d2b3aaa3d2515ba
+Source kernel commit: 8f71bede8efd820627ac05c19eac2758214bc896
 
-Determine if inode fork damage is responsible for the inode being unable
-to pass the ifork verifiers in xfs_iget and zap the fork contents if
-this is true.  Once this is done the fork will be empty but we'll be
-able to construct an in-core inode, and a subsequent call to the inode
-fork repair ioctl will search the rmapbt to rebuild the records that
-were in the fork.
+Use the reverse-mapping btree information to rebuild an inode block map.
+Update the btree bulk loading code as necessary to support inode rooted
+btrees and fix some bitrot problems.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_attr_leaf.c      |   13 +++----------
- libxfs/xfs_attr_leaf.h      |    3 ++-
- libxfs/xfs_bmap.c           |   22 ++++++++++++++++------
- libxfs/xfs_bmap.h           |    2 ++
- libxfs/xfs_dir2_priv.h      |    3 ++-
- libxfs/xfs_dir2_sf.c        |   13 +++----------
- libxfs/xfs_inode_fork.c     |   33 ++++++++++++++++++++++++++-------
- libxfs/xfs_shared.h         |    2 +-
- libxfs/xfs_symlink_remote.c |    8 ++------
- 9 files changed, 57 insertions(+), 42 deletions(-)
+ libxfs/xfs_bmap_btree.c    |  121 +++++++++++++++++++++++++++++++++++++-------
+ libxfs/xfs_bmap_btree.h    |    5 ++
+ libxfs/xfs_btree_staging.c |   11 +++-
+ libxfs/xfs_btree_staging.h |    2 -
+ libxfs/xfs_iext_tree.c     |   23 ++++++--
+ libxfs/xfs_inode_fork.c    |    1 
+ libxfs/xfs_inode_fork.h    |    3 +
+ 7 files changed, 136 insertions(+), 30 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index baa168318..8329348eb 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -1037,23 +1037,16 @@ xfs_attr_shortform_allfit(
- 	return xfs_attr_shortform_bytesfit(dp, bytes);
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index c4d5c8a64..73ba067df 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -15,6 +15,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_alloc.h"
+ #include "xfs_btree.h"
++#include "xfs_btree_staging.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_bmap.h"
+ #include "xfs_trace.h"
+@@ -286,10 +287,7 @@ xfs_bmbt_get_minrecs(
+ 	int			level)
+ {
+ 	if (level == cur->bc_nlevels - 1) {
+-		struct xfs_ifork	*ifp;
+-
+-		ifp = xfs_ifork_ptr(cur->bc_ino.ip,
+-				    cur->bc_ino.whichfork);
++		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
+ 
+ 		return xfs_bmbt_maxrecs(cur->bc_mp,
+ 					ifp->if_broot_bytes, level == 0) / 2;
+@@ -304,10 +302,7 @@ xfs_bmbt_get_maxrecs(
+ 	int			level)
+ {
+ 	if (level == cur->bc_nlevels - 1) {
+-		struct xfs_ifork	*ifp;
+-
+-		ifp = xfs_ifork_ptr(cur->bc_ino.ip,
+-				    cur->bc_ino.whichfork);
++		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
+ 
+ 		return xfs_bmbt_maxrecs(cur->bc_mp,
+ 					ifp->if_broot_bytes, level == 0);
+@@ -541,23 +536,19 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.keys_contiguous	= xfs_bmbt_keys_contiguous,
+ };
+ 
+-/*
+- * Allocate a new bmap btree cursor.
+- */
+-struct xfs_btree_cur *				/* new bmap btree cursor */
+-xfs_bmbt_init_cursor(
+-	struct xfs_mount	*mp,		/* file system mount point */
+-	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_inode	*ip,		/* inode owning the btree */
+-	int			whichfork)	/* data or attr fork */
++static struct xfs_btree_cur *
++xfs_bmbt_init_common(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			whichfork)
+ {
+-	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
+ 	struct xfs_btree_cur	*cur;
++
+ 	ASSERT(whichfork != XFS_COW_FORK);
+ 
+ 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP,
+ 			mp->m_bm_maxlevels[whichfork], xfs_bmbt_cur_cache);
+-	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
+ 
+ 	cur->bc_ops = &xfs_bmbt_ops;
+@@ -565,10 +556,30 @@ xfs_bmbt_init_cursor(
+ 	if (xfs_has_crc(mp))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+-	cur->bc_ino.forksize = xfs_inode_fork_size(ip, whichfork);
+ 	cur->bc_ino.ip = ip;
+ 	cur->bc_ino.allocated = 0;
+ 	cur->bc_ino.flags = 0;
++
++	return cur;
++}
++
++/*
++ * Allocate a new bmap btree cursor.
++ */
++struct xfs_btree_cur *
++xfs_bmbt_init_cursor(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			whichfork)
++{
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
++	struct xfs_btree_cur	*cur;
++
++	cur = xfs_bmbt_init_common(mp, tp, ip, whichfork);
++
++	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
++	cur->bc_ino.forksize = xfs_inode_fork_size(ip, whichfork);
+ 	cur->bc_ino.whichfork = whichfork;
+ 
+ 	return cur;
+@@ -585,6 +596,76 @@ xfs_bmbt_block_maxrecs(
+ 	return blocklen / (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t));
  }
  
--/* Verify the consistency of an inline attribute fork. */
-+/* Verify the consistency of a raw inline attribute fork. */
- xfs_failaddr_t
- xfs_attr_shortform_verify(
--	struct xfs_inode		*ip)
-+	struct xfs_attr_shortform	*sfp,
-+	size_t				size)
- {
--	struct xfs_attr_shortform	*sfp;
- 	struct xfs_attr_sf_entry	*sfep;
- 	struct xfs_attr_sf_entry	*next_sfep;
- 	char				*endp;
--	struct xfs_ifork		*ifp;
- 	int				i;
--	int64_t				size;
--
--	ASSERT(ip->i_af.if_format == XFS_DINODE_FMT_LOCAL);
--	ifp = xfs_ifork_ptr(ip, XFS_ATTR_FORK);
--	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
--	size = ifp->if_bytes;
- 
- 	/*
- 	 * Give up if the attribute is way too short.
-diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index 368f4d9fa..ce6743463 100644
---- a/libxfs/xfs_attr_leaf.h
-+++ b/libxfs/xfs_attr_leaf.h
-@@ -56,7 +56,8 @@ int	xfs_attr_sf_findname(struct xfs_da_args *args,
- 			     unsigned int *basep);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
--xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
-+xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_attr_shortform *sfp,
-+		size_t size);
- void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
++/*
++ * Allocate a new bmap btree cursor for reloading an inode block mapping data
++ * structure.  Note that callers can use the staged cursor to reload extents
++ * format inode forks if they rebuild the iext tree and commit the staged
++ * cursor immediately.
++ */
++struct xfs_btree_cur *
++xfs_bmbt_stage_cursor(
++	struct xfs_mount	*mp,
++	struct xfs_inode	*ip,
++	struct xbtree_ifakeroot	*ifake)
++{
++	struct xfs_btree_cur	*cur;
++	struct xfs_btree_ops	*ops;
++
++	/* data fork always has larger maxheight */
++	cur = xfs_bmbt_init_common(mp, NULL, ip, XFS_DATA_FORK);
++	cur->bc_nlevels = ifake->if_levels;
++	cur->bc_ino.forksize = ifake->if_fork_size;
++
++	/* Don't let anyone think we're attached to the real fork yet. */
++	cur->bc_ino.whichfork = -1;
++	xfs_btree_stage_ifakeroot(cur, ifake, &ops);
++	ops->update_cursor = NULL;
++	return cur;
++}
++
++/*
++ * Swap in the new inode fork root.  Once we pass this point the newly rebuilt
++ * mappings are in place and we have to kill off any old btree blocks.
++ */
++void
++xfs_bmbt_commit_staged_btree(
++	struct xfs_btree_cur	*cur,
++	struct xfs_trans	*tp,
++	int			whichfork)
++{
++	struct xbtree_ifakeroot	*ifake = cur->bc_ino.ifake;
++	struct xfs_ifork	*ifp;
++	static const short	brootflag[2] = {XFS_ILOG_DBROOT, XFS_ILOG_ABROOT};
++	static const short	extflag[2] = {XFS_ILOG_DEXT, XFS_ILOG_AEXT};
++	int			flags = XFS_ILOG_CORE;
++
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++	ASSERT(whichfork != XFS_COW_FORK);
++
++	/*
++	 * Free any resources hanging off the real fork, then shallow-copy the
++	 * staging fork's contents into the real fork to transfer everything
++	 * we just built.
++	 */
++	ifp = xfs_ifork_ptr(cur->bc_ino.ip, whichfork);
++	xfs_idestroy_fork(ifp);
++	memcpy(ifp, ifake->if_fork, sizeof(struct xfs_ifork));
++
++	switch (ifp->if_format) {
++	case XFS_DINODE_FMT_EXTENTS:
++		flags |= extflag[whichfork];
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		flags |= brootflag[whichfork];
++		break;
++	default:
++		ASSERT(0);
++		break;
++	}
++	xfs_trans_log_inode(tp, cur->bc_ino.ip, flags);
++	xfs_btree_commit_ifakeroot(cur, tp, whichfork, &xfs_bmbt_ops);
++}
++
+ /*
+  * Calculate number of records in a bmap btree block.
+  */
+diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
+index 3e7a40a83..151b8491f 100644
+--- a/libxfs/xfs_bmap_btree.h
++++ b/libxfs/xfs_bmap_btree.h
+@@ -11,6 +11,7 @@ struct xfs_btree_block;
+ struct xfs_mount;
+ struct xfs_inode;
+ struct xfs_trans;
++struct xbtree_ifakeroot;
  
  /*
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 6d23c5e3e..534a516b5 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -6162,19 +6162,18 @@ xfs_bmap_finish_one(
- 	return error;
- }
+  * Btree block header size depends on a superblock flag.
+@@ -106,6 +107,10 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
  
--/* Check that an inode's extent does not have invalid flags or bad ranges. */
-+/* Check that an extent does not have invalid flags or bad ranges. */
- xfs_failaddr_t
--xfs_bmap_validate_extent(
--	struct xfs_inode	*ip,
-+xfs_bmap_validate_extent_raw(
-+	struct xfs_mount	*mp,
-+	bool			rtfile,
- 	int			whichfork,
- 	struct xfs_bmbt_irec	*irec)
- {
--	struct xfs_mount	*mp = ip->i_mount;
--
- 	if (!xfs_verify_fileext(mp, irec->br_startoff, irec->br_blockcount))
- 		return __this_address;
+ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_inode *, int);
++struct xfs_btree_cur *xfs_bmbt_stage_cursor(struct xfs_mount *mp,
++		struct xfs_inode *ip, struct xbtree_ifakeroot *ifake);
++void xfs_bmbt_commit_staged_btree(struct xfs_btree_cur *cur,
++		struct xfs_trans *tp, int whichfork);
  
--	if (XFS_IS_REALTIME_INODE(ip) && whichfork == XFS_DATA_FORK) {
-+	if (rtfile && whichfork == XFS_DATA_FORK) {
- 		if (!xfs_verify_rtbext(mp, irec->br_startblock,
- 					   irec->br_blockcount))
- 			return __this_address;
-@@ -6204,3 +6203,14 @@ xfs_bmap_intent_destroy_cache(void)
- 	kmem_cache_destroy(xfs_bmap_intent_cache);
- 	xfs_bmap_intent_cache = NULL;
- }
-+
-+/* Check that an inode's extent does not have invalid flags or bad ranges. */
-+xfs_failaddr_t
-+xfs_bmap_validate_extent(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	return xfs_bmap_validate_extent_raw(ip->i_mount,
-+			XFS_IS_REALTIME_INODE(ip), whichfork, irec);
-+}
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index e33470e39..8518324db 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -263,6 +263,8 @@ static inline uint32_t xfs_bmap_fork_to_state(int whichfork)
- 	}
- }
+ extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
+index d4164e37b..0ea44dcf1 100644
+--- a/libxfs/xfs_btree_staging.c
++++ b/libxfs/xfs_btree_staging.c
+@@ -405,7 +405,7 @@ xfs_btree_bload_prep_block(
+ 		ASSERT(*bpp == NULL);
  
-+xfs_failaddr_t xfs_bmap_validate_extent_raw(struct xfs_mount *mp, bool rtfile,
-+		int whichfork, struct xfs_bmbt_irec *irec);
- xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
- 		struct xfs_bmbt_irec *irec);
- int xfs_bmap_complain_bad_rec(struct xfs_inode *ip, int whichfork,
-diff --git a/libxfs/xfs_dir2_priv.h b/libxfs/xfs_dir2_priv.h
-index 7404a9ff1..1db2e60ba 100644
---- a/libxfs/xfs_dir2_priv.h
-+++ b/libxfs/xfs_dir2_priv.h
-@@ -175,7 +175,8 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
- extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
--extern xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_inode *ip);
-+xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_mount *mp,
-+		struct xfs_dir2_sf_hdr *sfp, int64_t size);
- int xfs_dir2_sf_entsize(struct xfs_mount *mp,
- 		struct xfs_dir2_sf_hdr *hdr, int len);
- void xfs_dir2_sf_put_ino(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *hdr,
-diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
-index 08b36c95c..260eccacf 100644
---- a/libxfs/xfs_dir2_sf.c
-+++ b/libxfs/xfs_dir2_sf.c
-@@ -707,11 +707,10 @@ xfs_dir2_sf_check(
- /* Verify the consistency of an inline directory. */
- xfs_failaddr_t
- xfs_dir2_sf_verify(
--	struct xfs_inode		*ip)
-+	struct xfs_mount		*mp,
-+	struct xfs_dir2_sf_hdr		*sfp,
-+	int64_t				size)
- {
--	struct xfs_mount		*mp = ip->i_mount;
--	struct xfs_ifork		*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
--	struct xfs_dir2_sf_hdr		*sfp;
- 	struct xfs_dir2_sf_entry	*sfep;
- 	struct xfs_dir2_sf_entry	*next_sfep;
- 	char				*endp;
-@@ -719,15 +718,9 @@ xfs_dir2_sf_verify(
- 	int				i;
- 	int				i8count;
- 	int				offset;
--	int64_t				size;
- 	int				error;
- 	uint8_t				filetype;
+ 		/* Allocate a new incore btree root block. */
+-		new_size = bbl->iroot_size(cur, nr_this_block, priv);
++		new_size = bbl->iroot_size(cur, level, nr_this_block, priv);
+ 		ifp->if_broot = kmem_zalloc(new_size, 0);
+ 		ifp->if_broot_bytes = (int)new_size;
  
--	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
--
--	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
--	size = ifp->if_bytes;
--
+@@ -596,7 +596,14 @@ xfs_btree_bload_level_geometry(
+ 	unsigned int		desired_npb;
+ 	unsigned int		maxnr;
+ 
+-	maxnr = cur->bc_ops->get_maxrecs(cur, level);
++	/*
++	 * Compute the absolute maximum number of records that we can store in
++	 * the ondisk block or inode root.
++	 */
++	if (cur->bc_ops->get_dmaxrecs)
++		maxnr = cur->bc_ops->get_dmaxrecs(cur, level);
++	else
++		maxnr = cur->bc_ops->get_maxrecs(cur, level);
+ 
  	/*
- 	 * Give up if the directory is way too short.
- 	 */
+ 	 * Compute the number of blocks we need to fill each block with the
+diff --git a/libxfs/xfs_btree_staging.h b/libxfs/xfs_btree_staging.h
+index f0a500728..055ea43b1 100644
+--- a/libxfs/xfs_btree_staging.h
++++ b/libxfs/xfs_btree_staging.h
+@@ -53,7 +53,7 @@ typedef int (*xfs_btree_bload_get_records_fn)(struct xfs_btree_cur *cur,
+ typedef int (*xfs_btree_bload_claim_block_fn)(struct xfs_btree_cur *cur,
+ 		union xfs_btree_ptr *ptr, void *priv);
+ typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
+-		unsigned int nr_this_level, void *priv);
++		unsigned int level, unsigned int nr_this_level, void *priv);
+ 
+ struct xfs_btree_bload {
+ 	/*
+diff --git a/libxfs/xfs_iext_tree.c b/libxfs/xfs_iext_tree.c
+index 7f5c4f403..5d0be2dc8 100644
+--- a/libxfs/xfs_iext_tree.c
++++ b/libxfs/xfs_iext_tree.c
+@@ -622,13 +622,11 @@ static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp)
+ }
+ 
+ void
+-xfs_iext_insert(
+-	struct xfs_inode	*ip,
++xfs_iext_insert_raw(
++	struct xfs_ifork	*ifp,
+ 	struct xfs_iext_cursor	*cur,
+-	struct xfs_bmbt_irec	*irec,
+-	int			state)
++	struct xfs_bmbt_irec	*irec)
+ {
+-	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
+ 	xfs_fileoff_t		offset = irec->br_startoff;
+ 	struct xfs_iext_leaf	*new = NULL;
+ 	int			nr_entries, i;
+@@ -662,12 +660,23 @@ xfs_iext_insert(
+ 	xfs_iext_set(cur_rec(cur), irec);
+ 	ifp->if_bytes += sizeof(struct xfs_iext_rec);
+ 
+-	trace_xfs_iext_insert(ip, cur, state, _RET_IP_);
+-
+ 	if (new)
+ 		xfs_iext_insert_node(ifp, xfs_iext_leaf_key(new, 0), new, 2);
+ }
+ 
++void
++xfs_iext_insert(
++	struct xfs_inode	*ip,
++	struct xfs_iext_cursor	*cur,
++	struct xfs_bmbt_irec	*irec,
++	int			state)
++{
++	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
++
++	xfs_iext_insert_raw(ifp, cur, irec);
++	trace_xfs_iext_insert(ip, cur, state, _RET_IP_);
++}
++
+ static struct xfs_iext_node *
+ xfs_iext_rebalance_node(
+ 	struct xfs_iext_node	*parent,
 diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 5cc056ff7..3e2d7882a 100644
+index 3e2d7882a..80f4215d2 100644
 --- a/libxfs/xfs_inode_fork.c
 +++ b/libxfs/xfs_inode_fork.c
-@@ -700,12 +700,22 @@ xfs_ifork_verify_local_data(
- 	xfs_failaddr_t		fa = NULL;
+@@ -518,6 +518,7 @@ xfs_idata_realloc(
+ 	ifp->if_bytes = new_size;
+ }
  
- 	switch (VFS_I(ip)->i_mode & S_IFMT) {
--	case S_IFDIR:
--		fa = xfs_dir2_sf_verify(ip);
-+	case S_IFDIR: {
-+		struct xfs_mount	*mp = ip->i_mount;
-+		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
-+		struct xfs_dir2_sf_hdr	*sfp;
-+
-+		sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
-+		fa = xfs_dir2_sf_verify(mp, sfp, ifp->if_bytes);
- 		break;
--	case S_IFLNK:
--		fa = xfs_symlink_shortform_verify(ip);
-+	}
-+	case S_IFLNK: {
-+		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
-+
-+		fa = xfs_symlink_shortform_verify(ifp->if_u1.if_data,
-+				ifp->if_bytes);
- 		break;
-+	}
- 	default:
- 		break;
- 	}
-@@ -727,11 +737,20 @@ xfs_ifork_verify_local_attr(
- 	struct xfs_ifork	*ifp = &ip->i_af;
- 	xfs_failaddr_t		fa;
++/* Free all memory and reset a fork back to its initial state. */
+ void
+ xfs_idestroy_fork(
+ 	struct xfs_ifork	*ifp)
+diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
+index 96d307784..535be5c03 100644
+--- a/libxfs/xfs_inode_fork.h
++++ b/libxfs/xfs_inode_fork.h
+@@ -180,6 +180,9 @@ void		xfs_init_local_fork(struct xfs_inode *ip, int whichfork,
+ 				const void *data, int64_t size);
  
--	if (!xfs_inode_has_attr_fork(ip))
-+	if (!xfs_inode_has_attr_fork(ip)) {
- 		fa = __this_address;
--	else
--		fa = xfs_attr_shortform_verify(ip);
-+	} else {
-+		struct xfs_attr_shortform	*sfp;
-+		struct xfs_ifork		*ifp;
-+		int64_t				size;
- 
-+		ASSERT(ip->i_af.if_format == XFS_DINODE_FMT_LOCAL);
-+		ifp = xfs_ifork_ptr(ip, XFS_ATTR_FORK);
-+		sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
-+		size = ifp->if_bytes;
-+
-+		fa = xfs_attr_shortform_verify(sfp, size);
-+	}
- 	if (fa) {
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "attr fork",
- 				ifp->if_u1.if_data, ifp->if_bytes, fa);
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index c4381388c..4220d3584 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -139,7 +139,7 @@ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
- 			uint32_t size, struct xfs_buf *bp);
- void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
- 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
--xfs_failaddr_t xfs_symlink_shortform_verify(struct xfs_inode *ip);
-+xfs_failaddr_t xfs_symlink_shortform_verify(void *sfp, int64_t size);
- 
- /* Computed inode geometry for the filesystem. */
- struct xfs_ino_geometry {
-diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
-index 29c9f1cc1..cf894b527 100644
---- a/libxfs/xfs_symlink_remote.c
-+++ b/libxfs/xfs_symlink_remote.c
-@@ -199,15 +199,11 @@ xfs_symlink_local_to_remote(
-  */
- xfs_failaddr_t
- xfs_symlink_shortform_verify(
--	struct xfs_inode	*ip)
-+	void			*sfp,
-+	int64_t			size)
- {
--	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
--	char			*sfp = (char *)ifp->if_u1.if_data;
--	int			size = ifp->if_bytes;
- 	char			*endp = sfp + size;
- 
--	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
--
- 	/*
- 	 * Zero length symlinks should never occur in memory as they are
- 	 * never allowed to exist on disk.
+ xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
++void		xfs_iext_insert_raw(struct xfs_ifork *ifp,
++			struct xfs_iext_cursor *cur,
++			struct xfs_bmbt_irec *irec);
+ void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
+ 			struct xfs_bmbt_irec *, int);
+ void		xfs_iext_remove(struct xfs_inode *, struct xfs_iext_cursor *,
 
