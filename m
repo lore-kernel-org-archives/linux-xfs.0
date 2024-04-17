@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AEB1171A1
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:43:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE9C9651AF
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:43:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713390191; cv=none; b=ASIyJJeJpR3TCldxBZ0n34QwLH1Q3heICkuXZV0ZQkD3N8gVZXuzlTqzU0SMh2o3tUviNNYyMOBaYwS+eYXE+ADplQWvze9Czryx8XIpEQNC320akQmrFWIsMsHeB3ZlpSgG8ZiXwbTnLRb/JuMPex5vAMie2f4hQDuAWflcePM=
+	t=1713390206; cv=none; b=BpNqAqU17/c9+6VNQcrBxms5gr7xUThB/KXu3HU7qLUzV5mP1Xu2NDLxucdkTz3lWwRkvBN8Iin8vIt6AOQO+PzBjmneGUoYPfHD/16/Gfrf6+bIF0tTXqNp5E5pvdgUb3eHIqx5FjcOT+P7HRBltIZKJHd9Kzhje8qITJpqHog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713390191; c=relaxed/simple;
-	bh=h8N4CNfuoeQJt+iA8IAIj0MavEGnJJ/Aay+quY1LceM=;
+	s=arc-20240116; t=1713390206; c=relaxed/simple;
+	bh=KT2H+nCPm79rGKeUs6jQhLYQ77UA5+KS5gcZTsq4S/E=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RVstsPLnC+BgdU7auPuYNMmjd+s90z7eEIVjvUgOkIlrY4FFs40MbIQju7WZcOty1dws0IctyvQ0Op/sAPsd2HzX6SxKg81te9lhlmjw6+zULhZ7LqgiGbIgLs1fJ1kqbPr3Hx1iMg5ZLBc8NI/GyQ5lTpt1Giy9Fpfkw49SEGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XKiXcVHS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ri3nZjL+WhW8pX2arHMuarX5nyOfR5zacsPtWOzB+WMth2CONw9Yr61MaZexgQ9jnnRqY4r968B8Yvb/mdbZzDxvzAiRAEMlF9kS0rfVcbTRMlBC/AHwb2GOI5WwbOvCBRNzuXndU7NC7eppEEwokBH1mblDjMRq7gEwZO7Tgb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9uXjPf5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XKiXcVHS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0159BC072AA;
-	Wed, 17 Apr 2024 21:43:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9uXjPf5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0795C072AA;
+	Wed, 17 Apr 2024 21:43:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713390191;
-	bh=h8N4CNfuoeQJt+iA8IAIj0MavEGnJJ/Aay+quY1LceM=;
+	s=k20201202; t=1713390206;
+	bh=KT2H+nCPm79rGKeUs6jQhLYQ77UA5+KS5gcZTsq4S/E=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=XKiXcVHSor7kXDlApNEMLys4Mh4aIoiyDxO66D59cH4um/ubL+OIUE3rowWwEtiUI
-	 1bP/k+5CMCQwTUnrJS7zYdscG59hS7J38HNUd9/SpSTKU4BOGjuT3DXolcQwZyDEjy
-	 9mp349tiBh4/f6FsAYfPnKMuBeelcizbfkKanT/3z2c5B0xxglszQeZ9YeLz+/ZZMv
-	 RjLKsTmsXUkK906K7m9IQQMGsghVP0Ybn6PH/7E5Wy/GeVRcNtDCsIIZI0cK2dfWRF
-	 h8kXcIDimgYCGa4kgNDd+rGxL9VIpADXJdRNytBKEcZn3HG9qJjaApbnvH6xOw5vhE
-	 G/02RQLTy1ptg==
-Date: Wed, 17 Apr 2024 14:43:10 -0700
-Subject: [PATCH 1/3] libfrog: rename XFROG_SCRUB_TYPE_* to XFROG_SCRUB_GROUP_*
+	b=Z9uXjPf583mMtBqMPh5rwjC+D65tFMepD/m2k/wNvEDJ1miQmftjxAc/tfx6X1qtP
+	 q9vGwCueyZg89vDYBtmEDTeCUhEuwfn1InjGGHtMDfYXY7i9uJDTTZ+1SLVh65MMLB
+	 lNBraa+cTjjdlvXu7OrkOyYNCpDYeQExggIuCb6k5FNeryRQr8W9yS+R1Ay37aYLga
+	 ztVyaNSq2xSn3gMDRNwWoSWpspcp+vqCZ9TVym0TR6+OUjGXilxzPns4HyY3+Q+yiy
+	 KQdvVNXOKu9OWWJQC/oBVPnWiaNVqNpRfNaspe0EcJaDK6Gju7LNavOh9BtFhexK77
+	 tvutuVm1GFobA==
+Date: Wed, 17 Apr 2024 14:43:26 -0700
+Subject: [PATCH 2/3] libfrog: promote XFROG_SCRUB_DESCR_SUMMARY to a scrub
+ type
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
  linux-xfs@vger.kernel.org
-Message-ID: <171338845087.1856356.2618275835572367768.stgit@frogsfrogsfrogs>
+Message-ID: <171338845102.1856356.13626009588928864155.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338845069.1856356.14579148362990140838.stgit@frogsfrogsfrogs>
 References: <171338845069.1856356.14579148362990140838.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,392 +48,164 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I didn't do a good job of naming XFROG_SCRUB_TYPE when I created that
-enumeration.  The goal of the enum is to group the scrub ioctl's
-XFS_SCRUB_TYPE_* codes by principal filesystem object (AG, inode, etc.)
-but for some dumb reason I chose to reuse "type".  This is confusing,
-so fix this sin.
+"Summary" metadata, at least in the scrub context, are metadata whose
+values depend on some kind of computation and therefore can only be
+checked after we've looked at all the other metadata.  Currently, the
+superblock summary counters are the only thing that are like this, but
+since they run in a totally separate xfs_scrub phase (7 vs. 2), make
+them their own group and remove the group+flag mix.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- io/scrub.c      |   12 ++++++------
- libfrog/scrub.c |   50 +++++++++++++++++++++++++-------------------------
- libfrog/scrub.h |   16 ++++++++--------
- scrub/scrub.c   |   54 +++++++++++++++++++++++++++---------------------------
- 4 files changed, 66 insertions(+), 66 deletions(-)
+ io/scrub.c      |    1 +
+ libfrog/scrub.c |    3 +--
+ libfrog/scrub.h |    8 +-------
+ scrub/phase4.c  |    2 +-
+ scrub/phase7.c  |    4 ++--
+ scrub/scrub.c   |   16 ++++++++++++----
+ scrub/scrub.h   |    3 ++-
+ 7 files changed, 20 insertions(+), 17 deletions(-)
 
 
 diff --git a/io/scrub.c b/io/scrub.c
-index 403b3a728..d6eda5bea 100644
+index d6eda5bea..70301c067 100644
 --- a/io/scrub.c
 +++ b/io/scrub.c
-@@ -166,23 +166,23 @@ parse_args(
- 	meta->sm_type = type;
- 	meta->sm_flags = flags;
- 
--	switch (d->type) {
--	case XFROG_SCRUB_TYPE_INODE:
-+	switch (d->group) {
-+	case XFROG_SCRUB_GROUP_INODE:
- 		if (!parse_inode(argc, argv, optind, &meta->sm_ino,
- 						     &meta->sm_gen)) {
- 			exitcode = 1;
- 			return command_usage(cmdinfo);
- 		}
+@@ -183,6 +183,7 @@ parse_args(
  		break;
--	case XFROG_SCRUB_TYPE_AGHEADER:
--	case XFROG_SCRUB_TYPE_PERAG:
-+	case XFROG_SCRUB_GROUP_AGHEADER:
-+	case XFROG_SCRUB_GROUP_PERAG:
- 		if (!parse_agno(argc, argv, optind, &meta->sm_agno)) {
- 			exitcode = 1;
- 			return command_usage(cmdinfo);
- 		}
- 		break;
--	case XFROG_SCRUB_TYPE_FS:
--	case XFROG_SCRUB_TYPE_NONE:
-+	case XFROG_SCRUB_GROUP_FS:
-+	case XFROG_SCRUB_GROUP_NONE:
+ 	case XFROG_SCRUB_GROUP_FS:
+ 	case XFROG_SCRUB_GROUP_NONE:
++	case XFROG_SCRUB_GROUP_SUMMARY:
  		if (!parse_none(argc, optind)) {
  			exitcode = 1;
  			return command_usage(cmdinfo);
 diff --git a/libfrog/scrub.c b/libfrog/scrub.c
-index d900bf2af..90fc2b1a4 100644
+index 90fc2b1a4..5a5f522a4 100644
 --- a/libfrog/scrub.c
 +++ b/libfrog/scrub.c
-@@ -12,127 +12,127 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
- 	[XFS_SCRUB_TYPE_PROBE] = {
- 		.name	= "probe",
- 		.descr	= "metadata",
--		.type	= XFROG_SCRUB_TYPE_NONE,
-+		.group	= XFROG_SCRUB_GROUP_NONE,
- 	},
- 	[XFS_SCRUB_TYPE_SB] = {
- 		.name	= "sb",
- 		.descr	= "superblock",
--		.type	= XFROG_SCRUB_TYPE_AGHEADER,
-+		.group	= XFROG_SCRUB_GROUP_AGHEADER,
- 	},
- 	[XFS_SCRUB_TYPE_AGF] = {
- 		.name	= "agf",
- 		.descr	= "free space header",
--		.type	= XFROG_SCRUB_TYPE_AGHEADER,
-+		.group	= XFROG_SCRUB_GROUP_AGHEADER,
- 	},
- 	[XFS_SCRUB_TYPE_AGFL] = {
- 		.name	= "agfl",
- 		.descr	= "free list",
--		.type	= XFROG_SCRUB_TYPE_AGHEADER,
-+		.group	= XFROG_SCRUB_GROUP_AGHEADER,
- 	},
- 	[XFS_SCRUB_TYPE_AGI] = {
- 		.name	= "agi",
- 		.descr	= "inode header",
--		.type	= XFROG_SCRUB_TYPE_AGHEADER,
-+		.group	= XFROG_SCRUB_GROUP_AGHEADER,
- 	},
- 	[XFS_SCRUB_TYPE_BNOBT] = {
- 		.name	= "bnobt",
- 		.descr	= "freesp by block btree",
--		.type	= XFROG_SCRUB_TYPE_PERAG,
-+		.group	= XFROG_SCRUB_GROUP_PERAG,
- 	},
- 	[XFS_SCRUB_TYPE_CNTBT] = {
- 		.name	= "cntbt",
- 		.descr	= "freesp by length btree",
--		.type	= XFROG_SCRUB_TYPE_PERAG,
-+		.group	= XFROG_SCRUB_GROUP_PERAG,
- 	},
- 	[XFS_SCRUB_TYPE_INOBT] = {
- 		.name	= "inobt",
- 		.descr	= "inode btree",
--		.type	= XFROG_SCRUB_TYPE_PERAG,
-+		.group	= XFROG_SCRUB_GROUP_PERAG,
- 	},
- 	[XFS_SCRUB_TYPE_FINOBT] = {
- 		.name	= "finobt",
- 		.descr	= "free inode btree",
--		.type	= XFROG_SCRUB_TYPE_PERAG,
-+		.group	= XFROG_SCRUB_GROUP_PERAG,
- 	},
- 	[XFS_SCRUB_TYPE_RMAPBT] = {
- 		.name	= "rmapbt",
- 		.descr	= "reverse mapping btree",
--		.type	= XFROG_SCRUB_TYPE_PERAG,
-+		.group	= XFROG_SCRUB_GROUP_PERAG,
- 	},
- 	[XFS_SCRUB_TYPE_REFCNTBT] = {
- 		.name	= "refcountbt",
- 		.descr	= "reference count btree",
--		.type	= XFROG_SCRUB_TYPE_PERAG,
-+		.group	= XFROG_SCRUB_GROUP_PERAG,
- 	},
- 	[XFS_SCRUB_TYPE_INODE] = {
- 		.name	= "inode",
- 		.descr	= "inode record",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_BMBTD] = {
- 		.name	= "bmapbtd",
- 		.descr	= "data block map",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_BMBTA] = {
- 		.name	= "bmapbta",
- 		.descr	= "attr block map",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_BMBTC] = {
- 		.name	= "bmapbtc",
- 		.descr	= "CoW block map",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_DIR] = {
- 		.name	= "directory",
- 		.descr	= "directory entries",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_XATTR] = {
- 		.name	= "xattr",
- 		.descr	= "extended attributes",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_SYMLINK] = {
- 		.name	= "symlink",
- 		.descr	= "symbolic link",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_PARENT] = {
- 		.name	= "parent",
- 		.descr	= "parent pointer",
--		.type	= XFROG_SCRUB_TYPE_INODE,
-+		.group	= XFROG_SCRUB_GROUP_INODE,
- 	},
- 	[XFS_SCRUB_TYPE_RTBITMAP] = {
- 		.name	= "rtbitmap",
- 		.descr	= "realtime bitmap",
--		.type	= XFROG_SCRUB_TYPE_FS,
-+		.group	= XFROG_SCRUB_GROUP_FS,
- 	},
- 	[XFS_SCRUB_TYPE_RTSUM] = {
- 		.name	= "rtsummary",
- 		.descr	= "realtime summary",
--		.type	= XFROG_SCRUB_TYPE_FS,
-+		.group	= XFROG_SCRUB_GROUP_FS,
- 	},
- 	[XFS_SCRUB_TYPE_UQUOTA] = {
- 		.name	= "usrquota",
- 		.descr	= "user quotas",
--		.type	= XFROG_SCRUB_TYPE_FS,
-+		.group	= XFROG_SCRUB_GROUP_FS,
- 	},
- 	[XFS_SCRUB_TYPE_GQUOTA] = {
- 		.name	= "grpquota",
- 		.descr	= "group quotas",
--		.type	= XFROG_SCRUB_TYPE_FS,
-+		.group	= XFROG_SCRUB_GROUP_FS,
- 	},
- 	[XFS_SCRUB_TYPE_PQUOTA] = {
- 		.name	= "prjquota",
- 		.descr	= "project quotas",
--		.type	= XFROG_SCRUB_TYPE_FS,
-+		.group	= XFROG_SCRUB_GROUP_FS,
- 	},
+@@ -132,8 +132,7 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
  	[XFS_SCRUB_TYPE_FSCOUNTERS] = {
  		.name	= "fscounters",
  		.descr	= "filesystem summary counters",
--		.type	= XFROG_SCRUB_TYPE_FS,
-+		.group	= XFROG_SCRUB_GROUP_FS,
- 		.flags	= XFROG_SCRUB_DESCR_SUMMARY,
+-		.group	= XFROG_SCRUB_GROUP_FS,
+-		.flags	= XFROG_SCRUB_DESCR_SUMMARY,
++		.group	= XFROG_SCRUB_GROUP_SUMMARY,
  	},
  };
+ 
 diff --git a/libfrog/scrub.h b/libfrog/scrub.h
-index e43d8c244..43a882321 100644
+index 43a882321..68f1a9681 100644
 --- a/libfrog/scrub.h
 +++ b/libfrog/scrub.h
-@@ -6,20 +6,20 @@
- #ifndef __LIBFROG_SCRUB_H__
- #define __LIBFROG_SCRUB_H__
- 
--/* Type info and names for the scrub types. */
--enum xfrog_scrub_type {
--	XFROG_SCRUB_TYPE_NONE,		/* not metadata */
--	XFROG_SCRUB_TYPE_AGHEADER,	/* per-AG header */
--	XFROG_SCRUB_TYPE_PERAG,		/* per-AG metadata */
--	XFROG_SCRUB_TYPE_FS,		/* per-FS metadata */
--	XFROG_SCRUB_TYPE_INODE,		/* per-inode metadata */
-+/* Group the scrub types by principal filesystem object. */
-+enum xfrog_scrub_group {
-+	XFROG_SCRUB_GROUP_NONE,		/* not metadata */
-+	XFROG_SCRUB_GROUP_AGHEADER,	/* per-AG header */
-+	XFROG_SCRUB_GROUP_PERAG,	/* per-AG metadata */
-+	XFROG_SCRUB_GROUP_FS,		/* per-FS metadata */
-+	XFROG_SCRUB_GROUP_INODE,	/* per-inode metadata */
+@@ -13,6 +13,7 @@ enum xfrog_scrub_group {
+ 	XFROG_SCRUB_GROUP_PERAG,	/* per-AG metadata */
+ 	XFROG_SCRUB_GROUP_FS,		/* per-FS metadata */
+ 	XFROG_SCRUB_GROUP_INODE,	/* per-inode metadata */
++	XFROG_SCRUB_GROUP_SUMMARY,	/* summary metadata */
  };
  
  /* Catalog of scrub types and names, indexed by XFS_SCRUB_TYPE_* */
- struct xfrog_scrub_descr {
+@@ -20,15 +21,8 @@ struct xfrog_scrub_descr {
  	const char		*name;
  	const char		*descr;
--	enum xfrog_scrub_type	type;
-+	enum xfrog_scrub_group	group;
- 	unsigned int		flags;
+ 	enum xfrog_scrub_group	group;
+-	unsigned int		flags;
  };
  
+-/*
+- * The type of metadata checked by this scrubber is a summary of other types
+- * of metadata.  This scrubber should be run after all the others.
+- */
+-#define XFROG_SCRUB_DESCR_SUMMARY	(1 << 0)
+-
+ extern const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR];
+ 
+ int xfrog_scrub_metadata(struct xfs_fd *xfd, struct xfs_scrub_metadata *meta);
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 1228c7cb6..5dfc3856b 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -139,7 +139,7 @@ phase4_func(
+ 	 * counters, so counter repairs have to be put on the list now so that
+ 	 * they get fixed before we stop retrying unfixed metadata repairs.
+ 	 */
+-	ret = scrub_fs_summary(ctx, &ctx->action_lists[0]);
++	ret = scrub_fs_counters(ctx, &ctx->action_lists[0]);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/scrub/phase7.c b/scrub/phase7.c
+index 2fd96053f..93a074f11 100644
+--- a/scrub/phase7.c
++++ b/scrub/phase7.c
+@@ -116,9 +116,9 @@ phase7_func(
+ 	int			ip;
+ 	int			error;
+ 
+-	/* Check and fix the fs summary counters. */
++	/* Check and fix the summary metadata. */
+ 	action_list_init(&alist);
+-	error = scrub_fs_summary(ctx, &alist);
++	error = scrub_summary_metadata(ctx, &alist);
+ 	if (error)
+ 		return error;
+ 	error = action_list_process(ctx, -1, &alist,
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 756f1915a..cde9babc5 100644
+index cde9babc5..c7ee074fd 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -34,21 +34,21 @@ format_scrub_descr(
- 	struct xfs_scrub_metadata	*meta = where;
- 	const struct xfrog_scrub_descr	*sc = &xfrog_scrubbers[meta->sm_type];
- 
--	switch (sc->type) {
--	case XFROG_SCRUB_TYPE_AGHEADER:
--	case XFROG_SCRUB_TYPE_PERAG:
-+	switch (sc->group) {
-+	case XFROG_SCRUB_GROUP_AGHEADER:
-+	case XFROG_SCRUB_GROUP_PERAG:
- 		return snprintf(buf, buflen, _("AG %u %s"), meta->sm_agno,
+@@ -46,6 +46,7 @@ format_scrub_descr(
  				_(sc->descr));
  		break;
--	case XFROG_SCRUB_TYPE_INODE:
-+	case XFROG_SCRUB_GROUP_INODE:
- 		return scrub_render_ino_descr(ctx, buf, buflen,
- 				meta->sm_ino, meta->sm_gen, "%s",
- 				_(sc->descr));
- 		break;
--	case XFROG_SCRUB_TYPE_FS:
-+	case XFROG_SCRUB_GROUP_FS:
+ 	case XFROG_SCRUB_GROUP_FS:
++	case XFROG_SCRUB_GROUP_SUMMARY:
  		return snprintf(buf, buflen, _("%s"), _(sc->descr));
  		break;
--	case XFROG_SCRUB_TYPE_NONE:
-+	case XFROG_SCRUB_GROUP_NONE:
- 		assert(0);
- 		break;
- 	}
-@@ -276,12 +276,12 @@ scrub_save_repair(
- 	memset(aitem, 0, sizeof(*aitem));
- 	aitem->type = meta->sm_type;
- 	aitem->flags = meta->sm_flags;
--	switch (xfrog_scrubbers[meta->sm_type].type) {
--	case XFROG_SCRUB_TYPE_AGHEADER:
--	case XFROG_SCRUB_TYPE_PERAG:
-+	switch (xfrog_scrubbers[meta->sm_type].group) {
-+	case XFROG_SCRUB_GROUP_AGHEADER:
-+	case XFROG_SCRUB_GROUP_PERAG:
- 		aitem->agno = meta->sm_agno;
- 		break;
--	case XFROG_SCRUB_TYPE_INODE:
-+	case XFROG_SCRUB_GROUP_INODE:
- 		aitem->ino = meta->sm_ino;
- 		aitem->gen = meta->sm_gen;
- 		break;
-@@ -336,14 +336,14 @@ scrub_meta_type(
- }
+ 	case XFROG_SCRUB_GROUP_NONE:
+@@ -356,8 +357,6 @@ scrub_group(
  
- /*
-- * Scrub all metadata types that are assigned to the given XFROG_SCRUB_TYPE_*,
-+ * Scrub all metadata types that are assigned to the given XFROG_SCRUB_GROUP_*,
-  * saving corruption reports for later.  This should not be used for
-- * XFROG_SCRUB_TYPE_INODE or for checking summary metadata.
-+ * XFROG_SCRUB_GROUP_INODE or for checking summary metadata.
-  */
- static bool
--scrub_all_types(
-+scrub_group(
- 	struct scrub_ctx		*ctx,
--	enum xfrog_scrub_type		scrub_type,
-+	enum xfrog_scrub_group		group,
- 	xfs_agnumber_t			agno,
- 	struct action_list		*alist)
- {
-@@ -354,7 +354,7 @@ scrub_all_types(
- 	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
- 		int			ret;
- 
--		if (sc->type != scrub_type)
-+		if (sc->group != group)
+ 		if (sc->group != group)
  			continue;
- 		if (sc->flags & XFROG_SCRUB_DESCR_SUMMARY)
- 			continue;
-@@ -388,7 +388,7 @@ scrub_ag_headers(
- 	xfs_agnumber_t			agno,
- 	struct action_list		*alist)
- {
--	return scrub_all_types(ctx, XFROG_SCRUB_TYPE_AGHEADER, agno, alist);
-+	return scrub_group(ctx, XFROG_SCRUB_GROUP_AGHEADER, agno, alist);
+-		if (sc->flags & XFROG_SCRUB_DESCR_SUMMARY)
+-			continue;
+ 
+ 		ret = scrub_meta_type(ctx, type, agno, alist);
+ 		if (ret)
+@@ -410,9 +409,18 @@ scrub_fs_metadata(
+ 	return scrub_group(ctx, XFROG_SCRUB_GROUP_FS, 0, alist);
  }
  
- /* Scrub each AG's metadata btrees. */
-@@ -398,7 +398,7 @@ scrub_ag_metadata(
- 	xfs_agnumber_t			agno,
- 	struct action_list		*alist)
- {
--	return scrub_all_types(ctx, XFROG_SCRUB_TYPE_PERAG, agno, alist);
-+	return scrub_group(ctx, XFROG_SCRUB_GROUP_PERAG, agno, alist);
- }
- 
- /* Scrub whole-FS metadata btrees. */
-@@ -407,7 +407,7 @@ scrub_fs_metadata(
+-/* Scrub FS summary metadata. */
++/* Scrub all FS summary metadata. */
+ int
+-scrub_fs_summary(
++scrub_summary_metadata(
++	struct scrub_ctx		*ctx,
++	struct action_list		*alist)
++{
++	return scrub_group(ctx, XFROG_SCRUB_GROUP_SUMMARY, 0, alist);
++}
++
++/* Scrub /only/ the superblock summary counters. */
++int
++scrub_fs_counters(
  	struct scrub_ctx		*ctx,
  	struct action_list		*alist)
  {
--	return scrub_all_types(ctx, XFROG_SCRUB_TYPE_FS, 0, alist);
-+	return scrub_group(ctx, XFROG_SCRUB_GROUP_FS, 0, alist);
- }
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index f7e66bb61..35d609f28 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -23,7 +23,8 @@ int scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct action_list *alist);
+ int scrub_fs_metadata(struct scrub_ctx *ctx, struct action_list *alist);
+-int scrub_fs_summary(struct scrub_ctx *ctx, struct action_list *alist);
++int scrub_summary_metadata(struct scrub_ctx *ctx, struct action_list *alist);
++int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
  
- /* Scrub FS summary metadata. */
-@@ -430,12 +430,12 @@ scrub_estimate_ag_work(
- 
- 	sc = xfrog_scrubbers;
- 	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
--		switch (sc->type) {
--		case XFROG_SCRUB_TYPE_AGHEADER:
--		case XFROG_SCRUB_TYPE_PERAG:
-+		switch (sc->group) {
-+		case XFROG_SCRUB_GROUP_AGHEADER:
-+		case XFROG_SCRUB_GROUP_PERAG:
- 			estimate += ctx->mnt.fsgeom.agcount;
- 			break;
--		case XFROG_SCRUB_TYPE_FS:
-+		case XFROG_SCRUB_GROUP_FS:
- 			estimate++;
- 			break;
- 		default:
-@@ -463,7 +463,7 @@ scrub_file(
- 	enum check_outcome		fix;
- 
- 	assert(type < XFS_SCRUB_TYPE_NR);
--	assert(xfrog_scrubbers[type].type == XFROG_SCRUB_TYPE_INODE);
-+	assert(xfrog_scrubbers[type].group == XFROG_SCRUB_GROUP_INODE);
- 
- 	meta.sm_type = type;
- 	meta.sm_ino = bstat->bs_ino;
-@@ -625,12 +625,12 @@ xfs_repair_metadata(
- 	meta.sm_flags = aitem->flags | XFS_SCRUB_IFLAG_REPAIR;
- 	if (use_force_rebuild)
- 		meta.sm_flags |= XFS_SCRUB_IFLAG_FORCE_REBUILD;
--	switch (xfrog_scrubbers[aitem->type].type) {
--	case XFROG_SCRUB_TYPE_AGHEADER:
--	case XFROG_SCRUB_TYPE_PERAG:
-+	switch (xfrog_scrubbers[aitem->type].group) {
-+	case XFROG_SCRUB_GROUP_AGHEADER:
-+	case XFROG_SCRUB_GROUP_PERAG:
- 		meta.sm_agno = aitem->agno;
- 		break;
--	case XFROG_SCRUB_TYPE_INODE:
-+	case XFROG_SCRUB_GROUP_INODE:
- 		meta.sm_ino = aitem->ino;
- 		meta.sm_gen = aitem->gen;
- 		break;
+ bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
+ bool can_scrub_inode(struct scrub_ctx *ctx);
 
