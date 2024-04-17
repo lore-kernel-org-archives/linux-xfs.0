@@ -1,124 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from a27-52.smtp-out.us-west-2.amazonses.com (a27-52.smtp-out.us-west-2.amazonses.com [54.240.27.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF09C380;
-	Wed, 17 Apr 2024 00:37:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D24FCA47
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 01:03:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.240.27.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713314276; cv=none; b=ox+QA73sQ8GtlpO0fO9Bp8VFk7/UjPKny+7Y6fJ50X1dimFl46MaGvMlYFWv1QRhHMg87MQjkRTDsIT06ktZrQEoFTYmHLyT8b8nRMAGVjtWQcTpDeo1Ql+WEi7lkW3QAYSjrglJRrWniyc8sHEX4S7QFublaVLb9eH+8FVCU+8=
+	t=1713315831; cv=none; b=qstuNUhf/Nhil3Ld7HGe2G1hFt/d3ZaJ2Jyp13YHrh35wkLoYqlo7LOlnBTDpqg356GE7PXFMPTU/5cEIctiM1fdTRgQSXEjkB6C5ZtlP2cH3OLoIC3pEf/jVbshCdENLGvO7sv5TCpiTyQkgAE1ZAEdykGZGalqw/XXs2PbFFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713314276; c=relaxed/simple;
-	bh=6AWzsuKRQAF3hA8h1VfHOO4HsgKqT9BgoO3EL4C1Nf4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C06VnyawuMDHn8SJy7uk12OQIUM7BuPbxEp8qOlcMoQYPBjnfh3z1qbO0/9Q//qPZnVXZMjBCGi7IF70y28euQrptenDADq0A62RhJHkjFpZHumQy7AX+WMxyNyNnZg3FsxG0zR+/DObTNXAU/HJQ7X3UWTcNzDO27bhx+faoI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uLv101/Y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713315831; c=relaxed/simple;
+	bh=ACt/YU7mRu6rYSa4MEYKGPxGiIl1Q19ovy+YJkphELs=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=WvVNc2ddtTVCJLSvT51t/HrNlgfEba7UmvI/DWO/hRt8UQh9iAv1sSQTaD3AgMnqzWGlg0WPbB2tqLK5OXtSTpTdiP0PQzGcXWSpzENS1F/pxWWulju2sENdfzR5duzxT71h6OhwAFc65La8lDRLZqOarpdMenc4l3Z7SiX5Dp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rutile.org; spf=pass smtp.mailfrom=us-west-2.amazonses.com; dkim=pass (1024-bit key) header.d=rutile.org header.i=@rutile.org header.b=YIur1B0K; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=l6lAYBTT; arc=none smtp.client-ip=54.240.27.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rutile.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=us-west-2.amazonses.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uLv101/Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F515C113CE;
-	Wed, 17 Apr 2024 00:37:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713314276;
-	bh=6AWzsuKRQAF3hA8h1VfHOO4HsgKqT9BgoO3EL4C1Nf4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uLv101/YuHFBRULIBbDwCxkETrX6r1NauHJZmv0wX9ShR5T42cNpRfxVO1S9HYIdZ
-	 CLsHXjvNEz7N0lXqP+yqFjgED3vUFj1ZXjSeISxEd17H99aCIUL6ll37Xu3uzLZ0HG
-	 kR+e9beSYD7ZGhU6MuLh84VL4JWfbF/F7swpKJIAH3B0vLu+N/ay/5Z6Lbpcbc7qnG
-	 syxcEOwo0wXA98swXv37eEE0co1QSNDPH94V34N2gG4dsRzzR+M2EdoFuJorPk7seg
-	 EFcSm1oTxzhKbM6+LOZNspo6zkNPaBAR6yjuB2kXT1dZhnJbPfLZKyJkzqVkZtxcla
-	 vpIZ0gfh5ZmDA==
-Date: Tue, 16 Apr 2024 17:37:55 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: kdevops@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH kdevops] xfs: add xfs/242 as failing on xfs_reflink_2k
-Message-ID: <20240417003755.GK11948@frogsfrogsfrogs>
-References: <20240416235108.3391394-1-mcgrof@kernel.org>
+	dkim=pass (1024-bit key) header.d=rutile.org header.i=@rutile.org header.b="YIur1B0K";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="l6lAYBTT"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=cd6jqasjwj7rkm4pcqvzv2v4wr47yxhv; d=rutile.org; t=1713315829;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=ACt/YU7mRu6rYSa4MEYKGPxGiIl1Q19ovy+YJkphELs=;
+	b=YIur1B0KCB1dTuIEXtUShJZDi5pygakd/9eGnb5L4ES8BQ4ARuCYzTgh5UWcnZ1n
+	d1KG6WJkmY+Ru+MXvy6PmAKxzboo//KVkrYEodTWT34cwu/CepSYCmvQiu0Y9kjdkiU
+	cCa5FzwDYqsSz36HrimGnZjmpjj4dnhFwyRSS8Ys=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=7v7vs6w47njt4pimodk5mmttbegzsi6n; d=amazonses.com; t=1713315829;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:In-Reply-To:Content-Type:Content-Transfer-Encoding:Feedback-ID;
+	bh=ACt/YU7mRu6rYSa4MEYKGPxGiIl1Q19ovy+YJkphELs=;
+	b=l6lAYBTTsEX5byL+RtZ+RkasqU8I1dc5kSuN9L8NgxW+sUL4shAVhro97p6vt+UF
+	CJK2IC8WhYYLM6LOmSDbtNVfruphV9SNC8JYF1Wngg4JRWt+j1YKGmcWJyHMr6OqX+7
+	QKwP43crUit3Mu4/fVVpnrGzUzMJEWdYYTY2wYRo=
+Message-ID: <0101018ee994d5c1-fafa8e6b-6d23-4182-9164-7bd5b33eab19-000000@us-west-2.amazonses.com>
+Date: Wed, 17 Apr 2024 01:03:49 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240416235108.3391394-1-mcgrof@kernel.org>
+User-Agent: Mozilla Thunderbird
+From: linux-xfs.ykg@rutile.org
+Subject: Re: Question about using reflink and realtime features on the same
+ filesystem
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+References: <0101018ee939dd0d-f4f89d16-04ff-44ae-97f6-541a30117a4d-000000@us-west-2.amazonses.com>
+ <20240417002639.GJ11948@frogsfrogsfrogs>
+Content-Language: en-US
+In-Reply-To: <20240417002639.GJ11948@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Feedback-ID: 1.us-west-2.IG/R7L46ohk7VXbk73xp5DybEdSON9tjwQLyIAtkjJo=:AmazonSES
+X-SES-Outgoing: 2024.04.17-54.240.27.52
 
-On Tue, Apr 16, 2024 at 04:51:08PM -0700, Luis Chamberlain wrote:
-> This test is rather simple, and somehow we managed to capture a
-> non-crash failure. The test was added to fstests via fstests commit
-> 0c95fadc35c8e450 ("expand 252 with more corner case tests") which
-> essentially does this:
+On 4/16/2024 17:26, Darrick J. Wong wrote:
+> On Tue, Apr 16, 2024 at 11:24:27PM +0000, linux-xfs.ykg@rutile.org wrote:
+>> Greetings,
+>>
+>> I was attempting to use mkfs.xfs on Linux Mint 21 (kernel 6.5.0, xfsprogs
+>> 5.13.0) and ran into an error trying to use realtime and reflink features on
+>> the same filesystem. Is there anything I'm doing wrong, or is this
+>> combination simply not supported on the same filesystem?
+>>
+>> The exact command I ran was:
+>> mkfs.xfs -N -r rtdev=/dev/sda1,extsize=1048576 -m reflink=1 /dev/sda2
+>>
+>> Which returned with:
+>> reflink not supported with realtime devices
+>>
+>> Just to be clear - I didn't expect to be able to use reflinking on realtime
+>> files (*), but I did expect to be able to have realtime files and reflinked
+>> non-realtime files supported on the same filesystem. With my limited
+>> knowledge of the inner workings of XFS, those two features _seem_ like they
+>> could both work together as long as they are used on different inodes. Is
+>> this not the case?
 > 
-> +       $XFS_IO_PROG $xfs_io_opt -f -c "truncate $block_size" \
-> +               -c "pwrite 0 $block_size" $sync_cmd \
-> +               -c "$zero_cmd 128 128" \
-> +               -c "$map_cmd -v" $testfile | $filter_cmd
+> It's not supported, currently.  Patches have been out for review since
+> 2020 but have not moved forward due to prioritization and backlog issues.
+> Sorry about that. :(
 > 
-> The map_cmd in this case is: 'bmap -p'. So the test does:
+> https://lore.kernel.org/linux-xfs/160945477567.2833676.4112646582104319587.stgit@magnolia/
 > 
-> a) truncates data to the block size
-> b) sync
-> c) zero-fills the the blocksize
+> --D
+> 
+>> Thanks,
+>> Reed Wilson
+>>
+>>
+>>
+>> (*) I noticed that there were recent commits for reflinking realtime files,
+>> but that's not really what I was looking for
+>>
+>>
+> 
 
-Which subtest is this?
 
-I've seen periodic failures in xfs/242 that I can't reproduce either:
+Thanks for the quick response. It's not really a big problem in my case; I can
+work around it fairly easily. I mostly wanted to verify that it's not a supported
+configuration since I couldn't find any documentation to that effect.
 
---- /tmp/fstests/tests/xfs/242.out	2024-02-28 16:20:24.448887914 -0800
-+++ /var/tmp/fstests/xfs/242.out.bad	2024-04-15 17:36:46.736000000 -0700
-@@ -6,8 +6,7 @@ QA output created by 242
- 1aca77e2188f52a62674fe8a873bdaba
- 	2. into allocated space
- 0: [0..127]: data
--1: [128..383]: unwritten
--2: [384..639]: data
-+1: [128..639]: unwritten
- 2f7a72b9ca9923b610514a11a45a80c9
- 	3. into unwritten space
- 0: [0..639]: unwritten
-
-It's very strange to me that the block map changes but the md5 doesn't?
-The pwrite should have written 0xcd into the file and then the space
-between 64k and 192K got replaced with an unwritten extent.  But
-everything between 192K and 320K should still be written data.
-
---D
-
-> The xfs_io bmap displays the block mapping for the current open file.
-> Since our failed delta is:
-> 
-> -0: [0..7]: data
-> +0: [0..7]: unwritten
-> 
-> So it would seem we somehow managed to race to write, but it never
-> went anywhere. I can't reproduce yet, but figured I'd put this out
-> there to at least acknowledge its seen at least once.
-> 
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
-> 
-> Super rare to trigger this but figured I'd check to see if others have seen
-> this fail before. This was on vanilla v6.8-rc2. I'm wondering a race is
-> possible with a guest using sparse files on the host, and the host somehow
-> incorrectly informing the guest the write is done. btrfs sparse files
-> were used on the host for the drives used by this guest for scratch drives.
-> 
->  .../fstests/expunges/6.8.0-rc2/xfs/unassigned/xfs_reflink_2k.txt | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/workflows/fstests/expunges/6.8.0-rc2/xfs/unassigned/xfs_reflink_2k.txt b/workflows/fstests/expunges/6.8.0-rc2/xfs/unassigned/xfs_reflink_2k.txt
-> index f6ea47b0479f..8b4161f3700e 100644
-> --- a/workflows/fstests/expunges/6.8.0-rc2/xfs/unassigned/xfs_reflink_2k.txt
-> +++ b/workflows/fstests/expunges/6.8.0-rc2/xfs/unassigned/xfs_reflink_2k.txt
-> @@ -19,6 +19,7 @@ xfs/075
->  xfs/155
->  xfs/168
->  xfs/188
-> +xfs/242 # F:1/2000 non-fatal failure cosmic ray? https://gist.github.com/mcgrof/6ef50311179a65221413a63c0cc8efd1
->  xfs/270
->  xfs/301
->  xfs/502 # F:1/8 korg#218226 xfs assert fs/xfs/xfs_message.c:102
-> -- 
-> 2.43.0
-> 
-> 
+Thanks again!
+Reed Wilson
