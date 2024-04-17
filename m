@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A275C147C8D
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:34:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CC21487DC
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 15:38:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713368097; cv=none; b=k1tmf1P4GW7yU0aVTEKhWAdx0nALXrOdOqiaWfuYoF4bALs76zBzKEkcYMgPEhaNlZUbc86LtNVKQpv2gwt6tgNOggfYGPkO2eu50lT7IDuMxIv7NbHUHXTa6G299uMMER8OjQ99Sb7L0lWhhpU7JtOEa0yq0aK4ExJBdTIBmuc=
+	t=1713368334; cv=none; b=kDv1scLrYOs0Kj8CkUWc/y3M5tiWzAguAYglbcWGOna0fmqgubZ8fJ6lG6I2aEWinMISRqb3uq5vT3/R8jx085Ai7E9rdE2sWqMWreQrJpH7nOoAWJcxwIHWi6W5k32px/w5mm+qIgAcwo+x/WuEOndO2v8TJgAC13iltijH36Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713368097; c=relaxed/simple;
-	bh=uYmKEqNFeNwzPhOnYA8IhDQe8hEbZ3Nubus5XA+UmpA=;
+	s=arc-20240116; t=1713368334; c=relaxed/simple;
+	bh=iyXtEl7cXjrpufV/i1mK1td1zSAKpXL8c4PKgDaJgMQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hmzCMT9FVjOOoviX4Xn9/keigTx0qJuq2NOxl3keR7QFhchkGKld8DE3VXJlXjJCi8CMIDYFRYqR2DF7p04J7cJhq2tgsdc+IxH1yfqtQNQEEyPgSAv/ZXtr1xOXgxfSgM9YwlUg0RY5hoDTV1WxESGo4Pap123sDF9bt61csO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gu8caGMp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=IM5pSaN/PRQbD7/qdTf9VVa5VeXJIi7StOAGOhelKlvS4+smNzbKVuibor7PpGxmnz95pQ8bRr/j+go5+R4lENZThG9mIQTUwwunMOM5dydE6XQkg2xL4eWGxiSN+bc0GokPcYIE6t3gZLI5pCRLZ1YIJcwkaJ+EC6zVwl0jTqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqyEbOEC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gu8caGMp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38D68C072AA;
-	Wed, 17 Apr 2024 15:34:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqyEbOEC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A573DC072AA;
+	Wed, 17 Apr 2024 15:38:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713368097;
-	bh=uYmKEqNFeNwzPhOnYA8IhDQe8hEbZ3Nubus5XA+UmpA=;
+	s=k20201202; t=1713368333;
+	bh=iyXtEl7cXjrpufV/i1mK1td1zSAKpXL8c4PKgDaJgMQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Gu8caGMpWgcoT9k64YAn7tyb9lQICtzya991IKINrUwfPqCEASYyXvkhVP0CPPROZ
-	 ru3KBDyW+T8PIApTGeTKOdwEHkHUBlc6YbKDFgVE1S9LGXbofffU0CEGVTlfMM9Ke3
-	 E35S5ixDQ/2Qza1ZqNeBZqpgofKJJZqjWGWhPhgkp01aVR+iTSFgXNpItFgttEWyqG
-	 WeQblrOuCPhu/kDe8Mskc/ckrezTUWSfJAOEPZggb050MzZoN8zoVbeOEpFOK895FZ
-	 aMdfjgHch3FiR72sX1Mo0BzZopM4ybDYjo2pzOOYyT5ZRfJRi8L2BP9AxKI0phTgJq
-	 beW6HMXvXcI9A==
-Date: Wed, 17 Apr 2024 08:34:56 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+	b=LqyEbOECxK1YmMxDAcPYzAmwkr7Dom4OwqP3xfXzyTjbF9Lj3I8YIcnsnn90AovXH
+	 T1z3r3cqnpJpVHqcSBWO+7vgpuiqcjld8djZhGCcmRbCDPpsyVpO/jpy96jpU1iCC/
+	 KlFG8k+64bSX+zxBpJO1uQIjOMLvX4mHVzGLklD7UjlK6hJjkXDsXUPU1+ME8FSM/B
+	 wLVqC5Um9+LDjUly+sJMrXDWrIKa08BfPJ5FLDpza07vxcQCM5N2CaK6U7faZm+zcw
+	 Vq6ufc3wUp3AJl9xv3Tuisn6josSkex73+caXZ/HpYiVZpYyPQKMQc2B9G/dVQL3YR
+	 xP/MceawP6Q5g==
+Date: Wed, 17 Apr 2024 17:38:49 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 Subject: Re: [ANNOUNCE] xfsprogs v6.7.0 released
-Message-ID: <20240417153456.GZ11948@frogsfrogsfrogs>
+Message-ID: <dhctuexefsu2wd3vduuk4hcwim2k7e2df2h2grcbg43ptp5ago@ygy4luggv277>
 References: <fcm36zohx5vbvsd2houwjsmln4kc4grkazbgn6qlsjjglyozep@knvfxshr2bmy>
- <mMHk0yaj9LgGgzujpBfn8GpG3uZmXbQHUrGp5m_ZJWUAwpcEcZWzMa0KUUcZ8_oQ5T6lDTu0CcOl-hYmW7z-MA==@protonmail.internalid>
  <20240417151834.GR11948@frogsfrogsfrogs>
- <pvsrakeforclh6cg576qn4u3ifgtzl6iwebzyjvxtvxqh2ph55@muhndh3a536k>
+ <Zh_ok7hsmUTpiihC@infradead.org>
+ <RCr0vu54dKexAkTyYnuPSN3xj6XabgDVmS1RVQEKIFnZ_5eCzDkxk3IkGsoZ6Kc1hcctxsCrpW8RRYteEDtIIQ==@protonmail.internalid>
+ <20240417152357.GW11948@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,60 +45,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <pvsrakeforclh6cg576qn4u3ifgtzl6iwebzyjvxtvxqh2ph55@muhndh3a536k>
+In-Reply-To: <20240417152357.GW11948@frogsfrogsfrogs>
 
-On Wed, Apr 17, 2024 at 05:32:15PM +0200, Carlos Maiolino wrote:
-> On Wed, Apr 17, 2024 at 08:18:34AM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 17, 2024 at 10:13:52AM +0200, Carlos Maiolino wrote:
-> > > Hi folks,
+On Wed, Apr 17, 2024 at 08:23:57AM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 17, 2024 at 08:19:47AM -0700, Christoph Hellwig wrote:
+> > On Wed, Apr 17, 2024 at 08:18:34AM -0700, Darrick J. Wong wrote:
+> > > > on the list and not included in this update, please let me know.
 > > >
-> > > The xfsprogs repository at:
-> > >
-> > > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> > >
-> > > has just been updated.
-> > >
-> > > Patches often get missed, so if your outstanding patches are properly reviewed
-> > > on the list and not included in this update, please let me know.
-> > 
-> > Ah well, I was hoping to get
-> > https://lore.kernel.org/linux-xfs/171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs/
-> > and
-> > https://lore.kernel.org/linux-xfs/20240326192448.GI6414@frogsfrogsfrogs/
-> > in for 6.7.
+> > > Ah well, I was hoping to get
+> > > https://lore.kernel.org/linux-xfs/171142126291.2211955.14829143192552278353.stgit@frogsfrogsfrogs/
+> > > and
+> > > https://lore.kernel.org/linux-xfs/20240326192448.GI6414@frogsfrogsfrogs/
+> > > in for 6.7.
+> >
+> > Shouldn't we have a 6.8 follow pretty quickly anyway?
 > 
-> To be honest, one of the reasons I decided to release 6.7 today, was because these patches were
-> cooking for too long on the list, and I wanted to pull them this week, but not delay 6.7 because of
-> them as I want to also not delay 6.8 for too long, mostly libxfs-sync and what we already have on
-> the list. The debian one I totally missed it btw
+> Yes, but right now you can't build a 6.7 debian package without
 > 
-> Also, I was assuming you were going to send PRs for these series according to our previous talks,
-> will you still submit PRs or shall I pull them from the list?
-> 
-> I'll try to pull those patches you meant asap.
-> 
-> I could do a 6.7.1 release with the debian patch if this is really required, but I don't think it
-> will change anything if I simply postpone it for 6.8.
+> https://lore.kernel.org/linux-xfs/20240326192448.GI6414@frogsfrogsfrogs/
 
-Well if we get a 6.8 release out fairly fast then it might not matter --
-Debian are busy rebuilding the world with 64-bit time_t and altered
-package names.
-
---D
+Hm, I see. Even if I release 6.7.1, it won't change that unfortunately.
 
 > 
-> > 
-> > --D
-> > 
-> > >
-> > > The for-next branch has also been updated to match the state of master.
-> > >
-> > > The new head of the master branch is commit:
-> > >
-> > > 09ba6420a1ee2ca4bfc763e498b4ee6be415b131
-> > >
-> > > --
-> > > Carlos
-> > >
-> > 
+> and libxfs doesn't match between kernel 6.7 and xfsprogs 6.7 without:
 > 
+> https://lore.kernel.org/linux-xfs/171142126323.2211955.1239989461209318080.stgit@frogsfrogsfrogs/
+
+I'll add it before the 6.8 libxfs-sync, I should submit it soon. Things seem not a nightmare for
+6.8. So far :)
+
+
+
+> 
+> --D
