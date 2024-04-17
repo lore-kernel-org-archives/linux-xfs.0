@@ -1,70 +1,75 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF08A524D4
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 12:53:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89DB7132803
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 12:53:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713358383; cv=none; b=Nx1ZTUOicwWDPNo3GEK8lEMg5814qdpEVMI8ipp9FDdvOhrt2SC6el+/ft39nZJFW5mpUr/JXvt6SLqSHWqOxYWdlTEvBtjqPyGh/3Im9AIf+A40aAFGivvQrWo/hWZzW357Gw3gisrwMTyuHvq3sQ2Go186NgfANmkX5qDs4AE=
+	t=1713358383; cv=none; b=ljHxgc7R0GtFRNGN15c1lvpTqmCaFUIykdTlBqP5P8oRof44tKO+xaYfVRsgPLIm/YJ2joNIMyTwTwStoOjNO1rStnBD8/GU3KZV4zgDiG1H1Ohlcy4YlxgLVE6dSd2L7KfvBCFJPFqqfYGDpEBOHAPBHBir6kqR+MKaM5v5zsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1713358383; c=relaxed/simple;
-	bh=G1CXJAZBdC7R61oXoxnLeQOo3q6jTvn60AYQ+yNTBk0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K3LOSr6j7nhUQoYsFvDxvos6VRJuHvjn3xQwBGvOl1KuIN0JkckyRs4LOm7RjE8B7x77R7iuN6z3kDdHoiZ7St5RgDDD1DLuoiJdjMV/2dGkn3NKhDvv8B0hA0WIuucRfhFgqSOAaegSsoWvhnlz/xFFSJgL3CLObzXQMohMv7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QusKvT70; arc=none smtp.client-ip=170.10.133.124
+	bh=BXFADOllrM1UVBKYRuTMUGphNwRYGkcECWf3FM7Nekk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YrTpPP3i//OeECtF7oQfg4DqvCy1NVTvnC6/7N2PZRIubM4fVh23AEM2fBKyVN0T6FDxMKEU2mFpa4RbW+/b+a3sc7HIkSDZLIutm0xcQ2Xrl7ePoa3D3dvan5cV0HpXkZ/reCyiZaY0JuVjYNUuzV+RxjVlPcwpXF8S3yx2wCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SbzVZQQl; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QusKvT70"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SbzVZQQl"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713358380;
+	s=mimecast20190719; t=1713358381;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=wXIKXZWKJz5pz5DBlu+ZCgTbZ3xtN34Ndnq7o695Syw=;
-	b=QusKvT70+JRqT5UN645ouiW9hfCvT30ifHMsnHKs+s8j/dQBbNILn5xs/RhoN+YuOnP4yR
-	ncl5olHvoULaOkBphnC+Wk2dzPzTSyYLBeyaofq83Xz2cdMZErF46hl9ZZlFxJ3+wyqfQM
-	3F5X/NjJVFBQD+x3LGKnHO/L2A0odYE=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5lSe+S7OK8mtqrgnzypf5LaiZywQ+Xf+tz3DhSkUCjo=;
+	b=SbzVZQQlim5s58VScOtVsgWtULL5R5QupndoNbx6EeT7by89OFw0DylfaSzTFsVxSCVEbQ
+	vYp9RJY2px4SlUzb2JXXbzcgiFhBXRxhL03yjEnxoCfhiuznzZRAwPJvPKdWQHvcBVr3Ea
+	4vL5id6Rrr0tm6N7LtQVZ6/uMHg9aRc=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-640-Tlpj2VsvNpqDUv9T3eyzeg-1; Wed, 17 Apr 2024 08:52:59 -0400
-X-MC-Unique: Tlpj2VsvNpqDUv9T3eyzeg-1
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-56e7187af0fso3482466a12.0
+ us-mta-132-WZrgp7irMziG9I4NguEhjA-1; Wed, 17 Apr 2024 08:53:00 -0400
+X-MC-Unique: WZrgp7irMziG9I4NguEhjA-1
+Received: by mail-lf1-f70.google.com with SMTP id 2adb3069b0e04-516d6c879c5so3133091e87.3
         for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 05:52:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1713358378; x=1713963178;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wXIKXZWKJz5pz5DBlu+ZCgTbZ3xtN34Ndnq7o695Syw=;
-        b=S1qOw/hVY6dNJIwuNAeSXijLllzI9oIgaGIA9cf2RyVjVc1lvQhIpwT4xTC/Mpu3QS
-         odBrV/VNvWM/68TSM41ICzy6ijsQdySl2PrCw4VwtPHRLOlGZaHFTxe95lBnskDdNX7y
-         ktsHtfG40LgoavALhwi2K5v+xp0lFMWXkJvfwWiRbOuNYEagE9vm8toZLI8P0sQJW1GG
-         9zi9TIHubkIrn8RgcELhrrNxeuTjR30+wku0ej5DBZFDi8dTClZnpRb30SPIQQshBW2M
-         1gyeEojQqXNCSxuZhSqzVQWcIeG33KNobXFWUfhTVZ6venllExmzwFkGlBldXc8R+XAg
-         Qhvw==
-X-Forwarded-Encrypted: i=1; AJvYcCVEDgh1DoSHGh8LmzMZ+oa1lNn3yNcFhQn+wIrxkFNWzR135T8V+buGFDKJ7g2fi3ZI+9tSSabLG/2gq7/OEu91EV0Ij4S+cux3
-X-Gm-Message-State: AOJu0YylrvTBvfw2thHbEvFtCcHIOtPKMGT+Wn/OHaKsDfROgwfoyU0e
-	Rp6tOkXjnGZ9niGBDWEGwrx5dimKiXi1e47UsJ/Y4f0JNNclPCwfP3UyMvfUNTtfyqFtMqeFQQb
-	DNVc66DKW4XfeCK1ePC2LgO/5oufSdB7X3pNBZQaWAquttijVA8LM7AzKTUWkPauK
-X-Received: by 2002:a50:cd19:0:b0:570:1ea8:cd1c with SMTP id z25-20020a50cd19000000b005701ea8cd1cmr7568961edi.35.1713358377547;
-        Wed, 17 Apr 2024 05:52:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGpD+Clg5pj1hK7EkOV/bXuLnM0qPvTpCH6jfmk9UcDKTzaSt8BmwhQ7hbvdtJiNisLm6rx7w==
-X-Received: by 2002:a50:cd19:0:b0:570:1ea8:cd1c with SMTP id z25-20020a50cd19000000b005701ea8cd1cmr7568951edi.35.1713358377021;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5lSe+S7OK8mtqrgnzypf5LaiZywQ+Xf+tz3DhSkUCjo=;
+        b=OrSKdrtuLTGccP5TL0QshHg12eLo0FBYq4m43D6XL8dXoANa81AcEDsrsplWh1NWuT
+         eUqR2j+/vpYk8K+spOKh9t7jxPMAOK4M2AndAMsAd8u3eDVIhY8pCBt3IUJ/l0hqOHgY
+         VqWClSwXSp4ZIbhs68+gR4Xv1E/mFa1TuN9inXtDY2Nv5uvD1gOo3KmFGMSLILKSC0vh
+         CaM/YZ08j4+MGfRxm8NOC2nY49+2PIsqw/je4XAlZBAHPgT5wi8l4ijO/cM1P3P9eh1j
+         VewkobF6ISimvzgGlgkFUtRiP2+jxJLCZys7XbpayZoW1ZUsiZSwYV4nLj2o7bFxpGuM
+         BOjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVu9aVIK9XZjAzkNNjqCRlgORIh3KQAYcZStXJoGUqJEYI/JomJ7iu5SUwph1C0XYL4r2YLYTxpgTCbCfc3Jz5BdxbAgTI5CagJ
+X-Gm-Message-State: AOJu0YzP8R93O+S/0aWpnEwYZCJnXFpudpDsEbfA5ESPHrst3+rcyR1V
+	o5DHJ0jOHWCDIc+ntXdsOdIwa0THvvxOxujhpmvkdPwJ4/IjcSH2Or+FnGggi43VUARCl53O+y7
+	uB+JnlgHcpYfkM/MrVxKRaFjxY+SNkkIoLZ1Z9/M9w1ultEGyFeUw/tiNrJAsZCKx
+X-Received: by 2002:a19:740b:0:b0:516:bea2:5931 with SMTP id v11-20020a19740b000000b00516bea25931mr10263698lfe.23.1713358378274;
+        Wed, 17 Apr 2024 05:52:58 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFRScuA2VAP7ngevppA1bCXvDvhNpTMhkk2Oams0lo/+fWB3VtzFnlY8GdAlsDUJLArpl73aQ==
+X-Received: by 2002:a19:740b:0:b0:516:bea2:5931 with SMTP id v11-20020a19740b000000b00516bea25931mr10263678lfe.23.1713358377697;
         Wed, 17 Apr 2024 05:52:57 -0700 (PDT)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id en8-20020a056402528800b0056e2432d10bsm7258169edb.70.2024.04.17.05.52.56
+        by smtp.gmail.com with ESMTPSA id en8-20020a056402528800b0056e2432d10bsm7258169edb.70.2024.04.17.05.52.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Apr 2024 05:52:56 -0700 (PDT)
+        Wed, 17 Apr 2024 05:52:57 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: cem@kernel.org,
 	linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v3 0/4] xfsprogs random fixes found by Coverity scan
-Date: Wed, 17 Apr 2024 14:52:24 +0200
-Message-ID: <20240417125227.916015-2-aalbersh@redhat.com>
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	Bill O'Donnell <bodonnel@redhat.com>
+Subject: [PATCH v3 1/4] xfs_db: fix leak in flist_find_ftyp()
+Date: Wed, 17 Apr 2024 14:52:25 +0200
+Message-ID: <20240417125227.916015-3-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20240417125227.916015-2-aalbersh@redhat.com>
+References: <20240417125227.916015-2-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,40 +78,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+When count is zero fl reference is lost. Fix it by freeing the list.
 
-This is bunch of random fixes found by Coverity scan, there's memory
-leak, truncation of time_t to int, access overflow, and freeing of
-uninitialized struct.
+Fixes: a0d79cb37a36 ("xfs_db: make flist_find_ftyp() to check for field existance on disk")
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+---
+ db/flist.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-v3:
-- better error message for too long runtime
-v2:
-- remove parentheses
-- drop count initialization patch as this code goes away with parent
-  pointers
-- rename unload: label
-- howlong limit
-
---
-Andrey
-
-Andrey Albershteyn (4):
-  xfs_db: fix leak in flist_find_ftyp()
-  xfs_repair: make duration take time_t
-  xfs_scrub: don't call phase_end if phase_rusage was not initialized
-  xfs_fsr: convert fsrallfs to use time_t instead of int
-
- db/flist.c          |  4 +++-
- fsr/xfs_fsr.c       | 10 ++++++++--
- repair/globals.c    |  2 +-
- repair/globals.h    |  2 +-
- repair/progress.c   |  7 ++++---
- repair/progress.h   |  2 +-
- repair/xfs_repair.c |  2 +-
- scrub/xfs_scrub.c   |  3 ++-
- 8 files changed, 21 insertions(+), 11 deletions(-)
-
+diff --git a/db/flist.c b/db/flist.c
+index c81d229ab99c..0a6cc5fcee43 100644
+--- a/db/flist.c
++++ b/db/flist.c
+@@ -424,8 +424,10 @@ flist_find_ftyp(
+ 		if (f->ftyp == type)
+ 			return fl;
+ 		count = fcount(f, obj, startoff);
+-		if (!count)
++		if (!count) {
++			flist_free(fl);
+ 			continue;
++		}
+ 		fa = &ftattrtab[f->ftyp];
+ 		if (fa->subfld) {
+ 			flist_t *nfl;
 -- 
 2.42.0
 
