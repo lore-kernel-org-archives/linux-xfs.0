@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A7318F4A
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:31:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975ED8F4A
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:31:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713389470; cv=none; b=pGs4ua3X9iTj2Fr96jy2aDuaPCsdKG0bS+16Y2/dmhM3FLtTFEU7RYaDO8OGvqWXm932yASrhUjjMD39AlyIOTEsH29h1yfCRhfKkGig8nEBny/ENApz4TFplvbEp6bl3BmsyuMdfhtsbgdGvbdWevCum9wneMBs9nmMNLolHUA=
+	t=1713389486; cv=none; b=Csai9E6qLJODkq76mZlqMYv/SwcokKh/kMyyms3JjJy8lYRppO8Wt1Vr698mGqsPUCXNeOq3JrgbLAjs8TCBluK+b4BACw3wRhcsrFFVX538NfGigS3nbrtca3syExLLSSJ36Ac2uH+E/+rxsJc/NbzHKyj1dP6dS6XO2cyQRbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713389470; c=relaxed/simple;
-	bh=M6i+CyLzx09DmMjJOZGTwus5da6BHd9ntUDSRGxfa+E=;
+	s=arc-20240116; t=1713389486; c=relaxed/simple;
+	bh=YnTeqnEpcRncCLrzY4LCl4HzPKOxVItIuemeLxBGaQo=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=T0XPKmHn18xfmRQjcKvXHQTeOTCQOnPR0VxSQg83r/Q2xyOFSirSazU8OrHqs2D0BIndVefbDjt8cMhJLCtNSet64oOHpfuvM5SiiIijbA9sSjS1UPvFLjAPYLxEIVnW8lGhfwTv7MSW2zePqnKBJwan1pwy88KPoLVXbri2Zqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rrjXyA8E; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=p6GESUK7vNmkOWHVmeK96Bf622INEdnVcOc9XYuhIHTJrEKe/okaW0LlM/LCDl4wWJXKdKqtBQm5WRW83sF8tc38fXZZt96I6eFFgZDdItPN25mr1OgwttC1NWGwL0z+LVcJMY2Ya9a9SjBjh5SWHicXx33qWZnwIe2LZ8GTb/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uKJyHQoi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rrjXyA8E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FE0EC072AA;
-	Wed, 17 Apr 2024 21:31:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uKJyHQoi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C5E0C072AA;
+	Wed, 17 Apr 2024 21:31:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713389470;
-	bh=M6i+CyLzx09DmMjJOZGTwus5da6BHd9ntUDSRGxfa+E=;
+	s=k20201202; t=1713389486;
+	bh=YnTeqnEpcRncCLrzY4LCl4HzPKOxVItIuemeLxBGaQo=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rrjXyA8EM0IYYCpwinwFshO0CloGcSCGiCwvAk3Qe7QITA4L8swlT3lEjKXzEIItl
-	 YMu0JGtkyKoa5Q755cUdOMSqw5ANUAbxF+2R7xXP88pwF2xw3OyoIYHLRfx4jGicTR
-	 cO6vlSkewV77/MzopIeaiysqKnVe2VHMRngVgfea6ItZ16cDwdaPaB+GmE4VT1lq2l
-	 JnzsJAsF3ODqUZC6urG+9AHNy1T3MjJEqw14Gdd1E3Q2J8baWHj6ySMDgqmV6rNY5N
-	 7bxFkl2xDJtejflcyZUxone4Do61cILfZqubNZTSvjbdaQn8p7Hv7+p6eP7yPNnNng
-	 OzwJcM+iWFX1Q==
-Date: Wed, 17 Apr 2024 14:31:09 -0700
-Subject: [PATCH 36/67] xfs: repair refcount btrees
+	b=uKJyHQoionGGK+6jMaI23lLTM3NyZL4GwWcxxTC18/NE2mRbwJsIs4GIYDsqYvaPJ
+	 OMx4Z2lZ/EVWJxy32mW/TwtjlR9mURcWiunpHXfTlvWEGeitcwWDZCktkF+QErZvJ6
+	 9ujuv4C2zMEC32bHAYhs2Q1yC3WOv4x9nuh0KaQ0NgB0et6mAsXHC2oZwjzYWrna4+
+	 JQ1sxTJExfreYLH0Vz3PitZXA8yjDQxcIrpd3NPItFbku/xZ5zwVeeu7q9LpSQ3AKi
+	 QGfYI03j4CbrK4BCrZJneopyCXmVWoTgfyCTZHR2F7p0DdCQKvVnWtRA7BRSgqFUA/
+	 243/rvo7CVdNQ==
+Date: Wed, 17 Apr 2024 14:31:25 -0700
+Subject: [PATCH 37/67] xfs: dont cast to char * for XFS_DFORK_*PTR macros
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
- Bill O'Donnell <bodonnel@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <171338842880.1853449.232363015259431961.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, Bill O'Donnell <bodonnel@redhat.com>,
+ linux-xfs@vger.kernel.org
+Message-ID: <171338842895.1853449.11074801219916121156.stgit@frogsfrogsfrogs>
 In-Reply-To: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 References: <171338842269.1853449.4066376212453408283.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,152 +47,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 9099cd38002f8029c9a1da08e6832d1cd18e8451
+Source kernel commit: 6b5d917780219d0d8f8e2cefefcb6f50987d0fa3
 
-Reconstruct the refcount data from the rmap btree.
+Code in the next patch will assign the return value of XFS_DFORK_*PTR
+macros to a struct pointer.  gcc complains about casting char* strings
+to struct pointers, so let's fix the macro's cast to void* to shut up
+the warnings.
 
-Link: https://docs.kernel.org/filesystems/xfs-online-fsck-design.html#case-study-rebuilding-the-space-reference-counts
+While we're at it, fix one of the scrub tests that uses PTR to use BOFF
+instead for a simpler integer comparison, since other linters whine
+about char* and void* comparisons.
+
+Can't satisfy all these dman bots.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 ---
- libxfs/xfs_ag.h             |    1 +
- libxfs/xfs_btree.c          |   26 ++++++++++++++++++++++++++
- libxfs/xfs_btree.h          |    2 ++
- libxfs/xfs_refcount.c       |    8 +++-----
- libxfs/xfs_refcount.h       |    2 +-
- libxfs/xfs_refcount_btree.c |   13 ++++++++++++-
- 6 files changed, 45 insertions(+), 7 deletions(-)
+ libxfs/xfs_format.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index f16cb7a17..67c3260ee 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -87,6 +87,7 @@ struct xfs_perag {
- 	 * verifiers while rebuilding the AG btrees.
- 	 */
- 	uint8_t		pagf_repair_levels[XFS_BTNUM_AGF];
-+	uint8_t		pagf_repair_refcount_level;
- #endif
- 
- 	spinlock_t	pag_state_lock;
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 97962fc16..0022bb641 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -5209,3 +5209,29 @@ xfs_btree_destroy_cur_caches(void)
- 	xfs_rmapbt_destroy_cur_cache();
- 	xfs_refcountbt_destroy_cur_cache();
- }
-+
-+/* Move the btree cursor before the first record. */
-+int
-+xfs_btree_goto_left_edge(
-+	struct xfs_btree_cur	*cur)
-+{
-+	int			stat = 0;
-+	int			error;
-+
-+	memset(&cur->bc_rec, 0, sizeof(cur->bc_rec));
-+	error = xfs_btree_lookup(cur, XFS_LOOKUP_LE, &stat);
-+	if (error)
-+		return error;
-+	if (!stat)
-+		return 0;
-+
-+	error = xfs_btree_decrement(cur, 0, &stat);
-+	if (error)
-+		return error;
-+	if (stat != 0) {
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+}
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index e0875cec4..d906324e2 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -738,4 +738,6 @@ xfs_btree_alloc_cursor(
- int __init xfs_btree_init_cur_caches(void);
- void xfs_btree_destroy_cur_caches(void);
- 
-+int xfs_btree_goto_left_edge(struct xfs_btree_cur *cur);
-+
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index 45f8134e4..3377fac12 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -122,11 +122,9 @@ xfs_refcount_btrec_to_irec(
- /* Simple checks for refcount records. */
- xfs_failaddr_t
- xfs_refcount_check_irec(
--	struct xfs_btree_cur		*cur,
-+	struct xfs_perag		*pag,
- 	const struct xfs_refcount_irec	*irec)
- {
--	struct xfs_perag		*pag = cur->bc_ag.pag;
--
- 	if (irec->rc_blockcount == 0 || irec->rc_blockcount > MAXREFCEXTLEN)
- 		return __this_address;
- 
-@@ -178,7 +176,7 @@ xfs_refcount_get_rec(
- 		return error;
- 
- 	xfs_refcount_btrec_to_irec(rec, irec);
--	fa = xfs_refcount_check_irec(cur, irec);
-+	fa = xfs_refcount_check_irec(cur->bc_ag.pag, irec);
- 	if (fa)
- 		return xfs_refcount_complain_bad_rec(cur, fa, irec);
- 
-@@ -1898,7 +1896,7 @@ xfs_refcount_recover_extent(
- 	INIT_LIST_HEAD(&rr->rr_list);
- 	xfs_refcount_btrec_to_irec(rec, &rr->rr_rrec);
- 
--	if (xfs_refcount_check_irec(cur, &rr->rr_rrec) != NULL ||
-+	if (xfs_refcount_check_irec(cur->bc_ag.pag, &rr->rr_rrec) != NULL ||
- 	    XFS_IS_CORRUPT(cur->bc_mp,
- 			   rr->rr_rrec.rc_domain != XFS_REFC_DOMAIN_COW)) {
- 		kfree(rr);
-diff --git a/libxfs/xfs_refcount.h b/libxfs/xfs_refcount.h
-index 783cd89ca..5c207f1c6 100644
---- a/libxfs/xfs_refcount.h
-+++ b/libxfs/xfs_refcount.h
-@@ -117,7 +117,7 @@ extern int xfs_refcount_has_records(struct xfs_btree_cur *cur,
- union xfs_btree_rec;
- extern void xfs_refcount_btrec_to_irec(const union xfs_btree_rec *rec,
- 		struct xfs_refcount_irec *irec);
--xfs_failaddr_t xfs_refcount_check_irec(struct xfs_btree_cur *cur,
-+xfs_failaddr_t xfs_refcount_check_irec(struct xfs_perag *pag,
- 		const struct xfs_refcount_irec *irec);
- extern int xfs_refcount_insert(struct xfs_btree_cur *cur,
- 		struct xfs_refcount_irec *irec, int *stat);
-diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index bc8bd867e..ac1c3ab86 100644
---- a/libxfs/xfs_refcount_btree.c
-+++ b/libxfs/xfs_refcount_btree.c
-@@ -225,7 +225,18 @@ xfs_refcountbt_verify(
- 
- 	level = be16_to_cpu(block->bb_level);
- 	if (pag && xfs_perag_initialised_agf(pag)) {
--		if (level >= pag->pagf_refcount_level)
-+		unsigned int	maxlevel = pag->pagf_refcount_level;
-+
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+		/*
-+		 * Online repair could be rewriting the refcount btree, so
-+		 * we'll validate against the larger of either tree while this
-+		 * is going on.
-+		 */
-+		maxlevel = max_t(unsigned int, maxlevel,
-+				pag->pagf_repair_refcount_level);
-+#endif
-+		if (level >= maxlevel)
- 			return __this_address;
- 	} else if (level >= mp->m_refc_maxlevels)
- 		return __this_address;
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 9a88aba15..f16974126 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1008,7 +1008,7 @@ enum xfs_dinode_fmt {
+  * Return pointers to the data or attribute forks.
+  */
+ #define XFS_DFORK_DPTR(dip) \
+-	((char *)dip + xfs_dinode_size(dip->di_version))
++	((void *)dip + xfs_dinode_size(dip->di_version))
+ #define XFS_DFORK_APTR(dip)	\
+ 	(XFS_DFORK_DPTR(dip) + XFS_DFORK_BOFF(dip))
+ #define XFS_DFORK_PTR(dip,w)	\
 
