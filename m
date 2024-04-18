@@ -1,134 +1,98 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7C47E56C;
-	Thu, 18 Apr 2024 13:31:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 041C9548E9;
+	Thu, 18 Apr 2024 14:00:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713447068; cv=none; b=AorL3vfhhnz8vCtqkz7QAc5FOV1szryb9B9vUYbXv4HtgZqdttUUfqA2SKmYzSIwSHrzidONAZiXBW/YJaxBO3zrd9AzlgjmQ/vdkrONjqr4oBtUeV8lJuS6Atc+8enlgQpaokrwm4hyIET/yqljCf2vxEwMeJLhjvkKKfoyNS4=
+	t=1713448814; cv=none; b=J2ySf3/Sr0+ffPiF/Cyi/x52IvceHHHSZrb22P6ym/Dod6aySt5buw1ynELS9wU1O4XTv1iTewsS7uGDJGGulBQmfgMldes7XaUYOQfERgkM2oilBtw7APFsf4ThCjhhUD74XsV7yjiTFfBo7D5qksF1kOk4e4kiDS4AQb3tYao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713447068; c=relaxed/simple;
-	bh=3j2rz2dbI2fkH5QHoUTV7PpGZBloSPbbrcpGku/DmFo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dmRhcK26aLJZFNWv6ibQ4bMc6gmGUEfGjN7C+yw1BOHFwXDvYkQE2YqNagcxGdQr7L+c4J6TMU6EUzHGNl5C+pSZpM+cQ0XUA1YsMOpKf8/lXHdkCt+e3XDY1UM4aRiIbUhwRMugwQw5wiVm40uEmKbfwuqS2IdWRET+OJHJQTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pG34Xm1m; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1713448814; c=relaxed/simple;
+	bh=3x4YtFem5i68pHRvsRarHF+OwK1l9hPtEIyAaNF1kBM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oSibZyF/DIjTaFKDB8tY0likJPBmeQXH0NrY0PVQIk+iGmZx/HOUFqpiipi0GMd30BO+rM826V1lP3wDjdquvEp6ergeOsjT8Ftsum4CaY4jjxhBYhK7w7IEn1urs9s/rRlZ1PrpQF0MnwcqON+rRbIDUrx476BaCEd3bIxDUME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L6K2/8Ff; arc=none smtp.client-ip=209.85.221.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pG34Xm1m"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=fnGoDCR4iCyVOVXnpcrF/UTwU56hAzv+QpuJiLDXQlY=; b=pG34Xm1mx0NiIYrVKyXftfANoq
-	vsEd3i6d3wpkxJlzoUKk8zpwKXazQbeksdDfiS8vYRmWAQmXEV1AAg/dA0g4JW/Gu29K8ODltT97C
-	1t6IQpuJ+1qaAd6jY6w38W8IX8Dd9/RtOXlZKMuOIeM747cebc+ksWfFpquOC9/+AnYa/helqm+cB
-	nGZg3RhNNYa7Ax4grnwh7GwQ9zwaD/mxN2ETKcFvLgdDZ6KL56nUhfI0H5GfWj6tYSyo7MOxJHmfq
-	KuldwSJMz3oeiuFtqAw04ihniz0Gx9tcdrzdjymXdDPNeSPFyhK78bqvZHfz34tGIfi3itRZBXhOp
-	NyfjzGBA==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rxRqq-00000005Pmu-3Iiy;
-	Thu, 18 Apr 2024 13:30:56 +0000
-Date: Thu, 18 Apr 2024 14:30:56 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: fstests@vger.kernel.org, kdevops@lists.linux.dev,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, david@redhat.com,
-	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de
-Subject: Re: [PATCH] fstests: add fsstress + compaction test
-Message-ID: <ZiEgkExEZ3By2wD0@casper.infradead.org>
-References: <20240418001356.95857-1-mcgrof@kernel.org>
- <ZiB5x-EKrmb1ZPuf@casper.infradead.org>
- <ZiDA1Lokzwxd3d-v@bombadil.infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L6K2/8Ff"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-3465921600dso758812f8f.3;
+        Thu, 18 Apr 2024 07:00:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1713448811; x=1714053611; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RrJobdf05VR55MPzvvqAhAZGqW+VKfpfsZCu1Cykk0o=;
+        b=L6K2/8Ffw6YzFm/3odFoXhkcsqGYeW05gpz2MJne5Bz9kCPEa3efHHiDdCI/BPFJ0t
+         mKR0mbkn8RFqG0z2mzBgheShnrUYLj0lC6UZoCjwMWjwpbUVnuNQzyqt+oq2MAb85v/U
+         ltbOv+qR86YD3SY78LiigvnZ4H7iIYwq60ztqSM8ls7Ftj/E5CGx5e7KTYWVJB+oMnSX
+         BEWyljaT80LLp24znDy1cLnxfQG8Tu/B6XCbz6lzicmz6MIun2MCjSCUo0t+fPD2KKRv
+         0n0o22uOtpp8/F0ZWeHxPqHvLxtZox4S/wzOk4HF0CMbfOYOoIBZSKf5MSWdEXbEmR9C
+         vGkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713448811; x=1714053611;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RrJobdf05VR55MPzvvqAhAZGqW+VKfpfsZCu1Cykk0o=;
+        b=YFLnfZ6r9k8gObkkzgsb2xHhwhfkk61ldyI9eQj52g/0pET+P3pGtOtEToeU9XN+66
+         0dUMTd1Jutcsm2SBt4JgXCxvjxUKq1WrvH+iq/0Gwzl6/woIuYJrmmaHn5GTio+DEooY
+         vrt4AyznWXduhWq1FelAWM9SNKpFftY3JiVTcos7Rh9Rf6e17J0LtWKBdEZw5rZAqw5q
+         OBbJMtgxpdNBzr3ifZ3P+RuFq/4KF2RtffrDKiFKjXKzd49vkHrAYqLblfbi59frb25g
+         7IUfUt7Jwwvg3DvEcnE3yNdeYtrLa5MN98veXVt23q4d0JsvuotRBIQRwiDb0gub8Orq
+         Qc8Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWKu3RGAjh2i3Hk9vfh4l9PufzVtSUXyAO+V0trEoYLQjPsYnY/7vxtolMF3yRt6Sa3tYypPGp8HaFUT3bd5cjPZRh3N/B9v0rgJ6GBR1HqxcMzXLrxhqtGPD1zrMaV8xAqsanEByAG
+X-Gm-Message-State: AOJu0YyTyB9GaJM8poLgr5jDw271Yo0IwbbhVrHjzfVzBOf/uKhv8eDs
+	VMd/PhnykR5CEUiiwxcfrnpGD0hHE8zx7lEJ2x6YsBDkhlgrwDVncdlKxTVl/2NJRZofVNBxAyo
+	ZvIf2YFAcfkgvU+BwSf+eVAA5kG0=
+X-Google-Smtp-Source: AGHT+IF4io6pWaC1pV+NK3eAMZgzmqLFDQ0IApf4hVd6v3XiYlCwckn3UzXvWbZkzuxlzBatD0+J2HpKSZ+9ShNiJ64=
+X-Received: by 2002:adf:e481:0:b0:349:cafd:a779 with SMTP id
+ i1-20020adfe481000000b00349cafda779mr1555514wrm.68.1713448811029; Thu, 18 Apr
+ 2024 07:00:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZiDA1Lokzwxd3d-v@bombadil.infradead.org>
+References: <ZiCp2ArgSzjGQZql@dread.disaster.area> <ZiDECInm854YiSPo@infradead.org>
+In-Reply-To: <ZiDECInm854YiSPo@infradead.org>
+From: Andrey Ryabinin <ryabinin.a.a@gmail.com>
+Date: Thu, 18 Apr 2024 15:58:52 +0200
+Message-ID: <CAPAsAGxPEZYBCb30=an8yyku9zNZT74g3n4W_XFCRwLgg=9Xyw@mail.gmail.com>
+Subject: Re: xfs : WARNING: possible circular locking dependency detected
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Xiubo Li <xiubli@redhat.com>, linux-xfs@vger.kernel.org, 
+	chandan.babu@oracle.com, djwong@kernel.org, linux-kernel@vger.kernel.org, 
+	kasan-dev@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 17, 2024 at 11:42:28PM -0700, Luis Chamberlain wrote:
-> > > Today I find that v6.9-rc4 is also hitting an unrecoverable hung task
-> > > between compaction and fsstress while running generic/476 on the
-> > > following kdevops test sections [2]:
-> > > 
-> > >   * xfs_nocrc
-> > >   * xfs_nocrc_2k
-> > >   * xfs_nocrc_4k
-> > > 
-> > > Analyzing the trace I see the guest uses loopback block devices for the
-> > > fstests TEST_DEV, the loopback file uses sparsefiles on a btrfs
-> > > partition. The contention based on traces [3] [4] seems to be that we
-> > > have somehow have fsstress + compaction race on folio_wait_bit_common().
-> > 
-> > What do you mean by "race"?  Here's what I see:
-> 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: folio_wait_bit_common (mm/filemap.c:1275 (discriminator 4)) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: migrate_pages_batch (./include/linux/pagemap.h:1048 mm/migrate.c:1486 mm/migrate.c:1700) 
+On Thu, Apr 18, 2024 at 8:56=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
+g> wrote:
+>
+> Adding the KASAN maintainer so that we actuall have a chane of
+> fixing this instead of a rant that just gets lost on the xfs list..
+>
 
-That's folio_lock().
+Thanks.
 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task kworker/u38:8:807213 blocked for more than 120 seconds.
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: folio_wait_bit_common (mm/filemap.c:1275 (discriminator 4)) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: extent_write_cache_pages (fs/btrfs/extent_io.c:2130) btrfs
+> On Thu, Apr 18, 2024 at 03:04:24PM +1000, Dave Chinner wrote:
+> > The only krealloc() in this path is:
+> >
+> >       new =3D krealloc(ifp->if_data, new_size,
+> >                         GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+> >
+> > And it explicitly uses __GFP_NOLOCKDEP to tell lockdep not to warn
+> > about this allocation because of this false positive situation.
+> >
+> > Oh. I've seen this before. This is a KASAN bug, and I'm pretty sure
+> > I've posted a patch to fix it a fair while back that nobody seemed
+> > to care about enough to review or merge it.
+> >
 
-folio_lock().
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task kworker/u34:9:1268436 blocked for more than 120 seconds.
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: folio_wait_bit_common (mm/filemap.c:1275 (discriminator 4)) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: btrfs_folio_start_writer_lock (./include/linux/pagemap.h:1048 fs/btrfs/subpage.c:394) btrfs
-
-folio_lock().
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task xfsaild/loop5:1377891 blocked for more than 120 seconds.
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: io_schedule (kernel/sched/core.c:9019 (discriminator 1) kernel/sched/core.c:9045 (discriminator 1)) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: rq_qos_wait (block/blk-rq-qos.c:284 (discriminator 4)) 
-
-I'm not familiar with this code.
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: wbt_wait (block/blk-wbt.c:660) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __rq_qos_throttle (block/blk-rq-qos.c:66) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: blk_mq_submit_bio (block/blk-mq.c:2880 block/blk-mq.c:2984) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: submit_bio_noacct_nocheck (./include/linux/bio.h:639 block/blk-core.c:701 block/blk-core.c:729) 
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: _xfs_buf_ioapply (fs/xfs/xfs_buf.c:1584 fs/xfs/xfs_buf.c:1671) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __xfs_buf_submit (./arch/x86/include/asm/atomic.h:67 ./include/linux/atomic/atomic-arch-fallback.h:2278 ./include/linux/atomic/atomic-instrumented.h:1384 fs/xfs/xfs_buf.c:1762) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_delwri_submit_buffers (fs/xfs/xfs_buf.c:2280 (discriminator 2)) xfs
-
-... but it's submitting a write.
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfsaild (fs/xfs/xfs_trans_ail.c:560 (discriminator 1) fs/xfs/xfs_trans_ail.c:671 (discriminator 1)) xfs
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task fsstress:1377894 blocked for more than 120 seconds.
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_iowait (fs/xfs/xfs_buf.c:1691) xfs
-
-Waiting for an I/O completion
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __xfs_buf_submit (fs/xfs/xfs_buf.c:1770) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_read_map (fs/xfs/xfs_buf.c:870) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289 (discriminator 1)) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_btree_read_buf_block (./fs/xfs/xfs_trans.h:210 fs/xfs/libxfs/xfs_btree.c:1432) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_btree_lookup_get_block (fs/xfs/libxfs/xfs_btree.c:1934) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2045) xfs
-
-but a read, not a write.
-
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task fsstress:1377895 blocked for more than 120 seconds.
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_iowait (fs/xfs/xfs_buf.c:1691) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __xfs_buf_submit (fs/xfs/xfs_buf.c:1770) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_read_map (fs/xfs/xfs_buf.c:870) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289 (discriminator 1)) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_da_read_buf (fs/xfs/libxfs/xfs_da_btree.c:2676) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr3_leaf_read (fs/xfs/libxfs/xfs_attr_leaf.c:458) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr_leaf_hasname (fs/xfs/libxfs/xfs_attr.c:1206) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr_leaf_get (fs/xfs/libxfs/xfs_attr.c:1275) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr_get (fs/xfs/libxfs/xfs_attr.c:276) xfs
-> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_xattr_get (fs/xfs/xfs_xattr.c:143) xfs
-
-A different read.
-
-I'm not seeing a _race_ here.  I'm seeing tasks _stuck_, but on what?
-A missing wakeup?
+Sorry, must have been my bad. I didn't find the actual patch though,
+only proposed way to fix this bug:
+https://lkml.kernel.org/r/%3C20230119045253.GI360264@dread.disaster.area%3E
+So I'll cook patch and will send it shortly.
