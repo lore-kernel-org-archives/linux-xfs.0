@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE0BD6A342;
-	Thu, 18 Apr 2024 07:41:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E10A70CAA;
+	Thu, 18 Apr 2024 07:41:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713426068; cv=none; b=kvNEWam4mh8+Vy9QFc0Bxcgvit58jkXW+AAAROMLA6jtyIpm06lj4+LAo6216IB2Oo2VIoRNvPkE/6LQiFoWciQQZYsUk3B+MbBEFiRl9dEmmU2u4+RaZqNmexMQptGgR3j5ch8vSVoRLT1Cbe0z4j6Mp6CkeQrpik2RutMSSws=
+	t=1713426069; cv=none; b=U27IOzoqMTpvx9RDGLj61Dd4iQj3syG+9VbmQfbwGsrmm1ZuNHLnk/sr66ocQJem79ADlWI6MfeDwk7v2lwiM61Dg6p8abtpRpXpLSGgnM8moOqbjbxiA5AY/pcSA7FUx6tZsGoOGqSlvou7NqoPfNIAQsFp3yMLyxCubHAV8L4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713426068; c=relaxed/simple;
-	bh=CToSS6I7amLm3aUdIcGGGg8WCvN7rg7XPN2G4GFgufQ=;
+	s=arc-20240116; t=1713426069; c=relaxed/simple;
+	bh=bGIQsHoiORvPOi7ZtVT7+8tcgKpbWaAQH8lYxD6klOk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KjuKcNGfbFnAusROqOG34dXnG9EIxt3yFMEeju4/08DUumYqhZpCtMqqdQYaHRmCN4kniqtXSQ+Nkdr6RLC6CENzZZLc5h2pwNgdlxuN+N47wAsyMIL0if2k3Ar09crhBRzXT4Y7c8xVfB1PJHAE991ZzT7wHT3rvA+CLf2+R1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vGKKfNoL; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=d9JtN4upUE4FyYYU1QocrtnW7PLZYgQWJvEuiSIPFFC1+iZ5DtoxMp7Ep5YE3cfT2MsB3rjM3b2YnClKE67Xqt7IX69Xg6buqPV2zLX1Cg0wL4we4tLXrkgE2r9m0qBFZTOYcsVaKp4d2GOGlG5hUtmD67RpK27PIRLHnARqEFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0gMHlR4O; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vGKKfNoL"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0gMHlR4O"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=h8UtT+bq6dMZ2LljslF41Fz9WxTreNCs14K/ecsAusM=; b=vGKKfNoLi5XU+rt+20p2kIHU6z
-	nLb/6OXHdPXtb+kaiGCvG4ERwNhEa8/Djv6HoBAxIH0GfirRcapjnuRwN4Be5fpquO7zDbbgIITSd
-	8giEowY2pEYwnCKnfyQYoBRou28WJCuyoMtMdrz+9JKf99SKKS5XalcX5rvFWW1D+o49LuP4+DvtA
-	Sb37U5yqz5B2d+1zhsnzkPIoo/ZMUZDOKXd5FowdheiUDHNS6YT+e/fZfjvHq84R+JXSa5uiLJ62E
-	7hgLusn8rHCl/PjoEck2/rEgfbmUTuFBtauFMD8J+L+Bp8SlZj500dYEe55WRqvhrJeRDSXV5BZnz
-	/RytaEQQ==;
+	bh=PHPH+2rTlZBkcWWeNUkBkhR3vyx2Mh301mRl5dtiPEc=; b=0gMHlR4OVG2OCu4hK5pJBNyBiy
+	c4vU3/YkbR47ztkAXum1urU//w9a6JCNlZnhKtb5JWqjdWmxAJcwrzRc85bjl0kFjo4CyEqZ8zUsD
+	+cRUU6/FXqkKoLTAjAPNgSphL4ysNKjcDNaaz1tvAwz4vFurWcLg572z2DvvHut7ZYyvEqSz4vqBs
+	vgPS36PTp9R6Bsy5x1xsS5nBIjf6H6NHKr4eGbdxy/bc7suErHG/evyaSIOtw8Yn48RerKwK6EhNe
+	ZCGFGB0JzJ1NBja0bwYFg5As+tQ/kyFLaqyLO0pOrSRjDSk0rRB09zegUzl4RUQCapJpUHYAwlK1k
+	PbK+/BIA==;
 Received: from 3.95.143.157.bbcs.as8758.net ([157.143.95.3] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rxMOF-00000001Ilm-3kAJ;
-	Thu, 18 Apr 2024 07:41:04 +0000
+	id 1rxMOJ-00000001Imp-2RKe;
+	Thu, 18 Apr 2024 07:41:07 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J . Wong " <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	fstests@vger.kernel.org
-Subject: [PATCH 4/5] xfs/{158,160}: split out v4 tests
-Date: Thu, 18 Apr 2024 09:40:45 +0200
-Message-Id: <20240418074046.2326450-5-hch@lst.de>
+Subject: [PATCH 5/5] xfs: don't run tests that require v4 file systems when not supported
+Date: Thu, 18 Apr 2024 09:40:46 +0200
+Message-Id: <20240418074046.2326450-6-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240418074046.2326450-1-hch@lst.de>
 References: <20240418074046.2326450-1-hch@lst.de>
@@ -50,130 +50,199 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Move the subtests that check we can't upgrade v4 file systems to a
-separate test.
+Add a _require_xfs_nocrc helper that checks that we can mkfs and mount
+a crc=0 file systems before running tests that rely on it to avoid failures
+on kernels with CONFIG_XFS_SUPPORT_V4 disabled.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/158     |  5 -----
- tests/xfs/158.out |  3 ---
- tests/xfs/160     |  5 -----
- tests/xfs/160.out |  3 ---
- tests/xfs/612     | 32 ++++++++++++++++++++++++++++++++
- tests/xfs/612.out |  7 +++++++
- 6 files changed, 39 insertions(+), 16 deletions(-)
- create mode 100755 tests/xfs/612
- create mode 100644 tests/xfs/612.out
+ common/xfs    | 10 ++++++++++
+ tests/xfs/002 |  1 +
+ tests/xfs/095 |  1 +
+ tests/xfs/096 |  1 +
+ tests/xfs/132 |  1 +
+ tests/xfs/148 |  6 ++++++
+ tests/xfs/194 | 10 ++++++++++
+ tests/xfs/199 |  1 +
+ tests/xfs/300 |  1 +
+ tests/xfs/526 |  3 +++
+ tests/xfs/612 |  1 +
+ tests/xfs/613 |  1 +
+ 12 files changed, 37 insertions(+)
 
-diff --git a/tests/xfs/158 b/tests/xfs/158
-index 4440adf6e..9f03eb528 100755
---- a/tests/xfs/158
-+++ b/tests/xfs/158
-@@ -23,11 +23,6 @@ _require_xfs_repair_upgrade inobtcount
- _scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
- 	echo "Should not be able to format with inobtcount but not finobt."
+diff --git a/common/xfs b/common/xfs
+index 49ca5a2d5..733c3a5be 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1852,3 +1852,13 @@ _xfs_discard_max_offset_kb()
+ 	$XFS_IO_PROG -c 'statfs' "$1" | \
+ 		awk '{g[$1] = $3} END {print (g["geom.bsize"] * g["geom.datablocks"] / 1024)}'
+ }
++
++# check if mkfs and the kernel support nocrc (v4) file systems
++_require_xfs_nocrc()
++{
++	_scratch_mkfs_xfs -m crc=0 > /dev/null 2>&1 || \
++		_notrun "v4 file systems not supported"
++	_try_scratch_mount > /dev/null 2>&1 || \
++		_notrun "v4 file systems not supported"
++	_scratch_unmount
++}
+diff --git a/tests/xfs/002 b/tests/xfs/002
+index 8dfd2693b..26d0cd6e4 100755
+--- a/tests/xfs/002
++++ b/tests/xfs/002
+@@ -23,6 +23,7 @@ _begin_fstest auto quick growfs
+ _supported_fs xfs
+ _require_scratch_nocheck
+ _require_no_large_scratch_dev
++_require_xfs_nocrc
  
--# Make sure we can't upgrade a V4 filesystem
--_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
--_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
--_check_scratch_xfs_features INOBTCNT
--
- # Make sure we can't upgrade a filesystem to inobtcount without finobt.
- _scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
- _scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-diff --git a/tests/xfs/158.out b/tests/xfs/158.out
-index 5461031a3..3bc043e43 100644
---- a/tests/xfs/158.out
-+++ b/tests/xfs/158.out
-@@ -1,8 +1,5 @@
- QA output created by 158
- Running xfs_repair to upgrade filesystem.
--Inode btree count feature only supported on V5 filesystems.
--FEATURES: INOBTCNT:NO
--Running xfs_repair to upgrade filesystem.
- Inode btree count feature requires free inode btree.
- FEATURES: INOBTCNT:NO
- Fail partway through upgrading
-diff --git a/tests/xfs/160 b/tests/xfs/160
-index 399fe4bcf..d11eaba3c 100755
---- a/tests/xfs/160
-+++ b/tests/xfs/160
-@@ -22,11 +22,6 @@ _require_xfs_repair_upgrade bigtime
- date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
- 	_notrun "Userspace does not support dates past 2038."
+ _scratch_mkfs_xfs -m crc=0 -d size=128m >> $seqres.full 2>&1 || _fail "mkfs failed"
  
--# Make sure we can't upgrade a V4 filesystem
--_scratch_mkfs -m crc=0 >> $seqres.full
--_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
--_check_scratch_xfs_features BIGTIME
--
- # Make sure we're required to specify a feature status
- _scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
- _scratch_xfs_admin -O bigtime 2>> $seqres.full
-diff --git a/tests/xfs/160.out b/tests/xfs/160.out
-index 58fdd68da..9a7647f25 100644
---- a/tests/xfs/160.out
-+++ b/tests/xfs/160.out
-@@ -1,8 +1,5 @@
- QA output created by 160
- Running xfs_repair to upgrade filesystem.
--Large timestamp feature only supported on V5 filesystems.
--FEATURES: BIGTIME:NO
--Running xfs_repair to upgrade filesystem.
- Running xfs_repair to upgrade filesystem.
- Adding inode btree counts to filesystem.
- Adding large timestamp support to filesystem.
-diff --git a/tests/xfs/612 b/tests/xfs/612
-new file mode 100755
-index 000000000..4ae4d3977
---- /dev/null
-+++ b/tests/xfs/612
-@@ -0,0 +1,32 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
+diff --git a/tests/xfs/095 b/tests/xfs/095
+index a3891c85e..e7dc3e9f4 100755
+--- a/tests/xfs/095
++++ b/tests/xfs/095
+@@ -19,6 +19,7 @@ _begin_fstest log v2log auto
+ _supported_fs xfs
+ _require_scratch
+ _require_v2log
++_require_xfs_nocrc
+ 
+ if [ "$(blockdev --getss $SCRATCH_DEV)" != "512" ]; then
+ 	_notrun "need 512b sector size"
+diff --git a/tests/xfs/096 b/tests/xfs/096
+index 7eff6cb1d..0a1bfb3fa 100755
+--- a/tests/xfs/096
++++ b/tests/xfs/096
+@@ -20,6 +20,7 @@ _supported_fs xfs
+ 
+ _require_scratch
+ _require_xfs_quota
++_require_xfs_nocrc
+ 
+ function option_string()
+ {
+diff --git a/tests/xfs/132 b/tests/xfs/132
+index ee1c8c1ec..b46d3d28c 100755
+--- a/tests/xfs/132
++++ b/tests/xfs/132
+@@ -19,6 +19,7 @@ _supported_fs xfs
+ 
+ # we intentionally corrupt the filesystem, so don't check it after the test
+ _require_scratch_nocheck
++_require_xfs_nocrc
+ 
+ # on success, we'll get a shutdown filesystem with a really noisy log message
+ # due to transaction cancellation.  Hence we don't want to check dmesg here.
+diff --git a/tests/xfs/148 b/tests/xfs/148
+index c9f634cfd..fde3bf476 100755
+--- a/tests/xfs/148
++++ b/tests/xfs/148
+@@ -27,6 +27,8 @@ _cleanup()
+ _supported_fs xfs
+ _require_test
+ _require_attrs
++_require_xfs_nocrc
++
+ _disable_dmesg_check
+ 
+ imgfile=$TEST_DIR/img-$seq
+@@ -40,6 +42,10 @@ test_names=("something" "$nullstr" "$slashstr" "another")
+ rm -f $imgfile $imgfile.old
+ 
+ # Format image file w/o crcs so we can sed the image file
 +#
-+# FS QA Test No. 612
-+# 
-+# Check that we can upgrade v5 only features on a v4 file system
++# TODO: It might be possible to rewrite this using proper xfs_db
++# fs manipulation commands that would work with CRCs.
++#
+ # We need to use 512 byte inodes to ensure the attr forks remain in short form
+ # even when security xattrs are present so we are always doing name matches on
+ # lookup and not name hash compares as leaf/node forms will do.
+diff --git a/tests/xfs/194 b/tests/xfs/194
+index 5a1dff5d2..2fcc55b3e 100755
+--- a/tests/xfs/194
++++ b/tests/xfs/194
+@@ -30,6 +30,16 @@ _supported_fs xfs
+ # real QA test starts here
+ 
+ _require_scratch
 +
-+. ./common/preamble
-+_begin_fstest auto quick
++#
++# This currently forces nocrc because only that can support 512 byte block size
++# and thus block size = 1/8 page size on 4k page size systems.
++# In theory we could run it on systems with larger page size with CRCs, or hope
++# that large folios would trigger the same issue.
++# But for now that is left as an exercise for the reader.
++#
++_require_xfs_nocrc
 +
-+# Import common functions.
-+. ./common/filter
+ _scratch_mkfs_xfs >/dev/null 2>&1
+ 
+ # For this test we use block size = 1/8 page size
+diff --git a/tests/xfs/199 b/tests/xfs/199
+index 4669f2c3e..f99b04db3 100755
+--- a/tests/xfs/199
++++ b/tests/xfs/199
+@@ -26,6 +26,7 @@ _cleanup()
+ _supported_fs xfs
+ 
+ _require_scratch
++_require_xfs_nocrc
+ 
+ # clear any mkfs options so that we can directly specify the options we need to
+ # be able to test the features bitmask behaviour correctly.
+diff --git a/tests/xfs/300 b/tests/xfs/300
+index 2ee5eee71..bc1f0efc6 100755
+--- a/tests/xfs/300
++++ b/tests/xfs/300
+@@ -13,6 +13,7 @@ _begin_fstest auto fsr
+ . ./common/filter
+ 
+ _require_scratch
++_require_xfs_nocrc
+ 
+ # real QA test starts here
+ 
+diff --git a/tests/xfs/526 b/tests/xfs/526
+index 4261e8497..c5c5f9b1a 100755
+--- a/tests/xfs/526
++++ b/tests/xfs/526
+@@ -27,6 +27,9 @@ _require_test
+ _require_scratch_nocheck
+ _require_xfs_mkfs_cfgfile
+ 
++# Currently the only conflicting options are v4 specific
++_require_xfs_nocrc
 +
-+# real QA test starts here
-+_supported_fs xfs
-+_require_scratch_xfs_inobtcount
-+_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-+_require_xfs_repair_upgrade inobtcount
-+
-+# Make sure we can't upgrade to inobt on a V4 filesystem
-+_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
-+_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-+_check_scratch_xfs_features INOBTCNT
-+
-+# Make sure we can't upgrade to bigtim on a V4 filesystem
-+_scratch_mkfs -m crc=0 >> $seqres.full
-+_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
-+_check_scratch_xfs_features BIGTIME
-+
-+status=0
-+exit
-diff --git a/tests/xfs/612.out b/tests/xfs/612.out
-new file mode 100644
-index 000000000..6908c15f8
---- /dev/null
-+++ b/tests/xfs/612.out
-@@ -0,0 +1,7 @@
-+QA output created by 612
-+Running xfs_repair to upgrade filesystem.
-+Inode btree count feature only supported on V5 filesystems.
-+FEATURES: INOBTCNT:NO
-+Running xfs_repair to upgrade filesystem.
-+Large timestamp feature only supported on V5 filesystems.
-+FEATURES: BIGTIME:NO
+ cfgfile=$TEST_DIR/a
+ rm -rf $cfgfile
+ 
+diff --git a/tests/xfs/612 b/tests/xfs/612
+index 4ae4d3977..0f6df7deb 100755
+--- a/tests/xfs/612
++++ b/tests/xfs/612
+@@ -17,6 +17,7 @@ _supported_fs xfs
+ _require_scratch_xfs_inobtcount
+ _require_command "$XFS_ADMIN_PROG" "xfs_admin"
+ _require_xfs_repair_upgrade inobtcount
++_require_xfs_nocrc
+ 
+ # Make sure we can't upgrade to inobt on a V4 filesystem
+ _scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
+diff --git a/tests/xfs/613 b/tests/xfs/613
+index 522358cb3..8bff21711 100755
+--- a/tests/xfs/613
++++ b/tests/xfs/613
+@@ -34,6 +34,7 @@ _supported_fs xfs
+ _fixed_by_kernel_commit 237d7887ae72 \
+ 	"xfs: show the proper user quota options"
+ 
++_require_xfs_nocrc
+ _require_test
+ _require_loop
+ _require_xfs_io_command "falloc"
 -- 
 2.39.2
 
