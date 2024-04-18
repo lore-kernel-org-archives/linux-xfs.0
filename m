@@ -1,64 +1,45 @@
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3F85338A
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Apr 2024 04:27:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5FC7EDF
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Apr 2024 04:31:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713414471; cv=none; b=H8uTyTP5SjPZuzoLMXEjRT2TSFS5yRSKB4wdB+aQ4cVIUjqdVx1A1uwqpXt6sSQ/v1qetshpnhqycRezCZUDfMIRo+hklCQd7nBSfzCez87YbDCGWaBZACqrS/uOsLkUemSaK3TEkAuuBdbLRjmKmEaRBu52rd0iun8IsDR1jgI=
+	t=1713414689; cv=none; b=o0TgKC4hNR/pcTbAkH7ETmsUl4SKhmAt40Iqq2eMxl0aakj8qsts+61EtgrR7l2m5FfqGip7AIikdMtw70UO1jIKkpopDKEKPQvvExALr0FwTlys12HuqcITrURff4ks5Sf4MC2g+62+bKZaIVHSsV7aU2WXlORQxDVMEHioa3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713414471; c=relaxed/simple;
-	bh=SfG1s1y1fbs4IRvRpyJEItMWdHRLy7BTd3xvVF3hb1Q=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=NBAmUq6y/cxOf+G3WdpnRK3AItVJ8H91qzivkNMi3Fg8ySnXc1iGui/X0jiTPOyHD4/pti4EuSnyP9yqxZ9/PSNS+3KWOPAusa78qi0O+OPd6O9+4JiDxPL9FRQUs5f+yHA3QVFrBuZG2D+qhihrfngigYebpIKy/oNpGnXm4VI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-7d6c32ef13bso46011439f.0
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2024 21:27:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713414469; x=1714019269;
-        h=cc:to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SfG1s1y1fbs4IRvRpyJEItMWdHRLy7BTd3xvVF3hb1Q=;
-        b=uHvdcnUsl4C3XCStFHPWLBJ2lAwxghPEfkBAVtMLcZta8smIhDAxcUlW0xDEdqn6a2
-         ED0j8V8Bo9O3E6gw8FORWdD7mgLxYuqNzsafkuHM90sYzeKXaOTb/uJtzsXj/0j2B2rn
-         U/HrUFK+xK9T9K9P9Z3UsS5t0pjLknryBTb12ZRC3eld+rEeKAx5mJ+VDpO0CkILz78k
-         aDMuqu8mFygjZsyvsnom56P2F9Rv5bHkH+UPwgXNyaFFSv4vqd6ahnvkhaBqhRm7MZsg
-         4PyqTk1VvIQSbpEwXSzHvCqzSjOp+/KjskLRN+yVENDgLs3A7p6r19c287bqJ1cD86Ms
-         01hw==
-X-Forwarded-Encrypted: i=1; AJvYcCVuK7xwqFQT1/M6zLaQ7fe4qiaJLoygLcPWNsS0emusxOYBnZxXLyCCp3Q4uLAlZYgLT90YqS8Xh0LlT5A5PNK/ALpVEKj3Yx6s
-X-Gm-Message-State: AOJu0Yykzajl3PNdMCEOXrAbBGQlfTOveP7AKbIQCPQkvXdX33c4MCjK
-	P+YFC+qJN5NzgXoOrcBUTXZt/To4WMRi8jKGUVHU6x4FGptXyVEPF9adb3+KUJ91ZmeVTRURC8P
-	dvRBER9IbI95zo02wpZhkYySQ3Z8XTR+OxWgV4gLoRUu4bUBxJBIfgEU=
-X-Google-Smtp-Source: AGHT+IFwL8qeN80Hv4nk9W+bxA3Mu/wX0/j/+lzG4a9AN7cCSGgQotKYvsLnIC5qQraEK1JJIlW4Sb3AG3WAp6IiyW2Ip0HUyaAR
+	s=arc-20240116; t=1713414689; c=relaxed/simple;
+	bh=Q3Qirn57XIeppGyyK0u0+rzCXH4igXh3qGPVpeU5vwc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=myFYhbDbh5FulVVGwOzkuM9MqDHqPDsKzbj4fkhSNEa6e7mcM41/2Z8PX090F7MLDPzvGOxsNpCkB2pJBwnLSmSsps26cxhUBPO2vXnvUIHKcQuKacoLyztvayqLbjMXI6m2hSKH2fOteGd8bHrgU5DWigjEKEKQ/+c4hFMmQmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9611768C4E; Thu, 18 Apr 2024 06:31:22 +0200 (CEST)
+Date: Thu, 18 Apr 2024 06:31:22 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, bodonnel@redhat.com, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL 01/11] xfsprogs: packaging fixes for 6.7
+Message-ID: <20240418043122.GA23591@lst.de>
+References: <20240417220440.GB11948@frogsfrogsfrogs> <171339158311.1911630.13437553389622374759.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6638:8523:b0:482:e922:2823 with SMTP id
- is35-20020a056638852300b00482e9222823mr99129jab.0.1713414468938; Wed, 17 Apr
- 2024 21:27:48 -0700 (PDT)
-Date: Wed, 17 Apr 2024 21:27:48 -0700
-In-Reply-To: <20240418042740.313103-1-aha310510@gmail.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000c63725061657646d@google.com>
-Subject: Re: [syzbot] [fs?] [mm?] KCSAN: data-race in __filemap_remove_folio /
- folio_mapping (2)
-From: syzbot <syzbot+606f94dfeaaa45124c90@syzkaller.appspotmail.com>
-To: aha310510@gmail.com
-Cc: aha310510@gmail.com, djwong@kernel.org, hch@infradead.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <171339158311.1911630.13437553389622374759.stg-ugh@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-> please test data-race in __filemap_remove_folio / folio_mapping
->
-> #syz test git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
+On Wed, Apr 17, 2024 at 03:07:35PM -0700, Darrick J. Wong wrote:
+> Hi Carlos,
+> 
+> Please pull this branch with changes for xfsprogs for 6.6-rc1.
 
-This crash does not have a reproducer. I cannot test it.
+I think the scripts need a little tweak, anything from now on should
+be for 6.8-rc or later.
 
