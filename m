@@ -1,118 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B6C15AAD9;
-	Thu, 18 Apr 2024 09:31:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7C47E56C;
+	Thu, 18 Apr 2024 13:31:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713432675; cv=none; b=bIxWk6Y9Ff7l/7luR4GEdK7vrxAOJWvJhw+rsnAGCet5xcQF8uC87bhu3GTuO6k2HoPZsvULNRp0P8S1eSFUYIDQhSw+HbKnbFsqnQC7e3odr3u0BX7l7ldAqWZ7hA/+zk3iUgWFgGzyXCl/6j6TYN/KyuzWQn1Ah/ylct/vMdA=
+	t=1713447068; cv=none; b=AorL3vfhhnz8vCtqkz7QAc5FOV1szryb9B9vUYbXv4HtgZqdttUUfqA2SKmYzSIwSHrzidONAZiXBW/YJaxBO3zrd9AzlgjmQ/vdkrONjqr4oBtUeV8lJuS6Atc+8enlgQpaokrwm4hyIET/yqljCf2vxEwMeJLhjvkKKfoyNS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713432675; c=relaxed/simple;
-	bh=gN0fEs2IeXR2uuO3djCJi6oqh+EDHi/DMzZ/PmxG0OY=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=R4cLJgTW/7r/D+CMJhTUKZtCew4qappdXy75yIZA5BKHzmbd3GxZSgd1XbSST4LoB0Oia/4APyqSVBpCNdcc95qm7TZef6hS4RiZj1rjZ4LWSlKaXJg5mvtfrhh9KVunbFrJA7H0uL/8696a6OJ8BsUBb7zd5SJ5nieT5rWecog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KYtQ8IV7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713447068; c=relaxed/simple;
+	bh=3j2rz2dbI2fkH5QHoUTV7PpGZBloSPbbrcpGku/DmFo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dmRhcK26aLJZFNWv6ibQ4bMc6gmGUEfGjN7C+yw1BOHFwXDvYkQE2YqNagcxGdQr7L+c4J6TMU6EUzHGNl5C+pSZpM+cQ0XUA1YsMOpKf8/lXHdkCt+e3XDY1UM4aRiIbUhwRMugwQw5wiVm40uEmKbfwuqS2IdWRET+OJHJQTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pG34Xm1m; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KYtQ8IV7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21B6EC113CC;
-	Thu, 18 Apr 2024 09:31:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713432675;
-	bh=gN0fEs2IeXR2uuO3djCJi6oqh+EDHi/DMzZ/PmxG0OY=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=KYtQ8IV73qHbXNUqGYmdNx4WMyYZ2SQUo4t+qUdIDXO09H/BsM5ayYka8bGqD5i7l
-	 R+j79Z4noQwdPahEtL/ywwiqVRdmIC2l5a9GRyT2hBkdyuhDBTAYtdPV1PXUYnDSye
-	 cpOP6uh7TOA9AMS0Qon2rUXsbNZwZSIuixDChyolENUC/YrnQOmJbjUeH9wygirF0p
-	 9gC8EWWBy0T74iq85j6hXNQhtm78LBA0/G9h9MAa9bdrELL4/6/F7CO/2ZBVm/IXY4
-	 /qfFM5vVT7viU2xW+s0j5izNZQ0zmtuVpqj28YyAu8EBP4C6YVCPgyBR7QuKjAxoM0
-	 /5mPUrrvsuqoQ==
-References: <20240320110548.2200662-1-yi.zhang@huaweicloud.com>
- <87ttk0d2ck.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20240417-finster-kichern-31077915c0be@brauner>
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- djwong@kernel.org, hch@infradead.org, david@fromorbit.com, tytso@mit.edu,
- jack@suse.cz, yi.zhang@huawei.com, chengzhihao1@huawei.com,
- yukuai3@huawei.com
-Subject: Re: [PATCH v4 0/9] xfs/iomap: fix non-atomic clone operation and
- don't update size when zeroing range post eof
-Date: Thu, 18 Apr 2024 15:00:11 +0530
-In-reply-to: <20240417-finster-kichern-31077915c0be@brauner>
-Message-ID: <87bk67t3ts.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pG34Xm1m"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=fnGoDCR4iCyVOVXnpcrF/UTwU56hAzv+QpuJiLDXQlY=; b=pG34Xm1mx0NiIYrVKyXftfANoq
+	vsEd3i6d3wpkxJlzoUKk8zpwKXazQbeksdDfiS8vYRmWAQmXEV1AAg/dA0g4JW/Gu29K8ODltT97C
+	1t6IQpuJ+1qaAd6jY6w38W8IX8Dd9/RtOXlZKMuOIeM747cebc+ksWfFpquOC9/+AnYa/helqm+cB
+	nGZg3RhNNYa7Ax4grnwh7GwQ9zwaD/mxN2ETKcFvLgdDZ6KL56nUhfI0H5GfWj6tYSyo7MOxJHmfq
+	KuldwSJMz3oeiuFtqAw04ihniz0Gx9tcdrzdjymXdDPNeSPFyhK78bqvZHfz34tGIfi3itRZBXhOp
+	NyfjzGBA==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rxRqq-00000005Pmu-3Iiy;
+	Thu, 18 Apr 2024 13:30:56 +0000
+Date: Thu, 18 Apr 2024 14:30:56 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: fstests@vger.kernel.org, kdevops@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org, david@redhat.com,
+	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de
+Subject: Re: [PATCH] fstests: add fsstress + compaction test
+Message-ID: <ZiEgkExEZ3By2wD0@casper.infradead.org>
+References: <20240418001356.95857-1-mcgrof@kernel.org>
+ <ZiB5x-EKrmb1ZPuf@casper.infradead.org>
+ <ZiDA1Lokzwxd3d-v@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZiDA1Lokzwxd3d-v@bombadil.infradead.org>
 
-On Wed, Apr 17, 2024 at 01:40:36 PM +0200, Christian Brauner wrote:
-> On Wed, Apr 17, 2024 at 10:12:10AM +0530, Chandan Babu R wrote:
->> On Wed, Mar 20, 2024 at 07:05:39 PM +0800, Zhang Yi wrote:
->> > Changes since v3:
->> >  - Improve some git message comments and do some minor code cleanup, no
->> >    logic changes.
->> >
->> > Changes since v2:
->> >  - Merge the patch for dropping of xfs_convert_blocks() and the patch
->> >    for modifying xfs_bmapi_convert_delalloc().
->> >  - Reword the commit message of the second patch.
->> >
->> > Changes since v1:
->> >  - Make xfs_bmapi_convert_delalloc() to allocate the target offset and
->> >    drop the writeback helper xfs_convert_blocks().
->> >  - Don't use xfs_iomap_write_direct() to convert delalloc blocks for
->> >    zeroing posteof case, use xfs_bmapi_convert_delalloc() instead.
->> >  - Fix two off-by-one issues when converting delalloc blocks.
->> >  - Add a separate patch to drop the buffered write failure handle in
->> >    zeroing and unsharing.
->> >  - Add a comments do emphasize updating i_size should under folio lock.
->> >  - Make iomap_write_end() to return a boolean, and do some cleanups in
->> >    buffered write begin path.
->> >
->> > This patch series fix a problem of exposing zeroed data on xfs since the
->> > non-atomic clone operation. This problem was found while I was
->> > developing ext4 buffered IO iomap conversion (ext4 is relying on this
->> > fix [1]), the root cause of this problem and the discussion about the
->> > solution please see [2]. After fix the problem, iomap_zero_range()
->> > doesn't need to update i_size so that ext4 can use it to zero partial
->> > block, e.g. truncate eof block [3].
->> >
->> > [1] https://lore.kernel.org/linux-ext4/20240127015825.1608160-1-yi.zhang@huaweicloud.com/
->> > [2] https://lore.kernel.org/linux-ext4/9b0040ef-3d9d-6246-4bdd-82b9a8f55fa2@huaweicloud.com/
->> > [3] https://lore.kernel.org/linux-ext4/9c9f1831-a772-299b-072b-1c8116c3fb35@huaweicloud.com/
->> >
->> > Thanks,
->> > Yi.
->> >
->> > Zhang Yi (9):
->> >   xfs: match lock mode in xfs_buffered_write_iomap_begin()
->> >   xfs: make the seq argument to xfs_bmapi_convert_delalloc() optional
->> >   xfs: make xfs_bmapi_convert_delalloc() to allocate the target offset
->> >   xfs: convert delayed extents to unwritten when zeroing post eof blocks
->> >   iomap: drop the write failure handles when unsharing and zeroing
->> >   iomap: don't increase i_size if it's not a write operation
->> >   iomap: use a new variable to handle the written bytes in
->> >     iomap_write_iter()
->> >   iomap: make iomap_write_end() return a boolean
->> >   iomap: do some small logical cleanup in buffered write
->> >
->> 
->> Hi all,
->> 
->> I have picked up this patchset for inclusion into XFS' 6.10-rc1 patch
->> queue. Please let me know if there are any objections.
->
-> It'd be nice if I could take the iomap patches into the vfs.iomap tree
-> that you can then pull from if you depend on it.. There's already some
-> cleanups in there. Sounds ok?
+On Wed, Apr 17, 2024 at 11:42:28PM -0700, Luis Chamberlain wrote:
+> > > Today I find that v6.9-rc4 is also hitting an unrecoverable hung task
+> > > between compaction and fsstress while running generic/476 on the
+> > > following kdevops test sections [2]:
+> > > 
+> > >   * xfs_nocrc
+> > >   * xfs_nocrc_2k
+> > >   * xfs_nocrc_4k
+> > > 
+> > > Analyzing the trace I see the guest uses loopback block devices for the
+> > > fstests TEST_DEV, the loopback file uses sparsefiles on a btrfs
+> > > partition. The contention based on traces [3] [4] seems to be that we
+> > > have somehow have fsstress + compaction race on folio_wait_bit_common().
+> > 
+> > What do you mean by "race"?  Here's what I see:
+> 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: folio_wait_bit_common (mm/filemap.c:1275 (discriminator 4)) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: migrate_pages_batch (./include/linux/pagemap.h:1048 mm/migrate.c:1486 mm/migrate.c:1700) 
 
-Yes, that works for me. I will pick only those patches that are specific to
-XFS i.e. patches numbered 1 to 4.
+That's folio_lock().
 
--- 
-Chandan
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task kworker/u38:8:807213 blocked for more than 120 seconds.
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: folio_wait_bit_common (mm/filemap.c:1275 (discriminator 4)) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: extent_write_cache_pages (fs/btrfs/extent_io.c:2130) btrfs
+
+folio_lock().
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task kworker/u34:9:1268436 blocked for more than 120 seconds.
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: folio_wait_bit_common (mm/filemap.c:1275 (discriminator 4)) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: btrfs_folio_start_writer_lock (./include/linux/pagemap.h:1048 fs/btrfs/subpage.c:394) btrfs
+
+folio_lock().
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task xfsaild/loop5:1377891 blocked for more than 120 seconds.
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: io_schedule (kernel/sched/core.c:9019 (discriminator 1) kernel/sched/core.c:9045 (discriminator 1)) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: rq_qos_wait (block/blk-rq-qos.c:284 (discriminator 4)) 
+
+I'm not familiar with this code.
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: wbt_wait (block/blk-wbt.c:660) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __rq_qos_throttle (block/blk-rq-qos.c:66) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: blk_mq_submit_bio (block/blk-mq.c:2880 block/blk-mq.c:2984) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: submit_bio_noacct_nocheck (./include/linux/bio.h:639 block/blk-core.c:701 block/blk-core.c:729) 
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: _xfs_buf_ioapply (fs/xfs/xfs_buf.c:1584 fs/xfs/xfs_buf.c:1671) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __xfs_buf_submit (./arch/x86/include/asm/atomic.h:67 ./include/linux/atomic/atomic-arch-fallback.h:2278 ./include/linux/atomic/atomic-instrumented.h:1384 fs/xfs/xfs_buf.c:1762) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_delwri_submit_buffers (fs/xfs/xfs_buf.c:2280 (discriminator 2)) xfs
+
+... but it's submitting a write.
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfsaild (fs/xfs/xfs_trans_ail.c:560 (discriminator 1) fs/xfs/xfs_trans_ail.c:671 (discriminator 1)) xfs
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task fsstress:1377894 blocked for more than 120 seconds.
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_iowait (fs/xfs/xfs_buf.c:1691) xfs
+
+Waiting for an I/O completion
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __xfs_buf_submit (fs/xfs/xfs_buf.c:1770) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_read_map (fs/xfs/xfs_buf.c:870) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289 (discriminator 1)) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_btree_read_buf_block (./fs/xfs/xfs_trans.h:210 fs/xfs/libxfs/xfs_btree.c:1432) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_btree_lookup_get_block (fs/xfs/libxfs/xfs_btree.c:1934) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2045) xfs
+
+but a read, not a write.
+
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: INFO: task fsstress:1377895 blocked for more than 120 seconds.
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_iowait (fs/xfs/xfs_buf.c:1691) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: __xfs_buf_submit (fs/xfs/xfs_buf.c:1770) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_buf_read_map (fs/xfs/xfs_buf.c:870) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289 (discriminator 1)) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_da_read_buf (fs/xfs/libxfs/xfs_da_btree.c:2676) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr3_leaf_read (fs/xfs/libxfs/xfs_attr_leaf.c:458) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr_leaf_hasname (fs/xfs/libxfs/xfs_attr.c:1206) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr_leaf_get (fs/xfs/libxfs/xfs_attr.c:1275) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_attr_get (fs/xfs/libxfs/xfs_attr.c:276) xfs
+> Apr 16 23:06:11 base-xfs-nocrc-2k kernel: xfs_xattr_get (fs/xfs/xfs_xattr.c:143) xfs
+
+A different read.
+
+I'm not seeing a _race_ here.  I'm seeing tasks _stuck_, but on what?
+A missing wakeup?
