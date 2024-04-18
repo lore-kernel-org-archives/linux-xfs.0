@@ -1,44 +1,46 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD85F9E9;
-	Thu, 18 Apr 2024 06:56:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD691D68F;
+	Thu, 18 Apr 2024 06:57:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713423370; cv=none; b=lUhV6dk3QvMVvWeEkrLPPJTwyfJ/+ATO/jNTkH1Dl+65bR48ccPZ7Z3RivSVnDjd1ANNxYd6z1+v2BSbkAdN1fNM02aIMHuIK6FGfom1az+q56sRj4efJtEHNhgbn6mCIzkOXEi3+vipEoJJtBfetwuV5YbAd3jsgfgqy2sePss=
+	t=1713423460; cv=none; b=ptyCbJ47DCBINcD2gwZc8IlAV62a5WegdUhvDVlByCBP3faW8aU490PGvCraL6Bu4XOkOHePDyfmPWwSS5WQuTOnqtNn8vI2v7IszDKyJgigbJpgXGwNx2U4E08T4P60PBOVRLw0iCzW3EiOOUajdhZ/00WYRjb2KM1Hlt4o8HQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713423370; c=relaxed/simple;
-	bh=IsExlcz2Xfug/BF9nxQEE7UvsLNy9ys/X476DRWYKxw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=uuu0QG68bNfC0r53zMTkRNads6a8gaPZZL/72LabiQHR5U3CbwHGBWI00rIMeUs+3si6K7JOrT8PSTKCkCII5fhuE7OeyesadWO6FxFYfxiJCjUwZW7rmIBvp4KTEkUMkSkMwnf7rDZEBj9AqtYvqw/RYhH0Xmd+XHvKQoBZnyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rf4a6dBH; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1713423460; c=relaxed/simple;
+	bh=hdMRk1LSH/lnEkyfJAy19Lc0gZf3hJSMMD4sQObLMV8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BQsXgyWUVPk+UKY29MkNfnbIw3rVvSBq9UJkuAHEU+nqkNRVB+yP6NsGbd8vezzXYRNF2x07/01zjUn+YMXbWOC66qMfwmvzvCRUWf3rJbqORarLZvVDU4zIKQQD/RDgrM0aOKT5yK67PQdqm9NGr/78Y6Rw2F1Keq467HSEO0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fhg3fK0M; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rf4a6dBH"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fhg3fK0M"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding
-	:Content-ID:Content-Description:References;
-	bh=rf7iH3kMuOmRA9x6ghFFTvcsrJ/ISQqGDxDhjq51q04=; b=rf4a6dBHA2GobREdG26szefzxA
-	HSdTSboPz51McD1ZaykaePmvtrK+wfJ3fJtYeQ+ygTaEGUMwhjlX8/2o9MIqjv3jY8jiJxazjH/YB
-	0xLiJgo4KxO2X85TbAjbjW+KherNdx8wK9ZuWOaN0f+PkW9bvtnMqFcjgAflHBIdZK8BtKJX/Tie6
-	sinLcqdj0XCZ8mNS2kgNb8rGaqrFLcEj6UPXn2j2q3PjaCuEO3K3VmBBH7/RdSCT53J5EF2r/VdSQ
-	IrMHyg0G6SzcYdf0iPM3kHeQmSSmF1UQTGYLeOhJ9fX4otg1XYoU4vbVzZpsA43QLRxuW0A8RYEJz
-	pKdaUvMQ==;
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=p/wnFP4mdXA5Mm/wJGf3pRXfWmVzoZ2R9xyuxxlwO3Q=; b=fhg3fK0MsHRh2wnDOWN84YdHFo
+	6KCBe8bCNjkROH4/ybblEjrHL0Uf3pZhxMhCpr3BS+sn5ZY3Cw6eTd6DutubyO9DhUsc7Ns2UvYQG
+	FnsLdYETr1IHHwis7sjuTF/QKVAvs4SvaQGTaGE4VaFxxofVA/BwgPB+eMSr5IBzDLj0VtRDGF/Vx
+	WG71/gBcJLCgNm+81iMH4FM0AeoxZi7KaeXu3rj6MoQZtvtul2Po93890x4gkJ3/bpYpup3e4zJkE
+	yALUMoU/TW7XTP50lVZ3yzXwg8Jw7yNywfUCt5RZ3MInKJqdz4TEiobgzc9g5UzgkaAeoWXpCcbs5
+	+TUuLfUg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rxLgm-00000001Bod-2kwO;
-	Thu, 18 Apr 2024 06:56:08 +0000
-Date: Wed, 17 Apr 2024 23:56:08 -0700
+	id 1rxLiE-00000001CEE-0bAs;
+	Thu, 18 Apr 2024 06:57:38 +0000
+Date: Wed, 17 Apr 2024 23:57:38 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Xiubo Li <xiubli@redhat.com>, linux-xfs@vger.kernel.org,
-	chandan.babu@oracle.com, djwong@kernel.org,
-	linux-kernel@vger.kernel.org,
-	Andrey Ryabinin <ryabinin.a.a@gmail.com>,
-	kasan-dev@googlegroups.com
-Subject: Re: xfs : WARNING: possible circular locking dependency detected
-Message-ID: <ZiDECInm854YiSPo@infradead.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, fstests@vger.kernel.org,
+	kdevops@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, david@redhat.com,
+	linmiaohe@huawei.com, muchun.song@linux.dev, osalvador@suse.de,
+	Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [PATCH] fstests: add fsstress + compaction test
+Message-ID: <ZiDEYrY479OdZBq2@infradead.org>
+References: <20240418001356.95857-1-mcgrof@kernel.org>
+ <ZiB5x-EKrmb1ZPuf@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,41 +49,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZiCp2ArgSzjGQZql@dread.disaster.area>
+In-Reply-To: <ZiB5x-EKrmb1ZPuf@casper.infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Adding the KASAN maintainer so that we actuall have a chane of
-fixing this instead of a rant that just gets lost on the xfs list..
+On Thu, Apr 18, 2024 at 02:39:19AM +0100, Matthew Wilcox wrote:
+> > Running compaction while we run fsstress can crash older kernels as per
+> > korg#218227 [0], the fix for that [0] has been posted [1] but that patch
+> > is not yet on v6.9-rc4 and the patch requires changes for v6.9.
+> 
+> It doesn't require changes, it just has prerequisites:
+> 
+> https://lore.kernel.org/all/ZgHhcojXc9QjynUI@casper.infradead.org/
 
-On Thu, Apr 18, 2024 at 03:04:24PM +1000, Dave Chinner wrote:
-> The only krealloc() in this path is:
-> 
-> 	new = krealloc(ifp->if_data, new_size,
->                         GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
-> 
-> And it explicitly uses __GFP_NOLOCKDEP to tell lockdep not to warn
-> about this allocation because of this false positive situation.
-> 
-> Oh. I've seen this before. This is a KASAN bug, and I'm pretty sure
-> I've posted a patch to fix it a fair while back that nobody seemed
-> to care about enough to review or merge it.
-> 
-> That is: kasan_save_stack() is doing a fixed GFP_KERNEL allocation
-> in an context where GFP_KERNEL allocations are known to generate
-> lockdep false positives.  This occurs depsite the XFS and general
-> memory allocation code doing exactly the right thing to avoid the
-> lockdep false positives (i.e. using and obeying __GFP_NOLOCKDEP).
-> 
-> The kasan code ends up in stack_depot_save_flags(), which does a
-> GFP_KERNEL allocation but filters out __GFP_NOLOCKDEP and does not
-> add it back. Hence kasan generates the false positive lockdep
-> warnings, not the code doing the original allocation.
-> 
-> kasan and/or stack_depot_save_flags() needs fixing here.
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
----end quoted text---
+How can we expedite getting this fix in?
+
