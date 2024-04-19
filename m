@@ -1,78 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD971B667;
-	Fri, 19 Apr 2024 06:10:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3724C8E0;
+	Fri, 19 Apr 2024 06:22:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713507051; cv=none; b=VTflJqbwBIVSHG8j6mqN4WW6LC1Z76wL8WqinXhisDqLZxjvkGWIkudRMZ+4iCsigxA+dbp/nVwNKopt5Lj4+JuTEaKDaSjs0cd3fqjTPif41OaCmbUI2tpCPyyumsNl2eu312a//Ko12YjojM3op+tIUWGlAkb/Snttw7YKnZw=
+	t=1713507731; cv=none; b=I2KTOvfO9+yVVqxqGSfNaHtulEWb8HBmV2toCfV2/ZDH/5puLnkUZ+e+QcQIjwA4jg4ld7v6eVNw9EEV3zfqpEfQWo1wgra6o//d5fGY6cbg4wwh98awF6xWDYlDDHxPXwzxpP1LVwa0Qp9mjXF6nqkYVFqVU0fkkJ4f8f31Vgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713507051; c=relaxed/simple;
-	bh=gTKwXvsblCudz6DySMG8Bzhl47r0kTOoiMzPOa8wdcs=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=AMVikubDwpvQ43lLTYDDHF57vkMhli0O9MiRbNTQisdAlUMe1WwQj01IjkE3EaWVO/xKK1zJVMjcocebxaryBamCZrJ3mcGvUjRWXtGhYGdykzqy1i4+BbeIbKDpfmpDeKpUf83kSDeMImiLAFDYYP1SXs5q2eIHG2Oki8My+kE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LMTqoaDs; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LMTqoaDs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA297C072AA;
-	Fri, 19 Apr 2024 06:10:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713507051;
-	bh=gTKwXvsblCudz6DySMG8Bzhl47r0kTOoiMzPOa8wdcs=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=LMTqoaDsdGEUNpHPHgjHLNdg/bkiD4jzjz8qAbwZd2rRa9qLx/iBqUH/bDhhsIk8Y
-	 JdHn3gj03z9+Y1RWfIXrBfMDAC19ytGvBZYy20Qd2JFZ28QPeC08f/NblRa2rPBelB
-	 wYjO/QzLFh2qbh65J1uVqLX2qhqvwLIW0pxA+orqN4kVQM8C9nomOngRhrgip0tHLi
-	 II41zb+bRmfmfQiPzetFruOWShCv+0ZATa+rnTb6mxX72Qtx8yuEqM6qLAjqzxnLTg
-	 i0VpwiV2/wIFV5a1kGGpjk6lUJPTlmDBELcXDfUq3a7I6Acqql/HjQ44bo2FC7oWdN
-	 fw229PrhpEyCQ==
-References: <20240320110548.2200662-1-yi.zhang@huaweicloud.com>
- <20240320110548.2200662-7-yi.zhang@huaweicloud.com>
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
- brauner@kernel.org, david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH v4 6/9] iomap: don't increase i_size if it's not a write
- operation
-Date: Fri, 19 Apr 2024 11:37:51 +0530
-In-reply-to: <20240320110548.2200662-7-yi.zhang@huaweicloud.com>
-Message-ID: <87edb13ms8.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=arc-20240116; t=1713507731; c=relaxed/simple;
+	bh=OgtNH68QHSOCj2Q1N4piVftBi0yqKXVj2TEitr652PM=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=oQueyN0L16s+cHzvgUHhy6onI0lQl7vqCcXn4UPFX8uuNeQqKxoBoRaOMRi9OpVVHHh/a9sMJs695rQ/ANYM4LDBxJx58crr4bWFed61RBS/GlvTk1Xbm4VIHjwqfLWML9tCWVVxPZUisuO9cRJQpOse0wvsGxBiJfvRRy0Cj9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4VLPcJ3b4nz1N87g;
+	Fri, 19 Apr 2024 14:19:12 +0800 (CST)
+Received: from canpemm500010.china.huawei.com (unknown [7.192.105.118])
+	by mail.maildlp.com (Postfix) with ESMTPS id 42AF4180073;
+	Fri, 19 Apr 2024 14:22:07 +0800 (CST)
+Received: from huawei.com (10.175.101.107) by canpemm500010.china.huawei.com
+ (7.192.105.118) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Fri, 19 Apr
+ 2024 14:22:06 +0800
+From: Ye Bin <yebin10@huawei.com>
+To: <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<chandan.babu@oracle.com>, <dchinner@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <yebin10@huawei.com>
+Subject: [PATCH RFC 2/2] xfs: avoid potenial alloc inode failed
+Date: Fri, 19 Apr 2024 14:18:48 +0800
+Message-ID: <20240419061848.1032366-3-yebin10@huawei.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240419061848.1032366-1-yebin10@huawei.com>
+References: <20240419061848.1032366-1-yebin10@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ canpemm500010.china.huawei.com (7.192.105.118)
 
-On Wed, Mar 20, 2024 at 07:05:45 PM +0800, Zhang Yi wrote:
-> From: Zhang Yi <yi.zhang@huawei.com>
->
-> Increase i_size in iomap_zero_range() and iomap_unshare_iter() is not
-> needed, the caller should handle it. Especially, when truncate partial
-> block, we should not increase i_size beyond the new EOF here. It doesn't
-> affect xfs and gfs2 now because they set the new file size after zero
-> out, it doesn't matter that a transient increase in i_size, but it will
-> affect ext4 because it set file size before truncate. So move the i_size
-> updating logic to iomap_write_iter().
->
+As 'pag->pagf_longest' may be temporarily set to 0. When the AGF buffer
+lock is not held, using 'pag->pagf_longest' to determine whether the space
+is available will cause misjudgment.
+When the fragmentation is not serious and the reserved space exists, using
+'pag->pagf_longest' to determine whether the space is available cannot filter
+out the space that really cannot be allocated.
+So remove judgement about 'pag->pagf_longest' in xfs_dialloc_good_ag().
 
-This patch causes generic/522 to consistently fail when using the following
-fstest configuration,
+Signed-off-by: Ye Bin <yebin10@huawei.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-TEST_DEV=/dev/loop16
-TEST_LOGDEV=/dev/loop13
-SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11 /dev/loop12"
-MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -lsize=1g'
-MOUNT_OPTIONS='-o usrquota,grpquota,prjquota'
-TEST_FS_MOUNT_OPTS="$TEST_FS_MOUNT_OPTS -o usrquota,grpquota,prjquota"
-TEST_FS_MOUNT_OPTS="-o logdev=/dev/loop13"
-SCRATCH_LOGDEV=/dev/loop15
-USE_EXTERNAL=yes
-LOGWRITES_DEV=/dev/loop15
-
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index e5ac3e5430c4..bb0ce2248386 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1689,7 +1689,6 @@ xfs_dialloc_good_ag(
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	xfs_extlen_t		ineed;
+-	xfs_extlen_t		longest = 0;
+ 	int			needspace;
+ 	int			error;
+ 
+@@ -1717,12 +1716,7 @@ xfs_dialloc_good_ag(
+ 
+ 	/*
+ 	 * Check that there is enough free space for the file plus a chunk of
+-	 * inodes if we need to allocate some. If this is the first pass across
+-	 * the AGs, take into account the potential space needed for alignment
+-	 * of inode chunks when checking the longest contiguous free space in
+-	 * the AG - this prevents us from getting ENOSPC because we have free
+-	 * space larger than ialloc_blks but alignment constraints prevent us
+-	 * from using it.
++	 * inodes if we need to allocate some.
+ 	 *
+ 	 * If we can't find an AG with space for full alignment slack to be
+ 	 * taken into account, we must be near ENOSPC in all AGs.  Hence we
+@@ -1742,12 +1736,9 @@ xfs_dialloc_good_ag(
+ 	ineed = M_IGEO(mp)->ialloc_min_blks;
+ 	if (flags && ineed > 1)
+ 		ineed += M_IGEO(mp)->cluster_align;
+-	longest = pag->pagf_longest;
+-	if (!longest)
+-		longest = pag->pagf_flcount > 0;
+ 	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
+ 
+-	if (pag->pagf_freeblks < needspace + ineed || longest < ineed)
++	if (pag->pagf_freeblks < needspace + ineed)
+ 		return false;
+ 	return true;
+ }
 -- 
-Chandan
+2.34.1
+
