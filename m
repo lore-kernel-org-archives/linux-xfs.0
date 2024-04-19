@@ -1,65 +1,81 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDCDA4688
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Apr 2024 07:22:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C6F94596B;
+	Fri, 19 Apr 2024 07:51:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713511333; cv=none; b=US9kwH+Ws+7XcyC+1hlTxGIGzkm8ASQ6e1/H3ZeLs7OWZrRNWClUkpJhwURZxOK8PJU0nhXceTlNBcr1ZAM6uofjpNUKQHQosska2grYI/sa5QJZ7abPC9zGM1q8mJfQTsOrN9jAedowVh0K7UhDBcVnBJ1utWklpRbXzorjh00=
+	t=1713513103; cv=none; b=g3SahVe9wqtSQnHxD5wkeqcTnNYdQZnP3+NLJ8MxXMvfta80AVgrSvOL7x7m+C7NXEBtKVj3AeJJ8vShAkoDTKSpGcnyw00N2Cd/TcDKUb7Mm+2nuDRtllN82zIjPqvDcwXmYd0Axy5sqW1S++tyvrQ996U2YWrjcXRA0NCdJFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713511333; c=relaxed/simple;
-	bh=DVLF7Y2qa92OEOgVJRhNa69ve+DmBH2CTOGM7T8UCxs=;
+	s=arc-20240116; t=1713513103; c=relaxed/simple;
+	bh=xC8tOVdoSvmRXP9FDmN+GWkpBkXfpFpevNJ6HtTvgj8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GXl1cNb8QL+lkuxN9POgSjc8bJ1ViVv843u06lrZmb4fnNiGp17mVBM0HP+ILfZ+Jq2Rngs0Lc3I4buOyi7vgpP8CCnyBSwTsrJMDi+s3HBbUuh6pFI5kSpyQWpVNtT9hc3zOt5ZjtuOSoiuU4TelmX6ll5vyowVSH3lsKvbjoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=P3MZmOQC; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=u5bo3FF68LSOrOyytHkkugmUgdxsZlS5XRrbhvnsoglKUKCE8UyaPv1e6fqiPZza+11N56NBvFrdcMuTIql4q5dXQ3YUleuKS+wN3+GyelqgJCCLaBIU19KPRq68mQFTpaeEkJ2frl2GUMw2QVSGe1U2RMembDdOHRPJBHTKuu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=uQjM7/u0; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=CFFwG3cb; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=XwhsQfmb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=8Xk8/6aR; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P3MZmOQC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713511329;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="uQjM7/u0";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="CFFwG3cb";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="XwhsQfmb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="8Xk8/6aR"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 336E33753D;
+	Fri, 19 Apr 2024 07:51:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1713513097; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9ufghlX9X/YZxYGKjwh33+ZH4tDDTY460s6418shg9c=;
-	b=P3MZmOQChPSeUFl8l7y+N0pKNyXuTZzQD247z9iYNUODToaNUH5q8mNcIrqATG6dzuZ5N5
-	IFEfFh5ivHB1GCyTt4ZUdxbXbmbDKNyqCqKoPvc01IjIeIsvGH1jFK+c0zytCjLuxXJU/A
-	C3GV2XMgkQi1V6leCTmvDm0ARnMOmsc=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-689-e8AZh_pXMR2WFLfu6EVAyA-1; Fri, 19 Apr 2024 03:22:07 -0400
-X-MC-Unique: e8AZh_pXMR2WFLfu6EVAyA-1
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-6ee089eedb7so2688187b3a.1
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Apr 2024 00:22:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713511326; x=1714116126;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9ufghlX9X/YZxYGKjwh33+ZH4tDDTY460s6418shg9c=;
-        b=UxYEIPBLle+24AUrR/X+f7c6tWmiA3amjd1nq7bJY+sYJ2ctOlLpVXr2WkgYxd9nhG
-         N6y1tqmsgXcrvZFwu6t3XyaYENHkzka48Wa59g6OlMRAM0YUN87qrvYZqsEScXyhnz4X
-         moStBaU2kcjIsbYzbqehhbPqA7/CzU4c69xxgR3EessKKUCPdiL1XmOFK3Zaol8gVuH5
-         WviAokbiVIPrFZ7r1vhpR61Ozou0sPPs7V6oLnI0twXuQJgz9pnWXn2ZZmUmOjxMfTzn
-         qoGKwqCRh87/C+K8E0ZSck0viclgyqJIkx2axzhE6xqiU4BKExGoxbOTbYuS1mqfyZ7O
-         wseA==
-X-Forwarded-Encrypted: i=1; AJvYcCXnAGjUbbpomKY6/zVaNeuR8jHE/16xd11jHaQgIny0kW4eD1pNvNxi7WiNJ8nVdWPoCFkSgvthWL41n1d/kH2e+GtDGMIp57NE
-X-Gm-Message-State: AOJu0Yyt8f5O+J+MtmVAOmXdkCZ/b1QVFBUdkGjqeibY6Dd4B91+wPPO
-	RC7zwf1pf6ZR2mNQMaJMbhE6CkStNx/cmT/FxWOYUMF5VAjzr5wX9YMUallezL6SdwsiEl2jKnR
-	pLkND6y/joIvV0q+etA1reDZZr7xUmwUbdCvQ2K7Tw+tR74ON9RMaDrnABA==
-X-Received: by 2002:a05:6a00:2d87:b0:6ec:eacb:ecd2 with SMTP id fb7-20020a056a002d8700b006eceacbecd2mr1350372pfb.33.1713511326072;
-        Fri, 19 Apr 2024 00:22:06 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGPsCyhIGDpvJlyIVCC+q0i/x4NfWtUYABDJ7g8PTdGst75EDTJ5dCscUyA7lsCqjSASFuqrw==
-X-Received: by 2002:a05:6a00:2d87:b0:6ec:eacb:ecd2 with SMTP id fb7-20020a056a002d8700b006eceacbecd2mr1350355pfb.33.1713511325662;
-        Fri, 19 Apr 2024 00:22:05 -0700 (PDT)
-Received: from [10.72.116.75] ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id k124-20020a633d82000000b005f7d61ec8afsm957338pga.91.2024.04.19.00.22.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Apr 2024 00:22:05 -0700 (PDT)
-Message-ID: <3ddfc8e2-8404-4a50-861d-a51cab5cd457@redhat.com>
-Date: Fri, 19 Apr 2024 15:21:59 +0800
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=r9lgyvgFGhM0wyhAG46ik4nnJpii/WIMIE2U5BN6Ktw=;
+	b=uQjM7/u0luVfiVv/JKrsU5iluRqDjf/3KiPnx2aR7POoW30VZRohNIiltzv41s2H6JDQR4
+	/dqotdPkpib+D0p3RzMiTHXMoKbHRaZJpp2pVfv5Q29PWT0+MUi89C/iorNK2iTT+8e4He
+	fEbuq8/n5YHJSdapE034RNZpFjX+s7k=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1713513097;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=r9lgyvgFGhM0wyhAG46ik4nnJpii/WIMIE2U5BN6Ktw=;
+	b=CFFwG3cbA6TcQ0LG0k+d2yuzLJfghpyuxOjwWg3uhc62zbZqTUTKTjKPFmDmyRQxEDLPHU
+	z7KVC2TyqD36tiDg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=XwhsQfmb;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b="8Xk8/6aR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1713513096; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=r9lgyvgFGhM0wyhAG46ik4nnJpii/WIMIE2U5BN6Ktw=;
+	b=XwhsQfmb3QosDhOAW749uCLqZUagX+8Dd07CDWnYziPAju2zCHDB3f0kfhnEueFjOutAAw
+	FBuHZbCozTh3OEJ8PyllnFhN/cDPuWoOdy1LNC5ZPSNR/AuX/jdbiMQrqF2iUwKOJ9UmmH
+	x4ruy7f70eL9LXQnCze1z4sKHdh9s8s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1713513096;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=r9lgyvgFGhM0wyhAG46ik4nnJpii/WIMIE2U5BN6Ktw=;
+	b=8Xk8/6aR9pygpecA6t1h1B2hTtoKnc5tQnZxIRRFhP3PZy0xYCmRcHTMn5U97C2w2GrAjv
+	qu7aW+s1h7s0GxDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 171E1136CF;
+	Fri, 19 Apr 2024 07:51:36 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 9YA+BYgiImb8WwAAD6G6ig
+	(envelope-from <vbabka@suse.cz>); Fri, 19 Apr 2024 07:51:36 +0000
+Message-ID: <3d4eac1f-8f33-4fbb-8c9f-5d7b2c50b6dd@suse.cz>
+Date: Fri, 19 Apr 2024 09:51:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -67,112 +83,120 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] stackdepot: respect __GFP_NOLOCKDEP allocation flag
-To: Andrey Ryabinin <ryabinin.a.a@gmail.com>,
+Subject: Re: [PATCH] fstests: add fsstress + compaction test
+To: Matthew Wilcox <willy@infradead.org>,
  Andrew Morton <akpm@linux-foundation.org>
-Cc: Alexander Potapenko <glider@google.com>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>,
- kasan-dev@googlegroups.com, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <a0caa289-ca02-48eb-9bf2-d86fd47b71f4@redhat.com>
- <20240418141133.22950-1-ryabinin.a.a@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+ Luis Chamberlain <mcgrof@kernel.org>, fstests@vger.kernel.org,
+ kdevops@lists.linux.dev, linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+ linux-fsdevel@vger.kernel.org, david@redhat.com, linmiaohe@huawei.com,
+ muchun.song@linux.dev, osalvador@suse.de
+References: <20240418001356.95857-1-mcgrof@kernel.org>
+ <ZiB5x-EKrmb1ZPuf@casper.infradead.org> <ZiDEYrY479OdZBq2@infradead.org>
+ <d0d118ed-88dd-4757-8693-f0730dc9727c@suse.cz>
+ <20240418114552.37e9cc827d68e3c4781dd61a@linux-foundation.org>
+ <ZiFt8uGMLIWuTh4g@casper.infradead.org>
 Content-Language: en-US
-From: Xiubo Li <xiubli@redhat.com>
-In-Reply-To: <20240418141133.22950-1-ryabinin.a.a@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Vlastimil Babka <vbabka@suse.cz>
+Autocrypt: addr=vbabka@suse.cz; keydata=
+ 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
+ EP+ylKVEKb0Q2A==
+In-Reply-To: <ZiFt8uGMLIWuTh4g@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 336E33753D
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Score: -4.50
 
+On 4/18/24 9:01 PM, Matthew Wilcox wrote:
+> On Thu, Apr 18, 2024 at 11:45:52AM -0700, Andrew Morton wrote:
+>> It indeed appears that I can move
+>> 
+>> mm-create-folio_flag_false-and-folio_type_ops-macros.patch
+>> mm-support-page_mapcount-on-page_has_type-pages.patch
+>> mm-turn-folio_test_hugetlb-into-a-pagetype.patch
+>> mm-turn-folio_test_hugetlb-into-a-pagetype-fix.patch
+>> 
+>> without merge or build issues.  I added
+>> 
+>> Fixes: 9c5ccf2db04b ("mm: remove HUGETLB_PAGE_DTOR")
+>> Cc: <stable@vger.kernel.org>
+>> 
+>> to all patches.
+>> 
+>> But a question: 9c5ccf2db04b is from August 2023.  Why are we seeing
+>> this issue now?
+> 
+> We saw it earlier, we just didn't know how to fix it.
+> eg December 2023:
+> https://lore.kernel.org/all/ZXNhGsX32y19a2Xv@casper.infradead.org/
+> 
+> I think there were earlier reports, but I'm not finding them now.
 
-On 4/18/24 22:11, Andrey Ryabinin wrote:
-> If stack_depot_save_flags() allocates memory it always drops
-> __GFP_NOLOCKDEP flag. So when KASAN tries to track __GFP_NOLOCKDEP
-> allocation we may end up with lockdep splat like bellow:
->
-> ======================================================
->   WARNING: possible circular locking dependency detected
->   6.9.0-rc3+ #49 Not tainted
->   ------------------------------------------------------
->   kswapd0/149 is trying to acquire lock:
->   ffff88811346a920
-> (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_reclaim_inode+0x3ac/0x590
-> [xfs]
->
->   but task is already holding lock:
->   ffffffff8bb33100 (fs_reclaim){+.+.}-{0:0}, at:
-> balance_pgdat+0x5d9/0xad0
->
->   which lock already depends on the new lock.
->
->   the existing dependency chain (in reverse order) is:
->   -> #1 (fs_reclaim){+.+.}-{0:0}:
->          __lock_acquire+0x7da/0x1030
->          lock_acquire+0x15d/0x400
->          fs_reclaim_acquire+0xb5/0x100
->   prepare_alloc_pages.constprop.0+0xc5/0x230
->          __alloc_pages+0x12a/0x3f0
->          alloc_pages_mpol+0x175/0x340
->          stack_depot_save_flags+0x4c5/0x510
->          kasan_save_stack+0x30/0x40
->          kasan_save_track+0x10/0x30
->          __kasan_slab_alloc+0x83/0x90
->          kmem_cache_alloc+0x15e/0x4a0
->          __alloc_object+0x35/0x370
->          __create_object+0x22/0x90
->   __kmalloc_node_track_caller+0x477/0x5b0
->          krealloc+0x5f/0x110
->          xfs_iext_insert_raw+0x4b2/0x6e0 [xfs]
->          xfs_iext_insert+0x2e/0x130 [xfs]
->          xfs_iread_bmbt_block+0x1a9/0x4d0 [xfs]
->          xfs_btree_visit_block+0xfb/0x290 [xfs]
->          xfs_btree_visit_blocks+0x215/0x2c0 [xfs]
->          xfs_iread_extents+0x1a2/0x2e0 [xfs]
->   xfs_buffered_write_iomap_begin+0x376/0x10a0 [xfs]
->          iomap_iter+0x1d1/0x2d0
->   iomap_file_buffered_write+0x120/0x1a0
->          xfs_file_buffered_write+0x128/0x4b0 [xfs]
->          vfs_write+0x675/0x890
->          ksys_write+0xc3/0x160
->          do_syscall_64+0x94/0x170
->   entry_SYSCALL_64_after_hwframe+0x71/0x79
->
-> Always preserve __GFP_NOLOCKDEP to fix this.
->
-> Fixes: cd11016e5f52 ("mm, kasan: stackdepot implementation. Enable stackdepot for SLAB")
-> Reported-by: Xiubo Li <xiubli@redhat.com>
-> Closes: https://lore.kernel.org/all/a0caa289-ca02-48eb-9bf2-d86fd47b71f4@redhat.com/
-> Reported-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Closes: https://lore.kernel.org/all/f9ff999a-e170-b66b-7caf-293f2b147ac2@opensource.wdc.com/
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Andrey Ryabinin <ryabinin.a.a@gmail.com>
-> ---
->   lib/stackdepot.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/lib/stackdepot.c b/lib/stackdepot.c
-> index 68c97387aa54..cd8f23455285 100644
-> --- a/lib/stackdepot.c
-> +++ b/lib/stackdepot.c
-> @@ -627,10 +627,10 @@ depot_stack_handle_t stack_depot_save_flags(unsigned long *entries,
->   		/*
->   		 * Zero out zone modifiers, as we don't have specific zone
->   		 * requirements. Keep the flags related to allocation in atomic
-> -		 * contexts and I/O.
-> +		 * contexts, I/O, nolockdep.
->   		 */
->   		alloc_flags &= ~GFP_ZONEMASK;
-> -		alloc_flags &= (GFP_ATOMIC | GFP_KERNEL);
-> +		alloc_flags &= (GFP_ATOMIC | GFP_KERNEL | __GFP_NOLOCKDEP);
->   		alloc_flags |= __GFP_NOWARN;
->   		page = alloc_pages(alloc_flags, DEPOT_POOL_ORDER);
->   		if (page)
-
-Tested it and this patch worked well for me.
-
-Thanks
-
-- Xiubo
-
-
-
+It's a race and needs CONFIG_DEBUG_VM to be visible, which probably makes it
+rare. What seems to be new are the stress tests that have more "luck" at
+hitting it? Or maybe also the changes towards more high-order folio usage
+make it more likely.
