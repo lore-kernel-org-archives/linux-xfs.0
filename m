@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3129153BFB
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:40:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB1F15381B
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:40:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713804043; cv=none; b=k+eyFF3ZNDogQsQi3cyZPJsJxtzUlBmM058lKyYT1YR/DRVTZB/vuAZGY5o7zdnGEaGqSYvEWRdj2CEK//EbIKlOpChsaDDxvALBoziuKd4Vb0ZDHR1FEfOwUXp7It1nFHr0DhC4x+ouMM69iAwqFwpClOqzQIq82EJtiXZJpEk=
+	t=1713804045; cv=none; b=fCzBPLeFQeJ4kab1q1PzmtDypEoUe5ZlsC8OoA5bJ1lkJNV+po0bJPDJa/RBGR0GzS6O/ZEpuh1ZTRLO1M5iaizLYpjyhilzT5RVrkTChj4nPTa2RopVCARvInGGMrV6SxroypXsqRm4rsw88ERBLSRP0ctBq6ux1NiHMgnofjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713804043; c=relaxed/simple;
-	bh=ftz1jEtiHbhcvz4RBiJZwh7BMm9+3il6XPTF5OC4vXg=;
+	s=arc-20240116; t=1713804045; c=relaxed/simple;
+	bh=xRNHjvWn5Og4xBVEKdmGXR6/2SCdprMCyu8SEUdqwB8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eKxWy6lPjZ6ksAqe/Bgh2qhUuTwlEmbtB86UgquASM3dUdD/6L/I9GqJA+xgjOLE/r7m/DtTFLfSw4Hr3g7nPvP2JigQEt5heYyN1owVfIhyAqSugT4ikcSFSyNDt8cZcQMznUOOQgOAw44Xz/T++WscB0i5nir+IMWtjP9IgzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jsy6OL4k; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=RBRtj+I/T9XQ+2Jdnelei7npcDG8wzlmOOx4lt0QAnw+iOTBSlPGcfscB2BYYpvkTO+CNuneZcpdXaZW6mIqiVzeqGJCco/T+K85WZKK//AC0MfkohNRPxV0DyWXYOMEp6ycYnwMfaV4+v+19tzVF1pWZ//VyP26OUXn0Akt53A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OmFUXjVw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jsy6OL4k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9978CC116B1;
-	Mon, 22 Apr 2024 16:40:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OmFUXjVw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28739C116B1;
+	Mon, 22 Apr 2024 16:40:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713804043;
-	bh=ftz1jEtiHbhcvz4RBiJZwh7BMm9+3il6XPTF5OC4vXg=;
+	s=k20201202; t=1713804045;
+	bh=xRNHjvWn5Og4xBVEKdmGXR6/2SCdprMCyu8SEUdqwB8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Jsy6OL4kbCjWimzrf+045t9zYgEFB5MuznWv8/R8ei34dhWI8OiwQ+F6cQjYhxND9
-	 oY/IGiDpLO/A7yZG326snWObvEd4E+4GdfaU6fVAwA6cYdaIyl7WOuQGpUSJ1nOoU/
-	 G+zO1eQ+ctRf60682C83K5gyCGlYwTEEURY2PMu6n1n6XkEo9F/yv1IRCW9KBwq6D6
-	 3QQofBQIzx77Yn0bNY16k9pqrtvGAYd0XB5Rqz8kkZny/uuCt0A1pH6OIHxEtvdtuY
-	 eIZZnCZ0Nx5ChiUeZIOR7qxzrKgxmwKhoZlWndWuTJyFmywd/t4sIbRHZgWjB9IWIc
-	 EB8gJARpwXMKA==
+	b=OmFUXjVwTICMdWAUP6nOSJ02Iuebbkb5dDmRYvNKPHmCJdbyEbtwc7te0UY6tksX4
+	 yfUnWNiN5ImGm1pLmI7ICi8sCrw4SEbFar/wOen4P48NMlmCUTNL3GkosA8jZLhrcV
+	 5jLSb4b/5f/LJjy2xE3LiRvWWY51oWtAboXm0FmLK0+SGE3Li1m0BcdPAQUbPG4llO
+	 drnqDnAGHd9H8a8ZV6X4ii5WxEJP9jk36fp5YPVOVJXPsiEJARaiRM0BAgr3NM+bnB
+	 KMj5fBf12/Vqr/CtHOr02A/S3bedszi02IrvD7HNn10HRzrLQj551f9pfsYKA8L4uH
+	 5dc7TTRWJd+ng==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 63/67] xfs: fix a use after free in xfs_defer_finish_recovery
-Date: Mon, 22 Apr 2024 18:26:25 +0200
-Message-ID: <20240422163832.858420-65-cem@kernel.org>
+Subject: [PATCH 64/67] xfs: use the op name in trace_xlog_intent_recovery_failed
+Date: Mon, 22 Apr 2024 18:26:26 +0200
+Message-ID: <20240422163832.858420-66-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -46,41 +46,30 @@ Content-Transfer-Encoding: 8bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 4f6ac47b55e3ce6e982807928d6074ec105ab66e
+Source kernel commit: bcdfae6ee520b665385020fa3e47633a8af84f12
 
-dfp will be freed by ->recover_work and thus the tracepoint in case
-of an error can lead to a use after free.
+Instead of tracing the address of the recovery handler, use the name
+in the defer op, similar to other defer ops related tracepoints.
 
-Store the defer ops in a local variable to avoid that.
-
-Fixes: 7f2f7531e0d4 ("xfs: store an ops pointer in struct xfs_defer_pending")
-Reported-by: kernel test robot <oliver.sang@intel.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_defer.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ libxfs/xfs_defer.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 077e99298..5bdc8f5a2 100644
+index 5bdc8f5a2..bf1d1e06a 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -909,12 +909,14 @@ xfs_defer_finish_recovery(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-+	const struct xfs_defer_op_type	*ops = dfp->dfp_ops;
- 	int				error;
- 
--	error = dfp->dfp_ops->recover_work(dfp, capture_list);
-+	/* dfp is freed by recover_work and must not be accessed afterwards */
-+	error = ops->recover_work(dfp, capture_list);
+@@ -915,8 +915,7 @@ xfs_defer_finish_recovery(
+ 	/* dfp is freed by recover_work and must not be accessed afterwards */
+ 	error = ops->recover_work(dfp, capture_list);
  	if (error)
- 		trace_xlog_intent_recovery_failed(mp, error,
--				dfp->dfp_ops->recover_work);
-+				ops->recover_work);
+-		trace_xlog_intent_recovery_failed(mp, error,
+-				ops->recover_work);
++		trace_xlog_intent_recovery_failed(mp, ops, error);
  	return error;
  }
  
