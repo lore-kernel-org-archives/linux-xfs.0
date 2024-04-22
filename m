@@ -1,43 +1,47 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD1A1465A8
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 11:20:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5D91465A8
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 11:20:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713784826; cv=none; b=Xwn61nz1E3ouJMg+KgcH+hPwaleRXSp+mMdJ3Utr+aP2tyKyt8XrT6LAcbGV9rxZa8zwodigVMSeYE/rLLWyypp0kohxKsbO7HtW3hWv04rLB2FcCtuHQmPBZMczXvXTor+6s9ewad2LmVzQIY6Z7qFHhVBPvUF353+hO4xQWD0=
+	t=1713784829; cv=none; b=ls5v8adDW0bGxCwnBAmSZabDzOpFdWCqLPqQxlMJXOVRh8KRbYhSuSNqW1P5+Nrh31ZCEScbleIIfnsAkwOwNhlaGbwaMAlBPgVLq3vEtSxrz9Bp5IWM/Fu6lkDLeEKabs8HZa6gX0OkLS+Ea6feQ0IC5MGjmnCovlJF0FFrU9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713784826; c=relaxed/simple;
-	bh=wOYbc5N/q+FQSrvxYEn661gAyH0dr7dP4mkFMHd14fM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kYZU2IExVD4djLSRmbdqrnlXRY6O6GWiyjysNts1jN9+AbkUmezixLk4ZhgnTnRjrcSOvvnquHObhmZeoINck4gbIi4CeN44m6HjgkdfiRu+iihzUht3zii/uwaFZAhqDzjyZxT4Ah6PX+705lHp/KUgF5U4sCppHToxR7logVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nHVAP14N; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1713784829; c=relaxed/simple;
+	bh=ADvbqIXjxrjRO1P5Q44+TigMGw/BqHJsOrDimOH1y/w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=MtzgF2Pe2BKPrgniPrSMgjP5D4w+FG6PBUh7r+AcmJ456RT4n2LkLGSm+L7yNEyu5TwBy1qVMLVqmFPdxpo1Bpcv5zQ2JKo5Rh44ityjiOLdqkJRe+j3jWvDpu2cuxRQMT1DRM28+/HR49zCIcNB0shWVUos9gOZwiJFFFLQ69E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JBzRntZM; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nHVAP14N"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JBzRntZM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=ZJkvAY9Yc+0zCf2Z+of+IQ9e+xfMBVQx5uVl1S3N+Aw=; b=nHVAP14NQkU9pGuIoHJ5xIpvsv
-	4UfbLPirGIuPRAD2iX6i76xWzW6AqhM9VJ+5Iwt3cR07xUGK7jjVDMDkKpyhKPI70YBrYH/17WlxF
-	/h85Cx4nEyM4UGNhS28hxJtPaTKeMnFcCbWojht4LfNiXLrvJKdVJ7TelCFT9wYe7bo0J6J4eRSQJ
-	dTBZ8NI5nOLyioYjTm/DDIme1Gbd1c+F97VUcXvV+2HUWmgHi4+/yq4jv4Vzl3u2Tc/DGl5NwHi7d
-	+wMMzOwLxMMW7EQSspBrWT8Um7ZaePEPlZvDmEDGcwWbuM3qe41xrXvdLrQFyAsXWE0gNdoB6lAIB
-	Yg92KZfQ==;
+	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=9LyweYzSVjcvj0FFS9dX8bG23KO1zNtzLi+Cl9pJ/4s=; b=JBzRntZMqoe9vhFk1u9QUGdRKG
+	xG2GwHfVnsvUnn70o8XwrpXtL9Cy1TT8dF9UfuKlC3EzJj/LcqBjkY1WIMoDNbLVaCRFerK9VpYSg
+	J1qsxX0ACq1P/5AeEiTioKzB9BD/hTow8dXruMUPS2niczfgy6UEb3QBfrJxbswNNObgFzGMQC+Yg
+	tufSWs3Imf6EMTAxAYDtI7Zmzh3iLlps5+ookmLuAUuL+Np/eDW6x8BQnvyD+hUDbAhDsKrhOOXfd
+	038SAjF5K3edfg6qygWgV60GD7y8HP7xiayN8vnf9EQAzIRzFG+Rdb5XJ2XTawCoPLfgiWLsPG0xD
+	fE0M3nVg==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ryrih-0000000DKuw-2tN9;
-	Mon, 22 Apr 2024 11:20:24 +0000
+	id 1ryrik-0000000DKxK-3mqr;
+	Mon, 22 Apr 2024 11:20:27 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
-	linux-xfs@vger.kernel.org
-Subject: bring back RT delalloc support v6
-Date: Mon, 22 Apr 2024 13:20:06 +0200
-Message-Id: <20240422112019.212467-1-hch@lst.de>
+	linux-xfs@vger.kernel.org,
+	Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 01/13] xfs: make XFS_TRANS_LOWMODE match the other XFS_TRANS_ definitions
+Date: Mon, 22 Apr 2024 13:20:07 +0200
+Message-Id: <20240422112019.212467-2-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240422112019.212467-1-hch@lst.de>
+References: <20240422112019.212467-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,66 +51,39 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+Commit bb7b1c9c5dd3 ("xfs: tag transactions that contain intent done
+items") switched the XFS_TRANS_ definitions to be bit based, and using
+comments above the definitions.  As XFS_TRANS_LOWMODE was last and has
+a big fat comment it was missed.  Switch it to the same style.
 
-this series adds back delalloc support for RT inodes, at least if the RT
-extent size is a single file system block.  This shows really nice
-performance improvements for workloads that frequently rewrite or append
-to files, and improves fragmentation for larger writes.  On other
-workloads it sometimes shows small performance improvements or flat
-performance.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/libxfs/xfs_shared.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Changes since v5:
- - rebased to current xfs for-next (aka fixed a trival conflict due to
-   two #include statements added in the same place)
-
-Changes since v4:
- - fix a bug in the fix for splitting RT delalloc reservations
- - rework where rtbitmap locking happens in the bunmapi patch to
-   avoid churn with a series in development, stealing a patch from
-   Darrick's giant patch queue in the process
-
-Changes since v3:
- - fix a bug in splitting RT delalloc reservations
- - fix online repair of RT delalloc fscounters
- - adjust the freespace counter refactoing to play nicer with an
-   upcoming series of mine
-
-Changes since v3:
- - drop gratuitous changes to xfs_mod_freecounter/xfs_add_freecounter
-   that caused a warning to be logged when it shouldn't.
- - track delalloc rtextents instead of rtblocks in xfs_mount
- - fix commit message spelling an typos
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index dfd61fa8332e1a..f35640ad3e7fe4 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -124,7 +124,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ #define XFS_TRANS_RES_FDBLKS		(1u << 6)
+ /* Transaction contains an intent done log item */
+ #define XFS_TRANS_HAS_INTENT_DONE	(1u << 7)
+-
+ /*
+  * LOWMODE is used by the allocator to activate the lowspace algorithm - when
+  * free space is running low the extent allocator may choose to allocate an
+@@ -136,7 +135,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+  * for free space from AG 0. If the correct transaction reservations have been
+  * made then this algorithm will eventually find all the space it needs.
+  */
+-#define XFS_TRANS_LOWMODE	0x100	/* allocate in low space mode */
++#define XFS_TRANS_LOWMODE		(1u << 8)
  
-Changes since v2:
- - keep casting to int64_t for xfs_mod_delalloc
- - add a patch to clarify and assert that the block delta in
-   xfs_trans_unreserve_and_mod_sb can only be positive
+ /*
+  * Field values for xfs_trans_mod_sb.
+-- 
+2.39.2
 
-Diffstat:
- libxfs/xfs_ag.c           |    4 -
- libxfs/xfs_ag_resv.c      |   24 +------
- libxfs/xfs_ag_resv.h      |    2 
- libxfs/xfs_alloc.c        |    4 -
- libxfs/xfs_bmap.c         |  152 ++++++++++++++++++++++------------------------
- libxfs/xfs_rtbitmap.c     |   57 +++++++++++++++++
- libxfs/xfs_rtbitmap.h     |   17 +++++
- libxfs/xfs_shared.h       |    6 +
- scrub/common.c            |    1 
- scrub/fscounters.c        |   12 ++-
- scrub/fscounters.h        |    1 
- scrub/fscounters_repair.c |    3 
- scrub/repair.c            |    5 -
- xfs_fsmap.c               |    4 -
- xfs_fsops.c               |   29 ++------
- xfs_fsops.h               |    2 
- xfs_inode.c               |    3 
- xfs_iomap.c               |   44 +++++++++----
- xfs_iops.c                |    2 
- xfs_mount.c               |   85 +++++++++++++++----------
- xfs_mount.h               |   36 ++++++++--
- xfs_rtalloc.c             |   22 ++----
- xfs_super.c               |   17 +++--
- xfs_trace.h               |    1 
- xfs_trans.c               |   63 +++++++++----------
- 25 files changed, 348 insertions(+), 248 deletions(-)
