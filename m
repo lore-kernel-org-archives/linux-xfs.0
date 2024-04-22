@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2939154432
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25F77154432
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713803979; cv=none; b=dqBIvG6FxQimYx78G+xJKBPAxctP9Fo2wLogvBGXezy5oMURQnQuh6xLa4Ofaf53M9KnVNlcLRRz6VcWhvooeXFE+o9Vc7dToGOpc8ckZDyKVuQUhI6FV27kCTT31QYRzl16h1bA3OHqsDqAoh7gS7wTm0gCzK6/FO9JT0F4gMA=
+	t=1713803980; cv=none; b=hoM1rqRj9btV/hsURs8te1o0oda2pNNchgihTvMLWwY+60qwnqxjB8IqMgxdrB7Ts8AA29cingP3db+bFH1oxRj/y4n1pLcdqnwtc7PZpBDEyxCzwx212vExtV5ZtF6AKiyfXrNGpWKz0cjp6h10uIU+a/XCnaG+vvMjFe3IhTc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713803979; c=relaxed/simple;
-	bh=ojxpQjaEGx/XjEa3JtD3O2n1DdffhYcZOZJKf3ZsBl8=;
+	s=arc-20240116; t=1713803980; c=relaxed/simple;
+	bh=w0J/LMADVK3+d8ySMyvNPamSzna0f7Lj1cS5v0+TlTc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eVRGrgSF6itsWz0++aocxRHuzremSebxYns30kZVOd3z3jqQlbA+kf+X6RLFtrW9MqIKix8FE7vhMIEZtgrDDUXv3mUemuGLoF/zzm7Vsoup4oMAAsNbBDAvjZYh4BncLXbMXe4Fju6dfJ1/ZQNxqCVAQsWWmz9IdTYHYMyNNuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/v+f/LU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=sMdisA3l9W87RECtsqunbDabL3Ilex9v/lHbwnzHSTqDHmbvZHNUDPL8Efq+8o6RRBuMglCUetojk+mVW/u4+IPqdzR+/HG0TmU9e79ZPu0pgdngbd6NuoFvx8MB5o+8jGD83/bX2tz6dtHtT1IbbVGyn0mnoA45dCGr7jMJjp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHOnamoF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/v+f/LU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76B67C116B1;
-	Mon, 22 Apr 2024 16:39:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHOnamoF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09831C32782;
+	Mon, 22 Apr 2024 16:39:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713803978;
-	bh=ojxpQjaEGx/XjEa3JtD3O2n1DdffhYcZOZJKf3ZsBl8=;
+	s=k20201202; t=1713803980;
+	bh=w0J/LMADVK3+d8ySMyvNPamSzna0f7Lj1cS5v0+TlTc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=q/v+f/LUNSM+63WmC3hNGyQvoYeHDo2JbZn4Ttr0zzr2MCyAuTwEIAY1XNwG3E/t9
-	 SrdO5qVJ1kfO87H9eoZPUkOOjC9d+dxp5FDZf1C3Gmv0bmzQhpqeLziGK7qJaEhbN/
-	 kv7NxHXvgn2hhUflvMg+HD+F+sbEegqrAHSsfYKotuNRQ7iVmT+kxUcC96oaLhkGff
-	 9pOmHTiLnb/3BojfGnoehIGkrx9wE4mwER3arn7mb0Ds2h3sgi63j0wvwaLDpXcMaS
-	 mH7l06/ATzbxWH5qPxcu16a7HZnV6bLFLyRbZ/6+/HwrJjYMmHlL3j4wRskYmP0pZE
-	 KRmaY3lYzGt2Q==
+	b=UHOnamoFN6Ridva/HvY/dY8ziPnQpe2qsBFp2q5gJBIh1l/lYGOkhMBWdbes9C9GG
+	 Vic86iPXHIp4u6PcwNoXDXCWwz6waVnD9kctihKbz+4JfnVNaa9+zktcOsZAYtsdtu
+	 bjgQaCkKnp4vLXYvtu9+2lHncbkJkmF3/oX8WJiwK1ocnt6cwfe73lNVzUyAvIXFg+
+	 uYqcMbxnX41MtbStz4JyFo27K601GBgtB6My21U74zMOqihU3oTK+T3XOOxl1tnVCf
+	 P1UfbZ1w1bDmfS79H7g9YyEmZQR6gtxKLNuY6zJDhTc77zLtwEnXIMOgFUxckNnZN5
+	 jcXx+8WuRgpiQ==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 20/67] xfs: force small EFIs for reaping btree extents
-Date: Mon, 22 Apr 2024 18:25:42 +0200
-Message-ID: <20240422163832.858420-22-cem@kernel.org>
+Subject: [PATCH 21/67] xfs: ensure logflagsp is initialized in xfs_bmap_del_extent_real
+Date: Mon, 22 Apr 2024 18:25:43 +0200
+Message-ID: <20240422163832.858420-23-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -44,190 +44,227 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
 
-Source kernel commit: 3f3cec031099c37513727efc978a12b6346e326d
+Source kernel commit: e6af9c98cbf0164a619d95572136bfb54d482dd6
 
-Introduce the concept of a defer ops barrier to separate consecutively
-queued pending work items of the same type.  With a barrier in place,
-the two work items will be tracked separately, and receive separate log
-intent items.  The goal here is to prevent reaping of old metadata
-blocks from creating unnecessarily huge EFIs that could then run the
-risk of overflowing the scrub transaction.
+In the case of returning -ENOSPC, ensure logflagsp is initialized by 0.
+Otherwise the caller __xfs_bunmapi will set uninitialized illegal
+tmp_logflags value into xfs log, which might cause unpredictable error
+in the log recovery procedure.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Also, remove the flags variable and set the *logflagsp directly, so that
+the code should be more robust in the long run.
+
+Fixes: 1b24b633aafe ("xfs: move some more code into xfs_bmap_del_extent_real")
+Signed-off-by: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_defer.c | 107 ++++++++++++++++++++++++++++++++++++++++-----
- libxfs/xfs_defer.h |   3 ++
- 2 files changed, 99 insertions(+), 11 deletions(-)
+ libxfs/xfs_bmap.c | 73 ++++++++++++++++++++---------------------------
+ 1 file changed, 31 insertions(+), 42 deletions(-)
 
-diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 58ad1881d..98f1cbe6a 100644
---- a/libxfs/xfs_defer.c
-+++ b/libxfs/xfs_defer.c
-@@ -176,6 +176,58 @@ static struct kmem_cache	*xfs_defer_pending_cache;
-  * Note that the continuation requested between t2 and t3 is likely to
-  * reoccur.
-  */
-+STATIC struct xfs_log_item *
-+xfs_defer_barrier_create_intent(
-+	struct xfs_trans		*tp,
-+	struct list_head		*items,
-+	unsigned int			count,
-+	bool				sort)
-+{
-+	return NULL;
-+}
-+
-+STATIC void
-+xfs_defer_barrier_abort_intent(
-+	struct xfs_log_item		*intent)
-+{
-+	/* empty */
-+}
-+
-+STATIC struct xfs_log_item *
-+xfs_defer_barrier_create_done(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*intent,
-+	unsigned int			count)
-+{
-+	return NULL;
-+}
-+
-+STATIC int
-+xfs_defer_barrier_finish_item(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
-+	struct list_head		*item,
-+	struct xfs_btree_cur		**state)
-+{
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
-+
-+STATIC void
-+xfs_defer_barrier_cancel_item(
-+	struct list_head		*item)
-+{
-+	ASSERT(0);
-+}
-+
-+static const struct xfs_defer_op_type xfs_barrier_defer_type = {
-+	.max_items	= 1,
-+	.create_intent	= xfs_defer_barrier_create_intent,
-+	.abort_intent	= xfs_defer_barrier_abort_intent,
-+	.create_done	= xfs_defer_barrier_create_done,
-+	.finish_item	= xfs_defer_barrier_finish_item,
-+	.cancel_item	= xfs_defer_barrier_cancel_item,
-+};
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 8c553d22c..20ec22dfc 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -5004,7 +5004,6 @@ xfs_bmap_del_extent_real(
+ 	xfs_fileoff_t		del_endoff;	/* first offset past del */
+ 	int			do_fx;	/* free extent at end of routine */
+ 	int			error;	/* error return value */
+-	int			flags = 0;/* inode logging flags */
+ 	struct xfs_bmbt_irec	got;	/* current extent entry */
+ 	xfs_fileoff_t		got_endoff;	/* first offset past got */
+ 	int			i;	/* temp state */
+@@ -5017,6 +5016,8 @@ xfs_bmap_del_extent_real(
+ 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_bmbt_irec	old;
  
- static const struct xfs_defer_op_type *defer_op_types[] = {
- 	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
-@@ -184,6 +236,7 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
- 	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
- 	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
- 	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
-+	[XFS_DEFER_OPS_TYPE_BARRIER]	= &xfs_barrier_defer_type,
- };
++	*logflagsp = 0;
++
+ 	mp = ip->i_mount;
+ 	XFS_STATS_INC(mp, xs_del_exlist);
  
- /* Create a log intent done item for a log intent item. */
-@@ -773,6 +826,23 @@ xfs_defer_can_append(
- 	return true;
+@@ -5029,7 +5030,6 @@ xfs_bmap_del_extent_real(
+ 	ASSERT(got_endoff >= del_endoff);
+ 	ASSERT(!isnullstartblock(got.br_startblock));
+ 	qfield = 0;
+-	error = 0;
+ 
+ 	/*
+ 	 * If it's the case where the directory code is running with no block
+@@ -5045,13 +5045,13 @@ xfs_bmap_del_extent_real(
+ 	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
+ 		return -ENOSPC;
+ 
+-	flags = XFS_ILOG_CORE;
++	*logflagsp = XFS_ILOG_CORE;
+ 	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+ 		if (!(bflags & XFS_BMAPI_REMAP)) {
+ 			error = xfs_rtfree_blocks(tp, del->br_startblock,
+ 					del->br_blockcount);
+ 			if (error)
+-				goto done;
++				return error;
+ 		}
+ 
+ 		do_fx = 0;
+@@ -5066,11 +5066,9 @@ xfs_bmap_del_extent_real(
+ 	if (cur) {
+ 		error = xfs_bmbt_lookup_eq(cur, &got, &i);
+ 		if (error)
+-			goto done;
+-		if (XFS_IS_CORRUPT(mp, i != 1)) {
+-			error = -EFSCORRUPTED;
+-			goto done;
+-		}
++			return error;
++		if (XFS_IS_CORRUPT(mp, i != 1))
++			return -EFSCORRUPTED;
+ 	}
+ 
+ 	if (got.br_startoff == del->br_startoff)
+@@ -5087,17 +5085,15 @@ xfs_bmap_del_extent_real(
+ 		xfs_iext_prev(ifp, icur);
+ 		ifp->if_nextents--;
+ 
+-		flags |= XFS_ILOG_CORE;
++		*logflagsp |= XFS_ILOG_CORE;
+ 		if (!cur) {
+-			flags |= xfs_ilog_fext(whichfork);
++			*logflagsp |= xfs_ilog_fext(whichfork);
+ 			break;
+ 		}
+ 		if ((error = xfs_btree_delete(cur, &i)))
+-			goto done;
+-		if (XFS_IS_CORRUPT(mp, i != 1)) {
+-			error = -EFSCORRUPTED;
+-			goto done;
+-		}
++			return error;
++		if (XFS_IS_CORRUPT(mp, i != 1))
++			return -EFSCORRUPTED;
+ 		break;
+ 	case BMAP_LEFT_FILLING:
+ 		/*
+@@ -5108,12 +5104,12 @@ xfs_bmap_del_extent_real(
+ 		got.br_blockcount -= del->br_blockcount;
+ 		xfs_iext_update_extent(ip, state, icur, &got);
+ 		if (!cur) {
+-			flags |= xfs_ilog_fext(whichfork);
++			*logflagsp |= xfs_ilog_fext(whichfork);
+ 			break;
+ 		}
+ 		error = xfs_bmbt_update(cur, &got);
+ 		if (error)
+-			goto done;
++			return error;
+ 		break;
+ 	case BMAP_RIGHT_FILLING:
+ 		/*
+@@ -5122,12 +5118,12 @@ xfs_bmap_del_extent_real(
+ 		got.br_blockcount -= del->br_blockcount;
+ 		xfs_iext_update_extent(ip, state, icur, &got);
+ 		if (!cur) {
+-			flags |= xfs_ilog_fext(whichfork);
++			*logflagsp |= xfs_ilog_fext(whichfork);
+ 			break;
+ 		}
+ 		error = xfs_bmbt_update(cur, &got);
+ 		if (error)
+-			goto done;
++			return error;
+ 		break;
+ 	case 0:
+ 		/*
+@@ -5144,18 +5140,18 @@ xfs_bmap_del_extent_real(
+ 		new.br_state = got.br_state;
+ 		new.br_startblock = del_endblock;
+ 
+-		flags |= XFS_ILOG_CORE;
++		*logflagsp |= XFS_ILOG_CORE;
+ 		if (cur) {
+ 			error = xfs_bmbt_update(cur, &got);
+ 			if (error)
+-				goto done;
++				return error;
+ 			error = xfs_btree_increment(cur, 0, &i);
+ 			if (error)
+-				goto done;
++				return error;
+ 			cur->bc_rec.b = new;
+ 			error = xfs_btree_insert(cur, &i);
+ 			if (error && error != -ENOSPC)
+-				goto done;
++				return error;
+ 			/*
+ 			 * If get no-space back from btree insert, it tried a
+ 			 * split, and we have a zero block reservation.  Fix up
+@@ -5168,33 +5164,28 @@ xfs_bmap_del_extent_real(
+ 				 */
+ 				error = xfs_bmbt_lookup_eq(cur, &got, &i);
+ 				if (error)
+-					goto done;
+-				if (XFS_IS_CORRUPT(mp, i != 1)) {
+-					error = -EFSCORRUPTED;
+-					goto done;
+-				}
++					return error;
++				if (XFS_IS_CORRUPT(mp, i != 1))
++					return -EFSCORRUPTED;
+ 				/*
+ 				 * Update the btree record back
+ 				 * to the original value.
+ 				 */
+ 				error = xfs_bmbt_update(cur, &old);
+ 				if (error)
+-					goto done;
++					return error;
+ 				/*
+ 				 * Reset the extent record back
+ 				 * to the original value.
+ 				 */
+ 				xfs_iext_update_extent(ip, state, icur, &old);
+-				flags = 0;
+-				error = -ENOSPC;
+-				goto done;
+-			}
+-			if (XFS_IS_CORRUPT(mp, i != 1)) {
+-				error = -EFSCORRUPTED;
+-				goto done;
++				*logflagsp = 0;
++				return -ENOSPC;
+ 			}
++			if (XFS_IS_CORRUPT(mp, i != 1))
++				return -EFSCORRUPTED;
+ 		} else
+-			flags |= xfs_ilog_fext(whichfork);
++			*logflagsp |= xfs_ilog_fext(whichfork);
+ 
+ 		ifp->if_nextents++;
+ 		xfs_iext_next(ifp, icur);
+@@ -5218,7 +5209,7 @@ xfs_bmap_del_extent_real(
+ 					((bflags & XFS_BMAPI_NODISCARD) ||
+ 					del->br_state == XFS_EXT_UNWRITTEN));
+ 			if (error)
+-				goto done;
++				return error;
+ 		}
+ 	}
+ 
+@@ -5233,9 +5224,7 @@ xfs_bmap_del_extent_real(
+ 	if (qfield && !(bflags & XFS_BMAPI_REMAP))
+ 		xfs_trans_mod_dquot_byino(tp, ip, qfield, (long)-nblks);
+ 
+-done:
+-	*logflagsp = flags;
+-	return error;
++	return 0;
  }
  
-+/* Create a new pending item at the end of the transaction list. */
-+static inline struct xfs_defer_pending *
-+xfs_defer_alloc(
-+	struct xfs_trans		*tp,
-+	enum xfs_defer_ops_type		type)
-+{
-+	struct xfs_defer_pending	*dfp;
-+
-+	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
-+			GFP_NOFS | __GFP_NOFAIL);
-+	dfp->dfp_type = type;
-+	INIT_LIST_HEAD(&dfp->dfp_work);
-+	list_add_tail(&dfp->dfp_list, &tp->t_dfops);
-+
-+	return dfp;
-+}
-+
- /* Add an item for later deferred processing. */
- struct xfs_defer_pending *
- xfs_defer_add(
-@@ -787,23 +857,38 @@ xfs_defer_add(
- 	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
- 
- 	dfp = xfs_defer_find_last(tp, type, ops);
--	if (!dfp || !xfs_defer_can_append(dfp, ops)) {
--		/* Create a new pending item at the end of the intake list. */
--		dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
--				GFP_NOFS | __GFP_NOFAIL);
--		dfp->dfp_type = type;
--		dfp->dfp_intent = NULL;
--		dfp->dfp_done = NULL;
--		dfp->dfp_count = 0;
--		INIT_LIST_HEAD(&dfp->dfp_work);
--		list_add_tail(&dfp->dfp_list, &tp->t_dfops);
--	}
-+	if (!dfp || !xfs_defer_can_append(dfp, ops))
-+		dfp = xfs_defer_alloc(tp, type);
- 
- 	xfs_defer_add_item(dfp, li);
- 	trace_xfs_defer_add_item(tp->t_mountp, dfp, li);
- 	return dfp;
- }
- 
-+/*
-+ * Add a defer ops barrier to force two otherwise adjacent deferred work items
-+ * to be tracked separately and have separate log items.
-+ */
-+void
-+xfs_defer_add_barrier(
-+	struct xfs_trans		*tp)
-+{
-+	struct xfs_defer_pending	*dfp;
-+	const enum xfs_defer_ops_type	type = XFS_DEFER_OPS_TYPE_BARRIER;
-+	const struct xfs_defer_op_type	*ops = defer_op_types[type];
-+
-+	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-+
-+	/* If the last defer op added was a barrier, we're done. */
-+	dfp = xfs_defer_find_last(tp, type, ops);
-+	if (dfp)
-+		return;
-+
-+	xfs_defer_alloc(tp, type);
-+
-+	trace_xfs_defer_add_item(tp->t_mountp, dfp, NULL);
-+}
-+
  /*
-  * Create a pending deferred work item to replay the recovered intent item
-  * and add it to the list.
-diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index b0284154f..5b1990ef3 100644
---- a/libxfs/xfs_defer.h
-+++ b/libxfs/xfs_defer.h
-@@ -20,6 +20,7 @@ enum xfs_defer_ops_type {
- 	XFS_DEFER_OPS_TYPE_FREE,
- 	XFS_DEFER_OPS_TYPE_AGFL_FREE,
- 	XFS_DEFER_OPS_TYPE_ATTR,
-+	XFS_DEFER_OPS_TYPE_BARRIER,
- 	XFS_DEFER_OPS_TYPE_MAX,
- };
- 
-@@ -163,4 +164,6 @@ xfs_defer_add_item(
- int __init xfs_defer_init_item_caches(void);
- void xfs_defer_destroy_item_caches(void);
- 
-+void xfs_defer_add_barrier(struct xfs_trans *tp);
-+
- #endif /* __XFS_DEFER_H__ */
 -- 
 2.44.0
 
