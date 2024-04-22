@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 794E215383C
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D54153BC1
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713803969; cv=none; b=a+i6/XyXH1obfx3U9BR9jEyPv+er3Mdkrk2pzC4SxQp+sa/oPPCCVohqCP9vrnM3cCfmEPTCeIMoOCW5lZPKJ7ao7pZdw7dQMwCN5AuS/kX+KDT7Y++eQ4gulyiXwa83IFYsvogx9OeJLU22VNJc2JzaY2yQj0qNM6cyDvwWvck=
+	t=1713803972; cv=none; b=paDIAIuiT1Z5PHBUZ9eh7kFIziBIk6cLWEb1yU/YEgJsfwUMyk4fv5lWWR5MxNhTWnrboL01GcJ6LUZEFbmtmVGz3cR+9+IqmPw7s/co00UO5FO/aLhGXA4dlcW/QgUzlLJF3o6SOd0FpDYJ37cB2uzPQLY4Eue21uIneAaHgAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713803969; c=relaxed/simple;
-	bh=xuG2F8nmPDhPdSLuNWWFFycgkf8rqnwpQ0kQBe7Aj3w=;
+	s=arc-20240116; t=1713803972; c=relaxed/simple;
+	bh=0PdgUgl89r6jvvmF9cdoUhVzmZCeluXFWjgFeNVrlYc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ews5VhWJg9G0t0gfWZn+qIgD2jX5cS3sagHqLrCfl7bti7ltBMLnVL0/74qDnfsY1TIURRS3xzUwWxSrX03V3dyp64oixElrzjA/IQWMwctfvLmw5JeUmftt+1LjHZTvlfNI5Mz/1G5S4PC106etJSVXrmuEn5xGZlSkiz3D53Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CZ2/O5M4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=j2j5WRkqc/IA0gcM+a2Q2CZy6UBhj1ho2QmHQX5NsZp4kkxtY2CAMW91bbmganLcgJDNqOq6HcrymGYuw0KADkQz8wZgGegUKBAcwUX4AiiSQhphiUxqN4/nc7bfSUhK5z5+1eVu2HY5h6viU2+PUBwbqDQF2+dRFyjEtjvnmFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NefK33q1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CZ2/O5M4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B013C32783;
-	Mon, 22 Apr 2024 16:39:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NefK33q1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E239BC113CC;
+	Mon, 22 Apr 2024 16:39:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713803969;
-	bh=xuG2F8nmPDhPdSLuNWWFFycgkf8rqnwpQ0kQBe7Aj3w=;
+	s=k20201202; t=1713803970;
+	bh=0PdgUgl89r6jvvmF9cdoUhVzmZCeluXFWjgFeNVrlYc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CZ2/O5M4/u3dsCdRjdg5NS6gWv8JYoDKsk7hk/L3cur0k4VPKw2Hg1GnR3gbvxuG0
-	 lyrzmxQAoShpAt/r+hIbWkZ5Dix2iJ8RGo0Q3nbWWV3eXzuMDA127p6YhzkmPtPDXE
-	 /LyEwu8Roj5fBytFSSbP9F1knKLIzdn4TXNGgquej+lUsfjI1zP2IuBuTjTHr3xH5+
-	 gCl2pYlrk6xxTpFhCEyY2pjTAEAtPROP39cxujIZ2LcxXyxWcHZ85NFlCd8h9mme9o
-	 e7ayFCUHI/cuf8/QOGX/vqeelip0FhyASoghSWo+Si3VbaXbcoXaWRevBT4BjGfHf5
-	 XKVio3Yc0lmkA==
+	b=NefK33q17/fO3Y1MWqrqzT9t7fxkw477CfdUmuCvsnwq2G3fqk9/p3zwtgiuCtW8r
+	 N51ga/1ki5lSpnkLiUIs/I++nel2hHXtF3puhOzzn22txMwGJhwuz33mkLDV8V/py+
+	 ltaYfkzD+yvbriTVweA1MHZYVw+kUEKCFV3qsI48nKKE9hHeV1TxSOo5lpQYIQwWeH
+	 tI13ivB6Zg6V9kYj6NZCTZW6RGlxtPKOOFLkzZWRc3TBWyLEEHOZU3dRZI49lpR8mB
+	 gZE/ES1Ivy5uylKOThe2evlRN7fp81FN8DlziZbSmQefH41eDwjwWNfSmHonHIo0kl
+	 FtW7Heo9jNoLA==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 14/67] xfs: elide ->create_done calls for unlogged deferred work
-Date: Mon, 22 Apr 2024 18:25:36 +0200
-Message-ID: <20240422163832.858420-16-cem@kernel.org>
+Subject: [PATCH 15/67] xfs: don't append work items to logged xfs_defer_pending objects
+Date: Mon, 22 Apr 2024 18:25:37 +0200
+Message-ID: <20240422163832.858420-17-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -46,48 +46,115 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-Source kernel commit: 9c07bca793b4ff9f0b7871e2a928a1b28b8fa4e3
+Source kernel commit: 6b126139401a2284402d7c38fe3168d5a26da41d
 
-Extended attribute updates use the deferred work machinery to manage
-state across a chain of smaller transactions.  All previous deferred
-work users have employed log intent items and log done items to manage
-restarting of interrupted operations, which means that ->create_intent
-sets dfp_intent to a log intent item and ->create_done uses that item to
-create a log intent done item.
+When someone tries to add a deferred work item to xfs_defer_add, it will
+try to attach the work item to the most recently added xfs_defer_pending
+object attached to the transaction.  However, it doesn't check if the
+pending object has a log intent item attached to it.  This is incorrect
+behavior because we cannot add more work to an object that has already
+been committed to the ondisk log.
 
-However, xattrs have used the INCOMPLETE flag to deal with the lack of
-recovery support for an interrupted transaction chain.  Log items are
-optional if the xattr update caller didn't set XFS_DA_OP_LOGGED to
-require a restartable sequence.
+Therefore, change the behavior not to append to pending items with a non
+null dfp_intent.  In practice this has not been an issue because the
+only way xfs_defer_add gets called after log intent items have been
+the @dop_pending isolation in xfs_defer_finish_noroll protects the
+pending items that have already been logged.
 
-In other words, ->create_intent can return NULL to say that there's no
-log intent item.  If that's the case, no log intent done item should be
-created.  Clean up xfs_defer_create_done not to do this, so that the
-->create_done functions don't have to check for non-null dfp_intent
-themselves.
+However, the next patch will add the ability to pause a deferred extent
+free object during online btree rebuilding, and any new extfree work
+items need to have their own pending event.
+
+While we're at it, hoist the predicate to its own static inline function
+for readability.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_defer.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ libxfs/xfs_defer.c | 61 ++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 48 insertions(+), 13 deletions(-)
 
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 29ec0bd81..722ff6a77 100644
+index 722ff6a77..200d1b300 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -195,6 +195,10 @@ xfs_defer_create_done(
- 	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
- 	struct xfs_log_item		*lip;
+@@ -689,6 +689,51 @@ xfs_defer_cancel(
+ 	xfs_defer_cancel_list(mp, &tp->t_dfops);
+ }
  
-+	/* If there is no log intent item, there can be no log done item. */
-+	if (!dfp->dfp_intent)
-+		return;
++/*
++ * Return the last pending work item attached to this transaction if it matches
++ * the deferred op type.
++ */
++static inline struct xfs_defer_pending *
++xfs_defer_find_last(
++	struct xfs_trans		*tp,
++	enum xfs_defer_ops_type		type,
++	const struct xfs_defer_op_type	*ops)
++{
++	struct xfs_defer_pending	*dfp = NULL;
 +
- 	/*
- 	 * Mark the transaction dirty, even on error. This ensures the
- 	 * transaction is aborted, which:
++	/* No dfops at all? */
++	if (list_empty(&tp->t_dfops))
++		return NULL;
++
++	dfp = list_last_entry(&tp->t_dfops, struct xfs_defer_pending,
++			dfp_list);
++
++	/* Wrong type? */
++	if (dfp->dfp_type != type)
++		return NULL;
++	return dfp;
++}
++
++/*
++ * Decide if we can add a deferred work item to the last dfops item attached
++ * to the transaction.
++ */
++static inline bool
++xfs_defer_can_append(
++	struct xfs_defer_pending	*dfp,
++	const struct xfs_defer_op_type	*ops)
++{
++	/* Already logged? */
++	if (dfp->dfp_intent)
++		return false;
++
++	/* Already full? */
++	if (ops->max_items && dfp->dfp_count >= ops->max_items)
++		return false;
++
++	return true;
++}
++
+ /* Add an item for later deferred processing. */
+ void
+ xfs_defer_add(
+@@ -702,19 +747,9 @@ xfs_defer_add(
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
+ 
+-	/*
+-	 * Add the item to a pending item at the end of the intake list.
+-	 * If the last pending item has the same type, reuse it.  Else,
+-	 * create a new pending item at the end of the intake list.
+-	 */
+-	if (!list_empty(&tp->t_dfops)) {
+-		dfp = list_last_entry(&tp->t_dfops,
+-				struct xfs_defer_pending, dfp_list);
+-		if (dfp->dfp_type != type ||
+-		    (ops->max_items && dfp->dfp_count >= ops->max_items))
+-			dfp = NULL;
+-	}
+-	if (!dfp) {
++	dfp = xfs_defer_find_last(tp, type, ops);
++	if (!dfp || !xfs_defer_can_append(dfp, ops)) {
++		/* Create a new pending item at the end of the intake list. */
+ 		dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
+ 				GFP_NOFS | __GFP_NOFAIL);
+ 		dfp->dfp_type = type;
 -- 
 2.44.0
 
