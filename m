@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E7A1153BCF
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C81153BCF
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713803981; cv=none; b=mbYX17fKk6hjPa23LmRHIIDNrcdYfknFh75cd6x2zas93QYqmjtXjDtJpCCkZ0F8k5Jn0E0TDo8AClRUGHd/CX8IcdkiP4Zha4mNAiWYnlTRS9obXuour6+cvoA48jgkfJfIBn5EiHqWcYk2GDvbauWxPN7ySQEEP+bfB+S8Ndg=
+	t=1713803983; cv=none; b=JQdKYFkPsMdk+Lo1jC83u65cU4q0g5EnlOEIV5FMWjtt2wAwCvkzB7xXrED/ymNZr1t5MBKFSema1R0jf3jtqWhuWBfAC9rXaYG2/laE/wVm6ijsAQmW0d39Cspd1qTyTTULJNIMz7wxrUr0H8V1O66HpuwVlY8cjpI3wSBRTOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713803981; c=relaxed/simple;
-	bh=I3uPu+NnvYpcA54lCXV2p/3UdGR/BbZN2wGNEdvNzzE=;
+	s=arc-20240116; t=1713803983; c=relaxed/simple;
+	bh=AF/Beh2BTqJX7DPXeYYCKvoWNf4TdDLemRe9GmQ4JA8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=W7337OehbtfolmX2VDSYMLtxIZEYqmaa5CCC5evAwgLO0zAAQnLMPyzv94RnPp27kuwLUYLk6Irgd2QVxV+aG8CV1raxmZkcW4f8YqgYkWukF6IDpVSkaGjYbittg304Yg3UGo0lmhN5LB4xIbXhq2EL45i86GwNjn341I3ZUi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OMc+2aGH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=f7xq/eeLCs+JNuIJbxDKuCuxg2qfA6ha4qrwuf6eN/YVUodEXFFbvBe5yhFskPpLylutadcSvMj2WvHTsTr5tu9Grc56ubvpT+pvYcB/UFlFAQkCMSfRLthmZt6Tp900Ac3KGFHWNHrMWRhMN9XoksWOxHGFKnsp3wLkUAXCR78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pCE3SIRj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OMc+2aGH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CB00C113CC;
-	Mon, 22 Apr 2024 16:39:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pCE3SIRj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 022B9C32781;
+	Mon, 22 Apr 2024 16:39:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713803981;
-	bh=I3uPu+NnvYpcA54lCXV2p/3UdGR/BbZN2wGNEdvNzzE=;
+	s=k20201202; t=1713803983;
+	bh=AF/Beh2BTqJX7DPXeYYCKvoWNf4TdDLemRe9GmQ4JA8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OMc+2aGHW/1f4zmSQazD17yTDf1aTQz98RZF//twvFzYFjvraHKBYIvcCv9gFDNY9
-	 jL3JyIl7gCfe0DaY0g+9aj8s4hiUK1aXpjTXaDqiCiY1jNoWUJsd/IUFH/TBVnzUSu
-	 qA1HIEfVQFNa9Zg4cwfw61qQuLfrWQUQ/H2APsg+stCHyCs0RaG9OQu1bJb+/vDzFM
-	 s/v8h+AREPlNgaXQ2QKLpE5l19EdTHjkrZbszdit8Sg4alw0bNQhA/IYJuiAfmccpk
-	 SkgpMjP6Uq65adIGtSEZqUmFwlvETnQXYg0YU4qJADNEGOeO50o7Ug2TF9mORtNjVo
-	 IVasbFF3SjuTg==
+	b=pCE3SIRjxY6n2uTYLhQknOFSWUhc5rTDIktzXXb8Po2p1F8e8Q7jTyqWb0+3zc9wL
+	 9d02g5DsI3P6F3umEhZw8h+kfHoRaVIDMwzCEGN9MruM3QvGEZ8Dcu4kMKEV6wMSDm
+	 urh+y9q0ymJCs8T5PaJjazADssmcjPqyWNXKtRN7y8DAMeqGIdGOcB7RktpgATXS2u
+	 4To9AlT3I6Xe03YXWW2IbEHmgeNjkSqH825fRpNuxsF72iMt4N/3ufqEIXFwL2r7BL
+	 sCl2HOvSbyRPu1fwh4aCRbawrLU0C9bF64Vp1/jSVvcsLs4+gmLIWoT7hHXaOTRcFv
+	 It6CUTB45iR3Q==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 22/67] xfs: update dir3 leaf block metadata after swap
-Date: Mon, 22 Apr 2024 18:25:44 +0200
-Message-ID: <20240422163832.858420-24-cem@kernel.org>
+Subject: [PATCH 23/67] xfs: extract xfs_da_buf_copy() helper function
+Date: Mon, 22 Apr 2024 18:25:45 +0200
+Message-ID: <20240422163832.858420-25-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -46,67 +46,183 @@ Content-Transfer-Encoding: 8bit
 
 From: Zhang Tianci <zhangtianci.1997@bytedance.com>
 
-Source kernel commit: 5759aa4f956034b289b0ae2c99daddfc775442e1
+Source kernel commit: fd45ddb9dd606b3eaddf26e13f64340636955986
 
-xfs_da3_swap_lastblock() copy the last block content to the dead block,
-but do not update the metadata in it. We need update some metadata
-for some kinds of type block, such as dir3 leafn block records its
-blkno, we shall update it to the dead block blkno. Otherwise,
-before write the xfs_buf to disk, the verify_write() will fail in
-blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
+This patch does not modify logic.
 
-We will get this warning:
+xfs_da_buf_copy() will copy one block from src xfs_buf to
+dst xfs_buf, and update the block metadata in dst directly.
 
-XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
-XFS (dm-0): Unmount and run xfs_repair
-XFS (dm-0): First 128 bytes of corrupted metadata buffer:
-00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
-000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
-000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
-00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
-00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
-000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
-00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
-0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
-XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
-XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
-XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-
->From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
-its blkno is 0x1a0.
-
-Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
 Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_da_btree.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ libxfs/xfs_attr_leaf.c | 12 +++----
+ libxfs/xfs_da_btree.c  | 74 +++++++++++++++++-------------------------
+ libxfs/xfs_da_btree.h  |  2 ++
+ 3 files changed, 36 insertions(+), 52 deletions(-)
 
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index ed81471ce..baa168318 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -1241,14 +1241,10 @@ xfs_attr3_leaf_to_node(
+ 	if (error)
+ 		goto out;
+ 
+-	/* copy leaf to new buffer, update identifiers */
+-	xfs_trans_buf_set_type(args->trans, bp2, XFS_BLFT_ATTR_LEAF_BUF);
+-	bp2->b_ops = bp1->b_ops;
+-	memcpy(bp2->b_addr, bp1->b_addr, args->geo->blksize);
+-	if (xfs_has_crc(mp)) {
+-		struct xfs_da3_blkinfo *hdr3 = bp2->b_addr;
+-		hdr3->blkno = cpu_to_be64(xfs_buf_daddr(bp2));
+-	}
++	/*
++	 * Copy leaf to new buffer and log it.
++	 */
++	xfs_da_buf_copy(bp2, bp1, args->geo->blksize);
+ 	xfs_trans_log_buf(args->trans, bp2, 0, args->geo->blksize - 1);
+ 
+ 	/*
 diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index a068a0164..3903486d1 100644
+index 3903486d1..0779bb624 100644
 --- a/libxfs/xfs_da_btree.c
 +++ b/libxfs/xfs_da_btree.c
-@@ -2312,10 +2312,17 @@ xfs_da3_swap_lastblock(
+@@ -417,6 +417,25 @@ xfs_da3_node_read_mapped(
+ 	return xfs_da3_node_set_type(tp, *bpp);
+ }
+ 
++/*
++ * Copy src directory/attr leaf/node buffer to the dst.
++ * For v5 file systems make sure the right blkno is stamped in.
++ */
++void
++xfs_da_buf_copy(
++	struct xfs_buf *dst,
++	struct xfs_buf *src,
++	size_t size)
++{
++	struct xfs_da3_blkinfo *da3 = dst->b_addr;
++
++	memcpy(dst->b_addr, src->b_addr, size);
++	dst->b_ops = src->b_ops;
++	xfs_trans_buf_copy_type(dst, src);
++	if (xfs_has_crc(dst->b_mount))
++		da3->blkno = cpu_to_be64(xfs_buf_daddr(dst));
++}
++
+ /*========================================================================
+  * Routines used for growing the Btree.
+  *========================================================================*/
+@@ -686,12 +705,6 @@ xfs_da3_root_split(
+ 		btree = icnodehdr.btree;
+ 		size = (int)((char *)&btree[icnodehdr.count] - (char *)oldroot);
+ 		level = icnodehdr.level;
+-
+-		/*
+-		 * we are about to copy oldroot to bp, so set up the type
+-		 * of bp while we know exactly what it will be.
+-		 */
+-		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DA_NODE_BUF);
+ 	} else {
+ 		struct xfs_dir3_icleaf_hdr leafhdr;
+ 
+@@ -703,31 +716,17 @@ xfs_da3_root_split(
+ 		size = (int)((char *)&leafhdr.ents[leafhdr.count] -
+ 			(char *)leaf);
+ 		level = 0;
+-
+-		/*
+-		 * we are about to copy oldroot to bp, so set up the type
+-		 * of bp while we know exactly what it will be.
+-		 */
+-		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_LEAFN_BUF);
+ 	}
+ 
+ 	/*
+-	 * we can copy most of the information in the node from one block to
+-	 * another, but for CRC enabled headers we have to make sure that the
+-	 * block specific identifiers are kept intact. We update the buffer
+-	 * directly for this.
++	 * Copy old root to new buffer and log it.
+ 	 */
+-	memcpy(node, oldroot, size);
+-	if (oldroot->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC) ||
+-	    oldroot->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
+-		struct xfs_da3_intnode *node3 = (struct xfs_da3_intnode *)node;
+-
+-		node3->hdr.info.blkno = cpu_to_be64(xfs_buf_daddr(bp));
+-	}
++	xfs_da_buf_copy(bp, blk1->bp, size);
+ 	xfs_trans_log_buf(tp, bp, 0, size - 1);
+ 
+-	bp->b_ops = blk1->bp->b_ops;
+-	xfs_trans_buf_copy_type(bp, blk1->bp);
++	/*
++	 * Update blk1 to point to new buffer.
++	 */
+ 	blk1->bp = bp;
+ 	blk1->blkno = blkno;
+ 
+@@ -1216,21 +1215,14 @@ xfs_da3_root_join(
+ 	xfs_da_blkinfo_onlychild_validate(bp->b_addr, oldroothdr.level);
+ 
+ 	/*
+-	 * This could be copying a leaf back into the root block in the case of
+-	 * there only being a single leaf block left in the tree. Hence we have
+-	 * to update the b_ops pointer as well to match the buffer type change
+-	 * that could occur. For dir3 blocks we also need to update the block
+-	 * number in the buffer header.
++	 * Copy child to root buffer and log it.
+ 	 */
+-	memcpy(root_blk->bp->b_addr, bp->b_addr, args->geo->blksize);
+-	root_blk->bp->b_ops = bp->b_ops;
+-	xfs_trans_buf_copy_type(root_blk->bp, bp);
+-	if (oldroothdr.magic == XFS_DA3_NODE_MAGIC) {
+-		struct xfs_da3_blkinfo *da3 = root_blk->bp->b_addr;
+-		da3->blkno = cpu_to_be64(xfs_buf_daddr(root_blk->bp));
+-	}
++	xfs_da_buf_copy(root_blk->bp, bp, args->geo->blksize);
+ 	xfs_trans_log_buf(args->trans, root_blk->bp, 0,
+ 			  args->geo->blksize - 1);
++	/*
++	 * Now we can drop the child buffer.
++	 */
+ 	error = xfs_da_shrink_inode(args, child, bp);
+ 	return error;
+ }
+@@ -2312,14 +2304,8 @@ xfs_da3_swap_lastblock(
  		return error;
  	/*
  	 * Copy the last block into the dead buffer and log it.
-+	 * On CRC-enabled file systems, also update the stamped in blkno.
+-	 * On CRC-enabled file systems, also update the stamped in blkno.
  	 */
- 	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
-+	if (xfs_has_crc(mp)) {
-+		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr;
-+
-+		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
-+	}
+-	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
+-	if (xfs_has_crc(mp)) {
+-		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr;
+-
+-		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
+-	}
++	xfs_da_buf_copy(dead_buf, last_buf, args->geo->blksize);
  	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
  	dead_info = dead_buf->b_addr;
-+
- 	/*
- 	 * Get values from the moved block.
- 	 */
+ 
+diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
+index ffa3df5b2..706baf36e 100644
+--- a/libxfs/xfs_da_btree.h
++++ b/libxfs/xfs_da_btree.h
+@@ -219,6 +219,8 @@ int	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
+ 		const struct xfs_buf_ops *ops);
+ int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
+ 					  struct xfs_buf *dead_buf);
++void	xfs_da_buf_copy(struct xfs_buf *dst, struct xfs_buf *src,
++			size_t size);
+ 
+ uint xfs_da_hashname(const uint8_t *name_string, int name_length);
+ enum xfs_dacmp xfs_da_compname(struct xfs_da_args *args,
 -- 
 2.44.0
 
