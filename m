@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5F015099A
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0C4153833
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713803955; cv=none; b=iUIH+UycqCf1jTRgdx9G+3kb6sJzWdzfG6xGJYyZtu50ZbZzKZxU3yCOWIQpUDAVrDr8R0e4YnaqCcMK/ElKb7x0XWjIw7/sPaGLVg8TeZ0xP2XHkxJIjUZw+7ALc3L3zPt/gdJ6TGFokw7ioRk9uJNuZ010Gb6/XF1ajNS4gpI=
+	t=1713803957; cv=none; b=Wag/jxxmLJrTN0ptI4fD3d26T2f4FBYKWMgcO0mStrZ8SMPubUDr+Rhv08zCc9y1NEkc7eSQ4Z/DojtOwdtqueIChNLDdINCLHzHtW3RV5YPc0iiPSFLxVCXs0AwWPXdoq87ilJzJgc+ABLa7O8bLZ43NapvxXTrAFNPfFNxwAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713803955; c=relaxed/simple;
-	bh=5FburhU4w3fQkPHp67dEAIFAh2jkcwegVWZs8Zqa8rs=;
+	s=arc-20240116; t=1713803957; c=relaxed/simple;
+	bh=GOdqprI8nrfgICBT9hOwQ5WModjn3kps2kn3kqtvbAY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KYtSHeO5sN136VTn40CYkCZMiVbmUG+HD6QzC7Db5FQYL5H184xpC0+j0WjsyNMSewGGtzbH/hWytGDOg+UhxE3eaSpTCFgH3WEnSLY0x6hhJ+j8acK1JBNVz5+YMFAoGBSfbZ8doTKYmGGsQ9Kixsn79i0UT6hWkl9fHW+NZEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DsfQ+lHW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=LbzTnv2MhYIFJINdghrXiwrFlzaqYG2SSVIysuC6AnPlZiiqYaF3t77JuFuq3Hv8+1tQ8ZuX1sFbRqeFnA9vTUbBkahg7nEjgi+JqC5d3Uesam3rzaiPPiJtmN892jllNBKW7PXBlQKWJ/mJQv41WW0AU/oj+7Ht7R5zjnrrZTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CL1WD9pk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DsfQ+lHW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F3BC4AF07;
-	Mon, 22 Apr 2024 16:39:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CL1WD9pk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24B06C32782;
+	Mon, 22 Apr 2024 16:39:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713803955;
-	bh=5FburhU4w3fQkPHp67dEAIFAh2jkcwegVWZs8Zqa8rs=;
+	s=k20201202; t=1713803957;
+	bh=GOdqprI8nrfgICBT9hOwQ5WModjn3kps2kn3kqtvbAY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=DsfQ+lHWt1lFhEayHjgtxOgXsCtC4MqNw5v14e2rQeLKzsI35QrhlSUsvXpUzE7Vd
-	 MX8v4ePErbcfarFdDGMwdkUesSqErpLukScGrava4pbNuGPyc/jUXNXokyj4tFyYJy
-	 SxBAnFKI/hCxPqBoE5P4/GvAG1KzhzhjpeCn8KGuBdKtFRuX2N7Yh8lfJYwMsEWBuc
-	 5W32PLjgCYnkbacB2ybTonk4s/RPAJxOqzPMsjYwm+jRH/RFySHtCHqRSniyEx8ro4
-	 3NUdNCXspCwRVB6MjkUr2onzN47l4W8CogK9zQaO3gjjZI+qPtOfidYPHZnf16g0H6
-	 GaLtnKUs62tJg==
+	b=CL1WD9pkhUwmiCUYKsyIkfCziF1Gos6sdhtnBlz6+nLG/kzcv1f0kVFt0ZKyCVtfc
+	 FACfcCEXMA8sm9BXIjPenH9Oy4C9dH930sY/m6NpjT/YwuvF78na4S8c1Gr/lZg7KL
+	 r6QIEROGHnbASOlakdwb7eZNm2OFhclPMUwVJf/gVZWerPy4tbjXoc4ALN2qe0L559
+	 Yk/V3zlXBkUk6cNePyCLVGj1BH75JBI7pLkl4XceB3fkm2o82NqbuhGsiPtNN75rgr
+	 LKjJdYKHFno0YgmkB6aCLn5t+MUr3dGEQTULouEoeYzOtLFz1RdN0q872zbB4h/78F
+	 oL9ZkbsJJOaTg==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 05/67] xfs: hoist intent done flag setting to ->finish_item callsite
-Date: Mon, 22 Apr 2024 18:25:27 +0200
-Message-ID: <20240422163832.858420-7-cem@kernel.org>
+Subject: [PATCH 06/67] xfs: hoist ->create_intent boilerplate to its callsite
+Date: Mon, 22 Apr 2024 18:25:28 +0200
+Message-ID: <20240422163832.858420-8-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -46,69 +46,31 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-Source kernel commit: 3dd75c8db1c1675a26d3e228bab349c1fc065867
+Source kernel commit: f3fd7f6fce1cc9b8eb59705b27f823330207b7c9
 
-Each log intent item's ->finish_item call chain inevitably includes some
-code to set the dirty flag of the transaction.  If there's an associated
-log intent done item, it also sets the item's dirty flag and the
-transaction's INTENT_DONE flag.  This is repeated throughout the
-codebase.
-
-Reduce the LOC by moving all that to xfs_defer_finish_one.
+Hoist the dirty flag setting code out of each ->create_intent
+implementation up to the callsite to reduce boilerplate further.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_defer.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ libxfs/xfs_defer.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 54865b73b..6a9ce9241 100644
+index 6a9ce9241..1be9554e1 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -186,6 +186,32 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
- 	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
- };
+@@ -235,6 +235,8 @@ xfs_defer_create_intent(
+ 	if (IS_ERR(lip))
+ 		return PTR_ERR(lip);
  
-+/* Create a log intent done item for a log intent item. */
-+static inline void
-+xfs_defer_create_done(
-+	struct xfs_trans		*tp,
-+	struct xfs_defer_pending	*dfp)
-+{
-+	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
-+	struct xfs_log_item		*lip;
-+
-+	/*
-+	 * Mark the transaction dirty, even on error. This ensures the
-+	 * transaction is aborted, which:
-+	 *
-+	 * 1.) releases the log intent item and frees the log done item
-+	 * 2.) shuts down the filesystem
-+	 */
 +	tp->t_flags |= XFS_TRANS_DIRTY;
-+	lip = ops->create_done(tp, dfp->dfp_intent, dfp->dfp_count);
-+	if (!lip)
-+		return;
-+
-+	tp->t_flags |= XFS_TRANS_HAS_INTENT_DONE;
 +	set_bit(XFS_LI_DIRTY, &lip->li_flags);
-+	dfp->dfp_done = lip;
-+}
-+
- /*
-  * Ensure there's a log intent item associated with this deferred work item if
-  * the operation must be restarted on crash.  Returns 1 if there's a log item;
-@@ -491,7 +517,7 @@ xfs_defer_finish_one(
- 
- 	trace_xfs_defer_pending_finish(tp->t_mountp, dfp);
- 
--	dfp->dfp_done = ops->create_done(tp, dfp->dfp_intent, dfp->dfp_count);
-+	xfs_defer_create_done(tp, dfp);
- 	list_for_each_safe(li, n, &dfp->dfp_work) {
- 		list_del(li);
- 		dfp->dfp_count--;
+ 	dfp->dfp_intent = lip;
+ 	return 1;
+ }
 -- 
 2.44.0
 
