@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617A115381C
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:40:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8C01514CA
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:40:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713804025; cv=none; b=o+CC19cfhQbXp4PWcH/MlZsV/FqrzNRkYnyyMn78/+pclEwgCcCSRJk0hIzrdN/+RUCzMl9JcuklyKjySwn93leWmkUmqwe014RYXwapu9IHTLr928D2U98r6qru9WGwQLJdfcQQrcNhX3CsN2Al00A2Ph6qDB/wAQwjJ37y9JE=
+	t=1713804026; cv=none; b=XJdm2L7Ga0Ob+ANJTUkAUFBpWjat5S21HR//vm2kP0IQHU6sPpiX5kpM1OkfGnCQeKgk0SJdXyRZXAbgfVEP3ph8INedy0Z9syuK4HnLv9vkX5Eoq/lWdBf4mollfwaCt+aYz2Ywe6Z3RXPfsLWD13FfSEcB938d39mEhN9mGDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713804025; c=relaxed/simple;
-	bh=lB+HOlwXXEe/nQVHNzD6NLpo9SAiN8nPQYgY+0G3wAs=;
+	s=arc-20240116; t=1713804026; c=relaxed/simple;
+	bh=fzOFol4cvr8odkknKZN2uyJTaiTxNXYam+nrknXWAwI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jT6vc0ApY5nq+BVp0Q9029y3NlYCr+CRjVJq51EEVcxhc2QxWOf4XjEP9UYArT6JhAWDKVP2ynjaQSt8j5XOOyJ/Woq3Iz0il/fHfAqF/Ghibsf91Kvzdk3u5UV5p/nvkj3g8+Q9BMQa+Zd7S9eNUADAhWMc4oIdDdO6syD7/0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lMh4Jv6F; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=TLdzLcI2CTk7OE+8UEiG+ItncNrIjJRid3tvQM8wEwW5dfLFOkVptEPgdzMVSwg1m/IQGlFrgToQ5XsOwDXjqvXFp2FCAzwmRt09UzjVQYAjcPcV8kViUcjJJa/uCxWzlyRFL3jJRSW3Rn9HOr8JLAvJGOP0eFcKhkcVML1cKC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I7crmtNf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lMh4Jv6F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F134C32781;
-	Mon, 22 Apr 2024 16:40:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I7crmtNf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5AB8C113CC;
+	Mon, 22 Apr 2024 16:40:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713804025;
-	bh=lB+HOlwXXEe/nQVHNzD6NLpo9SAiN8nPQYgY+0G3wAs=;
+	s=k20201202; t=1713804026;
+	bh=fzOFol4cvr8odkknKZN2uyJTaiTxNXYam+nrknXWAwI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lMh4Jv6FyhFZ3I8dmJx2mBReisv6Ipvkdc96Vp7kftA9OB1Tg8NAcWfnCgVaOsZ1P
-	 yAU1ne/ZxJQApgxl5w6uWMV5VcMbHlldWTQf3Vwt33w+ylaCbK5GJdZ2jP/U8t/wYp
-	 mzpSjeQ7yvzUhXMsRGXULUXgMCrwuaJv04fZL6BcBLrOtm+oGsf+qyebovNZ2R9Yje
-	 sk4XfKwy4Xcl0jMfRHK6ZSSPp2colRIvGbmf/xZ+JCbuCk1WMKaHJ5BRsCLqnkolmK
-	 VIgofQ0AJ/aT1E/BlJLclb1AWmnZQYuMY6LT9gGk5StGzIp/MjL/EMya1NKKqjX5S/
-	 mDwWagpWLjNRg==
+	b=I7crmtNfhv0/vZfU3O9oBb72iR9xd0lQj8irTug4wM/E06y/0EM/Yxej3XNZIWkes
+	 Xh6waqVQgoZxEYDp9T+OB4iU3WnBeK4rMacqZzmQ5KTWiEK7J/HTYmvojT5noDPpjh
+	 7Bxr2Lw7GgSfbZZTLYDb9cSeluvQlTI9L2Tk1dvYknNLgFLX7vywlJNiIKPqqyctUf
+	 A6Oo1mLMQGYx+jaiBm1d1EReQpoFZtcmusNFnwXweS+BFtIvH5zujfQ4vBgnwHsyYu
+	 N8cSzMchq1jq0w2S7FK+VU/7nUK+w3UXutckgUGa2qJ3mu6QBdmMr+fSKlH2Ywa4v9
+	 99Gkstar9ywsA==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 51/67] xfs: split xfs_rtmodify_summary_int
-Date: Mon, 22 Apr 2024 18:26:13 +0200
-Message-ID: <20240422163832.858420-53-cem@kernel.org>
+Subject: [PATCH 52/67] xfs: remove rt-wrappers from xfs_format.h
+Date: Mon, 22 Apr 2024 18:26:14 +0200
+Message-ID: <20240422163832.858420-54-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -46,129 +46,213 @@ Content-Transfer-Encoding: 8bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: b271b314119eca1fb98a2c4e15304ce562802f0c
+Source kernel commit: 3abfe6c2759e2e3000b13f8ce8a1a325e80987a1
 
-Inline the logic of xfs_rtmodify_summary_int into xfs_rtmodify_summary
-and xfs_rtget_summary instead of having a somewhat awkward helper to
-share a little bit of code.
+xfs_format.h has a bunch odd wrappers for helper functions and mount
+structure access using RT* prefixes.  Replace them with their open coded
+versions (for those that weren't entirely unused) and remove the wrappers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_rtbitmap.c | 76 ++++++++++++++-----------------------------
- 1 file changed, 25 insertions(+), 51 deletions(-)
+ db/check.c            |  4 ++--
+ libxfs/xfs_format.h   |  8 --------
+ libxfs/xfs_rtbitmap.c | 24 ++++++++++++------------
+ repair/rt.c           |  6 ++----
+ 4 files changed, 16 insertions(+), 26 deletions(-)
 
+diff --git a/db/check.c b/db/check.c
+index a47a5d9cb..36d82af0a 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3647,7 +3647,7 @@ process_rtbitmap(
+ 			} else if (prevbit == 1) {
+ 				len = ((int)bmbno - start_bmbno) *
+ 					bitsperblock + (bit - start_bit);
+-				log = XFS_RTBLOCKLOG(len);
++				log = xfs_highbit64(len);
+ 				offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 				sumcompute[offs]++;
+ 				prevbit = 0;
+@@ -3660,7 +3660,7 @@ process_rtbitmap(
+ 	if (prevbit == 1) {
+ 		len = ((int)bmbno - start_bmbno) * bitsperblock +
+ 			(bit - start_bit);
+-		log = XFS_RTBLOCKLOG(len);
++		log = xfs_highbit64(len);
+ 		offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 		sumcompute[offs]++;
+ 	}
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index e6ca188e2..7d2873a79 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1156,20 +1156,12 @@ static inline bool xfs_dinode_has_large_extent_counts(
+ #define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
+ #define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
+ 
+-#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
+-#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
+-
+ /*
+  * RT bit manipulation macros.
+  */
+ #define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+ #define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+ 
+-#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
+-#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
+-
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
+-
+ /*
+  * Dquot and dquot block format definitions
+  */
 diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index adeaffed7..bbf955be8 100644
+index bbf955be8..eefc45c64 100644
 --- a/libxfs/xfs_rtbitmap.c
 +++ b/libxfs/xfs_rtbitmap.c
-@@ -450,71 +450,38 @@ xfs_trans_log_rtsummary(
+@@ -193,7 +193,7 @@ xfs_rtfind_back(
+ 			/*
+ 			 * Different.  Mark where we are and return.
+ 			 */
+-			i = bit - XFS_RTHIBIT(wdiff);
++			i = bit - xfs_highbit32(wdiff);
+ 			*rtx = start - i + 1;
+ 			return 0;
+ 		}
+@@ -231,7 +231,7 @@ xfs_rtfind_back(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_NBWORD - 1 - XFS_RTHIBIT(wdiff);
++			i += XFS_NBWORD - 1 - xfs_highbit32(wdiff);
+ 			*rtx = start - i + 1;
+ 			return 0;
+ 		}
+@@ -270,7 +270,7 @@ xfs_rtfind_back(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_NBWORD - 1 - XFS_RTHIBIT(wdiff);
++			i += XFS_NBWORD - 1 - xfs_highbit32(wdiff);
+ 			*rtx = start - i + 1;
+ 			return 0;
+ 		} else
+@@ -346,7 +346,7 @@ xfs_rtfind_forw(
+ 			/*
+ 			 * Different.  Mark where we are and return.
+ 			 */
+-			i = XFS_RTLOBIT(wdiff) - bit;
++			i = xfs_lowbit32(wdiff) - bit;
+ 			*rtx = start + i - 1;
+ 			return 0;
+ 		}
+@@ -384,7 +384,7 @@ xfs_rtfind_forw(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*rtx = start + i - 1;
+ 			return 0;
+ 		}
+@@ -421,7 +421,7 @@ xfs_rtfind_forw(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*rtx = start + i - 1;
+ 			return 0;
+ 		} else
+@@ -706,7 +706,7 @@ xfs_rtfree_range(
+ 	 */
+ 	if (preblock < start) {
+ 		error = xfs_rtmodify_summary(args,
+-				XFS_RTBLOCKLOG(start - preblock),
++				xfs_highbit64(start - preblock),
+ 				xfs_rtx_to_rbmblock(mp, preblock), -1);
+ 		if (error) {
+ 			return error;
+@@ -718,7 +718,7 @@ xfs_rtfree_range(
+ 	 */
+ 	if (postblock > end) {
+ 		error = xfs_rtmodify_summary(args,
+-				XFS_RTBLOCKLOG(postblock - end),
++				xfs_highbit64(postblock - end),
+ 				xfs_rtx_to_rbmblock(mp, end + 1), -1);
+ 		if (error) {
+ 			return error;
+@@ -729,7 +729,7 @@ xfs_rtfree_range(
+ 	 * (new) free extent.
+ 	 */
+ 	return xfs_rtmodify_summary(args,
+-			XFS_RTBLOCKLOG(postblock + 1 - preblock),
++			xfs_highbit64(postblock + 1 - preblock),
+ 			xfs_rtx_to_rbmblock(mp, preblock), 1);
  }
  
- /*
-- * Read and/or modify the summary information for a given extent size,
-- * bitmap block combination.
-- * Keeps track of a current summary block, so we don't keep reading
-- * it from the buffer cache.
-- *
-- * Summary information is returned in *sum if specified.
-- * If no delta is specified, returns summary only.
-+ * Modify the summary information for a given extent size, bitmap block
-+ * combination.
-  */
- int
--xfs_rtmodify_summary_int(
-+xfs_rtmodify_summary(
- 	struct xfs_rtalloc_args	*args,
- 	int			log,	/* log2 of extent size */
- 	xfs_fileoff_t		bbno,	/* bitmap block number */
--	int			delta,	/* change to make to summary info */
--	xfs_suminfo_t		*sum)	/* out: summary info for this block */
-+	int			delta)	/* in/out: summary block number */
+@@ -798,7 +798,7 @@ xfs_rtcheck_range(
+ 			/*
+ 			 * Different, compute first wrong bit and return.
+ 			 */
+-			i = XFS_RTLOBIT(wdiff) - bit;
++			i = xfs_lowbit32(wdiff) - bit;
+ 			*new = start + i;
+ 			*stat = 0;
+ 			return 0;
+@@ -837,7 +837,7 @@ xfs_rtcheck_range(
+ 			/*
+ 			 * Different, compute first wrong bit and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*new = start + i;
+ 			*stat = 0;
+ 			return 0;
+@@ -875,7 +875,7 @@ xfs_rtcheck_range(
+ 			/*
+ 			 * Different, compute first wrong bit and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*new = start + i;
+ 			*stat = 0;
+ 			return 0;
+diff --git a/repair/rt.c b/repair/rt.c
+index 9f3bc8d53..d5283c57f 100644
+--- a/repair/rt.c
++++ b/repair/rt.c
+@@ -14,8 +14,6 @@
+ #include "err_protos.h"
+ #include "rt.h"
+ 
+-#define xfs_highbit64 libxfs_highbit64	/* for XFS_RTBLOCKLOG macro */
+-
+ void
+ rtinit(xfs_mount_t *mp)
  {
- 	struct xfs_mount	*mp = args->mp;
--	int			error;
--	xfs_fileoff_t		sb;	/* summary fsblock */
--	xfs_rtsumoff_t		so;	/* index into the summary file */
-+	xfs_rtsumoff_t		so = xfs_rtsumoffs(mp, log, bbno);
- 	unsigned int		infoword;
-+	xfs_suminfo_t		val;
-+	int			error;
- 
--	/*
--	 * Compute entry number in the summary file.
--	 */
--	so = xfs_rtsumoffs(mp, log, bbno);
--	/*
--	 * Compute the block number in the summary file.
--	 */
--	sb = xfs_rtsumoffs_to_block(mp, so);
--
--	error = xfs_rtsummary_read_buf(args, sb);
-+	error = xfs_rtsummary_read_buf(args, xfs_rtsumoffs_to_block(mp, so));
- 	if (error)
- 		return error;
- 
--	/*
--	 * Point to the summary information, modify/log it, and/or copy it out.
--	 */
- 	infoword = xfs_rtsumoffs_to_infoword(mp, so);
--	if (delta) {
--		xfs_suminfo_t	val = xfs_suminfo_add(args, infoword, delta);
--
--		if (mp->m_rsum_cache) {
--			if (val == 0 && log + 1 == mp->m_rsum_cache[bbno])
--				mp->m_rsum_cache[bbno] = log;
--			if (val != 0 && log >= mp->m_rsum_cache[bbno])
--				mp->m_rsum_cache[bbno] = log + 1;
--		}
--		xfs_trans_log_rtsummary(args, infoword);
--		if (sum)
--			*sum = val;
--	} else if (sum) {
--		*sum = xfs_suminfo_get(args, infoword);
-+	val = xfs_suminfo_add(args, infoword, delta);
-+
-+	if (mp->m_rsum_cache) {
-+		if (val == 0 && log + 1 == mp->m_rsum_cache[bbno])
-+			mp->m_rsum_cache[bbno] = log;
-+		if (val != 0 && log >= mp->m_rsum_cache[bbno])
-+			mp->m_rsum_cache[bbno] = log + 1;
+@@ -90,7 +88,7 @@ generate_rtinfo(xfs_mount_t	*mp,
+ 				}
+ 			} else if (in_extent == 1) {
+ 				len = (int) (extno - start_ext);
+-				log = XFS_RTBLOCKLOG(len);
++				log = libxfs_highbit64(len);
+ 				offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 				sumcompute[offs]++;
+ 				in_extent = 0;
+@@ -106,7 +104,7 @@ generate_rtinfo(xfs_mount_t	*mp,
  	}
--	return 0;
--}
- 
--int
--xfs_rtmodify_summary(
--	struct xfs_rtalloc_args	*args,
--	int			log,	/* log2 of extent size */
--	xfs_fileoff_t		bbno,	/* bitmap block number */
--	int			delta)	/* in/out: summary block number */
--{
--	return xfs_rtmodify_summary_int(args, log, bbno, delta, NULL);
-+	xfs_trans_log_rtsummary(args, infoword);
-+	return 0;
- }
- 
- /*
-@@ -528,7 +495,14 @@ xfs_rtget_summary(
- 	xfs_fileoff_t		bbno,	/* bitmap block number */
- 	xfs_suminfo_t		*sum)	/* out: summary info for this block */
- {
--	return xfs_rtmodify_summary_int(args, log, bbno, 0, sum);
-+	struct xfs_mount	*mp = args->mp;
-+	xfs_rtsumoff_t		so = xfs_rtsumoffs(mp, log, bbno);
-+	int			error;
-+
-+	error = xfs_rtsummary_read_buf(args, xfs_rtsumoffs_to_block(mp, so));
-+	if (!error)
-+		*sum = xfs_suminfo_get(args, xfs_rtsumoffs_to_infoword(mp, so));
-+	return error;
- }
- 
- /* Log rtbitmap block from the word @from to the byte before @next. */
+ 	if (in_extent == 1) {
+ 		len = (int) (extno - start_ext);
+-		log = XFS_RTBLOCKLOG(len);
++		log = libxfs_highbit64(len);
+ 		offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 		sumcompute[offs]++;
+ 	}
 -- 
 2.44.0
 
