@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C81153BCF
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E1C153BCE
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713803983; cv=none; b=JQdKYFkPsMdk+Lo1jC83u65cU4q0g5EnlOEIV5FMWjtt2wAwCvkzB7xXrED/ymNZr1t5MBKFSema1R0jf3jtqWhuWBfAC9rXaYG2/laE/wVm6ijsAQmW0d39Cspd1qTyTTULJNIMz7wxrUr0H8V1O66HpuwVlY8cjpI3wSBRTOM=
+	t=1713803984; cv=none; b=kl+jTMTrG8s70Px7aZ5Sd4OHAAv8IsMMxDduM6FWzQEUiI7fhaB6bB76yheFx+VtcaHY7v95zDW2v3wW7SGOhn8l69GbmMiPBXLoTjCuW5hHNZDlUZslnBdRUONaaW1sQ6zbjcAlkZMQAs7X0WXUletXijCnWDqvW2l/WEc4XjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713803983; c=relaxed/simple;
-	bh=AF/Beh2BTqJX7DPXeYYCKvoWNf4TdDLemRe9GmQ4JA8=;
+	s=arc-20240116; t=1713803984; c=relaxed/simple;
+	bh=hulg6lXaxvq6FFNGxeH+aBjzckylcnCF+SwSTPt8GAc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=f7xq/eeLCs+JNuIJbxDKuCuxg2qfA6ha4qrwuf6eN/YVUodEXFFbvBe5yhFskPpLylutadcSvMj2WvHTsTr5tu9Grc56ubvpT+pvYcB/UFlFAQkCMSfRLthmZt6Tp900Ac3KGFHWNHrMWRhMN9XoksWOxHGFKnsp3wLkUAXCR78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pCE3SIRj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=YYkSGpsWGm8shHmUeJN/SDeGcQcc2X6LPREFJ3guTFOqUZ5cZu3d0v8HHcGTnEsfRNFZa18Y8oIw48Q4Yzr8b0K7Mr97aHComWJKXnPoUeA50nQMrT9F4Tdt5oRahvB//VTcDUOx9ydbyhQRNKTmelBKE2hT9P/jWlqGEB/MQwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XDZxLAUa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pCE3SIRj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 022B9C32781;
-	Mon, 22 Apr 2024 16:39:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XDZxLAUa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 850C6C113CC;
+	Mon, 22 Apr 2024 16:39:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713803983;
-	bh=AF/Beh2BTqJX7DPXeYYCKvoWNf4TdDLemRe9GmQ4JA8=;
+	s=k20201202; t=1713803984;
+	bh=hulg6lXaxvq6FFNGxeH+aBjzckylcnCF+SwSTPt8GAc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pCE3SIRjxY6n2uTYLhQknOFSWUhc5rTDIktzXXb8Po2p1F8e8Q7jTyqWb0+3zc9wL
-	 9d02g5DsI3P6F3umEhZw8h+kfHoRaVIDMwzCEGN9MruM3QvGEZ8Dcu4kMKEV6wMSDm
-	 urh+y9q0ymJCs8T5PaJjazADssmcjPqyWNXKtRN7y8DAMeqGIdGOcB7RktpgATXS2u
-	 4To9AlT3I6Xe03YXWW2IbEHmgeNjkSqH825fRpNuxsF72iMt4N/3ufqEIXFwL2r7BL
-	 sCl2HOvSbyRPu1fwh4aCRbawrLU0C9bF64Vp1/jSVvcsLs4+gmLIWoT7hHXaOTRcFv
-	 It6CUTB45iR3Q==
+	b=XDZxLAUaIsMcVJx0Gq+DiR5OfPCRPTNYEug/tOmjXzrgX6tfm3OCHOHmUD2R67xNb
+	 eiEveTVgZfF/DEK5J4DiCN4oqZ/4ptXu4KWPd79LGKK/d2Go2xrSTvYhNp//mCridQ
+	 W3pvYZtvFFnOt7OQIpoEzQ4m5z+mxJooH4AmOlqVjlv0MyUcEWXXSww2EJozkwn4CQ
+	 hG01IkZMxqBHcwe4Dw24nC8q+2wWnwgHWMj+aoQRMaEa44cNKsq4K7DDDqQEOgtpXq
+	 rfNcwK4tYoHrKU1LXngXP6oHW/8lH/oEsNfcUL4eZCePvlbGYnwZwcPcySj4WBtirs
+	 0EpN453Hid/SA==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 23/67] xfs: extract xfs_da_buf_copy() helper function
-Date: Mon, 22 Apr 2024 18:25:45 +0200
-Message-ID: <20240422163832.858420-25-cem@kernel.org>
+Subject: [PATCH 24/67] xfs: move xfs_ondisk.h to libxfs/
+Date: Mon, 22 Apr 2024 18:25:46 +0200
+Message-ID: <20240422163832.858420-26-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -44,185 +44,254 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Zhang Tianci <zhangtianci.1997@bytedance.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: fd45ddb9dd606b3eaddf26e13f64340636955986
+Source kernel commit: 18793e050504288345eb455a471677b57117bcc6
 
-This patch does not modify logic.
+Move xfs_ondisk.h to libxfs so that we can do the struct sanity checks
+in userspace libxfs as well.  This should allow us to retire the
+somewhat fragile xfs/122 test on xfstests.
 
-xfs_da_buf_copy() will copy one block from src xfs_buf to
-dst xfs_buf, and update the block metadata in dst directly.
-
-Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_attr_leaf.c | 12 +++----
- libxfs/xfs_da_btree.c  | 74 +++++++++++++++++-------------------------
- libxfs/xfs_da_btree.h  |  2 ++
- 3 files changed, 36 insertions(+), 52 deletions(-)
+ libxfs/init.c       |   6 ++
+ libxfs/xfs_ondisk.h | 199 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 205 insertions(+)
+ create mode 100644 libxfs/xfs_ondisk.h
 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index ed81471ce..baa168318 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -1241,14 +1241,10 @@ xfs_attr3_leaf_to_node(
- 	if (error)
- 		goto out;
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 63c506a69..f7ba4d1b3 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -23,6 +23,11 @@
+ #include "xfs_refcount_btree.h"
+ #include "libfrog/platform.h"
  
--	/* copy leaf to new buffer, update identifiers */
--	xfs_trans_buf_set_type(args->trans, bp2, XFS_BLFT_ATTR_LEAF_BUF);
--	bp2->b_ops = bp1->b_ops;
--	memcpy(bp2->b_addr, bp1->b_addr, args->geo->blksize);
--	if (xfs_has_crc(mp)) {
--		struct xfs_da3_blkinfo *hdr3 = bp2->b_addr;
--		hdr3->blkno = cpu_to_be64(xfs_buf_daddr(bp2));
--	}
-+	/*
-+	 * Copy leaf to new buffer and log it.
-+	 */
-+	xfs_da_buf_copy(bp2, bp1, args->geo->blksize);
- 	xfs_trans_log_buf(args->trans, bp2, 0, args->geo->blksize - 1);
- 
- 	/*
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index 3903486d1..0779bb624 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -417,6 +417,25 @@ xfs_da3_node_read_mapped(
- 	return xfs_da3_node_set_type(tp, *bpp);
- }
- 
-+/*
-+ * Copy src directory/attr leaf/node buffer to the dst.
-+ * For v5 file systems make sure the right blkno is stamped in.
-+ */
-+void
-+xfs_da_buf_copy(
-+	struct xfs_buf *dst,
-+	struct xfs_buf *src,
-+	size_t size)
-+{
-+	struct xfs_da3_blkinfo *da3 = dst->b_addr;
++#include "xfs_format.h"
++#include "xfs_da_format.h"
++#include "xfs_log_format.h"
++#include "xfs_ondisk.h"
 +
-+	memcpy(dst->b_addr, src->b_addr, size);
-+	dst->b_ops = src->b_ops;
-+	xfs_trans_buf_copy_type(dst, src);
-+	if (xfs_has_crc(dst->b_mount))
-+		da3->blkno = cpu_to_be64(xfs_buf_daddr(dst));
+ #include "libxfs.h"		/* for now */
+ 
+ #ifndef HAVE_LIBURCU_ATOMIC64
+@@ -248,6 +253,7 @@ libxfs_close_devices(
+ int
+ libxfs_init(struct libxfs_init *a)
+ {
++	xfs_check_ondisk_structs();
+ 	rcu_init();
+ 	rcu_register_thread();
+ 	radix_tree_init();
+diff --git a/libxfs/xfs_ondisk.h b/libxfs/xfs_ondisk.h
+new file mode 100644
+index 000000000..d9c988c5a
+--- /dev/null
++++ b/libxfs/xfs_ondisk.h
+@@ -0,0 +1,199 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2016 Oracle.
++ * All Rights Reserved.
++ */
++#ifndef __XFS_ONDISK_H
++#define __XFS_ONDISK_H
++
++#define XFS_CHECK_STRUCT_SIZE(structname, size) \
++	static_assert(sizeof(structname) == (size), \
++		"XFS: sizeof(" #structname ") is wrong, expected " #size)
++
++#define XFS_CHECK_OFFSET(structname, member, off) \
++	static_assert(offsetof(structname, member) == (off), \
++		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
++		"expected " #off)
++
++#define XFS_CHECK_VALUE(value, expected) \
++	static_assert((value) == (expected), \
++		"XFS: value of " #value " is wrong, expected " #expected)
++
++static inline void __init
++xfs_check_ondisk_structs(void)
++{
++	/* ag/file structures */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			344);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_shdr,	48);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_lhdr,	64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_key,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_rec,		12);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_key,		20);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_rec,		24);
++	XFS_CHECK_STRUCT_SIZE(xfs_timestamp_t,			8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_timestamp,	8);
++	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
++	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
++	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
++	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
++	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
++	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
++
++	/* dir/attr trees */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leafblock,	80);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_rmt_hdr,		56);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_blkinfo,		56);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_intnode,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_node_hdr,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_blk_hdr,		48);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_data_hdr,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
++	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_entry_t,		8);
++	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_hdr_t,		32);
++	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
++	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
++
++	/* realtime structures */
++	XFS_CHECK_STRUCT_SIZE(union xfs_rtword_raw,		4);
++	XFS_CHECK_STRUCT_SIZE(union xfs_suminfo_raw,		4);
++
++	/*
++	 * m68k has problems with xfs_attr_leaf_name_remote_t, but we pad it to
++	 * 4 bytes anyway so it's not obviously a problem.  Hence for the moment
++	 * we don't check this structure. This can be re-instated when the attr
++	 * definitions are updated to use c99 VLA definitions.
++	 *
++	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
++	 */
++
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
++	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		32);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_shortform,	4);
++	XFS_CHECK_OFFSET(struct xfs_attr_shortform, hdr.totsize, 0);
++	XFS_CHECK_OFFSET(struct xfs_attr_shortform, hdr.count,	 2);
++	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].namelen,	4);
++	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].valuelen,	5);
++	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].flags,	6);
++	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].nameval,	7);
++	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
++	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
++	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
++	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
++	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
++	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_entry_t,		8);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_hdr_t,		16);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
++	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
++	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
++	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
++	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
++
++	/* log structures */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,	88);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_log_dinode,		176);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
++	XFS_CHECK_STRUCT_SIZE(xfs_log_timestamp_t,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_log_legacy_timestamp,	8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bui_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bud_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_cui_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_cud_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rui_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rud_log_format,	16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_map_extent,		32);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_phys_extent,		16);
++
++	XFS_CHECK_OFFSET(struct xfs_bui_log_format, bui_extents,	16);
++	XFS_CHECK_OFFSET(struct xfs_cui_log_format, cui_extents,	16);
++	XFS_CHECK_OFFSET(struct xfs_rui_log_format, rui_extents,	16);
++	XFS_CHECK_OFFSET(struct xfs_efi_log_format, efi_extents,	16);
++	XFS_CHECK_OFFSET(struct xfs_efi_log_format_32, efi_extents,	16);
++	XFS_CHECK_OFFSET(struct xfs_efi_log_format_64, efi_extents,	16);
++
++	/*
++	 * The v5 superblock format extended several v4 header structures with
++	 * additional data. While new fields are only accessible on v5
++	 * superblocks, it's important that the v5 structures place original v4
++	 * fields/headers in the correct location on-disk. For example, we must
++	 * be able to find magic values at the same location in certain blocks
++	 * regardless of superblock version.
++	 *
++	 * The following checks ensure that various v5 data structures place the
++	 * subset of v4 metadata associated with the same type of block at the
++	 * start of the on-disk block. If there is no data structure definition
++	 * for certain types of v4 blocks, traverse down to the first field of
++	 * common metadata (e.g., magic value) and make sure it is at offset
++	 * zero.
++	 */
++	XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
++	XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
++	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
++	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
++	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
++
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
++
++	/*
++	 * Make sure the incore inode timestamp range corresponds to hand
++	 * converted values based on the ondisk format specification.
++	 */
++	XFS_CHECK_VALUE(XFS_BIGTIME_TIME_MIN - XFS_BIGTIME_EPOCH_OFFSET,
++			XFS_LEGACY_TIME_MIN);
++	XFS_CHECK_VALUE(XFS_BIGTIME_TIME_MAX - XFS_BIGTIME_EPOCH_OFFSET,
++			16299260424LL);
++
++	/* Do the same with the incore quota expiration range. */
++	XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MIN << XFS_DQ_BIGTIME_SHIFT, 4);
++	XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MAX << XFS_DQ_BIGTIME_SHIFT,
++			16299260424LL);
 +}
 +
- /*========================================================================
-  * Routines used for growing the Btree.
-  *========================================================================*/
-@@ -686,12 +705,6 @@ xfs_da3_root_split(
- 		btree = icnodehdr.btree;
- 		size = (int)((char *)&btree[icnodehdr.count] - (char *)oldroot);
- 		level = icnodehdr.level;
--
--		/*
--		 * we are about to copy oldroot to bp, so set up the type
--		 * of bp while we know exactly what it will be.
--		 */
--		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DA_NODE_BUF);
- 	} else {
- 		struct xfs_dir3_icleaf_hdr leafhdr;
- 
-@@ -703,31 +716,17 @@ xfs_da3_root_split(
- 		size = (int)((char *)&leafhdr.ents[leafhdr.count] -
- 			(char *)leaf);
- 		level = 0;
--
--		/*
--		 * we are about to copy oldroot to bp, so set up the type
--		 * of bp while we know exactly what it will be.
--		 */
--		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_LEAFN_BUF);
- 	}
- 
- 	/*
--	 * we can copy most of the information in the node from one block to
--	 * another, but for CRC enabled headers we have to make sure that the
--	 * block specific identifiers are kept intact. We update the buffer
--	 * directly for this.
-+	 * Copy old root to new buffer and log it.
- 	 */
--	memcpy(node, oldroot, size);
--	if (oldroot->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC) ||
--	    oldroot->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
--		struct xfs_da3_intnode *node3 = (struct xfs_da3_intnode *)node;
--
--		node3->hdr.info.blkno = cpu_to_be64(xfs_buf_daddr(bp));
--	}
-+	xfs_da_buf_copy(bp, blk1->bp, size);
- 	xfs_trans_log_buf(tp, bp, 0, size - 1);
- 
--	bp->b_ops = blk1->bp->b_ops;
--	xfs_trans_buf_copy_type(bp, blk1->bp);
-+	/*
-+	 * Update blk1 to point to new buffer.
-+	 */
- 	blk1->bp = bp;
- 	blk1->blkno = blkno;
- 
-@@ -1216,21 +1215,14 @@ xfs_da3_root_join(
- 	xfs_da_blkinfo_onlychild_validate(bp->b_addr, oldroothdr.level);
- 
- 	/*
--	 * This could be copying a leaf back into the root block in the case of
--	 * there only being a single leaf block left in the tree. Hence we have
--	 * to update the b_ops pointer as well to match the buffer type change
--	 * that could occur. For dir3 blocks we also need to update the block
--	 * number in the buffer header.
-+	 * Copy child to root buffer and log it.
- 	 */
--	memcpy(root_blk->bp->b_addr, bp->b_addr, args->geo->blksize);
--	root_blk->bp->b_ops = bp->b_ops;
--	xfs_trans_buf_copy_type(root_blk->bp, bp);
--	if (oldroothdr.magic == XFS_DA3_NODE_MAGIC) {
--		struct xfs_da3_blkinfo *da3 = root_blk->bp->b_addr;
--		da3->blkno = cpu_to_be64(xfs_buf_daddr(root_blk->bp));
--	}
-+	xfs_da_buf_copy(root_blk->bp, bp, args->geo->blksize);
- 	xfs_trans_log_buf(args->trans, root_blk->bp, 0,
- 			  args->geo->blksize - 1);
-+	/*
-+	 * Now we can drop the child buffer.
-+	 */
- 	error = xfs_da_shrink_inode(args, child, bp);
- 	return error;
- }
-@@ -2312,14 +2304,8 @@ xfs_da3_swap_lastblock(
- 		return error;
- 	/*
- 	 * Copy the last block into the dead buffer and log it.
--	 * On CRC-enabled file systems, also update the stamped in blkno.
- 	 */
--	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
--	if (xfs_has_crc(mp)) {
--		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr;
--
--		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
--	}
-+	xfs_da_buf_copy(dead_buf, last_buf, args->geo->blksize);
- 	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
- 	dead_info = dead_buf->b_addr;
- 
-diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
-index ffa3df5b2..706baf36e 100644
---- a/libxfs/xfs_da_btree.h
-+++ b/libxfs/xfs_da_btree.h
-@@ -219,6 +219,8 @@ int	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
- 		const struct xfs_buf_ops *ops);
- int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
- 					  struct xfs_buf *dead_buf);
-+void	xfs_da_buf_copy(struct xfs_buf *dst, struct xfs_buf *src,
-+			size_t size);
- 
- uint xfs_da_hashname(const uint8_t *name_string, int name_length);
- enum xfs_dacmp xfs_da_compname(struct xfs_da_args *args,
++#endif /* __XFS_ONDISK_H */
 -- 
 2.44.0
 
