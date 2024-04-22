@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8C915381C
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5F015099A
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2024 16:39:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713803954; cv=none; b=JtYo8LCFwRuSAEpClB0Dney9SWI+uIN87TKa2/Iwh0Rwj7V+FSDOdwZ1i0Elq/4BRGvY8qyXD8x/rM/oRNenhKJeV78udmkZilsGIoLAgbyQTvcoSINu10v2ukoF5wOtbLi+u+6Zp2A2A9kDuOjf9sjagWbaPK3A8jpYS2imZm8=
+	t=1713803955; cv=none; b=iUIH+UycqCf1jTRgdx9G+3kb6sJzWdzfG6xGJYyZtu50ZbZzKZxU3yCOWIQpUDAVrDr8R0e4YnaqCcMK/ElKb7x0XWjIw7/sPaGLVg8TeZ0xP2XHkxJIjUZw+7ALc3L3zPt/gdJ6TGFokw7ioRk9uJNuZ010Gb6/XF1ajNS4gpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713803954; c=relaxed/simple;
-	bh=u3TZZTy0oaeA8NEEOdJrtE4yIYbcKdNv3fLD3k+f/lE=;
+	s=arc-20240116; t=1713803955; c=relaxed/simple;
+	bh=5FburhU4w3fQkPHp67dEAIFAh2jkcwegVWZs8Zqa8rs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N/rU0TSH9sVUjFO0aQR1MPmyhLPTglRbjpX5JBmnxm5NP+jHExppHXs6OgTQsaggMhLeSnMAc/UtpGEyCO6l3+RJsJNalDX11D7nAmXpwhcdaGfMwW/uDk+TgPhMSR4Ft5N+qaXiLq6vlZMfsCn1Hn+OBE2nn0OaJfblXz5Q1uI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mzem7R8n; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=KYtSHeO5sN136VTn40CYkCZMiVbmUG+HD6QzC7Db5FQYL5H184xpC0+j0WjsyNMSewGGtzbH/hWytGDOg+UhxE3eaSpTCFgH3WEnSLY0x6hhJ+j8acK1JBNVz5+YMFAoGBSfbZ8doTKYmGGsQ9Kixsn79i0UT6hWkl9fHW+NZEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DsfQ+lHW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mzem7R8n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20469C116B1;
-	Mon, 22 Apr 2024 16:39:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DsfQ+lHW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F3BC4AF07;
+	Mon, 22 Apr 2024 16:39:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713803954;
-	bh=u3TZZTy0oaeA8NEEOdJrtE4yIYbcKdNv3fLD3k+f/lE=;
+	s=k20201202; t=1713803955;
+	bh=5FburhU4w3fQkPHp67dEAIFAh2jkcwegVWZs8Zqa8rs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Mzem7R8nKpoOM4OL8yRjOedoUau54z7yB6MNQffE9FRWyjPSIQ9xByG4rm2eeCTGl
-	 1M++1oUfCXBKQt54ZwEs6oXh71kmiS3mT4zbuitsJguA5tcgFv2B/Ylf0Q772pROx4
-	 rF6qSncJE9WftRR4jPKkbnicvbkES4zjZNqKUg2YSaexPwrLego1zFPwjqluaGfKqN
-	 kK4rZ7RRYLmoUViCMsx+QBPEtzI2AONoz1bbZFlBiRAEMcBPerdFUCsaLkXpf5IyN0
-	 5MMs/w4PAVG7uH9hkYVGb+2rSL7RFJnTD4OYvQjmpP2vl+HupEymHJr+/v4j7/A8Rm
-	 FE4UxbF8lLJaQ==
+	b=DsfQ+lHWt1lFhEayHjgtxOgXsCtC4MqNw5v14e2rQeLKzsI35QrhlSUsvXpUzE7Vd
+	 MX8v4ePErbcfarFdDGMwdkUesSqErpLukScGrava4pbNuGPyc/jUXNXokyj4tFyYJy
+	 SxBAnFKI/hCxPqBoE5P4/GvAG1KzhzhjpeCn8KGuBdKtFRuX2N7Yh8lfJYwMsEWBuc
+	 5W32PLjgCYnkbacB2ybTonk4s/RPAJxOqzPMsjYwm+jRH/RFySHtCHqRSniyEx8ro4
+	 3NUdNCXspCwRVB6MjkUr2onzN47l4W8CogK9zQaO3gjjZI+qPtOfidYPHZnf16g0H6
+	 GaLtnKUs62tJg==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: djwong@kernel.org,
 	hch@lst.de
-Subject: [PATCH 04/67] xfs: move ->iop_recover to xfs_defer_op_type
-Date: Mon, 22 Apr 2024 18:25:26 +0200
-Message-ID: <20240422163832.858420-6-cem@kernel.org>
+Subject: [PATCH 05/67] xfs: hoist intent done flag setting to ->finish_item callsite
+Date: Mon, 22 Apr 2024 18:25:27 +0200
+Message-ID: <20240422163832.858420-7-cem@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240422163832.858420-2-cem@kernel.org>
 References: <20240422163832.858420-2-cem@kernel.org>
@@ -46,82 +46,69 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-Source kernel commit: db7ccc0bac2add5a41b66578e376b49328fc99d0
+Source kernel commit: 3dd75c8db1c1675a26d3e228bab349c1fc065867
 
-Finish off the series by moving the intent item recovery function
-pointer to the xfs_defer_op_type struct, since this is really a deferred
-work function now.
+Each log intent item's ->finish_item call chain inevitably includes some
+code to set the dirty flag of the transaction.  If there's an associated
+log intent done item, it also sets the item's dirty flag and the
+transaction's INTENT_DONE flag.  This is repeated throughout the
+codebase.
+
+Reduce the LOC by moving all that to xfs_defer_finish_one.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- include/xfs_trace.h |  2 ++
- libxfs/xfs_defer.c  | 17 +++++++++++++++++
- libxfs/xfs_defer.h  |  4 ++++
- 3 files changed, 23 insertions(+)
+ libxfs/xfs_defer.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index 7fd446ad4..c79a4bd74 100644
---- a/include/xfs_trace.h
-+++ b/include/xfs_trace.h
-@@ -336,4 +336,6 @@
- 
- #define trace_xfs_fs_mark_healthy(a,b)		((void) 0)
- 
-+#define trace_xlog_intent_recovery_failed(...)	((void) 0)
-+
- #endif /* __TRACE_H__ */
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 4ef9867cc..54865b73b 100644
+index 54865b73b..6a9ce9241 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -708,6 +708,23 @@ xfs_defer_cancel_recovery(
- 	xfs_defer_pending_cancel_work(mp, dfp);
- }
+@@ -186,6 +186,32 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
+ 	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
+ };
  
-+/* Replay the deferred work item created from a recovered log intent item. */
-+int
-+xfs_defer_finish_recovery(
-+	struct xfs_mount		*mp,
-+	struct xfs_defer_pending	*dfp,
-+	struct list_head		*capture_list)
++/* Create a log intent done item for a log intent item. */
++static inline void
++xfs_defer_create_done(
++	struct xfs_trans		*tp,
++	struct xfs_defer_pending	*dfp)
 +{
 +	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
-+	int				error;
++	struct xfs_log_item		*lip;
 +
-+	error = ops->recover_work(dfp, capture_list);
-+	if (error)
-+		trace_xlog_intent_recovery_failed(mp, error,
-+				ops->recover_work);
-+	return error;
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the log intent item and frees the log done item
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	lip = ops->create_done(tp, dfp->dfp_intent, dfp->dfp_count);
++	if (!lip)
++		return;
++
++	tp->t_flags |= XFS_TRANS_HAS_INTENT_DONE;
++	set_bit(XFS_LI_DIRTY, &lip->li_flags);
++	dfp->dfp_done = lip;
 +}
 +
  /*
-  * Move deferred ops from one transaction to another and reset the source to
-  * initial state. This is primarily used to carry state forward across
-diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index c1a648e99..ef86a7f9b 100644
---- a/libxfs/xfs_defer.h
-+++ b/libxfs/xfs_defer.h
-@@ -57,6 +57,8 @@ struct xfs_defer_op_type {
- 	void (*finish_cleanup)(struct xfs_trans *tp,
- 			struct xfs_btree_cur *state, int error);
- 	void (*cancel_item)(struct list_head *item);
-+	int (*recover_work)(struct xfs_defer_pending *dfp,
-+			    struct list_head *capture_list);
- 	unsigned int		max_items;
- };
+  * Ensure there's a log intent item associated with this deferred work item if
+  * the operation must be restarted on crash.  Returns 1 if there's a log item;
+@@ -491,7 +517,7 @@ xfs_defer_finish_one(
  
-@@ -130,6 +132,8 @@ void xfs_defer_start_recovery(struct xfs_log_item *lip,
- 		enum xfs_defer_ops_type dfp_type, struct list_head *r_dfops);
- void xfs_defer_cancel_recovery(struct xfs_mount *mp,
- 		struct xfs_defer_pending *dfp);
-+int xfs_defer_finish_recovery(struct xfs_mount *mp,
-+		struct xfs_defer_pending *dfp, struct list_head *capture_list);
+ 	trace_xfs_defer_pending_finish(tp->t_mountp, dfp);
  
- static inline void
- xfs_defer_add_item(
+-	dfp->dfp_done = ops->create_done(tp, dfp->dfp_intent, dfp->dfp_count);
++	xfs_defer_create_done(tp, dfp);
+ 	list_for_each_safe(li, n, &dfp->dfp_work) {
+ 		list_del(li);
+ 		dfp->dfp_count--;
 -- 
 2.44.0
 
