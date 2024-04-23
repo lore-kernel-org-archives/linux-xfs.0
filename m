@@ -1,96 +1,94 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A2013BC27;
-	Tue, 23 Apr 2024 15:05:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA751DDC5;
+	Tue, 23 Apr 2024 18:31:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713884737; cv=none; b=S8cwXrrcAUQRuRwMF9m+cpaD0WuwBpA4McclTXahlkc2HTMGevhLEqn6r9WoOoaTs2CJRRijd2aVk6+IAkfohyjbQIQkOyykWNzyxO1XCs6i7dACMOm0PaQ3JA6WVRlD6/qoEbM+o8WMyYvDJRRsg2vV/6GE5PzOCm3wg57+f7Q=
+	t=1713897108; cv=none; b=na4g+41QcKKUfAUVIVfgS47Xqo5jjlr+WdTFRhS9vKR6s+5mQb7nBMLxbUPDiyj1X604PH0Vh9cxVnLkBSuH6OceENWw5B7DCxC7fxEsRhL7/x0cB+QCvMHW3y7I5V/XNtj+ySeyhr0cf2xY2Oen+mjYV9nH9mrTZQjPtxonWao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713884737; c=relaxed/simple;
-	bh=1hxwFFG7sRViIQmtpQdXpYlxNm1EZkeQJ2bJvNxf/P4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aEXUZ3GJUnMkkpjfEeqxljM6Ers0Wj+f4nUEyW8bmr0e0ofzncRxq6kcnzl+EaLcoZkd9Cx5E+E0zBEY6VXCn8X6I2TRNSW95xLAmZJHMaSY4sWcYs2M8N5HWpi/H3IMd356UH+i7YoJhtd5JzPiLdPtdNtT0p0wRx0qtAg/SnY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gWugi0Qj; arc=none smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1713897108; c=relaxed/simple;
+	bh=zCEHlyKJhhK4MvhJVSRGGSCDG0oxF0tC8ADUk82NkVk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bfRq5v77AOHR8aaGY6eV8O+t4obBkrmNNQ7UZr5mkx1KRud0on5EW8Th/1x6gZNv4CIsmrcPxMemhMvacMK0q4VuGTyc0tyiFQ6k3WkB1jtv5bpJZZWCSoec0Z418b+IwL4cLm2rxS+fXaHMUM/K6XuSCnm8GJ3Tp8SKroRPu+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WfiCVzYk; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gWugi0Qj"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-51b09c3a111so3951016e87.1;
-        Tue, 23 Apr 2024 08:05:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1713884734; x=1714489534; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=1hxwFFG7sRViIQmtpQdXpYlxNm1EZkeQJ2bJvNxf/P4=;
-        b=gWugi0Qj7+6RB2IlHo3P8hpJdMFoJ6/mJ3B3xGMy/LedV5Qk9pW9hlfqbpajZTnHWP
-         A47tDh6byDRRpSODU4o4a4m8Q2T0t+Ohe3xBKhG75L+KG7IKp5eugkkVrH33VKss2/uA
-         XFpqaQVOQuHLAYwyiLdygUGnA62dEp/eF2KVCaOfLpBL6gMwpjZp9nb1V1fLk3GESHuU
-         2DM0j1H6b5+M9KwWmqVkPfNTQOqXw2Gc0BsrNLvbUzj4zmY5nWimUyK/Qo3pIOPU6E1q
-         ztaFnPZderivx8clhUxJ3bl6X9V6oTpRMCWr8Mc+xoa1cMcjyTTJQMosLOCVaofsmlht
-         SK9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713884734; x=1714489534;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=1hxwFFG7sRViIQmtpQdXpYlxNm1EZkeQJ2bJvNxf/P4=;
-        b=EY1YZukhH7LNiLzkaomBjQCTLuMrnzsp0cE6LDiZCaVj5IrWpkMXrjbLZL0ZqUsE8N
-         o+O5r366CsO0rmCY5nxKJ/4IvNUHQcR9HH78sMafWeP9hAyx+WRCkoPhlfQt3Ad6R80A
-         G2RpWQk9DW+Lepqhn3xv+VjYVdrz3Wpo8VGzqAFfCi3XjhENkeO+RI0fRND+Gv79FuIx
-         XfLIpJE7tGBlY5veS0XbUlQkClZxYS2jVudWBo/QgPQOrVY+e2kAXjXWhKtIE9b5sXBZ
-         yWcTTv+LMmmN4oitKwHArvkYdWWfD3tQ+GoHF4iHdOHDUhrYqPCf/Z74/pELycvMF+mk
-         XdVw==
-X-Forwarded-Encrypted: i=1; AJvYcCVawKkeIql+6La5p9m8kUCUUtR8ZzYUMM/N2Zdvf7mkI92Gx1sG0M2QrWvztRLmK9KgegZIVbAV93HqdePi7GGJC2vFhSATp9UbGJrq8WBW1HZ3ttk+WYzIPTIPMXQ4xIs/lDEsVX9Z
-X-Gm-Message-State: AOJu0Yx0QSwA2cHmgU7LDMSXO2Vk43QSb68VzTZ29vqK//rOEPxSvtT5
-	bfci2k9dtb+/B6F1+Kij3pZVUQN2xHzLoOsnr3IXIh/GapymYG/cAAQEDajYYLtgZkNSd0Jnmzu
-	b4a3OMGY3sWbo3ZsnSDWplj5uSMwvQMYshWw=
-X-Google-Smtp-Source: AGHT+IEU3imTQlpcLZ5MH0x6sN91i6XuYjmBODMD6US12RgziIx79DvQUAGEuU8BBK2rOuvXt9euHVtFIGm0exQtmgc=
-X-Received: by 2002:ac2:4f8b:0:b0:518:c959:8be with SMTP id
- z11-20020ac24f8b000000b00518c95908bemr7735255lfs.58.1713884733587; Tue, 23
- Apr 2024 08:05:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WfiCVzYk"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:
+	Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+	Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description;
+	bh=Rogg05ztOu4aP2/pn8CD75vsgL5H5uwqaxXujjk6r6E=; b=WfiCVzYkyj37KGe/1NcuIa1Hgk
+	I9gAfHu6MCMw7NSXSor84TLrOU+mUG0ndyfzjVt0moZbaiRHo/8L+p3QYdcySteGNhcAPGJCKkoWj
+	g/687Hepcmtf5PZKpuZ7znbxvUnMDD43qnPnbu67zfXVJS8SML5AtXvgw73tSyJkv3Nhg5awIIQnq
+	1JNMkoOZN3LoUHS53IUhOaxE7wP++2K6T0ediCLJbAhO11cNq5v9xJzhveqww2JPt0aKNdvm5A/Y5
+	rB55b5NewsYDat/UO4lQuhE8Q3txZ3JjdTGVGjV+Hgo05PhOwNnuMGRbC0LVs1cOtEcnZeCVZdr0F
+	79Ap4ebA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rzKvd-000000018V6-22Td;
+	Tue, 23 Apr 2024 18:31:41 +0000
+Date: Tue, 23 Apr 2024 11:31:41 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>
+Cc: Joel Granados <j.granados@samsung.com>,
+	Kees Cook <keescook@chromium.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-riscv@lists.infradead.org, linux-mm@kvack.org,
+	linux-security-module@vger.kernel.org, bpf@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-xfs@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	linux-perf-users@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	coreteam@netfilter.org, kexec@lists.infradead.org,
+	linux-hardening@vger.kernel.org, bridge@lists.linux.dev,
+	lvs-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
+	rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, apparmor@lists.ubuntu.com
+Subject: Re: [PATCH v3 00/11] sysctl: treewide: constify ctl_table argument
+ of sysctl handlers
+Message-ID: <Zif-jf8Takojtq7x@bombadil.infradead.org>
+References: <20240423-sysctl-const-handler-v3-0-e0beccb836e2@weissschuh.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJg=8jz0X=CKR1POvF41oEumrq1z=MVWPdF2ECbzV6-rhht8-g@mail.gmail.com>
- <ZiGYbJezGZg6tGgq@dread.disaster.area> <CAJg=8jycPX=fQskUb=48g=AS7-uUNAVKZyZ+tyAC5uGYwfpabg@mail.gmail.com>
- <ZiWl2MG5f0wAp7mM@dread.disaster.area>
-In-Reply-To: <ZiWl2MG5f0wAp7mM@dread.disaster.area>
-From: Marius Fleischer <fleischermarius@gmail.com>
-Date: Tue, 23 Apr 2024 08:05:22 -0700
-Message-ID: <CAJg=8jyZuxsUX+oNU6O_L4LNOVs21xVKTDi8ywPfDbj+cAxegA@mail.gmail.com>
-Subject: Re: KASAN: null-ptr-deref Write in xlog_cil_commit
-To: Dave Chinner <david@fromorbit.com>
-Cc: Leah Rumancik <leah.rumancik@gmail.com>, "Darrick J. Wong" <djwong@kernel.org>, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	harrisonmichaelgreen@gmail.com, syzkaller@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240423-sysctl-const-handler-v3-0-e0beccb836e2@weissschuh.net>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-Hi Dave,
+On Tue, Apr 23, 2024 at 09:54:35AM +0200, Thomas Weiﬂschuh wrote:
+> * Patch 1 is a bugfix for the stack_erasing sysctl handler
+> * Patches 2-10 change various helper functions throughout the kernel to
+>   be able to handle 'const ctl_table'.
+> * Patch 11 changes the signatures of all proc handlers through the tree.
+>   Some other signatures are also adapted, for details see the commit
+>   message.
+> 
+> Only patch 1 changes any code at all.
+> 
+> The series was compile-tested on top of next-20230423 for
+> i386, x86_64, arm, arm64, riscv, loongarch, s390 and m68k.
+> 
+> The series was split from my larger series sysctl-const series [0].
+> It only focusses on the proc_handlers but is an important step to be
+> able to move all static definitions of ctl_table into .rodata.
+> 
+> [0] https://lore.kernel.org/lkml/20231204-const-sysctl-v2-0-7a5060b11447@weissschuh.net/
+> 
+> Signed-off-by: Thomas Weiﬂschuh <linux@weissschuh.net>
 
-Thank you so much for your detailed explanations!
+Cover letters don't need SOBS we only use them for patches.
 
-> > Do you think it would make sense to backport that patch to 5.15.156 (the
-> > LTS kernel)?
->
-> That's up to the 5.15 LTS maintainers to decide. They also need to
-> weigh up the fact that xlog_cil_kvmalloc() doesn't exist anymore in
-> the upstream code base. i.e. we found other places that had the same
-> kvmalloc() performance problems, and so lifted that code up further
-> and used it in other places in XFS....
->
+But anyway:
 
-Understood. Please allow me one last follow-up question. Did I add the correct
-maintainers/mailing lists to reach the 5.15 LTS maintainers? If not,
-how do I find
-the correct addresses? I used scripts/get_maintainer.pl as suggested here
-(https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html)
-to locate maintainers/mailing lists.
+Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
 
-Wishing you a lovely week!
-
-Best,
-Marius
+  Luis
