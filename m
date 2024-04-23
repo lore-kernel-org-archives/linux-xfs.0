@@ -1,110 +1,112 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A624D7E118;
-	Tue, 23 Apr 2024 11:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4020355E45
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Apr 2024 12:06:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713871813; cv=none; b=mqDyD241hIvgwHiSHH9oUSDPvWUwEEa78d8wrOfZLaZYupj9toH66MvyED3aWgq7VsIyBfVvbXz2AjYis/P5mCHkn39NB0l5hJUxhRrBfEXIiXsm35O3lcssHRJAWomtePstlvMuuoBf/jpt4p4cQ668KMBeDQqCq8h4KBjyOx0=
+	t=1713873965; cv=none; b=lLedQPpQ7HyNGOOtrsY7M6RvaACeYUP6VoG5YcI9YZkeppHWrNVuuZIzFT95mhP8+J2xxis7wzmnYvd8/jlRSE5OeJzp/nYb02qGNoBiHHlNINjXkrGRG24elwkCIgp1DqCBmhgzKJc14KjJn+cmPLFRXzBt9i3CeTzRe5AENt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713871813; c=relaxed/simple;
-	bh=IjrLm+jHCQEXdyCv6CiIzEcP94pKJ2KOwDyAUcgLU+g=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=B24Kpeq4rnprIF5GwItdnojIEv0cRZAA4/HNvqick2TVK28i+7+hTh+V33QYH3ZOQ7Lb5JS4mZKNOOKO/TOKHKupdsIPrvWCTJfWoxdOF8f39ZI4xUkgwiy3SYubNUK0VRry50BtuhRKsfryZ3ksLgvuj+psdqObFvRH3k5Wj9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VP0K15qDFz4f3pHY;
-	Tue, 23 Apr 2024 19:29:57 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id F0F241A10D4;
-	Tue, 23 Apr 2024 19:30:06 +0800 (CST)
-Received: from [10.174.176.34] (unknown [10.174.176.34])
-	by APP1 (Coremail) with SMTP id cCh0CgBnOBG4mydm6qX7Kg--.45038S3;
-	Tue, 23 Apr 2024 19:30:02 +0800 (CST)
-Subject: Re: [PATCH v4 6/9] iomap: don't increase i_size if it's not a write
- operation
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
- brauner@kernel.org, david@fromorbit.com, tytso@mit.edu, jack@suse.cz,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-References: <20240320110548.2200662-1-yi.zhang@huaweicloud.com>
- <20240320110548.2200662-7-yi.zhang@huaweicloud.com>
- <87edb13ms8.fsf@debian-BULLSEYE-live-builder-AMD64>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <c9c51d1b-70aa-103f-d580-07ac3ec545e2@huaweicloud.com>
-Date: Tue, 23 Apr 2024 19:30:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1713873965; c=relaxed/simple;
+	bh=2285hlKkSfxBlSG0KJ/mHcPKsFy7jjYGVUB9e5mfny8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WCJkxTyQCuIp/mtlC+Mwt/mffzWVCB++Kn9dve5Vh82Axk4CVAjAGbMFeJDeixd4eICsdIF7ONmXgajPb1OvYD5U4rp/IyUwJheiVCABFTIGOxjiTkdDzbUUP4rGQhA8nftSvcpokVr/TJP4MoAFUvryANctYMtmxU5lNUTlzSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k/vE8gJB; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k/vE8gJB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76902C116B1;
+	Tue, 23 Apr 2024 12:06:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713873964;
+	bh=2285hlKkSfxBlSG0KJ/mHcPKsFy7jjYGVUB9e5mfny8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=k/vE8gJB0lKIF9wlf/JaS7yR6mF95qDmhMlzIwHmQRlW18Eu4WbBl5zj/dCtf/Npl
+	 xHCrU0/vXIzLBu4Psuv8as0dmZwmukM13fXeUXwABdRD2xwLc9Ll9fLQ8AGH7673qJ
+	 lC8jWmmSRxGW8N9kKUsZv9Xg7JZSUNSrTTRfgeU3jHtgkHl+sjhOS9sDTblS8VHggD
+	 2g2UNuRHgiM+8e5JAXVlqqFo/iPQAPoQpkxTLMok3IOZUrAk8idPBhtqWU7NpCkZc8
+	 rryg9gVhGoYh8XLGepcMRWp/yuDLFa4VGGHDJlS3Vzm9nA0ErT5Pk7bzb+dbW4tQ95
+	 yl7CrS2YfCE+w==
+Date: Tue, 23 Apr 2024 14:06:00 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, hch@infradead.org
+Subject: Re: [PATCH v4 2/4] xfs_repair: make duration take time_t
+Message-ID: <ztbcnzbz3ff56jb6dlndh2c4nd5o6q6a6ku6l24z5ow7urkg6w@l4bwypdpdtaz>
+References: <20240417161646.963612-1-aalbersh@redhat.com>
+ <AldvXwG-630177p4GQIDSBX7_XzAQg-kSjfvizJvnaJDI4qAZLZc_PEhvqKniJsAO7moz1Fyn9WGP2OuFu4KbA==@protonmail.internalid>
+ <20240417161646.963612-3-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <87edb13ms8.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgBnOBG4mydm6qX7Kg--.45038S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFWxGr17tF43KF4UXr4UCFg_yoW8AF1fpF
-	WfWa4Fqr4UKw1xKFW7XryUX3W8X3W5Xr9xuryUGrWYyFnxAF1fArs2grWUurWUtFZ7Cw1F
-	qw4kCFWkGry5urDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvFb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-	07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
-	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWUJwCI42IY6I8E87Iv67AK
-	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
-	xUrR6zUUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240417161646.963612-3-aalbersh@redhat.com>
 
-On 2024/4/19 14:07, Chandan Babu R wrote:
-> On Wed, Mar 20, 2024 at 07:05:45 PM +0800, Zhang Yi wrote:
->> From: Zhang Yi <yi.zhang@huawei.com>
->>
->> Increase i_size in iomap_zero_range() and iomap_unshare_iter() is not
->> needed, the caller should handle it. Especially, when truncate partial
->> block, we should not increase i_size beyond the new EOF here. It doesn't
->> affect xfs and gfs2 now because they set the new file size after zero
->> out, it doesn't matter that a transient increase in i_size, but it will
->> affect ext4 because it set file size before truncate. So move the i_size
->> updating logic to iomap_write_iter().
->>
+>  extern int		ag_stride;
+> diff --git a/repair/progress.c b/repair/progress.c
+> index f6c4d988444e..71042fbbfa4c 100644
+> --- a/repair/progress.c
+> +++ b/repair/progress.c
+> @@ -268,12 +268,13 @@ progress_rpt_thread (void *p)
+>  				_("\t- %02d:%02d:%02d: Phase %d: elapsed time %s - processed %d %s per minute\n"),
+>  				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
+>  				current_phase, duration(elapsed, msgbuf),
+> -				(int) (60*sum/(elapsed)), *msgp->format->type);
+> +				60 * sum / elapsed, *msgp->format->type);
+
+				^ Type differs from print format.
+
+Carlos
+
+>  			do_log(
+>  	_("\t- %02d:%02d:%02d: Phase %d: %" PRIu64 "%% done - estimated remaining time %s\n"),
+>  				tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
+>  				current_phase, percent,
+> -				duration((int) ((*msgp->total - sum) * (elapsed)/sum), msgbuf));
+> +				duration((*msgp->total - sum) * elapsed / sum,
+> +					msgbuf));
+>  		}
 > 
-> This patch causes generic/522 to consistently fail when using the following
-> fstest configuration,
+>  		if (pthread_mutex_unlock(&msgp->mutex) != 0) {
+> @@ -420,7 +421,7 @@ timestamp(int end, int phase, char *buf)
+>  }
 > 
-> TEST_DEV=/dev/loop16
-> TEST_LOGDEV=/dev/loop13
-> SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11 /dev/loop12"
-> MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -lsize=1g'
-> MOUNT_OPTIONS='-o usrquota,grpquota,prjquota'
-> TEST_FS_MOUNT_OPTS="$TEST_FS_MOUNT_OPTS -o usrquota,grpquota,prjquota"
-> TEST_FS_MOUNT_OPTS="-o logdev=/dev/loop13"
-> SCRATCH_LOGDEV=/dev/loop15
-> USE_EXTERNAL=yes
-> LOGWRITES_DEV=/dev/loop15
+>  char *
+> -duration(int length, char *buf)
+> +duration(time_t length, char *buf)
+>  {
+>  	int sum;
+>  	int weeks;
+> diff --git a/repair/progress.h b/repair/progress.h
+> index 2c1690db1b17..9575df164aa0 100644
+> --- a/repair/progress.h
+> +++ b/repair/progress.h
+> @@ -38,7 +38,7 @@ extern void summary_report(void);
+>  extern int  set_progress_msg(int report, uint64_t total);
+>  extern uint64_t print_final_rpt(void);
+>  extern char *timestamp(int end, int phase, char *buf);
+> -extern char *duration(int val, char *buf);
+> +extern char *duration(time_t val, char *buf);
+>  extern int do_parallel;
 > 
-
-Hello!
-
-The root cause of the problem is caused by patch 4/9, this patch is fine,
-I've revised the patch 4/9 and send it out separately in reply to v4. I've
-tested that on my machine for over 100 rounds on generic/522 and it hasn't
-failed again. Please take a look at the v5 patch for details and test it
-on your machine.
-
-https://lore.kernel.org/linux-xfs/20240423111735.1298851-1-yi.zhang@huaweicloud.com/T/#m2da33e643b642071aa20077321e2c431f5a64e38
-
-Thanks,
-Yi.
-
+>  #define	PROG_RPT_INC(a,b) if (ag_stride && prog_rpt_done) (a) += (b)
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index ba9d28330d82..2ceea87dc57d 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -377,7 +377,7 @@ process_args(int argc, char **argv)
+>  			do_prefetch = 0;
+>  			break;
+>  		case 't':
+> -			report_interval = (int)strtol(optarg, NULL, 0);
+> +			report_interval = strtol(optarg, NULL, 0);
+>  			break;
+>  		case 'e':
+>  			report_corrected = true;
+> --
+> 2.42.0
+> 
+> 
