@@ -1,99 +1,112 @@
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1C994F895;
-	Tue, 23 Apr 2024 08:03:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8FF5FB9B;
+	Tue, 23 Apr 2024 10:17:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713859392; cv=none; b=B9mJr6cIlREq52RSODeNdRyiHuXUKSbOWihnyw29zFkbaRTNroUVs7YyQGW27ZTqPqUrBroP0KyDx5jWoOwPYf/3VP/pcA0I20PTQ0Tl9w30QIpcOaVJnoi92htqWnMo5nVXOdESdanNjiuByRqFvwEU5gEF4gLUuviVIhsFqv0=
+	t=1713867448; cv=none; b=D9bt/b1qx2PyE3011DRE8AmYeiQfbnTVwLreMvY01wlTWYf0XmRuIi6HxMQrcWYj/QtiHpLCJigwcAUEKEczWnpyqTDMHDI6akIuHvGNTWV6/MgrTYYg+iTulQgy6R0GAT8UkCC8ofNOgsT02TFks5skVKbBBgTG4R3NsgsX2Ig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713859392; c=relaxed/simple;
-	bh=D/3OJwMoANYNDnHN43YEhKh/XOzsWgZJBxcvKVpFvHo=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Pgjt2HeOaWpCD3/KmNZSLYs+dNlSDzoHT6KAie1wwV7ioDLlDYliyTUJ8Fa5RdZOB1OZpEKLO+JJZ2KJuHALyFvtV+HkZ6sLlP4WbvMWS4OVwcudrwd6R1kks1FiHDOaCAy/nWFcDTTuWYA9r708tCXeizJkfwjfxcf31o1+vHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=Z4eTOEAy; arc=none smtp.client-ip=159.69.126.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
+	s=arc-20240116; t=1713867448; c=relaxed/simple;
+	bh=g97Q5WKTti1lvGYjtaVYb1xsYis+AkbzMbtB6NWEOBo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sQDlANmnuNJaMg3ODiY5mB/Ak+OR4A4nHnxXMfalYuO1hSt5cqnmHAT4L0HXYUSyglAzi8txtRwxQdoC6AK8wfTeQDg14mDx7bhFIP5q7N6E5thN8J77kKQd8bjPwPcxmlt+4YMI6rTjT9J07VdHdoywbK92x5E4fa94nXe8BXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GkZX5Mbe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="Z4eTOEAy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1713858962;
-	bh=D/3OJwMoANYNDnHN43YEhKh/XOzsWgZJBxcvKVpFvHo=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Z4eTOEAyeZGZRhMLErDlHrOzyIn7K/DlkM60MPZgILl0NsHakg85D489lgcJ2pyps
-	 w8ZjrPHlpbLbeknooUuGV8AX44PHoyXa1MFbZ8JyqpCmrdU3drnEDl22/6rS7GAbFk
-	 mLBVLjPqI1ce59ORnQdEOqbJ1Zk5A8F74faI2Ijw=
-From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Tue, 23 Apr 2024 09:54:36 +0200
-Subject: [PATCH v3 01/11] stackleak: don't modify ctl_table argument
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GkZX5Mbe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D231DC3277B;
+	Tue, 23 Apr 2024 10:17:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713867448;
+	bh=g97Q5WKTti1lvGYjtaVYb1xsYis+AkbzMbtB6NWEOBo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=GkZX5Mbe+DcfBnNpYb4lSxBDtXqoBKsSrv5XoV1ENL9c1t/ltmOMxslfjjH0rrzHB
+	 gAhZcUP/l04g12oYhP3mM8VVIKHNP1/LK2G4N371h73irnMebtbuSej6z06DLn0yuX
+	 CVcqoKqgPmBsy6gUBGjrkRZelw0d+DgEfDYN1Tn+iUEHMEy/3nhdg2XdXN0VTibH0E
+	 Zmpcvl6Ijh4Qp+0E+5kpI90kHwfenHZGZJgfy7w4vaUJWWOfO7EfeWVCuXrXaB+/r0
+	 GAas/3FHd4wqOIDgnjsX0FKLQZsJDjUH4qZrQ/r154wiBALZl2gC0KLcwXG/5W+6+G
+	 9s8CspQHoARKw==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 6a94b1acda7e
+Date: Tue, 23 Apr 2024 15:46:24 +0530
+Message-ID: <87bk60z8lm.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20240423-sysctl-const-handler-v3-1-e0beccb836e2@weissschuh.net>
-References: <20240423-sysctl-const-handler-v3-0-e0beccb836e2@weissschuh.net>
-In-Reply-To: <20240423-sysctl-const-handler-v3-0-e0beccb836e2@weissschuh.net>
-To: Luis Chamberlain <mcgrof@kernel.org>, 
- Joel Granados <j.granados@samsung.com>, Kees Cook <keescook@chromium.org>
-Cc: Eric Dumazet <edumazet@google.com>, Dave Chinner <david@fromorbit.com>, 
- linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org, 
- linux-mm@kvack.org, linux-security-module@vger.kernel.org, 
- bpf@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
- linux-xfs@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
- linux-perf-users@vger.kernel.org, netfilter-devel@vger.kernel.org, 
- coreteam@netfilter.org, kexec@lists.infradead.org, 
- linux-hardening@vger.kernel.org, bridge@lists.linux.dev, 
- lvs-devel@vger.kernel.org, linux-rdma@vger.kernel.org, 
- rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org, 
- linux-nfs@vger.kernel.org, apparmor@lists.ubuntu.com, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1713858961; l=1205;
- i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=D/3OJwMoANYNDnHN43YEhKh/XOzsWgZJBxcvKVpFvHo=;
- b=1RhNomBbqj6XFaD6ZYOxEHBLV6bfBHp2WGUjkt4XBn/Ez17CpMDHBnau1hMCabUBp0fIJIUhv
- lq3ewsWLz9gCbCEhY4DcLZnRRhb9Y2u6rar0aoKgOs7QrHrAJv1mc4Z
-X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
- pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
+Content-Type: text/plain
 
-In a future commit the proc_handlers will change to
-"const struct ctl_table".
-As a preparation for that adapt the logic to work with a temporary
-variable, similar to how it is done in other parts of the kernel.
+Hi folks,
 
-Fixes: 964c9dff0091 ("stackleak: Allow runtime disabling of kernel stack erasing")
-Acked-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
----
- kernel/stackleak.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+The for-next branch of the xfs-linux repository at:
 
-diff --git a/kernel/stackleak.c b/kernel/stackleak.c
-index d099f3affcf1..558b9d6d28d3 100644
---- a/kernel/stackleak.c
-+++ b/kernel/stackleak.c
-@@ -27,10 +27,11 @@ static int stack_erasing_sysctl(struct ctl_table *table, int write,
- 	int ret = 0;
- 	int state = !static_branch_unlikely(&stack_erasing_bypass);
- 	int prev_state = state;
-+	struct ctl_table tmp = *table;
- 
--	table->data = &state;
--	table->maxlen = sizeof(int);
--	ret = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
-+	tmp.data = &state;
-+	tmp.maxlen = sizeof(int);
-+	ret = proc_dointvec_minmax(&tmp, write, buffer, lenp, ppos);
- 	state = !!state;
- 	if (ret || !write || state == prev_state)
- 		return ret;
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
--- 
-2.44.0
+has just been updated.
 
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+6a94b1acda7e xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
+
+17 new commits:
+
+Christoph Hellwig (17):
+      [e78a3ce28331] xfs: move more logic into xfs_extent_busy_clear_one
+      [c37d6ed87462] xfs: unwind xfs_extent_busy_clear
+      [c0ac6cb251bd] xfs: remove the unused xfs_extent_busy_enomem trace event
+      [4887e5316382] xfs: compile out v4 support if disabled
+      [330c4f94b0d7] xfs: make XFS_TRANS_LOWMODE match the other XFS_TRANS_ definitions
+      [b7e23c0e2e3b] xfs: refactor realtime inode locking
+      [9871d0963751] xfs: free RT extents after updating the bmap btree
+      [de37dbd0ccc6] xfs: move RT inode locking out of __xfs_bunmapi
+      [5e1e4d4fc79c] xfs: block deltas in xfs_trans_unreserve_and_mod_sb must be positive
+      [f30f656e25eb] xfs: split xfs_mod_freecounter
+      [dc1b17a25c32] xfs: reinstate RT support in xfs_bmapi_reserve_delalloc
+      [7e77d57a1fea] xfs: cleanup fdblock/frextent accounting in xfs_bmap_del_extent_delay
+      [7099bd0f243f] xfs: support RT inodes in xfs_mod_delalloc
+      [727f8431638f] xfs: look at m_frextents in xfs_iomap_prealloc_size for RT allocations
+      [da2b9c3a8d2c] xfs: rework splitting of indirect block reservations
+      [bd1753d8c42b] xfs: stop the steal (of data blocks for RT indirect blocks)
+      [6a94b1acda7e] xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
+
+Please note that the patch "xfs: fix sparse warning in xfs_extent_busy_clear"
+has been dropped now.
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_ag.c           |   4 +--
+ fs/xfs/libxfs/xfs_ag_resv.c      |  24 ++++-----------
+ fs/xfs/libxfs/xfs_ag_resv.h      |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c        |   4 +--
+ fs/xfs/libxfs/xfs_bmap.c         | 152 +++++++++++++++++++++++++++++++++++++++++++++-----------------------------------------------
+ fs/xfs/libxfs/xfs_rtbitmap.c     |  57 +++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtbitmap.h     |  17 +++++++++++
+ fs/xfs/libxfs/xfs_shared.h       |   6 ++--
+ fs/xfs/scrub/common.c            |   1 +
+ fs/xfs/scrub/fscounters.c        |  12 +++++---
+ fs/xfs/scrub/fscounters.h        |   1 +
+ fs/xfs/scrub/fscounters_repair.c |  12 +++++++-
+ fs/xfs/scrub/repair.c            |   5 +--
+ fs/xfs/xfs_extent_busy.c         |  80 ++++++++++++++++++++++--------------------------
+ fs/xfs/xfs_fsmap.c               |   4 +--
+ fs/xfs/xfs_fsops.c               |  29 +++++-------------
+ fs/xfs/xfs_fsops.h               |   2 +-
+ fs/xfs/xfs_inode.c               |   3 +-
+ fs/xfs/xfs_iomap.c               |  45 ++++++++++++++++++---------
+ fs/xfs/xfs_iops.c                |   2 +-
+ fs/xfs/xfs_mount.c               |  87 +++++++++++++++++++++++++++++++----------------------
+ fs/xfs/xfs_mount.h               |  76 +++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_rtalloc.c             |  22 +++++---------
+ fs/xfs/xfs_super.c               |  39 +++++++++++++++---------
+ fs/xfs/xfs_trace.h               |   2 --
+ fs/xfs/xfs_trans.c               |  63 ++++++++++++++++++++------------------
+ 26 files changed, 439 insertions(+), 312 deletions(-)
