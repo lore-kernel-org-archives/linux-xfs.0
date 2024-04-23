@@ -1,73 +1,72 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608DC134CCA
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Apr 2024 12:37:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF9F1350F8
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Apr 2024 12:37:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713875823; cv=none; b=ZABdtKV6MnRQ8sVKenQSKWVbu46aCZS6jQmK99IjKHfO5/KH5SdOnMf8Mel6ssZT2MpXitInIYjW4BF77wl+gwaiSpHtWvLdxvsavvuIxG/F671/vNgOmEnUfTT20E8mwncVXP4Zk7bZAx3k12wrrUPlQu4EXM0B/rSJZQRMYFk=
+	t=1713875824; cv=none; b=fRvtwvp/LafRw9rVyE+J3t821I/F+2qt1YMmy5YTDf03B6W/u94pcNquu3PpuECmVFlfbWBH1cM5zF/n89pl0FDYupPTc51mMfTRfYSkITRRPVu7p6dhVBIAj/mHY6UNAjaTRINFFzkrro4QQ2VvZCghiECCR2DAW7MI2Zcidq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713875823; c=relaxed/simple;
-	bh=ulMq5NcQJ+Mm4bToiJej1gzpiwB8mC3K7VcZcG9FsKY=;
+	s=arc-20240116; t=1713875824; c=relaxed/simple;
+	bh=M58YW49eqB4hUf/akvPZwjxoJHQcW1zBANFCkx0Oyyc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g++PPWkQq0AfXoYUT1zBiKUOqLFg7vdPbCt5RB8GLnwfbExOc5AahGXEwypFT/gDWq+fhI5kjgazj01Hyl7M0Ip4VoAZXci6TefBXBtIvRKWQFJ8qSzgqfjwLSP9SzoxT2SATSKeNnNfIOH7faOmA0MD0yc6LoJhTIb+zi6rHxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bQIenZ73; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=VvztWg/Tvig+127Z4l1ti2cL043SRwzsh/SVNwxqLxiESLpV6H5m2qSczh/XucQ5Uh7IddVHJPmeYcRZ4fhLLXjPSBGnSqwwBKUF6g+3S+D7RDf84be3XMyBslMKoFMGR/KiPlvsSEWHoleQ4n3stdzeonFLsscUpAiKqkGYXSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Rwz4P+w5; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bQIenZ73"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rwz4P+w5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713875820;
+	s=mimecast20190719; t=1713875822;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=FSdLmKVak3TNL+D9ABpWccd8Qslsa3Pvs9zG76WZCUo=;
-	b=bQIenZ739JQr+a2XCX3oEIx5DsRhhTBT1mdWV/fmQg31Zuesoij+Zry+6qMyOU+8IouokV
-	4PgSZbW5gTS6Xc88IDkHpu3iIyfVVa/dV9d+iNg5/wiSikBzQN9a5xzwortegdOC7am4i8
-	VPNRdPWIY8clGEq/ubVOWiDfGcqVXVA=
-Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
- [209.85.208.199]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=dpVpkDusONxbkM2QhNnBSL8Tf6PN4P83p60GT/ae07w=;
+	b=Rwz4P+w5Od74lVIblNqcFwkzKGpDqNexaqyOrqtkiW69zYsYNz2ElkHRVbg7Sy2A5t11El
+	EXcc0xj9Xd+13qK8yUAMrX9vg/2g3Mi5HH3Uf3LEjlSKt8iHcM9VZpUdoMLmnHvSMqDw51
+	Cluv7/v+JHaT5FHMmJANRJ2zoY2QK6Y=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-625-wArSill0NzCb6H4npsnAlg-1; Tue, 23 Apr 2024 08:36:58 -0400
-X-MC-Unique: wArSill0NzCb6H4npsnAlg-1
-Received: by mail-lj1-f199.google.com with SMTP id 38308e7fff4ca-2da2f30cb50so40652701fa.2
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Apr 2024 05:36:58 -0700 (PDT)
+ us-mta-515-K8zfnhAUOf-pc96-0N45dA-1; Tue, 23 Apr 2024 08:37:00 -0400
+X-MC-Unique: K8zfnhAUOf-pc96-0N45dA-1
+Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-56e678f6d81so6404062a12.0
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Apr 2024 05:37:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713875817; x=1714480617;
+        d=1e100.net; s=20230601; t=1713875819; x=1714480619;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=FSdLmKVak3TNL+D9ABpWccd8Qslsa3Pvs9zG76WZCUo=;
-        b=S1U1M8xCeYLD96p39AMdl2L/bRSZVfi63Gb2FfBbDBZT+dar4YvbNCEIrap3rF56UE
-         uVYgkHmT0gGW7mtefd3Y6q3L2p8BMtJKFdcrwTFNE4unV5EtPim6PBeBmJ/SI7PVFvbl
-         x2VqhUNxKA9GvamcyGaS0iE1uRrp1LXe2OFGyCe+rPUpfophrwizj2OvmeUUAE0/o7/a
-         0/LyCNsAqYH0IgFbShlSYY8MA/AoL8nc3eHlh2+vHUb9TDD/dyb2qkyHXVXRJ9JFCzCk
-         yEbrPH/LrsG2BdrIlWvsIXxKjrok5haINOf5m/nhXi8NXn3AVrzEn9Ezpoeokpp5Ly1g
-         Y4cQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUG9MT7eBevzzDPmp24C8veDA2RAkFQ+6PuynEaoWQ1MbpXg7pHVLPvBizrPjdQ9HsRWIhVw+wFhl3DnazB+1eOxeqQZYoYJRo4
-X-Gm-Message-State: AOJu0Yz7ayyitaER2cLC8wg0Wj61wCfNfog1NOrnkw6LiT6jyFLk2wf4
-	kTBc9gYI2wnxkMrggs8j8m3OMTUohtbyDi/x6OWtMGORZU95tu4m6PO9lEHOeNuvu6Vn8cZnxKQ
-	S0cj2m8eDoC2QQcoRNrUQpP509RbqZ97zdlZXwyn+7HDrj3P/SvK4tQxK
-X-Received: by 2002:a2e:7a09:0:b0:2dc:ae40:c797 with SMTP id v9-20020a2e7a09000000b002dcae40c797mr8683306ljc.15.1713875817055;
-        Tue, 23 Apr 2024 05:36:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEIA5yxWSenyzdbd847+b4uxYnxzPsOOYxS1pMneGAQD8bw0T2R2ImOOQJIlTVr5mWrCaPWrg==
-X-Received: by 2002:a2e:7a09:0:b0:2dc:ae40:c797 with SMTP id v9-20020a2e7a09000000b002dcae40c797mr8683287ljc.15.1713875816560;
-        Tue, 23 Apr 2024 05:36:56 -0700 (PDT)
+        bh=dpVpkDusONxbkM2QhNnBSL8Tf6PN4P83p60GT/ae07w=;
+        b=Vj+PnTdK+oTrO6Lru+zXxEjxKFAPAKlJTPnkkQ+SYrMlknTxEOkwZ1NmM7/1UwwrEn
+         spBz1+Wtd4lBhcnwb/LFO3A8YQuOn3cECuY8oF2zZrvXYi0uGo0UpJsqKcmJOjHQWlwu
+         NYsJKAAA0qIrZMRWLmUjXgbqqfaTbDdAWwDvJpFqFlAC4oP4xrnl+ARJaBsQyWoBuArU
+         gEeHYiCj4JWxzcC/aCUbDthA9zuLO91ezyDPLstXLH2ci0dKv2lOS0IqpNAU7Le2Eut3
+         ss42M7IWLl1+RvDb0XNP+lwJXSiQZx2NIjEugEu/jrQfFv0ozycUNx9K13Db6lYBjLNz
+         8EEw==
+X-Forwarded-Encrypted: i=1; AJvYcCXXHEpW86gWbd2yB/esZUwAOuno1SretDwZCZtP8SNrOIri45nx3iteZ8DjKyrGXFzhUBZqakl9mvJIB1tG/05cIBYgTgSQsSii
+X-Gm-Message-State: AOJu0Yzn5PzZDOMIw1pLj8Juhsi2gefQ/X0ANAZd4iVe/eiDsZXL7IEk
+	joeKgdNdczkWqIB8R/b+yO40OzRjhcRn1EH3CC2SsvmiDPY08nk+A3Ldh4QV5jbdbGc1iK8QJV5
+	X2hnTda2cj2kRVWzcyjpFDAvxve9RDlFZGHxGFRjeaNCLi6IM2z3QsShk
+X-Received: by 2002:a50:9e8d:0:b0:572:1c21:1937 with SMTP id a13-20020a509e8d000000b005721c211937mr2662199edf.11.1713875819351;
+        Tue, 23 Apr 2024 05:36:59 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE/7MkF0SXqSifaAQkbxR8qkm5vtYzqqmVZCAwNi7LzWk1grJKM6pe0lEfswJ5jejvGOiVUeg==
+X-Received: by 2002:a50:9e8d:0:b0:572:1c21:1937 with SMTP id a13-20020a509e8d000000b005721c211937mr2662168edf.11.1713875818823;
+        Tue, 23 Apr 2024 05:36:58 -0700 (PDT)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id et3-20020a056402378300b00571d8da8d09sm4783170edb.68.2024.04.23.05.36.55
+        by smtp.gmail.com with ESMTPSA id et3-20020a056402378300b00571d8da8d09sm4783170edb.68.2024.04.23.05.36.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Apr 2024 05:36:56 -0700 (PDT)
+        Tue, 23 Apr 2024 05:36:58 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: cem@kernel.org,
 	linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	Bill O'Donnell <bodonnel@redhat.com>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 1/4] xfs_db: fix leak in flist_find_ftyp()
-Date: Tue, 23 Apr 2024 14:36:14 +0200
-Message-ID: <20240423123616.2629570-3-aalbersh@redhat.com>
+Subject: [PATCH v5 4/4] xfs_fsr: convert fsrallfs to use time_t instead of int
+Date: Tue, 23 Apr 2024 14:36:17 +0200
+Message-ID: <20240423123616.2629570-6-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240423123616.2629570-2-aalbersh@redhat.com>
 References: <20240423123616.2629570-2-aalbersh@redhat.com>
@@ -79,33 +78,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When count is zero fl reference is lost. Fix it by freeing the list.
+Convert howlong argument to a time_t as it's truncated to int, but in
+practice this is not an issue as duration will never be this big.
 
-Fixes: a0d79cb37a36 ("xfs_db: make flist_find_ftyp() to check for field existance on disk")
+Add check for howlong to fit into int (printf can use int format
+specifier). Even longer interval doesn't make much sense.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- db/flist.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fsr/xfs_fsr.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/db/flist.c b/db/flist.c
-index c81d229ab99c..0a6cc5fcee43 100644
---- a/db/flist.c
-+++ b/db/flist.c
-@@ -424,8 +424,10 @@ flist_find_ftyp(
- 		if (f->ftyp == type)
- 			return fl;
- 		count = fcount(f, obj, startoff);
--		if (!count)
-+		if (!count) {
-+			flist_free(fl);
- 			continue;
-+		}
- 		fa = &ftattrtab[f->ftyp];
- 		if (fa->subfld) {
- 			flist_t *nfl;
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 3077d8f4ef46..02d61ef9399a 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -72,7 +72,7 @@ static int  packfile(char *fname, char *tname, int fd,
+ static void fsrdir(char *dirname);
+ static int  fsrfs(char *mntdir, xfs_ino_t ino, int targetrange);
+ static void initallfs(char *mtab);
+-static void fsrallfs(char *mtab, int howlong, char *leftofffile);
++static void fsrallfs(char *mtab, time_t howlong, char *leftofffile);
+ static void fsrall_cleanup(int timeout);
+ static int  getnextents(int);
+ int xfsrtextsize(int fd);
+@@ -165,6 +165,12 @@ main(int argc, char **argv)
+ 			break;
+ 		case 't':
+ 			howlong = atoi(optarg);
++			if (howlong > INT_MAX) {
++				fprintf(stderr,
++				_("%s: the maximum runtime is %d seconds.\n"),
++					optarg, INT_MAX);
++				exit(1);
++			}
+ 			break;
+ 		case 'f':
+ 			leftofffile = optarg;
+@@ -387,7 +393,7 @@ initallfs(char *mtab)
+ }
+ 
+ static void
+-fsrallfs(char *mtab, int howlong, char *leftofffile)
++fsrallfs(char *mtab, time_t howlong, char *leftofffile)
+ {
+ 	int fd;
+ 	int error;
 -- 
 2.42.0
 
