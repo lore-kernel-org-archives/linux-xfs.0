@@ -1,112 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8FF5FB9B;
-	Tue, 23 Apr 2024 10:17:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6D2F60279;
+	Tue, 23 Apr 2024 11:26:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713867448; cv=none; b=D9bt/b1qx2PyE3011DRE8AmYeiQfbnTVwLreMvY01wlTWYf0XmRuIi6HxMQrcWYj/QtiHpLCJigwcAUEKEczWnpyqTDMHDI6akIuHvGNTWV6/MgrTYYg+iTulQgy6R0GAT8UkCC8ofNOgsT02TFks5skVKbBBgTG4R3NsgsX2Ig=
+	t=1713871612; cv=none; b=SwW95kWZyndz6ZRe1kyVZa9QPQCrFPBJtPEswc+n1WlMp1Lr91yE6pJraWxO+04c3xPBhb5MRCsx9uFWJ/SvwqBHzClzuq1H1SRosZmIXY2gw8WGddUFQ0SPQ18M2+dNWwEMCh8Cmd6eHXUoL+yWJwZvbPeuw/7rv7FVE2QUl6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713867448; c=relaxed/simple;
-	bh=g97Q5WKTti1lvGYjtaVYb1xsYis+AkbzMbtB6NWEOBo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sQDlANmnuNJaMg3ODiY5mB/Ak+OR4A4nHnxXMfalYuO1hSt5cqnmHAT4L0HXYUSyglAzi8txtRwxQdoC6AK8wfTeQDg14mDx7bhFIP5q7N6E5thN8J77kKQd8bjPwPcxmlt+4YMI6rTjT9J07VdHdoywbK92x5E4fa94nXe8BXA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GkZX5Mbe; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GkZX5Mbe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D231DC3277B;
-	Tue, 23 Apr 2024 10:17:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713867448;
-	bh=g97Q5WKTti1lvGYjtaVYb1xsYis+AkbzMbtB6NWEOBo=;
-	h=From:To:Cc:Subject:Date:From;
-	b=GkZX5Mbe+DcfBnNpYb4lSxBDtXqoBKsSrv5XoV1ENL9c1t/ltmOMxslfjjH0rrzHB
-	 gAhZcUP/l04g12oYhP3mM8VVIKHNP1/LK2G4N371h73irnMebtbuSej6z06DLn0yuX
-	 CVcqoKqgPmBsy6gUBGjrkRZelw0d+DgEfDYN1Tn+iUEHMEy/3nhdg2XdXN0VTibH0E
-	 Zmpcvl6Ijh4Qp+0E+5kpI90kHwfenHZGZJgfy7w4vaUJWWOfO7EfeWVCuXrXaB+/r0
-	 GAas/3FHd4wqOIDgnjsX0FKLQZsJDjUH4qZrQ/r154wiBALZl2gC0KLcwXG/5W+6+G
-	 9s8CspQHoARKw==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 6a94b1acda7e
-Date: Tue, 23 Apr 2024 15:46:24 +0530
-Message-ID: <87bk60z8lm.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=arc-20240116; t=1713871612; c=relaxed/simple;
+	bh=yIru4Dpy+UCxrypB9Zbcrt6rwL+AC++o7HQ7EHMSuTY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=kL337ZAR3vZmZPcQf0qDsZeKLnDA11lbfuGbalwQr5sr35sXTvyXGGaXs/x+ydyhSn0x+206zBaFdUpFPu77R3vEb48J+Q78VPYtYtcxx1nSiId9AU2hVAsZu1xu0FF7cfTQvIR0rwSdfpZhznu4LJFTFIbT8KqB/R+z/0eoq30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VP0F84QTsz4f3nKM;
+	Tue, 23 Apr 2024 19:26:36 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id C08ED1A0175;
+	Tue, 23 Apr 2024 19:26:45 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBHymidmAnH7Kg--.30599S4;
+	Tue, 23 Apr 2024 19:26:45 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	brauner@kernel.org,
+	david@fromorbit.com,
+	chandanbabu@kernel.org,
+	tytso@mit.edu,
+	jack@suse.cz,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com
+Subject: [PATCH v5 4/9] xfs: convert delayed extents to unwritten when zeroing post eof blocks
+Date: Tue, 23 Apr 2024 19:17:35 +0800
+Message-Id: <20240423111735.1298851-1-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240320110548.2200662-5-yi.zhang@huaweicloud.com>
+References: <20240320110548.2200662-5-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHGBHymidmAnH7Kg--.30599S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxWw47Kw4fCw4UJF4DuryDKFg_yoWrGrW8pF
+	Zagw15GrsrKw1fZw4fAF1agr1F93Z5Cr4UJryrXrs3Za4Yqr4IgryIy3Wjqry8Cws3A3Wj
+	vF4jgas2934qvaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VU1
+	a9aPUUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hi folks,
+From: Zhang Yi <yi.zhang@huawei.com>
 
-The for-next branch of the xfs-linux repository at:
+Current clone operation could be non-atomic if the destination of a file
+is beyond EOF, user could get a file with corrupted (zeroed) data on
+crash.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+The problem is about preallocations. If you write some data into a file:
 
-has just been updated.
+	[A...B)
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+and XFS decides to preallocate some post-eof blocks, then it can create
+a delayed allocation reservation:
 
-The new head of the for-next branch is commit:
+	[A.........D)
 
-6a94b1acda7e xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
+The writeback path tries to convert delayed extents to real ones by
+allocating blocks. If there aren't enough contiguous free space, we can
+end up with two extents, the first real and the second still delalloc:
 
-17 new commits:
+	[A....C)[C.D)
 
-Christoph Hellwig (17):
-      [e78a3ce28331] xfs: move more logic into xfs_extent_busy_clear_one
-      [c37d6ed87462] xfs: unwind xfs_extent_busy_clear
-      [c0ac6cb251bd] xfs: remove the unused xfs_extent_busy_enomem trace event
-      [4887e5316382] xfs: compile out v4 support if disabled
-      [330c4f94b0d7] xfs: make XFS_TRANS_LOWMODE match the other XFS_TRANS_ definitions
-      [b7e23c0e2e3b] xfs: refactor realtime inode locking
-      [9871d0963751] xfs: free RT extents after updating the bmap btree
-      [de37dbd0ccc6] xfs: move RT inode locking out of __xfs_bunmapi
-      [5e1e4d4fc79c] xfs: block deltas in xfs_trans_unreserve_and_mod_sb must be positive
-      [f30f656e25eb] xfs: split xfs_mod_freecounter
-      [dc1b17a25c32] xfs: reinstate RT support in xfs_bmapi_reserve_delalloc
-      [7e77d57a1fea] xfs: cleanup fdblock/frextent accounting in xfs_bmap_del_extent_delay
-      [7099bd0f243f] xfs: support RT inodes in xfs_mod_delalloc
-      [727f8431638f] xfs: look at m_frextents in xfs_iomap_prealloc_size for RT allocations
-      [da2b9c3a8d2c] xfs: rework splitting of indirect block reservations
-      [bd1753d8c42b] xfs: stop the steal (of data blocks for RT indirect blocks)
-      [6a94b1acda7e] xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
+After that, both the in-memory and the on-disk file sizes are still B.
+If we clone into the range [E...F) from another file:
 
-Please note that the patch "xfs: fix sparse warning in xfs_extent_busy_clear"
-has been dropped now.
+	[A....C)[C.D)      [E...F)
 
-Code Diffstat:
+then xfs_reflink_zero_posteof() calls iomap_zero_range() to zero out the
+range [B, E) beyond EOF and flush it. Since [C, D) is still a delalloc
+extent, its pagecache will be zeroed and both the in-memory and on-disk
+size will be updated to D after flushing but before cloning. This is
+wrong, because the user can see the size change and read the zeroes
+while the clone operation is ongoing.
 
- fs/xfs/libxfs/xfs_ag.c           |   4 +--
- fs/xfs/libxfs/xfs_ag_resv.c      |  24 ++++-----------
- fs/xfs/libxfs/xfs_ag_resv.h      |   2 +-
- fs/xfs/libxfs/xfs_alloc.c        |   4 +--
- fs/xfs/libxfs/xfs_bmap.c         | 152 +++++++++++++++++++++++++++++++++++++++++++++-----------------------------------------------
- fs/xfs/libxfs/xfs_rtbitmap.c     |  57 +++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtbitmap.h     |  17 +++++++++++
- fs/xfs/libxfs/xfs_shared.h       |   6 ++--
- fs/xfs/scrub/common.c            |   1 +
- fs/xfs/scrub/fscounters.c        |  12 +++++---
- fs/xfs/scrub/fscounters.h        |   1 +
- fs/xfs/scrub/fscounters_repair.c |  12 +++++++-
- fs/xfs/scrub/repair.c            |   5 +--
- fs/xfs/xfs_extent_busy.c         |  80 ++++++++++++++++++++++--------------------------
- fs/xfs/xfs_fsmap.c               |   4 +--
- fs/xfs/xfs_fsops.c               |  29 +++++-------------
- fs/xfs/xfs_fsops.h               |   2 +-
- fs/xfs/xfs_inode.c               |   3 +-
- fs/xfs/xfs_iomap.c               |  45 ++++++++++++++++++---------
- fs/xfs/xfs_iops.c                |   2 +-
- fs/xfs/xfs_mount.c               |  87 +++++++++++++++++++++++++++++++----------------------
- fs/xfs/xfs_mount.h               |  76 +++++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_rtalloc.c             |  22 +++++---------
- fs/xfs/xfs_super.c               |  39 +++++++++++++++---------
- fs/xfs/xfs_trace.h               |   2 --
- fs/xfs/xfs_trans.c               |  63 ++++++++++++++++++++------------------
- 26 files changed, 439 insertions(+), 312 deletions(-)
+We need to keep the in-memory and on-disk size before the clone
+operation starts, so instead of writing zeroes through the page cache
+for delayed ranges beyond EOF, we convert these ranges to unwritten and
+invalidate any cached data over that range beyond EOF.
+
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+Changes since v4:
+
+Move the delalloc converting hunk before searching the COW fork. Because
+if the file has been reflinked and copied on write,
+xfs_bmap_extsize_align() aligned the range of COW delalloc extent, after
+the writeback, there might be some unwritten extents left over in the
+COW fork that overlaps the delalloc extent we found in data fork.
+
+  data fork  ...wwww|dddddddddd...
+  cow fork          |uuuuuuuuuu...
+                    ^
+                  i_size
+
+In my v4, we search the COW fork before checking the delalloc extent,
+goto found_cow tag and return unconverted delalloc srcmap in the above
+case, so the delayed extent in the data fork will have no chance to
+convert to unwritten, it will lead to delalloc extent residue and break
+generic/522 after merging patch 6.
+
+ fs/xfs/xfs_iomap.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 236ee78aa75b..ab398cb3680a 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1022,6 +1022,23 @@ xfs_buffered_write_iomap_begin(
+ 		goto out_unlock;
+ 	}
+ 
++	/*
++	 * For zeroing, trim a delalloc extent that extends beyond the EOF
++	 * block.  If it starts beyond the EOF block, convert it to an
++	 * unwritten extent.
++	 */
++	if ((flags & IOMAP_ZERO) && imap.br_startoff <= offset_fsb &&
++	    isnullstartblock(imap.br_startblock)) {
++		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
++
++		if (offset_fsb >= eof_fsb)
++			goto convert_delay;
++		if (end_fsb > eof_fsb) {
++			end_fsb = eof_fsb;
++			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
++		}
++	}
++
+ 	/*
+ 	 * Search the COW fork extent list even if we did not find a data fork
+ 	 * extent.  This serves two purposes: first this implements the
+@@ -1167,6 +1184,17 @@ xfs_buffered_write_iomap_begin(
+ 	xfs_iunlock(ip, lockmode);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0, seq);
+ 
++convert_delay:
++	xfs_iunlock(ip, lockmode);
++	truncate_pagecache(inode, offset);
++	error = xfs_bmapi_convert_delalloc(ip, XFS_DATA_FORK, offset,
++					   iomap, NULL);
++	if (error)
++		return error;
++
++	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
++	return 0;
++
+ found_cow:
+ 	seq = xfs_iomap_inode_sequence(ip, 0);
+ 	if (imap.br_startoff <= offset_fsb) {
+-- 
+2.39.2
+
