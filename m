@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA0A85925
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:11:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948A013340B
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:12:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713928308; cv=none; b=QqU3CFq8cpFKfmnFLkbe6BCEsZVdw047U3Trmwwo7c+3PFRoMt6xFxuGUqR/j27nxzpytE9I8/jxn1AxRppgbsUISG81ROqeEgJHcepmvZmlqVdZHAJOKUTsJsl3S2fmVG3ILwQOh3ujuiabH7deLD6lGjD3RHAIq3Vxpy8jo30=
+	t=1713928324; cv=none; b=L2yUP1CRvH95XBLpsxKXT2B6+31iL8ohDU+n8te1LyfU51vHwtwP3ySVBjDdWSPA2JhQPr77VhtD+9xL3BdK0eVLGYSmHagmZdQT/vAJqfC3HcOkesOQCyZ9gRmVxn8YiZbkPRMimog95Dm5s24ZdMYPgYmzHXZdmpKZaMvnn4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713928308; c=relaxed/simple;
-	bh=hg81GAHKMLjk31tTyOQR7lFZlAWT0coYEdkkR8hryLI=;
+	s=arc-20240116; t=1713928324; c=relaxed/simple;
+	bh=oU1mg7wgAGqRTRADN9170IDfgIv7yYRwqtLOvaGm3sY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bo85J7IIgHoYyzylgqgst1fTCcbiCDhAQxVbMeDJjhO+kJkOAA2tvVc1UHAFBcfgR/5lK0yu3HYJZ47GuNZZfXBk5Skho9beuZKgOI1uCatwQ8xr2Zfk7lK6ezmac68oBzcH4bWzpVk3BoCLuCh4u3x2TbUEdukZsYB5A/aaIms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qb6YEhuP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AyrqYFHRXTGxkyRr2r11m8FGfucNWacrrjc4Cz3gA7a3cYuj1mHRfakJTnbAgalmJ0fnWJ2gSIYvMBuxBGSCEbPge7m+cvrezJxCT2FjgCgsrs72geRrSJ7ddclcDCX6JDbfrULRUBmCnSp5SoSMVxdnLl9Abjf/J2WqtQ/4b+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rrfyz9/T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qb6YEhuP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62213C2BD10;
-	Wed, 24 Apr 2024 03:11:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rrfyz9/T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C0AC2BD10;
+	Wed, 24 Apr 2024 03:12:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713928308;
-	bh=hg81GAHKMLjk31tTyOQR7lFZlAWT0coYEdkkR8hryLI=;
+	s=k20201202; t=1713928324;
+	bh=oU1mg7wgAGqRTRADN9170IDfgIv7yYRwqtLOvaGm3sY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qb6YEhuPTTHm6GvpneB1ECbXYnSDvu8vFeez2+oH60LnNWlpCZrkYTglCI5B5UcFi
-	 CfQU83ez+S29JH/Kdnoeqj9AFBHNgMyM+rC6V8794LC+FZq+4V6+zYRqvV5YW0oIT9
-	 2kvAexM2gSGiHBkL3AbUzUhV9isAw1NPQmtUyPU04t1mtvRnbmA6JXWeH4Aa1quLyr
-	 IigoUKwOgFlCTGlV/evXwHfrBAMOXWvDXiuGaBz9m/XJNpz/FP082JGKp/jpcyaSYP
-	 Vv7N/a7aGQgMIFl6ABacSiW8YYlaqJCKyQg14RP0b9MTOK2ndJ3Nf4bTScG/lHrM6c
-	 kgeBkQl4prJaA==
-Date: Tue, 23 Apr 2024 20:11:47 -0700
-Subject: [PATCH 11/14] xfs: use local variables for name and value length in
- _attri_commit_pass2
+	b=rrfyz9/TEBsbexdWwtQM9x9idibVMZapG74me+YC/zGjhok84cVkqR1dSNlM1/aqR
+	 BC7V9fICF5BkEyyLRZDYoBR5S/36yBJ629kSYIWnQGwZXoli4Y2JGeetqL/U2updNY
+	 O0HqT113WdYt0SpajhR8SBcRKqsPL9mRidXHyTSxYbgaOvQI697+JB7Mn0Rrh0vPEe
+	 2JonijvIpyyn1YpI9CkFRE/uX0DkhJF7WPCsWaeyq2xCF/yMaxIziaEulZhaLBpprn
+	 BnNoDXKVemFPRPG5gwO3R0glqJGGJU5lSp5n/JL4Ra/i855x0zb0AFoTTL2ewOhuqR
+	 0x7c4xjE8kPyA==
+Date: Tue, 23 Apr 2024 20:12:03 -0700
+Subject: [PATCH 12/14] xfs: refactor name/length checks in xfs_attri_validate
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392782758.1904599.15252200321854261490.stgit@frogsfrogsfrogs>
+Message-ID: <171392782775.1904599.5336276739826774234.stgit@frogsfrogsfrogs>
 In-Reply-To: <171392782539.1904599.4346314665349138617.stgit@frogsfrogsfrogs>
 References: <171392782539.1904599.4346314665349138617.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,108 +46,68 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We're about to start using tagged unions in the xattr log format, so
-create a bunch of local variables in the recovery function so we only
-have to decode the log item fields once.
+Move the name and length checks into the attr op switch statement so
+that we can perform more specific checks of the value length.  Over the
+next few patches we're going to add new attr op flags with different
+validation requirements.
+
+While we're at it, remove the incorrect comment.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_attr_item.c |   25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_attr_item.c |   23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 8a13e2840692..59723e5f483e 100644
+index 59723e5f483e..c8f92166b9ad 100644
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -738,9 +738,11 @@ xlog_recover_attri_commit_pass2(
- 	struct xfs_attri_log_item       *attrip;
- 	struct xfs_attri_log_format     *attri_formatp;
- 	struct xfs_attri_log_nameval	*nv;
--	const void			*attr_value = NULL;
- 	const void			*attr_name;
-+	const void			*attr_value = NULL;
- 	size_t				len;
-+	unsigned int			name_len = 0;
-+	unsigned int			value_len = 0;
- 	unsigned int			op, i = 0;
+@@ -466,6 +466,12 @@ xfs_attri_item_match(
+ 	return ATTRI_ITEM(lip)->attri_format.alfi_id == intent_id;
+ }
  
- 	/* Validate xfs_attri_log_format before the large memory allocation */
-@@ -769,6 +771,8 @@ xlog_recover_attri_commit_pass2(
- 					     attri_formatp, len);
- 			return -EFSCORRUPTED;
- 		}
-+		name_len = attri_formatp->alfi_name_len;
-+		value_len = attri_formatp->alfi_value_len;
- 		break;
++static inline bool
++xfs_attri_validate_namelen(unsigned int namelen)
++{
++	return namelen > 0 && namelen <= XATTR_NAME_MAX;
++}
++
+ /* Is this recovered ATTRI format ok? */
+ static inline bool
+ xfs_attri_validate(
+@@ -486,23 +492,24 @@ xfs_attri_validate(
+ 	if (attrp->alfi_attr_filter & ~XFS_ATTRI_FILTER_MASK)
+ 		return false;
+ 
+-	/* alfi_op_flags should be either a set or remove */
+ 	switch (op) {
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
++		if (attrp->alfi_value_len > XATTR_SIZE_MAX)
++			return false;
++		if (!xfs_attri_validate_namelen(attrp->alfi_name_len))
++			return false;
++		break;
  	case XFS_ATTRI_OP_FLAGS_REMOVE:
- 		/* Log item, attr name */
-@@ -777,6 +781,7 @@ xlog_recover_attri_commit_pass2(
- 					     attri_formatp, len);
- 			return -EFSCORRUPTED;
- 		}
-+		name_len = attri_formatp->alfi_name_len;
++		if (attrp->alfi_value_len != 0)
++			return false;
++		if (!xfs_attri_validate_namelen(attrp->alfi_name_len))
++			return false;
  		break;
  	default:
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-@@ -786,15 +791,14 @@ xlog_recover_attri_commit_pass2(
- 	i++;
- 
- 	/* Validate the attr name */
--	if (item->ri_buf[i].i_len !=
--			xlog_calc_iovec_len(attri_formatp->alfi_name_len)) {
-+	if (item->ri_buf[i].i_len != xlog_calc_iovec_len(name_len)) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 				attri_formatp, len);
- 		return -EFSCORRUPTED;
+ 		return false;
  	}
  
- 	attr_name = item->ri_buf[i].i_addr;
--	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
-+	if (!xfs_attr_namecheck(attr_name, name_len)) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 				attri_formatp, len);
- 		return -EFSCORRUPTED;
-@@ -802,8 +806,8 @@ xlog_recover_attri_commit_pass2(
- 	i++;
+-	if (attrp->alfi_value_len > XATTR_SIZE_MAX)
+-		return false;
+-
+-	if ((attrp->alfi_name_len > XATTR_NAME_MAX) ||
+-	    (attrp->alfi_name_len == 0))
+-		return false;
+-
+ 	return xfs_verify_ino(mp, attrp->alfi_ino);
+ }
  
- 	/* Validate the attr value, if present */
--	if (attri_formatp->alfi_value_len != 0) {
--		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(attri_formatp->alfi_value_len)) {
-+	if (value_len != 0) {
-+		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(value_len)) {
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					item->ri_buf[0].i_addr,
- 					item->ri_buf[0].i_len);
-@@ -827,7 +831,7 @@ xlog_recover_attri_commit_pass2(
- 	switch (op) {
- 	case XFS_ATTRI_OP_FLAGS_REMOVE:
- 		/* Regular remove operations operate only on names. */
--		if (attr_value != NULL || attri_formatp->alfi_value_len != 0) {
-+		if (attr_value != NULL || value_len != 0) {
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					     attri_formatp, len);
- 			return -EFSCORRUPTED;
-@@ -840,7 +844,7 @@ xlog_recover_attri_commit_pass2(
- 		 * and do not take a newname.  Values are optional for set and
- 		 * replace.
- 		 */
--		if (attr_name == NULL || attri_formatp->alfi_name_len == 0) {
-+		if (attr_name == NULL || name_len == 0) {
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					     attri_formatp, len);
- 			return -EFSCORRUPTED;
-@@ -853,9 +857,8 @@ xlog_recover_attri_commit_pass2(
- 	 * name/value buffer to the recovered incore log item and drop our
- 	 * reference.
- 	 */
--	nv = xfs_attri_log_nameval_alloc(attr_name,
--			attri_formatp->alfi_name_len, attr_value,
--			attri_formatp->alfi_value_len);
-+	nv = xfs_attri_log_nameval_alloc(attr_name, name_len,
-+			attr_value, value_len);
- 
- 	attrip = xfs_attri_init(mp, nv);
- 	memcpy(&attrip->attri_format, attri_formatp, len);
 
