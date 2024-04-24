@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86F488F47
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:14:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9748F47
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:14:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713928465; cv=none; b=l5nDXqTwLTmyyYPLTlX6JrYrfmKTU5J+VDxZrsOkHa3pUTqF576pItQrj5zHuNb1XGqQRrRXi1PYAFclqZ6lWA6cXrZAgg4OlPE/bp6bsrDebueAV6HYyGopeJOnb8OtRMmVEEedg0oggG8UoW43Uu2CS3ZCX/MKfubxJXnDWMs=
+	t=1713928480; cv=none; b=jWrRn4NZzFQHgFogeDkLnLDW116d46CjmTxZXFue/0+ipp9gK5/788nlvJNrwW+CkwZpvqoXwKf0W6XksxPfz2Atnc3qT3DPCjstIqpx3eZJDgSVj1IeODW8OuP5tnLrEhdr7bac55WRFLfvxtg8/fazeAjJacvoYFQ/07ctPA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713928465; c=relaxed/simple;
-	bh=IO2VHsYkfM91QsefTNr21QyCOFopWa+i028yHS0PXmc=;
+	s=arc-20240116; t=1713928480; c=relaxed/simple;
+	bh=9dQKWzfxi/TbZ+3UFAnZetW+7e9D5IaU3YfAT33FTTs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qB8KC9hkK2s1Zg2ZPEBF6poraFiTEHcsPmJvwyG4ukfABlPNsWHMKVsHc4Xl3uWJ75g1wG6JtwD1+Uy96YqGlIc7j0orAIaugGtJKN4JT2o+EqtwpxBR3szonLufaPFNFAmy7zi7Hl5STnwJ783UTfpNNWoBBDYaxsJETCxLOo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CYBqrOXN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jY/4ywUguWlDBHkDvi4sDXFmxIZfxCP9HvO8biOVnpVCO6vpCIXC0aarfB92Zpw5V+hq5IPIPWpXAzIRwoMkbCtpTx0lhE/TFkbOVk9Uq7PMU/gw3ZjjNKvv4TYYFZs7vpuopgAXsHkVeE9I8EUrv8nToWORDP14THuYNj0yq8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ex/aEH+r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CYBqrOXN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 135A6C116B1;
-	Wed, 24 Apr 2024 03:14:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ex/aEH+r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4323C116B1;
+	Wed, 24 Apr 2024 03:14:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713928465;
-	bh=IO2VHsYkfM91QsefTNr21QyCOFopWa+i028yHS0PXmc=;
+	s=k20201202; t=1713928480;
+	bh=9dQKWzfxi/TbZ+3UFAnZetW+7e9D5IaU3YfAT33FTTs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CYBqrOXNoxHaEhYWCfecsUulnZhnY44/wxWphMHW6YKBlYPH0fMQSADscJMUaaONW
-	 qdOOVJnzykUMspg03ZDVhX+qDzLmvvJcQI+jnyAHJs30Tf2b7JwtsgsfhbPxqaGxbu
-	 YUOIoDRqMSCseNXk5n38Mt/yISMnqX56IJsgqNlQPz6s6Gw1LgPGvJ9MgJXDtmbVwx
-	 ijNaFNyUpz8Y8v3KSFMnDxjx/cKH5bg+oUq2bY3oxkZGxqdzWxxyEWXQ0ZqaiTF8Kb
-	 i6/Wm+3v2XhYkBfLVlHQgR4toJ8djynMgpcLPqrlT0lvssLZuLQiZClQ5LqtCri9TJ
-	 HQgeqz4IHFtWg==
-Date: Tue, 23 Apr 2024 20:14:24 -0700
-Subject: [PATCH 07/30] xfs: allow xattr matching on name and value for parent
- pointers
+	b=ex/aEH+r6mOeh3ak6wrWijtpHfsaGlCXa80+1XgsFFe1RqG1tluyVq5Ro4+L+kbqo
+	 hekA+edV8o4rgYIMzh1fOltuXwwip1gwX6wWfavIS+9H1ys/SZ/6OF6v67ODN2p9+n
+	 ss+JxCOdXSZXBxzkGVJCeCWzTauN9cKJIMJAXMGanPhl6VM/0PV2ff8uYGZLNUhwC2
+	 0pYihQFvUrmMLylQx0SNxJOEzNXWD0W1Dzdd/RxF+U5zO0RkzEqcj90zwmjU+7ziZc
+	 mMtrLWrEisN7tqkxPVNheYfzowBMbK5bxbCeSUtIqg6MPIjD0NNMY+Tn4IGiITgXUR
+	 TstADfPYZnNgQ==
+Date: Tue, 23 Apr 2024 20:14:40 -0700
+Subject: [PATCH 08/30] xfs: refactor xfs_is_using_logged_xattrs checks in attr
+ item recovery
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, catherine.hoang@oracle.com,
  allison.henderson@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392783384.1905110.166027987253562347.stgit@frogsfrogsfrogs>
+Message-ID: <171392783401.1905110.745513040348283039.stgit@frogsfrogsfrogs>
 In-Reply-To: <171392783191.1905110.6347010840682949070.stgit@frogsfrogsfrogs>
 References: <171392783191.1905110.6347010840682949070.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,127 +48,46 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a file is hardlinked with the same name but from multiple parents,
-the parent pointers will all have the same dirent name (== attr name)
-but with different parent_ino/parent_gen values.  To disambiguate, we
-need to be able to match on both the attr name and the attr value.  This
-is in contrast to regular xattrs, which are matchtg edit
-d only on name.
-
-Therefore, plumb in the ability to match shortform and local attrs on
-name and value in the XFS_ATTR_PARENT namespace.  Parent pointer attr
-values are never large enough to be stored in a remote attr, so we need
-can reject these cases as corruption.
+Move this feature check down to the per-op checks so that we can ensure
+that we never see parent pointer attr items on non-pptr filesystems, and
+that logged xattrs are turned on for non-pptr attr items.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |   52 ++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 46 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_attr_item.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index e54a8372a30a..1a374c6885d7 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -514,12 +514,37 @@ static inline unsigned int xfs_attr_match_mask(const struct xfs_da_args *args)
- 	return XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE;
- }
- 
-+static inline bool
-+xfs_attr_parent_match(
-+	const struct xfs_da_args	*args,
-+	const void			*value,
-+	unsigned int			valuelen)
-+{
-+	ASSERT(args->value != NULL);
-+
-+	/* Parent pointers do not use remote values */
-+	if (!value)
-+		return false;
-+
-+	/*
-+	 * The only value we support is a parent rec.  However, we'll accept
-+	 * any valuelen so that offline repair can delete ATTR_PARENT values
-+	 * that are not parent pointers.
-+	 */
-+	if (valuelen != args->valuelen)
-+		return false;
-+
-+	return memcmp(args->value, value, valuelen) == 0;
-+}
-+
- static bool
- xfs_attr_match(
- 	struct xfs_da_args	*args,
- 	unsigned int		attr_flags,
- 	const unsigned char	*name,
--	unsigned int		namelen)
-+	unsigned int		namelen,
-+	const void		*value,
-+	unsigned int		valuelen)
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 4a57bcff49eb..413e3d3959a5 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -480,9 +480,6 @@ xfs_attri_validate(
  {
- 	unsigned int		mask = xfs_attr_match_mask(args);
+ 	unsigned int			op = xfs_attr_log_item_op(attrp);
  
-@@ -530,6 +555,9 @@ xfs_attr_match(
- 	if (memcmp(args->name, name, namelen) != 0)
+-	if (!xfs_is_using_logged_xattrs(mp))
+-		return false;
+-
+ 	if (attrp->__pad != 0)
  		return false;
  
-+	if (attr_flags & XFS_ATTR_PARENT)
-+		return xfs_attr_parent_match(args, value, valuelen);
-+
- 	return true;
- }
- 
-@@ -539,6 +567,13 @@ xfs_attr_copy_value(
- 	unsigned char		*value,
- 	int			valuelen)
- {
-+	/*
-+	 * Parent pointer lookups require the caller to specify the name and
-+	 * value, so don't copy anything.
-+	 */
-+	if (args->attr_filter & XFS_ATTR_PARENT)
-+		return 0;
-+
- 	/*
- 	 * No copy if all we have to do is get the length
- 	 */
-@@ -748,7 +783,8 @@ xfs_attr_sf_findname(
- 	     sfe < xfs_attr_sf_endptr(sf);
- 	     sfe = xfs_attr_sf_nextentry(sfe)) {
- 		if (xfs_attr_match(args, sfe->flags, sfe->nameval,
--					sfe->namelen))
-+				sfe->namelen, &sfe->nameval[sfe->namelen],
-+				sfe->valuelen))
- 			return sfe;
- 	}
- 
-@@ -2444,18 +2480,22 @@ xfs_attr3_leaf_lookup_int(
- 		if (entry->flags & XFS_ATTR_LOCAL) {
- 			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
- 			if (!xfs_attr_match(args, entry->flags,
--						name_loc->nameval,
--						name_loc->namelen))
-+					name_loc->nameval, name_loc->namelen,
-+					&name_loc->nameval[name_loc->namelen],
-+					be16_to_cpu(name_loc->valuelen)))
- 				continue;
- 			args->index = probe;
- 			return -EEXIST;
- 		} else {
-+			unsigned int	valuelen;
-+
- 			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
-+			valuelen = be32_to_cpu(name_rmt->valuelen);
- 			if (!xfs_attr_match(args, entry->flags, name_rmt->name,
--						name_rmt->namelen))
-+					name_rmt->namelen, NULL, valuelen))
- 				continue;
- 			args->index = probe;
--			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
-+			args->rmtvaluelen = valuelen;
- 			args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
- 			args->rmtblkcnt = xfs_attr3_rmt_blocks(
- 							args->dp->i_mount,
+@@ -499,12 +496,16 @@ xfs_attri_validate(
+ 	switch (op) {
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
++		if (!xfs_is_using_logged_xattrs(mp))
++			return false;
+ 		if (attrp->alfi_value_len > XATTR_SIZE_MAX)
+ 			return false;
+ 		if (!xfs_attri_validate_namelen(attrp->alfi_name_len))
+ 			return false;
+ 		break;
+ 	case XFS_ATTRI_OP_FLAGS_REMOVE:
++		if (!xfs_is_using_logged_xattrs(mp))
++			return false;
+ 		if (attrp->alfi_value_len != 0)
+ 			return false;
+ 		if (!xfs_attri_validate_namelen(attrp->alfi_name_len))
 
