@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F0648627C
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:28:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF9EB129A9C
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:28:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713929295; cv=none; b=Wn0MQdIBh2MUjFTY7zwfIc1sNqJAHI0bBn7OJ6M/skCjdF2a+plDRq+4Pgb14qk1nNjr7ZqJX2v0xbIHjK/r4f6V9s+mKWFq7lEpMjMY07OqETLxLAHheazaA3R1JUffdCvahYTkET14YLaGpGakD8D+jUUvt02Ing1LFEB4PGA=
+	t=1713929311; cv=none; b=KO34AN0cMV65NR2Fc7DXthmxu4EgEBDVrPab1HOpgqmGsl0vMfN2usyHCj/jb8rdlX1KqJH8YTFz4pCypj5U3kcdshpom9u5+BppOg6gXLm998Xh4hzO7DKnJdurwrhl8vdcPTeoWBiMC45vl4z4UDKSzgLGdVYzXCQVDmaRhyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713929295; c=relaxed/simple;
-	bh=7Pw+iofAElmn1Cp8g4c5mcG5dlbLii61NywmLFTHiGk=;
+	s=arc-20240116; t=1713929311; c=relaxed/simple;
+	bh=Ptdikgx+p5cbC78Jj+wjzIwYo+inNhZtWeopTgJfDYw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ncqJL1y230yXgQLdvp4nzSwGcTM63BmHxgKYC0As2imfPNpkHzQpAgVPwbFytP08KxTaT0dLzjtA3FGRDxVlC+vlyzW5NIx84Di4x4Psz6WTRJUT5Ucv6dZ7xDZyexQ7/yfBIjV7S5QXH1sBScHuP1s1VwccCkDk66ypJZLDF+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=igRZTnln; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=io8l6GS5LmsQF+F+xGN4v4RMUJJ/V0AmWXoEwGSQQkhhb0fjs++75CzNwRhrGTh0Q9hB4FUV7wa9RlRdxxM+PngV8NYOiA3hL0KvlFAQ9emMlsUlngSm3acLZ5BKTuiil63AypOCaukNolBTdfl2jB6u0YVhx2GbmYZ9gkSMh9E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yf77ADYu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="igRZTnln"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FD3FC116B1;
-	Wed, 24 Apr 2024 03:28:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yf77ADYu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA172C116B1;
+	Wed, 24 Apr 2024 03:28:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713929295;
-	bh=7Pw+iofAElmn1Cp8g4c5mcG5dlbLii61NywmLFTHiGk=;
+	s=k20201202; t=1713929310;
+	bh=Ptdikgx+p5cbC78Jj+wjzIwYo+inNhZtWeopTgJfDYw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=igRZTnlnCm1GzJQviZY6UgHwshIV+8PgYWYmg587RDcUMWZ2DYsKAf5b0gSAP6DVu
-	 4dcatdGcXfxje+Sh1R+qspQsgbh7E9CPEaBZA5tH5P0R5hXzh1Xft7X+1qP8J/jB6s
-	 PHCClhRXTTW5MMI7lT8PieO0otPnkYfc/V/At8BXlLKU4YBITTz+7uEsujgg1gHOV1
-	 tcvDP1VfkCyGYXHSWXWJUUQ25jwcQ7WWBoM75P/TBL06HgWSkb0C0+vy20tGMMddyj
-	 AOucpbuKaA/nr7Vvg1ix3ktkpZgBqTePlJNBndOeitwY0/TF0d5mwtBaXRy+aRN9cR
-	 PLfLtGNZmZP3g==
-Date: Tue, 23 Apr 2024 20:28:14 -0700
-Subject: [PATCH 3/3] xfs: introduce vectored scrub mode
+	b=Yf77ADYu7MYsI0DuOcdVa98n9nVuhmfMsSpfmGT8Nj+Riv+EkK2WTjNe2uzH+pP2j
+	 Zp78EVOFwvV3HsS+RlQGdd7yLma37vb0Af0RT3p60w9OMtiMfUYN1AKuEz9n4jCglV
+	 +3mGSNMjjC1JB2DFJSOuJhBuFQm5cmYrsCfVdYTGxJKGPJOE5PkC3mEHrvNfMiYAyu
+	 0ZK+FR3fsdPxbdbIRw8U6W2NlV8hJi62eD/doINgARcOdeUfhixklS6kd7jvuIe/YS
+	 JQq7bjKtMz6lOvneh2CXD6MUQ9cDBq4oXgxMD7mqG5qYAASTQRiky0JFtvyQi+vD7h
+	 d2BESVxFPCRFQ==
+Date: Tue, 23 Apr 2024 20:28:30 -0700
+Subject: [PATCH 1/2] xfs: use dontcache for grabbing inodes during scrub
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392785706.1907196.2126507199222831441.stgit@frogsfrogsfrogs>
-In-Reply-To: <171392785649.1907196.827031134623701813.stgit@frogsfrogsfrogs>
-References: <171392785649.1907196.827031134623701813.stgit@frogsfrogsfrogs>
+Message-ID: <171392786048.1907355.7613339211894472671.stgit@frogsfrogsfrogs>
+In-Reply-To: <171392786026.1907355.15363148011407104351.stgit@frogsfrogsfrogs>
+References: <171392786026.1907355.15363148011407104351.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,404 +46,141 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Introduce a variant on XFS_SCRUB_METADATA that allows for a vectored
-mode.  The caller specifies the principal metadata object that they want
-to scrub (allocation group, inode, etc.) once, followed by an array of
-scrub types they want called on that object.  The kernel runs the scrub
-operations and writes the output flags and errno code to the
-corresponding array element.
+Back when I wrote commit a03297a0ca9f2, I had thought that we'd be doing
+users a favor by only marking inodes dontcache at the end of a scrub
+operation, and only if there's only one reference to that inode.  This
+was more or less true back when I_DONTCACHE was an XFS iflag and the
+only thing it did was change the outcome of xfs_fs_drop_inode to 1.
 
-A new pseudo scrub type BARRIER is introduced to force the kernel to
-return to userspace if any corruptions have been found when scrubbing
-the previous scrub types in the array.  This enables userspace to
-schedule, for example, the sequence:
+Note: If there are dentries pointing to the inode when scrub finishes,
+the inode will have positive i_count and stay around in cache until
+dentry reclaim.
 
- 1. data fork
- 2. barrier
- 3. directory
+But now we have d_mark_dontcache, which cause the inode *and* the
+dentries attached to it all to be marked I_DONTCACHE, which means that
+we drop the dentries ASAP, which drops the inode ASAP.
 
-If the data fork scrub is clean, then the kernel will perform the
-directory scrub.  If not, the barrier in 2 will exit back to userspace.
+This is bad if scrub found problems with the inode, because now they can
+be scheduled for inactivation, which can cause inodegc to trip on it and
+shut down the filesystem.
 
-The alternative would have been an interface where userspace passes a
-pointer to an empty buffer, and the kernel formats that with
-xfs_scrub_vecs that tell userspace what it scrubbed and what the outcome
-was.  With that the kernel would have to communicate that the buffer
-needed to have been at least X size, even though for our cases
-XFS_SCRUB_TYPE_NR + 2 would always be enough.
+Even if the inode isn't bad, this is still suboptimal because phases 3-7
+each initiate inode scans.  Dropping the inode immediately during phase
+3 is silly because phase 5 will reload it and drop it immediately, etc.
+It's fine to mark the inodes dontcache, but if there have been accesses
+to the file that set up dentries, we should keep them.
 
-Compared to that, this design keeps all the dependency policy and
-ordering logic in userspace where it already resides instead of
-duplicating it in the kernel. The downside of that is that it needs the
-barrier logic.
+I validated this by setting up ftrace to capture xfs_iget_recycle*
+tracepoints and ran xfs/285 for 30 seconds.  With current djwong-wtf I
+saw ~30,000 recycle events.  I then dropped the d_mark_dontcache calls
+and set XFS_IGET_DONTCACHE, and the recycle events dropped to ~5,000 per
+30 seconds.
 
-When running fstests in "rebuild all metadata after each test" mode, I
-observed a 10% reduction in runtime due to fewer transitions across the
-system call boundary.
+Therefore, grab the inode with XFS_IGET_DONTCACHE, which only has the
+effect of setting I_DONTCACHE for cache misses.  Remove the
+d_mark_dontcache call that can happen in xchk_irele.
 
+Fixes: a03297a0ca9f2 ("xfs: manage inode DONTCACHE status at irele time")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_fs.h   |   33 ++++++++++
- fs/xfs/scrub/scrub.c     |  149 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/trace.h     |   79 ++++++++++++++++++++++++
- fs/xfs/scrub/xfs_scrub.h |    2 +
- fs/xfs/xfs_ioctl.c       |    2 +
- 5 files changed, 264 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/common.c |   12 +++---------
+ fs/xfs/scrub/iscan.c  |   13 +++++++++++--
+ fs/xfs/scrub/scrub.h  |    7 +++++++
+ 3 files changed, 21 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 7ae1912cdbfc..97996cb79aaa 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -725,6 +725,15 @@ struct xfs_scrub_metadata {
- /* Number of scrub subcommands. */
- #define XFS_SCRUB_TYPE_NR	29
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index a7d3a2279662..1ad8ec63a7f4 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -783,7 +783,7 @@ xchk_iget(
+ {
+ 	ASSERT(sc->tp != NULL);
+ 
+-	return xfs_iget(sc->mp, sc->tp, inum, XFS_IGET_UNTRUSTED, 0, ipp);
++	return xfs_iget(sc->mp, sc->tp, inum, XCHK_IGET_FLAGS, 0, ipp);
+ }
+ 
+ /*
+@@ -834,8 +834,8 @@ xchk_iget_agi(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_iget(mp, tp, inum,
+-			XFS_IGET_NORETRY | XFS_IGET_UNTRUSTED, 0, ipp);
++	error = xfs_iget(mp, tp, inum, XFS_IGET_NORETRY | XCHK_IGET_FLAGS, 0,
++			ipp);
+ 	if (error == -EAGAIN) {
+ 		/*
+ 		 * The inode may be in core but temporarily unavailable and may
+@@ -1062,12 +1062,6 @@ xchk_irele(
+ 		spin_lock(&VFS_I(ip)->i_lock);
+ 		VFS_I(ip)->i_state &= ~I_DONTCACHE;
+ 		spin_unlock(&VFS_I(ip)->i_lock);
+-	} else if (atomic_read(&VFS_I(ip)->i_count) == 1) {
+-		/*
+-		 * If this is the last reference to the inode and the caller
+-		 * permits it, set DONTCACHE to avoid thrashing.
+-		 */
+-		d_mark_dontcache(VFS_I(ip));
+ 	}
+ 
+ 	xfs_irele(ip);
+diff --git a/fs/xfs/scrub/iscan.c b/fs/xfs/scrub/iscan.c
+index c380207702e2..cf9d983667ce 100644
+--- a/fs/xfs/scrub/iscan.c
++++ b/fs/xfs/scrub/iscan.c
+@@ -407,6 +407,15 @@ xchk_iscan_iget_retry(
+ 	return -EAGAIN;
+ }
  
 +/*
-+ * This special type code only applies to the vectored scrub implementation.
-+ *
-+ * If any of the previous scrub vectors recorded runtime errors or have
-+ * sv_flags bits set that match the OFLAG bits in the barrier vector's
-+ * sv_flags, set the barrier's sv_ret to -ECANCELED and return to userspace.
++ * For an inode scan, we hold the AGI and want to try to grab a batch of
++ * inodes.  Holding the AGI prevents inodegc from clearing freed inodes,
++ * so we must use noretry here.  For every inode after the first one in the
++ * batch, we don't want to wait, so we use retry there too.  Finally, use
++ * dontcache to avoid polluting the cache.
 + */
-+#define XFS_SCRUB_TYPE_BARRIER	(0xFFFFFFFF)
-+
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
- 
-@@ -769,6 +778,29 @@ struct xfs_scrub_metadata {
- 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
- 
-+/* Vectored scrub calls to reduce the number of kernel transitions. */
-+
-+struct xfs_scrub_vec {
-+	__u32 sv_type;		/* XFS_SCRUB_TYPE_* */
-+	__u32 sv_flags;		/* XFS_SCRUB_FLAGS_* */
-+	__s32 sv_ret;		/* 0 or a negative error code */
-+	__u32 sv_reserved;	/* must be zero */
-+};
-+
-+/* Vectored metadata scrub control structure. */
-+struct xfs_scrub_vec_head {
-+	__u64 svh_ino;		/* inode number. */
-+	__u32 svh_gen;		/* inode generation. */
-+	__u32 svh_agno;		/* ag number. */
-+	__u32 svh_flags;	/* XFS_SCRUB_VEC_FLAGS_* */
-+	__u16 svh_rest_us;	/* wait this much time between vector items */
-+	__u16 svh_nr;		/* number of svh_vectors */
-+	__u64 svh_reserved;	/* must be zero */
-+	__u64 svh_vectors;	/* pointer to buffer of xfs_scrub_vec */
-+};
-+
-+#define XFS_SCRUB_VEC_FLAGS_ALL		(0)
++#define ISCAN_IGET_FLAGS	(XFS_IGET_NORETRY | XFS_IGET_DONTCACHE)
 +
  /*
-  * ioctl limits
-  */
-@@ -928,6 +960,7 @@ struct xfs_getparents_by_handle {
- #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
- #define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
- #define XFS_IOC_GETPARENTS_BY_HANDLE _IOWR('X', 63, struct xfs_getparents_by_handle)
-+#define XFS_IOC_SCRUBV_METADATA	_IOWR('X', 64, struct xfs_scrub_vec_head)
+  * Grab an inode as part of an inode scan.  While scanning this inode, the
+  * caller must ensure that no other threads can modify the inode until a call
+@@ -434,7 +443,7 @@ xchk_iscan_iget(
+ 	ASSERT(iscan->__inodes[0] == NULL);
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 1456cc11c406..78b00ab85c9c 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -21,6 +21,7 @@
- #include "xfs_exchmaps.h"
- #include "xfs_dir2.h"
- #include "xfs_parent.h"
-+#include "xfs_icache.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -749,3 +750,151 @@ xfs_ioc_scrub_metadata(
+ 	/* Fill the first slot in the inode array. */
+-	error = xfs_iget(sc->mp, sc->tp, ino, XFS_IGET_NORETRY, 0,
++	error = xfs_iget(sc->mp, sc->tp, ino, ISCAN_IGET_FLAGS, 0,
+ 			&iscan->__inodes[idx]);
  
- 	return 0;
- }
-+
-+/* Decide if there have been any scrub failures up to this point. */
-+static inline int
-+xfs_scrubv_check_barrier(
-+	struct xfs_mount		*mp,
-+	const struct xfs_scrub_vec	*vectors,
-+	const struct xfs_scrub_vec	*stop_vec)
-+{
-+	const struct xfs_scrub_vec	*v;
-+	__u32				failmask;
-+
-+	failmask = stop_vec->sv_flags & XFS_SCRUB_FLAGS_OUT;
-+
-+	for (v = vectors; v < stop_vec; v++) {
-+		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER)
-+			continue;
-+
-+		/*
-+		 * Runtime errors count as a previous failure, except the ones
-+		 * used to ask userspace to retry.
-+		 */
-+		switch (v->sv_ret) {
-+		case -EBUSY:
-+		case -ENOENT:
-+		case -EUSERS:
-+		case 0:
-+			break;
-+		default:
-+			return -ECANCELED;
-+		}
-+
-+		/*
-+		 * If any of the out-flags on the scrub vector match the mask
-+		 * that was set on the barrier vector, that's a previous fail.
-+		 */
-+		if (v->sv_flags & failmask)
-+			return -ECANCELED;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Vectored scrub implementation to reduce ioctl calls. */
-+int
-+xfs_ioc_scrubv_metadata(
-+	struct file			*file,
-+	void				__user *arg)
-+{
-+	struct xfs_scrub_vec_head	head;
-+	struct xfs_scrub_vec_head	__user *uhead = arg;
-+	struct xfs_scrub_vec		*vectors;
-+	struct xfs_scrub_vec		__user *uvectors;
-+	struct xfs_inode		*ip_in = XFS_I(file_inode(file));
-+	struct xfs_mount		*mp = ip_in->i_mount;
-+	struct xfs_scrub_vec		*v;
-+	size_t				vec_bytes;
-+	unsigned int			i;
-+	int				error = 0;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	if (copy_from_user(&head, uhead, sizeof(head)))
-+		return -EFAULT;
-+
-+	if (head.svh_reserved)
-+		return -EINVAL;
-+	if (head.svh_flags & ~XFS_SCRUB_VEC_FLAGS_ALL)
-+		return -EINVAL;
-+	if (head.svh_nr == 0)
-+		return 0;
-+
-+	vec_bytes = array_size(head.svh_nr, sizeof(struct xfs_scrub_vec));
-+	if (vec_bytes > PAGE_SIZE)
-+		return -ENOMEM;
-+
-+	uvectors = (void __user *)(uintptr_t)head.svh_vectors;
-+	vectors = memdup_user(uvectors, vec_bytes);
-+	if (IS_ERR(vectors))
-+		return PTR_ERR(vectors);
-+
-+	trace_xchk_scrubv_start(ip_in, &head);
-+
-+	for (i = 0, v = vectors; i < head.svh_nr; i++, v++) {
-+		if (v->sv_reserved) {
-+			error = -EINVAL;
-+			goto out_free;
-+		}
-+
-+		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER &&
-+		    (v->sv_flags & ~XFS_SCRUB_FLAGS_OUT)) {
-+			error = -EINVAL;
-+			goto out_free;
-+		}
-+
-+		trace_xchk_scrubv_item(mp, &head, i, v);
-+	}
-+
-+	/* Run all the scrubbers. */
-+	for (i = 0, v = vectors; i < head.svh_nr; i++, v++) {
-+		struct xfs_scrub_metadata	sm = {
-+			.sm_type		= v->sv_type,
-+			.sm_flags		= v->sv_flags,
-+			.sm_ino			= head.svh_ino,
-+			.sm_gen			= head.svh_gen,
-+			.sm_agno		= head.svh_agno,
-+		};
-+
-+		if (v->sv_type == XFS_SCRUB_TYPE_BARRIER) {
-+			v->sv_ret = xfs_scrubv_check_barrier(mp, vectors, v);
-+			if (v->sv_ret) {
-+				trace_xchk_scrubv_barrier_fail(mp, &head, i, v);
-+				break;
-+			}
-+
-+			continue;
-+		}
-+
-+		v->sv_ret = xfs_scrub_metadata(file, &sm);
-+		v->sv_flags = sm.sm_flags;
-+
-+		trace_xchk_scrubv_outcome(mp, &head, i, v);
-+
-+		if (head.svh_rest_us) {
-+			ktime_t		expires;
-+
-+			expires = ktime_add_ns(ktime_get(),
-+					head.svh_rest_us * 1000);
-+			set_current_state(TASK_KILLABLE);
-+			schedule_hrtimeout(&expires, HRTIMER_MODE_ABS);
-+		}
-+
-+		if (fatal_signal_pending(current)) {
-+			error = -EINTR;
-+			goto out_free;
-+		}
-+	}
-+
-+	if (copy_to_user(uvectors, vectors, vec_bytes) ||
-+	    copy_to_user(uhead, &head, sizeof(head))) {
-+		error = -EFAULT;
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(vectors);
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index b3756722bee1..8ce74bd8530a 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -69,6 +69,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_QUOTACHECK);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_NLINKS);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_HEALTHY);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_DIRTREE);
-+TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BARRIER);
+ 	trace_xchk_iscan_iget(iscan, error);
+@@ -507,7 +516,7 @@ xchk_iscan_iget(
  
- #define XFS_SCRUB_TYPE_STRINGS \
- 	{ XFS_SCRUB_TYPE_PROBE,		"probe" }, \
-@@ -99,7 +100,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_DIRTREE);
- 	{ XFS_SCRUB_TYPE_QUOTACHECK,	"quotacheck" }, \
- 	{ XFS_SCRUB_TYPE_NLINKS,	"nlinks" }, \
- 	{ XFS_SCRUB_TYPE_HEALTHY,	"healthy" }, \
--	{ XFS_SCRUB_TYPE_DIRTREE,	"dirtree" }
-+	{ XFS_SCRUB_TYPE_DIRTREE,	"dirtree" }, \
-+	{ XFS_SCRUB_TYPE_BARRIER,	"barrier" }
+ 		ASSERT(iscan->__inodes[idx] == NULL);
  
- #define XFS_SCRUB_FLAG_STRINGS \
- 	{ XFS_SCRUB_IFLAG_REPAIR,		"repair" }, \
-@@ -208,6 +210,81 @@ DEFINE_EVENT(xchk_fsgate_class, name, \
- DEFINE_SCRUB_FSHOOK_EVENT(xchk_fsgates_enable);
- DEFINE_SCRUB_FSHOOK_EVENT(xchk_fsgates_disable);
+-		error = xfs_iget(sc->mp, sc->tp, ino, XFS_IGET_NORETRY, 0,
++		error = xfs_iget(sc->mp, sc->tp, ino, ISCAN_IGET_FLAGS, 0,
+ 				&iscan->__inodes[idx]);
+ 		if (error)
+ 			break;
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 4e7e3edb6350..1da10182f7f4 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -60,6 +60,13 @@ static inline int xchk_maybe_relax(struct xchk_relax *widget)
+ #define XCHK_GFP_FLAGS	((__force gfp_t)(GFP_KERNEL | __GFP_NOWARN | \
+ 					 __GFP_RETRY_MAYFAIL))
  
-+DECLARE_EVENT_CLASS(xchk_vector_head_class,
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_vec_head *vhead),
-+	TP_ARGS(ip, vhead),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_ino_t, inum)
-+		__field(unsigned int, gen)
-+		__field(unsigned int, flags)
-+		__field(unsigned short, rest_us)
-+		__field(unsigned short, nr_vecs)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->agno = vhead->svh_agno;
-+		__entry->inum = vhead->svh_ino;
-+		__entry->gen = vhead->svh_gen;
-+		__entry->flags = vhead->svh_flags;
-+		__entry->rest_us = vhead->svh_rest_us;
-+		__entry->nr_vecs = vhead->svh_nr;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx agno 0x%x inum 0x%llx gen 0x%x flags 0x%x rest_us %u nr_vecs %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->agno,
-+		  __entry->inum,
-+		  __entry->gen,
-+		  __entry->flags,
-+		  __entry->rest_us,
-+		  __entry->nr_vecs)
-+)
-+#define DEFINE_SCRUBV_HEAD_EVENT(name) \
-+DEFINE_EVENT(xchk_vector_head_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_vec_head *vhead), \
-+	TP_ARGS(ip, vhead))
++/*
++ * For opening files by handle for fsck operations, we don't trust the inumber
++ * or the allocation state; therefore, perform an untrusted lookup.  We don't
++ * want these inodes to pollute the cache, so mark them for immediate removal.
++ */
++#define XCHK_IGET_FLAGS	(XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE)
 +
-+DEFINE_SCRUBV_HEAD_EVENT(xchk_scrubv_start);
-+
-+DECLARE_EVENT_CLASS(xchk_vector_class,
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_scrub_vec_head *vhead,
-+		 unsigned int vec_nr, struct xfs_scrub_vec *v),
-+	TP_ARGS(mp, vhead, vec_nr, v),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(unsigned int, vec_nr)
-+		__field(unsigned int, vec_type)
-+		__field(unsigned int, vec_flags)
-+		__field(int, vec_ret)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->vec_nr = vec_nr;
-+		__entry->vec_type = v->sv_type;
-+		__entry->vec_flags = v->sv_flags;
-+		__entry->vec_ret = v->sv_ret;
-+	),
-+	TP_printk("dev %d:%d vec[%u] type %s flags %s ret %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->vec_nr,
-+		  __print_symbolic(__entry->vec_type, XFS_SCRUB_TYPE_STRINGS),
-+		  __print_flags(__entry->vec_flags, "|", XFS_SCRUB_FLAG_STRINGS),
-+		  __entry->vec_ret)
-+)
-+#define DEFINE_SCRUBV_EVENT(name) \
-+DEFINE_EVENT(xchk_vector_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_scrub_vec_head *vhead, \
-+		 unsigned int vec_nr, struct xfs_scrub_vec *v), \
-+	TP_ARGS(mp, vhead, vec_nr, v))
-+
-+DEFINE_SCRUBV_EVENT(xchk_scrubv_barrier_fail);
-+DEFINE_SCRUBV_EVENT(xchk_scrubv_item);
-+DEFINE_SCRUBV_EVENT(xchk_scrubv_outcome);
-+
- TRACE_EVENT(xchk_op_error,
- 	TP_PROTO(struct xfs_scrub *sc, xfs_agnumber_t agno,
- 		 xfs_agblock_t bno, int error, void *ret_ip),
-diff --git a/fs/xfs/scrub/xfs_scrub.h b/fs/xfs/scrub/xfs_scrub.h
-index 02c930f175d0..f17173b83e6f 100644
---- a/fs/xfs/scrub/xfs_scrub.h
-+++ b/fs/xfs/scrub/xfs_scrub.h
-@@ -8,8 +8,10 @@
- 
- #ifndef CONFIG_XFS_ONLINE_SCRUB
- # define xfs_ioc_scrub_metadata(f, a)	(-ENOTTY)
-+# define xfs_ioc_scrubv_metadata(f, a)	(-ENOTTY)
- #else
- int xfs_ioc_scrub_metadata(struct file *file, void __user *arg);
-+int xfs_ioc_scrubv_metadata(struct file *file, void __user *arg);
- #endif /* CONFIG_XFS_ONLINE_SCRUB */
- 
- #endif	/* __XFS_SCRUB_H__ */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 857b19428984..f0117188f302 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1413,6 +1413,8 @@ xfs_file_ioctl(
- 	case FS_IOC_GETFSMAP:
- 		return xfs_ioc_getfsmap(ip, arg);
- 
-+	case XFS_IOC_SCRUBV_METADATA:
-+		return xfs_ioc_scrubv_metadata(filp, arg);
- 	case XFS_IOC_SCRUB_METADATA:
- 		return xfs_ioc_scrub_metadata(filp, arg);
- 
+ /* Type info and names for the scrub types. */
+ enum xchk_type {
+ 	ST_NONE = 1,	/* disabled */
 
