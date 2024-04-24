@@ -1,88 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F302B156C68;
-	Wed, 24 Apr 2024 12:49:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB85115B15C;
+	Wed, 24 Apr 2024 14:58:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713962956; cv=none; b=LhYZQwHq0WvvMY25Vfy26+GS5HDfG6WEYGV/01akssRzY2lSrM7h/rIIA/thPkMD9LvEAM6a5nshzEAN0PKHH+IrZWJYi/8T5xeDHOfWolJfQTWJmTseYwYf/+pgX5fCO2mvgjEmitxWcztWDgI+fHw3ufiACVw7cmTEz/66bGQ=
+	t=1713970700; cv=none; b=jG9ASXYWyRXs9JQw4R1fvE7XZnAZ3pklXaAHKvA0rLzYBNECNgiK/awWXs1Kjs3Yc/pvI/RVczCyteCLe+LN08aiqZ/grKvzJTWqH2ORkB/wElHOrIH9MXjl7xKWv4EfY4Tu6yJ4T0mvt4Q72gUxCkCCK+P2ONwnhGPwkuPN0Cc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713962956; c=relaxed/simple;
-	bh=Pe/8rKv+51DI3a+CqP2y5vGWwqMpYTxCESRC+dNeud0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IS/gYiQTehZvFiffLX1Ss/jPlXxqjC+8CyYDNkh5Dnehg0yS1PY/3kl345EdHFz/e/TGlHzrzEgY3NY+hu3EQINayCFZ4lqQmovlMG6YOdH5lIeRZP0VyYcsav9rZlIMod2QFtdLgyYcTkMw/B/wF3bA3r9Sc5T8QVQTv53L9eo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QVfQh2Kf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713970700; c=relaxed/simple;
+	bh=YV+9GI/ieu7Q3hqRSONAS5/3IIe3dHs8IVjcw8TKwBc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mSSXNZ1sk+za1ReKByLlo07mPY4Qjmv18vosOb8lYhL2AVw5TQGF+DaJHZf9FJU8/eOP5QveYNssnnXDFYChozYDN9xVjMsNgtPpcgnWSh2WJyeECPazpzaj/sahrrVi1Jav7ivw/+HPzIXhBvnaX6GthHZsLqrjf5xqci/tJes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wdgwd8d0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QVfQh2Kf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02837C113CE;
-	Wed, 24 Apr 2024 12:49:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wdgwd8d0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3214C113CE;
+	Wed, 24 Apr 2024 14:58:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713962955;
-	bh=Pe/8rKv+51DI3a+CqP2y5vGWwqMpYTxCESRC+dNeud0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=QVfQh2KfvE8HUdB+INEHukSpOt9vFPJxwWKhk4KU2wYbdRi8whAsTxEWBvgr7hVuk
-	 q9uuP0FXGjlQgM/7S8UbYNy1aBO7YiDjzN5amjAT1+nFDCcjrmZ+/4FftCZbiTgDLR
-	 PPQj+sWirUje66HIN6F+YizQLjVjL+HK/roCyB2bPJW+N/gxw43rvUo3S2yupQUJVI
-	 u/qEXznTu22G1EOUcS5dbyxeZH/5CbEgrLJZd92/GcfO+wI5/Rl002kNeTNhai3Kb5
-	 jngpWh4Y+Ui0RgtJ4tSpEO2A4I3MyHPzvZqT/hJ901fHPH/9fGu8LvetHpPUhNoQLG
-	 6+dOxDrRD+3yA==
-From: Christian Brauner <brauner@kernel.org>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: xfs fixups for the fop_flags conversion
-Date: Wed, 24 Apr 2024 14:49:06 +0200
-Message-ID: <20240424-parameter-bekam-55dfd6f34ce6@brauner>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240423124608.537794-1-hch@lst.de>
-References: <20240423124608.537794-1-hch@lst.de>
+	s=k20201202; t=1713970699;
+	bh=YV+9GI/ieu7Q3hqRSONAS5/3IIe3dHs8IVjcw8TKwBc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Wdgwd8d0kmNgYEApT8v50fyk3qNQMS1LTPg63DLd9uuVSkfsheX89fQ0ITmQy5Rhd
+	 /VX1rWa/J8C8HdEkfQt2VVThwf95QTbuhQ49yiDSHy8cIXXVyhRj/+fJz93dj00SiG
+	 L6BVgXOBLUssKTBm8eeqCppaDd7NI1dzmG9aQ/nTUWr3zwbpge/pEqHqi6VT7/M/Yi
+	 KUBLZjNAzGQ10icxp9pD9/Y/69bED8Wvco8JG5IpOYqM4NvwiKmm3P/pXBBZ0kXv+M
+	 ZpMZHSwVR6kcZH8/7+j7pki7/YhfXdjqENLo2xD1+IWKmBI9PUjLmSmYio0P0ducT+
+	 zPwpbf26hntHA==
+Date: Wed, 24 Apr 2024 07:58:19 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, dchinner@redhat.com, hch@lst.de,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 6a94b1acda7e
+Message-ID: <20240424145819.GF360919@frogsfrogsfrogs>
+References: <87bk60z8lm.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <Zig6A632L9PDK6Qp@dread.disaster.area>
+ <87wmonib6s.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1455; i=brauner@kernel.org; h=from:subject:message-id; bh=Pe/8rKv+51DI3a+CqP2y5vGWwqMpYTxCESRC+dNeud0=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaRp/D/MuSw0Is9A6fJ+NhGOV4tOGEtvt/32zdwgyeAAT 2U079zOjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIlU/GX4p/GpYLXaF14WueAJ gelNcrHFT99O/7401Lv2xNZZGZs3/GBkaD06JVHF4o9iR/PrM9xrz+0UDdXPKclsEO2WNLn95J4 4FwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87wmonib6s.fsf@debian-BULLSEYE-live-builder-AMD64>
 
-On Tue, 23 Apr 2024 14:46:05 +0200, Christoph Hellwig wrote:
-> this series against Christian's vfs.misc branch fixes up pointless
-> harmless but pointless over-declaration of capabilities for XFS
-> directories.
+On Wed, Apr 24, 2024 at 10:49:29AM +0530, Chandan Babu R wrote:
+> On Wed, Apr 24, 2024 at 08:45:23 AM +1000, Dave Chinner wrote:
+> > On Tue, Apr 23, 2024 at 03:46:24PM +0530, Chandan Babu R wrote:
+> >> Hi folks,
+> >> 
+> >> The for-next branch of the xfs-linux repository at:
+> >> 
+> >> 	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> >> 
+> >> has just been updated.
+> >> 
+> >> Patches often get missed, so please check if your outstanding patches
+> >> were in this update. If they have not been in this update, please
+> >> resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+> >> the next update.
+> >> 
+> >> The new head of the for-next branch is commit:
+> >> 
+> >> 6a94b1acda7e xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
+> >
+> > I've just noticed a regression in for-next - it was there prior to
+> > this update, but I hadn't run a 1kB block size fstests run in a
+> > while so I've only just noticed it. It is 100% reproducable, and may
+> > well be a problem with the partial filter matches in the test rather
+> > than a kernel bug...
+> >
+> > SECTION       -- xfs_1k
+> > FSTYP         -- xfs (debug)
+> > PLATFORM      -- Linux/x86_64 test1 6.9.0-rc5-dgc+ #219 SMP PREEMPT_DYNAMIC Wed Apr 24 08:30:50 AEST 2024
+> > MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/vdb
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb /mnt/scratch
+> >
+> > xfs/348 19s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad)
+> >     --- tests/xfs/348.out       2022-12-21 15:53:25.579041081 +1100
+> >     +++ /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad     2024-04-24 08:34:43.718525603 +1000
+> >     @@ -2,7 +2,7 @@
+> >      ===== Find inode by file type:
+> >      dt=1 => FIFO_INO
+> >      dt=2 => CHRDEV_INO
+> >     -dt=4 => DIR_INO
+> >     +dt=4 => PARENT_INO108928
+> >      dt=6 => BLKDEV_INO
+> >      dt=10 => DATA_INO
+> >     ...
+> >     (Run 'diff -u /home/dave/src/xfstests-dev/tests/xfs/348.out /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad'  to see the entire diff)
+> > Failures: xfs/348
+> > Failed 1 of 1 tests
+> >
+> > xfsprogs version installed on this test VM is:
+> >
+> > $ xfs_repair -V
+> > xfs_repair version 6.4.0
+> > $
 > 
-> Christian: the first patch would make sense to just fold into the
-> original fop_flags conversion if you're still rebasing the branch.
+> That is weird. I am unable to recreate this bug on my cloud instance. I am
+> using fstests version v2024.04.14 and Xfsprogs version 6.7.0.
 > 
-> [...]
+> # ./check xfs/348
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 fstest 6.9.0-rc4-00122-g6a94b1acda7e #13 SMP PREEMPT_DYNAMIC Wed Apr 24 09:48:36 IST 2024
+> MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/loop1
+> MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
+> 
+> xfs/348 7s ...  8s
+> Ran: xfs/348
+> Passed all 1 tests
 
-Thanks for the fixes! I didn't fold because it would rebase a lot of
-other stuff which I'd like to avoid. :/
+Same here -- I checked all of yesterday's runs and none of them tripped
+over that.  sed \b perhaps?
 
----
+--D
 
-Applied to the vfs.misc branch of the vfs/vfs.git tree.
-Patches in the vfs.misc branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.misc
-
-[1/3] xfs: fix overly long line in the file_operations
-      https://git.kernel.org/vfs/vfs/c/19e048641bc6
-[2/3] xfs: drop fop_flags for directories
-      https://git.kernel.org/vfs/vfs/c/f50805713a6e
-[3/3] xfs: don't call xfs_file_open from xfs_dir_open
-      https://git.kernel.org/vfs/vfs/c/652efdeca5b1
+> -- 
+> Chandan
+> 
