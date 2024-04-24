@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38EA58627C
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:29:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E134E129A9C
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:29:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713929342; cv=none; b=Ce9IBMyWWZ/zbHyh9ThOkPuZEfUSJrmF+Id4C5ftW5E+z7k1Fch7S+hTPPHA6SuCCHy+htUdzA5W5v/Ld0B1p3pHYZXaU6dFBLC3qBBlI9xet44EVyFVUtZBfVx9fPLvygt11nyR0yqMRK72obYxccmIM1d1o2+hsIHwH14wJSc=
+	t=1713929358; cv=none; b=NIuhJ9KjwLy5p/+vqnjSoqC8mUfOHPHGEjmEKjl5d92RshzxIiXSO5+0LSNnHIOqowpI/sF/Tz3jsgtQEkDGoWRhiOuLzzQHXoaiDzcJH1YzoTizlsrJxmuShmNEyG/JHJfOoVNM6FR0cRTeqlJjyhNwGYQxw9IKYtk4MKqHR0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713929342; c=relaxed/simple;
-	bh=1x5byBxVJZGN5MD6kQ4uxUodGp28ChuVsfLW5VnFE78=;
+	s=arc-20240116; t=1713929358; c=relaxed/simple;
+	bh=5Ymv9HE+1oTIIWmqPa1cizDlxl+EvUwHX4ovKSYDi7A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B4TaJup505wDT92+Lpy3aiH7M8aUNCSUarzsH1OCdEa++x+Vfir3bXLCCUF5IaLH0T53mFhioBVDEH7OU56G6KTyqVmIlWCuyAXiaqEyD0nsjzFuhMcKzxESd9RFQrWnsCWzM+H6uGo1Vmfg0yqHCr+ChDhwsI0JRY07l28n4ZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GeLNr7R3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QFi/V71hhNRKkdeetUAD8i5utDcx8w5qmNdw2mnQ2QZ7YhFenAdE0dvilytWDMUe76aLdRahJl/NK3JH0FEgdMO6qjPdnX+SoZXAlt9nnKZUlQHDsCdbq4J3iSfHS5Ku3dBNa1nsb5W5IgnFzu3RgIHDSawADU5V9TlcxwGueLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cVv5X5SW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GeLNr7R3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15CE4C116B1;
-	Wed, 24 Apr 2024 03:29:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cVv5X5SW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAEE9C116B1;
+	Wed, 24 Apr 2024 03:29:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713929342;
-	bh=1x5byBxVJZGN5MD6kQ4uxUodGp28ChuVsfLW5VnFE78=;
+	s=k20201202; t=1713929357;
+	bh=5Ymv9HE+1oTIIWmqPa1cizDlxl+EvUwHX4ovKSYDi7A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GeLNr7R3auxbd4wJwVqtlJW8BuWsTmMbXT3HWtX1aEWmc224dKM2eqBa4N9IZa/Ik
-	 tVo/J18qYNs3cgP0YkQQKu56c+vL6VR+dNnPV5z9Tne7v5IjybdzQ6zMML1wSt8WKg
-	 Ox1yM4hYINRTkIklidQ7jHwzsTfYp3Rf1AcYhmvaNYQgi3kc7EJKbuOKkkaVDW5kxy
-	 5A1LxBUDJzfDsmL/PRecrFp/WWnXP3R2lAulWgtAr8Cfmv1gFQcA7CM+2aWdxntB2X
-	 IVl9wOnAJbwx/t9mwofnnPtcj/akncWuAqUE0XJP+C3gpbd1hk6pQbn2fxU1LKyYqj
-	 2moDeDx6F2o7g==
-Date: Tue, 23 Apr 2024 20:29:01 -0700
-Subject: [PATCH 1/4] xfs: drop the scrub file's iolock when transaction
- allocation fails
+	b=cVv5X5SWrY86sZM6ZUDhDyjUrBws05bKTo8tQJ/jXj6sFzGzmlDLD9UbhbBKDfAdT
+	 /4qQv85rD62RITfsxGuL3RgzpMiny5mrvxUXjelXNKJPmEZ8Ja/jwLED4EKsdR6b5d
+	 JwhUml5mAYQFFwkgfxSKWV3vJHmrV5XWr+uzQZgadTDahAL3zYn0Fzha/F9n2O8mji
+	 a8xeJFlpuy4Ukl29Mn6KmkWFAxV1ct9dQrBGxUYhGa+rYlL2uk/a9lDnfdMCuXwv/E
+	 aF292SvZF4YGHCkQG2dd3QxSeIokow2wdtjOLUGRq7474o0ukrRw/hxVT9xDRKSA54
+	 8lkBP6yDdr5vw==
+Date: Tue, 23 Apr 2024 20:29:17 -0700
+Subject: [PATCH 2/4] xfs: fix iunlock calls in xrep_adoption_trans_alloc
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392786413.1907482.6190323348839350573.stgit@frogsfrogsfrogs>
+Message-ID: <171392786430.1907482.10478321489362698566.stgit@frogsfrogsfrogs>
 In-Reply-To: <171392786386.1907482.12122730497500276549.stgit@frogsfrogsfrogs>
 References: <171392786386.1907482.12122730497500276549.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,33 +46,31 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the transaction allocation in the !orphanage_available case of
-xrep_nlinks_repair_inode fails, we need to drop the IOLOCK of the file
-being scrubbed before exiting.
+If the transaction allocation in xrep_adoption_trans_alloc fails, we
+should drop only the locks that we took.  In this case this is
+ILOCK_EXCL of both the orphanage and the file being repaired.  Dropping
+any IOLOCK here is incorrect.
 
 Found by fuzzing u3.sfdir3.list[1].name = zeroes in xfs/1546.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/nlinks_repair.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/orphanage.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/nlinks_repair.c b/fs/xfs/scrub/nlinks_repair.c
-index 78d0f650fe89..b3e707f47b7b 100644
---- a/fs/xfs/scrub/nlinks_repair.c
-+++ b/fs/xfs/scrub/nlinks_repair.c
-@@ -138,8 +138,10 @@ xrep_nlinks_repair_inode(
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index b1c6c60ee1da..2b142e6de8f3 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -382,7 +382,7 @@ xrep_adoption_trans_alloc(
+ out_cancel:
+ 	xchk_trans_cancel(sc);
+ 	xrep_orphanage_iunlock(sc, XFS_ILOCK_EXCL);
+-	xrep_orphanage_iunlock(sc, XFS_IOLOCK_EXCL);
++	xchk_iunlock(sc, XFS_ILOCK_EXCL);
+ 	return error;
+ }
  
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_link, 0, 0, 0,
- 				&sc->tp);
--		if (error)
-+		if (error) {
-+			xchk_iunlock(sc, XFS_IOLOCK_EXCL);
- 			return error;
-+		}
- 
- 		xchk_ilock(sc, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(sc->tp, ip, 0);
 
