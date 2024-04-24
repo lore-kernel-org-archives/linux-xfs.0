@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75822BE4D
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:09:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 123F4BE4D
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:09:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713928183; cv=none; b=JYZRg44Ku54gLJ1hw9bIkIvB1yvOq5eeifQYYINqpf/2aeCGMrplkFT32qgom1iNZrsOrbbdztk/QXhOgEAHQMJARNWLnZ+GXmgKDglZoHN2dGK7+dyGMf/GYuTvNsgOCHOO/TPDC7DzxxbS4FDlKKmZaFIgi3z4Saes1le/ADY=
+	t=1713928199; cv=none; b=GFpHORwwgUvAAzNtKsfbuhqtoSk2EuND9UtVXq5ARD9j0djwb6kBKzz6ea/w0zo25VVOfJF2lEdnm/fN7Gv+X98556zV8lbQC8gX8jNBetlbzCvPZwMEICl7IqNuiHk5NhjgboTqu3NIYtT4WzFkoFPyLIy+sNLVk3KmokW5hm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713928183; c=relaxed/simple;
-	bh=yCSw1XKoz4YampMrk/L/blUWodrLnoK+22p9hXpSIjw=;
+	s=arc-20240116; t=1713928199; c=relaxed/simple;
+	bh=HEyCRW7J3P9E8BOO6r8u/bcnKFnS04bARQTL/ZI0VYQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gB5C5o5kT3YVs9AjgUSnoUSi0uumljHgzDVv12gVebwB8CH+QXFjDC1tWw/ChpHQUKuS19vXuqagfVbDjk8jUxFFXiKQwt9qr2t5Gq9QFu6xQ7y3DWJbCNfkjIK50rgRARNOl+bCfb8BkSI065uTF0nBACdZSBxidZPzkpyrufI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAJe7wbx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=EoEX8lusbm7ci5GOJQ0TNQxvlpFGg4keQ0QhjKJUXoIjM/bjYRctNr/9fOfGS94gNgaUoyNsUKyC11es7Fnh2X6GUiK4VIZxS5X/avhbT/9+o4Z/yHWv2nAqBu8AjIkdOpxfjTgEJXFn7iZURPluwIQR2GLPJIrkixxUZuWvgT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PjL4IPKi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAJe7wbx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BA7CC116B1;
-	Wed, 24 Apr 2024 03:09:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PjL4IPKi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E306EC2BD10;
+	Wed, 24 Apr 2024 03:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713928183;
-	bh=yCSw1XKoz4YampMrk/L/blUWodrLnoK+22p9hXpSIjw=;
+	s=k20201202; t=1713928198;
+	bh=HEyCRW7J3P9E8BOO6r8u/bcnKFnS04bARQTL/ZI0VYQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TAJe7wbxMgtTv7RwMZs2j3stWOjYE0XQ1LghOkmcuNpqmQ8iw7q6YbWiTBmU41VX0
-	 zAebkdUBnmCOz9ONu6Xm2d2xbodSSIGBZ6+jm0VcI/uJWsyEHi+Mcy00Agw/hCSzbd
-	 ihXhmFbl5i4YeEWPGztwCfJJ+aA2WOxo3hnA2EONUyl6XE5O95KBmVmNerb3x51e/k
-	 TFFuOyCukSK9XaAQ9+xysWVHKPCDslEnurGHaE6xv8Ca62tu/vMp0RNmsANVcmhUAi
-	 NAFoVob7Cpx85j+VBQ1arEntFMwq2GT7kJyDhUJI5l0yjne0TXYK4PhWdDj6FhZdM7
-	 f9LwcobR0t0tA==
-Date: Tue, 23 Apr 2024 20:09:42 -0700
-Subject: [PATCH 03/14] xfs: use an XFS_OPSTATE_ flag for detecting if logged
- xattrs are available
+	b=PjL4IPKi1kT+3YW4U6FJ1ERH4Nk3wZBfvZ/yaciNryH3Nq/vjXzlaMY4f8CgVGBSV
+	 2edArSonhzeprDxHtId23XlbJKN4JROR4F27UFleKkldNAsXGxXMT9Ojsu4i0tPyBL
+	 72Jkfxz2UoCIbYoGhzuywVK7EwYTOoEkOrn6CqEsZNTshgI0OQH0TElRNaKbBk6RxM
+	 DqWyFj9YUTCWmzUyiNDAlKqyiEnG0GJ8m0Jsfn8BqF9hXBFEw0XDb/cCsjfbGgvn1U
+	 ZFpdH8T6mN210Nq6o9Lj183Sb3KJ9/CEw2tJEbRY+ozKdI2Yv31HYwUf15Kb5eWvqg
+	 tPeDGC9xndOyw==
+Date: Tue, 23 Apr 2024 20:09:58 -0700
+Subject: [PATCH 04/14] xfs: check opcode and iovec count match in
+ xlog_recover_attri_commit_pass2
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392782623.1904599.14923341489093242321.stgit@frogsfrogsfrogs>
+Message-ID: <171392782640.1904599.15360184000286406971.stgit@frogsfrogsfrogs>
 In-Reply-To: <171392782539.1904599.4346314665349138617.stgit@frogsfrogsfrogs>
 References: <171392782539.1904599.4346314665349138617.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -47,116 +47,59 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Per reviewer request, use an OPSTATE flag (+ helpers) to decide if
-logged xattrs are enabled, instead of querying the xfs_sb.
+Check that the number of recovered log iovecs is what is expected for
+the xattri opcode is expecting.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_attr_item.c |    2 +-
- fs/xfs/xfs_mount.c     |   16 ++++++++++++++++
- fs/xfs/xfs_mount.h     |    6 +++++-
- fs/xfs/xfs_xattr.c     |    3 ++-
- 4 files changed, 24 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_attr_item.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
 
 diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index dfe7039dac98..e5e7ddbc594b 100644
+index e5e7ddbc594b..d3559e6b24b7 100644
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -469,7 +469,7 @@ xfs_attri_validate(
- 	unsigned int			op = attrp->alfi_op_flags &
- 					     XFS_ATTRI_OP_FLAGS_TYPE_MASK;
+@@ -737,6 +737,7 @@ xlog_recover_attri_commit_pass2(
+ 	const void			*attr_value = NULL;
+ 	const void			*attr_name;
+ 	size_t				len;
++	unsigned int			op;
  
--	if (!xfs_sb_version_haslogxattrs(&mp->m_sb))
-+	if (!xfs_is_using_logged_xattrs(mp))
- 		return false;
- 
- 	if (attrp->__pad != 0)
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b2e5653b5200..09eef1721ef4 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -231,6 +231,13 @@ xfs_readsb(
- 	mp->m_features |= xfs_sb_version_to_features(sbp);
- 	xfs_reinit_percpu_counters(mp);
- 
-+	/*
-+	 * If logged xattrs are enabled after log recovery finishes, then set
-+	 * the opstate so that log recovery will work properly.
-+	 */
-+	if (xfs_sb_version_haslogxattrs(&mp->m_sb))
-+		xfs_set_using_logged_xattrs(mp);
-+
- 	/* no need to be quiet anymore, so reset the buf ops */
- 	bp->b_ops = &xfs_sb_buf_ops;
- 
-@@ -829,6 +836,15 @@ xfs_mountfs(
- 		goto out_inodegc_shrinker;
+ 	attri_formatp = item->ri_buf[0].i_addr;
+ 	attr_name = item->ri_buf[1].i_addr;
+@@ -755,6 +756,32 @@ xlog_recover_attri_commit_pass2(
+ 		return -EFSCORRUPTED;
  	}
  
-+	/*
-+	 * If logged xattrs are still enabled after log recovery finishes, then
-+	 * they'll be available until unmount.  Otherwise, turn them off.
-+	 */
-+	if (xfs_sb_version_haslogxattrs(&mp->m_sb))
-+		xfs_set_using_logged_xattrs(mp);
-+	else
-+		xfs_clear_using_logged_xattrs(mp);
++	/* Check the number of log iovecs makes sense for the op code. */
++	op = attri_formatp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++	switch (op) {
++	case XFS_ATTRI_OP_FLAGS_SET:
++	case XFS_ATTRI_OP_FLAGS_REPLACE:
++		/* Log item, attr name, attr value */
++		if (item->ri_total != 3) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					     attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++		break;
++	case XFS_ATTRI_OP_FLAGS_REMOVE:
++		/* Log item, attr name */
++		if (item->ri_total != 2) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					     attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++		break;
++	default:
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++				     attri_formatp, len);
++		return -EFSCORRUPTED;
++	}
 +
- 	/* Enable background inode inactivation workers. */
- 	xfs_inodegc_start(mp);
- 	xfs_blockgc_start(mp);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index ca6f105990a2..d0567dfbc036 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -444,6 +444,8 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
- #define XFS_OPSTATE_QUOTACHECK_RUNNING	10
- /* Do we want to clear log incompat flags? */
- #define XFS_OPSTATE_UNSET_LOG_INCOMPAT	11
-+/* Filesystem can use logged extended attributes */
-+#define XFS_OPSTATE_USE_LARP		12
- 
- #define __XFS_IS_OPSTATE(name, NAME) \
- static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
-@@ -472,6 +474,7 @@ __XFS_IS_OPSTATE(quotacheck_running, QUOTACHECK_RUNNING)
- # define xfs_is_quotacheck_running(mp)	(false)
- #endif
- __XFS_IS_OPSTATE(done_with_log_incompat, UNSET_LOG_INCOMPAT)
-+__XFS_IS_OPSTATE(using_logged_xattrs, USE_LARP)
- 
- static inline bool
- xfs_should_warn(struct xfs_mount *mp, long nr)
-@@ -491,7 +494,8 @@ xfs_should_warn(struct xfs_mount *mp, long nr)
- 	{ (1UL << XFS_OPSTATE_WARNED_SHRINK),		"wshrink" }, \
- 	{ (1UL << XFS_OPSTATE_WARNED_LARP),		"wlarp" }, \
- 	{ (1UL << XFS_OPSTATE_QUOTACHECK_RUNNING),	"quotacheck" }, \
--	{ (1UL << XFS_OPSTATE_UNSET_LOG_INCOMPAT),	"unset_log_incompat" }
-+	{ (1UL << XFS_OPSTATE_UNSET_LOG_INCOMPAT),	"unset_log_incompat" }, \
-+	{ (1UL << XFS_OPSTATE_USE_LARP),		"logged_xattrs" }
- 
- /*
-  * Max and min values for mount-option defined I/O
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 0cbb93cf2869..ba56a9e73144 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -31,7 +31,7 @@ xfs_attr_grab_log_assist(
- 	int			error = 0;
- 
- 	/* xattr update log intent items are already enabled */
--	if (xfs_sb_version_haslogxattrs(&mp->m_sb))
-+	if (xfs_is_using_logged_xattrs(mp))
- 		return 0;
- 
- 	/*
-@@ -48,6 +48,7 @@ xfs_attr_grab_log_assist(
- 			XFS_SB_FEAT_INCOMPAT_LOG_XATTRS);
- 	if (error)
- 		return error;
-+	xfs_set_using_logged_xattrs(mp);
- 
- 	xfs_warn_mount(mp, XFS_OPSTATE_WARNED_LARP,
-  "EXPERIMENTAL logged extended attributes feature in use. Use at your own risk!");
+ 	/* Validate the attr name */
+ 	if (item->ri_buf[1].i_len !=
+ 			xlog_calc_iovec_len(attri_formatp->alfi_name_len)) {
 
