@@ -1,37 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09D7E8627C
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:30:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3705F126F09;
+	Wed, 24 Apr 2024 03:33:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713929419; cv=none; b=l+dAObtEywGNc1EVwJxEKs8CH2IvL8SWEC3DBd+aHAWqvnLEr8oW7m2PJIhcmQSj10zp1+7uh3QXDuDRuKj7buLmahvXsp/jWzsAIqb+zqqoQryI9sJKM7PT0GOTW4CiG3dguFO8q1O6pkf5MazEir4bgtv9f+gMTiRP+LPx+/E=
+	t=1713929585; cv=none; b=Xm+P9wP3dLIc0je8FtD0rT6i/F/J0j9qXKhm4wIz0l4WAb16pHLSH8f07gKXJLXeSZnOp/IfdxYijnOs/hn8ZpZ4UhSoMz/2WTmZpxd7O7ganwmj2gQD9MVk44JTpVJNAiefPotXbG/UelGmBAuLyAag06fvNwulCQu5DFLfv60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713929419; c=relaxed/simple;
-	bh=PY7DtCjyIhpciZtxjVaVHcklsc0ClFm192bKDYbTE8I=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=TLcbFbvmk1X9ToqcZ6OkMhuA//IoeKSCFn9XMAOoYZFJV3Tuk9phnjCxBgklBCFSxY4OV/XYdrbyNEkmI9Nmb9huTDqbs5zkYV9mbmizcSiVt6aWg4hJyUj9O+MDy5uYp/W9u7/07Fcvpda3BkS07/Q0TpM8BBv7bGyhA3aD3C8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FV/Tb7qM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713929585; c=relaxed/simple;
+	bh=KZ4Wx3vojtmu1T5yBHKPKnazen3vB69ch9sDcexlvV0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pI6hAougtFXyQvpDGvN/kQ+9ECSKuzVA+7QPgtKXEvbjwPw5Kin0Lh8ccLWgZFVFj7gf3xby+UpWOJZDIOgLlntoDd+qAzcdc1M8o4Rq04VTKvhl2UYF1URtHbVBVW4MndfscRFh+ZcPSPacqK1O9HLf8PuLVrtjYOsslm5CGxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ScufGjgy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FV/Tb7qM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3AAEC116B1;
-	Wed, 24 Apr 2024 03:30:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ScufGjgy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F273C116B1;
+	Wed, 24 Apr 2024 03:33:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713929418;
-	bh=PY7DtCjyIhpciZtxjVaVHcklsc0ClFm192bKDYbTE8I=;
-	h=Date:From:To:Cc:Subject:From;
-	b=FV/Tb7qMpQEwGCi4xFbs4zbV+zA8Kvz4z0UdKj6Ue8S84jjHO90cOoOiEDj9NBX/8
-	 72LTodWkWNFm/sYAutc+3rj0lagxrJlTzgZYeki8ElAsUAt+lenagR4UGmOIrsxqyp
-	 VlLAQvuiJODxfU8Ofzk+wA83lcNZLbGu6t98lnKTNPyIoKfL6SlgUCNEJwNeoaBRMu
-	 sZQyNIjCVW5xHCklTeB/iOdKrKa1hSmBqS6YISr5ZqndWMM3/M/2ivw2ySRQj0GW1X
-	 xQrIA9no20UlWgerlENsMDnKVzKn/UBwbaeS3en7Eo2LYZ5MeK0z+mvbRfq+RS2xVK
-	 fYh1wx96VR4ZQ==
-Date: Tue, 23 Apr 2024 20:30:18 -0700
+	s=k20201202; t=1713929584;
+	bh=KZ4Wx3vojtmu1T5yBHKPKnazen3vB69ch9sDcexlvV0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ScufGjgyMUpjq8Nav6ywOaQ/8Qn2TtYdQQD1VtIiKz9pOUM9mUQSKl4HnVLXlwlEr
+	 kXxoKsf9FUxsaFaIOWOAcUfbxJ3F9WTzeNZirGV/CpmBEFSDDFacxCUNuS8ODQcnds
+	 BlC1SV/S7rajOOc9jbj+U3jFzBhrDIKLWRCliuqtoV2QofhPdAfjlM5n97mG4hHLU0
+	 wSadH0cRAgfSKNXd+3Era1PHXChzo/cCrsxdth245pUMNos3MLLz6GN4J2k1NyRUpm
+	 I2d/TFQjrEZ3Y4IqIYgzwfxUw0hXl2Tru4OP5cXPAmfuzcfxjN4nRhzwYQJITJ9Dqx
+	 GuGwoebqxLuXw==
+Date: Tue, 23 Apr 2024 20:33:04 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Subject: [GIT PULLBOMB v13.4] xfs: directory parent pointers
-Message-ID: <20240424033018.GB360940@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <christian@brauner.io>,
+	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: xfs fixups for the fop_flags conversion
+Message-ID: <20240424033304.GC360940@frogsfrogsfrogs>
+References: <20240423124608.537794-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,14 +43,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240423124608.537794-1-hch@lst.de>
 
-Hi Chandan,
+On Tue, Apr 23, 2024 at 02:46:05PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series against Christian's vfs.misc branch fixes up pointless
+> harmless but pointless over-declaration of capabilities for XFS
+> directories.
+> 
+> Christian: the first patch would make sense to just fold into the
+> original fop_flags conversion if you're still rebasing the branch.
 
-Christoph and I have finished reviewing parent pointers and think it's
-ready to be merged, so please accept these pull requests against today's
-for-next branch.
-
-For anyone following along at home, the xfsprogs patches are here:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=vectorized-scrub-6.10_2024-04-23
+All three patches look good to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
+
+> 
+>  xfs_file.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
