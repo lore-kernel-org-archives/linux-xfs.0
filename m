@@ -1,109 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E58BE4D
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:06:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FEB6339A1;
+	Wed, 24 Apr 2024 03:06:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713928011; cv=none; b=VKpadGUIjI1lE55GkZ7gcfDUQ5mZU7stOd/0wHf+46zI8W1PEC0mFAxgWbqRbbynOSApXFsvBi1JujYHUG+FKdTzUKTLoNi/kW7iOv77ndS0+dTsjZO/M4qFttcaUUUGtYkx2qtZsGc27J7m0+qLiDGuYChCONdC1QRSq7UWaAw=
+	t=1713928017; cv=none; b=sqFoxDToICWEETc1pk8/HpyDCrmN+IJvTdS6a2uwsrOzctv+Osbmkl9C/IwoTdRripE49B1NDitUZsRnY8rGoeFtH+2xUixBGusoNL5uBF0sEg038++NmPLOuaR1LpTVaQktrcKH3yK3OYpZBLH7de1r8+1dD0L2cSrI4HVkGn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713928011; c=relaxed/simple;
-	bh=MHxvgKRXpYqr545jbw2HKhRWL6s8b4HTAeKyH2+WcA0=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d1FEHnzDL+wnwVej1oCPvDZ8SXe+r7qLoNE2wMwCV7AHboTdhANTuH9cNYtou5h2ycKFfsuf7m2younjqGXW86+2yxlWuf02EsyzJJwlDYwaKnxtcapPywKryz1OI1OuHltMpog2qiiN8usP2aDqdU0SK8wZyrQvYib1xPtQv9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BbmL+yZX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713928017; c=relaxed/simple;
+	bh=HAm8npkjU9W9knreApov7ysuQwghSu0sfaePTT/qFdM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MYm87SehUo5Jpxw3rGYAlhy+qBn4EDy/GSPaMcYefbaYUZJB05Hq5V4QbfkSdm8RVcgMHinfNkd3MnnB49apRwi9O+tmU+gBMh1N6P1muOiEvR2gz7Wl043VTPjYeCtFmv/qslGwtCmPjdoWAZJsU9ca7Aa7d8TOrYCi4cDfWW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LYfXxw3p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BbmL+yZX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18672C116B1;
-	Wed, 24 Apr 2024 03:06:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LYfXxw3p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AED8C116B1;
+	Wed, 24 Apr 2024 03:06:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713928011;
-	bh=MHxvgKRXpYqr545jbw2HKhRWL6s8b4HTAeKyH2+WcA0=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BbmL+yZX8dv4o7uI+qYkkhSSErkQy9Dz+7LNDgL+YiA0PZhWIBcZzFsYL0ocUCDIb
-	 IbdPBFvSdNQUNScipkKqBbDFrOkBq5Ilnl2LUirL5ysRZHJ+FiNvJkANwB7r/8IIua
-	 eR6qti6nWNutwfqv46FECrPgh3zQO+wxc08M7A/FDrAVjpaHIE4VWDnAQtoygsfNty
-	 K7ssa52NX44nzqPI3a3jh+0uCXCxDmfQ2eR1gx9ku7s/QOfnPLZzrt3XxGewuKAMo3
-	 rgu6FZ39hSlE3xbV7tn6NG3WKfvcnAP1W8lsmTJuHDgmRHkSew5ELFr+kz0TCKeb58
-	 bUdo6kqs4TbEA==
-Date: Tue, 23 Apr 2024 20:06:50 -0700
-Subject: [PATCHSET v13.4 6/9] xfs: detect and correct directory tree problems
+	s=k20201202; t=1713928016;
+	bh=HAm8npkjU9W9knreApov7ysuQwghSu0sfaePTT/qFdM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LYfXxw3p4wmKieHARFTBzsmHd7aZLi/XmBIFSyRdmgBtB9/1KsRNKMXYtkwmWDczJ
+	 WgXdVF7y7GPi8iK+q/qIdEP5v8Gsak1sml73TpWMoXjdbKrHU6RntqsOVbS9/Nzu80
+	 2VjASi+6BRpmo1iKP/fL4A7yiRhu4l2EepmtyORboMix6Udl+Yj2hEsCYqHgdlfCY8
+	 /TR/UCjZfjIp0zNyMflTpeQB1Igx7pOpdVfyPupT2aOZ/+wG/UvAXQ0ag4Asxihi9X
+	 XV7ctIpglPk+qIle93BDb59IvJi+gEJOIp8bihRNVLlTKUYUxddDWq8KwMq4A4gA4O
+	 sGlPFPkDBbXXA==
+Date: Tue, 23 Apr 2024 20:06:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, chandanbabu@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392785243.1906995.3930834516122962087.stgit@frogsfrogsfrogs>
-In-Reply-To: <20240424030246.GB360919@frogsfrogsfrogs>
-References: <20240424030246.GB360919@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
+Subject: Re: [PATCH] xfs: Remove unused function xrep_dir_self_parent
+Message-ID: <20240424030656.GC360919@frogsfrogsfrogs>
+References: <20240424020638.81487-1-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240424020638.81487-1-jiapeng.chong@linux.alibaba.com>
 
-Hi all,
+On Wed, Apr 24, 2024 at 10:06:38AM +0800, Jiapeng Chong wrote:
+> The function are defined in the dir_repair.c file, but not called
+> elsewhere, so delete the unused function.
+> 
+> fs/xfs/scrub/dir_repair.c:186:1: warning: unused function 'xrep_dir_self_parent'.
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8867
+> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 
-Historically, checking the tree-ness of the directory tree structure has
-not been complete.  Cycles of subdirectories break the tree properties,
-as do subdirectories with multiple parents.  It's easy enough for DFS to
-detect problems as long as one of the participants is reachable from the
-root, but this technique cannot find unconnected cycles.
-
-Directory parent pointers change that, because we can discover all of
-these problems from a simple walk from a subdirectory towards the root.
-For each child we start with, if the walk terminates without reaching
-the root, we know the path is disconnected and ought to be attached to
-the lost and found.  If we find ourselves, we know this is a cycle and
-can delete an incoming edge.  If we find multiple paths to the root, we
-know to delete an incoming edge.
-
-Even better, once we've finished walking paths, we've identified the
-good ones and know which other path(s) to remove.
-
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
+Yep, not used anywhere in my patchsets.  Thank you for catching this and
+cleaning it up.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-directory-tree-6.10
----
-Commits in this patchset:
- * xfs: teach online scrub to find directory tree structure problems
- * xfs: invalidate dirloop scrub path data when concurrent updates happen
- * xfs: report directory tree corruption in the health information
- * xfs: fix corruptions in the directory tree
----
- fs/xfs/Makefile               |    2 
- fs/xfs/libxfs/xfs_fs.h        |    4 
- fs/xfs/libxfs/xfs_health.h    |    4 
- fs/xfs/scrub/common.h         |    1 
- fs/xfs/scrub/dirtree.c        |  985 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/dirtree.h        |  178 +++++++
- fs/xfs/scrub/dirtree_repair.c |  821 ++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.c         |    1 
- fs/xfs/scrub/ino_bitmap.h     |   37 ++
- fs/xfs/scrub/orphanage.c      |    6 
- fs/xfs/scrub/orphanage.h      |    8 
- fs/xfs/scrub/repair.h         |    4 
- fs/xfs/scrub/scrub.c          |    7 
- fs/xfs/scrub/scrub.h          |    1 
- fs/xfs/scrub/stats.c          |    1 
- fs/xfs/scrub/trace.c          |    4 
- fs/xfs/scrub/trace.h          |  272 +++++++++++
- fs/xfs/scrub/xfarray.h        |    1 
- fs/xfs/xfs_health.c           |    1 
- fs/xfs/xfs_inode.c            |    2 
- fs/xfs/xfs_inode.h            |    1 
- 21 files changed, 2337 insertions(+), 4 deletions(-)
- create mode 100644 fs/xfs/scrub/dirtree.c
- create mode 100644 fs/xfs/scrub/dirtree.h
- create mode 100644 fs/xfs/scrub/dirtree_repair.c
- create mode 100644 fs/xfs/scrub/ino_bitmap.h
-
+> ---
+>  fs/xfs/scrub/dir_repair.c | 21 ---------------------
+>  1 file changed, 21 deletions(-)
+> 
+> diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+> index 38957da26b94..f8450c7f99f4 100644
+> --- a/fs/xfs/scrub/dir_repair.c
+> +++ b/fs/xfs/scrub/dir_repair.c
+> @@ -176,27 +176,6 @@ xrep_setup_directory(
+>  	return 0;
+>  }
+>  
+> -/*
+> - * If we're the root of a directory tree, we are our own parent.  If we're an
+> - * unlinked directory, the parent /won't/ have a link to us.  Set the parent
+> - * directory to the root for both cases.  Returns NULLFSINO if we don't know
+> - * what to do.
+> - */
+> -static inline xfs_ino_t
+> -xrep_dir_self_parent(
+> -	struct xrep_dir		*rd)
+> -{
+> -	struct xfs_scrub	*sc = rd->sc;
+> -
+> -	if (sc->ip->i_ino == sc->mp->m_sb.sb_rootino)
+> -		return sc->mp->m_sb.sb_rootino;
+> -
+> -	if (VFS_I(sc->ip)->i_nlink == 0)
+> -		return sc->mp->m_sb.sb_rootino;
+> -
+> -	return NULLFSINO;
+> -}
+> -
+>  /*
+>   * Look up the dotdot entry and confirm that it's really the parent.
+>   * Returns NULLFSINO if we don't know what to do.
+> -- 
+> 2.20.1.7.g153144c
+> 
+> 
