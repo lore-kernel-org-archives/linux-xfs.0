@@ -1,118 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3731F101F2
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:39:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B1813A269;
+	Wed, 24 Apr 2024 03:42:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713929974; cv=none; b=TJcmVMmkLuzM0r2+s5Twb6vAElWtMquZqwUWd9abhDVUy3D840YLiQHY43QNI5Y//CXg0AMpgimoh8E5np5wYIYphc8zAblSzgPISFc/TWQOwK5EGCShwH/9w+wLXh+Na3lUbb7SdXUW8nhGlLVm3MAHTK+yvJbid3G/u6H3hW8=
+	t=1713930153; cv=none; b=rqs65lynoWTtjo1yZpuz+utxrSuFajJpvVBVprdCyIdIOWHgWlh61et3nqL63CecFohouy3rXfgZA00qJQwrKrOfCb4QA7AyVicGmLNDCUh829vCQTJaVXajmAnXqDkomPDUj8Ct04Ktl9gTLJ+ScLAQDvAGgi3DerrogapJrvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713929974; c=relaxed/simple;
-	bh=Gd7vXeXXhFiFwAs1eStXMqr9TOtgGeZJsTi/eGCrw94=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=WYn4edGnMU3LokFfAkYilqWjUM7b3s71RCWfJ30DZ+uAWqMJmxPVGkKSS5b69Xa97bHh1LM5wL9cCiu0KUputpHYFBgOIfT/RHqp6box71cK7UiE3/KjlPj94K9bLfbWD+DobXax3bn9YShtRCt3sPNQ4FWbbkBd3TubCWMgNlY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WLBSDLBn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713930153; c=relaxed/simple;
+	bh=s8JSpe5lXZIlrGkV5GrE8eLt0SRuwdFk9Gns8mE2/uE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cvldpornClj1oEbG0c0xAqrBfPex6PpRI2wYdO4eMZJirwn7lopVDBItu7db3LDetkDnZQjMyHQ5OVANC05wu5bCP6vGkVsTaJtjMyipSIqm7zuLoIhMpQg/d1DzpzXl973Lu0gfl8JKMNz1Rt9Mo60B+vSKYpGGG/3QRETjivw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LKLBrxBE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WLBSDLBn"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C540FC32786
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:39:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LKLBrxBE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47F9C3277B;
+	Wed, 24 Apr 2024 03:42:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713929973;
-	bh=Gd7vXeXXhFiFwAs1eStXMqr9TOtgGeZJsTi/eGCrw94=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=WLBSDLBnd1tot7g3IfA4nDbfxxNQHAwQQu6VnNiqTVAVI4L68l27rCnF7p2W3gyHi
-	 ex/FmD47E4tEomDTHzfNBM2t7KNX9nBv1adPTcWmC2b/FOJMQVlipvHFwfwufEKB8J
-	 nce1TFeIH0bRybddKz8owVFTxbA5wX7XNl+CTGXXosM3BGsUCAwKvWGJNWc24RzCDN
-	 5y7a/WHsZAXQb/0CkiO2GCwXJeoyNo/sMFPaHeCCWUjQTttzoOi37tbAZMI+WeLsuX
-	 LBxGIXEs1ZTo8Q2r4NJu2whomXcA+du8fI/X+WKingFivqQxk4UQkJdWgnQ3EGi0X6
-	 BWa8X6qHI+ZEw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id BC987C53B50; Wed, 24 Apr 2024 03:39:33 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 218764] xfs_scrub_all.in: NameError: name 'path' is not defined
-Date: Wed, 24 Apr 2024 03:39:33 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: djwong@kernel.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218764-201763-ssx1qYtUga@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218764-201763@https.bugzilla.kernel.org/>
-References: <bug-218764-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1713930153;
+	bh=s8JSpe5lXZIlrGkV5GrE8eLt0SRuwdFk9Gns8mE2/uE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LKLBrxBE4M7LMlIiN0mpe0WQXkYqSkcPKHWIC0yWrZ2AIkZ/coaC7iUCQEMGzJUUA
+	 1/rPwZJemR5Ur2J68hnvh9UaEfiTYrna3fV27pQ8gF5zkFQLRZBCvScXskr5VHxp1j
+	 cxlsT++NSh96ve3UUgbGsnRAcWCaQLzVUu55lgMMvA+UyAqfjvY237MKgzkTsF9mp9
+	 2sW2gpDdA0I+i8eQuh4nLMu48yzroqp8UBHWW/4VNSU1HHYHzYFGa3aFqZlUDrHPPz
+	 yOjWh7cUnj+EpiV9Ug+U7qzQxbQy/ytauTBynUKUiTj8KQ6YQnDt5SWUPWHDSNpLtY
+	 HSSQu1Cj51uCw==
+Date: Tue, 23 Apr 2024 20:42:32 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Marius Fleischer <fleischermarius@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Leah Rumancik <leah.rumancik@gmail.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, harrisonmichaelgreen@gmail.com,
+	syzkaller@googlegroups.com
+Subject: Re: KASAN: null-ptr-deref Write in xlog_cil_commit
+Message-ID: <20240424034232.GD360940@frogsfrogsfrogs>
+References: <CAJg=8jz0X=CKR1POvF41oEumrq1z=MVWPdF2ECbzV6-rhht8-g@mail.gmail.com>
+ <ZiGYbJezGZg6tGgq@dread.disaster.area>
+ <CAJg=8jycPX=fQskUb=48g=AS7-uUNAVKZyZ+tyAC5uGYwfpabg@mail.gmail.com>
+ <ZiWl2MG5f0wAp7mM@dread.disaster.area>
+ <CAJg=8jyZuxsUX+oNU6O_L4LNOVs21xVKTDi8ywPfDbj+cAxegA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJg=8jyZuxsUX+oNU6O_L4LNOVs21xVKTDi8ywPfDbj+cAxegA@mail.gmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218764
+On Tue, Apr 23, 2024 at 08:05:22AM -0700, Marius Fleischer wrote:
+> Hi Dave,
+> 
+> Thank you so much for your detailed explanations!
+> 
+> > > Do you think it would make sense to backport that patch to 5.15.156 (the
+> > > LTS kernel)?
+> >
+> > That's up to the 5.15 LTS maintainers to decide. They also need to
+> > weigh up the fact that xlog_cil_kvmalloc() doesn't exist anymore in
+> > the upstream code base. i.e. we found other places that had the same
+> > kvmalloc() performance problems, and so lifted that code up further
+> > and used it in other places in XFS....
+> >
+> 
+> Understood. Please allow me one last follow-up question. Did I add the correct
+> maintainers/mailing lists to reach the 5.15 LTS maintainers? If not,
+> how do I find
+> the correct addresses? I used scripts/get_maintainer.pl as suggested here
+> (https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html)
+> to locate maintainers/mailing lists.
 
---- Comment #1 from Darrick J. Wong (djwong@kernel.org) ---
-On Tue, Apr 23, 2024 at 03:24:32AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D218764
->=20
->             Bug ID: 218764
->            Summary: xfs_scrub_all.in: NameError: name 'path' is not
->                     defined
->            Product: File System
->            Version: 2.5
->           Hardware: All
->                 OS: Linux
->             Status: NEW
->           Severity: normal
->           Priority: P3
->          Component: XFS
->           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->           Reporter: 60510scott@gmail.com
->         Regression: No
->=20
-> Created attachment 306198
->   --> https://bugzilla.kernel.org/attachment.cgi?id=3D306198&action=3Dedit
-> journalctl -b -u xfs_scrub_all.service
->=20
-> `path` variable is not defined in
->
-> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/scrub/xfs_scr=
-ub_all.in#n166
->=20
->=20
-> Attached is the error log of `xfs_scrub_all.service`
-
-Working on it; there's a largeish rewrite of xfs_scrub{,_all} pending
-now that the kernel part is done.  This patch should fix the problem:
-https://lore.kernel.org/linux-xfs/168506075234.3746473.4940860665627249144.=
-stgit@frogsfrogsfrogs/
-
-But it might take a bit of time to get the last ~150 userspace patches
-merged.
+You got it correct -- Leah is the 5.15 maintainer of record.
 
 --D
 
->=20
-> --=20
-> You may reply to this email to add a comment.
->=20
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> Wishing you a lovely week!
+> 
+> Best,
+> Marius
