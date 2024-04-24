@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB85115B15C;
-	Wed, 24 Apr 2024 14:58:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A98F15E7E9
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 17:20:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713970700; cv=none; b=jG9ASXYWyRXs9JQw4R1fvE7XZnAZ3pklXaAHKvA0rLzYBNECNgiK/awWXs1Kjs3Yc/pvI/RVczCyteCLe+LN08aiqZ/grKvzJTWqH2ORkB/wElHOrIH9MXjl7xKWv4EfY4Tu6yJ4T0mvt4Q72gUxCkCCK+P2ONwnhGPwkuPN0Cc=
+	t=1713979244; cv=none; b=kmcglb4QTAJdLWWWnG2q7bkO2BrT8RmftAtvTJlkUFglpTb+3wihqsGNEcBRS2eiHJs6eCgce7ddF2KQyqpc7CA7rm9YJZHxSLxmWrWZ22CIPTL+LFEbJVfGRLr/M4m/AvVgzSZbAhk5ZyWKxLjjFMLxYsyeh7yUHMj5RDgbIWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713970700; c=relaxed/simple;
-	bh=YV+9GI/ieu7Q3hqRSONAS5/3IIe3dHs8IVjcw8TKwBc=;
+	s=arc-20240116; t=1713979244; c=relaxed/simple;
+	bh=dfaUCI23zW0RmOJRkG9LSDOJ/krgry3nUUjjIhuq44I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mSSXNZ1sk+za1ReKByLlo07mPY4Qjmv18vosOb8lYhL2AVw5TQGF+DaJHZf9FJU8/eOP5QveYNssnnXDFYChozYDN9xVjMsNgtPpcgnWSh2WJyeECPazpzaj/sahrrVi1Jav7ivw/+HPzIXhBvnaX6GthHZsLqrjf5xqci/tJes=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wdgwd8d0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aEiWVCvCbliv4yETkokkSVz9R5I5UTOjqyka06LZN7A1Y1lsqwwrkDBu8/yGKJysK3pmqW1K9cHMUx5f+brs4/1e9mvslttJqx2JcIZ0tGK7Ui8R4w+7Wbg4dGlSVjQ4guC5qRYbKzZwYvDOfyoMYZWusoDR1mGY7u+V1NosfbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u1UCsHzo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wdgwd8d0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3214C113CE;
-	Wed, 24 Apr 2024 14:58:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u1UCsHzo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F22E3C113CD;
+	Wed, 24 Apr 2024 17:20:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713970699;
-	bh=YV+9GI/ieu7Q3hqRSONAS5/3IIe3dHs8IVjcw8TKwBc=;
+	s=k20201202; t=1713979244;
+	bh=dfaUCI23zW0RmOJRkG9LSDOJ/krgry3nUUjjIhuq44I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Wdgwd8d0kmNgYEApT8v50fyk3qNQMS1LTPg63DLd9uuVSkfsheX89fQ0ITmQy5Rhd
-	 /VX1rWa/J8C8HdEkfQt2VVThwf95QTbuhQ49yiDSHy8cIXXVyhRj/+fJz93dj00SiG
-	 L6BVgXOBLUssKTBm8eeqCppaDd7NI1dzmG9aQ/nTUWr3zwbpge/pEqHqi6VT7/M/Yi
-	 KUBLZjNAzGQ10icxp9pD9/Y/69bED8Wvco8JG5IpOYqM4NvwiKmm3P/pXBBZ0kXv+M
-	 ZpMZHSwVR6kcZH8/7+j7pki7/YhfXdjqENLo2xD1+IWKmBI9PUjLmSmYio0P0ducT+
-	 zPwpbf26hntHA==
-Date: Wed, 24 Apr 2024 07:58:19 -0700
+	b=u1UCsHzodaDzLFzz+WZLcxfSxV7ZPK49guhlvDBiuULCLijaAoYNQBZU6Pow8S++e
+	 AeVgok4ZTRQO+CxLlKyW29qj8DoG+t5G+x0SBozFAiv1T+b+8oXGstc0n/SWh6jQ51
+	 SAgDJdi0wzr5eUB4tgZNVvujoZLhX6mrAOKo8XrQV1/XabCtAHFuojUv7/G8He9qxX
+	 u95hgSTp8Jl+X2YE8avTXKBn884hZUXGb4DR3qI9c9x/6yRCnKrhqOkON4F1nTJ9f+
+	 Us/bTCLBmu2gOBc9nFJ+JmQC1zr+HHlfhNFTRvfF+g4KjetpPYQ318WeYdoofjPzLx
+	 ecDV4/SW2Sx+g==
+Date: Wed, 24 Apr 2024 10:20:43 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, dchinner@redhat.com, hch@lst.de,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 6a94b1acda7e
-Message-ID: <20240424145819.GF360919@frogsfrogsfrogs>
-References: <87bk60z8lm.fsf@debian-BULLSEYE-live-builder-AMD64>
- <Zig6A632L9PDK6Qp@dread.disaster.area>
- <87wmonib6s.fsf@debian-BULLSEYE-live-builder-AMD64>
+To: cem@kernel.org
+Cc: cmaiolino@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: [PATCH v3.1 090/111] libxfs: partition memfd files to avoid using
+ too many fds
+Message-ID: <20240424172043.GH360919@frogsfrogsfrogs>
+References: <171322882240.211103.3776766269442402814.stgit@frogsfrogsfrogs>
+ <171322883514.211103.15800307559901643828.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,80 +43,332 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87wmonib6s.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <171322883514.211103.15800307559901643828.stgit@frogsfrogsfrogs>
 
-On Wed, Apr 24, 2024 at 10:49:29AM +0530, Chandan Babu R wrote:
-> On Wed, Apr 24, 2024 at 08:45:23 AM +1000, Dave Chinner wrote:
-> > On Tue, Apr 23, 2024 at 03:46:24PM +0530, Chandan Babu R wrote:
-> >> Hi folks,
-> >> 
-> >> The for-next branch of the xfs-linux repository at:
-> >> 
-> >> 	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> >> 
-> >> has just been updated.
-> >> 
-> >> Patches often get missed, so please check if your outstanding patches
-> >> were in this update. If they have not been in this update, please
-> >> resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-> >> the next update.
-> >> 
-> >> The new head of the for-next branch is commit:
-> >> 
-> >> 6a94b1acda7e xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
-> >
-> > I've just noticed a regression in for-next - it was there prior to
-> > this update, but I hadn't run a 1kB block size fstests run in a
-> > while so I've only just noticed it. It is 100% reproducable, and may
-> > well be a problem with the partial filter matches in the test rather
-> > than a kernel bug...
-> >
-> > SECTION       -- xfs_1k
-> > FSTYP         -- xfs (debug)
-> > PLATFORM      -- Linux/x86_64 test1 6.9.0-rc5-dgc+ #219 SMP PREEMPT_DYNAMIC Wed Apr 24 08:30:50 AEST 2024
-> > MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/vdb
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb /mnt/scratch
-> >
-> > xfs/348 19s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad)
-> >     --- tests/xfs/348.out       2022-12-21 15:53:25.579041081 +1100
-> >     +++ /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad     2024-04-24 08:34:43.718525603 +1000
-> >     @@ -2,7 +2,7 @@
-> >      ===== Find inode by file type:
-> >      dt=1 => FIFO_INO
-> >      dt=2 => CHRDEV_INO
-> >     -dt=4 => DIR_INO
-> >     +dt=4 => PARENT_INO108928
-> >      dt=6 => BLKDEV_INO
-> >      dt=10 => DATA_INO
-> >     ...
-> >     (Run 'diff -u /home/dave/src/xfstests-dev/tests/xfs/348.out /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad'  to see the entire diff)
-> > Failures: xfs/348
-> > Failed 1 of 1 tests
-> >
-> > xfsprogs version installed on this test VM is:
-> >
-> > $ xfs_repair -V
-> > xfs_repair version 6.4.0
-> > $
-> 
-> That is weird. I am unable to recreate this bug on my cloud instance. I am
-> using fstests version v2024.04.14 and Xfsprogs version 6.7.0.
-> 
-> # ./check xfs/348
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 fstest 6.9.0-rc4-00122-g6a94b1acda7e #13 SMP PREEMPT_DYNAMIC Wed Apr 24 09:48:36 IST 2024
-> MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/loop1
-> MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-> 
-> xfs/348 7s ...  8s
-> Ran: xfs/348
-> Passed all 1 tests
+From: Darrick J. Wong <djwong@kernel.org>
 
-Same here -- I checked all of yesterday's runs and none of them tripped
-over that.  sed \b perhaps?
+In a few patchsets from now, we'll transition xfs_repair to use
+memfd-backed rmap and rcbag btrees for storing repair data instead of
+heap allocations.  This allows repair to use libxfs code shared from the
+online repair code, which reduces the size of the codebase.  It also
+reduces heap fragmentation, which might be critical on 32-bit systems.
 
---D
+However, there's one hitch -- userspace xfiles naively allocate one
+memfd per data structure, but there's only so many file descriptors that
+a process can open.  If a filesystem has a lot of allocation groups, we
+can run out of fds and fail.  xfs_repair already tries to increase
+RLIMIT_NOFILE to the maximum (~1M) but this can fail due to system or
+memory constraints.
 
-> -- 
-> Chandan
-> 
+Fortunately, it is possible to compute the upper bound of a memfd btree,
+which implies that we can store multiple btrees per memfd.  Make it so
+that we can partition a memfd file to avoid running out of file
+descriptors.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v3.1: improve commit message to explain why we need this
+---
+ libxfs/xfile.c |  197 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ libxfs/xfile.h |   17 ++++-
+ 2 files changed, 205 insertions(+), 9 deletions(-)
+
+diff --git a/libxfs/xfile.c b/libxfs/xfile.c
+index cba173cc17f1..fdb76f406647 100644
+--- a/libxfs/xfile.c
++++ b/libxfs/xfile.c
+@@ -97,6 +97,149 @@ xfile_create_fd(
+ 	return fd;
+ }
+ 
++static LIST_HEAD(fcb_list);
++static pthread_mutex_t fcb_mutex = PTHREAD_MUTEX_INITIALIZER;
++
++/* Create a new memfd. */
++static inline int
++xfile_fcb_create(
++	const char		*description,
++	struct xfile_fcb	**fcbp)
++{
++	struct xfile_fcb	*fcb;
++	int			fd;
++
++	fd = xfile_create_fd(description);
++	if (fd < 0)
++		return -errno;
++
++	fcb = malloc(sizeof(struct xfile_fcb));
++	if (!fcb) {
++		close(fd);
++		return -ENOMEM;
++	}
++
++	list_head_init(&fcb->fcb_list);
++	fcb->fd = fd;
++	fcb->refcount = 1;
++
++	*fcbp = fcb;
++	return 0;
++}
++
++/* Release an xfile control block */
++static void
++xfile_fcb_irele(
++	struct xfile_fcb	*fcb,
++	loff_t			pos,
++	uint64_t		len)
++{
++	/*
++	 * If this memfd is linked only to itself, it's private, so we can
++	 * close it without taking any locks.
++	 */
++	if (list_empty(&fcb->fcb_list)) {
++		close(fcb->fd);
++		free(fcb);
++		return;
++	}
++
++	pthread_mutex_lock(&fcb_mutex);
++	if (--fcb->refcount == 0) {
++		/* If we're the last user of this memfd file, kill it fast. */
++		list_del(&fcb->fcb_list);
++		close(fcb->fd);
++		free(fcb);
++	} else if (len > 0) {
++		struct stat	statbuf;
++		int		ret;
++
++		/*
++		 * If we were using the end of a partitioned file, free the
++		 * address space.  IOWs, bonus points if you delete these in
++		 * reverse-order of creation.
++		 */
++		ret = fstat(fcb->fd, &statbuf);
++		if (!ret && statbuf.st_size == pos + len) {
++			ret = ftruncate(fcb->fd, pos);
++		}
++	}
++	pthread_mutex_unlock(&fcb_mutex);
++}
++
++/*
++ * Find an memfd that can accomodate the given amount of address space.
++ */
++static int
++xfile_fcb_find(
++	const char		*description,
++	uint64_t		maxbytes,
++	loff_t			*posp,
++	struct xfile_fcb	**fcbp)
++{
++	struct xfile_fcb	*fcb;
++	int			ret;
++	int			error;
++
++	/* No maximum range means that the caller gets a private memfd. */
++	if (maxbytes == 0) {
++		*posp = 0;
++		return xfile_fcb_create(description, fcbp);
++	}
++
++	/* round up to page granularity so we can do mmap */
++	maxbytes = roundup_64(maxbytes, PAGE_SIZE);
++
++	pthread_mutex_lock(&fcb_mutex);
++
++	/*
++	 * If we only need a certain number of byte range, look for one with
++	 * available file range.
++	 */
++	list_for_each_entry(fcb, &fcb_list, fcb_list) {
++		struct stat	statbuf;
++		loff_t		pos;
++
++		ret = fstat(fcb->fd, &statbuf);
++		if (ret)
++			continue;
++		pos = roundup_64(statbuf.st_size, PAGE_SIZE);
++
++		/*
++		 * Truncate up to ensure that the memfd can actually handle
++		 * writes to the end of the range.
++		 */
++		ret = ftruncate(fcb->fd, pos + maxbytes);
++		if (ret)
++			continue;
++
++		fcb->refcount++;
++		*posp = pos;
++		*fcbp = fcb;
++		goto out_unlock;
++	}
++
++	/* Otherwise, open a new memfd and add it to our list. */
++	error = xfile_fcb_create(description, &fcb);
++	if (error)
++		return error;
++
++	ret = ftruncate(fcb->fd, maxbytes);
++	if (ret) {
++		error = -errno;
++		xfile_fcb_irele(fcb, 0, maxbytes);
++		return error;
++	}
++
++	list_add_tail(&fcb->fcb_list, &fcb_list);
++	*posp = 0;
++	*fcbp = fcb;
++
++out_unlock:
++	pthread_mutex_unlock(&fcb_mutex);
++	return error;
++}
++
+ /*
+  * Create an xfile of the given size.  The description will be used in the
+  * trace output.
+@@ -104,6 +247,7 @@ xfile_create_fd(
+ int
+ xfile_create(
+ 	const char		*description,
++	unsigned long long	maxbytes,
+ 	struct xfile		**xfilep)
+ {
+ 	struct xfile		*xf;
+@@ -113,13 +257,14 @@ xfile_create(
+ 	if (!xf)
+ 		return -ENOMEM;
+ 
+-	xf->fd = xfile_create_fd(description);
+-	if (xf->fd < 0) {
+-		error = -errno;
++	error = xfile_fcb_find(description, maxbytes, &xf->partition_pos,
++			&xf->fcb);
++	if (error) {
+ 		kfree(xf);
+ 		return error;
+ 	}
+ 
++	xf->maxbytes = maxbytes;
+ 	*xfilep = xf;
+ 	return 0;
+ }
+@@ -129,7 +274,7 @@ void
+ xfile_destroy(
+ 	struct xfile		*xf)
+ {
+-	close(xf->fd);
++	xfile_fcb_irele(xf->fcb, xf->partition_pos, xf->maxbytes);
+ 	kfree(xf);
+ }
+ 
+@@ -137,6 +282,9 @@ static inline loff_t
+ xfile_maxbytes(
+ 	struct xfile		*xf)
+ {
++	if (xf->maxbytes > 0)
++		return xf->maxbytes;
++
+ 	if (sizeof(loff_t) == 8)
+ 		return LLONG_MAX;
+ 	return LONG_MAX;
+@@ -160,7 +308,7 @@ xfile_load(
+ 	if (xfile_maxbytes(xf) - pos < count)
+ 		return -ENOMEM;
+ 
+-	ret = pread(xf->fd, buf, count, pos);
++	ret = pread(xf->fcb->fd, buf, count, pos + xf->partition_pos);
+ 	if (ret < 0)
+ 		return -errno;
+ 	if (ret != count)
+@@ -186,7 +334,7 @@ xfile_store(
+ 	if (xfile_maxbytes(xf) - pos < count)
+ 		return -EFBIG;
+ 
+-	ret = pwrite(xf->fd, buf, count, pos);
++	ret = pwrite(xf->fcb->fd, buf, count, pos + xf->partition_pos);
+ 	if (ret < 0)
+ 		return -errno;
+ 	if (ret != count)
+@@ -194,6 +342,38 @@ xfile_store(
+ 	return 0;
+ }
+ 
++/* Compute the number of bytes used by a partitioned xfile. */
++static unsigned long long
++xfile_partition_bytes(
++	struct xfile		*xf)
++{
++	loff_t			data_pos = xf->partition_pos;
++	loff_t			stop_pos = data_pos + xf->maxbytes;
++	loff_t			hole_pos;
++	unsigned long long	bytes = 0;
++
++	data_pos = lseek(xf->fcb->fd, data_pos, SEEK_DATA);
++	while (data_pos >= 0 && data_pos < stop_pos) {
++		hole_pos = lseek(xf->fcb->fd, data_pos, SEEK_HOLE);
++		if (hole_pos < 0) {
++			/* save error, break */
++			data_pos = hole_pos;
++			break;
++		}
++		if (hole_pos >= stop_pos) {
++			bytes += stop_pos - data_pos;
++			return bytes;
++		}
++		bytes += hole_pos - data_pos;
++
++		data_pos = lseek(xf->fcb->fd, hole_pos, SEEK_DATA);
++	}
++	if (data_pos < 0 && errno != ENXIO)
++		return xf->maxbytes;
++
++	return bytes;
++}
++
+ /* Compute the number of bytes used by a xfile. */
+ unsigned long long
+ xfile_bytes(
+@@ -202,7 +382,10 @@ xfile_bytes(
+ 	struct stat		statbuf;
+ 	int			error;
+ 
+-	error = fstat(xf->fd, &statbuf);
++	if (xf->maxbytes > 0)
++		return xfile_partition_bytes(xf);
++
++	error = fstat(xf->fcb->fd, &statbuf);
+ 	if (error)
+ 		return -errno;
+ 
+diff --git a/libxfs/xfile.h b/libxfs/xfile.h
+index d60084011357..180a42bbbaa2 100644
+--- a/libxfs/xfile.h
++++ b/libxfs/xfile.h
+@@ -6,11 +6,24 @@
+ #ifndef __LIBXFS_XFILE_H__
+ #define __LIBXFS_XFILE_H__
+ 
+-struct xfile {
++struct xfile_fcb {
++	struct list_head	fcb_list;
+ 	int			fd;
++	unsigned int		refcount;
+ };
+ 
+-int xfile_create(const char *description, struct xfile **xfilep);
++struct xfile {
++	struct xfile_fcb	*fcb;
++
++	/* File position within fcb->fd where this partition starts */
++	loff_t			partition_pos;
++
++	/* Maximum number of bytes that can be written to the partition. */
++	uint64_t		maxbytes;
++};
++
++int xfile_create(const char *description, unsigned long long maxbytes,
++		struct xfile **xfilep);
+ void xfile_destroy(struct xfile *xf);
+ 
+ ssize_t xfile_load(struct xfile *xf, void *buf, size_t count, loff_t pos);
