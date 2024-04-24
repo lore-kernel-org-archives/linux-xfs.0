@@ -1,128 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B47A44C89;
-	Tue, 23 Apr 2024 23:58:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BF931A716;
+	Wed, 24 Apr 2024 02:06:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713916710; cv=none; b=i6dN5rXK4qSNB60FD1Q4qWxtVPTZ5UcFGh7aU1tTJa1noRGH9RnPwWFKLPEDPzSGxmDNvWBQfXWc286wOPVJN77As/2J7BgobgEKDXsNKXfHsOk7iTHs3xLwSEG9PV/XyF0RWkmdzecaA/r7rnlpkk4On+omeRkJzL2REbDVdIA=
+	t=1713924417; cv=none; b=cUhYINIRDkl7lnSE05ySSUtchpbq4w6ft2FtwECNXyLFcJZ4eVVFmCt/NbzJN0SkJJzi8dAeJ2ZrJYVq1XATWaL0LIA5dsYMsJnkdU7qmw4+gOhb8ugbQMr2ZiNAzPEZ/NwxOfGdHV0MypXAcJ75003pZ3fNmEndFVSdrYUuf6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713916710; c=relaxed/simple;
-	bh=3/Rx6u7DXGhpElwgLl6iYyBIIp761cKdsL6QZg3T8v0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JMIMkChfUO+uk6RdWsTbfbELiByJMOFz1nRLdi3mzZIibq0x6zxQLHEF20rEmBOTcr+ctL0LABLT8Y2FxhANE5eTsRsUhq00KgPIrXf++9xLfgRNTiMGh1sfDee9LYQNv+nZY8+RfQq1H91WWOuh+7hxi2vE0TFET3TyMXp5lEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxHRbGw3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713924417; c=relaxed/simple;
+	bh=1uIB8Djgu2opDW8zJGbQrnwtQSobfaX9bM0LV2IjT9U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b71JmOHK3BIb1zzHebOnDFMu+EJ8oGtKXneJ3Q7xBogsyy379S1jZ9mM6PrJcJxdILcyCpVi0ki17NQ690l7sH4CCZ28bWXHd5fWLlcnwel2D46BZLejHuMK8h46Wej0MOSrlT/PUVS1+P21pjjksMZItwJH/RXBdEnQBaREmY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=vLEXkhX2; arc=none smtp.client-ip=115.124.30.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxHRbGw3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6FACC3277B;
-	Tue, 23 Apr 2024 23:58:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713916710;
-	bh=3/Rx6u7DXGhpElwgLl6iYyBIIp761cKdsL6QZg3T8v0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gxHRbGw3e//ENDtVi5225pu+R/64GVdFF/6d43GQ5IljWDUzNBAZXa8rnOQOXcYAS
-	 ATxmwn2qhQnVRhGFetpAplK0IuPEBxhzk11WHmwMCQIXCcnfM/PGK2OnKp/h2IjQVe
-	 LXmHcaRJwtMqrVxghZlWNhb/1vKrfsVBvmGwPJp1HOh8Wppzbv/8dUr2fE9TuFUo5W
-	 BmGb5lOuLUh0SkCwY9+00ezI7IOhS3NyQiJPczpZ+F+km7HYJr+zQ7xMP2jiiUCM+O
-	 hzIkipr6Md7arRci1N3BT9U5VF+cgfM+fzJ7dWqojwovS/X06+6rci+2aZYVzRzNtZ
-	 1oztpIFwNFNGA==
-Date: Tue, 23 Apr 2024 16:58:29 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chandan Babu R <chandanbabu@kernel.org>, dchinner@redhat.com,
-	hch@lst.de, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 6a94b1acda7e
-Message-ID: <20240423235829.GA360919@frogsfrogsfrogs>
-References: <87bk60z8lm.fsf@debian-BULLSEYE-live-builder-AMD64>
- <Zig6A632L9PDK6Qp@dread.disaster.area>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="vLEXkhX2"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1713924410; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=AsvxfKD5Ttu7vZmsRdGtb3GoFi3Ym87cXlOdkwJGalQ=;
+	b=vLEXkhX28Kaj2t55RvhqJjZ0lD8mka591ZdZVKxqunDFMz+prFF/SL53hN4mFODf1yvSXAI+fr9vjychOWvhGpuYeQjSUrHciZYkjxuNI9yyOazLTGexj7Q+aDGbCVr8zlJilKzBnPdF5BGxEwhQBInXacwzd6mQRO9hO1Ey2YM=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046060;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0W5Abekw_1713924398;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0W5Abekw_1713924398)
+          by smtp.aliyun-inc.com;
+          Wed, 24 Apr 2024 10:06:49 +0800
+From: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To: chandan.babu@oracle.com
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+	Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] xfs: Remove unused function xrep_dir_self_parent
+Date: Wed, 24 Apr 2024 10:06:38 +0800
+Message-Id: <20240424020638.81487-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zig6A632L9PDK6Qp@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Apr 24, 2024 at 08:45:23AM +1000, Dave Chinner wrote:
-> On Tue, Apr 23, 2024 at 03:46:24PM +0530, Chandan Babu R wrote:
-> > Hi folks,
-> > 
-> > The for-next branch of the xfs-linux repository at:
-> > 
-> > 	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> > 
-> > has just been updated.
-> > 
-> > Patches often get missed, so please check if your outstanding patches
-> > were in this update. If they have not been in this update, please
-> > resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-> > the next update.
-> > 
-> > The new head of the for-next branch is commit:
-> > 
-> > 6a94b1acda7e xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
-> 
-> I've just noticed a regression in for-next - it was there prior to
-> this update, but I hadn't run a 1kB block size fstests run in a
-> while so I've only just noticed it. It is 100% reproducable, and may
-> well be a problem with the partial filter matches in the test rather
-> than a kernel bug...
-> 
-> SECTION       -- xfs_1k
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 test1 6.9.0-rc5-dgc+ #219 SMP PREEMPT_DYNAMIC Wed Apr 24 08:30:50 AEST 2024
-> MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/vdb
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb /mnt/scratch
-> 
-> xfs/348 19s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad)
->     --- tests/xfs/348.out       2022-12-21 15:53:25.579041081 +1100
->     +++ /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad     2024-04-24 08:34:43.718525603 +1000
->     @@ -2,7 +2,7 @@
->      ===== Find inode by file type:
->      dt=1 => FIFO_INO
->      dt=2 => CHRDEV_INO
->     -dt=4 => DIR_INO
->     +dt=4 => PARENT_INO108928
+The function are defined in the dir_repair.c file, but not called
+elsewhere, so delete the unused function.
 
-Given:
+fs/xfs/scrub/dir_repair.c:186:1: warning: unused function 'xrep_dir_self_parent'.
 
-pino=$(ls -id $testdir | awk '{print $1}')
-echo "s/inode $pino/PARENT_INO/" >> $inode_filter
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8867
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ fs/xfs/scrub/dir_repair.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-I'd say that pino=35 would then result in:
+diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+index 38957da26b94..f8450c7f99f4 100644
+--- a/fs/xfs/scrub/dir_repair.c
++++ b/fs/xfs/scrub/dir_repair.c
+@@ -176,27 +176,6 @@ xrep_setup_directory(
+ 	return 0;
+ }
+ 
+-/*
+- * If we're the root of a directory tree, we are our own parent.  If we're an
+- * unlinked directory, the parent /won't/ have a link to us.  Set the parent
+- * directory to the root for both cases.  Returns NULLFSINO if we don't know
+- * what to do.
+- */
+-static inline xfs_ino_t
+-xrep_dir_self_parent(
+-	struct xrep_dir		*rd)
+-{
+-	struct xfs_scrub	*sc = rd->sc;
+-
+-	if (sc->ip->i_ino == sc->mp->m_sb.sb_rootino)
+-		return sc->mp->m_sb.sb_rootino;
+-
+-	if (VFS_I(sc->ip)->i_nlink == 0)
+-		return sc->mp->m_sb.sb_rootino;
+-
+-	return NULLFSINO;
+-}
+-
+ /*
+  * Look up the dotdot entry and confirm that it's really the parent.
+  * Returns NULLFSINO if we don't know what to do.
+-- 
+2.20.1.7.g153144c
 
-s/inode 35/PARENT_INO/
-
-Which will then match and transform:
-
-inode 35108928
-
-into:
-
-PARENT_INO108928
-
-So yeah, I agree that the partial filter matches are a problem.
-
---D
-
->      dt=6 => BLKDEV_INO
->      dt=10 => DATA_INO
->     ...
->     (Run 'diff -u /home/dave/src/xfstests-dev/tests/xfs/348.out /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad'  to see the entire diff)
-> Failures: xfs/348
-> Failed 1 of 1 tests
-> 
-> xfsprogs version installed on this test VM is:
-> 
-> $ xfs_repair -V
-> xfs_repair version 6.4.0
-> $
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
