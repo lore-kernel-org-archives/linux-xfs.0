@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642B185C46
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:26:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C9061339BA
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:26:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713929170; cv=none; b=itEnyRrW422pTKA6zb93McDCric2y7iXiRV9G+3l5Sa7wF+XbkLJyErdkWgdopPSn4xjmRZcOs+6XUZ+ML2BZbLHNzHiiiRH7pv3MA/6AeGW8oRnAnjtyRxrs1g0BvPzbiTSLLSWtR5ijfxXSebDCtoifvQC1DjoGUKV0BoXz/Y=
+	t=1713929186; cv=none; b=kM7COsZcZGc8LGar7crRGD8qDCL2HssWHLZPmzFJR/Op1aMTLREt3s3VqE3rkkSXmdN4yAUEEngQPklS3SubTV/J/5Cj2MGI4ZHqJpurE9UUuBUFsaDS29wUCUPAX93PyzYI4Nc8jI9MPuWHwhIiTfMIjS+XvZF6g3vrRYLQ1Vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713929170; c=relaxed/simple;
-	bh=5T5IUB+nfLe8ErMs2n2kI9tnS9abRI9NQ2e5eI7EqLc=;
+	s=arc-20240116; t=1713929186; c=relaxed/simple;
+	bh=e/l+JJfFqJnu01decjF2mxf15HKzbCP78f/lkGpIqNE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kwjxmzm+MsZNh43LdeUoG1whxuhbZD64ELSTvAyHc0JFJhoWiJq2FEbcXWTaFehytZ8FhldvbGYlWqYxo2b1CmmeKjEjyaipeudv+DK//tC97+RVwQT9KnOnM9CYOuoAx0l361Dt0FUBWgvIwYhkYxZNtJgswm9Mp8Thi34Ad5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NATEurSb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=K/SlGeRcO8iXbJPnwX9+vXQwuGrMSl2CrV1HLMMYkFVcpETpFy+xc1FQbTcRpQsCMR/W1AoXGol0gPGpcp4IOtpUJi9Sz92urnF4pYBSBXJpXXhPMmrlvXVpu9yzlL3bNaw5smS4NL7+A8q1pCeZZ79tiFqzSzTYSC+S6mgt3WU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QbcsL5SG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NATEurSb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA872C116B1;
-	Wed, 24 Apr 2024 03:26:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QbcsL5SG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93E3BC116B1;
+	Wed, 24 Apr 2024 03:26:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713929170;
-	bh=5T5IUB+nfLe8ErMs2n2kI9tnS9abRI9NQ2e5eI7EqLc=;
+	s=k20201202; t=1713929185;
+	bh=e/l+JJfFqJnu01decjF2mxf15HKzbCP78f/lkGpIqNE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NATEurSbhh4XBStBS1iNjKmRsaUp/+0gHrzv5tJQ1MCqk8pvnOYknvci92wzrXct0
-	 7bz0uH+bm+RUxQASWIud4nrOm4U8bpZkXBY/UQ0dkwb0r0GxOPozMBGX1JITROW3m/
-	 aMR4vBrh3B5bSKa6QzIK7S0ZHIOYGz/JGahghdSLzjPBCF5jRwl3nB3VpyiRF5EhmF
-	 IoqA3nb6qIH266es4TlJRaDnH4ClkOQa//Kgq2EExxvgbkHm84x0S0cvm2/zsgR5Kz
-	 fDiMCnvzWhQrag5+XegSxaB0/0Wjc1FNSu4K9M7RSmb72WAcAZvg7hGLtlcFAtITlz
-	 /y5vFhUS1BFsw==
-Date: Tue, 23 Apr 2024 20:26:09 -0700
-Subject: [PATCH 15/16] xfs: repair link count of nondirectories after
- rebuilding parent pointers
+	b=QbcsL5SGBtM0I7WaRLmyNq8k5nDWlFcUUQAPDakOgZ9XQNAfLGRaoj2aiR6Jiaf+i
+	 kHPzXGMCXRk6+DFhiNROwcHpLHMZTJn6MgmIrBKZuCLBrXh+v046ffVsjZjaUa1qB6
+	 QnFiuTxNbkgWJdjc9PuJZm5ZZtX9Z7GXu08lx1dRG5oRXLPDI8Z1i+YxFvacrOXQDR
+	 ldDn4XYLw40fseh7aj4yT4Hqm4CT6jRka+Lj/LqOJs0O8SreNq+RFjiccHX2rSTiqb
+	 5ceh54nRRDWJtpTBsQwhk61a+d+Cv22MMpsaKzTp09DNeKjIJliqZlBQbv3SKS19c8
+	 ZFGWcG6Un7XCQ==
+Date: Tue, 23 Apr 2024 20:26:25 -0700
+Subject: [PATCH 16/16] xfs: inode repair should ensure there's an attr fork to
+ store parent pointers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, catherine.hoang@oracle.com,
  allison.henderson@oracle.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <171392784907.1906420.7569932751648364489.stgit@frogsfrogsfrogs>
+Message-ID: <171392784924.1906420.155030277853959722.stgit@frogsfrogsfrogs>
 In-Reply-To: <171392784611.1906420.2159865382920841289.stgit@frogsfrogsfrogs>
 References: <171392784611.1906420.2159865382920841289.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,161 +48,78 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Since the parent pointer scrubber does not exhaustively search the
-filesystem for missing parent pointers, it doesn't have a good way to
-determine that there are pointers missing from an otherwise uncorrupt
-xattr structure.  Instead, for nondirectories it employs a heuristic of
-comparing the file link count to the number of parent pointers found.
+The runtime parent pointer update code expects that any file being moved
+around the directory tree already has an attr fork.  However, if we had
+to rebuild an inode core record, there's a chance that we zeroed forkoff
+as part of the inode to pass the iget verifiers.
 
-However, we don't want this heuristic flagging a false corruption after
-a repair has actually scanned the entire filesystem to rebuild the
-parent pointers.  Therefore, reset the file link count in this one case
-because we actually know the correct link count.
+Therefore, if we performed any repairs on an inode core, ensure that the
+inode has a nonzero forkoff before unlocking the inode.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/parent_repair.c |  107 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 107 insertions(+)
+ fs/xfs/scrub/inode_repair.c |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/parent_repair.c b/fs/xfs/scrub/parent_repair.c
-index 28e9746c0663..ee88ce5a12b8 100644
---- a/fs/xfs/scrub/parent_repair.c
-+++ b/fs/xfs/scrub/parent_repair.c
-@@ -27,6 +27,7 @@
- #include "xfs_parent.h"
- #include "xfs_attr.h"
- #include "xfs_bmap.h"
-+#include "xfs_ag.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -156,6 +157,9 @@ struct xrep_parent {
- 
- 	/* Have we seen any live updates of parent pointers recently? */
- 	bool			saw_pptr_updates;
-+
-+	/* Number of parents we found after all other repairs */
-+	unsigned long long	parents;
- };
- 
- struct xrep_parent_xattr {
-@@ -1370,6 +1374,102 @@ xrep_parent_rebuild_tree(
- 	return 0;
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index e3b74ea50fde..daf9f1ee7c2c 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -1736,6 +1736,44 @@ xrep_inode_extsize(
+ 	}
  }
  
-+/* Count the number of parent pointers. */
++/* Ensure this file has an attr fork if it needs to hold a parent pointer. */
 +STATIC int
-+xrep_parent_count_pptr(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	unsigned int		attr_flags,
-+	const unsigned char	*name,
-+	unsigned int		namelen,
-+	const void		*value,
-+	unsigned int		valuelen,
-+	void			*priv)
++xrep_inode_pptr(
++	struct xfs_scrub	*sc)
 +{
-+	struct xrep_parent	*rp = priv;
-+	int			error;
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_inode	*ip = sc->ip;
++	struct inode		*inode = VFS_I(ip);
 +
-+	if (!(attr_flags & XFS_ATTR_PARENT))
++	if (!xfs_has_parent(mp))
 +		return 0;
 +
-+	error = xfs_parent_from_attr(sc->mp, attr_flags, name, namelen, value,
-+			valuelen, NULL, NULL);
-+	if (error)
-+		return error;
++	/*
++	 * Unlinked inodes that cannot be added to the directory tree will not
++	 * have a parent pointer.
++	 */
++	if (inode->i_nlink == 0 && !(inode->i_state & I_LINKABLE))
++		return 0;
 +
-+	rp->parents++;
-+	return 0;
++	/* The root directory doesn't have a parent pointer. */
++	if (ip == mp->m_rootip)
++		return 0;
++
++	/*
++	 * Metadata inodes are rooted in the superblock and do not have any
++	 * parents.
++	 */
++	if (xfs_is_metadata_inode(ip))
++		return 0;
++
++	/* Inode already has an attr fork; no further work possible here. */
++	if (xfs_inode_has_attr_fork(ip))
++		return 0;
++
++	return xfs_bmap_add_attrfork(sc->tp, ip,
++			sizeof(struct xfs_attr_sf_hdr), true);
 +}
 +
-+/*
-+ * After all parent pointer rebuilding and adoption activity completes, reset
-+ * the link count of this nondirectory, having scanned the fs to rebuild all
-+ * parent pointers.
-+ */
-+STATIC int
-+xrep_parent_set_nondir_nlink(
-+	struct xrep_parent	*rp)
-+{
-+	struct xfs_scrub	*sc = rp->sc;
-+	struct xfs_inode	*ip = sc->ip;
-+	struct xfs_perag	*pag;
-+	bool			joined = false;
-+	int			error;
-+
-+	/* Count parent pointers so we can reset the file link count. */
-+	rp->parents = 0;
-+	error = xchk_xattr_walk(sc, ip, xrep_parent_count_pptr, NULL, rp);
-+	if (error)
-+		return error;
-+
-+	if (rp->parents > 0 && xfs_inode_on_unlinked_list(ip)) {
-+		xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+		joined = true;
-+
-+		/*
-+		 * The file is on the unlinked list but we found parents.
-+		 * Remove the file from the unlinked list.
-+		 */
-+		pag = xfs_perag_get(sc->mp, XFS_INO_TO_AGNO(sc->mp, ip->i_ino));
-+		if (!pag) {
-+			ASSERT(0);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		error = xfs_iunlink_remove(sc->tp, pag, ip);
-+		xfs_perag_put(pag);
-+		if (error)
-+			return error;
-+	} else if (rp->parents == 0 && !xfs_inode_on_unlinked_list(ip)) {
-+		xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+		joined = true;
-+
-+		/*
-+		 * The file is not on the unlinked list but we found no
-+		 * parents.  Add the file to the unlinked list.
-+		 */
-+		error = xfs_iunlink(sc->tp, ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* Set the correct link count. */
-+	if (VFS_I(ip)->i_nlink != rp->parents) {
-+		if (!joined) {
-+			xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+			joined = true;
-+		}
-+
-+		set_nlink(VFS_I(ip), min_t(unsigned long long, rp->parents,
-+					   XFS_NLINK_PINNED));
-+	}
-+
-+	/* Log the inode to keep it moving forward if we dirtied anything. */
-+	if (joined)
-+		xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
- /* Set up the filesystem scan so we can look for parents. */
+ /* Fix any irregularities in an inode that the verifiers don't catch. */
  STATIC int
- xrep_parent_setup_scan(
-@@ -1494,6 +1594,13 @@ xrep_parent(
- 	error = xrep_parent_rebuild_tree(rp);
- 	if (error)
- 		goto out_teardown;
-+	if (xfs_has_parent(sc->mp) && !S_ISDIR(VFS_I(sc->ip)->i_mode)) {
-+		error = xrep_parent_set_nondir_nlink(rp);
-+		if (error)
-+			goto out_teardown;
-+	}
-+
-+	error = xrep_defer_finish(sc);
+ xrep_inode_problems(
+@@ -1744,6 +1782,9 @@ xrep_inode_problems(
+ 	int			error;
  
- out_teardown:
- 	xrep_parent_teardown(rp);
+ 	error = xrep_inode_blockcounts(sc);
++	if (error)
++		return error;
++	error = xrep_inode_pptr(sc);
+ 	if (error)
+ 		return error;
+ 	xrep_inode_timestamps(sc->ip);
 
