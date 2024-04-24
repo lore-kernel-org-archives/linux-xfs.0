@@ -1,82 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B1813A269;
-	Wed, 24 Apr 2024 03:42:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B344E1552F7;
+	Wed, 24 Apr 2024 05:25:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713930153; cv=none; b=rqs65lynoWTtjo1yZpuz+utxrSuFajJpvVBVprdCyIdIOWHgWlh61et3nqL63CecFohouy3rXfgZA00qJQwrKrOfCb4QA7AyVicGmLNDCUh829vCQTJaVXajmAnXqDkomPDUj8Ct04Ktl9gTLJ+ScLAQDvAGgi3DerrogapJrvo=
+	t=1713936351; cv=none; b=tdnJKTE8O9AzJcutalVHd6KLS/8phLUt7f1RyYPntw/qXCkjWkh+01jaKoqBatZykYZwQOk+vy6ZaRnHCFmnXDOPnPLGBAa/vsA3J/t/Fsw/Un4gm40Sbw1wy9LZJj2A3fpk/KA4HIscp1Ejrsw0Y9hh8jske2EssR3Zdm8bc/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713930153; c=relaxed/simple;
-	bh=s8JSpe5lXZIlrGkV5GrE8eLt0SRuwdFk9Gns8mE2/uE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cvldpornClj1oEbG0c0xAqrBfPex6PpRI2wYdO4eMZJirwn7lopVDBItu7db3LDetkDnZQjMyHQ5OVANC05wu5bCP6vGkVsTaJtjMyipSIqm7zuLoIhMpQg/d1DzpzXl973Lu0gfl8JKMNz1Rt9Mo60B+vSKYpGGG/3QRETjivw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LKLBrxBE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713936351; c=relaxed/simple;
+	bh=ZrEoiWUGTqWTDdfXjBA93UXyO9HM0evbwAmIM3ft2r8=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=pjXgwJLodhqdISCJtu4HMZMYjnM24o8RK+JMa67sPNjwExzmmMGK3siGx+DV/AiwrzdIc1kd2ZQVG/o03yg2m0t+Tv4lXtrNFA0Cbd6/w7Jc7YO+hS8hovXUUQXaGil2NWSqVCdgc9iaSySta5zncVUU+lFYf9QQrBgl2US3slM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hMOVTDkQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LKLBrxBE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47F9C3277B;
-	Wed, 24 Apr 2024 03:42:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hMOVTDkQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFC29C113CE;
+	Wed, 24 Apr 2024 05:25:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713930153;
-	bh=s8JSpe5lXZIlrGkV5GrE8eLt0SRuwdFk9Gns8mE2/uE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LKLBrxBE4M7LMlIiN0mpe0WQXkYqSkcPKHWIC0yWrZ2AIkZ/coaC7iUCQEMGzJUUA
-	 1/rPwZJemR5Ur2J68hnvh9UaEfiTYrna3fV27pQ8gF5zkFQLRZBCvScXskr5VHxp1j
-	 cxlsT++NSh96ve3UUgbGsnRAcWCaQLzVUu55lgMMvA+UyAqfjvY237MKgzkTsF9mp9
-	 2sW2gpDdA0I+i8eQuh4nLMu48yzroqp8UBHWW/4VNSU1HHYHzYFGa3aFqZlUDrHPPz
-	 yOjWh7cUnj+EpiV9Ug+U7qzQxbQy/ytauTBynUKUiTj8KQ6YQnDt5SWUPWHDSNpLtY
-	 HSSQu1Cj51uCw==
-Date: Tue, 23 Apr 2024 20:42:32 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Marius Fleischer <fleischermarius@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>,
-	Leah Rumancik <leah.rumancik@gmail.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, harrisonmichaelgreen@gmail.com,
-	syzkaller@googlegroups.com
-Subject: Re: KASAN: null-ptr-deref Write in xlog_cil_commit
-Message-ID: <20240424034232.GD360940@frogsfrogsfrogs>
-References: <CAJg=8jz0X=CKR1POvF41oEumrq1z=MVWPdF2ECbzV6-rhht8-g@mail.gmail.com>
- <ZiGYbJezGZg6tGgq@dread.disaster.area>
- <CAJg=8jycPX=fQskUb=48g=AS7-uUNAVKZyZ+tyAC5uGYwfpabg@mail.gmail.com>
- <ZiWl2MG5f0wAp7mM@dread.disaster.area>
- <CAJg=8jyZuxsUX+oNU6O_L4LNOVs21xVKTDi8ywPfDbj+cAxegA@mail.gmail.com>
+	s=k20201202; t=1713936351;
+	bh=ZrEoiWUGTqWTDdfXjBA93UXyO9HM0evbwAmIM3ft2r8=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=hMOVTDkQagwJuLynXFXX35n+sWmhg+Hc4WEwuAcytT5bJLMSwFcHTs/KOGO7DzpwX
+	 R3ygRBcGrmEpwD8r0a1OC13nH/R5c0YU5tqHH1HrvKYqUqHzz4AEz4AdDTf73d45Id
+	 8QcFQ/MnOxBBX9aB4K9i+VJmMiCeADnpoKIgcNBeR523lgJHTtU/Q70fabaeUJrqbf
+	 YaYQfwcAsWwkoRtWIH4KyuFxTl0/rREBOrFHvmNfNozrlD2hA0wCW4rNqA/Vn/qP3M
+	 gIhR8N85xlgrveUH8++lt3XonVxJ3Pk8+aEyEiswQb+JKeRYoEQaEC6NMzYWDB8gk8
+	 CP80HCVDmDPew==
+References: <87bk60z8lm.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <Zig6A632L9PDK6Qp@dread.disaster.area>
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: dchinner@redhat.com, djwong@kernel.org, hch@lst.de,
+ linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 6a94b1acda7e
+Date: Wed, 24 Apr 2024 10:49:29 +0530
+In-reply-to: <Zig6A632L9PDK6Qp@dread.disaster.area>
+Message-ID: <87wmonib6s.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJg=8jyZuxsUX+oNU6O_L4LNOVs21xVKTDi8ywPfDbj+cAxegA@mail.gmail.com>
+Content-Type: text/plain
 
-On Tue, Apr 23, 2024 at 08:05:22AM -0700, Marius Fleischer wrote:
-> Hi Dave,
-> 
-> Thank you so much for your detailed explanations!
-> 
-> > > Do you think it would make sense to backport that patch to 5.15.156 (the
-> > > LTS kernel)?
-> >
-> > That's up to the 5.15 LTS maintainers to decide. They also need to
-> > weigh up the fact that xlog_cil_kvmalloc() doesn't exist anymore in
-> > the upstream code base. i.e. we found other places that had the same
-> > kvmalloc() performance problems, and so lifted that code up further
-> > and used it in other places in XFS....
-> >
-> 
-> Understood. Please allow me one last follow-up question. Did I add the correct
-> maintainers/mailing lists to reach the 5.15 LTS maintainers? If not,
-> how do I find
-> the correct addresses? I used scripts/get_maintainer.pl as suggested here
-> (https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html)
-> to locate maintainers/mailing lists.
+On Wed, Apr 24, 2024 at 08:45:23 AM +1000, Dave Chinner wrote:
+> On Tue, Apr 23, 2024 at 03:46:24PM +0530, Chandan Babu R wrote:
+>> Hi folks,
+>> 
+>> The for-next branch of the xfs-linux repository at:
+>> 
+>> 	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+>> 
+>> has just been updated.
+>> 
+>> Patches often get missed, so please check if your outstanding patches
+>> were in this update. If they have not been in this update, please
+>> resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+>> the next update.
+>> 
+>> The new head of the for-next branch is commit:
+>> 
+>> 6a94b1acda7e xfs: reinstate delalloc for RT inodes (if sb_rextsize == 1)
+>
+> I've just noticed a regression in for-next - it was there prior to
+> this update, but I hadn't run a 1kB block size fstests run in a
+> while so I've only just noticed it. It is 100% reproducable, and may
+> well be a problem with the partial filter matches in the test rather
+> than a kernel bug...
+>
+> SECTION       -- xfs_1k
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test1 6.9.0-rc5-dgc+ #219 SMP PREEMPT_DYNAMIC Wed Apr 24 08:30:50 AEST 2024
+> MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/vdb
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb /mnt/scratch
+>
+> xfs/348 19s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad)
+>     --- tests/xfs/348.out       2022-12-21 15:53:25.579041081 +1100
+>     +++ /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad     2024-04-24 08:34:43.718525603 +1000
+>     @@ -2,7 +2,7 @@
+>      ===== Find inode by file type:
+>      dt=1 => FIFO_INO
+>      dt=2 => CHRDEV_INO
+>     -dt=4 => DIR_INO
+>     +dt=4 => PARENT_INO108928
+>      dt=6 => BLKDEV_INO
+>      dt=10 => DATA_INO
+>     ...
+>     (Run 'diff -u /home/dave/src/xfstests-dev/tests/xfs/348.out /home/dave/src/xfstests-dev/results//xfs_1k/xfs/348.out.bad'  to see the entire diff)
+> Failures: xfs/348
+> Failed 1 of 1 tests
+>
+> xfsprogs version installed on this test VM is:
+>
+> $ xfs_repair -V
+> xfs_repair version 6.4.0
+> $
 
-You got it correct -- Leah is the 5.15 maintainer of record.
+That is weird. I am unable to recreate this bug on my cloud instance. I am
+using fstests version v2024.04.14 and Xfsprogs version 6.7.0.
 
---D
+# ./check xfs/348
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 fstest 6.9.0-rc4-00122-g6a94b1acda7e #13 SMP PREEMPT_DYNAMIC Wed Apr 24 09:48:36 IST 2024
+MKFS_OPTIONS  -- -f -m rmapbt=1 -b size=1k /dev/loop1
+MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
 
-> Wishing you a lovely week!
-> 
-> Best,
-> Marius
+xfs/348 7s ...  8s
+Ran: xfs/348
+Passed all 1 tests
+
+-- 
+Chandan
