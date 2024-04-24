@@ -1,102 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FEB6339A1;
-	Wed, 24 Apr 2024 03:06:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33EF1BE4D
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Apr 2024 03:07:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713928017; cv=none; b=sqFoxDToICWEETc1pk8/HpyDCrmN+IJvTdS6a2uwsrOzctv+Osbmkl9C/IwoTdRripE49B1NDitUZsRnY8rGoeFtH+2xUixBGusoNL5uBF0sEg038++NmPLOuaR1LpTVaQktrcKH3yK3OYpZBLH7de1r8+1dD0L2cSrI4HVkGn0=
+	t=1713928027; cv=none; b=tOyvKwY5dj0NaQdRGqJ+/21DQmUtjFmR48SU2EWn2pV8RD1fbwct0CtoWQAIcFLF1JLmQiDtu6HII1apzRBzsg0bEdVBc95cEXDTa1xJabPsHo4IlwCYSlur9tMQc4XHMuDnwu57DwqfptiF2/8qsvi6gRaUNlFEp7evQNXNn+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713928017; c=relaxed/simple;
-	bh=HAm8npkjU9W9knreApov7ysuQwghSu0sfaePTT/qFdM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MYm87SehUo5Jpxw3rGYAlhy+qBn4EDy/GSPaMcYefbaYUZJB05Hq5V4QbfkSdm8RVcgMHinfNkd3MnnB49apRwi9O+tmU+gBMh1N6P1muOiEvR2gz7Wl043VTPjYeCtFmv/qslGwtCmPjdoWAZJsU9ca7Aa7d8TOrYCi4cDfWW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LYfXxw3p; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713928027; c=relaxed/simple;
+	bh=+oQA62V4oK4mPuie8MbA4uDEXnOm4V2wjMmRg+BjFL4=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bA12ZS38lyiQ+hYZ0phRYRHHHCMTSwvub/VCOd8WpPmeU7gXpEAVjkkLJIym4lRsXCgnLzw9ncJ+jfzIVHQmWj5E1YCRRrXMxEnjS4SRnPZ5AZVPKNqMnaR24hLzvogY5AGWUWlPyhjY3ZKqIlEhXvJMTrjODv43NSEOAihaL7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bdL5OxNO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LYfXxw3p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AED8C116B1;
-	Wed, 24 Apr 2024 03:06:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bdL5OxNO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCC7DC116B1;
+	Wed, 24 Apr 2024 03:07:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713928016;
-	bh=HAm8npkjU9W9knreApov7ysuQwghSu0sfaePTT/qFdM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LYfXxw3p4wmKieHARFTBzsmHd7aZLi/XmBIFSyRdmgBtB9/1KsRNKMXYtkwmWDczJ
-	 WgXdVF7y7GPi8iK+q/qIdEP5v8Gsak1sml73TpWMoXjdbKrHU6RntqsOVbS9/Nzu80
-	 2VjASi+6BRpmo1iKP/fL4A7yiRhu4l2EepmtyORboMix6Udl+Yj2hEsCYqHgdlfCY8
-	 /TR/UCjZfjIp0zNyMflTpeQB1Igx7pOpdVfyPupT2aOZ/+wG/UvAXQ0ag4Asxihi9X
-	 XV7ctIpglPk+qIle93BDb59IvJi+gEJOIp8bihRNVLlTKUYUxddDWq8KwMq4A4gA4O
-	 sGlPFPkDBbXXA==
-Date: Tue, 23 Apr 2024 20:06:56 -0700
+	s=k20201202; t=1713928026;
+	bh=+oQA62V4oK4mPuie8MbA4uDEXnOm4V2wjMmRg+BjFL4=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=bdL5OxNO9UTRgdq4lI9BIp/TDSz52zFRrmpSogJnOmYGNRlGyNPgklaD1TinWhyhh
+	 v7bXe6KNt/vqpIzfmw976Dc3OFWRgd/V5NCNVDCoeGYbnDstqSniljWPEqG7DWyr1D
+	 2GECSwyeIYQhV2RoyIuMbwsaor/IKEYs88lllG3N4jIig9gzIg/yocbul8ntOiN3yI
+	 YLPSJa613MUz6UCIF8I998t3j+q7dKF38jLxbk3ATNlBnABQ20IPCqNNNm4+MbZ1jL
+	 NjthY8VYzBqUrS37oFd5GcWzGzx9zOpT8SDrWo5X38sEYkIgQl0cZ7pSJcppYvAKNH
+	 Qp+ew+ZveQqEw==
+Date: Tue, 23 Apr 2024 20:07:06 -0700
+Subject: [PATCHSET v13.4 7/9] xfs: vectorize scrub kernel calls
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Cc: chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH] xfs: Remove unused function xrep_dir_self_parent
-Message-ID: <20240424030656.GC360919@frogsfrogsfrogs>
-References: <20240424020638.81487-1-jiapeng.chong@linux.alibaba.com>
+To: djwong@kernel.org, chandanbabu@kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171392785649.1907196.827031134623701813.stgit@frogsfrogsfrogs>
+In-Reply-To: <20240424030246.GB360919@frogsfrogsfrogs>
+References: <20240424030246.GB360919@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240424020638.81487-1-jiapeng.chong@linux.alibaba.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 24, 2024 at 10:06:38AM +0800, Jiapeng Chong wrote:
-> The function are defined in the dir_repair.c file, but not called
-> elsewhere, so delete the unused function.
-> 
-> fs/xfs/scrub/dir_repair.c:186:1: warning: unused function 'xrep_dir_self_parent'.
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8867
-> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Hi all,
 
-Yep, not used anywhere in my patchsets.  Thank you for catching this and
-cleaning it up.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Create a vectorized version of the metadata scrub and repair ioctl, and
+adapt xfs_scrub to use that.  This mitigates the impact of system call
+overhead on xfs_scrub runtime.
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> ---
->  fs/xfs/scrub/dir_repair.c | 21 ---------------------
->  1 file changed, 21 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-> index 38957da26b94..f8450c7f99f4 100644
-> --- a/fs/xfs/scrub/dir_repair.c
-> +++ b/fs/xfs/scrub/dir_repair.c
-> @@ -176,27 +176,6 @@ xrep_setup_directory(
->  	return 0;
->  }
->  
-> -/*
-> - * If we're the root of a directory tree, we are our own parent.  If we're an
-> - * unlinked directory, the parent /won't/ have a link to us.  Set the parent
-> - * directory to the root for both cases.  Returns NULLFSINO if we don't know
-> - * what to do.
-> - */
-> -static inline xfs_ino_t
-> -xrep_dir_self_parent(
-> -	struct xrep_dir		*rd)
-> -{
-> -	struct xfs_scrub	*sc = rd->sc;
-> -
-> -	if (sc->ip->i_ino == sc->mp->m_sb.sb_rootino)
-> -		return sc->mp->m_sb.sb_rootino;
-> -
-> -	if (VFS_I(sc->ip)->i_nlink == 0)
-> -		return sc->mp->m_sb.sb_rootino;
-> -
-> -	return NULLFSINO;
-> -}
-> -
->  /*
->   * Look up the dotdot entry and confirm that it's really the parent.
->   * Returns NULLFSINO if we don't know what to do.
-> -- 
-> 2.20.1.7.g153144c
-> 
-> 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=vectorized-scrub-6.10
+---
+Commits in this patchset:
+ * xfs: reduce the rate of cond_resched calls inside scrub
+ * xfs: move xfs_ioc_scrub_metadata to scrub.c
+ * xfs: introduce vectored scrub mode
+---
+ fs/xfs/libxfs/xfs_fs.h   |   33 +++++++++
+ fs/xfs/scrub/common.h    |   25 ------
+ fs/xfs/scrub/scrub.c     |  177 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.h     |   64 +++++++++++++++++
+ fs/xfs/scrub/trace.h     |   79 ++++++++++++++++++++-
+ fs/xfs/scrub/xfarray.c   |   10 +--
+ fs/xfs/scrub/xfarray.h   |    3 +
+ fs/xfs/scrub/xfile.c     |    2 -
+ fs/xfs/scrub/xfs_scrub.h |    6 +-
+ fs/xfs/xfs_ioctl.c       |   26 +------
+ 10 files changed, 366 insertions(+), 59 deletions(-)
+
