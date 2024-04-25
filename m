@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404B97EF;
-	Thu, 25 Apr 2024 00:30:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E63816;
+	Thu, 25 Apr 2024 00:45:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714005013; cv=none; b=VTcGxC8LJCLIxK3T0vEYW1mittv2K6RSJvBMK3peNE12jPTPxItEIUpkgsGiqMeGR511wnonLQlWcT7GpEhPvLFf4mlCj41m3rFNiFre1Qb36POTAuvrJAqtovFEF/n4TcfmyhK/Jud0uBsEzMYoTBXsWgfV4nr90A/AiDsv4cc=
+	t=1714005946; cv=none; b=He2UWVTiRLBBbYr3rE5yomNHC1pv6iBw3eUav6DodOL2yFUaBKy4IA4W6VEDFnrmgscnmWJQOqOa41qbM2v7SAHlnlZIPMgM5VXy9DXP0jfKQevOgZLqhd5TBxCZ75v2L0P9dF8ZJbMekOvdpHX0Jn9S+buX+whWMhzBv/cSF6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714005013; c=relaxed/simple;
-	bh=KOLaJB66X3054hufeGyheJESQV+R37/EE+6cbTDfyHk=;
+	s=arc-20240116; t=1714005946; c=relaxed/simple;
+	bh=bVOU6tOiuNXUao4R1yl9Kt8577O5Q/2RVA/VfGBG9oY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qCs4Ga5jpjlLWHCb9NrDXayw7gHcJ5jOOTe9HbFOQRWXl45J+OO/NCApgGK4VZhjHqyrim8RJtI/dXlhmFrhEyBrw3Eh+QmMsSut3tithJSFrUI+k5bk0OFCI1HoudpbKI9wH7rEZe/xVl6ESYVBoiCmEu/3qB1H2Tv5Xt62Vuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WGTfPJmQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jd6lafCSZTgs94E2E1C1SnjPrLw9TI3PwIaGGP2UPyJstKNklLpbZqyOynZ2fQfB6NfGEFYf0D0Mqkf3k54KZxupd9GoE8Ybr5VJ1fJj8GLISkiavgRyI0Ivox/UoEfqAN1BTG6Ij6r53IWEjhf1SUOydDaIXVJteC0t87PRq9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xh4y/h+m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WGTfPJmQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC828C113CE;
-	Thu, 25 Apr 2024 00:30:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xh4y/h+m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7323C113CD;
+	Thu, 25 Apr 2024 00:45:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714005012;
-	bh=KOLaJB66X3054hufeGyheJESQV+R37/EE+6cbTDfyHk=;
+	s=k20201202; t=1714005945;
+	bh=bVOU6tOiuNXUao4R1yl9Kt8577O5Q/2RVA/VfGBG9oY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WGTfPJmQRxT+1mvhuL9STyvcxrTD3k3MDrw3SIUUoqxCSgkdBKdvlYNjXx9ivDNiC
-	 dzfGciaQz3iNh4Ev+Oq6pT1C3sgIEVlDnYTm7FoMnazSFE8MNGVCr1UWSWdaZ9qw3v
-	 zNsgTmfRLL7inwvlblV5A36ISwT4MCk5/Z0EwGObBqIi1CQlAweHuZKa7dnc1RKnse
-	 Bp++4ryM5BlITgDBtlPX1RIgbBMxxEGQkuqzWAmPU5Osf9bn3CIwlCeWRYFvcC1aK/
-	 7n8ggc54Jy5VML4V+yXmTnezIhDb6s+oUgh5c7mk1lbiewMJlVxbFiL8KkWrNDmGJt
-	 aNG0BkqpvRa5A==
-Date: Wed, 24 Apr 2024 17:30:12 -0700
+	b=Xh4y/h+m/y2LnBrm0pPsghkzZvXdJdnP+Q/nqM937UXIKZCa0FB5uoXlVkot0yCUB
+	 3CIPyqQ/uGc4fK6fAKnRsmLdlDRBioFP8UKcnqz0X3wumqTGUBRcavSBNS4vG21hYG
+	 ik1XHM7n/N9yg/e3Ev4Ujh6UqgOfQk6Y5/D3u5vV5IakqshBeUEaX400rBMzRvvc6t
+	 82nrejF7Q56UgfQBFOmkqfJpBGSxjTmfGn4ZUBN7UdREYJGZqjwUzC8OwM4yuuiZ8X
+	 Yta9wBrxP4R8/s2Y8BOiCdVKc4td3y1p0e0pYLxVgofAaleY5rCunFFIqhgH2nQoCj
+	 +nrkya7hBBijA==
+Date: Wed, 24 Apr 2024 17:45:45 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Eric Biggers <ebiggers@kernel.org>
 Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, fsverity@lists.linux.dev
-Subject: Re: [PATCH 06/13] fsverity: send the level of the merkle tree block
- to ->read_merkle_tree_block
-Message-ID: <20240425003012.GT360919@frogsfrogsfrogs>
+Subject: Re: [PATCH 08/13] fsverity: expose merkle tree geometry to callers
+Message-ID: <20240425004545.GU360919@frogsfrogsfrogs>
 References: <171175867829.1987804.15934006844321506283.stgit@frogsfrogsfrogs>
- <171175867965.1987804.16949621858616176182.stgit@frogsfrogsfrogs>
- <20240405024212.GD1958@quark.localdomain>
+ <171175867998.1987804.8334701724660862039.stgit@frogsfrogsfrogs>
+ <20240405025045.GF1958@quark.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,32 +44,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240405024212.GD1958@quark.localdomain>
+In-Reply-To: <20240405025045.GF1958@quark.localdomain>
 
-On Thu, Apr 04, 2024 at 10:42:12PM -0400, Eric Biggers wrote:
-> On Fri, Mar 29, 2024 at 05:34:14PM -0700, Darrick J. Wong wrote:
+On Thu, Apr 04, 2024 at 10:50:45PM -0400, Eric Biggers wrote:
+> On Fri, Mar 29, 2024 at 05:34:45PM -0700, Darrick J. Wong wrote:
 > > +/**
-> > + * struct fsverity_readmerkle - Request to read a Merkle Tree block buffer
-> > + * @inode: the inode to read
-> > + * @level: expected level of the block; level 0 are the leaves, -1 means a
-> > + * streaming read
-> > + * @num_levels: number of levels in the tree total
-> > + * @log_blocksize: log2 of the size of the expected block
-> > + * @ra_bytes: The number of bytes that should be prefetched starting at pos
-> > + *		if the page at @block->offset isn't already cached.
-> > + *		Implementations may ignore this argument; it's only a
-> > + *		performance optimization.
-> > + */
-> > +struct fsverity_readmerkle {
-> > +	struct inode *inode;
-> > +	unsigned long ra_bytes;
-> > +	int level;
-> > +	int num_levels;
-> > +	u8 log_blocksize;
-> > +};
+> > + * fsverity_merkle_tree_geometry() - return Merkle tree geometry
+> > + * @inode: the inode for which the Merkle tree is being built
 > 
-> This struct should be introduced in the patch that adds ->read_merkle_tree_block
-> originally.
+> This function is actually for inodes that already have fsverity enabled.  So the
+> above comment is misleading.
+
+How about:
+
+/**
+ * fsverity_merkle_tree_geometry() - return Merkle tree geometry
+ * @inode: the inode to query
+ * @block_size: size of a merkle tree block, in bytes
+ * @tree_size: size of the merkle tree, in bytes
+ *
+ * Callers are not required to have opened the file.
+ */
+
+
+> > +int fsverity_merkle_tree_geometry(struct inode *inode, unsigned int *block_size,
+> > +				  u64 *tree_size)
+> > +{
+> > +	struct fsverity_info *vi;
+> > +	int error;
+> > +
+> > +	if (!IS_VERITY(inode))
+> > +		return -EOPNOTSUPP;
+> 
+> Maybe use ENODATA, similar to fsverity_ioctl_measure() and
+> bpf_get_fsverity_digest().
+
+Done.
+
+> > +
+> > +	error = ensure_verity_info(inode);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	vi = fsverity_get_info(inode);
+> 
+> This can just use 'vi = inode->i_verity_info', since ensure_verity_info() was
+> called.
+
+Changed.
+
+> It should also be documented that an open need not have been done on the file
+> yet, as this behavior differs from functions like fsverity_get_digest() that
+> require that an open was done first.
 
 Done.
 
