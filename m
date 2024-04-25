@@ -1,210 +1,231 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F9A14A615;
-	Thu, 25 Apr 2024 13:23:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714051392; cv=none; b=shk3ieeLQThKWFvgfqswYFivEkMIklKmY6TKZRRv5iciQFmoZR14CfKqHSFvwAtWWmlJE43mLNg6KPLDZTFcLbQE7swWKWEGfow9yNKeYGdjkkiWkYA6RcB1smScfcV6rToVljlU2WSPgHg+zpyYRdckpZiSDim6rJm5ktsRK2w=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714051392; c=relaxed/simple;
-	bh=j2xIiE3AY5vB90b1oFVvadTR9sNvBchDafZ+psVCxPY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MBdxy3ukzt2zp1CH6dW2D8XhtGkZqwz7T/b6VJN2pnOk+ddh9qrUvwdg+N0qJXN9SpXLi23dyDrxooHWt9lESr0jqOZWQIsdyjJnvsPx7+qzyvciVqj3JSjocUy6f66ZM/KT2f2ygFdgyiM4caug6qhUEaKGOTjSrVhaPo6pLeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VQGkZ4QvZz4f3kpF;
-	Thu, 25 Apr 2024 21:23:02 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7E7931A016E;
-	Thu, 25 Apr 2024 21:23:07 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBEqWSpmHu+2Kw--.61462S12;
-	Thu, 25 Apr 2024 21:23:07 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	brauner@kernel.org,
-	david@fromorbit.com,
-	chandanbabu@kernel.org,
-	tytso@mit.edu,
-	jack@suse.cz,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com
-Subject: [PATCH v5 8/9] iomap: make iomap_write_end() return a boolean
-Date: Thu, 25 Apr 2024 21:13:34 +0800
-Message-Id: <20240425131335.878454-9-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240425131335.878454-1-yi.zhang@huaweicloud.com>
-References: <20240425131335.878454-1-yi.zhang@huaweicloud.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4F9D149E0B
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 13:24:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714051498; cv=fail; b=qs0rBsqsfa9KgNGZFaGWVkNLGAJHu1lHFU4e+2JaneQC4/M3okblWi93npyCAW+Ryx1OHI1iuPHD30PxHGcEels/pgMNEwu7+/I3utMkuNLoS+l7iJK/8uVV0xDwHC+ZvLAXyGTjm9XfKUzCfDdngBigyz05ARhWFUmUistMZcI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714051498; c=relaxed/simple;
+	bh=b7aWKwH1MQFYDK/EkD156oGmIn2iT9CEE/POJVeKSyg=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=bCML2G8ztNBPIeyjNWx+p+7i9gEDoKmhqQoKamlg4PC45V/ik70hBV2sNwvKbDxFodHf/1EZ2T1Sf3ZhAADf4FGSA89JI5ZyUJG5UgKqb8mTYx4LPW3D+yu1R/OqE7Ga/HN1+JBSIU+g6qZXZv7mt9chTizjafczuuegeq7Bstg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=DEhHOFM9; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=JI8ic4b2; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DEhHOFM9";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="JI8ic4b2"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43P8uT0C017708;
+	Thu, 25 Apr 2024 13:24:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=dz6ZlUknVeps9w+cJqY1H1/hODANwJcvvwxE8ARADxc=;
+ b=DEhHOFM9b1Bvvs8ral2DshCXaUbWpvQfm9YKtVDS8c+9g8UOEtiOIomVwPX0p4Z3Tvev
+ roz/VceEutITc0yNmM3qEBESRBp2F/ECBd+Q7JejzeGfKwOk08Zd5Arx6TLM9ruEQxNv
+ ss2um10zFYhAoVVxG3apCKnEceAHD5VE80P7M0L+A+kQhBeOM4WCfTrbdRuEAGzQjo/9
+ 5CJp/wWZdROgApiOMM/P6sXw9RyBQhh67iKxaL4Ip6b+7JzHMpY0ATiDs3orUWyWVCls
+ 2loUnPRal3wCD92OkP/eD4CySIWOREOb9uH6cnQF4ZfmO7wjGcFB7rlJND8kgeyP7vbp uw== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xm4a2k70f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 25 Apr 2024 13:24:41 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43PC21NO001912;
+	Thu, 25 Apr 2024 13:24:40 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2041.outbound.protection.outlook.com [104.47.66.41])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xm45b0h2g-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 25 Apr 2024 13:24:40 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BeSGgI+Lq/J+hVVu/3I3ryZ31n3VDvRi4ZsYTxQSf5wy9R9ij5hZwxE/Cy0smPl7h9FrrpOOBmieilYSaIXnfqaIOR8/vSdcY8bOire5ATSlWPt3DWp00LZuvnj4nw3v/+Z5bk6IvNKEGn98o7LgGLzSiQzy2U8M+fBMu7746VXXc6OT9Ouk75I/OCE6+3pZthUVDlXjn9TYNJJoIHcrtAJwBmfqQH+dzlnkNXL0ShlhnoTC1/Uq+f2U3dogXhP3sf/WdVLtqj5Dgr6fu2nNDWYTfEF92IzNbiGk4JF6g2Fo6TIo+7rZ8nxIxCH6Md42WB9+R3Dx45rsZzrBp9sVYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dz6ZlUknVeps9w+cJqY1H1/hODANwJcvvwxE8ARADxc=;
+ b=g+7iHCDZbUiNqr1egKwWQIjTc1NTO8a7dvsuGsg2EGhIvUzUyCfOk7h1oRYpFyATV3Qopj5Cp2Iwc2gtwxo9IKiBs3rS3Bzf5hdEjBKlnEI2XTgg5JXrLuR9gzAFt0qzinkt9FAxort97PHtgq1q5SSwd1BKyNCV3R7qRTaFKPHO4v3vhBt2PxAVmPXvS2qlm4wK1gfj2CTxhGrr7Sq7/cS+9U/Xe/4bq1mUX5WjDAfzmeXD64A1wIkPM/5hldPsClb9LIZlV1m0h3gQnZyWLLkckSYxAgYGNCrjb0LCcsZpS07X3JuajpVOw7n69tIza4h0qxealpxCa1tTGwCutQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dz6ZlUknVeps9w+cJqY1H1/hODANwJcvvwxE8ARADxc=;
+ b=JI8ic4b2HxPOWpCk6VoRlqIX5N1+cH96wjiV9cgVUgFpYaGpXnVVj5IghcDuvCtWbkcsE3NMVfAwNsl0cWXtY3h31bBxqwSj6IP1/xZU/ogmHv/ERFpiVcaP6WWPE1s3xmWDWj1JAM9HMkmzjWq6PrHaEcI3BIaSVBsVAc9ja68=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CH3PR10MB6881.namprd10.prod.outlook.com (2603:10b6:610:14d::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7472.44; Thu, 25 Apr
+ 2024 13:24:38 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%4]) with mapi id 15.20.7519.021; Thu, 25 Apr 2024
+ 13:24:38 +0000
+Message-ID: <01b8050a-b564-4843-8fec-dfa40489aaf4@oracle.com>
+Date: Thu, 25 Apr 2024 14:24:28 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] xfs: Clear W=1 warning in xfs_iwalk_run_callbacks():
+To: Christoph Hellwig <hch@infradead.org>
+Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org
+References: <20240425120846.707829-1-john.g.garry@oracle.com>
+ <20240425120846.707829-2-john.g.garry@oracle.com>
+ <ZipJ4P7QDK9dZlyn@infradead.org>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <ZipJ4P7QDK9dZlyn@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SG2PR06CA0211.apcprd06.prod.outlook.com
+ (2603:1096:4:68::19) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBEqWSpmHu+2Kw--.61462S12
-X-Coremail-Antispam: 1UD129KBjvJXoWxXFy3JFW3GrWDZF1kKFW3Wrg_yoW7JrWUpr
-	yDK398CFs7Ja17urn5JFy3Zr1Yk34fGrW2krW7G3y3AFn0yrW7K3WrGa4jvF1rJ3s7Ar1f
-	JF4vya4rWF1UAr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQ
-	SdkUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH3PR10MB6881:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2330bb56-d128-451f-73b1-08dc652b0e3a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?WlQzUER2eEM0cWI5QTE5Z1R5aEUrL01hNmhwZWNTYWgwVFhvYXF5V1ZxRnlj?=
+ =?utf-8?B?R1Bxb0hrVlhYWEhHWFNhVExtNkF5VkJVTjg1Qk1WTHBtdURZOGRhRm5hN2hP?=
+ =?utf-8?B?b0lCeGNUa2x1d0VPZGNCTVp5cnJ3aXRoS2lodGx6cDBuakVVYVhKR29XZmFh?=
+ =?utf-8?B?L3hvaU52WmN1WEhzb05GOGZZMDFXUklJMldtaVZpcnl2d01JTXFYc0Q4Njhs?=
+ =?utf-8?B?OVZkSENXZEZVUUw5SVpnUTBPTXRnYWcyUCtScy9HTmtUNnVOc1UyK21LT0da?=
+ =?utf-8?B?M0NZOVdZYlZEak56SnJXVGNaVDk2MC91dXB2M3cyRHB3Z1pqeTJCb1o2RUdR?=
+ =?utf-8?B?TlY0ZklQa3JkSmJOaTNqb3dpb2RJK1Qzd21zeEhTT0dnVCtzc2ZidmZsZXhN?=
+ =?utf-8?B?U29laHplWlZISmg4STJPRStjVmdSZlJZVlVVQ2FxcmpOT2RoZ1VpenZXclI4?=
+ =?utf-8?B?ZmFrNjBJd1VuK1pvUS81RmZVZm9VSW9rYUhWbWZRZUl1VHhYbVRqeGpad3g1?=
+ =?utf-8?B?ZUQ3b0hPUU5jWkNNZjlDeWd5K3hPTldLLzQraTJTQ0t6TXAzQ3V2RXpjdUFM?=
+ =?utf-8?B?OE9NYkdXR1hLUzExTzlDeVpQWG1waXpGSlkwTkpxL1pMZVdUUk01MHpQclhx?=
+ =?utf-8?B?VmFaV0xrZy9XU0dNSWpwNTJHYkpUa0tQQW9wY0ZkbGpvVnMrcWloT0E0bjNJ?=
+ =?utf-8?B?b3lvNGFrcTZFOG5Qc21yWVF3USt6NVlvbU03aE9PNVdkS2tzSllYdnNIVDNE?=
+ =?utf-8?B?N2I5OU1BK0k1ZUprSEgxdEFiYm0yaDFwemVscTdQMXMwekcrYTJVQXdXcUFp?=
+ =?utf-8?B?VlN1NVJnYThDd1ZCL3FId2prb2JGRUtzbmJLbUVaNW1semljOGtMSGRwVkUv?=
+ =?utf-8?B?b2dWT3hIMVBRZkVES28rMWtuSS8zajlBaDRNSnZnQXZNSmdiNGJ5eVRJaUxR?=
+ =?utf-8?B?dHpKMmtYeXlxdi9lMGlRNnkzVnU1dXNOME1PSEZ0cllUdGZQV1ZINDcrem9i?=
+ =?utf-8?B?U0RpOWxLUEpVY0xlVnNSb2hjU0wydGhoYW1iNDRaNEVlalFXV0JqakpvUmsz?=
+ =?utf-8?B?ODVMeWdaVEQrd2doUkRyWERDQkg5My9FcnQrVTFSRW5wN0k4NEIxcFlhTXVT?=
+ =?utf-8?B?ZENDOVNYNUpXQlEwaE1neG9FWDFNSHNMbXZsbmZDeHhIRlNtVUxVaW1FM2o5?=
+ =?utf-8?B?VTg1dFE1bUN0WXJlMFpEMHpNbEtjQnd4T2VLUWt4dUFCa3pYOTVGOTdkUzJP?=
+ =?utf-8?B?akFjek1FVjNOUWowZmNKeU1XMHF0MzEranlsNjJGRWpzeitUclhaT3g0eDZE?=
+ =?utf-8?B?NXh1a05KdWx4cHYrNFRvaHByRTdPcm9RckVkTWc3QUVOM0QvR0N5WWhPMmVZ?=
+ =?utf-8?B?U1UyZDlyUXNlRmQ5SHNCdEw3UUV4Nnh0bXFianM3RzBVTmtqSnBRY1MwS1RQ?=
+ =?utf-8?B?LzRHMjQydlp6a0M1VzRDYWkrVXVGUUQzemxlQXFXNmpmbWNhb0JOUUQxZ053?=
+ =?utf-8?B?WUNlY3lMMnFMdmlMa09naTVMK0ttWDVzSGNRQkEyVVdoOG51eTJVWW5uTXhV?=
+ =?utf-8?B?OXQyNHQySVlKbFhHaUp5cGJ6eVBjZFFoWFR0MjQ4ZU9GZnVRdDVqdWJYbzFr?=
+ =?utf-8?B?VFlETVNFSWxhNWYzcGU2ejluUkhPMHZvcUtDNXZZbm05YnNXRFRrS2VFeElW?=
+ =?utf-8?B?NHdZTXJieUJFWHdNQW5JcnkzRVdBQmgwZktNakhyd1ZjRi9JUW9CaUVnPT0=?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(366007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?cCsvbjNFWWtqb2hmbldmWVQwUEs1UWppVXBZMlRhSWpuQmZZMG5LaWt4N0F6?=
+ =?utf-8?B?Qm9XK3dqRGdOSU5FWnc4NnZJUnFzaFBEZHc5NEJ1d0dXVURZUTNLek1ITzNV?=
+ =?utf-8?B?SDV0TlEyOHI2UHU1VmJiUFM0eVBaaVBDNlRzektIMTJzdGl2MkpIUnUwQXE1?=
+ =?utf-8?B?OUFHVFFQMnNkQjJFT1hZZmhucWYvM2JpVVR1dU53SERMOEFQUFBWb3d6RzFB?=
+ =?utf-8?B?VGt4ajNLTzZzWkxhTEtJaUF3WUtzNzJpTVBDSmh0MitWdzlyRUhtd0JRcWVw?=
+ =?utf-8?B?UnVuNmZNZG5lMWQ2MjA1K05HK3FzWnVXWUJ6QTRiZkxaelgwTTB1TVd6NE9o?=
+ =?utf-8?B?NlZRN1J6VmJva3FDeFlmeGM5a0t0QjhTbkpOL0h1aU9mVnVzelpISXZSL3pt?=
+ =?utf-8?B?NEp2RDg3NzBLTFIwbW9lTlBCNCswY2J4RE1KeUxWeHBtMXVrb01EUUt5MDVo?=
+ =?utf-8?B?Z3grL3BYUmRaWnFVUGExczdXY2VJczhoeS9yMXNIUllMK1RwVGxOQW1KYjZD?=
+ =?utf-8?B?bkh5a0NPMmJUaitvbHV3MWhHd1hVZmxqeDBCQ2o1Wk5wUFl1Q1VVaE83Q3hl?=
+ =?utf-8?B?VVY3L1gyUTdLVTNZb0tvU2RMbEczMWJIK0FTQzdhWWJLNDQ2eVpiMGYvYkpT?=
+ =?utf-8?B?eHhLN2FUazdvQjl1S0d4dEZNU1dxNFZTQXJoT3ZCcUQ1dktXeDA2U0pDaWhP?=
+ =?utf-8?B?WGlXWEdzZ01JZlFXa0VnYkorT3BkbkIzT094UXhXVy8yUVJTSWI2YjdwOXVh?=
+ =?utf-8?B?TDhiODFaTHVWZzd2b3Qvc2piOFNyOHRWUEZqTkFjTTFSZVpRYlhHUUFnZnJa?=
+ =?utf-8?B?L0RVVlYwczdTRW5YQ0tCTWZtMzQ5REJaMyttd2FoMFh2ZWIrOFRzOFpROHEy?=
+ =?utf-8?B?Q2pZa205SXhJWE5zeFJnMFdmSS9QR0xLMlNRYjFTMHRoZEV6UWF6L3Zucm1i?=
+ =?utf-8?B?Nm5JajdEL0JPdWQrelVoTmo0bHg4KzZJUEJlYlVvS1FIcU83OFNSRmpQVndC?=
+ =?utf-8?B?bDJZV2RBK25MQThmUjdLckZCc1RaWEx2WG9lNlpzZFdQKzhVMmhDT3ZuSUZ4?=
+ =?utf-8?B?bjFkZDdUVVNHT0xYSjM0bFBHM0gzWnJzMjRqdDFLVXI2VTk3OExJdXpNWDZC?=
+ =?utf-8?B?Q1NXR2JGTHozekJYbjk4SlIxZHZzaHhPOU5WUmg0SHBFOWpWbjRDaFZHWUtD?=
+ =?utf-8?B?cjhSR3cwT2JiUGlxOWZMbkxWWUFtUnlIc2QrOUFuV0E4M3NvTTRFSkd6NG5R?=
+ =?utf-8?B?R09HbGpiU2FXL1dDQkVxV3Z5RjVkRFpVc3VNdzRpcEVXVXVNVVR6VzFHcmll?=
+ =?utf-8?B?TGh0VHZ0QTBCTmRjR0VtM1hsSzYxZGRLQURjdCtDOWZxWHRpQTNnbVgzSWFu?=
+ =?utf-8?B?V0FhOFd6OTZmbjJvZnFqR1ByWkhUWlhoTldveXhueE1nbUhnN1pnR3NhR1pj?=
+ =?utf-8?B?Sm14aVBYc3JQa3NlOHRjUWd0cWFZTDZ2M1dRMndPRHZCRDJJWFUxTno2UGZ0?=
+ =?utf-8?B?KzR3dnFva2RGbFljOVZ5UFNJQkpKcGYvT05zL243M1JYL1JEai9NaTc4R1JL?=
+ =?utf-8?B?KzZEYk13RFdhcW90eElsVnJ0MHJCcnk2aEdNaWsxdjlBR01TdGZzUFI5ZW5X?=
+ =?utf-8?B?NSs1MXRwWmhyN2p2NmZpOG1JNzZNM3J6MVVONWRtazRmeFppYTFybzNDYlBU?=
+ =?utf-8?B?TThTOUdNbTA4VTU5Z2dmWHdqalVjNGVqVTE1SGh3dzNhbmxvRzR6NjZYYmxX?=
+ =?utf-8?B?ZkZqRVhQbWJjNlRCWVkxcUN2eUxMTCtXdUNxMlVKMjlnU3pOczY4d3ZRdjVs?=
+ =?utf-8?B?RjZ3b051ZGJMSldJaUdGNHZiNmdWa2F3SFF2a2N0K05qQTZCUWlYUEdxRTlJ?=
+ =?utf-8?B?UW1OSUZSSCtQTm9naFZKU3FYSk9SNVRXL1RiRUhNNkszNG1YUlB6MmdTbWxI?=
+ =?utf-8?B?QXo1OVN5bnZTUzMyWGhCM1JYajk1Z2oxSi9ybDFmMUxHODIxMUg4djB3Mkp1?=
+ =?utf-8?B?d2JBOW1vYkM5cXU1elgrVWRYWTZBeExabXZiN0pSRytCb2tMNU1lVlVVT1ZT?=
+ =?utf-8?B?QUJRdzV2VVZkcTVCb0ZGMSs0WnFTWkNpNjJ6dTZKdTNXejVWNEhrY1VvK3JD?=
+ =?utf-8?B?aE9WSUVlSXVGTHdFWDRJS1VpZ2xZMjhKanJBRzNtR2k5Ui9qY3hLUlA0anZj?=
+ =?utf-8?B?OFE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	F8QxJ72qtLzXg3yqCkpIUcy7YRUdXwLkaq6YWXkhik5HusnhM/16PnVlF/SuSDDwkeEI505cNIGlhOAiVlJP8hlRNTdYKjL+N2HtRAJW62LU40OIFTduhOi3BuaLJhGnrw0nOKsBgoB63/X79SMXQ8eST2QzzqmgJqdGMiT/AR9Oo41Hs3FDlUN8y4w7Ql6IHv82/piFoUlfHHMYm+XGculh1y/1MIqrKgzUDP36QbT3EdVfBfNnWs4KQJLzrGTnC0jXx+5BB6e8Ow2GbuWDspAR6hb+urqjkfk/BgHz8XnQfVrdPoiiXlUp3Uhl6I2qZ5QPnWs5rd+0OuMMSVNJde8fZ/xATySpeN8Z25XbxNDYzvJ5b5XSK4zl3YTkvDrlbHOdh68IbIG7xxsVHFTZoQrc6ZW2Gmh2Jwlk/WCFgzX9hoXTLxyF7JjRCIUu13ttyulyHD40HgOaqXXb9oKOIHvDq7+FyBeDJBMYCX9MFvosDXYJh31+Ib0ppZ1t1chDk/41cDH/iugU8Kx28pcKMkSZsR1pWPF5rXM+bk1KyU7B7dekAZUgvTr7QcqZsUfchgMiBJvycTvSdFuV/43Ix7iKA0DhdnQnvw4x3NeIJYg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2330bb56-d128-451f-73b1-08dc652b0e3a
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Apr 2024 13:24:37.9201
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2YH+sc3GiE/6sywVm+cLd1kXVk22TUKQPoLBNO2EwVZ9tEI5BbHL96A1h40x/U2F5QDETItUFwkaiqq/FKUeHQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB6881
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-04-25_13,2024-04-25_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2404010000
+ definitions=main-2404250097
+X-Proofpoint-GUID: Yp1gemKQt26dPpiW6Q9MLeOamvMgs2aC
+X-Proofpoint-ORIG-GUID: Yp1gemKQt26dPpiW6Q9MLeOamvMgs2aC
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On 25/04/2024 13:17, Christoph Hellwig wrote:
+> On Thu, Apr 25, 2024 at 12:08:45PM +0000, John Garry wrote:
+>> +	struct xfs_inobt_rec_incore __maybe_unused	*irec;
+> 
+> I've never seen code where __maybe_unused is the right answer, and this
+> is no exception.
 
-For now, we can make sure iomap_write_end() always return 0 or copied
-bytes, so instead of return written bytes, convert to return a boolean
-to indicate the copied bytes have been written to the pagecache.
+Then what about 9798f615ad2be?
 
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/iomap/buffered-io.c | 48 +++++++++++++++++++++++++++---------------
- 1 file changed, 31 insertions(+), 17 deletions(-)
+> 
+> Just remove this instance of irec, which also removes the variable
+> shadowing by the one inside the loop below.
+> 
+> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+> index 730c8d48da2827..86f14ec7c31fed 100644
+> --- a/fs/xfs/xfs_iwalk.c
+> +++ b/fs/xfs/xfs_iwalk.c
+> @@ -351,7 +351,6 @@ xfs_iwalk_run_callbacks(
+>   	int				*has_more)
+>   {
+>   	struct xfs_mount		*mp = iwag->mp;
+> -	struct xfs_inobt_rec_incore	*irec;
+>   	xfs_agino_t			next_agino;
+>   	int				error;
+>   
+> @@ -361,8 +360,8 @@ xfs_iwalk_run_callbacks(
+>   
+>   	/* Delete cursor but remember the last record we cached... */
+>   	xfs_iwalk_del_inobt(iwag->tp, curpp, agi_bpp, 0);
+> -	irec = &iwag->recs[iwag->nr_recs - 1];
+> -	ASSERT(next_agino >= irec->ir_startino + XFS_INODES_PER_CHUNK);
+> +	ASSERT(next_agino >= iwag->recs[iwag->nr_recs - 1].ir_startino +
+> +			XFS_INODES_PER_CHUNK);
+>   
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 854fa3d4b1c8..176a9ea502ba 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -828,7 +828,7 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
- 	return status;
- }
- 
--static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
-+static bool __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 		size_t copied, struct folio *folio)
- {
- 	flush_dcache_folio(folio);
-@@ -845,14 +845,14 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 	 * redo the whole thing.
- 	 */
- 	if (unlikely(copied < len && !folio_test_uptodate(folio)))
--		return 0;
-+		return false;
- 	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), len);
- 	iomap_set_range_dirty(folio, offset_in_folio(folio, pos), copied);
- 	filemap_dirty_folio(inode->i_mapping, folio);
--	return copied;
-+	return true;
- }
- 
--static size_t iomap_write_end_inline(const struct iomap_iter *iter,
-+static void iomap_write_end_inline(const struct iomap_iter *iter,
- 		struct folio *folio, loff_t pos, size_t copied)
- {
- 	const struct iomap *iomap = &iter->iomap;
-@@ -867,20 +867,31 @@ static size_t iomap_write_end_inline(const struct iomap_iter *iter,
- 	kunmap_local(addr);
- 
- 	mark_inode_dirty(iter->inode);
--	return copied;
- }
- 
--/* Returns the number of bytes copied.  May be 0.  Cannot be an errno. */
--static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
-+/*
-+ * Returns true if all copied bytes have been written to the pagecache,
-+ * otherwise return false.
-+ */
-+static bool iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
- 		size_t copied, struct folio *folio)
- {
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
- 
--	if (srcmap->type == IOMAP_INLINE)
--		return iomap_write_end_inline(iter, folio, pos, copied);
--	if (srcmap->flags & IOMAP_F_BUFFER_HEAD)
--		return block_write_end(NULL, iter->inode->i_mapping, pos, len,
--				       copied, &folio->page, NULL);
-+	if (srcmap->type == IOMAP_INLINE) {
-+		iomap_write_end_inline(iter, folio, pos, copied);
-+		return true;
-+	}
-+
-+	if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
-+		size_t bh_written;
-+
-+		bh_written = block_write_end(NULL, iter->inode->i_mapping, pos,
-+					len, copied, &folio->page, NULL);
-+		WARN_ON_ONCE(bh_written != copied && bh_written != 0);
-+		return bh_written == copied;
-+	}
-+
- 	return __iomap_write_end(iter->inode, pos, len, copied, folio);
- }
- 
-@@ -945,7 +956,8 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 			flush_dcache_folio(folio);
- 
- 		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
--		written = iomap_write_end(iter, pos, bytes, copied, folio);
-+		written = iomap_write_end(iter, pos, bytes, copied, folio) ?
-+			  copied : 0;
- 
- 		/*
- 		 * Update the in-memory inode size after copying the data into
-@@ -1323,6 +1335,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- 		int status;
- 		size_t offset;
- 		size_t bytes = min_t(u64, SIZE_MAX, length);
-+		bool ret;
- 
- 		status = iomap_write_begin(iter, pos, bytes, &folio);
- 		if (unlikely(status))
-@@ -1334,9 +1347,9 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- 		if (bytes > folio_size(folio) - offset)
- 			bytes = folio_size(folio) - offset;
- 
--		bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
-+		ret = iomap_write_end(iter, pos, bytes, bytes, folio);
- 		__iomap_put_folio(iter, pos, bytes, folio);
--		if (WARN_ON_ONCE(bytes == 0))
-+		if (WARN_ON_ONCE(!ret))
- 			return -EIO;
- 
- 		cond_resched();
-@@ -1385,6 +1398,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		int status;
- 		size_t offset;
- 		size_t bytes = min_t(u64, SIZE_MAX, length);
-+		bool ret;
- 
- 		status = iomap_write_begin(iter, pos, bytes, &folio);
- 		if (status)
-@@ -1399,9 +1413,9 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		folio_zero_range(folio, offset, bytes);
- 		folio_mark_accessed(folio);
- 
--		bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
-+		ret = iomap_write_end(iter, pos, bytes, bytes, folio);
- 		__iomap_put_folio(iter, pos, bytes, folio);
--		if (WARN_ON_ONCE(bytes == 0))
-+		if (WARN_ON_ONCE(!ret))
- 			return -EIO;
- 
- 		pos += bytes;
--- 
-2.39.2
+ok, that seems better.
+
+>   	if (iwag->drop_trans) {
+>   		xfs_trans_cancel(iwag->tp);
 
