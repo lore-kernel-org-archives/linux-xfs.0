@@ -1,38 +1,47 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A21A7153812
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 21:22:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815792599;
+	Thu, 25 Apr 2024 22:40:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714080153; cv=none; b=FXVkAdDumpI2bywKd9zUFCHlnZp0i3Ykj6Ck7fcalIr8i7wEhSOP7rOg1vpq/1IkV/MIkfHQLWozxe8j9I/Fhmk79VRgcPCM5Mxf5abvp/ZXOdy7xqLBcjHudPJICInHEtXkffJ6/anP1PuUc538dMLmGTdn74Vr7ffwsBokKU4=
+	t=1714084837; cv=none; b=i9A/SDT5YQ5u0WTJ4NKvBb4oQoLxKG30QiQVnjEGP6aFd0DHCFgo52LKDN2xaa9kcoC6k1OvyXek8mSqsp7Z1B2W9FPWp7HSKi/AZcGA3H06azeDvfEo4iAymb7TynhMPARkqtzxKGBZzSSs6n+79eEVo63cbG/rTN6xcfkRL2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714080153; c=relaxed/simple;
-	bh=BVPZb2vEapiUSKzx4LA51Ey9U7CS9GzpQ/kHPP9heEE=;
+	s=arc-20240116; t=1714084837; c=relaxed/simple;
+	bh=isimwcOHdDK7dQ5J/GY/2fBT8r4/NY8PJ8OszygoMX4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cdlTlVI6P05sESR0LebYy+pPpufpR7bJhkSODE3NI9n4inpufZOihqfV4AdmYrIC85z7xxcgdwAvPzukXkzYOXOt3vfPDbkx4iFqr5r/J2fl9mxVtNGBbeOSvCecH7k3WvLaiNNVxHp+RTe7G+aIaWU28vW36XcON25wybqHp5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cifu1ra8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=q4aMOEyj39BtUTL457CtifU6Ma1pb6AEd8+zw6MryGIcgQlH+CYJ+ZMOItEI4YSFIYjgY9FwMr5iI/ttUXvg/kHIoZtdGOrnC4XWC1hhvt0OD/CjmZoFeONRBneS+rQiChWE1cE8+q6UZbg5lB/s3ZRvPnnqUDvkwcPIb2pgomY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JrN+gwGB; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cifu1ra8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27753C113CC;
-	Thu, 25 Apr 2024 21:22:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714080153;
-	bh=BVPZb2vEapiUSKzx4LA51Ey9U7CS9GzpQ/kHPP9heEE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cifu1ra8+6cjYgQuEU+D0YWFkGmvmYSgZjEd1EhnsBJAPGeGUHx1n1X9mE5Og1XSw
-	 7GYvJvWssdXC6dtQcucp5LEt4iVnbIHNnkMtYLbocx+DRsrYGCW3uRJxjmHKYYz+iq
-	 AJ79speY7MA619VgQPLQUBIEXeAdwwrsKGhrZYeUfiFJHJY7Rus56/qtS+DQ6NF4pA
-	 qsAUvq/uR+0syyuSr0Y+3hWZ1fPf6frq2P23RG5IZ2M8uQCiaREQdCZPpFxw6k6dQW
-	 YJP5UKgaoFXSwrEFgedHGXCP1vY90hD/SwW08SBzXnSoiqBa0uQpIgQ+tBwLvI/zdy
-	 fdCxxwky716aQ==
-Date: Thu, 25 Apr 2024 14:22:32 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: add higher level directory operations helpers
-Message-ID: <20240425212232.GB360919@frogsfrogsfrogs>
-References: <20240425131703.928936-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JrN+gwGB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:
+	Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+	Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description;
+	bh=Pv6DAoPFFNrD4sYIPF/agyqOANkVbxxZ+lZCZEZ+GiM=; b=JrN+gwGBiCeml7wT9b6Ytx+8zr
+	E199uP12fHkIKlQBzuWwF3kTvVpMlFuwd5s25SPo+4NkOMRvOr2Imy6xxJJF+njOuGptf8Zew0Ibq
+	KPjc39y8562tf4ByOhadWH7GuD1gVuM/dqzfYIrpG8Tk/3SOHdFDjAWP4tRmTTZFIb06BzcWIbp/4
+	tlRQRwmmabiIUYsZgpe6gtzHLjpAP7MLAxo2DDaJ65Ar8XiM7nHR40HOtJ4/3WYmDY6H/L9DPs1rC
+	Bl93lsDBs8NkuMqNge2MOiiMM7JSM+k1VTdlNjlGa+C+rM/tCKK6kFFrOAuAXEFAaCT73kRxIkhzH
+	dSMCCz5w==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s07lY-0000000AV5t-1zP9;
+	Thu, 25 Apr 2024 22:40:32 +0000
+Date: Thu, 25 Apr 2024 15:40:32 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Zi Yan <ziy@nvidia.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	willy@infradead.org, hare@suse.de, john.g.garry@oracle.com,
+	p.raghav@samsung.com, da.gomez@samsung.com
+Subject: Re: [PATCH 1/2] mm/huge_memory: skip invalid debugfs file entry for
+ folio split
+Message-ID: <Zirb4GNjubOJzdoR@bombadil.infradead.org>
+References: <20240424225449.1498244-1-mcgrof@kernel.org>
+ <20240424225449.1498244-2-mcgrof@kernel.org>
+ <17447911-9578-45B2-A601-28CD0C5036D4@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,36 +50,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240425131703.928936-1-hch@lst.de>
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <17447911-9578-45B2-A601-28CD0C5036D4@nvidia.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On Thu, Apr 25, 2024 at 03:16:58PM +0200, Christoph Hellwig wrote:
-> Hi all,
-> 
-> with the scrub and online repair code we now duplicate the switching
-> between the directory format for directory operations in at least two
-> places for each operation, with the metadir code adding even more for
-> some of these operations.
-> 
-> This series adds _args helpers to consolidate this code, and then
-> refactors the checking for the directory format into a single well-defined
-> helper.
-> 
-> It is based on the online repair patchbombs that Darrick submitted
-> yesterday.
+On Wed, Apr 24, 2024 at 09:03:51PM -0400, Zi Yan wrote:
+> On 24 Apr 2024, at 18:54, Luis Chamberlain wrote:
+>=20
+> > If the file entry is too long we may easily end up going out of bounds
+> > and crash after strsep() on sscanf(). To avoid this ensure we bound the
+> > string to an expected length before we use sscanf() on it.
+> >
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> > ---
+> >  mm/huge_memory.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> >
+> > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> > index 9e9879d2f501..8386d24a163e 100644
+> > --- a/mm/huge_memory.c
+> > +++ b/mm/huge_memory.c
+> > @@ -3623,6 +3623,7 @@ static ssize_t split_huge_pages_write(struct file=
+ *file, const char __user *buf,
+> >  		char file_path[MAX_INPUT_BUF_SZ];
+> >  		pgoff_t off_start =3D 0, off_end =3D 0;
+> >  		size_t input_len =3D strlen(input_buf);
+> > +		size_t max_left_over;
+> >
+> >  		tok =3D strsep(&buf, ",");
+> >  		if (tok) {
+> > @@ -3632,6 +3633,14 @@ static ssize_t split_huge_pages_write(struct fil=
+e *file, const char __user *buf,
+> >  			goto out;
+> >  		}
+> >
+> > +		max_left_over =3D MAX_INPUT_BUF_SZ - strlen(file_path);
+> > +		if (!buf ||
+> > +		    strnlen(buf, max_left_over) < 7 ||
+>=20
+> What is this magic number 7? strlen("0xN,0xN") as the minimal input strin=
+g size?
+> Maybe use sizeof("0xN,0xN") - 1 instead?
 
-These all look like straightforward conversions to me, so:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Sure and I forgot the fixes tag, will send a v2.
 
---D
-
-> 
-> Diffstat:
->  libxfs/xfs_dir2.c     |  274 +++++++++++++++++++++++---------------------------
->  libxfs/xfs_dir2.h     |   17 ++-
->  libxfs/xfs_exchmaps.c |    9 -
->  scrub/dir.c           |    3 
->  scrub/dir_repair.c    |   58 ----------
->  scrub/readdir.c       |   59 +---------
->  xfs_dir2_readdir.c    |   19 +--
->  7 files changed, 168 insertions(+), 271 deletions(-)
-> 
+  Luis
