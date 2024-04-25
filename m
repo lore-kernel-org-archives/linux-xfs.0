@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 294D01494B4
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 13:17:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7FCA1494B4
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 13:17:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714051031; cv=none; b=ko1QelAioiMkkuoky5ZG1Id3EJPaALJhAX72K8fXn+FA/S7hLXTQaRvHHX5+B13Vm7jz+yVjUPq0o5NnNPKe8gTKhR9Q4aEpeYAKBt/qc6L9l5XMSK8bhjgVGwbGU41Ls2jBDGmv64e2jok9SsMJMZwznUBUSxUqAeozPe716fE=
+	t=1714051034; cv=none; b=fTV8jdS20syFLDQNT/ldgmHFA9lgDQIfVlzq9EHQ9yIyDbqtS38it1QJQ7JoLVE02O25vexrM30Z2IaS4X+1dkJ3wsHyowm1r6yBxKd356n2rN0E1tdn+UBeWMx+QOOVFHhvl/EAc4uHaLw4axe6UoaUs792EWqDvYNcBkvF93Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714051031; c=relaxed/simple;
-	bh=C1albHJd/WmRn+TS4wqB3fdwY5iEd+TUtbSUiPrRTrU=;
+	s=arc-20240116; t=1714051034; c=relaxed/simple;
+	bh=Yc/DZrNE3ahnxwzJeLLb4KDTrytwA1yS5YIu4EyntYQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mVcx0vu1i+nLTiZJ2rAXNTtIVwH/Ih/w+UOrb8Ac/06Uo0YIXfKatyZr2Q9jeNSv0IqkpxWQbpGSMVPCz6/OUSky7BkR4YOPJV2/XfHGmODznYL4rJojBrTS072sUWyBCQjPevniVQNHXCYlNt+30FCw74MpWSlao/P6RBE8sqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ddOqLBXN; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=A0TCQH5OOEppTPi5xyEuWuiyFVxAsd/ktP6fIk54M8FyRXxdl1TPEuuRQtF5n1m17m95e2iI4baC4mYYmGj2N4Wfv6j7kXK+NtDITM341+iDVE/qZSgfggrz55Ti4jcVg9kKdIUKrUnpZVQD5eBVuyb6vngYO9anQhPoxmYydiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=COSv4IM8; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ddOqLBXN"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="COSv4IM8"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=DO85Hx0gB6R31990IWHGGl8RMK6rYst4Iy3T4KZLg84=; b=ddOqLBXNUPlcDbrIg2qSaqo/uC
-	2T6mR5n/D+4VllHDzzw0n+YdeqrekuyxnU4Uws28QNPr7l5TlwyqHqb+FH4AAkxLoB8wivdQDIWi/
-	fwnAZ+Z5EMbC5o1TKHuNOUAildfDuLzipis0HEUAatGrDXdYOshi/G86Rr5U7rV4xm7RBaHUgEhdJ
-	YXQIWNDfiVJs13gCpr2gGV7pBOcxDNkjw8By3KzscQGRjVNsHYTRoVp5GGDZ6JcuM+6ReYxZSMAlM
-	KCmVWkG609evFWIDoNgnykFLz5pmGixK/kKnGicBPnSJGzBWgKuo1gwpPO3zJPD32vQ2BXFYGmY3x
-	rFsFsGbA==;
+	bh=YvEPoS05Iqugz6R7olDfJyEpQnnjPC0xdHRyOCRkY3U=; b=COSv4IM8E5cUhTabBZcryh+SCo
+	4mcOo7eQrl7iXcVojvC2CuPReqMvISvVBUT/ZoZckY/LsxV5BIyQ+CJam3YjQYaEYhL4iJOBBTRvi
+	EI1MgvMBqvNkiXQggRKBoRpRwtUiwJTf04ncc8T31r9EhgI3yWV4aopi98OiNPuC0CfxI70JEWdR0
+	unZ8sQrsmln6VOBIpOuTRBvGOg6Z/r92Q55hDVrQ7K5VwtAo8A0Er7UQR9idp+YVLgoc+SkmOaaPj
+	qd6oDOPoDfFzna4WSYvzCn3O3PGjexRGz1b+9JK5QDsUnHzJy+wNDQ5DfeViTym7gpi03D1AJaEt9
+	QYhMQYkQ==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rzyyL-00000008Rao-1Is5;
-	Thu, 25 Apr 2024 13:17:09 +0000
+	id 1rzyyN-00000008RbY-3UCD;
+	Thu, 25 Apr 2024 13:17:12 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 1/5] xfs: factor out a xfs_dir_lookup_args helper
-Date: Thu, 25 Apr 2024 15:16:59 +0200
-Message-Id: <20240425131703.928936-2-hch@lst.de>
+Subject: [PATCH 2/5] xfs: factor out a xfs_dir_createname_args helper
+Date: Thu, 25 Apr 2024 15:17:00 +0200
+Message-Id: <20240425131703.928936-3-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240425131703.928936-1-hch@lst.de>
 References: <20240425131703.928936-1-hch@lst.de>
@@ -50,179 +50,144 @@ Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 Add a helper to switch between the different directory formats for
-lookup and to handle the -EEXIST return for a successful lookup.
+creating a directory entry and to handle the XFS_DA_OP_JUSTCHECK flag
+based on the passed in ino number field.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2.c | 66 ++++++++++++++++++++++++----------------
- fs/xfs/libxfs/xfs_dir2.h |  2 ++
- fs/xfs/scrub/readdir.c   | 35 +--------------------
- 3 files changed, 43 insertions(+), 60 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.c  | 53 +++++++++++++++++++++------------------
+ fs/xfs/libxfs/xfs_dir2.h  |  1 +
+ fs/xfs/scrub/dir_repair.c | 19 +-------------
+ 3 files changed, 30 insertions(+), 43 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 7634344dc51538..b4f9359089117e 100644
+index b4f9359089117e..e2727602d0479e 100644
 --- a/fs/xfs/libxfs/xfs_dir2.c
 +++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -352,6 +352,45 @@ xfs_dir_cilookup_result(
- 	return -EEXIST;
+@@ -256,6 +256,33 @@ xfs_dir_init(
+ 	return error;
  }
  
 +int
-+xfs_dir_lookup_args(
++xfs_dir_createname_args(
 +	struct xfs_da_args	*args)
 +{
 +	bool			is_block, is_leaf;
 +	int			error;
 +
-+	if (args->dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-+		error = xfs_dir2_sf_lookup(args);
-+		goto out;
-+	}
++	if (!args->inumber)
++		args->op_flags |= XFS_DA_OP_JUSTCHECK;
 +
-+	/* dir2 functions require that the data fork is loaded */
-+	error = xfs_iread_extents(args->trans, args->dp, XFS_DATA_FORK);
-+	if (error)
-+		goto out;
++	if (args->dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
++		return xfs_dir2_sf_addname(args);
 +
 +	error = xfs_dir2_isblock(args, &is_block);
 +	if (error)
-+		goto out;
-+
-+	if (is_block) {
-+		error = xfs_dir2_block_lookup(args);
-+		goto out;
-+	}
++		return error;
++	if (is_block)
++		return xfs_dir2_block_addname(args);
 +
 +	error = xfs_dir2_isleaf(args, &is_leaf);
 +	if (error)
-+		goto out;
-+	if (is_leaf)
-+		error = xfs_dir2_leaf_lookup(args);
-+	else
-+		error = xfs_dir2_node_lookup(args);
-+out:
-+	if (error != -EEXIST)
 +		return error;
-+	return 0;
++	if (is_leaf)
++		return xfs_dir2_leaf_addname(args);
++	return xfs_dir2_node_addname(args);
 +}
 +
  /*
-  * Lookup a name in a directory, give back the inode number.
-  * If ci_name is not NULL, returns the actual name in ci_name if it differs
-@@ -368,7 +407,6 @@ xfs_dir_lookup(
+  * Enter a name in a directory, or check for available space.
+  * If inum is 0, only the available space test is performed.
+@@ -270,7 +297,6 @@ xfs_dir_createname(
  {
  	struct xfs_da_args	*args;
  	int			rval;
 -	bool			v;
- 	int			lock_mode;
  
  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-@@ -390,30 +428,7 @@ xfs_dir_lookup(
- 		args->op_flags |= XFS_DA_OP_CILOOKUP;
  
- 	lock_mode = xfs_ilock_data_map_shared(dp);
--	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
--		rval = xfs_dir2_sf_lookup(args);
--		goto out_check_rval;
--	}
+@@ -297,31 +323,8 @@ xfs_dir_createname(
+ 	args->trans = tp;
+ 	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+ 	args->owner = dp->i_ino;
+-	if (!inum)
+-		args->op_flags |= XFS_DA_OP_JUSTCHECK;
 -
+-	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
+-		rval = xfs_dir2_sf_addname(args);
+-		goto out_free;
+-	}
+ 
 -	rval = xfs_dir2_isblock(args, &v);
 -	if (rval)
 -		goto out_free;
 -	if (v) {
--		rval = xfs_dir2_block_lookup(args);
--		goto out_check_rval;
+-		rval = xfs_dir2_block_addname(args);
+-		goto out_free;
 -	}
 -
 -	rval = xfs_dir2_isleaf(args, &v);
 -	if (rval)
 -		goto out_free;
 -	if (v)
--		rval = xfs_dir2_leaf_lookup(args);
+-		rval = xfs_dir2_leaf_addname(args);
 -	else
--		rval = xfs_dir2_node_lookup(args);
+-		rval = xfs_dir2_node_addname(args);
 -
--out_check_rval:
--	if (rval == -EEXIST)
--		rval = 0;
-+	rval = xfs_dir_lookup_args(args);
- 	if (!rval) {
- 		*inum = args->inumber;
- 		if (ci_name) {
-@@ -421,7 +436,6 @@ xfs_dir_lookup(
- 			ci_name->len = args->valuelen;
- 		}
- 	}
 -out_free:
- 	xfs_iunlock(dp, lock_mode);
++	rval = xfs_dir_createname_args(args);
  	kfree(args);
  	return rval;
+ }
 diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index b580a78bcf4fc2..982c2249bfa305 100644
+index 982c2249bfa305..f5361dd7b90a93 100644
 --- a/fs/xfs/libxfs/xfs_dir2.h
 +++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -66,6 +66,8 @@ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+@@ -67,6 +67,7 @@ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
  				struct xfs_name *name);
  
-+int xfs_dir_lookup_args(struct xfs_da_args *args);
-+
+ int xfs_dir_lookup_args(struct xfs_da_args *args);
++int xfs_dir_createname_args(struct xfs_da_args *args);
+ 
  /*
   * Direct call from the bmap code, bypassing the generic directory layer.
-  */
-diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
-index 28a94c78b0b199..0ac77359d8e9f8 100644
---- a/fs/xfs/scrub/readdir.c
-+++ b/fs/xfs/scrub/readdir.c
-@@ -328,7 +328,6 @@ xchk_dir_lookup(
- 		.op_flags	= XFS_DA_OP_OKNOENT,
- 		.owner		= dp->i_ino,
- 	};
--	bool			isblock, isleaf;
+diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+index 6ad40f8aafb826..4cad98243d7be8 100644
+--- a/fs/xfs/scrub/dir_repair.c
++++ b/fs/xfs/scrub/dir_repair.c
+@@ -708,7 +708,6 @@ xrep_dir_replay_createname(
+ {
+ 	struct xfs_scrub	*sc = rd->sc;
+ 	struct xfs_inode	*dp = rd->sc->tempip;
+-	bool			is_block, is_leaf;
  	int			error;
  
- 	if (xfs_is_shutdown(dp->i_mount))
-@@ -344,39 +343,7 @@ xchk_dir_lookup(
  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	xfs_assert_ilocked(dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
+@@ -723,23 +722,7 @@ xrep_dir_replay_createname(
+ 	rd->args.inumber = inum;
+ 	rd->args.total = total;
+ 	rd->args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+-
+-	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+-		return xfs_dir2_sf_addname(&rd->args);
+-
+-	error = xfs_dir2_isblock(&rd->args, &is_block);
+-	if (error)
+-		return error;
+-	if (is_block)
+-		return xfs_dir2_block_addname(&rd->args);
+-
+-	error = xfs_dir2_isleaf(&rd->args, &is_leaf);
+-	if (error)
+-		return error;
+-	if (is_leaf)
+-		return xfs_dir2_leaf_addname(&rd->args);
+-
+-	return xfs_dir2_node_addname(&rd->args);
++	return xfs_dir_createname_args(&rd->args);
+ }
  
--	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
--		error = xfs_dir2_sf_lookup(&args);
--		goto out_check_rval;
--	}
--
--	/* dir2 functions require that the data fork is loaded */
--	error = xfs_iread_extents(sc->tp, dp, XFS_DATA_FORK);
--	if (error)
--		return error;
--
--	error = xfs_dir2_isblock(&args, &isblock);
--	if (error)
--		return error;
--
--	if (isblock) {
--		error = xfs_dir2_block_lookup(&args);
--		goto out_check_rval;
--	}
--
--	error = xfs_dir2_isleaf(&args, &isleaf);
--	if (error)
--		return error;
--
--	if (isleaf) {
--		error = xfs_dir2_leaf_lookup(&args);
--		goto out_check_rval;
--	}
--
--	error = xfs_dir2_node_lookup(&args);
--
--out_check_rval:
--	if (error == -EEXIST)
--		error = 0;
-+	error = xfs_dir_lookup_args(&args);
- 	if (!error)
- 		*ino = args.inumber;
- 	return error;
+ /* Replay a stashed removename onto the temporary directory. */
 -- 
 2.39.2
 
