@@ -1,39 +1,39 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413DE2AEF1;
-	Thu, 25 Apr 2024 11:46:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC82212AAD1;
+	Thu, 25 Apr 2024 11:47:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714045619; cv=none; b=ZyF3OFa36mPyAHsSr3rM0OjGS7ScVdD7HIOd/Gg7VAqkKiGe/oefuldk8X4uFQ4oQ0nbNsjhN24VpTtwmu3To9+L9JbgAVD2v0eweb/Kdz310u9dkI5NpKhZDADE62VtdbwXE8NV1xRgH8zkB6RgeS8CtjpMqeqvNMIgRec0UoM=
+	t=1714045637; cv=none; b=QoYHLFSur2WAnwTSz074F/3lxdBLraAK5ugwNjnyxK+SHrtcS+qkbBfRHZv5nfDxRmjJFnAM/MIoLXZB/BrAIlYjo8IcPr5DUgDIKulnJW/LHoUOcf6nCO2y8YyWOPnmHa0J95xluN8OOMvq5iUMT1BWOyv22fokLbAKJvR+dp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714045619; c=relaxed/simple;
-	bh=FjN1EFdP4B2GhhMcTneVme9zFeaY2F4Xx/iXsYn/4X8=;
+	s=arc-20240116; t=1714045637; c=relaxed/simple;
+	bh=kwE4kRA1hN9mlG3PCM2KBf+7t4fXGBB1vmxwnpdjqlU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KTeT4qDsRXvbXlLoOifurM2t/uWVqPKtFOpMr54ZqofJAEzAnM666atA//KtN7EDlv3u461O8NEN4xEx2EGzAKEzWPJ/UkBW8GzxnNNIcslEctCU6HTfHYvV5zmydOhUSh8Q0Hk11NFmvWjMQplxtspxgI3xVCwOHMQ5Hua94uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=pWAvZZwL; arc=none smtp.client-ip=80.241.56.152
+	 MIME-Version; b=DxyOLozbBEQSuOysrhk764p74i0OcexzJ5XTjR1CSqE1DI5OhGvQUfH6w8LBYQwOzodvx24gwhj1xsCPuWe0cb8dTIfJbnoJJ8G4W5ROFOdMlPvRna3eolpOAItSkNrSNhe4+fXIywYmO5ghLOxgO3Y03BMBTPS8jca/vnLnGTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=Z0huUBl7; arc=none smtp.client-ip=80.241.56.161
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="pWAvZZwL"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="Z0huUBl7"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4VQDPM5z88z9sqH;
-	Thu, 25 Apr 2024 13:37:59 +0200 (CEST)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4VQDPZ0yvLz9ssM;
+	Thu, 25 Apr 2024 13:38:10 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1714045079;
+	s=MBO0001; t=1714045090;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jwJiip//T+O8iHQnA8gIdy4HYh6WY6jnyehEbs5RfBY=;
-	b=pWAvZZwLeRk248TadAtN1GDZWGqpWPg8DxfyFHbfGEdom2wHzQIoOrmK+RQpww2eBjxVN/
-	NlABjkXV9Gjpd+TpwlZSMoEAu05F6/Mw4VOD8OXl16gp7AVgZDmbn+3JirgO4gTNK7Qe97
-	at1vhk5t49j7z4wFdFwJ/Dldj6xrKudEaXOAuO4oLHfIb9yVzFAL0V+XZQJgUZJ9H6r0qy
-	FxHC6gBCJyRluZh7j4XHD5DtA2ibCeDlVPUZUmymb4Uc4Trh/a0cO91qysuPW5S6GYYYdF
-	XWAd/YEqQ4QNgruuoeC/0NDR0mnB2XMeaVxFPNnWkok5yOpWkSpxnlMjW1Xs5A==
+	bh=4fVr4b9yY0BnR40etXyUF6I1OzhNW3adroiSkIr7JfI=;
+	b=Z0huUBl7vPYkwQXuGJvayILrp8fqw1XoWWWGfZA54Jz3eGBIbjPv2tzkb8U2hzLbN9kbzH
+	CBVqCH1M87ltsgLZgkAJDtRtQTRwDdciiRm8HxJazZR48lp0lxZ0HZ8xH80ehB/Wf3AoJN
+	KAh4mmedJIL72xLuMNS89gd6IW+Lksmwj+8MN4t+fBP+/YCC/PcX+i5CO1HDAW2CxtGWAG
+	hdYShbikqRUAeOGRKvcwOevAF3K5a5ptRScXTkN4OOAADyrRpBA9eZ0HXPI8lSfNdVd5rm
+	EGAr6TPGPpBEx6EBqTDWeGxgwBtvn53q1W5q5/KLLowSAgqffxK5VDdfhFhgcg==
 From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: willy@infradead.org,
 	djwong@kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-fsdevel@vger.kernel.org,
 	mcgrof@kernel.org,
 	gost.dev@samsung.com,
 	p.raghav@samsung.com
-Subject: [PATCH v4 02/11] fs: Allow fine-grained control of folio sizes
-Date: Thu, 25 Apr 2024 13:37:37 +0200
-Message-Id: <20240425113746.335530-3-kernel@pankajraghav.com>
+Subject: [PATCH v4 05/11] mm: do not split a folio if it has minimum folio order requirement
+Date: Thu, 25 Apr 2024 13:37:40 +0200
+Message-Id: <20240425113746.335530-6-kernel@pankajraghav.com>
 In-Reply-To: <20240425113746.335530-1-kernel@pankajraghav.com>
 References: <20240425113746.335530-1-kernel@pankajraghav.com>
 Precedence: bulk
@@ -61,181 +61,46 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4VQDPZ0yvLz9ssM
 
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Some filesystems want to be able to ensure that folios that are added to
-the page cache are at least a certain size.
-Add mapping_set_folio_min_order() to allow this level of control.
+Splitting a larger folio with a base order is supported using
+split_huge_page_to_list_to_order() API. However, using that API for LBS
+is resulting in an NULL ptr dereference error in the writeback path [1].
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+Refuse to split a folio if it has minimum folio order requirement until
+we can start using split_huge_page_to_list_to_order() API. Splitting the
+folio can be added as a later optimization.
+
+[1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
+
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- include/linux/pagemap.h | 116 +++++++++++++++++++++++++++++++++-------
- 1 file changed, 96 insertions(+), 20 deletions(-)
+ mm/huge_memory.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 2df35e65557d..2e5612de1749 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -202,13 +202,18 @@ enum mapping_flags {
- 	AS_EXITING	= 4, 	/* final truncate in progress */
- 	/* writeback related tags are not used */
- 	AS_NO_WRITEBACK_TAGS = 5,
--	AS_LARGE_FOLIO_SUPPORT = 6,
--	AS_RELEASE_ALWAYS,	/* Call ->release_folio(), even if no private data */
--	AS_STABLE_WRITES,	/* must wait for writeback before modifying
-+	AS_RELEASE_ALWAYS = 6,	/* Call ->release_folio(), even if no private data */
-+	AS_STABLE_WRITES = 7,	/* must wait for writeback before modifying
- 				   folio contents */
--	AS_UNMOVABLE,		/* The mapping cannot be moved, ever */
-+	AS_FOLIO_ORDER_MIN = 8,
-+	AS_FOLIO_ORDER_MAX = 13, /* Bit 8-17 are used for FOLIO_ORDER */
-+	AS_UNMOVABLE = 18,		/* The mapping cannot be moved, ever */
- };
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 9859aa4f7553..dadf1e68dbdc 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3117,6 +3117,15 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ 			goto out;
+ 		}
  
-+#define AS_FOLIO_ORDER_MIN_MASK 0x00001f00
-+#define AS_FOLIO_ORDER_MAX_MASK 0x0003e000
-+#define AS_FOLIO_ORDER_MASK (AS_FOLIO_ORDER_MIN_MASK | AS_FOLIO_ORDER_MAX_MASK)
++		/*
++		 * Do not split if mapping has minimum folio order
++		 * requirement.
++		 */
++		if (mapping_min_folio_order(mapping)) {
++			ret = -EINVAL;
++			goto out;
++		}
 +
- /**
-  * mapping_set_error - record a writeback error in the address_space
-  * @mapping: the mapping in which an error should be set
-@@ -344,9 +349,63 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
- 	m->gfp_mask = mask;
- }
+ 		gfp = current_gfp_context(mapping_gfp_mask(mapping) &
+ 							GFP_RECLAIM_MASK);
  
-+/*
-+ * There are some parts of the kernel which assume that PMD entries
-+ * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
-+ * limit the maximum allocation order to PMD size.  I'm not aware of any
-+ * assumptions about maximum order if THP are disabled, but 8 seems like
-+ * a good order (that's 1MB if you're using 4kB pages)
-+ */
-+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-+#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
-+#else
-+#define MAX_PAGECACHE_ORDER	8
-+#endif
-+
-+/*
-+ * mapping_set_folio_order_range() - Set the folio order range
-+ * @mapping: The address_space.
-+ * @min: Minimum folio order (between 0-MAX_PAGECACHE_ORDER inclusive).
-+ * @max: Maximum folio order (between @min-MAX_PAGECACHE_ORDER inclusive).
-+ *
-+ * The filesystem should call this function in its inode constructor to
-+ * indicate which base size (min) and maximum size (max) of folio the VFS
-+ * can use to cache the contents of the file.  This should only be used
-+ * if the filesystem needs special handling of folio sizes (ie there is
-+ * something the core cannot know).
-+ * Do not tune it based on, eg, i_size.
-+ *
-+ * Context: This should not be called while the inode is active as it
-+ * is non-atomic.
-+ */
-+static inline void mapping_set_folio_order_range(struct address_space *mapping,
-+						 unsigned int min_order,
-+						 unsigned int max_order)
-+{
-+	if (min_order > MAX_PAGECACHE_ORDER)
-+		min_order = MAX_PAGECACHE_ORDER;
-+
-+	if (max_order > MAX_PAGECACHE_ORDER)
-+		max_order = MAX_PAGECACHE_ORDER;
-+
-+	max_order = max(max_order, min_order);
-+	/*
-+	 * TODO: max_order is not yet supported in filemap.
-+	 */
-+	mapping->flags = (mapping->flags & ~AS_FOLIO_ORDER_MASK) |
-+			 (min_order << AS_FOLIO_ORDER_MIN) |
-+			 (max_order << AS_FOLIO_ORDER_MAX);
-+}
-+
-+static inline void mapping_set_folio_min_order(struct address_space *mapping,
-+					       unsigned int min)
-+{
-+	mapping_set_folio_order_range(mapping, min, MAX_PAGECACHE_ORDER);
-+}
-+
- /**
-  * mapping_set_large_folios() - Indicate the file supports large folios.
-- * @mapping: The file.
-+ * @mapping: The address_space.
-  *
-  * The filesystem should call this function in its inode constructor to
-  * indicate that the VFS can use large folios to cache the contents of
-@@ -357,7 +416,37 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
-  */
- static inline void mapping_set_large_folios(struct address_space *mapping)
- {
--	__set_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
-+	mapping_set_folio_order_range(mapping, 0, MAX_PAGECACHE_ORDER);
-+}
-+
-+static inline unsigned int mapping_max_folio_order(struct address_space *mapping)
-+{
-+	return (mapping->flags & AS_FOLIO_ORDER_MAX_MASK) >> AS_FOLIO_ORDER_MAX;
-+}
-+
-+static inline unsigned int mapping_min_folio_order(struct address_space *mapping)
-+{
-+	return (mapping->flags & AS_FOLIO_ORDER_MIN_MASK) >> AS_FOLIO_ORDER_MIN;
-+}
-+
-+static inline unsigned long mapping_min_folio_nrpages(struct address_space *mapping)
-+{
-+	return 1UL << mapping_min_folio_order(mapping);
-+}
-+
-+/**
-+ * mapping_align_start_index() - Align starting index based on the min
-+ * folio order of the page cache.
-+ * @mapping: The address_space.
-+ *
-+ * Ensure the index used is aligned to the minimum folio order when adding
-+ * new folios to the page cache by rounding down to the nearest minimum
-+ * folio number of pages.
-+ */
-+static inline pgoff_t mapping_align_start_index(struct address_space *mapping,
-+						pgoff_t index)
-+{
-+	return round_down(index, mapping_min_folio_nrpages(mapping));
- }
- 
- /*
-@@ -367,7 +456,7 @@ static inline void mapping_set_large_folios(struct address_space *mapping)
- static inline bool mapping_large_folio_support(struct address_space *mapping)
- {
- 	return IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE) &&
--		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
-+	       (mapping_max_folio_order(mapping) > 0);
- }
- 
- static inline int filemap_nr_thps(struct address_space *mapping)
-@@ -528,19 +617,6 @@ static inline void *detach_page_private(struct page *page)
- 	return folio_detach_private(page_folio(page));
- }
- 
--/*
-- * There are some parts of the kernel which assume that PMD entries
-- * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
-- * limit the maximum allocation order to PMD size.  I'm not aware of any
-- * assumptions about maximum order if THP are disabled, but 8 seems like
-- * a good order (that's 1MB if you're using 4kB pages)
-- */
--#ifdef CONFIG_TRANSPARENT_HUGEPAGE
--#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
--#else
--#define MAX_PAGECACHE_ORDER	8
--#endif
--
- #ifdef CONFIG_NUMA
- struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
- #else
 -- 
 2.34.1
 
