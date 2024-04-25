@@ -1,96 +1,68 @@
-Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 168F31494A0;
-	Thu, 25 Apr 2024 12:32:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDBD615AF6;
+	Thu, 25 Apr 2024 12:44:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714048376; cv=none; b=knlyek9PYe5nilZgt3HjMaCKMoNb1ocivc9l4ueInlO+N8U02OZQ5zgl93TvT/s7njz9+fEdRGK7VgRQU8n5w14X5UEj3qdFLJYBkRkiIIuRwxQ5LqQ4ZL9QVwQ6f+nfDlc8K1jVe5rdUFVL4l4WFqjPvueUDs/A7M4X0cKvXLI=
+	t=1714049093; cv=none; b=D77XQweJOTT2lxWMJh3D+62KFnzO5hF3zx8nZDEnezVq0yPZi1meA63C4L4/sHCeduVuztpf9PUHSXH9x2nK6GWD+33BuHZsy3b15oGA1sLv9YrkfqZCdkrqJNvMgdU+P0ptkz4Md30qfl0wdIvNzH6srjQWhsaSRwJXTLXxKFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714048376; c=relaxed/simple;
-	bh=0m35+vbI8D/mNQBzmIl+HPDV6J3A1AZ6PbYpSywaQQk=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=IURaNu7H0M7PREQ+dAlQ3x1/IBKEvyl3vLksjsWquL0g3WyAUcGcWD6VG6lCITtQv46HkklBxL3kplWH0IBmeHJdp0T/ukL6oSeB+nJAFIBJVdO3GZLGE9B1R0EqEp7YeTACQ+lL0rbebemfNCUS3m/WdpFrY1B1Imsqj3lY0cQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VQFcP4qdDz4f3jXX;
-	Thu, 25 Apr 2024 20:32:37 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 447421A0568;
-	Thu, 25 Apr 2024 20:32:45 +0800 (CST)
-Received: from [10.174.176.34] (unknown [10.174.176.34])
-	by APP1 (Coremail) with SMTP id cCh0CgBnOBFrTSpmycKzKw--.59782S3;
-	Thu, 25 Apr 2024 20:32:45 +0800 (CST)
-Subject: Re: [PATCH v5 4/9] xfs: convert delayed extents to unwritten when
- zeroing post eof blocks
+	s=arc-20240116; t=1714049093; c=relaxed/simple;
+	bh=FKP4rwK5HVxu4BI9BqHwkO0GA561653oDDY27Kaxpm8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KlShN+Enlvasu3ReWDSfvsL4sWrI+B9Q0pR1Z6UHiTNB9gUMN42KyIAGAxjrBqU2cBzDA/N8UfG/F9dqoNCq96JCtg3sdObKb0E5xVQcm0eG1jiU6DulsG0EsPXZTWG7QshncU4cWJdtvRxshiPRfctu4u6CSrzGqNrm+thIxnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=U3ka5y23; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U3ka5y23"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=bib3CrkpXPZh3fL7KWT/QVmeJRtookIbtMqUYQFAvRw=; b=U3ka5y23JWwQ0p+XkRvJa0pXZU
+	RDIQYifjcjrxeWOakx/oGJ5IKNSxnv/omV3jk2DrH8ylwR3NTKjjof86xtrSUxLh2BEoke9x++ujH
+	3L9wJOPdUcIaBl/vCYNH7DEHTRbwXTA1TLcQ9l2M33vX/MUKdKZ30Be5rANx8oU39vhPGauV96pOK
+	LOve1fsHpBVqUyfbUXtFWbu4ZSNuxZjxn7ypqPCLYI6a21CuwxnVaEoD9hvevBWkC4JbIjwDAYkxQ
+	8TjZf5JuJQHP1VDz7xgXwhw7gGj0DjrbsT3xIVYbzkYFtmM79E7aj08faYfJClP62yGCduBbPFozb
+	rcPYzQkA==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rzyT3-000000032Ji-3Ug1;
+	Thu, 25 Apr 2024 12:44:49 +0000
+Date: Thu, 25 Apr 2024 13:44:49 +0100
+From: Matthew Wilcox <willy@infradead.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, djwong@kernel.org, brauner@kernel.org,
- david@fromorbit.com, chandanbabu@kernel.org, tytso@mit.edu, jack@suse.cz,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com
-References: <20240320110548.2200662-5-yi.zhang@huaweicloud.com>
- <20240423111735.1298851-1-yi.zhang@huaweicloud.com>
- <ZipLCm2N-fYKCuGv@infradead.org>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <d89fc58a-59d0-6b91-0304-1dcc8166a350@huaweicloud.com>
-Date: Thu, 25 Apr 2024 20:32:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+Cc: linux-fsdevel@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 27/30] iomap: Remove calls to set and clear folio error
+ flag
+Message-ID: <ZipQQYPLuFuh3ui6@casper.infradead.org>
+References: <20240420025029.2166544-1-willy@infradead.org>
+ <20240420025029.2166544-28-willy@infradead.org>
+ <ZiYAoTnn8bO26sK3@infradead.org>
+ <ZiZ817PiBFqDYo1T@casper.infradead.org>
+ <ZiaBqiYUx5NrunTO@infradead.org>
+ <ZiajqYd305U8njo5@casper.infradead.org>
+ <ZipLUF3cZkXctvGG@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZipLCm2N-fYKCuGv@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgBnOBFrTSpmycKzKw--.59782S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7XF4xurW7XrWUCr4rJFy5Arb_yoW3Zrg_ua
-	yqyF4UCayvqFy5KF4UKrn5ArWFqrWqg3yYvrWkt3yqqayDGr48ZF1SyF1Fy3WfKan7Aanx
-	ZwnYqrsak3Z0vjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbxAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267
-	AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80
-	ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4
-	AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7Mxk0xIA0c2IEe2xF
-	o4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
-	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07
-	UWE__UUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZipLUF3cZkXctvGG@infradead.org>
 
-On 2024/4/25 20:22, Christoph Hellwig wrote:
-> On Tue, Apr 23, 2024 at 07:17:35PM +0800, Zhang Yi wrote:
->> +	if ((flags & IOMAP_ZERO) && imap.br_startoff <= offset_fsb &&
->> +	    isnullstartblock(imap.br_startblock)) {
->> +		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
->> +
->> +		if (offset_fsb >= eof_fsb)
->> +			goto convert_delay;
->> +		if (end_fsb > eof_fsb) {
->> +			end_fsb = eof_fsb;
->> +			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+On Thu, Apr 25, 2024 at 05:23:44AM -0700, Christoph Hellwig wrote:
+> On Mon, Apr 22, 2024 at 06:51:37PM +0100, Matthew Wilcox wrote:
+> > If I do that then half the mailing lists bounce them for having too
+> > many recipients.  b4 can fetch the entire series for you if you've
+> > decided to break your email workflow.  And yes, 0/30 was bcc'd to
+> > linux-xfs as well.
 > 
-> Nit: overly long line here.
-> 
-> I've also tried to to a more comprehensive review, but this depends on
-> the rest of the series, which isn't in my linux-xfs folder for April.
-> 
-> I've your're not doing and instant revision it's usually much easier to
-> just review the whole series.
-> .
->
+> I can't find it on linux-xfs still.  And please just don't make up
+> your own workflow or require odd tools.
 
-Sure, I will resend the whole series.
-
-Thanks,
-Yi.
-
+You even quoted the bit where I explained that the workflow you insist I
+follow doesn't work.
