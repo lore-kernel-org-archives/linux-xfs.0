@@ -1,110 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0467131746;
-	Thu, 25 Apr 2024 16:55:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA9C14EC41;
+	Thu, 25 Apr 2024 18:09:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714064124; cv=none; b=WOiN9gEluTmHw96ZJ3GXvXG2IXSLLfpCvmS/KRx26oxkU0OT21o+jXorypzYH7FZT3T1LYjk2JW7zQluoPE3Pn8evwwRD5jDgWrweQV1+xbM0549dnLfPLQA1mQFPp2r2iej7VgnA4PhE58f8QzRButwy98SzUvYhoKFyGs/jyc=
+	t=1714068563; cv=none; b=lJiW5N9SKKlvN6qGGpGZLVX9sCzJRoOn+e9H4fXwoI4Tg22OTGpklYAjYltF9ZcPxmQJ0l5pQwfmhF6iNxp6nkz+76eExkkWwYy0z1OrqECMQ3OSTYJtKbTZYcuyZE90bqJRDgrrU1Lu9/pgh6xm2E2XuXOqqSqPDRbq2F4T704=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714064124; c=relaxed/simple;
-	bh=spomJ+a/wob9Uwtaio77gXEhScUHFtHTYV3kW94eQoA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AXDjhUmbT1Rg52Bc3MXNOpmREapqGQRjLCxU2z2WRzuUqlXoGHCHDlSnDZbWws324t1j2hGHE8YdhlVk5dUcgurRyxyj7lpAIy/Q0tzTiASEMTNW6nN2MnipCs4IC8uuKLl+OlqmndGnHATWCbmUXCkdOwILcacPbdtmDd3ihrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jxlI2MKg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714068563; c=relaxed/simple;
+	bh=yXvKLKmIqLWNvOzaNLbgdP2/i1gAcTBGQURPG36mRuc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Gz6V0TWKocD+tnWbI4wCsmcKpGQoB3KtbQvQZuDXNnieATuJfargnbY4jdza660AAlyVXOgyik++85MB1wE/0Bo/M5IDnBli0swqV/GSeMMjhwwNg84ep0Zprs6VFPgO3SVJvrbOfwZV0fgk+clkvYi3kCcM4UF2HiIYeQQPnco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=UGlgywoo; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AXiPXVWu; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=UGlgywoo; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AXiPXVWu; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jxlI2MKg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16046C113CC;
-	Thu, 25 Apr 2024 16:55:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714064124;
-	bh=spomJ+a/wob9Uwtaio77gXEhScUHFtHTYV3kW94eQoA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jxlI2MKgQyMg6IF7lPjYV9tOd7J+RWsmL5/hN9rSHeHkOJK8peg4d6kZhI26i5VBD
-	 oj8k+pfmbaf603cP4zVG12ayPxYY/oGvkHbe1jXAD3d8AhFprIiix7YeIOEbr+BvJJ
-	 eNdYTIofP4QSBELqBCMprtkI0Wt2y6XE+iB/iA8njkcayBn9O9+nyjYRqnKgH3bJXY
-	 LarEANd56itUxB00uszt8qVK4aC4hS6t3gu2PoYVrFZgghzLwJCaMtLLBYnR4j3cgn
-	 Yn2jMApggD4UVbwFc2o3HTMJQ8AAWRlndw4WUIijnhgrO0S5iaattp8MohvPxJkhQq
-	 vy8fEnzdAMu0Q==
-Date: Thu, 25 Apr 2024 09:55:23 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/30] iomap: Remove calls to set and clear folio error
- flag
-Message-ID: <20240425165523.GB360898@frogsfrogsfrogs>
-References: <20240420025029.2166544-1-willy@infradead.org>
- <20240420025029.2166544-28-willy@infradead.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="UGlgywoo";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AXiPXVWu";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="UGlgywoo";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AXiPXVWu"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id B0AB45C31F;
+	Thu, 25 Apr 2024 18:09:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1714068559; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rJjo3xNZICJD137GxpNVfwLznPUTtrqUIQ1GMRoLYwQ=;
+	b=UGlgywoof7ZGa3BWHTOMxMqSuT9gZkXPUHrIfe3ctPsJ5EF5fp6vUv+fBBM2BTVCw3Z7By
+	J7+Sow3wPBOOuq/WE8EDxrYDf1wTRABm7SJ987gwoqUfL4+eItdUKu/dlDJflWtmxwaKfM
+	vEgGc1BPU09MidataNygQnHMnMYETs0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1714068559;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rJjo3xNZICJD137GxpNVfwLznPUTtrqUIQ1GMRoLYwQ=;
+	b=AXiPXVWuv/o2g8Str6W/QApEBuZ7mWESK9hW/aeRboCgERqLpNhNE+/MC1BUA3wY20kV51
+	yi6CoT3n99JSPKAg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=UGlgywoo;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=AXiPXVWu
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1714068559; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rJjo3xNZICJD137GxpNVfwLznPUTtrqUIQ1GMRoLYwQ=;
+	b=UGlgywoof7ZGa3BWHTOMxMqSuT9gZkXPUHrIfe3ctPsJ5EF5fp6vUv+fBBM2BTVCw3Z7By
+	J7+Sow3wPBOOuq/WE8EDxrYDf1wTRABm7SJ987gwoqUfL4+eItdUKu/dlDJflWtmxwaKfM
+	vEgGc1BPU09MidataNygQnHMnMYETs0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1714068559;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rJjo3xNZICJD137GxpNVfwLznPUTtrqUIQ1GMRoLYwQ=;
+	b=AXiPXVWuv/o2g8Str6W/QApEBuZ7mWESK9hW/aeRboCgERqLpNhNE+/MC1BUA3wY20kV51
+	yi6CoT3n99JSPKAg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EC15A13991;
+	Thu, 25 Apr 2024 18:09:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Yk7tAz+cKmYHPgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 25 Apr 2024 18:09:03 +0000
+Message-ID: <4db94c9f-c170-4679-b570-520eb40d6062@suse.de>
+Date: Thu, 25 Apr 2024 20:07:48 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240420025029.2166544-28-willy@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 02/11] fs: Allow fine-grained control of folio sizes
+Content-Language: en-US
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, willy@infradead.org,
+ djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
+ chandan.babu@oracle.com, akpm@linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, linux-xfs@vger.kernel.org, mcgrof@kernel.org,
+ gost.dev@samsung.com, p.raghav@samsung.com
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-3-kernel@pankajraghav.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240425113746.335530-3-kernel@pankajraghav.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-5.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	DWL_DNSWL_LOW(-1.00)[suse.de:dkim];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_TLS_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	TO_DN_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,infradead.org:email];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: B0AB45C31F
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Score: -5.50
 
-On Sat, Apr 20, 2024 at 03:50:22AM +0100, Matthew Wilcox (Oracle) wrote:
-> The folio error flag is not checked anywhere, so we can remove the calls
-> to set and clear it.
+On 4/25/24 13:37, Pankaj Raghav (Samsung) wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> Cc: Christian Brauner <brauner@kernel.org>
-> Cc: Darrick J. Wong <djwong@kernel.org>
-> Cc: linux-xfs@vger.kernel.org
+> Some filesystems want to be able to ensure that folios that are added to
+> the page cache are at least a certain size.
+> Add mapping_set_folio_min_order() to allow this level of control.
+> 
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-
-Looks fine to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
+> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 > ---
->  fs/iomap/buffered-io.c | 8 --------
->  1 file changed, 8 deletions(-)
+>   include/linux/pagemap.h | 116 +++++++++++++++++++++++++++++++++-------
+>   1 file changed, 96 insertions(+), 20 deletions(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 4e8e41c8b3c0..41352601f939 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -306,8 +306,6 @@ static void iomap_finish_folio_read(struct folio *folio, size_t off,
->  		spin_unlock_irqrestore(&ifs->state_lock, flags);
->  	}
->  
-> -	if (error)
-> -		folio_set_error(folio);
->  	if (finished)
->  		folio_end_read(folio, uptodate);
->  }
-> @@ -460,9 +458,6 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
->  	while ((ret = iomap_iter(&iter, ops)) > 0)
->  		iter.processed = iomap_readpage_iter(&iter, &ctx, 0);
->  
-> -	if (ret < 0)
-> -		folio_set_error(folio);
-> -
->  	if (ctx.bio) {
->  		submit_bio(ctx.bio);
->  		WARN_ON_ONCE(!ctx.cur_folio_in_bio);
-> @@ -697,7 +692,6 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->  
->  	if (folio_test_uptodate(folio))
->  		return 0;
-> -	folio_clear_error(folio);
->  
->  	do {
->  		iomap_adjust_read_range(iter->inode, folio, &block_start,
-> @@ -1528,8 +1522,6 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
->  
->  	/* walk all folios in bio, ending page IO on them */
->  	bio_for_each_folio_all(fi, bio) {
-> -		if (error)
-> -			folio_set_error(fi.folio);
->  		iomap_finish_folio_write(inode, fi.folio, fi.length);
->  		folio_count++;
->  	}
-> -- 
-> 2.43.0
-> 
-> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
