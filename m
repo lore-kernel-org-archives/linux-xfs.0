@@ -1,44 +1,47 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72B9B1BF40
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 12:18:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44BFA12AAC5;
+	Thu, 25 Apr 2024 12:22:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714047516; cv=none; b=utyr9aPcm8L28XnKKAN5utGnAhJqnEiabrSxibL9PCgt8TjlxTcQVGAQTaoKwoArLaV2lezl55HBR7gC8jC6qGfXIF0TwXNxHUHTRJK8f1vn+FJQQ85uzM4ipldTC2ByGico3vVPh3sDLraAXyhbm1qX6ifDfK04lCnTTPn9wvI=
+	t=1714047757; cv=none; b=fOKL2HLt/30kLbUZ5oAsqu2O8GT0OnV3bF+1UsqVtwyUzf5NXkBbYMUves9SxkFpj6ICJW0rjbdhkXVYtZud2icLc4CXxNomAkxHbnSljOi5QoDf9Vq5RjNwdDkpJHXTgVfeT4UCqPS8smfxen5omz3Z/kpH0Ou4sKtNMLCyA8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714047516; c=relaxed/simple;
-	bh=cvg2u/V2pPfdHsDSQQJK8Wvbd9QnS57Vi97QZwX0KD8=;
+	s=arc-20240116; t=1714047757; c=relaxed/simple;
+	bh=ac90Xptu+LlZdA2H1bGYh9aUekchXQrWaju28h5LvBk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hGSaa3EEWmmGfGbBamCUAmLk18VL9ekRE4sOt1qfWs/Dubbw1BM6Iunl/HX1difxjY/QZV8aiZECg25gocaXDtT5vXB1y94EcN5TI4aMaQIo5ttuFbEV6E0Krsz/Sk3vPBdF78U4dlaa0pgPD8heeecsLQAR9sB0q4G7Y80Uo7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rl4D7qKj; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=MSuDLOgUpcTysxOxNN5ViLTe8nsCEFtRcHv0m1yW0zUlOl2Sq24c4N0AC0vdbeuyir2iZXhyGX3Z3EcpUkon5RYOscM17mjZX8FcZ+/C9q0dQP7VQ0oS0QIvwwk4kTjxDjyGtbRwEGawNP5szfyMhnAKpOw/b9oMCzFDZKH88Xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4TbXn6nB; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rl4D7qKj"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4TbXn6nB"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=cvg2u/V2pPfdHsDSQQJK8Wvbd9QnS57Vi97QZwX0KD8=; b=rl4D7qKjuBe5pcQUsn0u1W3ywt
-	RdsH2zc8UZkzRR37F+5L+ju3BnKUFgnQDCpSp/k4ZF32pw9li+xlBzwpuHQHiYTsa6hRgSEL209XP
-	d++ePof7QkhOoX5IvcTtnfXvC4HBl0iGpqnclF/UszOIbxJdVR0DjyYMCDK1G0Q6A8DPuOLDGTzVO
-	oE/7Ipvs1vIkmTWtlgDKinnvT8qwPLE6jeS8u/t3zNuKgVavC6xblmW2yJ1Y63w3+plheLfUNlr+j
-	HcDhHSqPBuHDoNqi1qqOzTB+bECzo0on79tAcvu5o7vDwPO/oa32K9NAnpB9jfty6TP7V+Tzj6ynY
-	c+1adEUw==;
+	bh=5kmdkkgmxltKWTQk4TRnBXqD+WYMw+Ii9wmT2IhgF+M=; b=4TbXn6nBSXtbGSFyjPidJ1dkTq
+	kz/vOUst+cMP+R+woJCvf0tZuMWXcuOX0colAum5jIVBfBm/SXHNXBeeceqHvotdSH/HILVeE6koe
+	cX9y+AEKR1R2rJaUaQ3oHb1hnnteqOY0OehYypL2iAbMc+DXeL7fQMDSYtD8WInPgX3Dw7QNR7sD7
+	odBbDcjEWk5tVXeTaaj/0WXRP5Th7DYNboCY4dgxJ093XmvKw/c12GYHXui/ikYmMTr65HG28mqvr
+	VsPCzIHWpTW2W1cKeCAlGmQONjP4Jp0T1sDxHWDRAzdxKdjxxUWQwdkGZ48Wfkv8iZZKxHHNiCap7
+	iFlZDxNg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rzy3e-00000008BSp-3ZUJ;
-	Thu, 25 Apr 2024 12:18:34 +0000
-Date: Thu, 25 Apr 2024 05:18:34 -0700
+	id 1rzy7W-00000008CMg-2JzU;
+	Thu, 25 Apr 2024 12:22:34 +0000
+Date: Thu, 25 Apr 2024 05:22:34 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Subject: Re: [PATCHv2 1/1] xfs: Add cond_resched in xfs_bunmapi_range loop
-Message-ID: <ZipKGsb0X9yoJ-hQ@infradead.org>
-References: <cover.1714033516.git.ritesh.list@gmail.com>
- <f7d3db235a2c7e16681a323a99bb0ce50a92296a.1714033516.git.ritesh.list@gmail.com>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
+	brauner@kernel.org, david@fromorbit.com, chandanbabu@kernel.org,
+	tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com
+Subject: Re: [PATCH v5 4/9] xfs: convert delayed extents to unwritten when
+ zeroing post eof blocks
+Message-ID: <ZipLCm2N-fYKCuGv@infradead.org>
+References: <20240320110548.2200662-5-yi.zhang@huaweicloud.com>
+ <20240423111735.1298851-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,13 +50,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f7d3db235a2c7e16681a323a99bb0ce50a92296a.1714033516.git.ritesh.list@gmail.com>
+In-Reply-To: <20240423111735.1298851-1-yi.zhang@huaweicloud.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Tue, Apr 23, 2024 at 07:17:35PM +0800, Zhang Yi wrote:
+> +	if ((flags & IOMAP_ZERO) && imap.br_startoff <= offset_fsb &&
+> +	    isnullstartblock(imap.br_startblock)) {
+> +		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> +
+> +		if (offset_fsb >= eof_fsb)
+> +			goto convert_delay;
+> +		if (end_fsb > eof_fsb) {
+> +			end_fsb = eof_fsb;
+> +			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Nit: overly long line here.
 
-(and I can't wait for the day that preempt models are consolidated and
-cond_resched() is gone..)
+I've also tried to to a more comprehensive review, but this depends on
+the rest of the series, which isn't in my linux-xfs folder for April.
 
+I've your're not doing and instant revision it's usually much easier to
+just review the whole series.
