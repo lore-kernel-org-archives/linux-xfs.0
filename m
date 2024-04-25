@@ -1,98 +1,71 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C23AC3717F;
-	Thu, 25 Apr 2024 13:12:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30DDE1494B4
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 13:17:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714050746; cv=none; b=Vw4TnVRkUnQ3tS1wHyoYYal55e3z757YO/rueFMS8627NZTLRH9UaLSFrhBWI0+To+LvKxRqY2E068dSdyMXSBhNdAMWTMOON0JBJk9JDR1SY+1ROMbGyaQZWxjD8zi6FgQJBzSnpP75pce49Dmmwhqdw7DbWDBTigRhWEnkMlk=
+	t=1714051029; cv=none; b=r79CwQrOwNLdgGNnL+2XGCJ+VlYK/LMUZKqL1mZPPcwSXZqQXr2UenC+vv4EsDIxWHf+SOslBYjZY43cjvDAzl4S3YiLXP7GNcHmnCZRuYwe25oHFcNTVugBFY8+VRhvRz7dd6mmS99B3YYBY3rumU6UHXswAz5rIdVZzvtmIao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714050746; c=relaxed/simple;
-	bh=jwu57ioxDHFHYb2H4BekzE6s7a/+kDgLmSQBk4z/Wck=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fcrPVJU12Nif/H4byTWezmGIDTwOmY2d6N4lbz6QyPSfmc3Plz1KqYhnUtew++ZNCfXq01Nc9P3To3s2oAJfT3mX+usp6OyJgR88h8laZqOLoCv4uuhULFipwm31SP1+jlxBjU1BtdsGgz6+WbTsTjadJxxKHinhLHOauVvHHmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bVlE6mk2; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1714051029; c=relaxed/simple;
+	bh=N+0vJG+WP0A/I9OEw+M8qK2PuvvA4Y2DncnRASgiGwA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JyiAfwYE0ZNnkH02wPFwH/PjNZfLvj2ayrrTn9ZzpRaIF5m1DbPLL8j+Ahf9+XlMN48+a9AgeRI9SOGvn2b0YJgECllV9+U8grtaw/NkLibiHnuYR66SFIf/FvWryzBId0mOkHvG2qExe3xI54VOhcEGpovfpF+QJXgEpHsKYf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ufYZlQlw; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bVlE6mk2"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ufYZlQlw"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=JX9qBQ7VAepgiukLD5OGQzhQEBGgQLKoeCn+uha43Z8=; b=bVlE6mk2ULmgnXAbrNSirOX6s7
-	8jWxcb68KZ0Epcq+T/k3psD6jBs6Dp1obTwaN62VEd+b06EQ8LOLdnt90YRpyKZ6U0jbJKG1+u3qd
-	06SPJ7dH3hNAumGTwYfWgNkn9uVcU2nLaFspepLaxh6TvotJpyVwvCBehu77jrVAMK7iQRNin+mzJ
-	ms6zkzArJ/PaddwRCCmN+TW6lQT+fjMFx405s4d9yGmoBoafHEw5xXTTx/t2tZoKSYFMVcqH7VUWo
-	4foZ3ZDHJxOCv628Jqxh/ILFUbLZLKdf3yIInJyUeELPVVWDld/Y7mqp9wsivxbiJpF5NXW/jieS2
-	j6FICUxg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rzytj-00000008QCX-3z5k;
-	Thu, 25 Apr 2024 13:12:23 +0000
-Date: Thu, 25 Apr 2024 06:12:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Sam Sun <samsun1006219@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	djwong@kernel.org, chandan.babu@oracle.com,
-	syzkaller-bugs@googlegroups.com, xrivendell7@gmail.com,
-	Brian Foster <bfoster@redhat.com>
-Subject: Re: [Linux kernel bug] KASAN: slab-out-of-bounds Read in xlog_cksum
-Message-ID: <ZipWt03PhXs2Yc84@infradead.org>
-References: <CAEkJfYO++C-pxyqzfoXFKEvmMQEnrgkQ2QcG6radAWJMqdXQCQ@mail.gmail.com>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=U8LI8UHMu6OEXjPUjgugQMZ14ZpzLD/nWshcZOoeG84=; b=ufYZlQlwAymPQKrmWOXOV32foh
+	zvtJCTw5urcWchz4unv24478Wc+fMtZYMFuXM5zpqtDCxu/Igq8Ol7QLJ3mlOGR/7UTmUKzETyX5v
+	/l4pWYlGL/pWk13TmPGq7ITMFcvF4pqJ2swqOCdwcYo1chZNbpXGKWl4hlebrrhrX4+2qfcfHI0L6
+	ba45VjMjVkQpEUkwGIxLVCQ0t6X9+XRWT+Y5f3veiqLpgO5K/PiNZ2gD+S9Rc1Ys60RYg+3SOFmZk
+	1y9KueVmwjJ9BqjgXAGC39ZDDt58x0NJ0d+01VuwTvqV0DEkR+clk2pLJ1mQmiF765Ojgl9ggURGI
+	+jvLoVfw==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rzyyI-00000008RZp-2N9o;
+	Thu, 25 Apr 2024 13:17:06 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: add higher level directory operations helpers
+Date: Thu, 25 Apr 2024 15:16:58 +0200
+Message-Id: <20240425131703.928936-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAEkJfYO++C-pxyqzfoXFKEvmMQEnrgkQ2QcG6radAWJMqdXQCQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This triggers the workaround for really old xfsprogs putting in a
-bogus h_size:
+Hi all,
 
-[   12.101992] XFS (loop0): invalid iclog size (0 bytes), using lsunit (65536 bytes)
+with the scrub and online repair code we now duplicate the switching
+between the directory format for directory operations in at least two
+places for each operation, with the metadir code adding even more for
+some of these operations.
 
-but then calculates the log recovery buffer size based on the actual
-on-disk h_size value.  The patch below open codes xlog_logrec_hblks and
-fixes this particular reproducer.  But I wonder if we should limit the
-workaround.  Brian, you don't happpen to remember how old xfsprogs had
-to be to require your workaround (commit a70f9fe52daa8)?
+This series adds _args helpers to consolidate this code, and then
+refactors the checking for the directory format into a single well-defined
+helper.
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b445e8ce4a7d21..b3ea546508dc93 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2999,7 +2999,7 @@ xlog_do_recovery_pass(
- 	int			error = 0, h_size, h_len;
- 	int			error2 = 0;
- 	int			bblks, split_bblks;
--	int			hblks, split_hblks, wrapped_hblks;
-+	int			hblks = 1, split_hblks, wrapped_hblks;
- 	int			i;
- 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
- 	LIST_HEAD		(buffer_list);
-@@ -3055,14 +3055,16 @@ xlog_do_recovery_pass(
- 		if (error)
- 			goto bread_err1;
- 
--		hblks = xlog_logrec_hblks(log, rhead);
--		if (hblks != 1) {
--			kvfree(hbp);
--			hbp = xlog_alloc_buffer(log, hblks);
-+		if ((rhead->h_version & cpu_to_be32(XLOG_VERSION_2)) &&
-+		    h_size > XLOG_HEADER_CYCLE_SIZE) {
-+			hblks = DIV_ROUND_UP(h_size, XLOG_HEADER_CYCLE_SIZE);
-+			if (hblks > 1) {
-+				kvfree(hbp);
-+				hbp = xlog_alloc_buffer(log, hblks);
-+			}
- 		}
- 	} else {
- 		ASSERT(log->l_sectBBsize == 1);
--		hblks = 1;
- 		hbp = xlog_alloc_buffer(log, 1);
- 		h_size = XLOG_BIG_RECORD_BSIZE;
- 	}
+It is based on the online repair patchbombs that Darrick submitted
+yesterday.
+
+Diffstat:
+ libxfs/xfs_dir2.c     |  274 +++++++++++++++++++++++---------------------------
+ libxfs/xfs_dir2.h     |   17 ++-
+ libxfs/xfs_exchmaps.c |    9 -
+ scrub/dir.c           |    3 
+ scrub/dir_repair.c    |   58 ----------
+ scrub/readdir.c       |   59 +---------
+ xfs_dir2_readdir.c    |   19 +--
+ 7 files changed, 168 insertions(+), 271 deletions(-)
