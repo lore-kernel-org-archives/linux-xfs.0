@@ -1,56 +1,56 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F333E38DC3
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E305438DE8
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714168563; cv=none; b=gKo09STHfm1RXgg/t+Y6LCDuTDHsG5EKKJ1aZ8eK3nya4UIRvODdkCuITUflBaJ3usamKhIV74vf9zX6nj1gmDL2LK6GSraCepDvaJTMQlAsw67J8WfqXR5/gDHLPZoROCjDm79fimvq4YwVukmcyjSJx2bOM7IJnRgDo1RxTLA=
+	t=1714168564; cv=none; b=sJPdpOvIo2EzNCg/ODacDrtE1UuPdL8GQMl7dLdS9awOjV3rPEVDSsQu09xvppPzkzW7wI9EDvgucSMpMVI7fcRH9Zv6dq6L0+KQ/rrSd48shSG/vq6yMKVIbylRH1ttCne0ayRQCiattTPovfoatFDbdr0dg4EWAn9QFna4cF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714168563; c=relaxed/simple;
-	bh=bk3lpnetHLN3B3aWPqzKx8lv0E490khl9xgMBPEhMSY=;
+	s=arc-20240116; t=1714168564; c=relaxed/simple;
+	bh=i8IsRUlgnLu13aDmR4B/+ZCHKCTqPEvoTxJGMA1rKWA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uVahcPwR3CQxUBsgy18HAnzD1QxEr5vG7Q9PHObDzK3ydEc/QhPFrLtEbuEx4G7g/RAZec0HpVNzMuFIN4uR+rJOUAeHK/5ziIVvTGN6dc6mjjYyB5JZhdXhot3kaR6D8ky7l/v2M3INzHpULy5kue89lfZRBdKdtCLYu/HD5Cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yx4VgtFM; arc=none smtp.client-ip=209.85.214.169
+	 MIME-Version; b=h+bM+SG8zNAAqQ7pcZlXbEzNKjydXLML4+hcF70TVqNj0BQuUl5N3DyT+HgoBsIc9JJ8rmHakD61NjJwbhTHiTgw2ARC89ESdRSGqtN+NQPZfr0WbIzA/gu8UsBPwHst7TOCj82SkE2lK7WNg6VztWYySjTqYYXnQvLk3fSsdhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X30syMXM; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yx4VgtFM"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1e9451d8b71so23623365ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X30syMXM"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1e3ca4fe4cfso20198145ad.2
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714168561; x=1714773361; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714168562; x=1714773362; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=eUdKEAlR9Lv7qwu40BEj3Ujyv05MVk4KCVWcoRXZqek=;
-        b=Yx4VgtFM93jD1AsKkUlEzY5rXuZF+PByxsMDvAFBtn76Sji0yUUCKseGDHWY403bvp
-         Bluky2cj3Jnhu6Ti3qJqanH223eli1pQ2NOBOQG2zYg17o9gTbTa9eRldDuJEFHD74BK
-         X4cSKRcxvkQIRYLeEZfN1Shgy53GHOopoGtGB2hL51+J8U+xY7SD9UVOHfijSRkVaRTv
-         xx9JCE2BfV+avJb3EdXkbQpJCTVxL9qRdswaZm0yxsdJ+4DNFEZm5IcJpGWaSuPYyKcV
-         YlMCDKQgPuwSFGALIZu9jGZz6LgVY3wyas8qaB13KHShQ/kmXFLE7PRFX4n+i4EaNXEH
-         g0pg==
+        bh=FLKtpsrnk0K3LTK1AqAbvKTAf5YdKNbZ1P7dlKwCa0U=;
+        b=X30syMXMa7vfDV849N27cYpGt3FG0aWl3/x7oaXIYtLRWGfVYOEBzZXdsBcgn4xnoY
+         xUB9vyG3Y934PmMBAS3dd7q9HMN2h755W89Q7KTf8vzucaH/bE9jTmep01l7hi9S4UnU
+         58dmA4sFwzUySgWQ+VTXsRl3C+8xyY0It8Mp5WbCuoEyZZI8SjUuEkaaW0pdJCTEpggK
+         IthDMOD2Ctm6apmQ8jnlHSnGouAwgbDe5UXddDtXuWuO5mZltD+cVcYBD79YOrm+skHX
+         IDRVasbD+by8El3T2MvD3qkj7l1VqxDmrhE3lM+LBxB793T7nfXoOfbdjW15M01X/3Rf
+         +4Kw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714168561; x=1714773361;
+        d=1e100.net; s=20230601; t=1714168562; x=1714773362;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=eUdKEAlR9Lv7qwu40BEj3Ujyv05MVk4KCVWcoRXZqek=;
-        b=WyfmpuphRGpvyQxPpkBBwngWn21xT5zfmvKWUnHxH9FO+ghQzSoga9rTJrHi9ESWvS
-         M5DisCp3b9sbKNC4GcWTk7FjQo1SgtgswigyVpFQtsouaxuQrck7bOd5wNFd5spTSc+U
-         pI5ccUqjH1S2krAEeg9bjJMBvUFDBRZPg1DAaVQWlz398ok7ru2W1aaZW7rS0ZRDjrb4
-         yDVQncVZ+wzGhvndqKR8G40L059k6/KjlG5qG/A/RRfvJS9wjvx+zRY4NDNqo/VFiOOC
-         RZm1FiXlaaKEcRfi5OgmQ1UWKcgxDb+Ztfgw5t5uMjBnWPqDqfHzTKB5hyaZScJi2SFo
-         BJlQ==
-X-Gm-Message-State: AOJu0Yz98Jx0YakJJjZrCLcI7h4EF8pRrJ7VbfOJ446Y5nhjy1Snse+7
-	RAj8LJwnBUYv+sCaw1VW/ODrC2eKFje8O9gwWngFXOYDoML9cOabzTMbFlcA
-X-Google-Smtp-Source: AGHT+IGhokCYfq5HKcDiOGEHYwLada4ZLMsFqz+YmyvzwTVRnwlmDXjORLg0LwML96qFBZWEHoQf6Q==
-X-Received: by 2002:a17:902:d48f:b0:1eb:4c47:3454 with SMTP id c15-20020a170902d48f00b001eb4c473454mr791757plg.0.1714168561020;
+        bh=FLKtpsrnk0K3LTK1AqAbvKTAf5YdKNbZ1P7dlKwCa0U=;
+        b=qr8037qQDRAl8XJfa5IbJedpgyPnTm5UKi36Dd7si7PStojURgVlFujKf0rQ1Wdoba
+         2LtAAcZ7bYVjknRjCaMW7BPqMlTShYb6ikDQ2azUPQkEGbofg+nlkQGATeYhNzp5t89y
+         dXB4mIHYcdnnC5WbiZML3C27F1LNKu96Nv8oZofhc1/mBMbmec7e870wG+urnhvzRmMv
+         X8N8zHx4TyPJQ9sWIu1P2XNr/TwVJ14qlh+lXQ0EhPAwZqFY87Dl1VBQtP0WE7985xu/
+         pef8uUJAo8O9kdhboHBJD0b3QoXXpldTXPsf2RP37W2Csvy9X6cx7RGvL4lfPt4zyX+k
+         6eTw==
+X-Gm-Message-State: AOJu0YxLq03zVPEIBsfhgdau7K3Xl/GOfatLq8WsFxKUyP5zSwqqBNB9
+	BtGuyUZQuo2PhuQ8whXO5pvcban3kiwmhEIRdAQe5ujxEVsVtYFm2C8hmbb0
+X-Google-Smtp-Source: AGHT+IGpJpO2xK2ekJ+gFCSECEhOH7EMvNGXQWpMBu852oUK2g7r+6ldUWCxnINGHIFQdHAoTl4ezQ==
+X-Received: by 2002:a17:903:18e:b0:1e6:766c:6a26 with SMTP id z14-20020a170903018e00b001e6766c6a26mr5168155plg.12.1714168561980;
         Fri, 26 Apr 2024 14:56:01 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2b3a:c37d:d273:a588])
-        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.00
+        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:56:00 -0700 (PDT)
+        Fri, 26 Apr 2024 14:56:01 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
@@ -60,9 +60,9 @@ Cc: amir73il@gmail.com,
 	Long Li <leo.lilong@huawei.com>,
 	"Darrick J . Wong" <djwong@kernel.org>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 12/24] xfs: fix sb write verify for lazysbcount
-Date: Fri, 26 Apr 2024 14:54:59 -0700
-Message-ID: <20240426215512.2673806-13-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 13/24] xfs: fix incorrect i_nlink caused by inode racing
+Date: Fri, 26 Apr 2024 14:55:00 -0700
+Message-ID: <20240426215512.2673806-14-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.44.0.769.g3c40516874-goog
 In-Reply-To: <20240426215512.2673806-1-leah.rumancik@gmail.com>
 References: <20240426215512.2673806-1-leah.rumancik@gmail.com>
@@ -76,150 +76,77 @@ Content-Transfer-Encoding: 8bit
 
 From: Long Li <leo.lilong@huawei.com>
 
-[ Upstream commit 59f6ab40fd8735c9a1a15401610a31cc06a0bbd6 ]
+[ Upstream commit 28b4b0596343d19d140da059eee0e5c2b5328731 ]
 
-When lazysbcount is enabled, fsstress and loop mount/unmount test report
-the following problems:
+The following error occurred during the fsstress test:
 
-XFS (loop0): SB summary counter sanity check failed
-XFS (loop0): Metadata corruption detected at xfs_sb_write_verify+0x13b/0x460,
-	xfs_sb block 0x0
-XFS (loop0): Unmount and run xfs_repair
-XFS (loop0): First 128 bytes of corrupted metadata buffer:
-00000000: 58 46 53 42 00 00 10 00 00 00 00 00 00 28 00 00  XFSB.........(..
-00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000020: 69 fb 7c cd 5f dc 44 af 85 74 e0 cc d4 e3 34 5a  i.|._.D..t....4Z
-00000030: 00 00 00 00 00 20 00 06 00 00 00 00 00 00 00 80  ..... ..........
-00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
-00000050: 00 00 00 01 00 0a 00 00 00 00 00 04 00 00 00 00  ................
-00000060: 00 00 0a 00 b4 b5 02 00 02 00 00 08 00 00 00 00  ................
-00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 14 00 00 19  ................
-XFS (loop0): Corruption of in-memory data (0x8) detected at _xfs_buf_ioapply
-	+0xe1e/0x10e0 (fs/xfs/xfs_buf.c:1580).  Shutting down filesystem.
-XFS (loop0): Please unmount the filesystem and rectify the problem(s)
-XFS (loop0): log mount/recovery failed: error -117
-XFS (loop0): log mount failed
+XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2452
 
-This corruption will shutdown the file system and the file system will
-no longer be mountable. The following script can reproduce the problem,
-but it may take a long time.
+The problem was that inode race condition causes incorrect i_nlink to be
+written to disk, and then it is read into memory. Consider the following
+call graph, inodes that are marked as both XFS_IFLUSHING and
+XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
+value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
+may be set to 1.
 
- #!/bin/bash
+  xfsaild
+      xfs_inode_item_push
+          xfs_iflush_cluster
+              xfs_iflush
+                  xfs_inode_to_disk
 
- device=/dev/sda
- testdir=/mnt/test
- round=0
+  xfs_iget
+      xfs_iget_cache_hit
+          xfs_iget_recycle
+              xfs_reinit_inode
+                  inode_init_always
 
- function fail()
- {
-	 echo "$*"
-	 exit 1
- }
+xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing internal
+inode state and can race with other RCU protected inode lookups. On the
+read side, xfs_iflush_cluster() grabs the ILOCK_SHARED while under rcu +
+ip->i_flags_lock, and so xfs_iflush/xfs_inode_to_disk() are protected from
+racing inode updates (during transactions) by that lock.
 
- mkdir -p $testdir
- while [ $round -lt 10000 ]
- do
-	 echo "******* round $round ********"
-	 mkfs.xfs -f $device
-	 mount $device $testdir || fail "mount failed!"
-	 fsstress -d $testdir -l 0 -n 10000 -p 4 >/dev/null &
-	 sleep 4
-	 killall -w fsstress
-	 umount $testdir
-	 xfs_repair -e $device > /dev/null
-	 if [ $? -eq 2 ];then
-		 echo "ERR CODE 2: Dirty log exception during repair."
-		 exit 1
-	 fi
-	 round=$(($round+1))
- done
-
-With lazysbcount is enabled, There is no additional lock protection for
-reading m_ifree and m_icount in xfs_log_sb(), if other cpu modifies the
-m_ifree, this will make the m_ifree greater than m_icount. For example,
-consider the following sequence and ifreedelta is postive:
-
- CPU0				 CPU1
- xfs_log_sb			 xfs_trans_unreserve_and_mod_sb
- ----------			 ------------------------------
- percpu_counter_sum(&mp->m_icount)
-				 percpu_counter_add_batch(&mp->m_icount,
-						idelta, XFS_ICOUNT_BATCH)
-				 percpu_counter_add(&mp->m_ifree, ifreedelta);
- percpu_counter_sum(&mp->m_ifree)
-
-After this, incorrect inode count (sb_ifree > sb_icount) will be writen to
-the log. In the subsequent writing of sb, incorrect inode count (sb_ifree >
-sb_icount) will fail to pass the boundary check in xfs_validate_sb_write()
-that cause the file system shutdown.
-
-When lazysbcount is enabled, we don't need to guarantee that Lazy sb
-counters are completely correct, but we do need to guarantee that sb_ifree
-<= sb_icount. On the other hand, the constraint that m_ifree <= m_icount
-must be satisfied any time that there /cannot/ be other threads allocating
-or freeing inode chunks. If the constraint is violated under these
-circumstances, sb_i{count,free} (the ondisk superblock inode counters)
-maybe incorrect and need to be marked sick at unmount, the count will
-be rebuilt on the next mount.
-
-Fixes: 8756a5af1819 ("libxfs: add more bounds checking to sb sanity checks")
+Fixes: ff7bebeb91f8 ("xfs: refactor the inode recycling code") # goes further back than this
 Signed-off-by: Long Li <leo.lilong@huawei.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/libxfs/xfs_sb.c |  4 +++-
- fs/xfs/xfs_mount.c     | 15 +++++++++++++++
- 2 files changed, 18 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_icache.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index b6a584e044be..28c464307817 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -973,7 +973,9 @@ xfs_log_sb(
- 	 */
- 	if (xfs_has_lazysbcount(mp)) {
- 		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
--		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
-+		mp->m_sb.sb_ifree = min_t(uint64_t,
-+				percpu_counter_sum(&mp->m_ifree),
-+				mp->m_sb.sb_icount);
- 		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
- 	}
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index d884cba1d707..dd5a664c294f 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -342,6 +342,9 @@ xfs_iget_recycle(
  
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index e8bb3c2e847e..fb87ffb48f7f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -538,6 +538,20 @@ xfs_check_summary_counts(
- 	return 0;
- }
+ 	trace_xfs_iget_recycle(ip);
  
-+static void
-+xfs_unmount_check(
-+	struct xfs_mount	*mp)
-+{
-+	if (xfs_is_shutdown(mp))
-+		return;
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++		return -EAGAIN;
 +
-+	if (percpu_counter_sum(&mp->m_ifree) >
-+			percpu_counter_sum(&mp->m_icount)) {
-+		xfs_alert(mp, "ifree/icount mismatch at unmount");
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
-+	}
-+}
-+
- /*
-  * Flush and reclaim dirty inodes in preparation for unmount. Inodes and
-  * internal inode structures can be sitting in the CIL and AIL at this point,
-@@ -1077,6 +1091,7 @@ xfs_unmountfs(
- 	if (error)
- 		xfs_warn(mp, "Unable to free reserved block pool. "
- 				"Freespace may not be correct on next mount.");
-+	xfs_unmount_check(mp);
+ 	/*
+ 	 * We need to make it look like the inode is being reclaimed to prevent
+ 	 * the actual reclaim workers from stomping over us while we recycle
+@@ -355,6 +358,7 @@ xfs_iget_recycle(
  
- 	xfs_log_unmount(mp);
- 	xfs_da_unmount(mp);
+ 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+ 	error = xfs_reinit_inode(mp, inode);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (error) {
+ 		/*
+ 		 * Re-initializing the inode failed, and we are in deep
+@@ -523,6 +527,8 @@ xfs_iget_cache_hit(
+ 	if (ip->i_flags & XFS_IRECLAIMABLE) {
+ 		/* Drops i_flags_lock and RCU read lock. */
+ 		error = xfs_iget_recycle(pag, ip);
++		if (error == -EAGAIN)
++			goto out_skip;
+ 		if (error)
+ 			return error;
+ 	} else {
 -- 
 2.44.0.769.g3c40516874-goog
 
