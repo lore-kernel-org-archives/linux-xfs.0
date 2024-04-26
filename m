@@ -1,53 +1,57 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30D473A1B7;
-	Fri, 26 Apr 2024 11:43:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708071E52A
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 12:44:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714131797; cv=none; b=KO6P4qfN4cqfn3oc0Ewiwx2NrC8kJ/E7YXKJkFVAnUXSnLsqxh7Uw+WHsg45A9nc3PCwUc9Cq2TPgtNZPbCrbZY9U1IG8IA+AdrkF9xL99oyeMAl+4Qly1Dh8J/cZtpOZ6fsJ29zuF8dZ4x7hq0DDVHmq7acw9xzxR+6KjHyUVs=
+	t=1714135444; cv=none; b=tEDGCvmo1UxYcEJiXC4ZSkY0QTARkcFcFFuxvyUfvPwb0UHn8kvz6+c4owVDO8vkSV5kLi1OkhgnLyCERcEHFvGF+6BVvZURXIvr3UdPIORMThfJ+r4+Z/Dbi0OMd+O71wZ9uZ61ZwHrCRMXAYw81dUg5h2xlQ/dWGkG078nYpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714131797; c=relaxed/simple;
-	bh=BcEjWt3YbmNIE7LVBFxvxMgZ2KaV3f86h2IsdGvrfSQ=;
+	s=arc-20240116; t=1714135444; c=relaxed/simple;
+	bh=4osWF3z7TVSnKXwxzghbXZwzHfp+R/4Uz9B9jm/RxLI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tYVd2y3Ngvr2QWW/iD0jVS5dhC1WFjylcuF5pEdDacNMWiGDAIotYGJEGk/dy4nF65Q0A1oEzabMHjHqmW+usxoPlq2Lmbusm/L530+oDKN3No6qj8ueaFM2quUM2Y/QRKli+3LmEqJwduqmh9/kVtUHR2T/RtZNkLvLWAJBo+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=aQ34CJ9E; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZXaVcfPXd1gvPC4GuJvY3Zg5JBmRMvOqPUFIefYb7tBXE0FIfRwrcgGRKtJ4y2+suSrUqsH4UVZAHt43WimDsZqbrB/yzdSvSASSJZzi4xTtictXI48WZJbneafWDc/qvYIDQ1P3zXeKLO5o1mtFvt+FxHtEJrEQLPYt/XEgldo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UbxOw73/; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="aQ34CJ9E"
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4VQrSn4Vb2z9smT;
-	Fri, 26 Apr 2024 13:43:05 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1714131785;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UbxOw73/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1714135442;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cltDh65KDZw+OJ1Jx8uFob9VDGIFeVIuEhOR2xoeV7w=;
-	b=aQ34CJ9EipShkD28LV1bat6g3mnpc2GYmdBbBDCxEOoKx1zuh67XteNQm//lttTjtJ0edL
-	6LHYT43I/gKfoQuSGCtBrXqszUCosiV79JLe/IpGS2LxZSkhUI7OvKsJYEDjwHNBKu8mdo
-	UlDUKmUFUqBoNudAiYdIi/bpWmjmwDddMKFafy8oYEyhkldv+0DZxVEi8SZ1hUtGFCQf/B
-	rdfj2D7v9znaP2RGoKhZD/BYFOGRi82ix5kxdxKbu4K5kZkVUmO3U2/QhsErvykWztTiKe
-	7h0LLoaQJb+HZoz5OX0ZqX+BGUNHfMp8oEV433VEKJDCmdeFCDClI1k7vcvcPQ==
-Date: Fri, 26 Apr 2024 11:43:01 +0000
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+	bh=OCVM+mcR/zAidOTS4y72huxA4HPGOw6uU5hpLDITtQk=;
+	b=UbxOw73/sPQsNstUs0rjLFprguPFtNxIC/RMHElArnkl/60WpUt2pGtPtU6qPFunOR+aZE
+	PdRXwev2c9yXo8ftSrrwWFXInex6FGweDRHW7VGRIgMhJwbk9wf7cXgxLQjIghN1niI/vY
+	o512K4r8/2NTTEW2qejWVegN3alBO38=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-563-O05rPKkQP2uQT5wmnySeHA-1; Fri, 26 Apr 2024 08:43:59 -0400
+X-MC-Unique: O05rPKkQP2uQT5wmnySeHA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7791A802352;
+	Fri, 26 Apr 2024 12:43:58 +0000 (UTC)
+Received: from bfoster (unknown [10.22.16.38])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 11904AC6A;
+	Fri, 26 Apr 2024 12:43:58 +0000 (UTC)
+Date: Fri, 26 Apr 2024 08:46:13 -0400
+From: Brian Foster <bfoster@redhat.com>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: willy@infradead.org, djwong@kernel.org, brauner@kernel.org,
-	david@fromorbit.com, chandan.babu@oracle.com,
-	akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com
-Subject: Re: [PATCH v4 07/11] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <20240426114301.rtrqsv653a6vkbh6@quentin>
-References: <20240425113746.335530-1-kernel@pankajraghav.com>
- <20240425113746.335530-8-kernel@pankajraghav.com>
- <ZitIK5OnR7ZNY0IG@infradead.org>
+Cc: Sam Sun <samsun1006219@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, djwong@kernel.org,
+	chandan.babu@oracle.com, syzkaller-bugs@googlegroups.com,
+	xrivendell7@gmail.com
+Subject: Re: [Linux kernel bug] KASAN: slab-out-of-bounds Read in xlog_cksum
+Message-ID: <ZiuiFfWEOCiO9wVA@bfoster>
+References: <CAEkJfYO++C-pxyqzfoXFKEvmMQEnrgkQ2QcG6radAWJMqdXQCQ@mail.gmail.com>
+ <ZipWt03PhXs2Yc84@infradead.org>
+ <ZiphYrREkQvxkE-U@bfoster>
+ <ZitF8eqWEYECruXo@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,44 +60,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZitIK5OnR7ZNY0IG@infradead.org>
-X-Rspamd-Queue-Id: 4VQrSn4Vb2z9smT
+In-Reply-To: <ZitF8eqWEYECruXo@infradead.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.1
 
-On Thu, Apr 25, 2024 at 11:22:35PM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 25, 2024 at 01:37:42PM +0200, Pankaj Raghav (Samsung) wrote:
-> > From: Pankaj Raghav <p.raghav@samsung.com>
+On Thu, Apr 25, 2024 at 11:13:05PM -0700, Christoph Hellwig wrote:
+> On Thu, Apr 25, 2024 at 09:57:54AM -0400, Brian Foster wrote:
+> > On Thu, Apr 25, 2024 at 06:12:23AM -0700, Christoph Hellwig wrote:
+> > > This triggers the workaround for really old xfsprogs putting in a
+> > > bogus h_size:
+> > > 
+> > > [   12.101992] XFS (loop0): invalid iclog size (0 bytes), using lsunit (65536 bytes)
+> > > 
+> > > but then calculates the log recovery buffer size based on the actual
+> > > on-disk h_size value.  The patch below open codes xlog_logrec_hblks and
+> > > fixes this particular reproducer.  But I wonder if we should limit the
+> > > workaround.  Brian, you don't happpen to remember how old xfsprogs had
+> > > to be to require your workaround (commit a70f9fe52daa8)?
+> > > 
 > > 
-> > iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
-> > < fs block size. iomap_dio_zero() has an implicit assumption that fs block
-> > size < page_size. This is true for most filesystems at the moment.
-> > 
-> > If the block size > page size, this will send the contents of the page
-> > next to zero page(as len > PAGE_SIZE) to the underlying block device,
-> > causing FS corruption.
-> > 
-> > iomap is a generic infrastructure and it should not make any assumptions
-> > about the fs block size and the page size of the system.
+> > No, but a little digging turns up xfsprogs commit 20fbd4593ff2 ("libxfs:
+> > format the log with valid log record headers"), which I think is what
+> > you're looking for..? That went in around v4.5 or so, so I suppose
+> > anything earlier than that is affected.
 > 
-> So what happened to the plan to making huge_zero_page a folio and have
-> it available for non-hugetlb setups?  Not only would this be cleaner
-> and more efficient, but it would actually work for the case where you'd
-> have to zero more than 1MB on a 4k PAGE_SIZE system, which doesn't
-> seem impossible with 2MB folios.
+> Thanks.  I was kinda hoping we could exclude v5 file systems from that
+> workaround, but it is needed way too recent for that.
+> 
+> Maybe we can specificly check for the wrongly hardcoded
+> XLOG_HEADER_CYCLE_SIZE instead of allowing any value?
+> 
 
-I mentioned this Darrick in one of the older series[1] that it was
-proving to be a bit complicated (at least for me) to add that support.
+That seems like a reasonable option to me if you wanted to make it a bit
+more limited to its purpose. You might just want to double check that
+the size used in libxfs hadn't changed at any point previously, because
+that 1. apparently wouldn't have been an issue up until the record
+verification stuff and 2. the existing size-agnostic check in the kernel
+would have still handled it (prior to being broken).
 
-Currently, we reserve the ZERO_PAGE during kernel startup (arch/x86/kernel/head_64.S).
+It might also be worth a separately named macro or something in the
+kernel just for extra indication that this particular check is unique
+and warrants extra thought on future changes. Not so much that I'd
+expect the original macro value to change, but just that I suspect
+something like that might have helped flag this logic as semi-special
+and maybe helped avoid breaking it in commit 0c771b99d6c9. In hindsight,
+maybe it would have been a little better even to just put that logic
+into its own special fixup function or something. Anyways, just some
+random thoughts..
 
-Do we go about doing the same by reserving 1 PMD (512 PTEs with base page size)
-at kernel startup if we want to have zeroed 2MB (for x86) always at
-our disposal to use for zeroing out?
-Because allocating it during runtime will defeat the purpose.
+Brian
 
-Let me know what you think.
-
-In anycase, I would like to pursue huge_zero_page folio separately
-from this series. Also iomap_dio_zero() only pads a fs block with
-zeroes, which should never be > 64k for XFS.
-
-[1] https://lore.kernel.org/linux-fsdevel/5kodxnrvjq5dsjgjfeps6wte774c2sl75bn3fg3hh46q3wkwk5@2tru4htvqmrq/
