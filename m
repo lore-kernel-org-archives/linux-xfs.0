@@ -1,68 +1,69 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E305438DE8
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DC238F82
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714168564; cv=none; b=sJPdpOvIo2EzNCg/ODacDrtE1UuPdL8GQMl7dLdS9awOjV3rPEVDSsQu09xvppPzkzW7wI9EDvgucSMpMVI7fcRH9Zv6dq6L0+KQ/rrSd48shSG/vq6yMKVIbylRH1ttCne0ayRQCiattTPovfoatFDbdr0dg4EWAn9QFna4cF4=
+	t=1714168565; cv=none; b=JfgSUTgJ748LLZIDe2KWLtqqdAgiSuzX4ZCG/RPw8aao1K80TrNzTr0l4saAeq/RPyv7tzvams8srwvPGxjqMnvST5UVaT5kiRTn5oozo0tUAVJrHXD+AeXBKdqCsv+JhP5/L/VuUu6vL2kCtsSKGMSadM2qfkKKqyew9sZ6nP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714168564; c=relaxed/simple;
-	bh=i8IsRUlgnLu13aDmR4B/+ZCHKCTqPEvoTxJGMA1rKWA=;
+	s=arc-20240116; t=1714168565; c=relaxed/simple;
+	bh=B3gztKCcvuBinrC7FtzDV9IFiRHY08MUU0Q/4bjgyhI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h+bM+SG8zNAAqQ7pcZlXbEzNKjydXLML4+hcF70TVqNj0BQuUl5N3DyT+HgoBsIc9JJ8rmHakD61NjJwbhTHiTgw2ARC89ESdRSGqtN+NQPZfr0WbIzA/gu8UsBPwHst7TOCj82SkE2lK7WNg6VztWYySjTqYYXnQvLk3fSsdhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X30syMXM; arc=none smtp.client-ip=209.85.214.173
+	 MIME-Version; b=eiDyTiSKbnU/lg19DeiGyoppe8NZ6J5H5gzl7i+r7RPY9lciRKvmH6wcL8ymoCN6VafKPJOaqiORUVh6mJSg1oscskE5eSe4mXC+qV7mTP5ag4edNbNSO/5JuHhycatsR9Qz8EwQK2ja7qYFGbJKf2CQxsdDGtiUe7+eu64Ydw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h+B7UkRX; arc=none smtp.client-ip=209.85.210.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X30syMXM"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1e3ca4fe4cfso20198145ad.2
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h+B7UkRX"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6ed112c64beso2620007b3a.1
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714168562; x=1714773362; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714168563; x=1714773363; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=FLKtpsrnk0K3LTK1AqAbvKTAf5YdKNbZ1P7dlKwCa0U=;
-        b=X30syMXMa7vfDV849N27cYpGt3FG0aWl3/x7oaXIYtLRWGfVYOEBzZXdsBcgn4xnoY
-         xUB9vyG3Y934PmMBAS3dd7q9HMN2h755W89Q7KTf8vzucaH/bE9jTmep01l7hi9S4UnU
-         58dmA4sFwzUySgWQ+VTXsRl3C+8xyY0It8Mp5WbCuoEyZZI8SjUuEkaaW0pdJCTEpggK
-         IthDMOD2Ctm6apmQ8jnlHSnGouAwgbDe5UXddDtXuWuO5mZltD+cVcYBD79YOrm+skHX
-         IDRVasbD+by8El3T2MvD3qkj7l1VqxDmrhE3lM+LBxB793T7nfXoOfbdjW15M01X/3Rf
-         +4Kw==
+        bh=y1vf5yCfbFIZaQ93LPInJPX/XpHUz5DT96bZkz73Ios=;
+        b=h+B7UkRXLoDUZugMkQ9+c2CGczXWR+vjCI6dGfJou+mZcMiUbDNx5XdYBIIdhERqKW
+         BFOvhg+twsiPrwizBOvyOuAHmJjQbgCBkUD8GhEiHSIWR7Ww0h9GOTiVDAK5PPMci3v6
+         uuPOr5uu14lwCxGlpehbQ4otKGcKUsWqGrqIa5MPVZbvfozMh9d0cCkCg9HNGyP5y+HB
+         aTWOD425LFaHD2Y6/iPodxlV00w4h/d+MKFHDrc/begkWEkfMcNT8M4l2GcSSGd+FOf8
+         7ekC4Yb+I795HORvF/M4adMpUzp+buNexUaDphhdFx2Pgb7/7Sq+DOU8XbbmL5jJwBsn
+         giIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714168562; x=1714773362;
+        d=1e100.net; s=20230601; t=1714168563; x=1714773363;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=FLKtpsrnk0K3LTK1AqAbvKTAf5YdKNbZ1P7dlKwCa0U=;
-        b=qr8037qQDRAl8XJfa5IbJedpgyPnTm5UKi36Dd7si7PStojURgVlFujKf0rQ1Wdoba
-         2LtAAcZ7bYVjknRjCaMW7BPqMlTShYb6ikDQ2azUPQkEGbofg+nlkQGATeYhNzp5t89y
-         dXB4mIHYcdnnC5WbiZML3C27F1LNKu96Nv8oZofhc1/mBMbmec7e870wG+urnhvzRmMv
-         X8N8zHx4TyPJQ9sWIu1P2XNr/TwVJ14qlh+lXQ0EhPAwZqFY87Dl1VBQtP0WE7985xu/
-         pef8uUJAo8O9kdhboHBJD0b3QoXXpldTXPsf2RP37W2Csvy9X6cx7RGvL4lfPt4zyX+k
-         6eTw==
-X-Gm-Message-State: AOJu0YxLq03zVPEIBsfhgdau7K3Xl/GOfatLq8WsFxKUyP5zSwqqBNB9
-	BtGuyUZQuo2PhuQ8whXO5pvcban3kiwmhEIRdAQe5ujxEVsVtYFm2C8hmbb0
-X-Google-Smtp-Source: AGHT+IGpJpO2xK2ekJ+gFCSECEhOH7EMvNGXQWpMBu852oUK2g7r+6ldUWCxnINGHIFQdHAoTl4ezQ==
-X-Received: by 2002:a17:903:18e:b0:1e6:766c:6a26 with SMTP id z14-20020a170903018e00b001e6766c6a26mr5168155plg.12.1714168561980;
-        Fri, 26 Apr 2024 14:56:01 -0700 (PDT)
+        bh=y1vf5yCfbFIZaQ93LPInJPX/XpHUz5DT96bZkz73Ios=;
+        b=KO3R2Pk+DDLKIjOQKUTKrsOhIAc9n4l9RElQXJX8X6WcZ/QjsqGUkx7ROdTnXI+zA9
+         dnTz016Ov3TMoIe3oKKEcQ7B9nevM0AlWb/jT1sIfISeUXgLSjJuePe4SdPIILxwnGQi
+         uNolBaZsrcSUxnUhkJaav62qVscC30baXHi4ze6AamNAmD7fcWHIW1KUK0GiTArqWced
+         GW1m8JRfH/6YvasWNTlxDvJ0ApmoK8rTkfsVHb70efMNPRDVm08ZYSWbClv9pOKUl/pX
+         jIIKYoTU97v1SHO7YN8DDEkts9OMy1O7h6c11VSk5s9cMsFHcS+JRL+LfNM5js0vNhsA
+         ObYg==
+X-Gm-Message-State: AOJu0YyOgYbWntzmsM+WxlISQA1u4WzMUQAE6+NPt2909SUeJ9tGaiX6
+	De8c2FVz+SQFWC3tTYfodGYqGzzHOd8CJJkqTXJfEPm4FQZz+p3wfSn/1RVL
+X-Google-Smtp-Source: AGHT+IFvXzM80Vx32QNQMhBTP7TKiL/F80WvzU4b8SKqvRBOcjyMtvHx8nLXUJfO/cT+8iSFmeJoyg==
+X-Received: by 2002:a17:903:1cd:b0:1e4:cb0e:2988 with SMTP id e13-20020a17090301cd00b001e4cb0e2988mr1342042plh.2.1714168563040;
+        Fri, 26 Apr 2024 14:56:03 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2b3a:c37d:d273:a588])
-        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.01
+        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:56:01 -0700 (PDT)
+        Fri, 26 Apr 2024 14:56:02 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
 	chandan.babu@oracle.com,
 	fred@cloudflare.com,
 	mngyadam@amazon.com,
-	Long Li <leo.lilong@huawei.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Gao Xiang <hsiangkao@linux.alibaba.com>,
+	Dave Chinner <dchinner@redhat.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 13/24] xfs: fix incorrect i_nlink caused by inode racing
-Date: Fri, 26 Apr 2024 14:55:00 -0700
-Message-ID: <20240426215512.2673806-14-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 14/24] xfs: invalidate block device page cache during unmount
+Date: Fri, 26 Apr 2024 14:55:01 -0700
+Message-ID: <20240426215512.2673806-15-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.44.0.769.g3c40516874-goog
 In-Reply-To: <20240426215512.2673806-1-leah.rumancik@gmail.com>
 References: <20240426215512.2673806-1-leah.rumancik@gmail.com>
@@ -74,79 +75,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Long Li <leo.lilong@huawei.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 28b4b0596343d19d140da059eee0e5c2b5328731 ]
+[ Upstream commit 032e160305f6872e590c77f11896fb28365c6d6c ]
 
-The following error occurred during the fsstress test:
+Every now and then I see fstests failures on aarch64 (64k pages) that
+trigger on the following sequence:
 
-XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2452
+mkfs.xfs $dev
+mount $dev $mnt
+touch $mnt/a
+umount $mnt
+xfs_db -c 'path /a' -c 'print' $dev
 
-The problem was that inode race condition causes incorrect i_nlink to be
-written to disk, and then it is read into memory. Consider the following
-call graph, inodes that are marked as both XFS_IFLUSHING and
-XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
-value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
-may be set to 1.
+99% of the time this succeeds, but every now and then xfs_db cannot find
+/a and fails.  This turns out to be a race involving udev/blkid, the
+page cache for the block device, and the xfs_db process.
 
-  xfsaild
-      xfs_inode_item_push
-          xfs_iflush_cluster
-              xfs_iflush
-                  xfs_inode_to_disk
+udev is triggered whenever anyone closes a block device or unmounts it.
+The default udev rules invoke blkid to read the fs super and create
+symlinks to the bdev under /dev/disk.  For this, it uses buffered reads
+through the page cache.
 
-  xfs_iget
-      xfs_iget_cache_hit
-          xfs_iget_recycle
-              xfs_reinit_inode
-                  inode_init_always
+xfs_db also uses buffered reads to examine metadata.  There is no
+coordination between xfs_db and udev, which means that they can run
+concurrently.  Note there is no coordination between the kernel and
+blkid either.
 
-xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing internal
-inode state and can race with other RCU protected inode lookups. On the
-read side, xfs_iflush_cluster() grabs the ILOCK_SHARED while under rcu +
-ip->i_flags_lock, and so xfs_iflush/xfs_inode_to_disk() are protected from
-racing inode updates (during transactions) by that lock.
+On a system with 64k pages, the page cache can cache the superblock and
+the root inode (and hence the root dir) with the same 64k page.  If
+udev spawns blkid after the mkfs and the system is busy enough that it
+is still running when xfs_db starts up, they'll both read from the same
+page in the pagecache.
 
-Fixes: ff7bebeb91f8 ("xfs: refactor the inode recycling code") # goes further back than this
-Signed-off-by: Long Li <leo.lilong@huawei.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The unmount writes updated inode metadata to disk directly.  The XFS
+buffer cache does not use the bdev pagecache, nor does it invalidate the
+pagecache on umount.  If the above scenario occurs, the pagecache no
+longer reflects what's on disk, xfs_db reads the stale metadata, and
+fails to find /a.  Most of the time this succeeds because closing a bdev
+invalidates the page cache, but when processes race, everyone loses.
+
+Fix the problem by invalidating the bdev pagecache after flushing the
+bdev, so that xfs_db will see up to date metadata.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_icache.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/xfs/xfs_buf.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d884cba1d707..dd5a664c294f 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -342,6 +342,9 @@ xfs_iget_recycle(
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index dde346450952..54c774af6e1c 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1945,6 +1945,7 @@ xfs_free_buftarg(
+ 	list_lru_destroy(&btp->bt_lru);
  
- 	trace_xfs_iget_recycle(ip);
+ 	blkdev_issue_flush(btp->bt_bdev);
++	invalidate_bdev(btp->bt_bdev);
+ 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
  
-+	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-+		return -EAGAIN;
-+
- 	/*
- 	 * We need to make it look like the inode is being reclaimed to prevent
- 	 * the actual reclaim workers from stomping over us while we recycle
-@@ -355,6 +358,7 @@ xfs_iget_recycle(
- 
- 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
- 	error = xfs_reinit_inode(mp, inode);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error) {
- 		/*
- 		 * Re-initializing the inode failed, and we are in deep
-@@ -523,6 +527,8 @@ xfs_iget_cache_hit(
- 	if (ip->i_flags & XFS_IRECLAIMABLE) {
- 		/* Drops i_flags_lock and RCU read lock. */
- 		error = xfs_iget_recycle(pag, ip);
-+		if (error == -EAGAIN)
-+			goto out_skip;
- 		if (error)
- 			return error;
- 	} else {
+ 	kmem_free(btp);
 -- 
 2.44.0.769.g3c40516874-goog
 
