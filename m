@@ -1,71 +1,73 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A030E2C6BD
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:22:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04E22D03D
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714166547; cv=none; b=c3ULyLztcOhtk7scKE21+kbakPrZdF+qTTkS7nvGFxW24KtErhBVHxPpBnQ0ZLc4mq1hQ5h69K9KPSNom6O2dILCaOHaMLmX1wXFwPusJX+sGSebXpLfrcbqN9I8kwLbrjxqxkGW5Hy7N2l8VMImrQjO6MTPdgC6DFOwjghpUew=
+	t=1714167412; cv=none; b=UryNUpOo00jc5jnI4oTJpDpUQEFUKd3Ng2Inu2dNXro6fmy9FFfa9Nc1bmUNamXFdzuNXqvCMSFS8gbUOkB3BFDCmBj7x2WL0NUho97BX2EuZ34NZ0f2V0vwf60Cz/30B1Gw5sqSq0GgOuMbsuvRlKRCx/sZLgx2xc+bhFVuBBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714166547; c=relaxed/simple;
-	bh=fOysDqErrJ5jjFQQO7y0XrzRGTTn1Sm1Ftw4svl51wA=;
+	s=arc-20240116; t=1714167412; c=relaxed/simple;
+	bh=k76bPd0gjWNDHnKIQuP6Q1j9Ush0tI3sOfqwGGeCkDI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pnWcvuiCR0tzxwkx2JT8CI4/tF8j7d2tWY2Vtz23u3bLrEupAQ9aehcz3GXxkc0r1QrXVVT4m/gloOOKwhvYb4gqwbWxvGIdopfiwc6Rzp0eB9eI65hPZk+d2aTxaDONf4uxeWEUR2i6bKdqMaZp0538B4rlXkou3KQp0tyT3aI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=at+p/p8W; arc=none smtp.client-ip=209.85.214.174
+	 Content-Type:Content-Disposition:In-Reply-To; b=fsWR1c/M7+Y2HZUTdnmq4qVE93ERAXAghyjBm0WHQP3amvFxk5LOE5r3WJHuzd9Da6kjg5Fy4qv8cJ44nuFgUk0+E6QCivFpdo9rYI8YAA/r89nEE6nFMhINyWQnUmJ0pAKJ18vhT3yutCJZnXjnoZOP5lVD72UqOJSjh/7e22Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Bl5f0noG; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="at+p/p8W"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1e5c7d087e1so23991335ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:22:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Bl5f0noG"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2a2da57ab3aso2321162a91.3
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:36:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714166545; x=1714771345; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714167410; x=1714772210; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zCoO2T2YsP7LrwbAT+g4HEuejnEIT/1nDXSmbYAkLWs=;
-        b=at+p/p8WQ7moPDzFRCkS0q8kwJlKDj8scksv7PfoJ97biapaiNva4c5q/M8bOyso7M
-         D8BnHH0/c3787g/BCY4NeuTpuRAUsjtVRzLPE4p5qb7P3q64B9BP/rJicQrO2CZyybaP
-         zCoNIdqOPTcH57d0FIUFUrBe3nOP7CXPX1DCbStndPTc5YnVeeIyHj6NuUKWzM48k8Ac
-         vCCYqKKCfxy5x9ogYsrOIzrlB52bEB8NMT/NTNG5gDkPudAkOL1UFKp6hETHtFolXIeK
-         PqYNzQRUbftdsSZxhvIRHGnIl5zjDBJXm1DbTqh+fGoH/xomDhypF9+ADmMRUFwtu8yO
-         uMJA==
+        bh=QJtFmQ5+PxyI0zzkbzopCLLSCW05zynZDvU06FC33Kg=;
+        b=Bl5f0noGE1n1Ctu1BYJlPVz59G/XZMK75leLLRKjCqXPb3cM9RYK8TlSVyS4gnkDcB
+         6KoL3j5dkj/qUPCueBL28J8F2wpbJ3Ns78ZFVw1aW4Si0vE+huy08/p3BvJlMQZrB3CE
+         zoOIhwI+pJFdWwdXeTrqUaoJxwGmjYZwdrh2wylTwhwgLzAChWW0VLnsuf99S+fssSDp
+         5xocCq2VN9HO8ipK20CZE8A8+YINEFYXGrCS1UqIaxVcpxawMrloToA2dJcms11R9Q0L
+         4BFFTDbh3jwyU2gGsIARs3Y6cwbX19uJAg8BKWgy+pZwXacQObds8ikjj7ZNOYhJ9fNf
+         7+tQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714166545; x=1714771345;
+        d=1e100.net; s=20230601; t=1714167410; x=1714772210;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zCoO2T2YsP7LrwbAT+g4HEuejnEIT/1nDXSmbYAkLWs=;
-        b=LONbClKqABrthi6LWVOgjdDOZM39MFTShmZqdB7EbBw/7mD6vXTCV9DlcNzQaJto7X
-         vWGBY600Hsd1SmGhEUrEUlow5dlkBUfgo/x6dM/3Oy6g6Qq3nSTOMLD+GcVfH1Pzuizp
-         m/D7haMQqy11vER3rh7s1u1kN27pGDe41CsU9viKLzTmLpldl4la3/wZc0HftBcO6gQW
-         9F2rjs88Ps9+qIlAk9MXOh2kI3/zx9pweq93jg6HN7XwJWi14uzpBaOjcvYxUSkFjXna
-         SxqHzcsAuXTwPB4D66GvycR3QdJX2d53imMRHu/Kh44SKxehxCy+h/skZwTOS1hf7jCF
-         qAmA==
-X-Forwarded-Encrypted: i=1; AJvYcCW+QHex01FlBZVMvbTSxIoaiwbKa/xnt989Vr8oFoxG9wL0JoOfsI38x/ST9YIWWaKWDdlJwM5W5+GVLIyeu7WRuOiq1v4CUzVA
-X-Gm-Message-State: AOJu0Yw4jZM7gWsiS65gx/L7dcubhV5AMCoKkdk8nnyU7EG4pLLJ7ndK
-	93Q1hZjCiU/fGLKPUWMm7c2Shyyj9PtOfzgnYh+0Nu8iqYlMq99chAfwOVNPVyg=
-X-Google-Smtp-Source: AGHT+IGXdMkn9l1ezfkyGK+n7n0uMS4D1Tg5ZQjgV0UMy7e+oIR6yZfo+ivuZ6fE7HD6JR0rdlOg3w==
-X-Received: by 2002:a17:902:eec1:b0:1e9:1f39:2edb with SMTP id h1-20020a170902eec100b001e91f392edbmr3802429plb.26.1714166544642;
-        Fri, 26 Apr 2024 14:22:24 -0700 (PDT)
+        bh=QJtFmQ5+PxyI0zzkbzopCLLSCW05zynZDvU06FC33Kg=;
+        b=rw1cBJ+UZNLSZNsckKKGGiHjy2Wul7Twmr5JnfAz0+OkeOBxv6lRx/qI84jXSaqVQQ
+         snfi9y6nv24Q4RtiK6uaiqv+6vcB2dYXs3I5DW7JK8JOzf/+xI+YP7mEBxFhuBh5Pd0c
+         2dS4HqKzB8FbbLEbTmk2POxsC+myzocNlkwED7x4RWpCCwBg4IZjzNuoDq36x4fSzKZc
+         w5CAljl+Uf3fMJnN5ef2ldLm9AzkQc02gsno8xA3kSW4qF35qIS/cFdZ028qkLeSkVxp
+         bOSo8dAqH353mTi+u5vN1S7iR4sifF+A9mxch8asUUnq9a+3qnVpxnb+hPCjv2wnKVj+
+         1Edg==
+X-Forwarded-Encrypted: i=1; AJvYcCUxfbIipKhZ3arJikARr6WARC8DU2PAodNzBTHTsIecp/hzgiSKWTsFwul7nN039XVj8IjLbvKBrZQXWH65vJl6pTJTwrN1Wh9i
+X-Gm-Message-State: AOJu0Yyd8GhMbX5GrS+bOR7IheLUiXJf/U4dC9f4FRLUSaYmGyxQKH1p
+	77aeIlrs92v6VIts+ceUQ6SE37RD79G9sL/NvNVn+sm+lTFoAtHL5+WqMMx/h8I=
+X-Google-Smtp-Source: AGHT+IFmc+RCoBKTzXGahw3W04/QE6IHRfllxdX6+wwRlssyDfe4FaWZC8l9940dp7jrpXgq341nDw==
+X-Received: by 2002:a17:90a:a114:b0:2ae:8f3f:9bf2 with SMTP id s20-20020a17090aa11400b002ae8f3f9bf2mr3953512pjp.42.1714167410039;
+        Fri, 26 Apr 2024 14:36:50 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id b7-20020a170902650700b001e245c5afbfsm16215959plk.155.2024.04.26.14.22.23
+        by smtp.gmail.com with ESMTPSA id gn5-20020a17090ac78500b0029f349cc253sm16734964pjb.54.2024.04.26.14.36.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:22:24 -0700 (PDT)
+        Fri, 26 Apr 2024 14:36:49 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1s0T1R-00Bzn8-1O;
-	Sat, 27 Apr 2024 07:22:21 +1000
-Date: Sat, 27 Apr 2024 07:22:21 +1000
+	id 1s0TFP-00C0ca-09;
+	Sat, 27 Apr 2024 07:36:47 +1000
+Date: Sat, 27 Apr 2024 07:36:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: syzbot <syzbot+1619d847a7b9ba3a9137@syzkaller.appspotmail.com>,
-	chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, Sam Sun <samsun1006219@gmail.com>,
 	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_fs_dirty_inode
-Message-ID: <ZiwbDbYUJgH7t+G6@dread.disaster.area>
-References: <000000000000fee02e0616f8fdff@google.com>
- <20240426163008.GO360919@frogsfrogsfrogs>
+	djwong@kernel.org, chandan.babu@oracle.com,
+	syzkaller-bugs@googlegroups.com, xrivendell7@gmail.com
+Subject: Re: [Linux kernel bug] KASAN: slab-out-of-bounds Read in xlog_cksum
+Message-ID: <Ziweb7egkq2Ltn0d@dread.disaster.area>
+References: <CAEkJfYO++C-pxyqzfoXFKEvmMQEnrgkQ2QcG6radAWJMqdXQCQ@mail.gmail.com>
+ <ZipWt03PhXs2Yc84@infradead.org>
+ <ZiphYrREkQvxkE-U@bfoster>
+ <ZitF8eqWEYECruXo@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,98 +76,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240426163008.GO360919@frogsfrogsfrogs>
+In-Reply-To: <ZitF8eqWEYECruXo@infradead.org>
 
-On Fri, Apr 26, 2024 at 09:30:08AM -0700, Darrick J. Wong wrote:
-> On Thu, Apr 25, 2024 at 10:15:29PM -0700, syzbot wrote:
-> > Hello,
+On Thu, Apr 25, 2024 at 11:13:05PM -0700, Christoph Hellwig wrote:
+> On Thu, Apr 25, 2024 at 09:57:54AM -0400, Brian Foster wrote:
+> > On Thu, Apr 25, 2024 at 06:12:23AM -0700, Christoph Hellwig wrote:
+> > > This triggers the workaround for really old xfsprogs putting in a
+> > > bogus h_size:
+> > > 
+> > > [   12.101992] XFS (loop0): invalid iclog size (0 bytes), using lsunit (65536 bytes)
+> > > 
+> > > but then calculates the log recovery buffer size based on the actual
+> > > on-disk h_size value.  The patch below open codes xlog_logrec_hblks and
+> > > fixes this particular reproducer.  But I wonder if we should limit the
+> > > workaround.  Brian, you don't happpen to remember how old xfsprogs had
+> > > to be to require your workaround (commit a70f9fe52daa8)?
+> > > 
 > > 
-> > syzbot found the following issue on:
-> > 
-> > HEAD commit:    3b68086599f8 Merge tag 'sched_urgent_for_v6.9_rc5' of git:..
-> > git tree:       upstream
-> > console output: https://syzkaller.appspot.com/x/log.txt?x=158206bb180000
-> > kernel config:  https://syzkaller.appspot.com/x/.config?x=f47e5e015c177e57
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=1619d847a7b9ba3a9137
-> > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-> > 
-> > Unfortunately, I don't have any reproducer for this issue yet.
-> > 
-> > Downloadable assets:
-> > disk image: https://storage.googleapis.com/syzbot-assets/caa90b55d476/disk-3b680865.raw.xz
-> > vmlinux: https://storage.googleapis.com/syzbot-assets/17940f1c5e8f/vmlinux-3b680865.xz
-> > kernel image: https://storage.googleapis.com/syzbot-assets/b03bd6929a1c/bzImage-3b680865.xz
-> > 
-> > IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> > Reported-by: syzbot+1619d847a7b9ba3a9137@syzkaller.appspotmail.com
-> > 
-> > ======================================================
-> > WARNING: possible circular locking dependency detected
-> > 6.9.0-rc4-syzkaller-00274-g3b68086599f8 #0 Not tainted
-> > ------------------------------------------------------
-> > kswapd0/81 is trying to acquire lock:
-> > ffff8881a895a610 (sb_internal#3){.+.+}-{0:0}, at: xfs_fs_dirty_inode+0x158/0x250 fs/xfs/xfs_super.c:689
-> > 
-> > but task is already holding lock:
-> > ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6782 [inline]
-> > ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xb20/0x30c0 mm/vmscan.c:7164
-> > 
-> > which lock already depends on the new lock.
-> > 
-> > 
-> > the existing dependency chain (in reverse order) is:
-> > 
-> > -> #2 (fs_reclaim){+.+.}-{0:0}:
-> >        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
-> >        __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
-> >        fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
-> >        might_alloc include/linux/sched/mm.h:312 [inline]
-> >        slab_pre_alloc_hook mm/slub.c:3746 [inline]
-> >        slab_alloc_node mm/slub.c:3827 [inline]
-> >        kmalloc_trace+0x47/0x360 mm/slub.c:3992
-> >        kmalloc include/linux/slab.h:628 [inline]
-> >        add_stack_record_to_list mm/page_owner.c:177 [inline]
-
-There's the GFP_KERNEL allocation being warned about again.
-
-> >        inc_stack_record_count mm/page_owner.c:219 [inline]
-> >        __set_page_owner+0x561/0x810 mm/page_owner.c:334
-> >        set_page_owner include/linux/page_owner.h:32 [inline]
-> >        post_alloc_hook+0x1ea/0x210 mm/page_alloc.c:1534
-> >        prep_new_page mm/page_alloc.c:1541 [inline]
-> >        get_page_from_freelist+0x3410/0x35b0 mm/page_alloc.c:3317
-> >        __alloc_pages+0x256/0x6c0 mm/page_alloc.c:4575
-> >        __alloc_pages_node include/linux/gfp.h:238 [inline]
-> >        alloc_pages_node include/linux/gfp.h:261 [inline]
-> >        alloc_slab_page+0x5f/0x160 mm/slub.c:2175
-> >        allocate_slab mm/slub.c:2338 [inline]
-> >        new_slab+0x84/0x2f0 mm/slub.c:2391
-> >        ___slab_alloc+0xc73/0x1260 mm/slub.c:3525
-> >        __slab_alloc mm/slub.c:3610 [inline]
-> >        __slab_alloc_node mm/slub.c:3663 [inline]
-> >        slab_alloc_node mm/slub.c:3835 [inline]
-> >        kmem_cache_alloc+0x252/0x340 mm/slub.c:3852
-> >        kmem_cache_zalloc include/linux/slab.h:739 [inline]
-> >        xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:679 [inline]
-> >        xfs_refcountbt_init_cursor+0x65/0x2a0 fs/xfs/libxfs/xfs_refcount_btree.c:367
-> >        xfs_reflink_find_shared fs/xfs/xfs_reflink.c:147 [inline]
-> >        xfs_reflink_trim_around_shared+0x53a/0x9d0 fs/xfs/xfs_reflink.c:194
-> >        xfs_buffered_write_iomap_begin+0xebf/0x1b40 fs/xfs/xfs_iomap.c:1062
+> > No, but a little digging turns up xfsprogs commit 20fbd4593ff2 ("libxfs:
+> > format the log with valid log record headers"), which I think is what
+> > you're looking for..? That went in around v4.5 or so, so I suppose
+> > anything earlier than that is affected.
 > 
-> Hm.  We've taken an ILOCK in xfs_buffered_write_iomap_begin, and now
-> we're allocating a btree cursor but we don't have PF_MEMALLOC_NOFS set,
-> nor do we pass GFP_NOFS.
-> 
-> Ah, because nothing in this code path sets PF_MEMALLOC_NOFS explicitly,
-> nor does it create a xfs_trans_alloc_empty, which would set that.  Prior
-> to the removal of kmem_alloc, I think we were much more aggressive about
-> GFP_NOFS usage.
-> 
-> Seeing as we're about to walk a btree, we probably want the empty
-> transaction to guard against btree cycle livelocks.
+> Thanks.  I was kinda hoping we could exclude v5 file systems from that
+> workaround, but it is needed way too recent for that.
 
-Nothing like that is needed or desired, this is a just a bug in the
-memory allocation tracking code...
+Any v5 filesystem with reflink and/or rmapbt enabled can be
+excluded, as they didn't get added until 4.8 or after. All new
+filesystems from here on should at least have reflink enabled, so
+just returning EFSCORRUPTED and aborting recovery would be fine for
+those filesystems....
+
+OTOH, I think anyone using a 6.x kernel should be using a 6.x
+xfsprogs, too, so maybe we should just remove the workaround from
+upstream kernels altogether?
+
+> Maybe we can specificly check for the wrongly hardcoded
+> XLOG_HEADER_CYCLE_SIZE instead of allowing any value?
+
+We probably should do that, too.
 
 -Dave.
 -- 
