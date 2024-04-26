@@ -1,74 +1,49 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38E802599
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 23:30:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 638B8380;
+	Fri, 26 Apr 2024 00:47:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714087811; cv=none; b=I8nUN0XMvX+GWT6r67tChX54n2kRIl5neBcaC44z3dDl5OvSSDedz8d3H1aP/qq+9YfJrtprNBy+cRhuvZ8ILPNq3/ElKZG3W2QOVOAw3kha5Ct8F00pynAzgO0/auaXbuAKB8FNdkhDeRqCT4in2ALzxOCwP7U6/iZAXvWyfao=
+	t=1714092453; cv=none; b=MRrdzrqBKu6AFDOgD8SIHwbx+TPy2RbqEZyz93X3niUsymj8/p12426vmwZ6zzojQ94i02Dud1OrEiQoIZbGO82oYi5xc2Yu8Phc2LC4Z+YHJ84u4GZRCToyhMmkJ9b28/XpkRx51SvjC1vaLv4D78ZWytDotEvGmJtjD8smkIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714087811; c=relaxed/simple;
-	bh=mNmnYI8ZX9ToNqn+4yvvr2Xf/XOAit97Ly8NwVa2KDI=;
+	s=arc-20240116; t=1714092453; c=relaxed/simple;
+	bh=C5A9J+Gbrbj/i3IjchhAKHt0ZfALGWbdhp86L8wkEeI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hSIYqDdbAOujFRUiX5UgICzKNx2Y1ykvVLQmpQVqUtJ04DShnJ53qu4De32rVG1yl9QZ+4pmfL1Y8yK46SovCLKfrZ4LD9LdfgabqZcs3SxBqd2dB1zCuNCj2BQQKvYGLxWB0qJn2z18hDdjBa8gNkNh0K6uRkgntOMWuugh4a8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=z6eYqpcK; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bylh/Z1HXsecrhNR1qVBabeg37u/d2nyDscAmtk7E8oXMdXS4wezRBNsay3sB3xirhz8GjIsMDZffgAwcBMi+fNQCUSHIzSX2PRycNh3hBxR7/cdi3yImyN8CT9/DE7DZd5wiPeQeCZ+kclrhscJ7KsVcLJIL0qqzz1s1ZT+i0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=f0+vinsW; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="z6eYqpcK"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2a54fb929c8so1134313a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 16:30:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714087809; x=1714692609; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5cXMcedxU3o8BAZ3NwgNX3q6oAlC7C5KnfWFQs/vc0o=;
-        b=z6eYqpcKLugSZBPPmzIEtfTzpEi10I+KRc61kJBOWpnin1mPCcimeagZjB7xZLSJWc
-         StBAOkH3NeuBAXdhhoqN9oSn0g/i/C2AR/3mIKx8+VoMNDe98Hn821Pcq3UKwNhveyuw
-         6iCUVFz2l93voAlGZUJiNGEqNnvFtuM+2HSG6IiCIHJjD9GSg7EH0LkwJu0fTEPCfZpj
-         rOc83hJIMBCbhbLODnutTF2fixUR0YYB5nts+RqQd32ODPCiP2DPZ8r0rNhovbtaGawd
-         e8Y/nA1FweFKtQDrRHu/nV3bgthyPLn5MGKMhaNFyd3neOSb79pqCYBXilBWL8Gas/R/
-         2kqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714087809; x=1714692609;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5cXMcedxU3o8BAZ3NwgNX3q6oAlC7C5KnfWFQs/vc0o=;
-        b=IkdQ0zLjYvakFmpmgzUFskIc2JH/xXDVa70ACaSJRr/MhWHS9R3JfIIc675LOdegwh
-         E23YspuUnaCmXLubG8VFR0wfLb6NN5Arj4dO8gd+md9QhPNw653MdmHfaSDXWG8UyNsr
-         P95x/AcBseMSzcF1qvXxaxm0+h5/Lq0/AP98GDRxXTmWk0AP+LKwOAdYxz0TfRv07FHj
-         u5bWf14b4XxyD0FCuGi8TrbIY5ao44d90DS5sBFSJaR7dm1thipNzYsxYK1z5w2pwPP6
-         CPTfkL+9NMIvj87KEuuPXJ6oQ5+Xey8M9Gt01oadahh3egQV1ow61zkeJfsxtPMI8REN
-         8JIg==
-X-Forwarded-Encrypted: i=1; AJvYcCUTEo27kPk346OATm1hx3fkNpF6UqEljNp9oEib9LlYBdGpFa+igjwjq0SeveeUyGQ+BYgWdjWHeFqlAvai/DACNTDsGURWPZcH
-X-Gm-Message-State: AOJu0YyPxABmggrMaWSO+OzABS1EJrp+9WJ7YLQ3DRJMR9PzDhhyh1Qh
-	mjIl+Iz8srohDo+jtM3qtP0ZbiYlpkie8PuIQMC7dedGKEQyuZmrInW9BfURUKA=
-X-Google-Smtp-Source: AGHT+IFAj1+qrRXMReD519Auiz+VmMbjLUN9V6BCXHT5D52lbJ6674ZOpHAs0q2j9zhSCOx512n6Dw==
-X-Received: by 2002:a17:90a:4a92:b0:2ad:f47b:3e31 with SMTP id f18-20020a17090a4a9200b002adf47b3e31mr1121740pjh.28.1714087809262;
-        Thu, 25 Apr 2024 16:30:09 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id q11-20020a17090ad38b00b002a076b6cc69sm13622292pju.23.2024.04.25.16.30.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Apr 2024 16:30:08 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1s08XV-00AwZ5-1s;
-	Fri, 26 Apr 2024 09:30:05 +1000
-Date: Fri, 26 Apr 2024 09:30:05 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, chandan.babu@oracle.com,
-	djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: Clear W=1 warning in xfs_iwalk_run_callbacks():
-Message-ID: <ZirnfaFFqqyaUdQv@dread.disaster.area>
-References: <20240425120846.707829-1-john.g.garry@oracle.com>
- <20240425120846.707829-2-john.g.garry@oracle.com>
- <ZipJ4P7QDK9dZlyn@infradead.org>
- <01b8050a-b564-4843-8fec-dfa40489aaf4@oracle.com>
- <Zipa2CadmKMlERYW@infradead.org>
- <9a0a308d-ecd3-43eb-9ac0-aea111d04e9e@oracle.com>
- <a99a9fa0-e5ab-4bbf-b639-f4364e6b7efe@oracle.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="f0+vinsW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=6jnE6LGAE0Ge7rAWbVl9vm4Cu+KrxLEesibskCl1htg=; b=f0+vinsWX0muKf6vaKgTKwJ3aM
+	+DuqXXB3MLam69jGiOjU663h1e9sUMxRNxElfr+tDjGlokyrag0jL2mcN8ZbbcqjrwPxD1buayqVl
+	UoYWexnagnozKyAzskjB+udRYZc3DZDJIiPRS0ntTrnlmyY/Z4RmmBme6dq2D5aL0NQ5GdaXg8YZw
+	DjuORwkpqODS4GMKICRq7fXPJqps+xnze0ZE6HY8P+JzFOOXHwHxqiOFbC9xXpVisUc/zJqFnpqxE
+	UCWk+aZXz+kfClceSFXdTtaQyKtUhgg5UGmZLP+vSa3L1Hxl+A5UO3r4j35dUrWjT/HxavIBNg0Ye
+	tGVH1xCQ==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s09kN-0000000Ak4J-0KrB;
+	Fri, 26 Apr 2024 00:47:28 +0000
+Date: Thu, 25 Apr 2024 17:47:27 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, djwong@kernel.org,
+	brauner@kernel.org, david@fromorbit.com, chandan.babu@oracle.com,
+	akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	hare@suse.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum
+ folio order requirement
+Message-ID: <Zir5n6JNiX14VoPm@bombadil.infradead.org>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-6-kernel@pankajraghav.com>
+ <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,86 +52,83 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a99a9fa0-e5ab-4bbf-b639-f4364e6b7efe@oracle.com>
+In-Reply-To: <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On Thu, Apr 25, 2024 at 04:37:25PM +0100, John Garry wrote:
-> On 25/04/2024 14:33, John Garry wrote:
-> > > 
-> > > (it also wasn't in the original patch and only got added working around
-> > > some debug warnings)
+On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
+> On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
 > > 
-> > Fine, I'll look to remove those ones as well, which I think is possible
-> > with the same method you suggest.
+> > Splitting a larger folio with a base order is supported using
+> > split_huge_page_to_list_to_order() API. However, using that API for LBS
+> > is resulting in an NULL ptr dereference error in the writeback path [1].
+> > 
+> > Refuse to split a folio if it has minimum folio order requirement until
+> > we can start using split_huge_page_to_list_to_order() API. Splitting the
+> > folio can be added as a later optimization.
+> > 
+> > [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
 > 
-> It's a bit messy, as xfs_buf.b_addr is a void *:
-> 
-> From 1181afdac3d61b79813381d308b9ab2ebe30abca Mon Sep 17 00:00:00 2001
-> From: John Garry <john.g.garry@oracle.com>
-> Date: Thu, 25 Apr 2024 16:23:49 +0100
-> Subject: [PATCH] xfs: Stop using __maybe_unused in xfs_alloc.c
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 9da52e92172a..5d84a97b4971 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1008,13 +1008,13 @@ xfs_alloc_cur_finish(
->  	struct xfs_alloc_arg	*args,
->  	struct xfs_alloc_cur	*acur)
->  {
-> -	struct xfs_agf __maybe_unused *agf = args->agbp->b_addr;
->  	int			error;
-> 
->  	ASSERT(acur->cnt && acur->bnolt);
->  	ASSERT(acur->bno >= acur->rec_bno);
->  	ASSERT(acur->bno + acur->len <= acur->rec_bno + acur->rec_len);
-> -	ASSERT(acur->rec_bno + acur->rec_len <= be32_to_cpu(agf->agf_length));
-> +	ASSERT(acur->rec_bno + acur->rec_len <=
-> +		be32_to_cpu(((struct xfs_agf *)args->agbp->b_addr)->agf_length));
+> Obviously this has to be tracked down and fixed before this patchset can
+> be merged ... I think I have some ideas.  Let me look a bit.  How
+> would I go about reproducing this?
 
-Please think about what the code is actually doing and our data
-structures a little more deeply - this is can be fixed in a much
-better way than doing a mechanical code change.
+Using kdevops this is easy:
 
-agf->agf_length is what, exactly?
+make defconfig-lbs-xfs-small -j $(nproc)
+make -j $(nproc)
+make fstests
+make linux
+make fstests-baseline TESTS=generic/447 COUNT=10
+tail -f
 
-	It's an on-disk constant for the AG size held in the AGF.
+guestfs/*-xfs-reflink-16k-4ks/console.log
+or
+sudo virsh list
+sudo virsh console ${foo}-xfs-reflink-16k-4ks
 
-What is this ASSERT check doing?
+Where $foo is the value of CONFIG_KDEVOPS_HOSTS_PREFIX in .config for
+your kdevops run.
 
-	It is verifying the agbno of the end of the extent is
-	within valid bounds.
+Otherwise if you wanna run things manually the above uses an lbs branch
+called large-block-minorder on kdevops [0] based on v6.9-rc5 with:
 
-Do we have a pre-computed in memory constant for this on disk
-value?
+a) Fixes we know we need
+b) this patch series minus this patch
+c) A truncation enablement patch
 
-	Yes, we do: pag->block_count
+Note that the above also uses an fstests git tree with the fstests
+changes we also have posted as fixes and some new tests which have been
+posted [1]. You will then want to run:
 
-Do we have a function to verify an agbno is within valid bounds of
-the AG using these in-memory constants?
+./check -s xfs_reflink_16k_4ks -I 10 generic/447
 
-	Yes, we do: xfs_verify_agbno().
+The configuration for xfs_reflink_16k_4ks follows:
 
-Do we have a function to verify an extent is within the valid bounds
-of the AG using these in-memory constants?
+cat /var/lib/xfstests/configs/min-xfs-reflink-16k-4ks.config
 
-	Yes, we do: xfs_verify_agbext()
+[default]
+FSTYP=xfs
+TEST_DIR=/media/test
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+DUMP_CORRUPT_FS=1
+CANON_DEVS=yes
+RECREATE_TEST_DEV=true
+SOAK_DURATION=9900
 
-Can this be written differently that has no need to access the
-on-disk AGF at all?
+[xfs_reflink_16k_4ks]
+TEST_DEV=/dev/loop16
+SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11 /dev/loop12"
+MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=16384, -s size=4k'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/loop15
 
-	Yes, it can:
+I didn't have time to verify if the above commands for kdevops worked but... in
+theory its possible it may, because you know, May is right around the
+corner, and May... the force be with us.
 
-	ASSERT(xfs_verify_agbno(args->pag, acur->rec_bno + acur->rec_len));
+[0] https://github.com/linux-kdevops/linux/tree/large-block-minorder
+[1] https://github.com/linux-kdevops/fstests
 
-	or:
-
-	ASSERT(xfs_verify_agbext(args->pag, acur->rec_bno, acur->rec_len));
-
-The latter is better, as it verifies both the start and the end of
-the extent are within the bounds of the AG and catches overflows...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  Luis
