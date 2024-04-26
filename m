@@ -1,47 +1,48 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 342C92F2F;
-	Fri, 26 Apr 2024 06:13:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7FD013A3F6;
+	Fri, 26 Apr 2024 06:22:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714111987; cv=none; b=Xm7Cm1Tt/SKiYq0SdMJFL8O5ekLuMSA+ot3ozKIbMtmUlccaI0rEths7/tVZy2EJF14s2nFA8sbqrA/Vmgh4YGhfAoDPHBXGyXfEDOiLiFJ8Ze9+wnAeWALeqKQCO4kIYKiPHpj0j8LOqKVOuBEvcT25h5A5iNsTEd1XYm/FpD8=
+	t=1714112560; cv=none; b=bJXNhmt1jATPH/LnBT5UCdwfxAd/R9KIik786NEsfCi0marLjXbEZzevCerLY0xYCJ2W2ksqhYnGCGDAXEU5vJoZimqM4qNFe+dUgbkoDOBAo17Qn71ypZOR80p4+1u+9XlTehkLx8SJGg94EwEu1szKqI6Q85R82KFCiq2RmME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714111987; c=relaxed/simple;
-	bh=5fiEOv77X5MtDshrhcX7AT7EaPP4Cfvs3HIW1CqwulY=;
+	s=arc-20240116; t=1714112560; c=relaxed/simple;
+	bh=BR48DrtgCPpatn69kUSmi7M2D+owOLBvQdsaqG/9+R8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DBcUE1zdUcIyPFIZqgBnPoYS0LoNgHcgCO32JVHzeOd9sVGs8LfdB+VkPgPriV5vz0YcLE1D3Uid+ZEjvdlB4j4yekJAtDitmty3q8iAYtyVcHJD/I9jqxGQYUp23Ystuov/uNnjq1z+r96VpMZLxZhwd5Gy8FZUUN9GWjixY3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ap5js1Vf; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=P8Q30rSK2vPta8y+2JP7Yx7Fp80GiqXRuk5LX5YAjY8ivMfs0HEh4Q5OZ3h3H8NpEN3Ox0z4nzR/0DeH/h3YTZW1CdpZr4GUdndhz/ovutGqNojmZ6i7YEPlTBBCEvw301AMlB3w7OKcPOOGXXhUwrDv/rZY0P57uu4MbBsJoGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wZKm1ytG; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ap5js1Vf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wZKm1ytG"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=bXuxQSeK9EhyAEvn7EIbpyezyLZhRR4SZi6ic3qEHyY=; b=ap5js1VfrH/g8G8XbPp1QnRWe8
-	GNFhL6G/y7S24a7lmUv9ZiTH/d9yipZXWlqNYb1EHFWkmSZSYVaHFWC/ahi6krrscrNJK/cn4lX8E
-	Nld7M7FYXExhEKNd0W79+2Xs6ZrW39Cxkg8I1xd8wSWNXvfIXSsNo5DX65kRktfXtXeFKiDiUcWK+
-	3LPgxS0IqQFOofZx0z25LCImjqQ9EcXVdOMH0C/wnsITtdbiwC+1dFIX4nkjkokGOByPDJYX5+7S1
-	UOgXFfR+uoWt/jrxEwvFom2hyMbJb+L+p/Kt0zIRKZd0uFmCCcva6RnHik0K6l97hnNVikigDoVXS
-	6oEOd5Kg==;
+	bh=OsCAXcsOgjQmywmQiyJHHP0zBpAzxY9THRzdMHy/kms=; b=wZKm1ytG9a1ZnUonedxPFrvO0g
+	U6Q9t7hfkAQkIP4+Z8OfwFc8wekHFirxtyScMm48irq7pVsay7NEyvMEpQwDtOdfFm+eVU/RyVmhX
+	TjGhLKN66BuY73OHbrT8FobgqymnsDyIHM4d/8fiySCT0VT6qzOWIzO0eU7v4TvYTaFz/Mai9i1SN
+	2dEmpYu9o7smJ/sa9OE30EXtdIUA3coUZcGA+lMJhRiSh4PoMESXTlRS+Oxh5fOW112QWNssSuygu
+	t3UpOPkOfOd61djqpu1+q/wnQhuEeaG3NkSl4JwjUWNfENMbDcQUoRNaD8nyeMyIU+dDqioWNwFPC
+	GsILR2+g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s0EpV-0000000BGaD-0O3G;
-	Fri, 26 Apr 2024 06:13:05 +0000
-Date: Thu, 25 Apr 2024 23:13:05 -0700
+	id 1s0Eyh-0000000BI6s-392P;
+	Fri, 26 Apr 2024 06:22:35 +0000
+Date: Thu, 25 Apr 2024 23:22:35 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Sam Sun <samsun1006219@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, djwong@kernel.org,
-	chandan.babu@oracle.com, syzkaller-bugs@googlegroups.com,
-	xrivendell7@gmail.com
-Subject: Re: [Linux kernel bug] KASAN: slab-out-of-bounds Read in xlog_cksum
-Message-ID: <ZitF8eqWEYECruXo@infradead.org>
-References: <CAEkJfYO++C-pxyqzfoXFKEvmMQEnrgkQ2QcG6radAWJMqdXQCQ@mail.gmail.com>
- <ZipWt03PhXs2Yc84@infradead.org>
- <ZiphYrREkQvxkE-U@bfoster>
+To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+Cc: willy@infradead.org, djwong@kernel.org, brauner@kernel.org,
+	david@fromorbit.com, chandan.babu@oracle.com,
+	akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	hare@suse.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v4 07/11] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Message-ID: <ZitIK5OnR7ZNY0IG@infradead.org>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-8-kernel@pankajraghav.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,31 +51,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZiphYrREkQvxkE-U@bfoster>
+In-Reply-To: <20240425113746.335530-8-kernel@pankajraghav.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Apr 25, 2024 at 09:57:54AM -0400, Brian Foster wrote:
-> On Thu, Apr 25, 2024 at 06:12:23AM -0700, Christoph Hellwig wrote:
-> > This triggers the workaround for really old xfsprogs putting in a
-> > bogus h_size:
-> > 
-> > [   12.101992] XFS (loop0): invalid iclog size (0 bytes), using lsunit (65536 bytes)
-> > 
-> > but then calculates the log recovery buffer size based on the actual
-> > on-disk h_size value.  The patch below open codes xlog_logrec_hblks and
-> > fixes this particular reproducer.  But I wonder if we should limit the
-> > workaround.  Brian, you don't happpen to remember how old xfsprogs had
-> > to be to require your workaround (commit a70f9fe52daa8)?
-> > 
+On Thu, Apr 25, 2024 at 01:37:42PM +0200, Pankaj Raghav (Samsung) wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
 > 
-> No, but a little digging turns up xfsprogs commit 20fbd4593ff2 ("libxfs:
-> format the log with valid log record headers"), which I think is what
-> you're looking for..? That went in around v4.5 or so, so I suppose
-> anything earlier than that is affected.
+> iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+> < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+> size < page_size. This is true for most filesystems at the moment.
+> 
+> If the block size > page size, this will send the contents of the page
+> next to zero page(as len > PAGE_SIZE) to the underlying block device,
+> causing FS corruption.
+> 
+> iomap is a generic infrastructure and it should not make any assumptions
+> about the fs block size and the page size of the system.
 
-Thanks.  I was kinda hoping we could exclude v5 file systems from that
-workaround, but it is needed way too recent for that.
-
-Maybe we can specificly check for the wrongly hardcoded
-XLOG_HEADER_CYCLE_SIZE instead of allowing any value?
+So what happened to the plan to making huge_zero_page a folio and have
+it available for non-hugetlb setups?  Not only would this be cleaner
+and more efficient, but it would actually work for the case where you'd
+have to zero more than 1MB on a 4k PAGE_SIZE system, which doesn't
+seem impossible with 2MB folios.
 
