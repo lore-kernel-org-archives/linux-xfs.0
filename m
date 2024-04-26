@@ -1,45 +1,72 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 481FC381B1;
-	Fri, 26 Apr 2024 19:19:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26712C85C
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:20:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714159191; cv=none; b=QRPWIIqJWwvSAvUeLtmZDcfmtXdLIjIZL/o7AwNEkjRxNMADeK6PIcBIEnXVY+D4Sa1PL81zMu4i+BeWrd05ED2zgTQfLQuD9CvbvPjxat9F8pXwMHcwghyEbZIrlAT5BNsa/ez/YdMtKvB1pgSII827Nx5nJZjNO3USSR+CjPA=
+	t=1714166409; cv=none; b=Nu4diQgqHeD3ip4d/nmiP2hfYLRmXM7bB9XBQFWfsvHkisqBaLH4CLqKn07WO1vJxFvN9DJxaZg6QtejMo7Hu5UOeDzlVBmN1bDxBUxlTpw6eiP34ObcmK4V5CiopOR/ylLFer/rh4+9BwgQE28Ie9PDJ+GhCoYtH4ziv3nRMxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714159191; c=relaxed/simple;
-	bh=TC7LQlrCZB3uq+KXiSH49G5kN/E4xe/gRBFwdygPLX0=;
+	s=arc-20240116; t=1714166409; c=relaxed/simple;
+	bh=AIkMWWmXISfChN4FCiladEBiD3D0Tf4P66S8V1kaebk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C8Wq91ZamYz2l5SUKOMJdWjcU8Ncg2HN9UI6bMdo8FRlP1W68bC03MElwmPWDzWxYFgYA1Gs77dWU9ltkgo+ZS4DiojxIM7H4IwYVFVZ/42+fXZlu7nggEPwfBxwKb8mkwGAVGyC9GB/W+GSttSHRb0I7GyHLv1ckueGdgd+vMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=r4HaL18d; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=sGE0r0mrJ40HnZt6z+batvHc0cIdSD5mS0lfgeK1X0ngYETKRq987cm/DdOHvkiZljb7ZOCGQlSzIcpaQR5Qzi7DfwGvViHVwEeqCbubJdP1QVEPS03gqmg2LjXdz2ueo6DNXXaEJGmYgzgAcWsfahLHeDfg9REY+XqHV6gRtFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=btLMldfe; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r4HaL18d"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=B3nzzU3zrnIN/j3XnmTMNrndFTXY08gHY8Wi6J3W1B4=; b=r4HaL18d8TtYOoQLK75q8eFCGs
-	hO7VC1e+GhgCqw0e8lFnF+a/X5ytoFZVfxhNwbtYBWC30z1fp2tbbHTpmPXydfyBWERbN1GKihEgx
-	5jiMxyZVFrq05iUvg6694kgBL/+2TyZCpar74oW9QrIIwZYINpicdrhzh04kc5/D3OX46H73VS2Mk
-	fYQ2UFeLXyViwgsKyA99N/lgY9upT/BJmGZrMjr6nQa/vDzV9orWFsX1xiKSjiNfOAjtD86OaYkZ/
-	+BTLTfE5di9EgqtlHMPaTOUvEPcEtvXVcx7VPLzS9YohDoY0AdTkmg2Mt65N56oO+BYFeoR2RY+2Q
-	oN65hFjA==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s0R6p-00000005qwN-3Hjn;
-	Fri, 26 Apr 2024 19:19:47 +0000
-Date: Fri, 26 Apr 2024 20:19:47 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>, Jan Kara <jack@suse.cz>
-Subject: Re: [RFCv3 7/7] iomap: Optimize data access patterns for filesystems
- with indirect mappings
-Message-ID: <Ziv-U8-Rt9md-Npv@casper.infradead.org>
-References: <Zivu0gzb4aiazSNu@casper.infradead.org>
- <871q6symrz.fsf@gmail.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="btLMldfe"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6ed0e9ccca1so2547928b3a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:20:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714166407; x=1714771207; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7tVzNK4uUjr+QTuz4dYOgYNVPVhfLm2jvPaMneK04Hc=;
+        b=btLMldfeu5n59IihAv2h/K4KoPWZkigYRsI/9FWKxZ76TU1sc9brz7JGkJldqHAcFN
+         MS7lArSiZ2XeSbR00M4l4CzNKCf4F5LE/8gvSLLG6rA1OEanaoZvaMkZf5OBEdCf2zNm
+         1C0RoDwzWjdYhCLDXC3kbLd5QrU7Ji8T041FOSqnY9v3tp4DIbF1tDfcA9Vx6+1rlqgr
+         tBBv+ARLBgZEoMAdii2jIC3TlXunOiWnQhqFU6m6QnN3skJC+BhWSunUFfgJgFcP4dmC
+         oHsuCZ9ejjRFnKbHMR7y8z+y5LryDAcDcLDANNS9jRiZ51ce4eXjfrGI1xwrncbhQg1i
+         D2BQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714166407; x=1714771207;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7tVzNK4uUjr+QTuz4dYOgYNVPVhfLm2jvPaMneK04Hc=;
+        b=ZAkj/OftfSx0UWGkX8DDCWJL/A9fyjBFy1KHWFZtEDQQ80P0j9TuacpLcwuk4jT6oB
+         b5pbshmZctPQlS028WWxrUmXIaNlRuwfff970barLnPe7PuEAfQDjDvAqqzrtL2h9Xlo
+         6bZYCdqVZ9Nl0S+8Yu3WDlx67Pvqmmihf2yXseebZq8vLrKofq1oQtpxa33qwtOv3ye9
+         WcFV57KFOuw2uxxRsZYcbkG4wJu8PQ8yJ5UT3wzEaVFtCzc7lQxKz5cHig/DswQiHd2g
+         wpKwAT2/s/NuTdedGonkHqG5IzhwPiaEHoem4qeTVtplTt8Aa66CltOCxuvEuuGvjWiO
+         t0TQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUkyWE6dKddbbxrWpUq6uOOrG2v9Dt7xlq7/vNnPSzIa2TtfyVDlZ2QEaDuyUnVnIiKTfG75nq8vaNnqE+hEUUqEqrVgPYvcU6H
+X-Gm-Message-State: AOJu0Ywaa7qfzuDDF3+c7I7FTXNXQKQ5fRQQI24gH1Zpl9Vokjs4J140
+	64805WIiDy03qaoJsuUola8W/VD4MmWM6Sb+JPjfp6PP90WEKZ81C0+KRj5nYNs=
+X-Google-Smtp-Source: AGHT+IHy9Iy0EdDWZlyUCOK3+Kb0ToI9DOIrnuCr0zR65zLK7tOKbRa3HTeFMC4u53qQuIJWpz35JA==
+X-Received: by 2002:a05:6a00:a0f:b0:6ec:ebf4:3e8a with SMTP id p15-20020a056a000a0f00b006ecebf43e8amr5035898pfh.15.1714166406757;
+        Fri, 26 Apr 2024 14:20:06 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
+        by smtp.gmail.com with ESMTPSA id g14-20020a62f94e000000b006f2d97c3e87sm9259099pfm.125.2024.04.26.14.20.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Apr 2024 14:20:06 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1s0SzD-00Bzh6-0B;
+	Sat, 27 Apr 2024 07:20:03 +1000
+Date: Sat, 27 Apr 2024 07:20:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: syzbot <syzbot+b7e8d799f0ab724876f9@syzkaller.appspotmail.com>,
+	chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, linux-mm@kvack.org,
+	Andrey Ryabinin <ryabinin.a.a@gmail.com>
+Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_ilock_data_map_shared
+Message-ID: <Ziwag2++iy62jHik@dread.disaster.area>
+References: <00000000000028dd9a0616ecda61@google.com>
+ <20240426163228.GP360919@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,53 +75,163 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <871q6symrz.fsf@gmail.com>
+In-Reply-To: <20240426163228.GP360919@frogsfrogsfrogs>
 
-On Sat, Apr 27, 2024 at 12:27:52AM +0530, Ritesh Harjani wrote:
-> Matthew Wilcox <willy@infradead.org> writes:
-> > @@ -79,6 +79,7 @@ static void iomap_set_range_uptodate(struct folio *folio, size_t off,
-> >  	if (ifs) {
-> >  		spin_lock_irqsave(&ifs->state_lock, flags);
-> >  		uptodate = ifs_set_range_uptodate(folio, ifs, off, len);
-> > +		ifs->read_bytes_pending -= len;
-> >  		spin_unlock_irqrestore(&ifs->state_lock, flags);
-> >  	}
+[cc linux-mm@kvack.org]
+
+On Fri, Apr 26, 2024 at 09:32:28AM -0700, Darrick J. Wong wrote:
+> On Thu, Apr 25, 2024 at 07:46:28AM -0700, syzbot wrote:
+> > Hello,
+> > 
+> > syzbot found the following issue on:
+> > 
+> > HEAD commit:    977b1ef51866 Merge tag 'block-6.9-20240420' of git://git.k..
+> > git tree:       upstream
+> > console output: https://syzkaller.appspot.com/x/log.txt?x=126497cd180000
+> > kernel config:  https://syzkaller.appspot.com/x/.config?x=d239903bd07761e5
+> > dashboard link: https://syzkaller.appspot.com/bug?extid=b7e8d799f0ab724876f9
+> > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> > 
+> > Unfortunately, I don't have any reproducer for this issue yet.
+> > 
+> > Downloadable assets:
+> > disk image: https://storage.googleapis.com/syzbot-assets/08d7b6e107aa/disk-977b1ef5.raw.xz
+> > vmlinux: https://storage.googleapis.com/syzbot-assets/9c5e543ffdcf/vmlinux-977b1ef5.xz
+> > kernel image: https://storage.googleapis.com/syzbot-assets/04a6d79d2f69/bzImage-977b1ef5.xz
+> > 
+> > IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> > Reported-by: syzbot+b7e8d799f0ab724876f9@syzkaller.appspotmail.com
+> > 
+> > XFS (loop2): Ending clean mount
+> > ======================================================
+> > WARNING: possible circular locking dependency detected
+> > 6.9.0-rc4-syzkaller-00266-g977b1ef51866 #0 Not tainted
+> > ------------------------------------------------------
+> > syz-executor.2/7915 is trying to acquire lock:
+> > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:312 [inline]
+> > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:3746 [inline]
+> > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:3827 [inline]
+> > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: kmalloc_trace+0x47/0x360 mm/slub.c:3992
+> > 
+> > but task is already holding lock:
+> > ffff888056da8118 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_data_map_shared+0x4f/0x70 fs/xfs/xfs_inode.c:114
+> > 
+> > which lock already depends on the new lock.
+> > 
+> > 
+> > the existing dependency chain (in reverse order) is:
+> > 
+> > -> #1 (&xfs_dir_ilock_class){++++}-{3:3}:
+> >        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+> >        down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
+> >        xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
+> >        xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
+> >        xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
+> >        xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
+> >        xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
+> >        super_cache_scan+0x411/0x4b0 fs/super.c:227
+> >        do_shrink_slab+0x707/0x1160 mm/shrinker.c:435
+> >        shrink_slab+0x1092/0x14d0 mm/shrinker.c:662
+> >        shrink_one+0x453/0x880 mm/vmscan.c:4774
+> >        shrink_many mm/vmscan.c:4835 [inline]
+> >        lru_gen_shrink_node mm/vmscan.c:4935 [inline]
+> >        shrink_node+0x3b17/0x4310 mm/vmscan.c:5894
+> >        kswapd_shrink_node mm/vmscan.c:6704 [inline]
+> >        balance_pgdat mm/vmscan.c:6895 [inline]
+> >        kswapd+0x1882/0x38a0 mm/vmscan.c:7164
+> >        kthread+0x2f2/0x390 kernel/kthread.c:388
+> >        ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147
+> >        ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+> > 
+> > -> #0 (fs_reclaim){+.+.}-{0:0}:
+> >        check_prev_add kernel/locking/lockdep.c:3134 [inline]
+> >        check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+> >        validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
+> >        __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
+> >        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+> >        __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
+> >        fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
+> >        might_alloc include/linux/sched/mm.h:312 [inline]
+> >        slab_pre_alloc_hook mm/slub.c:3746 [inline]
+> >        slab_alloc_node mm/slub.c:3827 [inline]
+> >        kmalloc_trace+0x47/0x360 mm/slub.c:3992
+> >        kmalloc include/linux/slab.h:628 [inline]
+> >        add_stack_record_to_list mm/page_owner.c:177 [inline]
+> >        inc_stack_record_count mm/page_owner.c:219 [inline]
+> >        __set_page_owner+0x561/0x810 mm/page_owner.c:334
+> >        set_page_owner include/linux/page_owner.h:32 [inline]
+> >        post_alloc_hook+0x1ea/0x210 mm/page_alloc.c:1534
+> >        prep_new_page mm/page_alloc.c:1541 [inline]
+> >        get_page_from_freelist+0x3410/0x35b0 mm/page_alloc.c:3317
+> >        __alloc_pages+0x256/0x6c0 mm/page_alloc.c:4575
+> >        __alloc_pages_bulk+0x729/0xd40 mm/page_alloc.c:4523
+> >        alloc_pages_bulk_array include/linux/gfp.h:202 [inline]
+> >        xfs_buf_alloc_pages+0x1a7/0x860 fs/xfs/xfs_buf.c:398
+> >        xfs_buf_find_insert+0x19a/0x1540 fs/xfs/xfs_buf.c:650
+> >        xfs_buf_get_map+0x149c/0x1ae0 fs/xfs/xfs_buf.c:755
+> >        xfs_buf_read_map+0x111/0xa60 fs/xfs/xfs_buf.c:860
+> >        xfs_trans_read_buf_map+0x260/0xad0 fs/xfs/xfs_trans_buf.c:289
+> >        xfs_da_read_buf+0x2b1/0x470 fs/xfs/libxfs/xfs_da_btree.c:2674
+> >        xfs_dir3_block_read+0x92/0x1a0 fs/xfs/libxfs/xfs_dir2_block.c:145
+> >        xfs_dir2_block_lookup_int+0x109/0x7d0 fs/xfs/libxfs/xfs_dir2_block.c:700
+> >        xfs_dir2_block_lookup+0x19a/0x630 fs/xfs/libxfs/xfs_dir2_block.c:650
+> >        xfs_dir_lookup+0x633/0xaf0 fs/xfs/libxfs/xfs_dir2.c:399
 > 
-> iomap_set_range_uptodate() gets called from ->write_begin() and
-> ->write_end() too. So what we are saying is we are updating
-> the state of read_bytes_pending even though we are not in
-> ->read_folio() or ->readahead() call?
-
-Exactly.
-
-> >  
-> > @@ -208,6 +209,8 @@ static struct iomap_folio_state *ifs_alloc(struct inode *inode,
-> >  	spin_lock_init(&ifs->state_lock);
-> >  	if (folio_test_uptodate(folio))
-> >  		bitmap_set(ifs->state, 0, nr_blocks);
-> > +	else
-> > +		ifs->read_bytes_pending = folio_size(folio);
+> Hm.  We've taken an ILOCK in xfs_dir_lookup, and now we're reading a
+> directory block.  We don't have PF_MEMALLOC_NOFS set, nor do we pass
+> GFP_NOFS when allocating the xfs_buf pages.
 > 
-> We might not come till here during ->read_folio -> ifs_alloc(). Since we
-> might have a cached ifs which was allocated during write to this folio.
-> 
-> But unless you are saying that during writes, we would have set
-> ifs->r_b_p to folio_size() and when the read call happens, we use
-> the same value of the cached ifs.
-> Ok, I see. I was mostly focusing on updating ifs->r_b_p value only when
-> the reads bytes are actually pending during ->read_folio() or
-> ->readahead() and not updating r_b_p during writes.
+> Nothing in this code path sets PF_MEMALLOC_NOFS explicitly, nor does it
+> create a xfs_trans_alloc_empty, which would set that.  Prior to the
+> removal of kmem_alloc, I think we were much more aggressive about
+> GFP_NOFS usage.
 
-I see why you might want to think that way ... but this way is much less
-complex, don't you think?  ;-)
+This isn't an XFS bug. The XFS code is correct - the callsite in the
+buffer cache is using GFP_KERNEL | __GFP_NOLOCKDEP explicitly to
+avoid these sorts of false positives.
 
-> ...One small problem which I see with this approach is - we might have
-> some non-zero value in ifs->r_b_p when ifs_free() gets called and it
-> might give a warning of non-zero ifs->r_b_p, because we updated
-> ifs->r_b_p during writes to a non-zero value, but the reads
-> never happend. Then during a call to ->release_folio, it will complain
-> of a non-zero ifs->r_b_p.
+Please take a closer look at the stack trace - there's a second
+memory allocation taking place there way below the XFS memory
+allocation inside the page owner tracking code itself:
 
-Yes, we'll have to remove that assertion.  I don't think that's a
-problem, do you?
+static void add_stack_record_to_list(struct stack_record *stack_record,
+                                     gfp_t gfp_mask)
+{
+        unsigned long flags;
+        struct stack *stack;
 
+        /* Filter gfp_mask the same way stackdepot does, for consistency */
+        gfp_mask &= ~GFP_ZONEMASK;
+        gfp_mask &= (GFP_ATOMIC | GFP_KERNEL);
+        gfp_mask |= __GFP_NOWARN;
+
+        set_current_in_page_owner();
+        stack = kmalloc(sizeof(*stack), gfp_mask);
+        if (!stack) {
+                unset_current_in_page_owner();
+                return;
+        }
+        unset_current_in_page_owner();
+.....
+
+Look familiar? That exactly the same gfp mask filtering that the
+stackdepot code was doing that caused this issue with KASAN:
+
+https://lore.kernel.org/linux-xfs/000000000000fbf10e06164f3695@google.com/
+
+Which was fixed with this patch:
+
+https://lore.kernel.org/linux-xfs/20240418141133.22950-1-ryabinin.a.a@gmail.com/
+
+Essentially, we're now playing whack-a-mole with internal kernel
+debug code that doesn't honor __GFP_NOLOCKDEP....
+
+MM-people: can you please do an audit of all the nested allocations
+that occur inside the public high level allocation API and ensure
+that they all obey __GFP_NOLOCKDEP so we don't have syzbot keep
+tripping over them one at a time?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
