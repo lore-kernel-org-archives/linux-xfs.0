@@ -1,134 +1,294 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 638B8380;
-	Fri, 26 Apr 2024 00:47:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CA4D13A25C
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 05:15:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714092453; cv=none; b=MRrdzrqBKu6AFDOgD8SIHwbx+TPy2RbqEZyz93X3niUsymj8/p12426vmwZ6zzojQ94i02Dud1OrEiQoIZbGO82oYi5xc2Yu8Phc2LC4Z+YHJ84u4GZRCToyhMmkJ9b28/XpkRx51SvjC1vaLv4D78ZWytDotEvGmJtjD8smkIE=
+	t=1714108531; cv=none; b=Ot/qeKGTrLqTAihU11EyL2QANQCiUQOdMbK+U+l40EmdfDEwOq08P4nmuZ6c/nblDj7Gb3wVBN+hVL8NKb770EZi5ZJSV/q9Qk5DN0B+PiBpXp4LheXrtPfYqmu4S2KGUewrrq4+GuxAcWUJIlFqQJQlTN7gccR4H9DLRfFi4l0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714092453; c=relaxed/simple;
-	bh=C5A9J+Gbrbj/i3IjchhAKHt0ZfALGWbdhp86L8wkEeI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bylh/Z1HXsecrhNR1qVBabeg37u/d2nyDscAmtk7E8oXMdXS4wezRBNsay3sB3xirhz8GjIsMDZffgAwcBMi+fNQCUSHIzSX2PRycNh3hBxR7/cdi3yImyN8CT9/DE7DZd5wiPeQeCZ+kclrhscJ7KsVcLJIL0qqzz1s1ZT+i0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=f0+vinsW; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="f0+vinsW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6jnE6LGAE0Ge7rAWbVl9vm4Cu+KrxLEesibskCl1htg=; b=f0+vinsWX0muKf6vaKgTKwJ3aM
-	+DuqXXB3MLam69jGiOjU663h1e9sUMxRNxElfr+tDjGlokyrag0jL2mcN8ZbbcqjrwPxD1buayqVl
-	UoYWexnagnozKyAzskjB+udRYZc3DZDJIiPRS0ntTrnlmyY/Z4RmmBme6dq2D5aL0NQ5GdaXg8YZw
-	DjuORwkpqODS4GMKICRq7fXPJqps+xnze0ZE6HY8P+JzFOOXHwHxqiOFbC9xXpVisUc/zJqFnpqxE
-	UCWk+aZXz+kfClceSFXdTtaQyKtUhgg5UGmZLP+vSa3L1Hxl+A5UO3r4j35dUrWjT/HxavIBNg0Ye
-	tGVH1xCQ==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s09kN-0000000Ak4J-0KrB;
-	Fri, 26 Apr 2024 00:47:28 +0000
-Date: Thu, 25 Apr 2024 17:47:27 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, djwong@kernel.org,
-	brauner@kernel.org, david@fromorbit.com, chandan.babu@oracle.com,
-	akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	hare@suse.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com
-Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum
- folio order requirement
-Message-ID: <Zir5n6JNiX14VoPm@bombadil.infradead.org>
-References: <20240425113746.335530-1-kernel@pankajraghav.com>
- <20240425113746.335530-6-kernel@pankajraghav.com>
- <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
+	s=arc-20240116; t=1714108531; c=relaxed/simple;
+	bh=baHPmeqi++OzxY0/EDR1/7GQxx7Oc7qHLuRLqj252aM=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=r39a811i86d4mMPS+X7er7aQZJU/C7ODNNdV3HJzrYRH2tNtncSE7B/eRW4piJ0uFqPjDAKvpb6V8kZWvrRtskCr9BNGpgmvqmLSH5lAGnq/q0bwYyUK7rGajSF26xbCxTxf994P9IE7KG1EsDj8rGMmNWe44VID9TRZOm+4wpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-7de2de148f9so167247839f.3
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2024 22:15:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714108529; x=1714713329;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ykNK5VhsI+dP9tKxCFYw3VBfRAQeinv0rad6NPmo4qE=;
+        b=oHA/f9rj1Bum7FN6isSp6ISKzrsBaO1JNZBjHSpcsKXvi4xskmHUunGzQbrS8NCRRx
+         /JnANMhs8FVwkc/cN7dEWkS2AMHN2ldRC6sXNk+ceCobT41kAevjBxJR2cvwx+ngzenK
+         JZ1LPyfvl1KIZ9g3y1gDTLcIHJPINNWg4/YmOhsKLcnw34ok1zF9ycAynKwKWhnORhdG
+         DUdN4Euq1NusjEMiAFrTz6l7kyVUDbJ2376JfAySnRlfMmUrFGI/1oCOSF4UCtKQ0RAd
+         Wv0yhSn8h9i1dqEw3daN2NqCgk8afqf6XzyBafob8JD5aXyyLtz0kZWLdgZuCx3XlHpG
+         fShA==
+X-Forwarded-Encrypted: i=1; AJvYcCU/Pbrlt4W06dAFdwh6mfET1zxID5coDcSihIORKdxHlos/5zlRmv0HZFk8Qw2DgbIPWnBROBoohA0TPVWQqOBZhYOxqAMTGyNn
+X-Gm-Message-State: AOJu0YwJ/kR53eY1g02k0GZOxBTCDRTuVFT+j5+bLBkCErtgfM9AYfsU
+	AH0AqCXAM9yLreMx4jqday1Ll0citdej+rPN2B1m8oCv/REshE6oheZdg4eDOa3f/UkZSKQY3OA
+	4uhBTxAGpeuIl6hgQRTyEOY042dPp4vjRx/9f/6vwhGmMZajO1onx1zs=
+X-Google-Smtp-Source: AGHT+IFBKFmYe5laHydCAqQAoeaWdcBuRyGTbku/3XoPsQe4bRsTG1szZALj8hXm8DhrnHGu7dMNxvO5xY50AgAMkDYBEwH96pYK
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+X-Received: by 2002:a05:6638:4116:b0:485:549f:eed8 with SMTP id
+ ay22-20020a056638411600b00485549feed8mr84862jab.0.1714108529299; Thu, 25 Apr
+ 2024 22:15:29 -0700 (PDT)
+Date: Thu, 25 Apr 2024 22:15:29 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000fee02e0616f8fdff@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_fs_dirty_inode
+From: syzbot <syzbot+1619d847a7b9ba3a9137@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
-> On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) wrote:
-> > From: Pankaj Raghav <p.raghav@samsung.com>
-> > 
-> > Splitting a larger folio with a base order is supported using
-> > split_huge_page_to_list_to_order() API. However, using that API for LBS
-> > is resulting in an NULL ptr dereference error in the writeback path [1].
-> > 
-> > Refuse to split a folio if it has minimum folio order requirement until
-> > we can start using split_huge_page_to_list_to_order() API. Splitting the
-> > folio can be added as a later optimization.
-> > 
-> > [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
-> 
-> Obviously this has to be tracked down and fixed before this patchset can
-> be merged ... I think I have some ideas.  Let me look a bit.  How
-> would I go about reproducing this?
+Hello,
 
-Using kdevops this is easy:
+syzbot found the following issue on:
 
-make defconfig-lbs-xfs-small -j $(nproc)
-make -j $(nproc)
-make fstests
-make linux
-make fstests-baseline TESTS=generic/447 COUNT=10
-tail -f
+HEAD commit:    3b68086599f8 Merge tag 'sched_urgent_for_v6.9_rc5' of git:..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=158206bb180000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f47e5e015c177e57
+dashboard link: https://syzkaller.appspot.com/bug?extid=1619d847a7b9ba3a9137
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-guestfs/*-xfs-reflink-16k-4ks/console.log
-or
-sudo virsh list
-sudo virsh console ${foo}-xfs-reflink-16k-4ks
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Where $foo is the value of CONFIG_KDEVOPS_HOSTS_PREFIX in .config for
-your kdevops run.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/caa90b55d476/disk-3b680865.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/17940f1c5e8f/vmlinux-3b680865.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/b03bd6929a1c/bzImage-3b680865.xz
 
-Otherwise if you wanna run things manually the above uses an lbs branch
-called large-block-minorder on kdevops [0] based on v6.9-rc5 with:
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+1619d847a7b9ba3a9137@syzkaller.appspotmail.com
 
-a) Fixes we know we need
-b) this patch series minus this patch
-c) A truncation enablement patch
+======================================================
+WARNING: possible circular locking dependency detected
+6.9.0-rc4-syzkaller-00274-g3b68086599f8 #0 Not tainted
+------------------------------------------------------
+kswapd0/81 is trying to acquire lock:
+ffff8881a895a610 (sb_internal#3){.+.+}-{0:0}, at: xfs_fs_dirty_inode+0x158/0x250 fs/xfs/xfs_super.c:689
 
-Note that the above also uses an fstests git tree with the fstests
-changes we also have posted as fixes and some new tests which have been
-posted [1]. You will then want to run:
+but task is already holding lock:
+ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6782 [inline]
+ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xb20/0x30c0 mm/vmscan.c:7164
 
-./check -s xfs_reflink_16k_4ks -I 10 generic/447
+which lock already depends on the new lock.
 
-The configuration for xfs_reflink_16k_4ks follows:
 
-cat /var/lib/xfstests/configs/min-xfs-reflink-16k-4ks.config
+the existing dependency chain (in reverse order) is:
 
-[default]
-FSTYP=xfs
-TEST_DIR=/media/test
-SCRATCH_MNT=/media/scratch
-RESULT_BASE=$PWD/results/$HOST/$(uname -r)
-DUMP_CORRUPT_FS=1
-CANON_DEVS=yes
-RECREATE_TEST_DEV=true
-SOAK_DURATION=9900
+-> #2 (fs_reclaim){+.+.}-{0:0}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+       __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
+       fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
+       might_alloc include/linux/sched/mm.h:312 [inline]
+       slab_pre_alloc_hook mm/slub.c:3746 [inline]
+       slab_alloc_node mm/slub.c:3827 [inline]
+       kmalloc_trace+0x47/0x360 mm/slub.c:3992
+       kmalloc include/linux/slab.h:628 [inline]
+       add_stack_record_to_list mm/page_owner.c:177 [inline]
+       inc_stack_record_count mm/page_owner.c:219 [inline]
+       __set_page_owner+0x561/0x810 mm/page_owner.c:334
+       set_page_owner include/linux/page_owner.h:32 [inline]
+       post_alloc_hook+0x1ea/0x210 mm/page_alloc.c:1534
+       prep_new_page mm/page_alloc.c:1541 [inline]
+       get_page_from_freelist+0x3410/0x35b0 mm/page_alloc.c:3317
+       __alloc_pages+0x256/0x6c0 mm/page_alloc.c:4575
+       __alloc_pages_node include/linux/gfp.h:238 [inline]
+       alloc_pages_node include/linux/gfp.h:261 [inline]
+       alloc_slab_page+0x5f/0x160 mm/slub.c:2175
+       allocate_slab mm/slub.c:2338 [inline]
+       new_slab+0x84/0x2f0 mm/slub.c:2391
+       ___slab_alloc+0xc73/0x1260 mm/slub.c:3525
+       __slab_alloc mm/slub.c:3610 [inline]
+       __slab_alloc_node mm/slub.c:3663 [inline]
+       slab_alloc_node mm/slub.c:3835 [inline]
+       kmem_cache_alloc+0x252/0x340 mm/slub.c:3852
+       kmem_cache_zalloc include/linux/slab.h:739 [inline]
+       xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:679 [inline]
+       xfs_refcountbt_init_cursor+0x65/0x2a0 fs/xfs/libxfs/xfs_refcount_btree.c:367
+       xfs_reflink_find_shared fs/xfs/xfs_reflink.c:147 [inline]
+       xfs_reflink_trim_around_shared+0x53a/0x9d0 fs/xfs/xfs_reflink.c:194
+       xfs_buffered_write_iomap_begin+0xebf/0x1b40 fs/xfs/xfs_iomap.c:1062
+       iomap_iter+0x691/0xf60 fs/iomap/iter.c:91
+       iomap_file_unshare+0x17a/0x710 fs/iomap/buffered-io.c:1364
+       xfs_reflink_unshare+0x173/0x5f0 fs/xfs/xfs_reflink.c:1710
+       xfs_file_fallocate+0x87c/0xd00 fs/xfs/xfs_file.c:1082
+       vfs_fallocate+0x564/0x6c0 fs/open.c:330
+       ksys_fallocate fs/open.c:353 [inline]
+       __do_sys_fallocate fs/open.c:361 [inline]
+       __se_sys_fallocate fs/open.c:359 [inline]
+       __x64_sys_fallocate+0xbd/0x110 fs/open.c:359
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xf5/0x240 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-[xfs_reflink_16k_4ks]
-TEST_DEV=/dev/loop16
-SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11 /dev/loop12"
-MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=16384, -s size=4k'
-USE_EXTERNAL=no
-LOGWRITES_DEV=/dev/loop15
+-> #1 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+       down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
+       xfs_dquot_disk_alloc+0x399/0xe50 fs/xfs/xfs_dquot.c:332
+       xfs_qm_dqread+0x1a3/0x650 fs/xfs/xfs_dquot.c:693
+       xfs_qm_dqget+0x2bb/0x6f0 fs/xfs/xfs_dquot.c:905
+       xfs_qm_quotacheck_dqadjust+0xea/0x5a0 fs/xfs/xfs_qm.c:1096
+       xfs_qm_dqusage_adjust+0x4db/0x6f0 fs/xfs/xfs_qm.c:1215
+       xfs_iwalk_ag_recs+0x4e0/0x860 fs/xfs/xfs_iwalk.c:213
+       xfs_iwalk_run_callbacks+0x218/0x470 fs/xfs/xfs_iwalk.c:372
+       xfs_iwalk_ag+0xa39/0xb50 fs/xfs/xfs_iwalk.c:478
+       xfs_iwalk_ag_work+0xfb/0x1b0 fs/xfs/xfs_iwalk.c:620
+       xfs_pwork_work+0x7f/0x190 fs/xfs/xfs_pwork.c:47
+       process_one_work kernel/workqueue.c:3254 [inline]
+       process_scheduled_works+0xa10/0x17c0 kernel/workqueue.c:3335
+       worker_thread+0x86d/0xd70 kernel/workqueue.c:3416
+       kthread+0x2f0/0x390 kernel/kthread.c:388
+       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
 
-I didn't have time to verify if the above commands for kdevops worked but... in
-theory its possible it may, because you know, May is right around the
-corner, and May... the force be with us.
+-> #0 (sb_internal#3){.+.+}-{0:0}:
+       check_prev_add kernel/locking/lockdep.c:3134 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+       validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
+       __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+       percpu_down_read include/linux/percpu-rwsem.h:51 [inline]
+       __sb_start_write include/linux/fs.h:1664 [inline]
+       sb_start_intwrite include/linux/fs.h:1847 [inline]
+       xfs_trans_alloc+0xe5/0x830 fs/xfs/xfs_trans.c:264
+       xfs_fs_dirty_inode+0x158/0x250 fs/xfs/xfs_super.c:689
+       __mark_inode_dirty+0x325/0xe20 fs/fs-writeback.c:2477
+       mark_inode_dirty_sync include/linux/fs.h:2410 [inline]
+       iput+0x1fe/0x930 fs/inode.c:1764
+       __dentry_kill+0x20d/0x630 fs/dcache.c:603
+       shrink_kill+0xa9/0x2c0 fs/dcache.c:1048
+       shrink_dentry_list+0x2c0/0x5b0 fs/dcache.c:1075
+       prune_dcache_sb+0x10f/0x180 fs/dcache.c:1156
+       super_cache_scan+0x34f/0x4b0 fs/super.c:221
+       do_shrink_slab+0x705/0x1160 mm/shrinker.c:435
+       shrink_slab_memcg mm/shrinker.c:548 [inline]
+       shrink_slab+0x883/0x14d0 mm/shrinker.c:626
+       shrink_node_memcgs mm/vmscan.c:5875 [inline]
+       shrink_node+0x11f5/0x2d60 mm/vmscan.c:5908
+       kswapd_shrink_node mm/vmscan.c:6704 [inline]
+       balance_pgdat mm/vmscan.c:6895 [inline]
+       kswapd+0x1a25/0x30c0 mm/vmscan.c:7164
+       kthread+0x2f0/0x390 kernel/kthread.c:388
+       ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
 
-[0] https://github.com/linux-kdevops/linux/tree/large-block-minorder
-[1] https://github.com/linux-kdevops/fstests
+other info that might help us debug this:
 
-  Luis
+Chain exists of:
+  sb_internal#3 --> &xfs_nondir_ilock_class#3 --> fs_reclaim
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(fs_reclaim);
+                               lock(&xfs_nondir_ilock_class#3);
+                               lock(fs_reclaim);
+  rlock(sb_internal#3);
+
+ *** DEADLOCK ***
+
+2 locks held by kswapd0/81:
+ #0: ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6782 [inline]
+ #0: ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xb20/0x30c0 mm/vmscan.c:7164
+ #1: ffff8881a895a0e0 (&type->s_umount_key#65){++++}-{3:3}, at: super_trylock_shared fs/super.c:561 [inline]
+ #1: ffff8881a895a0e0 (&type->s_umount_key#65){++++}-{3:3}, at: super_cache_scan+0x94/0x4b0 fs/super.c:196
+
+stack backtrace:
+CPU: 1 PID: 81 Comm: kswapd0 Not tainted 6.9.0-rc4-syzkaller-00274-g3b68086599f8 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:114
+ check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2187
+ check_prev_add kernel/locking/lockdep.c:3134 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+ validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
+ __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
+ lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+ percpu_down_read include/linux/percpu-rwsem.h:51 [inline]
+ __sb_start_write include/linux/fs.h:1664 [inline]
+ sb_start_intwrite include/linux/fs.h:1847 [inline]
+ xfs_trans_alloc+0xe5/0x830 fs/xfs/xfs_trans.c:264
+ xfs_fs_dirty_inode+0x158/0x250 fs/xfs/xfs_super.c:689
+ __mark_inode_dirty+0x325/0xe20 fs/fs-writeback.c:2477
+ mark_inode_dirty_sync include/linux/fs.h:2410 [inline]
+ iput+0x1fe/0x930 fs/inode.c:1764
+ __dentry_kill+0x20d/0x630 fs/dcache.c:603
+ shrink_kill+0xa9/0x2c0 fs/dcache.c:1048
+ shrink_dentry_list+0x2c0/0x5b0 fs/dcache.c:1075
+ prune_dcache_sb+0x10f/0x180 fs/dcache.c:1156
+ super_cache_scan+0x34f/0x4b0 fs/super.c:221
+ do_shrink_slab+0x705/0x1160 mm/shrinker.c:435
+ shrink_slab_memcg mm/shrinker.c:548 [inline]
+ shrink_slab+0x883/0x14d0 mm/shrinker.c:626
+ shrink_node_memcgs mm/vmscan.c:5875 [inline]
+ shrink_node+0x11f5/0x2d60 mm/vmscan.c:5908
+ kswapd_shrink_node mm/vmscan.c:6704 [inline]
+ balance_pgdat mm/vmscan.c:6895 [inline]
+ kswapd+0x1a25/0x30c0 mm/vmscan.c:7164
+ kthread+0x2f0/0x390 kernel/kthread.c:388
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
+NILFS (loop4): discard dirty page: offset=98304, ino=3
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=0, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty page: offset=0, ino=12
+NILFS (loop4): discard dirty block: blocknr=17, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty page: offset=0, ino=3
+NILFS (loop4): discard dirty block: blocknr=42, size=1024
+NILFS (loop4): discard dirty block: blocknr=43, size=1024
+NILFS (loop4): discard dirty block: blocknr=44, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty page: offset=4096, ino=6
+NILFS (loop4): discard dirty block: blocknr=39, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty page: offset=196608, ino=3
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+NILFS (loop4): discard dirty block: blocknr=49, size=1024
+NILFS (loop4): discard dirty block: blocknr=18446744073709551615, size=1024
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
