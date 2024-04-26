@@ -1,122 +1,141 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04E22D03D
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:36:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 976B62B9AF
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:55:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714167412; cv=none; b=UryNUpOo00jc5jnI4oTJpDpUQEFUKd3Ng2Inu2dNXro6fmy9FFfa9Nc1bmUNamXFdzuNXqvCMSFS8gbUOkB3BFDCmBj7x2WL0NUho97BX2EuZ34NZ0f2V0vwf60Cz/30B1Gw5sqSq0GgOuMbsuvRlKRCx/sZLgx2xc+bhFVuBBY=
+	t=1714168534; cv=none; b=qI/7jBxsU2aznvHLELpZaUydYMToUgfVXz0loTvkeHtN36v/12kwiEeauWFkaCvBXgp9uoLDEl2Bwfi1ELsc6Ubm+hGuXEJXc7bondZLtDpZfwYjGXKQ83j4l4HI8UBRQwEhT70kXTQjG/B5STLgayHy9fCCMu9zjPRpO4ndE3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714167412; c=relaxed/simple;
-	bh=k76bPd0gjWNDHnKIQuP6Q1j9Ush0tI3sOfqwGGeCkDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fsWR1c/M7+Y2HZUTdnmq4qVE93ERAXAghyjBm0WHQP3amvFxk5LOE5r3WJHuzd9Da6kjg5Fy4qv8cJ44nuFgUk0+E6QCivFpdo9rYI8YAA/r89nEE6nFMhINyWQnUmJ0pAKJ18vhT3yutCJZnXjnoZOP5lVD72UqOJSjh/7e22Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Bl5f0noG; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1714168534; c=relaxed/simple;
+	bh=ByTKF1VzTvv5a0CLQurna7KzVG7mWrycdZxRk8eqgm0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KwOeThrum14UKHsszummyTbTjFEsvXsmmix4HcR6nY292+G5QzqbMZbj2Ip7euXr9D3HI+63B/j5J2KifMksGvsyKVqxMsbReTMe/KVf/35G3gDnNIvgo3B6Zs+IRiVuMV/pYZKXwpT3kZSQJx3PReUMlV4amHO5PVXDY2Kbg8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WOWDJu+h; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Bl5f0noG"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2a2da57ab3aso2321162a91.3
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:36:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WOWDJu+h"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1e834159f40so21419725ad.2
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:55:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714167410; x=1714772210; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=QJtFmQ5+PxyI0zzkbzopCLLSCW05zynZDvU06FC33Kg=;
-        b=Bl5f0noGE1n1Ctu1BYJlPVz59G/XZMK75leLLRKjCqXPb3cM9RYK8TlSVyS4gnkDcB
-         6KoL3j5dkj/qUPCueBL28J8F2wpbJ3Ns78ZFVw1aW4Si0vE+huy08/p3BvJlMQZrB3CE
-         zoOIhwI+pJFdWwdXeTrqUaoJxwGmjYZwdrh2wylTwhwgLzAChWW0VLnsuf99S+fssSDp
-         5xocCq2VN9HO8ipK20CZE8A8+YINEFYXGrCS1UqIaxVcpxawMrloToA2dJcms11R9Q0L
-         4BFFTDbh3jwyU2gGsIARs3Y6cwbX19uJAg8BKWgy+pZwXacQObds8ikjj7ZNOYhJ9fNf
-         7+tQ==
+        d=gmail.com; s=20230601; t=1714168532; x=1714773332; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=g5JkCn2JNjSEuLyxpWsrFQ+7LJqSJuXTjikZchfkgiY=;
+        b=WOWDJu+hm3zFjGYA2wXVnGtiAEDYrJ2QhMdrXGxVO08JDvEN/3spM2Uxx0a83DbNtB
+         O/5wXKFtS5CUukAvZK8CPj11TXCRgC2LBvNmvw42LrtDd4fJHg1MjXAnZ5+dYz5oLvUH
+         73z+IodMcQfASdswn28zrqlUpiYrjzUR4OMFJ+MZqChX0cFmg8LJkT2RA+DeyHQuin3c
+         qoNyZH8wSYbbyoyRGrxqCO2jROL9zM3QC6cVnzqP6uUVeYGqSMIdEh5ZKGGawGy8QuI0
+         tBIkbMCsGP8BM3Zsa31eDjBhOdoDYWZ/mG5DBjpqVBm2AKp81vqY8+jv0ZLpNggrv52F
+         95QA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714167410; x=1714772210;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QJtFmQ5+PxyI0zzkbzopCLLSCW05zynZDvU06FC33Kg=;
-        b=rw1cBJ+UZNLSZNsckKKGGiHjy2Wul7Twmr5JnfAz0+OkeOBxv6lRx/qI84jXSaqVQQ
-         snfi9y6nv24Q4RtiK6uaiqv+6vcB2dYXs3I5DW7JK8JOzf/+xI+YP7mEBxFhuBh5Pd0c
-         2dS4HqKzB8FbbLEbTmk2POxsC+myzocNlkwED7x4RWpCCwBg4IZjzNuoDq36x4fSzKZc
-         w5CAljl+Uf3fMJnN5ef2ldLm9AzkQc02gsno8xA3kSW4qF35qIS/cFdZ028qkLeSkVxp
-         bOSo8dAqH353mTi+u5vN1S7iR4sifF+A9mxch8asUUnq9a+3qnVpxnb+hPCjv2wnKVj+
-         1Edg==
-X-Forwarded-Encrypted: i=1; AJvYcCUxfbIipKhZ3arJikARr6WARC8DU2PAodNzBTHTsIecp/hzgiSKWTsFwul7nN039XVj8IjLbvKBrZQXWH65vJl6pTJTwrN1Wh9i
-X-Gm-Message-State: AOJu0Yyd8GhMbX5GrS+bOR7IheLUiXJf/U4dC9f4FRLUSaYmGyxQKH1p
-	77aeIlrs92v6VIts+ceUQ6SE37RD79G9sL/NvNVn+sm+lTFoAtHL5+WqMMx/h8I=
-X-Google-Smtp-Source: AGHT+IFmc+RCoBKTzXGahw3W04/QE6IHRfllxdX6+wwRlssyDfe4FaWZC8l9940dp7jrpXgq341nDw==
-X-Received: by 2002:a17:90a:a114:b0:2ae:8f3f:9bf2 with SMTP id s20-20020a17090aa11400b002ae8f3f9bf2mr3953512pjp.42.1714167410039;
-        Fri, 26 Apr 2024 14:36:50 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-56-237.pa.nsw.optusnet.com.au. [49.181.56.237])
-        by smtp.gmail.com with ESMTPSA id gn5-20020a17090ac78500b0029f349cc253sm16734964pjb.54.2024.04.26.14.36.49
+        d=1e100.net; s=20230601; t=1714168532; x=1714773332;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=g5JkCn2JNjSEuLyxpWsrFQ+7LJqSJuXTjikZchfkgiY=;
+        b=qj/RnDtjcr+pKsT4jNBc0EuGdItFJ7Z+8CSHg0q3Ad8+ceLt6Bq9s/Bfn5B9ZdLMvz
+         9QYvPOihftSJhRViFFvIoepk3GBPkJfb9g0IXOuCVNLLyVmn+i3FOQuhlySL69w3ZUuo
+         lGpL8hmWYdBBDhShf0SnjZYOoo9O7CRIOm2eizkdkKdsifX2h3+miTTx7mdi4WxxDsQE
+         iRCTAf1ZcnJZcs2Okv/Lw90isxZTsCkcDw/R0rRjcWvsOy3g4TQJb4wOAanMcx3Mb+RS
+         iX98gkRXY6kOgXuuSIyx1430YU/HpwE/yE6TP3AsoKvVPjHTIGs6JeocHR39/N44kxMq
+         mV7A==
+X-Gm-Message-State: AOJu0Yx43v8AxS3BEHE1MMMQcEaxKXZ068Ymae1ozUcNxB2082tpIgx3
+	4YJp2EoEhgPoYmV6R+a22GatfXC5VzxzLCiO8wn+jid7OAWA1GVAxfJGz/7P
+X-Google-Smtp-Source: AGHT+IEGTLWdppq8aZmmR9W1zYT+nh6QBHZP6aS6t5+qSZ9ufp4OzsF8O+JwOCirHRPNe2Z3vIIcBQ==
+X-Received: by 2002:a17:902:da88:b0:1e5:556:60e2 with SMTP id j8-20020a170902da8800b001e5055660e2mr4497674plx.5.1714168532573;
+        Fri, 26 Apr 2024 14:55:32 -0700 (PDT)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2b3a:c37d:d273:a588])
+        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.55.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:36:49 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1s0TFP-00C0ca-09;
-	Sat, 27 Apr 2024 07:36:47 +1000
-Date: Sat, 27 Apr 2024 07:36:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, Sam Sun <samsun1006219@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	djwong@kernel.org, chandan.babu@oracle.com,
-	syzkaller-bugs@googlegroups.com, xrivendell7@gmail.com
-Subject: Re: [Linux kernel bug] KASAN: slab-out-of-bounds Read in xlog_cksum
-Message-ID: <Ziweb7egkq2Ltn0d@dread.disaster.area>
-References: <CAEkJfYO++C-pxyqzfoXFKEvmMQEnrgkQ2QcG6radAWJMqdXQCQ@mail.gmail.com>
- <ZipWt03PhXs2Yc84@infradead.org>
- <ZiphYrREkQvxkE-U@bfoster>
- <ZitF8eqWEYECruXo@infradead.org>
+        Fri, 26 Apr 2024 14:55:32 -0700 (PDT)
+From: Leah Rumancik <leah.rumancik@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: amir73il@gmail.com,
+	chandan.babu@oracle.com,
+	fred@cloudflare.com,
+	mngyadam@amazon.com,
+	Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 00/24] more backport proposals for linux-6.1.y
+Date: Fri, 26 Apr 2024 14:54:47 -0700
+Message-ID: <20240426215512.2673806-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.44.0.769.g3c40516874-goog
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZitF8eqWEYECruXo@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Apr 25, 2024 at 11:13:05PM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 25, 2024 at 09:57:54AM -0400, Brian Foster wrote:
-> > On Thu, Apr 25, 2024 at 06:12:23AM -0700, Christoph Hellwig wrote:
-> > > This triggers the workaround for really old xfsprogs putting in a
-> > > bogus h_size:
-> > > 
-> > > [   12.101992] XFS (loop0): invalid iclog size (0 bytes), using lsunit (65536 bytes)
-> > > 
-> > > but then calculates the log recovery buffer size based on the actual
-> > > on-disk h_size value.  The patch below open codes xlog_logrec_hblks and
-> > > fixes this particular reproducer.  But I wonder if we should limit the
-> > > workaround.  Brian, you don't happpen to remember how old xfsprogs had
-> > > to be to require your workaround (commit a70f9fe52daa8)?
-> > > 
-> > 
-> > No, but a little digging turns up xfsprogs commit 20fbd4593ff2 ("libxfs:
-> > format the log with valid log record headers"), which I think is what
-> > you're looking for..? That went in around v4.5 or so, so I suppose
-> > anything earlier than that is affected.
-> 
-> Thanks.  I was kinda hoping we could exclude v5 file systems from that
-> workaround, but it is needed way too recent for that.
+Hi again,
 
-Any v5 filesystem with reflink and/or rmapbt enabled can be
-excluded, as they didn't get added until 4.8 or after. All new
-filesystems from here on should at least have reflink enabled, so
-just returning EFSCORRUPTED and aborting recovery would be fine for
-those filesystems....
+These have been tested on 10 configs x 30 runs of the auto group. No
+regressions were seen.
 
-OTOH, I think anyone using a 6.x kernel should be using a 6.x
-xfsprogs, too, so maybe we should just remove the workaround from
-upstream kernels altogether?
+- Leah
 
-> Maybe we can specificly check for the wrongly hardcoded
-> XLOG_HEADER_CYCLE_SIZE instead of allowing any value?
+Darrick J. Wong (8):
+  xfs: fix incorrect error-out in xfs_remove
+  xfs: invalidate block device page cache during unmount
+  xfs: attach dquots to inode before reading data/cow fork mappings
+  xfs: hoist refcount record merge predicates
+  xfs: estimate post-merge refcounts correctly
+  xfs: invalidate xfs_bufs when allocating cow extents
+  xfs: allow inode inactivation during a ro mount log recovery
+  xfs: fix log recovery when unknown rocompat bits are set
 
-We probably should do that, too.
+Dave Chinner (10):
+  xfs: write page faults in iomap are not buffered writes
+  xfs: punching delalloc extents on write failure is racy
+  xfs: use byte ranges for write cleanup ranges
+  xfs,iomap: move delalloc punching to iomap
+  iomap: buffered write failure should not truncate the page cache
+  xfs: xfs_bmap_punch_delalloc_range() should take a byte range
+  iomap: write iomap validity checks
+  xfs: use iomap_valid method to detect stale cached iomaps
+  xfs: drop write error injection is unfixable, remove it
+  xfs: fix off-by-one-block in xfs_discard_folio()
 
--Dave.
+Eric Sandeen (1):
+  xfs: short circuit xfs_growfs_data_private() if delta is zero
+
+Guo Xuenan (2):
+  xfs: wait iclog complete before tearing down AIL
+  xfs: fix super block buf log item UAF during force shutdown
+
+Hironori Shiina (1):
+  xfs: get root inode correctly at bulkstat
+
+Long Li (2):
+  xfs: fix sb write verify for lazysbcount
+  xfs: fix incorrect i_nlink caused by inode racing
+
+ fs/iomap/buffered-io.c       | 254 ++++++++++++++++++++++++++++++++++-
+ fs/iomap/iter.c              |  19 ++-
+ fs/xfs/libxfs/xfs_bmap.c     |   8 +-
+ fs/xfs/libxfs/xfs_errortag.h |  12 +-
+ fs/xfs/libxfs/xfs_refcount.c | 146 +++++++++++++++++---
+ fs/xfs/libxfs/xfs_sb.c       |   7 +-
+ fs/xfs/xfs_aops.c            |  37 ++---
+ fs/xfs/xfs_bmap_util.c       |  10 +-
+ fs/xfs/xfs_bmap_util.h       |   2 +-
+ fs/xfs/xfs_buf.c             |   1 +
+ fs/xfs/xfs_buf_item.c        |   2 +
+ fs/xfs/xfs_error.c           |  27 +++-
+ fs/xfs/xfs_file.c            |   2 +-
+ fs/xfs/xfs_fsops.c           |   4 +
+ fs/xfs/xfs_icache.c          |   6 +
+ fs/xfs/xfs_inode.c           |  16 ++-
+ fs/xfs/xfs_ioctl.c           |   4 +-
+ fs/xfs/xfs_iomap.c           | 177 ++++++++++++++----------
+ fs/xfs/xfs_iomap.h           |   6 +-
+ fs/xfs/xfs_log.c             |  53 ++++----
+ fs/xfs/xfs_mount.c           |  15 +++
+ fs/xfs/xfs_pnfs.c            |   6 +-
+ include/linux/iomap.h        |  47 +++++--
+ 23 files changed, 683 insertions(+), 178 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.44.0.769.g3c40516874-goog
+
