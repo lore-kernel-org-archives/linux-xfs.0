@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F523B794
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 23:14:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA56BA4B;
+	Fri, 26 Apr 2024 23:17:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714173248; cv=none; b=hQCOdhJq/Uq+NOgjArhVx6KbVcm/MZwgDspj0qejoa7uLWVyg47/eNM0lBQ1JQ1mEN/GFqn1fs8VE6f5QM2wvUqNEJBpfWYIgI4Y6XFVt2mSVn7mkxB1wch2X6g1DV6+mMKF/Xb6ZtlaiHU8Sugwv8nQ6Q0+5DjUvr0XJvXdfG4=
+	t=1714173430; cv=none; b=O4uzHf7BdAJvB5i9QYZ3tfrEulJLLalcCBF9UPqIIt3T1KSIh/HrgcIh3hzWLisBDUqrgisGjldkUfadNp/c9ZyPFyUdbaLu8Fpt59x9hPRYLBX+DZi8kL+8FOQ0r+seJhZsoC+q6P4xecX6pMe87Bkp2lefCIlj6V8KGAXCTqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714173248; c=relaxed/simple;
-	bh=u2hMRS4kCpEcv5SWdeC2AqIlS+6jveCS0zoi5xeEBik=;
+	s=arc-20240116; t=1714173430; c=relaxed/simple;
+	bh=rcMEnyVBn3pKkfcSNlKvp5IFGtJ7Mh/CEE8I3MHF6uE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O4EVzdKTA0FNpYVxNERW8IT0l5cMuYyDi8CwChAhkS2fKayev9Dhe4GURpDbO/94gBb4uHj4EPWNnpOgYXjJmxEQzh6/9PqBSJ5V2zyuJ5/DtqIt8GJcIJzFq8/3KlcVcR82rM1edl57T3HQcL/rd1Bvc4p7OuasMV1HDN9fQYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oLeZ9smZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=a6tEfzJK0a95XoI/t7t4kKgU5j16vznKrTpF35zKaqUxaCbDriUcT3aZdrDjVPp2Veoh5cLlFN5rZEOb9n5O4xy52lujAimVmAnXtBs8oVUzfue2lRr2FF03eaORwNpZ/thI4v2qTY31u2VNjOB+4LKZo0qsBE7LTtsnXEmFFEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p9gEBB/h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oLeZ9smZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 346CDC113CD;
-	Fri, 26 Apr 2024 23:14:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p9gEBB/h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F7AFC113CD;
+	Fri, 26 Apr 2024 23:17:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714173248;
-	bh=u2hMRS4kCpEcv5SWdeC2AqIlS+6jveCS0zoi5xeEBik=;
+	s=k20201202; t=1714173429;
+	bh=rcMEnyVBn3pKkfcSNlKvp5IFGtJ7Mh/CEE8I3MHF6uE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oLeZ9smZr6IeSKTG3XEf+3Z08Z0+qbD4Flz+jqL2p72o0k5hs1JwWQr9OvBbOXqOx
-	 7I/Wd7Pp6FqFhmWn3JmaIQggzzIPScSluqOKgzn9gUPq9hyTRnB1AwWm6Luo2GSZ6a
-	 +GhVOVhfaE9nPV9aKypOi+gPEQMVuGlg61m6i+kCOXnvxIF4MzC+ipqtLl6ivdr0y4
-	 EeExJsTUL25b36kz8GYO0WaOdwM4QlBaEToTk1cmHc8Khtl4zgK09YWlAXxe+q626C
-	 DT7nojg0+igtusEUiSC6QFY8Aq45Lw8aj99xvgAfmKiwre+1HfuSTT4TUz/rx/BxhN
-	 /OLzZNbyuDdcw==
-Date: Fri, 26 Apr 2024 16:14:07 -0700
+	b=p9gEBB/hpJvW0D7NcGlQ7pnO0GoWzoOY3S5QpN/RanZsD91BUZMPrDnwPwnDNu86q
+	 6muCn+nLV6wnDBkuix+X3gTItIuh9P9pHMeURM8GTgwwAG36SZChTn8xx6w7E+I8zK
+	 krKCa0RvhLZHK14opkYYNAZYTzqYcgn4YVJl6I9/LpXse63ugx3s11bwQ+Pk0L6ChY
+	 XqI+mGm4ePLWu6AqFDEs3Qa5PidssgzU/Ae4DI9O3nHl9rwYWd8NijgsyYv7xTdLSJ
+	 DrLBpV00/XNdYYkar1q12mJKAro+Bx5a9FRwHR5DjWtuicKQlBBl+0ldlI+kwIYjG8
+	 Efxf4Oy0bQOOA==
+Date: Fri, 26 Apr 2024 16:17:08 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Leah Rumancik <leah.rumancik@gmail.com>
-Cc: linux-xfs@vger.kernel.org, amir73il@gmail.com, chandan.babu@oracle.com,
-	fred@cloudflare.com, mngyadam@amazon.com
-Subject: Re: [PATCH 6.1 CANDIDATE 00/24] more backport proposals for
- linux-6.1.y
-Message-ID: <20240426231407.GQ360919@frogsfrogsfrogs>
-References: <20240426215512.2673806-1-leah.rumancik@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: syzbot <syzbot+b7e8d799f0ab724876f9@syzkaller.appspotmail.com>,
+	chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, linux-mm@kvack.org,
+	Andrey Ryabinin <ryabinin.a.a@gmail.com>
+Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_ilock_data_map_shared
+Message-ID: <20240426231708.GR360919@frogsfrogsfrogs>
+References: <00000000000028dd9a0616ecda61@google.com>
+ <20240426163228.GP360919@frogsfrogsfrogs>
+ <Ziwag2++iy62jHik@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,84 +47,171 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240426215512.2673806-1-leah.rumancik@gmail.com>
+In-Reply-To: <Ziwag2++iy62jHik@dread.disaster.area>
 
-On Fri, Apr 26, 2024 at 02:54:47PM -0700, Leah Rumancik wrote:
-> Hi again,
+On Sat, Apr 27, 2024 at 07:20:03AM +1000, Dave Chinner wrote:
+> [cc linux-mm@kvack.org]
 > 
-> These have been tested on 10 configs x 30 runs of the auto group. No
-> regressions were seen.
+> On Fri, Apr 26, 2024 at 09:32:28AM -0700, Darrick J. Wong wrote:
+> > On Thu, Apr 25, 2024 at 07:46:28AM -0700, syzbot wrote:
+> > > Hello,
+> > > 
+> > > syzbot found the following issue on:
+> > > 
+> > > HEAD commit:    977b1ef51866 Merge tag 'block-6.9-20240420' of git://git.k..
+> > > git tree:       upstream
+> > > console output: https://syzkaller.appspot.com/x/log.txt?x=126497cd180000
+> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=d239903bd07761e5
+> > > dashboard link: https://syzkaller.appspot.com/bug?extid=b7e8d799f0ab724876f9
+> > > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> > > 
+> > > Unfortunately, I don't have any reproducer for this issue yet.
+> > > 
+> > > Downloadable assets:
+> > > disk image: https://storage.googleapis.com/syzbot-assets/08d7b6e107aa/disk-977b1ef5.raw.xz
+> > > vmlinux: https://storage.googleapis.com/syzbot-assets/9c5e543ffdcf/vmlinux-977b1ef5.xz
+> > > kernel image: https://storage.googleapis.com/syzbot-assets/04a6d79d2f69/bzImage-977b1ef5.xz
+> > > 
+> > > IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> > > Reported-by: syzbot+b7e8d799f0ab724876f9@syzkaller.appspotmail.com
+> > > 
+> > > XFS (loop2): Ending clean mount
+> > > ======================================================
+> > > WARNING: possible circular locking dependency detected
+> > > 6.9.0-rc4-syzkaller-00266-g977b1ef51866 #0 Not tainted
+> > > ------------------------------------------------------
+> > > syz-executor.2/7915 is trying to acquire lock:
+> > > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:312 [inline]
+> > > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:3746 [inline]
+> > > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:3827 [inline]
+> > > ffffffff8e42a800 (fs_reclaim){+.+.}-{0:0}, at: kmalloc_trace+0x47/0x360 mm/slub.c:3992
+> > > 
+> > > but task is already holding lock:
+> > > ffff888056da8118 (&xfs_dir_ilock_class){++++}-{3:3}, at: xfs_ilock_data_map_shared+0x4f/0x70 fs/xfs/xfs_inode.c:114
+> > > 
+> > > which lock already depends on the new lock.
+> > > 
+> > > 
+> > > the existing dependency chain (in reverse order) is:
+> > > 
+> > > -> #1 (&xfs_dir_ilock_class){++++}-{3:3}:
+> > >        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+> > >        down_write_nested+0x3d/0x50 kernel/locking/rwsem.c:1695
+> > >        xfs_reclaim_inode fs/xfs/xfs_icache.c:945 [inline]
+> > >        xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1631 [inline]
+> > >        xfs_icwalk_ag+0x120e/0x1ad0 fs/xfs/xfs_icache.c:1713
+> > >        xfs_icwalk fs/xfs/xfs_icache.c:1762 [inline]
+> > >        xfs_reclaim_inodes_nr+0x257/0x360 fs/xfs/xfs_icache.c:1011
+> > >        super_cache_scan+0x411/0x4b0 fs/super.c:227
+> > >        do_shrink_slab+0x707/0x1160 mm/shrinker.c:435
+> > >        shrink_slab+0x1092/0x14d0 mm/shrinker.c:662
+> > >        shrink_one+0x453/0x880 mm/vmscan.c:4774
+> > >        shrink_many mm/vmscan.c:4835 [inline]
+> > >        lru_gen_shrink_node mm/vmscan.c:4935 [inline]
+> > >        shrink_node+0x3b17/0x4310 mm/vmscan.c:5894
+> > >        kswapd_shrink_node mm/vmscan.c:6704 [inline]
+> > >        balance_pgdat mm/vmscan.c:6895 [inline]
+> > >        kswapd+0x1882/0x38a0 mm/vmscan.c:7164
+> > >        kthread+0x2f2/0x390 kernel/kthread.c:388
+> > >        ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147
+> > >        ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+> > > 
+> > > -> #0 (fs_reclaim){+.+.}-{0:0}:
+> > >        check_prev_add kernel/locking/lockdep.c:3134 [inline]
+> > >        check_prevs_add kernel/locking/lockdep.c:3253 [inline]
+> > >        validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869
+> > >        __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137
+> > >        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
+> > >        __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
+> > >        fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
+> > >        might_alloc include/linux/sched/mm.h:312 [inline]
+> > >        slab_pre_alloc_hook mm/slub.c:3746 [inline]
+> > >        slab_alloc_node mm/slub.c:3827 [inline]
+> > >        kmalloc_trace+0x47/0x360 mm/slub.c:3992
+> > >        kmalloc include/linux/slab.h:628 [inline]
+> > >        add_stack_record_to_list mm/page_owner.c:177 [inline]
+> > >        inc_stack_record_count mm/page_owner.c:219 [inline]
+> > >        __set_page_owner+0x561/0x810 mm/page_owner.c:334
+> > >        set_page_owner include/linux/page_owner.h:32 [inline]
+> > >        post_alloc_hook+0x1ea/0x210 mm/page_alloc.c:1534
+> > >        prep_new_page mm/page_alloc.c:1541 [inline]
+> > >        get_page_from_freelist+0x3410/0x35b0 mm/page_alloc.c:3317
+> > >        __alloc_pages+0x256/0x6c0 mm/page_alloc.c:4575
+> > >        __alloc_pages_bulk+0x729/0xd40 mm/page_alloc.c:4523
+> > >        alloc_pages_bulk_array include/linux/gfp.h:202 [inline]
+> > >        xfs_buf_alloc_pages+0x1a7/0x860 fs/xfs/xfs_buf.c:398
+> > >        xfs_buf_find_insert+0x19a/0x1540 fs/xfs/xfs_buf.c:650
+> > >        xfs_buf_get_map+0x149c/0x1ae0 fs/xfs/xfs_buf.c:755
+> > >        xfs_buf_read_map+0x111/0xa60 fs/xfs/xfs_buf.c:860
+> > >        xfs_trans_read_buf_map+0x260/0xad0 fs/xfs/xfs_trans_buf.c:289
+> > >        xfs_da_read_buf+0x2b1/0x470 fs/xfs/libxfs/xfs_da_btree.c:2674
+> > >        xfs_dir3_block_read+0x92/0x1a0 fs/xfs/libxfs/xfs_dir2_block.c:145
+> > >        xfs_dir2_block_lookup_int+0x109/0x7d0 fs/xfs/libxfs/xfs_dir2_block.c:700
+> > >        xfs_dir2_block_lookup+0x19a/0x630 fs/xfs/libxfs/xfs_dir2_block.c:650
+> > >        xfs_dir_lookup+0x633/0xaf0 fs/xfs/libxfs/xfs_dir2.c:399
+> > 
+> > Hm.  We've taken an ILOCK in xfs_dir_lookup, and now we're reading a
+> > directory block.  We don't have PF_MEMALLOC_NOFS set, nor do we pass
+> > GFP_NOFS when allocating the xfs_buf pages.
+> > 
+> > Nothing in this code path sets PF_MEMALLOC_NOFS explicitly, nor does it
+> > create a xfs_trans_alloc_empty, which would set that.  Prior to the
+> > removal of kmem_alloc, I think we were much more aggressive about
+> > GFP_NOFS usage.
 > 
-> - Leah
+> This isn't an XFS bug. The XFS code is correct - the callsite in the
+> buffer cache is using GFP_KERNEL | __GFP_NOLOCKDEP explicitly to
+> avoid these sorts of false positives.
 > 
-> Darrick J. Wong (8):
->   xfs: fix incorrect error-out in xfs_remove
->   xfs: invalidate block device page cache during unmount
->   xfs: attach dquots to inode before reading data/cow fork mappings
->   xfs: hoist refcount record merge predicates
->   xfs: estimate post-merge refcounts correctly
->   xfs: invalidate xfs_bufs when allocating cow extents
->   xfs: allow inode inactivation during a ro mount log recovery
->   xfs: fix log recovery when unknown rocompat bits are set
+> Please take a closer look at the stack trace - there's a second
+> memory allocation taking place there way below the XFS memory
+> allocation inside the page owner tracking code itself:
 > 
-> Dave Chinner (10):
->   xfs: write page faults in iomap are not buffered writes
->   xfs: punching delalloc extents on write failure is racy
->   xfs: use byte ranges for write cleanup ranges
->   xfs,iomap: move delalloc punching to iomap
->   iomap: buffered write failure should not truncate the page cache
->   xfs: xfs_bmap_punch_delalloc_range() should take a byte range
->   iomap: write iomap validity checks
->   xfs: use iomap_valid method to detect stale cached iomaps
->   xfs: drop write error injection is unfixable, remove it
->   xfs: fix off-by-one-block in xfs_discard_folio()
+> static void add_stack_record_to_list(struct stack_record *stack_record,
+>                                      gfp_t gfp_mask)
+> {
+>         unsigned long flags;
+>         struct stack *stack;
 > 
-> Eric Sandeen (1):
->   xfs: short circuit xfs_growfs_data_private() if delta is zero
+>         /* Filter gfp_mask the same way stackdepot does, for consistency */
+>         gfp_mask &= ~GFP_ZONEMASK;
+>         gfp_mask &= (GFP_ATOMIC | GFP_KERNEL);
+>         gfp_mask |= __GFP_NOWARN;
 > 
-> Guo Xuenan (2):
->   xfs: wait iclog complete before tearing down AIL
->   xfs: fix super block buf log item UAF during force shutdown
+>         set_current_in_page_owner();
+>         stack = kmalloc(sizeof(*stack), gfp_mask);
+>         if (!stack) {
+>                 unset_current_in_page_owner();
+>                 return;
+>         }
+>         unset_current_in_page_owner();
+> .....
 > 
-> Hironori Shiina (1):
->   xfs: get root inode correctly at bulkstat
+> Look familiar? That exactly the same gfp mask filtering that the
+> stackdepot code was doing that caused this issue with KASAN:
 > 
-> Long Li (2):
->   xfs: fix sb write verify for lazysbcount
->   xfs: fix incorrect i_nlink caused by inode racing
+> https://lore.kernel.org/linux-xfs/000000000000fbf10e06164f3695@google.com/
+> 
+> Which was fixed with this patch:
+> 
+> https://lore.kernel.org/linux-xfs/20240418141133.22950-1-ryabinin.a.a@gmail.com/
+> 
+> Essentially, we're now playing whack-a-mole with internal kernel
+> debug code that doesn't honor __GFP_NOLOCKDEP....
+> 
+> MM-people: can you please do an audit of all the nested allocations
+> that occur inside the public high level allocation API and ensure
+> that they all obey __GFP_NOLOCKDEP so we don't have syzbot keep
+> tripping over them one at a time?
 
-Looks good to me,
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Ah.  Well.  Given my clear inability to investigate these reports
+sufficiently, I will step back and let the experts handle them from now
+on.
 
 --D
 
-> 
->  fs/iomap/buffered-io.c       | 254 ++++++++++++++++++++++++++++++++++-
->  fs/iomap/iter.c              |  19 ++-
->  fs/xfs/libxfs/xfs_bmap.c     |   8 +-
->  fs/xfs/libxfs/xfs_errortag.h |  12 +-
->  fs/xfs/libxfs/xfs_refcount.c | 146 +++++++++++++++++---
->  fs/xfs/libxfs/xfs_sb.c       |   7 +-
->  fs/xfs/xfs_aops.c            |  37 ++---
->  fs/xfs/xfs_bmap_util.c       |  10 +-
->  fs/xfs/xfs_bmap_util.h       |   2 +-
->  fs/xfs/xfs_buf.c             |   1 +
->  fs/xfs/xfs_buf_item.c        |   2 +
->  fs/xfs/xfs_error.c           |  27 +++-
->  fs/xfs/xfs_file.c            |   2 +-
->  fs/xfs/xfs_fsops.c           |   4 +
->  fs/xfs/xfs_icache.c          |   6 +
->  fs/xfs/xfs_inode.c           |  16 ++-
->  fs/xfs/xfs_ioctl.c           |   4 +-
->  fs/xfs/xfs_iomap.c           | 177 ++++++++++++++----------
->  fs/xfs/xfs_iomap.h           |   6 +-
->  fs/xfs/xfs_log.c             |  53 ++++----
->  fs/xfs/xfs_mount.c           |  15 +++
->  fs/xfs/xfs_pnfs.c            |   6 +-
->  include/linux/iomap.h        |  47 +++++--
->  23 files changed, 683 insertions(+), 178 deletions(-)
-> 
+> -Dave.
 > -- 
-> 2.44.0.769.g3c40516874-goog
-> 
+> Dave Chinner
+> david@fromorbit.com
 > 
