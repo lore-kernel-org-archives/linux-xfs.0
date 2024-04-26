@@ -1,56 +1,56 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35DD3AC01
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC0C73B290
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714168571; cv=none; b=cfFUqRY2GMF6ZS3oEipNt11Ty33jKSESxPDTffEGYFY2AOX3OfjWrKnJiGQTNK7nPgUq9YgWVtbL5FzD/X/NA7f8BPIjZcCqOreNs0p0xk5rhRz0J/GM89hSPQ/jZB9HFIrI7QEYBtNI4Qg2r3SwWHPa+h6ciKxynjsPFSHLYXI=
+	t=1714168573; cv=none; b=qFiDfqK5RDYf4P9qGD+K/j4hBomX1OaXfPq3Osj/oTxfOLRydm9Mz8y7IAL8D3VO1VSLGxo24dM0Px1nzypAnyKLV4IddvPD1YSGsxLcJeRx8xqhxr8orE+8cXE1ssIlxiB2jOJww+C5OEWTqgBuaNL9kQPjHCxBXM5yfPC9Faw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714168571; c=relaxed/simple;
-	bh=XmzbHAvg2b6sJ0iPja5NIyp38GHTvg5TSU3divPaVoU=;
+	s=arc-20240116; t=1714168573; c=relaxed/simple;
+	bh=ZAeie0BqhizVnnmgD4FuucPgIO5gG3Nz+KefeHd8Cd8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XnpbwXKpZFiNdAXAnRWhTxt1U/oe2pf9tpmQLfNIBMDQyUnIoZZmPVPoCmOwuJ0OtmoAXT+xUf+c8+jNle780MOKdXP9KbfRCheQNqzs0C7FqR/sliwGxGo3V/2aJRvCD+U2p77ScAYOyEIrtBwhC9HFI1hMBsPiNCmHX4FZWho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y5Cj4g3P; arc=none smtp.client-ip=209.85.215.179
+	 MIME-Version; b=p2uFbx9dCBstxYdkE8zZ85KnXi84iEDX8Ife5R7y/z8dv5/pZSFBghqJoENatCpXQps7LTARZ9banFTYoeTltAS/mgMV895Xr3UShtsUI7vHzWhItxgecQji5K1jkFK0hsZ4wY24skvLAt3enRLIO5jzgQ3bAmxaKp9+8edQiNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ryz8NUKl; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y5Cj4g3P"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-5d8b519e438so2072779a12.1
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ryz8NUKl"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1e5715a9ebdso22928835ad.2
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714168570; x=1714773370; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714168571; x=1714773371; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pht/K/7CZKwiiqOQN9VzZ+/9t5Cm8B/yBFfj5eXlF9o=;
-        b=Y5Cj4g3PKtBtAe3YbP5SqshNidcIFczTx+CK5dkB2g8NzCc6zSeo6rAnACB+7iN7Cx
-         aOBGWUx++UoiiRLZxE+UihxFR5Dv5sXNCeugSx+mHstqwA6UfBxpvGaW9zm1CEGIGY3h
-         RwJLzp8P0LhsPT9QroNovPIOojJ+J4i3bnwXNjhBI4U12c6r++7uthCDeIzL4mLENyeq
-         FSpgK5rtGTeQSfLzXrkS392x63pjZ8eb8vQxNOA0FMwuLdlo7qDFISJmmq9OcDUflo1S
-         OVhcptrQj4cyQSxOFgnj98hLz7fnNJaawIT0CTMYd1SCJDG59OF+b2fMNyFhBi8elZQl
-         XPHg==
+        bh=NrbvPDJfVbs0FiQOsMs7wCJkoN/sO7lxWFpoPiUL0OI=;
+        b=Ryz8NUKl+9PJnhN9P9eVGwOxomtt94hVUkKn0yhbO/jbkUYTMiclG0o2kk455CxK7P
+         Z1UI2lJbC6TT22D+yWi91RS9k8zRLqFcsUSaPmlLTQunKREb2S01rKFu+c21F40kV8j1
+         mn2ZTi/ZekMdVW0lhYATHkoAOya9Q5eMlPUsKdP8c4PA+MJrx2de5KjY9KqHTbBYhU7e
+         HogRVDzRuQSWDx+Eb+kLYdlHHWYI1th6pdrCNeGCu9BHmlf6eocIEaLqfpy4gEYiZ6RA
+         yJZLr5qDARYYnW0Mmw/r4iYZdX4CEPx9Eso0P+x9NJy+DWNpIa7IhBInY1shYRqD6he+
+         OQkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714168570; x=1714773370;
+        d=1e100.net; s=20230601; t=1714168571; x=1714773371;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pht/K/7CZKwiiqOQN9VzZ+/9t5Cm8B/yBFfj5eXlF9o=;
-        b=YYdobYUzSO+gRxqsd5OM1gu1LaRYwyB75BwryOIsr+3Zga99HGXYPHDEW4S6XTrbwH
-         FzeaKOhgUbffNxz9bL79P7nojVUZvuMOumOwFcSXMZZjcl1lIWjEKMM0Rf4PzroYBn+7
-         /gk8WbWaleCtAjkdJ/mkvYWgzRAbYWC29tj4nIWC+HOb/XLJd1/a1aU340bSDIZf+nTr
-         EdmVkzf38OEzJovczfOEBdH0xAgNZwR5lie1wjXYrjAj4XPTnpl2y9wL3WT9nbfqUnoo
-         iFmFz+AngqnqaGlK3rUnTPn+GFxEkxRQA2ygY+HfhoJH4yoKhYD30joe6Tjcw1pNDTMX
-         L4qg==
-X-Gm-Message-State: AOJu0YyLX29TOiSb42NtHin4VqRm5wgmiDolBFdL5ZMIqMy/yJbVTtZP
-	Iq7aXxlIiVhvN4Gz+WgPntDFGf+XQ/O2LHTXf6o69wqKUFCmEsLSTabO1TC+
-X-Google-Smtp-Source: AGHT+IEVcl6FGXitanH6nqcz9w950sg3/erj0t12/pyTV2CrpCuG92rBDR/p/9VP090rJVScYloucA==
-X-Received: by 2002:a17:902:f605:b0:1eb:ed2:f74c with SMTP id n5-20020a170902f60500b001eb0ed2f74cmr3511517plg.67.1714168569866;
-        Fri, 26 Apr 2024 14:56:09 -0700 (PDT)
+        bh=NrbvPDJfVbs0FiQOsMs7wCJkoN/sO7lxWFpoPiUL0OI=;
+        b=solND3fAqR57Izjq1gtXKzjHLr2YjADOnvRQtPKR/N/6iltazR2TX8blyUjKAKr/10
+         bz0XYbiDdGhermsQMoLarN+uI8jSq6qRcnLEcfGMb8ZF9VmsJ0XmRqfIFjH/+C7CIKdU
+         eO9lZ6VId8VSm6Uv2BiyQ260jf6f1VnVTRQikmE59STKZ5qeyuY+kEV+5hnypX8TMSak
+         8IvwwDIqQiir0pkspdBjwVfdBGwGX/oNDKHsXyqcEKqWTj/lP6J1Ukxt4bBc1zYSOmyF
+         iAoUO4vkHYsbPTbDLhyDr3I+GQS10ZOjpDcU4r0LY82oSPjCrFjovQeyc5pNrs05aHVJ
+         XDlA==
+X-Gm-Message-State: AOJu0Ywmtu+Sdoi/tiiOgk78NxVvrr2sikhmu8q8zJqV3ifVltXbaGJH
+	MVmOFEG6PwmXHJH5FTgxPp0MiLVKn3kqOVu5smKuXltyThd9Wp66Yo3VIx3h
+X-Google-Smtp-Source: AGHT+IFWyGFV1QE6JLjllsEY9l78sJdgWuDBTmba7ogiqleq5UxN5vClSChZtirjbHPG6SfLnIwhNA==
+X-Received: by 2002:a17:902:dac5:b0:1e3:e4ff:7054 with SMTP id q5-20020a170902dac500b001e3e4ff7054mr1212878plx.38.1714168570951;
+        Fri, 26 Apr 2024 14:56:10 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2b3a:c37d:d273:a588])
-        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.08
+        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:56:09 -0700 (PDT)
+        Fri, 26 Apr 2024 14:56:10 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
@@ -60,9 +60,9 @@ Cc: amir73il@gmail.com,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 20/24] xfs: invalidate xfs_bufs when allocating cow extents
-Date: Fri, 26 Apr 2024 14:55:07 -0700
-Message-ID: <20240426215512.2673806-21-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 21/24] xfs: allow inode inactivation during a ro mount log recovery
+Date: Fri, 26 Apr 2024 14:55:08 -0700
+Message-ID: <20240426215512.2673806-22-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.44.0.769.g3c40516874-goog
 In-Reply-To: <20240426215512.2673806-1-leah.rumancik@gmail.com>
 References: <20240426215512.2673806-1-leah.rumancik@gmail.com>
@@ -76,51 +76,60 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit ddfdd530e43fcb3f7a0a69966e5f6c33497b4ae3 ]
+[ Upstream commit 76e589013fec672c3587d6314f2d1f0aeddc26d9 ]
 
-While investigating test failures in xfs/17[1-3] in alwayscow mode, I
-noticed through code inspection that xfs_bmap_alloc_userdata isn't
-setting XFS_ALLOC_USERDATA when allocating extents for a file's CoW
-fork.  COW staging extents should be flagged as USERDATA, since user
-data are persisted to these blocks before being remapped into a file.
+In the next patch, we're going to prohibit log recovery if the primary
+superblock contains an unrecognized rocompat feature bit even on
+readonly mounts.  This requires removing all the code in the log
+mounting process that temporarily disables the readonly state.
 
-This mis-classification has a few impacts on the behavior of the system.
-First, the filestreams allocator is supposed to keep allocating from a
-chosen AG until it runs out of space in that AG.  However, it only does
-that for USERDATA allocations, which means that COW allocations aren't
-tied to the filestreams AG.  Fortunately, few people use filestreams, so
-nobody's noticed.
+Unfortunately, inode inactivation disables itself on readonly mounts.
+Clearing the iunlinked lists after log recovery needs inactivation to
+run to free the unreferenced inodes, which (AFAICT) is the only reason
+why log mounting plays games with the readonly state in the first place.
 
-A more serious problem is that xfs_alloc_ag_vextent_small looks for a
-buffer to invalidate *if* the USERDATA flag is set and the AG is so full
-that the allocation had to come from the AGFL because the cntbt is
-empty.  The consequences of not invalidating the buffer are severe --
-if the AIL incorrectly checkpoints a buffer that is now being used to
-store user data, that action will clobber the user's written data.
-
-Fix filestreams and yet another data corruption vector by flagging COW
-allocations as USERDATA.
+Therefore, change the inactivation predicates to allow inactivation
+during log recovery of a readonly mount.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_inode.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 56b9b7db38bb..0d56a8d862e8 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4058,7 +4058,7 @@ xfs_bmap_alloc_userdata(
- 	 * the busy list.
- 	 */
- 	bma->datatype = XFS_ALLOC_NOBUSY;
--	if (whichfork == XFS_DATA_FORK) {
-+	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK) {
- 		bma->datatype |= XFS_ALLOC_USERDATA;
- 		if (bma->offset == 0)
- 			bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d354ea2b74f9..54b707787f90 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1652,8 +1652,11 @@ xfs_inode_needs_inactive(
+ 	if (VFS_I(ip)->i_mode == 0)
+ 		return false;
+ 
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (xfs_is_readonly(mp))
++	/*
++	 * If this is a read-only mount, don't do this (would generate I/O)
++	 * unless we're in log recovery and cleaning the iunlinked list.
++	 */
++	if (xfs_is_readonly(mp) && !xlog_recovery_needed(mp->m_log))
+ 		return false;
+ 
+ 	/* If the log isn't running, push inodes straight to reclaim. */
+@@ -1713,8 +1716,11 @@ xfs_inactive(
+ 	mp = ip->i_mount;
+ 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
+ 
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (xfs_is_readonly(mp))
++	/*
++	 * If this is a read-only mount, don't do this (would generate I/O)
++	 * unless we're in log recovery and cleaning the iunlinked list.
++	 */
++	if (xfs_is_readonly(mp) && !xlog_recovery_needed(mp->m_log))
+ 		goto out;
+ 
+ 	/* Metadata inodes require explicit resource cleanup. */
 -- 
 2.44.0.769.g3c40516874-goog
 
