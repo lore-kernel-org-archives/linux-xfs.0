@@ -1,56 +1,56 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DC238F82
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112A538F9C
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714168565; cv=none; b=JfgSUTgJ748LLZIDe2KWLtqqdAgiSuzX4ZCG/RPw8aao1K80TrNzTr0l4saAeq/RPyv7tzvams8srwvPGxjqMnvST5UVaT5kiRTn5oozo0tUAVJrHXD+AeXBKdqCsv+JhP5/L/VuUu6vL2kCtsSKGMSadM2qfkKKqyew9sZ6nP0=
+	t=1714168566; cv=none; b=NCyQURCbiP1F+M1WvaqLCBw6TwyA95u+p1hk+v/iN9nAyG8K0T1myiKiTy1MBGQGx7GSFbUxw3FION5MYy7oOnZTfRabWOmxB86UpvUKr3NqnThLaPNWWqj4S/hn3nK0ZkDp7gR4QYPYCQzzCzRpQMgfBKWq3PHwD2GFRLZ2nCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714168565; c=relaxed/simple;
-	bh=B3gztKCcvuBinrC7FtzDV9IFiRHY08MUU0Q/4bjgyhI=;
+	s=arc-20240116; t=1714168566; c=relaxed/simple;
+	bh=lKWj+A+6Geg3knTDu04Ekq7yei1wMit/JDhaUC++eTs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eiDyTiSKbnU/lg19DeiGyoppe8NZ6J5H5gzl7i+r7RPY9lciRKvmH6wcL8ymoCN6VafKPJOaqiORUVh6mJSg1oscskE5eSe4mXC+qV7mTP5ag4edNbNSO/5JuHhycatsR9Qz8EwQK2ja7qYFGbJKf2CQxsdDGtiUe7+eu64Ydw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h+B7UkRX; arc=none smtp.client-ip=209.85.210.177
+	 MIME-Version; b=gUjpITsuXdJITfverodm0ZP1+g81diQftnzgg1oHHDTtxX9hEgQDh/W44XFHtfmKIm+ohppLqrC/V5h0RNstjgPJE82N4eyiRfwzfr4jIvfGPWsQWTu5wvZR9w3YOPhJPXx1CQ+3sgN1s6IG1uqzRya7xVaJrMBhQftbWW+26sY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=amPej8Ph; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h+B7UkRX"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6ed112c64beso2620007b3a.1
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="amPej8Ph"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1e5c7d087e1so24211035ad.0
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714168563; x=1714773363; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714168564; x=1714773364; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=y1vf5yCfbFIZaQ93LPInJPX/XpHUz5DT96bZkz73Ios=;
-        b=h+B7UkRXLoDUZugMkQ9+c2CGczXWR+vjCI6dGfJou+mZcMiUbDNx5XdYBIIdhERqKW
-         BFOvhg+twsiPrwizBOvyOuAHmJjQbgCBkUD8GhEiHSIWR7Ww0h9GOTiVDAK5PPMci3v6
-         uuPOr5uu14lwCxGlpehbQ4otKGcKUsWqGrqIa5MPVZbvfozMh9d0cCkCg9HNGyP5y+HB
-         aTWOD425LFaHD2Y6/iPodxlV00w4h/d+MKFHDrc/begkWEkfMcNT8M4l2GcSSGd+FOf8
-         7ekC4Yb+I795HORvF/M4adMpUzp+buNexUaDphhdFx2Pgb7/7Sq+DOU8XbbmL5jJwBsn
-         giIA==
+        bh=rHkOjOBlJX6eTTzXowp+zeMCB89DR2w2wGeNo3xZt3k=;
+        b=amPej8PhhgU77v7K2FCSfna2iWHqau+5cxq4CzisBLfHSBBAz4mS+bK5EXVduB2MeL
+         O0N78OAqV22fQaixtRSGzDQyw8/rSLGW/FNPobsAyiSYSzjZ5hM58qHX0CwplmBU1zVq
+         Vu71i0ctQaXnrcYhjenXs0pPCTn5jUukB0pc9h8Gt2bWCwPavrLBbDShdEAD1Rad+yiT
+         ky4HTz+LKBVe3FhKWiZkwcfXE7xJT7paW/n2vEfpKSK4lE7b/JFzWBiiM2f+2g1067kk
+         OBVNbaii1QhNskfaa6h8kvgbGzwAan1oW994MpO8G5QUWpJgd5BD4EQecBA1eT8RRoB5
+         VQNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714168563; x=1714773363;
+        d=1e100.net; s=20230601; t=1714168564; x=1714773364;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=y1vf5yCfbFIZaQ93LPInJPX/XpHUz5DT96bZkz73Ios=;
-        b=KO3R2Pk+DDLKIjOQKUTKrsOhIAc9n4l9RElQXJX8X6WcZ/QjsqGUkx7ROdTnXI+zA9
-         dnTz016Ov3TMoIe3oKKEcQ7B9nevM0AlWb/jT1sIfISeUXgLSjJuePe4SdPIILxwnGQi
-         uNolBaZsrcSUxnUhkJaav62qVscC30baXHi4ze6AamNAmD7fcWHIW1KUK0GiTArqWced
-         GW1m8JRfH/6YvasWNTlxDvJ0ApmoK8rTkfsVHb70efMNPRDVm08ZYSWbClv9pOKUl/pX
-         jIIKYoTU97v1SHO7YN8DDEkts9OMy1O7h6c11VSk5s9cMsFHcS+JRL+LfNM5js0vNhsA
-         ObYg==
-X-Gm-Message-State: AOJu0YyOgYbWntzmsM+WxlISQA1u4WzMUQAE6+NPt2909SUeJ9tGaiX6
-	De8c2FVz+SQFWC3tTYfodGYqGzzHOd8CJJkqTXJfEPm4FQZz+p3wfSn/1RVL
-X-Google-Smtp-Source: AGHT+IFvXzM80Vx32QNQMhBTP7TKiL/F80WvzU4b8SKqvRBOcjyMtvHx8nLXUJfO/cT+8iSFmeJoyg==
-X-Received: by 2002:a17:903:1cd:b0:1e4:cb0e:2988 with SMTP id e13-20020a17090301cd00b001e4cb0e2988mr1342042plh.2.1714168563040;
-        Fri, 26 Apr 2024 14:56:03 -0700 (PDT)
+        bh=rHkOjOBlJX6eTTzXowp+zeMCB89DR2w2wGeNo3xZt3k=;
+        b=AwfHTKPKT1WRIIzLjCVme723YRTDZrSczKYHrDejq3ZDvWyXFllsbo3mmnD4L4lBjQ
+         6xsU+QLUj23XCswXdVLjmErg+2SoPDNSRYL32zpv1UatIj1E1Xa5RMIQJ8ePXQKLltCy
+         7DMuMk0gnnlUhj5EVyVQb2GQ7guLLJjVERBeA8UDHsumZJQtZuH27RTI/KNrt5SYLKxT
+         Dticw5MbefW36k5efrFBFmMZLbJue7/G3QjGfmOdwrGCUm3I86vevgwv/gw3OAcFlrqz
+         rVP71OzwaXtyaco2NnlUtQERu8zcANV1E1Er0lA52UlUxpmt6biRqiv4XuGqKHrL5XBr
+         9vrQ==
+X-Gm-Message-State: AOJu0YxUNYmhDxR8PS45LAjDl2VfDN6TX7sHWVDO0dLMqYa9/xBSRBZJ
+	lgfx2vI/kKFdYT+1fvAJIqTJ/ItrHgG6gH9SbESyi6t+ntuVP/U4DwbKFvK7
+X-Google-Smtp-Source: AGHT+IEHV8nlEi6XIzLDAEGNLTVV84W33+AMe7O9xNjKiNKGQ1dk80I4BDKgsWa5rtgv+4kF8WdNjw==
+X-Received: by 2002:a17:903:2342:b0:1e9:43c:d176 with SMTP id c2-20020a170903234200b001e9043cd176mr4895080plh.12.1714168564304;
+        Fri, 26 Apr 2024 14:56:04 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2b3a:c37d:d273:a588])
-        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.02
+        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:56:02 -0700 (PDT)
+        Fri, 26 Apr 2024 14:56:03 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
@@ -58,12 +58,11 @@ Cc: amir73il@gmail.com,
 	fred@cloudflare.com,
 	mngyadam@amazon.com,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	Gao Xiang <hsiangkao@linux.alibaba.com>,
 	Dave Chinner <dchinner@redhat.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 14/24] xfs: invalidate block device page cache during unmount
-Date: Fri, 26 Apr 2024 14:55:01 -0700
-Message-ID: <20240426215512.2673806-15-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 15/24] xfs: attach dquots to inode before reading data/cow fork mappings
+Date: Fri, 26 Apr 2024 14:55:02 -0700
+Message-ID: <20240426215512.2673806-16-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.44.0.769.g3c40516874-goog
 In-Reply-To: <20240426215512.2673806-1-leah.rumancik@gmail.com>
 References: <20240426215512.2673806-1-leah.rumancik@gmail.com>
@@ -77,67 +76,154 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 032e160305f6872e590c77f11896fb28365c6d6c ]
+[ Upstream commit 4c6dbfd2756bd83a0085ed804e2bb7be9cc16bc5 ]
 
-Every now and then I see fstests failures on aarch64 (64k pages) that
-trigger on the following sequence:
+I've been running near-continuous integration testing of online fsck,
+and I've noticed that once a day, one of the ARM VMs will fail the test
+with out of order records in the data fork.
 
-mkfs.xfs $dev
-mount $dev $mnt
-touch $mnt/a
-umount $mnt
-xfs_db -c 'path /a' -c 'print' $dev
+xfs/804 races fsstress with online scrub (aka scan but do not change
+anything), so I think this might be a bug in the core xfs code.  This
+also only seems to trigger if one runs the test for more than ~6 minutes
+via TIME_FACTOR=13 or something.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/tree/tests/xfs/804?h=djwong-wtf
 
-99% of the time this succeeds, but every now and then xfs_db cannot find
-/a and fails.  This turns out to be a race involving udev/blkid, the
-page cache for the block device, and the xfs_db process.
+I added a debugging patch to the kernel to check the data fork extents
+after taking the ILOCK, before dropping ILOCK, and before and after each
+bmapping operation.  So far I've narrowed it down to the delalloc code
+inserting a record in the wrong place in the iext tree:
 
-udev is triggered whenever anyone closes a block device or unmounts it.
-The default udev rules invoke blkid to read the fs super and create
-symlinks to the bdev under /dev/disk.  For this, it uses buffered reads
-through the page cache.
+xfs_bmap_add_extent_hole_delay, near line 2691:
 
-xfs_db also uses buffered reads to examine metadata.  There is no
-coordination between xfs_db and udev, which means that they can run
-concurrently.  Note there is no coordination between the kernel and
-blkid either.
+	case 0:
+		/*
+		 * New allocation is not contiguous with another
+		 * delayed allocation.
+		 * Insert a new entry.
+		 */
+		oldlen = newlen = 0;
+		xfs_iunlock_check_datafork(ip);		<-- ok here
+		xfs_iext_insert(ip, icur, new, state);
+		xfs_iunlock_check_datafork(ip);		<-- bad here
+		break;
+	}
 
-On a system with 64k pages, the page cache can cache the superblock and
-the root inode (and hence the root dir) with the same 64k page.  If
-udev spawns blkid after the mkfs and the system is busy enough that it
-is still running when xfs_db starts up, they'll both read from the same
-page in the pagecache.
+I recorded the state of the data fork mappings and iext cursor state
+when a corrupt data fork is detected immediately after the
+xfs_bmap_add_extent_hole_delay call in xfs_bmapi_reserve_delalloc:
 
-The unmount writes updated inode metadata to disk directly.  The XFS
-buffer cache does not use the bdev pagecache, nor does it invalidate the
-pagecache on umount.  If the above scenario occurs, the pagecache no
-longer reflects what's on disk, xfs_db reads the stale metadata, and
-fails to find /a.  Most of the time this succeeds because closing a bdev
-invalidates the page cache, but when processes race, everyone loses.
+ino 0x140bb3 func xfs_bmapi_reserve_delalloc line 4164 data fork:
+    ino 0x140bb3 nr 0x0 nr_real 0x0 offset 0xb9 blockcount 0x1f startblock 0x935de2 state 1
+    ino 0x140bb3 nr 0x1 nr_real 0x1 offset 0xe6 blockcount 0xa startblock 0xffffffffe0007 state 0
+    ino 0x140bb3 nr 0x2 nr_real 0x1 offset 0xd8 blockcount 0xe startblock 0x935e01 state 0
 
-Fix the problem by invalidating the bdev pagecache after flushing the
-bdev, so that xfs_db will see up to date metadata.
+Here we see that a delalloc extent was inserted into the wrong position
+in the iext leaf, same as all the other times.  The extra trace data I
+collected are as follows:
 
+ino 0x140bb3 fork 0 oldoff 0xe6 oldlen 0x4 oldprealloc 0x6 isize 0xe6000
+    ino 0x140bb3 oldgotoff 0xea oldgotstart 0xfffffffffffffffe oldgotcount 0x0 oldgotstate 0
+    ino 0x140bb3 crapgotoff 0x0 crapgotstart 0x0 crapgotcount 0x0 crapgotstate 0
+    ino 0x140bb3 freshgotoff 0xd8 freshgotstart 0x935e01 freshgotcount 0xe freshgotstate 0
+    ino 0x140bb3 nowgotoff 0xe6 nowgotstart 0xffffffffe0007 nowgotcount 0xa nowgotstate 0
+    ino 0x140bb3 oldicurpos 1 oldleafnr 2 oldleaf 0xfffffc00f0609a00
+    ino 0x140bb3 crapicurpos 2 crapleafnr 2 crapleaf 0xfffffc00f0609a00
+    ino 0x140bb3 freshicurpos 1 freshleafnr 2 freshleaf 0xfffffc00f0609a00
+    ino 0x140bb3 newicurpos 1 newleafnr 3 newleaf 0xfffffc00f0609a00
+
+The first line shows that xfs_bmapi_reserve_delalloc was called with
+whichfork=XFS_DATA_FORK, off=0xe6, len=0x4, prealloc=6.
+
+The second line ("oldgot") shows the contents of @got at the beginning
+of the call, which are the results of the first iext lookup in
+xfs_buffered_write_iomap_begin.
+
+Line 3 ("crapgot") is the result of duplicating the cursor at the start
+of the body of xfs_bmapi_reserve_delalloc and performing a fresh lookup
+at @off.
+
+Line 4 ("freshgot") is the result of a new xfs_iext_get_extent right
+before the call to xfs_bmap_add_extent_hole_delay.  Totally garbage.
+
+Line 5 ("nowgot") is contents of @got after the
+xfs_bmap_add_extent_hole_delay call.
+
+Line 6 is the contents of @icur at the beginning fo the call.  Lines 7-9
+are the contents of the iext cursors at the point where the block
+mappings were sampled.
+
+I think @oldgot is a HOLESTARTBLOCK extent because the first lookup
+didn't find anything, so we filled in imap with "fake hole until the
+end".  At the time of the first lookup, I suspect that there's only one
+32-block unwritten extent in the mapping (hence oldicurpos==1) but by
+the time we get to recording crapgot, crapicurpos==2.
+
+Dave then added:
+
+Ok, that's much simpler to reason about, and implies the smoke is
+coming from xfs_buffered_write_iomap_begin() or
+xfs_bmapi_reserve_delalloc(). I suspect the former - it does a lot
+of stuff with the ILOCK_EXCL held.....
+
+.... including calling xfs_qm_dqattach_locked().
+
+xfs_buffered_write_iomap_begin
+  ILOCK_EXCL
+  look up icur
+  xfs_qm_dqattach_locked
+    xfs_qm_dqattach_one
+      xfs_qm_dqget_inode
+        dquot cache miss
+        xfs_iunlock(ip, XFS_ILOCK_EXCL);
+        error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
+        xfs_ilock(ip, XFS_ILOCK_EXCL);
+  ....
+  xfs_bmapi_reserve_delalloc(icur)
+
+Yup, that's what is letting the magic smoke out -
+xfs_qm_dqattach_locked() can cycle the ILOCK. If that happens, we
+can pass a stale icur to xfs_bmapi_reserve_delalloc() and it all
+goes downhill from there.
+
+Back to Darrick now:
+
+So.  Fix this by moving the dqattach_locked call up before we take the
+ILOCK, like all the other callers in that file.
+
+Fixes: a526c85c2236 ("xfs: move xfs_file_iomap_begin_delay around") # goes further back than this
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_buf.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_iomap.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index dde346450952..54c774af6e1c 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1945,6 +1945,7 @@ xfs_free_buftarg(
- 	list_lru_destroy(&btp->bt_lru);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1bdd7afc1010..ab5512c0bcf7 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -968,6 +968,10 @@ xfs_buffered_write_iomap_begin(
  
- 	blkdev_issue_flush(btp->bt_bdev);
-+	invalidate_bdev(btp->bt_bdev);
- 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
  
- 	kmem_free(btp);
++	error = xfs_qm_dqattach(ip);
++	if (error)
++		return error;
++
+ 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
+ 	if (error)
+ 		return error;
+@@ -1071,10 +1075,6 @@ xfs_buffered_write_iomap_begin(
+ 			allocfork = XFS_COW_FORK;
+ 	}
+ 
+-	error = xfs_qm_dqattach_locked(ip, false);
+-	if (error)
+-		goto out_unlock;
+-
+ 	if (eof && offset + count > XFS_ISIZE(ip)) {
+ 		/*
+ 		 * Determine the initial size of the preallocation.
 -- 
 2.44.0.769.g3c40516874-goog
 
