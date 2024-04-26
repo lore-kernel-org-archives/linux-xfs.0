@@ -1,68 +1,69 @@
 Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6337639FF2
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 644373A1B9
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 21:56:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714168568; cv=none; b=eILDfMPOQdXir/nGCnWzq9+c0yEyeldpFCXBOKYG+xrZY1oCCSfZdF+GY8vJTTpKd++hh0VnngMZ33OX9oO+wJLVBq+2fKZEOXGwp8JJe5qmicuRCXZ0523JmcIPrURp6Jliihz3d/GwV10jZFbCyxJlbL7nwcIinBR8+JXE76o=
+	t=1714168569; cv=none; b=gKpyuj4VdqvQ+aJ9S60jSdHgFF3LVhG3iAz9hRqp7f8wlbkp59RpPIzEF8ZHXIBf6lt4gldztqqGjrNomLKUdnbN66PXcGfuQQhaYwp9SPB9R/5p2cWLbr4T51Db+k6dgmx35nQCAT1E6oeZ1CAX+RRYhI5NUW6vg2/83fE1nJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714168568; c=relaxed/simple;
-	bh=K0CYLz+X0WaXFgwOIZ9fp3/KM0f7gN+QqCDJ8lRzRwI=;
+	s=arc-20240116; t=1714168569; c=relaxed/simple;
+	bh=J/WYcXvRiLzch+6h6hgq+qzl+PgaTZ5Vn/Zr6VuhAok=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NUR/grq24w3t9zG0GeVWIjprYCLMB8uT1ES7w0HYDzMZ8Z8nUFigQ74nnnKX+jScCTxW6gFA53AmPO7Nz/MZ8oOQaxyzxXsaPQwsVSiBsTKbjlO22LIVCGTEClV//XlqKqyckUyK6hjCtLSSY2g9nJyiVMyNQIPRlDp4TGg8r7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=An0n5bdu; arc=none smtp.client-ip=209.85.214.173
+	 MIME-Version; b=BTJzvc6H/5KSMEq+6g/FbD+4bdo8FUxNq7ff7OPfLXl5vZfqxm5SujZ8PshgnAiUUmGW+NXl3j7D8qt5GzMHcMlzC6cq/tWtzcTfS4TNhPtt44Ln2v51BDGQ0VrerXxZh6+wVrDVH1575EEDuX3bXD/URk7gD+xz2aI/Zr3UNUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WUxZyjJw; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="An0n5bdu"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1e3ff14f249so20158225ad.1
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WUxZyjJw"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1e8f68f8e0dso19617595ad.3
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2024 14:56:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714168566; x=1714773366; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714168568; x=1714773368; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Y6LUDHkv9eYKxn5TY/+wGN2T9MmB63zoVimXrOLrpvw=;
-        b=An0n5bduarcPDMux+Wp/2rsStbGTEsnRp1ZJlN6MJpsjz4AbXPTBwP5Bud1LISfgLD
-         QmMwNZxDpMb7H6vU5asRh30zUq4PKystBsIpu3YFZIV1czzl4eknxo2uWdqTVXGaY9wQ
-         X0GMbQ7njhhZuY1dS8kJY0Jr4DHD9AEYBv4OV5CGtUTHL44l/gIq1tMpXeK1J6g3CaZc
-         M2/EEZ88kr7xIxYumsM3izVDCp18czwrEsovYeES/XiEseEpNc+iiRcr+k6AMKMziZyF
-         Vxd1BfFKxmBnK/jz8kdW5rzBv5DFvRJHsR/+qvhmkzIuBGeN353LIIbh7H81o+FraJZj
-         cMLg==
+        bh=njkvQk9fwdhBmNn3nsfX35b2DXTrgzvFuq0Yw0RR6rg=;
+        b=WUxZyjJwSHzUgVoRd0kim/j7CwPk3EMzYa085122dlq1tQkYQgnyjgPq0YfxUB228O
+         ZQSovhbnPsLv4A5kNBorjxHvgWvUXUlOU/e4lxi/7EbzrhXnjUfGczRDGoV2++ulaTfh
+         nAFGeUbRNVOB4NDCAotBg9OeaeFBYt6AFzF2k6BsiBWc0IxH4Rkv+61/pVEeIF3YYi4m
+         df0wtxdXA0JDinN46BeAs7r+vyfo45bb+D05t673nhbH4rg4SGCs7a1nL/OvOOLw0H07
+         d2Ou643kEFjkDyvbA+ZZjN3NhqRgjq+Afrfwd8XeaTjSmpAnzqVQ5LVbT31ws7gsOicc
+         CgEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714168566; x=1714773366;
+        d=1e100.net; s=20230601; t=1714168568; x=1714773368;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Y6LUDHkv9eYKxn5TY/+wGN2T9MmB63zoVimXrOLrpvw=;
-        b=ER5J7wzKxlRG02aXKSY2Xbgm9X7XAKK4dbfEHTymdIwa0K026Hzjs2Rw/tvLtNAEwP
-         0tKgmXVtR4Q4i8mKFY3JeZDeHH3vPm0FXfJAHN+8jSYtXwNfbem5u8WdYzqtuiFDMYNQ
-         9o0CF2zvqcBI3KOflpGcuXsiV0EKjJi8Flg/kBR5SE3nwS4yk72xAPo2K8d1ANNEyHMK
-         LxkC4NCxA+SdiMvIzoeikWozk5nhMfWoWzlLqS71oiCYf4dw3n1zZaS9J5TxsV+QxpK8
-         amC5z5PcAy5PbKTQKuApudtagbTxyYysQWUoLzjqoD2LS77btFxrg0Dsj2U0qlk7u9mm
-         qZUA==
-X-Gm-Message-State: AOJu0YyqPlWkZekDBTL/vBhazChjkmRrcasVJk9poVSf4KVLOuGUMjd+
-	ccFPfLe9WaypiYmvVTKIgO81wixHu+/HeayobW0YYCBiGSL1fyoG/ISh2Fa4
-X-Google-Smtp-Source: AGHT+IF3mGN2BhcM7Mjv6dRXH7lrvSPsEGHlDzmfceQmklC2DrY+PM91hyiviN3/NqGgCxYUGaAG0w==
-X-Received: by 2002:a17:902:d50a:b0:1eb:4930:58d3 with SMTP id b10-20020a170902d50a00b001eb493058d3mr814463plg.4.1714168566572;
-        Fri, 26 Apr 2024 14:56:06 -0700 (PDT)
+        bh=njkvQk9fwdhBmNn3nsfX35b2DXTrgzvFuq0Yw0RR6rg=;
+        b=nH5otqsgrAxmJJmWNvy8kFTtbhZ+4IqsA2dJ80JW5NAdqIbSs/ZeFQOM2FC4+F3CEl
+         miy7YBsNYvjLHkuuGiI/M7KvanRd2I8fFc3X4wezsCruWipRwyTjDuJA4higArMY3YqP
+         szuX2tt7af3Fvwmr7YlR+ZQrOOZKg5wO+hv4XlqqY15gsm5dZpCOwpCV/1GvYf25e8PY
+         r4kAPifWjYFi3pMfFNFON3Rcg9qDErXK1eXyxxinxiQGIupxxFjJFc2mhjtQ4H3dajSh
+         M+NtdxIL0wemt1PDvAquDWMnx0F0xA+vGvw/AGzlpmuOPItnc0VkwgtC8suy1BYV1upX
+         C4Yw==
+X-Gm-Message-State: AOJu0YyLkvZUqKi0sPH3G3twiFWP/VWKCXRH0qcrh9DaISp9++h+9o0m
+	4RVVOPSLAgC4LHTO0/9VxwvanWSDLKVs5k++FBmZ+zTad5FSaY8rTERU+YjB
+X-Google-Smtp-Source: AGHT+IENlw2oWf0i6w02mZfYDRhQaYvOIuRr7d6Yw3O3giYbTIPnlXqNfsHxxFR9zTX/ynyoufHufg==
+X-Received: by 2002:a17:902:6b45:b0:1e2:6165:8086 with SMTP id g5-20020a1709026b4500b001e261658086mr841221plt.61.1714168567619;
+        Fri, 26 Apr 2024 14:56:07 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:2b3a:c37d:d273:a588])
-        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.05
+        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm855772plh.126.2024.04.26.14.56.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Apr 2024 14:56:06 -0700 (PDT)
+        Fri, 26 Apr 2024 14:56:07 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: amir73il@gmail.com,
 	chandan.babu@oracle.com,
 	fred@cloudflare.com,
 	mngyadam@amazon.com,
-	Guo Xuenan <guoxuenan@huawei.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	Xiao Yang <yangx.jy@fujitsu.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 CANDIDATE 17/24] xfs: fix super block buf log item UAF during force shutdown
-Date: Fri, 26 Apr 2024 14:55:04 -0700
-Message-ID: <20240426215512.2673806-18-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 CANDIDATE 18/24] xfs: hoist refcount record merge predicates
+Date: Fri, 26 Apr 2024 14:55:05 -0700
+Message-ID: <20240426215512.2673806-19-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.44.0.769.g3c40516874-goog
 In-Reply-To: <20240426215512.2673806-1-leah.rumancik@gmail.com>
 References: <20240426215512.2673806-1-leah.rumancik@gmail.com>
@@ -74,145 +75,186 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Guo Xuenan <guoxuenan@huawei.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 575689fc0ffa6c4bb4e72fd18e31a6525a6124e0 ]
+[ Upstream commit 9d720a5a658f5135861773f26e927449bef93d61 ]
 
-xfs log io error will trigger xlog shut down, and end_io worker call
-xlog_state_shutdown_callbacks to unpin and release the buf log item.
-The race condition is that when there are some thread doing transaction
-commit and happened not to be intercepted by xlog_is_shutdown, then,
-these log item will be insert into CIL, when unpin and release these
-buf log item, UAF will occur. BTW, add delay before `xlog_cil_commit`
-can increase recurrence probability.
+Hoist these multiline conditionals into separate static inline helpers
+to improve readability and set the stage for corruption fixes that will
+be introduced in the next patch.
 
-The following call graph actually encountered this bad situation.
-fsstress                    io end worker kworker/0:1H-216
-                            xlog_ioend_work
-                              ->xlog_force_shutdown
-                                ->xlog_state_shutdown_callbacks
-                                  ->xlog_cil_process_committed
-                                    ->xlog_cil_committed
-                                      ->xfs_trans_committed_bulk
-->xfs_trans_apply_sb_deltas             ->li_ops->iop_unpin(lip, 1);
-  ->xfs_trans_getsb
-    ->_xfs_trans_bjoin
-      ->xfs_buf_item_init
-        ->if (bip) { return 0;} //relog
-->xlog_cil_commit
-  ->xlog_cil_insert_items //insert into CIL
-                                           ->xfs_buf_ioend_fail(bp);
-                                             ->xfs_buf_ioend
-                                               ->xfs_buf_item_done
-                                                 ->xfs_buf_item_relse
-                                                   ->xfs_buf_item_free
-
-when cil push worker gather percpu cil and insert super block buf log item
-into ctx->log_items then uaf occurs.
-
-==================================================================
-BUG: KASAN: use-after-free in xlog_cil_push_work+0x1c8f/0x22f0
-Write of size 8 at addr ffff88801800f3f0 by task kworker/u4:4/105
-
-CPU: 0 PID: 105 Comm: kworker/u4:4 Tainted: G W
-6.1.0-rc1-00001-g274115149b42 #136
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-1.13.0-1ubuntu1.1 04/01/2014
-Workqueue: xfs-cil/sda xlog_cil_push_work
-Call Trace:
- <TASK>
- dump_stack_lvl+0x4d/0x66
- print_report+0x171/0x4a6
- kasan_report+0xb3/0x130
- xlog_cil_push_work+0x1c8f/0x22f0
- process_one_work+0x6f9/0xf70
- worker_thread+0x578/0xf30
- kthread+0x28c/0x330
- ret_from_fork+0x1f/0x30
- </TASK>
-
-Allocated by task 2145:
- kasan_save_stack+0x1e/0x40
- kasan_set_track+0x21/0x30
- __kasan_slab_alloc+0x54/0x60
- kmem_cache_alloc+0x14a/0x510
- xfs_buf_item_init+0x160/0x6d0
- _xfs_trans_bjoin+0x7f/0x2e0
- xfs_trans_getsb+0xb6/0x3f0
- xfs_trans_apply_sb_deltas+0x1f/0x8c0
- __xfs_trans_commit+0xa25/0xe10
- xfs_symlink+0xe23/0x1660
- xfs_vn_symlink+0x157/0x280
- vfs_symlink+0x491/0x790
- do_symlinkat+0x128/0x220
- __x64_sys_symlink+0x7a/0x90
- do_syscall_64+0x35/0x80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-Freed by task 216:
- kasan_save_stack+0x1e/0x40
- kasan_set_track+0x21/0x30
- kasan_save_free_info+0x2a/0x40
- __kasan_slab_free+0x105/0x1a0
- kmem_cache_free+0xb6/0x460
- xfs_buf_ioend+0x1e9/0x11f0
- xfs_buf_item_unpin+0x3d6/0x840
- xfs_trans_committed_bulk+0x4c2/0x7c0
- xlog_cil_committed+0xab6/0xfb0
- xlog_cil_process_committed+0x117/0x1e0
- xlog_state_shutdown_callbacks+0x208/0x440
- xlog_force_shutdown+0x1b3/0x3a0
- xlog_ioend_work+0xef/0x1d0
- process_one_work+0x6f9/0xf70
- worker_thread+0x578/0xf30
- kthread+0x28c/0x330
- ret_from_fork+0x1f/0x30
-
-The buggy address belongs to the object at ffff88801800f388
- which belongs to the cache xfs_buf_item of size 272
-The buggy address is located 104 bytes inside of
- 272-byte region [ffff88801800f388, ffff88801800f498)
-
-The buggy address belongs to the physical page:
-page:ffffea0000600380 refcount:1 mapcount:0 mapping:0000000000000000
-index:0xffff88801800f208 pfn:0x1800e
-head:ffffea0000600380 order:1 compound_mapcount:0 compound_pincount:0
-flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
-raw: 001fffff80010200 ffffea0000699788 ffff88801319db50 ffff88800fb50640
-raw: ffff88801800f208 000000000015000a 00000001ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
- ffff88801800f280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff88801800f300: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
->ffff88801800f380: fc fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                                                             ^
- ffff88801800f400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff88801800f480: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
-==================================================================
-Disabling lock debugging due to kernel taint
-
-Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Xiao Yang <yangx.jy@fujitsu.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_buf_item.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/libxfs/xfs_refcount.c | 129 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 113 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 522d450a94b1..df7322ed73fa 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1018,6 +1018,8 @@ xfs_buf_item_relse(
- 	trace_xfs_buf_item_relse(bp, _RET_IP_);
- 	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 3f34bafe18dd..4408893333a6 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -815,11 +815,119 @@ xfs_refcount_find_right_extents(
+ /* Is this extent valid? */
+ static inline bool
+ xfs_refc_valid(
+-	struct xfs_refcount_irec	*rc)
++	const struct xfs_refcount_irec	*rc)
+ {
+ 	return rc->rc_startblock != NULLAGBLOCK;
+ }
  
-+	if (atomic_read(&bip->bli_refcount))
-+		return;
- 	bp->b_log_item = NULL;
- 	xfs_buf_rele(bp);
- 	xfs_buf_item_free(bip);
++static inline bool
++xfs_refc_want_merge_center(
++	const struct xfs_refcount_irec	*left,
++	const struct xfs_refcount_irec	*cleft,
++	const struct xfs_refcount_irec	*cright,
++	const struct xfs_refcount_irec	*right,
++	bool				cleft_is_cright,
++	enum xfs_refc_adjust_op		adjust,
++	unsigned long long		*ulenp)
++{
++	unsigned long long		ulen = left->rc_blockcount;
++
++	/*
++	 * To merge with a center record, both shoulder records must be
++	 * adjacent to the record we want to adjust.  This is only true if
++	 * find_left and find_right made all four records valid.
++	 */
++	if (!xfs_refc_valid(left)  || !xfs_refc_valid(right) ||
++	    !xfs_refc_valid(cleft) || !xfs_refc_valid(cright))
++		return false;
++
++	/* There must only be one record for the entire range. */
++	if (!cleft_is_cright)
++		return false;
++
++	/* The shoulder record refcounts must match the new refcount. */
++	if (left->rc_refcount != cleft->rc_refcount + adjust)
++		return false;
++	if (right->rc_refcount != cleft->rc_refcount + adjust)
++		return false;
++
++	/*
++	 * The new record cannot exceed the max length.  ulen is a ULL as the
++	 * individual record block counts can be up to (u32 - 1) in length
++	 * hence we need to catch u32 addition overflows here.
++	 */
++	ulen += cleft->rc_blockcount + right->rc_blockcount;
++	if (ulen >= MAXREFCEXTLEN)
++		return false;
++
++	*ulenp = ulen;
++	return true;
++}
++
++static inline bool
++xfs_refc_want_merge_left(
++	const struct xfs_refcount_irec	*left,
++	const struct xfs_refcount_irec	*cleft,
++	enum xfs_refc_adjust_op		adjust)
++{
++	unsigned long long		ulen = left->rc_blockcount;
++
++	/*
++	 * For a left merge, the left shoulder record must be adjacent to the
++	 * start of the range.  If this is true, find_left made left and cleft
++	 * contain valid contents.
++	 */
++	if (!xfs_refc_valid(left) || !xfs_refc_valid(cleft))
++		return false;
++
++	/* Left shoulder record refcount must match the new refcount. */
++	if (left->rc_refcount != cleft->rc_refcount + adjust)
++		return false;
++
++	/*
++	 * The new record cannot exceed the max length.  ulen is a ULL as the
++	 * individual record block counts can be up to (u32 - 1) in length
++	 * hence we need to catch u32 addition overflows here.
++	 */
++	ulen += cleft->rc_blockcount;
++	if (ulen >= MAXREFCEXTLEN)
++		return false;
++
++	return true;
++}
++
++static inline bool
++xfs_refc_want_merge_right(
++	const struct xfs_refcount_irec	*cright,
++	const struct xfs_refcount_irec	*right,
++	enum xfs_refc_adjust_op		adjust)
++{
++	unsigned long long		ulen = right->rc_blockcount;
++
++	/*
++	 * For a right merge, the right shoulder record must be adjacent to the
++	 * end of the range.  If this is true, find_right made cright and right
++	 * contain valid contents.
++	 */
++	if (!xfs_refc_valid(right) || !xfs_refc_valid(cright))
++		return false;
++
++	/* Right shoulder record refcount must match the new refcount. */
++	if (right->rc_refcount != cright->rc_refcount + adjust)
++		return false;
++
++	/*
++	 * The new record cannot exceed the max length.  ulen is a ULL as the
++	 * individual record block counts can be up to (u32 - 1) in length
++	 * hence we need to catch u32 addition overflows here.
++	 */
++	ulen += cright->rc_blockcount;
++	if (ulen >= MAXREFCEXTLEN)
++		return false;
++
++	return true;
++}
++
+ /*
+  * Try to merge with any extents on the boundaries of the adjustment range.
+  */
+@@ -861,23 +969,15 @@ xfs_refcount_merge_extents(
+ 		 (cleft.rc_blockcount == cright.rc_blockcount);
+ 
+ 	/* Try to merge left, cleft, and right.  cleft must == cright. */
+-	ulen = (unsigned long long)left.rc_blockcount + cleft.rc_blockcount +
+-			right.rc_blockcount;
+-	if (xfs_refc_valid(&left) && xfs_refc_valid(&right) &&
+-	    xfs_refc_valid(&cleft) && xfs_refc_valid(&cright) && cequal &&
+-	    left.rc_refcount == cleft.rc_refcount + adjust &&
+-	    right.rc_refcount == cleft.rc_refcount + adjust &&
+-	    ulen < MAXREFCEXTLEN) {
++	if (xfs_refc_want_merge_center(&left, &cleft, &cright, &right, cequal,
++				adjust, &ulen)) {
+ 		*shape_changed = true;
+ 		return xfs_refcount_merge_center_extents(cur, &left, &cleft,
+ 				&right, ulen, aglen);
+ 	}
+ 
+ 	/* Try to merge left and cleft. */
+-	ulen = (unsigned long long)left.rc_blockcount + cleft.rc_blockcount;
+-	if (xfs_refc_valid(&left) && xfs_refc_valid(&cleft) &&
+-	    left.rc_refcount == cleft.rc_refcount + adjust &&
+-	    ulen < MAXREFCEXTLEN) {
++	if (xfs_refc_want_merge_left(&left, &cleft, adjust)) {
+ 		*shape_changed = true;
+ 		error = xfs_refcount_merge_left_extent(cur, &left, &cleft,
+ 				agbno, aglen);
+@@ -893,10 +993,7 @@ xfs_refcount_merge_extents(
+ 	}
+ 
+ 	/* Try to merge cright and right. */
+-	ulen = (unsigned long long)right.rc_blockcount + cright.rc_blockcount;
+-	if (xfs_refc_valid(&right) && xfs_refc_valid(&cright) &&
+-	    right.rc_refcount == cright.rc_refcount + adjust &&
+-	    ulen < MAXREFCEXTLEN) {
++	if (xfs_refc_want_merge_right(&cright, &right, adjust)) {
+ 		*shape_changed = true;
+ 		return xfs_refcount_merge_right_extent(cur, &right, &cright,
+ 				aglen);
 -- 
 2.44.0.769.g3c40516874-goog
 
