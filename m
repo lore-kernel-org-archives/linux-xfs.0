@@ -1,50 +1,49 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08DAF25774;
-	Fri, 26 Apr 2024 23:46:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1DFB383B1;
+	Sat, 27 Apr 2024 03:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714175177; cv=none; b=PqSsUJevJ/eo9X3CEeOKe2Wqi2gHMeTDnDqp1BMYBMsEfh74LW6OwGipu0+GdBBHqdhmmq3npgINqP8IP/xymGHq2cdIYnHQvlfMGnMoM3sbjD8bb4zS0ScXWthbttFVwDcF++ctUj1VdlinAYuPxm5amRuOWWSz3nUqmKsF8nQ=
+	t=1714188417; cv=none; b=G5e2nXRJvSbSPymOApFAHFTQVY+Mb/YWYehM0LIsG444VIVIAQvxTlC2t5whitpnaVhW0fjV/A+axp/EiqldAAzsKv8BSufWRxgRfc1aBwMVtpM77gZgMHiP8vl6Qi7v0GciMCYt26TzS5WHm4Q/9qLQJ53Dnk/n93fdbXgJu/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714175177; c=relaxed/simple;
-	bh=shcFPaG02bDB4GVRHw+7yeBUIeLQfnWcPP4M6dkAQO0=;
+	s=arc-20240116; t=1714188417; c=relaxed/simple;
+	bh=rpuR8yy1xjzC30bcQqsO07LuNXGEevgvwHEcSYerdeM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gbXzjsBjvzT5KYAyJWpDZkCTg/rkMqqVycTH1k2zwuhRjFg+D2ry/uC2JucH6n6sTZDDYjaEYLIoUhuTUEVD2xPkRTl0mFTKZx+b4ZCaSftSk/3sxGmvUD3XL7xhS9jCg8Q3z721OqQIXLSW1G9mDQjuHcMSlBfa1COa8x1bfeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xRE0wDIs; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=q8jLS6Jcbl9UM3hn410zKo4Ovz9OzaOPHObeGswpHtNkJYAU1LfiePMkRhTkM1iwis8vF73ZiNdyN1NjmIt0TwFklXRCfrSuM9M4cmMwfW3C6SiSn46cEikSb24qp9gNqj7dI9vrrN5UpJfvgl3/9uJlH2ZVCn5L8FM3b/J29Do=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SAuVtdZF; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xRE0wDIs"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SAuVtdZF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=oEICw/YBQkHFydzURongpQCI84RNVUsQ3AXdXR1HsB8=; b=xRE0wDIs5SY5sV0mNmw7sdP037
-	4tOO5LC8H0SVowqjZeSy9lYEmZJYVFvcjBVXyNnehBzVqXcRwDjohOENq26j/98PrZkhAQP8qNrJk
-	yCEbmT7DXmmwydHutCZPtO8vBDheohXL91jYHolL5nYoy4K3FU6Yga6nYPJDS7xoxVmzZ+toNricm
-	rbnAabsp0fEd8cxbBi5hivc2rBXSDUMrSCkjDWPqh995LL41quiI2FQlmVNsIN+/4sJ2MbjmxH/84
-	5V3qxlcw9ou7VzvTUNMijxpdELciJt92Q3k7USXxzcUqmtDSBiRLbbpsTcdUxolacCAGcNUZzPxlj
-	ZeWjDZyg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s0VGd-0000000EOAk-0VYk;
-	Fri, 26 Apr 2024 23:46:11 +0000
-Date: Fri, 26 Apr 2024 16:46:11 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
+	bh=5v6AQgZQjyOeRuTWmiZF8n0lMYbUyrVMuDyPiZp+bGA=; b=SAuVtdZFgtlC5/s8e3mzOSRlKV
+	BnMVkhauKdWMzRFJO8w3xTA2ElRZcxShO2vVWW+uCiwumTOxuOfwej3B9mS+FNlQRDe/NR0Zw6e8C
+	z1Jx6rtjKX5dFDw21FlGbF4hQLH33bThbEbQcxeGrFnNnYoLjkplh4uw3lCpfNlH66LuFAPoneK5n
+	b3KhG/3zzpCwzWKR60npeaC1LfLPK5NEM8LdCZozpP2F9JlIxtvO+4/kmpZIGhyt8uHVay8rOD77X
+	mfivdSttI7aE7keKZm0sWYxdsPgMuNFZHYq1VvNtHBwEF6vzdapQMvt+tjyn/bFTvc8QRK/YEwXwk
+	8Nm4zGQg==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s0Yi4-00000006aiS-2RiT;
+	Sat, 27 Apr 2024 03:26:44 +0000
+Date: Sat, 27 Apr 2024 04:26:44 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, djwong@kernel.org,
 	brauner@kernel.org, david@fromorbit.com, chandan.babu@oracle.com,
 	akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org,
 	hare@suse.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, gost.dev@samsung.com,
+	linux-xfs@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
 	p.raghav@samsung.com
-Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum
- folio order requirement
-Message-ID: <Ziw8w3P9vljrO9JV@bombadil.infradead.org>
+Subject: Re: [PATCH v4 07/11] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Message-ID: <ZixwdKxqYWq4-rxd@casper.infradead.org>
 References: <20240425113746.335530-1-kernel@pankajraghav.com>
- <20240425113746.335530-6-kernel@pankajraghav.com>
- <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
- <Zir5n6JNiX14VoPm@bombadil.infradead.org>
+ <20240425113746.335530-8-kernel@pankajraghav.com>
+ <ZitIK5OnR7ZNY0IG@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,48 +52,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zir5n6JNiX14VoPm@bombadil.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <ZitIK5OnR7ZNY0IG@infradead.org>
 
-On Thu, Apr 25, 2024 at 05:47:28PM -0700, Luis Chamberlain wrote:
-> On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
-> > On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) wrote:
-> > > From: Pankaj Raghav <p.raghav@samsung.com>
-> > > 
-> > > using that API for LBS is resulting in an NULL ptr dereference
-> > > error in the writeback path [1].
-> > >
-> > > [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
+On Thu, Apr 25, 2024 at 11:22:35PM -0700, Christoph Hellwig wrote:
+> On Thu, Apr 25, 2024 at 01:37:42PM +0200, Pankaj Raghav (Samsung) wrote:
+> > From: Pankaj Raghav <p.raghav@samsung.com>
 > > 
-> >  How would I go about reproducing this?
+> > iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+> > < fs block size. iomap_dio_zero() has an implicit assumption that fs block
+> > size < page_size. This is true for most filesystems at the moment.
+> > 
+> > If the block size > page size, this will send the contents of the page
+> > next to zero page(as len > PAGE_SIZE) to the underlying block device,
+> > causing FS corruption.
+> > 
+> > iomap is a generic infrastructure and it should not make any assumptions
+> > about the fs block size and the page size of the system.
 > 
-> Using kdevops this is easy:
-> 
-> make defconfig-lbs-xfs-small -j $(nproc)
-> make -j $(nproc)
+> So what happened to the plan to making huge_zero_page a folio and have
 
-I forgot after the above:
+There's a series of commits in linux-mm with the titles:
 
-make bringup
+      sparc: use is_huge_zero_pmd()
+      mm: add is_huge_zero_folio()
+      mm: add pmd_folio()
+      mm: convert migrate_vma_collect_pmd to use a folio
+      mm: convert huge_zero_page to huge_zero_folio
+      mm: convert do_huge_pmd_anonymous_page to huge_zero_folio
+      dax: use huge_zero_folio
+      mm: rename mm_put_huge_zero_page to mm_put_huge_zero_folio
 
-> make fstests
-> make linux
-> make fstests-baseline TESTS=generic/447 COUNT=10
-> tail -f guestfs/*-xfs-reflink-16k-4ks/console.log
+> it available for non-hugetlb setups?  Not only would this be cleaner
+> and more efficient, but it would actually work for the case where you'd
+> have to zero more than 1MB on a 4k PAGE_SIZE system, which doesn't
+> seem impossible with 2MB folios.
 
-The above tail command needs sudo prefix for now too.
-
-> or
-> sudo virsh list
-> sudo virsh console ${foo}-xfs-reflink-16k-4ks
-> 
-> Where $foo is the value of CONFIG_KDEVOPS_HOSTS_PREFIX in .config for
-> your kdevops run.
->
-> I didn't have time to verify if the above commands for kdevops worked
-
-I did now, I forgot to git push commits to kdevops yesterday but I
-confirm the above steps can be used to repdroduce this issue now.
-
-  Luis
-
+It is available for non-hugetlb setups.  It is however allocated on
+demand, so it might not be available.
