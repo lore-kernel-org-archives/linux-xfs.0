@@ -1,51 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC9D43AA2;
-	Sat, 27 Apr 2024 05:12:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A0D3613E;
+	Sat, 27 Apr 2024 05:56:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714194726; cv=none; b=qWbyo2sJChzboGyr/alocTccwooJH5tUb/VR9JaultdwXDCvJ6+LNAbg3SRb4quy+Pm81gS7vCnLkmzn6a4LtIO55z19J6IDJ04aKFslDDQ3j7lmdIrKKf3SXMPoGuvxA4iaLHRDxc1linCkJIz31p7fhTa1rXSTxIlj7LeJl4o=
+	t=1714197407; cv=none; b=gJ+2zJzQQ6gXllyQW19VMX7iayYIsarAH7lUDqKmSYWNkl+5hO1PPpHKC6TVvkFn79inBjAwIujjSgFyyxL6/nciuzx3m6jx635FvAeFv0zRHy9HWrxIGlPMFGa5UQA/zh6+sIX4Ju4ZBbgAXjwkZpE5VbMDJ17aAVMCNfLyfD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714194726; c=relaxed/simple;
-	bh=O7G1N5kUJ42MLKk6C0TENm1uIF0EeIdbs+5O5igP4mM=;
+	s=arc-20240116; t=1714197407; c=relaxed/simple;
+	bh=ifCmRoCuifRwOAn8KyOhJeBAIlHoij5W1CclBwYKMGc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bYdJxzRiPrk004a42Nprei8ZdQAQFMVLFe14KYvr8kekyw3qz46DoMQq3yGXVEp1YNlzhZIgIZrHyDLp/yaRYmBzi2TwIWInXH7aOHP2VYxjmBtkqrtgP+T/1v7BozwVbQNk1D0kBuun2SSPpxaXmGLRGdajt3oi+jbEWQEuEDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UUfaZcJn; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=P0kUXaohg6NDWDziOgkp9AENTXWUvFg4vi6qS8ktAfQHnK5l9qA/cnHTXf9ZvD+/9W3u88STcLTy2IqszhVwjrlIvFwDJsJgTr4IeBGANoO8ZuKYw0quHrA+4Kzx4Eq4lnhkcK3HUQjy93soNw5g8R2IIfIa5j+CiPHGUjA4XiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=s+09236g; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UUfaZcJn"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="s+09236g"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=oxXXlnoPot77a+fvQmA9reMneHMSrAR6fk9Rds04GtI=; b=UUfaZcJnJ53B+b0GduvU399iAV
-	SCSZcYaAdxoEBh4BPtjZEp314+5gE5ekYonF6kmrewSca1uEJYQr2era5a2qiJekM3/8Qyth9pQPj
-	pCOxvaLF+JdOhWoKZ50z4H5tknIoecADa+IxwEpW3T/wRAqUSPEmUsRmMbkg0ddXnpmAD1Xjo//B+
-	3BsTusR3PaYkr+a/BtDLSQHrfWWdjVsBrlrqVOavasL0QOV/83uZeoZ7m0CYTWWiTlEEHzrbBqhNx
-	Beoedwvj5cIJABy0xyjsnZkJcjaWOJDLE+Ae8J+gBneZEGamVxbUvdgUDo5Zkc78hGmWSzvJuc6vQ
-	13wZaVJA==;
+	bh=493wgnpOJqFydWUTV4V/S2Y8tTPRxpsJi/rxEz2QTo0=; b=s+09236gFo5oebAofXuiWPelY5
+	7DRn5a2tgg1n0LpSJ/Y/SH6rwNlMCzISERqDUG4QJCZ+SFKfrAyciMyNnV6Lp4HVr/ZX9tkemaIH8
+	UOVfPxeafT95TpmYxKa1+zZUMOXpdYuqUWlxXiGGD4LTWtgn6PRziE6msCuXR3NrEy3hRgodCq25U
+	vT33BFgzQXPCGnbtbBdg6UCjaPLWINc0TabFbZUEUWnLjiqpSV75l7eW6+7xhYfT83dErSqdaEeym
+	oUVnIc4Fl0XAHdWaeZ+ZugoWtWfTwzjDK1sMW/uxO0rzXfKyE3d8ReQYxb9wY/nfJhut/EdNmoUVL
+	P3H5wsEg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s0aLx-0000000ErB1-3M92;
-	Sat, 27 Apr 2024 05:12:01 +0000
-Date: Fri, 26 Apr 2024 22:12:01 -0700
+	id 1s0b3F-0000000Eva8-1Kn2;
+	Sat, 27 Apr 2024 05:56:45 +0000
+Date: Fri, 26 Apr 2024 22:56:45 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Christoph Hellwig <hch@infradead.org>, willy@infradead.org,
-	djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
-	chandan.babu@oracle.com, akpm@linux-foundation.org,
-	linux-fsdevel@vger.kernel.org, hare@suse.de,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
-	p.raghav@samsung.com
-Subject: Re: [PATCH v4 07/11] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <ZiyJITld-KdZeOrC@infradead.org>
-References: <20240425113746.335530-1-kernel@pankajraghav.com>
- <20240425113746.335530-8-kernel@pankajraghav.com>
- <ZitIK5OnR7ZNY0IG@infradead.org>
- <20240426114301.rtrqsv653a6vkbh6@quentin>
+To: David Disseldorp <ddiss@suse.de>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] common/config: export TEST_DEV for mkfs.xfs
+Message-ID: <ZiyTneFh5GWM6Rs_@infradead.org>
+References: <20240411063234.30110-1-ddiss@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,18 +44,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240426114301.rtrqsv653a6vkbh6@quentin>
+In-Reply-To: <20240411063234.30110-1-ddiss@suse.de>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Apr 26, 2024 at 11:43:01AM +0000, Pankaj Raghav (Samsung) wrote:
-> Because allocating it during runtime will defeat the purpose.
+On Thu, Apr 11, 2024 at 04:32:33PM +1000, David Disseldorp wrote:
+> As of xfsprogs commit 6e0ed3d1 ("mkfs: stop allowing tiny filesystems")
+> attempts to create XFS filesystems sized under 300M fail, unless
+> TEST_DIR, TEST_DEV and QA_CHECK_FS environment variables are exported
+> (or a --unsupported mkfs parameter is provided).
+> 
+> TEST_DIR and QA_CHECK_FS are already exported, while TEST_DEV may only
+> be locally set if provided via e.g. configs/$HOSTNAME.config. Explicitly
+> export TEST_DEV to ensure that tests which call _scratch_mkfs_sized()
+> with an fssize under 300M run normally.
 
-Well, what runtime?  Either way it seems like we have the infrastructure
-now based on the comment from willy.
+As for fixing the immediate problem this looks fine:
 
-> In anycase, I would like to pursue huge_zero_page folio separately
-> from this series. Also iomap_dio_zero() only pads a fs block with
-> zeroes, which should never be > 64k for XFS.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Only if you are limited to 64k block size.
+But adding the xfs list as allowing to create a smaller than supported
+file system just for testing is pretty silly.  If we don't want to
+support these tiny file systems, we should also not use them for
+testing.  The best way to port over the existing tests to a larger
+size would probably be to round up the size to the minimum supported
+one and then fill the space?
 
