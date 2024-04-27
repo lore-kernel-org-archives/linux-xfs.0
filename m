@@ -1,480 +1,127 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C65CC3F9D4
-	for <linux-xfs@vger.kernel.org>; Sat, 27 Apr 2024 05:04:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B0B7358A7;
+	Sat, 27 Apr 2024 05:05:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714194260; cv=none; b=SsAsMcZgWcB5ytLciPwWNuUuLRXhAvfvxTLSrUOPJF6lrHHrMotjSRHLU9AfZyzO05W50bx6oeB/unu/aTC3vdM4dMd78VfcMg5DfAe+aLdIQsZTSlJ2ekF+XYNeop+H53b6NRIv1buqJtqigDeTWIidN4NsPnyztFB9WShQLcg=
+	t=1714194319; cv=none; b=Lq75qs3UmgjMGCpWg/jXYR+6154Kt/dOZqrlcNSNmApA4W9nif/RbdcOn+to+b4+QK5Bb5NY7v1KMMwxyEtilJSTFyWO5k7SjDiFxLAJbQ8firgk0NOw8o+k0LSEDvtPdwPOrwb7+29aM9Lo79akRVgDiPFWCIg4B3suYFnMF/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714194260; c=relaxed/simple;
-	bh=BonDpfRBwoIc8DV7Gx2T0UntdvbW9TeZYIsux3DFf9Y=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eFDmj+bXIpuQpVMqpaCprarigQXBEjUfcSYhuTccqLTzC4uxLTsYZ+j0TZuqEJO3kTPDwbls1W+wxbEmf57yiHbSgnJBVc77+FQwstzA5ZKRY3pS+acVSBchdMk1NjMf4ON5SuGKfc5q7Vl2zO/QH6+FtUAvtAKHGkZwIcG+AFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qI/WYdNq; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1714194319; c=relaxed/simple;
+	bh=Pn09BqCdvGBpv9oyzNDTerZgLB2/sM1Oc/sK0a/sceA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p0QFFh1RSLq2shJHxwpc6ZK7tfWmhZsXQSvopKxYj3vweUlX5E3Mqf0saPvNnHxObE7OLMMFKb6VvRZ3arkHib3x1kJD+0Tm6FlNb58wKom8+ghnb+1bv8L9lcUz915mlBZAlAjHAJwESZgFRIR92lZaj77VuZ/nClLY1V1UqGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E/3L/32v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qI/WYdNq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=gRXSbaUQQsbACBnWBM3GF1q6Gx1sUOPDgf5Usj7JzzE=; b=qI/WYdNq9UkE/G/kr3fJlv0W3N
-	9DlovgcbmSeLOfSZrdk9NE4EGFG2JoCUPnKsjtSTdhHFGBVVQemdtVMJE4bA0BFJyBlKH7le4QB2+
-	ly7dSIiU3W7DqfljqKDYpVNvYdWpNL76eS/vtCaSeIECnDenZNllkhvfPSOXcmWPsWrlQ8YuQLKLY
-	xwlJFVTK1fG+HnSfTZURTOU9+lTRn4QhZsvkk4/eQr8nWAzktivSmB91qSX4oy71H9WfcAh+kGT7M
-	Uibg5lv+mVOmmY2d3OI4aAjbbCkDJhDZKzeh3hzWzRhY7R6mR0T8rk0vO+TcofMMa3GQFzWjM0wJk
-	C+44Gp8Q==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s0aET-0000000EqCt-33KC;
-	Sat, 27 Apr 2024 05:04:18 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: refactor dir format helpers
-Date: Sat, 27 Apr 2024 07:04:00 +0200
-Message-Id: <20240427050400.1126656-6-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240427050400.1126656-1-hch@lst.de>
-References: <20240427050400.1126656-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E/3L/32v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B20C113CE;
+	Sat, 27 Apr 2024 05:05:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1714194318;
+	bh=Pn09BqCdvGBpv9oyzNDTerZgLB2/sM1Oc/sK0a/sceA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=E/3L/32vgCHnYYhzIyzQIsZUl9VXAwaHmX1BhU5Z4GpgyHvNrONVpPJ5aNxAyKq3A
+	 R1JcQ++zUGoYG4SQDRxm6YvNjksF8eQsqSaNebe4BzrGHsoFVawC/qDPyr7I49tX44
+	 yK9OvxPjsAMH6xP1sNe8+c9rBNm3GwO8UzJ/aLFCXL9xTrJ7sZPT8tkeN4+h1T7FHf
+	 2+NZnL+0qxtAT36Lk8YakS+Y8kphqBxNjpOXX4OyyiNjUSij9oQ0W3pVVCi2J578QC
+	 G0MdmASHwjKW0NHMfABrcuSFByPhmFlrMUmTBUfJHQl/UmgzcSoYJ2tSJoRkdYOYQQ
+	 iULwLzWScBHcw==
+Date: Fri, 26 Apr 2024 22:05:17 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	willy@infradead.org, brauner@kernel.org, david@fromorbit.com,
+	chandan.babu@oracle.com, akpm@linux-foundation.org,
+	linux-fsdevel@vger.kernel.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v4 00/11] enable bs > ps in XFS
+Message-ID: <20240427050517.GC360898@frogsfrogsfrogs>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <87y18zxvpd.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87y18zxvpd.fsf@gmail.com>
 
-Add a new enum and a xfs_dir2_format helper that returns it to allow
-the code to switch on the format of a directory in a single operation
-and switch all helpers of xfs_dir2_isblock and xfs_dir2_isleaf to it.
+On Sat, Apr 27, 2024 at 10:12:38AM +0530, Ritesh Harjani wrote:
+> "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com> writes:
+> 
+> > From: Pankaj Raghav <p.raghav@samsung.com>
+> >
+> > This is the fourth version of the series that enables block size > page size
+> > (Large Block Size) in XFS. The context and motivation can be seen in cover
+> > letter of the RFC v1[1]. We also recorded a talk about this effort at LPC [3],
+> > if someone would like more context on this effort.
+> >
+> > This series does not split a folio during truncation even though we have
+> > an API to do so due to some issues with writeback. While it is not a
+> > blocker, this feature can be added as a future improvement once we
+> > get the base patches upstream (See patch 7).
+> >
+> > A lot of emphasis has been put on testing using kdevops. The testing has
+> > been split into regression and progression.
+> >
+> > Regression testing:
+> > In regression testing, we ran the whole test suite to check for
+> > *regression on existing profiles due to the page cache changes.
+> >
+> > No regression was found with the patches added on top.
+> >
+> > Progression testing:
+> > For progression testing, we tested for 8k, 16k, 32k and 64k block sizes.
+> > To compare it with existing support, an ARM VM with 64k base page system
+> > (without our patches) was used as a reference to check for actual failures
+> > due to LBS support in a 4k base page size system.
+> >
+> > There are some tests that assumes block size < page size that needs to
+> > be fixed. I have a tree with fixes for xfstests here [6], which I will be
+> > sending soon to the list. Already a part of this has been upstreamed to
+> > fstest.
+> >
+> > No new failures were found with the LBS support.
+> 
+> I just did portability testing by creating XFS with 16k bs on x86 VM (4k
+> pagesize), created some files + checksums. I then moved the disk to
+> Power VM with 64k pagesize and mounted this. I was able to mount and
+> all the file checksums passed.
+> 
+> Then I did the vice versa, created a filesystem on Power VM with 64k
+> blocksize and created 10 files with random data of 10MB each. I then
+> hotplugged this device out from Power and plugged it into x86 VM and
+> mounted it.
+> 
+> <Logs of the 2nd operation>
+> ~# mount /dev/vdk /mnt1/
+> [   35.145350] XFS (vdk): EXPERIMENTAL: Filesystem with Large Block Size (65536 bytes) enabled.
+> [   35.149858] XFS (vdk): Mounting V5 Filesystem 91933a8b-1370-4931-97d1-c21213f31f8f
+> [   35.227459] XFS (vdk): Ending clean mount
+> [   35.235090] xfs filesystem being mounted at /mnt1 supports timestamps until 2038-01-19 (0x7fffffff)
+> ~# cd /mnt1/
+> ~# sha256sum -c checksums 
+> file-1.img: OK
+> file-2.img: OK
+> file-3.img: OK
+> file-4.img: OK
+> file-5.img: OK
+> file-6.img: OK
+> file-7.img: OK
+> file-8.img: OK
+> file-9.img: OK
+> file-10.img: OK
+> 
+> So thanks for this nice portability which this series offers :) 
 
-This also removes the explicit xfs_iread_extents call in a few of the
-call sites given that xfs_bmap_last_offset already takes care of it
-underneath.
+Yessss this is awesome to see this coming together after many years!
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_dir2.c     | 188 ++++++++++++++---------------------
- fs/xfs/libxfs/xfs_dir2.h     |  12 ++-
- fs/xfs/libxfs/xfs_exchmaps.c |   9 +-
- fs/xfs/scrub/dir.c           |   3 +-
- fs/xfs/scrub/readdir.c       |  24 ++---
- fs/xfs/xfs_dir2_readdir.c    |  19 ++--
- 6 files changed, 105 insertions(+), 150 deletions(-)
+--D
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index d3d4d80c2098d3..457f9a38f85045 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -256,31 +256,60 @@ xfs_dir_init(
- 	return error;
- }
- 
-+enum xfs_dir2_fmt
-+xfs_dir2_format(
-+	struct xfs_da_args	*args,
-+	int			*error)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_da_geometry	*geo = mp->m_dir_geo;
-+	xfs_fileoff_t		eof;
-+
-+	xfs_assert_ilocked(dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
-+
-+	*error = 0;
-+	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+		return XFS_DIR2_FMT_SF;
-+
-+	*error = xfs_bmap_last_offset(dp, &eof, XFS_DATA_FORK);
-+	if (*error)
-+		return XFS_DIR2_FMT_ERROR;
-+
-+	if (eof == XFS_B_TO_FSB(mp, geo->blksize)) {
-+		if (XFS_IS_CORRUPT(mp, dp->i_disk_size != geo->blksize)) {
-+			xfs_da_mark_sick(args);
-+			*error = -EFSCORRUPTED;
-+			return XFS_DIR2_FMT_ERROR;
-+		}
-+		return XFS_DIR2_FMT_BLOCK;
-+	}
-+	if (eof == geo->leafblk + geo->fsbcount)
-+		return XFS_DIR2_FMT_LEAF;
-+	return XFS_DIR2_FMT_NODE;
-+}
-+
- int
- xfs_dir_createname_args(
- 	struct xfs_da_args	*args)
- {
--	bool			is_block, is_leaf;
- 	int			error;
- 
- 	if (!args->inumber)
- 		args->op_flags |= XFS_DA_OP_JUSTCHECK;
- 
--	if (args->dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+	switch (xfs_dir2_format(args, &error)) {
-+	case XFS_DIR2_FMT_SF:
- 		return xfs_dir2_sf_addname(args);
--
--	error = xfs_dir2_isblock(args, &is_block);
--	if (error)
--		return error;
--	if (is_block)
-+	case XFS_DIR2_FMT_BLOCK:
- 		return xfs_dir2_block_addname(args);
--
--	error = xfs_dir2_isleaf(args, &is_leaf);
--	if (error)
--		return error;
--	if (is_leaf)
-+	case XFS_DIR2_FMT_LEAF:
- 		return xfs_dir2_leaf_addname(args);
--	return xfs_dir2_node_addname(args);
-+	case XFS_DIR2_FMT_NODE:
-+		return xfs_dir2_node_addname(args);
-+	default:
-+		return error;
-+	}
- }
- 
- /*
-@@ -359,36 +388,25 @@ int
- xfs_dir_lookup_args(
- 	struct xfs_da_args	*args)
- {
--	bool			is_block, is_leaf;
- 	int			error;
- 
--	if (args->dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-+	switch (xfs_dir2_format(args, &error)) {
-+	case XFS_DIR2_FMT_SF:
- 		error = xfs_dir2_sf_lookup(args);
--		goto out;
--	}
--
--	/* dir2 functions require that the data fork is loaded */
--	error = xfs_iread_extents(args->trans, args->dp, XFS_DATA_FORK);
--	if (error)
--		goto out;
--
--	error = xfs_dir2_isblock(args, &is_block);
--	if (error)
--		goto out;
--
--	if (is_block) {
-+		break;
-+	case XFS_DIR2_FMT_BLOCK:
- 		error = xfs_dir2_block_lookup(args);
--		goto out;
--	}
--
--	error = xfs_dir2_isleaf(args, &is_leaf);
--	if (error)
--		goto out;
--	if (is_leaf)
-+		break;
-+	case XFS_DIR2_FMT_LEAF:
- 		error = xfs_dir2_leaf_lookup(args);
--	else
-+		break;
-+	case XFS_DIR2_FMT_NODE:
- 		error = xfs_dir2_node_lookup(args);
--out:
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	if (error != -EEXIST)
- 		return error;
- 	return 0;
-@@ -448,24 +466,20 @@ int
- xfs_dir_removename_args(
- 	struct xfs_da_args	*args)
- {
--	bool			is_block, is_leaf;
- 	int			error;
- 
--	if (args->dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+	switch (xfs_dir2_format(args, &error)) {
-+	case XFS_DIR2_FMT_SF:
- 		return xfs_dir2_sf_removename(args);
--
--	error = xfs_dir2_isblock(args, &is_block);
--	if (error)
--		return error;
--	if (is_block)
-+	case XFS_DIR2_FMT_BLOCK:
- 		return xfs_dir2_block_removename(args);
--
--	error = xfs_dir2_isleaf(args, &is_leaf);
--	if (error)
--		return error;
--	if (is_leaf)
-+	case XFS_DIR2_FMT_LEAF:
- 		return xfs_dir2_leaf_removename(args);
--	return xfs_dir2_node_removename(args);
-+	case XFS_DIR2_FMT_NODE:
-+		return xfs_dir2_node_removename(args);
-+	default:
-+		return error;
-+	}
- }
- 
- /*
-@@ -509,25 +523,20 @@ int
- xfs_dir_replace_args(
- 	struct xfs_da_args	*args)
- {
--	bool			is_block, is_leaf;
- 	int			error;
- 
--	if (args->dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+	switch (xfs_dir2_format(args, &error)) {
-+	case XFS_DIR2_FMT_SF:
- 		return xfs_dir2_sf_replace(args);
--
--	error = xfs_dir2_isblock(args, &is_block);
--	if (error)
--		return error;
--	if (is_block)
-+	case XFS_DIR2_FMT_BLOCK:
- 		return xfs_dir2_block_replace(args);
--
--	error = xfs_dir2_isleaf(args, &is_leaf);
--	if (error)
--		return error;
--	if (is_leaf)
-+	case XFS_DIR2_FMT_LEAF:
- 		return xfs_dir2_leaf_replace(args);
--
--	return xfs_dir2_node_replace(args);
-+	case XFS_DIR2_FMT_NODE:
-+		return xfs_dir2_node_replace(args);
-+	default:
-+		return error;
-+	}
- }
- 
- /*
-@@ -633,57 +642,6 @@ xfs_dir2_grow_inode(
- 	return 0;
- }
- 
--/*
-- * See if the directory is a single-block form directory.
-- */
--int
--xfs_dir2_isblock(
--	struct xfs_da_args	*args,
--	bool			*isblock)
--{
--	struct xfs_mount	*mp = args->dp->i_mount;
--	xfs_fileoff_t		eof;
--	int			error;
--
--	error = xfs_bmap_last_offset(args->dp, &eof, XFS_DATA_FORK);
--	if (error)
--		return error;
--
--	*isblock = false;
--	if (XFS_FSB_TO_B(mp, eof) != args->geo->blksize)
--		return 0;
--
--	*isblock = true;
--	if (XFS_IS_CORRUPT(mp, args->dp->i_disk_size != args->geo->blksize)) {
--		xfs_da_mark_sick(args);
--		return -EFSCORRUPTED;
--	}
--	return 0;
--}
--
--/*
-- * See if the directory is a single-leaf form directory.
-- */
--int
--xfs_dir2_isleaf(
--	struct xfs_da_args	*args,
--	bool			*isleaf)
--{
--	xfs_fileoff_t		eof;
--	int			error;
--
--	error = xfs_bmap_last_offset(args->dp, &eof, XFS_DATA_FORK);
--	if (error)
--		return error;
--
--	*isleaf = false;
--	if (eof != args->geo->leafblk + args->geo->fsbcount)
--		return 0;
--
--	*isleaf = true;
--	return 0;
--}
--
- /*
-  * Remove the given block from the directory.
-  * This routine is used for data and free blocks, leaf/node are done
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 6c00fe24a8987e..6dbe6e9ecb491f 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -36,6 +36,16 @@ xfs_dir2_samename(
- 	return !memcmp(n1->name, n2->name, n1->len);
- }
- 
-+enum xfs_dir2_fmt {
-+	XFS_DIR2_FMT_SF,
-+	XFS_DIR2_FMT_BLOCK,
-+	XFS_DIR2_FMT_LEAF,
-+	XFS_DIR2_FMT_NODE,
-+	XFS_DIR2_FMT_ERROR,
-+};
-+
-+enum xfs_dir2_fmt xfs_dir2_format(struct xfs_da_args *args, int *error);
-+
- /*
-  * Convert inode mode to directory entry filetype
-  */
-@@ -79,8 +89,6 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
- /*
-  * Interface routines used by userspace utilities
-  */
--extern int xfs_dir2_isblock(struct xfs_da_args *args, bool *isblock);
--extern int xfs_dir2_isleaf(struct xfs_da_args *args, bool *isleaf);
- extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
- 				struct xfs_buf *bp);
- 
-diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
-index 44ab6a9235c0bd..2021396651de27 100644
---- a/fs/xfs/libxfs/xfs_exchmaps.c
-+++ b/fs/xfs/libxfs/xfs_exchmaps.c
-@@ -465,17 +465,12 @@ xfs_exchmaps_dir_to_sf(
- 	};
- 	struct xfs_dir2_sf_hdr	sfh;
- 	struct xfs_buf		*bp;
--	bool			isblock;
- 	int			size;
--	int			error;
-+	int			error = 0;
- 
--	error = xfs_dir2_isblock(&args, &isblock);
--	if (error)
-+	if (xfs_dir2_format(&args, &error) != XFS_DIR2_FMT_BLOCK)
- 		return error;
- 
--	if (!isblock)
--		return 0;
--
- 	error = xfs_dir3_block_read(tp, xmi->xmi_ip2, xmi->xmi_ip2->i_ino, &bp);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 62474d0557c41a..bf9199e8df633f 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -808,7 +808,8 @@ xchk_directory_blocks(
- 	free_lblk = XFS_B_TO_FSB(mp, XFS_DIR2_FREE_OFFSET);
- 
- 	/* Is this a block dir? */
--	error = xfs_dir2_isblock(&args, &is_block);
-+	if (xfs_dir2_format(&args, &error) == XFS_DIR2_FMT_BLOCK)
-+		is_block = true;
- 	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
- 		goto out;
- 
-diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
-index 0ac77359d8e9f8..01c9a2dc0f2c48 100644
---- a/fs/xfs/scrub/readdir.c
-+++ b/fs/xfs/scrub/readdir.c
-@@ -276,7 +276,6 @@ xchk_dir_walk(
- 		.trans		= sc->tp,
- 		.owner		= dp->i_ino,
- 	};
--	bool			isblock;
- 	int			error;
- 
- 	if (xfs_is_shutdown(dp->i_mount))
-@@ -285,22 +284,17 @@ xchk_dir_walk(
- 	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- 	xfs_assert_ilocked(dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
- 
--	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+	switch (xfs_dir2_format(&args, &error)) {
-+	case XFS_DIR2_FMT_SF:
- 		return xchk_dir_walk_sf(sc, dp, dirent_fn, priv);
--
--	/* dir2 functions require that the data fork is loaded */
--	error = xfs_iread_extents(sc->tp, dp, XFS_DATA_FORK);
--	if (error)
--		return error;
--
--	error = xfs_dir2_isblock(&args, &isblock);
--	if (error)
--		return error;
--
--	if (isblock)
-+	case XFS_DIR2_FMT_BLOCK:
- 		return xchk_dir_walk_block(sc, dp, dirent_fn, priv);
--
--	return xchk_dir_walk_leaf(sc, dp, dirent_fn, priv);
-+	case XFS_DIR2_FMT_LEAF:
-+	case XFS_DIR2_FMT_NODE:
-+		return xchk_dir_walk_leaf(sc, dp, dirent_fn, priv);
-+	default:
-+		return error;
-+	}
- }
- 
- /*
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index b3abad5a6cd800..06ac5a7de60a04 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -516,7 +516,6 @@ xfs_readdir(
- {
- 	struct xfs_da_args	args = { NULL };
- 	unsigned int		lock_mode;
--	bool			isblock;
- 	int			error;
- 
- 	trace_xfs_readdir(dp);
-@@ -539,18 +538,18 @@ xfs_readdir(
- 		return xfs_dir2_sf_getdents(&args, ctx);
- 
- 	lock_mode = xfs_ilock_data_map_shared(dp);
--	error = xfs_dir2_isblock(&args, &isblock);
--	if (error)
--		goto out_unlock;
--
--	if (isblock) {
-+	switch (xfs_dir2_format(&args, &error)) {
-+	case XFS_DIR2_FMT_BLOCK:
- 		error = xfs_dir2_block_getdents(&args, ctx, &lock_mode);
--		goto out_unlock;
-+		break;
-+	case XFS_DIR2_FMT_LEAF:
-+	case XFS_DIR2_FMT_NODE:
-+		error = xfs_dir2_leaf_getdents(&args, ctx, bufsize, &lock_mode);
-+		break;
-+	default:
-+		break;
- 	}
- 
--	error = xfs_dir2_leaf_getdents(&args, ctx, bufsize, &lock_mode);
--
--out_unlock:
- 	if (lock_mode)
- 		xfs_iunlock(dp, lock_mode);
- 	return error;
--- 
-2.39.2
-
+> -ritesh
+> 
+> 
