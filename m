@@ -1,73 +1,53 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16167524B7
-	for <linux-xfs@vger.kernel.org>; Sun, 28 Apr 2024 09:03:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9286EB661;
+	Sun, 28 Apr 2024 20:59:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714294993; cv=none; b=JcwS73u7lthOOu4hAKwgiGesv5XHFGaS55FdrattWISaLz7M7F3NVOZaq2AHIEJeZUMc8U/lsI9IfCtDqRfb5e1IXBuf1RIaP1aC1B52+TWmZorRPtxUIVaHPmURG09hpQq6BRYDAr0avXM85sLxjTYFs4EiQMArHwIjvbEZZew=
+	t=1714337966; cv=none; b=U/byvuR7mpS3YDw7x1fKTZA1hFGLZfwJ31SvR6yE3OrqSYkIznjqg4S/9GeUWpQqSX5F2k4Q2ytus/qGT7xG7oF9bKDgwxcDovbUz48oBImBxgxi8SlsEl+Alg5NwdPOxFRbRvapBTL0AODSBVCVQ14sIuo74Ll0//FnngVKj1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714294993; c=relaxed/simple;
-	bh=HE6YEx6iyY9zD9AH18rT5nCOEkYRCz6W95mci+l+20M=;
+	s=arc-20240116; t=1714337966; c=relaxed/simple;
+	bh=5Kbw4/D6LUjCS3NHHCH6xj23QMQ+Nuis92riDkbC/Z4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PcP7X8gr6F+4boAQgoSqdfaLdCKFlflNq3mx46QhqZsRdk4qUfLrI4vOLR13wcVMlaGdPLd5+TFMs+o4Vf1x0r7wgEtX4QfUvJFxd8pdqf+6H7hf1f8xSK2cYEXWXLlTa42s3zPDz4mwtvhtkHNUI3eSuxrjQ63wgOR/do+d/BE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=bKahZhAL; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=gm4qqnZ/kIvoE6HkNUbZ8UxWqfTpNjbpBufkkJ4eNooifqX63Ddk7DTCgONDIWgwX505GqgeZlorF4lpOQtUryVynKTKq7c4HcjIVBdXKgi2otwjvOWE3TgY9kSI/Dn24aoERHZplzGrrIH70ikBxpk8teDAdAdutrR3+IiTNaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=OwNofpHv; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bKahZhAL"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1eb24e3a2d9so15525545ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 28 Apr 2024 02:03:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714294991; x=1714899791; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=r/EjhKNRSg3o3EX3Rny1HlxHzhrYC7Z5aVDzwR+1mQo=;
-        b=bKahZhAL3vsRxo47bUmpshOWMXc7quDPWw2sgcvgrZ7N1TaU54bwE1cHUN2aKHnfr5
-         UdeIWYs9p5KQqUED50V4ntmLKsV+P6cvxB/5az7kZ6Qwe2Enh6/yt6yTCHRYkI1kt8iw
-         B2icC+zfb3Ov0pbsyzAgHzNqD77NnQeuPsCH0yy6MLXtpSK+1z+aFQcZeNOcmqbKsyhO
-         v3SnOyQa8TRiW43Y8evQMJaBppNcYsAk07Uz3s873s6xnagj6kySBI9Y8b4eSSsl7KMr
-         +/Z0SvfbnuqTJku0W+BgIEljUkL7jnVxvUyBLws7i0ON31/Ya6NxAAkuRuxic4o+JMAM
-         pM6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714294991; x=1714899791;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=r/EjhKNRSg3o3EX3Rny1HlxHzhrYC7Z5aVDzwR+1mQo=;
-        b=sPhdjwgFXQgblCNjMezxPcYmKD0TQOU+06F3QmrnlAoQSin4Mx5JNCVtZKElwnvZz9
-         AiW50J+UQt4FTxNRCoBV+WIt14zG7S1I++ZIwq9LxxHmyA7cfk/Eu3I35Yxxq5oUlP4s
-         /IO+vRiDx4BnTGocd3ihP6U071E+x35oyF8oA4qX3ZHvozilZV4tWVWWoJ0Dxu7rLj06
-         IU3e9wsdQaMoyyty+Wejzv3efNnxgaWlhzgWc0/FKn7fNjovyFMjVVt+EfU/amSCh0xt
-         mXbnSOkmxyTYMeRH1u9bXBGoJ/5TT1gzoi+WJDmYlSl9z+Dv9sjogvrwru6B0XxTwE/f
-         Fedg==
-X-Forwarded-Encrypted: i=1; AJvYcCXSgBjwb+/Ydb03i7KBM8MZq2q7FQLnrjayqiK2df616bTN6nwaPtC0vFl/+14hRVAT2yXjWmv1y0aND6bt43hT1uEiBXjXduQ9
-X-Gm-Message-State: AOJu0YwEZOKhj8G25mpMlfy9jdeVxk57kwVt3zKL2bmZZeqf0+80mAS9
-	oskAvR4yAyFmdUX8XyvA7Z5THtgG3HYiam0V5nOTIDHbOXxOMyKk75r+yzrVr78=
-X-Google-Smtp-Source: AGHT+IFnJtLkCEfPqJBYHiCH/Dx2zJGLzVHRjBOJOZtR72BjihLV893HcPLnlVvIQLk29Gi+lAw/Ng==
-X-Received: by 2002:a17:902:f805:b0:1e2:b137:4f88 with SMTP id ix5-20020a170902f80500b001e2b1374f88mr7678593plb.30.1714294991082;
-        Sun, 28 Apr 2024 02:03:11 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-29-7.pa.nsw.optusnet.com.au. [49.181.29.7])
-        by smtp.gmail.com with ESMTPSA id x18-20020a170902b41200b001e446fe6843sm18086990plr.79.2024.04.28.02.03.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Apr 2024 02:03:10 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1s10R9-00DiJg-2h;
-	Sun, 28 Apr 2024 19:03:07 +1000
-Date: Sun, 28 Apr 2024 19:03:07 +1000
-From: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="OwNofpHv"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4VSJjh61y0z9sf0;
+	Sun, 28 Apr 2024 22:59:20 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1714337960;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oVuobLMQ/P3jplHXQkykRM7/2IOlzm4DqmyFCcCzMHA=;
+	b=OwNofpHvCUzTevzwB69MRfcQ4Fbi9zpzM6X5SMfGDBgzn3gynhVV3LCVn3LOwQ2HO96cvw
+	DVDgfgtvtk05RPjYW9QK0rOq4ILVukQC028R4OuVS+CdvMa02NGQC3PLcJHXzg2GDF+fLL
+	Gonw0LlGjlTVqv5AAt8Wb0azbPYvxm5hLx9HUkms218f08GeKdoMw34qjq3VxP+t+VqIeI
+	kMlA1FGAp2VKojjNTlYn//rLUvKx0HZF+G89IMQH8zJ0TShQ1Uptu/KpRlupH+VJSAoZOq
+	0sMQlXX7XK9JWk+7JKJ+B9turL0HbIhJocLidmpM5TRDcazcHFFa1FM+fPB5Xg==
+Date: Sun, 28 Apr 2024 20:59:15 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: syzbot <syzbot+1619d847a7b9ba3a9137@syzkaller.appspotmail.com>,
-	chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_fs_dirty_inode
-Message-ID: <Zi4Qy2UeWj/R9QcE@dread.disaster.area>
-References: <000000000000fee02e0616f8fdff@google.com>
- <20240426163008.GO360919@frogsfrogsfrogs>
- <ZiwbDbYUJgH7t+G6@dread.disaster.area>
- <20240426232052.GT360919@frogsfrogsfrogs>
+Cc: willy@infradead.org, brauner@kernel.org, david@fromorbit.com,
+	chandan.babu@oracle.com, akpm@linux-foundation.org,
+	linux-fsdevel@vger.kernel.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v4 03/11] filemap: allocate mapping_min_order folios in
+ the page cache
+Message-ID: <20240428205915.2iocwkcf3edc5y2k@quentin>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-4-kernel@pankajraghav.com>
+ <20240426151243.GD360919@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,145 +56,131 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240426232052.GT360919@frogsfrogsfrogs>
+In-Reply-To: <20240426151243.GD360919@frogsfrogsfrogs>
+X-Rspamd-Queue-Id: 4VSJjh61y0z9sf0
 
-On Fri, Apr 26, 2024 at 04:20:52PM -0700, Darrick J. Wong wrote:
-> On Sat, Apr 27, 2024 at 07:22:21AM +1000, Dave Chinner wrote:
-> > On Fri, Apr 26, 2024 at 09:30:08AM -0700, Darrick J. Wong wrote:
-> > > On Thu, Apr 25, 2024 at 10:15:29PM -0700, syzbot wrote:
-> > > > Hello,
-> > > > 
-> > > > syzbot found the following issue on:
-> > > > 
-> > > > HEAD commit:    3b68086599f8 Merge tag 'sched_urgent_for_v6.9_rc5' of git:..
-> > > > git tree:       upstream
-> > > > console output: https://syzkaller.appspot.com/x/log.txt?x=158206bb180000
-> > > > kernel config:  https://syzkaller.appspot.com/x/.config?x=f47e5e015c177e57
-> > > > dashboard link: https://syzkaller.appspot.com/bug?extid=1619d847a7b9ba3a9137
-> > > > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-> > > > 
-> > > > Unfortunately, I don't have any reproducer for this issue yet.
-> > > > 
-> > > > Downloadable assets:
-> > > > disk image: https://storage.googleapis.com/syzbot-assets/caa90b55d476/disk-3b680865.raw.xz
-> > > > vmlinux: https://storage.googleapis.com/syzbot-assets/17940f1c5e8f/vmlinux-3b680865.xz
-> > > > kernel image: https://storage.googleapis.com/syzbot-assets/b03bd6929a1c/bzImage-3b680865.xz
-> > > > 
-> > > > IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> > > > Reported-by: syzbot+1619d847a7b9ba3a9137@syzkaller.appspotmail.com
-> > > > 
-> > > > ======================================================
-> > > > WARNING: possible circular locking dependency detected
-> > > > 6.9.0-rc4-syzkaller-00274-g3b68086599f8 #0 Not tainted
-> > > > ------------------------------------------------------
-> > > > kswapd0/81 is trying to acquire lock:
-> > > > ffff8881a895a610 (sb_internal#3){.+.+}-{0:0}, at: xfs_fs_dirty_inode+0x158/0x250 fs/xfs/xfs_super.c:689
-> > > > 
-> > > > but task is already holding lock:
-> > > > ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:6782 [inline]
-> > > > ffffffff8e428e80 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0xb20/0x30c0 mm/vmscan.c:7164
-> > > > 
-> > > > which lock already depends on the new lock.
-> > > > 
-> > > > 
-> > > > the existing dependency chain (in reverse order) is:
-> > > > 
-> > > > -> #2 (fs_reclaim){+.+.}-{0:0}:
-> > > >        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754
-> > > >        __fs_reclaim_acquire mm/page_alloc.c:3698 [inline]
-> > > >        fs_reclaim_acquire+0x88/0x140 mm/page_alloc.c:3712
-> > > >        might_alloc include/linux/sched/mm.h:312 [inline]
-> > > >        slab_pre_alloc_hook mm/slub.c:3746 [inline]
-> > > >        slab_alloc_node mm/slub.c:3827 [inline]
-> > > >        kmalloc_trace+0x47/0x360 mm/slub.c:3992
-> > > >        kmalloc include/linux/slab.h:628 [inline]
-> > > >        add_stack_record_to_list mm/page_owner.c:177 [inline]
+On Fri, Apr 26, 2024 at 08:12:43AM -0700, Darrick J. Wong wrote:
+> On Thu, Apr 25, 2024 at 01:37:38PM +0200, Pankaj Raghav (Samsung) wrote:
+> > From: Luis Chamberlain <mcgrof@kernel.org>
 > > 
-> > There's the GFP_KERNEL allocation being warned about again.
+> > filemap_create_folio() and do_read_cache_folio() were always allocating
+> > folio of order 0. __filemap_get_folio was trying to allocate higher
+> > order folios when fgp_flags had higher order hint set but it will default
+> > to order 0 folio if higher order memory allocation fails.
 > > 
-> > > >        inc_stack_record_count mm/page_owner.c:219 [inline]
-> > > >        __set_page_owner+0x561/0x810 mm/page_owner.c:334
-> > > >        set_page_owner include/linux/page_owner.h:32 [inline]
-> > > >        post_alloc_hook+0x1ea/0x210 mm/page_alloc.c:1534
-> > > >        prep_new_page mm/page_alloc.c:1541 [inline]
-> > > >        get_page_from_freelist+0x3410/0x35b0 mm/page_alloc.c:3317
-> > > >        __alloc_pages+0x256/0x6c0 mm/page_alloc.c:4575
-> > > >        __alloc_pages_node include/linux/gfp.h:238 [inline]
-> > > >        alloc_pages_node include/linux/gfp.h:261 [inline]
-> > > >        alloc_slab_page+0x5f/0x160 mm/slub.c:2175
-> > > >        allocate_slab mm/slub.c:2338 [inline]
-> > > >        new_slab+0x84/0x2f0 mm/slub.c:2391
-> > > >        ___slab_alloc+0xc73/0x1260 mm/slub.c:3525
-> > > >        __slab_alloc mm/slub.c:3610 [inline]
-> > > >        __slab_alloc_node mm/slub.c:3663 [inline]
-> > > >        slab_alloc_node mm/slub.c:3835 [inline]
-> > > >        kmem_cache_alloc+0x252/0x340 mm/slub.c:3852
-> > > >        kmem_cache_zalloc include/linux/slab.h:739 [inline]
-> > > >        xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:679 [inline]
-> > > >        xfs_refcountbt_init_cursor+0x65/0x2a0 fs/xfs/libxfs/xfs_refcount_btree.c:367
-> > > >        xfs_reflink_find_shared fs/xfs/xfs_reflink.c:147 [inline]
-> > > >        xfs_reflink_trim_around_shared+0x53a/0x9d0 fs/xfs/xfs_reflink.c:194
-> > > >        xfs_buffered_write_iomap_begin+0xebf/0x1b40 fs/xfs/xfs_iomap.c:1062
-> > > 
-> > > Hm.  We've taken an ILOCK in xfs_buffered_write_iomap_begin, and now
-> > > we're allocating a btree cursor but we don't have PF_MEMALLOC_NOFS set,
-> > > nor do we pass GFP_NOFS.
-> > > 
-> > > Ah, because nothing in this code path sets PF_MEMALLOC_NOFS explicitly,
-> > > nor does it create a xfs_trans_alloc_empty, which would set that.  Prior
-> > > to the removal of kmem_alloc, I think we were much more aggressive about
-> > > GFP_NOFS usage.
-> > > 
-> > > Seeing as we're about to walk a btree, we probably want the empty
-> > > transaction to guard against btree cycle livelocks.
-> > 
-> > Nothing like that is needed or desired, this is a just a bug in the
-> > memory allocation tracking code...
+> > Supporting mapping_min_order implies that we guarantee each folio in the
+> > page cache has at least an order of mapping_min_order. When adding new
+> > folios to the page cache we must also ensure the index used is aligned to
+> > the mapping_min_order as the page cache requires the index to be aligned
+> > to the order of the folio.
 > 
-> Not needed because it doesn't address the root cause of these two syzbot
-> reports?
+> If we cannot find a folio of at least min_order size, what error is sent
+> back?
+> 
+> If the answer is "the same error that you get if we cannot allocate a
+> base page today (aka ENOMEM)", then I think I understand this enough to
+> say
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Yes.
-
-> Or did you actually analyze the refcount btree code and
-> discover that there's no possibility of livelocking on btree cycles?
-
-I think that's completely irrelevant, because I'm at a loss to
-explain why adding a transaction context will prevent a btree cycle
-from livelocking a lookup that stumbles into the cycle.
-
-How does adding a transaction context trigger detection of a btree
-cycle and enable the code to break out of it before it livelocks?
-
-I know that the transaction context does not track the path taken
-through the btree - it simply tracks buffers that are either dirtied
-or not released by the btree path traversal. I also know that the
-only buffers that aren't released while a traversal is in progress
-is the path held by the btree cursor.  i.e. when we
-increment/decrement the cursor to the next block, the previous block
-the cursor pointed to is released (see xfs_btree_setbuf()). If it
-wasn't dirtied, then the transaction context will also release and
-unlock it and stop tracking it.
-
-Hence I don't see what adding a transaction context does here w.r.t.
-btree cycles, especially as the btree cursor does this buffer
-management regardless of whether a transaction context is present or
-not.
-
-Yes, I can see that adding a transaction context may change what
-happens when we try to lock a buffer we already have locked in the
-current operation.  e.g. a ptr points to a node already held by the
-cursor. This will turn a deadlock into a livelock, but it does not
-add anything that detects the cycle or enables the code to break out
-of the cycle.
-
-AFAICS, the btree cursor is the context that should be doing btree
-traversal tracking and cycle detection but it does not do this right
-now. And AFAICT it doesn't need a transaction context to do this
-job, either, because we don't need to hold references to locked
-buffers to do visitation history tracking...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yes. We will get a ENOMEM if we cannot allocate min_order size folio. :)
+Thanks!
+> 
+> --D
+> 
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> > Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> > ---
+> >  mm/filemap.c | 24 +++++++++++++++++-------
+> >  1 file changed, 17 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 30de18c4fd28..f0c0cfbbd134 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -858,6 +858,8 @@ noinline int __filemap_add_folio(struct address_space *mapping,
+> >  
+> >  	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+> >  	VM_BUG_ON_FOLIO(folio_test_swapbacked(folio), folio);
+> > +	VM_BUG_ON_FOLIO(folio_order(folio) < mapping_min_folio_order(mapping),
+> > +			folio);
+> >  	mapping_set_update(&xas, mapping);
+> >  
+> >  	if (!huge) {
+> > @@ -1895,8 +1897,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+> >  		folio_wait_stable(folio);
+> >  no_page:
+> >  	if (!folio && (fgp_flags & FGP_CREAT)) {
+> > -		unsigned order = FGF_GET_ORDER(fgp_flags);
+> > +		unsigned int min_order = mapping_min_folio_order(mapping);
+> > +		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
+> >  		int err;
+> > +		index = mapping_align_start_index(mapping, index);
+> >  
+> >  		if ((fgp_flags & FGP_WRITE) && mapping_can_writeback(mapping))
+> >  			gfp |= __GFP_WRITE;
+> > @@ -1936,7 +1940,7 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+> >  				break;
+> >  			folio_put(folio);
+> >  			folio = NULL;
+> > -		} while (order-- > 0);
+> > +		} while (order-- > min_order);
+> >  
+> >  		if (err == -EEXIST)
+> >  			goto repeat;
+> > @@ -2425,13 +2429,16 @@ static int filemap_update_page(struct kiocb *iocb,
+> >  }
+> >  
+> >  static int filemap_create_folio(struct file *file,
+> > -		struct address_space *mapping, pgoff_t index,
+> > +		struct address_space *mapping, loff_t pos,
+> >  		struct folio_batch *fbatch)
+> >  {
+> >  	struct folio *folio;
+> >  	int error;
+> > +	unsigned int min_order = mapping_min_folio_order(mapping);
+> > +	pgoff_t index;
+> >  
+> > -	folio = filemap_alloc_folio(mapping_gfp_mask(mapping), 0);
+> > +	folio = filemap_alloc_folio(mapping_gfp_mask(mapping),
+> > +				    min_order);
+> >  	if (!folio)
+> >  		return -ENOMEM;
+> >  
+> > @@ -2449,6 +2456,8 @@ static int filemap_create_folio(struct file *file,
+> >  	 * well to keep locking rules simple.
+> >  	 */
+> >  	filemap_invalidate_lock_shared(mapping);
+> > +	/* index in PAGE units but aligned to min_order number of pages. */
+> > +	index = (pos >> (PAGE_SHIFT + min_order)) << min_order;
+> >  	error = filemap_add_folio(mapping, folio, index,
+> >  			mapping_gfp_constraint(mapping, GFP_KERNEL));
+> >  	if (error == -EEXIST)
+> > @@ -2509,8 +2518,7 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
+> >  	if (!folio_batch_count(fbatch)) {
+> >  		if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_WAITQ))
+> >  			return -EAGAIN;
+> > -		err = filemap_create_folio(filp, mapping,
+> > -				iocb->ki_pos >> PAGE_SHIFT, fbatch);
+> > +		err = filemap_create_folio(filp, mapping, iocb->ki_pos, fbatch);
+> >  		if (err == AOP_TRUNCATED_PAGE)
+> >  			goto retry;
+> >  		return err;
+> > @@ -3708,9 +3716,11 @@ static struct folio *do_read_cache_folio(struct address_space *mapping,
+> >  repeat:
+> >  	folio = filemap_get_folio(mapping, index);
+> >  	if (IS_ERR(folio)) {
+> > -		folio = filemap_alloc_folio(gfp, 0);
+> > +		folio = filemap_alloc_folio(gfp,
+> > +					    mapping_min_folio_order(mapping));
+> >  		if (!folio)
+> >  			return ERR_PTR(-ENOMEM);
+> > +		index = mapping_align_start_index(mapping, index);
+> >  		err = filemap_add_folio(mapping, folio, index, gfp);
+> >  		if (unlikely(err)) {
+> >  			folio_put(folio);
+> > -- 
+> > 2.34.1
+> > 
+> > 
