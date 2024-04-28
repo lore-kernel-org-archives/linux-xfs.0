@@ -1,103 +1,93 @@
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38483376EC;
-	Sat, 27 Apr 2024 07:40:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758067E1;
+	Sun, 28 Apr 2024 00:57:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714203652; cv=none; b=UY1otfYt7LzaThluwcz4PqDrjfBzo61C7gJOuXywvhysJTpledZs9sAClSmpGbrhWsVaDYCRzEAtXTdjuME8dCcDRfEm/qFUQdGYxefw2bjVfD7emapmOtWMAuF3jXo1Vh2z/rLwUjLjEWcjSxcwFcRw3oXQR2lrYtRkq1/TDEk=
+	t=1714265848; cv=none; b=cog7h0mayUNiy74bCCewoqZKCwaKH6d/MOtgEPlT9kQxgOor0SkrnAqR13RNsyijiqmJdRWuvnTMHXjNqetCPfSY8KXW8n6sHoL95EoWPlRJq22uPMIY8iuqRQukdIA2G1ltX3lo/6Wwol+mUEhr5svaMDOkMnABPfRgDOgGSAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714203652; c=relaxed/simple;
-	bh=CzgUKxV1DiRGrX9zQXzZL6Gotui8EXJUqYQ3eQT9fT4=;
+	s=arc-20240116; t=1714265848; c=relaxed/simple;
+	bh=54uIGKbchIqeyGHCinmigs69p/bVqpwlPIcL4lKukpQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EldON3TuhubwZAoNWjdObGunaICbj7oTMsx5nhciB0CMEiZ76f/cBRB9AJTeoRbsLyAv6WPgwpS4WlNdUhZ8IP6in0Aflo7GIy7d0cFxduAzBPcQ9JYnLlP5wI90lnkBr/+olVU+D5IPfDqqastftUc2DBKBdaTuhXzRdhnLui4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=gEqEbcAY; arc=none smtp.client-ip=159.69.126.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=weissschuh.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
+	 Content-Type:Content-Disposition:In-Reply-To; b=uonBy4nHXkFcmUKnQcq79r86Pm3L9ZoB9gyNuX2KMUniWp4vCuyqqSa5HTGDPaHNYsszm8QiuH6qGFpfFqsHG4fw+QBsTF4I/tN/dTbTUyjyfqKKKkr92xEhC6MSCEmv9HfynDqc6/CT9bU3Xw2oYeq0y/WICxWi8yJfZ0Otpn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IWHqDCYU; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="gEqEbcAY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1714203646;
-	bh=CzgUKxV1DiRGrX9zQXzZL6Gotui8EXJUqYQ3eQT9fT4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gEqEbcAYbNH1Cl76LGX0IqteTFz6QZM2G7WkdPY5ve6JFJe7QvQdYePk2UkJVcvTR
-	 6u5FIHxh7+/FsU6vrbi0R0NpqVH+T4CvlFrv7BQ8Kzndu1PmGsnulYTnxUn5nJrEUi
-	 e3WiuV0em4CHQ+eAmWIJfWacyiMhggB7HEWeZqN8=
-Date: Sat, 27 Apr 2024 09:40:43 +0200
-From: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
-To: Jakub Kicinski <kuba@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
-	Joel Granados <j.granados@samsung.com>
-Cc: Kees Cook <keescook@chromium.org>, Eric Dumazet <edumazet@google.com>, 
-	Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org, 
-	bpf@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-xfs@vger.kernel.org, 
-	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
-	netfilter-devel@vger.kernel.org, coreteam@netfilter.org, kexec@lists.infradead.org, 
-	linux-hardening@vger.kernel.org, bridge@lists.linux.dev, lvs-devel@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, rds-devel@oss.oracle.com, linux-sctp@vger.kernel.org, 
-	linux-nfs@vger.kernel.org, apparmor@lists.ubuntu.com
-Subject: Re: [PATCH v3 00/11] sysctl: treewide: constify ctl_table argument
- of sysctl handlers
-Message-ID: <38a87a0f-02c7-4072-9342-8f6697ea1a17@t-8ch.de>
-References: <20240423-sysctl-const-handler-v3-0-e0beccb836e2@weissschuh.net>
- <20240424201234.3cc2b509@kernel.org>
- <9e657181-866a-4626-82d0-e0030051b003@t-8ch.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IWHqDCYU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=iEhnO4AWXoNxFsAFeSCOgVl/u1tIJg7C/6bLYFJsfso=; b=IWHqDCYUczIV+YtqAUlL6HVU+V
+	qCtZyJpY5Sh2NfLpSQK0jlGyEtErUphjfxsjrprhsLPjB+PmckQ17consJv5VugT5B64CyFQ3dIAD
+	WajK1Il7ARNNEV/N8P0Mb0R5DHCFMJoAMKyWI7Qmz4Lu6MNnDpgneBWjCEKZoSN8OpO1PbghXkg+c
+	vrs8MDYIDAUlKDlpojo4H5DPbN0R8m6m/6qvwBnplNJ9p4Lm03LOOuvj5k846ad5o1rV/sczirBif
+	P5BktIszYYw7GDr4ZqNSZVwKat58sz1tf2UdKbpR4DrowlURDVSud5kA9E9EvWWc+Q5LmyKtpUtoW
+	wy8sUNtw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s0sqz-0000000GWGt-1oqf;
+	Sun, 28 Apr 2024 00:57:17 +0000
+Date: Sat, 27 Apr 2024 17:57:17 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>, ziy@nvidia.com
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, djwong@kernel.org,
+	brauner@kernel.org, david@fromorbit.com, chandan.babu@oracle.com,
+	akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	hare@suse.de, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum
+ folio order requirement
+Message-ID: <Zi2e7ecKJK6p6ERu@bombadil.infradead.org>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-6-kernel@pankajraghav.com>
+ <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
+ <Zir5n6JNiX14VoPm@bombadil.infradead.org>
+ <Ziw8w3P9vljrO9JV@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9e657181-866a-4626-82d0-e0030051b003@t-8ch.de>
+In-Reply-To: <Ziw8w3P9vljrO9JV@bombadil.infradead.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On 2024-04-25 09:10:27+0000, Thomas Weißschuh wrote:
-> On 2024-04-24 20:12:34+0000, Jakub Kicinski wrote:
-> > On Tue, 23 Apr 2024 09:54:35 +0200 Thomas Weißschuh wrote:
-> > > The series was split from my larger series sysctl-const series [0].
-> > > It only focusses on the proc_handlers but is an important step to be
-> > > able to move all static definitions of ctl_table into .rodata.
-> > 
-> > Split this per subsystem, please.
-> 
-> Unfortunately this would introduce an enormous amount of code churn.
-> 
-> The function prototypes for each callback have to stay consistent.
-> So a another callback member ("proc_handler_new") is needed and users
-> would be migrated to it gradually.
-> 
-> But then *all* definitions of "struct ctl_table" throughout the tree need to
-> be touched.
-> In contrast, the proposed series only needs to change the handler
-> implementations, not their usage sites.
-> 
-> There are many, many more usage sites than handler implementations.
-> 
-> Especially, as the majority of sysctl tables use the standard handlers
-> (proc_dostring, proc_dobool, ...) and are not affected by the proposed
-> aproach at all.
-> 
-> And then we would have introduced a new handler name "proc_handler_new"
-> and maybe have to do the whole thing again to rename it back to
-> the original and well-known "proc_handler".
+On Fri, Apr 26, 2024 at 04:46:11PM -0700, Luis Chamberlain wrote:
+> On Thu, Apr 25, 2024 at 05:47:28PM -0700, Luis Chamberlain wrote:
+> > On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
+> > > On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) wrote:
+> > > > From: Pankaj Raghav <p.raghav@samsung.com>
+> > > > 
+> > > > using that API for LBS is resulting in an NULL ptr dereference
+> > > > error in the writeback path [1].
+> > > >
+> > > > [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
+> > > 
+> > >  How would I go about reproducing this?
 
-This aproach could be optimized by only migrating the usages of the
-custom handler implementations to "proc_handler_new".
-After this we could move over the core handlers and "proc_handler" in
-one small patch that does not need to touch the usages sites.
+Well so the below fixes this but I am not sure if this is correct.
+folio_mark_dirty() at least says that a folio should not be truncated
+while its running. I am not sure if we should try to split folios then
+even though we check for writeback once. truncate_inode_partial_folio()
+will folio_wait_writeback() but it will split_folio() before checking
+for claiming to fail to truncate with folio_test_dirty(). But since the
+folio is locked its not clear why this should be possible.
 
-Afterwards all non-core usages would be migrated back from
-"proc_handler_new" to "proc_handler" and the _new variant could be
-dropped again.
-
-It would still be more than twice the churn of my current patch.
-And these patches would be more complex than the current
-"just add a bunch of consts, nothing else".
-
-Personally I still prefer the original aproach.
-
-
-Thomas
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 83955362d41c..90195506211a 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3058,7 +3058,7 @@ int split_huge_page_to_list_to_order(struct page *page, struct list_head *list,
+ 	if (new_order >= folio_order(folio))
+ 		return -EINVAL;
+ 
+-	if (folio_test_writeback(folio))
++	if (folio_test_dirty(folio) || folio_test_writeback(folio))
+ 		return -EBUSY;
+ 
+ 	if (!folio_test_anon(folio)) {
