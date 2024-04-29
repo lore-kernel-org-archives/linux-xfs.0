@@ -1,127 +1,86 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD32535C8
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 12:16:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D347C2C6
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 12:34:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714392997; cv=none; b=rsIHbMg0+ppWx+sdN9ySRaQjAQXoGArd8bx7B7SnIRqIstdTgR2AvvHC+zyRXcQpLkVKZUEZ/Mks+N94A91KnWXLQ+01SaHM9ZRaDCmNS5X0gkDDbhWhBf+UayCJr8CsA4foo96hsWD2USt3AwVoTr/XjyoKj68YmEE2yS7TAqs=
+	t=1714394066; cv=none; b=uoFkgmZAFszjxwVvZOhm1kZd5VXc3Nknc1QQFBQcQsuEIJ4cIje03Rl1yybmyS5LMXICtwN074GrgyN/SxlHG7TG9pi4KCIHD4vlhkwJqrucjMEkwCdi890X9/FphAuYdKtZQecf5SAhbXEMU5OwZUuni/bi0EritGOHSk9grnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714392997; c=relaxed/simple;
-	bh=0NfZtSzvM+rPV/GIyXt3W7n2ADT40aDodAXbDGfLOVg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U/H80DAzzbxoIiLTovByCA6HtI6BQ+eK+HPLC8L/9TF6pHvl1W44/KodSIF09MM7Oi4aTKBEwJJMdkICVEbb2MNLDkdGeS3iG+Pq8D67TIm2z6MuABLuwuab56FuX/GNEqlpF6Q61ShXwoCXOf36e7uLUcRAJoZ6zufNkgLHwTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NDLLuy0r; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NDLLuy0r"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1714392994;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eHN65QWCg/irn7GyW1FrzSpFmgST4dcEtn94mTVVhy0=;
-	b=NDLLuy0rLmPqqq3S0mIhdd66uwPUpdJn+nGdWx17PLOMTJbH8KXEZMcse/vK/adE8nAauH
-	hp5hFnRw4mYtaMP9A5A/sUj+O1Wz5VQKFE7lsOxpYEuzxJwCnnc6XKPPskPrNDiD5SSJze
-	g/QmEx1IiFGMC8++JIRcBR3j1TWAbQ8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-91-Y2s4jjNwN62cZBIv18-Naw-1; Mon, 29 Apr 2024 08:16:33 -0400
-X-MC-Unique: Y2s4jjNwN62cZBIv18-Naw-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 930C680021A;
-	Mon, 29 Apr 2024 12:16:32 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.117])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 4F2C540EE0E;
-	Mon, 29 Apr 2024 12:16:32 +0000 (UTC)
-Date: Mon, 29 Apr 2024 08:18:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Sam Sun <samsun1006219@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: clean up buffer allocation in
- xlog_do_recovery_pass
-Message-ID: <Zi-QKgVdIyQToXpu@bfoster>
-References: <20240429070200.1586537-1-hch@lst.de>
- <20240429070200.1586537-4-hch@lst.de>
+	s=arc-20240116; t=1714394066; c=relaxed/simple;
+	bh=LqwpeATDEqzTWvBRdvng7xlYCZcHB8eS4iVMqq2dtu0=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=MFm2H6q5U/kLkujv3gMk64MjRYWu8FtUIkK/Ej/kwco84ItcN+0LJrTmsKbC8AipdOOzGJpRAGuKXwX0fFOqZG25sRbZ3PrQb76lnnOcwGaW39TyRlCxhlybQcpHf7lo0wfx1c5RNokKnuEGF/AE746VGMKrED0rIRx2AOpVDrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-7da42114485so511671939f.2
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 05:34:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714394064; x=1714998864;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=o2AaJZfflPUK1SiENvO14YPAhJrFA9DHhIMvZy5GYW0=;
+        b=kTgYcyHEpJE1floGUTFAUJoEiT2sFJr0mGo7REacMhpDFsWqkvVBIWk0pPWQCqWOqD
+         hw/Wp8rOsEmQ2o2aXzO9sSA1b+7H4yfwN0UA5uTG1xpMdyhOjGpW2Mr8jOlnsvTnzXCu
+         7y+1d284Y+gC7SLKY994s5KdBwdfoabrG3Khp0wYHbLqiG3CkvODbR1EfqKXLs+VRLGd
+         R/olnm6LQM7qXhgfi07hcgTGJW5RyRbpY0JJdYP7JY5GbOWkhOo+vY7kZKlvXsTygzSo
+         1jXGh9WtoYOkkgz4oUCaJ06/A15rJPY+H/3x/OAdYota4eOIduAxtv0E0PZ6zeEFnytF
+         06MQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXTnancersKe2H1UzOvTw4JdkSQ3oLbtXnSiKYzDh8cYbfXlZ1jro7+LkqNBzUPUalPXf2cPFx0gpCoLUJxOMRaz/KECxhhLHW5
+X-Gm-Message-State: AOJu0YwMQV2xX5D1/QsC9N25G/IzQcmZxxPZpgFYdzNCrdU2bRdzEQz8
+	Jp3p08AuDoh/+5MBjN/1VEPLY9yfHaDkAfaJmo8zRBouqkhr+HoDl1AZqGiyu5By5DL/4CLlwiN
+	2cyHvF3ZUF1oPRp1tTUxW47GgqMyoTP+p48UTVuk7V5EYi6KDvBY36oU=
+X-Google-Smtp-Source: AGHT+IGi46mPg6VYHOkhq09yOPOdhU3sHjHJG5X5pp+H4weXhi9VVNVgk4hB8yd7+4pvbOMEdAmO/Q9OK+G6k/Rstmb/Y/v53Onf
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240429070200.1586537-4-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
+X-Received: by 2002:a05:6638:4112:b0:487:cc0:9c05 with SMTP id
+ ay18-20020a056638411200b004870cc09c05mr893258jab.2.1714394064792; Mon, 29 Apr
+ 2024 05:34:24 -0700 (PDT)
+Date: Mon, 29 Apr 2024 05:34:24 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000003cbbff06173b79c8@google.com>
+Subject: [syzbot] Monthly xfs report (Apr 2024)
+From: syzbot <syzbot+list8709ef9586e8e98ab5ae@syzkaller.appspotmail.com>
+To: chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Apr 29, 2024 at 09:02:00AM +0200, Christoph Hellwig wrote:
-> Merge the initial xlog_alloc_buffer calls, and pass the variable
-> designating the length that is initialized to 1 above instead of passing
-> the open coded 1 directly.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Hello xfs maintainers/developers,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
->  fs/xfs/xfs_log_recover.c | 13 ++++++-------
->  1 file changed, 6 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index d73bec65f93b46..d2e8b903945741 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3010,6 +3010,10 @@ xlog_do_recovery_pass(
->  	for (i = 0; i < XLOG_RHASH_SIZE; i++)
->  		INIT_HLIST_HEAD(&rhash[i]);
->  
-> +	hbp = xlog_alloc_buffer(log, hblks);
-> +	if (!hbp)
-> +		return -ENOMEM;
-> +
->  	/*
->  	 * Read the header of the tail block and get the iclog buffer size from
->  	 * h_size.  Use this to tell how many sectors make up the log header.
-> @@ -3020,10 +3024,6 @@ xlog_do_recovery_pass(
->  		 * iclog header and extract the header size from it.  Get a
->  		 * new hbp that is the correct size.
->  		 */
-> -		hbp = xlog_alloc_buffer(log, 1);
-> -		if (!hbp)
-> -			return -ENOMEM;
-> -
->  		error = xlog_bread(log, tail_blk, 1, hbp, &offset);
->  		if (error)
->  			goto bread_err1;
-> @@ -3071,16 +3071,15 @@ xlog_do_recovery_pass(
->  			if (hblks > 1) {
->  				kvfree(hbp);
->  				hbp = xlog_alloc_buffer(log, hblks);
-> +				if (!hbp)
-> +					return -ENOMEM;
->  			}
->  		}
->  	} else {
->  		ASSERT(log->l_sectBBsize == 1);
-> -		hbp = xlog_alloc_buffer(log, 1);
->  		h_size = XLOG_BIG_RECORD_BSIZE;
->  	}
->  
-> -	if (!hbp)
-> -		return -ENOMEM;
->  	dbp = xlog_alloc_buffer(log, BTOBB(h_size));
->  	if (!dbp) {
->  		kvfree(hbp);
-> -- 
-> 2.39.2
-> 
-> 
+During the period, 4 new issues were detected and 0 were fixed.
+In total, 7 issues are still open and 22 have been fixed so far.
 
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 605     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+<2> 190     No    possible deadlock in xfs_ilock (2)
+                  https://syzkaller.appspot.com/bug?extid=c6d7bff58a2218f14632
+<3> 27      No    possible deadlock in xfs_icwalk_ag (2)
+                  https://syzkaller.appspot.com/bug?extid=4248e91deb3db78358a2
+<4> 6       No    KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
