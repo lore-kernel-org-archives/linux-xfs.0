@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4273981745
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 15:55:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB4E181745
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 15:56:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714406145; cv=none; b=it5tCj2IEBlwccIDHBqvP0aakayRYob6N2/sla5fHCwmAAIvTM1Q/gEIZUb8MdYUVRACeKPYyiVp2Bx7MechiVSQsuyAVS7+74R4vJ4GPEId5Nn5AiVflcmmpsXCfQe+g+b1wHyWeuJBNIiHvNRtjPc15NmdAvBDwAVSlIohmnA=
+	t=1714406180; cv=none; b=NyabQmnX1KlaKY7lvDCNPXI366fsY/szAfdhg04GOFzBvSuHS5ic1NQ4rIAdI+bmnFfwU579BVGSkO/Rmx3NiEwuzb+0pk1Q7XzlWuafs28BLFszm+UnmBbQ7Ar9nL+eHajRjWozTWLT30DLamr/K1Me2oPfVPij3uAgE5Hdpkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714406145; c=relaxed/simple;
-	bh=qQfCbXsmHydYULuHizQp3GVthZnwEU3K9w/Qw5GbG4A=;
+	s=arc-20240116; t=1714406180; c=relaxed/simple;
+	bh=jEksKuMnOgRllx3V4EOZrWI79f+C37ryoG+R/Oq/q6g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FdBSQDVbqqRhnL3kncHbjbNTkX2LdgsYWSJxs0RA/WH9onK6Bfw8PUPC09pRdGYJkH5DykzYKkmALMsig3iYh7g7l7HIy18kn8NtzqZ0M1UEzPkIWNWHO3G3dfdvvR0jJtve2NqTVzbsmSZYjk0oxcyfYFoEUyZ8/lDZT8tbNQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jvorMhqs; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YzcoJzVT7JOTNUY/VbtqOk0C2esTuTt9JJhNGbWSa/kD1Z+FKIk3bpR6PA58k+D/l6KS3E6Xo3tREwRBoKnGNsT2R/A1E497L53YbvWl/eQjHgY2pjhnclPB+73j/V1oRKrg2N55YC+Ld86dYyOYLnDK0QoW2GDehM3dOADTwRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hj5lI46O; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jvorMhqs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E157C113CD;
-	Mon, 29 Apr 2024 15:55:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hj5lI46O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25714C113CD;
+	Mon, 29 Apr 2024 15:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714406144;
-	bh=qQfCbXsmHydYULuHizQp3GVthZnwEU3K9w/Qw5GbG4A=;
+	s=k20201202; t=1714406180;
+	bh=jEksKuMnOgRllx3V4EOZrWI79f+C37ryoG+R/Oq/q6g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jvorMhqsNI3V+qAv4y63DqOQkwqjVKVKt0nOh5mqAdVQGdq8a/g+5yzfFNbf7u6Pf
-	 jixvk11ubTakNTr/mg/nEq0Co3Se/wIby6dlch3USuRu3rQ/Rs/PFrsUHyjFCqWZX3
-	 a/7kPdaErMQlNIk6GMLySWv4nLJEwm6bKxrTpEDGwj4QcprglDqbqLWCL8W0thZaQP
-	 XoN3tMn03ssEpmOr41Ph9nBi/uWMxBsjKYf1hZshnUhBe9fTPlziXfDsSZRtLKNWY3
-	 2MmC6WV3zf0a1Gda9/CX+vv6nVkecCmvG2CqzjBQ79zz5YDbxfYQ5Emp2Nnc1JXw/O
-	 ICCQ0jVdXxVUA==
-Date: Mon, 29 Apr 2024 08:55:44 -0700
+	b=Hj5lI46O5jlQuUWhsCXgVNcWh1YzSU/kXO5/gxYmPj33QDbWRRfiw81EHeWxwszAi
+	 M9FO2U+8udOMaUJA47um4dxa6+Y+uKXFQQGoo0Xznd19ZOw9gMXuDFY5iinf4CPR9F
+	 cqxqsWacbMBZvMFq4HG39m+I/gRqaUd3iZmsycXfV2Gr/Zn7I1ZufjyGmUPPHHOjYK
+	 Dd4Z10SkqQfomJlepemSsVnT66TqjTAU3IQxLkm3H9HTqUnhw6JUoqy5YSy0XJcZES
+	 cTZI2fikqsTgWNYJXJeTYqbUPv5of1fHq9msjxbkXLF3SBNRFJ9suz/Wdl1jCswy84
+	 dZhuiQ4aCuLzg==
+Date: Mon, 29 Apr 2024 08:56:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Brian Foster <bfoster@redhat.com>,
 	Dave Chinner <david@fromorbit.com>,
 	Sam Sun <samsun1006219@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: restrict the h_size fixup in
+Subject: Re: [PATCH 3/3] xfs: clean up buffer allocation in
  xlog_do_recovery_pass
-Message-ID: <20240429155544.GE360919@frogsfrogsfrogs>
+Message-ID: <20240429155619.GF360919@frogsfrogsfrogs>
 References: <20240429070200.1586537-1-hch@lst.de>
- <20240429070200.1586537-3-hch@lst.de>
+ <20240429070200.1586537-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,48 +46,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240429070200.1586537-3-hch@lst.de>
+In-Reply-To: <20240429070200.1586537-4-hch@lst.de>
 
-On Mon, Apr 29, 2024 at 09:01:59AM +0200, Christoph Hellwig wrote:
-> The reflink and rmap features require a fixed xfsprogs, so don't allow
-> this fixup for them.
+On Mon, Apr 29, 2024 at 09:02:00AM +0200, Christoph Hellwig wrote:
+> Merge the initial xlog_alloc_buffer calls, and pass the variable
+> designating the length that is initialized to 1 above instead of passing
+> the open coded 1 directly.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log_recover.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index bb8957927c3c2e..d73bec65f93b46 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3040,10 +3040,14 @@ xlog_do_recovery_pass(
->  		 * Detect this condition here. Use lsunit for the buffer size as
->  		 * long as this looks like the mkfs case. Otherwise, return an
->  		 * error to avoid a buffer overrun.
-> +		 *
-> +		 * Reject the invalid size if the file system has new enough
-> +		 * features that require a fixed mkfs.
->  		 */
->  		h_size = be32_to_cpu(rhead->h_size);
->  		h_len = be32_to_cpu(rhead->h_len);
-> -		if (h_len > h_size && h_len <= log->l_mp->m_logbsize &&
-> +		if (!xfs_has_reflink(log->l_mp) && xfs_has_reflink(log->l_mp) &&
-> +		    h_len > h_size && h_len <= log->l_mp->m_logbsize &&
->  		    rhead->h_num_logops == cpu_to_be32(1)) {
 
-Same comment about do you want to test for rmap and reflink here?
-
-I also wonder if this multiline predicate should turn into a static
-inline helper.  I nearly wrote you one, but then I realize that I don't
-remember enough about the xfsprogs problem to know if the problem was
-limited to mkfs, or if xfs_repair zeroing the log would also write out a
-bad h_size?
+Nice cleanup,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  			xfs_warn(log->l_mp,
->  		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
+> ---
+>  fs/xfs/xfs_log_recover.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index d73bec65f93b46..d2e8b903945741 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3010,6 +3010,10 @@ xlog_do_recovery_pass(
+>  	for (i = 0; i < XLOG_RHASH_SIZE; i++)
+>  		INIT_HLIST_HEAD(&rhash[i]);
+>  
+> +	hbp = xlog_alloc_buffer(log, hblks);
+> +	if (!hbp)
+> +		return -ENOMEM;
+> +
+>  	/*
+>  	 * Read the header of the tail block and get the iclog buffer size from
+>  	 * h_size.  Use this to tell how many sectors make up the log header.
+> @@ -3020,10 +3024,6 @@ xlog_do_recovery_pass(
+>  		 * iclog header and extract the header size from it.  Get a
+>  		 * new hbp that is the correct size.
+>  		 */
+> -		hbp = xlog_alloc_buffer(log, 1);
+> -		if (!hbp)
+> -			return -ENOMEM;
+> -
+>  		error = xlog_bread(log, tail_blk, 1, hbp, &offset);
+>  		if (error)
+>  			goto bread_err1;
+> @@ -3071,16 +3071,15 @@ xlog_do_recovery_pass(
+>  			if (hblks > 1) {
+>  				kvfree(hbp);
+>  				hbp = xlog_alloc_buffer(log, hblks);
+> +				if (!hbp)
+> +					return -ENOMEM;
+>  			}
+>  		}
+>  	} else {
+>  		ASSERT(log->l_sectBBsize == 1);
+> -		hbp = xlog_alloc_buffer(log, 1);
+>  		h_size = XLOG_BIG_RECORD_BSIZE;
+>  	}
+>  
+> -	if (!hbp)
+> -		return -ENOMEM;
+>  	dbp = xlog_alloc_buffer(log, BTOBB(h_size));
+>  	if (!dbp) {
+>  		kvfree(hbp);
 > -- 
 > 2.39.2
 > 
