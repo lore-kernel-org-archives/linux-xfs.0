@@ -1,80 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0821773A;
-	Mon, 29 Apr 2024 09:39:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B7CEAC2;
+	Mon, 29 Apr 2024 09:48:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714383543; cv=none; b=SuqmzX2GXll1KSJWxI9O01awmFZObl+8UzXQcnU7RJBhaBWqG7CkjDXXn7lv5Xk4ON/UKmJ/TKVCIRhLEbzR/wy5XU8hr1/Ifu3MSVr2My9T5/zIA3mMxQblIH0HT0Alj3z1POSX9kpehO3QhQ8W7SmthKsOxIwFRQwlJAb3YTI=
+	t=1714384117; cv=none; b=et4LcncpJLClI7XZP4GAY+YrXhU0IHVny5ZndivIfXoSyUhm6Hkt/CUAfqnqm0Z6znZoV8X6zMD14tvTY8JTmiGBBFsHkd9UjrdvOjfynNrR/HOa5UV2IsdowUSPQ5dVQBGBU7Hq1wCfSa7hgDrvtKJA7Dza6oJ+7e0xCUPEQic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714383543; c=relaxed/simple;
-	bh=+QHuu6tcrTd2miYwphgGCGGwqwJ2bGdzLGGe1AU7gUk=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
-	 MIME-Version:Content-Type; b=ZxTkPt3Q+hLjeF9fQAkosfJ6/OZmrgQ5+Rlx+3OvadAZegN/GuZGY8T6rxQGRKWVIZWaBh4WDD4PmYaAlwTRBaDRUdRDxJu59Cy6sh33seGQvoL5dYB0BAYMBRn9jaq4azeVaFhqTkt0g5euiD3FLA99erGaQxrdVUwl8BANpdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QANXdDR9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714384117; c=relaxed/simple;
+	bh=eOQoFD2Q1RfOcsu5iO/K4iGBJCStR6G+ZsM+imLU3t4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IHlOSVCRZv8lmIgFhso1S12E/Dr61l2VU/aTPZf4gjg2fg+HXs0HnJQf/w1h9/a4dnOXS3tpyNZdknwiuh9Ggl2X/4VYA8IOnvWPl808vjn6iEsau1aV0ouD5tDMq/vTMpV5BZ9+HbJFmaUJl4ISFay+mBBHXH4aUdTwTQF6/Fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Kg9UUvOf; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QANXdDR9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FA9FC4AF17;
-	Mon, 29 Apr 2024 09:39:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714383542;
-	bh=+QHuu6tcrTd2miYwphgGCGGwqwJ2bGdzLGGe1AU7gUk=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=QANXdDR9BkIu/RMCRVPiPQ3BYjZqeCdjqma7ryhs1RkcxztLfUDLpEXvz8zRdYqZ9
-	 2YUUXh7xUWhthwCdGjSmXLIQzBwSzAI4ZDkM3CJE06RVD+OKOH+0DmIif/ydmCBxCq
-	 gC/z8/cRNBr/gagG+aOVRCJ1ZXn/hxjEVRBSz+lLFc6MW9gf1vEVJhk/6RREnOr9ad
-	 vzWw65C4fMgWdWSAt9msRszNtucWac7YyaafArPtMFwcz/KyKPDlGsO72NjGZpTyWy
-	 sE8x7SQYOcCythGim5Du2efG6mU9pNzimjbZPA9vynbSEVpMev6QlfZip8HEN3oZ9R
-	 C/D4LLSTd16IQ==
-References: <20240408133243.694134-1-hch@lst.de>
- <20240408133243.694134-2-hch@lst.de>
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>,
- linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: remove support for tools and kernels with v5
- support
-Date: Mon, 29 Apr 2024 15:04:51 +0530
-In-reply-to: <20240408133243.694134-2-hch@lst.de>
-Message-ID: <871q6oqzik.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Kg9UUvOf"
+Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43T9WcRr023175;
+	Mon, 29 Apr 2024 09:47:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=pp1;
+ bh=Kn2/uMMJ4m7IZDO8WlgsPqO7vUsAlVouDdMvBgTuG6Q=;
+ b=Kg9UUvOfIY+q0ndE7ZECmZZUdA61ZCkJRFtD9wLCjYzo6fe8LGiqgmj/OaQd5I/iEeGT
+ h1W12UFRvhBs0Ojrxq2EVahg4SwzhBVbMh+nl7Xnt0KphpPc+1K4uJnLB1ltR+O9/J8Y
+ xH2aBPNbeoLf7rIVjTmAK85pN4JRaPC9PScCooRYa7ChiJY29YfixJaL//aFd9303wQR
+ GZQxdsEVeB2nF62y0IT3RUjuxSeOIjIAGLlEpPQHiihzSala+ltUzs1I4eJF+yCxcsu9
+ xwGFkZf6AwHS79UZe7yymFDc9jL+Zte2Za8lJWgzOlYfHYZrwUSEHHijG4bCs204Im4A kw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xt90jg0v6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 29 Apr 2024 09:47:55 +0000
+Received: from m0353728.ppops.net (m0353728.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43T9ltmx016519;
+	Mon, 29 Apr 2024 09:47:55 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xt90jg0v5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 29 Apr 2024 09:47:54 +0000
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 43T7DaXf001450;
+	Mon, 29 Apr 2024 09:47:53 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3xsbptppem-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 29 Apr 2024 09:47:53 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 43T9loYx26542522
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 29 Apr 2024 09:47:52 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0556520040;
+	Mon, 29 Apr 2024 09:47:50 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B4E6220043;
+	Mon, 29 Apr 2024 09:47:48 +0000 (GMT)
+Received: from osiris (unknown [9.171.12.101])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon, 29 Apr 2024 09:47:48 +0000 (GMT)
+Date: Mon, 29 Apr 2024 11:47:47 +0200
+From: Heiko Carstens <hca@linux.ibm.com>
+To: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>
+Cc: Luis Chamberlain <mcgrof@kernel.org>,
+        Joel Granados <j.granados@samsung.com>,
+        Kees Cook <keescook@chromium.org>, Eric Dumazet <edumazet@google.com>,
+        Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-mm@kvack.org,
+        linux-security-module@vger.kernel.org, bpf@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-xfs@vger.kernel.org,
+        linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        kexec@lists.infradead.org, linux-hardening@vger.kernel.org,
+        bridge@lists.linux.dev, lvs-devel@vger.kernel.org,
+        linux-rdma@vger.kernel.org, rds-devel@oss.oracle.com,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        apparmor@lists.ubuntu.com
+Subject: Re: [PATCH v3 11/11] sysctl: treewide: constify the ctl_table
+ argument of handlers
+Message-ID: <20240429094747.29046-G-hca@linux.ibm.com>
+References: <20240423-sysctl-const-handler-v3-0-e0beccb836e2@weissschuh.net>
+ <20240423-sysctl-const-handler-v3-11-e0beccb836e2@weissschuh.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240423-sysctl-const-handler-v3-11-e0beccb836e2@weissschuh.net>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: dsJabyKjD5wmo-a4UVf9qexuuOQkOoCK
+X-Proofpoint-GUID: 7SlQVN0HjcUbQBl5eVSaH1VEy2oE_0-m
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-04-29_07,2024-04-26_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ bulkscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 suspectscore=0 clxscore=1011 mlxscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2404010000 definitions=main-2404290061
 
-On Mon, Apr 08, 2024 at 03:32:38 PM +0200, Christoph Hellwig wrote:
-> v5 file systems have been the default for more than 10 years.  Drop
-> support for non-v5 enabled kernels and xfsprogs.
->
+On Tue, Apr 23, 2024 at 09:54:46AM +0200, Thomas Weiﬂschuh wrote:
+> Adapt the proc_hander function signature to make it clear that handlers
+> are not supposed to modify their ctl_table argument.
+> 
+> This is a prerequisite to moving the static ctl_table structs into
+> rodata.
+> By migrating all handlers at once a lengthy transition can be avoided.
+> 
+> The patch was mostly generated by coccinelle with the following script:
+> 
+>     @@
+>     identifier func, ctl, write, buffer, lenp, ppos;
+>     @@
+> 
+>     int func(
+>     - struct ctl_table *ctl,
+>     + const struct ctl_table *ctl,
+>       int write, void *buffer, size_t *lenp, loff_t *ppos)
+>     { ... }
+> 
+> In addition to the scripted changes some other changes are done:
+> 
+> * the typedef proc_handler is adapted
+> 
+> * the prototypes of non-static handler are adapted
+> 
+> * kernel/seccomp.c:{read,write}_actions_logged() and
+>   kernel/watchdog.c:proc_watchdog_common() are adapted as they need to
+>   adapted together with the handlers for type-consistency reasons
+> 
+> Signed-off-by: Thomas Weiﬂschuh <linux@weissschuh.net>
 
-Hi,
+...
 
-This patch is causing xfs/077 to fail as shown below,
+>  arch/s390/appldata/appldata_base.c        | 10 ++---
+>  arch/s390/kernel/debug.c                  |  2 +-
+>  arch/s390/kernel/topology.c               |  2 +-
+>  arch/s390/mm/cmm.c                        |  6 +--
 
-# ./check xfs/077
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 xfs-crc 6.9.0-rc4+ #2 SMP PREEMPT_DYNAMIC Mon Apr 29 08:08:05 GMT 2024
-MKFS_OPTIONS  -- -f -f -m crc=1,reflink=0,rmapbt=0, -i sparse=0 /dev/loop6
-MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota -o context=system_u:object_r:root_t:s0 /dev/loop6 /media/scratch
-
-xfs/077 9s ... [not run] Kernel doesn't support meta_uuid feature
-Ran: xfs/077
-Not run: xfs/077
-Passed all 1 tests
-
-The corresponding configuration file used had the following,
-
-  export TEST_DEV=/dev/loop5
-  export TEST_DIR=/media/test
-  export SCRATCH_DEV=/dev/loop6
-  export SCRATCH_MNT=/media/scratch
-  
-  MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
-  MOUNT_OPTIONS='-o usrquota,grpquota,prjquota'
-
--- 
-Chandan
+Acked-by: Heiko Carstens <hca@linux.ibm.com> # s390
