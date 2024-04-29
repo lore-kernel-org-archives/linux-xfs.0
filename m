@@ -1,334 +1,259 @@
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2061.outbound.protection.outlook.com [40.107.94.61])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04AE47C0A6;
-	Mon, 29 Apr 2024 14:29:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.94.61
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714400979; cv=fail; b=dG+unOKD9SnUdQI64pkdKLClH3beCREuVv3+GcsAYC+EDp01iwGJ6kgNZMq7kNFB9eg1mU4VkGHntrohJd/PbVxCbqkxsb1hICuAaoG+GkUNZEuOLMHX0MUQ2FcKH6j/oaNV3aKS/OetLu9dBf4cVLmxQ4i7H49S9xv+kr4BCnw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714400979; c=relaxed/simple;
-	bh=5e8RI6W47IBu0UtfWxFcy+vRv34UAisKA7Hf+LagcEM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=L2elZbz7wT6yhU13sPRcod64QcVelzf2AQ5udUf0jI7xwqLHw1wVXNCiPJsH/UHap63TIyAQnPyLmXIFeOJVQzTQr3fVedV46+fFfGriJVzumFPhVcY0spaNCn2f0cEIulD6HxAbeLZBCy9OfEayT4jqT0VZVIAYHHO0MqtxnIE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=n2ExqiwL; arc=fail smtp.client-ip=40.107.94.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 688BA7E0F2
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 15:11:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714403507; cv=none; b=ZdD/rGuVWj7D8j/U2dV5nDnthO9s1iDiWZQVcWBlE+83MQLIMRup6Jq6JaN4HxbQ03hdOsgcCgVpOjJIp6EPmFAW8ZHAgbhsR8TeFoKFMk0Nby1Um4zZmIdl8kgnXKI5RIfgltwpLDOxq/cUtc27/rWXxW6zgjZGukAQO+GCdQ8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714403507; c=relaxed/simple;
+	bh=Y/1+hzOrhvhSJ+8zEWH2WuOqPoRK8RCvN8nw3zG0wNM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TvYzE6XXhfCkwRTKPWslLS5AeAyIGRb5AIDNGlI4TOMQF9ViAgWZoV6H+AiG00Yb13lhVQTWi4MgJn8UPL3Zo0GmHfSuFNLh0APVGLaKXWHwO/d63fz+so09vNOu/i4Zp775+il20E82BC953pbUPcAMT7bnSxNJyvQnF6ZgiW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j2UX/3YW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="n2ExqiwL"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fztIosGqlLwHAsHaqnjLdyuUQUFhdOAf5U0ZnWOfhRWE0bSU2D7cMYtjOYgvNpZESwQrI3sd1Pv9ak79UtnPP3mCY9EgfIaQ0tt2JF0r2hSU7p2lVrQcQaSbuoWaySmVWvi1a/HL7HMdffNWYYxLC68B1Iabf4Ea7ubVOZhGQEE88RYU07d5I6azE0rFtRZfWAno5ttvtRYXlQj0Zdm06v4vep03nptsNjjBZ/N+owZZZm8JyO5ahSblYcoIR8nEmy4iyZDa+FuFY11wTKbGcT+MjxBnJVeHNXYo1rCqYcMK+hZvaw/iN+m5R7dwgWzOw8r75D5OdrXIz39ab+wJnQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ynYzX5dw2zS9ty4VpRnvnw/htccmtXO4bQLpKRuupkA=;
- b=InEf93Lmh997Kxwjb9LHtIbO0K9E9bzTM05PRw6WaYL1UfDXeMRNU5+xjQei6fKsTh+9iQbi37mOMndaT6VwfRGZqzUa5/ga5+wUxPvvat+nI/o5+hUb0fYVb6jSTurVbZAWjEMVFVY1ITp/Z/479UkEZv/e2z+mN3FIwGXUKjlXHO/8zyINwIuwF9iNt5AsR963RCgRO0u2YUDYx9gsT2MTJLVV/1a/9RkmmgFXpLd7NW8MJ0aoPzgZHTGPfcP1gP/iFSZENQr8i6au/TYetJWfFmJIvXLt6E/IQ0+Fp3Oaex1FEMylwtAGIFLvKCHZcrGHVH4cpTHN+yT0+jh7/Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ynYzX5dw2zS9ty4VpRnvnw/htccmtXO4bQLpKRuupkA=;
- b=n2ExqiwLJUzpCv/Oo2WRtU92AXvvhqZZmguE1UGsBqXiTuWorDEMzi6VdDJWpgNUN5jY0HBSx+k0oaFleuXxDRpL0hNZ53ZNneELkzWkZ+WGMKYVWbmRuQIo+pc3t0IZL6Uj1l5M/BbIz0ydKy562jXTaA+CZx6sfGEsRvC7JNJpYa0ybQZ/8ySZKvYmEtglNKn9559ICPuhrRJd6JUYXAngXwmXryPQ+FLiSaERwuhpuOpkfzf7cBO6n5wmJSX+agYNoK3fsx7XYkDWLVb27X87myrmM/BI+wzh556lhISXR8O34AS5vpUg7AdQnLg+2XQ6HmfOTz3D2rTslACucA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB5744.namprd12.prod.outlook.com (2603:10b6:8:73::18) by
- DS0PR12MB7801.namprd12.prod.outlook.com (2603:10b6:8:140::10) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7519.34; Mon, 29 Apr 2024 14:29:34 +0000
-Received: from DS7PR12MB5744.namprd12.prod.outlook.com
- ([fe80::dc5c:2cf1:d5f5:9753]) by DS7PR12MB5744.namprd12.prod.outlook.com
- ([fe80::dc5c:2cf1:d5f5:9753%6]) with mapi id 15.20.7519.031; Mon, 29 Apr 2024
- 14:29:33 +0000
-From: Zi Yan <ziy@nvidia.com>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>, Sean Christopherson <seanjc@google.com>,
- Matthew Wilcox <willy@infradead.org>,
- "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, djwong@kernel.org,
- brauner@kernel.org, david@fromorbit.com, chandan.babu@oracle.com,
- akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, hare@suse.de,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
- gost.dev@samsung.com, p.raghav@samsung.com
-Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum folio
- order requirement
-Date: Mon, 29 Apr 2024 10:29:29 -0400
-X-Mailer: MailMate (1.14r6030)
-Message-ID: <6799F341-9E37-4F3E-B0D0-B5B2138A5F5F@nvidia.com>
-In-Reply-To: <Zi8aYA92pvjDY7d5@bombadil.infradead.org>
-References: <20240425113746.335530-1-kernel@pankajraghav.com>
- <20240425113746.335530-6-kernel@pankajraghav.com>
- <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
- <Zir5n6JNiX14VoPm@bombadil.infradead.org>
- <Ziw8w3P9vljrO9JV@bombadil.infradead.org>
- <Zi2e7ecKJK6p6ERu@bombadil.infradead.org>
- <Zi8aYA92pvjDY7d5@bombadil.infradead.org>
-Content-Type: multipart/signed;
- boundary="=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=";
- micalg=pgp-sha512; protocol="application/pgp-signature"
-X-ClientProxiedBy: BL1P223CA0017.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:208:2c4::22) To DS7PR12MB5744.namprd12.prod.outlook.com
- (2603:10b6:8:73::18)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j2UX/3YW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6C68C113CD;
+	Mon, 29 Apr 2024 15:11:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1714403507;
+	bh=Y/1+hzOrhvhSJ+8zEWH2WuOqPoRK8RCvN8nw3zG0wNM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=j2UX/3YWjF5kycfatocY8XTMrk2HJeZM4FisNfk/lG0kSp0SJG0gE4KLRcxhRYEEz
+	 hA9Iq6e+IkSlEuxw8yQvFTYMWOwRvKtklz1fcxm+b9bqc1tydG8lqj3PSIrvcv61ha
+	 /GXfFMitH+IpkjzLl+STznAsanfISoBEzGERGoQ7wvHafquUYbzSMmqtfhaDxhdL6r
+	 d6/dkyXEUPR32aTiSSuiZMWlRQt4hPQAn38jkivdq7z0UpftqiicIDIie75MkNY3gw
+	 pgCgGHId/WF3tIBMRhORgTJJ5ur0FH91UzZCL1IRRJ7Hgtt1OB4brQr3qXg/DMpuCY
+	 ZBhCXV+w4aNog==
+Date: Mon, 29 Apr 2024 08:11:46 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Subject: Re: [PATCHv2 1/1] xfs: Add cond_resched in xfs_bunmapi_range loop
+Message-ID: <20240429151146.GU360919@frogsfrogsfrogs>
+References: <f7d3db235a2c7e16681a323a99bb0ce50a92296a.1714033516.git.ritesh.list@gmail.com>
+ <87sez4y2v5.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB5744:EE_|DS0PR12MB7801:EE_
-X-MS-Office365-Filtering-Correlation-Id: ac40d570-8f53-4546-f2b9-08dc6858ca20
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230031|7416005|376005|1800799015|366007;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?SGRmeRdZAzoSI7OhNN4uopmjEAhrGfhz+T0N0rVTM4oWj5FoV1EibjRTIB5C?=
- =?us-ascii?Q?HqgLbVSY06YlpOlgZoFsieDs+zMZgOYb2foL0p6JEfiweWjIzQwfcyH1kzRT?=
- =?us-ascii?Q?qLgsyU8+0KZN+USoHixObs7hirJUXvaGx+sqS3WRi2fkBk6RZuQ7sV8YElfA?=
- =?us-ascii?Q?Svy4mKSGjjgL6XqT59TZkrYvOICSW3DOUC4pTNtNUGuiLjNrrFzYz899kuY3?=
- =?us-ascii?Q?7McRZY0ueF7rsc2f6ZNZQJ6f3vBljjmszWNyBCdKAYP0a8lzinVTKX/DDZ1S?=
- =?us-ascii?Q?n0lbUkTT6S87q6amsgKTNZg0X7fM1q6gzjuS0XUpprFqwfME5WQFAIeHSc8F?=
- =?us-ascii?Q?TZg2gCmHz47fN4fhuB9fJklUcw6GVudHQhu+lnnjCNXJ5hR840adCFWWocGT?=
- =?us-ascii?Q?k+b4Pka9nHLVHvJP+DyApIiJUYO+fInZqYRZjY2JTQ7obouXBmMCX/uzwQlK?=
- =?us-ascii?Q?sZkpEscGV3YwcaNnnWxpLeOr2KFm8qkDI77iPCde+acrC5aYptBVV0lAOrX6?=
- =?us-ascii?Q?BKF9VIFFKtcEqnF1czgTVYFvWZ2wGNlD01wBocNGIHho2MOqDEFRatjc32VC?=
- =?us-ascii?Q?/ur++VJtKGa5K4anJ2izSGY4cJOA/VVHIqQSF8XgkDcIiLEQDetr/Qs9Kv8S?=
- =?us-ascii?Q?u6bg8ddUm/Me9PMPp1BKM9gFr/xUTTQJSXkz1xkbiUYOUWyJKA7ZS4J/QPXR?=
- =?us-ascii?Q?HFhSbPEezdme7bqjg2AWv2E/0oA8R0DnAKE1d+aSAHy7zil1flDc3JtXZqTz?=
- =?us-ascii?Q?LjrdD8aCcetmAj+tKL19C6GjBNFw4ePM/ELlXHW/dyvHJm+A6NiS8qvwFpvz?=
- =?us-ascii?Q?h7R3yA4fPFHXNIASFLFYDkG0EiK+dvUEuI9KT/5DXqQcF5peFPgSeWEPgFle?=
- =?us-ascii?Q?tvmeEzIQzMfVjPpMQBlyHbmx7phjR05VjKIAmx+tfKg4yCJRH3kIPhimnAqG?=
- =?us-ascii?Q?0W0jUUKQJkzyzqi7amNX1PogZckhRAPr/pyQRyHIl3NINpszs/0BaVk1+ZEB?=
- =?us-ascii?Q?Ykm010rI4QydTPBcNxi40WBWhBz175IaMVxsgTCwjRjJZK25qNtTfC8A5Cen?=
- =?us-ascii?Q?vAE8IKrgDruRTv3W2xguKA1kzhGurTKCvRm5z5BW/irHCWbFPaEdgyOPCY2E?=
- =?us-ascii?Q?s1/imO8XJY8sSDrRsJAGTNOd6SVuaFE9IWxi/emP8mKHXWa+E6Z/xFIKdulW?=
- =?us-ascii?Q?GW9KFVyLq5FwDwTHVkasOCWWkfveoBzKV2nwoFjB7CM5GzGQM22Whw+qUpow?=
- =?us-ascii?Q?ujIhxD2RQxpj0wEh33E1AsTZKmVEHMavRXutV2ZuVw=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB5744.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7416005)(376005)(1800799015)(366007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?DbPX2NcneEYnamAnGPrxjVkA+a0NpmScUbSPjzUnxasHdh2LJhDGfiv6QrhZ?=
- =?us-ascii?Q?aWC/FPBnpscQeujXY032m0cw/OYma7qFyiRIEi0giqEmyv0/UZOL5FVRGJN3?=
- =?us-ascii?Q?X/EWL3356j9CLN96MfHrccDaDaoowMcxLdWYV4FOVW5VjoScwh5TFoj12j8D?=
- =?us-ascii?Q?mJmN8B14KLea7xb40aYMMUblitebKLm5pmfUMgYA+5l9jQ20l+3D9s6lxatT?=
- =?us-ascii?Q?Gvuf0ovLIRLOJf3mCR37RBqB9PKKA59UzTSOW0Tku7tS8kBsO2LnMEkcPdzR?=
- =?us-ascii?Q?n2IGo/IZQUOnQCqluN/F+8s9xfcUmwX2VUa3LPOcecWNQj8l22h1uiLJwlET?=
- =?us-ascii?Q?OuA+8z9nEAe0eLLxP4qh2BCBSZIRJ/Oo4ndSgn9ngvG302GfwQPf3IxTFUu+?=
- =?us-ascii?Q?41iyEs5dN2GNxbblYUF16zl6E/0p+k/1N0YWYIjRVEC90W4Jg9xNxEw3kim/?=
- =?us-ascii?Q?nIVfQU7IHCUpdRiO9916nYkqvnTKHuvfI/h2nL+HfRI+Fdr+ydUgdPJeMARK?=
- =?us-ascii?Q?2dVaTDDIvQYVUwwgCl3HcCKDOFeD4PkM8aq1ElazElRqLpWp+MYV24t8oXBr?=
- =?us-ascii?Q?5ld09zM4yTT++1iKFTiGQJsqy+zb4CD8dTgBOl7O8k+dGB5P24weJD+/8e05?=
- =?us-ascii?Q?DHX/hV6+taMkFJAQLxnnPfELBeYJK9BT4WMiOvqiVAIkeuiQqgmTpQpfNFuY?=
- =?us-ascii?Q?xcerUyNTxJOoOUKDs2hDAgR4+bjZOTg52pxi3AmSWKLbJk5bypArfnGLDD1k?=
- =?us-ascii?Q?B+QGRtMHSzVhBvEU0YAOfFrXB51zlqoiICGLh3tMDxazVLoTcvUYsKwpT0rC?=
- =?us-ascii?Q?o7OsDlNZgCPDD8eXYY2BfGPaezOJ6YC/G2Qc8Ntc4X5KsHtwCI3JPIyNrxkP?=
- =?us-ascii?Q?o6BzXrvNK18ZIEPwwcqqCwUTTeoDhmZzrHZfkmWDuYDui4GjIgAPGNsnQfSW?=
- =?us-ascii?Q?nBNc/ztcFLKTBk8VYFvCjCYbDnkZicpMMQ44GEVdCkvTtWPMOBuwXfxliANx?=
- =?us-ascii?Q?aXYzvav+97HEw6XQWHisBOFvSKpFS03gcjkBVcTi1E4fDZmABDuZAXkHzl8T?=
- =?us-ascii?Q?dxh1jFMFburaOzdMEaAhtLq43mmiH7Fjv7jO0Wk54R66wPe72hpVSg9/emb7?=
- =?us-ascii?Q?b7UsW7HGQ4K7Os79RyMrt2kKCOyd1aHY1tnoMMPMmqCIW0jiFr9ZHqlho4tf?=
- =?us-ascii?Q?6gqP8W2zi1dE5BTyYs/Puwd30qveAgadbLD/V6e/LI1Y5U/d2bAyQsW5i1Pe?=
- =?us-ascii?Q?LDqLrkm0U6kIRUXlccqwVh5ziMWDFXDrf/YtfuSDeM5PeSo/CDcb+a8wTnK+?=
- =?us-ascii?Q?wUCwOkCpPhs2h/YWxfJ6HzpXajxGNIpHyZZPHuk7OEhBFftw8w+MErk3pUJJ?=
- =?us-ascii?Q?1Y+Pe26q6NeiJTapfE1exBl/sSiH28wxSMyYuFlbMpWZx+I4KQ13Q7GI54/f?=
- =?us-ascii?Q?cDjbpRcNdryTcOdwY6YxDw+HQNH9W5oh0ZZGXnyx+Fsy3vEvmE8YtEjifkkY?=
- =?us-ascii?Q?kcxu8Wsfbtsa3xv5jFHKqgrwwM4MetBE2olq3kVOTwx80jNhU53FB02F4kwl?=
- =?us-ascii?Q?wRU22ucg/UEgFUhEjnc=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac40d570-8f53-4546-f2b9-08dc6858ca20
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB5744.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Apr 2024 14:29:33.8419
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /mwVVCfvMCzYUIIjl/cOQekcgPBEhlokb26zfg22Z5Sb0V2XhmTa9mxXdiTFDNu8
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7801
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87sez4y2v5.fsf@gmail.com>
 
---=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, Apr 29, 2024 at 02:14:46PM +0530, Ritesh Harjani wrote:
+> "Ritesh Harjani (IBM)" <ritesh.list@gmail.com> writes:
+> 
+> > An async dio write to a sparse file can generate a lot of extents
+> > and when we unlink this file (using rm), the kernel can be busy in umapping
+> > and freeing those extents as part of transaction processing.
+> > Add cond_resched() in xfs_bunmapi_range() to avoid soft lockups
+> > messages like these. Here is a call trace of such a soft lockup.
+> >
+> > watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [kworker/1:0:82435]
+> > CPU: 1 PID: 82435 Comm: kworker/1:0 Tainted: G S  L   6.9.0-rc5-0-default #1
+> > Workqueue: xfs-inodegc/sda2 xfs_inodegc_worker
+> > NIP [c000000000beea10] xfs_extent_busy_trim+0x100/0x290
+> > LR [c000000000bee958] xfs_extent_busy_trim+0x48/0x290
+> > Call Trace:
+> >   xfs_alloc_get_rec+0x54/0x1b0 (unreliable)
+> >   xfs_alloc_compute_aligned+0x5c/0x144
+> >   xfs_alloc_ag_vextent_size+0x238/0x8d4
+> >   xfs_alloc_fix_freelist+0x540/0x694
+> >   xfs_free_extent_fix_freelist+0x84/0xe0
+> >   __xfs_free_extent+0x74/0x1ec
+> >   xfs_extent_free_finish_item+0xcc/0x214
+> >   xfs_defer_finish_one+0x194/0x388
+> >   xfs_defer_finish_noroll+0x1b4/0x5c8
+> >   xfs_defer_finish+0x2c/0xc4
+> >   xfs_bunmapi_range+0xa4/0x100
+> >   xfs_itruncate_extents_flags+0x1b8/0x2f4
+> >   xfs_inactive_truncate+0xe0/0x124
+> >   xfs_inactive+0x30c/0x3e0
+> >   xfs_inodegc_worker+0x140/0x234
+> >   process_scheduled_works+0x240/0x57c
+> >   worker_thread+0x198/0x468
+> >   kthread+0x138/0x140
+> >   start_kernel_thread+0x14/0x18
+> >
+> 
+> My v1 patch had cond_resched() in xfs_defer_finish_noroll, since I was
+> suspecting that it's a common point where we loop for many other
+> operations. And initially Dave also suggested for the same [1].
+> But I was not totally convinced given the only problematic path I
+> had till now was in unmapping extents. So this patch keeps the
+> cond_resched() in xfs_bunmapi_range() loop.
+> 
+> [1]: https://lore.kernel.org/all/ZZ8OaNnp6b%2FPJzsb@dread.disaster.area/
+> 
+> However, I was able to reproduce a problem with reflink remapping path
+> both on Power (with 64k bs) and on x86 (with preempt=none and with KASAN
+> enabled). I actually noticed while I was doing regression testing of
+> some of the iomap changes with KASAN enabled. The issue was seen with
+> generic/175 for both on Power and x86.
+> 
+> Do you think we should keep the cond_resched() inside
+> xfs_defer_finish_noroll() loop like we had in v1 [2]. If yes, then I can rebase
+> v1 on the latest upstream tree and also update the commit msg with both
+> call stacks.
 
-On 28 Apr 2024, at 23:56, Luis Chamberlain wrote:
+I think there ought to be one in xfs_defer_finish_noroll (or even
+xfs_trans_roll) when we're between dirty transactions, since long
+running transaction chains can indeed stall.  That'll hopefully solve
+the problem for bunmapi and long running online repair operations.
 
-> On Sat, Apr 27, 2024 at 05:57:17PM -0700, Luis Chamberlain wrote:
->> On Fri, Apr 26, 2024 at 04:46:11PM -0700, Luis Chamberlain wrote:
->>> On Thu, Apr 25, 2024 at 05:47:28PM -0700, Luis Chamberlain wrote:
->>>> On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
->>>>> On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) w=
-rote:
->>>>>> From: Pankaj Raghav <p.raghav@samsung.com>
->>>>>>
->>>>>> using that API for LBS is resulting in an NULL ptr dereference
->>>>>> error in the writeback path [1].
->>>>>>
->>>>>> [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397d=
-f
->>>>>
->>>>>  How would I go about reproducing this?
->>
->> Well so the below fixes this but I am not sure if this is correct.
->> folio_mark_dirty() at least says that a folio should not be truncated
->> while its running. I am not sure if we should try to split folios then=
+But that said, the main FICLONE loop continually creates new transaction
+chains, so you probably need one there too.  Hence the grumblings about
+cond_resched whackamole.
 
->> even though we check for writeback once. truncate_inode_partial_folio(=
-)
->> will folio_wait_writeback() but it will split_folio() before checking
->> for claiming to fail to truncate with folio_test_dirty(). But since th=
-e
->> folio is locked its not clear why this should be possible.
->>
->> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
->> index 83955362d41c..90195506211a 100644
->> --- a/mm/huge_memory.c
->> +++ b/mm/huge_memory.c
->> @@ -3058,7 +3058,7 @@ int split_huge_page_to_list_to_order(struct page=
- *page, struct list_head *list,
->>  	if (new_order >=3D folio_order(folio))
->>  		return -EINVAL;
->>
->> -	if (folio_test_writeback(folio))
->> +	if (folio_test_dirty(folio) || folio_test_writeback(folio))
->>  		return -EBUSY;
->>
->>  	if (!folio_test_anon(folio)) {
->
-> I wondered what code path is causing this and triggering this null
-> pointer, so I just sprinkled a check here:
->
-> 	VM_BUG_ON_FOLIO(folio_test_dirty(folio), folio);
->
-> The answer was:
->
-> kcompactd() --> migrate_pages_batch()
->                   --> try_split_folio --> split_folio_to_list() -->
-> 		       split_huge_page_to_list_to_order()
->
+Thoughts?
 
-There are 3 try_split_folio() in migrate_pages_batch(). First one is to
-split anonymous large folios that are on deferred split list, so not rela=
-ted;
-second one is to split THPs when thp migration is not supported, but
-this is compaction, so not related; third one is to split large folios
-when there is no same size free page in the system, and this should be
-the one.
+--D
 
-> Since it took running fstests generic/447 twice to reproduce the crash
-> with a minorder and 16k block size, modified generic/447 as followed an=
-d
-> it helps to speed up the reproducer with just running the test once:
->
-> diff --git a/tests/generic/447 b/tests/generic/447
-> index 16b814ee7347..43050b58e8ba 100755
-> --- a/tests/generic/447
-> +++ b/tests/generic/447
-> @@ -36,6 +39,15 @@ _scratch_mount >> "$seqres.full" 2>&1
->  testdir=3D"$SCRATCH_MNT/test-$seq"
->  mkdir "$testdir"
->
-> +runfile=3D"$tmp.compaction"
-> +touch $runfile
-> +while [ -e $runfile ]; do
-> +	echo 1 > /proc/sys/vm/compact_memory
-> +	sleep 10
-> +done &
-> +compaction_pid=3D$!
-> +
-> +
->  # Setup for one million blocks, but we'll accept stress testing down t=
-o
->  # 2^17 blocks... that should be plenty for anyone.
->  fnr=3D20
-> @@ -69,6 +81,8 @@ _scratch_cycle_mount
->  echo "Delete file1"
->  rm -rf $testdir/file1
->
-> +rm -f $runfile
-> +wait > /dev/null 2>&1
->  # success, all done
->  status=3D0
->  exit
->
-> And I verified that moving the check only to the migrate_pages_batch()
-> path also fixes the crash:
->
-> diff --git a/mm/migrate.c b/mm/migrate.c
-> index 73a052a382f1..83b528eb7100 100644
-> --- a/mm/migrate.c
-> +++ b/mm/migrate.c
-> @@ -1484,7 +1484,12 @@ static inline int try_split_folio(struct folio *=
-folio, struct list_head *split_f
->  	int rc;
->
->  	folio_lock(folio);
-> +	if (folio_test_dirty(folio)) {
-> +		rc =3D -EBUSY;
-> +		goto out;
-> +	}
->  	rc =3D split_folio_to_list(folio, split_folios);
-> +out:
->  	folio_unlock(folio);
->  	if (!rc)
->  		list_move_tail(&folio->lru, split_folios);
->
-> However I'd like compaction folks to review this. I see some indication=
-s
-> in the code that migration can race with truncation but we feel fine by=
-
-> it by taking the folio lock. However here we have a case where we see
-> the folio clearly locked and the folio is dirty. Other migraiton code
-> seems to write back the code and can wait, here we just move on. Furthe=
-r
-> reading on commit 0003e2a414687 ("mm: Add AS_UNMOVABLE to mark mapping
-> as completely unmovable") seems to hint that migration is safe if the
-> mapping either does not exist or the mapping does exist but has
-> mapping->a_ops->migrate_folio so I'd like further feedback on this.
-
-During migration, all page table entries pointing to this dirty folio
-are invalid, and accesses to this folio will cause page fault and
-wait on the migration entry. I am not sure we need to skip dirty folios.
-
-> Another thing which requires review is if we we split a folio but not
-> down to order 0 but to the new min order, does the accounting on
-> migrate_pages_batch() require changing?  And most puzzling, why do we
-
-What accounting are you referring to? split code should take care of it.
-
-> not see this with regular large folios, but we do see it with minorder =
-?
-
-I wonder if the split code handles folio->mapping->i_pages properly.
-Does the i_pages store just folio pointers or also need all tail page
-pointers? I am no expert in fs, thus need help.
-
-
---
-Best Regards,
-Yan, Zi
-
---=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename=signature.asc
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iQJDBAEBCgAtFiEE6rR4j8RuQ2XmaZol4n+egRQHKFQFAmYvrskPHHppeUBudmlk
-aWEuY29tAAoJEOJ/noEUByhUY/AQAJIqwPsNtL3RZCEp0irMLEgWWP6dCzsybB82
-c1lJFSHDx8gWcTJ5mm3ZWywewh+KBwUXS//2524KCWk5VRr2IFl/7eydM91WAcbq
-Zo6i17nh84KXEwzHFmYs80t6qYIxJufdo2HM0yk8U5RidHkKbyshHlPu/G3lEqD1
-+WInHkspt4XfZK7q6ALoS8aZkpkYE2cH1Zjjx9tCy2kUdgY/Jj8iBvaGQXyqgBxt
-0J75x1EVewP1dEKhKgPDJ8bA2eEcvWRm4PfS9E60SKX2F8b7lDHtxBufAzeqcjNh
-DKnQ9rNGRfYZvMPlBrVKQmAD1awLW7BUF893XXgzh/qLkkXInBnpINzti8n92LCe
-ISDEuiUUgSX2WEqqPdRkr2fUy8DcBnpJv3Eet3kEYhGw/16zSFZTtS5KBfrsaxMe
-HClVLDrb0bZoSv63tkIn1eIt/f3XkE98/vEab09XHYX1qQGIihz/4xnZt/ccmy10
-yYdicuWpDT7LOyPpll9RHxOz0WpMEAu6Sl0S1zStZtB7C7OjITEqsE40bzFtw1M0
-5P8OtQCgSyf9g3z/zFo1A+bnYgVG9QtE1vKHJF8EKycX4WduU8ebVMy7AghTghyW
-8rvN6Zc4kvTeaep7eTtxciNDXHOPJR85uF0FTlqZe9Nvsp9sYPT4n32Vf2z5cpwk
-KgZh6ZCS
-=VRI5
------END PGP SIGNATURE-----
-
---=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=--
+> [2]: https://lore.kernel.org/all/0bfaf740a2d10cc846616ae05963491316850c52.1713674899.git.ritesh.list@gmail.com/
+> 
+> 
+> <call stack on Power>
+> ======================
+>  run fstests generic/175 at 2024-02-02 04:40:21
+>  <...>
+> [   C17] watchdog: BUG: soft lockup - CPU#17 stuck for 23s! [xfs_io:7679]
+>  watchdog: BUG: soft lockup - CPU#17 stuck for 23s! [xfs_io:7679]
+>  CPU: 17 PID: 7679 Comm: xfs_io Kdump: loaded Tainted: G               X     6.4.0-150600.5-default #1
+>  NIP [c008000005e3ec94] xfs_rmapbt_diff_two_keys+0x54/0xe0 [xfs]
+>  LR [c008000005e08798] xfs_btree_get_leaf_keys+0x110/0x1e0 [xfs]
+>  Call Trace:
+>   0xc000000014107c00 (unreliable)
+>   __xfs_btree_updkeys+0x8c/0x2c0 [xfs]
+>   xfs_btree_update_keys+0x150/0x170 [xfs]
+>   xfs_btree_lshift+0x534/0x660 [xfs]
+>   xfs_btree_make_block_unfull+0x19c/0x240 [xfs]
+>   xfs_btree_insrec+0x4e4/0x630 [xfs]
+>   xfs_btree_insert+0x104/0x2d0 [xfs]
+>   xfs_rmap_insert+0xc4/0x260 [xfs]
+>   xfs_rmap_map_shared+0x228/0x630 [xfs]
+>   xfs_rmap_finish_one+0x2d4/0x350 [xfs]
+>   xfs_rmap_update_finish_item+0x44/0xc0 [xfs]
+>   xfs_defer_finish_noroll+0x2e4/0x740 [xfs]
+>   __xfs_trans_commit+0x1f4/0x400 [xfs]
+>   xfs_reflink_remap_extent+0x2d8/0x650 [xfs]
+>   xfs_reflink_remap_blocks+0x154/0x320 [xfs]
+>   xfs_file_remap_range+0x138/0x3a0 [xfs]
+>   do_clone_file_range+0x11c/0x2f0
+>   vfs_clone_file_range+0x60/0x1c0
+>   ioctl_file_clone+0x78/0x140
+>   sys_ioctl+0x934/0x1270
+>   system_call_exception+0x158/0x320
+>   system_call_vectored_common+0x15c/0x2ec
+> 
+> 
+> <call stack on x86 with KASAN>
+> ===============================
+>  watchdog: BUG: soft lockup - CPU#6 stuck for 26s! [xfs_io:3438095]
+>  CPU: 6 PID: 3438095 Comm: xfs_io Not tainted 6.9.0-rc5-xfstests-perf-00008-g4e2752e99f55 #1
+>  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.16.2-0-gea1b7a073390-prebuilt.qemu.o4
+>  RIP: 0010:_raw_spin_unlock_irqrestore+0x3c/0x60
+>  Code: 10 48 89 fb 48 83 c7 18 e8 31 7c 10 fd 48 89 df e8 79 f5 10 fd f7 c5 00 02 00 00 74 06 e8 0c 6
+>  Call Trace:
+>   <IRQ>
+>   ? watchdog_timer_fn+0x2dc/0x3a0
+>   ? __pfx_watchdog_timer_fn+0x10/0x10
+>   ? __hrtimer_run_queues+0x4a1/0x870
+>   ? __pfx___hrtimer_run_queues+0x10/0x10
+>   ? kvm_clock_get_cycles+0x18/0x30
+>   ? ktime_get_update_offsets_now+0xc6/0x2f0
+>   ? hrtimer_interrupt+0x2b8/0x7a0
+>   ? __sysvec_apic_timer_interrupt+0xca/0x390
+>   ? sysvec_apic_timer_interrupt+0x65/0x80
+>   </IRQ>
+>   <TASK>
+>   ? asm_sysvec_apic_timer_interrupt+0x1a/0x20
+>   ? _raw_spin_unlock_irqrestore+0x34/0x60
+>   ? _raw_spin_unlock_irqrestore+0x3c/0x60
+>   ? _raw_spin_unlock_irqrestore+0x34/0x60
+>   get_partial_node.part.0+0x1af/0x340
+>   ___slab_alloc+0xc07/0x1250
+>   ? do_vfs_ioctl+0xe5c/0x1660
+>   ? __x64_sys_ioctl+0xd5/0x1b0
+>  ? __alloc_object+0x39/0x660
+>  ? __pfx___might_resched+0x10/0x10
+>  ? __alloc_object+0x39/0x660
+>  ? kmem_cache_alloc+0x3cd/0x410
+>  ? should_failslab+0xe/0x20
+>  kmem_cache_alloc+0x3cd/0x410
+>  __alloc_object+0x39/0x660
+>  __create_object+0x22/0x90
+>  kmem_cache_alloc+0x324/0x410
+>  xfs_bui_init+0x1b/0x150
+>  xfs_bmap_update_create_intent+0x48/0x110
+>  ? __pfx_xfs_bmap_update_create_intent+0x10/0x10
+>  xfs_defer_create_intent+0xcc/0x1b0
+>  xfs_defer_create_intents+0x8f/0x230
+>  xfs_defer_finish_noroll+0x1c0/0x1160
+>  ? xfs_inode_item_precommit+0x2c1/0x880
+>  ? __create_object+0x5e/0x90
+>  ? __pfx_xfs_defer_finish_noroll+0x10/0x10
+>  ? xfs_trans_run_precommits+0x126/0x200
+>  __xfs_trans_commit+0x767/0xbe0
+>  ? inode_maybe_inc_iversion+0xe2/0x150
+>  ? __pfx___xfs_trans_commit+0x10/0x10
+>  xfs_reflink_remap_extent+0x654/0xd40
+>  ? __pfx_xfs_reflink_remap_extent+0x10/0x10
+>  ? __pfx_down_read_nested+0x10/0x10
+>  xfs_reflink_remap_blocks+0x21a/0x850
+>  ? __pfx_xfs_reflink_remap_blocks+0x10/0x10
+>  ? _raw_spin_unlock+0x23/0x40
+>  ? xfs_reflink_remap_prep+0x47d/0x900
+>  xfs_file_remap_range+0x296/0xb40
+>  ? __pfx_xfs_file_remap_range+0x10/0x10
+>  ? __pfx_lock_acquire+0x10/0x10
+>  ? __pfx___might_resched+0x10/0x10
+>  vfs_clone_file_range+0x260/0xc20
+>  ioctl_file_clone+0x49/0xb0
+>  do_vfs_ioctl+0xe5c/0x1660
+>  ? __pfx_do_vfs_ioctl+0x10/0x10
+>  ? trace_irq_enable.constprop.0+0xd2/0x110
+>  ? kasan_quarantine_put+0x7e/0x1d0
+>  ? do_sys_openat2+0x120/0x170
+>  ? lock_acquire+0x43b/0x4f0
+>  ? __pfx_lock_release+0x10/0x10
+>  ? __pfx_do_sys_openat2+0x10/0x10
+>  ? __do_sys_newfstatat+0x94/0xe0
+>  ? __fget_files+0x1ce/0x330
+>  __x64_sys_ioctl+0xd5/0x1b0
+>  do_syscall_64+0x6a/0x140
+>  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> RIP: 0033:0x7ffff7d1a94f
+>  </TASK>
+> 
+> 
+> -ritesh
+> 
+> 
+> 
+> > Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 656c95a22f2e..44d5381bc66f 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -6354,6 +6354,7 @@ xfs_bunmapi_range(
+> >  		error = xfs_defer_finish(tpp);
+> >  		if (error)
+> >  			goto out;
+> > +		cond_resched();
+> >  	}
+> >  out:
+> >  	return error;
+> > --
+> > 2.44.0
+> 
