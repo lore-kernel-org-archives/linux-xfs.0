@@ -1,104 +1,195 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917751079D;
-	Mon, 29 Apr 2024 07:11:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1FC4134BF
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 07:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714374718; cv=none; b=H/4RrAWL1WgEAq/aXCrYZuWi1mNIjMy33UzgM2y8QqAtIHUWS+dz8Cn0Y00pxV7pkAkbb7EfgunEYJPQMahQ5Q0u2i6Gb+DCtfGZOxbA4VvUhkDx59oO2Ybc8eC3DnpudgQFDihKCJu3EhpHZM5Y+6qJpQRi/+ljr08cw/bJwnc=
+	t=1714377593; cv=none; b=GrleoT0V1WvwtEwEbXRMkB7vw8MxNc3MPKYEHlEzmRQYUPt88XJaeokvwlvZ86LhzZCBEJUJVpcUCwVqdoZuF8J+VMILRnEr9Us54U7MlLADYW/NIylcJkgv8bt53ksi8G0H1TNph7SFAN3ntDf/tDsYY/TW01M3HlOjajDqKmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714374718; c=relaxed/simple;
-	bh=VrcNs7voZl2xbyNLKiAEs2ZgJnR3UJ/Zp71/jqId5Po=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=AzLTvnnLd7xfn45ZMBH1NgXLuUEWJ7KdBtmrIX7CzjgFNOG3WD/UMqHJQ+7sc0lhvsp4DO3I/BvjKgT9t8QKm3MIrOTjnOqsThpRdh2fg7Sf3b/vElTEfeA0lB1+NTg9oPQ1n400oheGSOvjDNBFT4NbmFFOC6J8HnizMUqePNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VSZJF44Qpz4f3mHg;
-	Mon, 29 Apr 2024 15:11:41 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id F3B691A0568;
-	Mon, 29 Apr 2024 15:11:50 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP2 (Coremail) with SMTP id Syh0CgAXOQw1SC9mlDgXLg--.20275S3;
-	Mon, 29 Apr 2024 15:11:50 +0800 (CST)
-Subject: Re: [PATCH v5 4/9] xfs: convert delayed extents to unwritten when
- zeroing post eof blocks
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- brauner@kernel.org, david@fromorbit.com, chandanbabu@kernel.org,
- tytso@mit.edu, jack@suse.cz, yi.zhang@huawei.com, chengzhihao1@huawei.com,
- yukuai3@huawei.com
-References: <20240425131335.878454-1-yi.zhang@huaweicloud.com>
- <20240425131335.878454-5-yi.zhang@huaweicloud.com>
- <20240425182904.GA360919@frogsfrogsfrogs>
- <3be86418-e629-c7e6-fd73-f59f97a73a89@huaweicloud.com>
- <ZitKncYr0cCmU0NG@infradead.org>
- <5b6228ce-c553-3387-dfc4-2db78e3bd810@huaweicloud.com>
- <ZiyiNzQ6oY3ZAohg@infradead.org>
- <c4ab199e-92bf-4b22-fe41-1fca400bdc31@huaweicloud.com>
- <Zi8lCUjX8lByIVZI@infradead.org>
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-Message-ID: <f8363f80-027c-cbc2-8abc-fd211e639b38@huaweicloud.com>
-Date: Mon, 29 Apr 2024 15:11:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1714377593; c=relaxed/simple;
+	bh=J/M3Kyyaxp9U40xUp5o+l0+F3r6uFcjQS9TUkAY64kc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kuFL/WP8RR0gWp6Z+ZmIGWlD3v5+bltgtwnv2yfp5zRq16vlkpJitjzaPQtvEqh0GQ2D8K0kuR+4cOdqRxcbOJR9Vivcue4n0s2OSA/qSfJXhWg1D42twGjbrBgI2uV03OUK6Z4Y/lDvqoLmE8rmPOID8pGEjm2fJfJ4Y0XnXA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=qOwwJqtu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=9D6szPgE; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=qOwwJqtu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=9D6szPgE; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qOwwJqtu";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="9D6szPgE";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qOwwJqtu";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="9D6szPgE"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id A686422B14;
+	Mon, 29 Apr 2024 07:59:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1714377583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=jvmZqNemgCykxOSMl87YYizu5RB3gJTyHE7G4OaSmNw=;
+	b=qOwwJqtulAYG6bDnwd8OS9AkorOhMykpaxjYWE6nfEYEUZZkTKu4mEHB5DHbiSFYXoGZGk
+	HauX1pyZFQYzpuNsmFSzz+JAaIn0zmRoj6I5nBgTlFvuvQ4WTDdGC8RdQbr97G5Og8sLIy
+	4krXmqX8b5StjEo0AcRVBtkkrBcL21A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1714377583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=jvmZqNemgCykxOSMl87YYizu5RB3gJTyHE7G4OaSmNw=;
+	b=9D6szPgEVtaIm8ctWKph6O50A1dbrMDYt/pjfsYeE6CpsIpsfAA/TmSyALyZmhPz7Rmpp2
+	thsUGPgPEmvn+FCQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1714377583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=jvmZqNemgCykxOSMl87YYizu5RB3gJTyHE7G4OaSmNw=;
+	b=qOwwJqtulAYG6bDnwd8OS9AkorOhMykpaxjYWE6nfEYEUZZkTKu4mEHB5DHbiSFYXoGZGk
+	HauX1pyZFQYzpuNsmFSzz+JAaIn0zmRoj6I5nBgTlFvuvQ4WTDdGC8RdQbr97G5Og8sLIy
+	4krXmqX8b5StjEo0AcRVBtkkrBcL21A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1714377583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=jvmZqNemgCykxOSMl87YYizu5RB3gJTyHE7G4OaSmNw=;
+	b=9D6szPgEVtaIm8ctWKph6O50A1dbrMDYt/pjfsYeE6CpsIpsfAA/TmSyALyZmhPz7Rmpp2
+	thsUGPgPEmvn+FCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 90A2C139DE;
+	Mon, 29 Apr 2024 07:59:43 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id RQ7tIm9TL2ZVAQAAD6G6ig
+	(envelope-from <vbabka@suse.cz>); Mon, 29 Apr 2024 07:59:43 +0000
+Message-ID: <3e486c7f-57d4-4a36-a949-0cf19f10bf4f@suse.cz>
+Date: Mon, 29 Apr 2024 09:59:43 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <Zi8lCUjX8lByIVZI@infradead.org>
-Content-Type: text/plain; charset=utf-8
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] mm,page_owner: don't remove GFP flags in
+ add_stack_record_to_list
+To: Christoph Hellwig <hch@lst.de>, akpm@linux-foundation.org,
+ osalvador@suse.de
+Cc: elver@google.com, andreyknvl@gmail.com, linux-mm@kvack.org,
+ djwong@kernel.org, david@fromorbit.com, linux-xfs@vger.kernel.org
+References: <20240429054706.1543980-1-hch@lst.de>
 Content-Language: en-US
+From: Vlastimil Babka <vbabka@suse.cz>
+Autocrypt: addr=vbabka@suse.cz; keydata=
+ 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
+ EP+ylKVEKb0Q2A==
+In-Reply-To: <20240429054706.1543980-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:Syh0CgAXOQw1SC9mlDgXLg--.20275S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jw18JF1DCFWfuFy5ZFyfCrg_yoW3urc_uF
-	WI939xCrs7Jan3Zan0kr1SqrWvkF45Gr1YgrZ8Xrs7Jas8AFyxJ395GrZ5uw1fKw42yrnx
-	W3ZFvFy7CF9FqjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbIxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS
-	07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
-	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAF
-	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
-	7IU1zuWJUUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+X-Spam-Flag: NO
+X-Spam-Score: -4.29
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.29 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FREEMAIL_CC(0.00)[google.com,gmail.com,kvack.org,kernel.org,fromorbit.com,vger.kernel.org];
+	RCVD_TLS_ALL(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	MID_RHS_MATCH_FROM(0.00)[];
+	TO_DN_SOME(0.00)[]
 
-On 2024/4/29 12:41, Christoph Hellwig wrote:
-> On Sun, Apr 28, 2024 at 11:26:00AM +0800, Zhang Yi wrote:
->>>
->>> Oh well.  Given that we're full in on the speculative allocations
->>> we might as well deal with it.
->>>
->>
->> Let me confirm, so you also think the preallocations in the COW fork that
->> overlaps the unreflinked range is useless, we should avoid allocating
->> this range, is that right? If so, I suppose we can do this improvement in
->> another patch(set), this one works fine now.
-> 
-> Well, not stop allocating it, but not actually convert it to a real
-> allocation when we're just truncating it and replacing the blocks with
-> reflinked blocks.
+On 4/29/24 7:47 AM, Christoph Hellwig wrote:
+> This loses flags like GFP_NOFS and GFP_NOIO that are important to avoid
+> deadlocks as well as GFP_NOLOCKDEP that otherwise generates lockdep false
+> positives.
 
-OK, it looks fine, too.
+GFP_NOFS and GFP_NOIO translate to GFP_KERNEL without __GFP_FS/__GFP_IO so I
+don't see how this patch would have helped with those.
+__GFP_NOLOCKDEP is likely the actual issue and stackdepot solved it like this:
 
-Thanks,
-Yi.
+https://lore.kernel.org/linux-xfs/20240418141133.22950-1-ryabinin.a.a@gmail.com/
 
+So we could just do the same here.
+
+> Fixes: 217b2119b9e2 ("mm,page_owner: implement the tracking of the stacks count")
+> Reported-by: Reported-by: syzbot+b7e8d799f0ab724876f9@syzkaller.appspotmail.com
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  mm/page_owner.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> But yes, this is a bigger project.>
-> For now for this patch to go ahead:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
+> diff --git a/mm/page_owner.c b/mm/page_owner.c
+> index d17d1351ec84af..d214488846fa92 100644
+> --- a/mm/page_owner.c
+> +++ b/mm/page_owner.c
+> @@ -168,9 +168,7 @@ static void add_stack_record_to_list(struct stack_record *stack_record,
+>  	unsigned long flags;
+>  	struct stack *stack;
+>  
+> -	/* Filter gfp_mask the same way stackdepot does, for consistency */
+>  	gfp_mask &= ~GFP_ZONEMASK;
+> -	gfp_mask &= (GFP_ATOMIC | GFP_KERNEL);
+>  	gfp_mask |= __GFP_NOWARN;
+>  
+>  	set_current_in_page_owner();
 
