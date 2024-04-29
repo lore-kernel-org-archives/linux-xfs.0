@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C89B283CBD
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 15:26:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1392484A30
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 15:27:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714404412; cv=none; b=JvIxPVJdfcXXpguo1qS/vkxSBL7/aS+NyjcBe/+26WQxmF9WF97xH3rxUABzAPz9MZ4XwDP5dUEv2ZeQ4PCQDJihSWnR8znRC00yciJvG6I7V61m6N969OCF+thAVysfr3PurlmlVmg5W9p9xu1UNTXz68TsDqjLt8czldyiEYw=
+	t=1714404464; cv=none; b=ZsMXvFNZMtCy85LBac90vGYGL3tENDY6HUGu0+Pr+bAr61qQRYbEwGCMBOz4ksS1Pj8jII2vg35c6jPlT+EyNWb8/1ncUV7N1s4+7pQYzGGX15WIUp+3TD7KfBRHCrtNmbwCiGUS4yRaZEpnvgH37pzQMGqHNvtk/S4wY+TnfTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714404412; c=relaxed/simple;
-	bh=wuFZT5MFwQue1A0Rkk0/Z2lwU5LGnUNyr49vNOWlmZw=;
+	s=arc-20240116; t=1714404464; c=relaxed/simple;
+	bh=Jg+JAU5uJgLPFU0wrIphJbGKFnG+Vjp2eSaSlYwc5/g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PhKElHb2VZ3mb9p3EH7AyrZZEHqjrKaLrRdBIb/mM/a1Fb8fi76wCCCQOccZA7S+OoAuNAqQpHXbT+ec+76KiR068HkqH1e1L0Kl4qcT29s+0TUHEkzNElyKQdUIHaI6uPyV1FoAPqyZuEy/4mEy1KmzZZQMhqI2SenAFPsuqwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NmDrjkJB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cn50cEjPva4GfkbafEBiXuaY0KYW3PmsWN+tMNVbpbLBkf0VIzzXPvHuHrRmAXRXd5Mr4RCi3s0sdOA9g5et9FKyMnCvggjzncJA7v4be21+01k2qrNEQSJwImjjAHX8abMcyMCYvAgf8neRaUk7TPGG0GqZAgO/h/TCH75fxKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iBtqWxnB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NmDrjkJB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D89AC116B1;
-	Mon, 29 Apr 2024 15:26:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iBtqWxnB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C32CC116B1;
+	Mon, 29 Apr 2024 15:27:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714404412;
-	bh=wuFZT5MFwQue1A0Rkk0/Z2lwU5LGnUNyr49vNOWlmZw=;
+	s=k20201202; t=1714404463;
+	bh=Jg+JAU5uJgLPFU0wrIphJbGKFnG+Vjp2eSaSlYwc5/g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NmDrjkJBasfsKkbqRRHzgs9uoY3tiN+YZFA8l4XLw7ZpwZoNIjhgt0goUzgkbL2A2
-	 yse26zy2T3XlUw3Fn4CIT4x/jJq41iJrgH58vpHBaAFxLjwmsYxwugHrB0XKW8/k6Q
-	 IfNTmYq8ZPBQZJqVcmrcr3jfERZheCNS7e5P87B4rEJ7gD6T3UwupyjCy6K+DprUTC
-	 tf6pP82h4XgAQZZXL2/AbNGaiSUcIJ6Cda4Bf3Utj5f8d3M5Hsk/EFU975pQmMwCPk
-	 JNQzVWcY/FpXG5disOezh4nkcOrSBfBpQVrlhGNIoGpi15alUyu+3HbUtTXhqvg1q9
-	 8J7vKfv2OsyUQ==
-Date: Mon, 29 Apr 2024 08:26:52 -0700
+	b=iBtqWxnBHZrU9zYFUUjiOm0M3wvimxGsonWvV4HkAY5SD5mIknwFWqvVCR+TtILjG
+	 nOrTnLqVht2rJbbL090R9JqAwBg6maEsLDwHNdJaRHKc+4cTntH5Xf4Hk6P96OBaQ7
+	 8CMnvfLbJbJI425rU0Cw6LXaAe8lKX2XUUZ9dIn9QLZNPglHVFd6t4ENYTqOv4V+qk
+	 F/2IBqtAwacLVHi4Rg5So4SI7yNIleTPI3VRs5Olm3MGukrR4gFHtfSrLTv2IMUICC
+	 V/gdUe+9UuNunpMYgCLk7YuSxSgGoxTXCjYGqYAeVqmJxNmxk7gDSZbysTPi146+pf
+	 OpUG2t4MYRYzg==
+Date: Mon, 29 Apr 2024 08:27:43 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/8] xfs: upgrade the extent counters in
- xfs_reflink_end_cow_extent later
-Message-ID: <20240429152652.GV360919@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/8] xfs: remove a racy if_bytes check in
+ xfs_reflink_end_cow_extent
+Message-ID: <20240429152743.GW360919@frogsfrogsfrogs>
 References: <20240429044917.1504566-1-hch@lst.de>
- <20240429044917.1504566-2-hch@lst.de>
+ <20240429044917.1504566-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,64 +43,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240429044917.1504566-2-hch@lst.de>
+In-Reply-To: <20240429044917.1504566-3-hch@lst.de>
 
-On Mon, Apr 29, 2024 at 06:49:10AM +0200, Christoph Hellwig wrote:
-> Defer the extent counter size upgrade until we know we're going to
-> modify the extent mapping.  This also defers dirtying the transaction
-> and will allow us safely back out later in the function in later
-> changes.
+On Mon, Apr 29, 2024 at 06:49:11AM +0200, Christoph Hellwig wrote:
+> Accessing if_bytes without the ilock is racy.  Remove the initial
+> if_bytes == 0 check in xfs_reflink_end_cow_extent and let
+> ext_iext_lookup_extent fail for this case after we've taken the ilock.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_reflink.c | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 7da0e8f961d351..9ce37d366534c3 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -751,14 +751,6 @@ xfs_reflink_end_cow_extent(
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> -	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-> -			XFS_IEXT_REFLINK_END_COW_CNT);
-> -	if (error == -EFBIG)
-> -		error = xfs_iext_count_upgrade(tp, ip,
-> -				XFS_IEXT_REFLINK_END_COW_CNT);
-> -	if (error)
-> -		goto out_cancel;
-> -
->  	/*
->  	 * In case of racing, overlapping AIO writes no COW extents might be
->  	 * left by the time I/O completes for the loser of the race.  In that
 
-I think this is actually a bug fix.  If an xfs_iext_count_upgrade
-dirties the transaction and then xfs_iext_lookup_extent cancels the
-transaction due to the overlapping AIO race, the _trans_cancel shuts
-down the fs, right?
+I wonder if this has any practical (mal)effects on the system?
 
-Fixes: 4f86bb4b66c9 ("xfs: Conditionally upgrade existing inodes to use large extent counters")
+Regardless,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> @@ -787,6 +779,14 @@ xfs_reflink_end_cow_extent(
->  	del = got;
->  	xfs_trim_extent(&del, *offset_fsb, end_fsb - *offset_fsb);
+> ---
+>  fs/xfs/xfs_reflink.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 9ce37d366534c3..0ab2ef5b58f6c4 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -731,12 +731,6 @@ xfs_reflink_end_cow_extent(
+>  	int			nmaps;
+>  	int			error;
 >  
-> +	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-> +			XFS_IEXT_REFLINK_END_COW_CNT);
-> +	if (error == -EFBIG)
-> +		error = xfs_iext_count_upgrade(tp, ip,
-> +				XFS_IEXT_REFLINK_END_COW_CNT);
-> +	if (error)
-> +		goto out_cancel;
-> +
->  	/* Grab the corresponding mapping in the data fork. */
->  	nmaps = 1;
->  	error = xfs_bmapi_read(ip, del.br_startoff, del.br_blockcount, &data,
+> -	/* No COW extents?  That's easy! */
+> -	if (ifp->if_bytes == 0) {
+> -		*offset_fsb = end_fsb;
+> -		return 0;
+> -	}
+> -
+>  	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+>  			XFS_TRANS_RESERVE, &tp);
 > -- 
 > 2.39.2
 > 
