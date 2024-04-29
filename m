@@ -1,45 +1,53 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E35EED534
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 04:49:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3C27C8C7;
+	Mon, 29 Apr 2024 05:00:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714366185; cv=none; b=kcjl9a12X/dWaW+RFE7tl7Q7ThkcRHxqTSqv9lRKBvoF4xYAIH5NI1APHVjYcRQ3din6geaW6BRA6hHnlOub/jgLva+hVufLVZDQbaKUn4nOKw13SRxvDVRRQ9WWqKxeIODEbT8p4+syHPVI2uQ3u+DaNVdqq4+RE3Krn/jAr+Q=
+	t=1714366829; cv=none; b=YsaAjTOxd2Whip+4kS1/34R4Oz7JCyoRaTjZ9W/66chqx9l4UQSqZ1DQsRWzN2/FX2Cz/U0KOJGsfcb48JZNSUGhSZTdssp/WXlO36R1uLltYu4WXkfHvwdL9BMyxG2TvcyPx5pVi/km+/7vqzAX8D5Btd80bP/7RuwQvE0otcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714366185; c=relaxed/simple;
-	bh=1UtKFrmTo1DCO4xEHPFaxfavne6zXLHyjmkrZK0YBbE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GLeIXr/NjoG8XIPhGaD7pEA6wPAwx3uGiiL3aBS1e7xwXSVi72iVa3APoM5F7lb70km5XSyp2+8BHdnlD5D3uptsQl20XM+t4t0WtK3QvorFd91abjOK5JKEX3d0yHqnbuomfiYRhD/QnR0nlD+BxU38vrmIk+MKTOSTSO1utZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=c7Zs/0y2; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1714366829; c=relaxed/simple;
+	bh=8XvmCn7Pd1ktB7On/6rVc5Y8x7d9UEbl4Pd866pIWC4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LibfOg7aPW+RNR7cyt/eJsCbqfdtM0ZIazAaioijF6U2ZNAAfBuiTxshtr2aFAYfQlfUdnluLb4j3mNlhKg71NZ+0YBZ33vSia0NG+OCmuLx1WsqX2qsBj/a7mNWWOLe0GlWF4iXjiy2POHuXzSyu47K83JpzRG0Cx+J33lFQoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2feX+zPn; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c7Zs/0y2"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2feX+zPn"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=2LBnwVJWyfdi8kgWchXm5CVyxntrtaHrqVXkEUlOdrA=; b=c7Zs/0y23+qAW0jAYX8Es/dThd
-	FuHG6vzQPx71nzRClfoPktXoR7Oe75H4lUxdSzuQqURGaq0md68MYZKGv3NAvhMY3Z8sODvp8QeyD
-	jHgQYFjUExZeJYczsFOFw8iMf3or96RBie4ZdlOI4V8GSkHFwaLVel1yf9Wq5yPoCAmW5Sy3M9wvs
-	eAfDmpxkTWq0t7vjwCRUkQP7l/gsbkPhwzeehqVtgGLUckno+FX3HjT209eyhOEWiu9RLmrxWcJcB
-	Ko3eqkbKtRrKJxmfJRkW2hX7KsD/QDiLMtZxCb8UHKRnSgEDuBNaoBEsjLti++QiW6rFaHzMbJgWr
-	iQ0ruaAA==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1IxT-00000001SA8-0zQd;
-	Mon, 29 Apr 2024 04:49:43 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: rename the del variable in xfs_reflink_end_cow_extent
-Date: Mon, 29 Apr 2024 06:49:17 +0200
-Message-Id: <20240429044917.1504566-9-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240429044917.1504566-1-hch@lst.de>
-References: <20240429044917.1504566-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=0up5w6U/SD43DrHq7xXf8Ll9aXDDKmogMJKfJTux2Uw=; b=2feX+zPnyDaIDIoXqrS5icBciX
+	8dUhFHXFjBk8vww8VOa9IFnUM/TRQd6u9UuaEf2fVDuxXMlo3Dyt0VvEtmuOL9fBE7LrLxPKNHns/
+	nlGdysdqRTBOAQ86LMKL2qGXpH7jv8lj/53KyHIb/egMByJETfFwyva6cBQ8BzTqahL1sA3/npSWl
+	QDXb8A4NaKS2+eMYce0pnLuvRs/jZgbJnhBNTdzxceVHynaSJlfHl2S40/y8Ktg39OkYJ3UdQ1wEC
+	xYL3zg8S27AYAB7RRL5ROLxzAyChs5ZtxvvH6pkpHZZqECV81YCfvbyMnHG3ux5A3X+LeADo8mnfs
+	MHUxw7YQ==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s1J7n-00000001TGv-1acJ;
+	Mon, 29 Apr 2024 05:00:23 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org,
+	akpm@linux-foundation.org,
+	ziy@nvidia.com,
+	vbabka@suse.cz,
+	seanjc@google.com,
+	willy@infradead.org,
+	p.raghav@samsung.com,
+	da.gomez@samsung.com,
+	hare@suse.de,
+	john.g.garry@oracle.com,
+	linux-xfs@vger.kernel.org,
+	patches@lists.linux.dev,
+	Luis Chamberlain <mcgrof@kernel.org>
+Subject: [RFC v2] fstests: add stress truncation + writeback + compaction split test
+Date: Sun, 28 Apr 2024 22:00:22 -0700
+Message-ID: <20240429050022.350818-1-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,91 +55,218 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-del contains the new extent that we are remapping.  Give it a somewhat
-less confusing name.
+Stress test folio splits by using the debugfs interface to a target
+a new smaller folio order while running compaction at the same time.
+This is dangerous at the moment as its using a debugfs API which
+requires two out of tree fixes [0] [1] which have already been
+posted but not yet merged.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+With these debugfs patches applied this test can now be used to
+reproduce an issue which was only possible to reproduce by running
+generic/447 twice with min order:
+
+https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
+
+This is designed to try to exacerbate races with folio splits incurred
+by truncation and race that with compaction and writeback. This only
+creates a crash with min order enabled, so for example with a 16k block
+sized XFS test profile.
+
+This also begs the question if something like MADV_NOHUGEPAGE might be
+desirable from userspace, so to enable userspace to request splits when
+possible.
+
+If inspecting more closely, you'll want to enable on your kernel boot:
+
+	dyndbg='file mm/huge_memory.c +p'
+
+Since we want to race large folio splits we also augment the full test
+output log $seqres.full with the test specific number of successful
+splits from vmstat thp_split_page and thp_split_page_failed.
+
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/commit/?h=20240424-lbs&id=80f6df5037fd0ad560526af45bd7f4d779fe03f6
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/commit/?h=20240424-lbs&id=38f6fac5b4283ea48b1876fc56728f062168f8c3
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/xfs_reflink.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index e20db39d1cc46f..f4c4cd4ef72336 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -784,7 +784,7 @@ xfs_reflink_end_cow_extent(
- 	xfs_fileoff_t		end_fsb)
+For now at laest to allow people to more easily reproduce the crash we're
+discussing here:
+
+https://lkml.kernel.org/r/Zi8aYA92pvjDY7d5@bombadil.infradead.org
+
+I can clean this up based on Zorro's feedback after this. Posting this RFCv2
+so to enable folks to more easily reproduce the issue and also the debugfs
+issue that this uses.
+
+ common/rc             |  20 ++++++++
+ tests/generic/745     | 115 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/745.out |   2 +
+ 3 files changed, 137 insertions(+)
+ create mode 100755 tests/generic/745
+ create mode 100644 tests/generic/745.out
+
+diff --git a/common/rc b/common/rc
+index d4432f5ce259..1eefb53aa84b 100644
+--- a/common/rc
++++ b/common/rc
+@@ -127,6 +127,26 @@ _require_compaction()
+ 	    _notrun "Need compaction enabled CONFIG_COMPACTION=y"
+ 	fi
+ }
++
++# Requires CONFIG_DEBUGFS and truncation knobs
++SPLIT_DEBUGFS="/sys/kernel/debug/split_huge_pages"
++_require_split_debugfs()
++{
++       if [ ! -f $SPLIT_DEBUGFS ]; then
++           _notrun "Needs CONFIG_DEBUGFS and split_huge_pages"
++       fi
++}
++
++_split_huge_pages_file_full()
++{
++	local file=$1
++	local offset="0x0"
++	local len=$(printf "%x" $(stat --format='%s' $file))
++	local order="0"
++	local split_cmd="$file,$offset,0x${len},$order"
++	echo $split_cmd > $SPLIT_DEBUGFS
++}
++
+ # Get hugepagesize in bytes
+ _get_hugepagesize()
  {
- 	struct xfs_iext_cursor	icur;
--	struct xfs_bmbt_irec	got, del;
-+	struct xfs_bmbt_irec	got, remap;
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_COW_FORK);
-@@ -820,7 +820,7 @@ xfs_reflink_end_cow_extent(
- 	 * Only remap real extents that contain data.  With AIO, speculative
- 	 * preallocations can leak into the range we are called upon, and we
- 	 * need to skip them.  Preserve @got for the eventual CoW fork
--	 * deletion; from now on @del represents the mapping that we're
-+	 * deletion; from now on @remap represents the mapping that we're
- 	 * actually remapping.
- 	 */
- 	while (!xfs_bmap_is_written_extent(&got)) {
-@@ -830,9 +830,9 @@ xfs_reflink_end_cow_extent(
- 			goto out_cancel;
- 		}
- 	}
--	del = got;
--	xfs_trim_extent(&del, *offset_fsb, end_fsb - *offset_fsb);
--	trace_xfs_reflink_cow_remap_from(ip, &del);
-+	remap = got;
-+	xfs_trim_extent(&remap, *offset_fsb, end_fsb - *offset_fsb);
-+	trace_xfs_reflink_cow_remap_from(ip, &remap);
- 
- 	error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 			XFS_IEXT_REFLINK_END_COW_CNT);
-@@ -840,23 +840,24 @@ xfs_reflink_end_cow_extent(
- 		goto out_cancel;
- 
- 	/* Unmap the old data. */
--	error = xfs_reflink_unmap_old_data(&tp, ip, del.br_startoff,
--			del.br_startoff + del.br_blockcount);
-+	error = xfs_reflink_unmap_old_data(&tp, ip, remap.br_startoff,
-+			remap.br_startoff + remap.br_blockcount);
- 	if (error)
- 		goto out_cancel;
- 
- 	/* Free the CoW orphan record. */
--	xfs_refcount_free_cow_extent(tp, del.br_startblock, del.br_blockcount);
-+	xfs_refcount_free_cow_extent(tp, remap.br_startblock,
-+			remap.br_blockcount);
- 
- 	/* Map the new blocks into the data fork. */
--	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, &del);
-+	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, &remap);
- 
- 	/* Charge this new data fork mapping to the on-disk quota. */
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
--			(long)del.br_blockcount);
-+			(long)remap.br_blockcount);
- 
- 	/* Remove the mapping from the CoW fork. */
--	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-+	xfs_bmap_del_extent_cow(ip, &icur, &got, &remap);
- 
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-@@ -864,7 +865,7 @@ xfs_reflink_end_cow_extent(
- 		return error;
- 
- 	/* Update the caller about how much progress we made. */
--	*offset_fsb = del.br_startoff + del.br_blockcount;
-+	*offset_fsb = remap.br_startoff + remap.br_blockcount;
- 	return 0;
- 
- out_cancel:
+diff --git a/tests/generic/745 b/tests/generic/745
+new file mode 100755
+index 000000000000..0c67bd990a2f
+--- /dev/null
++++ b/tests/generic/745
+@@ -0,0 +1,115 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (C) 2024 Luis Chamberlain. All Rights Reserved.
++#
++# FS QA Test No. 734
++#
++# stress truncation + writeback + compaction
++#
++# This aims at trying to reproduce a difficult to reproduce bug found with
++# min order. The root cause lies in compaction racing with truncation on
++# min order:
++#
++# https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
++#
++# If you're enabling this and want to check underneath the hood you may want to
++# enable:
++#
++# dyndbg='file mm/huge_memory.c +p'
++#
++# We want to increase the rate of successful truncations + compaction racing,
++# so we want to increase the value of thp_split_page in $seqres.full.
++#
++# Our general goal here is to race with folio truncation + writeback and
++# compaction.
++
++. ./common/preamble
++
++# This is dangerous_fuzzers fow now until we get the debugfs interface
++# this uses fixed. Patches for that have been posted but still under
++# review.
++_begin_fstest long_rw stress soak smoketest dangerous_fuzzers
++
++# Override the default cleanup function.
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++}
++
++# Import common functions.
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_require_test
++_require_scratch
++_require_split_debugfs
++_require_compaction
++_require_command "$KILLALL_PROG" "killall"
++
++echo "Silence is golden"
++
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++nr_cpus=$((LOAD_FACTOR * 4))
++nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
++
++fsstress_args=(-w -d $SCRATCH_MNT/test -n $nr_ops -p $nr_cpus)
++
++# used to let our loops know when to stop
++runfile="$tmp.keep.running.loop"
++touch $runfile
++
++# The background ops are out of bounds, the goal is to race with fsstress.
++
++# Force folio split if possible, this seems to be screaming for MADV_NOHUGEPAGE
++# for large folios.
++while [ -e $runfile ]; do
++	for i in $(find $SCRATCH_MNT/test \( -type f \) 2>/dev/null); do
++		_split_huge_pages_file_full $i >/dev/null 2>&1
++	done
++	sleep 2
++done &
++split_huge_pages_files_pid=$!
++
++while [ -e $runfile ]; do
++	echo 1 > /proc/sys/vm/compact_memory
++	sleep 10
++done &
++compaction_pid=$!
++
++blocksize=$(_get_file_block_size $SCRATCH_MNT)
++export XFS_DIO_MIN=$((blocksize * 2))
++
++test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
++
++split_count_before=0
++split_count_failed_before=0
++
++if grep -q thp_split_page /proc/vmstat; then
++	split_count_before=$(grep ^thp_split_page /proc/vmstat | head -1 | awk '{print $2}')
++	split_count_failed_before=$(grep ^thp_split_page_failed /proc/vmstat | head -1 | awk '{print $2}')
++else
++	echo "no thp_split_page in /proc/vmstat" >> /proc/vmstat
++fi
++
++$FSSTRESS_PROG $FSSTRESS_AVOID "${fsstress_args[@]}" >> $seqres.full
++
++rm -f $runfile
++wait > /dev/null 2>&1
++
++if grep -q thp_split_page /proc/vmstat; then
++	split_count_after=$(grep ^thp_split_page /proc/vmstat | head -1 | awk '{print $2}')
++	split_count_failed_after=$(grep ^thp_split_page_failed /proc/vmstat | head -1 | awk '{print $2}')
++	thp_split_page=$((split_count_after - split_count_before))
++	thp_split_page_failed=$((split_count_failed_after - split_count_failed_before))
++
++	echo "vmstat thp_split_page: $thp_split_page" >> $seqres.full
++	echo "vmstat thp_split_page_failed: $thp_split_page_failed" >> $seqres.full
++fi
++
++status=0
++exit
+diff --git a/tests/generic/745.out b/tests/generic/745.out
+new file mode 100644
+index 000000000000..fce6b7f5489d
+--- /dev/null
++++ b/tests/generic/745.out
+@@ -0,0 +1,2 @@
++QA output created by 745
++Silence is golden
 -- 
-2.39.2
+2.43.0
 
