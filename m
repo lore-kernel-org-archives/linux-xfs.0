@@ -1,37 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AEB745019;
-	Mon, 29 Apr 2024 11:46:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53FA4AED6
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 11:48:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714391196; cv=none; b=axxvgSQJ8IRN8lSJ8L1LGjMqwiSFC4uMtZxtspcWVRimLIUk/9zO1rR5pZ+YDaXgja5kQHsi5KP46G5EBnzcNRto/05YtMrPlItjbPMURw04Xfk9WuviKRIAulB9z++v5sLyDPb+BLRwQbdLicRsm4N5IZPl14AbCcG5LwLrckQ=
+	t=1714391293; cv=none; b=MyvJksZgluOo/hIIHT+wdSZBDf0hp57TTuJHY7U+wka9SPlxOtUBQ+rA6GJIk16MpRBz4s9dqYPHJ9At5wgLs8N3tYHykgJWGQXd6iDrGUtgHLrK4jy8KtLfzrD8RK+yFovQvbFFLBW0hYKqfjiXUSxw+y3j2/D8QQZRUr5YgnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714391196; c=relaxed/simple;
-	bh=IV+ygMs7PiO/TTkU9zkJBAHn6CUSMGd5cDU2VnC6I3A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pOvLmaBKSrVzePYlRpATtYf3OyPH1chavCJpMbepAZGSpBnOCAMZmR53VQHywoj/gYPwhwM0GTMl1CfDHet7IbP1p2PEb3+UIeS0Z+zSUsjDJBKCq/t1AmXh+T2Kzonolr7TfUN9fOmokIDDeF3t+W/g6Njm6nXODPHGlfhMUsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pj6P5rkr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714391293; c=relaxed/simple;
+	bh=mz0O67DGLfjwOmtDeAJldvb0GYKgLkfc5yfZWeXcG/o=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=aRAkk0k/0bExAS+ioxLErearrgEZIaOKVR7V0Z8yea+K2iB9xOvK2XhkpgJUw+CTqSMbW6SnXwONB8NA4Q/2iSgRBGeMKc57rNWL//u2A4ouOE8JYg9qZOl/fvv2/L669C0kWP/UMTjkILNaqtWLDlxC8SAxfB0IphoTXyksiz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=khUWtgo4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pj6P5rkr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A73DC4AF19;
-	Mon, 29 Apr 2024 11:46:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="khUWtgo4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DED3FC113CD;
+	Mon, 29 Apr 2024 11:48:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714391195;
-	bh=IV+ygMs7PiO/TTkU9zkJBAHn6CUSMGd5cDU2VnC6I3A=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Pj6P5rkr8Q7knSG+3gnF32/ImkEdUQsu0uATCnsR5khCIAiHD71nhxWcC4yheOFHt
-	 YjOOfm3FHCx8BMNh9PtAZ36LCYlNWtNDpsIWY1DjLE/B6l63BE/HP2EBYGElNt5p3b
-	 qXHgoIhe3DrtFyiQ3Cvr3Qq82rBl65LsEyqW/QI2S4apUWO24zwZ3Duy0Qsx2r+w53
-	 uoTYwsFzRCX24hjwfi4PJ0w/upuDlKefvsg1K/LpYn2PfhO0NEoWUGKJBPpHgAtnQ2
-	 S0z5KuDRuQI3O/zuT28VcU/XvVKYUBo1mgvTi71qYudfcvy3xQV9EtS7YprPTKxrGM
-	 cJqCrbE6LJBAA==
+	s=k20201202; t=1714391293;
+	bh=mz0O67DGLfjwOmtDeAJldvb0GYKgLkfc5yfZWeXcG/o=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=khUWtgo4YMrU/A1dLqm1oFGRQmtVBslD0+rzcmtSPK8M7JF0JwPHtmoJNVUJ5M3OB
+	 l01D94E07PevJoddFyh/RIkR5qZ319rZpt95PUvFLfTULbJLB5KsKhQ8chBIJ7ODh8
+	 ipAyFDfyBG5u7H3rZ+SRdLIYGBzwMGxnbSq7387NU/tCmsJuBrXgSihx3wNOP9qHF4
+	 wM514Km8Ahbg+y0P1VR6hw2Qp8w6Z9sj5gr2DoWu0ZOqdMQxL883iyDyT5cvvJ0aGf
+	 yWvYVdXPyl1cL0LE+vJbQHkCfHfe5n6sewvI6IQ7JaKymk/8ShCcX1lbl2iqlwx34T
+	 B+q4KVoHV2ksg==
+References: <20240427050400.1126656-1-hch@lst.de>
 User-agent: mu4e 1.10.8; emacs 29.2
 From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to e58ac1770ded
-Date: Mon, 29 Apr 2024 17:15:18 +0530
-Message-ID: <87wmogpf1k.fsf@debian-BULLSEYE-live-builder-AMD64>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: add higher level directory operations helpers v2
+Date: Mon, 29 Apr 2024 17:17:20 +0530
+In-reply-to: <20240427050400.1126656-1-hch@lst.de>
+Message-ID: <87sez4peyt.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,39 +43,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Hi folks,
+On Sat, Apr 27, 2024 at 07:03:55 AM +0200, Christoph Hellwig wrote:
+> Hi all,
+>
+> with the scrub and online repair code we now duplicate the switching
+> between the directory format for directory operations in at least two
+> places for each operation, with the metadir code adding even more for
+> some of these operations.
+>
+> This series adds _args helpers to consolidate this code, and then
+> refactors the checking for the directory format into a single well-defined
+> helper.
+>
+> This is now based against the for-next branch in the xfs tree.
+>
+> Changes since v1:
+>  - removed two stray whitespaces in the last patch
 
-The for-next branch of the xfs-linux repository at:
+I had already applied patches from v1 and cleaned up the trailing whitespaces
+while doing so.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-e58ac1770ded xfs: refactor dir format helpers
-
-5 new commits:
-
-Christoph Hellwig (5):
-      [14ee22fef420] xfs: factor out a xfs_dir_lookup_args helper
-      [4d893a40514e] xfs: factor out a xfs_dir_createname_args helper
-      [3866e6e669e2] xfs: factor out a xfs_dir_removename_args helper
-      [dfe5febe2b6a] xfs: factor out a xfs_dir_replace_args helper
-      [e58ac1770ded] xfs: refactor dir format helpers
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_dir2.c     | 276 +++++++++++++---------------
- fs/xfs/libxfs/xfs_dir2.h     |  17 +-
- fs/xfs/libxfs/xfs_exchmaps.c |   9 +-
- fs/xfs/scrub/dir.c           |   3 +-
- fs/xfs/scrub/dir_repair.c    |  58 +-----
- fs/xfs/scrub/readdir.c       |  59 +-----
- fs/xfs/xfs_dir2_readdir.c    |  19 +-
- 7 files changed, 169 insertions(+), 272 deletions(-)
+-- 
+Chandan
