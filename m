@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1097CD28D
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 04:49:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA25D28D
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 04:49:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714366176; cv=none; b=sTiNCVQvLJ1F9b56HNUAJrzS+wzSkZ2uHNbiQr+5ijCIcGleNRIfIL/fbh84E6C9sbrH5WALQqMm9Xx7QxV4mELB/qpBVYtGbPobRFKV5T5Z3Hsl/dB1SQ3XYELZ1ojaVr9/fLxJSQpnohcbORVEJLC4rvByDznVsO+BHb31lrU=
+	t=1714366179; cv=none; b=jLta9xlIH9IIra0gVs6ZFToiW/gfsFbDqDAPEp6ReXpsLZxO4cpqyK4mBD86Me1bdIhm0Oah3cCc1kC24oUtNvvtj3IGJ+LOAkXhaN/e/DipFwjvUvJD0EHMGUPZNo1705nja3eDqmIL8nAh1Vkucu4qcyO29l2Ff+pOQvt6NrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714366176; c=relaxed/simple;
-	bh=vYPJzDhtJrQ4GqbUFLnFxal4ZS2ZJ1kQnnZZd9Uw98o=;
+	s=arc-20240116; t=1714366179; c=relaxed/simple;
+	bh=sA13kw9FhD7gMvhsQfQNyymdnJAdif4ycdypkUsM61M=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eVUmhoj8R6U1iXYg712zD90e7VDKqCIGA+Ugzq15SJSWBD18KvUt9guMeLj4T2ywAURlzp7PEQVWvktCFN0AZEoKt6BycD/HXk9k62Iu8yPbyXEg5fU1gHfphXyi5ABNanQGB8UcKufdaYU8+8qXcfSSXaKdL2PIKYzf3JLc/zs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UOnwUiZi; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=jTyTVoh55XVIx6xalotdbIF1qlE6S0+F98BktrJ4SB0READhjwKA7RKkHbisM37f3FBYdCHF9y+CjEwfEedyHxA9s0XTK8JEntVIKFs6WICRvojq5fMdU41mr7waz5bV65mrBrw2gM9wVkBfE/9RRBVe9zcZnp7yRsveUD8TtmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xLGoR9s/; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UOnwUiZi"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xLGoR9s/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=fcOT4wJJ3e74OZATUKDXVm07h2YoLmukK07PhSiXTNY=; b=UOnwUiZivKiABrtihWdkVC5nuo
-	G/CcRKdbLNk6EyzGKdpvhfsBUSqgL0A3KJZLWogEPzOffmiAxtMXkxfcqSdru9g237ocLhI20HTvI
-	pOgDJA3coNDhCSk1BPMYsX77eumZyCrwnl3n2tyofIvMd9UZtdzrNn0uHCqS0pNuu8FtRxHURoyux
-	veUhpNGywnREK+Ugur6xtu5ApMGsoRt6Qy6hgW/7MaDZ0b6zE7i4xrBNpw0YDmbuNuvexuwyyZMoF
-	5XUwOmoEXzuIMYIzskq86IUGUf+rh5UhyJzYf/VkdzbZ2ZOc5b18g/261OMVt74ImhbAqXGVcD31c
-	LMj+sDhA==;
+	bh=+tWV+bp6iGWTVnLeA5oPjcqfEgPGbJauCznjmy4+A6U=; b=xLGoR9s/6EnoqMwdDpO1HYP8sJ
+	iwl0O9hPXR/Y/jqsU2na5OHaiXXRDkLcnmQjG/BA0sPjw97XJ2zmYVE3syAmBD3b7Q++gOitsTAzN
+	GT0jP2i/UyIeC0Lqnkaw/5JMczTpx9YAQHWv6aOk8yBPArUg0a0wZqkFA8TMAbmuLyopgBPJNuksZ
+	ejxfmrWnG9M2Up79Ybey6JX+cRmUGSSjEyroxl36KU4FosoUxGZKia073ZeDN5SeUFqqFtBX71/Lr
+	q3nE/BhUJOrRP44Y2LLvSIH3LKPL8iZ1TDnohkOgOLv9EkyArkkHCTl+vG0lrrBx3aPnXmAJ0zaaK
+	rQ23z3hw==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1IxK-00000001S6b-13rS;
-	Mon, 29 Apr 2024 04:49:34 +0000
+	id 1s1IxM-00000001S7g-3hVt;
+	Mon, 29 Apr 2024 04:49:37 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/8] xfs: simplify iext overflow checking and upgrade
-Date: Mon, 29 Apr 2024 06:49:14 +0200
-Message-Id: <20240429044917.1504566-6-hch@lst.de>
+Subject: [PATCH 6/8] xfs: lift XREP_MAX_ITRUNCATE_EFIS out of the scrub code
+Date: Mon, 29 Apr 2024 06:49:15 +0200
+Message-Id: <20240429044917.1504566-7-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240429044917.1504566-1-hch@lst.de>
 References: <20240429044917.1504566-1-hch@lst.de>
@@ -49,331 +49,80 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Currently the calls to xfs_iext_count_may_overflow and
-xfs_iext_count_upgrade are always paired.  Merge them into a single
-function to simplify the callers and the actual check and upgrade
-logic itself.
+We want to play the same trick in the COW end I/O handler, so lift this
+constant out of the scrub directory and change the prefix to XFS_.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr.c       |  5 +--
- fs/xfs/libxfs/xfs_bmap.c       |  5 +--
- fs/xfs/libxfs/xfs_inode_fork.c | 57 +++++++++++++++-------------------
- fs/xfs/libxfs/xfs_inode_fork.h |  6 ++--
- fs/xfs/xfs_bmap_item.c         |  4 +--
- fs/xfs/xfs_bmap_util.c         | 24 +++-----------
- fs/xfs/xfs_dquot.c             |  5 +--
- fs/xfs/xfs_iomap.c             |  9 ++----
- fs/xfs/xfs_reflink.c           |  9 ++----
- fs/xfs/xfs_rtalloc.c           |  5 +--
- 10 files changed, 41 insertions(+), 88 deletions(-)
+ fs/xfs/libxfs/xfs_trans_resv.h | 7 +++++++
+ fs/xfs/scrub/newbt.c           | 2 +-
+ fs/xfs/scrub/reap.c            | 2 +-
+ fs/xfs/scrub/repair.h          | 8 --------
+ 4 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 1c2a27fce08a9d..ded92ccefe9f6d 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1050,11 +1050,8 @@ xfs_attr_set(
- 		return error;
- 
- 	if (op != XFS_ATTRUPDATE_REMOVE || xfs_inode_hasattr(dp)) {
--		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
-+		error = xfs_iext_count_ensure(args->trans, dp, XFS_ATTR_FORK,
- 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
--		if (error == -EFBIG)
--			error = xfs_iext_count_upgrade(args->trans, dp,
--					XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
- 		if (error)
- 			goto out_trans_cancel;
- 	}
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 68e80e8eaaeebe..9a55ce4f1f0d45 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4621,11 +4621,8 @@ xfs_bmapi_convert_delalloc(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
- 
--	error = xfs_iext_count_may_overflow(ip, whichfork,
-+	error = xfs_iext_count_ensure(tp, ip, whichfork,
- 			XFS_IEXT_ADD_NOSPLIT_CNT);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip,
--				XFS_IEXT_ADD_NOSPLIT_CNT);
- 	if (error)
- 		goto out_trans_cancel;
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 7d660a9739090a..82e670dd1212c4 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -765,53 +765,46 @@ xfs_ifork_verify_local_attr(
- 	return 0;
- }
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 0554b9d775d269..51eb56560ee189 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -95,6 +95,13 @@ struct xfs_trans_resv {
+ #define	XFS_ITRUNCATE_LOG_COUNT_REFLINK	8
+ #define	XFS_WRITE_LOG_COUNT_REFLINK	8
  
 +/*
-+ * Check if the inode fork supports adding nr_to_add more extents.
-+ *
-+ * If it doesn't but we can upgrade it to large extent counters, do the upgrade.
-+ * If we can't upgrade or are already using big counters but still can't fit the
-+ * additional extents, return -EFBIG.
++ * This is the maximum number of deferred extent freeing item extents (EFIs)
++ * that we'll attach to a transaction without rolling the transaction to avoid
++ * overrunning a tr_itruncate reservation.
 + */
- int
--xfs_iext_count_may_overflow(
-+xfs_iext_count_ensure(
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	int			whichfork,
--	int			nr_to_add)
-+	uint			nr_to_add)
- {
-+	struct xfs_mount	*mp = ip->i_mount;
-+	bool			has_large =
-+		xfs_inode_has_large_extent_counts(ip);
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
--	uint64_t		max_exts;
- 	uint64_t		nr_exts;
- 
-+	ASSERT(nr_to_add <= XFS_MAX_EXTCNT_UPGRADE_NR);
++#define XFS_MAX_ITRUNCATE_EFIS		128
 +
- 	if (whichfork == XFS_COW_FORK)
- 		return 0;
+ void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+ uint xfs_allocfree_block_count(struct xfs_mount *mp, uint num_ops);
  
--	max_exts = xfs_iext_max_nextents(xfs_inode_has_large_extent_counts(ip),
--				whichfork);
--
--	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
--		max_exts = 10;
--
-+	/* no point in upgrading if if_nextents overflows */
- 	nr_exts = ifp->if_nextents + nr_to_add;
--	if (nr_exts < ifp->if_nextents || nr_exts > max_exts)
-+	if (nr_exts < ifp->if_nextents)
- 		return -EFBIG;
+diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
+index 4a0271123d94ea..872f97db2a6425 100644
+--- a/fs/xfs/scrub/newbt.c
++++ b/fs/xfs/scrub/newbt.c
+@@ -452,7 +452,7 @@ xrep_newbt_free(
+ 		}
  
--	return 0;
--}
--
+ 		freed += ret;
+-		if (freed >= XREP_MAX_ITRUNCATE_EFIS) {
++		if (freed >= XFS_MAX_ITRUNCATE_EFIS) {
+ 			error = xrep_defer_finish(sc);
+ 			if (error)
+ 				goto junkit;
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index 01ceaa4efa16bf..433891b0d08c73 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -169,7 +169,7 @@ static inline bool xreap_want_roll(const struct xreap_state *rs)
+ {
+ 	if (rs->force_roll)
+ 		return true;
+-	if (rs->deferred > XREP_MAX_ITRUNCATE_EFIS)
++	if (rs->deferred > XFS_MAX_ITRUNCATE_EFIS)
+ 		return true;
+ 	if (rs->invalidated > XREAP_MAX_BINVAL)
+ 		return true;
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 0e0dc2bf985c21..ec76774afffb31 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -17,14 +17,6 @@ static inline int xrep_notsupported(struct xfs_scrub *sc)
+ 
+ #ifdef CONFIG_XFS_ONLINE_REPAIR
+ 
 -/*
-- * Upgrade this inode's extent counter fields to be able to handle a potential
-- * increase in the extent count by nr_to_add.  Normally this is the same
-- * quantity that caused xfs_iext_count_may_overflow() to return -EFBIG.
+- * This is the maximum number of deferred extent freeing item extents (EFIs)
+- * that we'll attach to a transaction without rolling the transaction to avoid
+- * overrunning a tr_itruncate reservation.
 - */
--int
--xfs_iext_count_upgrade(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*ip,
--	uint			nr_to_add)
--{
--	ASSERT(nr_to_add <= XFS_MAX_EXTCNT_UPGRADE_NR);
+-#define XREP_MAX_ITRUNCATE_EFIS	(128)
 -
--	if (!xfs_has_large_extent_counts(ip->i_mount) ||
--	    xfs_inode_has_large_extent_counts(ip) ||
--	    XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) &&
-+	    nr_exts > 10)
- 		return -EFBIG;
- 
--	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 -
-+	if (nr_exts > xfs_iext_max_nextents(has_large, whichfork)) {
-+		if (has_large || !xfs_has_large_extent_counts(mp))
-+			return -EFBIG;
-+		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	}
- 	return 0;
- }
+ /* Repair helpers */
  
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index bd53eb951b6515..9e1456f5cc2c85 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -256,10 +256,8 @@ extern void xfs_ifork_init_cow(struct xfs_inode *ip);
- 
- int xfs_ifork_verify_local_data(struct xfs_inode *ip);
- int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
--int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
--		int nr_to_add);
--int xfs_iext_count_upgrade(struct xfs_trans *tp, struct xfs_inode *ip,
--		uint nr_to_add);
-+int xfs_iext_count_ensure(struct xfs_trans *tp, struct xfs_inode *ip,
-+		int whichfork, uint nr_to_add);
- bool xfs_ifork_is_realtime(struct xfs_inode *ip, int whichfork);
- 
- /* returns true if the fork has extents but they are not read in yet. */
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index d27859a684aa69..38067d02ee3ca7 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -524,9 +524,7 @@ xfs_bmap_recover_work(
- 	else
- 		iext_delta = XFS_IEXT_PUNCH_HOLE_CNT;
- 
--	error = xfs_iext_count_may_overflow(ip, work->bi_whichfork, iext_delta);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip, iext_delta);
-+	error = xfs_iext_count_ensure(tp, ip, work->bi_whichfork, iext_delta);
- 	if (error)
- 		goto err_cancel;
- 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index df370d7112dc54..cad3b3e4f1c33e 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -710,11 +710,8 @@ xfs_alloc_file_space(
- 		if (error)
- 			break;
- 
--		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+		error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 				XFS_IEXT_ADD_NOSPLIT_CNT);
--		if (error == -EFBIG)
--			error = xfs_iext_count_upgrade(tp, ip,
--					XFS_IEXT_ADD_NOSPLIT_CNT);
- 		if (error)
- 			goto error;
- 
-@@ -772,10 +769,8 @@ xfs_unmap_extent(
- 	if (error)
- 		return error;
- 
--	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+	error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 			XFS_IEXT_PUNCH_HOLE_CNT);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip, XFS_IEXT_PUNCH_HOLE_CNT);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -1051,10 +1046,8 @@ xfs_insert_file_space(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
- 
--	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+	error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 			XFS_IEXT_PUNCH_HOLE_CNT);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip, XFS_IEXT_PUNCH_HOLE_CNT);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -1280,23 +1273,16 @@ xfs_swap_extent_rmap(
- 			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
- 
- 			if (xfs_bmap_is_real_extent(&uirec)) {
--				error = xfs_iext_count_may_overflow(ip,
--						XFS_DATA_FORK,
-+				error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 						XFS_IEXT_SWAP_RMAP_CNT);
--				if (error == -EFBIG)
--					error = xfs_iext_count_upgrade(tp, ip,
--							XFS_IEXT_SWAP_RMAP_CNT);
- 				if (error)
- 					goto out;
- 			}
- 
- 			if (xfs_bmap_is_real_extent(&irec)) {
--				error = xfs_iext_count_may_overflow(tip,
-+				error = xfs_iext_count_ensure(tp, tip,
- 						XFS_DATA_FORK,
- 						XFS_IEXT_SWAP_RMAP_CNT);
--				if (error == -EFBIG)
--					error = xfs_iext_count_upgrade(tp, ip,
--							XFS_IEXT_SWAP_RMAP_CNT);
- 				if (error)
- 					goto out;
- 			}
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 13aba84bd64afb..c2e66d392399dd 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -341,11 +341,8 @@ xfs_dquot_disk_alloc(
- 		goto err_cancel;
- 	}
- 
--	error = xfs_iext_count_may_overflow(quotip, XFS_DATA_FORK,
-+	error = xfs_iext_count_ensure(tp, quotip, XFS_DATA_FORK,
- 			XFS_IEXT_ADD_NOSPLIT_CNT);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, quotip,
--				XFS_IEXT_ADD_NOSPLIT_CNT);
- 	if (error)
- 		goto err_cancel;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c06fca2e751c7c..128ad834ca69b1 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -299,9 +299,7 @@ xfs_iomap_write_direct(
- 	if (error)
- 		return error;
- 
--	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, nr_exts);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip, nr_exts);
-+	error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK, nr_exts);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -625,11 +623,8 @@ xfs_iomap_write_unwritten(
- 		if (error)
- 			return error;
- 
--		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+		error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 				XFS_IEXT_WRITE_UNWRITTEN_CNT);
--		if (error == -EFBIG)
--			error = xfs_iext_count_upgrade(tp, ip,
--					XFS_IEXT_WRITE_UNWRITTEN_CNT);
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 02cb6c2b257058..af388f2caef304 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -768,11 +768,8 @@ xfs_reflink_end_cow_extent(
- 	del = got;
- 	xfs_trim_extent(&del, *offset_fsb, end_fsb - *offset_fsb);
- 
--	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+	error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 			XFS_IEXT_REFLINK_END_COW_CNT);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip,
--				XFS_IEXT_REFLINK_END_COW_CNT);
- 	if (error)
- 		goto out_cancel;
- 
-@@ -1272,9 +1269,7 @@ xfs_reflink_remap_extent(
- 	if (dmap_written)
- 		++iext_delta;
- 
--	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, iext_delta);
--	if (error == -EFBIG)
--		error = xfs_iext_count_upgrade(tp, ip, iext_delta);
-+	error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK, iext_delta);
- 	if (error)
- 		goto out_cancel;
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index b476a876478d93..37edf4c5ce73ad 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -695,11 +695,8 @@ xfs_growfs_rt_alloc(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 
--		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+		error = xfs_iext_count_ensure(tp, ip, XFS_DATA_FORK,
- 				XFS_IEXT_ADD_NOSPLIT_CNT);
--		if (error == -EFBIG)
--			error = xfs_iext_count_upgrade(tp, ip,
--					XFS_IEXT_ADD_NOSPLIT_CNT);
- 		if (error)
- 			goto out_trans_cancel;
- 
+ int xrep_attempt(struct xfs_scrub *sc, struct xchk_stats_run *run);
 -- 
 2.39.2
 
