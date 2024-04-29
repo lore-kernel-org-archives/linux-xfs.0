@@ -1,139 +1,334 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2061.outbound.protection.outlook.com [40.107.94.61])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E084277F11
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 14:20:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714400457; cv=none; b=VSnTZxQxRE4BX7BGEZbpoiAXRKtakiNntRJak2848YGGaZWyscwum45dLag7VmIg9+e22m/dQVzAxxUk2RGitCnVUj8FWnDiT9c28pPGJd9/6rGTQvkRzM5A5Xa0AiA7hgsDtMylYIB46g40TyqCt76UfJIHyP3jnpUgDx+cOfk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714400457; c=relaxed/simple;
-	bh=oxcjuCsClzGt7kG7ieOC9UZaB1ndAR03opK5HDsYqbw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O6x0uZx/icVlbEDNhzJJ+ouEWm6l/zoeKBwJf/SlmhzYt/LkftDlgc/WSCvjsRYADXKZV/avEUbUI+OyPF2b/5FSyKzAZjf6MsWhMprNOypMLj74bEYZAOu0UWZaM9F5acGN6YUpTeBrbj5jqCT48+bYFKZ2q9/AnYzs9rTnIYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CKLg7VNy; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04AE47C0A6;
+	Mon, 29 Apr 2024 14:29:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.94.61
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714400979; cv=fail; b=dG+unOKD9SnUdQI64pkdKLClH3beCREuVv3+GcsAYC+EDp01iwGJ6kgNZMq7kNFB9eg1mU4VkGHntrohJd/PbVxCbqkxsb1hICuAaoG+GkUNZEuOLMHX0MUQ2FcKH6j/oaNV3aKS/OetLu9dBf4cVLmxQ4i7H49S9xv+kr4BCnw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714400979; c=relaxed/simple;
+	bh=5e8RI6W47IBu0UtfWxFcy+vRv34UAisKA7Hf+LagcEM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=L2elZbz7wT6yhU13sPRcod64QcVelzf2AQ5udUf0jI7xwqLHw1wVXNCiPJsH/UHap63TIyAQnPyLmXIFeOJVQzTQr3fVedV46+fFfGriJVzumFPhVcY0spaNCn2f0cEIulD6HxAbeLZBCy9OfEayT4jqT0VZVIAYHHO0MqtxnIE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=n2ExqiwL; arc=fail smtp.client-ip=40.107.94.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CKLg7VNy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1714400454;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uqmGiN5NrDbqqE/DWJqb5zJnPTX/FXC/9hqKXGHU6yU=;
-	b=CKLg7VNyWawjMe1fODM9UzRQvfaY071SO0k6GO8v8PUOf8g97Ktdqo5JiGnqOxGgMxzaIo
-	T/IZS6eMhzuYsJ2JK4IXcAyEc+W8RvrD9/Qz9qmVgY82/nmjoNOjbmxJRQhT15I9XwM7NU
-	HekkBT2HLHX6f0QosGbyZTe+xzwFWfs=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-627-S7c5lasWPVWwiQno6tlqkQ-1; Mon, 29 Apr 2024 10:20:53 -0400
-X-MC-Unique: S7c5lasWPVWwiQno6tlqkQ-1
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-6f3e2ae6c23so3022073b3a.2
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 07:20:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714400452; x=1715005252;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uqmGiN5NrDbqqE/DWJqb5zJnPTX/FXC/9hqKXGHU6yU=;
-        b=cXzaS59TRudPoJsbNSnzpWqLDjd9Ir5ZsKRlCjFLRObarS3jcmuSQSKlaKvoEUJVpu
-         tH2qUyD8uhZjJcSjMVMDWn69rdidyQG/VaSkedXw5rkBYi/uzRX4r8sRiH7sB4KXaF0n
-         xU/wIhILyDtaKG98nHeWNGIypWK7qZF1zLMGZsbrnUVXmAHkjO+HiIl2rP1hMkwJcZa9
-         kS8zrNjkGKk9fvt/XEhaAl7Xk7ztv1vG90bROvrQkL7j3o2HAKzTuU26DLOU7+Xu0+rg
-         UVPzXhbBQhDRCku4BfST21gdifxDI9XhNyDfcrihx542EZAXDM0dYFfv3AIwzHV0RAbb
-         lMfg==
-X-Forwarded-Encrypted: i=1; AJvYcCWvPN3GVs1a7bUKeMMwEhzSYoRr8Dobq1PuWPv/eZOCUXFLAHpGQ5szlClIK4lu6/w1CKt01JK9hbxgFKg3d4q94pwwIx3LA3X5
-X-Gm-Message-State: AOJu0YxiXYb6VhkDx5+Vxh14vjliJZkaQHWWLchV8fhMfCZZ92AG4HPv
-	y0wtqoxKa3MXxkI7pqoz8o7EWl9HDEvMK1Dby8jSeS301M6VbuUrQeXtdTxLPuL74kAaiclYiFx
-	85CBfRrL7TMtF9PZvkQOk6SWcOOV1bdqiMfTr71It9ko9qt4iLmyN00GLiA==
-X-Received: by 2002:aa7:88c1:0:b0:6e8:f66f:6b33 with SMTP id k1-20020aa788c1000000b006e8f66f6b33mr13592977pff.4.1714400450477;
-        Mon, 29 Apr 2024 07:20:50 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGCi/lLJ8ZRLjdiUU3OTGWsavGD1f6c86BhAd33cBWujTb75f9iky46wEjtW4xp2k7WS2ar+A==
-X-Received: by 2002:aa7:88c1:0:b0:6e8:f66f:6b33 with SMTP id k1-20020aa788c1000000b006e8f66f6b33mr13592938pff.4.1714400449986;
-        Mon, 29 Apr 2024 07:20:49 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id e14-20020a62ee0e000000b006eaf43b5982sm19289700pfi.108.2024.04.29.07.20.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Apr 2024 07:20:49 -0700 (PDT)
-Date: Mon, 29 Apr 2024 22:20:43 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: remove support for tools and kernels with v5
- support
-Message-ID: <20240429142043.324fmguwtqyouuwb@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240408133243.694134-1-hch@lst.de>
- <20240408133243.694134-2-hch@lst.de>
- <871q6oqzik.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="n2ExqiwL"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fztIosGqlLwHAsHaqnjLdyuUQUFhdOAf5U0ZnWOfhRWE0bSU2D7cMYtjOYgvNpZESwQrI3sd1Pv9ak79UtnPP3mCY9EgfIaQ0tt2JF0r2hSU7p2lVrQcQaSbuoWaySmVWvi1a/HL7HMdffNWYYxLC68B1Iabf4Ea7ubVOZhGQEE88RYU07d5I6azE0rFtRZfWAno5ttvtRYXlQj0Zdm06v4vep03nptsNjjBZ/N+owZZZm8JyO5ahSblYcoIR8nEmy4iyZDa+FuFY11wTKbGcT+MjxBnJVeHNXYo1rCqYcMK+hZvaw/iN+m5R7dwgWzOw8r75D5OdrXIz39ab+wJnQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ynYzX5dw2zS9ty4VpRnvnw/htccmtXO4bQLpKRuupkA=;
+ b=InEf93Lmh997Kxwjb9LHtIbO0K9E9bzTM05PRw6WaYL1UfDXeMRNU5+xjQei6fKsTh+9iQbi37mOMndaT6VwfRGZqzUa5/ga5+wUxPvvat+nI/o5+hUb0fYVb6jSTurVbZAWjEMVFVY1ITp/Z/479UkEZv/e2z+mN3FIwGXUKjlXHO/8zyINwIuwF9iNt5AsR963RCgRO0u2YUDYx9gsT2MTJLVV/1a/9RkmmgFXpLd7NW8MJ0aoPzgZHTGPfcP1gP/iFSZENQr8i6au/TYetJWfFmJIvXLt6E/IQ0+Fp3Oaex1FEMylwtAGIFLvKCHZcrGHVH4cpTHN+yT0+jh7/Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ynYzX5dw2zS9ty4VpRnvnw/htccmtXO4bQLpKRuupkA=;
+ b=n2ExqiwLJUzpCv/Oo2WRtU92AXvvhqZZmguE1UGsBqXiTuWorDEMzi6VdDJWpgNUN5jY0HBSx+k0oaFleuXxDRpL0hNZ53ZNneELkzWkZ+WGMKYVWbmRuQIo+pc3t0IZL6Uj1l5M/BbIz0ydKy562jXTaA+CZx6sfGEsRvC7JNJpYa0ybQZ/8ySZKvYmEtglNKn9559ICPuhrRJd6JUYXAngXwmXryPQ+FLiSaERwuhpuOpkfzf7cBO6n5wmJSX+agYNoK3fsx7XYkDWLVb27X87myrmM/BI+wzh556lhISXR8O34AS5vpUg7AdQnLg+2XQ6HmfOTz3D2rTslACucA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS7PR12MB5744.namprd12.prod.outlook.com (2603:10b6:8:73::18) by
+ DS0PR12MB7801.namprd12.prod.outlook.com (2603:10b6:8:140::10) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.7519.34; Mon, 29 Apr 2024 14:29:34 +0000
+Received: from DS7PR12MB5744.namprd12.prod.outlook.com
+ ([fe80::dc5c:2cf1:d5f5:9753]) by DS7PR12MB5744.namprd12.prod.outlook.com
+ ([fe80::dc5c:2cf1:d5f5:9753%6]) with mapi id 15.20.7519.031; Mon, 29 Apr 2024
+ 14:29:33 +0000
+From: Zi Yan <ziy@nvidia.com>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Vlastimil Babka <vbabka@suse.cz>, Sean Christopherson <seanjc@google.com>,
+ Matthew Wilcox <willy@infradead.org>,
+ "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, djwong@kernel.org,
+ brauner@kernel.org, david@fromorbit.com, chandan.babu@oracle.com,
+ akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, hare@suse.de,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+ gost.dev@samsung.com, p.raghav@samsung.com
+Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum folio
+ order requirement
+Date: Mon, 29 Apr 2024 10:29:29 -0400
+X-Mailer: MailMate (1.14r6030)
+Message-ID: <6799F341-9E37-4F3E-B0D0-B5B2138A5F5F@nvidia.com>
+In-Reply-To: <Zi8aYA92pvjDY7d5@bombadil.infradead.org>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-6-kernel@pankajraghav.com>
+ <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
+ <Zir5n6JNiX14VoPm@bombadil.infradead.org>
+ <Ziw8w3P9vljrO9JV@bombadil.infradead.org>
+ <Zi2e7ecKJK6p6ERu@bombadil.infradead.org>
+ <Zi8aYA92pvjDY7d5@bombadil.infradead.org>
+Content-Type: multipart/signed;
+ boundary="=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=";
+ micalg=pgp-sha512; protocol="application/pgp-signature"
+X-ClientProxiedBy: BL1P223CA0017.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:208:2c4::22) To DS7PR12MB5744.namprd12.prod.outlook.com
+ (2603:10b6:8:73::18)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <871q6oqzik.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS7PR12MB5744:EE_|DS0PR12MB7801:EE_
+X-MS-Office365-Filtering-Correlation-Id: ac40d570-8f53-4546-f2b9-08dc6858ca20
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230031|7416005|376005|1800799015|366007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?SGRmeRdZAzoSI7OhNN4uopmjEAhrGfhz+T0N0rVTM4oWj5FoV1EibjRTIB5C?=
+ =?us-ascii?Q?HqgLbVSY06YlpOlgZoFsieDs+zMZgOYb2foL0p6JEfiweWjIzQwfcyH1kzRT?=
+ =?us-ascii?Q?qLgsyU8+0KZN+USoHixObs7hirJUXvaGx+sqS3WRi2fkBk6RZuQ7sV8YElfA?=
+ =?us-ascii?Q?Svy4mKSGjjgL6XqT59TZkrYvOICSW3DOUC4pTNtNUGuiLjNrrFzYz899kuY3?=
+ =?us-ascii?Q?7McRZY0ueF7rsc2f6ZNZQJ6f3vBljjmszWNyBCdKAYP0a8lzinVTKX/DDZ1S?=
+ =?us-ascii?Q?n0lbUkTT6S87q6amsgKTNZg0X7fM1q6gzjuS0XUpprFqwfME5WQFAIeHSc8F?=
+ =?us-ascii?Q?TZg2gCmHz47fN4fhuB9fJklUcw6GVudHQhu+lnnjCNXJ5hR840adCFWWocGT?=
+ =?us-ascii?Q?k+b4Pka9nHLVHvJP+DyApIiJUYO+fInZqYRZjY2JTQ7obouXBmMCX/uzwQlK?=
+ =?us-ascii?Q?sZkpEscGV3YwcaNnnWxpLeOr2KFm8qkDI77iPCde+acrC5aYptBVV0lAOrX6?=
+ =?us-ascii?Q?BKF9VIFFKtcEqnF1czgTVYFvWZ2wGNlD01wBocNGIHho2MOqDEFRatjc32VC?=
+ =?us-ascii?Q?/ur++VJtKGa5K4anJ2izSGY4cJOA/VVHIqQSF8XgkDcIiLEQDetr/Qs9Kv8S?=
+ =?us-ascii?Q?u6bg8ddUm/Me9PMPp1BKM9gFr/xUTTQJSXkz1xkbiUYOUWyJKA7ZS4J/QPXR?=
+ =?us-ascii?Q?HFhSbPEezdme7bqjg2AWv2E/0oA8R0DnAKE1d+aSAHy7zil1flDc3JtXZqTz?=
+ =?us-ascii?Q?LjrdD8aCcetmAj+tKL19C6GjBNFw4ePM/ELlXHW/dyvHJm+A6NiS8qvwFpvz?=
+ =?us-ascii?Q?h7R3yA4fPFHXNIASFLFYDkG0EiK+dvUEuI9KT/5DXqQcF5peFPgSeWEPgFle?=
+ =?us-ascii?Q?tvmeEzIQzMfVjPpMQBlyHbmx7phjR05VjKIAmx+tfKg4yCJRH3kIPhimnAqG?=
+ =?us-ascii?Q?0W0jUUKQJkzyzqi7amNX1PogZckhRAPr/pyQRyHIl3NINpszs/0BaVk1+ZEB?=
+ =?us-ascii?Q?Ykm010rI4QydTPBcNxi40WBWhBz175IaMVxsgTCwjRjJZK25qNtTfC8A5Cen?=
+ =?us-ascii?Q?vAE8IKrgDruRTv3W2xguKA1kzhGurTKCvRm5z5BW/irHCWbFPaEdgyOPCY2E?=
+ =?us-ascii?Q?s1/imO8XJY8sSDrRsJAGTNOd6SVuaFE9IWxi/emP8mKHXWa+E6Z/xFIKdulW?=
+ =?us-ascii?Q?GW9KFVyLq5FwDwTHVkasOCWWkfveoBzKV2nwoFjB7CM5GzGQM22Whw+qUpow?=
+ =?us-ascii?Q?ujIhxD2RQxpj0wEh33E1AsTZKmVEHMavRXutV2ZuVw=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB5744.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7416005)(376005)(1800799015)(366007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?DbPX2NcneEYnamAnGPrxjVkA+a0NpmScUbSPjzUnxasHdh2LJhDGfiv6QrhZ?=
+ =?us-ascii?Q?aWC/FPBnpscQeujXY032m0cw/OYma7qFyiRIEi0giqEmyv0/UZOL5FVRGJN3?=
+ =?us-ascii?Q?X/EWL3356j9CLN96MfHrccDaDaoowMcxLdWYV4FOVW5VjoScwh5TFoj12j8D?=
+ =?us-ascii?Q?mJmN8B14KLea7xb40aYMMUblitebKLm5pmfUMgYA+5l9jQ20l+3D9s6lxatT?=
+ =?us-ascii?Q?Gvuf0ovLIRLOJf3mCR37RBqB9PKKA59UzTSOW0Tku7tS8kBsO2LnMEkcPdzR?=
+ =?us-ascii?Q?n2IGo/IZQUOnQCqluN/F+8s9xfcUmwX2VUa3LPOcecWNQj8l22h1uiLJwlET?=
+ =?us-ascii?Q?OuA+8z9nEAe0eLLxP4qh2BCBSZIRJ/Oo4ndSgn9ngvG302GfwQPf3IxTFUu+?=
+ =?us-ascii?Q?41iyEs5dN2GNxbblYUF16zl6E/0p+k/1N0YWYIjRVEC90W4Jg9xNxEw3kim/?=
+ =?us-ascii?Q?nIVfQU7IHCUpdRiO9916nYkqvnTKHuvfI/h2nL+HfRI+Fdr+ydUgdPJeMARK?=
+ =?us-ascii?Q?2dVaTDDIvQYVUwwgCl3HcCKDOFeD4PkM8aq1ElazElRqLpWp+MYV24t8oXBr?=
+ =?us-ascii?Q?5ld09zM4yTT++1iKFTiGQJsqy+zb4CD8dTgBOl7O8k+dGB5P24weJD+/8e05?=
+ =?us-ascii?Q?DHX/hV6+taMkFJAQLxnnPfELBeYJK9BT4WMiOvqiVAIkeuiQqgmTpQpfNFuY?=
+ =?us-ascii?Q?xcerUyNTxJOoOUKDs2hDAgR4+bjZOTg52pxi3AmSWKLbJk5bypArfnGLDD1k?=
+ =?us-ascii?Q?B+QGRtMHSzVhBvEU0YAOfFrXB51zlqoiICGLh3tMDxazVLoTcvUYsKwpT0rC?=
+ =?us-ascii?Q?o7OsDlNZgCPDD8eXYY2BfGPaezOJ6YC/G2Qc8Ntc4X5KsHtwCI3JPIyNrxkP?=
+ =?us-ascii?Q?o6BzXrvNK18ZIEPwwcqqCwUTTeoDhmZzrHZfkmWDuYDui4GjIgAPGNsnQfSW?=
+ =?us-ascii?Q?nBNc/ztcFLKTBk8VYFvCjCYbDnkZicpMMQ44GEVdCkvTtWPMOBuwXfxliANx?=
+ =?us-ascii?Q?aXYzvav+97HEw6XQWHisBOFvSKpFS03gcjkBVcTi1E4fDZmABDuZAXkHzl8T?=
+ =?us-ascii?Q?dxh1jFMFburaOzdMEaAhtLq43mmiH7Fjv7jO0Wk54R66wPe72hpVSg9/emb7?=
+ =?us-ascii?Q?b7UsW7HGQ4K7Os79RyMrt2kKCOyd1aHY1tnoMMPMmqCIW0jiFr9ZHqlho4tf?=
+ =?us-ascii?Q?6gqP8W2zi1dE5BTyYs/Puwd30qveAgadbLD/V6e/LI1Y5U/d2bAyQsW5i1Pe?=
+ =?us-ascii?Q?LDqLrkm0U6kIRUXlccqwVh5ziMWDFXDrf/YtfuSDeM5PeSo/CDcb+a8wTnK+?=
+ =?us-ascii?Q?wUCwOkCpPhs2h/YWxfJ6HzpXajxGNIpHyZZPHuk7OEhBFftw8w+MErk3pUJJ?=
+ =?us-ascii?Q?1Y+Pe26q6NeiJTapfE1exBl/sSiH28wxSMyYuFlbMpWZx+I4KQ13Q7GI54/f?=
+ =?us-ascii?Q?cDjbpRcNdryTcOdwY6YxDw+HQNH9W5oh0ZZGXnyx+Fsy3vEvmE8YtEjifkkY?=
+ =?us-ascii?Q?kcxu8Wsfbtsa3xv5jFHKqgrwwM4MetBE2olq3kVOTwx80jNhU53FB02F4kwl?=
+ =?us-ascii?Q?wRU22ucg/UEgFUhEjnc=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ac40d570-8f53-4546-f2b9-08dc6858ca20
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB5744.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Apr 2024 14:29:33.8419
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /mwVVCfvMCzYUIIjl/cOQekcgPBEhlokb26zfg22Z5Sb0V2XhmTa9mxXdiTFDNu8
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7801
 
-On Mon, Apr 29, 2024 at 03:04:51PM +0530, Chandan Babu R wrote:
-> On Mon, Apr 08, 2024 at 03:32:38 PM +0200, Christoph Hellwig wrote:
-> > v5 file systems have been the default for more than 10 years.  Drop
-> > support for non-v5 enabled kernels and xfsprogs.
-> >
-> 
-> Hi,
-> 
-> This patch is causing xfs/077 to fail as shown below,
-> 
-> # ./check xfs/077
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 xfs-crc 6.9.0-rc4+ #2 SMP PREEMPT_DYNAMIC Mon Apr 29 08:08:05 GMT 2024
-> MKFS_OPTIONS  -- -f -f -m crc=1,reflink=0,rmapbt=0, -i sparse=0 /dev/loop6
-> MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota -o context=system_u:object_r:root_t:s0 /dev/loop6 /media/scratch
-> 
-> xfs/077 9s ... [not run] Kernel doesn't support meta_uuid feature
-> Ran: xfs/077
-> Not run: xfs/077
-> Passed all 1 tests
-> 
-> The corresponding configuration file used had the following,
-> 
->   export TEST_DEV=/dev/loop5
->   export TEST_DIR=/media/test
->   export SCRATCH_DEV=/dev/loop6
->   export SCRATCH_MNT=/media/scratch
->   
->   MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
->   MOUNT_OPTIONS='-o usrquota,grpquota,prjquota'
+--=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for finding this issue, the _require_meta_uuid helper or the calling
-of _require_meta_uuid looks not correct. The xfs/077 calls _require_meta_uuid
-as:
+On 28 Apr 2024, at 23:56, Luis Chamberlain wrote:
 
-  _supported_fs xfs
-  _require_xfs_copy
-  _require_scratch
-  _require_no_large_scratch_dev
-  _require_meta_uuid            <=====
-  ...
+> On Sat, Apr 27, 2024 at 05:57:17PM -0700, Luis Chamberlain wrote:
+>> On Fri, Apr 26, 2024 at 04:46:11PM -0700, Luis Chamberlain wrote:
+>>> On Thu, Apr 25, 2024 at 05:47:28PM -0700, Luis Chamberlain wrote:
+>>>> On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
+>>>>> On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) w=
+rote:
+>>>>>> From: Pankaj Raghav <p.raghav@samsung.com>
+>>>>>>
+>>>>>> using that API for LBS is resulting in an NULL ptr dereference
+>>>>>> error in the writeback path [1].
+>>>>>>
+>>>>>> [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397d=
+f
+>>>>>
+>>>>>  How would I go about reproducing this?
+>>
+>> Well so the below fixes this but I am not sure if this is correct.
+>> folio_mark_dirty() at least says that a folio should not be truncated
+>> while its running. I am not sure if we should try to split folios then=
 
-The x/077 hasn't mkfs on SCRATCH_DEV, but the _require_meta_uuid does
-_scratch_xfs_db directly. That looks not right.
+>> even though we check for writeback once. truncate_inode_partial_folio(=
+)
+>> will folio_wait_writeback() but it will split_folio() before checking
+>> for claiming to fail to truncate with folio_test_dirty(). But since th=
+e
+>> folio is locked its not clear why this should be possible.
+>>
+>> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+>> index 83955362d41c..90195506211a 100644
+>> --- a/mm/huge_memory.c
+>> +++ b/mm/huge_memory.c
+>> @@ -3058,7 +3058,7 @@ int split_huge_page_to_list_to_order(struct page=
+ *page, struct list_head *list,
+>>  	if (new_order >=3D folio_order(folio))
+>>  		return -EINVAL;
+>>
+>> -	if (folio_test_writeback(folio))
+>> +	if (folio_test_dirty(folio) || folio_test_writeback(folio))
+>>  		return -EBUSY;
+>>
+>>  	if (!folio_test_anon(folio)) {
+>
+> I wondered what code path is causing this and triggering this null
+> pointer, so I just sprinkled a check here:
+>
+> 	VM_BUG_ON_FOLIO(folio_test_dirty(folio), folio);
+>
+> The answer was:
+>
+> kcompactd() --> migrate_pages_batch()
+>                   --> try_split_folio --> split_folio_to_list() -->
+> 		       split_huge_page_to_list_to_order()
+>
 
-I think we should do "_scratch_mkfs ..." before doing _require_meta_uuid.
-E.g. mkfs at the beginning of _require_meta_uuid.
+There are 3 try_split_folio() in migrate_pages_batch(). First one is to
+split anonymous large folios that are on deferred split list, so not rela=
+ted;
+second one is to split THPs when thp migration is not supported, but
+this is compaction, so not related; third one is to split large folios
+when there is no same size free page in the system, and this should be
+the one.
 
-Any thoughts?
+> Since it took running fstests generic/447 twice to reproduce the crash
+> with a minorder and 16k block size, modified generic/447 as followed an=
+d
+> it helps to speed up the reproducer with just running the test once:
+>
+> diff --git a/tests/generic/447 b/tests/generic/447
+> index 16b814ee7347..43050b58e8ba 100755
+> --- a/tests/generic/447
+> +++ b/tests/generic/447
+> @@ -36,6 +39,15 @@ _scratch_mount >> "$seqres.full" 2>&1
+>  testdir=3D"$SCRATCH_MNT/test-$seq"
+>  mkdir "$testdir"
+>
+> +runfile=3D"$tmp.compaction"
+> +touch $runfile
+> +while [ -e $runfile ]; do
+> +	echo 1 > /proc/sys/vm/compact_memory
+> +	sleep 10
+> +done &
+> +compaction_pid=3D$!
+> +
+> +
+>  # Setup for one million blocks, but we'll accept stress testing down t=
+o
+>  # 2^17 blocks... that should be plenty for anyone.
+>  fnr=3D20
+> @@ -69,6 +81,8 @@ _scratch_cycle_mount
+>  echo "Delete file1"
+>  rm -rf $testdir/file1
+>
+> +rm -f $runfile
+> +wait > /dev/null 2>&1
+>  # success, all done
+>  status=3D0
+>  exit
+>
+> And I verified that moving the check only to the migrate_pages_batch()
+> path also fixes the crash:
+>
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index 73a052a382f1..83b528eb7100 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -1484,7 +1484,12 @@ static inline int try_split_folio(struct folio *=
+folio, struct list_head *split_f
+>  	int rc;
+>
+>  	folio_lock(folio);
+> +	if (folio_test_dirty(folio)) {
+> +		rc =3D -EBUSY;
+> +		goto out;
+> +	}
+>  	rc =3D split_folio_to_list(folio, split_folios);
+> +out:
+>  	folio_unlock(folio);
+>  	if (!rc)
+>  		list_move_tail(&folio->lru, split_folios);
+>
+> However I'd like compaction folks to review this. I see some indication=
+s
+> in the code that migration can race with truncation but we feel fine by=
 
-Thanks,
-Zorro
+> it by taking the folio lock. However here we have a case where we see
+> the folio clearly locked and the folio is dirty. Other migraiton code
+> seems to write back the code and can wait, here we just move on. Furthe=
+r
+> reading on commit 0003e2a414687 ("mm: Add AS_UNMOVABLE to mark mapping
+> as completely unmovable") seems to hint that migration is safe if the
+> mapping either does not exist or the mapping does exist but has
+> mapping->a_ops->migrate_folio so I'd like further feedback on this.
 
-> 
-> -- 
-> Chandan
-> 
+During migration, all page table entries pointing to this dirty folio
+are invalid, and accesses to this folio will cause page fault and
+wait on the migration entry. I am not sure we need to skip dirty folios.
 
+> Another thing which requires review is if we we split a folio but not
+> down to order 0 but to the new min order, does the accounting on
+> migrate_pages_batch() require changing?  And most puzzling, why do we
+
+What accounting are you referring to? split code should take care of it.
+
+> not see this with regular large folios, but we do see it with minorder =
+?
+
+I wonder if the split code handles folio->mapping->i_pages properly.
+Does the i_pages store just folio pointers or also need all tail page
+pointers? I am no expert in fs, thus need help.
+
+
+--
+Best Regards,
+Yan, Zi
+
+--=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename=signature.asc
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJDBAEBCgAtFiEE6rR4j8RuQ2XmaZol4n+egRQHKFQFAmYvrskPHHppeUBudmlk
+aWEuY29tAAoJEOJ/noEUByhUY/AQAJIqwPsNtL3RZCEp0irMLEgWWP6dCzsybB82
+c1lJFSHDx8gWcTJ5mm3ZWywewh+KBwUXS//2524KCWk5VRr2IFl/7eydM91WAcbq
+Zo6i17nh84KXEwzHFmYs80t6qYIxJufdo2HM0yk8U5RidHkKbyshHlPu/G3lEqD1
++WInHkspt4XfZK7q6ALoS8aZkpkYE2cH1Zjjx9tCy2kUdgY/Jj8iBvaGQXyqgBxt
+0J75x1EVewP1dEKhKgPDJ8bA2eEcvWRm4PfS9E60SKX2F8b7lDHtxBufAzeqcjNh
+DKnQ9rNGRfYZvMPlBrVKQmAD1awLW7BUF893XXgzh/qLkkXInBnpINzti8n92LCe
+ISDEuiUUgSX2WEqqPdRkr2fUy8DcBnpJv3Eet3kEYhGw/16zSFZTtS5KBfrsaxMe
+HClVLDrb0bZoSv63tkIn1eIt/f3XkE98/vEab09XHYX1qQGIihz/4xnZt/ccmy10
+yYdicuWpDT7LOyPpll9RHxOz0WpMEAu6Sl0S1zStZtB7C7OjITEqsE40bzFtw1M0
+5P8OtQCgSyf9g3z/zFo1A+bnYgVG9QtE1vKHJF8EKycX4WduU8ebVMy7AghTghyW
+8rvN6Zc4kvTeaep7eTtxciNDXHOPJR85uF0FTlqZe9Nvsp9sYPT4n32Vf2z5cpwk
+KgZh6ZCS
+=VRI5
+-----END PGP SIGNATURE-----
+
+--=_MailMate_3CFDE44C-20AD-427E-9C6C-D6F7E093DEE1_=--
