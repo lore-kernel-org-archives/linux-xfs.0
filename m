@@ -1,47 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D487DDB1
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 05:47:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F168D534
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 06:15:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714369634; cv=none; b=fnMB7rS5VxZfyejKvoaQb0bCgmiJNQVgsoYICaKUDlljCozPFsxOPzTagLtQ7TSqz5PerGWnWLCJChA+mKPRQAeZD46AReHbhtPyaY2gOZXBiutTeaEV8Dr+DhcVuhBJ1j9x+WkBVJXpxpuHTqmY4hIAWLWqqwz2lpV3/RCvSdY=
+	t=1714371335; cv=none; b=Wg9K+E1yO6Fw0pHbLorz7fX4qj7V8xMEIZQ0QJ4ljGAVKrdeEQjWKGnH2+93ZCXq5/ZE3O1LAxAGu7ETbhiuuFt4nXx7XA9xEOtaWVjWS0B/2+RlS+oq+OLsUp0AyXT7Y5BcRFD1+264kro8f8bV0NF1sOao3WZu60TKMWkUQZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714369634; c=relaxed/simple;
-	bh=ANY6eBQDUNSWA+yGZpO145WImdVYktHMNJzWKs22I4k=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GekO7QlL5wjZManpBAd2+pMdeb0k3kINEODNNVmRDCctfhfF7eDoOzUWe/13Q6FgF/HvH+76wRMMPi8gLlViI8bo6A1A1dT4IW9FVcAmXAiu0WC8qncdix+DrFA7RvGTYvU2SZ5IC1qegEPZc5Qb/GHhgjMhiZiQAgO9JmoBSb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yq7eDAHs; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1714371335; c=relaxed/simple;
+	bh=W+oqyxYZkwWtSJt2ZdoV/iF0av8kwh5VMkyoIgcoGk4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lj4ZRsQWz7t0poic5P4pCSlNbXBq+YVOKAMVtwqYQy5inx/Jpvac0h/+vfBJh5boque2PI76rxrfy9ema3t9L+wIOIU72oaIbBR86nG4icN7+1Qn6UK42psmZvPtavTMB5Qtr11Xsw3fihjCZB3u4H3KwdPC7mqiAHfiF0KHASQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KWinXmcl; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yq7eDAHs"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KWinXmcl"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
 	Content-ID:Content-Description:In-Reply-To:References;
-	bh=SJvYXm32u+nWT3WytsBkuXdj6i0UsjWFcaJXvyE7BqM=; b=yq7eDAHs3hj2ncu+ItRPuqcnBL
-	upMzkA/OMiBiARGwRBnjYV/LFX6pUNh/Zx7zQQtTowiwMyF1ocXQu3WPhm4bDCCs3+vHBTnDBuWx0
-	Sk76sfg9CULFZOiFORejMSc+FLPyzC4GJuX6Aba5Vlg2fPo3Znw3qcgj+P6DbR3cC+TDmHzeqSDCW
-	nENHB54KEDiK0Iky2BM4wbqOV0YLDWPxNj6BrHWJVTxJtDluUWJWHABhwomSYlVWnt6Oo6wjsvRU6
-	JTxRF+yPiKrUMgATAhiEXcN4vcTc8pil4nBiHzplsv7THhSJAcQiOXcnsnMpEIoqStEh89SilrU2C
-	nHVDfDHA==;
+	bh=WqX/JmrkzcDu9puEK/spRV9NA0auOMBPpXnlDqJ55f0=; b=KWinXmcl3h5tjmrHg5KvmPNk1U
+	HvZK8dtZZddoUg+VIhx8ivLIbqjVQziIbZtohkZjQBxo/m8HzQaCnYsJm+VeLVUXExNiP0LF5hdkM
+	Gn7XPOlNMNP8jtbpcCPtbpkBm4IOH059FXykZQlk1hYeH2zc6zfoL0BLMESSGX3IfBtfWpeW+TqaJ
+	Cu32Pg+cqDWaLw6tXftZ+2+sDKjFeWdi0k4Nm3A7cEoySWt3uVzX6ep6V8uqZ2tFHjOF3M53Tu4n2
+	ha2um5ZCHPpyW7ESfF/Sdgmmlfs6x9FxvcmJEctiuJxIZQHvXsfKWgZBRzAxvjDjVzGaQnh98K/wz
+	QE0Tw9gw==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1Jr2-00000001Xz5-34kC;
-	Mon, 29 Apr 2024 05:47:09 +0000
+	id 1s1KIW-00000001ch1-20Pa;
+	Mon, 29 Apr 2024 06:15:32 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: akpm@linux-foundation.org,
-	osalvador@suse.de
-Cc: elver@google.com,
-	vbabka@suse.cz,
-	andreyknvl@gmail.com,
-	linux-mm@kvack.org,
-	djwong@kernel.org,
-	david@fromorbit.com,
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH] mm,page_owner: don't remove GFP flags in add_stack_record_to_list
-Date: Mon, 29 Apr 2024 07:47:06 +0200
-Message-Id: <20240429054706.1543980-1-hch@lst.de>
+Subject: xfs_bmapi_write retval fix v2
+Date: Mon, 29 Apr 2024 08:15:20 +0200
+Message-Id: <20240429061529.1550204-1-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -52,31 +47,29 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This loses flags like GFP_NOFS and GFP_NOIO that are important to avoid
-deadlocks as well as GFP_NOLOCKDEP that otherwise generates lockdep false
-positives.
 
-Fixes: 217b2119b9e2 ("mm,page_owner: implement the tracking of the stacks count")
-Reported-by: Reported-by: syzbot+b7e8d799f0ab724876f9@syzkaller.appspotmail.com
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- mm/page_owner.c | 2 --
- 1 file changed, 2 deletions(-)
+Hi all,
 
-diff --git a/mm/page_owner.c b/mm/page_owner.c
-index d17d1351ec84af..d214488846fa92 100644
---- a/mm/page_owner.c
-+++ b/mm/page_owner.c
-@@ -168,9 +168,7 @@ static void add_stack_record_to_list(struct stack_record *stack_record,
- 	unsigned long flags;
- 	struct stack *stack;
- 
--	/* Filter gfp_mask the same way stackdepot does, for consistency */
- 	gfp_mask &= ~GFP_ZONEMASK;
--	gfp_mask &= (GFP_ATOMIC | GFP_KERNEL);
- 	gfp_mask |= __GFP_NOWARN;
- 
- 	set_current_in_page_owner();
--- 
-2.39.2
+this series addresses our long standing issue with confusing return
+values from xfs_bmapi_write.
 
+The first patch is the actual return value fix for the fuzzer-reported
+issue.
+
+The second to last patch cleans up and fixes long-standing issues in
+xfs_bmap_add_extent_delay_real in code paths that haven't been used much
+or at all.
+
+The last patch changes xfs_bmapi_write to not convert the entire
+delalloc extent if it hits one.  This sounds simpler than it is, because
+delalloc conversion has been designed to always convert the entire
+extent since the initial delalloc commits.
+
+While this has gotten a bit more testing by now, this will still stress
+code never used.  I've also looked into the alternative of having all
+callers handle short delalloc conversions, but it doesn't look appealing
+at all.
+
+Changes since v1:
+ - rebased to the latest xfs-for-next tree with a minor conflict
+ - spelling fixes
