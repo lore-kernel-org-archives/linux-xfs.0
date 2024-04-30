@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64BD917592
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:49:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C9EB17592
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:49:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714481378; cv=none; b=eN2i4+ecXgeaTdhpE5lQKSNApzjNWy+SiOiBvyF4KBO6W6SZW8V4fOStKw+szhyS1uHz8OHINgRrjxk93m1UmvANKkPwzsW4bf0eZ9HrZk5N48JhMES77+piClAErQZlNEpNN8iystQ3YAGiQrdGAZRCWg2+cLciMcyqdoEcMYw=
+	t=1714481380; cv=none; b=l+yAInUgwyRkvLL7FJjW5/B4OmQw7Orhe3gEFX/AWGeCLXNWBnbAgL99MRbr8kxa5nxTsTbQY7Rr4yUpKCFxyona/C7tOhwTyZNpOM6r1CSeeBBC41RcwG6LWLd7MMCLpfr6YJiquUcR7I2Q9if/7bObhpT3M/8/NZ6I9xpavIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714481378; c=relaxed/simple;
-	bh=Nj0KQSP2or/BYhco4R1AYYdKwLNT7oPK7WPasV/y3ss=;
+	s=arc-20240116; t=1714481380; c=relaxed/simple;
+	bh=ByQ2paw3lCvCs8m2RawGJZ1dbquqkvo3DwpcSPRpl1Y=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=V/s2w3UX53Mwpalz67IqXwQC4VpwomqNMJUcDzIb7OSS7Z5MUvpzQYIV9JhLs+QeWQekGOm4fEeVJ3xF4EIfFKkxcMZlo81INbRZ96lCFA5g7D5O1F5+CeznQ29alHVcLWKar6c1ZXI7g8SfPiIsQDI27+U2QdzTdgkn+PKZmTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Hgp9uluT; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=nZWvx674XAk02bsexB8nhXrf5Mtdcl11kIkSOlv43HDE407+/OO6tMiFvqTNSZhy8QWge9OTriswLk7+uXB8jHvjsgTHtVYljuyuWeebm1WECFQdByrBlrtg6n3jX+qppxnsmgciz9Mo3Dezt9zpMmTlE86L+IpYFkR058LROq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bSYLkvHP; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Hgp9uluT"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bSYLkvHP"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=5LQ2P1FJwur0I5RhelJJlGdQPcGdcQneF/YA8zVwlHI=; b=Hgp9uluTMTb8IbSUUo7gdwujqS
-	AJbqDUjxei3bC48rn7ETWUaaJ5Tk6DzNEuQR5qzN1+XLykes46lZtkqrgR32HgX5gvH8SQDFxAhcv
-	1i2dQhttxjNB+ETPiCuSwryle9HVnAgDZPEz9QsXTs761RERa9zuX4g8TG0XtnbEhrTMPYV7JUgRX
-	MMaWcD5b/YYYSE1uB9jPR3oRNpiMjAVh83NP0t+oq35GM7N+tc9tg3VuLfVAPb4R8h5tvOY/JNQWK
-	X9J/mM7UFcDOHDvobe6SIxc8985+XWPPs9ByUphRBHzZyorxCOcd0eok8p1QNB88ZiSb2G2mWRlKt
-	vLksJ+VA==;
+	bh=Lw1QlIlo8n8YbxYcxV2TWEHM4cqB42SUKvArEpT37GE=; b=bSYLkvHPO2OTYOOLljRv2qo6P1
+	i3rODwS4zR6ymo+vNaUQRsBGp5VBckGjbcv0ZzqZfTnqWVSNypfLGhnj7qNrF+MycsdgPGl6XVFCy
+	Bi2c1zL4iPsNnlK537YjN3/U0WW1hgwJZy74fQeYeWFdo7sVhK+NznJ8ycciE6SCP/bY8sKNqNU3w
+	b/jvQJIRO4z6wsgZijjXkYH0oKyzW+fUImLervSDnq2HarLqCjBiW8UZrLXPeP0T8NTT2hBwVR5oh
+	Jglbz2VK3905DLS+bVjIP7P2Pfd5U/w8KDVPTsUAZ1O2sxiSncWKowtzuwaFBWs7dHNWDsYj6faGU
+	uBl5vxzw==;
 Received: from [2001:4bb8:188:7ba8:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1mvP-00000006Ngv-25t3;
-	Tue, 30 Apr 2024 12:49:36 +0000
+	id 1s1mvS-00000006NhT-37O1;
+	Tue, 30 Apr 2024 12:49:39 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 02/16] xfs: remove an extra buffer allocation in xfs_attr_shortform_to_leaf
-Date: Tue, 30 Apr 2024 14:49:12 +0200
-Message-Id: <20240430124926.1775355-3-hch@lst.de>
+Subject: [PATCH 03/16] xfs: rationalize dir2_sf entry condition asserts
+Date: Tue, 30 Apr 2024 14:49:13 +0200
+Message-Id: <20240430124926.1775355-4-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240430124926.1775355-1-hch@lst.de>
 References: <20240430124926.1775355-1-hch@lst.de>
@@ -49,55 +49,100 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Make use of the new ability to call xfs_bmap_local_to_extents_empty on
-a non-empty local fork to reuse the old inode fork data to build the leaf
-block to replace the local temporary buffer.
+Various routines dealing with shortform directories have a similar
+pre-condition ASSERT boilerplate that does look a bit weird.
+
+Remove the assert that the inode fork is non-NULL as it doesn't buy
+anything over the NULL pointer dereference if it is.
+
+Remove the duplicate i_disk_size ASSERT that uses the less precise
+location of the parent inode number over the one using
+xfs_dir2_sf_hdr_size().
+
+Remove the if_nextents assert in xfs_dir2_sf_to_block as that is implied
+by the local formt (and not checked by the other functions either).
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_block.c |  4 ----
+ fs/xfs/libxfs/xfs_dir2_sf.c    | 12 ++----------
+ 2 files changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b9e98950eb3d81..d9285614d7c21b 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -942,24 +942,16 @@ xfs_attr_shortform_to_leaf(
- 	struct xfs_da_args		*args)
- {
- 	struct xfs_inode		*dp = args->dp;
--	struct xfs_ifork		*ifp = &dp->i_af;
--	struct xfs_attr_sf_hdr		*sf = ifp->if_data;
-+	struct xfs_attr_sf_hdr		*sf;
- 	struct xfs_attr_sf_entry	*sfe;
--	int				size = be16_to_cpu(sf->totsize);
- 	struct xfs_da_args		nargs;
--	char				*tmpbuffer;
- 	int				error, i;
- 	xfs_dablk_t			blkno;
- 	struct xfs_buf			*bp;
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 0f93ed1a4a74f4..035a54dbdd7586 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -1105,12 +1105,8 @@ xfs_dir2_sf_to_block(
+ 	trace_xfs_dir2_sf_to_block(args);
  
- 	trace_xfs_attr_sf_to_leaf(args);
- 
--	tmpbuffer = kmalloc(size, GFP_KERNEL | __GFP_NOFAIL);
--	memcpy(tmpbuffer, ifp->if_data, size);
--	sf = (struct xfs_attr_sf_hdr *)tmpbuffer;
+ 	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
+-	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
 -
--	xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
--	xfs_bmap_local_to_extents_empty(args->trans, dp, XFS_ATTR_FORK);
-+	sf = xfs_bmap_local_to_extents_empty(args->trans, dp, XFS_ATTR_FORK);
+ 	ASSERT(ifp->if_bytes == dp->i_disk_size);
+-	ASSERT(oldsfp != NULL);
+ 	ASSERT(dp->i_disk_size >= xfs_dir2_sf_hdr_size(oldsfp->i8count));
+-	ASSERT(dp->i_df.if_nextents == 0);
  
- 	bp = NULL;
- 	error = xfs_da_grow_inode(args, &blkno);
-@@ -1003,7 +995,7 @@ xfs_attr_shortform_to_leaf(
- 	}
- 	error = 0;
- out:
--	kfree(tmpbuffer);
-+	kfree(sf);
- 	return error;
- }
+ 	/*
+ 	 * Copy the directory into a temporary buffer.
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 17a20384c8b719..1cd5228e1ce6af 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -378,9 +378,7 @@ xfs_dir2_sf_addname(
  
+ 	ASSERT(xfs_dir2_sf_lookup(args) == -ENOENT);
+ 	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+-	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
+ 	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
+-	ASSERT(sfp != NULL);
+ 	ASSERT(dp->i_disk_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
+ 	/*
+ 	 * Compute entry (and change in) size.
+@@ -855,9 +853,7 @@ xfs_dir2_sf_lookup(
+ 	xfs_dir2_sf_check(args);
+ 
+ 	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+-	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
+ 	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
+-	ASSERT(sfp != NULL);
+ 	ASSERT(dp->i_disk_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
+ 	/*
+ 	 * Special case for .
+@@ -920,21 +916,19 @@ xfs_dir2_sf_removename(
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_dir2_sf_hdr	*sfp = dp->i_df.if_data;
++	int			oldsize = dp->i_disk_size;
+ 	int			byteoff;	/* offset of removed entry */
+ 	int			entsize;	/* this entry's size */
+ 	int			i;		/* shortform entry index */
+ 	int			newsize;	/* new inode size */
+-	int			oldsize;	/* old inode size */
+ 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
+ 
+ 	trace_xfs_dir2_sf_removename(args);
+ 
+ 	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+-	oldsize = (int)dp->i_disk_size;
+-	ASSERT(oldsize >= offsetof(struct xfs_dir2_sf_hdr, parent));
+ 	ASSERT(dp->i_df.if_bytes == oldsize);
+-	ASSERT(sfp != NULL);
+ 	ASSERT(oldsize >= xfs_dir2_sf_hdr_size(sfp->i8count));
++
+ 	/*
+ 	 * Loop over the old directory entries.
+ 	 * Find the one we're deleting.
+@@ -1028,9 +1022,7 @@ xfs_dir2_sf_replace(
+ 	trace_xfs_dir2_sf_replace(args);
+ 
+ 	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+-	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
+ 	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
+-	ASSERT(sfp != NULL);
+ 	ASSERT(dp->i_disk_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
+ 
+ 	/*
 -- 
 2.39.2
 
