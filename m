@@ -1,95 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E778DDA6;
-	Tue, 30 Apr 2024 03:42:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79B6DDA6;
+	Tue, 30 Apr 2024 03:47:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714448542; cv=none; b=SGjUKPB8ZvivxFKtRizIuXuSbQinxqnpoTR/q7VQamMejHhlz4n8MuavAK5ixi/tSxz8yAe34dQsvifI0Bq/2AvYLSzPdJDhMOi1ixrRIj/wNtXEXfIqdJpGFFIfPkOTbmFodyKd7c/3EKrM3QbIDJsXY5e82WOiaAmo0sC+1nc=
+	t=1714448869; cv=none; b=UoXOVPDp6qymc7Y4I3paZO+a2fyGSfXC88ObSZ93VMvvO4MEtRDpaQoUTGvXBS3BNtXlvZ1xv8tmo36dVCTqJ/11t5enIjNEQX7H2ECAtucRNONKiXoIiw9+SzvBEP4KDVGQg+X5ZpPa6VXZY7lwKlUBqmOqzO72wFqBNxEsVUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714448542; c=relaxed/simple;
-	bh=jbApkDvEWvvkWcdeshF4HBowOWeIkefxLeuhyJUzYvA=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Sc9iHD98S70wljFjagyFGcCPAWxrZvPhAtNYAd+YTiV8sqtTqgNSyM5Fj3TVbiEoIg3U/kvYf9UN2yy783UPJmTIpRztf2ZU5orhqfih7COmKxvd5hhD5kR8cgeSerhzSDhcv1w1aL5/3i6XS85xNpPNaURN3FAmmXOtS3hdc8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FnsV80QO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714448869; c=relaxed/simple;
+	bh=jUs9XgpaOa7DxLf3I0tsnTGWIU0jUYW5+Lq9rL+rIVw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=knMznN7S4y07fEaSlQRYRdeChHKh6pzc0V6iwrrZT/9v+7NVV94HLaHYKH1KCP/EC2ocXBcd16zhHXRVEFlFTxOQ+++cR3ERpNI17PFXty9X7IJ/pz8xzRr/C7dW4UEz8izz9zLSr1DQc7sZjtnIotMHsM7D3/Qcjl6jEDodNis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=IcbDiX5r; arc=none smtp.client-ip=115.124.30.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FnsV80QO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24874C116B1;
-	Tue, 30 Apr 2024 03:42:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714448542;
-	bh=jbApkDvEWvvkWcdeshF4HBowOWeIkefxLeuhyJUzYvA=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FnsV80QOgYyl6gGrhdpVmULSAHxSHejT4TlWbMOjf1SsOrkmGJZ7GmUt/D7aY+IJf
-	 +Vi43sxd4SUygIVlrl9VVcqe0w8MtJCQKbEBh8uA30hD5YnMfgYb7bcfVcP21ezEre
-	 ggq4EO5G9dRo09OP9SNNiFquasY2qziGj9bo1mP24V5qco0lyVP6oV1NBHGofa2214
-	 VqoeD9x3+WXuEFI7j0MCCYBppCmqqkra15TImCKYFc33hqkvBFQ8WJ5mfAfRkF9P/P
-	 y9KnNE9sT32sG6kXrq3e7+1FK6yPakABl+WXUHNWQwRSe/ITCqB/PIFOfszTaVo6vj
-	 MlzG1xVZ2YUog==
-Date: Mon, 29 Apr 2024 20:42:21 -0700
-Subject: [PATCH 6/6] common/populate: add verity files to populate xfs images
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@redhat.com, zlang@redhat.com, ebiggers@kernel.org,
- djwong@kernel.org
-Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, guan@eryu.me,
- linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <171444688070.962488.15915265664424203708.stgit@frogsfrogsfrogs>
-In-Reply-To: <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
-References: <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="IcbDiX5r"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1714448863; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=/CsF+Y2IP+3jZ5bkwA2pggt8f+Xx33IGI6tV8P3LBv8=;
+	b=IcbDiX5r/pAZCCT8flZ4BGElBcp1P2NEmX+6VBEVn6Xg/TEHLJKig38iqDn8wcB2falxxOl13o7OXoYwOAP6jMEJ53ttOwReUMNOWRr5tftBP5MofB5cNsomEaJlTyxysMCZYFDJXjpNM/DTcLdrDR99h1XUA0Jv+XXp7sEseU4=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R561e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033068173054;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0W5b.701_1714448859;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0W5b.701_1714448859)
+          by smtp.aliyun-inc.com;
+          Tue, 30 Apr 2024 11:47:42 +0800
+From: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To: chandan.babu@oracle.com
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+	Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH 2/2] xfs: Remove duplicate xfs_da_btree.h header
+Date: Tue, 30 Apr 2024 11:47:28 +0800
+Message-Id: <20240430034728.86811-2-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
+In-Reply-To: <20240430034728.86811-1-jiapeng.chong@linux.alibaba.com>
+References: <20240430034728.86811-1-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+./fs/xfs/xfs_handle.c: xfs_da_btree.h is included more than once.
 
-If verity is enabled on a filesystem, we should create some sample
-verity files.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8930
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 ---
- common/populate |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ fs/xfs/xfs_handle.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-
-diff --git a/common/populate b/common/populate
-index 35071f4210..ab9495e739 100644
---- a/common/populate
-+++ b/common/populate
-@@ -520,6 +520,30 @@ _scratch_xfs_populate() {
- 		done
- 	fi
- 
-+	# verity merkle trees
-+	is_verity="$(_xfs_has_feature "$SCRATCH_MNT" verity -v)"
-+	if [ $is_verity -gt 0 ]; then
-+		echo "+ fsverity"
-+
-+		# Create a biggish file with all zeroes, because metadump
-+		# won't preserve data blocks and we don't want the hashes to
-+		# stop working for our sample fs.
-+		for ((pos = 0, i = 88; pos < 23456789; pos += 234567, i++)); do
-+			$XFS_IO_PROG -f -c "pwrite -S 0 $pos 234567" "$SCRATCH_MNT/verity"
-+		done
-+
-+		fsverity enable "$SCRATCH_MNT/verity"
-+
-+		# Create a sparse file
-+		$XFS_IO_PROG -f -c "pwrite -S 0 0 3" -c "pwrite -S 0 23456789 3" "$SCRATCH_MNT/sparse_verity"
-+		fsverity enable "$SCRATCH_MNT/sparse_verity"
-+
-+		# Create a salted sparse file
-+		$XFS_IO_PROG -f -c "pwrite -S 0 0 3" -c "pwrite -S 0 23456789 3" "$SCRATCH_MNT/salted_verity"
-+		local salt="5846532066696e616c6c7920686173206461746120636865636b73756d732121"	# XFS finally has data checksums!!
-+		fsverity enable --salt="$salt" "$SCRATCH_MNT/salted_verity"
-+	fi
-+
- 	# Copy some real files (xfs tests, I guess...)
- 	echo "+ real files"
- 	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
+diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
+index c8785ed59543..234b2c965fb6 100644
+--- a/fs/xfs/xfs_handle.c
++++ b/fs/xfs/xfs_handle.c
+@@ -21,7 +21,6 @@
+ #include "xfs_attr.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_parent.h"
+-#include "xfs_da_btree.h"
+ #include "xfs_handle.h"
+ #include "xfs_health.h"
+ #include "xfs_icache.h"
+-- 
+2.20.1.7.g153144c
 
