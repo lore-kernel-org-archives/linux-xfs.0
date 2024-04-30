@@ -1,71 +1,58 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAF077605D
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 23:49:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F15363D;
+	Tue, 30 Apr 2024 00:31:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714434600; cv=none; b=UOKV/drZo3AmDi9ZTVtBcGZs/Kzfr7YPW5Zz29oFZOQuD1qGSwB0XwtbkPzIKXqNgedCWwYo2dux8tzum/C1cM7h3MuNfB9Ud83AN04ax8hzsk/e8f7nCeU59RaXEBeNtKj2cdhdxhweYkU00FaOuDMev1VnKmkSAgnT3RxHvY4=
+	t=1714437070; cv=none; b=GdsgNgDsZ8HTQm3w/pnnjjGbi22fWsRs3fNx73fLbElXA3bJJXfZ5Ucsl08J0NmZmoSZMo20TL+GTtkuw016T+6Zdqb8bEM74yzv1KTWLdFH3LtL1E6mfQjZLQe+c5+3CetY/OkQipPKKUAw+UoZJ+ItyxBizp6RCSJFBWy4KhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714434600; c=relaxed/simple;
-	bh=j9ywEpiu/jjwOJYPTpZQKnoDHh2+iunxHi0HGXlG3kA=;
+	s=arc-20240116; t=1714437070; c=relaxed/simple;
+	bh=zbabn4bYczmAMt84G0q9LOhSpRMq5wb3vv9mBqCZXM4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PdPI0GR26b+Y9NcrepPIYvVzK29a1u4tTYN/XO0c8dFUpmFgieZBVWkHGHmXFwSv1HIJDzasK7ms7ZmctQBpWdTGbLbA06iE3IoOQQGzxnXneqA+zzpRKdCut4bCx7aTf9bull4XChwlRFMiaOKLj1pNic0MP7wxiTZmlHZsgmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HQeesBs6; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=lrWdeZeRGAGOCixTYuLAOLgJg5SxeQ42DbVtVw6o7zXEIT6HgaadVgChFrd/wpxI3yye49SdQUhP7qCNiJQ4v6lA+bXZ79xGPItUQKFFqf8FTmW5s8im2P5xEtx16VGGeIAAYDkYXP/A2P8LBCL+GGyA+piMWnyTCN5TPgnzPrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mZtlK3e2; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HQeesBs6"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6ee0642f718so4589493b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Apr 2024 16:49:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714434598; x=1715039398; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=DiddL8zAMvqY9VshCFjzx63U+GcMXjyvOVSjq0kNaIU=;
-        b=HQeesBs6GDFTpMYr79a0oFNrxWQ3NLzOBGZzcBH13wjOrRJTnDYksuH1G3e+jal23p
-         /mob7mr8FJ39dLi7hsd4E5zjhszfKNgPqbxrQB9/R4DodqsJMdykvQ2sD8wFz/MpFDQ5
-         BKiMzlNtF196/2kEHB8lpKpOGzZJzWgoeGvSqzdYaUFKxQkScIrTJUGso74wxCy6HLgg
-         TN8hC2x0vk45DWD8BAqySsBtjUpDpD+jqF2YcILV+MTrJ1zh9bZ8BdxA1t8fMQ4r53AB
-         397Mw12HyBW0W0vx5+kLhzejjjI+hwjLTubC0euqk0xRyzpvtSZuGFyaLdjUT/RSjILM
-         I2WQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714434598; x=1715039398;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DiddL8zAMvqY9VshCFjzx63U+GcMXjyvOVSjq0kNaIU=;
-        b=Rakra7G2O+lLJ8zF0483iZozdRmH1SdGejD4uYwiUQ3Y00YBtPIXdWCAGjB/CkBd2g
-         bu8NeGjHHCoUyiXUINpUP4veQygwM3CRescTt2Jhi+Vde/AsaPnlqrxeqNI3o5ynCWQS
-         bfg/u1MQhHTNeep/0zWOuVzEWGUmNZ0H4DzPzNRhdEKEXyh4Ii4P1lGfC1g1J7K55DN+
-         ufaDgwrjSuH3yNF+JwEAWB1LpmDkADC5H45OpK7tP9OcNUS5LxbvrmKzNoTYEjWDLjTy
-         e9jsp3R+X9YQTaCaggKdTvHxV8esdmDbRFQqELwVf2XnRq5R4ghMJECmq3ZyxMQWHaeW
-         IJVA==
-X-Forwarded-Encrypted: i=1; AJvYcCWrDQuA3tU+O3SjAgBzq/nqqfvRae3HXWzEj6dOvUJdryAduVFsmWLZFR2TOrGMUhU1NyJ8lH43+fBsoCt8dcZ7Rh7RZxmt4eHU
-X-Gm-Message-State: AOJu0YyFOfUAiq7qh9c7okq6GQ/RqUu7PzqacDYQc+o57LE8okoC/Stg
-	2LSCwphUJxWy1HEBrupNs1lVm/wanBrVS74yjfo/z7zjKJJkZ5jbUWOT41w9z8U=
-X-Google-Smtp-Source: AGHT+IHuKWC/c4x41+QSZNJd3lcQoUR6wyVRlABzffvTWdUs6RTvtjN3IU97w2Kq/BMHMP9Eb571CA==
-X-Received: by 2002:a05:6a21:8181:b0:1a9:793c:59ec with SMTP id pd1-20020a056a21818100b001a9793c59ecmr1438535pzb.13.1714434597446;
-        Mon, 29 Apr 2024 16:49:57 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id lc16-20020a056a004f5000b006f09f711e4esm19265220pfb.151.2024.04.29.16.49.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Apr 2024 16:49:56 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1s1akr-00FaLP-2v;
-	Tue, 30 Apr 2024 09:49:53 +1000
-Date: Tue, 30 Apr 2024 09:49:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, akpm@linux-foundation.org,
-	osalvador@suse.de, elver@google.com, andreyknvl@gmail.com,
-	linux-mm@kvack.org, djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mm,page_owner: don't remove GFP flags in
- add_stack_record_to_list
-Message-ID: <ZjAyIWUzDipofHFJ@dread.disaster.area>
-References: <20240429054706.1543980-1-hch@lst.de>
- <3e486c7f-57d4-4a36-a949-0cf19f10bf4f@suse.cz>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mZtlK3e2"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:
+	Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+	Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description;
+	bh=mVey8R8Zz45QQuqemHBOMxf/98lgRmfH3Sz6ARn8tbY=; b=mZtlK3e2Iyyi/JVP6RhPWslTNs
+	nrpbisQN6UwcnWIZPM+fAVz/a0aU76JsntebMl9ZhtVTi2gX8Ftw7S+hkhSDqukPsy0IloJ6qKRAn
+	1BlhjG9dF825mzb3IV9lwYpemkcI3kKkFx31jT/bgeW8yanjn8W9irlbBcSeJhmpPe3qmpIQGvEOW
+	777nct7/aA0p2533nrT9C3/pTOckaDlsIjNYoFUS3mf2aQiyTY2jm5ePjjoKADD8oOfHxitxO8Jw3
+	2oTgBHRwbsTyDHMNIEcBzC5FtwpyTay5gNZQTWsWFkHycMPcY5qyTNPTRm7TkZB4URjxY0FQuq91/
+	3gbJhLGA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s1bOi-00000004ZVy-0u0j;
+	Tue, 30 Apr 2024 00:31:04 +0000
+Date: Mon, 29 Apr 2024 17:31:04 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: Zi Yan <ziy@nvidia.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>,
+	Sean Christopherson <seanjc@google.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
+	djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
+	chandan.babu@oracle.com, akpm@linux-foundation.org,
+	linux-fsdevel@vger.kernel.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v4 05/11] mm: do not split a folio if it has minimum
+ folio order requirement
+Message-ID: <ZjA7yBQjkh52TM_T@bombadil.infradead.org>
+References: <20240425113746.335530-1-kernel@pankajraghav.com>
+ <20240425113746.335530-6-kernel@pankajraghav.com>
+ <Ziq4qAJ_p7P9Smpn@casper.infradead.org>
+ <Zir5n6JNiX14VoPm@bombadil.infradead.org>
+ <Ziw8w3P9vljrO9JV@bombadil.infradead.org>
+ <Zi2e7ecKJK6p6ERu@bombadil.infradead.org>
+ <Zi8aYA92pvjDY7d5@bombadil.infradead.org>
+ <6799F341-9E37-4F3E-B0D0-B5B2138A5F5F@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,52 +61,144 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3e486c7f-57d4-4a36-a949-0cf19f10bf4f@suse.cz>
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <6799F341-9E37-4F3E-B0D0-B5B2138A5F5F@nvidia.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On Mon, Apr 29, 2024 at 09:59:43AM +0200, Vlastimil Babka wrote:
-> On 4/29/24 7:47 AM, Christoph Hellwig wrote:
-> > This loses flags like GFP_NOFS and GFP_NOIO that are important to avoid
-> > deadlocks as well as GFP_NOLOCKDEP that otherwise generates lockdep false
-> > positives.
-> 
-> GFP_NOFS and GFP_NOIO translate to GFP_KERNEL without __GFP_FS/__GFP_IO so I
-> don't see how this patch would have helped with those.
-> __GFP_NOLOCKDEP is likely the actual issue and stackdepot solved it like this:
-> 
-> https://lore.kernel.org/linux-xfs/20240418141133.22950-1-ryabinin.a.a@gmail.com/
->
-> So we could just do the same here.
+On Mon, Apr 29, 2024 at 10:29:29AM -0400, Zi Yan wrote:
+> On 28 Apr 2024, at 23:56, Luis Chamberlain wrote:
+>=20
+> > On Sat, Apr 27, 2024 at 05:57:17PM -0700, Luis Chamberlain wrote:
+> >> On Fri, Apr 26, 2024 at 04:46:11PM -0700, Luis Chamberlain wrote:
+> >>> On Thu, Apr 25, 2024 at 05:47:28PM -0700, Luis Chamberlain wrote:
+> >>>> On Thu, Apr 25, 2024 at 09:10:16PM +0100, Matthew Wilcox wrote:
+> >>>>> On Thu, Apr 25, 2024 at 01:37:40PM +0200, Pankaj Raghav (Samsung) w=
+rote:
+> >>>>>> From: Pankaj Raghav <p.raghav@samsung.com>
+> >>>>>>
+> >>>>>> using that API for LBS is resulting in an NULL ptr dereference
+> >>>>>> error in the writeback path [1].
+> >>>>>>
+> >>>>>> [1] https://gist.github.com/mcgrof/d12f586ec6ebe32b2472b5d634c397df
+> >>>>>
+> >>>>>  How would I go about reproducing this?
+> >>
+> >> Well so the below fixes this but I am not sure if this is correct.
+> >> folio_mark_dirty() at least says that a folio should not be truncated
+> >> while its running. I am not sure if we should try to split folios then
+> >> even though we check for writeback once. truncate_inode_partial_folio()
+> >> will folio_wait_writeback() but it will split_folio() before checking
+> >> for claiming to fail to truncate with folio_test_dirty(). But since the
+> >> folio is locked its not clear why this should be possible.
+> >>
+> >> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> >> index 83955362d41c..90195506211a 100644
+> >> --- a/mm/huge_memory.c
+> >> +++ b/mm/huge_memory.c
+> >> @@ -3058,7 +3058,7 @@ int split_huge_page_to_list_to_order(struct page=
+ *page, struct list_head *list,
+> >>  	if (new_order >=3D folio_order(folio))
+> >>  		return -EINVAL;
+> >>
+> >> -	if (folio_test_writeback(folio))
+> >> +	if (folio_test_dirty(folio) || folio_test_writeback(folio))
+> >>  		return -EBUSY;
+> >>
+> >>  	if (!folio_test_anon(folio)) {
+> >
+> > I wondered what code path is causing this and triggering this null
+> > pointer, so I just sprinkled a check here:
+> >
+> > 	VM_BUG_ON_FOLIO(folio_test_dirty(folio), folio);
+> >
+> > The answer was:
+> >
+> > kcompactd() --> migrate_pages_batch()
+> >                   --> try_split_folio --> split_folio_to_list() -->
+> > 		       split_huge_page_to_list_to_order()
+> >
+>=20
+> There are 3 try_split_folio() in migrate_pages_batch().
 
-Yes, it is __GFP_NOLOCKDEP that is the issue here, but
-cargo-cult-copying of that stackdepot fix is just whack-a-mole bug
-fixing without addressing the technical debt that got us here in the
-first place. Has anyone else bothered to look to see if kmemleak has
-the same problem?
+This is only true for linux-next, for v6.9-rc5 off of which this testing
+is based on there are only two.
 
-If anyone bothered to do an audit, they would see that
-gfp_kmemleak_mask() handles the reclaim context masks correctly.
-Further, it adds NOWARN, NOMEMALLOC and
-NORETRY, which means the debug code is silent when it fails, it
-doesn't deplete emergency reserves and doesn't bog down retrying
-forever when there are sustained low memory situations.
+> First one is to split anonymous large folios that are on deferred
+> split list, so not related;
 
-This also points out that the page-owner/stackdepot code that strips
-GFP_ZONEMASK is completely redundant. Doing:
+This is in linux-next and not v6.9-rc5.
 
-	gfp_flags &= GFP_KERNEL|GFP_ATOMIC|__GFP_NOLOCKDEP;
+> second one is to split THPs when thp migration is not supported, but
+> this is compaction, so not related; third one is to split large folios
+> when there is no same size free page in the system, and this should be
+> the one.
 
-strips everything but __GFP_RECLAIM, __GFP_FS, __GFP_IO,
-__GFP_HIGH and __GFP_NOLOCKDEP. This already strips the zonemask
-info, so there's no need to do it explicitly.
+Agreed, the case where migrate_folio_unmap() failed with -ENOMEM. This
+also helps us enhance the reproducer further, which I'll do next.
 
-IOWs, the right way to fix this set of problems is to lift
-gfp_kmemleak_mask() to include/linux/gfp.h and then use it across
-all these nested allocations that occur behind the public
-memory allocation API.
+> > And I verified that moving the check only to the migrate_pages_batch()
+> > path also fixes the crash:
+> >
+> > diff --git a/mm/migrate.c b/mm/migrate.c
+> > index 73a052a382f1..83b528eb7100 100644
+> > --- a/mm/migrate.c
+> > +++ b/mm/migrate.c
+> > @@ -1484,7 +1484,12 @@ static inline int try_split_folio(struct folio *=
+folio, struct list_head *split_f
+> >  	int rc;
+> >
+> >  	folio_lock(folio);
+> > +	if (folio_test_dirty(folio)) {
+> > +		rc =3D -EBUSY;
+> > +		goto out;
+> > +	}
+> >  	rc =3D split_folio_to_list(folio, split_folios);
+> > +out:
+> >  	folio_unlock(folio);
+> >  	if (!rc)
+> >  		list_move_tail(&folio->lru, split_folios);
+> >
+> > However I'd like compaction folks to review this. I see some indications
+> > in the code that migration can race with truncation but we feel fine by
+> > it by taking the folio lock. However here we have a case where we see
+> > the folio clearly locked and the folio is dirty. Other migraiton code
+> > seems to write back the code and can wait, here we just move on. Further
+> > reading on commit 0003e2a414687 ("mm: Add AS_UNMOVABLE to mark mapping
+> > as completely unmovable") seems to hint that migration is safe if the
+> > mapping either does not exist or the mapping does exist but has
+> > mapping->a_ops->migrate_folio so I'd like further feedback on this.
+>=20
+> During migration, all page table entries pointing to this dirty folio
+> are invalid, and accesses to this folio will cause page fault and
+> wait on the migration entry. I am not sure we need to skip dirty folios.
 
-I've got a patchset under test at the moment that does this....
+I see.. thanks!
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > Another thing which requires review is if we we split a folio but not
+> > down to order 0 but to the new min order, does the accounting on
+> > migrate_pages_batch() require changing?  And most puzzling, why do we
+>=20
+> What accounting are you referring to? split code should take care of it.
+
+The folio order can change after split, and so I was concerned about the
+nr_pages used in migrate_pages_batch(). But I see now that when
+migrate_folio_unmap() first failed we try to split the folio, and if
+successful I see now we the caller will again call migrate_pages_batch()
+with a retry attempt of 1 only to the split folios. I also see the
+nr_pages is just local to each list for each loop, first on the from
+list to unmap and afte on the unmap list so we move the folios.
+
+> > not see this with regular large folios, but we do see it with minorder ?
+>=20
+> I wonder if the split code handles folio->mapping->i_pages properly.
+> Does the i_pages store just folio pointers or also need all tail page
+> pointers? I am no expert in fs, thus need help.
+
+mapping->i_pages stores folio pointers in the page cache or
+swap/dax/shadow entries (xa_is_value(folio)). The folios however can be
+special and we special-case them with shmem_mapping(mapping) checks.
+split_huge_page_to_list_to_order() doens't get called with swap/dax/shadow=
+=20
+entries, and we also bail out on shmem_mapping(mapping) already.
+
+  Luis
