@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1764917592
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:49:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64BD917592
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:49:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714481375; cv=none; b=Cl+ql4BWzLrTTvUZPVsl28xvoP+KWjQa0wIIMUH6qDOdXDKubKvwbXZdz69sTJx8uzZZcRwW+qM/He990I9kl0Bnh39Ch/n0GN3Ac5gFSUxJ6yAopQbpPgDqmVpN+VINqnofLO90K+qpG4veys+ssgkKHCkLzn5pj5q9uLW8Kpo=
+	t=1714481378; cv=none; b=eN2i4+ecXgeaTdhpE5lQKSNApzjNWy+SiOiBvyF4KBO6W6SZW8V4fOStKw+szhyS1uHz8OHINgRrjxk93m1UmvANKkPwzsW4bf0eZ9HrZk5N48JhMES77+piClAErQZlNEpNN8iystQ3YAGiQrdGAZRCWg2+cLciMcyqdoEcMYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714481375; c=relaxed/simple;
-	bh=eoQ5gqVXvqU3uu7dDEab9mQ9Q0+tYZ6YiC/VLv94c0Y=;
+	s=arc-20240116; t=1714481378; c=relaxed/simple;
+	bh=Nj0KQSP2or/BYhco4R1AYYdKwLNT7oPK7WPasV/y3ss=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NBhQTxj4kdSEnA8QTcGCsm7tDF7ttsu45JHV0JQDBdBMJXbqypXK6e/bp3sYmtHAdlUX7DLeWMXAxh/Z6XHSP5F/WqM6l4YKFZinvzsxudTUlehFtUMmjLAoi6J5DeSCHAUXbuIrJVQFY8lRp77Hg2mF2q67Tr4hRtWU5CgQpIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Fq2NdotW; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=V/s2w3UX53Mwpalz67IqXwQC4VpwomqNMJUcDzIb7OSS7Z5MUvpzQYIV9JhLs+QeWQekGOm4fEeVJ3xF4EIfFKkxcMZlo81INbRZ96lCFA5g7D5O1F5+CeznQ29alHVcLWKar6c1ZXI7g8SfPiIsQDI27+U2QdzTdgkn+PKZmTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Hgp9uluT; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fq2NdotW"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Hgp9uluT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nq/mQZNeKj6QPJVC9FZM3pY1xkMO08H4j7VRRXBq5tc=; b=Fq2NdotWl0EAgNiPyRWex8WwFu
-	BWlWDZAkV2HYpPtwhx6FXfQQkWA83lGSfCEIlJv8VUVKw9Uui8knhcg4gVrAQUy5FgtZAETWfoYJ4
-	ZNW7Dg7cIseUb92Ltp9YZQ2p7eHSnp/6gc5ra31QkdvaaEmubxC6Sdt2Z/um5g7ZKYs4lpoDacbkv
-	TkE7rMfIf9IpkRGTz+gCrAqYgmGqHnjzTQfgJCJ2FdhOYRlbCdgt7mryUQT9qXDZWexqBmEjgXvU7
-	881/JXEAHG7y3UtVpT7rd4m2AyWZ2ogk6ZSIg5ku4LHZuRouegTkDcFARqQuA+a1U6SJ8J3ITj9PU
-	aqqRQeww==;
+	bh=5LQ2P1FJwur0I5RhelJJlGdQPcGdcQneF/YA8zVwlHI=; b=Hgp9uluTMTb8IbSUUo7gdwujqS
+	AJbqDUjxei3bC48rn7ETWUaaJ5Tk6DzNEuQR5qzN1+XLykes46lZtkqrgR32HgX5gvH8SQDFxAhcv
+	1i2dQhttxjNB+ETPiCuSwryle9HVnAgDZPEz9QsXTs761RERa9zuX4g8TG0XtnbEhrTMPYV7JUgRX
+	MMaWcD5b/YYYSE1uB9jPR3oRNpiMjAVh83NP0t+oq35GM7N+tc9tg3VuLfVAPb4R8h5tvOY/JNQWK
+	X9J/mM7UFcDOHDvobe6SIxc8985+XWPPs9ByUphRBHzZyorxCOcd0eok8p1QNB88ZiSb2G2mWRlKt
+	vLksJ+VA==;
 Received: from [2001:4bb8:188:7ba8:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1mvM-00000006Ngf-2aD8;
-	Tue, 30 Apr 2024 12:49:33 +0000
+	id 1s1mvP-00000006Ngv-25t3;
+	Tue, 30 Apr 2024 12:49:36 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 01/16] xfs: allow non-empty forks in xfs_bmap_local_to_extents_empty
-Date: Tue, 30 Apr 2024 14:49:11 +0200
-Message-Id: <20240430124926.1775355-2-hch@lst.de>
+Subject: [PATCH 02/16] xfs: remove an extra buffer allocation in xfs_attr_shortform_to_leaf
+Date: Tue, 30 Apr 2024 14:49:12 +0200
+Message-Id: <20240430124926.1775355-3-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240430124926.1775355-1-hch@lst.de>
 References: <20240430124926.1775355-1-hch@lst.de>
@@ -49,78 +49,55 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Currently xfs_bmap_local_to_extents_empty expects the caller to set the
-for size to 0, which implies freeing if_data.  That is highly suboptimal
-because the callers need the data in the local fork so that they can
-copy it to the newly allocated extent.
-
-Change xfs_bmap_local_to_extents_empty to return the old fork data and
-clear if_bytes to zero instead and let the callers free the memory for
-the local fork, which allows them to access the data directly while
-formatting the extent format data.
+Make use of the new ability to call xfs_bmap_local_to_extents_empty on
+a non-empty local fork to reuse the old inode fork data to build the leaf
+block to replace the local temporary buffer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 13 +++++++------
- fs/xfs/libxfs/xfs_bmap.h |  2 +-
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6053f5e5c71eec..eb826fae8fd878 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -754,31 +754,32 @@ xfs_bmap_extents_to_btree(
- 
- /*
-  * Convert a local file to an extents file.
-- * This code is out of bounds for data forks of regular files,
-- * since the file data needs to get logged so things will stay consistent.
-- * (The bmap-level manipulations are ok, though).
-+ *
-+ * Returns the content of the old data fork, which needs to be freed by the
-+ * caller.
-  */
--void
-+void *
- xfs_bmap_local_to_extents_empty(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	int			whichfork)
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index b9e98950eb3d81..d9285614d7c21b 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -942,24 +942,16 @@ xfs_attr_shortform_to_leaf(
+ 	struct xfs_da_args		*args)
  {
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, whichfork);
-+	void			*old_data = ifp->if_data;
+ 	struct xfs_inode		*dp = args->dp;
+-	struct xfs_ifork		*ifp = &dp->i_af;
+-	struct xfs_attr_sf_hdr		*sf = ifp->if_data;
++	struct xfs_attr_sf_hdr		*sf;
+ 	struct xfs_attr_sf_entry	*sfe;
+-	int				size = be16_to_cpu(sf->totsize);
+ 	struct xfs_da_args		nargs;
+-	char				*tmpbuffer;
+ 	int				error, i;
+ 	xfs_dablk_t			blkno;
+ 	struct xfs_buf			*bp;
  
- 	ASSERT(whichfork != XFS_COW_FORK);
- 	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
--	ASSERT(ifp->if_bytes == 0);
- 	ASSERT(ifp->if_nextents == 0);
+ 	trace_xfs_attr_sf_to_leaf(args);
  
- 	xfs_bmap_forkoff_reset(ip, whichfork);
- 	ifp->if_data = NULL;
-+	ifp->if_bytes = 0;
- 	ifp->if_height = 0;
- 	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return old_data;
+-	tmpbuffer = kmalloc(size, GFP_KERNEL | __GFP_NOFAIL);
+-	memcpy(tmpbuffer, ifp->if_data, size);
+-	sf = (struct xfs_attr_sf_hdr *)tmpbuffer;
+-
+-	xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
+-	xfs_bmap_local_to_extents_empty(args->trans, dp, XFS_ATTR_FORK);
++	sf = xfs_bmap_local_to_extents_empty(args->trans, dp, XFS_ATTR_FORK);
+ 
+ 	bp = NULL;
+ 	error = xfs_da_grow_inode(args, &blkno);
+@@ -1003,7 +995,7 @@ xfs_attr_shortform_to_leaf(
+ 	}
+ 	error = 0;
+ out:
+-	kfree(tmpbuffer);
++	kfree(sf);
+ 	return error;
  }
  
--
- int					/* error */
- xfs_bmap_local_to_extents(
- 	xfs_trans_t	*tp,		/* transaction pointer */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index e98849eb9bbae3..6e0b6081bf3aa5 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -178,7 +178,7 @@ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- unsigned int xfs_bmap_compute_attr_offset(struct xfs_mount *mp);
- int	xfs_bmap_add_attrfork(struct xfs_trans *tp, struct xfs_inode *ip,
- 		int size, int rsvd);
--void	xfs_bmap_local_to_extents_empty(struct xfs_trans *tp,
-+void	*xfs_bmap_local_to_extents_empty(struct xfs_trans *tp,
- 		struct xfs_inode *ip, int whichfork);
- int xfs_bmap_local_to_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_extlen_t total, int *logflagsp, int whichfork,
 -- 
 2.39.2
 
