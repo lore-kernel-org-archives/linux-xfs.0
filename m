@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61CD310A01;
-	Tue, 30 Apr 2024 03:37:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072C5DDA6;
+	Tue, 30 Apr 2024 03:37:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714448245; cv=none; b=l+aQM/loShKesnNpQHbIzbYxsC+B5xbAKdqJfIptLHcj63H1VANPAYZKBKdeAW3tZUvsfJT45nNGX/U8EPYtu1ap/EhKogOzgkxHQBPmpf7VhkSiQ7cu3p/p6VWuBQqG+KBesmugGYyEy9JZAlIqE2RLpaPNpO/bdkvrOGbh0qQ=
+	t=1714448261; cv=none; b=eDciIoiqxCtt7REbDEY3nZNPjEF8QuKZD93MyCI/a54LmjuSB5/Iy6Vbw9U4D1NSI38qtTkuF+1YWZvntJbRVqpR08wJDjxIZea4C5YigBdqKPvy65mdlKguzHNSx/WczqraJkC7ap4Hudjwl7xJGNdz3yh5vjOOKogbgosAdYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714448245; c=relaxed/simple;
-	bh=nKFUd5MnqdN7gs5sweoBkBE86SpI2ISuPXSjE49K9GA=;
+	s=arc-20240116; t=1714448261; c=relaxed/simple;
+	bh=Hq9bAAzXVOfUtqOv92GE9o97z+9N6P/Hzhx43UZJysI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=q2YqljvFXRFF0HIBNpjxqPPZg/n6FSmMWdcEzMN2Zt94gTshNJ/jZJn70ttqgw9K2iSvA9WaFdcDAc32Kz0eH/J2uUu2+lxOcqRfhEKR+K3bArIlkDaEvQCypzygSzaz3iGncWnU9XX7B9dr7rdvY1FVlR/ytMb0wCHdtoCVgCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FRWnkdBQ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=FwzaTv2Uuy8AymZjcSebruhtHOYseXI+JI2ma1FTaJUqaQrHXzrhI9/gz+NvJ7Jvy52GD792sBsJePLgoTc+QBMSlRggeDsfE4Uqm+RcxSqCGTkiMs2Oc2tbnW+5P11K21ZIA6LrWCgvpy7//tNzLp/GSNkezeQmJMwKr6yUJCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PfdWtAcM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FRWnkdBQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEE74C4AF18;
-	Tue, 30 Apr 2024 03:37:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PfdWtAcM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 874CEC116B1;
+	Tue, 30 Apr 2024 03:37:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714448244;
-	bh=nKFUd5MnqdN7gs5sweoBkBE86SpI2ISuPXSjE49K9GA=;
+	s=k20201202; t=1714448260;
+	bh=Hq9bAAzXVOfUtqOv92GE9o97z+9N6P/Hzhx43UZJysI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FRWnkdBQ66jcJrcEKqn5zbcxMyR5ZOHQqFX4o76eyp5SgZ2Kynd8V1ioz+rSvNjUW
-	 OLQ2KAVWAYY8TIPNPqR+C/jRPQzcQPEBpjxU+cAm+DOsIidAr/M0Zb3SFFfb0/LWRp
-	 Cf5m2X5CVCFUVHKeWrT90vpsAMUoWpVCYVIr0lM2cdElrLRsVxqyWrrcc4hqsNwO9f
-	 DktsFs9f47RWvZsBGupot3mpqBmBC5j/Y7UCidjlEigcvVBLsps2crl5JOVUJVVTlj
-	 extRINj++rokr4SOu07NY/5c7vQI95rwAT0BBfKt/9523eSICMIVgHGd359S4n7BHs
-	 w8hdk/obCyWlA==
-Date: Mon, 29 Apr 2024 20:37:24 -0700
-Subject: [PATCH 25/38] xfs_db: don't obfuscate verity xattrs
+	b=PfdWtAcMTMm+YLbcTV/Qf5OHqS9gMxHNsAVnpU/P3HESloZsw8bMnQtpmKjBpFp+H
+	 lAT/uPLzXGELGdg4JOEgaVGt3lHNz1CtEv1wP8dsT1Igy13OhurcYxcE9oqfzPeUi+
+	 4kQGkeG6VO1fqkoKUjmFC5ySJk8AqB24YexM0cB7oHU/cvi9/cvPQnu3VE4DQHtdiI
+	 LLSpH3xTwCTSolYP+CC+XA7vQtQSPIh2vKemnIbQqNyRxILqqaZeRljcHbYskaUdSw
+	 DJBR18NK+YObHbFv73dJYA8zR4UtaBa2lLW4NifDYB8G3X6yRM9fhZzEGi+c30Rg55
+	 hl1XMn1ASPlVw==
+Date: Mon, 29 Apr 2024 20:37:40 -0700
+Subject: [PATCH 26/38] xfs_db: dump the inode verity flag
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@redhat.com, ebiggers@kernel.org, cem@kernel.org,
  djwong@kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
  fsverity@lists.linux.dev
-Message-ID: <171444683495.960383.3327817770931540712.stgit@frogsfrogsfrogs>
+Message-ID: <171444683510.960383.11746420992762795794.stgit@frogsfrogsfrogs>
 In-Reply-To: <171444683053.960383.12871831441554683674.stgit@frogsfrogsfrogs>
 References: <171444683053.960383.12871831441554683674.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,45 +48,26 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't obfuscate fsverity metadata when performing a metadump.
+Display the verity iflag.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/metadump.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ db/inode.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 23defaee929f..112d762a8c31 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1448,6 +1448,8 @@ process_sf_attr(
- 		if (asfep->flags & XFS_ATTR_PARENT) {
- 			maybe_obfuscate_pptr(asfep->flags, name, namelen,
- 					value, asfep->valuelen, is_meta);
-+		} else if (asfep->flags & XFS_ATTR_VERITY) {
-+			; /* never obfuscate verity metadata */
- 		} else if (want_obfuscate_attr(asfep->flags, name, namelen,
- 					value, asfep->valuelen, is_meta)) {
- 			generate_obfuscated_name(0, asfep->namelen, name);
-@@ -1843,6 +1845,8 @@ process_attr_block(
- 				maybe_obfuscate_pptr(entry->flags, name,
- 						local->namelen, value,
- 						valuelen, is_meta);
-+			} else if (entry->flags & XFS_ATTR_VERITY) {
-+				; /* never obfuscate verity metadata */
- 			} else if (want_obfuscate_attr(entry->flags, name,
- 						local->namelen, value,
- 						valuelen, is_meta)) {
-@@ -1871,6 +1875,10 @@ process_attr_block(
- 				/* do not obfuscate obviously busted pptr */
- 				add_remote_vals(be32_to_cpu(remote->valueblk),
- 						be32_to_cpu(remote->valuelen));
-+			} else if (entry->flags & XFS_ATTR_VERITY) {
-+				/* never obfuscate verity metadata */
-+				add_remote_vals(be32_to_cpu(remote->valueblk),
-+						be32_to_cpu(remote->valuelen));
- 			} else if (want_obfuscate_dirents(is_meta)) {
- 				generate_obfuscated_name(0, remote->namelen,
- 							 &remote->name[0]);
+diff --git a/db/inode.c b/db/inode.c
+index d7ce7eb77365..6a6bb43dc15a 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -213,6 +213,9 @@ const field_t	inode_v3_flds[] = {
+ 	{ "metadir", FLDT_UINT1,
+ 	  OI(COFF(flags2) + bitsz(uint64_t) - XFS_DIFLAG2_METADIR_BIT-1), C1,
+ 	  0, TYP_NONE },
++	{ "verity", FLDT_UINT1,
++	  OI(COFF(flags2) + bitsz(uint64_t) - XFS_DIFLAG2_VERITY_BIT-1), C1,
++	  0, TYP_NONE },
+ 	{ NULL }
+ };
+ 
 
