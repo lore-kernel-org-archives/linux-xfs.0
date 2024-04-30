@@ -1,69 +1,62 @@
-Received: from out30-100.freemail.mail.aliyun.com (out30-100.freemail.mail.aliyun.com [115.124.30.100])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4153F10965;
-	Tue, 30 Apr 2024 03:47:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B84D2101C5;
+	Tue, 30 Apr 2024 04:04:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714448871; cv=none; b=gfs124IZjfY1n6M/5BVAB1m+ook9ERE2WZRoYFIkpbxVWsYPSTA8mnlueExrYXNJgfohgPZQ7NT7iirT6ZYREVgjjOgle3dHKrGUte1cdTN4JMxehCecwBwipz9zQeCdo+SiNVKht26xwvVs5iSvvrneCtEXSxZ/KWhe3V48EOw=
+	t=1714449854; cv=none; b=S1or4uFZt6B6Nb6txl3Z2mmyPHqdYYJK5FdDDFvQ+iKmC0ggyBVNwOP/pcd0htqCce/BnsRHWjLWfJQBuW3hEo65QDFapjwLYtBZlYVXat7Y/u1+MK6MWSctQV+6o1g760E/J58gviRieni2oY/aXlAeAQt7Nk77UwhCybJBzdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714448871; c=relaxed/simple;
-	bh=Mo0Pfq0A8u0WgoYsEWiaKzNz4YXl0RQNy5c1b2zgnWc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VpDhs0qPxRv9YmsJmqEoxU3o7a/JRK7446BIWqf6vNziEufihge09ArpceRqkYQoa8qXq1PmZdRJ/VEGy2V8eYHY8xo686dL52eCqHM2PcA7ynpjE2m+LBT92INU8uGe97GwVSfiEJv+X0SxBUhfLuSwiKRfanpBDOIQ+TOC1OI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=RGcuuWzG; arc=none smtp.client-ip=115.124.30.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1714449854; c=relaxed/simple;
+	bh=xquYkdl9fpC+Wtb+uNSGETdm8v6yEqPydZ0+Pzg3qgo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tq1VohRHK0EFAEEzJkt8rddurMzzSZ6zYd9rTUEKJ0iouCCkaUEF73I9Uc5PPkfbmjsf5RCpwW2Nbt68CWl/9t1/WZQeSuANwEauV4pCfM/BDpFGkTQ6VJIJDGTAlzGL6tVEivwqeRNjlpVoFlKc7apx41dgui3gA/1JGmqq5Pk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ygYcon6u; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="RGcuuWzG"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1714448859; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=6EoYFnnrRx9Ut/tDax0nPzU21beFw383jDxbtRqkCXk=;
-	b=RGcuuWzGo/a0jmR1dp9SALfywD/ZlehIMBZ9dBDN5DcSRyHikbjGRO0uDFIzDux5sIUr7HEXz1m2/Ga7pFH6jdKSlE0AuiMZRWO04N9y24vDqTUhiOLSReQrPhn0oLI3AkYfQSSg/gkTCdnPy42j1D5yWM/XvUpqZfoXF92PqHY=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R741e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037067111;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0W5ayAjS_1714448850;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0W5ayAjS_1714448850)
-          by smtp.aliyun-inc.com;
-          Tue, 30 Apr 2024 11:47:39 +0800
-From: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To: chandan.babu@oracle.com
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-	Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH 1/2] xfs: Remove duplicate xfs_da_format.h header
-Date: Tue, 30 Apr 2024 11:47:27 +0800
-Message-Id: <20240430034728.86811-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ygYcon6u"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Cc+/1xCquATq7FO6eqR8t3cu5To1zwP4PfeaYzwibME=; b=ygYcon6u+jC+Jl55WVeEYJm703
+	J1rriCyFT2G+/Pn2LZnU9UoMC8vwxFmABUJz74+YLijBxCsgIdBi8j+gAq867BDTjKUsIIuJU8245
+	TaDr1fqX9HlBLkUt91nrh73ciReXhJ1AnCQJNPlPOqTWfF4D6+rhceGAheF0JIaqhzwiBAXo6wtRK
+	2WB+fea1l1SgR4qQDrQUpJo5kcNmAiTlmapV+gNuSWn+HCW0RUp6juUrWOnTntDm22Au2KNHCJfi5
+	4QBULQfXtIeXXe8BkRWjKXdJWCDh87FBDqgQVmIdQRUMNCjNw/3aSFyGnvfJ/cJAMe1QPP9ISQK18
+	jOWXwLWg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s1eiw-00000004zYR-48Wf;
+	Tue, 30 Apr 2024 04:04:10 +0000
+Date: Mon, 29 Apr 2024 21:04:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
+Subject: Re: [PATCH 1/2] xfs: Remove duplicate xfs_da_format.h header
+Message-ID: <ZjBtuvRX4vncJGMs@infradead.org>
+References: <20240430034728.86811-1-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240430034728.86811-1-jiapeng.chong@linux.alibaba.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-./fs/xfs/libxfs/xfs_trans_resv.c: xfs_da_format.h is included more than once.
+On Tue, Apr 30, 2024 at 11:47:27AM +0800, Jiapeng Chong wrote:
+> ./fs/xfs/libxfs/xfs_trans_resv.c: xfs_da_format.h is included more than once.
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8931
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8931
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- fs/xfs/libxfs/xfs_trans_resv.c | 1 -
- 1 file changed, 1 deletion(-)
+I don't think we do Closes for random bugzilla, never mind for trivial
+cleanups.
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 6dbe6e7251e7..3dc8f785bf29 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -22,7 +22,6 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_attr_item.h"
- #include "xfs_log.h"
--#include "xfs_da_format.h"
- 
- #define _ALLOC	true
- #define _FREE	false
--- 
-2.20.1.7.g153144c
+The changes itself looks fine, though:
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
