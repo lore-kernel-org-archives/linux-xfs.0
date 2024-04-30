@@ -1,286 +1,143 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457EF172BA5
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:58:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE89717107C
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 13:02:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714481913; cv=none; b=ElqFOCzbBHFEjlCLktT5Io849sMD8mtUvBRvxMhM7XQAETEAkSQtUDaJ6dM++mrnByOJbj+gt0BPs4m0uIkTErLrOK/8b86CVKBwNZf1ZYqYf34632hP7qa1Tukxj/3SmcTDEeMSP2heAR85nDK282b/lZNrLTgPy4FBUmgpcF0=
+	t=1714482169; cv=none; b=HIwJZNHS6b+1ojBKS84uwjq3Zbl/buZVfRG0I1zL8Lg4TGDWekOYJljk/+lNKeWZMdV8bnRTjmUoNw5Eq/04zDH2sK5bmMHSMw5lipYNjho1eEB19CdTCSajy4qM+dRsNdENuIva9lWYBiPNTD9+MhzmDEpfRbfhSr0sm+7L8K0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714481913; c=relaxed/simple;
-	bh=U1ccXr8wEXm29+CtBW3N4nBVNcPw+KyT3ulnmNaoLQQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Sgnpg15prFeli2Ri+XJp24rt0XfxMCn6e1JmWy/jsXxcOM2h/x8ajb7yc2dKySSUbJAYd0drmsQ5f5ryXgIcEkAtrTITzsRGVP/qjxvDv56+mcAINsOPFrX4vC7oJqa5twxQ2+u0dRprwnbdQ4Tha0d4fuE0jN04V5ChZUYz/W0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ekeik80m; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1714482169; c=relaxed/simple;
+	bh=uNA3xvlHg49E3hzcRGO5DiB55Ff++VuWM7eWoUi66a0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=H0h+ZyH3b7jQFbHhmXdP0Uc5lJ/QFF0NXV9ixSQRovyzpfqdYD0fiOgfSzy/VvhQHESk4vIG6dU8jPBN9fJvKMTnNgJG3XCqsyPZdbSZSaerBxvzzwV/CIZZZKrHGAle48tvtg8Jo4hT010JG0DyNlOVdJpo6UcM79QftvfIF5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y1fpQWBx; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ekeik80m"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=t+vODA5BNfZ1HpARPf7QHkYqkgIW2ZKnY3sdsI/kgu8=; b=ekeik80mRLfpwB3qST6JzoLWMQ
-	txTCI9Wdg0gDIdUKhTmwwb8E6RaOZLcmU8i8xAlygiOmqfEuwGwtHZJWIsmSL4pHonItjVsvLdOfg
-	gLMIpKftKW0dmFaft6vg8O1QSb1lYu2NZF9z+e2zx1DefmvLe0IxjYFFvKOuobnnyClsKKud59ewL
-	RrEx1ZPx6xSDW7nIEcvO4AwBYdPmrSBb74R8B72OgLyZTW4xN+a71jIG2cvO99ZzObpmfhxm22zBj
-	NMzwh1QkFhmwIVHiR0T3HxoPufVcSHUZyCjTA1XdgbQMPe/0ykH/RkQAopkdn2Tu+HZOThch3kVkS
-	jPyrjiQw==;
-Received: from [2001:4bb8:188:7ba8:c70:4a89:bc61:3] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1n43-00000006Pzm-0cS9;
-	Tue, 30 Apr 2024 12:58:31 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: xfs_quota_unreserve_blkres can't fail
-Date: Tue, 30 Apr 2024 14:58:22 +0200
-Message-Id: <20240430125822.1776274-3-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240430125822.1776274-1-hch@lst.de>
-References: <20240430125822.1776274-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y1fpQWBx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1714482166;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UJJVrbUvK84cKXJPWoMrD8EIdMaV6tJACMZb9O9Qsus=;
+	b=Y1fpQWBxKXoHKUxWwD5xHz7HjYq+nYAg6IEO4h7mqmU3Ys0JpuaRZSc7BjYiOU93L5QKOs
+	wTE7GlO6xvOJPGKiKF3k66Rl/um8RETu08vKC4BRN7CogcFVZcrXcNmNOtQeXimP4BIizr
+	dwiq9luQJWPqaBO9zlw0aSoBVBWutKA=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-131-ixmJn63KNF-VXti5TgDdqQ-1; Tue, 30 Apr 2024 09:02:45 -0400
+X-MC-Unique: ixmJn63KNF-VXti5TgDdqQ-1
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1e45572fb3fso55578845ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 06:02:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714482164; x=1715086964;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UJJVrbUvK84cKXJPWoMrD8EIdMaV6tJACMZb9O9Qsus=;
+        b=dddvbIXLiM2mTJWHS/41jRoxtRuxmaon8HNLiO26bFr6ReVLUEOCBnUwWW5vCIFYfh
+         PHsixzNKTs7Fxr4/kJDVpDD5kl4my5VVVveVtMBRqMKdk8NP5QE4LlDOCaY3JOoHMba8
+         tpKU9uI05dh5jmHDHxbyHRpEp4Q+dgue7XcezNRjUAl9mWpFrMPJRmIg8AgQr6vrZTtp
+         qQa1eviGnNsGY5G/YipB3iVQoqHwY6MyjVioWx6fzN6A5zMTOBfcWthD3uILTOFR3m/J
+         bB89gP10mmU1WyiW01mFGCVD8u8f0932D5WFSp4AJMe4vuMh45eA1sqHKDgcs1Uyq61w
+         Vh8g==
+X-Forwarded-Encrypted: i=1; AJvYcCX3VqPrVRA7Ncfb3D1kM/SxjJwSraPNgFC2B3mb0KfM8cYjzmIoe59fmsRL7/LVDDupu0B+aRbNMB1elXS33vfW0uLDOQFC6umU
+X-Gm-Message-State: AOJu0YxweX1VzvtlKX+dlqmYYgqiSfOlu9TW1Qmv3TTzIGxNfRBG6dZh
+	Kzf+bxIGQ+m6F7cic/QKFa+PASMPaU4ggbEDYoL/lrxjdVyEoY+jFnl254zbVlDrD8m/hMAefa+
+	K0PPK2cHj38CzbV/ZZ4O3nAqmSKZrX0nWah2jUDvQiKvPFEVK2JK9Mwk1LQ==
+X-Received: by 2002:a17:903:264f:b0:1e0:e85f:3882 with SMTP id je15-20020a170903264f00b001e0e85f3882mr12076220plb.38.1714482164137;
+        Tue, 30 Apr 2024 06:02:44 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEOvnBcuyyK/ktO+06jlafUocaJJlNf9t8SByiwoWmCk0pXgZfDsndOSZjgLEWgwKxtO7xgFw==
+X-Received: by 2002:a17:903:264f:b0:1e0:e85f:3882 with SMTP id je15-20020a170903264f00b001e0e85f3882mr12076040plb.38.1714482161634;
+        Tue, 30 Apr 2024 06:02:41 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id j14-20020a170903024e00b001e4753f7715sm22294731plh.12.2024.04.30.06.02.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Apr 2024 06:02:41 -0700 (PDT)
+Date: Tue, 30 Apr 2024 21:02:37 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, djwong@kernel.org, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org, chandanbabu@kernel.org
+Subject: Re: [PATCH] xfs/077: remove _require_meta_uuid
+Message-ID: <20240430130237.dgbxexni2r3vf7ga@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240429170548.1629224-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240429170548.1629224-1-hch@lst.de>
 
-Unreserving quotas can't fail due to quota limits, and we'll notice a
-shut down file system a bit later in all the callers anyway.  Return
-void and remove the error checking and propagation in the callers.
+On Mon, Apr 29, 2024 at 07:05:48PM +0200, Christoph Hellwig wrote:
+> _require_meta_uuid tries to check if the configuration supports the
+> metauuid feature.  It assumes a scratch fs has already been created,
+> which in the part was accidentally true to do a _require_xfs_crc call
+> that was removed in commit 39afc0aa237d ("xfs: remove support for tools
+> and kernels without v5 support").
+> 
+> As v5 file systems always support meta uuids, and xfs/077 forces a v5
+> file systems we can just remove the check.
+> 
+> Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  common/xfs    | 15 ---------------
+>  tests/xfs/077 |  1 -
+>  2 files changed, 16 deletions(-)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 733c3a5be..11481180b 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1232,21 +1232,6 @@ _require_scratch_xfs_shrink()
+>  	_scratch_unmount
+>  }
+>  
+> -# XFS ability to change UUIDs on V5/CRC filesystems
+> -#
+> -_require_meta_uuid()
+> -{
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_bmap.c | 16 +++++-----------
- fs/xfs/libxfs/xfs_bmap.h |  2 +-
- fs/xfs/xfs_aops.c        |  6 +-----
- fs/xfs/xfs_bmap_util.c   |  9 +++------
- fs/xfs/xfs_bmap_util.h   |  2 +-
- fs/xfs/xfs_iomap.c       |  4 ++--
- fs/xfs/xfs_quota.h       |  7 ++++---
- fs/xfs/xfs_reflink.c     | 11 +++--------
- 8 files changed, 20 insertions(+), 37 deletions(-)
+OK, I thought you might want to add a _scratch_mkfs at here. But sure,
+I'm good to remove it too.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6053f5e5c71eec..68e80e8eaaeebe 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4870,7 +4870,7 @@ xfs_bmap_split_indlen(
- 	*indlen2 = len2;
- }
- 
--int
-+void
- xfs_bmap_del_extent_delay(
- 	struct xfs_inode	*ip,
- 	int			whichfork,
-@@ -4886,7 +4886,6 @@ xfs_bmap_del_extent_delay(
- 	xfs_filblks_t		got_indlen, new_indlen, stolen = 0;
- 	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
- 	uint64_t		fdblocks;
--	int			error = 0;
- 	bool			isrt;
- 
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -4906,9 +4905,7 @@ xfs_bmap_del_extent_delay(
- 	 * sb counters as we might have to borrow some blocks for the
- 	 * indirect block accounting.
- 	 */
--	error = xfs_quota_unreserve_blkres(ip, del->br_blockcount);
--	if (error)
--		return error;
-+	xfs_quota_unreserve_blkres(ip, del->br_blockcount);
- 	ip->i_delayed_blks -= del->br_blockcount;
- 
- 	if (got->br_startoff == del->br_startoff)
-@@ -5006,7 +5003,6 @@ xfs_bmap_del_extent_delay(
- 
- 	xfs_add_fdblocks(mp, fdblocks);
- 	xfs_mod_delalloc(ip, -(int64_t)del->br_blockcount, -da_diff);
--	return error;
- }
- 
- void
-@@ -5564,18 +5560,16 @@ __xfs_bunmapi(
- 
- delete:
- 		if (wasdel) {
--			error = xfs_bmap_del_extent_delay(ip, whichfork, &icur,
--					&got, &del);
-+			xfs_bmap_del_extent_delay(ip, whichfork, &icur, &got, &del);
- 		} else {
- 			error = xfs_bmap_del_extent_real(ip, tp, &icur, cur,
- 					&del, &tmp_logflags, whichfork,
- 					flags);
- 			logflags |= tmp_logflags;
-+			if (error)
-+				goto error0;
- 		}
- 
--		if (error)
--			goto error0;
--
- 		end = del.br_startoff - 1;
- nodelete:
- 		/*
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index e98849eb9bbae3..667b0c2b33d1d5 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -202,7 +202,7 @@ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, uint32_t flags,
- 		xfs_extnum_t nexts, int *done);
--int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
-+void	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
- 		struct xfs_iext_cursor *cur, struct xfs_bmbt_irec *got,
- 		struct xfs_bmbt_irec *del);
- void	xfs_bmap_del_extent_cow(struct xfs_inode *ip,
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 3f428620ebf2a3..c51bc17f5cfa03 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -469,7 +469,6 @@ xfs_discard_folio(
- {
- 	struct xfs_inode	*ip = XFS_I(folio->mapping->host);
- 	struct xfs_mount	*mp = ip->i_mount;
--	int			error;
- 
- 	if (xfs_is_shutdown(mp))
- 		return;
-@@ -483,11 +482,8 @@ xfs_discard_folio(
- 	 * byte of the next folio. Hence the end offset is only dependent on the
- 	 * folio itself and not the start offset that is passed in.
- 	 */
--	error = xfs_bmap_punch_delalloc_range(ip, pos,
-+	xfs_bmap_punch_delalloc_range(ip, pos,
- 				folio_pos(folio) + folio_size(folio));
--
--	if (error && !xfs_is_shutdown(mp))
--		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- }
- 
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 53aa90a0ee3a85..df370d7112dc54 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -440,7 +440,7 @@ xfs_getbmap(
-  * if the ranges only partially overlap them, so it is up to the caller to
-  * ensure that partial blocks are not passed in.
-  */
--int
-+void
- xfs_bmap_punch_delalloc_range(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		start_byte,
-@@ -452,7 +452,6 @@ xfs_bmap_punch_delalloc_range(
- 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end_byte);
- 	struct xfs_bmbt_irec	got, del;
- 	struct xfs_iext_cursor	icur;
--	int			error = 0;
- 
- 	ASSERT(!xfs_need_iread_extents(ifp));
- 
-@@ -476,15 +475,13 @@ xfs_bmap_punch_delalloc_range(
- 			continue;
- 		}
- 
--		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
--						  &got, &del);
--		if (error || !xfs_iext_get_extent(ifp, &icur, &got))
-+		xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur, &got, &del);
-+		if (!xfs_iext_get_extent(ifp, &icur, &got))
- 			break;
- 	}
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return error;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 77ecbb753ef207..51f84d8ff372fa 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -30,7 +30,7 @@ xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
- }
- #endif /* CONFIG_XFS_RT */
- 
--int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
-+void	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
- 		xfs_off_t start_byte, xfs_off_t end_byte);
- 
- struct kgetbmap {
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 9ce0f6b9df93e6..c06fca2e751c7c 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1211,8 +1211,8 @@ xfs_buffered_write_delalloc_punch(
- 	loff_t			offset,
- 	loff_t			length)
- {
--	return xfs_bmap_punch_delalloc_range(XFS_I(inode), offset,
--			offset + length);
-+	xfs_bmap_punch_delalloc_range(XFS_I(inode), offset, offset + length);
-+	return 0;
- }
- 
- static int
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index 621ea9d7cf06d9..23d71a55bbc006 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -215,10 +215,11 @@ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t blocks)
- 	return xfs_trans_reserve_quota_nblks(NULL, ip, blocks, 0, false);
- }
- 
--static inline int
--xfs_quota_unreserve_blkres(struct xfs_inode *ip, int64_t blocks)
-+static inline void
-+xfs_quota_unreserve_blkres(struct xfs_inode *ip, uint64_t blocks)
- {
--	return xfs_quota_reserve_blkres(ip, -blocks);
-+	/* don't return an error as unreserving quotas can't fail */
-+	xfs_quota_reserve_blkres(ip, -(int64_t)blocks);
- }
- 
- extern int xfs_mount_reset_sbqflags(struct xfs_mount *);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7da0e8f961d351..e03daae6eed637 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -606,10 +606,8 @@ xfs_reflink_cancel_cow_blocks(
- 		trace_xfs_reflink_cancel_cow(ip, &del);
- 
- 		if (isnullstartblock(del.br_startblock)) {
--			error = xfs_bmap_del_extent_delay(ip, XFS_COW_FORK,
--					&icur, &got, &del);
--			if (error)
--				break;
-+			xfs_bmap_del_extent_delay(ip, XFS_COW_FORK, &icur, &got,
-+					&del);
- 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
- 			ASSERT((*tpp)->t_highest_agno == NULLAGNUMBER);
- 
-@@ -632,10 +630,7 @@ xfs_reflink_cancel_cow_blocks(
- 			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
- 
- 			/* Remove the quota reservation */
--			error = xfs_quota_unreserve_blkres(ip,
--					del.br_blockcount);
--			if (error)
--				break;
-+			xfs_quota_unreserve_blkres(ip, del.br_blockcount);
- 		} else {
- 			/* Didn't do anything, push cursor back. */
- 			xfs_iext_prev(ifp, &icur);
--- 
-2.39.2
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+> -	_scratch_xfs_db -x -c "uuid restore" 2>&1 \
+> -	   | grep -q "invalid UUID\|supported on V5 fs" \
+> -	   && _notrun "Userspace doesn't support meta_uuid feature"
+> -
+> -	_scratch_xfs_db -x -c "uuid generate" >/dev/null 2>&1
+> -
+> -	_try_scratch_mount >/dev/null 2>&1 \
+> -	   || _notrun "Kernel doesn't support meta_uuid feature"
+> -	_scratch_unmount
+> -}
+> -
+>  # this test requires mkfs.xfs have case-insensitive naming support
+>  _require_xfs_mkfs_ciname()
+>  {
+> diff --git a/tests/xfs/077 b/tests/xfs/077
+> index 37ea931f1..4c597fddd 100755
+> --- a/tests/xfs/077
+> +++ b/tests/xfs/077
+> @@ -24,7 +24,6 @@ _supported_fs xfs
+>  _require_xfs_copy
+>  _require_scratch
+>  _require_no_large_scratch_dev
+> -_require_meta_uuid
+>  
+>  # Takes 2 args, 2nd optional:
+>  #  1: generate, rewrite, or restore
+> -- 
+> 2.39.2
+> 
+> 
 
