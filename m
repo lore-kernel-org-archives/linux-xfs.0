@@ -1,190 +1,185 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f173.google.com (mail-vk1-f173.google.com [209.85.221.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1117217107D
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:39:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFEB4383A5
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:39:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714480751; cv=none; b=XFpEPT5IGPq96nKFvVHkVQPNwZp3k7Ae2zwfyRpRrLFfJNVWP2h/yzJit4NqOhC9z0452aM31YbJN70BMz5LTzx/MrCbKSUijuFHzhZ7OJJe7uGlEeZbjG8LbyrQVATodnvEA8WEZ8Ktx2iQmsIvjNHX+WjHZyGnDPz4qeTVPlQ=
+	t=1714480785; cv=none; b=f9yszexpIVp7GhJiDTQGFb+68R2ldq0t+CFKz+xjWoB9Du2EfG2Uhlk7ZgWtGYaSX7rHenzq3SMHe+YLaciqsnwZXVLdtxY0Kuzc4aj2AClogMJSXaedGbVenJCUhFxQaPuYgbktBYZzenjZq9VLJNi070o0qNZ81a5GbqsGfik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714480751; c=relaxed/simple;
-	bh=2B5D0D1GgUPmS0uCeYNjZO5NRwRu0X9XoEhIRqRwJsQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rQRUCHMAlTbJtK1XD7x0Xin35MwY7XucQj7L5Dz6cThUEWQD1JLmmWseN974S33KhMV7QMZRFTc+3XXDMj1kBeQAlvtFhabDQmxiPcwG+khOGLbZ1CcFJJJ+j+OcseThuPUMCUxmflDprguPpOsFKLf/xgmKxZc7/f7z+GEmh/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=enWqOxC4; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1714480785; c=relaxed/simple;
+	bh=d5C1kNp1z7NxqL/wKJI/vdqABzDFLhqelCRRAccXAFI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=er5XvDd7ZAbghIydsRxUpnb3cVkRCoKBq1cRwywvaVOkPYDs7JW5hVeZUrOqj3ElwLXF4x4vhGSwzGZsre8DhDicnNKDDiq3SOCfEY2mbBxxAKnmFDxoQ/dH9dENFuAHOx/VzX5RZ606q54PUGWfU/UUSdsdbhwQNRyA8mzwSfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=N0s8SQGo; arc=none smtp.client-ip=209.85.221.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="enWqOxC4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1714480749;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=W8nGH1asXpyg2kuAwkDFcJcU70PWri0NFYqSFUgAKXg=;
-	b=enWqOxC4hJ2z3NCoYs5iGAKuxCcdU8B09PevdcMNoT+v1WejC41dXt+QTOYpIIx/ZmADB3
-	plSxX4c5BR0oSKZMfpnhnXqfp0CJvcKA1YH4kLcAhbwOBFf+hRgeitNDBgM9RdUfHgUA06
-	G8urrwdE5PSKrIeJyVy00m0ghJb+1ks=
-Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
- [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-73-QW3BsSJWPaauGVxuVFXUcw-1; Tue, 30 Apr 2024 08:39:07 -0400
-X-MC-Unique: QW3BsSJWPaauGVxuVFXUcw-1
-Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-2d87257c610so55213921fa.2
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 05:39:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="N0s8SQGo"
+Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-4dae8b2d29bso1596829e0c.0
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 05:39:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1714480782; x=1715085582; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=PZRv4mKNGpnlZv+nzsq+J9a/kblTtfRZRI+IS2d96V4=;
+        b=N0s8SQGoffITY1uyTYkXAZSWJIIXh5WZZ68WCYvBJ9DW/6aQPdwddX+vHF2/ja98jj
+         XLtK/l1qJGV//AiF4BDjCeWzSObE2Kb22kIJkDg38XYXO49NxQ9ozKLwNgsS5GLfIJ1b
+         JuEeSmO5Cko1hy40Rq1EU0rXe5BMi16Of8XnQCc0u98r+RS83PDSQ9iPTgjKp46ccGkA
+         JXqZqZpqbo/IvDGhEryKOCo1j5PB7XNIp2L0aRxST0Yz5tHl32yUv6XegjKkrknH/q6g
+         7uS5nNS3oZLzpKi9kVOThFFAExj1RKy1T5WjAgv4CqnaL+kg2tf0RJrOzt5h0t9pj6IU
+         wLmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714480746; x=1715085546;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=W8nGH1asXpyg2kuAwkDFcJcU70PWri0NFYqSFUgAKXg=;
-        b=GDuGDdewP1GOIDOJOFmsVf7Wiahg0IztY1BiZqqqdyzIbxbnL0MCEIJvz1fj2iYCQo
-         ZQGZAwUklISGSOpLt5WTalx9RqPBSbkK7cNtEas4T6Z999xO6AC9qqKqq++9hd7nA1kS
-         eoNN2qwqiE0zNYDBJlcl8AjShs1ppglM2In8hP3906d2+GW9NPE4uItvWIoy5BiIt+tW
-         Yb7UERfiXoZpDoSxah7QLyqE1H0HHL9rL4G5uTrLz7/3hVV7Cx90LpeAtKdEek5kKgq8
-         YWYCv3qJbyWghCOTEbqzSOtWhfRJumhosTxxfzOKbLKVUjXDaAxrNPKtivsrnhf9Fmpo
-         rjCA==
-X-Forwarded-Encrypted: i=1; AJvYcCWv82YETDyVVjrw4dAvh0CwB7nDXOa/jKAvamMYtCE4rVi/CZ4mV6gwNMcEAgfxmEYPXcQ2PYUyFcszrkLJccLkfxzMYyZhYtJd
-X-Gm-Message-State: AOJu0YzdPLC059o56sbmuWJ88kjU/1FS48wjviUy4Cv37gTZPQanosV3
-	rInYdYMqsMOBp8dnoanyrCH39woNDwKROcGYnecXvy9ijpKG3B5Vlqfr318RaOUjgS7RUuf9/y6
-	xl6VxlKthPp+EnWK50IqYMGn0PYtLGZmqNnQ0egtROvocwgdM41YmXspfx2sAqxQE
-X-Received: by 2002:a2e:8751:0:b0:2da:7cd1:3f1f with SMTP id q17-20020a2e8751000000b002da7cd13f1fmr9600212ljj.52.1714480745911;
-        Tue, 30 Apr 2024 05:39:05 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGVYxuPVguCsONK3OpB7FYzf3d9kL4MuW/MmdYMbqLYevCuGHaDwdtQS1Ck+BozrjZINcYDmg==
-X-Received: by 2002:a2e:8751:0:b0:2da:7cd1:3f1f with SMTP id q17-20020a2e8751000000b002da7cd13f1fmr9600183ljj.52.1714480745328;
-        Tue, 30 Apr 2024 05:39:05 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id jw5-20020a170906e94500b00a58eab0f0e9sm3899676ejb.185.2024.04.30.05.39.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Apr 2024 05:39:04 -0700 (PDT)
-Date: Tue, 30 Apr 2024 14:39:04 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, ebiggers@kernel.org, 
-	Andrey Albershteyn <andrey.albershteyn@gmail.com>, fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	guan@eryu.me, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/6] common/verity: enable fsverity for XFS
-Message-ID: <owfufxxoyiv3f67shc42n7pxvw4ippzjgukn3lfhayu5uraeci@pmqvwjh2u424>
-References: <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
- <171444687994.962488.5112127418406573234.stgit@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1714480782; x=1715085582;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=PZRv4mKNGpnlZv+nzsq+J9a/kblTtfRZRI+IS2d96V4=;
+        b=BOmbRU7JvHDgFiEMsTbI6JnsxmngaRhgdcvtNLKOfpbe26cUP1Syv2f9C/Ax3oXoBI
+         u6petpQJ2Vj+pqtnujEWZYJ00HFa3dm2l5FCiKe4VgfVYlMX1OjNYVTGfVpZ8ceNwTmw
+         5+G484rkkyk/m62Cbxp+81OJcVaADUwyLCBby9Jk9rZMY3EjvR1cNxw7c7+TRMunmiRC
+         FzKt/CNDZbWWYHbNgj4OKdzbhQFywVYUXlVqO2oeK1HG9s8HzZqgAUhkrFak04xJK109
+         9+x5N+rSZ8+4rCxHNXMm2QcwfOQ7hAD0I5iCOyd2+5vLwEqJUXRXCzxjf5ttvFKs016q
+         wxTg==
+X-Forwarded-Encrypted: i=1; AJvYcCXE014nnstGKlklcnn/HvPfvyxyANvYCzC5X+dd0nDYVnYUDjbPeN4Yusm2F4Ge99R0qqzS1UNy1YTQrReEzNdMKCnZgDr3VnPH
+X-Gm-Message-State: AOJu0YzZ2e39shkiIeSkoLHiS3VL+SObkgzE4hJomypzH1WiaCgy1tHh
+	jKJMDvun/8Ef2Ex7B7r9UNBY6lobXnHFOCiDlTsODXVn8t1REmiZmkJqCa36sFfWeh1Qovaa+9V
+	zVmeucRJ6i8jeLOjc03OGWB5/ZjBK1jzTPwUf
+X-Google-Smtp-Source: AGHT+IHyjMVbPcaMiV1qHC09V0wXme2k4N77APd0OWHpJKNbqJbrVwAzQ3kXjJKvqQ3gXS0iWjPzoK/bZ94N2sqjAGQ=
+X-Received: by 2002:a05:6122:311f:b0:4d4:5d86:b2d with SMTP id
+ cg31-20020a056122311f00b004d45d860b2dmr13994961vkb.16.1714480782463; Tue, 30
+ Apr 2024 05:39:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <171444687994.962488.5112127418406573234.stgit@frogsfrogsfrogs>
+References: <20240430054604.4169568-1-david@fromorbit.com> <20240430054604.4169568-2-david@fromorbit.com>
+In-Reply-To: <20240430054604.4169568-2-david@fromorbit.com>
+From: Marco Elver <elver@google.com>
+Date: Tue, 30 Apr 2024 14:39:04 +0200
+Message-ID: <CANpmjNONgXYzeYXobYsT+GDkwcTCtECSpUdWE_gpeM79Cnephw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] mm: lift gfp_kmemleak_mask() to gfp.h
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, akpm@linux-foundation.org, 
+	hch@lst.de, osalvador@suse.de, vbabka@suse.cz, andreyknvl@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 2024-04-29 20:41:03, Darrick J. Wong wrote:
-> From: Andrey Albershteyn <aalbersh@redhat.com>
-> 
-> XFS supports verity and can be enabled for -g verity group.
-> 
-> Signed-off-by: Andrey Albershteyn <andrey.albershteyn@gmail.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+On Tue, 30 Apr 2024 at 07:46, Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> Any "internal" nested allocation done from within an allocation
+> context needs to obey the high level allocation gfp_mask
+> constraints. This is necessary for debug code like KASAN, kmemleak,
+> lockdep, etc that allocate memory for saving stack traces and other
+> information during memory allocation. If they don't obey things like
+> __GFP_NOLOCKDEP or __GFP_NOWARN, they produce false positive failure
+> detections.
+>
+> kmemleak gets this right by using gfp_kmemleak_mask() to pass
+> through the relevant context flags to the nested allocation
+> to ensure that the allocation follows the constraints of the caller
+> context.
+>
+> KASAN recently was foudn to be missing __GFP_NOLOCKDEP due to stack
+> depot allocations, and even more recently the page owner tracking
+> code was also found to be missing __GFP_NOLOCKDEP support.
+>
+> We also don't wan't want KASAN or lockdep to drive the system into
+> OOM kill territory by exhausting emergency reserves. This is
+> something that kmemleak also gets right by adding (__GFP_NORETRY |
+> __GFP_NOMEMALLOC | __GFP_NOWARN) to the allocation mask.
+>
+> Hence it is clear that we need to define a common nested allocation
+> filter mask for these sorts of third party nested allocations used
+> in debug code. So to start this process, lift gfp_kmemleak_mask() to
+> gfp.h and rename it to gfp_nested_mask(), and convert the kmemleak
+> callers to use it.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Reviewed-by: Marco Elver <elver@google.com>
+
+Looks very reasonable, thanks.
+
 > ---
->  common/verity |   39 +++++++++++++++++++++++++++++++++++++--
->  1 file changed, 37 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/common/verity b/common/verity
-> index 59b67e1201..20408c8c0e 100644
-> --- a/common/verity
-> +++ b/common/verity
-> @@ -43,7 +43,16 @@ _require_scratch_verity()
->  
->  	# The filesystem may be aware of fs-verity but have it disabled by
->  	# CONFIG_FS_VERITY=n.  Detect support via sysfs.
-> -	if [ ! -e /sys/fs/$fstyp/features/verity ]; then
-> +	case $FSTYP in
-> +	xfs)
-> +		_scratch_unmount
-> +		_check_scratch_xfs_features VERITY &>>$seqres.full
-> +		_scratch_mount
-> +	;;
-> +	*)
-> +		test -e /sys/fs/$fstyp/features/verity
-> +	esac
-> +	if [ ! $? ]; then
->  		_notrun "kernel $fstyp isn't configured with verity support"
->  	fi
->  
-> @@ -201,6 +210,9 @@ _scratch_mkfs_verity()
->  	ext4|f2fs)
->  		_scratch_mkfs -O verity
->  		;;
-> +	xfs)
-> +		_scratch_mkfs -i verity
-> +		;;
->  	btrfs)
->  		_scratch_mkfs
->  		;;
-> @@ -334,12 +346,19 @@ _fsv_scratch_corrupt_bytes()
->  	local lstart lend pstart pend
->  	local dd_cmds=()
->  	local cmd
-> +	local device=$SCRATCH_DEV
->  
->  	sync	# Sync to avoid unwritten extents
->  
->  	cat > $tmp.bytes
->  	local end=$(( offset + $(_get_filesize $tmp.bytes ) ))
->  
-> +	# If this is an xfs realtime file, switch @device to the rt device
-> +	if [ $FSTYP = "xfs" ]; then
-> +		$XFS_IO_PROG -r -c 'stat -v' "$file" | grep -q -w realtime && \
-> +			device=$SCRATCH_RTDEV
-> +	fi
+>  include/linux/gfp.h | 25 +++++++++++++++++++++++++
+>  mm/kmemleak.c       | 10 ++--------
+>  2 files changed, 27 insertions(+), 8 deletions(-)
+>
+> diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+> index c775ea3c6015..a4ca004f3b8e 100644
+> --- a/include/linux/gfp.h
+> +++ b/include/linux/gfp.h
+> @@ -154,6 +154,31 @@ static inline int gfp_zonelist(gfp_t flags)
+>         return ZONELIST_FALLBACK;
+>  }
+>
+> +/*
+> + * gfp flag masking for nested internal allocations.
+> + *
+> + * For code that needs to do allocations inside the public allocation API (e.g.
+> + * memory allocation tracking code) the allocations need to obey the caller
+> + * allocation context constrains to prevent allocation context mismatches (e.g.
+> + * GFP_KERNEL allocations in GFP_NOFS contexts) from potential deadlock
+> + * situations.
+> + *
+> + * It is also assumed that these nested allocations are for internal kernel
+> + * object storage purposes only and are not going to be used for DMA, etc. Hence
+> + * we strip out all the zone information and leave just the context information
+> + * intact.
+> + *
+> + * Further, internal allocations must fail before the higher level allocation
+> + * can fail, so we must make them fail faster and fail silently. We also don't
+> + * want them to deplete emergency reserves.  Hence nested allocations must be
+> + * prepared for these allocations to fail.
+> + */
+> +static inline gfp_t gfp_nested_mask(gfp_t flags)
+> +{
+> +       return ((flags & (GFP_KERNEL | GFP_ATOMIC | __GFP_NOLOCKDEP)) |
+> +               (__GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN));
+> +}
 > +
->  	# For each extent that intersects the requested range in order, add a
->  	# command that writes the next part of the data to that extent.
->  	while read -r lstart lend pstart pend; do
-> @@ -355,7 +374,7 @@ _fsv_scratch_corrupt_bytes()
->  		elif (( offset < lend )); then
->  			local len=$((lend - offset))
->  			local seek=$((pstart + (offset - lstart)))
-> -			dd_cmds+=("head -c $len | dd of=$SCRATCH_DEV oflag=seek_bytes seek=$seek status=none")
-> +			dd_cmds+=("head -c $len | dd of=$device oflag=seek_bytes seek=$seek status=none")
->  			(( offset += len ))
->  		fi
->  	done < <($XFS_IO_PROG -r -c "fiemap $offset $((end - offset))" "$file" \
-> @@ -408,6 +427,22 @@ _fsv_scratch_corrupt_merkle_tree()
->  		done
->  		_scratch_mount
->  		;;
-> +	xfs)
-> +		local ino=$(stat -c '%i' $file)
-
-I didn't know about xfs_db's "path" command, this can be probably
-replace with -c "path $file", below in _scratch_xfs_db.
-
-> +		local attr_offset=$(( $offset % $FSV_BLOCK_SIZE ))
-> +		local attr_index=$(printf "%08d" $(( offset - attr_offset )))
-> +		_scratch_unmount
-> +		# Attribute name is 8 bytes long (byte position of Merkle tree block)
-> +		_scratch_xfs_db -x -c "inode $ino" \
-                                here   ^^^^^^^^^^
-> +			-c "attr_modify -f -m 8 -o $attr_offset $attr_index \"BUG\"" \
-> +			-c "ablock 0" -c "print" \
-> +			>>$seqres.full
-> +		# In case bsize == 4096 and merkle block size == 1024, by
-> +		# modifying attribute with 'attr_modify we can corrupt quota
-> +		# account. Let's repair it
-> +		_scratch_xfs_repair >> $seqres.full 2>&1
-> +		_scratch_mount
-> +		;;
->  	*)
->  		_fail "_fsv_scratch_corrupt_merkle_tree() unimplemented on $FSTYP"
->  		;;
-> 
-> 
-
-Otherwise, looks good to me:
-Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
-
--- 
-- Andrey
-
+>  /*
+>   * We get the zone list from the current node and the gfp_mask.
+>   * This zone list contains a maximum of MAX_NUMNODES*MAX_NR_ZONES zones.
+> diff --git a/mm/kmemleak.c b/mm/kmemleak.c
+> index 6a540c2b27c5..b723f937e513 100644
+> --- a/mm/kmemleak.c
+> +++ b/mm/kmemleak.c
+> @@ -114,12 +114,6 @@
+>
+>  #define BYTES_PER_POINTER      sizeof(void *)
+>
+> -/* GFP bitmask for kmemleak internal allocations */
+> -#define gfp_kmemleak_mask(gfp) (((gfp) & (GFP_KERNEL | GFP_ATOMIC | \
+> -                                          __GFP_NOLOCKDEP)) | \
+> -                                __GFP_NORETRY | __GFP_NOMEMALLOC | \
+> -                                __GFP_NOWARN)
+> -
+>  /* scanning area inside a memory block */
+>  struct kmemleak_scan_area {
+>         struct hlist_node node;
+> @@ -463,7 +457,7 @@ static struct kmemleak_object *mem_pool_alloc(gfp_t gfp)
+>
+>         /* try the slab allocator first */
+>         if (object_cache) {
+> -               object = kmem_cache_alloc(object_cache, gfp_kmemleak_mask(gfp));
+> +               object = kmem_cache_alloc(object_cache, gfp_nested_mask(gfp));
+>                 if (object)
+>                         return object;
+>         }
+> @@ -947,7 +941,7 @@ static void add_scan_area(unsigned long ptr, size_t size, gfp_t gfp)
+>         untagged_objp = (unsigned long)kasan_reset_tag((void *)object->pointer);
+>
+>         if (scan_area_cache)
+> -               area = kmem_cache_alloc(scan_area_cache, gfp_kmemleak_mask(gfp));
+> +               area = kmem_cache_alloc(scan_area_cache, gfp_nested_mask(gfp));
+>
+>         raw_spin_lock_irqsave(&object->lock, flags);
+>         if (!area) {
+> --
+> 2.43.0
+>
