@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FD4E17592
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:49:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 199BD17592
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 12:49:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714481395; cv=none; b=qG+nS4EnIl0hTaTdB+GkjcJcSH8+FjTIHNhHB5r7yF934vHlpam+mYNP3o6gGNXYhQT/r9u6+gjgU9V+ot0Y04CoGnkr8/knDs+qDLBKnvES8ohH9UCyPTisd/GJNdgATiEO272YbWGXLsRgLZcrwIVXBhLTHgAOa4ERhkHZWg0=
+	t=1714481398; cv=none; b=SehPOzXu9fYoLyZ+EyHIT5z6XorMYU12pC2Lpi0Uk3hp2wQuPpZ+wUuA4vhC8+vtSuVuXZ0Ng/ZRyWOrEe958djE7eRd1ZvpHt0ZBMa4Qct8HwaNJTFffPJr7qU5OQRuQio35wh4mQhVXEBqofVnRJS4raSqN8kvAQWw9yc8uNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714481395; c=relaxed/simple;
-	bh=KsVmBDpk8WE90z/wLz9LIoytIBOPszCnUVulQOeZKh8=;
+	s=arc-20240116; t=1714481398; c=relaxed/simple;
+	bh=pJZkmzBr6ISQVwMBPLCNPrm6haWfEf4TKJ79y0a21HQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nJdxRxgrcOYYNV514nVMWU0rkXcSXL4p7qnsm+UzeVwXGezC1p4R1NZmyBXYvomE8ZC+qp5swJctI7eWTqwXUEQoxtMMdFZSFN463pugei8fvbniyxWn2Kx2SDYHSmwedK7zwQdNFUbeg7ipXC/SyVWJNfDxcmUOqxiU059NCdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LLAKE2zp; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=tGbKkWpvesK1vSs+tmDiXVXq0apsoLh/Um7yQMhH41eO67pgxAXBz1UvByU57JaaYRz9YeDUdK5RrbwPFJ1A20cQZcoa6zSAIk8d4xOS7zvut47beOq2uqKPR1o6NKU7hsNoEo9QpPLqoWWdH33H0NprdCxqZQsPalFNJ5C3D9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vFwDRFBP; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LLAKE2zp"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vFwDRFBP"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=K02Q8RNmVx6CULPgX5Hpgse4SZ9DfpqYV4NAYsFaQQI=; b=LLAKE2zpsQdAHus1KNRipnUCwX
-	crI/zx1ztWR2Pev4rnh58Ap3Ei7VoJNyWhyriJCJNDpzYv62QG35FTwY8QaWNz7hmmOQFJj4IVFtY
-	2Kz4tIF+kxfzEqHexq4zwxjdWsYlD6urYELvDZUMpO66eeYEIteMTJ/GLvTEUIbMFlXjaLfQhnRut
-	NgXMT19tEuoaLKbX45LmQpLRLQ+K05TUZnzqH9VhYlKd4TtUob4jJlhXfV+8Pt3OsnwA+f3xLz8Q0
-	6XxiOWa2iEVvO7pEh9Fe4Rj3bKOM2zPWi5sRd//nXPuUwzZuyW4JdxA0jv8QfpFl8we09nCatxzi7
-	fyM5zutQ==;
+	bh=J91CyDJKyKV4tKglaK1Z1i9F/2QJIGaKXeKDn5QuaVM=; b=vFwDRFBPowmT7TYgBs1MUKOjXb
+	O6/HVlUMglDLnIscjB5Rq4haJoSldFFkAWa0ADpvjCy4tZwA6SzDCGlwo/sN8dP+UlVgx9rfkTqo6
+	RDvooCwwexxnLPJBbXN5a25blKtTBGB03MosBAjgA8v51PAWVFSbeWMES8pu53+3JEowEQjk2XDky
+	+vtJxWVRXf2dC3D22gIFnCfS/BlOSvl3EvGnZZ/Y7eeKr8rERgvqFvzv/YGwTqQj4UITvRftRuxDZ
+	5MEWRAz5OcFD9OSYXRdPJOrzQsNHd+VDb+2o6y75fO/AMhuQrOu8D6A28f8orVVVNl2h6OQd2ls6X
+	24JHHUFg==;
 Received: from [2001:4bb8:188:7ba8:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s1mvh-00000006Nl1-1E1k;
-	Tue, 30 Apr 2024 12:49:53 +0000
+	id 1s1mvk-00000006NlK-1X8u;
+	Tue, 30 Apr 2024 12:49:56 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 08/16] xfs: remove a superfluous memory allocation in xfs_dir2_sf_toino8
-Date: Tue, 30 Apr 2024 14:49:18 +0200
-Message-Id: <20240430124926.1775355-9-hch@lst.de>
+Subject: [PATCH 09/16] xfs: remove a superfluous memory allocation in xfs_dir2_sf_toino4
+Date: Tue, 30 Apr 2024 14:49:19 +0200
+Message-Id: <20240430124926.1775355-10-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240430124926.1775355-1-hch@lst.de>
 References: <20240430124926.1775355-1-hch@lst.de>
@@ -58,10 +58,10 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
  1 file changed, 8 insertions(+), 21 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 164ae1684816b6..87552c01260a1c 100644
+index 87552c01260a1c..3b6d6dda92f29f 100644
 --- a/fs/xfs/libxfs/xfs_dir2_sf.c
 +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -1205,36 +1205,25 @@ xfs_dir2_sf_toino8(
+@@ -1133,36 +1133,25 @@ xfs_dir2_sf_toino4(
  	struct xfs_inode	*dp = args->dp;
  	struct xfs_mount	*mp = dp->i_mount;
  	struct xfs_dir2_sf_hdr	*oldsfp = dp->i_df.if_data;
@@ -74,7 +74,7 @@ index 164ae1684816b6..87552c01260a1c 100644
  	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
  	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
  
- 	trace_xfs_dir2_sf_toino8(args);
+ 	trace_xfs_dir2_sf_toino4(args);
  
 -	/*
 -	 * Copy the old directory to the buffer.
@@ -83,13 +83,13 @@ index 164ae1684816b6..87552c01260a1c 100644
 -	 */
 -	oldsize = dp->i_df.if_bytes;
 -	buf = kmalloc(oldsize, GFP_KERNEL | __GFP_NOFAIL);
- 	ASSERT(oldsfp->i8count == 0);
+ 	ASSERT(oldsfp->i8count == 1);
 -	memcpy(buf, oldsfp, oldsize);
 +
  	/*
- 	 * Compute the new inode size (nb: entry count + 1 for parent)
+ 	 * Compute the new inode size.
  	 */
- 	newsize = oldsize + (oldsfp->count + 1) * XFS_INO64_DIFF;
+ 	newsize = oldsize - (oldsfp->count + 1) * XFS_INO64_DIFF;
 -	xfs_idata_realloc(dp, -oldsize, XFS_DATA_FORK);
 -	xfs_idata_realloc(dp, newsize, XFS_DATA_FORK);
 -	/*
@@ -104,7 +104,7 @@ index 164ae1684816b6..87552c01260a1c 100644
  	/*
  	 * Fill in the new header.
  	 */
-@@ -1257,10 +1246,8 @@ xfs_dir2_sf_toino8(
+@@ -1185,10 +1174,8 @@ xfs_dir2_sf_toino4(
  		xfs_dir2_sf_put_ftype(mp, sfep,
  				xfs_dir2_sf_get_ftype(mp, oldsfep));
  	}
