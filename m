@@ -1,61 +1,61 @@
-Received: from mail-oo1-f42.google.com (mail-oo1-f42.google.com [209.85.161.42])
+Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42E654A39
-	for <linux-xfs@vger.kernel.org>; Wed,  1 May 2024 01:32:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D76B567D
+	for <linux-xfs@vger.kernel.org>; Wed,  1 May 2024 01:47:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714527128; cv=none; b=okoxNgIclnymPhFyMImOs5/lldDvD3BqeHzikPgdwric6W8D3dq2kcY2nFAgMVaaBHQFmLUDcsD8DVEZq9q6sTI8DQ52Rj41hwA7/4x+A914uCVj81FxzewXk7qT4+By5yaZYJkbB+hsXtfH4GtQ0tR7oRoST2NV6MYIeFyZn2k=
+	t=1714528066; cv=none; b=Jgjk2Nlo+yi5D27DR0gDiZbBPGSea5pw5kbwKrA2aeySyFFzaLh5QJqmPwzWlcf1i9DxjFSGijG40kfyULAMyT+g1nRFrvrWDJg8WLFpuvhgoTKaLUROtZ6P9C6ZciApDAEWyVdg+PcnzSBEF3oVbIZ9q7yajPTAZdEO18aQVVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714527128; c=relaxed/simple;
-	bh=nNA/+5lUlX8TZ8Hrv3FoOYIRmlTOzjp/ZOYWxKwxduc=;
+	s=arc-20240116; t=1714528066; c=relaxed/simple;
+	bh=1BevPDrC06ybAYlvpZi7vW1hZEysUlTpN+aYC4MLwG0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=McAa+xos5ECAnTi90AM7hnRayUQKz5BR/AsPLX8qqp/V/HUVMd47JdoqAxJM+lNr+JITC4mfvHFb3JId16ry78CCiBqVYPpQlYEm6cJWCLXB44lw7XlINOEq4t9KqmjIJ7OrngyOyoo5C/c5HIo7z4Yssu6tEHXltx8VrOG1F6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=1+OV8jIb; arc=none smtp.client-ip=209.85.161.42
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sp4BrctUoBD7oidtpju6BUQ4uiOVbsDbNYOCwMI6U5ftKv1raCt64KLjiorYZlbd2C6Fvj7Ar7AOxx4akyNVxLrVgQAUPgp+URKnKEaRNax1ccV2sAPgBr1FPRmvyQV9YRQKm1GecakZUFWnc0Z0sQjfDq8ceLvf+P/vQT+SerU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Egtkymk9; arc=none smtp.client-ip=209.85.160.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1+OV8jIb"
-Received: by mail-oo1-f42.google.com with SMTP id 006d021491bc7-5aa400b917dso4121564eaf.0
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 18:32:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Egtkymk9"
+Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-22edbef3b4eso1728213fac.3
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2024 18:47:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714527124; x=1715131924; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714528063; x=1715132863; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=KM7Hd5zki3USqEbBfz9TXSdoSf1EQG0WzU/UqVvexrQ=;
-        b=1+OV8jIbYG66pZUK2m8IEQwBn5oVX6u5ZhY8tP/EIrnrCsEkWop/7yOIkM/+5SFJ/S
-         N7mJCaNT5/m/VZDZG4VS54WhLNRVYlivJPx0Z9BwmpS+AAOJ1COCJT754NtxTsXJnQ7O
-         8UDilEVIa1VsvMJQvc2Jc71llQj05GbEoq88v3BUjPcLB0Q0q/NfTb7cx+0tqHo0vMKl
-         LZrmUCAi4JnpYnDoRUEKI9x9eEPu0KYY9lOXQA4lq4Y7dXN2xndg+X2BP8YE281XEZ9K
-         BSFbrJbZfweqbjTZKiXc7ZTbqb6kC3kgAW7cygSErGHV0QXj4VDJrhtFNEbZrZNawan/
-         g6HQ==
+        bh=X2lTibDiFI0ZoiOE7Og2GQjpallD6n8zJfYR3muw4DE=;
+        b=Egtkymk99E8HdIFt7CFI80d1oLSo/+q0ExuR+ZmXm6FjAh1KoWY5xXmrKdaZH8JX0S
+         lss1PXc6PE2l+fG8yob+pZZV3VdDPuu9R0xUWRNSnIGfnLc+ikTID02PKGqgFL76BhGZ
+         4TxbDicveQ2bPgAxk/x/jTNcPBx/6IUiS4qVbhr1t1ajg6oPaGkXcUDWt9/fFf6Q4Q3R
+         ISxo1xktJScvePyFsyhVwWVtpwAElt8xmMUuGTL1LWrc1n6d0Uu8paQsnVuGSV3G0V4H
+         vqnXE770Q/n9LYMNfRRbmwxdB3xAclqWRM+8RRIvp0N6BzgmTKtJ67dsdf5IVSR7FmXt
+         QGlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714527124; x=1715131924;
+        d=1e100.net; s=20230601; t=1714528063; x=1715132863;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KM7Hd5zki3USqEbBfz9TXSdoSf1EQG0WzU/UqVvexrQ=;
-        b=fEoNsSGbmdc3Gu6Fi9u8a7tFz+CDT6lDr0k2sHENLWTLBzg2scHFgbQ5/OkmC9msC8
-         ASXcGjGdN5T6ZoqerqbJ+IaTAA1WWPIq4hY65kF+PxIwD/TGZuvmV8rfUXY7mGD+5p/e
-         YUm7IC0H0PYTHqZF/97YpzkM2im7aTGKXNfTQbw0UUDKZCyQu/mQ1Ptcklv2pdowzHM2
-         dT8lK9HMaSaBhQlWrbQkBRu45QKq0OGHQAxcEd1V1HRqdxVmoGGgSh4jLupvOXZr/MFH
-         XXK3FNeVlXiw5vSj5pFVObQh8Slfwiv8QevKmf12fmye8o7fnAw06CCwYi4NjsMj7WY6
-         R2Aw==
-X-Forwarded-Encrypted: i=1; AJvYcCVrgWfUAsM9hBqDFQU/AbNKVyArE7lxddWsmwWmyhBspj4UEjEoZOX/N5C4PM9gvs4/cl0jyp71MaypXKgO3HemVoO+qvqmrnu4
-X-Gm-Message-State: AOJu0YwI2cUISgPY2nP/t+aX76xV2dSfymJLxFFV5Oh7oIw0Aj0D0lM4
-	As+ikyTwNkwzLFYmghHCR9Ba/bJF2LHhz1I93AZ4Zo2ro5I3xg/PAvtxC4cw1oQ=
-X-Google-Smtp-Source: AGHT+IEAQ8njw5Xk9bQwmGDIxl6ZK6d3U3YkxZ7bTcibYCg1oYT8UUm8HvkrTms16QE9uu7PwRaMpA==
-X-Received: by 2002:a05:6358:887:b0:17e:b867:cb99 with SMTP id m7-20020a056358088700b0017eb867cb99mr1868688rwj.1.1714527123767;
-        Tue, 30 Apr 2024 18:32:03 -0700 (PDT)
+        bh=X2lTibDiFI0ZoiOE7Og2GQjpallD6n8zJfYR3muw4DE=;
+        b=tg03ZVSYJbOqR2lzdDtCgFOMAcgWALUXHCAEtoiyPvesEp9/9BWNNBpv+QnKwmWmEy
+         ceiNXzcxmLzZwUJIOzcybxXNYQxJtZSwiqKbD225jIETMysiFMOvDcmievhTxgQk0Zq1
+         nugvvwj38EOvhOmN9xMKbWnjUzT0awfbY+dY6Qcgwah6xrlFMvx0zVTI5XyDuHYM0BqN
+         8Q5MmxUs6wDH6eqkXyjhsChloo0iRWHi2LNRVkcYNAFnRlwOXMIChJY3o0jP2ONV8VRg
+         eaJR698pzQLmAfcbZHEsoq9cQ/OXKqFZue3XxxQ2+FXNc3DTHqpwI+h3yq8gYXiRFFeB
+         EqCA==
+X-Forwarded-Encrypted: i=1; AJvYcCVXBPFm1AUjJHzcu1NwI2ReE9DgLRSeXPcIsWjkUAsSJiwqTOEaRNzgSXsyydLs70a+a9Ah76gasfzwPs1tY29DVPbGI1p9P1h7
+X-Gm-Message-State: AOJu0Ywkz3lPLJCBono6pjcnI213LxBmkHPDN0/FBqOzA1exGW5iePx1
+	5pCFeuB/ZL78F2YvpSCYeb+4bRjDB0wp20Kl+In0/9comW5We4wAshdxCoLupTY=
+X-Google-Smtp-Source: AGHT+IEmewIJwY7Yi1W0lOvUPHQD+aXLDxZ98fdhOHrZpRU1dqWfUjvKTaI2jboHvumLvPnDmIO3YQ==
+X-Received: by 2002:a05:6870:4414:b0:23c:bc3a:6ccb with SMTP id u20-20020a056870441400b0023cbc3a6ccbmr1237203oah.19.1714528062942;
+        Tue, 30 Apr 2024 18:47:42 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id y124-20020a636482000000b006109431806dsm6349949pgb.92.2024.04.30.18.32.03
+        by smtp.gmail.com with ESMTPSA id i11-20020a056a00004b00b006e4432027d1sm5918046pfk.142.2024.04.30.18.47.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Apr 2024 18:32:03 -0700 (PDT)
+        Tue, 30 Apr 2024 18:47:42 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1s1ypE-00GpU1-0H;
-	Wed, 01 May 2024 11:32:00 +1000
-Date: Wed, 1 May 2024 11:32:00 +1000
+	id 1s1z4N-00Gq9H-2k;
+	Wed, 01 May 2024 11:47:39 +1000
+Date: Wed, 1 May 2024 11:47:39 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: John Garry <john.g.garry@oracle.com>
 Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
@@ -65,10 +65,10 @@ Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
 	tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com,
 	ritesh.list@gmail.com, mcgrof@kernel.org, p.raghav@samsung.com,
 	linux-xfs@vger.kernel.org, catherine.hoang@oracle.com
-Subject: Re: [PATCH v3 15/21] fs: xfs: iomap: Sub-extent zeroing
-Message-ID: <ZjGbkAuGj0MhXAZ/@dread.disaster.area>
+Subject: Re: [PATCH v3 17/21] iomap: Atomic write support
+Message-ID: <ZjGfOyJl5y3D49fC@dread.disaster.area>
 References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-16-john.g.garry@oracle.com>
+ <20240429174746.2132161-18-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,162 +77,84 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240429174746.2132161-16-john.g.garry@oracle.com>
+In-Reply-To: <20240429174746.2132161-18-john.g.garry@oracle.com>
 
-On Mon, Apr 29, 2024 at 05:47:40PM +0000, John Garry wrote:
-> Set iomap->extent_size when sub-extent zeroing is required.
+On Mon, Apr 29, 2024 at 05:47:42PM +0000, John Garry wrote:
+> Support atomic writes by producing a single BIO with REQ_ATOMIC flag set.
 > 
-> We treat a sub-extent write same as an unaligned write, so we can leverage
-> the existing sub-FSblock unaligned write support, i.e. try a shared lock
-> with IOMAP_DIO_OVERWRITE_ONLY flag, if this fails then try the exclusive
-> lock.
+> We rely on the FS to guarantee extent alignment, such that an atomic write
+> should never straddle two or more extents. The FS should also check for
+> validity of an atomic write length/alignment.
 > 
-> In xfs_iomap_write_unwritten(), FSB calcs are now based on the extsize.
-
-If forcedalign is set, should we just reject unaligned DIOs?
-
-.....
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_file.c  | 35 ++++++++++++++++++++++-------------
->  fs/xfs/xfs_iomap.c | 13 +++++++++++--
->  2 files changed, 33 insertions(+), 15 deletions(-)
+>  fs/iomap/direct-io.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e81e01e6b22b..ee4f94cf6f4e 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -620,18 +620,19 @@ xfs_file_dio_write_aligned(
->   * Handle block unaligned direct I/O writes
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index a3ed7cfa95bc..d7bdeb675068 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -275,6 +275,7 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+>  static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+>  		struct iomap_dio *dio)
+>  {
+> +	bool is_atomic = dio->iocb->ki_flags & IOCB_ATOMIC;
+>  	const struct iomap *iomap = &iter->iomap;
+>  	struct inode *inode = iter->inode;
+>  	unsigned int zeroing_size, pad;
+> @@ -387,6 +388,9 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+>  		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+>  		bio->bi_write_hint = inode->i_write_hint;
+>  		bio->bi_ioprio = dio->iocb->ki_ioprio;
+> +		if (is_atomic)
+> +			bio->bi_opf |= REQ_ATOMIC;
 
- * Handle unaligned direct IO writes.
+REQ_ATOMIC is only valid for write IO, isn't it?
 
->   *
->   * In most cases direct I/O writes will be done holding IOLOCK_SHARED, allowing
-> - * them to be done in parallel with reads and other direct I/O writes.  However,
-> - * if the I/O is not aligned to filesystem blocks, the direct I/O layer may need
-> - * to do sub-block zeroing and that requires serialisation against other direct
-> - * I/O to the same block.  In this case we need to serialise the submission of
-> - * the unaligned I/O so that we don't get racing block zeroing in the dio layer.
-> - * In the case where sub-block zeroing is not required, we can do concurrent
-> - * sub-block dios to the same block successfully.
-> + * them to be done in parallel with reads and other direct I/O writes.
-> + * However if the I/O is not aligned to filesystem blocks/extent, the direct
-> + * I/O layer may need to do sub-block/extent zeroing and that requires
-> + * serialisation against other direct I/O to the same block/extent.  In this
-> + * case we need to serialise the submission of the unaligned I/O so that we
-> + * don't get racing block/extent zeroing in the dio layer.
-> + * In the case where sub-block/extent zeroing is not required, we can do
-> + * concurrent sub-block/extent dios to the same block/extent successfully.
->   *
->   * Optimistically submit the I/O using the shared lock first, but use the
->   * IOMAP_DIO_OVERWRITE_ONLY flag to tell the lower layers to return -EAGAIN
-> - * if block allocation or partial block zeroing would be required.  In that case
-> - * we try again with the exclusive lock.
-> + * if block/extent allocation or partial block/extent zeroing would be
-> + * required.  In that case we try again with the exclusive lock.
-
-Rather than changing every "block" to "block/extent", leave the bulk
-of the comment unchanged and add another paragraph to it that says
-something like:
-
- * If forced extent alignment is turned on, then serialisation
- * constraints are extended from filesystem block alignment
- * to extent alignment boundaries. In this case, we treat any
- * non-extent-aligned DIO the same as a sub-block DIO.
-
->   */
->  static noinline ssize_t
->  xfs_file_dio_write_unaligned(
-> @@ -646,9 +647,9 @@ xfs_file_dio_write_unaligned(
->  	ssize_t			ret;
->  
->  	/*
-> -	 * Extending writes need exclusivity because of the sub-block zeroing
-> -	 * that the DIO code always does for partial tail blocks beyond EOF, so
-> -	 * don't even bother trying the fast path in this case.
-> +	 * Extending writes need exclusivity because of the sub-block/extent
-> +	 * zeroing that the DIO code always does for partial tail blocks
-> +	 * beyond EOF, so don't even bother trying the fast path in this case.
->  	 */
->  	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
->  		if (iocb->ki_flags & IOCB_NOWAIT)
-> @@ -714,11 +715,19 @@ xfs_file_dio_write(
->  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
->  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
->  	size_t			count = iov_iter_count(from);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	unsigned int		blockmask;
->  
->  	/* direct I/O must be aligned to device logical sector size */
->  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
->  		return -EINVAL;
-> -	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
-> +
-> +	if (xfs_inode_has_forcealign(ip) && ip->i_extsize > 1)
-> +		blockmask = XFS_FSB_TO_B(mp, ip->i_extsize) - 1;
-> +	else
-> +		blockmask = mp->m_blockmask;
-
-	alignmask = XFS_FSB_TO_B(mp, xfs_inode_alignment(ip)) - 1;
-
-Note that this would consider sub rt_extsize IO as unaligned, which
-may be undesirable. In that case, we should define a second helper
-such as xfs_inode_io_alignment() that doesn't take into account RT
-extent sizes because we can still do filesystem block sized
-unwritten extent conversion on those devices. The same IO-specific
-wrapper would be used for the other cases in this patch, too.
+This should be added in iomap_dio_bio_opflags() after it is
+determined we are doing a write operation.  Regardless, it should be
+added in iomap_dio_bio_opflags(), not here. That also allows us to
+get rid of the is_atomic variable.
 
 > +
-> +	if ((iocb->ki_pos | count) & blockmask)
->  		return xfs_file_dio_write_unaligned(ip, iocb, from);
->  	return xfs_file_dio_write_aligned(ip, iocb, from);
->  }
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 4087af7f3c9f..1a3692bbc84d 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -138,6 +138,8 @@ xfs_bmbt_to_iomap(
+>  		bio->bi_private = dio;
+>  		bio->bi_end_io = iomap_dio_bio_end_io;
 >  
->  	iomap->validity_cookie = sequence_cookie;
->  	iomap->folio_ops = &xfs_iomap_folio_ops;
-> +	if (xfs_inode_has_forcealign(ip) && ip->i_extsize > 1)
-> +		iomap->extent_size = XFS_FSB_TO_B(mp, ip->i_extsize);
-
-	iomap->io_block_size = XFS_FSB_TO_B(mp, xfs_inode_alignment(ip));
-
->  	return 0;
->  }
+> @@ -403,6 +407,12 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+>  		}
 >  
-> @@ -570,8 +572,15 @@ xfs_iomap_write_unwritten(
->  
->  	trace_xfs_unwritten_convert(ip, offset, count);
->  
-> -	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> -	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-> +	if (xfs_inode_has_forcealign(ip) && ip->i_extsize > 1) {
-> +		xfs_extlen_t extsize_bytes = mp->m_sb.sb_blocksize * ip->i_extsize;
-> +
-> +		offset_fsb = XFS_B_TO_FSBT(mp, round_down(offset, extsize_bytes));
-> +		count_fsb = XFS_B_TO_FSB(mp, round_up(offset + count, extsize_bytes));
-> +	} else {
-> +		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +		count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-> +	}
+>  		n = bio->bi_iter.bi_size;
+> +		if (is_atomic && n != orig_count) {
+> +			/* This bio should have covered the complete length */
+> +			ret = -EINVAL;
+> +			bio_put(bio);
+> +			goto out;
+> +		}
 
-More places we can use a xfs_inode_alignment() helper.
+What happens now if we've done zeroing IO before this? I suspect we
+might expose stale data if the partial block zeroing converts the
+unwritten extent in full...
 
-	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-	rounding = XFS_FSB_TO_B(mp, xfs_inode_alignment(ip));
-	if (rounding > 1) {
-		 offset_fsb = rounddown_64(offset_fsb, rounding);
-		 count_fsb = roundup_64(count_fsb, rounding);
-	}
+>  		if (dio->flags & IOMAP_DIO_WRITE) {
+>  			task_io_account_write(n);
+>  		} else {
 
-Cheers,
+Ignoring the error handling issues, this code might be better as:
 
-Dave.
+		if (dio->flags & IOMAP_DIO_WRITE) {
+			if ((opflags & REQ_ATOMIC) && n != orig_count) {
+				/* atomic writes are all or nothing */
+				ret = -EIO
+				bio_put(bio);
+				goto out;
+			}
+		}
+
+so that we are not putting atomic write error checks in the read IO
+submission path.
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
