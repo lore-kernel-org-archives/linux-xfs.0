@@ -1,44 +1,83 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36A2C1D6BD;
-	Wed,  1 May 2024 07:36:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC70C4DA04
+	for <linux-xfs@vger.kernel.org>; Wed,  1 May 2024 08:06:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714548973; cv=none; b=dXxx1AG3SCLoQoVqL1jwpMAAS4YlbCBvqoSNY56roPRnj2yeWaOxfrjagfZ8mFd81vNRIGeXoABVg6q2uR6tVAxyr7mGn5nqv5veiMJSQEAXyNlVgL1SY/xf5pO7zzRidZUj5dXgVhguIJjH1eSuTl6CdbfWONha0Sj5BVPNWI4=
+	t=1714550807; cv=none; b=tAFOIkt6p7pH7RaoPOcD29fRGNyJfVSSAcjX99OvXVR1qobfxtmjIu3gxQY1rMxcXdfdj3+Jhzwd4OFHk2MkBVdAbSYKTWea+05PFV1nwMTVD6f2o5veaTDKZXSdZpF+fY0UHleaEtKe+S26hFI7UVlpuXYl4LFp99s1OBK3zz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714548973; c=relaxed/simple;
-	bh=78OtVTU0S7VeuAEcwb5RQREB9F0J7C1SWmxUj81GLkI=;
+	s=arc-20240116; t=1714550807; c=relaxed/simple;
+	bh=1wdaH2F2g83FwEVz/NGe+iX00fR9AuY8x3s5HvmbMb0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HLIhTX7xwVizT2ce2fJNlS5rbhpDbngAv3UQAmSUKkyCmx8GqoiCHrAb6ZQi+IPU/T3tRxND9GOgBtTPoWxHHpo2cZV5yIaqaw2ulcNjqahic0IBpldOUE08IrBsNnCbetL3TWwhhUT/6Pn/Vlhg+tJlsc4g9Y9pk6QYSszISQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AELKk3cK; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q5mtnMedsB6qGztg1pCfTzqk/BRXsBayw8nOqkR1CKcxIWWQ16OcsG4lfvYWDq/FJRvj0DqvZMXSMPnLcopuECSoLN+00qHkbcFU1luroqIbcnV3s2odOThPc8kWznTrg8qGapiGomRi78mor5kjGjekyeJB58n3bN1o10Mi4X0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=nu7HUQhJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Em25h0cX; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=nu7HUQhJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Em25h0cX; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AELKk3cK"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=AuAV651yDKAHBeEcELA6xnyO7eX02trO0Cc/JJpvPC4=; b=AELKk3cKk+Hgjz906P5C7zzMX8
-	IqAKtlHgXBtXfePcO9q8awmQSVqhoubbHaXnkvw5VeQmtI8CFyhgr9HC1btpnGsqcHe6bjCNAdFEd
-	QGJkvEyB/bPfrS91mXmDGOLlKOvaxbw9RrCLUNCanZo7L6yCGZwZ0qetnY873niBpnJ+os8ScPR1x
-	zscDeUI8MmVXsAr0ffZ1GMTZ7rmne65qUb8omr/0rLNkEowsxYSWZMoS7vX0/7mvsx+FIZu/xiNWl
-	qM3CTp9F881mNbJMSDxLu/qY1D/QV7jF+oj2GiDv04zO3LVuCmRXHeV035kYPS/cX9Xhwv75GM98L
-	+qq1j6YA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s24Vf-00000008lII-350g;
-	Wed, 01 May 2024 07:36:11 +0000
-Date: Wed, 1 May 2024 00:36:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@redhat.com, ebiggers@kernel.org, linux-xfs@vger.kernel.org,
-	alexl@redhat.com, walters@verbum.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 04/18] fsverity: support block-based Merkle tree caching
-Message-ID: <ZjHw6wt3K164hOBr@infradead.org>
-References: <171444679542.955480.18087310571597618350.stgit@frogsfrogsfrogs>
- <171444679658.955480.4637262867075831070.stgit@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="nu7HUQhJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Em25h0cX";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="nu7HUQhJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Em25h0cX"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 0427E1F83D;
+	Wed,  1 May 2024 08:06:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1714550804; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZvOa1RRKhsRXbnRKhGTHJSYYjtSxKx+Tc+58iQcDqlo=;
+	b=nu7HUQhJsfl1GUr4gFVkN1JBYwlYjUU4ztPQQ8PTk7s4b+r1zEMnRFWLrodXnJf/jSUYNm
+	yms/7TpxMHMtxi16W8hI8LEMsUCa3uwiNCJvMUwm5detBCDsP0vV42R9TiStgC5kOd8zQw
+	ScOyDECXMnuMssYw0akplBYf5fSxvH8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1714550804;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZvOa1RRKhsRXbnRKhGTHJSYYjtSxKx+Tc+58iQcDqlo=;
+	b=Em25h0cXEswYzYaCAYPV2Mt/UYPPZnyIfY4CNMt7C325a14533cu48bTlKA7MAYn5yZjtm
+	1raCi2FZx7s5t1AQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1714550804; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZvOa1RRKhsRXbnRKhGTHJSYYjtSxKx+Tc+58iQcDqlo=;
+	b=nu7HUQhJsfl1GUr4gFVkN1JBYwlYjUU4ztPQQ8PTk7s4b+r1zEMnRFWLrodXnJf/jSUYNm
+	yms/7TpxMHMtxi16W8hI8LEMsUCa3uwiNCJvMUwm5detBCDsP0vV42R9TiStgC5kOd8zQw
+	ScOyDECXMnuMssYw0akplBYf5fSxvH8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1714550804;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZvOa1RRKhsRXbnRKhGTHJSYYjtSxKx+Tc+58iQcDqlo=;
+	b=Em25h0cXEswYzYaCAYPV2Mt/UYPPZnyIfY4CNMt7C325a14533cu48bTlKA7MAYn5yZjtm
+	1raCi2FZx7s5t1AQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7D15713942;
+	Wed,  1 May 2024 08:06:43 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id PTv4GxP4MWYQZwAAD6G6ig
+	(envelope-from <osalvador@suse.de>); Wed, 01 May 2024 08:06:43 +0000
+Date: Wed, 1 May 2024 10:06:41 +0200
+From: Oscar Salvador <osalvador@suse.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+	akpm@linux-foundation.org, hch@lst.de, elver@google.com,
+	vbabka@suse.cz, andreyknvl@gmail.com
+Subject: Re: [PATCH 0/3] mm: fix nested allocation context filtering
+Message-ID: <ZjH4EdwEtPOQZoRH@localhost.localdomain>
+References: <20240430054604.4169568-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,29 +86,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <171444679658.955480.4637262867075831070.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240430054604.4169568-1-david@fromorbit.com>
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	RCVD_TLS_ALL(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[kvack.org,vger.kernel.org,linux-foundation.org,lst.de,google.com,suse.cz,gmail.com];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email]
 
-> @@ -377,6 +391,19 @@ int fsverity_read_merkle_tree_block(struct inode *inode,
->  
->  	block->pos = pos;
->  	block->size = params->block_size;
-> +	block->verified = false;
-> +
-> +	if (vops->read_merkle_tree_block) {
-> +		struct fsverity_readmerkle req = {
-> +			.inode = inode,
-> +			.ra_bytes = ra_bytes,
-> +		};
-> +
-> +		err = vops->read_merkle_tree_block(&req, block);
-> +		if (err)
-> +			goto bad;
-> +		return 0;
+On Tue, Apr 30, 2024 at 03:28:22PM +1000, Dave Chinner wrote:
+> This patchset is the followup to the comment I made earlier today:
+> 
+> https://lore.kernel.org/linux-xfs/ZjAyIWUzDipofHFJ@dread.disaster.area/
+> 
+> Tl;dr: Memory allocations that are done inside the public memory
+> allocation API need to obey the reclaim recursion constraints placed
+> on the allocation by the original caller, including the "don't track
+> recursion for this allocation" case defined by __GFP_NOLOCKDEP.
+> 
+> These nested allocations are generally in debug code that is
+> tracking something about the allocation (kmemleak, KASAN, etc) and
+> so are allocating private kernel objects that only that debug system
+> will use.
+> 
+> Neither the page-owner code nor the stack depot code get this right.
+> They also also clear GFP_ZONEMASK as a separate operation, which is
+> completely redundant because the constraint filter applied
+> immediately after guarantees that GFP_ZONEMASK bits are cleared.
+> 
+> kmemleak gets this filtering right. It preserves the allocation
+> constraints for deadlock prevention and clears all other context
+> flags whilst also ensuring that the nested allocation will fail
+> quickly, silently and without depleting emergency kernel reserves if
+> there is no memory available.
+> 
+> This can be made much more robust, immune to whack-a-mole games and
+> the code greatly simplified by lifting gfp_kmemleak_mask() to
+> include/linux/gfp.h and using that everywhere. Also document it so
+> that there is no excuse for not knowing about it when writing new
+> debug code that nests allocations.
+> 
+> Tested with lockdep, KASAN + page_owner=on and kmemleak=on over
+> multiple fstests runs with XFS.
 
-I still don't understand why we're keeping two interfaces instead of
-providing a read through pagecache helper that implements the
-->read_block interface.  That makes the interface really hard to follow
-and feel rather ad-hoc.  I also have vague memories of providing such a
-refactoring a long time ago.
+Reviewed-by: Oscar Salvador <osalvador@suse.de>
 
+Thanks!
+
+
+-- 
+Oscar Salvador
+SUSE Labs
