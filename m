@@ -1,56 +1,56 @@
 Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F6531607B2;
-	Wed,  1 May 2024 18:41:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2855816131A;
+	Wed,  1 May 2024 18:41:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714588898; cv=none; b=qlRGBJDogF0l4KcFT4htfBT1Lfso6Cof9RzfOqxzSqkIMY2lhkmIZ+Um2bZYibUvAT8IuanMDi+Zn2FOUKwKk4wnUDhIwNygL7Hki/08w9RcdGIRFmvuimtueMcFREIMhyPbyaAAtw/90KKXUpyq53e98Gd6/k51efv4spcacmU=
+	t=1714588899; cv=none; b=QI0pGqquFnexThl9Wx1sqiBQVt8Al8MxqYDpFJegUtSS+k+wU386AgSMhWRh+ujX7bGDUTqOzP/4DJ82na7bKUdef3rGnEX9CBp4NuMQMMj8o7xbM0HfFTJ0LETZQdKy1DyQNplccaa0bpOdRMXdhPyiCSz9GPRjHXmsQs6sDYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714588898; c=relaxed/simple;
-	bh=E4g2Q1/p7/s0gG6PYDJq/7j+q1Io62v3H+EdvSsi0TE=;
+	s=arc-20240116; t=1714588899; c=relaxed/simple;
+	bh=d0l69Gcsw/vDJus6C3eaPV2ij5WC8jODHuGbI9yJ4r0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mjxDQfgWqSSIdfnK3iZcBPNHbUbEUO3H0vCPGxTVg8ATzOr0EOH6RIJ5MhR8GpFGgIS+LeaaPwt6e3AGRGjUv40vs8rH1HnSpyx60nFUnuCK1VGAatqT79fkdkjroHTkRp0dv+6R4HuoSC6VzMNNrnYNn8/rOlxuj5KxBlBG6FE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XOeek4ug; arc=none smtp.client-ip=209.85.210.175
+	 MIME-Version; b=PqOwJvTzJuIg/JXv0pd+3/ps03U4MYwqVmBRPiwGQrXZN36qj3KbtBUFfLxBl5wpODFEI7YjQ+Pc1Bd1nfcX67sVMlMlMIZRMMg+C3UBHSqMZk2TDYC7m7CNbHwiHqm0eHo3+TcTAUV8sqn2UychEtVMB17eH0PRGu1jjnrrazk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gVzBpELm; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XOeek4ug"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6ed691fb83eso6259260b3a.1;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gVzBpELm"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6edc61d0ff6so7090010b3a.2;
         Wed, 01 May 2024 11:41:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714588896; x=1715193696; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714588897; x=1715193697; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4advk/h02abBXT0rWwwx1h+0BdZU9l5bCpDfvIPf8xI=;
-        b=XOeek4ug+xTD3q10EUt9rTXHcQqnT+Bhv3iPhTkjz54WNLkdlv9w6jQ8JMNvANnghX
-         TzfaplkwC1hqICexasxXsl3zP1vi0SRiZ9Ox5Vd8x73Y1lDwnbWDByCp+3IUP+KdJtpU
-         79NULL3vuD/INkBBAfarPQ6p3X4peHfM2hZy8xaVIIwDIRzxsVyCXtzelBnSbnYpoWkq
-         +ltY63JCKf3ZyJbsA1x7xIaRSA+6/G/M5Musr7nfGefEtRQPWFx1vu7y/u9xHUYG9auE
-         OXzST8P+nLEN6udRg2yM8qZEFSKa8n+FJGTgCi0d1ikRII+w9qeEYX3Mk10kJJj+SKgR
-         Gybw==
+        bh=37Y3fWOSX//AmqHXVYxSNoGC2xonxoZ9gZAufCblsfs=;
+        b=gVzBpELmZp7DiO+TNGxM54zwp7fVYDbyfq12c7OVKjmp2044IqBxKknXzUQ/XAOn7p
+         oE2NKae+THolnaBCOp4yoeKVc4inwl/2qYiEIEMwOxtBcQkBPWXV3jlBCXwa/YIzCYha
+         Bg133wp/elrJWs1ACkzPV71+7eIP5/1YFpvit8mIFiFb3vF1Sc2vD474LwZcH9NEcQun
+         1a7MWh8la8qahQAJ7CnqCZPqoHpAU2lFXxxlr480/qVIJmWClSiRv5e0KwufninoApJ+
+         +qtse3/ZISu4O9HMxvbh6YbYBoImDrroKMpN/0tlmvUAPN5e9jWZYVhp1j40wE+dBU6X
+         rjrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714588896; x=1715193696;
+        d=1e100.net; s=20230601; t=1714588897; x=1715193697;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=4advk/h02abBXT0rWwwx1h+0BdZU9l5bCpDfvIPf8xI=;
-        b=iCyhvg948zNByMBP2Nb9xbxTmjDS4uY5IJXBIEYtin/c/zb8G6ae+Y4Qm+UmVpV5ap
-         H+UhzNdfrA8lfgpzpxQfs4uGS0hgFgKKXT7TCduH0T8R6JY1B6a1Lr0ML5QDIi1qlT7H
-         izguPEiydD18KE1U2+4WUT37W/b9kA0ymNCJBRVCXvACWDlhtpdbYC6IRNAlDv4E6ZN4
-         EG951BRUQZhy+3y/FmxGbHdy8bjKaCFzgwYedVu9ip0gvJ6pHGV+HVYc9okM3JMr8MPb
-         5mcEV0vK+EoDnOmEdgGqKWWLYQ2IQ9xCp2WJ6sZgzFGuONjyP/aWqSACkFfZFhR79QD5
-         0rlw==
-X-Gm-Message-State: AOJu0YzNTVk+4rzmI2ql8+FE1C+mI02gmHVOHQcr5vLJQiM1S5dmmq8+
-	kz4FJco5X8wSqWJKzWdfcgTidEMpSRHoWVB2A3vi7kTtGrjcDMNKEaEYGNsB
-X-Google-Smtp-Source: AGHT+IGAvpb8IuXztwK7Vwcf5wHSt73yiOFQF5svxZnqHMZsmDOUnIsBA1lX4LjIPLPgMlk5vulCaQ==
-X-Received: by 2002:a05:6a20:3c91:b0:1a3:ae18:f1e4 with SMTP id b17-20020a056a203c9100b001a3ae18f1e4mr3839818pzj.34.1714588896371;
-        Wed, 01 May 2024 11:41:36 -0700 (PDT)
+        bh=37Y3fWOSX//AmqHXVYxSNoGC2xonxoZ9gZAufCblsfs=;
+        b=UJpzfGXSb0Ib0FlkZaAGD9liMRULRqoARZLHjU51td7UvHcOU8VXB4Yavf2WxJP38x
+         frkp59Bk7+0p3vtFvjCMt8ASKrx8R8xJQkXRCLZbNoUQgIAPwyXpCm/JmVPn5hFwGGuF
+         UGy6v4yubR5bwViB71OaIle2gqAyXU5IltfUTgbKbw0zcXm8hS4mXpJaobHRydgjruzi
+         lvWptu0jVQkFkKc3jN0ty3ay+edDQgwMhVYvUA0vZpnn4RGhtR0AddRWTs+ueBxP81QP
+         TxpyM9aZsTRweyTwtXnQI3PC5GpLRr7ckTAeX5S6S1sc2BVetMJMzXrp6AksCzOOsiFk
+         SmFA==
+X-Gm-Message-State: AOJu0YzuYR+s4ddkwcxpNPIh3zcovHl/A/TB9XtLN0fHRk+zmk8tsrJG
+	IwgKHeR2FlB56NJPukm9njzUctGVoPLw4HHVOkxOlQrtMjj3tOWVBaQBWeNJ
+X-Google-Smtp-Source: AGHT+IHTQjZfwNLL19dD33T0N6CclEHQyZVcnBhYHiJKwhpgcesop7bwmzQ4sAfu6aljZN6+1EpG5Q==
+X-Received: by 2002:a05:6a20:3c8b:b0:1a3:5c61:5ec2 with SMTP id b11-20020a056a203c8b00b001a35c615ec2mr3950217pzj.16.1714588897329;
+        Wed, 01 May 2024 11:41:37 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:9dbc:724d:6e88:fb08])
-        by smtp.gmail.com with ESMTPSA id j18-20020a62e912000000b006e681769ee0sm23687369pfh.145.2024.05.01.11.41.35
+        by smtp.gmail.com with ESMTPSA id j18-20020a62e912000000b006e681769ee0sm23687369pfh.145.2024.05.01.11.41.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 May 2024 11:41:35 -0700 (PDT)
+        Wed, 01 May 2024 11:41:37 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -61,9 +61,9 @@ Cc: linux-xfs@vger.kernel.org,
 	Dave Chinner <dchinner@redhat.com>,
 	Xiao Yang <yangx.jy@fujitsu.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 18/24] xfs: hoist refcount record merge predicates
-Date: Wed,  1 May 2024 11:41:06 -0700
-Message-ID: <20240501184112.3799035-18-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 19/24] xfs: estimate post-merge refcounts correctly
+Date: Wed,  1 May 2024 11:41:07 -0700
+Message-ID: <20240501184112.3799035-19-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.45.0.rc1.225.g2a3ae87e7f-goog
 In-Reply-To: <20240501184112.3799035-1-leah.rumancik@gmail.com>
 References: <20240501184112.3799035-1-leah.rumancik@gmail.com>
@@ -77,185 +77,111 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 9d720a5a658f5135861773f26e927449bef93d61 ]
+[ Upstream commit b25d1984aa884fc91a73a5a407b9ac976d441e9b ]
 
-Hoist these multiline conditionals into separate static inline helpers
-to improve readability and set the stage for corruption fixes that will
-be introduced in the next patch.
+Upon enabling fsdax + reflink for XFS, xfs/179 began to report refcount
+metadata corruptions after being run.  Specifically, xfs_repair noticed
+single-block refcount records that could be combined but had not been.
 
+The root cause of this is improper MAXREFCOUNT edge case handling in
+xfs_refcount_merge_extents.  When we're trying to find candidates for a
+refcount btree record merge, we compute the refcount attribute of the
+merged record, but we fail to account for the fact that once a record
+hits rc_refcount == MAXREFCOUNT, it is pinned that way forever.  Hence
+the computed refcount is wrong, and we fail to merge the extents.
+
+Fix this by adjusting the merge predicates to compute the adjusted
+refcount correctly.
+
+Fixes: 3172725814f9 ("xfs: adjust refcount of an extent of blocks in refcount btree")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Xiao Yang <yangx.jy@fujitsu.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_refcount.c | 129 ++++++++++++++++++++++++++++++-----
- 1 file changed, 113 insertions(+), 16 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 3f34bafe18dd..4408893333a6 100644
+index 4408893333a6..6f7ed9288fe4 100644
 --- a/fs/xfs/libxfs/xfs_refcount.c
 +++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -815,11 +815,119 @@ xfs_refcount_find_right_extents(
- /* Is this extent valid? */
- static inline bool
- xfs_refc_valid(
--	struct xfs_refcount_irec	*rc)
-+	const struct xfs_refcount_irec	*rc)
- {
+@@ -820,6 +820,17 @@ xfs_refc_valid(
  	return rc->rc_startblock != NULLAGBLOCK;
  }
  
-+static inline bool
-+xfs_refc_want_merge_center(
-+	const struct xfs_refcount_irec	*left,
-+	const struct xfs_refcount_irec	*cleft,
-+	const struct xfs_refcount_irec	*cright,
-+	const struct xfs_refcount_irec	*right,
-+	bool				cleft_is_cright,
-+	enum xfs_refc_adjust_op		adjust,
-+	unsigned long long		*ulenp)
-+{
-+	unsigned long long		ulen = left->rc_blockcount;
-+
-+	/*
-+	 * To merge with a center record, both shoulder records must be
-+	 * adjacent to the record we want to adjust.  This is only true if
-+	 * find_left and find_right made all four records valid.
-+	 */
-+	if (!xfs_refc_valid(left)  || !xfs_refc_valid(right) ||
-+	    !xfs_refc_valid(cleft) || !xfs_refc_valid(cright))
-+		return false;
-+
-+	/* There must only be one record for the entire range. */
-+	if (!cleft_is_cright)
-+		return false;
-+
-+	/* The shoulder record refcounts must match the new refcount. */
-+	if (left->rc_refcount != cleft->rc_refcount + adjust)
-+		return false;
-+	if (right->rc_refcount != cleft->rc_refcount + adjust)
-+		return false;
-+
-+	/*
-+	 * The new record cannot exceed the max length.  ulen is a ULL as the
-+	 * individual record block counts can be up to (u32 - 1) in length
-+	 * hence we need to catch u32 addition overflows here.
-+	 */
-+	ulen += cleft->rc_blockcount + right->rc_blockcount;
-+	if (ulen >= MAXREFCEXTLEN)
-+		return false;
-+
-+	*ulenp = ulen;
-+	return true;
-+}
-+
-+static inline bool
-+xfs_refc_want_merge_left(
-+	const struct xfs_refcount_irec	*left,
-+	const struct xfs_refcount_irec	*cleft,
++static inline xfs_nlink_t
++xfs_refc_merge_refcount(
++	const struct xfs_refcount_irec	*irec,
 +	enum xfs_refc_adjust_op		adjust)
 +{
-+	unsigned long long		ulen = left->rc_blockcount;
-+
-+	/*
-+	 * For a left merge, the left shoulder record must be adjacent to the
-+	 * start of the range.  If this is true, find_left made left and cleft
-+	 * contain valid contents.
-+	 */
-+	if (!xfs_refc_valid(left) || !xfs_refc_valid(cleft))
-+		return false;
-+
-+	/* Left shoulder record refcount must match the new refcount. */
-+	if (left->rc_refcount != cleft->rc_refcount + adjust)
-+		return false;
-+
-+	/*
-+	 * The new record cannot exceed the max length.  ulen is a ULL as the
-+	 * individual record block counts can be up to (u32 - 1) in length
-+	 * hence we need to catch u32 addition overflows here.
-+	 */
-+	ulen += cleft->rc_blockcount;
-+	if (ulen >= MAXREFCEXTLEN)
-+		return false;
-+
-+	return true;
++	/* Once a record hits MAXREFCOUNT, it is pinned there forever */
++	if (irec->rc_refcount == MAXREFCOUNT)
++		return MAXREFCOUNT;
++	return irec->rc_refcount + adjust;
 +}
 +
-+static inline bool
-+xfs_refc_want_merge_right(
-+	const struct xfs_refcount_irec	*cright,
-+	const struct xfs_refcount_irec	*right,
-+	enum xfs_refc_adjust_op		adjust)
-+{
-+	unsigned long long		ulen = right->rc_blockcount;
-+
-+	/*
-+	 * For a right merge, the right shoulder record must be adjacent to the
-+	 * end of the range.  If this is true, find_right made cright and right
-+	 * contain valid contents.
-+	 */
-+	if (!xfs_refc_valid(right) || !xfs_refc_valid(cright))
-+		return false;
-+
-+	/* Right shoulder record refcount must match the new refcount. */
-+	if (right->rc_refcount != cright->rc_refcount + adjust)
-+		return false;
-+
-+	/*
-+	 * The new record cannot exceed the max length.  ulen is a ULL as the
-+	 * individual record block counts can be up to (u32 - 1) in length
-+	 * hence we need to catch u32 addition overflows here.
-+	 */
-+	ulen += cright->rc_blockcount;
-+	if (ulen >= MAXREFCEXTLEN)
-+		return false;
-+
-+	return true;
-+}
-+
- /*
-  * Try to merge with any extents on the boundaries of the adjustment range.
-  */
-@@ -861,23 +969,15 @@ xfs_refcount_merge_extents(
- 		 (cleft.rc_blockcount == cright.rc_blockcount);
+ static inline bool
+ xfs_refc_want_merge_center(
+ 	const struct xfs_refcount_irec	*left,
+@@ -831,6 +842,7 @@ xfs_refc_want_merge_center(
+ 	unsigned long long		*ulenp)
+ {
+ 	unsigned long long		ulen = left->rc_blockcount;
++	xfs_nlink_t			new_refcount;
  
- 	/* Try to merge left, cleft, and right.  cleft must == cright. */
--	ulen = (unsigned long long)left.rc_blockcount + cleft.rc_blockcount +
--			right.rc_blockcount;
--	if (xfs_refc_valid(&left) && xfs_refc_valid(&right) &&
--	    xfs_refc_valid(&cleft) && xfs_refc_valid(&cright) && cequal &&
--	    left.rc_refcount == cleft.rc_refcount + adjust &&
--	    right.rc_refcount == cleft.rc_refcount + adjust &&
--	    ulen < MAXREFCEXTLEN) {
-+	if (xfs_refc_want_merge_center(&left, &cleft, &cright, &right, cequal,
-+				adjust, &ulen)) {
- 		*shape_changed = true;
- 		return xfs_refcount_merge_center_extents(cur, &left, &cleft,
- 				&right, ulen, aglen);
- 	}
+ 	/*
+ 	 * To merge with a center record, both shoulder records must be
+@@ -846,9 +858,10 @@ xfs_refc_want_merge_center(
+ 		return false;
  
- 	/* Try to merge left and cleft. */
--	ulen = (unsigned long long)left.rc_blockcount + cleft.rc_blockcount;
--	if (xfs_refc_valid(&left) && xfs_refc_valid(&cleft) &&
--	    left.rc_refcount == cleft.rc_refcount + adjust &&
--	    ulen < MAXREFCEXTLEN) {
-+	if (xfs_refc_want_merge_left(&left, &cleft, adjust)) {
- 		*shape_changed = true;
- 		error = xfs_refcount_merge_left_extent(cur, &left, &cleft,
- 				agbno, aglen);
-@@ -893,10 +993,7 @@ xfs_refcount_merge_extents(
- 	}
+ 	/* The shoulder record refcounts must match the new refcount. */
+-	if (left->rc_refcount != cleft->rc_refcount + adjust)
++	new_refcount = xfs_refc_merge_refcount(cleft, adjust);
++	if (left->rc_refcount != new_refcount)
+ 		return false;
+-	if (right->rc_refcount != cleft->rc_refcount + adjust)
++	if (right->rc_refcount != new_refcount)
+ 		return false;
  
- 	/* Try to merge cright and right. */
--	ulen = (unsigned long long)right.rc_blockcount + cright.rc_blockcount;
--	if (xfs_refc_valid(&right) && xfs_refc_valid(&cright) &&
--	    right.rc_refcount == cright.rc_refcount + adjust &&
--	    ulen < MAXREFCEXTLEN) {
-+	if (xfs_refc_want_merge_right(&cright, &right, adjust)) {
- 		*shape_changed = true;
- 		return xfs_refcount_merge_right_extent(cur, &right, &cright,
- 				aglen);
+ 	/*
+@@ -871,6 +884,7 @@ xfs_refc_want_merge_left(
+ 	enum xfs_refc_adjust_op		adjust)
+ {
+ 	unsigned long long		ulen = left->rc_blockcount;
++	xfs_nlink_t			new_refcount;
+ 
+ 	/*
+ 	 * For a left merge, the left shoulder record must be adjacent to the
+@@ -881,7 +895,8 @@ xfs_refc_want_merge_left(
+ 		return false;
+ 
+ 	/* Left shoulder record refcount must match the new refcount. */
+-	if (left->rc_refcount != cleft->rc_refcount + adjust)
++	new_refcount = xfs_refc_merge_refcount(cleft, adjust);
++	if (left->rc_refcount != new_refcount)
+ 		return false;
+ 
+ 	/*
+@@ -903,6 +918,7 @@ xfs_refc_want_merge_right(
+ 	enum xfs_refc_adjust_op		adjust)
+ {
+ 	unsigned long long		ulen = right->rc_blockcount;
++	xfs_nlink_t			new_refcount;
+ 
+ 	/*
+ 	 * For a right merge, the right shoulder record must be adjacent to the
+@@ -913,7 +929,8 @@ xfs_refc_want_merge_right(
+ 		return false;
+ 
+ 	/* Right shoulder record refcount must match the new refcount. */
+-	if (right->rc_refcount != cright->rc_refcount + adjust)
++	new_refcount = xfs_refc_merge_refcount(cright, adjust);
++	if (right->rc_refcount != new_refcount)
+ 		return false;
+ 
+ 	/*
 -- 
 2.45.0.rc1.225.g2a3ae87e7f-goog
 
