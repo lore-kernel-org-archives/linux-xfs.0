@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C1D62233A;
-	Wed,  1 May 2024 22:47:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41CD2EB11;
+	Wed,  1 May 2024 22:50:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714603657; cv=none; b=QDfRgc3xEWUdaYqUPPNm83hWQb97vptd+O1F+CHrUIq/tp/4kb+GDMVf1uK/wAzEYu4oak5rcd9NAMtzu0qgMxmrVx/+21CWEYgM0VJErZgBrauWDkuKZ4Ynh9B7eGoQSzzxyTJmL0aTJbsl4zCFpq4CEi/jU6+SGUbZDBG6UwI=
+	t=1714603809; cv=none; b=KcHOYYPQJxmO2w8B7OCiE1wzrQcLc1dyRp7aTwpwuSRarEDhoDy2cHr+eEIMTk66eouFokCdCdttG1Trhd3qFBjzgHdzOMt4iTx97OvskBE/YIb25lnPPmX6si5U3WPSUYalgozaVEFxJJbww3WEugQusk9Xv+CdOWVnDPF9a4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714603657; c=relaxed/simple;
-	bh=gylVs1f/iw+g/RGHqqOI+00NXcJ18FS46ngsKmUCcJM=;
+	s=arc-20240116; t=1714603809; c=relaxed/simple;
+	bh=SoV+SxEkhA3zL0egu/9ZIbQpNspvP6UGxdsgBdTLQhQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eRN7VHwFXWAVX4SAnWZTwCf6AwtQbv4QE1C3ECGyrUxTPnRgrPXEtCkKTJD5J/tEKV47Eb3vUR8zQuWGRM/F0hr0qhEK1nl002HaZj/hY4b0RxS2aXozsdHx5T+GM4fsDC2d4qqzTG9B4oyB7cxVaUfFtCG5c/pZ9g1tWPnJoRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l4maHPw+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=eAtJOv+FxnllCsXhLhEa1kFRcatYTBzSHyUgElqppqcIbTaL0CZdXJzUriZ3SsoxzUgBNnRY7+yBg5yO3dY3hnbyUNhHi+pUMLvlzqEly6FyVGG/yCtWDDulBgqeDKKhX3EgN1mv6SlFqT9FAD0N4vdyM2EumVi6A4hVHoz9miA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K9M6XOU8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l4maHPw+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D518C072AA;
-	Wed,  1 May 2024 22:47:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K9M6XOU8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89563C072AA;
+	Wed,  1 May 2024 22:50:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714603656;
-	bh=gylVs1f/iw+g/RGHqqOI+00NXcJ18FS46ngsKmUCcJM=;
+	s=k20201202; t=1714603808;
+	bh=SoV+SxEkhA3zL0egu/9ZIbQpNspvP6UGxdsgBdTLQhQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=l4maHPw+ZngJrr7TVf6lC4ENz4/cjK4MhprAzJNeXeEfspE8vNfcpvdvVg205fAKY
-	 mQnWQtJJBpdRBFpR3SNx+MC0C/DQ7PYWme1uCfFOBLQXMRqXi1DQmz8R+CoU9UM7je
-	 4v/o5oMq7R18EspDKbu0UaMzWYmpAItnXekWRkEvQg37+9yZs1zCYiV6NxN6s8dHkd
-	 LUESboM9YrX7dd+Q5hfKv7C5gP9XjWbbHp400rFkkB+75/GNKyOASC/lB/Chv512dy
-	 9lXVPAMP/Qn6HQ1tNyvWSuwapn/xDTvHvRxNlDYqv84lvdeVCVjiXnBa4rDt3h53j/
-	 Iceflya/Et44w==
-Date: Wed, 1 May 2024 15:47:36 -0700
+	b=K9M6XOU8IwCWcm/PrVvOFEid4ZKCyKNshOxK18UiC2itEgrEfsCXLO2y0GLFPPdL4
+	 aTJtc24c+aYNb7OF6J0jwQKfWCGj1fyKmX3zvHa+eHhf2m80XpO84OjIraN5NTjUL8
+	 guHE+H8RvgZijdl9d8Rug9h2sj+SlLahhkZitzcqhb+FEvCcOeUp9IeLNoQfoQnEb3
+	 qaXwF9eAlyO9R9PoHFMXrS/nZTiH+u8iQZCwSwAQUipSeXFUWsc3NZkW6UCEUi35ET
+	 Flgqav5F9jctOsPyEgea1ZddDcCW5rZ1tQISuL21ofc6m1lGkPraZQQRRIipS65wGZ
+	 tO6w+P2UQzRiQ==
+Date: Wed, 1 May 2024 15:50:07 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: aalbersh@redhat.com, ebiggers@kernel.org, linux-xfs@vger.kernel.org,
 	alexl@redhat.com, walters@verbum.org, fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 19/26] xfs: don't bother storing merkle tree blocks for
- zeroed data blocks
-Message-ID: <20240501224736.GL360919@frogsfrogsfrogs>
+Subject: Re: [PATCH 25/26] xfs: make it possible to disable fsverity
+Message-ID: <20240501225007.GM360919@frogsfrogsfrogs>
 References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
- <171444680689.957659.7685497436750551477.stgit@frogsfrogsfrogs>
- <ZjHle-WDezhehB6a@infradead.org>
+ <171444680792.957659.14055056649560052839.stgit@frogsfrogsfrogs>
+ <ZjHlventem1xkuuS@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,33 +45,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZjHle-WDezhehB6a@infradead.org>
+In-Reply-To: <ZjHlventem1xkuuS@infradead.org>
 
-On Tue, Apr 30, 2024 at 11:47:23PM -0700, Christoph Hellwig wrote:
-> On Mon, Apr 29, 2024 at 08:29:03PM -0700, Darrick J. Wong wrote:
+On Tue, Apr 30, 2024 at 11:48:29PM -0700, Christoph Hellwig wrote:
+> On Mon, Apr 29, 2024 at 08:30:37PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Now that fsverity tells our merkle tree io functions about what a hash
-> > of a data block full of zeroes looks like, we can use this information
-> > to avoid writing out merkle tree blocks for sparse regions of the file.
-> > For verified gold master images this can save quite a bit of overhead.
+> > Create an experimental ioctl so that we can turn off fsverity.
 > 
-> Is this something that fsverity should be doing in a generic way?
+> Didn't Eric argue against this?  And if we're adding this, I think
+> it should be a generic feature and not just xfs specific.
 
-I don't think it's all that useful for ext4/f2fs because they always
-write out full merkle tree blocks even if it's the zerohash over and
-over again.  Old kernels aren't going to know how to deal with that.
+The tagging is a bit wrong, but it is a generic fsverity ioctl, though
+ext4/f2fs/btrfs don't have implementations.
 
-> It feels odd to have XFS behave different from everyone else here,
-> even if this does feel useful.  Do we also need any hash validation
-> that no one tampered with the metadata and added a new extent, or
-> is this out of scope for fsverity?
-
-If they wrote a new extent with nonzero contents, then the validation
-will fail, right?
-
-If they added a new unwritten extent (or a written one full of zeroes),
-then the file data hasn't changed and validation would still pass,
-correct?
+<shrug> According to Ted, programs that care about fsverity are supposed
+to check that VERITY is set in the stat data, but I imagine those
+programs aren't expecting it to turn off suddenly.  Maybe I should make
+this CAP_SYS_ADMIN?  Or withdraw it?
 
 --D
