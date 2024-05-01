@@ -1,30 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 050DB1D530
-	for <linux-xfs@vger.kernel.org>; Wed,  1 May 2024 04:37:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EDB29CF7;
+	Wed,  1 May 2024 06:47:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714538261; cv=none; b=g7LBGchzZUHXXGs1vQjlGYxDechm5Py1FE3NO/zSdZvEEb1RX3Bgo42A7VdE6+77d299qTh02teHARY1QfEL7EP4EHVEx9gcr0srNFK0JlA+DpaDzmRooSSiMwy/7BZRBczEhx31EyTscHFCpGMFKwAJHsq79so5XdEey4yeRqo=
+	t=1714546047; cv=none; b=kab96/ljRurGzX4VfoSz9qsawtLofbSCIsafwb97QLV0P68AG77kOe63F3k0oTQD8Gan+cZmBbz3Olmb97YEsJF3+Z9IPBdrEb5Rm3ZnKBkEgDvRmqALkfG61V2Nkt4TPs6UbKJGZm3NZPIMb8vS5/6iHauWIz8oW+/AkUpsdZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714538261; c=relaxed/simple;
-	bh=vpo3aWXCyCkezFbch30VJdWkM97wImJjf9diaZhwvJg=;
+	s=arc-20240116; t=1714546047; c=relaxed/simple;
+	bh=8eu5jBhcF+JTwF9edxhk6fR88p2fSd3KVnVvEBD8Mfc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YpcnEjn/lgWwKkmtT9t7tIZlxoDyWjbaAU6faV/WK8bLPfvcXZ0aDf9289NqFZpAAzuHcgE8684mDc9j+otb+4L5GTsjmd2t9kHtEmMcqh0wPKSXKPMm1RKk0eUDsfVobHqvnUNRmHo33bgStusHdpzTyLttUZ599br5XtQqQh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C331067373; Wed,  1 May 2024 06:37:34 +0200 (CEST)
-Date: Wed, 1 May 2024 06:37:34 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=gC11z0wXmy/R0pj3aSAaY98WhXnXZHiz2IPUSl2K38XQbuSUBIBx6cQaOAcNbw7FiWjOs4CmY9zyLJMQXMMMuCU51WncFKy/owcju6yg0BeS4q7awNUrNFHNvfWWaiE4lRJSlRFlPnebiEw91qGOnBVyfF0nq+/0Fo5TRzSSflM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=q1JRASe7; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q1JRASe7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=n70Vzf/KupcSs33nA2VNBogORzGpGkXecImO/4Ac2Jc=; b=q1JRASe7P7SWO32+rpLaoFEdTe
+	a78xpX4H80ozq7RKAex9ATg+sNyXxoKnv/IZ7fI6P47TFDkXkOxAmpZD3k+No4z25TkxXPuAsjaHZ
+	5tjuokzG1g0pbX5+xSWfKBKL0xNog/4AjX+/QPxtKJxRvfx1bf8X37Lrs7NBF04LE6y23urG57fma
+	ps2hB4Ylt9gb92dIMnjDCaKxtlVi0NQCzPZzOS7vUHq4lgd5pZxMhB0JvpFsz7Y+XdujyaHlLK4Mi
+	P15EEcV+mzvFeDRhJ/IhgDCiIo9bcZPetHHFBWbHav78dU39TwwOC89Ji3rq5rLYP0KjOEwDbQR9r
+	qfnXNmlQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s23kR-00000008hZJ-3VN6;
+	Wed, 01 May 2024 06:47:23 +0000
+Date: Tue, 30 Apr 2024 23:47:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/16] xfs: allow non-empty forks in
- xfs_bmap_local_to_extents_empty
-Message-ID: <20240501043734.GB31252@lst.de>
-References: <20240430124926.1775355-1-hch@lst.de> <20240430124926.1775355-2-hch@lst.de> <20240430155131.GO360919@frogsfrogsfrogs>
+Cc: aalbersh@redhat.com, ebiggers@kernel.org, linux-xfs@vger.kernel.org,
+	alexl@redhat.com, walters@verbum.org, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 19/26] xfs: don't bother storing merkle tree blocks for
+ zeroed data blocks
+Message-ID: <ZjHle-WDezhehB6a@infradead.org>
+References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
+ <171444680689.957659.7685497436750551477.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,22 +48,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240430155131.GO360919@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <171444680689.957659.7685497436750551477.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Apr 30, 2024 at 08:51:31AM -0700, Darrick J. Wong wrote:
-> > Change xfs_bmap_local_to_extents_empty to return the old fork data and
-> > clear if_bytes to zero instead and let the callers free the memory for
+On Mon, Apr 29, 2024 at 08:29:03PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> But I don't see any changes in the callsites to do that freeing, is this
-> a memory leak?
+> Now that fsverity tells our merkle tree io functions about what a hash
+> of a data block full of zeroes looks like, we can use this information
+> to avoid writing out merkle tree blocks for sparse regions of the file.
+> For verified gold master images this can save quite a bit of overhead.
 
-Even before this patch, xfs_bmap_local_to_extents_empty never frees any
-memory, it just asserts the the local fork size has been changed to 0,
-which implies that the caller already freed the memory.  With this
-patch the caller can free the memory after calling
-xfs_bmap_local_to_extents_empty instead of before it, which the callers
-(all but one anyway) will make use of in the following patches.
+Is this something that fsverity should be doing in a generic way?
+It feels odd to have XFS behave different from everyone else here,
+even if this does feel useful.  Do we also need any hash validation
+that no one tampered with the metadata and added a new extent, or
+is this out of scope for fsverity?
 
-I thought the commit log made that clear, but if you think it needs to
-improved feel free to suggest edits.
