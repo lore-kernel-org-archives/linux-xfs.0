@@ -1,68 +1,68 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA811607B2;
-	Wed,  1 May 2024 18:41:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BD881607B2;
+	Wed,  1 May 2024 18:41:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714588893; cv=none; b=gfJpwk5X9+/P64egGzMcbWEvMaw1mPo/qXZorkzr7ce7p0wYfHvdGFqiwHFCTnO0fUpXKmXN3oTi5179TchxIZozgL/60gxgfD0rSu3t7kQ+THKsimGpI3kpiv7zkwJ7BJhDWIUIc+ziU2U25NfENsLb53w0xFrojDmuApqjRbk=
+	t=1714588896; cv=none; b=YivKKcSeWChz91lv4hrGguqVt2+hbfaIFC42ycvg7yid7p7hQIAcH4poVHI/ZRY1mSud/g+l8NurvU0CMzFpaeYyK2u3r5QOcI9KSanZBAEEYYDF4iTBQu61STMHywm4Nwbz+6iDU4Xq/1Vvbk2OPwekXghSc1ensMwhb8C5VtU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714588893; c=relaxed/simple;
-	bh=KgNKmdvRhbteXlYA1qRmNazSdqVHiolUTLcA7KZB8lg=;
+	s=arc-20240116; t=1714588896; c=relaxed/simple;
+	bh=6+hrjg81qrAIO9cTvm/Y+R1pMVYG303SCYDZl3Ffr00=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hkP/Ujn6FCAVu9IPFOIOO4IHctQaAv51i4WXwUuDt2N1Ma9YOBN17Yj/uIBsK288BfJQEcsgSFoQEiEBaT7BPqeBisP8bYukqegtInzmX3aLSlmw6tCrfm3LGWYBg4JykRDi94chokfRGJJZEoKMSkWimOXVkbfVUxksrdX2is0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Q8CYVndV; arc=none smtp.client-ip=209.85.210.170
+	 MIME-Version; b=nqny8FvJaNOO1alna6GtSPnwmPw16CJkxWwqeYi/IM6sGSCsBhV4ceqsQ9GfF0pp6rQTzjib759FleXbQxusGYMmYCbGronIa/XlEn1CnRqLL7CjUUGIPmeENVs0uXwBOCWlQ5MqwfT+rfFcCfpsG9bhu3UjE9pwdFSM0uw6mUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ipGKe0si; arc=none smtp.client-ip=209.85.210.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q8CYVndV"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6f30f69a958so6116933b3a.1;
-        Wed, 01 May 2024 11:41:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ipGKe0si"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6f074520c8cso6758135b3a.0;
+        Wed, 01 May 2024 11:41:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714588891; x=1715193691; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714588894; x=1715193694; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=9StMf4Na2dHNSmM9yPOAXAhSD4SXWdlQn6JM5uJ3Giw=;
-        b=Q8CYVndV56UlMGBQ9k75BPjXqTz0V/fZrHVXfb3ZAredT6eP3rWIw5ONmjBK2As9Ko
-         +qvkPIrKy5GXJeDiESxY8wKAwy8hyh158gDgDevB0zdnvbufvg6ANYYSioB/mOB0Nmwb
-         5T6HJKb7SgxFs/vFLpAJf+DZgzYAqogO18MM6laW0AwyJgJR4989mRKB1vL4SfUqTc4c
-         D+m+Kk8vR0+/KKEE1XGGT0939mY8woctnE+c1XK3VVJjUvx++U2MchwQm7lK0GUfw0qd
-         Uy4Gm2JwQdDzK2sX4I1Mi4huAGBy7IryipzGicd8wgD9qSkIJwWzgej+IidnuAQxPuh8
-         m2vw==
+        bh=0QwCxkiidm1+UTwX4UdpCI7EfB4mPKiuL9ct1Q2HPwE=;
+        b=ipGKe0siqR8rfySknG9JsFRyR98E4ZCA3aRl0dxPyU/DIeRIzKLqjXtRxjiuhRJLyY
+         3hQpLFTq32nzPIagyuKBfbBGjEIswDcRVhJr1hJwd+g7hr6aO9VyjAM/umgPQGm/RAip
+         BJVZHTeOBVa1Nc0Xavv8WYQ9DvrfzlF48Y4H9BWfeL/ZQbwwato3//O4IYbpHPOBQf1p
+         bDj+uKh+5hS7ykrV2RtFH5r/NYhz6lOgTzO5uAyUclGTM3CHq2qj7/ka4PpHPqPRd8bI
+         lwTNJ/OqInJJGRcP+b767B22RRabMoMxwIz771f3IKUfvR4apYkVgkmHg2MgovPV6Cb8
+         DFzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714588891; x=1715193691;
+        d=1e100.net; s=20230601; t=1714588894; x=1715193694;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=9StMf4Na2dHNSmM9yPOAXAhSD4SXWdlQn6JM5uJ3Giw=;
-        b=tkdXhbJdY5RY9LlctbY9BqFLwWsMejvqD+v+Ao1g0+wqKg1pJTdtqeWnd4q6ZDofhX
-         uYL3N9xOq3Bx/v+XKRXPVqeOKdJAHPfqmwiFHTJCjLtJ5k6roT5w1UZA3dXZmtIpfxve
-         iSyNhSHg9PXOp3L49fmEiEJ3Qzj2XTYoLbFARXXNZ421xV9N793RbEB0s0rRMl9nmNAC
-         a5MQpH0//Uowtjwqw/kHXyiwVJ4JWSNKNMESNVkJkf+FBno28VW9EmM9VdOUWC11lDRh
-         MZ6dRBKgE0rjjGH3uLRyNglJX12vNSD3rNEtybSnNhGMjJ+QB6fBhSgA+n9P1LtcM0wm
-         RG8A==
-X-Gm-Message-State: AOJu0YyrvN9e1VgKkDgU4rpLqsCVR9nxs0r0cNdTowRuL8QMX+fQ6/X+
-	Ch1xTLHyPZgxDwhHUqr3yu/PwU5e1RrAjV/bsXXPkEGA64mQuU+zhDzNdpF6
-X-Google-Smtp-Source: AGHT+IE+0CHIdcmKj5rc/9ZHMwsZrOphM5y8UOntnHMRKj2d3PGDAoQfDRKzmUBLPntMsawFRJi2Kg==
-X-Received: by 2002:a05:6a20:2d27:b0:1aa:8aff:4695 with SMTP id g39-20020a056a202d2700b001aa8aff4695mr4757710pzl.42.1714588891236;
-        Wed, 01 May 2024 11:41:31 -0700 (PDT)
+        bh=0QwCxkiidm1+UTwX4UdpCI7EfB4mPKiuL9ct1Q2HPwE=;
+        b=KWJZd9vcmos9LBQVBrpxnZc+mSRLMZ7zyf5xnjE8b/uo38XKnw1w8tlXsV6RXjqXxB
+         l/G/DZ61qrvJ0AbN1PuW8XBN59AZ5Kx7O5oTX0fjhTq8KIZmz7/x56YYCvuV0o9niQ1Y
+         glUyigo2f6Q/Cs3Fx1dIgIKJJrYbW2wRgtahbV0wZayXFiNu3rreZIJ1j9AcESg3w3CQ
+         LzcBbdlbc5DWv3ZdjYf67BHkqOCi5XnYBIQLgJgTQpVeg8UabD18fXnsyPzHjQe9iIHM
+         1fVGTyFkuXOkAM1x71gEhVu3sVD0ndY7pTYsqTqE3Bf5DUJtwA0GHZ2AatjD4c3rFGEB
+         bVoA==
+X-Gm-Message-State: AOJu0YxTSgk9Lm8VRL6/1HPY7z3ruPQGJBlWmLaJeagmwjZGSdc5wjp2
+	FO/XTMwLR9yvy5i0q/Fx6TQUBACB4xLEId/xZdazfWpXs8t6NMvwZSlhRS88
+X-Google-Smtp-Source: AGHT+IF3UvVeXASZo52c08/+1ntnQ2sJxHAzyHZY/AwNtf1qBgpEAOjP84sxY5PGMJRggUJwk0BatA==
+X-Received: by 2002:a05:6a20:560c:b0:1ad:89e:21b5 with SMTP id ir12-20020a056a20560c00b001ad089e21b5mr3716369pzc.15.1714588892212;
+        Wed, 01 May 2024 11:41:32 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:9dbc:724d:6e88:fb08])
-        by smtp.gmail.com with ESMTPSA id j18-20020a62e912000000b006e681769ee0sm23687369pfh.145.2024.05.01.11.41.30
+        by smtp.gmail.com with ESMTPSA id j18-20020a62e912000000b006e681769ee0sm23687369pfh.145.2024.05.01.11.41.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 May 2024 11:41:30 -0700 (PDT)
+        Wed, 01 May 2024 11:41:31 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	amir73il@gmail.com,
 	chandan.babu@oracle.com,
 	fred@cloudflare.com,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
+	Guo Xuenan <guoxuenan@huawei.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 15/24] xfs: attach dquots to inode before reading data/cow fork mappings
-Date: Wed,  1 May 2024 11:41:03 -0700
-Message-ID: <20240501184112.3799035-15-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 16/24] xfs: wait iclog complete before tearing down AIL
+Date: Wed,  1 May 2024 11:41:04 -0700
+Message-ID: <20240501184112.3799035-16-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.45.0.rc1.225.g2a3ae87e7f-goog
 In-Reply-To: <20240501184112.3799035-1-leah.rumancik@gmail.com>
 References: <20240501184112.3799035-1-leah.rumancik@gmail.com>
@@ -74,157 +74,184 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Guo Xuenan <guoxuenan@huawei.com>
 
-[ Upstream commit 4c6dbfd2756bd83a0085ed804e2bb7be9cc16bc5 ]
+[ Upstream commit 1eb52a6a71981b80f9acbd915acd6a05a5037196 ]
 
-I've been running near-continuous integration testing of online fsck,
-and I've noticed that once a day, one of the ARM VMs will fail the test
-with out of order records in the data fork.
+Fix uaf in xfs_trans_ail_delete during xlog force shutdown.
+In commit cd6f79d1fb32 ("xfs: run callbacks before waking waiters in
+xlog_state_shutdown_callbacks") changed the order of running callbacks
+and wait for iclog completion to avoid unmount path untimely destroy AIL.
+But which seems not enough to ensue this, adding mdelay in
+`xfs_buf_item_unpin` can prove that.
 
-xfs/804 races fsstress with online scrub (aka scan but do not change
-anything), so I think this might be a bug in the core xfs code.  This
-also only seems to trigger if one runs the test for more than ~6 minutes
-via TIME_FACTOR=13 or something.
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/tree/tests/xfs/804?h=djwong-wtf
+The reproduction is as follows. To ensure destroy AIL safely,
+we should wait all xlog ioend workers done and sync the AIL.
 
-I added a debugging patch to the kernel to check the data fork extents
-after taking the ILOCK, before dropping ILOCK, and before and after each
-bmapping operation.  So far I've narrowed it down to the delalloc code
-inserting a record in the wrong place in the iext tree:
+==================================================================
+BUG: KASAN: use-after-free in xfs_trans_ail_delete+0x240/0x2a0
+Read of size 8 at addr ffff888023169400 by task kworker/1:1H/43
 
-xfs_bmap_add_extent_hole_delay, near line 2691:
+CPU: 1 PID: 43 Comm: kworker/1:1H Tainted: G        W
+6.1.0-rc1-00002-gc28266863c4a #137
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Workqueue: xfs-log/sda xlog_ioend_work
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report+0x171/0x4a6
+ kasan_report+0xb3/0x130
+ xfs_trans_ail_delete+0x240/0x2a0
+ xfs_buf_item_done+0x7b/0xa0
+ xfs_buf_ioend+0x1e9/0x11f0
+ xfs_buf_item_unpin+0x4c8/0x860
+ xfs_trans_committed_bulk+0x4c2/0x7c0
+ xlog_cil_committed+0xab6/0xfb0
+ xlog_cil_process_committed+0x117/0x1e0
+ xlog_state_shutdown_callbacks+0x208/0x440
+ xlog_force_shutdown+0x1b3/0x3a0
+ xlog_ioend_work+0xef/0x1d0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+ </TASK>
 
-	case 0:
-		/*
-		 * New allocation is not contiguous with another
-		 * delayed allocation.
-		 * Insert a new entry.
-		 */
-		oldlen = newlen = 0;
-		xfs_iunlock_check_datafork(ip);		<-- ok here
-		xfs_iext_insert(ip, icur, new, state);
-		xfs_iunlock_check_datafork(ip);		<-- bad here
-		break;
-	}
+Allocated by task 9606:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ __kasan_kmalloc+0x7a/0x90
+ __kmalloc+0x59/0x140
+ kmem_alloc+0xb2/0x2f0
+ xfs_trans_ail_init+0x20/0x320
+ xfs_log_mount+0x37e/0x690
+ xfs_mountfs+0xe36/0x1b40
+ xfs_fs_fill_super+0xc5c/0x1a70
+ get_tree_bdev+0x3c5/0x6c0
+ vfs_get_tree+0x85/0x250
+ path_mount+0xec3/0x1830
+ do_mount+0xef/0x110
+ __x64_sys_mount+0x150/0x1f0
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-I recorded the state of the data fork mappings and iext cursor state
-when a corrupt data fork is detected immediately after the
-xfs_bmap_add_extent_hole_delay call in xfs_bmapi_reserve_delalloc:
+Freed by task 9662:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ kasan_save_free_info+0x2a/0x40
+ __kasan_slab_free+0x105/0x1a0
+ __kmem_cache_free+0x99/0x2d0
+ kvfree+0x3a/0x40
+ xfs_log_unmount+0x60/0xf0
+ xfs_unmountfs+0xf3/0x1d0
+ xfs_fs_put_super+0x78/0x300
+ generic_shutdown_super+0x151/0x400
+ kill_block_super+0x9a/0xe0
+ deactivate_locked_super+0x82/0xe0
+ deactivate_super+0x91/0xb0
+ cleanup_mnt+0x32a/0x4a0
+ task_work_run+0x15f/0x240
+ exit_to_user_mode_prepare+0x188/0x190
+ syscall_exit_to_user_mode+0x12/0x30
+ do_syscall_64+0x42/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-ino 0x140bb3 func xfs_bmapi_reserve_delalloc line 4164 data fork:
-    ino 0x140bb3 nr 0x0 nr_real 0x0 offset 0xb9 blockcount 0x1f startblock 0x935de2 state 1
-    ino 0x140bb3 nr 0x1 nr_real 0x1 offset 0xe6 blockcount 0xa startblock 0xffffffffe0007 state 0
-    ino 0x140bb3 nr 0x2 nr_real 0x1 offset 0xd8 blockcount 0xe startblock 0x935e01 state 0
+The buggy address belongs to the object at ffff888023169400
+ which belongs to the cache kmalloc-128 of size 128
+The buggy address is located 0 bytes inside of
+ 128-byte region [ffff888023169400, ffff888023169480)
 
-Here we see that a delalloc extent was inserted into the wrong position
-in the iext leaf, same as all the other times.  The extra trace data I
-collected are as follows:
+The buggy address belongs to the physical page:
+page:ffffea00008c5a00 refcount:1 mapcount:0 mapping:0000000000000000
+index:0xffff888023168f80 pfn:0x23168
+head:ffffea00008c5a00 order:1 compound_mapcount:0 compound_pincount:0
+flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
+raw: 001fffff80010200 ffffea00006b3988 ffffea0000577a88 ffff88800f842ac0
+raw: ffff888023168f80 0000000000150007 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
 
-ino 0x140bb3 fork 0 oldoff 0xe6 oldlen 0x4 oldprealloc 0x6 isize 0xe6000
-    ino 0x140bb3 oldgotoff 0xea oldgotstart 0xfffffffffffffffe oldgotcount 0x0 oldgotstate 0
-    ino 0x140bb3 crapgotoff 0x0 crapgotstart 0x0 crapgotcount 0x0 crapgotstate 0
-    ino 0x140bb3 freshgotoff 0xd8 freshgotstart 0x935e01 freshgotcount 0xe freshgotstate 0
-    ino 0x140bb3 nowgotoff 0xe6 nowgotstart 0xffffffffe0007 nowgotcount 0xa nowgotstate 0
-    ino 0x140bb3 oldicurpos 1 oldleafnr 2 oldleaf 0xfffffc00f0609a00
-    ino 0x140bb3 crapicurpos 2 crapleafnr 2 crapleaf 0xfffffc00f0609a00
-    ino 0x140bb3 freshicurpos 1 freshleafnr 2 freshleaf 0xfffffc00f0609a00
-    ino 0x140bb3 newicurpos 1 newleafnr 3 newleaf 0xfffffc00f0609a00
+Memory state around the buggy address:
+ ffff888023169300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff888023169380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff888023169400: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                   ^
+ ffff888023169480: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff888023169500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+Disabling lock debugging due to kernel taint
 
-The first line shows that xfs_bmapi_reserve_delalloc was called with
-whichfork=XFS_DATA_FORK, off=0xe6, len=0x4, prealloc=6.
-
-The second line ("oldgot") shows the contents of @got at the beginning
-of the call, which are the results of the first iext lookup in
-xfs_buffered_write_iomap_begin.
-
-Line 3 ("crapgot") is the result of duplicating the cursor at the start
-of the body of xfs_bmapi_reserve_delalloc and performing a fresh lookup
-at @off.
-
-Line 4 ("freshgot") is the result of a new xfs_iext_get_extent right
-before the call to xfs_bmap_add_extent_hole_delay.  Totally garbage.
-
-Line 5 ("nowgot") is contents of @got after the
-xfs_bmap_add_extent_hole_delay call.
-
-Line 6 is the contents of @icur at the beginning fo the call.  Lines 7-9
-are the contents of the iext cursors at the point where the block
-mappings were sampled.
-
-I think @oldgot is a HOLESTARTBLOCK extent because the first lookup
-didn't find anything, so we filled in imap with "fake hole until the
-end".  At the time of the first lookup, I suspect that there's only one
-32-block unwritten extent in the mapping (hence oldicurpos==1) but by
-the time we get to recording crapgot, crapicurpos==2.
-
-Dave then added:
-
-Ok, that's much simpler to reason about, and implies the smoke is
-coming from xfs_buffered_write_iomap_begin() or
-xfs_bmapi_reserve_delalloc(). I suspect the former - it does a lot
-of stuff with the ILOCK_EXCL held.....
-
-.... including calling xfs_qm_dqattach_locked().
-
-xfs_buffered_write_iomap_begin
-  ILOCK_EXCL
-  look up icur
-  xfs_qm_dqattach_locked
-    xfs_qm_dqattach_one
-      xfs_qm_dqget_inode
-        dquot cache miss
-        xfs_iunlock(ip, XFS_ILOCK_EXCL);
-        error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
-        xfs_ilock(ip, XFS_ILOCK_EXCL);
-  ....
-  xfs_bmapi_reserve_delalloc(icur)
-
-Yup, that's what is letting the magic smoke out -
-xfs_qm_dqattach_locked() can cycle the ILOCK. If that happens, we
-can pass a stale icur to xfs_bmapi_reserve_delalloc() and it all
-goes downhill from there.
-
-Back to Darrick now:
-
-So.  Fix this by moving the dqattach_locked call up before we take the
-ILOCK, like all the other callers in that file.
-
-Fixes: a526c85c2236 ("xfs: move xfs_file_iomap_begin_delay around") # goes further back than this
+Fixes: cd6f79d1fb32 ("xfs: run callbacks before waking waiters in xlog_state_shutdown_callbacks")
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_iomap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_log.c | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 1bdd7afc1010..ab5512c0bcf7 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -968,6 +968,10 @@ xfs_buffered_write_iomap_begin(
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f02a0dd522b3..60b19f6d7077 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -886,6 +886,23 @@ xlog_force_iclog(
+ 	return xlog_state_release_iclog(iclog->ic_log, iclog, NULL);
+ }
  
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
- 
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		return error;
++/*
++ * Cycle all the iclogbuf locks to make sure all log IO completion
++ * is done before we tear down these buffers.
++ */
++static void
++xlog_wait_iclog_completion(struct xlog *log)
++{
++	int		i;
++	struct xlog_in_core	*iclog = log->l_iclog;
 +
- 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
- 	if (error)
- 		return error;
-@@ -1071,10 +1075,6 @@ xfs_buffered_write_iomap_begin(
- 			allocfork = XFS_COW_FORK;
- 	}
++	for (i = 0; i < log->l_iclog_bufs; i++) {
++		down(&iclog->ic_sema);
++		up(&iclog->ic_sema);
++		iclog = iclog->ic_next;
++	}
++}
++
+ /*
+  * Wait for the iclog and all prior iclogs to be written disk as required by the
+  * log force state machine. Waiting on ic_force_wait ensures iclog completions
+@@ -1111,6 +1128,14 @@ xfs_log_unmount(
+ {
+ 	xfs_log_clean(mp);
  
--	error = xfs_qm_dqattach_locked(ip, false);
--	if (error)
--		goto out_unlock;
++	/*
++	 * If shutdown has come from iclog IO context, the log
++	 * cleaning will have been skipped and so we need to wait
++	 * for the iclog to complete shutdown processing before we
++	 * tear anything down.
++	 */
++	xlog_wait_iclog_completion(mp->m_log);
++
+ 	xfs_buftarg_drain(mp->m_ddev_targp);
+ 
+ 	xfs_trans_ail_destroy(mp);
+@@ -2113,17 +2138,6 @@ xlog_dealloc_log(
+ 	xlog_in_core_t	*iclog, *next_iclog;
+ 	int		i;
+ 
+-	/*
+-	 * Cycle all the iclogbuf locks to make sure all log IO completion
+-	 * is done before we tear down these buffers.
+-	 */
+-	iclog = log->l_iclog;
+-	for (i = 0; i < log->l_iclog_bufs; i++) {
+-		down(&iclog->ic_sema);
+-		up(&iclog->ic_sema);
+-		iclog = iclog->ic_next;
+-	}
 -
- 	if (eof && offset + count > XFS_ISIZE(ip)) {
- 		/*
- 		 * Determine the initial size of the preallocation.
+ 	/*
+ 	 * Destroy the CIL after waiting for iclog IO completion because an
+ 	 * iclog EIO error will try to shut down the log, which accesses the
 -- 
 2.45.0.rc1.225.g2a3ae87e7f-goog
 
