@@ -1,56 +1,56 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2855816131A;
-	Wed,  1 May 2024 18:41:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AB341607B2;
+	Wed,  1 May 2024 18:41:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714588899; cv=none; b=QI0pGqquFnexThl9Wx1sqiBQVt8Al8MxqYDpFJegUtSS+k+wU386AgSMhWRh+ujX7bGDUTqOzP/4DJ82na7bKUdef3rGnEX9CBp4NuMQMMj8o7xbM0HfFTJ0LETZQdKy1DyQNplccaa0bpOdRMXdhPyiCSz9GPRjHXmsQs6sDYE=
+	t=1714588900; cv=none; b=mkOiKGqjAmcc7oxcGoBcYvZ2b7vLZGeB2DmIkb5Zzsj4bE+MdDppHe9lhWwolBLR6Jphw6a4bUZXplKWsx+0QEHyMmj4h4hDQj5epVA8XnK9osTFO5f2VIxVHgF6gpEWh0MiWwlwjpjfCI0Iet0FiMaeXVZY/aZI7J53oycLF28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714588899; c=relaxed/simple;
-	bh=d0l69Gcsw/vDJus6C3eaPV2ij5WC8jODHuGbI9yJ4r0=;
+	s=arc-20240116; t=1714588900; c=relaxed/simple;
+	bh=fkoAsTijuitE0hGfZRxVNhSccSlxC7wgFRZxPigoL5c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PqOwJvTzJuIg/JXv0pd+3/ps03U4MYwqVmBRPiwGQrXZN36qj3KbtBUFfLxBl5wpODFEI7YjQ+Pc1Bd1nfcX67sVMlMlMIZRMMg+C3UBHSqMZk2TDYC7m7CNbHwiHqm0eHo3+TcTAUV8sqn2UychEtVMB17eH0PRGu1jjnrrazk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gVzBpELm; arc=none smtp.client-ip=209.85.210.175
+	 MIME-Version; b=Q/wwgcQCQExFOWTgkUvRh4Et3Sj0aq0KBfdabMm8NJETuPLiL+G5/O1Ow/pkAOz82buMCStHxj2EEqDs4yauWZuGlaMAfRnq7IjSNq7s7zfHX/Mg+hCiMpvxufPzt4JegNPjWLyd3Oc162dhiQA1tOao80MaQS9ANNEENyAFWXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KQxIMs0b; arc=none smtp.client-ip=209.85.166.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gVzBpELm"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6edc61d0ff6so7090010b3a.2;
-        Wed, 01 May 2024 11:41:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KQxIMs0b"
+Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-36c60ff0322so5698745ab.1;
+        Wed, 01 May 2024 11:41:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714588897; x=1715193697; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1714588898; x=1715193698; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=37Y3fWOSX//AmqHXVYxSNoGC2xonxoZ9gZAufCblsfs=;
-        b=gVzBpELmZp7DiO+TNGxM54zwp7fVYDbyfq12c7OVKjmp2044IqBxKknXzUQ/XAOn7p
-         oE2NKae+THolnaBCOp4yoeKVc4inwl/2qYiEIEMwOxtBcQkBPWXV3jlBCXwa/YIzCYha
-         Bg133wp/elrJWs1ACkzPV71+7eIP5/1YFpvit8mIFiFb3vF1Sc2vD474LwZcH9NEcQun
-         1a7MWh8la8qahQAJ7CnqCZPqoHpAU2lFXxxlr480/qVIJmWClSiRv5e0KwufninoApJ+
-         +qtse3/ZISu4O9HMxvbh6YbYBoImDrroKMpN/0tlmvUAPN5e9jWZYVhp1j40wE+dBU6X
-         rjrQ==
+        bh=uhUid3on+fTbFyucjv2eM3kRqDwiVYdxsIEeGK+1+zI=;
+        b=KQxIMs0bXYQQJC9kH9n6dInRhdNLs9EJdDDCaNqt+JA2jndwvGEfMncavKVPk29ASc
+         j4g/Y+A6LscPC3OEIhOUPCVcKCIdrVJtWpinTYWsEhFM09vNPzOPp5BQE2BDdDL3jWd0
+         BEH3Dwr/DkeLN7+l6JS0sT2H1g42/93W4DnyN/eFACeV6P418Rvp5L1PKpEOm0pXdwmN
+         peh69TSqxUWJnr0lR8e3Jn0Gf9z5LDJR9B3ttpOV1kkACzciF5Qw73TPMr1H9/mbtf+A
+         wuraqR02Q0ENybDvRCd4w2euxvvStGf6V57F3iv4T2r6Upyx0Y1JzQ5/jOpzdfmgWUnE
+         MNOw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714588897; x=1715193697;
+        d=1e100.net; s=20230601; t=1714588898; x=1715193698;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=37Y3fWOSX//AmqHXVYxSNoGC2xonxoZ9gZAufCblsfs=;
-        b=UJpzfGXSb0Ib0FlkZaAGD9liMRULRqoARZLHjU51td7UvHcOU8VXB4Yavf2WxJP38x
-         frkp59Bk7+0p3vtFvjCMt8ASKrx8R8xJQkXRCLZbNoUQgIAPwyXpCm/JmVPn5hFwGGuF
-         UGy6v4yubR5bwViB71OaIle2gqAyXU5IltfUTgbKbw0zcXm8hS4mXpJaobHRydgjruzi
-         lvWptu0jVQkFkKc3jN0ty3ay+edDQgwMhVYvUA0vZpnn4RGhtR0AddRWTs+ueBxP81QP
-         TxpyM9aZsTRweyTwtXnQI3PC5GpLRr7ckTAeX5S6S1sc2BVetMJMzXrp6AksCzOOsiFk
-         SmFA==
-X-Gm-Message-State: AOJu0YzuYR+s4ddkwcxpNPIh3zcovHl/A/TB9XtLN0fHRk+zmk8tsrJG
-	IwgKHeR2FlB56NJPukm9njzUctGVoPLw4HHVOkxOlQrtMjj3tOWVBaQBWeNJ
-X-Google-Smtp-Source: AGHT+IHTQjZfwNLL19dD33T0N6CclEHQyZVcnBhYHiJKwhpgcesop7bwmzQ4sAfu6aljZN6+1EpG5Q==
-X-Received: by 2002:a05:6a20:3c8b:b0:1a3:5c61:5ec2 with SMTP id b11-20020a056a203c8b00b001a35c615ec2mr3950217pzj.16.1714588897329;
-        Wed, 01 May 2024 11:41:37 -0700 (PDT)
+        bh=uhUid3on+fTbFyucjv2eM3kRqDwiVYdxsIEeGK+1+zI=;
+        b=kGnHPahIuikk9KJ9rrFRfdu5HMJDICgyPnyqMOhyXi/Xv5YW4dhG8Yr5PF50aR2nBv
+         v0WTFWIvDv83UEjpR+SBiosnALyk0Tr0QtvH2+ejzDt/udUa9gDDU62ZEvT3geEVFHka
+         UGCgJMuDt2vwJBjSrokVhkvSBXrwNW2dD6tPd+tQjobKXcLeeAszGLv9/Rk1kx+l6rId
+         qB2qjkmxf0crYmyU6vw05/aET5Qk166RxZZMRXp4UE/RZYl4BZOCy8isW9e09rSdL4MS
+         3XsjwMGrpLN+X25xGyBt0i8fa7HGOUob2swgHZPwtef600/VYnEYcleKJWi1HTlpbs2k
+         ERww==
+X-Gm-Message-State: AOJu0Yz/qwEMZ9BgcCeFjHTIcMv88/YdDuErHoQt5alp6f1q54m69M/n
+	2mCcR8n0jVA7EW2SgIivZTRIarju1zcWazI6V6FNcwB/7rxZvwKMbuZS6yCg
+X-Google-Smtp-Source: AGHT+IEVj1KmAXZ/d2GJD/SS8NwDCF6VgMK+14ahYE87BzIfSgsaGgBn9+MbJY/t+Y8MqAEccUoyoQ==
+X-Received: by 2002:a05:6e02:1523:b0:36c:4eb4:3afb with SMTP id i3-20020a056e02152300b0036c4eb43afbmr3944985ilu.32.1714588898398;
+        Wed, 01 May 2024 11:41:38 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:9dbc:724d:6e88:fb08])
-        by smtp.gmail.com with ESMTPSA id j18-20020a62e912000000b006e681769ee0sm23687369pfh.145.2024.05.01.11.41.36
+        by smtp.gmail.com with ESMTPSA id j18-20020a62e912000000b006e681769ee0sm23687369pfh.145.2024.05.01.11.41.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 May 2024 11:41:37 -0700 (PDT)
+        Wed, 01 May 2024 11:41:38 -0700 (PDT)
 From: Leah Rumancik <leah.rumancik@gmail.com>
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -59,11 +59,10 @@ Cc: linux-xfs@vger.kernel.org,
 	fred@cloudflare.com,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
-	Xiao Yang <yangx.jy@fujitsu.com>,
 	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1 19/24] xfs: estimate post-merge refcounts correctly
-Date: Wed,  1 May 2024 11:41:07 -0700
-Message-ID: <20240501184112.3799035-19-leah.rumancik@gmail.com>
+Subject: [PATCH 6.1 20/24] xfs: invalidate xfs_bufs when allocating cow extents
+Date: Wed,  1 May 2024 11:41:08 -0700
+Message-ID: <20240501184112.3799035-20-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.45.0.rc1.225.g2a3ae87e7f-goog
 In-Reply-To: <20240501184112.3799035-1-leah.rumancik@gmail.com>
 References: <20240501184112.3799035-1-leah.rumancik@gmail.com>
@@ -77,111 +76,52 @@ Content-Transfer-Encoding: 8bit
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit b25d1984aa884fc91a73a5a407b9ac976d441e9b ]
+[ Upstream commit ddfdd530e43fcb3f7a0a69966e5f6c33497b4ae3 ]
 
-Upon enabling fsdax + reflink for XFS, xfs/179 began to report refcount
-metadata corruptions after being run.  Specifically, xfs_repair noticed
-single-block refcount records that could be combined but had not been.
+While investigating test failures in xfs/17[1-3] in alwayscow mode, I
+noticed through code inspection that xfs_bmap_alloc_userdata isn't
+setting XFS_ALLOC_USERDATA when allocating extents for a file's CoW
+fork.  COW staging extents should be flagged as USERDATA, since user
+data are persisted to these blocks before being remapped into a file.
 
-The root cause of this is improper MAXREFCOUNT edge case handling in
-xfs_refcount_merge_extents.  When we're trying to find candidates for a
-refcount btree record merge, we compute the refcount attribute of the
-merged record, but we fail to account for the fact that once a record
-hits rc_refcount == MAXREFCOUNT, it is pinned that way forever.  Hence
-the computed refcount is wrong, and we fail to merge the extents.
+This mis-classification has a few impacts on the behavior of the system.
+First, the filestreams allocator is supposed to keep allocating from a
+chosen AG until it runs out of space in that AG.  However, it only does
+that for USERDATA allocations, which means that COW allocations aren't
+tied to the filestreams AG.  Fortunately, few people use filestreams, so
+nobody's noticed.
 
-Fix this by adjusting the merge predicates to compute the adjusted
-refcount correctly.
+A more serious problem is that xfs_alloc_ag_vextent_small looks for a
+buffer to invalidate *if* the USERDATA flag is set and the AG is so full
+that the allocation had to come from the AGFL because the cntbt is
+empty.  The consequences of not invalidating the buffer are severe --
+if the AIL incorrectly checkpoints a buffer that is now being used to
+store user data, that action will clobber the user's written data.
 
-Fixes: 3172725814f9 ("xfs: adjust refcount of an extent of blocks in refcount btree")
+Fix filestreams and yet another data corruption vector by flagging COW
+allocations as USERDATA.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Xiao Yang <yangx.jy@fujitsu.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_refcount.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 4408893333a6..6f7ed9288fe4 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -820,6 +820,17 @@ xfs_refc_valid(
- 	return rc->rc_startblock != NULLAGBLOCK;
- }
- 
-+static inline xfs_nlink_t
-+xfs_refc_merge_refcount(
-+	const struct xfs_refcount_irec	*irec,
-+	enum xfs_refc_adjust_op		adjust)
-+{
-+	/* Once a record hits MAXREFCOUNT, it is pinned there forever */
-+	if (irec->rc_refcount == MAXREFCOUNT)
-+		return MAXREFCOUNT;
-+	return irec->rc_refcount + adjust;
-+}
-+
- static inline bool
- xfs_refc_want_merge_center(
- 	const struct xfs_refcount_irec	*left,
-@@ -831,6 +842,7 @@ xfs_refc_want_merge_center(
- 	unsigned long long		*ulenp)
- {
- 	unsigned long long		ulen = left->rc_blockcount;
-+	xfs_nlink_t			new_refcount;
- 
- 	/*
- 	 * To merge with a center record, both shoulder records must be
-@@ -846,9 +858,10 @@ xfs_refc_want_merge_center(
- 		return false;
- 
- 	/* The shoulder record refcounts must match the new refcount. */
--	if (left->rc_refcount != cleft->rc_refcount + adjust)
-+	new_refcount = xfs_refc_merge_refcount(cleft, adjust);
-+	if (left->rc_refcount != new_refcount)
- 		return false;
--	if (right->rc_refcount != cleft->rc_refcount + adjust)
-+	if (right->rc_refcount != new_refcount)
- 		return false;
- 
- 	/*
-@@ -871,6 +884,7 @@ xfs_refc_want_merge_left(
- 	enum xfs_refc_adjust_op		adjust)
- {
- 	unsigned long long		ulen = left->rc_blockcount;
-+	xfs_nlink_t			new_refcount;
- 
- 	/*
- 	 * For a left merge, the left shoulder record must be adjacent to the
-@@ -881,7 +895,8 @@ xfs_refc_want_merge_left(
- 		return false;
- 
- 	/* Left shoulder record refcount must match the new refcount. */
--	if (left->rc_refcount != cleft->rc_refcount + adjust)
-+	new_refcount = xfs_refc_merge_refcount(cleft, adjust);
-+	if (left->rc_refcount != new_refcount)
- 		return false;
- 
- 	/*
-@@ -903,6 +918,7 @@ xfs_refc_want_merge_right(
- 	enum xfs_refc_adjust_op		adjust)
- {
- 	unsigned long long		ulen = right->rc_blockcount;
-+	xfs_nlink_t			new_refcount;
- 
- 	/*
- 	 * For a right merge, the right shoulder record must be adjacent to the
-@@ -913,7 +929,8 @@ xfs_refc_want_merge_right(
- 		return false;
- 
- 	/* Right shoulder record refcount must match the new refcount. */
--	if (right->rc_refcount != cright->rc_refcount + adjust)
-+	new_refcount = xfs_refc_merge_refcount(cright, adjust);
-+	if (right->rc_refcount != new_refcount)
- 		return false;
- 
- 	/*
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 56b9b7db38bb..0d56a8d862e8 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4058,7 +4058,7 @@ xfs_bmap_alloc_userdata(
+ 	 * the busy list.
+ 	 */
+ 	bma->datatype = XFS_ALLOC_NOBUSY;
+-	if (whichfork == XFS_DATA_FORK) {
++	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK) {
+ 		bma->datatype |= XFS_ALLOC_USERDATA;
+ 		if (bma->offset == 0)
+ 			bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
 -- 
 2.45.0.rc1.225.g2a3ae87e7f-goog
 
