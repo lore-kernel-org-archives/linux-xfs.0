@@ -1,68 +1,71 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E950819;
-	Thu,  2 May 2024 06:34:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83BA221A04
+	for <linux-xfs@vger.kernel.org>; Thu,  2 May 2024 07:33:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714631658; cv=none; b=j4ADTkLf3PJLMhnEjJq+c7OrppF5G1CPuK16hDEA9PDZKfeDxOQwdZp8W2Y0kXu+ADgwVQfs1PJiu+wRpdEh3Y+ssxe+fII3lSdSvHNrfct2BlJwz20f7g8N0mvef//4XPAdySCZcrS6dAZ3x8grTsi0Lw2JGbzrzL4ns295114=
+	t=1714635240; cv=none; b=VkQKM0SEKoYX5lqmh7/LteegAsil3/WH9uq+u+H//yiYVvUaKpVhLV+3/HWk7Yc61MRkW8HSG9hnCJtPSm1CcJ6XYeHeYoQSsk9mI8hn3iqt9+n2RoMI+OkL5wtN6STm+jgRXeO/JcGnkD8mDjqpW60YFPc5LQ6QGfsV4ziOK1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714631658; c=relaxed/simple;
-	bh=7Mc7Ty1VbUPRUi5QZvmsccwkaqI4TbLdP62iaNgO35c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jo/fsWyw4PISEqP6EJHckMFiDvnaiDXzuPSHn59p3IFlpI/E2nQKWnwhaKXJvwE8jtJWcCnQ6RUXDlWEPBW/BDnM+aLHKeEHD/09LWxYKlma+kxCKWCujV9Qv9XfSQAlViQ5uhEo4pk2D1nSKlTRT58Hund9wPaGT6WVr4MvZ94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=W1q+hzgU; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1714635240; c=relaxed/simple;
+	bh=0N1dx6KG3a1opKZvp59L+Lkd5wbpvoymJoCad0GmbDg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=d1b9Hd80NcRBz4oJdbt5lMGDOipM7QN+q53FHSSR7qz+hwwcNnvQrJAXf0sf7vJjigeAgdW4xVoryAR6rWRGMw8XkDezXIusaXoI+28nubRQWxm90LAzreNCIImDlw5XIefqV4JFCPd3/27g09eBXSiUJLZpup8Du4Ti5w8B+nA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=djW30mbI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W1q+hzgU"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="djW30mbI"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=7Mc7Ty1VbUPRUi5QZvmsccwkaqI4TbLdP62iaNgO35c=; b=W1q+hzgUAAyfMJnTq2GfaQwX2U
-	N7gMfQkVZJmrEJtMsxthVqiW6lhsGcVhbZ+IBfG7bAyyoE5cl2yUZA0/kM12sf8PBZISyUsUBmVvG
-	Z5F+vH8FlWCrf3iVxqsCfoBISA6qvI2/OYm6Kcn3ucIaEzljElkoVgy0zeQ7BiXR7VJ4anUtXuc3Z
-	1iYM4tNIsSW396/rUdVlvteL4N6s0GjmQoa+JduxaPGWbrC5szrjjfaGTO/xILRhzARdfKeqjtxhe
-	VnegCTSE8Lr9IaDYvbLBxxWeY3XamA6uhlcWvnbe37c+o2HjbwJJPPcka1M7GaIYYgtFbQeqo0RgF
-	HdKWhYKg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s2Q1I-0000000BfQl-2QK8;
-	Thu, 02 May 2024 06:34:16 +0000
-Date: Wed, 1 May 2024 23:34:16 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Chandan Babu R <chandanbabu@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>, aalbersh@redhat.com,
-	ebiggers@kernel.org, linux-xfs@vger.kernel.org, alexl@redhat.com,
-	walters@verbum.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 01/26] xfs: use unsigned ints for non-negative quantities
- in xfs_attr_remote.c
-Message-ID: <ZjMz6GVrrFtL-9dT@infradead.org>
-References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
- <171444680378.957659.14973171617153243991.stgit@frogsfrogsfrogs>
- <ZjHnXmcsIeTh9lHI@infradead.org>
- <20240501223927.GI360919@frogsfrogsfrogs>
- <87r0ekbuva.fsf@debian-BULLSEYE-live-builder-AMD64>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=2LkKpLK44LJfPH2tHczZycX5Uw3i34lA+xrz1GIbf5o=; b=djW30mbIdtV2L4axGjojxvHsP6
+	sVRp48tWRd2eHcmur+Q6YJEuMz6oDnUGVJ/3pdiOf9WZ7telpoVEHGrsu1YaCB/X9b9QYC+r+rKKV
+	ipOR9WNMVOyBJ08s4FnSC6Fa2q0zGInMLIZNDZIH89bHuoEszBZG/vAxOWX+UwuPQaHU1kzxDzHmd
+	Y475G0CqLe74RJJ1jITxi9hcPVDNdG0I/YfLzp9f2KVkf+2+IbhYIAYsjhJOMx0L4/ol9avknEUdo
+	Q2Rivp9FWzf3KpubXrtUK18U/J21JVyDe6iYuW4GepUdMJHAxKSssVk4AHKsRk8rm7h8k9AwAOmh+
+	mSW+Jj+w==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s2Qx4-0000000Boia-20d6;
+	Thu, 02 May 2024 07:33:58 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: iext handling fixes and cleanup v2
+Date: Thu,  2 May 2024 09:33:52 +0200
+Message-Id: <20240502073355.1893587-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87r0ekbuva.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, May 02, 2024 at 11:26:08AM +0530, Chandan Babu R wrote:
-> 1. optimize COW end I/O remapping v2
+Hi all,
 
-This has been retracted and split.
+this series fixes two unlikely to hit iext handling bugs in
+xfs_reflink_end_cow and then cleanups up the iext count updgrade
+handling.
 
-> 2. iext handling fixes and cleanup
-> ... are either missing RVBs or need to address review comments.
+It has been split from a larger series that needs more work.
 
-I'll resend this with the rename in a bit.
+Changes since v1:
+ - rename xfs_iext_count_ensure to xfs_iext_count_extend
 
+Diffstat:
+ libxfs/xfs_attr.c       |    5 ----
+ libxfs/xfs_bmap.c       |    5 ----
+ libxfs/xfs_inode_fork.c |   57 +++++++++++++++++++++---------------------------
+ libxfs/xfs_inode_fork.h |    6 +----
+ xfs_bmap_item.c         |    4 ---
+ xfs_bmap_util.c         |   23 ++++---------------
+ xfs_dquot.c             |    5 ----
+ xfs_iomap.c             |    9 +------
+ xfs_reflink.c           |   23 +++++--------------
+ xfs_rtalloc.c           |    5 ----
+ 10 files changed, 45 insertions(+), 97 deletions(-)
