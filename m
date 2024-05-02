@@ -1,61 +1,61 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A291828E8
-	for <linux-xfs@vger.kernel.org>; Thu,  2 May 2024 01:11:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AEF112B8B
+	for <linux-xfs@vger.kernel.org>; Thu,  2 May 2024 01:26:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714612269; cv=none; b=nowkvqt93AfETMoqQ/PMGX4h4KamBW9Qo4drwwYIKl2IOQwPPp7QCYwS2VXytH9rMSf0ibXyjUqapYD4mcJ40wZFj9lrslpW1d1On2Lbf5yCzsJ4EOOFK+FuuZtKo4VaLQmQ79Z5MdufF69rI32gegC0gr6zPqdDis8fFKKoRjk=
+	t=1714613212; cv=none; b=paxaYPxNF9Z3luxwzyhjVcyFac+/2oHq/3y5r8aGVlrUw3CvgqppXRPGDT23VCdF8PJZP1WLr+qXjgFO6rSn1uec5/53UgX8cx75/j3drFkS3sIU8loPEShTpvh3IeJ/b/yrVAeVoXmqXr89QLFqSG2nUjdcKpWjm6QiZ5wQi/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714612269; c=relaxed/simple;
-	bh=goGnx7+o0cvrtydIDAhojJQ/cmld+QqZebwaXWoS2ZQ=;
+	s=arc-20240116; t=1714613212; c=relaxed/simple;
+	bh=aiQLgMnrBrWvk7K6foZtmxAJr384q7kBAbb7yTl4V5s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BtPTvYEi+jFP83G67rGpM6SEXV/bN4/5ak0Toh0940jySZtCosCp0vTbxcRqBjEhfPagz8XWf7T65ULA90EFNZO35vamyLWJSK0P5zetaiwTvgM7dqYB6omDpf2Id1yEuAKmSwj7nEFx0GqytNVSATfJY9eY5qbKI5iSPcHkuns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=HizvQYYw; arc=none smtp.client-ip=209.85.214.178
+	 Content-Type:Content-Disposition:In-Reply-To; b=gJf+CLwIdHSVyUV2Ip43e1QmDB+89ppRMqMeX9GoTzAytopwPn5g5T671HTxD3zMym6jk66OIQRuT2Z+FcnF5/2OlPYigwz+PZpkwMY6XyXveh8pqPoRkhfeky/boRk83eQOJk40VOVGgFHrCWSEf9ltN0Hp/IRp8uCSDJqvuaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=o0BMVTW3; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="HizvQYYw"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1e834159f40so59197295ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 01 May 2024 18:11:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="o0BMVTW3"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6f42e9221bbso574516b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 01 May 2024 18:26:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714612267; x=1715217067; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1714613211; x=1715218011; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cTmHTn+EDFvVBp/uyb7cTt66Oy+JEt94l4VC8Lg3nkQ=;
-        b=HizvQYYw2Vk/8lTkUD9rgJxIJ4rRQszigVSXO925Q/ViWXwPDpvBITXu+XzWF20o6L
-         0Djz/fjB+kR2wF+Hhx6wY5f2z7wfmqiUsEK5/MamyQGFuoNrLtdTlFFRGQAuzgaR0j1Q
-         OFRbNIstCFhbaLvtcfH4hPEz9xy8z/IcvWbhnjETX8M9m57yE+wF/x9QjXsKgDLXAIrk
-         tzvVi9RkT3t6UaCESlEHSWojWbgNo5MyICfMkMGgvD4lxkgTNWWJ1xQwx80drWaapT3b
-         tP4JvZtdjc00oeNiS5YbRwIPTc+C8aN7XJEoz1UliNlO+jD9LXaoE7ETeImzhOQAt2Pa
-         EARA==
+        bh=BoNtHTJ8szqDZXGrqdiequs/rQM0aLZwOdY/YpVYtUQ=;
+        b=o0BMVTW3O9/N6bVJ1TKjQiTqcuWG+xPLGKDhdcrjGRSiJobke3aijfF9lEyrBswMLo
+         bEXTVuMGMFv+bmv2z57rQNQjRq7YyfMJmnq3Fw1PlmouxXvCS5Xrl4ISJD1vIujqx4en
+         5BY6v5Czswsz32zKTP9+YJ2kFnkMHOLxjcUu6uDM9h0oGGRlixEx76GsSuGusd+llGkK
+         Klp88BwIYOPVBqT8KzYJ+GOAFHGFIuJKgXd7UurhvW+0LzVIexBntt2T9LRB3izJLKxW
+         4oN/3pWUx/TDKzaoSQPNM4UxDAN7EUbHDxDx+OwYwmqRYhOgX+o59tbD8S3RuPm4PuFi
+         EvGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714612267; x=1715217067;
+        d=1e100.net; s=20230601; t=1714613211; x=1715218011;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=cTmHTn+EDFvVBp/uyb7cTt66Oy+JEt94l4VC8Lg3nkQ=;
-        b=Pol5hMtjUpQeNloUA/1DKfw2u90Su5B4hjMdcUW/jp1sWEVY9SkIrTcmVW6FUP8QOu
-         Qstm5j+5Rxq3RqwUP0jYvVeXI7i01yIa4VMeRiTtIcwHYTAiLT/XpsY1M/9unVJ+/uXP
-         8i/nF9+Snw5XhnceP7ixT5KyLYfl1Cb7ALGfTrdsC4K8+V70j/OahNdfYovk4U6+fDCp
-         ajU8/YcoXR1tTNf4DNoQDxBVBLxHgb+n5VKXs6rT68WhkSrDoW9TqWd0B74AtyeUp2Z5
-         k/vUExGkohfP5kvcfisdPN9DVPPD9XFH6zkqIrI5ONs2QPv4OiLOCCgmNPGNRWviNA8N
-         zP9g==
-X-Forwarded-Encrypted: i=1; AJvYcCVn4aFq9wsfJMbhJrGrsCRDD+GZ4f2XEVOrlVvExR6pBoIcwq3BGHskgLqucOIHGNlo4qEra8iMvOJO2c1PrygqvAzGuTPyU4Cw
-X-Gm-Message-State: AOJu0YxQs+QZXJv8SGlPm9ivyCwjv55cWv35POFGlGKUrrN6DwdKTge5
-	28U4WKi3P+rWGqJZvl7LpTaJ+lH7mHe9fUF0B1TF7+FdfmLtIZ3A4cjMmRN8FOI=
-X-Google-Smtp-Source: AGHT+IG2tMNTomS3ZqyWOINVPtwBWTHlZFdEmCLTkAdgm8tukRJkLC5VAwUJPVsGDfNYzBUOMRcRmg==
-X-Received: by 2002:a17:902:ed01:b0:1e8:674b:d10f with SMTP id b1-20020a170902ed0100b001e8674bd10fmr426300pld.41.1714612266683;
-        Wed, 01 May 2024 18:11:06 -0700 (PDT)
+        bh=BoNtHTJ8szqDZXGrqdiequs/rQM0aLZwOdY/YpVYtUQ=;
+        b=BxkkewxyFp4nfemcVKxJJTUQF6/SlqoNyBMPw1NI1L9ifqW6/U9bjZUdOUkMB2+Ny9
+         E5OjvhGMUsI6tOmVfzypq5nxf1drDO+3keIHud8Cx9V5jCEVr5KIQBLU1sPijE0gFyq3
+         h9+QnMlrSmHrvdxeADRr/n1QJ0e89wXu9SHMVrtmVKVZqSL+6yST8YfSoMvaahfXuBKX
+         HHWTXG1LdfEljQxqcaGzlJAL4TKkwwa4z2j2dWjaBQWg8kVA7Fu2iAhhYtv2GDmH3Ep3
+         W/IQux8u3r8JOCrafTsxfT9IFwAr5dS9L3lFx342cq9lhs39S1pjiGIo507iZjOz35uQ
+         035g==
+X-Forwarded-Encrypted: i=1; AJvYcCXyRTiIm65/XhIcCz3QYyIqoE9/jUiGC/V6xgDZC2AzLaKYqRKM3U8HnoFEPOOExdvQ8Gi/qfAw17baJalkNrfCFguKqAB+O3Kf
+X-Gm-Message-State: AOJu0Ywlb7hGzHtLTOq/mQjO9I67ngQq1xOITcdNLhISLCKH40dFXsTm
+	QGI9rVeitPwgZqS2ht/XKsRI52Gc3P7ZSfe1L6x/Rwe/PngHrndv5bHgTO4cDok=
+X-Google-Smtp-Source: AGHT+IHnNHve2YtRJXBin4iPljutTTUfrx/RxhWwRiJVuk82SYT4Ex3LTe2WrKa6Z73pMoij2m2nGw==
+X-Received: by 2002:a05:6a00:23d5:b0:6f3:f30a:19b with SMTP id g21-20020a056a0023d500b006f3f30a019bmr4277299pfc.18.1714613210547;
+        Wed, 01 May 2024 18:26:50 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id b18-20020a170903229200b001eb2e6b14e0sm9671431plh.126.2024.05.01.18.11.06
+        by smtp.gmail.com with ESMTPSA id n16-20020a63ee50000000b005f3d54c0a57sm7292pgk.49.2024.05.01.18.26.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 May 2024 18:11:06 -0700 (PDT)
+        Wed, 01 May 2024 18:26:50 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1s2KyV-000N8D-2i;
-	Thu, 02 May 2024 11:11:03 +1000
-Date: Thu, 2 May 2024 11:11:03 +1000
+	id 1s2LDj-000Nxl-18;
+	Thu, 02 May 2024 11:26:47 +1000
+Date: Thu, 2 May 2024 11:26:47 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: John Garry <john.g.garry@oracle.com>
 Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
@@ -65,12 +65,12 @@ Cc: djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
 	tytso@mit.edu, jbongio@google.com, ojaswin@linux.ibm.com,
 	ritesh.list@gmail.com, mcgrof@kernel.org, p.raghav@samsung.com,
 	linux-xfs@vger.kernel.org, catherine.hoang@oracle.com
-Subject: Re: [PATCH v3 09/21] xfs: Do not free EOF blocks for forcealign
-Message-ID: <ZjLoJ4FeSbsb/hch@dread.disaster.area>
+Subject: Re: [PATCH v3 15/21] fs: xfs: iomap: Sub-extent zeroing
+Message-ID: <ZjLr12LjiSrY4cdh@dread.disaster.area>
 References: <20240429174746.2132161-1-john.g.garry@oracle.com>
- <20240429174746.2132161-10-john.g.garry@oracle.com>
- <ZjF2jjtsA/C6ajtb@dread.disaster.area>
- <833f5821-a928-441f-848f-3a846111dcb7@oracle.com>
+ <20240429174746.2132161-16-john.g.garry@oracle.com>
+ <ZjGbkAuGj0MhXAZ/@dread.disaster.area>
+ <0eb8b5b6-1a59-445c-8ac1-1de2a1c0ce4a@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,106 +79,60 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <833f5821-a928-441f-848f-3a846111dcb7@oracle.com>
+In-Reply-To: <0eb8b5b6-1a59-445c-8ac1-1de2a1c0ce4a@oracle.com>
 
-On Wed, May 01, 2024 at 09:30:37AM +0100, John Garry wrote:
-> On 30/04/2024 23:54, Dave Chinner wrote:
-> > On Mon, Apr 29, 2024 at 05:47:34PM +0000, John Garry wrote:
-> > > For when forcealign is enabled, we want the EOF to be aligned as well, so
-> > > do not free EOF blocks.
-> > 
-> > This is doesn't match what the code does. The code is correct - it
-> > rounds the range to be trimmed up to the aligned offset beyond EOF
-> > and then frees them. The description needs to be updated to reflect
-> > this.
-> 
-> ok, fine
-> 
-> > 
+On Wed, May 01, 2024 at 12:36:02PM +0100, John Garry wrote:
+> On 01/05/2024 02:32, Dave Chinner wrote:
+> > On Mon, Apr 29, 2024 at 05:47:40PM +0000, John Garry wrote:
+> > > Set iomap->extent_size when sub-extent zeroing is required.
 > > > 
-> > > Signed-off-by: John Garry <john.g.garry@oracle.com>
-> > > ---
-> > >   fs/xfs/xfs_bmap_util.c | 7 ++++++-
-> > >   1 file changed, 6 insertions(+), 1 deletion(-)
+> > > We treat a sub-extent write same as an unaligned write, so we can leverage
+> > > the existing sub-FSblock unaligned write support, i.e. try a shared lock
+> > > with IOMAP_DIO_OVERWRITE_ONLY flag, if this fails then try the exclusive
+> > > lock.
 > > > 
-> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > index 19e11d1da660..f26d1570b9bd 100644
-> > > --- a/fs/xfs/xfs_bmap_util.c
-> > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > @@ -542,8 +542,13 @@ xfs_can_free_eofblocks(
-> > >   	 * forever.
+> > > In xfs_iomap_write_unwritten(), FSB calcs are now based on the extsize.
+> > 
+> > If forcedalign is set, should we just reject unaligned DIOs?
+> 
+> Why would we? That's very restrictive. Indeed, we got to the point of adding
+> the sub-extent zeroing just for supporting that.
+> > > @@ -646,9 +647,9 @@ xfs_file_dio_write_unaligned(
+> > >   	ssize_t			ret;
+> > >   	/*
+> > > -	 * Extending writes need exclusivity because of the sub-block zeroing
+> > > -	 * that the DIO code always does for partial tail blocks beyond EOF, so
+> > > -	 * don't even bother trying the fast path in this case.
+> > > +	 * Extending writes need exclusivity because of the sub-block/extent
+> > > +	 * zeroing that the DIO code always does for partial tail blocks
+> > > +	 * beyond EOF, so don't even bother trying the fast path in this case.
 > > >   	 */
-> > >   	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-> > > -	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
+> > >   	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
+> > >   		if (iocb->ki_flags & IOCB_NOWAIT)
+> > > @@ -714,11 +715,19 @@ xfs_file_dio_write(
+> > >   	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+> > >   	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+> > >   	size_t			count = iov_iter_count(from);
+> > > +	struct xfs_mount	*mp = ip->i_mount;
+> > > +	unsigned int		blockmask;
+> > >   	/* direct I/O must be aligned to device logical sector size */
+> > >   	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+> > >   		return -EINVAL;
+> > > -	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
 > > > +
-> > > +	/* Do not free blocks when forcing extent sizes */
 > > > +	if (xfs_inode_has_forcealign(ip) && ip->i_extsize > 1)
+> > > +		blockmask = XFS_FSB_TO_B(mp, ip->i_extsize) - 1;
+> > > +	else
+> > > +		blockmask = mp->m_blockmask;
 > > 
-> > I see this sort of check all through the remaining patches.
-> > 
-> > Given there are significant restrictions on forced alignment,
-> > shouldn't this all the details be pushed inside the helper function?
-> > e.g.
-> > 
-> > /*
-> >   * Forced extent alignment is dependent on extent size hints being
-> >   * set to define the alignment. Alignment is only necessary when the
-> >   * extent size hint is larger than a single block.
-> >   *
-> >   * If reflink is enabled on the file or we are in always_cow mode,
-> >   * we can't easily do forced alignment.
-> >   *
-> >   * We don't support forced alignment on realtime files.
-> >   * XXX(dgc): why not?
+> > 	alignmask = XFS_FSB_TO_B(mp, xfs_inode_alignment(ip)) - 1;
 > 
-> There is no technical reason to not be able to support forcealign on RT,
-> AFAIK. My idea is to support RT after non-RT is supported.
-> 
-> >   */
-> > static inline bool
-> > xfs_inode_has_forcealign(struct xfs_inode *ip)
-> > {
-> > 	if (!(ip->di_flags & XFS_DIFLAG_EXTSIZE))
-> > 		return false;
-> > 	if (ip->i_extsize <= 1)
-> > 		return false;
-> > 
-> > 	if (xfs_is_cow_inode(ip))
-> > 		return false;
-> 
-> Could we just include this in the forcealign validate checks? Currently we
-> just check CoW extsize is zero there.
+> Do you mean xfs_extent_alignment() instead of xfs_inode_alignment()?
 
-Checking COW extsize is zero doesn't tell us anything useful about
-whether the inode might have shared extents, or that the filesystem
-has had the sysfs "always cow" debug knob turned on. That changes
-filesystem behaviour at mount time and has nothing to do with the
-on-disk format constraints.
+Yes, I was.
 
-And now that I think about it, checking for COW extsize is
-completely the wrong thing to do because it doesn't get used until
-an extent is shared and a COW trigger is hit. So the presence of COW
-extsize has zero impact on whether we can use forced alignment or
-not.
-
-IOWs, we have to check for shared extents or always cow here,
-because even a file with correctly set up forced alignment needs to
-have forced alignment disabled when always_cow is enabled. Every
-write is going to use the COW path and AFAICT we don't support
-forced alignment through that path yet.
-
-> 
-> > 	if (ip->di_flags & XFS_DIFLAG_REALTIME)
-> > 		return false;
-> 
-> We check this in xfs_inode_validate_forcealign()
-
-That's kinda my point - we have a random smattering of different
-checks at different layers and in different contexts. i.e.  There's
-no one function that performs -all- the "can we do forced alignment"
-checks that allow forced alignment to be used. This simply adds all
-those checks in the one place and ensures that even if other code
-gets checks wrong, we won't use forcealign inappropriately.
+I probably should have named it xfs_inode_extent_alignment() because
+clearly I kept thinking of it as "inode alignment"... :)
 
 -Dave.
 -- 
