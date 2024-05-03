@@ -1,155 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0B01BF31
-	for <linux-xfs@vger.kernel.org>; Fri,  3 May 2024 04:34:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A9521BF31
+	for <linux-xfs@vger.kernel.org>; Fri,  3 May 2024 04:35:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714710891; cv=none; b=U2jOew+mKO8VnKIpVzUAEFh1ip3EPHFULVij4wlAT07BWUlX5Fw1IoIFpdRpKYcc69abJAXBfnb3H33Tu3PC4ldrDJMkFNDUjCKgQW8seoA/ij+62U1Dv+foffQS0xNT6vgZmUO9gJ5btf55g7f1Z3zrJej89xXKcEmsgpTWGxE=
+	t=1714710907; cv=none; b=Gm2++jSVkzhIVp1Pe8Mxm3ppz586HGzQNHsxw8oo3nGFyYdHd/FoKVwQpJu8TmTglMwjNX2W9Lkqt6Ej1OmxP6UlEtzqXewbErnij1fTpYevpdi1hasqj1s0nAov+SeyYdFU2gkD84nS0x0MVAyiATBXvFDjvsLlY7GtlwcKj5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714710891; c=relaxed/simple;
-	bh=BLdTENdYkrpfml9Wv7RH+R+5BciiKxjUJxBqxz4S2so=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OJE1eq0QuDMAPDW7B/bKQ/KBajx5NEPRGlqDMnatRi1NDTAP5wBp2JuaFPGACBQ5q2CIxxmXfAaPNIHq0fKOeW8PYzIwFP0OcvMQx9K5WEymm1nJWEiRd7zmW72F+vMPSAp29ZRxJBVE7rG+Acvwj4+oZ1KmnF74ppuoL0F9jUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VSVffHnC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714710907; c=relaxed/simple;
+	bh=OyqJsFM+eWk9o2+zMtCeQxGKI5vTyRfiTzMcztQskcs=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:In-Reply-To:
+	 References:Content-Type; b=D1NN0dhaM2mxjQ+NPELb9MFVdcaPiqdliWK0fQ+LqJ6IpD43xxjKtqKWzM24EPJe/MvxBNX3uUBFm169mBUAzUyUViJZaN9U1RMx3St3p3Z3AmYh+MIwzBTSGOJO9/6lHn0oqwp2zS5lj+2MgeCvI+Rg8bsI/57bxFCNvB/FFfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OGXqAEB6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VSVffHnC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 439BEC116B1;
-	Fri,  3 May 2024 04:34:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OGXqAEB6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0E9DC116B1;
+	Fri,  3 May 2024 04:35:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714710891;
-	bh=BLdTENdYkrpfml9Wv7RH+R+5BciiKxjUJxBqxz4S2so=;
+	s=k20201202; t=1714710907;
+	bh=OyqJsFM+eWk9o2+zMtCeQxGKI5vTyRfiTzMcztQskcs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VSVffHnC63MmJJt0yx1R9zJGSSYsoB0MAYXltP11ZGLqhWpzfKTg/KIzEKtZYSRiR
-	 t5/WOhvvJshK9epW/GdbsUVRfp8KwlSqeCYNAgOlLd6Tl4dGol4fU1Z3UHQvMxAGG3
-	 BVLerDyrf8rncqJMfuWbmirxPp/2FB2G9+bxzlL6Om4wTOfKUy/8fPUTHoq7qqkHSt
-	 zYn1ZSIoszYQ/5QWLSSOis1cw64YWTJUyDbHGG2fS0JgDvuh37n5/ndzHk5NUXWRar
-	 Lf0rjcTh4wirmyHSt7FDC3OfSk1YhZs9W06z094l71IaQ9Cp5B4hc3ONbPA1NoS7aY
-	 OlhhwuCvJ6OTw==
-Date: Thu, 02 May 2024 21:34:50 -0700
-Subject: [PATCH 5/5] xfs: widen flags argument to the xfs_iflags_* helpers
+	b=OGXqAEB6pgfU+JusPIJCiQlwyobNW28//e7VoXnFXnn+eZH08l2BTpUXwCsRXoy3u
+	 NNbmzefTgR8D6Cn332AfRjLzGRbVUzAem/BnO0JXd4tdCjiJg4q1dqGrRBgmYtFgK3
+	 q26jg5bNPLq2Ww5OieIzVjBTKFoKT71yFlKuOzTWm6xxYQk9MBFMY+bsLcksJWvy5N
+	 nEp+lDp7aOHGdbjpl0Ly0KL9XTUd4e7ha7qV9MKU2KLypbkDuEOS3ICyHx7UG/Iv9z
+	 f0++3ItiIjjIftcyK7J14QW3TR0WlRVHISpNax3+Cvv31rofq8VaA+jBAJwGd3jB0n
+	 yHSzuytrNC/pA==
+Date: Thu, 02 May 2024 21:35:06 -0700
+Subject: [GIT PULL] xfs: last round of cleanups for 6.10
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, chandanbabu@kernel.org
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <171471075406.2662283.13086623086879689775.stgit@frogsfrogsfrogs>
-In-Reply-To: <171471075305.2662283.8498264701525930955.stgit@frogsfrogsfrogs>
-References: <171471075305.2662283.8498264701525930955.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To: chandanbabu@kernel.org, djwong@kernel.org
+Cc: aalbersh@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171471078492.2662518.17791437990071795258.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <None>
+References: <None>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi Chandan,
 
-xfs_inode.i_flags is an unsigned long, so make these helpers take that
-as the flags argument instead of unsigned short.  This is needed for the
-next patch.
+Please pull this branch with changes for xfs for 6.10-rc1.
 
-While we're at it, remove the iflags variable from xfs_iget_cache_miss
-because we no longer need it.
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit 21255afdd7296f57dd65f815301426bcf911c82d:
+
+xfs: do not allocate the entire delalloc extent in xfs_bmapi_write (2024-04-30 09:45:19 +0530)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/xfs-cleanups-6.10_2024-05-02
+
+for you to fetch changes up to 1a3f1afb2532028c7dc5552b3aa39423c2621062:
+
+xfs: widen flags argument to the xfs_iflags_* helpers (2024-05-02 07:48:37 -0700)
+
+----------------------------------------------------------------
+xfs: last round of cleanups for 6.10
+
+Here are the reviewed cleanups at the head of the fsverity series.
+Apparently there's other work that could use some of these things, so
+let's try to get it in for 6.10.
+
+With a bit of luck, this should all go splendidly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
----
- fs/xfs/xfs_icache.c |    4 +---
- fs/xfs/xfs_inode.h  |   14 +++++++-------
- 2 files changed, 8 insertions(+), 10 deletions(-)
 
+----------------------------------------------------------------
+Darrick J. Wong (5):
+xfs: use unsigned ints for non-negative quantities in xfs_attr_remote.c
+xfs: turn XFS_ATTR3_RMT_BUF_SPACE into a function
+xfs: create a helper to compute the blockcount of a max sized remote value
+xfs: minor cleanups of xfs_attr3_rmt_blocks
+xfs: widen flags argument to the xfs_iflags_* helpers
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 74f1812b03cb..0953163a2d84 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -613,7 +613,6 @@ xfs_iget_cache_miss(
- 	struct xfs_inode	*ip;
- 	int			error;
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
--	int			iflags;
- 
- 	ip = xfs_inode_alloc(mp, ino);
- 	if (!ip)
-@@ -693,13 +692,12 @@ xfs_iget_cache_miss(
- 	 * memory barrier that ensures this detection works correctly at lookup
- 	 * time.
- 	 */
--	iflags = XFS_INEW;
- 	if (flags & XFS_IGET_DONTCACHE)
- 		d_mark_dontcache(VFS_I(ip));
- 	ip->i_udquot = NULL;
- 	ip->i_gdquot = NULL;
- 	ip->i_pdquot = NULL;
--	xfs_iflags_set(ip, iflags);
-+	xfs_iflags_set(ip, XFS_INEW);
- 
- 	/* insert the new inode */
- 	spin_lock(&pag->pag_ici_lock);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 9fd4d29a5713..292b90b5f2ac 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -207,13 +207,13 @@ xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
-  * i_flags helper functions
-  */
- static inline void
--__xfs_iflags_set(xfs_inode_t *ip, unsigned short flags)
-+__xfs_iflags_set(xfs_inode_t *ip, unsigned long flags)
- {
- 	ip->i_flags |= flags;
- }
- 
- static inline void
--xfs_iflags_set(xfs_inode_t *ip, unsigned short flags)
-+xfs_iflags_set(xfs_inode_t *ip, unsigned long flags)
- {
- 	spin_lock(&ip->i_flags_lock);
- 	__xfs_iflags_set(ip, flags);
-@@ -221,7 +221,7 @@ xfs_iflags_set(xfs_inode_t *ip, unsigned short flags)
- }
- 
- static inline void
--xfs_iflags_clear(xfs_inode_t *ip, unsigned short flags)
-+xfs_iflags_clear(xfs_inode_t *ip, unsigned long flags)
- {
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_flags &= ~flags;
-@@ -229,13 +229,13 @@ xfs_iflags_clear(xfs_inode_t *ip, unsigned short flags)
- }
- 
- static inline int
--__xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
-+__xfs_iflags_test(xfs_inode_t *ip, unsigned long flags)
- {
- 	return (ip->i_flags & flags);
- }
- 
- static inline int
--xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
-+xfs_iflags_test(xfs_inode_t *ip, unsigned long flags)
- {
- 	int ret;
- 	spin_lock(&ip->i_flags_lock);
-@@ -245,7 +245,7 @@ xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
- }
- 
- static inline int
--xfs_iflags_test_and_clear(xfs_inode_t *ip, unsigned short flags)
-+xfs_iflags_test_and_clear(xfs_inode_t *ip, unsigned long flags)
- {
- 	int ret;
- 
-@@ -258,7 +258,7 @@ xfs_iflags_test_and_clear(xfs_inode_t *ip, unsigned short flags)
- }
- 
- static inline int
--xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned short flags)
-+xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned long flags)
- {
- 	int ret;
- 
+fs/xfs/libxfs/xfs_attr.c        |  2 +-
+fs/xfs/libxfs/xfs_attr_remote.c | 88 +++++++++++++++++++++++------------------
+fs/xfs/libxfs/xfs_attr_remote.h |  8 +++-
+fs/xfs/libxfs/xfs_da_format.h   |  4 +-
+fs/xfs/scrub/reap.c             |  4 +-
+fs/xfs/xfs_icache.c             |  4 +-
+fs/xfs/xfs_inode.h              | 14 +++----
+7 files changed, 69 insertions(+), 55 deletions(-)
 
