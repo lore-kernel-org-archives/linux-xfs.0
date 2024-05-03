@@ -1,62 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3C75FB9C
-	for <linux-xfs@vger.kernel.org>; Thu,  2 May 2024 17:05:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 424EE1CD26
+	for <linux-xfs@vger.kernel.org>; Fri,  3 May 2024 04:33:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714669517; cv=none; b=beq/WY4LYfLoX8HBA/JI7ndcfkAe6Jb6dVK7XRmOhjG/ht+POv1oqjBABVql9BukfZVKo3nzDwcYA5xtWbMFRQLTh5xzh+HopqwUBQfC3wV9IvqSsNFWmvmg7tRdlZLSexK6SLL3s9pkWTwdHpMoEahCFMT4mwMplZrlHSY5ZPs=
+	t=1714710823; cv=none; b=FTDZI4lZykVPvtejVhgPGeC/K7y2YDaMujRN3k7SKB/+hNB3e7QoLGhXsl2IZsD8T9RWg3JMt236B6SS9zBGGDy/IUdNizOtJWXk3Im9kfrBgxTMamALW3icLK0qJpU/KnZzqMx7ynoauGSoREUbbDp7bNasMdj9XPpvP6xVW3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714669517; c=relaxed/simple;
-	bh=inLpcop0Lb7aOfay9b8xok/bn6UOBqZfABOPjLwtFYc=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=N+lVy3yYTkVjSPHhsX/Tuk8Wt9ctMyMLuZSRvxRXU5awlz2F7egOaWymAevd9csPEPfuZAm9V36y2z3P4DCv4pf9aVRW5CN2+N0HMX4Og/uAUuqIueW9/rHmQsEqKO2yn8jlFJ2gVg8ABeBklK/IJpuQk+74oij0B70jrwxkfi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=WFDpw0wG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714710823; c=relaxed/simple;
+	bh=OOuwJNgoS2vTgg9V6rsKzF3rnojSYTonf1P+xasEQXk=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=quAVAmzBoCByVCJkZhLTVDS35zTdc2UzUr58gWREHjiwanvH/brGSRAizfgGqkf0tzvEuPHT+ocbdrIafU2kAe1HQgok3K0R2WZh0TGQabKR8CA8eVoIHkt33OOqHLisVaw49Z3ZthGMNs6Bmf3fKV4n8JkEfwvKLAhEHvMQlAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nljqcn0B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="WFDpw0wG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31E1EC113CC;
-	Thu,  2 May 2024 17:05:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-	s=korg; t=1714669517;
-	bh=inLpcop0Lb7aOfay9b8xok/bn6UOBqZfABOPjLwtFYc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=WFDpw0wGzwR2VzyTxf8IouXr1iaLkycTisV2RNEWinWNffyfpEm0tfTDM+L6LV6k0
-	 g/x+WPa+/9xDp6HjAWnw5oRRk9+8VFGI0X7t43TrfnzTgK8CxdXOa2XLb6Z608kMrf
-	 bgl3caiTv22Pk4IRcpnkJh9HQtTxh6mZKUPQR2MA=
-Date: Thu, 2 May 2024 10:05:14 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, hch@lst.de,
- osalvador@suse.de, elver@google.com, vbabka@suse.cz, andreyknvl@gmail.com
-Subject: Re: [PATCH 0/3] mm: fix nested allocation context filtering
-Message-Id: <20240502100514.cce09f1fab6914a56491debf@linux-foundation.org>
-In-Reply-To: <20240430054604.4169568-1-david@fromorbit.com>
-References: <20240430054604.4169568-1-david@fromorbit.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nljqcn0B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D92BBC116B1;
+	Fri,  3 May 2024 04:33:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1714710822;
+	bh=OOuwJNgoS2vTgg9V6rsKzF3rnojSYTonf1P+xasEQXk=;
+	h=Date:Subject:From:To:Cc:From;
+	b=Nljqcn0BUEZbufQG2hiDTMPBF51C978Cs1p3aD1pCEPqHaa5qYtbvA5NxOWlv09yS
+	 Bf4hMvLnK06OUqnADlgvDTpzsXZrWdmF1AlpSQLuelniVFPAZ4MSaWus/+4s2+CARU
+	 ecD8k2y1nblOWG9z2E+8aUC+UYJ2ESa5qj4VAL6B+Dpz5akSaPmStS6EEiNvgFY9jR
+	 d1wE/RevpWTpNsen4czqgFgmEaA+0OUdj5HY3P8E0zvhFKQAbGp7Lc9BaE52S3soft
+	 LXhB/PgZzmB9htVl0/2gW0lC5tdJ3nqKQ2ELVwoVHay8D62p+7hoBet6sasx9bt/jk
+	 bhmnOs3Q+Iw2g==
+Date: Thu, 02 May 2024 21:33:42 -0700
+Subject: [PATCHSET] xfs: last round of cleanups for 6.10
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: djwong@kernel.org, chandanbabu@kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Andrey Albershteyn <aalbersh@redhat.com>,
+ hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <171471075305.2662283.8498264701525930955.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-On Tue, 30 Apr 2024 15:28:22 +1000 Dave Chinner <david@fromorbit.com> wrote:
+Hi all,
 
-> This patchset is the followup to the comment I made earlier today:
-> 
-> https://lore.kernel.org/linux-xfs/ZjAyIWUzDipofHFJ@dread.disaster.area/
-> 
-> Tl;dr: Memory allocations that are done inside the public memory
-> allocation API need to obey the reclaim recursion constraints placed
-> on the allocation by the original caller, including the "don't track
-> recursion for this allocation" case defined by __GFP_NOLOCKDEP.
+Here are the reviewed cleanups at the head of the fsverity series.
+Apparently there's other work that could use some of these things, so
+let's try to get it in for 6.10.
 
-I resolved a number of conflicts here, mainly due to the addition
-of GFP_NOLOCKDEP in stackdepot and page-owner.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-https://lore.kernel.org/all/20240418141133.22950-1-ryabinin.a.a@gmail.com/T/#u
-https://lkml.kernel.org/r/20240429082828.1615986-1-hch@lst.de
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-Please check the resulting code?
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-cleanups-6.10
+---
+Commits in this patchset:
+ * xfs: use unsigned ints for non-negative quantities in xfs_attr_remote.c
+ * xfs: turn XFS_ATTR3_RMT_BUF_SPACE into a function
+ * xfs: create a helper to compute the blockcount of a max sized remote value
+ * xfs: minor cleanups of xfs_attr3_rmt_blocks
+ * xfs: widen flags argument to the xfs_iflags_* helpers
+---
+ fs/xfs/libxfs/xfs_attr.c        |    2 -
+ fs/xfs/libxfs/xfs_attr_remote.c |   88 ++++++++++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_attr_remote.h |    8 +++-
+ fs/xfs/libxfs/xfs_da_format.h   |    4 --
+ fs/xfs/scrub/reap.c             |    4 +-
+ fs/xfs/xfs_icache.c             |    4 --
+ fs/xfs/xfs_inode.h              |   14 +++---
+ 7 files changed, 69 insertions(+), 55 deletions(-)
+
