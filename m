@@ -1,34 +1,34 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68A814F9DD;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8D414F9E4;
 	Fri,  3 May 2024 09:54:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714730044; cv=none; b=SVEzEB0+0WdlRgqnR4gM3ahwjHH1T9goVXokbn7Kq5Yu4Wek+5ekMCm3jZnbh3GQnUNN6DiUEj+QHt4C+zYgYM8oiBrAZL7yN8ajLGh9IUn0naIMJS59hb2YojDD4YFiFwHRoZH2WzF3pKYNWdX9nfkM1791fDvsecDG6vhqjHc=
+	t=1714730044; cv=none; b=pPJin3wC0tS0hNnX+UmgfEfnmwNapK1Gstc/BNfw2jyZ2htJqmd2FoivYWspANXTRk0zMU1x4zxRcjA1kNaLtpYefKTy94HMqf9/MCWoyVfSbzu7LwrcdluEl7vxlC1j4YcI50bN7Z/hcrEFFV6NuixYsO4YAyBa/dxbzOpgA4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1714730044; c=relaxed/simple;
-	bh=iqVyyfsLtONeKvpurJXWFzNOaPD/3KBQrlP6i53wPms=;
+	bh=x/qHM+8+KOOgQuPF1OFt59ApCHtcscLof0zo4oBIjoI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nzINbVI+Dd6MTjdRq5Zd2diDqh/vHb8sg3veBdyfoNB/LvvDHssHckbEBxSOWBho3lgP67qipqxcggRJIWw+M/7G0ALwEo3w+O2sfS5bDixxB6xOyA0ch7Q/vf+slJ7SEn7Yc644yn4IuXgfx9IHI2mH98fbfnKGqBiOnWtjsnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=293Y9NqJ; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=uX4OO27J2GBM0Hyl3ElNSdn2iyWZUhrlfwHvf/7C9nLBRYTi8uZvIaVvDzp/khu3YMiY/FNOPAsZ1DtpURE6LCKTilkPrwlRMk6Pw/LqfAnR1sagaoygY9l4TgfUt4M+1wthITYlWZc96EcIJylSSjyePG6K/AClAVzUEVznZZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2qf468M5; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="293Y9NqJ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2qf468M5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=BWTy5cmOf0aa44yjfeQw1CZSOYiM2WGfk1gguG2IQEA=; b=293Y9NqJKACDszg47cyfqZ7M4v
-	h7+2Pbm0tHTdYTZ9dakBR/4E67odgQUI0udXr41Ly6Qk0MNrmoS0TYOi+MLOE9BlGsHRnRcMcl+4S
-	CaAF8BOvbDd1VyuKeF68xJcE+t75GvdzX2YDVD3pCDB7DKIPRvNX1NXu1/ER6IR+vSuuvNO1LGv7O
-	PPXo1oLvasFrtdJOT1fqnRrNQ6QTlSApW+UZIHPU6BUwfO0BJVf/Dx8p9g9XQ3bvbrSZAiXO1WsFP
-	xMIqfY+lpNUuDS6tJ2anjczVN1GObUX1NdrLTpMJg0phu7xOADlVnrwBlnAcHGihyjF5e65DnXkxW
-	tTyQgE7g==;
+	bh=RHyoQ5MeMPOJuHOHR3udnfU/iHZQj7DT1fxrfrX8N6E=; b=2qf468M5NYODQCoDLTcrc43FtK
+	/iR7zVVzXU4Pagy9bazcOeQhZP3xF8VslzicxT/A4zbKA6ZNrv3CNhW7bXTLx76PZzyUali+yFhal
+	lVmsI39fMAfT0NqziS1mxPlXOu6MlTrO7Deewn4YCyQmYryDehvIuFRJPb8zF1TkYkIq8LSLoTUTZ
+	YcW+VL+WSR8OnA1unlFHaMRsNIpRAoM6Ih0lcukDeKhwHBX7f2npAVyBxDOaJE54GLKZ0XtolFeb8
+	IAE0CHqxKCPV18AgbZHgjKqphyJCNSH2Wq4KnC9mGNq5xBeqhNGEfjLV+wOH5qpGWlD1Wpnaddr1k
+	/Ut43srQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s2pc2-0000000Fw3N-42gB;
-	Fri, 03 May 2024 09:53:54 +0000
+	id 1s2pc3-0000000Fw3m-1Iwd;
+	Fri, 03 May 2024 09:53:55 +0000
 From: Luis Chamberlain <mcgrof@kernel.org>
 To: akpm@linux-foundation.org,
 	willy@infradead.org,
@@ -48,9 +48,9 @@ Cc: hare@suse.de,
 	p.raghav@samsung.com,
 	kernel@pankajraghav.com,
 	mcgrof@kernel.org
-Subject: [PATCH v5 01/11] readahead: rework loop in page_cache_ra_unbounded()
-Date: Fri,  3 May 2024 02:53:43 -0700
-Message-ID: <20240503095353.3798063-2-mcgrof@kernel.org>
+Subject: [PATCH v5 07/11] iomap: fix iomap_dio_zero() for fs bs > system page size
+Date: Fri,  3 May 2024 02:53:49 -0700
+Message-ID: <20240503095353.3798063-8-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240503095353.3798063-1-mcgrof@kernel.org>
 References: <20240503095353.3798063-1-mcgrof@kernel.org>
@@ -63,72 +63,56 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-From: Hannes Reinecke <hare@suse.de>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Rework the loop in page_cache_ra_unbounded() to advance with
-the number of pages in a folio instead of just one page at a time.
+iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
+< fs block size. iomap_dio_zero() has an implicit assumption that fs block
+size < page_size. This is true for most filesystems at the moment.
 
-Note that the index is incremented by 1 if filemap_add_folio() fails
-because the size of the folio we are trying to add is 1 (order 0).
+If the block size > page size, this will send the contents of the page
+next to zero page(as len > PAGE_SIZE) to the underlying block device,
+causing FS corruption.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+iomap is a generic infrastructure and it should not make any assumptions
+about the fs block size and the page size of the system.
+
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- mm/readahead.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ fs/iomap/direct-io.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 130c0e7df99f..2361634a84fd 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -208,7 +208,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
- 	struct address_space *mapping = ractl->mapping;
- 	unsigned long index = readahead_index(ractl);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
--	unsigned long i;
-+	unsigned long i = 0;
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index f3b43d223a46..5f481068de5b 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -239,14 +239,23 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+ 	struct page *page = ZERO_PAGE(0);
+ 	struct bio *bio;
  
- 	/*
- 	 * Partway through the readahead operation, we will have added
-@@ -226,7 +226,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
- 	/*
- 	 * Preallocate as many pages as we will need.
- 	 */
--	for (i = 0; i < nr_to_read; i++) {
-+	while (i < nr_to_read) {
- 		struct folio *folio = xa_load(&mapping->i_pages, index + i);
+-	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
++	WARN_ON_ONCE(len > (BIO_MAX_VECS * PAGE_SIZE));
++
++	bio = iomap_dio_alloc_bio(iter, dio, BIO_MAX_VECS,
++				  REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+ 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+ 				  GFP_KERNEL);
++
+ 	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
  
- 		if (folio && !xa_is_value(folio)) {
-@@ -239,8 +239,8 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
- 			 * not worth getting one just for that.
- 			 */
- 			read_pages(ractl);
--			ractl->_index++;
--			i = ractl->_index + ractl->_nr_pages - index - 1;
-+			ractl->_index += folio_nr_pages(folio);
-+			i = ractl->_index + ractl->_nr_pages - index;
- 			continue;
- 		}
+-	__bio_add_page(bio, page, len, 0);
++	while (len) {
++		unsigned int io_len = min_t(unsigned int, len, PAGE_SIZE);
++
++		__bio_add_page(bio, page, io_len, 0);
++		len -= io_len;
++	}
+ 	iomap_dio_submit_bio(iter, dio, bio, pos);
+ }
  
-@@ -252,13 +252,14 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
- 			folio_put(folio);
- 			read_pages(ractl);
- 			ractl->_index++;
--			i = ractl->_index + ractl->_nr_pages - index - 1;
-+			i = ractl->_index + ractl->_nr_pages - index;
- 			continue;
- 		}
- 		if (i == nr_to_read - lookahead_size)
- 			folio_set_readahead(folio);
- 		ractl->_workingset |= folio_test_workingset(folio);
--		ractl->_nr_pages++;
-+		ractl->_nr_pages += folio_nr_pages(folio);
-+		i += folio_nr_pages(folio);
- 	}
- 
- 	/*
 -- 
 2.43.0
 
