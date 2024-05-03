@@ -1,33 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCD8814F9E2;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE3CD14F9E3;
 	Fri,  3 May 2024 09:54:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714730044; cv=none; b=dv7rzX2rBgB3tklHD7VvfWkCgESNKM7WvInjerhSipo98/ZvEKui0KML8EWdWVzfCvgstpXdxPi+c9pdzTiyaVUYWWBDXpnImmEAy5PqdxCJCsIcGTFOddK3DydePESKFTRl7CgHPEF6MMwM48JmQAqjqTGMF7Zjnv4DwmlnMXQ=
+	t=1714730044; cv=none; b=N6zddG2sDC3tO0o0o9mF5qMyFf/L3VonZCgRuU2kySKCGZ/icnWt0DWCeuug+R/gW7mIttee44mA0ivEHJLuyXc3dS7yi8OWWFpo1NCx8MPJ7/5Yf3jb9rPf8Rbqhv3RVmwJw18Xn0bJ+MgELPSQEKFmHfHws5+iPCiSwpc6Vgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1714730044; c=relaxed/simple;
-	bh=azapK84VOgNTINmmm/in9S5sNNAfK+UEob7yNDibvFc=;
+	bh=wOEYAEKDnZBwLhGE/hctvf3+vOSTrLfEXnVC8DhCQIU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GxAbGsI5cXhwYRHQ8ItopkgJEvSypjER3BtT+2zQOPhyRqqS/zGXfH6SAxUHM6yGUab19+oARwFOzVX7/iZWVxwI5FX21l7KgMvGrN3NH25QzaK+wynoITcM5RVzAunddlDT9NfI2eyJyIRHFJu0wonZuumgcWlCwInhNk8XyVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eGQNa+k1; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=UzkLtlDabFLDRo1lWEF3cO6pL1Smc9fFPpxirjKDBV+RSNKFEat3iEAv9+twGUUg7H5887y8k5anhCNop3Fnc/Hb53ipNiS3Xu4tjVFeBVxZ8Wyp4oA5mHTQMNQkXyymEYGpMB/xvN9tgXpZa9DCYKKb3TxT+KFBe8ZBfMet1xo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R/kxC9Mt; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eGQNa+k1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R/kxC9Mt"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=I9/ig2f6qdb85JXTTxWiGTh/YU9BH0iDoWZGke+SMYU=; b=eGQNa+k1rUYW2SIl6nOD5nbK0x
-	M++0yneUvBc/hmp841ajBZv3bl650KbxrHTgsnNFgu6l4xdIKJx1htBbPa0ilYwBK51Q0wvRmR2jO
-	ILtW0bC+d0rtwh9pHlPuW/ejj/sLHyPZ4nI1QABRx5W4RvcYR1CaMRkL18UqymgOztyvpZkJrnaV6
-	v4tcIjLvD9P6/MT/xjdJ15YhW+3v6rYl6B8N/c/hR77eS9iMWXvCTPwtiWMo+pQfQeOkVhBnt07JW
-	2prF0XjfYpNism/BcI4FPMP/uQXYhuaxXkw7ojpT/xM8SUAJXoY84MCRRGr+A24f8jjJbRBa+1Jg6
-	GUGYgC4Q==;
+	bh=5AQiWCoBhmOA7pyTxpsrgrJgVw4y8Mqo7PmDx8KBJ9E=; b=R/kxC9MtYuEakrgXbibfBZowvZ
+	LAdh+xf9sg8inZ8PA6cTMZ6QvG4izx4Ur3idKwsbtHorgYUYjZMH38frFbsWIwkmH36x+opiHV8lQ
+	ROQGjBeoWEVuuSuUxS4j5jbu1HyVa5IDFpNa27M4K3ubySo4auYEaKyjNfSlFt3eyYqgUbDcQIWWG
+	YbHtLJU6FwNHA9c5+v84tr4iYhB/SbSWnOtHTHOsdNqEbs0fXszP1xUi273NWv9aL3UdyuF4hv8Lv
+	0A+Jd7httU92sZ8NMAgI8OvsFoILGGPKxv8RL0rn4TTFx9l/MwzsVBVj84j5O6yhDjJtfWaxhr2vQ
+	JZJH11lQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s2pc3-0000000Fw3p-1VzT;
+	id 1s2pc3-0000000Fw3b-0QMJ;
 	Fri, 03 May 2024 09:53:55 +0000
 From: Luis Chamberlain <mcgrof@kernel.org>
 To: akpm@linux-foundation.org,
@@ -47,11 +47,10 @@ Cc: hare@suse.de,
 	gost.dev@samsung.com,
 	p.raghav@samsung.com,
 	kernel@pankajraghav.com,
-	mcgrof@kernel.org,
-	Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v5 08/11] xfs: use kvmalloc for xattr buffers
-Date: Fri,  3 May 2024 02:53:50 -0700
-Message-ID: <20240503095353.3798063-9-mcgrof@kernel.org>
+	mcgrof@kernel.org
+Subject: [PATCH v5 03/11] filemap: allocate mapping_min_order folios in the page cache
+Date: Fri,  3 May 2024 02:53:45 -0700
+Message-ID: <20240503095353.3798063-4-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240503095353.3798063-1-mcgrof@kernel.org>
 References: <20240503095353.3798063-1-mcgrof@kernel.org>
@@ -64,106 +63,111 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+filemap_create_folio() and do_read_cache_folio() were always allocating
+folio of order 0. __filemap_get_folio was trying to allocate higher
+order folios when fgp_flags had higher order hint set but it will default
+to order 0 folio if higher order memory allocation fails.
 
-Pankaj Raghav reported that when filesystem block size is larger
-than page size, the xattr code can use kmalloc() for high order
-allocations. This triggers a useless warning in the allocator as it
-is a __GFP_NOFAIL allocation here:
+Supporting mapping_min_order implies that we guarantee each folio in the
+page cache has at least an order of mapping_min_order. When adding new
+folios to the page cache we must also ensure the index used is aligned to
+the mapping_min_order as the page cache requires the index to be aligned
+to the order of the folio.
 
-static inline
-struct page *rmqueue(struct zone *preferred_zone,
-                        struct zone *zone, unsigned int order,
-                        gfp_t gfp_flags, unsigned int alloc_flags,
-                        int migratetype)
-{
-        struct page *page;
-
-        /*
-         * We most definitely don't want callers attempting to
-         * allocate greater than order-1 page units with __GFP_NOFAIL.
-         */
->>>>    WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
-...
-
-Fix this by changing all these call sites to use kvmalloc(), which
-will strip the NOFAIL from the kmalloc attempt and if that fails
-will do a __GFP_NOFAIL vmalloc().
-
-This is not an issue that productions systems will see as
-filesystems with block size > page size cannot be mounted by the
-kernel; Pankaj is developing this functionality right now.
-
-Reported-by: Pankaj Raghav <kernel@pankajraghav.com>
-Fixes: f078d4ea8276 ("xfs: convert kmem_alloc() to kmalloc()")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ mm/filemap.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index ac904cc1a97b..969abc6efd70 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -1059,10 +1059,7 @@ xfs_attr3_leaf_to_shortform(
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 30de18c4fd28..f0c0cfbbd134 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -858,6 +858,8 @@ noinline int __filemap_add_folio(struct address_space *mapping,
  
- 	trace_xfs_attr_leaf_to_sf(args);
+ 	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+ 	VM_BUG_ON_FOLIO(folio_test_swapbacked(folio), folio);
++	VM_BUG_ON_FOLIO(folio_order(folio) < mapping_min_folio_order(mapping),
++			folio);
+ 	mapping_set_update(&xas, mapping);
  
--	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
--	if (!tmpbuffer)
--		return -ENOMEM;
--
-+	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
- 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+ 	if (!huge) {
+@@ -1895,8 +1897,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+ 		folio_wait_stable(folio);
+ no_page:
+ 	if (!folio && (fgp_flags & FGP_CREAT)) {
+-		unsigned order = FGF_GET_ORDER(fgp_flags);
++		unsigned int min_order = mapping_min_folio_order(mapping);
++		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
+ 		int err;
++		index = mapping_align_start_index(mapping, index);
  
- 	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
-@@ -1125,7 +1122,7 @@ xfs_attr3_leaf_to_shortform(
- 	error = 0;
+ 		if ((fgp_flags & FGP_WRITE) && mapping_can_writeback(mapping))
+ 			gfp |= __GFP_WRITE;
+@@ -1936,7 +1940,7 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+ 				break;
+ 			folio_put(folio);
+ 			folio = NULL;
+-		} while (order-- > 0);
++		} while (order-- > min_order);
  
- out:
--	kfree(tmpbuffer);
-+	kvfree(tmpbuffer);
- 	return error;
+ 		if (err == -EEXIST)
+ 			goto repeat;
+@@ -2425,13 +2429,16 @@ static int filemap_update_page(struct kiocb *iocb,
  }
  
-@@ -1533,7 +1530,7 @@ xfs_attr3_leaf_compact(
+ static int filemap_create_folio(struct file *file,
+-		struct address_space *mapping, pgoff_t index,
++		struct address_space *mapping, loff_t pos,
+ 		struct folio_batch *fbatch)
+ {
+ 	struct folio *folio;
+ 	int error;
++	unsigned int min_order = mapping_min_folio_order(mapping);
++	pgoff_t index;
  
- 	trace_xfs_attr_leaf_compact(args);
+-	folio = filemap_alloc_folio(mapping_gfp_mask(mapping), 0);
++	folio = filemap_alloc_folio(mapping_gfp_mask(mapping),
++				    min_order);
+ 	if (!folio)
+ 		return -ENOMEM;
  
--	tmpbuffer = kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
-+	tmpbuffer = kvmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
- 	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
- 	memset(bp->b_addr, 0, args->geo->blksize);
- 	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
-@@ -1571,7 +1568,7 @@ xfs_attr3_leaf_compact(
+@@ -2449,6 +2456,8 @@ static int filemap_create_folio(struct file *file,
+ 	 * well to keep locking rules simple.
  	 */
- 	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
- 
--	kfree(tmpbuffer);
-+	kvfree(tmpbuffer);
- }
- 
- /*
-@@ -2250,7 +2247,7 @@ xfs_attr3_leaf_unbalance(
- 		struct xfs_attr_leafblock *tmp_leaf;
- 		struct xfs_attr3_icleaf_hdr tmphdr;
- 
--		tmp_leaf = kzalloc(state->args->geo->blksize,
-+		tmp_leaf = kvzalloc(state->args->geo->blksize,
- 				GFP_KERNEL | __GFP_NOFAIL);
- 
- 		/*
-@@ -2291,7 +2288,7 @@ xfs_attr3_leaf_unbalance(
- 		}
- 		memcpy(save_leaf, tmp_leaf, state->args->geo->blksize);
- 		savehdr = tmphdr; /* struct copy */
--		kfree(tmp_leaf);
-+		kvfree(tmp_leaf);
- 	}
- 
- 	xfs_attr3_leaf_hdr_to_disk(state->args->geo, save_leaf, &savehdr);
+ 	filemap_invalidate_lock_shared(mapping);
++	/* index in PAGE units but aligned to min_order number of pages. */
++	index = (pos >> (PAGE_SHIFT + min_order)) << min_order;
+ 	error = filemap_add_folio(mapping, folio, index,
+ 			mapping_gfp_constraint(mapping, GFP_KERNEL));
+ 	if (error == -EEXIST)
+@@ -2509,8 +2518,7 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
+ 	if (!folio_batch_count(fbatch)) {
+ 		if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_WAITQ))
+ 			return -EAGAIN;
+-		err = filemap_create_folio(filp, mapping,
+-				iocb->ki_pos >> PAGE_SHIFT, fbatch);
++		err = filemap_create_folio(filp, mapping, iocb->ki_pos, fbatch);
+ 		if (err == AOP_TRUNCATED_PAGE)
+ 			goto retry;
+ 		return err;
+@@ -3708,9 +3716,11 @@ static struct folio *do_read_cache_folio(struct address_space *mapping,
+ repeat:
+ 	folio = filemap_get_folio(mapping, index);
+ 	if (IS_ERR(folio)) {
+-		folio = filemap_alloc_folio(gfp, 0);
++		folio = filemap_alloc_folio(gfp,
++					    mapping_min_folio_order(mapping));
+ 		if (!folio)
+ 			return ERR_PTR(-ENOMEM);
++		index = mapping_align_start_index(mapping, index);
+ 		err = filemap_add_folio(mapping, folio, index, gfp);
+ 		if (unlikely(err)) {
+ 			folio_put(folio);
 -- 
 2.43.0
 
