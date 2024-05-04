@@ -1,104 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.web.de (mout.web.de [217.72.192.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5F843CF5E;
-	Sat,  4 May 2024 14:23:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B67881BF3F;
+	Sat,  4 May 2024 16:46:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714832619; cv=none; b=gfXd+1AIYWOY970dP+Vcg0a9pXv/WSCIYA6Kow1jWiXIfHuML9R3I0tJK70On18qpT1xV2sjQfaLgKygJQx3fWyHJr3wv9t0V0NZSPRO8nIsj/l/WjZmnQrn3wBHui22jLupke92Q/DSAfvy04Mkl7tZdQT3CLf86YPodQ9AZG0=
+	t=1714841184; cv=none; b=Z2TevppPcZYDPBI473XPWSo5gmQb1hRB094WU/930yaVfJldgVlGeoibOkG9559lU9OW1kmhLcd5zTBa7k+hfedEeE4mh/iCMc5hEzUUQlj2DVxxFAvAvUhtGns1ZYrBSlywWrA8M88aOzSYIujOKV72o7mV8jQiecPJbR1nAoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714832619; c=relaxed/simple;
-	bh=KWmi8ZHXEGCO7MdhtzcgU0EUB3tNVlp789IrQ+CIDJY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dwaNmWW9+MM7zMQO6uG1elYHQK/cQUmzPqU5YqJB3xdGjkdzWH/XggVl3PqOE4w+o7anmGZTHGRiYEckJ+FgRN0lyAdmRn3UWo+17EJNjHjqU1sEX2oP/DF5fxazM1RUHBpVwgo1QsfwQov67qNdVdi/h7bZBja+MpPbfwVtBRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QRWI5GFA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714841184; c=relaxed/simple;
+	bh=5jxx8V+nNPqKmPVWdV0+0Ox5zWIAkOpJRRMZFuNa6L4=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=MGgyvq03l2uvaSqPIwOGEMfraie+FuSNCXZuGKJ7u8MHMRWzWyEQbssQ3Ps8cPVbWgtUHfDRnGcMq1HMnFgTB5++G4qpnELDaD+cSIitSZ5b+DIovARxAZg4wwblCzcd9qtFYeRwMB4jbeCPBkZoN1jTGfcqTHd+bFAtA8NUKKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=BKy5KWWY; arc=none smtp.client-ip=217.72.192.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QRWI5GFA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D271AC4AF1B;
-	Sat,  4 May 2024 14:23:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714832618;
-	bh=KWmi8ZHXEGCO7MdhtzcgU0EUB3tNVlp789IrQ+CIDJY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=QRWI5GFAW6z8fUWFxdiQGDzgXvtk9krletOSjAd6lXQPBv0SrcjkBQb++cU8R7lVX
-	 UOivlMJMa/FBsbUZxQhmXJVwEnv6Qb2GGIoncKAJQFIFYGWvjYU3rhFR7fJ1EyTSCM
-	 Q+7w4mfMXc71wPs0VNuZvU/rX0dTzuDXT4PZgOpXFFBffwgL+iwzwwXl4D8C/H9ngh
-	 AWtf5MUN5wt0tfKJ27DS9WBd3bwivlo0QSHTr7jlgdK346RFPSJm1fsShYiiW7wCBy
-	 FE0X40nwE6iQbFiLT8hgw9WkRUJF5oXV7Uxauduwiyfc07MXV8pmazCkVazC6NNexa
-	 xLp02XsYY6B9g==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: chandanbabu@kernel.org
-Cc: aalbersh@redhat.com,bfoster@redhat.com,dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,samsun1006219@gmail.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 25576c5420e6
-Date: Sat, 04 May 2024 19:52:33 +0530
-Message-ID: <87o79lejvd.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="BKy5KWWY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1714841165; x=1715445965; i=markus.elfring@web.de;
+	bh=5jxx8V+nNPqKmPVWdV0+0Ox5zWIAkOpJRRMZFuNa6L4=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=BKy5KWWYhp5xPKRLCm1dqGHCjFhujx3RlkpaXhrD70QS8DO5vjrL/V/iuWz9X6SF
+	 62Qd9tMVeC1OjKoTf5GLMI+2b8Id9EjmbleREhzOTIxlose+2PSEPFgHcuhkxAAdl
+	 iLBcxTznnowpYS4qEL1Wu+CdMLxtvpmdiUBJ8cRYamTSMadsgHrSQFPKjlM2SdKGr
+	 5DyuYocr8zAoOCE3Ox45uukGBmvC8QLnJB1MkVIDju5nmL2IG0LaBv1oEOyO5j5fa
+	 boIfuMwh2msdXY8yv+iG7ws8a2A7EzqtLCchfeQaDF0Z9yxMz0N567FtkbcehmLeZ
+	 vWZM+H5gEIUhLYYTwQ==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.21] ([94.31.83.95]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1N0Icn-1soOtu0n8Z-00xKWI; Sat, 04
+ May 2024 18:46:05 +0200
+Message-ID: <264d605d-b7ff-4d92-925d-30332aa2e2bf@web.de>
+Date: Sat, 4 May 2024 18:46:01 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+To: Dan Carpenter <dan.carpenter@linaro.org>, linux-xfs@vger.kernel.org,
+ kernel-janitors@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Chandan Babu R <chandan.babu@oracle.com>
+References: <0e7def98-1479-4f3a-a69a-5f4d09e12fa8@moroto.mountain>
+Subject: Re: [PATCH] xfs: check for negatives in xfs_exchange_range_checks()
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <0e7def98-1479-4f3a-a69a-5f4d09e12fa8@moroto.mountain>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:I1VDS+lXT8gPAkRX4ICsp9DC98KkcW1J2SOrbYqnZK4U7XuEr6x
+ ta2sLJYEHpbLUqb6Mo3aohVYyanJlWiC0n+AUIGOZtpZiEpxZTP3vgwrKPpiZeOfGAYpIrL
+ MPCO/gXUQgJxrXi/joS1XDeU6S1TgkRuYpuMxP7JFogjpWV4vmQmBaAbRN0d8iqINbzhQWT
+ +2WyLNN3XycudG3O0d6lg==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:D29nIzUQi/o=;V1kZDU1H7JScLyyRryYo39rd6oA
+ q+BedEOjm8FNn5256Izh9+IZgsamG8t8DmYxGQwNHAngTz1ZM5uJBwcbZZ0HXRxitbNWlnqOx
+ teF3WKL9jMlEyGVtKDYxY+Hzk+ScEvyfELvTa+yuaWn7GJS2Cm05xvmS9b7JB9WAQPjnuCjI7
+ OMxYrUBEl1lCS3hvUcWl0OI/mGjcQr+ZWYYc9goqTo3KR1Lo3V46rAow7zhoaE+hnUs8pE/Kh
+ 71stxNA8+D/blFtGx8cAV218xDnLIFidqMAP6uax4VWk551DG9A14/J7Vp9J65gm3AeyHk+1h
+ 2kvyGni2B/WyFgBcIs3wyYJdBZiNcWR0e/P5M8cquNLJsG4IVrdRb99gg2P3LI1sDLmEE5Noj
+ AZzzbRyFa63hdk3ysMHg582Tu7zZ5rkOHfVr8e0Q9Iw/yRlBTTMi+I7DIZp63YH9WUZS9BwRb
+ ttkNV65utRgl1XmRUDwIG6c6UKLhuUfmJWwpXvHvQoBHiN78B73QfxpmKm/7zEpYYBGcXGham
+ 3h1MO6gYu7Y6cK8P53tfPltFMP60B4NIaBAbACDFNwuz7Fy7QBnq3zMzsZn/5SUVxERA7QOow
+ gBeXFXqkzkabf/G+he7EAHwTZn3ff6Jz6EMc4lPg3PUhTqFA8CWNXUSycEdXDn9xD60eBui6L
+ vHX/5JlWjILwKy9xXzyXbwphNpWUGEuBs6Ut0wmfo8zLjxzMT5hB70lv8CxTYgK29Tk4oaOpI
+ 32po344ssSKv/a2b4Vhc4tyj1TcPdARqOi+l//2DTB26+MV4JxkRtY7E8v9oLnZ0SgEiMTitg
+ 0AZ5hYG96szpqG+RoJ6uDpSnEw4v7UgS/zu1BhjoQdgNja3tERVh+buqIKWplyHOjr
 
-Hi folks,
+=E2=80=A6
+> Check the they aren't negative.
 
-The for-next branch of the xfs-linux repository at:
+Would you like to use the word =E2=80=9Cthat=E2=80=9D (instead of =E2=80=
+=9Cthe=E2=80=9D) in this sentence?
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-25576c5420e6 xfs: simplify iext overflow checking and upgrade
-
-13 new commits:
-
-Chandan Babu R (1):
-      [0370f9bb49f1] Merge tag 'xfs-cleanups-6.10_2024-05-02' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.10-mergeF
-
-Christoph Hellwig (7):
-      [45cf976008dd] xfs: fix log recovery buffer allocation for the legacy h_size fixup
-      [67a841f9d724] xfs: clean up buffer allocation in xlog_do_recovery_pass
-      [f7b9ee784511] xfs: consolidate the xfs_quota_reserve_blkres definitions
-      [cc3c92e7e79e] xfs: xfs_quota_unreserve_blkres can't fail
-      [99fb6b7ad1f2] xfs: upgrade the extent counters in xfs_reflink_end_cow_extent later
-      [86de848403ab] xfs: remove a racy if_bytes check in xfs_reflink_end_cow_extent
-      [25576c5420e6] xfs: simplify iext overflow checking and upgrade
-
-Darrick J. Wong (5):
-      [a86f8671d03e] xfs: use unsigned ints for non-negative quantities in xfs_attr_remote.c
-      [a5714b67cad5] xfs: turn XFS_ATTR3_RMT_BUF_SPACE into a function
-      [204a26aa1d5a] xfs: create a helper to compute the blockcount of a max sized remote value
-      [3791a053294b] xfs: minor cleanups of xfs_attr3_rmt_blocks
-      [1a3f1afb2532] xfs: widen flags argument to the xfs_iflags_* helpers
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_attr.c        |  7 ++-----
- fs/xfs/libxfs/xfs_attr_remote.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++---------------------------------------
- fs/xfs/libxfs/xfs_attr_remote.h |  8 +++++++-
- fs/xfs/libxfs/xfs_bmap.c        | 21 ++++++---------------
- fs/xfs/libxfs/xfs_bmap.h        |  2 +-
- fs/xfs/libxfs/xfs_da_format.h   |  4 +---
- fs/xfs/libxfs/xfs_inode_fork.c  | 57 +++++++++++++++++++++++++--------------------------------
- fs/xfs/libxfs/xfs_inode_fork.h  |  6 ++----
- fs/xfs/scrub/reap.c             |  4 ++--
- fs/xfs/xfs_aops.c               |  6 +-----
- fs/xfs/xfs_bmap_item.c          |  4 +---
- fs/xfs/xfs_bmap_util.c          | 32 ++++++++------------------------
- fs/xfs/xfs_bmap_util.h          |  2 +-
- fs/xfs/xfs_dquot.c              |  5 +----
- fs/xfs/xfs_icache.c             |  4 +---
- fs/xfs/xfs_inode.h              | 14 +++++++-------
- fs/xfs/xfs_iomap.c              | 13 ++++---------
- fs/xfs/xfs_log_recover.c        | 33 ++++++++++++++++++++-------------
- fs/xfs/xfs_quota.h              | 23 +++++++++--------------
- fs/xfs/xfs_reflink.c            | 34 +++++++++-------------------------
- fs/xfs/xfs_rtalloc.c            |  5 +----
- 21 files changed, 160 insertions(+), 214 deletions(-)
+Regards,
+Markus
