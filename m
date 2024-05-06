@@ -1,144 +1,504 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9505D44376
-	for <linux-xfs@vger.kernel.org>; Mon,  6 May 2024 04:24:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 595211DA5F
+	for <linux-xfs@vger.kernel.org>; Mon,  6 May 2024 12:39:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714969456; cv=none; b=O+BA6uXIr1ZDDX0SSgfODo04R3NB2jJ4uDkpxAlcmLVXm+5yaLYYknrBPdBNl1kBwAS/6tOK8qhC80j0H6m93J8sSKIF/NB9QVSccjbJsq50U9E1DEqjwGoJcNGEHa5VySBRXht7lhm+IWUI59QGLbIG/s/ENMv/OnTVLQrLLHM=
+	t=1714999185; cv=none; b=rZSbxz9hBKi4eo0ledVP96Zl+LMsIlK3ADb++jZDh/sG+FyXJ1X3EpymkV/dzuvv5Dzp9mD5JouRrrd3274n+oZ7sCj2ESNBrpLlRHxbEvZ9q8GJbAP6OoSkwetKaRXgbc+UKOYi3LQRXw/jFN/vh3ycFVhtwhneqnYgI05MS54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714969456; c=relaxed/simple;
-	bh=FAO5LYE6I/Ulzf1Oce5YWxuwVXpBI0RfXdh8PqoxbKw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mioucuySm3ejDvOGB08G/s6FF71lzLLVKWRYw/RPJdBrAgpxBf7VMFHXDfu3U4/R8I3W0SumbAxsuB8Ti8z2ufaYoalhn/2l0iKkseetHgOjHd3JsH2MI0qGoJEZ6IAgfVta7bjq7rGF1oBCNTtCKdiIjobWx9spWHhuqcN4CxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M4+DaDkn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714999185; c=relaxed/simple;
+	bh=9K5AlEs/yuMdfrCkFH/rxJ7qwKZKXT50yECAJOEHOFA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VK4Fh+6UHQg+ZOXaAcmGI/HjR4KIWvfYOlorEvKrlGYzmMVO0VoTDc9MN/pLaJKO5Xd9gc76tME/hHLe0/bOYDD1Q/pZ41ylf5sLz9hkEMXd++gDIymj/ksGY1OEeqOzaZCrkZ/Iy1TWUxcyg6/d1RPN0uUIkdzoLQdn96kyYCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YhIAsh6W; arc=none smtp.client-ip=209.85.161.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M4+DaDkn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E6D3C116B1;
-	Mon,  6 May 2024 04:24:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714969456;
-	bh=FAO5LYE6I/Ulzf1Oce5YWxuwVXpBI0RfXdh8PqoxbKw=;
-	h=From:To:Cc:Subject:Date:From;
-	b=M4+DaDkn4DkB1rAFA59q1poQXLVPh5z46g56bx1r+rnusxb2QS2Lpjv9qXpnEj5be
-	 kLFnCSOqqLbz2z4fOzogpqFWtwU5Q69O0HZqCYtkV2fzVQzgHvNVEAGbvd6y8mIaSf
-	 UoYNo+UGmsnFfRnaZEkIXMyN3ncVWIRHJMbZsKSruRWYiSAIDzmLvdIPKD0m+OwZV5
-	 5unEjNR7AvoqF6DL6q9aYhxkQmcbfrnxb1ZRrqbD2XlTff6vV97jZKCb7TQGuL4nE4
-	 s7n8J7L/Za9u6O6GZwzAktnh5WL/iBcNeN6YDdnLWT9vS0aFsoD+EEuInP4ciA0KBY
-	 j2z2SYex9cZuA==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Cc: Darrick J. Wong <djwong@kernel.org>
-Subject: [BUG REPORT] Deadlock when executing xfs/708 on xfs-linux's for-next
-Date: Mon, 06 May 2024 09:47:33 +0530
-Message-ID: <87edaftvo3.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YhIAsh6W"
+Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-5b209d564e0so750464eaf.2
+        for <linux-xfs@vger.kernel.org>; Mon, 06 May 2024 05:39:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1714999182; x=1715603982; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L3m2SKSiVN3jFw05rNele8TLz2y5wcBMS4qr5AUrRR4=;
+        b=YhIAsh6Wp/XGrgXftqJL13z5VtOpjVVVclzcBGhx3jQridzr5MtGuRw9q55a4bpLWD
+         VRwDt4G5FKNQz3l9str+rFvzorlODcX2M2/NqkUHNW2CTzwtHu6bzEHnmWKxH4NIA8Ur
+         6d9WrgoCn2rFGJyZz+s6YpkO5WWGuK7vHLbxmvBVR6A7Ttqe6bWUuRyUw0ZrWApAlfRw
+         V+VILdIu5q8lgeJXp2J7zQzXMaWn8fYTQ2Eb1Z3TMZ6FZTkX2qcHehYI5evtBZWgpeVc
+         wyQfav/8xvCnrucf1E3UP6lrNcbrB84MTiedf32/0bAqNnr2us0sR4LfnI6qbxMW1HWQ
+         BRpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714999182; x=1715603982;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=L3m2SKSiVN3jFw05rNele8TLz2y5wcBMS4qr5AUrRR4=;
+        b=PjfZKn78hPAVZqlB/jaYZvmmhI1Ul4Zh1a8EJFc9c1CVHRudL86bL2dyqoV/QHkPxH
+         Nzi4etUhfUAP/VZGSZtsQLxzB/NUyAFbzPt2W+DXipFLh/Y0alB44673eNpatEnbsrgH
+         EwV7jZtBAmRAkA9OLPT9gOtcvp88z4dQtEf6mCl6dCc/yknblYHE7KQZIJuMamAXAoNf
+         UkfKlLlsCbwMu/I6H7nXDOJI60Bz2MemA2zg7E32lLmVE4grhXjHFcmwx69vqii3yaMQ
+         9CvWYY7S9tZCs2mRamL5Rs1gPKNNV2zLxekkCXRl6w7ftyc8+VdoLcYXhUyojtBa+Bzc
+         AbHw==
+X-Forwarded-Encrypted: i=1; AJvYcCWKGBdiauT12plvAR33PLoZZmpxBZM2+2XOqXNKWXFuGoQcAMbrzhL3bbJQHnaOcDIlzRrsoxkyZxzHtq0Y/VgWRsUqgk5Eg11V
+X-Gm-Message-State: AOJu0YxICr6yemZagxrnMBi5xFUgmVUeOuqGN8LAFwamWNDLhnCg4efL
+	wPZxihJqO8KZ+u1WTHTm2SawGW6Ezp/n20zCd2SJSQTi5+w0hLF2FIrxAwDgMs84EahNwOVURr1
+	e1HA2l69GX36ZL55B70Vv1PydS3A=
+X-Google-Smtp-Source: AGHT+IHjAbtljH0O3eT69psTJOX3BT7CTzyrW8GkM/6mBYG1zqQ1hrnAgx3WiKNHY724Jou4AePDA2JzoFQS9JSvS04=
+X-Received: by 2002:a4a:4804:0:b0:5aa:4b31:50c5 with SMTP id
+ p4-20020a4a4804000000b005aa4b3150c5mr10450939ooa.2.1714999181664; Mon, 06 May
+ 2024 05:39:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20240429061529.1550204-1-hch@lst.de> <20240429061529.1550204-2-hch@lst.de>
+ <CAEJPjCu5CWEMHHpLS2yB7tk9Hh52EsQ5npifKiw--U-50PLEng@mail.gmail.com>
+In-Reply-To: <CAEJPjCu5CWEMHHpLS2yB7tk9Hh52EsQ5npifKiw--U-50PLEng@mail.gmail.com>
+From: =?UTF-8?B?5YiY6YCa?= <lyutoon@gmail.com>
+Date: Mon, 6 May 2024 20:39:30 +0800
+Message-ID: <CAEJPjCuj2AH2iUh4fcL9Ux-D52utREpXp7XGVdhGwYnDNuDMSA@mail.gmail.com>
+Subject: Re: [PATCH 1/9] xfs: fix error returns from xfs_bmapi_write
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Hello!
 
-Executing xfs/708 on xfs-linux's current for-next (commit
-25576c5420e61dea4c2b52942460f2221b8e46e8) causes the following hung task
-timeout to be printed,
+Thank you for promptly fixing this issue. May I ask if it's possible
+to assign a CVE to this vulnerability?
+Once again, thank you for your efforts in fixing this vulnerability!
 
-[ 6328.415475] run fstests xfs/708 at 2024-05-04 15:35:29
-[ 6328.964720] XFS (loop16): EXPERIMENTAL online scrub feature in use. Use at your own risk!
-[ 6329.258411] XFS (loop5): Mounting V5 Filesystem e96086f0-a2f9-4424-a1d5-c75d53d823be
-[ 6329.265694] XFS (loop5): Ending clean mount
-[ 6329.267899] XFS (loop5): Quotacheck needed: Please wait.
-[ 6329.280141] XFS (loop5): Quotacheck: Done.
-[ 6329.291589] XFS (loop5): EXPERIMENTAL online scrub feature in use. Use at your own risk!
-[ 7865.474615] INFO: task xfs_io:143725 blocked for more than 122 seconds.
-[ 7865.476744]       Not tainted 6.9.0-rc4+ #1
-[ 7865.478109] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[ 7865.479827] task:xfs_io          state:D stack:0     pid:143725 tgid:143725 ppid:117661 flags:0x00004006
-[ 7865.481685] Call Trace:
-[ 7865.482761]  <TASK>
-[ 7865.483801]  __schedule+0x69c/0x17a0
-[ 7865.485053]  ? __pfx___schedule+0x10/0x10
-[ 7865.486372]  ? _raw_spin_lock_irq+0x8b/0xe0
-[ 7865.487576]  schedule+0x74/0x1b0
-[ 7865.488749]  io_schedule+0xc4/0x140
-[ 7865.489943]  folio_wait_bit_common+0x254/0x650
-[ 7865.491308]  ? __pfx_folio_wait_bit_common+0x10/0x10
-[ 7865.492596]  ? __pfx_find_get_entries+0x10/0x10
-[ 7865.493875]  ? __pfx_wake_page_function+0x10/0x10
-[ 7865.495222]  ? lru_add_drain_cpu+0x1dd/0x2e0
-[ 7865.496399]  shmem_undo_range+0x9d5/0xb40
-[ 7865.497558]  ? __pfx_shmem_undo_range+0x10/0x10
-[ 7865.498757]  ? poison_slab_object+0x106/0x190
-[ 7865.500003]  ? kfree+0xfc/0x300
-[ 7865.501107]  ? xfs_scrub_metadata+0x84e/0xdf0 [xfs]
-[ 7865.502466]  ? xfs_ioc_scrub_metadata+0x9e/0x120 [xfs]
-[ 7865.503900]  ? wakeup_preempt+0x161/0x260
-[ 7865.505105]  ? _raw_spin_lock+0x85/0xe0
-[ 7865.506214]  ? __pfx__raw_spin_lock+0x10/0x10
-[ 7865.507334]  ? _raw_spin_lock+0x85/0xe0
-[ 7865.508410]  ? __pfx__raw_spin_lock+0x10/0x10
-[ 7865.509524]  ? __pfx__raw_spin_lock+0x10/0x10
-[ 7865.510638]  ? _raw_spin_lock+0x85/0xe0
-[ 7865.511677]  ? kasan_save_track+0x14/0x30
-[ 7865.512754]  ? kasan_save_free_info+0x3b/0x60
-[ 7865.513872]  ? poison_slab_object+0x106/0x190
-[ 7865.515084]  ? xfs_scrub_metadata+0x84e/0xdf0 [xfs]
-[ 7865.516326]  ? kfree+0xfc/0x300
-[ 7865.517302]  ? xfs_scrub_metadata+0x84e/0xdf0 [xfs]
-[ 7865.518578]  shmem_evict_inode+0x322/0x8f0
-[ 7865.519626]  ? __inode_wait_for_writeback+0xcf/0x1a0
-[ 7865.520801]  ? __pfx_shmem_evict_inode+0x10/0x10
-[ 7865.521951]  ? __pfx___inode_wait_for_writeback+0x10/0x10
-[ 7865.523136]  ? __pfx_wake_bit_function+0x10/0x10
-[ 7865.524207]  ? __pfx__raw_spin_lock+0x10/0x10
-[ 7865.525243]  ? __pfx__raw_spin_lock+0x10/0x10
-[ 7865.526236]  evict+0x24e/0x560
-[ 7865.527091]  __dentry_kill+0x17d/0x4d0
-[ 7865.528107]  dput+0x263/0x430
-[ 7865.529006]  __fput+0x2fc/0xaa0
-[ 7865.529927]  task_work_run+0x132/0x210
-[ 7865.530891]  ? __pfx_task_work_run+0x10/0x10
-[ 7865.531910]  get_signal+0x1a8/0x1910
-[ 7865.532917]  ? kasan_save_track+0x14/0x30
-[ 7865.533885]  ? kasan_save_free_info+0x3b/0x60
-[ 7865.534880]  ? __pfx_get_signal+0x10/0x10
-[ 7865.535793]  ? poison_slab_object+0xbe/0x190
-[ 7865.536784]  ? __pfx_ioctl_has_perm.constprop.0.isra.0+0x10/0x10
-[ 7865.537952]  arch_do_signal_or_restart+0x7b/0x2f0
-[ 7865.539014]  ? __pfx_arch_do_signal_or_restart+0x10/0x10
-[ 7865.540091]  ? restore_fpregs_from_fpstate+0x96/0x150
-[ 7865.541123]  ? __pfx_restore_fpregs_from_fpstate+0x10/0x10
-[ 7865.542209]  ? security_file_ioctl+0x51/0x90
-[ 7865.543153]  syscall_exit_to_user_mode+0x1c2/0x200
-[ 7865.544165]  do_syscall_64+0x72/0x170
-[ 7865.545033]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[ 7865.546095] RIP: 0033:0x7f4d18c3ec6b
-[ 7865.547033] RSP: 002b:00007ffe2056f878 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-[ 7865.548407] RAX: fffffffffffffffc RBX: 0000000000000001 RCX: 00007f4d18c3ec6b
-[ 7865.549757] RDX: 00007ffe2056f880 RSI: 00000000c040583c RDI: 0000000000000003
-[ 7865.551047] RBP: 000000001bd46c40 R08: 0000000000000002 R09: 0000000000000000
-[ 7865.552317] R10: 00007f4d18d9eac0 R11: 0000000000000246 R12: 0000000000000000
-[ 7865.553619] R13: 000000001bd46bc0 R14: 000000001bd46520 R15: 0000000000000004
-[ 7865.555005]  </TASK>
+Wish you all the best.
 
-The following is the contents from fstests config file,
+Tong
 
-FSTYP=xfs
-TEST_DIR=/media/test
-SCRATCH_MNT=/media/scratch
-DUMP_CORRUPT_FS=1
-SOAK_DURATION=1320
 
-TEST_DEV=/dev/loop16
-SCRATCH_DEV_POOL="/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop9 /dev/loop10 /dev/loop11 /dev/loop12"
-MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1,'
-MOUNT_OPTIONS='-o usrquota,grpquota,prjquota'
-TEST_FS_MOUNT_OPTS="$TEST_FS_MOUNT_OPTS -o usrquota,grpquota,prjquota"
-USE_EXTERNAL=no
-LOGWRITES_DEV=/dev/loop15
-
--- 
-Chandan
+=E5=88=98=E9=80=9A <lyutoon@gmail.com> =E4=BA=8E2024=E5=B9=B45=E6=9C=886=E6=
+=97=A5=E5=91=A8=E4=B8=80 20:24=E5=86=99=E9=81=93=EF=BC=9A
+>
+> Hello!
+>
+> Thank you for promptly fixing this issue. May I ask if it's possible to a=
+ssign a CVE to this vulnerability?
+> Once again, thank you for your efforts in fixing this vulnerability!
+>
+> Wish you all the best.
+>
+> Tong
+>
+> Christoph Hellwig <hch@lst.de> =E4=BA=8E2024=E5=B9=B44=E6=9C=8829=E6=97=
+=A5=E5=91=A8=E4=B8=80 14:15=E5=86=99=E9=81=93=EF=BC=9A
+>>
+>> xfs_bmapi_write can return 0 without actually returning a mapping in
+>> mval in two different cases:
+>>
+>>  1) when there is absolutely no space available to do an allocation
+>>  2) when converting delalloc space, and the allocation is so small
+>>     that it only covers parts of the delalloc extent before the
+>>     range requested by the caller
+>>
+>> Callers at best can handle one of these cases, but in many cases can't
+>> cope with either one.  Switch xfs_bmapi_write to always return a
+>> mapping or return an error code instead.  For case 1) above ENOSPC is
+>> the obvious choice which is very much what the callers expect anyway.
+>> For case 2) there is no really good error code, so pick a funky one
+>> from the SysV streams portfolio.
+>>
+>> This fixes the reproducer here:
+>>
+>>     https://lore.kernel.org/linux-xfs/CAEJPjCvT3Uag-pMTYuigEjWZHn1sGMZ0G=
+CjVVCv29tNHK76Cgg@mail.gmail.com0/
+>>
+>> which uses reserved blocks to create file systems that are gravely
+>> out of space and thus cause at least xfs_file_alloc_space to hang
+>> and trigger the lack of ENOSPC handling in xfs_dquot_disk_alloc.
+>>
+>> Note that this patch does not actually make any caller but
+>> xfs_alloc_file_space deal intelligently with case 2) above.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> Reported-by: =E5=88=98=E9=80=9A <lyutoon@gmail.com>
+>> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>> ---
+>>  fs/xfs/libxfs/xfs_attr_remote.c |  1 -
+>>  fs/xfs/libxfs/xfs_bmap.c        | 46 ++++++++++++++++++++++++++-------
+>>  fs/xfs/libxfs/xfs_da_btree.c    | 20 ++++----------
+>>  fs/xfs/scrub/quota_repair.c     |  6 -----
+>>  fs/xfs/scrub/rtbitmap_repair.c  |  2 --
+>>  fs/xfs/xfs_bmap_util.c          | 31 +++++++++++-----------
+>>  fs/xfs/xfs_dquot.c              |  1 -
+>>  fs/xfs/xfs_iomap.c              |  8 ------
+>>  fs/xfs/xfs_reflink.c            | 14 ----------
+>>  fs/xfs/xfs_rtalloc.c            |  2 --
+>>  10 files changed, 57 insertions(+), 74 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_re=
+mote.c
+>> index a8de9dc1e998a3..beb0efdd8f6b83 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+>> @@ -625,7 +625,6 @@ xfs_attr_rmtval_set_blk(
+>>         if (error)
+>>                 return error;
+>>
+>> -       ASSERT(nmap =3D=3D 1);
+>>         ASSERT((map->br_startblock !=3D DELAYSTARTBLOCK) &&
+>>                (map->br_startblock !=3D HOLESTARTBLOCK));
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+>> index 6053f5e5c71eec..f19191d6eade7e 100644
+>> --- a/fs/xfs/libxfs/xfs_bmap.c
+>> +++ b/fs/xfs/libxfs/xfs_bmap.c
+>> @@ -4217,8 +4217,10 @@ xfs_bmapi_allocate(
+>>         } else {
+>>                 error =3D xfs_bmap_alloc_userdata(bma);
+>>         }
+>> -       if (error || bma->blkno =3D=3D NULLFSBLOCK)
+>> +       if (error)
+>>                 return error;
+>> +       if (bma->blkno =3D=3D NULLFSBLOCK)
+>> +               return -ENOSPC;
+>>
+>>         if (bma->flags & XFS_BMAPI_ZERO) {
+>>                 error =3D xfs_zero_extent(bma->ip, bma->blkno, bma->leng=
+th);
+>> @@ -4397,6 +4399,15 @@ xfs_bmapi_finish(
+>>   * extent state if necessary.  Details behaviour is controlled by the f=
+lags
+>>   * parameter.  Only allocates blocks from a single allocation group, to=
+ avoid
+>>   * locking problems.
+>> + *
+>> + * Returns 0 on success and places the extent mappings in mval.  nmaps =
+is used
+>> + * as an input/output parameter where the caller specifies the maximum =
+number
+>> + * of mappings that may be returned and xfs_bmapi_write passes back the=
+ number
+>> + * of mappings (including existing mappings) it found.
+>> + *
+>> + * Returns a negative error code on failure, including -ENOSPC when it =
+could not
+>> + * allocate any blocks and -ENOSR when it did allocate blocks to conver=
+t a
+>> + * delalloc range, but those blocks were before the passed in range.
+>>   */
+>>  int
+>>  xfs_bmapi_write(
+>> @@ -4525,10 +4536,16 @@ xfs_bmapi_write(
+>>                         ASSERT(len > 0);
+>>                         ASSERT(bma.length > 0);
+>>                         error =3D xfs_bmapi_allocate(&bma);
+>> -                       if (error)
+>> +                       if (error) {
+>> +                               /*
+>> +                                * If we already allocated space in a pr=
+evious
+>> +                                * iteration return what we go so far wh=
+en
+>> +                                * running out of space.
+>> +                                */
+>> +                               if (error =3D=3D -ENOSPC && bma.nallocs)
+>> +                                       break;
+>>                                 goto error0;
+>> -                       if (bma.blkno =3D=3D NULLFSBLOCK)
+>> -                               break;
+>> +                       }
+>>
+>>                         /*
+>>                          * If this is a CoW allocation, record the data =
+in
+>> @@ -4566,7 +4583,6 @@ xfs_bmapi_write(
+>>                 if (!xfs_iext_next_extent(ifp, &bma.icur, &bma.got))
+>>                         eof =3D true;
+>>         }
+>> -       *nmap =3D n;
+>>
+>>         error =3D xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logfla=
+gs,
+>>                         whichfork);
+>> @@ -4577,7 +4593,22 @@ xfs_bmapi_write(
+>>                ifp->if_nextents > XFS_IFORK_MAXEXT(ip, whichfork));
+>>         xfs_bmapi_finish(&bma, whichfork, 0);
+>>         xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+>> -               orig_nmap, *nmap);
+>> +               orig_nmap, n);
+>> +
+>> +       /*
+>> +        * When converting delayed allocations, xfs_bmapi_allocate ignor=
+es
+>> +        * the passed in bno and always converts from the start of the f=
+ound
+>> +        * delalloc extent.
+>> +        *
+>> +        * To avoid a successful return with *nmap set to 0, return the =
+magic
+>> +        * -ENOSR error code for this particular case so that the caller=
+ can
+>> +        * handle it.
+>> +        */
+>> +       if (!n) {
+>> +               ASSERT(bma.nallocs >=3D *nmap);
+>> +               return -ENOSR;
+>> +       }
+>> +       *nmap =3D n;
+>>         return 0;
+>>  error0:
+>>         xfs_bmapi_finish(&bma, whichfork, error);
+>> @@ -4684,9 +4715,6 @@ xfs_bmapi_convert_delalloc(
+>>         if (error)
+>>                 goto out_finish;
+>>
+>> -       error =3D -ENOSPC;
+>> -       if (WARN_ON_ONCE(bma.blkno =3D=3D NULLFSBLOCK))
+>> -               goto out_finish;
+>>         if (WARN_ON_ONCE(!xfs_valid_startblock(ip, bma.got.br_startblock=
+))) {
+>>                 xfs_bmap_mark_sick(ip, whichfork);
+>>                 error =3D -EFSCORRUPTED;
+>> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+>> index b13796629e2213..16a529a8878083 100644
+>> --- a/fs/xfs/libxfs/xfs_da_btree.c
+>> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+>> @@ -2297,8 +2297,8 @@ xfs_da_grow_inode_int(
+>>         struct xfs_inode        *dp =3D args->dp;
+>>         int                     w =3D args->whichfork;
+>>         xfs_rfsblock_t          nblks =3D dp->i_nblocks;
+>> -       struct xfs_bmbt_irec    map, *mapp;
+>> -       int                     nmap, error, got, i, mapi;
+>> +       struct xfs_bmbt_irec    map, *mapp =3D &map;
+>> +       int                     nmap, error, got, i, mapi =3D 1;
+>>
+>>         /*
+>>          * Find a spot in the file space to put the new block.
+>> @@ -2314,14 +2314,7 @@ xfs_da_grow_inode_int(
+>>         error =3D xfs_bmapi_write(tp, dp, *bno, count,
+>>                         xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA|XFS_BMAPI_=
+CONTIG,
+>>                         args->total, &map, &nmap);
+>> -       if (error)
+>> -               return error;
+>> -
+>> -       ASSERT(nmap <=3D 1);
+>> -       if (nmap =3D=3D 1) {
+>> -               mapp =3D &map;
+>> -               mapi =3D 1;
+>> -       } else if (nmap =3D=3D 0 && count > 1) {
+>> +       if (error =3D=3D -ENOSPC && count > 1) {
+>>                 xfs_fileoff_t           b;
+>>                 int                     c;
+>>
+>> @@ -2339,16 +2332,13 @@ xfs_da_grow_inode_int(
+>>                                         args->total, &mapp[mapi], &nmap)=
+;
+>>                         if (error)
+>>                                 goto out_free_map;
+>> -                       if (nmap < 1)
+>> -                               break;
+>>                         mapi +=3D nmap;
+>>                         b =3D mapp[mapi - 1].br_startoff +
+>>                             mapp[mapi - 1].br_blockcount;
+>>                 }
+>> -       } else {
+>> -               mapi =3D 0;
+>> -               mapp =3D NULL;
+>>         }
+>> +       if (error)
+>> +               goto out_free_map;
+>>
+>>         /*
+>>          * Count the blocks we got, make sure it matches the total.
+>> diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+>> index 0bab4c30cb85ab..90cd1512bba961 100644
+>> --- a/fs/xfs/scrub/quota_repair.c
+>> +++ b/fs/xfs/scrub/quota_repair.c
+>> @@ -77,8 +77,6 @@ xrep_quota_item_fill_bmap_hole(
+>>                         irec, &nmaps);
+>>         if (error)
+>>                 return error;
+>> -       if (nmaps !=3D 1)
+>> -               return -ENOSPC;
+>>
+>>         dq->q_blkno =3D XFS_FSB_TO_DADDR(mp, irec->br_startblock);
+>>
+>> @@ -444,10 +442,6 @@ xrep_quota_data_fork(
+>>                                         XFS_BMAPI_CONVERT, 0, &nrec, &nm=
+ap);
+>>                         if (error)
+>>                                 goto out;
+>> -                       if (nmap !=3D 1) {
+>> -                               error =3D -ENOSPC;
+>> -                               goto out;
+>> -                       }
+>>                         ASSERT(nrec.br_startoff =3D=3D irec.br_startoff)=
+;
+>>                         ASSERT(nrec.br_blockcount =3D=3D irec.br_blockco=
+unt);
+>>
+>> diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repa=
+ir.c
+>> index 46f5d5f605c915..0fef98e9f83409 100644
+>> --- a/fs/xfs/scrub/rtbitmap_repair.c
+>> +++ b/fs/xfs/scrub/rtbitmap_repair.c
+>> @@ -108,8 +108,6 @@ xrep_rtbitmap_data_mappings(
+>>                                 0, &map, &nmaps);
+>>                 if (error)
+>>                         return error;
+>> -               if (nmaps !=3D 1)
+>> -                       return -EFSCORRUPTED;
+>>
+>>                 /* Commit new extent and all deferred work. */
+>>                 error =3D xrep_defer_finish(sc);
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index 53aa90a0ee3a85..2e6f08198c0719 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -721,33 +721,32 @@ xfs_alloc_file_space(
+>>                 if (error)
+>>                         goto error;
+>>
+>> -               error =3D xfs_bmapi_write(tp, ip, startoffset_fsb,
+>> -                               allocatesize_fsb, XFS_BMAPI_PREALLOC, 0,=
+ imapp,
+>> -                               &nimaps);
+>> -               if (error)
+>> -                       goto error;
+>> -
+>> -               ip->i_diflags |=3D XFS_DIFLAG_PREALLOC;
+>> -               xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>> -
+>> -               error =3D xfs_trans_commit(tp);
+>> -               xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>> -               if (error)
+>> -                       break;
+>> -
+>>                 /*
+>>                  * If the allocator cannot find a single free extent lar=
+ge
+>>                  * enough to cover the start block of the requested rang=
+e,
+>> -                * xfs_bmapi_write will return 0 but leave *nimaps set t=
+o 0.
+>> +                * xfs_bmapi_write will return -ENOSR.
+>>                  *
+>>                  * In that case we simply need to keep looping with the =
+same
+>>                  * startoffset_fsb so that one of the following allocati=
+ons
+>>                  * will eventually reach the requested range.
+>>                  */
+>> -               if (nimaps) {
+>> +               error =3D xfs_bmapi_write(tp, ip, startoffset_fsb,
+>> +                               allocatesize_fsb, XFS_BMAPI_PREALLOC, 0,=
+ imapp,
+>> +                               &nimaps);
+>> +               if (error) {
+>> +                       if (error !=3D -ENOSR)
+>> +                               goto error;
+>> +                       error =3D 0;
+>> +               } else {
+>>                         startoffset_fsb +=3D imapp->br_blockcount;
+>>                         allocatesize_fsb -=3D imapp->br_blockcount;
+>>                 }
+>> +
+>> +               ip->i_diflags |=3D XFS_DIFLAG_PREALLOC;
+>> +               xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>> +
+>> +               error =3D xfs_trans_commit(tp);
+>> +               xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>         }
+>>
+>>         return error;
+>> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+>> index 13aba84bd64afb..43acb4f0d17433 100644
+>> --- a/fs/xfs/xfs_dquot.c
+>> +++ b/fs/xfs/xfs_dquot.c
+>> @@ -357,7 +357,6 @@ xfs_dquot_disk_alloc(
+>>                 goto err_cancel;
+>>
+>>         ASSERT(map.br_blockcount =3D=3D XFS_DQUOT_CLUSTER_SIZE_FSB);
+>> -       ASSERT(nmaps =3D=3D 1);
+>>         ASSERT((map.br_startblock !=3D DELAYSTARTBLOCK) &&
+>>                (map.br_startblock !=3D HOLESTARTBLOCK));
+>>
+>> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+>> index 9ce0f6b9df93e6..60463160820b62 100644
+>> --- a/fs/xfs/xfs_iomap.c
+>> +++ b/fs/xfs/xfs_iomap.c
+>> @@ -322,14 +322,6 @@ xfs_iomap_write_direct(
+>>         if (error)
+>>                 goto out_unlock;
+>>
+>> -       /*
+>> -        * Copy any maps to caller's array and return any error.
+>> -        */
+>> -       if (nimaps =3D=3D 0) {
+>> -               error =3D -ENOSPC;
+>> -               goto out_unlock;
+>> -       }
+>> -
+>>         if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock))) {
+>>                 xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+>>                 error =3D xfs_alert_fsblock_zero(ip, imap);
+>> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+>> index 7da0e8f961d351..5ecb52a234becc 100644
+>> --- a/fs/xfs/xfs_reflink.c
+>> +++ b/fs/xfs/xfs_reflink.c
+>> @@ -430,13 +430,6 @@ xfs_reflink_fill_cow_hole(
+>>         if (error)
+>>                 return error;
+>>
+>> -       /*
+>> -        * Allocation succeeded but the requested range was not even par=
+tially
+>> -        * satisfied?  Bail out!
+>> -        */
+>> -       if (nimaps =3D=3D 0)
+>> -               return -ENOSPC;
+>> -
+>>  convert:
+>>         return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now=
+);
+>>
+>> @@ -499,13 +492,6 @@ xfs_reflink_fill_delalloc(
+>>                 error =3D xfs_trans_commit(tp);
+>>                 if (error)
+>>                         return error;
+>> -
+>> -               /*
+>> -                * Allocation succeeded but the requested range was not =
+even
+>> -                * partially satisfied?  Bail out!
+>> -                */
+>> -               if (nimaps =3D=3D 0)
+>> -                       return -ENOSPC;
+>>         } while (cmap->br_startoff + cmap->br_blockcount <=3D imap->br_s=
+tartoff);
+>>
+>>         return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now=
+);
+>> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+>> index b476a876478d93..150f544445ca82 100644
+>> --- a/fs/xfs/xfs_rtalloc.c
+>> +++ b/fs/xfs/xfs_rtalloc.c
+>> @@ -709,8 +709,6 @@ xfs_growfs_rt_alloc(
+>>                 nmap =3D 1;
+>>                 error =3D xfs_bmapi_write(tp, ip, oblocks, nblocks - obl=
+ocks,
+>>                                         XFS_BMAPI_METADATA, 0, &map, &nm=
+ap);
+>> -               if (!error && nmap < 1)
+>> -                       error =3D -ENOSPC;
+>>                 if (error)
+>>                         goto out_trans_cancel;
+>>                 /*
+>> --
+>> 2.39.2
+>>
