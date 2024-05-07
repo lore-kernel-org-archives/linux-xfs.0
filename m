@@ -1,67 +1,64 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from muffat.debian.org (muffat.debian.org [209.87.16.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E562916190C;
-	Tue,  7 May 2024 16:13:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3BA816D9B0
+	for <linux-xfs@vger.kernel.org>; Tue,  7 May 2024 18:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715098403; cv=none; b=b45NwDFeXsE9aPAehsjXwyGCrylBVF/6SF+ZIZmcUF9bs9Y+q7ZQhFF6AwUP4MVctQ3ucRMNKtTSsDve88HkaVOeA/x39FQxIqA9CRd1HCgUBe2Y+y8Es0jxroqOyvXRsPwd9KduN0hr84HVuVMurTT/wngFCCCvpmMUdT66FjA=
+	t=1715106931; cv=none; b=MFhQqY8V4sZCmRd0DhCCdwpuRk4Ysmp+fh8VAgJdplhKm/ox8ft5xkgB4nvY6xoUpqKzpc5ArlxmmNTeTiSP3oDTFZd3I2LjOyoMuUd31F+ZRx2CWpr6t8gj7gS0goXX/CRUbXk17OHisqy/l/NHLnXTeyUxETSCa0Rl8EJ806s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715098403; c=relaxed/simple;
-	bh=x4+X5D9b7YnRPJkgsyxVvYPYvZHUUomQ2HsXzEmbWQE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PqzUVldIMh3tzLqB7wmp4hrurzFA7pkGaEI1+wgJ4rjJ3zJGV6HwblXfrgRYqcvZCAgwGzuEydJRVrdnz7XLXcfKsLWSkrgM0IFADxCjSKLsIFTnWskHhux7pN8ChBhCc7Pmiti58fyKkUGAzJv7beUcDHD5RMXA/7o4s2ds1fE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TTAiAMbN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1715106931; c=relaxed/simple;
+	bh=T91L6dkkoD1YGYKKYQZ8kFKbodZVNzSnde2Ba86iBLA=;
+	h=To:From:Subject:Date:Message-Id; b=NmYmMcwXoleanFfzwRMCx147H7t7+jxdbi3Zay1VYkoC97VgDGmDqUR12a6DCU6ztLsNIrN4jM2ahAc4PPgPucQgaDOJVwhmBuEzcSgaIIX26yeBIo6KcdhZRPZOFF6Vbw6eZuGXAX3xD2DGYsw/soAbuafWJFXo/QPlHudHVKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=hWE4kRRO; arc=none smtp.client-ip=209.87.16.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TTAiAMbN"
+	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="hWE4kRRO"
+Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:38230)
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+	by muffat.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1s4Peu-0011OG-0r
+	for linux-xfs@vger.kernel.org; Tue, 07 May 2024 18:35:22 +0000
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=QikOvGJohtB2wgzDEFYigsChZEmsotuQTXOsqh0RHI0=; b=TTAiAMbNovozyEA1ekZkN7rDGQ
-	KssDxMqjazEd2Cwc8LEWLFWgqCZi8a/vUUgSt0w/l02+ByDKMuI41l5FJjc+QI9wqCkzPNVOAsymD
-	QjKRw8xVnskDMPa4okD/5j3kxNIqUP7irorBXi/PW8mF+cnf2kowwxn0IUrIFUs3To4KplLDLHMLy
-	+ImiGwMASJm2I+0rPVeDDDQvmH9SnMXRx3jntCgK1N016tNEDzyNCbqrVRr5rul+r3O1AAgRIaTVL
-	48IzDW2HUywaR2GLLcF/u1YujMAVAGYPFPrwPDca2fNuF33fvzWcAdmxSfRDfIjVuszqJfVWlZkWN
-	i8w9MFxQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s4NRN-0000000Bub8-1jNj;
-	Tue, 07 May 2024 16:13:17 +0000
-Date: Tue, 7 May 2024 09:13:17 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Luis Chamberlain <mcgrof@kernel.org>, akpm@linux-foundation.org,
-	djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
-	chandan.babu@oracle.com, hare@suse.de, ritesh.list@gmail.com,
-	john.g.garry@oracle.com, ziy@nvidia.com,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, p.raghav@samsung.com, kernel@pankajraghav.com
-Subject: Re: [PATCH v5 07/11] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <ZjpTHdtPJr1wLZBL@infradead.org>
-References: <20240503095353.3798063-1-mcgrof@kernel.org>
- <20240503095353.3798063-8-mcgrof@kernel.org>
- <ZjpQHA1zcLhUZa_D@casper.infradead.org>
- <ZjpSZ2KjpUHPs_1Z@infradead.org>
- <ZjpSzi-HiZkx_Kdq@casper.infradead.org>
+	d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
+	Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=m289D8/mSlVedb0yGjcfQMnfvtawiF5YIRIDoGLaLB8=; b=hWE4kRROH0sTt+m4r1z3Q4zoIk
+	ccKknp+zm7Lch1ttwIF3pDCBLk27qH9DdWFIjLNgWJpZAm9ueDbkBu62WHhQ3sfd6Bh0yGNGxr6UD
+	VvYhSOXSNHztzQHBlEUExZuDXVKyW1Hr+KWcgrgKZD0RM2h06SuwR9Of1balN7rXpcT6X+R332uVd
+	LrBqugp4Yk2a98yrDSiDosuYMwadzNf4fN4zyBMrYyYWzWnG2uGtgjcGjQpsYc/vab5U3u6RSwnZt
+	twutoYlyIN1ZaiJdQAUPish6lo0tIQ477/Pv0I9LtGnaza9M1Zk7OKdWibZjD10UZu7aI3O95xzm5
+	w9WUFK9g==;
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.94.2)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1s4Per-0014bh-Bu
+	for linux-xfs@vger.kernel.org; Tue, 07 May 2024 18:35:21 +0000
+To: linux-xfs@vger.kernel.org
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_6.7.0-1_source.changes
+Date: Tue, 07 May 2024 18:35:21 +0000
+X-Debian: DAK
+X-DAK: DAK
+Precedence: bulk
+Auto-Submitted: auto-generated
+X-Debian-Package: xfsprogs
+Message-Id: <E1s4Per-0014bh-Bu@usper.debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZjpSzi-HiZkx_Kdq@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, May 07, 2024 at 05:11:58PM +0100, Matthew Wilcox wrote:
-> > 	__bio_add_page(bio, page, len, 0);
-> 
-> no?  len can be > PAGE_SIZE.
+xfsprogs_6.7.0-1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_6.7.0-1.dsc
+  xfsprogs_6.7.0.orig.tar.xz
+  xfsprogs_6.7.0-1.debian.tar.xz
+  xfsprogs_6.7.0-1_source.buildinfo
 
-Yes. So what?
+Greetings,
+
+	Your Debian queue daemon (running on host usper.debian.org)
