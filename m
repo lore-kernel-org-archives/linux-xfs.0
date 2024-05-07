@@ -1,91 +1,139 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3FF158855
-	for <linux-xfs@vger.kernel.org>; Mon,  6 May 2024 18:04:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84A717C
+	for <linux-xfs@vger.kernel.org>; Tue,  7 May 2024 00:05:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715018683; cv=none; b=OS5SWQYZvXwQTQiPeEy6RlJAktUlaqLTJBSdY7ytkLLT8nkykiBuh3M1tZn8y6tKu5nki9PGsnTbjaUl1ooVkB0S7T1kH8UHKa2AsSqrF818kWZnsED0ae7QNlJ8AN0k96hQYpKwplHZ6oJpKM4bUFr6iMVfuF5LAkdX5pX56h8=
+	t=1715040341; cv=none; b=FKyy8MnDI0y2PYyB+IyjHIW6o6IgsvCuGBUZoXO/NkDUAHvhDc+AdaLhLgHUNK1smmpayOaHRQGYZRkeWMoWy8QQ2+YrGbA6EJWybAGLCbD7de/WuwvviyrrhxIGrvjGRhcaqVUDAJLIHiiSom0mHy2vcswvhEe6n2Zab/Qej3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715018683; c=relaxed/simple;
-	bh=YONtu3IiyU+bho/EpSsb6cY4we1TJnPBM/yTuxcb3dA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fLE/tI1rdD5wl7lvoP6VBvKrMaEjUQFe8CGojpRf8pA4h/xxT10GfuiqUyq29ZQxh6cPW6QIC6yRMNCoKrDAMM0fLHCAEqwLuaV7ns8n8DMGut0phDJcjSlb4ONTM1qaBPRb9P5nUuq2V7Dzfer5PmN2v+bgb/lUvu8V3B5Cf+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B9AgIedO; arc=none smtp.client-ip=209.85.210.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1715040341; c=relaxed/simple;
+	bh=+r96OpFsdE3OiCouE0MboKQhCrMK+ry6ELfJeJnog1c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R8BTKRjndk1EdUMSyfu2u4ohVhItMAccW0lgKn8QYAQAp99UY3sn6nVOKCjZ4IAsfV1752t8UTZVWNWooegnv6FyOxKT/dH7D6z6JF5N5nnt4qquL4kqDTqCVJV0mchjRUoeWuURktFdZThctbQ/gYicv1jUZhxwC1J2I6+IbSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=IUyxVQE7; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B9AgIedO"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6f44e3fd382so1577524b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 06 May 2024 11:04:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="IUyxVQE7"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1ee7963db64so517775ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 06 May 2024 17:05:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1715018681; x=1715623481; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Aj6xVxucLKLGAnugMcJaYCR64t9LFunkvNQhkaYMUAc=;
-        b=B9AgIedOFHVmEkms7j3yR3FGacNS9MJaEv/oW/FFzkChRbSLbmO+WHY9i8b57iCPhD
-         IIj5GliO41Jt5OZEDDJ8Q2LTRXoU9LvYxTu7Wf7+Wgt2KtXroIw8f6J0RXidugyvSn5z
-         1hrTR+yItQOqccTvONIQWeNVnduukjXVOJYjk6OviekFjL/ugny93YMXTmjODzEfAIRv
-         bx9MajvOrb/JRt354aRpPrnDM422/54ENF878BJXVDXDz8G6E9HTnzI9N8LCyxKP5SdV
-         KqmF1sz8GQMHBjdWKAzunfZcapjo/OGv3xB1GafHoBpXJHxZkI2UQkaE71hYACcLCdng
-         mxVQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1715040339; x=1715645139; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/mO8RAIpI3ciXCmAN8uZAWkBK2a+XdI/Wl85E3eh0Xg=;
+        b=IUyxVQE7r4mBofKiCzu+Q0FePdp2ilg3FpDTBZak3xlnXkJ01fqpceRZRzYFnWokOX
+         e63nJ+KFJvdDjwEPV+fL0PpXQRIsFrH0Nn9eHNNBQ/55jGVmU3yikpReTmY2B8HD+up/
+         vkFLxvBw68l2/BL5/pMTYyFdC9WFMkntDvc1a8GHgAUo5NgDiQVnAqzBtL2bkW2twxIH
+         KEm3Hb4i5JOIkYKqoWNLBqSQWRtEYe9HpnF6EPcoPs3aPty3ryTXGoJC7azoUIwtMpY+
+         P2ZxepmzKX9sFZ/p72kOKOpYuO4u+MwNf//NpHJR/0opNGgtRDGSEVs6Mw4Id4oP3RAN
+         yt4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715018681; x=1715623481;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Aj6xVxucLKLGAnugMcJaYCR64t9LFunkvNQhkaYMUAc=;
-        b=IV+ZjGtIjGKzoOHu5dq7bhvyKRDbsTBSgtGHUun2ZDQmbqh3Fer/6zNBRwAAMeuehU
-         ebAi6oAEVxHyyQQ8oGwntGQ1Wyvra0gsQZH/5h8vH3Ylfj4tVrHugLpZ5DX1BoEsK1dP
-         l+QrKd7CYou611XGiqqZSJDq6t12AGOinRljNGe+Pgw0k9ahF7p5O5HvN5FcCE7/kMh5
-         ZyNobPBG49PR9pbErwq56UUqUTzGlY1+5HlskEM+aIL62Onh220sISIHfWNBQZs7aOys
-         tsHk73flU/Va8oeq+disn0JnC5tRP6B0Yv7neF723eMyZoGYcpAW0dOE5cMht4RGlLJj
-         aWUw==
-X-Gm-Message-State: AOJu0Yxi8Ko3i2FnVvSvaWuIgDojnFT/f13eRyTTLD1GoNe7AqSzv5g/
-	LLUyUA/FY2T7/mOoOWe3L8sf5JAk4WmhxHqRti6LQDVUAPnIMOucdETIPLiJ
-X-Google-Smtp-Source: AGHT+IEUo21Aitl4Vi9B2UEz0gDKm2VS4OA4yz6XYAOpndQdqOFvR/44d5tcGHlmM43VglMFGeGesQ==
-X-Received: by 2002:a05:6a00:a05:b0:6eb:3d37:ce7a with SMTP id p5-20020a056a000a0500b006eb3d37ce7amr11372485pfh.21.1715018681171;
-        Mon, 06 May 2024 11:04:41 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:f68b:2943:e93b:7554])
-        by smtp.gmail.com with ESMTPSA id p4-20020a056a0026c400b006f448272ae0sm6736639pfw.4.2024.05.06.11.04.40
+        d=1e100.net; s=20230601; t=1715040339; x=1715645139;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/mO8RAIpI3ciXCmAN8uZAWkBK2a+XdI/Wl85E3eh0Xg=;
+        b=RYo4gEp2QybusxxqZHVuco+72MMgzC04e+64QO2R2Y3dbPU6X4W0OUAwiuDRWGc86s
+         lzk6/xUI4q6o7sSPl3ntOnl+v/98OnindVKxcDdLrQnYRsjlJRy6V7mx63RKCcQGe91w
+         pxAmnckZ0d+P9gWxKe56GSa5GH4okNBs77YP98rfN/ROO9yocJJrBVwqrMvUijLf9N5H
+         YgeKyr8xUoxQ5J3ecCRdwg9LssmkmfGUHtK7P+bE100KVq7Rxlbe0k4ty5tmV/5/q6+n
+         6oA8uNPtpk2kfWxGbOyst9KOKqveMFhBF9xT2AmdBQ+jByYNPNMF85TQI2NFcm29DqdW
+         kGLA==
+X-Forwarded-Encrypted: i=1; AJvYcCVG5IvlUymJ19EmuNp1RaTdMMUod29DhBAXVyM3rRhJNeAwOktUSszOZuqxcMX7dmGgeh8LJs32RLiyxE/hYQPD9C/H4MdoblFY
+X-Gm-Message-State: AOJu0YzAtLm37AYJAaGlgMaWIor+5nA86K7G83Rq5dmWar2BSZeYkZrc
+	qO24/4khKjovpdg83UaVOikAeEFGxyIj7cE4nMp9H4I+KWF7DrPc1qc2pVL8hAI=
+X-Google-Smtp-Source: AGHT+IFMS+uzDdaAPRHwq/U9jqHYjfdEca1j76tOxwxbkz7wqlqDtFC+MYf5HxlMEVl3x/q1hzXhRw==
+X-Received: by 2002:a17:903:2306:b0:1eb:1af8:309f with SMTP id d6-20020a170903230600b001eb1af8309fmr18304829plh.4.1715040338808;
+        Mon, 06 May 2024 17:05:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id e2-20020a170902f1c200b001e088a9e2bcsm8829552plc.292.2024.05.06.17.05.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 May 2024 11:04:40 -0700 (PDT)
-From: Leah Rumancik <leah.rumancik@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: amir73il@gmail.com,
-	chandan.babu@oracle.com,
-	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 6.1] MAINTAINERS: add leah to MAINTAINERS file
-Date: Mon,  6 May 2024 11:04:26 -0700
-Message-ID: <20240506180426.692441-1-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.45.0.rc1.225.g2a3ae87e7f-goog
+        Mon, 06 May 2024 17:05:38 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1s48Kt-006745-2E;
+	Tue, 07 May 2024 10:05:35 +1000
+Date: Tue, 7 May 2024 10:05:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: akpm@linux-foundation.org, willy@infradead.org, djwong@kernel.org,
+	brauner@kernel.org, chandan.babu@oracle.com, hare@suse.de,
+	ritesh.list@gmail.com, john.g.garry@oracle.com, ziy@nvidia.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, p.raghav@samsung.com, kernel@pankajraghav.com
+Subject: Re: [PATCH v5 11/11] xfs: enable block size larger than page size
+ support
+Message-ID: <ZjlwT65S9wJVW98w@dread.disaster.area>
+References: <20240503095353.3798063-1-mcgrof@kernel.org>
+ <20240503095353.3798063-12-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240503095353.3798063-12-mcgrof@kernel.org>
 
-I've been trying to get backports rolling to 6.1.y. Update MAINTAINERS
-file so backports requests / questions can get routed appropriately.
+On Fri, May 03, 2024 at 02:53:53AM -0700, Luis Chamberlain wrote:
+> From: Pankaj Raghav <p.raghav@samsung.com>
+> 
+> Page cache now has the ability to have a minimum order when allocating
+> a folio which is a prerequisite to add support for block size > page
+> size.
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+.....
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ecf4d0c8f446..4b19dfb5d2fd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -22557,6 +22557,7 @@ F:	include/xen/swiotlb-xen.h
- 
- XFS FILESYSTEM
- C:	irc://irc.oftc.net/xfs
-+M:	Leah Rumancik <leah.rumancik@gmail.com>
- M:	Darrick J. Wong <djwong@kernel.org>
- L:	linux-xfs@vger.kernel.org
- S:	Supported
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index bce020374c5e..db3b82c2c381 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1623,16 +1623,10 @@ xfs_fs_fill_super(
+>  		goto out_free_sb;
+>  	}
+>  
+> -	/*
+> -	 * Until this is fixed only page-sized or smaller data blocks work.
+> -	 */
+>  	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
+>  		xfs_warn(mp,
+> -		"File system with blocksize %d bytes. "
+> -		"Only pagesize (%ld) or less will currently work.",
+> -				mp->m_sb.sb_blocksize, PAGE_SIZE);
+> -		error = -ENOSYS;
+> -		goto out_free_sb;
+> +"EXPERIMENTAL: Filesystem with Large Block Size (%d bytes) enabled.",
+> +			mp->m_sb.sb_blocksize);
+>  	}
+
+We really don't want to have to test and support this on V4
+filesystems as tehy are deprecated, so can you make this conditional
+on being a V5 filesystem?
+
+i.e:
+	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
+		if (!xfs_has_crc(mp)) {
+			xfs_warn(mp,
+"V4 File system with blocksize %d bytes. Only pagesize (%ld) is supported.",
+				mp->m_sb.sb_blocksize, PAGE_SIZE);
+			error = -ENOSYS;
+			goto out_free_sb;
+		}
+
+		xfs_warn(mp,
+"EXPERIMENTAL: V5 Filesystem with Large Block Size (%d bytes) enabled.",
+			mp->m_sb.sb_blocksize);
+	}
+
+-Dave.
 -- 
-2.45.0.rc1.225.g2a3ae87e7f-goog
-
+Dave Chinner
+david@fromorbit.com
