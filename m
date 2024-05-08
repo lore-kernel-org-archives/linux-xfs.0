@@ -1,55 +1,53 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748FC81AD0;
-	Wed,  8 May 2024 11:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FD8D80C16;
+	Wed,  8 May 2024 11:40:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715168210; cv=none; b=E1i/Ro5FfsMGbMCNe6kfgl3KutPfJwd3i2lIES1ZH7G25x2QBVUHjP3o+epJ3OHEtVrTphtkSZ9I8/ohhQw0ITbVP1zLzgw7srhGUPawKoLDLp9VjyWI45NJKaQv7z2Ezb3gl6NTAK137UN1B6FenECiBcF9s1peFcUwFEelzns=
+	t=1715168405; cv=none; b=ugYCbN8zwlyA3EATnnCWxdWGIMTM4P9y0hmB/WzYAYPqTPhmz0IUGOvUc3tj7N17ocSnvB1HI0Cr5L0Zu9wW/CSgpIIYd/BnqQIB7+WtzMkJW84AK8N4A7Pq+Ms4a5HMcViRa+jtORP3D0pzn72mGmSg8EnPZmZ5By3FSY8doOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715168210; c=relaxed/simple;
-	bh=ionXjYKJhrS71F37Lkbw0fk4ODB48gbbt+9RI7m9ppw=;
+	s=arc-20240116; t=1715168405; c=relaxed/simple;
+	bh=n1Yp/PNkGCAOaGgNzSnsKa0mSwmdF+6LRktN0bUkFe8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kdOsZO0s1kb/gVl9Sm/R++/HICD3AfrXnspbnpfdcZDztfWZH31aYG7OlhNKIpQQiLEvMke6ZCXs17qu2f0/uwBpq1/45oFff2Qw1wl9Zl/lkTkL+R5k9JQcllx0v1tCMj94K0qnDgG2L3sTfRv5IeKngJJ8az6ZRphmU+YInqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=prTjolwE; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=UnNS/nlsTsVJAUU0Hd5LdXD2ymtIBhdcr9kOTUSIicuJX/WcbA+8BLQ01iG5w3q9WBzGqzQG8yYqTbyd6ODpHQQbT/CGVlrM118ldUGKzB/nPu7jBU0hKeGOE67YKd2XRkzfJV0NSc/MH2LWHqdardOfBSl7p51Hw3kRhRMLSuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=JzBIM3Hh; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="prTjolwE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=8rBSqqk3Dus3WYu5NpDl6sctlp3PQWFzSKoFRqkHQlo=; b=prTjolwEd1YkvaTflW9dmNx2HO
-	AG2tcaR6q+4iFyte+YucYkOlnUglinvPRfBljqY0fNtFz01mNoVPUbj9gtk5LzZAvKH/9JTj5uHYA
-	w5faiFjWiGstG8W7eN9Yhxv7rpQwD4Lrfxk3HZfYNwoLf/g5xeiGIEiExKRQzGmOa2ODgQf6FvPnJ
-	yWVNvY6pSWwsCDtMsmMeiwqhON68ROokIeRkz+uWMKgpfy+y970j1+I1uDYEfoLB4naHlT8c0cOx4
-	3IZrYCbf76VvU8QVBje3IXfGjZT4w9JjxisZWpBaHyhyXiYeKzo9yDIcxVvXwf2jziTizRfdlBdFb
-	qHrBzCXg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s4fbE-0000000FGOB-1v4V;
-	Wed, 08 May 2024 11:36:40 +0000
-Date: Wed, 8 May 2024 04:36:40 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Luis Chamberlain <mcgrof@kernel.org>, akpm@linux-foundation.org,
-	djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
-	chandan.babu@oracle.com, hare@suse.de, ritesh.list@gmail.com,
-	john.g.garry@oracle.com, ziy@nvidia.com,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, p.raghav@samsung.com, kernel@pankajraghav.com
-Subject: Re: [PATCH v5 07/11] iomap: fix iomap_dio_zero() for fs bs > system
- page size
-Message-ID: <ZjtjyM60ebrJfAmM@infradead.org>
-References: <20240503095353.3798063-1-mcgrof@kernel.org>
- <20240503095353.3798063-8-mcgrof@kernel.org>
- <ZjpQHA1zcLhUZa_D@casper.infradead.org>
- <ZjpSZ2KjpUHPs_1Z@infradead.org>
- <ZjpSzi-HiZkx_Kdq@casper.infradead.org>
- <ZjpTHdtPJr1wLZBL@infradead.org>
- <Zjr-lf2tJAmwLzzu@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="JzBIM3Hh"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4VZCqZ0LYQz9sQJ;
+	Wed,  8 May 2024 13:39:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1715168394;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=W8b5b6l3GLCsDlk5O+ejhQUOklplNdWM3AwYuWOI24c=;
+	b=JzBIM3HhX422tEgKrZjkDJsc26SpEUMYwBHDAqX7Kfq+NZTVCy4SI7U9rrUMzHOttYsWq3
+	eFRQNzWLuKFRE3k8cq/gkjEO9wbr2EnCBNf2L5luPvZFJgot1pDngkSbmD+S13TVCgtkWm
+	bdkTv9WMLn4147PK7nL+qNltl1D9hDx6C2duc8QvhUccVbWSFtvbMJ2FqD58XwFR3RsO2J
+	8OI1utieoGx5XklFcqCEqaWXmX90f8YJyGS6WWZI35srhu+QdOnC/yC0Q96bOwELTm3bhk
+	qrz/6IASRjGL5WlC4jQPlPTFux6muRM6XBJWPteLnm2AauVdvxc3BiVChd2qyQ==
+Date: Wed, 8 May 2024 11:39:49 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: hch@lst.de, willy@infradead.org, mcgrof@kernel.org,
+	akpm@linux-foundation.org, brauner@kernel.org,
+	chandan.babu@oracle.com, david@fromorbit.com, djwong@kernel.org,
+	gost.dev@samsung.com, hare@suse.de, john.g.garry@oracle.com,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org, p.raghav@samsung.com,
+	ritesh.list@gmail.com, ziy@nvidia.com
+Subject: Re: [RFC] iomap: use huge zero folio in iomap_dio_zero
+Message-ID: <20240508113949.pwyeavrc2rrwsxw2@quentin>
+References: <20240503095353.3798063-8-mcgrof@kernel.org>
+ <20240507145811.52987-1-kernel@pankajraghav.com>
+ <ZjpSx7SBvzQI4oRV@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,24 +56,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zjr-lf2tJAmwLzzu@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZjpSx7SBvzQI4oRV@infradead.org>
 
-On Wed, May 08, 2024 at 05:24:53AM +0100, Matthew Wilcox wrote:
-> On Tue, May 07, 2024 at 09:13:17AM -0700, Christoph Hellwig wrote:
-> > On Tue, May 07, 2024 at 05:11:58PM +0100, Matthew Wilcox wrote:
-> > > > 	__bio_add_page(bio, page, len, 0);
-> > > 
-> > > no?  len can be > PAGE_SIZE.
-> > 
-> > Yes. So what?
+On Tue, May 07, 2024 at 09:11:51AM -0700, Christoph Hellwig wrote:
+> On Tue, May 07, 2024 at 04:58:12PM +0200, Pankaj Raghav (Samsung) wrote:
+> > +	if (len > PAGE_SIZE) {
+> > +		folio = mm_get_huge_zero_folio(current->mm);
 > 
-> the zero_page is only PAGE_SIZE bytes long.  so you'd be writing
-> from the page that's after the zero page, whatever contents that has.
+> I don't think the mm_struct based interfaces work well here, as I/O
+> completions don't come in through the same mm.  You'll want to use
+> lower level interfaces like get_huge_zero_page and use them at
+> mount time.
 
-Except that the whole point of the exercise is to use the huge folio
-so that we don't run past the end of the zero page.  Yes, if we use
-ZERO_PAGE we need to chunk things up and use bio_add_page instead
-bio_page, check the return value and potentially deal with multiple
-bios.  I'd rather avoid that, though.
+At the moment, we can get a reference to the huge zero folio only through
+the mm interface. 
 
+Even if change the lower level interface to return THP, it can still fail
+at the mount time and we will need the fallback right?
+
+> 
+> > +		if (!folio)
+> > +			folio = zero_page_folio;
+> 
+> And then don't bother with a fallback.
+> 
+
+-- 
+Pankaj Raghav
