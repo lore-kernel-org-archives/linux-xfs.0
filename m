@@ -1,145 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE4D371753
-	for <linux-xfs@vger.kernel.org>; Wed,  8 May 2024 09:29:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDE642628B;
+	Wed,  8 May 2024 11:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715160583; cv=none; b=tvxiGb2UmoK0uyv/JF0q9M453IP5HdPBIvsRE0c5yUIUI5c2P8xYDRRr7WIR7xjZ1/IqUy079K7+Do/NagnUnFToYPCs50KV27P7628OUAwEycQ+khPGsMEULt8cpB1EP7ffpSt1GrrhiBnpP5UOLtQVrg9dVjybpdqUhbDj04k=
+	t=1715167218; cv=none; b=dEg3PbAR0Id0V0ZTIQsC7l84fGuVuVSZ2ILgH+pM43ZcfpXGxwPnD1r7Wu/dPKw4qhzSwiED3+h2Xx0YqH/q1+Fb9i343MylgMUUpoVR5d9TqCNJVkZ2gLlKMHiQ9YagP2pIjzbq8t2IS9mCz3PyUARfyBMppw96Q1sQTJy8EBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715160583; c=relaxed/simple;
-	bh=IuOti/7FmMOJOFVe94VcG21BqvUHpmUZFYDAMuu2xow=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sj+PQi2g9KXTWbQS8FQO5HDsBHRAAMEZOLHBPfKUdQjQNZJ18DGVfzl97tzRHohZlOOP7mMpc0JW+ZfrwRjGiqRaS6Hs8iaqkRInyOeXDLUeMeR+CUk61lJ0BAewfoTkKeNtLS002DRZWsxHmurt3wR0K8IAOW2ottKmQnr0SRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XQzSwZSm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1715167218; c=relaxed/simple;
+	bh=Nu6O2eMAVkIMziV3ZRSR/eCfiqPiKf6sn09cg0ygOoU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=k+ihHYbo1FvDTuMfW19UajF/5YpasZCNP+0cmdltDCHIHJZ3JPluzM4zWqhvHnVPBMxbFJBDz7ZC58XgGbyl5oyKJS0W9XBQPcPQuE/Xfe/DZjT5GQWDfmWF3IXCJ8icIFC4ncrnZNU/TGs/jFhRoPefiMoOIY5MJOSDodLopsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=kwhWSZcq; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XQzSwZSm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B299FC113CC;
-	Wed,  8 May 2024 09:29:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715160581;
-	bh=IuOti/7FmMOJOFVe94VcG21BqvUHpmUZFYDAMuu2xow=;
-	h=From:To:Cc:Subject:Date:From;
-	b=XQzSwZSm6oyYvM6nuSWPBSFU/SogxUizB8/Fh7VLCwmT1Kzc28OI3Y+VEfKPa/KBZ
-	 VCyevtuGFw9MPDULdLlkb4+dTHfmAY/pLmBJen5HHW3n5rNs9Ks78WFGUbcQUpIof0
-	 UdEEwT5CKS3+bu2VFKb7lcCbJW99AfSwKLRuMx2kEnJatcZn3qO39GtlyXqr/jC5WP
-	 ++IDxMfJAR22QjeFGmwlAasbRBk9hfswsp2zrhQ/+fxHLfsd51wcqp8WKNmi4QD886
-	 KMvkruJKjfFOmcY1S093GQj00eGp5OgNi5F3Atz3i05SOUgLSBfkRivBqAb+A2pSNI
-	 MSjIQ4u+U1/yw==
-User-agent: mu4e 1.10.8; emacs 29.2
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: yi.zhang@huawei.com
-Cc: brauner@kernel.org, Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Subject: [BUG REPORT] generic/561 fails when testing xfs on next-20240506
- kernel
-Date: Wed, 08 May 2024 14:31:02 +0530
-Message-ID: <87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="kwhWSZcq"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4VZCNr6w5lz9sQg;
+	Wed,  8 May 2024 13:20:12 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1715167213;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Y1un4/swOYqLsaMeeUpem8iiB/EUo0Jbdf4dJTwbApE=;
+	b=kwhWSZcqfxeUqy4w1ehrBrcL7c7QvNY6vH49D8wxGPTQs4HDilQDAovRKcID5Le1IApaTr
+	I1h2y6zMSnT83BwIhGl53JK2STiGOp5vW3tgBVnbl/xxLX3FwAi554PQUW+jvAlVhTJ8s7
+	PRRLTseJatMAldsJZbEkba59lcCay+0jzb9uQwi+e/mVEhkcxv14GmiFmrlb/7Y7Yo+Uaq
+	sDGXNl9aREvM4AXSmkm5Vv3Mxp/IgBTM/vo9Ly2W0zmwWNxinNQDIepQWvNdf/CIH9f/Rn
+	2L6oCVWyobMBGqG24+1bNOaZ9uQftwbST42yyRV3bzFqoFifLmTXnxxyUxk4Hg==
+Date: Wed, 8 May 2024 11:20:05 +0000
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, akpm@linux-foundation.org,
+	djwong@kernel.org, brauner@kernel.org, david@fromorbit.com,
+	chandan.babu@oracle.com, hare@suse.de, ritesh.list@gmail.com,
+	john.g.garry@oracle.com, ziy@nvidia.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, p.raghav@samsung.com
+Subject: Re: [PATCH v5 07/11] iomap: fix iomap_dio_zero() for fs bs > system
+ page size
+Message-ID: <20240508112005.4zhxgcre73omr37s@quentin>
+References: <20240503095353.3798063-1-mcgrof@kernel.org>
+ <20240503095353.3798063-8-mcgrof@kernel.org>
+ <ZjpQHA1zcLhUZa_D@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZjpQHA1zcLhUZa_D@casper.infradead.org>
 
-Hi,
+On Tue, May 07, 2024 at 05:00:28PM +0100, Matthew Wilcox wrote:
+> On Fri, May 03, 2024 at 02:53:49AM -0700, Luis Chamberlain wrote:
+> > +	bio = iomap_dio_alloc_bio(iter, dio, BIO_MAX_VECS,
+> > +				  REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+> >  	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+> >  				  GFP_KERNEL);
+> > +
+> >  	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
+> >  	bio->bi_private = dio;
+> >  	bio->bi_end_io = iomap_dio_bio_end_io;
+> >  
+> > -	__bio_add_page(bio, page, len, 0);
+> > +	while (len) {
+> > +		unsigned int io_len = min_t(unsigned int, len, PAGE_SIZE);
+> > +
+> > +		__bio_add_page(bio, page, io_len, 0);
+> > +		len -= io_len;
+> > +	}
+> >  	iomap_dio_submit_bio(iter, dio, bio, pos);
+> 
+> If the len is more than PAGE_SIZE * BIO_MAX_VECS, __bio_add_page()
+> will fail silently.  I hate this interface.
 
-generic/561 fails when testing XFS on a next-20240506 kernel as shown below,
+I added a WARN_ON_ONCE() at the start of the function so that it does
+not silently fail:
+	WARN_ON_ONCE(len > (BIO_MAX_VECS * PAGE_SIZE));
 
-# ./check generic/561
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 xfs-crc-rtdev-extsize-28k 6.9.0-rc7-next-2024=
-0506+ #1 SMP PREEMPT_DYNAMIC Mon May  6 07:53:46 GMT 2024
-MKFS_OPTIONS  -- -f -rrtdev=3D/dev/loop14 -f -m reflink=3D0,rmapbt=3D0, -d =
-rtinherit=3D1 -r extsize=3D28k /dev/loop5
-MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 -ortdev=3D/dev/lo=
-op14 /dev/loop5 /media/scratch
+This function is used to do only sub block zeroing, and I don't think we will
+cross 1MB block size in the forseeable future, and even if we do, we have
+this to warn us about so that it can be changed?
 
-generic/561       - output mismatch (see /var/lib/xfstests/results/xfs-crc-=
-rtdev-extsize-28k/6.9.0-rc7-next-20240506+/xfs_crc_rtdev_extsize_28k/generi=
-c/561.out.bad)
-    --- tests/generic/561.out   2024-05-06 08:18:09.681430366 +0000
-    +++ /var/lib/xfstests/results/xfs-crc-rtdev-extsize-28k/6.9.0-rc7-next-=
-20240506+/xfs_crc_rtdev_extsize_28k/generic/561.out.bad        2024-05-08 0=
-9:14:24.908010133 +0000
-    @@ -1,2 +1,5 @@
-     QA output created by 561
-    +/media/scratch/dir/p0/d0XXXXXXXXXXXXXXXXXXXXXXX/d486/d4bXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXX/d5bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d212XXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXX/d11XXXXXXXXX/d54/de4/d158/d27f/d895/d1307XXX/d=
-8a4/d832XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/r112fXXXXXXXX=
-XXX: FAILED
-    +/media/scratch/dir/p0/d0XXXXXXXXXXXXXXXXXXXXXXX/d486/d4bXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXX/d5bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d212XXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXX/d11XXXXXXXXX/d54/de4/d158/d27f/d13a3XXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d13c=
-0XXXXXXXX/d2301X/d222bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d1240XXXXXXXXXXXX=
-XXXXXXXXXXXX/d722XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d1380XXXXXXXXXXXXXXXX/dc62XXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/r10d5: FAILED
-    +md5sum: WARNING: 2 computed checksums did NOT match
-     Silence is golden
-    ...
-    (Run 'diff -u /var/lib/xfstests/tests/generic/561.out /var/lib/xfstests=
-/results/xfs-crc-rtdev-extsize-28k/6.9.0-rc7-next-20240506+/xfs_crc_rtdev_e=
-xtsize_28k/generic/561.out.bad'  to see the entire diff)
-Ran: generic/561
-Failures: generic/561
-Failed 1 of 1 tests
+> 
+> You should be doing something like ...
+> 
+> 	while (len) {
+> 		unsigned int io_len = min_t(unsigned int, len, PAGE_SIZE);
+> 
+> 		while (!bio || bio_add_page() < io_len) {
+> 			if (bio)
+> 				iomap_dio_submit_bio(iter, dio, bio, pos);
+> 			bio = iomap_dio_alloc_bio(iter, dio, BIO_MAX_VECS,
+> 					REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+> 		 	fscrypt_set_bio_crypt_ctx(bio, inode,
+> 					pos >> inode->i_blkbits, GFP_KERNEL);
+> 		}
+> 	}
 
-The following was the fstest configuration used for the test run,
-
-  FSTYP=3Dxfs
-  TEST_DIR=3D/media/test
-  SCRATCH_MNT=3D/media/scratch
-  TEST_DEV=3D/dev/loop16
-  TEST_LOGDEV=3D/dev/loop13
-  SCRATCH_DEV_POOL=3D"/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop=
-9 /dev/loop10 /dev/loop11 /dev/loop12"
-  MKFS_OPTIONS=3D'-f -m crc=3D1,reflink=3D0,rmapbt=3D0, -i sparse=3D0 -lsiz=
-e=3D1g'
-  TEST_FS_MOUNT_OPTS=3D"-o logdev=3D/dev/loop13"
-  MOUNT_OPTIONS=3D'-o usrquota,grpquota,prjquota'
-  TEST_FS_MOUNT_OPTS=3D"$TEST_FS_MOUNT_OPTS -o usrquota,grpquota,prjquota"
-  SCRATCH_LOGDEV=3D/dev/loop15
-  USE_EXTERNAL=3Dyes
-  LOGWRITES_DEV=3D/dev/loop15
-
-Git bisect produced the following as the first bad commit,
-
-commit 943bc0882cebf482422640924062a7daac5a27ba
-Author: Zhang Yi <yi.zhang@huawei.com>
-Date:   Wed Mar 20 19:05:45 2024 +0800
-
-    iomap: don't increase i_size if it's not a write operation
-
-    Increase i_size in iomap_zero_range() and iomap_unshare_iter() is not
-    needed, the caller should handle it. Especially, when truncate partial
-    block, we should not increase i_size beyond the new EOF here. It doesn't
-    affect xfs and gfs2 now because they set the new file size after zero
-    out, it doesn't matter that a transient increase in i_size, but it will
-    affect ext4 because it set file size before truncate. So move the i_size
-    updating logic to iomap_write_iter().
-
-    Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-    Link: https://lore.kernel.org/r/20240320110548.2200662-7-yi.zhang@huawe=
-icloud.com
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-    Signed-off-by: Christian Brauner <brauner@kernel.org>
-
- fs/iomap/buffered-io.c | 50 +++++++++++++++++++++++++---------------------=
-----
- 1 file changed, 25 insertions(+), 25 deletions(-)
-=20
---=20
-Chandan
+-- 
+Pankaj Raghav
