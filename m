@@ -1,108 +1,145 @@
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4863974C0D
-	for <linux-xfs@vger.kernel.org>; Wed,  8 May 2024 09:20:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE4D371753
+	for <linux-xfs@vger.kernel.org>; Wed,  8 May 2024 09:29:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715160029; cv=none; b=J1NgxQ3uR3hJaqD+52a7ssaidtq1fNDoWZ9n3iqEzNHIS0F4cFkGU4f4DeI7pNw2zGLu/NWqOhie3BBlE1yf5RHvvwW1UvcTyyAmt6QLuyURdroyOY1BbNXjAWCmHXb1Yj3w6VrhaEFw457pS071UZaZMAKQ9RZafxH14AZ4u0I=
+	t=1715160583; cv=none; b=tvxiGb2UmoK0uyv/JF0q9M453IP5HdPBIvsRE0c5yUIUI5c2P8xYDRRr7WIR7xjZ1/IqUy079K7+Do/NagnUnFToYPCs50KV27P7628OUAwEycQ+khPGsMEULt8cpB1EP7ffpSt1GrrhiBnpP5UOLtQVrg9dVjybpdqUhbDj04k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715160029; c=relaxed/simple;
-	bh=yKfqWildDBpRn3j/aQLboejYqWIQhfdprrcdr7mLdr8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jY4LkBk6KNYJVjSEcpNIm1XFZ0HhwtsztYwczpCL+gb/JH+LtHKMGf3LT4N9qCBt37VPRMTo6pa6THsTlSayIWI1CkcObiDyTp4EItjLNVeeH1mC8KHTu0ThOrfDeQY+HGnu6Gajtu50ODEE9UaW1s3ZrslXs5hHR4w6wJ0HkMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ei3BqE/P; arc=none smtp.client-ip=209.85.218.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1715160583; c=relaxed/simple;
+	bh=IuOti/7FmMOJOFVe94VcG21BqvUHpmUZFYDAMuu2xow=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=sj+PQi2g9KXTWbQS8FQO5HDsBHRAAMEZOLHBPfKUdQjQNZJ18DGVfzl97tzRHohZlOOP7mMpc0JW+ZfrwRjGiqRaS6Hs8iaqkRInyOeXDLUeMeR+CUk61lJ0BAewfoTkKeNtLS002DRZWsxHmurt3wR0K8IAOW2ottKmQnr0SRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XQzSwZSm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ei3BqE/P"
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-a59c448b44aso833548666b.2
-        for <linux-xfs@vger.kernel.org>; Wed, 08 May 2024 02:20:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1715160026; x=1715764826; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=3XvuGnMD1Ah+tuwTUGBWHswEEMKL2KFH48xBYXc+VM8=;
-        b=ei3BqE/PSo0Ze6nfudrXV+AGVhUpl5uCPNXWHQde5JTUkkhun9QoqF3bWU5z3tTOJA
-         LkBvJ7cp3DS/IE+ptDRw00V1wujbtMlDBoifZGlN0Kspce3DqMMgn4oODS3YpEhNPEIR
-         OdosdwD+D56YUhkWHovISFpkZoMikcDI3RcCGnt+SindLNWqqRROmZ2RBZ4QjbKwR09N
-         Axx1R5TJhMV22cMsoDi2URq62P5r+VjduU14jFL3IBQImhJ9GCJTBRZVaeAMudogCoG8
-         fTbQvqUp/E1wWJKBssDmDhb89/39CB0kr8dcl0HGD7pVPJM/vfQQjEV8Vesi0g+3yaVb
-         W90Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715160026; x=1715764826;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3XvuGnMD1Ah+tuwTUGBWHswEEMKL2KFH48xBYXc+VM8=;
-        b=BlQczqTfb8L19p+NsM59Dd5nid2meD09BKOBu6oJoExf+i7da+s++7xSyxWAp8meWV
-         O410s70/RD3YVa9YXexlxqxMzK+kRUzXjTPsq2C9+9xLAsTMs6s6kCWS0dq+isXzY0Tv
-         +6c+tWSMQJEldCslZpfkX2dzLJqTefP/kRWevlGv44q6TKSMmZ2iZ+dSU83GNidO8kgX
-         M53hUv60A1PhNZS95+oNaqlOG26nrrPtT3JNdOz+HXPW48fHcvQ5vCPttECPvs5J+qxc
-         j83omhUWl4/H2J7/5yYy2FKexnfSuCRpwxI0FVhh9ZMcixGZEDUQBvhCAJ7vA1hk7+I2
-         /lmQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVkEtv4DeeS76oel+0B7eBqHD1MhC0Vc7RhPCvSy0LA0oV15Hk+uHpCDGAuHrcFdVPUDegEwvdXqh5/x36H2jk5pNVh9ZPiSuW6
-X-Gm-Message-State: AOJu0Yx7cdvfkl5ZUaoMeu5rjozXEqaznruAPLAsZQxlxt8i/wCJCJJC
-	58OCetA80VVNwdBYUQpHVR8Aa5YJrqrI+P1eahCjbpc3Kw9GyYwqs3p7i6RQNQc=
-X-Google-Smtp-Source: AGHT+IHq2INOQdTZFtxvBQ4CNgUmxUKG/Y5YiCzni6VgE1Hb/kxqQiCsxPVeCX8iNNi6RQsuxFZCQw==
-X-Received: by 2002:a17:906:c444:b0:a59:c28a:7ec2 with SMTP id a640c23a62f3a-a59fb95dc67mr115208566b.41.1715160026392;
-        Wed, 08 May 2024 02:20:26 -0700 (PDT)
-Received: from localhost ([102.222.70.76])
-        by smtp.gmail.com with ESMTPSA id g3-20020a170906394300b00a599c1d46d5sm5967553eje.101.2024.05.08.02.20.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 May 2024 02:20:25 -0700 (PDT)
-Date: Wed, 8 May 2024 12:20:22 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] xfs: check for negatives in xfs_exchange_range_checks()
-Message-ID: <20137ff5-76a7-4b3d-96d9-9c6c90cbb063@moroto.mountain>
-References: <0e7def98-1479-4f3a-a69a-5f4d09e12fa8@moroto.mountain>
- <ZjrVaynGeygNaDtQ@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XQzSwZSm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B299FC113CC;
+	Wed,  8 May 2024 09:29:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1715160581;
+	bh=IuOti/7FmMOJOFVe94VcG21BqvUHpmUZFYDAMuu2xow=;
+	h=From:To:Cc:Subject:Date:From;
+	b=XQzSwZSm6oyYvM6nuSWPBSFU/SogxUizB8/Fh7VLCwmT1Kzc28OI3Y+VEfKPa/KBZ
+	 VCyevtuGFw9MPDULdLlkb4+dTHfmAY/pLmBJen5HHW3n5rNs9Ks78WFGUbcQUpIof0
+	 UdEEwT5CKS3+bu2VFKb7lcCbJW99AfSwKLRuMx2kEnJatcZn3qO39GtlyXqr/jC5WP
+	 ++IDxMfJAR22QjeFGmwlAasbRBk9hfswsp2zrhQ/+fxHLfsd51wcqp8WKNmi4QD886
+	 KMvkruJKjfFOmcY1S093GQj00eGp5OgNi5F3Atz3i05SOUgLSBfkRivBqAb+A2pSNI
+	 MSjIQ4u+U1/yw==
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: yi.zhang@huawei.com
+Cc: brauner@kernel.org, Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+Subject: [BUG REPORT] generic/561 fails when testing xfs on next-20240506
+ kernel
+Date: Wed, 08 May 2024 14:31:02 +0530
+Message-ID: <87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZjrVaynGeygNaDtQ@dread.disaster.area>
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 08, 2024 at 11:29:15AM +1000, Dave Chinner wrote:
-> On Sat, May 04, 2024 at 02:27:36PM +0300, Dan Carpenter wrote:
-> > The fxr->file1_offset and fxr->file2_offset variables come from the user
-> > in xfs_ioc_exchange_range().  They are size loff_t which is an s64.
-> > Check the they aren't negative.
-> > 
-> > Fixes: 9a64d9b3109d ("xfs: introduce new file range exchange ioctl")
-> > Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
-> > ---
-> > From static analysis.  Untested.  Sorry!
-> > 
-> >  fs/xfs/xfs_exchrange.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_exchrange.c b/fs/xfs/xfs_exchrange.c
-> > index c8a655c92c92..3465e152d928 100644
-> > --- a/fs/xfs/xfs_exchrange.c
-> > +++ b/fs/xfs/xfs_exchrange.c
-> > @@ -337,6 +337,9 @@ xfs_exchange_range_checks(
-> >  	if (IS_SWAPFILE(inode1) || IS_SWAPFILE(inode2))
-> >  		return -ETXTBSY;
-> >  
-> > +	if (fxr->file1_offset < 0 || fxr->file2_offset < 0)
-> > +		return -EINVAL;
-> 
-> Aren't the operational offset/lengths already checked for underflow
-> and overflow via xfs_exchange_range_verify_area()?
+Hi,
 
-Ah right.  Smatch complains in the middle of the two calls to
-xfs_exchange_range_verify_area().  (It get's called in different places
-depending on if the XFS_EXCHANGE_RANGE_TO_EOF flag is set).
+generic/561 fails when testing XFS on a next-20240506 kernel as shown below,
 
-regards,
-dan carpenter
+# ./check generic/561
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 xfs-crc-rtdev-extsize-28k 6.9.0-rc7-next-2024=
+0506+ #1 SMP PREEMPT_DYNAMIC Mon May  6 07:53:46 GMT 2024
+MKFS_OPTIONS  -- -f -rrtdev=3D/dev/loop14 -f -m reflink=3D0,rmapbt=3D0, -d =
+rtinherit=3D1 -r extsize=3D28k /dev/loop5
+MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 -ortdev=3D/dev/lo=
+op14 /dev/loop5 /media/scratch
 
+generic/561       - output mismatch (see /var/lib/xfstests/results/xfs-crc-=
+rtdev-extsize-28k/6.9.0-rc7-next-20240506+/xfs_crc_rtdev_extsize_28k/generi=
+c/561.out.bad)
+    --- tests/generic/561.out   2024-05-06 08:18:09.681430366 +0000
+    +++ /var/lib/xfstests/results/xfs-crc-rtdev-extsize-28k/6.9.0-rc7-next-=
+20240506+/xfs_crc_rtdev_extsize_28k/generic/561.out.bad        2024-05-08 0=
+9:14:24.908010133 +0000
+    @@ -1,2 +1,5 @@
+     QA output created by 561
+    +/media/scratch/dir/p0/d0XXXXXXXXXXXXXXXXXXXXXXX/d486/d4bXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXX/d5bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d212XXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXX/d11XXXXXXXXX/d54/de4/d158/d27f/d895/d1307XXX/d=
+8a4/d832XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/r112fXXXXXXXX=
+XXX: FAILED
+    +/media/scratch/dir/p0/d0XXXXXXXXXXXXXXXXXXXXXXX/d486/d4bXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXX/d5bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d212XXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXX/d11XXXXXXXXX/d54/de4/d158/d27f/d13a3XXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d13c=
+0XXXXXXXX/d2301X/d222bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d1240XXXXXXXXXXXX=
+XXXXXXXXXXXX/d722XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d1380XXXXXXXXXXXXXXXX/dc62XXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/r10d5: FAILED
+    +md5sum: WARNING: 2 computed checksums did NOT match
+     Silence is golden
+    ...
+    (Run 'diff -u /var/lib/xfstests/tests/generic/561.out /var/lib/xfstests=
+/results/xfs-crc-rtdev-extsize-28k/6.9.0-rc7-next-20240506+/xfs_crc_rtdev_e=
+xtsize_28k/generic/561.out.bad'  to see the entire diff)
+Ran: generic/561
+Failures: generic/561
+Failed 1 of 1 tests
+
+The following was the fstest configuration used for the test run,
+
+  FSTYP=3Dxfs
+  TEST_DIR=3D/media/test
+  SCRATCH_MNT=3D/media/scratch
+  TEST_DEV=3D/dev/loop16
+  TEST_LOGDEV=3D/dev/loop13
+  SCRATCH_DEV_POOL=3D"/dev/loop5 /dev/loop6 /dev/loop7 /dev/loop8 /dev/loop=
+9 /dev/loop10 /dev/loop11 /dev/loop12"
+  MKFS_OPTIONS=3D'-f -m crc=3D1,reflink=3D0,rmapbt=3D0, -i sparse=3D0 -lsiz=
+e=3D1g'
+  TEST_FS_MOUNT_OPTS=3D"-o logdev=3D/dev/loop13"
+  MOUNT_OPTIONS=3D'-o usrquota,grpquota,prjquota'
+  TEST_FS_MOUNT_OPTS=3D"$TEST_FS_MOUNT_OPTS -o usrquota,grpquota,prjquota"
+  SCRATCH_LOGDEV=3D/dev/loop15
+  USE_EXTERNAL=3Dyes
+  LOGWRITES_DEV=3D/dev/loop15
+
+Git bisect produced the following as the first bad commit,
+
+commit 943bc0882cebf482422640924062a7daac5a27ba
+Author: Zhang Yi <yi.zhang@huawei.com>
+Date:   Wed Mar 20 19:05:45 2024 +0800
+
+    iomap: don't increase i_size if it's not a write operation
+
+    Increase i_size in iomap_zero_range() and iomap_unshare_iter() is not
+    needed, the caller should handle it. Especially, when truncate partial
+    block, we should not increase i_size beyond the new EOF here. It doesn't
+    affect xfs and gfs2 now because they set the new file size after zero
+    out, it doesn't matter that a transient increase in i_size, but it will
+    affect ext4 because it set file size before truncate. So move the i_size
+    updating logic to iomap_write_iter().
+
+    Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+    Link: https://lore.kernel.org/r/20240320110548.2200662-7-yi.zhang@huawe=
+icloud.com
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+    Signed-off-by: Christian Brauner <brauner@kernel.org>
+
+ fs/iomap/buffered-io.c | 50 +++++++++++++++++++++++++---------------------=
+----
+ 1 file changed, 25 insertions(+), 25 deletions(-)
+=20
+--=20
+Chandan
