@@ -1,94 +1,89 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE41B80C14;
-	Thu,  9 May 2024 20:17:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 892991292CC;
+	Thu,  9 May 2024 22:00:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715285864; cv=none; b=GoBVRZnDw67HfTZLcMfP9IcEu/5AFzcfnZbJojlSGc2kA2qVev/sfdzb8elX5pOTYXradhOpdLcWOeIFp0XsTq/Carjiq2+quOyLoWMeKrAmVNbXrbBpFDrfb6m0avRskLqp4ALJVWjVDq29tUAO+xLzZC6p6HqooF0ruZskDsI=
+	t=1715292007; cv=none; b=Aax4KDamI3X+f9hI0V631I9un9UUupwwpDXJgrb0y0u4yfZY31/84+ADOytPPT5Wg1mdGpsLRc7mzHF2reEwrf7Q7LOmNLwdux/in5qeL5/0awSeRDw9YlCqvzgczMOEFDU2jSClXJT5GLefHMHuN0gJa1z9XdFWJ3cNAwm2qz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715285864; c=relaxed/simple;
-	bh=S/CCO5/QNpzI4OvPJp6a7Mb30fILCCIdG1WRMmNcaz0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HvjYiQG/RqH4RbmFtLGUBSsWAWvWCemZI6/tWzPQs1U9DiF9PEu66td3j/6EONB+gOS15m9nIY1sPg4v+J9zbpsx8sSf9Q8N3Phxvio6eb27tMjSpbXH/EO6wD4TsNI2kQc5IqPEwM7uh/BZdcbz1NjdN8TPn/ht6wUZn2jcVG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OTYGzRy8; arc=none smtp.client-ip=209.85.216.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1715292007; c=relaxed/simple;
+	bh=fhTJUGDcdOi43Jnd8puKDUnYXo8xg3dyrBSae3d5BFY=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=Yu3Bqywk+2hZ7uXShm7ra3JKsY+bbAB3XP7aPK7vsBF09k5APq0jHRsoGWLWdkgNcZhpo6ESNU6IeFFvQTYFC1P4FZQIji4cIbtoNMOVrKAXCusLVqiqzha6tJRBgqfZANtQDVXaSBHsWzRYNTCnrcPZmWW4m8gAjUir4r9r6rQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=n+/oc90g; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OTYGzRy8"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2b620677a4fso1043774a91.1;
-        Thu, 09 May 2024 13:17:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1715285862; x=1715890662; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=sEo1k9QjNoaPjKHYXsGQt2oIR44fE7x4tGAc9RVTBi8=;
-        b=OTYGzRy8RHveYVx0VTArmtlvI8z9qmM5msdyxLP4ShUhoJ0mSsDgxcxrfm+MBlylG6
-         +4nOfRIE2oLF34n9+FSzM7EfBtdRXu5XyB38CVui7g33rhUY6TGsjINNoXzeghnwU30j
-         duH58WpuLwZ0ramWM2h4Nbq1lo+v1fvWqtC+x/6+V/Bg5wcGzVXxWvIU91bb4dFXWcSd
-         QYV+69/5lBAcEuAhNMRGX9cjCmuE7Fy6Le8WCqXU6rPaxHpeg86PtGCCscTm5dUuqGLE
-         TOdFsFS3tpfU17kAWiIECqftL1kVRVGqPqzgefU8/gGPDYJTrtr3fTIoJpvLGoW5l5Ce
-         8tsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715285862; x=1715890662;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=sEo1k9QjNoaPjKHYXsGQt2oIR44fE7x4tGAc9RVTBi8=;
-        b=T7Lottw1TjjdalTRG3TUW9a90fH7kXNBHmuuKDzVWeJlAsp2pfxzpkyzRxBK1fEYye
-         2S5iVuN8XHtOCHQQ18cdk3s7wGXyVioL8j0XPssKn/B9BQxnwYSnkTDEkjBvF+sgjdFH
-         yq4bNbzH15qx/LZgebOO/KDfJnrotWTpm8ZI7yPhjvXbeyo9bTj8uUOn3Vp1HLbEvnsR
-         Q5MF1XKmzkmMErFJ5EM7I3vWusPPwC2TRyuxyRQZa8OGPQNRDnKa6Uk1IQfPc4wOkSdg
-         8VNhzdPg8DKIwdEbIh2l0679TdXVlnLFvDC6CAJukJyGqaPl016uUBdvfZxkm7NAhrmV
-         u82w==
-X-Gm-Message-State: AOJu0Yx/sKzQ9ajX53Ago8vs2MgDcHOZVXbgtbp0WirDXoAWLXxSjDnI
-	qLpfMYIuD1ug9ptILP/1iEXy/Ora4xrdJsR+XN+BUO2G99V76SnH1Pp4Pw==
-X-Google-Smtp-Source: AGHT+IH7zGvvDn2cSpwGXt27l+n1EYkk5xq05P2G7mbOWeU6CB4xhj6nO1eQpPQKL7bTjRfZjlzENA==
-X-Received: by 2002:a17:90b:ec7:b0:2b4:3679:183e with SMTP id 98e67ed59e1d1-2b6cc879ac3mr617885a91.21.1715285862008;
-        Thu, 09 May 2024 13:17:42 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:b32e:d59f:76f1:7402])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2b67178301esm1870174a91.49.2024.05.09.13.17.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 May 2024 13:17:41 -0700 (PDT)
-From: Leah Rumancik <leah.rumancik@gmail.com>
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	amir73il@gmail.com,
-	chandan.babu@oracle.com,
-	Leah Rumancik <leah.rumancik@gmail.com>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 6.1] MAINTAINERS: add leah to 6.1 MAINTAINERS file
-Date: Thu,  9 May 2024 13:17:35 -0700
-Message-ID: <20240509201735.2208865-1-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.45.0.118.g7fe29c98d7-goog
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="n+/oc90g"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=6ReveTWWElOwm+nOGbREtwyDH8pYqac9yedB8poPIGw=; b=n+/oc90gcMIoirqjRPYU5I+I7c
+	jBk0Nz3akXqr9z99aU970UhzNXSLgCnlcK7LnHN+/lW7cpL+5Hiz3MfmYRc6MY55VS71LgnfXZYMy
+	zit14EOdpEv/3Qh9w/CjkjyL8XVSzIFBkWpEAt42olr05QNVrWNQmcv33eddLZG5BCD8kq+lMeg4P
+	lyRU9T5CFUq8vCTh8O6GSTaYD5Xi8MJJQ7ZGjCWfPece1jKNA+2sfHBqjUG/jAAiK7r82JCXHguRg
+	MzUsWIALL2EHT8tx+bKCpU/qj7O1TP0rOm0u2rcm0I3lwI/U+OnKQbsPUDGRMdW05H1VcUKMgvUkG
+	FPrQ88mw==;
+Received: from d104-157-31-28.abhsia.telus.net ([104.157.31.28] helo=[192.168.1.250])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.94.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1s5Bnn-00EPCu-8r; Thu, 09 May 2024 15:59:48 -0600
+Message-ID: <4393e0d9-28c5-4b85-b603-40e457c9beba@deltatee.com>
+Date: Thu, 9 May 2024 15:59:35 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org
+Cc: david@fromorbit.com, dan.j.williams@intel.com, jhubbard@nvidia.com,
+ rcampbell@nvidia.com, willy@infradead.org, jgg@nvidia.com,
+ linux-fsdevel@vger.kernel.org, jack@suse.cz, djwong@kernel.org, hch@lst.de,
+ david@redhat.com, ruansy.fnst@fujitsu.com, nvdimm@lists.linux.dev,
+ linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, jglisse@redhat.com
+References: <cover.fe275e9819458a4bbb9451b888cafb88af8867d4.1712796818.git-series.apopple@nvidia.com>
+ <a443974e64917824e078485d4e755ef04c89d73f.1712796818.git-series.apopple@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <a443974e64917824e078485d4e755ef04c89d73f.1712796818.git-series.apopple@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 104.157.31.28
+X-SA-Exim-Rcpt-To: apopple@nvidia.com, linux-mm@kvack.org, david@fromorbit.com, dan.j.williams@intel.com, jhubbard@nvidia.com, rcampbell@nvidia.com, willy@infradead.org, jgg@nvidia.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, djwong@kernel.org, hch@lst.de, david@redhat.com, ruansy.fnst@fujitsu.com, nvdimm@lists.linux.dev, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, jglisse@redhat.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [RFC 03/10] pci/p2pdma: Don't initialise page refcount to one
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-I've been trying to get backports rolling to 6.1.y. Update MAINTAINERS
-file so backports requests / questions can get routed appropriately.
+Hi Alistair,
 
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+I was working on testing your patch set, however I'm dealing with some
+hardware issues at the moment so I haven't fully tested everything yet.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ecf4d0c8f446..4b19dfb5d2fd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -22557,6 +22557,7 @@ F:	include/xen/swiotlb-xen.h
- 
- XFS FILESYSTEM
- C:	irc://irc.oftc.net/xfs
-+M:	Leah Rumancik <leah.rumancik@gmail.com>
- M:	Darrick J. Wong <djwong@kernel.org>
- L:	linux-xfs@vger.kernel.org
- S:	Supported
--- 
-2.45.0.118.g7fe29c98d7-goog
+I managed to find one issue though:
 
+On 2024-04-10 18:57, Alistair Popple wrote:
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index fa7370f..ab7ef18 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -128,6 +128,8 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
+>  		goto out;
+>  	}
+>  
+> +	get_page(virt_to_page(kaddr));
+> +
+
+kaddr may represent more than one page, so this will fail to map
+anything if the mapping size is greater than 4KB. There is a loop just
+below this that calls vm_insert_page(). Moving a set_page_count() call
+just before vm_insert_page() fixes the issue.
+
+Thanks!
+
+Logan
