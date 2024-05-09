@@ -1,52 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ACEE15AF1;
-	Thu,  9 May 2024 14:32:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 017681E48B
+	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 14:35:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715265172; cv=none; b=Q+Ne1vLR52dNiFrFo4Uenc6wADen19WtBQNefe29JMd+y0VDrFUTR4kmb+TqiYSRqFg3ED9U9t6f/qkordTu0CjRI/uapYvZBv9J+Uk64tYSUQfmlJ2JlMiHmb25Mf9pGGbFVYMiquGRuEKj72cbNsL5NdPPYYHv2xyUiND+H84=
+	t=1715265330; cv=none; b=EoD23jAmwFFvfT3kTVeJaTh/SbqpeK2U74LCWAcKwsT7lrdFF297XPjUp+Cfmm8kqksFqSl8KGRxkeKm16Eu7uTKZm4H63oDd+/GmXcIYcWjK5X6s+IUpbQZxx5kxlbBZbJHzQUsXArOfHXEaQOpWUZaCNWhAHYDKy3Cc4+DS70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715265172; c=relaxed/simple;
-	bh=yz+YFbGtkYLL4EGdTd6mZCOqxppkuLvjVZ6QPxvtmJg=;
+	s=arc-20240116; t=1715265330; c=relaxed/simple;
+	bh=XHXCwrD1Igk0Kpgq+ojWV1QQcR0qNQgvIf/k6w65P8I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eqHpySUMW37PC24K6eiPd8oqpbj9gqYgA1y9HNzkqhPpHue6DqP5CitfrplS8eS8ZaVaYYuCUZloN86coHl1+6gtoLwJ3xtZCRFm+po2KMLSqoRp+f0vCZ4kZCe4r6H2GfTCiK6liiDJRmT8CrayluzXUoRKOaOxBnp34TKcP7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aK9xR7Pg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GV+R1cjL/64g088NaxRGYfnBGP4BGy55BoicpSi24G5tA9eaWLe5+SMhtUo6HTosplUrULz2bDG+oqsOQ/zahKbsQ/fHS2aM7PJwv257cZE5um+l4O6LoIa3oAjMsZn59bdnBNX10+FZFwIxN4jBz0Bu/nJelaLnbnB3j0SUsrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lUomK7mj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aK9xR7Pg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B9ADC116B1;
-	Thu,  9 May 2024 14:32:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lUomK7mj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E730C116B1;
+	Thu,  9 May 2024 14:35:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715265171;
-	bh=yz+YFbGtkYLL4EGdTd6mZCOqxppkuLvjVZ6QPxvtmJg=;
+	s=k20201202; t=1715265329;
+	bh=XHXCwrD1Igk0Kpgq+ojWV1QQcR0qNQgvIf/k6w65P8I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aK9xR7PgFB5bDXWjchi/PqHuIU+Au6YYRAM+Mc+i7r8mptyatvOtU9H4ymrCRKzmX
-	 i1sa0hT0QuCmU3225WaJYaVv4BtoK1vggutyVLg7djL1WBuTjj7+EdyqT0w8Tc5UzV
-	 cplECW9fHgxmwKrmNEi7OF5MMXzHdpv7cKYMhiJsoW2PO4MWua9n3g7I0OBw87Wb5o
-	 F8TzTC14QhZ5+Il++GiDZP2p48vWsay4RsUHHuXpR3KC08CzL0MY1485d83TBH1R9Q
-	 i/piU4TfG71SnOHL6E9uxmyWLBqTeo44jfN62fB9JzQHw0sEkTn7J2oAR8jltBkZ8F
-	 NEv6pP91cFwMg==
-Date: Thu, 9 May 2024 07:32:50 -0700
+	b=lUomK7mjHCaDTHUV1KK8TpbPcBcw3bzlLmgAoY74AHhgHkmjbUZ6m6zFPdqvKtD4x
+	 uVtsYbu3ydgBedhX6+qhrrCyUElpyGRoGLD6Q6YkrzJAabZTLLSTfJ/UwrHEvVSkxp
+	 OBYfyf0+Jrvz0XS7zV//Er6Qwyeaz+NQopQKNrES66ljbhwC5FBK2duigRj9Ug3lwM
+	 45hjlimFm+mFVi83eRWeInXo+kR2bt9iNnET4+dXNzgZ5LIufva2pyUpg6nOofXWYI
+	 VtQ7XqdMgSKBp1nmA+RVFd7ZNMT7qc3f99dKxk8WniKI6N3nsIV2wOFLgjb2lMDiVW
+	 DEIGPIdG8pXlw==
+Date: Thu, 9 May 2024 07:35:29 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, hch@lst.de,
-	willy@infradead.org, mcgrof@kernel.org, akpm@linux-foundation.org,
-	brauner@kernel.org, chandan.babu@oracle.com, david@fromorbit.com,
-	gost.dev@samsung.com, hare@suse.de, john.g.garry@oracle.com,
-	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, p.raghav@samsung.com,
-	ritesh.list@gmail.com, ziy@nvidia.com
-Subject: Re: [RFC] iomap: use huge zero folio in iomap_dio_zero
-Message-ID: <20240509143250.GF360919@frogsfrogsfrogs>
-References: <20240503095353.3798063-8-mcgrof@kernel.org>
- <20240507145811.52987-1-kernel@pankajraghav.com>
- <ZjpSx7SBvzQI4oRV@infradead.org>
- <20240508113949.pwyeavrc2rrwsxw2@quentin>
- <Zjtlep7rySFJFcik@infradead.org>
- <20240509123107.hhi3lzjcn5svejvk@quentin>
- <ZjzFv7cKJcwDRbjQ@infradead.org>
- <20240509125514.2i3a7yo657frjqwq@quentin>
- <ZjzIb-xfFgZ4yg0I@infradead.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/2] xfs: fallocate RT flush unmap range fixes
+Message-ID: <20240509143529.GG360919@frogsfrogsfrogs>
+References: <20240509104057.1197846-1-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,17 +42,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZjzIb-xfFgZ4yg0I@infradead.org>
+In-Reply-To: <20240509104057.1197846-1-john.g.garry@oracle.com>
 
-On Thu, May 09, 2024 at 05:58:23AM -0700, Christoph Hellwig wrote:
-> On Thu, May 09, 2024 at 12:55:14PM +0000, Pankaj Raghav (Samsung) wrote:
-> > We might still fail here during mount. My question is: do we also fail
-> > the mount if folio_alloc fails?
+On Thu, May 09, 2024 at 10:40:55AM +0000, John Garry wrote:
+> As mentioned by Dave Chinner at [0], xfs_flush_unmap_range() and
+> xfs_prepare_shift() should consider RT extents in the flush unmap range,
+> and need to be fixed.
 > 
-> Yes.  Like any other allocation that fails at mount time.
+> I don't want to add such changes to that series, so I am sending
+> separately.
+> 
+> About the change in xfs_prepare_shift(), that function is only called
+> from xfs_insert_file_space() and xfs_collapse_file_space(). Those
+> functions only permit RT extent-aligned calls in xfs_is_falloc_aligned(),
+> so in practice I don't think that this change would affect
+> xfs_prepare_shift(). And xfs_prepare_shift() calls
+> xfs_flush_unmap_range(), which is being fixed up anyway.
+> 
+> [0] https://lore.kernel.org/linux-xfs/ZjGSiOt21g5JCOhf@dread.disaster.area/
 
-How hard is it to fallback to regular zero-page if you can't allocate
-the zero-hugepage?  I think most sysadmins would rather mount with
-reduced zeroing performance than get an ENOMEM.
+Looks good to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
+
+> 
+> Changes since RFC:
+> - Use roundup() and rounddown() (Darrick)
+> - Change xfs_prepare_shift() comment (Darrick)
+> - Add Christoph's RB tags - I think ok, even though code has changed
+>   since RFC
+> 
+> John Garry (2):
+>   xfs: Fix xfs_flush_unmap_range() range for RT
+>   xfs: Fix xfs_prepare_shift() range for RT
+> 
+>  fs/xfs/xfs_bmap_util.c | 22 ++++++++++++++--------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
+> 
+> -- 
+> 2.31.1
+> 
+> 
