@@ -1,122 +1,118 @@
-Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
+Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADA110E5;
-	Thu,  9 May 2024 05:23:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 885C6149C7C;
+	Thu,  9 May 2024 09:14:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715232219; cv=none; b=EuUheM5qmdtvxZkD4gHGdvXXhCAhyfGD7L4dQH/S8AUplDNxeWCpq/V9Xi9pc+xjgJWormrTJUPZO14RJ5JC1maRpKxKAV8y9X22BCmQTtg+rdaKT2dpp1TnvYHvhlHswMZwkqegzd1+Qf+hU8t32qIT2qOsMdNvMcG5erzixlg=
+	t=1715246063; cv=none; b=dysySdwPyeKflI9kCb1pfl5IXhFJiMG/TNKuGR3WZ3Wg48fNkk/Iiwp4bes1E4m6Q0I4pD9TJyww6/5mX570qsBD2hi9zkzV0K5i2fmuqbnklt8whPUb3euVjXvdCXru96XaJIeA7KYvJ5R+7S5P5grirYpb/XtiygRvD+ebqwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715232219; c=relaxed/simple;
-	bh=A/nS3HEOugLNgKjph8tOEMwkUz1x3qdu92wcdow/m90=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=LXmVXBcIkpaGR6FxlH+6u0yTvLafdvUGZiHPFOstk6kvLo+eTvaMo3Tmzo1bNIrLw0l1luDnksPDdJg01JOV8qHW+N1/Z6miC3wBgwacWdDXDkxB7goi8L3XnE1xweyNTCEMHGaIQdj+VJDnajF8UjhH4dm0a0Sd1QLW8GFA+KY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nFkonWA7; arc=none smtp.client-ip=209.85.219.41
+	s=arc-20240116; t=1715246063; c=relaxed/simple;
+	bh=ZK+doQhDp/d9fILs65wdCIh3mPDLgRhve4CwjVpi63I=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References:
+	 MIME-version:Content-type; b=oS70ddrwbzjZ92tQUzltnC0GPiTVA58Hvw2WmwAlb30T3Bn68VnPpW/mDA4DQEyBpZbfDabjVFamgzCSZBtvuH8EpVWH5F4LoFyMR1ziZYJQZ5EZP1v3BVk4PUtaBVWEqXT7p0+nJ3NggEm0+V/YAFmeTyNfabX+nT/KE5TLYXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hPY+udbo; arc=none smtp.client-ip=209.85.161.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nFkonWA7"
-Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-69b6d36b71cso3128166d6.3;
-        Wed, 08 May 2024 22:23:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hPY+udbo"
+Received: by mail-oo1-f46.google.com with SMTP id 006d021491bc7-5b27999f889so39926eaf.0;
+        Thu, 09 May 2024 02:14:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1715232217; x=1715837017; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=A/nS3HEOugLNgKjph8tOEMwkUz1x3qdu92wcdow/m90=;
-        b=nFkonWA7VYy2ryh3JzZmyMg5bXH8pWCJxpUDx9KZLfzRenDFndL+SsicUXNZK1KJP9
-         dDGmunnPn+RRE7ulFAhWN46ugCPbBemqmjKYpGCi2ThBcIFf7i5Fye2zvxKFLWY8tI4K
-         AEkBAz1qFGP1iOWDcAOdptfljEDTNS50F5jJ6OvQmnG7YbCMveWQ1vyULlUmqm356ssn
-         GmeIAUqq1vS7TmVXVniFjYXyd1DmsK50xgm4TgEAIwfnUfRiVgVn6i4DzvEVV7ovzUZG
-         W381DJk4D3Bi+/lUwD0P5s6Erd/JRnYj1vZg0wgNyY96KNnRsxEp43m0fkgShh7SAx41
-         8v9A==
+        d=gmail.com; s=20230601; t=1715246061; x=1715850861; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:message-id:date
+         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZK+doQhDp/d9fILs65wdCIh3mPDLgRhve4CwjVpi63I=;
+        b=hPY+udboPGJ6xEUnb6sS+HDH4SzQshVmec6lAqVm6/V1M4C38TRV2t/i643ruG3vWn
+         jOr6OnS3lncOM4d51Cb/lKtRWdiHsSDpLKPs3G/x/1aJaGttGXdzyQM96ApT2OGBttDa
+         NSYIG1UA9lZ8u3jYjiIlC2pbOZ2ZcGFMMKSbFYCA9MFROok8hLXyxt4fShDLOHkUk/Jb
+         EFntP9pzvOxaizNCGyMPh5su3bzJy5HchgifJ4hmq1OfPHj8+0VlUyz6/8G0nYBZAlps
+         f7fsJDAO24buC9zW223j9PrLD30N3vfsBRSOdCj/1PqZkSkd5SHJ5tcSjdfyK89aZbbx
+         US5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715232217; x=1715837017;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1715246061; x=1715850861;
+        h=content-transfer-encoding:mime-version:references:message-id:date
+         :in-reply-to:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=A/nS3HEOugLNgKjph8tOEMwkUz1x3qdu92wcdow/m90=;
-        b=fwZSuhakX+RE5/RFoMZtqY5V2zObntt0rj+EO03EnJwgINp6B96Xdj8ydBtBcXA1kU
-         9/fPM7llLZGz332yej3BsfptzKyX7K5e/rigE/59uuWvWB3nJLr7flEwcLxrNi8DiQE5
-         xd4qk7zQNlEpydnmfE+audFCqotRMXqx2p604gzRB+PHN2ZBpZNdhtNT/VMgdnz+anyH
-         hnKXFb7UXW7hV4Q8HarQoUF9dH2euCKwY+7Yj87976F1Tjma//PVJbKRO0bjW0jGiHcE
-         TuV4OhM4hxdlivc6PtdTyzU8I2yZwA5avzLM+XTY+lLzyBPXxlFvbrplVBv4lK8Co7QX
-         IM/w==
-X-Forwarded-Encrypted: i=1; AJvYcCVn7yV8JFAwwRvO7qVL4zPulbAXVXOyGlpNRhKnhSVwaY9rIVd+LOaQCPJJMg/6Ul+LOnBtnBDSNS23MBH038XRWbMII40aN/lCkCPylDXCbMwE/WgEhraF++Q9YuFx+rduO8zudaR2Cg==
-X-Gm-Message-State: AOJu0YznxU7ZlthlD5gQJaE2kntwbMjPL/rOZOJ4ShuGwCBtB72oO6bZ
-	pwca2azUbnOxntbo41BIfN2bBWeEY60Q1srqbTVhiWqGEwRoWdyh+/W1Sfx/6hH4wHhS4h+hD86
-	CQZy3LB5pk2rmtsmhefZsbuu5NxA=
-X-Google-Smtp-Source: AGHT+IFHax6DPjC4uHCr77vr4oXeNl+kGo4KMIQopk17XCY3WMP9xzHXwDiZSy64nODDp2byf7wFN5LD6FnKjp7gkak=
-X-Received: by 2002:ad4:5dcc:0:b0:6a0:d465:6088 with SMTP id
- 6a1803df08f44-6a15156da86mr60562636d6.34.1715232216975; Wed, 08 May 2024
- 22:23:36 -0700 (PDT)
+        bh=ZK+doQhDp/d9fILs65wdCIh3mPDLgRhve4CwjVpi63I=;
+        b=dLqJe8w9rsF8U5NhzoYytk06+JSFVNyoXHVj1FfQwv2dgqh8WAMAZ9xa2mB2OLNmTQ
+         KvDtWGArQBUOLwdN4vfJwcTVB2s0Va1Q7GEu7lSv76RsNfKHAJMIQAxOfEBSlei1MuwM
+         ktO6R+Y9hqbnjM7nzXnpp1vr7u60lLdHnc6McJCJT+jDYtiKxyyjQVvMNjxt9eaY/FSB
+         JkquHptYmPxOdGRAjGSa0elXa04nfeE1+upAdU2vGyPqlO5tVq/oeS/SXMsoI+B90JAy
+         C1QLq9pxO9fCF4fKOTPwAg9sfc8Cd2udhZyqhZ1abaPuu6x5GyeUJ9og6LJt/trdXBQ8
+         Fwsw==
+X-Forwarded-Encrypted: i=1; AJvYcCXzI3KTH6WgkS2GwVmMj3ENeS3p0Ug6p4e4W97FDDX8cfQl+Pribnmz8kh3lEAvWn2pANAlalBYD1ablkHqtBMxXWpdiKelXRNEwPAdLzBQR4+DtDZyNcPbYGyc/xzgqyAk47HU2xPp7g==
+X-Gm-Message-State: AOJu0Yyq35jJ2FJ8OetZ8ixLbS8iBqHKDiiFPD0qL1djv0/KfyAmHK0t
+	gu1jHnY5F6QuBmGOxQj+f8f0/1+v9GZ+hgxE9KN17l38sMBU6wbK
+X-Google-Smtp-Source: AGHT+IFku0mLCd/miLK6ElPcOAzixoVqefNKq7YjiBiYCLtTm8MlG8E09soBoRoMMwR7yUDlR5ikLQ==
+X-Received: by 2002:a05:6359:5a8c:b0:192:4dd2:2b49 with SMTP id e5c5f4694b2df-192d2c29bc5mr643331955d.4.1715246061427;
+        Thu, 09 May 2024 02:14:21 -0700 (PDT)
+Received: from dw-tp ([171.76.81.176])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6341134705dsm864299a12.85.2024.05.09.02.14.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 May 2024 02:14:20 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Amir Goldstein <amir73il@gmail.com>, Luis Chamberlain <mcgrof@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>
+Cc: lsf-pc@lists.linux-foundation.org, xfs <linux-xfs@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Kent Overstreet <kent.overstreet@linux.dev>, Chandan Babu R <chandan.babu@oracle.com>
+Subject: Re: [Lsf-pc] XFS BoF at LSFMM
+In-Reply-To: <CAOQ4uxj8qVpPv=YM5QiV5ryaCmFeCvArFt0Uqf29KodBdnbOaw@mail.gmail.com>
+Date: Thu, 09 May 2024 14:39:09 +0530
+Message-ID: <87v83nfj2i.fsf@gmail.com>
+References: <CAB=NE6V_TqhQ0cqSdnDg7AZZQ5ZqzgBJHuHkjKBK0x_buKsgeQ@mail.gmail.com> <CAOQ4uxj8qVpPv=YM5QiV5ryaCmFeCvArFt0Uqf29KodBdnbOaw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <CAB=NE6V_TqhQ0cqSdnDg7AZZQ5ZqzgBJHuHkjKBK0x_buKsgeQ@mail.gmail.com>
- <CAOQ4uxj8qVpPv=YM5QiV5ryaCmFeCvArFt0Uqf29KodBdnbOaw@mail.gmail.com> <ZjxZttSUzFTd_UWc@infradead.org>
-In-Reply-To: <ZjxZttSUzFTd_UWc@infradead.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 9 May 2024 08:23:25 +0300
-Message-ID: <CAOQ4uxhpZ-+Fgrx_LDAO-K5wHaUghPfvGePLVpNaZZza1Wpvrg@mail.gmail.com>
-Subject: Re: [Lsf-pc] XFS BoF at LSFMM
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	lsf-pc@lists.linux-foundation.org, xfs <linux-xfs@vger.kernel.org>, 
-	Linux FS Devel <linux-fsdevel@vger.kernel.org>, Kent Overstreet <kent.overstreet@linux.dev>, 
-	Chandan Babu R <chandan.babu@oracle.com>, Jan Kara <jack@suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-On Thu, May 9, 2024 at 8:06=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
-> wrote:
+Amir Goldstein <amir73il@gmail.com> writes:
+
+> On Wed, May 8, 2024 at 10:42 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
+>>
+>> How about an XFS BoF at LSFMM?
 >
-> On Thu, May 09, 2024 at 08:01:39AM +0300, Amir Goldstein wrote:
-> >
-> > FYI, I counted more than 10 attendees that are active contributors or
-> > have contributed to xfs in one way or another.
-> > That's roughly a third of the FS track.
+> Let me rephrase that.
 >
-> FYI, I'm flying out at 4:15pm on Wednesday, and while I try to keep my
-> time at the airport short I'd still be gone by 3:30.
+> Darrick,
+>
+> Would you like to list some items for the XFS BoF so I can put it on
+> the agenda and link to this thread?
+>
+>> Would it be good to separate the BoF
+>> for XFS and bcachefs so that folks who want to attend both can do so?
+>
+> I have set a side 2.5 hours in the schedule on Wed afternoon for per-FS BoF
+> 3 hours if you include the FS lightning slot afterwards that could be used
+> as per-FS lightning updates.
+>
+>> How about Wednesday 15:30? That would allow a full hour for bcachefs.
+>
+> I have no doubt that people want to be updated about bcaches,
+> but a full hour for bcachefs? IDK.
+>
+> FYI, I counted more than 10 attendees that are active contributors or
+> have contributed to xfs in one way or another.
+> That's roughly a third of the FS track.
+>
+> So let's see how much time XFS BoF needs and divide the rest of the
+> time among other FS that want to do a BoF in the FS room.
 
-I've penciled XFS BoF at 2:30
+Thanks that would be helpful. I would like to participate in XFS/iomap BoF
+session and ext4 too (if that happens). So if we could avoid the
+conflict between the two, that would be much appreciated.
 
 >
-> But that will only matter if you make the BOF and actual BOF and not the
-> usual televised crap that happens at LSFMM.
+> If anyone would like to run a *FS BoF in the FS room please let me know
+> and please try to estimate how much time you will need.
+> You can also "register" for *FS lightning talk, but we can also arrange this
+> ad-hoc.
 >
+> Excited to see you all next week!
 
-What happens in XFS BoF is entirely up to the session lead and attendees
-to decide.
+Same here, Thanks!
 
-There is video in the room, if that is what you meant so that remote attend=
-ees
-that could not make it in person can be included.
-
-We did not hand out free virtual invites to anyone who asked to attend.
-Those were sent very selectively.
-
-Any session lead can request to opt-out from publishing the video of the
-session publicly or to audit the video before it is published.
-This was the same last year and this year this was explicitly mentioned
-in the invitation:
-
-"Please note: As with previous years there will be an A/V team on-
-site in order to facilitate conferencing and help with virtual
-participants. In order to leave room for off-the-record discussions
-the storage track completely opts out of recordings. For all other
-tracks, please coordinate with your track leads (mentioned below)
-whether a session should explicitly opt-out. This can also be
-coordinated on-site during or after the workshop. The track leads
-then take care that the given session recording will not be
-published."
-
-I will take a note to keep XFS BoF off the record if that is what you
-want and if the other xfs developers do not object.
-
-Thanks,
-Amir.
+-ritesh
