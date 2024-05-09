@@ -1,19 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B7D15AF1
-	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 14:42:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EDA01BC4B
+	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 14:45:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715265762; cv=none; b=t3h+BYfBjKPTNDqVfMdBbbwkHOq6FeEdKqaUU/v12bBp1eHzdHzpnncjV0cCH9Ruew41AJfiJcEBdQ0g6pt0zRsFVN0lRdlHsOgDU3SLhwtbHeOwNBzTBfr8OhXw+J0w8B1enr+Xb2CRoc2RBFMU3VFG9tob09VqTk+nq6EVxcM=
+	t=1715265908; cv=none; b=BUo90/pi8WTbAaeShd6AwTkTqyEgjLHLu4u69qOMdOeyWqtMglaXsBZrKnyDN5O/fkQCCSUAxtLe8E+D0s370sSZRVraq1K8Oe79TSDm8QGP5wLoJL7auXcXHiMFJpyLNY3CSwArlei0PCv6K9VMqUEw/NqW055IS+jLMvjwMZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715265762; c=relaxed/simple;
+	s=arc-20240116; t=1715265908; c=relaxed/simple;
 	bh=ThYBpHwjukrYClsTJKJy1PtHLsPvckt9pxwkDB5l62Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KlCe4O8fa0I/HbnGa+B8wpjSHRyW5vmJ+T9ONG4ZpX0ScSRNRk9NXZPscVmNeVI0EdaDO667ZLKE5M4jFV2N0ovAltnymK77nQ62t5xu17H16pdCMaCi+J5skF+GCaKYangV/dDVjWxhxTcq/huM/SDzlK8Px2BM8Rkh6tX903c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=srrMNzJv; arc=none smtp.client-ip=10.30.226.201
+	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A8y1/8CdWsqm2NnWomZ6EVEhv+qBvDNn4yN6xhvQoviWxK/w2451VYgrR9FNs3TbiK20s1v9EEW4nT9tfBSlF1JCW6Y5mUpQPOhIIA7uvwv4A0w+LTwZW+yiAuIessg9KIMOBZ4s3tDWG/Uks4FVJ05cB+04mtpyA53krxDcHt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=srrMNzJv reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="srrMNzJv"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="srrMNzJv"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1s5516-005pE1-RE; Thu, 09 May 2024 14:45:04 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1070795: Processed: your mail
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 1070795@bugs.debian.org
+Resent-From: "Darrick J. Wong" <djwong@kernel.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: XFS Development Team <linux-xfs@vger.kernel.org>
+X-Loop: owner@bugs.debian.org
+Resent-Date: Thu, 09 May 2024 14:45:03 +0000
+Resent-Message-ID: <handler.1070795.B1070795.17152657741386747@bugs.debian.org>
+X-Debian-PR-Message: followup 1070795
+X-Debian-PR-Package: xfsprogs-udeb
+X-Debian-PR-Keywords: d-i
+References: <87jzk3qngi.fsf@hands.com> <handler.s.C.17152516831244576.transcript@bugs.debian.org> <20240509144020.GH360919@frogsfrogsfrogs> <171524693891.215341.12611976307409148291.reportbug@nimble>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1070795-submit@bugs.debian.org id=B1070795.17152657741386747
+          (code B ref 1070795); Thu, 09 May 2024 14:45:03 +0000
+Received: (at 1070795) by bugs.debian.org; 9 May 2024 14:42:54 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 27; hammy, 142; neutral, 35; spammy,
+	0. spammytokens: hammytokens:0.000-+--UD:kernel.org,
+	0.000-+--HCc:D*kernel.org, 0.000-+--HCc:D*vger.kernel.org,
+	0.000-+--03am, 0.000-+--03AM
+Received: from sin.source.kernel.org ([2604:1380:40e1:4800::1]:53462)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <djwong@kernel.org>)
+	id 1s54z0-005okC-V9; Thu, 09 May 2024 14:42:53 +0000
+Received: from smtp.kernel.org (transwarp.subspace.kernel.org [100.75.92.58])
+	by sin.source.kernel.org (Postfix) with ESMTP id A72FACE1B70;
+	Thu,  9 May 2024 14:42:43 +0000 (UTC)
 Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18001C116B1;
 	Thu,  9 May 2024 14:42:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
@@ -32,11 +67,7 @@ To: Philip Hands <phil@hands.com>, Carlos Maiolino <cem@kernel.org>,
 	1070795@bugs.debian.org
 Cc: Debian Bug Tracking System <owner@bugs.debian.org>,
 	linux-xfs@vger.kernel.org
-Subject: Re: Processed: your mail
 Message-ID: <20240509144241.GI360919@frogsfrogsfrogs>
-References: <87jzk3qngi.fsf@hands.com>
- <handler.s.C.17152516831244576.transcript@bugs.debian.org>
- <20240509144020.GH360919@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,6 +77,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20240509144020.GH360919@frogsfrogsfrogs>
+Message-ID: <20240509144241._f_ZljIkrwI92wiWFYxK9_g4wmohTM7RXC_WC26xVA4@z>
 
 [actually cc the bugreport this time]
 
