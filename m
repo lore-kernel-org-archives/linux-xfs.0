@@ -1,46 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EABF13B590;
-	Thu,  9 May 2024 12:58:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ACEE15AF1;
+	Thu,  9 May 2024 14:32:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715259510; cv=none; b=utdBAJvSakhQvsZ9qniw3YEolmb4cKCZkUa08me0vdV0c2ynRK3XOu3RX6nKeSW8BnADXikcYqQQEPd8C571LAnTmeI+2BlnP9DlqlZHzbt8b+fzFXcFyBARALf1OXTBr+VrFUXukwT+MTq+wIng4UEdtgfwAy7870PZxya4ZRo=
+	t=1715265172; cv=none; b=Q+Ne1vLR52dNiFrFo4Uenc6wADen19WtBQNefe29JMd+y0VDrFUTR4kmb+TqiYSRqFg3ED9U9t6f/qkordTu0CjRI/uapYvZBv9J+Uk64tYSUQfmlJ2JlMiHmb25Mf9pGGbFVYMiquGRuEKj72cbNsL5NdPPYYHv2xyUiND+H84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715259510; c=relaxed/simple;
-	bh=MKC9wCjSQVelLnxG27A3NgjqV66DuuMiZIDzudaJX34=;
+	s=arc-20240116; t=1715265172; c=relaxed/simple;
+	bh=yz+YFbGtkYLL4EGdTd6mZCOqxppkuLvjVZ6QPxvtmJg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tgzUocSf3Y/GWFgBQ93Xuh2EDWf3UbIeCAzbdacwBw6PYovfAQKjtaAjnWwqWW+buEg5gPkjMXTH/Z2dOtIgQ1hFm9/FGh7i8PjaF7AfqQpbCxczZ472bKXDMD4bNWmg19ru5kv+n1+oxsNmiXWvR2ZK+0eiwHNX091kvxiWQGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TS/zwIpI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=eqHpySUMW37PC24K6eiPd8oqpbj9gqYgA1y9HNzkqhPpHue6DqP5CitfrplS8eS8ZaVaYYuCUZloN86coHl1+6gtoLwJ3xtZCRFm+po2KMLSqoRp+f0vCZ4kZCe4r6H2GfTCiK6liiDJRmT8CrayluzXUoRKOaOxBnp34TKcP7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aK9xR7Pg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TS/zwIpI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=P8JtwUqTZ5thY5C0o8JQ9jcIA6kib8zFsh+AmPPcQkw=; b=TS/zwIpI/RgjwOZIRNph0V1iPg
-	HFcQKqlkwrUU+z/fSblzUSWWo/CcR1JozYosfXC/3cdu1Krwf7lInvpoP222XBUJKgn7j696Q9aQR
-	oYbe3BcJjc1IykDXgGRB9TPZZTQis23b4wjWRNFOS+7GVflB14MGtUSobZkXZAJfT/EV3/rHtvz/E
-	3DQ1XkVZK7NZoMbuowRbe/cbywe/SgPkRkpu5Jk8VXha4nEGm3JFYGO2luu2m0t5hwwRgwxFAyMLi
-	ElSwArKsC7VSDkGuTwnIvysLt55peuNMyVDcWSnVM7kSpgantdDoj/5YSZIrx6ED4eSteU5z2AGhr
-	aL1XHHdw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s53Lr-00000001VQ2-0TaS;
-	Thu, 09 May 2024 12:58:23 +0000
-Date: Thu, 9 May 2024 05:58:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Christoph Hellwig <hch@infradead.org>, hch@lst.de, willy@infradead.org,
-	mcgrof@kernel.org, akpm@linux-foundation.org, brauner@kernel.org,
-	chandan.babu@oracle.com, david@fromorbit.com, djwong@kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aK9xR7Pg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B9ADC116B1;
+	Thu,  9 May 2024 14:32:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1715265171;
+	bh=yz+YFbGtkYLL4EGdTd6mZCOqxppkuLvjVZ6QPxvtmJg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aK9xR7PgFB5bDXWjchi/PqHuIU+Au6YYRAM+Mc+i7r8mptyatvOtU9H4ymrCRKzmX
+	 i1sa0hT0QuCmU3225WaJYaVv4BtoK1vggutyVLg7djL1WBuTjj7+EdyqT0w8Tc5UzV
+	 cplECW9fHgxmwKrmNEi7OF5MMXzHdpv7cKYMhiJsoW2PO4MWua9n3g7I0OBw87Wb5o
+	 F8TzTC14QhZ5+Il++GiDZP2p48vWsay4RsUHHuXpR3KC08CzL0MY1485d83TBH1R9Q
+	 i/piU4TfG71SnOHL6E9uxmyWLBqTeo44jfN62fB9JzQHw0sEkTn7J2oAR8jltBkZ8F
+	 NEv6pP91cFwMg==
+Date: Thu, 9 May 2024 07:32:50 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, hch@lst.de,
+	willy@infradead.org, mcgrof@kernel.org, akpm@linux-foundation.org,
+	brauner@kernel.org, chandan.babu@oracle.com, david@fromorbit.com,
 	gost.dev@samsung.com, hare@suse.de, john.g.garry@oracle.com,
 	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-mm@kvack.org, linux-xfs@vger.kernel.org, p.raghav@samsung.com,
 	ritesh.list@gmail.com, ziy@nvidia.com
 Subject: Re: [RFC] iomap: use huge zero folio in iomap_dio_zero
-Message-ID: <ZjzIb-xfFgZ4yg0I@infradead.org>
+Message-ID: <20240509143250.GF360919@frogsfrogsfrogs>
 References: <20240503095353.3798063-8-mcgrof@kernel.org>
  <20240507145811.52987-1-kernel@pankajraghav.com>
  <ZjpSx7SBvzQI4oRV@infradead.org>
@@ -49,6 +46,7 @@ References: <20240503095353.3798063-8-mcgrof@kernel.org>
  <20240509123107.hhi3lzjcn5svejvk@quentin>
  <ZjzFv7cKJcwDRbjQ@infradead.org>
  <20240509125514.2i3a7yo657frjqwq@quentin>
+ <ZjzIb-xfFgZ4yg0I@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,12 +55,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240509125514.2i3a7yo657frjqwq@quentin>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZjzIb-xfFgZ4yg0I@infradead.org>
 
-On Thu, May 09, 2024 at 12:55:14PM +0000, Pankaj Raghav (Samsung) wrote:
-> We might still fail here during mount. My question is: do we also fail
-> the mount if folio_alloc fails?
+On Thu, May 09, 2024 at 05:58:23AM -0700, Christoph Hellwig wrote:
+> On Thu, May 09, 2024 at 12:55:14PM +0000, Pankaj Raghav (Samsung) wrote:
+> > We might still fail here during mount. My question is: do we also fail
+> > the mount if folio_alloc fails?
+> 
+> Yes.  Like any other allocation that fails at mount time.
 
-Yes.  Like any other allocation that fails at mount time.
+How hard is it to fallback to regular zero-page if you can't allocate
+the zero-hugepage?  I think most sysadmins would rather mount with
+reduced zeroing performance than get an ENOMEM.
 
+--D
