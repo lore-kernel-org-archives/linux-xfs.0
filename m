@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 017681E48B
-	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 14:35:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5CB2941B
+	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 14:40:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715265330; cv=none; b=EoD23jAmwFFvfT3kTVeJaTh/SbqpeK2U74LCWAcKwsT7lrdFF297XPjUp+Cfmm8kqksFqSl8KGRxkeKm16Eu7uTKZm4H63oDd+/GmXcIYcWjK5X6s+IUpbQZxx5kxlbBZbJHzQUsXArOfHXEaQOpWUZaCNWhAHYDKy3Cc4+DS70=
+	t=1715265621; cv=none; b=g6XCYlZPepKwoLNW0zuLkPtsJo3+1vEfh6OS2aou0bWA1eJ3sIXdPswZKmFa0DvSrMTqGAa+Gpde38acOFI/9OBZ6GccSghp4jfv0amP747AGkOZA94f0RK2JkKvS4LzzAhYkwUtRCQbBilgNfSzE6R8IvikPMu8U72yrO5IVO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715265330; c=relaxed/simple;
-	bh=XHXCwrD1Igk0Kpgq+ojWV1QQcR0qNQgvIf/k6w65P8I=;
+	s=arc-20240116; t=1715265621; c=relaxed/simple;
+	bh=FwvYltcWZoxEu9oG1+npZIjIsJHdjC4cfSGQXYgQZko=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GV+R1cjL/64g088NaxRGYfnBGP4BGy55BoicpSi24G5tA9eaWLe5+SMhtUo6HTosplUrULz2bDG+oqsOQ/zahKbsQ/fHS2aM7PJwv257cZE5um+l4O6LoIa3oAjMsZn59bdnBNX10+FZFwIxN4jBz0Bu/nJelaLnbnB3j0SUsrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lUomK7mj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cCkyTKj1cCMcnH3xfbE4dU1fknKJzGH9aghIjOXEn7eZ9Qfs/CsLJC4WmxsUdjuv+dvmXYgid6eGAf5m13t1L3glDyYKGyI6yq81l52aW22Xx/SY6wOBGkfhQ9hYemThP22LWRTvxCq/21my7w8ixH8ZNDys3GnBjDeVT465yn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pAVnF42S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lUomK7mj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E730C116B1;
-	Thu,  9 May 2024 14:35:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pAVnF42S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C385C116B1;
+	Thu,  9 May 2024 14:40:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715265329;
-	bh=XHXCwrD1Igk0Kpgq+ojWV1QQcR0qNQgvIf/k6w65P8I=;
+	s=k20201202; t=1715265621;
+	bh=FwvYltcWZoxEu9oG1+npZIjIsJHdjC4cfSGQXYgQZko=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lUomK7mjHCaDTHUV1KK8TpbPcBcw3bzlLmgAoY74AHhgHkmjbUZ6m6zFPdqvKtD4x
-	 uVtsYbu3ydgBedhX6+qhrrCyUElpyGRoGLD6Q6YkrzJAabZTLLSTfJ/UwrHEvVSkxp
-	 OBYfyf0+Jrvz0XS7zV//Er6Qwyeaz+NQopQKNrES66ljbhwC5FBK2duigRj9Ug3lwM
-	 45hjlimFm+mFVi83eRWeInXo+kR2bt9iNnET4+dXNzgZ5LIufva2pyUpg6nOofXWYI
-	 VtQ7XqdMgSKBp1nmA+RVFd7ZNMT7qc3f99dKxk8WniKI6N3nsIV2wOFLgjb2lMDiVW
-	 DEIGPIdG8pXlw==
-Date: Thu, 9 May 2024 07:35:29 -0700
+	b=pAVnF42SS226LIOcj1P6DSH/S053gjxy2LgHGTY6wMEc/wsAqWqplZb29EPYsi1Wq
+	 tIcv8AqmnAN5/4CXjHhK6kj4kryx5+EPodbpqqM7lC7aUvtSxCOoZYsd1sfFDuPla5
+	 yxW1FTjsfpL7ZfDZdSXqs3Z4FKwnODLYKjWyTuS6e28yLwgDpy41ZCe1QPcvQ6GXzh
+	 8y4FZ/aOfEuDb8V4yQjO2knD9r30oFuFl3EJq60uyTtofpRyjZ/87RAHd4XByxnPoo
+	 WzNrgoL6HPPmkbH2h1K2kx27cXjs+69XQsxn3QCnMtxHAKkjasdrBUt2PhqwEF1vrC
+	 O4efYCHMTS/Yw==
+Date: Thu, 9 May 2024 07:40:20 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: chandan.babu@oracle.com, dchinner@redhat.com, hch@lst.de,
+To: Philip Hands <phil@hands.com>, Carlos Maiolino <cem@kernel.org>
+Cc: Debian Bug Tracking System <owner@bugs.debian.org>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/2] xfs: fallocate RT flush unmap range fixes
-Message-ID: <20240509143529.GG360919@frogsfrogsfrogs>
-References: <20240509104057.1197846-1-john.g.garry@oracle.com>
+Subject: Re: Processed: your mail
+Message-ID: <20240509144020.GH360919@frogsfrogsfrogs>
+References: <87jzk3qngi.fsf@hands.com>
+ <handler.s.C.17152516831244576.transcript@bugs.debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,45 +43,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240509104057.1197846-1-john.g.garry@oracle.com>
+In-Reply-To: <handler.s.C.17152516831244576.transcript@bugs.debian.org>
 
-On Thu, May 09, 2024 at 10:40:55AM +0000, John Garry wrote:
-> As mentioned by Dave Chinner at [0], xfs_flush_unmap_range() and
-> xfs_prepare_shift() should consider RT extents in the flush unmap range,
-> and need to be fixed.
+On Thu, May 09, 2024 at 10:51:03AM +0000, Debian Bug Tracking System wrote:
+> Processing commands for control@bugs.debian.org:
 > 
-> I don't want to add such changes to that series, so I am sending
-> separately.
-> 
-> About the change in xfs_prepare_shift(), that function is only called
-> from xfs_insert_file_space() and xfs_collapse_file_space(). Those
-> functions only permit RT extent-aligned calls in xfs_is_falloc_aligned(),
-> so in practice I don't think that this change would affect
-> xfs_prepare_shift(). And xfs_prepare_shift() calls
-> xfs_flush_unmap_range(), which is being fixed up anyway.
-> 
-> [0] https://lore.kernel.org/linux-xfs/ZjGSiOt21g5JCOhf@dread.disaster.area/
+> > tags 1070795 + d-i
+> Bug #1070795 [xfsprogs-udeb] xfsprogs-udeb: the udeb is empty (size 904 bytes) so does not contain mkfs.xfs
 
-Looks good to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yeah, someone needs to apply the patches in
+
+https://lore.kernel.org/linux-xfs/171338841094.1852814.10756994414036094487.stgit@frogsfrogsfrogs/
+
+and
+
+https://lore.kernel.org/linux-xfs/171338841109.1852814.13493721733893449217.stgit@frogsfrogsfrogs/
+
+which were not picked up for 6.7.  Unless the upstream maintainer
+(Carlos) goes ahead with a 6.7.1?
 
 --D
 
+> Added tag(s) d-i.
+> > thanks
+> Stopping processing here.
 > 
-> Changes since RFC:
-> - Use roundup() and rounddown() (Darrick)
-> - Change xfs_prepare_shift() comment (Darrick)
-> - Add Christoph's RB tags - I think ok, even though code has changed
->   since RFC
-> 
-> John Garry (2):
->   xfs: Fix xfs_flush_unmap_range() range for RT
->   xfs: Fix xfs_prepare_shift() range for RT
-> 
->  fs/xfs/xfs_bmap_util.c | 22 ++++++++++++++--------
->  1 file changed, 14 insertions(+), 8 deletions(-)
-> 
+> Please contact me if you need assistance.
 > -- 
-> 2.31.1
-> 
+> 1070795: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1070795
+> Debian Bug Tracking System
+> Contact owner@bugs.debian.org with problems
 > 
