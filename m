@@ -1,46 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4839E1A291;
-	Thu,  9 May 2024 14:45:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F2239AC9;
+	Thu,  9 May 2024 15:05:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715265943; cv=none; b=QijXVNSDG/f9tNtv/Rv9d/lYFo5YGj49IRBzpRp6uL5QiD2K4mMP0CRMSbxLz4RGtMkOrLwQjdYWngdqrnkXLm6a29oc1kqR2feO7fkFr1PSkuTYLm25bb1ab38EAbqJRfxdi8iT1mI4Strj7RClrIpSzeXOzpX87zwoM2GYH2E=
+	t=1715267136; cv=none; b=GXYaPKRLaBofFj0a4SwiPRaYZi2aExh+RLcu37GgP0r6kzMN6xcDNfAZ8u2ErvmbaE3CYWfKbxBkRA8UCvxj8sxQRlD458/pss0+7xWIwKPLuBxNTNrhtx0Nn97v3mfkP5bwAAbTFE5NnJC5NVySaeTMaettcUAdN4rlmNwuAeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715265943; c=relaxed/simple;
-	bh=5DAd3egjLUB5DhTkJFPxOSvu9VRu9lndvlj9IQrlv4A=;
+	s=arc-20240116; t=1715267136; c=relaxed/simple;
+	bh=I2fi4aAARoQ12m4ga3tovbUtAqHm2adC5Q0NtQoh148=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RE0h2KrvPIhJ82m7mtyeteGuflia4i0oT0zGx5lr+JAoKgUdzPcwrpfB1futoSuamuvvblByqXwnP1FnuQuzeKVkEuhLbRPWQxyai1+hVLnwo7DeCFotYQTtC0769y+XD60oIBBnb8fhdzIht+3pGiiFZwoFoXcRQkqCoucumtg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W1VEh47e; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lxzi/iZSclILXqQDBP2QBPfa8YHM2QtRuK15a4JzP33wfiHuPW5T8mSPo6lQtIyTl4HLk5YfajXttWeAPOmzaF5rAtzCImqzm5OvYQ3yau+QFNcaMfnXgtZCKf68P/kXmgWaVvv5RB1/ZrnvPZzvV+0DOcr4yoDSwcVWlMRI+kA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=p7jh5Wrw; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W1VEh47e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCB83C116B1;
-	Thu,  9 May 2024 14:45:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715265942;
-	bh=5DAd3egjLUB5DhTkJFPxOSvu9VRu9lndvlj9IQrlv4A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=W1VEh47e/zLe7EUtYA/+dUybkppzZd6E6rnydfYP7HpBvDmMSrshUds2Ps+RUeY4N
-	 YL3e0V8UAJl+vHgvped+guKrIHSc0CfV8Rp5+pqDV/DoeVkaWi/j3PWT0diafJdgo0
-	 TLogzGC0H9KmoGdRqj4SI66HiTEwCcp8+5snKa2c/4b5/6c6+7nc7Cfo4fEBGqjWU4
-	 LECzSvs8Fd5CEAxw7jP8aJYYvopWLPqEL6f5RJbGxSiHzC5qi4+BsmZxvexYD8w+1B
-	 VafQbkkBbHnRqjOfD1YsAdzTXUY8WSTtOD8Jia3eEXJGtHQtx1fGLl+pQ/z1mtIuUz
-	 xm1fNoRgUYR2A==
-Date: Thu, 9 May 2024 07:45:42 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Biggers <ebiggers@kernel.org>, aalbersh@redhat.com,
-	linux-xfs@vger.kernel.org, alexl@redhat.com, walters@verbum.org,
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 25/26] xfs: make it possible to disable fsverity
-Message-ID: <20240509144542.GJ360919@frogsfrogsfrogs>
-References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
- <171444680792.957659.14055056649560052839.stgit@frogsfrogsfrogs>
- <ZjHlventem1xkuuS@infradead.org>
- <20240501225007.GM360919@frogsfrogsfrogs>
- <20240502001501.GB1853833@google.com>
- <20240508203148.GE360919@frogsfrogsfrogs>
- <ZjxZRShZLTb7SS3d@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="p7jh5Wrw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=NTxQ6b9gJV4qPcNNolosfP527XGyNxAyMqN2wlfwLmo=; b=p7jh5Wrw8y3OsGiGmfbt4hL1jK
+	taC66FQQcRrAfbtFdUUVPhAx8vcQAFvszEAqNmrMe+KvnqhwT5WkDsfd4z3E7fxZz1VGuWckP66nr
+	SNd9Wf1LvVmE6yVcHASC2PpdPNuw98Kg6YhvlNSBgxhvSjCTMdCBpH4kqEY/Tw7x8wpKqKRfaoXRS
+	FyvwPWYLQycN5drHGFb5cMC+Fwc0HWo+et5hQ5h3GRZ3vMXLuzzV4nIaBtBo5Q1ram383ZNoOmdYH
+	ZvB8dT5gr9zx0A1ckhFczLA4LDJ6TfqroFB4a0Qflggf8SBoG0NubsSj8Q+SyVzNRF4NblXEZy7K7
+	8jnMko/Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s55Km-00000001ogW-0Vwe;
+	Thu, 09 May 2024 15:05:24 +0000
+Date: Thu, 9 May 2024 08:05:24 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>, hch@lst.de,
+	willy@infradead.org, mcgrof@kernel.org, akpm@linux-foundation.org,
+	brauner@kernel.org, chandan.babu@oracle.com, david@fromorbit.com,
+	gost.dev@samsung.com, hare@suse.de, john.g.garry@oracle.com,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org, p.raghav@samsung.com,
+	ritesh.list@gmail.com, ziy@nvidia.com
+Subject: Re: [RFC] iomap: use huge zero folio in iomap_dio_zero
+Message-ID: <ZjzmNF51yb_EyP4W@infradead.org>
+References: <20240503095353.3798063-8-mcgrof@kernel.org>
+ <20240507145811.52987-1-kernel@pankajraghav.com>
+ <ZjpSx7SBvzQI4oRV@infradead.org>
+ <20240508113949.pwyeavrc2rrwsxw2@quentin>
+ <Zjtlep7rySFJFcik@infradead.org>
+ <20240509123107.hhi3lzjcn5svejvk@quentin>
+ <ZjzFv7cKJcwDRbjQ@infradead.org>
+ <20240509125514.2i3a7yo657frjqwq@quentin>
+ <ZjzIb-xfFgZ4yg0I@infradead.org>
+ <20240509143250.GF360919@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,27 +60,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZjxZRShZLTb7SS3d@infradead.org>
+In-Reply-To: <20240509143250.GF360919@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, May 08, 2024 at 10:04:05PM -0700, Christoph Hellwig wrote:
-> On Wed, May 08, 2024 at 01:31:48PM -0700, Darrick J. Wong wrote:
-> > Hmm.  What if did something like what fsdax does to update the file
-> > access methods?  We could clear the ondisk iflag but not the incore one;
-> > set DONTCACHE on the dentry and the inode so that it will get reclaimed
-> > ASAP instead of being put on the lru; and then tell userspace they have
-> > to wait until the inode gets reclaimed and reloaded?
+On Thu, May 09, 2024 at 07:32:50AM -0700, Darrick J. Wong wrote:
+> On Thu, May 09, 2024 at 05:58:23AM -0700, Christoph Hellwig wrote:
+> > On Thu, May 09, 2024 at 12:55:14PM +0000, Pankaj Raghav (Samsung) wrote:
+> > > We might still fail here during mount. My question is: do we also fail
+> > > the mount if folio_alloc fails?
+> > 
+> > Yes.  Like any other allocation that fails at mount time.
 > 
-> Yikes.  That's a completely mess I'd rather get rid of than add more of
-> it.
-> 
-> What is the use case of disabling fsverity to start with vs just
-> removing a fsverity enabled file after copying the content out?
+> How hard is it to fallback to regular zero-page if you can't allocate
+> the zero-hugepage?
 
-How do you salvage the content of a fsverity file if the merkle tree
-hashes don't match the data?  I'm thinking about the backup disk usecase
-where you enable fsverity to detect bitrot in your video files but
-they'd otherwise be mostly playable if it weren't for the EIO.
+We'd need the bio allocation and bio_add_page loop.  Not the end
+of the world, but also a bit annoying.  If we do that we might as
+well just do it unconditionally.
 
-I guess you could always ddrescue the file, right?
+> I think most sysadmins would rather mount with
+> reduced zeroing performance than get an ENOMEM.
 
---D
+If you don't have 2MB free for the zero huge folio, are you going to
+do useful things with your large block size XFS file system which
+only makes sense for giant storage sizes?
