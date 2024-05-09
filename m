@@ -1,39 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A176986245
-	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 23:34:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9762512D1F6
+	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 23:40:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715297647; cv=none; b=hgW9jMAgL8SxgnXY69Rqj7rir0ncSHm03/CK65w1mQ01ZQn+zJjVGFfELiEY4Ir+v+Tc41VVjPq1sdZR7dcaHLBkOyZ2KYpd3iaYFhxOENaVECK3i6/9r5IEfX/MYNACZkFGNm+tFgeMqicVvIFXOSDk/wHjewgIRTDVJfaRzqg=
+	t=1715298034; cv=none; b=YrOBzt3L2QReg/WkFwa7+XPUwQyMXRUCWHoNaTD5sYowDYbMtZYrXEwhW1m1nQFgaF4I5ohMj/SI2j/bhCz1VlTUa5VWp9h1Kim34EQWJnFH1dfmWMIhDJSB5ApegcyPEYnNcAQoK2s4Ro92H08lQkxNwjXaSHkpxiAYUA8ZI/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715297647; c=relaxed/simple;
-	bh=oT8ri8Cl2FgwX6OukEIGVPg7CicVAnFopbDm7BLaRXU=;
+	s=arc-20240116; t=1715298034; c=relaxed/simple;
+	bh=l3QxiBqlvY7j9wljVG9Tc7t7Lkaf+nos6syHpA/YIjc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=blvTEKaU8iVsMs2Nc86xu6bzzaZl2PBJ3I7VuphcivPu75LJtzL8ahjEWb1HZ1HaijZQ2QRIXKU7XrFGs070aoZKEcY8QyE1m8V5mE0k6yNnYQhhRAPOfyupoYAJ/nJwf84f3cgsOLSZp5n4q6kRJITebiq8coY5k73Ct9NSwEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wfib7Gg8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=d2s5blr2vYsafOs2oJa629vwvYqyjVT6bf5ZfZAGUkR7S5C9/q7cfnvK39YjRrbBXTjbqv1I03HUxGHqLMeq34hCfcBlRh5tamOBy1pSvIiWG9FfsEi8kTr0Dmbx8TFGnGtAtfbqTWegGLImA9mBRU2SniZgpGXstBivr/drAdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=m6r62sR7; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wfib7Gg8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14119C116B1;
-	Thu,  9 May 2024 23:34:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715297647;
-	bh=oT8ri8Cl2FgwX6OukEIGVPg7CicVAnFopbDm7BLaRXU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Wfib7Gg8yqvUrarV1w1kpYQoUglu+1LX0jOHRxB7K/p4BXUrglpzXpxtegv2yyxwA
-	 jv+ooAuGEO9t87u7gLU6/lNezDeLa4rApJwuv0EV4yUbVJr8OqjYs+WSLPXzbaBxHS
-	 DSFsITnqS1ELCB44w5mEQDx4T9TDCput4929VPKRotTuJxxX5urwK2fDoymv7JfXnl
-	 rUSPBQ0mngXB1TWLvme+8qh4pY2p9TX1QvdMXKCgOdTMqq4wOZ1fbfRvzEbB84WmaM
-	 H0wtRVLvSGsy3KFa7y+UaaEj7ORvBHFA/jAoLe2pnl9he0vlYx9Af3QX4ppXwyxG9p
-	 sCiBPOAng9ulg==
-Date: Thu, 9 May 2024 16:34:06 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-fsdevel@vgre.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: allow setting xattrs on special files
-Message-ID: <20240509233406.GT360919@frogsfrogsfrogs>
-References: <20240509151459.3622910-2-aalbersh@redhat.com>
- <20240509151459.3622910-5-aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="m6r62sR7"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6f453d2c5a1so1378385b3a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 09 May 2024 16:40:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1715298032; x=1715902832; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TumGwD21CXpwquRMa7OnRwmjTE1NYn/U+PKZRtUOBa0=;
+        b=m6r62sR7kP5KPd8SJbR4clSNJSteKIzRS4sHFKj81HbMu8KchIEI+Pw1fVSndVRThl
+         kEvYnodD2mk31p60b2FdTavNNzUK73WmQmytPNVDu5dk0oNo1XKDnbON+FP+N+kphwos
+         xI4X7Hk2JP0Z1HYxSh7v2ZtMyRhlLgYsM3VBYsk2x4KHu2yxRwy4sPMrn4Jfnzt0FgiA
+         afv3OV4Y3yUuEXm1TE9JacZzVpx+f5ryNnVNXBkjeINqTCQ7cjN3jsYIrkc5gHIEsMJa
+         HHO8lcs78J4hhQ773AkSgmJ5C2TthWkV2O25aO8EBHjoEzvypL9Y3NnMc6hWTCyJ7PKo
+         FuDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715298032; x=1715902832;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TumGwD21CXpwquRMa7OnRwmjTE1NYn/U+PKZRtUOBa0=;
+        b=j5y+ecy+dF9EMHjStc7+0j7E7pUQyCBGkcFa1o+WXSFNX5Jzgk4mVrrPPDvWOgTrLC
+         xKBAZw4M4vhuJZuocHlNBHq/j0e2P0bGIYh8s47QguC4BLgLdAnY7mQ0K0eEyIUnqr3t
+         4zu1vYuEfOvG9RD7uL/tTs1pcam0XSq00ZXP/9o3nw1sXnqWa+d3qjXOIJ1DC3c1ohe3
+         wdYMlADluudy2pfSHTFUJfAwkzimwzAZlZaX/pplHAyn9TSIb7zKxS4cl1ZTdZk/EWWP
+         yrfiNtMnr4ji5CZmjwy3eE8BHD+3BnSSFnF93y/WOLqVGR/Wy8835FBd73zq6Q3Q3KYH
+         BkIg==
+X-Forwarded-Encrypted: i=1; AJvYcCWc6jAFVQEnethlvD9cujSMRmgWtixL3neC8v3x3D8FTwCXXljNa17/KiD912bNQpsZI9JPL8TrHjU+5JW5TUsmTpNkttDW3Zqq
+X-Gm-Message-State: AOJu0YzPrVAmzn49gldqggvcDHF2cA8wmZ10lAfwsyYBxEEPgaccr2bW
+	7mwk/09sAzpjjxU1KH2YxXC1MoN4WZg0CHA/CcAcjHIlWXuHxBl/DFaR+rO/f3pMZzcNLWx1gbu
+	O
+X-Google-Smtp-Source: AGHT+IHBwuAHc6fyW5QSj+pzDDfGP04AXmofDgd2guXhw80ysyfb7ktOLvy0IKy4Y9rnMlfE/fGJfA==
+X-Received: by 2002:a05:6a21:9181:b0:1af:dba9:2ff8 with SMTP id adf61e73a8af0-1afde130cd6mr1354563637.37.1715298031492;
+        Thu, 09 May 2024 16:40:31 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-6f4d2a6669dsm1831650b3a.31.2024.05.09.16.40.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 May 2024 16:40:31 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1s5DNE-009ZXH-02;
+	Fri, 10 May 2024 09:40:28 +1000
+Date: Fri, 10 May 2024 09:40:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, djwong@kernel.org,
+	hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: Fix xfs_flush_unmap_range() range for RT
+Message-ID: <Zj1e66zN0iReurEu@dread.disaster.area>
+References: <20240509104057.1197846-1-john.g.garry@oracle.com>
+ <20240509104057.1197846-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,159 +73,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240509151459.3622910-5-aalbersh@redhat.com>
+In-Reply-To: <20240509104057.1197846-2-john.g.garry@oracle.com>
 
-On Thu, May 09, 2024 at 05:14:59PM +0200, Andrey Albershteyn wrote:
-> As XFS didn't have ioctls for special files setting an inode
-> extended attributes was rejected for them in xfs_fileattr_set().
-> Same applies for reading.
+On Thu, May 09, 2024 at 10:40:56AM +0000, John Garry wrote:
+> Currently xfs_flush_unmap_range() does unmap for a full RT extent range,
+> which we also want to ensure is clean and idle.
 > 
-> With XFS's project quota directories this is necessary. When project
-> is setup, xfs_quota opens and calls FS_IOC_SETFSXATTR on every inode
-> in the directory. However, special files are skipped due to open()
-> returning a special inode for them. So, they don't even get to this
-> check.
+> This code change is originally from Dave Chinner.
 > 
-> The further patch introduces XFS_IOC_SETFSXATTRAT which will call
-> xfs_fileattr_set/get() on a special file. This patch add handling of
-> setting xflags and project ID for special files.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  fs/xfs/xfs_ioctl.c | 96 ++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 92 insertions(+), 4 deletions(-)
+>  fs/xfs/xfs_bmap_util.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index f0117188f302..515c9b4b862d 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -459,9 +459,6 @@ xfs_fileattr_get(
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index ac2e77ebb54c..5d4aac50cbf5 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -794,14 +794,18 @@ xfs_flush_unmap_range(
+>  	xfs_off_t		offset,
+>  	xfs_off_t		len)
 >  {
->  	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+> -	struct xfs_mount	*mp = ip->i_mount;
+>  	struct inode		*inode = VFS_I(ip);
+>  	xfs_off_t		rounding, start, end;
+>  	int			error;
 >  
-> -	if (d_is_special(dentry))
-> -		return -ENOTTY;
-> -
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	xfs_fill_fsxattr(ip, XFS_DATA_FORK, fa);
->  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> @@ -721,6 +718,97 @@ xfs_ioctl_setattr_check_projid(
->  	return 0;
->  }
->  
-> +static int
-> +xfs_fileattr_spec_set(
-> +	struct mnt_idmap	*idmap,
-> +	struct dentry		*dentry,
-> +	struct fileattr		*fa)
-> +{
-> +	struct xfs_inode *ip = XFS_I(d_inode(dentry));
-> +	struct xfs_mount *mp = ip->i_mount;
-> +	struct xfs_trans *tp;
-> +	struct xfs_dquot *pdqp = NULL;
-> +	struct xfs_dquot *olddquot = NULL;
-> +	int error;
-> +
-> +	if (!fa->fsx_valid)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (fa->fsx_extsize ||
-> +	    fa->fsx_nextents ||
-> +	    fa->fsx_cowextsize)
-> +		return -EOPNOTSUPP;
-> +
-> +	error = xfs_ioctl_setattr_check_projid(ip, fa);
-> +	if (error)
-> +		return error;
-> +
+> -	rounding = max_t(xfs_off_t, mp->m_sb.sb_blocksize, PAGE_SIZE);
+> -	start = round_down(offset, rounding);
+> -	end = round_up(offset + len, rounding) - 1;
 > +	/*
-> +	 * If disk quotas is on, we make sure that the dquots do exist on disk,
-> +	 * before we start any other transactions. Trying to do this later
-> +	 * is messy. We don't care to take a readlock to look at the ids
-> +	 * in inode here, because we can't hold it across the trans_reserve.
-> +	 * If the IDs do change before we take the ilock, we're covered
-> +	 * because the i_*dquot fields will get updated anyway.
+> +	 * Make sure we extend the flush out to extent alignment
+> +	 * boundaries so any extent range overlapping the start/end
+> +	 * of the modification we are about to do is clean and idle.
 > +	 */
-> +	if (fa->fsx_valid && XFS_IS_QUOTA_ON(mp)) {
+> +	rounding = max_t(xfs_off_t, xfs_inode_alloc_unitsize(ip), PAGE_SIZE);
+> +	start = rounddown(offset, rounding);
+> +	end = roundup(offset + len, rounding) - 1;
 
-Didn't we already check fsx_valid?
+These are 64 bit values, so roundup_64() and rounddown_64().
 
-Also, what's different about the behavior of setxattr on special files
-(vs. directories and regular files) such that we need a separate function?
-Is it to disable the ability to set the extent size hints or the xflags?
-
---D
-
-> +		error = xfs_qm_vop_dqalloc(ip, VFS_I(ip)->i_uid,
-> +					   VFS_I(ip)->i_gid, fa->fsx_projid,
-> +					   XFS_QMOPT_PQUOTA, NULL, NULL, &pdqp);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	tp = xfs_ioctl_setattr_get_trans(ip, pdqp);
-> +	if (IS_ERR(tp)) {
-> +		error = PTR_ERR(tp);
-> +		goto error_free_dquots;
-> +	}
-> +
-> +	error = xfs_ioctl_setattr_xflags(tp, ip, fa);
-> +	if (error)
-> +		goto error_trans_cancel;
-> +
-> +	/*
-> +	 * Change file ownership.  Must be the owner or privileged.  CAP_FSETID
-> +	 * overrides the following restrictions:
-> +	 *
-> +	 * The set-user-ID and set-group-ID bits of a file will be cleared upon
-> +	 * successful return from chown()
-> +	 */
-> +
-> +	if ((VFS_I(ip)->i_mode & (S_ISUID | S_ISGID)) &&
-> +	    !capable_wrt_inode_uidgid(idmap, VFS_I(ip), CAP_FSETID))
-> +		VFS_I(ip)->i_mode &= ~(S_ISUID | S_ISGID);
-> +
-> +	/* Change the ownerships and register project quota modifications */
-> +	if (ip->i_projid != fa->fsx_projid) {
-> +		if (XFS_IS_PQUOTA_ON(mp)) {
-> +			olddquot =
-> +				xfs_qm_vop_chown(tp, ip, &ip->i_pdquot, pdqp);
-> +		}
-> +		ip->i_projid = fa->fsx_projid;
-> +	}
-> +
-> +	error = xfs_trans_commit(tp);
-> +
-> +	/*
-> +	 * Release any dquot(s) the inode had kept before chown.
-> +	 */
-> +	xfs_qm_dqrele(olddquot);
-> +	xfs_qm_dqrele(pdqp);
-> +
-> +	return error;
-> +
-> +error_trans_cancel:
-> +	xfs_trans_cancel(tp);
-> +error_free_dquots:
-> +	xfs_qm_dqrele(pdqp);
-> +	return error;
-> +
-> +	return 0;
-> +}
-> +
->  int
->  xfs_fileattr_set(
->  	struct mnt_idmap	*idmap,
-> @@ -737,7 +825,7 @@ xfs_fileattr_set(
->  	trace_xfs_ioctl_setattr(ip);
->  
->  	if (d_is_special(dentry))
-> -		return -ENOTTY;
-> +		return xfs_fileattr_spec_set(idmap, dentry, fa);
->  
->  	if (!fa->fsx_valid) {
->  		if (fa->flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL |
-> -- 
-> 2.42.0
-> 
-> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
