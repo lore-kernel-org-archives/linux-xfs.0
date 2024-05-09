@@ -1,73 +1,131 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6DCC12FF9B;
-	Thu,  9 May 2024 15:13:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E31315B108
+	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 15:15:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715267630; cv=none; b=JDwckm/5u1aa/KGewjaAcHkEH/TogeMFMPMmIsZO/M1zSur1hWKcQ1owKKqEzSwhaY9Zu3mkq8rBaHo0vQas/vxN1bRXbzOYc7LvD2/pbRdVVVikSqF6nWjWZlKJUxObDyzhoRztPJ9JQTmJUbBBCL/IiFEu5vR16D0dA6t6ngU=
+	t=1715267723; cv=none; b=dc+VhplYa+0zGL/yX1enKoqov3SVlB14VDVqOo2uFBW6oLogeXMsiOmhzpGUzRRcsX/g9qieW6KuKn/Ntjj1lUxIFlLzEL/xML6qWukODCk+K1anV3XoaxNDtqgGBnBqJlSbMIeJdiP+NMUlaN08YjwV23kRUACVK3SOe3txYNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715267630; c=relaxed/simple;
-	bh=cnMzO2A+Ga6QE4ek+2uIiCB3gaEWsNraR5DEyjN8xHQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bp9IHWxGZwk4iU7Nx/00TtHDmmJcsxyVsZktftDdG7U5odcvvWK7+ZtkR9E/a93lkc9qj6wmm2ZywtlsNX2ChW5R67ubzkZvFKcO9s+zY3M5xa+skevZ7TUe4qiqFy1tvCNE4B10XIMzX09J9YES72hmxC9+BbUIZmYmrgG425w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cs39PB44; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1715267723; c=relaxed/simple;
+	bh=1NL1/dDvDNU2Zbas8ECSCxdIjF5qA2fFI3IHXBmleAo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=CklsuFxw4V2ni2TxbQQ8kHAISWDQ9X2AqSLRKDCZMT4kUeFAEC/hAG+BvpkWAD6uUN2F1qXdKLHeLUNtb0LYNvtE0zeJKQwkupMvwexGkzlbsjzrjFd5xX2uLSCOT/MWmVg1ZqM95Pf8FqL0JTM9YhlUg3zNsniNUOAyYK6w+Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cyN4vKgN; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cs39PB44"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=2z0wT8gt7dkldW9YUB+LxHRPNABG7fCbmV5XzFY7UhE=; b=cs39PB44VIazzjmJTVgeh67P+S
-	2T1nrRDAxOdv3tuwEyVb836vQfuk0wiRYk4UPW2P+vrhN1ba6YvZiWNpGTS4/BPBaQEWv+h1kguwh
-	Bw5O/zVhcUdmt0VOwjfyP3RDgEs9xVCYGeNsoFDMhZCXM4AhUXYc7f5E9RGf7yz3RtBsdWRbF1GfJ
-	vGs5RgqRFae/e7F/WHpTf1YeM15d/tdLh6D9Nul9xzS6nox9Nt68V9+2oqED2Hx/kXsw2KW5m3z5S
-	5HSVD6P0KuS2imG37E4eZBX9jLdCQhau8Mxme8qxXBx5Wa1/2LkvTkRVHipNeCXYd8jarleesbRb6
-	aV0y2CMA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s55Su-00000001qhf-44sO;
-	Thu, 09 May 2024 15:13:48 +0000
-Date: Thu, 9 May 2024 08:13:48 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Eric Biggers <ebiggers@kernel.org>, aalbersh@redhat.com,
-	linux-xfs@vger.kernel.org, alexl@redhat.com, walters@verbum.org,
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 25/26] xfs: make it possible to disable fsverity
-Message-ID: <ZjzoLKev1WqnsBx-@infradead.org>
-References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
- <171444680792.957659.14055056649560052839.stgit@frogsfrogsfrogs>
- <ZjHlventem1xkuuS@infradead.org>
- <20240501225007.GM360919@frogsfrogsfrogs>
- <20240502001501.GB1853833@google.com>
- <20240508203148.GE360919@frogsfrogsfrogs>
- <ZjxZRShZLTb7SS3d@infradead.org>
- <20240509144542.GJ360919@frogsfrogsfrogs>
- <Zjzmho9jm2wisUPj@infradead.org>
- <20240509150955.GL360919@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cyN4vKgN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1715267718;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0fnY+juoMhGcmaJz2MhrrIFayrEdo/RaxaccJjWuLCA=;
+	b=cyN4vKgNFrm+jTF7WrMmsiEy5iMwkewAbYhwmbP8rNwFX9qZK19yMKMsFJJzZABE61fJGm
+	7tdcJYuRsIqAudIHbXo4LEj2kLgbiSpGO6vcViO5yCc5EkZNrQ0HduMDCJGHY49A595RBJ
+	ATGBSfrVn5kUTSRNW4gjVgRvpd12tYE=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-611-itEBC8woOgOMNtxvtRIVLg-1; Thu, 09 May 2024 11:15:16 -0400
+X-MC-Unique: itEBC8woOgOMNtxvtRIVLg-1
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a59c0ecd59cso74685266b.2
+        for <linux-xfs@vger.kernel.org>; Thu, 09 May 2024 08:15:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715267715; x=1715872515;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0fnY+juoMhGcmaJz2MhrrIFayrEdo/RaxaccJjWuLCA=;
+        b=Pc2l5yZ7Q2trUNxyvZMPmV+cwwRnewyAZKzqzQS5aPSS0HVng2DgTtEzQZRfjua4DS
+         6S0A+/LHDv3mMbYWtRU1k4mSJIvdeGoByI0ysfDi3JYlhJnQt8RNt1pfPnegw9PQ6GMx
+         KFk3zMdk4RbwxkgeCIZuH07LddyUTwRyCQ7RkypVwOuK0ngqsmfAUONRww9D6pDNuVHe
+         3c2UA6jXygGueOIAe7kQ9ZzXhUtLnbY/vHtXGZhYqniMgWGRSx6oi1RXwLuQoxST8Usu
+         FFl67O9wuOFe+P1T7oSbVmG6cwjsG+7GuXPR6Vt/d9/j2b1985s+/Cyphl8S1AGVDaPd
+         laWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWKvll7rEr8k2bLmBO+qEjJjUpzx45YYao5gY9u08nte5vjt+WP3cN45TPMGbDZG7UfPW0zrLkRbpNV1hcqEaggC1riiu0gD8NM
+X-Gm-Message-State: AOJu0YzKzwS83L01/gUym5Yw4ORDZ+5tGrPyr5GVkucfLjplu94oR8kM
+	SZU1X4Z/Dlm7NAniyLeftwYX9jKalnEp6nxgaJ2Xy/yGQpEghoT1sPdjMObnfXHiOjBLssiRewM
+	KQcZd1xKqhIq7u56h0fqZKo+sHaMAutWBEpyP9gMynz6xTInIpE0869iVs5o4p9HB
+X-Received: by 2002:a17:906:ef08:b0:a59:afdd:590a with SMTP id a640c23a62f3a-a59fb9c6b4emr654984466b.56.1715267714911;
+        Thu, 09 May 2024 08:15:14 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEFmt7o0/NdAkyXCCoTiql70At8Tw5rG4AotCEnIbBl27agWLZSfEbyq0lrwzJ0gzNYP9udWQ==
+X-Received: by 2002:a17:906:ef08:b0:a59:afdd:590a with SMTP id a640c23a62f3a-a59fb9c6b4emr654979766b.56.1715267714233;
+        Thu, 09 May 2024 08:15:14 -0700 (PDT)
+Received: from thinky.redhat.com ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5a17b01785sm82035866b.164.2024.05.09.08.15.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 May 2024 08:15:13 -0700 (PDT)
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-fsdevel@vgre.kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH 1/4] fs: export copy_fsxattr_from_user()
+Date: Thu,  9 May 2024 17:14:57 +0200
+Message-ID: <20240509151459.3622910-3-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20240509151459.3622910-2-aalbersh@redhat.com>
+References: <20240509151459.3622910-2-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240509150955.GL360919@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-On Thu, May 09, 2024 at 08:09:55AM -0700, Darrick J. Wong wrote:
-> xfs doesn't do data block checksums.
-> 
-> I already have a dumb python program that basically duplicates fsverity
-> style merkle trees but I was looking forward to sunsetting it... :P
+Export copy_fsxattr_from_user(). This function will be used in
+further patch by XFS in XFS_IOC_SETFSXATTRAT ioctl.
 
-Well, fsverity as-is is intended for use cases where you care about
-integrity of the file.  For that disabling it really doesn't make
-sense.  If we have other use cases we can probably add a variant
-of fsverity that clearly deals with non-integrity checksums.
-Although just disabling them if they mismatch still feels like a
-somewhat odd usage model.
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+---
+ fs/ioctl.c               | 11 +++++++++--
+ include/linux/fileattr.h |  1 +
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 1d5abfdf0f22..2017c928194e 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -559,8 +559,14 @@ int copy_fsxattr_to_user(const struct fileattr *fa, struct fsxattr __user *ufa)
+ }
+ EXPORT_SYMBOL(copy_fsxattr_to_user);
+ 
+-static int copy_fsxattr_from_user(struct fileattr *fa,
+-				  struct fsxattr __user *ufa)
++/**
++ * copy_fsxattr_from_user - copy fsxattr from userspace.
++ * @fa:		fileattr pointer
++ * @ufa:	fsxattr user pointer
++ *
++ * Return: 0 on success, or -EFAULT on failure.
++ */
++int copy_fsxattr_from_user(struct fileattr *fa, struct fsxattr __user *ufa)
+ {
+ 	struct fsxattr xfa;
+ 
+@@ -575,6 +581,7 @@ static int copy_fsxattr_from_user(struct fileattr *fa,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(copy_fsxattr_from_user);
+ 
+ /*
+  * Generic function to check FS_IOC_FSSETXATTR/FS_IOC_SETFLAGS values and reject
+diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
+index 47c05a9851d0..3c4f8c75abc0 100644
+--- a/include/linux/fileattr.h
++++ b/include/linux/fileattr.h
+@@ -34,6 +34,7 @@ struct fileattr {
+ };
+ 
+ int copy_fsxattr_to_user(const struct fileattr *fa, struct fsxattr __user *ufa);
++int copy_fsxattr_from_user(struct fileattr *fa, struct fsxattr __user *ufa)
+ 
+ void fileattr_fill_xflags(struct fileattr *fa, u32 xflags);
+ void fileattr_fill_flags(struct fileattr *fa, u32 flags);
+-- 
+2.42.0
+
