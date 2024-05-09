@@ -1,39 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9791512D1F6
-	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 23:41:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7132512838D
+	for <linux-xfs@vger.kernel.org>; Thu,  9 May 2024 23:55:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715298065; cv=none; b=HWObxVmkEyxxWm0sdZbXsu260zw8NKOAUCq0dRbBqYimNlonp5MR91nYYrjNkIgHVuXP0xitceCCWGDZRL+rP8SmLsK7J7nNsS5q6anrVDaVsUgkMq19QPgnV7leaapvguKKmdjLquRfohyUcBoZaJsRAIHLwKMgHMe2i4LXmUQ=
+	t=1715298941; cv=none; b=V1aWZSfTLYl2sff3hxLWoGEMV+hxq1sKuGqJRtLgN6jpPLSP3zH0rBGTyI/vhvfEyj55Dygur3RcMSIbfp6DRXdJqyGQRCx/Cvp+OAaTjSeH02RfBoLNGo61GKNnYxEFdoimfYbyP3q9XVhR1dEw6Ag7gpwEt6z+9OtPbifq0/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715298065; c=relaxed/simple;
-	bh=zQ2oSuFyNQWqbgGgZAdzkKU76p8OjtnfUarzqeCbDtM=;
+	s=arc-20240116; t=1715298941; c=relaxed/simple;
+	bh=Ul7WOgsDHvpS+MEMu5IPMkjPvsDYPZ5bQeOuPOz7u/g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b1qIVMj4b6G3Xmzad0nre42bCVjoIUJDhbYAEzSIsylej5YHmIDt/DzsNV6D4I3Vb/YVuadFxJ9NWRy63GIdYTX9+GBM/yfLLL+TrMxxQJMaITmPkWV7rTs4iY2oXfZIVMcELlZGGf25v4J44OGzDhZO/bJv0xJNUCayIQgQGCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mhRGzGQK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=U5OUsFp6fRvuWIY7GbWGzdiSlc9a8CeW3Hw+9QMGexLBHh0/OKD8kUQURWl9UmAYr68NXhRhxBMCHnS1LKczCJoHhDpBh3ejRTxdCQOpa3RxcVd6X0exhBLALFNHfJbN3bDChFyqmqG4gRoyU0P31maV137C9dyKmL8jFS5HfYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fepZsJ/5; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mhRGzGQK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2676AC116B1;
-	Thu,  9 May 2024 23:41:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715298065;
-	bh=zQ2oSuFyNQWqbgGgZAdzkKU76p8OjtnfUarzqeCbDtM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mhRGzGQKj/3OfAD1pT99ofZlG7bioC1T9j9yrhT0XBU7O8ztdLTxEfZK+7H3czaGs
-	 fYpgpqgZueYHKF6bdaFGIiWT29MfvTCSkKvMlvEB94M1IssW2TkoCGDrIfQbK9Au7F
-	 160A6NVPk61UGeeMpOQh0lOrvub5naPAeXJij54E0GlrwUqWxXOqFQvzJOyPODX6H3
-	 pysF73WZDkEZYUiI5G8cekfkLGyTsaEOVuFciQew2+dsBVNLNOYdldttWvxXQx1bSt
-	 OWdAlldE1BEWRn+4f0i0+4D5q3On7mtYQb3HjeQL5KtvaXrwPi5FfLfq9zIwFOq/JM
-	 yChBuwfT6DIJg==
-Date: Thu, 9 May 2024 16:41:04 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fepZsJ/5"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1ec41d82b8bso13189905ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 09 May 2024 16:55:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1715298938; x=1715903738; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dRx1Bh8jsqURe9oYzdfY8r6TtvDzTymI8KoZRpomEtM=;
+        b=fepZsJ/54t79V/hTeCEy9ODVe3lhkTccD5FWh1m8eJHoy3Ml4BwETHfF49FNHNTTIl
+         nrHj4uzFXNGrGeW2dGXxcopxatXDsoC63z3+tMwmvfg5b3tBFTkw209NhCsAXNPY/gOb
+         /lCTMkApamdyvaUlxy9NpK9ecpzjTOgJTEt6i4VIHncApf74+4+J2IHjzOHMxTt92fvy
+         05qIhuvC+rr8DZtNgas7C1Xvux/gEfgK7POcGtLiZlL5A6FnbP5ilLyQFU4O9bsmAVQU
+         Le3udEweqihHrb2Ps77C8J3umTwW1MC2SA2MFd17ZJpjEW//fWdsdT9jbsepJ7M8OHFL
+         +wtg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715298938; x=1715903738;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dRx1Bh8jsqURe9oYzdfY8r6TtvDzTymI8KoZRpomEtM=;
+        b=kAZJMuGVn63XWoB2VA10UwdiLZ31VoL8VCu1vMSfcTiPjuaA0g15A9t/6FilDKHT9N
+         Jl0gc1LDsLdD6F50BvbmQ3fxGSP3DOIAsU2YYs/4fsTuQJ5IF4jibx75s4vzBCI3O4zz
+         8/qa35M+nEIPtKghgkq3LmuGahiH+J160YVh45/tBkn3dAo6cCNsdKfyRvplfsoPS5lK
+         n+yBKcjs899HZ4hmpVHhQyoGsmP0P8Coingyu0dkpnVTfdRonMC8DW11eItxKqOe381c
+         3HlW1VDLktMWb/2QXebgJGrXBw/dw8r03FOBjtYj23rhv4ArosihTWt6I5Y3c34uUdvr
+         UvZg==
+X-Forwarded-Encrypted: i=1; AJvYcCUNxNOWv8jxBh84X1QcsKdZZZez9v+6DCmpmraWKIpeiR4QB7AWW/u3yzQlSdKRTDAxrUnbORLvkpKYubNC29N817SVpZ56DNg9
+X-Gm-Message-State: AOJu0Yy1wLuDU3xWLnRKuJgjZNvz5pcQkwRyT07086FAX1cbcu3RFo9E
+	c9YkXbazp6s3DPuD792jBZgbk3C5a8cvnAlP67QlMm1hJSq3eEyFe7iCeDsb+Ks=
+X-Google-Smtp-Source: AGHT+IFwz2GABdkOkLSmPd78+IHOWE3dD0JNX+/3IRsyD9bMbCkArnQMrFpZNuoa7Ta9vsR8ecS7+w==
+X-Received: by 2002:a17:903:1d2:b0:1eb:2ee2:43bd with SMTP id d9443c01a7336-1ef43d0acc1mr15586555ad.7.1715298938420;
+        Thu, 09 May 2024 16:55:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ef0c137e7esm19584195ad.257.2024.05.09.16.55.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 May 2024 16:55:37 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1s5Dbr-009aLr-0v;
+	Fri, 10 May 2024 09:55:35 +1000
+Date: Fri, 10 May 2024 09:55:35 +1000
+From: Dave Chinner <david@fromorbit.com>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: linux-fsdevel@vgre.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libxfs/quota: utilize XFS_IOC_SETFSXATTRAT to set prjid
- on special files
-Message-ID: <20240509234104.GU360919@frogsfrogsfrogs>
-References: <20240509151714.3623695-2-aalbersh@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: add XFS_IOC_SETFSXATTRAT and
+ XFS_IOC_GETFSXATTRAT
+Message-ID: <Zj1id6YGbEn4mUcg@dread.disaster.area>
+References: <20240509151459.3622910-2-aalbersh@redhat.com>
+ <20240509151459.3622910-6-aalbersh@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,268 +72,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240509151714.3623695-2-aalbersh@redhat.com>
+In-Reply-To: <20240509151459.3622910-6-aalbersh@redhat.com>
 
-On Thu, May 09, 2024 at 05:17:15PM +0200, Andrey Albershteyn wrote:
-> Utilize new XFS ioctl to set project ID on special files.
-> Previously, special files were skipped due to lack of the way to
-> call FS_IOC_SETFSXATTR on them. The quota accounting was therefore
-> missing a few inodes (special files created before project setup).
+On Thu, May 09, 2024 at 05:15:00PM +0200, Andrey Albershteyn wrote:
+> XFS has project quotas which could be attached to a directory. All
+> new inodes in these directories inherit project ID.
+> 
+> The project is created from userspace by opening and calling
+> FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> files such as FIFO, SOCK, BLK etc. as opening them return special
+> inode from VFS. Therefore, some inodes are left with empty project
+> ID.
+> 
+> This patch adds new XFS ioctl which allows userspace, such as
+> xfs_quota, to set project ID on special files. This will let
+> xfs_quota set ID on all inodes and also reset it when project is
+> removed.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  libxfs/xfs_fs.h |  11 ++++
->  quota/project.c | 139 +++++++++++++++++++++++++++++++++++++++++++++---
->  2 files changed, 144 insertions(+), 6 deletions(-)
-> 
-> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-> index 6360073865db..1a560dfa7e15 100644
-> --- a/libxfs/xfs_fs.h
-> +++ b/libxfs/xfs_fs.h
-> @@ -662,6 +662,15 @@ typedef struct xfs_swapext
->  	struct xfs_bstat sx_stat;	/* stat of target b4 copy */
->  } xfs_swapext_t;
->  
-> +/*
-> + * Structure passed to XFS_IOC_GETFSXATTRAT/XFS_IOC_GETFSXATTRAT
-> + */
-> +struct xfs_xattrat_req {
-> +	struct fsxattr	__user *fsx;		/* XATTR to get/set */
-> +	__u32		dfd;			/* parent dir */
-> +	const char	__user *path;		/* NUL terminated path */
-> +};
-> +
->  /*
->   * Flags for going down operation
->   */
-> @@ -837,6 +846,8 @@ struct xfs_scrub_metadata {
->  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
->  #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
->  #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
-> +#define XFS_IOC_GETFSXATTRAT	     _IOR ('X', 130, struct xfs_xattrat_req)
-> +#define XFS_IOC_SETFSXATTRAT	     _IOW ('X', 131, struct xfs_xattrat_req)
->  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
->  
->  
-> diff --git a/quota/project.c b/quota/project.c
-> index adb26945fa57..e6059db93a77 100644
-> --- a/quota/project.c
-> +++ b/quota/project.c
-> @@ -12,6 +12,8 @@
->  static cmdinfo_t project_cmd;
->  static prid_t prid;
->  static int recurse_depth = -1;
-> +static int dfd;
-> +static int dlen;
->  
->  enum {
->  	CHECK_PROJECT	= 0x1,
-> @@ -78,6 +80,42 @@ project_help(void)
->  "\n"));
->  }
->  
-> +static int
-> +check_special_file(
-> +	const char		*path,
-> +	const struct stat	*stat,
-> +	int			flag,
-> +	struct FTW		*data)
-> +{
-> +	int			error;
-> +	struct fsxattr		fa;
-> +	struct xfs_xattrat_req	xreq = {
-> +		.fsx = &fa,
-> +		.dfd = dfd,
-> +		.path = path + (data->level ? dlen + 1 : 0),
-> +	};
-> +
-> +	error = xfsctl(path, dfd, XFS_IOC_GETFSXATTRAT, &xreq);
-> +	if (error == -ENOTTY) {
 
-These xfsctl calls should be direct ioctl calls.
+This really should be a VFS layer file ioctl (like
+FS_IOC_FSSETXATTR). Path resolution needs to be done before we call
+into the destination filesystem as the path may cross mount points
+and take us outside the filesytem that the parent dir points to.
 
-> +		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> +		return 0;
-> +	}
-> +
-> +	if (error) {
-> +		exitcode = 1;
-> +		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> +			progname, path, strerror(errno));
-> +		return 0;
-> +	}
-> +
-> +	if (xreq.fsx->fsx_projid != prid)
-> +		printf(_("%s - project identifier is not set"
-> +			 " (inode=%u, tree=%u)\n"),
-> +			path, xreq.fsx->fsx_projid, (unsigned int)prid);
-> +
-> +	return 0;
-> +}
-> +
->  static int
->  check_project(
->  	const char		*path,
-> @@ -97,8 +135,7 @@ check_project(
->  		return 0;
->  	}
->  	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
-> -		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> -		return 0;
-> +		return check_special_file(path, stat, flag, data);
->  	}
->  
->  	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
-> @@ -123,6 +160,48 @@ check_project(
->  	return 0;
->  }
->  
-> +static int
-> +clear_special_file(
-> +	const char		*path,
-> +	const struct stat	*stat,
-> +	int			flag,
-> +	struct FTW		*data)
-> +{
-> +	int			error;
-> +	struct fsxattr		fa;
-> +	struct xfs_xattrat_req	xreq = {
-> +		.fsx = &fa,
-> +		.dfd = dfd,
-> +		.path = path + (data->level ? dlen + 1 : 0),
-> +	};
-> +
-> +	error = xfsctl(path, dfd, XFS_IOC_GETFSXATTRAT, &xreq);
-> +	if (error == -ENOTTY) {
-> +		fprintf(stderr, _("%s: skipping special file %s\n"),
-> +				progname, path);
-> +		return 0;
-> +	}
-> +
-> +	if (error) {
-> +		exitcode = 1;
-> +		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> +			progname, path, strerror(errno));
-> +		return 0;
-> +	}
-> +
-> +	xreq.fsx->fsx_projid = 0;
-> +	xreq.fsx->fsx_xflags &= ~FS_XFLAG_PROJINHERIT;
-> +	error = xfsctl(path, dfd, XFS_IOC_SETFSXATTRAT, &xreq);
-> +	if (error) {
-> +		exitcode = 1;
-> +		fprintf(stderr, _("%s: cannot clear project on %s: %s\n"),
-> +			progname, path, strerror(errno));
-> +		return 0;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int
->  clear_project(
->  	const char		*path,
-> @@ -142,8 +221,7 @@ clear_project(
->  		return 0;
->  	}
->  	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
-> -		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> -		return 0;
-> +		return clear_special_file(path, stat, flag, data);
->  	}
->  
->  	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
-> @@ -170,6 +248,47 @@ clear_project(
->  	return 0;
->  }
->  
-> +static int
-> +setup_special_file(
-> +	const char		*path,
-> +	const struct stat	*stat,
-> +	int			flag,
-> +	struct FTW		*data)
-> +{
-> +	int			error;
-> +	struct fsxattr		fa;
-> +	struct xfs_xattrat_req	xreq = {
-> +		.fsx = &fa,
-> +		.dfd = dfd,
-> +		/* Cut path to parent - make it relative to the dfd */
-> +		.path = path + (data->level ? dlen + 1 : 0),
-> +	};
-> +
-> +	error = xfsctl(path, dfd, XFS_IOC_GETFSXATTRAT, &xreq);
-> +	if (error == -ENOTTY) {
-> +                fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> +                return 0;
-> +        }
-> +
-> +	if (error) {
-> +		exitcode = 1;
-> +		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> +			progname, path, strerror(errno));
-> +		return 0;
-> +	}
-> +	xreq.fsx->fsx_projid = prid;
-> +	xreq.fsx->fsx_xflags |= FS_XFLAG_PROJINHERIT;
-> +	error = xfsctl(path, dfd, XFS_IOC_SETFSXATTRAT, &xreq);
-> +	if (error) {
-> +		exitcode = 1;
-> +		fprintf(stderr, _("%s: cannot set project on %s: %s\n"),
-> +			progname, path, strerror(errno));
-> +		return 0;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int
->  setup_project(
->  	const char		*path,
-> @@ -189,8 +308,7 @@ setup_project(
->  		return 0;
->  	}
->  	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
-> -		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> -		return 0;
-> +		return setup_special_file(path, stat, flag, data);
->  	}
->  
->  	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
-> @@ -223,6 +341,13 @@ project_operations(
->  	char		*dir,
->  	int		type)
->  {
-> +	if ((dfd = open(dir, O_RDONLY|O_NOCTTY)) == -1) {
+IOWs, there should be no need to change anything in XFS to support
+FS_IOC_[GS]ETFSXATTRAT() as once the path has been resolved to a
+dentry at the VFS we can just call the existing
+vfs_fileattr_get()/vfs_fileattr_set() functions to get/set the
+xattr.
 
-Please let's not introduce more of this ^ in the codebase:
+The changes to allow/deny setting attributes on special files
+then goes into fileattr_set_prepare(), and with that I don't think
+there's much that needs changing in XFS at all...
 
-	dfd = open(...);
-	if (dfd < 0) {
-		printf(...);
-
---D
-
-> +		printf(_("Error opening dir %s for project %s...\n"), dir,
-> +				project);
-> +		return;
-> +	}
-> +	dlen = strlen(dir);
-> +
->  	switch (type) {
->  	case CHECK_PROJECT:
->  		printf(_("Checking project %s (path %s)...\n"), project, dir);
-> @@ -237,6 +362,8 @@ project_operations(
->  		nftw(dir, clear_project, 100, FTW_PHYS|FTW_MOUNT);
->  		break;
->  	}
-> +
-> +	close(dfd);
->  }
->  
->  static void
-> -- 
-> 2.42.0
-> 
-> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
