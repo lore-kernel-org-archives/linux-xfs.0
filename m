@@ -1,149 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212744C8B;
-	Thu,  9 May 2024 17:47:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 810722556F;
+	Thu,  9 May 2024 18:04:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715276866; cv=none; b=AX/433vfopZQ1MJmjXB+crmTUAXY2JrsDGp6rGkVS0K9Zue8lZyRacMyJNNtgJi81Rq31QIyOoYzX/kfNj8JQdqNHs6/rj29vTb4MdUjsgvBlbDUD/F3hTbSBDvT0QQjt+OVDjMZY6G7mV5cwrkktcz5Oj90fY3FI5UdPOoG7bE=
+	t=1715277868; cv=none; b=Kh1c3Y/NLw4SKjZdSDzteMZ0iHN7lGC+lGlvWIgerHQ/hxUwK80ztSZhGAuufVkdLKvM2MYc1VPYJc1JlSea8hUtkcxX5jHRlNSs5/p4YWHoZEdLGa2/1bgrazE1bkzJzr+nMUGEWYnKFqC5f/8CrROU6+xK4pWOWagbZM/7gSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715276866; c=relaxed/simple;
-	bh=2BpoyfLJpE2n7dg7OXu8AFRKGOsqO8S/HPUzWqSNnUI=;
+	s=arc-20240116; t=1715277868; c=relaxed/simple;
+	bh=SgVQHDSWbJsBloahemxqvlLpLQ1EHgHXMCSqkDCrp8k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JF5OTKa5rEg+wr1QeL2TMLToNcDUv/MYajj2BkSQmwA7z2+eF7TXtKM1LA+e+RlkwC/XhDILhRIRE8+m9gr5I2pxyo6GZ/aPZT6AL18QdW4oI7MwvYEpo8bYgFlIjZmNnlnwzbDmc+TYpkvNR2Yz716YwlfuYXz1WbswdamLKL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L+fJaHSY; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rjYPYzZ1RY9mFV01bI3AxIkQ8JC0SOBM6YhAogCMKonGM/cE+HfKp4a30CsVDlrxIoyq+YPqkpCloS+62UwdA8jQiE/VKToprxsLW3Tb++OxzA1P9tLvDKs5oDF2FAd00ZGCFmam4L4z4RzqjZMddK1O2NaOHXef5MD2fY6F+/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gc4VbZpb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L+fJaHSY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6BD1C116B1;
-	Thu,  9 May 2024 17:47:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gc4VbZpb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55157C116B1;
+	Thu,  9 May 2024 18:04:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715276866;
-	bh=2BpoyfLJpE2n7dg7OXu8AFRKGOsqO8S/HPUzWqSNnUI=;
+	s=k20201202; t=1715277868;
+	bh=SgVQHDSWbJsBloahemxqvlLpLQ1EHgHXMCSqkDCrp8k=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=L+fJaHSYVj8m+KtztBVrctcNxRTxNQ/q20yDVgIc3Sa2zVb7pT6aJ6EjZwy5bxbad
-	 IV91MA0KrykgQMr0STXmn0mrRHwEDOA5lwR8DCH/f0+x4n2qPyEMG9/jOOPuMeXCNJ
-	 1O6AeiK04JofQXMWqB6kYR0TOs+I1WgbywoOR1Y1JsHsV7jij3KiVzgv9VUTkU0/je
-	 d/xr41ZqJfo2QDSH2fXVmtRbh4bW7jqu8S3CFOpQ4WSUZLRrP1fpItTQUDIp15/zjr
-	 R9fsrut+I1r5D8SiuQypP6ci+EliNTj+LGewzIFesGYFiqsBH1tL1uJYErIiTwxPZ7
-	 8p2aZLcMASdog==
-Date: Thu, 9 May 2024 10:47:45 -0700
+	b=gc4VbZpbBcj7pMCX2nbLRMrVyvOIV04pH0wbg/MFbCVtZ1wIQBRxWCLLFLsee9xci
+	 vDCRxiLQBZFXDpmGChYD9CP+VqwV8Q9HQxhQPhnEDZvw5zXYgiBFBnipIEhTnaT+Sl
+	 +cv+BlUI2QAtw/hYiSfDXITJ2ZW2uu+tdH/fI8NqHEw4PIWgxGLrMFVBdK9ngOHUZR
+	 cI/79iA1Rf6VXYFl7fHiyAqeymDZE/+I883+xzRC4c9/UaN6ReS5xWExSBuskLYAc/
+	 ObXQt61W/tj/FXsV5sTGHSQySAK2yrthBeDp6zJjo8pdeDE+5up59nUZtRK9l3eJ7L
+	 IPicwOgRdvAEA==
+Date: Thu, 9 May 2024 11:04:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	lsf-pc@lists.linux-foundation.org, xfs <linux-xfs@vger.kernel.org>,
-	Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Chandan Babu R <chandan.babu@oracle.com>, Jan Kara <jack@suse.cz>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: Re: [Lsf-pc] XFS BoF at LSFMM
-Message-ID: <20240509174745.GO360919@frogsfrogsfrogs>
-References: <CAB=NE6V_TqhQ0cqSdnDg7AZZQ5ZqzgBJHuHkjKBK0x_buKsgeQ@mail.gmail.com>
- <CAOQ4uxj8qVpPv=YM5QiV5ryaCmFeCvArFt0Uqf29KodBdnbOaw@mail.gmail.com>
- <ZjxZttSUzFTd_UWc@infradead.org>
- <CAOQ4uxhpZ-+Fgrx_LDAO-K5wHaUghPfvGePLVpNaZZza1Wpvrg@mail.gmail.com>
- <20240509155528.GN360919@frogsfrogsfrogs>
- <CAOQ4uxiX=O8NhonBv2Yt6nu4ZiqTLBUZg+M5r0T-ZO5LC=a2dQ@mail.gmail.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@redhat.com,
+	linux-xfs@vger.kernel.org, alexl@redhat.com, walters@verbum.org,
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
+Message-ID: <20240509180427.GP360919@frogsfrogsfrogs>
+References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
+ <171444680671.957659.2149857258719599236.stgit@frogsfrogsfrogs>
+ <ZjHmzBRVc3HcyX7-@infradead.org>
+ <ZjHt1pSy4FqGWAB6@infradead.org>
+ <20240507212454.GX360919@frogsfrogsfrogs>
+ <ZjtmVIST_ujh_ld6@infradead.org>
+ <20240508202603.GC360919@frogsfrogsfrogs>
+ <20240509174652.GA2127@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxiX=O8NhonBv2Yt6nu4ZiqTLBUZg+M5r0T-ZO5LC=a2dQ@mail.gmail.com>
+In-Reply-To: <20240509174652.GA2127@sol.localdomain>
 
-On Thu, May 09, 2024 at 08:29:19PM +0300, Amir Goldstein wrote:
-> On Thu, May 9, 2024 at 6:55 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > [adds ritesh to cc]
-> >
-> > On Thu, May 09, 2024 at 08:23:25AM +0300, Amir Goldstein wrote:
-> > > On Thu, May 9, 2024 at 8:06 AM Christoph Hellwig <hch@infradead.org> wrote:
-> > > >
-> > > > On Thu, May 09, 2024 at 08:01:39AM +0300, Amir Goldstein wrote:
-> > > > >
-> > > > > FYI, I counted more than 10 attendees that are active contributors or
-> > > > > have contributed to xfs in one way or another.
-> > > > > That's roughly a third of the FS track.
-> > > >
-> > > > FYI, I'm flying out at 4:15pm on Wednesday, and while I try to keep my
-> > > > time at the airport short I'd still be gone by 3:30.
-> > >
-> > > I've penciled XFS BoF at 2:30
-> >
-> > Ritesh and Ted and Jan and I were chatting during the ext4 concall just
-> > now.  Could we have a 30 minute iomap bof at 2:30pm followed by the XFS
-> > bof after that?  That would give us some time to chat with hch about
-> > iomap (and xfs) direction before he has to leave.
-> >
-> > Alternately, we could announce a lunchtime discussion group on Monday
-> > following Ritesh's presentation about iomap.  That could fit everyone's
-> > schedule better?  Also everyone's braincaches will likely be warmer.
-> >
+On Thu, May 09, 2024 at 10:46:52AM -0700, Eric Biggers wrote:
+> On Wed, May 08, 2024 at 01:26:03PM -0700, Darrick J. Wong wrote:
+> > > If we did that would be yet another indicator that they aren't attrs
+> > > but something else.  But maybe I should stop banging that drum and
+> > > agree that everything is a nail if all you got is a hammer.. :)
+> > 
+> > Hammer?  All I've got is a big block of cheese. :P
+> > 
+> > FWIW the fsverity code seems to cut us off at U32_MAX bytes of merkle
+> > data so that's going to be the limit until they rev the ondisk format.
+> > 
 > 
-> Seems to me that there will be a wider interest in iomap BoF
-> Not sure what you mean by lunchtime discussion.
+> Where does that happen?
 
-Monday 90-minute lunch is posted as being in "Grand ballroom C", so I
-would tell everyone to come find the table(s) I'm sitting at for a
-discussion over lunch.  We can move out to a hallway after everyone's
-done eating.
+fsverity_init_merkle_tree_params has the following:
 
-> We can move Willy's GFP_NOFS talk to 15:30 and have the iomap BoF
-> after Ritesh's session.
+	/*
+	 * With block_size != PAGE_SIZE, an in-memory bitmap will need to be
+	 * allocated to track the "verified" status of hash blocks.  Don't allow
+	 * this bitmap to get too large.  For now, limit it to 1 MiB, which
+	 * limits the file size to about 4.4 TB with SHA-256 and 4K blocks.
+	 *
+	 * Together with the fact that the data, and thus also the Merkle tree,
+	 * cannot have more than ULONG_MAX pages, this implies that hash block
+	 * indices can always fit in an 'unsigned long'.  But to be safe, we
+	 * explicitly check for that too.  Note, this is only for hash block
+	 * indices; data block indices might not fit in an 'unsigned long'.
+	 */
+	if ((params->block_size != PAGE_SIZE && offset > 1 << 23) ||
+	    offset > ULONG_MAX) {
+		fsverity_err(inode, "Too many blocks in Merkle tree");
+		err = -EFBIG;
+		goto out_err;
+	}
 
-<shrug> If you like, though I don't think it's totally necessary.  But
-you might have a better idea of what the venue is like than I do, so
-I'll let you make that call. :)
+Hmm.  I didn't read this correctly -- the comment says ULONG_MAX pages,
+not bytes.  I got confused by the units of @offset, because "u64"
+doesn't really help me distinguish bytes, blocks, or pages. :(
 
-> > > >
-> > > > But that will only matter if you make the BOF and actual BOF and not the
-> > > > usual televised crap that happens at LSFMM.
-> > > >
-> > >
-> > > What happens in XFS BoF is entirely up to the session lead and attendees
-> > > to decide.
-> > >
-> > > There is video in the room, if that is what you meant so that remote attendees
-> > > that could not make it in person can be included.
-> > >
-> > > We did not hand out free virtual invites to anyone who asked to attend.
-> > > Those were sent very selectively.
-> > >
-> > > Any session lead can request to opt-out from publishing the video of the
-> > > session publicly or to audit the video before it is published.
-> > > This was the same last year and this year this was explicitly mentioned
-> > > in the invitation:
-> > >
-> > > "Please note: As with previous years there will be an A/V team on-
-> > > site in order to facilitate conferencing and help with virtual
-> > > participants. In order to leave room for off-the-record discussions
-> > > the storage track completely opts out of recordings. For all other
-> > > tracks, please coordinate with your track leads (mentioned below)
-> > > whether a session should explicitly opt-out. This can also be
-> > > coordinated on-site during or after the workshop. The track leads
-> > > then take care that the given session recording will not be
-> > > published."
-> > >
-> > > I will take a note to keep XFS BoF off the record if that is what you
-> > > want and if the other xfs developers do not object.
-> >
-> > Survey: How many people want to attend the xfs bof virtually?
-> >
-> > I'd be ok with an OTR discussion with no video, though I reserve the
-> > right to change my mind if the score becomes chair: 2 djwong: 0. :P
-> 
-> The middle ground is to allow video for the selective virtual attendees
-> (and trust them not to record and publish) and not publish the video
-> on LSMFF site.
+OTOH looking at how @offset is computed, it seems to be the total number
+of blocks in the merkle tree by the time we get here?
 
-I didn't know that was also an option; I'll keep that in mind.
+So I guess we actually /can/ create a very large (e.g. 2^33 blocks)
+merkle tree on a 64-bit machine, which could then return -EFBIG on
+32-bit?
+
+My dumb btree geometry calculator seems to think that an 8EiB file with
+a sha256 hash in 4k blocks would generate a 69,260,574,978MB merkle
+tree, or roughly a 2^44 block merkle tree?
+
+Ok I guess xfs fsverity really does need a substantial amount of attr
+fork space then. :)
 
 --D
 
-> Thanks,
-> Amir.
+> - Eric
 > 
