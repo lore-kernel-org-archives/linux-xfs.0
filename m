@@ -1,59 +1,43 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E7D38DE4
-	for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 12:34:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 036F717108E
+	for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 15:10:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715344464; cv=none; b=cRszws6NgKSiWVzKVVNQGxdsemMS/9ZtR0kjocb3fjcy2hJHED8dwG+KJHQawBQOaoN3yhttfRvBXsDAzrYHQnUFmiqn2bDthMS/27sbMiGDn9jCwv5OeVkhbAyL7syeYpjuDcSLVYDtddBmJietcQdHXeFNdxfqWOAwuJV4wSM=
+	t=1715353859; cv=none; b=cosk4tX2I8SiUvPyQcfl0pO6a3KZO2ZqN8CFgjk9RPUi1MJHiCkwECKuUbCRqsh/jDt1lfXcO7TLKGXxddTqXYPPN2zPoKe3s8Kx/IRmXx4cAD4ZJ4cej/fUxD3Xgb1LrEcfg9Amqg31OLd95BjjXYUukOUIQkjsmQdErxCz3Og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715344464; c=relaxed/simple;
-	bh=w8IuNDadnJ7e8otkTUQy/FUNUIhp2R3uUkcDfs1p0eA=;
+	s=arc-20240116; t=1715353859; c=relaxed/simple;
+	bh=qg3i762gXkPTkLqzxd/64MAf2quEhO3mZPLfRnxz0dM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m078Y/jHxPNloTBFx7MFsvmVE1/gx9Sgmsg89+GFdddgs6c74EqZYhyzI25T2Dr7SZdqabwPsytlf5sUkeVNAqpNfRBDy/XuiHVxe7/Lq121KVpQaCaB5bvVy09gLgH6ldjuGyfwk2rrbs0hEnoYuGH/DJ3w4gKZk8RRul8/s5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q2qjMvwd; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=YRldPxx/VqEGXwaV4Y4jhrXTV+ebi+v0aajca9z7LGO6Y132x1xZdB/2OxpPareYlxDggT4A8/lhwABA42Ut8ztlK/yXPnMz8iOU15T1tZJfwn95RgVRG+ssNQ+5/N1PfckJqjMSuIdkr9v/IuxU/wysYbJU2/ST4t86X3cBH3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hgHo4cMh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q2qjMvwd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1715344462;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=b3CKXkB7ANmM9fkAoMCAuvj+mrvULo3W+QZBbYxgBNk=;
-	b=Q2qjMvwdIs9ph4PmANk2Xw3uz+uqz6ghutoZDJTsg582UaL/kXq/LikP7bN17vw1KQzocV
-	TsgXBiTEmBayVW4rcapMBAUu6Mml19B9E3gYoG12WMOhYmiv5RqM9SwdHF99amy+sIs1B9
-	qijK05jpwlg7qz1RWqydm/K3Ndyl3jM=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-528-V0BOj0HhNnyOeoOYftkXnQ-1; Fri,
- 10 May 2024 08:34:18 -0400
-X-MC-Unique: V0BOj0HhNnyOeoOYftkXnQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 264973806723;
-	Fri, 10 May 2024 12:34:17 +0000 (UTC)
-Received: from bfoster (unknown [10.22.32.146])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id BBD8449B522;
-	Fri, 10 May 2024 12:34:16 +0000 (UTC)
-Date: Fri, 10 May 2024 08:34:35 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Sam Sun <samsun1006219@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: restrict the h_size fixup in
- xlog_do_recovery_pass
-Message-ID: <Zj4UW8bzYv7RGoST@bfoster>
-References: <20240429070200.1586537-1-hch@lst.de>
- <20240429070200.1586537-3-hch@lst.de>
- <Zi-QJG3tuRptnDVX@bfoster>
- <20240429171552.GE31337@lst.de>
- <ZjDPIwcuh-j9JIjT@bfoster>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hgHo4cMh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89C73C2BBFC;
+	Fri, 10 May 2024 15:10:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1715353858;
+	bh=qg3i762gXkPTkLqzxd/64MAf2quEhO3mZPLfRnxz0dM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hgHo4cMhV5+qdzAydTAUAnyjRgGCWxbsGhgSLO99IRK6eZ+J7RDpcUvzBinZ7bj/F
+	 MyZChlGnOX4gjvuE0/mY7qZu7P20iSC2SrH+blUJl59PaXh2jO50zsyRy5+LZ78izZ
+	 CFiMwFmYASboYyUk+XZjmdsppFmqRU1BVQvVywlzzAtSi9AOkE0JacAkoLG+1FWK8K
+	 XekqXuC5CQFuwNcEZT/VIvXvKLQ1qNfgDm6wkg17tKhPzNEuGhwBrPxpmDz94iD7bJ
+	 bCB/xHZk194kL1LGT5Gzw7Id8l/5/PHPlx6f1/XdPxF6Xfz3jubq+5/Y+9JwSg41fJ
+	 yBj9By3rop52Q==
+Date: Fri, 10 May 2024 08:10:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vgre.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: add XFS_IOC_SETFSXATTRAT and
+ XFS_IOC_GETFSXATTRAT
+Message-ID: <20240510151057.GW360919@frogsfrogsfrogs>
+References: <20240509151459.3622910-2-aalbersh@redhat.com>
+ <20240509151459.3622910-6-aalbersh@redhat.com>
+ <Zj2pevC1NuYNCnn7@infradead.org>
+ <oxflz6mkbp3xxk3nmxkhb3wunqmaxtjyxvyjkog5xu2eknalcd@p2fwn55jdhdh>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,71 +46,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZjDPIwcuh-j9JIjT@bfoster>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
+In-Reply-To: <oxflz6mkbp3xxk3nmxkhb3wunqmaxtjyxvyjkog5xu2eknalcd@p2fwn55jdhdh>
 
-On Tue, Apr 30, 2024 at 06:59:47AM -0400, Brian Foster wrote:
-> On Mon, Apr 29, 2024 at 07:15:52PM +0200, Christoph Hellwig wrote:
-> > On Mon, Apr 29, 2024 at 08:18:44AM -0400, Brian Foster wrote:
-> > > > -		if (h_len > h_size && h_len <= log->l_mp->m_logbsize &&
-> > > > +		if (!xfs_has_reflink(log->l_mp) && xfs_has_reflink(log->l_mp) &&
-> > > > +		    h_len > h_size && h_len <= log->l_mp->m_logbsize &&
+On Fri, May 10, 2024 at 11:50:28AM +0200, Andrey Albershteyn wrote:
+> On 2024-05-09 21:58:34, Christoph Hellwig wrote:
+> > On Thu, May 09, 2024 at 05:15:00PM +0200, Andrey Albershteyn wrote:
+> > > XFS has project quotas which could be attached to a directory. All
+> > > new inodes in these directories inherit project ID.
 > > > 
-> > > ... but I'm going to assume this hasn't been tested. ;) Do you mean to
-> > > also check !rmapbt here?
+> > > The project is created from userspace by opening and calling
+> > > FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> > > files such as FIFO, SOCK, BLK etc. as opening them return special
+> > > inode from VFS. Therefore, some inodes are left with empty project
+> > > ID.
+> > > 
+> > > This patch adds new XFS ioctl which allows userspace, such as
+> > > xfs_quota, to set project ID on special files. This will let
+> > > xfs_quota set ID on all inodes and also reset it when project is
+> > > removed.
 > > 
-> > Heh.  Well, it has been tested in that we don't do the fixup for the
-> > reproducer fixed by the previous patch and in that xfstests still passes.
-> > I guess nothing in there hits the old mkfs fixup, which isn't surprising.
-> > 
-> 
-> Yeah.. (sorry, just teasing about the testing.. ;).
-> 
-> > > Can you please also just double check that we still handle the original
-> > > mkfs problem correctly after these changes? I think that just means mkfs
-> > > from a sufficiently old xfsprogs using a larger log stripe unit, and
-> > > confirm the fs mounts (with a warning).
-> > 
-> > Yeah.  Is there any way to commit a fs image to xfstests so that we
-> > actually regularly test for it?
+> > Having these ioctls in XFS while the non-AT ones are in the VFS feels
+> > really odd.  What is the reason to make them XFS-specific?
 > > 
 > 
-> Not sure.. ideally we could fuzz the log record header somehow or
-> another to test for these various scenarios, since we clearly broke this
-> once already.
+> I just don't see other uses for these in other fs, and in xfs it's
+> just for project quota. So, I put them in XFS. But based on other
+> feedback I will move them to VFS.
+
+Yeah, ext4 has project quota now too. ;)
+
+--D
+
+> -- 
+> - Andrey
 > 
-> I don't quite recall if I looked into that at the time of the original
-> workaround. To Darrick's point, I wonder if there would be some use to
-> an expert logformat command or something that allowed for some bonkers
-> parameters (assuming something like that doesn't exist already).
 > 
-> I'm out on PTO for (at least) today, but I can take a closer look at
-> that once I'm back and caught up...
-> 
-
-I've had a chance to poke at this a bit and so far I don't think it's as
-straightforward as I'd hoped. The logformat command already exists,
-which makes it pretty easy to malformat a log record, but the recovery
-code only runs into this path on a dirty log. I suspect the original
-issue that prompted this logic was something like a crash-recovery test
-leading to log record trimming (i.e. simulated torn log writes) and then
-happening onto previously mkfs-formatted log records that way, but that
-is a guess at this point.
-
-I did play around a bit with fuzzing h_size for those sorts of tests
-(i.e. xfs/141), but that ran into other issues. I went back to using
-xfsprogs v4.3 or so and that eventually also produces an unmountable
-filesystem with a similar error (even with the h_size fix patch). It
-fails to locate the head/tail, which is obviously necessary in order to
-process the log and perform record validation, so I'm wondering if
-something else changed on the kernel side to further gate this scenario.
-Of course it's also possible I'm looking at things wrong and this is
-just orthogonal to the original problem.
-
-But given all of that, I am a little skeptical on the value of retaining
-this logic at all. Does whatever test case that recently uncovered the
-h_size problem leave a mountable filesystem, or does it just work around
-bad behavior to provide a more graceful failure condition?
-
-Brian
-
