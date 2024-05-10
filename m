@@ -1,43 +1,52 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4094756757
-	for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 04:58:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3370314F9F0;
+	Fri, 10 May 2024 05:08:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715317122; cv=none; b=WUGPy+q/TleeXNYCO5yrjnpgMjpj7mXy0RR09pnF4pruvKp5OCewNEc4iHn+x/Xk3zBG8a9n26xFAqrMw6I2Ey5epBuKKQUemItya4c/Fl1VBWBnvT2LMo3TaCaf5JL5FjJG/lPXgL2X4+hhaWLRZSio6uPJzPvmFYuxm87rl7Y=
+	t=1715317717; cv=none; b=o37JLShjhxcuihKdxYZa7Cp+hroOokzLOGKXYOxi1U0JA4JOOvIuItr6TmuzI1cULn0hLSiM8SqN/L/IwCYsSAV5futqpdcZkau6PUwXGpp77Z7EdLlkcISGj+nOecb6VU4tQE72LZqqUjvlJZeUXGFSBNTDWGk5KSyOpGughUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715317122; c=relaxed/simple;
-	bh=mIGGVqel70nvJakKMsfJRAoGP+4EJ4+mP/eVFeAtL5s=;
+	s=arc-20240116; t=1715317717; c=relaxed/simple;
+	bh=szAzEqHAl3mhrikNq0IrLuuMgLlC1lAZCTc80/t1JcE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JxDVXSEfR+wRjTY7qQOhcbwfDrUVNSnKR3wCneJWlJSTeoPo3VoDVf0X/ntAbT4vGRK65O+jqNo7VmnEzLiiubSkUzyuUiaarsneiRzh0Ndk1VCVERj7msgL8UKlz6pv8eOLDowxlZHI2U+qv1UGYIHY2Y6Wft+Z9fexly9s8zI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xZvpZVzj; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=n8Z55RSDs4XEnc27OE0rNJTG3XszsxI7DmyhIQft9QNibmAH1VbdMMcEVV8fy8nB7xbiOQ+fSy0qTF+zxz3tu1epw1P88PYnuNvvSvaxX/PTyB5K+D/5uVNEq/859O+kc6Bz+0kitJB3IuaYaNVlhjxKqCvh8uKdQzWCROPqqAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1hrJDEXn; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xZvpZVzj"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1hrJDEXn"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=VYTB4ZdwHQEb3MMe1WAOQsvWcPW4TOEGzIOwQX2/iEM=; b=xZvpZVzjATWsHBLnxDHavqn/0S
-	P5ybFfF2CB5ZQSAtjLqft44xmmRDjTPHF/qivK3SPfRUrcPLgW6yCDPPqVCEquEK3wVEs4k+sXBII
-	VM5cJEc/lu+jilFhKz4B702q7A7nX/dlX9QCqQjvBVve/P3F3ml8hyHwMNI0ZNA2aNDb2KpoNdB6o
-	VGh8bfpdfkvyycEtknRpACza2Ra6t/TaESmCEEhYF2BYstcMBitronbbmmURHP1j5NGzS+VHO9PUb
-	+xmiMATPF+YvPt1R1uw6sGxchv6oZE0K5Kaog2bfMbxVJSVd/PRAxtxzSXZ0bQc2w/u8QWsLAtd15
-	sLgz/biQ==;
+	bh=xq+wQGWTlkCSADrFxu9APfyBr7tzlacKQFJbx7N4YGQ=; b=1hrJDEXnoiph0sbSLFjwp1Rmsv
+	Dsuh+SI0C6b9caqQumDp6evPOTeBhBRl0xjpKqfs0xDZzZ3E6TAkN2c06mFDUINY1/ATUJngQDUtL
+	/Lfm2RJ3FoQW53hZ0185eKpLUbaSznDVOxCgqXcaouXxPd/TnDzPzH1UaxA9HYVCQy3ehoMagZ/9f
+	zaQ3GbbzQhv7KG4RkqiprMUhwppWwP9igDrqS1rTlySNMD0jAmzlOucBXSHmtvcWBd/27U0KJ1jIR
+	1LnowI5p4yqPo/0yF0EkFbHFOGRCfQDGDgpawb4QvaM7VUuq7/9pMDDR1VlnnCHcmHLImGiql6Rcv
+	7b3jzLUA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s5IL4-000000042Q1-0nPW;
-	Fri, 10 May 2024 04:58:34 +0000
-Date: Thu, 9 May 2024 21:58:34 -0700
+	id 1s5IUj-000000043YZ-06jS;
+	Fri, 10 May 2024 05:08:33 +0000
+Date: Thu, 9 May 2024 22:08:32 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-fsdevel@vgre.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: add XFS_IOC_SETFSXATTRAT and
- XFS_IOC_GETFSXATTRAT
-Message-ID: <Zj2pevC1NuYNCnn7@infradead.org>
-References: <20240509151459.3622910-2-aalbersh@redhat.com>
- <20240509151459.3622910-6-aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@redhat.com,
+	ebiggers@kernel.org, linux-xfs@vger.kernel.org, alexl@redhat.com,
+	walters@verbum.org, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
+Message-ID: <Zj2r0Ewrn-MqNKwc@infradead.org>
+References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
+ <171444680671.957659.2149857258719599236.stgit@frogsfrogsfrogs>
+ <ZjHmzBRVc3HcyX7-@infradead.org>
+ <ZjHt1pSy4FqGWAB6@infradead.org>
+ <20240507212454.GX360919@frogsfrogsfrogs>
+ <ZjtmVIST_ujh_ld6@infradead.org>
+ <20240508202603.GC360919@frogsfrogsfrogs>
+ <ZjxY_LbTOhv1i24m@infradead.org>
+ <20240509200250.GQ360919@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,24 +55,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240509151459.3622910-6-aalbersh@redhat.com>
+In-Reply-To: <20240509200250.GQ360919@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, May 09, 2024 at 05:15:00PM +0200, Andrey Albershteyn wrote:
-> XFS has project quotas which could be attached to a directory. All
-> new inodes in these directories inherit project ID.
+On Thu, May 09, 2024 at 01:02:50PM -0700, Darrick J. Wong wrote:
+> Thinking about this further, I think building the merkle tree becomes a
+> lot more difficult than the current design.  At first I thought of
+> reserving a static partition in the attr fork address range, but got
+> bogged donw in figuring out how big the static partition has to be.
 > 
-> The project is created from userspace by opening and calling
-> FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> files such as FIFO, SOCK, BLK etc. as opening them return special
-> inode from VFS. Therefore, some inodes are left with empty project
-> ID.
-> 
-> This patch adds new XFS ioctl which allows userspace, such as
-> xfs_quota, to set project ID on special files. This will let
-> xfs_quota set ID on all inodes and also reset it when project is
-> removed.
+> Downthread I realized that the maximum size of a merkle tree is actually
+> ULONG_MAX blocks, which means that on a 64-bit machine there effectively
+> is no limit.
 
-Having these ioctls in XFS while the non-AT ones are in the VFS feels
-really odd.  What is the reason to make them XFS-specific?
+Do we care about using up the limit?  Remember that in ext4/f2fs
+the merkle tree is stored in what XFS calls the data fork,
+so the file data plus the merkle tree have to fit into the size
+limit, be that S64_MAX or lower limit imposed by the page cache.
+And besides being the limit imposed by the current most common
+implementation (I haven't checked btrfs as the only other one),
+that does seem like a pretty reasonable one.
+
+> That led me to the idea of dynamic partitioning, where we find a sparse
+> part of the attr fork fileoff range and use that.  That burns a lot less
+> address range but means that we cannot elide merkle tree blocks that
+> contain entirely hash(zeroes) because elided blocks become sparse holes
+> in the attr fork, and xfs_bmap_first_unused can still find those holes.
+
+xfs_bmap_first_unused currently finds them.  It should not as it's
+callers are limited to 32-bit addressing.  I'll send a patch to make
+that clear. 
+
+> Setting even /that/ aside, how would we allocate/map the range?
+
+IFF we stick to a static range (which I think still make sense),
+that range would be statically reserved and should exist if the
+VERITY bit is set on the inode, and the size is calculated from
+the file size.  If not we'd indeed need to record the mapping
+somewhere, and an attr would be the right place.  It still feels
+like going down a rabit hole for no obvious benefit to me.
 
