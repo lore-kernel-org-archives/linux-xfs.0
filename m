@@ -1,52 +1,61 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3370314F9F0;
-	Fri, 10 May 2024 05:08:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F026149C43
+	for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 05:35:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715317717; cv=none; b=o37JLShjhxcuihKdxYZa7Cp+hroOokzLOGKXYOxi1U0JA4JOOvIuItr6TmuzI1cULn0hLSiM8SqN/L/IwCYsSAV5futqpdcZkau6PUwXGpp77Z7EdLlkcISGj+nOecb6VU4tQE72LZqqUjvlJZeUXGFSBNTDWGk5KSyOpGughUc=
+	t=1715319351; cv=none; b=BT3YihjoZ8XEcLRpS+MjXt1VBvQ2KUihnxlhKnvMFLCjcy7UXRN4E8iTPTx3oxcUqf+C6qz1X5nvoFQofdSX//gRsIYZuNIISZvFIF+JF5BGsQm3mUlAUlSPflAvh97U3hnq78qOH4NWKQZzMnf+rzWjIXLx23xC9tQE87BZzhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715317717; c=relaxed/simple;
-	bh=szAzEqHAl3mhrikNq0IrLuuMgLlC1lAZCTc80/t1JcE=;
+	s=arc-20240116; t=1715319351; c=relaxed/simple;
+	bh=MCTnAK71z/v1XjAM5beslY8sNh5hd/Sz8C2IfH1r9Uk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n8Z55RSDs4XEnc27OE0rNJTG3XszsxI7DmyhIQft9QNibmAH1VbdMMcEVV8fy8nB7xbiOQ+fSy0qTF+zxz3tu1epw1P88PYnuNvvSvaxX/PTyB5K+D/5uVNEq/859O+kc6Bz+0kitJB3IuaYaNVlhjxKqCvh8uKdQzWCROPqqAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1hrJDEXn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=bWXd57FgTjB9cGNPB7fHW8NmPQqCae4EqSiQsH0SFotc9b3ALQ6ST41GbbUNABisXY1f4KRIDMXfabYrrnwCIKrf0ajrkqZW7tJG+skHMAy//MMxL2g1thm1egF7vH6CGjv7WtG0TlROB9hZ+5xAuJLup7DyTr2cPyg2DcxBgh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MMhhMELB; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1hrJDEXn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=xq+wQGWTlkCSADrFxu9APfyBr7tzlacKQFJbx7N4YGQ=; b=1hrJDEXnoiph0sbSLFjwp1Rmsv
-	Dsuh+SI0C6b9caqQumDp6evPOTeBhBRl0xjpKqfs0xDZzZ3E6TAkN2c06mFDUINY1/ATUJngQDUtL
-	/Lfm2RJ3FoQW53hZ0185eKpLUbaSznDVOxCgqXcaouXxPd/TnDzPzH1UaxA9HYVCQy3ehoMagZ/9f
-	zaQ3GbbzQhv7KG4RkqiprMUhwppWwP9igDrqS1rTlySNMD0jAmzlOucBXSHmtvcWBd/27U0KJ1jIR
-	1LnowI5p4yqPo/0yF0EkFbHFOGRCfQDGDgpawb4QvaM7VUuq7/9pMDDR1VlnnCHcmHLImGiql6Rcv
-	7b3jzLUA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s5IUj-000000043YZ-06jS;
-	Fri, 10 May 2024 05:08:33 +0000
-Date: Thu, 9 May 2024 22:08:32 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@redhat.com,
-	ebiggers@kernel.org, linux-xfs@vger.kernel.org, alexl@redhat.com,
-	walters@verbum.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
-Message-ID: <Zj2r0Ewrn-MqNKwc@infradead.org>
-References: <171444680291.957659.15782417454902691461.stgit@frogsfrogsfrogs>
- <171444680671.957659.2149857258719599236.stgit@frogsfrogsfrogs>
- <ZjHmzBRVc3HcyX7-@infradead.org>
- <ZjHt1pSy4FqGWAB6@infradead.org>
- <20240507212454.GX360919@frogsfrogsfrogs>
- <ZjtmVIST_ujh_ld6@infradead.org>
- <20240508202603.GC360919@frogsfrogsfrogs>
- <ZjxY_LbTOhv1i24m@infradead.org>
- <20240509200250.GQ360919@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MMhhMELB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715319350; x=1746855350;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=MCTnAK71z/v1XjAM5beslY8sNh5hd/Sz8C2IfH1r9Uk=;
+  b=MMhhMELBlNaudiBwYQLIN3yJGwKKanL3VhFuGEvdPPsAmYw/HsHN4Wwn
+   u5vFn6gAVyfWWSCbQb9JPz21PIgpDBPRoX70hgDWWQwEWFD0Qhmhx5MrL
+   FWu3FHnve8uf92YbOBbB6BG1Zzu1Gl+Zi7zlV49gLf4NVp8kXLH8zO0xh
+   sVgNH7pUl7Yf9v8J4k7icPrC0YnzMgHAJ759qBfY8h1qk0G345ViOY5gO
+   PPX6Hp01rtwY4pFvERfTW54y3HmosyKamHr7j1eq9ktEKCLTLgAZ9qsw2
+   lmPoWIkMv8Buy2YxP7eZ14JUBbcCNVZ5njDLrbkFsqCZhjZtEjcBF8bvE
+   Q==;
+X-CSE-ConnectionGUID: xHcdZADLSOqMiLjRs2lsbA==
+X-CSE-MsgGUID: 9AOm7H3SQdSRvfduOj657g==
+X-IronPort-AV: E=McAfee;i="6600,9927,11068"; a="21878446"
+X-IronPort-AV: E=Sophos;i="6.08,150,1712646000"; 
+   d="scan'208";a="21878446"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 May 2024 22:35:49 -0700
+X-CSE-ConnectionGUID: 2JTm/vV2TturrfNUSIXpWQ==
+X-CSE-MsgGUID: hcEYcWkpQtK2dM3hWGRGcA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,150,1712646000"; 
+   d="scan'208";a="33928088"
+Received: from lkp-server01.sh.intel.com (HELO f8b243fe6e68) ([10.239.97.150])
+  by fmviesa005.fm.intel.com with ESMTP; 09 May 2024 22:35:47 -0700
+Received: from kbuild by f8b243fe6e68 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1s5Iv3-0005ll-1A;
+	Fri, 10 May 2024 05:35:45 +0000
+Date: Fri, 10 May 2024 13:35:25 +0800
+From: kernel test robot <lkp@intel.com>
+To: John Garry <john.g.garry@oracle.com>, chandan.babu@oracle.com,
+	dchinner@redhat.com, djwong@kernel.org, hch@lst.de
+Cc: oe-kbuild-all@lists.linux.dev, linux-xfs@vger.kernel.org,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: Fix xfs_prepare_shift() range for RT
+Message-ID: <202405101325.ODONtoFD-lkp@intel.com>
+References: <20240509104057.1197846-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,43 +64,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240509200250.GQ360919@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240509104057.1197846-3-john.g.garry@oracle.com>
 
-On Thu, May 09, 2024 at 01:02:50PM -0700, Darrick J. Wong wrote:
-> Thinking about this further, I think building the merkle tree becomes a
-> lot more difficult than the current design.  At first I thought of
-> reserving a static partition in the attr fork address range, but got
-> bogged donw in figuring out how big the static partition has to be.
-> 
-> Downthread I realized that the maximum size of a merkle tree is actually
-> ULONG_MAX blocks, which means that on a 64-bit machine there effectively
-> is no limit.
+Hi John,
 
-Do we care about using up the limit?  Remember that in ext4/f2fs
-the merkle tree is stored in what XFS calls the data fork,
-so the file data plus the merkle tree have to fit into the size
-limit, be that S64_MAX or lower limit imposed by the page cache.
-And besides being the limit imposed by the current most common
-implementation (I haven't checked btrfs as the only other one),
-that does seem like a pretty reasonable one.
+kernel test robot noticed the following build errors:
 
-> That led me to the idea of dynamic partitioning, where we find a sparse
-> part of the attr fork fileoff range and use that.  That burns a lot less
-> address range but means that we cannot elide merkle tree blocks that
-> contain entirely hash(zeroes) because elided blocks become sparse holes
-> in the attr fork, and xfs_bmap_first_unused can still find those holes.
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on next-20240509]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-xfs_bmap_first_unused currently finds them.  It should not as it's
-callers are limited to 32-bit addressing.  I'll send a patch to make
-that clear. 
+url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/xfs-Fix-xfs_flush_unmap_range-range-for-RT/20240509-184217
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20240509104057.1197846-3-john.g.garry%40oracle.com
+patch subject: [PATCH 2/2] xfs: Fix xfs_prepare_shift() range for RT
+config: xtensa-randconfig-001-20240510 (https://download.01.org/0day-ci/archive/20240510/202405101325.ODONtoFD-lkp@intel.com/config)
+compiler: xtensa-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240510/202405101325.ODONtoFD-lkp@intel.com/reproduce)
 
-> Setting even /that/ aside, how would we allocate/map the range?
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202405101325.ODONtoFD-lkp@intel.com/
 
-IFF we stick to a static range (which I think still make sense),
-that range would be statically reserved and should exist if the
-VERITY bit is set on the inode, and the size is calculated from
-the file size.  If not we'd indeed need to record the mapping
-somewhere, and an attr would be the right place.  It still feels
-like going down a rabit hole for no obvious benefit to me.
+All errors (new ones prefixed by >>):
 
+   `.exit.text' referenced in section `__jump_table' of fs/fuse/inode.o: defined in discarded section `.exit.text' of fs/fuse/inode.o
+   `.exit.text' referenced in section `__jump_table' of fs/fuse/inode.o: defined in discarded section `.exit.text' of fs/fuse/inode.o
+   xtensa-linux-ld: fs/xfs/xfs_bmap_util.o: in function `xfs_alloc_file_space':
+   xfs_bmap_util.c:(.text+0x1dbc): undefined reference to `__moddi3'
+   xtensa-linux-ld: fs/xfs/xfs_bmap_util.o: in function `xfs_flush_unmap_range':
+   xfs_bmap_util.c:(.text+0x1deb): undefined reference to `__moddi3'
+   xtensa-linux-ld: fs/xfs/xfs_bmap_util.o: in function `xfs_alloc_file_space':
+   xfs_bmap_util.c:(.text+0x1dc0): undefined reference to `__moddi3'
+   xtensa-linux-ld: fs/xfs/xfs_bmap_util.o: in function `xfs_flush_unmap_range':
+   xfs_bmap_util.c:(.text+0x1e36): undefined reference to `__moddi3'
+>> xtensa-linux-ld: xfs_bmap_util.c:(.text+0x1ea4): undefined reference to `__moddi3'
+   xtensa-linux-ld: fs/xfs/xfs_bmap_util.o:xfs_bmap_util.c:(.text+0x1efa): more undefined references to `__moddi3' follow
+   `.exit.text' referenced in section `__jump_table' of drivers/misc/phantom.o: defined in discarded section `.exit.text' of drivers/misc/phantom.o
+   `.exit.text' referenced in section `__jump_table' of drivers/misc/phantom.o: defined in discarded section `.exit.text' of drivers/misc/phantom.o
+   `.exit.text' referenced in section `__jump_table' of drivers/mtd/maps/pcmciamtd.o: defined in discarded section `.exit.text' of drivers/mtd/maps/pcmciamtd.o
+   `.exit.text' referenced in section `__jump_table' of drivers/mtd/maps/pcmciamtd.o: defined in discarded section `.exit.text' of drivers/mtd/maps/pcmciamtd.o
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
