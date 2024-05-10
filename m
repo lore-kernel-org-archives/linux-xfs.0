@@ -1,293 +1,225 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B0D91292F2
-	for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 10:38:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715337529; cv=none; b=EiytQAVL9nfefzIVJBkHCHEQfYLfbmDhLcKIn+Hx28U4e801OP7H1RP6QjGs0y/x9Upha+5EBE0M8X4ihb2YUaB23MzciwYHV/qfqbvFgbuEdwAZj/DHyVRZSU/HOzSr34QS5OSdM44wBiDDGkHrwvmxMicyHV4F8SdKod8I30s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715337529; c=relaxed/simple;
-	bh=Wq93lPs4XFSEBa/aWPK1iPYI8MQBoaqiADzzXfSR4Xw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=skqYu2dJ0YFJPT2Bb7jNevSONg8CQ3Z6bAhdArVqaZQtR0+FE89agl+BdIFa914VQ6uOi08G1URxc1Zl6s3Ng4A+wRrmCpcEyNHST7qRGzZuAAbxJQZesUJAOonw5Ih1IkMjf+5q7OjsYZLNzD9ksh5kuKPMMNbstExFa4vB6RA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LtbEWHS5; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B590C21340
+	for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 11:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715339444; cv=fail; b=Ly8DXPbSx4sVPHwHFG8zCIUwfUlJyx74Gpv67mOsP7xK0KyTS2I2F75UPpibj65EzZLRd2DHuKF2yB2WnPfPDwmX90LIU8P34iTwJAklbgk/HftTbCcgkOCNwAx480YKR+jF6cRyGzzyPokOnVcH5mp98q6QsYx5kwgy8VcIVXw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715339444; c=relaxed/simple;
+	bh=4lcxnm8Y9cRdjQnHRLm+R2gWlJQJnRILbVLM1WwDSds=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=ahBNiTY1IAPFPXsKMMRLpXajoYDlHsppvxofBzc+Fwqs6YSH5Fm3xI1vQXntMcxE2Fj+/GZDnljQGGhCtOPJRGMxp84ulIhqqxupFd7vvhxzfOvegWR27EDylWDLbCUbEtnGyRuKcxlnoaNoJmN0PVhbSVgMAUuBkBPbm/yKtDs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=c4SE4QWo; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=A0rJk6Rn; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LtbEWHS5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1715337526;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XZ8GQOLSzZjN+hKwXOHn41VkWpv9xsuV1JjtCn+vWNo=;
-	b=LtbEWHS5hy5tb3XN+QD5LnB3kqLm28Dpq0Ry46gOCwiC4Rf/DZ1wTLjXRkqqRZopGl/sVk
-	NFwKQKWGB9wVJ2EVqptk3RwuQAKHr8Ji6LI4Knl7PTLVHNi12OXur50WcMo437bj+P1e7r
-	OtNsJphSRZI5Ltfpsg+/r4gcztom5RA=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-326-VcWM_UnBNviecFaKO8OLxg-1; Fri, 10 May 2024 06:38:43 -0400
-X-MC-Unique: VcWM_UnBNviecFaKO8OLxg-1
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-a59efa9f108so93146666b.2
-        for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 03:38:43 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715337520; x=1715942320;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XZ8GQOLSzZjN+hKwXOHn41VkWpv9xsuV1JjtCn+vWNo=;
-        b=Vny+aL086Vj+kU4dBUyOglH/29Kx4P6RRbvC9CY0JnJrZr+GA2hMAmI12GXDqkeEZm
-         Ug4/krYfvkoncLMoySJJKOYvDz7mjtMd6rsr6Fz6gWnN6yBQ6mTAgAm9FvBWCecfYTa7
-         Rea6jr2PHvbmVRj/fvebvIucFKjbpa8ALQBQCai/g0qFtOwFu4UuBHNkDtMayjEyowEL
-         6WZg8YeRbBDim5plhghv6gqKuaSla1y/gZbwF7P9o9J50Oh+J6pa0WOm/BsXH6fEmzaB
-         iR4pLuU9F39CWvfyfLYOeDltgxQio7pMIcK+vZAJcq4WKj2dnHh0h+p73F2GNscOpeg1
-         dsbA==
-X-Forwarded-Encrypted: i=1; AJvYcCXh3qUu4I3xL/7KGiuJL9maWePhQOxbnorMJ6EIv7travXKhmFfKPxopa7C+948kSYBE0it3j/9KjrmTXIW4orgdu3ybK6ZxF5d
-X-Gm-Message-State: AOJu0YywfCbrQnR0it/C7TSK7hNZnCRX4zXNL0GC3Hg7fm1366qY16wL
-	XorX/7NCcsC5647tIrut4FJxR9Tlm3Mx1UVvXxjy36boEgisrziSJYPoVd5jARuufxTf67Jjfw4
-	IhT1Utbfp7pc150b/M05W3qVrPHubl4l3tsNuEKkjI9xYNPTFeI3c5jPFU000Rw5I
-X-Received: by 2002:a17:906:24cc:b0:a5a:44e:2b87 with SMTP id a640c23a62f3a-a5a2d57a3bcmr133003166b.21.1715337520011;
-        Fri, 10 May 2024 03:38:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGOhlEgNcZyT8GIAVe2Vxl7iGXuVA0Y+oXksqgX/6BMjsCnyoh5SG1LMZAJxBtU8ppfZ2nkkA==
-X-Received: by 2002:a17:906:24cc:b0:a5a:44e:2b87 with SMTP id a640c23a62f3a-a5a2d57a3bcmr133000666b.21.1715337519274;
-        Fri, 10 May 2024 03:38:39 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5a1781ce3fsm169020566b.4.2024.05.10.03.38.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 May 2024 03:38:38 -0700 (PDT)
-Date: Fri, 10 May 2024 12:38:37 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vgre.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: add XFS_IOC_SETFSXATTRAT and
- XFS_IOC_GETFSXATTRAT
-Message-ID: <q334ez5n7jrrts7l2akpq4p772dzncudjj3xc4zbkyxin3k5dv@lkum7alo2rvi>
-References: <20240509151459.3622910-2-aalbersh@redhat.com>
- <20240509151459.3622910-6-aalbersh@redhat.com>
- <20240509232517.GR360919@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="c4SE4QWo";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="A0rJk6Rn"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 44AAx2Iq022039;
+	Fri, 10 May 2024 11:10:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=B/RSSLHV+Q2AXrpvCwjdYAPat6EwNEwM2bJs9I/cEF4=;
+ b=c4SE4QWoy47Q6g0KiCWe4KpKKiFjm0Y3WSImWb10lirwxCcPmDmwJMIjEwe1lr3jRchC
+ 5VGfMOMRK+6wh8ECnMVPlu8rqjKjzuaXhpFAK89xVP23Edl63dYPD7L6YPFzXA0uteXv
+ nCf+KWuV0JS8vGQNpaM4O56o3usiVOd+8q31aWlfmviqVE3A4V1u9CaWxuIYTvwZUgXv
+ 7y73Gmc4Du4D8r1N/zX8vslJIKgRcjN03jGWW6gd0GRjtCHQBNlvHgeipf9bvAggH2k3
+ sIoD1c2q1jbSugBsE+ek0BJ8fW+PcXcdh47YZDSdTFIW6jrzZbpIAhmoQ0KtkxPbbQcq lA== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3y17x7rwkn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 10 May 2024 11:10:33 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 44AAN0Bp030996;
+	Fri, 10 May 2024 11:10:32 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xysfpp0vb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 10 May 2024 11:10:32 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=X6d+fkIAziHGA+e4w9XbFLkKEVg5GVRMaWYQ5h/B6Occ5xKmTMWJbMmzuapV6TIoMLjOQsysE0t5Et1lYx02L0UqRA4k1SbhjmyLBmTtu9jqQyvWCOZAnb0dUjD5fnG0Hcc/Xsq6IjLidGzf5tkFh7mzosy+9LvjPV+8d/npUADTlI8AY9BxzwOG2KBPCMWfunzg0UcRZkXPf4Lwlpivl/H2PBzWHd3EgwBz+Sx2PxQRrdMifkEuw4J485iQOCp7qD3F0K71kclMj7aWQm8XFaDd91DsF47NDeOI3AeALZpR8ljP3/HAj6OPMozkJOyjvXN+2m98fwFD7vxPadW+hw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=B/RSSLHV+Q2AXrpvCwjdYAPat6EwNEwM2bJs9I/cEF4=;
+ b=hPKr7oDSjSyW87BpOdH2kwxdmPUwP1RnPosOEszQ9Ah8SMJ9k6vbrnJk24PrvshvN1+drnyN61GzcG0l75ddHYGdgwtIVKnW2zvuX71PLNz6luXwQXAKZg9+OwRmu+TqLYSvbfBME/FOxrOoKP3mtfNqbJn1oyhomKcHvQpO+h6v5cKp4aleinpjBeV1IDx7AHiYqwqjAysmXjXayftNEhhqrS6yGraNB4yCGmg+WXW+bjZtJMBDLox7jCxtiirdKMMwzJN7qnYk1wpKPY0yoC8RY8S6nm+VOmoTpTtu+e8q+TdvftynPXDZWv9n9TgkbJaCf35sx8XF+KuAaQ2Ghw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=B/RSSLHV+Q2AXrpvCwjdYAPat6EwNEwM2bJs9I/cEF4=;
+ b=A0rJk6RnlUfhhxWW5RKXvD0fu7vN4KFBFSXYaEC9+/73VS9umFwEztRlL7XFNcow0WOD1fBLzTIE9j7t6xHsax/SoUb9Wi/yoxZ31ot81rt3BcgASd70b5LqQHnbBT0qvLgV/6fm6AnQXzgHq5fvlf+xMqU9g50sEZKBqvIMKBg=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by SJ0PR10MB4479.namprd10.prod.outlook.com (2603:10b6:a03:2af::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7544.49; Fri, 10 May
+ 2024 11:10:30 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.7544.047; Fri, 10 May 2024
+ 11:10:30 +0000
+Message-ID: <112d379e-bcdc-478e-bfd1-511d4f4371f1@oracle.com>
+Date: Fri, 10 May 2024 12:10:25 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] xfs: Fix xfs_flush_unmap_range() range for RT
+To: Dave Chinner <david@fromorbit.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, djwong@kernel.org,
+        hch@lst.de, linux-xfs@vger.kernel.org
+References: <20240509104057.1197846-1-john.g.garry@oracle.com>
+ <20240509104057.1197846-2-john.g.garry@oracle.com>
+ <Zj1e66zN0iReurEu@dread.disaster.area>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <Zj1e66zN0iReurEu@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0611.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:314::10) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240509232517.GR360919@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SJ0PR10MB4479:EE_
+X-MS-Office365-Filtering-Correlation-Id: 80de5390-d801-4c67-27c7-08dc70e1cd75
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230031|366007|1800799015|376005;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?WXNreVc5V3prNjNoTHpQdXF5RUo4d2xtT1ZkZWRyZFJmY0E3ak5xYzE0ZXoz?=
+ =?utf-8?B?c2UxdmR2SWRpY3IxTjhFMmpBRFJFTTF3cVQyb2Y5QlNTOTB0YUdodGtuejRF?=
+ =?utf-8?B?VGR1NUVQL1lTbGlVd2dWdVF5aFlPOC82aGJrOGNTYWg0QVd0OW5tM0V0eXBa?=
+ =?utf-8?B?dkJHSWR2dEhwOFYzb0hnbk1rNnJWbEVTcmJLa3oyYkI2K0t4aDh3L0FlV2hs?=
+ =?utf-8?B?aFhOVlJReHRjVCtncXRaSk5KSncxeUtzWmM4THNNZ1Y5NnhnaXpFS2RIY2Nj?=
+ =?utf-8?B?Qm1YZGZlQVF5KzYvdkxvaVJWQWhUbnNSUnZZd1JabWtJY1NGZ3N2cUYvUHcr?=
+ =?utf-8?B?V2VhREtIVjNNa2xpK2wzMERlazlHTGRkeGYzanp2UnRZTEVPWDc2U2Q0dEhn?=
+ =?utf-8?B?NEhJNlRJcHJqcEtkZmY4Njh5Zzc3eU90RitjM0lxVHBPYUV1MXVleXo3NzZ0?=
+ =?utf-8?B?Nm5qRE5NMlI1UWI1dndCUGY0d0FxUERFZ05QeHp6ZlowVzBBeGJQSkd0NGpj?=
+ =?utf-8?B?KzhweFdJbENCL1hZeHhLV25GYmh1RU5BNkZyNksyUHBDcEJwNzREbWMrMk14?=
+ =?utf-8?B?NzFNWmJrSVJtY2ZxN0dVL2dnczIrUlMzSGdFZjBWR0ZPMm5DeGhWQ2ZWeWxu?=
+ =?utf-8?B?YnZpQTRhK3JhUkJZVkRNaGRjTmtSMzIvLzRpLzB1ZUhzQ1RQcDQ1V1B5c1lM?=
+ =?utf-8?B?TnNvTU5SQlRFemFOQTBXelNidGRLRkdoZlpZWFhzeFlSNE4wMUpaRUNWWVdW?=
+ =?utf-8?B?VWVIYjE1dGg3YTY4VjUzeG5YUEFETG5rdVk4NUVveEJpWWZsejNBTzdlNnhC?=
+ =?utf-8?B?U1RieGFmUGk5KzdnQzJEalpua05OQllubGJNSHgxaTRDN3NvVWluNDdmeWVr?=
+ =?utf-8?B?NVRnRkJueEJUNDNHU292M1F4VW5JclRCZzRvY3ErZTdIUHZDM3lhb3c1bVk1?=
+ =?utf-8?B?MmlZOU5mdzNXbVFuL2Vkb2N2eldZakJhVU9VeGRGNVpPd3BuekFuenBmeXRX?=
+ =?utf-8?B?MFFQVlhiVGpEdTdPZFFaSkplUHFLbzVvWExiLzUvWHF6clNFL2tCelBheWhP?=
+ =?utf-8?B?dmpaRUJrT0daem9qYzNvbExxL2xRMTZaaC90UmYwMGRYZHJqRms3NDNWYmtG?=
+ =?utf-8?B?aTJmT0hDOFgzTkwvN1lucjZhRkZlQUVxQ0sxS09VUndJWXJNc1UwSUU4bll4?=
+ =?utf-8?B?K0w0bUdHNWVTbFZCbFd4SnZIZHFHdmN1Zml6eWxuRER3V2FITVdzTXFUQVRC?=
+ =?utf-8?B?R0g2aWtuS04wa0FUZGlYd1M4UmhIMEFkTFlKd2FpSUwzYjJodXBzdUNDTWdH?=
+ =?utf-8?B?aEticVI4Q3QvbVZScjJtV0poWDNONGZINzBsa3JzaW93c2RvMmZjY256SmFX?=
+ =?utf-8?B?V2trRWFFSXVseFNsV0lWNzA3YlkzbjdveEQrZG5XaWY2RmJuVTdWYWlkK3hS?=
+ =?utf-8?B?aE5xSm9GbHZVSjJyVzdUdzlrU1gwNGlibVZPV1VqK2krdkxEOVZLbk1wQWNW?=
+ =?utf-8?B?d2NnQTdCclJ5Tzh6dnJWbGlEY0RhWlZmTHRJeUFjMWs3d20zVDM2eERRRkRQ?=
+ =?utf-8?B?bGJjaVRvNy91b3lISkUySWZScDkwM0tGekg2Tk1WSXNvUkJXVEQzS3h4YjNK?=
+ =?utf-8?B?L3JxYmRXUnJScm1LWTVaQTFSSUp3RlJYVUIxaGdlZnFBYUdjUE5nMTZvNnpN?=
+ =?utf-8?B?Ymk0a1c0Wk9QWW9WNjJMbGpmcXdwcGxvaXFINE8wMjV0eDdGUkpGZ1FBPT0=?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?ZytXNnhLNUJGczBITGxVWTh1b0JTWER6aThXcXlLQXQ2clF0eXBrMWhCSFhQ?=
+ =?utf-8?B?V3gzZHBKYTBPQkdBK2tqM2VlQ2g5VkJtU1ZEQzJNcnlOYVdCMkV5ODZVV1px?=
+ =?utf-8?B?MWtIRGFWL0pXemFCaElqcE8vTmc4WWJZdkR5b1ozemkwbjg5d0UyT2ZwWm5V?=
+ =?utf-8?B?L25LNDFBOUdDOWJiUmlyZVg5aUUveXMyTjNMTDdxWktjaDY2WnFMakp2bVBV?=
+ =?utf-8?B?RmxCTURWNTJRTCsrT0FSaHdVbjVMajZldjZmTjdpM0cybk15akxrSmN5dERW?=
+ =?utf-8?B?MnRETmhZUHhCaUEvUWUvbDVQdWR4MlJROUdVM0Vqa3NoTWdPMERZQUZiMFRq?=
+ =?utf-8?B?SWdhS3UrL290L0FmeTBxN2N2VC9wdEpnekRMWU1oME11VzR0aURJR2w0WlZN?=
+ =?utf-8?B?Y2tkMkhmZE9ZVzZXK1ZFdGllTis2Z2IvSFA1NGcrMTFhSm9SUjgvS0JLbk40?=
+ =?utf-8?B?TXJFNWVMYUZ5NUFwVmtnWUV1YnM2S1FKekh3YnRIcXZzUUx1b2pxR0RlY2xq?=
+ =?utf-8?B?UWpjMzdpZUlyWXRWY0lnQ2oyOUwxZGsxNXhKWEZpSnJSQUEzNnUvbjFjUDM1?=
+ =?utf-8?B?RjhKeUdGc1JudDFrUFFLdXZXUHpjRzF4UkhQbUNzNHhkUUtjS3JHMTdpSnNI?=
+ =?utf-8?B?RDJYTkpRc091SDVmMlVDQmo2M0dQbm44WStoLys4bWVxWGJDWDZiZGpJNnNJ?=
+ =?utf-8?B?NlAvQm1FWk8vR0dSUjNCT1NCTEtGNGFidkFxY3pvcEV3NDdPYnlmdkRnaVpP?=
+ =?utf-8?B?QWhWV3o0WWFLZWlLUTJoMHlsV3NXZE55eXdHSGI4L0lyMnY4UEN2UVVkWnR4?=
+ =?utf-8?B?N3kzeEx1UDhQa0dpZHpyalhiWkVXU0lyVWFuMUZ3MlhxVnRPRFVveTkwcmZS?=
+ =?utf-8?B?UnZERWZ2Y0Y5enhpeVJxZFhrY3kzVFJzRmNzU2NlTkZhS2ZvUFZkd3BNMi9s?=
+ =?utf-8?B?L2NWN2NKSUF3RGsxb3N3dUdsTWc3Sk4xN3Z0bHFld1E5OG5CNjNmR1RVbWVm?=
+ =?utf-8?B?QjhMUEJFVG1XOUROaWVDdlJETnVta29MbW9lSFBvWnlHbEg1dkRVeDEvUkhq?=
+ =?utf-8?B?WEVOd1pjd1FEWTFCZG9vb2IxVW9JWVdPMUJLc1B2SlBxaHIrSXRWNm0xeEJz?=
+ =?utf-8?B?cDNVSUxoVWV3MUtTYUJyYlZPdkI0RWR4M0JjYmQ1ejdGYW5lTWt5U2NCVStN?=
+ =?utf-8?B?VldjN1U0a2k3QWZZalpjYWVWY2FNSHdodS9jaXI2Qm5YSlNEbVZGSStFN0t3?=
+ =?utf-8?B?aVd3WEpsU0swb3JiYmlKNUtRTVl5UUxNSWZkQjhoNGxWZ05lZ1JKbndQLzht?=
+ =?utf-8?B?WU42M3d6TlJ2aE42bzhRbS92N05KMlFmYXpRMFJYd0NKQ0xZdzRXbjBYV3kv?=
+ =?utf-8?B?VnBxWndQVnRSb1lMdmxZQVRZTzNiZ3A4cmU0dk9FZ1hYL244THR1YkVkVVdY?=
+ =?utf-8?B?YXNSQjBJcXJYUlRjZlpjWUR0Z3VEaGVkRnFFR3RNZWF5aWViOUNtd04yZktn?=
+ =?utf-8?B?djBZWmlCZTB0UXp0R0dvSXk0K0tFdktZajlRZkg1K0w1UDFvY3VURXlNVnFj?=
+ =?utf-8?B?aUFvUHBVaEtJckRVZmVnbmZzRUpnRmE0enR0cVRGRGxYVllSd1pCVFdCbSs5?=
+ =?utf-8?B?bHp4WVNJcCtuSkxzakFoWmR4MEJ6NTNtMHV6b3pucXBUUWxsb2tKbDh4dnpv?=
+ =?utf-8?B?TE1BN1Jweit4YjdGZUhpMEN6Mmd1YW5nN2FFaldMdDhrNzMxVmhnLzFNMUNK?=
+ =?utf-8?B?VGhhNktPZllnNG5RUWF6MTR0R1J2V3V2SE1sQkVnRGp0alpSYzdkbzd6a0Zp?=
+ =?utf-8?B?bmVlelk4SGxQSEVlb2toUFlzR3p4dHhVS25TMExMa21obGQvd2dQNk1SQmRh?=
+ =?utf-8?B?RTJjN1JwdTA4M3RoLzlEYnArc3BEc3ZHNjVRVlVUNEc2RS9LM2ZTUWswdnRR?=
+ =?utf-8?B?eGFTM2tBbWN2a3Y5SFNYWThyWUVnOHR2NklxY1NzS2xORUlUZkZ2c1IzUFRh?=
+ =?utf-8?B?SE1UbTlSSExBa3hkeUpadlM0dWRWYVQvb3diZjRtWHJvRWllSkRGK1VZRllC?=
+ =?utf-8?B?TmZTb3JBNFFRREIxL2V4Nm1WUE9RYlhzSyszTVBjdVlkbkQxZm9DdXdLVUNt?=
+ =?utf-8?B?Z2UyVkZuODcvZGdVaUtWWTVlNCtFbmYzSjREZ2g0RUVKUlBhUk5Oa0dmVlBC?=
+ =?utf-8?B?REE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	r4rA8Ugb9AaSfHhh0TqXWlgYbmLbY2dxACPdPj9RoGO/9krKa6kxRl29c+vdzNPV+A6Tpnyu6rVN/7fFxs+CABsqUL3Se1G5MIS4lTEF87izdWS66h3MvKk7yj86DqtZ+scO+fjyRwzHHQuAVLICYRld9QPRuUsQNLSCxlPNQqzPxXcwhmHfZazk8RuItFh15cRVO4scuToCCs8Un5h8pgym1lO//8EpD/gXTMpRUSaMzPIk42Qs6Y71cJlOheFryBkACGB+2GB4Cqxp4b7hjLbZzTvXExdExU7SK1shKoTTU2EdZ9J5tmDx3t0ocT/eNhCxzBsV+8eyS5RlP3rbMWovu/ug63sCEjyoCEBu5NTGhA9lEhjDPl8a/yATf75RIQaNVSrdhzlvL3aHN/vFF058VIeUgdz/R8UdEDg4U2mq61AGdT2SQlWMp1vFvNKsPOmJUY/8cz88wDhxxXjBJ/tjNubGLCFp2qxNP/A6OnBVlevp6mLq2VZ+M+FFTN7fDYX3SSRa1VxHOMVXdkY898Fr2ZCZj3MfyRSWFP7hDZt01f3Un9Oa5BnVS01c5Gv0SzpKAySCO9wuh5oa6EDuKkW4ubfzWlLcvr0ehTMlxOQ=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 80de5390-d801-4c67-27c7-08dc70e1cd75
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 May 2024 11:10:29.9767
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7xH1/dElUkICvIH88I62TeOvh7/XprI49MhkfM3GCCpnFYKx1hqirknCfuPlvdV4FNsfq/KKTwSSNPJbvdiLPQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4479
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-05-10_07,2024-05-10_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ suspectscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2405010000 definitions=main-2405100080
+X-Proofpoint-GUID: 2hmfwb2NxFfmvwXlglotwOaqlh5JKqFB
+X-Proofpoint-ORIG-GUID: 2hmfwb2NxFfmvwXlglotwOaqlh5JKqFB
 
-On 2024-05-09 16:25:17, Darrick J. Wong wrote:
-> On Thu, May 09, 2024 at 05:15:00PM +0200, Andrey Albershteyn wrote:
-> > XFS has project quotas which could be attached to a directory. All
-> > new inodes in these directories inherit project ID.
-> > 
-> > The project is created from userspace by opening and calling
-> > FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> > files such as FIFO, SOCK, BLK etc. as opening them return special
-> > inode from VFS. Therefore, some inodes are left with empty project
-> > ID.
-> > 
-> > This patch adds new XFS ioctl which allows userspace, such as
-> > xfs_quota, to set project ID on special files. This will let
-> > xfs_quota set ID on all inodes and also reset it when project is
-> > removed.
-> > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h   | 11 +++++
-> >  fs/xfs/xfs_ioctl.c       | 86 ++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/fileattr.h |  2 +-
-> >  3 files changed, 98 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 97996cb79aaa..f68e98005d4b 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -670,6 +670,15 @@ typedef struct xfs_swapext
-> >  	struct xfs_bstat sx_stat;	/* stat of target b4 copy */
-> >  } xfs_swapext_t;
-> >  
-> > +/*
-> > + * Structure passed to XFS_IOC_GETFSXATTRAT/XFS_IOC_GETFSXATTRAT
-> > + */
-> > +struct xfs_xattrat_req {
-> > +	struct fsxattr	__user *fsx;		/* XATTR to get/set */
-> 
-> Shouldn't this fsxattr object be embedded directly into xfs_xattrat_req?
-> That's one less pointer to mess with.
+On 10/05/2024 00:40, Dave Chinner wrote:
+>>   
+>> -	rounding = max_t(xfs_off_t, mp->m_sb.sb_blocksize, PAGE_SIZE);
+>> -	start = round_down(offset, rounding);
+>> -	end = round_up(offset + len, rounding) - 1;
+>> +	/*
+>> +	 * Make sure we extend the flush out to extent alignment
+>> +	 * boundaries so any extent range overlapping the start/end
+>> +	 * of the modification we are about to do is clean and idle.
+>> +	 */
+>> +	rounding = max_t(xfs_off_t, xfs_inode_alloc_unitsize(ip), PAGE_SIZE);
+>> +	start = rounddown(offset, rounding);
+>> +	end = roundup(offset + len, rounding) - 1;
 
-Yes, I think it can, will change that
+I have to admit that I am not the biggest fan of this rounding API.
 
-> 
-> > +	__u32		dfd;			/* parent dir */
-> > +	const char	__user *path;
-> 
-> Fugly wart: passing in a pointer as part of a ioctl structure means that
-> you also have to implement an ioctl32.c wrapper because pointer sizes
-> are not the same across the personalities that the kernel can run (e.g.
-> i386 on an x64 kernel).
+So round_{down, up}() happens to handle 64b, but round{down, up} doesn't :(
 
-aha, I see, thanks! Will look into it
+And that is not to mention the vague naming.
 
-> 
-> Unfortunately the only way I know of to work around the ioctl32 crud is
-> to declare this as a __u64 field, employ a bunch of uintptr_t casting to
-> shut up gcc, and pretend that pointers never exceed 64 bits.
-> 
-> > +};
-> > +
-> >  /*
-> >   * Flags for going down operation
-> >   */
-> > @@ -997,6 +1006,8 @@ struct xfs_getparents_by_handle {
-> >  #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
-> >  #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
-> >  #define XFS_IOC_EXCHANGE_RANGE	     _IOWR('X', 129, struct xfs_exchange_range)
-> > +#define XFS_IOC_GETFSXATTRAT	     _IOR ('X', 130, struct xfs_xattrat_req)
-> > +#define XFS_IOC_SETFSXATTRAT	     _IOW ('X', 131, struct xfs_xattrat_req)
-> 
-> These really ought to be defined in the VFS alongside
-> FS_IOC_FSGETXATTR, not in XFS.
-> 
-> >  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
-> >  
-> >  
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 515c9b4b862d..d54dba9128a0 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1408,6 +1408,74 @@ xfs_ioctl_fs_counts(
-> >  	return 0;
-> >  }
-> >  
-> > +static int
-> > +xfs_xattrat_get(
-> > +	struct file		*dir,
-> > +	const char __user	*pathname,
-> > +	struct xfs_xattrat_req	*xreq)
-> > +{
-> > +	struct path		filepath;
-> > +	struct xfs_inode	*ip;
-> > +	struct fileattr		fa;
-> > +	int			error = -EBADF;
-> > +
-> > +	memset(&fa, 0, sizeof(struct fileattr));
-> > +
-> > +	if (!S_ISDIR(file_inode(dir)->i_mode))
-> > +		return error;
-> > +
-> > +	error = user_path_at(xreq->dfd, pathname, 0, &filepath);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	ip = XFS_I(filepath.dentry->d_inode);
-> 
-> Can we trust that this path points to an XFS inode?  Or even the same
-> filesystem as the ioctl fd?  I think if you put the user_path_at part in
-> the VFS, you could use the resulting filepath.dentry to call the regular
-> ->fileattr_[gs]et functions, couldn't you?
+> These are 64 bit values, so roundup_64() and rounddown_64().
 
-Yeah, I missed that this could be a cross mount point, I will move
-it to VFS.
+yeah, thanks.
 
-> 
-> --D
-> 
-> > +
-> > +	xfs_ilock(ip, XFS_ILOCK_SHARED);
-> > +	xfs_fill_fsxattr(ip, XFS_DATA_FORK, &fa);
-> > +	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> > +
-> > +	error = copy_fsxattr_to_user(&fa, xreq->fsx);
-> > +
-> > +	path_put(&filepath);
-> > +	return error;
-> > +}
-> > +
-> > +static int
-> > +xfs_xattrat_set(
-> > +	struct file		*dir,
-> > +	const char __user	*pathname,
-> > +	struct xfs_xattrat_req	*xreq)
-> > +{
-> > +	struct fileattr		fa;
-> > +	struct path		filepath;
-> > +	struct mnt_idmap	*idmap = file_mnt_idmap(dir);
-> > +	int			error = -EBADF;
-> > +
-> > +	if (!S_ISDIR(file_inode(dir)->i_mode))
-> > +		return error;
-> > +
-> > +	error = copy_fsxattr_from_user(&fa, xreq->fsx);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	error = user_path_at(xreq->dfd, pathname, 0, &filepath);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	error = mnt_want_write(filepath.mnt);
-> > +	if (error) {
-> > +		path_put(&filepath);
-> > +		return error;
-> > +	}
-> > +
-> > +	fa.fsx_valid = true;
-> > +	error = vfs_fileattr_set(idmap, filepath.dentry, &fa);
-> > +
-> > +	mnt_drop_write(filepath.mnt);
-> > +	path_put(&filepath);
-> > +	return error;
-> > +}
-> > +
-> >  /*
-> >   * These long-unused ioctls were removed from the official ioctl API in 5.17,
-> >   * but retain these definitions so that we can log warnings about them.
-> > @@ -1652,6 +1720,24 @@ xfs_file_ioctl(
-> >  		sb_end_write(mp->m_super);
-> >  		return error;
-> >  	}
-> > +	case XFS_IOC_GETFSXATTRAT: {
-> > +		struct xfs_xattrat_req xreq;
-> > +
-> > +		if (copy_from_user(&xreq, arg, sizeof(struct xfs_xattrat_req)))
-> > +			return -EFAULT;
-> > +
-> > +		error = xfs_xattrat_get(filp, xreq.path, &xreq);
-> > +		return error;
-> > +	}
-> > +	case XFS_IOC_SETFSXATTRAT: {
-> > +		struct xfs_xattrat_req xreq;
-> > +
-> > +		if (copy_from_user(&xreq, arg, sizeof(struct xfs_xattrat_req)))
-> > +			return -EFAULT;
-> > +
-> > +		error = xfs_xattrat_set(filp, xreq.path, &xreq);
-> > +		return error;
-> > +	}
-> >  
-> >  	case XFS_IOC_EXCHANGE_RANGE:
-> >  		return xfs_ioc_exchange_range(filp, arg);
-> > diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
-> > index 3c4f8c75abc0..8598e94b530b 100644
-> > --- a/include/linux/fileattr.h
-> > +++ b/include/linux/fileattr.h
-> > @@ -34,7 +34,7 @@ struct fileattr {
-> >  };
-> >  
-> >  int copy_fsxattr_to_user(const struct fileattr *fa, struct fsxattr __user *ufa);
-> > -int copy_fsxattr_from_user(struct fileattr *fa, struct fsxattr __user *ufa)
-> > +int copy_fsxattr_from_user(struct fileattr *fa, struct fsxattr __user *ufa);
-> >  
-> >  void fileattr_fill_xflags(struct fileattr *fa, u32 xflags);
-> >  void fileattr_fill_flags(struct fileattr *fa, u32 flags);
-> > -- 
-> > 2.42.0
-> > 
-> > 
-> 
+I can't help but think such a thing should be part of core kernel API.
 
--- 
-- Andrey
+Thanks,
+John
+
+
+
+
 
