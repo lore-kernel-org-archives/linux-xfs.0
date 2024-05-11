@@ -1,73 +1,71 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3AF71843
-	for <linux-xfs@vger.kernel.org>; Sat, 11 May 2024 03:45:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FC6417571
+	for <linux-xfs@vger.kernel.org>; Sat, 11 May 2024 05:01:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715399123; cv=none; b=DlOcCi9tbnsgBJFLD6ygnp3rNsY908bPoqE1dCn+Yky4eDN9Zuw/51uTP1/cjH0XNga8Q26A9z5y0OzUbeHndRRUPRuVWV7u2jS+ZjP/92wqAfnJ/ZeQiKA+bVqtHWUsXYL0ex5e7M+8QHPTIejCyEjOwnl1mSIi+mKNXck96Q4=
+	t=1715403717; cv=none; b=YS9SVg7a2cFs41mbq9OYxMGZhhDUvp5f5xDRyirudisJ+jOrRXa1T3xnB3px7W/KT6jSG5XDrgK6Y/+LZWpeDlHw5NS2sH9RxUKSG8giaJnzTXaxCVi9xdbtw9Lz5nFn3O5EFAj6CGUfYH49xRjUcH7jwec4hkCoreNX4LZYjR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715399123; c=relaxed/simple;
-	bh=WzOTVZ8GCGiKQi4TF8klcgJTBycPjYkacv4ZdJWCBh0=;
+	s=arc-20240116; t=1715403717; c=relaxed/simple;
+	bh=2av7ldVmFODATl7G8x4XJ+ukXmnPObiC8mhBCT9hXG8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eaMfS/OCbbrAOEX00PFzL7sSOfuoZKa9L/bWNjnOwTqMXiL72OcavJg3ijyEcJTsXvfPESksnAsJmExJVziCUUTqjeC7xleD1gPn6gZ/Ne/dH6LuGX24Pi+XFn1tG8JaywFoxVbiUBdTiQzMJ1I4VXXkQc+OYSmLAsiKe+6GsSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=aseShwrv; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=D6Sx3DXBM0UMibVBlr1UVlOiZ8/rMvEcxyHUYBKkPV/HJglvwTuKqNDOc0/cfrdvc8THmGFmeXYnm7cYEwSDgxbb/sbHCwcvF/kcbJAY3dmVtDSeMmyvb2GEsqtiJ/abfAX31A0A/oDRVGc5WRExscVZSVLmghI9y1VYKBHhrTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IM/xxzTz; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="aseShwrv"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1e3c3aa8938so19351985ad.1
-        for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 20:45:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1715399121; x=1716003921; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=oUoBni/ncwQ6orRMlcHEjyA9DgrRVMLRCUTD4QAwLBA=;
-        b=aseShwrvUptn4PnXHwbFuk55KPWRNESKIofgRdrq6mGd33kNMRjMh/01arHHWSxuyR
-         Lze1B7d0El3ldH7b0DxpGreoUN9L/MOW/rU38D6OXe4NuaXLZUQalui72AOmxfUrF+Rl
-         1Ern9nmfvhtQ0tm1AlkVYMCrLPMN1gr6RVy41ug56QucrdhIHcbZKBpheYK1V/d+ggk5
-         hbwpIoUp6H/l2Lfg8BfmF7kr4aj7FugFeDkIaPR+bHdZdnW5p2rIm5zYwyJhZQGOnWvb
-         QcwU7HOn5WL8j3b+Sd+iC3TuWXgoqZxmUJoqZKTAo35pxr+oZc1g6VG6EnrD1ttX+QUb
-         BAig==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IM/xxzTz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1715403714;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TDNPYoMHZa+LiLBXZt4zxOSaybPS9naQJyx782OpWkg=;
+	b=IM/xxzTzE8s+vLkFiv5ZzyHA8cxOh06Dn5/SPHK7g+IJGQfmQ+cOU/Tk9qNtFThmD/nC5E
+	ML3GcnZpd25dqVFEou/4MnqHveVMCCSpxCbMmO91RjG7mHhdS7micOPeriXrtz7ZOwAbIV
+	12M09igq+mHJ6XGFXtAj2TNLWR2L618=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-128-2tInY_e1Os6uZOKoXGvpew-1; Sat, 11 May 2024 01:01:52 -0400
+X-MC-Unique: 2tInY_e1Os6uZOKoXGvpew-1
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-61b7d7c292aso2508328a12.1
+        for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 22:01:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715399121; x=1716003921;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oUoBni/ncwQ6orRMlcHEjyA9DgrRVMLRCUTD4QAwLBA=;
-        b=e1MlWWSuHFHp6DbTEBfzX8IvM8s8cAUrRqT/O0yu2d91chaWudgZUvs4hESd9xjxVb
-         WTOkhrnxTlyjxGGgFAHitqVzLYIVUGLj96kAwkNJ1cad6JI6KrG48njVWGoi0Uod8JVT
-         g4ldMxQJhlVJduPnoVSnL/6gcf1l1v00Uh8nQueOrCfEG3j52L2iUXGtpr6yBoXJO7bF
-         24ynICoDYCVOq58eBOk/YhjrUSs/zmVMkJG/PyeJA3rcKFX1ujzIK6Q2K4a4RYoUw8p9
-         ni+0PeWirYZ+sfjC3DXq4/RJrbCExQhNfVBDC6+ec/9lT5pIybzjREJmqZrzj7JmQixc
-         ++Dw==
-X-Forwarded-Encrypted: i=1; AJvYcCVAjlmLCOs2Fi5Pub0aBto+9ONFpsQkKOS+iPqrmaOJx5uvKE2fhC0icQOpQ0JwtX5/Xqc7WMGlg9WG7aMMbHW4MbGWIW9Kj05j
-X-Gm-Message-State: AOJu0YwI7kV1o7H5i/eLO79O1Tf1lFRMdLPtpMdOH5ogLdpN43R4VD8g
-	pi+4rfvxc08qDBArAd+5m+dvnNY7dkJnRA0odf2se9MFXVqDtQr2hGHLorqRds9UVE6OeCzKzwv
-	Q
-X-Google-Smtp-Source: AGHT+IETEq2sTtbfK9w6iVR+JAvy7FFgY4suhMgCCAK0ezGbJbr+iPsP4ne9S/d7aovh/nxVIJuEzg==
-X-Received: by 2002:a17:902:9007:b0:1ec:681c:30fa with SMTP id d9443c01a7336-1ef43e23407mr38503035ad.36.1715399120633;
-        Fri, 10 May 2024 20:45:20 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-32-121.pa.nsw.optusnet.com.au. [49.179.32.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ef0bad886csm40076255ad.70.2024.05.10.20.45.19
+        d=1e100.net; s=20230601; t=1715403711; x=1716008511;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TDNPYoMHZa+LiLBXZt4zxOSaybPS9naQJyx782OpWkg=;
+        b=bvnptGYFbdT5QCi7eemIjp/7v/204zV+BYTLMK7VD8p+no9z9SoySGY3PzeE4MRM7t
+         PWolMTuzxoAJ3KqF6ht/elQmC7oKLCDOpaehjDxvXxPcWSaYA2ToKs67BV83OA9kB9Xz
+         3Hc5HRHljyl8j5n61NR3wGlU0NvT8UwmWgwymMYDDT/IxbCl5QsdqC7qjEqe8TK0eJGL
+         z4R0unj3agNeWd6oQ3wQSo2zh6LLvvvXHKtbH2PBZ0Hg/jjpPT+qYoqEhUaQCTwjSNM9
+         0D3NmqhCqchYbpoXsp/F7J2lvYIcjQ4SqPTLoQng25qKG3DNfbZtMBmGKTPpN6hOpoBO
+         vDew==
+X-Forwarded-Encrypted: i=1; AJvYcCWjR4TtZiO6pWSNPxEfuV0OcJZ4bgfAhwxR8GyxcsX0gb9Y0jrGTDVxCtlwHFGa85v81ftH4Sb7zcAteESVQkD4bIoZ/wUQG4Dd
+X-Gm-Message-State: AOJu0Yx7dr18iB06pXWh0ijS4kSs/OWO/GZMv8JmBt/j838lfRCJQBoM
+	uou5MNhiIFI3MK56TW0K9XcikDUdjaBL15HK+8EmcZTjC7IIztDrJrY3rVC7LdhTA/VnzVDqmXn
+	MbFIKRmwnR98dsiAD3IMJtIqleuSuFYhXhZVdn3ztEY6lNVaCM4VhyF/RlQ==
+X-Received: by 2002:a05:6a20:7fa6:b0:1a9:6c18:7e96 with SMTP id adf61e73a8af0-1afde0e69demr4892818637.19.1715403710721;
+        Fri, 10 May 2024 22:01:50 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGBhS7yx2/bYWVvxBcMHhgvRgVdDMAnNnxTYn3AXqsfsQ/3xg5yARrJakUCW2UTPsJc3GeR9Q==
+X-Received: by 2002:a05:6a20:7fa6:b0:1a9:6c18:7e96 with SMTP id adf61e73a8af0-1afde0e69demr4892793637.19.1715403710008;
+        Fri, 10 May 2024 22:01:50 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2b671782d89sm4030893a91.55.2024.05.10.22.01.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 May 2024 20:45:19 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1s5dfh-00AvWa-10;
-	Sat, 11 May 2024 13:45:17 +1000
-Date: Sat, 11 May 2024 13:45:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Chandan Babu R <chandanbabu@kernel.org>, djwong@kernel.org,
-	Christoph Hellwig <hch@infradead.org>, brauner@kernel.org,
-	Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Subject: Re: [BUG REPORT] generic/561 fails when testing xfs on next-20240506
- kernel
-Message-ID: <Zj7pzTR7QOSpEXEi@dread.disaster.area>
-References: <87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64>
- <6c2c5235-d19e-202c-67cf-2609db932d5a@huaweicloud.com>
+        Fri, 10 May 2024 22:01:49 -0700 (PDT)
+Date: Sat, 11 May 2024 13:01:46 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET v5.6] fstests: fs-verity support for XFS
+Message-ID: <20240511050146.vc4jr2gagwjwwhdp@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20240430031134.GH360919@frogsfrogsfrogs>
+ <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,158 +74,128 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <6c2c5235-d19e-202c-67cf-2609db932d5a@huaweicloud.com>
+In-Reply-To: <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
 
-On Sat, May 11, 2024 at 11:11:32AM +0800, Zhang Yi wrote:
-> On 2024/5/8 17:01, Chandan Babu R wrote:
-> > Hi,
-> >=20
-> > generic/561 fails when testing XFS on a next-20240506 kernel as shown b=
-elow,
-> >=20
-> > # ./check generic/561
-> > FSTYP         -- xfs (debug)
-> > PLATFORM      -- Linux/x86_64 xfs-crc-rtdev-extsize-28k 6.9.0-rc7-next-=
-20240506+ #1 SMP PREEMPT_DYNAMIC Mon May  6 07:53:46 GMT 2024
-> > MKFS_OPTIONS  -- -f -rrtdev=3D/dev/loop14 -f -m reflink=3D0,rmapbt=3D0,=
- -d rtinherit=3D1 -r extsize=3D28k /dev/loop5
-> > MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 -ortdev=3D/de=
-v/loop14 /dev/loop5 /media/scratch
-> >=20
-> > generic/561       - output mismatch (see /var/lib/xfstests/results/xfs-=
-crc-rtdev-extsize-28k/6.9.0-rc7-next-20240506+/xfs_crc_rtdev_extsize_28k/ge=
-neric/561.out.bad)
-> >     --- tests/generic/561.out   2024-05-06 08:18:09.681430366 +0000
-> >     +++ /var/lib/xfstests/results/xfs-crc-rtdev-extsize-28k/6.9.0-rc7-n=
-ext-20240506+/xfs_crc_rtdev_extsize_28k/generic/561.out.bad        2024-05-=
-08 09:14:24.908010133 +0000
-> >     @@ -1,2 +1,5 @@
-> >      QA output created by 561
-> >     +/media/scratch/dir/p0/d0XXXXXXXXXXXXXXXXXXXXXXX/d486/d4bXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXX/d5bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d212XXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d11XXXXXXXXX/d54/de4/d158/d27f/d895/d1307X=
-XX/d8a4/d832XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/r112fXXXX=
-XXXXXXX: FAILED
-> >     +/media/scratch/dir/p0/d0XXXXXXXXXXXXXXXXXXXXXXX/d486/d4bXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXX/d5bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d212XXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d11XXXXXXXXX/d54/de4/d158/d27f/d13a3XXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/=
-d13c0XXXXXXXX/d2301X/d222bXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d1240XXXXXXXX=
-XXXXXXXXXXXXXXXX/d722XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/d1380XXXXXXXXXXXXXXXX/dc62XXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/r10d5: FAILED
-> >     +md5sum: WARNING: 2 computed checksums did NOT match
-> >      Silence is golden
-> >     ...
-> >     (Run 'diff -u /var/lib/xfstests/tests/generic/561.out /var/lib/xfst=
-ests/results/xfs-crc-rtdev-extsize-28k/6.9.0-rc7-next-20240506+/xfs_crc_rtd=
-ev_extsize_28k/generic/561.out.bad'  to see the entire diff)
-> > Ran: generic/561
-> > Failures: generic/561
-> > Failed 1 of 1 tests
-> >=20
->=20
-> Sorry about this regression. After debuging and analyzing the code, I not=
-ice
-> that this problem could only happens on xfs realtime inode. The real prob=
-lem
-> is about realtime extent alignment.
->=20
-> Please assume that if we have a file that contains a written extent [A, D=
-).
-> We unaligned truncate to the file to B, in the middle of this written ext=
-ent.
->=20
->        A            B                  D
->       +wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
->=20
-> After the truncate, the i_size is set to B, but due to the sb_rextsize,
-> xfs_itruncate_extents() truncate and aligned the written extent to C, so =
-the
-> data in [B, C) doesn't zeroed and becomes stale.
->=20
->        A            B     C
->       +wwwwwwwwwwwwwwSSSSSS
->                     ^
->                    EOF
+Hi Darrick,
 
-This region must be zeroed on disk before we call
-xfs_itruncate_extents().  i.e completed xfs_setattr_size() via
-xfs_truncate_page() and flushed to disk before we start removing
-extents.
+Due to only half of this patchset got reviewed, so I'd like to wait for your
+later version. I won't pick up part of this patchset to merge this time, I
+think better to merge it as an integrated patchset.
 
-The problem is that iomap_truncate_page() only zeros the trailing
-portion of the i_blocksize() value, which is wrong for realtime
-devices with rtextsize !=3D fs blocksize.
+Thanks,
+Zorro
 
-Further, xfs_setattr_size() then calls truncate_setsize(newsize)
-before the zeroing has been written back to disk, which means
-that the flush that occurs immediately after the truncate_setsize()
-call can not write blocks beyond the new EOF regardless of whether
-iomap_truncate_page() wrote zeroes to them or not.
+On Mon, Apr 29, 2024 at 08:19:24PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> This patchset adds support for fsverity to XFS.  In keeping with
+> Andrey's original design, XFS stores all fsverity metadata in the
+> extended attribute data.  However, I've made a few changes to the code:
+> First, it now caches merkle tree blocks directly instead of abusing the
+> buffer cache.  This reduces lookup overhead quite a bit, at a cost of
+> needing a new shrinker for cached merkle tree blocks.
+> 
+> To reduce the ondisk footprint further, I also made the verity
+> enablement code detect trailing zeroes whenever fsverity tells us to
+> write a buffer, and elide storing the zeroes.  To further reduce the
+> footprint of sparse files, I also skip writing merkle tree blocks if the
+> block contents are entirely hashes of zeroes.
+> 
+> Next, I implemented more of the tooling around verity, such as debugger
+> support, as much fsck support as I can manage without knowing the
+> internal format of the fsverity information; and added support for
+> xfs_scrub to read fsverity files to validate the consistency of the data
+> against the merkle tree.
+> 
+> Finally, I add the ability for administrators to turn off fsverity,
+> which might help recovering damaged data from an inconsistent file.
+> 
+> From Andrey Albershteyn:
+> 
+> Here's v5 of my patchset of adding fs-verity support to XFS.
+> 
+> This implementation uses extended attributes to store fs-verity
+> metadata. The Merkle tree blocks are stored in the remote extended
+> attributes. The names are offsets into the tree.
+> From Darrick J. Wong:
+> 
+> This v5.3 patchset builds upon v5.2 of Andrey's patchset to implement
+> fsverity for XFS.
+> 
+> The biggest thing that I didn't like in the v5 patchset is the abuse of
+> the data device's buffer cache to store the incore version of the merkle
+> tree blocks.  Not only do verity state flags end up in xfs_buf, but the
+> double-alloc flag wastes memory and doesn't remain internally consistent
+> if the xattrs shift around.
+> 
+> I replaced all of that with a per-inode xarray that indexes incore
+> merkle tree blocks.  For cache hits, this dramatically reduces the
+> amount of work that xfs has to do to feed fsverity.  The per-block
+> overhead is much lower (8 bytes instead of ~300 for xfs_bufs), and we no
+> longer have to entertain layering violations in the buffer cache.  I
+> also added a per-filesystem shrinker so that reclaim can cull cached
+> merkle tree blocks, starting with the leaf tree nodes.
+> 
+> I've also rolled in some changes recommended by the fsverity maintainer,
+> fixed some organization and naming problems in the xfs code, fixed a
+> collision in the xfs_inode iflags, and improved dead merkle tree cleanup
+> per the discussion of the v5 series.  At this point I'm happy enough
+> with this code to start integrating and testing it in my trees, so it's
+> time to send it out a coherent patchset for comments.
+> 
+> For v5.3, I've added bits and pieces of online and offline repair
+> support, reduced the size of partially filled merkle tree blocks by
+> removing trailing zeroes, changed the xattr hash function to better
+> avoid collisions between merkle tree keys, made the fsverity
+> invalidation bitmap unnecessary, and made it so that we can save space
+> on sparse verity files by not storing merkle tree blocks that hash
+> totally zeroed data blocks.
+> 
+> From Andrey Albershteyn:
+> 
+> Here's v5 of my patchset of adding fs-verity support to XFS.
+> 
+> This implementation uses extended attributes to store fs-verity
+> metadata. The Merkle tree blocks are stored in the remote extended
+> attributes. The names are offsets into the tree.
+> 
+> If you're going to start using this code, I strongly recommend pulling
+> from my git trees, which are linked below.
+> 
+> This has been running on the djcloud for months with no problems.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity
+> 
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=fsverity
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsverity
+> ---
+> Commits in this patchset:
+>  * common/verity: enable fsverity for XFS
+>  * xfs/{021,122}: adapt to fsverity xattrs
+>  * xfs/122: adapt to fsverity
+>  * xfs: test xfs_scrub detection and correction of corrupt fsverity metadata
+>  * xfs: test disabling fsverity
+>  * common/populate: add verity files to populate xfs images
+> ---
+>  common/populate    |   24 +++++++++
+>  common/verity      |   39 ++++++++++++++-
+>  tests/xfs/021      |    3 +
+>  tests/xfs/122.out  |    3 +
+>  tests/xfs/1880     |  135 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1880.out |   37 ++++++++++++++
+>  tests/xfs/1881     |  111 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1881.out |   28 +++++++++++
+>  8 files changed, 378 insertions(+), 2 deletions(-)
+>  create mode 100755 tests/xfs/1880
+>  create mode 100644 tests/xfs/1880.out
+>  create mode 100755 tests/xfs/1881
+>  create mode 100644 tests/xfs/1881.out
+> 
 
-> The if we write [E, F) beyond this written extent, xfs_file_write_checks(=
-)->
-> xfs_zero_range() would zero [B, C) in page cache, but since we don't incr=
-ease
-> i_size in iomap_zero_iter(), the writeback process doesn't write zero data
-> to disk. After write, the data in [B, C) is still stale so once we clear =
-the
-> pagecache, this stale data is exposed.
->=20
->        A            B     C        E      F
->       +wwwwwwwwwwwwwwSSSSSS        wwwwwwww
->=20
-> The reason this problem doesn't occur on normal inode is because normal i=
-node
-> doesn't have a post EOF written extent.
-
-That's incorrect - we can have post-eof written extents on normal
-files. The reason this doesn't get exposed for normal files is that
-the zeroing range used in iomap_truncate_page() covers the entire
-filesystem block and writeback can write the entire EOF page that
-covers that block containing the zeroes. Hence when we remove all
-the written extents beyond EOF later in the truncate, we don't leave
-any blocks beyond EOF that we haven't zeroed.
-
-> For realtime inode, I guess it's not
-> enough to just zero the EOF block (xfs_setattr_size()->xfs_truncate_page(=
-)),
-> we should also zero the extra blocks that aligned to realtime extent size
-> before updating i_size. Any suggestions?
-
-Right. xfs_setattr_size() needs fixing to flush the entire zeroed
-range *before* truncating the page cache and changing the inode size.
-
-Of course, xfs_truncate_page() also needs fixing to zero the=20
-entire rtextsize range, not use iomap_truncate_page() which only
-zeroes to the end of the EOF filesystem block.
-
-I note that dax_truncate_page() has the same problem with RT device
-block sizes as iomap_truncate_page(), so we need the same fix for
-both dax and non-dax paths here.
-
-It might actually be easiest to pass the block size for zeroing into
-iomap_truncate_page() rather than relying on being able to extract
-the zeroing range from the inode via i_blocksize(). We can't use
-i_blocksize() for RT files, because inode->i_blkbits and hence
-i_blocksize() only supports power of 2 block sizes. Changing that is
-a *much* bigger job, so fixing xfs_truncate_page() is likely the
-best thing to do right now...
-
-Cheers,
-
-Dave.
---=20
-Dave Chinner
-david@fromorbit.com
