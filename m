@@ -1,201 +1,204 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FC6417571
-	for <linux-xfs@vger.kernel.org>; Sat, 11 May 2024 05:01:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C833C1C01
+	for <linux-xfs@vger.kernel.org>; Sat, 11 May 2024 07:43:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715403717; cv=none; b=YS9SVg7a2cFs41mbq9OYxMGZhhDUvp5f5xDRyirudisJ+jOrRXa1T3xnB3px7W/KT6jSG5XDrgK6Y/+LZWpeDlHw5NS2sH9RxUKSG8giaJnzTXaxCVi9xdbtw9Lz5nFn3O5EFAj6CGUfYH49xRjUcH7jwec4hkCoreNX4LZYjR4=
+	t=1715413405; cv=none; b=L8qqwQBZ+Ue4ZWV+TRmgm0hGsTzRagfzq72zBEL0CutqNlIXugFvoMDl++pn4+akm2SjvphdCcrTS9zC+C5JHoBGp5Z5dtLvXApo31G74jYHpvbLy/OaMnaYCtjd7iZ09CtCtcqDXPjMk/wUJTMM/j0JaZ/q+Bkxo2aNMtKsHaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715403717; c=relaxed/simple;
-	bh=2av7ldVmFODATl7G8x4XJ+ukXmnPObiC8mhBCT9hXG8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D6Sx3DXBM0UMibVBlr1UVlOiZ8/rMvEcxyHUYBKkPV/HJglvwTuKqNDOc0/cfrdvc8THmGFmeXYnm7cYEwSDgxbb/sbHCwcvF/kcbJAY3dmVtDSeMmyvb2GEsqtiJ/abfAX31A0A/oDRVGc5WRExscVZSVLmghI9y1VYKBHhrTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IM/xxzTz; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IM/xxzTz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1715403714;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TDNPYoMHZa+LiLBXZt4zxOSaybPS9naQJyx782OpWkg=;
-	b=IM/xxzTzE8s+vLkFiv5ZzyHA8cxOh06Dn5/SPHK7g+IJGQfmQ+cOU/Tk9qNtFThmD/nC5E
-	ML3GcnZpd25dqVFEou/4MnqHveVMCCSpxCbMmO91RjG7mHhdS7micOPeriXrtz7ZOwAbIV
-	12M09igq+mHJ6XGFXtAj2TNLWR2L618=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-128-2tInY_e1Os6uZOKoXGvpew-1; Sat, 11 May 2024 01:01:52 -0400
-X-MC-Unique: 2tInY_e1Os6uZOKoXGvpew-1
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-61b7d7c292aso2508328a12.1
-        for <linux-xfs@vger.kernel.org>; Fri, 10 May 2024 22:01:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715403711; x=1716008511;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TDNPYoMHZa+LiLBXZt4zxOSaybPS9naQJyx782OpWkg=;
-        b=bvnptGYFbdT5QCi7eemIjp/7v/204zV+BYTLMK7VD8p+no9z9SoySGY3PzeE4MRM7t
-         PWolMTuzxoAJ3KqF6ht/elQmC7oKLCDOpaehjDxvXxPcWSaYA2ToKs67BV83OA9kB9Xz
-         3Hc5HRHljyl8j5n61NR3wGlU0NvT8UwmWgwymMYDDT/IxbCl5QsdqC7qjEqe8TK0eJGL
-         z4R0unj3agNeWd6oQ3wQSo2zh6LLvvvXHKtbH2PBZ0Hg/jjpPT+qYoqEhUaQCTwjSNM9
-         0D3NmqhCqchYbpoXsp/F7J2lvYIcjQ4SqPTLoQng25qKG3DNfbZtMBmGKTPpN6hOpoBO
-         vDew==
-X-Forwarded-Encrypted: i=1; AJvYcCWjR4TtZiO6pWSNPxEfuV0OcJZ4bgfAhwxR8GyxcsX0gb9Y0jrGTDVxCtlwHFGa85v81ftH4Sb7zcAteESVQkD4bIoZ/wUQG4Dd
-X-Gm-Message-State: AOJu0Yx7dr18iB06pXWh0ijS4kSs/OWO/GZMv8JmBt/j838lfRCJQBoM
-	uou5MNhiIFI3MK56TW0K9XcikDUdjaBL15HK+8EmcZTjC7IIztDrJrY3rVC7LdhTA/VnzVDqmXn
-	MbFIKRmwnR98dsiAD3IMJtIqleuSuFYhXhZVdn3ztEY6lNVaCM4VhyF/RlQ==
-X-Received: by 2002:a05:6a20:7fa6:b0:1a9:6c18:7e96 with SMTP id adf61e73a8af0-1afde0e69demr4892818637.19.1715403710721;
-        Fri, 10 May 2024 22:01:50 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGBhS7yx2/bYWVvxBcMHhgvRgVdDMAnNnxTYn3AXqsfsQ/3xg5yARrJakUCW2UTPsJc3GeR9Q==
-X-Received: by 2002:a05:6a20:7fa6:b0:1a9:6c18:7e96 with SMTP id adf61e73a8af0-1afde0e69demr4892793637.19.1715403710008;
-        Fri, 10 May 2024 22:01:50 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2b671782d89sm4030893a91.55.2024.05.10.22.01.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 May 2024 22:01:49 -0700 (PDT)
-Date: Sat, 11 May 2024 13:01:46 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCHSET v5.6] fstests: fs-verity support for XFS
-Message-ID: <20240511050146.vc4jr2gagwjwwhdp@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20240430031134.GH360919@frogsfrogsfrogs>
- <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1715413405; c=relaxed/simple;
+	bh=esebpeEuQzLxxD+YpPl6gbmECx3rgGP1nkSm9qJHBOU=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=VWcCe3pnUX4A7C2Rj44CUGnfMzGG1yWpj73LZX0iANilGnbx+Xyxe5Vu65N345pQm4si2fopl2FkOEPQjBF5ukhtU/cyYCHinkoO2cEFNw2UQY1UcSKgSCVGMRxynUlNnLiiJLlcIU5+5JGQVoHe1WKlxJpaCnb3LAGpTyLjzbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VbyR25jvFz4f3jM1
+	for <linux-xfs@vger.kernel.org>; Sat, 11 May 2024 15:43:10 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 3FF7F1A016E
+	for <linux-xfs@vger.kernel.org>; Sat, 11 May 2024 15:43:19 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP2 (Coremail) with SMTP id Syh0CgBXfA+VIT9mjKOZMg--.21280S3;
+	Sat, 11 May 2024 15:43:19 +0800 (CST)
+Subject: Re: [BUG REPORT] generic/561 fails when testing xfs on next-20240506
+ kernel
+To: Dave Chinner <david@fromorbit.com>
+Cc: Chandan Babu R <chandanbabu@kernel.org>, djwong@kernel.org,
+ Christoph Hellwig <hch@infradead.org>, brauner@kernel.org,
+ Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+References: <87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <6c2c5235-d19e-202c-67cf-2609db932d5a@huaweicloud.com>
+ <Zj7pzTR7QOSpEXEi@dread.disaster.area>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <966892ef-9b47-3891-e2d2-48889d46223d@huaweicloud.com>
+Date: Sat, 11 May 2024 15:43:17 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <171444687971.962488.18035230926224414854.stgit@frogsfrogsfrogs>
+In-Reply-To: <Zj7pzTR7QOSpEXEi@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: base64
+X-CM-TRANSID:Syh0CgBXfA+VIT9mjKOZMg--.21280S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxKw4xKr43Kw1fWr4ktw45Awb_yoW3Jw1kpF
+	18JF1UJr4Utw1UJr18JrnrtFyUGr15Jr1UZr1UJr1UJr1UAr17tr4Utr1UGr1UJr1UJr1U
+	Jr1UJryUJr1UJFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFcxC0VAYjxAxZF0Ew4CEw7xC0wCYjI0SjxkI62AI
+	1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWU
+	twCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
+	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJwCE64xvF2IEb7IF0Fy7YxBIda
+	VFxhVjvjDU0xZFpf9x07UCsjbUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hi Darrick,
-
-Due to only half of this patchset got reviewed, so I'd like to wait for your
-later version. I won't pick up part of this patchset to merge this time, I
-think better to merge it as an integrated patchset.
-
-Thanks,
-Zorro
-
-On Mon, Apr 29, 2024 at 08:19:24PM -0700, Darrick J. Wong wrote:
-> Hi all,
-> 
-> This patchset adds support for fsverity to XFS.  In keeping with
-> Andrey's original design, XFS stores all fsverity metadata in the
-> extended attribute data.  However, I've made a few changes to the code:
-> First, it now caches merkle tree blocks directly instead of abusing the
-> buffer cache.  This reduces lookup overhead quite a bit, at a cost of
-> needing a new shrinker for cached merkle tree blocks.
-> 
-> To reduce the ondisk footprint further, I also made the verity
-> enablement code detect trailing zeroes whenever fsverity tells us to
-> write a buffer, and elide storing the zeroes.  To further reduce the
-> footprint of sparse files, I also skip writing merkle tree blocks if the
-> block contents are entirely hashes of zeroes.
-> 
-> Next, I implemented more of the tooling around verity, such as debugger
-> support, as much fsck support as I can manage without knowing the
-> internal format of the fsverity information; and added support for
-> xfs_scrub to read fsverity files to validate the consistency of the data
-> against the merkle tree.
-> 
-> Finally, I add the ability for administrators to turn off fsverity,
-> which might help recovering damaged data from an inconsistent file.
-> 
-> From Andrey Albershteyn:
-> 
-> Here's v5 of my patchset of adding fs-verity support to XFS.
-> 
-> This implementation uses extended attributes to store fs-verity
-> metadata. The Merkle tree blocks are stored in the remote extended
-> attributes. The names are offsets into the tree.
-> From Darrick J. Wong:
-> 
-> This v5.3 patchset builds upon v5.2 of Andrey's patchset to implement
-> fsverity for XFS.
-> 
-> The biggest thing that I didn't like in the v5 patchset is the abuse of
-> the data device's buffer cache to store the incore version of the merkle
-> tree blocks.  Not only do verity state flags end up in xfs_buf, but the
-> double-alloc flag wastes memory and doesn't remain internally consistent
-> if the xattrs shift around.
-> 
-> I replaced all of that with a per-inode xarray that indexes incore
-> merkle tree blocks.  For cache hits, this dramatically reduces the
-> amount of work that xfs has to do to feed fsverity.  The per-block
-> overhead is much lower (8 bytes instead of ~300 for xfs_bufs), and we no
-> longer have to entertain layering violations in the buffer cache.  I
-> also added a per-filesystem shrinker so that reclaim can cull cached
-> merkle tree blocks, starting with the leaf tree nodes.
-> 
-> I've also rolled in some changes recommended by the fsverity maintainer,
-> fixed some organization and naming problems in the xfs code, fixed a
-> collision in the xfs_inode iflags, and improved dead merkle tree cleanup
-> per the discussion of the v5 series.  At this point I'm happy enough
-> with this code to start integrating and testing it in my trees, so it's
-> time to send it out a coherent patchset for comments.
-> 
-> For v5.3, I've added bits and pieces of online and offline repair
-> support, reduced the size of partially filled merkle tree blocks by
-> removing trailing zeroes, changed the xattr hash function to better
-> avoid collisions between merkle tree keys, made the fsverity
-> invalidation bitmap unnecessary, and made it so that we can save space
-> on sparse verity files by not storing merkle tree blocks that hash
-> totally zeroed data blocks.
-> 
-> From Andrey Albershteyn:
-> 
-> Here's v5 of my patchset of adding fs-verity support to XFS.
-> 
-> This implementation uses extended attributes to store fs-verity
-> metadata. The Merkle tree blocks are stored in the remote extended
-> attributes. The names are offsets into the tree.
-> 
-> If you're going to start using this code, I strongly recommend pulling
-> from my git trees, which are linked below.
-> 
-> This has been running on the djcloud for months with no problems.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
-> --D
-> 
-> kernel git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fsverity
-> 
-> xfsprogs git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=fsverity
-> 
-> fstests git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsverity
-> ---
-> Commits in this patchset:
->  * common/verity: enable fsverity for XFS
->  * xfs/{021,122}: adapt to fsverity xattrs
->  * xfs/122: adapt to fsverity
->  * xfs: test xfs_scrub detection and correction of corrupt fsverity metadata
->  * xfs: test disabling fsverity
->  * common/populate: add verity files to populate xfs images
-> ---
->  common/populate    |   24 +++++++++
->  common/verity      |   39 ++++++++++++++-
->  tests/xfs/021      |    3 +
->  tests/xfs/122.out  |    3 +
->  tests/xfs/1880     |  135 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1880.out |   37 ++++++++++++++
->  tests/xfs/1881     |  111 +++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1881.out |   28 +++++++++++
->  8 files changed, 378 insertions(+), 2 deletions(-)
->  create mode 100755 tests/xfs/1880
->  create mode 100644 tests/xfs/1880.out
->  create mode 100755 tests/xfs/1881
->  create mode 100644 tests/xfs/1881.out
-> 
+T24gMjAyNC81LzExIDExOjQ1LCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+IE9uIFNhdCwgTWF5
+IDExLCAyMDI0IGF0IDExOjExOjMyQU0gKzA4MDAsIFpoYW5nIFlpIHdyb3RlOg0KPj4gT24g
+MjAyNC81LzggMTc6MDEsIENoYW5kYW4gQmFidSBSIHdyb3RlOg0KPj4+IEhpLA0KPj4+DQo+
+Pj4gZ2VuZXJpYy81NjEgZmFpbHMgd2hlbiB0ZXN0aW5nIFhGUyBvbiBhIG5leHQtMjAyNDA1
+MDYga2VybmVsIGFzIHNob3duIGJlbG93LA0KPj4+DQo+Pj4gIyAuL2NoZWNrIGdlbmVyaWMv
+NTYxDQo+Pj4gRlNUWVAgICAgICAgICAtLSB4ZnMgKGRlYnVnKQ0KPj4+IFBMQVRGT1JNICAg
+ICAgLS0gTGludXgveDg2XzY0IHhmcy1jcmMtcnRkZXYtZXh0c2l6ZS0yOGsgNi45LjAtcmM3
+LW5leHQtMjAyNDA1MDYrICMxIFNNUCBQUkVFTVBUX0RZTkFNSUMgTW9uIE1heSAgNiAwNzo1
+Mzo0NiBHTVQgMjAyNA0KPj4+IE1LRlNfT1BUSU9OUyAgLS0gLWYgLXJydGRldj0vZGV2L2xv
+b3AxNCAtZiAtbSByZWZsaW5rPTAscm1hcGJ0PTAsIC1kIHJ0aW5oZXJpdD0xIC1yIGV4dHNp
+emU9MjhrIC9kZXYvbG9vcDUNCj4+PiBNT1VOVF9PUFRJT05TIC0tIC1vIGNvbnRleHQ9c3lz
+dGVtX3U6b2JqZWN0X3I6cm9vdF90OnMwIC1vcnRkZXY9L2Rldi9sb29wMTQgL2Rldi9sb29w
+NSAvbWVkaWEvc2NyYXRjaA0KPj4+DQo+Pj4gZ2VuZXJpYy81NjEgICAgICAgLSBvdXRwdXQg
+bWlzbWF0Y2ggKHNlZSAvdmFyL2xpYi94ZnN0ZXN0cy9yZXN1bHRzL3hmcy1jcmMtcnRkZXYt
+ZXh0c2l6ZS0yOGsvNi45LjAtcmM3LW5leHQtMjAyNDA1MDYrL3hmc19jcmNfcnRkZXZfZXh0
+c2l6ZV8yOGsvZ2VuZXJpYy81NjEub3V0LmJhZCkNCj4+PiAgICAgLS0tIHRlc3RzL2dlbmVy
+aWMvNTYxLm91dCAgIDIwMjQtMDUtMDYgMDg6MTg6MDkuNjgxNDMwMzY2ICswMDAwDQo+Pj4g
+ICAgICsrKyAvdmFyL2xpYi94ZnN0ZXN0cy9yZXN1bHRzL3hmcy1jcmMtcnRkZXYtZXh0c2l6
+ZS0yOGsvNi45LjAtcmM3LW5leHQtMjAyNDA1MDYrL3hmc19jcmNfcnRkZXZfZXh0c2l6ZV8y
+OGsvZ2VuZXJpYy81NjEub3V0LmJhZCAgICAgICAgMjAyNC0wNS0wOCAwOToxNDoyNC45MDgw
+MTAxMzMgKzAwMDANCj4+PiAgICAgQEAgLTEsMiArMSw1IEBADQo+Pj4gICAgICBRQSBvdXRw
+dXQgY3JlYXRlZCBieSA1NjENCj4+PiAgICAgKy9tZWRpYS9zY3JhdGNoL2Rpci9wMC9kMFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYL2Q0ODYvZDRiWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFgvZDViWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYL2QyMTJYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYL2QxMVhY
+WFhYWFhYWC9kNTQvZGU0L2QxNTgvZDI3Zi9kODk1L2QxMzA3WFhYL2Q4YTQvZDgzMlhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYL3IxMTJm
+WFhYWFhYWFhYWFg6IEZBSUxFRA0KPj4+ICAgICArL21lZGlhL3NjcmF0Y2gvZGlyL3AwL2Qw
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDQ4Ni9kNGJYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWC9kNWJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDIxMlhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDEx
+WFhYWFhYWFhYL2Q1NC9kZTQvZDE1OC9kMjdmL2QxM2EzWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDEzYzBY
+WFhYWFhYWC9kMjMwMVgvZDIyMmJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WC9kMTI0MFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWC9kNzIyWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWC9kMTM4MFhYWFhYWFhYWFhYWFhYWFgvZGM2MlhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYL3IxMGQ1OiBGQUlMRUQNCj4+PiAgICAgK21kNXN1bTogV0FSTklORzogMiBjb21w
+dXRlZCBjaGVja3N1bXMgZGlkIE5PVCBtYXRjaA0KPj4+ICAgICAgU2lsZW5jZSBpcyBnb2xk
+ZW4NCj4+PiAgICAgLi4uDQo+Pj4gICAgIChSdW4gJ2RpZmYgLXUgL3Zhci9saWIveGZzdGVz
+dHMvdGVzdHMvZ2VuZXJpYy81NjEub3V0IC92YXIvbGliL3hmc3Rlc3RzL3Jlc3VsdHMveGZz
+LWNyYy1ydGRldi1leHRzaXplLTI4ay82LjkuMC1yYzctbmV4dC0yMDI0MDUwNisveGZzX2Ny
+Y19ydGRldl9leHRzaXplXzI4ay9nZW5lcmljLzU2MS5vdXQuYmFkJyAgdG8gc2VlIHRoZSBl
+bnRpcmUgZGlmZikNCj4+PiBSYW46IGdlbmVyaWMvNTYxDQo+Pj4gRmFpbHVyZXM6IGdlbmVy
+aWMvNTYxDQo+Pj4gRmFpbGVkIDEgb2YgMSB0ZXN0cw0KPj4+DQo+Pg0KPj4gU29ycnkgYWJv
+dXQgdGhpcyByZWdyZXNzaW9uLiBBZnRlciBkZWJ1Z2luZyBhbmQgYW5hbHl6aW5nIHRoZSBj
+b2RlLCBJIG5vdGljZQ0KPj4gdGhhdCB0aGlzIHByb2JsZW0gY291bGQgb25seSBoYXBwZW5z
+IG9uIHhmcyByZWFsdGltZSBpbm9kZS4gVGhlIHJlYWwgcHJvYmxlbQ0KPj4gaXMgYWJvdXQg
+cmVhbHRpbWUgZXh0ZW50IGFsaWdubWVudC4NCj4+DQo+PiBQbGVhc2UgYXNzdW1lIHRoYXQg
+aWYgd2UgaGF2ZSBhIGZpbGUgdGhhdCBjb250YWlucyBhIHdyaXR0ZW4gZXh0ZW50IFtBLCBE
+KS4NCj4+IFdlIHVuYWxpZ25lZCB0cnVuY2F0ZSB0byB0aGUgZmlsZSB0byBCLCBpbiB0aGUg
+bWlkZGxlIG9mIHRoaXMgd3JpdHRlbiBleHRlbnQuDQo+Pg0KPj4gICAgICAgIEEgICAgICAg
+ICAgICBCICAgICAgICAgICAgICAgICAgRA0KPj4gICAgICAgK3d3d3d3d3d3d3d3d3d3d3d3
+d3d3d3d3d3d3d3d3d3d3dw0KPj4NCj4+IEFmdGVyIHRoZSB0cnVuY2F0ZSwgdGhlIGlfc2l6
+ZSBpcyBzZXQgdG8gQiwgYnV0IGR1ZSB0byB0aGUgc2JfcmV4dHNpemUsDQo+PiB4ZnNfaXRy
+dW5jYXRlX2V4dGVudHMoKSB0cnVuY2F0ZSBhbmQgYWxpZ25lZCB0aGUgd3JpdHRlbiBleHRl
+bnQgdG8gQywgc28gdGhlDQo+PiBkYXRhIGluIFtCLCBDKSBkb2Vzbid0IHplcm9lZCBhbmQg
+YmVjb21lcyBzdGFsZS4NCj4+DQo+PiAgICAgICAgQSAgICAgICAgICAgIEIgICAgIEMNCj4+
+ICAgICAgICt3d3d3d3d3d3d3d3d3d1NTU1NTUw0KPj4gICAgICAgICAgICAgICAgICAgICBe
+DQo+PiAgICAgICAgICAgICAgICAgICAgRU9GDQo+IA0KPiBUaGlzIHJlZ2lvbiBtdXN0IGJl
+IHplcm9lZCBvbiBkaXNrIGJlZm9yZSB3ZSBjYWxsDQo+IHhmc19pdHJ1bmNhdGVfZXh0ZW50
+cygpLiAgaS5lIGNvbXBsZXRlZCB4ZnNfc2V0YXR0cl9zaXplKCkgdmlhDQo+IHhmc190cnVu
+Y2F0ZV9wYWdlKCkgYW5kIGZsdXNoZWQgdG8gZGlzayBiZWZvcmUgd2Ugc3RhcnQgcmVtb3Zp
+bmcNCj4gZXh0ZW50cy4NCj4gDQo+IFRoZSBwcm9ibGVtIGlzIHRoYXQgaW9tYXBfdHJ1bmNh
+dGVfcGFnZSgpIG9ubHkgemVyb3MgdGhlIHRyYWlsaW5nDQo+IHBvcnRpb24gb2YgdGhlIGlf
+YmxvY2tzaXplKCkgdmFsdWUsIHdoaWNoIGlzIHdyb25nIGZvciByZWFsdGltZQ0KPiBkZXZp
+Y2VzIHdpdGggcnRleHRzaXplICE9IGZzIGJsb2Nrc2l6ZS4NCj4gDQo+IEZ1cnRoZXIsIHhm
+c19zZXRhdHRyX3NpemUoKSB0aGVuIGNhbGxzIHRydW5jYXRlX3NldHNpemUobmV3c2l6ZSkN
+Cj4gYmVmb3JlIHRoZSB6ZXJvaW5nIGhhcyBiZWVuIHdyaXR0ZW4gYmFjayB0byBkaXNrLCB3
+aGljaCBtZWFucw0KPiB0aGF0IHRoZSBmbHVzaCB0aGF0IG9jY3VycyBpbW1lZGlhdGVseSBh
+ZnRlciB0aGUgdHJ1bmNhdGVfc2V0c2l6ZSgpDQo+IGNhbGwgY2FuIG5vdCB3cml0ZSBibG9j
+a3MgYmV5b25kIHRoZSBuZXcgRU9GIHJlZ2FyZGxlc3Mgb2Ygd2hldGhlcg0KPiBpb21hcF90
+cnVuY2F0ZV9wYWdlKCkgd3JvdGUgemVyb2VzIHRvIHRoZW0gb3Igbm90Lg0KPiANCj4+IFRo
+ZSBpZiB3ZSB3cml0ZSBbRSwgRikgYmV5b25kIHRoaXMgd3JpdHRlbiBleHRlbnQsIHhmc19m
+aWxlX3dyaXRlX2NoZWNrcygpLT4NCj4+IHhmc196ZXJvX3JhbmdlKCkgd291bGQgemVybyBb
+QiwgQykgaW4gcGFnZSBjYWNoZSwgYnV0IHNpbmNlIHdlIGRvbid0IGluY3JlYXNlDQo+PiBp
+X3NpemUgaW4gaW9tYXBfemVyb19pdGVyKCksIHRoZSB3cml0ZWJhY2sgcHJvY2VzcyBkb2Vz
+bid0IHdyaXRlIHplcm8gZGF0YQ0KPj4gdG8gZGlzay4gQWZ0ZXIgd3JpdGUsIHRoZSBkYXRh
+IGluIFtCLCBDKSBpcyBzdGlsbCBzdGFsZSBzbyBvbmNlIHdlIGNsZWFyIHRoZQ0KPj4gcGFn
+ZWNhY2hlLCB0aGlzIHN0YWxlIGRhdGEgaXMgZXhwb3NlZC4NCj4+DQo+PiAgICAgICAgQSAg
+ICAgICAgICAgIEIgICAgIEMgICAgICAgIEUgICAgICBGDQo+PiAgICAgICArd3d3d3d3d3d3
+d3d3d3dTU1NTU1MgICAgICAgIHd3d3d3d3d3DQo+Pg0KPj4gVGhlIHJlYXNvbiB0aGlzIHBy
+b2JsZW0gZG9lc24ndCBvY2N1ciBvbiBub3JtYWwgaW5vZGUgaXMgYmVjYXVzZSBub3JtYWwg
+aW5vZGUNCj4+IGRvZXNuJ3QgaGF2ZSBhIHBvc3QgRU9GIHdyaXR0ZW4gZXh0ZW50Lg0KPiAN
+Cj4gVGhhdCdzIGluY29ycmVjdCAtIHdlIGNhbiBoYXZlIHBvc3QtZW9mIHdyaXR0ZW4gZXh0
+ZW50cyBvbiBub3JtYWwNCj4gZmlsZXMuIFRoZSByZWFzb24gdGhpcyBkb2Vzbid0IGdldCBl
+eHBvc2VkIGZvciBub3JtYWwgZmlsZXMgaXMgdGhhdA0KPiB0aGUgemVyb2luZyByYW5nZSB1
+c2VkIGluIGlvbWFwX3RydW5jYXRlX3BhZ2UoKSBjb3ZlcnMgdGhlIGVudGlyZQ0KPiBmaWxl
+c3lzdGVtIGJsb2NrIGFuZCB3cml0ZWJhY2sgY2FuIHdyaXRlIHRoZSBlbnRpcmUgRU9GIHBh
+Z2UgdGhhdA0KPiBjb3ZlcnMgdGhhdCBibG9jayBjb250YWluaW5nIHRoZSB6ZXJvZXMuIEhl
+bmNlIHdoZW4gd2UgcmVtb3ZlIGFsbA0KPiB0aGUgd3JpdHRlbiBleHRlbnRzIGJleW9uZCBF
+T0YgbGF0ZXIgaW4gdGhlIHRydW5jYXRlLCB3ZSBkb24ndCBsZWF2ZQ0KPiBhbnkgYmxvY2tz
+IGJleW9uZCBFT0YgdGhhdCB3ZSBoYXZlbid0IHplcm9lZC4NCj4gDQo+PiBGb3IgcmVhbHRp
+bWUgaW5vZGUsIEkgZ3Vlc3MgaXQncyBub3QNCj4+IGVub3VnaCB0byBqdXN0IHplcm8gdGhl
+IEVPRiBibG9jayAoeGZzX3NldGF0dHJfc2l6ZSgpLT54ZnNfdHJ1bmNhdGVfcGFnZSgpKSwN
+Cj4+IHdlIHNob3VsZCBhbHNvIHplcm8gdGhlIGV4dHJhIGJsb2NrcyB0aGF0IGFsaWduZWQg
+dG8gcmVhbHRpbWUgZXh0ZW50IHNpemUNCj4+IGJlZm9yZSB1cGRhdGluZyBpX3NpemUuIEFu
+eSBzdWdnZXN0aW9ucz8NCj4gDQo+IFJpZ2h0LiB4ZnNfc2V0YXR0cl9zaXplKCkgbmVlZHMg
+Zml4aW5nIHRvIGZsdXNoIHRoZSBlbnRpcmUgemVyb2VkDQo+IHJhbmdlICpiZWZvcmUqIHRy
+dW5jYXRpbmcgdGhlIHBhZ2UgY2FjaGUgYW5kIGNoYW5naW5nIHRoZSBpbm9kZSBzaXplLg0K
+PiANCj4gT2YgY291cnNlLCB4ZnNfdHJ1bmNhdGVfcGFnZSgpIGFsc28gbmVlZHMgZml4aW5n
+IHRvIHplcm8gdGhlIA0KPiBlbnRpcmUgcnRleHRzaXplIHJhbmdlLCBub3QgdXNlIGlvbWFw
+X3RydW5jYXRlX3BhZ2UoKSB3aGljaCBvbmx5DQo+IHplcm9lcyB0byB0aGUgZW5kIG9mIHRo
+ZSBFT0YgZmlsZXN5c3RlbSBibG9jay4NCj4gDQo+IEkgbm90ZSB0aGF0IGRheF90cnVuY2F0
+ZV9wYWdlKCkgaGFzIHRoZSBzYW1lIHByb2JsZW0gd2l0aCBSVCBkZXZpY2UNCj4gYmxvY2sg
+c2l6ZXMgYXMgaW9tYXBfdHJ1bmNhdGVfcGFnZSgpLCBzbyB3ZSBuZWVkIHRoZSBzYW1lIGZp
+eCBmb3INCj4gYm90aCBkYXggYW5kIG5vbi1kYXggcGF0aHMgaGVyZS4NCj4gDQo+IEl0IG1p
+Z2h0IGFjdHVhbGx5IGJlIGVhc2llc3QgdG8gcGFzcyB0aGUgYmxvY2sgc2l6ZSBmb3IgemVy
+b2luZyBpbnRvDQo+IGlvbWFwX3RydW5jYXRlX3BhZ2UoKSByYXRoZXIgdGhhbiByZWx5aW5n
+IG9uIGJlaW5nIGFibGUgdG8gZXh0cmFjdA0KPiB0aGUgemVyb2luZyByYW5nZSBmcm9tIHRo
+ZSBpbm9kZSB2aWEgaV9ibG9ja3NpemUoKS4gV2UgY2FuJ3QgdXNlDQo+IGlfYmxvY2tzaXpl
+KCkgZm9yIFJUIGZpbGVzLCBiZWNhdXNlIGlub2RlLT5pX2Jsa2JpdHMgYW5kIGhlbmNlDQo+
+IGlfYmxvY2tzaXplKCkgb25seSBzdXBwb3J0cyBwb3dlciBvZiAyIGJsb2NrIHNpemVzLiBD
+aGFuZ2luZyB0aGF0IGlzDQo+IGEgKm11Y2gqIGJpZ2dlciBqb2IsIHNvIGZpeGluZyB4ZnNf
+dHJ1bmNhdGVfcGFnZSgpIGlzIGxpa2VseSB0aGUNCj4gYmVzdCB0aGluZyB0byBkbyByaWdo
+dCBub3cuLi4NCj4gDQoNClRoYW5rcyBmb3IgdGhlIGV4cGxhbmF0aW9uIGFuZCBzdWdnZXN0
+aW9uLCBJIGFncmVlIHdpdGggeW91LiBIb3dldmVyLA0Kd2h5IGRvIHlvdSByZWNvbW1lbmQg
+dG8gcGFzcyBibG9jayBzaXplIGZvciB6ZXJvaW5nIGluIHRvDQppb21hcF90cnVuY2F0ZV9w
+YWdlKCk/IEl0J3MgbG9va3MgbGlrZSB3ZSBjb3VsZCBmaXggeGZzX3RydW5jYXRlX3BhZ2Uo
+KQ0KYnkgdXNpbmcgaW9tYXBfemVyb19yYW5nZSgpIGFuZCBkYXhfemVyb19yYW5nZSgpIGlu
+c3RlYWQgYW5kIGRvbid0IHVzZQ0KaW9tYXBfdHJ1bmNhdGVfcGFnZSgpIGFuZCBkYXhfdHJ1
+bmNhdGVfcGFnZSgpLg0KDQpUaGFua3MsDQpZaS4NCg==
 
