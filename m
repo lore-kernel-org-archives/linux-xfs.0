@@ -1,28 +1,27 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F6A52BB0D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 131372E651;
 	Wed, 15 May 2024 02:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715740745; cv=none; b=ZPXVRl3fAjCfLeyB8MFqzFId+tmR/k5rZ2WC116KjsCpTqlVNZ9/WZgnEB/rs0Xa+OTZS93rwBI/ZTnOX1EIxwclNVdytHlk/JVR2JvLoVZCVTK37a91nMjAQnEf5VrtL9SKQOXnF0dzdwjaGxBegoJXZ+FpoXmAr4vhD+P5eWI=
+	t=1715740745; cv=none; b=fOZJtbobrrd5q0xksFLyyxQ20iDUVZc+wcTpRRG2wxg5kX7Xrr/qQFGG22iVZbgteq5+FmQE/pSAq2LMTPjNB6awjUFgUJNhC+XRyyR/DDA1fX55xXlLIvXpDCQRoY9ol6FwMB9x+5vnFMU612EZmEL5CrPhBuwK5MJK5BA0FfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715740745; c=relaxed/simple;
-	bh=XujiZ625YkMwUYco9phrrOmKK3leYBhdEU1A2DI+XqE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jFO2IgehBjxV8OPr/1qfRI/0WEndNfjghEg1aFLHelDB5YjK+jRfwrviG24++ppL730vVbgw0/5qE8nO6EXAQ9X4+L+SMYbkbRPIj5keY4+Adju77IivKVIShK+TNp+14FkaDkrBUXE9gmdvSkOt+kx/uO1h6dVgZrMUsE+EPcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	bh=P17TUchu1NIssy+AdAxWw4Luu+/j+iOOFjptCl3k0aY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KBuOucD5RpqFt+SRfMkndWQTndcfcowPP8//GP59T697rgWOWsWMUWYXw73Awa/CXCSHEDzfhc4buyXfxFVEbyjLhbAutVpLMz25TWzL0Jq8WzU5oPjCjbMSr9ru1OztcOW8AIVPHe8YVA9EjKhAA7v1RA/VnvkvfKfnVASGLzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VfHV21JXKz4f3lfn;
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VfHV24Vdhz4f3jXc;
 	Wed, 15 May 2024 10:38:50 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 51BCE1A0182;
-	Wed, 15 May 2024 10:39:00 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 46E3E1A08D4;
+	Wed, 15 May 2024 10:38:59 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBE8IERmRFzIMg--.49754S6;
-	Wed, 15 May 2024 10:39:00 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBXKBE8IERmRFzIMg--.49754S4;
+	Wed, 15 May 2024 10:38:56 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
@@ -38,12 +37,10 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huaweicloud.com,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com
-Subject: [PATCH 2/3] fsdax: pass blocksize to dax_truncate_page()
-Date: Wed, 15 May 2024 10:28:28 +0800
-Message-Id: <20240515022829.2455554-3-yi.zhang@huaweicloud.com>
+Subject: [PATCH 0/3] iomap/xfs: fix stale data exposure when truncating realtime inodes
+Date: Wed, 15 May 2024 10:28:26 +0800
+Message-Id: <20240515022829.2455554-1-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240515022829.2455554-1-yi.zhang@huaweicloud.com>
-References: <20240515022829.2455554-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,105 +48,59 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBE8IERmRFzIMg--.49754S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFyrKF15GF1kGFWkAFWrKrg_yoW5CF4rpF
-	1DGa15G397X34j9F1kWF1UZw45t3WDCF409ryxAws3Zr92qr1IyF18KF1jkF4jqr48Z3yq
-	qF98Kw47Gr1rAFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAGYLUUUUU
-	=
+X-CM-TRANSID:cCh0CgBXKBE8IERmRFzIMg--.49754S4
+X-Coremail-Antispam: 1UD129KBjvJXoWrtrWxZF4UtrWDtF4kAFy8Grg_yoW8JF4UpF
+	Z3GFW3Wr48CFy3Zas3ua1qv345t3W0yrWUuFyxJwnxZasIqryIqr4Fka18WayDtrWkWr45
+	Xr1UKFW8ur1kArJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
+	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
+	UZa9-UUUUU=
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-dax_truncate_page() always assumes the block size of the truncating
-inode is i_blocksize(), this is not always true for some filesystems,
-e.g. XFS do extent size alignment for realtime inodes. Drop this
-assumption and pass the block size for zeroing into dax_truncate_page(),
-allow filesystems to indicate the correct block size.
+This series fix a stale data exposure issue reported by Chandan when
+running fstests generic/561 on xfs with realtime device[1]. The real
+problem is xfs_setattr_size() doesn't zero out enough range when
+truncating a realtime inode, please see the third patch or [1] for
+details.
 
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
- fs/dax.c            | 7 +++----
- fs/ext2/inode.c     | 4 ++--
- fs/xfs/xfs_iomap.c  | 2 +-
- include/linux/dax.h | 4 ++--
- 4 files changed, 8 insertions(+), 9 deletions(-)
+The first two patches modify iomap_truncate_page() and
+dax_truncate_page() to pass filesystem identified blocksize, and drop
+the assumption of i_blocksize() as Dave suggested. The third patch fix
+the issue by modifying xfs_truncate_page() to pass the correct
+blocksize, and make sure zeroed range have been flushed to disk before
+updating i_size.
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 423fc1607dfa..ae3133cc816c 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1403,11 +1403,10 @@ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- }
- EXPORT_SYMBOL_GPL(dax_zero_range);
- 
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops)
-+int dax_truncate_page(struct inode *inode, loff_t pos, loff_t blocksize,
-+		bool *did_zero, const struct iomap_ops *ops)
- {
--	unsigned int blocksize = i_blocksize(inode);
--	unsigned int off = pos & (blocksize - 1);
-+	unsigned int off = pos % blocksize;
- 
- 	/* Block boundary? Nothing to do */
- 	if (!off)
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index f3d570a9302b..fbbd479f3c4e 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1278,8 +1278,8 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 	inode_dio_wait(inode);
- 
- 	if (IS_DAX(inode))
--		error = dax_truncate_page(inode, newsize, NULL,
--					  &ext2_iomap_ops);
-+		error = dax_truncate_page(inode, newsize, i_blocksize(inode),
-+					  NULL, &ext2_iomap_ops);
- 	else
- 		error = block_truncate_page(inode->i_mapping,
- 				newsize, ext2_get_block);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 31ac07bb8425..4958cc3337bc 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1470,7 +1470,7 @@ xfs_truncate_page(
- 	unsigned int		blocksize = i_blocksize(inode);
- 
- 	if (IS_DAX(inode))
--		return dax_truncate_page(inode, pos, did_zero,
-+		return dax_truncate_page(inode, pos, blocksize, did_zero,
- 					&xfs_dax_write_iomap_ops);
- 	return iomap_truncate_page(inode, pos, blocksize, did_zero,
- 				   &xfs_buffered_write_iomap_ops);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 9d3e3327af4c..861fac466c76 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -210,8 +210,8 @@ int dax_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		const struct iomap_ops *ops);
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops);
-+int dax_truncate_page(struct inode *inode, loff_t pos, loff_t blocksize,
-+		bool *did_zero, const struct iomap_ops *ops);
- 
- #if IS_ENABLED(CONFIG_DAX)
- int dax_read_lock(void);
+[1] https://lore.kernel.org/linux-xfs/87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64/
+
+Thanks,
+Yi.
+
+Zhang Yi (3):
+  iomap: pass blocksize to iomap_truncate_page()
+  fsdax: pass blocksize to dax_truncate_page()
+  xfs: correct the zeroing truncate range
+
+ fs/dax.c               |  7 +++----
+ fs/ext2/inode.c        |  4 ++--
+ fs/iomap/buffered-io.c |  7 +++----
+ fs/xfs/xfs_iomap.c     | 36 ++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_iops.c      | 10 ----------
+ include/linux/dax.h    |  4 ++--
+ include/linux/iomap.h  |  4 ++--
+ 7 files changed, 44 insertions(+), 28 deletions(-)
+
 -- 
 2.39.2
 
