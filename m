@@ -1,175 +1,151 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B6B2C69B;
-	Wed, 15 May 2024 02:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CDCA381A4
+	for <linux-xfs@vger.kernel.org>; Wed, 15 May 2024 03:10:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715740746; cv=none; b=t6RUq4j09f17QSDd2HOQnv6UaSFOLBnd42wSUTAIlVRmLZKnJYivKhWgEmJYLCtul1IMqtJAgI7L8aRubi0xOh1r7MpdrOU7IJBl8iLDLSQ5vhdZyCFerGAMf1vqtZrl2Pi42wSIUiCArT6TFyQtKLAfblcGR6vP2R2K4xgOLgY=
+	t=1715742615; cv=none; b=fMYaHTyMRT3EreEYLVnJ2GdtBH1NHQ2AdLF9J7wBt5PMT0NiuXqKwFp3xyUM9DCH+3ldeNViRmY3aZTT9CSy8FP1A1S5P0aXfWRJkaLL+H6K4YS6Vhy3nC6iFd4mkGMVRyOcKoC+u93uB+dDK/OFjOi9ODyHWDZBbKZtZnLZAzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715740746; c=relaxed/simple;
-	bh=xuIlfY/3HVCtD8t5rWUv44jPGANtnz30uK1KfBywpWA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ggYy1zNQs8YTtMF8ruK0s0i5iXymkpJ7xSYLvKs2IJD4aUc2iyFtZdnNU4PJ7cbtOfIK692P4NLaAZw20APN+WiEZw8zM426GDnrQjVHzAq2qAX4+3FFGoCmpHyXqEnOWd9srRjjDM3HQHOqy8EdC1u58VcIqOl3bgB0vAGRV9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VfHV72Cpjz4f3jjk;
-	Wed, 15 May 2024 10:38:55 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D10301A0D99;
-	Wed, 15 May 2024 10:39:00 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBE8IERmRFzIMg--.49754S7;
-	Wed, 15 May 2024 10:39:00 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	brauner@kernel.org,
-	david@fromorbit.com,
-	chandanbabu@kernel.org,
-	jack@suse.cz,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com
-Subject: [PATCH 3/3] xfs: correct the zeroing truncate range
-Date: Wed, 15 May 2024 10:28:29 +0800
-Message-Id: <20240515022829.2455554-4-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240515022829.2455554-1-yi.zhang@huaweicloud.com>
-References: <20240515022829.2455554-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1715742615; c=relaxed/simple;
+	bh=FBMTnsK4lTDE5aVLMi9mJ+T7oHugiNoH4r25w3Ica+8=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=M1UvWgOgPwQh+KWXT063dLDnOc28QvLYB4oSFf6KyS2yYXVNA8fcbzeshmFSyMUNIdXRYbvJ+5K63qE13JZX1rmwoeL92CWD6fCuIXV5s0cSXiPaD51GOMgkIq34etMsfaMYQkATJ1dv0zEhjKlzLBgl0ck51guFAklc7ANbEZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4VfJ683bs9zvYhn;
+	Wed, 15 May 2024 11:06:40 +0800 (CST)
+Received: from canpemm500005.china.huawei.com (unknown [7.192.104.229])
+	by mail.maildlp.com (Postfix) with ESMTPS id 319A71800CB;
+	Wed, 15 May 2024 11:10:09 +0800 (CST)
+Received: from [10.174.179.80] (10.174.179.80) by
+ canpemm500005.china.huawei.com (7.192.104.229) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Wed, 15 May 2024 11:10:08 +0800
+Subject: Re: [BUG REPORT] generic/561 fails when testing xfs on next-20240506
+ kernel
+To: Chandan Babu R <chandanbabu@kernel.org>
+CC: <brauner@kernel.org>, Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+References: <87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64>
+From: Zhang Yi <yi.zhang@huawei.com>
+Message-ID: <1d23fa70-3eb4-5a5d-b401-bdb218e3736e@huawei.com>
+Date: Wed, 15 May 2024 11:10:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBE8IERmRFzIMg--.49754S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxGrW7uF4UAw1DCr4fGFW8Xrb_yoWrGry5pr
-	s7K3Z8CrsrK347ZF1kXF1jvw1Fy3WrAF409ryfGrn7Za4DXr1Iyrn2gF4rKa1Utr4DXw4Y
-	qFs5tayUuas5AaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8Jw
-	CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUFfHUDUUU
-	U
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+In-Reply-To: <87ttj8ircu.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ canpemm500005.china.huawei.com (7.192.104.229)
 
-From: Zhang Yi <yi.zhang@huawei.com>
-
-When truncating a realtime file unaligned to a shorter size,
-xfs_setattr_size() only flush the EOF page before zeroing out, and
-xfs_truncate_page() also only zeros the EOF block. This could expose
-stale data since 943bc0882ceb ("iomap: don't increase i_size if it's not
-a write operation").
-
-If the sb_rextsize is bigger than one block, and we have a realtime
-inode that contains a long enough written extent. If we unaligned
-truncate into the middle of this extent, xfs_itruncate_extents() could
-split the extent and align the it's tail to sb_rextsize, there maybe
-have more than one blocks more between the end of the file. Since
-xfs_truncate_page() only zeros the trailing portion of the i_blocksize()
-value, so it may leftover some blocks contains stale data that could be
-exposed if we append write it over a long enough distance later.
-
-xfs_truncate_page() should flush, zeros out the entire rtextsize range,
-and make sure the entire zeroed range have been flushed to disk before
-updating the inode size.
-
-Fixes: 943bc0882ceb ("iomap: don't increase i_size if it's not a write operation")
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-Link: https://lore.kernel.org/linux-xfs/0b92a215-9d9b-3788-4504-a520778953c2@huaweicloud.com
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
- fs/xfs/xfs_iomap.c | 35 +++++++++++++++++++++++++++++++----
- fs/xfs/xfs_iops.c  | 10 ----------
- 2 files changed, 31 insertions(+), 14 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 4958cc3337bc..fc379450fe74 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1466,12 +1466,39 @@ xfs_truncate_page(
- 	loff_t			pos,
- 	bool			*did_zero)
- {
-+	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
- 	unsigned int		blocksize = i_blocksize(inode);
-+	int			error;
-+
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		blocksize = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
-+
-+	/*
-+	 * iomap won't detect a dirty page over an unwritten block (or a
-+	 * cow block over a hole) and subsequently skips zeroing the
-+	 * newly post-EOF portion of the page. Flush the new EOF to
-+	 * convert the block before the pagecache truncate.
-+	 */
-+	error = filemap_write_and_wait_range(inode->i_mapping, pos,
-+					     roundup_64(pos, blocksize));
-+	if (error)
-+		return error;
- 
- 	if (IS_DAX(inode))
--		return dax_truncate_page(inode, pos, blocksize, did_zero,
--					&xfs_dax_write_iomap_ops);
--	return iomap_truncate_page(inode, pos, blocksize, did_zero,
--				   &xfs_buffered_write_iomap_ops);
-+		error = dax_truncate_page(inode, pos, blocksize, did_zero,
-+					  &xfs_dax_write_iomap_ops);
-+	else
-+		error = iomap_truncate_page(inode, pos, blocksize, did_zero,
-+					    &xfs_buffered_write_iomap_ops);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Write back path won't write dirty blocks post EOF folio,
-+	 * flush the entire zeroed range before updating the inode
-+	 * size.
-+	 */
-+	return filemap_write_and_wait_range(inode->i_mapping, pos,
-+					    roundup_64(pos, blocksize));
- }
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 66f8c47642e8..baeeddf4a6bb 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -845,16 +845,6 @@ xfs_setattr_size(
- 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
- 				&did_zeroing);
- 	} else {
--		/*
--		 * iomap won't detect a dirty page over an unwritten block (or a
--		 * cow block over a hole) and subsequently skips zeroing the
--		 * newly post-EOF portion of the page. Flush the new EOF to
--		 * convert the block before the pagecache truncate.
--		 */
--		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
--						     newsize);
--		if (error)
--			return error;
- 		error = xfs_truncate_page(ip, newsize, &did_zeroing);
- 	}
- 
--- 
-2.39.2
-
+T24gMjAyNC81LzggMTc6MDEsIENoYW5kYW4gQmFidSBSIHdyb3RlOg0KPiBIaSwNCj4gDQo+
+IGdlbmVyaWMvNTYxIGZhaWxzIHdoZW4gdGVzdGluZyBYRlMgb24gYSBuZXh0LTIwMjQwNTA2
+IGtlcm5lbCBhcyBzaG93biBiZWxvdywNCg0KSGVsbG8sDQoNCkkndmUgc2VuZCBvdXQgdGhl
+IGZpeCBbMV0gYmFzZWQgb24gdGhlIHNvbHV0aW9uIGRpc2N1c3NlZCB3aXRoIERhdmUsIGFu
+ZA0KSSd2ZSB0ZXN0ZWQgaXQgb24gZ2VuZXJpYy81NjEgc2V2ZXJhbCB0aW1lcyBhbmQgLWcg
+YXV0byB3aXRoIGJlbG93IDQgdHlwZXMNCm9mIGNvbmZpZywgbm8gbmV3IGZhaWx1cmVzLiBJ
+IGhvcGUgSSd2ZSBjb3ZlcmVkIGFsbCB0aGUgY29ybmVyIGNhc2VzIGFib3V0DQp6ZXJvIHJh
+bmdlIG9uIHhmcywgcGxlYXNlIHRha2UgYSBsb29rIGF0IHRoYXQgc2VyaWVzLg0KDQotIERl
+ZmF1bHQgY29uZmlnDQotIE1LRlNfT1BUSU9OUz0iLWYgLW0gcmVmbGluaz0wIg0KLSBNT1VO
+VF9PUFRJT05TPSctbyBkYXgnDQotIFVTRV9FWFRFUk5BTD15ZXMNCiAgU0NSQVRDSF9SVERF
+Vj0vZGV2L252bWUwbjENCiAgTUtGU19PUFRJT05TPSItZiAtbSByZWZsaW5rPTAscm1hcGJ0
+PTAsIC1kIHJ0aW5oZXJpdD0xIC1yIGV4dHNpemU9MjhrIg0KDQpbMV0gaHR0cHM6Ly9sb3Jl
+Lmtlcm5lbC5vcmcvbGludXgteGZzLzIwMjQwNTE1MDIyODI5LjI0NTU1NTQtMS15aS56aGFu
+Z0BodWF3ZWljbG91ZC5jb20vDQoNClRoYW5rcywNCllpLg0KDQo+IA0KPiAjIC4vY2hlY2sg
+Z2VuZXJpYy81NjENCj4gRlNUWVAgICAgICAgICAtLSB4ZnMgKGRlYnVnKQ0KPiBQTEFURk9S
+TSAgICAgIC0tIExpbnV4L3g4Nl82NCB4ZnMtY3JjLXJ0ZGV2LWV4dHNpemUtMjhrIDYuOS4w
+LXJjNy1uZXh0LTIwMjQwNTA2KyAjMSBTTVAgUFJFRU1QVF9EWU5BTUlDIE1vbiBNYXkgIDYg
+MDc6NTM6NDYgR01UIDIwMjQNCj4gTUtGU19PUFRJT05TICAtLSAtZiAtcnJ0ZGV2PS9kZXYv
+bG9vcDE0IC1mIC1tIHJlZmxpbms9MCxybWFwYnQ9MCwgLWQgcnRpbmhlcml0PTEgLXIgZXh0
+c2l6ZT0yOGsgL2Rldi9sb29wNQ0KPiBNT1VOVF9PUFRJT05TIC0tIC1vIGNvbnRleHQ9c3lz
+dGVtX3U6b2JqZWN0X3I6cm9vdF90OnMwIC1vcnRkZXY9L2Rldi9sb29wMTQgL2Rldi9sb29w
+NSAvbWVkaWEvc2NyYXRjaA0KPiANCj4gZ2VuZXJpYy81NjEgICAgICAgLSBvdXRwdXQgbWlz
+bWF0Y2ggKHNlZSAvdmFyL2xpYi94ZnN0ZXN0cy9yZXN1bHRzL3hmcy1jcmMtcnRkZXYtZXh0
+c2l6ZS0yOGsvNi45LjAtcmM3LW5leHQtMjAyNDA1MDYrL3hmc19jcmNfcnRkZXZfZXh0c2l6
+ZV8yOGsvZ2VuZXJpYy81NjEub3V0LmJhZCkNCj4gICAgIC0tLSB0ZXN0cy9nZW5lcmljLzU2
+MS5vdXQgICAyMDI0LTA1LTA2IDA4OjE4OjA5LjY4MTQzMDM2NiArMDAwMA0KPiAgICAgKysr
+IC92YXIvbGliL3hmc3Rlc3RzL3Jlc3VsdHMveGZzLWNyYy1ydGRldi1leHRzaXplLTI4ay82
+LjkuMC1yYzctbmV4dC0yMDI0MDUwNisveGZzX2NyY19ydGRldl9leHRzaXplXzI4ay9nZW5l
+cmljLzU2MS5vdXQuYmFkICAgICAgICAyMDI0LTA1LTA4IDA5OjE0OjI0LjkwODAxMDEzMyAr
+MDAwMA0KPiAgICAgQEAgLTEsMiArMSw1IEBADQo+ICAgICAgUUEgb3V0cHV0IGNyZWF0ZWQg
+YnkgNTYxDQo+ICAgICArL21lZGlhL3NjcmF0Y2gvZGlyL3AwL2QwWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFgvZDQ4Ni9kNGJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWC9kNWJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFgvZDIxMlhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDExWFhYWFhYWFhYL2Q1NC9k
+ZTQvZDE1OC9kMjdmL2Q4OTUvZDEzMDdYWFgvZDhhNC9kODMyWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvcjExMmZYWFhYWFhYWFhYWDog
+RkFJTEVEDQo+ICAgICArL21lZGlhL3NjcmF0Y2gvZGlyL3AwL2QwWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFgvZDQ4Ni9kNGJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWC9kNWJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFgvZDIxMlhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDExWFhYWFhYWFhYL2Q1NC9k
+ZTQvZDE1OC9kMjdmL2QxM2EzWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFgvZDEzYzBYWFhYWFhYWC9kMjMwMVgv
+ZDIyMmJYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWC9kMTI0MFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWC9kNzIyWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWC9kMTM4MFhYWFhYWFhYWFhYWFhYWFgvZGM2MlhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhY
+WFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYL3IxMGQ1OiBG
+QUlMRUQNCj4gICAgICttZDVzdW06IFdBUk5JTkc6IDIgY29tcHV0ZWQgY2hlY2tzdW1zIGRp
+ZCBOT1QgbWF0Y2gNCj4gICAgICBTaWxlbmNlIGlzIGdvbGRlbg0KPiAgICAgLi4uDQo+ICAg
+ICAoUnVuICdkaWZmIC11IC92YXIvbGliL3hmc3Rlc3RzL3Rlc3RzL2dlbmVyaWMvNTYxLm91
+dCAvdmFyL2xpYi94ZnN0ZXN0cy9yZXN1bHRzL3hmcy1jcmMtcnRkZXYtZXh0c2l6ZS0yOGsv
+Ni45LjAtcmM3LW5leHQtMjAyNDA1MDYrL3hmc19jcmNfcnRkZXZfZXh0c2l6ZV8yOGsvZ2Vu
+ZXJpYy81NjEub3V0LmJhZCcgIHRvIHNlZSB0aGUgZW50aXJlIGRpZmYpDQo+IFJhbjogZ2Vu
+ZXJpYy81NjENCj4gRmFpbHVyZXM6IGdlbmVyaWMvNTYxDQo+IEZhaWxlZCAxIG9mIDEgdGVz
+dHMNCj4gDQo+IFRoZSBmb2xsb3dpbmcgd2FzIHRoZSBmc3Rlc3QgY29uZmlndXJhdGlvbiB1
+c2VkIGZvciB0aGUgdGVzdCBydW4sDQo+IA0KPiAgIEZTVFlQPXhmcw0KPiAgIFRFU1RfRElS
+PS9tZWRpYS90ZXN0DQo+ICAgU0NSQVRDSF9NTlQ9L21lZGlhL3NjcmF0Y2gNCj4gICBURVNU
+X0RFVj0vZGV2L2xvb3AxNg0KPiAgIFRFU1RfTE9HREVWPS9kZXYvbG9vcDEzDQo+ICAgU0NS
+QVRDSF9ERVZfUE9PTD0iL2Rldi9sb29wNSAvZGV2L2xvb3A2IC9kZXYvbG9vcDcgL2Rldi9s
+b29wOCAvZGV2L2xvb3A5IC9kZXYvbG9vcDEwIC9kZXYvbG9vcDExIC9kZXYvbG9vcDEyIg0K
+PiAgIE1LRlNfT1BUSU9OUz0nLWYgLW0gY3JjPTEscmVmbGluaz0wLHJtYXBidD0wLCAtaSBz
+cGFyc2U9MCAtbHNpemU9MWcnDQo+ICAgVEVTVF9GU19NT1VOVF9PUFRTPSItbyBsb2dkZXY9
+L2Rldi9sb29wMTMiDQo+ICAgTU9VTlRfT1BUSU9OUz0nLW8gdXNycXVvdGEsZ3JwcXVvdGEs
+cHJqcXVvdGEnDQo+ICAgVEVTVF9GU19NT1VOVF9PUFRTPSIkVEVTVF9GU19NT1VOVF9PUFRT
+IC1vIHVzcnF1b3RhLGdycHF1b3RhLHByanF1b3RhIg0KPiAgIFNDUkFUQ0hfTE9HREVWPS9k
+ZXYvbG9vcDE1DQo+ICAgVVNFX0VYVEVSTkFMPXllcw0KPiAgIExPR1dSSVRFU19ERVY9L2Rl
+di9sb29wMTUNCj4gDQo+IEdpdCBiaXNlY3QgcHJvZHVjZWQgdGhlIGZvbGxvd2luZyBhcyB0
+aGUgZmlyc3QgYmFkIGNvbW1pdCwNCj4gDQo+IGNvbW1pdCA5NDNiYzA4ODJjZWJmNDgyNDIy
+NjQwOTI0MDYyYTdkYWFjNWEyN2JhDQo+IEF1dGhvcjogWmhhbmcgWWkgPHlpLnpoYW5nQGh1
+YXdlaS5jb20+DQo+IERhdGU6ICAgV2VkIE1hciAyMCAxOTowNTo0NSAyMDI0ICswODAwDQo+
+IA0KPiAgICAgaW9tYXA6IGRvbid0IGluY3JlYXNlIGlfc2l6ZSBpZiBpdCdzIG5vdCBhIHdy
+aXRlIG9wZXJhdGlvbg0KPiANCj4gICAgIEluY3JlYXNlIGlfc2l6ZSBpbiBpb21hcF96ZXJv
+X3JhbmdlKCkgYW5kIGlvbWFwX3Vuc2hhcmVfaXRlcigpIGlzIG5vdA0KPiAgICAgbmVlZGVk
+LCB0aGUgY2FsbGVyIHNob3VsZCBoYW5kbGUgaXQuIEVzcGVjaWFsbHksIHdoZW4gdHJ1bmNh
+dGUgcGFydGlhbA0KPiAgICAgYmxvY2ssIHdlIHNob3VsZCBub3QgaW5jcmVhc2UgaV9zaXpl
+IGJleW9uZCB0aGUgbmV3IEVPRiBoZXJlLiBJdCBkb2Vzbid0DQo+ICAgICBhZmZlY3QgeGZz
+IGFuZCBnZnMyIG5vdyBiZWNhdXNlIHRoZXkgc2V0IHRoZSBuZXcgZmlsZSBzaXplIGFmdGVy
+IHplcm8NCj4gICAgIG91dCwgaXQgZG9lc24ndCBtYXR0ZXIgdGhhdCBhIHRyYW5zaWVudCBp
+bmNyZWFzZSBpbiBpX3NpemUsIGJ1dCBpdCB3aWxsDQo+ICAgICBhZmZlY3QgZXh0NCBiZWNh
+dXNlIGl0IHNldCBmaWxlIHNpemUgYmVmb3JlIHRydW5jYXRlLiBTbyBtb3ZlIHRoZSBpX3Np
+emUNCj4gICAgIHVwZGF0aW5nIGxvZ2ljIHRvIGlvbWFwX3dyaXRlX2l0ZXIoKS4NCj4gDQo+
+ICAgICBTaWduZWQtb2ZmLWJ5OiBaaGFuZyBZaSA8eWkuemhhbmdAaHVhd2VpLmNvbT4NCj4g
+ICAgIExpbms6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL3IvMjAyNDAzMjAxMTA1NDguMjIw
+MDY2Mi03LXlpLnpoYW5nQGh1YXdlaWNsb3VkLmNvbQ0KPiAgICAgUmV2aWV3ZWQtYnk6IENo
+cmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiAgICAgUmV2aWV3ZWQtYnk6IERhcnJp
+Y2sgSi4gV29uZyA8ZGp3b25nQGtlcm5lbC5vcmc+DQo+ICAgICBTaWduZWQtb2ZmLWJ5OiBD
+aHJpc3RpYW4gQnJhdW5lciA8YnJhdW5lckBrZXJuZWwub3JnPg0KPiANCj4gIGZzL2lvbWFw
+L2J1ZmZlcmVkLWlvLmMgfCA1MCArKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKyks
+IDI1IGRlbGV0aW9ucygtKQ0KPiAgDQo+IA0K
