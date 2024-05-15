@@ -1,64 +1,47 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19C6212D77B;
-	Wed, 15 May 2024 13:16:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAF0015575F;
+	Wed, 15 May 2024 15:32:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715779011; cv=none; b=t2sskMWoePTWkUj1Dna5oxyLgk192JSh1WtqaWZU5K8mbmygfXaSvKHAkIS8zjVRYivht9mP6XPaBSmTyJjN1OtQI3lO3mXxDo1EpWoHpTYYQegx1l2yQcDNKukUArpUDeEjiTpQJPTErWdDKD+IORAkAD/1o9Dtj+xupHA+1S0=
+	t=1715787167; cv=none; b=l9gUT4LHP1OZzZYBnqelChQvEuMPhGrrW3oI75bky6uC+FhuuN7VhCGtFU46T8ZcqBfUCbWloRfziWSDOnb6tgN3snraaVDDsccGuKCzCq2JnqfWABFxFoQvqkzYhpaTJyMrSpsvbd50s4DF8v5G7o0PCXezfFngU75aA1Quu5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715779011; c=relaxed/simple;
-	bh=6Suti5BG8hbQxAoyYe7aKDviSAwS07hFSe3bf5Ox+o4=;
+	s=arc-20240116; t=1715787167; c=relaxed/simple;
+	bh=rTr0ZwCN0KdjUd9KikyXdcy97IGdX7z3vq0LokO2akg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HQQPHrLOFyvvjaCad8EuhDnjzwdWdcGP59cySfgf7zGkmHsK29YbK2nKlpUWYBE3ygCgLisOa/nr02pvzCzhZGAhDv7nsKcM0OB9+ZenJMW9nTpDF08aCMcPrACUSaM2FRwEwy1Sy1/dG6DlCraCvZ2YHd3i/+x5p8DfLycNsYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RDtUKDbu; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=pWqafrFY0wysO1Xzrl1r2+ttlK01AG5dDboM+nfGMyXPQfZ/M6bsnTF6m7CgX4GxBQOzkX548Edv6e9qlMbtEXSxJAlc2SVa7Y2GBkRDPjTJP8KBHSMT1vr2nLSNfU8fzHKqZtwP1snNKbnKthDDrKX6/82csKuEX+wa8LQIdo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GNj+3l13; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RDtUKDbu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715779010; x=1747315010;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=6Suti5BG8hbQxAoyYe7aKDviSAwS07hFSe3bf5Ox+o4=;
-  b=RDtUKDbu9UPCOOAizf/wM7DKyniH5yWci3wot+D2aDUd3bH8raGwJk7v
-   SWU8ZWWgiLym6cnCvj7/VWSG8xX7psfhLxZjEZTBCmoyCZF1JMiI85gb6
-   BeaYFNsxdIBpbVqJIX4QT1VKvLsXJ8rj1fAMz7Oi/OnDQ5hXDkS6GTzkv
-   8gxIywWAy7c39DElthgfcSyp9D5EHB0AuxAJuWGIyKucSyrgvLxUizkKs
-   SG/vV35+gmNJ+ci4yoV/7arFVqAmJnxb3jMiMAH/kRujscL/tV//QDFVG
-   h/IEIQnjlbHRIpSetTuKdTyLUSH1pNxfuV4ku3IuS/tuAQ2HLXUI8IyYW
-   Q==;
-X-CSE-ConnectionGUID: LTPQbDxFQVuH/vrVRtX3Kg==
-X-CSE-MsgGUID: q+QwLa+XREiPL7NeMhgOLQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11073"; a="29347559"
-X-IronPort-AV: E=Sophos;i="6.08,161,1712646000"; 
-   d="scan'208";a="29347559"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2024 06:16:47 -0700
-X-CSE-ConnectionGUID: +BgsFfFWTuS6NvBr+jXxFw==
-X-CSE-MsgGUID: opRpAD/iQjGyIdcjisO4/Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,161,1712646000"; 
-   d="scan'208";a="31179419"
-Received: from lkp-server01.sh.intel.com (HELO f8b243fe6e68) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 15 May 2024 06:16:44 -0700
-Received: from kbuild by f8b243fe6e68 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1s7EUq-000Cqj-2b;
-	Wed, 15 May 2024 13:16:40 +0000
-Date: Wed, 15 May 2024 21:16:23 +0800
-From: kernel test robot <lkp@intel.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-ext4@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
-	brauner@kernel.org, david@fromorbit.com, chandanbabu@kernel.org,
-	jack@suse.cz, yi.zhang@huawei.com, yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH 1/3] iomap: pass blocksize to iomap_truncate_page()
-Message-ID: <202405152037.DjvUiyJ1-lkp@intel.com>
-References: <20240515022829.2455554-2-yi.zhang@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GNj+3l13"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=eHwfVCsafGWvDE2TzhnqZg+hhQAlEsxHQ1ZY8ZtSmbY=; b=GNj+3l13CuwiMRDMw3zv0BrxQF
+	v31PKlvcnCFAzhv0Ka9pkJo6IS4saac/L9JyyvIETVT8oeuzU9V7xXNFyaW7OcjDgIrRR29+0QLsG
+	sy002gR8DfLW2b3W7t600g3i5FXw4v5QeY08x5oyXJut9o6CVxRFotgBDzbm/J1Fk36nF9Cmbg96z
+	gnbUu3Frc90Od/IdaRRM8R/t/Zh1tAC59LwDojYZ36vQ3ZeTN06WWyeE7Q93Ew5kdBm1IeWAioVST
+	yas1kZb5oF9Tp2u9lqGw6Q71mCe4Rkf+DZ10XIzdM308xo4mDkBMvR6IBpz30t+nUFMvAbWDufbtU
+	jDd8bkew==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s7GcO-0000000Ab1Q-0wAA;
+	Wed, 15 May 2024 15:32:36 +0000
+Date: Wed, 15 May 2024 16:32:36 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: akpm@linux-foundation.org, djwong@kernel.org, brauner@kernel.org,
+	david@fromorbit.com, chandan.babu@oracle.com, hare@suse.de,
+	ritesh.list@gmail.com, john.g.garry@oracle.com, ziy@nvidia.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, p.raghav@samsung.com, kernel@pankajraghav.com
+Subject: Re: [PATCH v5 05/11] mm: split a folio in minimum folio order chunks
+Message-ID: <ZkTVlOQXxfa2VHXo@casper.infradead.org>
+References: <20240503095353.3798063-1-mcgrof@kernel.org>
+ <20240503095353.3798063-6-mcgrof@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -67,37 +50,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240515022829.2455554-2-yi.zhang@huaweicloud.com>
+In-Reply-To: <20240503095353.3798063-6-mcgrof@kernel.org>
 
-Hi Zhang,
+On Fri, May 03, 2024 at 02:53:47AM -0700, Luis Chamberlain wrote:
+> +int split_folio_to_list(struct folio *folio, struct list_head *list);
 
-kernel test robot noticed the following build errors:
+...
 
-[auto build test ERROR on brauner-vfs/vfs.all]
-[also build test ERROR on linus/master v6.9 next-20240515]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> +static inline int split_folio_to_list(struct page *page, struct list_head *list)
+> +{
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Zhang-Yi/iomap-pass-blocksize-to-iomap_truncate_page/20240515-104121
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
-patch link:    https://lore.kernel.org/r/20240515022829.2455554-2-yi.zhang%40huaweicloud.com
-patch subject: [PATCH 1/3] iomap: pass blocksize to iomap_truncate_page()
-config: xtensa-allnoconfig (https://download.01.org/0day-ci/archive/20240515/202405152037.DjvUiyJ1-lkp@intel.com/config)
-compiler: xtensa-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240515/202405152037.DjvUiyJ1-lkp@intel.com/reproduce)
+Type mismatch.  Surprised the build bots didn't whine yet.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202405152037.DjvUiyJ1-lkp@intel.com/
+>  
+> +		min_order = mapping_min_folio_order(folio->mapping);
+> +		if (new_order < min_order) {
+> +			VM_WARN_ONCE(1, "Cannot split mapped folio below min-order: %u",
+> +				     min_order);
+> +			ret = -EINVAL;
+> +			goto out;
+> +		}
 
-All errors (new ones prefixed by >>):
+Wouldn't we prefer this as:
 
-   xtensa-linux-ld: fs/iomap/buffered-io.o: in function `iomap_file_unshare':
-   buffered-io.c:(.text+0x1f48): undefined reference to `__moddi3'
->> xtensa-linux-ld: buffered-io.c:(.text+0x1f57): undefined reference to `__moddi3'
+		if (VM_WARN_ONCE(new_order < min_order,
+				"Cannot split mapped folio below min-order: %u",
+				min_order) {
+			ret = -EINVAL;
+			goto out;
+		}
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
