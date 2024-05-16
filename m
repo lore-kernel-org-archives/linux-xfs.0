@@ -1,163 +1,234 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23CEF2031D;
-	Thu, 16 May 2024 07:40:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2DFF146D51;
+	Thu, 16 May 2024 13:20:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715845242; cv=none; b=AYmDI7tXpNotnY+ptYo3u4UagPcF/MGfsZKfNNZ+sZfmTR+bvixywqWymfDMoLU6T9P+RQ4e9UNxMfPbRtkiKwHkqxLuWAAfNXFOzoiKKV7ZvzmBY8ivgPwfocHV91PgsnoFPO3+93Z0m5vqf0J+U2nPfh6f4PYXI3+2MqSka5Y=
+	t=1715865608; cv=none; b=g3Qhy56pQKSDcG2HuSAnaBG3hawGWzvJPkBtEvMA4ZE9g/+3IB0cFZxGrRT5mzE34+6NB+jhbt7dgq8H1ZULaZPOm4Chd0GtrW4zqr+raq7Ghi7rlzmYhwo4FYSvD/GXMk45aR7DO4MYefXnhIfAupqnXbGVIgepFxCHCLiibXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715845242; c=relaxed/simple;
-	bh=Qzq9lHoKYDCGofPPRE8CXWW/Db7FcpxSOiT5KWlK7Es=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Lwy3fer/EE4pXbuTHdAU6/JS1IZ+OQJSbvFSv5oxnGjPcfhA0NlV3QYrPPR1aOcah33qyuFMd93EgKsmhaSXwqBFn3k36s1zzGcqqobXPN9TCq9OXsFiykUG1xMLfxtU+/KEsPq9MNRzwCXJ33/+IJ83Ho9Ldxs/3v4bWEmSXCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vg27Y4kNcz4f3lfY;
-	Thu, 16 May 2024 15:40:25 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D6D861A1068;
-	Thu, 16 May 2024 15:40:35 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXKBFtuEVmQuY4Mw--.31554S6;
-	Thu, 16 May 2024 15:40:35 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	brauner@kernel.org,
-	david@fromorbit.com,
-	chandanbabu@kernel.org,
-	jack@suse.cz,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com
-Subject: [PATCH v2 2/3] fsdax: pass blocksize to dax_truncate_page()
-Date: Thu, 16 May 2024 15:30:00 +0800
-Message-Id: <20240516073001.1066373-3-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240516073001.1066373-1-yi.zhang@huaweicloud.com>
-References: <20240516073001.1066373-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1715865608; c=relaxed/simple;
+	bh=S/7bv2DW/RD5v55OFxWspAXUnoxf9fnBX1m+bUjyDos=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bgz+Vom69i4IizO2rcf55K9do3Lmq2xCNUMjLGithqrr0f+gzKGj5k1TJ2fu7gEaxb2+DXFqUSz4+WlbP25bIAaLyyBZ0ER8muXa2hYlYzdN0247wYRk5VEktuackV9lhfGP6ibAiEwlppfS5Sydny6e+I6EFyZz3zFT5/D1B6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CW7Q2VcR; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CW7Q2VcR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715865606; x=1747401606;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=S/7bv2DW/RD5v55OFxWspAXUnoxf9fnBX1m+bUjyDos=;
+  b=CW7Q2VcRWOAmRN5zWEQk7DQbJ0ZRptJzozkBEo4FXA50iNCTTo18qno7
+   RTpU/cf2NXug4uz8oC1zssN3pAuTqLod1g+t5KUwc2GRrDBK/5h3aUbqn
+   hulSBCX20SwzrjctP5jMag56cKeWUvsE7WWs/PcxI46UjuICloSK1ZSSI
+   n2wxThwtmlVtIiOiwCvR7VjSD4nhO87qOZz8G34YCPcBzhvsOnM7NatSd
+   RwrpsODVBRQRMRPq6bmW1vVB33fgbSrgMf3Kz+LwZJzXvI8K5X6At2rOk
+   njqIaLfSXNlee7iCrXTYMjqVcWlRVuNXnOGa9myTQ8momAlqc/UmwYiwt
+   g==;
+X-CSE-ConnectionGUID: PY9VC51VTZKd614LcFWCpw==
+X-CSE-MsgGUID: V0k4P9EiRQWEpPX9e5t8xw==
+X-IronPort-AV: E=McAfee;i="6600,9927,11074"; a="12087061"
+X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
+   d="scan'208";a="12087061"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 06:20:05 -0700
+X-CSE-ConnectionGUID: GYJLNoBZRE2e5mjP1Y+xtg==
+X-CSE-MsgGUID: eLjji0ibTOy19GYkWIHYbw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
+   d="scan'208";a="35975470"
+Received: from lkp-server01.sh.intel.com (HELO f8b243fe6e68) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 16 May 2024 06:20:00 -0700
+Received: from kbuild by f8b243fe6e68 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1s7b1Z-000EGh-2R;
+	Thu, 16 May 2024 13:19:57 +0000
+Date: Thu, 16 May 2024 21:19:40 +0800
+From: kernel test robot <lkp@intel.com>
+To: Daniel Gomez <da.gomez@samsung.com>,
+	"hughd@google.com" <hughd@google.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"willy@infradead.org" <willy@infradead.org>,
+	"jack@suse.cz" <jack@suse.cz>,
+	"mcgrof@kernel.org" <mcgrof@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"djwong@kernel.org" <djwong@kernel.org>,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	"dagmcr@gmail.com" <dagmcr@gmail.com>,
+	"yosryahmed@google.com" <yosryahmed@google.com>,
+	"baolin.wang@linux.alibaba.com" <baolin.wang@linux.alibaba.com>,
+	"ritesh.list@gmail.com" <ritesh.list@gmail.com>,
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
+	"david@redhat.com" <david@redhat.com>,
+	"chandan.babu@oracle.com" <chandan.babu@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"brauner@kernel.org" <brauner@kernel.org>,
+	Daniel Gomez <da.gomez@samsung.com>
+Subject: Re: [PATCH 07/12] shmem: check if a block is uptodate before splice
+ into pipe
+Message-ID: <202405162045.kaXgB2n3-lkp@intel.com>
+References: <20240515055719.32577-8-da.gomez@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXKBFtuEVmQuY4Mw--.31554S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFyrKF15GF1kJw45JFyxXwb_yoW5tr48pF
-	1DGa15G397X34j9F1kWF1jvw15t3WkCF409ryxArs3Zr9Fqr1IyF18KF1YkF4UKr4xZ3yj
-	qFZ8K3y7Gr1rAFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAGYLUUUUU
-	=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240515055719.32577-8-da.gomez@samsung.com>
 
-From: Zhang Yi <yi.zhang@huawei.com>
+Hi Daniel,
 
-dax_truncate_page() always assumes the block size of the truncating
-inode is i_blocksize(), this is not always true for some filesystems,
-e.g. XFS does extent size alignment for realtime inodes. Drop this
-assumption and pass the block size for zeroing into dax_truncate_page(),
-allow filesystems to indicate the correct block size.
+kernel test robot noticed the following build errors:
 
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
- fs/dax.c            | 11 ++++++-----
- fs/ext2/inode.c     |  4 ++--
- fs/xfs/xfs_iomap.c  |  2 +-
- include/linux/dax.h |  4 ++--
- 4 files changed, 11 insertions(+), 10 deletions(-)
+[auto build test ERROR on akpm-mm/mm-everything]
+[also build test ERROR on xfs-linux/for-next brauner-vfs/vfs.all linus/master v6.9 next-20240516]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 423fc1607dfa..f672c9a663c1 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1403,16 +1403,17 @@ int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- }
- EXPORT_SYMBOL_GPL(dax_zero_range);
- 
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops)
-+int dax_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
-+		bool *did_zero, const struct iomap_ops *ops)
- {
--	unsigned int blocksize = i_blocksize(inode);
--	unsigned int off = pos & (blocksize - 1);
-+	loff_t start = pos;
-+	unsigned int off = is_power_of_2(blocksize) ? (pos & (blocksize - 1)) :
-+			   do_div(pos, blocksize);
- 
- 	/* Block boundary? Nothing to do */
- 	if (!off)
- 		return 0;
--	return dax_zero_range(inode, pos, blocksize - off, did_zero, ops);
-+	return dax_zero_range(inode, start, blocksize - off, did_zero, ops);
- }
- EXPORT_SYMBOL_GPL(dax_truncate_page);
- 
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index f3d570a9302b..fbbd479f3c4e 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1278,8 +1278,8 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 	inode_dio_wait(inode);
- 
- 	if (IS_DAX(inode))
--		error = dax_truncate_page(inode, newsize, NULL,
--					  &ext2_iomap_ops);
-+		error = dax_truncate_page(inode, newsize, i_blocksize(inode),
-+					  NULL, &ext2_iomap_ops);
- 	else
- 		error = block_truncate_page(inode->i_mapping,
- 				newsize, ext2_get_block);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 31ac07bb8425..4958cc3337bc 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1470,7 +1470,7 @@ xfs_truncate_page(
- 	unsigned int		blocksize = i_blocksize(inode);
- 
- 	if (IS_DAX(inode))
--		return dax_truncate_page(inode, pos, did_zero,
-+		return dax_truncate_page(inode, pos, blocksize, did_zero,
- 					&xfs_dax_write_iomap_ops);
- 	return iomap_truncate_page(inode, pos, blocksize, did_zero,
- 				   &xfs_buffered_write_iomap_ops);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 9d3e3327af4c..4aa8ef7c8fd4 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -210,8 +210,8 @@ int dax_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		const struct iomap_ops *ops);
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops);
-+int dax_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
-+		bool *did_zero, const struct iomap_ops *ops);
- 
- #if IS_ENABLED(CONFIG_DAX)
- int dax_read_lock(void);
+url:    https://github.com/intel-lab-lkp/linux/commits/Daniel-Gomez/splice-don-t-check-for-uptodate-if-partially-uptodate-is-impl/20240515-135925
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20240515055719.32577-8-da.gomez%40samsung.com
+patch subject: [PATCH 07/12] shmem: check if a block is uptodate before splice into pipe
+config: arm-s5pv210_defconfig (https://download.01.org/0day-ci/archive/20240516/202405162045.kaXgB2n3-lkp@intel.com/config)
+compiler: arm-linux-gnueabi-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240516/202405162045.kaXgB2n3-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202405162045.kaXgB2n3-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   arm-linux-gnueabi-ld: mm/shmem.o: in function `shmem_file_splice_read':
+>> mm/shmem.c:3240:(.text+0x5224): undefined reference to `__aeabi_ldivmod'
+
+
+vim +3240 mm/shmem.c
+
+  3174	
+  3175	static ssize_t shmem_file_splice_read(struct file *in, loff_t *ppos,
+  3176					      struct pipe_inode_info *pipe,
+  3177					      size_t len, unsigned int flags)
+  3178	{
+  3179		struct inode *inode = file_inode(in);
+  3180		struct address_space *mapping = inode->i_mapping;
+  3181		struct folio *folio = NULL;
+  3182		size_t total_spliced = 0, used, npages, n, part;
+  3183		loff_t isize;
+  3184		int error = 0;
+  3185	
+  3186		/* Work out how much data we can actually add into the pipe */
+  3187		used = pipe_occupancy(pipe->head, pipe->tail);
+  3188		npages = max_t(ssize_t, pipe->max_usage - used, 0);
+  3189		len = min_t(size_t, len, npages * PAGE_SIZE);
+  3190	
+  3191		do {
+  3192			if (*ppos >= i_size_read(inode))
+  3193				break;
+  3194	
+  3195			error = shmem_get_folio(inode, *ppos / PAGE_SIZE, &folio,
+  3196						SGP_READ);
+  3197			if (error) {
+  3198				if (error == -EINVAL)
+  3199					error = 0;
+  3200				break;
+  3201			}
+  3202			if (folio) {
+  3203				folio_unlock(folio);
+  3204	
+  3205				if (folio_test_hwpoison(folio) ||
+  3206				    (folio_test_large(folio) &&
+  3207				     folio_test_has_hwpoisoned(folio))) {
+  3208					error = -EIO;
+  3209					break;
+  3210				}
+  3211			}
+  3212	
+  3213			/*
+  3214			 * i_size must be checked after we know the pages are Uptodate.
+  3215			 *
+  3216			 * Checking i_size after the check allows us to calculate
+  3217			 * the correct value for "nr", which means the zero-filled
+  3218			 * part of the page is not copied back to userspace (unless
+  3219			 * another truncate extends the file - this is desired though).
+  3220			 */
+  3221			isize = i_size_read(inode);
+  3222			if (unlikely(*ppos >= isize))
+  3223				break;
+  3224			part = min_t(loff_t, isize - *ppos, len);
+  3225			if (folio && folio_test_large(folio) &&
+  3226			    folio_test_private(folio)) {
+  3227				unsigned long from = offset_in_folio(folio, *ppos);
+  3228				unsigned int bfirst = from >> inode->i_blkbits;
+  3229				unsigned int blast, blast_upd;
+  3230	
+  3231				len = min(folio_size(folio) - from, len);
+  3232				blast = (from + len - 1) >> inode->i_blkbits;
+  3233	
+  3234				blast_upd = sfs_get_last_block_uptodate(folio, bfirst,
+  3235									blast);
+  3236				if (blast_upd <= blast) {
+  3237					unsigned int bsize = 1 << inode->i_blkbits;
+  3238					unsigned int blks = blast_upd - bfirst + 1;
+  3239					unsigned int bbytes = blks << inode->i_blkbits;
+> 3240					unsigned int boff = (*ppos % bsize);
+  3241	
+  3242					part = min_t(loff_t, bbytes - boff, len);
+  3243				}
+  3244			}
+  3245	
+  3246			if (folio && shmem_is_block_uptodate(
+  3247					     folio, offset_in_folio(folio, *ppos) >>
+  3248							    inode->i_blkbits)) {
+  3249				/*
+  3250				 * If users can be writing to this page using arbitrary
+  3251				 * virtual addresses, take care about potential aliasing
+  3252				 * before reading the page on the kernel side.
+  3253				 */
+  3254				if (mapping_writably_mapped(mapping))
+  3255					flush_dcache_folio(folio);
+  3256				folio_mark_accessed(folio);
+  3257				/*
+  3258				 * Ok, we have the page, and it's up-to-date, so we can
+  3259				 * now splice it into the pipe.
+  3260				 */
+  3261				n = splice_folio_into_pipe(pipe, folio, *ppos, part);
+  3262				folio_put(folio);
+  3263				folio = NULL;
+  3264			} else {
+  3265				n = splice_zeropage_into_pipe(pipe, *ppos, part);
+  3266			}
+  3267	
+  3268			if (!n)
+  3269				break;
+  3270			len -= n;
+  3271			total_spliced += n;
+  3272			*ppos += n;
+  3273			in->f_ra.prev_pos = *ppos;
+  3274			if (pipe_full(pipe->head, pipe->tail, pipe->max_usage))
+  3275				break;
+  3276	
+  3277			cond_resched();
+  3278		} while (len);
+  3279	
+  3280		if (folio)
+  3281			folio_put(folio);
+  3282	
+  3283		file_accessed(in);
+  3284		return total_spliced ? total_spliced : error;
+  3285	}
+  3286	
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
