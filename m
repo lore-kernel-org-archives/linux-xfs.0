@@ -1,215 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C43E512C492;
-	Fri, 17 May 2024 17:59:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1121713D88B;
+	Fri, 17 May 2024 18:00:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715968741; cv=none; b=I0cXRAJTmLDyanMdmvTql6U9gviqXhg3PR98I7dsteuqZHzD6PjuJeVXE1akTXKpliB4o13FWnEYh7uiP8N2eyEEQIDu37oITh6Ut5qorl0gTZfSfqhw0M44JyRolmLO3Wt7Z5D74Ra1xmxpSZVphGifqcCk9xsDUzK7yNYwUwo=
+	t=1715968829; cv=none; b=PKiO8b30p6OKI1lgCG25MzDZk5FWzMcTYuugkgYe04s+sihlm2tdf9MaMWs+mWG+po142+dGrLf5JlsiuHsMOBBfCtQGvPMMVC+fQa8zRVyqtTUiEY6nTQrKb+mYmYpYO3VV4vtyq3OOfEnTZ1XGNAtMXvef5YbBdlrHxeGjU44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715968741; c=relaxed/simple;
-	bh=pKB07h4tYYQycvmYl0AAJgDHfhFWfWr/tJd2D4E2uEw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UA0SL4ByrqYVSMkfjEaM3LqxVEwU0aim4ke/Cf6zUqotUV4RpuA+CRX8YXSk7s/WISO3R/S2VitbT6OPVgWrrwDC23osQjDs18iftq/+21dY6D0wwUVVL/nqHP2Co34Kq3uxBIeoJ8GhXaz9/fsZg5xObZjC7Qtj0WA01VkNZtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U31g4s4X; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1715968829; c=relaxed/simple;
+	bh=hozAzpQMXObpbdTk7Ibzjpn2uslGrLTRVG5E8LS6QJA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HwH/jvTwkNY1CGaK1H3l3hV6WqCOVqPoj8nYiJPtHZe5aaDzOerBiTgmTk3dloDvfABHjpRX7HuvVTNvzSZeMtn4gtbXZNoDwdXwxAX1FlNVr29CrBfUPzGS0L5TBZG6j4tzEhSCap+JskwXLYlifjKZJSK1JgyV3g55UGCrATg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HW4kVh7M; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U31g4s4X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48A92C2BD10;
-	Fri, 17 May 2024 17:59:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715968741;
-	bh=pKB07h4tYYQycvmYl0AAJgDHfhFWfWr/tJd2D4E2uEw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U31g4s4XCO5YTLBcwQ7q82QmZmEBAxjcSq8FwCtOiIhJOR8Q/dnJJEzFeFly6SwKA
-	 qF0AwCq+MLkmsGGcbjv+QQu3P8Ndj3wob1NKChP9+LqBP3ne+1gcliI+Qx5kmmlFI8
-	 sYPpqr5StZ+FfHsRAQA5gi7aWfF3Q8G/QdWZsbkcYMGz7Q6UMrHwSIVkjoI934ICt2
-	 InEamXPV/GYar8V5FatSI4kb+Pm9WRNLmJvdg1319diM+wZbl6BfegwT3fwzQ6T7wK
-	 eKHVzxhUwD9NbQmuki4gf+3sgQT9q4TXBV26tiigDFVxGg7+X1s92jvOv3oqqdano9
-	 XCnak9gvigYyQ==
-Date: Fri, 17 May 2024 10:59:00 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	hch@infradead.org, brauner@kernel.org, david@fromorbit.com,
-	chandanbabu@kernel.org, jack@suse.cz, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com
-Subject: Re: [PATCH v3 3/3] xfs: correct the zeroing truncate range
-Message-ID: <20240517175900.GC360919@frogsfrogsfrogs>
-References: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
- <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HW4kVh7M"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1f08442b7bcso17357805ad.1;
+        Fri, 17 May 2024 11:00:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1715968827; x=1716573627; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=w/StxRW/VLxGkt1YAzvKzW9ayexnITae0WPMFzYawxM=;
+        b=HW4kVh7Mf1aqJZXkXUCX5NqzIMDENND+Ktu8JZlXTbcrLARq4Fyzu5hfIgcu9+PuXk
+         CzwAEiFryEdp7zEYZ7/kjY3xgqz0AVfUAviZ3qxix3G/MRZzblh3TcDG/y77K5wI4QjU
+         J/RkIYmye0aYTb0f/nC+C2FYHXxqaWSDoHP2HQWFLdxu4Iy74tgchlE5zb+dctwtERMy
+         LesV3t6oNdCrKBrtbW6UZ+0J1f/SId6G3tadCWC0iQDOih0CvZk0/AkeOVjRcrGIKBMO
+         y4S9xD9CM2BG9wvv+E4ikhz0Tyxnz6mLFUEgEnk50X6OyoUMleopoh90qQA1oNVkpieV
+         X9og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715968827; x=1716573627;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=w/StxRW/VLxGkt1YAzvKzW9ayexnITae0WPMFzYawxM=;
+        b=IDJs7MTwPOqL4buqDR7+7ZM98t60Mz+C5/S0KPKrmuSV8fqtqQ4iWoykMMlUQxr/tf
+         KUXQ02RnXauWQ3S4uOgFdNfMF8J5lpgC8gZSGE5t7j5SLBpEo/lelgO56/S/gJ1G/sA7
+         l31h/6zg5PE3UTNozPuNewiDxhiE2MUGpRCOxJtQkPd4beVvhGAeR03/LLv5xXF5NOr/
+         vPNZ1L0VjixrsBuZjPDc8KmBWoQ3aPHKoCSlKCX4htlmDo2VK75VC0t/9KeLJzq3617K
+         V4a7jmRcddD2tzg0c0SzVhkwliqX4MiPI1DVg6+hsc7RNmCwvBAkvRUr91jtk2R8PWFu
+         CnOg==
+X-Forwarded-Encrypted: i=1; AJvYcCUy94UqkqeQllkdcJ0YHsgVItz0lPHKJqBqXnAGtSMnEUhQ8n/D8fnzDg4fQ6rxsh+Cx3vxW/WscXujJ4CKrCN6NK2yKhzuFxT0RZFYX1A6e9KfDcInBfIvO5nDCn3RaTMWuazrCpennqNrm3iGLxxfUGRGrvFRlLAMi5Sk3syVzFg+rffpkFBBMmg3IaflCLpqJRLL5v+BR/WHqseN2JNn5HKo0/B1wmeSmoAkkCkkuSkIJvE0Y4QuXmluo6Pjmlo5TRv5CmjhuJEsSxMVgeTEWmPtUxB/gjbrcm6FWYX04nCZArybyp8hCknYe4+HMehRQfY06ZyFkbE3soa8LNe9NaoJ4YMN74bvHW5FfBzkH9WIk8f1Y6h/R3CZH3ZUq2VWdmPOJj7U+HTVU8cg3vhtmrjxWMV41ez/YApwVMindMJDWtwontSU2MgbDkIKGAspHshumJOeS/eBmzhEW5VwcaxE18c0qY+3ykU9O1nBIG8t8tpm9CD1jNAqSyqjJg2X/wBca4Jhk4sV1biIz4E9QQHjWC2Q8lv33YJYxCxL1q6P4WQL2oFQtwv2R36E0yR3Uvup+zIEy/aTxmm2Vmla34FFEp3qiLppDZ+L0g43G03h+5FT0xhT/S26dAnPbZh9ZgOAUCG5Ltq/Eilawi5t0dnrkHDjTWxt612rwg0fxK79K4V76AAgb+rpvyBfw6Qwr19PJoP/dmcrgqQZS+B5AtK5Kr9MWPVX8csgYh3w+EAMeS85leHvalFLRRfomIC5Jnqp7qoDkc/yP1u5kY6kvBqExnM/t/C87bDv+TKY/DcDZKfdJ6NvOlDcjcxc0wZz4G1ljzQ8sIOdO9RQDCjne2R9mbURnm7zWh5CF/K6f1z+dluq7Mn/kfzTYYcz5fBwAC/Uitkp9Og0Bap/iNfP5yYXn5qzgcRO1h51dODYeRfwzf8ZEdeREMpJ4A==
+X-Gm-Message-State: AOJu0YyRMzm/2Xjrt8z7DljUkzB1tV+7rgEbAl7kKiXNm32QWq1Hj6T5
+	CZaiFp6kBqyRjai0CnM2fhX8k569z67BjPY8VNS1RyKKSQXxs+bW
+X-Google-Smtp-Source: AGHT+IGZDVzcY7OCALKn8Hd9OAI6XcssKSQlDPeH3SNH0EqlCaPwK+7ssdLCEtEMxDGdIwihVzJtAg==
+X-Received: by 2002:a17:903:120e:b0:1e4:6519:816d with SMTP id d9443c01a7336-1ef43f51feamr267718025ad.48.1715968827236;
+        Fri, 17 May 2024 11:00:27 -0700 (PDT)
+Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ef0bf30bfesm159992895ad.175.2024.05.17.11.00.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 17 May 2024 11:00:26 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <5cff0ff0-48d1-49f8-84f4-bb33571fdf16@roeck-us.net>
+Date: Fri, 17 May 2024 11:00:22 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] tracing/treewide: Remove second parameter of
+ __assign_str()
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Linux trace kernel <linux-trace-kernel@vger.kernel.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>,
+ linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+ intel-xe@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+ freedreno@lists.freedesktop.org, virtualization@lists.linux.dev,
+ linux-rdma@vger.kernel.org, linux-pm@vger.kernel.org, iommu@lists.linux.dev,
+ linux-tegra@vger.kernel.org, netdev@vger.kernel.org,
+ linux-hyperv@vger.kernel.org, ath10k@lists.infradead.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ ath12k@lists.infradead.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-usb@vger.kernel.org,
+ linux-bcachefs@vger.kernel.org, linux-nfs@vger.kernel.org,
+ ocfs2-devel@lists.linux.dev, linux-cifs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-edac@vger.kernel.org,
+ selinux@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-erofs@lists.ozlabs.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-hwmon@vger.kernel.org, io-uring@vger.kernel.org,
+ linux-sound@vger.kernel.org, bpf@vger.kernel.org,
+ linux-wpan@vger.kernel.org, dev@openvswitch.org, linux-s390@vger.kernel.org,
+ tipc-discussion@lists.sourceforge.net, Julia Lawall <Julia.Lawall@inria.fr>
+References: <20240516133454.681ba6a0@rorschach.local.home>
+ <5080f4c5-e0b3-4c2e-9732-f673d7e6ca66@roeck-us.net>
+ <20240517134834.43e726dd@gandalf.local.home>
+Content-Language: en-US
+From: Guenter Roeck <linux@roeck-us.net>
+Autocrypt: addr=linux@roeck-us.net; keydata=
+ xsFNBE6H1WcBEACu6jIcw5kZ5dGeJ7E7B2uweQR/4FGxH10/H1O1+ApmcQ9i87XdZQiB9cpN
+ RYHA7RCEK2dh6dDccykQk3bC90xXMPg+O3R+C/SkwcnUak1UZaeK/SwQbq/t0tkMzYDRxfJ7
+ nyFiKxUehbNF3r9qlJgPqONwX5vJy4/GvDHdddSCxV41P/ejsZ8PykxyJs98UWhF54tGRWFl
+ 7i1xvaDB9lN5WTLRKSO7wICuLiSz5WZHXMkyF4d+/O5ll7yz/o/JxK5vO/sduYDIlFTvBZDh
+ gzaEtNf5tQjsjG4io8E0Yq0ViobLkS2RTNZT8ICq/Jmvl0SpbHRvYwa2DhNsK0YjHFQBB0FX
+ IdhdUEzNefcNcYvqigJpdICoP2e4yJSyflHFO4dr0OrdnGLe1Zi/8Xo/2+M1dSSEt196rXaC
+ kwu2KgIgmkRBb3cp2vIBBIIowU8W3qC1+w+RdMUrZxKGWJ3juwcgveJlzMpMZNyM1jobSXZ0
+ VHGMNJ3MwXlrEFPXaYJgibcg6brM6wGfX/LBvc/haWw4yO24lT5eitm4UBdIy9pKkKmHHh7s
+ jfZJkB5fWKVdoCv/omy6UyH6ykLOPFugl+hVL2Prf8xrXuZe1CMS7ID9Lc8FaL1ROIN/W8Vk
+ BIsJMaWOhks//7d92Uf3EArDlDShwR2+D+AMon8NULuLBHiEUQARAQABzTJHdWVudGVyIFJv
+ ZWNrIChMaW51eCBhY2NvdW50KSA8bGludXhAcm9lY2stdXMubmV0PsLBgQQTAQIAKwIbAwYL
+ CQgHAwIGFQgCCQoLBBYCAwECHgECF4ACGQEFAlVcphcFCRmg06EACgkQyx8mb86fmYFg0RAA
+ nzXJzuPkLJaOmSIzPAqqnutACchT/meCOgMEpS5oLf6xn5ySZkl23OxuhpMZTVX+49c9pvBx
+ hpvl5bCWFu5qC1jC2eWRYU+aZZE4sxMaAGeWenQJsiG9lP8wkfCJP3ockNu0ZXXAXwIbY1O1
+ c+l11zQkZw89zNgWgKobKzrDMBFOYtAh0pAInZ9TSn7oA4Ctejouo5wUugmk8MrDtUVXmEA9
+ 7f9fgKYSwl/H7dfKKsS1bDOpyJlqhEAH94BHJdK/b1tzwJCFAXFhMlmlbYEk8kWjcxQgDWMu
+ GAthQzSuAyhqyZwFcOlMCNbAcTSQawSo3B9yM9mHJne5RrAbVz4TWLnEaX8gA5xK3uCNCeyI
+ sqYuzA4OzcMwnnTASvzsGZoYHTFP3DQwf2nzxD6yBGCfwNGIYfS0i8YN8XcBgEcDFMWpOQhT
+ Pu3HeztMnF3HXrc0t7e5rDW9zCh3k2PA6D2NV4fews9KDFhLlTfCVzf0PS1dRVVWM+4jVl6l
+ HRIAgWp+2/f8dx5vPc4Ycp4IsZN0l1h9uT7qm1KTwz+sSl1zOqKD/BpfGNZfLRRxrXthvvY8
+ BltcuZ4+PGFTcRkMytUbMDFMF9Cjd2W9dXD35PEtvj8wnEyzIos8bbgtLrGTv/SYhmPpahJA
+ l8hPhYvmAvpOmusUUyB30StsHIU2LLccUPPOwU0ETofVZwEQALlLbQeBDTDbwQYrj0gbx3bq
+ 7kpKABxN2MqeuqGr02DpS9883d/t7ontxasXoEz2GTioevvRmllJlPQERVxM8gQoNg22twF7
+ pB/zsrIjxkE9heE4wYfN1AyzT+AxgYN6f8hVQ7Nrc9XgZZe+8IkuW/Nf64KzNJXnSH4u6nJM
+ J2+Dt274YoFcXR1nG76Q259mKwzbCukKbd6piL+VsT/qBrLhZe9Ivbjq5WMdkQKnP7gYKCAi
+ pNVJC4enWfivZsYupMd9qn7Uv/oCZDYoBTdMSBUblaLMwlcjnPpOYK5rfHvC4opxl+P/Vzyz
+ 6WC2TLkPtKvYvXmdsI6rnEI4Uucg0Au/Ulg7aqqKhzGPIbVaL+U0Wk82nz6hz+WP2ggTrY1w
+ ZlPlRt8WM9w6WfLf2j+PuGklj37m+KvaOEfLsF1v464dSpy1tQVHhhp8LFTxh/6RWkRIR2uF
+ I4v3Xu/k5D0LhaZHpQ4C+xKsQxpTGuYh2tnRaRL14YMW1dlI3HfeB2gj7Yc8XdHh9vkpPyuT
+ nY/ZsFbnvBtiw7GchKKri2gDhRb2QNNDyBnQn5mRFw7CyuFclAksOdV/sdpQnYlYcRQWOUGY
+ HhQ5eqTRZjm9z+qQe/T0HQpmiPTqQcIaG/edgKVTUjITfA7AJMKLQHgp04Vylb+G6jocnQQX
+ JqvvP09whbqrABEBAAHCwWUEGAECAA8CGwwFAlVcpi8FCRmg08MACgkQyx8mb86fmYHNRQ/+
+ J0OZsBYP4leJvQF8lx9zif+v4ZY/6C9tTcUv/KNAE5leyrD4IKbnV4PnbrVhjq861it/zRQW
+ cFpWQszZyWRwNPWUUz7ejmm9lAwPbr8xWT4qMSA43VKQ7ZCeTQJ4TC8kjqtcbw41SjkjrcTG
+ wF52zFO4bOWyovVAPncvV9eGA/vtnd3xEZXQiSt91kBSqK28yjxAqK/c3G6i7IX2rg6pzgqh
+ hiH3/1qM2M/LSuqAv0Rwrt/k+pZXE+B4Ud42hwmMr0TfhNxG+X7YKvjKC+SjPjqp0CaztQ0H
+ nsDLSLElVROxCd9m8CAUuHplgmR3seYCOrT4jriMFBtKNPtj2EE4DNV4s7k0Zy+6iRQ8G8ng
+ QjsSqYJx8iAR8JRB7Gm2rQOMv8lSRdjva++GT0VLXtHULdlzg8VjDnFZ3lfz5PWEOeIMk7Rj
+ trjv82EZtrhLuLjHRCaG50OOm0hwPSk1J64R8O3HjSLdertmw7eyAYOo4RuWJguYMg5DRnBk
+ WkRwrSuCn7UG+qVWZeKEsFKFOkynOs3pVbcbq1pxbhk3TRWCGRU5JolI4ohy/7JV1TVbjiDI
+ HP/aVnm6NC8of26P40Pg8EdAhajZnHHjA7FrJXsy3cyIGqvg9os4rNkUWmrCfLLsZDHD8FnU
+ mDW4+i+XlNFUPUYMrIKi9joBhu18ssf5i5Q=
+In-Reply-To: <20240517134834.43e726dd@gandalf.local.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, May 17, 2024 at 07:13:55PM +0800, Zhang Yi wrote:
-> From: Zhang Yi <yi.zhang@huawei.com>
+On 5/17/24 10:48, Steven Rostedt wrote:
+> On Fri, 17 May 2024 10:36:37 -0700
+> Guenter Roeck <linux@roeck-us.net> wrote:
 > 
-> When truncating a realtime file unaligned to a shorter size,
-> xfs_setattr_size() only flush the EOF page before zeroing out, and
-> xfs_truncate_page() also only zeros the EOF block. This could expose
-> stale data since 943bc0882ceb ("iomap: don't increase i_size if it's not
-> a write operation").
+>> Building csky:allmodconfig (and others) ... failed
+>> --------------
+>> Error log:
+>> In file included from include/trace/trace_events.h:419,
+>>                   from include/trace/define_trace.h:102,
+>>                   from drivers/cxl/core/trace.h:737,
+>>                   from drivers/cxl/core/trace.c:8:
+>> drivers/cxl/core/./trace.h:383:1: error: macro "__assign_str" passed 2 arguments, but takes just 1
+>>
+>> This is with the patch applied on top of v6.9-8410-gff2632d7d08e.
+>> So far that seems to be the only build failure.
+>> Introduced with commit 6aec00139d3a8 ("cxl/core: Add region info to
+>> cxl_general_media and cxl_dram events"). Guess we'll see more of those
+>> towards the end of the commit window.
 > 
-> If the sb_rextsize is bigger than one block, and we have a realtime
-> inode that contains a long enough written extent. If we unaligned
-> truncate into the middle of this extent, xfs_itruncate_extents() could
-> split the extent and align the it's tail to sb_rextsize, there maybe
-> have more than one blocks more between the end of the file. Since
-> xfs_truncate_page() only zeros the trailing portion of the i_blocksize()
-> value, so it may leftover some blocks contains stale data that could be
-> exposed if we append write it over a long enough distance later.
-
-IOWs, any time we truncate down, we need to zero every byte from the new
-EOF all the way to the end of the allocation unit, correct?
-
-Maybe pictures would be easier to reason with.  Say you have
-rextsize=30 and a partially written rtextent; each 'W' is a written
-fsblock and 'u' is an unwritten fsblock:
-
-WWWWWWWWWWWWWWWWWWWWWuuuuuuuuu
-                    ^ old EOF
-
-Now you want to truncate down:
-
-WWWWWWWWWWWWWWWWWWWWWuuuuuuuuu
-     ^ new EOF      ^ old EOF
-
-Currently, iomap_truncate_blocks only zeroes up to the next i_blocksize,
-so the truncate leaves the file in this state:
-
-WWWWWzWWWWWWWWWWWWWWWuuuuuuuuu
-     ^ new EOF      ^ old EOF
-
-(where 'z' is a written block with zeroes after EOF)
-
-This is bad because the "W"s between the new and old EOF still contain
-old credit card info or whatever.  Now if we mmap the file or whatever,
-we can access those old contents.
-
-So your new patch amends iomap_truncate_page so that it'll zero all the
-way to the end of the @blocksize parameter.  That fixes the exposure by 
-writing zeroes to the pagecache before we truncate down:
-
-WWWWWzzzzzzzzzzzzzzzzuuuuuuuuu
-     ^ new EOF      ^ old EOF
-
-Is that correct?
-
-If so, then why don't we make xfs_truncate_page convert the post-eof
-rtextent blocks back to unwritten status:
-
-WWWWWzuuuuuuuuuuuuuuuuuuuuuuuu
-     ^ new EOF      ^ old EOF
-
-If we can do that, then do we need the changes to iomap_truncate_page?
-Converting the mapping should be much faster than dirtying potentially
-a lot of data (rt extents can be 1GB in size).
-
-> xfs_truncate_page() should flush, zeros out the entire rtextsize range,
-> and make sure the entire zeroed range have been flushed to disk before
-> updating the inode size.
+> Looks like I made this patch just before this commit was pulled into
+> Linus's tree.
 > 
-> Fixes: 943bc0882ceb ("iomap: don't increase i_size if it's not a write operation")
-> Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-> Link: https://lore.kernel.org/linux-xfs/0b92a215-9d9b-3788-4504-a520778953c2@huaweicloud.com
-> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> ---
->  fs/xfs/xfs_iomap.c | 35 +++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_iops.c  | 10 ----------
->  2 files changed, 31 insertions(+), 14 deletions(-)
+> Which is why I'll apply and rerun the above again probably on Tuesday of
+> next week against Linus's latest.
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 4958cc3337bc..fc379450fe74 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1466,12 +1466,39 @@ xfs_truncate_page(
->  	loff_t			pos,
->  	bool			*did_zero)
->  {
-> +	struct xfs_mount	*mp = ip->i_mount;
->  	struct inode		*inode = VFS_I(ip);
->  	unsigned int		blocksize = i_blocksize(inode);
-> +	int			error;
-> +
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		blocksize = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
-
-Don't opencode xfs_inode_alloc_unitsize, please.
-
-> +
-> +	/*
-> +	 * iomap won't detect a dirty page over an unwritten block (or a
-> +	 * cow block over a hole) and subsequently skips zeroing the
-> +	 * newly post-EOF portion of the page. Flush the new EOF to
-> +	 * convert the block before the pagecache truncate.
-> +	 */
-> +	error = filemap_write_and_wait_range(inode->i_mapping, pos,
-> +					     roundup_64(pos, blocksize));
-> +	if (error)
-> +		return error;pos_in_block
-
-Ok so this is hoisting the filemap_write_and_wait_range call from
-xfs_setattr_size.  It's curious that we need to need to twiddle anything
-other than the EOF block itself though?
-
->  
->  	if (IS_DAX(inode))
-> -		return dax_truncate_page(inode, pos, blocksize, did_zero,
-> -					&xfs_dax_write_iomap_ops);
-> -	return iomap_truncate_page(inode, pos, blocksize, did_zero,
-> -				   &xfs_buffered_write_iomap_ops);
-> +		error = dax_truncate_page(inode, pos, blocksize, did_zero,
-> +					  &xfs_dax_write_iomap_ops);
-> +	else
-> +		error = iomap_truncate_page(inode, pos, blocksize, did_zero,
-> +					    &xfs_buffered_write_iomap_ops);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Write back path won't write dirty blocks post EOF folio,
-> +	 * flush the entire zeroed range before updating the inode
-> +	 * size.
-> +	 */
-> +	return filemap_write_and_wait_range(inode->i_mapping, pos,
-> +					    roundup_64(pos, blocksize));
-
-...but what is the purpose of the second filemap_write_and_wait_range
-call?  Is that to flush the bytes between new and old EOF to disk before
-truncate_setsize invalidates the (zeroed) pagecache?
-
---D
-
->  }
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 66f8c47642e8..baeeddf4a6bb 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -845,16 +845,6 @@ xfs_setattr_size(
->  		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
->  				&did_zeroing);
->  	} else {
-> -		/*
-> -		 * iomap won't detect a dirty page over an unwritten block (or a
-> -		 * cow block over a hole) and subsequently skips zeroing the
-> -		 * newly post-EOF portion of the page. Flush the new EOF to
-> -		 * convert the block before the pagecache truncate.
-> -		 */
-> -		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
-> -						     newsize);
-> -		if (error)
-> -			return error;
->  		error = xfs_truncate_page(ip, newsize, &did_zeroing);
->  	}
->  
-> -- 
-> 2.39.2
+> This patch made it through both an allyesconfig and an allmodconfig, but on
+> the commit I had applied it to, which was:
 > 
+>    1b294a1f3561 ("Merge tag 'net-next-6.10' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next")
 > 
+> I'll be compiling those two builds after I update it then.
+> 
+
+I am currently repeating my test builds with the above errors fixed.
+That should take a couple of hours. I'll let you know how it goes.
+
+Guenter
+
