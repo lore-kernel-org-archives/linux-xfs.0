@@ -1,57 +1,44 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC7F41213;
-	Fri, 17 May 2024 13:30:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3475163417;
+	Fri, 17 May 2024 14:38:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715952660; cv=none; b=una5WSqsouYoAjs/29Hi+3Sm3v6z0Kl/pST+rY5Ki6O7YfMCWx8bnakgK3d0D5pqPu+Xy7sjmxOxdRAjSKRnRaHqURjMqzF868VHUYV8EhOARKemqswypqgNY3/BEtxx4/NrIsrZmGVnCIKP4n6Xfm9Ny0ZheggqLn0xq2Yp/U0=
+	t=1715956693; cv=none; b=eERJ3ao0652ppMHWm2NPHW1t+iGymnUF2hYCnrPpMGaaUZbggrKwrAmv3REcwkc9ND+9URytWkOmPFZ12f7DtIaaAQRPcBERS9zBPoPo+rCX/B1M+mA0ZYN+ncqA9pOFkaVM1htwdXGZ4URRLHBj2gLuRerLBMxbsAb+80VM80Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715952660; c=relaxed/simple;
-	bh=22I53c26kSfT41B2cb4kNLqZWudw/plo2PbVRr1bu38=;
+	s=arc-20240116; t=1715956693; c=relaxed/simple;
+	bh=5gi+DTUzW3YPqxeZIoVVNsfDihx3SAkeEccu9TVI4Go=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ltI3zB1hPPSkuQoefrTE9X05Z/zB2simcXc0M5pZBY/SlB7/GUOul3MP1Q4hxoxlKr7aS3CazlzKiU4G9IoXWM7CAQwPmfYZEDqH7uCesDEW4zbSw1eBPB815PRl1AU0iZnEl/ITWxomXahymiDkKTixI8ODfPVKLcJxf26Kcuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mDZbhB0B; arc=none smtp.client-ip=90.155.50.34
+	 Content-Type:Content-Disposition:In-Reply-To; b=fZ1f0J/9Do+ewgsGePubAjAhI/51nKh4sGEdjCBbnk9Uve+ibN9lrMdTfEyKUcdl3IYcwMBCa33+Czq9kmYJ7sHA4pw1quisxj1sZaF0cxvjMJzabL9ZLgpGxhuELki7XfuIdhTrhc2LiwsnrjDzIgqfrlvB3Zb6mm7jtj7NaAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hVx3hBPw; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mDZbhB0B"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hVx3hBPw"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
 	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=xp/PqiG39gfb+fpKlsrloVFa0KFhPJTa9GfWfq4DY7g=; b=mDZbhB0Bo4bbgFpo9pkLp89Vj/
-	wQhzCtsKtWw/04XAp921BFJxBDJY6bKoMlhnaWs/54a/1u1WvxzalD9IdR96CnYYZulpOTk6HWhEB
-	EfnYBHEk4GWrbYshJIU+8S/L+sPZbDV9m7DT0xMEzDeqI3v13dwbYqJHyda0BW5fTVwUAt74I2LRv
-	Yw3g7+uck/GtcjPYkivUx3OA2yVDFL584Z+TD7Le/+0jiQU/tJkb4heNIKtfoMqVUX2ZU4XNJUOhV
-	PsovbgyNjpACoJlqCKmgn77Dehb5jY1xIvWyHk5cTn+Uy31F5OxzkgAEEEjQwamqrAPHTtSSdZyTr
-	vJwYQbqg==;
+	bh=t0Wr/sZLtXSS6zurWWrrdIcft16mGA/DRVSd5xr7vII=; b=hVx3hBPwm9fQ5/u8awj4CICYli
+	K4QOH/Owqr4rm+oXUxqPkaZjEijVGPDi99pUTsHfbQl50tDa2QNmeXQMnqqDFp3ZzOCSLsihLrO1S
+	MqxFaZCqoKspZqlFaSELPiZpllWJLzy8+Fr8pqjQfF5aCtUcCvfC+ik7mSXtr6bQHL3jzKfEcbKpj
+	agSafCDqhOwfi/MDyksmQMk9b6fDJ2oIS8Ll7kkaJM45FlznFgsachU/BHQg/OQttPir+F0n9FlM4
+	5OyTwvcMv2BgX+bcZ7uOz2Ldzpo7i1Qjh++3pUpHuQHN1ShaCh9uMXeGY48/c1t/YMn7CtPsGpyU2
+	z8jMOD5Q==;
 Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s7xfW-0000000Czht-1Hei;
-	Fri, 17 May 2024 13:30:42 +0000
-Date: Fri, 17 May 2024 14:30:42 +0100
+	id 1s7yik-0000000D2Of-3u8U;
+	Fri, 17 May 2024 14:38:06 +0000
+Date: Fri, 17 May 2024 15:38:06 +0100
 From: Matthew Wilcox <willy@infradead.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>,
-	david@fromorbit.com, djwong@kernel.org, hch@lst.de,
-	Keith Busch <kbusch@kernel.org>, mcgrof@kernel.org,
-	akpm@linux-foundation.org, brauner@kernel.org,
-	chandan.babu@oracle.com, gost.dev@samsung.com,
-	john.g.garry@oracle.com, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, p.raghav@samsung.com,
-	ritesh.list@gmail.com, ziy@nvidia.com
-Subject: Re: [RFC] iomap: use huge zero folio in iomap_dio_zero
-Message-ID: <ZkdcAsENj2mBHh91@casper.infradead.org>
-References: <20240503095353.3798063-8-mcgrof@kernel.org>
- <20240507145811.52987-1-kernel@pankajraghav.com>
- <ZkQG7bdFStBLFv3g@casper.infradead.org>
- <ZkQfId5IdKFRigy2@kbusch-mbp>
- <ZkQ0Pj26H81HxQ_4@casper.infradead.org>
- <20240515155943.2uaa23nvddmgtkul@quentin>
- <ZkT46AsZ3WghOArL@casper.infradead.org>
- <20240516150206.d64eezbj3waieef5@quentin>
- <ef22fc06-0227-419c-8f25-38aff7f5e3eb@suse.de>
+To: Xu Yang <xu.yang_2@nxp.com>
+Cc: brauner@kernel.org, djwong@kernel.org, hch@lst.de,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	jun.li@nxp.com
+Subject: Re: [PATCH v2] iomap: avoid redundant fault_in_iov_iter_readable()
+ judgement when use larger chunks
+Message-ID: <ZkdrzlM8d_GowdSO@casper.infradead.org>
+References: <20240517201407.2144528-1-xu.yang_2@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,33 +47,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ef22fc06-0227-419c-8f25-38aff7f5e3eb@suse.de>
+In-Reply-To: <20240517201407.2144528-1-xu.yang_2@nxp.com>
 
-On Fri, May 17, 2024 at 02:36:29PM +0200, Hannes Reinecke wrote:
-> > +#define ZERO_FSB_SIZE (65536)
-> > +#define ZERO_FSB_ORDER (get_order(ZERO_FSB_SIZE))
-> > +extern struct page *zero_fs_block;
-> > +
-> >   /*
-> >    * char_dev.c
-> >    */
-> But why?
-> We already have a perfectly fine hugepage zero page in huge_memory.c.
-> Shouldn't we rather export that one and use it?
-> (Actually I have some patches for doing so...)
+On Sat, May 18, 2024 at 04:14:07AM +0800, Xu Yang wrote:
+> Since commit (5d8edfb900d5 "iomap: Copy larger chunks from userspace"),
+> iomap will try to copy in larger chunks than PAGE_SIZE. However, if the
+> mapping doesn't support large folio, only one page of maximum 4KB will
+> be created and 4KB data will be writen to pagecache each time. Then,
+> next 4KB will be handled in next iteration.
+> 
+> If chunk is 2MB, total 512 pages need to be handled finally. During this
+> period, fault_in_iov_iter_readable() is called to check iov_iter readable
+> validity. Since only 4KB will be handled each time, below address space
+> will be checked over and over again:
+> 
+> start         	end
+> -
+> buf,    	buf+2MB
+> buf+4KB, 	buf+2MB
+> buf+8KB, 	buf+2MB
+> ...
+> buf+2044KB 	buf+2MB
+> 
+> Obviously the checking size is wrong since only 4KB will be handled each
+> time. So this will get a correct bytes before fault_in_iov_iter_readable()
+> to let iomap work well in non-large folio case.
 
-But we don't necessarily.  We only have it if
-do_huge_pmd_anonymous_page() satisfies:
+You haven't talked at all about why this is important.  Is it a
+performance problem?  If so, numbers please.  Particularly if you want
+this backported to stable.
 
-        if (!(vmf->flags & FAULT_FLAG_WRITE) &&
-                        !mm_forbids_zeropage(vma->vm_mm) &&
-                        transparent_hugepage_use_zero_page()) {
+I alos think this is the wrong way to solve the problem.  We should
+instead adjust 'chunk'.  Given everything else going on, I think we
+want:
 
-ie we've taken a page fault on a PMD hole in a VMA, that VMA permits
-PMD mappings to exist, the page fault was for read, the
-forbids-huge-zeropage isn't set for this vma, and using the hugetlb zero
-page isn't forbidden.
+(in filemap.h):
 
-I'd like to see stats for how much the PMD-zero-page is actually used,
-because I suspect it's not really used very much.
+static inline size_t mapping_max_folio_size(struct address_space *mapping)
+{
+	if (mapping_large_folio_support(mapping))
+		return PAGE_SIZE << MAX_PAGECACHE_ORDER;
+	return PAGE_SIZE;
+}
+
+and then in iomap,
+
+-	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
++	size_t chunk = mapping_max_folio_size(mapping);
+
+(and move the initialisation of 'mapping' to before this)
 
