@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC33E3D56D;
-	Fri, 17 May 2024 11:24:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC6913D39B;
+	Fri, 17 May 2024 11:24:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715945091; cv=none; b=ODQMmNEuQOLxyIRNvOsixGGZoAsQcq55p+j1aHpobjPDVm0HKM4JWwYlkYq0y5yQeHvMKNbB7mI6b83StVlB25Mj/hmh6vp/9rqgTcNeiFMqVLo3+71+n+z1+7N+yW4JCAPgBwrnedpQJ2KB8ZIiW0m4ClO5+9nDvOnB9Up/uO8=
+	t=1715945091; cv=none; b=s/jKYydyRyc0SNwe3XHFl1Y6sPb2qhrpgI83TI3A6mKGxR/AhcRUkDnwJvSscfrIY03T68k1JJPWHPBYEeKB6EETWZqs4GEEq23LJAtKKu2Cevuvt5LPFQwpzYPxQJfyY0y6Yd7Q5aka7U3SlsDbE9CxAL+EnBcLsNiQvQjEffY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715945091; c=relaxed/simple;
-	bh=xuIlfY/3HVCtD8t5rWUv44jPGANtnz30uK1KfBywpWA=;
+	bh=m9vypH1gMB/9FErJfl4U0x8qqTLLlpFrkNQYTD2IEyM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NgRyEdZgiFna2AdfLptB9Mc5NkUXmuHT4BgEaRDbZTbF63KO15WME43oAqJK8SXwsE7dqO87gQVug9gvh6884oWwHn1zY4xRpMvsPLbWHbQatuhbU1xZq3qiu0zMPusu3Xar0iloWDCDyWLw1p2zyECrRleByFnOFrHU2tTj/y8=
+	 MIME-Version; b=TdLHY1t81zMO0j3ksaw1+Zobn2H1DyTYIUqrOka0zRIDWFaEVpbLmSPp5h8akMQMcTqc1mK0EuRAZ+J/bMLK97mQeXeOhkWb/99GHd2i5RSffhfb1wfvafeV1GKA3yP6Kqp1uYA591FtLkNovxBPNYWHo11I/E2x3cGxIs202Bg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vgl3r0kSrz4f3jqB;
-	Fri, 17 May 2024 19:24:40 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Vgl3q0JHtz4f3jpq;
+	Fri, 17 May 2024 19:24:39 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id B214B1A0199;
-	Fri, 17 May 2024 19:24:45 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id A01C81A016E;
+	Fri, 17 May 2024 19:24:44 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBHGBFrPkdm3V+kMw--.2732S7;
-	Fri, 17 May 2024 19:24:45 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBHGBFrPkdm3V+kMw--.2732S5;
+	Fri, 17 May 2024 19:24:44 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
@@ -38,9 +38,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yi.zhang@huaweicloud.com,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com
-Subject: [PATCH v3 3/3] xfs: correct the zeroing truncate range
-Date: Fri, 17 May 2024 19:13:55 +0800
-Message-Id: <20240517111355.233085-4-yi.zhang@huaweicloud.com>
+Subject: [PATCH v3 1/3] iomap: pass blocksize to iomap_truncate_page()
+Date: Fri, 17 May 2024 19:13:53 +0800
+Message-Id: <20240517111355.233085-2-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
 References: <20240517111355.233085-1-yi.zhang@huaweicloud.com>
@@ -51,13 +51,13 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHGBFrPkdm3V+kMw--.2732S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxGrW7uF4UAw1DCr4fGFW8Xrb_yoWrGry5pr
-	s7K3Z8CrsrK347ZF1kXF1jvw1Fy3WrAF409ryfGrn7Za4DXr1Iyrn2gF4rKa1Utr4DXw4Y
-	qFs5tayUuas5AaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+X-CM-TRANSID:cCh0CgBHGBFrPkdm3V+kMw--.2732S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxuFyrKF15GFykZr47Kr45Jrb_yoW5CFyxpF
+	1qkF45Gws3Xryj9F1kuFyjvw15tF1DGr40krySgrZxZrnFqr1xtFn2ka1jyF1Yqrs7ur4j
+	qFZ8K3y8Wr15ArJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
 	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
 	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
 	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
@@ -65,111 +65,93 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxGrW7uF4UAw1DCr4fGFW8Xrb_yoWrGry5pr
 	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
 	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
 	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
-	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWx
-	JVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU
+	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+	JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjFdgJUUUUU=
 	=
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-When truncating a realtime file unaligned to a shorter size,
-xfs_setattr_size() only flush the EOF page before zeroing out, and
-xfs_truncate_page() also only zeros the EOF block. This could expose
-stale data since 943bc0882ceb ("iomap: don't increase i_size if it's not
-a write operation").
+iomap_truncate_page() always assumes the block size of the truncating
+inode is i_blocksize(), this is not always true for some filesystems,
+e.g. XFS does extent size alignment for realtime inodes. Drop this
+assumption and pass the block size for zeroing into
+iomap_truncate_page(), allow filesystems to indicate the correct block
+size.
 
-If the sb_rextsize is bigger than one block, and we have a realtime
-inode that contains a long enough written extent. If we unaligned
-truncate into the middle of this extent, xfs_itruncate_extents() could
-split the extent and align the it's tail to sb_rextsize, there maybe
-have more than one blocks more between the end of the file. Since
-xfs_truncate_page() only zeros the trailing portion of the i_blocksize()
-value, so it may leftover some blocks contains stale data that could be
-exposed if we append write it over a long enough distance later.
-
-xfs_truncate_page() should flush, zeros out the entire rtextsize range,
-and make sure the entire zeroed range have been flushed to disk before
-updating the inode size.
-
-Fixes: 943bc0882ceb ("iomap: don't increase i_size if it's not a write operation")
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
-Link: https://lore.kernel.org/linux-xfs/0b92a215-9d9b-3788-4504-a520778953c2@huaweicloud.com
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 ---
- fs/xfs/xfs_iomap.c | 35 +++++++++++++++++++++++++++++++----
- fs/xfs/xfs_iops.c  | 10 ----------
- 2 files changed, 31 insertions(+), 14 deletions(-)
+ fs/iomap/buffered-io.c | 13 +++++++++----
+ fs/xfs/xfs_iomap.c     |  3 ++-
+ include/linux/iomap.h  |  4 ++--
+ 3 files changed, 13 insertions(+), 7 deletions(-)
 
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 0926d216a5af..a0a0ac2c659c 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -17,6 +17,7 @@
+ #include <linux/bio.h>
+ #include <linux/sched/signal.h>
+ #include <linux/migrate.h>
++#include <linux/math64.h>
+ #include "trace.h"
+ 
+ #include "../internal.h"
+@@ -1445,11 +1446,15 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+ EXPORT_SYMBOL_GPL(iomap_zero_range);
+ 
+ int
+-iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+-		const struct iomap_ops *ops)
++iomap_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
++		bool *did_zero, const struct iomap_ops *ops)
+ {
+-	unsigned int blocksize = i_blocksize(inode);
+-	unsigned int off = pos & (blocksize - 1);
++	unsigned int off;
++
++	if (is_power_of_2(blocksize))
++		off = pos & (blocksize - 1);
++	else
++		div_u64_rem(pos, blocksize, &off);
+ 
+ 	/* Block boundary? Nothing to do */
+ 	if (!off)
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 4958cc3337bc..fc379450fe74 100644
+index 2857ef1b0272..31ac07bb8425 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -1466,12 +1466,39 @@ xfs_truncate_page(
- 	loff_t			pos,
+@@ -1467,10 +1467,11 @@ xfs_truncate_page(
  	bool			*did_zero)
  {
-+	struct xfs_mount	*mp = ip->i_mount;
  	struct inode		*inode = VFS_I(ip);
- 	unsigned int		blocksize = i_blocksize(inode);
-+	int			error;
-+
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		blocksize = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
-+
-+	/*
-+	 * iomap won't detect a dirty page over an unwritten block (or a
-+	 * cow block over a hole) and subsequently skips zeroing the
-+	 * newly post-EOF portion of the page. Flush the new EOF to
-+	 * convert the block before the pagecache truncate.
-+	 */
-+	error = filemap_write_and_wait_range(inode->i_mapping, pos,
-+					     roundup_64(pos, blocksize));
-+	if (error)
-+		return error;
++	unsigned int		blocksize = i_blocksize(inode);
  
  	if (IS_DAX(inode))
--		return dax_truncate_page(inode, pos, blocksize, did_zero,
--					&xfs_dax_write_iomap_ops);
--	return iomap_truncate_page(inode, pos, blocksize, did_zero,
--				   &xfs_buffered_write_iomap_ops);
-+		error = dax_truncate_page(inode, pos, blocksize, did_zero,
-+					  &xfs_dax_write_iomap_ops);
-+	else
-+		error = iomap_truncate_page(inode, pos, blocksize, did_zero,
-+					    &xfs_buffered_write_iomap_ops);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Write back path won't write dirty blocks post EOF folio,
-+	 * flush the entire zeroed range before updating the inode
-+	 * size.
-+	 */
-+	return filemap_write_and_wait_range(inode->i_mapping, pos,
-+					    roundup_64(pos, blocksize));
+ 		return dax_truncate_page(inode, pos, did_zero,
+ 					&xfs_dax_write_iomap_ops);
+-	return iomap_truncate_page(inode, pos, did_zero,
++	return iomap_truncate_page(inode, pos, blocksize, did_zero,
+ 				   &xfs_buffered_write_iomap_ops);
  }
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 66f8c47642e8..baeeddf4a6bb 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -845,16 +845,6 @@ xfs_setattr_size(
- 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
- 				&did_zeroing);
- 	} else {
--		/*
--		 * iomap won't detect a dirty page over an unwritten block (or a
--		 * cow block over a hole) and subsequently skips zeroing the
--		 * newly post-EOF portion of the page. Flush the new EOF to
--		 * convert the block before the pagecache truncate.
--		 */
--		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
--						     newsize);
--		if (error)
--			return error;
- 		error = xfs_truncate_page(ip, newsize, &did_zeroing);
- 	}
- 
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 6fc1c858013d..d67bf86ec582 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -273,8 +273,8 @@ int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ 		bool *did_zero, const struct iomap_ops *ops);
+-int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+-		const struct iomap_ops *ops);
++int iomap_truncate_page(struct inode *inode, loff_t pos, unsigned int blocksize,
++		bool *did_zero, const struct iomap_ops *ops);
+ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf,
+ 			const struct iomap_ops *ops);
+ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
 -- 
 2.39.2
 
