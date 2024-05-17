@@ -1,66 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0225D3D9E;
-	Fri, 17 May 2024 16:23:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F6AB13DB83;
+	Fri, 17 May 2024 17:17:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715962994; cv=none; b=JbzhVl9QqOrGn5aI3Lp2QNl3nFNFVGz2U9XaYDDV5FovgM5gKKZAXRXy1/SmO9pdi7wgxYf4Ybf2RQI7LH29HkUaLiMIMdWi2pliMj4nIRJ4+c9q0QjMzoq0sWfXOJpcHg7fErYP1NBGlj//ZNX4xSSk6r7glY0UKNAc0GOIo/w=
+	t=1715966242; cv=none; b=Tf42k9D537g8GAee+x2PFjxrItVaJsIPiMzm1AP7wXFNEsuj4YyZIPJVqksRAOeU9Xk8I4IoMZhw/Vs4lGvLJw80lFsF89o0BporOzdGTDe0TuGvpyerr1VjFwjNc5Q/RkTLfmpq1RYLRn15lzYP7Ry7NC6OgV4tPXdp3BBNUIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715962994; c=relaxed/simple;
-	bh=uNwlZVn0k6bBYrUn2NOTbtyZjAe9hAwPUWGNLiaSzKs=;
+	s=arc-20240116; t=1715966242; c=relaxed/simple;
+	bh=kuXbjsBIjFBldlivZBrKJlUteBHLDKXPu1KqkN8bBgU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MlIAnJvXoclx91HzV3KHgMAmzFsWWX7APIuqQKg6D8rdDfiO2lBWN8hNUnta8MkPvLMjbRrCzno9d+ey7uKWaxOu5yWMAIKuIS4yXd50yO6+ba4Jn3R+4XC21rSS0pTUnL9jV4xzW+y5gexohMQGsr+7nf1x4bn2gL2/M+fleQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8J6rGhR; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fPNewZs4Iwdqr+4K7l8CF5hqsZ89w9/4eqgkHMOnVmKQSgkEvS+nKzLynHuQ2jnR/XJFSH5bD0wMqiDc+G9U3LJxdXVqADeMMc7lHhproCkS1rSeHiTJ5IKAZcDRuNsGpttRjFAnjRQGMXvOJAhxpvTLC82BKAHyjD9Lx5dwruM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MuLT3Isq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8J6rGhR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70342C2BD10;
-	Fri, 17 May 2024 16:23:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MuLT3Isq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90CB1C2BD10;
+	Fri, 17 May 2024 17:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715962993;
-	bh=uNwlZVn0k6bBYrUn2NOTbtyZjAe9hAwPUWGNLiaSzKs=;
+	s=k20201202; t=1715966241;
+	bh=kuXbjsBIjFBldlivZBrKJlUteBHLDKXPu1KqkN8bBgU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F8J6rGhR6abMw+H3e0sNsBE3c0HR9drUMq7zelYKMTQHa0vv/MIG2W8+/hD/7XTI+
-	 9VkRoCKMyZzVY3LjQAv7zTKPKrfWjp+PaYpWL+HZIXKwJ9PpfHkWCOm8/AnprKJTiS
-	 x71fH3FEiRuBcJ7Snaffb4mCRWAYWAV32gCoEeO44TUBKDap7ZLHPJJXjD0QMTmCNO
-	 ZUj+MK/eDva4zMj4VegTwZ0y/H/lyuO2Nk/KqN8YnLbubwD8YFqugReL9OgeiAJUxc
-	 u0pTJlCPPo4/7T1+KTMYWfO14b9TwwHb+K7KeD4YmO6RNA3DpP+PsNxwbeXmOHuVhd
-	 +qE7xoo2PLRTA==
-Date: Fri, 17 May 2024 09:23:12 -0700
+	b=MuLT3IsqZvlqm2U4XAeWdUsrV6RSwzdQLnMG7oJItAfDkVcWbNpYi6Br8igDt0UTy
+	 kUh5BndYj0hs36GIGHiPV7leUEMRSTe8ZSQfm2JXRyJnTDkNudWUyMeBymdMzxQwTK
+	 pUb+9VjyrJu+1n1guH6OFmR2aNIm26r1Y+inJTSdgsX5D3fr/XXmBfv6elT2/V8jBI
+	 mJZi0CUrq54DxQVkQiAp9JtS/96aql79122Ciijg1dNNT/7ig3Eew8tz9kJYNBpU/8
+	 6PADXedbAjONc408OGT186spxqusS6jC/OWlyOP+TWUFN3UaUiri+D49NQyUXguy6S
+	 SZmZw2K6oFoug==
+Date: Fri, 17 May 2024 10:17:20 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux trace kernel <linux-trace-kernel@vger.kernel.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-	freedreno@lists.freedesktop.org, virtualization@lists.linux.dev,
-	linux-rdma@vger.kernel.org, linux-pm@vger.kernel.org,
-	iommu@lists.linux.dev, linux-tegra@vger.kernel.org,
-	netdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
-	linux-usb@vger.kernel.org, linux-bcachefs@vger.kernel.org,
-	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-edac@vger.kernel.org, selinux@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-hwmon@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-sound@vger.kernel.org,
-	bpf@vger.kernel.org, linux-wpan@vger.kernel.org,
-	dev@openvswitch.org, linux-s390@vger.kernel.org,
-	tipc-discussion@lists.sourceforge.net,
-	Julia Lawall <Julia.Lawall@inria.fr>
-Subject: Re: [PATCH] tracing/treewide: Remove second parameter of
- __assign_str()
-Message-ID: <20240517162312.GZ360919@frogsfrogsfrogs>
-References: <20240516133454.681ba6a0@rorschach.local.home>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aalbersh@redhat.com, ebiggers@kernel.org, linux-xfs@vger.kernel.org,
+	alexl@redhat.com, walters@verbum.org, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
+Message-ID: <20240517171720.GA360919@frogsfrogsfrogs>
+References: <171444680671.957659.2149857258719599236.stgit@frogsfrogsfrogs>
+ <ZjHmzBRVc3HcyX7-@infradead.org>
+ <ZjHt1pSy4FqGWAB6@infradead.org>
+ <20240507212454.GX360919@frogsfrogsfrogs>
+ <ZjtmVIST_ujh_ld6@infradead.org>
+ <20240508202603.GC360919@frogsfrogsfrogs>
+ <ZjxY_LbTOhv1i24m@infradead.org>
+ <20240509200250.GQ360919@frogsfrogsfrogs>
+ <Zj2r0Ewrn-MqNKwc@infradead.org>
+ <Zj28oXB6leJGem-9@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -69,60 +52,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240516133454.681ba6a0@rorschach.local.home>
+In-Reply-To: <Zj28oXB6leJGem-9@infradead.org>
 
-On Thu, May 16, 2024 at 01:34:54PM -0400, Steven Rostedt wrote:
-> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+On Thu, May 09, 2024 at 11:20:17PM -0700, Christoph Hellwig wrote:
+> FYI, I spent some time looking over the core verity and ext4 code,
+> and I can't find anything enforcing any kind of size limit.  Of course
+> testing that is kinda hard without taking sparseness into account.
 > 
-> [
->    This is a treewide change. I will likely re-create this patch again in
->    the second week of the merge window of v6.10 and submit it then. Hoping
->    to keep the conflicts that it will cause to a minimum.
-> ]
+> Eric, should fsverity or the fs backend check for a max size instead
+> od trying to build the merkle tree and evnetually failing to write it
+> out?
 > 
-> With the rework of how the __string() handles dynamic strings where it
-> saves off the source string in field in the helper structure[1], the
-> assignment of that value to the trace event field is stored in the helper
-> value and does not need to be passed in again.
+> An interesting note I found in the ext4 code is:
 > 
-> This means that with:
-> 
->   __string(field, mystring)
-> 
-> Which use to be assigned with __assign_str(field, mystring), no longer
-> needs the second parameter and it is unused. With this, __assign_str()
-> will now only get a single parameter.
-> 
-> There's over 700 users of __assign_str() and because coccinelle does not
-> handle the TRACE_EVENT() macro I ended up using the following sed script:
-> 
->   git grep -l __assign_str | while read a ; do
->       sed -e 's/\(__assign_str([^,]*[^ ,]\) *,[^;]*/\1)/' $a > /tmp/test-file;
->       mv /tmp/test-file $a;
->   done
-> 
-> I then searched for __assign_str() that did not end with ';' as those
-> were multi line assignments that the sed script above would fail to catch.
-> 
-> Note, the same updates will need to be done for:
-> 
->   __assign_str_len()
->   __assign_rel_str()
->   __assign_rel_str_len()
-> 
-> I tested this with both an allmodconfig and an allyesconfig (build only for both).
-> 
-> [1] https://lore.kernel.org/linux-trace-kernel/20240222211442.634192653@goodmis.org/
-> 
-> Cc: Masami Hiramatsu <mhiramat@kernel.org>
-> Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> Cc: Linus Torvalds <torvalds@linux-foundation.org>
-> Cc: Julia Lawall <Julia.Lawall@inria.fr>
-> Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
+>   Note that the verity metadata *must* be encrypted when the file is,
+>   since it contains hashes of the plaintext data.
 
-/me finds this pretty magical, but such is the way of macros.
-Thanks for being much smarter about them than me. :)
+Refresh my memory of fscrypt -- does it encrypt directory names, xattr
+names, and xattr values too?  Or does it only do that to file data?
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>	# xfs
+> While xfs doesn't currently support fscrypyt it would actually be very
+> useful feature, so we're locking us into encrypting attrs or at least
+> magic attr fork data if we do our own non-standard fsverity storage.
+> I'm getting less and less happy with not just doing the normal post
+> i_size storage.  Yes, it's not pretty (so isn't the whole fsverity idea
+> of shoehorning the hashes into file systems not built for it), but it
+> avoid adding tons of code and beeing very different.
+
+And if we copy the ext4 method of putting the merkle data after eof and
+loading it into the pagecache, how much of the generic fs/verity cleanup
+patches do we really need?
 
 --D
