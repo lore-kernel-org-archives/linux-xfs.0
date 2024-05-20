@@ -1,41 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4040328E7;
-	Mon, 20 May 2024 15:08:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452ED28E7;
+	Mon, 20 May 2024 15:09:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716217704; cv=none; b=P0xnJO20ivxEBKWFXBP3OvLcgvnxmwjegf86IWVRjhVSZrBHEn6JZrpqBQOvOnKjUsaFunGwYrsBw0gnXhXz6Jos1ERC53OI5OR64nTuSIH2rmixem+DHNU1rfPEvNYVXWxqIKc7qRdEGRuVa1gx83/qHnUskvKkeOJgReQdYgs=
+	t=1716217774; cv=none; b=VKVnbR0OqAn9UIbB0i2EsGCEPBy6Rg59mJRBaHGF4QDQerM++hoVyDCQThF3Jg8Gl7i/NZaz2U7PwBqpsmYHRpLxoDNl+uqc+FkkmtLCZOmyLO6UwdYE3uksy+nuRCvrCjGp4XMyBPJrFC3VglAT4S+9XGqlLoinDqnin3w9wps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716217704; c=relaxed/simple;
-	bh=Oi/RYQGscIAWIJG1eFtbKOigRW+SxycxdQRM4QDt/nw=;
+	s=arc-20240116; t=1716217774; c=relaxed/simple;
+	bh=sbs/QZGzVtE7Ea5+agnB85zLzyuqEYrZcYEy55xQ02U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jYi9selkrWrLh+hY8CZjFUR/x0kIsFMtnxijcF1Tnh0cirR63/q3sVxNr/iFueNYD0dzMkVDyp3Bx/J4eMO8f4ModHYpW5AnZVftsgd3/jkNxowSq3t+cVA9Z0E5okvP7lVsf+nVXEVjPlNzPyKHZB759xNnLx3oLFCaUtIMdVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qP17BERw; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=H6W1MktnTbuzXdIfjk0h2maNfSO+q+AFaz91XJ6Tm7cD0xU5vho8Qf1s7emp+e1VSeg1ZPy5Mlca/2fTPIs4PhHWds2QXTdCqb+Hu1G9i2MR7Q3tYQ8RnIg/dupCWkW31xOjNtfilcINckmMhX1J4EoYh5KYRxFJxgdNscfDmLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=iHaetlZ2; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qP17BERw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC3D4C32786;
-	Mon, 20 May 2024 15:08:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716217703;
-	bh=Oi/RYQGscIAWIJG1eFtbKOigRW+SxycxdQRM4QDt/nw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qP17BERwdasNFuOebOeiXdQ+ao4yA6ICyEMCHEoZWX3xoujZjQiho2X1thydTC6+r
-	 K49zgkTAs6y3H0iqBUnjJY7lpklsF7bhYYPpc7cyRNekYfr8G/5Bb4a4C9mpX+WDl4
-	 B0Bv8T8dGWyP7kld47/MKyVDXRj6ppWfkE4flZcWdGbJrAHIbv/wz16PK1fahD/8Pa
-	 HrxeBpN2Y0eLuEYFknht5CFsTuGvZ+DWH3s0m43AKio63Atshr5cO5cvTCplG+8rhA
-	 sZHEPylznKO6vVv0B5iRciSzWgbg7Y2sMD9iZeR+sknLTHSRmxOUIZ0OuEkZA4lCme
-	 GYzaGKmLVPx4A==
-Date: Mon, 20 May 2024 08:08:23 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Xu Yang <xu.yang_2@nxp.com>
-Cc: brauner@kernel.org, willy@infradead.org, hch@lst.de,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	jun.li@nxp.com
-Subject: Re: [PATCH v3] iomap: avoid redundant fault_in_iov_iter_readable()
- judgement when use larger chunks
-Message-ID: <20240520150823.GA25518@frogsfrogsfrogs>
-References: <20240520105525.2176322-1-xu.yang_2@nxp.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iHaetlZ2"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=899gHPr05AKT5RtjCWO3Cr4BISVkOSDY64Egox9s22E=; b=iHaetlZ2xaZNEZrd84PV+FDWll
+	VeWkowkiN7G4oHiys+mEGaiatma4lNDJGU6r0jzo7SKW9pBW+ajCWgdrA4avz1cToBQHWErE5fG59
+	u2MBjRk0B6j5xmJA+BB6wJjKn4tn/VarwP6mm+jI2pd4veQ1hGTYoyPkYbVelJ8/YqxXrsC5t1tsJ
+	9IYMXNag0r889nTQ7IsdQNUKL9vcieLq+RA1QxMKK89h9nHYHTV084e9PXucY2HEidn24FJhSRjyV
+	dbi8YuK3t40yeXhmutpDtD6OipVlHBUE6mmXmC90YC4ZvsLbsbbR2uOWSgIZKDFYXjH6cP+G5x3U/
+	xymRxSIw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1s94do-0000000Entf-3mKf;
+	Mon, 20 May 2024 15:09:32 +0000
+Date: Mon, 20 May 2024 08:09:32 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Guangwu Zhang <guazhang@redhat.com>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [bug report] Internal error isnullstartblock(got.br_startblock)
+ a t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.
+Message-ID: <ZktnrDCSpUYOk5xm@infradead.org>
+References: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,161 +46,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240520105525.2176322-1-xu.yang_2@nxp.com>
+In-Reply-To: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, May 20, 2024 at 06:55:25PM +0800, Xu Yang wrote:
-> Since commit (5d8edfb900d5 "iomap: Copy larger chunks from userspace"),
-> iomap will try to copy in larger chunks than PAGE_SIZE. However, if the
-> mapping doesn't support large folio, only one page of maximum 4KB will
-> be created and 4KB data will be writen to pagecache each time. Then,
-> next 4KB will be handled in next iteration. This will cause potential
-> write performance problem.
-> 
-> If chunk is 2MB, total 512 pages need to be handled finally. During this
-> period, fault_in_iov_iter_readable() is called to check iov_iter readable
-> validity. Since only 4KB will be handled each time, below address space
-> will be checked over and over again:
-> 
-> start         	end
-> -
-> buf,    	buf+2MB
-> buf+4KB, 	buf+2MB
-> buf+8KB, 	buf+2MB
-> ...
-> buf+2044KB 	buf+2MB
-> 
-> Obviously the checking size is wrong since only 4KB will be handled each
-> time. So this will get a correct chunk to let iomap work well in non-large
-> folio case.
-> 
-> With this change, the write speed will be stable. Tested on ARM64 device.
-> 
-> Before:
-> 
->  - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (334 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (278 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (204 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (170 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (150 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (139 MB/s)
-> 
-> After:
-> 
->  - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (339 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (330 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (332 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (333 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (333 MB/s)
->  - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (333 MB/s)
-> 
-> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Xu Yang <xu.yang_2@nxp.com>
-> 
-> ---
-> Changes in v2:
->  - fix address space description in message
-> Changes in v3:
->  - adjust 'chunk' and add mapping_max_folio_size() in header file
->    as suggested by Matthew
->  - add write performance results in commit message
-> ---
->  fs/iomap/buffered-io.c  |  2 +-
->  include/linux/pagemap.h | 37 ++++++++++++++++++++++++-------------
->  2 files changed, 25 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 41c8f0c68ef5..c5802a459334 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -898,11 +898,11 @@ static bool iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
->  static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  {
->  	loff_t length = iomap_length(iter);
-> -	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
->  	loff_t pos = iter->pos;
->  	ssize_t total_written = 0;
->  	long status = 0;
->  	struct address_space *mapping = iter->inode->i_mapping;
-> +	size_t chunk = mapping_max_folio_size(mapping);
->  	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
->  
->  	do {
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index c5e33e2ca48a..6be8e22360f1 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -346,6 +346,19 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
->  	m->gfp_mask = mask;
->  }
->  
-> +/*
-> + * There are some parts of the kernel which assume that PMD entries
-> + * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
-> + * limit the maximum allocation order to PMD size.  I'm not aware of any
-> + * assumptions about maximum order if THP are disabled, but 8 seems like
-> + * a good order (that's 1MB if you're using 4kB pages)
-> + */
-> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
-> +#else
-> +#define MAX_PAGECACHE_ORDER	8
-> +#endif
-> +
->  /**
->   * mapping_set_large_folios() - Indicate the file supports large folios.
->   * @mapping: The file.
-> @@ -372,6 +385,17 @@ static inline bool mapping_large_folio_support(struct address_space *mapping)
->  		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
->  }
->  
-> +/*
-> + * Get max folio size in case of supporting large folio, otherwise return
-> + * PAGE_SIZE.
+On Mon, May 20, 2024 at 07:48:13PM +0800, Guangwu Zhang wrote:
+> Hi,
+> I get a xfs error when run xfstests  generic/461 testing with
+> linux-block for-next branch.
+> looks it easy to reproduce with s390x arch.
 
-Minor quibble -- the comment doesn't need to restate what the function
-does because we can see that in the code below.
+Just to clarify, you see this with the block for-next branch, but not
+with Linux 6.9 or current Linus tree?
 
-/* Return the maximum folio size for this pagecache mapping, in bytes. */
-
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-
-> + */
-> +static inline size_t mapping_max_folio_size(struct address_space *mapping)
-> +{
-> +	if (mapping_large_folio_support(mapping))
-> +		return PAGE_SIZE << MAX_PAGECACHE_ORDER;
-> +	return PAGE_SIZE;
-> +}
-> +
->  static inline int filemap_nr_thps(struct address_space *mapping)
->  {
->  #ifdef CONFIG_READ_ONLY_THP_FOR_FS
-> @@ -530,19 +554,6 @@ static inline void *detach_page_private(struct page *page)
->  	return folio_detach_private(page_folio(page));
->  }
->  
-> -/*
-> - * There are some parts of the kernel which assume that PMD entries
-> - * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
-> - * limit the maximum allocation order to PMD size.  I'm not aware of any
-> - * assumptions about maximum order if THP are disabled, but 8 seems like
-> - * a good order (that's 1MB if you're using 4kB pages)
-> - */
-> -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
-> -#else
-> -#define MAX_PAGECACHE_ORDER	8
-> -#endif
-> -
->  #ifdef CONFIG_NUMA
->  struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
->  #else
-> -- 
-> 2.34.1
-> 
-> 
