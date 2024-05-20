@@ -1,72 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDEFE7C6C6
-	for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 16:46:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47DBFE552
+	for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 16:46:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716223606; cv=none; b=ZvkzhI2Y4eth1RgE76HClQZLN05EwAJy48RcTumTM7chuxpyeEkz4icZNVrW0cieTCuk0lrsLzn7YY1TwGtKTGhTVeF/283SkDV3aLqH5RlD4sKSPrdZ4WD6125Ntm8jRku6o2sGemDmEPgLVQcu/dmq7Yxh5UvK4OEpCUIn9gI=
+	t=1716223607; cv=none; b=uv5aShAQ4RbF+/a2GFHD6aOSDAqTwlxcmRLjGD9bTUYfoc21N+TIpQnyfSNYlyMQmcNjDT75paPhexlMf0OXa5om+uxgQjnXagUyOozNg5ITOxddEOOwOUmlF6PEI6VK3ijgTZMWLW4y0NaUtADlOdHvC4xAPkRc4nvqCCG3rn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716223606; c=relaxed/simple;
-	bh=ugfIve/MBoJ8lNXTtpo8ReL0nr2qmk5vFiPzMIYkrC8=;
+	s=arc-20240116; t=1716223607; c=relaxed/simple;
+	bh=NJljvBBncSXGFgCAhktMljdBsexiyMgQ3kAEmS7MYjs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BcnzLs3GJgDAwTt/Tc7z6cn/sl0fvSOV8bmTulqjRyuv4c9vE3W4JAElUc4bqBeq+J2vO8S53gtuFMMKJgduqicmkz6/Wv+AadEgMLWsa9NLvg7fZRFhuGuWsN0DF5zSyMUhrCI/5xPAZo5UN0TItxOH68pZK+QuPj7MzAFPi8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JRDvbVFm; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=jQw7NGh1VNLGRcVGFAmUKdFlTlgUdbc7G9kw7Yj4CteTzr+R7X2gL7EBEiSk05i6HcZR7ezeK0M7RrF46Q1AeNYrOtVg6VX65T9GFeAZToeaNeTiy9D1KIrAuDaRdTvfGGRQZV61Tr+bxxsgIh6f5vfDPaLQeAMZ6IXtntBvnO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QhuI+wUR; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JRDvbVFm"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QhuI+wUR"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716223603;
+	s=mimecast20190719; t=1716223605;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=30mOQiH4aadYmFiJ3Era8Nm22mVGbDn077f7QuA+8e4=;
-	b=JRDvbVFmZDKUIviWuiPH2nzsf3WmhHitnFp/sZNDaBruk9MP+5R2KDZ8p+cTZ+OSi7FlV8
-	iQCfcA3Fu3IF5ZRsOJspLMoVFvU2jP/iOc6+X/Gwk0gnG8FQoqr54ZO30k+/cjhIrbcRDJ
-	7Yy91STpsnsJcJq6f7cxORVCnWzxAjs=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=mb47u4BUbRbQvL5WkGQg3GmOK00O3SGgwt1kI14z+kY=;
+	b=QhuI+wURKmG4vu/X//o8LRpSQuBN0aV5TDg+JKp1c4egwax5Okwa9k0ebacWklMwwBz65m
+	1UeutzwWpgM8G6/2vQle1bVbOXfOsxSXd3upK+s6Nwm/hfhBC3h+PtAcCfxfCEBtGrMJoM
+	mvFr/ZzdQVBwUTlGczVKNDHdMV7YHc0=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-146-Pp012shrNFiRD9OrDXOojg-1; Mon, 20 May 2024 12:46:42 -0400
-X-MC-Unique: Pp012shrNFiRD9OrDXOojg-1
-Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-5732229087bso4172237a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 09:46:42 -0700 (PDT)
+ us-mta-215-rTwhFBaiNiqt3JQL2V7mVw-1; Mon, 20 May 2024 12:46:43 -0400
+X-MC-Unique: rTwhFBaiNiqt3JQL2V7mVw-1
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-a5a05c4e0efso718457666b.1
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 09:46:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716223601; x=1716828401;
+        d=1e100.net; s=20230601; t=1716223602; x=1716828402;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=30mOQiH4aadYmFiJ3Era8Nm22mVGbDn077f7QuA+8e4=;
-        b=TynHWAYWgNc+63KHFO5yov3BVdMBZxokx7k1/J5Ps/AGJ8I0tBeqJkYuJcHCWcRWrG
-         o/a9Tm8Udj6nPVYmoSanM+hAnNiZ4ItoRQxOkj52hIoiS07kiYeMTqdQBcNES1/RXc5g
-         5hu+ah04HB4iTD6SqHckgjEy0osO9AXqSnwdlfzpoIN3FEAEYr5nuCEDcU6KV94rpSv0
-         nJtBGawVKkH4s3FESVDRmxfP/l7KzIoZ2cAC8AcoGGpo71bnREf6n+eBjUGYLi6DTefI
-         Fu+Dd6xmMeGHhrOhwtBYckJ3aIAOkJ4d+qlDMCHhB+nfJkGc6hbUIREVF39T5Q2PXpSG
-         vuqg==
-X-Forwarded-Encrypted: i=1; AJvYcCU3iivkMejxWWpxs0gJRcNBdrdQ791Yk5gipzbdgvoVC3LmAutMHnxFWFRwtZ6sUj8GlUnGafo8+tiPAEjGwLTvi6cclrbe8wnI
-X-Gm-Message-State: AOJu0YwnAGB4flY0DayJzNutH76wCkv8jlriP+65VCXLqcp+Moi2/2c0
-	OyEzJAzu1ru6coXqteUm5Fw1da8JDKKi078PVvkgf9rn/njIRljt+h4UXXAukzqHT9J7bH7hlmR
-	ml12bjaJ9iySH7Z6AlYZgDBM008fnI8c1HPsVdM4yr0PQQONV4OLbqiTn
-X-Received: by 2002:a17:906:528b:b0:a59:cf0a:4e4d with SMTP id a640c23a62f3a-a5a2d55a730mr1978883566b.12.1716223600817;
-        Mon, 20 May 2024 09:46:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFzQqgrZX3g47bHdERLya0zMK+/mL6vVJ64It+2IF6hpe95OUqWP3EskbV2iavRJuetYubLpA==
-X-Received: by 2002:a17:906:528b:b0:a59:cf0a:4e4d with SMTP id a640c23a62f3a-a5a2d55a730mr1978882066b.12.1716223600208;
-        Mon, 20 May 2024 09:46:40 -0700 (PDT)
+        bh=mb47u4BUbRbQvL5WkGQg3GmOK00O3SGgwt1kI14z+kY=;
+        b=BMC3of3Km90U8+rANIndagS/QCMkVK6lvK6bSrcvUnQxa80eo3SpSW0g7bqCDSagW0
+         rHvAaQK6qu2xyHEn1jE3uUtA3/JL36nSfLpmmDuCMBTbfujfsgeJVhVgph0V7bnX7CW4
+         sONsJOMIWhMFwrvghNc6Nlz+YsLhNQ9/L1SV+zHPtIqhewy5U0c8Ni6co53HixpEDjGS
+         aE2/bKhGj1ot+O2g9CxKmLbNvisxLyddz/JGhlfbadsSlsW59IbjYFXv+ff+v44x7466
+         lCEGjTVmLhx7FZCiID+PC4VcFd9fYdLVwi5PSHQu31nZbjg56LBCsenWQ25qcH/UDTx3
+         8VJg==
+X-Forwarded-Encrypted: i=1; AJvYcCUP0tlZVwsYfIpAJU1NWTcOq8ncBEIASNxP7paF+gFAKZ0vCecc16pYDczFl1bGgPHpB08iPZMkcP+8Q1QqiM3aJwF1BaXXPoLK
+X-Gm-Message-State: AOJu0YyQie9IY89h09pR0yK1dTgPlhDDs+Qix1m3m3pFb6eIoSMraX9t
+	gu9re/iurMsF0eI8bMZt/xYsV/gwz4JkyRfOZ4fKwMfe1r8C3AlwjWfK0tw6I0vdDkItlmvulhG
+	FV7BDranHrgCalJPYi8JcmA4nF9qiSqzJJvdbdHHphM8P3kdE4/S6iIz/
+X-Received: by 2002:a17:906:1797:b0:a5a:8d07:6a00 with SMTP id a640c23a62f3a-a5a8d076e2cmr1097251566b.64.1716223602257;
+        Mon, 20 May 2024 09:46:42 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFXq/eJmuS+/EKU25zG0+NkD2jNJAjk33AZAKqiESOoaaPGOJRW1cqPS3Ogh8tCt2A0TzJAEg==
+X-Received: by 2002:a17:906:1797:b0:a5a:8d07:6a00 with SMTP id a640c23a62f3a-a5a8d076e2cmr1097248866b.64.1716223601635;
+        Mon, 20 May 2024 09:46:41 -0700 (PDT)
 Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5df00490cfsm318872066b.159.2024.05.20.09.46.39
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5df00490cfsm318872066b.159.2024.05.20.09.46.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 May 2024 09:46:39 -0700 (PDT)
+        Mon, 20 May 2024 09:46:41 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: linux-fsdevel@vgre.kernel.org,
 	linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH v2 1/4] xfs: allow renames of project-less inodes
-Date: Mon, 20 May 2024 18:46:20 +0200
-Message-ID: <20240520164624.665269-3-aalbersh@redhat.com>
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>
+Subject: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and FS_IOC_FSGETXATTRAT
+Date: Mon, 20 May 2024 18:46:21 +0200
+Message-ID: <20240520164624.665269-4-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240520164624.665269-2-aalbersh@redhat.com>
 References: <20240520164624.665269-2-aalbersh@redhat.com>
@@ -78,115 +79,185 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Identical problem as worked around in commit e23d7e82b707 ("xfs:
-allow cross-linking special files without project quota") exists
-with renames. Renaming special file without project ID is not
-possible inside PROJINHERIT directory.
+XFS has project quotas which could be attached to a directory. All
+new inodes in these directories inherit project ID set on parent
+directory.
 
-Special files inodes can not have project ID set from userspace and
-are skipped during initial project setup. Those inodes are left
-project-less in the project directory. New inodes created after
-project initialization do have an ID. Creating hard links or
-renaming those project-less inodes then fails on different ID check.
+The project is created from userspace by opening and calling
+FS_IOC_FSSETXATTR on each inode. This is not possible for special
+files such as FIFO, SOCK, BLK etc. as opening them returns a special
+inode from VFS. Therefore, some inodes are left with empty project
+ID. Those inodes then are not shown in the quota accounting but
+still exist in the directory.
 
-Add workaround to allow renames of special files without project ID.
-Also, move it into the helper.
+This patch adds two new ioctls which allows userspace, such as
+xfs_quota, to set project ID on special files by using parent
+directory to open FS inode. This will let xfs_quota set ID on all
+inodes and also reset it when project is removed. Also, as
+vfs_fileattr_set() is now will called on special files too, let's
+forbid any other attributes except projid and nextents (symlink can
+have one).
 
 Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 64 ++++++++++++++++++++++++----------------------
- 1 file changed, 34 insertions(+), 30 deletions(-)
+ fs/ioctl.c              | 93 +++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h | 11 +++++
+ 2 files changed, 104 insertions(+)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 58fb7a5062e1..63f8814a3d16 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1297,6 +1297,35 @@ xfs_create_tmpfile(
- 	return error;
- }
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 1d5abfdf0f22..3e3aacb6ea6e 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -22,6 +22,7 @@
+ #include <linux/mount.h>
+ #include <linux/fscrypt.h>
+ #include <linux/fileattr.h>
++#include <linux/namei.h>
  
-+static inline int
-+xfs_projid_differ(
-+	struct xfs_inode	*tdp,
-+	struct xfs_inode	*sip)
-+{
+ #include "internal.h"
+ 
+@@ -647,6 +648,19 @@ static int fileattr_set_prepare(struct inode *inode,
+ 	if (fa->fsx_cowextsize == 0)
+ 		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
+ 
 +	/*
-+	 * If we are using project inheritance, we only allow hard link/renames
-+	 * creation in our tree when the project IDs are the same; else
-+	 * the tree quota mechanism could be circumvented.
++	 * The only use case for special files is to set project ID, forbid any
++	 * other attributes
 +	 */
-+	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
-+		     tdp->i_projid != sip->i_projid)) {
-+		/*
-+		 * Project quota setup skips special files which can
-+		 * leave inodes in a PROJINHERIT directory without a
-+		 * project ID set. We need to allow links to be made
-+		 * to these "project-less" inodes because userspace
-+		 * expects them to succeed after project ID setup,
-+		 * but everything else should be rejected.
-+		 */
-+		if (!special_file(VFS_I(sip)->i_mode) ||
-+		    sip->i_projid != 0) {
-+			return -EXDEV;
-+		}
++	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
++		if (fa->fsx_xflags & ~FS_XFLAG_PROJINHERIT)
++			return -EINVAL;
++		if (!S_ISLNK(inode->i_mode) && fa->fsx_nextents)
++			return -EINVAL;
++		if (fa->fsx_extsize || fa->fsx_cowextsize)
++			return -EINVAL;
 +	}
 +
-+	return 0;
+ 	return 0;
+ }
+ 
+@@ -763,6 +777,79 @@ static int ioctl_fssetxattr(struct file *file, void __user *argp)
+ 	return err;
+ }
+ 
++static int ioctl_fsgetxattrat(struct file *file, void __user *argp)
++{
++	struct path filepath;
++	struct fsxattrat fsxat;
++	struct fileattr fa;
++	int error;
++
++	if (!S_ISDIR(file_inode(file)->i_mode))
++		return -EBADF;
++
++	if (copy_from_user(&fsxat, argp, sizeof(struct fsxattrat)))
++		return -EFAULT;
++
++	error = user_path_at(fsxat.dfd, fsxat.path, 0, &filepath);
++	if (error)
++		return error;
++
++	error = vfs_fileattr_get(filepath.dentry, &fa);
++	if (error) {
++		path_put(&filepath);
++		return error;
++	}
++
++	fsxat.fsx.fsx_xflags = fa.fsx_xflags;
++	fsxat.fsx.fsx_extsize = fa.fsx_extsize;
++	fsxat.fsx.fsx_nextents = fa.fsx_nextents;
++	fsxat.fsx.fsx_projid = fa.fsx_projid;
++	fsxat.fsx.fsx_cowextsize = fa.fsx_cowextsize;
++
++	if (copy_to_user(argp, &fsxat, sizeof(struct fsxattrat)))
++		error = -EFAULT;
++
++	path_put(&filepath);
++	return error;
 +}
 +
- int
- xfs_link(
- 	struct xfs_inode	*tdp,
-@@ -1346,27 +1375,9 @@ xfs_link(
- 		goto error_return;
- 	}
- 
--	/*
--	 * If we are using project inheritance, we only allow hard link
--	 * creation in our tree when the project IDs are the same; else
--	 * the tree quota mechanism could be circumvented.
--	 */
--	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
--		     tdp->i_projid != sip->i_projid)) {
--		/*
--		 * Project quota setup skips special files which can
--		 * leave inodes in a PROJINHERIT directory without a
--		 * project ID set. We need to allow links to be made
--		 * to these "project-less" inodes because userspace
--		 * expects them to succeed after project ID setup,
--		 * but everything else should be rejected.
--		 */
--		if (!special_file(VFS_I(sip)->i_mode) ||
--		    sip->i_projid != 0) {
--			error = -EXDEV;
--			goto error_return;
--		}
--	}
-+	error = xfs_projid_differ(tdp, sip);
++static int ioctl_fssetxattrat(struct file *file, void __user *argp)
++{
++	struct mnt_idmap *idmap = file_mnt_idmap(file);
++	struct fsxattrat fsxat;
++	struct path filepath;
++	struct fileattr fa;
++	int error;
++
++	if (!S_ISDIR(file_inode(file)->i_mode))
++		return -EBADF;
++
++	if (copy_from_user(&fsxat, argp, sizeof(struct fsxattrat)))
++		return -EFAULT;
++
++	error = user_path_at(fsxat.dfd, fsxat.path, 0, &filepath);
 +	if (error)
-+		goto error_return;
++		return error;
++
++	error = mnt_want_write(filepath.mnt);
++	if (error) {
++		path_put(&filepath);
++		return error;
++	}
++
++	fileattr_fill_xflags(&fa, fsxat.fsx.fsx_xflags);
++	fa.fsx_extsize = fsxat.fsx.fsx_extsize;
++	fa.fsx_nextents = fsxat.fsx.fsx_nextents;
++	fa.fsx_projid = fsxat.fsx.fsx_projid;
++	fa.fsx_cowextsize = fsxat.fsx.fsx_cowextsize;
++	fa.fsx_valid = true;
++
++	error = vfs_fileattr_set(idmap, filepath.dentry, &fa);
++	mnt_drop_write(filepath.mnt);
++	path_put(&filepath);
++	return error;
++}
++
+ static int ioctl_getfsuuid(struct file *file, void __user *argp)
+ {
+ 	struct super_block *sb = file_inode(file)->i_sb;
+@@ -872,6 +959,12 @@ static int do_vfs_ioctl(struct file *filp, unsigned int fd,
+ 	case FS_IOC_FSSETXATTR:
+ 		return ioctl_fssetxattr(filp, argp);
  
- 	if (!resblks) {
- 		error = xfs_dir_canenter(tp, tdp, target_name);
-@@ -3268,16 +3279,9 @@ xfs_rename(
- 	if (wip)
- 		xfs_trans_ijoin(tp, wip, 0);
++	case FS_IOC_FSGETXATTRAT:
++		return ioctl_fsgetxattrat(filp, argp);
++
++	case FS_IOC_FSSETXATTRAT:
++		return ioctl_fssetxattrat(filp, argp);
++
+ 	case FS_IOC_GETFSUUID:
+ 		return ioctl_getfsuuid(filp, argp);
  
--	/*
--	 * If we are using project inheritance, we only allow renames
--	 * into our tree when the project IDs are the same; else the
--	 * tree quota mechanism would be circumvented.
--	 */
--	if (unlikely((target_dp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
--		     target_dp->i_projid != src_ip->i_projid)) {
--		error = -EXDEV;
-+	error = xfs_projid_differ(target_dp, src_ip);
-+	if (error)
- 		goto out_trans_cancel;
--	}
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 45e4e64fd664..f8cd8d7bf35d 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -139,6 +139,15 @@ struct fsxattr {
+ 	unsigned char	fsx_pad[8];
+ };
  
- 	/* RENAME_EXCHANGE is unique from here on. */
- 	if (flags & RENAME_EXCHANGE) {
++/*
++ * Structure passed to FS_IOC_FSGETXATTRAT/FS_IOC_FSSETXATTRAT
++ */
++struct fsxattrat {
++	struct fsxattr	fsx;		/* XATTR to get/set */
++	__u32		dfd;		/* parent dir */
++	const char	__user *path;
++};
++
+ /*
+  * Flags for the fsx_xflags field
+  */
+@@ -231,6 +240,8 @@ struct fsxattr {
+ #define FS_IOC32_SETVERSION		_IOW('v', 2, int)
+ #define FS_IOC_FSGETXATTR		_IOR('X', 31, struct fsxattr)
+ #define FS_IOC_FSSETXATTR		_IOW('X', 32, struct fsxattr)
++#define FS_IOC_FSGETXATTRAT		_IOR('X', 33, struct fsxattrat)
++#define FS_IOC_FSSETXATTRAT		_IOW('X', 34, struct fsxattrat)
+ #define FS_IOC_GETFSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
+ #define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
+ /* Returns the external filesystem UUID, the same one blkid returns */
 -- 
 2.42.0
 
