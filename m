@@ -1,95 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9F728E7;
-	Mon, 20 May 2024 16:03:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6C1E552
+	for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 16:46:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716220981; cv=none; b=aDte7AGmhinfqdbQyAWiugP56vup+OWlyAlksXFrqTFJ2E0Q1G6+LY7Be0u4HFYY25yaUG5OyS0jezcdHPu2pbddT7c8DT0KdWhdNw0QttxZdiymOVt/KbW+0bSI7tEir4ALkABedPV2qDiiqkf9AbDMbUh6HuF6rjgRX6Cw1dE=
+	t=1716223604; cv=none; b=hkec72jRXWl8S2dj/i5R0axK/AFTi9khd9/nTPA9gxgaEiI1wlhXCMEiaTCjVrKMJgd4Ji9Foq6l0DsdDcVusYI9UwdRuCDsdE9gdYk04I3GeOoA/4Lva0dQWPFcDY8zRSasLAChW+nDGPARMnDal95GDN4/LpNsl8K1QtO4WNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716220981; c=relaxed/simple;
-	bh=x4pQtNrsoD9GLUzcxphICTbPaHI4aq7I5znYggVn9t0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Up0p/PSpWfCJ/3cV4NHJtfHvWes0KysWqFMUrSF5tiAIkMy6g87IPk9sSWSctUU0TJxeXpsuNf57UevlxP29pUCog/wYKxBjjCJBmPfOTDxVeTJqzqvRPKL1E8mSw/UfuLirUYEBGc+ur4XH8HVr2HZ3dzCVJNBOqC27jbRwn2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ILY1sWOu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716223604; c=relaxed/simple;
+	bh=kPk3zRp6sal4sEPBw/DjMZNpEA5ZgGLpyEIBZKHS/js=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rzq+j633s0Ht/UT2xbvNFgtpSpLicmyYYN066NriojkfdqFke8V26m8PeO351AHRh5VazYXrZVtup0HLmJ2rtU2e9V4TWRPMxCotrDVkypuDGJJK+2ghnv3HhWU40aNHzNZzG5+9aIc3wMW2mzoezJ4OIkXVlLbUqTL420c+S8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aGg1zaOU; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ILY1sWOu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5104EC2BD10;
-	Mon, 20 May 2024 16:03:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716220981;
-	bh=x4pQtNrsoD9GLUzcxphICTbPaHI4aq7I5znYggVn9t0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ILY1sWOun2yxTNj78UuuizIJB4E9D2O56aztH0eyLV0cZZsk/o2agJ81GZTKahxmK
-	 RU3Uq/zpIMI0HS/HDdZJxjMISDwvSE9gZrH/pXPrvu9Dt6OCNqHMf3/FOhS84hcNuC
-	 AAsUzOfURNTkr5GBRE9m/KGoezvflT3tGskzIGwAAq3gLFUgFM4PgkrUdrONTaU74d
-	 kRNQE4ZyGC/n+OMPG2oMSp/gPNM81tdn9h76Ar2XodE8nhpTaKWrNALRVAci3VL56V
-	 Tqh5x4UcQs8QvnQDUlVN2yzoh4M8VVE5y2xRxX7I8mq46ADgDtTvsGRAv+M8GAnj4D
-	 mzYrfO3pi8quA==
-Date: Mon, 20 May 2024 09:02:59 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@redhat.com, ebiggers@kernel.org, linux-xfs@vger.kernel.org,
-	alexl@redhat.com, walters@verbum.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
-Message-ID: <20240520160259.GA25546@frogsfrogsfrogs>
-References: <ZjHt1pSy4FqGWAB6@infradead.org>
- <20240507212454.GX360919@frogsfrogsfrogs>
- <ZjtmVIST_ujh_ld6@infradead.org>
- <20240508202603.GC360919@frogsfrogsfrogs>
- <ZjxY_LbTOhv1i24m@infradead.org>
- <20240509200250.GQ360919@frogsfrogsfrogs>
- <Zj2r0Ewrn-MqNKwc@infradead.org>
- <Zj28oXB6leJGem-9@infradead.org>
- <20240517171720.GA360919@frogsfrogsfrogs>
- <ZktEn5KOZTiy42c8@infradead.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aGg1zaOU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1716223602;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=xxY/q10BWQglrGn++ucuAjMzDaHamN2CmPng0TjhAfw=;
+	b=aGg1zaOUNHqVnAvgmFlQqQuXGvzWf1sn8fDMtHFcEWwsmUx4E7RzhyZKoMLkpQd9AjBQfr
+	tqxtWo6i9aOWXVFNbtDXu3lOt77S5xLtkHD9+7FKzGXHKhql827yIH8PObB2Ks7Dlw6xCK
+	wzN8dcB4Xsa3uFDc9D7XMlFZnfOtYvM=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-367--ALDDZeoPRG2aglVVzyk5g-1; Mon, 20 May 2024 12:46:40 -0400
+X-MC-Unique: -ALDDZeoPRG2aglVVzyk5g-1
+Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-a5a812308daso500329266b.0
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 09:46:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1716223599; x=1716828399;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xxY/q10BWQglrGn++ucuAjMzDaHamN2CmPng0TjhAfw=;
+        b=Gwuq7VmdTQTsm+7fkuGsI/jB0TK+/3zDtc+cXGLGj50lWVdpNoB+mHV7bAxn+fPGoF
+         bSS/DwG+ULcA68x9DUCtae2ItYMAU6ic9n3UQgcDiKAQ6sddCWeoxsepcN3deKUjL3pA
+         0Z52yj2swuD5RLShgmEdVL+cM2d+oMBLJygg4yzXrSzXUuosLKWIOOAyf85sxsQ8Zzgz
+         ajkpm5xIng0zs2TDexYH5nIwTz72mvgaQJPrsfSIf+gU5aKNJmEZCJ4edqv4A7DHCW+s
+         X8Qil2ZNgoaQscHe6heyrWxRlAlZoomP7Dv2ATCqP5vPvYWGd2Sbg5QZlv5OzR9Ecsh6
+         ExXQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWQaD9yvyd56icQHGKkmXBMTJI/hsKCG3rpI6PyHx1Y5llaM0fqF5La+lG0Ln65K1gy/c+zX+juacnNl1VJqcHNU7mqp/TAOXjR
+X-Gm-Message-State: AOJu0YwAfeJXOe6tYoBlP6aJHOmFG6858Nxyo3TZwlEdhklbn4XNXFt8
+	t4Qexy5Rj7diKa8Xva6RAx+W/APBa0QVxEwvsr7aFBqSf9/JnP92VNLzw6BGjpA+fEauU4zH1vY
+	56Eyskq5HDBGNQSXS2M1xSqmPjyhdjvylPUKa/9E7Kq/g/bQmh8thzt4D
+X-Received: by 2002:a17:906:7011:b0:a59:a895:3ee with SMTP id a640c23a62f3a-a5a2d5cca0fmr1940570266b.45.1716223599545;
+        Mon, 20 May 2024 09:46:39 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGGcdoQ6KxQjPGSwGIqMLmk1eL+vZgVHqQUGdGQU5uOw5WgNHluG43J6afMnHd/NKtYDsXFyA==
+X-Received: by 2002:a17:906:7011:b0:a59:a895:3ee with SMTP id a640c23a62f3a-a5a2d5cca0fmr1940567966b.45.1716223598889;
+        Mon, 20 May 2024 09:46:38 -0700 (PDT)
+Received: from thinky.redhat.com ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5df00490cfsm318872066b.159.2024.05.20.09.46.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 May 2024 09:46:38 -0700 (PDT)
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-fsdevel@vgre.kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v2 0/4] Introduce FS_IOC_FSSETXATTRAT/FS_IOC_FSGETXATTRAT ioctls
+Date: Mon, 20 May 2024 18:46:19 +0200
+Message-ID: <20240520164624.665269-2-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZktEn5KOZTiy42c8@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, May 20, 2024 at 05:39:59AM -0700, Christoph Hellwig wrote:
-> On Fri, May 17, 2024 at 10:17:20AM -0700, Darrick J. Wong wrote:
-> > >   Note that the verity metadata *must* be encrypted when the file is,
-> > >   since it contains hashes of the plaintext data.
-> > 
-> > Refresh my memory of fscrypt -- does it encrypt directory names, xattr
-> > names, and xattr values too?  Or does it only do that to file data?
-> 
-> It does encrypt the file names in the directories, but nothing in
-> xattrs as far as I can tell.
+Hi all,
 
-Do we want that for user.* attrs?  That seems like quite an omission.
+This patchset adds new ioctl for setting/getting inode extended
+attributes on fs inodes, useful for special files which return VFS
+inode on open() and therefore FS_IOC_FSSETXATTR can not be used.
+This roots from xfs_quota not being able to set project IDs on
+special files [1].
 
-> > And if we copy the ext4 method of putting the merkle data after eof and
-> > loading it into the pagecache, how much of the generic fs/verity cleanup
-> > patches do we really need?
-> 
-> We shouldn't need anything.  A bunch of cleanup
+[1]: https://lore.kernel.org/linux-xfs/20240314170700.352845-3-aalbersh@redhat.com/
 
-Should we do the read/drop_merkle_tree_block cleanup anyway?
+Andrey Albershteyn (4):
+  xfs: allow renames of project-less inodes
+  fs: add FS_IOC_FSSETXATTRAT and FS_IOC_FSGETXATTRAT
+  xfs: allow setting xattrs on special files
+  xfs: add fileattr_set/get for symlinks
 
-One of the advantages of xfs caching merkle tree blocks ourselves
-is that we neither extend the usage of PageChecked when merkle blocksize
-== pagesize nor become subject to the 1-million merkle block limit when
-merkle blocksize < pagesize.  There's a tripping hazard if you mount a 4k
-merkle block filesystem on a computer with 64k pages -- now you can't
-open 6T verity files.
+ fs/ioctl.c              | 93 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.c      | 64 +++++++++++++++-------------
+ fs/xfs/xfs_ioctl.c      |  6 ---
+ fs/xfs/xfs_iops.c       |  2 +
+ include/uapi/linux/fs.h | 11 +++++
+ 5 files changed, 140 insertions(+), 36 deletions(-)
 
-That said, it also sounds dumb to maintain a separate index for
-pagecache pages to track a single bit.  Maybe we should port verity to
-use xbitmap64 from xfs instead of single static buffer?
+-- 
+2.42.0
 
->                                                 and the support for not
-> generating a hash for holes might still be nice to have, though.
-
-Yeah, though I think that's only usable for xfs if merkle blocksize ==
-fs blocksize, since xfs doesn't store sub-fsblock unwritten state.
-
---D
