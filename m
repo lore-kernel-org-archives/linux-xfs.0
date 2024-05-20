@@ -1,53 +1,41 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1934156B95;
-	Mon, 20 May 2024 12:40:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4040328E7;
+	Mon, 20 May 2024 15:08:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716208809; cv=none; b=tMw26AzFsKhC+r6uVwtgRfWKnSJ2ocrCHhxUGbfdv6sGBUjEaQW2XtXquQCCVlGs6u4IYq8zaSz2rJqiiFaeQEY0UshKhtXBqFZ0YFd9XhgeB1fwTfR2VI4a+nOURQDtOiqMsAtEo2MNSMMqQEHemWSbo+fEI0EpFaWwGnOFta4=
+	t=1716217704; cv=none; b=P0xnJO20ivxEBKWFXBP3OvLcgvnxmwjegf86IWVRjhVSZrBHEn6JZrpqBQOvOnKjUsaFunGwYrsBw0gnXhXz6Jos1ERC53OI5OR64nTuSIH2rmixem+DHNU1rfPEvNYVXWxqIKc7qRdEGRuVa1gx83/qHnUskvKkeOJgReQdYgs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716208809; c=relaxed/simple;
-	bh=UHuJp186W8hPuQ0ApjYWHKIEpdT5Jpa7PNQ4ZgrHTZA=;
+	s=arc-20240116; t=1716217704; c=relaxed/simple;
+	bh=Oi/RYQGscIAWIJG1eFtbKOigRW+SxycxdQRM4QDt/nw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=itDBK/c4AxnIbjykyAxKRCrGkl8AeD+mKnvgA4Ziys+aOeKnYn67ZQrl7thdxAHznksBHKhtlveSZLj0od/eWxNZGSU+c24cNdblPJ1Oh0nTDIRvhaN4raS4oGth93jlQk85NdPHaMp7ESHYa+M8s7toTPlPg+mXRqD2nu6tLLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=29ZpxJSn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=jYi9selkrWrLh+hY8CZjFUR/x0kIsFMtnxijcF1Tnh0cirR63/q3sVxNr/iFueNYD0dzMkVDyp3Bx/J4eMO8f4ModHYpW5AnZVftsgd3/jkNxowSq3t+cVA9Z0E5okvP7lVsf+nVXEVjPlNzPyKHZB759xNnLx3oLFCaUtIMdVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qP17BERw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="29ZpxJSn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=qHlixz9bFfcZf4eMGD0ltC5/B7X3PK4eEszEI6XMsCE=; b=29ZpxJSn2kOch3TPgW5Pby4OKP
-	IEyDs8e80+nKAbHa8oAKH9HS0roNE+dQV5HgbbcDG9L2RLO/NBP2MLqnxN4tSW/QmFM/oO/Ntl9Pr
-	i6hxglgpGYBEMfTVHhzic1zowMPaz/Srbx121DmSk75BhpqeSSim7Qvw7jKANk8YdxUEW2aFOSVHx
-	wsKkYBKoe1b/GR1LgBWh8oaqgDJdxRk3s/9Jvxo19FbNkqqrMlpf1zSnM0G818LcRKBSccn+Uo82z
-	G5s+7Sfb/cJReyQuxN0WAEmxK0IM09yH3a7IR8i9WuZ8awKr68t/KxXRdGLKlvHdQFGQonEqxvBWS
-	W/Zx3QOA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1s92J5-0000000ETTm-3J1x;
-	Mon, 20 May 2024 12:39:59 +0000
-Date: Mon, 20 May 2024 05:39:59 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@redhat.com,
-	ebiggers@kernel.org, linux-xfs@vger.kernel.org, alexl@redhat.com,
-	walters@verbum.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 18/26] xfs: use merkle tree offset as attr hash
-Message-ID: <ZktEn5KOZTiy42c8@infradead.org>
-References: <ZjHmzBRVc3HcyX7-@infradead.org>
- <ZjHt1pSy4FqGWAB6@infradead.org>
- <20240507212454.GX360919@frogsfrogsfrogs>
- <ZjtmVIST_ujh_ld6@infradead.org>
- <20240508202603.GC360919@frogsfrogsfrogs>
- <ZjxY_LbTOhv1i24m@infradead.org>
- <20240509200250.GQ360919@frogsfrogsfrogs>
- <Zj2r0Ewrn-MqNKwc@infradead.org>
- <Zj28oXB6leJGem-9@infradead.org>
- <20240517171720.GA360919@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qP17BERw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC3D4C32786;
+	Mon, 20 May 2024 15:08:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1716217703;
+	bh=Oi/RYQGscIAWIJG1eFtbKOigRW+SxycxdQRM4QDt/nw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qP17BERwdasNFuOebOeiXdQ+ao4yA6ICyEMCHEoZWX3xoujZjQiho2X1thydTC6+r
+	 K49zgkTAs6y3H0iqBUnjJY7lpklsF7bhYYPpc7cyRNekYfr8G/5Bb4a4C9mpX+WDl4
+	 B0Bv8T8dGWyP7kld47/MKyVDXRj6ppWfkE4flZcWdGbJrAHIbv/wz16PK1fahD/8Pa
+	 HrxeBpN2Y0eLuEYFknht5CFsTuGvZ+DWH3s0m43AKio63Atshr5cO5cvTCplG+8rhA
+	 sZHEPylznKO6vVv0B5iRciSzWgbg7Y2sMD9iZeR+sknLTHSRmxOUIZ0OuEkZA4lCme
+	 GYzaGKmLVPx4A==
+Date: Mon, 20 May 2024 08:08:23 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Xu Yang <xu.yang_2@nxp.com>
+Cc: brauner@kernel.org, willy@infradead.org, hch@lst.de,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	jun.li@nxp.com
+Subject: Re: [PATCH v3] iomap: avoid redundant fault_in_iov_iter_readable()
+ judgement when use larger chunks
+Message-ID: <20240520150823.GA25518@frogsfrogsfrogs>
+References: <20240520105525.2176322-1-xu.yang_2@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,23 +44,161 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240517171720.GA360919@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20240520105525.2176322-1-xu.yang_2@nxp.com>
 
-On Fri, May 17, 2024 at 10:17:20AM -0700, Darrick J. Wong wrote:
-> >   Note that the verity metadata *must* be encrypted when the file is,
-> >   since it contains hashes of the plaintext data.
+On Mon, May 20, 2024 at 06:55:25PM +0800, Xu Yang wrote:
+> Since commit (5d8edfb900d5 "iomap: Copy larger chunks from userspace"),
+> iomap will try to copy in larger chunks than PAGE_SIZE. However, if the
+> mapping doesn't support large folio, only one page of maximum 4KB will
+> be created and 4KB data will be writen to pagecache each time. Then,
+> next 4KB will be handled in next iteration. This will cause potential
+> write performance problem.
 > 
-> Refresh my memory of fscrypt -- does it encrypt directory names, xattr
-> names, and xattr values too?  Or does it only do that to file data?
+> If chunk is 2MB, total 512 pages need to be handled finally. During this
+> period, fault_in_iov_iter_readable() is called to check iov_iter readable
+> validity. Since only 4KB will be handled each time, below address space
+> will be checked over and over again:
+> 
+> start         	end
+> -
+> buf,    	buf+2MB
+> buf+4KB, 	buf+2MB
+> buf+8KB, 	buf+2MB
+> ...
+> buf+2044KB 	buf+2MB
+> 
+> Obviously the checking size is wrong since only 4KB will be handled each
+> time. So this will get a correct chunk to let iomap work well in non-large
+> folio case.
+> 
+> With this change, the write speed will be stable. Tested on ARM64 device.
+> 
+> Before:
+> 
+>  - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (334 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (278 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (204 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (170 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (150 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (139 MB/s)
+> 
+> After:
+> 
+>  - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (339 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (330 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (332 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (333 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (333 MB/s)
+>  - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (333 MB/s)
+> 
+> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Xu Yang <xu.yang_2@nxp.com>
+> 
+> ---
+> Changes in v2:
+>  - fix address space description in message
+> Changes in v3:
+>  - adjust 'chunk' and add mapping_max_folio_size() in header file
+>    as suggested by Matthew
+>  - add write performance results in commit message
+> ---
+>  fs/iomap/buffered-io.c  |  2 +-
+>  include/linux/pagemap.h | 37 ++++++++++++++++++++++++-------------
+>  2 files changed, 25 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 41c8f0c68ef5..c5802a459334 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -898,11 +898,11 @@ static bool iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+>  static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  {
+>  	loff_t length = iomap_length(iter);
+> -	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
+>  	loff_t pos = iter->pos;
+>  	ssize_t total_written = 0;
+>  	long status = 0;
+>  	struct address_space *mapping = iter->inode->i_mapping;
+> +	size_t chunk = mapping_max_folio_size(mapping);
+>  	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
+>  
+>  	do {
+> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+> index c5e33e2ca48a..6be8e22360f1 100644
+> --- a/include/linux/pagemap.h
+> +++ b/include/linux/pagemap.h
+> @@ -346,6 +346,19 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
+>  	m->gfp_mask = mask;
+>  }
+>  
+> +/*
+> + * There are some parts of the kernel which assume that PMD entries
+> + * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+> + * limit the maximum allocation order to PMD size.  I'm not aware of any
+> + * assumptions about maximum order if THP are disabled, but 8 seems like
+> + * a good order (that's 1MB if you're using 4kB pages)
+> + */
+> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> +#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+> +#else
+> +#define MAX_PAGECACHE_ORDER	8
+> +#endif
+> +
+>  /**
+>   * mapping_set_large_folios() - Indicate the file supports large folios.
+>   * @mapping: The file.
+> @@ -372,6 +385,17 @@ static inline bool mapping_large_folio_support(struct address_space *mapping)
+>  		test_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
+>  }
+>  
+> +/*
+> + * Get max folio size in case of supporting large folio, otherwise return
+> + * PAGE_SIZE.
 
-It does encrypt the file names in the directories, but nothing in
-xattrs as far as I can tell.
+Minor quibble -- the comment doesn't need to restate what the function
+does because we can see that in the code below.
 
-> And if we copy the ext4 method of putting the merkle data after eof and
-> loading it into the pagecache, how much of the generic fs/verity cleanup
-> patches do we really need?
+/* Return the maximum folio size for this pagecache mapping, in bytes. */
 
-We shouldn't need anything.  A bunch of cleanup and the support for not
-generating a hash for holes might still be nice to have, though.
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
+--D
+
+
+> + */
+> +static inline size_t mapping_max_folio_size(struct address_space *mapping)
+> +{
+> +	if (mapping_large_folio_support(mapping))
+> +		return PAGE_SIZE << MAX_PAGECACHE_ORDER;
+> +	return PAGE_SIZE;
+> +}
+> +
+>  static inline int filemap_nr_thps(struct address_space *mapping)
+>  {
+>  #ifdef CONFIG_READ_ONLY_THP_FOR_FS
+> @@ -530,19 +554,6 @@ static inline void *detach_page_private(struct page *page)
+>  	return folio_detach_private(page_folio(page));
+>  }
+>  
+> -/*
+> - * There are some parts of the kernel which assume that PMD entries
+> - * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+> - * limit the maximum allocation order to PMD size.  I'm not aware of any
+> - * assumptions about maximum order if THP are disabled, but 8 seems like
+> - * a good order (that's 1MB if you're using 4kB pages)
+> - */
+> -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+> -#else
+> -#define MAX_PAGECACHE_ORDER	8
+> -#endif
+> -
+>  #ifdef CONFIG_NUMA
+>  struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
+>  #else
+> -- 
+> 2.34.1
+> 
+> 
