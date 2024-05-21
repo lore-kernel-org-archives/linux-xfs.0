@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D16C2E556
-	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 01:02:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 149357F
+	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 01:03:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716253368; cv=none; b=AMkiAVvtxR9qdlyaVnP/XiqVC3Q8WtGjxmuSAOBKEGZ6xOw7dxccHLEHAdVB/BN00cYEAuGVnxekrHq0pBzP2L7cS1q1XOWfi9ATLwj3Yo9Mdm6dbJwnHCpwk94CL36bt4KrdsnN+926+EZxL8X0kigoYSYJh0Tam3VI4L+6F9s=
+	t=1716253420; cv=none; b=RmRpTgTBlmpuXt/io31LbWoMY8GPSeOorGmMVYLv+1tI1x+hM6pSqmwt3QW7kdXFt15/+yXRqXI1Lm25iL7/Zv4CwW1/MMVD5MkD/gtXUTIyEHUSbMStaA9lo8CSYed4fIIFgCMEmnWggh/j+eymjXuUfuDkYpA/2Y7IuhsuT4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716253368; c=relaxed/simple;
-	bh=9Vorm6xRq6LwYQiIPJJr8X53SmgFKymRJHie2J5P1PA=;
+	s=arc-20240116; t=1716253420; c=relaxed/simple;
+	bh=dak+NhYtaYPV9hkY65Tpwq6YqWwrP4OPZNoRU16inZs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=CUhJu1BtOpUjbfbBadzxp7fqEko3cpvRCFgLY7/mhBmJF5lxgIeEJSNTQh7ElAC90ankTYT3+seKyP2rx3GPDJyouCY6vQBYupgELBCXRQViaSKOlbQIpLcQJAkncSu5cNkpUY0IMiRAqQ2Jt92lmwKjReKar4MMuSIAukAI154=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=itDiwBkf; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=J12jNDT8KhTATYg8xYdWkEhPK6wHjWZ4KwBV+z8LXHPBR24NK1b8m3hvczv86BGvRnfC11UX17YgLyw0cwrDo3U0CoOi5EvfgheIdXplD/BVWn831LreESA3oJzK1o++dWtCJ8ocA6w4QGi/0daMZtsSnRGMPr/9DeOYv/lZoKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=foMNSPc5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="itDiwBkf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 562EFC2BD10;
-	Tue, 21 May 2024 01:02:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="foMNSPc5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 792F1C2BD10;
+	Tue, 21 May 2024 01:03:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716253368;
-	bh=9Vorm6xRq6LwYQiIPJJr8X53SmgFKymRJHie2J5P1PA=;
+	s=k20201202; t=1716253419;
+	bh=dak+NhYtaYPV9hkY65Tpwq6YqWwrP4OPZNoRU16inZs=;
 	h=Date:From:To:Cc:Subject:From;
-	b=itDiwBkfgHsrNvspX3hYgjYwDAqK5MpAXx2Aqj/B/aWHqr1SSyw3aUr7ImMoxl1+L
-	 orpZVC7E1Z7/GQUa0WSUqx/3tfNFU/3B+ZzirsI32GGa/Ig68+bV7Z4OZPlu1HfJhX
-	 tk6siA1Dc13HaLLw7Qpv5OKF03zBuPTjIoQDzRGxyyRnsA/TPGs4N0PL65PuswHQHE
-	 5asPE3Sb+3+4mCsNHLYvoaIjJ5zlGg59HGW6+0fElgnlhyjxnqeG3qGdPTfHaXDkiu
-	 WEoTohNrQCvKbbWxejreQdeBDXR9PXojdJXL8zwlBvZHGZ6d1Lb1XYCG6cyehtn6RR
-	 32dvWXGWLEOsw==
-Date: Mon, 20 May 2024 18:02:47 -0700
+	b=foMNSPc5PlPILqRcqWXUY9DvVDiI1gvSfWduNQ0YruDtfQHQbp+p19mXV1UIymNq2
+	 b9/VfO+L3RCQ4iiaeF636lpodfZCCqulMOo4l9OkCkTELRS5HijiFoY1qfHu+C1A+d
+	 knHwWhBj/Awa+fBi/chneWG//n+v2HamQLc/QEGqN3AEhJmvyIAGgPkGJ36KfQsGk2
+	 DxJxfw9GaQIV4DBYYYk96IQhkxWdl6sGtpHl04KqdF0RahfrzhQOBuFKtq4cHwEDoj
+	 BIKxM8Axwi2c/i7Z9B9e6dV4YQWkQn60+OoMA1bxmJyXDCIgTFS62qidTbPiSN2nDb
+	 ZXhPaC/sXx1XQ==
+Date: Mon, 20 May 2024 18:03:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chandan Babu R <chandanbabu@kernel.org>,
 	Christoph Hellwig <hch@infradead.org>
 Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: drop xfarray sortinfo folio on error
-Message-ID: <20240521010247.GK25518@frogsfrogsfrogs>
+Subject: [PATCH] xfs: fix xfs_init_attr_trans not handling explicit operation
+ codes
+Message-ID: <20240521010338.GL25518@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,89 +45,148 @@ Content-Disposition: inline
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Chandan Babu reports the following livelock in xfs/708:
+When we were converting the attr code to use an explicit operation code
+instead of keying off of attr->value being null, we forgot to change the
+code that initializes the transaction reservation.  Split the function
+into two helpers that handle the !remove and remove cases, then fix both
+callsites to handle this correctly.
 
- run fstests xfs/708 at 2024-05-04 15:35:29
- XFS (loop16): EXPERIMENTAL online scrub feature in use. Use at your own risk!
- XFS (loop5): Mounting V5 Filesystem e96086f0-a2f9-4424-a1d5-c75d53d823be
- XFS (loop5): Ending clean mount
- XFS (loop5): Quotacheck needed: Please wait.
- XFS (loop5): Quotacheck: Done.
- XFS (loop5): EXPERIMENTAL online scrub feature in use. Use at your own risk!
- INFO: task xfs_io:143725 blocked for more than 122 seconds.
-       Not tainted 6.9.0-rc4+ #1
- "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
- task:xfs_io          state:D stack:0     pid:143725 tgid:143725 ppid:117661 flags:0x00004006
- Call Trace:
-  <TASK>
-  __schedule+0x69c/0x17a0
-  schedule+0x74/0x1b0
-  io_schedule+0xc4/0x140
-  folio_wait_bit_common+0x254/0x650
-  shmem_undo_range+0x9d5/0xb40
-  shmem_evict_inode+0x322/0x8f0
-  evict+0x24e/0x560
-  __dentry_kill+0x17d/0x4d0
-  dput+0x263/0x430
-  __fput+0x2fc/0xaa0
-  task_work_run+0x132/0x210
-  get_signal+0x1a8/0x1910
-  arch_do_signal_or_restart+0x7b/0x2f0
-  syscall_exit_to_user_mode+0x1c2/0x200
-  do_syscall_64+0x72/0x170
-  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-
-The shmem code is trying to drop all the folios attached to a shmem
-file and gets stuck on a locked folio after a bnobt repair.  It looks
-like the process has a signal pending, so I started looking for places
-where we lock an xfile folio and then deal with a fatal signal.
-
-I found a bug in xfarray_sort_scan via code inspection.  This function
-is called to set up the scanning phase of a quicksort operation, which
-may involve grabbing a locked xfile folio.  If we exit the function with
-an error code, the caller does not call xfarray_sort_scan_done to put
-the xfile folio.  If _sort_scan returns an error code while si->folio is
-set, we leak the reference and never unlock the folio.
-
-Therefore, change xfarray_sort to call _scan_done on exit.  This is safe
-to call multiple times because it sets si->folio to NULL and ignores a
-NULL si->folio.  Also change _sort_scan to use an intermediate variable
-so that we never pollute si->folio with an errptr.
-
-Fixes: 232ea052775f9 ("xfs: enable sorting of xfile-backed arrays")
-Reported-by: Chandan Babu R <chandanbabu@kernel.org>
+Fixes: c27411d4c640 ("xfs: make attr removal an explicit operation")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/xfarray.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c |   40 +++++++++++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_attr.h |    6 ++++--
+ fs/xfs/xfs_attr_item.c   |   15 +++++++++++++--
+ 3 files changed, 40 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
-index 9185ae7088d49..cdd13ed9c569a 100644
---- a/fs/xfs/scrub/xfarray.c
-+++ b/fs/xfs/scrub/xfarray.c
-@@ -822,12 +822,14 @@ xfarray_sort_scan(
- 
- 	/* Grab the first folio that backs this array element. */
- 	if (!si->folio) {
-+		struct folio	*folio;
- 		loff_t		next_pos;
- 
--		si->folio = xfile_get_folio(si->array->xfile, idx_pos,
-+		folio = xfile_get_folio(si->array->xfile, idx_pos,
- 				si->array->obj_size, XFILE_ALLOC);
--		if (IS_ERR(si->folio))
--			return PTR_ERR(si->folio);
-+		if (IS_ERR(folio))
-+			return PTR_ERR(folio);
-+		si->folio = folio;
- 
- 		si->first_folio_idx = xfarray_idx(si->array,
- 				folio_pos(si->folio) + si->array->obj_size - 1);
-@@ -1048,6 +1050,7 @@ xfarray_sort(
- 
- out_free:
- 	trace_xfarray_sort_stats(si, error);
-+	xfarray_sort_scan_done(si);
- 	kvfree(si);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 33f1d032ef138..302b0cf95528a 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -339,26 +339,31 @@ xfs_attr_calc_size(
+ 	return nblks;
  }
+ 
+-/* Initialize transaction reservation for attr operations */
+-void
+-xfs_init_attr_trans(
++/* Initialize transaction reservation for an xattr set/replace/upsert */
++unsigned int
++xfs_attr_init_set_trans(
+ 	struct xfs_da_args	*args,
+-	struct xfs_trans_res	*tres,
+-	unsigned int		*total)
++	struct xfs_trans_res	*tres)
+ {
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 
+-	if (args->value) {
+-		tres->tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+-				 M_RES(mp)->tr_attrsetrt.tr_logres *
+-				 args->total;
+-		tres->tr_logcount = XFS_ATTRSET_LOG_COUNT;
++	tres->tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
++			  M_RES(mp)->tr_attrsetrt.tr_logres * args->total;
++	tres->tr_logcount = XFS_ATTRSET_LOG_COUNT;
+ 		tres->tr_logflags = XFS_TRANS_PERM_LOG_RES;
+-		*total = args->total;
+-	} else {
+-		*tres = M_RES(mp)->tr_attrrm;
+-		*total = XFS_ATTRRM_SPACE_RES(mp);
+-	}
++	return args->total;
++}
++
++/* Initialize transaction reservation for an xattr remove */
++unsigned int
++xfs_attr_init_remove_trans(
++	struct xfs_da_args	*args,
++	struct xfs_trans_res	*tres)
++{
++	struct xfs_mount	*mp = args->dp->i_mount;
++
++	*tres = M_RES(mp)->tr_attrrm;
++	return XFS_ATTRRM_SPACE_RES(mp);
+ }
+ 
+ /*
+@@ -1021,7 +1026,7 @@ xfs_attr_set(
+ 	struct xfs_trans_res	tres;
+ 	int			error, local;
+ 	int			rmt_blks = 0;
+-	unsigned int		total;
++	unsigned int		total = 0;
+ 
+ 	ASSERT(!args->trans);
+ 
+@@ -1049,10 +1054,12 @@ xfs_attr_set(
+ 		if (!local)
+ 			rmt_blks = xfs_attr3_rmt_blocks(mp, args->attr_filter,
+ 					args->valuelen);
++		total = xfs_attr_init_set_trans(args, &tres);
+ 		break;
+ 	case XFS_ATTRUPDATE_REMOVE:
+ 		XFS_STATS_INC(mp, xs_attr_remove);
+ 		rmt_blks = xfs_attr3_max_rmt_blocks(mp);
++		total = xfs_attr_init_remove_trans(args, &tres);
+ 		break;
+ 	}
+ 
+@@ -1060,7 +1067,6 @@ xfs_attr_set(
+ 	 * Root fork attributes can use reserved data blocks for this
+ 	 * operation if necessary
+ 	 */
+-	xfs_init_attr_trans(args, &tres, &total);
+ 	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 088cb7b301680..616b0b5a0f11c 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -565,8 +565,10 @@ bool xfs_attr_check_namespace(unsigned int attr_flags);
+ bool xfs_attr_namecheck(unsigned int attr_flags, const void *name,
+ 		size_t length);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+-void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
+-			 unsigned int *total);
++unsigned int xfs_attr_init_set_trans(struct xfs_da_args *args,
++		struct xfs_trans_res *tres);
++unsigned int xfs_attr_init_remove_trans(struct xfs_da_args *args,
++		struct xfs_trans_res *tres);
+ 
+ /*
+  * Check to see if the attr should be upgraded from non-existent or shortform to
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 2b10ac4c5fce2..cff051ccafa43 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -746,7 +746,7 @@ xfs_attr_recover_work(
+ 	struct xfs_attri_log_format	*attrp;
+ 	struct xfs_attri_log_nameval	*nv = attrip->attri_nameval;
+ 	int				error;
+-	int				total;
++	unsigned int			total = 0;
+ 
+ 	/*
+ 	 * First check the validity of the attr described by the ATTRI.  If any
+@@ -763,7 +763,18 @@ xfs_attr_recover_work(
+ 		return PTR_ERR(attr);
+ 	args = attr->xattri_da_args;
+ 
+-	xfs_init_attr_trans(args, &resv, &total);
++	switch (xfs_attr_intent_op(attr)) {
++	case XFS_ATTRI_OP_FLAGS_PPTR_SET:
++	case XFS_ATTRI_OP_FLAGS_PPTR_REPLACE:
++	case XFS_ATTRI_OP_FLAGS_SET:
++	case XFS_ATTRI_OP_FLAGS_REPLACE:
++		total = xfs_attr_init_set_trans(args, &resv);
++		break;
++	case XFS_ATTRI_OP_FLAGS_PPTR_REMOVE:
++	case XFS_ATTRI_OP_FLAGS_REMOVE:
++		total = xfs_attr_init_remove_trans(args, &resv);
++		break;
++	}
+ 	resv = xlog_recover_resv(&resv);
+ 	error = xfs_trans_alloc(mp, &resv, total, 0, XFS_TRANS_RESERVE, &tp);
+ 	if (error)
