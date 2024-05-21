@@ -1,191 +1,312 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2BB6A8D2
-	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 10:07:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02D8874435
+	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 10:52:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716286021; cv=none; b=CEqA+nZzRiNhn9/P+3Yx2vbEXK1OlRSQG+TkcaLI8DrZh/ORpmFSN0wJQuYDPjcDABpjjL19uEZWSOtveSoEmh47H+l37tdeIIIdqIiutqjKh1tNRL9PTx8SxLLYiNosE29/NI0nMEsDi5NGh8R2m7F/gUB2NnxS0aBPgYN05Dc=
+	t=1716288768; cv=none; b=Pi/uzbj3NwkT54kB8dN+8jZ4URdAkDLRPXvSxJmB+bc2IDHfG5zpP1/XEZD+gANYPyfByNozj4JjeAvJVnFbvtpbQ5He75wRnfq9Xq6PmMsbTodix4YkTFIxN635Pxy9K47ZmcVM4BMU7b4qoNJVZOG1jvOhmIW0z6aiFKqlEMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716286021; c=relaxed/simple;
-	bh=gfS5ij5ynR+dW+7wUskzlakjEoDgLeefZRn5DlBOE/k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NOELWVeYMspWuIgrUdVi2XAmm3TqcMVS/t8G99vsWid5cwmh7mOK/h3aRyoZ0pEiWREgYyFYqU/bwT/oO+e1tCwHO3rnPE1wC/chN0MFWypcRkKgYNirkwgdlCbK3fNR1BAMhMsYtEanMegc3GUuZ3Hkt2vGYKi//fKgWwSk+sI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y/DwwWZi; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1716288768; c=relaxed/simple;
+	bh=e9/Jn1k9vV9epBJrZXg4uSK4RPSRoT+u0KqFE5tpxA8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AgSwzXbFFlIuNqJeVTXqsU5H1TmtscLzlMJZhuGoPAcoEylvMUHxUxiV1y6Wr+czLMV5FgYLq6Sbq7e54b53PCmR1WK3cHXT8iGgv22kAs+/Wlsjr3sw4ePRUM14ikXUycDD39p8LRYpyPdL4dqXsHT8i6In+fE9Rr+DXTTLTqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=b0BSwckP; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y/DwwWZi"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b0BSwckP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716286019;
+	s=mimecast20190719; t=1716288765;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lytEjnB2qVjk/ZWiVMPZLEZDCxYKGYQkDMVZ/hxvk6A=;
-	b=Y/DwwWZiphrMmwCwp/f7DzJT5YpfDdwT2gwoqqnFQ7fs45+DXdhDf3PBPS1kFTynhGDxGw
-	x5IulBJbdD/Ko8Dry3H3ugQm908vVMngUoUv85EsqQl8cOQ79dPNDU8aMyN54kKFVju7/J
-	kXBbzhfdp1Trc6jubEngMLA9AX0ieUo=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=56nvd/3MP7DtivfrraZ2mnUYGxV4GioUyzj3puEJA5Q=;
+	b=b0BSwckPqKW1mVg7Ui+5JEC//kxk0Wv7wDUpon+t2pw360uAvsdxCxqbJf/mYV4l/LZsfN
+	yzdq63AnJ8hCMERqE0leEyHJ4tXtnP2aS+cesSdwdRxbOflOt9m5aZU8RSRPpU+Nbh1GBd
+	cobd5vINg8NjJrScdIrqcHRb8f8O/ow=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-569-W6YIKzcIPd-ZA5zpcQFvtA-1; Tue, 21 May 2024 06:06:57 -0400
-X-MC-Unique: W6YIKzcIPd-ZA5zpcQFvtA-1
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-a59cbb6f266so823538066b.3
-        for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 03:06:56 -0700 (PDT)
+ us-mta-222-eAhu3txPMTuuJxGxlSYkHA-1; Tue, 21 May 2024 06:52:44 -0400
+X-MC-Unique: eAhu3txPMTuuJxGxlSYkHA-1
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-34f7618a1f2so6905298f8f.1
+        for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 03:52:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716286015; x=1716890815;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=lytEjnB2qVjk/ZWiVMPZLEZDCxYKGYQkDMVZ/hxvk6A=;
-        b=NUZkDQoO1CeRIoyufEzMasp9DGhwL1WdaPFdnCFFV3ekecYNkwBoZVnwmdneq62EWS
-         okSEIyJuvI1dZ3E0oGi6YBIUS39i6abmmq7dJBMmWVUmbxKhIfxn/G6DpR3hbFTlHhx7
-         dEcddA1Oi9VUr//kTF5n6CRvf2EdpbxOZLcGOKYcjHSxv0oE/IRdT4VSuat0gIUy5FQA
-         QSum4ak6DGs2DRiDfRjE9PXCgv+SodqKWRM/to28IsplBmvn7HqHOU5K6iQXJvDh8CYt
-         eWp5eOuUi/q3z22ymex4T7uaoUUxYXN4vU68Uw4iNk23GEQD0EnTSUiVzk4LxUX9iTyx
-         rPXw==
-X-Forwarded-Encrypted: i=1; AJvYcCVooiKnJ4+SD000gj1hPlmq6lEJryg7sGVHvB7NLtr9edTzDYvpKiRGrD3zJ51MurOzR4+0/4YqKJ+2AYuB5J73ATNcbSAbprSX
-X-Gm-Message-State: AOJu0Yx9DRsajgDpFSIY2fW/axIrdyz2yXHLoy4gejcEnfW2mn4k3O/c
-	KT2FwEvhL3N2IPNfQMFbOSg6J4TEb+D8+xb2fPKopUzl0vpofYFmN9LYj1FnGuSeQxmTmfw/ydH
-	84VYgoreMH/GGD0NNH/jiA7HDP/uOtsY/TcwyCingGHIuLjkQGrVF0ugTqXtYp+uIwVqnyE0sSt
-	dEseLW5ISqP05JeS8lkPktFjFBqRvW3sbzfs6kCLEACCsJ9Q==
-X-Received: by 2002:a17:907:9446:b0:a59:afdd:590a with SMTP id a640c23a62f3a-a5a2d65d66dmr3737226666b.56.1716286015671;
-        Tue, 21 May 2024 03:06:55 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGXAIkc2ncamBbHf63wfdmfYgVtcGm2uHgL1lxuGBQWEjjgbZEHhZRMVVNyYUS+LoP2ZSLxgfWgmgJvguDu3F4=
-X-Received: by 2002:a17:907:9446:b0:a59:afdd:590a with SMTP id
- a640c23a62f3a-a5a2d65d66dmr3737224866b.56.1716286015271; Tue, 21 May 2024
- 03:06:55 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1716288763; x=1716893563;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=56nvd/3MP7DtivfrraZ2mnUYGxV4GioUyzj3puEJA5Q=;
+        b=SynEz3D3OyFImqOEqNiyDU+M+YCkzckh0qbaEkKKqqmaSYAwo33hkTe/upew7WltgX
+         mpbFYcMcLiMQiArfgwYcIiW2CN3YaU0ixR/CclQHbeyKOhoHU4Re3JZGpAPRSeBlpXk7
+         CLZQO8EmsDfuFIjezWy0RTFevD13u6ckX07GnMlCKOlU7w8zneAGHT8PULDkqW3n96lU
+         253MLKtIm4GpICZsckfHAEn+K5g01HsZFq5ObR6+WDiS+NjaQFcVt8HXjQ30NL/CDAcV
+         A7CgyjrR3ShzvlqVpbuiGX9Lccn4ylyUw2FvWwhZoKbKJrpT1/i6LRAwR9Ih64OWvMM2
+         9GJQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVaQtJ9kdaYzdsWBVy9cAtDJYETBFjvrGEAnts85Q7MegMqgUUVUqd2QkwlBQg/ENx+U1TlYjZF+0wG/fRtU6r0URziayzhkWtS
+X-Gm-Message-State: AOJu0YynL1k3bgKSwGMObx3HTmEC8MqlgEXRvisX1yPHhS9Rxaa0Kj2P
+	pH8t2UHOuToNL+rLb1Z2WaH85PKAHurju8oStLgSZ6Uo2OMOZM2bcSl6Ifgu+nhi0U0s18Aw9RP
+	MdyermylereCgy5QuFCgJlJKt1NvS9TD8gKOOuiIE24TS2FY2PkmPxpSE
+X-Received: by 2002:a05:6000:367:b0:34c:7ed4:55a with SMTP id ffacd0b85a97d-354b9068ef6mr7201742f8f.33.1716288763174;
+        Tue, 21 May 2024 03:52:43 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH8X3T5ls2zvNTQPr42SEqp90ElmOB3G+kJaiypVEcci2UquiYpUqBaQ4MQm5HfBGvyHnDrDw==
+X-Received: by 2002:a05:6000:367:b0:34c:7ed4:55a with SMTP id ffacd0b85a97d-354b9068ef6mr7201703f8f.33.1716288762574;
+        Tue, 21 May 2024 03:52:42 -0700 (PDT)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3502baacfc6sm31803283f8f.72.2024.05.21.03.52.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 May 2024 03:52:42 -0700 (PDT)
+Date: Tue, 21 May 2024 12:52:41 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
+ FS_IOC_FSGETXATTRAT
+Message-ID: <wetpv5posln2xv5dy26a7ohrsrcr6yi3lr6qrpbtjf3ymiilxy@ohukv2n3do6t>
+References: <20240520164624.665269-2-aalbersh@redhat.com>
+ <20240520164624.665269-4-aalbersh@redhat.com>
+ <20240520175159.GD25518@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
- <ae36c333-29fe-1bfd-9558-894b614e916d@huaweicloud.com>
-In-Reply-To: <ae36c333-29fe-1bfd-9558-894b614e916d@huaweicloud.com>
-From: Guangwu Zhang <guazhang@redhat.com>
-Date: Tue, 21 May 2024 18:06:44 +0800
-Message-ID: <CAGS2=YrG7+k7ufEcX5NY2GFy69A7QQwq6BCku2biLHXVEOxWow@mail.gmail.com>
-Subject: Re: [bug report] Internal error isnullstartblock(got.br_startblock) a
- t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	fstests@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240520175159.GD25518@frogsfrogsfrogs>
 
-Hi,
-I use the below script reproduce the error.
+On 2024-05-20 10:51:59, Darrick J. Wong wrote:
+> On Mon, May 20, 2024 at 06:46:21PM +0200, Andrey Albershteyn wrote:
+> > XFS has project quotas which could be attached to a directory. All
+> > new inodes in these directories inherit project ID set on parent
+> > directory.
+> > 
+> > The project is created from userspace by opening and calling
+> > FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> > files such as FIFO, SOCK, BLK etc. as opening them returns a special
+> > inode from VFS. Therefore, some inodes are left with empty project
+> > ID. Those inodes then are not shown in the quota accounting but
+> > still exist in the directory.
+> > 
+> > This patch adds two new ioctls which allows userspace, such as
+> > xfs_quota, to set project ID on special files by using parent
+> > directory to open FS inode. This will let xfs_quota set ID on all
+> > inodes and also reset it when project is removed. Also, as
+> > vfs_fileattr_set() is now will called on special files too, let's
+> > forbid any other attributes except projid and nextents (symlink can
+> > have one).
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > ---
+> >  fs/ioctl.c              | 93 +++++++++++++++++++++++++++++++++++++++++
+> >  include/uapi/linux/fs.h | 11 +++++
+> >  2 files changed, 104 insertions(+)
+> > 
+> > diff --git a/fs/ioctl.c b/fs/ioctl.c
+> > index 1d5abfdf0f22..3e3aacb6ea6e 100644
+> > --- a/fs/ioctl.c
+> > +++ b/fs/ioctl.c
+> > @@ -22,6 +22,7 @@
+> >  #include <linux/mount.h>
+> >  #include <linux/fscrypt.h>
+> >  #include <linux/fileattr.h>
+> > +#include <linux/namei.h>
+> >  
+> >  #include "internal.h"
+> >  
+> > @@ -647,6 +648,19 @@ static int fileattr_set_prepare(struct inode *inode,
+> >  	if (fa->fsx_cowextsize == 0)
+> >  		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
+> >  
+> > +	/*
+> > +	 * The only use case for special files is to set project ID, forbid any
+> > +	 * other attributes
+> > +	 */
+> > +	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
+> > +		if (fa->fsx_xflags & ~FS_XFLAG_PROJINHERIT)
+> 
+> When would PROJINHERIT be set on a non-reg/non-dir file?
 
-        mkdir -p /media/xfs
-        mkdir -p /media/scratch
-        dev0=3D$(losetup --find)
-        dd if=3D/dev/zero of=3D1.tar bs=3D1G count=3D1
-        dd if=3D/dev/zero of=3D2.tar bs=3D1G count=3D1
-        losetup $dev0 1.tar
-        dev1=3D$(losetup --find)
-        losetup $dev1 2.tar
-        mkfs.xfs -f $dev0
-        mkfs.xfs -f $dev1
-        mount $dev0 /media/xfs
-        mount $dev1 /media/scratch
-        export TEST_DEV=3D"$(mount | grep '/media/xfs' | awk '{ print $1 }'=
-)"
-        export TEST_DIR=3D"/media/xfs"
-        export SCRATCH_DEV=3D"$(mount | grep '/media/scratch' | awk '{
-print $1 }')"
-        export SCRATCH_MNT=3D"/media/scratch"
+Oh I thought it's set on all inodes in projects anyway, but looks
+like it's dropped for files in xfs_flags2diflags(). The xfs_quota
+just set it for each inode so I just haven't checked it. I will drop
+this check and change xfs_quota to not set PROJINHERIT for special
+files.
 
-        git clone git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-        cd xfstests-dev
-        make
-        for i in $(seq 20);do
-            ./check generic/461
-        done
+> > +			return -EINVAL;
+> > +		if (!S_ISLNK(inode->i_mode) && fa->fsx_nextents)
+> 
+> FS_IOC_FSSETXATTR doesn't enforce anything for fsx_nextents for any
+> other type of file, does it?
 
-@YI,  Could you list your 4 patch links here ?  the kernel don't work
-well after apply the patch [1]
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/comm=
-it/?id=3D5ce5674187c345dc31534d2024c09ad8ef29b7ba
+yes, it doesn't enforce anything, as I described in the comment I
+tried to reject any other uses. But symlink has fsx_nextents == 1 so
+get + set call will fail.
 
+> 
+> > +			return -EINVAL;
+> > +		if (fa->fsx_extsize || fa->fsx_cowextsize)
+> > +			return -EINVAL;
+> > +	}
+> > +
+> >  	return 0;
+> >  }
+> >  
+> > @@ -763,6 +777,79 @@ static int ioctl_fssetxattr(struct file *file, void __user *argp)
+> >  	return err;
+> >  }
+> >  
+> > +static int ioctl_fsgetxattrat(struct file *file, void __user *argp)
+> > +{
+> > +	struct path filepath;
+> > +	struct fsxattrat fsxat;
+> > +	struct fileattr fa;
+> > +	int error;
+> > +
+> > +	if (!S_ISDIR(file_inode(file)->i_mode))
+> > +		return -EBADF;
+> > +
+> > +	if (copy_from_user(&fsxat, argp, sizeof(struct fsxattrat)))
+> > +		return -EFAULT;
+> > +
+> > +	error = user_path_at(fsxat.dfd, fsxat.path, 0, &filepath);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	error = vfs_fileattr_get(filepath.dentry, &fa);
+> > +	if (error) {
+> > +		path_put(&filepath);
+> > +		return error;
+> > +	}
+> > +
+> > +	fsxat.fsx.fsx_xflags = fa.fsx_xflags;
+> > +	fsxat.fsx.fsx_extsize = fa.fsx_extsize;
+> > +	fsxat.fsx.fsx_nextents = fa.fsx_nextents;
+> > +	fsxat.fsx.fsx_projid = fa.fsx_projid;
+> > +	fsxat.fsx.fsx_cowextsize = fa.fsx_cowextsize;
+> > +
+> > +	if (copy_to_user(argp, &fsxat, sizeof(struct fsxattrat)))
+> > +		error = -EFAULT;
+> > +
+> > +	path_put(&filepath);
+> > +	return error;
+> > +}
+> > +
+> > +static int ioctl_fssetxattrat(struct file *file, void __user *argp)
+> > +{
+> > +	struct mnt_idmap *idmap = file_mnt_idmap(file);
+> > +	struct fsxattrat fsxat;
+> > +	struct path filepath;
+> > +	struct fileattr fa;
+> > +	int error;
+> > +
+> > +	if (!S_ISDIR(file_inode(file)->i_mode))
+> > +		return -EBADF;
+> > +
+> > +	if (copy_from_user(&fsxat, argp, sizeof(struct fsxattrat)))
+> > +		return -EFAULT;
+> > +
+> > +	error = user_path_at(fsxat.dfd, fsxat.path, 0, &filepath);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	error = mnt_want_write(filepath.mnt);
+> > +	if (error) {
+> > +		path_put(&filepath);
+> > +		return error;
+> 
+> This could be a goto to the path_put below.
+> 
+> > +	}
+> > +
+> > +	fileattr_fill_xflags(&fa, fsxat.fsx.fsx_xflags);
+> > +	fa.fsx_extsize = fsxat.fsx.fsx_extsize;
+> > +	fa.fsx_nextents = fsxat.fsx.fsx_nextents;
+> > +	fa.fsx_projid = fsxat.fsx.fsx_projid;
+> > +	fa.fsx_cowextsize = fsxat.fsx.fsx_cowextsize;
+> > +	fa.fsx_valid = true;
+> > +
+> > +	error = vfs_fileattr_set(idmap, filepath.dentry, &fa);
+> 
+> Why not pass &fsxat.fsx directly to vfs_fileattr_set?
 
-Zhang Yi <yi.zhang@huaweicloud.com> =E4=BA=8E2024=E5=B9=B45=E6=9C=8821=E6=
-=97=A5=E5=91=A8=E4=BA=8C 13:05=E5=86=99=E9=81=93=EF=BC=9A
+vfs_fileattr_set() takes fileattr and there won't be fsx_valid, no? I
+suppose they aren't aligned
 
->
-> On 2024/5/20 19:48, Guangwu Zhang wrote:
-> > Hi,
-> > I get a xfs error when run xfstests  generic/461 testing with
-> > linux-block for-next branch.
-> > looks it easy to reproduce with s390x arch.
-> >
-> > kernel info :
-> > commit 04d3822ddfd11fa2c9b449c977f340b57996ef3d
-> > 6.9.0+
-> > reproducer
-> > git clone xfstests
-> >  ./check generic/461
-> >
-> >
->
-> I guess this issue should be fixed by 5ce5674187c3 ("xfs: convert delayed
-> extents to unwritten when zeroing post eof blocks"), please merge this co=
-mmit
-> series (include 4 patches) and try again.
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3D5ce5674187c345dc31534d2024c09ad8ef29b7ba
->
-> Yi.
->
-> > [ 5322.046654] XFS (loop1): Internal error isnullstartblock(got.br_star=
-tblock) a
-> > t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_bmap_insert_e=
-xtents+0x
-> > 2ee/0x420 [xfs]
-> > [ 5322.046859] CPU: 0 PID: 157526 Comm: fsstress Kdump: loaded Not tain=
-ted 6.9.0
-> > + #1
-> > [ 5322.046863] Hardware name: IBM 8561 LT1 400 (z/VM 7.2.0)
-> > [ 5322.046864] Call Trace:
-> > [ 5322.046866]  [<0000022f504d8fc4>] dump_stack_lvl+0x8c/0xb0
-> > [ 5322.046876]  [<0000022ed00fc308>] xfs_corruption_error+0x70/0xa0 [xf=
-s]
-> > [ 5322.046955]  [<0000022ed00b7206>] xfs_bmap_insert_extents+0x3fe/0x42=
-0 [xfs]
-> > [ 5322.047024]  [<0000022ed00f55a6>] xfs_insert_file_space+0x1be/0x248 =
-[xfs]
-> > [ 5322.047105]  [<0000022ed00ff1dc>] xfs_file_fallocate+0x244/0x400 [xf=
-s]
-> > [ 5322.047186]  [<0000022f4fe90000>] vfs_fallocate+0x218/0x338
-> > [ 5322.047190]  [<0000022f4fe9112e>] ksys_fallocate+0x56/0x98
-> > [ 5322.047193]  [<0000022f4fe911aa>] __s390x_sys_fallocate+0x3a/0x48
-> > [ 5322.047196]  [<0000022f505019d2>] __do_syscall+0x23a/0x2c0
-> > [ 5322.047200]  [<0000022f50511d20>] system_call+0x70/0x98
-> > [ 5322.054644] XFS (loop1): Corruption detected. Unmount and run xfs_re=
-pair
-> > [ 5322.977488] XFS (loop1): User initiated shutdown received.
-> > [ 5322.977505] XFS (loop1): Log I/O Error (0x6) detected at xfs_fs_goin=
-gdown+0xb
-> > 4/0xf8 [xfs] (fs/xfs/xfs_fsops.c:458).  Shutting down filesystem.
-> > [ 5322.977772] XFS (loop1): Please unmount the filesystem and rectify t=
-he proble
-> > m(s)
-> > [ 5322.977877] loop1: writeback error on inode 755831, offset 32768, se=
-ctor 1804
-> > 712
-> > 00:00:00
-> >
-> >
-> > .
-> >
->
->
+> 
+> > +	mnt_drop_write(filepath.mnt);
+> > +	path_put(&filepath);
+> > +	return error;
+> > +}
+> > +
+> >  static int ioctl_getfsuuid(struct file *file, void __user *argp)
+> >  {
+> >  	struct super_block *sb = file_inode(file)->i_sb;
+> > @@ -872,6 +959,12 @@ static int do_vfs_ioctl(struct file *filp, unsigned int fd,
+> >  	case FS_IOC_FSSETXATTR:
+> >  		return ioctl_fssetxattr(filp, argp);
+> >  
+> > +	case FS_IOC_FSGETXATTRAT:
+> > +		return ioctl_fsgetxattrat(filp, argp);
+> > +
+> > +	case FS_IOC_FSSETXATTRAT:
+> > +		return ioctl_fssetxattrat(filp, argp);
+> > +
+> >  	case FS_IOC_GETFSUUID:
+> >  		return ioctl_getfsuuid(filp, argp);
+> >  
+> > diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> > index 45e4e64fd664..f8cd8d7bf35d 100644
+> > --- a/include/uapi/linux/fs.h
+> > +++ b/include/uapi/linux/fs.h
+> > @@ -139,6 +139,15 @@ struct fsxattr {
+> >  	unsigned char	fsx_pad[8];
+> >  };
+> >  
+> > +/*
+> > + * Structure passed to FS_IOC_FSGETXATTRAT/FS_IOC_FSSETXATTRAT
+> > + */
+> > +struct fsxattrat {
+> > +	struct fsxattr	fsx;		/* XATTR to get/set */
+> > +	__u32		dfd;		/* parent dir */
+> > +	const char	__user *path;
+> 
+> As I mentioned last time[1], embedding a pointer in an ioctl structure
+> creates porting problems because pointer sizes vary between process
+> personalities, so the size of struct fsxattrat will vary and lead to
+> copy_to/from_user overflows.
 
+Oh right, sorry, totally forgot about that
 
---
-Guangwu Zhang
-Thanks
+> 
+> 
+> [1] https://lore.kernel.org/linux-xfs/20240509232517.GR360919@frogsfrogsfrogs/
+> 
+> --D
+> 
+> > +};
+> > +
+> >  /*
+> >   * Flags for the fsx_xflags field
+> >   */
+> > @@ -231,6 +240,8 @@ struct fsxattr {
+> >  #define FS_IOC32_SETVERSION		_IOW('v', 2, int)
+> >  #define FS_IOC_FSGETXATTR		_IOR('X', 31, struct fsxattr)
+> >  #define FS_IOC_FSSETXATTR		_IOW('X', 32, struct fsxattr)
+> > +#define FS_IOC_FSGETXATTRAT		_IOR('X', 33, struct fsxattrat)
+> > +#define FS_IOC_FSSETXATTRAT		_IOW('X', 34, struct fsxattrat)
+> >  #define FS_IOC_GETFSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
+> >  #define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
+> >  /* Returns the external filesystem UUID, the same one blkid returns */
+> > -- 
+> > 2.42.0
+> > 
+> > 
+> 
+
+-- 
+- Andrey
 
