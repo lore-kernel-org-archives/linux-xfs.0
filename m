@@ -1,201 +1,424 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2350914291A
-	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 16:34:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8120D28E7;
+	Tue, 21 May 2024 16:36:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716309276; cv=none; b=ICivRmc8D2+22NaAktkgz5IuArWMLtA+dZNsHnfWr0FvRLklIeJvZ2gFWNkrX2/2k+BAyw1HIFRxmXMsYiEkg78uJbO5YRiTqq5ff0mQ4qlmuhwKxpzy2IqQllw8qMP1nCFGOwiEt8dpMSEockjLG/viq5dtxjlccAfdCiDojWI=
+	t=1716309395; cv=none; b=Gy7RMpDr+/+SqYdkyt3iaTm1FLK6fK1KYu7j7YXUR7kDpKOYRsll/6YhQmRpyI1P2FM5jCpW9KOIFNvHIyQyuqa0Md/uQDzvYtrcoSesup5+gvOjdzxclq5A7wtQ2osb4CKxnJsEH+nYuseyA63NXWoaiz8nejpuL8TJi5omfUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716309276; c=relaxed/simple;
-	bh=juSFdfByfPrlbSQpoABkvj/nbibedrl1YknKIP1oZf4=;
+	s=arc-20240116; t=1716309395; c=relaxed/simple;
+	bh=vMZm4QoQ1oag7g+ltwfiBTYUO50A7cQ8XG7QVfZE1a0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DIM/cD+v0M3WmIE5o/Yxyv4GpLH6O81tovq1SgtZ6JfI8Uq8Uj5b6mQlUdUMDnTlrJxDvcepnD12nV+9YEaGNrnll30rCcdZu4PiSZU+1dihUZfiE8xZEPfpCHuKvEwix6niJu8bznYXkBDvkmoMiLusMoW1F3MRbF/oqv8fzrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TFEuo0HD; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=AX0EdifCz9U8H1n4yO9m+TrEgyQNUuA0s8WbD+xVE19sAARaMfh41hyBSGmQuJx0ocIr9QI4oe9Y9qdzEzggvY2+0uGq6SIfc36nykdFJr/VxYEm6ACmj8gOpLle/ZGwxuIXVRUqzC7czBzSTWQHn+idP4OtV8/erITODYXdY9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sfqYPtUN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TFEuo0HD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716309274;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xMWjXlQzrkt+R9p0EdQfQQ8DoBUNqzqS8fhr5tw1zQM=;
-	b=TFEuo0HD93CNXjpA+zIrBSm76qHkB3AqoZC/9NLg8qRjigIeuvcYFT319Mj+E6/O8nB5B3
-	LoGQrmyh3i6l6etrKlmf//+QRt8xAukCX9idMQ2U9FOhwGy+SLKjZt8Un2DJ2oB8XMj9RF
-	bXIDWwbuvG7gtGfu0oOxqhiuqCRDXeA=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-339-ekWaKUchN0GowbgiwRmieQ-1; Tue, 21 May 2024 12:34:32 -0400
-X-MC-Unique: ekWaKUchN0GowbgiwRmieQ-1
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4200e6a9901so60096525e9.3
-        for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 09:34:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716309271; x=1716914071;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xMWjXlQzrkt+R9p0EdQfQQ8DoBUNqzqS8fhr5tw1zQM=;
-        b=chQIT3jcKRCW/9niIG+ZMaaxlrcVA3MYL/WEJusEYs7ssJ1JBNZVdVMvMheVkey1/t
-         cFdX4fCF1UJ2WAi+UqVCnOgoRHKG6iqd7sKZCDjnOTyE/h9HzTU3AjwgnihT+YosKqGH
-         3fnslDqfTgdWlKOtwfAJNqMUbYnq1xSKpo6+b9DQyjhRVHYjL4zndDTG6jVBLSzuRiCc
-         N6YoyOfPkD3LU9RnJxKaYEKRlqGJy+vuAF6uIZJPF3aS0Wu8EXAyHCVu2/1dIGpuEOt8
-         wrJm7TJgxt8bWqeQXXpd+8gJkc44DnxMrAGNZnt6QxdeMMNR4KzaBD9lNGjPu3KpxT0V
-         OVwA==
-X-Forwarded-Encrypted: i=1; AJvYcCXx7OhpPx0yF/OCVuEWslLOOBWVdafkKdSMxLs6atNsspYj0bjtWNJ339nfkWHBvJbKZuDfytI+/S2FYl45O7Ys2M/ta3Vo9vB+
-X-Gm-Message-State: AOJu0Yy75Clo5idL84DF/71F2rrnxOH9fvX36JqlBi5L6xQNKVmfmY0I
-	dPSsdBJJpQ/fguHiQNpC9sDUxK2qcrWrO0SPT3WtuwRNWPhObgKSz7hdx6xTmvin3gEdumngehH
-	Qh6uPQ+mFxEXcFGATSrRmVaTiOOCrFxT67yGUeTIQBw/m4vaEcAoBIUBJ
-X-Received: by 2002:a05:600c:314e:b0:41f:c83d:5ba8 with SMTP id 5b1f17b1804b1-41feac59e95mr236895005e9.32.1716309271310;
-        Tue, 21 May 2024 09:34:31 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEYRbPc/sJrxiwnThiGGQ+172mOuNjepOBj7pUUx1GUQEKJSR3K40eBc0oTA6+HQF5F5MNTFg==
-X-Received: by 2002:a05:600c:314e:b0:41f:c83d:5ba8 with SMTP id 5b1f17b1804b1-41feac59e95mr236894675e9.32.1716309270559;
-        Tue, 21 May 2024 09:34:30 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-41fccce25d5sm472885415e9.14.2024.05.21.09.34.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 May 2024 09:34:30 -0700 (PDT)
-Date: Tue, 21 May 2024 18:34:29 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v2 2/4] fs: add FS_IOC_FSSETXATTRAT and
- FS_IOC_FSGETXATTRAT
-Message-ID: <z6ctkxtwhwioc5a5kzisjxffkde6xpchstrr3zlflh4bsz4mpd@5z2s2d7lbje5>
-References: <20240520164624.665269-2-aalbersh@redhat.com>
- <20240520164624.665269-4-aalbersh@redhat.com>
- <CAOQ4uxikMjmAkXwGk3d9897622JfkeE8LXaT9PBrtTiR5y3=Rg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sfqYPtUN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BC66C2BD11;
+	Tue, 21 May 2024 16:36:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1716309395;
+	bh=vMZm4QoQ1oag7g+ltwfiBTYUO50A7cQ8XG7QVfZE1a0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=sfqYPtUNw239+WsbshczqJlLkiVO9cggY4XamqX0V5IfDh94j4SGiWhg+OG96wwZ0
+	 v4tQpepbfGp7D2c9mbR5S9M/J3YySJvYIatgGKY+KZO+c2FT1lnsCO0RgH5EvNKlRy
+	 4f4fCEXmhBAYGun1JDjYaaXNmdW7PhUd6k0NMszo1jZm+T/Spy6Vpvj6RO3w6jnfph
+	 nZoVecJujEnWniqqZVnA+ABdmArFBZ4kUrtPnoNKxYye0EFznNWjAwtywgspJaqBf3
+	 KLc1zIuxyFxT/vVJGlrNi648uJRPR+q3t6Q9xdlGVyd7VlX2fAJOuY9/Gu20HfABR4
+	 bAsObcqz8hUYQ==
+Date: Tue, 21 May 2024 09:36:34 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Daniel Gomez <da.gomez@samsung.com>
+Cc: "hughd@google.com" <hughd@google.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"willy@infradead.org" <willy@infradead.org>,
+	"jack@suse.cz" <jack@suse.cz>,
+	"mcgrof@kernel.org" <mcgrof@kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	"dagmcr@gmail.com" <dagmcr@gmail.com>,
+	"yosryahmed@google.com" <yosryahmed@google.com>,
+	"baolin.wang@linux.alibaba.com" <baolin.wang@linux.alibaba.com>,
+	"ritesh.list@gmail.com" <ritesh.list@gmail.com>,
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
+	"david@redhat.com" <david@redhat.com>,
+	"chandan.babu@oracle.com" <chandan.babu@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"brauner@kernel.org" <brauner@kernel.org>
+Subject: Re: [PATCH 11/12] shmem: add file length arg in shmem_get_folio()
+ path
+Message-ID: <20240521163634.GT25518@frogsfrogsfrogs>
+References: <20240515055719.32577-1-da.gomez@samsung.com>
+ <CGME20240515055738eucas1p15335a32c790b731aa5857193bbddf92d@eucas1p1.samsung.com>
+ <20240515055719.32577-12-da.gomez@samsung.com>
+ <20240517161741.GY360919@frogsfrogsfrogs>
+ <65qj4iqgdzebrg5cqwaocjzswenzzgoifdnewrhoipieqi3d5v@bxxupemsgsbs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxikMjmAkXwGk3d9897622JfkeE8LXaT9PBrtTiR5y3=Rg@mail.gmail.com>
+In-Reply-To: <65qj4iqgdzebrg5cqwaocjzswenzzgoifdnewrhoipieqi3d5v@bxxupemsgsbs>
 
-On 2024-05-20 22:03:43, Amir Goldstein wrote:
-> On Mon, May 20, 2024 at 7:46 PM Andrey Albershteyn <aalbersh@redhat.com> wrote:
-> >
-> > XFS has project quotas which could be attached to a directory. All
-> > new inodes in these directories inherit project ID set on parent
-> > directory.
-> >
-> > The project is created from userspace by opening and calling
-> > FS_IOC_FSSETXATTR on each inode. This is not possible for special
-> > files such as FIFO, SOCK, BLK etc. as opening them returns a special
-> > inode from VFS. Therefore, some inodes are left with empty project
-> > ID. Those inodes then are not shown in the quota accounting but
-> > still exist in the directory.
-> >
-> > This patch adds two new ioctls which allows userspace, such as
-> > xfs_quota, to set project ID on special files by using parent
-> > directory to open FS inode. This will let xfs_quota set ID on all
-> > inodes and also reset it when project is removed. Also, as
-> > vfs_fileattr_set() is now will called on special files too, let's
-> > forbid any other attributes except projid and nextents (symlink can
-> > have one).
-> >
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > ---
-> >  fs/ioctl.c              | 93 +++++++++++++++++++++++++++++++++++++++++
-> >  include/uapi/linux/fs.h | 11 +++++
-> >  2 files changed, 104 insertions(+)
-> >
-> > diff --git a/fs/ioctl.c b/fs/ioctl.c
-> > index 1d5abfdf0f22..3e3aacb6ea6e 100644
-> > --- a/fs/ioctl.c
-> > +++ b/fs/ioctl.c
-> > @@ -22,6 +22,7 @@
-> >  #include <linux/mount.h>
-> >  #include <linux/fscrypt.h>
-> >  #include <linux/fileattr.h>
-> > +#include <linux/namei.h>
-> >
-> >  #include "internal.h"
-> >
-> > @@ -647,6 +648,19 @@ static int fileattr_set_prepare(struct inode *inode,
-> >         if (fa->fsx_cowextsize == 0)
-> >                 fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
-> >
-> > +       /*
-> > +        * The only use case for special files is to set project ID, forbid any
-> > +        * other attributes
-> > +        */
-> > +       if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
-> > +               if (fa->fsx_xflags & ~FS_XFLAG_PROJINHERIT)
-> > +                       return -EINVAL;
-> > +               if (!S_ISLNK(inode->i_mode) && fa->fsx_nextents)
-> > +                       return -EINVAL;
-> > +               if (fa->fsx_extsize || fa->fsx_cowextsize)
-> > +                       return -EINVAL;
-> > +       }
-> > +
-> >         return 0;
-> >  }
-> >
-> > @@ -763,6 +777,79 @@ static int ioctl_fssetxattr(struct file *file, void __user *argp)
-> >         return err;
-> >  }
-> >
-> > +static int ioctl_fsgetxattrat(struct file *file, void __user *argp)
-> > +{
-> > +       struct path filepath;
-> > +       struct fsxattrat fsxat;
-> > +       struct fileattr fa;
-> > +       int error;
-> > +
-> > +       if (!S_ISDIR(file_inode(file)->i_mode))
-> > +               return -EBADF;
-> 
-> So the *only* thing that is done with the fd of the ioctl is to verify
-> that it is a directory fd - there is no verification that this fd is on the
-> same sb as the path to act on.
-> 
-> Was this the intention? It does not make a lot of sense to me
-> and AFAIK there is no precedent to an API like this.
+On Tue, May 21, 2024 at 11:38:33AM +0000, Daniel Gomez wrote:
+> On Fri, May 17, 2024 at 09:17:41AM -0700, Darrick J. Wong wrote:
+> > On Wed, May 15, 2024 at 05:57:36AM +0000, Daniel Gomez wrote:
+> > > In preparation for large folio in the write and fallocate paths, add
+> > > file length argument in shmem_get_folio() path to be able to calculate
+> > > the folio order based on the file size. Use of order-0 (PAGE_SIZE) for
+> > > read, page cache read, and vm fault.
+> > > 
+> > > This enables high order folios in the write and fallocate path once the
+> > > folio order is calculated based on the length.
+> > > 
+> > > Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
+> > > ---
+> > >  fs/xfs/scrub/xfile.c     |  6 +++---
+> > >  fs/xfs/xfs_buf_mem.c     |  3 ++-
+> > >  include/linux/shmem_fs.h |  2 +-
+> > >  mm/khugepaged.c          |  3 ++-
+> > >  mm/shmem.c               | 35 ++++++++++++++++++++---------------
+> > >  mm/userfaultfd.c         |  2 +-
+> > >  6 files changed, 29 insertions(+), 22 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
+> > > index 8cdd863db585..4905f5e4cb5d 100644
+> > > --- a/fs/xfs/scrub/xfile.c
+> > > +++ b/fs/xfs/scrub/xfile.c
+> > > @@ -127,7 +127,7 @@ xfile_load(
+> > >  		unsigned int	offset;
+> > >  
+> > >  		if (shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> > > -				SGP_READ) < 0)
+> > > +				SGP_READ, PAGE_SIZE) < 0)
+> > 
+> > I suppose I /did/ say during LSFMM that for the current users of xfile.c
+> > and xfs_buf_mem.c the order of the folio being returned doesn't really
+> I not sure if I understood you well. Could you please elaborate on this?
 
-yeah, as we want to set xattrs on that inode the path is pointing
-to, so, VFS will call to the FS under that sb.
+Yes, I'll restate what I said in the session last week for those who
+weren't there:
 
-> 
-> There are ioctls that operate on the filesystem using any
-> fd on that fs, such as FS_IOC_GETFS{UUID,SYSFSPATH}
-> and maybe the closest example to what you are trying to add
-> XFS_IOC_BULKSTAT.
+Currently, xfile.c and xfs_buf_mem.c are only used by online repair to
+stage a recordset while rebuilding an ondisk btree index.  IOWs, they're
+ephemeral, so we don't care or need to optimize folio sizing.  Some day
+they might be adapted for longer-term usage though, so we might as well
+try not to leave too many papercuts.
 
-Not sure that I get what you mean here, the *at() part is to get
-around VFS special inodes and call vfs_fileattr_set/get on FS inodes.
+xfs_buf_mem.c creates in-memory btrees that mimic the ondisk btrees,
+albeit with blocksize == PAGE_SIZE, regardless of the fs blocksize.
+For this case we probably aren't ever going to care about large folios.
 
-> 
-> Trying to think of a saner API for this - perhaps pass an O_PATH
-> fd without any filename in struct fsxattrat, saving you also the
-> headache of passing a variable length string in an ioctl.
-> 
-> Then atfile = fdget_raw(fsxat.atfd) and verify that atfile->f_path
-> and file->f_path are on the same sb before proceeding to operate
-> on atfile->f_path.dentry.
+xfile.c is currently used to store fixed-size recordsets, names for
+rebuilding directories, and name/value pairs for rebuilding xattr
+structures.  Records aren't allowed to be larger than PAGE_SIZE, names
+cannot be larger than MAXNAMELEN (255), and xattr values can't be larger
+than 64k.
 
-Thanks! Didn't know about O_PATH that seems to be a way to get rid
-of the path passing.
+For that last case maybe it might be nice to get a large folio to reduce
+processing overhead, but huge xattrs aren't that common.
 
+> > matter, but why wouldn't the last argument here be "roundup_64(count,
+> > PAGE_SIZE)" ?  Shouldn't we at least hint to the page cache about the
+> > folio order that we actually want instead of limiting it to order-0?
 > 
-> The (maybe more sane) alternative is to add syscalls instead of
-> ioctls, but I won't force you to go there...
+> For v2, I'll include your suggestions. I think we can also enable large folios
+> in xfile_get_folio(), please check below:
 > 
-> What do everyone think?
+> diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
+> index 8cdd863db585..df8b495b4939 100644
+> --- a/fs/xfs/scrub/xfile.c
+> +++ b/fs/xfs/scrub/xfile.c
+> @@ -127,7 +127,7 @@ xfile_load(
+>                 unsigned int    offset;
 > 
+>                 if (shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> -                               SGP_READ) < 0)
+> +                               SGP_READ, roundup_64(count, PAGE_SIZE)) < 0)
+>                         break;
+>                 if (!folio) {
+>                         /*
+> @@ -197,7 +197,7 @@ xfile_store(
+>                 unsigned int    offset;
+> 
+>                 if (shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> -                               SGP_CACHE) < 0)
+> +                               SGP_CACHE, roundup_64(count, PAGE_SIZE)) < 0)
+>                         break;
+>                 if (filemap_check_wb_err(inode->i_mapping, 0)) {
+>                         folio_unlock(folio);
+> @@ -268,7 +268,8 @@ xfile_get_folio(
+> 
+>         pflags = memalloc_nofs_save();
+>         error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> -                       (flags & XFILE_ALLOC) ? SGP_CACHE : SGP_READ);
+> +                       (flags & XFILE_ALLOC) ? SGP_CACHE : SGP_READ,
+> +                       roundup_64(i_size_read(inode), PAGE_SIZE));
+
+I'm not sure why you picked i_size_read here; the xfile could be several
+gigabytes long.  xfile_get_folio want to look at a subset of the xfile,
+not all of it.
+
+roundup_64(len, PAGE_SIZE) perhaps?
+
+Also, should the rounding be done inside the shmem code so that callers
+don't have to know about that detail?
+
+>         memalloc_nofs_restore(pflags);
+>         if (error)
+>                 return ERR_PTR(error);
+> 
+> > 
+> > (Also it seems a little odd to me that the @index is in units of pgoff_t
+> > but @len is in bytes.)
+> 
+> I extended the shmem_get_folio() with @len to calculate folio order based on
+> size (bytes). This is sent to ilog2() although I'm planning to use get_order()
+> instead (after fixing the issues mentioned during the discussion). @index is
+> used for __ffs() (same as in filemap).
+> 
+> Would you use lofft for @len instead? Or what's your suggestion?
+
+I was reacting to @index, not @len.  I might've shifted @index to
+"loff_t pos" but looking at the existing callsites it doesn't seem worth
+the churn.
+
+--D
+
 > Thanks,
-> Amir.
+> Daniel
 > 
-
--- 
-- Andrey
-
+> > 
+> > >  			break;
+> > >  		if (!folio) {
+> > >  			/*
+> > > @@ -197,7 +197,7 @@ xfile_store(
+> > >  		unsigned int	offset;
+> > >  
+> > >  		if (shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> > > -				SGP_CACHE) < 0)
+> > > +				SGP_CACHE, PAGE_SIZE) < 0)
+> > >  			break;
+> > >  		if (filemap_check_wb_err(inode->i_mapping, 0)) {
+> > >  			folio_unlock(folio);
+> > > @@ -268,7 +268,7 @@ xfile_get_folio(
+> > >  
+> > >  	pflags = memalloc_nofs_save();
+> > >  	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio,
+> > > -			(flags & XFILE_ALLOC) ? SGP_CACHE : SGP_READ);
+> > > +			(flags & XFILE_ALLOC) ? SGP_CACHE : SGP_READ, PAGE_SIZE);
+> > >  	memalloc_nofs_restore(pflags);
+> > >  	if (error)
+> > >  		return ERR_PTR(error);
+> > > diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
+> > > index 9bb2d24de709..784c81d35a1f 100644
+> > > --- a/fs/xfs/xfs_buf_mem.c
+> > > +++ b/fs/xfs/xfs_buf_mem.c
+> > > @@ -149,7 +149,8 @@ xmbuf_map_page(
+> > >  		return -ENOMEM;
+> > >  	}
+> > >  
+> > > -	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio, SGP_CACHE);
+> > > +	error = shmem_get_folio(inode, pos >> PAGE_SHIFT, &folio, SGP_CACHE,
+> > > +				PAGE_SIZE);
+> > 
+> > This is ok unless someone wants to use a different XMBUF_BLOCKSIZE.
+> > 
+> > --D
+> > 
+> > >  	if (error)
+> > >  		return error;
+> > >  
+> > > diff --git a/include/linux/shmem_fs.h b/include/linux/shmem_fs.h
+> > > index 3fb18f7eb73e..bc59b4a00228 100644
+> > > --- a/include/linux/shmem_fs.h
+> > > +++ b/include/linux/shmem_fs.h
+> > > @@ -142,7 +142,7 @@ enum sgp_type {
+> > >  };
+> > >  
+> > >  int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **foliop,
+> > > -		enum sgp_type sgp);
+> > > +		enum sgp_type sgp, size_t len);
+> > >  struct folio *shmem_read_folio_gfp(struct address_space *mapping,
+> > >  		pgoff_t index, gfp_t gfp);
+> > >  
+> > > diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+> > > index 38830174608f..947770ded68c 100644
+> > > --- a/mm/khugepaged.c
+> > > +++ b/mm/khugepaged.c
+> > > @@ -1863,7 +1863,8 @@ static int collapse_file(struct mm_struct *mm, unsigned long addr,
+> > >  				xas_unlock_irq(&xas);
+> > >  				/* swap in or instantiate fallocated page */
+> > >  				if (shmem_get_folio(mapping->host, index,
+> > > -						&folio, SGP_NOALLOC)) {
+> > > +						    &folio, SGP_NOALLOC,
+> > > +						    PAGE_SIZE)) {
+> > >  					result = SCAN_FAIL;
+> > >  					goto xa_unlocked;
+> > >  				}
+> > > diff --git a/mm/shmem.c b/mm/shmem.c
+> > > index d531018ffece..fcd2c9befe19 100644
+> > > --- a/mm/shmem.c
+> > > +++ b/mm/shmem.c
+> > > @@ -1134,7 +1134,7 @@ static struct folio *shmem_get_partial_folio(struct inode *inode, pgoff_t index)
+> > >  	 * (although in some cases this is just a waste of time).
+> > >  	 */
+> > >  	folio = NULL;
+> > > -	shmem_get_folio(inode, index, &folio, SGP_READ);
+> > > +	shmem_get_folio(inode, index, &folio, SGP_READ, PAGE_SIZE);
+> > >  	return folio;
+> > >  }
+> > >  
+> > > @@ -1844,7 +1844,7 @@ static struct folio *shmem_alloc_folio(gfp_t gfp, struct shmem_inode_info *info,
+> > >  
+> > >  static struct folio *shmem_alloc_and_add_folio(gfp_t gfp,
+> > >  		struct inode *inode, pgoff_t index,
+> > > -		struct mm_struct *fault_mm, bool huge)
+> > > +		struct mm_struct *fault_mm, bool huge, size_t len)
+> > >  {
+> > >  	struct address_space *mapping = inode->i_mapping;
+> > >  	struct shmem_inode_info *info = SHMEM_I(inode);
+> > > @@ -2173,7 +2173,7 @@ static int shmem_swapin_folio(struct inode *inode, pgoff_t index,
+> > >   */
+> > >  static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+> > >  		struct folio **foliop, enum sgp_type sgp, gfp_t gfp,
+> > > -		struct vm_fault *vmf, vm_fault_t *fault_type)
+> > > +		struct vm_fault *vmf, vm_fault_t *fault_type, size_t len)
+> > >  {
+> > >  	struct vm_area_struct *vma = vmf ? vmf->vma : NULL;
+> > >  	struct mm_struct *fault_mm;
+> > > @@ -2258,7 +2258,7 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+> > >  		huge_gfp = vma_thp_gfp_mask(vma);
+> > >  		huge_gfp = limit_gfp_mask(huge_gfp, gfp);
+> > >  		folio = shmem_alloc_and_add_folio(huge_gfp,
+> > > -				inode, index, fault_mm, true);
+> > > +				inode, index, fault_mm, true, len);
+> > >  		if (!IS_ERR(folio)) {
+> > >  			count_vm_event(THP_FILE_ALLOC);
+> > >  			goto alloced;
+> > > @@ -2267,7 +2267,8 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+> > >  			goto repeat;
+> > >  	}
+> > >  
+> > > -	folio = shmem_alloc_and_add_folio(gfp, inode, index, fault_mm, false);
+> > > +	folio = shmem_alloc_and_add_folio(gfp, inode, index, fault_mm, false,
+> > > +					  len);
+> > >  	if (IS_ERR(folio)) {
+> > >  		error = PTR_ERR(folio);
+> > >  		if (error == -EEXIST)
+> > > @@ -2377,10 +2378,10 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+> > >   * Return: 0 if successful, else a negative error code.
+> > >   */
+> > >  int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **foliop,
+> > > -		enum sgp_type sgp)
+> > > +		enum sgp_type sgp, size_t len)
+> > >  {
+> > >  	return shmem_get_folio_gfp(inode, index, foliop, sgp,
+> > > -			mapping_gfp_mask(inode->i_mapping), NULL, NULL);
+> > > +			mapping_gfp_mask(inode->i_mapping), NULL, NULL, len);
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(shmem_get_folio);
+> > >  
+> > > @@ -2475,7 +2476,7 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
+> > >  
+> > >  	WARN_ON_ONCE(vmf->page != NULL);
+> > >  	err = shmem_get_folio_gfp(inode, vmf->pgoff, &folio, SGP_CACHE,
+> > > -				  gfp, vmf, &ret);
+> > > +				  gfp, vmf, &ret, PAGE_SIZE);
+> > >  	if (err)
+> > >  		return vmf_error(err);
+> > >  	if (folio) {
+> > > @@ -2954,6 +2955,9 @@ shmem_write_begin(struct file *file, struct address_space *mapping,
+> > >  	struct folio *folio;
+> > >  	int ret = 0;
+> > >  
+> > > +	if (!mapping_large_folio_support(mapping))
+> > > +		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
+> > > +
+> > >  	/* i_rwsem is held by caller */
+> > >  	if (unlikely(info->seals & (F_SEAL_GROW |
+> > >  				   F_SEAL_WRITE | F_SEAL_FUTURE_WRITE))) {
+> > > @@ -2963,7 +2967,7 @@ shmem_write_begin(struct file *file, struct address_space *mapping,
+> > >  			return -EPERM;
+> > >  	}
+> > >  
+> > > -	ret = shmem_get_folio(inode, index, &folio, SGP_WRITE);
+> > > +	ret = shmem_get_folio(inode, index, &folio, SGP_WRITE, len);
+> > >  	if (ret)
+> > >  		return ret;
+> > >  
+> > > @@ -3083,7 +3087,7 @@ static ssize_t shmem_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+> > >  				break;
+> > >  		}
+> > >  
+> > > -		error = shmem_get_folio(inode, index, &folio, SGP_READ);
+> > > +		error = shmem_get_folio(inode, index, &folio, SGP_READ, PAGE_SIZE);
+> > >  		if (error) {
+> > >  			if (error == -EINVAL)
+> > >  				error = 0;
+> > > @@ -3260,7 +3264,7 @@ static ssize_t shmem_file_splice_read(struct file *in, loff_t *ppos,
+> > >  			break;
+> > >  
+> > >  		error = shmem_get_folio(inode, *ppos / PAGE_SIZE, &folio,
+> > > -					SGP_READ);
+> > > +					SGP_READ, PAGE_SIZE);
+> > >  		if (error) {
+> > >  			if (error == -EINVAL)
+> > >  				error = 0;
+> > > @@ -3469,7 +3473,8 @@ static long shmem_fallocate(struct file *file, int mode, loff_t offset,
+> > >  			error = -ENOMEM;
+> > >  		else
+> > >  			error = shmem_get_folio(inode, index, &folio,
+> > > -						SGP_FALLOC);
+> > > +						SGP_FALLOC,
+> > > +						(end - index) << PAGE_SHIFT);
+> > >  		if (error) {
+> > >  			info->fallocend = undo_fallocend;
+> > >  			/* Remove the !uptodate folios we added */
+> > > @@ -3822,7 +3827,7 @@ static int shmem_symlink(struct mnt_idmap *idmap, struct inode *dir,
+> > >  	} else {
+> > >  		inode_nohighmem(inode);
+> > >  		inode->i_mapping->a_ops = &shmem_aops;
+> > > -		error = shmem_get_folio(inode, 0, &folio, SGP_WRITE);
+> > > +		error = shmem_get_folio(inode, 0, &folio, SGP_WRITE, PAGE_SIZE);
+> > >  		if (error)
+> > >  			goto out_remove_offset;
+> > >  		inode->i_op = &shmem_symlink_inode_operations;
+> > > @@ -3868,7 +3873,7 @@ static const char *shmem_get_link(struct dentry *dentry, struct inode *inode,
+> > >  			return ERR_PTR(-ECHILD);
+> > >  		}
+> > >  	} else {
+> > > -		error = shmem_get_folio(inode, 0, &folio, SGP_READ);
+> > > +		error = shmem_get_folio(inode, 0, &folio, SGP_READ, PAGE_SIZE);
+> > >  		if (error)
+> > >  			return ERR_PTR(error);
+> > >  		if (!folio)
+> > > @@ -5255,7 +5260,7 @@ struct folio *shmem_read_folio_gfp(struct address_space *mapping,
+> > >  	int error;
+> > >  
+> > >  	error = shmem_get_folio_gfp(inode, index, &folio, SGP_CACHE,
+> > > -				    gfp, NULL, NULL);
+> > > +				    gfp, NULL, NULL, PAGE_SIZE);
+> > >  	if (error)
+> > >  		return ERR_PTR(error);
+> > >  
+> > > diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
+> > > index 3c3539c573e7..540a0c2d4325 100644
+> > > --- a/mm/userfaultfd.c
+> > > +++ b/mm/userfaultfd.c
+> > > @@ -359,7 +359,7 @@ static int mfill_atomic_pte_continue(pmd_t *dst_pmd,
+> > >  	struct page *page;
+> > >  	int ret;
+> > >  
+> > > -	ret = shmem_get_folio(inode, pgoff, &folio, SGP_NOALLOC);
+> > > +	ret = shmem_get_folio(inode, pgoff, &folio, SGP_NOALLOC, PAGE_SIZE);
+> > >  	/* Our caller expects us to return -EFAULT if we failed to find folio */
+> > >  	if (ret == -ENOENT)
+> > >  		ret = -EFAULT;
+> > > -- 
+> > > 2.43.0
+> > > 
