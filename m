@@ -1,110 +1,133 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98FC8C13
-	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 01:05:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFDE9F510
+	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 01:06:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716253553; cv=none; b=Ep7WNa5H8TrSq+bsgJeoxNQFVJXQCDR86JwtSvsookGmK5QQmw62F0ZwLcaYOXeblTZ2a4WgMIrrce5680sGljfHf3veMsfO+N+n00XH8HEBuF0JvE7rD7rN6ZWnuUER0AS0ENwTG0nXqMCtxR1W4oCyuSkroSBLELWrGHCqlP8=
+	t=1716253564; cv=none; b=KqSn4+YZZAtaWiZU7m98BscLUWm/cNZmUoMVFApKIddeXYgWK4OiUc/+e7DVEdRIWgwX35whg8HhcFlOlo/cziO4d9yR3BTsSqbzH6p234XuUcfwehKvBYeEuiapyZP1qZmlxm0F4qAy8uopD3+g2Q2x53foBbOwGm3BRi/paw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716253553; c=relaxed/simple;
-	bh=sODGnfmKfl05kirINZM0ji46vr8FOdY8tSVDyJHhRbE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oSlViAj2Zu5iydgdEZ6xbOk0We9HCXAfFUtbYcIXbOLDzdHxfEbqEsyU3EkmNLpikvfjtqA8Fz0SZXfPZpVovPDsrYRablwES3qGvAVYbhSL+oJO7BM5ZTLu+0cshUMBEs9HPB+UojD+kh5Gf3U+NY3WDfl1SCP5TgJkigwPFX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GEoTHXUr; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1716253564; c=relaxed/simple;
+	bh=FLiRxNRXfix3FidDvsYZRzWZFqTb2hWXWi94GISuDss=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KQ0dseoq+UFDF9vJK2qSaZ/XsXnqVkiNBFTOHw0y2Xg94qi/6kgchR98sANzh102wXXIWkKuWeeJVSAhtHkQxEifL0icoGxZO/b0dZKYUOStms5P0nIgul/nwvYBObR3612GTpQSR0/H30L+7NTcc2qR6HMIfxd6zXBcHHb9dyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WeSYa2LS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GEoTHXUr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1716253550;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=p+IRLtr3CD5713sw58Oz9jeFDrRIoC1ExmWuiRLK+04=;
-	b=GEoTHXUrhWOQtJe8/gVRXYHEtDMgF/YjnJkK4+cO1Le3JZtxtg7eJzdvC4YiZEgYhi0Es2
-	2EYb7qgQICzfgWGMHW83zHpRX5TVrZB+p4bUVuoBBMaaCilNeVkh3ipNvfV2TOMZH3qeGx
-	XmY9sOoejEJBz4SYZOlCgLqA1gAws2E=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-277-KeCRYlUTNsK6up0b_EHx3A-1; Mon, 20 May 2024 21:05:47 -0400
-X-MC-Unique: KeCRYlUTNsK6up0b_EHx3A-1
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-a55709e5254so492623866b.3
-        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 18:05:47 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716253546; x=1716858346;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=p+IRLtr3CD5713sw58Oz9jeFDrRIoC1ExmWuiRLK+04=;
-        b=T8K3lk2/4RO+XV8LhZybLZY8gh/v3IW7i+0axkRtWj7RqQ6VPigknLt+2JmOZpqnM9
-         afdlccJArBI722SCoJ5d3BKRd54QM8C50kEIGlvGj3OIXN5xare+BCYV3ZL2meHh9IZC
-         zw16wxA1Hfvn3Kw9+f6eSAi6AsVLJ8Vd5KY2W46976tXQmK6AzWUrkUittQOoemqHqSP
-         PypG8BhZBmtmHzvFeMMbjaWldCEJcIYfSrFZOACfld5ryR6DNHKlE5BjKVMyDl8mghGD
-         FOTzaHgk1nGinfObrYCIzJOSGSkrLIFzLCJvwTVyFd6Q+c6LGYtM+94UcsQiSl0a2Z0f
-         B+EA==
-X-Forwarded-Encrypted: i=1; AJvYcCX6OagMUPcZGogQNvrKApZQ1mffqawWazoT18kJg9DYGX1Uo5rMgj7d/rQI/hjVH5DDJQf4gbKw0sYwzbFhyBxuCymGumR7a9XB
-X-Gm-Message-State: AOJu0YzlDi74M6Q9dRy+5Y0GatmAlKlQGxbFl7CGrHsSZ6T9c7hyNtrs
-	/4TqcDRINUyhhGPrvSnBTQsiu7NVkeMs9OKyz5tHKRqWeNW5oB3kxfzbnrmJnb4GiiBPM2KK/Rb
-	R4gm+6DGsz7+czkGnURr6UG1+tZdjmy24xAFZaOUv7fopdaIh5WoMI7IHA4lSQoVcr4dhKe5EIl
-	P6gNV6aKJywlfvJ/1WSDqkg2X0maQ8Xkin
-X-Received: by 2002:a17:906:eb52:b0:a5a:769d:1f8f with SMTP id a640c23a62f3a-a5a769d1fb5mr1326814466b.68.1716253546268;
-        Mon, 20 May 2024 18:05:46 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFmLA8Se8SsEJHpWJGihreHRU2FyfqBzUvAldKqKbqZ3YYcBppqSSpDm5brTkI9ODNGufLxUVJm562I8U/37oM=
-X-Received: by 2002:a17:906:eb52:b0:a5a:769d:1f8f with SMTP id
- a640c23a62f3a-a5a769d1fb5mr1326813166b.68.1716253545613; Mon, 20 May 2024
- 18:05:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WeSYa2LS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 369FBC2BD10;
+	Tue, 21 May 2024 01:06:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1716253564;
+	bh=FLiRxNRXfix3FidDvsYZRzWZFqTb2hWXWi94GISuDss=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WeSYa2LSYEErQz8BHnkS0Qh/LgPIX4iY0v8/RYIWueHhMWXjpGlc2LY/nT3YyAzs5
+	 zyUyp4vVqfjZWFATcnj9q3yk1s7cuKbIA3XuPpGEVTEVa+uUSLKo88EsChYF7tcdoB
+	 4ZKheG2AGBzBuBPhuc2qa9Xtvg0h18Omo0P6Yv/SJgTNewUvNoXqaweSHY8zfOfY8F
+	 uGd7jtFIi48A6kVXKdplZbynzaxrncJ7pfBNxgE0e4+67bfhMfV59aNf5a73RvcPBj
+	 nBJxCFdWrbnS4BkGcIeE9DOIANO+FrzgaaoFWDOJlUSOvB3G2QkMTFCjFFdfnf7lnf
+	 Qad4PCeaRE0pg==
+Date: Mon, 20 May 2024 18:06:03 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chandan Babu R <chandanbabu@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] generic: test creating and removing symlink xattrs
+Message-ID: <20240521010603.GN25518@frogsfrogsfrogs>
+References: <20240521010447.GM25518@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
- <ZktnrDCSpUYOk5xm@infradead.org>
-In-Reply-To: <ZktnrDCSpUYOk5xm@infradead.org>
-From: Guangwu Zhang <guazhang@redhat.com>
-Date: Tue, 21 May 2024 09:05:34 +0800
-Message-ID: <CAGS2=YqCD15RVtZ=NWVjPMa22H3wks1z6TSMVk7jmE_k1A-csg@mail.gmail.com>
-Subject: Re: [bug report] Internal error isnullstartblock(got.br_startblock) a
- t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	fstests@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240521010447.GM25518@frogsfrogsfrogs>
 
-yes,
-the branch header info.
-commit 04d3822ddfd11fa2c9b449c977f340b57996ef3d
-Merge: 59ef81807482 7b815817aa58
-Author: Jens Axboe <axboe@kernel.dk>
-Date:   Fri May 17 09:40:38 2024 -0600
+From: Darrick J. Wong <djwong@kernel.org>
 
-    Merge branch 'block-6.10' into for-next
+This began as a regression test for the issues identified in "xfs: allow
+symlinks with short remote targets".  To summarize, the kernel XFS code
+does not convert a remote symlink back to a shortform symlink after
+deleting the attr fork.  Recent attempts to tighten validation have
+flagged this incorrectly, so we need a regression test to focus on this
+dusty corner of the codebase.
 
-    * block-6.10:
-      blk-mq: add helper for checking if one CPU is mapped to specified hct=
-x
+However, there's nothing in here that's xfs-specific so it's a generic
+test.
 
-Christoph Hellwig <hch@infradead.org> =E4=BA=8E2024=E5=B9=B45=E6=9C=8820=E6=
-=97=A5=E5=91=A8=E4=B8=80 23:09=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Mon, May 20, 2024 at 07:48:13PM +0800, Guangwu Zhang wrote:
-> > Hi,
-> > I get a xfs error when run xfstests  generic/461 testing with
-> > linux-block for-next branch.
-> > looks it easy to reproduce with s390x arch.
->
-> Just to clarify, you see this with the block for-next branch, but not
-> with Linux 6.9 or current Linus tree?
->
->
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ tests/generic/1836     |   53 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1836.out |    2 ++
+ 2 files changed, 55 insertions(+)
+ create mode 100755 tests/generic/1836
+ create mode 100644 tests/generic/1836.out
 
-
---=20
-Guangwu Zhang
-Thanks
-
+diff --git a/tests/generic/1836 b/tests/generic/1836
+new file mode 100755
+index 0000000000..d5e45bb47a
+--- /dev/null
++++ b/tests/generic/1836
+@@ -0,0 +1,53 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1836
++#
++# Test that we can add xattrs to a symbolic link, remove all the xattrs, and
++# that the symbolic link doesn't get corrupted.
++#
++. ./common/preamble
++_begin_fstest auto
++
++_supported_fs generic
++_require_scratch
++
++_scratch_mkfs >> $seqres.full
++_scratch_mount >> $seqres.full
++
++SYMLINK_ADD="0123456789ABCDEF01234567890ABCDEF"
++
++# test from 32 to MAXPATHLEN sized symlink. This should make sure that
++# 256-1024 byte version 2 and 3 inodes are covered.
++SYMLINK=""
++for ((SIZE = 32; SIZE < 1024; SIZE += 32)); do
++	SYMLINK_FILE="$SCRATCH_MNT/symlink.$SIZE"
++	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
++	ln -s $SYMLINK $SYMLINK_FILE > /dev/null 2>&1
++
++# add the extended attributes
++	attr  -Rs 1234567890ab $SYMLINK_FILE < /dev/null > /dev/null 2>&1
++	attr  -Rs 1234567890ac $SYMLINK_FILE < /dev/null > /dev/null 2>&1
++	attr  -Rs 1234567890ad $SYMLINK_FILE < /dev/null > /dev/null 2>&1
++# remove the extended attributes
++	attr  -Rr 1234567890ab $SYMLINK_FILE > /dev/null 2>&1
++	attr  -Rr 1234567890ac $SYMLINK_FILE > /dev/null 2>&1
++	attr  -Rr 1234567890ad $SYMLINK_FILE > /dev/null 2>&1
++done
++
++_scratch_cycle_mount
++
++# Now check the symlink target contents
++SYMLINK=""
++for ((SIZE = 32; SIZE < 1024; SIZE += 32)); do
++	SYMLINK_FILE="$SCRATCH_MNT/symlink.$SIZE"
++	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
++
++	target="$(readlink $SYMLINK_FILE)"
++	test "$target" = "$SYMLINK" || echo "$SYMLINK_FILE: target is corrupt"
++done
++
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/generic/1836.out b/tests/generic/1836.out
+new file mode 100644
+index 0000000000..cf78922dea
+--- /dev/null
++++ b/tests/generic/1836.out
+@@ -0,0 +1,2 @@
++QA output created by 1836
++Silence is golden
