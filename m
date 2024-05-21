@@ -1,132 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48C057F
-	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 01:04:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98FC8C13
+	for <linux-xfs@vger.kernel.org>; Tue, 21 May 2024 01:05:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716253488; cv=none; b=AJvIRugBh1w4eoCy9UeVYCjN7l2gJvEoijWe20wbVlWgamz+FK9zZ9IgOtAtMKWtQl2CxT5OwaPYmgIDAVDddk5bPhL9hbhNWy4VJpMXFszmKButeu/Nkk5+Y9aa++C5u33gZhj5nmpNsuiCitpnh+cUo1DALX85I1HYuiY/5xo=
+	t=1716253553; cv=none; b=Ep7WNa5H8TrSq+bsgJeoxNQFVJXQCDR86JwtSvsookGmK5QQmw62F0ZwLcaYOXeblTZ2a4WgMIrrce5680sGljfHf3veMsfO+N+n00XH8HEBuF0JvE7rD7rN6ZWnuUER0AS0ENwTG0nXqMCtxR1W4oCyuSkroSBLELWrGHCqlP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716253488; c=relaxed/simple;
-	bh=ecoH7rU0bqAfjtH31fs/74xzMCIxLDoUG7HTpsLPix8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=r11d4e/AA5IDTXthITtCG+VhtvN22mc1nmKOfvTNCUdHa9Pl7yC2KhkvBUOnHTdnyUoIHCLEFBh8KCyvDTgb2Tab1Ujo3olFChr1y/Y6yNTRgFzQfBBXy+ggSjxHhmffUdvYzXWF4vvSHm5+uISm3o0YszTIWg7cFYxRXXoYP0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tQxhB25M; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716253553; c=relaxed/simple;
+	bh=sODGnfmKfl05kirINZM0ji46vr8FOdY8tSVDyJHhRbE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oSlViAj2Zu5iydgdEZ6xbOk0We9HCXAfFUtbYcIXbOLDzdHxfEbqEsyU3EkmNLpikvfjtqA8Fz0SZXfPZpVovPDsrYRablwES3qGvAVYbhSL+oJO7BM5ZTLu+0cshUMBEs9HPB+UojD+kh5Gf3U+NY3WDfl1SCP5TgJkigwPFX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GEoTHXUr; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tQxhB25M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A04AC2BD10;
-	Tue, 21 May 2024 01:04:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716253488;
-	bh=ecoH7rU0bqAfjtH31fs/74xzMCIxLDoUG7HTpsLPix8=;
-	h=Date:From:To:Cc:Subject:From;
-	b=tQxhB25MxyzIx1tHURFNpYouR1sG8eFfpntBpRyYx3vSHHqcx/RHXbS4pJr/0rQs1
-	 8qPjOh6cq26JTpnJlAR11M2bE/oZjN2Y4Bho4kUrJBBSjI6MgNV/THKqJpLkbjs2Up
-	 vbZrGj6kgsyr9Mk8I4OvpDXc+xG9+GoEZg/LURYAy66JAAs5xKguf54VRr97x7dTJF
-	 nyFJjhUvUT1jjrmf0NZnPGV6C7ggGcKBoszX/jGnhe9VkDiUv08c1HxLG5O2RTW/Nk
-	 EHOAjMkbE5Cg+RwrGYxcjAvZQbSPexYV1dit9aAXiwCco1nDbMTBPfn3PLUXQGck1S
-	 rOZ616NjGxf5g==
-Date: Mon, 20 May 2024 18:04:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chandan Babu R <chandanbabu@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: allow symlinks with short remote targets
-Message-ID: <20240521010447.GM25518@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GEoTHXUr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1716253550;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=p+IRLtr3CD5713sw58Oz9jeFDrRIoC1ExmWuiRLK+04=;
+	b=GEoTHXUrhWOQtJe8/gVRXYHEtDMgF/YjnJkK4+cO1Le3JZtxtg7eJzdvC4YiZEgYhi0Es2
+	2EYb7qgQICzfgWGMHW83zHpRX5TVrZB+p4bUVuoBBMaaCilNeVkh3ipNvfV2TOMZH3qeGx
+	XmY9sOoejEJBz4SYZOlCgLqA1gAws2E=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-277-KeCRYlUTNsK6up0b_EHx3A-1; Mon, 20 May 2024 21:05:47 -0400
+X-MC-Unique: KeCRYlUTNsK6up0b_EHx3A-1
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-a55709e5254so492623866b.3
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2024 18:05:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1716253546; x=1716858346;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=p+IRLtr3CD5713sw58Oz9jeFDrRIoC1ExmWuiRLK+04=;
+        b=T8K3lk2/4RO+XV8LhZybLZY8gh/v3IW7i+0axkRtWj7RqQ6VPigknLt+2JmOZpqnM9
+         afdlccJArBI722SCoJ5d3BKRd54QM8C50kEIGlvGj3OIXN5xare+BCYV3ZL2meHh9IZC
+         zw16wxA1Hfvn3Kw9+f6eSAi6AsVLJ8Vd5KY2W46976tXQmK6AzWUrkUittQOoemqHqSP
+         PypG8BhZBmtmHzvFeMMbjaWldCEJcIYfSrFZOACfld5ryR6DNHKlE5BjKVMyDl8mghGD
+         FOTzaHgk1nGinfObrYCIzJOSGSkrLIFzLCJvwTVyFd6Q+c6LGYtM+94UcsQiSl0a2Z0f
+         B+EA==
+X-Forwarded-Encrypted: i=1; AJvYcCX6OagMUPcZGogQNvrKApZQ1mffqawWazoT18kJg9DYGX1Uo5rMgj7d/rQI/hjVH5DDJQf4gbKw0sYwzbFhyBxuCymGumR7a9XB
+X-Gm-Message-State: AOJu0YzlDi74M6Q9dRy+5Y0GatmAlKlQGxbFl7CGrHsSZ6T9c7hyNtrs
+	/4TqcDRINUyhhGPrvSnBTQsiu7NVkeMs9OKyz5tHKRqWeNW5oB3kxfzbnrmJnb4GiiBPM2KK/Rb
+	R4gm+6DGsz7+czkGnURr6UG1+tZdjmy24xAFZaOUv7fopdaIh5WoMI7IHA4lSQoVcr4dhKe5EIl
+	P6gNV6aKJywlfvJ/1WSDqkg2X0maQ8Xkin
+X-Received: by 2002:a17:906:eb52:b0:a5a:769d:1f8f with SMTP id a640c23a62f3a-a5a769d1fb5mr1326814466b.68.1716253546268;
+        Mon, 20 May 2024 18:05:46 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFmLA8Se8SsEJHpWJGihreHRU2FyfqBzUvAldKqKbqZ3YYcBppqSSpDm5brTkI9ODNGufLxUVJm562I8U/37oM=
+X-Received: by 2002:a17:906:eb52:b0:a5a:769d:1f8f with SMTP id
+ a640c23a62f3a-a5a769d1fb5mr1326813166b.68.1716253545613; Mon, 20 May 2024
+ 18:05:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
+ <ZktnrDCSpUYOk5xm@infradead.org>
+In-Reply-To: <ZktnrDCSpUYOk5xm@infradead.org>
+From: Guangwu Zhang <guazhang@redhat.com>
+Date: Tue, 21 May 2024 09:05:34 +0800
+Message-ID: <CAGS2=YqCD15RVtZ=NWVjPMa22H3wks1z6TSMVk7jmE_k1A-csg@mail.gmail.com>
+Subject: Re: [bug report] Internal error isnullstartblock(got.br_startblock) a
+ t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	fstests@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Darrick J. Wong <djwong@kernel.org>
+yes,
+the branch header info.
+commit 04d3822ddfd11fa2c9b449c977f340b57996ef3d
+Merge: 59ef81807482 7b815817aa58
+Author: Jens Axboe <axboe@kernel.dk>
+Date:   Fri May 17 09:40:38 2024 -0600
 
-An internal user complained about log recovery failing on a symlink
-("Bad dinode after recovery") with the following (excerpted) format:
+    Merge branch 'block-6.10' into for-next
 
-core.magic = 0x494e
-core.mode = 0120777
-core.version = 3
-core.format = 2 (extents)
-core.nlinkv2 = 1
-core.nextents = 1
-core.size = 297
-core.nblocks = 1
-core.naextents = 0
-core.forkoff = 0
-core.aformat = 2 (extents)
-u3.bmx[0] = [startoff,startblock,blockcount,extentflag]
-0:[0,12,1,0]
+    * block-6.10:
+      blk-mq: add helper for checking if one CPU is mapped to specified hct=
+x
 
-This is a symbolic link with a 297-byte target stored in a disk block,
-which is to say this is a symlink with a remote target.  The forkoff is
-0, which is to say that there's 512 - 176 == 336 bytes in the inode core
-to store the data fork.
+Christoph Hellwig <hch@infradead.org> =E4=BA=8E2024=E5=B9=B45=E6=9C=8820=E6=
+=97=A5=E5=91=A8=E4=B8=80 23:09=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Mon, May 20, 2024 at 07:48:13PM +0800, Guangwu Zhang wrote:
+> > Hi,
+> > I get a xfs error when run xfstests  generic/461 testing with
+> > linux-block for-next branch.
+> > looks it easy to reproduce with s390x arch.
+>
+> Just to clarify, you see this with the block for-next branch, but not
+> with Linux 6.9 or current Linus tree?
+>
+>
 
-Eventually, testing of generic/388 failed with the same inode corruption
-message during inode recovery.  In writing a debugging patch to call
-xfs_dinode_verify on dirty inode log items when we're committing
-transactions, I observed that xfs/298 can reproduce the problem quite
-quickly.
 
-xfs/298 creates a symbolic link, adds some extended attributes, then
-deletes them all.  The test failure occurs when the final removexattr
-also deletes the attr fork because that does not convert the remote
-symlink back into a shortform symlink.  That is how we trip this test.
-The only reason why xfs/298 only triggers with the debug patch added is
-that it deletes the symlink, so the final iflush shows the inode as
-free.
+--=20
+Guangwu Zhang
+Thanks
 
-I wrote a quick fstest to emulate the behavior of xfs/298, except that
-it leaves the symlinks on the filesystem after inducing the "corrupt"
-state.  Kernels going back at least as far as 4.18 have written out
-symlink inodes in this manner and prior to 1eb70f54c445f they did not
-object to reading them back in.
-
-Because we've been writing out inodes this way for quite some time, the
-only way to fix this is to relax the check for symbolic links.
-Directories don't have this problem because di_size is bumped to
-blocksize during the sf->data conversion.
-
-Fixes: 1eb70f54c445f ("xfs: validate inode fork size against fork format")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_inode_buf.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 2305e64a4d5a9..88f4f2a1855ae 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -375,16 +375,27 @@ xfs_dinode_verify_fork(
- 	 * For fork types that can contain local data, check that the fork
- 	 * format matches the size of local data contained within the fork.
- 	 *
-+	 * A symlink with a small target can have a data fork can be in extents
-+	 * format if xattrs were added (thus converting the data fork from
-+	 * shortform to remote format) and then removed.
-+	 *
- 	 * For all types, check that when the size says the should be in extent
- 	 * or btree format, the inode isn't claiming it is in local format.
- 	 */
- 	if (whichfork == XFS_DATA_FORK) {
--		if (S_ISDIR(mode) || S_ISLNK(mode)) {
-+		if (S_ISDIR(mode)) {
- 			if (be64_to_cpu(dip->di_size) <= fork_size &&
- 			    fork_format != XFS_DINODE_FMT_LOCAL)
- 				return __this_address;
- 		}
- 
-+		if (S_ISLNK(mode)) {
-+			if (be64_to_cpu(dip->di_size) <= fork_size &&
-+			    fork_format != XFS_DINODE_FMT_EXTENTS &&
-+			    fork_format != XFS_DINODE_FMT_LOCAL)
-+				return __this_address;
-+		}
-+
- 		if (be64_to_cpu(dip->di_size) > fork_size &&
- 		    fork_format == XFS_DINODE_FMT_LOCAL)
- 			return __this_address;
