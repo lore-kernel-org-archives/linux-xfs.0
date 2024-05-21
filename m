@@ -1,228 +1,117 @@
-Received: from EUR04-DB3-obe.outbound.protection.outlook.com (mail-db3eur04on2079.outbound.protection.outlook.com [40.107.6.79])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56E91182DB;
-	Tue, 21 May 2024 03:41:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.6.79
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716262909; cv=fail; b=YU02kUzeJkZxnl80lUhwWRtaHFLTxfOX3zWxL9rl2ToT2spitre6C9sTTOxqa9MNVrNPl2RMc34/BQqUUQlaQ2ov1kiDGdH1O+vQ7GLp95SrpeFATOU81VstMIA48mS+Jt/Pq0CNP3K/pS1iqudl6Aj1Up1VerGvWSopCSRyXwo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716262909; c=relaxed/simple;
-	bh=3Br7GrShTYuvp0ga2yOM9alAgyEW/s7Msw9n8DatPDY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PsjnyHciebykaJDiMDR/6ZQJYYk9UO+fzO3b7PpI3dc5KE8eySFdYYEcFY82Mqvm0hqptETCtoVfx2D6Oinud83cxplHSHqfleuttZZVmfs2gABxzL1REzLkymk1NH4U9BZ0tYsuX2G2dXkqnjFCP2B9pth0JzFyOmtbdcNX9/o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b=hb18RWC4; arc=fail smtp.client-ip=40.107.6.79
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="hb18RWC4"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cCh0okGYE2JdN1hWfAlWLxs/n4jI1nhYPUQBbu/PXxMRRoT84pZH3diz4VSLiTX5QlzH/V/zIgcSesTp9GcYmMfdtXvSjI7t+ygIPmqVGxf2j7hpLS51z65QQ1QKMCVAxw4nRXJOGrhQiNMwkbIQtp0z6hONlbGRHWoaNDecPA/eLDdyP/SuktX3w+FwfMFM+RBGhjKFx6CVpi7XXlNC08lRSg8LsrelwQI4YMjMBuG2cio+cDYj5T6YTgsyklCqWT+eEA6X1BRS7HNeTdsqyxRVVZuJRDxa3O1TB2tMSnqj9aYx8wrpUTzXAPwr1hsAnIjJHliY7ZtGs/njCNXcNg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VioMiY8TvLlw52PeygM9+PK61Y19grDV3m6pKMV7lao=;
- b=bPDSibbNuxAMmrIBeLcd45KF5yII4OhIDGad7qQBYAhaG0L4/9WgSJLGmeT8HPPZP8MxPSsGhwcwGp8LjBGAaRdPmT4kDsRVCj7c0kt+Px3mfjYEJyM7Rn4PfAfRzkOmgOnCk0B66J4fUevJ/qT2KHviqNh6NE1q+Rx31i+0lERr3R14y6Swxg2kdYLjjuV/zauC/gjxfpcP3GhCa/E5vYUaESNPLbqIk06VBJVBe3WreHrWa/4Fn1pHLrvjgHcH4RyukigrEtfrURSEmq4XkHm5ZF9ut76V6NE2ikOud3ykxRS5+u0CD7Jzqk6fASTuu4zayOY4SfR0dR0grGFUnA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VioMiY8TvLlw52PeygM9+PK61Y19grDV3m6pKMV7lao=;
- b=hb18RWC4UFbylLc5RXDDoBR3mYgNsAeIkBfmGSrRVL9PugNGB57PO9UkHr4NTEu+zqejO5rHwC5YseIYm1QA3Z2K+FLALOwkRcHxpEZXJmhvV9+7RHF8/CjeXQIFXFxGYrTiRCGIua2Xih0DE9Oo7siug13IkumcNHA6Rj+KACE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from DU2PR04MB8822.eurprd04.prod.outlook.com (2603:10a6:10:2e1::11)
- by AM9PR04MB8212.eurprd04.prod.outlook.com (2603:10a6:20b:3b7::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.36; Tue, 21 May
- 2024 03:41:45 +0000
-Received: from DU2PR04MB8822.eurprd04.prod.outlook.com
- ([fe80::8d2f:ac7e:966a:2f5f]) by DU2PR04MB8822.eurprd04.prod.outlook.com
- ([fe80::8d2f:ac7e:966a:2f5f%6]) with mapi id 15.20.7587.035; Tue, 21 May 2024
- 03:41:45 +0000
-From: Xu Yang <xu.yang_2@nxp.com>
-To: brauner@kernel.org,
-	djwong@kernel.org,
-	willy@infradead.org,
-	akpm@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org,
-	jun.li@nxp.com
-Subject: [PATCH v5 2/2] iomap: fault in smaller chunks for non-large folio mappings
-Date: Tue, 21 May 2024 19:49:39 +0800
-Message-Id: <20240521114939.2541461-2-xu.yang_2@nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240521114939.2541461-1-xu.yang_2@nxp.com>
-References: <20240521114939.2541461-1-xu.yang_2@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG3P274CA0016.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:be::28)
- To DU2PR04MB8822.eurprd04.prod.outlook.com (2603:10a6:10:2e1::11)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4462D610C;
+	Tue, 21 May 2024 05:05:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1716267915; cv=none; b=DJ8+p2d7ObPcxgT77ZKnB+/h4giQvGNfB7MA69hHQ2q64NOEQvZR/q2sJxOCaRC9Meb8BF+agX+8C5+8BmGEdySPmdI7De7a0J1WVbEU1C379UkXep6Iqrme5wzsZb7PAijWvJ24HpPTaDM1Xung1yF5mFpOfGEMB2EUxMQJn+A=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1716267915; c=relaxed/simple;
+	bh=RP9vcw96CaaKADIQLctJHFBaWOSJ/J3L6fKmt2ShDuI=;
+	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=WF8Q0GrGNQD+bfav+OmtaeDz/LVrb5gb31Jn1KgJ0dX1tS9C4/hPODGmW+v8ceTTmvwZ0oxeiia7jCrvqpdjP5TV2yXUxsrQDF3WERA5huBPM+/FLIPEcvl87X9ENMSRcEUaoi3Dsj9c3lnKveeVMSplFZDWes7UzddZ/yJbgp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Vk2Rq39h4z4f3jcq;
+	Tue, 21 May 2024 13:04:55 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 542A91A08CC;
+	Tue, 21 May 2024 13:05:04 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP2 (Coremail) with SMTP id Syh0CgDH6w58K0xmGAdNNg--.20155S3;
+	Tue, 21 May 2024 13:05:01 +0800 (CST)
+Subject: Re: [bug report] Internal error isnullstartblock(got.br_startblock) a
+ t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.
+To: Guangwu Zhang <guazhang@redhat.com>, linux-block@vger.kernel.org,
+ linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+References: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <ae36c333-29fe-1bfd-9558-894b614e916d@huaweicloud.com>
+Date: Tue, 21 May 2024 13:05:00 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU2PR04MB8822:EE_|AM9PR04MB8212:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7bacdb00-c3e4-43a9-3d71-08dc7947eff9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230031|1800799015|52116005|376005|366007|38350700005;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?W06iFkFeU7S0NA0F7Qe06bfN70lvi/6IepHznwpGI8lkL2dbJ7jaXLdfp73b?=
- =?us-ascii?Q?Bka4BLwJbZSOTrMVl3mo6sFVwtOmrHYWPI/4VhDcndDzdqjA4dY+m2TwQIdC?=
- =?us-ascii?Q?2KMwVeqUQDlAfLcBSB3/Lbe2gLBLETB9lCnS74HGAtLRgpdS0IJ/eYz+XMYy?=
- =?us-ascii?Q?m3/YYkBlnUg6w9zRZ+e7luoa9qSJykS/WBBcahIumf6FaQrLxykUVWf9FVbh?=
- =?us-ascii?Q?FpxpdddVkJYWSO/j4kefQ8XSPoaj6rgzkxfXG99XJ9uQdzw5hUkZMhwr9Wp0?=
- =?us-ascii?Q?IAkwXDtVgD0Lw8g4nv0Hnusqar9g6mp+flsZJgVd00HrX5Kb9cD2x0S4+oMN?=
- =?us-ascii?Q?vkmiqHNHj/fP/UNFqQpckSxTGBUPI/KnM+RMX2CKMrDoRlkM3B+cUR6Pt5vI?=
- =?us-ascii?Q?rN6aJLGYDtDHCPSOvs7YngWg7kHAjk8LzTbJVft5u+FkmrfLJkvPbJL4e7rn?=
- =?us-ascii?Q?N6e3uSw2kWoI+kASbQuOVZPvSfterfZOSM5uHjI9UkGz9RxhtSbWidIiHbdT?=
- =?us-ascii?Q?PB3uYaxrL7pqbUV/dtFYrSuUZClMP+LxBHQrJNiYlIchLe2749E78azmwL+a?=
- =?us-ascii?Q?5IJQ/O81DrpEk2uZvi7Q8R2/Ja430DeUlJSLtdw4NOvgjUkwJ5Ik8nL0EQ+8?=
- =?us-ascii?Q?vSSVcZNqGFfL+zWfqrQR+6ENBzzm3it780sePD6quWLgz5xpWX9Yh1DW3wjJ?=
- =?us-ascii?Q?XH+UB0yAjKCIeCLqmHiwFhp+OKUcq4fMQEbVfoujgijUeIy6dKrbUGK5c7i5?=
- =?us-ascii?Q?RW3tBqcHHIw1COkmHd7n284ejvmH8+XJz4L8CCSK71kADjmG+iI+KM3/QoXY?=
- =?us-ascii?Q?PrYPdCAhyoTSJnMvTRjEFFaqPtaMJQ+VdnhPieWgleboT0Vzzit8HKi5J8xE?=
- =?us-ascii?Q?PJS9hsg3G+Byx44+AuG9Iw17KC3l92IhkzFHUzM+/c6jPwyYjldqFjMvnqF7?=
- =?us-ascii?Q?xrVp8Kr0gf713kWooHjRYo60jWOconZT6ZSSXyoSORUBVQLt28iNb/q8UtmF?=
- =?us-ascii?Q?RCHvN+46J7nRdhYDKWdAkHSR0Yu7L+kvlMGrydFlM5K/BX3nAINew74wDfXz?=
- =?us-ascii?Q?DwMgDuY0dKA5ykokYzcKFOKq13V8Vu2EVZg98lXz/ALsdN5wnW14tYUzUjGR?=
- =?us-ascii?Q?XjXR0g+imEY3ECHfcg/Rh+p/Z/+nIa3tiUTMA8pp5FYkK5xwBIkOwLrOe85k?=
- =?us-ascii?Q?VPSB2+rXIs4vt4xuaAcCtoNLfOBjnaP+PAE6hAnl8Kvv9hu5YUUmvg6VsHCb?=
- =?us-ascii?Q?cCyBZ1IfcpK64PYBYdQRcYS+l3lgqx3o2/muFL6MiHVix8pwhlvuqwJXkBAp?=
- =?us-ascii?Q?PQxX4tAMV/hEkUSHyquXUItEwuumY6h8HzpNCfJaPThakg=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8822.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(52116005)(376005)(366007)(38350700005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?pthm84TnfcrQZK15VfVY56LsnkeeXb9llGHKZyxcfs0yRnNYyr0cnu93bgGt?=
- =?us-ascii?Q?myx8HqUMHawHlTRUNyZk0hHej0CyZTyYCGn+z9UbhpFtFxVd8tPFYWkkNg8P?=
- =?us-ascii?Q?rjaOT72yuVUrM8oEMNjyOKx0WeUQ8G0QpmRwdX7TBPK2I0kBEZjjV8gJ65vE?=
- =?us-ascii?Q?m2V4JuqXhsd/fDv6kRMkcd0vbue9kXprphFeQcTyrQVNJy3Z+5a/4U4mNeKe?=
- =?us-ascii?Q?NQPi8kLX6EDIpVmcjrOqFudMQ51WKrUc/Dav+f05U4cmz5xRcZ3zfaDgiDQX?=
- =?us-ascii?Q?lcSBtStZEkOMLTc/92hP/4BuGPy49ZpN2Tf7/Yp2FSfDfFUGm4u/8oCP2NPO?=
- =?us-ascii?Q?yMhiOiqwGzmFx9Kb91jjC2oaBwsVSmntGbmBAnGCz5MDmInFad9Bp1Of9+rX?=
- =?us-ascii?Q?gusEoFV6EiA7Y5E6fLl+BC2ZBSEzHXnxc7tFq8peDUD0+NGmQEgpYuwNIGgN?=
- =?us-ascii?Q?LnnPJgyCWiPjdIljre7wOmEd4AVVYCgArjeX0Iz2H2TxE+q7aMvNjmX+uMoW?=
- =?us-ascii?Q?dNMLL8aeyabAAK2aZ7sJwdmwj0EflPTBMO7Py+xbERpOxTOSRCk1ScOyqpv3?=
- =?us-ascii?Q?Y74RFZMiZKuLYQXKpwikj2szADUbcYroJdvhSw9jcPt/d/sqRmbxkBVhN9du?=
- =?us-ascii?Q?1qtIaX6BsjTHbx2SEfdbXDsYLG4tpYYJVElePhjCLXDBIq9IKqOsig+Qp+e9?=
- =?us-ascii?Q?8QLCtND5lwTN5xtC5PWOwNjYw8f6xvN3oDZtWqWuDEbt155YWgv5UHXQTlXc?=
- =?us-ascii?Q?qvlMHZU3FdtJ+3jYh4UnXKo6p+xdHOk2Pz2gtM1GVRA60xf5q5d66OrzrgCR?=
- =?us-ascii?Q?m55kZixnEiAUKYpRbfZf2XG4riXj/R5V49OKIAhwdKW2Zogyr54XLTlOd4ML?=
- =?us-ascii?Q?kzPmFUQRBIWuXV6y+9dRVkbfphziiGAEhn+VhcLvXNAuO5E/363Cobi/TVeG?=
- =?us-ascii?Q?YTiUjlLKZBw4k3JuPEf0tkrmO2BoyPCEd3uASUzc+c+SdKqLOrBSJjEeHkym?=
- =?us-ascii?Q?RJnYNoCycQ/gexvZPHLg3L2I9Ckq5Rfs4cqEnbGlCTzZjsJ0EMQZK+pkCLDf?=
- =?us-ascii?Q?0AAbgN7ShlpcBPnrP70wFOOcr5FrV+DiiLd3z+cwtaBDE5x15eD/+Kp26qtl?=
- =?us-ascii?Q?V8pRIWCsE4inNaecASFsScSqG+kvgSv0wVEwU8xTmAM6qyPJh6KMrODLzAP7?=
- =?us-ascii?Q?lMVtBnEl4SBYlXNPqYZxotZIYt2sJos14USVQrvW0tA8YtJb2+GLSpBy9FQ7?=
- =?us-ascii?Q?nIXtXddi6sMR2H08NSQRATXUs0LYKVkdhjMiqC6sl+eu3KzggxV72gplrAqE?=
- =?us-ascii?Q?NVDpSIvEKYE2qpCmljd2zZwb0J89JCIk0HNQsoN5argYHAbs2ZZ6rRriJmik?=
- =?us-ascii?Q?a0RiErk4/UoYD7ZE48ruBt55wCLE+BmG7IESnmdzyfghPmkn4W8n9Ijjovvw?=
- =?us-ascii?Q?tB6gGdtiKkarauo4LJyuzyei0JnTBp/N34GH1OrB8/uN8q2+X8J+0Y6fLbF1?=
- =?us-ascii?Q?N8uQSFKi5IiQ3U4z1gyM7o+7AL7BazHPXhVtL+RyZ10fcnRUjToaNqOZ3YPv?=
- =?us-ascii?Q?lnTOX6WEallMW+3iGY6LRZVMs7aLjTWk7JJnK1sU?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7bacdb00-c3e4-43a9-3d71-08dc7947eff9
-X-MS-Exchange-CrossTenant-AuthSource: DU2PR04MB8822.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 May 2024 03:41:45.7338
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Zv5pJ8QQYxYa6V2URaGW5vDeU5PtKctylJ+GiyKO+RARCzOCOO9yxdAs01jx5ZnjPMidQmosoVCnQMTRBitttg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB8212
+In-Reply-To: <CAGS2=Ypq9_X23syZw8tpybjc_hPk7dQGqdYNbpw0KKN1A1wbNA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:Syh0CgDH6w58K0xmGAdNNg--.20155S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7KryxKFy8CryrZr47XrW3GFg_yoW8Kr4fpF
+	yq9ws8CrW0gw15XrnFv3Wjg3WYqa1qka4xZ3yvgF1xAF1fGryqv3s2vFyYgry8Cw4rZryj
+	qayv9ryDK3Z8CaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
+	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
+	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0
+	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
+	k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUzsqWUUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Since commit (5d8edfb900d5 "iomap: Copy larger chunks from userspace"),
-iomap will try to copy in larger chunks than PAGE_SIZE. However, if the
-mapping doesn't support large folio, only one page of maximum 4KB will
-be created and 4KB data will be writen to pagecache each time. Then,
-next 4KB will be handled in next iteration. This will cause potential
-write performance problem.
+On 2024/5/20 19:48, Guangwu Zhang wrote:
+> Hi,
+> I get a xfs error when run xfstests  generic/461 testing with
+> linux-block for-next branch.
+> looks it easy to reproduce with s390x arch.
+> 
+> kernel info :
+> commit 04d3822ddfd11fa2c9b449c977f340b57996ef3d
+> 6.9.0+
+> reproducer
+> git clone xfstests
+>  ./check generic/461
+> 
+> 
 
-If chunk is 2MB, total 512 pages need to be handled finally. During this
-period, fault_in_iov_iter_readable() is called to check iov_iter readable
-validity. Since only 4KB will be handled each time, below address space
-will be checked over and over again:
+I guess this issue should be fixed by 5ce5674187c3 ("xfs: convert delayed
+extents to unwritten when zeroing post eof blocks"), please merge this commit
+series (include 4 patches) and try again.
 
-start         	end
--
-buf,    	buf+2MB
-buf+4KB, 	buf+2MB
-buf+8KB, 	buf+2MB
-...
-buf+2044KB 	buf+2MB
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5ce5674187c345dc31534d2024c09ad8ef29b7ba
 
-Obviously the checking size is wrong since only 4KB will be handled each
-time. So this will get a correct chunk to let iomap work well in non-large
-folio case.
+Yi.
 
-With this change, the write speed will be stable. Tested on ARM64 device.
-
-Before:
-
- - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (334 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (278 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (204 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (170 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (150 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (139 MB/s)
-
-After:
-
- - dd if=/dev/zero of=/dev/sda bs=400K  count=10485  (339 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=800K  count=5242   (330 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=1600K count=2621   (332 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=2200K count=1906   (333 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=3000K count=1398   (333 MB/s)
- - dd if=/dev/zero of=/dev/sda bs=4500K count=932    (333 MB/s)
-
-Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-Cc: stable@vger.kernel.org
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Xu Yang <xu.yang_2@nxp.com>
-
----
-Changes in v2:
- - fix address space description in message
-Changes in v3:
- - adjust 'chunk' and add mapping_max_folio_size() in header file
-   as suggested by Matthew
- - add write performance results in commit message
-Changes in v4:
- - split mapping_max_folio_size() into a single patch 1/2
- - adjust subject
- - add Rb tag
-Changes in v5:
- - no change
----
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 41c8f0c68ef5..c5802a459334 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -898,11 +898,11 @@ static bool iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
- static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- {
- 	loff_t length = iomap_length(iter);
--	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
- 	loff_t pos = iter->pos;
- 	ssize_t total_written = 0;
- 	long status = 0;
- 	struct address_space *mapping = iter->inode->i_mapping;
-+	size_t chunk = mapping_max_folio_size(mapping);
- 	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
- 
- 	do {
--- 
-2.34.1
+> [ 5322.046654] XFS (loop1): Internal error isnullstartblock(got.br_startblock) a
+> t line 6005 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_bmap_insert_extents+0x
+> 2ee/0x420 [xfs]
+> [ 5322.046859] CPU: 0 PID: 157526 Comm: fsstress Kdump: loaded Not tainted 6.9.0
+> + #1
+> [ 5322.046863] Hardware name: IBM 8561 LT1 400 (z/VM 7.2.0)
+> [ 5322.046864] Call Trace:
+> [ 5322.046866]  [<0000022f504d8fc4>] dump_stack_lvl+0x8c/0xb0
+> [ 5322.046876]  [<0000022ed00fc308>] xfs_corruption_error+0x70/0xa0 [xfs]
+> [ 5322.046955]  [<0000022ed00b7206>] xfs_bmap_insert_extents+0x3fe/0x420 [xfs]
+> [ 5322.047024]  [<0000022ed00f55a6>] xfs_insert_file_space+0x1be/0x248 [xfs]
+> [ 5322.047105]  [<0000022ed00ff1dc>] xfs_file_fallocate+0x244/0x400 [xfs]
+> [ 5322.047186]  [<0000022f4fe90000>] vfs_fallocate+0x218/0x338
+> [ 5322.047190]  [<0000022f4fe9112e>] ksys_fallocate+0x56/0x98
+> [ 5322.047193]  [<0000022f4fe911aa>] __s390x_sys_fallocate+0x3a/0x48
+> [ 5322.047196]  [<0000022f505019d2>] __do_syscall+0x23a/0x2c0
+> [ 5322.047200]  [<0000022f50511d20>] system_call+0x70/0x98
+> [ 5322.054644] XFS (loop1): Corruption detected. Unmount and run xfs_repair
+> [ 5322.977488] XFS (loop1): User initiated shutdown received.
+> [ 5322.977505] XFS (loop1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xb
+> 4/0xf8 [xfs] (fs/xfs/xfs_fsops.c:458).  Shutting down filesystem.
+> [ 5322.977772] XFS (loop1): Please unmount the filesystem and rectify the proble
+> m(s)
+> [ 5322.977877] loop1: writeback error on inode 755831, offset 32768, sector 1804
+> 712
+> 00:00:00
+> 
+> 
+> .
+> 
 
